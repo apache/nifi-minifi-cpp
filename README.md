@@ -36,3 +36,37 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
+## Dependencies
+   * [LevelDB](https://github.com/google/leveldb) - tested with v1.18
+     MAC: brew install leveldb
+   * gcc - 4.8.4
+   * g++ - 4.8.4
+   * [libxml2](http://xmlsoft.org/) - tested with 2.9.1
+     MAC: brew install libxml2
+   * [libuuid] https://sourceforge.net/projects/libuuid/
+     MAC: After download the above source, configure/make/make install
+
+## Build instructions
+
+Build application
+ 
+   $ make
+
+Build tests
+   
+   $ make tests
+
+Clean 
+   
+   $ make clean
+
+
+## Running 
+
+Running application
+
+   $ ./build/minifi
+
+Runnning tests 
+
+   $ ./build/FlowFileRecordTest 
