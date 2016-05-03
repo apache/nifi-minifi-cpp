@@ -141,7 +141,7 @@ void ProcessSession::transfer(FlowFileRecord *flow, Relationship relationship)
 	_transferRelationship[flow->getUUIDStr()] = relationship;
 }
 
-void ProcessSession::write(FlowFileRecord *flow, OutputStreamCallback callback)
+void ProcessSession::write(FlowFileRecord *flow, OutputStreamCallback *callback)
 {
 	ResourceClaim *claim = NULL;
 
@@ -154,7 +154,7 @@ void ProcessSession::write(FlowFileRecord *flow, OutputStreamCallback callback)
 		if (fs.is_open())
 		{
 			// Call the callback to write the content
-			callback(&fs);
+			callback->process(&fs);
 			if (fs.good() && fs.tellp() >= 0)
 			{
 				flow->_size = fs.tellp();
@@ -197,7 +197,7 @@ void ProcessSession::write(FlowFileRecord *flow, OutputStreamCallback callback)
 	}
 }
 
-void ProcessSession::append(FlowFileRecord *flow, OutputStreamCallback callback)
+void ProcessSession::append(FlowFileRecord *flow, OutputStreamCallback *callback)
 {
 	ResourceClaim *claim = NULL;
 
@@ -217,7 +217,7 @@ void ProcessSession::append(FlowFileRecord *flow, OutputStreamCallback callback)
 		{
 			// Call the callback to write the content
 			std::streampos oldPos = fs.tellp();
-			callback(&fs);
+			callback->process(&fs);
 			if (fs.good() && fs.tellp() >= 0)
 			{
 				uint64_t appendSize = fs.tellp() - oldPos;
@@ -253,7 +253,7 @@ void ProcessSession::append(FlowFileRecord *flow, OutputStreamCallback callback)
 	}
 }
 
-void ProcessSession::read(FlowFileRecord *flow, InputStreamCallback callback)
+void ProcessSession::read(FlowFileRecord *flow, InputStreamCallback *callback)
 {
 	try
 	{
@@ -273,7 +273,7 @@ void ProcessSession::read(FlowFileRecord *flow, InputStreamCallback callback)
 
 			if (fs.good())
 			{
-				callback(&fs);
+				callback->process(&fs);
 				_logger->log_debug("Read offset %d size %d content %s for FlowFile UUID %s",
 						flow->_offset, flow->_size, claim->getContentFullPath().c_str(), flow->getUUIDStr().c_str());
 				fs.close();
