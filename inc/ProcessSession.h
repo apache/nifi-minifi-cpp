@@ -75,11 +75,11 @@ public:
 	//! Remove Flow File
 	void remove(FlowFileRecord *flow);
 	//! Execute the given read callback against the content
-	void read(FlowFileRecord *flow, InputStreamCallback callback);
+	void read(FlowFileRecord *flow, InputStreamCallback *callback);
 	//! Execute the given write callback against the content
-	void write(FlowFileRecord *flow, OutputStreamCallback callback);
+	void write(FlowFileRecord *flow, OutputStreamCallback *callback);
 	//! Execute the given write/append callback against the content
-	void append(FlowFileRecord *flow, OutputStreamCallback callback);
+	void append(FlowFileRecord *flow, OutputStreamCallback *callback);
 	//! Penalize the flow
 	void penalize(FlowFileRecord *flow);
 

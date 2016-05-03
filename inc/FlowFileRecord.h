@@ -86,8 +86,16 @@ inline const char *FlowAttributeKey(FlowAttribute attribute)
 
 //! FlowFile IO Callback functions for input and output
 //! throw exception for error
-typedef void (*InputStreamCallback) (std::ifstream *stream);
-typedef void (*OutputStreamCallback) (std::ofstream *stream);
+class InputStreamCallback
+{
+public:
+	virtual void process(std::ifstream *stream) = 0;
+};
+class OutputStreamCallback
+{
+public:
+	virtual void process(std::ofstream *stream) = 0;
+};
 
 
 //! FlowFile Record Class

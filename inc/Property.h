@@ -27,6 +27,9 @@
 #include <mutex>
 #include <atomic>
 #include <set>
+#include <stdlib.h>
+#include <math.h>
+
 
 //! Property Class
 class Property {
@@ -61,6 +64,98 @@ public:
 	//! Compare
 	bool operator < (const Property & right) const {
 		return _name < right._name;
+	}
+	//! Convert String to Integer
+	static bool StringToInt(std::string input, int64_t &output)
+	{
+		if (input.size() == 0) {
+			return false;
+		}
+
+		const char *cvalue = input.c_str();
+		char *pEnd;
+		long int ival = strtol(cvalue, &pEnd, 0);
+
+		if (pEnd[0] == '\0')
+		{
+			output = ival;
+			return true;
+		}
+
+		char end0 = toupper(pEnd[0]);
+		if ( (end0 == 'K') || (end0 == 'M') || (end0 == 'G') || (end0 == 'T') || (end0 == 'P') )
+		{
+			if (pEnd[1] == '\0')
+			{
+				unsigned long int multiplier = 1000;
+
+				if ( (end0 != 'K') ) {
+					multiplier *= 1000;
+					if (end0 != 'M') {
+						multiplier *= 1000;
+						if (end0 != 'G') {
+							multiplier *= 1000;
+							if (end0 != 'T') {
+								multiplier *= 1000;
+							}
+						}
+					}
+				}
+				output = ival * multiplier;
+				return true;
+
+			} else if ((pEnd[1] == 'b' || pEnd[1] == 'B') && (pEnd[2] == '\0')) {
+
+				unsigned long int multiplier = 1024;
+
+				if ( (end0 != 'K') ) {
+					multiplier *= 1024;
+					if (end0 != 'M') {
+						multiplier *= 1024;
+						if (end0 != 'G') {
+							multiplier *= 1024;
+							if (end0 != 'T') {
+								multiplier *= 1024;
+							}
+						}
+					}
+				}
+				output = ival * multiplier;
+				return true;
+			}
+		}
+
+		return false;
+	}
+	//! Convert String to Float
+	static bool StringToFloat(std::string input, float &output)
+	{
+		const char *cvalue = input.c_str();
+		char *pEnd;
+		float val = strtof(cvalue, &pEnd);
+
+		if (pEnd[0] == '\0')
+		{
+			output = val;
+			return true;
+		}
+		else
+			return false;
+	}
+	//! Convert String to Bool
+	static bool StringToBool(std::string input, bool &output)
+	{
+		if (input == "true" || input == "True" || input == "TRUE")
+		{
+			output = true;
+			return true;
+		}
+		if (input == "false" || input == "False" || input == "FALSE")
+		{
+			output = false;
+			return true;
+		}
+		return false;
 	}
 
 protected:

@@ -5,7 +5,7 @@ TARGET_LIB=libminifi.a
 TARGET_EXE=minifi
 CFLAGS=-O0 -fexceptions -fpermissive -Wno-write-strings -std=c++11 -fPIC -Wall -g -Wno-unused-private-field
 INCLUDES=-I./inc -I./src -I./test -I/usr/include/libxml2 -I/usr/local/opt/leveldb/include/
-LDDIRECTORY=-L/usr/local/opt/leveldb/out-static/ -L./build
+LDDIRECTORY=-L/usr/local/opt/leveldb/lib/ -L./build
 LDFLAGS=-lminifi -lxml2 -lleveldb -pthread -luuid
 
 UNAME_S := $(shell uname -s)
