@@ -1,3 +1,10 @@
 # Filter out generated files from the included libuuid
 thirdparty/uuid/tst_uuid*
 assemblies
+CMakeCache.txt
+CMakeFiles
+CMakeScripts
+Makefile
+cmake_install.cmake
+install_manifest.txt
+CTestTestfile.cmake
