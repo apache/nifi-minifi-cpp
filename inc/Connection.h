@@ -45,7 +45,7 @@ public:
 	 */
 	Connection(std::string name, uuid_t uuid = NULL, uuid_t srcUUID = NULL, uuid_t destUUID = NULL);
 	//! Destructor
-	virtual ~Connection();
+	virtual ~Connection() {}
 	//! Set Connection Name
 	void setName(std::string name) {
 		_name = name;
@@ -102,6 +102,8 @@ public:
 	}
 	//! Set Connection relationship
 	void setRelationship(Relationship relationship) {
+		_logger->log_debug("Set connection %s relationship %s",
+				_name.c_str(), relationship.getName().c_str());
 		_relationship = relationship;
 	}
 	// ! Get Connection relationship

@@ -20,14 +20,38 @@
 #include <vector>
 #include <queue>
 #include <map>
+#include <unistd.h>
 
-#include "FlowFileRecord.h"
 #include "Logger.h"
+#include "Configure.h"
+#include "FlowController.h"
+
+//! Main thread sleep interval 1 second
+#define SLEEP_INTERVAL 1
+//! Default nifi properties file path
+#define DEFAULT_NIFI_PROPERTIES_FILE "./conf/nifi.properties"
 
 int main(int argc, char **argv)
 {
 	Logger *logger = Logger::getLogger();
-
+	logger->setLogLevel(trace);
 	logger->log_info("MiNiFi started");
 
+	Configure *configure = Configure::getConfigure();
+	configure->loadConfigureFile(DEFAULT_NIFI_PROPERTIES_FILE);
+
+	FlowController controller;
+
+	// Load flow XML
+	controller.load();
+	// Start Processing the flow
+	controller.start();
+
+	// main loop
+	while (true)
+	{
+		sleep(SLEEP_INTERVAL);
+	}
+
+	return 0;
 }

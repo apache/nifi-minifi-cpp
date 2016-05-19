@@ -35,7 +35,11 @@ ResourceClaim::ResourceClaim(const std::string contentDirectory)
 	uuid_generate(_uuid);
 	// Increase the local ID for the resource claim
 	++_localResourceClaimNumber;
-	uuid_parse(uuidStr, _uuid);
+	uuid_unparse(_uuid, uuidStr);
 	// Create the full content path for the content
 	_contentFullPath = contentDirectory + "/" + uuidStr;
+
+	_configure = Configure::getConfigure();
+	_logger = Logger::getLogger();
+	_logger->log_debug("Resource Claim created %s", _contentFullPath.c_str());
 }

@@ -107,7 +107,7 @@ void ProcessGroup::removeProcessGroup(ProcessGroup *child)
 	}
 }
 
-void ProcessGroup::startProcessing()
+void ProcessGroup::startProcessing(TimerDrivenSchedulingAgent *timeScheduler)
 {
 	std::lock_guard<std::mutex> lock(_mtx);
 
@@ -118,14 +118,16 @@ void ProcessGroup::startProcessing()
 		{
 			Processor *processor(*it);
 			if (!processor->isRunning() && processor->getScheduledState() != DISABLED)
-				// TODO: call scheduler to start processor
-				;
+			{
+				if (processor->getSchedulingStrategy() == TIMER_DRIVEN)
+					timeScheduler->schedule(processor);
+			}
 		}
 
 		for (std::set<ProcessGroup *>::iterator it = _childProcessGroups.begin(); it != _childProcessGroups.end(); ++it)
 		{
 			ProcessGroup *processGroup(*it);
-			processGroup->startProcessing();
+			processGroup->startProcessing(timeScheduler);
 		}
 	}
 	catch (std::exception &exception)
@@ -140,7 +142,7 @@ void ProcessGroup::startProcessing()
 	}
 }
 
-void ProcessGroup::stopProcessing()
+void ProcessGroup::stopProcessing(TimerDrivenSchedulingAgent *timeScheduler)
 {
 	std::lock_guard<std::mutex> lock(_mtx);
 
@@ -150,15 +152,14 @@ void ProcessGroup::stopProcessing()
 		for (std::set<Processor *>::iterator it = _processors.begin(); it != _processors.end(); ++it)
 		{
 			Processor *processor(*it);
-			if (!processor->isRunning())
-				// TODO: call scheduler to stop processor
-				;
+			if (processor->getSchedulingStrategy() == TIMER_DRIVEN)
+					timeScheduler->unschedule(processor);
 		}
 
 		for (std::set<ProcessGroup *>::iterator it = _childProcessGroups.begin(); it != _childProcessGroups.end(); ++it)
 		{
 			ProcessGroup *processGroup(*it);
-			processGroup->stopProcessing();
+			processGroup->stopProcessing(timeScheduler);
 		}
 	}
 	catch (std::exception &exception)
@@ -170,5 +171,79 @@ void ProcessGroup::stopProcessing()
 	{
 		_logger->log_debug("Caught Exception during process group stop processing");
 		throw;
+	}
+}
+
+Processor *ProcessGroup::findProcessor(uuid_t uuid)
+{
+	Processor *ret = NULL;
+	// std::lock_guard<std::mutex> lock(_mtx);
+
+	for (std::set<Processor *>::iterator it = _processors.begin(); it != _processors.end(); ++it)
+	{
+		Processor *processor(*it);
+		uuid_t processorUUID;
+		if (processor->getUUID(processorUUID) && uuid_compare(processorUUID, uuid) == 0)
+			return processor;
+	}
+
+	for (std::set<ProcessGroup *>::iterator it = _childProcessGroups.begin(); it != _childProcessGroups.end(); ++it)
+	{
+		ProcessGroup *processGroup(*it);
+		Processor *processor = processGroup->findProcessor(uuid);
+		if (processor)
+			return processor;
+	}
+
+	return ret;
+}
+
+void ProcessGroup::addConnection(Connection *connection)
+{
+	std::lock_guard<std::mutex> lock(_mtx);
+
+	if (_connections.find(connection) == _connections.end())
+	{
+		// We do not have the same connection in this process group yet
+		_connections.insert(connection);
+		_logger->log_info("Add connection %s into process group %s",
+				connection->getName().c_str(), _name.c_str());
+		uuid_t sourceUUID;
+		Processor *source = NULL;
+		connection->getSourceProcessorUUID(sourceUUID);
+		source = this->findProcessor(sourceUUID);
+		if (source)
+			source->addConnection(connection);
+		Processor *destination = NULL;
+		uuid_t destinationUUID;
+		connection->getDestinationProcessorUUID(destinationUUID);
+		destination = this->findProcessor(destinationUUID);
+		if (destination && destination != source)
+			destination->addConnection(connection);
+	}
+}
+
+void ProcessGroup::removeConnection(Connection *connection)
+{
+	std::lock_guard<std::mutex> lock(_mtx);
+
+	if (_connections.find(connection) != _connections.end())
+	{
+		// We do not have the same connection in this process group yet
+		_connections.erase(connection);
+		_logger->log_info("Remove connection %s into process group %s",
+				connection->getName().c_str(), _name.c_str());
+		uuid_t sourceUUID;
+		Processor *source = NULL;
+		connection->getSourceProcessorUUID(sourceUUID);
+		source = this->findProcessor(sourceUUID);
+		if (source)
+			source->removeConnection(connection);
+		Processor *destination = NULL;
+		uuid_t destinationUUID;
+		connection->getDestinationProcessorUUID(destinationUUID);
+		destination = this->findProcessor(destinationUUID);
+		if (destination && destination != source)
+			destination->removeConnection(connection);
 	}
 }
