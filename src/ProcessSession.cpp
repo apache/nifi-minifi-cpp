@@ -85,6 +85,46 @@ FlowFileRecord* ProcessSession::clone(FlowFileRecord *parent)
 	return record;
 }
 
+FlowFileRecord* ProcessSession::cloneDuringTransfer(FlowFileRecord *parent)
+{
+	std::map<std::string, std::string> empty;
+	FlowFileRecord *record = new FlowFileRecord(empty);
+
+	if (record)
+	{
+		this->_clonedFlowFiles[record->getUUIDStr()] = record;
+		_logger->log_debug("Clone FlowFile with UUID %s during transfer", record->getUUIDStr().c_str());
+		// Copy attributes
+		std::map<std::string, std::string> parentAttributes = parent->getAttributes();
+		std::map<std::string, std::string>::iterator it;
+		for (it = parentAttributes.begin(); it!= parentAttributes.end(); it++)
+		{
+			if (it->first == FlowAttributeKey(ALTERNATE_IDENTIFIER) ||
+	    			it->first == FlowAttributeKey(DISCARD_REASON) ||
+					it->first == FlowAttributeKey(UUID))
+	    		// Do not copy special attributes from parent
+	    		continue;
+	    	record->setAttribute(it->first, it->second);
+	    }
+	    record->_lineageStartDate = parent->_lineageStartDate;
+	    record->_lineageIdentifiers = parent->_lineageIdentifiers;
+	    record->_lineageIdentifiers.insert(parent->_uuidStr);
+
+	    // Copy Resource Claim
+	    record->_claim = parent->_claim;
+	    if (record->_claim)
+	    {
+	    	record->_offset = parent->_offset;
+	    	record->_size = parent->_size;
+	    	record->_claim->increaseFlowFileRecordOwnedCount();
+	    }
+	    // Copy connection
+	    record->_connection = parent->_connection;
+	}
+
+	return record;
+}
+
 FlowFileRecord* ProcessSession::clone(FlowFileRecord *parent, long offset, long size)
 {
 	FlowFileRecord *record = this->create(parent);
@@ -166,6 +206,7 @@ void ProcessSession::write(FlowFileRecord *flow, OutputStreamCallback *callback)
 					flow->_claim = NULL;
 				}
 				flow->_claim = claim;
+				claim->increaseFlowFileRecordOwnedCount();
 				_logger->log_debug("Write offset %d length %d into content %s for FlowFile UUID %s",
 						flow->_offset, flow->_size, flow->_claim->getContentFullPath().c_str(), flow->getUUIDStr().c_str());
 				fs.close();
@@ -183,6 +224,11 @@ void ProcessSession::write(FlowFileRecord *flow, OutputStreamCallback *callback)
 	}
 	catch (std::exception &exception)
 	{
+		if (flow && flow->_claim == claim)
+		{
+			flow->_claim->decreaseFlowFileRecordOwnedCount();
+			flow->_claim = NULL;
+		}
 		if (claim)
 			delete claim;
 		_logger->log_debug("Caught Exception %s", exception.what());
@@ -190,6 +236,11 @@ void ProcessSession::write(FlowFileRecord *flow, OutputStreamCallback *callback)
 	}
 	catch (...)
 	{
+		if (flow && flow->_claim == claim)
+		{
+			flow->_claim->decreaseFlowFileRecordOwnedCount();
+			flow->_claim = NULL;
+		}
 		if (claim)
 			delete claim;
 		_logger->log_debug("Caught Exception during process session write");
@@ -239,15 +290,11 @@ void ProcessSession::append(FlowFileRecord *flow, OutputStreamCallback *callback
 	}
 	catch (std::exception &exception)
 	{
-		if (claim)
-			delete claim;
 		_logger->log_debug("Caught Exception %s", exception.what());
 		throw;
 	}
 	catch (...)
 	{
-		if (claim)
-			delete claim;
 		_logger->log_debug("Caught Exception during process session append");
 		throw;
 	}
@@ -331,7 +378,7 @@ void ProcessSession::commit()
 					else
 					{
 						// Autoterminated
-						record->_markedDelete = true;
+						remove(record);
 					}
 				}
 				else
@@ -348,9 +395,7 @@ void ProcessSession::commit()
 						else
 						{
 							// Clone the flow file and route to the connection
-							FlowFileRecord *cloneFlow = clone(record);
-							cloneFlow->_connection = connection;
-							this->_clonedFlowFiles[cloneFlow->getUUIDStr()] = cloneFlow;
+							this->cloneDuringTransfer(record);
 						}
 					}
 				}
@@ -387,7 +432,7 @@ void ProcessSession::commit()
 					else
 					{
 						// Autoterminated
-						record->_markedDelete = true;
+						remove(record);
 					}
 				}
 				else
@@ -404,9 +449,7 @@ void ProcessSession::commit()
 						else
 						{
 							// Clone the flow file and route to the connection
-							FlowFileRecord *cloneFlow = clone(record);
-							cloneFlow->_connection = connection;
-							this->_clonedFlowFiles[cloneFlow->getUUIDStr()] = cloneFlow;
+							this->cloneDuringTransfer(record);
 						}
 					}
 				}
@@ -424,22 +467,24 @@ void ProcessSession::commit()
 			FlowFileRecord *record = it->second;
 			if (record->_markedDelete)
 			{
-				delete record;
 				continue;
 			}
 			if (record->_connection)
 				record->_connection->put(record);
+			else
+				delete record;
 		}
 		for (it = _addedFlowFiles.begin(); it!= _addedFlowFiles.end(); it++)
 		{
 			FlowFileRecord *record = it->second;
 			if (record->_markedDelete)
 			{
-				delete record;
 				continue;
 			}
 			if (record->_connection)
 				record->_connection->put(record);
+			else
+				delete record;
 		}
 		// Process the clone flow files
 		for (it = _clonedFlowFiles.begin(); it!= _clonedFlowFiles.end(); it++)
@@ -447,11 +492,12 @@ void ProcessSession::commit()
 			FlowFileRecord *record = it->second;
 			if (record->_markedDelete)
 			{
-				delete record;
 				continue;
 			}
 			if (record->_connection)
 				record->_connection->put(record);
+			else
+				delete record;
 		}
 		// Delete the deleted flow files
 		for (it = _deletedFlowFiles.begin(); it!= _deletedFlowFiles.end(); it++)
@@ -522,5 +568,45 @@ void ProcessSession::rollback()
 		_logger->log_debug("Caught Exception during process session roll back");
 		throw;
 	}
+}
+
+FlowFileRecord *ProcessSession::get()
+{
+	Connection *first = _processContext->getProcessor()->getNextIncomingConnection();
+
+	if (first == NULL)
+		return NULL;
+
+	Connection *current = first;
+
+	do
+	{
+		std::set<FlowFileRecord *> expired;
+		FlowFileRecord *ret = current->poll(expired);
+		if (expired.size() > 0)
+		{
+			// Remove expired flow record
+			for (std::set<FlowFileRecord *>::iterator it = expired.begin(); it != expired.end(); ++it)
+			{
+				delete (*it);
+			}
+		}
+		if (ret)
+		{
+			// add the flow record to the current process session update map
+			_updatedFlowFiles[ret->getUUIDStr()] = ret;
+			std::map<std::string, std::string> empty;
+			FlowFileRecord *snapshot = new FlowFileRecord(empty);
+			_logger->log_debug("Create Snapshot FlowFile with UUID %s", snapshot->getUUIDStr().c_str());
+			snapshot->duplicate(ret);
+			// save a snapshot
+			_originalFlowFiles[snapshot->getUUIDStr()] = snapshot;
+			return ret;
+		}
+		current = _processContext->getProcessor()->getNextIncomingConnection();
+	}
+	while (current != NULL && current != first);
+
+	return NULL;
 }
 

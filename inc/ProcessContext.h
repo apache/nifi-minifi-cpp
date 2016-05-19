@@ -43,7 +43,7 @@ public:
 		_logger = Logger::getLogger();
 	}
 	//! Destructor
-	virtual ~ProcessContext();
+	virtual ~ProcessContext() {}
 	//! Get Processor associated with the Process Context
 	Processor *getProcessor() {
 		return _processor;

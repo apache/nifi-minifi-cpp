@@ -69,7 +69,7 @@ public:
 	Exception(ExceptionType type, const char *errorMsg) : _type(type), _errorMsg(errorMsg) {
 	}
 	//! Destructor
-	virtual ~Exception() throw ();
+	virtual ~Exception() throw () {}
 	virtual const char * what() const throw () {
 
 		_whatStr = ExceptionTypeToString(_type);

@@ -28,6 +28,7 @@
 
 #include "Processor.h"
 #include "ProcessContext.h"
+#include "ProcessSession.h"
 
 Processor::Processor(std::string name, uuid_t uuid)
 : _name(name)
@@ -37,6 +38,10 @@ Processor::Processor(std::string name, uuid_t uuid)
 		uuid_generate(_uuid);
 	else
 		uuid_copy(_uuid, uuid);
+
+	char uuidStr[37];
+	uuid_parse(uuidStr, _uuid);
+	_uuidStr = uuidStr;
 
 	// Setup the default values
 	_state = DISABLED;
@@ -50,6 +55,7 @@ Processor::Processor(std::string name, uuid_t uuid)
 	_maxConcurrentTasks = 1;
 	_activeTasks = 0;
 	_yieldExpiration = 0;
+	_incomingConnectionsIter = this->_incomingConnections.begin();
 	_logger = Logger::getLogger();
 
 	_logger->log_info("Processor %s created", _name.c_str());
@@ -62,7 +68,7 @@ Processor::~Processor()
 
 bool Processor::isRunning()
 {
-	return (_state == RUNNING);
+	return (_state == RUNNING && _activeTasks > 0);
 }
 
 bool Processor::setSupportedProperties(std::set<Property> properties)
@@ -81,6 +87,7 @@ bool Processor::setSupportedProperties(std::set<Property> properties)
 	{
 		Property item(*it);
 		_properties[item.getName()] = item;
+		_logger->log_info("Processor %s supported property name %s", _name.c_str(), item.getName().c_str());
 	}
 
 	return true;
@@ -102,6 +109,7 @@ bool Processor::setSupportedRelationships(std::set<Relationship> relationships)
 	{
 		Relationship item(*it);
 		_relationships[item.getName()] = item;
+		_logger->log_info("Processor %s supported relationship name %s", _name.c_str(), item.getName().c_str());
 	}
 
 	return true;
@@ -123,6 +131,7 @@ bool Processor::setAutoTerminatedRelationships(std::set<Relationship> relationsh
 	{
 		Relationship item(*it);
 		_autoTerminatedRelationships[item.getName()] = item;
+		_logger->log_info("Processor %s auto terminated relationship name %s", _name.c_str(), item.getName().c_str());
 	}
 
 	return true;
@@ -207,23 +216,19 @@ bool Processor::setProperty(std::string name, std::string value)
 	}
 
 	std::lock_guard<std::mutex> lock(_mtx);
-
 	std::map<std::string, Property>::iterator it = _properties.find(name);
 	if (it != _properties.end())
 	{
 		Property item = it->second;
+		item.setValue(value);
 		_properties[item.getName()] = item;
+		_logger->log_info("Processor %s property name %s value %s", _name.c_str(), item.getName().c_str(), item.getValue().c_str());
 		return true;
 	}
 	else
 	{
 		return false;
 	}
-}
-
-void Processor::yield()
-{
-	_yieldExpiration = (getTimeMillis() + _yieldPeriodMsec);
 }
 
 std::set<Connection *> Processor::getOutGoingConnections(std::string relationship)
@@ -269,6 +274,7 @@ bool Processor::addConnection(Connection *connection)
 			connection->setDestinationProcessor(this);
 			_logger->log_info("Add connection %s into Processor %s incoming connection",
 					connection->getName().c_str(), _name.c_str());
+			_incomingConnectionsIter = this->_incomingConnections.begin();
 			ret = true;
 		}
 	}
@@ -288,6 +294,7 @@ bool Processor::addConnection(Connection *connection)
 				// We do not have the same connection for this relationship yet
 				existedConnection.insert(connection);
 				connection->setSourceProcessor(this);
+				_outGoingConnections[relationship] = existedConnection;
 				_logger->log_info("Add connection %s into Processor %s outgoing connection for relationship %s",
 												connection->getName().c_str(), _name.c_str(), relationship.c_str());
 				ret = true;
@@ -335,6 +342,7 @@ void Processor::removeConnection(Connection *connection)
 			connection->setDestinationProcessor(NULL);
 			_logger->log_info("Remove connection %s into Processor %s incoming connection",
 					connection->getName().c_str(), _name.c_str());
+			_incomingConnectionsIter = this->_incomingConnections.begin();
 		}
 	}
 
@@ -361,3 +369,88 @@ void Processor::removeConnection(Connection *connection)
 	}
 }
 
+Connection *Processor::getNextIncomingConnection()
+{
+	std::lock_guard<std::mutex> lock(_mtx);
+
+	if (_incomingConnections.size() == 0)
+		return NULL;
+
+	if (_incomingConnectionsIter == _incomingConnections.end())
+		_incomingConnectionsIter = _incomingConnections.begin();
+
+	Connection *ret = *_incomingConnectionsIter;
+	_incomingConnectionsIter++;
+
+	if (_incomingConnectionsIter == _incomingConnections.end())
+		_incomingConnectionsIter = _incomingConnections.begin();
+
+	return ret;
+}
+
+bool Processor::flowFilesQueued()
+{
+	std::lock_guard<std::mutex> lock(_mtx);
+
+	if (_incomingConnections.size() == 0)
+		return false;
+
+	for (std::set<Connection *>::iterator it = _incomingConnections.begin(); it != _incomingConnections.end(); ++it)
+	{
+		Connection *connection = *it;
+		if (connection->getQueueSize() > 0)
+			return true;
+	}
+
+	return false;
+}
+
+bool Processor::flowFilesOutGoingFull()
+{
+	std::lock_guard<std::mutex> lock(_mtx);
+
+	std::map<std::string, std::set<Connection *>>::iterator it;
+
+	for (it = _outGoingConnections.begin(); it != _outGoingConnections.end(); ++it)
+	{
+		// We already has connection for this relationship
+		std::set<Connection *> existedConnection = it->second;
+		for (std::set<Connection *>::iterator itConnection = existedConnection.begin(); itConnection != existedConnection.end(); ++itConnection)
+		{
+			Connection *connection = *itConnection;
+			if (connection->isFull())
+				return true;
+		}
+	}
+
+	return false;
+}
+
+void Processor::onTrigger()
+{
+	ProcessContext *context = new ProcessContext(this);
+	ProcessSession *session = new ProcessSession(context);
+	try {
+		// Call the child onTrigger function
+		this->onTrigger(context, session);
+		session->commit();
+		delete session;
+		delete context;
+	}
+	catch (std::exception &exception)
+	{
+		_logger->log_debug("Caught Exception %s", exception.what());
+		session->rollback();
+		delete session;
+		delete context;
+		throw;
+	}
+	catch (...)
+	{
+		_logger->log_debug("Caught Exception Processor::onTrigger");
+		session->rollback();
+		delete session;
+		delete context;
+		throw;
+	}
+}

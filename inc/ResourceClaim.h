@@ -27,6 +27,7 @@
 #include <map>
 #include <mutex>
 #include <atomic>
+#include "Configure.h"
 
 //! Default content directory
 #define DEFAULT_CONTENT_DIRECTORY "."
@@ -41,7 +42,7 @@ public:
 	 */
 	ResourceClaim(const std::string contentDirectory);
 	//! Destructor
-	virtual ~ResourceClaim();
+	virtual ~ResourceClaim() {}
 	//! increaseFlowFileRecordOwnedCount
 	void increaseFlowFileRecordOwnedCount()
 	{
@@ -51,6 +52,11 @@ public:
 	void decreaseFlowFileRecordOwnedCount()
 	{
 		--_flowFileRecordOwnedCount;
+	}
+	//! getFlowFileRecordOwenedCount
+	uint64_t getFlowFileRecordOwnedCount()
+	{
+		return _flowFileRecordOwnedCount;
 	}
 	//! Get the content full path
 	std::string getContentFullPath()
@@ -70,6 +76,10 @@ protected:
 	std::atomic<uint64_t> _flowFileRecordOwnedCount;
 
 private:
+	//! Configure
+	Configure *_configure;
+	//! Logger
+	Logger *_logger;
 	// Prevent default copy constructor and assignment operation
 	// Only support pass by reference or pointer
 	ResourceClaim(const ResourceClaim &parent);

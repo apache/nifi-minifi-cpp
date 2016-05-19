@@ -54,7 +54,8 @@ public:
 		: _name(UNDEFINED_RELATIONSHIP) {
 	}
 	//! Destructor
-	virtual ~Relationship();
+	virtual ~Relationship() {
+	}
 	//! Get Name for the relationship
 	std::string getName() {
 		return _name;

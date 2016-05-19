@@ -126,8 +126,6 @@ public:
 	bool getAttribute(FlowAttribute key, std::string &value);
 	//! getAttribute key is string
 	bool getAttribute(std::string key, std::string &value);
-	//! duplicate the original flow file
-	void duplicate(FlowFileRecord *original);
 	//! setAttribute, if attribute already there, update it, else, add it
 	void setAttribute(std::string key, std::string value) {
 		_attributes[key] = value;
@@ -156,9 +154,17 @@ public:
 	uint64_t getEntryDate() {
 		return _entryDate;
 	}
+	// ! Get Lineage Start Date
+	uint64_t getlineageStartDate() {
+		return _lineageStartDate;
+	}
 	// ! Set Original connection
 	void setOriginalConnection (Connection *connection) {
 		_orginalConnection = connection;
+	}
+	//! Get Resource Claim
+	ResourceClaim *getResourceClaim() {
+		return _claim;
 	}
 
 protected:
@@ -187,6 +193,8 @@ protected:
 	std::string _uuidStr;
 	//! UUID string for all parents
 	std::set<std::string> _lineageIdentifiers;
+	//! duplicate the original flow file
+	void duplicate(FlowFileRecord *original);
 
 private:
 
@@ -200,6 +208,8 @@ private:
 	Connection *_orginalConnection;
 	//! Logger
 	Logger *_logger;
+	//! Snapshot flow record for session rollback
+	bool _snapshot;
 	// Prevent default copy constructor and assignment operation
 	// Only support pass by reference or pointer
 	FlowFileRecord(const FlowFileRecord &parent);

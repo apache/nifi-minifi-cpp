@@ -72,7 +72,7 @@ public:
 		_spdlog->set_level((spdlog::level::level_enum) level);
 	}
 	//! Destructor
-	~Logger();
+	~Logger() {}
 	/**
 	 * @brief Log error message
 	 * @param format format string ('man printf' for syntax)
@@ -140,7 +140,7 @@ private:
 	/*!
 	 * Create a logger
 	 * */
-	Logger(const std::string logger_name = LOG_NAME, const std::string filename = LOG_FILE_NAME, size_t max_file_size = DEFAULT_LOG_FILE_SIZE, size_t max_files = DEFAULT_LOG_FILE_NUMBER, bool force_flush = false) {
+	Logger(const std::string logger_name = LOG_NAME, const std::string filename = LOG_FILE_NAME, size_t max_file_size = DEFAULT_LOG_FILE_SIZE, size_t max_files = DEFAULT_LOG_FILE_NUMBER, bool force_flush = true) {
 		_spdlog = rotating_logger_mt(logger_name, filename, max_file_size, max_files, force_flush);
 		_spdlog->set_level((spdlog::level::level_enum) debug);
 	}
