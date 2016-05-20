@@ -48,7 +48,7 @@ FlowFileRecord::FlowFileRecord(std::map<std::string, std::string> attributes, Re
 	uuid_generate(_uuid);
 	// Increase the local ID for the flow record
 	++_localFlowSeqNumber;
-	uuid_parse(uuidStr, _uuid);
+	uuid_unparse(_uuid, uuidStr);
 	_uuidStr = uuidStr;
 
 	// Populate the default attributes
@@ -62,6 +62,8 @@ FlowFileRecord::FlowFileRecord(std::map<std::string, std::string> attributes, Re
     	addAttribute(it->first, it->second);
     }
 
+    _snapshot = false;
+
 	if (_claim)
 		// Increase the flow file record owned count for the resource claim
 		_claim->increaseFlowFileRecordOwnedCount();
@@ -70,10 +72,20 @@ FlowFileRecord::FlowFileRecord(std::map<std::string, std::string> attributes, Re
 
 FlowFileRecord::~FlowFileRecord()
 {
-	_logger->log_debug("Delete FlowFile UUID %s", _uuidStr.c_str());
+	if (!_snapshot)
+		_logger->log_debug("Delete FlowFile UUID %s", _uuidStr.c_str());
+	else
+		_logger->log_debug("Delete SnapShot FlowFile UUID %s", _uuidStr.c_str());
 	if (_claim)
+	{
 		// Decrease the flow file record owned count for the resource claim
 		_claim->decreaseFlowFileRecordOwnedCount();
+		if (_claim->getFlowFileRecordOwnedCount() == 0)
+		{
+			_logger->log_debug("Delete Resource Claim %s", _claim->getContentFullPath().c_str());
+			delete _claim;
+		}
+	}
 }
 
 bool FlowFileRecord::addAttribute(FlowAttribute key, std::string value)
@@ -202,9 +214,14 @@ void FlowFileRecord::duplicate(FlowFileRecord *original)
 	this->_size = original->_size;
 	this->_lineageIdentifiers = original->_lineageIdentifiers;
 	this->_orginalConnection = original->_orginalConnection;
+	this->_uuidStr = original->_uuidStr;
+	this->_connection = original->_connection;
+	this->_markedDelete = original->_markedDelete;
 
 	this->_claim = original->_claim;
 	if (this->_claim)
 		this->_claim->increaseFlowFileRecordOwnedCount();
+
+	this->_snapshot = true;
 }
 

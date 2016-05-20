@@ -48,7 +48,7 @@ public:
 		_logger->log_trace("ProcessSession created for %s", _processContext->getProcessor()->getName().c_str());
 	}
 	//! Destructor
-	virtual ~ProcessSession();
+	virtual ~ProcessSession() {}
 	//! Commit the session
 	void commit();
 	//! Roll Back the session
@@ -98,6 +98,8 @@ protected:
 	std::map<std::string, FlowFileRecord *> _clonedFlowFiles;
 
 private:
+	// Clone the flow file during transfer to multiple connections for a relationship
+	FlowFileRecord* cloneDuringTransfer(FlowFileRecord *parent);
 	//! ProcessContext
 	ProcessContext *_processContext;
 	// Prevent default copy constructor and assignment operation

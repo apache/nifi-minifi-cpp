@@ -30,6 +30,15 @@
 #include <stdlib.h>
 #include <math.h>
 
+//! Time Unit
+enum TimeUnit {
+	DAY,
+	HOUR,
+	MINUTE,
+	SECOND,
+	MILLISECOND,
+	NANOSECOND
+};
 
 //! Property Class
 class Property {
@@ -42,9 +51,9 @@ public:
 	Property(const std::string name, const std::string description, const std::string value)
 		: _name(name), _description(description), _value(value) {
 	}
-	Property();
+	Property() {}
 	//! Destructor
-	virtual ~Property();
+	virtual ~Property() {}
 	//! Get Name for the property
 	std::string getName() {
 		return _name;
@@ -65,6 +74,142 @@ public:
 	bool operator < (const Property & right) const {
 		return _name < right._name;
 	}
+
+	//! Convert TimeUnit to MilliSecond
+	static bool ConvertTimeUnitToMS(int64_t input, TimeUnit unit, int64_t &out)
+	{
+		if (unit == MILLISECOND)
+		{
+			out = input;
+			return true;
+		}
+		else if (unit == SECOND)
+		{
+			out = input * 1000;
+			return true;
+		}
+		else if (unit == MINUTE)
+		{
+			out = input * 60 * 1000;
+			return true;
+		}
+		else if (unit == HOUR)
+		{
+			out = input * 60 * 60 * 1000;
+			return true;
+		}
+		else if (unit == DAY)
+		{
+			out = 24 * 60 * 60 * 1000;
+			return true;
+		}
+		else if (unit == NANOSECOND)
+		{
+			out = input/1000/1000;
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+	//! Convert TimeUnit to NanoSecond
+	static bool ConvertTimeUnitToNS(int64_t input, TimeUnit unit, int64_t &out)
+	{
+		if (unit == MILLISECOND)
+		{
+			out = input * 1000 * 1000;
+			return true;
+		}
+		else if (unit == SECOND)
+		{
+			out = input * 1000 * 1000 * 1000;
+			return true;
+		}
+		else if (unit == MINUTE)
+		{
+			out = input * 60 * 1000 * 1000 * 1000;
+			return true;
+		}
+		else if (unit == HOUR)
+		{
+			out = input * 60 * 60 * 1000 * 1000 * 1000;
+			return true;
+		}
+		else if (unit == NANOSECOND)
+		{
+			out = input;
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+	//! Convert String
+	static bool StringToTime(std::string input, int64_t &output, TimeUnit &timeunit)
+	{
+		if (input.size() == 0) {
+			return false;
+		}
+
+		const char *cvalue = input.c_str();
+		char *pEnd;
+		long int ival = strtol(cvalue, &pEnd, 0);
+
+		if (pEnd[0] == '\0')
+		{
+			return false;
+		}
+
+		while (*pEnd == ' ')
+		{
+			// Skip the space
+			pEnd++;
+		}
+
+		std::string unit(pEnd);
+
+		if (unit == "sec" || unit == "s" || unit == "second" || unit == "seconds" || unit == "secs")
+		{
+			timeunit = SECOND;
+			output = ival;
+			return true;
+		}
+		else if (unit == "min" || unit == "m" || unit == "mins" || unit == "minute" || unit == "minutes")
+		{
+			timeunit = MINUTE;
+			output = ival;
+			return true;
+		}
+		else if (unit == "ns" || unit == "nano" || unit == "nanos" || unit == "nanoseconds")
+		{
+			timeunit = NANOSECOND;
+			output = ival;
+			return true;
+		}
+		else if (unit == "ms" || unit == "milli" || unit == "millis" || unit == "milliseconds")
+		{
+			timeunit = MILLISECOND;
+			output = ival;
+			return true;
+		}
+		else if (unit == "h" || unit == "hr" || unit == "hour" || unit == "hrs" || unit == "hours")
+		{
+			timeunit = HOUR;
+			output = ival;
+			return true;
+		}
+		else if (unit == "d" || unit == "day" || unit == "days")
+		{
+			timeunit = DAY;
+			output = ival;
+			return true;
+		}
+		else
+			return false;
+	}
+
 	//! Convert String to Integer
 	static bool StringToInt(std::string input, int64_t &output)
 	{
@@ -80,6 +225,12 @@ public:
 		{
 			output = ival;
 			return true;
+		}
+
+		while (*pEnd == ' ')
+		{
+			// Skip the space
+			pEnd++;
 		}
 
 		char end0 = toupper(pEnd[0]);

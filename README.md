@@ -50,6 +50,7 @@ limitations under the License.
 
 Build application
  
+   $ make clean
    $ make
 
 Build tests
@@ -64,8 +65,8 @@ Clean
 ## Running 
 
 Running application
-
-   $ ./build/minifi
+The nifi flow.xml and nifi.properties are in target/conf
+   $ ./target/minifi
 
 Runnning tests 
 

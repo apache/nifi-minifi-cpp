@@ -23,24 +23,27 @@
 #include <time.h>
 #include <sys/time.h>
 #include <string.h>
+#include <unistd.h>
+#include <string.h>
+#include <iostream>
 
 #ifdef __MACH__
 #include <mach/clock.h>
 #include <mach/mach.h>
 #endif
 
-uint64_t getTimeMillis()
+inline uint64_t getTimeMillis()
 {
 	uint64_t value;
 
 	timeval time;
 	gettimeofday(&time, NULL);
-	value = (time.tv_sec * 1000) + (time.tv_usec / 1000);
+	value = ((uint64_t) (time.tv_sec) * 1000) + (time.tv_usec / 1000);
 
 	return value;
 }
 
-uint64_t getTimeNano()
+inline uint64_t getTimeNano()
 {
 	struct timespec ts;
 	
@@ -56,7 +59,24 @@ uint64_t getTimeNano()
 	clock_gettime(CLOCK_REALTIME, &ts);
 #endif
 
-	return (ts.tv_sec * 1000000000 + ts.tv_nsec);
+	return ((uint64_t) (ts.tv_sec) * 1000000000 + ts.tv_nsec);
+}
+
+//! Convert millisecond since UTC to a time display string
+inline std::string getTimeStr(uint64_t msec)
+{
+	char date[120];
+	time_t second = (time_t) (msec/1000);
+	msec = msec % 1000;
+	strftime(date, sizeof(date) / sizeof(*date), "%Y-%m-%d %H:%M:%S",
+	             localtime(&second));
+
+	std::string ret = date;
+	date[0] = '\0';
+	sprintf(date, ".%03llu", msec);
+
+	ret += date;
+	return ret;
 }
 
 #endif

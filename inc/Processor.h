@@ -102,6 +102,9 @@ public:
 	//! Set UUID
 	void setUUID(uuid_t uuid) {
 		uuid_copy(_uuid, uuid);
+		char uuidStr[37];
+		uuid_unparse(_uuid, uuidStr);
+		_uuidStr = uuidStr;
 	}
 	//! Get UUID
 	bool getUUID(uuid_t uuid) {
@@ -206,11 +209,57 @@ public:
 	uint8_t getActiveTasks(void) {
 		return(_activeTasks);
 	}
+	//! Increment Active Task Counts
+	void incrementActiveTasks(void) {
+		_activeTasks++;
+	}
+	//! decrement Active Task Counts
+	void decrementActiveTask(void) {
+		_activeTasks--;
+	}
 	//! Yield based on the yield period
-	void yield();
+	void yield()
+	{
+		_yieldExpiration = (getTimeMillis() + _yieldPeriodMsec);
+	}
+	//! Yield based on the input time
+	void yield(uint64_t time)
+	{
+		_yieldExpiration = (getTimeMillis() + time);
+	}
+	//! whether need be to yield
+	bool isYield()
+	{
+		if (_yieldExpiration > 0)
+			return (_yieldExpiration >= getTimeMillis());
+		else
+			return false;
+	}
+	// clear yield expiration
+	void clearYield()
+	{
+		_yieldExpiration = 0;
+	}
+	// get yield time
+	uint64_t getYieldTime()
+	{
+		uint64_t curTime = getTimeMillis();
+		if (_yieldExpiration > curTime)
+			return (_yieldExpiration - curTime);
+		else
+			return 0;;
+	}
+	//! Whether flow file queued in incoming connection
+	bool flowFilesQueued();
+	//! Whether flow file queue full in any of the outgoin connection
+	bool flowFilesOutGoingFull();
 	//! Get incoming connections
 	std::set<Connection *> getIncomingConnections() {
 		return _incomingConnections;
+	}
+	//! Has Incoming Connection
+	bool hasIncomingConnections() {
+		return (_incomingConnections.size() > 0);
 	}
 	//! Get outgoing connections based on relationship name
 	std::set<Connection *> getOutGoingConnections(std::string relationship);
@@ -218,6 +267,14 @@ public:
 	bool addConnection(Connection *connection);
 	//! Remove connection
 	void removeConnection(Connection *connection);
+	//! Get the UUID as string
+	std::string getUUIDStr() {
+		return _uuidStr;
+	}
+	//! Get the Next RoundRobin incoming connection
+	Connection *getNextIncomingConnection();
+	//! On Trigger
+	void onTrigger();
 
 public:
 	//! OnTrigger method, implemented by NiFi Processor Designer
@@ -263,6 +320,8 @@ protected:
 	std::set<Connection *> _incomingConnections;
 	//! Outgoing connections map based on Relationship name
 	std::map<std::string, std::set<Connection *>> _outGoingConnections;
+	//! UUID string
+	std::string _uuidStr;
 
 private:
 
@@ -270,6 +329,8 @@ private:
 	std::mutex _mtx;
 	//! Yield Expiration
 	std::atomic<uint64_t> _yieldExpiration;
+	//! Incoming connection Iterator
+	std::set<Connection *>::iterator _incomingConnectionsIter;
 	//! Logger
 	Logger *_logger;
 	// Prevent default copy constructor and assignment operation

@@ -32,6 +32,7 @@
 #include "Logger.h"
 #include "Processor.h"
 #include "Exception.h"
+#include "TimerDrivenSchedulingAgent.h"
 
 //! Process Group Type
 enum ProcessGroupType
@@ -75,9 +76,9 @@ public:
 			return false;
 	}
 	//! Start Processing
-	void startProcessing();
+	void startProcessing(TimerDrivenSchedulingAgent *timeScheduler);
 	//! Stop Processing
-	void stopProcessing();
+	void stopProcessing(TimerDrivenSchedulingAgent *timeScheduler);
 	//! Whether it is root process group
 	bool isRootProcessGroup();
 	//! set parent process group
@@ -98,6 +99,12 @@ public:
 	void addProcessGroup(ProcessGroup *child);
 	//! Remove child processor group
 	void removeProcessGroup(ProcessGroup *child);
+	// ! Add connections
+	void addConnection(Connection *connection);
+	//! findProcessor based on UUID
+	Processor *findProcessor(uuid_t uuid);
+	//! removeConnection
+	void removeConnection(Connection *connection);
 
 protected:
 	//! A global unique identifier
@@ -109,6 +116,8 @@ protected:
 	//! Processors (ProcessNode) inside this process group which include Input/Output Port, Remote Process Group input/Output port
 	std::set<Processor *> _processors;
 	std::set<ProcessGroup *> _childProcessGroups;
+	//! Connections between the processor inside the group;
+	std::set<Connection *> _connections;
 	//! Parent Process Group
 	ProcessGroup* _parentProcessGroup;
 
