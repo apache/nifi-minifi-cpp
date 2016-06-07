@@ -82,6 +82,8 @@ public:
 	void append(FlowFileRecord *flow, OutputStreamCallback *callback);
 	//! Penalize the flow
 	void penalize(FlowFileRecord *flow);
+	//! Import the existed file into the flow
+	void import(std::string source, FlowFileRecord *flow);
 
 protected:
 	//! FlowFiles being modified by current process session

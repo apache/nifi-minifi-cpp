@@ -46,7 +46,24 @@ ProcessGroup::ProcessGroup(ProcessGroupType type, std::string name, uuid_t uuid,
 
 ProcessGroup::~ProcessGroup()
 {
+	for (std::set<Connection *>::iterator it = _connections.begin(); it != _connections.end(); ++it)
+	{
+		Connection *connection = *it;
+		connection->drain();
+		delete connection;
+	}
 
+	for (std::set<ProcessGroup *>::iterator it = _childProcessGroups.begin(); it != _childProcessGroups.end(); ++it)
+	{
+		ProcessGroup *processGroup(*it);
+		delete processGroup;
+	}
+
+	for (std::set<Processor *>::iterator it = _processors.begin(); it != _processors.end(); ++it)
+	{
+		Processor *processor(*it);
+		delete processor;
+	}
 }
 
 bool ProcessGroup::isRootProcessGroup()
@@ -196,6 +213,28 @@ Processor *ProcessGroup::findProcessor(uuid_t uuid)
 	}
 
 	return ret;
+}
+
+void ProcessGroup::updatePropertyValue(std::string processorName, std::string propertyName, std::string propertyValue)
+{
+	std::lock_guard<std::mutex> lock(_mtx);
+
+	for (std::set<Processor *>::iterator it = _processors.begin(); it != _processors.end(); ++it)
+	{
+		Processor *processor(*it);
+		if (processor->getName() == processorName)
+		{
+			processor->setProperty(propertyName, propertyValue);
+		}
+	}
+
+	for (std::set<ProcessGroup *>::iterator it = _childProcessGroups.begin(); it != _childProcessGroups.end(); ++it)
+	{
+		ProcessGroup *processGroup(*it);
+		processGroup->updatePropertyValue(processorName, propertyName, propertyValue);
+	}
+
+	return;
 }
 
 void ProcessGroup::addConnection(Connection *connection)

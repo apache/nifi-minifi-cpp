@@ -23,6 +23,10 @@ Configure *Configure::_configure(NULL);
 const char *Configure::nifi_flow_configuration_file = "nifi.flow.configuration.file";
 const char *Configure::nifi_administrative_yield_duration = "nifi.administrative.yield.duration";
 const char *Configure::nifi_bored_yield_duration = "nifi.bored.yield.duration";
+const char *Configure::nifi_server_name = "nifi.server.name";
+const char *Configure::nifi_server_port = "nifi.server.port";
+const char *Configure::nifi_server_report_interval= "nifi.server.report.interval";
+
 
 //! Get the config value
 bool Configure::get(std::string key, std::string &value)

@@ -85,6 +85,32 @@ public:
 		else
 			return false;
 	}
+	//! Nest Callback Class for read stream
+	class ReadCallback : public InputStreamCallback
+	{
+		public:
+		ReadCallback(uint64_t size)
+		{
+			_bufferSize = size;
+			_buffer = new char[_bufferSize];
+		}
+		~ReadCallback()
+		{
+			if (_buffer)
+				delete[] _buffer;
+		}
+		void process(std::ifstream *stream) {
+
+			stream->read(_buffer, _bufferSize);
+			if (!stream)
+				_readSize = stream->gcount();
+			else
+				_readSize = _bufferSize;
+		}
+		char  *_buffer;
+		uint64_t _bufferSize;
+		uint64_t _readSize;
+	};
 
 public:
 	//! OnTrigger method, implemented by NiFi LogAttribute

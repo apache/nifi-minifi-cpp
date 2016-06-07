@@ -217,6 +217,9 @@ public:
 	void decrementActiveTask(void) {
 		_activeTasks--;
 	}
+	void clearActiveTask(void) {
+		_activeTasks = 0;
+	}
 	//! Yield based on the yield period
 	void yield()
 	{

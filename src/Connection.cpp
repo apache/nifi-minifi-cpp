@@ -144,3 +144,17 @@ FlowFileRecord* Connection::poll(std::set<FlowFileRecord *> &expiredFlowRecords)
 
 	return NULL;
 }
+
+void Connection::drain()
+{
+	std::lock_guard<std::mutex> lock(_mtx);
+
+	while (!_queue.empty())
+	{
+		FlowFileRecord *item = _queue.front();
+		_queue.pop();
+		delete item;
+	}
+
+	_logger->log_debug("Drain connection %s", _name.c_str());
+}

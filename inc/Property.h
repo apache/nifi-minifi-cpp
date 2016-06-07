@@ -309,6 +309,26 @@ public:
 		return false;
 	}
 
+	// Trim String utils
+	static std::string trim(const std::string& s)
+	{
+	    return trimRight(trimLeft(s));
+	}
+
+	static std::string trimLeft(const std::string& s)
+	{
+		const char *WHITESPACE = " \n\r\t";
+	    size_t startpos = s.find_first_not_of(WHITESPACE);
+	    return (startpos == std::string::npos) ? "" : s.substr(startpos);
+	}
+
+	static std::string trimRight(const std::string& s)
+	{
+		const char *WHITESPACE = " \n\r\t";
+	    size_t endpos = s.find_last_not_of(WHITESPACE);
+	    return (endpos == std::string::npos) ? "" : s.substr(0, endpos+1);
+	}
+
 protected:
 	//! Name
 	std::string _name;

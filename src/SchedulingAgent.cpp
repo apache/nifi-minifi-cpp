@@ -60,6 +60,7 @@ bool SchedulingAgent::onTrigger(Processor *processor)
 	try
 	{
 		processor->onTrigger();
+		processor->decrementActiveTask();
 	}
 	catch (Exception &exception)
 	{
