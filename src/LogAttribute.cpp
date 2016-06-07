@@ -25,6 +25,7 @@
 #include <time.h>
 #include <sstream>
 #include <string.h>
+#include <iostream>
 
 #include "TimeUtil.h"
 #include "LogAttribute.h"
@@ -103,6 +104,24 @@ void LogAttribute::onTrigger(ProcessContext *context, ProcessSession *session)
     {
     	message << "\n" << "Content Claim:" << claim->getContentFullPath();
     }
+    if (logPayload && flow->getSize() <= 1024*1024)
+    {
+    	message << "\n" << "Payload:" << "\n";
+    	ReadCallback callback(flow->getSize());
+    	session->read(flow, &callback);
+    	for (int i = 0, j = 0; i < callback._readSize; i++)
+    	{
+    		char temp[8];
+    		sprintf(temp, "%02x ", (unsigned char) (callback._buffer[i]));
+    		message << temp;
+    		j++;
+    		if (j == 16)
+    		{
+    			message << '\n';
+    			j = 0;
+    		}
+    	}
+    }
     message << "\n" << dashLine << std::ends;
     std::string output = message.str();
 
@@ -126,6 +145,12 @@ void LogAttribute::onTrigger(ProcessContext *context, ProcessSession *session)
     default:
     	break;
     }
+
+    // Test Import
+    FlowFileRecord *importRecord = session->create();
+    session->import(claim->getContentFullPath(), importRecord);
+    session->transfer(importRecord, Success);
+
 
     // Transfer to the relationship
     session->transfer(flow, Success);

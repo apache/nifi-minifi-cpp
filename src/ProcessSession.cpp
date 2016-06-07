@@ -207,8 +207,9 @@ void ProcessSession::write(FlowFileRecord *flow, OutputStreamCallback *callback)
 				}
 				flow->_claim = claim;
 				claim->increaseFlowFileRecordOwnedCount();
+				/*
 				_logger->log_debug("Write offset %d length %d into content %s for FlowFile UUID %s",
-						flow->_offset, flow->_size, flow->_claim->getContentFullPath().c_str(), flow->getUUIDStr().c_str());
+						flow->_offset, flow->_size, flow->_claim->getContentFullPath().c_str(), flow->getUUIDStr().c_str()); */
 				fs.close();
 			}
 			else
@@ -273,8 +274,9 @@ void ProcessSession::append(FlowFileRecord *flow, OutputStreamCallback *callback
 			{
 				uint64_t appendSize = fs.tellp() - oldPos;
 				flow->_size += appendSize;
+				/*
 				_logger->log_debug("Append offset %d extra length %d to new size %d into content %s for FlowFile UUID %s",
-						flow->_offset, appendSize, flow->_size, claim->getContentFullPath().c_str(), flow->getUUIDStr().c_str());
+						flow->_offset, appendSize, flow->_size, claim->getContentFullPath().c_str(), flow->getUUIDStr().c_str()); */
 				fs.close();
 			}
 			else
@@ -321,8 +323,9 @@ void ProcessSession::read(FlowFileRecord *flow, InputStreamCallback *callback)
 			if (fs.good())
 			{
 				callback->process(&fs);
+				/*
 				_logger->log_debug("Read offset %d size %d content %s for FlowFile UUID %s",
-						flow->_offset, flow->_size, claim->getContentFullPath().c_str(), flow->getUUIDStr().c_str());
+						flow->_offset, flow->_size, claim->getContentFullPath().c_str(), flow->getUUIDStr().c_str()); */
 				fs.close();
 			}
 			else
@@ -344,6 +347,94 @@ void ProcessSession::read(FlowFileRecord *flow, InputStreamCallback *callback)
 	catch (...)
 	{
 		_logger->log_debug("Caught Exception during process session read");
+		throw;
+	}
+}
+
+void ProcessSession::import(std::string source, FlowFileRecord *flow)
+{
+	ResourceClaim *claim = NULL;
+
+	claim = new ResourceClaim(DEFAULT_CONTENT_DIRECTORY);
+	char *buf = NULL;
+	int size = 4096;
+	buf = new char [size];
+
+	try
+	{
+		std::ofstream fs;
+		fs.open(claim->getContentFullPath().c_str(), std::fstream::out | std::fstream::binary | std::fstream::trunc);
+		std::ifstream input;
+		input.open(source.c_str(), std::fstream::in | std::fstream::binary);
+
+		if (fs.is_open() && input.is_open())
+		{
+			// Open the source file and stream to the flow file
+			while (input.good())
+			{
+				input.read(buf, size);
+				if (input)
+					fs.write(buf, size);
+				else
+					fs.write(buf, input.gcount());
+			}
+
+			if (fs.good() && fs.tellp() >= 0)
+			{
+				flow->_size = fs.tellp();
+				flow->_offset = 0;
+				if (flow->_claim)
+				{
+					// Remove the old claim
+					flow->_claim->decreaseFlowFileRecordOwnedCount();
+					flow->_claim = NULL;
+				}
+				flow->_claim = claim;
+				claim->increaseFlowFileRecordOwnedCount();
+				/*
+				_logger->log_debug("Import offset %d length %d into content %s for FlowFile UUID %s",
+						flow->_offset, flow->_size, flow->_claim->getContentFullPath().c_str(), flow->getUUIDStr().c_str()); */
+				fs.close();
+				input.close();
+			}
+			else
+			{
+				fs.close();
+				input.close();
+				throw Exception(FILE_OPERATION_EXCEPTION, "File Import Error");
+			}
+		}
+		else
+		{
+			throw Exception(FILE_OPERATION_EXCEPTION, "File Import Error");
+		}
+
+		delete[] buf;
+	}
+	catch (std::exception &exception)
+	{
+		if (flow && flow->_claim == claim)
+		{
+			flow->_claim->decreaseFlowFileRecordOwnedCount();
+			flow->_claim = NULL;
+		}
+		if (claim)
+			delete claim;
+		_logger->log_debug("Caught Exception %s", exception.what());
+		delete[] buf;
+		throw;
+	}
+	catch (...)
+	{
+		if (flow && flow->_claim == claim)
+		{
+			flow->_claim->decreaseFlowFileRecordOwnedCount();
+			flow->_claim = NULL;
+		}
+		if (claim)
+			delete claim;
+		_logger->log_debug("Caught Exception during process session write");
+		delete[] buf;
 		throw;
 	}
 }

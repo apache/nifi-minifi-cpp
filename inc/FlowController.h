@@ -43,9 +43,10 @@
 #include "GenerateFlowFile.h"
 #include "LogAttribute.h"
 #include "TimerDrivenSchedulingAgent.h"
+#include "FlowControlProtocol.h"
 
 //! Default NiFi Root Group Name
-#define DEFAULT_ROOT_GROUP_NAME "NiFi Flow"
+#define DEFAULT_ROOT_GROUP_NAME ""
 #define DEFAULT_FLOW_XML_FILE_NAME "conf/flow.xml"
 
 //! FlowController Class
@@ -121,6 +122,14 @@ public:
 	void stop(bool force);
 	//! Unload the current flow xml, clean the root process group and all its children
 	void unload();
+	//! Load new xml
+	void reload(std::string xmlFile);
+	//! update property value
+	void updatePropertyValue(std::string processorName, std::string propertyName, std::string propertyValue)
+	{
+		if (_root)
+			_root->updatePropertyValue(processorName, propertyName, propertyValue);
+	}
 
 	//! Create Processor (Node/Input/Output Port) based on the name
 	Processor *createProcessor(std::string name, uuid_t uuid);
@@ -157,7 +166,8 @@ protected:
 	//! Config
 	//! Site to Site Server Listener
 	//! Heart Beat
-
+	//! FlowControl Protocol
+	FlowControlProtocol *_protocol;
 
 private:
 

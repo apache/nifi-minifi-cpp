@@ -44,6 +44,7 @@ FlowController::FlowController(std::string name)
 	_initialized = false;
 	_root = NULL;
 	_logger = Logger::getLogger();
+	_protocol = new FlowControlProtocol(this);
 
 	// NiFi config properties
 	_configure = Configure::getConfigure();
@@ -58,6 +59,7 @@ FlowController::~FlowController()
 {
 	stop(true);
 	unload();
+	delete _protocol;
 }
 
 bool FlowController::isRunning()
@@ -75,6 +77,11 @@ void FlowController::stop(bool force)
 	if (_running)
 	{
 		_logger->log_info("Stop Flow Controller");
+		this->_timerScheduler.stop();
+		// Wait for sometime for thread stop
+		std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+		if (this->_root)
+			this->_root->stopProcessing(&this->_timerScheduler);
 		_running = false;
 	}
 }
@@ -88,10 +95,34 @@ void FlowController::unload()
 	if (_initialized)
 	{
 		_logger->log_info("Unload Flow Controller");
+		if (_root)
+			delete _root;
+		_root = NULL;
 		_initialized = false;
+		_name = "";
 	}
 
 	return;
+}
+
+void FlowController::reload(std::string xmlFile)
+{
+	_logger->log_info("Starting to reload Flow Controller with xml %s", xmlFile.c_str());
+	stop(true);
+	unload();
+	std::string oldxmlFile = this->_xmlFileName;
+	this->_xmlFileName = xmlFile;
+	load();
+	start();
+	if (!this->_root)
+	{
+		this->_xmlFileName = oldxmlFile;
+		_logger->log_info("Rollback Flow Controller to xml %s", oldxmlFile.c_str());
+		stop(true);
+		unload();
+		load();
+		start();
+	}
 }
 
 Processor *FlowController::createProcessor(std::string name, uuid_t uuid)
@@ -291,6 +322,7 @@ void FlowController::parseRootProcessGroup(xmlDoc *doc, xmlNode *node)
 					}
 					// Set the root process group
 					this->_root = group;
+					this->_name = name;
 					xmlFree(name);
 				}
 			}
@@ -504,6 +536,20 @@ void FlowController::parseProcessorNode(xmlDoc *doc, xmlNode *processorNode, Pro
 					xmlFree(temp);
 				}
 			}
+			else if (xmlStrcmp(currentNode->name, BAD_CAST "maxConcurrentTasks") == 0)
+			{
+				char *temp = (char *) xmlNodeGetContent(currentNode);
+				if (temp)
+				{
+					int64_t maxConcurrentTasks;
+					if (Property::StringToInt(temp, maxConcurrentTasks))
+					{
+						_logger->log_debug("parseProcessorNode: maxConcurrentTasks => [%d]", maxConcurrentTasks);
+						processor->setMaxConcurrentTasks(maxConcurrentTasks);
+					}
+					xmlFree(temp);
+				}
+			}
 			else if (xmlStrcmp(currentNode->name, BAD_CAST "runDurationNanos") == 0)
 			{
 				char *temp = (char *) xmlNodeGetContent(currentNode);
@@ -548,12 +594,13 @@ void FlowController::load()
 	}
 	if (!_initialized)
 	{
-		_logger->log_info("Load Flow Controller");
+		_logger->log_info("Load Flow Controller from file %s", _xmlFileName.c_str());
 
 		xmlDoc *doc = xmlReadFile(_xmlFileName.c_str(), NULL, XML_PARSE_NONET);
 		if (doc == NULL)
 		{
 			_logger->log_error("xmlReadFile returned NULL when reading [%s]", _xmlFileName.c_str());
+			_initialized = true;
 			return;
 		}
 
@@ -637,6 +684,7 @@ bool FlowController::start()
 			if (this->_root)
 				this->_root->startProcessing(&this->_timerScheduler);
 			_running = true;
+			this->_protocol->start();
 		}
 		return true;
 	}

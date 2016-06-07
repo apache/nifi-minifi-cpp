@@ -22,6 +22,9 @@
 #include <map>
 #include <sys/time.h>
 #include <time.h>
+#include <iostream>
+#include <fstream>
+#include <cstdio>
 
 #include "FlowFileRecord.h"
 #include "Relationship.h"
@@ -83,6 +86,7 @@ FlowFileRecord::~FlowFileRecord()
 		if (_claim->getFlowFileRecordOwnedCount() == 0)
 		{
 			_logger->log_debug("Delete Resource Claim %s", _claim->getContentFullPath().c_str());
+			std::remove(_claim->getContentFullPath().c_str());
 			delete _claim;
 		}
 	}

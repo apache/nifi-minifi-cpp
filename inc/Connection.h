@@ -158,6 +158,8 @@ public:
 	void put(FlowFileRecord *flow);
 	//! Poll the flow file from queue, the expired flow file record also being returned
 	FlowFileRecord *poll(std::set<FlowFileRecord *> &expiredFlowRecords);
+	//! Drain the flow records
+	void drain();
 
 protected:
 	//! A global unique identifier

@@ -74,7 +74,7 @@ void TimerDrivenSchedulingAgent::schedule(Processor *processor)
 		_logger->log_info("Scheduled Time Driven thread %d running for process %s", thread->get_id(),
 				processor->getName().c_str());
 	}
-	_threads[processor->getName().c_str()] = threads;
+	_threads[processor->getUUIDStr().c_str()] = threads;
 
 	return;
 }
@@ -105,6 +105,7 @@ void TimerDrivenSchedulingAgent::unschedule(Processor *processor)
 		delete thread;
 	}
 	_threads.erase(processor->getUUIDStr());
+	processor->clearActiveTask();
 
 	return;
 }

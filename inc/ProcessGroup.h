@@ -105,6 +105,8 @@ public:
 	Processor *findProcessor(uuid_t uuid);
 	//! removeConnection
 	void removeConnection(Connection *connection);
+	//! update property value
+	void updatePropertyValue(std::string processorName, std::string propertyName, std::string propertyValue);
 
 protected:
 	//! A global unique identifier

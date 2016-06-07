@@ -40,7 +40,7 @@ Processor::Processor(std::string name, uuid_t uuid)
 		uuid_copy(_uuid, uuid);
 
 	char uuidStr[37];
-	uuid_parse(uuidStr, _uuid);
+	uuid_unparse(_uuid, uuidStr);
 	_uuidStr = uuidStr;
 
 	// Setup the default values
@@ -58,7 +58,7 @@ Processor::Processor(std::string name, uuid_t uuid)
 	_incomingConnectionsIter = this->_incomingConnections.begin();
 	_logger = Logger::getLogger();
 
-	_logger->log_info("Processor %s created", _name.c_str());
+	_logger->log_info("Processor %s created UUID %s", _name.c_str(), _uuidStr.c_str());
 }
 
 Processor::~Processor()
@@ -208,13 +208,6 @@ bool Processor::getProperty(std::string name, std::string &value)
 
 bool Processor::setProperty(std::string name, std::string value)
 {
-	if (isRunning())
-	{
-		_logger->log_info("Can not set processor property while the process %s is running",
-				_name.c_str());
-		return false;
-	}
-
 	std::lock_guard<std::mutex> lock(_mtx);
 	std::map<std::string, Property>::iterator it = _properties.find(name);
 	if (it != _properties.end())

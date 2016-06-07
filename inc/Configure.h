@@ -44,6 +44,9 @@ public:
 	static const char *nifi_flow_configuration_file;
 	static const char *nifi_administrative_yield_duration;
 	static const char *nifi_bored_yield_duration;
+	static const char *nifi_server_name;
+	static const char *nifi_server_port;
+	static const char *nifi_server_report_interval;
 
 	//! Clear the load config
 	void clear()
