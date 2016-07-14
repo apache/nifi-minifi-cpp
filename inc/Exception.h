@@ -34,6 +34,7 @@ enum ExceptionType
 	PROCESSOR_EXCEPTION,
 	PROCESS_SESSION_EXCEPTION,
 	PROCESS_SCHEDULE_EXCEPTION,
+	SITE2SITE_EXCEPTION,
 	GENERAL_EXCEPTION,
 	MAX_EXCEPTION
 };
@@ -46,6 +47,7 @@ static const char *ExceptionStr[MAX_EXCEPTION] =
 		"Processor Operation",
 		"Process Session Operation",
 		"Process Schedule Operation",
+		"Site2Site Protocol",
 		"General Operation"
 };
 

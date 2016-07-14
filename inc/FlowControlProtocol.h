@@ -248,6 +248,11 @@ public:
 	}
 	//! Run function for the thread
 	static void run(FlowControlProtocol *protocol);
+	//! set 8 bytes SerialNumber
+	void setSerialNumber(uint8_t *number)
+	{
+		memcpy(_serialNumber, number, 8);
+	}
 
 protected:
 

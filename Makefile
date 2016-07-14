@@ -28,7 +28,7 @@ LDDIRECTORY=-L./build -L./thirdparty/uuid -L./thirdparty/libxml2/.libs/ #-L/usr/
 #LDFLAGS=-lminifi -lxml2 -lleveldb -pthread -luuid
 LDFLAGS=-static -lminifi -lxml2 -pthread -luuid
 else ifeq ($(ARCH), linux)
-CFLAGS=-O0 -fexceptions -fpermissive -Wno-write-strings -std=c++11 -fPIC -Wall -g -Wno-unused-private-field
+CFLAGS=-O0 -fexceptions -fpermissive -Wno-write-strings -std=c++11 -fPIC -Wall -g
 INCLUDES=-I./inc -I./src -I./thirdparty -I./test -I./thirdparty/libxml2/include #-I/usr/local/opt/leveldb/include/
 LDDIRECTORY=-L./build -L./thirdparty/uuid -L./thirdparty/libxml2/.libs/ #-L/usr/local/opt/leveldb/lib
 #LDFLAGS=-lminifi -lxml2 -lleveldb -pthread -luuid
@@ -37,7 +37,7 @@ else
 CFLAGS=-O0 -fexceptions -fpermissive -Wno-write-strings -std=c++11 -fPIC -Wall -g -Wno-unused-private-field
 INCLUDES=-I./inc -I./src -I./test -I/usr/include/libxml2 #-I/usr/local/opt/leveldb/include/
 LDDIRECTORY=-L./build #-L/usr/local/opt/leveldb/out-static/
-LDFLAGS=-lminifi -lxml2 -pthread -luuid#--llevedb
+LDFLAGS=-lminifi -lxml2 -pthread -luuid #--llevedb
 endif
 
 

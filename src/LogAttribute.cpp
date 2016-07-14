@@ -109,7 +109,7 @@ void LogAttribute::onTrigger(ProcessContext *context, ProcessSession *session)
     	message << "\n" << "Payload:" << "\n";
     	ReadCallback callback(flow->getSize());
     	session->read(flow, &callback);
-    	for (int i = 0, j = 0; i < callback._readSize; i++)
+    	for (unsigned int i = 0, j = 0; i < callback._readSize; i++)
     	{
     		char temp[8];
     		sprintf(temp, "%02x ", (unsigned char) (callback._buffer[i]));
@@ -147,9 +147,10 @@ void LogAttribute::onTrigger(ProcessContext *context, ProcessSession *session)
     }
 
     // Test Import
+    /*
     FlowFileRecord *importRecord = session->create();
     session->import(claim->getContentFullPath(), importRecord);
-    session->transfer(importRecord, Success);
+    session->transfer(importRecord, Success); */
 
 
     // Transfer to the relationship

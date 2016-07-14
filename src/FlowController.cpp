@@ -136,6 +136,10 @@ Processor *FlowController::createProcessor(std::string name, uuid_t uuid)
 	{
 		processor = new LogAttribute(name, uuid);
 	}
+	else if (name == RealTimeDataCollector::ProcessorName)
+	{
+		processor = new RealTimeDataCollector(name, uuid);
+	}
 	else
 	{
 		_logger->log_error("No Processor defined for %s", name.c_str());
@@ -269,10 +273,20 @@ void FlowController::parseConnection(xmlDoc *doc, xmlNode *node, ProcessGroup *p
 				if (temp)
 				{
 					std::string relationshipName = temp;
-					Relationship relationship(relationshipName, "");
-					_logger->log_debug("parseConnection: relationship => [%s]", relationshipName.c_str());
-					if (connection)
-						connection->setRelationship(relationship);
+					if (!relationshipName.empty())
+					{
+						Relationship relationship(relationshipName, "");
+						_logger->log_debug("parseConnection: relationship => [%s]", relationshipName.c_str());
+						if (connection)
+							connection->setRelationship(relationship);
+					}
+					else
+					{
+						Relationship empty;
+						_logger->log_debug("parseConnection: relationship => [%s]", empty.getName().c_str());
+						if (connection)
+							connection->setRelationship(empty);
+					}
 					xmlFree(temp);
 				}
 			}
@@ -334,9 +348,110 @@ void FlowController::parseRootProcessGroup(xmlDoc *doc, xmlNode *node)
 			{
 				this->parseConnection(doc, currentNode, group);
 			}
+			else if (xmlStrcmp(currentNode->name, BAD_CAST "remoteProcessGroup") == 0)
+			{
+				this->parseRemoteProcessGroup(doc, currentNode, group);
+			}
 		} // if (currentNode->type == XML_ELEMENT_NODE)
       } // for node
+}
 
+void FlowController::parseRemoteProcessGroup(xmlDoc *doc, xmlNode *node, ProcessGroup *parent)
+{
+	uuid_t uuid;
+	xmlNode *currentNode;
+	ProcessGroup *group = NULL;
+	int64_t yieldPeriod = -1;
+	int64_t timeOut = -1;
+
+	// generate the random UIID
+	uuid_generate(uuid);
+
+	for (currentNode = node->xmlChildrenNode; currentNode != NULL; currentNode = currentNode->next)
+	{
+		if (currentNode->type == XML_ELEMENT_NODE)
+		{
+			if (xmlStrcmp(currentNode->name, BAD_CAST "id") == 0)
+			{
+				char *id = (char *) xmlNodeGetContent(currentNode);
+				if (id)
+				{
+					_logger->log_debug("parseRootProcessGroup: id => [%s]", id);
+					uuid_parse(id, uuid);
+					xmlFree(id);
+				}
+			}
+			else if (xmlStrcmp(currentNode->name, BAD_CAST "name") == 0)
+			{
+				char *name = (char *) xmlNodeGetContent(currentNode);
+				if (name)
+				{
+					_logger->log_debug("parseRemoteProcessGroup: name => [%s]", name);
+					group = this->createRemoteProcessGroup(name, uuid);
+					if (group == NULL)
+					{
+						xmlFree(name);
+						return;
+					}
+					group->setParent(parent);
+					parent->addProcessGroup(group);
+					xmlFree(name);
+				}
+			}
+			else if (xmlStrcmp(currentNode->name, BAD_CAST "yieldPeriod") == 0)
+			{
+				TimeUnit unit;
+				char *temp = (char *) xmlNodeGetContent(currentNode);
+				if (temp)
+				{
+					if (Property::StringToTime(temp, yieldPeriod, unit) &&
+							Property::ConvertTimeUnitToMS(yieldPeriod, unit, yieldPeriod) && group)
+					{
+						_logger->log_debug("parseRemoteProcessGroup: yieldPeriod => [%d] ms", yieldPeriod);
+						group->setYieldPeriodMsec(yieldPeriod);
+					}
+					xmlFree(temp);
+				}
+			}
+			else if (xmlStrcmp(currentNode->name, BAD_CAST "timeout") == 0)
+			{
+				TimeUnit unit;
+				char *temp = (char *) xmlNodeGetContent(currentNode);
+				if (temp)
+				{
+					if (Property::StringToTime(temp, timeOut, unit) &&
+							Property::ConvertTimeUnitToMS(timeOut, unit, timeOut) && group)
+					{
+						_logger->log_debug("parseRemoteProcessGroup: timeOut => [%d] ms", timeOut);
+						group->setTimeOut(timeOut);
+					}
+					xmlFree(temp);
+				}
+			}
+			else if (xmlStrcmp(currentNode->name, BAD_CAST "transmitting") == 0)
+			{
+				char *temp = (char *) xmlNodeGetContent(currentNode);
+				bool transmitting;
+				if (temp)
+				{
+					if (Property::StringToBool(temp, transmitting) && group)
+					{
+						_logger->log_debug("parseRemoteProcessGroup: transmitting => [%d]", transmitting);
+						group->setTransmitting(transmitting);
+					}
+					xmlFree(temp);
+				}
+			}
+			else if (xmlStrcmp(currentNode->name, BAD_CAST "inputPort") == 0 && group)
+			{
+				this->parsePort(doc, currentNode, group, SEND);
+			}
+			else if (xmlStrcmp(currentNode->name, BAD_CAST "outputPort") == 0 && group)
+			{
+				this->parsePort(doc, currentNode, group, RECEIVE);
+			}
+		} // if (currentNode->type == XML_ELEMENT_NODE)
+      } // for node
 }
 
 void FlowController::parseProcessorProperty(xmlDoc *doc, xmlNode *node, Processor *processor)
@@ -381,6 +496,106 @@ void FlowController::parseProcessorProperty(xmlDoc *doc, xmlNode *node, Processo
 			}
 		} // if (currentNode->type == XML_ELEMENT_NODE)
       } // for node
+}
+
+void FlowController::parsePort(xmlDoc *doc, xmlNode *processorNode, ProcessGroup *parent, TransferDirection direction)
+{
+	char *id = NULL;
+	char *name = NULL;
+	uuid_t uuid;
+	xmlNode *currentNode;
+	Processor *processor = NULL;
+	RemoteProcessorGroupPort *port = NULL;
+
+	if (!parent)
+	{
+		_logger->log_error("parseProcessNode: no parent group existed");
+		return;
+	}
+	// generate the random UIID
+	uuid_generate(uuid);
+
+	for (currentNode = processorNode->xmlChildrenNode; currentNode != NULL; currentNode = currentNode->next)
+	{
+		if (currentNode->type == XML_ELEMENT_NODE)
+		{
+			if (xmlStrcmp(currentNode->name, BAD_CAST "id") == 0)
+			{
+				id = (char *) xmlNodeGetContent(currentNode);
+				if (id)
+				{
+					_logger->log_debug("parseProcessorNode: id => [%s]", id);
+					uuid_parse(id, uuid);
+					xmlFree(id);
+				}
+			}
+			else if (xmlStrcmp(currentNode->name, BAD_CAST "name") == 0)
+			{
+				name = (char *) xmlNodeGetContent(currentNode);
+				if (name)
+				{
+					_logger->log_debug("parseProcessorNode: name => [%s]", name);
+					port = new RemoteProcessorGroupPort(name, uuid);
+					processor = (Processor *) port;
+					if (processor == NULL)
+					{
+						xmlFree(name);
+						return;
+					}
+					port->setDirection(direction);
+					port->setTimeOut(parent->getTimeOut());
+					port->setTransmitting(parent->getTransmitting());
+					processor->setYieldPeriodMsec(parent->getYieldPeriodMsec());
+					processor->initialize();
+					// add processor to parent
+					parent->addProcessor(processor);
+					xmlFree(name);
+				}
+			}
+			else if (xmlStrcmp(currentNode->name, BAD_CAST "scheduledState") == 0)
+			{
+				char *temp = (char *) xmlNodeGetContent(currentNode);
+				if (temp)
+				{
+					std::string state = temp;
+					if (state == "DISABLED")
+					{
+						_logger->log_debug("parseProcessorNode: scheduledState  => [%s]", state.c_str());
+						processor->setScheduledState(DISABLED);
+					}
+					if (state == "STOPPED")
+					{
+						_logger->log_debug("parseProcessorNode: scheduledState  => [%s]", state.c_str());
+						processor->setScheduledState(STOPPED);
+					}
+					if (state == "RUNNING")
+					{
+						_logger->log_debug("parseProcessorNode: scheduledState  => [%s]", state.c_str());
+						processor->setScheduledState(RUNNING);
+					}
+					xmlFree(temp);
+				}
+			}
+			else if (xmlStrcmp(currentNode->name, BAD_CAST "maxConcurrentTasks") == 0)
+			{
+				char *temp = (char *) xmlNodeGetContent(currentNode);
+				if (temp)
+				{
+					int64_t maxConcurrentTasks;
+					if (Property::StringToInt(temp, maxConcurrentTasks))
+					{
+						_logger->log_debug("parseProcessorNode: maxConcurrentTasks => [%d]", maxConcurrentTasks);
+						processor->setMaxConcurrentTasks(maxConcurrentTasks);
+					}
+					xmlFree(temp);
+				}
+			}
+			else if (xmlStrcmp(currentNode->name, BAD_CAST "property") == 0)
+			{
+				this->parseProcessorProperty(doc, currentNode, processor);
+			}
+		} // if (currentNode->type == XML_ELEMENT_NODE)
+      } // while node
 }
 
 void FlowController::parseProcessorNode(xmlDoc *doc, xmlNode *processorNode, ProcessGroup *parent)

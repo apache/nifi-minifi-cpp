@@ -61,6 +61,41 @@ public:
 	std::string getName(void) {
 		return (_name);
 	}
+	//! Set URL
+	void setURL(std::string url) {
+		_url = url;
+	}
+	//! Get URL
+	std::string getURL(void) {
+		return (_url);
+	}
+	//! SetTransmitting
+	void setTransmitting(bool val)
+	{
+		_transmitting = val;
+	}
+	//! Get Transmitting
+	bool getTransmitting()
+	{
+		return _transmitting;
+	}
+	//! setTimeOut
+	void setTimeOut(uint64_t time)
+	{
+		_timeOut = time;
+	}
+	uint64_t getTimeOut()
+	{
+		return _timeOut;
+	}
+	//! Set Processor yield period in MilliSecond
+	void setYieldPeriodMsec(uint64_t period) {
+		_yieldPeriodMsec = period;
+	}
+	//! Get Processor yield period in MilliSecond
+	uint64_t getYieldPeriodMsec(void) {
+		return(_yieldPeriodMsec);
+	}
 	//! Set UUID
 	void setUUID(uuid_t uuid) {
 		uuid_copy(_uuid, uuid);
@@ -122,6 +157,13 @@ protected:
 	std::set<Connection *> _connections;
 	//! Parent Process Group
 	ProcessGroup* _parentProcessGroup;
+	//! Yield Period in Milliseconds
+	std::atomic<uint64_t> _yieldPeriodMsec;
+	std::atomic<uint64_t> _timeOut;
+	//! URL
+	std::string _url;
+	//! Transmitting
+	std::atomic<bool> _transmitting;
 
 private:
 

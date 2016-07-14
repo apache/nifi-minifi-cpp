@@ -52,7 +52,7 @@ void sigHandler(int signal)
 int main(int argc, char **argv)
 {
 	Logger *logger = Logger::getLogger();
-	logger->setLogLevel(info);
+	logger->setLogLevel(trace);
 	logger->log_info("MiNiFi started");
 
 	if (signal(SIGINT, sigHandler) == SIG_ERR || signal(SIGTERM, sigHandler) == SIG_ERR)
