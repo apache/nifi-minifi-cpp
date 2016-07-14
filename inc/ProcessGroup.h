@@ -138,6 +138,8 @@ public:
 	void addConnection(Connection *connection);
 	//! findProcessor based on UUID
 	Processor *findProcessor(uuid_t uuid);
+	//! findProcessor based on name
+	Processor *findProcessor(std::string processorName);
 	//! removeConnection
 	void removeConnection(Connection *connection);
 	//! update property value

@@ -30,6 +30,7 @@
 #include <set>
 #include <libxml/parser.h>
 #include <libxml/tree.h>
+#include <yaml-cpp/yaml.h>
 
 #include "Configure.h"
 #include "Property.h"
@@ -52,6 +53,23 @@
 //! Default NiFi Root Group Name
 #define DEFAULT_ROOT_GROUP_NAME ""
 #define DEFAULT_FLOW_XML_FILE_NAME "conf/flow.xml"
+#define DEFAULT_FLOW_YAML_FILE_NAME "conf/flow.yml"
+#define CONFIG_YAML_PROCESSORS_KEY "Processors"
+
+enum class ConfigFormat { XML, YAML };
+
+struct ProcessorConfig {
+	std::string name;
+	std::string javaClass;
+	std::string maxConcurrentTasks;
+	std::string schedulingStrategy;
+	std::string schedulingPeriod;
+	std::string penalizationPeriod;
+	std::string yieldPeriod;
+	std::string runDurationNanos;
+	std::vector<std::string> autoTerminatedRelationships;
+	std::vector<Property> properties;
+};
 
 //! FlowController Class
 class FlowController
@@ -115,7 +133,7 @@ public:
 
 	//! Life Cycle related function
 	//! Load flow xml from disk, after that, create the root process group and its children, initialize the flows
-	void load();
+	void load(ConfigFormat format);
 	//! Whether the Flow Controller is start running
 	bool isRunning();
 	//! Whether the Flow Controller has already been initialized (loaded flow XML)
@@ -155,10 +173,10 @@ protected:
 	uuid_t _uuid;
 	//! FlowController Name
 	std::string _name;
-	//! XML File Name
-	std::string _xmlFileName;
+	//! Configuration File Name
+	std::string _configurationFileName;
 	//! NiFi property File Name
-	std::string _configFileName;
+	std::string _propertiesFileName;
 	//! Root Process Group
 	ProcessGroup *_root;
 	//! MAX Timer Driven Threads
@@ -202,6 +220,20 @@ private:
 	void parseConnection(xmlDoc *doc, xmlNode *node, ProcessGroup *parent);
 	//! Process Remote Process Group
 	void parseRemoteProcessGroup(xmlDoc *doc, xmlNode *node, ProcessGroup *parent);
+
+	//! Process Processor Node YAML
+	void parseProcessorNodeYaml(YAML::Node processorNode, ProcessGroup *parent);
+	//! Process Port YAML
+	void parsePortYaml(YAML::Node *portNode, ProcessGroup *parent, TransferDirection direction);
+	//! Process Root Processor Group YAML
+	void parseRootProcessGroupYaml(YAML::Node rootNode);
+	//! Process Property YAML
+	void parseProcessorPropertyYaml(YAML::Node *doc, YAML::Node *node, Processor *processor);
+	//! Process connection YAML
+	void parseConnectionYaml(YAML::Node *node, ProcessGroup *parent);
+	//! Process Remote Process Group YAML
+	void parseRemoteProcessGroupYaml(YAML::Node *node, ProcessGroup *parent);
+
 	// Prevent default copy constructor and assignment operation
 	// Only support pass by reference or pointer
 	FlowController(const FlowController &parent);
