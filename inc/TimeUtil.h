@@ -73,7 +73,7 @@ inline std::string getTimeStr(uint64_t msec)
 
 	std::string ret = date;
 	date[0] = '\0';
-	sprintf(date, ".%03llu", msec);
+	sprintf(date, ".%03llu", (unsigned long long) msec);
 
 	ret += date;
 	return ret;

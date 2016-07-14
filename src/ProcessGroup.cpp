@@ -40,6 +40,9 @@ ProcessGroup::ProcessGroup(ProcessGroupType type, std::string name, uuid_t uuid,
 	else
 		uuid_copy(_uuid, uuid);
 
+	_yieldPeriodMsec = 0;
+	_transmitting = false;
+
 	_logger = Logger::getLogger();
 	_logger->log_info("ProcessGroup %s created", _name.c_str());
 }

@@ -215,6 +215,8 @@ int FlowControlProtocol::readHdr(FlowControlProtocolHeader *hdr)
 
 void FlowControlProtocol::start()
 {
+	if (_reportInterval <= 0)
+		return;
 	if (_running)
 		return;
 	_running = true;

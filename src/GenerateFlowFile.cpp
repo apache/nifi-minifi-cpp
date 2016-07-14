@@ -115,6 +115,7 @@ void GenerateFlowFile::onTrigger(ProcessContext *context, ProcessSession *sessio
 			{
 				int randValue = random();
 				*((int *) current) = randValue;
+				// *((int *) current) = (0xFFFFFFFF & i);
 				current += sizeof(int);
 			}
 		}

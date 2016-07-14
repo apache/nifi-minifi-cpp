@@ -37,8 +37,6 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 ## Dependencies
-   * [LevelDB](https://github.com/google/leveldb) - tested with v1.18
-     MAC: brew install leveldb
    * gcc - 4.8.4
    * g++ - 4.8.4
    * [libxml2](http://xmlsoft.org/) - tested with 2.9.1
@@ -48,26 +46,24 @@ limitations under the License.
 
 ## Build instructions
 
-Build application
+Build application, it will build minifi exe under build and copy over to target directory
  
-   $ make clean
    $ make
-
-Build tests
-   
-   $ make tests
 
 Clean 
    
    $ make clean
 
-
 ## Running 
 
 Running application
-The nifi flow.xml and nifi.properties are in target/conf
+
    $ ./target/minifi
 
-Runnning tests 
+The Native MiNiFi example flow.xml is in target/conf
+It show cases a Native MiNiFi client which can generate flowfile, log flowfile and push it to the NiFi server.
+Also it can pull flowfile from NiFi server and log the flowfile.
+The NiFi server config is target/conf/flow_Site2SiteServer.xml
 
-   $ ./build/FlowFileRecordTest 
+For trial command control protocol between Native MiNiFi and NiFi Server, please see the example NiFi Server implementation in test/Server.cpp
+The command control protocol is not finalized yet. 

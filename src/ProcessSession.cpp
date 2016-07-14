@@ -118,8 +118,6 @@ FlowFileRecord* ProcessSession::cloneDuringTransfer(FlowFileRecord *parent)
 	    	record->_size = parent->_size;
 	    	record->_claim->increaseFlowFileRecordOwnedCount();
 	    }
-	    // Copy connection
-	    record->_connection = parent->_connection;
 	}
 
 	return record;
@@ -132,7 +130,7 @@ FlowFileRecord* ProcessSession::clone(FlowFileRecord *parent, long offset, long 
 	{
 		if (parent->_claim)
 		{
-			if ((offset + size) > parent->_size)
+			if ((offset + size) > (long) parent->_size)
 			{
 				// Set offset and size
 				_logger->log_error("clone offset %d and size %d exceed parent size %d",
@@ -486,7 +484,12 @@ void ProcessSession::commit()
 						else
 						{
 							// Clone the flow file and route to the connection
-							this->cloneDuringTransfer(record);
+							FlowFileRecord *cloneRecord;
+							cloneRecord = this->cloneDuringTransfer(record);
+							if (cloneRecord)
+								cloneRecord->_connection = connection;
+							else
+								throw Exception(PROCESS_SESSION_EXCEPTION, "Can not clone the flow for transfer");
 						}
 					}
 				}
@@ -540,7 +543,12 @@ void ProcessSession::commit()
 						else
 						{
 							// Clone the flow file and route to the connection
-							this->cloneDuringTransfer(record);
+							FlowFileRecord *cloneRecord;
+							cloneRecord = this->cloneDuringTransfer(record);
+							if (cloneRecord)
+								cloneRecord->_connection = connection;
+							else
+								throw Exception(PROCESS_SESSION_EXCEPTION, "Can not clone the flow for transfer");
 						}
 					}
 				}
@@ -627,7 +635,10 @@ void ProcessSession::rollback()
 		{
 			FlowFileRecord *record = it->second;
 			if (record->_orginalConnection)
+			{
+				record->_snapshot = false;
 				record->_orginalConnection->put(record);
+			}
 			else
 				delete record;
 		}
@@ -685,6 +696,7 @@ FlowFileRecord *ProcessSession::get()
 		if (ret)
 		{
 			// add the flow record to the current process session update map
+			ret->_markedDelete = false;
 			_updatedFlowFiles[ret->getUUIDStr()] = ret;
 			std::map<std::string, std::string> empty;
 			FlowFileRecord *snapshot = new FlowFileRecord(empty);

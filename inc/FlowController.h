@@ -42,8 +42,10 @@
 #include "ProcessGroup.h"
 #include "GenerateFlowFile.h"
 #include "LogAttribute.h"
+#include "RealTimeDataCollector.h"
 #include "TimerDrivenSchedulingAgent.h"
 #include "FlowControlProtocol.h"
+#include "RemoteProcessorGroupPort.h"
 
 //! Default NiFi Root Group Name
 #define DEFAULT_ROOT_GROUP_NAME ""
@@ -139,6 +141,11 @@ public:
 	ProcessGroup *createRemoteProcessGroup(std::string name, uuid_t uuid);
 	//! Create Connection
 	Connection *createConnection(std::string name, uuid_t uuid);
+	//! set 8 bytes SerialNumber
+	void setSerialNumber(uint8_t *number)
+	{
+		_protocol->setSerialNumber(number);
+	}
 
 protected:
 
@@ -183,12 +190,16 @@ private:
 	std::atomic<bool> _initialized;
 	//! Process Processor Node XML
 	void parseProcessorNode(xmlDoc *doc, xmlNode *processorNode, ProcessGroup *parent);
+	//! Process Port XML
+	void parsePort(xmlDoc *doc, xmlNode *processorNode, ProcessGroup *parent, TransferDirection direction);
 	//! Process Root Processor Group XML
 	void parseRootProcessGroup(xmlDoc *doc, xmlNode *node);
 	//! Process Property XML
 	void parseProcessorProperty(xmlDoc *doc, xmlNode *node, Processor *processor);
 	//! Process connection XML
 	void parseConnection(xmlDoc *doc, xmlNode *node, ProcessGroup *parent);
+	//! Process Remote Process Group
+	void parseRemoteProcessGroup(xmlDoc *doc, xmlNode *node, ProcessGroup *parent);
 	// Prevent default copy constructor and assignment operation
 	// Only support pass by reference or pointer
 	FlowController(const FlowController &parent);
