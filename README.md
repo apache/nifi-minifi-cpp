@@ -67,3 +67,37 @@ The NiFi server config is target/conf/flow_Site2SiteServer.xml
 
 For trial command control protocol between Native MiNiFi and NiFi Server, please see the example NiFi Server implementation in test/Server.cpp
 The command control protocol is not finalized yet. 
+
+Caveat:
+1) 
+Add new propery HostName and Port into RemoteProcessGroup InputOutput port for remote Site2Site hostname and port
+<remoteProcessGroup>
+      <id>8f3b248f-d493-4269-b317-36f85719f480</id>
+      <name>NiFi Flow</name>
+      <url>http://localhost:8081/nifi</url>
+      <timeout>30 sec</timeout>
+      <yieldPeriod>1 sec</yieldPeriod>
+      <transmitting>true</transmitting>
+      <inputPort>
+        <id>471deef6-2a6e-4a7d-912a-81cc17e3a204</id>
+        <name> From Node A</name>
+        <position x="0.0" y="0.0"/>
+        <comments/>
+        <scheduledState>RUNNING</scheduledState>
+        <maxConcurrentTasks>1</maxConcurrentTasks>
+        <useCompression>false</useCompression>
+        <property>
+            <name>Host Name</name>
+                <value>localhost</value>
+        </property>
+        <property>
+            <name>Port</name>
+            <value>10001</value>
+        </property>
+      </inputPort>
+2)
+Add new proerties into nifi.properties for command control 
+# MiNiFi Server for Command Control
+nifi.server.name=localhost
+nifi.server.port=9000
+nifi.server.report.interval=1000 ms
