@@ -14,13 +14,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License
 
+
 # for ARM make CROSS_COMPILE=arm-linux-gnueabi ARCH=arm
+VERSION=0.0.1
 CC=$(CROSS_COMPILE)-g++
 AR=$(CROSS_COMPILE)-ar
 BUILD_DIR= ./build
 TARGET_DIR=./target
+ASSEMBLIES_DIR = ./assemblies
 TARGET_LIB=libminifi.a
-TARGET_EXE=minifi
+PROJECT=minifi
+TARGET_EXE=$(PROJECT)
 ifeq ($(ARCH), arm)
 CFLAGS=-O0 -fexceptions -fpermissive -Wno-write-strings -std=c++11 -fPIC -Wall -g -Wno-unused-private-field -march=armv7-a -mfloat-abi=softfp -mfpu=vfpv3-d16 -Wl,--whole-archive -lpthread -Wl,--no-whole-archive -lc
 INCLUDES=-I./inc -I./src -I./thirdparty -I./test -I./thirdparty/libxml2/include #-I/usr/local/opt/leveldb/include/
@@ -51,12 +55,14 @@ endif
 OBJS:=$(shell /bin/ls src/*.cpp | xargs -n1 basename 2>/dev/null |  awk '/\.cpp$$/{a=$$0; gsub("\\.cpp$$",".o", a); print "$(BUILD_DIR)/" a}')
 TESTS:=Server
 
-all: directory $(BUILD_DIR)/$(TARGET_LIB) minifi tests
+all: directory $(BUILD_DIR)/$(TARGET_LIB) minifi tests assemblies
 
+.PHONY: directory
 directory:
 	mkdir -p $(BUILD_DIR)
+	mkdir -p $(TARGET_DIR)
 ifeq ($(ARCH), arm)
-	make -C thirdparty/uuid CROSS_COMILE=$(CROSS_COMPILE)
+	make -C thirdparty/uuid CROSS_COMPILE=$(CROSS_COMPILE)
 	cd thirdparty/libxml2; ./configure --host=${CROSS_COMPILE} --target==${CROSSS_COMPILE} --without-python --without-zlib --enable-static --disable-shared; make; cd ../../
 else ifeq ($(ARCH), linux)
 	make -C thirdparty/uuid
@@ -73,14 +79,39 @@ minifi: $(BUILD_DIR)/$(TARGET_LIB)
 	$(CC) $(CFLAGS) $(INCLUDES) -o $(BUILD_DIR)/$(TARGET_EXE) main/MiNiFiMain.cpp $(LDDIRECTORY) $(LDFLAGS)
 	cp $(BUILD_DIR)/$(TARGET_EXE) $(TARGET_DIR)/$(TARGET_EXE)
 
+.PHONY: tests
 tests: $(BUILD_DIR)/$(TARGET_LIB)
 	$(foreach TEST_NAME, $(TESTS),\
 	$(CC) $(CFLAGS) $(INCLUDES) -o $(BUILD_DIR)/$(TEST_NAME) test/$(TEST_NAME).cpp $(LDDIRECTORY) $(LDFLAGS))
 
+$(ASSEMBLIES_DIR) :
+	mkdir -p $(ASSEMBLIES_DIR)
+
+$(ASSEMBLIES_DIR)/$(PROJECT)-$(VERSION)-source.tar.gz : $(ASSEMBLIES_DIR)
+	tar -czf $(ASSEMBLIES_DIR)/$(PROJECT)-$(VERSION)-source.tar.gz \
+		LICENSE \
+		NOTICE \
+		README.md \
+		inc \
+		src \
+		main \
+		conf \
+		thirdparty \
+		Makefile
+	
+$(ASSEMBLIES_DIR)/$(PROJECT)-$(VERSION)-bin.tar.gz : $(ASSEMBLIES_DIR) $(TARGET_EXE)
+	tar -czf $(ASSEMBLIES_DIR)/$(PROJECT)-$(VERSION)-bin.tar.gz \
+		LICENSE \
+		NOTICE \
+		README.md \
+		conf \
+		-C target minifi
+
+.PHONY: clean
 clean:
-	rm -rf $(BUILD_DIR)/*
-	rm -rf $(TARGET_DIR)/$(TARGET_EXE)
-	cp -r $(TARGET_DIR)/conf $(BUILD_DIR)/
+	rm -rf $(BUILD_DIR)
+	rm -rf $(TARGET_DIR)
+	rm -rf $(ASSEMBLIES_DIR)
 ifeq ($(ARCH), arm)
 	make -C thirdparty/uuid clean
 	make -C thirdparty/libxml2 distclean
