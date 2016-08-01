@@ -83,7 +83,7 @@ public:
 	//! Penalize the flow
 	void penalize(FlowFileRecord *flow);
 	//! Import the existed file into the flow
-	void import(std::string source, FlowFileRecord *flow);
+	void import(std::string source, FlowFileRecord *flow, bool keepSource = true, uint64_t offset = 0);
 
 protected:
 	//! FlowFiles being modified by current process session

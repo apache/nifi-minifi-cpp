@@ -140,6 +140,14 @@ Processor *FlowController::createProcessor(std::string name, uuid_t uuid)
 	{
 		processor = new RealTimeDataCollector(name, uuid);
 	}
+	else if (name == GetFile::ProcessorName)
+	{
+		processor = new GetFile(name, uuid);
+	}
+	else if (name == TailFile::ProcessorName)
+	{
+		processor = new TailFile(name, uuid);
+	}
 	else
 	{
 		_logger->log_error("No Processor defined for %s", name.c_str());

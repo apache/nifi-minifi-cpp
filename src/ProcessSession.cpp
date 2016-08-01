@@ -349,7 +349,7 @@ void ProcessSession::read(FlowFileRecord *flow, InputStreamCallback *callback)
 	}
 }
 
-void ProcessSession::import(std::string source, FlowFileRecord *flow)
+void ProcessSession::import(std::string source, FlowFileRecord *flow, bool keepSource, uint64_t offset)
 {
 	ResourceClaim *claim = NULL;
 
@@ -368,6 +368,7 @@ void ProcessSession::import(std::string source, FlowFileRecord *flow)
 		if (fs.is_open() && input.is_open())
 		{
 			// Open the source file and stream to the flow file
+			input.seekg(offset, fs.beg);
 			while (input.good())
 			{
 				input.read(buf, size);
@@ -394,6 +395,8 @@ void ProcessSession::import(std::string source, FlowFileRecord *flow)
 						flow->_offset, flow->_size, flow->_claim->getContentFullPath().c_str(), flow->getUUIDStr().c_str()); */
 				fs.close();
 				input.close();
+				if (!keepSource)
+					std::remove(source.c_str());
 			}
 			else
 			{
@@ -610,6 +613,12 @@ void ProcessSession::commit()
 			FlowFileRecord *record = it->second;
 			delete record;
 		}
+		// All done
+		_updatedFlowFiles.clear();
+		_addedFlowFiles.clear();
+		_clonedFlowFiles.clear();
+		_deletedFlowFiles.clear();
+		_originalFlowFiles.clear();
 		_logger->log_trace("ProcessSession committed for %s", _processContext->getProcessor()->getName().c_str());
 	}
 	catch (std::exception &exception)
@@ -642,22 +651,27 @@ void ProcessSession::rollback()
 			else
 				delete record;
 		}
+		_originalFlowFiles.clear();
 		// Process the clone flow files
 		for (it = _clonedFlowFiles.begin(); it!= _clonedFlowFiles.end(); it++)
 		{
 			FlowFileRecord *record = it->second;
 			delete record;
 		}
+		_clonedFlowFiles.clear();
 		for (it = _addedFlowFiles.begin(); it!= _addedFlowFiles.end(); it++)
 		{
 			FlowFileRecord *record = it->second;
 			delete record;
 		}
+		_addedFlowFiles.clear();
 		for (it = _updatedFlowFiles.begin(); it!= _updatedFlowFiles.end(); it++)
 		{
 			FlowFileRecord *record = it->second;
 			delete record;
 		}
+		_updatedFlowFiles.clear();
+		_deletedFlowFiles.clear();
 		_logger->log_trace("ProcessSession rollback for %s", _processContext->getProcessor()->getName().c_str());
 	}
 	catch (std::exception &exception)
