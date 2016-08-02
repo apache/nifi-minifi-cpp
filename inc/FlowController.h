@@ -46,6 +46,8 @@
 #include "TimerDrivenSchedulingAgent.h"
 #include "FlowControlProtocol.h"
 #include "RemoteProcessorGroupPort.h"
+#include "GetFile.h"
+#include "TailFile.h"
 
 //! Default NiFi Root Group Name
 #define DEFAULT_ROOT_GROUP_NAME ""

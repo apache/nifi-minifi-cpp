@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<flowController>
+  <maxTimerDrivenThreadCount>10</maxTimerDrivenThreadCount>
+  <maxEventDrivenThreadCount>5</maxEventDrivenThreadCount>
+  <rootGroup>
+    <id>fe4a3a42-53b6-4af1-a80d-6fdfe60de97f</id>
+    <name>NiFi Flow</name>
+    <position x="0.0" y="0.0"/>
+    <comment/>
+    <processor>
+      <id>9347f92c-3dcc-4ece-ba97-d67eed846a39</id>
+      <name>GetFile</name>
+      <position x="2495.369384765625" y="749.25244140625"/>
+      <styles/>
+      <comment/>
+      <class>org.apache.nifi.processors.standard.GetFile</class>
+      <maxConcurrentTasks>1</maxConcurrentTasks>
+      <schedulingPeriod>5 sec</schedulingPeriod>
+      <penalizationPeriod>30 sec</penalizationPeriod>
+      <yieldPeriod>1 sec</yieldPeriod>
+      <bulletinLevel>WARN</bulletinLevel>
+      <lossTolerant>false</lossTolerant>
+      <scheduledState>STOPPED</scheduledState>
+      <schedulingStrategy>TIMER_DRIVEN</schedulingStrategy>
+      <runDurationNanos>0</runDurationNanos>
+      <property>
+        <name>Input Directory</name>
+        <value>/Users/binqiu/GetFile</value>
+      </property>
+      <property>
+        <name>File Filter</name>
+        <value>[^\.].*</value>
+      </property>
+      <property>
+        <name>Path Filter</name>
+      </property>
+      <property>
+        <name>Batch Size</name>
+        <value>10</value>
+      </property>
+      <property>
+        <name>Keep Source File</name>
+        <value>true</value>
+      </property>
+      <property>
+        <name>Recurse Subdirectories</name>
+        <value>true</value>
+      </property>
+      <property>
+        <name>Polling Interval</name>
+        <value>0 sec</value>
+      </property>
+      <property>
+        <name>Ignore Hidden Files</name>
+        <value>true</value>
+      </property>
+      <property>
+        <name>Minimum File Age</name>
+        <value>0 sec</value>
+      </property>
+      <property>
+        <name>Maximum File Age</name>
+      </property>
+      <property>
+        <name>Minimum File Size</name>
+        <value>0 B</value>
+      </property>
+      <property>
+        <name>Maximum File Size</name>
+      </property>
+    </processor>
+    <processor>
+      <id>12e3dece-dde5-44a2-8691-6d6bb2fab147</id>
+      <name>LogAttribute</name>
+      <position x="3239.369384765625" y="822.25244140625"/>
+      <styles/>
+      <comment/>
+      <class>org.apache.nifi.processors.standard.LogAttribute</class>
+      <maxConcurrentTasks>1</maxConcurrentTasks>
+      <schedulingPeriod>0 sec</schedulingPeriod>
+      <penalizationPeriod>30 sec</penalizationPeriod>
+      <yieldPeriod>1 sec</yieldPeriod>
+      <bulletinLevel>WARN</bulletinLevel>
+      <lossTolerant>false</lossTolerant>
+      <scheduledState>STOPPED</scheduledState>
+      <schedulingStrategy>TIMER_DRIVEN</schedulingStrategy>
+      <runDurationNanos>0</runDurationNanos>
+      <property>
+        <name>Log Level</name>
+        <value>info</value>
+      </property>
+      <property>
+        <name>Log Payload</name>
+        <value>false</value>
+      </property>
+      <property>
+        <name>Attributes to Log</name>
+      </property>
+      <property>
+        <name>Attributes to Ignore</name>
+      </property>
+      <property>
+        <name>Log prefix</name>
+      </property>
+      <autoTerminatedRelationship>success</autoTerminatedRelationship>
+    </processor>
+    <connection>
+      <id>d02db6bf-8c6f-463b-b07e-47f7ab726502</id>
+      <name/>
+      <bendPoints/>
+      <labelIndex>1</labelIndex>
+      <zIndex>0</zIndex>
+      <sourceId>9347f92c-3dcc-4ece-ba97-d67eed846a39</sourceId>
+      <sourceGroupId>fe4a3a42-53b6-4af1-a80d-6fdfe60de97f</sourceGroupId>
+      <sourceType>PROCESSOR</sourceType>
+      <destinationId>12e3dece-dde5-44a2-8691-6d6bb2fab147</destinationId>
+      <destinationGroupId>fe4a3a42-53b6-4af1-a80d-6fdfe60de97f</destinationGroupId>
+      <destinationType>PROCESSOR</destinationType>
+      <relationship>success</relationship>
+      <maxWorkQueueSize>0</maxWorkQueueSize>
+      <maxWorkQueueDataSize>0 MB</maxWorkQueueDataSize>
+      <flowFileExpiration>0 sec</flowFileExpiration>
+    </connection>
+  </rootGroup>
+  <controllerServices/>
+  <reportingTasks/>
+</flowController>
