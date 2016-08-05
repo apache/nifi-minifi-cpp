@@ -25,23 +25,10 @@ ASSEMBLIES_DIR = ./assemblies
 TARGET_LIB=libminifi.a
 PROJECT=minifi
 TARGET_EXE=$(PROJECT)
-ifeq ($(ARCH), arm)
-CFLAGS=-Os -fexceptions -fpermissive -Wno-write-strings -std=c++11 -fPIC -Wall -g -Wno-unused-private-field -march=armv7-a -mfloat-abi=softfp -mfpu=vfpv3-d16 -Wl,--whole-archive -lpthread -Wl,--no-whole-archive -lc
-INCLUDES=-I./inc -I./src -I./thirdparty -I./test -I./thirdparty/libxml2/include -I./thirdparty/yaml-cpp-yaml-cpp-0.5.3/include
-LDDIRECTORY=-L./build -L./thirdparty -L./thirdparty/libxml2/.libs/
-LDFLAGS=-static -lminifi -lxml2 -pthread -luuid
-else ifeq ($(ARCH), linux)
-CFLAGS=-Os -fexceptions -fpermissive -Wno-write-strings -std=c++11 -fPIC -Wall -g
-INCLUDES=-I./inc -I./src -I./thirdparty -I./test -I./thirdparty/libxml2/include -I./thirdparty/yaml-cpp-yaml-cpp-0.5.3/include
-LDDIRECTORY=-L./build -L./thirdparty/uuid -L./thirdparty/libxml2/.libs/
-LDFLAGS=-lminifi -lxml2 -pthread -luuid
-else
 CFLAGS=-Os -fexceptions -fpermissive -Wno-write-strings -std=c++11 -fPIC -Wall -g -Wno-unused-private-field
 INCLUDES=-I./inc -I./src -I./test -I./thirdparty -I/usr/include/libxml2 -I./thirdparty/yaml-cpp-yaml-cpp-0.5.3/include
 LDDIRECTORY=-L./build -L./thirdparty/uuid -L./thirdparty/yaml-cpp-yaml-cpp-0.5.3/lib/
 LDFLAGS=-lminifi -lxml2 -pthread -luuid -lyaml-cpp
-endif
-
 
 UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S),Linux)
@@ -64,12 +51,6 @@ directory:
 	mkdir -p $(BUILD_DIR)
 	mkdir -p $(TARGET_DIR)
 	make -C thirdparty/uuid
-ifeq ($(ARCH), arm)
-  make -C thirdparty/uuid CROSS_COMPILE=$(CROSS_COMPILE)
-  cd thirdparty/libxml2; ./configure --host=${CROSS_COMPILE} --target==${CROSSS_COMPILE} --without-python --without-zlib --enable-static --disable-shared; make; cd ../../
-else ifeq ($(ARCH), linux)
-  cd thirdparty/libxml2; ./configure --without-python --without-zlib --enable-static --disable-shared; make; cd ../../
-endif
 
 $(BUILD_DIR)/%.o: src/%.cpp
 	$(CC) $(CFLAGS) $(INCLUDES) -o $@ -c $<
@@ -126,10 +107,3 @@ clean:
 	rm -rf $(ASSEMBLIES_DIR)
 	make -C thirdparty/yaml-cpp-yaml-cpp-0.5.3 clean
 	make -C thirdparty/uuid clean
-ifeq ($(ARCH), arm)
-  make -C thirdparty/uuid clean
-  make -C thirdparty/libxml2 distclean
-else ifeq ($(ARCH), linux)
-  make -C thirdparty/uuid clean
-  make -C thirdparty/libxml2 distclean
-endif
