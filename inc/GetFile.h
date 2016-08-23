@@ -42,7 +42,7 @@ public:
 		_minAge = 0;
 		_maxAge = 0;
 		_minSize = 0;
-		_maxSize = 0;;
+		_maxSize = 0;
 		_ignoreHiddenFile = true;
 		_pollInterval = 0;
 		_batchSize = 10;

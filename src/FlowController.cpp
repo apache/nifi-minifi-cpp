@@ -88,6 +88,7 @@ FlowController::FlowController(std::string name)
 	_logger->log_info("FlowController NiFi Configuration file %s", pathString.c_str());
 
 	// Create repos for flow record and provenance
+
 	_logger->log_info("FlowController %s created", _name.c_str());
 }
 
@@ -465,22 +466,7 @@ void FlowController::parseProcessorNodeYaml(YAML::Node processorsNode, ProcessGr
 
 				// handle processor properties
 				YAML::Node propertiesNode = procNode["Properties"];
-				std::vector<Property> properties;
-
-				if (propertiesNode.IsMap() && !propertiesNode.IsNull() && propertiesNode.size() > 0) {
-					std::map<std::string, std::string> propertiesMap = propertiesNode.as<
-							std::map<std::string, std::string>>();
-					for (std::map<std::string, std::string>::iterator propsIter = propertiesMap.begin();
-							propsIter != propertiesMap.end(); propsIter++) {
-						std::string propertyName = propsIter->first;
-						std::string propertyValue = propsIter->second;
-						if (!processor->setProperty(propertyName, propertyValue)) {
-							_logger->log_warn(
-									"Received property %s with value %s but is not one of the properties for %s",
-									propertyName.c_str(), propertyValue.c_str(), procCfg.name.c_str());
-						}
-					}
-				}
+				parsePropertiesNodeYaml(&propertiesNode, processor);
 
 				// Take care of scheduling
 				TimeUnit unit;
@@ -835,20 +821,8 @@ void FlowController::parsePortYaml(YAML::Node *portNode, ProcessGroup *parent, T
 	// handle port properties
 	YAML::Node nodeVal = portNode->as<YAML::Node>();
 	YAML::Node propertiesNode = nodeVal["Properties"];
-	std::vector<Property> properties;
 
-	if (propertiesNode.IsMap() && !propertiesNode.IsNull() && propertiesNode.size() > 0) {
-		std::map<std::string, std::string> propertiesMap = propertiesNode.as<std::map<std::string, std::string>>();
-		for (std::map<std::string, std::string>::iterator propsIter = propertiesMap.begin();
-				propsIter != propertiesMap.end(); propsIter++) {
-			std::string propertyName = propsIter->first;
-			std::string propertyValue = propsIter->second;
-			if (!processor->setProperty(propertyName, propertyValue)) {
-				_logger->log_warn("Received property %s with value %s but is not one of the properties for %s",
-						propertyName.c_str(), propertyValue.c_str(), nameStr.c_str());
-			}
-		}
-	}
+	parsePropertiesNodeYaml(&propertiesNode, processor);
 
 	// add processor to parent
 	parent->addProcessor(processor);
@@ -1093,6 +1067,24 @@ void FlowController::parseProcessorNode(xmlDoc *doc, xmlNode *processorNode, Pro
 			}
 		} // if (currentNode->type == XML_ELEMENT_NODE)
 	} // while node
+}
+
+void FlowController::parsePropertiesNodeYaml(YAML::Node *propertiesNode, Processor *processor)
+{
+    // Treat generically as a YAML node so we can perform inspection on entries to ensure they are populated
+    for (YAML::const_iterator propsIter = propertiesNode->begin(); propsIter != propertiesNode->end(); ++propsIter)
+    {
+        std::string propertyName = propsIter->first.as<std::string>();
+        YAML::Node propertyValueNode = propsIter->second;
+        if (!propertyValueNode.IsNull() && propertyValueNode.IsDefined())
+        {
+            std::string rawValueString = propertyValueNode.as<std::string>();
+            if (!processor->setProperty(propertyName, rawValueString))
+            {
+                _logger->log_warn("Received property %s with value %s but is not one of the properties for %s", propertyName.c_str(), rawValueString.c_str(), processor->getName().c_str());
+            }
+        }
+    }
 }
 
 void FlowController::load(ConfigFormat configFormat) {
