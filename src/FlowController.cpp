@@ -59,7 +59,6 @@ FlowController::~FlowController()
 {
 	stop(true);
 	unload();
-	delete _protocol;
 }
 
 bool FlowController::isRunning()
