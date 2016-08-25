@@ -80,6 +80,7 @@ $(BUILD_DIR)/$(TARGET_LIB): $(OBJS)
 minifi: $(BUILD_DIR)/$(TARGET_LIB) thirdparty/yaml-cpp-yaml-cpp-0.5.3/lib/libyaml-cpp.a
 	$(CC) $(CFLAGS) $(INCLUDES) -o $(BUILD_DIR)/$(TARGET_EXE) main/MiNiFiMain.cpp $(LDDIRECTORY) $(LDFLAGS)
 	cp $(BUILD_DIR)/$(TARGET_EXE) $(TARGET_DIR)/$(TARGET_EXE)
+	cp main/minifi.sh $(TARGET_DIR)/minifi.sh
 
 .PHONY: tests
 tests: $(BUILD_DIR)/$(TARGET_LIB) thirdparty/yaml-cpp-yaml-cpp-0.5.3/lib/libyaml-cpp.a

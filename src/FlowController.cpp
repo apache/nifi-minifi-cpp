@@ -59,7 +59,6 @@ FlowController::~FlowController()
 {
 	stop(true);
 	unload();
-	delete _protocol;
 }
 
 bool FlowController::isRunning()
@@ -147,6 +146,10 @@ Processor *FlowController::createProcessor(std::string name, uuid_t uuid)
 	else if (name == TailFile::ProcessorName)
 	{
 		processor = new TailFile(name, uuid);
+	}
+	else if (name == ListenSyslog::ProcessorName)
+	{
+		processor = new ListenSyslog(name, uuid);
 	}
 	else
 	{
