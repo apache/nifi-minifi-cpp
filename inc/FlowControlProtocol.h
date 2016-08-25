@@ -217,6 +217,8 @@ public:
 			close(_socket);
 		if (_reportBlob)
 			delete [] _reportBlob;
+		if (this->_thread)
+			delete this->_thread;
 	}
 
 public:

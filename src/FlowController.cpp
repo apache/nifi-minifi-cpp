@@ -148,6 +148,10 @@ Processor *FlowController::createProcessor(std::string name, uuid_t uuid)
 	{
 		processor = new TailFile(name, uuid);
 	}
+	else if (name == ListenSyslog::ProcessorName)
+	{
+		processor = new ListenSyslog(name, uuid);
+	}
 	else
 	{
 		_logger->log_error("No Processor defined for %s", name.c_str());
