@@ -218,6 +218,29 @@ Processor *ProcessGroup::findProcessor(uuid_t uuid)
 	return ret;
 }
 
+Processor *ProcessGroup::findProcessor(std::string processorName)
+{
+	Processor *ret = NULL;
+
+	for (std::set<Processor *>::iterator it = _processors.begin(); it != _processors.end(); ++it)
+	{
+		Processor *processor(*it);
+		_logger->log_debug("Current processor is %s", processor->getName().c_str());
+		if (processor->getName() == processorName)
+			return processor;
+	}
+
+	for (std::set<ProcessGroup *>::iterator it = _childProcessGroups.begin(); it != _childProcessGroups.end(); ++it)
+	{
+		ProcessGroup *processGroup(*it);
+		Processor *processor = processGroup->findProcessor(processorName);
+		if (processor)
+			return processor;
+	}
+
+	return ret;
+}
+
 void ProcessGroup::updatePropertyValue(std::string processorName, std::string propertyName, std::string propertyValue)
 {
 	std::lock_guard<std::mutex> lock(_mtx);

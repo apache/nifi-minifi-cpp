@@ -96,7 +96,7 @@ Add new propery HostName and Port into RemoteProcessGroup InputOutput port for r
         </property>
       </inputPort>
 2)
-Add new proerties into nifi.properties for command control 
+Add new proerties into minifi.properties for command control 
 # MiNiFi Server for Command Control
 nifi.server.name=localhost
 nifi.server.port=9000

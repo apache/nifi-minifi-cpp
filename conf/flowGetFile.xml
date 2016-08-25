@@ -25,7 +25,7 @@
       <runDurationNanos>0</runDurationNanos>
       <property>
         <name>Input Directory</name>
-        <value>/Users/binqiu/GetFile</value>
+        <value>/Users/user/GetFile</value>
       </property>
       <property>
         <name>File Filter</name>

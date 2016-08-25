@@ -23,6 +23,7 @@
 #include <queue>
 #include <map>
 #include <unistd.h>
+#include <yaml-cpp/yaml.h>
 
 #include "Logger.h"
 #include "Configure.h"
@@ -32,8 +33,17 @@
 #define SLEEP_INTERVAL 1
 //! Main thread stop wait time
 #define STOP_WAIT_TIME 2
+//! Default YAML location
+#define DEFAULT_NIFI_CONFIG_YML "./conf/config.yml"
 //! Default nifi properties file path
-#define DEFAULT_NIFI_PROPERTIES_FILE "./conf/nifi.properties"
+#define DEFAULT_NIFI_PROPERTIES_FILE "./conf/minifi.properties"
+
+/* Define Parser Values for Configuration YAML sections */
+#define CONFIG_YAML_FLOW_CONTROLLER_KEY "Flow Controller"
+#define CONFIG_YAML_PROCESSORS_KEY "Processors"
+#define CONFIG_YAML_CONNECTIONS_KEY "Connections"
+#define CONFIG_YAML_REMOTE_PROCESSING_GROUPS_KEY "Remote Processing Groups"
+
 //! Whether it is running
 static bool running = false;
 //! Flow Controller
@@ -49,14 +59,58 @@ void sigHandler(int signal)
 	}
 }
 
-int main(int argc, char **argv)
-{
+int loadYaml() {
+	YAML::Node flow = YAML::LoadFile("./conf/flow.yml");
+
+	YAML::Node flowControllerNode = flow[CONFIG_YAML_FLOW_CONTROLLER_KEY];
+	YAML::Node processorsNode = flow[CONFIG_YAML_PROCESSORS_KEY];
+	YAML::Node connectionsNode = flow[CONFIG_YAML_CONNECTIONS_KEY];
+	YAML::Node remoteProcessingGroupNode = flow[CONFIG_YAML_REMOTE_PROCESSING_GROUPS_KEY];
+
+	if (processorsNode) {
+		int numProcessors = processorsNode.size();
+		if (numProcessors < 1) {
+			throw new std::invalid_argument("There must be at least one processor configured.");
+		}
+
+		std::vector<ProcessorConfig> processorConfigs;
+
+		if (processorsNode.IsSequence()) {
+			for (YAML::const_iterator iter = processorsNode.begin(); iter != processorsNode.end(); ++iter) {
+				ProcessorConfig procCfg;
+				YAML::Node procNode = iter->as<YAML::Node>();
+
+				procCfg.name = procNode["name"].as<std::string>();
+				procCfg.javaClass = procNode["class"].as<std::string>();
+
+				processorConfigs.push_back(procCfg);
+			}
+		}
+
+		Logger::getLogger()->log_info("Added %d processor configs.", processorConfigs.size());
+	} else {
+		throw new std::invalid_argument(
+				"Cannot instantiate a MiNiFi instance without a defined Processors configuration node.");
+	}
+
+	return 0;
+}
+
+int main(int argc, char **argv) {
+
 	Logger *logger = Logger::getLogger();
-	logger->setLogLevel(trace);
+	logger->setLogLevel(info);
 	logger->log_info("MiNiFi started");
 
-	if (signal(SIGINT, sigHandler) == SIG_ERR || signal(SIGTERM, sigHandler) == SIG_ERR)
-	{
+	try {
+		logger->log_info("Performing parsing of specified config.yml");
+		loadYaml();
+	} catch (...) {
+		std::cout << "Could not load YAML due to improper configuration.";
+		return 1;
+	}
+
+	if (signal(SIGINT, sigHandler) == SIG_ERR || signal(SIGTERM, sigHandler) == SIG_ERR || signal(SIGPIPE, SIG_IGN) == SIG_ERR) {
 		logger->log_error("Can not install signal handler");
 		return -1;
 	}
@@ -64,10 +118,10 @@ int main(int argc, char **argv)
 	Configure *configure = Configure::getConfigure();
 	configure->loadConfigureFile(DEFAULT_NIFI_PROPERTIES_FILE);
 
-	controller = new FlowController();;
+	controller = new FlowController();
 
-	// Load flow XML
-	controller->load();
+	// Load flow from specified configuration file
+	controller->load(ConfigFormat::YAML);
 	// Start Processing the flow
 	controller->start();
 	running = true;

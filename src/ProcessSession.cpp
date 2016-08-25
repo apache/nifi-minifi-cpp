@@ -465,7 +465,8 @@ void ProcessSession::commit()
 					if (!_processContext->getProcessor()->isAutoTerminated(relationship))
 					{
 						// Not autoterminate, we should have the connect
-						throw Exception(PROCESS_SESSION_EXCEPTION, "Connect empty for non auto terminated relationship");
+						std::string message = "Connect empty for non auto terminated relationship" + relationship.getName();
+						throw Exception(PROCESS_SESSION_EXCEPTION, message.c_str());
 					}
 					else
 					{
@@ -524,7 +525,8 @@ void ProcessSession::commit()
 					if (!_processContext->getProcessor()->isAutoTerminated(relationship))
 					{
 						// Not autoterminate, we should have the connect
-						throw Exception(PROCESS_SESSION_EXCEPTION, "Connect empty for non auto terminated relationship");
+						std::string message = "Connect empty for non auto terminated relationship " + relationship.getName();
+						throw Exception(PROCESS_SESSION_EXCEPTION, message.c_str());
 					}
 					else
 					{

@@ -1,0 +1,55 @@
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the \"License\"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an \"AS IS\" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+Flow Controller:
+    name: MiNiFi Flow
+
+Processors:
+    - name: GetFile
+      class: org.apache.nifi.processors.standard.GetFile
+      max concurrent tasks: 1
+      scheduling strategy: TIMER_DRIVEN
+      scheduling period: 1 sec
+      penalization period: 30 sec
+      yield period: 1 sec
+      run duration nanos: 0
+      auto-terminated relationships list:
+      Properties:
+          Input Directory: /tmp/getfile
+          Keep Source File: true
+
+Connections:
+    - name: GenerateFlowFileS2S
+      source name: GetFile
+      source relationship name: success
+      destination name: 471deef6-2a6e-4a7d-912a-81cc17e3a204
+      max work queue size: 0
+      max work queue data size: 1 MB
+      flowfile expiration: 60 sec
+      queue prioritizer class: org.apache.nifi.prioritizer.NewestFlowFileFirstPrioritizer
+
+Remote Processing Groups:
+    - name: NiFi Flow
+      url: https://localhost:8081/nifi
+      timeout: 30 secs
+      yield period: 10 sec
+      Input Ports:
+          - id: 471deef6-2a6e-4a7d-912a-81cc17e3a204
+            name: From Node A
+            max concurrent tasks: 1
+            use compression: false
+            Properties: # Deviates from spec and will later be removed when this is autonegotiated
+                Port: 10001
+                Host Name: localhost
