@@ -8,41 +8,6 @@
     <position x="0.0" y="0.0"/>
     <comment/>
     <processor>
-      <id>e01275ae-ac38-48f9-ac53-1a44df1be88e</id>
-      <name>LogAttribute</name>
-      <position x="3950.0958625440016" y="1355.8949219185629"/>
-      <styles/>
-      <comment/>
-      <class>org.apache.nifi.processors.standard.LogAttribute</class>
-      <maxConcurrentTasks>1</maxConcurrentTasks>
-      <schedulingPeriod>0 sec</schedulingPeriod>
-      <penalizationPeriod>30 sec</penalizationPeriod>
-      <yieldPeriod>1 sec</yieldPeriod>
-      <bulletinLevel>WARN</bulletinLevel>
-      <lossTolerant>false</lossTolerant>
-      <scheduledState>RUNNING</scheduledState>
-      <schedulingStrategy>TIMER_DRIVEN</schedulingStrategy>
-      <runDurationNanos>0</runDurationNanos>
-      <property>
-        <name>Log Level</name>
-        <value>info</value>
-      </property>
-      <property>
-        <name>Log Payload</name>
-        <value>false</value>
-      </property>
-      <property>
-        <name>Attributes to Log</name>
-      </property>
-      <property>
-        <name>Attributes to Ignore</name>
-      </property>
-      <property>
-        <name>Log prefix</name>
-      </property>
-      <autoTerminatedRelationship>success</autoTerminatedRelationship>
-    </processor>
-    <processor>
       <id>572aa3f3-6288-4ca1-ae43-5e492cb0ea23</id>
       <name>LogAttribute</name>
       <position x="3259.732177734375" y="1739.991943359375"/>
@@ -95,7 +60,7 @@
       <runDurationNanos>0</runDurationNanos>
       <property>
         <name>File Size</name>
-        <value>1024 kB</value>
+        <value>1 kB</value>
       </property>
       <property>
         <name>Batch Size</name>
@@ -110,69 +75,6 @@
         <value>false</value>
       </property>
     </processor>
-    <label>
-      <id>809d63d9-6feb-496a-9dc3-d23c217e52fd</id>
-      <position x="3635.581271381991" y="1309.9918825902428"/>
-      <size height="193.5023651123047" width="641.0671997070312"/>
-      <styles>
-        <style name="background-color">#9a91ff</style>
-        <style name="font-size">16px</style>
-      </styles>
-      <value>Pull From Node B</value>
-    </label>
-    <label>
-      <id>d95ce8d3-c005-4d0b-8fcc-b2f6fae7172f</id>
-      <position x="2601.7320892530847" y="1413.1875613011803"/>
-      <size height="193.5023651123047" width="641.0671997070312"/>
-      <styles>
-        <style name="font-size">16px</style>
-      </styles>
-      <value>Push to Node B</value>
-    </label>
-    <remoteProcessGroup>
-      <id>8f3b248f-d493-4269-b317-36f85719f480</id>
-      <name>NiFi Flow</name>
-      <position x="3254.3356850982673" y="1432.3274284388426"/>
-      <comment/>
-      <url>http://localhost:8081/nifi</url>
-      <timeout>30 sec</timeout>
-      <yieldPeriod>1 sec</yieldPeriod>
-      <transmitting>true</transmitting>
-      <inputPort>
-        <id>471deef6-2a6e-4a7d-912a-81cc17e3a204</id>
-        <name> From Node A</name>
-        <position x="0.0" y="0.0"/>
-        <comments/>
-        <scheduledState>RUNNING</scheduledState>
-        <maxConcurrentTasks>1</maxConcurrentTasks>
-        <useCompression>false</useCompression>
-        <property>
-            <name>Host Name</name>
-          	<value>localhost</value>
-        </property>
-        <property>
-            <name>Port</name>
-            <value>10001</value>
-        </property>
-      </inputPort>
-      <outputPort>
-        <id>75f88005-0a87-4fef-8320-6219cdbcf18b</id>
-        <name>To A</name>
-        <position x="0.0" y="0.0"/>
-        <comments/>
-        <scheduledState>RUNNING</scheduledState>
-        <maxConcurrentTasks>1</maxConcurrentTasks>
-        <useCompression>false</useCompression>
-        <property>
-            <name>Host Name</name>
-            <value>localhost</value>
-        </property>
-        <property>
-            <name>Port</name>
-            <value>10001</value>
-        </property>
-      </outputPort>
-    </remoteProcessGroup>
     <connection>
       <id>c4cf70d8-be05-4c3d-b926-465f330d6503</id>
       <name/>
@@ -191,35 +93,20 @@
       <flowFileExpiration>0 sec</flowFileExpiration>
     </connection>
     <connection>
-      <id>c9573abe-937c-464b-b18d-48b29c42dce2</id>
-      <name>site2siteSEND</name>
-      <bendPoints/>
+      <id>673cf83c-d261-4b6b-8e5a-19052fe40025</id>
+      <name/>
+      <bendPoints>
+        <bendPoint x="3106.4228882570283" y="1573.7169700192542"/>
+      </bendPoints>
       <labelIndex>1</labelIndex>
       <zIndex>0</zIndex>
       <sourceId>a0e57bb2-5b89-438e-8869-0326bbdbbe43</sourceId>
       <sourceGroupId>fe4a3a42-53b6-4af1-a80d-6fdfe60de97f</sourceGroupId>
       <sourceType>PROCESSOR</sourceType>
-      <destinationId>471deef6-2a6e-4a7d-912a-81cc17e3a204</destinationId>
-      <destinationGroupId>8f3b248f-d493-4269-b317-36f85719f480</destinationGroupId>
-      <destinationType>REMOTE_INPUT_PORT</destinationType>
-      <relationship>success</relationship>
-      <maxWorkQueueSize>0</maxWorkQueueSize>
-      <maxWorkQueueDataSize>0 MB</maxWorkQueueDataSize>
-      <flowFileExpiration>0 sec</flowFileExpiration>
-    </connection>
-    <connection>
-      <id>2cb90b4c-d6cb-4fef-8f0f-b16459561af5</id>
-      <name>site2siteReceive</name>
-      <bendPoints/>
-      <labelIndex>1</labelIndex>
-      <zIndex>0</zIndex>
-      <sourceId>75f88005-0a87-4fef-8320-6219cdbcf18b</sourceId>
-      <sourceGroupId>8f3b248f-d493-4269-b317-36f85719f480</sourceGroupId>
-      <sourceType>REMOTE_OUTPUT_PORT</sourceType>
-      <destinationId>e01275ae-ac38-48f9-ac53-1a44df1be88e</destinationId>
+      <destinationId>572aa3f3-6288-4ca1-ae43-5e492cb0ea23</destinationId>
       <destinationGroupId>fe4a3a42-53b6-4af1-a80d-6fdfe60de97f</destinationGroupId>
       <destinationType>PROCESSOR</destinationType>
-      <relationship/>
+      <relationship>success</relationship>
       <maxWorkQueueSize>0</maxWorkQueueSize>
       <maxWorkQueueDataSize>0 MB</maxWorkQueueDataSize>
       <flowFileExpiration>0 sec</flowFileExpiration>
@@ -269,7 +156,7 @@
       </property>
       <property>
         <name>Truststore Password</name>
-        <value>enc{3A31531B76B6395A72FB8BEB4C93E2040877D07C04FDAB5A84499B918BECEB77}</value>
+        <value>enc{9E2EE146023A0F31914706460EB177B357796CF0C768DECE09D10C4B40F344C8}</value>
       </property>
       <property>
         <name>Truststore Type</name>

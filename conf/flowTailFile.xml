@@ -60,7 +60,7 @@
       <runDurationNanos>0</runDurationNanos>
       <property>
         <name>File to Tail</name>
-        <value>/Users/user/getFile/log.txt</value>
+        <value>/Users/binqiu/getFile/log.txt</value>
       </property>
       <property>
         <name>Rolling Filename Pattern</name>
