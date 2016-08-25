@@ -37,7 +37,7 @@ FlowController::FlowController(std::string name)
 	uuid_generate(_uuid);
 
 	// Setup the default values
-	_configurationFileName = DEFAULT_FLOW_XML_FILE_NAME;
+	_configurationFileName = DEFAULT_FLOW_YAML_FILE_NAME;
 	_maxEventDrivenThreads = DEFAULT_MAX_EVENT_DRIVEN_THREAD;
 	_maxTimerDrivenThreads = DEFAULT_MAX_TIMER_DRIVEN_THREAD;
 	_running = false;
@@ -48,10 +48,46 @@ FlowController::FlowController(std::string name)
 
 	// NiFi config properties
 	_configure = Configure::getConfigure();
-	_configure->get(Configure::nifi_flow_configuration_file, _configurationFileName);
-	_logger->log_info("FlowController NiFi XML file %s", _configurationFileName.c_str());
-	// Create repos for flow record and provenance
 
+	std::string rawConfigFileString;
+	_configure->get(Configure::nifi_flow_configuration_file, rawConfigFileString);
+
+	if (!rawConfigFileString.empty())
+	{
+		_configurationFileName = rawConfigFileString;
+	}
+
+	char *path = NULL;
+	char full_path[PATH_MAX];
+
+	std::string adjustedFilename;
+	if (!_configurationFileName.empty())
+	{
+		// perform a naive determination if this is a relative path
+		if (_configurationFileName.c_str()[0] != '/')
+		{
+			adjustedFilename = adjustedFilename + _configure->getHome() + "/" + _configurationFileName;
+		}
+		else
+		{
+			adjustedFilename = _configurationFileName;
+		}
+	}
+
+	path = realpath(adjustedFilename.c_str(), full_path);
+	if (!path)
+	{
+		_logger->log_error("Could not locate path from provided configuration file name.");
+	}
+
+	char *flowPath = NULL;
+	char flow_full_path[PATH_MAX];
+
+	std::string pathString(path);
+	_configurationFileName = pathString;
+	_logger->log_info("FlowController NiFi Configuration file %s", pathString.c_str());
+
+	// Create repos for flow record and provenance
 	_logger->log_info("FlowController %s created", _name.c_str());
 }
 
@@ -419,15 +455,11 @@ void FlowController::parseProcessorNodeYaml(YAML::Node processorsNode, ProcessGr
 				std::vector<std::string> rawAutoTerminatedRelationshipValues;
 				if (autoTerminatedSequence.IsSequence() && !autoTerminatedSequence.IsNull()
 						&& autoTerminatedSequence.size() > 0) {
-					_logger->log_debug("Found non-empty auto terminated sequence... interpreting.");
 					for (YAML::const_iterator relIter = autoTerminatedSequence.begin();
 							relIter != autoTerminatedSequence.end(); ++relIter) {
 						std::string autoTerminatedRel = relIter->as<std::string>();
-						_logger->log_debug("Auto terminating relationship %s", autoTerminatedRel.c_str());
 						rawAutoTerminatedRelationshipValues.push_back(autoTerminatedRel);
 					}
-				} else {
-					_logger->log_debug("no relationships are auto terminated here...");
 				}
 				procCfg.autoTerminatedRelationships = rawAutoTerminatedRelationshipValues;
 
@@ -604,7 +636,7 @@ void FlowController::parseConnectionYaml(YAML::Node *connectionsNode, ProcessGro
 
 		if (connectionsNode->IsSequence()) {
 			for (YAML::const_iterator iter = connectionsNode->begin(); iter != connectionsNode->end(); ++iter) {
-// generate the random UIID
+				// generate the random UIID
 				uuid_generate(uuid);
 
 				YAML::Node connectionNode = iter->as<YAML::Node>();
@@ -623,10 +655,9 @@ void FlowController::parseConnectionYaml(YAML::Node *connectionsNode, ProcessGro
 				if (connection)
 					connection->setRelationship(relationship);
 				std::string connectionSrcProcName = connectionNode["source name"].as<std::string>();
+
 				Processor *srcProcessor = this->_root->findProcessor(connectionSrcProcName);
-				_logger->log_debug("I see processor with name %s looking for source with name %s",
-						this->_root->findProcessor(connectionSrcProcName)->getName().c_str(),
-						connectionSrcProcName.c_str());
+
 				if (!srcProcessor) {
 					_logger->log_error("Could not locate a source with name %s to create a connection",
 							connectionSrcProcName.c_str());
@@ -634,24 +665,15 @@ void FlowController::parseConnectionYaml(YAML::Node *connectionsNode, ProcessGro
 							"Could not locate a source with name %s to create a connection " + connectionSrcProcName);
 				}
 
-				_logger->log_debug("This processor has UUID of %s", srcProcessor->getUUIDStr().c_str());
-				_logger->log_trace("Trying to find dest processor by name %s", destName.c_str());
 				Processor *destProcessor = this->_root->findProcessor(destName);
 				// If we could not find name, try by UUID
 				if (!destProcessor) {
-					_logger->log_trace("Now looking up by uuid");
 					uuid_t destUuid;
 					uuid_parse(destName.c_str(), destUuid);
 					destProcessor = this->_root->findProcessor(destUuid);
 				}
 				if (destProcessor) {
 					std::string destUuid = destProcessor->getUUIDStr();
-					if (!destUuid.empty()) {
-						_logger->log_debug("This destination processor has UUID of %s",
-								destProcessor->getUUIDStr().c_str());
-					}
-				} else {
-					_logger->log_debug("!!! === Could not find a destination processor for the connection.");
 				}
 
 				uuid_t srcUuid;
@@ -787,8 +809,6 @@ void FlowController::parsePortYaml(YAML::Node *portNode, ProcessGroup *parent, T
 	Processor *processor = NULL;
 	RemoteProcessorGroupPort *port = NULL;
 
-	_logger->log_trace("Creating a port from YAML.");
-
 	if (!parent) {
 		_logger->log_error("parseProcessNode: no parent group existed");
 		return;
@@ -796,7 +816,7 @@ void FlowController::parsePortYaml(YAML::Node *portNode, ProcessGroup *parent, T
 
 	YAML::Node inputPortsObj = portNode->as<YAML::Node>();
 
-// generate the random UIID
+	// generate the random UIID
 	uuid_generate(uuid);
 
 	auto portId = inputPortsObj["id"].as<std::string>();
@@ -804,8 +824,6 @@ void FlowController::parsePortYaml(YAML::Node *portNode, ProcessGroup *parent, T
 	uuid_parse(portId.c_str(), uuid);
 
 	port = new RemoteProcessorGroupPort(nameStr.c_str(), uuid);
-	_logger->log_debug("parse input port: name => [%s]", nameStr.c_str());
-	_logger->log_debug("parse input port: id => [%s]", portId.c_str());
 
 	processor = (Processor *) port;
 	port->setDirection(direction);
@@ -819,23 +837,17 @@ void FlowController::parsePortYaml(YAML::Node *portNode, ProcessGroup *parent, T
 	YAML::Node propertiesNode = nodeVal["Properties"];
 	std::vector<Property> properties;
 
-	_logger->log_debug("!!! === Checking out properties for input port....");
-
 	if (propertiesNode.IsMap() && !propertiesNode.IsNull() && propertiesNode.size() > 0) {
 		std::map<std::string, std::string> propertiesMap = propertiesNode.as<std::map<std::string, std::string>>();
-		_logger->log_debug("Found non-empty properties sequence... interpreting.");
 		for (std::map<std::string, std::string>::iterator propsIter = propertiesMap.begin();
 				propsIter != propertiesMap.end(); propsIter++) {
 			std::string propertyName = propsIter->first;
 			std::string propertyValue = propsIter->second;
-			_logger->log_debug("Detected property %s => %s", propertyName.c_str(), propertyValue.c_str());
 			if (!processor->setProperty(propertyName, propertyValue)) {
 				_logger->log_warn("Received property %s with value %s but is not one of the properties for %s",
 						propertyName.c_str(), propertyValue.c_str(), nameStr.c_str());
 			}
 		}
-	} else {
-		_logger->log_debug("no properties here...");
 	}
 
 	// add processor to parent
@@ -1149,8 +1161,6 @@ void FlowController::load(ConfigFormat configFormat) {
 			xmlCleanupParser();
 			_initialized = true;
 		} else if (ConfigFormat::YAML == configFormat) {
-			_logger->log_info("Detected a YAML configuration file for processing.");
-
 			YAML::Node flow = YAML::LoadFile(_configurationFileName);
 
 			YAML::Node flowControllerNode = flow["Flow Controller"];

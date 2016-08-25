@@ -38,8 +38,8 @@ using spdlog::logger;
 #define DEFAULT_LOG_FILE_SIZE (5*1024*1024)
 //! 3 log files rotation
 #define DEFAULT_LOG_FILE_NUMBER 3
-#define LOG_NAME "nifi"
-#define LOG_FILE_NAME "nifi"
+#define LOG_NAME "minifi log"
+#define LOG_FILE_NAME "minifi-app.log"
 
 typedef enum
 {
@@ -141,11 +141,7 @@ private:
 	 * Create a logger
 	 * */
 	Logger(const std::string logger_name = LOG_NAME, const std::string filename = LOG_FILE_NAME, size_t max_file_size = DEFAULT_LOG_FILE_SIZE, size_t max_files = DEFAULT_LOG_FILE_NUMBER, bool force_flush = true) {
-		/*
-		if (!filename.empty())
-			_spdlog = rotating_logger_mt(logger_name, filename, max_file_size, max_files, force_flush);
-		else */
-			_spdlog = stdout_logger_mt("console");
+        _spdlog = rotating_logger_mt(logger_name, filename, max_file_size, max_files, force_flush);
 		_spdlog->set_level((spdlog::level::level_enum) debug);
 	}
 	//! spdlog

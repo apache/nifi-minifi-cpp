@@ -231,7 +231,6 @@ void FlowControlProtocol::stop()
 		return;
 	_running = false;
 	_logger->log_info("FlowControl Protocol Stop");
-	delete _thread;
 }
 
 void FlowControlProtocol::run(FlowControlProtocol *protocol)

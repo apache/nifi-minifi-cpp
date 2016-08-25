@@ -24,6 +24,8 @@
 #include <map>
 #include <unistd.h>
 #include <yaml-cpp/yaml.h>
+#include <iostream>
+#include "spdlog/spdlog.h"
 
 #include "Logger.h"
 #include "Configure.h"
@@ -37,6 +39,8 @@
 #define DEFAULT_NIFI_CONFIG_YML "./conf/config.yml"
 //! Default nifi properties file path
 #define DEFAULT_NIFI_PROPERTIES_FILE "./conf/minifi.properties"
+//! Define home environment variable
+#define MINIFI_HOME_ENV_KEY "MINIFI_HOME"
 
 /* Define Parser Values for Configuration YAML sections */
 #define CONFIG_YAML_FLOW_CONTROLLER_KEY "Flow Controller"
@@ -59,64 +63,49 @@ void sigHandler(int signal)
 	}
 }
 
-int loadYaml() {
-	YAML::Node flow = YAML::LoadFile("./conf/flow.yml");
-
-	YAML::Node flowControllerNode = flow[CONFIG_YAML_FLOW_CONTROLLER_KEY];
-	YAML::Node processorsNode = flow[CONFIG_YAML_PROCESSORS_KEY];
-	YAML::Node connectionsNode = flow[CONFIG_YAML_CONNECTIONS_KEY];
-	YAML::Node remoteProcessingGroupNode = flow[CONFIG_YAML_REMOTE_PROCESSING_GROUPS_KEY];
-
-	if (processorsNode) {
-		int numProcessors = processorsNode.size();
-		if (numProcessors < 1) {
-			throw new std::invalid_argument("There must be at least one processor configured.");
-		}
-
-		std::vector<ProcessorConfig> processorConfigs;
-
-		if (processorsNode.IsSequence()) {
-			for (YAML::const_iterator iter = processorsNode.begin(); iter != processorsNode.end(); ++iter) {
-				ProcessorConfig procCfg;
-				YAML::Node procNode = iter->as<YAML::Node>();
-
-				procCfg.name = procNode["name"].as<std::string>();
-				procCfg.javaClass = procNode["class"].as<std::string>();
-
-				processorConfigs.push_back(procCfg);
-			}
-		}
-
-		Logger::getLogger()->log_info("Added %d processor configs.", processorConfigs.size());
-	} else {
-		throw new std::invalid_argument(
-				"Cannot instantiate a MiNiFi instance without a defined Processors configuration node.");
+int main(int argc, char **argv)
+{
+	try
+	{
+		std::vector<spdlog::sink_ptr> sinks;
+		sinks.push_back(std::make_shared<spdlog::sinks::stdout_sink_st>());
+		sinks.push_back(std::make_shared<spdlog::sinks::daily_file_sink_st>("logfile", "log", 23, 59));
+		auto combined_logger = std::make_shared<spdlog::logger>("name", begin(sinks), end(sinks));
+		spdlog::register_logger(combined_logger);
 	}
-
-	return 0;
-}
-
-int main(int argc, char **argv) {
+	catch (const spdlog::spdlog_ex& ex)
+	{
+		std::cout << "Log failed: " << ex.what() << std::endl;
+	}
 
 	Logger *logger = Logger::getLogger();
 	logger->setLogLevel(info);
-	logger->log_info("MiNiFi started");
 
-	try {
-		logger->log_info("Performing parsing of specified config.yml");
-		loadYaml();
-	} catch (...) {
-		std::cout << "Could not load YAML due to improper configuration.";
-		return 1;
-	}
+    // assumes POSIX compliant environment
+    std::string minifiHome;
+    if (const char* env_p = std::getenv(MINIFI_HOME_ENV_KEY))
+    {
+        minifiHome = env_p;
+    }
+    else
+    {
+        logger->log_info("MINIFI_HOME was not found, determining based on executable path.");
+        char *path = NULL;
+        char full_path[PATH_MAX];
+        path = realpath(argv[0], full_path);
+        std::string minifiHome(path);
+        minifiHome = minifiHome.substr(0, minifiHome.find_last_of("/\\"));
+    }
 
-	if (signal(SIGINT, sigHandler) == SIG_ERR || signal(SIGTERM, sigHandler) == SIG_ERR || signal(SIGPIPE, SIG_IGN) == SIG_ERR) {
+	if (signal(SIGINT, sigHandler) == SIG_ERR || signal(SIGTERM, sigHandler) == SIG_ERR || signal(SIGPIPE, SIG_IGN) == SIG_ERR)
+	{
 		logger->log_error("Can not install signal handler");
 		return -1;
 	}
 
-	Configure *configure = Configure::getConfigure();
-	configure->loadConfigureFile(DEFAULT_NIFI_PROPERTIES_FILE);
+    Configure *configure = Configure::getConfigure();
+    configure->setHome(minifiHome);
+    configure->loadConfigureFile(DEFAULT_NIFI_PROPERTIES_FILE);
 
 	controller = new FlowController();
 
@@ -125,6 +114,8 @@ int main(int argc, char **argv) {
 	// Start Processing the flow
 	controller->start();
 	running = true;
+
+	logger->log_info("MiNiFi started");
 
 	// main loop
 	while (running)

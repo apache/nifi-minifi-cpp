@@ -331,9 +331,6 @@ void ListenSyslog::onTrigger(ProcessContext *context, ProcessSession *session)
 		}
 		else
 		{
-			/*
-			ListenSyslog::WriteCallback callbackSep((char *)_messageDelimiter.data(), _messageDelimiter.size());
-			session->append(flowFile, &callbackSep); */
 			ListenSyslog::WriteCallback callback((char *)event.payload, event.len);
 			session->append(flowFile, &callback);
 			delete[] event.payload;

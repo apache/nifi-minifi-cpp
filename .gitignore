@@ -1,2 +1,3 @@
 # Filter out generated files from the included libuuid
 thirdparty/uuid/tst_uuid*
+assemblies

@@ -76,14 +76,28 @@ public:
 	void parseConfigureFileLine(char *buf);
 	//! Load Configure File
 	void loadConfigureFile(const char *fileName);
-	//! Parse Command Line
-	void pareCommandLine(int argc, char **argv);
+    //! Set the determined MINIFI_HOME
+    void setHome(std::string minifiHome)
+    {
+        _minifiHome = minifiHome;
+    }
+
+    //! Get the determined MINIFI_HOME
+    std::string getHome()
+    {
+        return _minifiHome;
+    }
+    //! Parse Command Line
+    void parseCommandLine(int argc, char **argv);
 
 private:
 	//! Mutex for protection
 	std::mutex _mtx;
 	//! Logger
 	Logger *_logger;
+	//! Home location for this executable
+	std::string _minifiHome;
+
 	Configure()
 	{
 		_logger = Logger::getLogger();

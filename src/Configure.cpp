@@ -107,23 +107,42 @@ void Configure::parseConfigureFileLine(char *buf)
 //! Load Configure File
 void Configure::loadConfigureFile(const char *fileName)
 {
-	std::ifstream file(fileName, std::ifstream::in);
-	if (!file.good())
-	{
-		_logger->log_error("load configure file failed %s", fileName);
-		return;
-	}
-	this->clear();
-	const unsigned int bufSize = 512;
-	char buf[bufSize];
-	for (file.getline(buf,bufSize); file.good(); file.getline(buf,bufSize))
-	{
-		parseConfigureFileLine(buf);
-	}
+
+    std::string adjustedFilename;
+    if (fileName)
+    {
+        // perform a naive determination if this is a relative path
+        if (fileName[0] != '/')
+        {
+            adjustedFilename = adjustedFilename + _configure->getHome() + "/" + fileName;
+        }
+        else
+        {
+            adjustedFilename += fileName;
+        }
+    }
+    char *path = NULL;
+    char full_path[PATH_MAX];
+    path = realpath(adjustedFilename.c_str(), full_path);
+    _logger->log_info("Using configuration file located at %s", path);
+
+    std::ifstream file(path, std::ifstream::in);
+    if (!file.good())
+    {
+        _logger->log_error("load configure file failed %s", path);
+        return;
+    }
+    this->clear();
+    const unsigned int bufSize = 512;
+    char buf[bufSize];
+    for (file.getline(buf, bufSize); file.good(); file.getline(buf, bufSize))
+    {
+        parseConfigureFileLine(buf);
+    }
 }
 
 //! Parse Command Line
-void Configure::pareCommandLine(int argc, char **argv)
+void Configure::parseCommandLine(int argc, char **argv)
 {
 	int i;
 	bool keyFound = false;

@@ -80,6 +80,7 @@ $(BUILD_DIR)/$(TARGET_LIB): $(OBJS)
 minifi: $(BUILD_DIR)/$(TARGET_LIB) thirdparty/yaml-cpp-yaml-cpp-0.5.3/lib/libyaml-cpp.a
 	$(CC) $(CFLAGS) $(INCLUDES) -o $(BUILD_DIR)/$(TARGET_EXE) main/MiNiFiMain.cpp $(LDDIRECTORY) $(LDFLAGS)
 	cp $(BUILD_DIR)/$(TARGET_EXE) $(TARGET_DIR)/$(TARGET_EXE)
+	cp $(BUILD_DIR)/$(TARGET_EXE) bin/$(TARGET_EXE)
 
 .PHONY: tests
 tests: $(BUILD_DIR)/$(TARGET_LIB) thirdparty/yaml-cpp-yaml-cpp-0.5.3/lib/libyaml-cpp.a
@@ -100,6 +101,7 @@ $(ASSEMBLIES_DIR)/$(PROJECT)-$(VERSION)-source.tar.gz : $(ASSEMBLIES_DIR)
     inc \
     src \
     main \
+    bin \
     conf \
     thirdparty \
     Makefile \
@@ -107,12 +109,15 @@ $(ASSEMBLIES_DIR)/$(PROJECT)-$(VERSION)-source.tar.gz : $(ASSEMBLIES_DIR)
 	tar -czf $(ASSEMBLIES_DIR)/$(PROJECT)-$(VERSION)-source.tar.gz  -C $(ASSEMBLIES_DIR) $(PROJECT)-$(VERSION)-source
 
 $(ASSEMBLIES_DIR)/$(PROJECT)-$(VERSION)-bin.tar.gz : $(ASSEMBLIES_DIR) $(TARGET_EXE)
-	tar -czf $(ASSEMBLIES_DIR)/$(PROJECT)-$(VERSION)-bin.tar.gz \
-    LICENSE \
+	mkdir -p $(ASSEMBLIES_DIR)/$(PROJECT)-$(VERSION)-bin
+	cp -R LICENSE \
     NOTICE \
     README.md \
     conf \
-    -C target minifi
+    bin \
+    $(ASSEMBLIES_DIR)/$(PROJECT)-$(VERSION)-bin
+	cp target/minifi $(ASSEMBLIES_DIR)/$(PROJECT)-$(VERSION)-bin/bin/
+	tar -czf $(ASSEMBLIES_DIR)/$(PROJECT)-$(VERSION)-bin.tar.gz  -C $(ASSEMBLIES_DIR) $(PROJECT)-$(VERSION)-bin
 
 .PHONY: clean
 clean:

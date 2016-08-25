@@ -102,8 +102,6 @@ public:
 	}
 	//! Set Connection relationship
 	void setRelationship(Relationship relationship) {
-		_logger->log_debug("Set connection %s relationship %s",
-				_name.c_str(), relationship.getName().c_str());
 		_relationship = relationship;
 	}
 	// ! Get Connection relationship
