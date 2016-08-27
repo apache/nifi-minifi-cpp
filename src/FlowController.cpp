@@ -44,7 +44,6 @@ FlowController::FlowController(std::string name)
 	_initialized = false;
 	_root = NULL;
 	_logger = Logger::getLogger();
-	_protocol = new FlowControlProtocol(this);
 
 	// NiFi config properties
 	_configure = Configure::getConfigure();
@@ -813,7 +812,6 @@ void FlowController::parsePortYaml(YAML::Node *portNode, ProcessGroup *parent, T
 
 	processor = (Processor *) port;
 	port->setDirection(direction);
-	port->setTimeOut(parent->getTimeOut());
 	port->setTransmitting(true);
 	processor->setYieldPeriodMsec(parent->getYieldPeriodMsec());
 	processor->initialize();
@@ -1182,7 +1180,6 @@ bool FlowController::start() {
 			if (this->_root)
 				this->_root->startProcessing(&this->_timerScheduler);
 			_running = true;
-			this->_protocol->start();
 		}
 		return true;
 	}
