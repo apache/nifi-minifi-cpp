@@ -274,7 +274,7 @@ case "$1" in
       echo Starting MiNiFi with PID ${pid} and pid file ${pid_file}
       ;;
     stop)
-      if [ $(active_pid ${saved_pid}) -ne 0 ]; then
+      if [ $(active_pid ${saved_pid}) -le 0 ]; then
         echo "MiNiFi is not currently running."
       else
         echo "Stopping MiNiFi (PID: ${saved_pid})."
