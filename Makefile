@@ -16,7 +16,7 @@
 
 
 # for ARM make CROSS_COMPILE=arm-linux-gnueabi ARCH=arm
-VERSION=0.0.1
+VERSION=0.1.0
 CC=$(CROSS_COMPILE)-g++
 AR=$(CROSS_COMPILE)-ar
 BUILD_DIR= ./build
