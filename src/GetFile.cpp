@@ -161,6 +161,7 @@ void GetFile::onTrigger(ProcessContext *context, ProcessSession *session)
 			{
 				std::string fileName = list.front();
 				list.pop();
+				_logger->log_info("GetFile process %s", fileName.c_str());
 				FlowFileRecord *flowFile = session->create();
 				if (!flowFile)
 					return;
