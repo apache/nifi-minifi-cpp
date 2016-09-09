@@ -47,6 +47,7 @@ public:
 		_pollInterval = 0;
 		_batchSize = 10;
 		_lastDirectoryListingTime = getTimeMillis();
+		_fileFilter = "[^\\.].*";
 	}
 	//! Destructor
 	virtual ~GetFile()
@@ -65,6 +66,7 @@ public:
 	static Property IgnoreHiddenFile;
 	static Property PollInterval;
 	static Property BatchSize;
+	static Property FileFilter;
 	//! Supported Relationships
 	static Relationship Success;
 
@@ -109,6 +111,7 @@ private:
 	int64_t _pollInterval;
 	int64_t _batchSize;
 	uint64_t _lastDirectoryListingTime;
+	std::string _fileFilter;
 };
 
 #endif

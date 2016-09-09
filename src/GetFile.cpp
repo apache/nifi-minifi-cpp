@@ -32,6 +32,7 @@
 #include <dirent.h>
 #include <limits.h>
 #include <unistd.h>
+#include <regex>
 
 #include "TimeUtil.h"
 #include "GetFile.h"
@@ -52,6 +53,7 @@ Property GetFile::MaxSize("Maximum File Size", "The maximum size that a file can
 Property GetFile::MinSize("Minimum File Size", "The minimum size that a file must be in order to be pulled", "0 B");
 Property GetFile::PollInterval("Polling Interval", "Indicates how long to wait before performing a directory listing", "0 sec");
 Property GetFile::Recurse("Recurse Subdirectories", "Indicates whether or not to pull files from subdirectories", "true");
+Property GetFile::FileFilter("File Filter", "Only files whose names match the given regular expression will be picked up", "[^\\.].*");
 Relationship GetFile::Success("success", "All files are routed to success");
 
 void GetFile::initialize()
@@ -68,6 +70,7 @@ void GetFile::initialize()
 	properties.insert(MinSize);
 	properties.insert(PollInterval);
 	properties.insert(Recurse);
+	properties.insert(FileFilter);
 	setSupportedProperties(properties);
 	//! Set the supported relationships
 	std::set<Relationship> relationships;
@@ -132,6 +135,11 @@ void GetFile::onTrigger(ProcessContext *context, ProcessSession *session)
 	if (context->getProperty(Recurse.getName(), value))
 	{
 		Property::StringToBool(value, _recursive);
+	}
+
+	if (context->getProperty(FileFilter.getName(), value))
+	{
+		_fileFilter = value;
 	}
 
 	// Perform directory list
@@ -234,6 +242,16 @@ bool GetFile::acceptFile(std::string fileName)
 
 		if (_keepSourceFile == false && access(fileName.c_str(), W_OK) != 0)
 			return false;
+
+		try {
+			std::regex re(_fileFilter);
+			if (!std::regex_match(fileName, re)) {
+				return false;
+	   		}
+		} catch (std::regex_error e) {
+			_logger->log_error("Invalid File Filter regex: %s.", e.what());
+			return false;
+		}
 
 		return true;
 	}
