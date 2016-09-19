@@ -454,6 +454,11 @@ public:
 			_peer->setTimeOut(time);
 
 	}
+	//! getTimeout
+	uint64_t getTimeOut()
+	{
+		return _timeOut;
+	}
 	//! setPortId
 	void setPortId(uuid_t id)
 	{

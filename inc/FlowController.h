@@ -50,6 +50,7 @@
 #include "GetFile.h"
 #include "TailFile.h"
 #include "ListenSyslog.h"
+#include "ExecuteProcess.h"
 
 //! Default NiFi Root Group Name
 #define DEFAULT_ROOT_GROUP_NAME ""
@@ -234,6 +235,8 @@ private:
 	void parseConnectionYaml(YAML::Node *node, ProcessGroup *parent);
 	//! Process Remote Process Group YAML
 	void parseRemoteProcessGroupYaml(YAML::Node *node, ProcessGroup *parent);
+	//! Parse Properties Node YAML for a processor
+	void parsePropertiesNodeYaml(YAML::Node *propertiesNode, Processor *processor);
 
 	// Prevent default copy constructor and assignment operation
 	// Only support pass by reference or pointer
