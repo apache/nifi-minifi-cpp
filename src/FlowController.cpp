@@ -44,6 +44,7 @@ FlowController::FlowController(std::string name)
 	_initialized = false;
 	_root = NULL;
 	_logger = Logger::getLogger();
+	_protocol = new FlowControlProtocol(this);
 
 	// NiFi config properties
 	_configure = Configure::getConfigure();
@@ -78,9 +79,6 @@ FlowController::FlowController(std::string name)
 	{
 		_logger->log_error("Could not locate path from provided configuration file name.");
 	}
-
-	char *flowPath = NULL;
-	char flow_full_path[PATH_MAX];
 
 	std::string pathString(path);
 	_configurationFileName = pathString;
@@ -187,6 +185,10 @@ Processor *FlowController::createProcessor(std::string name, uuid_t uuid)
 	else if (name == ListenSyslog::ProcessorName)
 	{
 		processor = new ListenSyslog(name, uuid);
+	}
+	else if (name == ExecuteProcess::ProcessorName)
+	{
+		processor = new ExecuteProcess(name, uuid);
 	}
 	else
 	{
@@ -555,9 +557,40 @@ void FlowController::parseRemoteProcessGroupYaml(YAML::Node *rpgNode, ProcessGro
 				_logger->log_debug("parseRemoteProcessGroupYaml: timeout => [%s]", timeout.c_str());
 
 				std::string yieldPeriod = rpgNode["yield period"].as<std::string>();
-				_logger->log_debug("parseRemoteProcessGroupYaml: timeout => [%s]", yieldPeriod.c_str());
+				_logger->log_debug("parseRemoteProcessGroupYaml: yield period => [%s]", yieldPeriod.c_str());
 
 				YAML::Node inputPorts = rpgNode["Input Ports"].as<YAML::Node>();
+				ProcessGroup* group = NULL;
+
+				// generate the random UUID
+				uuid_generate(uuid);
+
+				char uuidStr[37];
+				uuid_unparse(_uuid, uuidStr);
+
+				int64_t timeoutValue = -1;
+				int64_t yieldPeriodValue = -1;
+
+				group = this->createRemoteProcessGroup(name.c_str(), uuid);
+				group->setParent(parentGroup);
+				parentGroup->addProcessGroup(group);
+
+				TimeUnit unit;
+
+				if (Property::StringToTime(yieldPeriod, yieldPeriodValue, unit)
+							&& Property::ConvertTimeUnitToMS(yieldPeriodValue, unit, yieldPeriodValue) && group) {
+					_logger->log_debug("parseRemoteProcessGroupYaml: yieldPeriod => [%d] ms", yieldPeriodValue);
+					group->setYieldPeriodMsec(yieldPeriodValue);
+				}
+
+				if (Property::StringToTime(timeout, timeoutValue, unit)
+					&& Property::ConvertTimeUnitToMS(timeoutValue, unit, timeoutValue) && group) {
+					_logger->log_debug("parseRemoteProcessGroupYaml: timeoutValue => [%d] ms", timeoutValue);
+					group->setTimeOut(timeoutValue);
+				}
+
+				group->setTransmitting(true);
+				group->setURL(url);
 
 				if (inputPorts.IsSequence()) {
 					for (YAML::const_iterator portIter = inputPorts.begin(); portIter != inputPorts.end(); ++portIter) {
@@ -565,39 +598,8 @@ void FlowController::parseRemoteProcessGroupYaml(YAML::Node *rpgNode, ProcessGro
 
 						YAML::Node currPort = portIter->as<YAML::Node>();
 
-						this->parsePortYaml(&currPort, parentGroup, SEND);
-
+						this->parsePortYaml(&currPort, group, SEND);
 					} // for node
-					char uuidStr[37];
-					uuid_unparse(_uuid, uuidStr);
-
-					// generate the random UUID
-					uuid_generate(uuid);
-
-					int64_t timeoutValue = -1;
-					int64_t yieldPeriodValue = -1;
-
-					ProcessGroup* group = this->createRemoteProcessGroup(name.c_str(), uuid);
-					group->setParent(parentGroup);
-					parentGroup->addProcessGroup(group);
-
-					TimeUnit unit;
-
-					if (Property::StringToTime(yieldPeriod, yieldPeriodValue, unit)
-							&& Property::ConvertTimeUnitToMS(yieldPeriodValue, unit, yieldPeriodValue) && group) {
-						_logger->log_debug("parseRemoteProcessGroup: yieldPeriod => [%d] ms", yieldPeriod.c_str());
-						group->setYieldPeriodMsec(yieldPeriodValue);
-					}
-
-					if (Property::StringToTime(timeout, timeoutValue, unit)
-							&& Property::ConvertTimeUnitToMS(timeoutValue, unit, timeoutValue) && group) {
-						_logger->log_debug("parseRemoteProcessGroup: timeoutValue => [%d] ms", timeout.c_str());
-						group->setTimeOut(yieldPeriodValue);
-					}
-
-					group->setTransmitting(true);
-					group->setURL(url);
-
 				}
 			}
 		}
@@ -812,6 +814,7 @@ void FlowController::parsePortYaml(YAML::Node *portNode, ProcessGroup *parent, T
 
 	processor = (Processor *) port;
 	port->setDirection(direction);
+	port->setTimeOut(parent->getTimeOut());
 	port->setTransmitting(true);
 	processor->setYieldPeriodMsec(parent->getYieldPeriodMsec());
 	processor->initialize();
@@ -1180,6 +1183,7 @@ bool FlowController::start() {
 			if (this->_root)
 				this->_root->startProcessing(&this->_timerScheduler);
 			_running = true;
+			this->_protocol->start();
 		}
 		return true;
 	}

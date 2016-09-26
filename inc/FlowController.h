@@ -50,6 +50,7 @@
 #include "GetFile.h"
 #include "TailFile.h"
 #include "ListenSyslog.h"
+#include "ExecuteProcess.h"
 
 //! Default NiFi Root Group Name
 #define DEFAULT_ROOT_GROUP_NAME ""

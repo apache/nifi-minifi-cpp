@@ -87,6 +87,7 @@ void RemoteProcessorGroupPort::onTrigger(ProcessContext *context, ProcessSession
 	{
 		// bootstrap the client protocol if needeed
 		context->yield();
+		_logger->log_error("Site2Site bootstrap failed yield period %d peer timeout %d", context->getProcessor()->getYieldPeriodMsec(), _protocol->getPeer()->getTimeOut());
 		return;
 	}
 
