@@ -206,6 +206,11 @@ public:
 	{
 		_timeOut = time;
 	}
+	//! getTimeOut
+	uint64_t getTimeOut()
+	{
+		return _timeOut;
+	}
 	int write(uint8_t value, CRC32 *crc = NULL)
 	{
 		return sendData(&value, 1, crc);

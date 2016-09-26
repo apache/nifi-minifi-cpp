@@ -177,6 +177,7 @@ int Site2SitePeer::sendData(uint8_t *buf, int buflen, CRC32 *crc)
 		//check for errors
 		if (ret == -1)
 		{
+			_logger->log_error("Site2Site Peer socket %d send failed %s", _socket, strerror(errno));
 			Close();
 			// this->yield();
 			return ret;
