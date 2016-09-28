@@ -63,7 +63,7 @@ public:
 	static const std::string ProcessorName;
 	//! Supported Properties
 	static Property Command;
-	static Property CommandArgument;
+	static Property CommandArguments;
 	static Property WorkingDir;
 	static Property BatchDuration;
 	static Property RedirectErrorStream;

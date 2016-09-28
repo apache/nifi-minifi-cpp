@@ -24,7 +24,7 @@
 
 const std::string ExecuteProcess::ProcessorName("ExecuteProcess");
 Property ExecuteProcess::Command("Command", "Specifies the command to be executed; if just the name of an executable is provided, it must be in the user's environment PATH.", "");
-Property ExecuteProcess::CommandArgument("Command Arguments",
+Property ExecuteProcess::CommandArguments("Command Arguments",
 		"The arguments to supply to the executable delimited by white space. White space can be escaped by enclosing it in double-quotes.", "");
 Property ExecuteProcess::WorkingDir("Working Directory",
 		"The directory to use as the current working directory when executing the command", "");
@@ -39,7 +39,7 @@ void ExecuteProcess::initialize()
 	//! Set the supported properties
 	std::set<Property> properties;
 	properties.insert(Command);
-	properties.insert(CommandArgument);
+	properties.insert(CommandArguments);
 	properties.insert(WorkingDir);
 	properties.insert(BatchDuration);
 	properties.insert(RedirectErrorStream);
@@ -58,7 +58,7 @@ void ExecuteProcess::onTrigger(ProcessContext *context, ProcessSession *session)
 	{
 		this->_command = value;
 	}
-	if (context->getProperty(CommandArgument.getName(), value))
+	if (context->getProperty(CommandArguments.getName(), value))
 	{
 		this->_commandArgument = value;
 	}
