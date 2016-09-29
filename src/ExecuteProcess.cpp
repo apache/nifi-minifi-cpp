@@ -21,6 +21,7 @@
 #include "ExecuteProcess.h"
 #include "ProcessContext.h"
 #include "ProcessSession.h"
+#include <cstring>
 
 const std::string ExecuteProcess::ProcessorName("ExecuteProcess");
 Property ExecuteProcess::Command("Command", "Specifies the command to be executed; if just the name of an executable is provided, it must be in the user's environment PATH.", "");
