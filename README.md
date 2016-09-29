@@ -66,7 +66,7 @@ Perspectives of the role of MiNiFi should be from the perspective of the agent a
 
 #### Libraries / Development Headers
 * libboost and boost-devel
-  * 1.23.0 or greater
+  * 1.48.0 or greater
 * libxml2 and libxml2-devel
 
 ### To run
