@@ -12,7 +12,7 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-# Apache NiFi -  MiNiFi - C++
+# Apache NiFi -  MiNiFi - C++ [![Build Status](https://travis-ci.org/apache/nifi-minifi-cpp.svg?branch=master)](https://travis-ci.org/apache/nifi-minifi-cpp)
 
 MiNiFi is a child project effort of Apache NiFi.  This repository is for a native implementation in C++.
 
