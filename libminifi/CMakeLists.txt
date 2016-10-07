@@ -37,12 +37,18 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 include_directories(../include)
+include_directories(../thirdparty)
+include_directories(../thirdparty/yaml-cpp-yaml-cpp-0.5.3/include)
 include_directories(include)
 
 file(GLOB SOURCES "src/*.cpp")
+file(GLOB SPD_SOURCES "../include/spdlog/*")
 
 # @apiri - need to check this out
-add_library(spdlog INTERFACE)
+
+# Workaround the limitations of having a
+# header only library
+add_library(spdlog STATIC ${SPD_SOURCES})
 add_library(minifi STATIC ${SOURCES})
 
 # Include libxml2
