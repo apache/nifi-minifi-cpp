@@ -35,8 +35,8 @@ endif (LIBXML2_FOUND)
 
 add_executable(minifiexe MiNiFiMain.cpp)
 
-# Link against minifi and yaml-cpp
-target_link_libraries(minifiexe minifi yaml-cpp)
+# Link against minifi, yaml-cpp and uuid
+target_link_libraries(minifiexe minifi yaml-cpp uuid)
 set_target_properties(minifiexe
         PROPERTIES OUTPUT_NAME minifi)
 
