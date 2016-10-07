@@ -19,19 +19,24 @@
 
 cmake_minimum_required(VERSION 2.6)
 
-set(PROJECT "nifi-minifi-cpp")
-set(VERSION "0.1.0")
+project(nifi-minifi-cpp)
+set(PROJECT_NAME "nifi-minifi-cpp")
+set(PROJECT_VERSION_MAJOR 0)
+set(PROJECT_VERSION_MINOR 1)
+set(PROJECT_VERSION_PATCH 0)
 
 #### Establish Project Configuration ####
 # Enable usage of the VERSION specifier
 # https://cmake.org/cmake/help/v3.0/policy/CMP0048.html#policy:CMP0048
-cmake_policy(SET CMP0048 NEW)
-
-project(${PROJECT}
-        VERSION ${VERSION})
+IF(POLICY CMP0048)
+  CMAKE_POLICY(SET CMP0048 OLD)
+ENDIF(POLICY CMP0048)
 
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# Search for threads
+find_package(Threads REQUIRED)
 
 # Provide custom modules for the project
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")

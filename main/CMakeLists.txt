@@ -19,7 +19,9 @@
 
 cmake_minimum_required(VERSION 2.6)
 
-cmake_policy(SET CMP0048 NEW)
+IF(POLICY CMP0048)
+  CMAKE_POLICY(SET CMP0048 OLD)
+ENDIF(POLICY CMP0048)
 
 include_directories(../include ../libminifi/include ../thirdparty/yaml-cpp-yaml-cpp-0.5.3/include)
 
