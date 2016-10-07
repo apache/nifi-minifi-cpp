@@ -19,26 +19,33 @@
 
 cmake_minimum_required (VERSION 2.6)
 
-set(PROJECT "apache-nifi-minifi-cpp")
-set(VERSION "0.1.0")
+project(nifi-libminifi)
+set(PROJECT_NAME "nifi-libminifi")
+set(PROJECT_VERSION_MAJOR 0)
+set(PROJECT_VERSION_MINOR 1)
+set(PROJECT_VERSION_PATCH 0)
+
 
 #### Establish Project Configuration ####
 # Enable usage of the VERSION specifier
 # https://cmake.org/cmake/help/v3.0/policy/CMP0048.html#policy:CMP0048
-cmake_policy(SET CMP0048 NEW)
-
-project(${PROJECT}
-        VERSION ${VERSION})
+IF(POLICY CMP0048)
+  CMAKE_POLICY(SET CMP0048 OLD)
+ENDIF(POLICY CMP0048)
 
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 include_directories(../include)
+include_directories(../thirdparty/yaml-cpp-yaml-cpp-0.5.3/include)
 include_directories(include)
 
 file(GLOB SOURCES "src/*.cpp")
+file(GLOB SPD_SOURCES "../include/spdlog/*")
 
-add_library(spdlog INTERFACE)
+# Workaround the limitations of having a
+# header only library
+add_library(spdlog STATIC ${SPD_SOURCES})
 add_library(minifi STATIC ${SOURCES})
 
 # Include libxml2

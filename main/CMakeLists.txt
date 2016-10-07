@@ -19,9 +19,11 @@
 
 cmake_minimum_required(VERSION 2.6)
 
-cmake_policy(SET CMP0048 NEW)
+IF(POLICY CMP0048)
+  CMAKE_POLICY(SET CMP0048 OLD)
+ENDIF(POLICY CMP0048)
 
-include_directories(../include ../libminifi/include ../thirdparty/yaml-cpp-yaml-cpp-0.5.3/include)
+include_directories(../include ../libminifi/include ../thirdparty/yaml-cpp-yaml-cpp-0.5.3/include ../thirdparty)
 
 # Include libxml2
 find_package(LibXml2)
@@ -33,8 +35,8 @@ endif (LIBXML2_FOUND)
 
 add_executable(minifiexe MiNiFiMain.cpp)
 
-# Link against minifi and yaml-cpp
-target_link_libraries(minifiexe minifi yaml-cpp)
+# Link against minifi, yaml-cpp and uuid
+target_link_libraries(minifiexe minifi yaml-cpp uuid)
 set_target_properties(minifiexe
         PROPERTIES OUTPUT_NAME minifi)
 
