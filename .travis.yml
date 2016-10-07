@@ -33,4 +33,5 @@ addons:
     - gcc-4.8
     - g++-4.8
     - libboost1.55-all-dev
+    - uuid-dev
     - libxml2-dev
