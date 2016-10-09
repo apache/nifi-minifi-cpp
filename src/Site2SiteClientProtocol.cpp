@@ -1220,6 +1220,15 @@ void Site2SiteClientProtocol::transferFlowFiles(ProcessContext *context, Process
 
 	if (!flow)
 		return;
+  else{
+    //Add hostname attribute to outgoing flowfiles
+    char hostname[1024];
+    hostname[1023] = '\0'; 
+    gethostname(hostname, 1023);
+    struct hostent* h;
+    h = gethostbyname(hostname);
+    flow->addAttribute("source.hostname", h->h_name);
+  }
 
 	if (_peerState != READY)
 	{
