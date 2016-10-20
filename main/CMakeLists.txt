@@ -34,6 +34,12 @@ else ()
 endif (LIBXML2_FOUND)
 
 add_executable(minifiexe MiNiFiMain.cpp)
+if(THREADS_HAVE_PTHREAD_ARG)
+  target_compile_options(PUBLIC minifiexe "-pthread")
+endif()
+if(CMAKE_THREAD_LIBS_INIT)
+  target_link_libraries(minifiexe "${CMAKE_THREAD_LIBS_INIT}")
+endif()
 
 # Link against minifi, yaml-cpp and uuid
 target_link_libraries(minifiexe minifi yaml-cpp uuid)
