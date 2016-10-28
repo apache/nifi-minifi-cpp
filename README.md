@@ -72,12 +72,14 @@ Perspectives of the role of MiNiFi should be from the perspective of the agent a
   * 1.48.0 or greater
 * libleveldb and libleveldb-devel
 * libuuid and uuid-dev
+* openssl
 
 ### To run
 
 #### Libraries
 * libuuid
 * libleveldb
+* libssl and libcrypto from openssl 
 
 The needed dependencies can be installed with the following commands for:
 
@@ -88,7 +90,7 @@ $ yum install cmake \
   gcc gcc-c++ \
   leveldb-devel leveldb \
   libuuid libuuid-devel \
-  boost-devel
+  boost-devel \ libssl-dev
 ```
 
 Aptitude based Linux Distributions
@@ -98,7 +100,7 @@ $ apt-get install cmake \
   gcc g++ \
   libleveldb-dev libleveldb1v5 \
   uuid-dev uuid \
-  libboost-all-dev
+  libboost-all-dev libssl-dev
 ```
 
 OS X Using Homebrew (with XCode Command Line Tools installed)
@@ -107,7 +109,7 @@ OS X Using Homebrew (with XCode Command Line Tools installed)
 $ brew install cmake \
   leveldb \
   ossp-uuid \
-  boost
+  boost \ openssl
 ```
 
 
@@ -237,6 +239,26 @@ Additionally, users can utilize the MiNiFi Toolkit Converter (version 0.0.1 - sc
                 Properties:
                     Port: 10001
                     Host Name: localhost
+
+### Site2Site Security Configuration
+
+    in minifi.properties 
+
+    enable tls ssl
+    nifi.remote.input.secure=true
+
+    if you want to enable client certificate base authorization 
+    nifi.security.need.ClientAuth=true
+    setup the client certificate and private key PEM files
+    nifi.security.client.certificate=./conf/client.pem
+    nifi.security.client.private.key=./conf/client.pem
+    setup the client private key passphrase file
+    nifi.security.client.pass.phrase=./conf/password
+    setup the client CA certificate file
+    nifi.security.client.ca.certificate=./conf/nifi-cert.pem
+
+    if you do not want to enable client certificate base authorization
+    nifi.security.need.ClientAuth=false
 
 ### Running
 After completing a [build](#building), the application can be run by issuing the following from :

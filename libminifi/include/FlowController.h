@@ -53,6 +53,9 @@
 #include "ListenSyslog.h"
 #include "ExecuteProcess.h"
 #include "AppendHostInfo.h"
+// OpenSSL related
+#include <openssl/ssl.h>
+#include <openssl/err.h>
 
 //! Default NiFi Root Group Name
 #define DEFAULT_ROOT_GROUP_NAME ""
@@ -86,6 +89,25 @@ public:
 			_flowController = new FlowController();
 		}
 		return _flowController;
+	}
+	//! passphase for the private file callback
+	static int pemPassWordCb(char *buf, int size, int rwflag, void *userdata)
+	{
+		std::string passphrase;
+
+		if (Configure::getConfigure()->get(Configure::nifi_security_client_pass_phrase, passphrase))
+		{
+		    std::ifstream file(passphrase.c_str(), std::ifstream::in);
+		    if (!file.good())
+		    {
+		    	memset(buf, 0, size);
+		    	return 0;
+		    }
+		    memset(buf, 0, size);
+		    file.getline(buf, size);
+		    return (int) strlen(buf);
+		}
+		return 0;
 	}
 
 	//! Destructor
@@ -172,6 +194,11 @@ public:
 	{
 		_protocol->setSerialNumber(number);
 	}
+	//! getSSLContext
+	SSL_CTX *getSSLContext()
+	{
+		return _ctx;
+	}
 
 protected:
 
@@ -204,6 +231,8 @@ protected:
 	//! Heart Beat
 	//! FlowControl Protocol
 	FlowControlProtocol *_protocol;
+	//! SSL context
+	SSL_CTX *_ctx;
 
 private:
 

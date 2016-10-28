@@ -39,8 +39,12 @@ endif()
 # Include UUID
 find_package(UUID REQUIRED)
 
+# Include OpenSSL 
+find_package(OpenSSL REQUIRED)
+include_directories(${OPENSSL_INCLUDE_DIR})
+
 # Link against minifi, yaml-cpp, uuid, and leveldb
-target_link_libraries(minifiexe minifi yaml-cpp ${UUID_LIBRARIES} ${LEVELDB_LIBRARIES})
+target_link_libraries(minifiexe minifi yaml-cpp ${UUID_LIBRARIES} ${LEVELDB_LIBRARIES} ${OPENSSL_LIBRARIES})
 set_target_properties(minifiexe
         PROPERTIES OUTPUT_NAME minifi)
 

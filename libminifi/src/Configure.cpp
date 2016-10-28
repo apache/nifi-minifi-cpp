@@ -29,6 +29,12 @@ const char *Configure::nifi_server_report_interval= "nifi.server.report.interval
 const char *Configure::nifi_provenance_repository_max_storage_size = "nifi.provenance.repository.max.storage.size";
 const char *Configure::nifi_provenance_repository_max_storage_time = "nifi.provenance.repository.max.storage.time";
 const char *Configure::nifi_provenance_repository_directory_default = "nifi.provenance.repository.directory.default";
+const char *Configure::nifi_remote_input_secure = "nifi.remote.input.secure";
+const char *Configure::nifi_security_need_ClientAuth = "nifi.security.need.ClientAuth";
+const char *Configure::nifi_security_client_certificate = "nifi.security.client.certificate";
+const char *Configure::nifi_security_client_private_key = "nifi.security.client.private.key";
+const char *Configure::nifi_security_client_pass_phrase = "nifi.security.client.pass.phrase";
+const char *Configure::nifi_security_client_ca_certificate = "nifi.security.client.ca.certificate";
 
 //! Get the config value
 bool Configure::get(std::string key, std::string &value)
