@@ -162,9 +162,18 @@ public:
 	void setOriginalConnection (Connection *connection) {
 		_orginalConnection = connection;
 	}
+	//! Get Original connection
+	Connection * getOriginalConnection() {
+		return _orginalConnection;
+	}
 	//! Get Resource Claim
 	ResourceClaim *getResourceClaim() {
 		return _claim;
+	}
+	//! Get lineageIdentifiers
+	std::set<std::string> getlineageIdentifiers()
+	{
+		return _lineageIdentifiers;
 	}
 
 protected:

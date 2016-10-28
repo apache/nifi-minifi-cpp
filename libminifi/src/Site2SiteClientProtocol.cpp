@@ -840,6 +840,7 @@ void Site2SiteClientProtocol::receiveFlowFiles(ProcessContext *context, ProcessS
 		while (true)
 		{
 			std::map<std::string, std::string> empty;
+			uint64_t startTime = getTimeMillis();
 			DataPacket packet(this, transaction, empty);
 			bool eof = false;
 
@@ -860,8 +861,11 @@ void Site2SiteClientProtocol::receiveFlowFiles(ProcessContext *context, ProcessS
 				return;
 			}
 			std::map<std::string, std::string>::iterator it;
+			std::string sourceIdentifier;
 			for (it = packet._attributes.begin(); it!= packet._attributes.end(); it++)
 			{
+				if (it->first == FlowAttributeKey(UUID))
+					sourceIdentifier = it->second;
 				flowFile->addAttribute(it->first, it->second);
 			}
 
@@ -876,6 +880,10 @@ void Site2SiteClientProtocol::receiveFlowFiles(ProcessContext *context, ProcessS
 				}
 			}
 			Relationship relation; // undefined relationship
+			uint64_t endTime = getTimeMillis();
+			std::string transitUri = _peer->getURL() + "/" + sourceIdentifier;
+			std::string details = "urn:nifi:" + sourceIdentifier + "Remote Host=" + _peer->getHostName();
+			session->getProvenanceReporter()->receive(flowFile, transitUri, sourceIdentifier, details, endTime - startTime);
 			session->transfer(flowFile, relation);
 			// receive the transfer for the flow record
 			bytes += packet._size;
@@ -1253,6 +1261,7 @@ void Site2SiteClientProtocol::transferFlowFiles(ProcessContext *context, Process
 	{
 		while (continueTransaction)
 		{
+			uint64_t startTime = getTimeMillis();
 			DataPacket packet(this, transaction, flow->getAttributes());
 
 			if (!send(transactionID, &packet, flow, session))
@@ -1262,6 +1271,10 @@ void Site2SiteClientProtocol::transferFlowFiles(ProcessContext *context, Process
 			}
 			_logger->log_info("Site2Site transaction %s send flow record %s",
 							transactionID.c_str(), flow->getUUIDStr().c_str());
+			uint64_t endTime = getTimeMillis();
+			std::string transitUri = _peer->getURL() + "/" + flow->getUUIDStr();
+			std::string details = "urn:nifi:" + flow->getUUIDStr() + "Remote Host=" + _peer->getHostName();
+			session->getProvenanceReporter()->send(flow, transitUri, details, endTime - startTime, false);
 			session->remove(flow);
 
 			uint64_t transferNanos = getTimeNano() - startSendingNanos;

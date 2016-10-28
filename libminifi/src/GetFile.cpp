@@ -215,11 +215,11 @@ void GetFile::pollListing(std::queue<std::string> &list, int maxSize)
 	return;
 }
 
-bool GetFile::acceptFile(std::string fileName)
+bool GetFile::acceptFile(std::string fullName, std::string name)
 {
 	struct stat statbuf;
 
-	if (stat(fileName.c_str(), &statbuf) == 0)
+	if (stat(fullName.c_str(), &statbuf) == 0)
 	{
 		if (_minSize > 0 && statbuf.st_size <_minSize)
 			return false;
@@ -234,18 +234,18 @@ bool GetFile::acceptFile(std::string fileName)
 		if (_maxAge > 0 && fileAge > _maxAge)
 			return false;
 
-		if (_ignoreHiddenFile && fileName.c_str()[0] == '.')
+		if (_ignoreHiddenFile && fullName.c_str()[0] == '.')
 			return false;
 
-		if (access(fileName.c_str(), R_OK) != 0)
+		if (access(fullName.c_str(), R_OK) != 0)
 			return false;
 
-		if (_keepSourceFile == false && access(fileName.c_str(), W_OK) != 0)
+		if (_keepSourceFile == false && access(fullName.c_str(), W_OK) != 0)
 			return false;
 
 		try {
 			std::regex re(_fileFilter);
-			if (!std::regex_match(fileName, re)) {
+			if (!std::regex_match(name, re)) {
 				return false;
 	   		}
 		} catch (std::regex_error e) {
@@ -284,7 +284,7 @@ void GetFile::performListing(std::string dir)
 		else
 		{
 			std::string fileName = dir + "/" + d_name;
-			if (acceptFile(fileName))
+			if (acceptFile(fileName, d_name))
 			{
 				// check whether we can take this file
 				putListing(fileName);

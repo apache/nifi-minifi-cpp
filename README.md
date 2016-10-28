@@ -44,7 +44,6 @@ Perspectives of the role of MiNiFi should be from the perspective of the agent a
 ## Caveats
 * 0.0.1 represents the first release, APIs and interfaces are subject to change
 * Build and usage currently only supports Linux and OS X environments. Providing the needed tooling to support Windows will be established as part of [MINIFI-34](https://issues.apache.org/jira/browse/MINIFI-34).
-* Currently, provenance events are not yet generated.  This effort is captured in [MINIFI-78](https://issues.apache.org/jira/browse/MINIFI-78).
 * Using Site to Site requires the additional manual step of specifying the remote socket.  This being autonegotiated through NiFi's REST API is captured in [MINIFI-70](https://issues.apache.org/jira/browse/MINIFI-70).
 * The processors currently implemented include:
   * TailFile
@@ -52,6 +51,7 @@ Perspectives of the role of MiNiFi should be from the perspective of the agent a
   * GenerateFlowFile
   * LogAttribute
   * ListenSyslog
+* Provenance events generation is supported and they are persistent using levelDB.
 
 ## System Requirements
 
@@ -69,6 +69,7 @@ Perspectives of the role of MiNiFi should be from the perspective of the agent a
 * libboost and boost-devel
   * 1.48.0 or greater
 * libxml2 and libxml2-devel
+* leveldb 
 
 ### To run
 

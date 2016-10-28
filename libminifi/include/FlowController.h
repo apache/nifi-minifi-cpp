@@ -47,6 +47,7 @@
 #include "TimerDrivenSchedulingAgent.h"
 #include "FlowControlProtocol.h"
 #include "RemoteProcessorGroupPort.h"
+#include "Provenance.h"
 #include "GetFile.h"
 #include "TailFile.h"
 #include "ListenSyslog.h"
@@ -79,11 +80,16 @@ class FlowController
 public:
     static const int DEFAULT_MAX_TIMER_DRIVEN_THREAD = 10;
     static const int DEFAULT_MAX_EVENT_DRIVEN_THREAD = 5;
-	//! Constructor
-	/*!
-	 * Create a new Flow Controller
-	 */
-	FlowController(std::string name = DEFAULT_ROOT_GROUP_NAME);
+	//! Get the singleton flow controller
+	static FlowController * getFlowController()
+	{
+		if (!_flowController)
+		{
+			_flowController = new FlowController();
+		}
+		return _flowController;
+	}
+
 	//! Destructor
 	virtual ~FlowController();
 	//! Set FlowController Name
@@ -128,11 +134,11 @@ public:
 	{
 		return _maxEventDrivenThreads;
 	}
-	//! Create FlowFile Repository
-	bool createFlowFileRepository();
-	//! Create Content Repository
-	bool createContentRepository();
-
+	//! Get the provenance repository
+	ProvenanceRepository *getProvenanceRepository()
+	{
+		return this->_provenanceRepo;
+	}
 	//! Life Cycle related function
 	//! Load flow xml from disk, after that, create the root process group and its children, initialize the flows
 	void load(ConfigFormat format);
@@ -188,6 +194,7 @@ protected:
 	//! Config
 	//! FlowFile Repo
 	//! Provenance Repo
+	ProvenanceRepository *_provenanceRepo;
 	//! Flow Engines
 	//! Flow Scheduler
 	TimerDrivenSchedulingAgent _timerScheduler;
@@ -237,6 +244,14 @@ private:
 	void parseRemoteProcessGroupYaml(YAML::Node *node, ProcessGroup *parent);
 	//! Parse Properties Node YAML for a processor
 	void parsePropertiesNodeYaml(YAML::Node *propertiesNode, Processor *processor);
+
+	static FlowController *_flowController;
+
+	//! Constructor
+	/*!
+	 * Create a new Flow Controller
+	 */
+	FlowController(std::string name = DEFAULT_ROOT_GROUP_NAME);
 
 	// Prevent default copy constructor and assignment operation
 	// Only support pass by reference or pointer

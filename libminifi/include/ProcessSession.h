@@ -34,6 +34,7 @@
 #include "ProcessContext.h"
 #include "FlowFileRecord.h"
 #include "Exception.h"
+#include "Provenance.h"
 
 //! ProcessSession Class
 class ProcessSession
@@ -46,13 +47,23 @@ public:
 	ProcessSession(ProcessContext *processContext = NULL) : _processContext(processContext) {
 		_logger = Logger::getLogger();
 		_logger->log_trace("ProcessSession created for %s", _processContext->getProcessor()->getName().c_str());
+		_provenanceReport = new ProvenanceReporter(_processContext->getProcessor()->getUUIDStr(),
+				_processContext->getProcessor()->getName());
 	}
 	//! Destructor
-	virtual ~ProcessSession() {}
+	virtual ~ProcessSession() {
+		if (_provenanceReport)
+			delete _provenanceReport;
+	}
 	//! Commit the session
 	void commit();
 	//! Roll Back the session
 	void rollback();
+	//! Get Provenance Report
+	ProvenanceReporter *getProvenanceReporter()
+	{
+		return _provenanceReport;
+	}
 	//!
 	//! Get the FlowFile from the highest priority queue
 	FlowFileRecord *get();
@@ -110,6 +121,8 @@ private:
 	ProcessSession &operator=(const ProcessSession &parent);
 	//! Logger
 	Logger *_logger;
+	//! Provenance Report
+	ProvenanceReporter *_provenanceReport;
 
 };
 

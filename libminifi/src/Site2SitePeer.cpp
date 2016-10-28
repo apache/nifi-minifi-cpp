@@ -359,7 +359,15 @@ int Site2SitePeer::readUTF(std::string &str, bool widen, CRC32 *crc)
     {
     	delete[] bytearr;
     	delete[] chararr;
-    	return ret;
+      	if (ret == 0)
+        {
+        	 if (!widen)
+        		 return (2 + utflen);
+        	 else
+        		 return (4 + utflen);
+        }
+        else
+        		return ret;
     }
 
     while (count < utflen) {

@@ -208,6 +208,8 @@ public:
 				_logger->log_info("NiFi server report interval: [%d] ms", _reportInterval);
 			}
 		}
+		else
+			_reportInterval = 0;
 	}
 	//! Destructor
 	virtual ~FlowControlProtocol()
