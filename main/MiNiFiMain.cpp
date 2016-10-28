@@ -94,7 +94,7 @@ int main(int argc, char **argv)
     configure->setHome(minifiHome);
     configure->loadConfigureFile(DEFAULT_NIFI_PROPERTIES_FILE);
 
-	controller = new FlowController();
+	controller = FlowController::getFlowController();
 
 	// Load flow from specified configuration file
 	controller->load(ConfigFormat::YAML);

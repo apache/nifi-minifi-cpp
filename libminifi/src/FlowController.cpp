@@ -31,6 +31,7 @@
 #include "FlowController.h"
 #include "ProcessContext.h"
 
+FlowController *FlowController::_flowController(NULL);
 FlowController::FlowController(std::string name)
 : _name(name)
 {
@@ -85,6 +86,8 @@ FlowController::FlowController(std::string name)
 	_logger->log_info("FlowController NiFi Configuration file %s", pathString.c_str());
 
 	// Create repos for flow record and provenance
+	_provenanceRepo = new ProvenanceRepository();
+	_provenanceRepo->initialize();
 
 	_logger->log_info("FlowController %s created", _name.c_str());
 }
@@ -94,6 +97,7 @@ FlowController::~FlowController()
 	stop(true);
 	unload();
 	delete _protocol;
+	delete _provenanceRepo;
 }
 
 bool FlowController::isRunning()
