@@ -742,7 +742,7 @@ public:
 		stop();
 		if (this->_thread)
 			delete this->_thread;
-		destory();
+		destroy();
 	}
 
 	//! initialize
@@ -827,8 +827,8 @@ public:
 	{
 		Delete(event->getEventId());
 	}
-	//! destory
-	void destory()
+	//! destroy
+	void destroy()
 	{
 		if (_db)
 		{

@@ -97,7 +97,7 @@ private:
 	//! Poll directory listing for files
 	void pollListing(std::queue<std::string> &list, int maxSize);
 	//! Check whether file can be added to the directory listing
-	bool acceptFile(std::string fileName);
+	bool acceptFile(std::string fullName, std::string name);
 	//! Mutex for protection of the directory listing
 	std::mutex _mtx;
 	std::string _directory;
