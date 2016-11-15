@@ -34,4 +34,4 @@ addons:
     - libboost-all-dev
     - uuid-dev
     - libxml2-dev
-    - leveldb-dev
+    - libleveldb-dev
