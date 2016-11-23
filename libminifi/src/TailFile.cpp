@@ -41,7 +41,7 @@
 const std::string TailFile::ProcessorName("TailFile");
 Property TailFile::FileName("File to Tail", "Fully-qualified filename of the file that should be tailed", "");
 Property TailFile::StateFile("State File",
-		"Specifies the file that should be used for storing state about what data has been ingested so that upon restart NiFi can resume from where it left off", "");
+		"Specifies the file that should be used for storing state about what data has been ingested so that upon restart NiFi can resume from where it left off", "TailFileState");
 Relationship TailFile::Success("success", "All files are routed to success");
 
 void TailFile::initialize()
@@ -230,7 +230,7 @@ void TailFile::onTrigger(ProcessContext *context, ProcessSession *session)
 	}
 	if (context->getProperty(StateFile.getName(), value))
 	{
-		_stateFile = value;
+		_stateFile = value + "." + getUUIDStr();
 	}
 	if (!this->_stateRecovered)
 	{
