@@ -51,7 +51,8 @@ Perspectives of the role of MiNiFi should be from the perspective of the agent a
   * GenerateFlowFile
   * LogAttribute
   * ListenSyslog
-* Provenance events generation is supported and they are persistent using levelDB.
+  * ExecuteProcess
+* Provenance events generation is supported and are persisted using levelDB.
 
 ## System Requirements
 
@@ -69,7 +70,7 @@ Perspectives of the role of MiNiFi should be from the perspective of the agent a
 * libboost and boost-devel
   * 1.48.0 or greater
 * libxml2 and libxml2-devel
-* leveldb 
+* leveldb and leveldb-devel
 
 ### To run
 
@@ -79,89 +80,86 @@ Perspectives of the role of MiNiFi should be from the perspective of the agent a
 ## Getting Started
 
 ### Building
+
 - From your source checkout, create a directory to perform the build (e.g. build) and cd into that directory.
-
-
-    # ~/Development/code/apache/nifi-minifi-cpp on git:master
-    $ mkdir build
-    # ~/Development/code/apache/nifi-minifi-cpp on git:master
-    $ cd build
-
+  ```
+  # ~/Development/code/apache/nifi-minifi-cpp on git:master
+  $ mkdir build
+  # ~/Development/code/apache/nifi-minifi-cpp on git:master
+  $ cd build
+  ```
 
 - Perform a `cmake ..` to generate the project files
-
-
-    # ~/Development/code/apache/nifi-minifi-cpp on git:master
-    $ cmake ..
-    ...
-    -- Configuring done
-    -- Generating done
-    -- Build files have been written to: /Users/apiri/Development/code/apache/nifi-minifi-cpp/build
-
+  ```
+  # ~/Development/code/apache/nifi-minifi-cpp on git:master
+  $ cmake ..
+  ...
+  -- Configuring done
+  -- Generating done
+  -- Build files have been written to: /Users/apiri/Development/code/apache/nifi-minifi-cpp/build
+  ```
 
 - Perform a build
+  ```
+  # ~/Development/code/apache/nifi-minifi-cpp on git:master
+  $ make
+  Scanning dependencies of target gmock_main
+  Scanning dependencies of target gmock
+  Scanning dependencies of target minifi
+  Scanning dependencies of target gtest
+  Scanning dependencies of target yaml-cpp
+  [  1%] Building CXX object thirdparty/yaml-cpp-yaml-cpp-0.5.3/test/gmock-1.7.0/gtest/CMakeFiles/gtest.dir/src/gtest-all.cc.o
+  [  3%] Building CXX object thirdparty/yaml-cpp-yaml-cpp-0.5.3/test/gmock-1.7.0/CMakeFiles/gmock.dir/gtest/src/gtest-all.cc.o
+  [  3%] Building CXX object thirdparty/yaml-cpp-yaml-cpp-0.5.3/test/gmock-1.7.0/CMakeFiles/gmock.dir/src/gmock-all.cc.o
+  [  6%] Building CXX object thirdparty/yaml-cpp-yaml-cpp-0.5.3/test/gmock-1.7.0/CMakeFiles/gmock_main.dir/gtest/src/gtest-all.cc.o
+  [  6%] Building CXX object thirdparty/yaml-cpp-yaml-cpp-0.5.3/test/gmock-1.7.0/CMakeFiles/gmock_main.dir/src/gmock-all.cc.o
+  [  7%] Building CXX object libminifi/CMakeFiles/minifi.dir/src/Configure.cpp.o
 
+  ...
 
-    # ~/Development/code/apache/nifi-minifi-cpp on git:master
-    $ make
-    Scanning dependencies of target gmock_main
-    Scanning dependencies of target gmock
-    Scanning dependencies of target minifi
-    Scanning dependencies of target gtest
-    Scanning dependencies of target yaml-cpp
-    [  1%] Building CXX object thirdparty/yaml-cpp-yaml-cpp-0.5.3/test/gmock-1.7.0/gtest/CMakeFiles/gtest.dir/src/gtest-all.cc.o
-    [  3%] Building CXX object thirdparty/yaml-cpp-yaml-cpp-0.5.3/test/gmock-1.7.0/CMakeFiles/gmock.dir/gtest/src/gtest-all.cc.o
-    [  3%] Building CXX object thirdparty/yaml-cpp-yaml-cpp-0.5.3/test/gmock-1.7.0/CMakeFiles/gmock.dir/src/gmock-all.cc.o
-    [  6%] Building CXX object thirdparty/yaml-cpp-yaml-cpp-0.5.3/test/gmock-1.7.0/CMakeFiles/gmock_main.dir/gtest/src/gtest-all.cc.o
-    [  6%] Building CXX object thirdparty/yaml-cpp-yaml-cpp-0.5.3/test/gmock-1.7.0/CMakeFiles/gmock_main.dir/src/gmock-all.cc.o
-    [  7%] Building CXX object libminifi/CMakeFiles/minifi.dir/src/Configure.cpp.o
-
-    ...
-
-    [ 97%] Linking CXX executable minifi
-    [ 97%] Built target minifiexe
-    [ 98%] Building CXX object thirdparty/yaml-cpp-yaml-cpp-0.5.3/test/CMakeFiles/run-tests.dir/node/node_test.cpp.o
-    [100%] Linking CXX executable run-tests
-    [100%] Built target run-tests
-
-
+  [ 97%] Linking CXX executable minifi
+  [ 97%] Built target minifiexe
+  [ 98%] Building CXX object thirdparty/yaml-cpp-yaml-cpp-0.5.3/test/CMakeFiles/run-tests.dir/node/node_test.cpp.o
+  [100%] Linking CXX executable run-tests
+  [100%] Built target run-tests
+  ```
 
 - Create a binary assembly located in your build directory with suffix -bin.tar.gz
-
-
-    ~/Development/code/apache/nifi-minifi-cpp/build
-    $ make package
-    Run CPack packaging tool for source...
-    CPack: Create package using TGZ
-    CPack: Install projects
-    CPack: - Install directory: ~/Development/code/apache/nifi-minifi-cpp
-    CPack: Create package
-    CPack: - package: ~/Development/code/apache/nifi-minifi-cpp/build/nifi-minifi-cpp-0.1.0-bin.tar.gz generated.
-
+  ```
+  ~/Development/code/apache/nifi-minifi-cpp/build
+  $ make package
+  Run CPack packaging tool for source...
+  CPack: Create package using TGZ
+  CPack: Install projects
+  CPack: - Install directory: ~/Development/code/apache/nifi-minifi-cpp
+  CPack: Create package
+  CPack: - package: ~/Development/code/apache/nifi-minifi-cpp/build/nifi-minifi-cpp-0.1.0-bin.tar.gz generated.
+  ```
 
 - Create a source assembly located in your build directory with suffix -source.tar.gz
-
-
-    ~/Development/code/apache/nifi-minifi-cpp/build
-    $ make package_source
-    Run CPack packaging tool for source...
-    CPack: Create package using TGZ
-    CPack: Install projects
-    CPack: - Install directory: ~/Development/code/apache/nifi-minifi-cpp
-    CPack: Create package
-    CPack: - package: ~/Development/code/apache/nifi-minifi-cpp/build/nifi-minifi-cpp-0.1.0-source.tar.gz generated.
+  ```
+  ~/Development/code/apache/nifi-minifi-cpp/build
+  $ make package_source
+  Run CPack packaging tool for source...
+  CPack: Create package using TGZ
+  CPack: Install projects
+  CPack: - Install directory: ~/Development/code/apache/nifi-minifi-cpp
+  CPack: Create package
+  CPack: - package: ~/Development/code/apache/nifi-minifi-cpp/build/nifi-minifi-cpp-0.1.0-source.tar.gz generated.
+  ```
 
 
 ### Cleaning
 Remove the build directory created above.
-
-    # ~/Development/code/apache/nifi-minifi-cpp on git:master
-    $ rm -rf ./build
+```
+# ~/Development/code/apache/nifi-minifi-cpp on git:master
+$ rm -rf ./build
+```
 
 ### Configuring
-The 'conf' directory in the root contains a template flow.yml document.  
+The 'conf' directory in the root contains a template config.yml document.  
 
-This is compatible with the format used with the Java MiNiFi application.  Currently, a subset of the configuration is supported.  Additional information on the YAML format for the flow.yml can be found in the [MiNiFi System Administrator Guide](https://nifi.apache.org/minifi/system-admin-guide.html).  
+This is compatible with the format used with the Java MiNiFi application.  Currently, a subset of the configuration is supported.  Additional information on the YAML format for the config.yml can be found in the [MiNiFi System Administrator Guide](https://nifi.apache.org/minifi/system-admin-guide.html).  
 
 Additionally, users can utilize the MiNiFi Toolkit Converter to aid in creating a flow configuration from a generated template exported from a NiFi instance.  The MiNiFi Toolkit Converter tool can be downloaded from http://nifi.apache.org/minifi/download.html under the `MiNiFi Toolkit Binaries` section.  Information on its usage is available at https://nifi.apache.org/minifi/minifi-toolkit.html.
 
@@ -206,11 +204,11 @@ Additionally, users can utilize the MiNiFi Toolkit Converter to aid in creating 
                     Host Name: localhost
 
 ### Running
-After completing a [build](#building), the application can be run by issuing:
+After completing a [build](#building), the application can be run by issuing the following from :
 
     $ ./bin/minifi.sh start
 
-By default, this will make use of a flow.yml located in the conf directory.  This configuration file location can be altered by adjusting the property `nifi.flow.configuration.file` in minifi.properties located in the conf directory.
+By default, this will make use of a config.yml located in the conf directory.  This configuration file location can be altered by adjusting the property `nifi.flow.configuration.file` in minifi.properties located in the conf directory.
 
 ### Stopping  
 
