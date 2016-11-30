@@ -23,7 +23,7 @@ IF(POLICY CMP0048)
   CMAKE_POLICY(SET CMP0048 OLD)
 ENDIF(POLICY CMP0048)
 
-include_directories(../include ../libminifi/include ../thirdparty/yaml-cpp-yaml-cpp-0.5.3/include ../thirdparty/leveldb-1.18/include ../thirdparty/)
+include_directories(../include ../libminifi/include ../thirdparty/yaml-cpp-yaml-cpp-0.5.3/include ../thirdparty/leveldb-1.18/include ../thirdparty/ /usr/local/include)
 
 # Include libxml2
 find_package(LibXml2)
@@ -41,8 +41,11 @@ if(CMAKE_THREAD_LIBS_INIT)
   target_link_libraries(minifiexe "${CMAKE_THREAD_LIBS_INIT}")
 endif()
 
-# Link against minifi, yaml-cpp and uuid
-target_link_libraries(minifiexe minifi yaml-cpp uuid leveldb)
+# Include UUID
+find_package(UUID REQUIRED)
+
+# Link against minifi, yaml-cpp, uuid, and leveldb
+target_link_libraries(minifiexe minifi yaml-cpp ${UUID_LIBRARIES} ${LEVELDB_LIBRARIES})
 set_target_properties(minifiexe
         PROPERTIES OUTPUT_NAME minifi)
 
