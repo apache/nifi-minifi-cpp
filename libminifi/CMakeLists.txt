@@ -56,3 +56,13 @@ if (LIBXML2_FOUND)
 else ()
     # Build from our local version
 endif (LIBXML2_FOUND)
+
+# Include LevelDB
+find_package (Leveldb REQUIRED)
+if (LEVELDB_FOUND)
+	include_directories(${LEVELDB_INCLUDE_DIRS})
+	target_link_libraries (minifi ${LEVELDB_LIBRARIES})
+else ()
+    message( FATAL_ERROR "LevelDB was not found. Please install LevelDB" )
+endif (LEVELDB_FOUND)
+
