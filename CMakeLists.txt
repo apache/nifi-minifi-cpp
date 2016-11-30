@@ -52,7 +52,6 @@ find_package(Threads REQUIRED)
 # Provide custom modules for the project
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
-#file(GLOB SOURCES "libminifi/src/*.cpp")
 add_subdirectory(thirdparty/yaml-cpp-yaml-cpp-0.5.3)
 add_subdirectory(libminifi)
 add_subdirectory(main)
@@ -64,7 +63,7 @@ set(CPACK_SOURCE_PACKAGE_FILE_NAME "${ASSEMBLY_BASE_NAME}-source")
 set(CPACK_SOURCE_IGNORE_FILES "/build/;/.bzr/;~$;${CPACK_SOURCE_IGNORE_FILES}")
 
 # Generate binary assembly
-install(FILES conf/minifi.properties
+install(FILES conf/minifi.properties conf/config.yml
         DESTINATION conf
         COMPONENT bin)
 
@@ -77,6 +76,7 @@ install(FILES LICENSE README.md NOTICE
         COMPONENT bin)
 
 set(CPACK_GENERATOR "TGZ")
+set(CPACK_COMPONENT_INCLUDE_TOPLEVEL_DIRECTORY 1)
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Apache NiFi MiNiFi C++ version ${VERSION}")
 set(CPACK_PACKAGE_VENDOR "Apache NiFi")
 set(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
