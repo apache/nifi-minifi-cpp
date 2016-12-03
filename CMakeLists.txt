@@ -22,7 +22,7 @@ cmake_minimum_required(VERSION 2.6)
 project(nifi-minifi-cpp)
 set(PROJECT_NAME "nifi-minifi-cpp")
 set(PROJECT_VERSION_MAJOR 0)
-set(PROJECT_VERSION_MINOR 1)
+set(PROJECT_VERSION_MINOR 2)
 set(PROJECT_VERSION_PATCH 0)
 
 #### Establish Project Configuration ####
