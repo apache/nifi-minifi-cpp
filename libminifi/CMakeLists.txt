@@ -39,7 +39,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 include_directories(../include)
 include_directories(../thirdparty/yaml-cpp-yaml-cpp-0.5.3/include)
 include_directories(include)
-include_directories(/usr/local/include)
 
 file(GLOB SOURCES "src/*.cpp")
 file(GLOB SPD_SOURCES "../include/spdlog/*")
