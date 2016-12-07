@@ -195,6 +195,10 @@ Processor *FlowController::createProcessor(std::string name, uuid_t uuid)
 	{
         processor = new ExecuteProcess(name, uuid);
 	}
+	else if (name == AppendHostInfo::ProcessorName)
+	{
+        processor = new AppendHostInfo(name, uuid);
+	}
 	else
 	{
         _logger->log_error("No Processor defined for %s", name.c_str());
