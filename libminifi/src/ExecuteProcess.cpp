@@ -158,6 +158,8 @@ void ExecuteProcess::onTrigger(ProcessContext *context, ProcessSession *session)
 					FlowFileRecord *flowFile = session->create();
 					if (!flowFile)
 						continue;
+          flowFile->addAttribute("command", _command.c_str());
+          flowFile->addAttribute("command.arguments", _commandArgument.c_str());
 					session->write(flowFile, &callback);
 					session->transfer(flowFile, Success);
 					session->commit();
@@ -184,6 +186,8 @@ void ExecuteProcess::onTrigger(ProcessContext *context, ProcessSession *session)
 								flowFile = session->create();
 								if (!flowFile)
 									break;
+								flowFile->addAttribute("command", _command.c_str());
+								flowFile->addAttribute("command.arguments", _commandArgument.c_str());
 								session->write(flowFile, &callback);
 							}
 							else
@@ -206,6 +210,8 @@ void ExecuteProcess::onTrigger(ProcessContext *context, ProcessSession *session)
 								flowFile = session->create();
 								if (!flowFile)
 									continue;
+								flowFile->addAttribute("command", _command.c_str());
+								flowFile->addAttribute("command.arguments", _commandArgument.c_str());
 								session->write(flowFile, &callback);
 							}
 							else
