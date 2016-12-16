@@ -31,6 +31,13 @@
 #include <net/if.h>
 #include <arpa/inet.h>
 
+#define __USE_POSIX
+#include <limits.h>
+
+#ifndef HOST_NAME_MAX
+#define HOST_NAME_MAX 255
+#endif
+
 const std::string AppendHostInfo::ProcessorName("AppendHostInfo");
 Property AppendHostInfo::InterfaceName("Network Interface Name", "Network interface from which to read an IP v4 address", "eth0");
 Property AppendHostInfo::HostAttribute("Hostname Attribute", "Flowfile attribute to used to record the agent's hostname", "source.hostname");
@@ -59,9 +66,9 @@ void AppendHostInfo::onTrigger(ProcessContext *context, ProcessSession *session)
 	  return;
 
 	//Get Hostname
-	char hostname[1024];
-	hostname[1023] = '\0'; 
-	gethostname(hostname, 1023);
+	char hostname[HOST_NAME_MAX];
+	hostname[HOST_NAME_MAX-1] = '\0'; 
+	gethostname(hostname, HOST_NAME_MAX-1);
 	struct hostent* h;
 	h = gethostbyname(hostname);
   std::string hostAttribute;
@@ -71,18 +78,21 @@ void AppendHostInfo::onTrigger(ProcessContext *context, ProcessSession *session)
 	//Get IP address for the specified interface
   std::string iface;
 	context->getProperty(InterfaceName.getName(), iface);
-	struct ifreq ifr;
-	int fd = socket(AF_INET, SOCK_DGRAM, 0);
-	//Type of address to retrieve - IPv4 IP address
-	ifr.ifr_addr.sa_family = AF_INET;
-	//Copy the interface name in the ifreq structure
-	strncpy(ifr.ifr_name , iface.c_str(), IFNAMSIZ-1);
-	ioctl(fd, SIOCGIFADDR, &ifr);
-	close(fd);
+  //Confirm the specified interface name exists on this device
+  if (if_nametoindex(iface.c_str()) != 0){
+    struct ifreq ifr;
+    int fd = socket(AF_INET, SOCK_DGRAM, 0);
+    //Type of address to retrieve - IPv4 IP address
+    ifr.ifr_addr.sa_family = AF_INET;
+    //Copy the interface name in the ifreq structure
+    strncpy(ifr.ifr_name , iface.c_str(), IFNAMSIZ-1);
+    ioctl(fd, SIOCGIFADDR, &ifr);
+    close(fd);
 
-  std::string ipAttribute;
-  context->getProperty(IPAttribute.getName(), ipAttribute);
-	flow->addAttribute(ipAttribute.c_str(), inet_ntoa(((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr));
+    std::string ipAttribute;
+    context->getProperty(IPAttribute.getName(), ipAttribute);
+    flow->addAttribute(ipAttribute.c_str(), inet_ntoa(((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr));
+  }
 
 	// Transfer to the relationship
 	session->transfer(flow, Success);
