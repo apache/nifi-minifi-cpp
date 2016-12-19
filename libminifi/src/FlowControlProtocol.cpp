@@ -252,6 +252,7 @@ void FlowControlProtocol::run(FlowControlProtocol *protocol)
 
 int FlowControlProtocol::sendRegisterReq()
 {
+	_logger->log_info("registering");
 	if (_registered)
 	{
 		_logger->log_info("Already registered");
@@ -261,6 +262,7 @@ int FlowControlProtocol::sendRegisterReq()
 	uint16_t port = this->_serverPort;
 
 	if (this->_socket <= 0)
+		_logger->log_info("connecting to nifi %s %s",_serverName.c_str(), port);
 		this->_socket = connectServer(_serverName.c_str(), port);
 
 	if (this->_socket <= 0)

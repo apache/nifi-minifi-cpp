@@ -52,6 +52,7 @@ void RemoteProcessorGroupPort::initialize()
 
 void RemoteProcessorGroupPort::onTrigger(ProcessContext *context, ProcessSession *session)
 {
+	_logger->log_error("Remote Process Group Triggered");
 	std::string value;
 
 	if (!_transmitting)
