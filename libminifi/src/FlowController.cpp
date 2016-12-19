@@ -566,6 +566,7 @@ void FlowController::parseRemoteProcessGroupYaml(YAML::Node *rpgNode, ProcessGro
                 _logger->log_debug("parseRemoteProcessGroupYaml: yield period => [%s]", yieldPeriod.c_str());
 
                 YAML::Node inputPorts = rpgNode["Input Ports"].as<YAML::Node>();
+                YAML::Node outputPorts = rpgNode["Output Ports"].as<YAML::Node>();
                 ProcessGroup *group = NULL;
 
                 // generate the random UUID
@@ -598,7 +599,7 @@ void FlowController::parseRemoteProcessGroupYaml(YAML::Node *rpgNode, ProcessGro
                 group->setTransmitting(true);
                 group->setURL(url);
 
-                if (inputPorts.IsSequence()) {
+                if (inputPorts && inputPorts.IsSequence()) {
                     for (YAML::const_iterator portIter = inputPorts.begin(); portIter != inputPorts.end(); ++portIter) {
                         _logger->log_debug("Got a current port, iterating...");
 
@@ -607,6 +608,16 @@ void FlowController::parseRemoteProcessGroupYaml(YAML::Node *rpgNode, ProcessGro
                         this->parsePortYaml(&currPort, group, SEND);
                     } // for node
                 }
+                if (outputPorts && outputPorts.IsSequence()) {
+                    for (YAML::const_iterator portIter = outputPorts.begin(); portIter != outputPorts.end(); ++portIter) {
+                        _logger->log_debug("Got a current port, iterating...");
+
+                        YAML::Node currPort = portIter->as<YAML::Node>();
+
+                        this->parsePortYaml(&currPort, group, RECEIVE);
+                    } // for node
+                }
+				
             }
         }
     }
