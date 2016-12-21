@@ -562,7 +562,7 @@ void FlowController::parseRemoteProcessGroupYaml(YAML::Node *rpgNode, ProcessGro
                 _logger->log_debug("parseRemoteProcessGroupYaml: yield period => [%s]", yieldPeriod.c_str());
 
                 YAML::Node inputPorts = rpgNode["Input Ports"].as<YAML::Node>();
-				YAML::Node outputPorts = rpgNode["Output Ports"].as<YAML::Node>();
+                YAML::Node outputPorts = rpgNode["Output Ports"].as<YAML::Node>();
                 ProcessGroup *group = NULL;
 
                 // generate the random UUID
@@ -595,7 +595,7 @@ void FlowController::parseRemoteProcessGroupYaml(YAML::Node *rpgNode, ProcessGro
                 group->setTransmitting(true);
                 group->setURL(url);
 
-                if (inputPorts.IsSequence()) {
+                if (inputPorts && inputPorts.IsSequence()) {
                     for (YAML::const_iterator portIter = inputPorts.begin(); portIter != inputPorts.end(); ++portIter) {
                         _logger->log_debug("Got a current port, iterating...");
 
@@ -604,7 +604,7 @@ void FlowController::parseRemoteProcessGroupYaml(YAML::Node *rpgNode, ProcessGro
                         this->parsePortYaml(&currPort, group, SEND);
                     } // for node
                 }
-                if (outputPorts.IsSequence()) {
+                if (outputPorts && outputPorts.IsSequence()) {
                     for (YAML::const_iterator portIter = outputPorts.begin(); portIter != outputPorts.end(); ++portIter) {
                         _logger->log_debug("Got a current port, iterating...");
 
@@ -810,13 +810,13 @@ void FlowController::parsePortYaml(YAML::Node *portNode, ProcessGroup *parent, T
         return;
     }
 
-    YAML::Node portsObj = portNode->as<YAML::Node>();
+    YAML::Node inputPortsObj = portNode->as<YAML::Node>();
 
     // generate the random UIID
     uuid_generate(uuid);
 
-    auto portId = portsObj["id"].as<std::string>();
-    auto nameStr = portsObj["name"].as<std::string>();
+    auto portId = inputPortsObj["id"].as<std::string>();
+    auto nameStr = inputPortsObj["name"].as<std::string>();
     uuid_parse(portId.c_str(), uuid);
 
     port = new RemoteProcessorGroupPort(nameStr.c_str(), uuid);
@@ -837,7 +837,7 @@ void FlowController::parsePortYaml(YAML::Node *portNode, ProcessGroup *parent, T
     // add processor to parent
     parent->addProcessor(processor);
     processor->setScheduledState(RUNNING);
-    auto rawMaxConcurrentTasks = portsObj["max concurrent tasks"].as<std::string>();
+    auto rawMaxConcurrentTasks = inputPortsObj["max concurrent tasks"].as<std::string>();
     int64_t maxConcurrentTasks;
     if (Property::StringToInt(rawMaxConcurrentTasks, maxConcurrentTasks)) {
         processor->setMaxConcurrentTasks(maxConcurrentTasks);
@@ -1175,7 +1175,7 @@ void FlowController::load(ConfigFormat configFormat) {
             parseProcessorNodeYaml(processorsNode, this->_root);
             parseRemoteProcessGroupYaml(&remoteProcessingGroupNode, this->_root);
             parseConnectionYaml(&connectionsNode, this->_root);
-			_logger->log_error("finished loading the yaml");
+
             _initialized = true;
         }
     }

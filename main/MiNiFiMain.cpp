@@ -66,7 +66,7 @@ void sigHandler(int signal)
 int main(int argc, char **argv)
 {
 	Logger *logger = Logger::getLogger();
-	logger->setLogLevel(trace);
+	logger->setLogLevel(info);
 
     // assumes POSIX compliant environment
     std::string minifiHome;
