@@ -52,6 +52,7 @@ Perspectives of the role of MiNiFi should be from the perspective of the agent a
   * LogAttribute
   * ListenSyslog
   * ExecuteProcess
+  * AppendHostInfo
 * Provenance events generation is supported and are persisted using levelDB.
 
 ## System Requirements
@@ -70,12 +71,50 @@ Perspectives of the role of MiNiFi should be from the perspective of the agent a
 * libboost and boost-devel
   * 1.48.0 or greater
 * libxml2 and libxml2-devel
-* leveldb and leveldb-devel
+* libleveldb and libleveldb-devel
+* libuuid and uuid-dev
 
 ### To run
 
 #### Libraries
 * libxml2
+* libuuid
+* libleveldb
+
+The needed dependencies can be installed with the following commands for:
+
+Yum based Linux Distributions
+```
+# ~/Development/code/apache/nifi-minifi-cpp on git:master
+$ yum install cmake \
+  gcc gcc-c++ \
+  leveldb-devel leveldb \
+  libuuid libuuid-devel \
+  libxml2-devel libxml2 \
+  boost-devel
+```
+
+Aptitude based Linux Distributions
+```
+# ~/Development/code/apache/nifi-minifi-cpp on git:master
+$ apt-get install cmake \
+  gcc g++ \
+  libleveldb-dev libleveldb1v5 \
+  uuid-dev uuid \
+  libxml++2.6-dev libxml++2.6-2v5 \
+  libboost-all-dev
+```
+
+OS X Using Homebrew (with XCode Command Line Tools installed)
+```
+# ~/Development/code/apache/nifi-minifi-cpp on git:master
+$ brew install cmake \
+  leveldb \
+  ossp-uuid \
+  libxml2 \
+  boost
+```
+
 
 ## Getting Started
 
@@ -159,9 +198,10 @@ $ rm -rf ./build
 ### Configuring
 The 'conf' directory in the root contains a template config.yml document.  
 
-This is compatible with the format used with the Java MiNiFi application.  Currently, a subset of the configuration is supported.  Additional information on the YAML format for the config.yml can be found in the [MiNiFi System Administrator Guide](https://nifi.apache.org/minifi/system-admin-guide.html).  
+This is compatible with the format used with the Java MiNiFi application.  Currently, a subset of the configuration is supported and MiNiFi C++ is currently compatible with version 1 of the MiNiFi YAML schema.
+Additional information on the YAML format for the config.yml and schema versioning can be found in the [MiNiFi System Administrator Guide](https://nifi.apache.org/minifi/system-admin-guide.html).
 
-Additionally, users can utilize the MiNiFi Toolkit Converter to aid in creating a flow configuration from a generated template exported from a NiFi instance.  The MiNiFi Toolkit Converter tool can be downloaded from http://nifi.apache.org/minifi/download.html under the `MiNiFi Toolkit Binaries` section.  Information on its usage is available at https://nifi.apache.org/minifi/minifi-toolkit.html.
+Additionally, users can utilize the MiNiFi Toolkit Converter (version 0.0.1 - schema version 1) to aid in creating a flow configuration from a generated template exported from a NiFi instance.  The MiNiFi Toolkit Converter tool can be downloaded from http://nifi.apache.org/minifi/download.html under the `MiNiFi Toolkit Binaries` section.  Information on its usage is available at https://nifi.apache.org/minifi/minifi-toolkit.html.
 
 
     Flow Controller:
@@ -223,7 +263,7 @@ MiNiFi can also be installed as a system service using minifi.sh with an optiona
     $ ./bin/minifi.sh install [service name]
 
 ## Documentation
-See http://nifi.apache.org/minifi for the latest documentation.
+See https://nifi.apache.org/minifi for the latest documentation.
 
 ## License
 Except as otherwise noted this software is licensed under the
