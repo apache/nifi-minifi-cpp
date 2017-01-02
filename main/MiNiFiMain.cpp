@@ -80,8 +80,9 @@ int main(int argc, char **argv)
         char *path = NULL;
         char full_path[PATH_MAX];
         path = realpath(argv[0], full_path);
-        std::string minifiHome(path);
-        minifiHome = minifiHome.substr(0, minifiHome.find_last_of("/\\"));
+        std::string minifiHomePath(path);
+        minifiHomePath = minifiHomePath.substr(0, minifiHomePath.find_last_of("/\\"));	//Remove /minifi from path
+        minifiHome = minifiHomePath.substr(0, minifiHomePath.find_last_of("/\\"));	//Remove /bin from path
     }
 
 	if (signal(SIGINT, sigHandler) == SIG_ERR || signal(SIGTERM, sigHandler) == SIG_ERR || signal(SIGPIPE, SIG_IGN) == SIG_ERR)
