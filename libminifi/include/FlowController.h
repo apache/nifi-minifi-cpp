@@ -52,6 +52,7 @@
 #include "TailFile.h"
 #include "ListenSyslog.h"
 #include "ExecuteProcess.h"
+#include "AppendHostInfo.h"
 
 //! Default NiFi Root Group Name
 #define DEFAULT_ROOT_GROUP_NAME ""

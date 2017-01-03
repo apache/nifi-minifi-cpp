@@ -8,3 +8,8 @@ Makefile
 cmake_install.cmake
 install_manifest.txt
 CTestTestfile.cmake
+build
+bin
+target
+thirdparty/**/*.o
+thirdparty/**/*.a

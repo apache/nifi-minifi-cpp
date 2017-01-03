@@ -22,7 +22,7 @@ cmake_minimum_required (VERSION 2.6)
 project(nifi-libminifi)
 set(PROJECT_NAME "nifi-libminifi")
 set(PROJECT_VERSION_MAJOR 0)
-set(PROJECT_VERSION_MINOR 1)
+set(PROJECT_VERSION_MINOR 2)
 set(PROJECT_VERSION_PATCH 0)
 
 
@@ -56,3 +56,13 @@ if (LIBXML2_FOUND)
 else ()
     # Build from our local version
 endif (LIBXML2_FOUND)
+
+# Include LevelDB
+find_package (Leveldb REQUIRED)
+if (LEVELDB_FOUND)
+	include_directories(${LEVELDB_INCLUDE_DIRS})
+	target_link_libraries (minifi ${LEVELDB_LIBRARIES})
+else ()
+    message( FATAL_ERROR "LevelDB was not found. Please install LevelDB" )
+endif (LEVELDB_FOUND)
+
