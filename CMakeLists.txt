@@ -125,3 +125,10 @@ enable_testing(test)
     target_include_directories(tests PRIVATE BEFORE "libminifi/include/")
     target_link_libraries(tests ${CMAKE_THREAD_LIBS_INIT} ${UUID_LIBRARIES} ${LEVELDB_LIBRARIES} ${OPENSSL_LIBRARIES} minifi yaml-cpp)
     add_test(NAME LibMinifiTests COMMAND tests)
+
+# Create a custom build target called "docker" that will invoke DockerBuild.sh and create the NiFi-MiNiFi-CPP Docker image
+add_custom_target(
+    docker
+    COMMAND ${CMAKE_SOURCE_DIR}/docker/DockerBuild.sh 1000 1000 0.2.0 nifi-minifi-cpp-0.2.0-bin.tar.gz ${CMAKE_SOURCE_DIR}
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/docker/
+)
