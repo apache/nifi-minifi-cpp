@@ -49,6 +49,7 @@
 #include "RemoteProcessorGroupPort.h"
 #include "Provenance.h"
 #include "GetFile.h"
+#include "PutFile.h"
 #include "TailFile.h"
 #include "ListenSyslog.h"
 #include "ExecuteProcess.h"
