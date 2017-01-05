@@ -184,6 +184,28 @@ $ brew install cmake \
   CPack: - package: ~/Development/code/apache/nifi-minifi-cpp/build/nifi-minifi-cpp-0.1.0-source.tar.gz generated.
   ```
 
+- (Optional) Create a Docker image from the resulting binary assembly output from "make package".
+```
+~/Development/code/apache/nifi-minifi-cpp/build
+$ make docker
+NiFi-MiNiFi-CPP Version: 0.2.0
+Current Working Directory: /Users/jdyer/Development/github/nifi-minifi-cpp/docker
+CMake Source Directory: /Users/jdyer/Development/github/nifi-minifi-cpp
+MiNiFi Package: nifi-minifi-cpp-0.2.0-bin.tar.gz
+Docker Command: 'docker build --build-arg UID=1000 --build-arg GID=1000 --build-arg MINIFI_VERSION=0.2.0 --build-arg MINIFI_PACKAGE=nifi-minifi-cpp-0.2.0-bin.tar.gz -t apacheminificpp:0.2.0 .'
+Sending build context to Docker daemon 777.2 kB
+Step 1 : FROM alpine:3.5
+ ---> 88e169ea8f46
+Step 2 : MAINTAINER Apache NiFi <dev@nifi.apache.org>
+
+...
+
+Step 15 : CMD $MINIFI_HOME/bin/minifi.sh run
+ ---> Using cache
+ ---> c390063d9bd1
+Successfully built c390063d9bd1
+Built target docker
+```
 
 ### Cleaning
 Remove the build directory created above.

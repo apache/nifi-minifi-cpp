@@ -13,3 +13,7 @@ bin
 target
 thirdparty/**/*.o
 thirdparty/**/*.a
+
+# Ignore source files that have been placed in the docker directory during build
+docker/minificppsource
+docker/.DS_STORE
