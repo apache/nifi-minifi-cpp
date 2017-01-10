@@ -1,6 +1,6 @@
 /**
- * @file TimerDrivenSchedulingAgent.h
- * TimerDrivenSchedulingAgent class declaration
+ * @file EventDrivenSchedulingAgent.h
+ * EventDrivenSchedulingAgent class declaration
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -17,28 +17,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __TIMER_DRIVEN_SCHEDULING_AGENT_H__
-#define __TIMER_DRIVEN_SCHEDULING_AGENT_H__
+#ifndef __EVENT_DRIVEN_SCHEDULING_AGENT_H__
+#define __EVENT_DRIVEN_SCHEDULING_AGENT_H__
 
 #include "Logger.h"
 #include "Processor.h"
 #include "ProcessContext.h"
 #include "ThreadedSchedulingAgent.h"
 
-//! TimerDrivenSchedulingAgent Class
-class TimerDrivenSchedulingAgent : public ThreadedSchedulingAgent
+//! EventDrivenSchedulingAgent Class
+class EventDrivenSchedulingAgent : public ThreadedSchedulingAgent
 {
 public:
 	//! Constructor
 	/*!
 	 * Create a new processor
 	 */
-	TimerDrivenSchedulingAgent()
+	EventDrivenSchedulingAgent()
 	: ThreadedSchedulingAgent()
 	{
 	}
 	//! Destructor
-	virtual ~TimerDrivenSchedulingAgent()
+	virtual ~EventDrivenSchedulingAgent()
 	{
 	}
 	//! Run function for the thread
@@ -47,8 +47,8 @@ public:
 private:
 	// Prevent default copy constructor and assignment operation
 	// Only support pass by reference or pointer
-	TimerDrivenSchedulingAgent(const TimerDrivenSchedulingAgent &parent);
-	TimerDrivenSchedulingAgent &operator=(const TimerDrivenSchedulingAgent &parent);
+	EventDrivenSchedulingAgent(const EventDrivenSchedulingAgent &parent);
+	EventDrivenSchedulingAgent &operator=(const EventDrivenSchedulingAgent &parent);
 
 };
 

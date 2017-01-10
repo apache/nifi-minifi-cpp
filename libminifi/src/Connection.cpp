@@ -28,6 +28,7 @@
 #include <iostream>
 
 #include "Connection.h"
+#include "Processor.h"
 
 Connection::Connection(std::string name, uuid_t uuid, uuid_t srcUUID, uuid_t destUUID)
 : _name(name)
@@ -81,14 +82,22 @@ bool Connection::isFull()
 
 void Connection::put(FlowFileRecord *flow)
 {
-	std::lock_guard<std::mutex> lock(_mtx);
+	{
+		std::lock_guard<std::mutex> lock(_mtx);
+	
+		_queue.push(flow);
+	
+		_queuedDataSize += flow->getSize();
+	
+		_logger->log_debug("Enqueue flow file UUID %s to connection %s",
+				flow->getUUIDStr().c_str(), _name.c_str());
+	}
 
-	_queue.push(flow);
-
-	_queuedDataSize += flow->getSize();
-
-	_logger->log_debug("Enqueue flow file UUID %s to connection %s",
-			flow->getUUIDStr().c_str(), _name.c_str());
+	// Notify receiving processor that work may be available
+	if(_destProcessor)
+	{
+		_destProcessor->notifyWork();
+	}
 }
 
 FlowFileRecord* Connection::poll(std::set<FlowFileRecord *> &expiredFlowRecords)

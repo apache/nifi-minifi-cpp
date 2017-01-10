@@ -117,10 +117,13 @@ void FlowController::stop(bool force)
 	{
         _logger->log_info("Stop Flow Controller");
         this->_timerScheduler.stop();
+        this->_eventScheduler.stop();
         // Wait for sometime for thread stop
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
         if (this->_root)
-            this->_root->stopProcessing(&this->_timerScheduler);
+            this->_root->stopProcessing(
+                    &this->_timerScheduler,
+                    &this->_eventScheduler);
         _running = false;
     }
 }
@@ -621,7 +624,7 @@ void FlowController::parseRemoteProcessGroupYaml(YAML::Node *rpgNode, ProcessGro
                         this->parsePortYaml(&currPort, group, RECEIVE);
                     } // for node
                 }
-				
+
             }
         }
     }
@@ -1197,8 +1200,11 @@ bool FlowController::start() {
         if (!_running) {
             _logger->log_info("Start Flow Controller");
             this->_timerScheduler.start();
+            this->_eventScheduler.start();
             if (this->_root)
-                this->_root->startProcessing(&this->_timerScheduler);
+                this->_root->startProcessing(
+                        &this->_timerScheduler,
+                        &this->_eventScheduler);
             _running = true;
             this->_protocol->start();
         }

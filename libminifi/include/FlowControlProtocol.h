@@ -304,9 +304,9 @@ private:
 	//! Mutex for protection
 	std::mutex _mtx;
 	//! Logger
-	Logger *_logger;
+	Logger *_logger = NULL;
 	//! Configure
-	Configure *_configure;
+	Configure *_configure = NULL;
 	//! NiFi server Name
 	std::string _serverName;
 	//! NiFi server port
@@ -322,13 +322,13 @@ private:
 	//! seq number
 	uint32_t _seqNumber;
 	//! FlowController
-	FlowController *_controller;
+	FlowController *_controller = NULL;
 	//! report Blob
 	char *_reportBlob;
 	//! report Blob len;
 	int _reportBlobLen;
 	//! thread
-	std::thread *_thread;
+	std::thread *_thread = NULL;
 	//! whether it is running
 	bool _running;
 	// Prevent default copy constructor and assignment operation
