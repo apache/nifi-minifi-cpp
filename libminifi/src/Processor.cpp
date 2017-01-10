@@ -449,3 +449,64 @@ void Processor::onTrigger()
 		throw;
 	}
 }
+
+void Processor::waitForWork(uint64_t timeoutMs)
+{
+	std::unique_lock<std::mutex> lock(_workAvailableMtx);
+	_hasWork = isWorkAvailable();
+
+	if (!_hasWork)
+	{
+		_hasWorkCondition.wait_for(lock, std::chrono::milliseconds(timeoutMs), [&] { return _hasWork; });
+	}
+
+	lock.unlock();
+}
+
+void Processor::notifyWork()
+{
+	// Do nothing if we are not event-driven
+	if (_strategy != EVENT_DRIVEN)
+	{
+		return;
+	}
+
+	{
+		std::unique_lock<std::mutex> lock(_workAvailableMtx);
+		_hasWork = isWorkAvailable();
+
+		// Keep a scope-local copy of the state to avoid race conditions
+		bool hasWork = _hasWork;
+
+		lock.unlock();
+
+		if (hasWork)
+		{
+			_hasWorkCondition.notify_one();
+		}
+	}
+}
+
+bool Processor::isWorkAvailable()
+{
+	// We have work if any incoming connection has work
+	bool hasWork = false;
+
+	try
+	{
+		for (const auto &conn : getIncomingConnections())
+		{
+			if (conn->getQueueSize() > 0)
+			{
+				hasWork = true;
+				break;
+			}
+		}
+	}
+	catch (...)
+	{
+		_logger->log_error("Caught an exception while checking if work is available; unless it was positively determined that work is available, assuming NO work is available!");
+	}
+
+	return hasWork;
+}

@@ -45,6 +45,7 @@
 #include "LogAttribute.h"
 #include "RealTimeDataCollector.h"
 #include "TimerDrivenSchedulingAgent.h"
+#include "EventDrivenSchedulingAgent.h"
 #include "FlowControlProtocol.h"
 #include "RemoteProcessorGroupPort.h"
 #include "Provenance.h"
@@ -197,8 +198,10 @@ protected:
 	//! Provenance Repo
 	ProvenanceRepository *_provenanceRepo;
 	//! Flow Engines
-	//! Flow Scheduler
+	//! Flow Timer Scheduler
 	TimerDrivenSchedulingAgent _timerScheduler;
+	//! Flow Event Scheduler
+	EventDrivenSchedulingAgent _eventScheduler;
 	//! Controller Service
 	//! Config
 	//! Site to Site Server Listener

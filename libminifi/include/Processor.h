@@ -25,9 +25,11 @@
 #include <queue>
 #include <map>
 #include <mutex>
+#include <condition_variable>
 #include <atomic>
 #include <algorithm>
 #include <set>
+#include <chrono>
 
 #include "TimeUtil.h"
 #include "Property.h"
@@ -278,6 +280,10 @@ public:
 	Connection *getNextIncomingConnection();
 	//! On Trigger
 	void onTrigger();
+	//! Block until work is available on any input connection, or the given duration elapses
+	void waitForWork(uint64_t timeoutMs);
+	//! Notify this processor that work may be available
+	void notifyWork();
 
 public:
 	//! OnTrigger method, implemented by NiFi Processor Designer
@@ -334,6 +340,14 @@ private:
 	std::atomic<uint64_t> _yieldExpiration;
 	//! Incoming connection Iterator
 	std::set<Connection *>::iterator _incomingConnectionsIter;
+	//! Condition for whether there is incoming work to do
+	bool _hasWork = false;
+	//! Concurrent condition mutex for whether there is incoming work to do
+	std::mutex _workAvailableMtx;
+	//! Concurrent condition variable for whether there is incoming work to do
+	std::condition_variable _hasWorkCondition;
+	//! Check all incoming connections for work
+	bool isWorkAvailable();
 	//! Logger
 	Logger *_logger;
 	// Prevent default copy constructor and assignment operation

@@ -127,7 +127,8 @@ void ProcessGroup::removeProcessGroup(ProcessGroup *child)
 	}
 }
 
-void ProcessGroup::startProcessing(TimerDrivenSchedulingAgent *timeScheduler)
+void ProcessGroup::startProcessing(TimerDrivenSchedulingAgent *timeScheduler,
+		EventDrivenSchedulingAgent *eventScheduler)
 {
 	std::lock_guard<std::mutex> lock(_mtx);
 
@@ -141,13 +142,15 @@ void ProcessGroup::startProcessing(TimerDrivenSchedulingAgent *timeScheduler)
 			{
 				if (processor->getSchedulingStrategy() == TIMER_DRIVEN)
 					timeScheduler->schedule(processor);
+				else if (processor->getSchedulingStrategy() == EVENT_DRIVEN)
+					eventScheduler->schedule(processor);
 			}
 		}
 
 		for (std::set<ProcessGroup *>::iterator it = _childProcessGroups.begin(); it != _childProcessGroups.end(); ++it)
 		{
 			ProcessGroup *processGroup(*it);
-			processGroup->startProcessing(timeScheduler);
+			processGroup->startProcessing(timeScheduler, eventScheduler);
 		}
 	}
 	catch (std::exception &exception)
@@ -162,7 +165,8 @@ void ProcessGroup::startProcessing(TimerDrivenSchedulingAgent *timeScheduler)
 	}
 }
 
-void ProcessGroup::stopProcessing(TimerDrivenSchedulingAgent *timeScheduler)
+void ProcessGroup::stopProcessing(TimerDrivenSchedulingAgent *timeScheduler,
+		EventDrivenSchedulingAgent *eventScheduler)
 {
 	std::lock_guard<std::mutex> lock(_mtx);
 
@@ -174,12 +178,14 @@ void ProcessGroup::stopProcessing(TimerDrivenSchedulingAgent *timeScheduler)
 			Processor *processor(*it);
 			if (processor->getSchedulingStrategy() == TIMER_DRIVEN)
 					timeScheduler->unschedule(processor);
+			else if (processor->getSchedulingStrategy() == EVENT_DRIVEN)
+					eventScheduler->unschedule(processor);
 		}
 
 		for (std::set<ProcessGroup *>::iterator it = _childProcessGroups.begin(); it != _childProcessGroups.end(); ++it)
 		{
 			ProcessGroup *processGroup(*it);
-			processGroup->stopProcessing(timeScheduler);
+			processGroup->stopProcessing(timeScheduler, eventScheduler);
 		}
 	}
 	catch (std::exception &exception)
