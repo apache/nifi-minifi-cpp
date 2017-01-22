@@ -73,6 +73,7 @@ Perspectives of the role of MiNiFi should be from the perspective of the agent a
 * libxml2 and libxml2-devel
 * libleveldb and libleveldb-devel
 * libuuid and uuid-dev
+* openssl
 
 ### To run
 
@@ -80,6 +81,7 @@ Perspectives of the role of MiNiFi should be from the perspective of the agent a
 * libxml2
 * libuuid
 * libleveldb
+* libssl and libcrypto from openssl 
 
 The needed dependencies can be installed with the following commands for:
 
@@ -91,7 +93,7 @@ $ yum install cmake \
   leveldb-devel leveldb \
   libuuid libuuid-devel \
   libxml2-devel libxml2 \
-  boost-devel
+  boost-devel \ libssl-dev
 ```
 
 Aptitude based Linux Distributions
@@ -102,7 +104,7 @@ $ apt-get install cmake \
   libleveldb-dev libleveldb1v5 \
   uuid-dev uuid \
   libxml++2.6-dev libxml++2.6-2v5 \
-  libboost-all-dev
+  libboost-all-dev libssl-dev
 ```
 
 OS X Using Homebrew (with XCode Command Line Tools installed)
@@ -112,7 +114,7 @@ $ brew install cmake \
   leveldb \
   ossp-uuid \
   libxml2 \
-  boost
+  boost \ openssl
 ```
 
 
@@ -242,6 +244,26 @@ Additionally, users can utilize the MiNiFi Toolkit Converter (version 0.0.1 - sc
                 Properties:
                     Port: 10001
                     Host Name: localhost
+
+### Site2Site Security Configuration
+
+    in minifi.properties 
+
+    enable tls ssl
+    nifi.remote.input.secure=true
+
+    if you want to enable client certificate base authorization 
+    nifi.security.need.ClientAuth=true
+    setup the client certificate and private key PEM files
+    nifi.security.client.certificate=./conf/client.pem
+    nifi.security.client.private.key=./conf/client.pem
+    setup the client private key passphase file
+    nifi.security.client.pass.phase=./conf/password
+    setup the client CA certificate file
+    nif.security.client.ca.certificate=./conf/nifi-cert.pem
+
+    if you do not want to enable client certificate base authorization
+    ifi.security.need.ClientAuth=false
 
 ### Running
 After completing a [build](#building), the application can be run by issuing the following from :

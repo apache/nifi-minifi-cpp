@@ -66,3 +66,11 @@ else ()
     message( FATAL_ERROR "LevelDB was not found. Please install LevelDB" )
 endif (LEVELDB_FOUND)
 
+# Include OpenSSL 
+find_package (OpenSSL REQUIRED)
+if (OPENSSL_FOUND)
+	include_directories(${OPENSSL_INCLUDE_DIR})
+	target_link_libraries (minifi ${OPENSSL_LIBRARIES})
+else ()
+    message( FATAL_ERROR "OpenSSL was not found. Please install OpenSSL" )
+endif (OPENSSL_FOUND)
