@@ -176,7 +176,7 @@ FlowControllerImpl::FlowControllerImpl(std::string name)  {
 
 			_logger->log_info("Load/Verify Client Certificate OK.");
 		}
-		
+
 	}
 	if (!path) {
 		_logger->log_error(
@@ -199,7 +199,7 @@ FlowControllerImpl::~FlowControllerImpl() {
 		delete _protocol;
 	if (NULL != _provenanceRepo)
 		delete _provenanceRepo;
-	
+
 }
 
 void FlowControllerImpl::stop(bool force) {
@@ -280,6 +280,8 @@ Processor *FlowControllerImpl::createProcessor(std::string name, uuid_t uuid) {
 		processor = new TailFile(name, uuid);
 	} else if (name == ListenSyslog::ProcessorName) {
 		processor = new ListenSyslog(name, uuid);
+	} else if (name == ListenHTTP::ProcessorName) {
+        processor = new ListenHTTP(name, uuid);
 	} else if (name == ExecuteProcess::ProcessorName) {
 		processor = new ExecuteProcess(name, uuid);
 	} else if (name == AppendHostInfo::ProcessorName) {

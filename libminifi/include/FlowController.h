@@ -51,6 +51,7 @@
 #include "PutFile.h"
 #include "TailFile.h"
 #include "ListenSyslog.h"
+#include "ListenHTTP.h"
 #include "ExecuteProcess.h"
 #include "AppendHostInfo.h"
 // OpenSSL related

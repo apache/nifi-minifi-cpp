@@ -25,11 +25,13 @@
 #include <queue>
 #include <map>
 #include <mutex>
+#include <memory>
 #include <condition_variable>
 #include <atomic>
 #include <algorithm>
 #include <set>
 #include <chrono>
+#include <functional>
 
 #include "TimeUtil.h"
 #include "Property.h"
@@ -39,6 +41,7 @@
 //! Forwarder declaration
 class ProcessContext;
 class ProcessSession;
+class ProcessSessionFactory;
 
 //! Minimum scheduling period in Nano Second
 #define MINIMUM_SCHEDULING_NANOS 30000
@@ -137,9 +140,7 @@ public:
 	//! Check whether the processor is running
 	bool isRunning();
 	//! Set Processor Scheduled State
-	void setScheduledState(ScheduledState state) {
-		_state = state;
-	}
+	void setScheduledState(ScheduledState state);
 	//! Get Processor Scheduled State
 	ScheduledState getScheduledState(void) {
 		return _state;
@@ -281,7 +282,7 @@ public:
 	//! Get the Next RoundRobin incoming connection
 	Connection *getNextIncomingConnection();
 	//! On Trigger
-	void onTrigger();
+	void onTrigger(ProcessContext *context, ProcessSessionFactory *sessionFactory);
 	//! Block until work is available on any input connection, or the given duration elapses
 	void waitForWork(uint64_t timeoutMs);
 	//! Notify this processor that work may be available
@@ -290,10 +291,10 @@ public:
 public:
 	//! OnTrigger method, implemented by NiFi Processor Designer
 	virtual void onTrigger(ProcessContext *context, ProcessSession *session) = 0;
-	//! Initialize, over write by NiFi Process Designer
-	virtual void initialize(void) {
-		return;
-	}
+	//! Initialize, overridden by NiFi Process Designer
+	virtual void initialize() {}
+	//! Scheduled event hook, overridden by NiFi Process Designer
+	virtual void onSchedule(ProcessContext *context, ProcessSessionFactory *sessionFactory) {}
 
 protected:
 

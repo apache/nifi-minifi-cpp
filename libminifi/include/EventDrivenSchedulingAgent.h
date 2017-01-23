@@ -42,7 +42,7 @@ public:
 	{
 	}
 	//! Run function for the thread
-	void run(Processor *processor);
+	void run(Processor *processor, ProcessContext *processContext, ProcessSessionFactory *sessionFactory);
 
 private:
 	// Prevent default copy constructor and assignment operation

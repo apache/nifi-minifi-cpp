@@ -45,9 +45,9 @@ public:
 	virtual ~ThreadedSchedulingAgent()
 	{
 	}
-	
+
 	//! Run function for the thread
-	virtual void run(Processor *processor) = 0;
+	virtual void run(Processor *processor, ProcessContext *processContext, ProcessSessionFactory *sessionFactory) = 0;
 
 public:
 	//! schedule, overwritten by different DrivenTimerDrivenSchedulingAgent

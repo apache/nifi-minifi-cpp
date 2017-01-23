@@ -25,10 +25,13 @@
 #include <time.h>
 #include <chrono>
 #include <thread>
+#include <memory>
+#include <functional>
 
 #include "Processor.h"
 #include "ProcessContext.h"
 #include "ProcessSession.h"
+#include "ProcessSessionFactory.h"
 
 Processor::Processor(std::string name, uuid_t uuid)
 : _name(name)
@@ -68,6 +71,11 @@ Processor::~Processor()
 bool Processor::isRunning()
 {
 	return (_state == RUNNING && _activeTasks > 0);
+}
+
+void Processor::setScheduledState(ScheduledState state)
+{
+	_state = state;
 }
 
 bool Processor::setSupportedProperties(std::set<Property> properties)
@@ -439,31 +447,25 @@ bool Processor::flowFilesOutGoingFull()
 	return false;
 }
 
-void Processor::onTrigger()
+void Processor::onTrigger(ProcessContext *context, ProcessSessionFactory *sessionFactory)
 {
-	ProcessContext *context = new ProcessContext(this);
-	ProcessSession *session = new ProcessSession(context);
+	auto session = sessionFactory->createSession();
+
 	try {
-		// Call the child onTrigger function
-		this->onTrigger(context, session);
+		// Call the virtual trigger function
+		onTrigger(context, session.get());
 		session->commit();
-		delete session;
-		delete context;
 	}
 	catch (std::exception &exception)
 	{
 		_logger->log_debug("Caught Exception %s", exception.what());
 		session->rollback();
-		delete session;
-		delete context;
 		throw;
 	}
 	catch (...)
 	{
 		_logger->log_debug("Caught Exception Processor::onTrigger");
 		session->rollback();
-		delete session;
-		delete context;
 		throw;
 	}
 }

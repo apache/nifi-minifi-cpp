@@ -96,16 +96,15 @@ public:
 			_processor->yield();
 	}
 
-protected:
+	// Prevent default copy constructor and assignment operation
+	// Only support pass by reference or pointer
+	ProcessContext(const ProcessContext &parent) = delete;
+	ProcessContext &operator=(const ProcessContext &parent) = delete;
 
 private:
 
 	//! Processor
 	Processor *_processor;
-	// Prevent default copy constructor and assignment operation
-	// Only support pass by reference or pointer
-	ProcessContext(const ProcessContext &parent);
-	ProcessContext &operator=(const ProcessContext &parent);
 	//! Logger
 	Logger *_logger;
 

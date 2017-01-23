@@ -23,11 +23,11 @@
 #include "Property.h"
 #include "EventDrivenSchedulingAgent.h"
 
-void EventDrivenSchedulingAgent::run(Processor *processor)
+void EventDrivenSchedulingAgent::run(Processor *processor, ProcessContext *processContext, ProcessSessionFactory *sessionFactory)
 {
 	while (this->_running)
 	{
-		bool shouldYield = this->onTrigger(processor);
+		bool shouldYield = this->onTrigger(processor, processContext, sessionFactory);
 
 		if (processor->isYield())
 		{

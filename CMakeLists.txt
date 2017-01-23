@@ -46,6 +46,9 @@ endif()
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# Enable asan in DEBUG for compatibility with civet
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=address")
+
 # Search for threads
 find_package(Threads REQUIRED)
 
@@ -56,7 +59,7 @@ else()
 set(OPENSSL_ROOT_DIR "/usr/lib/x86_64-linux-gnu")
 endif()
 
-# Include OpenSSL 
+# Include OpenSSL
 find_package (OpenSSL REQUIRED)
 if (OPENSSL_FOUND)
 	include_directories(${OPENSSL_INCLUDE_DIR})
@@ -78,6 +81,8 @@ find_package(UUID REQUIRED)
 file(GLOB SPD_SOURCES "include/spdlog/*")
 
 add_subdirectory(thirdparty/yaml-cpp-yaml-cpp-0.5.3)
+set(CIVETWEB_ENABLE_CXX ON CACHE BOOL "Enable civet C++ library")
+add_subdirectory(thirdparty/civetweb-1.9.1)
 add_subdirectory(libminifi)
 add_subdirectory(main)
 
@@ -115,7 +120,7 @@ set(CPACK_COMPONENTS_ALL bin)
 
 include(CPack)
 
-enable_testing(test) 
+enable_testing(test)
     file(GLOB LIBMINIFI_TEST_SOURCES "libminifi/test/unit/*.cpp")
     add_executable(tests ${LIBMINIFI_TEST_SOURCES} ${SPD_SOURCES})
     target_include_directories(tests PRIVATE BEFORE "thirdparty/catch")
@@ -123,5 +128,5 @@ enable_testing(test)
     target_include_directories(tests PRIVATE BEFORE ${LEVELDB_INCLUDE_DIRS})
     target_include_directories(tests PRIVATE BEFORE "include")
     target_include_directories(tests PRIVATE BEFORE "libminifi/include/")
-    target_link_libraries(tests ${CMAKE_THREAD_LIBS_INIT} ${UUID_LIBRARIES} ${LEVELDB_LIBRARIES} ${OPENSSL_LIBRARIES} minifi yaml-cpp)
+    target_link_libraries(tests ${CMAKE_THREAD_LIBS_INIT} ${UUID_LIBRARIES} ${LEVELDB_LIBRARIES} ${OPENSSL_LIBRARIES} minifi yaml-cpp c-library civetweb-cpp)
     add_test(NAME LibMinifiTests COMMAND tests)
