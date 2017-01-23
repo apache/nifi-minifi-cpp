@@ -96,6 +96,11 @@ public:
 	//! Import the existed file into the flow
 	void import(std::string source, FlowFileRecord *flow, bool keepSource = true, uint64_t offset = 0);
 
+	// Prevent default copy constructor and assignment operation
+	// Only support pass by reference or pointer
+	ProcessSession(const ProcessSession &parent) = delete;
+	ProcessSession &operator=(const ProcessSession &parent) = delete;
+
 protected:
 	//! FlowFiles being modified by current process session
 	std::map<std::string, FlowFileRecord *> _updatedFlowFiles;
@@ -115,10 +120,6 @@ private:
 	FlowFileRecord* cloneDuringTransfer(FlowFileRecord *parent);
 	//! ProcessContext
 	ProcessContext *_processContext;
-	// Prevent default copy constructor and assignment operation
-	// Only support pass by reference or pointer
-	ProcessSession(const ProcessSession &parent);
-	ProcessSession &operator=(const ProcessSession &parent);
 	//! Logger
 	Logger *_logger;
 	//! Provenance Report

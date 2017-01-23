@@ -25,11 +25,13 @@
 #include <queue>
 #include <map>
 #include <mutex>
+#include <memory>
 #include <condition_variable>
 #include <atomic>
 #include <algorithm>
 #include <set>
 #include <chrono>
+#include <functional>
 
 #include "TimeUtil.h"
 #include "Property.h"
@@ -39,6 +41,7 @@
 //! Forwarder declaration
 class ProcessContext;
 class ProcessSession;
+class ProcessSessionFactory;
 
 //! Minimum scheduling period in Nano Second
 #define MINIMUM_SCHEDULING_NANOS 30000
@@ -137,9 +140,7 @@ public:
 	//! Check whether the processor is running
 	bool isRunning();
 	//! Set Processor Scheduled State
-	void setScheduledState(ScheduledState state) {
-		_state = state;
-	}
+	void setScheduledState(ScheduledState state);
 	//! Get Processor Scheduled State
 	ScheduledState getScheduledState(void) {
 		return _state;
@@ -290,10 +291,10 @@ public:
 public:
 	//! OnTrigger method, implemented by NiFi Processor Designer
 	virtual void onTrigger(ProcessContext *context, ProcessSession *session) = 0;
-	//! Initialize, over write by NiFi Process Designer
-	virtual void initialize(void) {
-		return;
-	}
+	//! Initialize, overridden by NiFi Process Designer
+	virtual void initialize() {}
+	//! Scheduled event hook, overridden by NiFi Process Designer
+	virtual void onSchedule(ProcessContext *context, ProcessSessionFactory *sessionFactory) {}
 
 protected:
 
@@ -338,6 +339,10 @@ private:
 
 	//! Mutex for protection
 	std::mutex _mtx;
+	//! Reusable processing context for this processor
+	std::unique_ptr<ProcessContext> _processContext;
+	//! Factory to create sessions for this processor
+	std::unique_ptr<ProcessSessionFactory> _processSessionFactory;
 	//! Yield Expiration
 	std::atomic<uint64_t> _yieldExpiration;
 	//! Incoming connection Iterator
