@@ -35,8 +35,6 @@
 
 Processor::Processor(std::string name, uuid_t uuid)
 : _name(name)
-, _processContext(new ProcessContext(this))
-, _processSessionFactory(new ProcessSessionFactory(_processContext.get()))
 {
 	if (!uuid)
 		// Generate the global UUID for the flow record
@@ -77,19 +75,7 @@ bool Processor::isRunning()
 
 void Processor::setScheduledState(ScheduledState state)
 {
-	// Do nothing if there is no state change
-	if (state == _state)
-	{
-		return;
-	}
-
 	_state = state;
-
-	// Invoke the onSchedule hook
-	if (state == RUNNING)
-	{
-		onSchedule(_processContext.get(), _processSessionFactory.get());
-	}
 }
 
 bool Processor::setSupportedProperties(std::set<Property> properties)
@@ -461,13 +447,13 @@ bool Processor::flowFilesOutGoingFull()
 	return false;
 }
 
-void Processor::onTrigger()
+void Processor::onTrigger(ProcessContext *context, ProcessSessionFactory *sessionFactory)
 {
-	auto session = _processSessionFactory->createSession();
+	auto session = sessionFactory->createSession();
 
 	try {
-		// Call the session function
-		onTrigger(_processContext.get(), session.get());
+		// Call the virtual trigger function
+		onTrigger(context, session.get());
 		session->commit();
 	}
 	catch (std::exception &exception)

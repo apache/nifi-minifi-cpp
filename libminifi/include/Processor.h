@@ -282,7 +282,7 @@ public:
 	//! Get the Next RoundRobin incoming connection
 	Connection *getNextIncomingConnection();
 	//! On Trigger
-	void onTrigger();
+	void onTrigger(ProcessContext *context, ProcessSessionFactory *sessionFactory);
 	//! Block until work is available on any input connection, or the given duration elapses
 	void waitForWork(uint64_t timeoutMs);
 	//! Notify this processor that work may be available
@@ -339,10 +339,6 @@ private:
 
 	//! Mutex for protection
 	std::mutex _mtx;
-	//! Reusable processing context for this processor
-	std::unique_ptr<ProcessContext> _processContext;
-	//! Factory to create sessions for this processor
-	std::unique_ptr<ProcessSessionFactory> _processSessionFactory;
 	//! Yield Expiration
 	std::atomic<uint64_t> _yieldExpiration;
 	//! Incoming connection Iterator

@@ -38,7 +38,7 @@ bool SchedulingAgent::hasTooMuchOutGoing(Processor *processor)
 	return processor->flowFilesOutGoingFull();
 }
 
-bool SchedulingAgent::onTrigger(Processor *processor)
+bool SchedulingAgent::onTrigger(Processor *processor, ProcessContext *processContext, ProcessSessionFactory *sessionFactory)
 {
 	if (processor->isYield())
 		return false;
@@ -59,7 +59,7 @@ bool SchedulingAgent::onTrigger(Processor *processor)
 	processor->incrementActiveTasks();
 	try
 	{
-		processor->onTrigger();
+		processor->onTrigger(processContext, sessionFactory);
 		processor->decrementActiveTask();
 	}
 	catch (Exception &exception)

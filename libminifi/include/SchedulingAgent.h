@@ -53,7 +53,7 @@ public:
 
 	}
 	//! onTrigger, return whether the yield is need
-	bool onTrigger(Processor *processor);
+	bool onTrigger(Processor *processor, ProcessContext *processContext, ProcessSessionFactory *sessionFactory);
 	//! Whether agent has work to do
 	bool hasWorkToDo(Processor *processor);
 	//! Whether the outgoing need to be backpressure

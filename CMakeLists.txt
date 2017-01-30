@@ -46,6 +46,9 @@ endif()
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# Enable asan in DEBUG for compatibility with civet
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=address")
+
 # Search for threads
 find_package(Threads REQUIRED)
 
@@ -78,6 +81,8 @@ find_package(UUID REQUIRED)
 file(GLOB SPD_SOURCES "include/spdlog/*")
 
 add_subdirectory(thirdparty/yaml-cpp-yaml-cpp-0.5.3)
+set(CIVETWEB_ENABLE_CXX ON CACHE BOOL "Enable civet C++ library")
+add_subdirectory(thirdparty/civetweb-1.9.1)
 add_subdirectory(libminifi)
 add_subdirectory(main)
 

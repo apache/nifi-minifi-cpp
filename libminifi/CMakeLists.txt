@@ -38,6 +38,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 include_directories(../include)
 include_directories(../thirdparty/yaml-cpp-yaml-cpp-0.5.3/include)
+include_directories(../thirdparty/civetweb-1.9.1/include)
 include_directories(include)
 
 file(GLOB SOURCES "src/*.cpp")
@@ -48,6 +49,19 @@ file(GLOB SPD_SOURCES "../include/spdlog/*")
 add_library(spdlog STATIC ${SPD_SOURCES})
 add_library(minifi STATIC ${SOURCES})
 
+# Include Boost System
+find_package(Boost COMPONENTS system REQUIRED)
+target_link_libraries(minifi ${Boost_SYSTEM_LIBRARY})
+
+# Include libxml2
+find_package (LibXml2)
+if (LIBXML2_FOUND)
+    include_directories(${LIBXML2_INCLUDE_DIR})
+    target_link_libraries (minifi ${LIBXML2_LIBRARIES})
+else ()
+    # Build from our local version
+endif (LIBXML2_FOUND)
+
 # Include LevelDB
 find_package (Leveldb REQUIRED)
 if (LEVELDB_FOUND)
@@ -57,7 +71,7 @@ else ()
     message( FATAL_ERROR "LevelDB was not found. Please install LevelDB" )
 endif (LEVELDB_FOUND)
 
-# Include OpenSSL 
+# Include OpenSSL
 find_package (OpenSSL REQUIRED)
 if (OPENSSL_FOUND)
 	include_directories(${OPENSSL_INCLUDE_DIR})

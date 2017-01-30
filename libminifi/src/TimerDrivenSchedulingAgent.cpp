@@ -23,11 +23,11 @@
 #include "Property.h"
 #include "TimerDrivenSchedulingAgent.h"
 
-void TimerDrivenSchedulingAgent::run(Processor *processor)
+void TimerDrivenSchedulingAgent::run(Processor *processor, ProcessContext *processContext, ProcessSessionFactory *sessionFactory)
 {
 	while (this->_running)
 	{
-		bool shouldYield = this->onTrigger(processor);
+		bool shouldYield = this->onTrigger(processor, processContext, sessionFactory);
 
 		if (processor->isYield())
 		{

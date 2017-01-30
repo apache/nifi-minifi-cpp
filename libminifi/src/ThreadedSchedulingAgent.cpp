@@ -22,6 +22,10 @@
 
 #include "ThreadedSchedulingAgent.h"
 
+#include "ProcessContext.h"
+#include "ProcessSession.h"
+#include "ProcessSessionFactory.h"
+
 void ThreadedSchedulingAgent::schedule(Processor *processor)
 {
 	std::lock_guard<std::mutex> lock(_mtx);
@@ -64,11 +68,18 @@ void ThreadedSchedulingAgent::schedule(Processor *processor)
 		return;
 	}
 
+	auto processContext = std::make_shared<ProcessContext>(processor);
+	auto sessionFactory = std::make_shared<ProcessSessionFactory>(processContext.get());
+
+	processor->onSchedule(processContext.get(), sessionFactory.get());
+
 	std::vector<std::thread *> threads;
 	for (int i = 0; i < processor->getMaxConcurrentTasks(); i++)
 	{
 	    ThreadedSchedulingAgent *agent = this;
-		std::thread *thread = new std::thread([agent, processor] () { agent->run(processor); });
+		std::thread *thread = new std::thread([agent, processor, processContext, sessionFactory] () {
+			agent->run(processor, processContext.get(), sessionFactory.get());
+		});
 		thread->detach();
 		threads.push_back(thread);
 		_logger->log_info("Scheduled thread %d running for process %s", thread->get_id(),
@@ -82,7 +93,7 @@ void ThreadedSchedulingAgent::schedule(Processor *processor)
 void ThreadedSchedulingAgent::unschedule(Processor *processor)
 {
 	std::lock_guard<std::mutex> lock(_mtx);
-	
+
 	_logger->log_info("Shutting down threads for processor %s/%s",
 			processor->getName().c_str(),
 			processor->getUUIDStr().c_str());
