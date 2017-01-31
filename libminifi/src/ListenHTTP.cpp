@@ -74,7 +74,9 @@ void ListenHTTP::onSchedule(ProcessContext *context, ProcessSessionFactory *sess
 
 	if (!context->getProperty(BasePath.getName(), basePath))
 	{
-		_logger->log_info("%s attribute is missing, so default value of %s will be used", BasePath.getName().c_str(), BasePath.getValue().c_str());
+		_logger->log_info("%s attribute is missing, so default value of %s will be used",
+				BasePath.getName().c_str(),
+				BasePath.getValue().c_str());
 		basePath = BasePath.getValue();
 	}
 
@@ -84,7 +86,8 @@ void ListenHTTP::onSchedule(ProcessContext *context, ProcessSessionFactory *sess
 
 	if (!context->getProperty(Port.getName(), listeningPort))
 	{
-		_logger->log_error("%s attribute is missing or invalid", Port.getName().c_str());
+		_logger->log_error("%s attribute is missing or invalid",
+				Port.getName().c_str());
 		return;
 	}
 
@@ -92,14 +95,18 @@ void ListenHTTP::onSchedule(ProcessContext *context, ProcessSessionFactory *sess
 
 	if (context->getProperty(AuthorizedDNPattern.getName(), authDNPattern) && !authDNPattern.empty())
 	{
-		_logger->log_info("ListenHTTP using %s: %s", AuthorizedDNPattern.getName().c_str(), authDNPattern.c_str());
+		_logger->log_info("ListenHTTP using %s: %s",
+				AuthorizedDNPattern.getName().c_str(),
+				authDNPattern.c_str());
 	}
 
 	std::string sslCertFile;
 
 	if (context->getProperty(SSLCertificate.getName(), sslCertFile) && !sslCertFile.empty())
 	{
-		_logger->log_info("ListenHTTP using %s: %s", SSLCertificate.getName().c_str(), sslCertFile.c_str());
+		_logger->log_info("ListenHTTP using %s: %s",
+				SSLCertificate.getName().c_str(),
+				sslCertFile.c_str());
 	}
 
 	// Read further TLS/SSL options only if TLS/SSL usage is implied by virtue of certificate value being set
@@ -109,9 +116,12 @@ void ListenHTTP::onSchedule(ProcessContext *context, ProcessSessionFactory *sess
 
 	if (!sslCertFile.empty())
 	{
-		if (context->getProperty(SSLCertificateAuthority.getName(), sslCertAuthorityFile) && !sslCertAuthorityFile.empty())
+		if (context->getProperty(SSLCertificateAuthority.getName(), sslCertAuthorityFile)
+				&& !sslCertAuthorityFile.empty())
 		{
-			_logger->log_info("ListenHTTP using %s: %s", SSLCertificateAuthority.getName().c_str(), sslCertAuthorityFile.c_str());
+			_logger->log_info("ListenHTTP using %s: %s",
+					SSLCertificateAuthority.getName().c_str(),
+					sslCertAuthorityFile.c_str());
 		}
 
 		if (context->getProperty(SSLVerifyPeer.getName(), sslVerifyPeer))
@@ -132,16 +142,35 @@ void ListenHTTP::onSchedule(ProcessContext *context, ProcessSessionFactory *sess
 
 		if (context->getProperty(SSLMinimumVersion.getName(), sslMinVer))
 		{
-			_logger->log_info("ListenHTTP using %s: %s", SSLMinimumVersion.getName().c_str(), sslMinVer.c_str());
+			_logger->log_info("ListenHTTP using %s: %s",
+					SSLMinimumVersion.getName().c_str(),
+					sslMinVer.c_str());
 		}
+	}
+
+	std::string headersAsAttributesPattern;
+
+	if (context->getProperty(HeadersAsAttributesRegex.getName(),headersAsAttributesPattern)
+			&& !headersAsAttributesPattern.empty())
+	{
+		_logger->log_info("ListenHTTP using %s: %s",
+				HeadersAsAttributesRegex.getName().c_str(),
+				headersAsAttributesPattern.c_str());
 	}
 
 	auto numThreads = getMaxConcurrentTasks();
 
-	_logger->log_info("ListenHTTP starting HTTP server on port %s and path %s with %d threads", listeningPort.c_str(), basePath.c_str(), numThreads);
+	_logger->log_info("ListenHTTP starting HTTP server on port %s and path %s with %d threads",
+			listeningPort.c_str(),
+			basePath.c_str(),
+			numThreads);
 
 	// Initialize web server
 	std::vector<std::string> options;
+	options.push_back("enable_keep_alive");
+	options.push_back("yes");
+	options.push_back("keep_alive_timeout_ms");
+	options.push_back("15000");
 	options.push_back("num_threads");
 	options.push_back(std::to_string(numThreads));
 
@@ -204,7 +233,10 @@ void ListenHTTP::onSchedule(ProcessContext *context, ProcessSessionFactory *sess
 	}
 
 	_server.reset(new CivetServer(options));
-	_handler.reset(new Handler(context, sessionFactory, std::move(authDNPattern)));
+	_handler.reset(new Handler(context,
+			sessionFactory,
+			std::move(authDNPattern),
+			std::move(headersAsAttributesPattern)));
 	_server->addHandler(basePath, _handler.get());
 }
 
@@ -220,11 +252,23 @@ void ListenHTTP::onTrigger(ProcessContext *context, ProcessSession *session)
 	}
 }
 
-ListenHTTP::Handler::Handler(ProcessContext *context, ProcessSessionFactory *sessionFactory, std::string &&authDNPattern)
+ListenHTTP::Handler::Handler(ProcessContext *context,
+		ProcessSessionFactory *sessionFactory,
+		std::string &&authDNPattern,
+		std::string &&headersAsAttributesPattern)
 : _authDNRegex(std::move(authDNPattern))
+, _headersAsAttributesRegex(std::move(headersAsAttributesPattern))
 {
 	_processContext = context;
 	_processSessionFactory = sessionFactory;
+}
+
+void ListenHTTP::Handler::sendErrorResponse(struct mg_connection *conn)
+{
+	mg_printf(conn,
+			"HTTP/1.1 500 Internal Server Error\r\n"
+			"Content-Type: text/html\r\n"
+			"Content-Length: 0\r\n\r\n");
 }
 
 bool ListenHTTP::Handler::handlePost(CivetServer *server, struct mg_connection *conn)
@@ -242,8 +286,7 @@ bool ListenHTTP::Handler::handlePost(CivetServer *server, struct mg_connection *
 			mg_printf(conn,
 					"HTTP/1.1 403 Forbidden\r\n"
 					"Content-Type: text/html\r\n"
-					"Content-Length: 0\r\n"
-					"Connection: close\r\n\r\n");
+					"Content-Length: 0\r\n\r\n");
 			_logger->log_warn("ListenHTTP client DN not authorized: %s", req_info->client_cert->subject);
 			return true;
 		}
@@ -254,30 +297,61 @@ bool ListenHTTP::Handler::handlePost(CivetServer *server, struct mg_connection *
 
 	auto session = _processSessionFactory->createSession();
 	ListenHTTP::WriteCallback callback(conn, req_info);
-	FlowFileRecord *flowFile = session->create();
+	auto flowFile = session->create();
 
 	if (!flowFile)
 	{
-		mg_printf(conn,
-				"HTTP/1.1 500 Internal Server Error\r\n"
-				"Content-Type: text/html\r\n"
-				"Content-Length: 0\r\n"
-				"Connection: close\r\n\r\n");
+		sendErrorResponse(conn);
 		return true;
 	}
 
-	session->write(flowFile, &callback);
-	session->transfer(flowFile, Success);
+	try
+	{
+		session->write(flowFile, &callback);
 
-	//TODO add filename from "filename" header value (and pattern headers)
+		// Add filename from "filename" header value (and pattern headers)
+		for (int i = 0; i < req_info->num_headers; i++)
+		{
+			auto header = &req_info->http_headers[i];
 
-	session->commit();
+			if (strcmp("filename", header->name) == 0)
+			{
+				if (!flowFile->updateAttribute("filename", header->value))
+				{
+					flowFile->addAttribute("filename", header->value);
+				}
+			}
+			else if (std::regex_match(header->name, _headersAsAttributesRegex))
+			{
+				if (!flowFile->updateAttribute(header->name, header->value))
+				{
+					flowFile->addAttribute(header->name, header->value);
+				}
+			}
+		}
+
+		session->transfer(flowFile, Success);
+		session->commit();
+	}
+	catch (std::exception &exception)
+	{
+		_logger->log_debug("ListenHTTP Caught Exception %s", exception.what());
+		sendErrorResponse(conn);
+		session->rollback();
+		throw;
+	}
+	catch (...)
+	{
+		_logger->log_debug("ListenHTTP Caught Exception Processor::onTrigger");
+		sendErrorResponse(conn);
+		session->rollback();
+		throw;
+	}
 
 	mg_printf(conn,
 			"HTTP/1.1 200 OK\r\n"
 			"Content-Type: text/html\r\n"
-			"Content-Length: 0\r\n"
-			"Connection: close\r\n\r\n"); //FIXME enable keepalive
+			"Content-Length: 0\r\n\r\n");
 
 	return true;
 }

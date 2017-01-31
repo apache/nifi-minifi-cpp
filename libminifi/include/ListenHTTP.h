@@ -70,14 +70,20 @@ public:
 	class Handler : public CivetHandler
 	{
 	public:
-		Handler(ProcessContext *context, ProcessSessionFactory *sessionFactory, std::string &&authDNPattern);
+		Handler(ProcessContext *context,
+				ProcessSessionFactory *sessionFactory,
+				std::string &&authDNPattern,
+				std::string &&headersAsAttributesPattern);
 		bool handlePost(CivetServer *server, struct mg_connection *conn);
 
 	private:
+		//! Send HTTP 500 error response to client
+		void sendErrorResponse(struct mg_connection *conn);
 		//! Logger
 		Logger *_logger;
 
 		std::regex _authDNRegex;
+		std::regex _headersAsAttributesRegex;
 		ProcessContext *_processContext;
 		ProcessSessionFactory *_processSessionFactory;
 	};
