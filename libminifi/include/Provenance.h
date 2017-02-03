@@ -37,7 +37,10 @@
 #include <chrono>
 #include <thread>
 #include <ftw.h>
+
+#ifdef LEVELDB_SUPPORT
 #include "leveldb/db.h"
+#endif
 
 #include "TimeUtil.h"
 #include "Logger.h"
@@ -732,7 +735,9 @@ public:
 		_maxPartitionMillis = MAX_PROVENANCE_ENTRY_LIFE_TIME;
 		_purgePeriod = PROVENANCE_PURGE_PERIOD;
 		_maxPartitionBytes = MAX_PROVENANCE_STORAGE_SIZE;
+#ifdef LEVELDB_SUPPORT
 		_db = NULL;
+#endif
 		_running = false;
 		_repoFull = false;
 	}
@@ -768,6 +773,7 @@ public:
 			}
 		}
 		_logger->log_info("NiFi Provenance Max Storage Time: [%d] ms", _maxPartitionMillis);
+#ifdef LEVELDB_SUPPORT
 		leveldb::Options options;
 		options.create_if_missing = true;
 		leveldb::Status status = leveldb::DB::Open(options, _directory.c_str(), &_db);
@@ -783,11 +789,13 @@ public:
 
 		// start the monitor thread
 		start();
+#endif
 		return true;
 	}
 	//! Put
 	bool Put(std::string key, uint8_t *buf, int bufLen)
 	{
+#ifdef LEVELDB_SUPPORT
 		// persistent to the DB
 		leveldb::Slice value((const char *) buf, bufLen);
 		leveldb::Status status;
@@ -796,26 +804,37 @@ public:
 			return true;
 		else
 			return false;
+#else
+		return true;
+#endif
 	}
 	//! Delete
 	bool Delete(std::string key)
 	{
+#ifdef LEVELDB_SUPPORT
 		leveldb::Status status;
 		status = _db->Delete(leveldb::WriteOptions(), key);
 		if (status.ok())
 			return true;
 		else
 			return false;
+#else
+		return true;
+#endif
 	}
 	//! Get
 	bool Get(std::string key, std::string &value)
 	{
+#ifdef LEVELDB_SUPPORT
 		leveldb::Status status;
 		status = _db->Get(leveldb::ReadOptions(), key, &value);
 		if (status.ok())
 			return true;
 		else
 			return false;
+#else
+		return true;
+#endif
 	}
 	//! Persistent event
 	void registerEvent(ProvenanceEventRecord *event)
@@ -830,11 +849,13 @@ public:
 	//! destroy
 	void destroy()
 	{
+#ifdef LEVELDB_SUPPORT
 		if (_db)
 		{
 			delete _db;
 			_db = NULL;
 		}
+#endif
 	}
 	//! Run function for the thread
 	static void run(ProvenanceRepository *repo);
@@ -867,7 +888,9 @@ private:
 	//! purge period
 	uint64_t _purgePeriod;
 	//! level DB database
+#ifdef LEVELDB_SUPPORT
 	leveldb::DB* _db;
+#endif
 	//! thread
 	std::thread *_thread;
 	//! whether it is running

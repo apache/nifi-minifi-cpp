@@ -30,7 +30,9 @@
 #include <set>
 #include <libxml/parser.h>
 #include <libxml/tree.h>
+#ifdef YAM_SUPPORT
 #include <yaml-cpp/yaml.h>
+#endif
 
 #include "Configure.h"
 #include "Property.h"
@@ -54,8 +56,10 @@
 #include "ExecuteProcess.h"
 #include "AppendHostInfo.h"
 // OpenSSL related
+#ifdef OPENSSL_SUPPORT
 #include <openssl/ssl.h>
 #include <openssl/err.h>
+#endif
 
 //! Default NiFi Root Group Name
 #define DEFAULT_ROOT_GROUP_NAME ""
@@ -77,6 +81,9 @@ struct ProcessorConfig {
 	std::vector<std::string> autoTerminatedRelationships;
 	std::vector<Property> properties;
 };
+
+//! main entry for FlowController
+int FlowControllerMain(int argc, char **argv, char *home);
 
 //! FlowController Class
 class FlowController
@@ -197,11 +204,18 @@ public:
 	{
 		_protocol->setSerialNumber(number);
 	}
+	//! get Content directory
+	std::string getContentDirectory()
+	{
+		return _contentDirectory;
+	}
+#ifdef OPENSSL_SUPPORT
 	//! getSSLContext
 	SSL_CTX *getSSLContext()
 	{
 		return _ctx;
 	}
+#endif
 
 protected:
 
@@ -213,6 +227,8 @@ protected:
 	std::string _configurationFileName;
 	//! NiFi property File Name
 	std::string _propertiesFileName;
+	//! NiFi content directory
+	std::string _contentDirectory;
 	//! Root Process Group
 	ProcessGroup *_root;
 	//! MAX Timer Driven Threads
@@ -233,7 +249,9 @@ protected:
 	//! FlowControl Protocol
 	FlowControlProtocol *_protocol;
 	//! SSL context
+#ifdef OPENSSL_SUPPORT
 	SSL_CTX *_ctx;
+#endif
 
 private:
 
@@ -260,6 +278,7 @@ private:
 	//! Process Remote Process Group
 	void parseRemoteProcessGroup(xmlDoc *doc, xmlNode *node, ProcessGroup *parent);
 
+#ifdef YAM_SUPPORT
 	//! Process Processor Node YAML
 	void parseProcessorNodeYaml(YAML::Node processorNode, ProcessGroup *parent);
 	//! Process Port YAML
@@ -274,6 +293,7 @@ private:
 	void parseRemoteProcessGroupYaml(YAML::Node *node, ProcessGroup *parent);
 	//! Parse Properties Node YAML for a processor
 	void parsePropertiesNodeYaml(YAML::Node *propertiesNode, Processor *processor);
+#endif
 
 	static FlowController *_flowController;
 

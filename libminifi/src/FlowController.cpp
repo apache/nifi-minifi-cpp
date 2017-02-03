@@ -90,22 +90,26 @@ FlowController::FlowController(std::string name)
 	_logger->log_info("FlowController NiFi Configuration file %s", pathString.c_str());
 
 	// Create the content repo directory if needed
+	std::string contectDirPath;
 	struct stat contentDirStat;
+	contectDirPath = _configure->getHome() + "/" + DEFAULT_CONTENT_DIRECTORY;
 
-	if (stat(DEFAULT_CONTENT_DIRECTORY, &contentDirStat) != -1 && S_ISDIR(contentDirStat.st_mode))
+	if (stat(contectDirPath.c_str(), &contentDirStat) != -1 && S_ISDIR(contentDirStat.st_mode))
 	{
-		path = realpath(DEFAULT_CONTENT_DIRECTORY, full_path);
+		path = realpath(contectDirPath.c_str(), full_path);
 		_logger->log_info("FlowController content directory %s", full_path);
 	}
 	else
 	{
-	   if (mkdir(DEFAULT_CONTENT_DIRECTORY, 0777) == -1)
+	   if (mkdir(contectDirPath.c_str(), 0777) == -1)
 	   {
 		   _logger->log_error("FlowController content directory creation failed");
 		   exit(1);
 	   }
 	}
+	_contentDirectory = contectDirPath;
 
+#ifdef OPENSSL_SUPPORT
 	std::string secureStr;
 	bool isSecure = false;
 	if (_configure->get(Configure::nifi_remote_input_secure, secureStr))
@@ -187,6 +191,7 @@ FlowController::FlowController(std::string name)
 			_logger->log_info("Load/Verify Client Certificate OK.");
 		}
 	}
+#endif
 
     // Create repos for flow record and provenance
     _provenanceRepo = new ProvenanceRepository();
@@ -203,8 +208,10 @@ FlowController::~FlowController()
     unload();
     delete _protocol;
     delete _provenanceRepo;
+#ifdef OPENSSL_SUPPORT
     if (_ctx)
     	SSL_CTX_free(_ctx);
+#endif
 }
 
 bool FlowController::isRunning()
@@ -481,6 +488,7 @@ void FlowController::parseRootProcessGroup(xmlDoc *doc, xmlNode *node) {
     } // for node
 }
 
+#ifdef YAM_SUPPORT
 void FlowController::parseRootProcessGroupYaml(YAML::Node rootFlowNode) {
     uuid_t uuid;
     ProcessGroup *group = NULL;
@@ -801,6 +809,7 @@ void FlowController::parseConnectionYaml(YAML::Node *connectionsNode, ProcessGro
         return;
     }
 }
+#endif
 
 void FlowController::parseRemoteProcessGroup(xmlDoc *doc, xmlNode *node, ProcessGroup *parent) {
     uuid_t uuid;
@@ -910,6 +919,7 @@ void FlowController::parseProcessorProperty(xmlDoc *doc, xmlNode *node, Processo
     } // for node
 }
 
+#ifdef YAM_SUPPORT
 void FlowController::parsePortYaml(YAML::Node *portNode, ProcessGroup *parent, TransferDirection direction) {
     uuid_t uuid;
     Processor *processor = NULL;
@@ -956,6 +966,7 @@ void FlowController::parsePortYaml(YAML::Node *portNode, ProcessGroup *parent, T
     processor->setMaxConcurrentTasks(maxConcurrentTasks);
 
 }
+#endif
 
 void FlowController::parsePort(xmlDoc *doc, xmlNode *processorNode, ProcessGroup *parent, TransferDirection direction) {
     char *id = NULL;
@@ -1189,6 +1200,7 @@ void FlowController::parseProcessorNode(xmlDoc *doc, xmlNode *processorNode, Pro
     } // while node
 }
 
+#ifdef YAM_SUPPORT
 void FlowController::parsePropertiesNodeYaml(YAML::Node *propertiesNode, Processor *processor)
 {
     // Treat generically as a YAML node so we can perform inspection on entries to ensure they are populated
@@ -1206,6 +1218,7 @@ void FlowController::parsePropertiesNodeYaml(YAML::Node *propertiesNode, Process
         }
     }
 }
+#endif
 
 void FlowController::load(ConfigFormat configFormat) {
     if (_running) {
@@ -1272,6 +1285,7 @@ void FlowController::load(ConfigFormat configFormat) {
             xmlFreeDoc(doc);
             xmlCleanupParser();
             _initialized = true;
+#ifdef YAM_SUPPORT
         } else if (ConfigFormat::YAML == configFormat) {
             YAML::Node flow = YAML::LoadFile(_configurationFileName);
 
@@ -1287,6 +1301,7 @@ void FlowController::load(ConfigFormat configFormat) {
             parseConnectionYaml(&connectionsNode, this->_root);
 
             _initialized = true;
+#endif
         }
     }
 }
