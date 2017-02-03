@@ -226,6 +226,30 @@ bool Processor::setProperty(std::string name, std::string value)
 	}
 }
 
+bool Processor::setProperty(Property prop, std::string value) {
+
+	std::lock_guard<std::mutex> lock(_mtx);
+	auto it = _properties.find(
+			prop.getName());
+
+	if (it != _properties.end()) {
+		Property item = it->second;
+		item.setValue(value);
+		_properties[item.getName()] = item;
+		_logger->log_info("Processor %s property name %s value %s",
+				_name.c_str(), item.getName().c_str(), value.c_str());
+		return true;
+	} else {
+		Property newProp(prop);
+		newProp.setValue(value);
+		_properties.insert(
+				std::pair<std::string, Property>(prop.getName(), newProp));
+		return true;
+
+		return false;
+	}
+}
+
 std::set<Connection *> Processor::getOutGoingConnections(std::string relationship)
 {
 	std::set<Connection *> empty;
