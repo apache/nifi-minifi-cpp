@@ -18,12 +18,12 @@
 #
 
 cmake_minimum_required(VERSION 2.6)
-
 project(nifi-minifi-cpp)
 set(PROJECT_NAME "nifi-minifi-cpp")
 set(PROJECT_VERSION_MAJOR 0)
 set(PROJECT_VERSION_MINOR 2)
 set(PROJECT_VERSION_PATCH 0)
+option(test "Build all tests." ON)
 
 #### Establish Project Configuration ####
 # Enable usage of the VERSION specifier
@@ -51,6 +51,11 @@ find_package(Threads REQUIRED)
 
 # Provide custom modules for the project
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+
+find_package(UUID REQUIRED)
+
+file(GLOB SPD_SOURCES "include/spdlog/*")
+
 
 add_subdirectory(thirdparty/yaml-cpp-yaml-cpp-0.5.3)
 add_subdirectory(libminifi)
@@ -88,3 +93,13 @@ set(CPACK_ARCHIVE_COMPONENT_INSTALL ON)
 set(CPACK_COMPONENTS_ALL bin)
 
 include(CPack)
+
+enable_testing(test) 
+    file(GLOB LIBMINIFI_TEST_SOURCES "libminifi/test/unit/*.cpp")
+    add_executable(tests ${LIBMINIFI_TEST_SOURCES} ${SPD_SOURCES})
+    target_include_directories(tests PRIVATE BEFORE "thirdparty/catch")
+    target_include_directories(tests PRIVATE BEFORE "thirdparty/yaml-cpp-yaml-cpp-0.5.3/include")
+    target_include_directories(tests PRIVATE BEFORE "include")
+    target_include_directories(tests PRIVATE BEFORE "libminifi/include/")
+    target_link_libraries(tests ${CMAKE_THREAD_LIBS_INIT} ${UUID_LIBRARIES} minifi yaml-cpp)
+    add_test(NAME LibMinifiTests COMMAND tests)

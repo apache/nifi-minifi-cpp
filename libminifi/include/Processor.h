@@ -126,6 +126,8 @@ public:
 	bool getProperty(std::string name, std::string &value);
 	//! Set the supported property value by name wile the process is not running
 	bool setProperty(std::string name, std::string value);
+	//! Set the supported property value by using the property itself.
+	bool setProperty(Property prop, std::string value);
 	//! Whether the relationship is supported
 	bool isSupportedRelationship(Relationship relationship);
 	//! Set the auto terminated relationships while the process is not running
