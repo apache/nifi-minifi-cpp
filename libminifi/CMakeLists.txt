@@ -48,15 +48,6 @@ file(GLOB SPD_SOURCES "../include/spdlog/*")
 add_library(spdlog STATIC ${SPD_SOURCES})
 add_library(minifi STATIC ${SOURCES})
 
-# Include libxml2
-find_package (LibXml2)
-if (LIBXML2_FOUND)
-    include_directories(${LIBXML2_INCLUDE_DIR})
-    target_link_libraries (minifi ${LIBXML2_LIBRARIES})
-else ()
-    # Build from our local version
-endif (LIBXML2_FOUND)
-
 # Include LevelDB
 find_package (Leveldb REQUIRED)
 if (LEVELDB_FOUND)

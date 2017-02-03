@@ -98,7 +98,7 @@ int main(int argc, char **argv)
 	controller = FlowController::getFlowController();
 
 	// Load flow from specified configuration file
-	controller->load(ConfigFormat::YAML);
+	controller->load();
 	// Start Processing the flow
 	controller->start();
 	running = true;

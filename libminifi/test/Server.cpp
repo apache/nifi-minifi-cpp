@@ -25,10 +25,10 @@
 
 //! FlowControl Protocol Msg Type
 typedef enum {
-	REGISTER_REQ, // Device Register Request from device to server which contain device serial number, current running flow xml version
-	REGISTER_RESP, // Device Register Respond from server to device, may contain new flow.xml from server ask device to apply and also device report interval
-	REPORT_REQ, // Period Device Report from device to server which contain device serial number, current running flow xml name/version and other period report info
-	REPORT_RESP, // Report Respond from server to device, may ask device to update flow xml or processor property
+	REGISTER_REQ, // Device Register Request from device to server which contain device serial number, current running flow YAML version
+	REGISTER_RESP, // Device Register Respond from server to device, may contain new flow.yml from server ask device to apply and also device report interval
+	REPORT_REQ, // Period Device Report from device to server which contain device serial number, current running flow YAML name/version and other period report info
+	REPORT_RESP, // Report Respond from server to device, may ask device to update flow YAML or processor property
 	MAX_FLOW_CONTROL_MSG_TYPE
 } FlowControlMsgType;
 
@@ -54,10 +54,10 @@ inline const char *FlowControlMsgTypeToStr(FlowControlMsgType type)
 typedef enum {
 	//Fix length 8 bytes: client to server in register request, required field
 	FLOW_SERIAL_NUMBER,
-	// Flow XML name TLV: client to server in register request and report request, required field
-	FLOW_XML_NAME,
-	// Flow XML content, TLV: server to client in register respond, option field in case server want to ask client to load xml from server
-	FLOW_XML_CONTENT,
+	// Flow YAML name TLV: client to server in register request and report request, required field
+	FLOW_YAML_NAME,
+	// Flow YAML content, TLV: server to client in register respond, option field in case server want to ask client to load YAML from server
+	FLOW_YAML_CONTENT,
 	// Fix length, 4 bytes Report interval in msec: server to client in register respond, option field
 	REPORT_INTERVAL,
 	// Processor Name TLV:  server to client in report respond, option field in case server want to ask client to update processor property
@@ -75,8 +75,8 @@ typedef enum {
 static const char *FlowControlMsgIDStr[MAX_FLOW_MSG_ID] =
 {
 		"FLOW_SERIAL_NUMBER",
-		"FLOW_XML_NAME",
-		"FLOW_XML_CONTENT",
+		"FLOW_YAML_NAME",
+		"FLOW_YAML_CONTENT",
 		"REPORT_INTERVAL",
 		"PROCESSOR_NAME"
 		"PROPERTY_NAME",
@@ -308,9 +308,9 @@ int readHdr(int socket, FlowControlProtocolHeader *hdr)
 	return sizeof(FlowControlProtocolHeader);
 }
 
-int readXML(char **xmlContent)
+int readYAML(char **ymlContent)
 {
-	  std::ifstream is ("conf/flowServer.xml", std::ifstream::binary);
+	  std::ifstream is ("conf/flowServer.yml", std::ifstream::binary);
 	  if (is) {
 	    // get length of file:
 	    is.seekg (0, is.end);
@@ -319,14 +319,14 @@ int readXML(char **xmlContent)
 
 	    char * buffer = new char [length];
 
-	    printf("Reading %s len %d\n", "conf/flowServer.xml", length);
+	    printf("Reading %s len %d\n", "conf/flowServer.yml", length);
 	    // read data as a block:
 	    is.read (buffer,length);
 
 	    is.close();
 
 	    // ...buffer contains the entire file...
-	    *xmlContent = buffer;
+	    *ymlContent = buffer;
 
 	    return length;
 	  }
@@ -416,14 +416,14 @@ int main(int argc, char *argv[])
     		 				printf("Flow Control Protocol Register Req receive serial num\n");
     		 				payloadPtr += 8;
     		 			}
-    		 			else if (((FlowControlMsgID) msgID) == FLOW_XML_NAME)
+    		 			else if (((FlowControlMsgID) msgID) == FLOW_YAML_NAME)
     		 			{
     		 				uint32_t len;
     		 				payloadPtr = decode(payloadPtr, len);
-    		 				printf("Flow Control Protocol receive XML name length %d\n", len);
+    		 				printf("Flow Control Protocol receive YAML name length %d\n", len);
     		 				std::string flowName = (const char *) payloadPtr;
     		 				payloadPtr += len;
-    		 				printf("Flow Control Protocol receive XML name %s\n", flowName.c_str());
+    		 				printf("Flow Control Protocol receive YAML name %s\n", flowName.c_str());
     		 			}
     		 			else
     		 			{
@@ -433,11 +433,11 @@ int main(int argc, char *argv[])
     		 		delete[] payload;
     		 		// Send Register Respond
     		 		// Calculate the total payload msg size
-    		 		char *xmlContent;
-    		 		uint32_t xmlLen = readXML(&xmlContent);
+    		 		char *ymlContent;
+    		 		uint32_t yamlLen = readYAML(&ymlContent);
     		 		uint32_t payloadSize = FlowControlMsgIDEncodingLen(REPORT_INTERVAL, 0);
-    		 		if (xmlLen > 0)
-    		 			payloadSize += FlowControlMsgIDEncodingLen(FLOW_XML_CONTENT, xmlLen);
+    		 		if (yamlLen > 0)
+    		 			payloadSize += FlowControlMsgIDEncodingLen(FLOW_YAML_CONTENT, yamlLen);
 
     		 		uint32_t size = sizeof(FlowControlProtocolHeader) + payloadSize;
     		 		uint8_t *data = new uint8_t[size];
@@ -456,13 +456,13 @@ int main(int argc, char *argv[])
     		 		data = encode(data, REPORT_INTERVAL);
     		 		data = encode(data, DEFAULT_REPORT_INTERVAL);
 
-    		 		// encode the XML content
-    		 		if (xmlLen > 0)
+    		 		// encode the YAML content
+    		 		if (yamlLen > 0)
     		 		{
-    		 			data = encode(data, FLOW_XML_CONTENT);
-    		 			data = encode(data, xmlLen);
-    		 			data = encode(data, (uint8_t *) xmlContent, xmlLen);
-    		 			delete[] xmlContent;
+    		 			data = encode(data, FLOW_YAML_CONTENT);
+    		 			data = encode(data, yamlLen);
+    		 			data = encode(data, (uint8_t *) ymlContent, yamlLen);
+    		 			delete[] ymlContent;
     		 		}
 
     		 		// send it
@@ -479,14 +479,14 @@ int main(int argc, char *argv[])
         		 		{
         		 			uint32_t msgID = 0xFFFFFFFF;
         		 			payloadPtr = decode(payloadPtr, msgID);
-        		 			if (((FlowControlMsgID) msgID) == FLOW_XML_NAME)
+        		 			if (((FlowControlMsgID) msgID) == FLOW_YAML_NAME)
         		 			{
         		 				uint32_t len;
         		 				payloadPtr = decode(payloadPtr, len);
-        		 				printf("Flow Control Protocol receive XML name length %d\n", len);
+        		 				printf("Flow Control Protocol receive YAML name length %d\n", len);
         		 				std::string flowName = (const char *) payloadPtr;
         		 				payloadPtr += len;
-        		 				printf("Flow Control Protocol receive XML name %s\n", flowName.c_str());
+        		 				printf("Flow Control Protocol receive YAML name %s\n", flowName.c_str());
         		 			}
         		 			else
         		 			{

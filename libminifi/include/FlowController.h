@@ -28,8 +28,6 @@
 #include <atomic>
 #include <algorithm>
 #include <set>
-#include <libxml/parser.h>
-#include <libxml/tree.h>
 #include <yaml-cpp/yaml.h>
 
 #include "Configure.h"
@@ -58,11 +56,8 @@
 
 //! Default NiFi Root Group Name
 #define DEFAULT_ROOT_GROUP_NAME ""
-#define DEFAULT_FLOW_XML_FILE_NAME "conf/flow.xml"
 #define DEFAULT_FLOW_YAML_FILE_NAME "conf/flow.yml"
 #define CONFIG_YAML_PROCESSORS_KEY "Processors"
-
-enum class ConfigFormat { XML, YAML };
 
 struct ProcessorConfig {
 	std::string name;
@@ -143,20 +138,20 @@ public:
 		return this->_provenanceRepo;
 	}
 	//! Life Cycle related function
-	//! Load flow xml from disk, after that, create the root process group and its children, initialize the flows
-	void load(ConfigFormat format);
+	//! Load flow YAML from disk, after that, create the root process group and its children, initialize the flows
+	void load();
 	//! Whether the Flow Controller is start running
 	bool isRunning();
-	//! Whether the Flow Controller has already been initialized (loaded flow XML)
+	//! Whether the Flow Controller has already been initialized (loaded flow YAML)
 	bool isInitialized();
 	//! Start to run the Flow Controller which internally start the root process group and all its children
 	bool start();
 	//! Stop to run the Flow Controller which internally stop the root process group and all its children
 	void stop(bool force);
-	//! Unload the current flow xml, clean the root process group and all its children
+	//! reload flow controller's configuration
+	void reload(std::string yamlFile);
+	//! Unload the current flow YAML, clean the root process group and all its children
 	void unload();
-	//! Load new xml
-	void reload(std::string xmlFile);
 	//! update property value
 	void updatePropertyValue(std::string processorName, std::string propertyName, std::string propertyValue)
 	{
@@ -220,20 +215,8 @@ private:
 	Configure *_configure;
 	//! Whether it is running
 	std::atomic<bool> _running;
-	//! Whether it has already been initialized (load the flow XML already)
+	//! Whether it has already been initialized (load the flow YAML already)
 	std::atomic<bool> _initialized;
-	//! Process Processor Node XML
-	void parseProcessorNode(xmlDoc *doc, xmlNode *processorNode, ProcessGroup *parent);
-	//! Process Port XML
-	void parsePort(xmlDoc *doc, xmlNode *processorNode, ProcessGroup *parent, TransferDirection direction);
-	//! Process Root Processor Group XML
-	void parseRootProcessGroup(xmlDoc *doc, xmlNode *node);
-	//! Process Property XML
-	void parseProcessorProperty(xmlDoc *doc, xmlNode *node, Processor *processor);
-	//! Process connection XML
-	void parseConnection(xmlDoc *doc, xmlNode *node, ProcessGroup *parent);
-	//! Process Remote Process Group
-	void parseRemoteProcessGroup(xmlDoc *doc, xmlNode *node, ProcessGroup *parent);
 
 	//! Process Processor Node YAML
 	void parseProcessorNodeYaml(YAML::Node processorNode, ProcessGroup *parent);
