@@ -70,14 +70,12 @@ Perspectives of the role of MiNiFi should be from the perspective of the agent a
 #### Libraries / Development Headers
 * libboost and boost-devel
   * 1.48.0 or greater
-* libxml2 and libxml2-devel
 * libleveldb and libleveldb-devel
 * libuuid and uuid-dev
 
 ### To run
 
 #### Libraries
-* libxml2
 * libuuid
 * libleveldb
 
@@ -90,7 +88,6 @@ $ yum install cmake \
   gcc gcc-c++ \
   leveldb-devel leveldb \
   libuuid libuuid-devel \
-  libxml2-devel libxml2 \
   boost-devel
 ```
 
@@ -101,7 +98,6 @@ $ apt-get install cmake \
   gcc g++ \
   libleveldb-dev libleveldb1v5 \
   uuid-dev uuid \
-  libxml++2.6-dev libxml++2.6-2v5 \
   libboost-all-dev
 ```
 
@@ -111,7 +107,6 @@ OS X Using Homebrew (with XCode Command Line Tools installed)
 $ brew install cmake \
   leveldb \
   ossp-uuid \
-  libxml2 \
   boost
 ```
 

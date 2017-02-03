@@ -242,7 +242,6 @@ void FlowControlProtocol::run(FlowControlProtocol *protocol)
 		{
 			// if it is not register yet
 			protocol->sendRegisterReq();
-			// protocol->_controller->reload("flow.xml");
 		}
 		else
 			protocol->sendReportReq();
@@ -268,7 +267,7 @@ int FlowControlProtocol::sendRegisterReq()
 
 	// Calculate the total payload msg size
 	uint32_t payloadSize = FlowControlMsgIDEncodingLen(FLOW_SERIAL_NUMBER, 0) +
-			FlowControlMsgIDEncodingLen(FLOW_XML_NAME, this->_controller->getName().size()+1);
+			FlowControlMsgIDEncodingLen(FLOW_YML_NAME, this->_controller->getName().size()+1);
 	uint32_t size = sizeof(FlowControlProtocolHeader) + payloadSize;
 
 	uint8_t *data = new uint8_t[size];
@@ -289,8 +288,8 @@ int FlowControlProtocol::sendRegisterReq()
 	data = this->encode(data, FLOW_SERIAL_NUMBER);
 	data = this->encode(data, this->_serialNumber, 8);
 
-	// encode the XML name
-	data = this->encode(data, FLOW_XML_NAME);
+	// encode the YAML name
+	data = this->encode(data, FLOW_YML_NAME);
 	data = this->encode(data, this->_controller->getName());
 
 	// send it
@@ -347,25 +346,25 @@ int FlowControlProtocol::sendRegisterReq()
 				_logger->log_info("Flow Control Protocol receive report interval %d ms", reportInterval);
 				this->_reportInterval = reportInterval;
 			}
-			else if (((FlowControlMsgID) msgID) == FLOW_XML_CONTENT)
+			else if (((FlowControlMsgID) msgID) == FLOW_YML_CONTENT)
 			{
-				uint32_t xmlLen;
-				payloadPtr = this->decode(payloadPtr, xmlLen);
-				_logger->log_info("Flow Control Protocol receive XML content length %d", xmlLen);
+				uint32_t yamlLen;
+				payloadPtr = this->decode(payloadPtr, yamlLen);
+				_logger->log_info("Flow Control Protocol receive YAML content length %d", yamlLen);
 				time_t rawtime;
 				struct tm *timeinfo;
 				time(&rawtime);
 				timeinfo = localtime(&rawtime);
-				std::string xmlFileName = "flow.";
-				xmlFileName += asctime(timeinfo);
-				xmlFileName += ".xml";
+				std::string yamlFileName = "flow.";
+				yamlFileName += asctime(timeinfo);
+				yamlFileName += ".yml";
 				std::ofstream fs;
-				fs.open(xmlFileName.c_str(), std::fstream::out | std::fstream::binary | std::fstream::trunc);
+				fs.open(yamlFileName.c_str(), std::fstream::out | std::fstream::binary | std::fstream::trunc);
 				if (fs.is_open())
 				{
-					fs.write((const char *)payloadPtr, xmlLen);
+					fs.write((const char *)payloadPtr, yamlLen);
 					fs.close();
-					this->_controller->reload(xmlFileName.c_str());
+					this->_controller->reload(yamlFileName.c_str());
 				}
 			}
 			else
@@ -400,7 +399,7 @@ int FlowControlProtocol::sendReportReq()
 
 	// Calculate the total payload msg size
 	uint32_t payloadSize =
-			FlowControlMsgIDEncodingLen(FLOW_XML_NAME, this->_controller->getName().size()+1);
+			FlowControlMsgIDEncodingLen(FLOW_YML_NAME, this->_controller->getName().size()+1);
 	uint32_t size = sizeof(FlowControlProtocolHeader) + payloadSize;
 
 	uint8_t *data = new uint8_t[size];
@@ -417,8 +416,8 @@ int FlowControlProtocol::sendReportReq()
 	data = this->encode(data, hdr.status);
 	data = this->encode(data, hdr.payloadLen);
 
-	// encode the XML name
-	data = this->encode(data, FLOW_XML_NAME);
+	// encode the YAML name
+	data = this->encode(data, FLOW_YML_NAME);
 	data = this->encode(data, this->_controller->getName());
 
 	// send it
