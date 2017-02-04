@@ -138,7 +138,6 @@ bool Site2SitePeer::Open()
 	}
 
 	// OpenSSL init
-#ifdef OPENSSL_SUPPORT
 	SSL_CTX *ctx = FlowController::getFlowController()->getSSLContext();
 	if (ctx)
 	{
@@ -159,7 +158,6 @@ bool Site2SitePeer::Open()
 			_logger->log_info("SSL socket connect success to %s %d", host, port);
 		}
 	}
-#endif
 
 	_logger->log_info("Site2Site Peer socket %d connect to server %s port %d success", sock, host, port);
 
@@ -180,13 +178,11 @@ void Site2SitePeer::Close()
 {
 	if (_socket)
 	{
-#ifdef OPENSSL_SUPPORT
 		if (_ssl)
 		{
 			SSL_free(_ssl);
 			_ssl = NULL;
 		}
-#endif
 		_logger->log_info("Site2Site Peer socket %d close", _socket);
 		close(_socket);
 		_socket = 0;
@@ -205,14 +201,10 @@ int Site2SitePeer::sendData(uint8_t *buf, int buflen, CRC32 *crc)
 
 	while (bytes < buflen)
 	{
-#ifdef OPENSSL_SUPPORT
 		if (!_ssl)
-#endif
 			ret = send(_socket, buf+bytes, buflen-bytes, 0);
-#ifdef OPENSSL_SUPPORT
 		else
 			ret = SSL_write(_ssl, buf+bytes, buflen-bytes);
-#endif
 		//check for errors
 		if (ret < 0)
 		{
@@ -243,10 +235,8 @@ int Site2SitePeer::Select(int msec)
     tv.tv_sec = msec/1000;
     tv.tv_usec = (msec % 1000) * 1000;
 
-#ifdef OPENSSL_SUPPORT
     if (_ssl && SSL_pending(_ssl))
     	return 1;
-#endif
 
     if (msec > 0)
        retval = select(fd+1, &fds, NULL, NULL, &tv);
@@ -281,9 +271,7 @@ int Site2SitePeer::readData(uint8_t *buf, int buflen, CRC32 *crc)
 			Close();
 			return status;
 		}
-#ifdef OPENSSL_SUPPORT
 		if (!_ssl)
-#endif
 		{
 			status = recv(_socket, buf, buflen, 0);
 			if (status <= 0)
@@ -293,7 +281,6 @@ int Site2SitePeer::readData(uint8_t *buf, int buflen, CRC32 *crc)
 				return status;
 			}
 		}
-#ifdef OPENSSL_SUPPORT
 		else
 		{
 			// for SSL, wait for the TLS IO is completed
@@ -310,7 +297,6 @@ int Site2SitePeer::readData(uint8_t *buf, int buflen, CRC32 *crc)
 				return status;
 			}
 		}
-#endif
 		buflen -= status;
 		buf += status;
 	}

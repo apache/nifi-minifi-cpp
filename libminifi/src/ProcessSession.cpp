@@ -204,7 +204,7 @@ void ProcessSession::write(FlowFileRecord *flow, OutputStreamCallback *callback)
 {
 	ResourceClaim *claim = NULL;
 
-	claim = new ResourceClaim();
+	claim = new ResourceClaim(DEFAULT_CONTENT_DIRECTORY);
 
 	try
 	{
@@ -382,7 +382,7 @@ void ProcessSession::import(std::string source, FlowFileRecord *flow, bool keepS
 {
 	ResourceClaim *claim = NULL;
 
-	claim = new ResourceClaim();
+	claim = new ResourceClaim(DEFAULT_CONTENT_DIRECTORY);
 	char *buf = NULL;
 	int size = 4096;
 	buf = new char [size];

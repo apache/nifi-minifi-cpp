@@ -22,11 +22,10 @@
 #include <map>
 
 #include "ResourceClaim.h"
-#include "FlowController.h"
 
 std::atomic<uint64_t> ResourceClaim::_localResourceClaimNumber(0);
 
-ResourceClaim::ResourceClaim()
+ResourceClaim::ResourceClaim(const std::string contentDirectory)
 : _id(_localResourceClaimNumber.load()),
   _flowFileRecordOwnedCount(0)
 {
@@ -38,7 +37,7 @@ ResourceClaim::ResourceClaim()
 	++_localResourceClaimNumber;
 	uuid_unparse(_uuid, uuidStr);
 	// Create the full content path for the content
-	_contentFullPath = FlowController::getFlowController()->getContentDirectory() + "/" + uuidStr;
+	_contentFullPath = contentDirectory + "/" + uuidStr;
 
 	_configure = Configure::getConfigure();
 	_logger = Logger::getLogger();

@@ -465,8 +465,6 @@ public:
 		uuid_copy(_portId, id);
 		char idStr[37];
 		uuid_unparse(id, idStr);
-		for (int i = 0; i < 37; i++)
-			idStr[i] = tolower(idStr[i]);
 		_portIdStr = idStr;
 	}
 	//! getResourceName

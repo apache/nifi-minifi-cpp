@@ -40,7 +40,7 @@ public:
 	/*!
 	 * Create a new resource claim
 	 */
-	ResourceClaim();
+	ResourceClaim(const std::string contentDirectory);
 	//! Destructor
 	virtual ~ResourceClaim() {}
 	//! increaseFlowFileRecordOwnedCount

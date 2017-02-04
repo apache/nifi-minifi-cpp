@@ -871,7 +871,6 @@ void ProvenanceRepository::stop()
 
 void ProvenanceRepository::run(ProvenanceRepository *repo)
 {
-#ifdef LEVELDB_SUPPORT
 	// threshold for purge
 	uint64_t purgeThreshold = repo->_maxPartitionBytes*3/4;
 	while (repo->_running)
@@ -912,7 +911,6 @@ void ProvenanceRepository::run(ProvenanceRepository *repo)
 		else
 			repo->_repoFull = false;
 	}
-#endif
 	return;
 }
 
