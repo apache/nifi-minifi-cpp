@@ -257,8 +257,8 @@ Additionally, users can utilize the MiNiFi Toolkit Converter (version 0.0.1 - sc
     setup the client certificate and private key PEM files
     nifi.security.client.certificate=./conf/client.pem
     nifi.security.client.private.key=./conf/client.pem
-    setup the client private key passphase file
-    nifi.security.client.pass.phase=./conf/password
+    setup the client private key passphrase file
+    nifi.security.client.pass.phrase=./conf/password
     setup the client CA certificate file
     nif.security.client.ca.certificate=./conf/nifi-cert.pem
 

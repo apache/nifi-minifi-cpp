@@ -96,11 +96,11 @@ public:
 	//! passphase for the private file callback
 	static int pemPassWordCb(char *buf, int size, int rwflag, void *userdata)
 	{
-		std::string passphase;
+		std::string passphrase;
 
-		if (Configure::getConfigure()->get(Configure::nifi_security_client_pass_phase, passphase))
+		if (Configure::getConfigure()->get(Configure::nifi_security_client_pass_phrase, passphrase))
 		{
-		    std::ifstream file(passphase.c_str(), std::ifstream::in);
+		    std::ifstream file(passphrase.c_str(), std::ifstream::in);
 		    if (!file.good())
 		    {
 		    	memset(buf, 0, size);

@@ -277,7 +277,6 @@ int Site2SitePeer::readData(uint8_t *buf, int buflen, CRC32 *crc)
 			if (status <= 0)
 			{
 				Close();
-				// this->yield();
 				return status;
 			}
 		}
@@ -293,7 +292,6 @@ int Site2SitePeer::readData(uint8_t *buf, int buflen, CRC32 *crc)
 			if (status <= 0)
 			{
 				Close();
-				// this->yield();
 				return status;
 			}
 		}

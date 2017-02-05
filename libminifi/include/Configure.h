@@ -54,7 +54,7 @@ public:
 	static const char *nifi_security_need_ClientAuth;
 	static const char *nifi_security_client_certificate;
 	static const char *nifi_security_client_private_key;
-	static const char *nifi_security_client_pass_phase;
+	static const char *nifi_security_client_pass_phrase;
 	static const char *nifi_security_client_ca_certificate;
 
 	//! Clear the load config

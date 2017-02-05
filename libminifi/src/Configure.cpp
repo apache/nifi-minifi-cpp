@@ -33,8 +33,8 @@ const char *Configure::nifi_remote_input_secure = "nifi.remote.input.secure";
 const char *Configure::nifi_security_need_ClientAuth = "nifi.security.need.ClientAuth";
 const char *Configure::nifi_security_client_certificate = "nifi.security.client.certificate";
 const char *Configure::nifi_security_client_private_key = "nifi.security.client.private.key";
-const char *Configure::nifi_security_client_pass_phase = "nifi.security.client.pass.phase";
-const char *Configure::nifi_security_client_ca_certificate = "nif.security.client.ca.certificate";
+const char *Configure::nifi_security_client_pass_phrase = "nifi.security.client.pass.phrase";
+const char *Configure::nifi_security_client_ca_certificate = "nifi.security.client.ca.certificate";
 
 //! Get the config value
 bool Configure::get(std::string key, std::string &value)

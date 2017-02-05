@@ -141,7 +141,7 @@ FlowController::FlowController(std::string name)
 		{
 			std::string certificate;
 			std::string privatekey;
-			std::string passphase;
+			std::string passphrase;
 			std::string caCertificate;
 
 			if (!(_configure->get(Configure::nifi_security_client_certificate, certificate) &&
@@ -157,7 +157,7 @@ FlowController::FlowController(std::string name)
 				_logger->log_error("Could not create load certificate, Exiting.");
 				exit(1);
 			}
-			if (_configure->get(Configure::nifi_security_client_pass_phase, passphase))
+			if (_configure->get(Configure::nifi_security_client_pass_phrase, passphrase))
 			{
 				// if the private key has passphase
 				SSL_CTX_set_default_passwd_cb(_ctx, FlowController::pemPassWordCb);
