@@ -49,6 +49,9 @@ class ProcessSession;
 //! Default penalization period in second
 #define DEFAULT_PENALIZATION_PERIOD_SECONDS 30
 
+//! Description given to Dynamic Property since they have no definition
+#define DEFAULT_DYNAMIC_PROPERTY_DESC "Dynamic Property"
+
 /*!
  * Indicates the valid values for the state of a entity
  * with respect to scheduling the entity to run.
@@ -124,8 +127,12 @@ public:
 	bool setSupportedRelationships(std::set<Relationship> relationships);
 	//! Get the supported property value by name
 	bool getProperty(std::string name, std::string &value);
-	//! Set the supported property value by name wile the process is not running
+	//! Get the dynamic property value by name
+	bool getDynamicProperty(std::string name, std::string &value);
+	//! Set the supported property value by name wile the process is not running.
 	bool setProperty(std::string name, std::string value);
+	//! Set dynamic property if the property received is not a suppoted property
+	bool setDynamicProperty(std::string name, std::string value);
 	//! Whether the relationship is supported
 	bool isSupportedRelationship(Relationship relationship);
 	//! Set the auto terminated relationships while the process is not running
@@ -301,6 +308,8 @@ protected:
 	std::string _name;
 	//! Supported properties
 	std::map<std::string, Property> _properties;
+	//! Dynamic properties
+	std::map<std::string, Property> _dynamicProperties;
 	//! Supported relationships
 	std::map<std::string, Relationship> _relationships;
 	//! Autoterminated relationships

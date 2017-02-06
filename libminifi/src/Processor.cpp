@@ -29,6 +29,7 @@
 #include "Processor.h"
 #include "ProcessContext.h"
 #include "ProcessSession.h"
+#include "Configure.h"
 
 Processor::Processor(std::string name, uuid_t uuid)
 : _name(name)
@@ -206,6 +207,29 @@ bool Processor::getProperty(std::string name, std::string &value)
 	}
 }
 
+bool Processor::getDynamicProperty(std::string name, std::string &value)
+{
+	if (isRunning())
+		// Because set property only allowed in non running state, we need to obtain lock avoid rack condition
+		_mtx.lock();
+
+	std::map<std::string, Property>::iterator it = _dynamicProperties.find(name);
+	if (it != _dynamicProperties.end())
+	{
+		Property item = it->second;
+		value = item.getValue();
+		if (!isRunning())
+			_mtx.unlock();
+		return true;
+	}
+	else
+	{
+		if (!isRunning())
+			_mtx.unlock();
+		return false;
+	}
+}
+
 bool Processor::setProperty(std::string name, std::string value)
 {
 
@@ -223,6 +247,39 @@ bool Processor::setProperty(std::string name, std::string value)
 	else
 	{
 		return false;
+	}
+}
+
+bool Processor::setDynamicProperty(std::string name, std::string value)
+{
+	std::lock_guard<std::mutex> lock(_mtx);
+	std::map<std::string, Property>::iterator it = _dynamicProperties.find(name);
+
+	//Does user want Dynamic properties to be accepted?
+	std::string acceptDynValue;
+	Configure::getConfigure()->get(Configure::getConfigure()->nifi_accept_dynamic_properties, acceptDynValue);
+
+	if (it != _dynamicProperties.end())
+	{
+		Property item = it->second;
+		item.setValue(value);
+		_dynamicProperties[item.getName()] = item;
+		_logger->log_info("Processor %s dynamic property name %s value %s", _name.c_str(), item.getName().c_str(), value.c_str());
+		return true;
+	}
+	else
+	{
+		//Create and add the new Property to the list of Dynamic Properties if enabled
+		if (acceptDynValue == "true" || acceptDynValue == "True" || acceptDynValue == "TRUE") {
+			Property *dyn = new Property(name, DEFAULT_DYNAMIC_PROPERTY_DESC, value);
+			_logger->log_info("Processor %s dynamic property '%s' value '%s'", _name.c_str(), dyn->getName().c_str(), value.c_str());
+			_dynamicProperties[dyn->getName()] = *dyn;
+			return true;
+		} else {
+			_logger->log_warn("MiNiFi property %s was set to %s so ignoring dynamic property %s with value %s", 
+				Configure::getConfigure()->nifi_accept_dynamic_properties, acceptDynValue.c_str(), name.c_str(), value.c_str());
+			return false;
+		}
 	}
 }
 

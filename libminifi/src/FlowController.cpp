@@ -596,7 +596,14 @@ void FlowController::parsePropertiesNodeYaml(YAML::Node *propertiesNode, Process
             std::string rawValueString = propertyValueNode.as<std::string>();
             if (!processor->setProperty(propertyName, rawValueString))
             {
-                _logger->log_warn("Received property %s with value %s but is not one of the properties for %s", propertyName.c_str(), rawValueString.c_str(), processor->getName().c_str());
+                _logger->log_warn("Received property %s with value %s but is not one of the properties for %s. Attempting to add as dynamic property.", 
+                    propertyName.c_str(), rawValueString.c_str(), processor->getName().c_str());
+
+                if (!processor->setDynamicProperty(propertyName, rawValueString)) {
+                    _logger->log_warn("Unable to set the dynamic property %s with value %s", propertyName.c_str(), rawValueString.c_str());
+                } else {
+                    _logger->log_warn("Dynamic property %s with value %s set", propertyName.c_str(), rawValueString.c_str());
+                }
             }
         }
     }

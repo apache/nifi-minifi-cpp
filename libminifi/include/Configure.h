@@ -42,6 +42,7 @@ public:
 	}
 	//! nifi.flow.configuration.file
 	static const char *nifi_flow_configuration_file;
+	static const char *nifi_accept_dynamic_properties;
 	static const char *nifi_administrative_yield_duration;
 	static const char *nifi_bored_yield_duration;
 	static const char *nifi_server_name;
