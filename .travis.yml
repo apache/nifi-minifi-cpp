@@ -35,3 +35,4 @@ addons:
     - uuid-dev
     - libxml2-dev
     - libleveldb-dev
+    - openssl 

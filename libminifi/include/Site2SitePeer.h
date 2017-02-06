@@ -27,6 +27,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <fcntl.h>
+#include <resolv.h>
 #include <netdb.h>
 #include <string>
 #include <errno.h>
@@ -36,6 +37,9 @@
 #include "Logger.h"
 #include "Configure.h"
 #include "Property.h"
+// OpenSSL related
+#include <openssl/ssl.h>
+#include <openssl/err.h>
 
 class CRC32
 {
@@ -102,6 +106,7 @@ public:
 		_yieldExpiration = 0;
 		_timeOut = 30000; // 30 seconds
 		_url = "nifi://" + _host + ":" + std::to_string(_port);
+		_ssl = NULL;
 	}
 	//! Destructor
 	virtual ~Site2SitePeer() { Close();}
@@ -355,6 +360,8 @@ private:
 	std::atomic<uint64_t> _yieldExpiration;
 	//! Yield Expiration per destination PortID
 	std::map<std::string, uint64_t> _yieldExpirationPortIdMap;
+	//! OpenSSL connection state
+	SSL* _ssl;
 	// Prevent default copy constructor and assignment operation
 	// Only support pass by reference or pointer
 	Site2SitePeer(const Site2SitePeer &parent);

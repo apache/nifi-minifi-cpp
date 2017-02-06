@@ -30,7 +30,7 @@
 #include "Configure.h"
 
 //! Default content directory
-#define DEFAULT_CONTENT_DIRECTORY "."
+#define DEFAULT_CONTENT_DIRECTORY "./content_repository"
 
 //! ResourceClaim Class
 class ResourceClaim {

@@ -25,6 +25,9 @@
 #include <time.h>
 #include <chrono>
 #include <thread>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 #include <libxml/parser.h>
 #include <libxml/tree.h>
 
@@ -75,22 +78,123 @@ FlowController::FlowController(std::string name)
         }
     }
 
-    path = realpath(adjustedFilename.c_str(), full_path);
+	path = realpath(adjustedFilename.c_str(), full_path);
 	if (!path)
 	{
         _logger->log_error("Could not locate path from provided configuration file name (%s).  Exiting.", full_path);
         exit(1);
     }
 
-    std::string pathString(path);
-    _configurationFileName = pathString;
-    _logger->log_info("FlowController NiFi Configuration file %s", pathString.c_str());
+	std::string pathString(path);
+	_configurationFileName = pathString;
+	_logger->log_info("FlowController NiFi Configuration file %s", pathString.c_str());
+
+	// Create the content repo directory if needed
+	struct stat contentDirStat;
+
+	if (stat(DEFAULT_CONTENT_DIRECTORY, &contentDirStat) != -1 && S_ISDIR(contentDirStat.st_mode))
+	{
+		path = realpath(DEFAULT_CONTENT_DIRECTORY, full_path);
+		_logger->log_info("FlowController content directory %s", full_path);
+	}
+	else
+	{
+	   if (mkdir(DEFAULT_CONTENT_DIRECTORY, 0777) == -1)
+	   {
+		   _logger->log_error("FlowController content directory creation failed");
+		   exit(1);
+	   }
+	}
+
+	std::string secureStr;
+	bool isSecure = false;
+	if (_configure->get(Configure::nifi_remote_input_secure, secureStr))
+	{
+		Property::StringToBool(secureStr, isSecure);
+	}
+	std::string clientAuthStr;
+	bool needClientCert = true;
+	if (!(_configure->get(Configure::nifi_security_need_ClientAuth, clientAuthStr)
+			&& Property::StringToBool(clientAuthStr, needClientCert)))
+	{
+		needClientCert = true;
+	}
+	_logger->log_info("Site2Site secure setting is %d, needClientCert %d", isSecure, needClientCert);
+	_ctx = NULL;
+	if (isSecure)
+	{
+		// create SSL context
+		SSL_library_init();
+		const SSL_METHOD *method;
+
+		OpenSSL_add_all_algorithms();
+		SSL_load_error_strings();
+		method = TLSv1_2_client_method();
+		_ctx = SSL_CTX_new(method);
+		if ( _ctx == NULL )
+		{
+			ERR_print_errors_fp(stderr);
+			_logger->log_error("Could not create SSL context, Exiting.");
+			exit(1);
+		}
+		if (needClientCert)
+		{
+			std::string certificate;
+			std::string privatekey;
+			std::string passphrase;
+			std::string caCertificate;
+
+			if (!(_configure->get(Configure::nifi_security_client_certificate, certificate) &&
+					_configure->get(Configure::nifi_security_client_private_key, privatekey)))
+			{
+				_logger->log_error("Certificate and Private Key PEM file not configured, Exiting.");
+				exit(1);
+			}
+			// load certificates and private key in PEM format
+			if ( SSL_CTX_use_certificate_file(_ctx, certificate.c_str(), SSL_FILETYPE_PEM) <= 0 )
+			{
+				ERR_print_errors_fp(stderr);
+				_logger->log_error("Could not create load certificate, Exiting.");
+				exit(1);
+			}
+			if (_configure->get(Configure::nifi_security_client_pass_phrase, passphrase))
+			{
+				// if the private key has passphase
+				SSL_CTX_set_default_passwd_cb(_ctx, FlowController::pemPassWordCb);
+			}
+			if ( SSL_CTX_use_PrivateKey_file(_ctx, privatekey.c_str(), SSL_FILETYPE_PEM) <= 0 )
+			{
+				ERR_print_errors_fp(stderr);
+				_logger->log_error("Could not create load private key, Exiting.");
+				exit(1);
+			}
+			/* verify private key */
+			if ( !SSL_CTX_check_private_key(_ctx) )
+			{
+				_logger->log_error("Private key does not match the public certificate");
+				exit(1);
+			}
+			/* load CA certificates */
+			if (_configure->get(Configure::nifi_security_client_ca_certificate, caCertificate))
+			{
+				if (!SSL_CTX_load_verify_locations(_ctx, caCertificate.c_str(), 0))
+				{
+					_logger->log_error("Can not load CA certificate, Exiting.");
+					exit(1);
+				}
+			}
+
+			_logger->log_info("Load/Verify Client Certificate OK.");
+		}
+	}
 
     // Create repos for flow record and provenance
     _provenanceRepo = new ProvenanceRepository();
     _provenanceRepo->initialize();
 
     _logger->log_info("FlowController %s created", _name.c_str());
+
+
 }
 
 FlowController::~FlowController()
@@ -99,6 +203,8 @@ FlowController::~FlowController()
     unload();
     delete _protocol;
     delete _provenanceRepo;
+    if (_ctx)
+    	SSL_CTX_free(_ctx);
 }
 
 bool FlowController::isRunning()

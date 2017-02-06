@@ -26,6 +26,7 @@
 #include <netinet/tcp.h>
 #include <iostream>
 #include "Site2SitePeer.h"
+#include "FlowController.h"
 
 //! CRC tables
 std::atomic<bool> CRC32::tableInit(false);
@@ -136,6 +137,28 @@ bool Site2SitePeer::Open()
 		return false;
 	}
 
+	// OpenSSL init
+	SSL_CTX *ctx = FlowController::getFlowController()->getSSLContext();
+	if (ctx)
+	{
+		// we have s2s secure config
+		this->_ssl = SSL_new(ctx);
+		SSL_set_fd(_ssl, sock);
+		if (SSL_connect(_ssl) == -1)
+		{
+			_logger->log_error("SSL socket connect failed to %s %d", host, port);
+			SSL_free(_ssl);
+			_ssl = NULL;
+			close(sock);
+			this->yield();
+			return false;
+		}
+		else
+		{
+			_logger->log_info("SSL socket connect success to %s %d", host, port);
+		}
+	}
+
 	_logger->log_info("Site2Site Peer socket %d connect to server %s port %d success", sock, host, port);
 
 	_socket = sock;
@@ -155,6 +178,11 @@ void Site2SitePeer::Close()
 {
 	if (_socket)
 	{
+		if (_ssl)
+		{
+			SSL_free(_ssl);
+			_ssl = NULL;
+		}
 		_logger->log_info("Site2Site Peer socket %d close", _socket);
 		close(_socket);
 		_socket = 0;
@@ -173,9 +201,12 @@ int Site2SitePeer::sendData(uint8_t *buf, int buflen, CRC32 *crc)
 
 	while (bytes < buflen)
 	{
-		ret = send(_socket, buf+bytes, buflen-bytes, 0);
+		if (!_ssl)
+			ret = send(_socket, buf+bytes, buflen-bytes, 0);
+		else
+			ret = SSL_write(_ssl, buf+bytes, buflen-bytes);
 		//check for errors
-		if (ret == -1)
+		if (ret < 0)
 		{
 			_logger->log_error("Site2Site Peer socket %d send failed %s", _socket, strerror(errno));
 			Close();
@@ -203,6 +234,9 @@ int Site2SitePeer::Select(int msec)
 
     tv.tv_sec = msec/1000;
     tv.tv_usec = (msec % 1000) * 1000;
+
+    if (_ssl && SSL_pending(_ssl))
+    	return 1;
 
     if (msec > 0)
        retval = select(fd+1, &fds, NULL, NULL, &tv);
@@ -237,12 +271,29 @@ int Site2SitePeer::readData(uint8_t *buf, int buflen, CRC32 *crc)
 			Close();
 			return status;
 		}
-		status = recv(_socket, buf, buflen, 0);
-		if (status <= 0)
+		if (!_ssl)
 		{
-			Close();
-			// this->yield();
-			return status;
+			status = recv(_socket, buf, buflen, 0);
+			if (status <= 0)
+			{
+				Close();
+				return status;
+			}
+		}
+		else
+		{
+			// for SSL, wait for the TLS IO is completed
+			int sslStatus;
+			do {
+				status = SSL_read(_ssl, buf, buflen);
+				sslStatus = SSL_get_error(_ssl, status);
+			}
+			while (status < 0 && sslStatus == SSL_ERROR_WANT_READ);
+			if (status <= 0)
+			{
+				Close();
+				return status;
+			}
 		}
 		buflen -= status;
 		buf += status;
