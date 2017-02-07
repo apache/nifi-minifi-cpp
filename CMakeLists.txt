@@ -49,6 +49,13 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Search for threads
 find_package(Threads REQUIRED)
 
+# Set the right openssl root path
+if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+set(OPENSSL_ROOT_DIR "/usr/local/opt/openssl/")
+else()
+set(OPENSSL_ROOT_DIR "/usr/lib/x86_64-linux-gnu")
+endif()
+
 # Provide custom modules for the project
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
