@@ -343,7 +343,7 @@ private:
 	//! Incoming connection Iterator
 	std::set<Connection *>::iterator _incomingConnectionsIter;
 	//! Condition for whether there is incoming work to do
-	bool _hasWork = false;
+	std::atomic<bool> _hasWork;
 	//! Concurrent condition mutex for whether there is incoming work to do
 	std::mutex _workAvailableMtx;
 	//! Concurrent condition variable for whether there is incoming work to do

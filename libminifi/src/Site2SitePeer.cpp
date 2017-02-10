@@ -138,7 +138,7 @@ bool Site2SitePeer::Open()
 	}
 
 	// OpenSSL init
-	SSL_CTX *ctx = FlowController::getFlowController()->getSSLContext();
+	SSL_CTX *ctx = FlowControllerFactory::getFlowController()->getSSLContext();
 	if (ctx)
 	{
 		// we have s2s secure config

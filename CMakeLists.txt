@@ -60,9 +60,7 @@ endif()
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 find_package(UUID REQUIRED)
-
 file(GLOB SPD_SOURCES "include/spdlog/*")
-
 
 add_subdirectory(thirdparty/yaml-cpp-yaml-cpp-0.5.3)
 add_subdirectory(libminifi)

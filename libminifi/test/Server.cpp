@@ -15,7 +15,6 @@
 #include <errno.h>
 #include <chrono>
 #include <thread>
-#include <iostream>     // std::cout
 #include <fstream>      // std::ifstream
 #include <signal.h>
 

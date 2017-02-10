@@ -204,7 +204,7 @@ void ProcessSession::write(FlowFileRecord *flow, OutputStreamCallback *callback)
 {
 	ResourceClaim *claim = NULL;
 
-	claim = new ResourceClaim(DEFAULT_CONTENT_DIRECTORY);
+	claim = new ResourceClaim();
 
 	try
 	{
@@ -382,7 +382,7 @@ void ProcessSession::import(std::string source, FlowFileRecord *flow, bool keepS
 {
 	ResourceClaim *claim = NULL;
 
-	claim = new ResourceClaim(DEFAULT_CONTENT_DIRECTORY);
+	claim = new ResourceClaim();
 	char *buf = NULL;
 	int size = 4096;
 	buf = new char [size];
@@ -420,9 +420,10 @@ void ProcessSession::import(std::string source, FlowFileRecord *flow, bool keepS
 				}
 				flow->_claim = claim;
 				claim->increaseFlowFileRecordOwnedCount();
-				/*
+
 				_logger->log_debug("Import offset %d length %d into content %s for FlowFile UUID %s",
-						flow->_offset, flow->_size, flow->_claim->getContentFullPath().c_str(), flow->getUUIDStr().c_str()); */
+						flow->_offset, flow->_size, flow->_claim->getContentFullPath().c_str(), flow->getUUIDStr().c_str());
+
 				fs.close();
 				input.close();
 				if (!keepSource)
@@ -478,10 +479,9 @@ void ProcessSession::commit()
 	try
 	{
 		// First we clone the flow record based on the transfered relationship for updated flow record
-		std::map<std::string, FlowFileRecord *>::iterator it;
-		for (it = _updatedFlowFiles.begin(); it!= _updatedFlowFiles.end(); it++)
+		for (auto && it : _updatedFlowFiles)
 		{
-			FlowFileRecord *record = it->second;
+			FlowFileRecord *record = it.second;
 			if (record->_markedDelete)
 				continue;
 			std::map<std::string, Relationship>::iterator itRelationship =
@@ -537,11 +537,10 @@ void ProcessSession::commit()
 				throw Exception(PROCESS_SESSION_EXCEPTION, "Can not find the transfer relationship for the flow");
 			}
 		}
-
 		// Do the samething for added flow file
-		for (it = _addedFlowFiles.begin(); it!= _addedFlowFiles.end(); it++)
+		for(const auto it : _addedFlowFiles)
 		{
-			FlowFileRecord *record = it->second;
+			FlowFileRecord *record = it.second;
 			if (record->_markedDelete)
 				continue;
 			std::map<std::string, Relationship>::iterator itRelationship =
@@ -597,11 +596,10 @@ void ProcessSession::commit()
 				throw Exception(PROCESS_SESSION_EXCEPTION, "Can not find the transfer relationship for the flow");
 			}
 		}
-
 		// Complete process the added and update flow files for the session, send the flow file to its queue
-		for (it = _updatedFlowFiles.begin(); it!= _updatedFlowFiles.end(); it++)
+		for(const auto &it : _updatedFlowFiles)
 		{
-			FlowFileRecord *record = it->second;
+			FlowFileRecord *record = it.second;
 			if (record->_markedDelete)
 			{
 				continue;
@@ -611,9 +609,9 @@ void ProcessSession::commit()
 			else
 				delete record;
 		}
-		for (it = _addedFlowFiles.begin(); it!= _addedFlowFiles.end(); it++)
+		for(const auto &it : _addedFlowFiles)
 		{
-			FlowFileRecord *record = it->second;
+			FlowFileRecord *record = it.second;
 			if (record->_markedDelete)
 			{
 				continue;
@@ -624,9 +622,9 @@ void ProcessSession::commit()
 				delete record;
 		}
 		// Process the clone flow files
-		for (it = _clonedFlowFiles.begin(); it!= _clonedFlowFiles.end(); it++)
+		for(const auto &it : _clonedFlowFiles)
 		{
-			FlowFileRecord *record = it->second;
+			FlowFileRecord *record = it.second;
 			if (record->_markedDelete)
 			{
 				continue;
@@ -637,15 +635,15 @@ void ProcessSession::commit()
 				delete record;
 		}
 		// Delete the deleted flow files
-		for (it = _deletedFlowFiles.begin(); it!= _deletedFlowFiles.end(); it++)
+		for(const auto &it : _deletedFlowFiles)
 		{
-			FlowFileRecord *record = it->second;
+			FlowFileRecord *record = it.second;
 			delete record;
 		}
 		// Delete the snapshot
-		for (it = _originalFlowFiles.begin(); it!= _originalFlowFiles.end(); it++)
+		for(const auto &it : _originalFlowFiles)
 		{
-			FlowFileRecord *record = it->second;
+			FlowFileRecord *record = it.second;
 			delete record;
 		}
 		// All done
@@ -675,11 +673,10 @@ void ProcessSession::rollback()
 {
 	try
 	{
-		std::map<std::string, FlowFileRecord *>::iterator it;
 		// Requeue the snapshot of the flowfile back
-		for (it = _originalFlowFiles.begin(); it!= _originalFlowFiles.end(); it++)
+		for(const auto &it : _originalFlowFiles)
 		{
-			FlowFileRecord *record = it->second;
+			FlowFileRecord *record = it.second;
 			if (record->_orginalConnection)
 			{
 				record->_snapshot = false;
@@ -690,21 +687,21 @@ void ProcessSession::rollback()
 		}
 		_originalFlowFiles.clear();
 		// Process the clone flow files
-		for (it = _clonedFlowFiles.begin(); it!= _clonedFlowFiles.end(); it++)
+		for(const auto &it : _clonedFlowFiles)
 		{
-			FlowFileRecord *record = it->second;
+			FlowFileRecord *record = it.second;
 			delete record;
 		}
 		_clonedFlowFiles.clear();
-		for (it = _addedFlowFiles.begin(); it!= _addedFlowFiles.end(); it++)
+		for(const auto &it : _addedFlowFiles)
 		{
-			FlowFileRecord *record = it->second;
+			FlowFileRecord *record = it.second;
 			delete record;
 		}
 		_addedFlowFiles.clear();
-		for (it = _updatedFlowFiles.begin(); it!= _updatedFlowFiles.end(); it++)
+		for(const auto &it : _updatedFlowFiles)
 		{
-			FlowFileRecord *record = it->second;
+			FlowFileRecord *record = it.second;
 			delete record;
 		}
 		_updatedFlowFiles.clear();

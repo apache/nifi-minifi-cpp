@@ -15,12 +15,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <cstdlib>
 #include <uuid/uuid.h>
 #include <fstream>
+#include "FlowController.h"
+#include "ProvenanceTests.h"
 #include "../TestBase.h"
 #include "GetFile.h"
 
+#ifndef PROCESSOR_TESTS
+#define PROCESSOR_TESTS
 
 TEST_CASE("Test Creation of GetFile", "[getfileCreate]"){
 	GetFile processor("processorname");
@@ -30,24 +33,33 @@ TEST_CASE("Test Creation of GetFile", "[getfileCreate]"){
 
 TEST_CASE("Test Find file", "[getfileCreate2]"){
 
+	TestController testController;
+
+	testController.enableDebug();
+
+	ProvenanceTestRepository repo;
+	TestFlowController controller(repo);
+	FlowControllerFactory::getFlowController( dynamic_cast<FlowController*>(&controller));
 
 	GetFile processor("getfileCreate2");
 
 	char format[] ="/tmp/gt.XXXXXX";
-	char *dir = mkdtemp(format);
+	char *dir = testController.createTempDirectory(format);
 
 
-	Connection connection("emptyConnection");
+	uuid_t processoruuid;
+	REQUIRE( true == processor.getUUID(processoruuid) );
+
+	Connection connection("getfileCreate2Connection");
 	connection.setRelationship(Relationship("success","description"));
 
 	// link the connections so that we can test results at the end for this
 
 	connection.setSourceProcessor(&processor);
 
-	uuid_t processoruuid;
-	uuid_parse(processor.getUUIDStr().c_str(),processoruuid);
 
 	connection.setSourceProcessorUUID(processoruuid);
+	connection.setDestinationProcessorUUID(processoruuid);
 
 	processor.addConnection(&connection);
 	REQUIRE( dir != NULL );
@@ -64,15 +76,15 @@ TEST_CASE("Test Find file", "[getfileCreate2]"){
 	processor.onTrigger(&context,&session);
 
 	ProvenanceReporter *reporter = session.getProvenanceReporter();
-	std::set<ProvenanceEventRecord *> records = reporter->getEvents();
+	std::set<ProvenanceEventRecord*> records = reporter->getEvents();
 
-    record = session.get();
+	record = session.get();
 	REQUIRE( record== 0 );
 	REQUIRE( records.size() == 0 );
 
 	std::fstream file;
 	std::stringstream ss;
-	ss << dir << "/" << "tstFile";
+	ss << dir << "/" << "tstFile.ext";
 	file.open(ss.str(),std::ios::out);
 	file << "tempFile";
 	file.close();
@@ -89,12 +101,54 @@ TEST_CASE("Test Find file", "[getfileCreate2]"){
 
 	for(ProvenanceEventRecord *provEventRecord : records)
 	{
-
 		REQUIRE (provEventRecord->getComponentType() == processor.getName());
+	}
+	session.commit();
+
+	FlowFileRecord *ffr = session.get();
+
+	ffr->getResourceClaim()->decreaseFlowFileRecordOwnedCount();
+
+	delete ffr;
+
+	std::set<FlowFileRecord*> expiredFlows;
+
+	REQUIRE( 2 == repo.getRepoMap().size() );
+
+	for(auto  entry: repo.getRepoMap())
+	{
+		ProvenanceEventRecord newRecord;
+		newRecord.DeSerialize((uint8_t*)entry.second.data(),entry.second.length());
+
+		bool found = false;
+		for ( auto provRec : records)
+		{
+			if (provRec->getEventId() == newRecord.getEventId() )
+			{
+				REQUIRE( provRec->getEventId() == newRecord.getEventId());
+				REQUIRE( provRec->getComponentId() == newRecord.getComponentId());
+				REQUIRE( provRec->getComponentType() == newRecord.getComponentType());
+				REQUIRE( provRec->getDetails() == newRecord.getDetails());
+				REQUIRE( provRec->getEventDuration() == newRecord.getEventDuration());
+				found = true;
+				break;
+			}
+		}
+		if (!found)
+		throw std::runtime_error("Did not find record");
+
+
 	}
 
 
 
 
+
+
 }
+
+
+
+#endif
+
 

@@ -21,6 +21,8 @@
 #ifndef __LOGGER_H__
 #define __LOGGER_H__
 
+#include <string>
+#include <algorithm>
 #include <cstdio>
 #include "spdlog/spdlog.h"
 
@@ -71,6 +73,36 @@ public:
 		if (_spdlog == NULL)
 			return;
 		_spdlog->set_level((spdlog::level::level_enum) level);
+	}
+
+	void setLogLevel(const std::string &level,LOG_LEVEL_E defaultLevel = info )
+	{
+		std::string logLevel = "";
+		std::transform(level.begin(), level.end(), logLevel.end(), ::tolower);
+
+		if (logLevel == "trace") {
+			setLogLevel(trace);
+		} else if (logLevel == "debug") {
+			setLogLevel(debug);
+		} else if (logLevel == "info") {
+			setLogLevel(info);
+		} else if (logLevel == "notice") {
+			setLogLevel(notice);
+		} else if (logLevel == "warn") {
+			setLogLevel(warn);
+		} else if (logLevel == "error") {
+			setLogLevel(err);
+		} else if (logLevel == "critical") {
+			setLogLevel(critical);
+		} else if (logLevel == "alert") {
+			setLogLevel(alert);
+		} else if (logLevel == "emerg") {
+			setLogLevel(emerg);
+		} else if (logLevel == "off") {
+			setLogLevel(off);
+		} else {
+			setLogLevel(defaultLevel);
+		}
 	}
 	//! Destructor
 	~Logger() {}
