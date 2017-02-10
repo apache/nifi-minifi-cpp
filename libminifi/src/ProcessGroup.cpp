@@ -135,9 +135,10 @@ void ProcessGroup::startProcessing(TimerDrivenSchedulingAgent *timeScheduler,
 	try
 	{
 		// Start all the processor node, input and output ports
-		for (std::set<Processor *>::iterator it = _processors.begin(); it != _processors.end(); ++it)
+		for(auto processor : _processors)
 		{
-			Processor *processor(*it);
+			_logger->log_debug("Starting %s",processor->getName().c_str());
+
 			if (!processor->isRunning() && processor->getScheduledState() != DISABLED)
 			{
 				if (processor->getSchedulingStrategy() == TIMER_DRIVEN)
@@ -146,10 +147,9 @@ void ProcessGroup::startProcessing(TimerDrivenSchedulingAgent *timeScheduler,
 					eventScheduler->schedule(processor);
 			}
 		}
-
-		for (std::set<ProcessGroup *>::iterator it = _childProcessGroups.begin(); it != _childProcessGroups.end(); ++it)
+		// Start processing the group
+		for(auto processGroup : _childProcessGroups)
 		{
-			ProcessGroup *processGroup(*it);
 			processGroup->startProcessing(timeScheduler, eventScheduler);
 		}
 	}
@@ -202,12 +202,14 @@ void ProcessGroup::stopProcessing(TimerDrivenSchedulingAgent *timeScheduler,
 
 Processor *ProcessGroup::findProcessor(uuid_t uuid)
 {
+
 	Processor *ret = NULL;
 	// std::lock_guard<std::mutex> lock(_mtx);
 
 	for (std::set<Processor *>::iterator it = _processors.begin(); it != _processors.end(); ++it)
 	{
 		Processor *processor(*it);
+		_logger->log_info("find processor %s",processor->getName().c_str());
 		uuid_t processorUUID;
 		if (processor->getUUID(processorUUID) && uuid_compare(processorUUID, uuid) == 0)
 			return processor;
@@ -215,7 +217,9 @@ Processor *ProcessGroup::findProcessor(uuid_t uuid)
 
 	for (std::set<ProcessGroup *>::iterator it = _childProcessGroups.begin(); it != _childProcessGroups.end(); ++it)
 	{
+
 		ProcessGroup *processGroup(*it);
+		_logger->log_info("find processor child %s",processGroup->getName().c_str());
 		Processor *processor = processGroup->findProcessor(uuid);
 		if (processor)
 			return processor;

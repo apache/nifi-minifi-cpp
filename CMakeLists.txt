@@ -60,9 +60,7 @@ endif()
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 find_package(UUID REQUIRED)
-
 file(GLOB SPD_SOURCES "include/spdlog/*")
-
 
 add_subdirectory(thirdparty/yaml-cpp-yaml-cpp-0.5.3)
 add_subdirectory(libminifi)
@@ -100,6 +98,7 @@ set(CPACK_ARCHIVE_COMPONENT_INSTALL ON)
 set(CPACK_COMPONENTS_ALL bin)
 
 include(CPack)
+
 
 enable_testing(test) 
     file(GLOB LIBMINIFI_TEST_SOURCES "libminifi/test/unit/*.cpp")

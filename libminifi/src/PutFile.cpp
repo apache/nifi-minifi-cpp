@@ -136,11 +136,13 @@ bool PutFile::putFile(ProcessSession *session, FlowFileRecord *flowFile, const s
 	if (cb.commit())
 	{
 		session->transfer(flowFile, Success);
+		return true;
 	}
 	else
 	{
 		session->transfer(flowFile, Failure);
 	}
+	return false;
 }
 
 PutFile::ReadCallback::ReadCallback(const std::string &tmpFile, const std::string &destFile)

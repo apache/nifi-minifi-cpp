@@ -18,8 +18,68 @@
 
 #ifndef LIBMINIFI_TEST_TESTBASE_H_
 #define LIBMINIFI_TEST_TESTBASE_H_
-
+#include <cstdio>
+#include <cstdlib>
+#include "ResourceClaim.h"
 #include "catch.hpp"
+#include "Logger.h"
+#include <vector>
+
+
+class LogTestController {
+public:
+	LogTestController(const std::string level = "debug") {
+		Logger::getLogger()->setLogLevel(level);
+	}
+
+
+	void enableDebug()
+	{
+		Logger::getLogger()->setLogLevel("debug");
+	}
+
+	~LogTestController() {
+		Logger::getLogger()->setLogLevel(LOG_LEVEL_E::info);
+	}
+};
+
+class TestController{
+public:
+
+
+
+	TestController() : log("info")
+	{
+		ResourceClaim::default_directory_path = "./";
+	}
+
+	~TestController()
+	{
+		for(auto dir : directories)
+		{
+			rmdir(dir);
+		}
+	}
+
+	void enableDebug() {
+		log.enableDebug();
+	}
+
+	char *createTempDirectory(char *format)
+	{
+		char *dir = mkdtemp(format);
+		return dir;
+	}
+
+protected:
+	LogTestController log;
+	std::vector<char*> directories;
+
+
+};
+
+
+
 
 
 #endif /* LIBMINIFI_TEST_TESTBASE_H_ */

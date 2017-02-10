@@ -346,27 +346,6 @@ int FlowControlProtocol::sendRegisterReq()
 				_logger->log_info("Flow Control Protocol receive report interval %d ms", reportInterval);
 				this->_reportInterval = reportInterval;
 			}
-			else if (((FlowControlMsgID) msgID) == FLOW_YML_CONTENT)
-			{
-				uint32_t yamlLen;
-				payloadPtr = this->decode(payloadPtr, yamlLen);
-				_logger->log_info("Flow Control Protocol receive YAML content length %d", yamlLen);
-				time_t rawtime;
-				struct tm *timeinfo;
-				time(&rawtime);
-				timeinfo = localtime(&rawtime);
-				std::string yamlFileName = "flow.";
-				yamlFileName += asctime(timeinfo);
-				yamlFileName += ".yml";
-				std::ofstream fs;
-				fs.open(yamlFileName.c_str(), std::fstream::out | std::fstream::binary | std::fstream::trunc);
-				if (fs.is_open())
-				{
-					fs.write((const char *)payloadPtr, yamlLen);
-					fs.close();
-					this->_controller->reload(yamlFileName.c_str());
-				}
-			}
 			else
 			{
 				break;

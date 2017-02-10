@@ -32,15 +32,19 @@
 //! Default content directory
 #define DEFAULT_CONTENT_DIRECTORY "./content_repository"
 
+
+
 //! ResourceClaim Class
 class ResourceClaim {
 
 public:
+  
+	static std::string default_directory_path;
 	//! Constructor
 	/*!
 	 * Create a new resource claim
 	 */
-	ResourceClaim(const std::string contentDirectory);
+	ResourceClaim(const std::string contentDirectory = default_directory_path);
 	//! Destructor
 	virtual ~ResourceClaim() {}
 	//! increaseFlowFileRecordOwnedCount
