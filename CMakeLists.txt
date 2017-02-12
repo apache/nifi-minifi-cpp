@@ -99,6 +99,7 @@ set(CPACK_COMPONENTS_ALL bin)
 
 include(CPack)
 
+
 enable_testing(test) 
     file(GLOB LIBMINIFI_TEST_SOURCES "libminifi/test/unit/*.cpp")
     add_executable(tests ${LIBMINIFI_TEST_SOURCES} ${SPD_SOURCES})

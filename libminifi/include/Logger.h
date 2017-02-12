@@ -58,6 +58,8 @@ typedef enum
     off      = 9
 } LOG_LEVEL_E;
 
+
+
 //! Logger Class
 class Logger {
 

@@ -59,6 +59,7 @@ public:
 	static const char *nifi_security_client_pass_phrase;
 	static const char *nifi_security_client_ca_certificate;
 
+
 	//! Clear the load config
 	void clear()
 	{
