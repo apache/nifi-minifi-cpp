@@ -105,7 +105,7 @@ public:
 	void setUUID(uuid_t uuid) {
 		uuid_copy(_uuid, uuid);
 		char uuidStr[37];
-		uuid_unparse(_uuid, uuidStr);
+		uuid_unparse_lower(_uuid, uuidStr);
 		_uuidStr = uuidStr;
 	}
 	//! Get UUID

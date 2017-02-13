@@ -51,7 +51,7 @@ FlowFileRecord::FlowFileRecord(std::map<std::string, std::string> attributes, Re
 	uuid_generate(_uuid);
 	// Increase the local ID for the flow record
 	++_localFlowSeqNumber;
-	uuid_unparse(_uuid, uuidStr);
+	uuid_unparse_lower(_uuid, uuidStr);
 	_uuidStr = uuidStr;
 
 	// Populate the default attributes

@@ -171,7 +171,7 @@ public:
 		char eventIdStr[37];
 		// Generate the global UUID for th event
 		uuid_generate(_eventId);
-		uuid_unparse(_eventId, eventIdStr);
+		uuid_unparse_lower(_eventId, eventIdStr);
 		_eventIdStr = eventIdStr;
 		_logger = Logger::getLogger();
 	}

@@ -307,7 +307,7 @@ public:
 
 		// Generate the global UUID for the transaction
 		uuid_generate(_uuid);
-		uuid_unparse(_uuid, uuidStr);
+		uuid_unparse_lower(_uuid, uuidStr);
 		_uuidStr = uuidStr;
 	}
 	//! Destructor
@@ -454,17 +454,27 @@ public:
 			_peer->setTimeOut(time);
 
 	}
-	//! getTimeout
-	uint64_t getTimeOut()
-	{
+	/**
+	 * Provides a reference to the time out
+	 * @returns timeout
+	 */
+	const uint64_t getTimeOut() const {
 		return _timeOut;
+	}
+
+	/**
+	 * Provides a reference to the port identifier
+	 * @returns port identifier
+	 */
+	const std::string getPortId() const {
+		return _portIdStr;
 	}
 	//! setPortId
 	void setPortId(uuid_t id)
 	{
 		uuid_copy(_portId, id);
 		char idStr[37];
-		uuid_unparse(id, idStr);
+		uuid_unparse_lower(id, idStr);
 		_portIdStr = idStr;
 	}
 	//! getResourceName
