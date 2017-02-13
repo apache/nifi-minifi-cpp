@@ -59,7 +59,7 @@ else()
 set(OPENSSL_ROOT_DIR "/usr/lib/x86_64-linux-gnu")
 endif()
 
-# Include OpenSSL 
+# Include OpenSSL
 find_package (OpenSSL REQUIRED)
 if (OPENSSL_FOUND)
 	include_directories(${OPENSSL_INCLUDE_DIR})
@@ -120,7 +120,7 @@ set(CPACK_COMPONENTS_ALL bin)
 
 include(CPack)
 
-enable_testing(test) 
+enable_testing(test)
     file(GLOB LIBMINIFI_TEST_SOURCES "libminifi/test/unit/*.cpp")
     add_executable(tests ${LIBMINIFI_TEST_SOURCES} ${SPD_SOURCES})
     target_include_directories(tests PRIVATE BEFORE "thirdparty/catch")
@@ -128,5 +128,5 @@ enable_testing(test)
     target_include_directories(tests PRIVATE BEFORE ${LEVELDB_INCLUDE_DIRS})
     target_include_directories(tests PRIVATE BEFORE "include")
     target_include_directories(tests PRIVATE BEFORE "libminifi/include/")
-    target_link_libraries(tests ${CMAKE_THREAD_LIBS_INIT} ${UUID_LIBRARIES} ${LEVELDB_LIBRARIES} ${OPENSSL_LIBRARIES} minifi yaml-cpp)
+    target_link_libraries(tests ${CMAKE_THREAD_LIBS_INIT} ${UUID_LIBRARIES} ${LEVELDB_LIBRARIES} ${OPENSSL_LIBRARIES} minifi yaml-cpp c-library civetweb-cpp)
     add_test(NAME LibMinifiTests COMMAND tests)
