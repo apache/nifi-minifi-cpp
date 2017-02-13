@@ -49,6 +49,16 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Search for threads
 find_package(Threads REQUIRED)
 
+
+# Include OpenSSL 
+find_package (OpenSSL REQUIRED)
+if (OPENSSL_FOUND)
+	include_directories(${OPENSSL_INCLUDE_DIR})
+else ()
+    message( FATAL_ERROR "OpenSSL was not found. Please install OpenSSL" )
+endif (OPENSSL_FOUND)
+
+
 # Set the right openssl root path
 if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 set(OPENSSL_ROOT_DIR "/usr/local/opt/openssl/")
@@ -65,6 +75,7 @@ file(GLOB SPD_SOURCES "include/spdlog/*")
 add_subdirectory(thirdparty/yaml-cpp-yaml-cpp-0.5.3)
 add_subdirectory(libminifi)
 add_subdirectory(main)
+
 
 # Generate source assembly
 set(ASSEMBLY_BASE_NAME "${CMAKE_PROJECT_NAME}-${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}")
@@ -106,5 +117,5 @@ enable_testing(test)
     target_include_directories(tests PRIVATE BEFORE "thirdparty/yaml-cpp-yaml-cpp-0.5.3/include")
     target_include_directories(tests PRIVATE BEFORE "include")
     target_include_directories(tests PRIVATE BEFORE "libminifi/include/")
-    target_link_libraries(tests ${CMAKE_THREAD_LIBS_INIT} ${UUID_LIBRARIES} minifi yaml-cpp)
+    target_link_libraries(tests ${CMAKE_THREAD_LIBS_INIT} ${UUID_LIBRARIES} ${OPENSSL_LIBRARIES} minifi yaml-cpp)
     add_test(NAME LibMinifiTests COMMAND tests)
