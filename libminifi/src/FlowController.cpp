@@ -320,7 +320,7 @@ void FlowControllerImpl::parseRootProcessGroupYaml(YAML::Node rootFlowNode) {
 	std::string flowName = rootFlowNode["name"].as<std::string>();
 
 	char uuidStr[37];
-	uuid_unparse(_uuid, uuidStr);
+	uuid_unparse_lower(_uuid, uuidStr);
 	_logger->log_debug("parseRootProcessGroup: id => [%s]", uuidStr);
 	_logger->log_debug("parseRootProcessGroup: name => [%s]", flowName.c_str());
 	group = this->createRootProcessGroup(flowName, uuid);
@@ -361,7 +361,7 @@ void FlowControllerImpl::parseProcessorNodeYaml(YAML::Node processorsNode,
 						procCfg.javaClass.c_str());
 
 				char uuidStr[37];
-				uuid_unparse(_uuid, uuidStr);
+				uuid_unparse_lower(_uuid, uuidStr);
 
 				// generate the random UUID
 				uuid_generate(uuid);
@@ -571,7 +571,7 @@ void FlowControllerImpl::parseRemoteProcessGroupYaml(YAML::Node *rpgNode,
 				uuid_generate(uuid);
 
 				char uuidStr[37];
-				uuid_unparse(_uuid, uuidStr);
+				uuid_unparse_lower(_uuid, uuidStr);
 
 				int64_t timeoutValue = -1;
 				int64_t yieldPeriodValue = -1;
@@ -654,7 +654,7 @@ void FlowControllerImpl::parseConnectionYaml(YAML::Node *connectionsNode,
 						std::string>();
 
 				char uuidStr[37];
-				uuid_unparse(_uuid, uuidStr);
+				uuid_unparse_lower(_uuid, uuidStr);
 
 				_logger->log_debug(
 						"Created connection with UUID %s and name %s", uuidStr,
