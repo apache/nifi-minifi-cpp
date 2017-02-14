@@ -207,25 +207,23 @@ bool Processor::getProperty(std::string name, std::string &value)
 	}
 }
 
+int dyn_prop = 0;
+std::mutex dyn_prop_mutex;
+
 bool Processor::getDynamicProperty(std::string name, std::string &value)
 {
-	if (isRunning())
-		// Because set property only allowed in non running state, we need to obtain lock avoid rack condition
-		_mtx.lock();
+	std::lock_guard<std::mutex> lock(dyn_prop_mutex);
 
-	std::map<std::string, Property>::iterator it = _dynamicProperties.find(name);
+	//std::map<std::string, Property>::iterator it = _dynamicProperties.find(name);
+	auto it = _dynamicProperties.find(name);
 	if (it != _dynamicProperties.end())
 	{
 		Property item = it->second;
 		value = item.getValue();
-		if (!isRunning())
-			_mtx.unlock();
 		return true;
 	}
 	else
 	{
-		if (!isRunning())
-			_mtx.unlock();
 		return false;
 	}
 }
