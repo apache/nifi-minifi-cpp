@@ -28,9 +28,7 @@
 #include <atomic>
 #include <algorithm>
 #include <set>
-#include <libxml/parser.h>
-#include <libxml/tree.h>
-#include <yaml-cpp/yaml.h>
+#include "yaml-cpp/yaml.h"
 
 #include "Configure.h"
 #include "Property.h"
@@ -45,10 +43,12 @@
 #include "LogAttribute.h"
 #include "RealTimeDataCollector.h"
 #include "TimerDrivenSchedulingAgent.h"
+#include "EventDrivenSchedulingAgent.h"
 #include "FlowControlProtocol.h"
 #include "RemoteProcessorGroupPort.h"
 #include "Provenance.h"
 #include "GetFile.h"
+#include "PutFile.h"
 #include "TailFile.h"
 #include "ListenSyslog.h"
 #include "ExecuteProcess.h"
@@ -59,11 +59,8 @@
 
 //! Default NiFi Root Group Name
 #define DEFAULT_ROOT_GROUP_NAME ""
-#define DEFAULT_FLOW_XML_FILE_NAME "conf/flow.xml"
 #define DEFAULT_FLOW_YAML_FILE_NAME "conf/flow.yml"
 #define CONFIG_YAML_PROCESSORS_KEY "Processors"
-
-enum class ConfigFormat { XML, YAML };
 
 struct ProcessorConfig {
 	std::string name;
@@ -78,21 +75,15 @@ struct ProcessorConfig {
 	std::vector<Property> properties;
 };
 
-//! FlowController Class
-class FlowController
-{
+/**
+ * Flow Controller class. Generally used by FlowController factory
+ * as a singleton.
+ */
+class FlowController {
 public:
-    static const int DEFAULT_MAX_TIMER_DRIVEN_THREAD = 10;
-    static const int DEFAULT_MAX_EVENT_DRIVEN_THREAD = 5;
-	//! Get the singleton flow controller
-	static FlowController * getFlowController()
-	{
-		if (!_flowController)
-		{
-			_flowController = new FlowController();
-		}
-		return _flowController;
-	}
+  	static const int DEFAULT_MAX_TIMER_DRIVEN_THREAD = 10;
+	static const int DEFAULT_MAX_EVENT_DRIVEN_THREAD = 5;
+
 	//! passphase for the private file callback
 	static int pemPassWordCb(char *buf, int size, int rwflag, void *userdata)
 	{
@@ -114,96 +105,104 @@ public:
 	}
 
 	//! Destructor
-	virtual ~FlowController();
+	virtual ~FlowController(){
+	  if (_ctx)
+	    SSL_CTX_free(_ctx);
+	}
 	//! Set FlowController Name
-	void setName(std::string name) {
+	virtual void setName(std::string name) {
 		_name = name;
 	}
 	//! Get Flow Controller Name
-	std::string getName(void) {
+	virtual std::string getName(void) {
 		return (_name);
 	}
 	//! Set UUID
-	void setUUID(uuid_t uuid) {
+	virtual void setUUID(uuid_t uuid) {
 		uuid_copy(_uuid, uuid);
 	}
 	//! Get UUID
-	bool getUUID(uuid_t uuid) {
-		if (uuid)
-		{
+	virtual bool getUUID(uuid_t uuid) {
+		if (uuid) {
 			uuid_copy(uuid, _uuid);
 			return true;
-		}
-		else
+		} else
 			return false;
 	}
 	//! Set MAX TimerDrivenThreads
-	void setMaxTimerDrivenThreads(int number)
-	{
+	virtual void setMaxTimerDrivenThreads(int number) {
 		_maxTimerDrivenThreads = number;
 	}
 	//! Get MAX TimerDrivenThreads
-	int getMaxTimerDrivenThreads()
-	{
+	virtual int getMaxTimerDrivenThreads() {
 		return _maxTimerDrivenThreads;
 	}
 	//! Set MAX EventDrivenThreads
-	void setMaxEventDrivenThreads(int number)
-	{
+	virtual void setMaxEventDrivenThreads(int number) {
 		_maxEventDrivenThreads = number;
 	}
 	//! Get MAX EventDrivenThreads
-	int getMaxEventDrivenThreads()
-	{
+	virtual int getMaxEventDrivenThreads() {
 		return _maxEventDrivenThreads;
 	}
 	//! Get the provenance repository
-	ProvenanceRepository *getProvenanceRepository()
-	{
+	virtual ProvenanceRepository *getProvenanceRepository() {
 		return this->_provenanceRepo;
 	}
-	//! Life Cycle related function
 	//! Load flow xml from disk, after that, create the root process group and its children, initialize the flows
-	void load(ConfigFormat format);
+	virtual void load() = 0;
+
 	//! Whether the Flow Controller is start running
-	bool isRunning();
+	virtual bool isRunning() {
+		return _running.load();
+	}
 	//! Whether the Flow Controller has already been initialized (loaded flow XML)
-	bool isInitialized();
+	virtual bool isInitialized() {
+		return _initialized.load();
+	}
 	//! Start to run the Flow Controller which internally start the root process group and all its children
-	bool start();
-	//! Stop to run the Flow Controller which internally stop the root process group and all its children
-	void stop(bool force);
+	virtual bool start() = 0;
+	//! Unload the current flow YAML, clean the root process group and all its children
+	virtual void stop(bool force) = 0;
+	//! Asynchronous function trigger unloading and wait for a period of time
+	virtual void waitUnload(const uint64_t timeToWaitMs) = 0;
 	//! Unload the current flow xml, clean the root process group and all its children
-	void unload();
+	virtual void unload() = 0;
 	//! Load new xml
-	void reload(std::string xmlFile);
+	virtual void reload(std::string yamlFile) = 0;
 	//! update property value
-	void updatePropertyValue(std::string processorName, std::string propertyName, std::string propertyValue)
-	{
+	void updatePropertyValue(std::string processorName,
+			std::string propertyName, std::string propertyValue) {
 		if (_root)
-			_root->updatePropertyValue(processorName, propertyName, propertyValue);
+			_root->updatePropertyValue(processorName, propertyName,
+					propertyValue);
 	}
 
 	//! Create Processor (Node/Input/Output Port) based on the name
-	Processor *createProcessor(std::string name, uuid_t uuid);
+	virtual Processor *createProcessor(std::string name, uuid_t uuid) = 0;
 	//! Create Root Processor Group
-	ProcessGroup *createRootProcessGroup(std::string name, uuid_t uuid);
+	virtual ProcessGroup *createRootProcessGroup(std::string name, uuid_t uuid) = 0;
 	//! Create Remote Processor Group
-	ProcessGroup *createRemoteProcessGroup(std::string name, uuid_t uuid);
+	virtual ProcessGroup *createRemoteProcessGroup(std::string name,
+			uuid_t uuid) = 0;
 	//! Create Connection
-	Connection *createConnection(std::string name, uuid_t uuid);
+	virtual Connection *createConnection(std::string name, uuid_t uuid) = 0;
 	//! set 8 bytes SerialNumber
-	void setSerialNumber(uint8_t *number)
-	{
+	virtual void setSerialNumber(uint8_t *number) {
 		_protocol->setSerialNumber(number);
 	}
+
+	
 	//! getSSLContext
-	SSL_CTX *getSSLContext()
+	virtual SSL_CTX *getSSLContext()
 	{
 		return _ctx;
 	}
 
 protected:
+  
+	//! SSL context
+	SSL_CTX *_ctx;
 
 	//! A global unique identifier
 	uuid_t _uuid;
@@ -221,73 +220,147 @@ protected:
 	int _maxEventDrivenThreads;
 	//! Config
 	//! FlowFile Repo
+	//! Whether it is running
+	std::atomic<bool> _running;
+	//! Whether it has already been initialized (load the flow XML already)
+	std::atomic<bool> _initialized;
 	//! Provenance Repo
 	ProvenanceRepository *_provenanceRepo;
 	//! Flow Engines
-	//! Flow Scheduler
+	//! Flow Timer Scheduler
 	TimerDrivenSchedulingAgent _timerScheduler;
+	//! Flow Event Scheduler
+	EventDrivenSchedulingAgent _eventScheduler;
 	//! Controller Service
 	//! Config
 	//! Site to Site Server Listener
 	//! Heart Beat
 	//! FlowControl Protocol
 	FlowControlProtocol *_protocol;
-	//! SSL context
-	SSL_CTX *_ctx;
+	
+
+	FlowController() :
+			_root(0), _maxTimerDrivenThreads(0), _maxEventDrivenThreads(0), _running(
+					false), _initialized(false), _provenanceRepo(0), _protocol(
+					0), _logger(Logger::getLogger()), _ctx(NULL){
+	}
 
 private:
 
-	//! Mutex for protection
-	std::mutex _mtx;
 	//! Logger
 	Logger *_logger;
-	//! Configure
-	Configure *_configure;
-	//! Whether it is running
-	std::atomic<bool> _running;
-	//! Whether it has already been initialized (load the flow XML already)
-	std::atomic<bool> _initialized;
-	//! Process Processor Node XML
-	void parseProcessorNode(xmlDoc *doc, xmlNode *processorNode, ProcessGroup *parent);
-	//! Process Port XML
-	void parsePort(xmlDoc *doc, xmlNode *processorNode, ProcessGroup *parent, TransferDirection direction);
-	//! Process Root Processor Group XML
-	void parseRootProcessGroup(xmlDoc *doc, xmlNode *node);
-	//! Process Property XML
-	void parseProcessorProperty(xmlDoc *doc, xmlNode *node, Processor *processor);
-	//! Process connection XML
-	void parseConnection(xmlDoc *doc, xmlNode *node, ProcessGroup *parent);
-	//! Process Remote Process Group
-	void parseRemoteProcessGroup(xmlDoc *doc, xmlNode *node, ProcessGroup *parent);
 
-	//! Process Processor Node YAML
-	void parseProcessorNodeYaml(YAML::Node processorNode, ProcessGroup *parent);
-	//! Process Port YAML
-	void parsePortYaml(YAML::Node *portNode, ProcessGroup *parent, TransferDirection direction);
-	//! Process Root Processor Group YAML
-	void parseRootProcessGroupYaml(YAML::Node rootNode);
-	//! Process Property YAML
-	void parseProcessorPropertyYaml(YAML::Node *doc, YAML::Node *node, Processor *processor);
-	//! Process connection YAML
-	void parseConnectionYaml(YAML::Node *node, ProcessGroup *parent);
-	//! Process Remote Process Group YAML
-	void parseRemoteProcessGroupYaml(YAML::Node *node, ProcessGroup *parent);
-	//! Parse Properties Node YAML for a processor
-	void parsePropertiesNodeYaml(YAML::Node *propertiesNode, Processor *processor);
+};
 
-	static FlowController *_flowController;
+/**
+ * Flow Controller implementation that defines the typical flow.
+ * of events.
+ */
+class FlowControllerImpl: public FlowController {
+public:
+
+	//! Destructor
+	virtual ~FlowControllerImpl();
+
+	//! Life Cycle related function
+	//! Load flow xml from disk, after that, create the root process group and its children, initialize the flows
+	void load();
+	//! Start to run the Flow Controller which internally start the root process group and all its children
+	bool start();
+	//! Stop to run the Flow Controller which internally stop the root process group and all its children
+	void stop(bool force);
+	//! Asynchronous function trigger unloading and wait for a period of time
+	void waitUnload(const uint64_t timeToWaitMs);
+	//! Unload the current flow xml, clean the root process group and all its children
+	void unload();
+	//! Load new xml
+	void reload(std::string yamlFile);
+	//! update property value
+	void updatePropertyValue(std::string processorName,
+			std::string propertyName, std::string propertyValue) {
+		if (_root)
+			_root->updatePropertyValue(processorName, propertyName,
+					propertyValue);
+	}
+
+	//! Create Processor (Node/Input/Output Port) based on the name
+	Processor *createProcessor(std::string name, uuid_t uuid);
+	//! Create Root Processor Group
+	ProcessGroup *createRootProcessGroup(std::string name, uuid_t uuid);
+	//! Create Remote Processor Group
+	ProcessGroup *createRemoteProcessGroup(std::string name, uuid_t uuid);
+	//! Create Connection
+	Connection *createConnection(std::string name, uuid_t uuid);
 
 	//! Constructor
 	/*!
 	 * Create a new Flow Controller
 	 */
-	FlowController(std::string name = DEFAULT_ROOT_GROUP_NAME);
+	FlowControllerImpl(std::string name = DEFAULT_ROOT_GROUP_NAME);
+
+	
+	
+	
+	friend class FlowControlFactory;
+
+private:
+  
+	
+
+	//! Mutex for protection
+	std::mutex _mtx;
+	//! Logger
+	Logger *_logger;
+	Configure *_configure;
+
+	//! Process Processor Node YAML
+	void parseProcessorNodeYaml(YAML::Node processorNode, ProcessGroup *parent);
+	//! Process Port YAML
+	void parsePortYaml(YAML::Node *portNode, ProcessGroup *parent,
+			TransferDirection direction);
+	//! Process Root Processor Group YAML
+	void parseRootProcessGroupYaml(YAML::Node rootNode);
+	//! Process Property YAML
+	void parseProcessorPropertyYaml(YAML::Node *doc, YAML::Node *node,
+			Processor *processor);
+	//! Process connection YAML
+	void parseConnectionYaml(YAML::Node *node, ProcessGroup *parent);
+	//! Process Remote Process Group YAML
+	void parseRemoteProcessGroupYaml(YAML::Node *node, ProcessGroup *parent);
+	//! Parse Properties Node YAML for a processor
+	void parsePropertiesNodeYaml(YAML::Node *propertiesNode,
+			Processor *processor);
 
 	// Prevent default copy constructor and assignment operation
 	// Only support pass by reference or pointer
-	FlowController(const FlowController &parent);
-	FlowController &operator=(const FlowController &parent);
+	FlowControllerImpl(const FlowController &parent);
+	FlowControllerImpl &operator=(const FlowController &parent);
 
+};
+
+/**
+ * Flow Controller factory that creates flow controllers or gets the
+ * assigned instance.
+ */
+class FlowControllerFactory {
+public:
+	//! Get the singleton flow controller
+	static FlowController * getFlowController(FlowController *instance = 0) {
+		if (!_flowController) {
+			if (NULL == instance)
+				_flowController = createFlowController();
+			else
+				_flowController = instance;
+		}
+		return _flowController;
+	}
+
+	//! Get the singleton flow controller
+	static FlowController * createFlowController() {
+		 return dynamic_cast<FlowController*>(new FlowControllerImpl());
+	}
+private:
+	static FlowController *_flowController;
 };
 
 #endif

@@ -1,6 +1,4 @@
 /**
- * @file TimerDrivenSchedulingAgent.cpp
- * TimerDrivenSchedulingAgent class implementation
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -17,29 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <chrono>
-#include <thread>
-#include <iostream>
-#include "Property.h"
-#include "TimerDrivenSchedulingAgent.h"
 
-void TimerDrivenSchedulingAgent::run(Processor *processor)
-{
-	while (this->_running)
-	{
-		bool shouldYield = this->onTrigger(processor);
+#define CATCH_CONFIG_MAIN  // This tells Catch to provide a main() - only do this in one cpp file
 
-		if (processor->isYield())
-		{
-			// Honor the yield
-			std::this_thread::sleep_for(std::chrono::milliseconds(processor->getYieldTime()));
-		}
-		else if (shouldYield && this->_boredYieldDuration > 0)
-		{
-			// No work to do or need to apply back pressure
-			std::this_thread::sleep_for(std::chrono::milliseconds(this->_boredYieldDuration));
-		}
-		std::this_thread::sleep_for(std::chrono::nanoseconds(processor->getSchedulingPeriodNano()));
-	}
-	return;
-}
+
+#include "ProvenanceTests.h"
+#include "ProcessorTests.h"

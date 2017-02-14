@@ -25,10 +25,14 @@
 
 std::atomic<uint64_t> ResourceClaim::_localResourceClaimNumber(0);
 
+
+std::string ResourceClaim::default_directory_path=DEFAULT_CONTENT_DIRECTORY;
+
 ResourceClaim::ResourceClaim(const std::string contentDirectory)
 : _id(_localResourceClaimNumber.load()),
   _flowFileRecordOwnedCount(0)
 {
+  
 	char uuidStr[37];
 
 	// Generate the global UUID for the resource claim

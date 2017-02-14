@@ -42,7 +42,7 @@ Processor::Processor(std::string name, uuid_t uuid)
 	char uuidStr[37];
 	uuid_unparse(_uuid, uuidStr);
 	_uuidStr = uuidStr;
-
+	_hasWork.store(false);
 	// Setup the default values
 	_state = DISABLED;
 	_strategy = TIMER_DRIVEN;
@@ -57,7 +57,6 @@ Processor::Processor(std::string name, uuid_t uuid)
 	_yieldExpiration = 0;
 	_incomingConnectionsIter = this->_incomingConnections.begin();
 	_logger = Logger::getLogger();
-
 	_logger->log_info("Processor %s created UUID %s", _name.c_str(), _uuidStr.c_str());
 }
 
@@ -83,9 +82,8 @@ bool Processor::setSupportedProperties(std::set<Property> properties)
 	std::lock_guard<std::mutex> lock(_mtx);
 
 	_properties.clear();
-	for (std::set<Property>::iterator it = properties.begin(); it != properties.end(); ++it)
+	for (auto item : properties)
 	{
-		Property item(*it);
 		_properties[item.getName()] = item;
 		_logger->log_info("Processor %s supported property name %s", _name.c_str(), item.getName().c_str());
 	}
@@ -105,9 +103,8 @@ bool Processor::setSupportedRelationships(std::set<Relationship> relationships)
 	std::lock_guard<std::mutex> lock(_mtx);
 
 	_relationships.clear();
-	for (std::set<Relationship>::iterator it = relationships.begin(); it != relationships.end(); ++it)
+	for(auto item : relationships)
 	{
-		Relationship item(*it);
 		_relationships[item.getName()] = item;
 		_logger->log_info("Processor %s supported relationship name %s", _name.c_str(), item.getName().c_str());
 	}
@@ -127,9 +124,8 @@ bool Processor::setAutoTerminatedRelationships(std::set<Relationship> relationsh
 	std::lock_guard<std::mutex> lock(_mtx);
 
 	_autoTerminatedRelationships.clear();
-	for (std::set<Relationship>::iterator it = relationships.begin(); it != relationships.end(); ++it)
+	for(auto item : relationships)
 	{
-		Relationship item(*it);
 		_autoTerminatedRelationships[item.getName()] = item;
 		_logger->log_info("Processor %s auto terminated relationship name %s", _name.c_str(), item.getName().c_str());
 	}
@@ -140,21 +136,18 @@ bool Processor::setAutoTerminatedRelationships(std::set<Relationship> relationsh
 bool Processor::isAutoTerminated(Relationship relationship)
 {
 	bool isRun = isRunning();
+		
+	auto conditionalLock = !isRun ? 
+			  std::unique_lock<std::mutex>() 
+			: std::unique_lock<std::mutex>(_mtx);
 
-	if (!isRun)
-		_mtx.lock();
-
-	std::map<std::string, Relationship>::iterator it = _autoTerminatedRelationships.find(relationship.getName());
+	const auto &it = _autoTerminatedRelationships.find(relationship.getName());
 	if (it != _autoTerminatedRelationships.end())
 	{
-		if (!isRun)
-			_mtx.unlock();
 		return true;
 	}
 	else
 	{
-		if (!isRun)
-			_mtx.unlock();
 		return false;
 	}
 }
@@ -163,20 +156,17 @@ bool Processor::isSupportedRelationship(Relationship relationship)
 {
 	bool isRun = isRunning();
 
-	if (!isRun)
-		_mtx.lock();
+	auto conditionalLock = !isRun ? 
+			  std::unique_lock<std::mutex>() 
+			: std::unique_lock<std::mutex>(_mtx);
 
-	std::map<std::string, Relationship>::iterator it = _relationships.find(relationship.getName());
+	const auto &it = _relationships.find(relationship.getName());
 	if (it != _relationships.end())
 	{
-		if (!isRun)
-			_mtx.unlock();
 		return true;
 	}
 	else
 	{
-		if (!isRun)
-			_mtx.unlock();
 		return false;
 	}
 }
@@ -185,23 +175,20 @@ bool Processor::getProperty(std::string name, std::string &value)
 {
 	bool isRun = isRunning();
 
-	if (!isRun)
-		// Because set property only allowed in non running state, we need to obtain lock avoid rack condition
-		_mtx.lock();
-
-	std::map<std::string, Property>::iterator it = _properties.find(name);
+	
+	 auto conditionalLock = !isRun ? 
+                           std::unique_lock<std::mutex>() 
+                         : std::unique_lock<std::mutex>(_mtx);
+			 
+	const auto &it = _properties.find(name);
 	if (it != _properties.end())
 	{
 		Property item = it->second;
 		value = item.getValue();
-		if (!isRun)
-			_mtx.unlock();
 		return true;
 	}
 	else
 	{
-		if (!isRun)
-			_mtx.unlock();
 		return false;
 	}
 }
@@ -210,7 +197,7 @@ bool Processor::setProperty(std::string name, std::string value)
 {
 
 	std::lock_guard<std::mutex> lock(_mtx);
-	std::map<std::string, Property>::iterator it = _properties.find(name);
+	auto &&it = _properties.find(name);
 
 	if (it != _properties.end())
 	{
@@ -226,11 +213,35 @@ bool Processor::setProperty(std::string name, std::string value)
 	}
 }
 
+bool Processor::setProperty(Property prop, std::string value) {
+
+	std::lock_guard<std::mutex> lock(_mtx);
+	auto it = _properties.find(
+			prop.getName());
+
+	if (it != _properties.end()) {
+		Property item = it->second;
+		item.setValue(value);
+		_properties[item.getName()] = item;
+		_logger->log_info("Processor %s property name %s value %s",
+				_name.c_str(), item.getName().c_str(), value.c_str());
+		return true;
+	} else {
+		Property newProp(prop);
+		newProp.setValue(value);
+		_properties.insert(
+				std::pair<std::string, Property>(prop.getName(), newProp));
+		return true;
+
+		return false;
+	}
+}
+
 std::set<Connection *> Processor::getOutGoingConnections(std::string relationship)
 {
 	std::set<Connection *> empty;
 
-	std::map<std::string, std::set<Connection *>>::iterator it = _outGoingConnections.find(relationship);
+	auto  &&it = _outGoingConnections.find(relationship);
 	if (it != _outGoingConnections.end())
 	{
 		return _outGoingConnections[relationship];
@@ -245,12 +256,14 @@ bool Processor::addConnection(Connection *connection)
 {
 	bool ret = false;
 
+
 	if (isRunning())
 	{
 		_logger->log_info("Can not add connection while the process %s is running",
 				_name.c_str());
 		return false;
 	}
+
 
 	std::lock_guard<std::mutex> lock(_mtx);
 
@@ -259,8 +272,14 @@ bool Processor::addConnection(Connection *connection)
 
 	connection->getSourceProcessorUUID(srcUUID);
 	connection->getDestinationProcessorUUID(destUUID);
+	char uuid_str[37];
 
-	if (uuid_compare(_uuid, destUUID) == 0)
+
+	uuid_unparse_lower(_uuid, uuid_str);
+	std::string my_uuid = uuid_str;
+	uuid_unparse_lower(destUUID, uuid_str);
+	std::string destination_uuid = uuid_str;
+	if (my_uuid == destination_uuid)
 	{
 		// Connection is destination to the current processor
 		if (_incomingConnections.find(connection) == _incomingConnections.end())
@@ -273,12 +292,13 @@ bool Processor::addConnection(Connection *connection)
 			ret = true;
 		}
 	}
-
-	if (uuid_compare(_uuid, srcUUID) == 0)
+	uuid_unparse_lower(srcUUID, uuid_str);
+	std::string source_uuid = uuid_str;
+	if (my_uuid == source_uuid)
 	{
 		std::string relationship = connection->getRelationship().getName();
 		// Connection is source from the current processor
-		std::map<std::string, std::set<Connection *>>::iterator it =
+		auto &&it =
 				_outGoingConnections.find(relationship);
 		if (it != _outGoingConnections.end())
 		{
@@ -297,6 +317,7 @@ bool Processor::addConnection(Connection *connection)
 		}
 		else
 		{
+
 			// We do not have any outgoing connection for this relationship yet
 			std::set<Connection *> newConnection;
 			newConnection.insert(connection);
@@ -307,6 +328,7 @@ bool Processor::addConnection(Connection *connection)
 			ret = true;
 		}
 	}
+	
 
 	return ret;
 }
@@ -345,7 +367,7 @@ void Processor::removeConnection(Connection *connection)
 	{
 		std::string relationship = connection->getRelationship().getName();
 		// Connection is source from the current processor
-		std::map<std::string, std::set<Connection *>>::iterator it =
+		auto &&it =
 				_outGoingConnections.find(relationship);
 		if (it == _outGoingConnections.end())
 		{
@@ -390,9 +412,8 @@ bool Processor::flowFilesQueued()
 	if (_incomingConnections.size() == 0)
 		return false;
 
-	for (std::set<Connection *>::iterator it = _incomingConnections.begin(); it != _incomingConnections.end(); ++it)
+	for(auto &&connection : _incomingConnections)
 	{
-		Connection *connection = *it;
 		if (connection->getQueueSize() > 0)
 			return true;
 	}
@@ -404,15 +425,12 @@ bool Processor::flowFilesOutGoingFull()
 {
 	std::lock_guard<std::mutex> lock(_mtx);
 
-	std::map<std::string, std::set<Connection *>>::iterator it;
-
-	for (it = _outGoingConnections.begin(); it != _outGoingConnections.end(); ++it)
+	 for(auto &&connection : _outGoingConnections)
 	{
 		// We already has connection for this relationship
-		std::set<Connection *> existedConnection = it->second;
-		for (std::set<Connection *>::iterator itConnection = existedConnection.begin(); itConnection != existedConnection.end(); ++itConnection)
+		std::set<Connection *> existedConnection = connection.second;
+		for(const auto connection : existedConnection)
 		{
-			Connection *connection = *itConnection;
 			if (connection->isFull())
 				return true;
 		}
@@ -448,4 +466,59 @@ void Processor::onTrigger()
 		delete context;
 		throw;
 	}
+}
+
+void Processor::waitForWork(uint64_t timeoutMs)
+{
+	_hasWork.store( isWorkAvailable() );
+
+	if (!_hasWork.load())
+	{
+	    std::unique_lock<std::mutex> lock(_workAvailableMtx);
+	    _hasWorkCondition.wait_for(lock, std::chrono::milliseconds(timeoutMs), [&] { return _hasWork.load(); });
+	}
+
+}
+
+void Processor::notifyWork()
+{
+	// Do nothing if we are not event-driven
+	if (_strategy != EVENT_DRIVEN)
+	{
+		return;
+	}
+
+	{
+		_hasWork.store( isWorkAvailable() );
+
+
+		if (_hasWork.load())
+		{
+		      _hasWorkCondition.notify_one();
+		}
+	}
+}
+
+bool Processor::isWorkAvailable()
+{
+	// We have work if any incoming connection has work
+	bool hasWork = false;
+
+	try
+	{
+		for (const auto &conn : getIncomingConnections())
+		{
+			if (conn->getQueueSize() > 0)
+			{
+				hasWork = true;
+				break;
+			}
+		}
+	}
+	catch (...)
+	{
+		_logger->log_error("Caught an exception while checking if work is available; unless it was positively determined that work is available, assuming NO work is available!");
+	}
+
+	return hasWork;
 }

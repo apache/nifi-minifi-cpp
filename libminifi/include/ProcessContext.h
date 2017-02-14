@@ -54,6 +54,21 @@ public:
 		else
 			return false;
 	}
+	//! Sets the property value using the property's string name
+	bool setProperty(std::string name, std::string value)
+	{
+		if (_processor)
+			return _processor->setProperty(name, value);
+		else
+			return false;
+	}
+	//! Sets the property value using the Property object
+	bool setProperty(Property prop, std::string value) {
+		if (_processor)
+			return _processor->setProperty(prop, value);
+		else
+			return false;
+	}
 	//! Whether the relationship is supported
 	bool isSupportedRelationship(Relationship relationship) {
 		if (_processor)

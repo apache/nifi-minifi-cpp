@@ -28,14 +28,6 @@ include_directories(../include ../libminifi/include ../thirdparty/yaml-cpp-yaml-
 find_package(Boost REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS})
 
-# Include libxml2
-find_package(LibXml2)
-if (LIBXML2_FOUND)
-    include_directories(${LIBXML2_INCLUDE_DIR})
-else ()
-    # Build from our local version
-endif (LIBXML2_FOUND)
-
 add_executable(minifiexe MiNiFiMain.cpp)
 if(THREADS_HAVE_PTHREAD_ARG)
   target_compile_options(PUBLIC minifiexe "-pthread")

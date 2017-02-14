@@ -83,7 +83,7 @@ FlowFileRecord::~FlowFileRecord()
 	{
 		// Decrease the flow file record owned count for the resource claim
 		_claim->decreaseFlowFileRecordOwnedCount();
-		if (_claim->getFlowFileRecordOwnedCount() == 0)
+		if (_claim->getFlowFileRecordOwnedCount() <= 0)
 		{
 			_logger->log_debug("Delete Resource Claim %s", _claim->getContentFullPath().c_str());
 			std::remove(_claim->getContentFullPath().c_str());

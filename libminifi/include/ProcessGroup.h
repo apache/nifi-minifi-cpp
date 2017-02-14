@@ -33,6 +33,7 @@
 #include "Processor.h"
 #include "Exception.h"
 #include "TimerDrivenSchedulingAgent.h"
+#include "EventDrivenSchedulingAgent.h"
 
 //! Process Group Type
 enum ProcessGroupType
@@ -111,9 +112,11 @@ public:
 			return false;
 	}
 	//! Start Processing
-	void startProcessing(TimerDrivenSchedulingAgent *timeScheduler);
+	void startProcessing(TimerDrivenSchedulingAgent *timeScheduler,
+			EventDrivenSchedulingAgent *eventScheduler);
 	//! Stop Processing
-	void stopProcessing(TimerDrivenSchedulingAgent *timeScheduler);
+	void stopProcessing(TimerDrivenSchedulingAgent *timeScheduler,
+			EventDrivenSchedulingAgent *eventScheduler);
 	//! Whether it is root process group
 	bool isRootProcessGroup();
 	//! set parent process group

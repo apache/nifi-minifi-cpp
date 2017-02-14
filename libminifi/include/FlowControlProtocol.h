@@ -45,10 +45,10 @@ class FlowController;
 
 //! FlowControl Protocol Msg Type
 typedef enum {
-	REGISTER_REQ, // Device Register Request from device to server which contain device serial number, current running flow xml version
-	REGISTER_RESP, // Device Register Respond from server to device, may contain new flow.xml from server ask device to apply and also device report interval
-	REPORT_REQ, // Period Device Report from device to server which contain device serial number, current running flow xml name/version and other period report info
-	REPORT_RESP, // Report Respond from server to device, may ask device to update flow xml or processor property
+	REGISTER_REQ, // Device Register Request from device to server which contain device serial number, current running flow YAML version
+	REGISTER_RESP, // Device Register Respond from server to device, may contain new flow.YAML from server ask device to apply and also device report interval
+	REPORT_REQ, // Period Device Report from device to server which contain device serial number, current running flow YAML name/version and other period report info
+	REPORT_RESP, // Report Respond from server to device, may ask device to update flow YAML or processor property
 	MAX_FLOW_CONTROL_MSG_TYPE
 } FlowControlMsgType;
 
@@ -74,10 +74,10 @@ inline const char *FlowControlMsgTypeToStr(FlowControlMsgType type)
 typedef enum {
 	//Fix length 8 bytes: client to server in register request, required field
 	FLOW_SERIAL_NUMBER,
-	// Flow XML name TLV: client to server in register request and report request, required field
-	FLOW_XML_NAME,
-	// Flow XML content, TLV: server to client in register respond, option field in case server want to ask client to load xml from server
-	FLOW_XML_CONTENT,
+	// Flow YAML name TLV: client to server in register request and report request, required field
+	FLOW_YML_NAME,
+	// Flow YAML content, TLV: server to client in register respond, option field in case server want to ask client to load YAML from server
+	FLOW_YML_CONTENT,
 	// Fix length, 4 bytes Report interval in msec: server to client in register respond, option field
 	REPORT_INTERVAL,
 	// Processor Name TLV:  server to client in report respond, option field in case server want to ask client to update processor property
@@ -95,8 +95,8 @@ typedef enum {
 static const char *FlowControlMsgIDStr[MAX_FLOW_MSG_ID] =
 {
 		"FLOW_SERIAL_NUMBER",
-		"FLOW_XML_NAME",
-		"FLOW_XML_CONTENT",
+		"FLOW_YAML_NAME",
+		"FLOW_YAML_CONTENT",
 		"REPORT_INTERVAL",
 		"PROCESSOR_NAME"
 		"PROPERTY_NAME",
@@ -304,9 +304,9 @@ private:
 	//! Mutex for protection
 	std::mutex _mtx;
 	//! Logger
-	Logger *_logger;
+	Logger *_logger = NULL;
 	//! Configure
-	Configure *_configure;
+	Configure *_configure = NULL;
 	//! NiFi server Name
 	std::string _serverName;
 	//! NiFi server port
@@ -322,13 +322,13 @@ private:
 	//! seq number
 	uint32_t _seqNumber;
 	//! FlowController
-	FlowController *_controller;
+	FlowController *_controller = NULL;
 	//! report Blob
 	char *_reportBlob;
 	//! report Blob len;
 	int _reportBlobLen;
 	//! thread
-	std::thread *_thread;
+	std::thread *_thread = NULL;
 	//! whether it is running
 	bool _running;
 	// Prevent default copy constructor and assignment operation

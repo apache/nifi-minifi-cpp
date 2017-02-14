@@ -25,9 +25,11 @@
 #include <queue>
 #include <map>
 #include <mutex>
+#include <condition_variable>
 #include <atomic>
 #include <algorithm>
 #include <set>
+#include <chrono>
 
 #include "TimeUtil.h"
 #include "Property.h"
@@ -124,6 +126,8 @@ public:
 	bool getProperty(std::string name, std::string &value);
 	//! Set the supported property value by name wile the process is not running
 	bool setProperty(std::string name, std::string value);
+	//! Set the supported property value by using the property itself.
+	bool setProperty(Property prop, std::string value);
 	//! Whether the relationship is supported
 	bool isSupportedRelationship(Relationship relationship);
 	//! Set the auto terminated relationships while the process is not running
@@ -278,6 +282,10 @@ public:
 	Connection *getNextIncomingConnection();
 	//! On Trigger
 	void onTrigger();
+	//! Block until work is available on any input connection, or the given duration elapses
+	void waitForWork(uint64_t timeoutMs);
+	//! Notify this processor that work may be available
+	void notifyWork();
 
 public:
 	//! OnTrigger method, implemented by NiFi Processor Designer
@@ -334,6 +342,14 @@ private:
 	std::atomic<uint64_t> _yieldExpiration;
 	//! Incoming connection Iterator
 	std::set<Connection *>::iterator _incomingConnectionsIter;
+	//! Condition for whether there is incoming work to do
+	std::atomic<bool> _hasWork;
+	//! Concurrent condition mutex for whether there is incoming work to do
+	std::mutex _workAvailableMtx;
+	//! Concurrent condition variable for whether there is incoming work to do
+	std::condition_variable _hasWorkCondition;
+	//! Check all incoming connections for work
+	bool isWorkAvailable();
 	//! Logger
 	Logger *_logger;
 	// Prevent default copy constructor and assignment operation

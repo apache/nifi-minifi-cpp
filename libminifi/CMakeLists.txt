@@ -9,7 +9,7 @@
 #
 #   http://www.apache.org/licenses/LICENSE-2.0
 #
-# Unless qrequired by applicable law or agreed to in writing,
+# Unless required by applicable law or agreed to in writing,
 # software distributed under the License is distributed on an
 # "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
 # KIND, either express or implied.  See the License for the
@@ -47,15 +47,6 @@ file(GLOB SPD_SOURCES "../include/spdlog/*")
 # header only library
 add_library(spdlog STATIC ${SPD_SOURCES})
 add_library(minifi STATIC ${SOURCES})
-
-# Include libxml2
-find_package (LibXml2)
-if (LIBXML2_FOUND)
-    include_directories(${LIBXML2_INCLUDE_DIR})
-    target_link_libraries (minifi ${LIBXML2_LIBRARIES})
-else ()
-    # Build from our local version
-endif (LIBXML2_FOUND)
 
 # Include LevelDB
 find_package (Leveldb REQUIRED)

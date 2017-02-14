@@ -1,6 +1,6 @@
 /**
- * @file TimerDrivenSchedulingAgent.h
- * TimerDrivenSchedulingAgent class declaration
+ * @file ThreadedSchedulingAgent.h
+ * ThreadedSchedulingAgent class declaration
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -17,38 +17,53 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __TIMER_DRIVEN_SCHEDULING_AGENT_H__
-#define __TIMER_DRIVEN_SCHEDULING_AGENT_H__
+#ifndef __THREADED_SCHEDULING_AGENT_H__
+#define __THREADED_SCHEDULING_AGENT_H__
 
 #include "Logger.h"
+#include "Configure.h"
 #include "Processor.h"
 #include "ProcessContext.h"
-#include "ThreadedSchedulingAgent.h"
+#include "SchedulingAgent.h"
 
-//! TimerDrivenSchedulingAgent Class
-class TimerDrivenSchedulingAgent : public ThreadedSchedulingAgent
+/**
+ * An abstract scheduling agent which creates and manages a pool of threads for
+ * each processor scheduled.
+ */
+class ThreadedSchedulingAgent : public SchedulingAgent
 {
 public:
 	//! Constructor
 	/*!
 	 * Create a new processor
 	 */
-	TimerDrivenSchedulingAgent()
-	: ThreadedSchedulingAgent()
+	ThreadedSchedulingAgent()
+	: SchedulingAgent()
 	{
 	}
 	//! Destructor
-	virtual ~TimerDrivenSchedulingAgent()
+	virtual ~ThreadedSchedulingAgent()
 	{
 	}
+	
 	//! Run function for the thread
-	void run(Processor *processor);
+	virtual void run(Processor *processor) = 0;
+
+public:
+	//! schedule, overwritten by different DrivenTimerDrivenSchedulingAgent
+	virtual void schedule(Processor *processor);
+	//! unschedule, overwritten by different DrivenTimerDrivenSchedulingAgent
+	virtual void unschedule(Processor *processor);
+
+protected:
+	//! Threads
+	std::map<std::string, std::vector<std::thread *>> _threads;
 
 private:
 	// Prevent default copy constructor and assignment operation
 	// Only support pass by reference or pointer
-	TimerDrivenSchedulingAgent(const TimerDrivenSchedulingAgent &parent);
-	TimerDrivenSchedulingAgent &operator=(const TimerDrivenSchedulingAgent &parent);
+	ThreadedSchedulingAgent(const ThreadedSchedulingAgent &parent);
+	ThreadedSchedulingAgent &operator=(const ThreadedSchedulingAgent &parent);
 
 };
 

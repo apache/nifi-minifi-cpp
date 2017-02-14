@@ -21,6 +21,9 @@
 #ifndef __LOGGER_H__
 #define __LOGGER_H__
 
+#include <string>
+#include <algorithm>
+#include <cstdio>
 #include "spdlog/spdlog.h"
 
 using spdlog::stdout_logger_mt;
@@ -31,7 +34,7 @@ using spdlog::logger;
 #define FILL_BUFFER  char buffer[LOG_BUFFER_SIZE]; \
     va_list args; \
     va_start(args, format); \
-    vsnprintf(buffer, LOG_BUFFER_SIZE,format, args); \
+    std::vsnprintf(buffer, LOG_BUFFER_SIZE,format, args); \
     va_end(args);
 
 //! 5M default log file size
@@ -71,6 +74,36 @@ public:
 			return;
 		_spdlog->set_level((spdlog::level::level_enum) level);
 	}
+
+	void setLogLevel(const std::string &level,LOG_LEVEL_E defaultLevel = info )
+	{
+		std::string logLevel = "";
+		std::transform(level.begin(), level.end(), logLevel.end(), ::tolower);
+
+		if (logLevel == "trace") {
+			setLogLevel(trace);
+		} else if (logLevel == "debug") {
+			setLogLevel(debug);
+		} else if (logLevel == "info") {
+			setLogLevel(info);
+		} else if (logLevel == "notice") {
+			setLogLevel(notice);
+		} else if (logLevel == "warn") {
+			setLogLevel(warn);
+		} else if (logLevel == "error") {
+			setLogLevel(err);
+		} else if (logLevel == "critical") {
+			setLogLevel(critical);
+		} else if (logLevel == "alert") {
+			setLogLevel(alert);
+		} else if (logLevel == "emerg") {
+			setLogLevel(emerg);
+		} else if (logLevel == "off") {
+			setLogLevel(off);
+		} else {
+			setLogLevel(defaultLevel);
+		}
+	}
 	//! Destructor
 	~Logger() {}
 	/**
@@ -79,7 +112,7 @@ public:
 	 * @warning does not check @p log or @p format for null. Caller must ensure parameters and format string lengths match
 	 */
 	void log_error(const char *const format, ...) {
-		if(_spdlog == NULL)
+		if(_spdlog == NULL || !_spdlog->should_log(spdlog::level::level_enum::err))
 			return;
 		FILL_BUFFER
 	    _spdlog->error(buffer);
@@ -90,7 +123,7 @@ public:
 	 * @warning does not check @p log or @p format for null. Caller must ensure parameters and format string lengths match
 	 */
 	void log_warn(const char *const format, ...) {
-		if(_spdlog == NULL)
+		if(_spdlog == NULL || !_spdlog->should_log(spdlog::level::level_enum::warn))
 			return;
 		FILL_BUFFER
 	    _spdlog->warn(buffer);
@@ -101,7 +134,7 @@ public:
 	 * @warning does not check @p log or @p format for null. Caller must ensure parameters and format string lengths match
 	 */
 	void log_info(const char *const format, ...) {
-		if(_spdlog == NULL)
+		if(_spdlog == NULL || !_spdlog->should_log(spdlog::level::level_enum::info))
 			return;
 		FILL_BUFFER
 	    _spdlog->info(buffer);
@@ -112,7 +145,7 @@ public:
 	 * @warning does not check @p log or @p format for null. Caller must ensure parameters and format string lengths match
 	 */
 	void log_debug(const char *const format, ...) {
-		if(_spdlog == NULL)
+		if(_spdlog == NULL || !_spdlog->should_log(spdlog::level::level_enum::debug))
 			return;
 		FILL_BUFFER
 	    _spdlog->debug(buffer);
@@ -123,7 +156,7 @@ public:
 	 * @warning does not check @p log or @p format for null. Caller must ensure parameters and format string lengths match
 	 */
 	void log_trace(const char *const format, ...) {
-		if(_spdlog == NULL)
+		if(_spdlog == NULL || !_spdlog->should_log(spdlog::level::level_enum::trace))
 			return;
 		FILL_BUFFER
 	    _spdlog->trace(buffer);

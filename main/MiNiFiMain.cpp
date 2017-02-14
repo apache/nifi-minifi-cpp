@@ -17,7 +17,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <fcntl.h>
 #include <stdio.h>
+#include <semaphore.h>
 #include <signal.h>
 #include <vector>
 #include <queue>
@@ -34,7 +36,7 @@
 //! Main thread sleep interval 1 second
 #define SLEEP_INTERVAL 1
 //! Main thread stop wait time
-#define STOP_WAIT_TIME 2
+#define STOP_WAIT_TIME_MS 30*1000
 //! Default YAML location
 #define DEFAULT_NIFI_CONFIG_YML "./conf/config.yml"
 //! Default nifi properties file path
@@ -43,23 +45,32 @@
 #define MINIFI_HOME_ENV_KEY "MINIFI_HOME"
 
 /* Define Parser Values for Configuration YAML sections */
-#define CONFIG_YAML_FLOW_CONTROLLER_KEY "Flow Controller"
 #define CONFIG_YAML_PROCESSORS_KEY "Processors"
+#define CONFIG_YAML_FLOW_CONTROLLER_KEY "Flow Controller"
 #define CONFIG_YAML_CONNECTIONS_KEY "Connections"
 #define CONFIG_YAML_REMOTE_PROCESSING_GROUPS_KEY "Remote Processing Groups"
 
-//! Whether it is running
-static bool running = false;
+// Variables that allow us to avoid a timed wait.
+sem_t *running;
 //! Flow Controller
 static FlowController *controller = NULL;
 
+/**
+ * Removed the stop command from the signal handler so that we could trigger
+ * unload after we exit the semaphore controlled critical section in main.
+ *
+ * Semaphores are a portable choice when using signal handlers. Threads,
+ * mutexes, and condition variables are not guaranteed to work within
+ * a signal handler. Consequently we will use the semaphore to avoid thread
+ * safety issues and.
+ */
 void sigHandler(int signal)
 {
+
 	if (signal == SIGINT || signal == SIGTERM)
 	{
-		controller->stop(true);
-		sleep(STOP_WAIT_TIME);
-		running = false;
+		// avoid stopping the controller here.
+		sem_post(running);
 	}
 }
 
@@ -68,6 +79,19 @@ int main(int argc, char **argv)
 	Logger *logger = Logger::getLogger();
 	logger->setLogLevel(info);
 
+
+	uint16_t stop_wait_time = STOP_WAIT_TIME_MS;
+
+	std::string graceful_shutdown_seconds = "";
+	std::string configured_log_level = "";
+
+	running = sem_open("MiNiFiMain",O_CREAT,0644,0);
+	if (running == SEM_FAILED || running == 0)
+	{
+
+		logger->log_error("could not initialize semaphore");
+		perror("initialization failure");
+	}
     // assumes POSIX compliant environment
     std::string minifiHome;
     if (const char* env_p = std::getenv(MINIFI_HOME_ENV_KEY))
@@ -80,9 +104,11 @@ int main(int argc, char **argv)
         char *path = NULL;
         char full_path[PATH_MAX];
         path = realpath(argv[0], full_path);
-        std::string minifiHome(path);
-        minifiHome = minifiHome.substr(0, minifiHome.find_last_of("/\\"));
+        std::string minifiHomePath(path);
+        minifiHomePath = minifiHomePath.substr(0, minifiHomePath.find_last_of("/\\"));	//Remove /minifi from path
+        minifiHome = minifiHomePath.substr(0, minifiHomePath.find_last_of("/\\"));	//Remove /bin from path
     }
+
 
 	if (signal(SIGINT, sigHandler) == SIG_ERR || signal(SIGTERM, sigHandler) == SIG_ERR || signal(SIGPIPE, SIG_IGN) == SIG_ERR)
 	{
@@ -94,25 +120,66 @@ int main(int argc, char **argv)
     configure->setHome(minifiHome);
     configure->loadConfigureFile(DEFAULT_NIFI_PROPERTIES_FILE);
 
-	controller = FlowController::getFlowController();
 
-	// Load flow from specified configuration file
-	controller->load(ConfigFormat::YAML);
-	// Start Processing the flow
-	controller->start();
-	running = true;
+    if (configure->get(Configure::nifi_graceful_shutdown_seconds,graceful_shutdown_seconds))
+    {
+    	try
+    	{
+    		stop_wait_time = std::stoi(graceful_shutdown_seconds);
+    	}
+    	catch(const std::out_of_range &e)
+    	{
+    		logger->log_error("%s is out of range. %s",Configure::nifi_graceful_shutdown_seconds,e.what());
+    	}
+    	catch(const std::invalid_argument &e)
+    	{
+    		logger->log_error("%s contains an invalid argument set. %s",Configure::nifi_graceful_shutdown_seconds,e.what());
+    	}
+    }
+    else
+    {
+    	logger->log_debug("%s not set, defaulting to %d",Configure::nifi_graceful_shutdown_seconds,STOP_WAIT_TIME_MS);
+    }
 
-	logger->log_info("MiNiFi started");
-
-	// main loop
-	while (running)
+    if (configure->get(Configure::nifi_log_level,configured_log_level))
 	{
-		sleep(SLEEP_INTERVAL);
+    		std::cout << "log level is " << configured_log_level << std::endl;
+			logger->setLogLevel(configured_log_level);
+
 	}
 
-	controller->unload();
+
+
+	controller = FlowControllerFactory::getFlowController();
+
+	// Load flow from specified configuration file
+	controller->load();
+	// Start Processing the flow
+
+	controller->start();
+	logger->log_info("MiNiFi started");
+
+	/**
+	 * Sem wait provides us the ability to have a controlled
+	 * yield without the need for a more complex construct and
+	 * a spin lock
+	 */
+	if ( sem_wait(running) != -1 )
+		perror("sem_wait");
+
+
+	sem_unlink("MiNiFiMain");
+
+	/**
+	 * Trigger unload -- wait stop_wait_time
+	 */
+	controller->waitUnload(stop_wait_time);
+
 	delete controller;
+
 	logger->log_info("MiNiFi exit");
+
+
 
 	return 0;
 }

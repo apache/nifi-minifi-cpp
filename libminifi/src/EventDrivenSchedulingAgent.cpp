@@ -1,6 +1,6 @@
 /**
- * @file TimerDrivenSchedulingAgent.cpp
- * TimerDrivenSchedulingAgent class implementation
+ * @file EventDrivenSchedulingAgent.cpp
+ * EventDrivenSchedulingAgent class implementation
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -21,9 +21,9 @@
 #include <thread>
 #include <iostream>
 #include "Property.h"
-#include "TimerDrivenSchedulingAgent.h"
+#include "EventDrivenSchedulingAgent.h"
 
-void TimerDrivenSchedulingAgent::run(Processor *processor)
+void EventDrivenSchedulingAgent::run(Processor *processor)
 {
 	while (this->_running)
 	{
@@ -39,7 +39,9 @@ void TimerDrivenSchedulingAgent::run(Processor *processor)
 			// No work to do or need to apply back pressure
 			std::this_thread::sleep_for(std::chrono::milliseconds(this->_boredYieldDuration));
 		}
-		std::this_thread::sleep_for(std::chrono::nanoseconds(processor->getSchedulingPeriodNano()));
+
+		// Block until work is available
+		processor->waitForWork(1000);
 	}
 	return;
 }
