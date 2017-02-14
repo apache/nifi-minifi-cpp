@@ -37,8 +37,9 @@
 		#include <regex.h>
 	#endif
 #endif
+#include "utils/StringUtils.h"
 #include <regex>
-#include "TimeUtil.h"
+#include "utils/TimeUtil.h"
 #include "GetFile.h"
 #include "ProcessContext.h"
 #include "ProcessSession.h"
@@ -86,7 +87,7 @@ void GetFile::onTrigger(ProcessContext *context, ProcessSession *session)
 {
 	std::string value;
 
-	_logger->log_info("onTrigger GetFile");
+	logger_->log_info("onTrigger GetFile");
 	if (context->getProperty(Directory.getName(), value))
 	{
 		_directory = value;
@@ -97,14 +98,14 @@ void GetFile::onTrigger(ProcessContext *context, ProcessSession *session)
 	}
 	if (context->getProperty(IgnoreHiddenFile.getName(), value))
 	{
-		Property::StringToBool(value, _ignoreHiddenFile);
+		StringUtils::StringToBool(value, _ignoreHiddenFile);
 	}
 	if (context->getProperty(KeepSourceFile.getName(), value))
 	{
-		Property::StringToBool(value, _keepSourceFile);
+		StringUtils::StringToBool(value, _keepSourceFile);
 	}
 
-	_logger->log_info("onTrigger GetFile");
+	logger_->log_info("onTrigger GetFile");
 	if (context->getProperty(MaxAge.getName(), value))
 	{
 		TimeUnit unit;
@@ -142,7 +143,7 @@ void GetFile::onTrigger(ProcessContext *context, ProcessSession *session)
 	}
 	if (context->getProperty(Recurse.getName(), value))
 	{
-		Property::StringToBool(value, _recursive);
+		StringUtils::StringToBool(value, _recursive);
 	}
 
 	if (context->getProperty(FileFilter.getName(), value))
@@ -151,7 +152,7 @@ void GetFile::onTrigger(ProcessContext *context, ProcessSession *session)
 	}
 
 	// Perform directory list
-	_logger->log_info("Is listing empty %i",isListingEmpty());
+	logger_->log_info("Is listing empty %i",isListingEmpty());
 	if (isListingEmpty())
 	{
 		if (_pollInterval == 0 || (getTimeMillis() - _lastDirectoryListingTime) > _pollInterval)
@@ -159,7 +160,7 @@ void GetFile::onTrigger(ProcessContext *context, ProcessSession *session)
 			performListing(_directory);
 		}
 	}
-	_logger->log_info("Is listing empty %i",isListingEmpty());
+	logger_->log_info("Is listing empty %i",isListingEmpty());
 
 	if (!isListingEmpty())
 	{
@@ -172,7 +173,7 @@ void GetFile::onTrigger(ProcessContext *context, ProcessSession *session)
 
 				std::string fileName = list.front();
 				list.pop();
-				_logger->log_info("GetFile process %s", fileName.c_str());
+				logger_->log_info("GetFile process %s", fileName.c_str());
 				FlowFileRecord *flowFile = session->create();
 				if (!flowFile)
 					return;
@@ -188,7 +189,7 @@ void GetFile::onTrigger(ProcessContext *context, ProcessSession *session)
 		}
 		catch (std::exception &exception)
 		{
-			_logger->log_debug("GetFile Caught Exception %s", exception.what());
+			logger_->log_debug("GetFile Caught Exception %s", exception.what());
 			throw;
 		}
 		catch (...)
@@ -275,13 +276,13 @@ bool GetFile::acceptFile(std::string fullName, std::string name)
 						return false;
    					}
 				} catch (std::regex_error e) {
-					_logger->log_error("Invalid File Filter regex: %s.", e.what());
+					logger_->log_error("Invalid File Filter regex: %s.", e.what());
 					return false;
 				}
 			#endif
 		#endif
 		#else
-			_logger->log_info("Cannot support regex filtering");
+			logger_->log_info("Cannot support regex filtering");
 		#endif
 		return true;
 	}
@@ -291,13 +292,13 @@ bool GetFile::acceptFile(std::string fullName, std::string name)
 
 void GetFile::performListing(std::string dir)
 {
-	_logger->log_info("Performing file listing against %s",dir.c_str());
+	logger_->log_info("Performing file listing against %s",dir.c_str());
 	DIR *d;
 	d = opendir(dir.c_str());
 	if (!d)
 		return;
 	// only perform a listing while we are not empty
-	_logger->log_info("Performing file listing against %s",dir.c_str());
+	logger_->log_info("Performing file listing against %s",dir.c_str());
 	while (isRunning())
 	{
 		struct dirent *entry;

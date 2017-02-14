@@ -43,7 +43,7 @@ ResourceClaim::ResourceClaim(const std::string contentDirectory)
 	// Create the full content path for the content
 	_contentFullPath = contentDirectory + "/" + uuidStr;
 
-	_configure = Configure::getConfigure();
-	_logger = Logger::getLogger();
-	_logger->log_debug("Resource Claim created %s", _contentFullPath.c_str());
+	configure_ = Configure::getConfigure();
+	logger_ = Logger::getLogger();
+	logger_->log_debug("Resource Claim created %s", _contentFullPath.c_str());
 }

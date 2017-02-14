@@ -24,7 +24,8 @@
 #include <fstream>
 #include <uuid/uuid.h>
 
-#include "TimeUtil.h"
+#include "utils/StringUtils.h"
+#include "utils/TimeUtil.h"
 #include "PutFile.h"
 #include "ProcessContext.h"
 #include "ProcessSession.h"
@@ -61,7 +62,7 @@ void PutFile::onTrigger(ProcessContext *context, ProcessSession *session)
 
 	if (!context->getProperty(Directory.getName(), directory))
 	{
-		_logger->log_error("Directory attribute is missing or invalid");
+		logger_->log_error("Directory attribute is missing or invalid");
 		return;
 	}
 
@@ -69,7 +70,7 @@ void PutFile::onTrigger(ProcessContext *context, ProcessSession *session)
 
 	if (!context->getProperty(ConflictResolution.getName(), conflictResolution))
 	{
-		_logger->log_error("Conflict Resolution Strategy attribute is missing or invalid");
+		logger_->log_error("Conflict Resolution Strategy attribute is missing or invalid");
 		return;
 	}
 
@@ -92,21 +93,21 @@ void PutFile::onTrigger(ProcessContext *context, ProcessSession *session)
 	std::stringstream tmpFileSs;
 	tmpFileSs << directory << "/." << filename << "." << tmpFileUuidStr;
 	std::string tmpFile = tmpFileSs.str();
-	_logger->log_info("PutFile using temporary file %s", tmpFile.c_str());
+	logger_->log_info("PutFile using temporary file %s", tmpFile.c_str());
 
 	// Determine dest full file paths
 	std::stringstream destFileSs;
 	destFileSs << directory << "/" << filename;
 	std::string destFile = destFileSs.str();
 
-	_logger->log_info("PutFile writing file %s into directory %s", filename.c_str(), directory.c_str());
+	logger_->log_info("PutFile writing file %s into directory %s", filename.c_str(), directory.c_str());
 
 	// If file exists, apply conflict resolution strategy
 	struct stat statResult;
 
 	if (stat(destFile.c_str(), &statResult) == 0)
 	{
-		_logger->log_info("Destination file %s exists; applying Conflict Resolution Strategy: %s", destFile.c_str(), conflictResolution.c_str());
+		logger_->log_info("Destination file %s exists; applying Conflict Resolution Strategy: %s", destFile.c_str(), conflictResolution.c_str());
 
 		if (conflictResolution == CONFLICT_RESOLUTION_STRATEGY_REPLACE)
 		{
@@ -150,7 +151,7 @@ PutFile::ReadCallback::ReadCallback(const std::string &tmpFile, const std::strin
 , _tmpFileOs(tmpFile)
 , _destFile(destFile)
 {
-	_logger = Logger::getLogger();
+	logger_ = Logger::getLogger();
 }
 
 // Copy the entire file contents to the temporary file
@@ -168,7 +169,7 @@ bool PutFile::ReadCallback::commit()
 {
 	bool success = false;
 
-	_logger->log_info("PutFile committing put file operation to %s", _destFile.c_str());
+	logger_->log_info("PutFile committing put file operation to %s", _destFile.c_str());
 
 	if (_writeSucceeded)
 	{
@@ -176,17 +177,17 @@ bool PutFile::ReadCallback::commit()
 
 		if (rename(_tmpFile.c_str(), _destFile.c_str()))
 		{
-			_logger->log_info("PutFile commit put file operation to %s failed because rename() call failed", _destFile.c_str());
+			logger_->log_info("PutFile commit put file operation to %s failed because rename() call failed", _destFile.c_str());
 		}
 		else
 		{
 			success = true;
-			_logger->log_info("PutFile commit put file operation to %s succeeded", _destFile.c_str());
+			logger_->log_info("PutFile commit put file operation to %s succeeded", _destFile.c_str());
 		}
 	}
 	else
 	{
-		_logger->log_error("PutFile commit put file operation to %s failed because write failed", _destFile.c_str());
+		logger_->log_error("PutFile commit put file operation to %s failed because write failed", _destFile.c_str());
 	}
 
 	return success;

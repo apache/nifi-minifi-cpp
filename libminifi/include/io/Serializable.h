@@ -1,5 +1,5 @@
 /**
- *
+  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -15,124 +15,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __SERIALIZABLE_H__
-#define __SERIALIZABLE_H__
 
-#include <cstdint>
-#include <vector>
+#ifndef LIBMINIFI_INCLUDE_IO_SERIALIZABLE_H_
+#define LIBMINIFI_INCLUDE_IO_SERIALIZABLE_H_
+
 #include <string>
+#include "EndianCheck.h"
+#include "DataStream.h"
 
 
-/**
- * Mechanism to determine endianness of host.
- * Accounts for only BIG/LITTLE/BIENDIAN
- **/
-class EndiannessCheck
-{
-public:
-    static bool IS_LITTLE;
-private:
-
-    static bool is_little_endian() {
-        /* do whatever is needed at static init time */
-        unsigned int x = 1;
-        char *c = (char*) &x;
-        IS_LITTLE=*c==1;
-        return IS_LITTLE;
-    }
-};
-
-
-/**
- * DataStream defines the mechanism through which
- * binary data will be written to a sink
- */
-class DataStream
-{
-public:
-
-    DataStream() : readBuffer(0)
-    {
-
-    }
-
-    /**
-     * Constructor
-     **/
-    DataStream(const uint8_t *buf, const uint32_t buflen) : DataStream()
-    {
-        writeData((uint8_t*)buf,buflen);
-
-    }
-
-	/**
-	 * Reads data and places it into buf
-	 * @param buf buffer in which we extract data
-	 * @param buflen
-	 */
-	int readData(std::vector<uint8_t> &buf, int buflen);
-	/**
-	 * Reads data and places it into buf
-	 * @param buf buffer in which we extract data
-	 * @param buflen
-	 */
-    int readData(uint8_t *buf, int buflen);
-
-    /**
-     * writes valiue to buffer
-     * @param value value to write
-     * @param size size of value
-     */
-    int writeData(uint8_t *value, int size);
-
-
-    /**
-     * Reads a system word
-     * @param value value to write
-     */
-    inline int readLongLong(uint64_t &value, bool is_little_endian =
-                                EndiannessCheck::IS_LITTLE);
-
-
-    /**
-     * Reads a uint32_t
-     * @param value value to write
-     */
-    inline int readLong(uint32_t &value, bool is_little_endian =
-                            EndiannessCheck::IS_LITTLE);
-
-
-    /**
-     * Reads a system short
-     * @param value value to write
-     */
-    inline int readShort(uint16_t &value,bool is_little_endian =
-                             EndiannessCheck::IS_LITTLE);
-
-
-    /**
-     * Returns the underlying buffer
-     * @return vector's array
-     **/
-    const uint8_t *getBuffer() const
-    {
-        return &buffer[0];
-    }
-
-    /**
-     * Retrieve size of data stream
-     * @return size of data stream
-     **/
-    const uint32_t getSize() const
-    {
-        return buffer.size();
-    }
-
-private:
-    // All serialization related method and internal buf
-    std::vector<uint8_t> buffer;
-    uint32_t readBuffer;
-};
 
 /**
  * Serializable instances provide base functionality to
@@ -291,4 +182,5 @@ protected:
 
 };
 
-#endif
+
+#endif /* LIBMINIFI_INCLUDE_IO_SERIALIZABLE_H_ */

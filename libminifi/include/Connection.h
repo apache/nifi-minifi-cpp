@@ -43,7 +43,7 @@ public:
 	/*!
 	 * Create a new processor
 	 */
-	Connection(std::string name, uuid_t uuid = NULL, uuid_t srcUUID = NULL, uuid_t destUUID = NULL);
+	explicit Connection(std::string name, uuid_t uuid = NULL, uuid_t srcUUID = NULL, uuid_t destUUID = NULL);
 	//! Destructor
 	virtual ~Connection() {}
 	//! Set Connection Name
@@ -190,7 +190,7 @@ private:
 	//! Queue for the Flow File
 	std::queue<FlowFileRecord *> _queue;
 	//! Logger
-	Logger *_logger;
+	Logger *logger_;
 	// Prevent default copy constructor and assignment operation
 	// Only support pass by reference or pointer
 	Connection(const Connection &parent);

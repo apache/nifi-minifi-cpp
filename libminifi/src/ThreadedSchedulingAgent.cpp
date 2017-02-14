@@ -33,30 +33,30 @@ void ThreadedSchedulingAgent::schedule(Processor *processor)
 	_administrativeYieldDuration = 0;
 	std::string yieldValue;
 
-	if (_configure->get(Configure::nifi_administrative_yield_duration, yieldValue))
+	if (configure_->get(Configure::nifi_administrative_yield_duration, yieldValue))
 	{
 		TimeUnit unit;
 		if (Property::StringToTime(yieldValue, _administrativeYieldDuration, unit) &&
 					Property::ConvertTimeUnitToMS(_administrativeYieldDuration, unit, _administrativeYieldDuration))
 		{
-			_logger->log_debug("nifi_administrative_yield_duration: [%d] ms", _administrativeYieldDuration);
+			logger_->log_debug("nifi_administrative_yield_duration: [%d] ms", _administrativeYieldDuration);
 		}
 	}
 
 	_boredYieldDuration = 0;
-	if (_configure->get(Configure::nifi_bored_yield_duration, yieldValue))
+	if (configure_->get(Configure::nifi_bored_yield_duration, yieldValue))
 	{
 		TimeUnit unit;
 		if (Property::StringToTime(yieldValue, _boredYieldDuration, unit) &&
 					Property::ConvertTimeUnitToMS(_boredYieldDuration, unit, _boredYieldDuration))
 		{
-			_logger->log_debug("nifi_bored_yield_duration: [%d] ms", _boredYieldDuration);
+			logger_->log_debug("nifi_bored_yield_duration: [%d] ms", _boredYieldDuration);
 		}
 	}
 
 	if (processor->getScheduledState() != RUNNING)
 	{
-		_logger->log_info("Can not schedule threads for processor %s because it is not running", processor->getName().c_str());
+		logger_->log_info("Can not schedule threads for processor %s because it is not running", processor->getName().c_str());
 		return;
 	}
 
@@ -64,7 +64,7 @@ void ThreadedSchedulingAgent::schedule(Processor *processor)
 			_threads.find(processor->getUUIDStr());
 	if (it != _threads.end())
 	{
-		_logger->log_info("Can not schedule threads for processor %s because there are existing threads running");
+		logger_->log_info("Can not schedule threads for processor %s because there are existing threads running");
 		return;
 	}
 
@@ -82,7 +82,7 @@ void ThreadedSchedulingAgent::schedule(Processor *processor)
 		});
 		thread->detach();
 		threads.push_back(thread);
-		_logger->log_info("Scheduled thread %d running for process %s", thread->get_id(),
+		logger_->log_info("Scheduled thread %d running for process %s", thread->get_id(),
 				processor->getName().c_str());
 	}
 	_threads[processor->getUUIDStr().c_str()] = threads;
@@ -93,14 +93,14 @@ void ThreadedSchedulingAgent::schedule(Processor *processor)
 void ThreadedSchedulingAgent::unschedule(Processor *processor)
 {
 	std::lock_guard<std::mutex> lock(_mtx);
-
-	_logger->log_info("Shutting down threads for processor %s/%s",
+	
+	logger_->log_info("Shutting down threads for processor %s/%s",
 			processor->getName().c_str(),
 			processor->getUUIDStr().c_str());
 
 	if (processor->getScheduledState() != RUNNING)
 	{
-		_logger->log_info("Cannot unschedule threads for processor %s because it is not running", processor->getName().c_str());
+		logger_->log_info("Cannot unschedule threads for processor %s because it is not running", processor->getName().c_str());
 		return;
 	}
 
@@ -109,13 +109,13 @@ void ThreadedSchedulingAgent::unschedule(Processor *processor)
 
 	if (it == _threads.end())
 	{
-		_logger->log_info("Cannot unschedule threads for processor %s because there are no existing threads running", processor->getName().c_str());
+		logger_->log_info("Cannot unschedule threads for processor %s because there are no existing threads running", processor->getName().c_str());
 		return;
 	}
 	for (std::vector<std::thread *>::iterator itThread = it->second.begin(); itThread != it->second.end(); ++itThread)
 	{
 		std::thread *thread = *itThread;
-		_logger->log_info("Scheduled thread %d deleted for process %s", thread->get_id(),
+		logger_->log_info("Scheduled thread %d deleted for process %s", thread->get_id(),
 				processor->getName().c_str());
 		delete thread;
 	}

@@ -53,7 +53,7 @@ public:
 	ListenSyslog(std::string name, uuid_t uuid = NULL)
 	: Processor(name, uuid)
 	{
-		_logger = Logger::getLogger();
+		logger_ = Logger::getLogger();
 		_eventQueueByteSize = 0;
 		_serverSocket = 0;
 		_recvBufSize = 65507;
@@ -87,7 +87,7 @@ public:
 		_clientSockets.clear();
 		if (_serverSocket > 0)
 		{
-			_logger->log_info("ListenSysLog Server socket %d close", _serverSocket);
+			logger_->log_info("ListenSysLog Server socket %d close", _serverSocket);
 			close(_serverSocket);
 			_serverSocket = 0;
 		}
@@ -130,7 +130,7 @@ protected:
 
 private:
 	//! Logger
-	Logger *_logger;
+	Logger *logger_;
 	//! Run function for the thread
 	static void run(ListenSyslog *process);
 	//! Run Thread

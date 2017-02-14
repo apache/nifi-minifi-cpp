@@ -31,6 +31,8 @@
 #include <net/if.h>
 #include <arpa/inet.h>
 
+#include "io/ClientSocket.h"
+
 #define __USE_POSIX
 #include <limits.h>
 
@@ -66,14 +68,10 @@ void AppendHostInfo::onTrigger(ProcessContext *context, ProcessSession *session)
 	  return;
 
 	//Get Hostname
-	char hostname[HOST_NAME_MAX];
-	hostname[HOST_NAME_MAX-1] = '\0'; 
-	gethostname(hostname, HOST_NAME_MAX-1);
-	struct hostent* h;
-	h = gethostbyname(hostname);
-  std::string hostAttribute;
-  context->getProperty(HostAttribute.getName(), hostAttribute);
-	flow->addAttribute(hostAttribute.c_str(), h->h_name);
+
+	std::string hostAttribute = "";
+	context->getProperty(HostAttribute.getName(), hostAttribute);
+	flow->addAttribute(hostAttribute.c_str(), Socket::getMyHostName());
 
 	//Get IP address for the specified interface
   std::string iface;

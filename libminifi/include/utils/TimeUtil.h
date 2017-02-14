@@ -1,7 +1,4 @@
 /**
- * @file TimeUtil.h
- * Basic Time Utility 
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -25,51 +22,45 @@
 #include <string.h>
 #include <unistd.h>
 #include <string.h>
-#include <iostream>
+#include <iomanip>
+#include <sstream>
+#include <chrono>
 
-#ifdef __MACH__
-#include <mach/clock.h>
-#include <mach/mach.h>
-#endif
+#define TIME_FORMAT "%Y-%m-%d %H:%M:%S"
 
-inline uint64_t getTimeMillis()
-{
-	uint64_t value;
-
-	timeval time;
-	gettimeofday(&time, NULL);
-	value = ((uint64_t) (time.tv_sec) * 1000) + (time.tv_usec / 1000);
-
-	return value;
+/**
+ * Gets the current time in milliseconds
+ * @returns milliseconds since epoch
+ */
+inline uint64_t getTimeMillis() {
+	return std::chrono::duration_cast<std::chrono::milliseconds>(
+			std::chrono::system_clock::now().time_since_epoch()).count();
 }
 
-inline uint64_t getTimeNano()
-{
-	struct timespec ts;
-	
-#ifdef __MACH__ // OS X does not have clock_gettime, use clock_get_time
-	clock_serv_t cclock;
-	mach_timespec_t mts;
-	host_get_clock_service(mach_host_self(), CALENDAR_CLOCK, &cclock);
-	clock_get_time(cclock, &mts);
-	mach_port_deallocate(mach_task_self(), cclock);
-	ts.tv_sec = mts.tv_sec;
-	ts.tv_nsec = mts.tv_nsec;
-#else
-	clock_gettime(CLOCK_REALTIME, &ts);
-#endif
+/**
+ * Gets the current time in nanoseconds
+ * @returns nanoseconds since epoch
+ */
+inline uint64_t getTimeNano() {
 
-	return ((uint64_t) (ts.tv_sec) * 1000000000 + ts.tv_nsec);
+	return std::chrono::duration_cast<std::chrono::nanoseconds>(
+			std::chrono::system_clock::now().time_since_epoch()).count();
+
 }
 
-//! Convert millisecond since UTC to a time display string
-inline std::string getTimeStr(uint64_t msec)
+/**
+ * Returns a string based on TIME_FORMAT, converting
+ * the parameter to a string
+ * @param msec milliseconds since epoch
+ * @returns string representing the time
+ */
+inline std::string getTimeStr(uint64_t msec, bool enforce_locale = false)
 {
 	char date[120];
 	time_t second = (time_t) (msec/1000);
 	msec = msec % 1000;
-	strftime(date, sizeof(date) / sizeof(*date), "%Y-%m-%d %H:%M:%S",
-	             localtime(&second));
+	strftime(date, sizeof(date) / sizeof(*date), TIME_FORMAT,
+	             ( enforce_locale==true ? gmtime(&second) : localtime(&second)));
 
 	std::string ret = date;
 	date[0] = '\0';
@@ -78,5 +69,6 @@ inline std::string getTimeStr(uint64_t msec)
 	ret += date;
 	return ret;
 }
+
 
 #endif

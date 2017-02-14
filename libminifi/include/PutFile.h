@@ -40,7 +40,7 @@ public:
 	PutFile(std::string name, uuid_t uuid = NULL)
 	: Processor(name, uuid)
 	{
-		_logger = Logger::getLogger();
+		logger_ = Logger::getLogger();
 	}
 	//! Destructor
 	virtual ~PutFile()
@@ -69,7 +69,7 @@ public:
 		bool commit();
 
 	private:
-		Logger *_logger;
+		Logger *logger_;
 		std::ofstream _tmpFileOs;
 		bool _writeSucceeded = false;
 		std::string _tmpFile;
@@ -80,7 +80,7 @@ protected:
 
 private:
 	//! Logger
-	Logger *_logger;
+	Logger *logger_;
 
 	bool putFile(ProcessSession *session, FlowFileRecord *flowFile, const std::string &tmpFile, const std::string &destFile);
 };

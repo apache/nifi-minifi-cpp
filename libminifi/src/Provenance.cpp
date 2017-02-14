@@ -20,7 +20,8 @@
 #include <cstdint>
 #include <vector>
 #include <arpa/inet.h>
-#include "Serializable.h"
+#include "io/DataStream.h"
+#include "io/Serializable.h"
 #include "Provenance.h"
 #include "Relationship.h"
 #include "Logger.h"
@@ -35,11 +36,11 @@ bool ProvenanceEventRecord::DeSerialize(ProvenanceRepository *repo,
 	ret = repo->Get(key, value);
 
 	if (!ret) {
-		_logger->log_error("NiFi Provenance Store event %s can not found",
+		logger_->log_error("NiFi Provenance Store event %s can not found",
 				key.c_str());
 		return false;
 	} else
-		_logger->log_debug("NiFi Provenance Read event %s length %d",
+		logger_->log_debug("NiFi Provenance Read event %s length %d",
 				key.c_str(), value.length());
 
 
@@ -48,11 +49,11 @@ bool ProvenanceEventRecord::DeSerialize(ProvenanceRepository *repo,
 	ret = DeSerialize(stream);
 
 	if (ret) {
-		_logger->log_debug(
+		logger_->log_debug(
 				"NiFi Provenance retrieve event %s size %d eventType %d success",
 				_eventIdStr.c_str(), stream.getSize(), _eventType);
 	} else {
-		_logger->log_debug(
+		logger_->log_debug(
 				"NiFi Provenance retrieve event %s size %d eventType %d fail",
 				_eventIdStr.c_str(), stream.getSize(), _eventType);
 	}
@@ -221,11 +222,12 @@ bool ProvenanceEventRecord::Serialize(ProvenanceRepository *repo) {
 	}
 
 	// Persistent to the DB
+
 	if (repo->Put(_eventIdStr, const_cast<uint8_t*>(outStream.getBuffer()), outStream.getSize())) {
-		_logger->log_debug("NiFi Provenance Store event %s size %d success",
+		logger_->log_debug("NiFi Provenance Store event %s size %d success",
 				_eventIdStr.c_str(), outStream.getSize());
 	} else {
-		_logger->log_error("NiFi Provenance Store event %s size %d fail",
+		logger_->log_error("NiFi Provenance Store event %s size %d fail",
 				_eventIdStr.c_str(), outStream.getSize());
 	}
 
@@ -393,7 +395,7 @@ void ProvenanceReporter::commit() {
 			event->Serialize(
 					FlowControllerFactory::getFlowController()->getProvenanceRepository());
 		} else {
-			_logger->log_debug("Provenance Repository is full");
+			logger_->log_debug("Provenance Repository is full");
 		}
 	}
 }
@@ -566,7 +568,7 @@ void ProvenanceRepository::start() {
 	if (_running)
 		return;
 	_running = true;
-	_logger->log_info("ProvenanceRepository Monitor Thread Start");
+	logger_->log_info("ProvenanceRepository Monitor Thread Start");
 	_thread = new std::thread(run, this);
 	_thread->detach();
 }
@@ -575,7 +577,7 @@ void ProvenanceRepository::stop() {
 	if (!_running)
 		return;
 	_running = false;
-	_logger->log_info("ProvenanceRepository Monitor Thread Stop");
+	logger_->log_info("ProvenanceRepository Monitor Thread Stop");
 }
 
 void ProvenanceRepository::run(ProvenanceRepository *repo) {
@@ -599,7 +601,7 @@ void ProvenanceRepository::run(ProvenanceRepository *repo) {
 							> repo->_maxPartitionMillis)
 						purgeList.push_back(key);
 				} else {
-					repo->_logger->log_debug(
+					repo->logger_->log_debug(
 							"NiFi Provenance retrieve event %s fail",
 							key.c_str());
 					purgeList.push_back(key);
@@ -610,7 +612,7 @@ void ProvenanceRepository::run(ProvenanceRepository *repo) {
 			for (itPurge = purgeList.begin(); itPurge != purgeList.end();
 					itPurge++) {
 				std::string eventId = *itPurge;
-				repo->_logger->log_info("ProvenanceRepository Repo Purge %s",
+				repo->logger_->log_info("ProvenanceRepository Repo Purge %s",
 						eventId.c_str());
 				repo->Delete(eventId);
 			}

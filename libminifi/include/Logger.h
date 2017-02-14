@@ -65,14 +65,14 @@ public:
 
 	//! Get the singleton logger instance
 	static Logger * getLogger() {
-		if (!_logger)
-			_logger = new Logger();
-		return _logger;
+		if (!logger_)
+			logger_ = new Logger();
+		return logger_;
 	}
 	void setLogLevel(LOG_LEVEL_E level) {
-		if (_spdlog == NULL)
+		if (spdlog_ == NULL)
 			return;
-		_spdlog->set_level((spdlog::level::level_enum) level);
+		spdlog_->set_level((spdlog::level::level_enum) level);
 	}
 
 	void setLogLevel(const std::string &level,LOG_LEVEL_E defaultLevel = info )
@@ -112,10 +112,10 @@ public:
 	 * @warning does not check @p log or @p format for null. Caller must ensure parameters and format string lengths match
 	 */
 	void log_error(const char *const format, ...) {
-		if(_spdlog == NULL || !_spdlog->should_log(spdlog::level::level_enum::err))
+		if(spdlog_ == NULL || !spdlog_->should_log(spdlog::level::level_enum::err))
 			return;
 		FILL_BUFFER
-	    _spdlog->error(buffer);
+	    spdlog_->error(buffer);
 	}
 	/**
 	 * @brief Log warn message
@@ -123,10 +123,10 @@ public:
 	 * @warning does not check @p log or @p format for null. Caller must ensure parameters and format string lengths match
 	 */
 	void log_warn(const char *const format, ...) {
-		if(_spdlog == NULL || !_spdlog->should_log(spdlog::level::level_enum::warn))
+		if(spdlog_ == NULL || !spdlog_->should_log(spdlog::level::level_enum::warn))
 			return;
 		FILL_BUFFER
-	    _spdlog->warn(buffer);
+	    spdlog_->warn(buffer);
 	}
 	/**
 	 * @brief Log info message
@@ -134,10 +134,10 @@ public:
 	 * @warning does not check @p log or @p format for null. Caller must ensure parameters and format string lengths match
 	 */
 	void log_info(const char *const format, ...) {
-		if(_spdlog == NULL || !_spdlog->should_log(spdlog::level::level_enum::info))
+		if(spdlog_ == NULL || !spdlog_->should_log(spdlog::level::level_enum::info))
 			return;
 		FILL_BUFFER
-	    _spdlog->info(buffer);
+	    spdlog_->info(buffer);
 	}
 	/**
 	 * @brief Log debug message
@@ -145,10 +145,10 @@ public:
 	 * @warning does not check @p log or @p format for null. Caller must ensure parameters and format string lengths match
 	 */
 	void log_debug(const char *const format, ...) {
-		if(_spdlog == NULL || !_spdlog->should_log(spdlog::level::level_enum::debug))
+		if(spdlog_ == NULL || !spdlog_->should_log(spdlog::level::level_enum::debug))
 			return;
 		FILL_BUFFER
-	    _spdlog->debug(buffer);
+	    spdlog_->debug(buffer);
 	}
 	/**
 	 * @brief Log trace message
@@ -156,10 +156,10 @@ public:
 	 * @warning does not check @p log or @p format for null. Caller must ensure parameters and format string lengths match
 	 */
 	void log_trace(const char *const format, ...) {
-		if(_spdlog == NULL || !_spdlog->should_log(spdlog::level::level_enum::trace))
+		if(spdlog_ == NULL || !spdlog_->should_log(spdlog::level::level_enum::trace))
 			return;
 		FILL_BUFFER
-	    _spdlog->trace(buffer);
+	    spdlog_->trace(buffer);
 	}
 
 protected:
@@ -174,14 +174,14 @@ private:
 	 * Create a logger
 	 * */
 	Logger(const std::string logger_name = LOG_NAME, const std::string filename = LOG_FILE_NAME, size_t max_file_size = DEFAULT_LOG_FILE_SIZE, size_t max_files = DEFAULT_LOG_FILE_NUMBER, bool force_flush = true) {
-        _spdlog = rotating_logger_mt(logger_name, filename, max_file_size, max_files);
-		_spdlog->set_level((spdlog::level::level_enum) debug);
+		spdlog_ = rotating_logger_mt(logger_name, filename, max_file_size, max_files);
+		spdlog_->set_level((spdlog::level::level_enum) debug);
 	}
 	//! spdlog
-	std::shared_ptr<logger> _spdlog;
+	std::shared_ptr<logger> spdlog_;
 
 	//! Singleton logger instance
-	static Logger *_logger;
+	static Logger *logger_;
 };
 
 #endif

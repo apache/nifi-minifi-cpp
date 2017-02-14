@@ -46,7 +46,7 @@ public:
 	ExecuteProcess(std::string name, uuid_t uuid = NULL)
 	: Processor(name, uuid)
 	{
-		_logger = Logger::getLogger();
+		logger_ = Logger::getLogger();
 		_redirectErrorStream = false;
 		_batchDuration = 0;
 		_workingDir = ".";
@@ -94,7 +94,7 @@ protected:
 
 private:
 	//! Logger
-	Logger *_logger;
+	Logger *logger_;
 	//! Property
 	std::string _command;
 	std::string _commandArgument;

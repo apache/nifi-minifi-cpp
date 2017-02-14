@@ -20,24 +20,22 @@
 #ifndef __PROPERTY_H__
 #define __PROPERTY_H__
 
+#include <algorithm>
+#include <sstream>
 #include <string>
 #include <vector>
 #include <queue>
 #include <map>
 #include <mutex>
 #include <atomic>
+#include <functional>
 #include <set>
 #include <stdlib.h>
 #include <math.h>
 
 //! Time Unit
 enum TimeUnit {
-	DAY,
-	HOUR,
-	MINUTE,
-	SECOND,
-	MILLISECOND,
-	NANOSECOND
+	DAY, HOUR, MINUTE, SECOND, MILLISECOND, NANOSECOND
 };
 
 //! Property Class
@@ -48,12 +46,15 @@ public:
 	/*!
 	 * Create a new property
 	 */
-	Property(const std::string name, const std::string description, const std::string value)
-		: _name(name), _description(description), _value(value) {
+	Property(const std::string name, const std::string description,
+			const std::string value) :
+			_name(name), _description(description), _value(value) {
 	}
-	Property() {}
+	Property() {
+	}
 	//! Destructor
-	virtual ~Property() {}
+	virtual ~Property() {
+	}
 	//! Get Name for the property
 	std::string getName() {
 		return _name;
@@ -71,84 +72,60 @@ public:
 		_value = value;
 	}
 	//! Compare
-	bool operator < (const Property & right) const {
+	bool operator <(const Property & right) const {
 		return _name < right._name;
 	}
 
 	//! Convert TimeUnit to MilliSecond
-	static bool ConvertTimeUnitToMS(int64_t input, TimeUnit unit, int64_t &out)
-	{
-		if (unit == MILLISECOND)
-		{
+	static bool ConvertTimeUnitToMS(int64_t input, TimeUnit unit,
+			int64_t &out) {
+		if (unit == MILLISECOND) {
 			out = input;
 			return true;
-		}
-		else if (unit == SECOND)
-		{
+		} else if (unit == SECOND) {
 			out = input * 1000;
 			return true;
-		}
-		else if (unit == MINUTE)
-		{
+		} else if (unit == MINUTE) {
 			out = input * 60 * 1000;
 			return true;
-		}
-		else if (unit == HOUR)
-		{
+		} else if (unit == HOUR) {
 			out = input * 60 * 60 * 1000;
 			return true;
-		}
-		else if (unit == DAY)
-		{
+		} else if (unit == DAY) {
 			out = 24 * 60 * 60 * 1000;
 			return true;
-		}
-		else if (unit == NANOSECOND)
-		{
-			out = input/1000/1000;
+		} else if (unit == NANOSECOND) {
+			out = input / 1000 / 1000;
 			return true;
-		}
-		else
-		{
+		} else {
 			return false;
 		}
 	}
 	//! Convert TimeUnit to NanoSecond
-	static bool ConvertTimeUnitToNS(int64_t input, TimeUnit unit, int64_t &out)
-	{
-		if (unit == MILLISECOND)
-		{
+	static bool ConvertTimeUnitToNS(int64_t input, TimeUnit unit,
+			int64_t &out) {
+		if (unit == MILLISECOND) {
 			out = input * 1000 * 1000;
 			return true;
-		}
-		else if (unit == SECOND)
-		{
+		} else if (unit == SECOND) {
 			out = input * 1000 * 1000 * 1000;
 			return true;
-		}
-		else if (unit == MINUTE)
-		{
+		} else if (unit == MINUTE) {
 			out = input * 60 * 1000 * 1000 * 1000;
 			return true;
-		}
-		else if (unit == HOUR)
-		{
+		} else if (unit == HOUR) {
 			out = input * 60 * 60 * 1000 * 1000 * 1000;
 			return true;
-		}
-		else if (unit == NANOSECOND)
-		{
+		} else if (unit == NANOSECOND) {
 			out = input;
 			return true;
-		}
-		else
-		{
+		} else {
 			return false;
 		}
 	}
 	//! Convert String
-	static bool StringToTime(std::string input, int64_t &output, TimeUnit &timeunit)
-	{
+	static bool StringToTime(std::string input, int64_t &output,
+			TimeUnit &timeunit) {
 		if (input.size() == 0) {
 			return false;
 		}
@@ -157,62 +134,52 @@ public:
 		char *pEnd;
 		long int ival = strtol(cvalue, &pEnd, 0);
 
-		if (pEnd[0] == '\0')
-		{
+		if (pEnd[0] == '\0') {
 			return false;
 		}
 
-		while (*pEnd == ' ')
-		{
+		while (*pEnd == ' ') {
 			// Skip the space
 			pEnd++;
 		}
 
 		std::string unit(pEnd);
 
-		if (unit == "sec" || unit == "s" || unit == "second" || unit == "seconds" || unit == "secs")
-		{
+		if (unit == "sec" || unit == "s" || unit == "second"
+				|| unit == "seconds" || unit == "secs") {
 			timeunit = SECOND;
 			output = ival;
 			return true;
-		}
-		else if (unit == "min" || unit == "m" || unit == "mins" || unit == "minute" || unit == "minutes")
-		{
+		} else if (unit == "min" || unit == "m" || unit == "mins"
+				|| unit == "minute" || unit == "minutes") {
 			timeunit = MINUTE;
 			output = ival;
 			return true;
-		}
-		else if (unit == "ns" || unit == "nano" || unit == "nanos" || unit == "nanoseconds")
-		{
+		} else if (unit == "ns" || unit == "nano" || unit == "nanos"
+				|| unit == "nanoseconds") {
 			timeunit = NANOSECOND;
 			output = ival;
 			return true;
-		}
-		else if (unit == "ms" || unit == "milli" || unit == "millis" || unit == "milliseconds")
-		{
+		} else if (unit == "ms" || unit == "milli" || unit == "millis"
+				|| unit == "milliseconds") {
 			timeunit = MILLISECOND;
 			output = ival;
 			return true;
-		}
-		else if (unit == "h" || unit == "hr" || unit == "hour" || unit == "hrs" || unit == "hours")
-		{
+		} else if (unit == "h" || unit == "hr" || unit == "hour"
+				|| unit == "hrs" || unit == "hours") {
 			timeunit = HOUR;
 			output = ival;
 			return true;
-		}
-		else if (unit == "d" || unit == "day" || unit == "days")
-		{
+		} else if (unit == "d" || unit == "day" || unit == "days") {
 			timeunit = DAY;
 			output = ival;
 			return true;
-		}
-		else
+		} else
 			return false;
 	}
 
 	//! Convert String to Integer
-	static bool StringToInt(std::string input, int64_t &output)
-	{
+	static bool StringToInt(std::string input, int64_t &output) {
 		if (input.size() == 0) {
 			return false;
 		}
@@ -221,26 +188,23 @@ public:
 		char *pEnd;
 		long int ival = strtol(cvalue, &pEnd, 0);
 
-		if (pEnd[0] == '\0')
-		{
+		if (pEnd[0] == '\0') {
 			output = ival;
 			return true;
 		}
 
-		while (*pEnd == ' ')
-		{
+		while (*pEnd == ' ') {
 			// Skip the space
 			pEnd++;
 		}
 
 		char end0 = toupper(pEnd[0]);
-		if ( (end0 == 'K') || (end0 == 'M') || (end0 == 'G') || (end0 == 'T') || (end0 == 'P') )
-		{
-			if (pEnd[1] == '\0')
-			{
+		if ((end0 == 'K') || (end0 == 'M') || (end0 == 'G') || (end0 == 'T')
+				|| (end0 == 'P')) {
+			if (pEnd[1] == '\0') {
 				unsigned long int multiplier = 1000;
 
-				if ( (end0 != 'K') ) {
+				if ((end0 != 'K')) {
 					multiplier *= 1000;
 					if (end0 != 'M') {
 						multiplier *= 1000;
@@ -255,11 +219,12 @@ public:
 				output = ival * multiplier;
 				return true;
 
-			} else if ((pEnd[1] == 'b' || pEnd[1] == 'B') && (pEnd[2] == '\0')) {
+			} else if ((pEnd[1] == 'b' || pEnd[1] == 'B')
+					&& (pEnd[2] == '\0')) {
 
 				unsigned long int multiplier = 1024;
 
-				if ( (end0 != 'K') ) {
+				if ((end0 != 'K')) {
 					multiplier *= 1024;
 					if (end0 != 'M') {
 						multiplier *= 1024;
@@ -278,56 +243,7 @@ public:
 
 		return false;
 	}
-	//! Convert String to Float
-	static bool StringToFloat(std::string input, float &output)
-	{
-		const char *cvalue = input.c_str();
-		char *pEnd;
-		float val = strtof(cvalue, &pEnd);
 
-		if (pEnd[0] == '\0')
-		{
-			output = val;
-			return true;
-		}
-		else
-			return false;
-	}
-	//! Convert String to Bool
-	static bool StringToBool(std::string input, bool &output)
-	{
-		if (input == "true" || input == "True" || input == "TRUE")
-		{
-			output = true;
-			return true;
-		}
-		if (input == "false" || input == "False" || input == "FALSE")
-		{
-			output = false;
-			return true;
-		}
-		return false;
-	}
-
-	// Trim String utils
-	static std::string trim(const std::string& s)
-	{
-	    return trimRight(trimLeft(s));
-	}
-
-	static std::string trimLeft(const std::string& s)
-	{
-		const char *WHITESPACE = " \n\r\t";
-	    size_t startpos = s.find_first_not_of(WHITESPACE);
-	    return (startpos == std::string::npos) ? "" : s.substr(startpos);
-	}
-
-	static std::string trimRight(const std::string& s)
-	{
-		const char *WHITESPACE = " \n\r\t";
-	    size_t endpos = s.find_last_not_of(WHITESPACE);
-	    return (endpos == std::string::npos) ? "" : s.substr(0, endpos+1);
-	}
 
 protected:
 	//! Name

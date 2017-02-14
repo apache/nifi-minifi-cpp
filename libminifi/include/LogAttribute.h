@@ -35,7 +35,7 @@ public:
 	LogAttribute(std::string name, uuid_t uuid = NULL)
 	: Processor(name, uuid)
 	{
-		_logger = Logger::getLogger();
+		logger_ = Logger::getLogger();
 	}
 	//! Destructor
 	virtual ~LogAttribute()
@@ -122,7 +122,7 @@ protected:
 
 private:
 	//! Logger
-	Logger *_logger;
+	Logger *logger_;
 };
 
 #endif

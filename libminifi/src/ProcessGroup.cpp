@@ -29,118 +29,103 @@
 #include "ProcessGroup.h"
 #include "Processor.h"
 
-ProcessGroup::ProcessGroup(ProcessGroupType type, std::string name, uuid_t uuid, ProcessGroup *parent)
-: _name(name),
-  _type(type),
-  _parentProcessGroup(parent)
-{
+ProcessGroup::ProcessGroup(ProcessGroupType type, std::string name, uuid_t uuid,
+		ProcessGroup *parent) :
+		name_(name), type_(type), parent_process_group_(parent) {
 	if (!uuid)
 		// Generate the global UUID for the flow record
-		uuid_generate(_uuid);
+		uuid_generate(uuid_);
 	else
-		uuid_copy(_uuid, uuid);
+		uuid_copy(uuid_, uuid);
 
-	_yieldPeriodMsec = 0;
-	_transmitting = false;
+	yield_period_msec_ = 0;
+	transmitting_ = false;
 
-	_logger = Logger::getLogger();
-	_logger->log_info("ProcessGroup %s created", _name.c_str());
+	logger_ = Logger::getLogger();
+	logger_->log_info("ProcessGroup %s created", name_.c_str());
 }
 
-ProcessGroup::~ProcessGroup()
-{
-	for (std::set<Connection *>::iterator it = _connections.begin(); it != _connections.end(); ++it)
-	{
+ProcessGroup::~ProcessGroup() {
+	for (std::set<Connection *>::iterator it = connections_.begin();
+			it != connections_.end(); ++it) {
 		Connection *connection = *it;
 		connection->drain();
 		delete connection;
 	}
 
-	for (std::set<ProcessGroup *>::iterator it = _childProcessGroups.begin(); it != _childProcessGroups.end(); ++it)
-	{
+	for (std::set<ProcessGroup *>::iterator it = child_process_groups_.begin();
+			it != child_process_groups_.end(); ++it) {
 		ProcessGroup *processGroup(*it);
 		delete processGroup;
 	}
 
-	for (std::set<Processor *>::iterator it = _processors.begin(); it != _processors.end(); ++it)
-	{
+	for (std::set<Processor *>::iterator it = processors_.begin();
+			it != processors_.end(); ++it) {
 		Processor *processor(*it);
 		delete processor;
 	}
 }
 
-bool ProcessGroup::isRootProcessGroup()
-{
-	std::lock_guard<std::mutex> lock(_mtx);
-	return (_type == ROOT_PROCESS_GROUP);
+bool ProcessGroup::isRootProcessGroup() {
+	std::lock_guard<std::mutex> lock(mtx_);
+	return (type_ == ROOT_PROCESS_GROUP);
 }
 
-void ProcessGroup::addProcessor(Processor *processor)
-{
-	std::lock_guard<std::mutex> lock(_mtx);
+void ProcessGroup::addProcessor(Processor *processor) {
+	std::lock_guard<std::mutex> lock(mtx_);
 
-	if (_processors.find(processor) == _processors.end())
-	{
+	if (processors_.find(processor) == processors_.end()) {
 		// We do not have the same processor in this process group yet
-		_processors.insert(processor);
-		_logger->log_info("Add processor %s into process group %s",
-				processor->getName().c_str(), _name.c_str());
+		processors_.insert(processor);
+		logger_->log_info("Add processor %s into process group %s",
+				processor->getName().c_str(), name_.c_str());
 	}
 }
 
-void ProcessGroup::removeProcessor(Processor *processor)
-{
-	std::lock_guard<std::mutex> lock(_mtx);
+void ProcessGroup::removeProcessor(Processor *processor) {
+	std::lock_guard<std::mutex> lock(mtx_);
 
-	if (_processors.find(processor) != _processors.end())
-	{
+	if (processors_.find(processor) != processors_.end()) {
 		// We do have the same processor in this process group yet
-		_processors.erase(processor);
-		_logger->log_info("Remove processor %s from process group %s",
-				processor->getName().c_str(), _name.c_str());
+		processors_.erase(processor);
+		logger_->log_info("Remove processor %s from process group %s",
+				processor->getName().c_str(), name_.c_str());
 	}
 }
 
-void ProcessGroup::addProcessGroup(ProcessGroup *child)
-{
-	std::lock_guard<std::mutex> lock(_mtx);
+void ProcessGroup::addProcessGroup(ProcessGroup *child) {
+	std::lock_guard<std::mutex> lock(mtx_);
 
-	if (_childProcessGroups.find(child) == _childProcessGroups.end())
-	{
+	if (child_process_groups_.find(child) == child_process_groups_.end()) {
 		// We do not have the same child process group in this process group yet
-		_childProcessGroups.insert(child);
-		_logger->log_info("Add child process group %s into process group %s",
-				child->getName().c_str(), _name.c_str());
+		child_process_groups_.insert(child);
+		logger_->log_info("Add child process group %s into process group %s",
+				child->getName().c_str(), name_.c_str());
 	}
 }
 
-void ProcessGroup::removeProcessGroup(ProcessGroup *child)
-{
-	std::lock_guard<std::mutex> lock(_mtx);
+void ProcessGroup::removeProcessGroup(ProcessGroup *child) {
+	std::lock_guard<std::mutex> lock(mtx_);
 
-	if (_childProcessGroups.find(child) != _childProcessGroups.end())
-	{
+	if (child_process_groups_.find(child) != child_process_groups_.end()) {
 		// We do have the same child process group in this process group yet
-		_childProcessGroups.erase(child);
-		_logger->log_info("Remove child process group %s from process group %s",
-				child->getName().c_str(), _name.c_str());
+		child_process_groups_.erase(child);
+		logger_->log_info("Remove child process group %s from process group %s",
+				child->getName().c_str(), name_.c_str());
 	}
 }
 
 void ProcessGroup::startProcessing(TimerDrivenSchedulingAgent *timeScheduler,
-		EventDrivenSchedulingAgent *eventScheduler)
-{
-	std::lock_guard<std::mutex> lock(_mtx);
+		EventDrivenSchedulingAgent *eventScheduler) {
+	std::lock_guard<std::mutex> lock(mtx_);
 
-	try
-	{
+	try {
 		// Start all the processor node, input and output ports
-		for(auto processor : _processors)
-		{
-			_logger->log_debug("Starting %s",processor->getName().c_str());
+		for (auto processor : processors_) {
+			logger_->log_debug("Starting %s", processor->getName().c_str());
 
-			if (!processor->isRunning() && processor->getScheduledState() != DISABLED)
-			{
+			if (!processor->isRunning()
+					&& processor->getScheduledState() != DISABLED) {
 				if (processor->getSchedulingStrategy() == TIMER_DRIVEN)
 					timeScheduler->schedule(processor);
 				else if (processor->getSchedulingStrategy() == EVENT_DRIVEN)
@@ -148,78 +133,76 @@ void ProcessGroup::startProcessing(TimerDrivenSchedulingAgent *timeScheduler,
 			}
 		}
 		// Start processing the group
-		for(auto processGroup : _childProcessGroups)
-		{
+		for (auto processGroup : child_process_groups_) {
 			processGroup->startProcessing(timeScheduler, eventScheduler);
 		}
-	}
-	catch (std::exception &exception)
-	{
-		_logger->log_debug("Caught Exception %s", exception.what());
+	} catch (std::exception &exception) {
+		logger_->log_debug("Caught Exception %s", exception.what());
 		throw;
-	}
-	catch (...)
-	{
-		_logger->log_debug("Caught Exception during process group start processing");
+	} catch (...) {
+		logger_->log_debug(
+				"Caught Exception during process group start processing");
 		throw;
 	}
 }
 
 void ProcessGroup::stopProcessing(TimerDrivenSchedulingAgent *timeScheduler,
-		EventDrivenSchedulingAgent *eventScheduler)
-{
-	std::lock_guard<std::mutex> lock(_mtx);
+		EventDrivenSchedulingAgent *eventScheduler) {
+	std::lock_guard<std::mutex> lock(mtx_);
 
-	try
-	{
+	try {
 		// Stop all the processor node, input and output ports
-		for (std::set<Processor *>::iterator it = _processors.begin(); it != _processors.end(); ++it)
-		{
+		for (std::set<Processor *>::iterator it = processors_.begin();
+				it != processors_.end(); ++it) {
 			Processor *processor(*it);
 			if (processor->getSchedulingStrategy() == TIMER_DRIVEN)
-					timeScheduler->unschedule(processor);
+				timeScheduler->unschedule(processor);
 			else if (processor->getSchedulingStrategy() == EVENT_DRIVEN)
-					eventScheduler->unschedule(processor);
+				eventScheduler->unschedule(processor);
 		}
 
-		for (std::set<ProcessGroup *>::iterator it = _childProcessGroups.begin(); it != _childProcessGroups.end(); ++it)
-		{
+		for (std::set<ProcessGroup *>::iterator it =
+				child_process_groups_.begin(); it != child_process_groups_.end();
+				++it) {
 			ProcessGroup *processGroup(*it);
 			processGroup->stopProcessing(timeScheduler, eventScheduler);
 		}
-	}
-	catch (std::exception &exception)
-	{
-		_logger->log_debug("Caught Exception %s", exception.what());
+	} catch (std::exception &exception) {
+		logger_->log_debug("Caught Exception %s", exception.what());
 		throw;
-	}
-	catch (...)
-	{
-		_logger->log_debug("Caught Exception during process group stop processing");
+	} catch (...) {
+		logger_->log_debug(
+				"Caught Exception during process group stop processing");
 		throw;
 	}
 }
 
-Processor *ProcessGroup::findProcessor(uuid_t uuid)
-{
+Processor *ProcessGroup::findProcessor(uuid_t uuid) {
 
 	Processor *ret = NULL;
 	// std::lock_guard<std::mutex> lock(_mtx);
 
-	for (std::set<Processor *>::iterator it = _processors.begin(); it != _processors.end(); ++it)
-	{
-		Processor *processor(*it);
-		_logger->log_info("find processor %s",processor->getName().c_str());
+	for(auto processor : processors_){
+		logger_->log_info("find processor %s", processor->getName().c_str());
 		uuid_t processorUUID;
-		if (processor->getUUID(processorUUID) && uuid_compare(processorUUID, uuid) == 0)
-			return processor;
+
+		if (processor->getUUID(processorUUID)) {
+
+			char uuid_str[37]; // ex. "1b4e28ba-2fa1-11d2-883f-0016d3cca427" + "\0"
+			uuid_unparse_lower(processorUUID, uuid_str);
+			std::string processorUUIDstr = uuid_str;
+			uuid_unparse_lower(uuid, uuid_str);
+			std::string uuidStr = uuid_str;
+			if (processorUUIDstr == uuidStr) {
+				return processor;
+			}
+		}
+
 	}
+	for(auto processGroup : child_process_groups_){
 
-	for (std::set<ProcessGroup *>::iterator it = _childProcessGroups.begin(); it != _childProcessGroups.end(); ++it)
-	{
-
-		ProcessGroup *processGroup(*it);
-		_logger->log_info("find processor child %s",processGroup->getName().c_str());
+		logger_->log_info("find processor child %s",
+				processGroup->getName().c_str());
 		Processor *processor = processGroup->findProcessor(uuid);
 		if (processor)
 			return processor;
@@ -228,21 +211,17 @@ Processor *ProcessGroup::findProcessor(uuid_t uuid)
 	return ret;
 }
 
-Processor *ProcessGroup::findProcessor(std::string processorName)
-{
+Processor *ProcessGroup::findProcessor(std::string processorName) {
 	Processor *ret = NULL;
 
-	for (std::set<Processor *>::iterator it = _processors.begin(); it != _processors.end(); ++it)
-	{
-		Processor *processor(*it);
-		_logger->log_debug("Current processor is %s", processor->getName().c_str());
+	for(auto processor : processors_){
+		logger_->log_debug("Current processor is %s",
+				processor->getName().c_str());
 		if (processor->getName() == processorName)
 			return processor;
 	}
 
-	for (std::set<ProcessGroup *>::iterator it = _childProcessGroups.begin(); it != _childProcessGroups.end(); ++it)
-	{
-		ProcessGroup *processGroup(*it);
+	for(auto processGroup : child_process_groups_){
 		Processor *processor = processGroup->findProcessor(processorName);
 		if (processor)
 			return processor;
@@ -251,38 +230,32 @@ Processor *ProcessGroup::findProcessor(std::string processorName)
 	return ret;
 }
 
-void ProcessGroup::updatePropertyValue(std::string processorName, std::string propertyName, std::string propertyValue)
-{
-	std::lock_guard<std::mutex> lock(_mtx);
+void ProcessGroup::updatePropertyValue(std::string processorName,
+		std::string propertyName, std::string propertyValue) {
+	std::lock_guard<std::mutex> lock(mtx_);
 
-	for (std::set<Processor *>::iterator it = _processors.begin(); it != _processors.end(); ++it)
-	{
-		Processor *processor(*it);
-		if (processor->getName() == processorName)
-		{
+	for(auto processor : processors_){
+		if (processor->getName() == processorName) {
 			processor->setProperty(propertyName, propertyValue);
 		}
 	}
 
-	for (std::set<ProcessGroup *>::iterator it = _childProcessGroups.begin(); it != _childProcessGroups.end(); ++it)
-	{
-		ProcessGroup *processGroup(*it);
-		processGroup->updatePropertyValue(processorName, propertyName, propertyValue);
+	for(auto processGroup : child_process_groups_){
+		processGroup->updatePropertyValue(processorName, propertyName,
+				propertyValue);
 	}
 
 	return;
 }
 
-void ProcessGroup::addConnection(Connection *connection)
-{
-	std::lock_guard<std::mutex> lock(_mtx);
+void ProcessGroup::addConnection(Connection *connection) {
+	std::lock_guard<std::mutex> lock(mtx_);
 
-	if (_connections.find(connection) == _connections.end())
-	{
+	if (connections_.find(connection) == connections_.end()) {
 		// We do not have the same connection in this process group yet
-		_connections.insert(connection);
-		_logger->log_info("Add connection %s into process group %s",
-				connection->getName().c_str(), _name.c_str());
+		connections_.insert(connection);
+		logger_->log_info("Add connection %s into process group %s",
+				connection->getName().c_str(), name_.c_str());
 		uuid_t sourceUUID;
 		Processor *source = NULL;
 		connection->getSourceProcessorUUID(sourceUUID);
@@ -298,16 +271,14 @@ void ProcessGroup::addConnection(Connection *connection)
 	}
 }
 
-void ProcessGroup::removeConnection(Connection *connection)
-{
-	std::lock_guard<std::mutex> lock(_mtx);
+void ProcessGroup::removeConnection(Connection *connection) {
+	std::lock_guard<std::mutex> lock(mtx_);
 
-	if (_connections.find(connection) != _connections.end())
-	{
+	if (connections_.find(connection) != connections_.end()) {
 		// We do not have the same connection in this process group yet
-		_connections.erase(connection);
-		_logger->log_info("Remove connection %s into process group %s",
-				connection->getName().c_str(), _name.c_str());
+		connections_.erase(connection);
+		logger_->log_info("Remove connection %s into process group %s",
+				connection->getName().c_str(), name_.c_str());
 		uuid_t sourceUUID;
 		Processor *source = NULL;
 		connection->getSourceProcessorUUID(sourceUUID);

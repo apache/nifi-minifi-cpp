@@ -17,11 +17,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "TimeUtil.h"
 #include "ExecuteProcess.h"
 #include "ProcessContext.h"
 #include "ProcessSession.h"
 #include <cstring>
+#include "utils/StringUtils.h"
+#include "utils/TimeUtil.h"
 
 const std::string ExecuteProcess::ProcessorName("ExecuteProcess");
 Property ExecuteProcess::Command("Command", "Specifies the command to be executed; if just the name of an executable is provided, it must be in the user's environment PATH.", "");
@@ -78,7 +79,7 @@ void ExecuteProcess::onTrigger(ProcessContext *context, ProcessSession *session)
 	}
 	if (context->getProperty(RedirectErrorStream.getName(), value))
 	{
-		Property::StringToBool(value, _redirectErrorStream);
+		StringUtils::StringToBool(value, _redirectErrorStream);
 	}
 	this->_fullCommand = _command + " " + _commandArgument;
 	if (_fullCommand.length() == 0)
@@ -91,12 +92,12 @@ void ExecuteProcess::onTrigger(ProcessContext *context, ProcessSession *session)
 		// change to working directory
 		if (chdir(_workingDir.c_str()) != 0)
 		{
-			_logger->log_error("Execute Command can not chdir %s", _workingDir.c_str());
+			logger_->log_error("Execute Command can not chdir %s", _workingDir.c_str());
 			yield();
 			return;
 		}
 	}
-	_logger->log_info("Execute Command %s", _fullCommand.c_str());
+	logger_->log_info("Execute Command %s", _fullCommand.c_str());
 	// split the command into array
 	char cstr[_fullCommand.length()+1];
 	std::strcpy(cstr, _fullCommand.c_str());
@@ -125,7 +126,7 @@ void ExecuteProcess::onTrigger(ProcessContext *context, ProcessSession *session)
 		switch (_pid = fork())
 		{
 		case -1:
-			_logger->log_error("Execute Process fork failed");
+			logger_->log_error("Execute Process fork failed");
 			_processRunning = false;
 			close(_pipefd[0]);
 			close(_pipefd[1]);
@@ -153,7 +154,7 @@ void ExecuteProcess::onTrigger(ProcessContext *context, ProcessSession *session)
 					int numRead = read(_pipefd[0], buffer, sizeof(buffer));
 					if (numRead <= 0)
 						break;
-					_logger->log_info("Execute Command Respond %d", numRead);
+					logger_->log_info("Execute Command Respond %d", numRead);
 					ExecuteProcess::WriteCallback callback(buffer, numRead);
 					FlowFileRecord *flowFile = session->create();
 					if (!flowFile)
@@ -178,7 +179,7 @@ void ExecuteProcess::onTrigger(ProcessContext *context, ProcessSession *session)
 					{
 						if (totalRead > 0)
 						{
-							_logger->log_info("Execute Command Respond %d", totalRead);
+							logger_->log_info("Execute Command Respond %d", totalRead);
 							// child exits and close the pipe
 							ExecuteProcess::WriteCallback callback(buffer, totalRead);
 							if (!flowFile)
@@ -203,7 +204,7 @@ void ExecuteProcess::onTrigger(ProcessContext *context, ProcessSession *session)
 						if (numRead == (sizeof(buffer) - totalRead))
 						{
 							// we reach the max buffer size
-							_logger->log_info("Execute Command Max Respond %d", sizeof(buffer));
+							logger_->log_info("Execute Command Max Respond %d", sizeof(buffer));
 							ExecuteProcess::WriteCallback callback(buffer, sizeof(buffer));
 							if (!flowFile)
 							{
@@ -234,11 +235,11 @@ void ExecuteProcess::onTrigger(ProcessContext *context, ProcessSession *session)
 			died= wait(&status);
 			if (WIFEXITED(status))
 			{
-				_logger->log_info("Execute Command Complete %s status %d pid %d", _fullCommand.c_str(), WEXITSTATUS(status), _pid);
+				logger_->log_info("Execute Command Complete %s status %d pid %d", _fullCommand.c_str(), WEXITSTATUS(status), _pid);
 			}
 			else
 			{
-				_logger->log_info("Execute Command Complete %s status %d pid %d", _fullCommand.c_str(), WTERMSIG(status), _pid);
+				logger_->log_info("Execute Command Complete %s status %d pid %d", _fullCommand.c_str(), WTERMSIG(status), _pid);
 			}
 
 			close(_pipefd[0]);

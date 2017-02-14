@@ -20,6 +20,7 @@
 #ifndef __REMOTE_PROCESSOR_GROUP_PORT_H__
 #define __REMOTE_PROCESSOR_GROUP_PORT_H__
 
+#include <memory>
 #include "FlowFileRecord.h"
 #include "Processor.h"
 #include "ProcessSession.h"
@@ -34,18 +35,16 @@ public:
 	 * Create a new processor
 	 */
 	RemoteProcessorGroupPort(std::string name, uuid_t uuid = NULL)
-	: Processor(name, uuid)
+	: Processor(name, uuid), direction_(SEND),transmitting_(false), peer_()
 	{
-		_logger = Logger::getLogger();
-		_peer = new Site2SitePeer("", 9999);
-		_protocol = new Site2SiteClientProtocol(_peer);
-		_protocol->setPortId(uuid);
+	    logger_ = Logger::getLogger();
+	    protocol_ = std::unique_ptr<Site2SiteClientProtocol>(new Site2SiteClientProtocol(0));
+	    protocol_->setPortId(uuid);
 	}
 	//! Destructor
 	virtual ~RemoteProcessorGroupPort()
 	{
-		delete _protocol;
-		delete _peer;
+
 	}
 	//! Processor Name
 	static const std::string ProcessorName;
@@ -62,34 +61,34 @@ public:
 	//! Set Direction
 	void setDirection(TransferDirection direction)
 	{
-		_direction = direction;
-		if (_direction == RECEIVE)
+		direction_ = direction;
+		if (direction_ == RECEIVE)
 			this->setTriggerWhenEmpty(true);
 	}
 	//! Set Timeout
 	void setTimeOut(uint64_t timeout)
 	{
-		_protocol->setTimeOut(timeout);
+		protocol_->setTimeOut(timeout);
 	}
 	//! SetTransmitting
 	void setTransmitting(bool val)
 	{
-		_transmitting = val;
+		transmitting_ = val;
 	}
 
 protected:
 
 private:
 	//! Logger
-	Logger *_logger;
-	//! Peer Connection
-	Site2SitePeer *_peer;
+	Logger *logger_;
+	
+	Site2SitePeer peer_;
 	//! Peer Protocol
-	Site2SiteClientProtocol *_protocol;
+	std::unique_ptr<Site2SiteClientProtocol> protocol_;
 	//! Transaction Direction
-	TransferDirection _direction;
+	TransferDirection direction_;
 	//! Transmitting
-	bool _transmitting;
+	bool transmitting_;
 
 };
 

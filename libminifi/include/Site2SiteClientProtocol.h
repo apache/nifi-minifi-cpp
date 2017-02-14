@@ -41,6 +41,7 @@
 #include "FlowFileRecord.h"
 #include "ProcessContext.h"
 #include "ProcessSession.h"
+#include "io/CRCStream.h"
 
 //! Resource Negotiated Status Code
 #define RESOURCE_OK 20
@@ -63,7 +64,6 @@ typedef enum {
 	 * */
 	RECEIVE
 } TransferDirection;
-
 
 //! Peer State
 typedef enum {
@@ -116,55 +116,50 @@ typedef enum {
 
 //! Request Type
 typedef enum {
-    NEGOTIATE_FLOWFILE_CODEC = 0,
-    REQUEST_PEER_LIST,
-    SEND_FLOWFILES,
-    RECEIVE_FLOWFILES,
-    SHUTDOWN,
+	NEGOTIATE_FLOWFILE_CODEC = 0,
+	REQUEST_PEER_LIST,
+	SEND_FLOWFILES,
+	RECEIVE_FLOWFILES,
+	SHUTDOWN,
 	MAX_REQUEST_TYPE
 } RequestType;
 
 //! Request Type Str
-static const char *RequestTypeStr[MAX_REQUEST_TYPE] =
-{
-		"NEGOTIATE_FLOWFILE_CODEC",
-		"REQUEST_PEER_LIST",
-		"SEND_FLOWFILES",
-		"RECEIVE_FLOWFILES",
-		"SHUTDOWN"
-};
+static const char *RequestTypeStr[MAX_REQUEST_TYPE] = {
+		"NEGOTIATE_FLOWFILE_CODEC", "REQUEST_PEER_LIST", "SEND_FLOWFILES",
+		"RECEIVE_FLOWFILES", "SHUTDOWN" };
 
 //! Respond Code
 typedef enum {
-		RESERVED = 0,
-		// ResponseCode, so that we can indicate a 0 followed by some other bytes
+	RESERVED = 0,
+	// ResponseCode, so that we can indicate a 0 followed by some other bytes
 
-		// handshaking properties
-		PROPERTIES_OK = 1,
-		UNKNOWN_PROPERTY_NAME = 230,
-		ILLEGAL_PROPERTY_VALUE = 231,
-		MISSING_PROPERTY = 232,
-		// transaction indicators
-		CONTINUE_TRANSACTION = 10,
-		FINISH_TRANSACTION = 11,
-		CONFIRM_TRANSACTION = 12, // "Explanation" of this code is the checksum
-		TRANSACTION_FINISHED = 13,
-		TRANSACTION_FINISHED_BUT_DESTINATION_FULL = 14,
-		CANCEL_TRANSACTION = 15,
-		BAD_CHECKSUM = 19,
-		// data availability indicators
-		MORE_DATA = 20,
-		NO_MORE_DATA = 21,
-		// port state indicators
-		UNKNOWN_PORT = 200,
-		PORT_NOT_IN_VALID_STATE = 201,
-		PORTS_DESTINATION_FULL = 202,
-		// authorization
-		UNAUTHORIZED = 240,
-		// error indicators
-		ABORT = 250,
-		UNRECOGNIZED_RESPONSE_CODE = 254,
-		END_OF_STREAM = 255
+	// handshaking properties
+	PROPERTIES_OK = 1,
+	UNKNOWN_PROPERTY_NAME = 230,
+	ILLEGAL_PROPERTY_VALUE = 231,
+	MISSING_PROPERTY = 232,
+	// transaction indicators
+	CONTINUE_TRANSACTION = 10,
+	FINISH_TRANSACTION = 11,
+	CONFIRM_TRANSACTION = 12, // "Explanation" of this code is the checksum
+	TRANSACTION_FINISHED = 13,
+	TRANSACTION_FINISHED_BUT_DESTINATION_FULL = 14,
+	CANCEL_TRANSACTION = 15,
+	BAD_CHECKSUM = 19,
+	// data availability indicators
+	MORE_DATA = 20,
+	NO_MORE_DATA = 21,
+	// port state indicators
+	UNKNOWN_PORT = 200,
+	PORT_NOT_IN_VALID_STATE = 201,
+	PORTS_DESTINATION_FULL = 202,
+	// authorization
+	UNAUTHORIZED = 240,
+	// error indicators
+	ABORT = 250,
+	UNRECOGNIZED_RESPONSE_CODE = 254,
+	END_OF_STREAM = 255
 } RespondCode;
 
 //! Respond Code Class
@@ -175,30 +170,26 @@ typedef struct {
 } RespondCodeContext;
 
 //! Respond Code Context
-static RespondCodeContext respondCodeContext[]  =
-{
-		{RESERVED, "Reserved for Future Use", false},
-		{PROPERTIES_OK, "Properties OK", false},
-		{UNKNOWN_PROPERTY_NAME, "Unknown Property Name", true},
-		{ILLEGAL_PROPERTY_VALUE, "Illegal Property Value", true},
-		{MISSING_PROPERTY, "Missing Property", true},
-		{CONTINUE_TRANSACTION, "Continue Transaction", false},
-		{FINISH_TRANSACTION, "Finish Transaction", false},
-		{CONFIRM_TRANSACTION, "Confirm Transaction", true},
-		{TRANSACTION_FINISHED, "Transaction Finished", false},
-		{TRANSACTION_FINISHED_BUT_DESTINATION_FULL, "Transaction Finished But Destination is Full", false},
-		{CANCEL_TRANSACTION, "Cancel Transaction", true},
-		{BAD_CHECKSUM, "Bad Checksum", false},
-		{MORE_DATA, "More Data Exists", false},
-		{NO_MORE_DATA, "No More Data Exists", false},
-		{UNKNOWN_PORT, "Unknown Port", false},
-	    {PORT_NOT_IN_VALID_STATE, "Port Not in a Valid State", true},
-		{PORTS_DESTINATION_FULL, "Port's Destination is Full", false},
-		{UNAUTHORIZED, "User Not Authorized", true},
-		{ABORT, "Abort", true},
-		{UNRECOGNIZED_RESPONSE_CODE, "Unrecognized Response Code", false},
-		{END_OF_STREAM, "End of Stream", false}
-};
+static RespondCodeContext respondCodeContext[] = { { RESERVED,
+		"Reserved for Future Use", false }, { PROPERTIES_OK, "Properties OK",
+		false }, { UNKNOWN_PROPERTY_NAME, "Unknown Property Name", true }, {
+		ILLEGAL_PROPERTY_VALUE, "Illegal Property Value", true }, {
+		MISSING_PROPERTY, "Missing Property", true }, { CONTINUE_TRANSACTION,
+		"Continue Transaction", false }, { FINISH_TRANSACTION,
+		"Finish Transaction", false }, { CONFIRM_TRANSACTION,
+		"Confirm Transaction", true }, { TRANSACTION_FINISHED,
+		"Transaction Finished", false }, {
+		TRANSACTION_FINISHED_BUT_DESTINATION_FULL,
+		"Transaction Finished But Destination is Full", false }, {
+		CANCEL_TRANSACTION, "Cancel Transaction", true }, { BAD_CHECKSUM,
+		"Bad Checksum", false }, { MORE_DATA, "More Data Exists", false }, {
+		NO_MORE_DATA, "No More Data Exists", false }, { UNKNOWN_PORT,
+		"Unknown Port", false }, { PORT_NOT_IN_VALID_STATE,
+		"Port Not in a Valid State", true }, { PORTS_DESTINATION_FULL,
+		"Port's Destination is Full", false }, { UNAUTHORIZED,
+		"User Not Authorized", true }, { ABORT, "Abort", true }, {
+		UNRECOGNIZED_RESPONSE_CODE, "Unrecognized Response Code", false }, {
+		END_OF_STREAM, "End of Stream", false } };
 
 //! Respond Code Sequence Pattern
 static const uint8_t CODE_SEQUENCE_VALUE_1 = (uint8_t) 'R';
@@ -209,94 +200,92 @@ static const uint8_t CODE_SEQUENCE_VALUE_2 = (uint8_t) 'C';
  * Protocol.
  */
 typedef enum {
-		/**
-		 * Boolean value indicating whether or not the contents of a FlowFile should
-		 * be GZipped when transferred.
-		 */
-		GZIP,
-		/**
-		 * The unique identifier of the port to communicate with
-		 */
-		PORT_IDENTIFIER,
-		/**
-		 * Indicates the number of milliseconds after the request was made that the
-		 * client will wait for a response. If no response has been received by the
-		 * time this value expires, the server can move on without attempting to
-		 * service the request because the client will have already disconnected.
-		 */
-		REQUEST_EXPIRATION_MILLIS,
-		/**
-		 * The preferred number of FlowFiles that the server should send to the
-		 * client when pulling data. This property was introduced in version 5 of
-		 * the protocol.
-		 */
-		BATCH_COUNT,
-		/**
-		 * The preferred number of bytes that the server should send to the client
-		 * when pulling data. This property was introduced in version 5 of the
-		 * protocol.
-		 */
-		BATCH_SIZE,
-		/**
-		 * The preferred amount of time that the server should send data to the
-		 * client when pulling data. This property was introduced in version 5 of
-		 * the protocol. Value is in milliseconds.
-		 */
-		BATCH_DURATION,
-		MAX_HANDSHAKE_PROPERTY
+	/**
+	 * Boolean value indicating whether or not the contents of a FlowFile should
+	 * be GZipped when transferred.
+	 */
+	GZIP,
+	/**
+	 * The unique identifier of the port to communicate with
+	 */
+	PORT_IDENTIFIER,
+	/**
+	 * Indicates the number of milliseconds after the request was made that the
+	 * client will wait for a response. If no response has been received by the
+	 * time this value expires, the server can move on without attempting to
+	 * service the request because the client will have already disconnected.
+	 */
+	REQUEST_EXPIRATION_MILLIS,
+	/**
+	 * The preferred number of FlowFiles that the server should send to the
+	 * client when pulling data. This property was introduced in version 5 of
+	 * the protocol.
+	 */
+	BATCH_COUNT,
+	/**
+	 * The preferred number of bytes that the server should send to the client
+	 * when pulling data. This property was introduced in version 5 of the
+	 * protocol.
+	 */
+	BATCH_SIZE,
+	/**
+	 * The preferred amount of time that the server should send data to the
+	 * client when pulling data. This property was introduced in version 5 of
+	 * the protocol. Value is in milliseconds.
+	 */
+	BATCH_DURATION, MAX_HANDSHAKE_PROPERTY
 } HandshakeProperty;
 
 //! HandShakeProperty Str
-static const char *HandShakePropertyStr[MAX_HANDSHAKE_PROPERTY] =
-{
-		/**
-		 * Boolean value indicating whether or not the contents of a FlowFile should
-		 * be GZipped when transferred.
-		 */
-		"GZIP",
-		/**
-		 * The unique identifier of the port to communicate with
-		 */
-		"PORT_IDENTIFIER",
-		/**
-		 * Indicates the number of milliseconds after the request was made that the
-		 * client will wait for a response. If no response has been received by the
-		 * time this value expires, the server can move on without attempting to
-		 * service the request because the client will have already disconnected.
-		 */
-		"REQUEST_EXPIRATION_MILLIS",
-		/**
-		 * The preferred number of FlowFiles that the server should send to the
-		 * client when pulling data. This property was introduced in version 5 of
-		 * the protocol.
-		 */
-		"BATCH_COUNT",
-		/**
-		 * The preferred number of bytes that the server should send to the client
-		 * when pulling data. This property was introduced in version 5 of the
-		 * protocol.
-		 */
-		"BATCH_SIZE",
-		/**
-		 * The preferred amount of time that the server should send data to the
-		 * client when pulling data. This property was introduced in version 5 of
-		 * the protocol. Value is in milliseconds.
-		 */
-		"BATCH_DURATION"
-};
+static const char *HandShakePropertyStr[MAX_HANDSHAKE_PROPERTY] = {
+/**
+ * Boolean value indicating whether or not the contents of a FlowFile should
+ * be GZipped when transferred.
+ */
+"GZIP",
+/**
+ * The unique identifier of the port to communicate with
+ */
+"PORT_IDENTIFIER",
+/**
+ * Indicates the number of milliseconds after the request was made that the
+ * client will wait for a response. If no response has been received by the
+ * time this value expires, the server can move on without attempting to
+ * service the request because the client will have already disconnected.
+ */
+"REQUEST_EXPIRATION_MILLIS",
+/**
+ * The preferred number of FlowFiles that the server should send to the
+ * client when pulling data. This property was introduced in version 5 of
+ * the protocol.
+ */
+"BATCH_COUNT",
+/**
+ * The preferred number of bytes that the server should send to the client
+ * when pulling data. This property was introduced in version 5 of the
+ * protocol.
+ */
+"BATCH_SIZE",
+/**
+ * The preferred amount of time that the server should send data to the
+ * client when pulling data. This property was introduced in version 5 of
+ * the protocol. Value is in milliseconds.
+ */
+"BATCH_DURATION" };
 
 class Site2SiteClientProtocol;
 
 //! Transaction Class
-class Transaction
-{
+class Transaction {
 	friend class Site2SiteClientProtocol;
 public:
 	//! Constructor
 	/*!
 	 * Create a new transaction
 	 */
-	Transaction(TransferDirection direction) {
+	explicit Transaction(TransferDirection direction,
+			CRCStream<Site2SitePeer> &stream) :
+			crcStream(std::move(stream)) {
 		_state = TRANSACTION_STARTED;
 		_direction = direction;
 		_dataAvailable = false;
@@ -311,48 +300,50 @@ public:
 		_uuidStr = uuidStr;
 	}
 	//! Destructor
-	virtual ~Transaction()
-	{
+	virtual ~Transaction() {
 	}
 	//! getUUIDStr
-	std::string getUUIDStr()
-	{
+	std::string getUUIDStr() {
 		return _uuidStr;
 	}
 	//! getState
-	TransactionState getState()
-	{
+	TransactionState getState() {
 		return _state;
 	}
 	//! isDataAvailable
-	bool isDataAvailable()
-	{
+	bool isDataAvailable() {
 		return _dataAvailable;
 	}
 	//! setDataAvailable()
-	void setDataAvailable(bool value)
-	{
+	void setDataAvailable(bool value) {
 		_dataAvailable = value;
 	}
 	//! getDirection
-	TransferDirection getDirection()
-	{
+	TransferDirection getDirection() {
 		return _direction;
 	}
 	//! getCRC
-	long getCRC()
-	{
-		return _crc.getCRC();
+	long getCRC() {
+		return crcStream.getCRC();
 	}
 	//! updateCRC
-	void updateCRC(uint8_t *buffer, uint32_t length)
-	{
-		_crc.update(buffer, length);
+	void updateCRC(uint8_t *buffer, uint32_t length) {
+		crcStream.updateCRC(buffer, length);
 	}
+
+	CRCStream<Site2SitePeer> &getStream() {
+		return crcStream;
+	}
+	
+	
+	Transaction(const Transaction &parent) = delete;
+	Transaction &operator=(const Transaction &parent) = delete;
 
 protected:
 
 private:
+
+	CRCStream<Site2SitePeer> crcStream;
 	//! Transaction State
 	TransactionState _state;
 	//! Transaction Direction
@@ -367,21 +358,14 @@ private:
 	int _transfers;
 	//! Number of content bytes
 	uint64_t _bytes;
-	//! CRC32
-	CRC32 _crc;
 
-	// Prevent default copy constructor and assignment operation
-	// Only support pass by reference or pointer
-	Transaction(const Transaction &parent);
-	Transaction &operator=(const Transaction &parent);
 };
 
 /**
  * Represents a piece of data that is to be sent to or that was received from a
  * NiFi instance.
  */
-class DataPacket
-{
+class DataPacket {
 public:
 	DataPacket(Site2SiteClientProtocol *protocol, Transaction *transaction,
 			std::map<std::string, std::string> attributes) {
@@ -397,17 +381,16 @@ public:
 };
 
 //! Site2SiteClientProtocol Class
-class Site2SiteClientProtocol
-{
+class Site2SiteClientProtocol {
 public:
 	//! Constructor
 	/*!
 	 * Create a new control protocol
 	 */
 	Site2SiteClientProtocol(Site2SitePeer *peer) {
-		_logger = Logger::getLogger();
-		_configure = Configure::getConfigure();
-		_peer = peer;
+		logger_ = Logger::getLogger();
+		configure_ = Configure::getConfigure();
+		peer_ = peer;
 		_batchSize = 0;
 		_batchCount = 0;
 		_batchDuration = 0;
@@ -426,33 +409,33 @@ public:
 		_currentCodecVersionIndex = 0;
 	}
 	//! Destructor
-	virtual ~Site2SiteClientProtocol()
-	{
+	virtual ~Site2SiteClientProtocol() {
 	}
 
 public:
 	//! setBatchSize
-	void setBatchSize(uint64_t size)
-	{
+	void setBatchSize(uint64_t size) {
 		_batchSize = size;
 	}
 	//! setBatchCount
-	void setBatchCount(uint64_t count)
-	{
+	void setBatchCount(uint64_t count) {
 		_batchCount = count;
 	}
 	//! setBatchDuration
-	void setBatchDuration(uint64_t duration)
-	{
+	void setBatchDuration(uint64_t duration) {
 		_batchDuration = duration;
 	}
 	//! setTimeOut
-	void setTimeOut(uint64_t time)
-	{
+	void setTimeOut(uint64_t time) {
 		_timeOut = time;
-		if (_peer)
-			_peer->setTimeOut(time);
+		if (peer_)
+			peer_->setTimeOut(time);
 
+	}
+	
+	void setPeer(Site2SitePeer *peer)
+	{
+	  peer_ = peer;
 	}
 	/**
 	 * Provides a reference to the time out
@@ -470,21 +453,18 @@ public:
 		return _portIdStr;
 	}
 	//! setPortId
-	void setPortId(uuid_t id)
-	{
+	void setPortId(uuid_t id) {
 		uuid_copy(_portId, id);
 		char idStr[37];
 		uuid_unparse_lower(id, idStr);
 		_portIdStr = idStr;
 	}
 	//! getResourceName
-	std::string getResourceName()
-	{
+	std::string getResourceName() {
 		return "SocketFlowFileProtocol";
 	}
 	//! getCodecResourceName
-	std::string getCodecResourceName()
-	{
+	std::string getCodecResourceName() {
 		return "StandardFlowFileCodec";
 	}
 	//! bootstrap the protocol to the ready for transaction state by going through the state machine
@@ -510,31 +490,31 @@ public:
 	//! write respond
 	int writeRespond(RespondCode code, std::string message);
 	//! getRespondCodeContext
-	RespondCodeContext *getRespondCodeContext(RespondCode code)
-	{
-		for (unsigned int i = 0; i < sizeof(respondCodeContext)/sizeof(RespondCodeContext); i++)
-		{
-			if (respondCodeContext[i].code == code)
-			{
+	RespondCodeContext *getRespondCodeContext(RespondCode code) {
+		for (unsigned int i = 0;
+				i < sizeof(respondCodeContext) / sizeof(RespondCodeContext);
+				i++) {
+			if (respondCodeContext[i].code == code) {
 				return &respondCodeContext[i];
 			}
 		}
 		return NULL;
 	}
 	//! getPeer
-	Site2SitePeer *getPeer()
-	{
-		return _peer;
+	Site2SitePeer *getPeer() {
+		return peer_;
 	}
 	//! Creation of a new transaction, return the transaction ID if success,
 	//! Return NULL when any error occurs
-	Transaction *createTransaction(std::string &transactionID, TransferDirection direction);
+	Transaction *createTransaction(std::string &transactionID,
+			TransferDirection direction);
 	//! Receive the data packet from the transaction
 	//! Return false when any error occurs
 	bool receive(std::string transactionID, DataPacket *packet, bool &eof);
 	//! Send the data packet from the transaction
 	//! Return false when any error occurs
-	bool send(std::string transactionID, DataPacket *packet, FlowFileRecord *flowFile, ProcessSession *session);
+	bool send(std::string transactionID, DataPacket *packet,
+			FlowFileRecord *flowFile, ProcessSession *session);
 	//! Confirm the data that was sent or received by comparing CRC32's of the data sent and the data received.
 	bool confirm(std::string transactionID);
 	//! Cancel the transaction
@@ -550,22 +530,22 @@ public:
 	//! deleteTransaction
 	void deleteTransaction(std::string transactionID);
 	//! Nest Callback Class for write stream
-	class WriteCallback : public OutputStreamCallback
-	{
-		public:
-		WriteCallback(DataPacket *packet)
-		: _packet(packet) {}
+	class WriteCallback: public OutputStreamCallback {
+	public:
+		WriteCallback(DataPacket *packet) :
+				_packet(packet) {
+		}
 		DataPacket *_packet;
 		void process(std::ofstream *stream) {
 			uint8_t buffer[8192];
 			int len = _packet->_size;
-			while (len > 0)
-			{
+			while (len > 0) {
 				int size = std::min(len, (int) sizeof(buffer));
-				int ret = _packet->_protocol->_peer->readData(buffer, size, &_packet->_transaction->_crc);
-				if (ret != size)
-				{
-					_packet->_protocol->_logger->log_error("Site2Site Receive Flow Size %d Failed %d", size, ret);
+				int ret = _packet->_transaction->getStream().readData(buffer,size);
+				if (ret != size) {
+					_packet->_protocol->logger_->log_error(
+							"Site2Site Receive Flow Size %d Failed %d", size,
+							ret);
 					break;
 				}
 				stream->write((const char *) buffer, size);
@@ -574,26 +554,26 @@ public:
 		}
 	};
 	//! Nest Callback Class for read stream
-	class ReadCallback : public InputStreamCallback
-	{
-		public:
-		ReadCallback(DataPacket *packet)
-		: _packet(packet) {}
+	class ReadCallback: public InputStreamCallback {
+	public:
+		ReadCallback(DataPacket *packet) :
+				_packet(packet) {
+		}
 		DataPacket *_packet;
 		void process(std::ifstream *stream) {
 			_packet->_size = 0;
 			uint8_t buffer[8192];
 			int readSize;
-			while (stream->good())
-			{
-				if (!stream->read((char *)buffer, 8192))
+			while (stream->good()) {
+				if (!stream->read((char *) buffer, 8192))
 					readSize = stream->gcount();
 				else
 					readSize = 8192;
-				int ret = _packet->_protocol->_peer->write(buffer, readSize, &_packet->_transaction->_crc);
-				if (ret != readSize)
-				{
-					_packet->_protocol->_logger->log_error("Site2Site Send Flow Size %d Failed %d", readSize, ret);
+				int ret = _packet->_transaction->getStream().writeData(buffer,readSize);
+				if (ret != readSize) {
+					_packet->_protocol->logger_->log_error(
+							"Site2Site Send Flow Size %d Failed %d", readSize,
+							ret);
 					break;
 				}
 				_packet->_size += readSize;
@@ -604,12 +584,13 @@ public:
 protected:
 
 private:
+
 	//! Mutex for protection
 	std::mutex _mtx;
 	//! Logger
-	Logger *_logger;
+	Logger *logger_;
 	//! Configure
-	Configure *_configure;
+	Configure *configure_;
 	//! Batch Count
 	std::atomic<uint64_t> _batchCount;
 	//! Batch Size
@@ -619,7 +600,7 @@ private:
 	//! Timeout in msec
 	std::atomic<uint64_t> _timeOut;
 	//! Peer Connection
-	Site2SitePeer *_peer;
+	Site2SitePeer *peer_;
 	//! portId
 	uuid_t _portId;
 	//! portIDStr

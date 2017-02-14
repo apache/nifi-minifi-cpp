@@ -35,7 +35,7 @@ public:
 	AppendHostInfo(std::string name, uuid_t uuid = NULL)
 	: Processor(name, uuid)
 	{
-		_logger = Logger::getLogger();
+		logger_ = Logger::getLogger();
 	}
 	//! Destructor
 	virtual ~AppendHostInfo()
@@ -61,7 +61,7 @@ protected:
 
 private:
 	//! Logger
-	Logger *_logger;
+	Logger *logger_;
 };
 
 #endif

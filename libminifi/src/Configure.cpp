@@ -18,8 +18,9 @@
  * limitations under the License.
  */
 #include "Configure.h"
+#include "utils/StringUtils.h"
 
-Configure *Configure::_configure(NULL);
+Configure *Configure::configure_(NULL);
 const char *Configure::nifi_flow_configuration_file = "nifi.flow.configuration.file";
 const char *Configure::nifi_administrative_yield_duration = "nifi.administrative.yield.duration";
 const char *Configure::nifi_bored_yield_duration = "nifi.bored.yield.duration";
@@ -42,7 +43,7 @@ const char *Configure::nifi_security_client_ca_certificate = "nifi.security.clie
 bool Configure::get(std::string key, std::string &value)
 {
 	std::lock_guard<std::mutex> lock(_mtx);
-	std::map<std::string,std::string>::iterator it = _properties.find(key);
+	auto it = _properties.find(key);
 
 	if (it != _properties.end())
 	{
@@ -55,25 +56,6 @@ bool Configure::get(std::string key, std::string &value)
 	}
 }
 
-// Trim String utils
-std::string Configure::trim(const std::string& s)
-{
-    return trimRight(trimLeft(s));
-}
-
-std::string Configure::trimLeft(const std::string& s)
-{
-	const char *WHITESPACE = " \n\r\t";
-    size_t startpos = s.find_first_not_of(WHITESPACE);
-    return (startpos == std::string::npos) ? "" : s.substr(startpos);
-}
-
-std::string Configure::trimRight(const std::string& s)
-{
-	const char *WHITESPACE = " \n\r\t";
-    size_t endpos = s.find_last_not_of(WHITESPACE);
-    return (endpos == std::string::npos) ? "" : s.substr(0, endpos+1);
-}
 
 //! Parse one line in configure file like key=value
 void Configure::parseConfigureFileLine(char *buf)
@@ -109,8 +91,8 @@ void Configure::parseConfigureFileLine(char *buf)
     }
 
     std::string value = equal;
-    key = trimRight(key);
-    value = trimRight(value);
+    key = StringUtils::trimRight(key);
+    value = StringUtils::trimRight(value);
     set(key, value);
 }
 
@@ -124,7 +106,7 @@ void Configure::loadConfigureFile(const char *fileName)
         // perform a naive determination if this is a relative path
         if (fileName[0] != '/')
         {
-            adjustedFilename = adjustedFilename + _configure->getHome() + "/" + fileName;
+            adjustedFilename = adjustedFilename + configure_->getHome() + "/" + fileName;
         }
         else
         {
@@ -134,12 +116,12 @@ void Configure::loadConfigureFile(const char *fileName)
     char *path = NULL;
     char full_path[PATH_MAX];
     path = realpath(adjustedFilename.c_str(), full_path);
-    _logger->log_info("Using configuration file located at %s", path);
+    logger_->log_info("Using configuration file located at %s", path);
 
     std::ifstream file(path, std::ifstream::in);
     if (!file.good())
     {
-        _logger->log_error("load configure file failed %s", path);
+        logger_->log_error("load configure file failed %s", path);
         return;
     }
     this->clear();
