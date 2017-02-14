@@ -42,8 +42,8 @@
 #include "Logger.h"
 #include "Property.h"
 #include "ResourceClaim.h"
-#include "TimeUtil.h"
-#include "Serializable.h"
+#include "io/Serializable.h"
+#include "utils/TimeUtil.h"
 
 // Provenance Event Record Serialization Seg Size
 #define PROVENANCE_EVENT_RECORD_SEG_SIZE 2048
@@ -173,12 +173,12 @@ public:
 		uuid_generate(_eventId);
 		uuid_unparse_lower(_eventId, eventIdStr);
 		_eventIdStr = eventIdStr;
-		_logger = Logger::getLogger();
+		logger_ = Logger::getLogger();
 	}
 
 	ProvenanceEventRecord() {
 			_eventTime = getTimeMillis();
-			_logger = Logger::getLogger();
+			logger_ = Logger::getLogger();
 	}
 
 	//! Destructor
@@ -451,7 +451,7 @@ protected:
 private:
 
 	//! Logger
-	Logger *_logger;
+	Logger *logger_;
 	
 	// Prevent default copy constructor and assignment operation
 	// Only support pass by reference or pointer
@@ -470,7 +470,7 @@ public:
 	 * Create a new provenance reporter associated with the process session
 	 */
 	ProvenanceReporter(std::string componentId, std::string componentType) {
-		_logger = Logger::getLogger();
+		logger_ = Logger::getLogger();
 		_componentId = componentId;
 		_componentType = componentType;
 	}
@@ -555,7 +555,7 @@ private:
 	//! Incoming connection Iterator
 	std::set<ProvenanceEventRecord *> _events;
 	//! Logger
-	Logger *_logger;
+	Logger *logger_;
 
 	// Prevent default copy constructor and assignment operation
 	// Only support pass by reference or pointer
@@ -577,8 +577,8 @@ public:
 	 * Create a new provenance repository
 	 */
 	ProvenanceRepository() {
-		_logger = Logger::getLogger();
-		_configure = Configure::getConfigure();
+		logger_ = Logger::getLogger();
+		configure_ = Configure::getConfigure();
 		_directory = PROVENANCE_DIRECTORY;
 		_maxPartitionMillis = MAX_PROVENANCE_ENTRY_LIFE_TIME;
 		_purgePeriod = PROVENANCE_PURGE_PERIOD;
@@ -601,17 +601,17 @@ public:
 	virtual bool initialize()
 	{
 		std::string value;
-		if (_configure->get(Configure::nifi_provenance_repository_directory_default, value))
+		if (configure_->get(Configure::nifi_provenance_repository_directory_default, value))
 		{
 			_directory = value;
 		}
-		_logger->log_info("NiFi Provenance Repository Directory %s", _directory.c_str());
-		if (_configure->get(Configure::nifi_provenance_repository_max_storage_size, value))
+		logger_->log_info("NiFi Provenance Repository Directory %s", _directory.c_str());
+		if (configure_->get(Configure::nifi_provenance_repository_max_storage_size, value))
 		{
 			Property::StringToInt(value, _maxPartitionBytes);
 		}
-		_logger->log_info("NiFi Provenance Max Partition Bytes %d", _maxPartitionBytes);
-		if (_configure->get(Configure::nifi_provenance_repository_max_storage_time, value))
+		logger_->log_info("NiFi Provenance Max Partition Bytes %d", _maxPartitionBytes);
+		if (configure_->get(Configure::nifi_provenance_repository_max_storage_time, value))
 		{
 			TimeUnit unit;
 			if (Property::StringToTime(value, _maxPartitionMillis, unit) &&
@@ -619,17 +619,17 @@ public:
 			{
 			}
 		}
-		_logger->log_info("NiFi Provenance Max Storage Time: [%d] ms", _maxPartitionMillis);
+		logger_->log_info("NiFi Provenance Max Storage Time: [%d] ms", _maxPartitionMillis);
 		leveldb::Options options;
 		options.create_if_missing = true;
 		leveldb::Status status = leveldb::DB::Open(options, _directory.c_str(), &_db);
 		if (status.ok())
 		{
-			_logger->log_info("NiFi Provenance Repository database open %s success", _directory.c_str());
+			logger_->log_info("NiFi Provenance Repository database open %s success", _directory.c_str());
 		}
 		else
 		{
-			_logger->log_error("NiFi Provenance Repository database open %s fail", _directory.c_str());
+			logger_->log_error("NiFi Provenance Repository database open %s fail", _directory.c_str());
 			return false;
 		}
 
@@ -640,6 +640,7 @@ public:
 	//! Put
 	virtual bool Put(std::string key, uint8_t *buf, int bufLen)
 	{
+	  
 		// persistent to the DB
 		leveldb::Slice value((const char *) buf, bufLen);
 		leveldb::Status status;
@@ -709,10 +710,10 @@ private:
 	//! repository directory
 	std::string _directory;
 	//! Logger
-	Logger *_logger;
+	Logger *logger_;
 	//! Configure
 	//! max db entry life time
-	Configure *_configure;
+	Configure *configure_;
 	int64_t _maxPartitionMillis;
 	//! max db size
 	int64_t _maxPartitionBytes;

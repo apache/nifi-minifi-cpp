@@ -80,7 +80,6 @@ public:
 		return _whatStr.c_str();
 	}
 
-protected:
 
 private:
 	//! Exception type

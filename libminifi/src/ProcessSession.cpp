@@ -37,7 +37,7 @@ FlowFileRecord* ProcessSession::create()
 	if (record)
 	{
 		_addedFlowFiles[record->getUUIDStr()] = record;
-		_logger->log_debug("Create FlowFile with UUID %s", record->getUUIDStr().c_str());
+		logger_->log_debug("Create FlowFile with UUID %s", record->getUUIDStr().c_str());
 		std::string details = _processContext->getProcessor()->getName() + " creates flow record " +  record->getUUIDStr();
 		_provenanceReport->create(record, details);
 	}
@@ -53,7 +53,7 @@ FlowFileRecord* ProcessSession::create(FlowFileRecord *parent)
 	if (record)
 	{
 		_addedFlowFiles[record->getUUIDStr()] = record;
-		_logger->log_debug("Create FlowFile with UUID %s", record->getUUIDStr().c_str());
+		logger_->log_debug("Create FlowFile with UUID %s", record->getUUIDStr().c_str());
 	}
 
 	if (record)
@@ -104,7 +104,7 @@ FlowFileRecord* ProcessSession::cloneDuringTransfer(FlowFileRecord *parent)
 	if (record)
 	{
 		this->_clonedFlowFiles[record->getUUIDStr()] = record;
-		_logger->log_debug("Clone FlowFile with UUID %s during transfer", record->getUUIDStr().c_str());
+		logger_->log_debug("Clone FlowFile with UUID %s during transfer", record->getUUIDStr().c_str());
 		// Copy attributes
 		std::map<std::string, std::string> parentAttributes = parent->getAttributes();
 		std::map<std::string, std::string>::iterator it;
@@ -145,7 +145,7 @@ FlowFileRecord* ProcessSession::clone(FlowFileRecord *parent, long offset, long 
 			if ((offset + size) > (long) parent->_size)
 			{
 				// Set offset and size
-				_logger->log_error("clone offset %d and size %d exceed parent size %d",
+				logger_->log_error("clone offset %d and size %d exceed parent size %d",
 						offset, size, parent->_size);
 				// Remove the Add FlowFile for the session
 				std::map<std::string, FlowFileRecord *>::iterator it =
@@ -228,7 +228,7 @@ void ProcessSession::write(FlowFileRecord *flow, OutputStreamCallback *callback)
 				flow->_claim = claim;
 				claim->increaseFlowFileRecordOwnedCount();
 				/*
-				_logger->log_debug("Write offset %d length %d into content %s for FlowFile UUID %s",
+				logger_->log_debug("Write offset %d length %d into content %s for FlowFile UUID %s",
 						flow->_offset, flow->_size, flow->_claim->getContentFullPath().c_str(), flow->getUUIDStr().c_str()); */
 				fs.close();
 				std::string details = _processContext->getProcessor()->getName() + " modify flow record content " +  flow->getUUIDStr();
@@ -255,7 +255,7 @@ void ProcessSession::write(FlowFileRecord *flow, OutputStreamCallback *callback)
 		}
 		if (claim)
 			delete claim;
-		_logger->log_debug("Caught Exception %s", exception.what());
+		logger_->log_debug("Caught Exception %s", exception.what());
 		throw;
 	}
 	catch (...)
@@ -267,7 +267,7 @@ void ProcessSession::write(FlowFileRecord *flow, OutputStreamCallback *callback)
 		}
 		if (claim)
 			delete claim;
-		_logger->log_debug("Caught Exception during process session write");
+		logger_->log_debug("Caught Exception during process session write");
 		throw;
 	}
 }
@@ -299,7 +299,7 @@ void ProcessSession::append(FlowFileRecord *flow, OutputStreamCallback *callback
 				uint64_t appendSize = fs.tellp() - oldPos;
 				flow->_size += appendSize;
 				/*
-				_logger->log_debug("Append offset %d extra length %d to new size %d into content %s for FlowFile UUID %s",
+				logger_->log_debug("Append offset %d extra length %d to new size %d into content %s for FlowFile UUID %s",
 						flow->_offset, appendSize, flow->_size, claim->getContentFullPath().c_str(), flow->getUUIDStr().c_str()); */
 				fs.close();
 				std::string details = _processContext->getProcessor()->getName() + " modify flow record content " +  flow->getUUIDStr();
@@ -319,12 +319,12 @@ void ProcessSession::append(FlowFileRecord *flow, OutputStreamCallback *callback
 	}
 	catch (std::exception &exception)
 	{
-		_logger->log_debug("Caught Exception %s", exception.what());
+		logger_->log_debug("Caught Exception %s", exception.what());
 		throw;
 	}
 	catch (...)
 	{
-		_logger->log_debug("Caught Exception during process session append");
+		logger_->log_debug("Caught Exception during process session append");
 		throw;
 	}
 }
@@ -351,7 +351,7 @@ void ProcessSession::read(FlowFileRecord *flow, InputStreamCallback *callback)
 			{
 				callback->process(&fs);
 				/*
-				_logger->log_debug("Read offset %d size %d content %s for FlowFile UUID %s",
+				logger_->log_debug("Read offset %d size %d content %s for FlowFile UUID %s",
 						flow->_offset, flow->_size, claim->getContentFullPath().c_str(), flow->getUUIDStr().c_str()); */
 				fs.close();
 			}
@@ -368,12 +368,12 @@ void ProcessSession::read(FlowFileRecord *flow, InputStreamCallback *callback)
 	}
 	catch (std::exception &exception)
 	{
-		_logger->log_debug("Caught Exception %s", exception.what());
+		logger_->log_debug("Caught Exception %s", exception.what());
 		throw;
 	}
 	catch (...)
 	{
-		_logger->log_debug("Caught Exception during process session read");
+		logger_->log_debug("Caught Exception during process session read");
 		throw;
 	}
 }
@@ -421,7 +421,7 @@ void ProcessSession::import(std::string source, FlowFileRecord *flow, bool keepS
 				flow->_claim = claim;
 				claim->increaseFlowFileRecordOwnedCount();
 
-				_logger->log_debug("Import offset %d length %d into content %s for FlowFile UUID %s",
+				logger_->log_debug("Import offset %d length %d into content %s for FlowFile UUID %s",
 						flow->_offset, flow->_size, flow->_claim->getContentFullPath().c_str(), flow->getUUIDStr().c_str());
 
 				fs.close();
@@ -455,7 +455,7 @@ void ProcessSession::import(std::string source, FlowFileRecord *flow, bool keepS
 		}
 		if (claim)
 			delete claim;
-		_logger->log_debug("Caught Exception %s", exception.what());
+		logger_->log_debug("Caught Exception %s", exception.what());
 		delete[] buf;
 		throw;
 	}
@@ -468,7 +468,7 @@ void ProcessSession::import(std::string source, FlowFileRecord *flow, bool keepS
 		}
 		if (claim)
 			delete claim;
-		_logger->log_debug("Caught Exception during process session write");
+		logger_->log_debug("Caught Exception during process session write");
 		delete[] buf;
 		throw;
 	}
@@ -654,16 +654,16 @@ void ProcessSession::commit()
 		_originalFlowFiles.clear();
 		// persistent the provenance report
 		this->_provenanceReport->commit();
-		_logger->log_trace("ProcessSession committed for %s", _processContext->getProcessor()->getName().c_str());
+		logger_->log_trace("ProcessSession committed for %s", _processContext->getProcessor()->getName().c_str());
 	}
 	catch (std::exception &exception)
 	{
-		_logger->log_debug("Caught Exception %s", exception.what());
+		logger_->log_debug("Caught Exception %s", exception.what());
 		throw;
 	}
 	catch (...)
 	{
-		_logger->log_debug("Caught Exception during process session commit");
+		logger_->log_debug("Caught Exception during process session commit");
 		throw;
 	}
 }
@@ -706,16 +706,16 @@ void ProcessSession::rollback()
 		}
 		_updatedFlowFiles.clear();
 		_deletedFlowFiles.clear();
-		_logger->log_trace("ProcessSession rollback for %s", _processContext->getProcessor()->getName().c_str());
+		logger_->log_trace("ProcessSession rollback for %s", _processContext->getProcessor()->getName().c_str());
 	}
 	catch (std::exception &exception)
 	{
-		_logger->log_debug("Caught Exception %s", exception.what());
+		logger_->log_debug("Caught Exception %s", exception.what());
 		throw;
 	}
 	catch (...)
 	{
-		_logger->log_debug("Caught Exception during process session roll back");
+		logger_->log_debug("Caught Exception during process session roll back");
 		throw;
 	}
 }
@@ -751,7 +751,7 @@ FlowFileRecord *ProcessSession::get()
 			_updatedFlowFiles[ret->getUUIDStr()] = ret;
 			std::map<std::string, std::string> empty;
 			FlowFileRecord *snapshot = new FlowFileRecord(empty);
-			_logger->log_debug("Create Snapshot FlowFile with UUID %s", snapshot->getUUIDStr().c_str());
+			logger_->log_debug("Create Snapshot FlowFile with UUID %s", snapshot->getUUIDStr().c_str());
 			snapshot->duplicate(ret);
 			// save a snapshot
 			_originalFlowFiles[snapshot->getUUIDStr()] = snapshot;

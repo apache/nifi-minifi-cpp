@@ -31,6 +31,7 @@
 #include <future>
 #include "FlowController.h"
 #include "ProcessContext.h"
+#include "utils/StringUtils.h"
 
 FlowController *FlowControllerFactory::_flowController(NULL);
 
@@ -45,14 +46,14 @@ FlowControllerImpl::FlowControllerImpl(std::string name)  {
 	_running = false;
 	_initialized = false;
 	_root = NULL;
-	_logger = Logger::getLogger();
+	logger_ = Logger::getLogger();
 	_protocol = new FlowControlProtocol(this);
 
 	// NiFi config properties
-	_configure = Configure::getConfigure();
+	configure_ = Configure::getConfigure();
 
 	std::string rawConfigFileString;
-	_configure->get(Configure::nifi_flow_configuration_file,
+	configure_->get(Configure::nifi_flow_configuration_file,
 			rawConfigFileString);
 
 	if (!rawConfigFileString.empty()) {
@@ -66,7 +67,7 @@ FlowControllerImpl::FlowControllerImpl(std::string name)  {
 	if (!_configurationFileName.empty()) {
 		// perform a naive determination if this is a relative path
 		if (_configurationFileName.c_str()[0] != '/') {
-			adjustedFilename = adjustedFilename + _configure->getHome() + "/"
+			adjustedFilename = adjustedFilename + configure_->getHome() + "/"
 					+ _configurationFileName;
 		} else {
 			adjustedFilename = _configurationFileName;
@@ -77,7 +78,7 @@ FlowControllerImpl::FlowControllerImpl(std::string name)  {
 
 	std::string pathString(path);
 	_configurationFileName = pathString;
-	_logger->log_info("FlowController NiFi Configuration file %s", pathString.c_str());
+	logger_->log_info("FlowController NiFi Configuration file %s", pathString.c_str());
 
 	// Create the content repo directory if needed
 	struct stat contentDirStat;
@@ -85,101 +86,22 @@ FlowControllerImpl::FlowControllerImpl(std::string name)  {
 	if (stat(ResourceClaim::default_directory_path.c_str(), &contentDirStat) != -1 && S_ISDIR(contentDirStat.st_mode))
 	{
 		path = realpath(ResourceClaim::default_directory_path.c_str(), full_path);
-		_logger->log_info("FlowController content directory %s", full_path);
+		logger_->log_info("FlowController content directory %s", full_path);
 	}
 	else
 	{
 	   if (mkdir(ResourceClaim::default_directory_path.c_str(), 0777) == -1)
 	   {
-		   _logger->log_error("FlowController content directory creation failed");
+		   logger_->log_error("FlowController content directory creation failed");
 		   exit(1);
 	   }
 	}
 
-	std::string secureStr;
-	bool isSecure = false;
-	if (_configure->get(Configure::nifi_remote_input_secure, secureStr))
-	{
-		Property::StringToBool(secureStr, isSecure);
-	}
+	
 	std::string clientAuthStr;
-	bool needClientCert = true;
-	if (!(_configure->get(Configure::nifi_security_need_ClientAuth, clientAuthStr)
-			&& Property::StringToBool(clientAuthStr, needClientCert)))
-	{
-		needClientCert = true;
-	}
-	_logger->log_info("Site2Site secure setting is %d, needClientCert %d", isSecure, needClientCert);
-	_ctx = NULL;
-	if (isSecure)
-	{
-		// create SSL context
-		SSL_library_init();
-		const SSL_METHOD *method;
 
-		OpenSSL_add_all_algorithms();
-		SSL_load_error_strings();
-		method = TLSv1_2_client_method();
-		_ctx = SSL_CTX_new(method);
-		if ( _ctx == NULL )
-		{
-			ERR_print_errors_fp(stderr);
-			_logger->log_error("Could not create SSL context, Exiting.");
-			exit(1);
-		}
-		if (needClientCert)
-		{
-			std::string certificate;
-			std::string privatekey;
-			std::string passphrase;
-			std::string caCertificate;
-
-			if (!(_configure->get(Configure::nifi_security_client_certificate, certificate) &&
-					_configure->get(Configure::nifi_security_client_private_key, privatekey)))
-			{
-				_logger->log_error("Certificate and Private Key PEM file not configured, Exiting.");
-				exit(1);
-			}
-			// load certificates and private key in PEM format
-			if ( SSL_CTX_use_certificate_file(_ctx, certificate.c_str(), SSL_FILETYPE_PEM) <= 0 )
-			{
-				ERR_print_errors_fp(stderr);
-				_logger->log_error("Could not create load certificate, Exiting.");
-				exit(1);
-			}
-			if (_configure->get(Configure::nifi_security_client_pass_phrase, passphrase))
-			{
-				// if the private key has passphase
-				SSL_CTX_set_default_passwd_cb(_ctx, FlowController::pemPassWordCb);
-			}
-			if ( SSL_CTX_use_PrivateKey_file(_ctx, privatekey.c_str(), SSL_FILETYPE_PEM) <= 0 )
-			{
-				ERR_print_errors_fp(stderr);
-				_logger->log_error("Could not create load private key, Exiting.");
-				exit(1);
-			}
-			/* verify private key */
-			if ( !SSL_CTX_check_private_key(_ctx) )
-			{
-				_logger->log_error("Private key does not match the public certificate");
-				exit(1);
-			}
-			/* load CA certificates */
-			if (_configure->get(Configure::nifi_security_client_ca_certificate, caCertificate))
-			{
-				if (!SSL_CTX_load_verify_locations(_ctx, caCertificate.c_str(), 0))
-				{
-					_logger->log_error("Can not load CA certificate, Exiting.");
-					exit(1);
-				}
-			}
-
-			_logger->log_info("Load/Verify Client Certificate OK.");
-		}
-
-	}
 	if (!path) {
-		_logger->log_error(
+		logger_->log_error(
 				"Could not locate path from provided configuration file name (%s).  Exiting.",
 				full_path);
 		exit(1);
@@ -208,7 +130,7 @@ void FlowControllerImpl::stop(bool force) {
 		// immediately indicate that we are not running
 		_running = false;
 
-		_logger->log_info("Stop Flow Controller");
+		logger_->log_info("Stop Flow Controller");
 		this->_timerScheduler.stop();
 		this->_eventScheduler.stop();
 		// Wait for sometime for thread stop
@@ -253,7 +175,7 @@ void FlowControllerImpl::unload() {
 		stop(true);
 	}
 	if (_initialized) {
-		_logger->log_info("Unload Flow Controller");
+		logger_->log_info("Unload Flow Controller");
 		if (_root)
 			delete _root;
 		_root = NULL;
@@ -287,7 +209,7 @@ Processor *FlowControllerImpl::createProcessor(std::string name, uuid_t uuid) {
 	} else if (name == AppendHostInfo::ProcessorName) {
 		processor = new AppendHostInfo(name, uuid);
 	} else {
-		_logger->log_error("No Processor defined for %s", name.c_str());
+		logger_->log_error("No Processor defined for %s", name.c_str());
 		return NULL;
 	}
 
@@ -323,8 +245,8 @@ void FlowControllerImpl::parseRootProcessGroupYaml(YAML::Node rootFlowNode) {
 
 	char uuidStr[37];
 	uuid_unparse_lower(_uuid, uuidStr);
-	_logger->log_debug("parseRootProcessGroup: id => [%s]", uuidStr);
-	_logger->log_debug("parseRootProcessGroup: name => [%s]", flowName.c_str());
+	logger_->log_debug("parseRootProcessGroup: id => [%s]", uuidStr);
+	logger_->log_debug("parseRootProcessGroup: name => [%s]", flowName.c_str());
 	group = this->createRootProcessGroup(flowName, uuid);
 	this->_root = group;
 	this->_name = flowName;
@@ -340,7 +262,7 @@ void FlowControllerImpl::parseProcessorNodeYaml(YAML::Node processorsNode,
 	Processor *processor = NULL;
 
 	if (!parentGroup) {
-		_logger->log_error("parseProcessNodeYaml: no parent group exists");
+		logger_->log_error("parseProcessNodeYaml: no parent group exists");
 		return;
 	}
 
@@ -356,10 +278,10 @@ void FlowControllerImpl::parseProcessorNodeYaml(YAML::Node processorsNode,
 				YAML::Node procNode = iter->as<YAML::Node>();
 
 				procCfg.name = procNode["name"].as<std::string>();
-				_logger->log_debug("parseProcessorNode: name => [%s]",
+				logger_->log_debug("parseProcessorNode: name => [%s]",
 						procCfg.name.c_str());
 				procCfg.javaClass = procNode["class"].as<std::string>();
-				_logger->log_debug("parseProcessorNode: class => [%s]",
+				logger_->log_debug("parseProcessorNode: class => [%s]",
 						procCfg.javaClass.c_str());
 
 				char uuidStr[37];
@@ -379,7 +301,7 @@ void FlowControllerImpl::parseProcessorNodeYaml(YAML::Node processorsNode,
 				}
 
 				if (!processor) {
-					_logger->log_error(
+					logger_->log_error(
 							"Could not create a processor %s with name %s",
 							procCfg.name.c_str(), uuidStr);
 					throw std::invalid_argument(
@@ -389,31 +311,31 @@ void FlowControllerImpl::parseProcessorNodeYaml(YAML::Node processorsNode,
 
 				procCfg.maxConcurrentTasks =
 						procNode["max concurrent tasks"].as<std::string>();
-				_logger->log_debug(
+				logger_->log_debug(
 						"parseProcessorNode: max concurrent tasks => [%s]",
 						procCfg.maxConcurrentTasks.c_str());
 				procCfg.schedulingStrategy = procNode["scheduling strategy"].as<
 						std::string>();
-				_logger->log_debug(
+				logger_->log_debug(
 						"parseProcessorNode: scheduling strategy => [%s]",
 						procCfg.schedulingStrategy.c_str());
 				procCfg.schedulingPeriod = procNode["scheduling period"].as<
 						std::string>();
-				_logger->log_debug(
+				logger_->log_debug(
 						"parseProcessorNode: scheduling period => [%s]",
 						procCfg.schedulingPeriod.c_str());
 				procCfg.penalizationPeriod = procNode["penalization period"].as<
 						std::string>();
-				_logger->log_debug(
+				logger_->log_debug(
 						"parseProcessorNode: penalization period => [%s]",
 						procCfg.penalizationPeriod.c_str());
 				procCfg.yieldPeriod =
 						procNode["yield period"].as<std::string>();
-				_logger->log_debug("parseProcessorNode: yield period => [%s]",
+				logger_->log_debug("parseProcessorNode: yield period => [%s]",
 						procCfg.yieldPeriod.c_str());
 				procCfg.yieldPeriod = procNode["run duration nanos"].as<
 						std::string>();
-				_logger->log_debug(
+				logger_->log_debug(
 						"parseProcessorNode: run duration nanos => [%s]",
 						procCfg.runDurationNanos.c_str());
 
@@ -447,7 +369,7 @@ void FlowControllerImpl::parseProcessorNodeYaml(YAML::Node processorsNode,
 						schedulingPeriod, unit)
 						&& Property::ConvertTimeUnitToNS(schedulingPeriod, unit,
 								schedulingPeriod)) {
-					_logger->log_debug(
+					logger_->log_debug(
 							"convert: parseProcessorNode: schedulingPeriod => [%d] ns",
 							schedulingPeriod);
 					processor->setSchedulingPeriodNano(schedulingPeriod);
@@ -457,7 +379,7 @@ void FlowControllerImpl::parseProcessorNodeYaml(YAML::Node processorsNode,
 						penalizationPeriod, unit)
 						&& Property::ConvertTimeUnitToMS(penalizationPeriod,
 								unit, penalizationPeriod)) {
-					_logger->log_debug(
+					logger_->log_debug(
 							"convert: parseProcessorNode: penalizationPeriod => [%d] ms",
 							penalizationPeriod);
 					processor->setPenalizationPeriodMsec(penalizationPeriod);
@@ -467,7 +389,7 @@ void FlowControllerImpl::parseProcessorNodeYaml(YAML::Node processorsNode,
 						unit)
 						&& Property::ConvertTimeUnitToMS(yieldPeriod, unit,
 								yieldPeriod)) {
-					_logger->log_debug(
+					logger_->log_debug(
 							"convert: parseProcessorNode: yieldPeriod => [%d] ms",
 							yieldPeriod);
 					processor->setYieldPeriodMsec(yieldPeriod);
@@ -478,15 +400,15 @@ void FlowControllerImpl::parseProcessorNodeYaml(YAML::Node processorsNode,
 
 				if (procCfg.schedulingStrategy == "TIMER_DRIVEN") {
 					processor->setSchedulingStrategy(TIMER_DRIVEN);
-					_logger->log_debug("setting scheduling strategy as %s",
+					logger_->log_debug("setting scheduling strategy as %s",
 							procCfg.schedulingStrategy.c_str());
 				} else if (procCfg.schedulingStrategy == "EVENT_DRIVEN") {
 					processor->setSchedulingStrategy(EVENT_DRIVEN);
-					_logger->log_debug("setting scheduling strategy as %s",
+					logger_->log_debug("setting scheduling strategy as %s",
 							procCfg.schedulingStrategy.c_str());
 				} else {
 					processor->setSchedulingStrategy(CRON_DRIVEN);
-					_logger->log_debug("setting scheduling strategy as %s",
+					logger_->log_debug("setting scheduling strategy as %s",
 							procCfg.schedulingStrategy.c_str());
 
 				}
@@ -494,7 +416,7 @@ void FlowControllerImpl::parseProcessorNodeYaml(YAML::Node processorsNode,
 				int64_t maxConcurrentTasks;
 				if (Property::StringToInt(procCfg.maxConcurrentTasks,
 						maxConcurrentTasks)) {
-					_logger->log_debug(
+					logger_->log_debug(
 							"parseProcessorNode: maxConcurrentTasks => [%d]",
 							maxConcurrentTasks);
 					processor->setMaxConcurrentTasks(maxConcurrentTasks);
@@ -502,7 +424,7 @@ void FlowControllerImpl::parseProcessorNodeYaml(YAML::Node processorsNode,
 
 				if (Property::StringToInt(procCfg.runDurationNanos,
 						runDurationNanos)) {
-					_logger->log_debug(
+					logger_->log_debug(
 							"parseProcessorNode: runDurationNanos => [%d]",
 							runDurationNanos);
 					processor->setRunDurationNano(runDurationNanos);
@@ -511,7 +433,7 @@ void FlowControllerImpl::parseProcessorNodeYaml(YAML::Node processorsNode,
 				std::set<Relationship> autoTerminatedRelationships;
 				for (auto &&relString : procCfg.autoTerminatedRelationships) {
 					Relationship relationship(relString, "");
-					_logger->log_debug(
+					logger_->log_debug(
 							"parseProcessorNode: autoTerminatedRelationship  => [%s]",
 							relString.c_str());
 					autoTerminatedRelationships.insert(relationship);
@@ -534,7 +456,7 @@ void FlowControllerImpl::parseRemoteProcessGroupYaml(YAML::Node *rpgNode,
 	uuid_t uuid;
 
 	if (!parentGroup) {
-		_logger->log_error(
+		logger_->log_error(
 				"parseRemoteProcessGroupYaml: no parent group exists");
 		return;
 	}
@@ -546,21 +468,21 @@ void FlowControllerImpl::parseRemoteProcessGroupYaml(YAML::Node *rpgNode,
 				YAML::Node rpgNode = iter->as<YAML::Node>();
 
 				auto name = rpgNode["name"].as<std::string>();
-				_logger->log_debug("parseRemoteProcessGroupYaml: name => [%s]",
+				logger_->log_debug("parseRemoteProcessGroupYaml: name => [%s]",
 						name.c_str());
 
 				std::string url = rpgNode["url"].as<std::string>();
-				_logger->log_debug("parseRemoteProcessGroupYaml: url => [%s]",
+				logger_->log_debug("parseRemoteProcessGroupYaml: url => [%s]",
 						url.c_str());
 
 				std::string timeout = rpgNode["timeout"].as<std::string>();
-				_logger->log_debug(
+				logger_->log_debug(
 						"parseRemoteProcessGroupYaml: timeout => [%s]",
 						timeout.c_str());
 
 				std::string yieldPeriod =
 						rpgNode["yield period"].as<std::string>();
-				_logger->log_debug(
+				logger_->log_debug(
 						"parseRemoteProcessGroupYaml: yield period => [%s]",
 						yieldPeriod.c_str());
 
@@ -587,7 +509,7 @@ void FlowControllerImpl::parseRemoteProcessGroupYaml(YAML::Node *rpgNode,
 				if (Property::StringToTime(yieldPeriod, yieldPeriodValue, unit)
 						&& Property::ConvertTimeUnitToMS(yieldPeriodValue, unit,
 								yieldPeriodValue) && group) {
-					_logger->log_debug(
+					logger_->log_debug(
 							"parseRemoteProcessGroupYaml: yieldPeriod => [%d] ms",
 							yieldPeriodValue);
 					group->setYieldPeriodMsec(yieldPeriodValue);
@@ -596,7 +518,7 @@ void FlowControllerImpl::parseRemoteProcessGroupYaml(YAML::Node *rpgNode,
 				if (Property::StringToTime(timeout, timeoutValue, unit)
 						&& Property::ConvertTimeUnitToMS(timeoutValue, unit,
 								timeoutValue) && group) {
-					_logger->log_debug(
+					logger_->log_debug(
 							"parseRemoteProcessGroupYaml: timeoutValue => [%d] ms",
 							timeoutValue);
 					group->setTimeOut(timeoutValue);
@@ -608,7 +530,7 @@ void FlowControllerImpl::parseRemoteProcessGroupYaml(YAML::Node *rpgNode,
 				if (inputPorts && inputPorts.IsSequence()) {
 					for (YAML::const_iterator portIter = inputPorts.begin();
 							portIter != inputPorts.end(); ++portIter) {
-						_logger->log_debug("Got a current port, iterating...");
+						logger_->log_debug("Got a current port, iterating...");
 
 						YAML::Node currPort = portIter->as<YAML::Node>();
 
@@ -618,7 +540,7 @@ void FlowControllerImpl::parseRemoteProcessGroupYaml(YAML::Node *rpgNode,
 				if (outputPorts && outputPorts.IsSequence()) {
 					for (YAML::const_iterator portIter = outputPorts.begin();
 							portIter != outputPorts.end(); ++portIter) {
-						_logger->log_debug("Got a current port, iterating...");
+						logger_->log_debug("Got a current port, iterating...");
 
 						YAML::Node currPort = portIter->as<YAML::Node>();
 
@@ -637,7 +559,7 @@ void FlowControllerImpl::parseConnectionYaml(YAML::Node *connectionsNode,
 	Connection *connection = NULL;
 
 	if (!parent) {
-		_logger->log_error("parseProcessNode: no parent group was provided");
+		logger_->log_error("parseProcessNode: no parent group was provided");
 		return;
 	}
 
@@ -658,7 +580,7 @@ void FlowControllerImpl::parseConnectionYaml(YAML::Node *connectionsNode,
 				char uuidStr[37];
 				uuid_unparse_lower(_uuid, uuidStr);
 
-				_logger->log_debug(
+				logger_->log_debug(
 						"Created connection with UUID %s and name %s", uuidStr,
 						name.c_str());
 				connection = this->createConnection(name, uuid);
@@ -666,7 +588,7 @@ void FlowControllerImpl::parseConnectionYaml(YAML::Node *connectionsNode,
 						connectionNode["source relationship name"].as<
 								std::string>();
 				Relationship relationship(rawRelationship, "");
-				_logger->log_debug("parseConnection: relationship => [%s]",
+				logger_->log_debug("parseConnection: relationship => [%s]",
 						rawRelationship.c_str());
 				if (connection)
 					connection->setRelationship(relationship);
@@ -677,7 +599,7 @@ void FlowControllerImpl::parseConnectionYaml(YAML::Node *connectionsNode,
 						connectionSrcProcName);
 
 				if (!srcProcessor) {
-					_logger->log_error(
+					logger_->log_error(
 							"Could not locate a source with name %s to create a connection",
 							connectionSrcProcName.c_str());
 					throw std::invalid_argument(
@@ -723,7 +645,7 @@ void FlowControllerImpl::parsePortYaml(YAML::Node *portNode,
 	RemoteProcessorGroupPort *port = NULL;
 
 	if (!parent) {
-		_logger->log_error("parseProcessNode: no parent group existed");
+		logger_->log_error("parseProcessNode: no parent group existed");
 		return;
 	}
 
@@ -760,7 +682,7 @@ void FlowControllerImpl::parsePortYaml(YAML::Node *portNode,
 	if (Property::StringToInt(rawMaxConcurrentTasks, maxConcurrentTasks)) {
 		processor->setMaxConcurrentTasks(maxConcurrentTasks);
 	}
-	_logger->log_debug("parseProcessorNode: maxConcurrentTasks => [%d]",
+	logger_->log_debug("parseProcessorNode: maxConcurrentTasks => [%d]",
 			maxConcurrentTasks);
 	processor->setMaxConcurrentTasks(maxConcurrentTasks);
 
@@ -776,7 +698,7 @@ void FlowControllerImpl::parsePropertiesNodeYaml(YAML::Node *propertiesNode,
 		if (!propertyValueNode.IsNull() && propertyValueNode.IsDefined()) {
 			std::string rawValueString = propertyValueNode.as<std::string>();
 			if (!processor->setProperty(propertyName, rawValueString)) {
-				_logger->log_warn(
+				logger_->log_warn(
 						"Received property %s with value %s but is not one of the properties for %s",
 						propertyName.c_str(), rawValueString.c_str(),
 						processor->getName().c_str());
@@ -790,7 +712,7 @@ void FlowControllerImpl::load() {
         stop(true);
     }
     if (!_initialized) {
-        _logger->log_info("Load Flow Controller from file %s", _configurationFileName.c_str());
+        logger_->log_info("Load Flow Controller from file %s", _configurationFileName.c_str());
 
 
 		YAML::Node flow = YAML::LoadFile(_configurationFileName);
@@ -813,7 +735,7 @@ void FlowControllerImpl::load() {
 
 void FlowControllerImpl::reload(std::string yamlFile)
 {
-    _logger->log_info("Starting to reload Flow Controller with yaml %s", yamlFile.c_str());
+    logger_->log_info("Starting to reload Flow Controller with yaml %s", yamlFile.c_str());
     stop(true);
     unload();
     std::string oldYamlFile = this->_configurationFileName;
@@ -823,7 +745,7 @@ void FlowControllerImpl::reload(std::string yamlFile)
        if (!this->_root)
        {
         this->_configurationFileName = oldYamlFile;
-        _logger->log_info("Rollback Flow Controller to YAML %s", oldYamlFile.c_str());
+        logger_->log_info("Rollback Flow Controller to YAML %s", oldYamlFile.c_str());
         stop(true);
         unload();
         load();
@@ -833,13 +755,13 @@ void FlowControllerImpl::reload(std::string yamlFile)
 
 bool FlowControllerImpl::start() {
 	if (!_initialized) {
-		_logger->log_error(
+		logger_->log_error(
 				"Can not start Flow Controller because it has not been initialized");
 		return false;
 	} else {
 
 		if (!_running) {
-			_logger->log_info("Starting Flow Controller");
+			logger_->log_info("Starting Flow Controller");
 			this->_timerScheduler.start();
 			this->_eventScheduler.start();
 			if (this->_root)
@@ -847,7 +769,7 @@ bool FlowControllerImpl::start() {
 						&this->_eventScheduler);
 			_running = true;
 			this->_protocol->start();
-			_logger->log_info("Started Flow Controller");
+			logger_->log_info("Started Flow Controller");
 		}
 		return true;
 	}

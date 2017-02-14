@@ -26,6 +26,7 @@
 #include <chrono>
 #include <thread>
 #include <random>
+#include "utils/StringUtils.h"
 
 #include "GenerateFlowFile.h"
 #include "ProcessContext.h"
@@ -73,7 +74,7 @@ void GenerateFlowFile::onTrigger(ProcessContext *context, ProcessSession *sessio
 	}
 	if (context->getProperty(UniqueFlowFiles.getName(), value))
 	{
-		Property::StringToBool(value, uniqueFlowFile);
+		StringUtils::StringToBool(value, uniqueFlowFile);
 	}
 
 	if (!uniqueFlowFile)

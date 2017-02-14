@@ -36,12 +36,23 @@ ENDIF(POLICY CMP0048)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+include(CheckCXXCompilerFlag)
+CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
+CHECK_CXX_COMPILER_FLAG("-std=c++0x" COMPILER_SUPPORTS_CXX0X)
+if(COMPILER_SUPPORTS_CXX11)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -g")
+elseif(COMPILER_SUPPORTS_CXX0X)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
+else()
+ message(STATUS "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
+endif()
+
 include_directories(../include)
 include_directories(../thirdparty/yaml-cpp-yaml-cpp-0.5.3/include)
 include_directories(../thirdparty/civetweb-1.9.1/include)
 include_directories(include)
 
-file(GLOB SOURCES "src/*.cpp")
+file(GLOB SOURCES "src/*.cpp" "src/io/*.cpp" "src/utils/*.cpp")
 file(GLOB SPD_SOURCES "../include/spdlog/*")
 
 # Workaround the limitations of having a
@@ -52,6 +63,10 @@ add_library(minifi STATIC ${SOURCES})
 # Include Boost System
 find_package(Boost COMPONENTS system REQUIRED)
 target_link_libraries(minifi ${Boost_SYSTEM_LIBRARY})
+find_package(ZLIB REQUIRED)
+
+include_directories(${ZLIB_INCLUDE_DIRS})
+target_link_libraries (minifi ${ZLIB_LIBRARIES})
 
 # Include LevelDB
 find_package (Leveldb REQUIRED)

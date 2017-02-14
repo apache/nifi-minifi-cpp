@@ -31,7 +31,7 @@
 #include <fstream>
 #include <set>
 
-#include "TimeUtil.h"
+#include "utils/TimeUtil.h"
 #include "Logger.h"
 #include "ResourceClaim.h"
 
@@ -216,7 +216,7 @@ private:
 	//! Orginal connection queue that this flow file was dequeued from
 	Connection *_orginalConnection;
 	//! Logger
-	Logger *_logger;
+	Logger *logger_;
 	//! Snapshot flow record for session rollback
 	bool _snapshot;
 	// Prevent default copy constructor and assignment operation

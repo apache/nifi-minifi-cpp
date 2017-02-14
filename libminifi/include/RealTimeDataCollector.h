@@ -47,7 +47,7 @@ public:
 	{
 		_realTimeSocket = 0;
 		_batchSocket = 0;
-		_logger = Logger::getLogger();
+		logger_ = Logger::getLogger();
 		_firstInvoking = false;
 		_realTimeAccumulated = 0;
 		_batchAcccumulated = 0;
@@ -113,7 +113,7 @@ private:
 	int _realTimeSocket;
 	int _batchSocket;
 	//! Logger
-	Logger *_logger;
+	Logger *logger_;
 	//! Mutex for protection
 	std::mutex _mtx;
 	//! Queued data size

@@ -35,7 +35,7 @@ public:
 	GetFile(std::string name, uuid_t uuid = NULL)
 	: Processor(name, uuid)
 	{
-		_logger = Logger::getLogger();
+		logger_ = Logger::getLogger();
 		_directory = ".";
 		_recursive = true;
 		_keepSourceFile = false;
@@ -82,7 +82,7 @@ protected:
 
 private:
 	//! Logger
-	Logger *_logger;
+	Logger *logger_;
 	//! Queue for store directory list
 	std::queue<std::string> _dirList;
 	//! Get Listing size

@@ -25,6 +25,7 @@
 #include <uuid/uuid.h>
 #include <algorithm>
 #include <string>
+#include <memory>
 
 #define FMT_DEFAULT fmt_lower
 
@@ -33,7 +34,7 @@
 TEST_CASE("TestSetPortId", "[S2S1]"){
 
 
-	Site2SitePeer peer("fake_host",65433);
+	Site2SitePeer peer(std::unique_ptr<DataStream>(new DataStream()),"fake_host",65433);
 
 	Site2SiteClientProtocol protocol(&peer);
 
@@ -55,7 +56,7 @@ TEST_CASE("TestSetPortId", "[S2S1]"){
 TEST_CASE("TestSetPortIdUppercase", "[S2S2]"){
 
 
-	Site2SitePeer peer("fake_host",65433);
+	Site2SitePeer peer(std::unique_ptr<DataStream>(new DataStream()),"fake_host",65433);
 
 	Site2SiteClientProtocol protocol(&peer);
 

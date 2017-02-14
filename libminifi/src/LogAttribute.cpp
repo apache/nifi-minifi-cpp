@@ -27,7 +27,8 @@
 #include <string.h>
 #include <iostream>
 
-#include "TimeUtil.h"
+#include "utils/TimeUtil.h"
+#include "utils/StringUtils.h"
 #include "LogAttribute.h"
 #include "ProcessContext.h"
 #include "ProcessSession.h"
@@ -81,7 +82,7 @@ void LogAttribute::onTrigger(ProcessContext *context, ProcessSession *session)
 	}
 	if (context->getProperty(LogPayload.getName(), value))
 	{
-		Property::StringToBool(value, logPayload);
+		StringUtils::StringToBool(value, logPayload);
 	}
 
 	message << "Logging for flow file " << "\n";
@@ -128,19 +129,19 @@ void LogAttribute::onTrigger(ProcessContext *context, ProcessSession *session)
     switch (level)
     {
     case LogAttrLevelInfo:
-    	_logger->log_info("%s", output.c_str());
+    	logger_->log_info("%s", output.c_str());
 		break;
     case LogAttrLevelDebug:
-    	_logger->log_debug("%s", output.c_str());
+    	logger_->log_debug("%s", output.c_str());
 		break;
     case LogAttrLevelError:
-    	_logger->log_error("%s", output.c_str());
+    	logger_->log_error("%s", output.c_str());
 		break;
     case LogAttrLevelTrace:
-    	_logger->log_trace("%s", output.c_str());
+    	logger_->log_trace("%s", output.c_str());
     	break;
     case LogAttrLevelWarn:
-    	_logger->log_warn("%s", output.c_str());
+    	logger_->log_warn("%s", output.c_str());
     	break;
     default:
     	break;

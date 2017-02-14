@@ -33,7 +33,8 @@
 #include <limits.h>
 #include <unistd.h>
 
-#include "TimeUtil.h"
+#include "utils/TimeUtil.h"
+#include "utils/StringUtils.h"
 #include "TailFile.h"
 #include "ProcessContext.h"
 #include "ProcessSession.h"
@@ -59,16 +60,12 @@ void TailFile::initialize()
 
 std::string TailFile::trimLeft(const std::string& s)
 {
-	const char *WHITESPACE = " \n\r\t";
-    size_t startpos = s.find_first_not_of(WHITESPACE);
-    return (startpos == std::string::npos) ? "" : s.substr(startpos);
+	return StringUtils::trimLeft(s);
 }
 
 std::string TailFile::trimRight(const std::string& s)
 {
-	const char *WHITESPACE = " \n\r\t";
-    size_t endpos = s.find_last_not_of(WHITESPACE);
-    return (endpos == std::string::npos) ? "" : s.substr(0, endpos+1);
+	return StringUtils::trimRight(s);
 }
 
 void TailFile::parseStateFileLine(char *buf)
@@ -120,7 +117,7 @@ void TailFile::recoverState()
 	std::ifstream file(_stateFile.c_str(), std::ifstream::in);
 	if (!file.good())
 	{
-		_logger->log_error("load state file failed %s", _stateFile.c_str());
+		logger_->log_error("load state file failed %s", _stateFile.c_str());
 		return;
 	}
 	const unsigned int bufSize = 512;
@@ -136,7 +133,7 @@ void TailFile::storeState()
 	std::ofstream file(_stateFile.c_str());
 	if (!file.is_open())
 	{
-		_logger->log_error("store state file failed %s", _stateFile.c_str());
+		logger_->log_error("store state file failed %s", _stateFile.c_str());
 		return;
 	}
 	file << "FILENAME=" << this->_currentTailFileName << "\n";
@@ -205,7 +202,7 @@ void TailFile::checkRollOver()
 				if (it!=matchedFiles.end())
 				{
 					TailMatchedFileItem nextItem = *it;
-					_logger->log_info("TailFile File Roll Over from %s to %s", _currentTailFileName.c_str(), nextItem.fileName.c_str());
+					logger_->log_info("TailFile File Roll Over from %s to %s", _currentTailFileName.c_str(), nextItem.fileName.c_str());
 					_currentTailFileName = nextItem.fileName;
 					_currentTailFilePosition = 0;
 					storeState();
@@ -261,7 +258,7 @@ void TailFile::onTrigger(ProcessContext *context, ProcessSession *session)
 		flowFile->addAttribute(ABSOLUTE_PATH, fullPath);
 		session->import(fullPath, flowFile, true, this->_currentTailFilePosition);
 		session->transfer(flowFile, Success);
-		_logger->log_info("TailFile %s for %d bytes", _currentTailFileName.c_str(), flowFile->getSize());
+		logger_->log_info("TailFile %s for %d bytes", _currentTailFileName.c_str(), flowFile->getSize());
 		std::string logName = baseName + "." + std::to_string(_currentTailFilePosition) + "-" +
 				std::to_string(_currentTailFilePosition + flowFile->getSize()) + "." + extension;
 		flowFile->updateAttribute(FILENAME, logName);

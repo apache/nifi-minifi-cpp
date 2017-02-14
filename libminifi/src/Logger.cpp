@@ -23,5 +23,5 @@
 
 #include "Logger.h"
 
-Logger *Logger::_logger(NULL);
+Logger *Logger::logger_(NULL);
 

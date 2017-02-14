@@ -22,3 +22,7 @@
 #include "ProvenanceTests.h"
 #include "ProcessorTests.h"
 #include "SerializationTests.h"
+#include "PropertyTests.h"
+#include "SocketTests.h"
+#include "TimeUtilsTest.h"
+#include "CRCTests.h"

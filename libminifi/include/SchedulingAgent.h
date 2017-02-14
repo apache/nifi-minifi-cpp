@@ -27,7 +27,7 @@
 #include <atomic>
 #include <algorithm>
 #include <thread>
-#include "TimeUtil.h"
+#include "utils/TimeUtil.h"
 #include "Logger.h"
 #include "Configure.h"
 #include "FlowFileRecord.h"
@@ -43,8 +43,8 @@ public:
 	 * Create a new processor
 	 */
 	SchedulingAgent() {
-		_configure = Configure::getConfigure();
-		_logger = Logger::getLogger();
+		configure_ = Configure::getConfigure();
+		logger_ = Logger::getLogger();
 		_running = false;
 	}
 	//! Destructor
@@ -75,9 +75,9 @@ public:
 
 protected:
 	//! Logger
-	Logger *_logger;
+	Logger *logger_;
 	//! Configure
-	Configure *_configure;
+	Configure *configure_;
 	//! Mutex for protection
 	std::mutex _mtx;
 	//! Whether it is running

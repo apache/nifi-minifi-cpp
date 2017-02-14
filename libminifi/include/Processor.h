@@ -33,7 +33,7 @@
 #include <chrono>
 #include <functional>
 
-#include "TimeUtil.h"
+#include "utils/TimeUtil.h"
 #include "Property.h"
 #include "Relationship.h"
 #include "Connection.h"
@@ -119,7 +119,9 @@ public:
 			return true;
 		}
 		else
+		{
 			return false;
+		}
 	}
 	//! Set the supported processor properties while the process is not running
 	bool setSupportedProperties(std::set<Property> properties);
@@ -352,7 +354,7 @@ private:
 	//! Check all incoming connections for work
 	bool isWorkAvailable();
 	//! Logger
-	Logger *_logger;
+	Logger *logger_;
 	// Prevent default copy constructor and assignment operation
 	// Only support pass by reference or pointer
 	Processor(const Processor &parent);

@@ -1,0 +1,245 @@
+/**
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+#ifndef LIBMINIFI_INCLUDE_IO_CLIENTSOCKET_H_
+#define LIBMINIFI_INCLUDE_IO_CLIENTSOCKET_H_
+
+#include <cstdint>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netdb.h>
+#include <unistd.h>
+#include <mutex>
+#include <atomic>
+#include "io/BaseStream.h"
+#include "Logger.h"
+
+#include "io/validation.h"
+
+/**
+ * Socket class.
+ * Purpose: Provides a general purpose socket interface that abstracts
+ * connecting information from users
+ * Design: Extends DataStream and allows us to perform most streaming
+ * operations against a BSD socket
+ *
+ *
+ */
+class Socket: public BaseStream {
+public:
+	/**
+	 * Constructor that accepts host name, port and listeners. With this
+	 * contructor we will be creating a server socket
+	 * @param hostname our host name
+	 * @param port connecting port
+	 * @param listeners number of listeners in the queue
+	 */
+	explicit Socket(const std::string &hostname, const uint16_t port,
+			const uint16_t listeners);
+
+	/**
+	 * Constructor that creates a client socket.
+	 * @param hostname hostname we are connecting to.
+	 * @param port port we are connecting to.
+	 */
+	explicit Socket(const std::string &hostname, const uint16_t port);
+
+	/**
+	 * Move constructor.
+	 */
+	explicit Socket(const Socket &&);
+
+	static std::string HOSTNAME;
+
+	/**
+	 * Static function to return the current machine's host name
+	 */
+	static std::string getMyHostName(std::string *str = &HOSTNAME) {
+		if (__builtin_expect(!IsNullOrEmpty(str), 0))
+			return *str;
+		else {
+			char hostname[1024];
+			gethostname(hostname, 1024);
+			Socket mySock(hostname, 0);
+			mySock.initialize();
+			return mySock.getHostname();
+		}
+	}
+
+	/**
+	 * Destructor
+	 */
+
+	virtual ~Socket();
+
+	virtual void closeStream();
+	/**
+	 * Initializes the socket
+	 * @return result of the creation operation.
+	 */
+	virtual short initialize();
+
+	std::string getHostname() const;
+
+	/**
+	 * Return the port for this socket
+	 * @returns port
+	 */
+	uint16_t getPort();
+
+	// data stream extensions
+	/**
+	 * Reads data and places it into buf
+	 * @param buf buffer in which we extract data
+	 * @param buflen
+	 */
+	virtual int readData(std::vector<uint8_t> &buf, int buflen);
+	/**
+	 * Reads data and places it into buf
+	 * @param buf buffer in which we extract data
+	 * @param buflen
+	 */
+	virtual int readData(uint8_t *buf, int buflen);
+
+	/**
+	 * Write value to the stream using std::vector
+	 * @param buf incoming buffer
+	 * @param buflen buffer to write
+	 *
+	 */
+	virtual int writeData(std::vector<uint8_t> &buf, int buflen);
+
+	/**
+	 * writes value to stream
+	 * @param value value to write
+	 * @param size size of value
+	 */
+	virtual int writeData(uint8_t *value, int size);
+
+	
+	
+	/**
+	 * Writes a system word
+	 * @param value value to write
+	 */
+	virtual int write(uint64_t value, bool is_little_endian =
+			EndiannessCheck::IS_LITTLE);
+
+	/**
+	 * Writes a uint32_t
+	 * @param value value to write
+	 */
+	virtual int write(uint32_t value, bool is_little_endian =
+			EndiannessCheck::IS_LITTLE);
+
+	/**
+	 * Writes a system short
+	 * @param value value to write
+	 */
+	virtual int write(uint16_t value, bool is_little_endian =
+			EndiannessCheck::IS_LITTLE);
+
+	
+	/**
+	 * Reads a system word
+	 * @param value value to write
+	 */
+	virtual int read(uint64_t &value, bool is_little_endian =
+			EndiannessCheck::IS_LITTLE);
+
+	/**
+	 * Reads a uint32_t
+	 * @param value value to write
+	 */
+	virtual int read(uint32_t &value, bool is_little_endian =
+			EndiannessCheck::IS_LITTLE);
+
+	/**
+	 * Reads a system short
+	 * @param value value to write
+	 */
+	virtual int read(uint16_t &value, bool is_little_endian =
+			EndiannessCheck::IS_LITTLE);
+
+	/**
+	 * Returns the underlying buffer
+	 * @return vector's array
+	 **/
+	const uint8_t *getBuffer() const {
+		return ::DataStream::getBuffer();
+	}
+
+	/**
+	 * Retrieve size of data stream
+	 * @return size of data stream
+	 **/
+	const uint32_t getSize() const {
+		return ::DataStream::getSize();
+	}
+
+protected:
+
+	/**
+	 * Creates a vector and returns the vector using the provided
+	 * type name.
+	 * @param t incoming object
+	 * @returns vector.
+	 */
+	template<typename T>
+	std::vector<uint8_t> readBuffer(const T&);
+
+	/**
+	 * Creates a connection using the address info object.
+	 * @param p addrinfo structure.
+	 * @returns fd.
+	 */
+	virtual int8_t createConnection(const addrinfo *p);
+
+	/**
+	 * Sets socket options depending on the instance.
+	 * @param sock socket file descriptor.
+	 */
+	virtual short setSocketOptions(const int sock);
+
+	/**
+	 * Attempt to select the socket file descriptor
+	 * @param msec timeout interval to wait
+	 * @returns file descriptor
+	 */
+	virtual short select_descriptor(const uint16_t msec);
+
+	Logger *logger_;
+
+	addrinfo *addr_info_;
+
+	std::recursive_mutex selection_mutex_;
+
+	std::string requested_hostname_;
+	std::string canonical_hostname_;
+	uint16_t port_;
+
+	// connection information
+	int32_t socket_file_descriptor_;
+
+	fd_set total_list_;
+	fd_set read_fds_;
+	std::atomic<uint16_t> socket_max_;
+	uint16_t listeners_;
+
+};
+
+#endif /* LIBMINIFI_INCLUDE_IO_CLIENTSOCKET_H_ */

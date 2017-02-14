@@ -20,7 +20,8 @@
 #include <queue>
 #include <stdio.h>
 #include <string>
-#include "TimeUtil.h"
+#include "utils/TimeUtil.h"
+#include "utils/StringUtils.h"
 #include "ListenSyslog.h"
 #include "ProcessContext.h"
 #include "ProcessSession.h"
@@ -65,7 +66,7 @@ void ListenSyslog::startSocketThread()
 	if (_thread != NULL)
 		return;
 
-	_logger->log_info("ListenSysLog Socket Thread Start");
+	logger_->log_info("ListenSysLog Socket Thread Start");
 	_serverTheadRunning = true;
 	_thread = new std::thread(run, this);
 	_thread->detach();
@@ -109,7 +110,7 @@ void ListenSyslog::runThread()
 				sockfd = socket(AF_INET, SOCK_DGRAM, 0);
 			if (sockfd < 0)
 			{
-				_logger->log_info("ListenSysLog Server socket creation failed");
+				logger_->log_info("ListenSysLog Server socket creation failed");
 				break;
 			}
 			bzero((char *) &serv_addr, sizeof(serv_addr));
@@ -119,13 +120,13 @@ void ListenSyslog::runThread()
 			if (bind(sockfd, (struct sockaddr *) &serv_addr,
 					sizeof(serv_addr)) < 0)
 			{
-				_logger->log_error("ListenSysLog Server socket bind failed");
+				logger_->log_error("ListenSysLog Server socket bind failed");
 				break;
 			}
 			if (_protocol == "TCP")
 				listen(sockfd,5);
 			_serverSocket = sockfd;
-			_logger->log_error("ListenSysLog Server socket %d bind OK to port %d", _serverSocket, portno);
+			logger_->log_error("ListenSysLog Server socket %d bind OK to port %d", _serverSocket, portno);
 		}
 		FD_ZERO(&_readfds);
 		FD_SET(_serverSocket, &_readfds);
@@ -166,7 +167,7 @@ void ListenSyslog::runThread()
 					if (_clientSockets.size() < _maxConnections)
 					{
 						_clientSockets.push_back(newsockfd);
-						_logger->log_info("ListenSysLog new client socket %d connection", newsockfd);
+						logger_->log_info("ListenSysLog new client socket %d connection", newsockfd);
 						continue;
 					}
 					else
@@ -200,7 +201,7 @@ void ListenSyslog::runThread()
 				if (recvlen <= 0)
 				{
 					close(clientSocket);
-					_logger->log_info("ListenSysLog client socket %d close", clientSocket);
+					logger_->log_info("ListenSysLog client socket %d close", clientSocket);
 					it = _clientSockets.erase(it);
 				}
 				else
@@ -285,7 +286,7 @@ void ListenSyslog::onTrigger(ProcessContext *context, ProcessSession *session)
 	}
 	if (context->getProperty(ParseMessages.getName(), value))
 	{
-		Property::StringToBool(value, _parseMessages);
+		StringUtils::StringToBool(value, _parseMessages);
 	}
 	if (context->getProperty(Port.getName(), value))
 	{

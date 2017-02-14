@@ -65,18 +65,18 @@ bool SchedulingAgent::onTrigger(Processor *processor, ProcessContext *processCon
 	catch (Exception &exception)
 	{
 		// Normal exception
-		_logger->log_debug("Caught Exception %s", exception.what());
+		logger_->log_debug("Caught Exception %s", exception.what());
 		processor->decrementActiveTask();
 	}
 	catch (std::exception &exception)
 	{
-		_logger->log_debug("Caught Exception %s", exception.what());
+		logger_->log_debug("Caught Exception %s", exception.what());
 		processor->yield(_administrativeYieldDuration);
 		processor->decrementActiveTask();
 	}
 	catch (...)
 	{
-		_logger->log_debug("Caught Exception during SchedulingAgent::onTrigger");
+		logger_->log_debug("Caught Exception during SchedulingAgent::onTrigger");
 		processor->yield(_administrativeYieldDuration);
 		processor->decrementActiveTask();
 	}

@@ -28,6 +28,7 @@
 #include <random>
 #include <netinet/tcp.h>
 
+#include "utils/StringUtils.h"
 #include "RealTimeDataCollector.h"
 #include "ProcessContext.h"
 #include "ProcessSession.h"
@@ -88,7 +89,7 @@ int RealTimeDataCollector::connectServer(const char *host, uint16_t port)
 	sock = socket(AF_INET, SOCK_STREAM, 0);
 	if (sock < 0)
 	{
-		_logger->log_error("Could not create socket to hostName %s", host);
+		logger_->log_error("Could not create socket to hostName %s", host);
 		return 0;
 	}
 
@@ -100,14 +101,14 @@ int RealTimeDataCollector::connectServer(const char *host, uint16_t port)
 	{
 		if (setsockopt(sock, SOL_TCP, TCP_NODELAY, (void *)&opt, sizeof(opt)) < 0)
 		{
-			_logger->log_error("setsockopt() TCP_NODELAY failed");
+			logger_->log_error("setsockopt() TCP_NODELAY failed");
 			close(sock);
 			return 0;
 		}
 		if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR,
 				(char *)&opt, sizeof(opt)) < 0)
 		{
-			_logger->log_error("setsockopt() SO_REUSEADDR failed");
+			logger_->log_error("setsockopt() SO_REUSEADDR failed");
 			close(sock);
 			return 0;
 		}
@@ -116,7 +117,7 @@ int RealTimeDataCollector::connectServer(const char *host, uint16_t port)
 	int sndsize = 256*1024;
 	if (setsockopt(sock, SOL_SOCKET, SO_SNDBUF, (char *)&sndsize, (int)sizeof(sndsize)) < 0)
 	{
-		_logger->log_error("setsockopt() SO_SNDBUF failed");
+		logger_->log_error("setsockopt() SO_SNDBUF failed");
 		close(sock);
 		return 0;
 	}
@@ -134,7 +135,7 @@ int RealTimeDataCollector::connectServer(const char *host, uint16_t port)
 	socklen = sizeof(sa);
 	if (bind(sock, (struct sockaddr *)&sa, socklen) < 0)
 	{
-		_logger->log_error("socket bind failed");
+		logger_->log_error("socket bind failed");
 		close(sock);
 		return 0;
 	}
@@ -149,12 +150,12 @@ int RealTimeDataCollector::connectServer(const char *host, uint16_t port)
 
 	if (status < 0)
 	{
-		_logger->log_error("socket connect failed to %s %d", host, port);
+		logger_->log_error("socket connect failed to %s %d", host, port);
 		close(sock);
 		return 0;
 	}
 
-	_logger->log_info("socket %d connect to server %s port %d success", sock, host, port);
+	logger_->log_info("socket %d connect to server %s port %d success", sock, host, port);
 
 	return sock;
 }
@@ -175,7 +176,7 @@ int RealTimeDataCollector::sendData(int socket, const char *buf, int buflen)
 	}
 
 	if (ret)
-		_logger->log_debug("Send data size %d over socket %d", buflen, socket);
+		logger_->log_debug("Send data size %d over socket %d", buflen, socket);
 
 	return ret;
 }
@@ -188,41 +189,39 @@ void RealTimeDataCollector::onTriggerRealTime(ProcessContext *context, ProcessSe
 		if (this->getProperty(REALTIMEMSGID.getName(), value))
 		{
 			this->_realTimeMsgID.clear();
-			this->_logger->log_info("Real Time Msg IDs %s", value.c_str());
+			this->logger_->log_info("Real Time Msg IDs %s", value.c_str());
 			std::stringstream lineStream(value);
 			std::string cell;
 
 			while(std::getline(lineStream, cell, ','))
 		    {
 		        this->_realTimeMsgID.push_back(cell);
-		        // this->_logger->log_debug("Real Time Msg ID %s", cell.c_str());
+		        // this->logger_->log_debug("Real Time Msg ID %s", cell.c_str());
 		    }
 		}
 		if (this->getProperty(BATCHMSGID.getName(), value))
 		{
 			this->_batchMsgID.clear();
-			this->_logger->log_info("Batch Msg IDs %s", value.c_str());
+			this->logger_->log_info("Batch Msg IDs %s", value.c_str());
 			std::stringstream lineStream(value);
 			std::string cell;
 
 			while(std::getline(lineStream, cell, ','))
 		    {
-				cell = Property::trim(cell);
+				cell = StringUtils::trim(cell);
 		        this->_batchMsgID.push_back(cell);
-		        // this->_logger->log_debug("Batch Msg ID %s", cell.c_str());
 		    }
 		}
-		// _logger->log_info("onTriggerRealTime");
 		// Open the file
 		if (!this->_fileStream.is_open())
 		{
 			_fileStream.open(this->_fileName.c_str(), std::ifstream::in);
 			if (this->_fileStream.is_open())
-				_logger->log_debug("open %s", _fileName.c_str());
+				logger_->log_debug("open %s", _fileName.c_str());
 		}
 		if (!_fileStream.good())
 		{
-			_logger->log_error("load data file failed %s", _fileName.c_str());
+			logger_->log_error("load data file failed %s", _fileName.c_str());
 			return;
 		}
 		if (this->_fileStream.is_open())
@@ -236,7 +235,7 @@ void RealTimeDataCollector::onTriggerRealTime(ProcessContext *context, ProcessSe
 				std::string cell;
 				if (std::getline(lineStream, cell, ','))
 				{
-					cell = Property::trim(cell);
+					cell = StringUtils::trim(cell);
 					// Check whether it match to the batch traffic
 					for (std::vector<std::string>::iterator it = _batchMsgID.begin(); it != _batchMsgID.end(); ++it)
 					{
@@ -248,12 +247,12 @@ void RealTimeDataCollector::onTriggerRealTime(ProcessContext *context, ProcessSe
 							{
 								std::string item = _queue.front();
 								_queuedDataSize -= item.size();
-								_logger->log_debug("Pop item size %d from batch queue, queue buffer size %d", item.size(), _queuedDataSize);
+								logger_->log_debug("Pop item size %d from batch queue, queue buffer size %d", item.size(), _queuedDataSize);
 								_queue.pop();
 							}
 							_queue.push(line);
 							_queuedDataSize += line.size();
-							_logger->log_debug("Push batch msg ID %s into batch queue, queue buffer size %d", cell.c_str(), _queuedDataSize);
+							logger_->log_debug("Push batch msg ID %s into batch queue, queue buffer size %d", cell.c_str(), _queuedDataSize);
 						}
 					}
 					bool findRealTime = false;
@@ -287,12 +286,12 @@ void RealTimeDataCollector::onTriggerRealTime(ProcessContext *context, ProcessSe
 								{
 									std::string item = _queue.front();
 									_queuedDataSize -= item.size();
-									_logger->log_debug("Pop item size %d from batch queue, queue buffer size %d", item.size(), _queuedDataSize);
+									logger_->log_debug("Pop item size %d from batch queue, queue buffer size %d", item.size(), _queuedDataSize);
 									_queue.pop();
 								}
 								_queue.push(line);
 								_queuedDataSize += line.size();
-								_logger->log_debug("Push real time msg ID %s into batch queue, queue buffer size %d", cell.c_str(), _queuedDataSize);
+								logger_->log_debug("Push real time msg ID %s into batch queue, queue buffer size %d", cell.c_str(), _queuedDataSize);
 							}
 							// find real time
 							findRealTime = true;
@@ -317,7 +316,7 @@ void RealTimeDataCollector::onTriggerBatch(ProcessContext *context, ProcessSessi
 {
 	if (_batchAcccumulated >= this->_batchInterval)
 	{
-		// _logger->log_info("onTriggerBatch");
+		// logger_->log_info("onTriggerBatch");
 		// dequeue the batch and send over WIFI
 		int status = 0;
 		if (this->_batchSocket <= 0)
@@ -367,35 +366,35 @@ void RealTimeDataCollector::onTrigger(ProcessContext *context, ProcessSession *s
 			if (this->getProperty(FILENAME.getName(), value))
 			{
 				this->_fileName = value;
-				this->_logger->log_info("Data Collector File Name %s", _fileName.c_str());
+				this->logger_->log_info("Data Collector File Name %s", _fileName.c_str());
 			}
 			this->_realTimeServerName = "localhost";
 			if (this->getProperty(REALTIMESERVERNAME.getName(), value))
 			{
 				this->_realTimeServerName = value;
-				this->_logger->log_info("Real Time Server Name %s", this->_realTimeServerName.c_str());
+				this->logger_->log_info("Real Time Server Name %s", this->_realTimeServerName.c_str());
 			}
 			this->_realTimeServerPort = 10000;
 			if (this->getProperty(REALTIMESERVERPORT.getName(), value))
 			{
 				Property::StringToInt(value, _realTimeServerPort);
-				this->_logger->log_info("Real Time Server Port %d", _realTimeServerPort);
+				this->logger_->log_info("Real Time Server Port %d", _realTimeServerPort);
 			}
 			if (this->getProperty(BATCHSERVERNAME.getName(), value))
 			{
 				this->_batchServerName = value;
-				this->_logger->log_info("Batch Server Name %s", this->_batchServerName.c_str());
+				this->logger_->log_info("Batch Server Name %s", this->_batchServerName.c_str());
 			}
 			this->_batchServerPort = 10001;
 			if (this->getProperty(BATCHSERVERPORT.getName(), value))
 			{
 				Property::StringToInt(value, _batchServerPort);
-				this->_logger->log_info("Batch Server Port %d", _batchServerPort);
+				this->logger_->log_info("Batch Server Port %d", _batchServerPort);
 			}
 			if (this->getProperty(ITERATION.getName(), value))
 			{
-				Property::StringToBool(value, this->_iteration);
-				_logger->log_info("Iteration %d", _iteration);
+				StringUtils::StringToBool(value, this->_iteration);
+				logger_->log_info("Iteration %d", _iteration);
 			}
 			this->_realTimeInterval = 10000000; //10 msec
 			if (this->getProperty(REALTIMEINTERVAL.getName(), value))
@@ -404,7 +403,7 @@ void RealTimeDataCollector::onTrigger(ProcessContext *context, ProcessSession *s
 				if (Property::StringToTime(value, _realTimeInterval, unit) &&
 								Property::ConvertTimeUnitToNS(_realTimeInterval, unit, _realTimeInterval))
 				{
-					_logger->log_info("Real Time Interval: [%d] ns", _realTimeInterval);
+					logger_->log_info("Real Time Interval: [%d] ns", _realTimeInterval);
 				}
 			}
 			this->_batchInterval = 100000000; //100 msec
@@ -414,38 +413,38 @@ void RealTimeDataCollector::onTrigger(ProcessContext *context, ProcessSession *s
 				if (Property::StringToTime(value, _batchInterval, unit) &&
 								Property::ConvertTimeUnitToNS(_batchInterval, unit, _batchInterval))
 				{
-					_logger->log_info("Batch Time Interval: [%d] ns", _batchInterval);
+					logger_->log_info("Batch Time Interval: [%d] ns", _batchInterval);
 				}
 			}
 			this->_batchMaxBufferSize = 256*1024;
 			if (this->getProperty(BATCHMAXBUFFERSIZE.getName(), value))
 			{
 				Property::StringToInt(value, _batchMaxBufferSize);
-				this->_logger->log_info("Batch Max Buffer Size %d", _batchMaxBufferSize);
+				this->logger_->log_info("Batch Max Buffer Size %d", _batchMaxBufferSize);
 			}
 			if (this->getProperty(REALTIMEMSGID.getName(), value))
 			{
-				this->_logger->log_info("Real Time Msg IDs %s", value.c_str());
+				this->logger_->log_info("Real Time Msg IDs %s", value.c_str());
 				std::stringstream lineStream(value);
 				std::string cell;
 
 				while(std::getline(lineStream, cell, ','))
 			    {
 			        this->_realTimeMsgID.push_back(cell);
-			        this->_logger->log_info("Real Time Msg ID %s", cell.c_str());
+			        this->logger_->log_info("Real Time Msg ID %s", cell.c_str());
 			    }
 			}
 			if (this->getProperty(BATCHMSGID.getName(), value))
 			{
-				this->_logger->log_info("Batch Msg IDs %s", value.c_str());
+				this->logger_->log_info("Batch Msg IDs %s", value.c_str());
 				std::stringstream lineStream(value);
 				std::string cell;
 
 				while(std::getline(lineStream, cell, ','))
 			    {
-					cell = Property::trim(cell);
+					cell = StringUtils::trim(cell);
 			        this->_batchMsgID.push_back(cell);
-			        this->_logger->log_info("Batch Msg ID %s", cell.c_str());
+			        this->logger_->log_info("Batch Msg ID %s", cell.c_str());
 			    }
 			}
 			// Connect the LTE socket
@@ -462,12 +461,12 @@ void RealTimeDataCollector::onTrigger(ProcessContext *context, ProcessSession *s
 			_fileStream.open(this->_fileName.c_str(), std::ifstream::in);
 			if (!_fileStream.good())
 			{
-				_logger->log_error("load data file failed %s", _fileName.c_str());
+				logger_->log_error("load data file failed %s", _fileName.c_str());
 				return;
 			}
 			else
 			{
-				_logger->log_debug("open %s", _fileName.c_str());
+				logger_->log_debug("open %s", _fileName.c_str());
 			}
 			_realTimeThreadId = id;
 			this->_firstInvoking = true;

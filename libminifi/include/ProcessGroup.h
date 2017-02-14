@@ -56,56 +56,56 @@ public:
 	virtual ~ProcessGroup();
 	//! Set Processor Name
 	void setName(std::string name) {
-		_name = name;
+		name_ = name;
 	}
 	//! Get Process Name
 	std::string getName(void) {
-		return (_name);
+		return (name_);
 	}
 	//! Set URL
 	void setURL(std::string url) {
-		_url = url;
+		url_ = url;
 	}
 	//! Get URL
 	std::string getURL(void) {
-		return (_url);
+		return (url_);
 	}
 	//! SetTransmitting
 	void setTransmitting(bool val)
 	{
-		_transmitting = val;
+		transmitting_ = val;
 	}
 	//! Get Transmitting
 	bool getTransmitting()
 	{
-		return _transmitting;
+		return transmitting_;
 	}
 	//! setTimeOut
 	void setTimeOut(uint64_t time)
 	{
-		_timeOut = time;
+		timeOut_ = time;
 	}
 	uint64_t getTimeOut()
 	{
-		return _timeOut;
+		return timeOut_;
 	}
 	//! Set Processor yield period in MilliSecond
 	void setYieldPeriodMsec(uint64_t period) {
-		_yieldPeriodMsec = period;
+		yield_period_msec_ = period;
 	}
 	//! Get Processor yield period in MilliSecond
 	uint64_t getYieldPeriodMsec(void) {
-		return(_yieldPeriodMsec);
+		return(yield_period_msec_);
 	}
 	//! Set UUID
 	void setUUID(uuid_t uuid) {
-		uuid_copy(_uuid, uuid);
+		uuid_copy(uuid_, uuid);
 	}
 	//! Get UUID
 	bool getUUID(uuid_t uuid) {
 		if (uuid)
 		{
-			uuid_copy(uuid, _uuid);
+			uuid_copy(uuid, uuid_);
 			return true;
 		}
 		else
@@ -121,13 +121,13 @@ public:
 	bool isRootProcessGroup();
 	//! set parent process group
 	void setParent(ProcessGroup *parent) {
-		std::lock_guard<std::mutex> lock(_mtx);
-		_parentProcessGroup = parent;
+		std::lock_guard<std::mutex> lock(mtx_);
+		parent_process_group_ = parent;
 	}
 	//! get parent process group
 	ProcessGroup *getParent(void) {
-		std::lock_guard<std::mutex> lock(_mtx);
-		return _parentProcessGroup;
+		std::lock_guard<std::mutex> lock(mtx_);
+		return parent_process_group_;
 	}
 	//! Add processor
 	void addProcessor(Processor *processor);
@@ -150,32 +150,32 @@ public:
 
 protected:
 	//! A global unique identifier
-	uuid_t _uuid;
+	uuid_t uuid_;
 	//! Processor Group Name
-	std::string _name;
+	std::string name_;
 	//! Process Group Type
-	ProcessGroupType _type;
+	ProcessGroupType type_;
 	//! Processors (ProcessNode) inside this process group which include Input/Output Port, Remote Process Group input/Output port
-	std::set<Processor *> _processors;
-	std::set<ProcessGroup *> _childProcessGroups;
+	std::set<Processor *> processors_;
+	std::set<ProcessGroup *> child_process_groups_;
 	//! Connections between the processor inside the group;
-	std::set<Connection *> _connections;
+	std::set<Connection *> connections_;
 	//! Parent Process Group
-	ProcessGroup* _parentProcessGroup;
+	ProcessGroup* parent_process_group_;
 	//! Yield Period in Milliseconds
-	std::atomic<uint64_t> _yieldPeriodMsec;
-	std::atomic<uint64_t> _timeOut;
+	std::atomic<uint64_t> yield_period_msec_;
+	std::atomic<uint64_t> timeOut_;
 	//! URL
-	std::string _url;
+	std::string url_;
 	//! Transmitting
-	std::atomic<bool> _transmitting;
+	std::atomic<bool> transmitting_;
 
 private:
 
 	//! Mutex for protection
-	std::mutex _mtx;
+	std::mutex mtx_;
 	//! Logger
-	Logger *_logger;
+	Logger *logger_;
 	// Prevent default copy constructor and assignment operation
 	// Only support pass by reference or pointer
 	ProcessGroup(const ProcessGroup &parent);

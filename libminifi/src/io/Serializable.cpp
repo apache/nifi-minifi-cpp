@@ -15,17 +15,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #include <vector>
-#include <iostream>
-#include <cstdint>
+#include <string>
 #include <cstdio>
-#include <cstring>
 #include <arpa/inet.h>
-#include "Serializable.h"
+#include "io/DataStream.h"
+#include "io/Serializable.h"
+
 
 #define htonll_r(x) ((((uint64_t)htonl(x)) << 32) + htonl((x) >> 32))
 
-bool EndiannessCheck::IS_LITTLE = EndiannessCheck::is_little_endian();
+
 
 #define IS_ASCII(c) __builtin_expect(!!((c >= 1) && (c <= 127)),1)
 
@@ -78,7 +79,7 @@ int Serializable::write(bool value) {
 
 int Serializable::read(uint8_t &value,DataStream *stream) {
     uint8_t buf;
-
+    
     int ret = stream->readData(&buf, 1);
     if (ret == 1)
         value = buf;
@@ -100,17 +101,17 @@ int Serializable::read(uint8_t *value, int len,DataStream *stream) {
 
 int Serializable::read(uint16_t &value,DataStream *stream, bool is_little_endian) {
 
-    return stream->readShort(value, is_little_endian);
+    return stream->read(value, is_little_endian);
 }
 
 int Serializable::read(uint32_t &value,DataStream *stream, bool is_little_endian) {
 
-    return stream->readLong(value, is_little_endian);
+    return stream->read(value, is_little_endian);
 
 }
 int Serializable::read(uint64_t &value,DataStream *stream, bool is_little_endian) {
 
-    return stream->readLongLong(value, is_little_endian);
+    return stream->read(value, is_little_endian);
 
 }
 
@@ -254,112 +255,9 @@ int Serializable::writeUTF(std::string str,DataStream *stream, bool widen) {
         }
         ret = stream->writeData(utf_to_write.data(), utflen);
     } else {
-        utflen += 4;
+        //utflen += 4;
         write(utflen,stream);
         ret = stream->writeData(utf_to_write.data(), utflen);
     }
     return ret;
-}
-
-int DataStream::writeData(uint8_t *value, int size) {
-
-    /*if (buffer.size() + size < buffer.capacity())
-    	{
-    		buffer.resize( buffer.size() + size );
-    	}
-    	*/
-    std::copy(value,value+size,std::back_inserter(buffer));
-
-    return size;
-}
-
-int DataStream::readLongLong(uint64_t &value, bool is_little_endian) {
-    if ((8 + readBuffer) > buffer.size()) {
-        // if read exceed
-        return -1;
-    }
-    uint8_t *buf = &buffer[readBuffer];
-
-    if (is_little_endian) {
-        value = ((uint64_t) buf[0] << 56) | ((uint64_t) (buf[1] & 255) << 48)
-                | ((uint64_t) (buf[2] & 255) << 40)
-                | ((uint64_t) (buf[3] & 255) << 32)
-                | ((uint64_t) (buf[4] & 255) << 24)
-                | ((uint64_t) (buf[5] & 255) << 16)
-                | ((uint64_t) (buf[6] & 255) << 8)
-                | ((uint64_t) (buf[7] & 255) << 0);
-    } else {
-        value = ((uint64_t) buf[0] << 0) | ((uint64_t) (buf[1] & 255) << 8)
-                | ((uint64_t) (buf[2] & 255) << 16)
-                | ((uint64_t) (buf[3] & 255) << 24)
-                | ((uint64_t) (buf[4] & 255) << 32)
-                | ((uint64_t) (buf[5] & 255) << 40)
-                | ((uint64_t) (buf[6] & 255) << 48)
-                | ((uint64_t) (buf[7] & 255) << 56);
-    }
-    readBuffer += 8;
-    return 8;
-}
-
-int DataStream::readLong(uint32_t &value, bool is_little_endian) {
-    if ((4 + readBuffer) > buffer.size()) {
-        // if read exceed
-        return -1;
-    }
-    uint8_t *buf = &buffer[readBuffer];
-
-    if (is_little_endian) {
-        value = (buf[0] << 24) | (buf[1] << 16) | (buf[2] << 8) | buf[3];
-    } else {
-        value = buf[0] | buf[1] << 8 | buf[2] << 16 | buf[3] << 24;
-
-    }
-    readBuffer += 4;
-    return 4;
-}
-
-int DataStream::readShort(uint16_t &value, bool is_little_endian) {
-
-    if ((2 + readBuffer) > buffer.size()) {
-        // if read exceed
-        return -1;
-    }
-    uint8_t *buf = &buffer[readBuffer];
-
-    if (is_little_endian) {
-        value = (buf[0] << 8) | buf[1];
-    } else {
-        value = buf[0] | buf[1] << 8;
-
-    }
-    readBuffer += 2;
-    return 2;
-}
-
-int DataStream::readData(std::vector<uint8_t> &buf,int buflen) {
-    if ((buflen + readBuffer) > buffer.size()) {
-        // if read exceed
-        return -1;
-    }
-
-    if (buf.capacity() < buflen)
-    	buf.resize(buflen);
-
-    buf.insert(buf.begin(),&buffer[readBuffer],&buffer[readBuffer+buflen]);
-
-    readBuffer += buflen;
-    return buflen;
-}
-
-
-int DataStream::readData(uint8_t *buf,int buflen) {
-    if ((buflen + readBuffer) > buffer.size()) {
-        // if read exceed
-        return -1;
-    }
-
-    std::copy(&buffer[readBuffer],&buffer[readBuffer+buflen],buf);
-
-    readBuffer += buflen;
-    return buflen;
 }

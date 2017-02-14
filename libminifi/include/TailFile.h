@@ -35,7 +35,7 @@ public:
 	TailFile(std::string name, uuid_t uuid = NULL)
 	: Processor(name, uuid)
 	{
-		_logger = Logger::getLogger();
+		logger_ = Logger::getLogger();
 		_stateRecovered = false;
 	}
 	//! Destructor
@@ -65,7 +65,7 @@ protected:
 
 private:
 	//! Logger
-	Logger *_logger;
+	Logger *logger_;
 	std::string _fileLocation;
 	//! Property Specified Tailed File Name
 	std::string _fileName;

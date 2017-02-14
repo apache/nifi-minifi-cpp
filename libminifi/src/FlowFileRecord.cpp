@@ -70,22 +70,22 @@ FlowFileRecord::FlowFileRecord(std::map<std::string, std::string> attributes, Re
 	if (_claim)
 		// Increase the flow file record owned count for the resource claim
 		_claim->increaseFlowFileRecordOwnedCount();
-	_logger = Logger::getLogger();
+	logger_ = Logger::getLogger();
 }
 
 FlowFileRecord::~FlowFileRecord()
 {
 	if (!_snapshot)
-		_logger->log_debug("Delete FlowFile UUID %s", _uuidStr.c_str());
+		logger_->log_debug("Delete FlowFile UUID %s", _uuidStr.c_str());
 	else
-		_logger->log_debug("Delete SnapShot FlowFile UUID %s", _uuidStr.c_str());
+		logger_->log_debug("Delete SnapShot FlowFile UUID %s", _uuidStr.c_str());
 	if (_claim)
 	{
 		// Decrease the flow file record owned count for the resource claim
 		_claim->decreaseFlowFileRecordOwnedCount();
 		if (_claim->getFlowFileRecordOwnedCount() <= 0)
 		{
-			_logger->log_debug("Delete Resource Claim %s", _claim->getContentFullPath().c_str());
+			logger_->log_debug("Delete Resource Claim %s", _claim->getContentFullPath().c_str());
 			std::remove(_claim->getContentFullPath().c_str());
 			delete _claim;
 		}

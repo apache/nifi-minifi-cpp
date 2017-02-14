@@ -27,8 +27,12 @@
 #include <string.h>
 #include <iostream>
 
-#include "TimeUtil.h"
 #include "RemoteProcessorGroupPort.h"
+
+#include "io/ClientSocket.h"
+#include "io/SocketFactory.h"
+
+#include "utils/TimeUtil.h"
 #include "ProcessContext.h"
 #include "ProcessSession.h"
 
@@ -39,6 +43,7 @@ Relationship RemoteProcessorGroupPort::relation;
 
 void RemoteProcessorGroupPort::initialize()
 {
+
 	//! Set the supported properties
 	std::set<Property> properties;
 	properties.insert(hostName);
@@ -48,20 +53,20 @@ void RemoteProcessorGroupPort::initialize()
 	std::set<Relationship> relationships;
 	relationships.insert(relation);
 	setSupportedRelationships(relationships);
+
 }
 
 void RemoteProcessorGroupPort::onTrigger(ProcessContext *context, ProcessSession *session)
 {
 	std::string value;
 
-	if (!_transmitting)
+	if (!transmitting_)
 		return;
-
-	std::string host = _peer->getHostName();
-	uint16_t sport = _peer->getPort();
+	
+	std::string host = peer_.getHostName();
+	uint16_t sport = peer_.getPort();
 	int64_t lvalue;
-	bool needReset = false;
-
+	
 	if (context->getProperty(hostName.getName(), value))
 	{
 		host = value;
@@ -70,31 +75,47 @@ void RemoteProcessorGroupPort::onTrigger(ProcessContext *context, ProcessSession
 	{
 		sport = (uint16_t) lvalue;
 	}
-	if (host != _peer->getHostName())
+	
+	if (host != peer_.getHostName() || sport != peer_.getPort())
+	
 	{
-		_peer->setHostName(host);
+	  
+	      std::unique_ptr<DataStream> str = std::unique_ptr<DataStream>(SocketFactory::getInstance()->createSocket(host,sport));
+	      peer_ = std::move(Site2SitePeer (std::move(str), host, sport));
+	      protocol_->setPeer(&peer_);
+	  
+	}
+		
+	
+	
+	bool needReset = false;
+
+	
+	if (host != peer_.getHostName())
+	{
+		peer_.setHostName(host);
 		needReset= true;
 	}
-	if (sport != _peer->getPort())
+	if (sport != peer_.getPort())
 	{
-		_peer->setPort(sport);
+		peer_.setPort(sport);
 		needReset = true;
 	}
 	if (needReset)
-		_protocol->tearDown();
+		protocol_->tearDown();
 
-	if (!_protocol->bootstrap())
+	if (!protocol_->bootstrap())
 	{
 		// bootstrap the client protocol if needeed
 		context->yield();
-		_logger->log_error("Site2Site bootstrap failed yield period %d peer timeout %d", context->getProcessor()->getYieldPeriodMsec(), _protocol->getPeer()->getTimeOut());
+		logger_->log_error("Site2Site bootstrap failed yield period %d peer ", context->getProcessor()->getYieldPeriodMsec());
 		return;
 	}
 
-	if (_direction == RECEIVE)
-		_protocol->receiveFlowFiles(context, session);
+	if (direction_ == RECEIVE)
+		protocol_->receiveFlowFiles(context, session);
 	else
-		_protocol->transferFlowFiles(context, session);
+		protocol_->transferFlowFiles(context, session);
 
 	return;
 }

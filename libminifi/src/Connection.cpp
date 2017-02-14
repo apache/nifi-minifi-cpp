@@ -51,9 +51,9 @@ Connection::Connection(std::string name, uuid_t uuid, uuid_t srcUUID, uuid_t des
 	_expiredDuration = 0;
 	_queuedDataSize = 0;
 
-	_logger = Logger::getLogger();
+	logger_ = Logger::getLogger();
 
-	_logger->log_info("Connection %s created", _name.c_str());
+	logger_->log_info("Connection %s created", _name.c_str());
 }
 
 bool Connection::isEmpty()
@@ -89,7 +89,7 @@ void Connection::put(FlowFileRecord *flow)
 	
 		_queuedDataSize += flow->getSize();
 	
-		_logger->log_debug("Enqueue flow file UUID %s to connection %s",
+		logger_->log_debug("Enqueue flow file UUID %s to connection %s",
 				flow->getUUIDStr().c_str(), _name.c_str());
 	}
 
@@ -129,7 +129,7 @@ FlowFileRecord* Connection::poll(std::set<FlowFileRecord *> &expiredFlowRecords)
 					break;
 				}
 				item->setOriginalConnection(this);
-				_logger->log_debug("Dequeue flow file UUID %s from connection %s",
+				logger_->log_debug("Dequeue flow file UUID %s from connection %s",
 						item->getUUIDStr().c_str(), _name.c_str());
 				return item;
 			}
@@ -145,7 +145,7 @@ FlowFileRecord* Connection::poll(std::set<FlowFileRecord *> &expiredFlowRecords)
 				break;
 			}
 			item->setOriginalConnection(this);
-			_logger->log_debug("Dequeue flow file UUID %s from connection %s",
+			logger_->log_debug("Dequeue flow file UUID %s from connection %s",
 					item->getUUIDStr().c_str(), _name.c_str());
 			return item;
 		}
@@ -165,5 +165,5 @@ void Connection::drain()
 		delete item;
 	}
 
-	_logger->log_debug("Drain connection %s", _name.c_str());
+	logger_->log_debug("Drain connection %s", _name.c_str());
 }
