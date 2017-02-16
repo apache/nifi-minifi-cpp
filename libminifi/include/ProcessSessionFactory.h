@@ -33,7 +33,7 @@ public:
 	/*!
 	 * Create a new process session factory
 	 */
-	ProcessSessionFactory(ProcessContext *processContext) : _processContext(processContext) {}
+	explicit ProcessSessionFactory(ProcessContext *processContext) : _processContext(processContext) {}
 
 	//! Create the session
 	std::unique_ptr<ProcessSession> createSession();
