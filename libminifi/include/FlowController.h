@@ -28,9 +28,7 @@
 #include <atomic>
 #include <algorithm>
 #include <set>
-#ifdef YAML_SUPPORT
 #include "yaml-cpp/yaml.h"
-#endif
 
 #include "Configure.h"
 #include "Property.h"
@@ -55,11 +53,9 @@
 #include "ListenSyslog.h"
 #include "ExecuteProcess.h"
 #include "AppendHostInfo.h"
-#ifdef OPENSSL_SUPPORT
 // OpenSSL related
 #include <openssl/ssl.h>
 #include <openssl/err.h>
-#endif
 
 //! Default NiFi Root Group Name
 #define DEFAULT_ROOT_GROUP_NAME ""
@@ -110,19 +106,12 @@ public:
 
 	//! Destructor
 	virtual ~FlowController(){
-#ifdef OPENSSL_SUPPORT
 	  if (_ctx)
 	    SSL_CTX_free(_ctx);
-#endif
 	}
 	//! Set FlowController Name
 	virtual void setName(std::string name) {
 		_name = name;
-	}
-	//! get Content directory
-	virtual std::string getContentDirectory()
-	{
-		return _contentDirectory;
 	}
 	//! Get Flow Controller Name
 	virtual std::string getName(void) {
@@ -204,20 +193,16 @@ public:
 	}
 
 	
-#ifdef OPENSSL_SUPPORT
 	//! getSSLContext
 	virtual SSL_CTX *getSSLContext()
 	{
 		return _ctx;
 	}
-#endif
 
 protected:
   
-#ifdef OPENSSL_SUPPORT
 	//! SSL context
 	SSL_CTX *_ctx;
-#endif
 
 	//! A global unique identifier
 	uuid_t _uuid;
@@ -227,8 +212,6 @@ protected:
 	std::string _configurationFileName;
 	//! NiFi property File Name
 	std::string _propertiesFileName;
-	//! NiFi content directory
-	std::string _contentDirectory;
 	//! Root Process Group
 	ProcessGroup *_root;
 	//! MAX Timer Driven Threads
@@ -259,10 +242,7 @@ protected:
 	FlowController() :
 			_root(0), _maxTimerDrivenThreads(0), _maxEventDrivenThreads(0), _running(
 					false), _initialized(false), _provenanceRepo(0), _protocol(
-					0), _logger(Logger::getLogger()){
-#ifdef OPENSSL_SUPPORT
-			_ctx = NULL;
-#endif
+					0), _logger(Logger::getLogger()), _ctx(NULL){
 	}
 
 private:
@@ -333,7 +313,6 @@ private:
 	Logger *_logger;
 	Configure *_configure;
 
-#ifdef YAML_SUPPORT
 	//! Process Processor Node YAML
 	void parseProcessorNodeYaml(YAML::Node processorNode, ProcessGroup *parent);
 	//! Process Port YAML
@@ -351,7 +330,6 @@ private:
 	//! Parse Properties Node YAML for a processor
 	void parsePropertiesNodeYaml(YAML::Node *propertiesNode,
 			Processor *processor);
-#endif
 
 	// Prevent default copy constructor and assignment operation
 	// Only support pass by reference or pointer

@@ -224,7 +224,7 @@ bool Site2SiteClientProtocol::handShake()
 	// Generate the global UUID for the com identify
 	uuid_generate(uuid);
 	char uuidStr[37];
-	uuid_unparse(uuid, uuidStr);
+	uuid_unparse_lower(uuid, uuidStr);
 	_commsIdentifier = uuidStr;
 
 	int ret = _peer->writeUTF(_commsIdentifier);

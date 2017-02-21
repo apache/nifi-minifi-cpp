@@ -75,37 +75,27 @@ FlowControllerImpl::FlowControllerImpl(std::string name)  {
 
 	path = realpath(adjustedFilename.c_str(), full_path);
 
-	if (!path) {
-		_logger->log_error(
-				"Could not locate path from provided configuration file name (%s).  Exiting.",
-				full_path);
-		exit(1);
-	}
-
 	std::string pathString(path);
 	_configurationFileName = pathString;
 	_logger->log_info("FlowController NiFi Configuration file %s", pathString.c_str());
 
 	// Create the content repo directory if needed
-	std::string contectDirPath;
 	struct stat contentDirStat;
-	contectDirPath = _configure->getHome() + "/" + DEFAULT_CONTENT_DIRECTORY;
-	if (stat(contectDirPath.c_str(), &contentDirStat) != -1 && S_ISDIR(contentDirStat.st_mode))
+
+	if (stat(ResourceClaim::default_directory_path.c_str(), &contentDirStat) != -1 && S_ISDIR(contentDirStat.st_mode))
 	{
-		path = realpath(contectDirPath.c_str(), full_path);
+		path = realpath(ResourceClaim::default_directory_path.c_str(), full_path);
 		_logger->log_info("FlowController content directory %s", full_path);
 	}
 	else
 	{
-		if (mkdir(contectDirPath.c_str(), 0777) == -1)
-		{
-			_logger->log_error("FlowController content directory creation failed");
-			exit(1);
-		}
-        }
-        _contentDirectory = contectDirPath;
+	   if (mkdir(ResourceClaim::default_directory_path.c_str(), 0777) == -1)
+	   {
+		   _logger->log_error("FlowController content directory creation failed");
+		   exit(1);
+	   }
+	}
 
-#ifdef OPENSSL_SUPPORT
 	std::string secureStr;
 	bool isSecure = false;
 	if (_configure->get(Configure::nifi_remote_input_secure, secureStr))
@@ -188,7 +178,13 @@ FlowControllerImpl::FlowControllerImpl(std::string name)  {
 		}
 		
 	}
-#endif
+	if (!path) {
+		_logger->log_error(
+				"Could not locate path from provided configuration file name (%s).  Exiting.",
+				full_path);
+		exit(1);
+	}
+
 
 	// Create repos for flow record and provenance
 	_provenanceRepo = new ProvenanceRepository();
@@ -314,7 +310,6 @@ Connection *FlowControllerImpl::createConnection(std::string name,
 	return new Connection(name, uuid);
 }
 
-#ifdef YAML_SUPPORT
 void FlowControllerImpl::parseRootProcessGroupYaml(YAML::Node rootFlowNode) {
 	uuid_t uuid;
 	ProcessGroup *group = NULL;
@@ -325,7 +320,7 @@ void FlowControllerImpl::parseRootProcessGroupYaml(YAML::Node rootFlowNode) {
 	std::string flowName = rootFlowNode["name"].as<std::string>();
 
 	char uuidStr[37];
-	uuid_unparse(_uuid, uuidStr);
+	uuid_unparse_lower(_uuid, uuidStr);
 	_logger->log_debug("parseRootProcessGroup: id => [%s]", uuidStr);
 	_logger->log_debug("parseRootProcessGroup: name => [%s]", flowName.c_str());
 	group = this->createRootProcessGroup(flowName, uuid);
@@ -366,7 +361,7 @@ void FlowControllerImpl::parseProcessorNodeYaml(YAML::Node processorsNode,
 						procCfg.javaClass.c_str());
 
 				char uuidStr[37];
-				uuid_unparse(_uuid, uuidStr);
+				uuid_unparse_lower(_uuid, uuidStr);
 
 				// generate the random UUID
 				uuid_generate(uuid);
@@ -576,7 +571,7 @@ void FlowControllerImpl::parseRemoteProcessGroupYaml(YAML::Node *rpgNode,
 				uuid_generate(uuid);
 
 				char uuidStr[37];
-				uuid_unparse(_uuid, uuidStr);
+				uuid_unparse_lower(_uuid, uuidStr);
 
 				int64_t timeoutValue = -1;
 				int64_t yieldPeriodValue = -1;
@@ -659,7 +654,7 @@ void FlowControllerImpl::parseConnectionYaml(YAML::Node *connectionsNode,
 						std::string>();
 
 				char uuidStr[37];
-				uuid_unparse(_uuid, uuidStr);
+				uuid_unparse_lower(_uuid, uuidStr);
 
 				_logger->log_debug(
 						"Created connection with UUID %s and name %s", uuidStr,
@@ -787,7 +782,6 @@ void FlowControllerImpl::parsePropertiesNodeYaml(YAML::Node *propertiesNode,
 		}
 	}
 }
-#endif
 
 void FlowControllerImpl::load() {
     if (_running) {
@@ -796,7 +790,7 @@ void FlowControllerImpl::load() {
     if (!_initialized) {
         _logger->log_info("Load Flow Controller from file %s", _configurationFileName.c_str());
 
-#ifdef YAML_SUPPORT
+
 		YAML::Node flow = YAML::LoadFile(_configurationFileName);
 
 		YAML::Node flowControllerNode = flow["Flow Controller"];
@@ -809,7 +803,6 @@ void FlowControllerImpl::load() {
 		parseProcessorNodeYaml(processorsNode, this->_root);
 		parseRemoteProcessGroupYaml(&remoteProcessingGroupNode, this->_root);
 		parseConnectionYaml(&connectionsNode, this->_root);
-#endif
 
 		_initialized = true;
 

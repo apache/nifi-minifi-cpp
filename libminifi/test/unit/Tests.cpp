@@ -21,3 +21,4 @@
 
 #include "ProvenanceTests.h"
 #include "ProcessorTests.h"
+#include "SerializationTests.h"

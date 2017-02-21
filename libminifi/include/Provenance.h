@@ -32,12 +32,10 @@
 #include <thread>
 #include <vector>
 
-#ifdef LEVELDB_SUPPORT
 #include "leveldb/db.h"
 #include "leveldb/options.h"
 #include "leveldb/slice.h"
 #include "leveldb/status.h"
-#endif
 #include "Configure.h"
 #include "Connection.h"
 #include "FlowFileRecord.h"
@@ -173,7 +171,7 @@ public:
 		char eventIdStr[37];
 		// Generate the global UUID for th event
 		uuid_generate(_eventId);
-		uuid_unparse(_eventId, eventIdStr);
+		uuid_unparse_lower(_eventId, eventIdStr);
 		_eventIdStr = eventIdStr;
 		_logger = Logger::getLogger();
 	}
@@ -585,9 +583,7 @@ public:
 		_maxPartitionMillis = MAX_PROVENANCE_ENTRY_LIFE_TIME;
 		_purgePeriod = PROVENANCE_PURGE_PERIOD;
 		_maxPartitionBytes = MAX_PROVENANCE_STORAGE_SIZE;
-#ifdef LEVELDB_SUPPORT
 		_db = NULL;
-#endif
 		_thread = NULL;
 		_running = false;
 		_repoFull = false;
@@ -624,7 +620,6 @@ public:
 			}
 		}
 		_logger->log_info("NiFi Provenance Max Storage Time: [%d] ms", _maxPartitionMillis);
-#ifdef LEVELDB_SUPPORT
 		leveldb::Options options;
 		options.create_if_missing = true;
 		leveldb::Status status = leveldb::DB::Open(options, _directory.c_str(), &_db);
@@ -637,7 +632,7 @@ public:
 			_logger->log_error("NiFi Provenance Repository database open %s fail", _directory.c_str());
 			return false;
 		}
-#endif
+
 		// start the monitor thread
 		start();
 		return true;
@@ -645,7 +640,6 @@ public:
 	//! Put
 	virtual bool Put(std::string key, uint8_t *buf, int bufLen)
 	{
-#ifdef LEVELDB_SUPPORT
 		// persistent to the DB
 		leveldb::Slice value((const char *) buf, bufLen);
 		leveldb::Status status;
@@ -654,37 +648,26 @@ public:
 			return true;
 		else
 			return false;
-#else
-		return false;
-#endif
 	}
 	//! Delete
 	virtual bool Delete(std::string key)
 	{
-#ifdef LEVELDB_SUPPORT
 		leveldb::Status status;
 		status = _db->Delete(leveldb::WriteOptions(), key);
 		if (status.ok())
 			return true;
 		else
 			return false;
-#else
-		return false;
-#endif
 	}
 	//! Get
 	virtual bool Get(std::string key, std::string &value)
 	{
-#ifdef LEVELDB_SUPPORT
 		leveldb::Status status;
 		status = _db->Get(leveldb::ReadOptions(), key, &value);
 		if (status.ok())
 			return true;
 		else
 			return false;
-#else
-		return false;
-#endif
 	}
 	//! Persistent event
 	void registerEvent(ProvenanceEventRecord *event)
@@ -699,13 +682,11 @@ public:
 	//! destroy
 	void destroy()
 	{
-#ifdef LEVELDB_SUPPORT
 		if (_db)
 		{
 			delete _db;
 			_db = NULL;
 		}
-#endif
 	}
 	//! Run function for the thread
 	static void run(ProvenanceRepository *repo);
@@ -737,10 +718,8 @@ private:
 	int64_t _maxPartitionBytes;
 	//! purge period
 	uint64_t _purgePeriod;
-#ifdef LEVELDB_SUPPORT
 	//! level DB database
 	leveldb::DB* _db;
-#endif
 	//! thread
 	std::thread *_thread;
 	//! whether it is running

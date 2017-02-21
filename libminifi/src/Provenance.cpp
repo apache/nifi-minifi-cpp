@@ -580,7 +580,6 @@ void ProvenanceRepository::stop() {
 
 void ProvenanceRepository::run(ProvenanceRepository *repo) {
 	// threshold for purge
-#ifdef LEVELDB_SUPPORT
 	uint64_t purgeThreshold = repo->_maxPartitionBytes * 3 / 4;
 	while (repo->_running) {
 		std::this_thread::sleep_for(
@@ -621,7 +620,6 @@ void ProvenanceRepository::run(ProvenanceRepository *repo) {
 		else
 			repo->_repoFull = false;
 	}
-#endif
 	return;
 }
 

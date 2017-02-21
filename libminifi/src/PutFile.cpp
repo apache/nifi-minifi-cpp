@@ -88,7 +88,7 @@ void PutFile::onTrigger(ProcessContext *context, ProcessSession *session)
 	char tmpFileUuidStr[37];
 	uuid_t tmpFileUuid;
 	uuid_generate(tmpFileUuid);
-	uuid_unparse(tmpFileUuid, tmpFileUuidStr);
+	uuid_unparse_lower(tmpFileUuid, tmpFileUuidStr);
 	std::stringstream tmpFileSs;
 	tmpFileSs << directory << "/." << filename << "." << tmpFileUuidStr;
 	std::string tmpFile = tmpFileSs.str();

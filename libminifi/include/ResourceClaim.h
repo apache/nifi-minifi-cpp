@@ -44,7 +44,7 @@ public:
 	/*!
 	 * Create a new resource claim
 	 */
-	ResourceClaim();
+	ResourceClaim(const std::string contentDirectory = default_directory_path);
 	//! Destructor
 	virtual ~ResourceClaim() {}
 	//! increaseFlowFileRecordOwnedCount

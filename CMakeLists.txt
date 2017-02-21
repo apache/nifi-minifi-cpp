@@ -74,13 +74,13 @@ if (LEVELDB_FOUND)
 else ()
     message( FATAL_ERROR "LevelDB was not found. Please install LevelDB" )
 endif (LEVELDB_FOUND)
-
 find_package(UUID REQUIRED)
 file(GLOB SPD_SOURCES "include/spdlog/*")
 
 add_subdirectory(thirdparty/yaml-cpp-yaml-cpp-0.5.3)
 add_subdirectory(libminifi)
 add_subdirectory(main)
+
 
 # Generate source assembly
 set(ASSEMBLY_BASE_NAME "${CMAKE_PROJECT_NAME}-${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}")
@@ -120,8 +120,8 @@ enable_testing(test)
     add_executable(tests ${LIBMINIFI_TEST_SOURCES} ${SPD_SOURCES})
     target_include_directories(tests PRIVATE BEFORE "thirdparty/catch")
     target_include_directories(tests PRIVATE BEFORE "thirdparty/yaml-cpp-yaml-cpp-0.5.3/include")
+    target_include_directories(tests PRIVATE BEFORE ${LEVELDB_INCLUDE_DIRS})
     target_include_directories(tests PRIVATE BEFORE "include")
     target_include_directories(tests PRIVATE BEFORE "libminifi/include/")
-    target_include_directories(tests PRIVATE BEFORE ${LEVELDB_INCLUDE_DIRS})
-    target_link_libraries(tests ${CMAKE_THREAD_LIBS_INIT} ${LEVELDB_LIBRARIES} ${OPENSSL_LIBRARIES} ${UUID_LIBRARIES} minifi yaml-cpp)
+    target_link_libraries(tests ${CMAKE_THREAD_LIBS_INIT} ${UUID_LIBRARIES} ${LEVELDB_LIBRARIES} ${OPENSSL_LIBRARIES} minifi yaml-cpp)
     add_test(NAME LibMinifiTests COMMAND tests)
