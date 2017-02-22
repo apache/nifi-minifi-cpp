@@ -1,37 +1,20 @@
-/*************************************************************************/
-/* spdlog - an extremely fast and easy to use c++11 logging library.     */
-/* Copyright (c) 2014 Gabi Melman.                                       */
-/*                                                                       */
-/* Permission is hereby granted, free of charge, to any person obtaining */
-/* a copy of this software and associated documentation files (the       */
-/* "Software"), to deal in the Software without restriction, including   */
-/* without limitation the rights to use, copy, modify, merge, publish,   */
-/* distribute, sublicense, and/or sell copies of the Software, and to    */
-/* permit persons to whom the Software is furnished to do so, subject to */
-/* the following conditions:                                             */
-/*                                                                       */
-/* The above copyright notice and this permission notice shall be        */
-/* included in all copies or substantial portions of the Software.       */
-/*                                                                       */
-/* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,       */
-/* EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF    */
-/* MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.*/
-/* IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY  */
-/* CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,  */
-/* TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE     */
-/* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                */
-/*************************************************************************/
+//
+// Copyright(c) 2015 Gabi Melman.
+// Distributed under the MIT License (http://opensource.org/licenses/MIT)
+//
 
 #pragma once
 
-
-#include "./async_log_helper.h"
-
-//
 // Async Logger implementation
-// Use single async_sink (queue) to perform the logging in a worker thread
-//
+// Use an async_sink (queue per logger) to perform the logging in a worker thread
 
+#include <spdlog/details/async_log_helper.h>
+#include <spdlog/async_logger.h>
+
+#include <string>
+#include <functional>
+#include <chrono>
+#include <memory>
 
 template<class It>
 inline spdlog::async_logger::async_logger(const std::string& logger_name,
@@ -40,28 +23,39 @@ inline spdlog::async_logger::async_logger(const std::string& logger_name,
         size_t queue_size,
         const  async_overflow_policy overflow_policy,
         const std::function<void()>& worker_warmup_cb,
-        const std::chrono::milliseconds& flush_interval_ms) :
+        const std::chrono::milliseconds& flush_interval_ms,
+        const std::function<void()>& worker_teardown_cb) :
     logger(logger_name, begin, end),
-    _async_log_helper(new details::async_log_helper(_formatter, _sinks, queue_size, overflow_policy, worker_warmup_cb, flush_interval_ms))
+    _async_log_helper(new details::async_log_helper(_formatter, _sinks, queue_size, _err_handler, overflow_policy, worker_warmup_cb, flush_interval_ms, worker_teardown_cb))
 {
 }
 
 inline spdlog::async_logger::async_logger(const std::string& logger_name,
-        sinks_init_list sinks,
+        sinks_init_list sinks_list,
         size_t queue_size,
         const  async_overflow_policy overflow_policy,
         const std::function<void()>& worker_warmup_cb,
-        const std::chrono::milliseconds& flush_interval_ms) :
-    async_logger(logger_name, sinks.begin(), sinks.end(), queue_size, overflow_policy, worker_warmup_cb, flush_interval_ms) {}
+        const std::chrono::milliseconds& flush_interval_ms,
+        const std::function<void()>& worker_teardown_cb) :
+    async_logger(logger_name, sinks_list.begin(), sinks_list.end(), queue_size, overflow_policy, worker_warmup_cb, flush_interval_ms, worker_teardown_cb) {}
 
 inline spdlog::async_logger::async_logger(const std::string& logger_name,
         sink_ptr single_sink,
         size_t queue_size,
         const  async_overflow_policy overflow_policy,
         const std::function<void()>& worker_warmup_cb,
-        const std::chrono::milliseconds& flush_interval_ms) :
-    async_logger(logger_name, { single_sink }, queue_size, overflow_policy, worker_warmup_cb, flush_interval_ms) {}
+        const std::chrono::milliseconds& flush_interval_ms,
+        const std::function<void()>& worker_teardown_cb) :
+    async_logger(logger_name,
+{
+    single_sink
+}, queue_size, overflow_policy, worker_warmup_cb, flush_interval_ms, worker_teardown_cb) {}
 
+
+inline void spdlog::async_logger::flush()
+{
+    _async_log_helper->flush(true);
+}
 
 inline void spdlog::async_logger::_set_formatter(spdlog::formatter_ptr msg_formatter)
 {
@@ -76,7 +70,20 @@ inline void spdlog::async_logger::_set_pattern(const std::string& pattern)
 }
 
 
-inline void spdlog::async_logger::_log_msg(details::log_msg& msg)
+inline void spdlog::async_logger::_sink_it(details::log_msg& msg)
 {
-    _async_log_helper->log(msg);
+    try
+    {
+        _async_log_helper->log(msg);
+        if (_should_flush_on(msg))
+            _async_log_helper->flush(false); // do async flush
+    }
+    catch (const std::exception &ex)
+    {
+        _err_handler(ex.what());
+    }
+    catch (...)
+    {
+        _err_handler("Unknown exception");
+    }
 }

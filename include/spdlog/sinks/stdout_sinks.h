@@ -1,33 +1,16 @@
-/*************************************************************************/
-/* spdlog - an extremely fast and easy to use c++11 logging library.     */
-/* Copyright (c) 2014 Gabi Melman.                                       */
-/*                                                                       */
-/* Permission is hereby granted, free of charge, to any person obtaining */
-/* a copy of this software and associated documentation files (the       */
-/* "Software"), to deal in the Software without restriction, including   */
-/* without limitation the rights to use, copy, modify, merge, publish,   */
-/* distribute, sublicense, and/or sell copies of the Software, and to    */
-/* permit persons to whom the Software is furnished to do so, subject to */
-/* the following conditions:                                             */
-/*                                                                       */
-/* The above copyright notice and this permission notice shall be        */
-/* included in all copies or substantial portions of the Software.       */
-/*                                                                       */
-/* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,       */
-/* EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF    */
-/* MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.*/
-/* IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY  */
-/* CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,  */
-/* TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE     */
-/* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                */
-/*************************************************************************/
+//
+// Copyright(c) 2015 Gabi Melman.
+// Distributed under the MIT License (http://opensource.org/licenses/MIT)
+//
 
 #pragma once
 
-#include <iostream>
+#include <spdlog/details/null_mutex.h>
+#include <spdlog/sinks/base_sink.h>
+
+#include <cstdio>
+#include <memory>
 #include <mutex>
-#include "./ostream_sink.h"
-#include "spdlog/details/null_mutex.h"
 
 namespace spdlog
 {
@@ -35,15 +18,27 @@ namespace sinks
 {
 
 template <class Mutex>
-class stdout_sink : public ostream_sink<Mutex>
+class stdout_sink: public base_sink<Mutex>
 {
     using MyType = stdout_sink<Mutex>;
 public:
-    stdout_sink() : ostream_sink<Mutex>(std::cout, true) {}
+    stdout_sink()
+    {}
     static std::shared_ptr<MyType> instance()
     {
         static std::shared_ptr<MyType> instance = std::make_shared<MyType>();
         return instance;
+    }
+
+    void _sink_it(const details::log_msg& msg) override
+    {
+        fwrite(msg.formatted.data(), sizeof(char), msg.formatted.size(), stdout);
+        flush();
+    }
+
+    void flush() override
+    {
+        fflush(stdout);
     }
 };
 
@@ -52,17 +47,28 @@ typedef stdout_sink<std::mutex> stdout_sink_mt;
 
 
 template <class Mutex>
-class stderr_sink : public ostream_sink<Mutex>
+class stderr_sink: public base_sink<Mutex>
 {
     using MyType = stderr_sink<Mutex>;
 public:
-    stderr_sink() : ostream_sink<Mutex>(std::cerr, true) {}
+    stderr_sink()
+    {}
     static std::shared_ptr<MyType> instance()
     {
         static std::shared_ptr<MyType> instance = std::make_shared<MyType>();
         return instance;
     }
 
+    void _sink_it(const details::log_msg& msg) override
+    {
+        fwrite(msg.formatted.data(), sizeof(char), msg.formatted.size(), stderr);
+        flush();
+    }
+
+    void flush() override
+    {
+        fflush(stderr);
+    }
 };
 
 typedef stderr_sink<std::mutex> stderr_sink_mt;
