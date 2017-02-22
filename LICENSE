@@ -240,8 +240,17 @@ This product bundles 'libuuid' which is available under a "3-clause BSD" license
 
 This product bundles 'spdlog' which is available under an MIT license.
 
-	Copyright (c) 2016 Gabi Melman.
 
+	Copyright (c) 2016 Alexander Dalshov.
+
+	Copyright (c) 2015 David Schury.
+
+	Copyright (c) 2015/2016 Gabi Melman.
+	
+	Copyright (c) 2016 Kevin M. Godby (a modified version of spdlog).
+	
+	Copyright (c) 2016 spdlog.
+	
 	Permission is hereby granted, free of charge, to any person obtaining a copy
 	of this software and associated documentation files (the "Software"), to deal
 	in the Software without restriction, including without limitation the rights
@@ -259,6 +268,7 @@ This product bundles 'spdlog' which is available under an MIT license.
 	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 	THE SOFTWARE.
+		
 
 This product bundles 'libxml2' which is available under an MIT license.
 
