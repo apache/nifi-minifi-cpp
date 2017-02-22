@@ -49,7 +49,7 @@ TEST_CASE("Test CRC3", "[testcrc3]") {
 	CRCStream<BaseStream> test(&base);
 	uint64_t number=7;
 	test.write(number);
-	REQUIRE(1877464688 == test.getCRC());
+	REQUIRE(4215687882 == test.getCRC());
 	
 	
 }
@@ -61,7 +61,7 @@ TEST_CASE("Test CRC4", "[testcrc4]") {
 	CRCStream<BaseStream> test(&base);
 	uint32_t number=7;
 	test.write(number);
-	REQUIRE(3163809701 == test.getCRC());
+	REQUIRE(3206564543 == test.getCRC());
 	
 	
 }
@@ -72,7 +72,7 @@ TEST_CASE("Test CRC5", "[testcrc5]") {
 	CRCStream<BaseStream> test(&base);
 	uint16_t number=7;
 	test.write(number);
-	REQUIRE(244876344 == test.getCRC());
+	REQUIRE(3753740124 == test.getCRC());
 	
 	
 }

@@ -126,7 +126,7 @@ public:
 	
 
 	virtual short initialize() {
-		child_stream->initialize();
+		child_stream_->initialize();
 		reset();
 		return 0;
 	}
@@ -135,7 +135,7 @@ public:
 	void updateCRC(uint8_t *buffer, uint32_t length);
 
 	uint64_t getCRC() {
-		return crc;
+		return crc_;
 	}
 
 	void reset();
@@ -155,30 +155,21 @@ protected:
 	    return buf;
 	}
 	
-	template<typename K>
-	void updateCRCPrimitive(const K &t) {
-	    uint8_t bytes[sizeof t];
-	    std::copy(static_cast<const char*>(static_cast<const void*>(&t)),
-		      static_cast<const char*>(static_cast<const void*>(&t)) + sizeof t,
-		      bytes);
-	    updateCRC(bytes, sizeof t);
-	}
-
   
-	uint64_t crc;
-	T *child_stream;
+	uint64_t crc_;
+	T *child_stream_;
 };
 
 
 template<typename T>
 CRCStream<T>::CRCStream(T *other) :
-		child_stream(other) {
-	crc = crc32(0L, Z_NULL, 0);
+		child_stream_(other) {
+	crc_ = crc32(0L, Z_NULL, 0);
 }
 
 template<typename T>
 CRCStream<T>::CRCStream(CRCStream<T> &&move) :
-		crc(std::move(move.crc)), child_stream(std::move(move.child_stream)) {
+		crc_(std::move(move.crc_)), child_stream_(std::move(move.child_stream_)) {
 
 }
 
@@ -192,8 +183,8 @@ int CRCStream<T>::readData(std::vector<uint8_t> &buf, int buflen) {
 
 template<typename T>
 int CRCStream<T>::readData(uint8_t *buf, int buflen) {
-	int ret = child_stream->read(buf, buflen);
-	crc = crc32(crc, buf, buflen);
+	int ret = child_stream_->read(buf, buflen);
+	crc_ = crc32(crc_, buf, buflen);
 	return ret;
 }
 
@@ -208,55 +199,52 @@ int CRCStream<T>::writeData(std::vector<uint8_t> &buf, int buflen) {
 template<typename T>
 int CRCStream<T>::writeData(uint8_t *value, int size) {
 
-	int ret = child_stream->write(value, size);
-	crc = crc32(crc, value, size);
+	int ret = child_stream_->write(value, size);
+	crc_ = crc32(crc_, value, size);
 	return ret;
 
 }
 template<typename T>
 void CRCStream<T>::reset() {
-	crc = crc32(0L, Z_NULL, 0);
+	crc_ = crc32(0L, Z_NULL, 0);
 }
 template<typename T>
 void CRCStream<T>::updateCRC(uint8_t *buffer, uint32_t length) {
-	crc = crc32(crc, buffer, length);
+	crc_ = crc32(crc_, buffer, length);
 }
 
 template<typename T>
 int CRCStream<T>::write(uint64_t base_value, bool is_little_endian){
   
-  updateCRCPrimitive(base_value);
    const uint64_t value =
         is_little_endian == 1 ? htonll_r(base_value) : base_value;
     uint8_t bytes[sizeof value];
     std::copy(static_cast<const char*>(static_cast<const void*>(&value)),
               static_cast<const char*>(static_cast<const void*>(&value)) + sizeof value,
               bytes);
-  return child_stream->write(bytes,sizeof value);
+    return writeData(bytes,sizeof value);
 }
 
 
 template<typename T>
 int CRCStream<T>::write(uint32_t base_value, bool is_little_endian){
-  updateCRCPrimitive(base_value);
    const uint32_t value = is_little_endian ? htonl(base_value) : base_value;
     uint8_t bytes[sizeof value];
     std::copy(static_cast<const char*>(static_cast<const void*>(&value)),
               static_cast<const char*>(static_cast<const void*>(&value)) + sizeof value,
               bytes);
-  return child_stream->write(bytes,sizeof value);
+    return writeData(bytes,sizeof value);
 }
 
 template<typename T>
 int CRCStream<T>::write(uint16_t base_value, bool is_little_endian){
-  updateCRCPrimitive(base_value);
   const uint16_t value =
         is_little_endian == 1 ? htons(base_value) : base_value;
   uint8_t bytes[sizeof value];
     std::copy(static_cast<const char*>(static_cast<const void*>(&value)),
               static_cast<const char*>(static_cast<const void*>(&value)) + sizeof value,
               bytes);
-  return child_stream->write(bytes,sizeof value);
+    return writeData(bytes,sizeof value);
 }
 
 
