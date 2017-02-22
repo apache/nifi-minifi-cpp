@@ -53,15 +53,6 @@ add_library(minifi STATIC ${SOURCES})
 find_package(Boost COMPONENTS system REQUIRED)
 target_link_libraries(minifi ${Boost_SYSTEM_LIBRARY})
 
-# Include libxml2
-find_package (LibXml2)
-if (LIBXML2_FOUND)
-    include_directories(${LIBXML2_INCLUDE_DIR})
-    target_link_libraries (minifi ${LIBXML2_LIBRARIES})
-else ()
-    # Build from our local version
-endif (LIBXML2_FOUND)
-
 # Include LevelDB
 find_package (Leveldb REQUIRED)
 if (LEVELDB_FOUND)
