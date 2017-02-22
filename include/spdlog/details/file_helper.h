@@ -1,26 +1,7 @@
-/*************************************************************************/
-/* spdlog - an extremely fast and easy to use c++11 logging library.     */
-/* Copyright (c) 2014 Gabi Melman.                                       */
-/*                                                                       */
-/* Permission is hereby granted, free of charge, to any person obtaining */
-/* a copy of this software and associated documentation files (the       */
-/* "Software"), to deal in the Software without restriction, including   */
-/* without limitation the rights to use, copy, modify, merge, publish,   */
-/* distribute, sublicense, and/or sell copies of the Software, and to    */
-/* permit persons to whom the Software is furnished to do so, subject to */
-/* the following conditions:                                             */
-/*                                                                       */
-/* The above copyright notice and this permission notice shall be        */
-/* included in all copies or substantial portions of the Software.       */
-/*                                                                       */
-/* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,       */
-/* EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF    */
-/* MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.*/
-/* IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY  */
-/* CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,  */
-/* TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE     */
-/* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                */
-/*************************************************************************/
+//
+// Copyright(c) 2015 Gabi Melman.
+// Distributed under the MIT License (http://opensource.org/licenses/MIT)
+//
 
 #pragma once
 
@@ -29,13 +10,14 @@
 // Can be set to auto flush on every line
 // Throw spdlog_ex exception on errors
 
+#include <spdlog/details/os.h>
+#include <spdlog/details/log_msg.h>
+
+#include <chrono>
+#include <cstdio>
 #include <string>
 #include <thread>
-#include <chrono>
-#include "os.h"
-
-
-
+#include <cerrno>
 
 namespace spdlog
 {
@@ -44,13 +26,13 @@ namespace details
 
 class file_helper
 {
+
 public:
     const int open_tries = 5;
     const int open_interval = 10;
 
-    explicit file_helper(bool force_flush):
-        _fd(nullptr),
-        _force_flush(force_flush)
+    explicit file_helper() :
+        _fd(nullptr)
     {}
 
     file_helper(const file_helper&) = delete;
@@ -62,32 +44,33 @@ public:
     }
 
 
-    void open(const std::string& fname, bool truncate=false)
+    void open(const filename_t& fname, bool truncate = false)
     {
 
         close();
-        const char* mode = truncate ? "wb" : "ab";
+        auto *mode = truncate ? SPDLOG_FILENAME_T("wb") : SPDLOG_FILENAME_T("ab");
         _filename = fname;
         for (int tries = 0; tries < open_tries; ++tries)
         {
-            if(!os::fopen_s(&_fd, fname, mode))
+            if (!os::fopen_s(&_fd, fname, mode))
                 return;
 
             std::this_thread::sleep_for(std::chrono::milliseconds(open_interval));
         }
 
-        throw spdlog_ex("Failed opening file " + fname + " for writing");
+        throw spdlog_ex("Failed opening file " + os::filename_to_str(_filename) + " for writing", errno);
     }
 
     void reopen(bool truncate)
     {
-        if(_filename.empty())
+        if (_filename.empty())
             throw spdlog_ex("Failed re opening file - was not opened before");
         open(_filename, truncate);
 
     }
 
-    void flush() {
+    void flush()
+    {
         std::fflush(_fd);
     }
 
@@ -103,42 +86,33 @@ public:
     void write(const log_msg& msg)
     {
 
-        size_t size = msg.formatted.size();
+        size_t msg_size = msg.formatted.size();
         auto data = msg.formatted.data();
-        if(std::fwrite(data, 1, size, _fd) != size)
-            throw spdlog_ex("Failed writing to file " + _filename);
-
-        if(_force_flush)
-            std::fflush(_fd);
-
+        if (std::fwrite(data, 1, msg_size, _fd) != msg_size)
+            throw spdlog_ex("Failed writing to file " + os::filename_to_str(_filename), errno);
     }
 
-    const std::string& filename() const
+    size_t size()
+    {
+        if (!_fd)
+            throw spdlog_ex("Cannot use size() on closed file " + os::filename_to_str(_filename));
+        return os::filesize(_fd);
+    }
+
+    const filename_t& filename() const
     {
         return _filename;
     }
 
-    static bool file_exists(const std::string& name)
+    static bool file_exists(const filename_t& name)
     {
-        FILE* file;
-        if (!os::fopen_s(&file, name.c_str(), "r"))
-        {
-            fclose(file);
-            return true;
-        }
-        else
-        {
-            return false;
-        }
+
+        return os::file_exists(name);
     }
 
 private:
     FILE* _fd;
-    std::string _filename;
-    bool _force_flush;
-
-
+    filename_t _filename;
 };
 }
 }
-
