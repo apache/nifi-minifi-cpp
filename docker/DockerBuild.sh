@@ -22,17 +22,29 @@
 UID_ARG=$1
 GID_ARG=$2
 MINIFI_VERSION=$3
-MINIFI_PACKAGE=$4
+MINIFI_SOURCE_CODE=$4
 CMAKE_SOURCE_DIR=$5
 
 echo "NiFi-MiNiFi-CPP Version: $MINIFI_VERSION"
 echo "Current Working Directory: $(pwd)"
 echo "CMake Source Directory: $CMAKE_SOURCE_DIR"
-echo "MiNiFi Package: $MINIFI_PACKAGE"
+echo "MiNiFi Package: $MINIFI_SOURCE_CODE"
 
 # Copy the MiNiFi package to the Docker working directory before building
-cp $CMAKE_SOURCE_DIR/build/$MINIFI_PACKAGE $CMAKE_SOURCE_DIR/docker/.
+mkdir -p $CMAKE_SOURCE_DIR/docker/minificppsource
+cp -r $CMAKE_SOURCE_DIR/bin $CMAKE_SOURCE_DIR/docker/minificppsource/.
+cp -r $CMAKE_SOURCE_DIR/cmake $CMAKE_SOURCE_DIR/docker/minificppsource/.
+cp -r $CMAKE_SOURCE_DIR/conf $CMAKE_SOURCE_DIR/docker/minificppsource/.
+cp -r $CMAKE_SOURCE_DIR/examples $CMAKE_SOURCE_DIR/docker/minificppsource/.
+cp -r $CMAKE_SOURCE_DIR/include $CMAKE_SOURCE_DIR/docker/minificppsource/.
+cp -r $CMAKE_SOURCE_DIR/libminifi $CMAKE_SOURCE_DIR/docker/minificppsource/.
+cp -r $CMAKE_SOURCE_DIR/main $CMAKE_SOURCE_DIR/docker/minificppsource/.
+cp -r $CMAKE_SOURCE_DIR/thirdparty $CMAKE_SOURCE_DIR/docker/minificppsource/.
+cp -r $CMAKE_SOURCE_DIR/CMakeLists.txt $CMAKE_SOURCE_DIR/docker/minificppsource/.
+cp -r $CMAKE_SOURCE_DIR/LICENSE $CMAKE_SOURCE_DIR/docker/minificppsource/.
+cp -r $CMAKE_SOURCE_DIR/NOTICE $CMAKE_SOURCE_DIR/docker/minificppsource/.
+cp -r $CMAKE_SOURCE_DIR/README.md $CMAKE_SOURCE_DIR/docker/minificppsource/.
 
-DOCKER_COMMAND="docker build --build-arg UID=$UID_ARG --build-arg GID=$GID_ARG --build-arg MINIFI_VERSION=$MINIFI_VERSION --build-arg MINIFI_PACKAGE=$MINIFI_PACKAGE -t apacheminificpp:$MINIFI_VERSION ."
+DOCKER_COMMAND="docker build --build-arg UID=$UID_ARG --build-arg GID=$GID_ARG --build-arg MINIFI_VERSION=$MINIFI_VERSION --build-arg MINIFI_SOURCE_CODE=$MINIFI_SOURCE_CODE -t apacheminificpp:$MINIFI_VERSION ."
 echo "Docker Command: '$DOCKER_COMMAND'"
 ${DOCKER_COMMAND}

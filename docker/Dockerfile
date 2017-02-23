@@ -16,26 +16,53 @@
 # under the License.
 #
 
-FROM alpine:3.5
+FROM ubuntu:16.10
 MAINTAINER Apache NiFi <dev@nifi.apache.org>
 
 ARG UID
 ARG GID
 ARG MINIFI_VERSION
-ARG MINIFI_PACKAGE
+ARG MINIFI_SOURCE_CODE
+
+# Install the system dependencies needed for a build
+RUN apt-get update && apt-get install -y build-essential \
+	wget \
+	gdb \
+	libboost-all-dev \
+	libxml2-dev \
+	vim \
+	uuid-dev \
+	libleveldb-dev \
+	cmake \
+	git \
+	unzip \
+	libgps-dev \
+	gpsd \
+	gpsd-clients \
+	libssl-dev
 
 ENV USER minificpp
 ENV MINIFI_BASE_DIR /opt/minifi
-ENV MINIFI_HOME $MINIFI_BASE_DIR/nifi-minifi-cpp-$MINIFI_VERSION
 
 # Setup minificpp user
-RUN adduser -u $UID -g $GID -D $USER
-RUN mkdir -p $MINIFI_HOME 
+RUN addgroup --gid $GID $USER && adduser --uid $UID --gid $GID --disabled-password --gecos "" $USER
+RUN mkdir -p $MINIFI_BASE_DIR 
 
-ADD $MINIFI_PACKAGE $MINIFI_BASE_DIR
-RUN chown -R $USER:$USER $MINIFI_HOME
+ADD $MINIFI_SOURCE_CODE $MINIFI_BASE_DIR
+RUN chown -R $USER:$USER $MINIFI_BASE_DIR
 
 USER $USER
 
-# Startup NiFi-MiNiFi-CPP
-CMD $MINIFI_HOME/bin/minifi.sh run
+ENV MINIFI_HOME $MINIFI_BASE_DIR/nifi-minifi-cpp-$MINIFI_VERSION
+
+# Perform the build
+RUN cd $MINIFI_BASE_DIR \
+	&& mkdir build \
+	&& cd build \
+	&& cmake .. \
+	&& make package \
+	&& tar -xzvf $MINIFI_BASE_DIR/build/nifi-minifi-cpp-$MINIFI_VERSION-bin.tar.gz -C $MINIFI_BASE_DIR
+
+# Start MiNiFi CPP in the foreground
+CMD cd $MINIFI_HOME && ./bin/minifi.sh run
+
