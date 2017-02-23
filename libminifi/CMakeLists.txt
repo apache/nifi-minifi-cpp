@@ -52,7 +52,7 @@ include_directories(../thirdparty/yaml-cpp-yaml-cpp-0.5.3/include)
 include_directories(../thirdparty/civetweb-1.9.1/include)
 include_directories(include)
 
-file(GLOB_RECURSE SOURCES "src/*.cpp")
+file(GLOB SOURCES "src/*.cpp" "src/io/*.cpp" "src/utils/*.cpp")
 file(GLOB SPD_SOURCES "../include/spdlog/*")
 
 # Workaround the limitations of having a
