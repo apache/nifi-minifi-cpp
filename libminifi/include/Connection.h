@@ -29,8 +29,8 @@
 #include <algorithm>
 
 #include "FlowFileRecord.h"
-#include "Relationship.h"
 #include "Logger.h"
+#include "Relationship.h"
 
 //! Forwarder declaration
 class Processor;
@@ -190,7 +190,7 @@ private:
 	//! Queue for the Flow File
 	std::queue<FlowFileRecord *> _queue;
 	//! Logger
-	Logger *logger_;
+	std::shared_ptr<Logger> logger_;
 	// Prevent default copy constructor and assignment operation
 	// Only support pass by reference or pointer
 	Connection(const Connection &parent);

@@ -37,6 +37,7 @@
 #include "utils/TimeUtil.h"
 
 
+
 static const char MAGIC_BYTES[] = { 'N', 'i', 'F', 'i' };
 
 //! Site2SitePeer Class
@@ -251,7 +252,7 @@ private:
 	//! socket timeout;
 	std::atomic<uint64_t> _timeOut;
 	//! Logger
-	Logger *logger_;
+	std::shared_ptr<Logger> logger_;
 	//! Configure
 	Configure *configure_;
 	//! Yield Period in Milliseconds

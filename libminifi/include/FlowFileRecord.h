@@ -216,7 +216,7 @@ private:
 	//! Orginal connection queue that this flow file was dequeued from
 	Connection *_orginalConnection;
 	//! Logger
-	Logger *logger_;
+	std::shared_ptr<Logger> logger_;
 	//! Snapshot flow record for session rollback
 	bool _snapshot;
 	// Prevent default copy constructor and assignment operation

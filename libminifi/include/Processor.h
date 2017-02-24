@@ -354,7 +354,7 @@ private:
 	//! Check all incoming connections for work
 	bool isWorkAvailable();
 	//! Logger
-	Logger *logger_;
+	std::shared_ptr<Logger> logger_;
 	// Prevent default copy constructor and assignment operation
 	// Only support pass by reference or pointer
 	Processor(const Processor &parent);

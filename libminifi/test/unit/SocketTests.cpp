@@ -16,9 +16,7 @@
  * limitations under the License.
  */
 
-#ifndef LIBMINIFI_TEST_UNIT_REALTIMEDATACOLLECTOR_H_
-#define LIBMINIFI_TEST_UNIT_REALTIMEDATACOLLECTOR_H_
-
+#include "../TestBase.h"
 #include "../../include/io/ClientSocket.h"
 TEST_CASE("TestSocket", "[TestSocket1]") {
 
@@ -186,5 +184,3 @@ TEST_CASE("TestSocketWriteTestAfterClose", "[TestSocket6]") {
 
 }
 
-
-#endif /* LIBMINIFI_TEST_UNIT_REALTIMEDATACOLLECTOR_H_ */

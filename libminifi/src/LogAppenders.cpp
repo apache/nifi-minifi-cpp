@@ -16,15 +16,10 @@
  * limitations under the License.
  */
 
-#ifndef LIBMINIFI_TEST_UNIT_TIMEUTILSTEST_H_
-#define LIBMINIFI_TEST_UNIT_TIMEUTILSTEST_H_
+#include "../include/LogAppenders.h"
 
-#include "utils/TimeUtil.h"
+const char *OutputStreamAppender::nifi_log_output_stream_error_stderr="nifi.log.outputstream.appender.error.stderr";
 
-TEST_CASE("Test time conversion", "[testtimeconversion]"){
-	REQUIRE ( "2017-02-16 20:14:56.196" == getTimeStr(1487276096196,true) );
-}
-
-
-
-#endif /* LIBMINIFI_TEST_UNIT_TIMEUTILSTEST_H_ */
+const char *RollingAppender::nifi_log_rolling_apender_file = "nifi.log.rolling.appender.file";
+const char *RollingAppender::nifi_log_rolling_appender_max_files = "nifi.log.rolling.appender.max.files";
+const char *RollingAppender::nifi_log_rolling_appender_max_file_size = "nifi.log.rolling.appender.max.file_size";

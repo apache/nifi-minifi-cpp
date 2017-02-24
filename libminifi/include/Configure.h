@@ -27,6 +27,7 @@
 #include <errno.h>
 #include <iostream>
 #include <fstream>
+
 #include "Logger.h"
 
 class Configure {
@@ -45,7 +46,6 @@ public:
 	static const char *nifi_administrative_yield_duration;
 	static const char *nifi_bored_yield_duration;
 	static const char *nifi_graceful_shutdown_seconds;
-	static const char *nifi_log_level;
 	static const char *nifi_server_name;
 	static const char *nifi_server_port;
 	static const char *nifi_server_report_interval;
@@ -101,7 +101,7 @@ private:
 	//! Mutex for protection
 	std::mutex _mtx;
 	//! Logger
-	Logger *logger_;
+	std::shared_ptr<Logger> logger_;
 	//! Home location for this executable
 	std::string _minifiHome;
 

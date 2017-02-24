@@ -83,7 +83,7 @@ private:
 	//! Configure
 	Configure *configure_;
 	//! Logger
-	Logger *logger_;
+	std::shared_ptr<Logger> logger_;
 	// Prevent default copy constructor and assignment operation
 	// Only support pass by reference or pointer
 	ResourceClaim(const ResourceClaim &parent);

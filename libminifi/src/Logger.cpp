@@ -17,11 +17,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include "../include/Logger.h"
+
 #include <vector>
 #include <queue>
 #include <map>
 
-#include "Logger.h"
 
-Logger *Logger::logger_(NULL);
+std::shared_ptr<Logger> Logger::singleton_logger_(nullptr);
 

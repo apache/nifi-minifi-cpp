@@ -130,7 +130,7 @@ protected:
 
 private:
 	//! Logger
-	Logger *logger_;
+	std::shared_ptr<Logger> logger_;
 	//! Run function for the thread
 	static void run(ListenSyslog *process);
 	//! Run Thread

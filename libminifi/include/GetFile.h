@@ -82,7 +82,7 @@ protected:
 
 private:
 	//! Logger
-	Logger *logger_;
+	std::shared_ptr<Logger> logger_;
 	//! Queue for store directory list
 	std::queue<std::string> _dirList;
 	//! Get Listing size

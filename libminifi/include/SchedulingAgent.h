@@ -31,6 +31,7 @@
 #include "Logger.h"
 #include "Configure.h"
 #include "FlowFileRecord.h"
+#include "Logger.h"
 #include "Processor.h"
 #include "ProcessContext.h"
 
@@ -75,7 +76,7 @@ public:
 
 protected:
 	//! Logger
-	Logger *logger_;
+	std::shared_ptr<Logger> logger_;
 	//! Configure
 	Configure *configure_;
 	//! Mutex for protection

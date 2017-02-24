@@ -29,11 +29,11 @@
 #include <algorithm>
 #include <set>
 
-#include "Logger.h"
 #include "Processor.h"
 #include "Exception.h"
 #include "TimerDrivenSchedulingAgent.h"
 #include "EventDrivenSchedulingAgent.h"
+#include "Logger.h"
 
 //! Process Group Type
 enum ProcessGroupType
@@ -175,7 +175,7 @@ private:
 	//! Mutex for protection
 	std::mutex mtx_;
 	//! Logger
-	Logger *logger_;
+	std::shared_ptr<Logger> logger_;
 	// Prevent default copy constructor and assignment operation
 	// Only support pass by reference or pointer
 	ProcessGroup(const ProcessGroup &parent);

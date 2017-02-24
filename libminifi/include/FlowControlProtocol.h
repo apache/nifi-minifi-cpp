@@ -32,8 +32,8 @@
 #include <errno.h>
 #include <chrono>
 #include <thread>
-#include "Logger.h"
 #include "Configure.h"
+#include "Logger.h"
 #include "Property.h"
 
 //! Forwarder declaration
@@ -304,7 +304,7 @@ private:
 	//! Mutex for protection
 	std::mutex _mtx;
 	//! Logger
-	Logger *logger_ = NULL;
+	std::shared_ptr<Logger> logger_;
 	//! Configure
 	Configure *configure_ = NULL;
 	//! NiFi server Name

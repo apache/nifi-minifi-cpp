@@ -23,8 +23,9 @@
 #include "io/DataStream.h"
 #include "io/Serializable.h"
 #include "Provenance.h"
-#include "Relationship.h"
+
 #include "Logger.h"
+#include "Relationship.h"
 #include "FlowController.h"
 
 //! DeSerialize

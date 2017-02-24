@@ -106,7 +106,7 @@ private:
 	//! Processor
 	Processor *_processor;
 	//! Logger
-	Logger *logger_;
+	std::shared_ptr<Logger> logger_;
 
 };
 

@@ -29,11 +29,11 @@
 #include <algorithm>
 #include <set>
 
-#include "Logger.h"
 #include "Processor.h"
 #include "ProcessContext.h"
 #include "FlowFileRecord.h"
 #include "Exception.h"
+#include "Logger.h"
 #include "Provenance.h"
 
 //! ProcessSession Class
@@ -121,7 +121,7 @@ private:
 	//! ProcessContext
 	ProcessContext *_processContext;
 	//! Logger
-	Logger *logger_;
+	std::shared_ptr<Logger> logger_;
 	//! Provenance Report
 	ProvenanceReporter *_provenanceReport;
 

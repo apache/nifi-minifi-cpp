@@ -20,8 +20,8 @@
 #ifndef __THREADED_SCHEDULING_AGENT_H__
 #define __THREADED_SCHEDULING_AGENT_H__
 
-#include "Logger.h"
 #include "Configure.h"
+#include "Logger.h"
 #include "Processor.h"
 #include "ProcessContext.h"
 #include "SchedulingAgent.h"
