@@ -113,7 +113,7 @@ private:
 	int _realTimeSocket;
 	int _batchSocket;
 	//! Logger
-	Logger *logger_;
+	std::shared_ptr<Logger> logger_;
 	//! Mutex for protection
 	std::mutex _mtx;
 	//! Queued data size

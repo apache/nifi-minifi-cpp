@@ -94,7 +94,7 @@ protected:
 
 private:
 	//! Logger
-	Logger *logger_;
+	std::shared_ptr<Logger> logger_;
 	//! Property
 	std::string _command;
 	std::string _commandArgument;

@@ -69,7 +69,7 @@ public:
 		bool commit();
 
 	private:
-		Logger *logger_;
+		std::shared_ptr<Logger> logger_;
 		std::ofstream _tmpFileOs;
 		bool _writeSucceeded = false;
 		std::string _tmpFile;
@@ -80,7 +80,7 @@ protected:
 
 private:
 	//! Logger
-	Logger *logger_;
+	std::shared_ptr<Logger> logger_;
 
 	bool putFile(ProcessSession *session, FlowFileRecord *flowFile, const std::string &tmpFile, const std::string &destFile);
 };

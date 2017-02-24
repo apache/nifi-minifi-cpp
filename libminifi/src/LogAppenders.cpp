@@ -16,14 +16,10 @@
  * limitations under the License.
  */
 
-#define CATCH_CONFIG_MAIN  // This tells Catch to provide a main() - only do this in one cpp file
+#include "../include/LogAppenders.h"
 
+const char *OutputStreamAppender::nifi_log_output_stream_error_stderr="nifi.log.outputstream.appender.error.stderr";
 
-#include "ProvenanceTests.h"
-#include "ProcessorTests.h"
-#include "SerializationTests.h"
-#include "PropertyTests.h"
-#include "SocketTests.h"
-#include "TimeUtilsTest.h"
-#include "CRCTests.h"
-#include "LoggerTests.h"
+const char *RollingAppender::nifi_log_rolling_apender_file = "nifi.log.rolling.appender.file";
+const char *RollingAppender::nifi_log_rolling_appender_max_files = "nifi.log.rolling.appender.max.files";
+const char *RollingAppender::nifi_log_rolling_appender_max_file_size = "nifi.log.rolling.appender.max.file_size";

@@ -244,7 +244,6 @@ public:
 		return false;
 	}
 
-
 protected:
 	//! Name
 	std::string _name;

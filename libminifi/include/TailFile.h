@@ -65,7 +65,7 @@ protected:
 
 private:
 	//! Logger
-	Logger *logger_;
+	std::shared_ptr<Logger> logger_;
 	std::string _fileLocation;
 	//! Property Specified Tailed File Name
 	std::string _fileName;

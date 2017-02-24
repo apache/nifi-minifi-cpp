@@ -22,8 +22,8 @@
 #include <cstdlib>
 #include "ResourceClaim.h"
 #include "catch.hpp"
-#include "Logger.h"
 #include <vector>
+#include "Logger.h"
 
 
 class LogTestController {

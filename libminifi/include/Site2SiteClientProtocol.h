@@ -34,11 +34,11 @@
 #include <thread>
 #include <algorithm>
 #include <uuid/uuid.h>
-#include "Logger.h"
 #include "Configure.h"
 #include "Property.h"
 #include "Site2SitePeer.h"
 #include "FlowFileRecord.h"
+#include "Logger.h"
 #include "ProcessContext.h"
 #include "ProcessSession.h"
 #include "io/CRCStream.h"
@@ -588,7 +588,7 @@ private:
 	//! Mutex for protection
 	std::mutex _mtx;
 	//! Logger
-	Logger *logger_;
+	std::shared_ptr<Logger> logger_;
 	//! Configure
 	Configure *configure_;
 	//! Batch Count

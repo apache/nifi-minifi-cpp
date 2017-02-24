@@ -122,7 +122,7 @@ protected:
 
 private:
 	//! Logger
-	Logger *logger_;
+	std::shared_ptr<Logger> logger_;
 };
 
 #endif

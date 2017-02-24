@@ -27,8 +27,9 @@
 #include <cstdio>
 
 #include "FlowFileRecord.h"
-#include "Relationship.h"
+
 #include "Logger.h"
+#include "Relationship.h"
 
 std::atomic<uint64_t> FlowFileRecord::_localFlowSeqNumber(0);
 

@@ -28,7 +28,7 @@ std::atomic<TLSContext*> TLSContext::context_instance;
 std::mutex TLSContext::context_mutex;
 
 TLSContext::TLSContext() :
-		error_value(0), ctx(0), logger(Logger::getLogger()), configuration(
+		error_value(0), ctx(0), logger_(Logger::getLogger()), configuration(
 				Configure::getConfigure()) {
 
 }
@@ -56,7 +56,7 @@ short TLSContext::initialize() {
 	method = TLSv1_2_client_method();
 	ctx = SSL_CTX_new(method);
 	if (ctx == NULL) {
-		logger->log_error("Could not create SSL context, error: %s.",
+		logger_->log_error("Could not create SSL context, error: %s.",
 				std::strerror(errno));
 		error_value = TLS_ERROR_CONTEXT;
 		return error_value;
@@ -71,7 +71,7 @@ short TLSContext::initialize() {
 				certificate)
 				&& configuration->get(
 						Configure::nifi_security_client_private_key, privatekey))) {
-			logger->log_error(
+			logger_->log_error(
 					"Certificate and Private Key PEM file not configured, error: %s.",
 					std::strerror(errno));
 			error_value = TLS_ERROR_PEM_MISSING;
@@ -80,7 +80,7 @@ short TLSContext::initialize() {
 		// load certificates and private key in PEM format
 		if (SSL_CTX_use_certificate_file(ctx, certificate.c_str(),
 				SSL_FILETYPE_PEM) <= 0) {
-			logger->log_error("Could not create load certificate, error : %s",
+			logger_->log_error("Could not create load certificate, error : %s",
 					std::strerror(errno));
 			error_value = TLS_ERROR_CERT_MISSING;
 			return error_value;
@@ -96,14 +96,14 @@ short TLSContext::initialize() {
 		int retp = SSL_CTX_use_PrivateKey_file(ctx, privatekey.c_str(),
 				SSL_FILETYPE_PEM);
 		if (retp != 1) {
-			logger->log_error("Could not create load private key,%i on %s error : %s",
+			logger_->log_error("Could not create load private key,%i on %s error : %s",
 					retp,privatekey.c_str(),std::strerror(errno));
 			error_value = TLS_ERROR_KEY_ERROR;
 			return error_value;
 		}
 		// verify private key
 		if (!SSL_CTX_check_private_key(ctx)) {
-			logger->log_error(
+			logger_->log_error(
 					"Private key does not match the public certificate, error : %s",
 					std::strerror(errno));
 			error_value = TLS_ERROR_KEY_ERROR;
@@ -114,7 +114,7 @@ short TLSContext::initialize() {
 				caCertificate)) {
 			retp = SSL_CTX_load_verify_locations(ctx, caCertificate.c_str(), 0);
 			if (retp==0) {
-				logger->log_error(
+				logger_->log_error(
 						"Can not load CA certificate, Exiting, error : %s",
 						std::strerror(errno));
 				error_value = TLS_ERROR_CERT_ERROR;
@@ -122,7 +122,7 @@ short TLSContext::initialize() {
 			}
 		}
 
-		logger->log_info("Load/Verify Client Certificate OK.");
+		logger_->log_info("Load/Verify Client Certificate OK.");
 	}
 	return 0;
 }

@@ -103,7 +103,7 @@ private:
 
 	TLSContext();
 
-	Logger *logger;
+	std::shared_ptr<Logger> logger_;
 	Configure *configuration;
 	SSL_CTX *ctx;
 

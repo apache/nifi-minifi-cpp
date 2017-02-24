@@ -219,7 +219,7 @@ protected:
 private:
 
 	//! Logger
-	Logger *logger_;
+	std::shared_ptr<Logger> logger_;
 
 };
 
@@ -281,9 +281,8 @@ private:
 	//! Mutex for protection
 	std::mutex _mtx;
 	//! Logger
-	Logger *logger_;
+	std::shared_ptr<Logger> logger_;
 	Configure *configure_;
-
 	//! Process Processor Node YAML
 	void parseProcessorNodeYaml(YAML::Node processorNode, ProcessGroup *parent);
 	//! Process Port YAML

@@ -27,6 +27,9 @@
 #include <unistd.h>
 #include <yaml-cpp/yaml.h>
 #include <iostream>
+
+#include "../libminifi/include/BaseLogger.h"
+#include "../libminifi/include/LogAppenders.h"
 #include "spdlog/spdlog.h"
 
 #include "Logger.h"
@@ -64,91 +67,78 @@ static FlowController *controller = NULL;
  * a signal handler. Consequently we will use the semaphore to avoid thread
  * safety issues and.
  */
-void sigHandler(int signal)
-{
+void sigHandler(int signal) {
 
-	if (signal == SIGINT || signal == SIGTERM)
-	{
+	if (signal == SIGINT || signal == SIGTERM) {
 		// avoid stopping the controller here.
 		sem_post(running);
 	}
 }
 
-int main(int argc, char **argv)
-{
-	Logger *logger = Logger::getLogger();
-	logger->setLogLevel(info);
+int main(int argc, char **argv) {
+	std::shared_ptr<Logger> logger = Logger::getLogger();
 
+	logger->setLogLevel(info);
 
 	uint16_t stop_wait_time = STOP_WAIT_TIME_MS;
 
 	std::string graceful_shutdown_seconds = "";
-	std::string configured_log_level = "";
 
-	running = sem_open("MiNiFiMain",O_CREAT,0644,0);
-	if (running == SEM_FAILED || running == 0)
-	{
+	running = sem_open("MiNiFiMain", O_CREAT, 0644, 0);
+	if (running == SEM_FAILED || running == 0) {
 
 		logger->log_error("could not initialize semaphore");
 		perror("initialization failure");
 	}
-    // assumes POSIX compliant environment
-    std::string minifiHome;
-    if (const char* env_p = std::getenv(MINIFI_HOME_ENV_KEY))
-    {
-        minifiHome = env_p;
-    }
-    else
-    {
-        logger->log_info("MINIFI_HOME was not found, determining based on executable path.");
-        char *path = NULL;
-        char full_path[PATH_MAX];
-        path = realpath(argv[0], full_path);
-        std::string minifiHomePath(path);
-        minifiHomePath = minifiHomePath.substr(0, minifiHomePath.find_last_of("/\\"));	//Remove /minifi from path
-        minifiHome = minifiHomePath.substr(0, minifiHomePath.find_last_of("/\\"));	//Remove /bin from path
-    }
+	// assumes POSIX compliant environment
+	std::string minifiHome;
+	if (const char* env_p = std::getenv(MINIFI_HOME_ENV_KEY)) {
+		minifiHome = env_p;
+	} else {
+		logger->log_info(
+				"MINIFI_HOME was not found, determining based on executable path.");
+		char *path = NULL;
+		char full_path[PATH_MAX];
+		path = realpath(argv[0], full_path);
+		std::string minifiHomePath(path);
+		minifiHomePath = minifiHomePath.substr(0,
+				minifiHomePath.find_last_of("/\\")); //Remove /minifi from path
+		minifiHome = minifiHomePath.substr(0,
+				minifiHomePath.find_last_of("/\\"));	//Remove /bin from path
+	}
 
-
-	if (signal(SIGINT, sigHandler) == SIG_ERR || signal(SIGTERM, sigHandler) == SIG_ERR || signal(SIGPIPE, SIG_IGN) == SIG_ERR)
-	{
+	if (signal(SIGINT, sigHandler) == SIG_ERR
+			|| signal(SIGTERM, sigHandler) == SIG_ERR
+			|| signal(SIGPIPE, SIG_IGN) == SIG_ERR) {
 		logger->log_error("Can not install signal handler");
 		return -1;
 	}
 
-    Configure *configure = Configure::getConfigure();
-    configure->setHome(minifiHome);
-    configure->loadConfigureFile(DEFAULT_NIFI_PROPERTIES_FILE);
+	Configure *configure = Configure::getConfigure();
+	configure->setHome(minifiHome);
+	configure->loadConfigureFile(DEFAULT_NIFI_PROPERTIES_FILE);
 
-
-    if (configure->get(Configure::nifi_graceful_shutdown_seconds,graceful_shutdown_seconds))
-    {
-    	try
-    	{
-    		stop_wait_time = std::stoi(graceful_shutdown_seconds);
-    	}
-    	catch(const std::out_of_range &e)
-    	{
-    		logger->log_error("%s is out of range. %s",Configure::nifi_graceful_shutdown_seconds,e.what());
-    	}
-    	catch(const std::invalid_argument &e)
-    	{
-    		logger->log_error("%s contains an invalid argument set. %s",Configure::nifi_graceful_shutdown_seconds,e.what());
-    	}
-    }
-    else
-    {
-    	logger->log_debug("%s not set, defaulting to %d",Configure::nifi_graceful_shutdown_seconds,STOP_WAIT_TIME_MS);
-    }
-
-    if (configure->get(Configure::nifi_log_level,configured_log_level))
-	{
-    		std::cout << "log level is " << configured_log_level << std::endl;
-			logger->setLogLevel(configured_log_level);
-
+	if (configure->get(Configure::nifi_graceful_shutdown_seconds,
+			graceful_shutdown_seconds)) {
+		try {
+			stop_wait_time = std::stoi(graceful_shutdown_seconds);
+		} catch (const std::out_of_range &e) {
+			logger->log_error("%s is out of range. %s",
+					Configure::nifi_graceful_shutdown_seconds, e.what());
+		} catch (const std::invalid_argument &e) {
+			logger->log_error("%s contains an invalid argument set. %s",
+					Configure::nifi_graceful_shutdown_seconds, e.what());
+		}
+	} else {
+		logger->log_debug("%s not set, defaulting to %d",
+				Configure::nifi_graceful_shutdown_seconds, STOP_WAIT_TIME_MS);
 	}
 
+	// set the log configuration.
+	std::unique_ptr<BaseLogger> configured_logger = LogInstance::getConfiguredLogger(
+			configure);
 
+	logger->updateLogger(std::move(configured_logger));
 
 	controller = FlowControllerFactory::getFlowController();
 
@@ -164,9 +154,8 @@ int main(int argc, char **argv)
 	 * yield without the need for a more complex construct and
 	 * a spin lock
 	 */
-	if ( sem_wait(running) != -1 )
+	if (sem_wait(running) != -1)
 		perror("sem_wait");
-
 
 	sem_unlink("MiNiFiMain");
 
@@ -178,8 +167,6 @@ int main(int argc, char **argv)
 	delete controller;
 
 	logger->log_info("MiNiFi exit");
-
-
 
 	return 0;
 }

@@ -25,7 +25,6 @@ const char *Configure::nifi_flow_configuration_file = "nifi.flow.configuration.f
 const char *Configure::nifi_administrative_yield_duration = "nifi.administrative.yield.duration";
 const char *Configure::nifi_bored_yield_duration = "nifi.bored.yield.duration";
 const char *Configure::nifi_graceful_shutdown_seconds  = "nifi.graceful.shutdown.seconds";
-const char *Configure::nifi_log_level = "nifi.log.level";
 const char *Configure::nifi_server_name = "nifi.server.name";
 const char *Configure::nifi_server_port = "nifi.server.port";
 const char *Configure::nifi_server_report_interval= "nifi.server.report.interval";
@@ -38,6 +37,7 @@ const char *Configure::nifi_security_client_certificate = "nifi.security.client.
 const char *Configure::nifi_security_client_private_key = "nifi.security.client.private.key";
 const char *Configure::nifi_security_client_pass_phrase = "nifi.security.client.pass.phrase";
 const char *Configure::nifi_security_client_ca_certificate = "nifi.security.client.ca.certificate";
+
 
 //! Get the config value
 bool Configure::get(std::string key, std::string &value)

@@ -27,23 +27,21 @@
 #include "Site2SiteClientProtocol.h"
 
 //! RemoteProcessorGroupPort Class
-class RemoteProcessorGroupPort : public Processor
-{
+class RemoteProcessorGroupPort: public Processor {
 public:
 	//! Constructor
 	/*!
 	 * Create a new processor
 	 */
-	RemoteProcessorGroupPort(std::string name, uuid_t uuid = NULL)
-	: Processor(name, uuid), direction_(SEND),transmitting_(false), peer_()
-	{
-	    logger_ = Logger::getLogger();
-	    protocol_ = std::unique_ptr<Site2SiteClientProtocol>(new Site2SiteClientProtocol(0));
-	    protocol_->setPortId(uuid);
+	RemoteProcessorGroupPort(std::string name, uuid_t uuid = NULL) :
+			Processor(name, uuid), direction_(SEND), transmitting_(false), peer_() {
+		logger_ = Logger::getLogger();
+		protocol_ = std::unique_ptr<Site2SiteClientProtocol>(
+				new Site2SiteClientProtocol(0));
+		protocol_->setPortId(uuid);
 	}
 	//! Destructor
-	virtual ~RemoteProcessorGroupPort()
-	{
+	virtual ~RemoteProcessorGroupPort() {
 
 	}
 	//! Processor Name
@@ -59,20 +57,17 @@ public:
 	//! Initialize, over write by NiFi RemoteProcessorGroupPort
 	virtual void initialize(void);
 	//! Set Direction
-	void setDirection(TransferDirection direction)
-	{
+	void setDirection(TransferDirection direction) {
 		direction_ = direction;
 		if (direction_ == RECEIVE)
 			this->setTriggerWhenEmpty(true);
 	}
 	//! Set Timeout
-	void setTimeOut(uint64_t timeout)
-	{
+	void setTimeOut(uint64_t timeout) {
 		protocol_->setTimeOut(timeout);
 	}
 	//! SetTransmitting
-	void setTransmitting(bool val)
-	{
+	void setTransmitting(bool val) {
 		transmitting_ = val;
 	}
 
@@ -80,8 +75,8 @@ protected:
 
 private:
 	//! Logger
-	Logger *logger_;
-	
+	std::shared_ptr<Logger> logger_;
+	//! Peer Connection
 	Site2SitePeer peer_;
 	//! Peer Protocol
 	std::unique_ptr<Site2SiteClientProtocol> protocol_;

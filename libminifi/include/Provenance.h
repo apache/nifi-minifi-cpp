@@ -451,7 +451,7 @@ protected:
 private:
 
 	//! Logger
-	Logger *logger_;
+	std::shared_ptr<Logger> logger_;
 	
 	// Prevent default copy constructor and assignment operation
 	// Only support pass by reference or pointer
@@ -555,7 +555,7 @@ private:
 	//! Incoming connection Iterator
 	std::set<ProvenanceEventRecord *> _events;
 	//! Logger
-	Logger *logger_;
+	std::shared_ptr<Logger> logger_;
 
 	// Prevent default copy constructor and assignment operation
 	// Only support pass by reference or pointer
@@ -710,7 +710,7 @@ private:
 	//! repository directory
 	std::string _directory;
 	//! Logger
-	Logger *logger_;
+	std::shared_ptr<Logger> logger_;
 	//! Configure
 	//! max db entry life time
 	Configure *configure_;

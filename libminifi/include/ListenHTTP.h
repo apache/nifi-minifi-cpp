@@ -80,7 +80,7 @@ public:
 		//! Send HTTP 500 error response to client
 		void sendErrorResponse(struct mg_connection *conn);
 		//! Logger
-		Logger *_logger;
+		std::shared_ptr<Logger> _logger;
 
 		std::regex _authDNRegex;
 		std::regex _headersAsAttributesRegex;
@@ -97,7 +97,7 @@ public:
 
 	private:
 		//! Logger
-		Logger *_logger;
+		std::shared_ptr<Logger> _logger;
 
 		struct mg_connection *_conn;
 		const struct mg_request_info *_reqInfo;
@@ -107,7 +107,7 @@ protected:
 
 private:
 	//! Logger
-	Logger *_logger;
+	std::shared_ptr<Logger> _logger;
 
 	std::unique_ptr<CivetServer> _server;
 	std::unique_ptr<Handler> _handler;

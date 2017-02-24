@@ -222,7 +222,7 @@ protected:
 	 */
 	virtual short select_descriptor(const uint16_t msec);
 
-	Logger *logger_;
+	std::shared_ptr<Logger> logger_;
 
 	addrinfo *addr_info_;
 
