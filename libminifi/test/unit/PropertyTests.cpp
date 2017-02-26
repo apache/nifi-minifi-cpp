@@ -15,8 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_TEST_UNIT_PROPERTYTESTS_H_
-#define LIBMINIFI_TEST_UNIT_PROPERTYTESTS_H_
 
 #include "utils/StringUtils.h"
 #include "../TestBase.h"
@@ -103,4 +101,3 @@ TEST_CASE("Test Trimmer Left", "[testTrims]") {
 
 }
 
-#endif /* LIBMINIFI_TEST_UNIT_PROPERTYTESTS_H_ */

@@ -19,11 +19,10 @@
 #define CATCH_CONFIG_MAIN  // This tells Catch to provide a main() - only do this in one cpp file
 
 
-#include "ProvenanceTests.h"
-#include "ProcessorTests.h"
-#include "SerializationTests.h"
-#include "PropertyTests.h"
-#include "SocketTests.h"
-#include "TimeUtilsTest.h"
-#include "CRCTests.h"
-#include "LoggerTests.h"
+
+#include "utils/TimeUtil.h"
+#include "../TestBase.h"
+
+TEST_CASE("Test time conversion", "[testtimeconversion]"){
+	REQUIRE ( "2017-02-16 20:14:56.196" == getTimeStr(1487276096196,true) );
+}

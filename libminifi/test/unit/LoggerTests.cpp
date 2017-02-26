@@ -16,11 +16,9 @@
  * limitations under the License.
  */
 
-#ifndef LIBMINIFI_TEST_UNIT_LOGGERTESTS_H_
-#define LIBMINIFI_TEST_UNIT_LOGGERTESTS_H_
-
 #include <memory>
 
+#include "../TestBase.h"
 #include "../../include/LogAppenders.h"
 
 bool contains(std::string stringA, std::string ending) {
@@ -143,5 +141,3 @@ TEST_CASE("Test log LevelsConfigured", "[ttl6]") {
 	REQUIRE( 0 == oss.str().length() );
 
 }
-
-#endif /* LIBMINIFI_TEST_UNIT_LOGGERTESTS_H_ */

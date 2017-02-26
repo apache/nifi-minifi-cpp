@@ -17,8 +17,6 @@
  */
 
 
-#ifndef DERSER_TESTS
-#define DERSER_TESTS
 
 #include "Site2SitePeer.h"
 #include "Site2SiteClientProtocol.h"
@@ -26,7 +24,7 @@
 #include <algorithm>
 #include <string>
 #include <memory>
-
+#include "../TestBase.h"
 #define FMT_DEFAULT fmt_lower
 
 
@@ -83,6 +81,3 @@ TEST_CASE("TestSetPortIdUppercase", "[S2S2]"){
 
 
 
-
-
-#endif

@@ -18,12 +18,10 @@
 #include <uuid/uuid.h>
 #include <fstream>
 #include "FlowController.h"
-#include "ProvenanceTests.h"
+#include "ProvenanceTestHelper.h"
 #include "../TestBase.h"
 #include "GetFile.h"
 
-#ifndef PROCESSOR_TESTS
-#define PROCESSOR_TESTS
 
 TEST_CASE("Test Creation of GetFile", "[getfileCreate]"){
 	GetFile processor("processorname");
@@ -148,7 +146,5 @@ TEST_CASE("Test Find file", "[getfileCreate2]"){
 }
 
 
-
-#endif
 
 
