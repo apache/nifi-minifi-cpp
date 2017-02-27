@@ -110,15 +110,17 @@ public:
 				stderr_ = std::make_shared<spdlog::logger>(err_unique_name,
 						error_ostream_sink);
 			}
-		} else
+		} else {
 			stderr_ = nullptr;
+		}
 
 		std::string log_level;
 		if (NULL != config
 				&& config->get(BaseLogger::nifi_log_level, log_level)) {
 			setLogLevel(log_level);
-		} else
+		} else{
 			setLogLevel("info");
+		}
 
 	}
 
@@ -140,8 +142,9 @@ public:
 		if (NULL != config
 				&& config->get(BaseLogger::nifi_log_level, log_level)) {
 			setLogLevel(log_level);
-		} else
+		} else {
 			setLogLevel("info");
+		}
 
 	}
 
@@ -179,8 +182,9 @@ public:
 		if (NULL != config
 				&& config->get(nifi_log_rolling_apender_file, file_name)) {
 			file_name_ = file_name;
-		} else
+		} else{
 			file_name_ = LOG_FILE_NAME;
+		}
 
 		std::string max_files = "";
 		if (NULL != config
@@ -193,8 +197,9 @@ public:
 			} catch (const std::out_of_range &oor) {
 				max_files_ = DEFAULT_LOG_FILE_NUMBER;
 			}
-		} else
+		} else {
 			max_files_ = DEFAULT_LOG_FILE_NUMBER;
+		}
 
 		std::string max_file_size = "";
 		if (NULL != config
@@ -207,8 +212,9 @@ public:
 			} catch (const std::out_of_range &oor) {
 				max_file_size_ = DEFAULT_LOG_FILE_SIZE;
 			}
-		} else
+		} else {
 			max_file_size_ = DEFAULT_LOG_FILE_SIZE;
+		}
 
 		std::string unique_name = getUniqueName<OutputStreamAppender>();
 		logger_ = spdlog::rotating_logger_mt(unique_name, file_name_,
