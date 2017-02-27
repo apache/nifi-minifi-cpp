@@ -23,23 +23,24 @@
 #include "Property.h"
 #include "TimerDrivenSchedulingAgent.h"
 
-void TimerDrivenSchedulingAgent::run(Processor *processor, ProcessContext *processContext, ProcessSessionFactory *sessionFactory)
-{
-	while (this->_running)
-	{
-		bool shouldYield = this->onTrigger(processor, processContext, sessionFactory);
+void TimerDrivenSchedulingAgent::run(Processor *processor,
+                                     ProcessContext *processContext,
+                                     ProcessSessionFactory *sessionFactory) {
+  while (this->_running) {
+    bool shouldYield = this->onTrigger(processor, processContext,
+                                       sessionFactory);
 
-		if (processor->isYield())
-		{
-			// Honor the yield
-			std::this_thread::sleep_for(std::chrono::milliseconds(processor->getYieldTime()));
-		}
-		else if (shouldYield && this->_boredYieldDuration > 0)
-		{
-			// No work to do or need to apply back pressure
-			std::this_thread::sleep_for(std::chrono::milliseconds(this->_boredYieldDuration));
-		}
-		std::this_thread::sleep_for(std::chrono::nanoseconds(processor->getSchedulingPeriodNano()));
-	}
-	return;
+    if (processor->isYield()) {
+      // Honor the yield
+      std::this_thread::sleep_for(
+          std::chrono::milliseconds(processor->getYieldTime()));
+    } else if (shouldYield && this->_boredYieldDuration > 0) {
+      // No work to do or need to apply back pressure
+      std::this_thread::sleep_for(
+          std::chrono::milliseconds(this->_boredYieldDuration));
+    }
+    std::this_thread::sleep_for(
+        std::chrono::nanoseconds(processor->getSchedulingPeriodNano()));
+  }
+  return;
 }

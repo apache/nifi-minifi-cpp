@@ -33,7 +33,13 @@
  * Log level enumeration.
  */
 typedef enum {
-	trace = 0, debug = 1, info = 2, warn = 3, err = 4, critical = 5, off = 6
+  trace = 0,
+  debug = 1,
+  info = 2,
+  warn = 3,
+  err = 4,
+  critical = 5,
+  off = 6
 } LOG_LEVEL_E;
 
 #define LOG_BUFFER_SIZE 1024
@@ -48,160 +54,157 @@ typedef enum {
  */
 class BaseLogger {
 
-public:
-	static const char *nifi_log_level;
-	static const char *nifi_log_appender;
+ public:
+  static const char *nifi_log_level;
+  static const char *nifi_log_appender;
 
-	/**
-	 * Base Constructor
-	 */
-	BaseLogger() {
-		setLogLevel("info");
-		logger_ = nullptr;
-		stderr_ = nullptr;
-	}
+  /**
+   * Base Constructor
+   */
+  BaseLogger() {
+    setLogLevel("info");
+    logger_ = nullptr;
+    stderr_ = nullptr;
+  }
 
-	/**
-	 * Logger configuration constructorthat will set the base log level.
-	 * @param config incoming configuration.
-	 */
-	BaseLogger(std::string log_level, std::shared_ptr<spdlog::logger> logger) : logger_(logger) {
-		setLogLevel(log_level);
+  /**
+   * Logger configuration constructorthat will set the base log level.
+   * @param config incoming configuration.
+   */
+  BaseLogger(std::string log_level, std::shared_ptr<spdlog::logger> logger)
+      : logger_(logger) {
+    setLogLevel(log_level);
 
-	}
+  }
 
-	virtual ~BaseLogger() {
+  virtual ~BaseLogger() {
 
-	}
+  }
 
-	/**
-	 * Move constructor that will atomically swap configuration
-	 * shared pointers.
-	 */
-	BaseLogger(const BaseLogger &&other) :
-			configured_level_(other.configured_level_.load()) {
-		// must atomically exchange the pointers
-		logger_ = std::move(other.logger_);
-		set_error_logger(other.stderr_);
+  /**
+   * Move constructor that will atomically swap configuration
+   * shared pointers.
+   */
+  BaseLogger(const BaseLogger &&other)
+      : configured_level_(other.configured_level_.load()) {
+    // must atomically exchange the pointers
+    logger_ = std::move(other.logger_);
+    set_error_logger(other.stderr_);
 
-	}
+  }
 
-	/**
-	 * Returns the log level for this instance.
-	 */
-	virtual LOG_LEVEL_E getLogLevel() const {
-		return configured_level_;
-	}
+  /**
+   * Returns the log level for this instance.
+   */
+  virtual LOG_LEVEL_E getLogLevel() const {
+    return configured_level_;
+  }
 
-	/**
-	 * @brief Log error message
-	 * @param format format string ('man printf' for syntax)
-	 * @warning does not check @p log or @p format for null. Caller must ensure parameters and format string lengths match
-	 */
-	virtual void log_error(const char * const format, ...);
-	/**
-	 * @brief Log warn message
-	 * @param format format string ('man printf' for syntax)
-	 * @warning does not check @p log or @p format for null. Caller must ensure parameters and format string lengths match
-	 */
-	virtual void log_warn(const char * const format, ...);
-	/**
-	 * @brief Log info message
-	 * @param format format string ('man printf' for syntax)
-	 * @warning does not check @p log or @p format for null. Caller must ensure parameters and format string lengths match
-	 */
-	virtual void log_info(const char * const format, ...);
-	/**
-	 * @brief Log debug message
-	 * @param format format string ('man printf' for syntax)
-	 * @warning does not check @p log or @p format for null. Caller must ensure parameters and format string lengths match
-	 */
-	virtual void log_debug(const char * const format, ...);
-	/**
-	 * @brief Log trace message
-	 * @param format format string ('man printf' for syntax)
-	 * @warning does not check @p log or @p format for null. Caller must ensure parameters and format string lengths match
-	 */
-	virtual void log_trace(const char * const format, ...);
+  /**
+   * @brief Log error message
+   * @param format format string ('man printf' for syntax)
+   * @warning does not check @p log or @p format for null. Caller must ensure parameters and format string lengths match
+   */
+  virtual void log_error(const char * const format, ...);
+  /**
+   * @brief Log warn message
+   * @param format format string ('man printf' for syntax)
+   * @warning does not check @p log or @p format for null. Caller must ensure parameters and format string lengths match
+   */
+  virtual void log_warn(const char * const format, ...);
+  /**
+   * @brief Log info message
+   * @param format format string ('man printf' for syntax)
+   * @warning does not check @p log or @p format for null. Caller must ensure parameters and format string lengths match
+   */
+  virtual void log_info(const char * const format, ...);
+  /**
+   * @brief Log debug message
+   * @param format format string ('man printf' for syntax)
+   * @warning does not check @p log or @p format for null. Caller must ensure parameters and format string lengths match
+   */
+  virtual void log_debug(const char * const format, ...);
+  /**
+   * @brief Log trace message
+   * @param format format string ('man printf' for syntax)
+   * @warning does not check @p log or @p format for null. Caller must ensure parameters and format string lengths match
+   */
+  virtual void log_trace(const char * const format, ...);
 
-	/**
-	 * @brief Log error message
-	 * @param format format string ('man printf' for syntax)
-	 * @warning does not check @p log or @p format for null. Caller must ensure parameters and format string lengths match
-	 */
-	virtual void log_str(LOG_LEVEL_E level,const std::string &buffer);
+  /**
+   * @brief Log error message
+   * @param format format string ('man printf' for syntax)
+   * @warning does not check @p log or @p format for null. Caller must ensure parameters and format string lengths match
+   */
+  virtual void log_str(LOG_LEVEL_E level, const std::string &buffer);
 
-	/**
-	 * Sets the log level for this instance based on the string
-	 * @param level desired log leve.
-	 * @param defaultLevel default level if we cannot match level.
-	 */
-	virtual void setLogLevel(const std::string &level,
-			LOG_LEVEL_E defaultLevel = info);
+  /**
+   * Sets the log level for this instance based on the string
+   * @param level desired log leve.
+   * @param defaultLevel default level if we cannot match level.
+   */
+  virtual void setLogLevel(const std::string &level, LOG_LEVEL_E defaultLevel =
+                               info);
 
-	/**
-	 * Sets the log level atomic and sets it
-	 * within logger if it can
-	 * @param level desired log level.
-	 */
-	virtual void setLogLevel(LOG_LEVEL_E level) {
-		configured_level_ = level;
-		setLogLevel();
-	}
+  /**
+   * Sets the log level atomic and sets it
+   * within logger if it can
+   * @param level desired log level.
+   */
+  virtual void setLogLevel(LOG_LEVEL_E level) {
+    configured_level_ = level;
+    setLogLevel();
+  }
 
-	bool shouldLog(LOG_LEVEL_E level)
-	{
-		return level >= configured_level_.load(std::memory_order_relaxed);
-	}
+  bool shouldLog(LOG_LEVEL_E level) {
+    return level >= configured_level_.load(std::memory_order_relaxed);
+  }
 
-	/**
-	 * Move operator overload
-	 */
-	BaseLogger &operator=(const BaseLogger &&other) {
-		configured_level_ = (other.configured_level_.load());
-		// must atomically exchange the pointers
-		logger_ = std::move(other.logger_);
-		set_error_logger(other.stderr_);
-		return *this;
-	}
+  /**
+   * Move operator overload
+   */
+  BaseLogger &operator=(const BaseLogger &&other) {
+    configured_level_ = (other.configured_level_.load());
+    // must atomically exchange the pointers
+    logger_ = std::move(other.logger_);
+    set_error_logger(other.stderr_);
+    return *this;
+  }
 
-protected:
+ protected:
 
+  /**
+   * Logger configuration constructorthat will set the base log level.
+   * @param config incoming configuration.
+   */
+  BaseLogger(std::string log_level)
+      : logger_(nullptr) {
+    setLogLevel(log_level);
+  }
 
+  void setLogger(std::shared_ptr<spdlog::logger> logger) {
+    logger_ = logger;
+  }
 
-	/**
-	 * Logger configuration constructorthat will set the base log level.
-	 * @param config incoming configuration.
-	 */
-	BaseLogger(std::string log_level) : logger_(nullptr) {
-		setLogLevel(log_level);
-	}
+  /**
+   * Since a thread may be using stderr and it can be null,
+   * we must atomically exchange the shared pointers.
+   * @param other other shared pointer. can be null ptr
+   */
+  void set_error_logger(std::shared_ptr<spdlog::logger> other);
 
+  /**
+   * Sets the log level on the spdlogger if it is not null.
+   */
+  void setLogLevel() {
+    if (logger_ != nullptr)
+      logger_->set_level((spdlog::level::level_enum) configured_level_.load());
 
-	void setLogger(std::shared_ptr<spdlog::logger> logger) {
-		logger_ = logger;
-	}
+  }
 
-	/**
-	 * Since a thread may be using stderr and it can be null,
-	 * we must atomically exchange the shared pointers.
-	 * @param other other shared pointer. can be null ptr
-	 */
-	void set_error_logger(std::shared_ptr<spdlog::logger> other);
-
-	/**
-	 * Sets the log level on the spdlogger if it is not null.
-	 */
-	void setLogLevel() {
-		if (logger_ != nullptr)
-		logger_->set_level(
-				(spdlog::level::level_enum) configured_level_.load());
-
-	}
-
-	std::atomic<LOG_LEVEL_E> configured_level_;
-	std::shared_ptr<spdlog::logger> logger_;
-	std::shared_ptr<spdlog::logger> stderr_;
+  std::atomic<LOG_LEVEL_E> configured_level_;
+  std::shared_ptr<spdlog::logger> logger_;
+  std::shared_ptr<spdlog::logger> stderr_;
 };
 
 #endif /* LIBMINIFI_INCLUDE_BASELOGGER_H_ */

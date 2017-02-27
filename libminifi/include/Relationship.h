@@ -31,57 +31,56 @@
 //! undefined relationship for remote process group outgoing port and root process group incoming port
 #define UNDEFINED_RELATIONSHIP "undefined"
 
-inline bool isRelationshipNameUndefined(std::string name)
-{
-	if (name == UNDEFINED_RELATIONSHIP)
-		return true;
-	else
-		return false;
+inline bool isRelationshipNameUndefined(std::string name) {
+  if (name == UNDEFINED_RELATIONSHIP)
+    return true;
+  else
+    return false;
 }
 
 //! Relationship Class
 class Relationship {
 
-public:
-	//! Constructor
-	/*!
-	 * Create a new relationship 
-	 */
-	Relationship(const std::string name, const std::string description)
-		: _name(name), _description(description) {
-	}
-	Relationship()
-		: _name(UNDEFINED_RELATIONSHIP) {
-	}
-	//! Destructor
-	virtual ~Relationship() {
-	}
-	//! Get Name for the relationship
-	std::string getName() {
-		return _name;
-	}
-	//! Get Description for the relationship
-	std::string getDescription() {
-		return _description;
-	}
-	//! Compare
-	bool operator < (const Relationship & right) const {
-		return _name < right._name;
-	}
-	//! Whether it is a undefined relationship
-	bool isRelationshipUndefined()
-	{
-		return isRelationshipNameUndefined(_name);
-	}
+ public:
+  //! Constructor
+  /*!
+   * Create a new relationship 
+   */
+  Relationship(const std::string name, const std::string description)
+      : _name(name),
+        _description(description) {
+  }
+  Relationship()
+      : _name(UNDEFINED_RELATIONSHIP) {
+  }
+  //! Destructor
+  virtual ~Relationship() {
+  }
+  //! Get Name for the relationship
+  std::string getName() {
+    return _name;
+  }
+  //! Get Description for the relationship
+  std::string getDescription() {
+    return _description;
+  }
+  //! Compare
+  bool operator <(const Relationship & right) const {
+    return _name < right._name;
+  }
+  //! Whether it is a undefined relationship
+  bool isRelationshipUndefined() {
+    return isRelationshipNameUndefined(_name);
+  }
 
-protected:
+ protected:
 
-	//! Name
-	std::string _name;
-	//! Description
-	std::string _description;
+  //! Name
+  std::string _name;
+  //! Description
+  std::string _description;
 
-private:
+ private:
 };
 
 #endif

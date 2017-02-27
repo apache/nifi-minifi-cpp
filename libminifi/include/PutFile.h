@@ -25,64 +25,61 @@
 #include "ProcessSession.h"
 
 //! PutFile Class
-class PutFile : public Processor
-{
-public:
+class PutFile : public Processor {
+ public:
 
-	static const std::string CONFLICT_RESOLUTION_STRATEGY_REPLACE;
-	static const std::string CONFLICT_RESOLUTION_STRATEGY_IGNORE;
-	static const std::string CONFLICT_RESOLUTION_STRATEGY_FAIL;
+  static const std::string CONFLICT_RESOLUTION_STRATEGY_REPLACE;
+  static const std::string CONFLICT_RESOLUTION_STRATEGY_IGNORE;
+  static const std::string CONFLICT_RESOLUTION_STRATEGY_FAIL;
 
-	//! Constructor
-	/*!
-	 * Create a new processor
-	 */
-	PutFile(std::string name, uuid_t uuid = NULL)
-	: Processor(name, uuid)
-	{
-		logger_ = Logger::getLogger();
-	}
-	//! Destructor
-	virtual ~PutFile()
-	{
-	}
-	//! Processor Name
-	static const std::string ProcessorName;
-	//! Supported Properties
-	static Property Directory;
-	static Property ConflictResolution;
-	//! Supported Relationships
-	static Relationship Success;
-	static Relationship Failure;
+  //! Constructor
+  /*!
+   * Create a new processor
+   */
+  PutFile(std::string name, uuid_t uuid = NULL)
+      : Processor(name, uuid) {
+    logger_ = Logger::getLogger();
+  }
+  //! Destructor
+  virtual ~PutFile() {
+  }
+  //! Processor Name
+  static const std::string ProcessorName;
+  //! Supported Properties
+  static Property Directory;
+  static Property ConflictResolution;
+  //! Supported Relationships
+  static Relationship Success;
+  static Relationship Failure;
 
-	//! OnTrigger method, implemented by NiFi PutFile
-	virtual void onTrigger(ProcessContext *context, ProcessSession *session);
-	//! Initialize, over write by NiFi PutFile
-	virtual void initialize(void);
+  //! OnTrigger method, implemented by NiFi PutFile
+  virtual void onTrigger(ProcessContext *context, ProcessSession *session);
+  //! Initialize, over write by NiFi PutFile
+  virtual void initialize(void);
 
-	class ReadCallback : public InputStreamCallback
-	{
-	public:
-		ReadCallback(const std::string &tmpFile, const std::string &destFile);
-		~ReadCallback();
-		virtual void process(std::ifstream *stream);
-		bool commit();
+  class ReadCallback : public InputStreamCallback {
+   public:
+    ReadCallback(const std::string &tmpFile, const std::string &destFile);
+    ~ReadCallback();
+    virtual void process(std::ifstream *stream);
+    bool commit();
 
-	private:
-		std::shared_ptr<Logger> logger_;
-		std::ofstream _tmpFileOs;
-		bool _writeSucceeded = false;
-		std::string _tmpFile;
-		std::string _destFile;
-	};
+   private:
+    std::shared_ptr<Logger> logger_;
+    std::ofstream _tmpFileOs;
+    bool _writeSucceeded = false;
+    std::string _tmpFile;
+    std::string _destFile;
+  };
 
-protected:
+ protected:
 
-private:
-	//! Logger
-	std::shared_ptr<Logger> logger_;
+ private:
+  //! Logger
+  std::shared_ptr<Logger> logger_;
 
-	bool putFile(ProcessSession *session, FlowFileRecord *flowFile, const std::string &tmpFile, const std::string &destFile);
+  bool putFile(ProcessSession *session, FlowFileRecord *flowFile,
+               const std::string &tmpFile, const std::string &destFile);
 };
 
 #endif

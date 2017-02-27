@@ -18,5 +18,4 @@
 
 #include "io/EndianCheck.h"
 
-
 bool EndiannessCheck::IS_LITTLE = EndiannessCheck::is_little_endian();

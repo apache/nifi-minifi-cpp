@@ -23,6 +23,5 @@
 #include <queue>
 #include <map>
 
-
 std::shared_ptr<Logger> Logger::singleton_logger_(nullptr);
 

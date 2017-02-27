@@ -36,63 +36,62 @@
 #include "ProcessContext.h"
 
 //! SchedulingAgent Class
-class SchedulingAgent
-{
-public:
-	//! Constructor
-	/*!
-	 * Create a new processor
-	 */
-	SchedulingAgent() {
-		configure_ = Configure::getConfigure();
-		logger_ = Logger::getLogger();
-		_running = false;
-	}
-	//! Destructor
-	virtual ~SchedulingAgent()
-	{
+class SchedulingAgent {
+ public:
+  //! Constructor
+  /*!
+   * Create a new processor
+   */
+  SchedulingAgent() {
+    configure_ = Configure::getConfigure();
+    logger_ = Logger::getLogger();
+    _running = false;
+  }
+  //! Destructor
+  virtual ~SchedulingAgent() {
 
-	}
-	//! onTrigger, return whether the yield is need
-	bool onTrigger(Processor *processor, ProcessContext *processContext, ProcessSessionFactory *sessionFactory);
-	//! Whether agent has work to do
-	bool hasWorkToDo(Processor *processor);
-	//! Whether the outgoing need to be backpressure
-	bool hasTooMuchOutGoing(Processor *processor);
-	//! start
-	void start() {
-		_running = true;
-	}
-	//! stop
-	void stop() {
-		_running = false;
-	}
+  }
+  //! onTrigger, return whether the yield is need
+  bool onTrigger(Processor *processor, ProcessContext *processContext,
+                 ProcessSessionFactory *sessionFactory);
+  //! Whether agent has work to do
+  bool hasWorkToDo(Processor *processor);
+  //! Whether the outgoing need to be backpressure
+  bool hasTooMuchOutGoing(Processor *processor);
+  //! start
+  void start() {
+    _running = true;
+  }
+  //! stop
+  void stop() {
+    _running = false;
+  }
 
-public:
-	//! schedule, overwritten by different DrivenSchedulingAgent
-	virtual void schedule(Processor *processor) = 0;
-	//! unschedule, overwritten by different DrivenSchedulingAgent
-	virtual void unschedule(Processor *processor) = 0;
+ public:
+  //! schedule, overwritten by different DrivenSchedulingAgent
+  virtual void schedule(Processor *processor) = 0;
+  //! unschedule, overwritten by different DrivenSchedulingAgent
+  virtual void unschedule(Processor *processor) = 0;
 
-protected:
-	//! Logger
-	std::shared_ptr<Logger> logger_;
-	//! Configure
-	Configure *configure_;
-	//! Mutex for protection
-	std::mutex _mtx;
-	//! Whether it is running
-	std::atomic<bool> _running;
-	//! AdministrativeYieldDuration
-	int64_t _administrativeYieldDuration;
-	//! BoredYieldDuration
-	int64_t _boredYieldDuration;
+ protected:
+  //! Logger
+  std::shared_ptr<Logger> logger_;
+  //! Configure
+  Configure *configure_;
+  //! Mutex for protection
+  std::mutex _mtx;
+  //! Whether it is running
+  std::atomic<bool> _running;
+  //! AdministrativeYieldDuration
+  int64_t _administrativeYieldDuration;
+  //! BoredYieldDuration
+  int64_t _boredYieldDuration;
 
-private:
-	// Prevent default copy constructor and assignment operation
-	// Only support pass by reference or pointer
-	SchedulingAgent(const SchedulingAgent &parent);
-	SchedulingAgent &operator=(const SchedulingAgent &parent);
+ private:
+  // Prevent default copy constructor and assignment operation
+  // Only support pass by reference or pointer
+  SchedulingAgent(const SchedulingAgent &parent);
+  SchedulingAgent &operator=(const SchedulingAgent &parent);
 
 };
 

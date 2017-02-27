@@ -23,25 +23,25 @@
 #include "Property.h"
 #include "EventDrivenSchedulingAgent.h"
 
-void EventDrivenSchedulingAgent::run(Processor *processor, ProcessContext *processContext, ProcessSessionFactory *sessionFactory)
-{
-	while (this->_running)
-	{
-		bool shouldYield = this->onTrigger(processor, processContext, sessionFactory);
+void EventDrivenSchedulingAgent::run(Processor *processor,
+                                     ProcessContext *processContext,
+                                     ProcessSessionFactory *sessionFactory) {
+  while (this->_running) {
+    bool shouldYield = this->onTrigger(processor, processContext,
+                                       sessionFactory);
 
-		if (processor->isYield())
-		{
-			// Honor the yield
-			std::this_thread::sleep_for(std::chrono::milliseconds(processor->getYieldTime()));
-		}
-		else if (shouldYield && this->_boredYieldDuration > 0)
-		{
-			// No work to do or need to apply back pressure
-			std::this_thread::sleep_for(std::chrono::milliseconds(this->_boredYieldDuration));
-		}
+    if (processor->isYield()) {
+      // Honor the yield
+      std::this_thread::sleep_for(
+          std::chrono::milliseconds(processor->getYieldTime()));
+    } else if (shouldYield && this->_boredYieldDuration > 0) {
+      // No work to do or need to apply back pressure
+      std::this_thread::sleep_for(
+          std::chrono::milliseconds(this->_boredYieldDuration));
+    }
 
-		// Block until work is available
-		processor->waitForWork(1000);
-	}
-	return;
+    // Block until work is available
+    processor->waitForWork(1000);
+  }
+  return;
 }

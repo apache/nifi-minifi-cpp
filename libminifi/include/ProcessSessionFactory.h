@@ -26,26 +26,27 @@
 #include "ProcessSession.h"
 
 //! ProcessSessionFactory Class
-class ProcessSessionFactory
-{
-public:
-	//! Constructor
-	/*!
-	 * Create a new process session factory
-	 */
-	explicit ProcessSessionFactory(ProcessContext *processContext) : _processContext(processContext) {}
+class ProcessSessionFactory {
+ public:
+  //! Constructor
+  /*!
+   * Create a new process session factory
+   */
+  explicit ProcessSessionFactory(ProcessContext *processContext)
+      : _processContext(processContext) {
+  }
 
-	//! Create the session
-	std::unique_ptr<ProcessSession> createSession();
+  //! Create the session
+  std::unique_ptr<ProcessSession> createSession();
 
-	// Prevent default copy constructor and assignment operation
-	// Only support pass by reference or pointer
-	ProcessSessionFactory(const ProcessSessionFactory &parent) = delete;
-	ProcessSessionFactory &operator=(const ProcessSessionFactory &parent) = delete;
+  // Prevent default copy constructor and assignment operation
+  // Only support pass by reference or pointer
+  ProcessSessionFactory(const ProcessSessionFactory &parent) = delete;
+  ProcessSessionFactory &operator=(const ProcessSessionFactory &parent) = delete;
 
-private:
-	//! ProcessContext
-	ProcessContext *_processContext;
+ private:
+  //! ProcessContext
+  ProcessContext *_processContext;
 
 };
 

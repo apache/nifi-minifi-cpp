@@ -36,168 +36,160 @@ const std::string PutFile::CONFLICT_RESOLUTION_STRATEGY_FAIL("fail");
 
 const std::string PutFile::ProcessorName("PutFile");
 
-Property PutFile::Directory("Output Directory", "The output directory to which to put files", ".");
-Property PutFile::ConflictResolution("Conflict Resolution Strategy", "Indicates what should happen when a file with the same name already exists in the output directory", CONFLICT_RESOLUTION_STRATEGY_FAIL);
+Property PutFile::Directory("Output Directory",
+                            "The output directory to which to put files", ".");
+Property PutFile::ConflictResolution(
+    "Conflict Resolution Strategy",
+    "Indicates what should happen when a file with the same name already exists in the output directory",
+    CONFLICT_RESOLUTION_STRATEGY_FAIL);
 
 Relationship PutFile::Success("success", "All files are routed to success");
-Relationship PutFile::Failure("failure", "Failed files (conflict, write failure, etc.) are transferred to failure");
+Relationship PutFile::Failure(
+    "failure",
+    "Failed files (conflict, write failure, etc.) are transferred to failure");
 
-void PutFile::initialize()
-{
-	//! Set the supported properties
-	std::set<Property> properties;
-	properties.insert(Directory);
-	properties.insert(ConflictResolution);
-	setSupportedProperties(properties);
-	//! Set the supported relationships
-	std::set<Relationship> relationships;
-	relationships.insert(Success);
-	relationships.insert(Failure);
-	setSupportedRelationships(relationships);
+void PutFile::initialize() {
+  //! Set the supported properties
+  std::set<Property> properties;
+  properties.insert(Directory);
+  properties.insert(ConflictResolution);
+  setSupportedProperties(properties);
+  //! Set the supported relationships
+  std::set<Relationship> relationships;
+  relationships.insert(Success);
+  relationships.insert(Failure);
+  setSupportedRelationships(relationships);
 }
 
-void PutFile::onTrigger(ProcessContext *context, ProcessSession *session)
-{
-	std::string directory;
+void PutFile::onTrigger(ProcessContext *context, ProcessSession *session) {
+  std::string directory;
 
-	if (!context->getProperty(Directory.getName(), directory))
-	{
-		logger_->log_error("Directory attribute is missing or invalid");
-		return;
-	}
+  if (!context->getProperty(Directory.getName(), directory)) {
+    logger_->log_error("Directory attribute is missing or invalid");
+    return;
+  }
 
-	std::string conflictResolution;
+  std::string conflictResolution;
 
-	if (!context->getProperty(ConflictResolution.getName(), conflictResolution))
-	{
-		logger_->log_error("Conflict Resolution Strategy attribute is missing or invalid");
-		return;
-	}
+  if (!context->getProperty(ConflictResolution.getName(), conflictResolution)) {
+    logger_->log_error(
+        "Conflict Resolution Strategy attribute is missing or invalid");
+    return;
+  }
 
-	FlowFileRecord *flowFile = session->get();
+  FlowFileRecord *flowFile = session->get();
 
-	// Do nothing if there are no incoming files
-	if (!flowFile)
-	{
-		return;
-	}
+  // Do nothing if there are no incoming files
+  if (!flowFile) {
+    return;
+  }
 
-	std::string filename;
-	flowFile->getAttribute(FILENAME, filename);
+  std::string filename;
+  flowFile->getAttribute(FILENAME, filename);
 
-	// Generate a safe (universally-unique) temporary filename on the same partition 
-	char tmpFileUuidStr[37];
-	uuid_t tmpFileUuid;
-	uuid_generate(tmpFileUuid);
-	uuid_unparse_lower(tmpFileUuid, tmpFileUuidStr);
-	std::stringstream tmpFileSs;
-	tmpFileSs << directory << "/." << filename << "." << tmpFileUuidStr;
-	std::string tmpFile = tmpFileSs.str();
-	logger_->log_info("PutFile using temporary file %s", tmpFile.c_str());
+  // Generate a safe (universally-unique) temporary filename on the same partition 
+  char tmpFileUuidStr[37];
+  uuid_t tmpFileUuid;
+  uuid_generate(tmpFileUuid);
+  uuid_unparse_lower(tmpFileUuid, tmpFileUuidStr);
+  std::stringstream tmpFileSs;
+  tmpFileSs << directory << "/." << filename << "." << tmpFileUuidStr;
+  std::string tmpFile = tmpFileSs.str();
+  logger_->log_info("PutFile using temporary file %s", tmpFile.c_str());
 
-	// Determine dest full file paths
-	std::stringstream destFileSs;
-	destFileSs << directory << "/" << filename;
-	std::string destFile = destFileSs.str();
+  // Determine dest full file paths
+  std::stringstream destFileSs;
+  destFileSs << directory << "/" << filename;
+  std::string destFile = destFileSs.str();
 
-	logger_->log_info("PutFile writing file %s into directory %s", filename.c_str(), directory.c_str());
+  logger_->log_info("PutFile writing file %s into directory %s",
+                    filename.c_str(), directory.c_str());
 
-	// If file exists, apply conflict resolution strategy
-	struct stat statResult;
+  // If file exists, apply conflict resolution strategy
+  struct stat statResult;
 
-	if (stat(destFile.c_str(), &statResult) == 0)
-	{
-		logger_->log_info("Destination file %s exists; applying Conflict Resolution Strategy: %s", destFile.c_str(), conflictResolution.c_str());
+  if (stat(destFile.c_str(), &statResult) == 0) {
+    logger_->log_info(
+        "Destination file %s exists; applying Conflict Resolution Strategy: %s",
+        destFile.c_str(), conflictResolution.c_str());
 
-		if (conflictResolution == CONFLICT_RESOLUTION_STRATEGY_REPLACE)
-		{
-			putFile(session, flowFile, tmpFile, destFile);
-		}
-		else if (conflictResolution == CONFLICT_RESOLUTION_STRATEGY_IGNORE)
-		{
-			session->transfer(flowFile, Success);
-		}
-		else
-		{
-			session->transfer(flowFile, Failure);
-		}
-	}
-	else
-	{
-		putFile(session, flowFile, tmpFile, destFile);
-	}
+    if (conflictResolution == CONFLICT_RESOLUTION_STRATEGY_REPLACE) {
+      putFile(session, flowFile, tmpFile, destFile);
+    } else if (conflictResolution == CONFLICT_RESOLUTION_STRATEGY_IGNORE) {
+      session->transfer(flowFile, Success);
+    } else {
+      session->transfer(flowFile, Failure);
+    }
+  } else {
+    putFile(session, flowFile, tmpFile, destFile);
+  }
 }
 
-bool PutFile::putFile(ProcessSession *session, FlowFileRecord *flowFile, const std::string &tmpFile, const std::string &destFile)
-{
+bool PutFile::putFile(ProcessSession *session, FlowFileRecord *flowFile,
+                      const std::string &tmpFile, const std::string &destFile) {
 
-	ReadCallback cb(tmpFile, destFile);
-    	session->read(flowFile, &cb);
+  ReadCallback cb(tmpFile, destFile);
+  session->read(flowFile, &cb);
 
-	if (cb.commit())
-	{
-		session->transfer(flowFile, Success);
-		return true;
-	}
-	else
-	{
-		session->transfer(flowFile, Failure);
-	}
-	return false;
+  if (cb.commit()) {
+    session->transfer(flowFile, Success);
+    return true;
+  } else {
+    session->transfer(flowFile, Failure);
+  }
+  return false;
 }
 
-PutFile::ReadCallback::ReadCallback(const std::string &tmpFile, const std::string &destFile)
-: _tmpFile(tmpFile)
-, _tmpFileOs(tmpFile)
-, _destFile(destFile)
-{
-	logger_ = Logger::getLogger();
+PutFile::ReadCallback::ReadCallback(const std::string &tmpFile,
+                                    const std::string &destFile)
+    : _tmpFile(tmpFile),
+      _tmpFileOs(tmpFile),
+      _destFile(destFile) {
+  logger_ = Logger::getLogger();
 }
 
 // Copy the entire file contents to the temporary file
-void PutFile::ReadCallback::process(std::ifstream *stream)
-{
-	// Copy file contents into tmp file
-	_writeSucceeded = false;
-	_tmpFileOs << stream->rdbuf();
-	_writeSucceeded = true;
+void PutFile::ReadCallback::process(std::ifstream *stream) {
+  // Copy file contents into tmp file
+  _writeSucceeded = false;
+  _tmpFileOs << stream->rdbuf();
+  _writeSucceeded = true;
 }
 
 // Renames tmp file to final destination
 // Returns true if commit succeeded
-bool PutFile::ReadCallback::commit()
-{
-	bool success = false;
+bool PutFile::ReadCallback::commit() {
+  bool success = false;
 
-	logger_->log_info("PutFile committing put file operation to %s", _destFile.c_str());
+  logger_->log_info("PutFile committing put file operation to %s",
+                    _destFile.c_str());
 
-	if (_writeSucceeded)
-	{
-		_tmpFileOs.close();
+  if (_writeSucceeded) {
+    _tmpFileOs.close();
 
-		if (rename(_tmpFile.c_str(), _destFile.c_str()))
-		{
-			logger_->log_info("PutFile commit put file operation to %s failed because rename() call failed", _destFile.c_str());
-		}
-		else
-		{
-			success = true;
-			logger_->log_info("PutFile commit put file operation to %s succeeded", _destFile.c_str());
-		}
-	}
-	else
-	{
-		logger_->log_error("PutFile commit put file operation to %s failed because write failed", _destFile.c_str());
-	}
+    if (rename(_tmpFile.c_str(), _destFile.c_str())) {
+      logger_->log_info(
+          "PutFile commit put file operation to %s failed because rename() call failed",
+          _destFile.c_str());
+    } else {
+      success = true;
+      logger_->log_info("PutFile commit put file operation to %s succeeded",
+                        _destFile.c_str());
+    }
+  } else {
+    logger_->log_error(
+        "PutFile commit put file operation to %s failed because write failed",
+        _destFile.c_str());
+  }
 
-	return success;
+  return success;
 }
 
 // Clean up resources
 PutFile::ReadCallback::~ReadCallback() {
-	// Close tmp file
-	_tmpFileOs.close();
+  // Close tmp file
+  _tmpFileOs.close();
 
-	// Clean up tmp file, if necessary
-	unlink(_tmpFile.c_str());
+  // Clean up tmp file, if necessary
+  unlink(_tmpFile.c_str());
 }

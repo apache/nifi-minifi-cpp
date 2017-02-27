@@ -27,67 +27,59 @@
 #include <string.h>
 
 //! ExceptionType 
-enum ExceptionType 
-{
-	FILE_OPERATION_EXCEPTION = 0,
-	FLOW_EXCEPTION,
-	PROCESSOR_EXCEPTION,
-	PROCESS_SESSION_EXCEPTION,
-	PROCESS_SCHEDULE_EXCEPTION,
-	SITE2SITE_EXCEPTION,
-	GENERAL_EXCEPTION,
-	MAX_EXCEPTION
+enum ExceptionType {
+  FILE_OPERATION_EXCEPTION = 0,
+  FLOW_EXCEPTION,
+  PROCESSOR_EXCEPTION,
+  PROCESS_SESSION_EXCEPTION,
+  PROCESS_SCHEDULE_EXCEPTION,
+  SITE2SITE_EXCEPTION,
+  GENERAL_EXCEPTION,
+  MAX_EXCEPTION
 };
 
 //! Exception String 
-static const char *ExceptionStr[MAX_EXCEPTION] =
-{
-		"File Operation",
-		"Flow File Operation",
-		"Processor Operation",
-		"Process Session Operation",
-		"Process Schedule Operation",
-		"Site2Site Protocol",
-		"General Operation"
-};
+static const char *ExceptionStr[MAX_EXCEPTION] = { "File Operation",
+    "Flow File Operation", "Processor Operation", "Process Session Operation",
+    "Process Schedule Operation", "Site2Site Protocol", "General Operation" };
 
 //! Exception Type to String 
-inline const char *ExceptionTypeToString(ExceptionType type)
-{
-	if (type < MAX_EXCEPTION)
-		return ExceptionStr[type];
-	else
-		return NULL;
+inline const char *ExceptionTypeToString(ExceptionType type) {
+  if (type < MAX_EXCEPTION)
+    return ExceptionStr[type];
+  else
+    return NULL;
 }
 
 //! Exception Class
-class Exception : public std::exception
-{
-public:
-	//! Constructor
-	/*!
-	 * Create a new flow record
-	 */
-	Exception(ExceptionType type, const char *errorMsg) : _type(type), _errorMsg(errorMsg) {
-	}
-	//! Destructor
-	virtual ~Exception() throw () {}
-	virtual const char * what() const throw () {
+class Exception : public std::exception {
+ public:
+  //! Constructor
+  /*!
+   * Create a new flow record
+   */
+  Exception(ExceptionType type, const char *errorMsg)
+      : _type(type),
+        _errorMsg(errorMsg) {
+  }
+  //! Destructor
+  virtual ~Exception() throw () {
+  }
+  virtual const char * what() const throw () {
 
-		_whatStr = ExceptionTypeToString(_type);
+    _whatStr = ExceptionTypeToString(_type);
 
-		_whatStr += ":" + _errorMsg;
-		return _whatStr.c_str();
-	}
+    _whatStr += ":" + _errorMsg;
+    return _whatStr.c_str();
+  }
 
-
-private:
-	//! Exception type
-	ExceptionType _type;
-	//! Exception detailed information
-	std::string _errorMsg;
-	//! Hold the what result
-	mutable std::string _whatStr;
+ private:
+  //! Exception type
+  ExceptionType _type;
+  //! Exception detailed information
+  std::string _errorMsg;
+  //! Hold the what result
+  mutable std::string _whatStr;
 
 };
 

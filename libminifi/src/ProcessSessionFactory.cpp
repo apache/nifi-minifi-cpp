@@ -22,7 +22,6 @@
 
 #include <memory>
 
-std::unique_ptr<ProcessSession> ProcessSessionFactory::createSession()
-{
-	return std::unique_ptr<ProcessSession>(new ProcessSession(_processContext));
+std::unique_ptr<ProcessSession> ProcessSessionFactory::createSession() {
+  return std::unique_ptr<ProcessSession>(new ProcessSession(_processContext));
 }
