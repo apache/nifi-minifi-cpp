@@ -27,6 +27,11 @@
 #include <algorithm>
 #include "io/DataStream.h"
 
+namespace org {
+namespace apache {
+namespace nifi {
+namespace minifi {
+namespace io {
 
 
 int DataStream::writeData(uint8_t *value, int size) {
@@ -126,3 +131,10 @@ int DataStream::readData(uint8_t *buf,int buflen) {
     readBuffer += buflen;
     return buflen;
 }
+
+
+} /* namespace io */
+} /* namespace minifi */
+} /* namespace nifi */
+} /* namespace apache */
+} /* namespace org */

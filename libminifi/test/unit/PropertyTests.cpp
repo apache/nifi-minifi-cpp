@@ -16,22 +16,23 @@
  * limitations under the License.
  */
 
+#include "../../include/core/Property.h"
 #include "utils/StringUtils.h"
 #include "../TestBase.h"
-#include "Property.h"
+
 
 TEST_CASE("Test Boolean Conversion", "[testboolConversion]") {
 
 	bool b;
-	REQUIRE(true == StringUtils::StringToBool("true",b));
-	REQUIRE(true == StringUtils::StringToBool("True",b));
-	REQUIRE(true == StringUtils::StringToBool("TRue",b));
-	REQUIRE(true == StringUtils::StringToBool("tRUE",b));
+	REQUIRE(true == org::apache::nifi::minifi::utils::StringUtils::StringToBool("true",b));
+	REQUIRE(true == org::apache::nifi::minifi::utils::StringUtils::StringToBool("True",b));
+	REQUIRE(true == org::apache::nifi::minifi::utils::StringUtils::StringToBool("TRue",b));
+	REQUIRE(true == org::apache::nifi::minifi::utils::StringUtils::StringToBool("tRUE",b));
 
-	REQUIRE(false == StringUtils::StringToBool("FALSE",b));
-	REQUIRE(false == StringUtils::StringToBool("FALLSEY",b));
-	REQUIRE(false == StringUtils::StringToBool("FaLSE",b));
-	REQUIRE(false == StringUtils::StringToBool("false",b));
+	REQUIRE(false == org::apache::nifi::minifi::utils::StringUtils::StringToBool("FALSE",b));
+	REQUIRE(false == org::apache::nifi::minifi::utils::StringUtils::StringToBool("FALLSEY",b));
+	REQUIRE(false == org::apache::nifi::minifi::utils::StringUtils::StringToBool("FaLSE",b));
+	REQUIRE(false == org::apache::nifi::minifi::utils::StringUtils::StringToBool("false",b));
 
 }
 
@@ -41,7 +42,7 @@ TEST_CASE("Test Trimmer Right", "[testTrims]") {
 
 	REQUIRE(test.c_str()[test.length() - 1] == '\n');
 	REQUIRE(test.c_str()[test.length() - 2] == '\t');
-	test = StringUtils::trimRight(test);
+	test = org::apache::nifi::minifi::utils::StringUtils::trimRight(test);
 
 	REQUIRE(test.c_str()[test.length() - 1] == 'd');
 	REQUIRE(test.c_str()[test.length() - 2] == 'a');
@@ -51,7 +52,7 @@ TEST_CASE("Test Trimmer Right", "[testTrims]") {
 	REQUIRE(test.c_str()[test.length() - 1] == '\t');
 	REQUIRE(test.c_str()[test.length() - 2] == '\v');
 
-	test = StringUtils::trimRight(test);
+	test = org::apache::nifi::minifi::utils::StringUtils::trimRight(test);
 
 	REQUIRE(test.c_str()[test.length() - 1] == 'd');
 	REQUIRE(test.c_str()[test.length() - 2] == 'a');
@@ -61,7 +62,7 @@ TEST_CASE("Test Trimmer Right", "[testTrims]") {
 	REQUIRE(test.c_str()[test.length() - 1] == '\f');
 	REQUIRE(test.c_str()[test.length() - 2] == ' ');
 
-	test = StringUtils::trimRight(test);
+	test = org::apache::nifi::minifi::utils::StringUtils::trimRight(test);
 
 	REQUIRE(test.c_str()[test.length() - 1] == 'd');
 
@@ -74,7 +75,7 @@ TEST_CASE("Test Trimmer Left", "[testTrims]") {
 	REQUIRE(test.c_str()[0] == '\t');
 	REQUIRE(test.c_str()[1] == '\n');
 
-	test = StringUtils::trimLeft(test);
+	test = org::apache::nifi::minifi::utils::StringUtils::trimLeft(test);
 
 	REQUIRE(test.c_str()[0] == 'a');
 	REQUIRE(test.c_str()[1] == ' ');
@@ -84,7 +85,7 @@ TEST_CASE("Test Trimmer Left", "[testTrims]") {
 	REQUIRE(test.c_str()[0] == '\v');
 	REQUIRE(test.c_str()[1] == '\t');
 
-	test = StringUtils::trimLeft(test);
+	test = org::apache::nifi::minifi::utils::StringUtils::trimLeft(test);
 
 	REQUIRE(test.c_str()[0] == 'a');
 	REQUIRE(test.c_str()[1] == ' ');
@@ -94,7 +95,7 @@ TEST_CASE("Test Trimmer Left", "[testTrims]") {
 	REQUIRE(test.c_str()[0] == ' ');
 	REQUIRE(test.c_str()[1] == '\f');
 
-	test = StringUtils::trimLeft(test);
+	test = org::apache::nifi::minifi::utils::StringUtils::trimLeft(test);
 
 	REQUIRE(test.c_str()[0] == 'a');
 	REQUIRE(test.c_str()[1] == ' ');
