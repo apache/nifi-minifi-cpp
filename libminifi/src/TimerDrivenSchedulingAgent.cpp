@@ -20,26 +20,38 @@
 #include <chrono>
 #include <thread>
 #include <iostream>
-#include "Property.h"
 #include "TimerDrivenSchedulingAgent.h"
+#include "core/Property.h"
 
-void TimerDrivenSchedulingAgent::run(Processor *processor, ProcessContext *processContext, ProcessSessionFactory *sessionFactory)
-{
-	while (this->_running)
-	{
-		bool shouldYield = this->onTrigger(processor, processContext, sessionFactory);
+namespace org {
+namespace apache {
+namespace nifi {
+namespace minifi {
 
-		if (processor->isYield())
-		{
-			// Honor the yield
-			std::this_thread::sleep_for(std::chrono::milliseconds(processor->getYieldTime()));
-		}
-		else if (shouldYield && this->_boredYieldDuration > 0)
-		{
-			// No work to do or need to apply back pressure
-			std::this_thread::sleep_for(std::chrono::milliseconds(this->_boredYieldDuration));
-		}
-		std::this_thread::sleep_for(std::chrono::nanoseconds(processor->getSchedulingPeriodNano()));
-	}
-	return;
+void TimerDrivenSchedulingAgent::run(
+    std::shared_ptr<core::Processor> processor,
+    core::ProcessContext *processContext,
+    core::ProcessSessionFactory *sessionFactory) {
+  while (this->running_) {
+    bool shouldYield = this->onTrigger(processor, processContext,
+                                       sessionFactory);
+
+    if (processor->isYield()) {
+      // Honor the yield
+      std::this_thread::sleep_for(
+          std::chrono::milliseconds(processor->getYieldTime()));
+    } else if (shouldYield && this->_boredYieldDuration > 0) {
+      // No work to do or need to apply back pressure
+      std::this_thread::sleep_for(
+          std::chrono::milliseconds(this->_boredYieldDuration));
+    }
+    std::this_thread::sleep_for(
+        std::chrono::nanoseconds(processor->getSchedulingPeriodNano()));
+  }
+  return;
 }
+
+} /* namespace minifi */
+} /* namespace nifi */
+} /* namespace apache */
+} /* namespace org */

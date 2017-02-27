@@ -26,7 +26,13 @@
 #include <errno.h>
 #include <string.h>
 
-//! ExceptionType 
+
+namespace org {
+namespace apache {
+namespace nifi {
+namespace minifi {
+
+// ExceptionType 
 enum ExceptionType 
 {
 	FILE_OPERATION_EXCEPTION = 0,
@@ -39,7 +45,7 @@ enum ExceptionType
 	MAX_EXCEPTION
 };
 
-//! Exception String 
+// Exception String 
 static const char *ExceptionStr[MAX_EXCEPTION] =
 {
 		"File Operation",
@@ -51,7 +57,7 @@ static const char *ExceptionStr[MAX_EXCEPTION] =
 		"General Operation"
 };
 
-//! Exception Type to String 
+// Exception Type to String 
 inline const char *ExceptionTypeToString(ExceptionType type)
 {
 	if (type < MAX_EXCEPTION)
@@ -60,17 +66,17 @@ inline const char *ExceptionTypeToString(ExceptionType type)
 		return NULL;
 }
 
-//! Exception Class
+// Exception Class
 class Exception : public std::exception
 {
 public:
-	//! Constructor
+	// Constructor
 	/*!
 	 * Create a new flow record
 	 */
 	Exception(ExceptionType type, const char *errorMsg) : _type(type), _errorMsg(errorMsg) {
 	}
-	//! Destructor
+	// Destructor
 	virtual ~Exception() throw () {}
 	virtual const char * what() const throw () {
 
@@ -82,13 +88,17 @@ public:
 
 
 private:
-	//! Exception type
+	// Exception type
 	ExceptionType _type;
-	//! Exception detailed information
+	// Exception detailed information
 	std::string _errorMsg;
-	//! Hold the what result
+	// Hold the what result
 	mutable std::string _whatStr;
 
 };
 
+} /* namespace minifi */
+} /* namespace nifi */
+} /* namespace apache */
+} /* namespace org */
 #endif

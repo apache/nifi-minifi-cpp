@@ -23,63 +23,52 @@
 #include "ResourceClaim.h"
 #include "catch.hpp"
 #include <vector>
-#include "Logger.h"
+#include "core/logging/Logger.h"
+#include "core/core.h"
 
 
 class LogTestController {
-public:
-	LogTestController(const std::string level = "debug") {
-		Logger::getLogger()->setLogLevel(level);
-	}
+ public:
+  LogTestController(const std::string level = "debug") {
+    logging::Logger::getLogger()->setLogLevel(level);
+  }
 
+  void enableDebug() {
+    logging::Logger::getLogger()->setLogLevel("debug");
+  }
 
-	void enableDebug()
-	{
-		Logger::getLogger()->setLogLevel("debug");
-	}
-
-	~LogTestController() {
-		Logger::getLogger()->setLogLevel(LOG_LEVEL_E::info);
-	}
+  ~LogTestController() {
+    logging::Logger::getLogger()->setLogLevel(logging::LOG_LEVEL_E::info);
+  }
 };
 
-class TestController{
-public:
+class TestController {
+ public:
 
+  TestController()
+      : log("info") {
+    minifi::ResourceClaim::default_directory_path = "./";
+  }
 
+  ~TestController() {
+    for (auto dir : directories) {
+      rmdir(dir);
+    }
+  }
 
-	TestController() : log("info")
-	{
-		ResourceClaim::default_directory_path = "./";
-	}
+  void enableDebug() {
+    log.enableDebug();
+  }
 
-	~TestController()
-	{
-		for(auto dir : directories)
-		{
-			rmdir(dir);
-		}
-	}
+  char *createTempDirectory(char *format) {
+    char *dir = mkdtemp(format);
+    return dir;
+  }
 
-	void enableDebug() {
-		log.enableDebug();
-	}
-
-	char *createTempDirectory(char *format)
-	{
-		char *dir = mkdtemp(format);
-		return dir;
-	}
-
-protected:
-	LogTestController log;
-	std::vector<char*> directories;
-
+ protected:
+  LogTestController log;
+  std::vector<char*> directories;
 
 };
-
-
-
-
 
 #endif /* LIBMINIFI_TEST_TESTBASE_H_ */

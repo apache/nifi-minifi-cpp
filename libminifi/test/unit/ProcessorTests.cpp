@@ -20,21 +20,40 @@
 #include "FlowController.h"
 #include "ProvenanceTestHelper.h"
 #include "../TestBase.h"
+<<<<<<< HEAD
 #include <memory>
 #include "../../include/LogAppenders.h"
 #include "GetFile.h"
+=======
+#include "core/logging/LogAppenders.h"
+#include "core/logging/BaseLogger.h"
+#include "processors/GetFile.h"
+#include "core/core.h"
+#include "../../include/core/FlowFile.h"
+#include "core/Processor.h"
+#include "core/ProcessContext.h"
+#include "core/ProcessSession.h"
+#include "core/ProcessorNode.h"
 
-
-TEST_CASE("Test Creation of GetFile", "[getfileCreate]"){
-	GetFile processor("processorname");
-	REQUIRE( processor.getName() == "processorname");
+TEST_CASE("Test Creation of GetFile", "[getfileCreate]") {
+  org::apache::nifi::minifi::processors::GetFile processor("processorname");
+  REQUIRE(processor.getName() == "processorname");
 }
+>>>>>>> MINIFI-217: First commit. Updates namespaces and removes
 
+TEST_CASE("Test Find file", "[getfileCreate2]") {
 
-TEST_CASE("Test Find file", "[getfileCreate2]"){
+  TestController testController;
 
-	TestController testController;
+  testController.enableDebug();
 
+  std::shared_ptr<ProvenanceTestRepository> repo = std::make_shared<
+      ProvenanceTestRepository>();
+
+  std::shared_ptr<core::Processor> processor = std::make_shared<
+      org::apache::nifi::minifi::processors::GetFile>("getfileCreate2");
+
+<<<<<<< HEAD
 	Configure *config = Configure::getConfigure();
 
 	config->set(BaseLogger::nifi_log_appender,"rollingappender");
@@ -48,47 +67,101 @@ TEST_CASE("Test Find file", "[getfileCreate2]"){
 	FlowTestRepository flowRepo;
 	TestFlowController controller(provenanceRepo, flowRepo);
 	FlowControllerFactory::getFlowController( dynamic_cast<FlowController*>(&controller));
+=======
+  char format[] = "/tmp/gt.XXXXXX";
+  char *dir = testController.createTempDirectory(format);
 
-	GetFile processor("getfileCreate2");
+  uuid_t processoruuid;
+  REQUIRE(true == processor->getUUID(processoruuid));
+>>>>>>> MINIFI-217: First commit. Updates namespaces and removes
 
-	char format[] ="/tmp/gt.XXXXXX";
-	char *dir = testController.createTempDirectory(format);
+  std::shared_ptr<minifi::Connection> connection = std::make_shared<
+      minifi::Connection>("getfileCreate2Connection");
+  connection->setRelationship(core::Relationship("success", "description"));
 
+  // link the connections so that we can test results at the end for this
+  connection->setSource(processor);
 
-	uuid_t processoruuid;
-	REQUIRE( true == processor.getUUID(processoruuid) );
+  connection->setSourceUUID(processoruuid);
+  connection->setDestinationUUID(processoruuid);
 
-	Connection connection("getfileCreate2Connection");
-	connection.setRelationship(Relationship("success","description"));
+  processor->addConnection(connection);
+  REQUIRE(dir != NULL);
 
-	// link the connections so that we can test results at the end for this
+  core::ProcessorNode node(processor);
 
+  core::ProcessContext context(node, repo);
+  context.setProperty(org::apache::nifi::minifi::processors::GetFile::Directory,
+                      dir);
+  core::ProcessSession session(&context);
+
+<<<<<<< HEAD
 	connection.setSourceProcessor(&processor);
 	connection.setDestinationProcessor(&processor);
+=======
+  REQUIRE(processor->getName() == "getfileCreate2");
 
-	connection.setSourceProcessorUUID(processoruuid);
-	connection.setDestinationProcessorUUID(processoruuid);
+  std::shared_ptr<core::FlowFile> record;
+  processor->setScheduledState(core::ScheduledState::RUNNING);
+  processor->onTrigger(&context, &session);
+>>>>>>> MINIFI-217: First commit. Updates namespaces and removes
 
-	processor.addConnection(&connection);
-	REQUIRE( dir != NULL );
+  provenance::ProvenanceReporter *reporter = session.getProvenanceReporter();
+  std::set<provenance::ProvenanceEventRecord*> records = reporter->getEvents();
+  record = session.get();
+  REQUIRE(record == nullptr);
+  REQUIRE(records.size() == 0);
 
-	ProcessContext context(&processor);
-	context.setProperty(GetFile::Directory,dir);
-	ProcessSession session(&context);
+  std::fstream file;
+  std::stringstream ss;
+  ss << dir << "/" << "tstFile.ext";
+  file.open(ss.str(), std::ios::out);
+  file << "tempFile";
+  file.close();
 
+  processor->incrementActiveTasks();
+  processor->setScheduledState(core::ScheduledState::RUNNING);
+  processor->onTrigger(&context, &session);
+  unlink(ss.str().c_str());
+  rmdir(dir);
+  reporter = session.getProvenanceReporter();
+
+<<<<<<< HEAD
 	REQUIRE( processor.getName() == "getfileCreate2");
+=======
+  records = reporter->getEvents();
 
-	FlowFileRecord *record;
-	processor.setScheduledState(ScheduledState::RUNNING);
-	processor.onTrigger(&context,&session);
+  for (provenance::ProvenanceEventRecord *provEventRecord : records) {
+    REQUIRE(provEventRecord->getComponentType() == processor->getName());
+  }
+  session.commit();
+  std::shared_ptr<core::FlowFile> ffr = session.get();
+>>>>>>> MINIFI-217: First commit. Updates namespaces and removes
 
-	ProvenanceReporter *reporter = session.getProvenanceReporter();
-	std::set<ProvenanceEventRecord*> records = reporter->getEvents();
+  ffr->getResourceClaim()->decreaseFlowFileRecordOwnedCount();
+  REQUIRE(2 == repo->getRepoMap().size());
 
-	record = session.get();
-	REQUIRE( record== 0 );
-	REQUIRE( records.size() == 0 );
+  for (auto entry : repo->getRepoMap()) {
+    provenance::ProvenanceEventRecord newRecord;
+    newRecord.DeSerialize((uint8_t*) entry.second.data(),
+                          entry.second.length());
 
+    bool found = false;
+    for (auto provRec : records) {
+      if (provRec->getEventId() == newRecord.getEventId()) {
+        REQUIRE(provRec->getEventId() == newRecord.getEventId());
+        REQUIRE(provRec->getComponentId() == newRecord.getComponentId());
+        REQUIRE(provRec->getComponentType() == newRecord.getComponentType());
+        REQUIRE(provRec->getDetails() == newRecord.getDetails());
+        REQUIRE(provRec->getEventDuration() == newRecord.getEventDuration());
+        found = true;
+        break;
+      }
+    }
+    if (!found)
+      throw std::runtime_error("Did not find record");
+
+<<<<<<< HEAD
 	std::fstream file;
 	std::stringstream ss;
 	std::string fileName("tstFile.ext");
@@ -104,17 +177,26 @@ TEST_CASE("Test Find file", "[getfileCreate2]"){
 	processor.onTrigger(&context,&session);
 	unlink(ss.str().c_str());
 	rmdir(dir);
+=======
+  }
 
-	reporter = session.getProvenanceReporter();
+}
+>>>>>>> MINIFI-217: First commit. Updates namespaces and removes
 
-	records = reporter->getEvents();
+TEST_CASE("LogAttributeTest", "[getfileCreate3]") {
+  std::ostringstream oss;
+  std::unique_ptr<logging::BaseLogger> outputLogger = std::unique_ptr<
+      logging::BaseLogger>(
+      new org::apache::nifi::minifi::core::logging::OutputStreamAppender(oss,
+                                                                         0));
+  std::shared_ptr<logging::Logger> logger = logging::Logger::getLogger();
+  logger->updateLogger(std::move(outputLogger));
 
-	for(ProvenanceEventRecord *provEventRecord : records)
-	{
-		REQUIRE (provEventRecord->getComponentType() == processor.getName());
-	}
-	session.commit();
+  TestController testController;
 
+  testController.enableDebug();
+
+<<<<<<< HEAD
         // verify flow file repo
 	REQUIRE( 1 == flowRepo.getRepoMap().size() );
 
@@ -130,13 +212,27 @@ TEST_CASE("Test Find file", "[getfileCreate2]"){
 	}
 
 	FlowFileRecord *ffr = session.get();
+=======
+  std::shared_ptr<ProvenanceTestRepository> repo = std::make_shared<
+      ProvenanceTestRepository>();
 
-	ffr->getResourceClaim()->decreaseFlowFileRecordOwnedCount();
+  std::shared_ptr<core::Processor> processor = std::make_shared<
+      org::apache::nifi::minifi::processors::GetFile>("getfileCreate2");
 
-	delete ffr;
+  std::shared_ptr<core::Processor> logAttribute = std::make_shared<
+      org::apache::nifi::minifi::processors::LogAttribute>("logattribute");
+>>>>>>> MINIFI-217: First commit. Updates namespaces and removes
 
-	std::set<FlowFileRecord*> expiredFlows;
+  char format[] = "/tmp/gt.XXXXXX";
+  char *dir = testController.createTempDirectory(format);
 
+  uuid_t processoruuid;
+  REQUIRE(true == processor->getUUID(processoruuid));
+
+  uuid_t logattribute_uuid;
+  REQUIRE(true == logAttribute->getUUID(logattribute_uuid));
+
+<<<<<<< HEAD
 	REQUIRE( 2 == provenanceRepo.getRepoMap().size() );
 
 	for(auto  entry: provenanceRepo.getRepoMap())
@@ -161,16 +257,99 @@ TEST_CASE("Test Find file", "[getfileCreate2]"){
 		if (!found)
 		throw std::runtime_error("Did not find record");
 	}
+=======
+  std::shared_ptr<minifi::Connection> connection = std::make_shared<
+      minifi::Connection>("getfileCreate2Connection");
+  connection->setRelationship(core::Relationship("success", "description"));
 
+  std::shared_ptr<minifi::Connection> connection2 = std::make_shared<
+      minifi::Connection>("logattribute");
+  connection2->setRelationship(core::Relationship("success", "description"));
 
+  // link the connections so that we can test results at the end for this
+  connection->setSource(processor);
+>>>>>>> MINIFI-217: First commit. Updates namespaces and removes
 
+  // link the connections so that we can test results at the end for this
+  connection->setDestination(logAttribute);
 
+<<<<<<< HEAD
+=======
+  connection2->setSource(logAttribute);
+>>>>>>> MINIFI-217: First commit. Updates namespaces and removes
 
+  connection2->setSourceUUID(logattribute_uuid);
+  connection->setSourceUUID(processoruuid);
+  connection->setDestinationUUID(logattribute_uuid);
 
+  processor->addConnection(connection);
+  logAttribute->addConnection(connection);
+  logAttribute->addConnection(connection2);
+  REQUIRE(dir != NULL);
 
+  core::ProcessorNode node(processor);
+  core::ProcessorNode node2(logAttribute);
+
+  core::ProcessContext context(node, repo);
+  core::ProcessContext context2(node2, repo);
+  context.setProperty(org::apache::nifi::minifi::processors::GetFile::Directory,
+                      dir);
+  core::ProcessSession session(&context);
+  core::ProcessSession session2(&context2);
+
+  REQUIRE(processor->getName() == "getfileCreate2");
+
+  std::shared_ptr<core::FlowFile> record;
+  processor->setScheduledState(core::ScheduledState::RUNNING);
+  processor->onTrigger(&context, &session);
+
+  logAttribute->incrementActiveTasks();
+  logAttribute->setScheduledState(core::ScheduledState::RUNNING);
+  logAttribute->onTrigger(&context2, &session2);
+
+  provenance::ProvenanceReporter *reporter = session.getProvenanceReporter();
+  std::set<provenance::ProvenanceEventRecord*> records = reporter->getEvents();
+  record = session.get();
+  REQUIRE(record == nullptr);
+  REQUIRE(records.size() == 0);
+
+  std::fstream file;
+  std::stringstream ss;
+  ss << dir << "/" << "tstFile.ext";
+  file.open(ss.str(), std::ios::out);
+  file << "tempFile";
+  file.close();
+
+  processor->incrementActiveTasks();
+  processor->setScheduledState(core::ScheduledState::RUNNING);
+  processor->onTrigger(&context, &session);
+  unlink(ss.str().c_str());
+  rmdir(dir);
+  reporter = session.getProvenanceReporter();
+
+  records = reporter->getEvents();
+  session.commit();
+  oss.str("");
+  oss.clear();
+
+  logAttribute->incrementActiveTasks();
+  logAttribute->setScheduledState(core::ScheduledState::RUNNING);
+  logAttribute->onTrigger(&context2, &session2);
+
+  //session2.commit();
+  records = reporter->getEvents();
+
+  std::string log_attribute_output = oss.str();
+  REQUIRE(
+      log_attribute_output.find("key:absolute.path value:" + ss.str())
+          != std::string::npos);
+  REQUIRE(log_attribute_output.find("Size:8 Offset:0") != std::string::npos);
+  REQUIRE(
+      log_attribute_output.find("key:path value:" + std::string(dir))
+          != std::string::npos);
+
+  outputLogger = std::unique_ptr<logging::BaseLogger>(
+      new org::apache::nifi::minifi::core::logging::NullAppender());
+  logger->updateLogger(std::move(outputLogger));
 
 }
-
-
-
-

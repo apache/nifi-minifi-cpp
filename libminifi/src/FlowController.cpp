@@ -30,220 +30,240 @@
 #include <unistd.h>
 #include <future>
 #include "FlowController.h"
-#include "ProcessContext.h"
+#include "core/ProcessContext.h"
+#include "core/ProcessGroup.h"
 #include "utils/StringUtils.h"
+#include "core/core.h"
 
-FlowController *FlowControllerFactory::_flowController(NULL);
+namespace org {
+namespace apache {
+namespace nifi {
+namespace minifi {
 
-FlowControllerImpl::FlowControllerImpl(std::string name)  {
-	uuid_generate(_uuid);
+FlowControllerImpl::FlowControllerImpl(
+    std::shared_ptr<core::Repository> repo , std::shared_ptr<core::Repository> flow_file_repo, std::string name)
+    : FlowController(repo,flow_file_repo) {
+  uuid_generate(uuid_);
+  setUUID(uuid_);
 
-	_name = name;
-	// Setup the default values
-	_configurationFileName = DEFAULT_FLOW_YAML_FILE_NAME;
-	_maxEventDrivenThreads = DEFAULT_MAX_EVENT_DRIVEN_THREAD;
-	_maxTimerDrivenThreads = DEFAULT_MAX_TIMER_DRIVEN_THREAD;
-	_running = false;
-	_initialized = false;
-	_root = NULL;
-	logger_ = Logger::getLogger();
-	_protocol = new FlowControlProtocol(this);
+  // Setup the default values
+  configuration_filename_ = DEFAULT_FLOW_YAML_FILENAME;
+  max_event_driven_threads_ = DEFAULT_MAX_EVENT_DRIVEN_THREAD;
+  max_timer_driven_threads_ = DEFAULT_MAX_TIMER_DRIVEN_THREAD;
+  running_ = false;
+  initialized_ = false;
+  root_ = NULL;
+  logger_ = logging::Logger::getLogger();
+  protocol_ = new FlowControlProtocol(this);
 
-	// NiFi config properties
-	configure_ = Configure::getConfigure();
+  // NiFi config properties
+  configure_ = Configure::getConfigure();
 
-	std::string rawConfigFileString;
-	configure_->get(Configure::nifi_flow_configuration_file,
-			rawConfigFileString);
+  std::string rawConfigFileString;
+  configure_->get(Configure::nifi_flow_configuration_file, rawConfigFileString);
 
-	if (!rawConfigFileString.empty()) {
-		_configurationFileName = rawConfigFileString;
-	}
+  if (!rawConfigFileString.empty()) {
+    configuration_filename_ = rawConfigFileString;
+  }
 
-	char *path = NULL;
-	char full_path[PATH_MAX];
+  char *path = NULL;
+  char full_path[PATH_MAX];
 
-	std::string adjustedFilename;
-	if (!_configurationFileName.empty()) {
-		// perform a naive determination if this is a relative path
-		if (_configurationFileName.c_str()[0] != '/') {
-			adjustedFilename = adjustedFilename + configure_->getHome() + "/"
-					+ _configurationFileName;
-		} else {
-			adjustedFilename = _configurationFileName;
-		}
-	}
+  std::string adjustedFilename;
+  if (!configuration_filename_.empty()) {
+    // perform a naive determination if this is a relative path
+    if (configuration_filename_.c_str()[0] != '/') {
+      adjustedFilename = adjustedFilename + configure_->getHome() + "/"
+          + configuration_filename_;
+    } else {
+      adjustedFilename = configuration_filename_;
+    }
+  }
 
-	path = realpath(adjustedFilename.c_str(), full_path);
+  path = realpath(adjustedFilename.c_str(), full_path);
 
-	std::string pathString(path);
-	_configurationFileName = pathString;
-	logger_->log_info("FlowController NiFi Configuration file %s", pathString.c_str());
+  if (path == NULL) {
+    throw std::runtime_error(
+        "Path is not specified. Either manually set MINIFI_HOME or ensure ../conf exists");
+  }
+  std::string pathString(path);
+  configuration_filename_ = pathString;
+  logger_->log_info("FlowController NiFi Configuration file %s",
+                    pathString.c_str());
 
-	// Create the content repo directory if needed
-	struct stat contentDirStat;
+  // Create the content repo directory if needed
+  struct stat contentDirStat;
 
-	if (stat(ResourceClaim::default_directory_path.c_str(), &contentDirStat) != -1 && S_ISDIR(contentDirStat.st_mode))
-	{
-		path = realpath(ResourceClaim::default_directory_path.c_str(), full_path);
-		logger_->log_info("FlowController content directory %s", full_path);
-	}
-	else
-	{
-	   if (mkdir(ResourceClaim::default_directory_path.c_str(), 0777) == -1)
-	   {
-		   logger_->log_error("FlowController content directory creation failed");
-		   exit(1);
-	   }
-	}
+  if (stat(ResourceClaim::default_directory_path.c_str(), &contentDirStat)
+      != -1&& S_ISDIR(contentDirStat.st_mode)) {
+    path = realpath(ResourceClaim::default_directory_path.c_str(), full_path);
+    logger_->log_info("FlowController content directory %s", full_path);
+  } else {
+    if (mkdir(ResourceClaim::default_directory_path.c_str(), 0777) == -1) {
+      logger_->log_error("FlowController content directory creation failed");
+      exit(1);
+    }
+  }
 
-	
-	std::string clientAuthStr;
+  std::string clientAuthStr;
 
-	if (!path) {
-		logger_->log_error(
-				"Could not locate path from provided configuration file name (%s).  Exiting.",
-				full_path);
-		exit(1);
-	}
+  if (!path) {
+    logger_->log_error(
+        "Could not locate path from provided configuration file name (%s).  Exiting.",
+        full_path);
+    exit(1);
+  }
 
 
-	// Create repos for flow record and provenance
-	_flowfileRepo = new FlowFileRepository();
-	_flowfileRepo->initialize();
-	_provenanceRepo = new ProvenanceRepository();
-	_provenanceRepo->initialize();
 }
 
 FlowControllerImpl::~FlowControllerImpl() {
-
-	stop(true);
-	unload();
-	if (NULL != _protocol)
-		delete _protocol;
-	if (NULL != _provenanceRepo)
-		delete _provenanceRepo;
-	if (NULL != _flowfileRepo)
-		delete _flowfileRepo;
+  stop(true);
+  unload();
+  if (NULL != protocol_)
+    delete protocol_;
 
 }
 
 void FlowControllerImpl::stop(bool force) {
 
-	if (_running) {
-		// immediately indicate that we are not running
-		_running = false;
+  if (running_) {
+    // immediately indicate that we are not running
+    running_ = false;
 
-		logger_->log_info("Stop Flow Controller");
-		this->_timerScheduler.stop();
-		this->_eventScheduler.stop();
-		this->_flowfileRepo->stop();
-		this->_provenanceRepo->stop();
-		// Wait for sometime for thread stop
-		std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-		if (this->_root)
-			this->_root->stopProcessing(&this->_timerScheduler,
-					&this->_eventScheduler);
+    logger_->log_info("Stop Flow Controller");
+    this->_timerScheduler.stop();
+    this->_eventScheduler.stop();
+    this->flow_file_repo_->stop();
+    this->provenance_repo_->stop();
+    // Wait for sometime for thread stop
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    if (this->root_)
+      this->root_->stopProcessing(&this->_timerScheduler,
+                                  &this->_eventScheduler);
 
-	}
+  }
 }
 
 /**
  * This function will attempt to unload yaml and stop running Processors.
  *
  * If the latter attempt fails or does not complete within the prescribed
- * period, _running will be set to false and we will return.
+ * period, running_ will be set to false and we will return.
  *
  * @param timeToWaitMs Maximum time to wait before manually
  * marking running as false.
  */
 void FlowControllerImpl::waitUnload(const uint64_t timeToWaitMs) {
-	if (_running) {
-		// use the current time and increment with the provided argument.
-		std::chrono::system_clock::time_point wait_time =
-				std::chrono::system_clock::now()
-						+ std::chrono::milliseconds(timeToWaitMs);
+  if (running_) {
+    // use the current time and increment with the provided argument.
+    std::chrono::system_clock::time_point wait_time =
+        std::chrono::system_clock::now()
+            + std::chrono::milliseconds(timeToWaitMs);
 
-		// create an asynchronous future.
-		std::future<void> unload_task = std::async(std::launch::async,
-				[this]() {unload();});
+    // create an asynchronous future.
+    std::future<void> unload_task = std::async(std::launch::async,
+                                               [this]() {unload();});
 
-		if (std::future_status::ready == unload_task.wait_until(wait_time)) {
-			_running = false;
-		}
+    if (std::future_status::ready == unload_task.wait_until(wait_time)) {
+      running_ = false;
+    }
 
-	}
+  }
 }
-
 
 void FlowControllerImpl::unload() {
-	if (_running) {
-		stop(true);
-	}
-	if (_initialized) {
-		logger_->log_info("Unload Flow Controller");
-		if (_root)
-			delete _root;
-		_root = NULL;
-		_initialized = false;
-		_name = "";
-	}
+  if (running_) {
+    stop(true);
+  }
+  if (initialized_) {
+    logger_->log_info("Unload Flow Controller");
+    if (root_)
+      delete root_;
+    root_ = NULL;
+    initialized_ = false;
+    name_ = "";
+  }
 
-	return;
+  return;
 }
 
-Processor *FlowControllerImpl::createProcessor(std::string name, uuid_t uuid) {
-	Processor *processor = NULL;
-	if (name == GenerateFlowFile::ProcessorName) {
-		processor = new GenerateFlowFile(name, uuid);
-	} else if (name == LogAttribute::ProcessorName) {
-		processor = new LogAttribute(name, uuid);
-	} else if (name == RealTimeDataCollector::ProcessorName) {
-		processor = new RealTimeDataCollector(name, uuid);
-	} else if (name == GetFile::ProcessorName) {
-		processor = new GetFile(name, uuid);
-	} else if (name == PutFile::ProcessorName) {
-		processor = new PutFile(name, uuid);
-	} else if (name == TailFile::ProcessorName) {
-		processor = new TailFile(name, uuid);
-	} else if (name == ListenSyslog::ProcessorName) {
-		processor = new ListenSyslog(name, uuid);
-	} else if (name == ListenHTTP::ProcessorName) {
-        processor = new ListenHTTP(name, uuid);
-	} else if (name == ExecuteProcess::ProcessorName) {
-		processor = new ExecuteProcess(name, uuid);
-	} else if (name == AppendHostInfo::ProcessorName) {
-		processor = new AppendHostInfo(name, uuid);
-	} else {
-		logger_->log_error("No Processor defined for %s", name.c_str());
-		return NULL;
-	}
+std::shared_ptr<core::Processor> FlowControllerImpl::createProcessor(
+    std::string name, uuid_t uuid) {
+  std::shared_ptr<core::Processor> processor = nullptr;
+  if (name
+      == org::apache::nifi::minifi::processors::GenerateFlowFile::ProcessorName) {
+    processor = std::make_shared<
+        org::apache::nifi::minifi::processors::GenerateFlowFile>(name, uuid);
+  } else if (name
+      == org::apache::nifi::minifi::processors::LogAttribute::ProcessorName) {
+    processor = std::make_shared<
+        org::apache::nifi::minifi::processors::LogAttribute>(name, uuid);
+  } else if (name
+      == org::apache::nifi::minifi::processors::RealTimeDataCollector::ProcessorName) {
+    processor = std::make_shared<
+        org::apache::nifi::minifi::processors::RealTimeDataCollector>(name,
+                                                                      uuid);
+  } else if (name
+      == org::apache::nifi::minifi::processors::GetFile::ProcessorName) {
+    processor =
+        std::make_shared<org::apache::nifi::minifi::processors::GetFile>(name,
+                                                                         uuid);
+  } else if (name
+      == org::apache::nifi::minifi::processors::PutFile::ProcessorName) {
+    processor =
+        std::make_shared<org::apache::nifi::minifi::processors::PutFile>(name,
+                                                                         uuid);
+  } else if (name
+      == org::apache::nifi::minifi::processors::TailFile::ProcessorName) {
+    processor =
+        std::make_shared<org::apache::nifi::minifi::processors::TailFile>(name,
+                                                                          uuid);
+  } else if (name
+      == org::apache::nifi::minifi::processors::ListenSyslog::ProcessorName) {
+    processor = std::make_shared<
+        org::apache::nifi::minifi::processors::ListenSyslog>(name, uuid);
+  } else if (name
+      == org::apache::nifi::minifi::processors::ListenHTTP::ProcessorName) {
+    processor = std::make_shared<
+        org::apache::nifi::minifi::processors::ListenHTTP>(name, uuid);
+  } else if (name
+      == org::apache::nifi::minifi::processors::ExecuteProcess::ProcessorName) {
+    processor = std::make_shared<
+        org::apache::nifi::minifi::processors::ExecuteProcess>(name, uuid);
+  } else if (name
+      == org::apache::nifi::minifi::processors::AppendHostInfo::ProcessorName) {
+    processor = std::make_shared<
+        org::apache::nifi::minifi::processors::AppendHostInfo>(name, uuid);
+  } else {
+    logger_->log_error("No Processor defined for %s", name.c_str());
+    return nullptr;
+  }
 
-	//! initialize the processor
-	processor->initialize();
+  // initialize the processor
+  processor->initialize();
 
-	return processor;
+  return processor;
 }
 
-ProcessGroup *FlowControllerImpl::createRootProcessGroup(std::string name,
-		uuid_t uuid) {
-	return new ProcessGroup(ROOT_PROCESS_GROUP, name, uuid);
+core::ProcessGroup *FlowControllerImpl::createRootProcessGroup(std::string name,
+                                                               uuid_t uuid) {
+  return new core::ProcessGroup(core::ROOT_PROCESS_GROUP, name, uuid);
 }
 
-ProcessGroup *FlowControllerImpl::createRemoteProcessGroup(std::string name,
-		uuid_t uuid) {
-	return new ProcessGroup(REMOTE_PROCESS_GROUP, name, uuid);
+core::ProcessGroup *FlowControllerImpl::createRemoteProcessGroup(
+    std::string name, uuid_t uuid) {
+  return new core::ProcessGroup(core::REMOTE_PROCESS_GROUP, name, uuid);
 }
 
-Connection *FlowControllerImpl::createConnection(std::string name,
-		uuid_t uuid) {
-	return new Connection(name, uuid);
+std::shared_ptr<Connection> FlowControllerImpl::createConnection(
+    std::string name, uuid_t uuid) {
+  return std::make_shared<Connection>(name, uuid);
 }
 
 void FlowControllerImpl::parseRootProcessGroupYaml(YAML::Node rootFlowNode) {
-	uuid_t uuid;
-	ProcessGroup *group = NULL;
-
+  uuid_t uuid;
+  core::ProcessGroup *group = NULL;
 	std::string flowName = rootFlowNode["name"].as<std::string>();
 	std::string id = rootFlowNode["id"].as<std::string>();
 
@@ -252,18 +272,18 @@ void FlowControllerImpl::parseRootProcessGroupYaml(YAML::Node rootFlowNode) {
 	logger_->log_debug("parseRootProcessGroup: id => [%s]", id.c_str());
 	logger_->log_debug("parseRootProcessGroup: name => [%s]", flowName.c_str());
 	group = this->createRootProcessGroup(flowName, uuid);
-	this->_root = group;
-	this->_name = flowName;
+	this->root_ = group;
+	this->name_ = flowName;
 }
 
 void FlowControllerImpl::parseProcessorNodeYaml(YAML::Node processorsNode,
-		ProcessGroup *parentGroup) {
+		core::ProcessGroup *parentGroup) {
 	int64_t schedulingPeriod = -1;
 	int64_t penalizationPeriod = -1;
 	int64_t yieldPeriod = -1;
 	int64_t runDurationNanos = -1;
 	uuid_t uuid;
-	Processor *processor = NULL;
+	std::shared_ptr<core::Processor> processor = nullptr;
 
 	if (!parentGroup) {
 		logger_->log_error("parseProcessNodeYaml: no parent group exists");
@@ -397,18 +417,18 @@ void FlowControllerImpl::parseProcessorNodeYaml(YAML::Node processorsNode,
 				}
 
 				// Default to running
-				processor->setScheduledState(RUNNING);
+				processor->setScheduledState(core::RUNNING);
 
 				if (procCfg.schedulingStrategy == "TIMER_DRIVEN") {
-					processor->setSchedulingStrategy(TIMER_DRIVEN);
+					processor->setSchedulingStrategy(core::TIMER_DRIVEN);
 					logger_->log_debug("setting scheduling strategy as %s",
 							procCfg.schedulingStrategy.c_str());
 				} else if (procCfg.schedulingStrategy == "EVENT_DRIVEN") {
-					processor->setSchedulingStrategy(EVENT_DRIVEN);
+					processor->setSchedulingStrategy(core::EVENT_DRIVEN);
 					logger_->log_debug("setting scheduling strategy as %s",
 							procCfg.schedulingStrategy.c_str());
 				} else {
-					processor->setSchedulingStrategy(CRON_DRIVEN);
+					processor->setSchedulingStrategy(core::CRON_DRIVEN);
 					logger_->log_debug("setting scheduling strategy as %s",
 							procCfg.schedulingStrategy.c_str());
 
@@ -431,9 +451,9 @@ void FlowControllerImpl::parseProcessorNodeYaml(YAML::Node processorsNode,
 					processor->setRunDurationNano(runDurationNanos);
 				}
 
-				std::set<Relationship> autoTerminatedRelationships;
+				std::set<core::Relationship> autoTerminatedRelationships;
 				for (auto &&relString : procCfg.autoTerminatedRelationships) {
-					Relationship relationship(relString, "");
+					core::Relationship relationship(relString, "");
 					logger_->log_debug(
 							"parseProcessorNode: autoTerminatedRelationship  => [%s]",
 							relString.c_str());
@@ -453,7 +473,7 @@ void FlowControllerImpl::parseProcessorNodeYaml(YAML::Node processorsNode,
 }
 
 void FlowControllerImpl::parseRemoteProcessGroupYaml(YAML::Node *rpgNode,
-		ProcessGroup *parentGroup) {
+		core::ProcessGroup *parentGroup) {
 	uuid_t uuid;
 
 	if (!parentGroup) {
@@ -492,7 +512,7 @@ void FlowControllerImpl::parseRemoteProcessGroupYaml(YAML::Node *rpgNode,
 				YAML::Node inputPorts = rpgNode["Input Ports"].as<YAML::Node>();
 				YAML::Node outputPorts =
 						rpgNode["Output Ports"].as<YAML::Node>();
-				ProcessGroup *group = NULL;
+				core::ProcessGroup *group = NULL;
 
 				uuid_parse(id.c_str(), uuid);
 
@@ -553,9 +573,9 @@ void FlowControllerImpl::parseRemoteProcessGroupYaml(YAML::Node *rpgNode,
 }
 
 void FlowControllerImpl::parseConnectionYaml(YAML::Node *connectionsNode,
-		ProcessGroup *parent) {
+		core::ProcessGroup *parent) {
 	uuid_t uuid;
-	Connection *connection = NULL;
+	std::shared_ptr<minifi::Connection> connection = nullptr;
 
 	if (!parent) {
 		logger_->log_error("parseProcessNode: no parent group was provided");
@@ -584,7 +604,7 @@ void FlowControllerImpl::parseConnectionYaml(YAML::Node *connectionsNode,
 				auto rawRelationship =
 						connectionNode["source relationship name"].as<
 								std::string>();
-				Relationship relationship(rawRelationship, "");
+				core::Relationship relationship(rawRelationship, "");
 				logger_->log_debug("parseConnection: relationship => [%s]",
 						rawRelationship.c_str());
 				if (connection)
@@ -594,7 +614,7 @@ void FlowControllerImpl::parseConnectionYaml(YAML::Node *connectionsNode,
 				uuid_t srcUUID;
 				uuid_parse(connectionSrcProcId.c_str(), srcUUID);
 
-				Processor *srcProcessor = this->_root->findProcessor(
+				Processor *srcProcessor = this->root_->findProcessor(
 						srcUUID);
 
 				if (!srcProcessor) {
@@ -608,12 +628,12 @@ void FlowControllerImpl::parseConnectionYaml(YAML::Node *connectionsNode,
 
 				uuid_t destUUID;
 				uuid_parse(destId.c_str(), destUUID);
-				Processor *destProcessor = this->_root->findProcessor(destUUID);
+				Processor *destProcessor = this->root_->findProcessor(destUUID);
 				// If we could not find name, try by UUID
 				if (!destProcessor) {
 					uuid_t destUuid;
 					uuid_parse(destId.c_str(), destUuid);
-					destProcessor = this->_root->findProcessor(destUuid);
+					destProcessor = this->root_->findProcessor(destUuid);
 				}
 				if (destProcessor) {
 					std::string destUuid = destProcessor->getUUIDStr();
@@ -622,9 +642,9 @@ void FlowControllerImpl::parseConnectionYaml(YAML::Node *connectionsNode,
 				uuid_t srcUuid;
 				uuid_t destUuid;
 				srcProcessor->getUUID(srcUuid);
-				connection->setSourceProcessorUUID(srcUuid);
+				connection->setSourceUUID(srcUuid);
 				destProcessor->getUUID(destUuid);
-				connection->setDestinationProcessorUUID(destUuid);
+				connection->setDestinationUUID(destUuid);
 
 				if (connection) {
 					parent->addConnection(connection);
@@ -640,152 +660,159 @@ void FlowControllerImpl::parseConnectionYaml(YAML::Node *connectionsNode,
 }
 
 void FlowControllerImpl::parsePortYaml(YAML::Node *portNode,
-		ProcessGroup *parent, TransferDirection direction) {
-	uuid_t uuid;
-	Processor *processor = NULL;
-	RemoteProcessorGroupPort *port = NULL;
+                                       core::ProcessGroup *parent,
+                                       TransferDirection direction) {
+  uuid_t uuid;
+  std::shared_ptr<core::Processor> processor = NULL;
+  RemoteProcessorGroupPort *port = NULL;
 
-	if (!parent) {
-		logger_->log_error("parseProcessNode: no parent group existed");
-		return;
-	}
+  if (!parent) {
+    logger_->log_error("parseProcessNode: no parent group existed");
+    return;
+  }
 
-	YAML::Node inputPortsObj = portNode->as<YAML::Node>();
+  YAML::Node inputPortsObj = portNode->as<YAML::Node>();
 
-	// generate the random UIID
-	uuid_generate(uuid);
+  // generate the random UIID
+  uuid_generate(uuid);
 
-	auto portId = inputPortsObj["id"].as<std::string>();
-	auto nameStr = inputPortsObj["name"].as<std::string>();
-	uuid_parse(portId.c_str(), uuid);
+  auto portId = inputPortsObj["id"].as<std::string>();
+  auto nameStr = inputPortsObj["name"].as<std::string>();
+  uuid_parse(portId.c_str(), uuid);
 
-	port = new RemoteProcessorGroupPort(nameStr.c_str(), uuid);
+  port = new RemoteProcessorGroupPort(nameStr.c_str(), uuid);
 
-	processor = (Processor *) port;
-	port->setDirection(direction);
-	port->setTimeOut(parent->getTimeOut());
-	port->setTransmitting(true);
-	processor->setYieldPeriodMsec(parent->getYieldPeriodMsec());
-	processor->initialize();
+  processor = (std::shared_ptr<core::Processor>) port;
+  port->setDirection(direction);
+  port->setTimeOut(parent->getTimeOut());
+  port->setTransmitting(true);
+  processor->setYieldPeriodMsec(parent->getYieldPeriodMsec());
+  processor->initialize();
 
-	// handle port properties
-	YAML::Node nodeVal = portNode->as<YAML::Node>();
-	YAML::Node propertiesNode = nodeVal["Properties"];
+  // handle port properties
+  YAML::Node nodeVal = portNode->as<YAML::Node>();
+  YAML::Node propertiesNode = nodeVal["Properties"];
 
-	parsePropertiesNodeYaml(&propertiesNode, processor);
+  parsePropertiesNodeYaml(&propertiesNode, processor);
 
-	// add processor to parent
-	parent->addProcessor(processor);
-	processor->setScheduledState(RUNNING);
-	auto rawMaxConcurrentTasks = inputPortsObj["max concurrent tasks"].as<
-			std::string>();
-	int64_t maxConcurrentTasks;
-	if (Property::StringToInt(rawMaxConcurrentTasks, maxConcurrentTasks)) {
-		processor->setMaxConcurrentTasks(maxConcurrentTasks);
-	}
-	logger_->log_debug("parseProcessorNode: maxConcurrentTasks => [%d]",
-			maxConcurrentTasks);
-	processor->setMaxConcurrentTasks(maxConcurrentTasks);
+  // add processor to parent
+  parent->addProcessor(processor);
+  processor->setScheduledState(core::RUNNING);
+  auto rawMaxConcurrentTasks = inputPortsObj["max concurrent tasks"]
+      .as<std::string>();
+  int64_t maxConcurrentTasks;
+  if (core::Property::StringToInt(rawMaxConcurrentTasks, maxConcurrentTasks)) {
+    processor->setMaxConcurrentTasks(maxConcurrentTasks);
+  }
+  logger_->log_debug("parseProcessorNode: maxConcurrentTasks => [%d]",
+                     maxConcurrentTasks);
+  processor->setMaxConcurrentTasks(maxConcurrentTasks);
 
 }
 
-void FlowControllerImpl::parsePropertiesNodeYaml(YAML::Node *propertiesNode,
-		Processor *processor) {
-	// Treat generically as a YAML node so we can perform inspection on entries to ensure they are populated
-	for (YAML::const_iterator propsIter = propertiesNode->begin();
-			propsIter != propertiesNode->end(); ++propsIter) {
-		std::string propertyName = propsIter->first.as<std::string>();
-		YAML::Node propertyValueNode = propsIter->second;
-		if (!propertyValueNode.IsNull() && propertyValueNode.IsDefined()) {
-			std::string rawValueString = propertyValueNode.as<std::string>();
-			if (!processor->setProperty(propertyName, rawValueString)) {
-				logger_->log_warn(
-						"Received property %s with value %s but is not one of the properties for %s",
-						propertyName.c_str(), rawValueString.c_str(),
-						processor->getName().c_str());
-			}
-		}
-	}
+void FlowControllerImpl::parsePropertiesNodeYaml(
+    YAML::Node *propertiesNode, std::shared_ptr<core::Processor> processor) {
+  // Treat generically as a YAML node so we can perform inspection on entries to ensure they are populated
+  for (YAML::const_iterator propsIter = propertiesNode->begin();
+      propsIter != propertiesNode->end(); ++propsIter) {
+    std::string propertyName = propsIter->first.as<std::string>();
+    YAML::Node propertyValueNode = propsIter->second;
+    if (!propertyValueNode.IsNull() && propertyValueNode.IsDefined()) {
+      std::string rawValueString = propertyValueNode.as<std::string>();
+      if (!processor->setProperty(propertyName, rawValueString)) {
+        logger_->log_warn(
+            "Received property %s with value %s but is not one of the properties for %s",
+            propertyName.c_str(), rawValueString.c_str(),
+            processor->getName().c_str());
+      }
+    }
+  }
 }
 
 void FlowControllerImpl::load() {
-    if (_running) {
-        stop(true);
-    }
-    if (!_initialized) {
-        logger_->log_info("Load Flow Controller from file %s", _configurationFileName.c_str());
+  if (running_) {
+    stop(true);
+  }
+  if (!initialized_) {
+    logger_->log_info("Load Flow Controller from file %s",
+                      configuration_filename_.c_str());
 
+    YAML::Node flow = YAML::LoadFile(configuration_filename_);
 
-		YAML::Node flow = YAML::LoadFile(_configurationFileName);
+    YAML::Node flowControllerNode = flow["Flow Controller"];
+    YAML::Node processorsNode = flow[CONFIG_YAML_PROCESSORS_KEY];
+    YAML::Node connectionsNode = flow["Connections"];
+    YAML::Node remoteProcessingGroupNode = flow["Remote Processing Groups"];
 
-		YAML::Node flowControllerNode = flow["Flow Controller"];
-		YAML::Node processorsNode = flow[CONFIG_YAML_PROCESSORS_KEY];
-		YAML::Node connectionsNode = flow["Connections"];
-		YAML::Node remoteProcessingGroupNode = flow["Remote Processing Groups"];
-
-		// Create the root process group
-		parseRootProcessGroupYaml(flowControllerNode);
-		parseProcessorNodeYaml(processorsNode, this->_root);
-		parseRemoteProcessGroupYaml(&remoteProcessingGroupNode, this->_root);
-		parseConnectionYaml(&connectionsNode, this->_root);
+    // Create the root process group
+    parseRootProcessGroupYaml(flowControllerNode);
+    parseProcessorNodeYaml(processorsNode, this->root_);
+    parseRemoteProcessGroupYaml(&remoteProcessingGroupNode, this->root_);
+    parseConnectionYaml(&connectionsNode, this->root_);
 
 		// Load Flow File from Repo
 		loadFlowRepo();
 
-		_initialized = true;
-    }
+
+  }
+}
+
+void FlowControllerImpl::reload(std::string yamlFile) {
+  logger_->log_info("Starting to reload Flow Controller with yaml %s",
+                    yamlFile.c_str());
+  stop(true);
+  unload();
+  std::string oldYamlFile = this->configuration_filename_;
+  this->configuration_filename_ = yamlFile;
+  load();
+  start();
+  if (!this->root_) {
+    this->configuration_filename_ = oldYamlFile;
+    logger_->log_info("Rollback Flow Controller to YAML %s",
+                      oldYamlFile.c_str());
+    stop(true);
+    unload();
+    load();
+    start();
+  }
 }
 
 void FlowControllerImpl::loadFlowRepo()
 {
-	if (this->_flowfileRepo && this->_flowfileRepo->isEnable())
-	{
-		std::map<std::string, Connection *> connectionMap;
-		this->_root->getConnections(&connectionMap);
-		this->_flowfileRepo->loadFlowFileToConnections(&connectionMap);
-	}
+  if (this->flow_file_repo_)
+  {
+    std::map<std::string, Connection *> connectionMap;
+    this->root_->getConnections(connectionMap);
+    this->flow_file_repo_->loadFlowFileToConnections(&connectionMap);
+  }
 }
 
-void FlowControllerImpl::reload(std::string yamlFile)
-{
-    logger_->log_info("Starting to reload Flow Controller with yaml %s", yamlFile.c_str());
-    stop(true);
-    unload();
-    std::string oldYamlFile = this->_configurationFileName;
-    this->_configurationFileName = yamlFile;
-    load();
-    start();
-       if (!this->_root)
-       {
-        this->_configurationFileName = oldYamlFile;
-        logger_->log_info("Rollback Flow Controller to YAML %s", oldYamlFile.c_str());
-        stop(true);
-        unload();
-        load();
-        start();
-    }
-}
 
 bool FlowControllerImpl::start() {
-	if (!_initialized) {
-		logger_->log_error(
-				"Can not start Flow Controller because it has not been initialized");
-		return false;
-	} else {
+  if (!initialized_) {
+    logger_->log_error(
+        "Can not start Flow Controller because it has not been initialized");
+    return false;
+  } else {
 
-		if (!_running) {
-			logger_->log_info("Starting Flow Controller");
-			this->_timerScheduler.start();
-			this->_eventScheduler.start();
-			if (this->_root)
-				this->_root->startProcessing(&this->_timerScheduler,
-						&this->_eventScheduler);
-			_running = true;
-			this->_protocol->start();
-			this->_provenanceRepo->start();
-			this->_flowfileRepo->start();
-			logger_->log_info("Started Flow Controller");
-		}
-		return true;
-	}
+    if (!running_) {
+      logger_->log_info("Starting Flow Controller");
+      this->_timerScheduler.start();
+      this->_eventScheduler.start();
+      if (this->root_)
+        this->root_->startProcessing(&this->_timerScheduler,
+                                     &this->_eventScheduler);
+      running_ = true;
+      this->protocol_->start();
+      this->provenance_repo_->start();
+      this->flow_file_repo_->start();
+      logger_->log_info("Started Flow Controller");
+    }
+    return true;
+  }
 }
+
+} /* namespace minifi */
+} /* namespace nifi */
+} /* namespace apache */
+} /* namespace org */

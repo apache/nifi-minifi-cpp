@@ -18,5 +18,16 @@
 
 #include "io/EndianCheck.h"
 
-
+namespace org {
+namespace apache {
+namespace nifi {
+namespace minifi {
+namespace io {
 bool EndiannessCheck::IS_LITTLE = EndiannessCheck::is_little_endian();
+
+
+} /* namespace io */
+} /* namespace minifi */
+} /* namespace nifi */
+} /* namespace apache */
+} /* namespace org */

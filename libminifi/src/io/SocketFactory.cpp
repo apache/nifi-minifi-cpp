@@ -20,5 +20,18 @@
 #include <atomic>
 #include <mutex> 
   
+namespace org {
+namespace apache {
+namespace nifi {
+namespace minifi {
+namespace io {
+
 std::atomic<SocketFactory*> SocketFactory::context_instance_;
 std::mutex SocketFactory::context_mutex_;
+
+
+} /* namespace io */
+} /* namespace minifi */
+} /* namespace nifi */
+} /* namespace apache */
+} /* namespace org */

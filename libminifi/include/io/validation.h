@@ -21,23 +21,24 @@
 #include <string>
 #include <cstring>
 
+
 /**
  * A checker that will, at compile time, tell us
  * if the declared type has a size method.
  */
 template<typename T>
 class size_function_functor_checker {
-    typedef char hasit;
-    typedef long doesnothaveit;
+  typedef char hasit;
+  typedef long doesnothaveit;
 
-    // look for the declared type
-    template<typename O> static hasit test(decltype(&O::size));
-    template<typename O> static doesnothaveit test(...);
+  // look for the declared type
+  template<typename O> static hasit test(decltype(&O::size));
+  template<typename O> static doesnothaveit test(...);
 
-public:
-    enum {
-        has_size_function = sizeof(test<T>(0)) == sizeof(char)
-    };
+ public:
+  enum {
+    has_size_function = sizeof(test<T>(0)) == sizeof(char)
+  };
 };
 
 /**
@@ -46,7 +47,7 @@ public:
 template<typename T>
 static auto IsNullOrEmpty(
     T &object) -> typename std::enable_if<size_function_functor_checker<T>::has_size_function==1, bool>::type {
-    return object.size() == 0;
+  return object.size() == 0;
 }
 
 /**
@@ -55,7 +56,7 @@ static auto IsNullOrEmpty(
 template<typename T>
 static auto IsNullOrEmpty(
     T *object) -> typename std::enable_if<size_function_functor_checker<T>::has_size_function==1, bool>::type {
-    return (0 == object || object->size() == 0);
+  return (0 == object || object->size() == 0);
 }
 
 /**
@@ -64,13 +65,13 @@ static auto IsNullOrEmpty(
 template<typename T>
 static auto IsNullOrEmpty(
     T *object) -> typename std::enable_if<not size_function_functor_checker<T>::has_size_function , bool>::type {
-    return (0 == object);
+  return (0 == object);
 }
 /**
  * Determines if the variable is null or strlen(str) == 0
  */
 static auto IsNullOrEmpty(char *str)-> decltype(NULL !=str, bool()) {
-    return (NULL == str || strlen(str) == 0);
+  return (NULL == str || strlen(str) == 0);
 }
 
 

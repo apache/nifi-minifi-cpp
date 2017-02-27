@@ -22,99 +22,111 @@
 #include <cstdint>
 #include <vector>
 #include "EndianCheck.h"
-
+namespace org {
+namespace apache {
+namespace nifi {
+namespace minifi {
+namespace io {
 /**
  * DataStream defines the mechanism through which
  * binary data will be written to a sink
  */
 class DataStream {
-public:
+ public:
 
-	DataStream() :
-			readBuffer(0) {
+  DataStream()
+      : readBuffer(0) {
 
-	}
+  }
 
-	/**
-	 * Constructor
-	 **/
-	explicit DataStream(const uint8_t *buf, const uint32_t buflen) :
-			DataStream() {
-		writeData((uint8_t*) buf, buflen);
+  ~DataStream() {
 
-	}
+  }
 
-	virtual short initialize() {
-		buffer.clear();
-		readBuffer = 0;
-		return 0;
-	}
+  /**
+   * Constructor
+   **/
+  explicit DataStream(const uint8_t *buf, const uint32_t buflen)
+      : DataStream() {
+    writeData((uint8_t*) buf, buflen);
 
-	virtual void closeStream()
-	{
+  }
 
-	}
-	/**
-	 * Reads data and places it into buf
-	 * @param buf buffer in which we extract data
-	 * @param buflen
-	 */
-	virtual int readData(std::vector<uint8_t> &buf, int buflen);
-	/**
-	 * Reads data and places it into buf
-	 * @param buf buffer in which we extract data
-	 * @param buflen
-	 */
-	virtual int readData(uint8_t *buf, int buflen);
+  virtual short initialize() {
+    buffer.clear();
+    readBuffer = 0;
+    return 0;
+  }
 
-	/**
-	 * writes valiue to buffer
-	 * @param value value to write
-	 * @param size size of value
-	 */
-	virtual int writeData(uint8_t *value, int size);
+  virtual void closeStream() {
 
-	/**
-	 * Reads a system word
-	 * @param value value to write
-	 */
-	virtual int read(uint64_t &value, bool is_little_endian =
-			EndiannessCheck::IS_LITTLE);
+  }
+  /**
+   * Reads data and places it into buf
+   * @param buf buffer in which we extract data
+   * @param buflen
+   */
+  virtual int readData(std::vector<uint8_t> &buf, int buflen);
+  /**
+   * Reads data and places it into buf
+   * @param buf buffer in which we extract data
+   * @param buflen
+   */
+  virtual int readData(uint8_t *buf, int buflen);
 
-	/**
-	 * Reads a uint32_t
-	 * @param value value to write
-	 */
-	virtual int read(uint32_t &value, bool is_little_endian =
-			EndiannessCheck::IS_LITTLE);
+  /**
+   * writes valiue to buffer
+   * @param value value to write
+   * @param size size of value
+   */
+  virtual int writeData(uint8_t *value, int size);
 
-	/**
-	 * Reads a system short
-	 * @param value value to write
-	 */
-	virtual int read(uint16_t &value, bool is_little_endian =
-			EndiannessCheck::IS_LITTLE);
+  /**
+   * Reads a system word
+   * @param value value to write
+   */
+  virtual int read(uint64_t &value, bool is_little_endian =
+                       EndiannessCheck::IS_LITTLE);
 
-	/**
-	 * Returns the underlying buffer
-	 * @return vector's array
-	 **/
-	const uint8_t *getBuffer() const {
-		return &buffer[0];
-	}
+  /**
+   * Reads a uint32_t
+   * @param value value to write
+   */
+  virtual int read(uint32_t &value, bool is_little_endian =
+                       EndiannessCheck::IS_LITTLE);
 
-	/**
-	 * Retrieve size of data stream
-	 * @return size of data stream
-	 **/
-	const uint32_t getSize() const {
-		return buffer.size();
-	}
+  /**
+   * Reads a system short
+   * @param value value to write
+   */
+  virtual int read(uint16_t &value, bool is_little_endian =
+                       EndiannessCheck::IS_LITTLE);
 
-protected:
-	// All serialization related method and internal buf
-	std::vector<uint8_t> buffer;
-	uint32_t readBuffer;
+  /**
+   * Returns the underlying buffer
+   * @return vector's array
+   **/
+  const uint8_t *getBuffer() const {
+    return &buffer[0];
+  }
+
+  /**
+   * Retrieve size of data stream
+   * @return size of data stream
+   **/
+  const uint32_t getSize() const {
+    return buffer.size();
+  }
+
+ protected:
+  // All serialization related method and internal buf
+  std::vector<uint8_t> buffer;
+  uint32_t readBuffer;
 };
 
+} /* namespace io */
+} /* namespace minifi */
+} /* namespace nifi */
+} /* namespace apache */
+} /* namespace org */
 #endif /* LIBMINIFI_INCLUDE_IO_DATASTREAM_H_ */

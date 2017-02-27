@@ -33,89 +33,103 @@
 #include "io/SocketFactory.h"
 
 #include "utils/TimeUtil.h"
-#include "ProcessContext.h"
-#include "ProcessSession.h"
+#include "core/ProcessContext.h"
+#include "core/ProcessSession.h"
 
-const std::string RemoteProcessorGroupPort::ProcessorName("RemoteProcessorGroupPort");
-Property RemoteProcessorGroupPort::hostName("Host Name", "Remote Host Name.", "localhost");
-Property RemoteProcessorGroupPort::port("Port", "Remote Port", "9999");
-Relationship RemoteProcessorGroupPort::relation;
+namespace org {
+namespace apache {
+namespace nifi {
+namespace minifi {
 
-void RemoteProcessorGroupPort::initialize()
-{
+const std::string RemoteProcessorGroupPort::ProcessorName(
+    "RemoteProcessorGroupPort");
+core::Property RemoteProcessorGroupPort::hostName(
+    "Host Name", "Remote Host Name.", "localhost");
+core::Property RemoteProcessorGroupPort::port(
+    "Port", "Remote Port", "9999");
+core::Relationship RemoteProcessorGroupPort::relation;
 
-	//! Set the supported properties
-	std::set<Property> properties;
-	properties.insert(hostName);
-	properties.insert(port);
-	setSupportedProperties(properties);
-	//! Set the supported relationships
-	std::set<Relationship> relationships;
-	relationships.insert(relation);
-	setSupportedRelationships(relationships);
+void RemoteProcessorGroupPort::initialize() {
+
+  // Set the supported properties
+  std::set<core::Property> properties;
+  properties.insert(hostName);
+  properties.insert(port);
+  setSupportedProperties(properties);
+  // Set the supported relationships
+  std::set<core::Relationship> relationships;
+  relationships.insert(relation);
+  setSupportedRelationships(relationships);
 
 }
 
-void RemoteProcessorGroupPort::onTrigger(ProcessContext *context, ProcessSession *session)
-{
-	std::string value;
+void RemoteProcessorGroupPort::onTrigger(
+    core::ProcessContext *context,
+    core::ProcessSession *session) {
+  std::string value;
 
-	if (!transmitting_)
-		return;
-	
-	std::string host = peer_.getHostName();
-	uint16_t sport = peer_.getPort();
-	int64_t lvalue;
-	
-	if (context->getProperty(hostName.getName(), value))
-	{
-		host = value;
-	}
-	if (context->getProperty(port.getName(), value) && Property::StringToInt(value, lvalue))
-	{
-		sport = (uint16_t) lvalue;
-	}
-	
-	if (host != peer_.getHostName() || sport != peer_.getPort())
-	
-	{
-	  
-	      std::unique_ptr<DataStream> str = std::unique_ptr<DataStream>(SocketFactory::getInstance()->createSocket(host,sport));
-	      peer_ = std::move(Site2SitePeer (std::move(str), host, sport));
-	      protocol_->setPeer(&peer_);
-	  
-	}
-		
-	
-	
-	bool needReset = false;
+  if (!transmitting_)
+    return;
 
-	
-	if (host != peer_.getHostName())
-	{
-		peer_.setHostName(host);
-		needReset= true;
-	}
-	if (sport != peer_.getPort())
-	{
-		peer_.setPort(sport);
-		needReset = true;
-	}
-	if (needReset)
-		protocol_->tearDown();
+  std::string host = peer_.getHostName();
+  uint16_t sport = peer_.getPort();
+  int64_t lvalue;
 
-	if (!protocol_->bootstrap())
-	{
-		// bootstrap the client protocol if needeed
-		context->yield();
-		logger_->log_error("Site2Site bootstrap failed yield period %d peer ", context->getProcessor()->getYieldPeriodMsec());
-		return;
-	}
+  if (context->getProperty(hostName.getName(), value)) {
+    host = value;
+  }
+  if (context->getProperty(port.getName(), value)
+      && core::Property::StringToInt(value,
+                                                                lvalue)) {
+    sport = (uint16_t) lvalue;
+  }
 
-	if (direction_ == RECEIVE)
-		protocol_->receiveFlowFiles(context, session);
-	else
-		protocol_->transferFlowFiles(context, session);
+  if (host != peer_.getHostName() || sport != peer_.getPort())
 
-	return;
+  {
+
+    std::unique_ptr<org::apache::nifi::minifi::io::DataStream> str =
+        std::unique_ptr<org::apache::nifi::minifi::io::DataStream>(
+            org::apache::nifi::minifi::io::SocketFactory::getInstance()
+                ->createSocket(host, sport));
+    peer_ = std::move(Site2SitePeer(std::move(str), host, sport));
+    protocol_->setPeer(&peer_);
+
+  }
+
+  bool needReset = false;
+
+  if (host != peer_.getHostName()) {
+    peer_.setHostName(host);
+    needReset = true;
+  }
+  if (sport != peer_.getPort()) {
+    peer_.setPort(sport);
+    needReset = true;
+  }
+  if (needReset)
+    protocol_->tearDown();
+
+  if (!protocol_->bootstrap()) {
+    // bootstrap the client protocol if needeed
+    context->yield();
+    std::shared_ptr<Processor> processor = std::static_pointer_cast<Processor>(
+        context->getProcessorNode().getProcessor());
+    logger_->log_error("Site2Site bootstrap failed yield period %d peer ",
+                       processor->getYieldPeriodMsec());
+    return;
+  }
+
+  if (direction_ == RECEIVE)
+    protocol_->receiveFlowFiles(context, session);
+  else
+    protocol_->transferFlowFiles(context, session);
+
+  return;
 }
+
+
+} /* namespace minifi */
+} /* namespace nifi */
+} /* namespace apache */
+} /* namespace org */

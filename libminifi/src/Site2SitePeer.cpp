@@ -31,6 +31,12 @@
 #include "Site2SitePeer.h"
 #include "FlowController.h"
 
+
+namespace org {
+namespace apache {
+namespace nifi {
+namespace minifi {
+
 bool Site2SitePeer::Open() {
 
 	if (IsNullOrEmpty (host_))
@@ -53,3 +59,9 @@ void Site2SitePeer::Close() {
 	stream_->closeStream();
 }
 
+
+
+} /* namespace minifi */
+} /* namespace nifi */
+} /* namespace apache */
+} /* namespace org */

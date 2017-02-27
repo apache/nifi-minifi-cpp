@@ -27,253 +27,119 @@
 #include <cstdio>
 
 #include "FlowFileRecord.h"
-#include "Relationship.h"
-#include "Logger.h"
-#include "FlowController.h"
-#include "FlowFileRepository.h"
+#include "core/logging/Logger.h"
+#include "core/Relationship.h"
+#include "core/Repository.h"
 
-std::atomic<uint64_t> FlowFileRecord::_localFlowSeqNumber(0);
+namespace org {
+namespace apache {
+namespace nifi {
+namespace minifi {
 
-FlowFileRecord::FlowFileRecord(std::map<std::string, std::string> attributes, ResourceClaim *claim)
-: _size(0),
-  _id(_localFlowSeqNumber.load()),
-  _offset(0),
-  _penaltyExpirationMs(0),
-  _claim(claim),
-  _isStoredToRepo(false),
-  _markedDelete(false),
-  _connection(NULL),
-  _orginalConnection(NULL)
-{
-	_entryDate = getTimeMillis();
-	_lineageStartDate = _entryDate;
+std::atomic<uint64_t> FlowFileRecord::local_flow_seq_number_(0);
 
-	char uuidStr[37];
+FlowFileRecord::FlowFileRecord(
+    std::shared_ptr<core::Repository> flow_repository,
+    std::map<std::string, std::string> attributes,
+    std::shared_ptr<ResourceClaim> claim)
+    : FlowFile(),
+      flow_repository_(flow_repository) {
 
-	// Generate the global UUID for the flow record
-	uuid_generate(_uuid);
-	// Increase the local ID for the flow record
-	++_localFlowSeqNumber;
-	uuid_unparse_lower(_uuid, uuidStr);
-	_uuidStr = uuidStr;
+  id_ = local_flow_seq_number_.load();
+  claim_ = claim;
+  // Increase the local ID for the flow record
+  ++local_flow_seq_number_;
+  // Populate the default attributes
+  addKeyedAttribute(FILENAME, std::to_string(getTimeNano()));
+  addKeyedAttribute(PATH, DEFAULT_FLOWFILE_PATH);
+  addKeyedAttribute(UUID, getUUIDStr());
+  // Populate the attributes from the input
+  std::map<std::string, std::string>::iterator it;
+  for (it = attributes.begin(); it != attributes.end(); it++) {
+    FlowFile::addAttribute(it->first, it->second);
+  }
 
-	// Populate the default attributes
-    addAttribute(FILENAME, std::to_string(getTimeNano()));
-    addAttribute(PATH, DEFAULT_FLOWFILE_PATH);
-    addAttribute(UUID, uuidStr);
-	// Populate the attributes from the input
-    std::map<std::string, std::string>::iterator it;
-    for (it = attributes.begin(); it!= attributes.end(); it++)
-    {
-    	addAttribute(it->first, it->second);
+  snapshot_ = false;
+
+  if (claim_ != nullptr)
+    // Increase the flow file record owned count for the resource claim
+    claim_->increaseFlowFileRecordOwnedCount();
+  logger_ = logging::Logger::getLogger();
+}
+
+FlowFileRecord::FlowFileRecord(
+    std::shared_ptr<core::Repository> flow_repository,
+    std::shared_ptr<core::FlowFile> event)
+    : FlowFile(),
+      flow_repository_(flow_repository) {
+
+}
+
+FlowFileRecord::~FlowFileRecord() {
+  if (!snapshot_)
+    logger_->log_debug("Delete FlowFile UUID %s", uuid_str_.c_str());
+  else
+    logger_->log_debug("Delete SnapShot FlowFile UUID %s", uuid_str_.c_str());
+  if (claim_) {
+    // Decrease the flow file record owned count for the resource claim
+    claim_->decreaseFlowFileRecordOwnedCount();
+    if (claim_->getFlowFileRecordOwnedCount() <= 0) {
+      logger_->log_debug("Delete Resource Claim %s",
+                         claim_->getContentFullPath().c_str());
+      if (!this->stored || !flow_repository_->Get(_uuidStr, value)) {
+        std::remove(claim_->getContentFullPath().c_str());
+      }
     }
-
-    _snapshot = false;
-
-	if (_claim)
-		// Increase the flow file record owned count for the resource claim
-		_claim->increaseFlowFileRecordOwnedCount();
-	logger_ = Logger::getLogger();
+  }
 }
 
-FlowFileRecord::FlowFileRecord(FlowFileEventRecord *event)
-: _size(0),
-  _id(_localFlowSeqNumber.load()),
-  _offset(0),
-  _penaltyExpirationMs(0),
-  _claim(NULL),
-  _isStoredToRepo(false),
-  _markedDelete(false),
-  _connection(NULL),
-  _orginalConnection(NULL)
-{
-	_entryDate = event->getFlowFileEntryDate();
-	_lineageStartDate = event->getlineageStartDate();
-	_size = event->getFileSize();
-	_offset = event->getFileOffset();
-	_lineageIdentifiers = event->getLineageIdentifiers();
-	_attributes = event->getAttributes();
-    _snapshot = false;
-    _uuidStr = event->getFlowFileUuid();
-    uuid_parse(_uuidStr.c_str(), _uuid);
-
-    if (_size > 0)
-    {
-    	_claim = new ResourceClaim();
-    }
-
-	if (_claim)
-	{
-		_claim->setContentFullPath(event->getContentFullPath());
-		// Increase the flow file record owned count for the resource claim
-		_claim->increaseFlowFileRecordOwnedCount();
-	}
-	logger_ = Logger::getLogger();
-	++_localFlowSeqNumber;
+bool FlowFileRecord::addKeyedAttribute(FlowAttribute key, std::string value) {
+  const char *keyStr = FlowAttributeKey(key);
+  if (keyStr) {
+    const std::string keyString = keyStr;
+    return FlowFile::addAttribute(keyString, value);
+  } else {
+    return false;
+  }
 }
 
-
-FlowFileRecord::~FlowFileRecord()
-{
-	if (!_snapshot)
-		logger_->log_debug("Delete FlowFile UUID %s", _uuidStr.c_str());
-	else
-		logger_->log_debug("Delete SnapShot FlowFile UUID %s", _uuidStr.c_str());
-	if (_claim)
-	{
-		// Decrease the flow file record owned count for the resource claim
-		_claim->decreaseFlowFileRecordOwnedCount();
-		if (_claim->getFlowFileRecordOwnedCount() <= 0)
-		{
-			logger_->log_debug("Delete Resource Claim %s", _claim->getContentFullPath().c_str());
-			std::string value;
-			if (!FlowControllerFactory::getFlowController()->getFlowFileRepository() ||
-					!FlowControllerFactory::getFlowController()->getFlowFileRepository()->isEnable() ||
-					!this->_isStoredToRepo ||
-					!FlowControllerFactory::getFlowController()->getFlowFileRepository()->Get(_uuidStr, value))
-			{
-				// if it is persistent to DB already while it is in the queue, we keep the content
-				std::remove(_claim->getContentFullPath().c_str());
-			}
-			delete _claim;
-		}
-	}
+bool FlowFileRecord::removeKeyedAttribute(FlowAttribute key) {
+  const char *keyStr = FlowAttributeKey(key);
+  if (keyStr) {
+    std::string keyString = keyStr;
+    return FlowFile::removeAttribute(keyString);
+  } else {
+    return false;
+  }
 }
 
-bool FlowFileRecord::addAttribute(FlowAttribute key, std::string value)
-{
-	const char *keyStr = FlowAttributeKey(key);
-	if (keyStr)
-	{
-		std::string keyString = keyStr;
-		return addAttribute(keyString, value);
-	}
-	else
-	{
-		return false;
-	}
+bool FlowFileRecord::updateKeyedAttribute(FlowAttribute key,
+                                          std::string value) {
+  const char *keyStr = FlowAttributeKey(key);
+  if (keyStr) {
+    std::string keyString = keyStr;
+    return FlowFile::updateAttribute(keyString, value);
+  } else {
+    return false;
+  }
 }
 
-bool FlowFileRecord::addAttribute(std::string key, std::string value)
-{
-	std::map<std::string, std::string>::iterator it = _attributes.find(key);
-	if (it != _attributes.end())
-	{
-		// attribute already there in the map
-		return false;
-	}
-	else
-	{
-		_attributes[key] = value;
-		return true;
-	}
+bool FlowFileRecord::getKeyedAttribute(FlowAttribute key, std::string &value) {
+  const char *keyStr = FlowAttributeKey(key);
+  if (keyStr) {
+    std::string keyString = keyStr;
+    return FlowFile::getAttribute(keyString, value);
+  } else {
+    return false;
+  }
 }
 
-bool FlowFileRecord::removeAttribute(FlowAttribute key)
-{
-	const char *keyStr = FlowAttributeKey(key);
-	if (keyStr)
-	{
-		std::string keyString = keyStr;
-		return removeAttribute(keyString);
-	}
-	else
-	{
-		return false;
-	}
+FlowFileRecord &FlowFileRecord::operator=(const FlowFileRecord &other) {
+  core::FlowFile::operator=(other);
+  return *this;
 }
 
-bool FlowFileRecord::removeAttribute(std::string key)
-{
-	std::map<std::string, std::string>::iterator it = _attributes.find(key);
-	if (it != _attributes.end())
-	{
-		_attributes.erase(key);
-		return true;
-	}
-	else
-	{
-		return false;
-	}
-}
-
-bool FlowFileRecord::updateAttribute(FlowAttribute key, std::string value)
-{
-	const char *keyStr = FlowAttributeKey(key);
-	if (keyStr)
-	{
-		std::string keyString = keyStr;
-		return updateAttribute(keyString, value);
-	}
-	else
-	{
-		return false;
-	}
-}
-
-bool FlowFileRecord::updateAttribute(std::string key, std::string value)
-{
-	std::map<std::string, std::string>::iterator it = _attributes.find(key);
-	if (it != _attributes.end())
-	{
-		_attributes[key] = value;
-		return true;
-	}
-	else
-	{
-		return false;
-	}
-}
-
-bool FlowFileRecord::getAttribute(FlowAttribute key, std::string &value)
-{
-	const char *keyStr = FlowAttributeKey(key);
-	if (keyStr)
-	{
-		std::string keyString = keyStr;
-		return getAttribute(keyString, value);
-	}
-	else
-	{
-		return false;
-	}
-}
-
-bool FlowFileRecord::getAttribute(std::string key, std::string &value)
-{
-	std::map<std::string, std::string>::iterator it = _attributes.find(key);
-	if (it != _attributes.end())
-	{
-		value = it->second;
-		return true;
-	}
-	else
-	{
-		return false;
-	}
-}
-
-void FlowFileRecord::duplicate(FlowFileRecord *original)
-{
-	uuid_copy(this->_uuid, original->_uuid);
-	this->_attributes = original->_attributes;
-	this->_entryDate = original->_entryDate;
-	this->_id = original->_id;
-	this->_lastQueueDate = original->_lastQueueDate;
-	this->_lineageStartDate = original->_lineageStartDate;
-	this->_offset = original->_offset;
-	this->_penaltyExpirationMs = original->_penaltyExpirationMs;
-	this->_size = original->_size;
-	this->_lineageIdentifiers = original->_lineageIdentifiers;
-	this->_orginalConnection = original->_orginalConnection;
-	this->_uuidStr = original->_uuidStr;
-	this->_connection = original->_connection;
-	this->_markedDelete = original->_markedDelete;
-
-	this->_claim = original->_claim;
-	if (this->_claim)
-		this->_claim->increaseFlowFileRecordOwnedCount();
-
-	this->_snapshot = true;
-}
-
+} /* namespace minifi */
+} /* namespace nifi */
+} /* namespace apache */
+} /* namespace org */
