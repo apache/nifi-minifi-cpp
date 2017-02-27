@@ -26,29 +26,28 @@
 #include "ThreadedSchedulingAgent.h"
 
 //! TimerDrivenSchedulingAgent Class
-class TimerDrivenSchedulingAgent : public ThreadedSchedulingAgent
-{
-public:
-	//! Constructor
-	/*!
-	 * Create a new processor
-	 */
-	TimerDrivenSchedulingAgent()
-	: ThreadedSchedulingAgent()
-	{
-	}
-	//! Destructor
-	virtual ~TimerDrivenSchedulingAgent()
-	{
-	}
-	//! Run function for the thread
-	void run(Processor *processor, ProcessContext *processContext, ProcessSessionFactory *sessionFactory);
+class TimerDrivenSchedulingAgent : public ThreadedSchedulingAgent {
+ public:
+  //! Constructor
+  /*!
+   * Create a new processor
+   */
+  TimerDrivenSchedulingAgent()
+      : ThreadedSchedulingAgent() {
+  }
+  //! Destructor
+  virtual ~TimerDrivenSchedulingAgent() {
+  }
+  //! Run function for the thread
+  void run(Processor *processor, ProcessContext *processContext,
+           ProcessSessionFactory *sessionFactory);
 
-private:
-	// Prevent default copy constructor and assignment operation
-	// Only support pass by reference or pointer
-	TimerDrivenSchedulingAgent(const TimerDrivenSchedulingAgent &parent);
-	TimerDrivenSchedulingAgent &operator=(const TimerDrivenSchedulingAgent &parent);
+ private:
+  // Prevent default copy constructor and assignment operation
+  // Only support pass by reference or pointer
+  TimerDrivenSchedulingAgent(const TimerDrivenSchedulingAgent &parent);
+  TimerDrivenSchedulingAgent &operator=(
+      const TimerDrivenSchedulingAgent &parent);
 
 };
 

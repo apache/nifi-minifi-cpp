@@ -33,23 +33,23 @@
 
 bool Site2SitePeer::Open() {
 
-	if (IsNullOrEmpty (host_))
-		return false;
+  if (IsNullOrEmpty(host_))
+    return false;
 
-	if (stream_->initialize() < 0)
-		return false;
+  if (stream_->initialize() < 0)
+    return false;
 
-	uint16_t data_size = sizeof MAGIC_BYTES;
+  uint16_t data_size = sizeof MAGIC_BYTES;
 
-	if (stream_->writeData((uint8_t *) MAGIC_BYTES, data_size) != data_size) {
-		return false;
-	}
+  if (stream_->writeData((uint8_t *) MAGIC_BYTES, data_size) != data_size) {
+    return false;
+  }
 
-	return true;
+  return true;
 }
 
 void Site2SitePeer::Close() {
-    if (stream_ != nullptr)
-	stream_->closeStream();
+  if (stream_ != nullptr)
+    stream_->closeStream();
 }
 

@@ -25,43 +25,40 @@
 #include "ProcessSession.h"
 
 //! AppendHostInfo Class
-class AppendHostInfo : public Processor
-{
-public:
-	//! Constructor
-	/*!
-	 * Create a new processor
-	 */
-	AppendHostInfo(std::string name, uuid_t uuid = NULL)
-	: Processor(name, uuid)
-	{
-		logger_ = Logger::getLogger();
-	}
-	//! Destructor
-	virtual ~AppendHostInfo()
-	{
-	}
-	//! Processor Name
-	static const std::string ProcessorName;
-	//! Supported Properties
-	static Property InterfaceName;
-	static Property HostAttribute;
-	static Property IPAttribute;
+class AppendHostInfo : public Processor {
+ public:
+  //! Constructor
+  /*!
+   * Create a new processor
+   */
+  AppendHostInfo(std::string name, uuid_t uuid = NULL)
+      : Processor(name, uuid) {
+    logger_ = Logger::getLogger();
+  }
+  //! Destructor
+  virtual ~AppendHostInfo() {
+  }
+  //! Processor Name
+  static const std::string ProcessorName;
+  //! Supported Properties
+  static Property InterfaceName;
+  static Property HostAttribute;
+  static Property IPAttribute;
 
-	//! Supported Relationships
-	static Relationship Success;
+  //! Supported Relationships
+  static Relationship Success;
 
-public:
-	//! OnTrigger method, implemented by NiFi AppendHostInfo
-	virtual void onTrigger(ProcessContext *context, ProcessSession *session);
-	//! Initialize, over write by NiFi AppendHostInfo
-	virtual void initialize(void);
+ public:
+  //! OnTrigger method, implemented by NiFi AppendHostInfo
+  virtual void onTrigger(ProcessContext *context, ProcessSession *session);
+  //! Initialize, over write by NiFi AppendHostInfo
+  virtual void initialize(void);
 
-protected:
+ protected:
 
-private:
-	//! Logger
-	std::shared_ptr<Logger> logger_;
+ private:
+  //! Logger
+  std::shared_ptr<Logger> logger_;
 };
 
 #endif

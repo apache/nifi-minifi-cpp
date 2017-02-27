@@ -41,57 +41,67 @@
 #endif
 
 const std::string AppendHostInfo::ProcessorName("AppendHostInfo");
-Property AppendHostInfo::InterfaceName("Network Interface Name", "Network interface from which to read an IP v4 address", "eth0");
-Property AppendHostInfo::HostAttribute("Hostname Attribute", "Flowfile attribute to used to record the agent's hostname", "source.hostname");
-Property AppendHostInfo::IPAttribute("IP Attribute", "Flowfile attribute to used to record the agent's IP address", "source.ipv4");
-Relationship AppendHostInfo::Success("success", "success operational on the flow record");
+Property AppendHostInfo::InterfaceName(
+    "Network Interface Name",
+    "Network interface from which to read an IP v4 address", "eth0");
+Property AppendHostInfo::HostAttribute(
+    "Hostname Attribute",
+    "Flowfile attribute to used to record the agent's hostname",
+    "source.hostname");
+Property AppendHostInfo::IPAttribute(
+    "IP Attribute",
+    "Flowfile attribute to used to record the agent's IP address",
+    "source.ipv4");
+Relationship AppendHostInfo::Success("success",
+                                     "success operational on the flow record");
 
-void AppendHostInfo::initialize()
-{
-	//! Set the supported properties
-	std::set<Property> properties;
-	properties.insert(InterfaceName);
-	properties.insert(HostAttribute);
-	properties.insert(IPAttribute);
-	setSupportedProperties(properties);
+void AppendHostInfo::initialize() {
+  //! Set the supported properties
+  std::set<Property> properties;
+  properties.insert(InterfaceName);
+  properties.insert(HostAttribute);
+  properties.insert(IPAttribute);
+  setSupportedProperties(properties);
 
-	//! Set the supported relationships
-	std::set<Relationship> relationships;
-	relationships.insert(Success);
-	setSupportedRelationships(relationships);
+  //! Set the supported relationships
+  std::set<Relationship> relationships;
+  relationships.insert(Success);
+  setSupportedRelationships(relationships);
 }
 
-void AppendHostInfo::onTrigger(ProcessContext *context, ProcessSession *session)
-{
-	FlowFileRecord *flow = session->get();
-	if (!flow)
-	  return;
+void AppendHostInfo::onTrigger(ProcessContext *context,
+                               ProcessSession *session) {
+  FlowFileRecord *flow = session->get();
+  if (!flow)
+    return;
 
-	//Get Hostname
+  //Get Hostname
 
-	std::string hostAttribute = "";
-	context->getProperty(HostAttribute.getName(), hostAttribute);
-	flow->addAttribute(hostAttribute.c_str(), Socket::getMyHostName());
+  std::string hostAttribute = "";
+  context->getProperty(HostAttribute.getName(), hostAttribute);
+  flow->addAttribute(hostAttribute.c_str(), Socket::getMyHostName());
 
-	//Get IP address for the specified interface
+  //Get IP address for the specified interface
   std::string iface;
-	context->getProperty(InterfaceName.getName(), iface);
+  context->getProperty(InterfaceName.getName(), iface);
   //Confirm the specified interface name exists on this device
-  if (if_nametoindex(iface.c_str()) != 0){
+  if (if_nametoindex(iface.c_str()) != 0) {
     struct ifreq ifr;
     int fd = socket(AF_INET, SOCK_DGRAM, 0);
     //Type of address to retrieve - IPv4 IP address
     ifr.ifr_addr.sa_family = AF_INET;
     //Copy the interface name in the ifreq structure
-    strncpy(ifr.ifr_name , iface.c_str(), IFNAMSIZ-1);
+    strncpy(ifr.ifr_name, iface.c_str(), IFNAMSIZ - 1);
     ioctl(fd, SIOCGIFADDR, &ifr);
     close(fd);
 
     std::string ipAttribute;
     context->getProperty(IPAttribute.getName(), ipAttribute);
-    flow->addAttribute(ipAttribute.c_str(), inet_ntoa(((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr));
+    flow->addAttribute(
+        ipAttribute.c_str(),
+        inet_ntoa(((struct sockaddr_in *) &ifr.ifr_addr)->sin_addr));
   }
 
-	// Transfer to the relationship
-	session->transfer(flow, Success);
+  // Transfer to the relationship
+  session->transfer(flow, Success);
 }

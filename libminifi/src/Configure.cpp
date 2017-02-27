@@ -21,139 +21,132 @@
 #include "utils/StringUtils.h"
 
 Configure *Configure::configure_(NULL);
-const char *Configure::nifi_flow_configuration_file = "nifi.flow.configuration.file";
-const char *Configure::nifi_administrative_yield_duration = "nifi.administrative.yield.duration";
+const char *Configure::nifi_flow_configuration_file =
+    "nifi.flow.configuration.file";
+const char *Configure::nifi_administrative_yield_duration =
+    "nifi.administrative.yield.duration";
 const char *Configure::nifi_bored_yield_duration = "nifi.bored.yield.duration";
-const char *Configure::nifi_graceful_shutdown_seconds  = "nifi.graceful.shutdown.seconds";
+const char *Configure::nifi_graceful_shutdown_seconds =
+    "nifi.graceful.shutdown.seconds";
 const char *Configure::nifi_server_name = "nifi.server.name";
 const char *Configure::nifi_server_port = "nifi.server.port";
-const char *Configure::nifi_server_report_interval= "nifi.server.report.interval";
-const char *Configure::nifi_provenance_repository_max_storage_size = "nifi.provenance.repository.max.storage.size";
-const char *Configure::nifi_provenance_repository_max_storage_time = "nifi.provenance.repository.max.storage.time";
-const char *Configure::nifi_provenance_repository_directory_default = "nifi.provenance.repository.directory.default";
+const char *Configure::nifi_server_report_interval =
+    "nifi.server.report.interval";
+const char *Configure::nifi_provenance_repository_max_storage_size =
+    "nifi.provenance.repository.max.storage.size";
+const char *Configure::nifi_provenance_repository_max_storage_time =
+    "nifi.provenance.repository.max.storage.time";
+const char *Configure::nifi_provenance_repository_directory_default =
+    "nifi.provenance.repository.directory.default";
 const char *Configure::nifi_remote_input_secure = "nifi.remote.input.secure";
-const char *Configure::nifi_security_need_ClientAuth = "nifi.security.need.ClientAuth";
-const char *Configure::nifi_security_client_certificate = "nifi.security.client.certificate";
-const char *Configure::nifi_security_client_private_key = "nifi.security.client.private.key";
-const char *Configure::nifi_security_client_pass_phrase = "nifi.security.client.pass.phrase";
-const char *Configure::nifi_security_client_ca_certificate = "nifi.security.client.ca.certificate";
-
+const char *Configure::nifi_security_need_ClientAuth =
+    "nifi.security.need.ClientAuth";
+const char *Configure::nifi_security_client_certificate =
+    "nifi.security.client.certificate";
+const char *Configure::nifi_security_client_private_key =
+    "nifi.security.client.private.key";
+const char *Configure::nifi_security_client_pass_phrase =
+    "nifi.security.client.pass.phrase";
+const char *Configure::nifi_security_client_ca_certificate =
+    "nifi.security.client.ca.certificate";
 
 //! Get the config value
-bool Configure::get(std::string key, std::string &value)
-{
-	std::lock_guard<std::mutex> lock(_mtx);
-	auto it = _properties.find(key);
+bool Configure::get(std::string key, std::string &value) {
+  std::lock_guard<std::mutex> lock(_mtx);
+  auto it = _properties.find(key);
 
-	if (it != _properties.end())
-	{
-		value = it->second;
-		return true;
-	}
-	else
-	{
-		return false;
-	}
+  if (it != _properties.end()) {
+    value = it->second;
+    return true;
+  } else {
+    return false;
+  }
 }
 
-
 //! Parse one line in configure file like key=value
-void Configure::parseConfigureFileLine(char *buf)
-{
-	char *line = buf;
+void Configure::parseConfigureFileLine(char *buf) {
+  char *line = buf;
 
-    while ((line[0] == ' ') || (line[0] =='\t'))
-    	++line;
+  while ((line[0] == ' ') || (line[0] == '\t'))
+    ++line;
 
-    char first = line[0];
-    if ((first == '\0') || (first == '#')  || (first == '\r') || (first == '\n') || (first == '='))
-    {
-    	return;
-    }
+  char first = line[0];
+  if ((first == '\0') || (first == '#') || (first == '\r') || (first == '\n')
+      || (first == '=')) {
+    return;
+  }
 
-    char *equal = strchr(line, '=');
-    if (equal == NULL)
-    {
-    	return;
-    }
+  char *equal = strchr(line, '=');
+  if (equal == NULL) {
+    return;
+  }
 
-    equal[0] = '\0';
-    std::string key = line;
+  equal[0] = '\0';
+  std::string key = line;
 
-    equal++;
-    while ((equal[0] == ' ') || (equal[0] == '\t'))
-    	++equal;
+  equal++;
+  while ((equal[0] == ' ') || (equal[0] == '\t'))
+    ++equal;
 
-    first = equal[0];
-    if ((first == '\0') || (first == '\r') || (first== '\n'))
-    {
-    	return;
-    }
+  first = equal[0];
+  if ((first == '\0') || (first == '\r') || (first == '\n')) {
+    return;
+  }
 
-    std::string value = equal;
-    key = StringUtils::trimRight(key);
-    value = StringUtils::trimRight(value);
-    set(key, value);
+  std::string value = equal;
+  key = StringUtils::trimRight(key);
+  value = StringUtils::trimRight(value);
+  set(key, value);
 }
 
 //! Load Configure File
-void Configure::loadConfigureFile(const char *fileName)
-{
+void Configure::loadConfigureFile(const char *fileName) {
 
-    std::string adjustedFilename;
-    if (fileName)
-    {
-        // perform a naive determination if this is a relative path
-        if (fileName[0] != '/')
-        {
-            adjustedFilename = adjustedFilename + configure_->getHome() + "/" + fileName;
-        }
-        else
-        {
-            adjustedFilename += fileName;
-        }
+  std::string adjustedFilename;
+  if (fileName) {
+    // perform a naive determination if this is a relative path
+    if (fileName[0] != '/') {
+      adjustedFilename = adjustedFilename + configure_->getHome() + "/"
+          + fileName;
+    } else {
+      adjustedFilename += fileName;
     }
-    char *path = NULL;
-    char full_path[PATH_MAX];
-    path = realpath(adjustedFilename.c_str(), full_path);
-    logger_->log_info("Using configuration file located at %s", path);
+  }
+  char *path = NULL;
+  char full_path[PATH_MAX];
+  path = realpath(adjustedFilename.c_str(), full_path);
+  logger_->log_info("Using configuration file located at %s", path);
 
-    std::ifstream file(path, std::ifstream::in);
-    if (!file.good())
-    {
-        logger_->log_error("load configure file failed %s", path);
-        return;
-    }
-    this->clear();
-    const unsigned int bufSize = 512;
-    char buf[bufSize];
-    for (file.getline(buf, bufSize); file.good(); file.getline(buf, bufSize))
-    {
-        parseConfigureFileLine(buf);
-    }
+  std::ifstream file(path, std::ifstream::in);
+  if (!file.good()) {
+    logger_->log_error("load configure file failed %s", path);
+    return;
+  }
+  this->clear();
+  const unsigned int bufSize = 512;
+  char buf[bufSize];
+  for (file.getline(buf, bufSize); file.good(); file.getline(buf, bufSize)) {
+    parseConfigureFileLine(buf);
+  }
 }
 
 //! Parse Command Line
-void Configure::parseCommandLine(int argc, char **argv)
-{
-	int i;
-	bool keyFound = false;
-	std::string key, value;
+void Configure::parseCommandLine(int argc, char **argv) {
+  int i;
+  bool keyFound = false;
+  std::string key, value;
 
-	for (i = 1; i < argc; i++)
-	{
-		if (argv[i][0] == '-' && argv[i][1] != '\0')
-		{
-			keyFound = true;
-			key = &argv[i][1];
-			continue;
-		}
-		if (keyFound)
-		{
-			value = argv[i];
-			set(key,value);
-			keyFound = false;
-		}
-	}
-	return;
+  for (i = 1; i < argc; i++) {
+    if (argv[i][0] == '-' && argv[i][1] != '\0') {
+      keyFound = true;
+      key = &argv[i][1];
+      continue;
+    }
+    if (keyFound) {
+      value = argv[i];
+      set(key, value);
+      keyFound = false;
+    }
+  }
+  return;
 }

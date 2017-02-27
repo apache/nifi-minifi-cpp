@@ -30,40 +30,38 @@
  * An abstract scheduling agent which creates and manages a pool of threads for
  * each processor scheduled.
  */
-class ThreadedSchedulingAgent : public SchedulingAgent
-{
-public:
-	//! Constructor
-	/*!
-	 * Create a new processor
-	 */
-	ThreadedSchedulingAgent()
-	: SchedulingAgent()
-	{
-	}
-	//! Destructor
-	virtual ~ThreadedSchedulingAgent()
-	{
-	}
+class ThreadedSchedulingAgent : public SchedulingAgent {
+ public:
+  //! Constructor
+  /*!
+   * Create a new processor
+   */
+  ThreadedSchedulingAgent()
+      : SchedulingAgent() {
+  }
+  //! Destructor
+  virtual ~ThreadedSchedulingAgent() {
+  }
 
-	//! Run function for the thread
-	virtual void run(Processor *processor, ProcessContext *processContext, ProcessSessionFactory *sessionFactory) = 0;
+  //! Run function for the thread
+  virtual void run(Processor *processor, ProcessContext *processContext,
+                   ProcessSessionFactory *sessionFactory) = 0;
 
-public:
-	//! schedule, overwritten by different DrivenTimerDrivenSchedulingAgent
-	virtual void schedule(Processor *processor);
-	//! unschedule, overwritten by different DrivenTimerDrivenSchedulingAgent
-	virtual void unschedule(Processor *processor);
+ public:
+  //! schedule, overwritten by different DrivenTimerDrivenSchedulingAgent
+  virtual void schedule(Processor *processor);
+  //! unschedule, overwritten by different DrivenTimerDrivenSchedulingAgent
+  virtual void unschedule(Processor *processor);
 
-protected:
-	//! Threads
-	std::map<std::string, std::vector<std::thread *>> _threads;
+ protected:
+  //! Threads
+  std::map<std::string, std::vector<std::thread *>> _threads;
 
-private:
-	// Prevent default copy constructor and assignment operation
-	// Only support pass by reference or pointer
-	ThreadedSchedulingAgent(const ThreadedSchedulingAgent &parent);
-	ThreadedSchedulingAgent &operator=(const ThreadedSchedulingAgent &parent);
+ private:
+  // Prevent default copy constructor and assignment operation
+  // Only support pass by reference or pointer
+  ThreadedSchedulingAgent(const ThreadedSchedulingAgent &parent);
+  ThreadedSchedulingAgent &operator=(const ThreadedSchedulingAgent &parent);
 
 };
 

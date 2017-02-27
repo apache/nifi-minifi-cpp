@@ -32,65 +32,60 @@
 //! Default content directory
 #define DEFAULT_CONTENT_DIRECTORY "./content_repository"
 
-
-
 //! ResourceClaim Class
 class ResourceClaim {
 
-public:
-  
-	static std::string default_directory_path;
-	//! Constructor
-	/*!
-	 * Create a new resource claim
-	 */
-	ResourceClaim(const std::string contentDirectory = default_directory_path);
-	//! Destructor
-	virtual ~ResourceClaim() {}
-	//! increaseFlowFileRecordOwnedCount
-	void increaseFlowFileRecordOwnedCount()
-	{
-		++_flowFileRecordOwnedCount;
-	}
-	//! decreaseFlowFileRecordOwenedCount
-	void decreaseFlowFileRecordOwnedCount()
-	{
-		--_flowFileRecordOwnedCount;
-	}
-	//! getFlowFileRecordOwenedCount
-	uint64_t getFlowFileRecordOwnedCount()
-	{
-		return _flowFileRecordOwnedCount;
-	}
-	//! Get the content full path
-	std::string getContentFullPath()
-	{
-		return _contentFullPath;
-	}
+ public:
 
-protected:
-	//! A global unique identifier
-	uuid_t _uuid;
-	//! A local unique identifier
-	uint64_t _id;
-	//! Full path to the content
-	std::string _contentFullPath;
+  static std::string default_directory_path;
+  //! Constructor
+  /*!
+   * Create a new resource claim
+   */
+  ResourceClaim(const std::string contentDirectory = default_directory_path);
+  //! Destructor
+  virtual ~ResourceClaim() {
+  }
+  //! increaseFlowFileRecordOwnedCount
+  void increaseFlowFileRecordOwnedCount() {
+    ++_flowFileRecordOwnedCount;
+  }
+  //! decreaseFlowFileRecordOwenedCount
+  void decreaseFlowFileRecordOwnedCount() {
+    --_flowFileRecordOwnedCount;
+  }
+  //! getFlowFileRecordOwenedCount
+  uint64_t getFlowFileRecordOwnedCount() {
+    return _flowFileRecordOwnedCount;
+  }
+  //! Get the content full path
+  std::string getContentFullPath() {
+    return _contentFullPath;
+  }
 
-	//! How many FlowFileRecord Own this cliam
-	std::atomic<uint64_t> _flowFileRecordOwnedCount;
+ protected:
+  //! A global unique identifier
+  uuid_t _uuid;
+  //! A local unique identifier
+  uint64_t _id;
+  //! Full path to the content
+  std::string _contentFullPath;
 
-private:
-	//! Configure
-	Configure *configure_;
-	//! Logger
-	std::shared_ptr<Logger> logger_;
-	// Prevent default copy constructor and assignment operation
-	// Only support pass by reference or pointer
-	ResourceClaim(const ResourceClaim &parent);
-	ResourceClaim &operator=(const ResourceClaim &parent);
+  //! How many FlowFileRecord Own this cliam
+  std::atomic<uint64_t> _flowFileRecordOwnedCount;
 
-	//! Local resource claim number
-	static std::atomic<uint64_t> _localResourceClaimNumber;
+ private:
+  //! Configure
+  Configure *configure_;
+  //! Logger
+  std::shared_ptr<Logger> logger_;
+  // Prevent default copy constructor and assignment operation
+  // Only support pass by reference or pointer
+  ResourceClaim(const ResourceClaim &parent);
+  ResourceClaim &operator=(const ResourceClaim &parent);
+
+  //! Local resource claim number
+  static std::atomic<uint64_t> _localResourceClaimNumber;
 };
 
 #endif

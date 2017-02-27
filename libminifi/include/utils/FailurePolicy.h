@@ -23,23 +23,23 @@
  */
 enum FailurePolicy {
 
-	/**
-	 * DO NOTHING
-	 */
-	NOTHING,
-	/**
-	 * Return a response code from the executing function
-	 */
-	RETURN,
-	/**
-	 * Throw an exception for flow control.
-	 */
-	EXCEPT,
-	/**
-	 * Exit the program. This should only be used when something
-	 * precludes us from continuing
-	 */
-	EXIT
+  /**
+   * DO NOTHING
+   */
+  NOTHING,
+  /**
+   * Return a response code from the executing function
+   */
+  RETURN,
+  /**
+   * Throw an exception for flow control.
+   */
+  EXCEPT,
+  /**
+   * Exit the program. This should only be used when something
+   * precludes us from continuing
+   */
+  EXIT
 };
 
 #endif /* LIBMINIFI_INCLUDE_UTILS_FAILUREPOLICY_H_ */

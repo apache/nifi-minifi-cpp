@@ -29,88 +29,83 @@
 #include "Processor.h"
 #include "ProcessSession.h"
 
-
 //! ListenHTTP Class
-class ListenHTTP : public Processor
-{
-public:
+class ListenHTTP : public Processor {
+ public:
 
-	//! Constructor
-	/*!
-	 * Create a new processor
-	 */
-	ListenHTTP(std::string name, uuid_t uuid = NULL)
-	: Processor(name, uuid)
-	{
-		_logger = Logger::getLogger();
-	}
-	//! Destructor
-	~ListenHTTP()
-	{
-	}
-	//! Processor Name
-	static const std::string ProcessorName;
-	//! Supported Properties
-	static Property BasePath;
-	static Property Port;
-	static Property AuthorizedDNPattern;
-	static Property SSLCertificate;
-	static Property SSLCertificateAuthority;
-	static Property SSLVerifyPeer;
-	static Property SSLMinimumVersion;
-	static Property HeadersAsAttributesRegex;
-	//! Supported Relationships
-	static Relationship Success;
+  //! Constructor
+  /*!
+   * Create a new processor
+   */
+  ListenHTTP(std::string name, uuid_t uuid = NULL)
+      : Processor(name, uuid) {
+    _logger = Logger::getLogger();
+  }
+  //! Destructor
+  ~ListenHTTP() {
+  }
+  //! Processor Name
+  static const std::string ProcessorName;
+  //! Supported Properties
+  static Property BasePath;
+  static Property Port;
+  static Property AuthorizedDNPattern;
+  static Property SSLCertificate;
+  static Property SSLCertificateAuthority;
+  static Property SSLVerifyPeer;
+  static Property SSLMinimumVersion;
+  static Property HeadersAsAttributesRegex;
+  //! Supported Relationships
+  static Relationship Success;
 
-	void onTrigger(ProcessContext *context, ProcessSession *session);
-	void initialize();
-	void onSchedule(ProcessContext *context, ProcessSessionFactory *sessionFactory);
+  void onTrigger(ProcessContext *context, ProcessSession *session);
+  void initialize();
+  void onSchedule(ProcessContext *context,
+                  ProcessSessionFactory *sessionFactory);
 
-	//! HTTP request handler
-	class Handler : public CivetHandler
-	{
-	public:
-		Handler(ProcessContext *context,
-				ProcessSessionFactory *sessionFactory,
-				std::string &&authDNPattern,
-				std::string &&headersAsAttributesPattern);
-		bool handlePost(CivetServer *server, struct mg_connection *conn);
+  //! HTTP request handler
+  class Handler : public CivetHandler {
+   public:
+    Handler(ProcessContext *context, ProcessSessionFactory *sessionFactory,
+            std::string &&authDNPattern,
+            std::string &&headersAsAttributesPattern);
+    bool handlePost(CivetServer *server, struct mg_connection *conn);
 
-	private:
-		//! Send HTTP 500 error response to client
-		void sendErrorResponse(struct mg_connection *conn);
-		//! Logger
-		std::shared_ptr<Logger> _logger;
+   private:
+    //! Send HTTP 500 error response to client
+    void sendErrorResponse(struct mg_connection *conn);
+    //! Logger
+    std::shared_ptr<Logger> _logger;
 
-		std::regex _authDNRegex;
-		std::regex _headersAsAttributesRegex;
-		ProcessContext *_processContext;
-		ProcessSessionFactory *_processSessionFactory;
-	};
+    std::regex _authDNRegex;
+    std::regex _headersAsAttributesRegex;
+    ProcessContext *_processContext;
+    ProcessSessionFactory *_processSessionFactory;
+  };
 
-	//! Write callback for transferring data from HTTP request to content repo
-	class WriteCallback : public OutputStreamCallback
-	{
-	public:
-		WriteCallback(struct mg_connection *conn, const struct mg_request_info *reqInfo);
-		void process(std::ofstream *stream);
+  //! Write callback for transferring data from HTTP request to content repo
+  class WriteCallback : public OutputStreamCallback {
+   public:
+    WriteCallback(struct mg_connection *conn,
+                  const struct mg_request_info *reqInfo);
+    void process(std::ofstream *stream);
 
-	private:
-		//! Logger
-		std::shared_ptr<Logger> _logger;
+   private:
+    //! Logger
+    std::shared_ptr<Logger> _logger;
 
-		struct mg_connection *_conn;
-		const struct mg_request_info *_reqInfo;
-	};
+    struct mg_connection *_conn;
+    const struct mg_request_info *_reqInfo;
+  };
 
-protected:
+ protected:
 
-private:
-	//! Logger
-	std::shared_ptr<Logger> _logger;
+ private:
+  //! Logger
+  std::shared_ptr<Logger> _logger;
 
-	std::unique_ptr<CivetServer> _server;
-	std::unique_ptr<Handler> _handler;
+  std::unique_ptr<CivetServer> _server;
+  std::unique_ptr<Handler> _handler;
 };
 
 #endif

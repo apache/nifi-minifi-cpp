@@ -26,29 +26,28 @@
 #include "ThreadedSchedulingAgent.h"
 
 //! EventDrivenSchedulingAgent Class
-class EventDrivenSchedulingAgent : public ThreadedSchedulingAgent
-{
-public:
-	//! Constructor
-	/*!
-	 * Create a new processor
-	 */
-	EventDrivenSchedulingAgent()
-	: ThreadedSchedulingAgent()
-	{
-	}
-	//! Destructor
-	virtual ~EventDrivenSchedulingAgent()
-	{
-	}
-	//! Run function for the thread
-	void run(Processor *processor, ProcessContext *processContext, ProcessSessionFactory *sessionFactory);
+class EventDrivenSchedulingAgent : public ThreadedSchedulingAgent {
+ public:
+  //! Constructor
+  /*!
+   * Create a new processor
+   */
+  EventDrivenSchedulingAgent()
+      : ThreadedSchedulingAgent() {
+  }
+  //! Destructor
+  virtual ~EventDrivenSchedulingAgent() {
+  }
+  //! Run function for the thread
+  void run(Processor *processor, ProcessContext *processContext,
+           ProcessSessionFactory *sessionFactory);
 
-private:
-	// Prevent default copy constructor and assignment operation
-	// Only support pass by reference or pointer
-	EventDrivenSchedulingAgent(const EventDrivenSchedulingAgent &parent);
-	EventDrivenSchedulingAgent &operator=(const EventDrivenSchedulingAgent &parent);
+ private:
+  // Prevent default copy constructor and assignment operation
+  // Only support pass by reference or pointer
+  EventDrivenSchedulingAgent(const EventDrivenSchedulingAgent &parent);
+  EventDrivenSchedulingAgent &operator=(
+      const EventDrivenSchedulingAgent &parent);
 
 };
 
