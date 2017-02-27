@@ -19,125 +19,140 @@
 #include <memory>
 
 #include "../TestBase.h"
-#include "../../include/LogAppenders.h"
+#include "core/logging/LogAppenders.h"
+
+using namespace logging;
 
 bool contains(std::string stringA, std::string ending) {
-	return (ending.length() > 0 && stringA.find(ending) != std::string::npos);
+  return (ending.length() > 0 && stringA.find(ending) != std::string::npos);
 }
 
 TEST_CASE("Test log Levels", "[ttl1]") {
-	std::ostringstream oss;
+  std::ostringstream oss;
 
-	std::unique_ptr<BaseLogger> outputLogger = std::unique_ptr<BaseLogger>(new OutputStreamAppender(oss,0));
-	std::shared_ptr<Logger> logger = Logger::getLogger();
-	logger->updateLogger(std::move(outputLogger));
-	logger->setLogLevel("trace");
-	logger->log_info("hello world");
+  std::unique_ptr<BaseLogger> outputLogger = std::unique_ptr<BaseLogger>(
+      new org::apache::nifi::minifi::core::logging::OutputStreamAppender(oss, 0));
+  std::shared_ptr<logging::Logger> logger = logging::Logger::getLogger();
+  logger->updateLogger(std::move(outputLogger));
+  logger->setLogLevel("trace");
+  logger->log_info("hello world");
 
-	REQUIRE( true == contains(oss.str(),"[minifi log -- OutputStreamAppender] [info] hello world"));
+  REQUIRE(
+      true == contains(oss.str(),"[minifi log -- org::apache::nifi::minifi::core::logging::OutputStreamAppender] [info] hello world"));
 }
 
 TEST_CASE("Test log Levels debug", "[ttl2]") {
-	std::ostringstream oss;
+  std::ostringstream oss;
 
-	std::unique_ptr<BaseLogger> outputLogger = std::unique_ptr<BaseLogger>(new OutputStreamAppender(oss,0));
-	std::shared_ptr<Logger> logger = Logger::getLogger();
-	logger->updateLogger(std::move(outputLogger));
-	logger->setLogLevel("trace");
-	logger->log_debug("hello world");
+  std::unique_ptr<BaseLogger> outputLogger = std::unique_ptr<BaseLogger>(
+      new org::apache::nifi::minifi::core::logging::OutputStreamAppender(oss, 0));
+  std::shared_ptr<logging::Logger> logger = logging::Logger::getLogger();
+  logger->updateLogger(std::move(outputLogger));
+  logger->setLogLevel("trace");
+  logger->log_debug("hello world");
 
-	REQUIRE( true == contains(oss.str(),"[minifi log -- OutputStreamAppender] [debug] hello world"));
+  REQUIRE(
+      true == contains(oss.str(),"[minifi log -- org::apache::nifi::minifi::core::logging::OutputStreamAppender] [debug] hello world"));
 }
 
 TEST_CASE("Test log Levels trace", "[ttl3]") {
-	std::ostringstream oss;
+  std::ostringstream oss;
 
-	std::unique_ptr<BaseLogger> outputLogger = std::unique_ptr<BaseLogger>(new OutputStreamAppender(oss,0));
-	std::shared_ptr<Logger> logger = Logger::getLogger();
-	logger->updateLogger(std::move(outputLogger));
-	logger->setLogLevel("trace");
+  std::unique_ptr<BaseLogger> outputLogger = std::unique_ptr<BaseLogger>(
+      new org::apache::nifi::minifi::core::logging::OutputStreamAppender(oss, 0));
+  std::shared_ptr<logging::Logger> logger = logging::Logger::getLogger();
+  logger->updateLogger(std::move(outputLogger));
+  logger->setLogLevel("trace");
 
-	logger->log_trace("hello world");
+  logger->log_trace("hello world");
 
-	REQUIRE( true == contains(oss.str(),"[minifi log -- OutputStreamAppender] [trace] hello world"));
+  REQUIRE(
+      true == contains(oss.str(),"[minifi log -- org::apache::nifi::minifi::core::logging::OutputStreamAppender] [trace] hello world"));
 }
 
 TEST_CASE("Test log Levels error", "[ttl4]") {
-	std::ostringstream oss;
+  std::ostringstream oss;
 
-	std::unique_ptr<BaseLogger> outputLogger = std::unique_ptr<BaseLogger>(new OutputStreamAppender(oss,0));
-	std::shared_ptr<Logger> logger = Logger::getLogger();
-	logger->updateLogger(std::move(outputLogger));
-	logger->setLogLevel("trace");
+  std::unique_ptr<BaseLogger> outputLogger = std::unique_ptr<BaseLogger>(
+      new org::apache::nifi::minifi::core::logging::OutputStreamAppender(oss, 0));
+  std::shared_ptr<logging::Logger> logger = logging::Logger::getLogger();
+  logger->updateLogger(std::move(outputLogger));
+  logger->setLogLevel("trace");
 
-	logger->log_error("hello world");
+  logger->log_error("hello world");
 
-	REQUIRE( true == contains(oss.str(),"[minifi log -- OutputStreamAppender] [error] hello world"));
+  REQUIRE(
+      true == contains(oss.str(),"[minifi log -- org::apache::nifi::minifi::core::logging::OutputStreamAppender] [error] hello world"));
 }
 
 TEST_CASE("Test log Levels change", "[ttl5]") {
-	std::ostringstream oss;
+  std::ostringstream oss;
 
-	std::unique_ptr<BaseLogger> outputLogger = std::unique_ptr<BaseLogger>(new OutputStreamAppender(oss,0));
-	std::shared_ptr<Logger> logger = Logger::getLogger();
-	logger->updateLogger(std::move(outputLogger));
-	logger->setLogLevel("trace");
+  std::unique_ptr<BaseLogger> outputLogger = std::unique_ptr<BaseLogger>(
+      new org::apache::nifi::minifi::core::logging::OutputStreamAppender(oss, 0));
+  std::shared_ptr<logging::Logger> logger = logging::Logger::getLogger();
+  logger->updateLogger(std::move(outputLogger));
+  logger->setLogLevel("trace");
 
-	logger->log_error("hello world");
+  logger->log_error("hello world");
 
-	REQUIRE( true == contains(oss.str(),"[minifi log -- OutputStreamAppender] [error] hello world"));
-	oss.str("");
-	oss.clear();
-	REQUIRE( 0 == oss.str().length() );
-	logger->setLogLevel("off");
+  REQUIRE(
+      true == contains(oss.str(),"[minifi log -- org::apache::nifi::minifi::core::logging::OutputStreamAppender] [error] hello world"));
+  oss.str("");
+  oss.clear();
+  REQUIRE(0 == oss.str().length());
+  logger->setLogLevel("off");
 
-	logger->log_error("hello world");
+  logger->log_error("hello world");
 
-	REQUIRE( 0 == oss.str().length() );
+  REQUIRE(0 == oss.str().length());
 }
 
 TEST_CASE("Test log LevelsConfigured", "[ttl6]") {
-	std::ostringstream oss;
+  std::ostringstream oss;
 
-	Configure *config = Configure::getConfigure();
+  minifi::Configure *config = minifi::Configure::getConfigure();
 
-	config->set(BaseLogger::nifi_log_appender,"outputstreamappender");
-	config->set(OutputStreamAppender::nifi_log_output_stream_error_stderr,"true");
+  config->set(BaseLogger::nifi_log_appender, "org::apache::nifi::minifi::core::logging::OutputStreamAppender");
+  config->set(org::apache::nifi::minifi::core::logging::OutputStreamAppender::nifi_log_output_stream_error_stderr,
+              "true");
 
-	std::shared_ptr<Logger> logger = Logger::getLogger();
+  std::shared_ptr<logging::Logger> logger = logging::Logger::getLogger();
 
-	auto oldrdbuf = std::cerr.rdbuf();
-	std::cerr.rdbuf(oss.rdbuf());
+  auto oldrdbuf = std::cerr.rdbuf();
+  std::cerr.rdbuf(oss.rdbuf());
 
-	std::unique_ptr<BaseLogger> newLogger =LogInstance::getConfiguredLogger(config);
+  std::unique_ptr<BaseLogger> newLogger = LogInstance::getConfiguredLogger(
+      config);
 
-	logger->updateLogger(std::move(newLogger));
+  logger->updateLogger(std::move(newLogger));
 
-	logger->setLogLevel("trace");
+  logger->setLogLevel("trace");
 
-	// capture stderr
-	logger->log_error("hello world");
+  // capture stderr
+  logger->log_error("hello world");
 
-	REQUIRE( true == contains(oss.str(),"[minifi log -- OutputStreamAppender] [error] hello world"));
+  REQUIRE(
+      true == contains(oss.str(),"[minifi log -- org::apache::nifi::minifi::core::logging::OutputStreamAppender] [error] hello world"));
 
-	std::cerr.rdbuf(oldrdbuf);
+  std::cerr.rdbuf(oldrdbuf);
 
-	config->set(BaseLogger::nifi_log_appender,"nullappender");
+  config->set(BaseLogger::nifi_log_appender, "nullappender");
 
-	newLogger =LogInstance::getConfiguredLogger(config);
+  newLogger = LogInstance::getConfiguredLogger(config);
 
-	logger->updateLogger(std::move(newLogger));
+  logger->updateLogger(std::move(newLogger));
 
-	oss.str("");
-	oss.clear();
-	REQUIRE( 0 == oss.str().length() );
+  oss.str("");
+  oss.clear();
+  REQUIRE(0 == oss.str().length());
 
-	// should have nothing from the null appender
-	logger->log_info("hello world");
-	logger->log_debug("hello world");
-	logger->log_trace("hello world");
+  // should have nothing from the null appender
+  logger->log_info("hello world");
+  logger->log_debug("hello world");
+  logger->log_trace("hello world");
 //	logger->log_error("hello world");
 
-	REQUIRE( 0 == oss.str().length() );
+  REQUIRE(0 == oss.str().length());
 
 }

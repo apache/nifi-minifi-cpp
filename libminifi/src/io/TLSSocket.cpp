@@ -15,20 +15,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifdef OPENSSL_SUPPORT
-#include "Property.h"
 #include "Configure.h"
 #include "io/TLSSocket.h"
 #include "utils/StringUtils.h"
+
+#include "core/Property.h"
+
+namespace org {
+namespace apache {
+namespace nifi {
+namespace minifi {
+namespace io {
+
 #include <openssl/ssl.h>
 #include <openssl/err.h>
-
 
 std::atomic<TLSContext*> TLSContext::context_instance;
 std::mutex TLSContext::context_mutex;
 
 TLSContext::TLSContext() :
-		error_value(0), ctx(0), logger_(Logger::getLogger()), configuration(
+		error_value(0), ctx(0), logger_(logging::Logger::getLogger()), configuration(
 				Configure::getConfigure()) {
 
 }
@@ -44,7 +50,7 @@ short TLSContext::initialize() {
 	bool needClientCert = true;
 	if (!(configuration->get(Configure::nifi_security_need_ClientAuth,
 			clientAuthStr)
-			&& StringUtils::StringToBool(clientAuthStr, needClientCert))) {
+			&& org::apache::nifi::minifi::utils::StringUtils::StringToBool(clientAuthStr, needClientCert))) {
 		needClientCert = true;
 	}
 
@@ -141,15 +147,15 @@ TLSSocket::~TLSSocket()
  */
 TLSSocket::TLSSocket(const std::string &hostname, const uint16_t port,
 		const uint16_t listeners) :
-		::Socket(hostname, port, listeners), ssl(0) {
+		Socket(hostname, port, listeners), ssl(0) {
 }
 
 TLSSocket::TLSSocket(const std::string &hostname, const uint16_t port) :
-		::Socket(hostname, port, 0), ssl(0) {
+		Socket(hostname, port, 0), ssl(0) {
 }
 
 TLSSocket::TLSSocket(const TLSSocket &&d) :
-		::Socket(std::move(d)), ssl(0) {
+		Socket(std::move(d)), ssl(0) {
 }
 
 short TLSSocket::initialize() {
@@ -234,4 +240,10 @@ int TLSSocket::readData(uint8_t *buf, int buflen) {
 
 	return total_read;
 }
-#endif // #ifdef OPENSSL_SUPPORT
+
+
+} /* namespace io */
+} /* namespace minifi */
+} /* namespace nifi */
+} /* namespace apache */
+} /* namespace org */

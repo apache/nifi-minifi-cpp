@@ -16,81 +16,81 @@
  * limitations under the License.
  */
 
-
 #ifndef PROVENANCE_TESTS
 #define PROVENANCE_TESTS
 #include "../TestBase.h"
 
 #include "ProvenanceTestHelper.h"
-#include "Provenance.h"
+#include "provenance/Provenance.h"
 #include "FlowFileRecord.h"
+#include "core/core.h"
 
+TEST_CASE("Test Provenance record create", "[Testprovenance::ProvenanceEventRecord]") {
 
-
-TEST_CASE("Test Provenance record create", "[TestProvenanceEventRecord]"){
-
-	ProvenanceEventRecord record1(ProvenanceEventRecord::ProvenanceEventType::CREATE,"blah","blahblah");
-	REQUIRE( record1.getAttributes().size() == 0);
-	REQUIRE( record1.getAlternateIdentifierUri().length() == 0);
-
-}
-
-
-TEST_CASE("Test Provenance record serialization", "[TestProvenanceEventRecordSerializeDeser]"){
-
-	ProvenanceEventRecord record1(ProvenanceEventRecord::ProvenanceEventType::CREATE,"componentid","componenttype");
-
-	std::string eventId = record1.getEventId();
-	
-	std::string smileyface = ":)" ;
-	record1.setDetails(smileyface);
-
-	ProvenanceTestRepository repo;
-	uint64_t sample = 65555;
-	ProvenanceRepository *testRepository = dynamic_cast<ProvenanceRepository*>(&repo);
-	record1.setEventDuration(sample);
-
-	record1.Serialize(testRepository);
-	ProvenanceEventRecord record2;
-	REQUIRE( record2.DeSerialize(testRepository,eventId) == true);
-	REQUIRE( record2.getEventId() == record1.getEventId());
-	REQUIRE( record2.getComponentId() == record1.getComponentId());
-	REQUIRE( record2.getComponentType() == record1.getComponentType());
-	REQUIRE( record2.getDetails() == record1.getDetails());
-	REQUIRE( record2.getDetails() == smileyface);
-	REQUIRE( record2.getEventDuration() == sample);
-}
-
-
-TEST_CASE("Test Flowfile record added to provenance", "[TestFlowAndProv1]"){
-
-	ProvenanceEventRecord record1(ProvenanceEventRecord::ProvenanceEventType::CLONE,"componentid","componenttype");
-	std::string eventId = record1.getEventId();
-	std::map<std::string, std::string> attributes;
-	attributes.insert(std::pair<std::string,std::string>("potato","potatoe"));
-	attributes.insert(std::pair<std::string,std::string>("tomato","tomatoe"));
-	FlowFileRecord ffr1(attributes);
-
-	record1.addChildFlowFile(&ffr1);
-
-	ProvenanceTestRepository repo;
-	uint64_t sample = 65555;
-	ProvenanceRepository *testRepository = dynamic_cast<ProvenanceRepository*>(&repo);
-	record1.setEventDuration(sample);
-
-	record1.Serialize(testRepository);
-	ProvenanceEventRecord record2;
-	REQUIRE( record2.DeSerialize(testRepository,eventId) == true);
-	REQUIRE( record1.getChildrenUuids().size() == 1);
-	REQUIRE( record2.getChildrenUuids().size() == 1);
-	std::string childId = record2.getChildrenUuids().at(0);
-	REQUIRE( childId == ffr1.getUUIDStr());
-	record2.removeChildUuid(childId);
-	REQUIRE( record2.getChildrenUuids().size() == 0);
-
+  provenance::ProvenanceEventRecord record1(
+      provenance::ProvenanceEventRecord::ProvenanceEventType::CREATE, "blah",
+      "blahblah");
+  REQUIRE(record1.getAttributes().size() == 0);
+  REQUIRE(record1.getAlternateIdentifierUri().length() == 0);
 
 }
 
+TEST_CASE("Test Provenance record serialization", "[Testprovenance::ProvenanceEventRecordSerializeDeser]") {
 
+  provenance::ProvenanceEventRecord record1(
+      provenance::ProvenanceEventRecord::ProvenanceEventType::CREATE, "componentid",
+      "componenttype");
+
+  std::string eventId = record1.getEventId();
+
+  std::string smileyface = ":)";
+  record1.setDetails(smileyface);
+
+  ProvenanceTestRepository repo;
+  uint64_t sample = 65555;
+  std::shared_ptr<ProvenanceTestRepository> testRepository =std::make_shared<ProvenanceTestRepository>();
+  record1.setEventDuration(sample);
+
+  record1.Serialize(testRepository);
+  provenance::ProvenanceEventRecord record2;
+  REQUIRE(record2.DeSerialize(testRepository,eventId) == true);
+  REQUIRE(record2.getEventId() == record1.getEventId());
+  REQUIRE(record2.getComponentId() == record1.getComponentId());
+  REQUIRE(record2.getComponentType() == record1.getComponentType());
+  REQUIRE(record2.getDetails() == record1.getDetails());
+  REQUIRE(record2.getDetails() == smileyface);
+  REQUIRE(record2.getEventDuration() == sample);
+}
+
+TEST_CASE("Test Flowfile record added to provenance", "[TestFlowAndProv1]") {
+
+  provenance::ProvenanceEventRecord record1(
+      provenance::ProvenanceEventRecord::ProvenanceEventType::CLONE, "componentid",
+      "componenttype");
+  std::string eventId = record1.getEventId();
+  std::map<std::string, std::string> attributes;
+  attributes.insert(std::pair<std::string, std::string>("potato", "potatoe"));
+  attributes.insert(std::pair<std::string, std::string>("tomato", "tomatoe"));
+  std::shared_ptr<minifi::FlowFileRecord> ffr1 = std::make_shared<
+      minifi::FlowFileRecord>(attributes);
+
+  record1.addChildFlowFile(ffr1);
+
+  ProvenanceTestRepository repo;
+  uint64_t sample = 65555;
+  std::shared_ptr<ProvenanceTestRepository> testRepository =std::make_shared<ProvenanceTestRepository>();
+  record1.setEventDuration(sample);
+
+  record1.Serialize(testRepository);
+  provenance::ProvenanceEventRecord record2;
+  REQUIRE(record2.DeSerialize(testRepository,eventId) == true);
+  REQUIRE(record1.getChildrenUuids().size() == 1);
+  REQUIRE(record2.getChildrenUuids().size() == 1);
+  std::string childId = record2.getChildrenUuids().at(0);
+  REQUIRE(childId == ffr1->getUUIDStr());
+  record2.removeChildUuid(childId);
+  REQUIRE(record2.getChildrenUuids().size() == 0);
+
+}
 
 #endif

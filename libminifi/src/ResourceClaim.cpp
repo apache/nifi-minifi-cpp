@@ -23,27 +23,36 @@
 
 #include "ResourceClaim.h"
 
+namespace org {
+namespace apache {
+namespace nifi {
+namespace minifi {
+
 std::atomic<uint64_t> ResourceClaim::_localResourceClaimNumber(0);
 
-
-std::string ResourceClaim::default_directory_path=DEFAULT_CONTENT_DIRECTORY;
+std::string ResourceClaim::default_directory_path = DEFAULT_CONTENT_DIRECTORY;
 
 ResourceClaim::ResourceClaim(const std::string contentDirectory)
-: _id(_localResourceClaimNumber.load()),
-  _flowFileRecordOwnedCount(0)
-{
-  
-	char uuidStr[37];
+    : _id(_localResourceClaimNumber.load()),
+      _flowFileRecordOwnedCount(0) {
 
-	// Generate the global UUID for the resource claim
-	uuid_generate(_uuid);
-	// Increase the local ID for the resource claim
-	++_localResourceClaimNumber;
-	uuid_unparse_lower(_uuid, uuidStr);
-	// Create the full content path for the content
-	_contentFullPath = contentDirectory + "/" + uuidStr;
+  char uuidStr[37];
 
-	configure_ = Configure::getConfigure();
-	logger_ = Logger::getLogger();
-	logger_->log_debug("Resource Claim created %s", uuidStr);
+  // Generate the global UUID for the resource claim
+  uuid_generate(_uuid);
+  // Increase the local ID for the resource claim
+  ++_localResourceClaimNumber;
+  uuid_unparse_lower(_uuid, uuidStr);
+  // Create the full content path for the content
+  _contentFullPath = contentDirectory + "/" + uuidStr;
+
+  configure_ = Configure::getConfigure();
+
+  logger_ = logging::Logger::getLogger();
+  logger_->log_debug("Resource Claim created %s", _contentFullPath.c_str());
 }
+
+} /* namespace minifi */
+} /* namespace nifi */
+} /* namespace apache */
+} /* namespace org */

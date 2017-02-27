@@ -22,60 +22,58 @@
 #include "io/DataStream.h"
 #include "../TestBase.h"
 
-
 TEST_CASE("Test CRC1", "[testcrc1]") {
 
-	BaseStream base;
-	CRCStream<BaseStream> test(&base);
-	test.writeData((uint8_t*)"cow",3);
-	REQUIRE(2580823964 == test.getCRC());
-	
-	
+  org::apache::nifi::minifi::io::BaseStream base;
+  org::apache::nifi::minifi::io::CRCStream<
+      org::apache::nifi::minifi::io::BaseStream> test(&base);
+  test.writeData((uint8_t*) "cow", 3);
+  REQUIRE(2580823964 == test.getCRC());
+
+
 }
 
 TEST_CASE("Test CRC2", "[testcrc2]") {
 
-	BaseStream base;
-	CRCStream<BaseStream> test(&base);
-	std::string fox = "the quick brown fox jumped over the brown fox";
-	std::vector<uint8_t> charvect(fox.begin(), fox.end()); 
-	test.writeData(charvect,charvect.size());
-	REQUIRE(1922388889 == test.getCRC());
-	
-	
-}
+  org::apache::nifi::minifi::io::BaseStream base;
+  org::apache::nifi::minifi::io::CRCStream<
+      org::apache::nifi::minifi::io::BaseStream> test(&base);
+  std::string fox = "the quick brown fox jumped over the brown fox";
+  std::vector<uint8_t> charvect(fox.begin(), fox.end());
+  test.writeData(charvect, charvect.size());
+  REQUIRE(1922388889 == test.getCRC());
 
+}
 
 TEST_CASE("Test CRC3", "[testcrc3]") {
 
-	BaseStream base;
-	CRCStream<BaseStream> test(&base);
-	uint64_t number=7;
-	test.write(number);
-	REQUIRE(4215687882 == test.getCRC());
-	
-	
-}
+  org::apache::nifi::minifi::io::BaseStream base;
+  org::apache::nifi::minifi::io::CRCStream<
+      org::apache::nifi::minifi::io::BaseStream> test(&base);
+  uint64_t number = 7;
+  test.write(number);
+  REQUIRE(4215687882 == test.getCRC());
 
+}
 
 TEST_CASE("Test CRC4", "[testcrc4]") {
 
-	BaseStream base;
-	CRCStream<BaseStream> test(&base);
-	uint32_t number=7;
-	test.write(number);
-	REQUIRE(3206564543 == test.getCRC());
-	
-	
+  org::apache::nifi::minifi::io::BaseStream base;
+  org::apache::nifi::minifi::io::CRCStream<
+      org::apache::nifi::minifi::io::BaseStream> test(&base);
+  uint32_t number = 7;
+  test.write(number);
+  REQUIRE(3206564543 == test.getCRC());
+
 }
 
 TEST_CASE("Test CRC5", "[testcrc5]") {
 
-	BaseStream base;
-	CRCStream<BaseStream> test(&base);
-	uint16_t number=7;
-	test.write(number);
-	REQUIRE(3753740124 == test.getCRC());
-	
-	
+  org::apache::nifi::minifi::io::BaseStream base;
+  org::apache::nifi::minifi::io::CRCStream<
+      org::apache::nifi::minifi::io::BaseStream> test(&base);
+  uint16_t number = 7;
+  test.write(number);
+  REQUIRE(3753740124 == test.getCRC());
+
 }

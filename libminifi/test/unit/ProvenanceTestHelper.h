@@ -18,8 +18,9 @@
 #ifndef LIBMINIFI_TEST_UNIT_PROVENANCETESTHELPER_H_
 #define LIBMINIFI_TEST_UNIT_PROVENANCETESTHELPER_H_
 
-#include "Provenance.h"
+#include "provenance/Provenance.h"
 #include "FlowController.h"
+<<<<<<< HEAD
 #include "FlowFileRepository.h"
 
 /**
@@ -31,13 +32,13 @@ public:
 	FlowTestRepository()
 {
 }
-		//! initialize
+		// initialize
 		bool initialize()
 		{
 			return true;
 		}
 
-		//! Destructor
+		// Destructor
 		virtual ~FlowTestRepository() {
 
 		}
@@ -47,13 +48,13 @@ public:
 			repositoryResults.insert(std::pair<std::string,std::string>(key,std::string((const char*)buf,bufLen)));
 			return true;
 		}
-		//! Delete
+		// Delete
 		bool Delete(std::string key)
 		{
 			repositoryResults.erase(key);
 			return true;
 		}
-		//! Get
+		// Get
 		bool Get(std::string key, std::string &value)
 		{
 			auto result = repositoryResults.find(key);
@@ -86,13 +87,13 @@ public:
 	ProvenanceTestRepository()
 {
 }
-		//! initialize
+		// initialize
 		bool initialize()
 		{
 			return true;
 		}
 
-		//! Destructor
+		// Destructor
 		virtual ~ProvenanceTestRepository() {
 
 		}
@@ -102,13 +103,13 @@ public:
 			repositoryResults.insert(std::pair<std::string,std::string>(key,std::string((const char*)buf,bufLen)));
 			return true;
 		}
-		//! Delete
+		// Delete
 		bool Delete(std::string key)
 		{
 			repositoryResults.erase(key);
 			return true;
 		}
-		//! Get
+		// Get
 		bool Get(std::string key, std::string &value)
 		{
 			auto result = repositoryResults.find(key);
@@ -152,13 +153,13 @@ public:
 
 	bool start()
 	{
-		_running.store(true);
+		running_.store(true);
 		return true;
 	}
 
 	void stop(bool force)
 	{
-		_running.store(false);
+		running_.store(false);
 	}
 	void waitUnload(const uint64_t timeToWaitMs)
 	{
@@ -188,6 +189,54 @@ public:
 	ProcessGroup *createRemoteProcessGroup(std::string name, uuid_t uuid){ return 0; }
 
 	Connection *createConnection(std::string name, uuid_t uuid){ return 0; }
+=======
+#include "core/core.h"
+/**
+ * Test repository
+ */
+class ProvenanceTestRepository : public provenance::ProvenanceRepository {
+ public:
+  ProvenanceTestRepository() {
+  }
+  // initialize
+  bool initialize() {
+    return true;
+  }
+
+  // Destructor
+  virtual ~ProvenanceTestRepository() {
+
+  }
+
+  bool Put(std::string key, uint8_t *buf, int bufLen) {
+    repositoryResults.insert(
+        std::pair<std::string, std::string>(
+            key, std::string((const char*) buf, bufLen)));
+    return true;
+  }
+  // Delete
+  bool Delete(std::string key) {
+    repositoryResults.erase(key);
+    return true;
+  }
+  // Get
+  bool Get(std::string key, std::string &value) {
+    auto result = repositoryResults.find(key);
+    if (result != repositoryResults.end()) {
+      value = result->second;
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  const std::map<std::string, std::string> &getRepoMap() const {
+    return repositoryResults;
+  }
+
+ protected:
+  std::map<std::string, std::string> repositoryResults;
+>>>>>>> MINIFI-217: First commit. Updates namespaces and removes
 };
 
 

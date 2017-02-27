@@ -20,36 +20,46 @@
 #ifndef __TIMER_DRIVEN_SCHEDULING_AGENT_H__
 #define __TIMER_DRIVEN_SCHEDULING_AGENT_H__
 
-#include "Logger.h"
-#include "Processor.h"
-#include "ProcessContext.h"
+#include "core/logging/Logger.h"
+#include "core/Processor.h"
+#include "core/ProcessContext.h"
 #include "ThreadedSchedulingAgent.h"
 
-//! TimerDrivenSchedulingAgent Class
-class TimerDrivenSchedulingAgent : public ThreadedSchedulingAgent
-{
-public:
-	//! Constructor
-	/*!
-	 * Create a new processor
-	 */
-	TimerDrivenSchedulingAgent()
-	: ThreadedSchedulingAgent()
-	{
-	}
-	//! Destructor
-	virtual ~TimerDrivenSchedulingAgent()
-	{
-	}
-	//! Run function for the thread
-	void run(Processor *processor, ProcessContext *processContext, ProcessSessionFactory *sessionFactory);
+namespace org {
+namespace apache {
+namespace nifi {
+namespace minifi {
+//  TimerDrivenSchedulingAgent Class
+class TimerDrivenSchedulingAgent : public ThreadedSchedulingAgent {
+ public:
+  //  Constructor
+  /*!
+   * Create a new processor
+   */
+  TimerDrivenSchedulingAgent(std::shared_ptr<provenance::ProvenanceRepository> repo)
+      : ThreadedSchedulingAgent(repo) {
+  }
+  //  Destructor
+  virtual ~TimerDrivenSchedulingAgent() {
+  }
+  /**
+   * Run function that accepts the processor, context and session factory.
+   */
+  void run(std::shared_ptr<core::Processor> processor,
+           core::ProcessContext *processContext,
+           core::ProcessSessionFactory *sessionFactory);
 
-private:
-	// Prevent default copy constructor and assignment operation
-	// Only support pass by reference or pointer
-	TimerDrivenSchedulingAgent(const TimerDrivenSchedulingAgent &parent);
-	TimerDrivenSchedulingAgent &operator=(const TimerDrivenSchedulingAgent &parent);
+ private:
+  // Prevent default copy constructor and assignment operation
+  // Only support pass by reference or pointer
+  TimerDrivenSchedulingAgent(const TimerDrivenSchedulingAgent &parent);
+  TimerDrivenSchedulingAgent &operator=(
+      const TimerDrivenSchedulingAgent &parent);
 
 };
 
+} /* namespace minifi */
+} /* namespace nifi */
+} /* namespace apache */
+} /* namespace org */
 #endif
