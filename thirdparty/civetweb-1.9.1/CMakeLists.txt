@@ -405,27 +405,6 @@ add_definitions(-DMAX_REQUEST_SIZE=${CIVETWEB_MAX_REQUEST_SIZE})
 # Build the targets
 add_subdirectory(src)
 
-# Enable the testing of the library/executable
-include(CTest)
-if (BUILD_TESTING)
-  # Check unit testing framework Version
-  set(CIVETWEB_CHECK_VERSION 0.11.0 CACHE STRING
-    "The version of Check unit testing framework to build and include statically")
-  set_property(CACHE CIVETWEB_CHECK_VERSION PROPERTY VALUE ${CIVETWEB_CHECK_VERSION})
-  message(STATUS "Check Unit Testing Framework Version - ${CIVETWEB_CHECK_VERSION}")
-  mark_as_advanced(CIVETWEB_CHECK_VERSION)
-
-  # Check unit testing framework Verification Hash
-  # Hash for Check 0.10.0: 67a34c40b5bc888737f4e5ae82e9939f
-  # Hash for Check 0.11.0: 1b14ee307dca8e954a8219c34484d7c4
-  set(CIVETWEB_CHECK_MD5_HASH 1b14ee307dca8e954a8219c34484d7c4 CACHE STRING
-    "The hash of Check unit testing framework archive to be downloaded")
-  set_property(CACHE CIVETWEB_CHECK_MD5_HASH PROPERTY VALUE ${CIVETWEB_CHECK_MD5_HASH})
-  mark_as_advanced(CIVETWEB_CHECK_MD5_HASH)
-
-  # Build the testing
-  add_subdirectory(test)
-endif()
 
 # Set up CPack
 include(InstallRequiredSystemLibraries)
