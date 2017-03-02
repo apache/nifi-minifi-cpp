@@ -147,6 +147,8 @@ public:
 	void removeConnection(Connection *connection);
 	//! update property value
 	void updatePropertyValue(std::string processorName, std::string propertyName, std::string propertyValue);
+	//! get connections under the process group
+	void getConnections(std::map<std::string, Connection*> *connectionMap);
 
 protected:
 	//! A global unique identifier

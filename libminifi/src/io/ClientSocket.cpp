@@ -331,7 +331,7 @@ int Socket::writeData(uint8_t *value, int size) {
 	}
 
 	if (ret)
-		logger_->log_debug("Send data size %d over socket %d", size,
+		logger_->log_trace("Send data size %d over socket %d", size,
 				socket_file_descriptor_);
 
 	return bytes;

@@ -28,6 +28,18 @@
 #include <iostream>
 
 #include "ProcessSession.h"
+#include "FlowController.h"
+
+ProcessSession::ProcessSession(ProcessContext *processContext) : _processContext(processContext) {
+	logger_ = Logger::getLogger();
+	logger_->log_trace("ProcessSession created for %s", _processContext->getProcessor()->getName().c_str());
+	_provenanceReport = NULL;
+	if (FlowControllerFactory::getFlowController()->getProvenanceRepository()->isEnable())
+	{
+		_provenanceReport = new ProvenanceReporter(_processContext->getProcessor()->getUUIDStr(),
+					_processContext->getProcessor()->getName());
+	}
+}
 
 FlowFileRecord* ProcessSession::create()
 {
@@ -39,7 +51,8 @@ FlowFileRecord* ProcessSession::create()
 		_addedFlowFiles[record->getUUIDStr()] = record;
 		logger_->log_debug("Create FlowFile with UUID %s", record->getUUIDStr().c_str());
 		std::string details = _processContext->getProcessor()->getName() + " creates flow record " +  record->getUUIDStr();
-		_provenanceReport->create(record, details);
+		if (_provenanceReport)
+			_provenanceReport->create(record, details);
 	}
 
 	return record;
@@ -91,7 +104,8 @@ FlowFileRecord* ProcessSession::clone(FlowFileRecord *parent)
 			record->_size = parent->_size;
 			record->_claim->increaseFlowFileRecordOwnedCount();
 		}
-		_provenanceReport->clone(parent, record);
+		if (_provenanceReport)
+			_provenanceReport->clone(parent, record);
 	}
 	return record;
 }
@@ -129,7 +143,8 @@ FlowFileRecord* ProcessSession::cloneDuringTransfer(FlowFileRecord *parent)
 	    	record->_size = parent->_size;
 	    	record->_claim->increaseFlowFileRecordOwnedCount();
 	    }
-	    _provenanceReport->clone(parent, record);
+	    if (_provenanceReport)
+	    	_provenanceReport->clone(parent, record);
 	}
 
 	return record;
@@ -161,7 +176,8 @@ FlowFileRecord* ProcessSession::clone(FlowFileRecord *parent, long offset, long 
 			record->_claim = parent->_claim;
 			record->_claim->increaseFlowFileRecordOwnedCount();
 		}
-		_provenanceReport->clone(parent, record);
+		if (_provenanceReport)
+			_provenanceReport->clone(parent, record);
 	}
 	return record;
 }
@@ -171,7 +187,8 @@ void ProcessSession::remove(FlowFileRecord *flow)
 	flow->_markedDelete = true;
 	_deletedFlowFiles[flow->getUUIDStr()] = flow;
 	std::string reason = _processContext->getProcessor()->getName() + " drop flow record " +  flow->getUUIDStr();
-	_provenanceReport->drop(flow, reason);
+	if (_provenanceReport)
+		_provenanceReport->drop(flow, reason);
 }
 
 void ProcessSession::putAttribute(FlowFileRecord *flow, std::string key, std::string value)
@@ -179,7 +196,8 @@ void ProcessSession::putAttribute(FlowFileRecord *flow, std::string key, std::st
 	flow->setAttribute(key, value);
 	std::string details = _processContext->getProcessor()->getName() + " modify flow record " +  flow->getUUIDStr() +
 			" attribute " + key + ":" + value;
-	_provenanceReport->modifyAttributes(flow, details);
+	if (_provenanceReport)
+		_provenanceReport->modifyAttributes(flow, details);
 }
 
 void ProcessSession::removeAttribute(FlowFileRecord *flow, std::string key)
@@ -187,7 +205,8 @@ void ProcessSession::removeAttribute(FlowFileRecord *flow, std::string key)
 	flow->removeAttribute(key);
 	std::string details = _processContext->getProcessor()->getName() + " remove flow record " +  flow->getUUIDStr() +
 				" attribute " + key;
-	_provenanceReport->modifyAttributes(flow, details);
+	if (_provenanceReport)
+		_provenanceReport->modifyAttributes(flow, details);
 }
 
 void ProcessSession::penalize(FlowFileRecord *flow)
@@ -233,7 +252,8 @@ void ProcessSession::write(FlowFileRecord *flow, OutputStreamCallback *callback)
 				fs.close();
 				std::string details = _processContext->getProcessor()->getName() + " modify flow record content " +  flow->getUUIDStr();
 				uint64_t endTime = getTimeMillis();
-				_provenanceReport->modifyContent(flow, details, endTime - startTime);
+				if (_provenanceReport)
+					_provenanceReport->modifyContent(flow, details, endTime - startTime);
 			}
 			else
 			{
@@ -304,7 +324,8 @@ void ProcessSession::append(FlowFileRecord *flow, OutputStreamCallback *callback
 				fs.close();
 				std::string details = _processContext->getProcessor()->getName() + " modify flow record content " +  flow->getUUIDStr();
 				uint64_t endTime = getTimeMillis();
-				_provenanceReport->modifyContent(flow, details, endTime - startTime);
+				if (_provenanceReport)
+					_provenanceReport->modifyContent(flow, details, endTime - startTime);
 			}
 			else
 			{
@@ -430,7 +451,8 @@ void ProcessSession::import(std::string source, FlowFileRecord *flow, bool keepS
 					std::remove(source.c_str());
 				std::string details = _processContext->getProcessor()->getName() + " modify flow record content " +  flow->getUUIDStr();
 				uint64_t endTime = getTimeMillis();
-				_provenanceReport->modifyContent(flow, details, endTime - startTime);
+				if (_provenanceReport)
+					_provenanceReport->modifyContent(flow, details, endTime - startTime);
 			}
 			else
 			{
@@ -653,7 +675,8 @@ void ProcessSession::commit()
 		_deletedFlowFiles.clear();
 		_originalFlowFiles.clear();
 		// persistent the provenance report
-		this->_provenanceReport->commit();
+		if (this->_provenanceReport)
+			this->_provenanceReport->commit();
 		logger_->log_trace("ProcessSession committed for %s", _processContext->getProcessor()->getName().c_str());
 	}
 	catch (std::exception &exception)
@@ -740,7 +763,8 @@ FlowFileRecord *ProcessSession::get()
 			{
 				FlowFileRecord *record = *it;
 				std::string details = _processContext->getProcessor()->getName() + " expire flow record " +  record->getUUIDStr();
-				_provenanceReport->expire(record, details);
+				if (_provenanceReport)
+					_provenanceReport->expire(record, details);
 				delete (record);
 			}
 		}

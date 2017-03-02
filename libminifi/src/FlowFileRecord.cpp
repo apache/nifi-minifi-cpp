@@ -27,9 +27,10 @@
 #include <cstdio>
 
 #include "FlowFileRecord.h"
-
-#include "Logger.h"
 #include "Relationship.h"
+#include "Logger.h"
+#include "FlowController.h"
+#include "FlowFileRepository.h"
 
 std::atomic<uint64_t> FlowFileRecord::_localFlowSeqNumber(0);
 
@@ -39,6 +40,7 @@ FlowFileRecord::FlowFileRecord(std::map<std::string, std::string> attributes, Re
   _offset(0),
   _penaltyExpirationMs(0),
   _claim(claim),
+  _isStoredToRepo(false),
   _markedDelete(false),
   _connection(NULL),
   _orginalConnection(NULL)
@@ -74,6 +76,43 @@ FlowFileRecord::FlowFileRecord(std::map<std::string, std::string> attributes, Re
 	logger_ = Logger::getLogger();
 }
 
+FlowFileRecord::FlowFileRecord(FlowFileEventRecord *event)
+: _size(0),
+  _id(_localFlowSeqNumber.load()),
+  _offset(0),
+  _penaltyExpirationMs(0),
+  _claim(NULL),
+  _isStoredToRepo(false),
+  _markedDelete(false),
+  _connection(NULL),
+  _orginalConnection(NULL)
+{
+	_entryDate = event->getFlowFileEntryDate();
+	_lineageStartDate = event->getlineageStartDate();
+	_size = event->getFileSize();
+	_offset = event->getFileOffset();
+	_lineageIdentifiers = event->getLineageIdentifiers();
+	_attributes = event->getAttributes();
+    _snapshot = false;
+    _uuidStr = event->getFlowFileUuid();
+    uuid_parse(_uuidStr.c_str(), _uuid);
+
+    if (_size > 0)
+    {
+    	_claim = new ResourceClaim();
+    }
+
+	if (_claim)
+	{
+		_claim->setContentFullPath(event->getContentFullPath());
+		// Increase the flow file record owned count for the resource claim
+		_claim->increaseFlowFileRecordOwnedCount();
+	}
+	logger_ = Logger::getLogger();
+	++_localFlowSeqNumber;
+}
+
+
 FlowFileRecord::~FlowFileRecord()
 {
 	if (!_snapshot)
@@ -87,7 +126,15 @@ FlowFileRecord::~FlowFileRecord()
 		if (_claim->getFlowFileRecordOwnedCount() <= 0)
 		{
 			logger_->log_debug("Delete Resource Claim %s", _claim->getContentFullPath().c_str());
-			std::remove(_claim->getContentFullPath().c_str());
+			std::string value;
+			if (!FlowControllerFactory::getFlowController()->getFlowFileRepository() ||
+					!FlowControllerFactory::getFlowController()->getFlowFileRepository()->isEnable() ||
+					!this->_isStoredToRepo ||
+					!FlowControllerFactory::getFlowController()->getFlowFileRepository()->Get(_uuidStr, value))
+			{
+				// if it is persistent to DB already while it is in the queue, we keep the content
+				std::remove(_claim->getContentFullPath().c_str());
+			}
 			delete _claim;
 		}
 	}

@@ -20,6 +20,62 @@
 
 #include "Provenance.h"
 #include "FlowController.h"
+#include "FlowFileRepository.h"
+
+/**
+ * Test repository
+ */
+class FlowTestRepository : public FlowFileRepository
+{
+public:
+	FlowTestRepository()
+{
+}
+		//! initialize
+		bool initialize()
+		{
+			return true;
+		}
+
+		//! Destructor
+		virtual ~FlowTestRepository() {
+
+		}
+
+		bool Put(std::string key, uint8_t *buf, int bufLen)
+		{
+			repositoryResults.insert(std::pair<std::string,std::string>(key,std::string((const char*)buf,bufLen)));
+			return true;
+		}
+		//! Delete
+		bool Delete(std::string key)
+		{
+			repositoryResults.erase(key);
+			return true;
+		}
+		//! Get
+		bool Get(std::string key, std::string &value)
+		{
+			auto result = repositoryResults.find(key);
+			if (result != repositoryResults.end())
+			{
+				value = result->second;
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+		}
+
+		const std::map<std::string,std::string> &getRepoMap() const
+		{
+			return repositoryResults;
+		}
+
+protected:
+		std::map<std::string,std::string> repositoryResults;
+};
 
 /**
  * Test repository
@@ -81,9 +137,10 @@ class TestFlowController : public FlowController
 {
 
 public:
-	TestFlowController(ProvenanceTestRepository &repo) : ::FlowController()
+	TestFlowController(ProvenanceTestRepository &provenanceRepo, FlowTestRepository &flowRepo) : ::FlowController()
 	{
-		_provenanceRepo = dynamic_cast<ProvenanceRepository*>(&repo);
+		_provenanceRepo = dynamic_cast<ProvenanceRepository*>(&provenanceRepo);
+		_flowfileRepo = dynamic_cast<FlowFileRepository*>(&flowRepo);
 	}
 	~TestFlowController()
 	{

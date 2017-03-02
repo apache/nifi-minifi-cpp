@@ -84,6 +84,10 @@ public:
 		else
 			return false;
 	}
+	//! Get UUID Str
+	std::string getUUIDStr() {
+		return _uuidStr;
+	}
 	//! Set Connection Source Processor
 	void setSourceProcessor(Processor *source) {
 		_srcProcessor = source;
@@ -180,7 +184,8 @@ protected:
 	std::atomic<uint64_t> _maxQueueDataSize;
 	//! Flow File Expiration Duration in= MilliSeconds
 	std::atomic<uint64_t> _expiredDuration;
-
+	//! UUID string
+	std::string _uuidStr;
 
 private:
 	//! Mutex for protection
