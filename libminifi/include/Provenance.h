@@ -32,10 +32,6 @@
 #include <thread>
 #include <vector>
 
-#include "leveldb/db.h"
-#include "leveldb/options.h"
-#include "leveldb/slice.h"
-#include "leveldb/status.h"
 #include "Configure.h"
 #include "Connection.h"
 #include "FlowFileRecord.h"
@@ -44,9 +40,7 @@
 #include "ResourceClaim.h"
 #include "io/Serializable.h"
 #include "utils/TimeUtil.h"
-
-// Provenance Event Record Serialization Seg Size
-#define PROVENANCE_EVENT_RECORD_SEG_SIZE 2048
+#include "Repository.h"
 
 class ProvenanceRepository;
 
@@ -569,107 +563,23 @@ private:
 #define PROVENANCE_PURGE_PERIOD (2500) // 2500 msec
 
 //! Provenance Repository
-class ProvenanceRepository
+class ProvenanceRepository : public Repository
 {
 public:
 	//! Constructor
 	/*!
 	 * Create a new provenance repository
 	 */
-	ProvenanceRepository() {
-		logger_ = Logger::getLogger();
-		configure_ = Configure::getConfigure();
-		_directory = PROVENANCE_DIRECTORY;
-		_maxPartitionMillis = MAX_PROVENANCE_ENTRY_LIFE_TIME;
-		_purgePeriod = PROVENANCE_PURGE_PERIOD;
-		_maxPartitionBytes = MAX_PROVENANCE_STORAGE_SIZE;
-		_db = NULL;
-		_thread = NULL;
-		_running = false;
-		_repoFull = false;
+	ProvenanceRepository()
+	 : Repository(Repository::PROVENANCE, PROVENANCE_DIRECTORY,
+			MAX_PROVENANCE_ENTRY_LIFE_TIME, MAX_PROVENANCE_STORAGE_SIZE, PROVENANCE_PURGE_PERIOD)
+	{
 	}
 
 	//! Destructor
 	virtual ~ProvenanceRepository() {
-		stop();
-		if (this->_thread)
-			delete this->_thread;
-		destroy();
 	}
 
-	//! initialize
-	virtual bool initialize()
-	{
-		std::string value;
-		if (configure_->get(Configure::nifi_provenance_repository_directory_default, value))
-		{
-			_directory = value;
-		}
-		logger_->log_info("NiFi Provenance Repository Directory %s", _directory.c_str());
-		if (configure_->get(Configure::nifi_provenance_repository_max_storage_size, value))
-		{
-			Property::StringToInt(value, _maxPartitionBytes);
-		}
-		logger_->log_info("NiFi Provenance Max Partition Bytes %d", _maxPartitionBytes);
-		if (configure_->get(Configure::nifi_provenance_repository_max_storage_time, value))
-		{
-			TimeUnit unit;
-			if (Property::StringToTime(value, _maxPartitionMillis, unit) &&
-						Property::ConvertTimeUnitToMS(_maxPartitionMillis, unit, _maxPartitionMillis))
-			{
-			}
-		}
-		logger_->log_info("NiFi Provenance Max Storage Time: [%d] ms", _maxPartitionMillis);
-		leveldb::Options options;
-		options.create_if_missing = true;
-		leveldb::Status status = leveldb::DB::Open(options, _directory.c_str(), &_db);
-		if (status.ok())
-		{
-			logger_->log_info("NiFi Provenance Repository database open %s success", _directory.c_str());
-		}
-		else
-		{
-			logger_->log_error("NiFi Provenance Repository database open %s fail", _directory.c_str());
-			return false;
-		}
-
-		// start the monitor thread
-		start();
-		return true;
-	}
-	//! Put
-	virtual bool Put(std::string key, uint8_t *buf, int bufLen)
-	{
-	  
-		// persistent to the DB
-		leveldb::Slice value((const char *) buf, bufLen);
-		leveldb::Status status;
-		status = _db->Put(leveldb::WriteOptions(), key, value);
-		if (status.ok())
-			return true;
-		else
-			return false;
-	}
-	//! Delete
-	virtual bool Delete(std::string key)
-	{
-		leveldb::Status status;
-		status = _db->Delete(leveldb::WriteOptions(), key);
-		if (status.ok())
-			return true;
-		else
-			return false;
-	}
-	//! Get
-	virtual bool Get(std::string key, std::string &value)
-	{
-		leveldb::Status status;
-		status = _db->Get(leveldb::ReadOptions(), key, &value);
-		if (status.ok())
-			return true;
-		else
-			return false;
-	}
 	//! Persistent event
 	void registerEvent(ProvenanceEventRecord *event)
 	{
@@ -680,77 +590,15 @@ public:
 	{
 		Delete(event->getEventId());
 	}
-	//! destroy
-	void destroy()
-	{
-		if (_db)
-		{
-			delete _db;
-			_db = NULL;
-		}
-	}
-	//! Run function for the thread
-	static void run(ProvenanceRepository *repo);
-	//! Start the repository monitor thread
-	virtual void start();
-	//! Stop the repository monitor thread
-	virtual void stop();
-	//! whether the repo is full
-	virtual bool isFull()
-	{
-		return _repoFull;
-	}
 
 protected:
 
 private:
 
-	//! Mutex for protection
-	std::mutex _mtx;
-	//! repository directory
-	std::string _directory;
-	//! Logger
-	std::shared_ptr<Logger> logger_;
-	//! Configure
-	//! max db entry life time
-	Configure *configure_;
-	int64_t _maxPartitionMillis;
-	//! max db size
-	int64_t _maxPartitionBytes;
-	//! purge period
-	uint64_t _purgePeriod;
-	//! level DB database
-	leveldb::DB* _db;
-	//! thread
-	std::thread *_thread;
-	//! whether it is running
-	bool _running;
-	//! whether stop accepting provenace event
-	std::atomic<bool> _repoFull;
-	//! size of the directory
-	static uint64_t _repoSize;
-	//! call back for directory size
-	static int repoSum(const char *fpath, const struct stat *sb, int typeflag)
-	{
-	    _repoSize += sb->st_size;
-	    return 0;
-	}
-	//! repoSize
-	uint64_t repoSize()
-	{
-		_repoSize = 0;
-		if (ftw(_directory.c_str(), repoSum, 1) != 0)
-			_repoSize = 0;
-
-		return _repoSize;
-	}
 	// Prevent default copy constructor and assignment operation
 	// Only support pass by reference or pointer
 	ProvenanceRepository(const ProvenanceRepository &parent);
 	ProvenanceRepository &operator=(const ProvenanceRepository &parent);
 };
-
-
-
 
 #endif

@@ -23,9 +23,8 @@
 #include "io/DataStream.h"
 #include "io/Serializable.h"
 #include "Provenance.h"
-
-#include "Logger.h"
 #include "Relationship.h"
+#include "Logger.h"
 #include "FlowController.h"
 
 //! DeSerialize
@@ -227,9 +226,11 @@ bool ProvenanceEventRecord::Serialize(ProvenanceRepository *repo) {
 	if (repo->Put(_eventIdStr, const_cast<uint8_t*>(outStream.getBuffer()), outStream.getSize())) {
 		logger_->log_debug("NiFi Provenance Store event %s size %d success",
 				_eventIdStr.c_str(), outStream.getSize());
+		return true;
 	} else {
 		logger_->log_error("NiFi Provenance Store event %s size %d fail",
 				_eventIdStr.c_str(), outStream.getSize());
+		return false;
 	}
 
 	// cleanup
@@ -391,6 +392,8 @@ bool ProvenanceEventRecord::DeSerialize(const uint8_t *buffer, const int bufferS
 }
 
 void ProvenanceReporter::commit() {
+	if (!FlowControllerFactory::getFlowController()->getProvenanceRepository()->isEnable())
+		return;
 	for (auto event : _events) {
 		if (!FlowControllerFactory::getFlowController()->getProvenanceRepository()->isFull()) {
 			event->Serialize(
@@ -559,70 +562,5 @@ void ProvenanceReporter::fetch(FlowFileRecord *flow, std::string transitUri,
 		event->setEventDuration(processingDuration);
 		add(event);
 	}
-}
-
-uint64_t ProvenanceRepository::_repoSize = 0;
-
-void ProvenanceRepository::start() {
-	if (this->_purgePeriod <= 0)
-		return;
-	if (_running)
-		return;
-	_running = true;
-	logger_->log_info("ProvenanceRepository Monitor Thread Start");
-	_thread = new std::thread(run, this);
-	_thread->detach();
-}
-
-void ProvenanceRepository::stop() {
-	if (!_running)
-		return;
-	_running = false;
-	logger_->log_info("ProvenanceRepository Monitor Thread Stop");
-}
-
-void ProvenanceRepository::run(ProvenanceRepository *repo) {
-	// threshold for purge
-	uint64_t purgeThreshold = repo->_maxPartitionBytes * 3 / 4;
-	while (repo->_running) {
-		std::this_thread::sleep_for(
-				std::chrono::milliseconds(repo->_purgePeriod));
-		uint64_t curTime = getTimeMillis();
-		uint64_t size = repo->repoSize();
-		if (size >= purgeThreshold) {
-			std::vector<std::string> purgeList;
-			leveldb::Iterator* it = repo->_db->NewIterator(
-					leveldb::ReadOptions());
-			for (it->SeekToFirst(); it->Valid(); it->Next()) {
-				ProvenanceEventRecord eventRead;
-				std::string key = it->key().ToString();
-				if (eventRead.DeSerialize((uint8_t *) it->value().data(),
-						(int) it->value().size())) {
-					if ((curTime - eventRead.getEventTime())
-							> repo->_maxPartitionMillis)
-						purgeList.push_back(key);
-				} else {
-					repo->logger_->log_debug(
-							"NiFi Provenance retrieve event %s fail",
-							key.c_str());
-					purgeList.push_back(key);
-				}
-			}
-			delete it;
-			std::vector<std::string>::iterator itPurge;
-			for (itPurge = purgeList.begin(); itPurge != purgeList.end();
-					itPurge++) {
-				std::string eventId = *itPurge;
-				repo->logger_->log_info("ProvenanceRepository Repo Purge %s",
-						eventId.c_str());
-				repo->Delete(eventId);
-			}
-		}
-		if (size > repo->_maxPartitionBytes)
-			repo->_repoFull = true;
-		else
-			repo->_repoFull = false;
-	}
-	return;
 }
 

@@ -29,6 +29,8 @@
 
 #include "Connection.h"
 #include "Processor.h"
+#include "FlowFileRepository.h"
+#include "FlowController.h"
 
 Connection::Connection(std::string name, uuid_t uuid, uuid_t srcUUID, uuid_t destUUID)
 : _name(name)
@@ -52,6 +54,10 @@ Connection::Connection(std::string name, uuid_t uuid, uuid_t srcUUID, uuid_t des
 	_queuedDataSize = 0;
 
 	logger_ = Logger::getLogger();
+
+	char uuidStr[37];
+	uuid_unparse_lower(_uuid, uuidStr);
+	_uuidStr = uuidStr;
 
 	logger_->log_info("Connection %s created", _name.c_str());
 }
@@ -93,6 +99,21 @@ void Connection::put(FlowFileRecord *flow)
 				flow->getUUIDStr().c_str(), _name.c_str());
 	}
 
+
+	if (FlowControllerFactory::getFlowController()->getFlowFileRepository() &&
+			FlowControllerFactory::getFlowController()->getFlowFileRepository()->isEnable() &&
+			!flow->isStoredToRepository())
+	{
+		// Save to the flowfile repo
+		FlowFileEventRecord event;
+		event.fromFlowFile(flow, this->_uuidStr);
+		if (event.Serialize(
+				FlowControllerFactory::getFlowController()->getFlowFileRepository()))
+		{
+			flow->setStoredToRepository(true);
+		}
+	}
+
 	// Notify receiving processor that work may be available
 	if(_destProcessor)
 	{
@@ -117,6 +138,13 @@ FlowFileRecord* Connection::poll(std::set<FlowFileRecord *> &expiredFlowRecords)
 			{
 				// Flow record expired
 				expiredFlowRecords.insert(item);
+				if (FlowControllerFactory::getFlowController()->getFlowFileRepository() &&
+						FlowControllerFactory::getFlowController()->getFlowFileRepository()->isEnable())
+				{
+					// delete from the flowfile repo
+					FlowControllerFactory::getFlowController()->getFlowFileRepository()->Delete(item->getUUIDStr());
+					item->setStoredToRepository(false);
+				}
 			}
 			else
 			{
@@ -131,6 +159,13 @@ FlowFileRecord* Connection::poll(std::set<FlowFileRecord *> &expiredFlowRecords)
 				item->setOriginalConnection(this);
 				logger_->log_debug("Dequeue flow file UUID %s from connection %s",
 						item->getUUIDStr().c_str(), _name.c_str());
+				if (FlowControllerFactory::getFlowController()->getFlowFileRepository() &&
+						FlowControllerFactory::getFlowController()->getFlowFileRepository()->isEnable())
+				{
+					// delete from the flowfile repo
+					FlowControllerFactory::getFlowController()->getFlowFileRepository()->Delete(item->getUUIDStr());
+					item->setStoredToRepository(false);
+				}
 				return item;
 			}
 		}
@@ -147,6 +182,13 @@ FlowFileRecord* Connection::poll(std::set<FlowFileRecord *> &expiredFlowRecords)
 			item->setOriginalConnection(this);
 			logger_->log_debug("Dequeue flow file UUID %s from connection %s",
 					item->getUUIDStr().c_str(), _name.c_str());
+			if (FlowControllerFactory::getFlowController()->getFlowFileRepository() &&
+					FlowControllerFactory::getFlowController()->getFlowFileRepository()->isEnable())
+			{
+				// delete from the flowfile repo
+				FlowControllerFactory::getFlowController()->getFlowFileRepository()->Delete(item->getUUIDStr());
+				item->setStoredToRepository(false);
+			}
 			return item;
 		}
 	}

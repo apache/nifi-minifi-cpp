@@ -47,6 +47,7 @@
 #include "FlowControlProtocol.h"
 #include "RemoteProcessorGroupPort.h"
 #include "Provenance.h"
+#include "FlowFileRepository.h"
 #include "GetFile.h"
 #include "PutFile.h"
 #include "TailFile.h"
@@ -64,6 +65,7 @@
 #define CONFIG_YAML_PROCESSORS_KEY "Processors"
 
 struct ProcessorConfig {
+	std::string id;
 	std::string name;
 	std::string javaClass;
 	std::string maxConcurrentTasks;
@@ -129,6 +131,10 @@ public:
 	virtual ProvenanceRepository *getProvenanceRepository() {
 		return this->_provenanceRepo;
 	}
+	//! Get the flowfile repository
+	virtual FlowFileRepository *getFlowFileRepository() {
+		return this->_flowfileRepo;
+	}
 	//! Load flow xml from disk, after that, create the root process group and its children, initialize the flows
 	virtual void load() = 0;
 
@@ -172,7 +178,6 @@ public:
 		_protocol->setSerialNumber(number);
 	}
 
-
 protected:
   
 	//! A global unique identifier
@@ -197,6 +202,8 @@ protected:
 	std::atomic<bool> _initialized;
 	//! Provenance Repo
 	ProvenanceRepository *_provenanceRepo;
+	//! FlowFile Repo
+	FlowFileRepository *_flowfileRepo;
 	//! Flow Engines
 	//! Flow Timer Scheduler
 	TimerDrivenSchedulingAgent _timerScheduler;
@@ -212,7 +219,7 @@ protected:
 
 	FlowController() :
 			_root(0), _maxTimerDrivenThreads(0), _maxEventDrivenThreads(0), _running(
-					false), _initialized(false), _provenanceRepo(0), _protocol(
+					false), _initialized(false), _provenanceRepo(0), _flowfileRepo(0), _protocol(
 					0), logger_(Logger::getLogger()){
 	}
 
@@ -246,6 +253,8 @@ public:
 	void unload();
 	//! Load new xml
 	void reload(std::string yamlFile);
+	//! Load Flow File from persistent Flow Repo
+	void loadFlowRepo();
 	//! update property value
 	void updatePropertyValue(std::string processorName,
 			std::string propertyName, std::string propertyValue) {
@@ -283,6 +292,7 @@ private:
 	//! Logger
 	std::shared_ptr<Logger> logger_;
 	Configure *configure_;
+
 	//! Process Processor Node YAML
 	void parseProcessorNodeYaml(YAML::Node processorNode, ProcessGroup *parent);
 	//! Process Port YAML

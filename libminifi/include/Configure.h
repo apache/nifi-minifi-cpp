@@ -27,7 +27,6 @@
 #include <errno.h>
 #include <iostream>
 #include <fstream>
-
 #include "Logger.h"
 
 class Configure {
@@ -46,12 +45,18 @@ public:
 	static const char *nifi_administrative_yield_duration;
 	static const char *nifi_bored_yield_duration;
 	static const char *nifi_graceful_shutdown_seconds;
+	static const char *nifi_log_level;
 	static const char *nifi_server_name;
 	static const char *nifi_server_port;
 	static const char *nifi_server_report_interval;
 	static const char *nifi_provenance_repository_max_storage_time;
 	static const char *nifi_provenance_repository_max_storage_size;
 	static const char *nifi_provenance_repository_directory_default;
+	static const char *nifi_provenance_repository_enable;
+	static const char *nifi_flowfile_repository_max_storage_time;
+	static const char *nifi_flowfile_repository_max_storage_size;
+	static const char *nifi_flowfile_repository_directory_default;
+	static const char *nifi_flowfile_repository_enable;
 	static const char *nifi_remote_input_secure;
 	static const char *nifi_security_need_ClientAuth;
 	static const char *nifi_security_client_certificate;

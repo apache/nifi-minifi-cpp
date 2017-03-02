@@ -109,6 +109,8 @@ FlowControllerImpl::FlowControllerImpl(std::string name)  {
 
 
 	// Create repos for flow record and provenance
+	_flowfileRepo = new FlowFileRepository();
+	_flowfileRepo->initialize();
 	_provenanceRepo = new ProvenanceRepository();
 	_provenanceRepo->initialize();
 }
@@ -121,6 +123,8 @@ FlowControllerImpl::~FlowControllerImpl() {
 		delete _protocol;
 	if (NULL != _provenanceRepo)
 		delete _provenanceRepo;
+	if (NULL != _flowfileRepo)
+		delete _flowfileRepo;
 
 }
 
@@ -133,6 +137,8 @@ void FlowControllerImpl::stop(bool force) {
 		logger_->log_info("Stop Flow Controller");
 		this->_timerScheduler.stop();
 		this->_eventScheduler.stop();
+		this->_flowfileRepo->stop();
+		this->_provenanceRepo->stop();
 		// Wait for sometime for thread stop
 		std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 		if (this->_root)
@@ -238,14 +244,12 @@ void FlowControllerImpl::parseRootProcessGroupYaml(YAML::Node rootFlowNode) {
 	uuid_t uuid;
 	ProcessGroup *group = NULL;
 
-	// generate the random UIID
-	uuid_generate(uuid);
-
 	std::string flowName = rootFlowNode["name"].as<std::string>();
+	std::string id = rootFlowNode["id"].as<std::string>();
 
-	char uuidStr[37];
-	uuid_unparse_lower(_uuid, uuidStr);
-	logger_->log_debug("parseRootProcessGroup: id => [%s]", uuidStr);
+	uuid_parse(id.c_str(), uuid);
+
+	logger_->log_debug("parseRootProcessGroup: id => [%s]", id.c_str());
 	logger_->log_debug("parseRootProcessGroup: name => [%s]", flowName.c_str());
 	group = this->createRootProcessGroup(flowName, uuid);
 	this->_root = group;
@@ -278,17 +282,14 @@ void FlowControllerImpl::parseProcessorNodeYaml(YAML::Node processorsNode,
 				YAML::Node procNode = iter->as<YAML::Node>();
 
 				procCfg.name = procNode["name"].as<std::string>();
-				logger_->log_debug("parseProcessorNode: name => [%s]",
-						procCfg.name.c_str());
+				procCfg.id = procNode["id"].as<std::string>();
+				logger_->log_debug("parseProcessorNode: name => [%s] id => [%s]",
+						procCfg.name.c_str(), procCfg.id.c_str());
 				procCfg.javaClass = procNode["class"].as<std::string>();
 				logger_->log_debug("parseProcessorNode: class => [%s]",
 						procCfg.javaClass.c_str());
 
-				char uuidStr[37];
-				uuid_unparse_lower(_uuid, uuidStr);
-
-				// generate the random UUID
-				uuid_generate(uuid);
+				uuid_parse(procCfg.id.c_str(), uuid);
 
 				// Determine the processor name only from the Java class
 				int lastOfIdx = procCfg.javaClass.find_last_of(".");
@@ -303,7 +304,7 @@ void FlowControllerImpl::parseProcessorNodeYaml(YAML::Node processorsNode,
 				if (!processor) {
 					logger_->log_error(
 							"Could not create a processor %s with name %s",
-							procCfg.name.c_str(), uuidStr);
+							procCfg.name.c_str(), procCfg.id.c_str());
 					throw std::invalid_argument(
 							"Could not create processor " + procCfg.name);
 				}
@@ -468,8 +469,10 @@ void FlowControllerImpl::parseRemoteProcessGroupYaml(YAML::Node *rpgNode,
 				YAML::Node rpgNode = iter->as<YAML::Node>();
 
 				auto name = rpgNode["name"].as<std::string>();
-				logger_->log_debug("parseRemoteProcessGroupYaml: name => [%s]",
-						name.c_str());
+				auto id = rpgNode["id"].as<std::string>();
+
+				logger_->log_debug("parseRemoteProcessGroupYaml: name => [%s], id => [%s]",
+						name.c_str(), id.c_str());
 
 				std::string url = rpgNode["url"].as<std::string>();
 				logger_->log_debug("parseRemoteProcessGroupYaml: url => [%s]",
@@ -491,11 +494,7 @@ void FlowControllerImpl::parseRemoteProcessGroupYaml(YAML::Node *rpgNode,
 						rpgNode["Output Ports"].as<YAML::Node>();
 				ProcessGroup *group = NULL;
 
-				// generate the random UUID
-				uuid_generate(uuid);
-
-				char uuidStr[37];
-				uuid_unparse_lower(_uuid, uuidStr);
+				uuid_parse(id.c_str(), uuid);
 
 				int64_t timeoutValue = -1;
 				int64_t yieldPeriodValue = -1;
@@ -568,20 +567,18 @@ void FlowControllerImpl::parseConnectionYaml(YAML::Node *connectionsNode,
 		if (connectionsNode->IsSequence()) {
 			for (YAML::const_iterator iter = connectionsNode->begin();
 					iter != connectionsNode->end(); ++iter) {
-				// generate the random UUID
-				uuid_generate(uuid);
 
 				YAML::Node connectionNode = iter->as<YAML::Node>();
 
 				std::string name = connectionNode["name"].as<std::string>();
-				std::string destName = connectionNode["destination name"].as<
+				std::string id = connectionNode["id"].as<std::string>();
+				std::string destId = connectionNode["destination id"].as<
 						std::string>();
 
-				char uuidStr[37];
-				uuid_unparse_lower(_uuid, uuidStr);
+				uuid_parse(id.c_str(), uuid);
 
 				logger_->log_debug(
-						"Created connection with UUID %s and name %s", uuidStr,
+						"Created connection with UUID %s and name %s", id.c_str(),
 						name.c_str());
 				connection = this->createConnection(name, uuid);
 				auto rawRelationship =
@@ -592,26 +589,30 @@ void FlowControllerImpl::parseConnectionYaml(YAML::Node *connectionsNode,
 						rawRelationship.c_str());
 				if (connection)
 					connection->setRelationship(relationship);
-				std::string connectionSrcProcName =
-						connectionNode["source name"].as<std::string>();
+				std::string connectionSrcProcId =
+						connectionNode["source id"].as<std::string>();
+				uuid_t srcUUID;
+				uuid_parse(connectionSrcProcId.c_str(), srcUUID);
 
 				Processor *srcProcessor = this->_root->findProcessor(
-						connectionSrcProcName);
+						srcUUID);
 
 				if (!srcProcessor) {
 					logger_->log_error(
-							"Could not locate a source with name %s to create a connection",
-							connectionSrcProcName.c_str());
+							"Could not locate a source with id %s to create a connection",
+							connectionSrcProcId.c_str());
 					throw std::invalid_argument(
-							"Could not locate a source with name %s to create a connection "
-									+ connectionSrcProcName);
+							"Could not locate a source with id %s to create a connection "
+									+ connectionSrcProcId);
 				}
 
-				Processor *destProcessor = this->_root->findProcessor(destName);
+				uuid_t destUUID;
+				uuid_parse(destId.c_str(), destUUID);
+				Processor *destProcessor = this->_root->findProcessor(destUUID);
 				// If we could not find name, try by UUID
 				if (!destProcessor) {
 					uuid_t destUuid;
-					uuid_parse(destName.c_str(), destUuid);
+					uuid_parse(destId.c_str(), destUuid);
 					destProcessor = this->_root->findProcessor(destUuid);
 				}
 				if (destProcessor) {
@@ -728,9 +729,21 @@ void FlowControllerImpl::load() {
 		parseRemoteProcessGroupYaml(&remoteProcessingGroupNode, this->_root);
 		parseConnectionYaml(&connectionsNode, this->_root);
 
-		_initialized = true;
+		// Load Flow File from Repo
+		loadFlowRepo();
 
+		_initialized = true;
     }
+}
+
+void FlowControllerImpl::loadFlowRepo()
+{
+	if (this->_flowfileRepo && this->_flowfileRepo->isEnable())
+	{
+		std::map<std::string, Connection *> connectionMap;
+		this->_root->getConnections(&connectionMap);
+		this->_flowfileRepo->loadFlowFileToConnections(&connectionMap);
+	}
 }
 
 void FlowControllerImpl::reload(std::string yamlFile)
@@ -769,6 +782,8 @@ bool FlowControllerImpl::start() {
 						&this->_eventScheduler);
 			_running = true;
 			this->_protocol->start();
+			this->_provenanceRepo->start();
+			this->_flowfileRepo->start();
 			logger_->log_info("Started Flow Controller");
 		}
 		return true;

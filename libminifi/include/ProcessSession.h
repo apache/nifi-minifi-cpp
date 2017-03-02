@@ -44,12 +44,7 @@ public:
 	/*!
 	 * Create a new process session
 	 */
-	ProcessSession(ProcessContext *processContext = NULL) : _processContext(processContext) {
-		logger_ = Logger::getLogger();
-		logger_->log_trace("ProcessSession created for %s", _processContext->getProcessor()->getName().c_str());
-		_provenanceReport = new ProvenanceReporter(_processContext->getProcessor()->getUUIDStr(),
-				_processContext->getProcessor()->getName());
-	}
+	ProcessSession(ProcessContext *processContext = NULL);
 	//! Destructor
 	virtual ~ProcessSession() {
 		if (_provenanceReport)

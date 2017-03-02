@@ -67,6 +67,11 @@ public:
 	{
 		return _contentFullPath;
 	}
+	//! Set the content full path
+	void setContentFullPath(std::string path)
+	{
+		_contentFullPath = path;
+	}
 
 protected:
 	//! A global unique identifier

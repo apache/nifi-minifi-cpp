@@ -66,6 +66,18 @@ ProcessGroup::~ProcessGroup() {
 	}
 }
 
+void ProcessGroup::getConnections(std::map<std::string, Connection*> *connectionMap)
+{
+	for (auto connection : connections_)
+	{
+		(*connectionMap)[connection->getUUIDStr()] = connection;
+	}
+
+	for (auto processGroup: child_process_groups_) {
+		processGroup->getConnections(connectionMap);
+	}
+}
+
 bool ProcessGroup::isRootProcessGroup() {
 	std::lock_guard<std::mutex> lock(mtx_);
 	return (type_ == ROOT_PROCESS_GROUP);

@@ -37,6 +37,7 @@
 
 class ProcessSession;
 class Connection;
+class FlowFileEventRecord;
 
 #define DEFAULT_FLOWFILE_PATH "."
 
@@ -108,6 +109,10 @@ public:
 	 * Create a new flow record
 	 */
 	FlowFileRecord(std::map<std::string, std::string> attributes, ResourceClaim *claim = NULL);
+	/*!
+	 * Create a new flow record from repo flow event
+	 */
+	FlowFileRecord(FlowFileEventRecord *event);
 	//! Destructor
 	virtual ~FlowFileRecord();
 	//! addAttribute key is enum
@@ -175,6 +180,15 @@ public:
 	{
 		return _lineageIdentifiers;
 	}
+	//! Check whether it is stored to DB already
+	bool isStoredToRepository()
+	{
+		return _isStoredToRepo;
+	}
+	void setStoredToRepository(bool value)
+	{
+		_isStoredToRepo = value;
+	}
 
 protected:
 
@@ -202,6 +216,8 @@ protected:
 	std::string _uuidStr;
 	//! UUID string for all parents
 	std::set<std::string> _lineageIdentifiers;
+	//! whether it is stored to DB
+	bool _isStoredToRepo;
 	//! duplicate the original flow file
 	void duplicate(FlowFileRecord *original);
 

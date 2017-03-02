@@ -224,10 +224,12 @@ Additionally, users can utilize the MiNiFi Toolkit Converter (version 0.0.1 - sc
 
 
     Flow Controller:
+        id: 471deef6-2a6e-4a7d-912a-81cc17e3a205
         name: MiNiFi Flow
 
     Processors:
         - name: GetFile
+          id: 471deef6-2a6e-4a7d-912a-81cc17e3a206
           class: org.apache.nifi.processors.standard.GetFile
           max concurrent tasks: 1
           scheduling strategy: TIMER_DRIVEN
@@ -242,15 +244,17 @@ Additionally, users can utilize the MiNiFi Toolkit Converter (version 0.0.1 - sc
 
     Connections:
         - name: TransferFilesToRPG
-          source name: GetFile
+          id: 471deef6-2a6e-4a7d-912a-81cc17e3a207
+          source id: 471deef6-2a6e-4a7d-912a-81cc17e3a206 
           source relationship name: success
-          destination name: 471deef6-2a6e-4a7d-912a-81cc17e3a204
+          destination id: 471deef6-2a6e-4a7d-912a-81cc17e3a204
           max work queue size: 0
           max work queue data size: 1 MB
           flowfile expiration: 60 sec
 
     Remote Processing Groups:
         - name: NiFi Flow
+          id: 471deef6-2a6e-4a7d-912a-81cc17e3a208
           url: http://localhost:8080/nifi
           timeout: 30 secs
           yield period: 10 sec
