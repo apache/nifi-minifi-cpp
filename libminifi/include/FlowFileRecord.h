@@ -108,11 +108,11 @@ public:
 	/*!
 	 * Create a new flow record
 	 */
-	FlowFileRecord(std::map<std::string, std::string> attributes, ResourceClaim *claim = NULL);
+	explicit FlowFileRecord(std::map<std::string, std::string> attributes, ResourceClaim *claim = NULL);
 	/*!
 	 * Create a new flow record from repo flow event
 	 */
-	FlowFileRecord(FlowFileEventRecord *event);
+	explicit FlowFileRecord(FlowFileEventRecord *event);
 	//! Destructor
 	virtual ~FlowFileRecord();
 	//! addAttribute key is enum

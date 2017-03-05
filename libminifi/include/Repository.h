@@ -214,15 +214,6 @@ public:
 		else
 			return false;
 	}
-	//! destroy
-	void destroy()
-	{
-		if (_db)
-		{
-			delete _db;
-			_db = NULL;
-		}
-	}
 	//! Run function for the thread
 	static void run(Repository *repo);
 	//! Start the repository monitor thread
@@ -261,9 +252,9 @@ protected:
 	leveldb::DB* _db;
 	//! thread
 	std::thread *_thread;
-	//! whether it is running
+	//! whether the monitoring thread is running for the repo while it was enabled 
 	bool _running;
-	//! whether it is enable 
+	//! whether it is enabled by minfi property for the repo 
 	bool _enable;
 	//! whether stop accepting provenace event
 	std::atomic<bool> _repoFull;
@@ -285,6 +276,15 @@ protected:
 	}
 
 private:
+	//! destroy
+	void destroy()
+	{
+		if (_db)
+		{
+			delete _db;
+			_db = NULL;
+		}
+	}
 	// Prevent default copy constructor and assignment operation
 	// Only support pass by reference or pointer
 	Repository(const Repository &parent);

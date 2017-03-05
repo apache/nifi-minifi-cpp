@@ -103,10 +103,8 @@ void Repository::run(Repository *repo) {
 				}
 			}
 			delete it;
-			std::vector<std::string>::iterator itPurge;
-			for (itPurge = purgeList.begin(); itPurge != purgeList.end();
-					itPurge++) {
-				std::string eventId = *itPurge;
+			for (auto eventId : purgeList)
+			{
 				repo->logger_->log_info("Repository Repo %s Purge %s",
 						RepositoryTypeStr[repo->_type],
 						eventId.c_str());

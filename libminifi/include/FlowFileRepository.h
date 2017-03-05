@@ -42,13 +42,43 @@
 #include "utils/TimeUtil.h"
 #include "Repository.h"
 
-class FlowFileRepository;
+#define FLOWFILE_REPOSITORY_DIRECTORY "./flowfile_repository"
+#define MAX_FLOWFILE_REPOSITORY_STORAGE_SIZE (10*1024*1024) // 10M
+#define MAX_FLOWFILE_REPOSITORY_ENTRY_LIFE_TIME (600000) // 10 minute
+#define FLOWFILE_REPOSITORY_PURGE_PERIOD (2500) // 2500 msec
+
+//! FlowFile Repository
+class FlowFileRepository : public Repository
+{
+public:
+	//! Constructor
+	/*!
+	 * Create a new provenance repository
+	 */
+	FlowFileRepository()
+	 : Repository(Repository::FLOWFILE, FLOWFILE_REPOSITORY_DIRECTORY,
+			MAX_FLOWFILE_REPOSITORY_ENTRY_LIFE_TIME, MAX_FLOWFILE_REPOSITORY_STORAGE_SIZE, FLOWFILE_REPOSITORY_PURGE_PERIOD)
+	{
+	}
+	//! Destructor
+	virtual ~FlowFileRepository() {
+	}
+	//! Load Repo to Connections
+	void loadFlowFileToConnections(std::map<std::string, Connection *> *connectionMap);
+
+protected:
+
+private:
+
+	// Prevent default copy constructor and assignment operation
+	// Only support pass by reference or pointer
+	FlowFileRepository(const FlowFileRepository &parent);
+	FlowFileRepository &operator=(const FlowFileRepository &parent);
+};
 
 //! FlowFile Event Record
 class FlowFileEventRecord : protected Serializable
 {
-public:
-	friend class ProcessSession;
 public:
 	//! Constructor
 	/*!
@@ -169,40 +199,6 @@ private:
 	FlowFileEventRecord(const FlowFileEventRecord &parent);
 	FlowFileEventRecord &operator=(const FlowFileEventRecord &parent);
 
-};
-
-#define FLOWFILE_REPOSITORY_DIRECTORY "./flowfile_repository"
-#define MAX_FLOWFILE_REPOSITORY_STORAGE_SIZE (10*1024*1024) // 10M
-#define MAX_FLOWFILE_REPOSITORY_ENTRY_LIFE_TIME (600000) // 10 minute
-#define FLOWFILE_REPOSITORY_PURGE_PERIOD (2500) // 2500 msec
-
-//! FlowFile Repository
-class FlowFileRepository : public Repository
-{
-public:
-	//! Constructor
-	/*!
-	 * Create a new provenance repository
-	 */
-	FlowFileRepository()
-	 : Repository(Repository::FLOWFILE, FLOWFILE_REPOSITORY_DIRECTORY,
-			MAX_FLOWFILE_REPOSITORY_ENTRY_LIFE_TIME, MAX_FLOWFILE_REPOSITORY_STORAGE_SIZE, FLOWFILE_REPOSITORY_PURGE_PERIOD)
-	{
-	}
-	//! Destructor
-	virtual ~FlowFileRepository() {
-	}
-	//! Load Repo to Connections
-	void loadFlowFileToConnections(std::map<std::string, Connection *> *connectionMap);
-
-protected:
-
-private:
-
-	// Prevent default copy constructor and assignment operation
-	// Only support pass by reference or pointer
-	FlowFileRepository(const FlowFileRepository &parent);
-	FlowFileRepository &operator=(const FlowFileRepository &parent);
 };
 
 #endif
