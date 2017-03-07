@@ -20,6 +20,8 @@
 #include "FlowController.h"
 #include "ProvenanceTestHelper.h"
 #include "../TestBase.h"
+#include <memory>
+#include "../../include/LogAppenders.h"
 #include "GetFile.h"
 
 
@@ -33,10 +35,18 @@ TEST_CASE("Test Find file", "[getfileCreate2]"){
 
 	TestController testController;
 
-	testController.enableDebug();
+	Configure *config = Configure::getConfigure();
 
-	ProvenanceTestRepository repo;
-	TestFlowController controller(repo);
+	config->set(BaseLogger::nifi_log_appender,"rollingappender");
+	config->set(OutputStreamAppender::nifi_log_output_stream_error_stderr,"true");
+	std::shared_ptr<Logger> logger = Logger::getLogger();
+	std::unique_ptr<BaseLogger> newLogger =LogInstance::getConfiguredLogger(config);
+	logger->updateLogger(std::move(newLogger));
+	logger->setLogLevel("debug");
+
+	ProvenanceTestRepository provenanceRepo;
+	FlowTestRepository flowRepo;
+	TestFlowController controller(provenanceRepo, flowRepo);
 	FlowControllerFactory::getFlowController( dynamic_cast<FlowController*>(&controller));
 
 	GetFile processor("getfileCreate2");
@@ -54,7 +64,7 @@ TEST_CASE("Test Find file", "[getfileCreate2]"){
 	// link the connections so that we can test results at the end for this
 
 	connection.setSourceProcessor(&processor);
-
+	connection.setDestinationProcessor(&processor);
 
 	connection.setSourceProcessorUUID(processoruuid);
 	connection.setDestinationProcessorUUID(processoruuid);
@@ -65,7 +75,6 @@ TEST_CASE("Test Find file", "[getfileCreate2]"){
 	ProcessContext context(&processor);
 	context.setProperty(GetFile::Directory,dir);
 	ProcessSession session(&context);
-
 
 	REQUIRE( processor.getName() == "getfileCreate2");
 
@@ -82,13 +91,16 @@ TEST_CASE("Test Find file", "[getfileCreate2]"){
 
 	std::fstream file;
 	std::stringstream ss;
-	ss << dir << "/" << "tstFile.ext";
+	std::string fileName("tstFile.ext");
+	ss << dir << "/" << fileName;
 	file.open(ss.str(),std::ios::out);
 	file << "tempFile";
+	int64_t fileSize = file.tellp();
 	file.close();
 
 	processor.incrementActiveTasks();
 	processor.setScheduledState(ScheduledState::RUNNING);
+
 	processor.onTrigger(&context,&session);
 	unlink(ss.str().c_str());
 	rmdir(dir);
@@ -103,6 +115,20 @@ TEST_CASE("Test Find file", "[getfileCreate2]"){
 	}
 	session.commit();
 
+        // verify flow file repo
+	REQUIRE( 1 == flowRepo.getRepoMap().size() );
+
+	for(auto  entry: flowRepo.getRepoMap())
+	{
+		FlowFileEventRecord newRecord;
+		newRecord.DeSerialize((uint8_t*)entry.second.data(),entry.second.length());
+		REQUIRE (fileSize == newRecord.getFileSize());
+		REQUIRE (0 == newRecord.getFileOffset());
+		std::map<std::string, std::string> attrs = newRecord.getAttributes();
+		std::string key = FlowAttributeKey(FILENAME);
+		REQUIRE (attrs[key] == fileName);
+	}
+
 	FlowFileRecord *ffr = session.get();
 
 	ffr->getResourceClaim()->decreaseFlowFileRecordOwnedCount();
@@ -111,9 +137,9 @@ TEST_CASE("Test Find file", "[getfileCreate2]"){
 
 	std::set<FlowFileRecord*> expiredFlows;
 
-	REQUIRE( 2 == repo.getRepoMap().size() );
+	REQUIRE( 2 == provenanceRepo.getRepoMap().size() );
 
-	for(auto  entry: repo.getRepoMap())
+	for(auto  entry: provenanceRepo.getRepoMap())
 	{
 		ProvenanceEventRecord newRecord;
 		newRecord.DeSerialize((uint8_t*)entry.second.data(),entry.second.length());
@@ -134,9 +160,9 @@ TEST_CASE("Test Find file", "[getfileCreate2]"){
 		}
 		if (!found)
 		throw std::runtime_error("Did not find record");
-
-
 	}
+
+
 
 
 
