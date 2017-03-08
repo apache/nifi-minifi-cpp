@@ -106,13 +106,18 @@ int8_t Socket::createConnection(const addrinfo *p) {
 		sa_loc->sin_family = AF_INET;
 		//sa_loc->sin_port = htons(port);
 		sa_loc->sin_port = htons(port_);
-		sa_loc->sin_addr.s_addr = htonl(INADDR_ANY); // inet_addr(requested_hostname.c_str());
+		// use any address if you are connecting to the local machine for testing
+		// otherwise we must use the requested hostname
+		if (IsNullOrEmpty(requested_hostname_) || requested_hostname_=="localhost")
+		  sa_loc->sin_addr.s_addr = htonl(INADDR_ANY);
+		else
+		  sa_loc->sin_addr.s_addr = inet_addr(requested_hostname_.c_str());
 		if (connect(socket_file_descriptor_, p->ai_addr, p->ai_addrlen) == -1) {
 			  close(socket_file_descriptor_);
 				socket_file_descriptor_ = -1;
 				logger_->log_warn("Could not connect to socket, error:%s", strerror(errno));
 				return -1;
-			
+
 		}
 	  }
 	}
@@ -142,7 +147,7 @@ short Socket::initialize() {
 	hints.ai_flags = AI_CANONNAME;
 	if (listeners_ > 0)
 	    hints.ai_flags |= AI_PASSIVE;
-	  
+
 	hints.ai_protocol = 0; /* any protocol */
 
 	int errcode = getaddrinfo(requested_hostname_.c_str(), 0, &hints, &addr_info_);
@@ -209,9 +214,9 @@ short Socket::select_descriptor(const uint16_t msec) {
 					socket_max_ = newfd;
 				}
 				return newfd;
-				
-				
-				
+
+
+
 			  }
 			  else{
 			    return socket_file_descriptor_;
@@ -289,7 +294,7 @@ int Socket::writeData(uint8_t *value, int size) {
 	while (bytes < size) {
 
 
-	  
+
 		ret = send(socket_file_descriptor_, value + bytes, size - bytes, 0);
 		//check for errors
 		if (ret <= 0) {
@@ -298,7 +303,7 @@ int Socket::writeData(uint8_t *value, int size) {
 			return ret;
 		}
 		bytes += ret;
-		
+
 	}
 
 	if (ret)
@@ -319,7 +324,7 @@ inline std::vector<uint8_t> Socket::readBuffer(const T& t) {
 
 
 int Socket::write(uint64_t base_value, bool is_little_endian){
-  
+
   return Serializable::write(base_value,this,is_little_endian);
 }
 

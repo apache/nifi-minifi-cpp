@@ -29,7 +29,7 @@ TEST_CASE("TestSocket", "[TestSocket1]") {
 
 TEST_CASE("TestSocketWriteTest1", "[TestSocket2]") {
 
-	Socket socket(Socket::getMyHostName(),8183);
+	Socket socket("localhost",8183);
 	REQUIRE(-1 == socket.initialize() );
 
 	socket.writeData(0,0);
@@ -48,11 +48,11 @@ TEST_CASE("TestSocketWriteTest2", "[TestSocket3]") {
 		std::vector<uint8_t> buffer;
 	buffer.push_back('a');
 
-	Socket server(Socket::getMyHostName(),9183,1);
+	Socket server("localhost",9183,1);
 
 	REQUIRE(-1 != server.initialize() );
 
-	Socket client(Socket::getMyHostName(),9183);
+	Socket client("localhost",9183);
 
 	REQUIRE(-1 != client.initialize() );
 
@@ -85,11 +85,11 @@ TEST_CASE("TestWriteEndian64", "[TestSocket4]") {
 		std::vector<uint8_t> buffer;
 	buffer.push_back('a');
 
-	Socket server(Socket::getMyHostName(),9183,1);
+	Socket server("localhost",9183,1);
 
 	REQUIRE(-1 != server.initialize() );
 
-	Socket client(Socket::getMyHostName(),9183);
+	Socket client("localhost",9183);
 
 	REQUIRE(-1 != client.initialize() );
 
@@ -115,11 +115,11 @@ TEST_CASE("TestWriteEndian32", "[TestSocket5]") {
 		std::vector<uint8_t> buffer;
 	buffer.push_back('a');
 
-	Socket server(Socket::getMyHostName(),9183,1);
+	Socket server("localhost",9183,1);
 
 	REQUIRE(-1 != server.initialize() );
 
-	Socket client(Socket::getMyHostName(),9183);
+	Socket client("localhost",9183);
 
 	REQUIRE(-1 != client.initialize() );
 
@@ -157,11 +157,11 @@ TEST_CASE("TestSocketWriteTestAfterClose", "[TestSocket6]") {
 		std::vector<uint8_t> buffer;
 	buffer.push_back('a');
 
-	Socket server(Socket::getMyHostName(),9183,1);
+	Socket server("localhost",9183,1);
 
 	REQUIRE(-1 != server.initialize() );
 
-	Socket client(Socket::getMyHostName(),9183);
+	Socket client("localhost",9183);
 
 	REQUIRE(-1 != client.initialize() );
 
