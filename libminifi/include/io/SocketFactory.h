@@ -61,7 +61,11 @@ public:
 	std::unique_ptr<Socket> createSocket(const std::string &host, const uint16_t port) {
 		Socket *socket = 0;
 		if (is_secure_) {
+#ifdef OPENSSL_SUPPORT
 			socket = new TLSSocket(host, port);
+#else
+			socket = 0;
+#endif
 		} else {
 			socket = new Socket(host, port);
 		}

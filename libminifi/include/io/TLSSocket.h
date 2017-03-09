@@ -18,6 +18,7 @@
 #ifndef LIBMINIFI_INCLUDE_IO_TLSSOCKET_H_
 #define LIBMINIFI_INCLUDE_IO_TLSSOCKET_H_
 
+#ifdef OPENSSL_SUPPORT
 #include <cstdint>
 #include "ClientSocket.h"
 #include <atomic>
@@ -108,8 +109,8 @@ private:
 	SSL_CTX *ctx;
 
 	short error_value;
-
 	static std::atomic<TLSContext*> context_instance;
+
 	static std::mutex context_mutex;
 };
 
@@ -181,5 +182,6 @@ protected:
 	SSL* ssl;
 
 };
+#endif
 
 #endif /* LIBMINIFI_INCLUDE_IO_TLSSOCKET_H_ */
