@@ -36,6 +36,14 @@ ENDIF(POLICY CMP0048)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+IF (IOS)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fobjc-abi-version=2 -fobjc-arc -std=gnu++11 -stdlib=libc++ -isysroot ${CMAKE_OSX_SYSROOT} -DIOS")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fobjc-abi-version=2 -fobjc-arc -isysroot ${CMAKE_OSX_SYSROOT} -DIOS")
+ELSE ()
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DLEVELDB_SUPPORT -DOPENSSL_SUPPORT -DYAML_SUPPORT")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DLEVELDB_SUPPORT -DOPENSSL_SUPPORT -DYAML_SUPPORT")
+ENDIF()
+
 include(CheckCXXCompilerFlag)
 CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
 CHECK_CXX_COMPILER_FLAG("-std=c++0x" COMPILER_SUPPORTS_CXX0X)
@@ -60,13 +68,14 @@ file(GLOB SPD_SOURCES "../include/spdlog/*")
 add_library(spdlog STATIC ${SPD_SOURCES})
 add_library(minifi STATIC ${SOURCES})
 
+find_package(ZLIB REQUIRED)
+include_directories(${ZLIB_INCLUDE_DIRS})
+target_link_libraries (minifi ${ZLIB_LIBRARIES})
+
+if (NOT IOS)
 # Include Boost System
 find_package(Boost COMPONENTS system REQUIRED)
 target_link_libraries(minifi ${Boost_SYSTEM_LIBRARY})
-find_package(ZLIB REQUIRED)
-
-include_directories(${ZLIB_INCLUDE_DIRS})
-target_link_libraries (minifi ${ZLIB_LIBRARIES})
 
 # Include LevelDB
 find_package (Leveldb REQUIRED)
@@ -85,3 +94,4 @@ if (OPENSSL_FOUND)
 else ()
     message( FATAL_ERROR "OpenSSL was not found. Please install OpenSSL" )
 endif (OPENSSL_FOUND)
+endif ()

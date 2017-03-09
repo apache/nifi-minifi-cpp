@@ -32,10 +32,12 @@
 #include <thread>
 #include <vector>
 
+#ifdef LEVELDB_SUPPORT
 #include "leveldb/db.h"
 #include "leveldb/options.h"
 #include "leveldb/slice.h"
 #include "leveldb/status.h"
+#endif
 #include "Configure.h"
 #include "Connection.h"
 #include "FlowFileRecord.h"
@@ -71,7 +73,9 @@ public:
 		_purgePeriod = purgePeriod;
 		logger_ = Logger::getLogger();
 		configure_ = Configure::getConfigure();
+#ifdef LEVELDB_SUPPORT
 		_db = NULL;
+#endif
 		_thread = NULL;
 		_running = false;
 		_repoFull = false;
@@ -91,6 +95,7 @@ public:
 	{
 		std::string value;
 
+#ifdef LEVELDB_SUPPORT
 		if (_type == PROVENANCE)
 		{
 			if (!(configure_->get(Configure::nifi_provenance_repository_enable, value)
@@ -174,10 +179,14 @@ public:
 		}
 
 		return true;
+#else
+		return false;
+#endif
 	}
 	//! Put
 	virtual bool Put(std::string key, uint8_t *buf, int bufLen)
 	{
+#ifdef LEVELDB_SUPPORT
 		if (!_enable)
 			return false;
 			
@@ -189,10 +198,14 @@ public:
 			return true;
 		else
 			return false;
+#else
+		return false;
+#endif
 	}
 	//! Delete
 	virtual bool Delete(std::string key)
 	{
+#ifdef LEVELDB_SUPPORT
 		if (!_enable)
 			return false;
 		leveldb::Status status;
@@ -201,10 +214,14 @@ public:
 			return true;
 		else
 			return false;
+#else
+		return false;
+#endif
 	}
 	//! Get
 	virtual bool Get(std::string key, std::string &value)
 	{
+#ifdef LEVELDB_SUPPORT
 		if (!_enable)
 			return false;
 		leveldb::Status status;
@@ -213,6 +230,9 @@ public:
 			return true;
 		else
 			return false;
+#else
+		return false;
+#endif
 	}
 	//! Run function for the thread
 	static void run(Repository *repo);
@@ -248,8 +268,10 @@ protected:
 	int64_t _maxPartitionBytes;
 	//! purge period
 	uint64_t _purgePeriod;
+#ifdef LEVELDB_SUPPORT
 	//! level DB database
 	leveldb::DB* _db;
+#endif
 	//! thread
 	std::thread *_thread;
 	//! whether the monitoring thread is running for the repo while it was enabled 
@@ -279,11 +301,13 @@ private:
 	//! destroy
 	void destroy()
 	{
+#ifdef LEVELDB_SUPPORT
 		if (_db)
 		{
 			delete _db;
 			_db = NULL;
 		}
+#endif
 	}
 	// Prevent default copy constructor and assignment operation
 	// Only support pass by reference or pointer

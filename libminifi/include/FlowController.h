@@ -28,8 +28,9 @@
 #include <atomic>
 #include <algorithm>
 #include <set>
+#ifdef YAML_SUPPORT
 #include "yaml-cpp/yaml.h"
-
+#endif
 #include "Configure.h"
 #include "Property.h"
 #include "Relationship.h"
@@ -56,8 +57,10 @@
 #include "ExecuteProcess.h"
 #include "AppendHostInfo.h"
 // OpenSSL related
+#ifdef OPENSSL_SUPPORT
 #include <openssl/ssl.h>
 #include <openssl/err.h>
+#endif
 
 //! Default NiFi Root Group Name
 #define DEFAULT_ROOT_GROUP_NAME ""
@@ -293,6 +296,7 @@ private:
 	std::shared_ptr<Logger> logger_;
 	Configure *configure_;
 
+#ifdef YAML_SUPPORT
 	//! Process Processor Node YAML
 	void parseProcessorNodeYaml(YAML::Node processorNode, ProcessGroup *parent);
 	//! Process Port YAML
@@ -310,6 +314,7 @@ private:
 	//! Parse Properties Node YAML for a processor
 	void parsePropertiesNodeYaml(YAML::Node *propertiesNode,
 			Processor *processor);
+#endif
 
 	// Prevent default copy constructor and assignment operation
 	// Only support pass by reference or pointer

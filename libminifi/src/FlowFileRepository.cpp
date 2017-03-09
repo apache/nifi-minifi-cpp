@@ -225,6 +225,7 @@ bool FlowFileEventRecord::DeSerialize(const uint8_t *buffer, const int bufferSiz
 
 void FlowFileRepository::loadFlowFileToConnections(std::map<std::string, Connection *> *connectionMap)
 {
+#ifdef LEVELDB_SUPPORT
 	if (!_enable)
 		return;
 
@@ -274,6 +275,7 @@ void FlowFileRepository::loadFlowFileToConnections(std::map<std::string, Connect
 										eventId.c_str());
 		Delete(eventId);
 	}
+#endif
 
 	return;
 }
