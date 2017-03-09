@@ -24,8 +24,10 @@
 #include <mutex>
 
 #include "Configure.h"
+#ifdef OPENSSL_SUPPORT
 #include <openssl/ssl.h>
 #include <openssl/err.h>
+#endif
 
 #define TLS_ERROR_CONTEXT 1
 #define TLS_ERROR_PEM_MISSING 2
@@ -61,13 +63,17 @@ public:
 	}
 
 	virtual ~TLSContext() {
+#ifdef OPENSSL_SUPPORT
 		if (0 != ctx)
 			SSL_CTX_free(ctx);
+#endif
 	}
 
+#ifdef OPENSSL_SUPPORT
 	SSL_CTX *getContext() {
 		return ctx;
 	}
+#endif
 
 	short getError() {
 		return error_value;
@@ -105,11 +111,13 @@ private:
 
 	std::shared_ptr<Logger> logger_;
 	Configure *configuration;
+#ifdef OPENSSL_SUPPORT
 	SSL_CTX *ctx;
+#endif
 
 	short error_value;
-
 	static std::atomic<TLSContext*> context_instance;
+
 	static std::mutex context_mutex;
 };
 
@@ -178,7 +186,9 @@ public:
 
 protected:
 
+#ifdef OPENSSL_SUPPORT
 	SSL* ssl;
+#endif
 
 };
 
