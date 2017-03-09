@@ -207,7 +207,7 @@ protected:
 	 * @param p addrinfo structure.
 	 * @returns fd.
 	 */
-	virtual int8_t createConnection(const addrinfo *p);
+	virtual int8_t createConnection(const addrinfo *p,in_addr_t &addr);
 
 	/**
 	 * Sets socket options depending on the instance.
