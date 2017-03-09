@@ -109,9 +109,13 @@ int8_t Socket::createConnection(const addrinfo *p) {
 		// use any address if you are connecting to the local machine for testing
 		// otherwise we must use the requested hostname
 		if (IsNullOrEmpty(requested_hostname_) || requested_hostname_=="localhost")
+		{
 		  sa_loc->sin_addr.s_addr = htonl(INADDR_ANY);
+		}
 		else
+		{
 		  sa_loc->sin_addr.s_addr = inet_addr(requested_hostname_.c_str());
+		}
 		if (connect(socket_file_descriptor_, p->ai_addr, p->ai_addrlen) == -1) {
 			  close(socket_file_descriptor_);
 				socket_file_descriptor_ = -1;
