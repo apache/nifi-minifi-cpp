@@ -78,7 +78,7 @@ void Socket::closeStream()
     }
 }
 
-int8_t Socket::createConnection(const addrinfo *p) {
+int8_t Socket::createConnection(const addrinfo *p,in_addr_t &addr) {
 	if ((socket_file_descriptor_ = socket(p->ai_family, p->ai_socktype,
 			p->ai_protocol)) == -1) {
 		logger_->log_error("error while connecting to server socket");
@@ -114,7 +114,7 @@ int8_t Socket::createConnection(const addrinfo *p) {
 		}
 		else
 		{
-		  sa_loc->sin_addr.s_addr = inet_addr(requested_hostname_.c_str());
+		  sa_loc->sin_addr.s_addr = addr;
 		}
 		if (connect(socket_file_descriptor_, p->ai_addr, p->ai_addrlen) == -1) {
 			  close(socket_file_descriptor_);
@@ -163,6 +163,25 @@ short Socket::initialize() {
 
 	socket_file_descriptor_ = -1;
 
+	in_addr_t addr;
+	  struct hostent *h;
+	#ifdef __MACH__
+	  h = gethostbyname(requested_hostname_.c_str());
+	#else
+	  const char *host;
+    uint16_t port;
+
+    host = requested_hostname_.c_str();
+    port = port_;
+	  char buf[1024];
+	  struct hostent he;
+	  int hh_errno;
+	  gethostbyname_r(host, &he, buf, sizeof(buf), &h, &hh_errno);
+	#endif
+
+	  memcpy((char *) &addr, h->h_addr_list[0], h->h_length);
+
+
 	auto p = addr_info_;
 	for (; p != NULL; p = p->ai_next) {
 		if (IsNullOrEmpty(canonical_hostname_)) {
@@ -170,8 +189,9 @@ short Socket::initialize() {
 				canonical_hostname_ = p->ai_canonname;
 		}
 
+
 		//we've successfully connected
-		if (port_ > 0 && createConnection(p) >= 0)
+		if (port_ > 0 && createConnection(p,addr) >= 0)
 		{
 			return 0;
 			break;
