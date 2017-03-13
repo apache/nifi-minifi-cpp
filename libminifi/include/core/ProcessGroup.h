@@ -146,7 +146,8 @@ class ProcessGroup {
   void updatePropertyValue(std::string processorName, std::string propertyName,
                            std::string propertyValue);
 
-  void getConnections(std::map<std::string, Connection*> &connectionMap);
+  void getConnections(
+      std::map<std::string, std::shared_ptr<Connection>> &connectionMap);
 
  protected:
   // A global unique identifier

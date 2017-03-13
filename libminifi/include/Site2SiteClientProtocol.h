@@ -36,7 +36,7 @@
 #include <uuid/uuid.h>
 
 #include "core/Property.h"
-#include "Configure.h"
+#include "properties/Configure.h"
 #include "Site2SitePeer.h"
 #include "FlowFileRecord.h"
 #include "core/logging/Logger.h"
@@ -396,10 +396,10 @@ class Site2SiteClientProtocol {
   /*!
    * Create a new control protocol
    */
-  Site2SiteClientProtocol(Site2SitePeer *peer) {
+  Site2SiteClientProtocol(std::unique_ptr<Site2SitePeer> peer) {
     logger_ = logging::Logger::getLogger();
     configure_ = Configure::getConfigure();
-    peer_ = peer;
+    peer_ = std::move(peer);
     _batchSize = 0;
     _batchCount = 0;
     _batchDuration = 0;
@@ -419,6 +419,7 @@ class Site2SiteClientProtocol {
   }
   // Destructor
   virtual ~Site2SiteClientProtocol() {
+    tearDown();
   }
 
  public:
@@ -442,8 +443,8 @@ class Site2SiteClientProtocol {
 
   }
 
-  void setPeer(Site2SitePeer *peer) {
-    peer_ = peer;
+  void setPeer(std::unique_ptr<Site2SitePeer> peer) {
+    peer_ = std::move(peer);
   }
   /**
    * Provides a reference to the time out
@@ -507,10 +508,7 @@ class Site2SiteClientProtocol {
     }
     return NULL;
   }
-  // getPeer
-  Site2SitePeer *getPeer() {
-    return peer_;
-  }
+
   // Creation of a new transaction, return the transaction ID if success,
   // Return NULL when any error occurs
   Transaction *createTransaction(std::string &transactionID,
@@ -611,7 +609,7 @@ class Site2SiteClientProtocol {
   // Timeout in msec
   std::atomic<uint64_t> _timeOut;
   // Peer Connection
-  Site2SitePeer *peer_;
+  std::unique_ptr<Site2SitePeer> peer_;
   // portId
   uuid_t _portId;
   // portIDStr

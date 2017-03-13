@@ -18,8 +18,13 @@
 #ifndef LIBMINIFI_INCLUDE_CORE_REPOSITORY_FLOWFILEREPOSITORY_H_
 #define LIBMINIFI_INCLUDE_CORE_REPOSITORY_FLOWFILEREPOSITORY_H_
 
+#include "leveldb/db.h"
+#include "leveldb/options.h"
+#include "leveldb/slice.h"
+#include "leveldb/status.h"
 #include "core/Repository.h"
 #include "core/core.h"
+#include "Connection.h"
 
 namespace org {
 namespace apache {
@@ -39,17 +44,24 @@ namespace repository {
  * Flow File repository
  * Design: Extends Repository and implements the run function, using LevelDB as the primary substrate.
  */
-class FlowFileRepository : public Repository {
+class FlowFileRepository : public core::Repository, public std::enable_shared_from_this<FlowFileRepository> {
  public:
   // Constructor
 
+
+   
   FlowFileRepository(std::string directory, int64_t maxPartitionMillis,
                      int64_t maxPartitionBytes, uint64_t purgePeriod)
-      : Repository(getClassName<FlowFileRepository>(), directory,
+      : Repository(core::getClassName<FlowFileRepository>(), directory,
                    maxPartitionMillis, maxPartitionBytes, purgePeriod)
 
   {
     db_ = NULL;
+  }
+  
+  FlowFileRepository() : FlowFileRepository(FLOWFILE_REPOSITORY_DIRECTORY,
+			MAX_FLOWFILE_REPOSITORY_ENTRY_LIFE_TIME, MAX_FLOWFILE_REPOSITORY_STORAGE_SIZE, FLOWFILE_REPOSITORY_PURGE_PERIOD)
+  {
   }
 
   // Destructor
@@ -101,7 +113,49 @@ class FlowFileRepository : public Repository {
   }
 
   virtual void run();
-
+  
+  virtual bool Put(std::string key, uint8_t *buf, int bufLen)
+  {
+		  
+	  // persistent to the DB
+	  leveldb::Slice value((const char *) buf, bufLen);
+	  leveldb::Status status;
+	  status = db_->Put(leveldb::WriteOptions(), key, value);
+	  if (status.ok())
+		  return true;
+	  else
+		  return false;
+  }
+  /**
+  * 
+  * Deletes the key
+  * @return status of the delete operation
+  */
+  virtual bool Delete(std::string key)
+  {
+	  leveldb::Status status;
+	  status = db_->Delete(leveldb::WriteOptions(), key);
+	  if (status.ok())
+		  return true;
+	  else
+		  return false;
+  }
+  /**
+    * Sets the value from the provided key
+    * @return status of the get operation.
+    */
+  virtual bool Get(std::string key, std::string &value)
+  {
+	  leveldb::Status status;
+	  status = db_->Get(leveldb::ReadOptions(), key, &value);
+	  if (status.ok())
+		  return true;
+	  else
+		  return false;
+  }
+  
+  void loadFlowFileToConnections(std::map<std::string, std::shared_ptr<minifi::Connection>> &connectionMap);
+  
  private:
   leveldb::DB* db_;
 };

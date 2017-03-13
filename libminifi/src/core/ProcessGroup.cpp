@@ -248,18 +248,16 @@ void ProcessGroup::updatePropertyValue(std::string processorName,
   return;
 }
 
-void ProcessGroup::getConnections(std::map<std::string, Connection*> &connectionMap)
- {
-   for (auto connection : connections_)
-   {
-     connectionMap[connection->getUUIDStr()] = connection;
-   }
+void ProcessGroup::getConnections(
+    std::map<std::string, std::shared_ptr<Connection>> &connectionMap) {
+  for (auto connection : connections_) {
+    connectionMap[connection->getUUIDStr()] = connection;
+  }
 
-   for (auto processGroup: child_process_groups_) {
-     processGroup->getConnections(connectionMap);
-   }
- }
-
+  for (auto processGroup : child_process_groups_) {
+    processGroup->getConnections(connectionMap);
+  }
+}
 
 void ProcessGroup::addConnection(std::shared_ptr<Connection> connection) {
   std::lock_guard<std::mutex> lock(mutex_);

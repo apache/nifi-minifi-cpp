@@ -27,12 +27,13 @@
 #include <mutex>
 #include <atomic>
 #include <algorithm>
-
+#include "core/core.h"
 #include "core/Connectable.h"
 #include "core/logging/Logger.h"
 #include "core/Relationship.h"
 #include "core/Connectable.h"
 #include "core/FlowFile.h"
+#include "core/Repository.h"
 
 namespace org {
 namespace apache {
@@ -181,7 +182,6 @@ class Connection : public core::Connectable,
   // Queue for the Flow File
   std::queue<std::shared_ptr<core::FlowFile>> queue_;
   // flow repository
-  std::shared_ptr<core::Repository> flow_repository_;
   // Logger
   std::shared_ptr<logging::Logger> logger_;
   // Prevent default copy constructor and assignment operation

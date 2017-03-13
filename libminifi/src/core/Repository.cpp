@@ -20,12 +20,12 @@
 #include <arpa/inet.h>
 #include "io/DataStream.h"
 #include "io/Serializable.h"
-#include "Relationship.h"
-#include "Logger.h"
+#include "core/Relationship.h"
+#include "core/logging/Logger.h"
 #include "FlowController.h"
 #include "core/Repository.h"
 #include "provenance/Provenance.h"
-#include "FlowFileRepository.h"
+#include "core/repository/FlowFileRepository.h"
 
 namespace org {
 namespace apache {
@@ -41,7 +41,7 @@ void Repository::start() {
   thread_ = std::thread(&Repository::threadExecutor, this);
   thread_.detach();
   running_ = true;
-  logger_->log_info("%s Repository Monitor Thread Start", name_);
+  logger_->log_info("%s Repository Monitor Thread Start", name_.c_str());
 }
 
 void Repository::stop() {
@@ -50,7 +50,7 @@ void Repository::stop() {
   running_ = false;
   if (thread_.joinable())
     thread_.join();
-  logger_->log_info("%s Repository Monitor Thread Stop", name_);
+  logger_->log_info("%s Repository Monitor Thread Stop", name_.c_str());
 }
 
 // repoSize

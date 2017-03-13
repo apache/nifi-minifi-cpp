@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "Configure.h"
+#include "properties/Configure.h"
 #include "io/TLSSocket.h"
 #include "utils/StringUtils.h"
 

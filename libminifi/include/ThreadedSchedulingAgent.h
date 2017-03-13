@@ -20,9 +20,10 @@
 #ifndef __THREADED_SCHEDULING_AGENT_H__
 #define __THREADED_SCHEDULING_AGENT_H__
 
-#include "Configure.h"
+#include "properties/Configure.h"
 #include "core/logging/Logger.h"
 #include "core/Processor.h"
+#include "core/Repository.h"
 #include "core/ProcessContext.h"
 #include "SchedulingAgent.h"
 
@@ -41,7 +42,7 @@ class ThreadedSchedulingAgent : public SchedulingAgent {
   /*!
    * Create a new processor
    */
-  ThreadedSchedulingAgent(std::shared_ptr<provenance::ProvenanceRepository> repo)
+  ThreadedSchedulingAgent(std::shared_ptr<core::Repository> repo)
       : SchedulingAgent(repo) {
   }
   // Destructor

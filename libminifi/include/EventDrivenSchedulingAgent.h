@@ -38,7 +38,7 @@ class EventDrivenSchedulingAgent : public ThreadedSchedulingAgent {
   /*!
    * Create a new processor
    */
-  EventDrivenSchedulingAgent(std::shared_ptr<provenance::ProvenanceRepository> repo)
+  EventDrivenSchedulingAgent(std::shared_ptr<core::Repository> repo)
       : ThreadedSchedulingAgent(repo) {
   }
   // Destructor

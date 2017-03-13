@@ -32,13 +32,7 @@
 #include <thread>
 #include <vector>
 
-#include "leveldb/db.h"
-#include "leveldb/options.h"
-#include "leveldb/slice.h"
-#include "leveldb/status.h"
-#include "Configure.h"
-#include "Connection.h"
-#include "FlowFileRecord.h"
+#include "properties/Configure.h"
 #include "core/logging/Logger.h"
 #include "core/Property.h"
 #include "ResourceClaim.h"
@@ -87,7 +81,7 @@ class Repository : public CoreComponent {
   virtual bool Get(std::string key, std::string &value) = 0;
 
   // Run function for the thread
-    void run() = 0;
+  virtual  void run() = 0;
   // Start the repository monitor thread
   virtual void start();
   // Stop the repository monitor thread
@@ -102,7 +96,7 @@ class Repository : public CoreComponent {
   }
   uint64_t incrementSize(const char *fpath, const struct stat *sb,
                          int typeflag) {
-    return (repo_full_ += sb->st_size);
+    return (repo_size_ += sb->st_size);
   }
 
   // Prevent default copy constructor and assignment operation

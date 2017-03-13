@@ -17,6 +17,10 @@
 #ifndef LIBMINIFI_INCLUDE_PROVENANCE_PROVENANCEREPOSITORY_H_
 #define LIBMINIFI_INCLUDE_PROVENANCE_PROVENANCEREPOSITORY_H_
 
+#include "leveldb/db.h"
+#include "leveldb/options.h"
+#include "leveldb/slice.h"
+#include "leveldb/status.h"
 #include "core/Repository.h"
 #include "core/core.h"
 namespace org {
@@ -141,7 +145,7 @@ class ProvenanceRepository : public core::Repository,
     }
   }
   // Run function for the thread
-  static void run();
+   void run();
 
   // Prevent default copy constructor and assignment operation
   // Only support pass by reference or pointer

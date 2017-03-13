@@ -24,6 +24,7 @@
 #include "provenance/Provenance.h"
 #include "FlowFileRecord.h"
 #include "core/core.h"
+#include "core/repository/FlowFileRepository.h"
 
 TEST_CASE("Test Provenance record create", "[Testprovenance::ProvenanceEventRecord]") {
 
@@ -46,9 +47,8 @@ TEST_CASE("Test Provenance record serialization", "[Testprovenance::ProvenanceEv
   std::string smileyface = ":)";
   record1.setDetails(smileyface);
 
-  ProvenanceTestRepository repo;
   uint64_t sample = 65555;
-  std::shared_ptr<ProvenanceTestRepository> testRepository =std::make_shared<ProvenanceTestRepository>();
+  std::shared_ptr<core::Repository> testRepository =std::make_shared<TestRepository>();
   record1.setEventDuration(sample);
 
   record1.Serialize(testRepository);
@@ -71,14 +71,14 @@ TEST_CASE("Test Flowfile record added to provenance", "[TestFlowAndProv1]") {
   std::map<std::string, std::string> attributes;
   attributes.insert(std::pair<std::string, std::string>("potato", "potatoe"));
   attributes.insert(std::pair<std::string, std::string>("tomato", "tomatoe"));
+  std::shared_ptr<core::repository::FlowFileRepository> frepo = std::make_shared<core::repository::FlowFileRepository>("./content_repository",0,0,0);
   std::shared_ptr<minifi::FlowFileRecord> ffr1 = std::make_shared<
-      minifi::FlowFileRecord>(attributes);
+      minifi::FlowFileRecord>(frepo,attributes);
 
   record1.addChildFlowFile(ffr1);
 
-  ProvenanceTestRepository repo;
-  uint64_t sample = 65555;
-  std::shared_ptr<ProvenanceTestRepository> testRepository =std::make_shared<ProvenanceTestRepository>();
+   uint64_t sample = 65555;
+  std::shared_ptr<core::Repository> testRepository =std::make_shared<TestRepository>();
   record1.setEventDuration(sample);
 
   record1.Serialize(testRepository);

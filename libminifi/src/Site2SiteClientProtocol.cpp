@@ -518,7 +518,7 @@ Transaction* Site2SiteClientProtocol::createTransaction(
       return NULL;
     }
 
-    org::apache::nifi::minifi::io::CRCStream<Site2SitePeer> crcstream(peer_);
+    org::apache::nifi::minifi::io::CRCStream<Site2SitePeer> crcstream(peer_.get());
     switch (code) {
       case MORE_DATA:
         dataAvailable = true;
@@ -553,7 +553,7 @@ Transaction* Site2SiteClientProtocol::createTransaction(
       // tearDown();
       return NULL;
     } else {
-      org::apache::nifi::minifi::io::CRCStream<Site2SitePeer> crcstream(peer_);
+      org::apache::nifi::minifi::io::CRCStream<Site2SitePeer> crcstream(peer_.get());
       transaction = new Transaction(direction, crcstream);
       _transactionMap[transaction->getUUIDStr()] = transaction;
       transactionID = transaction->getUUIDStr();

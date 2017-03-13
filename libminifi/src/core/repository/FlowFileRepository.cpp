@@ -1,4 +1,5 @@
 #include "core/repository/FlowFileRepository.h"
+#include "FlowFileRecord.h"
 
 namespace org {
 namespace apache {
@@ -19,21 +20,21 @@ void FlowFileRepository::run() {
       leveldb::Iterator* it = db_->NewIterator(leveldb::ReadOptions());
 
       for (it->SeekToFirst(); it->Valid(); it->Next()) {
-        FlowFileEventRecord eventRead;
+        std::shared_ptr<FlowFileRecord> eventRead = std::make_shared<FlowFileRecord>(shared_from_this());
         std::string key = it->key().ToString();
-        if (eventRead.DeSerialize((uint8_t *) it->value().data(),
+        if (eventRead->DeSerialize((uint8_t *) it->value().data(),
                                   (int) it->value().size())) {
-          if ((curTime - eventRead.getEventTime()) > max_partition_millis_)
+          if ((curTime - eventRead->getEventTime()) > max_partition_millis_)
             purgeList.push_back(key);
         } else {
-          logger_->log_debug("NiFi %s retrieve event %s fail", name_,
+          logger_->log_debug("NiFi %s retrieve event %s fail", name_.c_str(),
                              key.c_str());
           purgeList.push_back(key);
         }
       }
       delete it;
       for (auto eventId : purgeList) {
-        logger_->log_info("Repository Repo %s Purge %s", name_,
+        logger_->log_info("Repository Repo %s Purge %s", name_.c_str(),
                           eventId.c_str());
         Delete(eventId);
       }
@@ -46,7 +47,7 @@ void FlowFileRepository::run() {
   return;
 }
 
-void FlowFileRepository::loadFlowFileToConnections(std::map<std::string, Connection *> &connectionMap)
+void FlowFileRepository::loadFlowFileToConnections(std::map<std::string, std::shared_ptr<minifi::Connection>> &connectionMap)
  {
 
   std::vector<std::string> purgeList;
@@ -55,25 +56,26 @@ void FlowFileRepository::loadFlowFileToConnections(std::map<std::string, Connect
 
   for (it->SeekToFirst(); it->Valid(); it->Next())
   {
-    FlowFileEventRecord eventRead;
+    std::shared_ptr<FlowFileRecord> eventRead = std::make_shared<FlowFileRecord>(shared_from_this());
     std::string key = it->key().ToString();
-    if (eventRead.DeSerialize((uint8_t *) it->value().data(),
+    if (eventRead->DeSerialize((uint8_t *) it->value().data(),
         (int) it->value().size()))
     {
-      auto search = connectionMap->find(eventRead.getConnectionUuid());
-      if (search != connectionMap->end())
+      auto search = connectionMap.find(eventRead->getConnectionUuid());
+      if (search != connectionMap.end())
       {
         // we find the connection for the persistent flowfile, create the flowfile and enqueue that
-        FlowFileRecord *record = new FlowFileRecord(&eventRead);
+	std::shared_ptr<core::FlowFile> flow_file_ref = std::static_pointer_cast<core::FlowFile>(eventRead);
+        std::shared_ptr<FlowFileRecord> record = std::make_shared<FlowFileRecord>(shared_from_this(),flow_file_ref);
         // set store to repo to true so that we do need to persistent again in enqueue
         record->setStoredToRepository(true);
         search->second->put(record);
       }
       else
       {
-        if (eventRead.getContentFullPath().length() > 0)
+        if (eventRead->getContentFullPath().length() > 0)
         {
-          std::remove(eventRead.getContentFullPath().c_str());
+          std::remove(eventRead->getContentFullPath().c_str());
         }
         purgeList.push_back(key);
       }
@@ -91,13 +93,13 @@ void FlowFileRepository::loadFlowFileToConnections(std::map<std::string, Connect
   {
     std::string eventId = *itPurge;
     logger_->log_info("Repository Repo %s Purge %s",
-                    RepositoryTypeStr[_type],
+                    name_.c_str(),
                     eventId.c_str());
     Delete(eventId);
   }
- +
+
   return;
- +}
+}
 
 } /* namespace repository */
 } /* namespace core */

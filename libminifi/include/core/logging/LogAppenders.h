@@ -22,7 +22,7 @@
 #include "spdlog/sinks/null_sink.h"
 #include "spdlog/sinks/ostream_sink.h"
 #include <cxxabi.h>
-#include "Configure.h"
+#include "properties/Configure.h"
 
 namespace org {
 namespace apache {

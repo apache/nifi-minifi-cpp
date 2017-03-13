@@ -23,6 +23,7 @@
 #include "core/logging/Logger.h"
 #include "core/Processor.h"
 #include "core/ProcessContext.h"
+#include "core/Repository.h"
 #include "ThreadedSchedulingAgent.h"
 
 namespace org {
@@ -36,7 +37,7 @@ class TimerDrivenSchedulingAgent : public ThreadedSchedulingAgent {
   /*!
    * Create a new processor
    */
-  TimerDrivenSchedulingAgent(std::shared_ptr<provenance::ProvenanceRepository> repo)
+  TimerDrivenSchedulingAgent(std::shared_ptr<core::Repository> repo)
       : ThreadedSchedulingAgent(repo) {
   }
   //  Destructor
