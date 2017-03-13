@@ -30,11 +30,12 @@
 #include <set>
 #include "yaml-cpp/yaml.h"
 
-#include "Configure.h"
+#include "properties/Configure.h"
 #include "core/Relationship.h"
 #include "FlowFileRecord.h"
 #include "Connection.h"
 #include "core/Processor.h"
+#include "core/logging/Logger.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/ProcessGroup.h"
@@ -109,7 +110,7 @@ class FlowController : public core::CoreComponent {
     return max_event_driven_threads_;
   }
   // Get the provenance repository
-  virtual std::shared_ptr<provenance::ProvenanceRepository> getProvenanceRepository() {
+  virtual std::shared_ptr<core::Repository> getProvenanceRepository() {
     return this->provenance_repo_;
   }
 
@@ -184,7 +185,7 @@ class FlowController : public core::CoreComponent {
   // Whether it has already been initialized (load the flow XML already)
   std::atomic<bool> initialized_;
   // Provenance Repo
-  std::shared_ptr<provenance::ProvenanceRepository> provenance_repo_;
+  std::shared_ptr<core::Repository> provenance_repo_;
 
   // FlowFile Repo
   std::shared_ptr<core::Repository> flow_file_repo_;
@@ -203,7 +204,7 @@ class FlowController : public core::CoreComponent {
 
   FlowController(std::shared_ptr<core::Repository> provenance_repo,
                  std::shared_ptr<core::Repository> flow_file_repo)
-      : root_(0),
+      : CoreComponent(core::getClassName<FlowController>()), root_(0),
         max_timer_driven_threads_(0),
         max_event_driven_threads_(0),
         running_(false),
@@ -212,14 +213,13 @@ class FlowController : public core::CoreComponent {
         flow_file_repo_(flow_file_repo),
         protocol_(0),
         _timerScheduler(provenance_repo_),
-        _eventScheduler(provenance_repo_),
-        logger_(logging::Logger::getLogger()) {
+        _eventScheduler(provenance_repo_){
+    if (provenance_repo == nullptr)
+      throw std::runtime_error("Provenance Repo should not be null");
+    if (flow_file_repo == nullptr)
+          throw std::runtime_error("Flow Repo should not be null");
   }
 
- private:
-
-  // Logger
-  std::shared_ptr<logging::Logger> logger_;
 
 };
 
@@ -269,7 +269,7 @@ class FlowControllerImpl : public FlowController {
   /*!
    * Create a new Flow Controller
    */
-  FlowControllerImpl(std::shared_ptr<provenance::ProvenanceRepository> repo,
+  FlowControllerImpl(std::shared_ptr<core::Repository> repo,std::shared_ptr<core::Repository> flow_file_repo,
                      std::string name = DEFAULT_ROOT_GROUP_NAME);
 
   // Prevent default copy constructor and assignment operation

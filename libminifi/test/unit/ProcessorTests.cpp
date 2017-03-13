@@ -20,11 +20,6 @@
 #include "FlowController.h"
 #include "ProvenanceTestHelper.h"
 #include "../TestBase.h"
-<<<<<<< HEAD
-#include <memory>
-#include "../../include/LogAppenders.h"
-#include "GetFile.h"
-=======
 #include "core/logging/LogAppenders.h"
 #include "core/logging/BaseLogger.h"
 #include "processors/GetFile.h"
@@ -39,7 +34,6 @@ TEST_CASE("Test Creation of GetFile", "[getfileCreate]") {
   org::apache::nifi::minifi::processors::GetFile processor("processorname");
   REQUIRE(processor.getName() == "processorname");
 }
->>>>>>> MINIFI-217: First commit. Updates namespaces and removes
 
 TEST_CASE("Test Find file", "[getfileCreate2]") {
 
@@ -47,40 +41,32 @@ TEST_CASE("Test Find file", "[getfileCreate2]") {
 
   testController.enableDebug();
 
-  std::shared_ptr<ProvenanceTestRepository> repo = std::make_shared<
-      ProvenanceTestRepository>();
+  
 
   std::shared_ptr<core::Processor> processor = std::make_shared<
       org::apache::nifi::minifi::processors::GetFile>("getfileCreate2");
 
-<<<<<<< HEAD
-	Configure *config = Configure::getConfigure();
+  std::shared_ptr<core::Repository> test_repo = std::make_shared<TestRepository>();
+  
+  std::shared_ptr<TestRepository> repo = std::static_pointer_cast<TestRepository>(test_repo);
+  std::shared_ptr<minifi::FlowController> controller =  std::make_shared<TestFlowController>(test_repo, test_repo);
 
-	config->set(BaseLogger::nifi_log_appender,"rollingappender");
-	config->set(OutputStreamAppender::nifi_log_output_stream_error_stderr,"true");
-	std::shared_ptr<Logger> logger = Logger::getLogger();
-	std::unique_ptr<BaseLogger> newLogger =LogInstance::getConfiguredLogger(config);
-	logger->updateLogger(std::move(newLogger));
-	logger->setLogLevel("debug");
+      
 
-	ProvenanceTestRepository provenanceRepo;
-	FlowTestRepository flowRepo;
-	TestFlowController controller(provenanceRepo, flowRepo);
-	FlowControllerFactory::getFlowController( dynamic_cast<FlowController*>(&controller));
-=======
   char format[] = "/tmp/gt.XXXXXX";
   char *dir = testController.createTempDirectory(format);
 
   uuid_t processoruuid;
   REQUIRE(true == processor->getUUID(processoruuid));
->>>>>>> MINIFI-217: First commit. Updates namespaces and removes
+
 
   std::shared_ptr<minifi::Connection> connection = std::make_shared<
-      minifi::Connection>("getfileCreate2Connection");
+      minifi::Connection>(test_repo,"getfileCreate2Connection");
   connection->setRelationship(core::Relationship("success", "description"));
 
   // link the connections so that we can test results at the end for this
   connection->setSource(processor);
+  connection->setDestination(processor);
 
   connection->setSourceUUID(processoruuid);
   connection->setDestinationUUID(processoruuid);
@@ -90,21 +76,17 @@ TEST_CASE("Test Find file", "[getfileCreate2]") {
 
   core::ProcessorNode node(processor);
 
-  core::ProcessContext context(node, repo);
+  core::ProcessContext context(node, test_repo);
   context.setProperty(org::apache::nifi::minifi::processors::GetFile::Directory,
                       dir);
   core::ProcessSession session(&context);
 
-<<<<<<< HEAD
-	connection.setSourceProcessor(&processor);
-	connection.setDestinationProcessor(&processor);
-=======
+
   REQUIRE(processor->getName() == "getfileCreate2");
 
   std::shared_ptr<core::FlowFile> record;
   processor->setScheduledState(core::ScheduledState::RUNNING);
   processor->onTrigger(&context, &session);
->>>>>>> MINIFI-217: First commit. Updates namespaces and removes
 
   provenance::ProvenanceReporter *reporter = session.getProvenanceReporter();
   std::set<provenance::ProvenanceEventRecord*> records = reporter->getEvents();
@@ -126,9 +108,8 @@ TEST_CASE("Test Find file", "[getfileCreate2]") {
   rmdir(dir);
   reporter = session.getProvenanceReporter();
 
-<<<<<<< HEAD
-	REQUIRE( processor.getName() == "getfileCreate2");
-=======
+  REQUIRE( processor->getName() == "getfileCreate2");
+
   records = reporter->getEvents();
 
   for (provenance::ProvenanceEventRecord *provEventRecord : records) {
@@ -136,7 +117,6 @@ TEST_CASE("Test Find file", "[getfileCreate2]") {
   }
   session.commit();
   std::shared_ptr<core::FlowFile> ffr = session.get();
->>>>>>> MINIFI-217: First commit. Updates namespaces and removes
 
   ffr->getResourceClaim()->decreaseFlowFileRecordOwnedCount();
   REQUIRE(2 == repo->getRepoMap().size());
@@ -161,27 +141,10 @@ TEST_CASE("Test Find file", "[getfileCreate2]") {
     if (!found)
       throw std::runtime_error("Did not find record");
 
-<<<<<<< HEAD
-	std::fstream file;
-	std::stringstream ss;
-	std::string fileName("tstFile.ext");
-	ss << dir << "/" << fileName;
-	file.open(ss.str(),std::ios::out);
-	file << "tempFile";
-	int64_t fileSize = file.tellp();
-	file.close();
 
-	processor.incrementActiveTasks();
-	processor.setScheduledState(ScheduledState::RUNNING);
-
-	processor.onTrigger(&context,&session);
-	unlink(ss.str().c_str());
-	rmdir(dir);
-=======
   }
 
 }
->>>>>>> MINIFI-217: First commit. Updates namespaces and removes
 
 TEST_CASE("LogAttributeTest", "[getfileCreate3]") {
   std::ostringstream oss;
@@ -196,32 +159,15 @@ TEST_CASE("LogAttributeTest", "[getfileCreate3]") {
 
   testController.enableDebug();
 
-<<<<<<< HEAD
-        // verify flow file repo
-	REQUIRE( 1 == flowRepo.getRepoMap().size() );
 
-	for(auto  entry: flowRepo.getRepoMap())
-	{
-		FlowFileEventRecord newRecord;
-		newRecord.DeSerialize((uint8_t*)entry.second.data(),entry.second.length());
-		REQUIRE (fileSize == newRecord.getFileSize());
-		REQUIRE (0 == newRecord.getFileOffset());
-		std::map<std::string, std::string> attrs = newRecord.getAttributes();
-		std::string key = FlowAttributeKey(FILENAME);
-		REQUIRE (attrs[key] == fileName);
-	}
-
-	FlowFileRecord *ffr = session.get();
-=======
-  std::shared_ptr<ProvenanceTestRepository> repo = std::make_shared<
-      ProvenanceTestRepository>();
+  std::shared_ptr<core::Repository> repo = std::make_shared<
+      TestRepository>();
 
   std::shared_ptr<core::Processor> processor = std::make_shared<
       org::apache::nifi::minifi::processors::GetFile>("getfileCreate2");
 
   std::shared_ptr<core::Processor> logAttribute = std::make_shared<
       org::apache::nifi::minifi::processors::LogAttribute>("logattribute");
->>>>>>> MINIFI-217: First commit. Updates namespaces and removes
 
   char format[] = "/tmp/gt.XXXXXX";
   char *dir = testController.createTempDirectory(format);
@@ -232,51 +178,24 @@ TEST_CASE("LogAttributeTest", "[getfileCreate3]") {
   uuid_t logattribute_uuid;
   REQUIRE(true == logAttribute->getUUID(logattribute_uuid));
 
-<<<<<<< HEAD
-	REQUIRE( 2 == provenanceRepo.getRepoMap().size() );
 
-	for(auto  entry: provenanceRepo.getRepoMap())
-	{
-		ProvenanceEventRecord newRecord;
-		newRecord.DeSerialize((uint8_t*)entry.second.data(),entry.second.length());
-
-		bool found = false;
-		for ( auto provRec : records)
-		{
-			if (provRec->getEventId() == newRecord.getEventId() )
-			{
-				REQUIRE( provRec->getEventId() == newRecord.getEventId());
-				REQUIRE( provRec->getComponentId() == newRecord.getComponentId());
-				REQUIRE( provRec->getComponentType() == newRecord.getComponentType());
-				REQUIRE( provRec->getDetails() == newRecord.getDetails());
-				REQUIRE( provRec->getEventDuration() == newRecord.getEventDuration());
-				found = true;
-				break;
-			}
-		}
-		if (!found)
-		throw std::runtime_error("Did not find record");
-	}
-=======
   std::shared_ptr<minifi::Connection> connection = std::make_shared<
-      minifi::Connection>("getfileCreate2Connection");
+      minifi::Connection>(repo,"getfileCreate2Connection");
   connection->setRelationship(core::Relationship("success", "description"));
 
   std::shared_ptr<minifi::Connection> connection2 = std::make_shared<
-      minifi::Connection>("logattribute");
+      minifi::Connection>(repo,"logattribute");
   connection2->setRelationship(core::Relationship("success", "description"));
 
   // link the connections so that we can test results at the end for this
   connection->setSource(processor);
->>>>>>> MINIFI-217: First commit. Updates namespaces and removes
+
 
   // link the connections so that we can test results at the end for this
   connection->setDestination(logAttribute);
 
-<<<<<<< HEAD
-=======
   connection2->setSource(logAttribute);
->>>>>>> MINIFI-217: First commit. Updates namespaces and removes
+
 
   connection2->setSourceUUID(logattribute_uuid);
   connection->setSourceUUID(processoruuid);

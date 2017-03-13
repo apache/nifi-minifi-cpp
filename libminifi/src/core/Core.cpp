@@ -21,7 +21,7 @@ void CoreComponent::setUUID(uuid_t uuid) {
   uuidStr_ = uuidStr;
 }
 // Get UUID
-bool CoreComponent::getUUID(uuid_t uuid) const {
+bool CoreComponent::getUUID(uuid_t uuid) {
   if (uuid) {
     uuid_copy(uuid, uuid_);
     return true;
@@ -31,7 +31,7 @@ bool CoreComponent::getUUID(uuid_t uuid) const {
 }
 
 // Get UUID
-unsigned const char *CoreComponent::getUUID() const {
+unsigned const char *CoreComponent::getUUID() {
   return uuid_;
 }
 
@@ -41,7 +41,7 @@ void CoreComponent::setName(const std::string name) {
 
 }
 // Get Process Name
-std::string CoreComponent::getName() const {
+std::string CoreComponent::getName() {
   return name_;
 }
 }

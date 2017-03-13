@@ -20,11 +20,14 @@
 #ifndef __REMOTE_PROCESSOR_GROUP_PORT_H__
 #define __REMOTE_PROCESSOR_GROUP_PORT_H__
 
+#include <mutex>
 #include <memory>
+#include <stack>
 #include "FlowFileRecord.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
 #include "Site2SiteClientProtocol.h"
+
 
 namespace org {
 namespace apache {
@@ -41,12 +44,9 @@ class RemoteProcessorGroupPort :
   RemoteProcessorGroupPort(std::string name, uuid_t uuid = NULL)
       : core::Processor(name, uuid),
         direction_(SEND),
-        transmitting_(false),
-        peer_() {
+        transmitting_(false){
     logger_ = logging::Logger::getLogger();
-    protocol_ = std::unique_ptr<Site2SiteClientProtocol>(
-        new Site2SiteClientProtocol(0));
-    protocol_->setPortId(uuid);
+    uuid_copy(protocol_uuid_,uuid);
   }
   // Destructor
   virtual ~RemoteProcessorGroupPort() {
@@ -74,7 +74,7 @@ class RemoteProcessorGroupPort :
   }
   // Set Timeout
   void setTimeOut(uint64_t timeout) {
-    protocol_->setTimeOut(timeout);
+    timeout_ = timeout;
   }
   // SetTransmitting
   void setTransmitting(bool val) {
@@ -84,17 +84,23 @@ class RemoteProcessorGroupPort :
  protected:
 
  private:
+   
+  std::unique_ptr<Site2SiteClientProtocol> getNextProtocol();
+  void returnProtocol(std::unique_ptr<Site2SiteClientProtocol> protocol);
+   
+  std::stack<std::unique_ptr<Site2SiteClientProtocol>> available_protocols_;
+  std::mutex protocol_mutex_;
   // Logger
   std::shared_ptr<logging::Logger> logger_;
-  // Peer Connection
-  Site2SitePeer peer_;
-  // Peer Protocol
-  std::unique_ptr<Site2SiteClientProtocol> protocol_;
   // Transaction Direction
   TransferDirection direction_;
   // Transmitting
   bool transmitting_;
-
+  // timeout
+  uint64_t timeout_;
+  
+  uuid_t protocol_uuid_;
+ 
 };
 
 } /* namespace minifi */

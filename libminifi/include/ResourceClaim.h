@@ -27,7 +27,7 @@
 #include <map>
 #include <mutex>
 #include <atomic>
-#include "Configure.h"
+#include "properties/Configure.h"
 
 namespace org {
 namespace apache {

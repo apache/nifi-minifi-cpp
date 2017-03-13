@@ -32,9 +32,9 @@ using namespace org::apache::nifi::minifi::io;
 TEST_CASE("TestSetPortId", "[S2S1]"){
 
 
-	minifi::Site2SitePeer peer(std::unique_ptr<DataStream>(new DataStream()),"fake_host",65433);
+	std::unique_ptr<minifi::Site2SitePeer> peer = std::unique_ptr<minifi::Site2SitePeer>( new minifi::Site2SitePeer(std::unique_ptr<DataStream>(new DataStream()),"fake_host",65433));
 
-	minifi::Site2SiteClientProtocol protocol(&peer);
+	minifi::Site2SiteClientProtocol protocol(std::move(peer));
 
 
 	std::string uuid_str = "c56a4180-65aa-42ec-a945-5fd21dec0538";
@@ -54,9 +54,9 @@ TEST_CASE("TestSetPortId", "[S2S1]"){
 TEST_CASE("TestSetPortIdUppercase", "[S2S2]"){
 
 
-	minifi::Site2SitePeer peer(std::unique_ptr<DataStream>(new DataStream()),"fake_host",65433);
+  std::unique_ptr<minifi::Site2SitePeer> peer = std::unique_ptr<minifi::Site2SitePeer>( new minifi::Site2SitePeer(std::unique_ptr<DataStream>(new DataStream()),"fake_host",65433));
 
-  minifi::Site2SiteClientProtocol protocol(&peer);
+  minifi::Site2SiteClientProtocol protocol(std::move(peer));
 
 
 	std::string uuid_str = "C56A4180-65AA-42EC-A945-5FD21DEC0538";

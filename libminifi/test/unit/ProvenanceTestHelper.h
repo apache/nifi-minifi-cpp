@@ -20,128 +20,67 @@
 
 #include "provenance/Provenance.h"
 #include "FlowController.h"
-<<<<<<< HEAD
-#include "FlowFileRepository.h"
-
+#include "core/Repository.h"
+#include "core/core.h"
 /**
  * Test repository
  */
-class FlowTestRepository : public FlowFileRepository
-{
-public:
-	FlowTestRepository()
-{
-}
-		// initialize
-		bool initialize()
-		{
-			return true;
-		}
+class TestRepository : public core::Repository{
+ public:
+  TestRepository() : Repository("repo_name", "./dir",
+            1000, 100, 0) {
+  }
+  // initialize
+  bool initialize() {
+    return true;
+  }
 
-		// Destructor
-		virtual ~FlowTestRepository() {
+  // Destructor
+  virtual ~TestRepository() {
 
-		}
+  }
 
-		bool Put(std::string key, uint8_t *buf, int bufLen)
-		{
-			repositoryResults.insert(std::pair<std::string,std::string>(key,std::string((const char*)buf,bufLen)));
-			return true;
-		}
-		// Delete
-		bool Delete(std::string key)
-		{
-			repositoryResults.erase(key);
-			return true;
-		}
-		// Get
-		bool Get(std::string key, std::string &value)
-		{
-			auto result = repositoryResults.find(key);
-			if (result != repositoryResults.end())
-			{
-				value = result->second;
-				return true;
-			}
-			else
-			{
-				return false;
-			}
-		}
+  bool Put(std::string key, uint8_t *buf, int bufLen) {
+    repositoryResults.insert(
+        std::pair<std::string, std::string>(
+            key, std::string((const char*) buf, bufLen)));
+    return true;
+  }
+  // Delete
+  bool Delete(std::string key) {
+    repositoryResults.erase(key);
+    return true;
+  }
+  // Get
+  bool Get(std::string key, std::string &value) {
+    auto result = repositoryResults.find(key);
+    if (result != repositoryResults.end()) {
+      value = result->second;
+      return true;
+    } else {
+      return false;
+    }
+  }
 
-		const std::map<std::string,std::string> &getRepoMap() const
-		{
-			return repositoryResults;
-		}
+  const std::map<std::string, std::string> &getRepoMap() const {
+    return repositoryResults;
+  }
 
-protected:
-		std::map<std::string,std::string> repositoryResults;
-};
-
-/**
- * Test repository
- */
-class ProvenanceTestRepository : public ProvenanceRepository
-{
-public:
-	ProvenanceTestRepository()
-{
-}
-		// initialize
-		bool initialize()
-		{
-			return true;
-		}
-
-		// Destructor
-		virtual ~ProvenanceTestRepository() {
-
-		}
-
-		bool Put(std::string key, uint8_t *buf, int bufLen)
-		{
-			repositoryResults.insert(std::pair<std::string,std::string>(key,std::string((const char*)buf,bufLen)));
-			return true;
-		}
-		// Delete
-		bool Delete(std::string key)
-		{
-			repositoryResults.erase(key);
-			return true;
-		}
-		// Get
-		bool Get(std::string key, std::string &value)
-		{
-			auto result = repositoryResults.find(key);
-			if (result != repositoryResults.end())
-			{
-				value = result->second;
-				return true;
-			}
-			else
-			{
-				return false;
-			}
-		}
-
-		const std::map<std::string,std::string> &getRepoMap() const
-		{
-			return repositoryResults;
-		}
-
-protected:
-		std::map<std::string,std::string> repositoryResults;
+  void run(){
+    // do nothing
+  }
+ protected:
+  std::map<std::string, std::string> repositoryResults;
 };
 
 
-class TestFlowController : public FlowController
+
+class TestFlowController : public minifi::FlowController
 {
 
 public:
-	TestFlowController(ProvenanceTestRepository &provenanceRepo, FlowTestRepository &flowRepo) : ::FlowController()
+	TestFlowController(std::shared_ptr<core::Repository> repo,std::shared_ptr<core::Repository> flow_file_repo) : minifi::FlowController(repo,flow_file_repo)
 	{
-		_provenanceRepo = dynamic_cast<ProvenanceRepository*>(&provenanceRepo);
-		_flowfileRepo = dynamic_cast<FlowFileRepository*>(&flowRepo);
 	}
 	~TestFlowController()
 	{
@@ -182,62 +121,13 @@ public:
 	}
 
 
-	Processor *createProcessor(std::string name, uuid_t uuid){ return 0;}
+	std::shared_ptr<core::Processor> createProcessor(std::string name, uuid_t uuid){ return 0;}
 
-	ProcessGroup *createRootProcessGroup(std::string name, uuid_t uuid){ return 0;}
+	core::ProcessGroup *createRootProcessGroup(std::string name, uuid_t uuid){ return 0;}
 
-	ProcessGroup *createRemoteProcessGroup(std::string name, uuid_t uuid){ return 0; }
+	core::ProcessGroup *createRemoteProcessGroup(std::string name, uuid_t uuid){ return 0; }
 
-	Connection *createConnection(std::string name, uuid_t uuid){ return 0; }
-=======
-#include "core/core.h"
-/**
- * Test repository
- */
-class ProvenanceTestRepository : public provenance::ProvenanceRepository {
- public:
-  ProvenanceTestRepository() {
-  }
-  // initialize
-  bool initialize() {
-    return true;
-  }
-
-  // Destructor
-  virtual ~ProvenanceTestRepository() {
-
-  }
-
-  bool Put(std::string key, uint8_t *buf, int bufLen) {
-    repositoryResults.insert(
-        std::pair<std::string, std::string>(
-            key, std::string((const char*) buf, bufLen)));
-    return true;
-  }
-  // Delete
-  bool Delete(std::string key) {
-    repositoryResults.erase(key);
-    return true;
-  }
-  // Get
-  bool Get(std::string key, std::string &value) {
-    auto result = repositoryResults.find(key);
-    if (result != repositoryResults.end()) {
-      value = result->second;
-      return true;
-    } else {
-      return false;
-    }
-  }
-
-  const std::map<std::string, std::string> &getRepoMap() const {
-    return repositoryResults;
-  }
-
- protected:
-  std::map<std::string, std::string> repositoryResults;
->>>>>>> MINIFI-217: First commit. Updates namespaces and removes
+	std::shared_ptr<minifi::Connection> createConnection(std::string name, uuid_t uuid){ return 0; }
 };
-
 
 #endif /* LIBMINIFI_TEST_UNIT_PROVENANCETESTHELPER_H_ */

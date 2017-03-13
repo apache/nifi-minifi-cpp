@@ -31,6 +31,7 @@
 #include <fstream>
 #include <set>
 
+#include "io/Serializable.h"
 #include "core/FlowFile.h"
 #include "utils/TimeUtil.h"
 #include "core/logging/Logger.h"
@@ -89,17 +90,29 @@ class OutputStreamCallback {
   virtual void process(std::ofstream *stream) = 0;
 };
 
-class FlowFileRecord : public core::FlowFile {
+class FlowFileRecord : public core::FlowFile, public io::Serializable {
  public:
   // Constructor
-  /*!
+  /*
    * Create a new flow record
    */
   explicit FlowFileRecord(std::shared_ptr<core::Repository> flow_repository,
                           std::map<std::string, std::string> attributes,
                           std::shared_ptr<ResourceClaim> claim = nullptr);
 
-  explicit FlowFileRecord(std::shared_ptr<core::Repository> flow_repository,std::shared_ptr<core::FlowFile> event);
+  explicit FlowFileRecord(std::shared_ptr<core::Repository> flow_repository,
+                          std::shared_ptr<core::FlowFile> &event);
+
+  explicit FlowFileRecord(std::shared_ptr<core::Repository> flow_repository,
+                          std::shared_ptr<core::FlowFile> &event,
+                          const std::string &uuidConnection);
+
+  explicit FlowFileRecord(std::shared_ptr<core::Repository> flow_repository)
+      : FlowFile(),
+        flow_repository_(flow_repository),
+        snapshot_("") {
+
+  }
   // Destructor
   virtual ~FlowFileRecord();
   // addAttribute key is enum
@@ -111,17 +124,45 @@ class FlowFileRecord : public core::FlowFile {
   // getAttribute key is enum
   bool getKeyedAttribute(FlowAttribute key, std::string &value);
 
+  //! Serialize and Persistent to the repository
+  bool Serialize();
+  //! DeSerialize
+  bool DeSerialize(const uint8_t *buffer, const int bufferSize);
+  //! DeSerialize
+  bool DeSerialize(io::DataStream &stream) {
+    return DeSerialize(stream.getBuffer(), stream.getSize());
+  }
+  //! DeSerialize
+  bool DeSerialize(std::string key);
+
   void setSnapShot(bool snapshot) {
     snapshot_ = snapshot;
   }
 
-  FlowFileRecord &operator=(const FlowFileRecord &) = delete;
+  /**
+   * gets the UUID connection.
+   * @return uuidConnection
+   */
+  const std::string getConnectionUuid() {
+    return uuid_connection_;
+  }
+  
+  const std::string getContentFullPath()
+  {
+    return content_full_fath_;
+  }
+  
+
+  FlowFileRecord &operator=(const FlowFileRecord &);
 
   FlowFileRecord(const FlowFileRecord &parent) = delete;
 
  protected:
 
- private:
+  // connection uuid
+  std::string uuid_connection_;
+  // Full path to the content
+  std::string content_full_fath_;
 
   // Local flow sequence ID
   static std::atomic<uint64_t> local_flow_seq_number_;
@@ -129,8 +170,6 @@ class FlowFileRecord : public core::FlowFile {
   // repository reference.
   std::shared_ptr<core::Repository> flow_repository_;
 
-  // Logger
-  std::shared_ptr<logging::Logger> logger_;
   // Snapshot flow record for session rollback
   bool snapshot_;
   // Prevent default copy constructor and assignment operation

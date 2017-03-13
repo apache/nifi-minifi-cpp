@@ -21,7 +21,7 @@
 #include "ClientSocket.h"
 #include "TLSSocket.h"
 #include "ClientSocket.h"
-#include "Configure.h"
+#include "properties/Configure.h"
 #include "utils/StringUtils.h"
 
 namespace org {

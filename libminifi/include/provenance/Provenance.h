@@ -37,7 +37,7 @@
 
 #include "core/Repository.h"
 #include "core/Property.h"
-#include "Configure.h"
+#include "properties/Configure.h"
 #include "Connection.h"
 #include "FlowFileRecord.h"
 #include "core/logging/Logger.h"

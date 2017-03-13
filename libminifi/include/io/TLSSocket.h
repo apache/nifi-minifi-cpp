@@ -23,7 +23,7 @@
 #include <atomic>
 #include <mutex>
 
-#include "Configure.h"
+#include "properties/Configure.h"
 
 namespace org {
 namespace apache {

@@ -34,6 +34,7 @@
 #include "core/ProcessGroup.h"
 #include "utils/StringUtils.h"
 #include "core/core.h"
+#include "core/repository/FlowFileRepository.h"
 
 namespace org {
 namespace apache {
@@ -47,7 +48,7 @@ FlowControllerImpl::FlowControllerImpl(
   setUUID(uuid_);
 
   // Setup the default values
-  configuration_filename_ = DEFAULT_FLOW_YAML_FILENAME;
+  configuration_filename_ = DEFAULT_FLOW_YAML_FILE_NAME;
   max_event_driven_threads_ = DEFAULT_MAX_EVENT_DRIVEN_THREAD;
   max_timer_driven_threads_ = DEFAULT_MAX_TIMER_DRIVEN_THREAD;
   running_ = false;
@@ -258,7 +259,7 @@ core::ProcessGroup *FlowControllerImpl::createRemoteProcessGroup(
 
 std::shared_ptr<Connection> FlowControllerImpl::createConnection(
     std::string name, uuid_t uuid) {
-  return std::make_shared<Connection>(name, uuid);
+  return std::make_shared<Connection>(flow_file_repo_, name, uuid);
 }
 
 void FlowControllerImpl::parseRootProcessGroupYaml(YAML::Node rootFlowNode) {
@@ -385,10 +386,10 @@ void FlowControllerImpl::parseProcessorNodeYaml(YAML::Node processorsNode,
 				parsePropertiesNodeYaml(&propertiesNode, processor);
 
 				// Take care of scheduling
-				TimeUnit unit;
-				if (Property::StringToTime(procCfg.schedulingPeriod,
+				core::TimeUnit unit;
+				if (core::Property::StringToTime(procCfg.schedulingPeriod,
 						schedulingPeriod, unit)
-						&& Property::ConvertTimeUnitToNS(schedulingPeriod, unit,
+						&& core::Property::ConvertTimeUnitToNS(schedulingPeriod, unit,
 								schedulingPeriod)) {
 					logger_->log_debug(
 							"convert: parseProcessorNode: schedulingPeriod => [%d] ns",
@@ -396,9 +397,9 @@ void FlowControllerImpl::parseProcessorNodeYaml(YAML::Node processorsNode,
 					processor->setSchedulingPeriodNano(schedulingPeriod);
 				}
 
-				if (Property::StringToTime(procCfg.penalizationPeriod,
+				if (core::Property::StringToTime(procCfg.penalizationPeriod,
 						penalizationPeriod, unit)
-						&& Property::ConvertTimeUnitToMS(penalizationPeriod,
+						&& core::Property::ConvertTimeUnitToMS(penalizationPeriod,
 								unit, penalizationPeriod)) {
 					logger_->log_debug(
 							"convert: parseProcessorNode: penalizationPeriod => [%d] ms",
@@ -406,9 +407,9 @@ void FlowControllerImpl::parseProcessorNodeYaml(YAML::Node processorsNode,
 					processor->setPenalizationPeriodMsec(penalizationPeriod);
 				}
 
-				if (Property::StringToTime(procCfg.yieldPeriod, yieldPeriod,
+				if (core::Property::StringToTime(procCfg.yieldPeriod, yieldPeriod,
 						unit)
-						&& Property::ConvertTimeUnitToMS(yieldPeriod, unit,
+						&& core::Property::ConvertTimeUnitToMS(yieldPeriod, unit,
 								yieldPeriod)) {
 					logger_->log_debug(
 							"convert: parseProcessorNode: yieldPeriod => [%d] ms",
@@ -435,7 +436,7 @@ void FlowControllerImpl::parseProcessorNodeYaml(YAML::Node processorsNode,
 				}
 
 				int64_t maxConcurrentTasks;
-				if (Property::StringToInt(procCfg.maxConcurrentTasks,
+				if (core::Property::StringToInt(procCfg.maxConcurrentTasks,
 						maxConcurrentTasks)) {
 					logger_->log_debug(
 							"parseProcessorNode: maxConcurrentTasks => [%d]",
@@ -443,7 +444,7 @@ void FlowControllerImpl::parseProcessorNodeYaml(YAML::Node processorsNode,
 					processor->setMaxConcurrentTasks(maxConcurrentTasks);
 				}
 
-				if (Property::StringToInt(procCfg.runDurationNanos,
+				if (core::Property::StringToInt(procCfg.runDurationNanos,
 						runDurationNanos)) {
 					logger_->log_debug(
 							"parseProcessorNode: runDurationNanos => [%d]",
@@ -523,10 +524,10 @@ void FlowControllerImpl::parseRemoteProcessGroupYaml(YAML::Node *rpgNode,
 				group->setParent(parentGroup);
 				parentGroup->addProcessGroup(group);
 
-				TimeUnit unit;
+				core::TimeUnit unit;
 
-				if (Property::StringToTime(yieldPeriod, yieldPeriodValue, unit)
-						&& Property::ConvertTimeUnitToMS(yieldPeriodValue, unit,
+				if (core::Property::StringToTime(yieldPeriod, yieldPeriodValue, unit)
+						&& core::Property::ConvertTimeUnitToMS(yieldPeriodValue, unit,
 								yieldPeriodValue) && group) {
 					logger_->log_debug(
 							"parseRemoteProcessGroupYaml: yieldPeriod => [%d] ms",
@@ -534,8 +535,8 @@ void FlowControllerImpl::parseRemoteProcessGroupYaml(YAML::Node *rpgNode,
 					group->setYieldPeriodMsec(yieldPeriodValue);
 				}
 
-				if (Property::StringToTime(timeout, timeoutValue, unit)
-						&& Property::ConvertTimeUnitToMS(timeoutValue, unit,
+				if (core::Property::StringToTime(timeout, timeoutValue, unit)
+						&& core::Property::ConvertTimeUnitToMS(timeoutValue, unit,
 								timeoutValue) && group) {
 					logger_->log_debug(
 							"parseRemoteProcessGroupYaml: timeoutValue => [%d] ms",
@@ -614,7 +615,7 @@ void FlowControllerImpl::parseConnectionYaml(YAML::Node *connectionsNode,
 				uuid_t srcUUID;
 				uuid_parse(connectionSrcProcId.c_str(), srcUUID);
 
-				Processor *srcProcessor = this->root_->findProcessor(
+				auto srcProcessor = this->root_->findProcessor(
 						srcUUID);
 
 				if (!srcProcessor) {
@@ -628,7 +629,7 @@ void FlowControllerImpl::parseConnectionYaml(YAML::Node *connectionsNode,
 
 				uuid_t destUUID;
 				uuid_parse(destId.c_str(), destUUID);
-				Processor *destProcessor = this->root_->findProcessor(destUUID);
+				auto destProcessor = this->root_->findProcessor(destUUID);
 				// If we could not find name, try by UUID
 				if (!destProcessor) {
 					uuid_t destUuid;
@@ -750,10 +751,10 @@ void FlowControllerImpl::load() {
     parseRemoteProcessGroupYaml(&remoteProcessingGroupNode, this->root_);
     parseConnectionYaml(&connectionsNode, this->root_);
 
-		// Load Flow File from Repo
-		loadFlowRepo();
+    // Load Flow File from Repo
+    loadFlowRepo();
 
-
+    initialized_=true;
   }
 }
 
@@ -781,9 +782,10 @@ void FlowControllerImpl::loadFlowRepo()
 {
   if (this->flow_file_repo_)
   {
-    std::map<std::string, Connection *> connectionMap;
+    std::map<std::string, std::shared_ptr<Connection>> connectionMap;
     this->root_->getConnections(connectionMap);
-    this->flow_file_repo_->loadFlowFileToConnections(&connectionMap);
+    auto rep = std::static_pointer_cast<core::repository::FlowFileRepository>(flow_file_repo_);
+    rep->loadFlowFileToConnections(connectionMap);
   }
 }
 

@@ -32,7 +32,7 @@
 
 #include "core/Property.h"
 #include "core/logging/Logger.h"
-#include "Configure.h"
+#include "properties/Configure.h"
 #include "io/ClientSocket.h"
 #include "io/BaseStream.h"
 #include "utils/TimeUtil.h"

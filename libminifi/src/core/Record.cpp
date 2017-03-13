@@ -16,6 +16,7 @@
  */
 
 #include "core/FlowFile.h"
+#include "core/logging/Logger.h"
 
 namespace org {
 namespace apache {
@@ -44,6 +45,8 @@ FlowFile::FlowFile()
 
   uuid_unparse_lower(uuid_, uuidStr);
   uuid_str_ = uuidStr;
+  
+  logger_ = logging::Logger::getLogger();
 
 }
 
@@ -105,6 +108,9 @@ void FlowFile::setResourceClaim(std::shared_ptr<ResourceClaim> &claim) {
 // ! Get Entry Date
 uint64_t FlowFile::getEntryDate() {
   return entry_date_;
+}
+uint64_t FlowFile::getEventTime() {
+  return event_time_;
 }
 // ! Get Lineage Start Date
 uint64_t FlowFile::getlineageStartDate() {
@@ -182,8 +188,7 @@ void FlowFile::setOriginalConnection(
  * Sets the connection with a shared pointer.
  * @param connection shared connection.
  */
-void FlowFile::setConnection(
-    std::shared_ptr<core::Connectable> &connection) {
+void FlowFile::setConnection(std::shared_ptr<core::Connectable> &connection) {
   connection_ = connection;
 }
 
@@ -191,8 +196,7 @@ void FlowFile::setConnection(
  * Sets the connection with a shared pointer.
  * @param connection shared connection.
  */
-void FlowFile::setConnection(
-    std::shared_ptr<core::Connectable> &&connection) {
+void FlowFile::setConnection(std::shared_ptr<core::Connectable> &&connection) {
   connection_ = connection;
 }
 

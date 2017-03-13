@@ -28,12 +28,14 @@
 #include <algorithm>
 #include <thread>
 #include "utils/TimeUtil.h"
+#include "core/core.h"
 #include "core/logging/Logger.h"
-#include "Configure.h"
+#include "properties/Configure.h"
 #include "FlowFileRecord.h"
 #include "core/logging/Logger.h"
 #include "core/Processor.h"
 #include "core/ProcessContext.h"
+#include "provenance/ProvenanceRepository.h"
 
 
 namespace org {
@@ -49,7 +51,7 @@ class SchedulingAgent {
   /*!
    * Create a new processor
    */
-  SchedulingAgent(std::shared_ptr<provenance::ProvenanceRepository> repo) {
+  SchedulingAgent(std::shared_ptr<core::Repository> repo) {
     configure_ = Configure::getConfigure();
     logger_ = logging::Logger::getLogger();
     running_ = false;
@@ -102,7 +104,7 @@ class SchedulingAgent {
   // BoredYieldDuration
   int64_t _boredYieldDuration;
 
-  std::shared_ptr<provenance::ProvenanceRepository> repo_;
+  std::shared_ptr<core::Repository> repo_;
 
  private:
   // Prevent default copy constructor and assignment operation

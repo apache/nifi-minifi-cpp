@@ -28,12 +28,15 @@
 #include <yaml-cpp/yaml.h>
 #include <iostream>
 
+#include "core/core.h"
+
 #include "core/logging/BaseLogger.h"
 #include "core/logging/LogAppenders.h"
 #include "spdlog/spdlog.h"
 
+#include "core/repository/FlowFileRepository.h"
 #include "core/logging/Logger.h"
-#include "Configure.h"
+#include "properties/Configure.h"
 #include "FlowController.h"
 
 //! Main thread sleep interval 1 second
@@ -143,12 +146,16 @@ int main(int argc, char **argv) {
   logger->updateLogger(std::move(configured_logger));
 
   // Create repos for flow record and provenance
-  std::shared_ptr<provenance::ProvenanceRepository> repo = std::make_shared<
+  std::shared_ptr<provenance::ProvenanceRepository> prov_repo = std::make_shared<
       provenance::ProvenanceRepository>();
-  repo->initialize();
+  prov_repo->initialize();
+  
+  std::shared_ptr<core::repository::FlowFileRepository> flow_repo = std::make_shared<
+      core::repository::FlowFileRepository>();
+  flow_repo->initialize();
 
   controller = std::unique_ptr<minifi::FlowController>(
-      new minifi::FlowControllerImpl(repo));
+      new minifi::FlowControllerImpl(prov_repo,flow_repo));
 
   // Load flow from specified configuration file
   controller->load();

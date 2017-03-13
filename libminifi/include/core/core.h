@@ -17,6 +17,10 @@
  */
 #ifndef LIBMINIFI_INCLUDE_CORE_CORE_H_
 #define LIBMINIFI_INCLUDE_CORE_CORE_H_
+
+#include <uuid/uuid.h>
+#include <cxxabi.h>
+#include "core/logging/Logger.h"
 /**
  * namespace aliasing
  */
@@ -35,7 +39,9 @@ namespace core {
 
 template<typename T>
 static inline std::string getClassName() {
-  std::string name = abi::__cxa_demangle(typeid(T).name(), 0, 0, 0);
+  char *b =   abi::__cxa_demangle(typeid(T).name(), 0, 0, 0);
+  std::string name = b;
+  delete [] b;
   return name;
 }
 
@@ -75,7 +81,7 @@ class CoreComponent {
   }
 
   // Get component name Name
-  std::string getName() const;
+  std::string getName();
 
   /**
    * Set name.
@@ -94,14 +100,14 @@ class CoreComponent {
    * @param uuid uuid struct to which we will copy the memory
    * @return success of request
    */
-  bool getUUID(uuid_t uuid) const;
+  bool getUUID(uuid_t uuid);
 
-  unsigned const char *getUUID() const;
+  unsigned const char *getUUID();
   /**
    * Return the UUID string
    * @param constant reference to the UUID str
    */
-  const std::string & getUUIDStr() const {
+  const std::string & getUUIDStr()  {
     return uuidStr_;
   }
 
@@ -112,7 +118,7 @@ class CoreComponent {
   std::string uuidStr_;
 
   // logger shared ptr
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<org::apache::nifi::minifi::core::logging::Logger> logger_;
 
   // Connectable's name
   std::string name_;

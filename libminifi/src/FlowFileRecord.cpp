@@ -69,8 +69,30 @@ FlowFileRecord::FlowFileRecord(
 
 FlowFileRecord::FlowFileRecord(
     std::shared_ptr<core::Repository> flow_repository,
-    std::shared_ptr<core::FlowFile> event)
+    std::shared_ptr<core::FlowFile> &event, const std::string &uuidConnection)
     : FlowFile(),
+      snapshot_(""),
+      flow_repository_(flow_repository) {
+	entry_date_ = event->getEntryDate();
+	lineage_start_date_ = event->getlineageStartDate();
+	lineage_Identifiers_ = event->getlineageIdentifiers();
+	uuid_str_ = event->getUUIDStr();
+	attributes_ = event->getAttributes();
+	size_ = event->getSize();
+	offset_ = event->getOffset();
+	event->getUUID(uuid_);
+	uuid_connection_ = uuidConnection;
+	if (event->getResourceClaim()) {
+	  content_full_fath_ = event->getResourceClaim()->getContentFullPath();
+	}
+}
+
+FlowFileRecord::FlowFileRecord(
+    std::shared_ptr<core::Repository> flow_repository,
+    std::shared_ptr<core::FlowFile> &event)
+    : FlowFile(),
+      uuid_connection_(""),
+      snapshot_(""),
       flow_repository_(flow_repository) {
 
 }
@@ -83,10 +105,11 @@ FlowFileRecord::~FlowFileRecord() {
   if (claim_) {
     // Decrease the flow file record owned count for the resource claim
     claim_->decreaseFlowFileRecordOwnedCount();
+    std::string value;
     if (claim_->getFlowFileRecordOwnedCount() <= 0) {
       logger_->log_debug("Delete Resource Claim %s",
                          claim_->getContentFullPath().c_str());
-      if (!this->stored || !flow_repository_->Get(_uuidStr, value)) {
+      if (!this->stored || !flow_repository_->Get(uuid_str_, value)) {
         std::remove(claim_->getContentFullPath().c_str());
       }
     }
@@ -136,7 +159,204 @@ bool FlowFileRecord::getKeyedAttribute(FlowAttribute key, std::string &value) {
 
 FlowFileRecord &FlowFileRecord::operator=(const FlowFileRecord &other) {
   core::FlowFile::operator=(other);
+  uuid_connection_ = other.uuid_connection_;
+  content_full_fath_ = other.content_full_fath_;
+  snapshot_ = other.snapshot_;
   return *this;
+}
+
+bool FlowFileRecord::DeSerialize(std::string key) {
+  std::string value;
+  bool ret;
+
+  ret = flow_repository_->Get(key, value);
+
+  if (!ret) {
+    logger_->log_error("NiFi FlowFile Store event %s can not found",
+                       key.c_str());
+    return false;
+  } else
+    logger_->log_debug("NiFi FlowFile Read event %s length %d", key.c_str(),
+                       value.length());
+
+  io::DataStream stream((const uint8_t*) value.data(), value.length());
+
+  ret = DeSerialize(stream);
+
+  if (ret) {
+    logger_->log_debug(
+        "NiFi FlowFile retrieve uuid %s size %d connection %s success",
+        uuid_str_.c_str(), stream.getSize(), uuid_connection_.c_str());
+  } else {
+    logger_->log_debug(
+        "NiFi FlowFile retrieve uuid %s size %d connection %d fail",
+        uuid_str_.c_str(), stream.getSize(), uuid_connection_.c_str());
+  }
+
+  return ret;
+}
+
+bool FlowFileRecord::Serialize() {
+
+  io::DataStream outStream;
+
+  int ret;
+
+  ret = write(this->event_time_, &outStream);
+  if (ret != 8) {
+
+    return false;
+  }
+
+  ret = write(this->entry_date_, &outStream);
+  if (ret != 8) {
+    return false;
+  }
+
+  ret = write(this->lineage_start_date_, &outStream);
+  if (ret != 8) {
+
+    return false;
+  }
+
+  ret = writeUTF(this->uuid_str_, &outStream);
+  if (ret <= 0) {
+
+    return false;
+  }
+
+  ret = writeUTF(this->uuid_connection_, &outStream);
+  if (ret <= 0) {
+
+    return false;
+  }
+  // write flow attributes
+  uint32_t numAttributes = this->attributes_.size();
+  ret = write(numAttributes, &outStream);
+  if (ret != 4) {
+
+    return false;
+  }
+
+  for (auto itAttribute : attributes_) {
+    ret = writeUTF(itAttribute.first, &outStream, true);
+    if (ret <= 0) {
+
+      return false;
+    }
+    ret = writeUTF(itAttribute.second, &outStream, true);
+    if (ret <= 0) {
+
+      return false;
+    }
+  }
+
+  ret = writeUTF(this->content_full_fath_, &outStream);
+  if (ret <= 0) {
+
+    return false;
+  }
+
+  ret = write(this->size_, &outStream);
+  if (ret != 8) {
+
+    return false;
+  }
+
+  ret = write(this->offset_, &outStream);
+  if (ret != 8) {
+
+    return false;
+  }
+
+  // Persistent to the DB
+  
+
+  if (flow_repository_->Put(uuid_str_,
+                            const_cast<uint8_t*>(outStream.getBuffer()),
+                            outStream.getSize())) {
+    logger_->log_debug("NiFi FlowFile Store event %s size %d success",
+                       uuid_str_.c_str(), outStream.getSize());
+    return true;
+  } else {
+    logger_->log_error("NiFi FlowFile Store event %s size %d fail",
+                       uuid_str_.c_str(), outStream.getSize());
+    return false;
+  }
+
+  // cleanup
+
+  return true;
+}
+
+bool FlowFileRecord::DeSerialize(const uint8_t *buffer, const int bufferSize) {
+
+  int ret;
+
+  io::DataStream outStream(buffer, bufferSize);
+
+  ret = read(this->event_time_, &outStream);
+  if (ret != 8) {
+    return false;
+  }
+
+  ret = read(this->entry_date_, &outStream);
+  if (ret != 8) {
+    return false;
+  }
+
+  ret = read(this->lineage_start_date_, &outStream);
+  if (ret != 8) {
+    return false;
+  }
+
+  ret = readUTF(this->uuid_str_, &outStream);
+  if (ret <= 0) {
+    return false;
+  }
+
+  ret = readUTF(this->uuid_connection_, &outStream);
+  if (ret <= 0) {
+    return false;
+  }
+
+  // read flow attributes
+  uint32_t numAttributes = 0;
+  ret = read(numAttributes, &outStream);
+  if (ret != 4) {
+    return false;
+  }
+
+  for (uint32_t i = 0; i < numAttributes; i++) {
+    std::string key;
+    ret = readUTF(key, &outStream, true);
+    if (ret <= 0) {
+      return false;
+    }
+    std::string value;
+    ret = readUTF(value, &outStream, true);
+    if (ret <= 0) {
+      return false;
+    }
+    this->attributes_[key] = value;
+  }
+
+  ret = readUTF(this->content_full_fath_, &outStream);
+  if (ret <= 0) {
+    return false;
+  }
+
+  ret = read(this->size_, &outStream);
+  if (ret != 8) {
+    return false;
+  }
+
+  ret = read(this->offset_, &outStream);
+  if (ret != 8) {
+    return false;
+  }
+
+  return true;
 }
 
 } /* namespace minifi */

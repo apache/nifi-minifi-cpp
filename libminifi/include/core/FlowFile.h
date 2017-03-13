@@ -73,6 +73,12 @@ class FlowFile {
    * @return entry date uint64_t
    */
   uint64_t getEntryDate();
+
+  /**
+   * Gets the event time.
+   * @return event time.
+   */
+  uint64_t getEventTime();
   /**
    * Get lineage start date
    * @return lineage start date uint64_t
@@ -177,6 +183,12 @@ class FlowFile {
   std::string getUUIDStr() {
     return uuid_str_;
   }
+  
+  bool getUUID(uuid_t other)
+  {
+    uuid_copy(other,uuid_);
+    return true;
+  }
 
   // Check whether it is still being penalized
   bool isPenalized() {
@@ -227,6 +239,8 @@ class FlowFile {
   bool marked_delete_;
   // Date at which the flow file entered the flow
   uint64_t entry_date_;
+  // event time
+  uint64_t event_time_;
   // Date at which the origin of this flow file entered the flow
   uint64_t lineage_start_date_;
   // Date at which the flow file was queued
@@ -250,6 +264,9 @@ class FlowFile {
   // UUID string for all parents
   std::set<std::string> lineage_Identifiers_;
 
+  // Logger
+  std::shared_ptr<logging::Logger> logger_;
+  
   // Connection queue that this flow file will be transfer or current in
   std::shared_ptr<core::Connectable> connection_;
   // Orginal connection queue that this flow file was dequeued from
