@@ -18,16 +18,15 @@
 #ifndef LIBMINIFI_INCLUDE_IO_TLSSOCKET_H_
 #define LIBMINIFI_INCLUDE_IO_TLSSOCKET_H_
 
+#ifdef OPENSSL_SUPPORT
 #include <cstdint>
 #include "ClientSocket.h"
 #include <atomic>
 #include <mutex>
 
 #include "Configure.h"
-#ifdef OPENSSL_SUPPORT
 #include <openssl/ssl.h>
 #include <openssl/err.h>
-#endif
 
 #define TLS_ERROR_CONTEXT 1
 #define TLS_ERROR_PEM_MISSING 2
@@ -63,17 +62,13 @@ public:
 	}
 
 	virtual ~TLSContext() {
-#ifdef OPENSSL_SUPPORT
 		if (0 != ctx)
 			SSL_CTX_free(ctx);
-#endif
 	}
 
-#ifdef OPENSSL_SUPPORT
 	SSL_CTX *getContext() {
 		return ctx;
 	}
-#endif
 
 	short getError() {
 		return error_value;
@@ -111,9 +106,7 @@ private:
 
 	std::shared_ptr<Logger> logger_;
 	Configure *configuration;
-#ifdef OPENSSL_SUPPORT
 	SSL_CTX *ctx;
-#endif
 
 	short error_value;
 	static std::atomic<TLSContext*> context_instance;
@@ -186,10 +179,9 @@ public:
 
 protected:
 
-#ifdef OPENSSL_SUPPORT
 	SSL* ssl;
-#endif
 
 };
+#endif
 
 #endif /* LIBMINIFI_INCLUDE_IO_TLSSOCKET_H_ */

@@ -15,26 +15,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+#ifdef OPENSSL_SUPPORT
 #include "Property.h"
 #include "Configure.h"
 #include "io/TLSSocket.h"
 #include "utils/StringUtils.h"
-#ifdef OPENSSL_SUPPORT
 #include <openssl/ssl.h>
 #include <openssl/err.h>
-#endif
 
 
 std::atomic<TLSContext*> TLSContext::context_instance;
 std::mutex TLSContext::context_mutex;
 
 TLSContext::TLSContext() :
-		error_value(0), logger_(Logger::getLogger()), configuration(
+		error_value(0), ctx(0), logger_(Logger::getLogger()), configuration(
 				Configure::getConfigure()) {
-#ifdef OPENSSL_SUPPORT
-		ctx = 0;
-#endif
 
 }
 
@@ -42,7 +37,6 @@ TLSContext::TLSContext() :
  * The memory barrier is defined by the singleton
  */
 short TLSContext::initialize() {
-#ifdef OPENSSL_SUPPORT
 	if (ctx != 0) {
 		return error_value;
 	}
@@ -130,16 +124,13 @@ short TLSContext::initialize() {
 
 		logger_->log_info("Load/Verify Client Certificate OK.");
 	}
-#endif
 	return 0;
 }
 
 TLSSocket::~TLSSocket()
 {
-#ifdef OPENSSL_SUPPORT
 	if (ssl != 0)
 		SSL_free(ssl);
-#endif
 }
 /**
  * Constructor that accepts host name, port and listeners. With this
@@ -150,28 +141,18 @@ TLSSocket::~TLSSocket()
  */
 TLSSocket::TLSSocket(const std::string &hostname, const uint16_t port,
 		const uint16_t listeners) :
-		::Socket(hostname, port, listeners) {
-#ifdef OPENSSL_SUPPORT
-		ssl = 0;
-#endif
+		::Socket(hostname, port, listeners), ssl(0) {
 }
 
 TLSSocket::TLSSocket(const std::string &hostname, const uint16_t port) :
-		::Socket(hostname, port, 0) {
-#ifdef OPENSSL_SUPPORT
-		ssl = 0;
-#endif
+		::Socket(hostname, port, 0), ssl(0) {
 }
 
 TLSSocket::TLSSocket(const TLSSocket &&d) :
-		::Socket(std::move(d)) {
-#ifdef OPENSSL_SUPPORT
-		ssl = 0;
-#endif
+		::Socket(std::move(d)), ssl(0) {
 }
 
 short TLSSocket::initialize() {
-#ifdef OPENSSL_SUPPORT
 	TLSContext *context = TLSContext::getInstance();
 	short ret = context->initialize();
 	Socket::initialize();
@@ -193,19 +174,12 @@ short TLSSocket::initialize() {
 		}
 	}
 	return ret;
-#else
-	return -1;
-#endif
 }
 
 short TLSSocket::select_descriptor(const uint16_t msec) {
-#ifdef OPENSSL_SUPPORT
 	if (ssl && SSL_pending(ssl))
 		return 1;
 	return Socket::select_descriptor(msec);
-#else
-	return 0;
-#endif
 }
 
 int TLSSocket::writeData(std::vector< uint8_t>& buf, int buflen)
@@ -214,7 +188,6 @@ int TLSSocket::writeData(std::vector< uint8_t>& buf, int buflen)
 }
 
 int TLSSocket::writeData(uint8_t *value, int size) {
-#ifdef OPENSSL_SUPPORT
 	if (IsNullOrEmpty(ssl))
 	  return -1;
 	// for SSL, wait for the TLS IO is completed
@@ -232,14 +205,10 @@ int TLSSocket::writeData(uint8_t *value, int size) {
 		bytes += sent;
 	}
 	return size;
-#else
-	return 0;
-#endif
 }
 
 int TLSSocket::readData(uint8_t *buf, int buflen) {
 
-#ifdef OPENSSL_SUPPORT
 	if (IsNullOrEmpty(ssl))
 	  return -1;
 	int total_read = 0;
@@ -264,7 +233,5 @@ int TLSSocket::readData(uint8_t *buf, int buflen) {
 	}
 
 	return total_read;
-#else
-	return 0;
-#endif
 }
+#endif // #ifdef OPENSSL_SUPPORT
