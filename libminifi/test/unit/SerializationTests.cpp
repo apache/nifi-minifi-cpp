@@ -17,7 +17,7 @@
  */
 
 
-
+#include "io/BaseStream.h"
 #include "Site2SitePeer.h"
 #include "Site2SiteClientProtocol.h"
 #include <uuid/uuid.h>
@@ -78,6 +78,68 @@ TEST_CASE("TestSetPortIdUppercase", "[S2S2]"){
 }
 
 
+TEST_CASE("TestWriteUTF", "[MINIFI193]"){
+
+  DataStream baseStream;
+
+  Serializable ser;
+
+  std::string stringOne = "helo world"; // yes, this has a typo.
+  std::string verifyString;
+  ser.writeUTF(stringOne,&baseStream,false);
+
+
+  ser.readUTF(verifyString,&baseStream,false);
+
+  REQUIRE(verifyString == stringOne);
 
 
 
+
+}
+
+
+
+
+TEST_CASE("TestWriteUTF2", "[MINIFI193]"){
+
+  DataStream baseStream;
+
+  Serializable ser;
+
+  std::string stringOne = "hel\xa1o world";
+  REQUIRE(11 == stringOne.length());
+  std::string verifyString;
+  ser.writeUTF(stringOne,&baseStream,false);
+
+
+  ser.readUTF(verifyString,&baseStream,false);
+
+  REQUIRE(verifyString == stringOne);
+
+
+
+
+}
+
+
+TEST_CASE("TestWriteUTF3", "[MINIFI193]"){
+
+  DataStream baseStream;
+
+  Serializable ser;
+
+  std::string stringOne = "\xe4\xbd\xa0\xe5\xa5\xbd\xe4\xb8\x96\xe7\x95\x8c";
+  REQUIRE(12 == stringOne.length());
+  std::string verifyString;
+  ser.writeUTF(stringOne,&baseStream,false);
+
+
+  ser.readUTF(verifyString,&baseStream,false);
+
+  REQUIRE(verifyString == stringOne);
+
+
+
+
+}
