@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+#include <iostream>
 #include <vector>
 #include <string>
 #include <cstdio>
@@ -100,17 +100,14 @@ int Serializable::read(uint8_t *value, int len,DataStream *stream) {
 }
 
 int Serializable::read(uint16_t &value,DataStream *stream, bool is_little_endian) {
-
     return stream->read(value, is_little_endian);
 }
 
 int Serializable::read(uint32_t &value,DataStream *stream, bool is_little_endian) {
-
     return stream->read(value, is_little_endian);
 
 }
 int Serializable::read(uint64_t &value,DataStream *stream, bool is_little_endian) {
-
     return stream->read(value, is_little_endian);
 
 }
@@ -138,9 +135,8 @@ int Serializable::write(uint16_t base_value,DataStream *stream, bool is_little_e
 }
 
 int Serializable::readUTF(std::string &str,DataStream *stream, bool widen) {
-    uint32_t utflen;
+    uint32_t utflen=0;
     int ret = 1;
-
     if (!widen) {
         uint16_t shortLength = 0;
         ret = read(shortLength,stream);
@@ -151,10 +147,13 @@ int Serializable::readUTF(std::string &str,DataStream *stream, bool widen) {
     } else {
         uint32_t len;
         ret = read(len,stream);
+
         if (ret <= 0)
             return ret;
         utflen = len;
     }
+
+
 
     if (utflen == 0)
         return 1;
@@ -166,12 +165,6 @@ int Serializable::readUTF(std::string &str,DataStream *stream, bool widen) {
     str = std::string((const char*)&buf[0],utflen);
 
     return utflen;
-    /*
-    if (!widen)
-        return (2 + utflen);
-    else
-        return (4 + utflen);
-        */
 }
 
 int Serializable::writeUTF(std::string str,DataStream *stream, bool widen) {
@@ -179,16 +172,7 @@ int Serializable::writeUTF(std::string str,DataStream *stream, bool widen) {
     uint32_t utflen = 0;
     int currentPtr = 0;
 
-    /* use charAt instead of copying String to char array */
-    for (auto c : str) {
-        if (IS_ASCII(c)) {
-            utflen++;
-        }else if (c > 2047){
-        	utflen += 3;
-        } else {
-            utflen += 2;
-        }
-    }
+   utflen = str.length();
 
     if (utflen > 65535)
         return -1;
@@ -199,7 +183,7 @@ int Serializable::writeUTF(std::string str,DataStream *stream, bool widen) {
             uint16_t shortLen = utflen;
             write(shortLen,stream);
         } else {
-
+          write(utflen,stream);
         }
         return 1;
     }
@@ -207,13 +191,8 @@ int Serializable::writeUTF(std::string str,DataStream *stream, bool widen) {
     std::vector<uint8_t> utf_to_write;
     if (!widen) {
         utf_to_write.resize(utflen);
-
-        uint16_t shortLen = utflen;
-
     } else {
-
         utf_to_write.resize(utflen);
-
     }
 
     int i = 0;
@@ -221,26 +200,7 @@ int Serializable::writeUTF(std::string str,DataStream *stream, bool widen) {
 
     uint8_t *underlyingPtr = &utf_to_write[0];
     for (auto c : str) {
-        if (IS_ASCII(c)) {
-            writeData(c, underlyingPtr++);
-        } else if (c > 2047){
-
-        	auto t = (uint8_t) (((c >> 0x0C) & 15) | 192);
-        	writeData(t, underlyingPtr++);
-        	t = (uint8_t) (((c >> 0x06) & 63) | 128);
-        	writeData(t, underlyingPtr++);
-        	t = (uint8_t) (((c >> 0) & 63) | 128);
-			writeData(t, underlyingPtr++);
-
-        } else {
-            auto t = (uint8_t) (((c >> 0x06) & 31) | 192);
-            writeData(t, underlyingPtr++);
-            currentPtr++;
-            t = (uint8_t) (((c >> 0x00) & 63) | 128);
-            writeData(t, underlyingPtr++);
-            currentPtr++;
-
-        }
+      writeData(c, underlyingPtr++);
     }
     int ret;
 
@@ -248,11 +208,6 @@ int Serializable::writeUTF(std::string str,DataStream *stream, bool widen) {
 
         uint16_t short_length = utflen;
         write(short_length,stream);
-
-        for (int i = 0; i < utflen; i++) {
-        }
-        for (auto c : utf_to_write) {
-        }
         ret = stream->writeData(utf_to_write.data(), utflen);
     } else {
         //utflen += 4;
