@@ -79,7 +79,7 @@ class TestFlowController : public minifi::FlowController
 {
 
 public:
-	TestFlowController(std::shared_ptr<core::Repository> repo,std::shared_ptr<core::Repository> flow_file_repo) : minifi::FlowController(repo,flow_file_repo)
+	TestFlowController(std::shared_ptr<core::Repository> repo,std::shared_ptr<core::Repository> flow_file_repo) : minifi::FlowController(repo,flow_file_repo,nullptr)
 	{
 	}
 	~TestFlowController()
