@@ -308,6 +308,19 @@ MiNiFi can also be installed as a system service using minifi.sh with an optiona
 ## Documentation
 See https://nifi.apache.org/minifi for the latest documentation.
 
+## Contributing
+
+We welcome all contributions to Apache MiNiFi. To make development easier, we've included 
+the linter for the Google Style guide. Google provides an Eclipse formatter for their style
+guide. It is located [here](https://github.com/google/styleguide/blob/gh-pages/eclipse-cpp-google-style.xml).
+New contributions are expected to follow the Google style guide when it is reasonable. 
+Additionally, all new files must include a copy of the Apache License Header. 
+
+Once you have completed your changes, including source code and tests, you can verify that
+you follow the Google style guide by running the following command:
+     $ make linter. 
+This will provide output for all source files.
+
 ## License
 Except as otherwise noted this software is licensed under the
 [Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.html)
