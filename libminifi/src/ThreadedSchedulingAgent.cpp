@@ -22,103 +22,125 @@
 
 #include "ThreadedSchedulingAgent.h"
 
-#include "ProcessContext.h"
-#include "ProcessSession.h"
-#include "ProcessSessionFactory.h"
+#include "core/Connectable.h"
+#include "core/ProcessorNode.h"
+#include "core/ProcessContext.h"
+#include "core/ProcessSession.h"
+#include "core/ProcessSessionFactory.h"
 
-void ThreadedSchedulingAgent::schedule(Processor *processor)
-{
-	std::lock_guard<std::mutex> lock(_mtx);
+namespace org {
+namespace apache {
+namespace nifi {
+namespace minifi {
 
-	_administrativeYieldDuration = 0;
-	std::string yieldValue;
+void ThreadedSchedulingAgent::schedule(
+    std::shared_ptr<core::Processor> processor) {
+  std::lock_guard < std::mutex > lock(mutex_);
 
-	if (configure_->get(Configure::nifi_administrative_yield_duration, yieldValue))
-	{
-		TimeUnit unit;
-		if (Property::StringToTime(yieldValue, _administrativeYieldDuration, unit) &&
-					Property::ConvertTimeUnitToMS(_administrativeYieldDuration, unit, _administrativeYieldDuration))
-		{
-			logger_->log_debug("nifi_administrative_yield_duration: [%d] ms", _administrativeYieldDuration);
-		}
-	}
+  _administrativeYieldDuration = 0;
+  std::string yieldValue;
 
-	_boredYieldDuration = 0;
-	if (configure_->get(Configure::nifi_bored_yield_duration, yieldValue))
-	{
-		TimeUnit unit;
-		if (Property::StringToTime(yieldValue, _boredYieldDuration, unit) &&
-					Property::ConvertTimeUnitToMS(_boredYieldDuration, unit, _boredYieldDuration))
-		{
-			logger_->log_debug("nifi_bored_yield_duration: [%d] ms", _boredYieldDuration);
-		}
-	}
+  if (configure_->get(Configure::nifi_administrative_yield_duration,
+                      yieldValue)) {
+    core::TimeUnit unit;
+    if (core::Property::StringToTime(
+        yieldValue, _administrativeYieldDuration, unit)
+        && core::Property::ConvertTimeUnitToMS(
+            _administrativeYieldDuration, unit, _administrativeYieldDuration)) {
+      logger_->log_debug("nifi_administrative_yield_duration: [%d] ms",
+                         _administrativeYieldDuration);
+    }
+  }
 
-	if (processor->getScheduledState() != RUNNING)
-	{
-		logger_->log_info("Can not schedule threads for processor %s because it is not running", processor->getName().c_str());
-		return;
-	}
+  _boredYieldDuration = 0;
+  if (configure_->get(Configure::nifi_bored_yield_duration, yieldValue)) {
+    core::TimeUnit unit;
+    if (core::Property::StringToTime(
+        yieldValue, _boredYieldDuration, unit)
+        && core::Property::ConvertTimeUnitToMS(
+            _boredYieldDuration, unit, _boredYieldDuration)) {
+      logger_->log_debug("nifi_bored_yield_duration: [%d] ms",
+                         _boredYieldDuration);
+    }
+  }
 
-	std::map<std::string, std::vector<std::thread *>>::iterator it =
-			_threads.find(processor->getUUIDStr());
-	if (it != _threads.end())
-	{
-		logger_->log_info("Can not schedule threads for processor %s because there are existing threads running");
-		return;
-	}
+  if (processor->getScheduledState() != core::RUNNING) {
+    logger_->log_info(
+        "Can not schedule threads for processor %s because it is not running",
+        processor->getName().c_str());
+    return;
+  }
 
-	auto processContext = std::make_shared<ProcessContext>(processor);
-	auto sessionFactory = std::make_shared<ProcessSessionFactory>(processContext.get());
+  std::map<std::string, std::vector<std::thread *>>::iterator it =
+      _threads.find(processor->getUUIDStr());
+  if (it != _threads.end()) {
+    logger_->log_info(
+        "Can not schedule threads for processor %s because there are existing threads running");
+    return;
+  }
 
-	processor->onSchedule(processContext.get(), sessionFactory.get());
+  core::ProcessorNode processor_node(processor);
+  auto processContext = std::make_shared
+      < core::ProcessContext > (processor_node,repo_);
+  auto sessionFactory = std::make_shared
+      < core::ProcessSessionFactory
+      > (processContext.get());
 
-	std::vector<std::thread *> threads;
-	for (int i = 0; i < processor->getMaxConcurrentTasks(); i++)
-	{
-	    ThreadedSchedulingAgent *agent = this;
-		std::thread *thread = new std::thread([agent, processor, processContext, sessionFactory] () {
-			agent->run(processor, processContext.get(), sessionFactory.get());
-		});
-		thread->detach();
-		threads.push_back(thread);
-		logger_->log_info("Scheduled thread %d running for process %s", thread->get_id(),
-				processor->getName().c_str());
-	}
-	_threads[processor->getUUIDStr().c_str()] = threads;
+  processor->onSchedule(processContext.get(), sessionFactory.get());
 
-	return;
+  std::vector<std::thread *> threads;
+  for (int i = 0; i < processor->getMaxConcurrentTasks(); i++) {
+    ThreadedSchedulingAgent *agent = this;
+    std::thread *thread = new std::thread(
+        [agent, processor, processContext, sessionFactory] () {
+          agent->run(processor, processContext.get(), sessionFactory.get());
+        });
+    thread->detach();
+    threads.push_back(thread);
+    logger_->log_info("Scheduled thread %d running for process %s",
+                      thread->get_id(), processor->getName().c_str());
+  }
+  _threads[processor->getUUIDStr().c_str()] = threads;
+
+  return;
 }
 
-void ThreadedSchedulingAgent::unschedule(Processor *processor)
-{
-	std::lock_guard<std::mutex> lock(_mtx);
-	
-	logger_->log_info("Shutting down threads for processor %s/%s",
-			processor->getName().c_str(),
-			processor->getUUIDStr().c_str());
+void ThreadedSchedulingAgent::unschedule(std::shared_ptr<core::Processor> processor) {
+  std::lock_guard < std::mutex > lock(mutex_);
 
-	if (processor->getScheduledState() != RUNNING)
-	{
-		logger_->log_info("Cannot unschedule threads for processor %s because it is not running", processor->getName().c_str());
-		return;
-	}
+  logger_->log_info("Shutting down threads for processor %s/%s",
+                    processor->getName().c_str(),
+                    processor->getUUIDStr().c_str());
 
-	std::map<std::string, std::vector<std::thread *>>::iterator it =
-			_threads.find(processor->getUUIDStr());
+  if (processor->getScheduledState() != core::RUNNING) {
+    logger_->log_info(
+        "Cannot unschedule threads for processor %s because it is not running",
+        processor->getName().c_str());
+    return;
+  }
 
-	if (it == _threads.end())
-	{
-		logger_->log_info("Cannot unschedule threads for processor %s because there are no existing threads running", processor->getName().c_str());
-		return;
-	}
-	for (std::vector<std::thread *>::iterator itThread = it->second.begin(); itThread != it->second.end(); ++itThread)
-	{
-		std::thread *thread = *itThread;
-		logger_->log_info("Scheduled thread %d deleted for process %s", thread->get_id(),
-				processor->getName().c_str());
-		delete thread;
-	}
-	_threads.erase(processor->getUUIDStr());
-	processor->clearActiveTask();
+  std::map<std::string, std::vector<std::thread *>>::iterator it =
+      _threads.find(processor->getUUIDStr());
+
+  if (it == _threads.end()) {
+    logger_->log_info(
+        "Cannot unschedule threads for processor %s because there are no existing threads running",
+        processor->getName().c_str());
+    return;
+  }
+  for (std::vector<std::thread *>::iterator itThread = it->second.begin();
+      itThread != it->second.end(); ++itThread) {
+    std::thread *thread = *itThread;
+    logger_->log_info("Scheduled thread %d deleted for process %s",
+                      thread->get_id(), processor->getName().c_str());
+    delete thread;
+  }
+  _threads.erase(processor->getUUIDStr());
+  processor->clearActiveTask();
 }
+
+
+} /* namespace minifi */
+} /* namespace nifi */
+} /* namespace apache */
+} /* namespace org */

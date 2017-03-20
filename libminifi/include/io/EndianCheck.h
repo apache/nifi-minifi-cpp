@@ -1,5 +1,5 @@
 /**
-  *
+ *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -16,32 +16,34 @@
  * limitations under the License.
  */
 
-
 #ifndef LIBMINIFI_INCLUDE_IO_ENDIANCHECK_H_
 #define LIBMINIFI_INCLUDE_IO_ENDIANCHECK_H_
-
-
-
+namespace org {
+namespace apache {
+namespace nifi {
+namespace minifi {
+namespace io {
 /**
  * Mechanism to determine endianness of host.
  * Accounts for only BIG/LITTLE/BIENDIAN
  **/
-class EndiannessCheck
-{
-public:
-    static bool IS_LITTLE;
-private:
+class EndiannessCheck {
+ public:
+  static bool IS_LITTLE;
+ private:
 
-    static bool is_little_endian() {
-        /* do whatever is needed at static init time */
-        unsigned int x = 1;
-        char *c = (char*) &x;
-        IS_LITTLE=*c==1;
-        return IS_LITTLE;
-    }
+  static bool is_little_endian() {
+    /* do whatever is needed at static init time */
+    unsigned int x = 1;
+    char *c = (char*) &x;
+    IS_LITTLE = *c == 1;
+    return IS_LITTLE;
+  }
 };
 
-
-
-
+} /* namespace io */
+} /* namespace minifi */
+} /* namespace nifi */
+} /* namespace apache */
+} /* namespace org */
 #endif /* LIBMINIFI_INCLUDE_IO_ENDIANCHECK_H_ */

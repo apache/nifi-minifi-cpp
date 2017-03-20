@@ -19,7 +19,13 @@
 
 #include <algorithm>
 #include <sstream>
-#include "../utils/FailurePolicy.h"
+#include "utils/FailurePolicy.h"
+
+namespace org {
+namespace apache {
+namespace nifi {
+namespace minifi {
+namespace utils {
 
 /**
  * Stateless String utility class.
@@ -121,5 +127,12 @@ public:
 	}
 
 };
+
+} /* namespace utils */
+} /* namespace minifi */
+} /* namespace nifi */
+} /* namespace apache */
+} /* namespace org */
+
 
 #endif /* LIBMINIFI_INCLUDE_IO_STRINGUTILS_H_ */

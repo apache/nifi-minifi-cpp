@@ -22,64 +22,71 @@
 #include <iostream>
 #include "Exception.h"
 #include "SchedulingAgent.h"
+#include "core/Processor.h"
 
-bool SchedulingAgent::hasWorkToDo(Processor *processor)
-{
-	// Whether it has work to do
-	if (processor->getTriggerWhenEmpty() || !processor->hasIncomingConnections() ||
-			processor->flowFilesQueued())
-		return true;
-	else
-		return false;
+namespace org {
+namespace apache {
+namespace nifi {
+namespace minifi {
+
+bool SchedulingAgent::hasWorkToDo(
+    std::shared_ptr<core::Processor> processor) {
+  // Whether it has work to do
+  if (processor->getTriggerWhenEmpty() || !processor->hasIncomingConnections()
+      || processor->flowFilesQueued())
+    return true;
+  else
+    return false;
 }
 
-bool SchedulingAgent::hasTooMuchOutGoing(Processor *processor)
-{
-	return processor->flowFilesOutGoingFull();
+bool SchedulingAgent::hasTooMuchOutGoing(
+    std::shared_ptr<core::Processor> processor) {
+  return processor->flowFilesOutGoingFull();
 }
 
-bool SchedulingAgent::onTrigger(Processor *processor, ProcessContext *processContext, ProcessSessionFactory *sessionFactory)
-{
-	if (processor->isYield())
-		return false;
+bool SchedulingAgent::onTrigger(
+    std::shared_ptr<core::Processor> processor,
+    core::ProcessContext *processContext,
+    core::ProcessSessionFactory *sessionFactory) {
+  if (processor->isYield())
+    return false;
 
-	// No need to yield, reset yield expiration to 0
-	processor->clearYield();
+  // No need to yield, reset yield expiration to 0
+  processor->clearYield();
 
-	if (!hasWorkToDo(processor))
-		// No work to do, yield
-		return true;
+  if (!hasWorkToDo(processor))
+    // No work to do, yield
+    return true;
 
-	if(hasTooMuchOutGoing(processor))
-		// need to apply backpressure
-		return true;
+  if (hasTooMuchOutGoing(processor))
+    // need to apply backpressure
+    return true;
 
-	//TODO runDuration
+  //TODO runDuration
 
-	processor->incrementActiveTasks();
-	try
-	{
-		processor->onTrigger(processContext, sessionFactory);
-		processor->decrementActiveTask();
-	}
-	catch (Exception &exception)
-	{
-		// Normal exception
-		logger_->log_debug("Caught Exception %s", exception.what());
-		processor->decrementActiveTask();
-	}
-	catch (std::exception &exception)
-	{
-		logger_->log_debug("Caught Exception %s", exception.what());
-		processor->yield(_administrativeYieldDuration);
-		processor->decrementActiveTask();
-	}
-	catch (...)
-	{
-		logger_->log_debug("Caught Exception during SchedulingAgent::onTrigger");
-		processor->yield(_administrativeYieldDuration);
-		processor->decrementActiveTask();
-	}
+  processor->incrementActiveTasks();
+  try {
+    processor->onTrigger(processContext, sessionFactory);
+    processor->decrementActiveTask();
+  } catch (Exception &exception) {
+    // Normal exception
+    logger_->log_debug("Caught Exception %s", exception.what());
+    processor->decrementActiveTask();
+  } catch (std::exception &exception) {
+    logger_->log_debug("Caught Exception %s", exception.what());
+    processor->yield(_administrativeYieldDuration);
+    processor->decrementActiveTask();
+  } catch (...) {
+    logger_->log_debug("Caught Exception during SchedulingAgent::onTrigger");
+    processor->yield(_administrativeYieldDuration);
+    processor->decrementActiveTask();
+  }
 
-	return false;
+  return false;
 }
+
+
+} /* namespace minifi */
+} /* namespace nifi */
+} /* namespace apache */
+} /* namespace org */

@@ -26,9 +26,16 @@
 #include <mutex>
 #include <atomic>
 #include "io/BaseStream.h"
-#include "Logger.h"
+#include "core/core.h"
+#include "core/logging/Logger.h"
 
 #include "io/validation.h"
+
+namespace org {
+namespace apache {
+namespace nifi {
+namespace minifi {
+namespace io {
 
 /**
  * Socket class.
@@ -39,207 +46,209 @@
  *
  *
  */
-class Socket: public BaseStream {
-public:
-	/**
-	 * Constructor that accepts host name, port and listeners. With this
-	 * contructor we will be creating a server socket
-	 * @param hostname our host name
-	 * @param port connecting port
-	 * @param listeners number of listeners in the queue
-	 */
-	explicit Socket(const std::string &hostname, const uint16_t port,
-			const uint16_t listeners);
+class Socket : public BaseStream {
+ public:
+  /**
+   * Constructor that accepts host name, port and listeners. With this
+   * contructor we will be creating a server socket
+   * @param hostname our host name
+   * @param port connecting port
+   * @param listeners number of listeners in the queue
+   */
+  explicit Socket(const std::string &hostname, const uint16_t port,
+                  const uint16_t listeners);
 
-	/**
-	 * Constructor that creates a client socket.
-	 * @param hostname hostname we are connecting to.
-	 * @param port port we are connecting to.
-	 */
-	explicit Socket(const std::string &hostname, const uint16_t port);
+  /**
+   * Constructor that creates a client socket.
+   * @param hostname hostname we are connecting to.
+   * @param port port we are connecting to.
+   */
+  explicit Socket(const std::string &hostname, const uint16_t port);
 
-	/**
-	 * Move constructor.
-	 */
-	explicit Socket(const Socket &&);
+  /**
+   * Move constructor.
+   */
+  explicit Socket(const Socket &&);
 
-	static std::string HOSTNAME;
+  static std::string HOSTNAME;
 
-	/**
-	 * Static function to return the current machine's host name
-	 */
-	static std::string getMyHostName(std::string *str = &HOSTNAME) {
-		if (__builtin_expect(!IsNullOrEmpty(str), 0))
-			return *str;
-		else {
-			char hostname[1024];
-			gethostname(hostname, 1024);
-			Socket mySock(hostname, 0);
-			mySock.initialize();
-			return mySock.getHostname();
-		}
-	}
+  /**
+   * Static function to return the current machine's host name
+   */
+  static std::string getMyHostName(std::string *str = &HOSTNAME) {
+    if (__builtin_expect(!IsNullOrEmpty(str), 0))
+      return *str;
+    else {
+      char hostname[1024];
+      gethostname(hostname, 1024);
+      Socket mySock(hostname, 0);
+      mySock.initialize();
+      return mySock.getHostname();
+    }
+  }
 
-	/**
-	 * Destructor
-	 */
+  /**
+   * Destructor
+   */
 
-	virtual ~Socket();
+  virtual ~Socket();
 
-	virtual void closeStream();
-	/**
-	 * Initializes the socket
-	 * @return result of the creation operation.
-	 */
-	virtual short initialize();
+  virtual void closeStream();
+  /**
+   * Initializes the socket
+   * @return result of the creation operation.
+   */
+  virtual short initialize();
 
-	std::string getHostname() const;
+  std::string getHostname() const;
 
-	/**
-	 * Return the port for this socket
-	 * @returns port
-	 */
-	uint16_t getPort();
+  /**
+   * Return the port for this socket
+   * @returns port
+   */
+  uint16_t getPort();
 
-	// data stream extensions
-	/**
-	 * Reads data and places it into buf
-	 * @param buf buffer in which we extract data
-	 * @param buflen
-	 */
-	virtual int readData(std::vector<uint8_t> &buf, int buflen);
-	/**
-	 * Reads data and places it into buf
-	 * @param buf buffer in which we extract data
-	 * @param buflen
-	 */
-	virtual int readData(uint8_t *buf, int buflen);
+  // data stream extensions
+  /**
+   * Reads data and places it into buf
+   * @param buf buffer in which we extract data
+   * @param buflen
+   */
+  virtual int readData(std::vector<uint8_t> &buf, int buflen);
+  /**
+   * Reads data and places it into buf
+   * @param buf buffer in which we extract data
+   * @param buflen
+   */
+  virtual int readData(uint8_t *buf, int buflen);
 
-	/**
-	 * Write value to the stream using std::vector
-	 * @param buf incoming buffer
-	 * @param buflen buffer to write
-	 *
-	 */
-	virtual int writeData(std::vector<uint8_t> &buf, int buflen);
+  /**
+   * Write value to the stream using std::vector
+   * @param buf incoming buffer
+   * @param buflen buffer to write
+   *
+   */
+  virtual int writeData(std::vector<uint8_t> &buf, int buflen);
 
-	/**
-	 * writes value to stream
-	 * @param value value to write
-	 * @param size size of value
-	 */
-	virtual int writeData(uint8_t *value, int size);
+  /**
+   * writes value to stream
+   * @param value value to write
+   * @param size size of value
+   */
+  virtual int writeData(uint8_t *value, int size);
 
-	
-	
-	/**
-	 * Writes a system word
-	 * @param value value to write
-	 */
-	virtual int write(uint64_t value, bool is_little_endian =
-			EndiannessCheck::IS_LITTLE);
+  /**
+   * Writes a system word
+   * @param value value to write
+   */
+  virtual int write(uint64_t value, bool is_little_endian =
+                        EndiannessCheck::IS_LITTLE);
 
-	/**
-	 * Writes a uint32_t
-	 * @param value value to write
-	 */
-	virtual int write(uint32_t value, bool is_little_endian =
-			EndiannessCheck::IS_LITTLE);
+  /**
+   * Writes a uint32_t
+   * @param value value to write
+   */
+  virtual int write(uint32_t value, bool is_little_endian =
+                        EndiannessCheck::IS_LITTLE);
 
-	/**
-	 * Writes a system short
-	 * @param value value to write
-	 */
-	virtual int write(uint16_t value, bool is_little_endian =
-			EndiannessCheck::IS_LITTLE);
+  /**
+   * Writes a system short
+   * @param value value to write
+   */
+  virtual int write(uint16_t value, bool is_little_endian =
+                        EndiannessCheck::IS_LITTLE);
 
-	
-	/**
-	 * Reads a system word
-	 * @param value value to write
-	 */
-	virtual int read(uint64_t &value, bool is_little_endian =
-			EndiannessCheck::IS_LITTLE);
+  /**
+   * Reads a system word
+   * @param value value to write
+   */
+  virtual int read(uint64_t &value, bool is_little_endian =
+                       EndiannessCheck::IS_LITTLE);
 
-	/**
-	 * Reads a uint32_t
-	 * @param value value to write
-	 */
-	virtual int read(uint32_t &value, bool is_little_endian =
-			EndiannessCheck::IS_LITTLE);
+  /**
+   * Reads a uint32_t
+   * @param value value to write
+   */
+  virtual int read(uint32_t &value, bool is_little_endian =
+                       EndiannessCheck::IS_LITTLE);
 
-	/**
-	 * Reads a system short
-	 * @param value value to write
-	 */
-	virtual int read(uint16_t &value, bool is_little_endian =
-			EndiannessCheck::IS_LITTLE);
+  /**
+   * Reads a system short
+   * @param value value to write
+   */
+  virtual int read(uint16_t &value, bool is_little_endian =
+                       EndiannessCheck::IS_LITTLE);
 
-	/**
-	 * Returns the underlying buffer
-	 * @return vector's array
-	 **/
-	const uint8_t *getBuffer() const {
-		return ::DataStream::getBuffer();
-	}
+  /**
+   * Returns the underlying buffer
+   * @return vector's array
+   **/
+  const uint8_t *getBuffer() const {
+    return DataStream::getBuffer();
+  }
 
-	/**
-	 * Retrieve size of data stream
-	 * @return size of data stream
-	 **/
-	const uint32_t getSize() const {
-		return ::DataStream::getSize();
-	}
+  /**
+   * Retrieve size of data stream
+   * @return size of data stream
+   **/
+  const uint32_t getSize() const {
+    return DataStream::getSize();
+  }
 
-protected:
+ protected:
 
-	/**
-	 * Creates a vector and returns the vector using the provided
-	 * type name.
-	 * @param t incoming object
-	 * @returns vector.
-	 */
-	template<typename T>
-	std::vector<uint8_t> readBuffer(const T&);
+  /**
+   * Creates a vector and returns the vector using the provided
+   * type name.
+   * @param t incoming object
+   * @returns vector.
+   */
+  template<typename T>
+  std::vector<uint8_t> readBuffer(const T&);
 
-	/**
-	 * Creates a connection using the address info object.
-	 * @param p addrinfo structure.
-	 * @returns fd.
-	 */
-	virtual int8_t createConnection(const addrinfo *p,in_addr_t &addr);
+  /**
+   * Creates a connection using the address info object.
+   * @param p addrinfo structure.
+   * @returns fd.
+   */
+  virtual int8_t createConnection(const addrinfo *p, in_addr_t &addr);
 
-	/**
-	 * Sets socket options depending on the instance.
-	 * @param sock socket file descriptor.
-	 */
-	virtual short setSocketOptions(const int sock);
+  /**
+   * Sets socket options depending on the instance.
+   * @param sock socket file descriptor.
+   */
+  virtual short setSocketOptions(const int sock);
 
-	/**
-	 * Attempt to select the socket file descriptor
-	 * @param msec timeout interval to wait
-	 * @returns file descriptor
-	 */
-	virtual short select_descriptor(const uint16_t msec);
+  /**
+   * Attempt to select the socket file descriptor
+   * @param msec timeout interval to wait
+   * @returns file descriptor
+   */
+  virtual short select_descriptor(const uint16_t msec);
 
-	std::shared_ptr<Logger> logger_;
+  std::shared_ptr<logging::Logger> logger_;
 
-	addrinfo *addr_info_;
+  addrinfo *addr_info_;
 
-	std::recursive_mutex selection_mutex_;
+  std::recursive_mutex selection_mutex_;
 
-	std::string requested_hostname_;
-	std::string canonical_hostname_;
-	uint16_t port_;
+  std::string requested_hostname_;
+  std::string canonical_hostname_;
+  uint16_t port_;
 
-	// connection information
-	int32_t socket_file_descriptor_;
+  // connection information
+  int32_t socket_file_descriptor_;
 
-	fd_set total_list_;
-	fd_set read_fds_;
-	std::atomic<uint16_t> socket_max_;
-	uint16_t listeners_;
+  fd_set total_list_;
+  fd_set read_fds_;
+  std::atomic<uint16_t> socket_max_;
+  uint16_t listeners_;
 
 };
 
+} /* namespace io */
+} /* namespace minifi */
+} /* namespace nifi */
+} /* namespace apache */
+} /* namespace org */
 #endif /* LIBMINIFI_INCLUDE_IO_CLIENTSOCKET_H_ */

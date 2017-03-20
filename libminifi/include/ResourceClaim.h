@@ -27,75 +27,85 @@
 #include <map>
 #include <mutex>
 #include <atomic>
-#include "Configure.h"
+#include "properties/Configure.h"
 
-//! Default content directory
+namespace org {
+namespace apache {
+namespace nifi {
+namespace minifi {
+
+
+// Default content directory
 #define DEFAULT_CONTENT_DIRECTORY "./content_repository"
 
 
 
-//! ResourceClaim Class
+// ResourceClaim Class
 class ResourceClaim {
 
 public:
   
 	static std::string default_directory_path;
-	//! Constructor
+	// Constructor
 	/*!
 	 * Create a new resource claim
 	 */
 	ResourceClaim(const std::string contentDirectory = default_directory_path);
-	//! Destructor
+	// Destructor
 	virtual ~ResourceClaim() {}
-	//! increaseFlowFileRecordOwnedCount
+	// increaseFlowFileRecordOwnedCount
 	void increaseFlowFileRecordOwnedCount()
 	{
 		++_flowFileRecordOwnedCount;
 	}
-	//! decreaseFlowFileRecordOwenedCount
+	// decreaseFlowFileRecordOwenedCount
 	void decreaseFlowFileRecordOwnedCount()
 	{
 		--_flowFileRecordOwnedCount;
 	}
-	//! getFlowFileRecordOwenedCount
+	// getFlowFileRecordOwenedCount
 	uint64_t getFlowFileRecordOwnedCount()
 	{
 		return _flowFileRecordOwnedCount;
 	}
-	//! Get the content full path
+	// Get the content full path
 	std::string getContentFullPath()
 	{
 		return _contentFullPath;
 	}
-	//! Set the content full path
+	// Set the content full path
 	void setContentFullPath(std::string path)
 	{
 		_contentFullPath = path;
 	}
 
 protected:
-	//! A global unique identifier
+	// A global unique identifier
 	uuid_t _uuid;
-	//! A local unique identifier
+	// A local unique identifier
 	uint64_t _id;
-	//! Full path to the content
+	// Full path to the content
 	std::string _contentFullPath;
 
-	//! How many FlowFileRecord Own this cliam
+	// How many FlowFileRecord Own this cliam
 	std::atomic<uint64_t> _flowFileRecordOwnedCount;
 
 private:
-	//! Configure
+	// Configure
 	Configure *configure_;
-	//! Logger
-	std::shared_ptr<Logger> logger_;
+	// Logger
+	std::shared_ptr<logging::Logger> logger_;
 	// Prevent default copy constructor and assignment operation
 	// Only support pass by reference or pointer
 	ResourceClaim(const ResourceClaim &parent);
 	ResourceClaim &operator=(const ResourceClaim &parent);
 
-	//! Local resource claim number
+	// Local resource claim number
 	static std::atomic<uint64_t> _localResourceClaimNumber;
 };
 
+} /* namespace minifi */
+} /* namespace nifi */
+} /* namespace apache */
+} /* namespace org */
 #endif

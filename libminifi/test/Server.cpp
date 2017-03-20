@@ -22,7 +22,7 @@
 #define DEFAULT_REPORT_INTERVAL 1000 // 1 sec
 #define MAX_READ_TIMEOUT 30000 // 30 seconds
 
-//! FlowControl Protocol Msg Type
+// FlowControl Protocol Msg Type
 typedef enum {
 	REGISTER_REQ, // Device Register Request from device to server which contain device serial number, current running flow YAML version
 	REGISTER_RESP, // Device Register Respond from server to device, may contain new flow.yml from server ask device to apply and also device report interval
@@ -31,7 +31,7 @@ typedef enum {
 	MAX_FLOW_CONTROL_MSG_TYPE
 } FlowControlMsgType;
 
-//! FlowControl Protocol Msg Type String
+// FlowControl Protocol Msg Type String
 static const char *FlowControlMsgTypeStr[MAX_FLOW_CONTROL_MSG_TYPE] =
 {
 		"REGISTER_REQ",
@@ -40,7 +40,7 @@ static const char *FlowControlMsgTypeStr[MAX_FLOW_CONTROL_MSG_TYPE] =
 		"REPORT_RESP"
 };
 
-//! Flow Control Msg Type to String
+// Flow Control Msg Type to String
 inline const char *FlowControlMsgTypeToStr(FlowControlMsgType type)
 {
 	if (type < MAX_FLOW_CONTROL_MSG_TYPE)
@@ -49,7 +49,7 @@ inline const char *FlowControlMsgTypeToStr(FlowControlMsgType type)
 		return NULL;
 }
 
-//! FlowControll Protocol Msg ID (Some Messages are fix length, Some are variable length (TLV)
+// FlowControll Protocol Msg ID (Some Messages are fix length, Some are variable length (TLV)
 typedef enum {
 	//Fix length 8 bytes: client to server in register request, required field
 	FLOW_SERIAL_NUMBER,
@@ -70,7 +70,7 @@ typedef enum {
 	MAX_FLOW_MSG_ID
 } FlowControlMsgID;
 
-//! FlowControl Protocol Msg ID String
+// FlowControl Protocol Msg ID String
 static const char *FlowControlMsgIDStr[MAX_FLOW_MSG_ID] =
 {
 		"FLOW_SERIAL_NUMBER",
@@ -86,7 +86,7 @@ static const char *FlowControlMsgIDStr[MAX_FLOW_MSG_ID] =
 #define TYPE_HDR_LEN 4 // Fix Hdr Type
 #define TLV_HDR_LEN 8 // Type 4 bytes and Len 4 bytes
 
-//! FlowControl Protocol Msg Len
+// FlowControl Protocol Msg Len
 inline int FlowControlMsgIDEncodingLen(FlowControlMsgID id, int payLoadLen)
 {
 	if (id == FLOW_SERIAL_NUMBER)
@@ -99,7 +99,7 @@ inline int FlowControlMsgIDEncodingLen(FlowControlMsgID id, int payLoadLen)
 		return -1;
 }
 
-//! Flow Control Msg Id to String
+// Flow Control Msg Id to String
 inline const char *FlowControlMsgIdToStr(FlowControlMsgID id)
 {
 	if (id < MAX_FLOW_MSG_ID)
@@ -108,7 +108,7 @@ inline const char *FlowControlMsgIdToStr(FlowControlMsgID id)
 		return NULL;
 }
 
-//! Flow Control Respond status code
+// Flow Control Respond status code
 typedef enum {
 	RESP_SUCCESS,
 	RESP_TRIGGER_REGISTER, // Server respond to client report to re trigger register
@@ -118,7 +118,7 @@ typedef enum {
 	MAX_RESP_CODE
 } FlowControlRespCode;
 
-//! FlowControl Resp Code str
+// FlowControl Resp Code str
 static const char *FlowControlRespCodeStr[MAX_RESP_CODE] =
 {
 		"RESP_SUCCESS",
@@ -128,7 +128,7 @@ static const char *FlowControlRespCodeStr[MAX_RESP_CODE] =
 		"RESP_FAILURE"
 };
 
-//! Flow Control Resp Code to String
+// Flow Control Resp Code to String
 inline const char *FlowControlRespCodeToStr(FlowControlRespCode code)
 {
 	if (code < MAX_RESP_CODE)
@@ -137,16 +137,16 @@ inline const char *FlowControlRespCodeToStr(FlowControlRespCode code)
 		return NULL;
 }
 
-//! Common FlowControlProtocol Header
+// Common FlowControlProtocol Header
 typedef struct {
-	uint32_t msgType; //! Msg Type
-	uint32_t seqNumber; //! Seq Number to match Req with Resp
-	uint32_t status; //! Resp Code, see FlowControlRespCode
-	uint32_t payloadLen; //! Msg Payload length
+	uint32_t msgType; // Msg Type
+	uint32_t seqNumber; // Seq Number to match Req with Resp
+	uint32_t status; // Resp Code, see FlowControlRespCode
+	uint32_t payloadLen; // Msg Payload length
 } FlowControlProtocolHeader;
 
 
-//! encode uint32_t
+// encode uint32_t
 uint8_t *encode(uint8_t *buf, uint32_t value)
 {
 		*buf++ = (value & 0xFF000000) >> 24;
@@ -156,14 +156,14 @@ uint8_t *encode(uint8_t *buf, uint32_t value)
 		return buf;
 }
 
-//! encode uint32_t
+// encode uint32_t
 uint8_t *decode(uint8_t *buf, uint32_t &value)
 {
 		value = ((buf[0]<<24)|(buf[1]<<16)|(buf[2]<<8)|(buf[3]));
 		return (buf + 4);
 }
 
-//! encode byte array
+// encode byte array
 uint8_t *encode(uint8_t *buf, uint8_t *bufArray, int size)
 {
 		memcpy(buf, bufArray, size);
@@ -171,7 +171,7 @@ uint8_t *encode(uint8_t *buf, uint8_t *bufArray, int size)
 		return buf;
 }
 
-//! encode std::string
+// encode std::string
 uint8_t *encode(uint8_t *buf, std::string value)
 {
 		// add the \0 for size

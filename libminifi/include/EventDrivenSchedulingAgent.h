@@ -20,36 +20,46 @@
 #ifndef __EVENT_DRIVEN_SCHEDULING_AGENT_H__
 #define __EVENT_DRIVEN_SCHEDULING_AGENT_H__
 
-#include "Logger.h"
-#include "Processor.h"
-#include "ProcessContext.h"
+#include "core/logging/Logger.h"
+#include "core/Processor.h"
+#include "core/ProcessContext.h"
+#include "core/ProcessSessionFactory.h"
 #include "ThreadedSchedulingAgent.h"
 
-//! EventDrivenSchedulingAgent Class
-class EventDrivenSchedulingAgent : public ThreadedSchedulingAgent
-{
-public:
-	//! Constructor
-	/*!
-	 * Create a new processor
-	 */
-	EventDrivenSchedulingAgent()
-	: ThreadedSchedulingAgent()
-	{
-	}
-	//! Destructor
-	virtual ~EventDrivenSchedulingAgent()
-	{
-	}
-	//! Run function for the thread
-	void run(Processor *processor, ProcessContext *processContext, ProcessSessionFactory *sessionFactory);
+namespace org {
+namespace apache {
+namespace nifi {
+namespace minifi {
 
-private:
-	// Prevent default copy constructor and assignment operation
-	// Only support pass by reference or pointer
-	EventDrivenSchedulingAgent(const EventDrivenSchedulingAgent &parent);
-	EventDrivenSchedulingAgent &operator=(const EventDrivenSchedulingAgent &parent);
+// EventDrivenSchedulingAgent Class
+class EventDrivenSchedulingAgent : public ThreadedSchedulingAgent {
+ public:
+  // Constructor
+  /*!
+   * Create a new processor
+   */
+  EventDrivenSchedulingAgent(std::shared_ptr<core::Repository> repo)
+      : ThreadedSchedulingAgent(repo) {
+  }
+  // Destructor
+  virtual ~EventDrivenSchedulingAgent() {
+  }
+  // Run function for the thread
+  void run(std::shared_ptr<core::Processor> processor,
+           core::ProcessContext *processContext,
+           core::ProcessSessionFactory *sessionFactory);
+
+ private:
+  // Prevent default copy constructor and assignment operation
+  // Only support pass by reference or pointer
+  EventDrivenSchedulingAgent(const EventDrivenSchedulingAgent &parent);
+  EventDrivenSchedulingAgent &operator=(
+      const EventDrivenSchedulingAgent &parent);
 
 };
 
+} /* namespace minifi */
+} /* namespace nifi */
+} /* namespace apache */
+} /* namespace org */
 #endif

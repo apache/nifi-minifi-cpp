@@ -22,7 +22,11 @@
 #include <arpa/inet.h>
 #include "io/DataStream.h"
 #include "io/Serializable.h"
-
+namespace org {
+namespace apache {
+namespace nifi {
+namespace minifi {
+namespace io {
 
 #define htonll_r(x) ((((uint64_t)htonl(x)) << 32) + htonl((x) >> 32))
 
@@ -261,3 +265,10 @@ int Serializable::writeUTF(std::string str,DataStream *stream, bool widen) {
     }
     return ret;
 }
+
+
+} /* namespace io */
+} /* namespace minifi */
+} /* namespace nifi */
+} /* namespace apache */
+} /* namespace org */
