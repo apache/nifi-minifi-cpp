@@ -135,5 +135,9 @@ enable_testing(test)
 add_custom_target(
     docker
     COMMAND ${CMAKE_SOURCE_DIR}/docker/DockerBuild.sh 1000 1000 ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH} minificppsource ${CMAKE_SOURCE_DIR}
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/docker/
-)
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/docker/)
+
+# Create a custom build target that will run the linter.
+add_custom_target(
+    linter
+    COMMAND ${CMAKE_SOURCE_DIR}/thirdparty/google-styleguide/run_linter.sh ${CMAKE_SOURCE_DIR}/libminifi/include/ ${CMAKE_SOURCE_DIR}/libminifi/src/ )
