@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -15,23 +14,40 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "io/SocketFactory.h"
+#ifndef LIBMINIFI_INCLUDE_CORE_PROCESSORCONFIG_H_
+#define LIBMINIFI_INCLUDE_CORE_PROCESSORCONFIG_H_
 
-#include <atomic>
-#include <mutex> 
-  
+#include "core/core.h"
+#include "core/Property.h"
+
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
-namespace io {
-
-std::atomic<SocketFactory*> SocketFactory::context_instance_;
-std::mutex SocketFactory::context_mutex_;
+namespace core {
 
 
-} /* namespace io */
+struct ProcessorConfig {
+  std::string id;
+  std::string name;
+  std::string javaClass;
+  std::string maxConcurrentTasks;
+  std::string schedulingStrategy;
+  std::string schedulingPeriod;
+  std::string penalizationPeriod;
+  std::string yieldPeriod;
+  std::string runDurationNanos;
+  std::vector<std::string> autoTerminatedRelationships;
+  std::vector<core::Property> properties;
+};
+
+
+
+} /* namespace core */
 } /* namespace minifi */
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
+
+
+#endif /* LIBMINIFI_INCLUDE_CORE_PROCESSORCONFIG_H_ */

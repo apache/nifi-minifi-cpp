@@ -33,7 +33,8 @@
 #include "core/logging/BaseLogger.h"
 #include "core/logging/LogAppenders.h"
 #include "spdlog/spdlog.h"
-
+#include "core/FlowConfiguration.h"
+#include "core/yaml/YamlConfiguration.h"
 #include "core/repository/FlowFileRepository.h"
 #include "core/logging/Logger.h"
 #include "properties/Configure.h"
@@ -146,16 +147,21 @@ int main(int argc, char **argv) {
   logger->updateLogger(std::move(configured_logger));
 
   // Create repos for flow record and provenance
-  std::shared_ptr<provenance::ProvenanceRepository> prov_repo = std::make_shared<
-      provenance::ProvenanceRepository>();
+  std::shared_ptr<provenance::ProvenanceRepository> prov_repo =
+      std::make_shared<provenance::ProvenanceRepository>();
   prov_repo->initialize();
-  
-  std::shared_ptr<core::repository::FlowFileRepository> flow_repo = std::make_shared<
-      core::repository::FlowFileRepository>();
+
+  std::shared_ptr<core::repository::FlowFileRepository> flow_repo =
+      std::make_shared<core::repository::FlowFileRepository>();
   flow_repo->initialize();
 
+  std::unique_ptr<core::FlowConfiguration> flow_configuration = std::unique_ptr<
+      core::FlowConfiguration>(
+      new core::YamlConfiguration(prov_repo, flow_repo));
+
   controller = std::unique_ptr<minifi::FlowController>(
-      new minifi::FlowControllerImpl(prov_repo,flow_repo));
+      new minifi::FlowController(prov_repo, flow_repo,
+                                     std::move(flow_configuration)));
 
   // Load flow from specified configuration file
   controller->load();

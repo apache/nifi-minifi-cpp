@@ -18,6 +18,7 @@
 
 #ifndef VALIDATION_H
 #define VALIDATION_H
+#include <type_traits>
 #include <string>
 #include <cstring>
 
@@ -40,6 +41,7 @@ class size_function_functor_checker {
     has_size_function = sizeof(test<T>(0)) == sizeof(char)
   };
 };
+
 
 /**
  * Determines if the variable is null or ::size() == 0

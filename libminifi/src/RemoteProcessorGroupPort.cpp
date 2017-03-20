@@ -29,9 +29,8 @@
 
 #include "RemoteProcessorGroupPort.h"
 
+#include "../include/io/StreamFactoryh"
 #include "io/ClientSocket.h"
-#include "io/SocketFactory.h"
-
 #include "utils/TimeUtil.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
@@ -110,7 +109,7 @@ void RemoteProcessorGroupPort::onTrigger(core::ProcessContext *context,
     }
     std::unique_ptr<org::apache::nifi::minifi::io::DataStream> str =
         std::unique_ptr<org::apache::nifi::minifi::io::DataStream>(
-            org::apache::nifi::minifi::io::SocketFactory::getInstance()
+            org::apache::nifi::minifi::io::StreamFactory::getInstance()
                 ->createSocket(host, sport));
 
     std::unique_ptr<Site2SitePeer> peer_ = std::unique_ptr<Site2SitePeer>(

@@ -20,7 +20,7 @@
 
 #ifdef OPENSSL_SUPPORT
 #include <cstdint>
-#include "ClientSocket.h"
+#include "../ClientSocket.h"
 #include <atomic>
 #include <mutex>
 
