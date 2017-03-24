@@ -240,6 +240,7 @@ Connection *FlowControllerImpl::createConnection(std::string name,
 	return new Connection(name, uuid);
 }
 
+#ifdef YAML_SUPPORT
 void FlowControllerImpl::parseRootProcessGroupYaml(YAML::Node rootFlowNode) {
 	uuid_t uuid;
 	ProcessGroup *group = NULL;
@@ -707,6 +708,7 @@ void FlowControllerImpl::parsePropertiesNodeYaml(YAML::Node *propertiesNode,
 		}
 	}
 }
+#endif /* ifdef YAML_SUPPORT */
 
 void FlowControllerImpl::load() {
     if (_running) {
@@ -715,7 +717,7 @@ void FlowControllerImpl::load() {
     if (!_initialized) {
         logger_->log_info("Load Flow Controller from file %s", _configurationFileName.c_str());
 
-
+#ifdef YAML_SUPPORT
 		YAML::Node flow = YAML::LoadFile(_configurationFileName);
 
 		YAML::Node flowControllerNode = flow["Flow Controller"];
@@ -731,6 +733,7 @@ void FlowControllerImpl::load() {
 
 		// Load Flow File from Repo
 		loadFlowRepo();
+#endif
 
 		_initialized = true;
     }

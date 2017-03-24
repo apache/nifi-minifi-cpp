@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+#ifdef OPENSSL_SUPPORT
 #include "Property.h"
 #include "Configure.h"
 #include "io/TLSSocket.h"
@@ -234,3 +234,4 @@ int TLSSocket::readData(uint8_t *buf, int buflen) {
 
 	return total_read;
 }
+#endif // #ifdef OPENSSL_SUPPORT

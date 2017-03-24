@@ -53,6 +53,7 @@ void Repository::stop() {
 }
 
 void Repository::run(Repository *repo) {
+#ifdef LEVELDB_SUPPORT
 	// threshold for purge
 	uint64_t purgeThreshold = repo->_maxPartitionBytes * 3 / 4;
 	while (repo->_running) {
@@ -116,6 +117,7 @@ void Repository::run(Repository *repo) {
 		else
 			repo->_repoFull = false;
 	}
+#endif
 	return;
 }
 
