@@ -50,6 +50,10 @@ namespace core {
  */
 class FlowConfiguration : public CoreComponent {
  public:
+  /**
+   * Constructor that will be used for configuring
+   * the flow controller.
+   */
   FlowConfiguration(std::shared_ptr<core::Repository> repo,
                     std::shared_ptr<core::Repository> flow_file_repo,
                     const std::string path)
@@ -74,6 +78,10 @@ class FlowConfiguration : public CoreComponent {
   std::shared_ptr<minifi::Connection> createConnection(std::string name,
                                                        uuid_t uuid);
 
+  /**
+   * Returns the configuration path string
+   * @return config_path_
+   */
   const std::string &getConfigurationPath() {
     return config_path_;
   }
@@ -82,8 +90,15 @@ class FlowConfiguration : public CoreComponent {
     return getRoot(config_path_);
   }
 
+  /**
+   * Base implementation that returns a null root pointer.
+   * @return Extensions should return a non-null pointer in order to
+   * properly configure flow controller.
+   */
   virtual std::unique_ptr<core::ProcessGroup> getRoot(
-      const std::string &from_config) =0;
+      const std::string &from_config) {
+    return nullptr;
+  }
 
  protected:
   // configuration path

@@ -18,7 +18,6 @@
 #ifndef LIBMINIFI_INCLUDE_IO_TLSSOCKET_H_
 #define LIBMINIFI_INCLUDE_IO_TLSSOCKET_H_
 
-#ifdef OPENSSL_SUPPORT
 #include <cstdint>
 #include "../ClientSocket.h"
 #include <atomic>
@@ -43,84 +42,6 @@ namespace io {
 
 class TLSContext {
 
-<<<<<<< HEAD
-public:
-
-	/**
-	 * Build an instance, creating a memory fence, which
-	 * allows us to avoid locking. This is tantamount to double checked locking.
-	 * @returns new TLSContext;
-	 */
-	static TLSContext *getInstance() {
-		TLSContext* atomic_context = context_instance.load(
-				std::memory_order_relaxed);
-		std::atomic_thread_fence(std::memory_order_acquire);
-		if (atomic_context == nullptr) {
-			std::lock_guard<std::mutex> lock(context_mutex);
-			atomic_context = context_instance.load(std::memory_order_relaxed);
-			if (atomic_context == nullptr) {
-				atomic_context = new TLSContext();
-				atomic_context->initialize();
-				std::atomic_thread_fence(std::memory_order_release);
-				context_instance.store(atomic_context,
-						std::memory_order_relaxed);
-			}
-		}
-		return atomic_context;
-	}
-
-	virtual ~TLSContext() {
-		if (0 != ctx)
-			SSL_CTX_free(ctx);
-	}
-
-	SSL_CTX *getContext() {
-		return ctx;
-	}
-
-	short getError() {
-		return error_value;
-	}
-
-	short initialize();
-
-private:
-
-	static int pemPassWordCb(char *buf, int size, int rwflag, void *userdata) {
-		std::string passphrase;
-
-		if (Configure::getConfigure()->get(
-				Configure::nifi_security_client_pass_phrase, passphrase)) {
-
-			std::ifstream file(passphrase.c_str(), std::ifstream::in);
-			if (!file.good()) {
-				memset(buf, 0x00, size);
-				return 0;
-			}
-
-			std::string password;
-			password.assign((std::istreambuf_iterator<char>(file)),
-					std::istreambuf_iterator<char>());
-			file.close();
-			memset(buf,0x00,size);
-			memcpy(buf, password.c_str(), password.length()-1);
-
-			return password.length()-1;
-		}
-		return 0;
-	}
-
-	TLSContext();
-
-	std::shared_ptr<Logger> logger_;
-	Configure *configuration;
-	SSL_CTX *ctx;
-
-	short error_value;
-	static std::atomic<TLSContext*> context_instance;
-
-	static std::mutex context_mutex;
-=======
  public:
 
   /**
@@ -196,7 +117,7 @@ private:
 
   static std::atomic<TLSContext*> context_instance;
   static std::mutex context_mutex;
->>>>>>> MINIFI-217: First commit. Updates namespaces and removes
+
 };
 
 class TLSSocket : public Socket {
@@ -267,7 +188,6 @@ class TLSSocket : public Socket {
   SSL* ssl;
 
 };
-#endif
 
 } /* namespace io */
 } /* namespace minifi */

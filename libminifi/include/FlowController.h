@@ -122,7 +122,7 @@ class FlowController : public core::CoreComponent {
   // update property value
   void updatePropertyValue(std::string processorName, std::string propertyName,
                            std::string propertyValue) {
-    if (root_)
+    if (root_  != nullptr)
       root_->updatePropertyValue(processorName, propertyName, propertyValue);
   }
 

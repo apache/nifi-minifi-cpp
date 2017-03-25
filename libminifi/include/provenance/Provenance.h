@@ -30,10 +30,6 @@
 #include <thread>
 #include <vector>
 
-#include "leveldb/db.h"
-#include "leveldb/options.h"
-#include "leveldb/slice.h"
-#include "leveldb/status.h"
 
 #include "core/Repository.h"
 #include "core/Property.h"

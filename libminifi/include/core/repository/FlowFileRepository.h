@@ -65,14 +65,13 @@ class FlowFileRepository : public core::Repository, public std::enable_shared_fr
   }
 
   // Destructor
-  virtual ~FlowFileRepository() {
+  ~FlowFileRepository() {
     if (db_)
       delete db_;
   }
 
   // initialize
   virtual bool initialize() {
-
     std::string value;
 
     if (configure_->get(Configure::nifi_flowfile_repository_directory_default,

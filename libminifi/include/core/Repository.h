@@ -72,16 +72,26 @@ class Repository : public CoreComponent {
   }
 
   // initialize
-  virtual bool initialize() = 0;
+  virtual bool initialize(){
+    return true;
+  }
   // Put
-  virtual bool Put(std::string key, uint8_t *buf, int bufLen) = 0;
+  virtual bool Put(std::string key, uint8_t *buf, int bufLen){
+    return true;
+  }
   // Delete
-  virtual bool Delete(std::string key) = 0;
+  virtual bool Delete(std::string key){
+    return true;
+  }
 
-  virtual bool Get(std::string key, std::string &value) = 0;
+  virtual bool Get(std::string key, std::string &value) {
+    return true;
+  }
 
   // Run function for the thread
-  virtual  void run() = 0;
+  virtual  void run(){
+    // no op
+  }
   // Start the repository monitor thread
   virtual void start();
   // Stop the repository monitor thread

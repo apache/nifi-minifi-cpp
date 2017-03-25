@@ -15,13 +15,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_IO_SOCKET_H_
-#define LIBMINIFI_INCLUDE_IO_SOCKET_H_
 
-#include "ClientSocket.h"
 
-#ifdef OPENSSL_SUPPORT
-#include "tls/TLSSocket.h"
-#endif
+#include "core/core.h"
+#include "core/RepositoryFactory.h"
 
-#endif /* LIBMINIFI_INCLUDE_IO_TLS_SECURESOCKET_H_ */
+
+#include "core/ConfigurationFactory.h"
+
+TEST_CASE("NoYamlSupport1", "[NoYamlSupport1]") {
+  std::shared_ptr<core::Repository> prov_repo = core::createRepository(
+      "provenancerepository", true);
+REQUIRE(nullptr != prov_repo);
+std::unique_ptr<core::FlowConfiguration> flow_configuration = std::move(
+      core::createFlowConfiguration(prov_repo, prov_repo,
+                                   "yamlconfiguration"));
+
+
+  REQUIRE(nullptr != flow_configuration);
+  
+}
+

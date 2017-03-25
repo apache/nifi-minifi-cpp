@@ -15,13 +15,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_IO_SOCKET_H_
-#define LIBMINIFI_INCLUDE_IO_SOCKET_H_
 
-#include "ClientSocket.h"
+#include "../TestBase.h"
 
-#ifdef OPENSSL_SUPPORT
-#include "tls/TLSSocket.h"
-#endif
+#include "core/core.h"
+#include "core/RepositoryFactory.h"
 
-#endif /* LIBMINIFI_INCLUDE_IO_TLS_SECURESOCKET_H_ */
+TEST_CASE("NoLevelDBTest1", "[NoLevelDBTest]") {
+  std::shared_ptr<core::Repository> prov_repo = core::createRepository(
+      "provenancerepository", true);
+  REQUIRE(nullptr != prov_repo);
+}
+
+TEST_CASE("NoLevelDBTest2", "[NoLevelDBTest]") {
+  std::shared_ptr<core::Repository> prov_repo = core::createRepository(
+      "flowfilerepository", true);
+  REQUIRE(nullptr != prov_repo);
+}

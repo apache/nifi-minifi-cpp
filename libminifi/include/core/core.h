@@ -45,6 +45,36 @@ static inline std::string getClassName() {
   return name;
 }
 
+template<typename T>
+struct class_operations {
+  
+  template<typename Q=T>
+  static std::true_type canDestruct(decltype(std::declval<Q>().~Q()) *) {
+    return std::true_type();
+  }
+
+  
+  template<typename Q=T>
+  static std::false_type canDestruct(...) {
+    return std::false_type();
+  }
+
+  typedef decltype(canDestruct<T>(0)) type;
+
+  static const bool value = type::value; /* Which is it? */
+};
+
+
+template<typename T>
+typename std::enable_if<!class_operations<T>::value, T*>::type instantiate() {
+  throw std::runtime_error("Cannot instantiate class");
+}
+
+template<typename T>
+typename std::enable_if<class_operations<T>::value, T*>::type instantiate() {
+  return new T();
+}
+
 /**
  * Base component within MiNiFi
  * Purpose: Many objects store a name and UUID, therefore

@@ -23,6 +23,7 @@
 #include "leveldb/status.h"
 #include "core/Repository.h"
 #include "core/core.h"
+#include "provenance/Provenance.h"
 namespace org {
 namespace apache {
 namespace nifi {

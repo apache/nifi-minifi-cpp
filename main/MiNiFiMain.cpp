@@ -34,8 +34,8 @@
 #include "core/logging/LogAppenders.h"
 #include "spdlog/spdlog.h"
 #include "core/FlowConfiguration.h"
-#include "core/yaml/YamlConfiguration.h"
-#include "core/repository/FlowFileRepository.h"
+#include "core/ConfigurationFactory.h"
+#include "core/RepositoryFactory.h"
 #include "core/logging/Logger.h"
 #include "properties/Configure.h"
 #include "FlowController.h"
@@ -87,6 +87,9 @@ int main(int argc, char **argv) {
   uint16_t stop_wait_time = STOP_WAIT_TIME_MS;
 
   std::string graceful_shutdown_seconds = "";
+  std::string prov_repo_class = "provenancerepository";
+  std::string flow_repo_class = "flowfilerepository";
+  std::string nifi_configuration_class_name = "yamlconfiguration";
 
   running = sem_open("MiNiFiMain", O_CREAT, 0644, 0);
   if (running == SEM_FAILED || running == 0) {
@@ -146,22 +149,31 @@ int main(int argc, char **argv) {
 
   logger->updateLogger(std::move(configured_logger));
 
+  configure->get(minifi::Configure::nifi_provenance_repository_class_name,
+                 prov_repo_class);
   // Create repos for flow record and provenance
-  std::shared_ptr<provenance::ProvenanceRepository> prov_repo =
-      std::make_shared<provenance::ProvenanceRepository>();
+  std::shared_ptr<core::Repository> prov_repo = core::createRepository(
+      prov_repo_class, true);
   prov_repo->initialize();
 
-  std::shared_ptr<core::repository::FlowFileRepository> flow_repo =
-      std::make_shared<core::repository::FlowFileRepository>();
+  configure->get(minifi::Configure::nifi_flow_repository_class_name,
+                 flow_repo_class);
+
+  std::shared_ptr<core::Repository> flow_repo = core::createRepository(
+      flow_repo_class, true);
+
   flow_repo->initialize();
 
-  std::unique_ptr<core::FlowConfiguration> flow_configuration = std::unique_ptr<
-      core::FlowConfiguration>(
-      new core::YamlConfiguration(prov_repo, flow_repo));
+  configure->get(minifi::Configure::nifi_configuration_class_name,
+                 nifi_configuration_class_name);
+
+  std::unique_ptr<core::FlowConfiguration> flow_configuration = std::move(
+      core::createFlowConfiguration(prov_repo, flow_repo,
+                                   nifi_configuration_class_name));
 
   controller = std::unique_ptr<minifi::FlowController>(
       new minifi::FlowController(prov_repo, flow_repo,
-                                     std::move(flow_configuration)));
+                                 std::move(flow_configuration)));
 
   // Load flow from specified configuration file
   controller->load();

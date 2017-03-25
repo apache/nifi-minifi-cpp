@@ -29,7 +29,7 @@
 
 #include "RemoteProcessorGroupPort.h"
 
-#include "../include/io/StreamFactoryh"
+#include "../include/io/StreamFactory.h"
 #include "io/ClientSocket.h"
 #include "utils/TimeUtil.h"
 #include "core/ProcessContext.h"

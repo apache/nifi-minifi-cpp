@@ -16,42 +16,29 @@
  * limitations under the License.
  */
 
-#include "core/Property.h"
+#ifndef LIBMINIFI_INCLUDE_CORE_REPOSITORYFACTORY_H_
+#define LIBMINIFI_INCLUDE_CORE_REPOSITORYFACTORY_H_
+
+
+#include "core/Repository.h"
+#include "core.h"
 
 namespace org {
 namespace apache {
-namespace nifi {namespace minifi {
+namespace nifi {
+namespace minifi {
+
 namespace core {
 
-// Get Name for the property
-std::string Property::getName() const {
-  return name_;
-}
-// Get Description for the property
-std::string Property::getDescription() {
-  return description_;
-}
-// Get value for the property
-std::string Property::getValue() const {
-  return value_;
-}
-// Set value for the property
-void Property::setValue(std::string value) {
-  value_ = value;
-}
-// Compare
-bool Property::operator <(const Property & right) const {
-  return name_ < right.name_;
-}
+  std::shared_ptr<core::Repository> createRepository(
+      const std::string configuration_class_name, bool fail_safe = false);
 
-const Property &Property::operator=(const Property &other) {
-  name_ = other.name_;
-  value_ = other.value_;
-  return *this;
-}
+
 
 } /* namespace core */
 } /* namespace minifi */
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
+
+#endif /* LIBMINIFI_INCLUDE_CORE_REPOSITORYFACTORY_H_ */

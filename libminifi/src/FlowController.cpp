@@ -227,18 +227,6 @@ void FlowController::load() {
                       configuration_filename_.c_str());
 
     this->root_ = flow_configuration_->getRoot(configuration_filename_);
-    /*YAML::Node flow = YAML::LoadFile(configuration_filename_);
-
-     YAML::Node flowControllerNode = flow["Flow Controller"];
-     YAML::Node processorsNode = flow[CONFIG_YAML_PROCESSORS_KEY];
-     YAML::Node connectionsNode = flow["Connections"];
-     YAML::Node remoteProcessingGroupNode = flow["Remote Processing Groups"];
-
-     // Create the root process group
-     parseRootProcessGroupYaml(flowControllerNode);
-     parseProcessorNodeYaml(processorsNode, this->root_);
-     parseRemoteProcessGroupYaml(&remoteProcessingGroupNode, this->root_);
-     parseConnectionYaml(&connectionsNode, this->root_);*/
 
     // Load Flow File from Repo
     loadFlowRepo();
@@ -257,7 +245,7 @@ void FlowController::reload(std::string yamlFile) {
   this->configuration_filename_ = yamlFile;
   load();
   start();
-  if (!this->root_) {
+  if (this->root_ != nullptr) {
     this->configuration_filename_ = oldYamlFile;
     logger_->log_info("Rollback Flow Controller to YAML %s",
                       oldYamlFile.c_str());
@@ -271,7 +259,9 @@ void FlowController::reload(std::string yamlFile) {
 void FlowController::loadFlowRepo() {
   if (this->flow_file_repo_) {
     std::map<std::string, std::shared_ptr<Connection>> connectionMap;
-    this->root_->getConnections(connectionMap);
+    if (this->root_ != nullptr) {
+      this->root_->getConnections(connectionMap);
+    }
     auto rep = std::static_pointer_cast<core::repository::FlowFileRepository>(
         flow_file_repo_);
     rep->loadFlowFileToConnections(connectionMap);
@@ -290,9 +280,10 @@ bool FlowController::start() {
       logger_->log_info("Starting Flow Controller");
       this->_timerScheduler.start();
       this->_eventScheduler.start();
-      if (this->root_)
+      if (this->root_ != nullptr) {
         this->root_->startProcessing(&this->_timerScheduler,
                                      &this->_eventScheduler);
+      }
       running_ = true;
       this->protocol_->start();
       this->provenance_repo_->start();

@@ -21,14 +21,15 @@
 #include "core/ProcessorConfig.h"
 #include "yaml-cpp/yaml.h"
 #include "../FlowConfiguration.h"
+#include "Site2SiteClientProtocol.h"
 #include <string>
+#include "io/validation.h"
 
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
 namespace core {
-#include "Site2SiteClientProtocol.h"
 
 #define DEFAULT_FLOW_YAML_FILE_NAME "conf/flow.yml"
 #define CONFIG_YAML_PROCESSORS_KEY "Processors"
@@ -40,7 +41,9 @@ class YamlConfiguration : public FlowConfiguration {
                     std::shared_ptr<core::Repository> flow_file_repo,
                     const std::string path = DEFAULT_FLOW_YAML_FILE_NAME)
       : FlowConfiguration(repo, flow_file_repo, path) {
-
+    if (IsNullOrEmpty(config_path_)) {
+      config_path_ = DEFAULT_FLOW_YAML_FILE_NAME;
+    }
   }
 
   virtual ~YamlConfiguration() {
@@ -86,7 +89,6 @@ class YamlConfiguration : public FlowConfiguration {
   void parsePropertiesNodeYaml(YAML::Node *propertiesNode,
                                std::shared_ptr<core::Processor> processor);
 };
-
 
 } /* namespace core */
 } /* namespace minifi */

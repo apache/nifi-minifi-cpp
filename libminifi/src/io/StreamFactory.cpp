@@ -15,9 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include "../../include/io/StreamFactory.h"
+
 #include <atomic>
 #include <mutex> 
-#include "../../include/io/StreamFactoryh"
   
 namespace org {
 namespace apache {
