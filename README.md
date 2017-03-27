@@ -311,14 +311,15 @@ See https://nifi.apache.org/minifi for the latest documentation.
 ## Contributing
 
 We welcome all contributions to Apache MiNiFi. To make development easier, we've included 
-the Google style guide at thirdparty/google-styleguide/cppguide.html . We've also included
-the eclipse formatter in the same directory. New contributions are expected to follow the
-Google style guide when it is reasonable. Additionally, all new files must include a copy
-of the Apache License Header. 
+the linter for the Google Style guide. Google provides an Eclipse formatter for their style
+guide. It is located [here](https://github.com/google/styleguide/blob/gh-pages/eclipse-cpp-google-style.xml).
+New contributions are expected to follow the Google style guide when it is reasonable. 
+Additionally, all new files must include a copy of the Apache License Header. 
 
 Once you have completed your changes, including source code and tests, you can verify that
-you follow the Google style guide by running make linter. This will provide output for all
-source files.
+you follow the Google style guide by running the following command:
+     $ make linter. 
+This will provide output for all source files.
 
 ## License
 Except as otherwise noted this software is licensed under the
