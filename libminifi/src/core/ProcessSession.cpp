@@ -50,7 +50,7 @@ std::shared_ptr<core::FlowFile> ProcessSession::create() {
   return record;
 }
 
-std::shared_ptr<core::FlowFile> ProcessSession::create(std::shared_ptr<core::FlowFile> &parent) {
+std::shared_ptr<core::FlowFile> ProcessSession::create(std::shared_ptr<core::FlowFile> &&parent) {
   std::map<std::string, std::string> empty;
   std::shared_ptr<core::FlowFile> record = std::make_shared<FlowFileRecord>(process_context_->getProvenanceRepository(),
       empty);
@@ -530,6 +530,97 @@ void ProcessSession::read(std::shared_ptr<core::FlowFile> &&flow,
   }
 }
 
+/**
+  * Imports a file from the data stream
+  * @param stream incoming data stream that contains the data to store into a file
+  * @param flow flow file
+  *
+  */
+void ProcessSession::importFrom(io::DataStream &stream,
+                            std::shared_ptr<core::FlowFile> &&flow) {
+  std::shared_ptr<ResourceClaim> claim = std::make_shared<ResourceClaim>();
+
+  int max_read = getpagesize();
+  std::vector<uint8_t> charBuffer;
+  charBuffer.resize(max_read);
+
+  try {
+    std::ofstream fs;
+    uint64_t startTime = getTimeMillis();
+    fs.open(claim->getContentFullPath().c_str(),
+            std::fstream::out | std::fstream::binary | std::fstream::trunc);
+
+
+    if (fs.is_open() ) {
+
+      size_t position = 0;
+      const size_t max_size = stream.getSize();
+      size_t read_size = max_read;
+      while(position < max_size)
+      {
+        if ((max_size - position) > max_read)
+        {
+          read_size = max_read;
+        }
+        else
+        {
+          read_size = max_size - position;
+        }
+        charBuffer.clear();
+        stream.readData(charBuffer,read_size);
+
+        fs.write((const char*)charBuffer.data(),read_size);
+        position+=read_size;
+      }
+      // Open the source file and stream to the flow file
+
+      if (fs.good() && fs.tellp() >= 0) {
+        flow->setSize(fs.tellp());
+        flow->setOffset(0);
+        if (flow->getResourceClaim() != nullptr) {
+          // Remove the old claim
+          flow->getResourceClaim()->decreaseFlowFileRecordOwnedCount();
+          flow->clearResourceClaim();
+        }
+        flow->setResourceClaim(claim);
+        claim->increaseFlowFileRecordOwnedCount();
+
+        logger_->log_debug(
+            "Import offset %d length %d into content %s for FlowFile UUID %s",
+            flow->getOffset(), flow->getSize(),
+            flow->getResourceClaim()->getContentFullPath().c_str(),
+            flow->getUUIDStr().c_str());
+
+        fs.close();
+        std::string details = process_context_->getProcessorNode().getName()
+            + " modify flow record content " + flow->getUUIDStr();
+        uint64_t endTime = getTimeMillis();
+        provenance_report_->modifyContent(flow, details, endTime - startTime);
+      } else {
+        fs.close();
+        throw Exception(FILE_OPERATION_EXCEPTION, "File Import Error");
+      }
+    } else {
+      throw Exception(FILE_OPERATION_EXCEPTION, "File Import Error");
+    }
+
+  } catch (std::exception &exception) {
+    if (flow && flow->getResourceClaim() == claim) {
+      flow->getResourceClaim()->decreaseFlowFileRecordOwnedCount();
+      flow->clearResourceClaim();
+    }
+    logger_->log_debug("Caught Exception %s", exception.what());
+    throw;
+  } catch (...) {
+    if (flow && flow->getResourceClaim() == claim) {
+      flow->getResourceClaim()->decreaseFlowFileRecordOwnedCount();
+      flow->clearResourceClaim();
+    }
+    logger_->log_debug("Caught Exception during process session write");
+    throw;
+  }
+}
+
 void ProcessSession::import(std::string source,
                             std::shared_ptr<core::FlowFile> &flow,
                             bool keepSource, uint64_t offset) {
@@ -638,6 +729,7 @@ void ProcessSession::import(std::string source,
         else
           fs.write(buf, input.gcount());
       }
+
 
       if (fs.good() && fs.tellp() >= 0) {
         flow->setSize(fs.tellp());

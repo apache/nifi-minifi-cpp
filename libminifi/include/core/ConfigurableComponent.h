@@ -19,8 +19,14 @@
 #ifndef LIBMINIFI_INCLUDE_CORE_CONFIGURABLECOMPONENT_H_
 #define LIBMINIFI_INCLUDE_CORE_CONFIGURABLECOMPONENT_H_
 
+#include <mutex>
+#include <iostream>
+#include <map>
+#include <memory>
+#include <set>
+
+#include "logging/Logger.h"
 #include "Property.h"
-#include "core/logging/Logger.h"
 
 namespace org {
 namespace apache {
@@ -35,9 +41,7 @@ namespace core {
 class ConfigurableComponent {
  public:
 
-
   ConfigurableComponent() = delete;
-
 
   explicit ConfigurableComponent(std::shared_ptr<logging::Logger> logger);
 
@@ -81,7 +85,6 @@ class ConfigurableComponent {
 
  protected:
 
-
   /**
    * Returns true if the instance can be edited.
    * @return true/false
@@ -89,9 +92,12 @@ class ConfigurableComponent {
   virtual bool canEdit()= 0;
 
   std::mutex configuration_mutex_;
-  std::shared_ptr<logging::Logger> logger_;
+
   // Supported properties
   std::map<std::string, Property> properties_;
+
+ private:
+  std::shared_ptr<logging::Logger> my_logger_;
 
 };
 

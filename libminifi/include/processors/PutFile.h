@@ -45,7 +45,6 @@ class PutFile : public core::Processor {
    */
   PutFile(std::string name, uuid_t uuid = NULL)
       : core::Processor(name, uuid) {
-    logger_ = logging::Logger::getLogger();
   }
   // Destructor
   virtual ~PutFile() {
@@ -59,10 +58,18 @@ class PutFile : public core::Processor {
   static core::Relationship Success;
   static core::Relationship Failure;
 
+  /**
+   * Function that's executed when the processor is scheduled.
+   * @param context process context.
+   * @param sessionFactory process session factory that is used when creating
+   * ProcessSession objects.
+   */
+  void onSchedule(core::ProcessContext *context,
+                  core::ProcessSessionFactory *sessionFactory);
+
   // OnTrigger method, implemented by NiFi PutFile
-  virtual void onTrigger(
-      core::ProcessContext *context,
-      core::ProcessSession *session);
+  virtual void onTrigger(core::ProcessContext *context,
+                         core::ProcessSession *session);
   // Initialize, over write by NiFi PutFile
   virtual void initialize(void);
 
@@ -84,8 +91,11 @@ class PutFile : public core::Processor {
  protected:
 
  private:
-  // Logger
-  std::shared_ptr<logging::Logger> logger_;
+
+  // directory
+  std::string directory_;
+  // conflict resolution type.
+  std::string conflict_resolution_;
 
   bool putFile(core::ProcessSession *session,
                std::shared_ptr<FlowFileRecord> flowFile,

@@ -136,6 +136,21 @@ enable_testing(test)
     target_include_directories(tests PRIVATE BEFORE "libminifi/include/provenance")
     target_link_libraries(tests ${CMAKE_THREAD_LIBS_INIT} ${UUID_LIBRARIES} ${LEVELDB_LIBRARIES} ${OPENSSL_LIBRARIES} minifi yaml-cpp c-library civetweb-cpp)
     add_test(NAME LibMinifiTests COMMAND tests)
+    
+    file(GLOB LIBMINIFI_TEST_EXECUTE_PROCESS "libminifi/test/TestExecuteProcess.cpp")
+    add_executable(testExecuteProcess ${LIBMINIFI_TEST_EXECUTE_PROCESS} ${SPD_SOURCES})
+    target_include_directories(testExecuteProcess PRIVATE BEFORE "thirdparty/yaml-cpp-yaml-cpp-0.5.3/include")
+    target_include_directories(testExecuteProcess PRIVATE BEFORE ${LEVELDB_INCLUDE_DIRS})
+    target_include_directories(testExecuteProcess PRIVATE BEFORE "include")
+    target_include_directories(testExecuteProcess PRIVATE BEFORE "libminifi/include/")
+    target_include_directories(testExecuteProcess PRIVATE BEFORE "libminifi/include/core")
+    target_include_directories(testExecuteProcess PRIVATE BEFORE "libminifi/include/core/repository")
+    target_include_directories(testExecuteProcess PRIVATE BEFORE "libminifi/include/io")
+    target_include_directories(testExecuteProcess PRIVATE BEFORE "libminifi/include/utils")
+    target_include_directories(testExecuteProcess PRIVATE BEFORE "libminifi/include/processors")
+    target_include_directories(testExecuteProcess PRIVATE BEFORE "libminifi/include/provenance")
+    target_link_libraries(testExecuteProcess ${CMAKE_THREAD_LIBS_INIT} ${UUID_LIBRARIES} ${LEVELDB_LIBRARIES} ${OPENSSL_LIBRARIES} minifi yaml-cpp c-library civetweb-cpp)
+    add_test(NAME ExecuteProcess COMMAND testExecuteProcess)
 
 # Create a custom build target called "docker" that will invoke DockerBuild.sh and create the NiFi-MiNiFi-CPP Docker image
 add_custom_target(
