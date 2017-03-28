@@ -32,7 +32,7 @@ namespace core {
  * Represents a configurable component
  * Purpose: Extracts configuration items for all components and localized them
  */
-class ConfigurableComponent {
+class ConfigurableComponent  {
  public:
 
 
@@ -89,9 +89,12 @@ class ConfigurableComponent {
   virtual bool canEdit()= 0;
 
   std::mutex configuration_mutex_;
-  std::shared_ptr<logging::Logger> logger_;
+
   // Supported properties
   std::map<std::string, Property> properties_;
+
+ private:
+  std::shared_ptr<logging::Logger> my_logger_;
 
 };
 

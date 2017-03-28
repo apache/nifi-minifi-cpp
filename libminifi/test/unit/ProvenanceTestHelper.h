@@ -130,7 +130,6 @@ class TestFlowController : public minifi::FlowController {
   }
  protected:
   void initializePaths(const std::string &adjustedFilename) {
-    std::cout << "what" << std::endl;
   }
 };
 

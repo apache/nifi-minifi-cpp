@@ -28,14 +28,14 @@ namespace minifi {
 namespace core {
 
 ConfigurableComponent::ConfigurableComponent(std::shared_ptr<logging::Logger> logger)
-    : logger_(logger) {
+    : my_logger_(logger) {
 
 }
 
 ConfigurableComponent::ConfigurableComponent(
     const ConfigurableComponent &&other)
     : properties_(std::move(other.properties_)),
-      logger_(std::move(other.logger_)) {
+      my_logger_(std::move(other.my_logger_)) {
 
 }
 ConfigurableComponent::~ConfigurableComponent() {
@@ -57,7 +57,7 @@ bool ConfigurableComponent::getProperty(const std::string name,
   if (it != properties_.end()) {
     Property item = it->second;
     value = item.getValue();
-    logger_->log_info("Processor %s property name %s value %s", name.c_str(),
+    my_logger_->log_info("Processor %s property name %s value %s", name.c_str(),
                       item.getName().c_str(), value.c_str());
     return true;
   } else {
@@ -79,7 +79,7 @@ bool ConfigurableComponent::setProperty(const std::string name,
     Property item = it->second;
     item.setValue(value);
     properties_[item.getName()] = item;
-    logger_->log_info("Component %s property name %s value %s", name.c_str(),
+    my_logger_->log_info("Component %s property name %s value %s", name.c_str(),
                       item.getName().c_str(), value.c_str());
     return true;
   } else {
@@ -101,7 +101,7 @@ bool ConfigurableComponent::setProperty(Property &prop, std::string value) {
     Property item = it->second;
     item.setValue(value);
     properties_[item.getName()] = item;
-    logger_->log_info("property name %s value %s", prop.getName().c_str(),
+    my_logger_->log_info("property name %s value %s", prop.getName().c_str(),
                       item.getName().c_str(), value.c_str());
     return true;
   } else {

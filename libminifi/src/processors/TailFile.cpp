@@ -145,10 +145,10 @@ static bool sortTailMatchedFileItem(TailMatchedFileItem i,
                                     TailMatchedFileItem j) {
   return (i.modifiedTime < j.modifiedTime);
 }
-void TailFile::checkRollOver() {
+void TailFile::checkRollOver(std::string fileLocation, std::string fileName) {
   struct stat statbuf;
   std::vector<TailMatchedFileItem> matchedFiles;
-  std::string fullPath = this->_fileLocation + "/" + _currentTailFileName;
+  std::string fullPath = fileLocation + "/" + _currentTailFileName;
 
   if (stat(fullPath.c_str(), &statbuf) == 0) {
     if (statbuf.st_size > this->_currentTailFilePosition)
@@ -157,12 +157,12 @@ void TailFile::checkRollOver() {
 
     uint64_t modifiedTimeCurrentTailFile =
         ((uint64_t) (statbuf.st_mtime) * 1000);
-    std::string pattern = _fileName;
-    std::size_t found = _fileName.find_last_of(".");
+    std::string pattern = fileName;
+    std::size_t found = fileName.find_last_of(".");
     if (found != std::string::npos)
-      pattern = _fileName.substr(0, found);
+      pattern = fileName.substr(0, found);
     DIR *d;
-    d = opendir(this->_fileLocation.c_str());
+    d = opendir(fileLocation.c_str());
     if (!d)
       return;
     while (1) {
@@ -173,7 +173,7 @@ void TailFile::checkRollOver() {
       std::string d_name = entry->d_name;
       if (!(entry->d_type & DT_DIR)) {
         std::string fileName = d_name;
-        std::string fileFullName = this->_fileLocation + "/" + d_name;
+        std::string fileFullName = fileLocation + "/" + d_name;
         if (fileFullName.find(pattern) != std::string::npos
             && stat(fileFullName.c_str(), &statbuf) == 0) {
           if (((uint64_t) (statbuf.st_mtime) * 1000)
@@ -215,24 +215,28 @@ void TailFile::checkRollOver() {
 void TailFile::onTrigger(
     core::ProcessContext *context,
     core::ProcessSession *session) {
+
+  std::lock_guard<std::mutex> tail_lock(tail_file_mutex_);
   std::string value;
+  std::string fileLocation="";
+  std::string fileName="";
   if (context->getProperty(FileName.getName(), value)) {
     std::size_t found = value.find_last_of("/\\");
-    this->_fileLocation = value.substr(0, found);
-    this->_fileName = value.substr(found + 1);
+    fileLocation = value.substr(0, found);
+    fileName = value.substr(found + 1);
   }
   if (context->getProperty(StateFile.getName(), value)) {
     _stateFile = value + "." + getUUIDStr();
   }
   if (!this->_stateRecovered) {
     _stateRecovered = true;
-    this->_currentTailFileName = _fileName;
+    this->_currentTailFileName = fileName;
     this->_currentTailFilePosition = 0;
     // recover the state if we have not done so
     this->recoverState();
   }
-  checkRollOver();
-  std::string fullPath = this->_fileLocation + "/" + _currentTailFileName;
+  checkRollOver(fileLocation,fileName);
+  std::string fullPath = fileLocation + "/" + _currentTailFileName;
   struct stat statbuf;
   if (stat(fullPath.c_str(), &statbuf) == 0) {
     if (statbuf.st_size <= this->_currentTailFilePosition)
@@ -241,13 +245,13 @@ void TailFile::onTrigger(
       context->yield();
       return;
     }
-    std::shared_ptr<FlowFileRecord> flowFile = std::static_pointer_cast<FlowFileRecord>(session->create());;
+    std::shared_ptr<FlowFileRecord> flowFile = std::static_pointer_cast<FlowFileRecord>(session->create());
     if (!flowFile)
       return;
     std::size_t found = _currentTailFileName.find_last_of(".");
     std::string baseName = _currentTailFileName.substr(0, found);
     std::string extension = _currentTailFileName.substr(found + 1);
-    flowFile->updateKeyedAttribute(PATH, _fileLocation);
+    flowFile->updateKeyedAttribute(PATH, fileLocation);
     flowFile->addKeyedAttribute(ABSOLUTE_PATH, fullPath);
     session->import(fullPath, flowFile, true, this->_currentTailFilePosition);
     session->transfer(flowFile, Success);
