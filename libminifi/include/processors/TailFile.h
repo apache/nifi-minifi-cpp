@@ -80,7 +80,10 @@ class TailFile : public core::Processor {
   std::string trimLeft(const std::string& s);
   std::string trimRight(const std::string& s);
   void parseStateFileLine(char *buf);
-  void checkRollOver(std::string, std::string);
+  /**
+   * Check roll over for the provided file.
+   */
+  void checkRollOver(const std::string &, const std::string&);
 
 };
 

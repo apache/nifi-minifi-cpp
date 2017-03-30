@@ -91,12 +91,13 @@ class GetFile : public core::Processor {
         core::ProcessSessionFactory *sessionFactory);
   // Initialize, over write by NiFi GetFile
   virtual void initialize(void);
-  // perform directory listing
+  /**
+   * performs a listeing on the directory.
+   * @param dir directory to list
+   * @param request get file request.
+   */
   void performListing(std::string dir,const GetFileRequest &request);
 
-  uint64_t getLastListingTime(const std::string &directory);
-
-  void updateListingTime(const std::string &directory);
  protected:
 
  private:
@@ -122,7 +123,9 @@ class GetFile : public core::Processor {
 
   std::mutex mutex_;
 
-  std::map<std::string,std::atomic<uint64_t>> last_listing_times_;
+  // last listing time for root directory ( if recursive, we will consider the root
+  // as the top level time.
+  std::atomic<uint64_t> last_listing_time_;
 
 };
 

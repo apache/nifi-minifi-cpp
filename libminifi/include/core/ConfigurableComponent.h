@@ -19,8 +19,14 @@
 #ifndef LIBMINIFI_INCLUDE_CORE_CONFIGURABLECOMPONENT_H_
 #define LIBMINIFI_INCLUDE_CORE_CONFIGURABLECOMPONENT_H_
 
+#include <mutex>
+#include <iostream>
+#include <map>
+#include <memory>
+#include <set>
+
+#include "logging/Logger.h"
 #include "Property.h"
-#include "core/logging/Logger.h"
 
 namespace org {
 namespace apache {
@@ -32,12 +38,10 @@ namespace core {
  * Represents a configurable component
  * Purpose: Extracts configuration items for all components and localized them
  */
-class ConfigurableComponent  {
+class ConfigurableComponent {
  public:
 
-
   ConfigurableComponent() = delete;
-
 
   explicit ConfigurableComponent(std::shared_ptr<logging::Logger> logger);
 
@@ -80,7 +84,6 @@ class ConfigurableComponent  {
   virtual ~ConfigurableComponent();
 
  protected:
-
 
   /**
    * Returns true if the instance can be edited.

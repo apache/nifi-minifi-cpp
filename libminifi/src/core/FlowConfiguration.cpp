@@ -40,10 +40,6 @@ std::shared_ptr<core::Processor> FlowConfiguration::createProcessor(
     processor = std::make_shared<
         org::apache::nifi::minifi::processors::LogAttribute>(name, uuid);
   } else if (name
-      == org::apache::nifi::minifi::processors::ListenHTTP::ProcessorName) {
-    processor = std::make_shared<
-        org::apache::nifi::minifi::processors::ListenHTTP>(name, uuid);
-  } else if (name
       == org::apache::nifi::minifi::processors::RealTimeDataCollector::ProcessorName) {
     processor = std::make_shared<
         org::apache::nifi::minifi::processors::RealTimeDataCollector>(name,
@@ -67,6 +63,10 @@ std::shared_ptr<core::Processor> FlowConfiguration::createProcessor(
       == org::apache::nifi::minifi::processors::ListenSyslog::ProcessorName) {
     processor = std::make_shared<
         org::apache::nifi::minifi::processors::ListenSyslog>(name, uuid);
+  } else if (name
+        == org::apache::nifi::minifi::processors::ListenHTTP::ProcessorName) {
+      processor = std::make_shared<
+          org::apache::nifi::minifi::processors::ListenHTTP>(name, uuid);
   } else if (name
       == org::apache::nifi::minifi::processors::ExecuteProcess::ProcessorName) {
     processor = std::make_shared<

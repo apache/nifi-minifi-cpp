@@ -88,8 +88,8 @@ int main(int argc, char  **argv)
   std::shared_ptr<core::ProcessContext> contextset = std::make_shared<
       core::ProcessContext>(node2, test_repo);
   core::ProcessSessionFactory factory(contextset.get());
- // processor->onSchedule(contextset.get(), &factory);
-  /*
+  processor->onSchedule(contextset.get(), &factory);
+
   for (int i = 0; i < 1; i++) {
     //
     processor_workers.push_back(
@@ -104,14 +104,9 @@ int main(int argc, char  **argv)
               while(!is_ready.load(std::memory_order_relaxed)) {
 
               }
-*/
-  core::ProcessorNode node(processor);
-  std::shared_ptr<core::ProcessContext> context = std::make_shared<core::ProcessContext>(node, test_repo);
-                context->setProperty(org::apache::nifi::minifi::processors::ExecuteProcess::Command,"sleep 0.5");
-                //context->setProperty(org::apache::nifi::minifi::processors::ExecuteProcess::CommandArguments," 1 >>" + ss.str());
-                std::shared_ptr<core::ProcessSession> session = std::make_shared<core::ProcessSession>(context.get());
+
               processor->onTrigger(context.get(), session.get());
-/*
+
             }));
   }
 
@@ -123,7 +118,7 @@ int main(int argc, char  **argv)
                 {
                   t.join();
                 });
-*/
+
     outputLogger = std::unique_ptr<logging::BaseLogger>(
       new org::apache::nifi::minifi::core::logging::NullAppender());
   logger->updateLogger(std::move(outputLogger));

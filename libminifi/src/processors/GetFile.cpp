@@ -176,11 +176,11 @@ void GetFile::onTrigger(core::ProcessContext *context,
   // Perform directory list
   logger_->log_info("Is listing empty %i", isListingEmpty());
   if (isListingEmpty()) {
-    auto last_listing_time_ = getLastListingTime(request_.directory);
 
     if (request_.pollInterval == 0
         || (getTimeMillis() - last_listing_time_) > request_.pollInterval) {
       performListing(request_.directory, request_);
+      last_listing_time_.store(getTimeMillis());
     }
   }
   logger_->log_info("Is listing empty %i", isListingEmpty());
@@ -215,24 +215,6 @@ void GetFile::onTrigger(core::ProcessContext *context,
     }
   }
 
-}
-
-uint64_t GetFile::getLastListingTime(const std::string &directory) {
-  std::lock_guard<std::mutex> lock(mutex_);
-  auto listing_time = last_listing_times_.find(directory);
-  if (listing_time == last_listing_times_.end()) {
-    last_listing_times_[directory] = getTimeMillis();
-    listing_time = last_listing_times_.find(directory);
-  }
-  return listing_time->second.load();
-}
-
-void GetFile::updateListingTime(const std::string &directory) {
-  std::lock_guard<std::mutex> lock(mutex_);
-  auto listing_time = last_listing_times_.find(directory);
-  if (listing_time != last_listing_times_.end()) {
-    listing_time->second.store(getTimeMillis());
-  }
 }
 
 bool GetFile::isListingEmpty() {
@@ -330,7 +312,6 @@ void GetFile::performListing(std::string dir, const GetFileRequest &request) {
   // only perform a listing while we are not empty
   logger_->log_info("Performing file listing against %s", dir.c_str());
   while (isRunning()) {
-    updateListingTime(request.directory);
     struct dirent *entry;
     entry = readdir(d);
     if (!entry)

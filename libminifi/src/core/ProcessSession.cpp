@@ -530,6 +530,12 @@ void ProcessSession::read(std::shared_ptr<core::FlowFile> &&flow,
   }
 }
 
+/**
+  * Imports a file from the data stream
+  * @param stream incoming data stream that contains the data to store into a file
+  * @param flow flow file
+  *
+  */
 void ProcessSession::importFrom(io::DataStream &stream,
                             std::shared_ptr<core::FlowFile> &&flow) {
   std::shared_ptr<ResourceClaim> claim = std::make_shared<ResourceClaim>();

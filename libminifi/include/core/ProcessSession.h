@@ -127,8 +127,14 @@ class ProcessSession {
 // Penalize the flow
   void penalize(std::shared_ptr<core::FlowFile> &flow);
   void penalize(std::shared_ptr<core::FlowFile> &&flow);
-// Import the existed file into the flow
+
+  /**
+   * Imports a file from the data stream
+   * @param stream incoming data stream that contains the data to store into a file
+   * @param flow flow file
+   */
   void importFrom(io::DataStream &stream, std::shared_ptr<core::FlowFile> &&flow);
+  // import from the data source.
   void import(std::string source, std::shared_ptr<core::FlowFile> &flow,
               bool keepSource = true, uint64_t offset = 0);
   void import(std::string source, std::shared_ptr<core::FlowFile> &&flow,

@@ -145,7 +145,7 @@ static bool sortTailMatchedFileItem(TailMatchedFileItem i,
                                     TailMatchedFileItem j) {
   return (i.modifiedTime < j.modifiedTime);
 }
-void TailFile::checkRollOver(std::string fileLocation, std::string fileName) {
+void TailFile::checkRollOver(const std::string &fileLocation, const std::string &fileName) {
   struct stat statbuf;
   std::vector<TailMatchedFileItem> matchedFiles;
   std::string fullPath = fileLocation + "/" + _currentTailFileName;
