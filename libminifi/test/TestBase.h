@@ -18,14 +18,15 @@
 
 #ifndef LIBMINIFI_TEST_TESTBASE_H_
 #define LIBMINIFI_TEST_TESTBASE_H_
+#include <dirent.h>
 #include <cstdio>
 #include <cstdlib>
 #include "ResourceClaim.h"
 #include "catch.hpp"
 #include <vector>
+#include "core/logging/LogAppenders.h"
 #include "core/logging/Logger.h"
 #include "core/core.h"
-
 
 class LogTestController {
  public:
@@ -52,8 +53,42 @@ class TestController {
 
   ~TestController() {
     for (auto dir : directories) {
+      DIR *created_dir;
+      struct dirent *dir_entry;
+      created_dir = opendir(dir);
+      if (created_dir != NULL) {
+        while ((dir_entry = readdir(created_dir)) != NULL) {
+          if (dir_entry->d_name[0] != '.') {
+
+            std::string file(dir);
+            file += "/";
+            file += dir_entry->d_name;
+            unlink(file.c_str());
+          }
+        }
+      }
+      closedir(created_dir);
       rmdir(dir);
     }
+  }
+
+  void setDebugToConsole() {
+    std::ostringstream oss;
+    std::unique_ptr<logging::BaseLogger> outputLogger = std::unique_ptr<
+        logging::BaseLogger>(
+        new org::apache::nifi::minifi::core::logging::OutputStreamAppender(
+            std::cout, minifi::Configure::getConfigure()));
+    std::shared_ptr<logging::Logger> logger = logging::Logger::getLogger();
+    logger->updateLogger(std::move(outputLogger));
+  }
+
+  void setNullAppender() {
+
+    std::unique_ptr<logging::BaseLogger> outputLogger = std::unique_ptr<
+        logging::BaseLogger>(
+        new org::apache::nifi::minifi::core::logging::NullAppender());
+    std::shared_ptr<logging::Logger> logger = logging::Logger::getLogger();
+    logger->updateLogger(std::move(outputLogger));
   }
 
   void enableDebug() {
@@ -62,6 +97,7 @@ class TestController {
 
   char *createTempDirectory(char *format) {
     char *dir = mkdtemp(format);
+    directories.push_back(dir);
     return dir;
   }
 

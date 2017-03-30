@@ -66,13 +66,13 @@ struct class_operations {
 
 
 template<typename T>
-typename std::enable_if<!class_operations<T>::value, T*>::type instantiate() {
+typename std::enable_if<!class_operations<T>::value, std::shared_ptr<T>>::type instantiate() {
   throw std::runtime_error("Cannot instantiate class");
 }
 
 template<typename T>
-typename std::enable_if<class_operations<T>::value, T*>::type instantiate() {
-  return new T();
+typename std::enable_if<class_operations<T>::value, std::shared_ptr<T>>::type instantiate() {
+  return std::make_shared<T>();
 }
 
 /**
@@ -139,6 +139,9 @@ class CoreComponent {
    */
   const std::string & getUUIDStr()  {
     return uuidStr_;
+  }
+  
+  void loadComponent(){
   }
 
  protected:

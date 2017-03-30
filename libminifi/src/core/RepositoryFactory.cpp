@@ -32,11 +32,11 @@ namespace core {
       std::shared_ptr<core::Repository> return_obj = nullptr;
       if (class_name_lc == "flowfilerepository") {
 
-        return_obj = std::shared_ptr<core::Repository>((core::Repository*)instantiate<core::repository::FlowFileRepository>());
+        return_obj = instantiate<core::repository::FlowFileRepository>();
       } else if (class_name_lc == "provenancerepository") {
 
 
-	return_obj = std::shared_ptr<core::Repository>((core::Repository*)instantiate<provenance::ProvenanceRepository>());
+	return_obj = instantiate<provenance::ProvenanceRepository>();//std::shared_ptr<core::Repository>((core::Repository*)instantiate<provenance::ProvenanceRepository>());
 
       }
       

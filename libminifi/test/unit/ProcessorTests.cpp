@@ -105,7 +105,6 @@ TEST_CASE("Test Find file", "[getfileCreate2]") {
   processor->setScheduledState(core::ScheduledState::RUNNING);
   processor->onTrigger(&context, &session);
   unlink(ss.str().c_str());
-  rmdir(dir);
   reporter = session.getProvenanceReporter();
 
   REQUIRE( processor->getName() == "getfileCreate2");
@@ -243,7 +242,6 @@ TEST_CASE("LogAttributeTest", "[getfileCreate3]") {
   processor->setScheduledState(core::ScheduledState::RUNNING);
   processor->onTrigger(&context, &session);
   unlink(ss.str().c_str());
-  rmdir(dir);
   reporter = session.getProvenanceReporter();
 
   records = reporter->getEvents();
