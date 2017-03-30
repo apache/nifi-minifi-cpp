@@ -146,12 +146,17 @@ class FlowFileRecord : public core::FlowFile, public io::Serializable {
   const std::string getConnectionUuid() {
     return uuid_connection_;
   }
-  
-  const std::string getContentFullPath()
-  {
+
+  /**
+   * Set the UUID connection.
+   */
+  void setUuidConnection(const std::string &uuid_connection) {
+    uuid_connection_ = uuid_connection;
+  }
+
+  const std::string getContentFullPath() {
     return content_full_fath_;
   }
-  
 
   FlowFileRecord &operator=(const FlowFileRecord &);
 

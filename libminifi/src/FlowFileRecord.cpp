@@ -269,9 +269,6 @@ bool FlowFileRecord::Serialize() {
     return false;
   }
 
-  // Persistent to the DB
-  
-
   if (flow_repository_->Put(uuid_str_,
                             const_cast<uint8_t*>(outStream.getBuffer()),
                             outStream.getSize())) {

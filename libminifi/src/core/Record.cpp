@@ -161,6 +161,8 @@ bool FlowFile::updateAttribute(const std::string key, const std::string value) {
 }
 
 bool FlowFile::addAttribute(const std::string &key, const std::string &value) {
+
+
   auto it = attributes_.find(key);
   if (it != attributes_.end()) {
     // attribute already there in the map
