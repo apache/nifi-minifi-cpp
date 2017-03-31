@@ -152,6 +152,8 @@ FlowController::~FlowController() {
   unload();
   if (NULL != protocol_)
     delete protocol_;
+  flow_file_repo_ = nullptr;
+  provenance_repo_ = nullptr;
 
 }
 
@@ -264,7 +266,8 @@ void FlowController::loadFlowRepo() {
     }
     auto rep = std::static_pointer_cast<core::repository::FlowFileRepository>(
         flow_file_repo_);
-    rep->loadFlowFileToConnections(connectionMap);
+    rep->setConnectionMap(connectionMap);
+    flow_file_repo_->loadComponent();
   }
 }
 

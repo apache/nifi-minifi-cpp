@@ -153,9 +153,25 @@ class FlowFileRepository : public core::Repository, public std::enable_shared_fr
 		  return false;
   }
   
-  void loadFlowFileToConnections(std::map<std::string, std::shared_ptr<minifi::Connection>> &connectionMap);
+  void setConnectionMap(std::map<std::string, std::shared_ptr<minifi::Connection>> &connectionMap)
+  {
+    this->connectionMap=connectionMap;
+  }
+  void loadComponent();
   
+   void start() {
+  if (this->purge_period_ <= 0)
+    return;
+  if (running_)
+    return;
+  thread_ = std::thread(&FlowFileRepository::run, shared_from_this());
+  thread_.detach();
+  running_ = true;
+  logger_->log_info("%s Repository Monitor Thread Start", name_.c_str());
+}
+
  private:
+  std::map<std::string, std::shared_ptr<minifi::Connection>> connectionMap;
   leveldb::DB* db_;
 };
 

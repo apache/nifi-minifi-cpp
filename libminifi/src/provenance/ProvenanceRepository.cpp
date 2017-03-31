@@ -31,6 +31,7 @@ void ProvenanceRepository::run() {
   // threshold for purge
   uint64_t purgeThreshold = max_partition_bytes_ * 3 / 4;
   while (running_) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(purge_period_));
     std::this_thread::sleep_for(std::chrono::milliseconds(purge_period_));
     uint64_t curTime = getTimeMillis();
     uint64_t size = repoSize();
@@ -53,6 +54,7 @@ void ProvenanceRepository::run() {
       }
       delete it;
       std::vector<std::string>::iterator itPurge;
+      
       for (itPurge = purgeList.begin(); itPurge != purgeList.end(); itPurge++) {
         std::string eventId = *itPurge;
         logger_->log_info("ProvenanceRepository Repo Purge %s",
@@ -64,6 +66,7 @@ void ProvenanceRepository::run() {
       repo_full_ = true;
     else
       repo_full_ = false;
+    
   }
   return;
 }

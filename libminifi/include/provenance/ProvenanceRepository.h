@@ -58,6 +58,17 @@ class ProvenanceRepository : public core::Repository,
     if (db_)
       delete db_;
   }
+  
+  void start() {
+  if (this->purge_period_ <= 0)
+    return;
+  if (running_)
+    return;
+  thread_ = std::thread(&ProvenanceRepository::run, shared_from_this());
+  thread_.detach();
+  running_ = true;
+  logger_->log_info("%s Repository Monitor Thread Start", name_.c_str());
+}
 
   // initialize
   virtual bool initialize() {
@@ -164,3 +175,4 @@ class ProvenanceRepository : public core::Repository,
 } /* namespace apache */
 } /* namespace org */
 #endif /* LIBMINIFI_INCLUDE_PROVENANCE_PROVENANCEREPOSITORY_H_ */
+

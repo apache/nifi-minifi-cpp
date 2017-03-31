@@ -238,6 +238,7 @@ bool ProvenanceEventRecord::Serialize(
                        _eventIdStr.c_str(), outStream.getSize());
   }
 
+
   // cleanup
 
   return true;

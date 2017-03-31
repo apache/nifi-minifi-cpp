@@ -137,12 +137,13 @@ class Repository : public CoreComponent {
   uint64_t repoSize();
   // size of the directory
   std::atomic<uint64_t> repo_size_;
-
- private:
   // Run function for the thread
-    void threadExecutor(){
+  void threadExecutor(){
       run();
     }
+
+  
+    
 };
 
 } /* namespace core */
