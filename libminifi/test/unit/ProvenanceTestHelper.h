@@ -66,6 +66,22 @@ class TestRepository : public core::Repository {
     return repositoryResults;
   }
 
+  void getProvenanceRecord(
+      std::vector<std::shared_ptr<provenance::ProvenanceEventRecord>> &records,
+      int maxSize) {
+    for (auto entry : repositoryResults) {
+      if (records.size() >= maxSize)
+        break;
+      std::shared_ptr<provenance::ProvenanceEventRecord> eventRead =
+          std::make_shared<provenance::ProvenanceEventRecord>();
+
+      if (eventRead->DeSerialize((uint8_t*) entry.second.data(),
+          entry.second.length())) {
+        records.push_back(eventRead);
+      }
+    }
+  }
+
   void run() {
     // do nothing
   }
@@ -75,7 +91,7 @@ class TestRepository : public core::Repository {
 
 class TestFlowController : public minifi::FlowController {
 
- public:
+public:
   TestFlowController(std::shared_ptr<core::Repository> repo,
                      std::shared_ptr<core::Repository> flow_file_repo)
       : minifi::FlowController(repo, flow_file_repo, nullptr, "",true) {
@@ -125,10 +141,10 @@ class TestFlowController : public minifi::FlowController {
   }
 
   std::shared_ptr<minifi::Connection> createConnection(std::string name,
-                                                       uuid_t uuid) {
+      uuid_t uuid) {
     return 0;
   }
- protected:
+protected:
   void initializePaths(const std::string &adjustedFilename) {
   }
 };

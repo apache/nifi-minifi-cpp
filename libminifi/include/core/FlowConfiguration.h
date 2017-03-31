@@ -22,6 +22,7 @@
 #include "Connection.h"
 #include "RemoteProcessorGroupPort.h"
 #include "provenance/Provenance.h"
+#include "core/reporting/SiteToSiteProvenanceReportingTask.h"
 #include "processors/GetFile.h"
 #include "processors/PutFile.h"
 #include "processors/TailFile.h"
@@ -77,6 +78,8 @@ class FlowConfiguration : public CoreComponent {
   // Create Connection
   std::shared_ptr<minifi::Connection> createConnection(std::string name,
                                                        uuid_t uuid);
+  // Create Provenance Report Task
+  std::shared_ptr<core::Processor> createProvenanceReportTask(void);
 
   /**
    * Returns the configuration path string

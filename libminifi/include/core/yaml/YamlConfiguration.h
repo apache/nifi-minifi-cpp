@@ -58,12 +58,14 @@ class YamlConfiguration : public FlowConfiguration {
     YAML::Node processorsNode = flow[CONFIG_YAML_PROCESSORS_KEY];
     YAML::Node connectionsNode = flow["Connections"];
     YAML::Node remoteProcessingGroupNode = flow["Remote Processing Groups"];
+    YAML::Node provenanceReportNode = flow["Provenance Reporting"];
 
     // Create the root process group
     core::ProcessGroup * root = parseRootProcessGroupYaml(flowControllerNode);
     parseProcessorNodeYaml(processorsNode, root);
     parseRemoteProcessGroupYaml(&remoteProcessingGroupNode, root);
     parseConnectionYaml(&connectionsNode, root);
+    parseProvenanceReportingYaml(&provenanceReportNode, root);
 
     return std::unique_ptr<core::ProcessGroup>(root);
 
@@ -85,6 +87,8 @@ class YamlConfiguration : public FlowConfiguration {
   // Process Remote Process Group YAML
   void parseRemoteProcessGroupYaml(YAML::Node *node,
                                    core::ProcessGroup * parent);
+  // Process Provenance Report YAML
+  void parseProvenanceReportingYaml(YAML::Node *reportNode, core::ProcessGroup * parentGroup);
   // Parse Properties Node YAML for a processor
   void parsePropertiesNodeYaml(YAML::Node *propertiesNode,
                                std::shared_ptr<core::Processor> processor);

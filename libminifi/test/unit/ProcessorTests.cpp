@@ -44,6 +44,10 @@ TEST_CASE("Test Find file", "[getfileCreate2]") {
   std::shared_ptr<core::Processor> processor = std::make_shared<
       org::apache::nifi::minifi::processors::GetFile>("getfileCreate2");
 
+  std::shared_ptr<core::Processor> processorReport = std::make_shared
+      < org::apache::nifi::minifi::core::reporting::SiteToSiteProvenanceReportingTask
+      > ();
+
   std::shared_ptr<core::Repository> test_repo =
       std::make_shared<TestRepository>();
 
@@ -77,7 +81,7 @@ TEST_CASE("Test Find file", "[getfileCreate2]") {
   core::ProcessContext context(node, test_repo);
   core::ProcessSessionFactory factory(&context);
   context.setProperty(org::apache::nifi::minifi::processors::GetFile::Directory,
-                      dir);
+      dir);
   core::ProcessSession session(&context);
 
   processor->onSchedule(&context, &factory);
@@ -122,7 +126,7 @@ TEST_CASE("Test Find file", "[getfileCreate2]") {
   for (auto entry : repo->getRepoMap()) {
     provenance::ProvenanceEventRecord newRecord;
     newRecord.DeSerialize((uint8_t*) entry.second.data(),
-                          entry.second.length());
+        entry.second.length());
 
     bool found = false;
     for (auto provRec : records) {
@@ -141,6 +145,23 @@ TEST_CASE("Test Find file", "[getfileCreate2]") {
 
   }
 
+  core::ProcessorNode nodeReport(processorReport);
+  core::ProcessContext contextReport(nodeReport, test_repo);
+  core::ProcessSessionFactory factoryReport(&contextReport);
+  core::ProcessSession sessionReport(&contextReport);
+  processorReport->onSchedule(&contextReport, &factoryReport);
+  std::shared_ptr<org::apache::nifi::minifi::core::reporting::SiteToSiteProvenanceReportingTask> taskReport = std::static_pointer_cast
+        < org::apache::nifi::minifi::core::reporting::SiteToSiteProvenanceReportingTask > (processorReport);
+  taskReport->setBatchSize(1);
+  std::vector < std::shared_ptr < provenance::ProvenanceEventRecord >> recordsReport;
+  processorReport->incrementActiveTasks();
+  processorReport->setScheduledState(core::ScheduledState::RUNNING);
+  std::string jsonStr;
+  repo->getProvenanceRecord(recordsReport, 1);
+  taskReport->getJsonReport(&contextReport, &sessionReport, recordsReport, jsonStr);
+  REQUIRE(recordsReport.size() == 1);
+  REQUIRE(taskReport->getName() == std::string(org::apache::nifi::minifi::core::reporting::SiteToSiteProvenanceReportingTask::ReportTaskName));
+  REQUIRE(jsonStr.find("\"componentType\" : \"getfileCreate2\"") != std::string::npos);
 }
 
 TEST_CASE("Test GetFileLikeIt'sThreaded", "[getfileCreate3]") {

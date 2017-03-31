@@ -34,6 +34,11 @@ namespace nifi {
 namespace minifi {
 namespace provenance {
 
+const char *ProvenanceEventRecord::ProvenanceEventTypeStr[REPLAY+1] =
+{ "CREATE", "RECEIVE", "FETCH", "SEND", "DOWNLOAD", "DROP", "EXPIRE", "FORK",
+                "JOIN", "CLONE", "CONTENT_MODIFIED", "ATTRIBUTES_MODIFIED", "ROUTE",
+                "ADDINFO", "REPLAY"};
+
 // DeSerialize
 bool ProvenanceEventRecord::DeSerialize(
     const std::shared_ptr<core::Repository> &repo, std::string key) {

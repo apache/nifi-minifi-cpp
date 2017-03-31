@@ -329,6 +329,73 @@ void YamlConfiguration::parseRemoteProcessGroupYaml(
   }
 }
 
+void YamlConfiguration::parseProvenanceReportingYaml(
+    YAML::Node *reportNode, core::ProcessGroup * parentGroup) {
+  uuid_t port_uuid;
+  int64_t schedulingPeriod = -1;
+
+  if (!parentGroup) {
+    logger_->log_error("parseProvenanceReportingYaml: no parent group exists");
+    return;
+  }
+
+  if (!reportNode || !(reportNode->IsSequence())) {
+    logger_->log_debug("no provenance reporting task specified");
+    return;
+  }
+
+  std::shared_ptr<core::Processor> processor = nullptr;
+  processor = createProvenanceReportTask();
+  std::shared_ptr<core::reporting::SiteToSiteProvenanceReportingTask> reportTask =
+      std::static_pointer_cast < core::reporting::SiteToSiteProvenanceReportingTask
+      > (processor);
+
+  YAML::Node node = reportNode->as<YAML::Node>();
+
+  auto schedulingStrategyStr = node["scheduling strategy"].as<std::string>();
+  auto schedulingPeriodStr = node["scheduling period"].as<std::string>();
+  auto hostStr = node["host"].as<std::string>();
+  auto portStr = node["port"].as<std::string>();
+  auto portUUIDStr = node["port uuid"].as<std::string>();
+  auto batchSizeStr = node["batch size"].as<std::string>();
+
+  // add processor to parent
+  parentGroup->addProcessor(processor);
+  processor->setScheduledState(core::RUNNING);
+
+  core::TimeUnit unit;
+  if (core::Property::StringToTime(schedulingPeriodStr,
+      schedulingPeriod, unit) && core::Property::ConvertTimeUnitToNS(schedulingPeriod, unit,
+          schedulingPeriod)) {
+    logger_->log_debug(
+        "ProvenanceReportingTask schedulingPeriod %d ns",
+        schedulingPeriod);
+    processor->setSchedulingPeriodNano(schedulingPeriod);
+  }
+
+  if (schedulingStrategyStr == "TIMER_DRIVEN") {
+     processor->setSchedulingStrategy(core::TIMER_DRIVEN);
+     logger_->log_debug("ProvenanceReportingTask scheduling strategy %s", schedulingStrategyStr.c_str());
+  } else {
+    throw std::invalid_argument(
+        "Invalid scheduling strategy " +  schedulingStrategyStr);
+  }
+
+  reportTask->setHost(hostStr);
+  logger_->log_debug("ProvenanceReportingTask host %s", hostStr.c_str());
+  int64_t lvalue;
+  if (core::Property::StringToInt(portStr, lvalue)) {
+    logger_->log_debug("ProvenanceReportingTask port %d", (uint16_t) lvalue);
+    reportTask->setPort((uint16_t) lvalue);
+  }
+  logger_->log_debug("ProvenanceReportingTask port uuid %s", portUUIDStr.c_str());
+  uuid_parse(portUUIDStr.c_str(), port_uuid);
+  reportTask->setPortUUID(port_uuid);
+  if (core::Property::StringToInt(batchSizeStr, lvalue)) {
+    reportTask->setBatchSize(lvalue);
+  }
+}
+
 void YamlConfiguration::parseConnectionYaml(YAML::Node *connectionsNode,
                                             core::ProcessGroup *parent) {
   uuid_t uuid;
