@@ -682,6 +682,7 @@ bool Site2SiteClientProtocol::receive(std::string transactionID,
 
 bool Site2SiteClientProtocol::send(
     std::string transactionID, DataPacket *packet, std::shared_ptr<FlowFileRecord> flowFile,
+	uint8_t *payload, int length,
     core::ProcessSession *session) {
   int ret;
   Transaction *transaction = NULL;
@@ -748,18 +749,34 @@ bool Site2SiteClientProtocol::send(
                       itAttribute->second.c_str());
   }
 
-  uint64_t len = flowFile->getSize();
-  ret = transaction->getStream().write(len);
-  if (ret != 8) {
-    return false;
+  uint64_t len = 0;
+  if (flowFile) {
+	len = flowFile->getSize() ;
+	ret = transaction->getStream().write(len);
+	if (ret != 8) {
+	  return false;
+	}
+	if (flowFile->getSize()) {
+	  Site2SiteClientProtocol::ReadCallback callback(packet);
+	  session->read(flowFile, &callback);
+	  if (flowFile->getSize() != packet->_size) {
+		  return false;
+	  }
+	}
   }
+  else if (payload != NULL){
+	len = length;
 
-  if (flowFile->getSize()) {
-    Site2SiteClientProtocol::ReadCallback callback(packet);
-    session->read(flowFile, &callback);
-    if (flowFile->getSize() != packet->_size) {
-      return false;
-    }
+	ret = transaction->getStream().write(len);
+	if (ret != 8) {
+	  return false;
+	}
+
+	ret = transaction->getStream().writeData(payload, len);
+	if (ret != len) {
+	  return false;
+	}
+	packet->_size += len;
   }
 
   transaction->_transfers++;
@@ -1183,7 +1200,7 @@ void Site2SiteClientProtocol::transferFlowFiles(
       uint64_t startTime = getTimeMillis();
       DataPacket packet(this, transaction, flow->getAttributes());
 
-      if (!send(transactionID, &packet, flow, session)) {
+      if (!send(transactionID, &packet, flow, NULL, 0, session)) {
         throw Exception(SITE2SITE_EXCEPTION, "Send Failed");
         return;
       }
@@ -1238,6 +1255,88 @@ void Site2SiteClientProtocol::transferFlowFiles(
   deleteTransaction(transactionID);
 
   return;
+}
+
+void Site2SiteClientProtocol::transferBytes(core::ProcessContext *context, core::ProcessSession *session, uint8_t *payload, int length,
+		std::map<std::string, std::string> attributes)
+{
+	Transaction *transaction = NULL;
+
+	if (payload == NULL)
+		return;
+
+	if (_peerState != READY)
+	{
+		bootstrap();
+	}
+
+	if (_peerState != READY)
+	{
+		context->yield();
+		tearDown();
+		throw Exception(SITE2SITE_EXCEPTION, "Can not establish handshake with peer");
+		return;
+	}
+
+	// Create the transaction
+	std::string transactionID;
+	transaction = createTransaction(transactionID, SEND);
+
+	if (transaction == NULL)
+	{
+		context->yield();
+		tearDown();
+		throw Exception(SITE2SITE_EXCEPTION, "Can not create transaction");
+		return;
+	}
+
+	try
+	{
+		DataPacket packet(this, transaction, attributes);
+
+		if (!send(transactionID, &packet, nullptr, payload, length, session))
+		{
+			throw Exception(SITE2SITE_EXCEPTION, "Send Failed");
+			return;
+		}
+		logger_->log_info("Site2Site transaction %s send bytes length %d",
+							transactionID.c_str(), length);
+
+		if (!confirm(transactionID))
+		{
+			throw Exception(SITE2SITE_EXCEPTION, "Confirm Failed");
+			return;
+		}
+		if (!complete(transactionID))
+		{
+			throw Exception(SITE2SITE_EXCEPTION, "Complete Failed");
+			return;
+		}
+		logger_->log_info("Site2Site transaction %s successfully send flow record %d, content bytes %d",
+				transactionID.c_str(), transaction->_transfers, transaction->_bytes);
+	}
+	catch (std::exception &exception)
+	{
+		if (transaction)
+			deleteTransaction(transactionID);
+		context->yield();
+		tearDown();
+		logger_->log_debug("Caught Exception %s", exception.what());
+		throw;
+	}
+	catch (...)
+	{
+		if (transaction)
+			deleteTransaction(transactionID);
+		context->yield();
+		tearDown();
+		logger_->log_debug("Caught Exception during Site2SiteClientProtocol::transferBytes");
+		throw;
+	}
+
+	deleteTransaction(transactionID);
+
+	return;
 }
 
 

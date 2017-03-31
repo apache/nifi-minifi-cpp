@@ -75,6 +75,10 @@ std::shared_ptr<core::Processor> FlowConfiguration::createProcessor(
       == org::apache::nifi::minifi::processors::AppendHostInfo::ProcessorName) {
     processor = std::make_shared<
         org::apache::nifi::minifi::processors::AppendHostInfo>(name, uuid);
+  } else if (name
+      == org::apache::nifi::minifi::provenance::ProvenanceTaskReport::ProcessorName) {
+    processor = std::make_shared<
+        org::apache::nifi::minifi::provenance::ProvenanceTaskReport>(name, uuid);
   } else {
     logger_->log_error("No Processor defined for %s", name.c_str());
     return nullptr;

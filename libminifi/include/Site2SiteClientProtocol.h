@@ -520,6 +520,7 @@ class Site2SiteClientProtocol {
   // Return false when any error occurs
   bool send(std::string transactionID, DataPacket *packet,
             std::shared_ptr<FlowFileRecord> flowFile,
+			uint8_t *payload, int length,
             core::ProcessSession *session);
   // Confirm the data that was sent or received by comparing CRC32's of the data sent and the data received.
   bool confirm(std::string transactionID);
@@ -537,6 +538,9 @@ class Site2SiteClientProtocol {
   void transferFlowFiles(
       core::ProcessContext *context,
       core::ProcessSession *session);
+  //! Transfer payload for the process session
+  void transferBytes(core::ProcessContext *context, core::ProcessSession *session, uint8_t *payload, int length,
+      std::map<std::string, std::string> attributes);
   // deleteTransaction
   void deleteTransaction(std::string transactionID);
   // Nest Callback Class for write stream

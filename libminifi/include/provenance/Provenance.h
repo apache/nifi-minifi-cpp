@@ -156,6 +156,7 @@ class ProvenanceEventRecord :
      */
     REPLAY
   };
+  static const char *ProvenanceEventTypeStr[REPLAY+1];
  public:
   // Constructor
   /*!

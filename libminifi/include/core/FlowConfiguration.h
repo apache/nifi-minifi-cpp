@@ -22,6 +22,7 @@
 #include "Connection.h"
 #include "RemoteProcessorGroupPort.h"
 #include "provenance/Provenance.h"
+#include "provenance/ProvenanceTaskReport.h"
 #include "processors/GetFile.h"
 #include "processors/PutFile.h"
 #include "processors/TailFile.h"
