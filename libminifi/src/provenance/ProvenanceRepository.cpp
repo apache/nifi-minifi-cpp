@@ -36,7 +36,7 @@ void ProvenanceRepository::run() {
     uint64_t curTime = getTimeMillis();
     uint64_t size = repoSize();
     if (size >= purgeThreshold) {
-      // std::lock_guard<std::mutex> lock(mutex_);
+      std::lock_guard<std::mutex> lock(mutex_);
       std::vector<std::string> purgeList;
       leveldb::Iterator* it = db_->NewIterator(leveldb::ReadOptions());
       for (it->SeekToFirst(); it->Valid(); it->Next()) {
