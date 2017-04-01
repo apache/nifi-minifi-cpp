@@ -24,6 +24,7 @@
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
 #include "core/Core.h"
+#include "core/Resource.h"
 
 namespace org {
 namespace apache {
@@ -119,6 +120,8 @@ class LogAttribute : public core::Processor {
   // Logger
   std::shared_ptr<logging::Logger> logger_;
 };
+
+REGISTER_RESOURCE(LogAttribute);
 
 } /* namespace processors */
 } /* namespace minifi */

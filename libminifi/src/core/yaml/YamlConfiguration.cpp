@@ -21,6 +21,8 @@
 #include <string>
 #include <vector>
 #include <set>
+#include "core/reporting/SiteToSiteProvenanceReportingTask.h"
+#include "io/validation.h"
 namespace org {
 namespace apache {
 namespace nifi {
@@ -31,13 +33,14 @@ core::ProcessGroup *YamlConfiguration::parseRootProcessGroupYaml(
     YAML::Node rootFlowNode) {
   uuid_t uuid;
 
-  checkRequiredField(&rootFlowNode, "name", CONFIG_YAML_REMOTE_PROCESS_GROUP_KEY);
+  checkRequiredField(&rootFlowNode, "name",
+  CONFIG_YAML_REMOTE_PROCESS_GROUP_KEY);
   std::string flowName = rootFlowNode["name"].as<std::string>();
   std::string id = getOrGenerateId(&rootFlowNode);
   uuid_parse(id.c_str(), uuid);
 
-  logger_->log_debug(
-      "parseRootProcessGroup: id => [%s], name => [%s]", id, flowName);
+  logger_->log_debug("parseRootProcessGroup: id => [%s], name => [%s]", id,
+                     flowName);
   std::unique_ptr<core::ProcessGroup> group =
       FlowConfiguration::createRootProcessGroup(flowName, uuid);
 
@@ -172,13 +175,16 @@ void YamlConfiguration::parseProcessorNodeYaml(
 
         if (procCfg.schedulingStrategy == "TIMER_DRIVEN") {
           processor->setSchedulingStrategy(core::TIMER_DRIVEN);
-          logger_->log_debug("setting scheduling strategy as %s", procCfg.schedulingStrategy);
+          logger_->log_debug("setting scheduling strategy as %s",
+                             procCfg.schedulingStrategy);
         } else if (procCfg.schedulingStrategy == "EVENT_DRIVEN") {
           processor->setSchedulingStrategy(core::EVENT_DRIVEN);
-          logger_->log_debug("setting scheduling strategy as %s", procCfg.schedulingStrategy);
+          logger_->log_debug("setting scheduling strategy as %s",
+                             procCfg.schedulingStrategy);
         } else {
           processor->setSchedulingStrategy(core::CRON_DRIVEN);
-          logger_->log_debug("setting scheduling strategy as %s", procCfg.schedulingStrategy);
+          logger_->log_debug("setting scheduling strategy as %s",
+                             procCfg.schedulingStrategy);
         }
 
         int64_t maxConcurrentTasks;
@@ -203,11 +209,14 @@ void YamlConfiguration::parseProcessorNodeYaml(
 
         parentGroup->addProcessor(processor);
       }
+    } else {
+      throw new std::invalid_argument(
+          "Cannot instantiate a MiNiFi instance without a defined Processors configuration node.");
     }
   } else {
     throw new std::invalid_argument(
         "Cannot instantiate a MiNiFi instance without a defined "
-            "Processors configuration node.");
+        "Processors configuration node.");
   }
 }
 
@@ -323,14 +332,16 @@ void YamlConfiguration::parseProvenanceReportingYaml(
   std::shared_ptr<core::Processor> processor = nullptr;
   processor = createProvenanceReportTask();
   std::shared_ptr<core::reporting::SiteToSiteProvenanceReportingTask> reportTask =
-      std::static_pointer_cast < core::reporting::SiteToSiteProvenanceReportingTask
-      > (processor);
+      std::static_pointer_cast<
+          core::reporting::SiteToSiteProvenanceReportingTask>(processor);
 
   YAML::Node node = reportNode->as<YAML::Node>();
 
-  checkRequiredField(&node, "scheduling strategy", CONFIG_YAML_PROVENANCE_REPORT_KEY);
+  checkRequiredField(&node, "scheduling strategy",
+  CONFIG_YAML_PROVENANCE_REPORT_KEY);
   auto schedulingStrategyStr = node["scheduling strategy"].as<std::string>();
-  checkRequiredField(&node, "scheduling period", CONFIG_YAML_PROVENANCE_REPORT_KEY);
+  checkRequiredField(&node, "scheduling period",
+  CONFIG_YAML_PROVENANCE_REPORT_KEY);
   auto schedulingPeriodStr = node["scheduling period"].as<std::string>();
   checkRequiredField(&node, "host", CONFIG_YAML_PROVENANCE_REPORT_KEY);
   auto hostStr = node["host"].as<std::string>();
@@ -346,21 +357,21 @@ void YamlConfiguration::parseProvenanceReportingYaml(
   processor->setScheduledState(core::RUNNING);
 
   core::TimeUnit unit;
-  if (core::Property::StringToTime(schedulingPeriodStr, schedulingPeriod, unit) &&
-      core::Property::ConvertTimeUnitToNS(schedulingPeriod, unit, schedulingPeriod)) {
-    logger_->log_debug(
-        "ProvenanceReportingTask schedulingPeriod %d ns",
-        schedulingPeriod);
+  if (core::Property::StringToTime(schedulingPeriodStr, schedulingPeriod, unit)
+      && core::Property::ConvertTimeUnitToNS(schedulingPeriod, unit,
+                                             schedulingPeriod)) {
+    logger_->log_debug("ProvenanceReportingTask schedulingPeriod %d ns",
+                       schedulingPeriod);
     processor->setSchedulingPeriodNano(schedulingPeriod);
   }
 
   if (schedulingStrategyStr == "TIMER_DRIVEN") {
-     processor->setSchedulingStrategy(core::TIMER_DRIVEN);
-     logger_->log_debug(
-         "ProvenanceReportingTask scheduling strategy %s", schedulingStrategyStr);
+    processor->setSchedulingStrategy(core::TIMER_DRIVEN);
+    logger_->log_debug("ProvenanceReportingTask scheduling strategy %s",
+                       schedulingStrategyStr);
   } else {
     throw std::invalid_argument(
-        "Invalid scheduling strategy " +  schedulingStrategyStr);
+        "Invalid scheduling strategy " + schedulingStrategyStr);
   }
 
   reportTask->setHost(hostStr);
@@ -370,6 +381,7 @@ void YamlConfiguration::parseProvenanceReportingYaml(
     logger_->log_debug("ProvenanceReportingTask port %d", (uint16_t) lvalue);
     reportTask->setPort((uint16_t) lvalue);
   }
+
   logger_->log_debug("ProvenanceReportingTask port uuid %s", portUUIDStr);
   uuid_parse(portUUIDStr.c_str(), port_uuid);
   reportTask->setPortUUID(port_uuid);
@@ -378,9 +390,62 @@ void YamlConfiguration::parseProvenanceReportingYaml(
   }
 }
 
-void YamlConfiguration::parseConnectionYaml(
-    YAML::Node *connectionsNode,
-    core::ProcessGroup *parent) {
+void YamlConfiguration::parseControllerServices(
+    YAML::Node *controllerServicesNode) {
+  if (!IsNullOrEmpty(controllerServicesNode)) {
+    if (controllerServicesNode->IsSequence()) {
+      for (auto iter : *controllerServicesNode) {
+        YAML::Node controllerServiceNode = iter.as<YAML::Node>();
+        try {
+          checkRequiredField(&controllerServiceNode, "name",
+                             CONFIG_YAML_CONTROLLER_SERVICES_KEY);
+          checkRequiredField(&controllerServiceNode, "id",
+                             CONFIG_YAML_CONTROLLER_SERVICES_KEY);
+          checkRequiredField(&controllerServiceNode, "class",
+                             CONFIG_YAML_CONTROLLER_SERVICES_KEY);
+
+          auto name = controllerServiceNode["name"].as<std::string>();
+          auto id = controllerServiceNode["id"].as<std::string>();
+          auto type = controllerServiceNode["class"].as<std::string>();
+
+          uuid_t uuid;
+          uuid_parse(id.c_str(), uuid);
+          auto controller_service_node = createControllerService(type, name,
+                                                                 uuid);
+          if (nullptr != controller_service_node) {
+            logger_->log_debug(
+                "Created Controller Service with UUID %s and name %s", id,
+                name);
+            controller_service_node->initialize();
+            YAML::Node propertiesNode = controllerServiceNode["Properties"];
+            // we should propogate propertiets to the node and to the implementation
+            parsePropertiesNodeYaml(
+                &propertiesNode,
+                std::static_pointer_cast<core::ConfigurableComponent>(
+                    controller_service_node));
+            if (controller_service_node->getControllerServiceImplementation()
+                != nullptr) {
+              parsePropertiesNodeYaml(
+                  &propertiesNode,
+                  std::static_pointer_cast<core::ConfigurableComponent>(
+                      controller_service_node
+                          ->getControllerServiceImplementation()));
+            }
+          }
+          controller_services_->put(id, controller_service_node);
+          controller_services_->put(name, controller_service_node);
+        } catch (YAML::InvalidNode &in) {
+          throw Exception(
+              ExceptionType::GENERAL_EXCEPTION,
+              "Name, id, and class must be specified for controller services");
+        }
+      }
+    }
+  }
+}
+
+void YamlConfiguration::parseConnectionYaml(YAML::Node *connectionsNode,
+                                            core::ProcessGroup *parent) {
   if (!parent) {
     logger_->log_error("parseProcessNode: no parent group was provided");
     return;
@@ -400,15 +465,15 @@ void YamlConfiguration::parseConnectionYaml(
         std::string id = getOrGenerateId(&connectionNode);
         uuid_parse(id.c_str(), uuid);
         connection = this->createConnection(name, uuid);
-        logger_->log_debug(
-            "Created connection with UUID %s and name %s", id, name);
-
+        logger_->log_debug("Created connection with UUID %s and name %s", id,
+                           name);
 
         // Configure connection source
         checkRequiredField(&connectionNode, "source relationship name", CONFIG_YAML_CONNECTIONS_KEY);
         auto rawRelationship = connectionNode["source relationship name"].as<std::string>();
         core::Relationship relationship(rawRelationship, "");
-        logger_->log_debug("parseConnection: relationship => [%s]", rawRelationship);
+        logger_->log_debug("parseConnection: relationship => [%s]",
+                           rawRelationship);
         if (connection) {
           connection->setRelationship(relationship);
         }
@@ -462,7 +527,7 @@ void YamlConfiguration::parseConnectionYaml(
           std::string connectionDestProcName = connectionNode["destination name"].as<std::string>();
           uuid_t tmpUUID;
           if (!uuid_parse(connectionDestProcName.c_str(), tmpUUID) &&
-              NULL != parent->findProcessor(tmpUUID)) {
+          NULL != parent->findProcessor(tmpUUID)) {
             // the destination name is a remote port id, so use that as the dest id
             uuid_copy(destUUID, tmpUUID);
             logger_->log_debug("Using 'destination name' containing a remote port id to match the destination for "
@@ -508,13 +573,18 @@ void YamlConfiguration::parsePortYaml(YAML::Node *portNode,
   YAML::Node inputPortsObj = portNode->as<YAML::Node>();
 
   // Check for required fields
-  checkRequiredField(&inputPortsObj, "name", CONFIG_YAML_REMOTE_PROCESS_GROUP_KEY);
+  checkRequiredField(&inputPortsObj, "name",
+  CONFIG_YAML_REMOTE_PROCESS_GROUP_KEY);
   auto nameStr = inputPortsObj["name"].as<std::string>();
-  checkRequiredField(&inputPortsObj, "id", "The field 'id' is required for "
-      "the port named '" + nameStr + "' in the YAML Config. If this port "
-      "is an input port for a NiFi Remote Process Group, the port "
-      "id should match the corresponding id specified in the NiFi configuration. "
-      "This is a UUID of the format XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX.");
+  checkRequiredField(
+      &inputPortsObj,
+      "id",
+      "The field 'id' is required for "
+          "the port named '" + nameStr
+          + "' in the YAML Config. If this port "
+              "is an input port for a NiFi Remote Process Group, the port "
+              "id should match the corresponding id specified in the NiFi configuration. "
+              "This is a UUID of the format XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX.");
   auto portId = inputPortsObj["id"].as<std::string>();
   uuid_parse(portId.c_str(), uuid);
 
@@ -530,7 +600,9 @@ void YamlConfiguration::parsePortYaml(YAML::Node *portNode,
   // handle port properties
   YAML::Node nodeVal = portNode->as<YAML::Node>();
   YAML::Node propertiesNode = nodeVal["Properties"];
-  parsePropertiesNodeYaml(&propertiesNode, processor);
+  parsePropertiesNodeYaml(
+      &propertiesNode,
+      std::static_pointer_cast<core::ConfigurableComponent>(processor));
 
   // add processor to parent
   parent->addProcessor(processor);
@@ -548,28 +620,51 @@ void YamlConfiguration::parsePortYaml(YAML::Node *portNode,
 }
 
 void YamlConfiguration::parsePropertiesNodeYaml(
-    YAML::Node *propertiesNode, std::shared_ptr<core::Processor> processor) {
+    YAML::Node *propertiesNode,
+    std::shared_ptr<core::ConfigurableComponent> processor) {
   // Treat generically as a YAML node so we can perform inspection on entries to ensure they are populated
   for (YAML::const_iterator propsIter = propertiesNode->begin();
       propsIter != propertiesNode->end(); ++propsIter) {
     std::string propertyName = propsIter->first.as<std::string>();
     YAML::Node propertyValueNode = propsIter->second;
     if (!propertyValueNode.IsNull() && propertyValueNode.IsDefined()) {
-      std::string rawValueString = propertyValueNode.as<std::string>();
-      if (!processor->setProperty(propertyName, rawValueString)) {
-        logger_->log_warn(
-            "Received property %s with value %s but it is not one of the properties for %s",
-            propertyName,
-            rawValueString,
-            processor->getName());
+      if (propertyValueNode.IsSequence()) {
+        for (auto iter : propertyValueNode) {
+          if (iter.IsDefined()) {
+            YAML::Node nodeVal = iter.as<YAML::Node>();
+            YAML::Node propertiesNode = nodeVal["value"];
+            // must insert the sequence in differently.
+            std::string rawValueString = propertiesNode.as<std::string>();
+            logger_->log_info("Found %s=%s", propertyName, rawValueString);
+            if (!processor->updateProperty(propertyName, rawValueString)) {
+              std::shared_ptr<core::Connectable> proc =
+                  std::dynamic_pointer_cast<core::Connectable>(processor);
+              if (proc != 0) {
+                logger_->log_warn(
+                    "Received property %s with value %s but is not one of the properties for %s",
+                    propertyName, rawValueString, proc->getName());
+              }
+            }
+          }
+        }
+      } else {
+        std::string rawValueString = propertyValueNode.as<std::string>();
+        if (!processor->setProperty(propertyName, rawValueString)) {
+          std::shared_ptr<core::Connectable> proc = std::dynamic_pointer_cast<
+              core::Connectable>(processor);
+          if (proc != 0) {
+            logger_->log_warn(
+                "Received property %s with value %s but is not one of the properties for %s",
+                propertyName, rawValueString, proc->getName());
+          }
+        }
       }
     }
   }
 }
 
-std::string YamlConfiguration::getOrGenerateId(
-    YAML::Node *yamlNode,
-    const std::string &idField) {
+std::string YamlConfiguration::getOrGenerateId(YAML::Node *yamlNode,
+                                               const std::string &idField) {
   std::string id;
   YAML::Node node = yamlNode->as<YAML::Node>();
 
@@ -579,7 +674,7 @@ std::string YamlConfiguration::getOrGenerateId(
     } else {
       throw std::invalid_argument(
           "getOrGenerateId: idField is expected to reference YAML::Node "
-              "of YAML::NodeType::Scalar.");
+          "of YAML::NodeType::Scalar.");
     }
   } else {
     uuid_t uuid;
@@ -592,12 +687,10 @@ std::string YamlConfiguration::getOrGenerateId(
   return id;
 }
 
-void YamlConfiguration::checkRequiredField(
-    YAML::Node *yamlNode,
-    const std::string &fieldName,
-    const std::string &yamlSection,
-    const std::string &errorMessage) {
-
+void YamlConfiguration::checkRequiredField(YAML::Node *yamlNode,
+                                           const std::string &fieldName,
+                                           const std::string &yamlSection,
+                                           const std::string &errorMessage) {
   std::string errMsg = errorMessage;
   if (!yamlNode->as<YAML::Node>()[fieldName]) {
     if (errMsg.empty()) {
@@ -605,14 +698,13 @@ void YamlConfiguration::checkRequiredField(
       // invalid YAML config file, using the component name if present
       errMsg =
           yamlNode->as<YAML::Node>()["name"] ?
-          "Unable to parse configuration file for component named '" +
-              yamlNode->as<YAML::Node>()["name"].as<std::string>() +
-              "' as required field '" + fieldName + "' is missing" :
-          "Unable to parse configuration file as required field '" +
-              fieldName + "' is missing";
+              "Unable to parse configuration file for component named '"
+                  + yamlNode->as<YAML::Node>()["name"].as<std::string>()
+                  + "' as required field '" + fieldName + "' is missing" :
+              "Unable to parse configuration file as required field '"
+                  + fieldName + "' is missing";
       if (!yamlSection.empty()) {
-        errMsg += " [in '" + yamlSection +
-            "' section of configuration file]";
+        errMsg += " [in '" + yamlSection + "' section of configuration file]";
       }
     }
     logger_->log_error(errMsg.c_str());

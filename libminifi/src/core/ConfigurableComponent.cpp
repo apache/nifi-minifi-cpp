@@ -43,6 +43,20 @@ ConfigurableComponent::ConfigurableComponent(
 ConfigurableComponent::~ConfigurableComponent() {
 }
 
+bool ConfigurableComponent::getProperty(const std::string &name,
+                                        Property &prop) {
+  std::lock_guard<std::mutex> lock(configuration_mutex_);
+
+  auto &&it = properties_.find(name);
+
+  if (it != properties_.end()) {
+    prop = it->second;
+    return true;
+  } else {
+    return false;
+  }
+}
+
 /**
  * Get property using the provided name.
  * @param name property name.
@@ -54,12 +68,11 @@ bool ConfigurableComponent::getProperty(const std::string name,
   std::lock_guard<std::mutex> lock(configuration_mutex_);
 
   auto &&it = properties_.find(name);
-
   if (it != properties_.end()) {
     Property item = it->second;
     value = item.getValue();
-    my_logger_->log_info("Processor %s property name %s value %s", name.c_str(),
-                         item.getName().c_str(), value.c_str());
+    my_logger_->log_info("Processor %s property name %s value %s", name,
+                         item.getName(), value);
     return true;
   } else {
     return false;
@@ -79,6 +92,29 @@ bool ConfigurableComponent::setProperty(const std::string name,
   if (it != properties_.end()) {
     Property item = it->second;
     item.setValue(value);
+    properties_[item.getName()] = item;
+    my_logger_->log_info("Component %s property name %s value %s", name.c_str(),
+                         item.getName().c_str(), value.c_str());
+    return true;
+  } else {
+    return false;
+  }
+}
+
+/**
+ * Sets the property using the provided name
+ * @param property name
+ * @param value property value.
+ * @return result of setting property.
+ */
+bool ConfigurableComponent::updateProperty(const std::string &name,
+                                           const std::string &value) {
+  std::lock_guard<std::mutex> lock(configuration_mutex_);
+  auto &&it = properties_.find(name);
+
+  if (it != properties_.end()) {
+    Property item = it->second;
+    item.addValue(value);
     properties_[item.getName()] = item;
     my_logger_->log_info("Component %s property name %s value %s", name.c_str(),
                          item.getName().c_str(), value.c_str());

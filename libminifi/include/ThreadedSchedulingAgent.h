@@ -40,11 +40,13 @@ class ThreadedSchedulingAgent : public SchedulingAgent {
  public:
   // Constructor
   /*!
-   * Create a new processor
+   * Create a new threaded scheduling agent.
    */
-  ThreadedSchedulingAgent(std::shared_ptr<core::Repository> repo, std::shared_ptr<Configure> configure)
-      : SchedulingAgent(repo) {
-       configure_ = configure;
+  ThreadedSchedulingAgent(
+      std::shared_ptr<core::controller::ControllerServiceProvider> controller_service_provider,
+      std::shared_ptr<core::Repository> repo,
+      std::shared_ptr<Configure> configuration)
+      : SchedulingAgent(controller_service_provider, repo, configuration) {
   }
   // Destructor
   virtual ~ThreadedSchedulingAgent() {
@@ -70,7 +72,6 @@ class ThreadedSchedulingAgent : public SchedulingAgent {
   // Only support pass by reference or pointer
   ThreadedSchedulingAgent(const ThreadedSchedulingAgent &parent);
   ThreadedSchedulingAgent &operator=(const ThreadedSchedulingAgent &parent);
-  std::shared_ptr<Configure> configure_;
 };
 
 } /* namespace minifi */

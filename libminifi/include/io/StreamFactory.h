@@ -30,7 +30,11 @@ namespace io {
 
 class AbstractStreamFactory {
  public:
-  virtual std::unique_ptr<Socket> createSocket(const std::string &host, const uint16_t port) = 0;
+  virtual ~AbstractStreamFactory() {
+  }
+
+  virtual std::unique_ptr<Socket> createSocket(const std::string &host,
+                                               const uint16_t port) = 0;
 };
 
 /**

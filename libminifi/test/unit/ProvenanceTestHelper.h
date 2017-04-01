@@ -93,7 +93,7 @@ class TestRepository : public core::Repository {
 class TestFlowRepository : public core::repository::FlowFileRepository {
  public:
   TestFlowRepository()
-      : core::repository::FlowFileRepository("./", 1000, 100, 0) {
+      : core::repository::FlowFileRepository("./dir", 1000, 100, 0) {
   }
   // initialize
   bool initialize() {
@@ -154,9 +154,7 @@ class TestFlowRepository : public core::repository::FlowFileRepository {
   std::map<std::string, std::string> repositoryResults;
 };
 
-
-
-class TestFlowController : public minifi::FlowController {
+class TestFlowController : public minifi::FlowController{
 
 public:
   TestFlowController(std::shared_ptr<core::Repository> repo,

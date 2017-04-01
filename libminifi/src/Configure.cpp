@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 #include "properties/Configure.h"
+#include <cstdlib>
 #include <string>
 #include "utils/StringUtils.h"
 #include "core/Core.h"
@@ -25,8 +26,10 @@ namespace apache {
 namespace nifi {
 namespace minifi {
 
+const char *Configure::nifi_default_directory = "nifi.default.directory";
 const char *Configure::nifi_flow_configuration_file =
     "nifi.flow.configuration.file";
+const char *Configure::nifi_flow_engine_threads = "nifi.flow.engine.threads";
 const char *Configure::nifi_administrative_yield_duration =
     "nifi.administrative.yield.duration";
 const char *Configure::nifi_bored_yield_duration = "nifi.bored.yield.duration";
@@ -82,6 +85,17 @@ bool Configure::get(std::string key, std::string &value) {
   }
 }
 
+int Configure::getInt(const std::string &key, int default_value) {
+  std::lock_guard<std::mutex> lock(mutex_);
+  auto it = properties_.find(key);
+
+  if (it != properties_.end()) {
+    return std::atol(it->second.c_str());
+  } else {
+    return default_value;
+  }
+}
+
 // Parse one line in configure file like key=value
 void Configure::parseConfigureFileLine(char *buf) {
   char *line = buf;
@@ -124,8 +138,7 @@ void Configure::loadConfigureFile(const char *fileName) {
   if (fileName) {
     // perform a naive determination if this is a relative path
     if (fileName[0] != '/') {
-      adjustedFilename = adjustedFilename + getHome() + "/"
-          + fileName;
+      adjustedFilename = adjustedFilename + getHome() + "/" + fileName;
     } else {
       adjustedFilename += fileName;
     }

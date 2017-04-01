@@ -1,0 +1,62 @@
+Flow Controller:
+    name: MiNiFi Flow
+    id: 2438e3c8-015a-1000-79ca-83af40ec1990
+    
+Processors: 
+    - name: MockProcessorIto
+      id: 1438e3c8-015a-1000-79ca-83af40ec1991
+      class: org.apache.nifi.processors.standard.MockProcessor
+      max concurrent tasks: 1
+      scheduling strategy: TIMER_DRIVEN
+      scheduling period: 1 sec
+      penalization period: 30 sec
+      yield period: 1 sec
+      run duration nanos: 0
+      auto-terminated relationships list:
+      Properties:
+        linkedService: MockItLikeIts1995
+
+Connections:
+    - name: TransferFilesToRPG
+      id: 1438e3c8-015a-1000-79ca-83af40ec1997
+      source name: MockProcessorIto
+      source id: 1438e3c8-015a-1000-79ca-83af40ec1991
+      source relationship name: success
+      destination name: MockProcessorIto
+      destination id: 1438e3c8-015a-1000-79ca-83af40ec1991
+      destination relationship name: success
+      max work queue size: 0
+      max work queue data size: 1 MB
+      flowfile expiration: 60 sec
+      
+Controller Services:
+    - name: MockItLikeIts1995
+      id: 2438e3c8-015a-1000-79ca-83af40ec1991
+      class: MockControllerService
+      Properties:
+          Linked Services: 
+            - value: ID
+    - name: SSLClientServiceTest
+      id: 2438e3c8-015a-1000-79ca-83af40ec1994
+      class: SSLContextService
+      Properties:
+        Client Certificate:
+            - value: cn.crt.pem
+        Private Key:
+            - value: cn.ckey.pem
+        Passphrase:
+            - value: cn.pass
+        CA Certificate:
+            - value: nifi-cert.pem
+    - name: ID
+      id: 2438e3c8-015a-1000-79ca-83af40ec1992
+      class: MockControllerService
+      Properties:
+          Linked Services: 
+    - name: MockItLikeItsWrong
+      id: 2438e3c8-015a-1000-79ca-83af40ec1993
+      class: MockControllerSer
+      Properties:
+          Linked Services: 
+            - value: ID
+

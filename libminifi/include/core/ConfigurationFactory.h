@@ -31,7 +31,8 @@ namespace core {
 template<typename T>
 typename std::enable_if<!class_operations<T>::value, T*>::type instantiate(
     const std::shared_ptr<core::Repository> &repo,
-    const std::shared_ptr<core::Repository> &flow_file_repo, const std::string path) {
+    const std::shared_ptr<core::Repository> &flow_file_repo,
+    std::shared_ptr<Configure> configuration, const std::string path) {
   throw std::runtime_error("Cannot instantiate class");
 }
 
@@ -40,8 +41,8 @@ typename std::enable_if<class_operations<T>::value, T*>::type instantiate(
     const std::shared_ptr<core::Repository> &repo,
     const std::shared_ptr<core::Repository> &flow_file_repo,
     const std::shared_ptr<io::StreamFactory> &stream_factory,
-    const std::string path) {
-  return new T(repo, flow_file_repo, stream_factory, path);
+    std::shared_ptr<Configure> configuration, const std::string path) {
+  return new T(repo, flow_file_repo, stream_factory, configuration, path);
 }
 
 /**

@@ -18,6 +18,7 @@
 
 #include "core/Property.h"
 #include <string>
+#include <vector>
 namespace org {
 namespace apache {
 namespace nifi {
@@ -34,11 +35,27 @@ std::string Property::getDescription() {
 }
 // Get value for the property
 std::string Property::getValue() const {
-  return value_;
+  if (!values_.empty())
+    return values_.front();
+  else
+    return "";
+}
+
+std::vector<std::string> &Property::getValues() {
+  return values_;
 }
 // Set value for the property
 void Property::setValue(std::string value) {
-  value_ = value;
+  if (!isCollection) {
+    values_.clear();
+    values_.push_back(std::string(value.c_str()));
+  } else {
+    values_.push_back(std::string(value.c_str()));
+  }
+}
+
+void Property::addValue(const std::string &value) {
+  values_.push_back(std::string(value.c_str()));
 }
 // Compare
 bool Property::operator <(const Property & right) const {
@@ -47,7 +64,8 @@ bool Property::operator <(const Property & right) const {
 
 const Property &Property::operator=(const Property &other) {
   name_ = other.name_;
-  value_ = other.value_;
+  values_ = other.values_;
+  isCollection = other.isCollection;
   return *this;
 }
 

@@ -60,7 +60,7 @@ struct class_operations {
 
   typedef decltype(canDestruct<T>(0)) type;
 
-  static const bool value = type::value; /* Which is it? */
+  static const bool value = type::value;
 };
 
 template<typename T>
@@ -98,6 +98,7 @@ class CoreComponent {
     uuid_unparse_lower(uuid_, uuidStr);
     uuidStr_ = uuidStr;
   }
+
 
   /**
    * Move Constructor.

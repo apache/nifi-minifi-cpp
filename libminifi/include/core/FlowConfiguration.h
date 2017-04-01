@@ -21,6 +21,8 @@
 #include "core/Core.h"
 #include "Connection.h"
 #include "RemoteProcessorGroupPort.h"
+#include "core/controller/ControllerServiceNode.h"
+#include "core/controller/StandardControllerServiceProvider.h"
 #include "provenance/Provenance.h"
 #include "core/reporting/SiteToSiteProvenanceReportingTask.h"
 #include "processors/GetFile.h"
@@ -56,14 +58,19 @@ class FlowConfiguration : public CoreComponent {
    * Constructor that will be used for configuring
    * the flow controller.
    */
-  FlowConfiguration(std::shared_ptr<core::Repository> repo,
-                    std::shared_ptr<core::Repository> flow_file_repo,
-                    std::shared_ptr<io::StreamFactory> stream_factory,
-                    const std::string path)
+  explicit FlowConfiguration(std::shared_ptr<core::Repository> repo,
+                             std::shared_ptr<core::Repository> flow_file_repo,
+                             std::shared_ptr<io::StreamFactory> stream_factory,
+                             std::shared_ptr<Configure> configuration,
+                             const std::string path)
       : CoreComponent(core::getClassName<FlowConfiguration>()),
         flow_file_repo_(flow_file_repo),
         config_path_(path) {
-
+    controller_services_ = std::make_shared<
+        core::controller::ControllerServiceMap>();
+    service_provider_ = std::make_shared<
+        core::controller::StandardControllerServiceProvider>(
+        controller_services_, nullptr, configuration);
   }
 
   virtual ~FlowConfiguration();
@@ -74,6 +81,10 @@ class FlowConfiguration : public CoreComponent {
   // Create Root Processor Group
   std::unique_ptr<core::ProcessGroup> createRootProcessGroup(std::string name,
                                                              uuid_t uuid);
+
+  std::shared_ptr<core::controller::ControllerServiceNode> createControllerService(
+      const std::string &class_name, const std::string &name, uuid_t uuid);
+
   // Create Remote Processor Group
   std::unique_ptr<core::ProcessGroup> createRemoteProcessGroup(std::string name,
                                                                uuid_t uuid);
@@ -105,11 +116,21 @@ class FlowConfiguration : public CoreComponent {
     return nullptr;
   }
 
+  std::shared_ptr<core::controller::StandardControllerServiceProvider> &getControllerServiceProvider() {
+    return service_provider_;
+  }
+
  protected:
+
+  // service provider reference.
+  std::shared_ptr<core::controller::StandardControllerServiceProvider> service_provider_;
+  // based, shared controller service map.
+  std::shared_ptr<core::controller::ControllerServiceMap> controller_services_;
   // configuration path
   std::string config_path_;
   // flow file repo
   std::shared_ptr<core::Repository> flow_file_repo_;
+  // stream factory
   std::shared_ptr<io::StreamFactory> stream_factory_;
 };
 

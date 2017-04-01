@@ -21,6 +21,7 @@
 #include <memory>
 #include <algorithm>
 #include <set>
+#include "core/Core.h"
 #include "core/ConfigurationFactory.h"
 #include "core/FlowConfiguration.h"
 #include "io/StreamFactory.h"
@@ -53,17 +54,20 @@ std::unique_ptr<core::FlowConfiguration> createFlowConfiguration(
     if (class_name_lc == "flowconfiguration") {
       // load the base configuration.
       return std::unique_ptr<core::FlowConfiguration>(
-          new core::FlowConfiguration(repo, flow_file_repo, stream_factory, path));
+          new core::FlowConfiguration(repo, flow_file_repo, stream_factory,
+                                      configure, path));
 
     } else if (class_name_lc == "yamlconfiguration") {
       // only load if the class is defined.
       return std::unique_ptr<core::FlowConfiguration>(
-          instantiate<core::YamlConfiguration>(repo, flow_file_repo, stream_factory, path));
+          instantiate<core::YamlConfiguration>(repo, flow_file_repo,
+                                               stream_factory, configure, path));
 
     } else {
       if (fail_safe) {
         return std::unique_ptr<core::FlowConfiguration>(
-            new core::FlowConfiguration(repo, flow_file_repo, stream_factory, path));
+            new core::FlowConfiguration(repo, flow_file_repo, stream_factory,
+                                        configure, path));
       } else {
         throw std::runtime_error(
             "Support for the provided configuration class could not be found");
@@ -72,7 +76,8 @@ std::unique_ptr<core::FlowConfiguration> createFlowConfiguration(
   } catch (const std::runtime_error &r) {
     if (fail_safe) {
       return std::unique_ptr<core::FlowConfiguration>(
-          new core::FlowConfiguration(repo, flow_file_repo, stream_factory, path));
+          new core::FlowConfiguration(repo, flow_file_repo, stream_factory,
+                                      configure, path));
     }
   }
 

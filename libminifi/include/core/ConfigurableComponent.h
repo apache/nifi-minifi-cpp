@@ -54,6 +54,11 @@ class ConfigurableComponent {
    * @return result of getting property.
    */
   bool getProperty(const std::string name, std::string &value);
+
+  /**
+   * Provides a reference for the property.
+   */
+  bool getProperty(const std::string &name, Property &prop);
   /**
    * Sets the property using the provided name
    * @param property name
@@ -61,6 +66,12 @@ class ConfigurableComponent {
    * @return result of setting property.
    */
   bool setProperty(const std::string name, std::string value);
+
+  /**
+   * Updates the Property from the key (name), adding value
+   * to the collection of values within the Property.
+   */
+  bool updateProperty(const std::string &name, const std::string &value);
   /**
    * Sets the property using the provided name
    * @param property name

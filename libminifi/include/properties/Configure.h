@@ -28,6 +28,7 @@
 #include <iostream>
 #include <fstream>
 #include "core/Core.h"
+#include "utils/StringUtils.h"
 #include "core/logging/Logger.h"
 
 namespace org {
@@ -38,7 +39,9 @@ namespace minifi {
 class Configure {
  public:
   // nifi.flow.configuration.file
+  static const char *nifi_default_directory;
   static const char *nifi_flow_configuration_file;
+  static const char *nifi_flow_engine_threads;
   static const char *nifi_administrative_yield_duration;
   static const char *nifi_bored_yield_duration;
   static const char *nifi_graceful_shutdown_seconds;
@@ -80,7 +83,7 @@ class Configure {
   // Set the config value
   void set(std::string key, std::string value) {
     std::lock_guard<std::mutex> lock(mutex_);
-    properties_[key] = value;
+    properties_[key] = std::string(value.c_str());
   }
   // Check whether the config value existed
   bool has(std::string key) {
@@ -89,6 +92,12 @@ class Configure {
   }
   // Get the config value
   bool get(std::string key, std::string &value);
+
+  /**
+   * Returns the configuration value or an empty string.
+   * @return value corresponding to key or empty value.
+   */
+  int getInt(const std::string &key, int default_value);
   // Parse one line in configure file like key=value
   void parseConfigureFileLine(char *buf);
   // Load Configure File

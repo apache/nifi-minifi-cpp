@@ -38,6 +38,8 @@
 #include "core/ProcessSession.h"
 #include "core/ProcessGroup.h"
 #include "core/FlowConfiguration.h"
+#include "core/controller/ControllerServiceNode.h"
+#include "core/controller/ControllerServiceProvider.h"
 #include "TimerDrivenSchedulingAgent.h"
 #include "EventDrivenSchedulingAgent.h"
 #include "FlowControlProtocol.h"
@@ -56,7 +58,8 @@ namespace minifi {
  * Flow Controller class. Generally used by FlowController factory
  * as a singleton.
  */
-class FlowController : public core::CoreComponent {
+class FlowController : public core::controller::ControllerServiceProvider,
+    public std::enable_shared_from_this<FlowController> {
  public:
   static const int DEFAULT_MAX_TIMER_DRIVEN_THREAD = 10;
   static const int DEFAULT_MAX_EVENT_DRIVEN_THREAD = 5;
@@ -133,6 +136,122 @@ class FlowController : public core::CoreComponent {
     protocol_->setSerialNumber(number);
   }
 
+  /**
+   * Creates a controller service through the controller service provider impl.
+   * @param type class name
+   * @param id service identifier
+   * @param firstTimeAdded first time this CS was added
+   */
+  virtual std::shared_ptr<core::controller::ControllerServiceNode> createControllerService(
+      const std::string &type, const std::string &id,
+      bool firstTimeAdded);
+
+  /**
+   * controller service provider
+   */
+  /**
+   * removes controller service
+   * @param serviceNode service node to be removed.
+   */
+
+  virtual void removeControllerService(
+      const std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode);
+
+  /**
+   * Enables the controller service services
+   * @param serviceNode service node which will be disabled, along with linked services.
+   */
+  virtual void enableControllerService(
+      std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode);
+
+  /**
+   * Enables controller services
+   * @param serviceNoden vector of service nodes which will be enabled, along with linked services.
+   */
+  virtual void enableControllerServices(
+      std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> serviceNodes);
+
+  /**
+   * Disables controller services
+   * @param serviceNode service node which will be disabled, along with linked services.
+   */
+  virtual void disableControllerService(
+      std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode);
+
+  /**
+   * Gets all controller services.
+   */
+  virtual std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> getAllControllerServices();
+
+  /**
+   * Gets controller service node specified by <code>id</code>
+   * @param id service identifier
+   * @return shared pointer to the controller service node or nullptr if it does not exist.
+   */
+  virtual std::shared_ptr<core::controller::ControllerServiceNode> getControllerServiceNode(
+      const std::string &id);
+
+  virtual void verifyCanStopReferencingComponents(
+      std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode);
+
+  /**
+   * Unschedules referencing components.
+   */
+  virtual std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> unscheduleReferencingComponents(
+      std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode);
+
+  /**
+   * Verify can disable referencing components
+   * @param serviceNode service node whose referenced components will be scheduled.
+   */
+  virtual void verifyCanDisableReferencingServices(
+      std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode);
+
+  /**
+   * Disables referencing components
+   * @param serviceNode service node whose referenced components will be scheduled.
+   */
+  virtual std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> disableReferencingServices(
+      std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode);
+
+  /**
+   * Verify can enable referencing components
+   * @param serviceNode service node whose referenced components will be scheduled.
+   */
+  virtual void verifyCanEnableReferencingServices(
+      std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode);
+
+  /**
+   * Determines if the controller service specified by identifier is enabled.
+   */
+  bool isControllerServiceEnabled(const std::string &identifier);
+
+  /**
+   * Enables referencing components
+   * @param serviceNode service node whose referenced components will be scheduled.
+   */
+  virtual std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> enableReferencingServices(
+      std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode);
+
+  /**
+   * Schedules referencing components
+   * @param serviceNode service node whose referenced components will be scheduled.
+   */
+  virtual std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> scheduleReferencingComponents(
+      std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode);
+
+  /**
+   * Returns controller service components referenced by serviceIdentifier from the embedded
+   * controller service provider;
+   */
+  std::shared_ptr<core::controller::ControllerService> getControllerServiceForComponent(
+      const std::string &serviceIdentifier, const std::string &componentId);
+
+  /**
+   * Enables all controller services for the provider.
+   */
+  virtual void enableAllControllerServices();
+
  protected:
 
   // function to load the flow file repo.
@@ -151,7 +270,7 @@ class FlowController : public core::CoreComponent {
   // NiFi property File Name
   std::string properties_file_name_;
   // Root Process Group
-  std::unique_ptr<core::ProcessGroup> root_;
+  std::shared_ptr<core::ProcessGroup> root_;
   // MAX Timer Driven Threads
   int max_timer_driven_threads_;
   // MAX Event Driven Threads
@@ -171,9 +290,9 @@ class FlowController : public core::CoreComponent {
 
   // Flow Engines
   // Flow Timer Scheduler
-  TimerDrivenSchedulingAgent _timerScheduler;
+  std::shared_ptr<TimerDrivenSchedulingAgent> timer_scheduler_;
   // Flow Event Scheduler
-  EventDrivenSchedulingAgent _eventScheduler;
+  std::shared_ptr<EventDrivenSchedulingAgent> event_scheduler_;
   // Controller Service
   // Config
   // Site to Site Server Listener
@@ -181,6 +300,11 @@ class FlowController : public core::CoreComponent {
   // FlowControl Protocol
   FlowControlProtocol *protocol_;
 
+  std::shared_ptr<Configure> configuration_;
+
+  std::shared_ptr<core::controller::ControllerServiceMap> controller_service_map_;
+
+  std::shared_ptr<core::controller::ControllerServiceProvider> controller_service_provider_;
   // flow configuration object.
   std::unique_ptr<core::FlowConfiguration> flow_configuration_;
 

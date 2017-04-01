@@ -30,6 +30,7 @@
 #include <set>
 #include <stdlib.h>
 #include <math.h>
+#include "utils/StringUtils.h"
 
 namespace org {
 namespace apache {
@@ -58,11 +59,24 @@ class Property {
   Property(const std::string name, const std::string description,
            const std::string value)
       : name_(name),
-        description_(description),
-        value_(value) {
+        isCollection(false),
+        description_(description) {
+    values_.push_back(std::string(value.c_str()));
   }
-  Property() {
+
+  Property(const std::string name, const std::string description)
+      : name_(name),
+        isCollection(true),
+        description_(description) {
   }
+
+  Property()
+      : isCollection(false),
+        name_(""),
+        description_("") {
+
+  }
+
   // Destructor
   virtual ~Property() {
   }
@@ -72,8 +86,14 @@ class Property {
   std::string getDescription();
   // Get value for the property
   std::string getValue() const;
+  std::vector<std::string> &getValues();
+
   // Set value for the property
   void setValue(std::string value);
+  /**
+   * Add value to the collection of values.
+   */
+  void addValue(const std::string &value);
   const Property &operator=(const Property &other);
   // Compare
   bool operator <(const Property & right) const;
@@ -244,12 +264,13 @@ class Property {
   }
 
  protected:
+  bool isCollection;
   // Name
   std::string name_;
   // Description
   std::string description_;
   // Value
-  std::string value_;
+  std::vector<std::string> values_;
 
  private:
 

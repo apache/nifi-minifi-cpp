@@ -44,10 +44,10 @@ void EventDrivenSchedulingAgent::run(
       // Honor the yield
       std::this_thread::sleep_for(
           std::chrono::milliseconds(processor->getYieldTime()));
-    } else if (shouldYield && this->_boredYieldDuration > 0) {
+    } else if (shouldYield && this->bored_yield_duration_ > 0) {
       // No work to do or need to apply back pressure
       std::this_thread::sleep_for(
-          std::chrono::milliseconds(this->_boredYieldDuration));
+          std::chrono::milliseconds(this->bored_yield_duration_));
     }
 
     // Block until work is available

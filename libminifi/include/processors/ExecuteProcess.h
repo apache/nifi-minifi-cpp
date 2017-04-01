@@ -35,6 +35,7 @@
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
 #include "core/Core.h"
+#include "core/Resource.h"
 
 namespace org {
 namespace apache {
@@ -114,6 +115,8 @@ class ExecuteProcess : public core::Processor {
   int _pipefd[2];
   pid_t _pid;
 };
+
+REGISTER_RESOURCE(ExecuteProcess);
 
 } /* namespace processors */
 } /* namespace minifi */
