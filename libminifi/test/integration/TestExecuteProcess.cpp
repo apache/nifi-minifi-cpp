@@ -18,14 +18,18 @@
 
 #include <uuid/uuid.h>
 #include <fstream>
+
+#include "../unit/ProvenanceTestHelper.h"
 #include "FlowController.h"
-#include "unit/ProvenanceTestHelper.h"
 #include "core/logging/LogAppenders.h"
 #include "core/logging/BaseLogger.h"
 #include "processors/GetFile.h"
 #include "core/Core.h"
 #include "core/FlowFile.h"
 #include "core/Processor.h"
+#include "core/controller/ControllerServiceNode.h"
+#include "core/controller/ControllerServiceProvider.h"
+#include "processors/ExecuteProcess.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/ProcessorNode.h"
@@ -85,8 +89,9 @@ int main(int argc, char  **argv)
   std::vector<std::thread> processor_workers;
 
   core::ProcessorNode node2(processor);
+  std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider = nullptr;
   std::shared_ptr<core::ProcessContext> contextset = std::make_shared<
-      core::ProcessContext>(node2, test_repo);
+      core::ProcessContext>(node2,controller_services_provider, test_repo);
   core::ProcessSessionFactory factory(contextset.get());
   processor->onSchedule(contextset.get(), &factory);
 
@@ -97,7 +102,8 @@ int main(int argc, char  **argv)
             [processor,test_repo,&is_ready]()
             {
               core::ProcessorNode node(processor);
-              std::shared_ptr<core::ProcessContext> context = std::make_shared<core::ProcessContext>(node, test_repo);
+              std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider = nullptr;
+              std::shared_ptr<core::ProcessContext> context = std::make_shared<core::ProcessContext>(node,controller_services_provider, test_repo);
               context->setProperty(org::apache::nifi::minifi::processors::ExecuteProcess::Command,"sleep 0.5");
               //context->setProperty(org::apache::nifi::minifi::processors::ExecuteProcess::CommandArguments," 1 >>" + ss.str());
               std::shared_ptr<core::ProcessSession> session = std::make_shared<core::ProcessSession>(context.get());

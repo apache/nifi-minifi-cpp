@@ -18,7 +18,7 @@
 
 #define CATCH_CONFIG_MAIN  // This tells Catch to provide a main() - only do this in one cpp file
 
-#include "TestBase.h"
+#include "../TestBase.h"
 #include "io/ClientSocket.h"
 
 using namespace org::apache::nifi::minifi::io;

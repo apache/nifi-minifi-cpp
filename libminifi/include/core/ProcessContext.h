@@ -27,6 +27,8 @@
 #include <algorithm>
 
 #include "Property.h"
+#include "core/controller/ControllerServiceProvider.h"
+#include "core/controller/ControllerServiceLookup.h"
 #include "core/logging/Logger.h"
 #include "ProcessorNode.h"
 #include "core/Repository.h"
@@ -38,15 +40,18 @@ namespace minifi {
 namespace core {
 
 // ProcessContext Class
-class ProcessContext {
+class ProcessContext : public controller::ControllerServiceLookup {
  public:
   // Constructor
   /*!
    * Create a new process context associated with the processor/controller service/state manager
    */
-  ProcessContext(ProcessorNode &processor,
-                 std::shared_ptr<core::Repository> repo)
-      : processor_node_(processor) {
+  ProcessContext(
+      ProcessorNode &processor,
+      std::shared_ptr<controller::ControllerServiceProvider> &controller_service_provider,
+      std::shared_ptr<core::Repository> repo)
+      : processor_node_(processor),
+        controller_service_provider_(controller_service_provider) {
     logger_ = logging::Logger::getLogger();
     repo_ = repo;
   }
@@ -95,8 +100,54 @@ class ProcessContext {
   ProcessContext(const ProcessContext &parent) = delete;
   ProcessContext &operator=(const ProcessContext &parent) = delete;
 
+  // controller services
+
+  /**
+   * @param identifier of controller service
+   * @return the ControllerService that is registered with the given
+   * identifier
+   */
+  std::shared_ptr<core::controller::ControllerService> getControllerService(
+      const std::string &identifier) {
+    return controller_service_provider_->getControllerServiceForComponent(
+        identifier, processor_node_.getUUIDStr());
+  }
+
+  /**
+   * @param identifier identifier of service to check
+   * @return <code>true</code> if the Controller Service with the given
+   * identifier is enabled, <code>false</code> otherwise. If the given
+   * identifier is not known by this ControllerServiceLookup, returns
+   * <code>false</code>
+   */
+  bool isControllerServiceEnabled(const std::string &identifier) {
+    return controller_service_provider_->isControllerServiceEnabled(identifier);
+  }
+
+  /**
+   * @param identifier identifier of service to check
+   * @return <code>true</code> if the Controller Service with the given
+   * identifier has been enabled but is still in the transitioning state,
+   * otherwise returns <code>false</code>. If the given identifier is not
+   * known by this ControllerServiceLookup, returns <code>false</code>
+   */
+  bool isControllerServiceEnabling(const std::string &identifier) {
+    return controller_service_provider_->isControllerServiceEnabling(identifier);
+  }
+
+  /**
+   * @param identifier identifier to look up
+   * @return the name of the Controller service with the given identifier. If
+   * no service can be found with this identifier, returns {@code null}
+   */
+  const std::string getControllerServiceName(const std::string &identifier) {
+    return controller_service_provider_->getControllerServiceName(identifier);
+  }
+
  private:
 
+  // controller service provider.
+  std::shared_ptr<controller::ControllerServiceProvider> controller_service_provider_;
   // repository shared pointer.
   std::shared_ptr<core::Repository> repo_;
   // Processor

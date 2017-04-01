@@ -1,6 +1,4 @@
 /**
- * @file MiNiFiMain.cpp 
- * MiNiFiMain implementation 
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -17,12 +15,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+#include "core/controller/ControllerServiceNode.h"
+#include <memory>
 #include <vector>
-#include <queue>
-#include <map>
 
-#include "FlowFileRecord.h"
+namespace org {
+namespace apache {
+namespace nifi {
+namespace minifi {
+namespace core {
+namespace controller {
 
-int main(int argc, char **argv)
-{
+std::shared_ptr<ControllerService> &ControllerServiceNode::getControllerServiceImplementation() {
+  return controller_service_;
 }
+
+std::vector<std::shared_ptr<ControllerServiceNode> > &ControllerServiceNode::getLinkedControllerServices() {
+  return linked_controller_services_;
+}
+
+std::vector<std::shared_ptr<ConfigurableComponent> > &ControllerServiceNode::getLinkedComponents() {
+  return linked_components_;
+}
+
+
+
+} /* namespace controller */
+} /* namespace core */
+} /* namespace minifi */
+} /* namespace nifi */
+} /* namespace apache */
+} /* namespace org */

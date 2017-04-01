@@ -28,6 +28,7 @@
 #include <algorithm>
 #include <thread>
 #include "utils/TimeUtil.h"
+#include "utils/ThreadPool.h"
 #include "core/Core.h"
 #include "core/logging/Logger.h"
 #include "properties/Configure.h"
@@ -35,6 +36,8 @@
 #include "core/logging/Logger.h"
 #include "core/Processor.h"
 #include "core/ProcessContext.h"
+#include "core/controller/ControllerServiceProvider.h"
+#include "core/controller/ControllerServiceNode.h"
 #include "provenance/ProvenanceRepository.h"
 
 namespace org {
@@ -47,12 +50,22 @@ class SchedulingAgent {
  public:
   // Constructor
   /*!
-   * Create a new processor
+   * Create a new scheduling agent.
    */
-  SchedulingAgent(std::shared_ptr<core::Repository> repo) {
+  SchedulingAgent(
+      std::shared_ptr<core::controller::ControllerServiceProvider> controller_service_provider,
+      std::shared_ptr<core::Repository> repo, std::shared_ptr<Configure> configuration)
+      : configure_(configuration),
+        admin_yield_duration_(0),
+        bored_yield_duration_(0),
+        controller_service_provider_(controller_service_provider) {
     logger_ = logging::Logger::getLogger();
     running_ = false;
     repo_ = repo;
+    utils::ThreadPool<bool> pool = utils::ThreadPool<bool>(
+        configure_->getInt(Configure::nifi_flow_engine_threads, 8), true);
+    component_lifecycle_thread_pool_ = std::move(pool);
+    component_lifecycle_thread_pool_.start();
   }
   // Destructor
   virtual ~SchedulingAgent() {
@@ -69,13 +82,19 @@ class SchedulingAgent {
   // start
   void start() {
     running_ = true;
+
   }
   // stop
   void stop() {
     running_ = false;
+    component_lifecycle_thread_pool_.shutdown();
   }
 
  public:
+  virtual void enableControllerService(
+      std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode);
+  virtual void disableControllerService(
+      std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode);
   // schedule, overwritten by different DrivenSchedulingAgent
   virtual void schedule(std::shared_ptr<core::Processor> processor) = 0;
   // unschedule, overwritten by different DrivenSchedulingAgent
@@ -91,11 +110,17 @@ class SchedulingAgent {
   // Whether it is running
   std::atomic<bool> running_;
   // AdministrativeYieldDuration
-  int64_t _administrativeYieldDuration;
+  int64_t admin_yield_duration_;
   // BoredYieldDuration
-  int64_t _boredYieldDuration;
+  int64_t bored_yield_duration_;
+
+  std::shared_ptr<Configure> configure_;
 
   std::shared_ptr<core::Repository> repo_;
+  // thread pool for components.
+  utils::ThreadPool<bool> component_lifecycle_thread_pool_;
+  // controller service provider reference
+  std::shared_ptr<core::controller::ControllerServiceProvider> controller_service_provider_;
 
  private:
   // Prevent default copy constructor and assignment operation

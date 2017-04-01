@@ -20,6 +20,7 @@
 
 #include "core/ProcessorConfig.h"
 #include "yaml-cpp/yaml.h"
+#include "processors/LoadProcessors.h"
 #include "../FlowConfiguration.h"
 #include "Site2SiteClientProtocol.h"
 #include <string>
@@ -36,18 +37,21 @@ namespace core {
 #define CONFIG_YAML_FLOW_CONTROLLER_KEY "Flow Controller"
 #define CONFIG_YAML_PROCESSORS_KEY "Processors"
 #define CONFIG_YAML_CONNECTIONS_KEY "Connections"
+#define CONFIG_YAML_CONTROLLER_SERVICES_KEY "Controller Services"
 #define CONFIG_YAML_REMOTE_PROCESS_GROUP_KEY "Remote Processing Groups"
 #define CONFIG_YAML_PROVENANCE_REPORT_KEY "Provenance Reporting"
 
 class YamlConfiguration : public FlowConfiguration {
 
  public:
-  YamlConfiguration(std::shared_ptr<core::Repository> repo,
+  explicit YamlConfiguration(std::shared_ptr<core::Repository> repo,
                     std::shared_ptr<core::Repository> flow_file_repo,
                     std::shared_ptr<io::StreamFactory> stream_factory,
+                    std::shared_ptr<Configure> configuration,
                     const std::string path = DEFAULT_FLOW_YAML_FILE_NAME)
-      : FlowConfiguration(repo, flow_file_repo, stream_factory, path) {
-       stream_factory_ = stream_factory;
+      : FlowConfiguration(repo, flow_file_repo, stream_factory, configuration,
+                          path) {
+    stream_factory_ = stream_factory;
     if (IsNullOrEmpty(config_path_)) {
       config_path_ = DEFAULT_FLOW_YAML_FILE_NAME;
     }
@@ -67,7 +71,8 @@ class YamlConfiguration : public FlowConfiguration {
    * @return              the root ProcessGroup node of the flow
    *                        configuration tree
    */
-  std::unique_ptr<core::ProcessGroup> getRoot(const std::string &yamlConfigStr) {
+  std::unique_ptr<core::ProcessGroup> getRoot(
+      const std::string &yamlConfigStr) {
     YAML::Node rootYamlNode = YAML::LoadFile(yamlConfigStr);
     return getRoot(&rootYamlNode);
   }
@@ -106,15 +111,29 @@ class YamlConfiguration : public FlowConfiguration {
     YAML::Node flowControllerNode = rootYaml[CONFIG_YAML_FLOW_CONTROLLER_KEY];
     YAML::Node processorsNode = rootYaml[CONFIG_YAML_PROCESSORS_KEY];
     YAML::Node connectionsNode = rootYaml[CONFIG_YAML_CONNECTIONS_KEY];
-    YAML::Node remoteProcessingGroupsNode = rootYaml[CONFIG_YAML_REMOTE_PROCESS_GROUP_KEY];
-    YAML::Node provenanceReportNode = rootYaml[CONFIG_YAML_PROVENANCE_REPORT_KEY];
+    YAML::Node controllerServiceNode =
+        rootYaml[CONFIG_YAML_CONTROLLER_SERVICES_KEY];
+    YAML::Node remoteProcessingGroupsNode =
+        rootYaml[CONFIG_YAML_REMOTE_PROCESS_GROUP_KEY];
+    YAML::Node provenanceReportNode =
+        rootYaml[CONFIG_YAML_PROVENANCE_REPORT_KEY];
 
+    parseControllerServices(&controllerServiceNode);
     // Create the root process group
     core::ProcessGroup * root = parseRootProcessGroupYaml(flowControllerNode);
     parseProcessorNodeYaml(processorsNode, root);
     parseRemoteProcessGroupYaml(&remoteProcessingGroupsNode, root);
     parseConnectionYaml(&connectionsNode, root);
     parseProvenanceReportingYaml(&provenanceReportNode, root);
+
+    // set the controller services into the root group.
+    for (auto controller_service : controller_services_
+        ->getAllControllerServices()) {
+      root->addControllerService(controller_service->getName(),
+                                 controller_service);
+      root->addControllerService(controller_service->getUUIDStr(),
+                                 controller_service);
+    }
 
     return std::unique_ptr<core::ProcessGroup>(root);
   }
@@ -147,7 +166,6 @@ class YamlConfiguration : public FlowConfiguration {
   void parsePortYaml(YAML::Node *portNode, core::ProcessGroup *parent,
                      TransferDirection direction);
 
-
   /**
    * Parses the root level YAML node for the flow configuration and
    * returns a ProcessGroup containing the tree of flow configuration
@@ -157,6 +175,17 @@ class YamlConfiguration : public FlowConfiguration {
    * @return
    */
   core::ProcessGroup *parseRootProcessGroupYaml(YAML::Node rootNode);
+
+  // Process Property YAML
+  void parseProcessorPropertyYaml(YAML::Node *doc, YAML::Node *node,
+                                  std::shared_ptr<core::Processor> processor);
+  /**
+   * Parse controller services
+   * @param controllerServicesNode controller services YAML node.
+   * @param parent parent process group.
+   */
+  void parseControllerServices(YAML::Node *controllerServicesNode);
+  // Process connection YAML
 
   /**
    * Parses the Connections section of a configuration YAML.
@@ -200,8 +229,9 @@ class YamlConfiguration : public FlowConfiguration {
    * @param propertiesNode the YAML::Node containing the properties
    * @param processor      the Processor to which to add the resulting properties
    */
-  void parsePropertiesNodeYaml(YAML::Node *propertiesNode,
-                               std::shared_ptr<core::Processor> processor);
+  void parsePropertiesNodeYaml(
+      YAML::Node *propertiesNode,
+      std::shared_ptr<core::ConfigurableComponent> processor);
 
   /**
    * A helper function for parsing or generating optional id fields.
@@ -219,7 +249,8 @@ class YamlConfiguration : public FlowConfiguration {
    *                   is optional and defaults to 'id'
    * @return         the parsed or generated UUID string
    */
-  std::string getOrGenerateId(YAML::Node *yamlNode, const std::string &idField = "id");
+  std::string getOrGenerateId(YAML::Node *yamlNode, const std::string &idField =
+                                  "id");
 
   /**
    * This is a helper function for verifying the existence of a required
@@ -239,8 +270,7 @@ class YamlConfiguration : public FlowConfiguration {
    * @throws std::invalid_argument if the required field 'fieldName' is
    *                               not present in 'yamlNode'
    */
-  void checkRequiredField(YAML::Node *yamlNode,
-                          const std::string &fieldName,
+  void checkRequiredField(YAML::Node *yamlNode, const std::string &fieldName,
                           const std::string &yamlSection = "",
                           const std::string &errorMessage = "");
 

@@ -148,9 +148,9 @@ std::set<std::shared_ptr<Connectable>> Connectable::getOutGoingConnections(
     std::string relationship) {
   std::set<std::shared_ptr<Connectable>> empty;
 
-  auto &&it = _outGoingConnections.find(relationship);
-  if (it != _outGoingConnections.end()) {
-    return _outGoingConnections[relationship];
+  auto &&it = out_going_connections_.find(relationship);
+  if (it != out_going_connections_.end()) {
+    return out_going_connections_[relationship];
   } else {
     return empty;
   }

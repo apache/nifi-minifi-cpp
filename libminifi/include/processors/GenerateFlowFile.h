@@ -24,6 +24,7 @@
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
 #include "core/Core.h"
+#include "core/Resource.h"
 
 namespace org {
 namespace apache {
@@ -88,6 +89,8 @@ class GenerateFlowFile : public core::Processor {
   // Size of the generate data
   uint64_t _dataSize;
 };
+
+REGISTER_RESOURCE(GenerateFlowFile);
 
 } /* namespace processors */
 } /* namespace minifi */

@@ -17,6 +17,7 @@
  */
 
 #include "processors/InvokeHTTP.h"
+#include <regex.h>
 #include <curl/curlbuild.h>
 #include <curl/easy.h>
 #include <uuid/uuid.h>
@@ -41,12 +42,6 @@
 #include "io/StreamFactory.h"
 #include "ResourceClaim.h"
 #include "utils/StringUtils.h"
-
-#if  (__GNUC__ >= 4)
-#if (__GNUC_MINOR__ < 9)
-#include <regex.h>
-#endif
-#endif
 
 namespace org {
 namespace apache {
@@ -156,7 +151,8 @@ core::Relationship InvokeHTTP::RelFailure(
 
 void InvokeHTTP::set_request_method(CURL *curl, const std::string &method) {
   std::string my_method = method;
-  std::transform(my_method.begin(), my_method.end(), my_method.begin(), ::toupper);
+  std::transform(my_method.begin(), my_method.end(), my_method.begin(),
+                 ::toupper);
   if (my_method == "POST") {
     curl_easy_setopt(curl, CURLOPT_POST, 1);
   } else if (my_method == "PUT") {
@@ -280,6 +276,17 @@ void InvokeHTTP::onSchedule(core::ProcessContext *context,
   }
 
   utils::StringUtils::StringToBool(penalize_no_retry, penalize_no_retry_);
+
+  std::string context_name;
+  if (context->getProperty(SSLContext.getName(), context_name)
+      && !IsNullOrEmpty(context_name)) {
+    std::shared_ptr<core::controller::ControllerService> service = context
+        ->getControllerService(context_name);
+    if (nullptr != service) {
+      ssl_context_service_ = std::static_pointer_cast<
+          minifi::controllers::SSLContextService>(service);
+    }
+  }
 }
 
 InvokeHTTP::~InvokeHTTP() {
@@ -288,9 +295,9 @@ InvokeHTTP::~InvokeHTTP() {
 
 inline bool InvokeHTTP::matches(const std::string &value,
                                 const std::string &sregex) {
-#ifdef __GNUC__
-#if (__GNUC__ >= 4)
-#if (__GNUC_MINOR__ < 9)
+  if (sregex == ".*")
+    return true;
+
   regex_t regex;
   int ret = regcomp(&regex, sregex.c_str(), 0);
   if (ret)
@@ -299,24 +306,7 @@ inline bool InvokeHTTP::matches(const std::string &value,
   regfree(&regex);
   if (ret)
     return false;
-#else
-  try {
-    std::regex re(sregex);
 
-    if (!std::regex_match(value, re)) {
-      return false;
-    }
-  } catch (std::regex_error e) {
-    logger_->log_error("Invalid File Filter regex: %s.", e.what());
-    return false;
-  }
-#endif
-#endif
-#else
-  logger_->log_info("Cannot support regex filtering");
-  if (regex == ".*")
-  return true;
-#endif
   return true;
 }
 
@@ -346,6 +336,33 @@ struct curl_slist *InvokeHTTP::build_header_list(
   }
   return list;
 }
+
+bool InvokeHTTP::isSecure(const std::string &url) {
+  if (url.find("https") != std::string::npos) {
+    return true;
+  }
+  return false;
+}
+
+CURLcode InvokeHTTP::configure_ssl_context(CURL *curl, void *ctx, void *param) {
+  minifi::controllers::SSLContextService *ssl_context_service =
+      static_cast<minifi::controllers::SSLContextService*>(param);
+  if (!ssl_context_service->configure_ssl_context(static_cast<SSL_CTX*>(ctx))) {
+    return CURLE_FAILED_INIT;
+  }
+  return CURLE_OK;
+}
+
+void InvokeHTTP::configure_secure_connection(CURL *http_session) {
+  logger_->log_debug("InvokeHTTP -- Using certificate file %s",
+                     ssl_context_service_->getCertificateFile());
+  curl_easy_setopt(http_session, CURLOPT_VERBOSE, 1L);
+  curl_easy_setopt(http_session, CURLOPT_SSL_CTX_FUNCTION,
+                   &InvokeHTTP::configure_ssl_context);
+  curl_easy_setopt(http_session, CURLOPT_SSL_CTX_DATA,
+                   static_cast<void*>(ssl_context_service_.get()));
+}
+
 void InvokeHTTP::onTrigger(core::ProcessContext *context,
                            core::ProcessSession *session) {
   std::shared_ptr<FlowFileRecord> flowFile = std::static_pointer_cast<
@@ -371,6 +388,10 @@ void InvokeHTTP::onTrigger(core::ProcessContext *context,
   CURL *http_session = curl_easy_init();
   // set the HTTP request method from libCURL
   set_request_method(http_session, method_);
+  if (isSecure(url_) && ssl_context_service_ != nullptr) {
+    configure_secure_connection(http_session);
+  }
+
   curl_easy_setopt(http_session, CURLOPT_URL, url_.c_str());
 
   if (connect_timeout_ > 0) {

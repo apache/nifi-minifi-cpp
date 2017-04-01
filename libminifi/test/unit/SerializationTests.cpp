@@ -22,11 +22,12 @@
 #include <uuid/uuid.h>
 #include "core/logging/LogAppenders.h"
 #include "core/logging/BaseLogger.h"
-#include "SiteToSiteHelper.h"
 #include <algorithm>
 #include <string>
 #include <memory>
+
 #include "../TestBase.h"
+#include "../unit/SiteToSiteHelper.h"
 #define FMT_DEFAULT fmt_lower
 
 using namespace org::apache::nifi::minifi::io;

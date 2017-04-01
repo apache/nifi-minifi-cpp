@@ -60,7 +60,6 @@
 // Variables that allow us to avoid a timed wait.
 sem_t *running;
 //! Flow Controller
-static std::unique_ptr<minifi::FlowController> controller = nullptr;
 
 /**
  * Removed the stop command from the signal handler so that we could trigger
@@ -178,10 +177,11 @@ int main(int argc, char **argv) {
       core::createFlowConfiguration(prov_repo, flow_repo, configure, stream_factory,
                                    nifi_configuration_class_name));
 
-  controller = std::unique_ptr<minifi::FlowController>(
+  std::shared_ptr<minifi::FlowController> controller = std::unique_ptr<minifi::FlowController>(
       new minifi::FlowController(prov_repo, flow_repo, configure,
                                  std::move(flow_configuration)));
 
+  logger->log_info("Loading FlowController");
   // Load flow from specified configuration file
   controller->load();
   // Start Processing the flow

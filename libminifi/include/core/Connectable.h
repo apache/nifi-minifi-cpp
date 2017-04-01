@@ -120,6 +120,16 @@ class Connectable : public CoreComponent {
    */
   virtual bool isWorkAvailable() = 0;
 
+  /**
+   * Verify that this connectable can be stopped.
+   * @return bool.
+   */
+  virtual bool verifyCanStop() {
+    if (isRunning())
+      return true;
+    return false;
+  }
+
  protected:
 
   // Penalization Period in MilliSecond
@@ -137,7 +147,7 @@ class Connectable : public CoreComponent {
   // Incoming connections
   std::set<std::shared_ptr<Connectable>> _incomingConnections;
   // Outgoing connections map based on Relationship name
-  std::map<std::string, std::set<std::shared_ptr<Connectable>>>_outGoingConnections;
+  std::map<std::string, std::set<std::shared_ptr<Connectable>>> out_going_connections_;
 
   // Mutex for protection
   std::mutex relationship_mutex_;

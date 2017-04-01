@@ -17,8 +17,8 @@
  */
 
 #include "../TestBase.h"
+#include "../unit/ProvenanceTestHelper.h"
 
-#include "ProvenanceTestHelper.h"
 #include "provenance/Provenance.h"
 #include "FlowFileRecord.h"
 #include "core/Core.h"

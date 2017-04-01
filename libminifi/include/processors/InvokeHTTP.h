@@ -28,6 +28,8 @@
 #include "core/ProcessSession.h"
 #include "core/Core.h"
 #include "core/Property.h"
+#include "core/Resource.h"
+#include "controllers/SSLContextService.h"
 #include "utils/ByteInputCallBack.h"
 
 namespace org {
@@ -109,7 +111,8 @@ class InvokeHTTP : public core::Processor {
         connect_timeout_(20000),
         penalize_no_retry_(false),
         read_timeout_(20000),
-        always_output_response_(false) {
+        always_output_response_(false),
+        ssl_context_service_(nullptr) {
     curl_global_init(CURL_GLOBAL_DEFAULT);
   }
   // Destructor
@@ -161,6 +164,23 @@ class InvokeHTTP : public core::Processor {
  protected:
 
   /**
+   * Configures the SSL Context. Relies on the Context service and OpenSSL's installation
+   */
+  static CURLcode configure_ssl_context(CURL *curl, void *ctx, void *param);
+
+  /**
+   * Determines if a secure connection is required
+   * @param url url we will be connecting to
+   * @returns true if secure connection is allowed/required
+   */
+  bool isSecure(const std::string &url);
+
+  /**
+   * Configures a secure connection
+   */
+  void configure_secure_connection(CURL *http_session);
+
+  /**
    * Generate a transaction ID
    * @return transaction ID string.
    */
@@ -190,13 +210,17 @@ class InvokeHTTP : public core::Processor {
   void route(std::shared_ptr<FlowFileRecord> &request,
              std::shared_ptr<FlowFileRecord> &response,
              core::ProcessSession *session, core::ProcessContext *context,
-             bool isSuccess, int statusCode);
+             bool isSuccess,
+             int statusCode);
   /**
    * Determine if we should emit a new flowfile based on our activity
    * @param method method type
    * @return result of the evaluation.
    */
   bool emitFlowFile(const std::string &method);
+
+  std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service_;
+
   CURLcode res;
 
   // http method
@@ -218,6 +242,8 @@ class InvokeHTTP : public core::Processor {
   // penalize on no retry
   bool penalize_no_retry_;
 };
+
+REGISTER_RESOURCE(InvokeHTTP)
 
 } /* namespace processors */
 } /* namespace minifi */

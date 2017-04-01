@@ -19,6 +19,7 @@
 #include "core/FlowConfiguration.h"
 #include <memory>
 #include <string>
+#include "core/ClassLoader.h"
 
 namespace org {
 namespace apache {
@@ -31,54 +32,12 @@ FlowConfiguration::~FlowConfiguration() {
 
 std::shared_ptr<core::Processor> FlowConfiguration::createProcessor(
     std::string name, uuid_t uuid) {
-  std::shared_ptr<core::Processor> processor = nullptr;
-  if (name
-      == org::apache::nifi::minifi::processors::GenerateFlowFile::ProcessorName) {
-    processor = std::make_shared<
-        org::apache::nifi::minifi::processors::GenerateFlowFile>(name, uuid);
-  } else if (name
-      == org::apache::nifi::minifi::processors::LogAttribute::ProcessorName) {
-    processor = std::make_shared<
-        org::apache::nifi::minifi::processors::LogAttribute>(name, uuid);
-  } else if (name
-      == org::apache::nifi::minifi::processors::GetFile::ProcessorName) {
-    processor =
-        std::make_shared<org::apache::nifi::minifi::processors::GetFile>(name,
-                                                                         uuid);
-  } else if (name
-      == org::apache::nifi::minifi::processors::PutFile::ProcessorName) {
-    processor =
-        std::make_shared<org::apache::nifi::minifi::processors::PutFile>(name,
-                                                                         uuid);
-  } else if (name
-      == org::apache::nifi::minifi::processors::TailFile::ProcessorName) {
-    processor =
-        std::make_shared<org::apache::nifi::minifi::processors::TailFile>(name,
-                                                                          uuid);
-  } else if (name
-      == org::apache::nifi::minifi::processors::ListenSyslog::ProcessorName) {
-    processor = std::make_shared<
-        org::apache::nifi::minifi::processors::ListenSyslog>(name, uuid);
-  } else if (name
-        == org::apache::nifi::minifi::processors::ListenHTTP::ProcessorName) {
-      processor = std::make_shared<
-          org::apache::nifi::minifi::processors::ListenHTTP>(name, uuid);
-  } else if (name
-          == org::apache::nifi::minifi::processors::InvokeHTTP::ProcessorName) {
-        processor = std::make_shared<
-            org::apache::nifi::minifi::processors::InvokeHTTP>(name, uuid);
-  } else if (name
-      == org::apache::nifi::minifi::processors::ExecuteProcess::ProcessorName) {
-    processor = std::make_shared<
-        org::apache::nifi::minifi::processors::ExecuteProcess>(name, uuid);
-  } else if (name
-      == org::apache::nifi::minifi::processors::AppendHostInfo::ProcessorName) {
-    processor = std::make_shared<
-        org::apache::nifi::minifi::processors::AppendHostInfo>(name, uuid);
-  } else {
+  auto ptr = core::ClassLoader::getDefaultClassLoader().instantiate(name, uuid);
+  if (nullptr == ptr) {
     logger_->log_error("No Processor defined for %s", name.c_str());
-    return nullptr;
   }
+  std::shared_ptr<core::Processor> processor = std::static_pointer_cast<
+      core::Processor>(ptr);
 
   // initialize the processor
   processor->initialize();
@@ -89,8 +48,10 @@ std::shared_ptr<core::Processor> FlowConfiguration::createProcessor(
 std::shared_ptr<core::Processor> FlowConfiguration::createProvenanceReportTask() {
   std::shared_ptr<core::Processor> processor = nullptr;
 
-  processor = std::make_shared<
-        org::apache::nifi::minifi::core::reporting::SiteToSiteProvenanceReportingTask>(stream_factory_);
+  processor =
+      std::make_shared<
+          org::apache::nifi::minifi::core::reporting::SiteToSiteProvenanceReportingTask>(
+          stream_factory_);
   // initialize the processor
   processor->initialize();
 
@@ -112,6 +73,15 @@ std::unique_ptr<core::ProcessGroup> FlowConfiguration::createRemoteProcessGroup(
 std::shared_ptr<minifi::Connection> FlowConfiguration::createConnection(
     std::string name, uuid_t uuid) {
   return std::make_shared<minifi::Connection>(flow_file_repo_, name, uuid);
+}
+
+std::shared_ptr<core::controller::ControllerServiceNode> FlowConfiguration::createControllerService(
+    const std::string &class_name, const std::string &name, uuid_t uuid) {
+  std::shared_ptr<core::controller::ControllerServiceNode> controllerServicesNode =
+      service_provider_->createControllerService(class_name, name, true);
+  if (nullptr != controllerServicesNode)
+    controllerServicesNode->setUUID(uuid);
+  return controllerServicesNode;
 }
 
 } /* namespace core */

@@ -25,19 +25,19 @@
 #include <type_traits>
 #include <vector>
 #include <sys/stat.h>
-#include "utils/StringUtils.h"
-#include "../include/core/Core.h"
-#include "../include/core/logging/LogAppenders.h"
-#include "../include/core/logging/BaseLogger.h"
-#include "../include/core/logging/Logger.h"
-#include "../include/core/ProcessGroup.h"
-#include "../include/core/yaml/YamlConfiguration.h"
-#include "../include/FlowController.h"
-#include "../include/properties/Configure.h"
-#include "unit/ProvenanceTestHelper.h"
-#include "../include/io/StreamFactory.h"
 
-std::string test_file_location;
+#include "utils/StringUtils.h"
+#include "core/Core.h"
+#include "core/logging/LogAppenders.h"
+#include "core/logging/BaseLogger.h"
+#include "core/logging/Logger.h"
+#include "core/ProcessGroup.h"
+#include "core/yaml/YamlConfiguration.h"
+#include "FlowController.h"
+#include "properties/Configure.h"
+#include "../unit/ProvenanceTestHelper.h"
+#include "io/StreamFactory.h"
+
 
 void waitToVerifyProcessor() {
   std::this_thread::sleep_for(std::chrono::seconds(10));
@@ -45,9 +45,14 @@ void waitToVerifyProcessor() {
 
 int main(int argc, char **argv) {
 
+  std::string key_dir,test_file_location;
   if (argc > 1) {
     test_file_location = argv[1];
+    key_dir = argv[2];
   }
+  std::shared_ptr<minifi::Configure> configuration = std::make_shared<
+        minifi::Configure>();
+  configuration->set(minifi::Configure::nifi_default_directory, key_dir);
   mkdir("content_repository", S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
   std::ostringstream oss;
   std::unique_ptr<logging::BaseLogger> outputLogger = std::unique_ptr<
@@ -56,9 +61,7 @@ int main(int argc, char **argv) {
                                                                          0));
   std::shared_ptr<logging::Logger> logger = logging::Logger::getLogger();
   logger->updateLogger(std::move(outputLogger));
-  logger->setLogLevel("debug");
-
-  std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::Configure>();
+  logger->setLogLevel("trace");
 
   std::shared_ptr<core::Repository> test_repo =
       std::make_shared<TestRepository>();
@@ -68,19 +71,23 @@ int main(int argc, char **argv) {
   configuration->set(minifi::Configure::nifi_flow_configuration_file,
                      test_file_location);
 
-  std::shared_ptr<minifi::io::StreamFactory> stream_factory = std::make_shared<minifi::io::StreamFactory>(configuration);
+  std::shared_ptr<minifi::io::StreamFactory> stream_factory = std::make_shared<
+      minifi::io::StreamFactory>(configuration);
   std::unique_ptr<core::FlowConfiguration> yaml_ptr = std::unique_ptr<
       core::YamlConfiguration>(
-      new core::YamlConfiguration(test_repo, test_repo, stream_factory, test_file_location));
+      new core::YamlConfiguration(test_repo, test_repo, stream_factory,
+                                  configuration, test_file_location));
   std::shared_ptr<TestRepository> repo =
       std::static_pointer_cast<TestRepository>(test_repo);
 
   std::shared_ptr<minifi::FlowController> controller = std::make_shared<
-      minifi::FlowController>(test_repo, test_flow_repo, std::make_shared<minifi::Configure>(), std::move(yaml_ptr),
-  DEFAULT_ROOT_GROUP_NAME,
+      minifi::FlowController>(test_repo, test_flow_repo, configuration,
+                              std::move(yaml_ptr),
+                              DEFAULT_ROOT_GROUP_NAME,
                               true);
 
-  core::YamlConfiguration yaml_config(test_repo, test_repo, stream_factory, test_file_location);
+  core::YamlConfiguration yaml_config(test_repo, test_repo, stream_factory,configuration,
+                                      test_file_location);
 
   std::unique_ptr<core::ProcessGroup> ptr = yaml_config.getRoot(
       test_file_location);
@@ -94,6 +101,7 @@ int main(int argc, char **argv) {
 
   controller->waitUnload(60000);
   std::string logs = oss.str();
+  std::cout << logs << std::endl;
   assert(logs.find("key:filename value:") != std::string::npos);
   assert(
       logs.find(
@@ -108,11 +116,11 @@ int main(int argc, char **argv) {
   while (loc > 0) {
     std::string id = logs.substr(loc + stringtofind.size(), 36);
 
-    loc = logs.find(stringtofind, loc+1);
+    loc = logs.find(stringtofind, loc + 1);
     std::string path = "content_repository/" + id;
     unlink(path.c_str());
 
-    if ( loc == std::string::npos)
+    if (loc == std::string::npos)
       break;
   }
   rmdir("./content_repository");

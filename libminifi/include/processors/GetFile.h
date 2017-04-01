@@ -23,6 +23,7 @@
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
 #include "core/Core.h"
+#include "core/Resource.h"
 
 namespace org {
 namespace apache {
@@ -133,6 +134,8 @@ class GetFile : public core::Processor {
   std::atomic<uint64_t> last_listing_time_;
 
 };
+
+REGISTER_RESOURCE(GetFile);
 
 } /* namespace processors */
 } /* namespace minifi */

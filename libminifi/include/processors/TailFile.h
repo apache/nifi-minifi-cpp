@@ -24,6 +24,7 @@
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
 #include "core/Core.h"
+#include "core/Resource.h"
 
 namespace org {
 namespace apache {
@@ -73,8 +74,9 @@ class TailFile : public core::Processor {
   std::string _stateFile;
   // State related to the tailed file
   std::string _currentTailFileName;
-  uint64_t _currentTailFilePosition;
+  // determine if state is recovered;
   bool _stateRecovered;
+  uint64_t _currentTailFilePosition;
   uint64_t _currentTailFileCreatedTime;
   static const int BUFFER_SIZE = 512;
 
@@ -88,6 +90,8 @@ class TailFile : public core::Processor {
   void checkRollOver(const std::string &, const std::string&);
 
 };
+
+REGISTER_RESOURCE(TailFile);
 
 // Matched File Item for Roll over check
 typedef struct {

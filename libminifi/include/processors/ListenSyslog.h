@@ -36,6 +36,7 @@
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
 #include "core/Core.h"
+#include "core/Resource.h"
 
 namespace org {
 namespace apache {
@@ -205,6 +206,8 @@ class ListenSyslog : public core::Processor {
   // buffer for read socket
   char _buffer[2048];
 };
+
+REGISTER_RESOURCE(ListenSyslog);
 
 } /* namespace processors */
 } /* namespace minifi */

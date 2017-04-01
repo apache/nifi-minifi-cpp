@@ -29,6 +29,7 @@
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
 #include "core/Core.h"
+#include "core/Resource.h"
 
 namespace org {
 namespace apache {
@@ -105,8 +106,6 @@ class ListenHTTP : public core::Processor {
     const struct mg_request_info *_reqInfo;
   };
 
- protected:
-
  private:
   // Logger
   std::shared_ptr<logging::Logger> _logger;
@@ -114,6 +113,9 @@ class ListenHTTP : public core::Processor {
   std::unique_ptr<CivetServer> _server;
   std::unique_ptr<Handler> _handler;
 };
+
+
+REGISTER_RESOURCE(ListenHTTP);
 
 } /* namespace processors */
 } /* namespace minifi */

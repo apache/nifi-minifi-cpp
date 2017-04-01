@@ -1,3 +1,4 @@
+
 /**
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
@@ -18,10 +19,12 @@
 #define CATCH_CONFIG_MAIN  // This tells Catch to provide a main() - only do this in one cpp file
 #include <uuid/uuid.h>
 #include <fstream>
-#include "unit/ProvenanceTestHelper.h"
-#include "TestBase.h"
+#include "../unit/ProvenanceTestHelper.h"
+#include "../TestBase.h"
 #include "core/logging/LogAppenders.h"
 #include "core/logging/BaseLogger.h"
+#include "processors/ListenHTTP.h"
+#include "processors/LogAttribute.h"
 #include "processors/GetFile.h"
 #include "core/Core.h"
 #include "core/FlowFile.h"
@@ -57,8 +60,6 @@ TEST_CASE("Test Find file", "[getfileCreate2]") {
 
   std::shared_ptr<TestRepository> repo =
       std::static_pointer_cast<TestRepository>(test_repo);
-  std::shared_ptr<minifi::FlowController> controller = std::make_shared<
-      TestFlowController>(test_repo, test_repo);
 
   char format[] = "/tmp/gt.XXXXXX";
   char *dir = testController.createTempDirectory(format);
@@ -81,8 +82,9 @@ TEST_CASE("Test Find file", "[getfileCreate2]") {
   REQUIRE(dir != NULL);
 
   core::ProcessorNode node(processor);
-
-  core::ProcessContext context(node, test_repo);
+  std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider =
+      nullptr;
+  core::ProcessContext context(node, controller_services_provider, test_repo);
   core::ProcessSessionFactory factory(&context);
   context.setProperty(org::apache::nifi::minifi::processors::GetFile::Directory,
                       dir);
@@ -150,7 +152,7 @@ TEST_CASE("Test Find file", "[getfileCreate2]") {
   }
 
   core::ProcessorNode nodeReport(processorReport);
-  core::ProcessContext contextReport(nodeReport, test_repo);
+  core::ProcessContext contextReport(nodeReport,controller_services_provider, test_repo);
   core::ProcessSessionFactory factoryReport(&contextReport);
   core::ProcessSession sessionReport(&contextReport);
   processorReport->onSchedule(&contextReport, &factoryReport);
@@ -191,8 +193,6 @@ TEST_CASE("Test GetFileLikeIt'sThreaded", "[getfileCreate3]") {
 
   std::shared_ptr<TestRepository> repo =
       std::static_pointer_cast<TestRepository>(test_repo);
-  std::shared_ptr<minifi::FlowController> controller = std::make_shared<
-      TestFlowController>(test_repo, test_repo);
 
   char format[] = "/tmp/gt.XXXXXX";
   char *dir = testController.createTempDirectory(format);
@@ -215,7 +215,9 @@ TEST_CASE("Test GetFileLikeIt'sThreaded", "[getfileCreate3]") {
   REQUIRE(dir != NULL);
 
   core::ProcessorNode node(processor);
-  core::ProcessContext context(node, test_repo);
+  std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider =
+      nullptr;
+  core::ProcessContext context(node, controller_services_provider, test_repo);
   core::ProcessSessionFactory factory(&context);
   context.setProperty(org::apache::nifi::minifi::processors::GetFile::Directory,
                       dir);
@@ -328,9 +330,10 @@ TEST_CASE("LogAttributeTest", "[getfileCreate3]") {
 
   core::ProcessorNode node(processor);
   core::ProcessorNode node2(logAttribute);
-
-  core::ProcessContext context(node, repo);
-  core::ProcessContext context2(node2, repo);
+  std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider =
+      nullptr;
+  core::ProcessContext context(node, controller_services_provider, repo);
+  core::ProcessContext context2(node2, controller_services_provider, repo);
   context.setProperty(org::apache::nifi::minifi::processors::GetFile::Directory,
                       dir);
   core::ProcessSession session(&context);

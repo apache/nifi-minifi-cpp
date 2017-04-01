@@ -24,6 +24,7 @@
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
 #include "core/Core.h"
+#include "core/Resource.h"
 
 namespace org {
 namespace apache {
@@ -102,6 +103,8 @@ class PutFile : public core::Processor {
                std::shared_ptr<FlowFileRecord> flowFile,
                const std::string &tmpFile, const std::string &destFile);
 };
+
+REGISTER_RESOURCE(PutFile);
 
 } /* namespace processors */
 } /* namespace minifi */

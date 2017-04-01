@@ -18,13 +18,13 @@
 #include <uuid/uuid.h>
 #include <fstream>
 #include "FlowController.h"
-#include "ProvenanceTestHelper.h"
 #include "../TestBase.h"
 #include "core/logging/LogAppenders.h"
 #include "core/logging/BaseLogger.h"
 #include "processors/GetFile.h"
 #include "core/Core.h"
 #include "../../include/core/FlowFile.h"
+#include "../unit/ProvenanceTestHelper.h"
 #include "core/Processor.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
@@ -35,7 +35,8 @@ TEST_CASE("HTTPTestsPostNoResourceClaim", "[httptest1]") {
   std::stringstream oss;
   std::unique_ptr<logging::BaseLogger> outputLogger = std::unique_ptr<
       logging::BaseLogger>(
-      new org::apache::nifi::minifi::core::logging::OutputStreamAppender(oss,0));
+      new org::apache::nifi::minifi::core::logging::OutputStreamAppender(oss,
+                                                                         0));
   std::shared_ptr<logging::Logger> logger = logging::Logger::getLogger();
   logger->updateLogger(std::move(outputLogger));
 
@@ -43,9 +44,7 @@ TEST_CASE("HTTPTestsPostNoResourceClaim", "[httptest1]") {
 
   testController.enableDebug();
 
-
-  std::shared_ptr<TestRepository> repo = std::make_shared<
-      TestRepository>();
+  std::shared_ptr<TestRepository> repo = std::make_shared<TestRepository>();
 
   std::shared_ptr<core::Processor> processor = std::make_shared<
       org::apache::nifi::minifi::processors::ListenHTTP>("listenhttp");
@@ -58,25 +57,22 @@ TEST_CASE("HTTPTestsPostNoResourceClaim", "[httptest1]") {
   uuid_t invokehttp_uuid;
   REQUIRE(true == invokehttp->getUUID(invokehttp_uuid));
 
-
   std::shared_ptr<minifi::Connection> connection = std::make_shared<
-      minifi::Connection>(repo,"getfileCreate2Connection");
+      minifi::Connection>(repo, "getfileCreate2Connection");
   connection->setRelationship(core::Relationship("success", "description"));
 
   std::shared_ptr<minifi::Connection> connection2 = std::make_shared<
-      minifi::Connection>(repo,"listenhttp");
+      minifi::Connection>(repo, "listenhttp");
 
   connection2->setRelationship(core::Relationship("No Retry", "description"));
 
   // link the connections so that we can test results at the end for this
   connection->setSource(processor);
 
-
   // link the connections so that we can test results at the end for this
   connection->setDestination(invokehttp);
 
   connection2->setSource(invokehttp);
-
 
   connection2->setSourceUUID(invokehttp_uuid);
   connection->setSourceUUID(processoruuid);
@@ -86,21 +82,23 @@ TEST_CASE("HTTPTestsPostNoResourceClaim", "[httptest1]") {
   invokehttp->addConnection(connection);
   invokehttp->addConnection(connection2);
 
-
   core::ProcessorNode node(processor);
   core::ProcessorNode node2(invokehttp);
 
-  core::ProcessContext context(node, repo);
-  core::ProcessContext context2(node2, repo);
+  std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider =
+      nullptr;
+  core::ProcessContext context(node, controller_services_provider, repo);
+  core::ProcessContext context2(node2, controller_services_provider, repo);
   context.setProperty(org::apache::nifi::minifi::processors::ListenHTTP::Port,
                       "8685");
-  context.setProperty(org::apache::nifi::minifi::processors::ListenHTTP::BasePath,
-                        "/testytesttest");
+  context.setProperty(
+      org::apache::nifi::minifi::processors::ListenHTTP::BasePath,
+      "/testytesttest");
 
-  context2.setProperty(org::apache::nifi::minifi::processors::InvokeHTTP::Method,
-                        "POST");
+  context2.setProperty(
+      org::apache::nifi::minifi::processors::InvokeHTTP::Method, "POST");
   context2.setProperty(org::apache::nifi::minifi::processors::InvokeHTTP::URL,
-                          "http://localhost:8685/testytesttest");
+                       "http://localhost:8685/testytesttest");
   core::ProcessSession session(&context);
   core::ProcessSession session2(&context2);
 
@@ -125,7 +123,6 @@ TEST_CASE("HTTPTestsPostNoResourceClaim", "[httptest1]") {
   REQUIRE(record == nullptr);
   REQUIRE(records.size() == 0);
 
-
   processor->incrementActiveTasks();
   processor->setScheduledState(core::ScheduledState::RUNNING);
   processor->onTrigger(&context, &session);
@@ -142,25 +139,24 @@ TEST_CASE("HTTPTestsPostNoResourceClaim", "[httptest1]") {
   session2.commit();
   records = reporter->getEvents();
 
-
-
   for (provenance::ProvenanceEventRecord *provEventRecord : records) {
     REQUIRE(provEventRecord->getComponentType() == processor->getName());
   }
   std::shared_ptr<core::FlowFile> ffr = session2.get();
   std::string log_attribute_output = oss.str();
-std::cout << log_attribute_output << std::endl;
-  REQUIRE( log_attribute_output.find("exiting because method is POST") != std::string::npos );
+  REQUIRE(
+      log_attribute_output.find("exiting because method is POST")
+          != std::string::npos);
 
 }
-
 
 TEST_CASE("HTTPTestsWithNoResourceClaimPOST", "[httptest1]") {
 
   std::stringstream oss;
   std::unique_ptr<logging::BaseLogger> outputLogger = std::unique_ptr<
       logging::BaseLogger>(
-      new org::apache::nifi::minifi::core::logging::OutputStreamAppender(oss,0));
+      new org::apache::nifi::minifi::core::logging::OutputStreamAppender(oss,
+                                                                         0));
   std::shared_ptr<logging::Logger> logger = logging::Logger::getLogger();
   logger->updateLogger(std::move(outputLogger));
 
@@ -168,19 +164,16 @@ TEST_CASE("HTTPTestsWithNoResourceClaimPOST", "[httptest1]") {
 
   testController.enableDebug();
 
-
-
-  std::shared_ptr<TestRepository> repo = std::make_shared<
-      TestRepository>();
+  std::shared_ptr<TestRepository> repo = std::make_shared<TestRepository>();
 
   std::shared_ptr<core::Processor> getfileprocessor = std::make_shared<
-        org::apache::nifi::minifi::processors::GetFile>("getfileCreate2");
+      org::apache::nifi::minifi::processors::GetFile>("getfileCreate2");
 
-    std::shared_ptr<core::Processor> logAttribute = std::make_shared<
-        org::apache::nifi::minifi::processors::LogAttribute>("logattribute");
+  std::shared_ptr<core::Processor> logAttribute = std::make_shared<
+      org::apache::nifi::minifi::processors::LogAttribute>("logattribute");
 
-    char format[] = "/tmp/gt.XXXXXX";
-    char *dir = testController.createTempDirectory(format);
+  char format[] = "/tmp/gt.XXXXXX";
+  char *dir = testController.createTempDirectory(format);
 
   std::shared_ptr<core::Processor> listenhttp = std::make_shared<
       org::apache::nifi::minifi::processors::ListenHTTP>("listenhttp");
@@ -193,29 +186,25 @@ TEST_CASE("HTTPTestsWithNoResourceClaimPOST", "[httptest1]") {
   uuid_t invokehttp_uuid;
   REQUIRE(true == invokehttp->getUUID(invokehttp_uuid));
 
-
   std::shared_ptr<minifi::Connection> gcConnection = std::make_shared<
-    minifi::Connection>(repo, "getfileCreate2Connection");
+      minifi::Connection>(repo, "getfileCreate2Connection");
   gcConnection->setRelationship(core::Relationship("success", "description"));
 
-std::shared_ptr<minifi::Connection> laConnection = std::make_shared<
-    minifi::Connection>(repo, "logattribute");
-laConnection->setRelationship(core::Relationship("success", "description"));
-
-
+  std::shared_ptr<minifi::Connection> laConnection = std::make_shared<
+      minifi::Connection>(repo, "logattribute");
+  laConnection->setRelationship(core::Relationship("success", "description"));
 
   std::shared_ptr<minifi::Connection> connection = std::make_shared<
-      minifi::Connection>(repo,"getfileCreate2Connection");
+      minifi::Connection>(repo, "getfileCreate2Connection");
   connection->setRelationship(core::Relationship("success", "description"));
 
   std::shared_ptr<minifi::Connection> connection2 = std::make_shared<
-      minifi::Connection>(repo,"listenhttp");
+      minifi::Connection>(repo, "listenhttp");
 
   connection2->setRelationship(core::Relationship("No Retry", "description"));
 
   // link the connections so that we can test results at the end for this
   connection->setSource(listenhttp);
-
 
   connection2->setSourceUUID(invokehttp_uuid);
   connection->setSourceUUID(processoruuid);
@@ -225,21 +214,22 @@ laConnection->setRelationship(core::Relationship("success", "description"));
   invokehttp->addConnection(connection);
   invokehttp->addConnection(connection2);
 
-
   core::ProcessorNode node(listenhttp);
   core::ProcessorNode node2(invokehttp);
-
-  core::ProcessContext context(node, repo);
-  core::ProcessContext context2(node2, repo);
+  std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider =
+      nullptr;
+  core::ProcessContext context(node, controller_services_provider, repo);
+  core::ProcessContext context2(node2, controller_services_provider, repo);
   context.setProperty(org::apache::nifi::minifi::processors::ListenHTTP::Port,
                       "8686");
-  context.setProperty(org::apache::nifi::minifi::processors::ListenHTTP::BasePath,
-                        "/testytesttest");
+  context.setProperty(
+      org::apache::nifi::minifi::processors::ListenHTTP::BasePath,
+      "/testytesttest");
 
-  context2.setProperty(org::apache::nifi::minifi::processors::InvokeHTTP::Method,
-                        "POST");
+  context2.setProperty(
+      org::apache::nifi::minifi::processors::InvokeHTTP::Method, "POST");
   context2.setProperty(org::apache::nifi::minifi::processors::InvokeHTTP::URL,
-                          "http://localhost:8686/testytesttest");
+                       "http://localhost:8686/testytesttest");
   core::ProcessSession session(&context);
   core::ProcessSession session2(&context2);
 
@@ -264,7 +254,6 @@ laConnection->setRelationship(core::Relationship("success", "description"));
   REQUIRE(record == nullptr);
   REQUIRE(records.size() == 0);
 
-
   listenhttp->incrementActiveTasks();
   listenhttp->setScheduledState(core::ScheduledState::RUNNING);
   listenhttp->onTrigger(&context, &session);
@@ -281,32 +270,28 @@ laConnection->setRelationship(core::Relationship("success", "description"));
   session2.commit();
   records = reporter->getEvents();
 
-
-
   for (provenance::ProvenanceEventRecord *provEventRecord : records) {
     REQUIRE(provEventRecord->getComponentType() == listenhttp->getName());
   }
   std::shared_ptr<core::FlowFile> ffr = session2.get();
   std::string log_attribute_output = oss.str();
-std::cout << log_attribute_output << std::endl;
-  REQUIRE( log_attribute_output.find("exiting because method is POST") != std::string::npos );
+  REQUIRE(
+      log_attribute_output.find("exiting because method is POST")
+          != std::string::npos);
 
 }
 
-
-class CallBack : public minifi::OutputStreamCallback
-{
+class CallBack : public minifi::OutputStreamCallback {
  public:
-  CallBack()
-    {
-
-    }
-  virtual ~CallBack(){
+  CallBack() {
 
   }
-  virtual void process(std::ofstream *stream){
+  virtual ~CallBack() {
+
+  }
+  virtual void process(std::ofstream *stream) {
     std::string st = "we're gnna write some test stuff";
-    stream->write(st.c_str(),st.length());
+    stream->write(st.c_str(), st.length());
   }
 };
 
@@ -315,7 +300,8 @@ TEST_CASE("HTTPTestsWithResourceClaimPOST", "[httptest1]") {
   std::stringstream oss;
   std::unique_ptr<logging::BaseLogger> outputLogger = std::unique_ptr<
       logging::BaseLogger>(
-      new org::apache::nifi::minifi::core::logging::OutputStreamAppender(oss,0));
+      new org::apache::nifi::minifi::core::logging::OutputStreamAppender(oss,
+                                                                         0));
   std::shared_ptr<logging::Logger> logger = logging::Logger::getLogger();
   logger->updateLogger(std::move(outputLogger));
 
@@ -323,19 +309,16 @@ TEST_CASE("HTTPTestsWithResourceClaimPOST", "[httptest1]") {
 
   testController.enableDebug();
 
-
-
-  std::shared_ptr<TestRepository> repo = std::make_shared<
-      TestRepository>();
+  std::shared_ptr<TestRepository> repo = std::make_shared<TestRepository>();
 
   std::shared_ptr<core::Processor> getfileprocessor = std::make_shared<
-        org::apache::nifi::minifi::processors::GetFile>("getfileCreate2");
+      org::apache::nifi::minifi::processors::GetFile>("getfileCreate2");
 
-    std::shared_ptr<core::Processor> logAttribute = std::make_shared<
-        org::apache::nifi::minifi::processors::LogAttribute>("logattribute");
+  std::shared_ptr<core::Processor> logAttribute = std::make_shared<
+      org::apache::nifi::minifi::processors::LogAttribute>("logattribute");
 
-    char format[] = "/tmp/gt.XXXXXX";
-    char *dir = testController.createTempDirectory(format);
+  char format[] = "/tmp/gt.XXXXXX";
+  char *dir = testController.createTempDirectory(format);
 
   std::shared_ptr<core::Processor> listenhttp = std::make_shared<
       org::apache::nifi::minifi::processors::ListenHTTP>("listenhttp");
@@ -348,23 +331,20 @@ TEST_CASE("HTTPTestsWithResourceClaimPOST", "[httptest1]") {
   uuid_t invokehttp_uuid;
   REQUIRE(true == invokehttp->getUUID(invokehttp_uuid));
 
-
   std::shared_ptr<minifi::Connection> gcConnection = std::make_shared<
-    minifi::Connection>(repo, "getfileCreate2Connection");
+      minifi::Connection>(repo, "getfileCreate2Connection");
   gcConnection->setRelationship(core::Relationship("success", "description"));
 
-std::shared_ptr<minifi::Connection> laConnection = std::make_shared<
-    minifi::Connection>(repo, "logattribute");
-laConnection->setRelationship(core::Relationship("success", "description"));
-
-
+  std::shared_ptr<minifi::Connection> laConnection = std::make_shared<
+      minifi::Connection>(repo, "logattribute");
+  laConnection->setRelationship(core::Relationship("success", "description"));
 
   std::shared_ptr<minifi::Connection> connection = std::make_shared<
-      minifi::Connection>(repo,"getfileCreate2Connection");
+      minifi::Connection>(repo, "getfileCreate2Connection");
   connection->setRelationship(core::Relationship("success", "description"));
 
   std::shared_ptr<minifi::Connection> connection2 = std::make_shared<
-      minifi::Connection>(repo,"listenhttp");
+      minifi::Connection>(repo, "listenhttp");
 
   connection2->setRelationship(core::Relationship("No Retry", "description"));
 
@@ -372,31 +352,31 @@ laConnection->setRelationship(core::Relationship("success", "description"));
   connection->setSource(listenhttp);
 
   connection->setSourceUUID(invokehttp_uuid);
-    connection->setDestinationUUID(processoruuid);
+  connection->setDestinationUUID(processoruuid);
 
   connection2->setSourceUUID(processoruuid);
   connection2->setSourceUUID(processoruuid);
-
 
   listenhttp->addConnection(connection);
   invokehttp->addConnection(connection);
   invokehttp->addConnection(connection2);
 
-
   core::ProcessorNode node(invokehttp);
   core::ProcessorNode node2(listenhttp);
-
-  core::ProcessContext context(node, repo);
-  core::ProcessContext context2(node2, repo);
+  std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider =
+      nullptr;
+  core::ProcessContext context(node, controller_services_provider, repo);
+  core::ProcessContext context2(node2, controller_services_provider, repo);
   context.setProperty(org::apache::nifi::minifi::processors::ListenHTTP::Port,
                       "8680");
-  context.setProperty(org::apache::nifi::minifi::processors::ListenHTTP::BasePath,
-                        "/testytesttest");
+  context.setProperty(
+      org::apache::nifi::minifi::processors::ListenHTTP::BasePath,
+      "/testytesttest");
 
-  context2.setProperty(org::apache::nifi::minifi::processors::InvokeHTTP::Method,
-                        "POST");
+  context2.setProperty(
+      org::apache::nifi::minifi::processors::InvokeHTTP::Method, "POST");
   context2.setProperty(org::apache::nifi::minifi::processors::InvokeHTTP::URL,
-                          "http://localhost:8680/testytesttest");
+                       "http://localhost:8680/testytesttest");
   core::ProcessSession session(&context);
   core::ProcessSession session2(&context2);
 
@@ -410,13 +390,14 @@ laConnection->setRelationship(core::Relationship("success", "description"));
 
   /*
    explicit FlowFileRecord(std::shared_ptr<core::Repository> flow_repository,
-                          std::map<std::string, std::string> attributes,
-                          std::shared_ptr<ResourceClaim> claim = nullptr);
+   std::map<std::string, std::string> attributes,
+   std::shared_ptr<ResourceClaim> claim = nullptr);
    */
-  std::map<std::string,std::string> attributes;
+  std::map<std::string, std::string> attributes;
   attributes["testy"] = "test";
-  std::shared_ptr<minifi::FlowFileRecord> flow = std::make_shared<minifi::FlowFileRecord>(repo,attributes);
-  session2.write(flow,&callback);
+  std::shared_ptr<minifi::FlowFileRecord> flow = std::make_shared<
+      minifi::FlowFileRecord>(repo, attributes);
+  session2.write(flow, &callback);
 
   invokehttp->incrementActiveTasks();
   invokehttp->setScheduledState(core::ScheduledState::RUNNING);
@@ -429,14 +410,11 @@ laConnection->setRelationship(core::Relationship("success", "description"));
   listenhttp->onSchedule(&context, &factory);
   listenhttp->onTrigger(&context, &session);
 
-
-
   provenance::ProvenanceReporter *reporter = session.getProvenanceReporter();
   std::set<provenance::ProvenanceEventRecord*> records = reporter->getEvents();
   record = session.get();
   REQUIRE(record == nullptr);
   REQUIRE(records.size() == 0);
-
 
   listenhttp->incrementActiveTasks();
   listenhttp->setScheduledState(core::ScheduledState::RUNNING);
@@ -454,18 +432,14 @@ laConnection->setRelationship(core::Relationship("success", "description"));
   session2.commit();
   records = reporter->getEvents();
 
-
-
   for (provenance::ProvenanceEventRecord *provEventRecord : records) {
     REQUIRE(provEventRecord->getComponentType() == listenhttp->getName());
   }
   std::shared_ptr<core::FlowFile> ffr = session2.get();
   std::string log_attribute_output = oss.str();
-std::cout << log_attribute_output << std::endl;
-  REQUIRE( log_attribute_output.find("exiting because method is POST") != std::string::npos );
+  REQUIRE(
+      log_attribute_output.find("exiting because method is POST")
+          != std::string::npos);
 
 }
-
-
-
 

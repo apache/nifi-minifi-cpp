@@ -20,6 +20,7 @@
 #include "SchedulingAgent.h"
 #include <chrono>
 #include <thread>
+#include <utility>
 #include <memory>
 #include <iostream>
 #include "Exception.h"
@@ -37,6 +38,36 @@ bool SchedulingAgent::hasWorkToDo(std::shared_ptr<core::Processor> processor) {
     return true;
   else
     return false;
+}
+
+void SchedulingAgent::enableControllerService(
+    std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) {
+
+  logger_->log_trace("Enabling CSN in SchedulingAgent %s",
+                     serviceNode->getName());
+  // reference the enable function from serviceNode
+  std::function<bool()> f_ex = [serviceNode] {
+    return serviceNode->enable();
+  };
+  // create a functor that will be submitted to the thread pool.
+  utils::Worker<bool> functor(f_ex);
+  // move the functor into the thread pool. While a future is returned
+  // we aren't terribly concerned with the result.
+  component_lifecycle_thread_pool_.execute(std::move(functor));
+}
+
+void SchedulingAgent::disableControllerService(
+    std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) {
+
+  // reference the disable function from serviceNode
+  std::function<bool()> f_ex = [serviceNode] {
+    return serviceNode->disable();
+  };
+  // create a functor that will be submitted to the thread pool.
+  utils::Worker<bool> functor(f_ex);
+  // move the functor into the thread pool. While a future is returned
+  // we aren't terribly concerned with the result.
+  component_lifecycle_thread_pool_.execute(std::move(functor));
 }
 
 bool SchedulingAgent::hasTooMuchOutGoing(
@@ -71,11 +102,11 @@ bool SchedulingAgent::onTrigger(std::shared_ptr<core::Processor> processor,
     processor->decrementActiveTask();
   } catch (std::exception &exception) {
     logger_->log_debug("Caught Exception %s", exception.what());
-    processor->yield(_administrativeYieldDuration);
+    processor->yield(admin_yield_duration_);
     processor->decrementActiveTask();
   } catch (...) {
     logger_->log_debug("Caught Exception during SchedulingAgent::onTrigger");
-    processor->yield(_administrativeYieldDuration);
+    processor->yield(admin_yield_duration_);
     processor->decrementActiveTask();
   }
 

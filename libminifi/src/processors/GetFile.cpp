@@ -43,6 +43,10 @@ namespace apache {
 namespace nifi {
 namespace minifi {
 namespace processors {
+
+
+
+
 core::Property GetFile::BatchSize(
     "Batch Size", "The maximum number of files to pull in each iteration",
     "10");
