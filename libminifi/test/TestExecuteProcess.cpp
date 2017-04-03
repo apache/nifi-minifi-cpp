@@ -23,7 +23,7 @@
 #include "core/logging/LogAppenders.h"
 #include "core/logging/BaseLogger.h"
 #include "processors/GetFile.h"
-#include "core/core.h"
+#include "core/Core.h"
 #include "core/FlowFile.h"
 #include "core/Processor.h"
 #include "core/ProcessContext.h"

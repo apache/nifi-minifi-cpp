@@ -17,23 +17,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include "FlowController.h"
+#include <sys/time.h>
+#include <time.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 #include <vector>
 #include <queue>
 #include <map>
 #include <set>
-#include <sys/time.h>
-#include <time.h>
 #include <chrono>
-#include <thread>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
 #include <future>
-#include "FlowController.h"
+#include <thread>
+#include <utility>
+#include <memory>
+#include <string>
 #include "core/ProcessContext.h"
 #include "core/ProcessGroup.h"
 #include "utils/StringUtils.h"
-#include "core/core.h"
+#include "core/Core.h"
 #include "core/repository/FlowFileRepository.h"
 
 namespace org {
@@ -105,7 +108,6 @@ FlowController::FlowController(
 
     initializePaths(adjustedFilename);
   }
-
 }
 
 void FlowController::initializePaths(const std::string &adjustedFilename) {
@@ -125,12 +127,12 @@ void FlowController::initializePaths(const std::string &adjustedFilename) {
   // Create the content repo directory if needed
   struct stat contentDirStat;
 
-  if (stat(ResourceClaim::default_directory_path.c_str(), &contentDirStat)
+  if (stat(ResourceClaim::default_directory_path, &contentDirStat)
       != -1&& S_ISDIR(contentDirStat.st_mode)) {
-    path = realpath(ResourceClaim::default_directory_path.c_str(), full_path);
+    path = realpath(ResourceClaim::default_directory_path, full_path);
     logger_->log_info("FlowController content directory %s", full_path);
   } else {
-    if (mkdir(ResourceClaim::default_directory_path.c_str(), 0777) == -1) {
+    if (mkdir(ResourceClaim::default_directory_path, 0777) == -1) {
       logger_->log_error("FlowController content directory creation failed");
       exit(1);
     }
@@ -144,7 +146,6 @@ void FlowController::initializePaths(const std::string &adjustedFilename) {
         full_path);
     exit(1);
   }
-
 }
 
 FlowController::~FlowController() {
@@ -154,7 +155,6 @@ FlowController::~FlowController() {
     delete protocol_;
   flow_file_repo_ = nullptr;
   provenance_repo_ = nullptr;
-
 }
 
 void FlowController::stop(bool force) {
@@ -173,7 +173,6 @@ void FlowController::stop(bool force) {
     if (this->root_)
       this->root_->stopProcessing(&this->_timerScheduler,
                                   &this->_eventScheduler);
-
   }
 }
 
@@ -200,7 +199,6 @@ void FlowController::waitUnload(const uint64_t timeToWaitMs) {
     if (std::future_status::ready == unload_task.wait_until(wait_time)) {
       running_ = false;
     }
-
   }
 }
 
@@ -278,7 +276,6 @@ bool FlowController::start() {
         "Can not start Flow Controller because it has not been initialized");
     return false;
   } else {
-
     if (!running_) {
       logger_->log_info("Starting Flow Controller");
       this->_timerScheduler.start();

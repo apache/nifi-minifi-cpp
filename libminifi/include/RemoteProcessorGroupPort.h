@@ -28,14 +28,12 @@
 #include "core/ProcessSession.h"
 #include "Site2SiteClientProtocol.h"
 
-
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
 // RemoteProcessorGroupPort Class
-class RemoteProcessorGroupPort :
-    public core::Processor {
+class RemoteProcessorGroupPort : public core::Processor {
  public:
   // Constructor
   /*!
@@ -44,9 +42,9 @@ class RemoteProcessorGroupPort :
   RemoteProcessorGroupPort(std::string name, uuid_t uuid = NULL)
       : core::Processor(name, uuid),
         direction_(SEND),
-        transmitting_(false){
+        transmitting_(false) {
     logger_ = logging::Logger::getLogger();
-    uuid_copy(protocol_uuid_,uuid);
+    uuid_copy(protocol_uuid_, uuid);
   }
   // Destructor
   virtual ~RemoteProcessorGroupPort() {
@@ -61,9 +59,8 @@ class RemoteProcessorGroupPort :
   static core::Relationship relation;
  public:
   // OnTrigger method, implemented by NiFi RemoteProcessorGroupPort
-  virtual void onTrigger(
-      core::ProcessContext *context,
-      core::ProcessSession *session);
+  virtual void onTrigger(core::ProcessContext *context,
+                         core::ProcessSession *session);
   // Initialize, over write by NiFi RemoteProcessorGroupPort
   virtual void initialize(void);
   // Set Direction
@@ -84,10 +81,10 @@ class RemoteProcessorGroupPort :
  protected:
 
  private:
-   
+
   std::unique_ptr<Site2SiteClientProtocol> getNextProtocol();
   void returnProtocol(std::unique_ptr<Site2SiteClientProtocol> protocol);
-   
+
   std::stack<std::unique_ptr<Site2SiteClientProtocol>> available_protocols_;
   std::mutex protocol_mutex_;
   // Logger
@@ -98,9 +95,9 @@ class RemoteProcessorGroupPort :
   bool transmitting_;
   // timeout
   uint64_t timeout_;
-  
+
   uuid_t protocol_uuid_;
- 
+
 };
 
 } /* namespace minifi */

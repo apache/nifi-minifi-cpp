@@ -183,10 +183,9 @@ class FlowFile {
   std::string getUUIDStr() {
     return uuid_str_;
   }
-  
-  bool getUUID(uuid_t other)
-  {
-    uuid_copy(other,uuid_);
+
+  bool getUUID(uuid_t other) {
+    uuid_copy(other, uuid_);
     return true;
   }
 
@@ -266,7 +265,7 @@ class FlowFile {
 
   // Logger
   std::shared_ptr<logging::Logger> logger_;
-  
+
   // Connection queue that this flow file will be transfer or current in
   std::shared_ptr<core::Connectable> connection_;
   // Orginal connection queue that this flow file was dequeued from

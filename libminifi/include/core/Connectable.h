@@ -20,7 +20,7 @@
 #define LIBMINIFI_INCLUDE_CORE_CONNECTABLE_H_
 
 #include <set>
-#include "core.h"
+#include "Core.h"
 #include <condition_variable>
 #include "core/logging/Logger.h"
 #include "Relationship.h"

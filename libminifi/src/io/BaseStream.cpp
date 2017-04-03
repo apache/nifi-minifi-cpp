@@ -16,8 +16,8 @@
  * limitations under the License.
  */
 #include "io/BaseStream.h"
+#include <string>
 #include "io/Serializable.h"
-
 
 namespace org {
 namespace apache {
@@ -32,7 +32,8 @@ namespace io {
  * @return resulting write size
  **/
 int BaseStream::write(uint32_t base_value, bool is_little_endian) {
-	return Serializable::write(base_value, (DataStream*) this, is_little_endian);
+  return Serializable::write(base_value, reinterpret_cast<DataStream*>(this),
+                             is_little_endian);
 }
 
 /**
@@ -43,7 +44,8 @@ int BaseStream::write(uint32_t base_value, bool is_little_endian) {
  * @return resulting write size
  **/
 int BaseStream::write(uint16_t base_value, bool is_little_endian) {
-	return Serializable::write(base_value, (DataStream*) this, is_little_endian);
+  return Serializable::write(base_value, reinterpret_cast<DataStream*>(this),
+                             is_little_endian);
 }
 
 /**
@@ -54,7 +56,7 @@ int BaseStream::write(uint16_t base_value, bool is_little_endian) {
  * @return resulting write size
  **/
 int BaseStream::write(uint8_t *value, int len) {
-	return Serializable::write(value, len, (DataStream*) this);
+  return Serializable::write(value, len, reinterpret_cast<DataStream*>(this));
 }
 
 /**
@@ -65,7 +67,8 @@ int BaseStream::write(uint8_t *value, int len) {
  * @return resulting write size
  **/
 int BaseStream::write(uint64_t base_value, bool is_little_endian) {
-	return Serializable::write(base_value, (DataStream*) this, is_little_endian);
+  return Serializable::write(base_value, reinterpret_cast<DataStream*>(this),
+                             is_little_endian);
 }
 
 /**
@@ -74,8 +77,8 @@ int BaseStream::write(uint64_t base_value, bool is_little_endian) {
  * @return resulting write size
  **/
 int BaseStream::write(bool value) {
-	uint8_t v = value;
-	return Serializable::write(v);
+  uint8_t v = value;
+  return Serializable::write(v);
 }
 
 /**
@@ -84,7 +87,7 @@ int BaseStream::write(bool value) {
  * @return resulting write size
  **/
 int BaseStream::writeUTF(std::string str, bool widen) {
-	return Serializable::writeUTF(str, (DataStream*) this, widen);
+  return Serializable::writeUTF(str, reinterpret_cast<DataStream*>(this), widen);
 }
 
 /**
@@ -94,7 +97,7 @@ int BaseStream::writeUTF(std::string str, bool widen) {
  * @return resulting read size
  **/
 int BaseStream::read(uint8_t &value) {
-	return Serializable::read(value, (DataStream*) this);
+  return Serializable::read(value, reinterpret_cast<DataStream*>(this));
 }
 
 /**
@@ -104,7 +107,7 @@ int BaseStream::read(uint8_t &value) {
  * @return resulting read size
  **/
 int BaseStream::read(uint16_t &base_value, bool is_little_endian) {
-	return Serializable::read(base_value, (DataStream*) this);
+  return Serializable::read(base_value, reinterpret_cast<DataStream*>(this));
 }
 
 /**
@@ -114,7 +117,7 @@ int BaseStream::read(uint16_t &base_value, bool is_little_endian) {
  * @return resulting read size
  **/
 int BaseStream::read(char &value) {
-	return Serializable::read(value, (DataStream*) this);
+  return Serializable::read(value, reinterpret_cast<DataStream*>(this));
 }
 
 /**
@@ -125,7 +128,7 @@ int BaseStream::read(char &value) {
  * @return resulting read size
  **/
 int BaseStream::read(uint8_t *value, int len) {
-	return Serializable::read(value, len, (DataStream*) this);
+  return Serializable::read(value, len, reinterpret_cast<DataStream*>(this));
 }
 
 /**
@@ -135,7 +138,8 @@ int BaseStream::read(uint8_t *value, int len) {
  * @return resulting read size
  **/
 int BaseStream::read(uint32_t &value, bool is_little_endian) {
-	return Serializable::read(value, (DataStream*) this, is_little_endian);
+  return Serializable::read(value, reinterpret_cast<DataStream*>(this),
+                            is_little_endian);
 }
 
 /**
@@ -145,7 +149,8 @@ int BaseStream::read(uint32_t &value, bool is_little_endian) {
  * @return resulting read size
  **/
 int BaseStream::read(uint64_t &value, bool is_little_endian) {
-	return Serializable::read(value, (DataStream*) this, is_little_endian);
+  return Serializable::read(value, reinterpret_cast<DataStream*>(this),
+                            is_little_endian);
 }
 
 /**
@@ -155,9 +160,8 @@ int BaseStream::read(uint64_t &value, bool is_little_endian) {
  * @return resulting read size
  **/
 int BaseStream::readUTF(std::string &str, bool widen) {
-	return Serializable::readUTF(str, (DataStream*) this, widen);
+  return Serializable::readUTF(str, reinterpret_cast<DataStream*>(this), widen);
 }
-
 
 } /* namespace io */
 } /* namespace minifi */

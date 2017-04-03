@@ -47,4 +47,4 @@ matrix:
         - package='openssl'; [[ $(brew ls --versions ${package}) ]] && { brew outdated ${package} || brew upgrade ${package}; } || brew install ${package}
 
 script:
-  - mkdir ./build && cd ./build && cmake .. && make && make test
+  - mkdir ./build && cd ./build && cmake .. && make && make test && make linter

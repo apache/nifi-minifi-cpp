@@ -39,18 +39,18 @@ namespace io {
 template<typename T>
 class SocketCreator {
 
-	template<bool cond, typename U>
-	using TypeCheck = typename std::enable_if< cond, U >::type;
+  template<bool cond, typename U>
+  using TypeCheck = typename std::enable_if< cond, U >::type;
 
-public:
-	template<typename U = T>
-	TypeCheck<true, U> *create(const std::string &host, const uint16_t port) {
-		return new T(host, port);
-	}
-	template<typename U = T>
-	TypeCheck<false, U> *create(const std::string &host, const uint16_t port) {
-		return new Socket(host, port);
-	}
+ public:
+  template<typename U = T>
+  TypeCheck<true, U> *create(const std::string &host, const uint16_t port) {
+    return new T(host, port);
+  }
+  template<typename U = T>
+  TypeCheck<false, U> *create(const std::string &host, const uint16_t port) {
+    return new Socket(host, port);
+  }
 
 };
 
@@ -60,73 +60,72 @@ public:
  
  **/
 class StreamFactory {
-public:
+ public:
 
-	/**
-	 * Build an instance, creating a memory fence, which
-	 * allows us to avoid locking. This is tantamount to double checked locking.
-	 * @returns new StreamFactory;
-	 */
-	static StreamFactory *getInstance() {
-		StreamFactory* atomic_context = context_instance_.load(
-				std::memory_order_relaxed);
-		std::atomic_thread_fence(std::memory_order_acquire);
-		if (atomic_context == nullptr) {
-			std::lock_guard < std::mutex > lock(context_mutex_);
-			atomic_context = context_instance_.load(std::memory_order_relaxed);
-			if (atomic_context == nullptr) {
-				atomic_context = new StreamFactory();
-				std::atomic_thread_fence(std::memory_order_release);
-				context_instance_.store(atomic_context,
-						std::memory_order_relaxed);
-			}
-		}
-		return atomic_context;
-	}
+  /**
+   * Build an instance, creating a memory fence, which
+   * allows us to avoid locking. This is tantamount to double checked locking.
+   * @returns new StreamFactory;
+   */
+  static StreamFactory *getInstance() {
+    StreamFactory* atomic_context = context_instance_.load(
+        std::memory_order_relaxed);
+    std::atomic_thread_fence(std::memory_order_acquire);
+    if (atomic_context == nullptr) {
+      std::lock_guard<std::mutex> lock(context_mutex_);
+      atomic_context = context_instance_.load(std::memory_order_relaxed);
+      if (atomic_context == nullptr) {
+        atomic_context = new StreamFactory();
+        std::atomic_thread_fence(std::memory_order_release);
+        context_instance_.store(atomic_context, std::memory_order_relaxed);
+      }
+    }
+    return atomic_context;
+  }
 
-	/**
-	 * Creates a socket and returns a unique ptr
-	 *
-	 */
-	std::unique_ptr<Socket> createSocket(const std::string &host,
-			const uint16_t port) {
-		Socket *socket = 0;
+  /**
+   * Creates a socket and returns a unique ptr
+   *
+   */
+  std::unique_ptr<Socket> createSocket(const std::string &host,
+                                       const uint16_t port) {
+    Socket *socket = 0;
 
-		if (is_secure_) {
-			socket = createSocket<TLSSocket>(host, port);
-		} else {
-			socket = createSocket<Socket>(host, port);
-		}
-		return std::unique_ptr < Socket > (socket);
-	}
+    if (is_secure_) {
+      socket = createSocket<TLSSocket>(host, port);
+    } else {
+      socket = createSocket<Socket>(host, port);
+    }
+    return std::unique_ptr<Socket>(socket);
+  }
 
-protected:
+ protected:
 
-	/**
-	 * Creates a socket and returns a unique ptr
-	 *
-	 */
-	template<typename T>
-	Socket *createSocket(const std::string &host, const uint16_t port) {
-		SocketCreator<T> creator;
-		return creator.create(host, port);
-	}
+  /**
+   * Creates a socket and returns a unique ptr
+   *
+   */
+  template<typename T>
+  Socket *createSocket(const std::string &host, const uint16_t port) {
+    SocketCreator<T> creator;
+    return creator.create(host, port);
+  }
 
-	StreamFactory() :
-			configure_(Configure::getConfigure()) {
-		std::string secureStr;
-		is_secure_ = false;
-		if (configure_->get(Configure::nifi_remote_input_secure, secureStr)) {
-			org::apache::nifi::minifi::utils::StringUtils::StringToBool(
-					secureStr, is_secure_);
-		}
-	}
+  StreamFactory()
+      : configure_(Configure::getConfigure()) {
+    std::string secureStr;
+    is_secure_ = false;
+    if (configure_->get(Configure::nifi_remote_input_secure, secureStr)) {
+      org::apache::nifi::minifi::utils::StringUtils::StringToBool(secureStr,
+                                                                  is_secure_);
+    }
+  }
 
-	bool is_secure_;
-	static std::atomic<StreamFactory*> context_instance_;
-	static std::mutex context_mutex_;
+  bool is_secure_;
+  static std::atomic<StreamFactory*> context_instance_;
+  static std::mutex context_mutex_;
 
-	Configure *configure_;
+  Configure *configure_;
 };
 
 } /* namespace io */

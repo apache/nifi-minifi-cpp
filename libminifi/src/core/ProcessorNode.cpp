@@ -16,7 +16,7 @@
  */
 
 #include "core/ProcessorNode.h"
-
+#include <memory>
 namespace org {
 namespace apache {
 namespace nifi {
@@ -25,29 +25,23 @@ namespace core {
 
 ProcessorNode::ProcessorNode(const std::shared_ptr<Connectable> processor)
     : processor_(processor),
-      Connectable(processor->getName(),0),
+      Connectable(processor->getName(), 0),
       ConfigurableComponent(logging::Logger::getLogger()) {
-	
-	uuid_t copy;
-	processor->getUUID(copy);
-	setUUID( copy );
-
-
+  uuid_t copy;
+  processor->getUUID(copy);
+  setUUID(copy);
 }
 
 ProcessorNode::ProcessorNode(const ProcessorNode &other)
     : processor_(other.processor_),
       Connectable(other.getName(), 0),
       ConfigurableComponent(logging::Logger::getLogger()) {
-	
-	uuid_t copy;
-	processor_->getUUID(copy);
-	setUUID( copy );
-
+  uuid_t copy;
+  processor_->getUUID(copy);
+  setUUID(copy);
 }
 
 ProcessorNode::~ProcessorNode() {
-
 }
 
 bool ProcessorNode::isWorkAvailable() {
@@ -58,7 +52,7 @@ bool ProcessorNode::isRunning() {
   return processor_->isRunning();
 }
 
-} /* namespace processor */
+} /* namespace core */
 } /* namespace minifi */
 } /* namespace nifi */
 } /* namespace apache */

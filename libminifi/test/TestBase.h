@@ -26,7 +26,7 @@
 #include <vector>
 #include "core/logging/LogAppenders.h"
 #include "core/logging/Logger.h"
-#include "core/core.h"
+#include "core/Core.h"
 
 class LogTestController {
  public:
@@ -48,7 +48,7 @@ class TestController {
 
   TestController()
       : log("info") {
-    minifi::ResourceClaim::default_directory_path = "./";
+    minifi::ResourceClaim::default_directory_path = const_cast<char*>("./");
   }
 
   ~TestController() {

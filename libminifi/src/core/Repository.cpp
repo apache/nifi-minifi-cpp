@@ -15,15 +15,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include "core/Repository.h"
+#include <arpa/inet.h>
 #include <cstdint>
 #include <vector>
-#include <arpa/inet.h>
 #include "io/DataStream.h"
 #include "io/Serializable.h"
 #include "core/Relationship.h"
 #include "core/logging/Logger.h"
 #include "FlowController.h"
-#include "core/Repository.h"
 #include "provenance/Provenance.h"
 #include "core/repository/FlowFileRepository.h"
 

@@ -17,7 +17,10 @@
  */
 
 #include "core/ConfigurableComponent.h"
-
+#include <memory>
+#include <utility>
+#include <string>
+#include <set>
 #include "core/Property.h"
 #include "core/logging/Logger.h"
 
@@ -27,19 +30,17 @@ namespace nifi {
 namespace minifi {
 namespace core {
 
-ConfigurableComponent::ConfigurableComponent(std::shared_ptr<logging::Logger> logger)
+ConfigurableComponent::ConfigurableComponent(
+    std::shared_ptr<logging::Logger> logger)
     : my_logger_(logger) {
-
 }
 
 ConfigurableComponent::ConfigurableComponent(
     const ConfigurableComponent &&other)
     : properties_(std::move(other.properties_)),
       my_logger_(std::move(other.my_logger_)) {
-
 }
 ConfigurableComponent::~ConfigurableComponent() {
-
 }
 
 /**
@@ -58,7 +59,7 @@ bool ConfigurableComponent::getProperty(const std::string name,
     Property item = it->second;
     value = item.getValue();
     my_logger_->log_info("Processor %s property name %s value %s", name.c_str(),
-                      item.getName().c_str(), value.c_str());
+                         item.getName().c_str(), value.c_str());
     return true;
   } else {
     return false;
@@ -80,7 +81,7 @@ bool ConfigurableComponent::setProperty(const std::string name,
     item.setValue(value);
     properties_[item.getName()] = item;
     my_logger_->log_info("Component %s property name %s value %s", name.c_str(),
-                      item.getName().c_str(), value.c_str());
+                         item.getName().c_str(), value.c_str());
     return true;
   } else {
     return false;
@@ -102,7 +103,7 @@ bool ConfigurableComponent::setProperty(Property &prop, std::string value) {
     item.setValue(value);
     properties_[item.getName()] = item;
     my_logger_->log_info("property name %s value %s", prop.getName().c_str(),
-                      item.getName().c_str(), value.c_str());
+                         item.getName().c_str(), value.c_str());
     return true;
   } else {
     Property newProp(prop);
@@ -110,7 +111,6 @@ bool ConfigurableComponent::setProperty(Property &prop, std::string value) {
     properties_.insert(
         std::pair<std::string, Property>(prop.getName(), newProp));
     return true;
-
   }
   return false;
 }
@@ -132,11 +132,10 @@ bool ConfigurableComponent::setSupportedProperties(
   for (auto item : properties) {
     properties_[item.getName()] = item;
   }
-
   return true;
 }
 
-} /* namespace components */
+} /* namespace core */
 } /* namespace minifi */
 } /* namespace nifi */
 } /* namespace apache */

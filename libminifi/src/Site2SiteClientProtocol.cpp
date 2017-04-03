@@ -21,9 +21,11 @@
 #include <stdio.h>
 #include <time.h>
 #include <chrono>
+#include <map>
+#include <string>
+#include <memory>
 #include <thread>
 #include <random>
-#include <netinet/tcp.h>
 #include <iostream>
 #include "io/CRCStream.h"
 #include "Site2SitePeer.h"
@@ -356,7 +358,7 @@ int Site2SiteClientProtocol::readRequestType(RequestType &type) {
   if (ret <= 0)
     return ret;
 
-  for (int i = (int) NEGOTIATE_FLOWFILE_CODEC; i <= (int) SHUTDOWN; i++) {
+  for (int i = NEGOTIATE_FLOWFILE_CODEC; i <= SHUTDOWN; i++) {
     if (RequestTypeStr[i] == requestTypeStr) {
       type = (RequestType) i;
       return ret;
@@ -426,12 +428,14 @@ int Site2SiteClientProtocol::writeRespond(RespondCode code,
 
   if (resCode->hasDescription) {
     ret = peer_->writeUTF(message);
-    if (ret > 0)
+    if (ret > 0) {
       return (3 + ret);
-    else
+    } else {
       return ret;
-  } else
+    }
+  } else {
     return 3;
+  }
 }
 
 bool Site2SiteClientProtocol::negotiateCodec() {
@@ -518,7 +522,8 @@ Transaction* Site2SiteClientProtocol::createTransaction(
       return NULL;
     }
 
-    org::apache::nifi::minifi::io::CRCStream<Site2SitePeer> crcstream(peer_.get());
+    org::apache::nifi::minifi::io::CRCStream<Site2SitePeer> crcstream(
+        peer_.get());
     switch (code) {
       case MORE_DATA:
         dataAvailable = true;
@@ -553,7 +558,8 @@ Transaction* Site2SiteClientProtocol::createTransaction(
       // tearDown();
       return NULL;
     } else {
-      org::apache::nifi::minifi::io::CRCStream<Site2SitePeer> crcstream(peer_.get());
+      org::apache::nifi::minifi::io::CRCStream<Site2SitePeer> crcstream(
+          peer_.get());
       transaction = new Transaction(direction, crcstream);
       _transactionMap[transaction->getUUIDStr()] = transaction;
       transactionID = transaction->getUUIDStr();
@@ -680,9 +686,10 @@ bool Site2SiteClientProtocol::receive(std::string transactionID,
   return true;
 }
 
-bool Site2SiteClientProtocol::send(
-    std::string transactionID, DataPacket *packet, std::shared_ptr<FlowFileRecord> flowFile,
-    core::ProcessSession *session) {
+bool Site2SiteClientProtocol::send(std::string transactionID,
+                                   DataPacket *packet,
+                                   std::shared_ptr<FlowFileRecord> flowFile,
+                                   core::ProcessSession *session) {
   int ret;
   Transaction *transaction = NULL;
 
@@ -772,9 +779,8 @@ bool Site2SiteClientProtocol::send(
   return true;
 }
 
-void Site2SiteClientProtocol::receiveFlowFiles(
-    core::ProcessContext *context,
-    core::ProcessSession *session) {
+void Site2SiteClientProtocol::receiveFlowFiles(core::ProcessContext *context,
+                                               core::ProcessSession *session) {
   uint64_t bytes = 0;
   int transfers = 0;
   Transaction *transaction = NULL;
@@ -817,7 +823,9 @@ void Site2SiteClientProtocol::receiveFlowFiles(
         // transaction done
         break;
       }
-      std::shared_ptr<FlowFileRecord> flowFile = std::static_pointer_cast<FlowFileRecord>(session->create());;
+      std::shared_ptr<FlowFileRecord> flowFile = std::static_pointer_cast<
+          FlowFileRecord>(session->create());
+
       if (!flowFile) {
         throw Exception(SITE2SITE_EXCEPTION, "Flow File Creation Failed");
         return;
@@ -930,7 +938,7 @@ bool Site2SiteClientProtocol::confirm(std::string transactionID) {
     // be listening. As a result, it will re-send the data. By doing this two-phase commit, we narrow the
     // Critical Section involved in this transaction so that rather than the Critical Section being the
     // time window involved in the entire transaction, it is reduced to a simple round-trip conversation.
-    long crcValue = transaction->getCRC();
+    int64_t crcValue = transaction->getCRC();
     std::string crc = std::to_string(crcValue);
     logger_->log_info("Site2Site Send confirm with CRC %d to transaction %s",
                       transaction->getCRC(), transactionID.c_str());
@@ -978,7 +986,7 @@ bool Site2SiteClientProtocol::confirm(std::string transactionID) {
           "Site2Site transaction %s peer confirm transaction with CRC %s",
           transactionID.c_str(), message.c_str());
       if (this->_currentVersion > 3) {
-        long crcValue = transaction->getCRC();
+        int64_t crcValue = transaction->getCRC();
         std::string crc = std::to_string(crcValue);
         if (message == crc) {
           logger_->log_info("Site2Site transaction %s CRC matched",
@@ -1113,9 +1121,9 @@ bool Site2SiteClientProtocol::complete(std::string transactionID) {
       logger_->log_info("Site2Site transaction %s send finished",
                         transactionID.c_str());
       ret = this->writeRespond(TRANSACTION_FINISHED, "Finished");
-      if (ret <= 0)
+      if (ret <= 0) {
         return false;
-      else {
+      } else {
         transaction->_state = TRANSACTION_COMPLETED;
         return true;
       }
@@ -1143,10 +1151,11 @@ bool Site2SiteClientProtocol::complete(std::string transactionID) {
   }
 }
 
-void Site2SiteClientProtocol::transferFlowFiles(
-    core::ProcessContext *context,
-    core::ProcessSession *session) {
-  std::shared_ptr<FlowFileRecord> flow = std::static_pointer_cast<FlowFileRecord>(session->get());;
+void Site2SiteClientProtocol::transferFlowFiles(core::ProcessContext *context,
+                                                core::ProcessSession *session) {
+  std::shared_ptr<FlowFileRecord> flow =
+      std::static_pointer_cast<FlowFileRecord>(session->get());
+
   Transaction *transaction = NULL;
 
   if (!flow)
@@ -1201,7 +1210,8 @@ void Site2SiteClientProtocol::transferFlowFiles(
       if (transferNanos > _batchSendNanos)
         break;
 
-      flow = std::static_pointer_cast<FlowFileRecord>(session->get());;
+      flow = std::static_pointer_cast<FlowFileRecord>(session->get());
+
       if (!flow) {
         continueTransaction = false;
       }
@@ -1239,7 +1249,6 @@ void Site2SiteClientProtocol::transferFlowFiles(
 
   return;
 }
-
 
 } /* namespace minifi */
 } /* namespace nifi */

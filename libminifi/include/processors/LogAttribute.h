@@ -23,7 +23,7 @@
 #include "FlowFileRecord.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
-#include "core/core.h"
+#include "core/Core.h"
 
 namespace org {
 namespace apache {
@@ -46,7 +46,7 @@ class LogAttribute : public core::Processor {
   virtual ~LogAttribute() {
   }
   // Processor Name
-  static const std::string ProcessorName;
+  static constexpr char const* ProcessorName = "LogAttribute";
   // Supported Properties
   static core::Property LogLevel;
   static core::Property AttributesToLog;
@@ -108,9 +108,8 @@ class LogAttribute : public core::Processor {
 
  public:
   // OnTrigger method, implemented by NiFi LogAttribute
-  virtual void onTrigger(
-      core::ProcessContext *context,
-      core::ProcessSession *session);
+  virtual void onTrigger(core::ProcessContext *context,
+                         core::ProcessSession *session);
   // Initialize, over write by NiFi LogAttribute
   virtual void initialize(void);
 

@@ -18,10 +18,12 @@
 #ifndef LIBMINIFI_INCLUDE_IO_TLSSOCKET_H_
 #define LIBMINIFI_INCLUDE_IO_TLSSOCKET_H_
 
+#include <openssl/ssl.h>
+#include <openssl/err.h>
 #include <cstdint>
-#include "../ClientSocket.h"
 #include <atomic>
 #include <mutex>
+#include "../ClientSocket.h"
 
 #include "properties/Configure.h"
 
@@ -30,9 +32,6 @@ namespace apache {
 namespace nifi {
 namespace minifi {
 namespace io {
-
-#include <openssl/ssl.h>
-#include <openssl/err.h>
 
 #define TLS_ERROR_CONTEXT 1
 #define TLS_ERROR_PEM_MISSING 2
@@ -75,11 +74,11 @@ class TLSContext {
     return ctx;
   }
 
-  short getError() {
+  int16_t getError() {
     return error_value;
   }
 
-  short initialize();
+  int16_t initialize();
 
  private:
 
@@ -113,7 +112,7 @@ class TLSContext {
   Configure *configuration;
   SSL_CTX *ctx;
 
-  short error_value;
+  int16_t error_value;
 
   static std::atomic<TLSContext*> context_instance;
   static std::mutex context_mutex;
@@ -151,14 +150,14 @@ class TLSSocket : public Socket {
    * Initializes the socket
    * @return result of the creation operation.
    */
-  short initialize();
+  int16_t initialize();
 
   /**
    * Attempt to select the socket file descriptor
    * @param msec timeout interval to wait
    * @returns file descriptor
    */
-  virtual short select_descriptor(const uint16_t msec);
+  virtual int16_t select_descriptor(const uint16_t msec);
 
   /**
    * Reads data and places it into buf

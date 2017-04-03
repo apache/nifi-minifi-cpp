@@ -22,7 +22,7 @@
 #include "FlowFileRecord.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
-#include "core/core.h"
+#include "core/Core.h"
 
 namespace org {
 namespace apache {
@@ -30,19 +30,19 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-  struct GetFileRequest{
-    std::string directory = ".";
-    bool recursive = true;
-    bool keepSourceFile = false;
-    int64_t minAge = 0;
-    int64_t maxAge = 0;
-    int64_t minSize = 0;
-    int64_t maxSize = 0;
-    bool ignoreHiddenFile = true;
-    int64_t pollInterval = 0;
-    int64_t batchSize = 10;
-    std::string fileFilter= "[^\\.].*";
-  };
+struct GetFileRequest {
+  std::string directory = ".";
+  bool recursive = true;
+  bool keepSourceFile = false;
+  int64_t minAge = 0;
+  int64_t maxAge = 0;
+  int64_t minSize = 0;
+  int64_t maxSize = 0;
+  bool ignoreHiddenFile = true;
+  int64_t pollInterval = 0;
+  int64_t batchSize = 10;
+  std::string fileFilter = "[^\\.].*";
+};
 
 // GetFile Class
 class GetFile : public core::Processor {
@@ -59,7 +59,7 @@ class GetFile : public core::Processor {
   virtual ~GetFile() {
   }
   // Processor Name
-  static const std::string ProcessorName;
+  static constexpr char const* ProcessorName = "GetFile";
   // Supported Properties
   static core::Property Directory;
   static core::Property Recurse;
@@ -76,19 +76,22 @@ class GetFile : public core::Processor {
   static core::Relationship Success;
 
  public:
-  // OnTrigger method, implemented by NiFi GetFile
-  virtual void onTrigger(
-      core::ProcessContext *context,
-      core::ProcessSession *session);
   /**
    * Function that's executed when the processor is scheduled.
    * @param context process context.
    * @param sessionFactory process session factory that is used when creating
    * ProcessSession objects.
    */
-  void onSchedule(
-        core::ProcessContext *context,
-        core::ProcessSessionFactory *sessionFactory);
+  void onSchedule(core::ProcessContext *context,
+                  core::ProcessSessionFactory *sessionFactory);
+  /**
+   * Execution trigger for the GetFile Processor
+   * @param context processor context
+   * @param session processor session reference.
+   */
+  virtual void onTrigger(core::ProcessContext *context,
+                         core::ProcessSession *session);
+
   // Initialize, over write by NiFi GetFile
   virtual void initialize(void);
   /**
@@ -96,7 +99,7 @@ class GetFile : public core::Processor {
    * @param dir directory to list
    * @param request get file request.
    */
-  void performListing(std::string dir,const GetFileRequest &request);
+  void performListing(std::string dir, const GetFileRequest &request);
 
  protected:
 
@@ -114,9 +117,11 @@ class GetFile : public core::Processor {
   // Put full path file name into directory listing
   void putListing(std::string fileName);
   // Poll directory listing for files
-  void pollListing(std::queue<std::string> &list,const GetFileRequest &request);
+  void pollListing(std::queue<std::string> &list,
+                   const GetFileRequest &request);
   // Check whether file can be added to the directory listing
-  bool acceptFile(std::string fullName, std::string name, const GetFileRequest &request);
+  bool acceptFile(std::string fullName, std::string name,
+                  const GetFileRequest &request);
   // Get file request object.
   GetFileRequest request_;
   // Mutex for protection of the directory listing

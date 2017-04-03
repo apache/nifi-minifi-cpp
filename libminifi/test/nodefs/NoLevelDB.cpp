@@ -18,7 +18,7 @@
 
 #include "../TestBase.h"
 
-#include "core/core.h"
+#include "core/Core.h"
 #include "core/RepositoryFactory.h"
 
 TEST_CASE("NoLevelDBTest1", "[NoLevelDBTest]") {

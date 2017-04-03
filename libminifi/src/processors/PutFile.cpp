@@ -17,17 +17,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <sstream>
+#include "processors/PutFile.h"
 #include <stdio.h>
+#include <uuid/uuid.h>
+#include <sstream>
 #include <string>
 #include <iostream>
+#include <memory>
+#include <set>
 #include <fstream>
-#include <uuid/uuid.h>
-
 #include "io/validation.h"
 #include "utils/StringUtils.h"
 #include "utils/TimeUtil.h"
-#include "processors/PutFile.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 
@@ -36,12 +37,6 @@ namespace apache {
 namespace nifi {
 namespace minifi {
 namespace processors {
-
-const std::string PutFile::CONFLICT_RESOLUTION_STRATEGY_REPLACE("replace");
-const std::string PutFile::CONFLICT_RESOLUTION_STRATEGY_IGNORE("ignore");
-const std::string PutFile::CONFLICT_RESOLUTION_STRATEGY_FAIL("fail");
-
-const std::string PutFile::ProcessorName("PutFile");
 
 core::Property PutFile::Directory("Output Directory",
                                   "The output directory to which to put files",
@@ -72,7 +67,6 @@ void PutFile::initialize() {
 
 void PutFile::onSchedule(core::ProcessContext *context,
                          core::ProcessSessionFactory *sessionFactory) {
-
   if (!context->getProperty(Directory.getName(), directory_)) {
     logger_->log_error("Directory attribute is missing or invalid");
   }
@@ -82,11 +76,10 @@ void PutFile::onSchedule(core::ProcessContext *context,
     logger_->log_error(
         "Conflict Resolution Strategy attribute is missing or invalid");
   }
-
 }
+
 void PutFile::onTrigger(core::ProcessContext *context,
                         core::ProcessSession *session) {
-
   if (IsNullOrEmpty(directory_) || IsNullOrEmpty(conflict_resolution_)) {
     context->yield();
     return;
@@ -144,7 +137,6 @@ void PutFile::onTrigger(core::ProcessContext *context,
 bool PutFile::putFile(core::ProcessSession *session,
                       std::shared_ptr<FlowFileRecord> flowFile,
                       const std::string &tmpFile, const std::string &destFile) {
-
   ReadCallback cb(tmpFile, destFile);
   session->read(flowFile, &cb);
 
