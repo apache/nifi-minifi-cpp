@@ -17,6 +17,8 @@
  */
 
 #include "core/FlowConfiguration.h"
+#include <memory>
+#include <string>
 
 namespace org {
 namespace apache {
@@ -25,7 +27,6 @@ namespace minifi {
 namespace core {
 
 FlowConfiguration::~FlowConfiguration() {
-
 }
 
 std::shared_ptr<core::Processor> FlowConfiguration::createProcessor(
@@ -39,11 +40,6 @@ std::shared_ptr<core::Processor> FlowConfiguration::createProcessor(
       == org::apache::nifi::minifi::processors::LogAttribute::ProcessorName) {
     processor = std::make_shared<
         org::apache::nifi::minifi::processors::LogAttribute>(name, uuid);
-  } else if (name
-      == org::apache::nifi::minifi::processors::RealTimeDataCollector::ProcessorName) {
-    processor = std::make_shared<
-        org::apache::nifi::minifi::processors::RealTimeDataCollector>(name,
-                                                                      uuid);
   } else if (name
       == org::apache::nifi::minifi::processors::GetFile::ProcessorName) {
     processor =

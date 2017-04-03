@@ -27,7 +27,7 @@
 #include <errno.h>
 #include <iostream>
 #include <fstream>
-#include "core/core.h"
+#include "core/Core.h"
 #include "core/logging/Logger.h"
 
 namespace org {

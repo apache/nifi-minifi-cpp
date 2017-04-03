@@ -17,6 +17,10 @@
  */
 
 #include "core/logging/BaseLogger.h"
+#include <utility>
+#include <memory>
+#include <algorithm>
+#include <string>
 
 namespace org {
 namespace apache {
@@ -68,7 +72,6 @@ void BaseLogger::log_info(const char * const format, ...) {
  * @warning does not check @p log or @p format for null. Caller must ensure parameters and format string lengths match
  */
 void BaseLogger::log_debug(const char * const format, ...) {
-
   if (logger_ == NULL || !logger_->should_log(spdlog::level::level_enum::debug))
     return;
   FILL_BUFFER
@@ -80,7 +83,6 @@ void BaseLogger::log_debug(const char * const format, ...) {
  * @warning does not check @p log or @p format for null. Caller must ensure parameters and format string lengths match
  */
 void BaseLogger::log_trace(const char * const format, ...) {
-
   if (logger_ == NULL || !logger_->should_log(spdlog::level::level_enum::trace))
     return;
   FILL_BUFFER
@@ -122,7 +124,6 @@ void BaseLogger::log_str(LOG_LEVEL_E level, const std::string &buffer) {
       logger_->info(buffer);
       break;
   }
-
 }
 
 void BaseLogger::setLogLevel(const std::string &level,

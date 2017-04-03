@@ -1,4 +1,24 @@
+/**
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 #include "core/repository/FlowFileRepository.h"
+#include <memory>
+#include <string>
+#include <vector>
 #include "FlowFileRecord.h"
 
 namespace org {
@@ -20,10 +40,12 @@ void FlowFileRepository::run() {
       leveldb::Iterator* it = db_->NewIterator(leveldb::ReadOptions());
 
       for (it->SeekToFirst(); it->Valid(); it->Next()) {
-        std::shared_ptr<FlowFileRecord> eventRead = std::make_shared<FlowFileRecord>(shared_from_this());
+        std::shared_ptr<FlowFileRecord> eventRead = std::make_shared<
+            FlowFileRecord>(shared_from_this());
         std::string key = it->key().ToString();
-        if (eventRead->DeSerialize((uint8_t *) it->value().data(),
-                                  (int) it->value().size())) {
+        if (eventRead->DeSerialize(
+            reinterpret_cast<const uint8_t *>(it->value().data()),
+            it->value().size())) {
           if ((curTime - eventRead->getEventTime()) > max_partition_millis_)
             purgeList.push_back(key);
         } else {
@@ -47,54 +69,44 @@ void FlowFileRepository::run() {
   return;
 }
 
-void FlowFileRepository::loadComponent()
- {
-
+void FlowFileRepository::loadComponent() {
   std::vector<std::string> purgeList;
-  leveldb::Iterator* it = db_->NewIterator(
-            leveldb::ReadOptions());
+  leveldb::Iterator* it = db_->NewIterator(leveldb::ReadOptions());
 
-  for (it->SeekToFirst(); it->Valid(); it->Next())
-  {
-    std::shared_ptr<FlowFileRecord> eventRead = std::make_shared<FlowFileRecord>(shared_from_this());
+  for (it->SeekToFirst(); it->Valid(); it->Next()) {
+    std::shared_ptr<FlowFileRecord> eventRead =
+        std::make_shared<FlowFileRecord>(shared_from_this());
     std::string key = it->key().ToString();
-    if (eventRead->DeSerialize((uint8_t *) it->value().data(),
-        (int) it->value().size()))
-    {
+    if (eventRead->DeSerialize(
+        reinterpret_cast<const uint8_t *>(it->value().data()),
+        it->value().size())) {
       auto search = connectionMap.find(eventRead->getConnectionUuid());
-      if (search != connectionMap.end())
-      {
+      if (search != connectionMap.end()) {
         // we find the connection for the persistent flowfile, create the flowfile and enqueue that
-	std::shared_ptr<core::FlowFile> flow_file_ref = std::static_pointer_cast<core::FlowFile>(eventRead);
-        std::shared_ptr<FlowFileRecord> record = std::make_shared<FlowFileRecord>(shared_from_this(),flow_file_ref);
+        std::shared_ptr<core::FlowFile> flow_file_ref =
+            std::static_pointer_cast<core::FlowFile>(eventRead);
+        std::shared_ptr<FlowFileRecord> record =
+            std::make_shared<FlowFileRecord>(shared_from_this(), flow_file_ref);
         // set store to repo to true so that we do need to persistent again in enqueue
         record->setStoredToRepository(true);
         search->second->put(record);
-      }
-      else
-      {
-        if (eventRead->getContentFullPath().length() > 0)
-        {
+      } else {
+        if (eventRead->getContentFullPath().length() > 0) {
           std::remove(eventRead->getContentFullPath().c_str());
         }
         purgeList.push_back(key);
       }
-    }
-    else
-    {
+    } else {
       purgeList.push_back(key);
     }
   }
 
   delete it;
   std::vector<std::string>::iterator itPurge;
-  for (itPurge = purgeList.begin(); itPurge != purgeList.end();
-            itPurge++)
-  {
+  for (itPurge = purgeList.begin(); itPurge != purgeList.end(); itPurge++) {
     std::string eventId = *itPurge;
-    logger_->log_info("Repository Repo %s Purge %s",
-                    name_.c_str(),
-                    eventId.c_str());
+    logger_->log_info("Repository Repo %s Purge %s", name_.c_str(),
+                      eventId.c_str());
     Delete(eventId);
   }
 

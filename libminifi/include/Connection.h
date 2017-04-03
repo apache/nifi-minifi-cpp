@@ -27,7 +27,7 @@
 #include <mutex>
 #include <atomic>
 #include <algorithm>
-#include "core/core.h"
+#include "core/Core.h"
 #include "core/Connectable.h"
 #include "core/logging/Logger.h"
 #include "core/Relationship.h"

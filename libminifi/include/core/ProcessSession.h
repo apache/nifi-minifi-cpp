@@ -71,17 +71,17 @@ class ProcessSession {
   provenance::ProvenanceReporter *getProvenanceReporter() {
     return provenance_report_;
   }
-//
-// Get the FlowFile from the highest priority queue
+  //
+  // Get the FlowFile from the highest priority queue
   std::shared_ptr<core::FlowFile> get();
-// Create a new UUID FlowFile with no content resource claim and without parent
+  // Create a new UUID FlowFile with no content resource claim and without parent
   std::shared_ptr<core::FlowFile> create();
-// Create a new UUID FlowFile with no content resource claim and inherit all attributes from parent
+  // Create a new UUID FlowFile with no content resource claim and inherit all attributes from parent
   std::shared_ptr<core::FlowFile> create(
       std::shared_ptr<core::FlowFile> &&parent);
-
+  // Create a new UUID FlowFile with no content resource claim and inherit all attributes from parent
   std::shared_ptr<core::FlowFile> create(
-        std::shared_ptr<core::FlowFile> &parent){
+      std::shared_ptr<core::FlowFile> &parent) {
     return create(parent);
   }
 // Clone a new UUID FlowFile from parent both for content resource claim and attributes
@@ -89,7 +89,7 @@ class ProcessSession {
       std::shared_ptr<core::FlowFile> &parent);
 // Clone a new UUID FlowFile from parent for attributes and sub set of parent content resource claim
   std::shared_ptr<core::FlowFile> clone(std::shared_ptr<core::FlowFile> &parent,
-                                        long offset, long size);
+                                        int64_t offset, int64_t size);
 // Duplicate a FlowFile with the same UUID and all attributes and content resource claim for the roll back of the session
   std::shared_ptr<core::FlowFile> duplicate(
       std::shared_ptr<core::FlowFile> &original);
@@ -133,7 +133,8 @@ class ProcessSession {
    * @param stream incoming data stream that contains the data to store into a file
    * @param flow flow file
    */
-  void importFrom(io::DataStream &stream, std::shared_ptr<core::FlowFile> &&flow);
+  void importFrom(io::DataStream &stream,
+                  std::shared_ptr<core::FlowFile> &&flow);
   // import from the data source.
   void import(std::string source, std::shared_ptr<core::FlowFile> &flow,
               bool keepSource = true, uint64_t offset = 0);

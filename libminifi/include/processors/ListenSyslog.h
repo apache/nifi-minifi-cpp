@@ -35,7 +35,7 @@
 #include "FlowFileRecord.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
-#include "core/core.h"
+#include "core/Core.h"
 
 namespace org {
 namespace apache {
@@ -45,7 +45,7 @@ namespace processors {
 
 // SyslogEvent
 typedef struct {
-  uint8_t *payload;
+  char *payload;
   uint64_t len;
 } SysLogEvent;
 
@@ -95,7 +95,7 @@ class ListenSyslog : public core::Processor {
     }
   }
   // Processor Name
-  static const std::string ProcessorName;
+  static constexpr char const *ProcessorName = "ListenSyslog";
   // Supported Properties
   static core::Property RecvBufSize;
   static core::Property MaxSocketBufSize;
@@ -125,9 +125,8 @@ class ListenSyslog : public core::Processor {
 
  public:
   // OnTrigger method, implemented by NiFi ListenSyslog
-  virtual void onTrigger(
-      core::ProcessContext *context,
-      core::ProcessSession *session);
+  virtual void onTrigger(core::ProcessContext *context,
+                         core::ProcessSession *session);
   // Initialize, over write by NiFi ListenSyslog
   virtual void initialize(void);
 
@@ -163,7 +162,7 @@ class ListenSyslog : public core::Processor {
   void putEvent(uint8_t *payload, uint64_t len) {
     std::lock_guard<std::mutex> lock(mutex_);
     SysLogEvent event;
-    event.payload = payload;
+    event.payload = reinterpret_cast<char*>(payload);
     event.len = len;
     _eventQueue.push(event);
     _eventQueueByteSize += len;
@@ -204,7 +203,7 @@ class ListenSyslog : public core::Processor {
   bool _resetServerSocket;
   bool _serverTheadRunning;
   // buffer for read socket
-  uint8_t _buffer[2048];
+  char _buffer[2048];
 };
 
 } /* namespace processors */

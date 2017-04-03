@@ -17,19 +17,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include "processors/LogAttribute.h"
+#include <sys/time.h>
+#include <time.h>
+#include <string.h>
+#include <memory>
+#include <string>
 #include <vector>
 #include <queue>
 #include <map>
 #include <set>
-#include <sys/time.h>
-#include <time.h>
 #include <sstream>
-#include <string.h>
 #include <iostream>
-
 #include "utils/TimeUtil.h"
 #include "utils/StringUtils.h"
-#include "processors/LogAttribute.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 
@@ -38,7 +39,6 @@ namespace apache {
 namespace nifi {
 namespace minifi {
 namespace processors {
-const std::string LogAttribute::ProcessorName("LogAttribute");
 core::Property LogAttribute::LogLevel(
     "Log Level", "The Log Level to use when logging the Attributes", "info");
 core::Property LogAttribute::AttributesToLog(
@@ -51,7 +51,8 @@ core::Property LogAttribute::AttributesToIgnore(
     "");
 core::Property LogAttribute::LogPayload(
     "Log Payload",
-    "If true, the FlowFile's payload will be logged, in addition to its attributes; otherwise, just the Attributes will be logged.",
+    "If true, the FlowFile's payload will be logged, in addition to its attributes;"
+    "otherwise, just the Attributes will be logged.",
     "false");
 core::Property LogAttribute::LogPrefix(
     "Log prefix",
@@ -75,16 +76,14 @@ void LogAttribute::initialize() {
   setSupportedRelationships(relationships);
 }
 
-void LogAttribute::onTrigger(
-    core::ProcessContext *context,
-    core::ProcessSession *session) {
+void LogAttribute::onTrigger(core::ProcessContext *context,
+                             core::ProcessSession *session) {
   std::string dashLine = "--------------------------------------------------";
   LogAttrLevel level = LogAttrLevelInfo;
   bool logPayload = false;
   std::ostringstream message;
 
-  std::shared_ptr<core::FlowFile> flow =
-      session->get();
+  std::shared_ptr<core::FlowFile> flow = session->get();
 
   if (!flow)
     return;
@@ -97,7 +96,8 @@ void LogAttribute::onTrigger(
     dashLine = "-----" + value + "-----";
   }
   if (context->getProperty(LogPayload.getName(), value)) {
-    org::apache::nifi::minifi::utils::StringUtils::StringToBool(value, logPayload);
+    org::apache::nifi::minifi::utils::StringUtils::StringToBool(value,
+                                                                logPayload);
   }
 
   message << "Logging for flow file " << "\n";
@@ -125,9 +125,7 @@ void LogAttribute::onTrigger(
     ReadCallback callback(flow->getSize());
     session->read(flow, &callback);
     for (unsigned int i = 0, j = 0; i < callback._readSize; i++) {
-      char temp[8];
-      sprintf(temp, "%02x ", (unsigned char) (callback._buffer[i]));
-      message << temp;
+      message << std::hex << callback._buffer[i];
       j++;
       if (j == 16) {
         message << '\n';
@@ -167,7 +165,6 @@ void LogAttribute::onTrigger(
   // Transfer to the relationship
   session->transfer(flow, Success);
 }
-
 
 } /* namespace processors */
 } /* namespace minifi */

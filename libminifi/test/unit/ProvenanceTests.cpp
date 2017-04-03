@@ -21,7 +21,7 @@
 #include "ProvenanceTestHelper.h"
 #include "provenance/Provenance.h"
 #include "FlowFileRecord.h"
-#include "core/core.h"
+#include "core/Core.h"
 #include "core/repository/FlowFileRepository.h"
 
 TEST_CASE("Test Provenance record create", "[Testprovenance::ProvenanceEventRecord]") {

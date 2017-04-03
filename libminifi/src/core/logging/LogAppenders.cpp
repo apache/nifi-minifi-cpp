@@ -24,12 +24,15 @@ namespace minifi {
 namespace core {
 namespace logging {
 
-const char *OutputStreamAppender::nifi_log_output_stream_error_stderr="nifi.log.outputstream.appender.error.stderr";
+const char *OutputStreamAppender::nifi_log_output_stream_error_stderr =
+    "nifi.log.outputstream.appender.error.stderr";
 
-const char *RollingAppender::nifi_log_rolling_apender_file = "nifi.log.rolling.appender.file";
-const char *RollingAppender::nifi_log_rolling_appender_max_files = "nifi.log.rolling.appender.max.files";
-const char *RollingAppender::nifi_log_rolling_appender_max_file_size = "nifi.log.rolling.appender.max.file_size";
-
+const char *RollingAppender::nifi_log_rolling_apender_file =
+    "nifi.log.rolling.appender.file";
+const char *RollingAppender::nifi_log_rolling_appender_max_files =
+    "nifi.log.rolling.appender.max.files";
+const char *RollingAppender::nifi_log_rolling_appender_max_file_size =
+    "nifi.log.rolling.appender.max.file_size";
 
 } /* namespace logging */
 } /* namespace core */

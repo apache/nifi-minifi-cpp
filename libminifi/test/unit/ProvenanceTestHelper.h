@@ -21,7 +21,7 @@
 #include "provenance/Provenance.h"
 #include "FlowController.h"
 #include "core/Repository.h"
-#include "core/core.h"
+#include "core/Core.h"
 /**
  * Test repository
  */

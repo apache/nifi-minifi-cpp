@@ -23,7 +23,7 @@
 #include "core/logging/LogAppenders.h"
 #include "core/logging/BaseLogger.h"
 #include "processors/GetFile.h"
-#include "core/core.h"
+#include "core/Core.h"
 #include "../../include/core/FlowFile.h"
 #include "core/Processor.h"
 #include "core/ProcessContext.h"
@@ -189,6 +189,7 @@ TEST_CASE("Test GetFileLikeIt'sThreaded", "[getfileCreate3]") {
   processor->setScheduledState(core::ScheduledState::RUNNING);
   processor->onSchedule(&context, &factory);
 
+  int prev = 0;
   for (int i = 0; i < 10; i++) {
 
     core::ProcessSession session(&context);
@@ -216,7 +217,6 @@ TEST_CASE("Test GetFileLikeIt'sThreaded", "[getfileCreate3]") {
     processor->setScheduledState(core::ScheduledState::RUNNING);
     processor->onTrigger(&context, &session);
     unlink(ss.str().c_str());
-    rmdir(dir);
     reporter = session.getProvenanceReporter();
 
     REQUIRE(processor->getName() == "getfileCreate2");
@@ -229,14 +229,10 @@ TEST_CASE("Test GetFileLikeIt'sThreaded", "[getfileCreate3]") {
     session.commit();
     std::shared_ptr<core::FlowFile> ffr = session.get();
 
-    REQUIRE(2 == repo->getRepoMap().size());
+    REQUIRE((repo->getRepoMap().size()%2) == 0);
+    REQUIRE(repo->getRepoMap().size() == (prev+2));
+    prev+=2;
 
-    for (auto entry : repo->getRepoMap()) {
-      provenance::ProvenanceEventRecord newRecord;
-      newRecord.DeSerialize((uint8_t*) entry.second.data(),
-                            entry.second.length());
-
-    }
   }
 
 }

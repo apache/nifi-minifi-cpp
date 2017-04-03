@@ -15,17 +15,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-
+#include "io/DataStream.h"
+#include <arpa/inet.h>
 #include <vector>
 #include <iostream>
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
 #include <string>
-#include <arpa/inet.h>
 #include <algorithm>
-#include "io/DataStream.h"
 
 namespace org {
 namespace apache {
@@ -33,105 +31,91 @@ namespace nifi {
 namespace minifi {
 namespace io {
 
-
 int DataStream::writeData(uint8_t *value, int size) {
-
-    std::copy(value,value+size,std::back_inserter(buffer));
-
-    return size;
+  std::copy(value, value + size, std::back_inserter(buffer));
+  return size;
 }
 
 int DataStream::read(uint64_t &value, bool is_little_endian) {
-    if ((8 + readBuffer) > buffer.size()) {
-        // if read exceed
-        return -1;
-    }
-    uint8_t *buf = &buffer[readBuffer];
+  if ((8 + readBuffer) > buffer.size()) {
+    // if read exceed
+    return -1;
+  }
+  uint8_t *buf = &buffer[readBuffer];
 
-    if (is_little_endian) {
-        value = ((uint64_t) buf[0] << 56) | ((uint64_t) (buf[1] & 255) << 48)
-                | ((uint64_t) (buf[2] & 255) << 40)
-                | ((uint64_t) (buf[3] & 255) << 32)
-                | ((uint64_t) (buf[4] & 255) << 24)
-                | ((uint64_t) (buf[5] & 255) << 16)
-                | ((uint64_t) (buf[6] & 255) << 8)
-                | ((uint64_t) (buf[7] & 255) << 0);
-    } else {
-        value = ((uint64_t) buf[0] << 0) | ((uint64_t) (buf[1] & 255) << 8)
-                | ((uint64_t) (buf[2] & 255) << 16)
-                | ((uint64_t) (buf[3] & 255) << 24)
-                | ((uint64_t) (buf[4] & 255) << 32)
-                | ((uint64_t) (buf[5] & 255) << 40)
-                | ((uint64_t) (buf[6] & 255) << 48)
-                | ((uint64_t) (buf[7] & 255) << 56);
-    }
-    readBuffer += 8;
-    return 8;
+  if (is_little_endian) {
+    value = ((uint64_t) buf[0] << 56) | ((uint64_t) (buf[1] & 255) << 48)
+        | ((uint64_t) (buf[2] & 255) << 40) | ((uint64_t) (buf[3] & 255) << 32)
+        | ((uint64_t) (buf[4] & 255) << 24) | ((uint64_t) (buf[5] & 255) << 16)
+        | ((uint64_t) (buf[6] & 255) << 8) | ((uint64_t) (buf[7] & 255) << 0);
+  } else {
+    value = ((uint64_t) buf[0] << 0) | ((uint64_t) (buf[1] & 255) << 8)
+        | ((uint64_t) (buf[2] & 255) << 16) | ((uint64_t) (buf[3] & 255) << 24)
+        | ((uint64_t) (buf[4] & 255) << 32) | ((uint64_t) (buf[5] & 255) << 40)
+        | ((uint64_t) (buf[6] & 255) << 48) | ((uint64_t) (buf[7] & 255) << 56);
+  }
+  readBuffer += 8;
+  return 8;
 }
 
 int DataStream::read(uint32_t &value, bool is_little_endian) {
-    if ((4 + readBuffer) > buffer.size()) {
-        // if read exceed
-        return -1;
-    }
-    uint8_t *buf = &buffer[readBuffer];
+  if ((4 + readBuffer) > buffer.size()) {
+    // if read exceed
+    return -1;
+  }
+  uint8_t *buf = &buffer[readBuffer];
 
-    if (is_little_endian) {
-        value = (buf[0] << 24) | (buf[1] << 16) | (buf[2] << 8) | buf[3];
-    } else {
-        value = buf[0] | buf[1] << 8 | buf[2] << 16 | buf[3] << 24;
-
-    }
-    readBuffer += 4;
-    return 4;
+  if (is_little_endian) {
+    value = (buf[0] << 24) | (buf[1] << 16) | (buf[2] << 8) | buf[3];
+  } else {
+    value = buf[0] | buf[1] << 8 | buf[2] << 16 | buf[3] << 24;
+  }
+  readBuffer += 4;
+  return 4;
 }
 
 int DataStream::read(uint16_t &value, bool is_little_endian) {
+  if ((2 + readBuffer) > buffer.size()) {
+    // if read exceed
+    return -1;
+  }
+  uint8_t *buf = &buffer[readBuffer];
 
-    if ((2 + readBuffer) > buffer.size()) {
-        // if read exceed
-        return -1;
-    }
-    uint8_t *buf = &buffer[readBuffer];
-
-    if (is_little_endian) {
-        value = (buf[0] << 8) | buf[1];
-    } else {
-        value = buf[0] | buf[1] << 8;
-
-    }
-    readBuffer += 2;
-    return 2;
+  if (is_little_endian) {
+    value = (buf[0] << 8) | buf[1];
+  } else {
+    value = buf[0] | buf[1] << 8;
+  }
+  readBuffer += 2;
+  return 2;
 }
 
-int DataStream::readData(std::vector<uint8_t> &buf,int buflen) {
-    if ((buflen + readBuffer) > buffer.size()) {
-        // if read exceed
-        return -1;
-    }
+int DataStream::readData(std::vector<uint8_t> &buf, int buflen) {
+  if ((buflen + readBuffer) > buffer.size()) {
+    // if read exceed
+    return -1;
+  }
 
-    if (buf.capacity() < buflen)
-    	buf.resize(buflen);
+  if (buf.capacity() < buflen)
+    buf.resize(buflen);
 
-    buf.insert(buf.begin(),&buffer[readBuffer],&buffer[readBuffer+buflen]);
+  buf.insert(buf.begin(), &buffer[readBuffer], &buffer[readBuffer + buflen]);
 
-    readBuffer += buflen;
-    return buflen;
+  readBuffer += buflen;
+  return buflen;
 }
 
+int DataStream::readData(uint8_t *buf, int buflen) {
+  if ((buflen + readBuffer) > buffer.size()) {
+    // if read exceed
+    return -1;
+  }
 
-int DataStream::readData(uint8_t *buf,int buflen) {
-    if ((buflen + readBuffer) > buffer.size()) {
-        // if read exceed
-        return -1;
-    }
+  std::copy(&buffer[readBuffer], &buffer[readBuffer + buflen], buf);
 
-    std::copy(&buffer[readBuffer],&buffer[readBuffer+buflen],buf);
-
-    readBuffer += buflen;
-    return buflen;
+  readBuffer += buflen;
+  return buflen;
 }
-
 
 } /* namespace io */
 } /* namespace minifi */

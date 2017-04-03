@@ -30,7 +30,6 @@ namespace nifi {
 namespace minifi {
 namespace io {
 
-
 class BaseStream : public DataStream, public Serializable {
 
  public:

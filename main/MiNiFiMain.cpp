@@ -28,7 +28,7 @@
 #include <yaml-cpp/yaml.h>
 #include <iostream>
 
-#include "core/core.h"
+#include "core/Core.h"
 
 #include "core/logging/BaseLogger.h"
 #include "core/logging/LogAppenders.h"

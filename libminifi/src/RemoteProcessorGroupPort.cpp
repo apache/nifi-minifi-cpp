@@ -17,18 +17,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include "RemoteProcessorGroupPort.h"
+#include <sys/time.h>
+#include <string.h>
+#include <time.h>
 #include <vector>
 #include <queue>
 #include <map>
 #include <set>
-#include <sys/time.h>
-#include <time.h>
+#include <string>
+#include <utility>
+#include <memory>
 #include <sstream>
-#include <string.h>
 #include <iostream>
-
-#include "RemoteProcessorGroupPort.h"
-
 #include "../include/io/StreamFactory.h"
 #include "io/ClientSocket.h"
 #include "utils/TimeUtil.h"
@@ -48,13 +49,13 @@ core::Property RemoteProcessorGroupPort::hostName("Host Name",
 core::Property RemoteProcessorGroupPort::port("Port", "Remote Port", "9999");
 core::Relationship RemoteProcessorGroupPort::relation;
 
-
 std::unique_ptr<Site2SiteClientProtocol> RemoteProcessorGroupPort::getNextProtocol() {
   std::lock_guard<std::mutex> protocol_lock_(protocol_mutex_);
   if (available_protocols_.empty())
     return nullptr;
 
-  std::unique_ptr<Site2SiteClientProtocol> return_pointer = std::move(available_protocols_.top());
+  std::unique_ptr<Site2SiteClientProtocol> return_pointer = std::move(
+      available_protocols_.top());
   available_protocols_.pop();
   return std::move(return_pointer);
 }
@@ -66,7 +67,6 @@ void RemoteProcessorGroupPort::returnProtocol(
 }
 
 void RemoteProcessorGroupPort::initialize() {
-
   // Set the supported properties
   std::set<core::Property> properties;
   properties.insert(hostName);
@@ -76,7 +76,6 @@ void RemoteProcessorGroupPort::initialize() {
   std::set<core::Relationship> relationships;
   relationships.insert(relation);
   setSupportedRelationships(relationships);
-
 }
 
 void RemoteProcessorGroupPort::onTrigger(core::ProcessContext *context,
@@ -90,7 +89,6 @@ void RemoteProcessorGroupPort::onTrigger(core::ProcessContext *context,
 
   // Peer Connection
   if (protocol_ == nullptr) {
-
     protocol_ = std::unique_ptr<Site2SiteClientProtocol>(
         new Site2SiteClientProtocol(0));
     protocol_->setPortId(protocol_uuid_);

@@ -18,7 +18,7 @@
 #ifndef LIBMINIFI_INCLUDE_CORE_FLOWCONFIGURATION_H_
 #define LIBMINIFI_INCLUDE_CORE_FLOWCONFIGURATION_H_
 
-#include "core/core.h"
+#include "core/Core.h"
 #include "Connection.h"
 #include "RemoteProcessorGroupPort.h"
 #include "provenance/Provenance.h"
@@ -28,7 +28,7 @@
 #include "processors/ListenHTTP.h"
 #include "processors/ListenSyslog.h"
 #include "processors/GenerateFlowFile.h"
-#include "processors/RealTimeDataCollector.h"
+#include "processors/ListenHTTP.h"
 #include "processors/LogAttribute.h"
 #include "processors/ExecuteProcess.h"
 #include "processors/AppendHostInfo.h"

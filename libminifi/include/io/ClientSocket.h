@@ -26,7 +26,7 @@
 #include <mutex>
 #include <atomic>
 #include "io/BaseStream.h"
-#include "core/core.h"
+#include "core/Core.h"
 #include "core/logging/Logger.h"
 
 #include "io/validation.h"
@@ -70,14 +70,14 @@ class Socket : public BaseStream {
    */
   explicit Socket(const Socket &&);
 
-  static std::string HOSTNAME;
+  static char *HOSTNAME;
 
   /**
    * Static function to return the current machine's host name
    */
-  static std::string getMyHostName(std::string *str = &HOSTNAME) {
+  static std::string getMyHostName(const char *str = HOSTNAME) {
     if (__builtin_expect(!IsNullOrEmpty(str), 0))
-      return *str;
+      return str;
     else {
       char hostname[1024];
       gethostname(hostname, 1024);
@@ -98,7 +98,7 @@ class Socket : public BaseStream {
    * Initializes the socket
    * @return result of the creation operation.
    */
-  virtual short initialize();
+  virtual int16_t initialize();
 
   std::string getHostname() const;
 
@@ -217,14 +217,14 @@ class Socket : public BaseStream {
    * Sets socket options depending on the instance.
    * @param sock socket file descriptor.
    */
-  virtual short setSocketOptions(const int sock);
+  virtual int16_t setSocketOptions(const int sock);
 
   /**
    * Attempt to select the socket file descriptor
    * @param msec timeout interval to wait
    * @returns file descriptor
    */
-  virtual short select_descriptor(const uint16_t msec);
+  virtual int16_t select_descriptor(const uint16_t msec);
 
   std::shared_ptr<logging::Logger> logger_;
 

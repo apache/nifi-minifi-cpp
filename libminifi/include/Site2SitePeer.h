@@ -37,7 +37,6 @@
 #include "io/BaseStream.h"
 #include "utils/TimeUtil.h"
 
-
 namespace org {
 namespace apache {
 namespace nifi {
@@ -280,7 +279,6 @@ class Site2SitePeer : public org::apache::nifi::minifi::io::BaseStream {
   // Only support pass by reference or pointer
 
 };
-
 
 } /* namespace minifi */
 } /* namespace nifi */

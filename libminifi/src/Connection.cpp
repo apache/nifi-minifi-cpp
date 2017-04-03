@@ -17,16 +17,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <vector>
-#include <queue>
-#include <map>
-#include <set>
+#include "Connection.h"
 #include <sys/time.h>
 #include <time.h>
+#include <vector>
+#include <queue>
+#include <memory>
+#include <string>
+#include <map>
+#include <set>
 #include <chrono>
 #include <thread>
 #include <iostream>
-
 #include "core/FlowFile.h"
 #include "Connection.h"
 #include "core/Processor.h"
@@ -95,7 +97,7 @@ void Connection::put(std::shared_ptr<core::FlowFile> flow) {
 
   if (!flow->isStored()) {
     // Save to the flowfile repo
-    FlowFileRecord event(flow_repository_,flow,this->uuidStr_);
+    FlowFileRecord event(flow_repository_, flow, this->uuidStr_);
     if (event.Serialize()) {
       flow->setStoredToRepository(true);
     }

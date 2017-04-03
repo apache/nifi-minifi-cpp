@@ -23,7 +23,7 @@
 #include "FlowFileRecord.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
-#include "core/core.h"
+#include "core/Core.h"
 
 namespace org {
 namespace apache {
@@ -35,9 +35,11 @@ namespace processors {
 class PutFile : public core::Processor {
  public:
 
-  static const std::string CONFLICT_RESOLUTION_STRATEGY_REPLACE;
-  static const std::string CONFLICT_RESOLUTION_STRATEGY_IGNORE;
-  static const std::string CONFLICT_RESOLUTION_STRATEGY_FAIL;
+  static constexpr char const* CONFLICT_RESOLUTION_STRATEGY_REPLACE = "replace";
+  static constexpr char const* CONFLICT_RESOLUTION_STRATEGY_IGNORE = "ignore";
+  static constexpr char const* CONFLICT_RESOLUTION_STRATEGY_FAIL = "fail";
+
+  static constexpr char const* ProcessorName = "PutFile";
 
   // Constructor
   /*!
@@ -49,8 +51,7 @@ class PutFile : public core::Processor {
   // Destructor
   virtual ~PutFile() {
   }
-  // Processor Name
-  static const std::string ProcessorName;
+
   // Supported Properties
   static core::Property Directory;
   static core::Property ConflictResolution;
@@ -64,8 +65,8 @@ class PutFile : public core::Processor {
    * @param sessionFactory process session factory that is used when creating
    * ProcessSession objects.
    */
-  void onSchedule(core::ProcessContext *context,
-                  core::ProcessSessionFactory *sessionFactory);
+  virtual void onSchedule(core::ProcessContext *context,
+                          core::ProcessSessionFactory *sessionFactory);
 
   // OnTrigger method, implemented by NiFi PutFile
   virtual void onTrigger(core::ProcessContext *context,

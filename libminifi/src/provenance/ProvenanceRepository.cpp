@@ -16,22 +16,21 @@
  * limitations under the License.
  */
 
-#include "provenance/Provenance.h"
 #include "provenance/ProvenanceRepository.h"
-
+#include <string>
+#include <vector>
+#include "provenance/Provenance.h"
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
-namespace provenance{
-
-
+namespace provenance {
 
 void ProvenanceRepository::run() {
   // threshold for purge
   uint64_t purgeThreshold = max_partition_bytes_ * 3 / 4;
   while (running_) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(purge_period_));
+    std::this_thread::sleep_for(std::chrono::milliseconds(purge_period_));
     std::this_thread::sleep_for(std::chrono::milliseconds(purge_period_));
     uint64_t curTime = getTimeMillis();
     uint64_t size = repoSize();
@@ -41,24 +40,24 @@ void ProvenanceRepository::run() {
       for (it->SeekToFirst(); it->Valid(); it->Next()) {
         ProvenanceEventRecord eventRead;
         std::string key = it->key().ToString();
-        if (eventRead.DeSerialize((uint8_t *) it->value().data(),
-                                  (int) it->value().size())) {
-          if ((curTime - eventRead.getEventTime())
-              > max_partition_millis_)
+        if (eventRead.DeSerialize(
+            reinterpret_cast<uint8_t*>(const_cast<char*>(it->value().data())),
+            it->value().size())) {
+          if ((curTime - eventRead.getEventTime()) > max_partition_millis_)
             purgeList.push_back(key);
         } else {
           logger_->log_debug("NiFi Provenance retrieve event %s fail",
-                                   key.c_str());
+                             key.c_str());
           purgeList.push_back(key);
         }
       }
       delete it;
       std::vector<std::string>::iterator itPurge;
-      
+
       for (itPurge = purgeList.begin(); itPurge != purgeList.end(); itPurge++) {
         std::string eventId = *itPurge;
         logger_->log_info("ProvenanceRepository Repo Purge %s",
-                                eventId.c_str());
+                          eventId.c_str());
         Delete(eventId);
       }
     }
@@ -66,7 +65,6 @@ void ProvenanceRepository::run() {
       repo_full_ = true;
     else
       repo_full_ = false;
-    
   }
   return;
 }

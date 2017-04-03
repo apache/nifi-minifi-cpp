@@ -19,9 +19,8 @@
 #ifndef LIBMINIFI_INCLUDE_CORE_REPOSITORYFACTORY_H_
 #define LIBMINIFI_INCLUDE_CORE_REPOSITORYFACTORY_H_
 
-
 #include "core/Repository.h"
-#include "core.h"
+#include "Core.h"
 
 namespace org {
 namespace apache {
@@ -30,10 +29,8 @@ namespace minifi {
 
 namespace core {
 
-  std::shared_ptr<core::Repository> createRepository(
-      const std::string configuration_class_name, bool fail_safe = false);
-
-
+std::shared_ptr<core::Repository> createRepository(
+    const std::string configuration_class_name, bool fail_safe = false);
 
 } /* namespace core */
 } /* namespace minifi */

@@ -30,7 +30,6 @@
 #include <thread>
 #include <vector>
 
-
 #include "core/Repository.h"
 #include "core/Property.h"
 #include "properties/Configure.h"

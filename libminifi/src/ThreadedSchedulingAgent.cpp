@@ -17,11 +17,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include "ThreadedSchedulingAgent.h"
+#include <memory>
+#include <string>
+#include <vector>
+#include <map>
 #include <thread>
 #include <iostream>
-
-#include "ThreadedSchedulingAgent.h"
-
 #include "core/Connectable.h"
 #include "core/ProcessorNode.h"
 #include "core/ProcessContext.h"
@@ -35,7 +37,7 @@ namespace minifi {
 
 void ThreadedSchedulingAgent::schedule(
     std::shared_ptr<core::Processor> processor) {
-  std::lock_guard < std::mutex > lock(mutex_);
+  std::lock_guard<std::mutex> lock(mutex_);
 
   _administrativeYieldDuration = 0;
   std::string yieldValue;
@@ -43,10 +45,11 @@ void ThreadedSchedulingAgent::schedule(
   if (configure_->get(Configure::nifi_administrative_yield_duration,
                       yieldValue)) {
     core::TimeUnit unit;
-    if (core::Property::StringToTime(
-        yieldValue, _administrativeYieldDuration, unit)
-        && core::Property::ConvertTimeUnitToMS(
-            _administrativeYieldDuration, unit, _administrativeYieldDuration)) {
+    if (core::Property::StringToTime(yieldValue, _administrativeYieldDuration,
+                                     unit)
+        && core::Property::ConvertTimeUnitToMS(_administrativeYieldDuration,
+                                               unit,
+                                               _administrativeYieldDuration)) {
       logger_->log_debug("nifi_administrative_yield_duration: [%d] ms",
                          _administrativeYieldDuration);
     }
@@ -55,10 +58,9 @@ void ThreadedSchedulingAgent::schedule(
   _boredYieldDuration = 0;
   if (configure_->get(Configure::nifi_bored_yield_duration, yieldValue)) {
     core::TimeUnit unit;
-    if (core::Property::StringToTime(
-        yieldValue, _boredYieldDuration, unit)
-        && core::Property::ConvertTimeUnitToMS(
-            _boredYieldDuration, unit, _boredYieldDuration)) {
+    if (core::Property::StringToTime(yieldValue, _boredYieldDuration, unit)
+        && core::Property::ConvertTimeUnitToMS(_boredYieldDuration, unit,
+                                               _boredYieldDuration)) {
       logger_->log_debug("nifi_bored_yield_duration: [%d] ms",
                          _boredYieldDuration);
     }
@@ -80,11 +82,10 @@ void ThreadedSchedulingAgent::schedule(
   }
 
   core::ProcessorNode processor_node(processor);
-  auto processContext = std::make_shared
-      < core::ProcessContext > (processor_node,repo_);
-  auto sessionFactory = std::make_shared
-      < core::ProcessSessionFactory
-      > (processContext.get());
+  auto processContext = std::make_shared<core::ProcessContext>(processor_node,
+                                                               repo_);
+  auto sessionFactory = std::make_shared<core::ProcessSessionFactory>(
+      processContext.get());
 
   processor->onSchedule(processContext.get(), sessionFactory.get());
 
@@ -105,9 +106,9 @@ void ThreadedSchedulingAgent::schedule(
   return;
 }
 
-void ThreadedSchedulingAgent::unschedule(std::shared_ptr<core::Processor> processor) {
-  std::lock_guard < std::mutex > lock(mutex_);
-
+void ThreadedSchedulingAgent::unschedule(
+    std::shared_ptr<core::Processor> processor) {
+  std::lock_guard<std::mutex> lock(mutex_);
   logger_->log_info("Shutting down threads for processor %s/%s",
                     processor->getName().c_str(),
                     processor->getUUIDStr().c_str());
@@ -138,7 +139,6 @@ void ThreadedSchedulingAgent::unschedule(std::shared_ptr<core::Processor> proces
   _threads.erase(processor->getUUIDStr());
   processor->clearActiveTask();
 }
-
 
 } /* namespace minifi */
 } /* namespace nifi */

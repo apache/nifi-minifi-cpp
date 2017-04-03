@@ -20,6 +20,7 @@
 #include <vector>
 #include <queue>
 #include <map>
+#include <string>
 
 #include "ResourceClaim.h"
 
@@ -30,7 +31,7 @@ namespace minifi {
 
 std::atomic<uint64_t> ResourceClaim::_localResourceClaimNumber(0);
 
-std::string ResourceClaim::default_directory_path = DEFAULT_CONTENT_DIRECTORY;
+char *ResourceClaim::default_directory_path = const_cast<char*>(DEFAULT_CONTENT_DIRECTORY);
 
 ResourceClaim::ResourceClaim(const std::string contentDirectory)
     : _id(_localResourceClaimNumber.load()),

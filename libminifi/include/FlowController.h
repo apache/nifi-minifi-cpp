@@ -67,7 +67,8 @@ class FlowController : public core::CoreComponent {
   FlowController(std::shared_ptr<core::Repository> provenance_repo,
                  std::shared_ptr<core::Repository> flow_file_repo,
                  std::unique_ptr<core::FlowConfiguration> flow_configuration,
-                 const std::string name = DEFAULT_ROOT_GROUP_NAME,bool headless_mode=false);
+                 const std::string name = DEFAULT_ROOT_GROUP_NAME,
+                 bool headless_mode = false);
 
   // Destructor
   virtual ~FlowController();
@@ -122,7 +123,7 @@ class FlowController : public core::CoreComponent {
   // update property value
   void updatePropertyValue(std::string processorName, std::string propertyName,
                            std::string propertyValue) {
-    if (root_  != nullptr)
+    if (root_ != nullptr)
       root_->updatePropertyValue(processorName, propertyName, propertyValue);
   }
 

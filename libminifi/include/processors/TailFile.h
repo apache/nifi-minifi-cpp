@@ -23,7 +23,7 @@
 #include "FlowFileRecord.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
-#include "core/core.h"
+#include "core/Core.h"
 
 namespace org {
 namespace apache {
@@ -47,7 +47,7 @@ class TailFile : public core::Processor {
     storeState();
   }
   // Processor Name
-  static const std::string ProcessorName;
+  static constexpr char const* ProcessorName = "TailFile";
   // Supported Properties
   static core::Property FileName;
   static core::Property StateFile;
@@ -76,6 +76,8 @@ class TailFile : public core::Processor {
   uint64_t _currentTailFilePosition;
   bool _stateRecovered;
   uint64_t _currentTailFileCreatedTime;
+  static const int BUFFER_SIZE = 512;
+
   // Utils functions for parse state file
   std::string trimLeft(const std::string& s);
   std::string trimRight(const std::string& s);

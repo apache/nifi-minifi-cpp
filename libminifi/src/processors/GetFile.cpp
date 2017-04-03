@@ -15,30 +15,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <vector>
-#include <queue>
-#include <map>
-#include <set>
+#include "processors/GetFile.h"
 #include <sys/time.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <time.h>
-#include <sstream>
 #include <stdio.h>
-#include <string>
-#include <iostream>
 #include <dirent.h>
 #include <limits.h>
 #include <unistd.h>
-#if  (__GNUC__ >= 4) 
+#if  (__GNUC__ >= 4)
 #if (__GNUC_MINOR__ < 9)
 #include <regex.h>
-#endif
-#endif
-#include "utils/StringUtils.h"
+#else
 #include <regex>
+#endif
+#endif
+#include <vector>
+#include <queue>
+#include <map>
+#include <memory>
+#include <set>
+#include <sstream>
+#include <string>
+#include <iostream>
+#include "utils/StringUtils.h"
 #include "utils/TimeUtil.h"
-#include "processors/GetFile.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 
@@ -47,7 +49,6 @@ namespace apache {
 namespace nifi {
 namespace minifi {
 namespace processors {
-const std::string GetFile::ProcessorName("GetFile");
 core::Property GetFile::BatchSize(
     "Batch Size", "The maximum number of files to pull in each iteration",
     "10");
@@ -62,11 +63,13 @@ core::Property GetFile::KeepSourceFile(
     "false");
 core::Property GetFile::MaxAge(
     "Maximum File Age",
-    "The minimum age that a file must be in order to be pulled; any file younger than this amount of time (according to last modification date) will be ignored",
+    "The minimum age that a file must be in order to be pulled;"
+    " any file younger than this amount of time (according to last modification date) will be ignored",
     "0 sec");
 core::Property GetFile::MinAge(
     "Minimum File Age",
-    "The maximum age that a file must be in order to be pulled; any file older than this amount of time (according to last modification date) will be ignored",
+    "The maximum age that a file must be in order to be pulled; any file"
+    "older than this amount of time (according to last modification date) will be ignored",
     "0 sec");
 core::Property GetFile::MaxSize(
     "Maximum File Size",
@@ -113,7 +116,6 @@ void GetFile::onSchedule(core::ProcessContext *context,
                          core::ProcessSessionFactory *sessionFactory) {
   std::string value;
 
-  logger_->log_info("onTrigger GetFile");
   if (context->getProperty(Directory.getName(), value)) {
     request_.directory = value;
   }
@@ -129,13 +131,12 @@ void GetFile::onSchedule(core::ProcessContext *context,
         value, request_.keepSourceFile);
   }
 
-  logger_->log_info("onTrigger GetFile");
   if (context->getProperty(MaxAge.getName(), value)) {
     core::TimeUnit unit;
     if (core::Property::StringToTime(value, request_.maxAge, unit)
         && core::Property::ConvertTimeUnitToMS(request_.maxAge, unit,
                                                request_.maxAge)) {
-
+      logger_->log_debug("successfully applied _maxAge");
     }
   }
   if (context->getProperty(MinAge.getName(), value)) {
@@ -143,7 +144,7 @@ void GetFile::onSchedule(core::ProcessContext *context,
     if (core::Property::StringToTime(value, request_.minAge, unit)
         && core::Property::ConvertTimeUnitToMS(request_.minAge, unit,
                                                request_.minAge)) {
-
+      logger_->log_debug("successfully applied _minAge");
     }
   }
   if (context->getProperty(MaxSize.getName(), value)) {
@@ -157,7 +158,7 @@ void GetFile::onSchedule(core::ProcessContext *context,
     if (core::Property::StringToTime(value, request_.pollInterval, unit)
         && core::Property::ConvertTimeUnitToMS(request_.pollInterval, unit,
                                                request_.pollInterval)) {
-
+      logger_->log_debug("successfully applied _pollInterval");
     }
   }
   if (context->getProperty(Recurse.getName(), value)) {
@@ -172,11 +173,9 @@ void GetFile::onSchedule(core::ProcessContext *context,
 
 void GetFile::onTrigger(core::ProcessContext *context,
                         core::ProcessSession *session) {
-
   // Perform directory list
   logger_->log_info("Is listing empty %i", isListingEmpty());
   if (isListingEmpty()) {
-
     if (request_.pollInterval == 0
         || (getTimeMillis() - last_listing_time_) > request_.pollInterval) {
       performListing(request_.directory, request_);
@@ -190,7 +189,6 @@ void GetFile::onTrigger(core::ProcessContext *context,
       std::queue<std::string> list;
       pollListing(list, request_);
       while (!list.empty()) {
-
         std::string fileName = list.front();
         list.pop();
         logger_->log_info("GetFile process %s", fileName.c_str());
@@ -214,7 +212,6 @@ void GetFile::onTrigger(core::ProcessContext *context,
       throw;
     }
   }
-
 }
 
 bool GetFile::isListingEmpty() {
