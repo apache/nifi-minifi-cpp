@@ -39,22 +39,21 @@ namespace core {
 
 template<typename T>
 static inline std::string getClassName() {
-  char *b =   abi::__cxa_demangle(typeid(T).name(), 0, 0, 0);
+  char *b = abi::__cxa_demangle(typeid(T).name(), 0, 0, 0);
   std::string name = b;
-  delete [] b;
+  delete[] b;
   return name;
 }
 
 template<typename T>
 struct class_operations {
-  
-  template<typename Q=T>
+
+  template<typename Q = T>
   static std::true_type canDestruct(decltype(std::declval<Q>().~Q()) *) {
     return std::true_type();
   }
 
-  
-  template<typename Q=T>
+  template<typename Q = T>
   static std::false_type canDestruct(...) {
     return std::false_type();
   }
@@ -63,7 +62,6 @@ struct class_operations {
 
   static const bool value = type::value; /* Which is it? */
 };
-
 
 template<typename T>
 typename std::enable_if<!class_operations<T>::value, std::shared_ptr<T>>::type instantiate() {
@@ -137,7 +135,7 @@ class CoreComponent {
    * Return the UUID string
    * @param constant reference to the UUID str
    */
-  const std::string & getUUIDStr()  {
+  const std::string & getUUIDStr() {
     return uuidStr_;
   }
   

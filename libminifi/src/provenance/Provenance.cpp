@@ -15,13 +15,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <cstdint>
-#include <vector>
+
 #include <arpa/inet.h>
+#include <cstdint>
+#include <memory>
+#include <string>
+#include <vector>
 #include "io/DataStream.h"
 #include "io/Serializable.h"
 #include "provenance/Provenance.h"
-
 #include "core/logging/Logger.h"
 #include "core/Relationship.h"
 #include "FlowController.h"
@@ -49,9 +51,10 @@ bool ProvenanceEventRecord::DeSerialize(
     logger_->log_error("NiFi Provenance Store event %s can not found",
                        key.c_str());
     return false;
-  } else
+  } else {
     logger_->log_debug("NiFi Provenance Read event %s length %d", key.c_str(),
                        value.length());
+  }
 
   org::apache::nifi::minifi::io::DataStream stream(
       (const uint8_t*) value.data(), value.length());
@@ -80,20 +83,17 @@ bool ProvenanceEventRecord::Serialize(
 
   ret = writeUTF(this->_eventIdStr, &outStream);
   if (ret <= 0) {
-
     return false;
   }
 
   uint32_t eventType = this->_eventType;
   ret = write(eventType, &outStream);
   if (ret != 4) {
-
     return false;
   }
 
   ret = write(this->_eventTime, &outStream);
   if (ret != 8) {
-
     return false;
   }
 
@@ -104,37 +104,31 @@ bool ProvenanceEventRecord::Serialize(
 
   ret = write(this->_eventDuration, &outStream);
   if (ret != 8) {
-
     return false;
   }
 
   ret = write(this->_lineageStartDate, &outStream);
   if (ret != 8) {
-
     return false;
   }
 
   ret = writeUTF(this->_componentId, &outStream);
   if (ret <= 0) {
-
     return false;
   }
 
   ret = writeUTF(this->_componentType, &outStream);
   if (ret <= 0) {
-
     return false;
   }
 
   ret = writeUTF(this->uuid_, &outStream);
   if (ret <= 0) {
-
     return false;
   }
 
   ret = writeUTF(this->_details, &outStream);
   if (ret <= 0) {
-
     return false;
   }
 
@@ -142,44 +136,37 @@ bool ProvenanceEventRecord::Serialize(
   uint32_t numAttributes = this->_attributes.size();
   ret = write(numAttributes, &outStream);
   if (ret != 4) {
-
     return false;
   }
 
   for (auto itAttribute : _attributes) {
     ret = writeUTF(itAttribute.first, &outStream, true);
     if (ret <= 0) {
-
       return false;
     }
     ret = writeUTF(itAttribute.second, &outStream, true);
     if (ret <= 0) {
-
       return false;
     }
   }
 
   ret = writeUTF(this->_contentFullPath, &outStream);
   if (ret <= 0) {
-
     return false;
   }
 
   ret = write(this->_size, &outStream);
   if (ret != 8) {
-
     return false;
   }
 
   ret = write(this->_offset, &outStream);
   if (ret != 8) {
-
     return false;
   }
 
   ret = writeUTF(this->_sourceQueueIdentifier, &outStream);
   if (ret <= 0) {
-
     return false;
   }
 
@@ -190,13 +177,11 @@ bool ProvenanceEventRecord::Serialize(
     uint32_t number = this->_parentUuids.size();
     ret = write(number, &outStream);
     if (ret != 4) {
-
       return false;
     }
     for (auto parentUUID : _parentUuids) {
       ret = writeUTF(parentUUID, &outStream);
       if (ret <= 0) {
-
         return false;
       }
     }
@@ -208,7 +193,6 @@ bool ProvenanceEventRecord::Serialize(
     for (auto childUUID : _childrenUuids) {
       ret = writeUTF(childUUID, &outStream);
       if (ret <= 0) {
-
         return false;
       }
     }
@@ -216,24 +200,19 @@ bool ProvenanceEventRecord::Serialize(
       || this->_eventType == ProvenanceEventRecord::FETCH) {
     ret = writeUTF(this->_transitUri, &outStream);
     if (ret <= 0) {
-
       return false;
     }
   } else if (this->_eventType == ProvenanceEventRecord::RECEIVE) {
     ret = writeUTF(this->_transitUri, &outStream);
     if (ret <= 0) {
-
       return false;
     }
     ret = writeUTF(this->_sourceSystemFlowFileIdentifier, &outStream);
     if (ret <= 0) {
-
       return false;
     }
   }
-
   // Persistent to the DB
-
   if (repo->Put(_eventIdStr, const_cast<uint8_t*>(outStream.getBuffer()),
                 outStream.getSize())) {
     logger_->log_debug("NiFi Provenance Store event %s size %d success",
@@ -242,16 +221,11 @@ bool ProvenanceEventRecord::Serialize(
     logger_->log_error("NiFi Provenance Store event %s size %d fail",
                        _eventIdStr.c_str(), outStream.getSize());
   }
-
-
-  // cleanup
-
   return true;
 }
 
 bool ProvenanceEventRecord::DeSerialize(const uint8_t *buffer,
                                         const int bufferSize) {
-
   int ret;
 
   org::apache::nifi::minifi::io::DataStream outStream(buffer, bufferSize);

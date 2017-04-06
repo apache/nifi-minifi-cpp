@@ -15,10 +15,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+#include <type_traits>
+#include <utility>
+#include <string>
+#include <memory>
+#include <algorithm>
+#include <set>
 #include "core/ConfigurationFactory.h"
 #include "core/FlowConfiguration.h"
-#include  <type_traits>
+
 #ifdef YAML_SUPPORT
 #include "core/yaml/YamlConfiguration.h"
 #endif
@@ -29,49 +34,48 @@ namespace nifi {
 namespace minifi {
 namespace core {
 #ifndef YAML_SUPPORT
-  class YamlConfiguration;
+class YamlConfiguration;
 #endif
 
-  std::unique_ptr<core::FlowConfiguration> createFlowConfiguration(
-      std::shared_ptr<core::Repository> repo,
-      std::shared_ptr<core::Repository> flow_file_repo,
-      const std::string configuration_class_name, const std::string path,
-      bool fail_safe) {
+std::unique_ptr<core::FlowConfiguration> createFlowConfiguration(
+    std::shared_ptr<core::Repository> repo,
+    std::shared_ptr<core::Repository> flow_file_repo,
+    const std::string configuration_class_name, const std::string path,
+    bool fail_safe) {
 
-    std::string class_name_lc = configuration_class_name;
-    std::transform(class_name_lc.begin(), class_name_lc.end(),
-                   class_name_lc.begin(), ::tolower);
-    try {
+  std::string class_name_lc = configuration_class_name;
+  std::transform(class_name_lc.begin(), class_name_lc.end(),
+                 class_name_lc.begin(), ::tolower);
+  try {
+    if (class_name_lc == "flowconfiguration") {
+      // load the base configuration.
+      return std::unique_ptr<core::FlowConfiguration>(
+          new core::FlowConfiguration(repo, flow_file_repo, path));
 
-      if (class_name_lc == "flowconfiguration") {
-	// load the base configuration.
-        return std::unique_ptr<core::FlowConfiguration>(
-            new core::FlowConfiguration(repo, flow_file_repo, path));
-	
-      } else if (class_name_lc == "yamlconfiguration") {
-	// only load if the class is defined.
-        return std::unique_ptr<core::FlowConfiguration>(instantiate<core::YamlConfiguration>(repo, flow_file_repo, path));
-            
+    } else if (class_name_lc == "yamlconfiguration") {
+      // only load if the class is defined.
+      return std::unique_ptr<core::FlowConfiguration>(
+          instantiate<core::YamlConfiguration>(repo, flow_file_repo, path));
 
-      } else {
-        if (fail_safe) {
-          return std::unique_ptr<core::FlowConfiguration>(
-              new core::FlowConfiguration(repo, flow_file_repo, path));
-        } else {
-          throw std::runtime_error(
-              "Support for the provided configuration class could not be found");
-        }
-      }
-    } catch (const std::runtime_error &r) {
+    } else {
       if (fail_safe) {
         return std::unique_ptr<core::FlowConfiguration>(
             new core::FlowConfiguration(repo, flow_file_repo, path));
+      } else {
+        throw std::runtime_error(
+            "Support for the provided configuration class could not be found");
       }
     }
-
-    throw std::runtime_error(
-        "Support for the provided configuration class could not be found");
+  } catch (const std::runtime_error &r) {
+    if (fail_safe) {
+      return std::unique_ptr<core::FlowConfiguration>(
+          new core::FlowConfiguration(repo, flow_file_repo, path));
+    }
   }
+
+  throw std::runtime_error(
+      "Support for the provided configuration class could not be found");
+}
 
 } /* namespace core */
 } /* namespace minifi */

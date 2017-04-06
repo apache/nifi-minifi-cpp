@@ -28,7 +28,7 @@
 #include <algorithm>
 #include <thread>
 #include "utils/TimeUtil.h"
-#include "core/core.h"
+#include "core/Core.h"
 #include "core/logging/Logger.h"
 #include "properties/Configure.h"
 #include "FlowFileRecord.h"
@@ -37,12 +37,10 @@
 #include "core/ProcessContext.h"
 #include "provenance/ProvenanceRepository.h"
 
-
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
-
 
 // SchedulingAgent Class
 class SchedulingAgent {
@@ -62,15 +60,13 @@ class SchedulingAgent {
 
   }
   // onTrigger, return whether the yield is need
-  bool onTrigger(
-      std::shared_ptr<core::Processor> processor,
-      core::ProcessContext *processContext,
-      core::ProcessSessionFactory *sessionFactory);
+  bool onTrigger(std::shared_ptr<core::Processor> processor,
+                 core::ProcessContext *processContext,
+                 core::ProcessSessionFactory *sessionFactory);
   // Whether agent has work to do
   bool hasWorkToDo(std::shared_ptr<core::Processor> processor);
   // Whether the outgoing need to be backpressure
-  bool hasTooMuchOutGoing(
-      std::shared_ptr<core::Processor> processor);
+  bool hasTooMuchOutGoing(std::shared_ptr<core::Processor> processor);
   // start
   void start() {
     running_ = true;
@@ -82,11 +78,9 @@ class SchedulingAgent {
 
  public:
   // schedule, overwritten by different DrivenSchedulingAgent
-  virtual void schedule(
-      std::shared_ptr<core::Processor> processor) = 0;
+  virtual void schedule(std::shared_ptr<core::Processor> processor) = 0;
   // unschedule, overwritten by different DrivenSchedulingAgent
-  virtual void unschedule(
-      std::shared_ptr<core::Processor> processor) = 0;
+  virtual void unschedule(std::shared_ptr<core::Processor> processor) = 0;
 
   SchedulingAgent(const SchedulingAgent &parent) = delete;
   SchedulingAgent &operator=(const SchedulingAgent &parent) = delete;

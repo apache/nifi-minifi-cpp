@@ -17,10 +17,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include "EventDrivenSchedulingAgent.h"
 #include <chrono>
+#include <memory>
 #include <thread>
 #include <iostream>
-#include "EventDrivenSchedulingAgent.h"
 #include "core/Processor.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSessionFactory.h"
@@ -30,7 +31,6 @@ namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
-
 
 void EventDrivenSchedulingAgent::run(
     std::shared_ptr<core::Processor> processor,

@@ -17,12 +17,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <queue>
+#include "processors/ListenSyslog.h"
 #include <stdio.h>
+#include <memory>
 #include <string>
+#include <vector>
+#include <set>
+#include <queue>
 #include "utils/TimeUtil.h"
 #include "utils/StringUtils.h"
-#include "processors/ListenSyslog.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 
@@ -32,7 +35,6 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-const std::string ListenSyslog::ProcessorName("ListenSyslog");
 core::Property ListenSyslog::RecvBufSize(
     "Receive Buffer Size",
     "The size of each buffer used to receive Syslog messages.", "65507 B");
@@ -48,20 +50,22 @@ core::Property ListenSyslog::MaxBatchSize(
     "The maximum number of Syslog events to add to a single FlowFile.", "1");
 core::Property ListenSyslog::MessageDelimiter(
     "Message Delimiter",
-    "Specifies the delimiter to place between Syslog messages when multiple messages are bundled together (see <Max Batch Size> core::Property).",
+    "Specifies the delimiter to place between Syslog messages when multiple "
+    "messages are bundled together (see <Max Batch Size> core::Property).",
     "\n");
 core::Property ListenSyslog::ParseMessages(
     "Parse Messages",
     "Indicates if the processor should parse the Syslog messages. If set to false, each outgoing FlowFile will only.",
     "false");
-core::Property ListenSyslog::Protocol(
-    "Protocol", "The protocol for Syslog communication.", "UDP");
-core::Property ListenSyslog::Port(
-    "Port", "The port for Syslog communication.", "514");
-core::Relationship ListenSyslog::Success(
-    "success", "All files are routed to success");
-core::Relationship ListenSyslog::Invalid(
-    "invalid", "SysLog message format invalid");
+core::Property ListenSyslog::Protocol("Protocol",
+                                      "The protocol for Syslog communication.",
+                                      "UDP");
+core::Property ListenSyslog::Port("Port", "The port for Syslog communication.",
+                                  "514");
+core::Relationship ListenSyslog::Success("success",
+                                         "All files are routed to success");
+core::Relationship ListenSyslog::Invalid("invalid",
+                                         "SysLog message format invalid");
 
 void ListenSyslog::initialize() {
   // Set the supported properties
@@ -125,7 +129,7 @@ void ListenSyslog::runThread() {
         logger_->log_info("ListenSysLog Server socket creation failed");
         break;
       }
-      bzero((char *) &serv_addr, sizeof(serv_addr));
+      bzero(reinterpret_cast<char *>(&serv_addr), sizeof(serv_addr));
       serv_addr.sin_family = AF_INET;
       serv_addr.sin_addr.s_addr = INADDR_ANY;
       serv_addr.sin_port = htons(portno);
@@ -167,7 +171,8 @@ void ListenSyslog::runThread() {
         socklen_t clilen;
         struct sockaddr_in cli_addr;
         clilen = sizeof(cli_addr);
-        int newsockfd = accept(_serverSocket, (struct sockaddr *) &cli_addr,
+        int newsockfd = accept(_serverSocket,
+                               reinterpret_cast<struct sockaddr *>(&cli_addr),
                                &clilen);
         if (newsockfd > 0) {
           if (_clientSockets.size() < _maxConnections) {
@@ -197,7 +202,7 @@ void ListenSyslog::runThread() {
     while (it != _clientSockets.end()) {
       int clientSocket = *it;
       if (FD_ISSET(clientSocket, &fds)) {
-        int recvlen = readline(clientSocket, (char *) _buffer, sizeof(_buffer));
+        int recvlen = readline(clientSocket, _buffer, sizeof(_buffer));
         if (recvlen <= 0) {
           close(clientSocket);
           logger_->log_info("ListenSysLog client socket %d close",
@@ -228,7 +233,7 @@ int ListenSyslog::readline(int fd, char *bufptr, size_t len) {
     if (--cnt <= 0) {
       cnt = recv(fd, b, sizeof(b), 0);
       if (cnt < 0) {
-        if ( errno == EINTR) {
+        if (errno == EINTR) {
           len++; /* the while will decrement */
           continue;
         }
@@ -248,9 +253,8 @@ int ListenSyslog::readline(int fd, char *bufptr, size_t len) {
   return -1;
 }
 
-void ListenSyslog::onTrigger(
-    core::ProcessContext *context,
-    core::ProcessSession *session) {
+void ListenSyslog::onTrigger(core::ProcessContext *context,
+                             core::ProcessSession *session) {
   std::string value;
   bool needResetServerSocket = false;
   if (context->getProperty(Protocol.getName(), value)) {
@@ -262,12 +266,10 @@ void ListenSyslog::onTrigger(
     core::Property::StringToInt(value, _recvBufSize);
   }
   if (context->getProperty(MaxSocketBufSize.getName(), value)) {
-    core::Property::StringToInt(value,
-                                                           _maxSocketBufSize);
+    core::Property::StringToInt(value, _maxSocketBufSize);
   }
   if (context->getProperty(MaxConnections.getName(), value)) {
-    core::Property::StringToInt(value,
-                                                           _maxConnections);
+    core::Property::StringToInt(value, _maxConnections);
   }
   if (context->getProperty(MessageDelimiter.getName(), value)) {
     _messageDelimiter = value;
@@ -283,8 +285,7 @@ void ListenSyslog::onTrigger(
       needResetServerSocket = true;
   }
   if (context->getProperty(MaxBatchSize.getName(), value)) {
-    core::Property::StringToInt(value,
-                                                           _maxBatchSize);
+    core::Property::StringToInt(value, _maxBatchSize);
   }
 
   if (needResetServerSocket)
@@ -309,12 +310,12 @@ void ListenSyslog::onTrigger(
       flowFile = std::static_pointer_cast<FlowFileRecord>(session->create());
       if (!flowFile)
         return;
-      ListenSyslog::WriteCallback callback((char *) event.payload, event.len);
+      ListenSyslog::WriteCallback callback(event.payload, event.len);
       session->write(flowFile, &callback);
       delete[] event.payload;
       firstEvent = false;
     } else {
-      ListenSyslog::WriteCallback callback((char *) event.payload, event.len);
+      ListenSyslog::WriteCallback callback(event.payload, event.len);
       session->append(flowFile, &callback);
       delete[] event.payload;
     }

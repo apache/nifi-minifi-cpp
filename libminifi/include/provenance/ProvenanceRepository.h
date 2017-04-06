@@ -22,7 +22,7 @@
 #include "leveldb/slice.h"
 #include "leveldb/status.h"
 #include "core/Repository.h"
-#include "core/core.h"
+#include "core/Core.h"
 #include "provenance/Provenance.h"
 namespace org {
 namespace apache {
@@ -188,7 +188,7 @@ class ProvenanceRepository : public core::Repository,
     }
   }
   // Run function for the thread
-   void run();
+  void run();
 
   // Prevent default copy constructor and assignment operation
   // Only support pass by reference or pointer

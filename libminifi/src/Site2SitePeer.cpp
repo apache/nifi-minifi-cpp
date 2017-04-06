@@ -17,6 +17,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include "Site2SitePeer.h"
 #include <sys/time.h>
 #include <stdio.h>
 #include <time.h>
@@ -24,13 +25,10 @@
 #include <thread>
 #include <random>
 #include <memory>
-#include <netinet/tcp.h>
 #include <iostream>
 #include "io/ClientSocket.h"
 #include "io/validation.h"
-#include "Site2SitePeer.h"
 #include "FlowController.h"
-
 
 namespace org {
 namespace apache {
@@ -38,28 +36,27 @@ namespace nifi {
 namespace minifi {
 
 bool Site2SitePeer::Open() {
+  if (IsNullOrEmpty(host_))
+    return false;
 
-	if (IsNullOrEmpty (host_))
-		return false;
+  if (stream_->initialize() < 0)
+    return false;
 
-	if (stream_->initialize() < 0)
-		return false;
+  uint16_t data_size = sizeof MAGIC_BYTES;
 
-	uint16_t data_size = sizeof MAGIC_BYTES;
+  if (stream_->writeData(
+      reinterpret_cast<uint8_t *>(const_cast<char*>(MAGIC_BYTES)), data_size)
+      != data_size) {
+    return false;
+  }
 
-	if (stream_->writeData((uint8_t *) MAGIC_BYTES, data_size) != data_size) {
-		return false;
-	}
-
-	return true;
+  return true;
 }
 
 void Site2SitePeer::Close() {
-    if (stream_ != nullptr)
-	stream_->closeStream();
+  if (stream_ != nullptr)
+    stream_->closeStream();
 }
-
-
 
 } /* namespace minifi */
 } /* namespace nifi */

@@ -17,10 +17,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include "TimerDrivenSchedulingAgent.h"
 #include <chrono>
 #include <thread>
+#include <memory>
 #include <iostream>
-#include "TimerDrivenSchedulingAgent.h"
 #include "core/Property.h"
 
 namespace org {
@@ -35,7 +36,6 @@ void TimerDrivenSchedulingAgent::run(
   while (this->running_) {
     bool shouldYield = this->onTrigger(processor, processContext,
                                        sessionFactory);
-
     if (processor->isYield()) {
       // Honor the yield
       std::this_thread::sleep_for(

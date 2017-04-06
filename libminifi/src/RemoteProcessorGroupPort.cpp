@@ -17,18 +17,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include "RemoteProcessorGroupPort.h"
+#include <sys/time.h>
+#include <string.h>
+#include <time.h>
 #include <vector>
 #include <queue>
 #include <map>
 #include <set>
-#include <sys/time.h>
-#include <time.h>
+#include <string>
+#include <utility>
+#include <memory>
 #include <sstream>
-#include <string.h>
 #include <iostream>
-
-#include "RemoteProcessorGroupPort.h"
-
 #include "../include/io/StreamFactory.h"
 #include "io/ClientSocket.h"
 #include "utils/TimeUtil.h"
@@ -50,7 +51,6 @@ core::Property RemoteProcessorGroupPort::portUUID("Port UUID", "Specifies remote
 core::Relationship RemoteProcessorGroupPort::relation;
 
 void RemoteProcessorGroupPort::initialize() {
-
   // Set the supported properties
   std::set<core::Property> properties;
   properties.insert(hostName);
@@ -61,7 +61,6 @@ void RemoteProcessorGroupPort::initialize() {
   std::set<core::Relationship> relationships;
   relationships.insert(relation);
   setSupportedRelationships(relationships);
-
 }
 
 void RemoteProcessorGroupPort::onTrigger(core::ProcessContext *context,

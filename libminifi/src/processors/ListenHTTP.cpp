@@ -1,5 +1,6 @@
 /**
  * @file ListenHTTP.cpp
+
  * ListenHTTP class implementation
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
@@ -17,17 +18,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <sstream>
+#include "processors/ListenHTTP.h"
+#include <uuid/uuid.h>
+#include <CivetServer.h>
 #include <stdio.h>
+#include <sstream>
+#include <utility>
+#include <memory>
 #include <string>
 #include <iostream>
 #include <fstream>
-#include <uuid/uuid.h>
-
-#include <CivetServer.h>
-
-#include "processors/ListenHTTP.h"
-
+#include <set>
+#include <vector>
 #include "utils/TimeUtil.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
@@ -39,15 +41,15 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-const std::string ListenHTTP::ProcessorName("ListenHTTP");
-
-core::Property ListenHTTP::BasePath(
-    "Base Path", "Base path for incoming connections", "contentListener");
+core::Property ListenHTTP::BasePath("Base Path",
+                                    "Base path for incoming connections",
+                                    "contentListener");
 core::Property ListenHTTP::Port(
     "Listening Port", "The Port to listen on for incoming connections", "");
 core::Property ListenHTTP::AuthorizedDNPattern(
     "Authorized DN Pattern",
-    "A Regular Expression to apply against the Distinguished Name of incoming connections. If the Pattern does not match the DN, the connection will be refused.",
+    "A Regular Expression to apply against the Distinguished Name of incoming"
+    " connections. If the Pattern does not match the DN, the connection will be refused.",
     ".*");
 core::Property ListenHTTP::SSLCertificate(
     "SSL Certificate",
@@ -65,17 +67,18 @@ core::Property ListenHTTP::SSLMinimumVersion(
     "SSL2");
 core::Property ListenHTTP::HeadersAsAttributesRegex(
     "HTTP Headers to receive as Attributes (Regex)",
-    "Specifies the Regular Expression that determines the names of HTTP Headers that should be passed along as FlowFile attributes",
+    "Specifies the Regular Expression that determines the names of HTTP Headers that"
+    " should be passed along as FlowFile attributes",
     "");
 
-core::Relationship ListenHTTP::Success(
-    "success", "All files are routed to success");
+core::Relationship ListenHTTP::Success("success",
+                                       "All files are routed to success");
 
 void ListenHTTP::initialize() {
   _logger->log_info("Initializing ListenHTTP");
 
   // Set the supported properties
-  std::set < core::Property > properties;
+  std::set<core::Property> properties;
   properties.insert(BasePath);
   properties.insert(Port);
   properties.insert(AuthorizedDNPattern);
@@ -84,17 +87,15 @@ void ListenHTTP::initialize() {
   properties.insert(SSLVerifyPeer);
   properties.insert(SSLMinimumVersion);
   properties.insert(HeadersAsAttributesRegex);
-  setSupportedProperties (properties);
+  setSupportedProperties(properties);
   // Set the supported relationships
-  std::set < core::Relationship > relationships;
+  std::set<core::Relationship> relationships;
   relationships.insert(Success);
-  setSupportedRelationships (relationships);
+  setSupportedRelationships(relationships);
 }
 
-void ListenHTTP::onSchedule(
-    core::ProcessContext *context,
-    core::ProcessSessionFactory *sessionFactory) {
-
+void ListenHTTP::onSchedule(core::ProcessContext *context,
+                            core::ProcessSessionFactory *sessionFactory) {
   std::string basePath;
 
   if (!context->getProperty(BasePath.getName(), basePath)) {
@@ -178,7 +179,7 @@ void ListenHTTP::onSchedule(
       listeningPort.c_str(), basePath.c_str(), numThreads);
 
   // Initialize web server
-  std::vector < std::string > options;
+  std::vector<std::string> options;
   options.push_back("enable_keep_alive");
   options.push_back("yes");
   options.push_back("keep_alive_timeout_ms");
@@ -238,12 +239,10 @@ void ListenHTTP::onSchedule(
 ListenHTTP::~ListenHTTP() {
 }
 
-void ListenHTTP::onTrigger(
-    core::ProcessContext *context,
-    core::ProcessSession *session) {
-
-  std::shared_ptr < FlowFileRecord > flowFile = std::static_pointer_cast
-      < FlowFileRecord > (session->get());
+void ListenHTTP::onTrigger(core::ProcessContext *context,
+                           core::ProcessSession *session) {
+  std::shared_ptr<FlowFileRecord> flowFile = std::static_pointer_cast<
+      FlowFileRecord>(session->get());
 
   // Do nothing if there are no incoming files
   if (!flowFile) {
@@ -251,10 +250,10 @@ void ListenHTTP::onTrigger(
   }
 }
 
-ListenHTTP::Handler::Handler(
-    core::ProcessContext *context,
-    core::ProcessSessionFactory *sessionFactory,
-    std::string &&authDNPattern, std::string &&headersAsAttributesPattern)
+ListenHTTP::Handler::Handler(core::ProcessContext *context,
+                             core::ProcessSessionFactory *sessionFactory,
+                             std::string &&authDNPattern,
+                             std::string &&headersAsAttributesPattern)
     : _authDNRegex(std::move(authDNPattern)),
       _headersAsAttributesRegex(std::move(headersAsAttributesPattern)) {
   _processContext = context;
@@ -292,8 +291,7 @@ bool ListenHTTP::Handler::handlePost(CivetServer *server,
 
   auto session = _processSessionFactory->createSession();
   ListenHTTP::WriteCallback callback(conn, req_info);
-  auto flowFile = std::static_pointer_cast < FlowFileRecord
-      > (session->create());
+  auto flowFile = std::static_pointer_cast<FlowFileRecord>(session->create());
 
   if (!flowFile) {
     sendErrorResponse(conn);
@@ -347,9 +345,9 @@ ListenHTTP::WriteCallback::WriteCallback(
 }
 
 void ListenHTTP::WriteCallback::process(std::ofstream *stream) {
-  long long rlen;
-  long long nlen = 0;
-  long long tlen = _reqInfo->content_length;
+  int64_t rlen;
+  int64_t nlen = 0;
+  int64_t tlen = _reqInfo->content_length;
   char buf[16384];
 
   while (nlen < tlen) {

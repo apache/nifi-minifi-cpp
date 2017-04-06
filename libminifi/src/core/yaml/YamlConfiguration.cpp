@@ -17,7 +17,10 @@
  */
 
 #include "core/yaml/YamlConfiguration.h"
-
+#include <memory>
+#include <string>
+#include <vector>
+#include <set>
 namespace org {
 namespace apache {
 namespace nifi {
@@ -29,18 +32,17 @@ core::ProcessGroup *YamlConfiguration::parseRootProcessGroupYaml(
   uuid_t uuid;
 
   std::string flowName = rootFlowNode["name"].as<std::string>();
-  std::string id ;
-  
+  std::string id;
+
   try {
     rootFlowNode["id"].as<std::string>();
 
     uuid_parse(id.c_str(), uuid);
-  }catch(...)
-  {
+  } catch (...) {
     logger_->log_warn("Generating random ID for root node");
     uuid_generate(uuid);
     char uuid_str[37];
-    uuid_unparse(uuid,uuid_str);
+    uuid_unparse(uuid, uuid_str);
     id = uuid_str;
   }
 
@@ -69,7 +71,6 @@ void YamlConfiguration::parseProcessorNodeYaml(
   }
 
   if (processorsNode) {
-
     if (processorsNode.IsSequence()) {
       // Evaluate sequence of processors
       int numProcessors = processorsNode.size();
@@ -196,7 +197,6 @@ void YamlConfiguration::parseProcessorNodeYaml(
           processor->setSchedulingStrategy(core::CRON_DRIVEN);
           logger_->log_debug("setting scheduling strategy as %s",
                              procCfg.schedulingStrategy.c_str());
-
         }
 
         int64_t maxConcurrentTasks;
@@ -324,7 +324,6 @@ void YamlConfiguration::parseRemoteProcessGroupYaml(
             this->parsePortYaml(&currPort, group, RECEIVE);
           }  // for node
         }
-
       }
     }
   }
@@ -341,11 +340,9 @@ void YamlConfiguration::parseConnectionYaml(YAML::Node *connectionsNode,
   }
 
   if (connectionsNode) {
-
     if (connectionsNode->IsSequence()) {
       for (YAML::const_iterator iter = connectionsNode->begin();
           iter != connectionsNode->end(); ++iter) {
-
         YAML::Node connectionNode = iter->as<YAML::Node>();
 
         std::string name = connectionNode["name"].as<std::string>();
@@ -461,7 +458,6 @@ void YamlConfiguration::parsePortYaml(YAML::Node *portNode,
   logger_->log_debug("parseProcessorNode: maxConcurrentTasks => [%d]",
                      maxConcurrentTasks);
   processor->setMaxConcurrentTasks(maxConcurrentTasks);
-
 }
 
 void YamlConfiguration::parsePropertiesNodeYaml(

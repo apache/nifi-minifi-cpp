@@ -37,7 +37,6 @@
 #include "properties/Configure.h"
 #include "core/logging/Logger.h"
 
-
 namespace org {
 namespace apache {
 namespace nifi {
@@ -179,16 +178,14 @@ class FlowControlProtocol {
       logger_->log_info("NiFi Server Name %s", _serverName.c_str());
     }
     if (configure_->get(Configure::nifi_server_port, value)
-        && core::Property::StringToInt(
-            value, _serverPort)) {
+        && core::Property::StringToInt(value, _serverPort)) {
       logger_->log_info("NiFi Server Port: [%d]", _serverPort);
     }
     if (configure_->get(Configure::nifi_server_report_interval, value)) {
       core::TimeUnit unit;
-      if (core::Property::StringToTime(
-          value, _reportInterval, unit)
-          && core::Property::ConvertTimeUnitToMS(
-              _reportInterval, unit, _reportInterval)) {
+      if (core::Property::StringToTime(value, _reportInterval, unit)
+          && core::Property::ConvertTimeUnitToMS(_reportInterval, unit,
+                                                 _reportInterval)) {
         logger_->log_info("NiFi server report interval: [%d] ms",
                           _reportInterval);
       }

@@ -22,7 +22,6 @@
 #include <string>
 #include <cstring>
 
-
 /**
  * A checker that will, at compile time, tell us
  * if the declared type has a size method.
@@ -41,7 +40,6 @@ class size_function_functor_checker {
     has_size_function = sizeof(test<T>(0)) == sizeof(char)
   };
 };
-
 
 /**
  * Determines if the variable is null or ::size() == 0
@@ -72,9 +70,15 @@ static auto IsNullOrEmpty(
 /**
  * Determines if the variable is null or strlen(str) == 0
  */
-static auto IsNullOrEmpty(char *str)-> decltype(NULL !=str, bool()) {
+static auto IsNullOrEmpty(const char *str)-> decltype(NULL !=str, bool()) {
   return (NULL == str || strlen(str) == 0);
 }
 
+/**
+ * Determines if the variable is null or strlen(str) == 0
+ */
+static auto IsNullOrEmpty(char *str)-> decltype(NULL !=str, bool()) {
+  return (NULL == str || strlen(str) == 0);
+}
 
 #endif

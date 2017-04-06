@@ -17,11 +17,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include "SchedulingAgent.h"
 #include <chrono>
 #include <thread>
+#include <memory>
 #include <iostream>
 #include "Exception.h"
-#include "SchedulingAgent.h"
 #include "core/Processor.h"
 
 namespace org {
@@ -29,8 +30,7 @@ namespace apache {
 namespace nifi {
 namespace minifi {
 
-bool SchedulingAgent::hasWorkToDo(
-    std::shared_ptr<core::Processor> processor) {
+bool SchedulingAgent::hasWorkToDo(std::shared_ptr<core::Processor> processor) {
   // Whether it has work to do
   if (processor->getTriggerWhenEmpty() || !processor->hasIncomingConnections()
       || processor->flowFilesQueued())
@@ -44,10 +44,9 @@ bool SchedulingAgent::hasTooMuchOutGoing(
   return processor->flowFilesOutGoingFull();
 }
 
-bool SchedulingAgent::onTrigger(
-    std::shared_ptr<core::Processor> processor,
-    core::ProcessContext *processContext,
-    core::ProcessSessionFactory *sessionFactory) {
+bool SchedulingAgent::onTrigger(std::shared_ptr<core::Processor> processor,
+                                core::ProcessContext *processContext,
+                                core::ProcessSessionFactory *sessionFactory) {
   if (processor->isYield())
     return false;
 
@@ -61,8 +60,6 @@ bool SchedulingAgent::onTrigger(
   if (hasTooMuchOutGoing(processor))
     // need to apply backpressure
     return true;
-
-  //TODO runDuration
 
   processor->incrementActiveTasks();
   try {
@@ -84,7 +81,6 @@ bool SchedulingAgent::onTrigger(
 
   return false;
 }
-
 
 } /* namespace minifi */
 } /* namespace nifi */

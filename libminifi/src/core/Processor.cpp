@@ -17,19 +17,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include "core/Processor.h"
+#include <sys/time.h>
+#include <time.h>
 #include <vector>
 #include <queue>
 #include <map>
 #include <set>
-#include <sys/time.h>
-#include <time.h>
 #include <chrono>
+#include <string>
 #include <thread>
 #include <memory>
 #include <functional>
-
-#include "core/Processor.h"
-
 #include "Connection.h"
 #include "core/Connectable.h"
 #include "core/ProcessContext.h"
@@ -46,7 +45,6 @@ namespace core {
 Processor::Processor(std::string name, uuid_t uuid)
     : Connectable(name, uuid),
       ConfigurableComponent(logging::Logger::getLogger()) {
-
   has_work_.store(false);
   // Setup the default values
   state_ = DISABLED;
@@ -76,7 +74,6 @@ void Processor::setScheduledState(ScheduledState state) {
 }
 
 bool Processor::addConnection(std::shared_ptr<Connectable> conn) {
-  
   bool ret = false;
 
   if (isRunning()) {
@@ -84,7 +81,8 @@ bool Processor::addConnection(std::shared_ptr<Connectable> conn) {
                       name_.c_str());
     return false;
   }
-  std::shared_ptr<Connection> connection = std::static_pointer_cast<Connection>(conn);
+  std::shared_ptr<Connection> connection = std::static_pointer_cast<Connection>(
+      conn);
   std::lock_guard<std::mutex> lock(mutex_);
 
   uuid_t srcUUID;
@@ -130,7 +128,6 @@ bool Processor::addConnection(std::shared_ptr<Connectable> conn) {
         ret = true;
       }
     } else {
-
       // We do not have any outgoing connection for this relationship yet
       std::set<std::shared_ptr<Connectable>> newConnection;
       newConnection.insert(connection);
@@ -158,8 +155,9 @@ void Processor::removeConnection(std::shared_ptr<Connectable> conn) {
 
   uuid_t srcUUID;
   uuid_t destUUID;
-  
-  std::shared_ptr<Connection> connection = std::static_pointer_cast<Connection>(conn);
+
+  std::shared_ptr<Connection> connection = std::static_pointer_cast<Connection>(
+      conn);
 
   connection->getSourceUUID(srcUUID);
   connection->getDestinationUUID(destUUID);
@@ -252,7 +250,8 @@ bool Processor::flowFilesQueued() {
     return false;
 
   for (auto &&conn : _incomingConnections) {
-    std::shared_ptr<Connection> connection = std::static_pointer_cast<Connection>(conn);
+    std::shared_ptr<Connection> connection =
+        std::static_pointer_cast<Connection>(conn);
     if (connection->getQueueSize() > 0)
       return true;
   }
@@ -267,7 +266,8 @@ bool Processor::flowFilesOutGoingFull() {
     // We already has connection for this relationship
     std::set<std::shared_ptr<Connectable>> existedConnection = connection.second;
     for (const auto conn : existedConnection) {
-      std::shared_ptr<Connection> connection = std::static_pointer_cast<Connection>(conn);
+      std::shared_ptr<Connection> connection = std::static_pointer_cast<
+          Connection>(conn);
       if (connection->isFull())
         return true;
     }
@@ -301,7 +301,8 @@ bool Processor::isWorkAvailable() {
 
   try {
     for (const auto &conn : _incomingConnections) {
-      std::shared_ptr<Connection> connection = std::static_pointer_cast<Connection>(conn);
+      std::shared_ptr<Connection> connection = std::static_pointer_cast<
+          Connection>(conn);
       if (connection->getQueueSize() > 0) {
         hasWork = true;
         break;
@@ -309,13 +310,14 @@ bool Processor::isWorkAvailable() {
     }
   } catch (...) {
     logger_->log_error(
-        "Caught an exception while checking if work is available; unless it was positively determined that work is available, assuming NO work is available!");
+        "Caught an exception while checking if work is available;"
+        " unless it was positively determined that work is available, assuming NO work is available!");
   }
 
   return hasWork;
 }
 
-} /* namespace processor */
+} /* namespace core */
 } /* namespace minifi */
 } /* namespace nifi */
 } /* namespace apache */

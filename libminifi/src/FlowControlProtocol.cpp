@@ -17,17 +17,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include "FlowControlProtocol.h"
 #include <sys/time.h>
 #include <stdio.h>
 #include <time.h>
+#include <netinet/tcp.h>
 #include <chrono>
 #include <thread>
+#include <string>
 #include <random>
-#include <netinet/tcp.h>
 #include <iostream>
 #include "FlowController.h"
-#include "FlowControlProtocol.h"
-#include "core/core.h"
+#include "core/Core.h"
 namespace org {
 namespace apache {
 namespace nifi {
@@ -45,7 +46,7 @@ int FlowControlProtocol::connectServer(const char *host, uint16_t port) {
   int hh_errno;
   gethostbyname_r(host, &he, buf, sizeof(buf), &h, &hh_errno);
 #endif
-  memcpy((char *) &addr, h->h_addr_list[0], h->h_length);
+  memcpy(reinterpret_cast<char*>(&addr), h->h_addr_list[0], h->h_length);
   sock = socket(AF_INET, SOCK_STREAM, 0);
   if (sock < 0) {
     logger_->log_error("Could not create socket to hostName %s", host);
@@ -56,30 +57,26 @@ int FlowControlProtocol::connectServer(const char *host, uint16_t port) {
   int opt = 1;
   bool nagle_off = true;
 
-  if (nagle_off)
-  {
-    if (setsockopt(sock, SOL_TCP, TCP_NODELAY, (void *)&opt, sizeof(opt)) < 0)
-    {
+  if (nagle_off) {
+    if (setsockopt(sock, SOL_TCP, TCP_NODELAY, reinterpret_cast<void*>(&opt), sizeof(opt)) < 0) {
       logger_->log_error("setsockopt() TCP_NODELAY failed");
       close(sock);
       return 0;
     }
     if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR,
-            (char *)&opt, sizeof(opt)) < 0)
-    {
-      logger_->log_error("setsockopt() SO_REUSEADDR failed");
-      close(sock);
-      return 0;
-    }
-  }
+            reinterpret_cast<char*>(&opt), sizeof(opt)) < 0) {
+          logger_->log_error("setsockopt() SO_REUSEADDR failed");
+          close(sock);
+          return 0;
+        }
+      }
 
-  int sndsize = 256*1024;
-  if (setsockopt(sock, SOL_SOCKET, SO_SNDBUF, (char *)&sndsize, (int)sizeof(sndsize)) < 0)
-  {
-    logger_->log_error("setsockopt() SO_SNDBUF failed");
-    close(sock);
-    return 0;
-  }
+      int sndsize = 256*1024;
+      if (setsockopt(sock, SOL_SOCKET, SO_SNDBUF, reinterpret_cast<char*>(&sndsize), sizeof(sndsize)) < 0) {
+        logger_->log_error("setsockopt() SO_SNDBUF failed");
+        close(sock);
+        return 0;
+      }
 #endif
 
   struct sockaddr_in sa;
@@ -123,7 +120,7 @@ int FlowControlProtocol::sendData(uint8_t *buf, int buflen) {
 
   while (bytes < buflen) {
     ret = send(_socket, buf + bytes, buflen - bytes, 0);
-    //check for errors
+    // check for errors
     if (ret == -1) {
       return ret;
     }
@@ -232,8 +229,9 @@ void FlowControlProtocol::run(FlowControlProtocol *protocol) {
     if (!protocol->_registered) {
       // if it is not register yet
       protocol->sendRegisterReq();
-    } else
+    } else {
       protocol->sendReportReq();
+    }
   }
   return;
 }

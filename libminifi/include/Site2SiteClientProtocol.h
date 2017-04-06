@@ -44,7 +44,6 @@
 #include "core/ProcessSession.h"
 #include "io/CRCStream.h"
 
-
 namespace org {
 namespace apache {
 namespace nifi {
@@ -533,9 +532,8 @@ class Site2SiteClientProtocol {
   // Error the transaction
   void error(std::string transactionID);
   // Receive flow files for the process session
-  void receiveFlowFiles(
-      core::ProcessContext *context,
-      core::ProcessSession *session);
+  void receiveFlowFiles(core::ProcessContext *context,
+                        core::ProcessSession *session);
   // Transfer flow files for the process session
   void transferFlowFiles(
       core::ProcessContext *context,

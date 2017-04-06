@@ -17,19 +17,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <sstream>
+#include "processors/PutFile.h"
 #include <stdio.h>
+#include <uuid/uuid.h>
+#include <sstream>
 #include <string>
 #include <iostream>
+#include <memory>
+#include <set>
 #include <fstream>
-#include <uuid/uuid.h>
-
+#include "io/validation.h"
 #include "utils/StringUtils.h"
 #include "utils/TimeUtil.h"
-#include "processors/PutFile.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
-
 
 namespace org {
 namespace apache {
@@ -37,21 +38,16 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-const std::string PutFile::CONFLICT_RESOLUTION_STRATEGY_REPLACE("replace");
-const std::string PutFile::CONFLICT_RESOLUTION_STRATEGY_IGNORE("ignore");
-const std::string PutFile::CONFLICT_RESOLUTION_STRATEGY_FAIL("fail");
-
-const std::string PutFile::ProcessorName("PutFile");
-
-core::Property PutFile::Directory(
-    "Output Directory", "The output directory to which to put files", ".");
+core::Property PutFile::Directory("Output Directory",
+                                  "The output directory to which to put files",
+                                  ".");
 core::Property PutFile::ConflictResolution(
     "Conflict Resolution Strategy",
     "Indicates what should happen when a file with the same name already exists in the output directory",
     CONFLICT_RESOLUTION_STRATEGY_FAIL);
 
-core::Relationship PutFile::Success(
-    "success", "All files are routed to success");
+core::Relationship PutFile::Success("success",
+                                    "All files are routed to success");
 core::Relationship PutFile::Failure(
     "failure",
     "Failed files (conflict, write failure, etc.) are transferred to failure");
@@ -69,25 +65,28 @@ void PutFile::initialize() {
   setSupportedRelationships(relationships);
 }
 
-void PutFile::onTrigger(
-    core::ProcessContext *context,
-    core::ProcessSession *session) {
-  std::string directory;
-
-  if (!context->getProperty(Directory.getName(), directory)) {
+void PutFile::onSchedule(core::ProcessContext *context,
+                         core::ProcessSessionFactory *sessionFactory) {
+  if (!context->getProperty(Directory.getName(), directory_)) {
     logger_->log_error("Directory attribute is missing or invalid");
-    return;
   }
 
-  std::string conflictResolution;
-
-  if (!context->getProperty(ConflictResolution.getName(), conflictResolution)) {
+  if (!context->getProperty(ConflictResolution.getName(),
+                            conflict_resolution_)) {
     logger_->log_error(
         "Conflict Resolution Strategy attribute is missing or invalid");
+  }
+}
+
+void PutFile::onTrigger(core::ProcessContext *context,
+                        core::ProcessSession *session) {
+  if (IsNullOrEmpty(directory_) || IsNullOrEmpty(conflict_resolution_)) {
+    context->yield();
     return;
   }
 
-  std::shared_ptr<FlowFileRecord> flowFile = std::static_pointer_cast<FlowFileRecord>(session->get());
+  std::shared_ptr<FlowFileRecord> flowFile = std::static_pointer_cast<
+      FlowFileRecord>(session->get());
 
   // Do nothing if there are no incoming files
   if (!flowFile) {
@@ -103,17 +102,17 @@ void PutFile::onTrigger(
   uuid_generate(tmpFileUuid);
   uuid_unparse_lower(tmpFileUuid, tmpFileUuidStr);
   std::stringstream tmpFileSs;
-  tmpFileSs << directory << "/." << filename << "." << tmpFileUuidStr;
+  tmpFileSs << directory_ << "/." << filename << "." << tmpFileUuidStr;
   std::string tmpFile = tmpFileSs.str();
   logger_->log_info("PutFile using temporary file %s", tmpFile.c_str());
 
   // Determine dest full file paths
   std::stringstream destFileSs;
-  destFileSs << directory << "/" << filename;
+  destFileSs << directory_ << "/" << filename;
   std::string destFile = destFileSs.str();
 
   logger_->log_info("PutFile writing file %s into directory %s",
-                    filename.c_str(), directory.c_str());
+                    filename.c_str(), directory_.c_str());
 
   // If file exists, apply conflict resolution strategy
   struct stat statResult;
@@ -121,11 +120,11 @@ void PutFile::onTrigger(
   if (stat(destFile.c_str(), &statResult) == 0) {
     logger_->log_info(
         "Destination file %s exists; applying Conflict Resolution Strategy: %s",
-        destFile.c_str(), conflictResolution.c_str());
+        destFile.c_str(), conflict_resolution_.c_str());
 
-    if (conflictResolution == CONFLICT_RESOLUTION_STRATEGY_REPLACE) {
+    if (conflict_resolution_ == CONFLICT_RESOLUTION_STRATEGY_REPLACE) {
       putFile(session, flowFile, tmpFile, destFile);
-    } else if (conflictResolution == CONFLICT_RESOLUTION_STRATEGY_IGNORE) {
+    } else if (conflict_resolution_ == CONFLICT_RESOLUTION_STRATEGY_IGNORE) {
       session->transfer(flowFile, Success);
     } else {
       session->transfer(flowFile, Failure);
@@ -136,9 +135,8 @@ void PutFile::onTrigger(
 }
 
 bool PutFile::putFile(core::ProcessSession *session,
-                      std::shared_ptr<FlowFileRecord> flowFile, const std::string &tmpFile,
-                      const std::string &destFile) {
-
+                      std::shared_ptr<FlowFileRecord> flowFile,
+                      const std::string &tmpFile, const std::string &destFile) {
   ReadCallback cb(tmpFile, destFile);
   session->read(flowFile, &cb);
 
@@ -204,7 +202,6 @@ PutFile::ReadCallback::~ReadCallback() {
   // Clean up tmp file, if necessary
   unlink(_tmpFile.c_str());
 }
-
 
 } /* namespace processors */
 } /* namespace minifi */

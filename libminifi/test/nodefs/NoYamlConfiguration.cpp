@@ -17,7 +17,7 @@
  */
 
 
-#include "core/core.h"
+#include "core/Core.h"
 #include "core/RepositoryFactory.h"
 
 

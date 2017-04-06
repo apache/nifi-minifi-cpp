@@ -16,9 +16,14 @@
 #
 # ./run_linter <includedir> <srcdir>
 #!/bin/bash
+if [ "$(uname)" == "Darwin" ]; then
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+else
+SCRIPT=$(readlink -f $0)
+SCRIPT_DIR=`dirname $SCRIPT`
+fi
 HEADERS=`find ${1} -name '*.h' | tr '\n' ','`
 SOURCES=`find ${2} -name  '*.cpp' | tr '\n' ' '`
 echo ${HEADERS}
 echo ${SOURCES}
-python ${SCRIPT_DIR}/cpplint.py --headers=${HEADERS} ${SOURCES}
+python ${SCRIPT_DIR}/cpplint.py --linelength=128 --headers=${HEADERS} ${SOURCES}

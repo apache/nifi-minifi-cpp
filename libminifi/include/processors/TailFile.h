@@ -23,7 +23,7 @@
 #include "FlowFileRecord.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
-#include "core/core.h"
+#include "core/Core.h"
 
 namespace org {
 namespace apache {
@@ -38,9 +38,8 @@ class TailFile : public core::Processor {
   /*!
    * Create a new processor
    */
-  TailFile(std::string name, uuid_t uuid = NULL)
+  explicit TailFile(std::string name, uuid_t uuid = NULL)
       : core::Processor(name, uuid) {
-    logger_ = logging::Logger::getLogger();
     _stateRecovered = false;
   }
   // Destructor
@@ -48,7 +47,7 @@ class TailFile : public core::Processor {
     storeState();
   }
   // Processor Name
-  static const std::string ProcessorName;
+  static constexpr char const* ProcessorName = "TailFile";
   // Supported Properties
   static core::Property FileName;
   static core::Property StateFile;
@@ -57,9 +56,8 @@ class TailFile : public core::Processor {
 
  public:
   // OnTrigger method, implemented by NiFi TailFile
-  virtual void onTrigger(
-      core::ProcessContext *context,
-      core::ProcessSession *session);
+  virtual void onTrigger(core::ProcessContext *context,
+                         core::ProcessSession *session);
   // Initialize, over write by NiFi TailFile
   virtual void initialize(void);
   // recoverState
@@ -70,11 +68,7 @@ class TailFile : public core::Processor {
  protected:
 
  private:
-  // Logger
-  std::shared_ptr<logging::Logger> logger_;
-  std::string _fileLocation;
-  // Property Specified Tailed File Name
-  std::string _fileName;
+  std::mutex tail_file_mutex_;
   // File to save state
   std::string _stateFile;
   // State related to the tailed file
@@ -82,11 +76,16 @@ class TailFile : public core::Processor {
   uint64_t _currentTailFilePosition;
   bool _stateRecovered;
   uint64_t _currentTailFileCreatedTime;
+  static const int BUFFER_SIZE = 512;
+
   // Utils functions for parse state file
   std::string trimLeft(const std::string& s);
   std::string trimRight(const std::string& s);
   void parseStateFileLine(char *buf);
-  void checkRollOver();
+  /**
+   * Check roll over for the provided file.
+   */
+  void checkRollOver(const std::string &, const std::string&);
 
 };
 

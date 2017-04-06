@@ -25,7 +25,6 @@ namespace minifi {
 namespace io {
 bool EndiannessCheck::IS_LITTLE = EndiannessCheck::is_little_endian();
 
-
 } /* namespace io */
 } /* namespace minifi */
 } /* namespace nifi */

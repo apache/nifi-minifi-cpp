@@ -17,10 +17,11 @@
  */
 
 #include "core/Property.h"
-
+#include <string>
 namespace org {
 namespace apache {
-namespace nifi {namespace minifi {
+namespace nifi {
+namespace minifi {
 namespace core {
 
 // Get Name for the property

@@ -21,6 +21,7 @@
 
 #include <vector>
 #include <queue>
+#include <memory>
 #include <map>
 
 namespace org {

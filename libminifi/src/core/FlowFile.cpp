@@ -1,23 +1,26 @@
-/*
- * Copyright 2017 <copyright holder> <email>
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * 
+/**
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- * 
  */
 
 #include "core/FlowFile.h"
+#include <memory>
+#include <string>
+#include <set>
 #include "core/logging/Logger.h"
-
 namespace org {
 namespace apache {
 namespace nifi {
@@ -31,6 +34,7 @@ FlowFile::FlowFile()
       offset_(0),
       last_queue_date_(0),
       penaltyExpiration_ms_(0),
+      event_time_(0),
       claim_(nullptr),
       marked_delete_(false),
       connection_(nullptr),
@@ -45,17 +49,14 @@ FlowFile::FlowFile()
 
   uuid_unparse_lower(uuid_, uuidStr);
   uuid_str_ = uuidStr;
-  
-  logger_ = logging::Logger::getLogger();
 
+  logger_ = logging::Logger::getLogger();
 }
 
 FlowFile::~FlowFile() {
-
 }
 
 FlowFile& FlowFile::operator=(const FlowFile& other) {
-
   uuid_copy(uuid_, other.uuid_);
   stored = other.stored;
   marked_delete_ = other.marked_delete_;
@@ -72,7 +73,6 @@ FlowFile& FlowFile::operator=(const FlowFile& other) {
   uuid_str_ = other.uuid_str_;
   connection_ = other.connection_;
   original_connection_ = other.original_connection_;
-
   return *this;
 }
 
@@ -161,8 +161,6 @@ bool FlowFile::updateAttribute(const std::string key, const std::string value) {
 }
 
 bool FlowFile::addAttribute(const std::string &key, const std::string &value) {
-
-
   auto it = attributes_.find(key);
   if (it != attributes_.end()) {
     // attribute already there in the map
@@ -218,8 +216,8 @@ std::shared_ptr<core::Connectable> FlowFile::getOriginalConnection() {
   return original_connection_;
 }
 
-}
-}
-}
-}
-}
+} /* namespace core */
+} /* namespace minifi */
+} /* namespace nifi */
+} /* namespace apache */
+} /* namespace org */

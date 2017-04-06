@@ -1,6 +1,4 @@
 /**
- * @file GetFile.cpp
- * GetFile class implementation
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -17,30 +15,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <vector>
-#include <queue>
-#include <map>
-#include <set>
+#include "processors/GetFile.h"
 #include <sys/time.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <time.h>
-#include <sstream>
 #include <stdio.h>
-#include <string>
-#include <iostream>
 #include <dirent.h>
 #include <limits.h>
 #include <unistd.h>
-#if  (__GNUC__ >= 4) 
+#if  (__GNUC__ >= 4)
 #if (__GNUC_MINOR__ < 9)
 #include <regex.h>
-#endif
-#endif
-#include "utils/StringUtils.h"
+#else
 #include <regex>
+#endif
+#endif
+#include <vector>
+#include <queue>
+#include <map>
+#include <memory>
+#include <set>
+#include <sstream>
+#include <string>
+#include <iostream>
+#include "utils/StringUtils.h"
 #include "utils/TimeUtil.h"
-#include "processors/GetFile.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 
@@ -49,7 +49,6 @@ namespace apache {
 namespace nifi {
 namespace minifi {
 namespace processors {
-const std::string GetFile::ProcessorName("GetFile");
 core::Property GetFile::BatchSize(
     "Batch Size", "The maximum number of files to pull in each iteration",
     "10");
@@ -64,11 +63,13 @@ core::Property GetFile::KeepSourceFile(
     "false");
 core::Property GetFile::MaxAge(
     "Maximum File Age",
-    "The minimum age that a file must be in order to be pulled; any file younger than this amount of time (according to last modification date) will be ignored",
+    "The minimum age that a file must be in order to be pulled;"
+    " any file younger than this amount of time (according to last modification date) will be ignored",
     "0 sec");
 core::Property GetFile::MinAge(
     "Minimum File Age",
-    "The maximum age that a file must be in order to be pulled; any file older than this amount of time (according to last modification date) will be ignored",
+    "The maximum age that a file must be in order to be pulled; any file"
+    "older than this amount of time (according to last modification date) will be ignored",
     "0 sec");
 core::Property GetFile::MaxSize(
     "Maximum File Size",
@@ -87,8 +88,8 @@ core::Property GetFile::FileFilter(
     "File Filter",
     "Only files whose names match the given regular expression will be picked up",
     "[^\\.].*");
-core::Relationship GetFile::Success(
-    "success", "All files are routed to success");
+core::Relationship GetFile::Success("success",
+                                    "All files are routed to success");
 
 void GetFile::initialize() {
   // Set the supported properties
@@ -111,77 +112,74 @@ void GetFile::initialize() {
   setSupportedRelationships(relationships);
 }
 
-void GetFile::onTrigger(
-    core::ProcessContext *context,
-    core::ProcessSession *session) {
+void GetFile::onSchedule(core::ProcessContext *context,
+                         core::ProcessSessionFactory *sessionFactory) {
   std::string value;
 
-  logger_->log_info("onTrigger GetFile");
   if (context->getProperty(Directory.getName(), value)) {
-    _directory = value;
+    request_.directory = value;
   }
   if (context->getProperty(BatchSize.getName(), value)) {
-    core::Property::StringToInt(value, _batchSize);
+    core::Property::StringToInt(value, request_.batchSize);
   }
   if (context->getProperty(IgnoreHiddenFile.getName(), value)) {
     org::apache::nifi::minifi::utils::StringUtils::StringToBool(
-        value, _ignoreHiddenFile);
+        value, request_.ignoreHiddenFile);
   }
   if (context->getProperty(KeepSourceFile.getName(), value)) {
     org::apache::nifi::minifi::utils::StringUtils::StringToBool(
-        value, _keepSourceFile);
+        value, request_.keepSourceFile);
   }
 
-  logger_->log_info("onTrigger GetFile");
   if (context->getProperty(MaxAge.getName(), value)) {
     core::TimeUnit unit;
-    if (core::Property::StringToTime(value, _maxAge,
-                                                                unit)
-        && core::Property::ConvertTimeUnitToMS(
-            _maxAge, unit, _maxAge)) {
-
+    if (core::Property::StringToTime(value, request_.maxAge, unit)
+        && core::Property::ConvertTimeUnitToMS(request_.maxAge, unit,
+                                               request_.maxAge)) {
+      logger_->log_debug("successfully applied _maxAge");
     }
   }
   if (context->getProperty(MinAge.getName(), value)) {
     core::TimeUnit unit;
-    if (core::Property::StringToTime(value, _minAge,
-                                                                unit)
-        && core::Property::ConvertTimeUnitToMS(
-            _minAge, unit, _minAge)) {
-
+    if (core::Property::StringToTime(value, request_.minAge, unit)
+        && core::Property::ConvertTimeUnitToMS(request_.minAge, unit,
+                                               request_.minAge)) {
+      logger_->log_debug("successfully applied _minAge");
     }
   }
   if (context->getProperty(MaxSize.getName(), value)) {
-    core::Property::StringToInt(value, _maxSize);
+    core::Property::StringToInt(value, request_.maxSize);
   }
   if (context->getProperty(MinSize.getName(), value)) {
-    core::Property::StringToInt(value, _minSize);
+    core::Property::StringToInt(value, request_.minSize);
   }
   if (context->getProperty(PollInterval.getName(), value)) {
     core::TimeUnit unit;
-    if (core::Property::StringToTime(value,
-                                                                _pollInterval,
-                                                                unit)
-        && core::Property::ConvertTimeUnitToMS(
-            _pollInterval, unit, _pollInterval)) {
-
+    if (core::Property::StringToTime(value, request_.pollInterval, unit)
+        && core::Property::ConvertTimeUnitToMS(request_.pollInterval, unit,
+                                               request_.pollInterval)) {
+      logger_->log_debug("successfully applied _pollInterval");
     }
   }
   if (context->getProperty(Recurse.getName(), value)) {
-    org::apache::nifi::minifi::utils::StringUtils::StringToBool(value,
-                                                                _recursive);
+    org::apache::nifi::minifi::utils::StringUtils::StringToBool(
+        value, request_.recursive);
   }
 
   if (context->getProperty(FileFilter.getName(), value)) {
-    _fileFilter = value;
+    request_.fileFilter = value;
   }
+}
 
+void GetFile::onTrigger(core::ProcessContext *context,
+                        core::ProcessSession *session) {
   // Perform directory list
   logger_->log_info("Is listing empty %i", isListingEmpty());
   if (isListingEmpty()) {
-    if (_pollInterval == 0
-        || (getTimeMillis() - _lastDirectoryListingTime) > _pollInterval) {
-      performListing(_directory);
+    if (request_.pollInterval == 0
+        || (getTimeMillis() - last_listing_time_) > request_.pollInterval) {
+      performListing(request_.directory, request_);
+      last_listing_time_.store(getTimeMillis());
     }
   }
   logger_->log_info("Is listing empty %i", isListingEmpty());
@@ -189,9 +187,8 @@ void GetFile::onTrigger(
   if (!isListingEmpty()) {
     try {
       std::queue<std::string> list;
-      pollListing(list, _batchSize);
+      pollListing(list, request_);
       while (!list.empty()) {
-
         std::string fileName = list.front();
         list.pop();
         logger_->log_info("GetFile process %s", fileName.c_str());
@@ -205,7 +202,7 @@ void GetFile::onTrigger(
         flowFile->updateKeyedAttribute(FILENAME, name);
         flowFile->updateKeyedAttribute(PATH, path);
         flowFile->addKeyedAttribute(ABSOLUTE_PATH, fileName);
-        session->import(fileName, flowFile, _keepSourceFile);
+        session->import(fileName, flowFile, request_.keepSourceFile);
         session->transfer(flowFile, Success);
       }
     } catch (std::exception &exception) {
@@ -215,7 +212,6 @@ void GetFile::onTrigger(
       throw;
     }
   }
-
 }
 
 bool GetFile::isListingEmpty() {
@@ -230,10 +226,12 @@ void GetFile::putListing(std::string fileName) {
   _dirList.push(fileName);
 }
 
-void GetFile::pollListing(std::queue<std::string> &list, int maxSize) {
+void GetFile::pollListing(std::queue<std::string> &list,
+                          const GetFileRequest &request) {
   std::lock_guard<std::mutex> lock(mutex_);
 
-  while (!_dirList.empty() && (maxSize == 0 || list.size() < maxSize)) {
+  while (!_dirList.empty()
+      && (request.maxSize == 0 || list.size() < request.maxSize)) {
     std::string fileName = _dirList.front();
     _dirList.pop();
     list.push(fileName);
@@ -242,37 +240,38 @@ void GetFile::pollListing(std::queue<std::string> &list, int maxSize) {
   return;
 }
 
-bool GetFile::acceptFile(std::string fullName, std::string name) {
+bool GetFile::acceptFile(std::string fullName, std::string name,
+                         const GetFileRequest &request) {
   struct stat statbuf;
 
   if (stat(fullName.c_str(), &statbuf) == 0) {
-    if (_minSize > 0 && statbuf.st_size < _minSize)
+    if (request.minSize > 0 && statbuf.st_size < request.minSize)
       return false;
 
-    if (_maxSize > 0 && statbuf.st_size > _maxSize)
+    if (request.maxSize > 0 && statbuf.st_size > request.maxSize)
       return false;
 
     uint64_t modifiedTime = ((uint64_t) (statbuf.st_mtime) * 1000);
     uint64_t fileAge = getTimeMillis() - modifiedTime;
-    if (_minAge > 0 && fileAge < _minAge)
+    if (request.minAge > 0 && fileAge < request.minAge)
       return false;
-    if (_maxAge > 0 && fileAge > _maxAge)
+    if (request.maxAge > 0 && fileAge > request.maxAge)
       return false;
 
-    if (_ignoreHiddenFile && fullName.c_str()[0] == '.')
+    if (request.ignoreHiddenFile && fullName.c_str()[0] == '.')
       return false;
 
     if (access(fullName.c_str(), R_OK) != 0)
       return false;
 
-    if (_keepSourceFile == false && access(fullName.c_str(), W_OK) != 0)
+    if (request.keepSourceFile == false && access(fullName.c_str(), W_OK) != 0)
       return false;
 
 #ifdef __GNUC__
 #if (__GNUC__ >= 4)
 #if (__GNUC_MINOR__ < 9)
     regex_t regex;
-    int ret = regcomp(&regex, _fileFilter.c_str(), 0);
+    int ret = regcomp(&regex, request.fileFilter.c_str(), 0);
     if (ret)
       return false;
     ret = regexec(&regex, name.c_str(), (size_t) 0, NULL, 0);
@@ -281,7 +280,7 @@ bool GetFile::acceptFile(std::string fullName, std::string name) {
       return false;
 #else
     try {
-      std::regex re(_fileFilter);
+      std::regex re(fileFilter);
 
       if (!std::regex_match(name, re)) {
         return false;
@@ -301,7 +300,7 @@ bool GetFile::acceptFile(std::string fullName, std::string name) {
   return false;
 }
 
-void GetFile::performListing(std::string dir) {
+void GetFile::performListing(std::string dir, const GetFileRequest &request) {
   logger_->log_info("Performing file listing against %s", dir.c_str());
   DIR *d;
   d = opendir(dir.c_str());
@@ -317,14 +316,14 @@ void GetFile::performListing(std::string dir) {
     std::string d_name = entry->d_name;
     if ((entry->d_type & DT_DIR)) {
       // if this is a directory
-      if (_recursive && strcmp(d_name.c_str(), "..") != 0
+      if (request.recursive && strcmp(d_name.c_str(), "..") != 0
           && strcmp(d_name.c_str(), ".") != 0) {
         std::string path = dir + "/" + d_name;
-        performListing(path);
+        performListing(path, request);
       }
     } else {
       std::string fileName = dir + "/" + d_name;
-      if (acceptFile(fileName, d_name)) {
+      if (acceptFile(fileName, d_name, request)) {
         // check whether we can take this file
         putListing(fileName);
       }

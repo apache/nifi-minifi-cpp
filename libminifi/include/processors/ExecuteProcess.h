@@ -34,7 +34,7 @@
 #include "FlowFileRecord.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
-#include "core/core.h"
+#include "core/Core.h"
 
 namespace org {
 namespace apache {
@@ -64,7 +64,7 @@ class ExecuteProcess : public core::Processor {
       kill(_pid, SIGTERM);
   }
   // Processor Name
-  static const std::string ProcessorName;
+  static constexpr char const* ProcessorName = "ExecuteProcess";
   // Supported Properties
   static core::Property Command;
   static core::Property CommandArguments;
@@ -91,9 +91,8 @@ class ExecuteProcess : public core::Processor {
 
  public:
   // OnTrigger method, implemented by NiFi ExecuteProcess
-  virtual void onTrigger(
-      core::ProcessContext *context,
-      core::ProcessSession *session);
+  virtual void onTrigger(core::ProcessContext *context,
+                         core::ProcessSession *session);
   // Initialize, over write by NiFi ExecuteProcess
   virtual void initialize(void);
 

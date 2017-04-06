@@ -28,7 +28,7 @@
 #include "FlowFileRecord.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
-#include "core/core.h"
+#include "core/Core.h"
 
 namespace org {
 namespace apache {
@@ -51,7 +51,7 @@ class ListenHTTP : public core::Processor {
   // Destructor
   virtual ~ListenHTTP();
   // Processor Name
-  static const std::string ProcessorName;
+  static constexpr char const* ProcessorName = "ListenHTTP";
   // Supported Properties
   static core::Property BasePath;
   static core::Property Port;
@@ -64,20 +64,18 @@ class ListenHTTP : public core::Processor {
   // Supported Relationships
   static core::Relationship Success;
 
-  void onTrigger(core::ProcessContext *context,
-                 core::ProcessSession *session);
+  void onTrigger(core::ProcessContext *context, core::ProcessSession *session);
   void initialize();
-  void onSchedule(
-      core::ProcessContext *context,
-      core::ProcessSessionFactory *sessionFactory);
+  void onSchedule(core::ProcessContext *context,
+                  core::ProcessSessionFactory *sessionFactory);
 
   // HTTP request handler
   class Handler : public CivetHandler {
    public:
-    Handler(
-        core::ProcessContext *context,
-        core::ProcessSessionFactory *sessionFactory,
-        std::string &&authDNPattern, std::string &&headersAsAttributesPattern);
+    Handler(core::ProcessContext *context,
+            core::ProcessSessionFactory *sessionFactory,
+            std::string &&authDNPattern,
+            std::string &&headersAsAttributesPattern);
     bool handlePost(CivetServer *server, struct mg_connection *conn);
 
    private:

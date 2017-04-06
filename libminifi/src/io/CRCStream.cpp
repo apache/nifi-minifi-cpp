@@ -20,5 +20,3 @@
 #include <memory>
 #include "io/CRCStream.h"
 
-
-

@@ -15,11 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "../../include/io/StreamFactory.h"
-
+#include "io/StreamFactory.h"
 #include <atomic>
-#include <mutex> 
-  
+#include <mutex>
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -28,7 +27,6 @@ namespace io {
 
 std::atomic<StreamFactory*> StreamFactory::context_instance_;
 std::mutex StreamFactory::context_mutex_;
-
 
 } /* namespace io */
 } /* namespace minifi */

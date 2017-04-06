@@ -15,13 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include "io/Serializable.h"
+#include <arpa/inet.h>
+#include <cstdio>
 #include <iostream>
 #include <vector>
 #include <string>
-#include <cstdio>
-#include <arpa/inet.h>
+#include <algorithm>
 #include "io/DataStream.h"
-#include "io/Serializable.h"
 namespace org {
 namespace apache {
 namespace nifi {
@@ -29,8 +30,7 @@ namespace minifi {
 namespace io {
 
 #define htonll_r(x) ((((uint64_t)htonl(x)) << 32) + htonl((x) >> 32))
-
-#define IS_ASCII(c) __builtin_expect(!!((c >= 1) && (c <= 127)),1)
+#define IS_ASCII(c) __builtin_expect(!!((c >= 1) && (c <= 127)), 1)
 
 template<typename T>
 int Serializable::writeData(const T &t, DataStream *stream) {
@@ -63,7 +63,7 @@ int Serializable::write(uint8_t value, DataStream *stream) {
   return stream->writeData(&value, 1);
 }
 int Serializable::write(char value, DataStream *stream) {
-  return stream->writeData((uint8_t *) &value, 1);
+  return stream->writeData(reinterpret_cast<uint8_t *>(&value), 1);
 }
 
 int Serializable::write(uint8_t *value, int len, DataStream *stream) {
@@ -89,7 +89,7 @@ int Serializable::read(char &value, DataStream *stream) {
 
   int ret = stream->readData(&buf, 1);
   if (ret == 1)
-    value = (char) buf;
+    value = buf;
   return ret;
 }
 
@@ -105,17 +105,14 @@ int Serializable::read(uint16_t &value, DataStream *stream,
 int Serializable::read(uint32_t &value, DataStream *stream,
                        bool is_little_endian) {
   return stream->read(value, is_little_endian);
-
 }
 int Serializable::read(uint64_t &value, DataStream *stream,
                        bool is_little_endian) {
   return stream->read(value, is_little_endian);
-
 }
 
 int Serializable::write(uint32_t base_value, DataStream *stream,
                         bool is_little_endian) {
-
   const uint32_t value = is_little_endian ? htonl(base_value) : base_value;
 
   return writeData(value, stream);
@@ -123,7 +120,6 @@ int Serializable::write(uint32_t base_value, DataStream *stream,
 
 int Serializable::write(uint64_t base_value, DataStream *stream,
                         bool is_little_endian) {
-
   const uint64_t value =
       is_little_endian == 1 ? htonll_r(base_value) : base_value;
   return writeData(value, stream);
@@ -131,7 +127,6 @@ int Serializable::write(uint64_t base_value, DataStream *stream,
 
 int Serializable::write(uint16_t base_value, DataStream *stream,
                         bool is_little_endian) {
-
   const uint16_t value = is_little_endian == 1 ? htons(base_value) : base_value;
 
   return writeData(value, stream);
@@ -150,7 +145,6 @@ int Serializable::readUTF(std::string &str, DataStream *stream, bool widen) {
   } else {
     uint32_t len;
     ret = read(len, stream);
-
     if (ret <= 0)
       return ret;
     utflen = len;
@@ -166,7 +160,6 @@ int Serializable::readUTF(std::string &str, DataStream *stream, bool widen) {
 
   // The number of chars produced may be less than utflen
   str = std::string((const char*) &buf[0], utflen);
-
   return utflen;
 }
 
@@ -181,7 +174,6 @@ int Serializable::writeUTF(std::string str, DataStream *stream, bool widen) {
     return -1;
 
   if (utflen == 0) {
-
     if (!widen) {
       uint16_t shortLen = utflen;
       write(shortLen, stream);
@@ -207,12 +199,10 @@ int Serializable::writeUTF(std::string str, DataStream *stream, bool widen) {
   int ret;
 
   if (!widen) {
-
     uint16_t short_length = utflen;
     write(short_length, stream);
     ret = stream->writeData(utf_to_write.data(), utflen);
   } else {
-    //utflen += 4;
     write(utflen, stream);
     ret = stream->writeData(utf_to_write.data(), utflen);
   }

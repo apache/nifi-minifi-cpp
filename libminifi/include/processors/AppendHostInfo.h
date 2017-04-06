@@ -24,7 +24,7 @@
 #include "FlowFileRecord.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
-#include "core/core.h"
+#include "core/Core.h"
 
 namespace org {
 namespace apache {
@@ -47,7 +47,7 @@ class AppendHostInfo : public core::Processor {
   virtual ~AppendHostInfo() {
   }
   // Processor Name
-  static const std::string ProcessorName;
+  static constexpr char const* ProcessorName = "AppendHostInfo";
   // Supported Properties
   static core::Property InterfaceName;
   static core::Property HostAttribute;
@@ -58,9 +58,8 @@ class AppendHostInfo : public core::Processor {
 
  public:
   // OnTrigger method, implemented by NiFi AppendHostInfo
-  virtual void onTrigger(
-      core::ProcessContext *context,
-      core::ProcessSession *session);
+  virtual void onTrigger(core::ProcessContext *context,
+                         core::ProcessSession *session);
   // Initialize, over write by NiFi AppendHostInfo
   virtual void initialize(void);
 

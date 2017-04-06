@@ -18,9 +18,12 @@
  * limitations under the License.
  */
 #include "processors/ExecuteProcess.h"
+#include <cstring>
+#include <memory>
+#include <string>
+#include <set>
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
-#include <cstring>
 #include "utils/StringUtils.h"
 #include "utils/TimeUtil.h"
 
@@ -30,14 +33,15 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-const std::string ExecuteProcess::ProcessorName("ExecuteProcess");
 core::Property ExecuteProcess::Command(
     "Command",
-    "Specifies the command to be executed; if just the name of an executable is provided, it must be in the user's environment PATH.",
+    "Specifies the command to be executed; if just the name of an executable"
+    " is provided, it must be in the user's environment PATH.",
     "");
 core::Property ExecuteProcess::CommandArguments(
     "Command Arguments",
-    "The arguments to supply to the executable delimited by white space. White space can be escaped by enclosing it in double-quotes.",
+    "The arguments to supply to the executable delimited by white space. White "
+    "space can be escaped by enclosing it in double-quotes.",
     "");
 core::Property ExecuteProcess::WorkingDir(
     "Working Directory",
@@ -45,7 +49,8 @@ core::Property ExecuteProcess::WorkingDir(
     "");
 core::Property ExecuteProcess::BatchDuration(
     "Batch Duration",
-    "If the process is expected to be long-running and produce textual output, a batch duration can be specified.",
+    "If the process is expected to be long-running and produce textual output, a "
+    "batch duration can be specified.",
     "0");
 core::Property ExecuteProcess::RedirectErrorStream(
     "Redirect Error Stream",
@@ -69,9 +74,8 @@ void ExecuteProcess::initialize() {
   setSupportedRelationships(relationships);
 }
 
-void ExecuteProcess::onTrigger(
-    core::ProcessContext *context,
-    core::ProcessSession *session) {
+void ExecuteProcess::onTrigger(core::ProcessContext *context,
+                               core::ProcessSession *session) {
   std::string value;
   if (context->getProperty(Command.getName(), value)) {
     this->_command = value;
@@ -84,12 +88,10 @@ void ExecuteProcess::onTrigger(
   }
   if (context->getProperty(BatchDuration.getName(), value)) {
     core::TimeUnit unit;
-    if (core::Property::StringToTime(value,
-                                                                _batchDuration,
-                                                                unit)
-        && core::Property::ConvertTimeUnitToMS(
-            _batchDuration, unit, _batchDuration)) {
-
+    if (core::Property::StringToTime(value, _batchDuration, unit)
+        && core::Property::ConvertTimeUnitToMS(_batchDuration, unit,
+                                               _batchDuration)) {
+      logger_->log_info("Setting _batchDuration");
     }
   }
   if (context->getProperty(RedirectErrorStream.getName(), value)) {
@@ -112,9 +114,7 @@ void ExecuteProcess::onTrigger(
   }
   logger_->log_info("Execute Command %s", _fullCommand.c_str());
   // split the command into array
-  char cstr[_fullCommand.length() + 1];
-  std::strcpy(cstr, _fullCommand.c_str());
-  char *p = std::strtok(cstr, " ");
+  char *p = std::strtok(const_cast<char*>(_fullCommand.c_str()), " ");
   int argc = 0;
   char *argv[64];
   while (p != 0 && argc < 64) {

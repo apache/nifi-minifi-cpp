@@ -33,8 +33,8 @@
  * @returns milliseconds since epoch
  */
 inline uint64_t getTimeMillis() {
-	return std::chrono::duration_cast<std::chrono::milliseconds>(
-			std::chrono::system_clock::now().time_since_epoch()).count();
+  return std::chrono::duration_cast<std::chrono::milliseconds>(
+      std::chrono::system_clock::now().time_since_epoch()).count();
 }
 
 /**
@@ -43,8 +43,8 @@ inline uint64_t getTimeMillis() {
  */
 inline uint64_t getTimeNano() {
 
-	return std::chrono::duration_cast<std::chrono::nanoseconds>(
-			std::chrono::system_clock::now().time_since_epoch()).count();
+  return std::chrono::duration_cast<std::chrono::nanoseconds>(
+      std::chrono::system_clock::now().time_since_epoch()).count();
 
 }
 
@@ -54,21 +54,19 @@ inline uint64_t getTimeNano() {
  * @param msec milliseconds since epoch
  * @returns string representing the time
  */
-inline std::string getTimeStr(uint64_t msec, bool enforce_locale = false)
-{
-	char date[120];
-	time_t second = (time_t) (msec/1000);
-	msec = msec % 1000;
-	strftime(date, sizeof(date) / sizeof(*date), TIME_FORMAT,
-	             ( enforce_locale==true ? gmtime(&second) : localtime(&second)));
+inline std::string getTimeStr(uint64_t msec, bool enforce_locale = false) {
+  char date[120];
+  time_t second = (time_t) (msec / 1000);
+  msec = msec % 1000;
+  strftime(date, sizeof(date) / sizeof(*date), TIME_FORMAT,
+           (enforce_locale == true ? gmtime(&second) : localtime(&second)));
 
-	std::string ret = date;
-	date[0] = '\0';
-	sprintf(date, ".%03llu", (unsigned long long) msec);
+  std::string ret = date;
+  date[0] = '\0';
+  sprintf(date, ".%03llu", (unsigned long long) msec);
 
-	ret += date;
-	return ret;
+  ret += date;
+  return ret;
 }
-
 
 #endif

@@ -17,16 +17,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include "FlowFileRecord.h"
+#include <sys/time.h>
+#include <time.h>
+#include <cstdio>
 #include <vector>
 #include <queue>
 #include <map>
-#include <sys/time.h>
-#include <time.h>
+#include <memory>
+#include <string>
 #include <iostream>
 #include <fstream>
-#include <cstdio>
-
-#include "FlowFileRecord.h"
 #include "core/logging/Logger.h"
 #include "core/Relationship.h"
 #include "core/Repository.h"
@@ -73,18 +74,18 @@ FlowFileRecord::FlowFileRecord(
     : FlowFile(),
       snapshot_(""),
       flow_repository_(flow_repository) {
-	entry_date_ = event->getEntryDate();
-	lineage_start_date_ = event->getlineageStartDate();
-	lineage_Identifiers_ = event->getlineageIdentifiers();
-	uuid_str_ = event->getUUIDStr();
-	attributes_ = event->getAttributes();
-	size_ = event->getSize();
-	offset_ = event->getOffset();
-	event->getUUID(uuid_);
-	uuid_connection_ = uuidConnection;
-	if (event->getResourceClaim()) {
-	  content_full_fath_ = event->getResourceClaim()->getContentFullPath();
-	}
+  entry_date_ = event->getEntryDate();
+  lineage_start_date_ = event->getlineageStartDate();
+  lineage_Identifiers_ = event->getlineageIdentifiers();
+  uuid_str_ = event->getUUIDStr();
+  attributes_ = event->getAttributes();
+  size_ = event->getSize();
+  offset_ = event->getOffset();
+  event->getUUID(uuid_);
+  uuid_connection_ = uuidConnection;
+  if (event->getResourceClaim()) {
+    content_full_fath_ = event->getResourceClaim()->getContentFullPath();
+  }
 }
 
 FlowFileRecord::FlowFileRecord(
@@ -94,7 +95,6 @@ FlowFileRecord::FlowFileRecord(
       uuid_connection_(""),
       snapshot_(""),
       flow_repository_(flow_repository) {
-
 }
 
 FlowFileRecord::~FlowFileRecord() {
@@ -175,10 +175,10 @@ bool FlowFileRecord::DeSerialize(std::string key) {
     logger_->log_error("NiFi FlowFile Store event %s can not found",
                        key.c_str());
     return false;
-  } else
+  } else {
     logger_->log_debug("NiFi FlowFile Read event %s length %d", key.c_str(),
                        value.length());
-
+  }
   io::DataStream stream((const uint8_t*) value.data(), value.length());
 
   ret = DeSerialize(stream);
@@ -197,14 +197,12 @@ bool FlowFileRecord::DeSerialize(std::string key) {
 }
 
 bool FlowFileRecord::Serialize() {
-
   io::DataStream outStream;
 
   int ret;
 
   ret = write(this->event_time_, &outStream);
   if (ret != 8) {
-
     return false;
   }
 
@@ -215,57 +213,48 @@ bool FlowFileRecord::Serialize() {
 
   ret = write(this->lineage_start_date_, &outStream);
   if (ret != 8) {
-
     return false;
   }
 
   ret = writeUTF(this->uuid_str_, &outStream);
   if (ret <= 0) {
-
     return false;
   }
 
   ret = writeUTF(this->uuid_connection_, &outStream);
   if (ret <= 0) {
-
     return false;
   }
   // write flow attributes
   uint32_t numAttributes = this->attributes_.size();
   ret = write(numAttributes, &outStream);
   if (ret != 4) {
-
     return false;
   }
 
   for (auto itAttribute : attributes_) {
     ret = writeUTF(itAttribute.first, &outStream, true);
     if (ret <= 0) {
-
       return false;
     }
     ret = writeUTF(itAttribute.second, &outStream, true);
     if (ret <= 0) {
-
       return false;
     }
   }
 
   ret = writeUTF(this->content_full_fath_, &outStream);
   if (ret <= 0) {
-
     return false;
   }
 
   ret = write(this->size_, &outStream);
   if (ret != 8) {
-
     return false;
   }
 
   ret = write(this->offset_, &outStream);
   if (ret != 8) {
-
     return false;
   }
 
@@ -281,13 +270,10 @@ bool FlowFileRecord::Serialize() {
     return false;
   }
 
-  // cleanup
-
   return true;
 }
 
 bool FlowFileRecord::DeSerialize(const uint8_t *buffer, const int bufferSize) {
-
   int ret;
 
   io::DataStream outStream(buffer, bufferSize);

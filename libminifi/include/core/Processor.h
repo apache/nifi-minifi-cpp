@@ -126,8 +126,7 @@ class Processor : public Connectable, public ConfigurableComponent,
   void setPenalizationPeriodMsec(uint64_t period) {
     _penalizationPeriodMsec = period;
   }
-  
-  
+
   // Set Processor Maximum Concurrent Tasks
   void setMaxConcurrentTasks(uint8_t tasks) {
     max_concurrent_tasks_ = tasks;
@@ -214,7 +213,6 @@ class Processor : public Connectable, public ConfigurableComponent,
 
  public:
 
-
   // OnTrigger method, implemented by NiFi Processor Designer
   virtual void onTrigger(ProcessContext *context, ProcessSession *session) = 0;
   // Initialize, overridden by NiFi Process Designer
@@ -238,7 +236,7 @@ class Processor : public Connectable, public ConfigurableComponent,
   std::atomic<uint64_t> run_durantion_nano_;
   // Yield Period in Milliseconds
   std::atomic<uint64_t> yield_period_msec_;
-  
+
   // Active Tasks
   std::atomic<uint8_t> active_tasks_;
   // Trigger the Processor even if the incoming connection is empty
@@ -260,11 +258,8 @@ private:
   std::stack<std::shared_ptr<Site2SiteClientProtocol>> available_protocols_;
   std::atomic<bool> protocols_created_;
 
-
   // Check all incoming connections for work
   bool isWorkAvailable();
-  // Logger
-  std::shared_ptr<logging::Logger> logger_;
   // Prevent default copy constructor and assignment operation
   // Only support pass by reference or pointer
   Processor(const Processor &parent);

@@ -17,16 +17,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include "core/ProcessGroup.h"
+#include <sys/time.h>
+#include <time.h>
 #include <vector>
+#include <memory>
+#include <string>
 #include <queue>
 #include <map>
 #include <set>
-#include <sys/time.h>
-#include <time.h>
 #include <chrono>
 #include <thread>
-
-#include "core/ProcessGroup.h"
 #include "core/Processor.h"
 
 namespace org {
@@ -63,7 +64,6 @@ ProcessGroup::~ProcessGroup() {
     ProcessGroup *processGroup(*it);
     delete processGroup;
   }
-
 }
 
 bool ProcessGroup::isRootProcessGroup() {
@@ -176,16 +176,12 @@ void ProcessGroup::stopProcessing(TimerDrivenSchedulingAgent *timeScheduler,
 }
 
 std::shared_ptr<Processor> ProcessGroup::findProcessor(uuid_t uuid) {
-
   std::shared_ptr<Processor> ret = NULL;
-  // std::lock_guard<std::mutex> lock(mutex_);
-
   for (auto processor : processors_) {
     logger_->log_info("find processor %s", processor->getName().c_str());
     uuid_t processorUUID;
 
     if (processor->getUUID(processorUUID)) {
-
       char uuid_str[37];  // ex. "1b4e28ba-2fa1-11d2-883f-0016d3cca427" + "\0"
       uuid_unparse_lower(processorUUID, uuid_str);
       std::string processorUUIDstr = uuid_str;
@@ -195,37 +191,31 @@ std::shared_ptr<Processor> ProcessGroup::findProcessor(uuid_t uuid) {
         return processor;
       }
     }
-
   }
   for (auto processGroup : child_process_groups_) {
-
     logger_->log_info("find processor child %s",
                       processGroup->getName().c_str());
     std::shared_ptr<Processor> processor = processGroup->findProcessor(uuid);
     if (processor)
       return processor;
   }
-
   return ret;
 }
 
 std::shared_ptr<Processor> ProcessGroup::findProcessor(
     const std::string &processorName) {
   std::shared_ptr<Processor> ret = NULL;
-
   for (auto processor : processors_) {
     logger_->log_debug("Current processor is %s", processor->getName().c_str());
     if (processor->getName() == processorName)
       return processor;
   }
-
   for (auto processGroup : child_process_groups_) {
     std::shared_ptr<Processor> processor = processGroup->findProcessor(
         processorName);
     if (processor)
       return processor;
   }
-
   return ret;
 }
 
@@ -233,18 +223,15 @@ void ProcessGroup::updatePropertyValue(std::string processorName,
                                        std::string propertyName,
                                        std::string propertyValue) {
   std::lock_guard<std::mutex> lock(mutex_);
-
   for (auto processor : processors_) {
     if (processor->getName() == processorName) {
       processor->setProperty(propertyName, propertyValue);
     }
   }
-
   for (auto processGroup : child_process_groups_) {
     processGroup->updatePropertyValue(processorName, propertyName,
                                       propertyValue);
   }
-
   return;
 }
 
@@ -253,7 +240,6 @@ void ProcessGroup::getConnections(
   for (auto connection : connections_) {
     connectionMap[connection->getUUIDStr()] = connection;
   }
-
   for (auto processGroup : child_process_groups_) {
     processGroup->getConnections(connectionMap);
   }
@@ -305,7 +291,7 @@ void ProcessGroup::removeConnection(std::shared_ptr<Connection> connection) {
   }
 }
 
-} /* namespace processor */
+} /* namespace core */
 } /* namespace minifi */
 } /* namespace nifi */
 } /* namespace apache */

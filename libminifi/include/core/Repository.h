@@ -39,7 +39,7 @@
 #include "io/Serializable.h"
 #include "utils/TimeUtil.h"
 #include "utils/StringUtils.h"
-#include "core.h"
+#include "Core.h"
 
 namespace org {
 namespace apache {
@@ -72,15 +72,15 @@ class Repository : public CoreComponent {
   }
 
   // initialize
-  virtual bool initialize(){
+  virtual bool initialize() {
     return true;
   }
   // Put
-  virtual bool Put(std::string key, uint8_t *buf, int bufLen){
+  virtual bool Put(std::string key, uint8_t *buf, int bufLen) {
     return true;
   }
   // Delete
-  virtual bool Delete(std::string key){
+  virtual bool Delete(std::string key) {
     return true;
   }
 
@@ -89,7 +89,7 @@ class Repository : public CoreComponent {
   }
 
   // Run function for the thread
-  virtual  void run(){
+  virtual void run() {
     // no op
   }
   // Start the repository monitor thread
@@ -138,12 +138,9 @@ class Repository : public CoreComponent {
   // size of the directory
   std::atomic<uint64_t> repo_size_;
   // Run function for the thread
-  void threadExecutor(){
-      run();
-    }
-
-  
-    
+  void threadExecutor() {
+    run();
+  }
 };
 
 } /* namespace core */
