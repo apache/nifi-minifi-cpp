@@ -52,7 +52,7 @@ public:
 
 	}
 	//! Processor Name
-	static const std::string ProcessorName;
+	static constexpr char const* ProcessorName = "ProvenanceTaskReport";
 	//! Supported Properties
 	static core::Property hostName;
 	static core::Property port;

@@ -29,6 +29,7 @@
 #include <thread>
 #include <memory>
 #include <functional>
+#include <utility>
 #include "Connection.h"
 #include "core/Connectable.h"
 #include "core/ProcessContext.h"
@@ -42,9 +43,8 @@ namespace nifi {
 namespace minifi {
 namespace core {
 
-Processor::Processor(std::string name, uuid_t uuid)
-    : Connectable(name, uuid),
-      ConfigurableComponent(logging::Logger::getLogger()) {
+Processor::Processor(std::string name, uuid_t uuid) :
+    Connectable(name, uuid), ConfigurableComponent(logging::Logger::getLogger()) {
   has_work_.store(false);
   // Setup the default values
   state_ = DISABLED;
@@ -62,7 +62,7 @@ Processor::Processor(std::string name, uuid_t uuid)
   incoming_connections_Iter = this->_incomingConnections.begin();
   logger_ = logging::Logger::getLogger();
   logger_->log_info("Processor %s created UUID %s", name_.c_str(),
-                    uuidStr_.c_str());
+      uuidStr_.c_str());
 }
 
 bool Processor::isRunning() {
@@ -78,12 +78,12 @@ bool Processor::addConnection(std::shared_ptr<Connectable> conn) {
 
   if (isRunning()) {
     logger_->log_info("Can not add connection while the process %s is running",
-                      name_.c_str());
+        name_.c_str());
     return false;
   }
-  std::shared_ptr<Connection> connection = std::static_pointer_cast<Connection>(
-      conn);
-  std::lock_guard<std::mutex> lock(mutex_);
+  std::shared_ptr<Connection> connection = std::static_pointer_cast < Connection
+      > (conn);
+  std::lock_guard < std::mutex > lock(mutex_);
 
   uuid_t srcUUID;
   uuid_t destUUID;
@@ -116,7 +116,8 @@ bool Processor::addConnection(std::shared_ptr<Connectable> conn) {
     auto &&it = _outGoingConnections.find(relationship);
     if (it != _outGoingConnections.end()) {
       // We already has connection for this relationship
-      std::set<std::shared_ptr<Connectable>> existedConnection = it->second;
+      std::set < std::shared_ptr < Connectable >> existedConnection =
+          it->second;
       if (existedConnection.find(connection) == existedConnection.end()) {
         // We do not have the same connection for this relationship yet
         existedConnection.insert(connection);
@@ -129,7 +130,7 @@ bool Processor::addConnection(std::shared_ptr<Connectable> conn) {
       }
     } else {
       // We do not have any outgoing connection for this relationship yet
-      std::set<std::shared_ptr<Connectable>> newConnection;
+      std::set < std::shared_ptr < Connectable >> newConnection;
       newConnection.insert(connection);
       connection->setSource(shared_from_this());
       _outGoingConnections[relationship] = newConnection;
@@ -151,13 +152,13 @@ void Processor::removeConnection(std::shared_ptr<Connectable> conn) {
     return;
   }
 
-  std::lock_guard<std::mutex> lock(mutex_);
+  std::lock_guard < std::mutex > lock(mutex_);
 
   uuid_t srcUUID;
   uuid_t destUUID;
 
-  std::shared_ptr<Connection> connection = std::static_pointer_cast<Connection>(
-      conn);
+  std::shared_ptr<Connection> connection = std::static_pointer_cast < Connection
+      > (conn);
 
   connection->getSourceUUID(srcUUID);
   connection->getDestinationUUID(destUUID);
@@ -193,65 +194,65 @@ void Processor::removeConnection(std::shared_ptr<Connectable> conn) {
   }
 }
 
-std::shared_ptr<Site2SiteClientProtocol> Processor::obtainSite2SiteProtocol
-		(std::string host, uint16_t sport, uuid_t portId) {
-	std::lock_guard<std::mutex> lock(mutex_);
+std::shared_ptr<Site2SiteClientProtocol> Processor::obtainSite2SiteProtocol(
+    std::string host, uint16_t sport, uuid_t portId) {
+  std::lock_guard < std::mutex > lock(mutex_);
 
-	if (!protocols_created_) {
-		for (int i = 0; i < this->max_concurrent_tasks_; i++) {
-			// create the protocol pool based on max threads allowed
-			std::shared_ptr<Site2SiteClientProtocol> protocol (
-				        new Site2SiteClientProtocol(0));
-			protocols_created_ = true;
-			protocol->setPortId(portId);
-			std::unique_ptr<org::apache::nifi::minifi::io::DataStream> str =
-				        std::unique_ptr<org::apache::nifi::minifi::io::DataStream>(
-				            org::apache::nifi::minifi::io::StreamFactory::getInstance()
-				                ->createSocket(host, sport));
-			std::unique_ptr<Site2SitePeer> peer_ = std::unique_ptr<Site2SitePeer>(
-				        new Site2SitePeer(std::move(str), host, sport));
-			protocol->setPeer(std::move(peer_));
-			available_protocols_.push(protocol);
-		}
-	}
-	if (!available_protocols_.empty()) {
-		std::shared_ptr<Site2SiteClientProtocol> return_pointer = available_protocols_.top();
-		available_protocols_.pop();
-		return return_pointer;
-	}
-	else {
-		// create the protocol on demand if we exceed the pool
-		std::shared_ptr<Site2SiteClientProtocol> protocol (
-						        new Site2SiteClientProtocol(0));
-		protocol->setPortId(portId);
-		std::unique_ptr<org::apache::nifi::minifi::io::DataStream> str =
-						        std::unique_ptr<org::apache::nifi::minifi::io::DataStream>(
-						            org::apache::nifi::minifi::io::StreamFactory::getInstance()
-						                ->createSocket(host, sport));
-		std::unique_ptr<Site2SitePeer> peer_ = std::unique_ptr<Site2SitePeer>(
-						        new Site2SitePeer(std::move(str), host, sport));
-		protocol->setPeer(std::move(peer_));
-		return protocol;
-	}
+  if (!protocols_created_) {
+    for (int i = 0; i < this->max_concurrent_tasks_; i++) {
+      // create the protocol pool based on max threads allowed
+      std::shared_ptr<Site2SiteClientProtocol> protocol(
+          new Site2SiteClientProtocol(0));
+      protocols_created_ = true;
+      protocol->setPortId(portId);
+      std::unique_ptr<org::apache::nifi::minifi::io::DataStream> str =
+          std::unique_ptr < org::apache::nifi::minifi::io::DataStream
+              > (org::apache::nifi::minifi::io::StreamFactory::getInstance()->createSocket(
+                  host, sport));
+      std::unique_ptr<Site2SitePeer> peer_ = std::unique_ptr < Site2SitePeer
+          > (new Site2SitePeer(std::move(str), host, sport));
+      protocol->setPeer(std::move(peer_));
+      available_protocols_.push(protocol);
+    }
+  }
+  if (!available_protocols_.empty()) {
+    std::shared_ptr<Site2SiteClientProtocol> return_pointer =
+        available_protocols_.top();
+    available_protocols_.pop();
+    return return_pointer;
+  } else {
+    // create the protocol on demand if we exceed the pool
+    std::shared_ptr<Site2SiteClientProtocol> protocol(
+        new Site2SiteClientProtocol(0));
+    protocol->setPortId(portId);
+    std::unique_ptr<org::apache::nifi::minifi::io::DataStream> str =
+        std::unique_ptr < org::apache::nifi::minifi::io::DataStream
+            > (org::apache::nifi::minifi::io::StreamFactory::getInstance()->createSocket(
+                host, sport));
+    std::unique_ptr<Site2SitePeer> peer_ = std::unique_ptr < Site2SitePeer
+        > (new Site2SitePeer(std::move(str), host, sport));
+    protocol->setPeer(std::move(peer_));
+    return protocol;
+  }
 }
 
-void Processor::returnSite2SiteProtocol(std::shared_ptr<Site2SiteClientProtocol> protocol)
-{
-	std::lock_guard<std::mutex> lock(mutex_);
-	if (protocol && available_protocols_.size() < max_concurrent_tasks_) {
-		available_protocols_.push(protocol);
-	}
+void Processor::returnSite2SiteProtocol(
+    std::shared_ptr<Site2SiteClientProtocol> protocol) {
+  std::lock_guard < std::mutex > lock(mutex_);
+  if (protocol && available_protocols_.size() < max_concurrent_tasks_) {
+    available_protocols_.push(protocol);
+  }
 }
 
 bool Processor::flowFilesQueued() {
-  std::lock_guard<std::mutex> lock(mutex_);
+  std::lock_guard < std::mutex > lock(mutex_);
 
   if (_incomingConnections.size() == 0)
     return false;
 
   for (auto &&conn : _incomingConnections) {
-    std::shared_ptr<Connection> connection =
-        std::static_pointer_cast<Connection>(conn);
+    std::shared_ptr<Connection> connection = std::static_pointer_cast
+        < Connection > (conn);
     if (connection->getQueueSize() > 0)
       return true;
   }
@@ -260,14 +261,15 @@ bool Processor::flowFilesQueued() {
 }
 
 bool Processor::flowFilesOutGoingFull() {
-  std::lock_guard<std::mutex> lock(mutex_);
+  std::lock_guard < std::mutex > lock(mutex_);
 
   for (auto &&connection : _outGoingConnections) {
     // We already has connection for this relationship
-    std::set<std::shared_ptr<Connectable>> existedConnection = connection.second;
+    std::set < std::shared_ptr < Connectable >> existedConnection =
+        connection.second;
     for (const auto conn : existedConnection) {
-      std::shared_ptr<Connection> connection = std::static_pointer_cast<
-          Connection>(conn);
+      std::shared_ptr < Connection > connection = std::static_pointer_cast
+          < Connection > (conn);
       if (connection->isFull())
         return true;
     }
@@ -277,7 +279,7 @@ bool Processor::flowFilesOutGoingFull() {
 }
 
 void Processor::onTrigger(ProcessContext *context,
-                          ProcessSessionFactory *sessionFactory) {
+    ProcessSessionFactory *sessionFactory) {
   auto session = sessionFactory->createSession();
 
   try {
@@ -301,8 +303,8 @@ bool Processor::isWorkAvailable() {
 
   try {
     for (const auto &conn : _incomingConnections) {
-      std::shared_ptr<Connection> connection = std::static_pointer_cast<
-          Connection>(conn);
+      std::shared_ptr<Connection> connection = std::static_pointer_cast
+          < Connection > (conn);
       if (connection->getQueueSize() > 0) {
         hasWork = true;
         break;
@@ -311,7 +313,7 @@ bool Processor::isWorkAvailable() {
   } catch (...) {
     logger_->log_error(
         "Caught an exception while checking if work is available;"
-        " unless it was positively determined that work is available, assuming NO work is available!");
+            " unless it was positively determined that work is available, assuming NO work is available!");
   }
 
   return hasWork;
