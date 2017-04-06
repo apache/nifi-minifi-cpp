@@ -276,7 +276,7 @@ bool FlowFileRecord::Serialize() {
                        uuid_str_.c_str(), outStream.getSize());
     return true;
   } else {
-    logger_->log_error("NiFi FlowFile Store event %s size %d fail",
+    logger_->log_debug("NiFi FlowFile Store event %s size %d fail",
                        uuid_str_.c_str(), outStream.getSize());
     return false;
   }

@@ -682,7 +682,6 @@ bool Site2SiteClientProtocol::receive(std::string transactionID,
 
 bool Site2SiteClientProtocol::send(
     std::string transactionID, DataPacket *packet, std::shared_ptr<FlowFileRecord> flowFile,
-	uint8_t *payload, int length,
     core::ProcessSession *session) {
   int ret;
   Transaction *transaction = NULL;
@@ -764,15 +763,15 @@ bool Site2SiteClientProtocol::send(
 	  }
 	}
   }
-  else if (payload != NULL){
-	len = length;
+  else if (packet->payload_.length() > 0) {
+	len = packet->payload_.length();
 
 	ret = transaction->getStream().write(len);
 	if (ret != 8) {
 	  return false;
 	}
 
-	ret = transaction->getStream().writeData(payload, len);
+	ret = transaction->getStream().writeData((uint8_t *) (packet->payload_.c_str()), len);
 	if (ret != len) {
 	  return false;
 	}
@@ -823,7 +822,8 @@ void Site2SiteClientProtocol::receiveFlowFiles(
     while (true) {
       std::map<std::string, std::string> empty;
       uint64_t startTime = getTimeMillis();
-      DataPacket packet(this, transaction, empty);
+      std::string payload;
+      DataPacket packet(this, transaction, empty, payload);
       bool eof = false;
 
       if (!receive(transactionID, &packet, eof)) {
@@ -1198,9 +1198,10 @@ void Site2SiteClientProtocol::transferFlowFiles(
   try {
     while (continueTransaction) {
       uint64_t startTime = getTimeMillis();
-      DataPacket packet(this, transaction, flow->getAttributes());
+      std::string payload;
+      DataPacket packet(this, transaction, flow->getAttributes(), payload);
 
-      if (!send(transactionID, &packet, flow, NULL, 0, session)) {
+      if (!send(transactionID, &packet, flow, session)) {
         throw Exception(SITE2SITE_EXCEPTION, "Send Failed");
         return;
       }
@@ -1257,12 +1258,12 @@ void Site2SiteClientProtocol::transferFlowFiles(
   return;
 }
 
-void Site2SiteClientProtocol::transferBytes(core::ProcessContext *context, core::ProcessSession *session, uint8_t *payload, int length,
+void Site2SiteClientProtocol::transferString(core::ProcessContext *context, core::ProcessSession *session, std::string &payload,
 		std::map<std::string, std::string> attributes)
 {
 	Transaction *transaction = NULL;
 
-	if (payload == NULL)
+	if (payload.length() <= 0)
 		return;
 
 	if (_peerState != READY)
@@ -1292,15 +1293,15 @@ void Site2SiteClientProtocol::transferBytes(core::ProcessContext *context, core:
 
 	try
 	{
-		DataPacket packet(this, transaction, attributes);
+		DataPacket packet(this, transaction, attributes, payload);
 
-		if (!send(transactionID, &packet, nullptr, payload, length, session))
+		if (!send(transactionID, &packet, nullptr, session))
 		{
 			throw Exception(SITE2SITE_EXCEPTION, "Send Failed");
 			return;
 		}
 		logger_->log_info("Site2Site transaction %s send bytes length %d",
-							transactionID.c_str(), length);
+							transactionID.c_str(), payload.length());
 
 		if (!confirm(transactionID))
 		{

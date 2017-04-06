@@ -57,6 +57,7 @@ class RemoteProcessorGroupPort :
   // Supported Properties
   static core::Property hostName;
   static core::Property port;
+  static core::Property portUUID;
   // Supported Relationships
   static core::Relationship relation;
  public:

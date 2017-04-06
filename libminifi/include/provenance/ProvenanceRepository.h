@@ -113,6 +113,9 @@ class ProvenanceRepository : public core::Repository,
   // Put
   virtual bool Put(std::string key, uint8_t *buf, int bufLen) {
 
+	if (repo_full_)
+		return false;
+
     // persistent to the DB
     leveldb::Slice value((const char *) buf, bufLen);
     leveldb::Status status;

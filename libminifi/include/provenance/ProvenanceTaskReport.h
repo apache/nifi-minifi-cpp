@@ -57,8 +57,10 @@ public:
 	static core::Property hostName;
 	static core::Property port;
 	static core::Property batchSize;
+	static core::Property portUUID;
 	//! Supported Relationships
 	static core::Relationship relation;
+	static const char *ProvenanceAppStr;
 public:
 	//! OnTrigger method, implemented by NiFi ProvenanceTaskReport
 	virtual void onTrigger(core::ProcessContext *context, core::ProcessSession *session);
@@ -68,10 +70,6 @@ public:
 protected:
 
 private:
-	std::unique_ptr<Site2SiteClientProtocol> getNextProtocol();
-	void returnProtocol(std::unique_ptr<Site2SiteClientProtocol> protocol);
-	std::stack<std::unique_ptr<Site2SiteClientProtocol>> available_protocols_;
-	std::mutex protocol_mutex_;
 	uuid_t protocol_uuid_;
 	//! Logger
 	std::shared_ptr<logging::Logger> logger_;

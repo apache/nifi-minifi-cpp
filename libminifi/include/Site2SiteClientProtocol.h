@@ -377,7 +377,8 @@ class Transaction {
 class DataPacket {
  public:
   DataPacket(Site2SiteClientProtocol *protocol, Transaction *transaction,
-             std::map<std::string, std::string> attributes) {
+             std::map<std::string, std::string> attributes, std::string &payload) :
+             payload_ (payload) {
     _protocol = protocol;
     _size = 0;
     _transaction = transaction;
@@ -387,6 +388,8 @@ class DataPacket {
   uint64_t _size;
   Site2SiteClientProtocol *_protocol;
   Transaction *_transaction;
+  std::string & payload_;
+
 };
 
 // Site2SiteClientProtocol Class
@@ -520,7 +523,6 @@ class Site2SiteClientProtocol {
   // Return false when any error occurs
   bool send(std::string transactionID, DataPacket *packet,
             std::shared_ptr<FlowFileRecord> flowFile,
-			uint8_t *payload, int length,
             core::ProcessSession *session);
   // Confirm the data that was sent or received by comparing CRC32's of the data sent and the data received.
   bool confirm(std::string transactionID);
@@ -538,8 +540,8 @@ class Site2SiteClientProtocol {
   void transferFlowFiles(
       core::ProcessContext *context,
       core::ProcessSession *session);
-  //! Transfer payload for the process session
-  void transferBytes(core::ProcessContext *context, core::ProcessSession *session, uint8_t *payload, int length,
+  //! Transfer string for the process session
+  void transferString(core::ProcessContext *context, core::ProcessSession *session, std::string &payload,
       std::map<std::string, std::string> attributes);
   // deleteTransaction
   void deleteTransaction(std::string transactionID);

@@ -49,7 +49,9 @@ const std::string ProvenanceTaskReport::ProcessorName("ProvenanceTaskReport");
 core::Property ProvenanceTaskReport::hostName("Host Name", "Remote Host Name.", "localhost");
 core::Property ProvenanceTaskReport::port("Port", "Remote Port", "9999");
 core::Property ProvenanceTaskReport::batchSize("Batch Size", "Specifies how many records to send in a single batch, at most.", "100");
+core::Property ProvenanceTaskReport::portUUID("Port UUID", "Specifies remote NiFi Port UUID.", "");
 core::Relationship ProvenanceTaskReport::relation;
+const char *ProvenanceTaskReport::ProvenanceAppStr = "MiNiFi Flow";
 
 void ProvenanceTaskReport::initialize()
 {
@@ -58,6 +60,7 @@ void ProvenanceTaskReport::initialize()
 	properties.insert(hostName);
 	properties.insert(port);
 	properties.insert(batchSize);
+	properties.insert(portUUID);
 	setSupportedProperties(properties);
 	//! Set the supported relationships
 	std::set<core::Relationship> relationships;
@@ -65,55 +68,30 @@ void ProvenanceTaskReport::initialize()
 	setSupportedRelationships(relationships);
 }
 
-std::unique_ptr<Site2SiteClientProtocol> ProvenanceTaskReport::getNextProtocol()
-{
-	std::lock_guard<std::mutex> protocol_lock_(protocol_mutex_);
-	if (available_protocols_.empty())
-		return nullptr;
-	std::unique_ptr<Site2SiteClientProtocol> return_pointer = std::move(available_protocols_.top());
-	available_protocols_.pop();
-	return std::move(return_pointer);
-}
-
-void ProvenanceTaskReport::returnProtocol(
-  std::unique_ptr<Site2SiteClientProtocol> return_protocol)
-{
-	std::lock_guard<std::mutex> protocol_lock_(protocol_mutex_);
-	available_protocols_.push(std::move(return_protocol));
-}
-
 void ProvenanceTaskReport::onTrigger(core::ProcessContext *context, core::ProcessSession *session)
 {
 	std::string value;
 	int64_t lvalue;
+	std::string host = "";
+	uint16_t sport = 0;
+
+	if (context->getProperty(hostName.getName(), value)) {
+	  host = value;
+	}
+	if (context->getProperty(port.getName(), value)
+	    && core::Property::StringToInt(value, lvalue)) {
+	  sport = (uint16_t) lvalue;
+	}
+	if (context->getProperty(portUUID.getName(), value)) {
+	  uuid_parse(value.c_str(), protocol_uuid_);
+	}
+
+	std::shared_ptr<Site2SiteClientProtocol> protocol_ = this->obtainSite2SiteProtocol(host, sport, protocol_uuid_);
 	
-	std::unique_ptr<Site2SiteClientProtocol> protocol_ = getNextProtocol();
-
-	if (protocol_ == nullptr)
+	if (!protocol_)
 	{
-		protocol_ = std::unique_ptr<Site2SiteClientProtocol>(
-	        new Site2SiteClientProtocol(0));
-	    protocol_->setPortId(protocol_uuid_);
-
-	    std::string host = "";
-	    uint16_t sport = 0;
-
-	    if (context->getProperty(hostName.getName(), value)) {
-	      host = value;
-	    }
-	    if (context->getProperty(port.getName(), value)
-	        && core::Property::StringToInt(value, lvalue)) {
-	      sport = (uint16_t) lvalue;
-	    }
-	    std::unique_ptr<org::apache::nifi::minifi::io::DataStream> str =
-	        std::unique_ptr<org::apache::nifi::minifi::io::DataStream>(
-	            org::apache::nifi::minifi::io::StreamFactory::getInstance()
-	                ->createSocket(host, sport));
-
-	    std::unique_ptr<Site2SitePeer> peer_ = std::unique_ptr<Site2SitePeer>(
-	        new Site2SitePeer(std::move(str), host, sport));
-
-	    protocol_->setPeer(std::move(peer_));
+		context->yield();
+		return;
 	}
 
 	if (!protocol_->bootstrap())
@@ -124,14 +102,15 @@ void ProvenanceTaskReport::onTrigger(core::ProcessContext *context, core::Proces
 	        context->getProcessorNode().getProcessor());
 	    logger_->log_error("Site2Site bootstrap failed yield period %d peer ",
 	                       processor->getYieldPeriodMsec());
+	    returnSite2SiteProtocol(protocol_);
 	    return;
 	}
 
-	int batch = 100;
+	int64_t batch = 100;
 
 	if (context->getProperty(batchSize.getName(), value) && core::Property::StringToInt(value, lvalue))
 	{
-		batch = (int) lvalue;
+		batch = lvalue;
 	}
 	
 	std::vector<std::shared_ptr<ProvenanceEventRecord>> records;
@@ -141,7 +120,7 @@ void ProvenanceTaskReport::onTrigger(core::ProcessContext *context, core::Proces
 
 	if (records.size() <= 0)
 	{
-		returnProtocol(std::move(protocol_));
+		returnSite2SiteProtocol(protocol_);
 		return;
 	}
 
@@ -185,33 +164,30 @@ void ProvenanceTaskReport::onTrigger(core::ProcessContext *context, core::Proces
 		recordJson["transitUri"] = record->getTransitUri().c_str();
 		recordJson["remoteIdentifier"] = record->getSourceSystemFlowFileIdentifier().c_str();
 		recordJson["alternateIdentifier"] = record->getAlternateIdentifierUri().c_str();
-		recordJson["application"] = "MiNiFi Flow";
+		recordJson["application"] = ProvenanceAppStr;
 		array.append(recordJson);
 	}
 
 	Json::StyledWriter writer;
 	std::string jsonStr = writer.write(array);
-	uint8_t *payload = (uint8_t *) jsonStr.c_str();
-	int length = jsonStr.length();
 
 	try
 	{
 		std::map<std::string, std::string> attributes;
-		protocol_->transferBytes(context, session, payload, length, attributes);
+		protocol_->transferString(context, session, jsonStr, attributes);
 	}
 	catch (...)
 	{
 		// if transfer bytes failed, return instead of purge the provenance records
-		returnProtocol(std::move(protocol_));
+		returnSite2SiteProtocol(protocol_);
 		return;
 	}
 
 	// we transfer the record, purge the record from DB
 	repo->purgeProvenanceRecord(records);
 
-	returnProtocol(std::move(protocol_));
+	returnSite2SiteProtocol(protocol_);
 
-	return;
 }
 
 } /* namespace provenance */
