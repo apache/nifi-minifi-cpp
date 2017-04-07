@@ -201,8 +201,7 @@ std::shared_ptr<Site2SiteClientProtocol> Processor::obtainSite2SiteProtocol(
   if (!protocols_created_) {
     for (int i = 0; i < this->max_concurrent_tasks_; i++) {
       // create the protocol pool based on max threads allowed
-      std::shared_ptr<Site2SiteClientProtocol> protocol(
-          new Site2SiteClientProtocol(0));
+      std::shared_ptr<Site2SiteClientProtocol> protocol = std::make_shared<Site2SiteClientProtocol>(nullptr);
       protocols_created_ = true;
       protocol->setPortId(portId);
       std::unique_ptr<org::apache::nifi::minifi::io::DataStream> str =
@@ -222,8 +221,7 @@ std::shared_ptr<Site2SiteClientProtocol> Processor::obtainSite2SiteProtocol(
     return return_pointer;
   } else {
     // create the protocol on demand if we exceed the pool
-    std::shared_ptr<Site2SiteClientProtocol> protocol(
-        new Site2SiteClientProtocol(0));
+    std::shared_ptr<Site2SiteClientProtocol> protocol = std::make_shared<Site2SiteClientProtocol>(nullptr);
     protocol->setPortId(portId);
     std::unique_ptr<org::apache::nifi::minifi::io::DataStream> str =
         std::unique_ptr < org::apache::nifi::minifi::io::DataStream

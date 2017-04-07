@@ -159,7 +159,7 @@ class ProvenanceRepository : public core::Repository,
 	leveldb::Iterator* it = db_->NewIterator(
 				leveldb::ReadOptions());
 	for (it->SeekToFirst(); it->Valid(); it->Next()) {
-			std::shared_ptr<ProvenanceEventRecord> eventRead (new ProvenanceEventRecord());
+			std::shared_ptr<ProvenanceEventRecord> eventRead = std::make_shared<ProvenanceEventRecord>();
 			std::string key = it->key().ToString();
 			if (records.size() >= maxSize)
 				break;
