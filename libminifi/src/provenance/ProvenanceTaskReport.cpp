@@ -174,7 +174,6 @@ void ProvenanceTaskReport::onTrigger(core::ProcessContext *context,
     protocol_->transferString(context, session, jsonStr, attributes);
   } catch (...) {
     // if transfer bytes failed, return instead of purge the provenance records
-    returnSite2SiteProtocol(protocol_);
     return;
   }
 
