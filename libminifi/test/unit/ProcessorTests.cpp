@@ -41,16 +41,20 @@ TEST_CASE("Test Find file", "[getfileCreate2]") {
 
   testController.enableDebug();
 
-  std::shared_ptr<core::Processor> processor = std::make_shared<
-      org::apache::nifi::minifi::processors::GetFile>("getfileCreate2");
+  std::shared_ptr<core::Processor> processor = std::make_shared
+      < org::apache::nifi::minifi::processors::GetFile > ("getfileCreate2");
+
+  std::shared_ptr<core::Processor> processorReport = std::make_shared
+      < org::apache::nifi::minifi::provenance::ProvenanceTaskReport
+      > ("provenanceTaskReport");
 
   std::shared_ptr<core::Repository> test_repo =
       std::make_shared<TestRepository>();
 
-  std::shared_ptr<TestRepository> repo =
-      std::static_pointer_cast<TestRepository>(test_repo);
-  std::shared_ptr<minifi::FlowController> controller = std::make_shared<
-      TestFlowController>(test_repo, test_repo);
+  std::shared_ptr<TestRepository> repo = std::static_pointer_cast
+      < TestRepository > (test_repo);
+  std::shared_ptr<minifi::FlowController> controller = std::make_shared
+      < TestFlowController > (test_repo, test_repo);
 
   char format[] = "/tmp/gt.XXXXXX";
   char *dir = testController.createTempDirectory(format);
@@ -58,8 +62,8 @@ TEST_CASE("Test Find file", "[getfileCreate2]") {
   uuid_t processoruuid;
   REQUIRE(true == processor->getUUID(processoruuid));
 
-  std::shared_ptr<minifi::Connection> connection = std::make_shared<
-      minifi::Connection>(test_repo, "getfileCreate2Connection");
+  std::shared_ptr<minifi::Connection> connection = std::make_shared
+      < minifi::Connection > (test_repo, "getfileCreate2Connection");
   connection->setRelationship(core::Relationship("success", "description"));
 
   // link the connections so that we can test results at the end for this
@@ -77,7 +81,7 @@ TEST_CASE("Test Find file", "[getfileCreate2]") {
   core::ProcessContext context(node, test_repo);
   core::ProcessSessionFactory factory(&context);
   context.setProperty(org::apache::nifi::minifi::processors::GetFile::Directory,
-                      dir);
+      dir);
   core::ProcessSession session(&context);
 
   processor->onSchedule(&context, &factory);
@@ -122,7 +126,7 @@ TEST_CASE("Test Find file", "[getfileCreate2]") {
   for (auto entry : repo->getRepoMap()) {
     provenance::ProvenanceEventRecord newRecord;
     newRecord.DeSerialize((uint8_t*) entry.second.data(),
-                          entry.second.length());
+        entry.second.length());
 
     bool found = false;
     for (auto provRec : records) {
@@ -141,6 +145,26 @@ TEST_CASE("Test Find file", "[getfileCreate2]") {
 
   }
 
+  core::ProcessorNode nodeReport(processorReport);
+  core::ProcessContext contextReport(nodeReport, test_repo);
+  core::ProcessSessionFactory factoryReport(&contextReport);
+  contextReport.setProperty(org::apache::nifi::minifi::provenance::ProvenanceTaskReport::batchSize,
+      "1");
+  core::ProcessSession sessionReport(&contextReport);
+  processorReport->onSchedule(&contextReport, &factoryReport);
+  std::shared_ptr<org::apache::nifi::minifi::provenance::ProvenanceTaskReport> taskReport = std::static_pointer_cast
+        < org::apache::nifi::minifi::provenance::ProvenanceTaskReport > (processorReport);
+  std::vector < std::shared_ptr < provenance::ProvenanceEventRecord >> recordsReport;
+  processorReport->incrementActiveTasks();
+  processorReport->setScheduledState(core::ScheduledState::RUNNING);
+  std::string jsonStr;
+  repo->getProvenanceRecord(recordsReport, 1);
+  taskReport->getJasonReport(&contextReport, &sessionReport, recordsReport, jsonStr);
+  REQUIRE(recordsReport.size() == 1);
+  REQUIRE(taskReport->getName() == "provenanceTaskReport");
+  REQUIRE(jsonStr.find("\"componentType\" : \"getfileCreate2\"") != std::string::npos);
+  REQUIRE(jsonStr.find("\"filename\" : \"tstFile.ext\"") != std::string::npos);
+
 }
 
 TEST_CASE("Test GetFileLikeIt'sThreaded", "[getfileCreate3]") {
@@ -149,16 +173,16 @@ TEST_CASE("Test GetFileLikeIt'sThreaded", "[getfileCreate3]") {
 
   testController.enableDebug();
 
-  std::shared_ptr<core::Processor> processor = std::make_shared<
-      org::apache::nifi::minifi::processors::GetFile>("getfileCreate2");
+  std::shared_ptr<core::Processor> processor = std::make_shared
+      < org::apache::nifi::minifi::processors::GetFile > ("getfileCreate2");
 
   std::shared_ptr<core::Repository> test_repo =
       std::make_shared<TestRepository>();
 
-  std::shared_ptr<TestRepository> repo =
-      std::static_pointer_cast<TestRepository>(test_repo);
-  std::shared_ptr<minifi::FlowController> controller = std::make_shared<
-      TestFlowController>(test_repo, test_repo);
+  std::shared_ptr<TestRepository> repo = std::static_pointer_cast
+      < TestRepository > (test_repo);
+  std::shared_ptr<minifi::FlowController> controller = std::make_shared
+      < TestFlowController > (test_repo, test_repo);
 
   char format[] = "/tmp/gt.XXXXXX";
   char *dir = testController.createTempDirectory(format);
@@ -166,8 +190,8 @@ TEST_CASE("Test GetFileLikeIt'sThreaded", "[getfileCreate3]") {
   uuid_t processoruuid;
   REQUIRE(true == processor->getUUID(processoruuid));
 
-  std::shared_ptr<minifi::Connection> connection = std::make_shared<
-      minifi::Connection>(test_repo, "getfileCreate2Connection");
+  std::shared_ptr<minifi::Connection> connection = std::make_shared
+      < minifi::Connection > (test_repo, "getfileCreate2Connection");
   connection->setRelationship(core::Relationship("success", "description"));
 
   // link the connections so that we can test results at the end for this
@@ -184,7 +208,7 @@ TEST_CASE("Test GetFileLikeIt'sThreaded", "[getfileCreate3]") {
   core::ProcessContext context(node, test_repo);
   core::ProcessSessionFactory factory(&context);
   context.setProperty(org::apache::nifi::minifi::processors::GetFile::Directory,
-                      dir);
+      dir);
   // replicate 10 threads
   processor->setScheduledState(core::ScheduledState::RUNNING);
   processor->onSchedule(&context, &factory);
@@ -229,9 +253,9 @@ TEST_CASE("Test GetFileLikeIt'sThreaded", "[getfileCreate3]") {
     session.commit();
     std::shared_ptr<core::FlowFile> ffr = session.get();
 
-    REQUIRE((repo->getRepoMap().size()%2) == 0);
-    REQUIRE(repo->getRepoMap().size() == (prev+2));
-    prev+=2;
+    REQUIRE((repo->getRepoMap().size() % 2) == 0);
+    REQUIRE(repo->getRepoMap().size() == (prev + 2));
+    prev += 2;
 
   }
 
@@ -239,10 +263,10 @@ TEST_CASE("Test GetFileLikeIt'sThreaded", "[getfileCreate3]") {
 
 TEST_CASE("LogAttributeTest", "[getfileCreate3]") {
   std::ostringstream oss;
-  std::unique_ptr<logging::BaseLogger> outputLogger = std::unique_ptr<
-      logging::BaseLogger>(
-      new org::apache::nifi::minifi::core::logging::OutputStreamAppender(oss,
-                                                                         0));
+  std::unique_ptr<logging::BaseLogger> outputLogger = std::unique_ptr
+      < logging::BaseLogger
+      > (new org::apache::nifi::minifi::core::logging::OutputStreamAppender(oss,
+          0));
   std::shared_ptr<logging::Logger> logger = logging::Logger::getLogger();
   logger->updateLogger(std::move(outputLogger));
 
@@ -252,11 +276,11 @@ TEST_CASE("LogAttributeTest", "[getfileCreate3]") {
 
   std::shared_ptr<core::Repository> repo = std::make_shared<TestRepository>();
 
-  std::shared_ptr<core::Processor> processor = std::make_shared<
-      org::apache::nifi::minifi::processors::GetFile>("getfileCreate2");
+  std::shared_ptr<core::Processor> processor = std::make_shared
+      < org::apache::nifi::minifi::processors::GetFile > ("getfileCreate2");
 
-  std::shared_ptr<core::Processor> logAttribute = std::make_shared<
-      org::apache::nifi::minifi::processors::LogAttribute>("logattribute");
+  std::shared_ptr<core::Processor> logAttribute = std::make_shared
+      < org::apache::nifi::minifi::processors::LogAttribute > ("logattribute");
 
   char format[] = "/tmp/gt.XXXXXX";
   char *dir = testController.createTempDirectory(format);
@@ -267,12 +291,12 @@ TEST_CASE("LogAttributeTest", "[getfileCreate3]") {
   uuid_t logattribute_uuid;
   REQUIRE(true == logAttribute->getUUID(logattribute_uuid));
 
-  std::shared_ptr<minifi::Connection> connection = std::make_shared<
-      minifi::Connection>(repo, "getfileCreate2Connection");
+  std::shared_ptr<minifi::Connection> connection = std::make_shared
+      < minifi::Connection > (repo, "getfileCreate2Connection");
   connection->setRelationship(core::Relationship("success", "description"));
 
-  std::shared_ptr<minifi::Connection> connection2 = std::make_shared<
-      minifi::Connection>(repo, "logattribute");
+  std::shared_ptr<minifi::Connection> connection2 = std::make_shared
+      < minifi::Connection > (repo, "logattribute");
   connection2->setRelationship(core::Relationship("success", "description"));
 
   // link the connections so that we can test results at the end for this
@@ -298,7 +322,7 @@ TEST_CASE("LogAttributeTest", "[getfileCreate3]") {
   core::ProcessContext context(node, repo);
   core::ProcessContext context2(node2, repo);
   context.setProperty(org::apache::nifi::minifi::processors::GetFile::Directory,
-                      dir);
+      dir);
   core::ProcessSession session(&context);
   core::ProcessSession session2(&context2);
 
@@ -357,8 +381,8 @@ TEST_CASE("LogAttributeTest", "[getfileCreate3]") {
       log_attribute_output.find("key:path value:" + std::string(dir))
           != std::string::npos);
 
-  outputLogger = std::unique_ptr<logging::BaseLogger>(
-      new org::apache::nifi::minifi::core::logging::NullAppender());
+  outputLogger = std::unique_ptr < logging::BaseLogger
+      > (new org::apache::nifi::minifi::core::logging::NullAppender());
   logger->updateLogger(std::move(outputLogger));
 
 }

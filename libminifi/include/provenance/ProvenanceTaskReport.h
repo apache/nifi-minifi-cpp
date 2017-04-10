@@ -44,7 +44,8 @@ public:
 	ProvenanceTaskReport(std::string name, uuid_t uuid = NULL) :
 			core::Processor(name, uuid) {
 		logger_ = logging::Logger::getLogger();
-		uuid_copy(protocol_uuid_,uuid);
+		if (uuid)
+		  uuid_copy(protocol_uuid_,uuid);
 		this->setTriggerWhenEmpty(true);
 	}
 	//! Destructor
@@ -62,6 +63,10 @@ public:
 	static core::Relationship relation;
 	static const char *ProvenanceAppStr;
 public:
+	//! Get provenance jason report
+	void getJasonReport(core::ProcessContext *context,
+	    core::ProcessSession *session, std::vector < std::shared_ptr < ProvenanceEventRecord >> &records,
+	    std::string &report);
 	//! OnTrigger method, implemented by NiFi ProvenanceTaskReport
 	virtual void onTrigger(core::ProcessContext *context, core::ProcessSession *session);
 	//! Initialize, over write by NiFi ProvenanceTaskReport

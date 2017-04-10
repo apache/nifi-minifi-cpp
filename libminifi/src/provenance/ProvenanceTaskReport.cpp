@@ -68,60 +68,10 @@ void ProvenanceTaskReport::initialize() {
   setSupportedRelationships(relationships);
 }
 
-void ProvenanceTaskReport::onTrigger(core::ProcessContext *context,
-    core::ProcessSession *session) {
-  std::string value;
-  int64_t lvalue;
-  std::string host = "";
-  uint16_t sport = 0;
-
-  if (context->getProperty(hostName.getName(), value)) {
-    host = value;
-  }
-  if (context->getProperty(port.getName(), value)
-      && core::Property::StringToInt(value, lvalue)) {
-    sport = (uint16_t) lvalue;
-  }
-  if (context->getProperty(portUUID.getName(), value)) {
-    uuid_parse(value.c_str(), protocol_uuid_);
-  }
-
-  std::shared_ptr<Site2SiteClientProtocol> protocol_ =
-      this->obtainSite2SiteProtocol(host, sport, protocol_uuid_);
-
-  if (!protocol_) {
-    context->yield();
-    return;
-  }
-
-  if (!protocol_->bootstrap()) {
-    // bootstrap the client protocol if needeed
-    context->yield();
-    std::shared_ptr<Processor> processor = std::static_pointer_cast < Processor
-        > (context->getProcessorNode().getProcessor());
-    logger_->log_error("Site2Site bootstrap failed yield period %d peer ",
-        processor->getYieldPeriodMsec());
-    returnSite2SiteProtocol(protocol_);
-    return;
-  }
-
-  int64_t batch = 100;
-
-  if (context->getProperty(batchSize.getName(), value)
-      && core::Property::StringToInt(value, lvalue)) {
-    batch = lvalue;
-  }
-
-  std::vector < std::shared_ptr < ProvenanceEventRecord >> records;
-  std::shared_ptr<ProvenanceRepository> repo = std::static_pointer_cast
-      < ProvenanceRepository > (context->getProvenanceRepository());
-
-  repo->getProvenanceRecord(records, batch);
-
-  if (records.size() <= 0) {
-    returnSite2SiteProtocol(protocol_);
-    return;
-  }
+void ProvenanceTaskReport::getJasonReport(core::ProcessContext *context,
+    core::ProcessSession *session,
+    std::vector<std::shared_ptr<ProvenanceEventRecord>> &records,
+    std::string &report) {
 
   Json::Value array;
   for (auto record : records) {
@@ -167,7 +117,66 @@ void ProvenanceTaskReport::onTrigger(core::ProcessContext *context,
   }
 
   Json::StyledWriter writer;
-  std::string jsonStr = writer.write(array);
+  report = writer.write(array);
+}
+
+void ProvenanceTaskReport::onTrigger(core::ProcessContext *context,
+    core::ProcessSession *session) {
+  std::string value;
+  int64_t lvalue;
+  std::string host = "";
+  uint16_t sport = 0;
+
+  if (context->getProperty(hostName.getName(), value)) {
+    host = value;
+  }
+  if (context->getProperty(port.getName(), value)
+      && core::Property::StringToInt(value, lvalue)) {
+    sport = (uint16_t) lvalue;
+  }
+  if (context->getProperty(portUUID.getName(), value)) {
+    uuid_parse(value.c_str(), protocol_uuid_);
+  }
+
+  std::shared_ptr<Site2SiteClientProtocol> protocol_ =
+      this->obtainSite2SiteProtocol(host, sport, protocol_uuid_);
+
+  if (!protocol_) {
+    context->yield();
+    return;
+  }
+
+  if (!protocol_->bootstrap()) {
+    // bootstrap the client protocol if needeed
+    context->yield();
+    std::shared_ptr<Processor> processor = std::static_pointer_cast < Processor
+        > (context->getProcessorNode().getProcessor());
+    logger_->log_error("Site2Site bootstrap failed yield period %d peer ",
+        processor->getYieldPeriodMsec());
+    returnSite2SiteProtocol(protocol_);
+    return;
+  }
+
+  int64_t batch = 100;
+  if (context->getProperty(batchSize.getName(), value)
+      && core::Property::StringToInt(value, lvalue)) {
+    batch = lvalue;
+  }
+  std::vector < std::shared_ptr < ProvenanceEventRecord >> records;
+  std::shared_ptr<ProvenanceRepository> repo = std::static_pointer_cast
+      < ProvenanceRepository > (context->getProvenanceRepository());
+  repo->getProvenanceRecord(records, batch);
+  if (records.size() <= 0) {
+    returnSite2SiteProtocol(protocol_);
+    return;
+  }
+
+  std::string jsonStr;
+  this->getJasonReport(context, session, records, jsonStr);
+  if (jsonStr.length() <= 0) {
+    returnSite2SiteProtocol(protocol_);
+    return;
+  }
 
   try {
     std::map < std::string, std::string > attributes;
@@ -179,7 +188,6 @@ void ProvenanceTaskReport::onTrigger(core::ProcessContext *context,
 
   // we transfer the record, purge the record from DB
   repo->purgeProvenanceRecord(records);
-
   returnSite2SiteProtocol(protocol_);
 }
 
