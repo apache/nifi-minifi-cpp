@@ -33,61 +33,6 @@ namespace logging {
 const char *BaseLogger::nifi_log_level = "nifi.log.level";
 const char *BaseLogger::nifi_log_appender = "nifi.log.appender";
 
-/**
- * @brief Log error message
- * @param format format string ('man printf' for syntax)
- * @warning does not check @p log or @p format for null. Caller must ensure parameters and format string lengths match
- */
-void BaseLogger::log_error(const char * const format, ...) {
-  if (logger_ == NULL || !logger_->should_log(spdlog::level::level_enum::err))
-    return;
-  FILL_BUFFER
-  log_str(err, buffer);
-}
-/**
- * @brief Log warn message
- * @param format format string ('man printf' for syntax)
- * @warning does not check @p log or @p format for null. Caller must ensure parameters and format string lengths match
- */
-void BaseLogger::log_warn(const char * const format, ...) {
-  if (logger_ == NULL || !logger_->should_log(spdlog::level::level_enum::warn))
-    return;
-  FILL_BUFFER
-  log_str(warn, buffer);
-}
-/**
- * @brief Log info message
- * @param format format string ('man printf' for syntax)
- * @warning does not check @p log or @p format for null. Caller must ensure parameters and format string lengths match
- */
-void BaseLogger::log_info(const char * const format, ...) {
-  if (logger_ == NULL || !logger_->should_log(spdlog::level::level_enum::info))
-    return;
-  FILL_BUFFER
-  log_str(info, buffer);
-}
-/**
- * @brief Log debug message
- * @param format format string ('man printf' for syntax)
- * @warning does not check @p log or @p format for null. Caller must ensure parameters and format string lengths match
- */
-void BaseLogger::log_debug(const char * const format, ...) {
-  if (logger_ == NULL || !logger_->should_log(spdlog::level::level_enum::debug))
-    return;
-  FILL_BUFFER
-  log_str(debug, buffer);
-}
-/**
- * @brief Log trace message
- * @param format format string ('man printf' for syntax)
- * @warning does not check @p log or @p format for null. Caller must ensure parameters and format string lengths match
- */
-void BaseLogger::log_trace(const char * const format, ...) {
-  if (logger_ == NULL || !logger_->should_log(spdlog::level::level_enum::trace))
-    return;
-  FILL_BUFFER
-  log_str(debug, buffer);
-}
 
 // overridables
 

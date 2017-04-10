@@ -100,57 +100,67 @@ class Logger : public BaseLogger {
    * @param format format string ('man printf' for syntax)
    * @warning does not check @p log or @p format for null. Caller must ensure parameters and format string lengths match
    */
-  void log_error(const char * const format, ...) {
+  template<typename ... Args>
+  void log_error(const char * const format, Args ... args) {
     if (!current_logger_.load()->shouldLog(err))
       return;
-    FILL_BUFFER
-    current_logger_.load()->log_str(err, buffer);
+
+    current_logger_.load()->log_str(
+        err, format_string(format, conditional_conversion(args)...));
   }
   /**
    * @brief Log warn message
    * @param format format string ('man printf' for syntax)
    * @warning does not check @p log or @p format for null. Caller must ensure parameters and format string lengths match
    */
-  void log_warn(const char * const format, ...) {
+  template<typename ... Args>
+  void log_warn(const char * const format, Args ... args) {
     if (!current_logger_.load()->shouldLog(warn))
       return;
-    FILL_BUFFER
-    current_logger_.load()->log_str(warn, buffer);
+
+    current_logger_.load()->log_str(
+        warn, format_string(format, conditional_conversion(args)...));
   }
   /**
    * @brief Log info message
    * @param format format string ('man printf' for syntax)
    * @warning does not check @p log or @p format for null. Caller must ensure parameters and format string lengths match
    */
-  void log_info(const char * const format, ...) {
+  template<typename ... Args>
+  void log_info(const char * const format, Args ... args) {
     if (!current_logger_.load()->shouldLog(info))
       return;
-    FILL_BUFFER
-    current_logger_.load()->log_str(info, buffer);
+
+    current_logger_.load()->log_str(
+        info, format_string(format, conditional_conversion(args)...));
   }
   /**
    * @brief Log debug message
    * @param format format string ('man printf' for syntax)
    * @warning does not check @p log or @p format for null. Caller must ensure parameters and format string lengths match
    */
-  void log_debug(const char * const format, ...) {
+  template<typename ... Args>
+  void log_debug(const char * const format, Args ... args) {
 
     if (!current_logger_.load()->shouldLog(debug))
       return;
-    FILL_BUFFER
-    current_logger_.load()->log_str(debug, buffer);
+
+    current_logger_.load()->log_str(
+        debug, format_string(format, conditional_conversion(args)...));
   }
   /**
    * @brief Log trace message
    * @param format format string ('man printf' for syntax)
    * @warning does not check @p log or @p format for null. Caller must ensure parameters and format string lengths match
    */
-  void log_trace(const char * const format, ...) {
+  template<typename ... Args>
+  void log_trace(const char * const format, Args ... args) {
 
     if (!current_logger_.load()->shouldLog(trace))
       return;
-    FILL_BUFFER
-    current_logger_.load()->log_str(trace, buffer);
+
+    current_logger_.load()->log_str(
+        trace, format_string(format, conditional_conversion(args)...));
   }
 
   /**
