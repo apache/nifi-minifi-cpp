@@ -51,11 +51,25 @@ typedef enum {
 } LOG_LEVEL_E;
 
 #define LOG_BUFFER_SIZE 1024
-#define FILL_BUFFER  char buffer[LOG_BUFFER_SIZE]; \
-    va_list args; \
-    va_start(args, format); \
-    std::vsnprintf(buffer, LOG_BUFFER_SIZE,format, args); \
-    va_end(args);
+
+template<typename ... Args>
+inline std::string format_string(char const* format_str, Args&&... args) {
+  char buf[LOG_BUFFER_SIZE];
+  std::snprintf(buf, LOG_BUFFER_SIZE, format_str, args...);
+  return std::string(buf);
+}
+
+inline std::string format_string(char const* format_str) {
+  return format_str;
+}
+inline char const* conditional_conversion(std::string const& str) {
+  return str.c_str();
+}
+
+template<typename T>
+inline T conditional_conversion(T const& t) {
+  return t;
+}
 
 /**
  * Base class that represents a logger configuration.
@@ -113,31 +127,36 @@ class BaseLogger {
    * @param format format string ('man printf' for syntax)
    * @warning does not check @p log or @p format for null. Caller must ensure parameters and format string lengths match
    */
-  virtual void log_error(const char * const format, ...);
+  template<typename ... Args>
+  void log_error(const char * const format, Args ... args);
   /**
    * @brief Log warn message
    * @param format format string ('man printf' for syntax)
    * @warning does not check @p log or @p format for null. Caller must ensure parameters and format string lengths match
    */
-  virtual void log_warn(const char * const format, ...);
+  template<typename ... Args>
+  void log_warn(const char * const format, Args ... args);
   /**
    * @brief Log info message
    * @param format format string ('man printf' for syntax)
    * @warning does not check @p log or @p format for null. Caller must ensure parameters and format string lengths match
    */
-  virtual void log_info(const char * const format, ...);
+  template<typename ... Args>
+  void log_info(const char * const format, Args ... args);
   /**
    * @brief Log debug message
    * @param format format string ('man printf' for syntax)
    * @warning does not check @p log or @p format for null. Caller must ensure parameters and format string lengths match
    */
-  virtual void log_debug(const char * const format, ...);
+  template<typename ... Args>
+  void log_debug(const char * const format, Args ... args);
   /**
    * @brief Log trace message
    * @param format format string ('man printf' for syntax)
    * @warning does not check @p log or @p format for null. Caller must ensure parameters and format string lengths match
    */
-  virtual void log_trace(const char * const format, ...);
+  template<typename ... Args>
+  void log_trace(const char * const format, Args ... args);
 
   /**
    * @brief Log error message
@@ -214,6 +233,67 @@ class BaseLogger {
   std::shared_ptr<spdlog::logger> logger_;
   std::shared_ptr<spdlog::logger> stderr_;
 };
+
+/**
+ * @brief Log error message
+ * @param format format string ('man printf' for syntax)
+ * @warning does not check @p log or @p format for null. Caller must ensure parameters and format string lengths match
+ */
+template<typename ... Args>
+void BaseLogger::log_error(const char * const format, Args ... args) {
+  if (logger_ == NULL || !logger_->should_log(spdlog::level::level_enum::err))
+    return;
+
+  log_str(err, format_string(format, conditional_conversion(args)...));
+}
+/**
+ * @brief Log warn message
+ * @param format format string ('man printf' for syntax)
+ * @warning does not check @p log or @p format for null. Caller must ensure parameters and format string lengths match
+ */
+template<typename ... Args>
+void BaseLogger::log_warn(const char * const format, Args ... args) {
+  if (logger_ == NULL || !logger_->should_log(spdlog::level::level_enum::warn))
+    return;
+
+  log_str(warn, format_string(format, conditional_conversion(args)...));
+}
+/**
+ * @brief Log info message
+ * @param format format string ('man printf' for syntax)
+ * @warning does not check @p log or @p format for null. Caller must ensure parameters and format string lengths match
+ */
+template<typename ... Args>
+void BaseLogger::log_info(const char * const format, Args ... args) {
+  if (logger_ == NULL || !logger_->should_log(spdlog::level::level_enum::info))
+    return;
+
+  log_str(info, format_string(format, conditional_conversion(args)...));
+}
+/**
+ * @brief Log debug message
+ * @param format format string ('man printf' for syntax)
+ * @warning does not check @p log or @p format for null. Caller must ensure parameters and format string lengths match
+ */
+template<typename ... Args>
+void BaseLogger::log_debug(const char * const format, Args ... args) {
+  if (logger_ == NULL || !logger_->should_log(spdlog::level::level_enum::debug))
+    return;
+
+  log_str(debug, format_string(format, conditional_conversion(args)...));
+}
+/**
+ * @brief Log trace message
+ * @param format format string ('man printf' for syntax)
+ * @warning does not check @p log or @p format for null. Caller must ensure parameters and format string lengths match
+ */
+template<typename ... Args>
+void BaseLogger::log_trace(const char * const format, Args ... args) {
+  if (logger_ == NULL || !logger_->should_log(spdlog::level::level_enum::trace))
+    return;
+
+  log_str(debug, format_string(format, conditional_conversion(args)...));
+}
 
 } /* namespace logging */
 } /* namespace core */
