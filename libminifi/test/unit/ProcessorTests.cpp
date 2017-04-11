@@ -163,8 +163,6 @@ TEST_CASE("Test Find file", "[getfileCreate2]") {
   REQUIRE(recordsReport.size() == 1);
   REQUIRE(taskReport->getName() == "provenanceTaskReport");
   REQUIRE(jsonStr.find("\"componentType\" : \"getfileCreate2\"") != std::string::npos);
-  REQUIRE(jsonStr.find("\"filename\" : \"tstFile.ext\"") != std::string::npos);
-
 }
 
 TEST_CASE("Test GetFileLikeIt'sThreaded", "[getfileCreate3]") {
