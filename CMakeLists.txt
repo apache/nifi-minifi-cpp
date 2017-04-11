@@ -162,3 +162,24 @@ add_custom_target(
 add_custom_target(
     linter
     COMMAND ${CMAKE_SOURCE_DIR}/thirdparty/google-styleguide/run_linter.sh ${CMAKE_SOURCE_DIR}/libminifi/include/ ${CMAKE_SOURCE_DIR}/libminifi/src/ )
+
+
+FIND_PACKAGE(Doxygen)
+if(DOXYGEN_FOUND)
+ 
+MESSAGE(Creating API Documentation)
+SET(DOXYGEN_INPUT "../docs/Doxyfile")
+SET(DOXYGEN_OUTPUT "../docs")
+
+ADD_CUSTOM_COMMAND(
+  OUTPUT ${DOXYGEN_OUTPUT}
+  COMMAND ${CMAKE_COMMAND} -E echo_append "Building LibMiNiFi API Documentation..."
+  COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYGEN_INPUT}
+  COMMAND ${CMAKE_COMMAND} -E echo "Done."
+  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+  DEPENDS ${DOXYGEN_INPUT}
+  )
+
+ADD_CUSTOM_TARGET(docs ${DOXYGEN_EXECUTABLE} ${DOXYGEN_INPUT})
+
+endif(DOXYGEN_FOUND)

@@ -29,6 +29,7 @@ matrix:
           - g++-4.8
           - libboost-all-dev
           - uuid-dev
+          - doxygen
           - libxml2-dev
           - libleveldb-dev
           - openssl
@@ -45,6 +46,7 @@ matrix:
         - package='boost'; [[ $(brew ls --versions ${package}) ]] && { brew outdated ${package} || brew upgrade ${package}; } || brew install ${package}
         - package='cmake'; [[ $(brew ls --versions ${package}) ]] && { brew outdated ${package} || brew upgrade ${package}; } || brew install ${package}
         - package='openssl'; [[ $(brew ls --versions ${package}) ]] && { brew outdated ${package} || brew upgrade ${package}; } || brew install ${package}
+        - package='doxygen'; [[ $(brew ls --versions ${package}) ]] && { brew outdated ${package} || brew upgrade ${package}; } || brew install ${package}
 
 script:
-  - mkdir ./build && cd ./build && cmake .. && make && make test && make linter
+  - mkdir ./build && cd ./build && cmake .. && make && make test && make linter && make docs
