@@ -30,7 +30,6 @@ matrix:
           - libboost-all-dev
           - uuid-dev
           - doxygen
-          - libxml2-dev
           - libleveldb-dev
           - openssl
       before_install:
