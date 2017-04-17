@@ -1,6 +1,6 @@
 /**
- * @file ProvenanceTaskReport.cpp
- * ProvenanceTaskReport class implementation
+ * @file SiteToSiteProvenanceReportingTask.cpp
+ * SiteToSiteProvenanceReportingTask class implementation
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -26,7 +26,7 @@
 #include <sstream>
 #include <iostream>
 
-#include "provenance/ProvenanceTaskReport.h"
+#include "core/reporting/SiteToSiteProvenanceReportingTask.h"
 #include "../include/io/StreamFactory.h"
 #include "io/ClientSocket.h"
 #include "utils/TimeUtil.h"
@@ -42,35 +42,17 @@ namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
-namespace provenance {
+namespace core {
+namespace reporting {
 
-core::Property ProvenanceTaskReport::hostName("Host Name", "Remote Host Name.",
-    "localhost");
-core::Property ProvenanceTaskReport::port("Port", "Remote Port", "9999");
-core::Property ProvenanceTaskReport::batchSize("Batch Size",
-    "Specifies how many records to send in a single batch, at most.", "100");
-core::Property ProvenanceTaskReport::portUUID("Port UUID",
-    "Specifies remote NiFi Port UUID.", "");
-core::Relationship ProvenanceTaskReport::relation;
-const char *ProvenanceTaskReport::ProvenanceAppStr = "MiNiFi Flow";
+const char *SiteToSiteProvenanceReportingTask::ProvenanceAppStr = "MiNiFi Flow";
 
-void ProvenanceTaskReport::initialize() {
-  //! Set the supported properties
-  std::set<core::Property> properties;
-  properties.insert(hostName);
-  properties.insert(port);
-  properties.insert(batchSize);
-  properties.insert(portUUID);
-  setSupportedProperties(properties);
-  //! Set the supported relationships
-  std::set<core::Relationship> relationships;
-  relationships.insert(relation);
-  setSupportedRelationships(relationships);
+void SiteToSiteProvenanceReportingTask::initialize() {
 }
 
-void ProvenanceTaskReport::getJasonReport(core::ProcessContext *context,
+void SiteToSiteProvenanceReportingTask::getJsonReport(core::ProcessContext *context,
     core::ProcessSession *session,
-    std::vector<std::shared_ptr<ProvenanceEventRecord>> &records,
+    std::vector<std::shared_ptr<provenance::ProvenanceEventRecord>> &records,
     std::string &report) {
 
   Json::Value array;
@@ -81,7 +63,7 @@ void ProvenanceTaskReport::getJasonReport(core::ProcessContext *context,
     Json::Value childUuidJson;
     recordJson["eventId"] = record->getEventId().c_str();
     recordJson["eventType"] =
-        ProvenanceEventRecord::ProvenanceEventTypeStr[record->getEventType()];
+        provenance::ProvenanceEventRecord::ProvenanceEventTypeStr[record->getEventType()];
     recordJson["timestampMillis"] = record->getEventTime();
     recordJson["durationMillis"] = record->getEventDuration();
     recordJson["lineageStart"] = record->getlineageStartDate();
@@ -120,26 +102,11 @@ void ProvenanceTaskReport::getJasonReport(core::ProcessContext *context,
   report = writer.write(array);
 }
 
-void ProvenanceTaskReport::onTrigger(core::ProcessContext *context,
+void SiteToSiteProvenanceReportingTask::onTrigger(core::ProcessContext *context,
     core::ProcessSession *session) {
-  std::string value;
-  int64_t lvalue;
-  std::string host = "";
-  uint16_t sport = 0;
-
-  if (context->getProperty(hostName.getName(), value)) {
-    host = value;
-  }
-  if (context->getProperty(port.getName(), value)
-      && core::Property::StringToInt(value, lvalue)) {
-    sport = (uint16_t) lvalue;
-  }
-  if (context->getProperty(portUUID.getName(), value)) {
-    uuid_parse(value.c_str(), protocol_uuid_);
-  }
 
   std::shared_ptr<Site2SiteClientProtocol> protocol_ =
-      this->obtainSite2SiteProtocol(host, sport, protocol_uuid_);
+      this->obtainSite2SiteProtocol(host_, port_, port_uuid_);
 
   if (!protocol_) {
     context->yield();
@@ -157,22 +124,17 @@ void ProvenanceTaskReport::onTrigger(core::ProcessContext *context,
     return;
   }
 
-  int64_t batch = 100;
-  if (context->getProperty(batchSize.getName(), value)
-      && core::Property::StringToInt(value, lvalue)) {
-    batch = lvalue;
-  }
-  std::vector < std::shared_ptr < ProvenanceEventRecord >> records;
-  std::shared_ptr<ProvenanceRepository> repo = std::static_pointer_cast
-      < ProvenanceRepository > (context->getProvenanceRepository());
-  repo->getProvenanceRecord(records, batch);
+  std::vector < std::shared_ptr < provenance::ProvenanceEventRecord >> records;
+  std::shared_ptr<provenance::ProvenanceRepository> repo = std::static_pointer_cast
+      < provenance::ProvenanceRepository > (context->getProvenanceRepository());
+  repo->getProvenanceRecord(records, batch_size_);
   if (records.size() <= 0) {
     returnSite2SiteProtocol(protocol_);
     return;
   }
 
   std::string jsonStr;
-  this->getJasonReport(context, session, records, jsonStr);
+  this->getJsonReport(context, session, records, jsonStr);
   if (jsonStr.length() <= 0) {
     returnSite2SiteProtocol(protocol_);
     return;
@@ -191,7 +153,8 @@ void ProvenanceTaskReport::onTrigger(core::ProcessContext *context,
   returnSite2SiteProtocol(protocol_);
 }
 
-} /* namespace provenance */
+} /* namespace reporting */
+} /* namespace core */
 } /* namespace minifi */
 } /* namespace nifi */
 } /* namespace apache */

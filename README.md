@@ -53,7 +53,6 @@ Perspectives of the role of MiNiFi should be from the perspective of the agent a
   * ListenSyslog
   * ExecuteProcess
   * AppendHostInfo
-  * ProvenanceTaskReport
 * Provenance events generation is supported and are persisted using levelDB.
 
 ## System Requirements
@@ -62,7 +61,7 @@ Perspectives of the role of MiNiFi should be from the perspective of the agent a
 
 #### Utilities
 * CMake
-  * 2.8 or greater
+  * 3.1 or greater
 * gcc
   * 4.8.4 or greater
 * g++
@@ -289,23 +288,14 @@ Additionally, users can utilize the MiNiFi Toolkit Converter (version 0.0.1 - sc
 
 ### Provenance Report
 
-    Add ProvenanceTaskReport processor to config.yml
-    Port UUID of the ProvenanceTaskReport is the remote NiFi input port UUID
- 
-    - name: ProvenanceTaskReport
-      id: 471deef6-2a6e-4a7d-912a-81cc17e3a209
-      class: org.apache.nifi.processors.standard.ProvenanceTaskReport
-      max concurrent tasks: 1
+    Add Provenance Reporting to config.yml
+    Provenance Reporting:
       scheduling strategy: TIMER_DRIVEN
       scheduling period: 1 sec
-      penalization period: 30 sec
-      yield period: 10 sec
-      run duration nanos: 0
-      auto-terminated relationships list:
-      Properties:
-          Port: 10001
-          Host Name: localhost
-          Port UUID: 471deef6-2a6e-4a7d-912a-81cc17e3a204
+      port: 10001
+      host: localhost
+      port uuid: 471deef6-2a6e-4a7d-912a-81cc17e3a204
+      batch size: 100
 
 ### Running
 After completing a [build](#building), the application can be run by issuing the following from :

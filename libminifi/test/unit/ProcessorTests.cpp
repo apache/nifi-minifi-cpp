@@ -45,8 +45,8 @@ TEST_CASE("Test Find file", "[getfileCreate2]") {
       < org::apache::nifi::minifi::processors::GetFile > ("getfileCreate2");
 
   std::shared_ptr<core::Processor> processorReport = std::make_shared
-      < org::apache::nifi::minifi::provenance::ProvenanceTaskReport
-      > ("provenanceTaskReport");
+      < org::apache::nifi::minifi::core::reporting::SiteToSiteProvenanceReportingTask
+      > ();
 
   std::shared_ptr<core::Repository> test_repo =
       std::make_shared<TestRepository>();
@@ -148,20 +148,19 @@ TEST_CASE("Test Find file", "[getfileCreate2]") {
   core::ProcessorNode nodeReport(processorReport);
   core::ProcessContext contextReport(nodeReport, test_repo);
   core::ProcessSessionFactory factoryReport(&contextReport);
-  contextReport.setProperty(org::apache::nifi::minifi::provenance::ProvenanceTaskReport::batchSize,
-      "1");
   core::ProcessSession sessionReport(&contextReport);
   processorReport->onSchedule(&contextReport, &factoryReport);
-  std::shared_ptr<org::apache::nifi::minifi::provenance::ProvenanceTaskReport> taskReport = std::static_pointer_cast
-        < org::apache::nifi::minifi::provenance::ProvenanceTaskReport > (processorReport);
+  std::shared_ptr<org::apache::nifi::minifi::core::reporting::SiteToSiteProvenanceReportingTask> taskReport = std::static_pointer_cast
+        < org::apache::nifi::minifi::core::reporting::SiteToSiteProvenanceReportingTask > (processorReport);
+  taskReport->setBatchSize(1);
   std::vector < std::shared_ptr < provenance::ProvenanceEventRecord >> recordsReport;
   processorReport->incrementActiveTasks();
   processorReport->setScheduledState(core::ScheduledState::RUNNING);
   std::string jsonStr;
   repo->getProvenanceRecord(recordsReport, 1);
-  taskReport->getJasonReport(&contextReport, &sessionReport, recordsReport, jsonStr);
+  taskReport->getJsonReport(&contextReport, &sessionReport, recordsReport, jsonStr);
   REQUIRE(recordsReport.size() == 1);
-  REQUIRE(taskReport->getName() == "provenanceTaskReport");
+  REQUIRE(taskReport->getName() == std::string(org::apache::nifi::minifi::core::reporting::SiteToSiteProvenanceReportingTask::ReportTaskName));
   REQUIRE(jsonStr.find("\"componentType\" : \"getfileCreate2\"") != std::string::npos);
 }
 
