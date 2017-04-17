@@ -44,33 +44,18 @@ namespace minifi {
 const std::string RemoteProcessorGroupPort::ProcessorName(
     "RemoteProcessorGroupPort");
 core::Property RemoteProcessorGroupPort::hostName("Host Name",
-                                                  "Remote Host Name.",
-                                                  "localhost");
+    "Remote Host Name.", "localhost");
 core::Property RemoteProcessorGroupPort::port("Port", "Remote Port", "9999");
+core::Property RemoteProcessorGroupPort::portUUID("Port UUID",
+    "Specifies remote NiFi Port UUID.", "");
 core::Relationship RemoteProcessorGroupPort::relation;
-
-std::unique_ptr<Site2SiteClientProtocol> RemoteProcessorGroupPort::getNextProtocol() {
-  std::lock_guard<std::mutex> protocol_lock_(protocol_mutex_);
-  if (available_protocols_.empty())
-    return nullptr;
-
-  std::unique_ptr<Site2SiteClientProtocol> return_pointer = std::move(
-      available_protocols_.top());
-  available_protocols_.pop();
-  return std::move(return_pointer);
-}
-
-void RemoteProcessorGroupPort::returnProtocol(
-    std::unique_ptr<Site2SiteClientProtocol> return_protocol) {
-  std::lock_guard<std::mutex> protocol_lock_(protocol_mutex_);
-  available_protocols_.push(std::move(return_protocol));
-}
 
 void RemoteProcessorGroupPort::initialize() {
   // Set the supported properties
   std::set<core::Property> properties;
   properties.insert(hostName);
   properties.insert(port);
+  properties.insert(portUUID);
   setSupportedProperties(properties);
   // Set the supported relationships
   std::set<core::Relationship> relationships;
@@ -79,50 +64,42 @@ void RemoteProcessorGroupPort::initialize() {
 }
 
 void RemoteProcessorGroupPort::onTrigger(core::ProcessContext *context,
-                                         core::ProcessSession *session) {
-  std::string value;
-
+    core::ProcessSession *session) {
   if (!transmitting_)
     return;
 
-  std::unique_ptr<Site2SiteClientProtocol> protocol_ = getNextProtocol();
+  std::string value;
+  int64_t lvalue;
+  std::string host = "";
+  uint16_t sport = 0;
 
-  // Peer Connection
-  if (protocol_ == nullptr) {
-    protocol_ = std::unique_ptr<Site2SiteClientProtocol>(
-        new Site2SiteClientProtocol(0));
-    protocol_->setPortId(protocol_uuid_);
-    protocol_->setTimeOut(timeout_);
+  if (context->getProperty(hostName.getName(), value)) {
+    host = value;
+  }
+  if (context->getProperty(port.getName(), value)
+      && core::Property::StringToInt(value, lvalue)) {
+    sport = (uint16_t) lvalue;
+  }
+  if (context->getProperty(portUUID.getName(), value)) {
+    uuid_parse(value.c_str(), protocol_uuid_);
+  }
 
-    std::string host = "";
-    uint16_t sport = 0;
-    int64_t lvalue;
+  std::shared_ptr<Site2SiteClientProtocol> protocol_ =
+      this->obtainSite2SiteProtocol(host, sport, protocol_uuid_);
 
-    if (context->getProperty(hostName.getName(), value)) {
-      host = value;
-    }
-    if (context->getProperty(port.getName(), value)
-        && core::Property::StringToInt(value, lvalue)) {
-      sport = (uint16_t) lvalue;
-    }
-    std::unique_ptr<org::apache::nifi::minifi::io::DataStream> str =
-        std::unique_ptr<org::apache::nifi::minifi::io::DataStream>(
-            org::apache::nifi::minifi::io::StreamFactory::getInstance()
-                ->createSocket(host, sport));
-
-    std::unique_ptr<Site2SitePeer> peer_ = std::unique_ptr<Site2SitePeer>(
-        new Site2SitePeer(std::move(str), host, sport));
-
-    protocol_->setPeer(std::move(peer_));
+  if (!protocol_) {
+    context->yield();
+    return;
   }
 
   if (!protocol_->bootstrap()) {
     // bootstrap the client protocol if needeed
     context->yield();
-    std::shared_ptr<Processor> processor = std::static_pointer_cast<Processor>(
-        context->getProcessorNode().getProcessor());
+    std::shared_ptr<Processor> processor = std::static_pointer_cast < Processor
+        > (context->getProcessorNode().getProcessor());
     logger_->log_error("Site2Site bootstrap failed yield period %d peer ",
-                       processor->getYieldPeriodMsec());
+        processor->getYieldPeriodMsec());
+    returnSite2SiteProtocol(protocol_);
     return;
   }
 
@@ -131,7 +108,7 @@ void RemoteProcessorGroupPort::onTrigger(core::ProcessContext *context,
   else
     protocol_->transferFlowFiles(context, session);
 
-  returnProtocol(std::move(protocol_));
+  returnSite2SiteProtocol(protocol_);
 
   return;
 }

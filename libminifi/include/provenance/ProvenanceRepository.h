@@ -113,6 +113,9 @@ class ProvenanceRepository : public core::Repository,
   // Put
   virtual bool Put(std::string key, uint8_t *buf, int bufLen) {
 
+	if (repo_full_)
+		return false;
+
     // persistent to the DB
     leveldb::Slice value((const char *) buf, bufLen);
     leveldb::Status status;
@@ -148,6 +151,34 @@ class ProvenanceRepository : public core::Repository,
   // Remove event
   void removeEvent(ProvenanceEventRecord *event) {
     Delete(event->getEventId());
+  }
+  //! get record
+  void getProvenanceRecord(std::vector<std::shared_ptr<ProvenanceEventRecord>> &records, int maxSize)
+  {
+	std::lock_guard<std::mutex> lock(mutex_);
+	leveldb::Iterator* it = db_->NewIterator(
+				leveldb::ReadOptions());
+	for (it->SeekToFirst(); it->Valid(); it->Next()) {
+			std::shared_ptr<ProvenanceEventRecord> eventRead = std::make_shared<ProvenanceEventRecord>();
+			std::string key = it->key().ToString();
+			if (records.size() >= maxSize)
+				break;
+			if (eventRead->DeSerialize((uint8_t *) it->value().data(),
+					(int) it->value().size()))
+			{
+				records.push_back(eventRead);
+			}
+	}
+	delete it;
+  }
+  //! purge record
+  void purgeProvenanceRecord(std::vector<std::shared_ptr<ProvenanceEventRecord>> &records)
+  {
+	std::lock_guard<std::mutex> lock(mutex_);
+	for (auto record : records)
+	{
+		Delete(record->getEventId());
+	}
   }
   // destroy
   void destroy() {

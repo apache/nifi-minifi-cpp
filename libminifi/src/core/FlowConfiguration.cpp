@@ -82,6 +82,17 @@ std::shared_ptr<core::Processor> FlowConfiguration::createProcessor(
   return processor;
 }
 
+std::shared_ptr<core::Processor> FlowConfiguration::createProvenanceReportTask() {
+  std::shared_ptr<core::Processor> processor = nullptr;
+
+  processor = std::make_shared<
+        org::apache::nifi::minifi::core::reporting::SiteToSiteProvenanceReportingTask>();
+  // initialize the processor
+  processor->initialize();
+
+  return processor;
+}
+
 std::unique_ptr<core::ProcessGroup> FlowConfiguration::createRootProcessGroup(
     std::string name, uuid_t uuid) {
   return std::unique_ptr<core::ProcessGroup>(

@@ -61,7 +61,7 @@ Perspectives of the role of MiNiFi should be from the perspective of the agent a
 
 #### Utilities
 * CMake
-  * 2.8 or greater
+  * 3.1 or greater
 * gcc
   * 4.8.4 or greater
 * g++
@@ -285,6 +285,17 @@ Additionally, users can utilize the MiNiFi Toolkit Converter (version 0.0.1 - sc
 
     if you do not want to enable client certificate base authorization
     nifi.security.need.ClientAuth=false
+
+### Provenance Report
+
+    Add Provenance Reporting to config.yml
+    Provenance Reporting:
+      scheduling strategy: TIMER_DRIVEN
+      scheduling period: 1 sec
+      port: 10001
+      host: localhost
+      port uuid: 471deef6-2a6e-4a7d-912a-81cc17e3a204
+      batch size: 100
 
 ### Running
 After completing a [build](#building), the application can be run by issuing the following from :

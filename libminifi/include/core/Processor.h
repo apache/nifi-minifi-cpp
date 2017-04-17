@@ -42,6 +42,9 @@
 #include "ProcessSessionFactory.h"
 #include "Scheduling.h"
 
+#include <stack>
+#include "Site2SiteClientProtocol.h"
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -239,12 +242,21 @@ class Processor : public Connectable, public ConfigurableComponent,
   // Trigger the Processor even if the incoming connection is empty
   std::atomic<bool> _triggerWhenEmpty;
 
- private:
+  //! obtainSite2SiteProtocol for use
+  std::shared_ptr<Site2SiteClientProtocol> obtainSite2SiteProtocol(std::string host, uint16_t sport, uuid_t portId);
+  //! returnSite2SiteProtocol after use
+  void returnSite2SiteProtocol(std::shared_ptr<Site2SiteClientProtocol> protocol);
+
+private:
 
   // Mutex for protection
   std::mutex mutex_;
   // Yield Expiration
   std::atomic<uint64_t> yield_expiration_;
+  
+  // Site2Site Protocols
+  std::stack<std::shared_ptr<Site2SiteClientProtocol>> available_protocols_;
+  std::atomic<bool> protocols_created_;
 
   // Check all incoming connections for work
   bool isWorkAvailable();
