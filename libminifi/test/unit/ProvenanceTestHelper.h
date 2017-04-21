@@ -21,6 +21,7 @@
 #include "provenance/Provenance.h"
 #include "FlowController.h"
 #include "core/Repository.h"
+#include "core/repository/FlowFileRepository.h"
 #include "core/Core.h"
 /**
  * Test repository
@@ -88,6 +89,72 @@ class TestRepository : public core::Repository {
  protected:
   std::map<std::string, std::string> repositoryResults;
 };
+
+class TestFlowRepository : public core::repository::FlowFileRepository {
+ public:
+  TestFlowRepository()
+      : core::repository::FlowFileRepository("./", 1000, 100, 0) {
+  }
+  // initialize
+  bool initialize() {
+    return true;
+  }
+
+  // Destructor
+  virtual ~TestFlowRepository() {
+
+  }
+
+  bool Put(std::string key, uint8_t *buf, int bufLen) {
+    repositoryResults.insert(
+        std::pair<std::string, std::string>(
+            key, std::string((const char*) buf, bufLen)));
+    return true;
+  }
+  // Delete
+  bool Delete(std::string key) {
+    repositoryResults.erase(key);
+    return true;
+  }
+  // Get
+  bool Get(std::string key, std::string &value) {
+    auto result = repositoryResults.find(key);
+    if (result != repositoryResults.end()) {
+      value = result->second;
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  const std::map<std::string, std::string> &getRepoMap() const {
+    return repositoryResults;
+  }
+
+  void getProvenanceRecord(
+      std::vector<std::shared_ptr<provenance::ProvenanceEventRecord>> &records,
+      int maxSize) {
+    for (auto entry : repositoryResults) {
+      if (records.size() >= maxSize)
+        break;
+      std::shared_ptr<provenance::ProvenanceEventRecord> eventRead =
+          std::make_shared<provenance::ProvenanceEventRecord>();
+
+      if (eventRead->DeSerialize((uint8_t*) entry.second.data(),
+          entry.second.length())) {
+        records.push_back(eventRead);
+      }
+    }
+  }
+
+  void run() {
+    // do nothing
+  }
+ protected:
+  std::map<std::string, std::string> repositoryResults;
+};
+
+
 
 class TestFlowController : public minifi::FlowController {
 

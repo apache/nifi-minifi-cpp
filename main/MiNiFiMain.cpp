@@ -143,6 +143,12 @@ int main(int argc, char **argv) {
                       STOP_WAIT_TIME_MS);
   }
 
+  std::string log_level;
+  if (configure->get(minifi::Configure::nifi_log_level,
+                     log_level)) {
+    logger->setLogLevel(log_level);
+  }
+
   // set the log configuration.
   std::unique_ptr<logging::BaseLogger> configured_logger =
       logging::LogInstance::getConfiguredLogger(configure);
