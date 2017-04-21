@@ -70,6 +70,7 @@ Perspectives of the role of MiNiFi should be from the perspective of the agent a
 #### Libraries / Development Headers
 * libboost and boost-devel
   * 1.48.0 or greater
+* libCurl
 * libleveldb and libleveldb-devel
 * libuuid and uuid-dev
 * openssl
@@ -79,6 +80,7 @@ Perspectives of the role of MiNiFi should be from the perspective of the agent a
 #### Libraries
 * libuuid
 * libleveldb
+* libcurl
 * libssl and libcrypto from openssl 
 
 The needed dependencies can be installed with the following commands for:
@@ -88,6 +90,7 @@ Yum based Linux Distributions
 # ~/Development/code/apache/nifi-minifi-cpp on git:master
 $ yum install cmake \
   gcc gcc-c++ \
+  libcurl-devel \
   leveldb-devel leveldb \
   libuuid libuuid-devel \
   boost-devel \ libssl-dev
@@ -98,6 +101,7 @@ Aptitude based Linux Distributions
 # ~/Development/code/apache/nifi-minifi-cpp on git:master
 $ apt-get install cmake \
   gcc g++ \
+  libcurl-dev \
   libleveldb-dev libleveldb1v5 \
   uuid-dev uuid \
   libboost-all-dev libssl-dev
@@ -107,6 +111,7 @@ OS X Using Homebrew (with XCode Command Line Tools installed)
 ```
 # ~/Development/code/apache/nifi-minifi-cpp on git:master
 $ brew install cmake \
+  curl \
   leveldb \
   ossp-uuid \
   boost \ openssl

@@ -64,6 +64,10 @@ std::shared_ptr<core::Processor> FlowConfiguration::createProcessor(
       processor = std::make_shared<
           org::apache::nifi::minifi::processors::ListenHTTP>(name, uuid);
   } else if (name
+          == org::apache::nifi::minifi::processors::InvokeHTTP::ProcessorName) {
+        processor = std::make_shared<
+            org::apache::nifi::minifi::processors::InvokeHTTP>(name, uuid);
+  } else if (name
       == org::apache::nifi::minifi::processors::ExecuteProcess::ProcessorName) {
     processor = std::make_shared<
         org::apache::nifi::minifi::processors::ExecuteProcess>(name, uuid);

@@ -76,7 +76,13 @@ target_link_libraries (minifi ${ZLIB_LIBRARIES})
 if (NOT IOS)
 # Include Boost System
 find_package(Boost COMPONENTS system REQUIRED)
+find_package(CURL)
 target_link_libraries(minifi ${Boost_SYSTEM_LIBRARY})
+
+if (CURL_FOUND)
+        include_directories(${CURL_INCLUDE_DIRS})
+        target_link_libraries (minifi ${CURL_LIBRARIES})
+endif(CURL_FOUND)
 
 # Include LevelDB
 find_package (Leveldb REQUIRED)
