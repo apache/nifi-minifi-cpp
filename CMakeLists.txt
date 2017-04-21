@@ -167,9 +167,11 @@ add_custom_target(
 
 
 FIND_PACKAGE(Doxygen)
+
 if(DOXYGEN_FOUND)
- 
-MESSAGE(Creating API Documentation)
+if(EXISTS ${DOXYGEN_EXECUTABLE})
+
+MESSAGE("Creating API Documentation ${DOXYGEN_EXECUTABLE}")
 SET(DOXYGEN_INPUT "../docs/Doxyfile")
 SET(DOXYGEN_OUTPUT "../docs")
 
@@ -183,5 +185,9 @@ ADD_CUSTOM_COMMAND(
   )
 
 ADD_CUSTOM_TARGET(docs ${DOXYGEN_EXECUTABLE} ${DOXYGEN_INPUT})
-
+else()
+ADD_CUSTOM_TARGET(docs echo "Doxygen binary does not exist. Cannot create documentation... Please install Doxygen or verify correct installation.")
+endif()
+else()
+ADD_CUSTOM_TARGET(docs echo "Doxygen does not exist. Please install it. Cannot create documentation...")
 endif(DOXYGEN_FOUND)
