@@ -130,7 +130,7 @@ core::Property InvokeHTTP::PenalizeOnNoRetry(
 const char* InvokeHTTP::STATUS_CODE = "invokehttp.status.code";
 const char* InvokeHTTP::STATUS_MESSAGE = "invokehttp.status.message";
 const char* InvokeHTTP::RESPONSE_BODY = "invokehttp.response.body";
-const char* InvokeHTTP::REQUEST_URL = "invokehttp.requerst.url";
+const char* InvokeHTTP::REQUEST_URL = "invokehttp.request.url";
 const char* InvokeHTTP::TRANSACTION_ID = "invokehttp.tx.id";
 const char* InvokeHTTP::REMOTE_DN = "invokehttp.remote.dn";
 const char* InvokeHTTP::EXCEPTION_CLASS = "invokehttp.java.exception.class";

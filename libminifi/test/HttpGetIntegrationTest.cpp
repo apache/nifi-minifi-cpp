@@ -95,7 +95,7 @@ int main(int argc, char **argv) {
   assert(logs.find("key:filename value:") != std::string::npos);
   assert(
       logs.find(
-          "key:invokehttp.requerst.url value:https://curl.haxx.se/libcurl/c/httpput.html")
+          "key:invokehttp.request.url value:https://curl.haxx.se/libcurl/c/httpput.html")
           != std::string::npos);
   assert(logs.find("Size:8970 Offset:0") != std::string::npos);
   assert(

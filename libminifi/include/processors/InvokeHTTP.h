@@ -55,13 +55,14 @@ struct HTTPRequestResponse {
     return static_cast<HTTPRequestResponse*>(p)->write_content(data, size,
                                                                nmemb);
   }
+
   /**
-     * Callback for post, put, and patch operations
-     * @param buffer
-     * @param size size of buffer
-     * @param nitems items to add
-     * @param insteam input stream object.
-     */
+   * Callback for post, put, and patch operations
+   * @param buffer
+   * @param size size of buffer
+   * @param nitems items to add
+   * @param insteam input stream object.
+   */
 
   static size_t send_write(char * data, size_t size, size_t nmemb, void * p) {
     if (p != 0) {
@@ -69,8 +70,7 @@ struct HTTPRequestResponse {
       if (callback->pos <= callback->ptr->getBufferSize()) {
         char *ptr = callback->ptr->getBuffer();
         int len = callback->ptr->getBufferSize() - callback->pos;
-        if (len <= 0)
-        {
+        if (len <= 0) {
           delete callback->ptr;
           delete callback;
           return 0;
