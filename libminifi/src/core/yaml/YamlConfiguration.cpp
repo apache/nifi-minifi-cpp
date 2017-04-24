@@ -339,7 +339,7 @@ void YamlConfiguration::parseProvenanceReportingYaml(
     return;
   }
 
-  if (!reportNode || !(reportNode->IsSequence())) {
+  if (!reportNode || !reportNode->IsDefined() || reportNode->IsNull()) {
     logger_->log_debug("no provenance reporting task specified");
     return;
   }

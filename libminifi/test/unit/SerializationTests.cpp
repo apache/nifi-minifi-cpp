@@ -16,69 +16,21 @@
  * limitations under the License.
  */
 
-
 #include "io/BaseStream.h"
 #include "Site2SitePeer.h"
 #include "Site2SiteClientProtocol.h"
 #include <uuid/uuid.h>
+#include "core/logging/LogAppenders.h"
+#include "core/logging/BaseLogger.h"
+#include "SiteToSiteHelper.h"
 #include <algorithm>
 #include <string>
 #include <memory>
 #include "../TestBase.h"
 #define FMT_DEFAULT fmt_lower
 
-
 using namespace org::apache::nifi::minifi::io;
-TEST_CASE("TestSetPortId", "[S2S1]"){
-
-
-	std::unique_ptr<minifi::Site2SitePeer> peer = std::unique_ptr<minifi::Site2SitePeer>( new minifi::Site2SitePeer(std::unique_ptr<DataStream>(new DataStream()),"fake_host",65433));
-
-	minifi::Site2SiteClientProtocol protocol(std::move(peer));
-
-
-	std::string uuid_str = "c56a4180-65aa-42ec-a945-5fd21dec0538";
-
-	uuid_t fakeUUID;
-
-	uuid_parse(uuid_str.c_str(),fakeUUID);
-
-	protocol.setPortId(fakeUUID);
-
-	REQUIRE( uuid_str == protocol.getPortId() );
-
-
-
-}
-
-TEST_CASE("TestSetPortIdUppercase", "[S2S2]"){
-
-
-  std::unique_ptr<minifi::Site2SitePeer> peer = std::unique_ptr<minifi::Site2SitePeer>( new minifi::Site2SitePeer(std::unique_ptr<DataStream>(new DataStream()),"fake_host",65433));
-
-  minifi::Site2SiteClientProtocol protocol(std::move(peer));
-
-
-	std::string uuid_str = "C56A4180-65AA-42EC-A945-5FD21DEC0538";
-
-	uuid_t fakeUUID;
-
-	uuid_parse(uuid_str.c_str(),fakeUUID);
-
-	protocol.setPortId(fakeUUID);
-
-	REQUIRE( uuid_str != protocol.getPortId() );
-
-	std::transform(uuid_str.begin(),uuid_str.end(),uuid_str.begin(),::tolower);
-
-	REQUIRE( uuid_str == protocol.getPortId() );
-
-
-
-}
-
-
-TEST_CASE("TestWriteUTF", "[MINIFI193]"){
+TEST_CASE("TestWriteUTF", "[MINIFI193]") {
 
   DataStream baseStream;
 
@@ -86,22 +38,15 @@ TEST_CASE("TestWriteUTF", "[MINIFI193]"){
 
   std::string stringOne = "helo world"; // yes, this has a typo.
   std::string verifyString;
-  ser.writeUTF(stringOne,&baseStream,false);
+  ser.writeUTF(stringOne, &baseStream, false);
 
-
-  ser.readUTF(verifyString,&baseStream,false);
+  ser.readUTF(verifyString, &baseStream, false);
 
   REQUIRE(verifyString == stringOne);
 
-
-
-
 }
 
-
-
-
-TEST_CASE("TestWriteUTF2", "[MINIFI193]"){
+TEST_CASE("TestWriteUTF2", "[MINIFI193]") {
 
   DataStream baseStream;
 
@@ -110,20 +55,15 @@ TEST_CASE("TestWriteUTF2", "[MINIFI193]"){
   std::string stringOne = "hel\xa1o world";
   REQUIRE(11 == stringOne.length());
   std::string verifyString;
-  ser.writeUTF(stringOne,&baseStream,false);
+  ser.writeUTF(stringOne, &baseStream, false);
 
-
-  ser.readUTF(verifyString,&baseStream,false);
+  ser.readUTF(verifyString, &baseStream, false);
 
   REQUIRE(verifyString == stringOne);
 
-
-
-
 }
 
-
-TEST_CASE("TestWriteUTF3", "[MINIFI193]"){
+TEST_CASE("TestWriteUTF3", "[MINIFI193]") {
 
   DataStream baseStream;
 
@@ -132,14 +72,11 @@ TEST_CASE("TestWriteUTF3", "[MINIFI193]"){
   std::string stringOne = "\xe4\xbd\xa0\xe5\xa5\xbd\xe4\xb8\x96\xe7\x95\x8c";
   REQUIRE(12 == stringOne.length());
   std::string verifyString;
-  ser.writeUTF(stringOne,&baseStream,false);
+  ser.writeUTF(stringOne, &baseStream, false);
 
-
-  ser.readUTF(verifyString,&baseStream,false);
+  ser.readUTF(verifyString, &baseStream, false);
 
   REQUIRE(verifyString == stringOne);
 
-
-
-
 }
+
