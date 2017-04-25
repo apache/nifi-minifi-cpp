@@ -90,7 +90,9 @@ $ yum install cmake \
   gcc gcc-c++ \
   leveldb-devel leveldb \
   libuuid libuuid-devel \
-  boost-devel \ libssl-dev
+  boost-devel \
+  libssl-dev \
+  doxygen
 ```
 
 Aptitude based Linux Distributions
@@ -100,7 +102,8 @@ $ apt-get install cmake \
   gcc g++ \
   libleveldb-dev libleveldb1v5 \
   uuid-dev uuid \
-  libboost-all-dev libssl-dev
+  libboost-all-dev libssl-dev \
+  doxygen
 ```
 
 OS X Using Homebrew (with XCode Command Line Tools installed)
@@ -109,7 +112,9 @@ OS X Using Homebrew (with XCode Command Line Tools installed)
 $ brew install cmake \
   leveldb \
   ossp-uuid \
-  boost \ openssl
+  boost \
+  openssl \
+  doxygen
 ```
 
 
