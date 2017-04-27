@@ -81,9 +81,27 @@ endif (LEVELDB_FOUND)
 find_package(UUID REQUIRED)
 file(GLOB SPD_SOURCES "include/spdlog/*")
 
-add_subdirectory(thirdparty/yaml-cpp-yaml-cpp-0.5.3)
-add_subdirectory(thirdparty/jsoncpp)
+
+
+include(ExternalProject)
+
+# Setup Jsoncpp as an external project
+set(JSONCPP_LIB_DIR "${CMAKE_CURRENT_BINARY_DIR}/jsoncpp")
+
+externalproject_add(jsoncpp_project
+        SOURCE_DIR ${CMAKE_SOURCE_DIR}/thirdparty/jsoncpp
+        CMAKE_ARGS
+        "-G${CMAKE_GENERATOR}"
+        "-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}"
+        "-DCMAKE_INSTALL_PREFIX=${JSONCPP_LIB_DIR}"
+        )
+
+set(prefix "lib")
+set(suffix ".a")
+set(JSONCPP_LIB "${JSONCPP_LIB_DIR}/lib/${prefix}jsoncpp${suffix}")
+
 set(CIVETWEB_ENABLE_CXX ON CACHE BOOL "Enable civet C++ library")
+add_subdirectory(thirdparty/yaml-cpp-yaml-cpp-0.5.3)
 add_subdirectory(thirdparty/civetweb-1.9.1)
 add_subdirectory(libminifi)
 add_subdirectory(main)
@@ -137,7 +155,7 @@ enable_testing(test)
     target_include_directories(tests PRIVATE BEFORE "libminifi/include/utils")
     target_include_directories(tests PRIVATE BEFORE "libminifi/include/processors")
     target_include_directories(tests PRIVATE BEFORE "libminifi/include/provenance")
-    target_link_libraries(tests ${CMAKE_THREAD_LIBS_INIT} ${UUID_LIBRARIES} ${LEVELDB_LIBRARIES} ${OPENSSL_LIBRARIES} minifi yaml-cpp c-library civetweb-cpp jsoncpp_lib_static)
+    target_link_libraries(tests ${CMAKE_THREAD_LIBS_INIT} ${UUID_LIBRARIES} ${LEVELDB_LIBRARIES} ${OPENSSL_LIBRARIES} minifi yaml-cpp c-library civetweb-cpp ${JSON_CPP_LIB})
     if (CURL_FOUND)
         target_include_directories(tests PRIVATE BEFORE ${CURL_INCLUDE_DIRS})
                 target_link_libraries(tests ${CURL_LIBRARIES})
@@ -159,7 +177,7 @@ enable_testing(test)
     target_include_directories(testHttpGet PRIVATE BEFORE "libminifi/include/utils")
     target_include_directories(testHttpGet PRIVATE BEFORE "libminifi/include/processors")
     target_include_directories(testHttpGet PRIVATE BEFORE "libminifi/include/provenance")
-    target_link_libraries(testHttpGet ${CMAKE_THREAD_LIBS_INIT} ${UUID_LIBRARIES} ${LEVELDB_LIBRARIES} ${OPENSSL_LIBRARIES} minifi yaml-cpp c-library civetweb-cpp jsoncpp_lib_static)
+    target_link_libraries(testHttpGet ${CMAKE_THREAD_LIBS_INIT} ${UUID_LIBRARIES} ${LEVELDB_LIBRARIES} ${OPENSSL_LIBRARIES} minifi yaml-cpp c-library civetweb-cpp ${JSON_CPP_LIB})
     if (CURL_FOUND)
         target_include_directories(testHttpGet PRIVATE BEFORE ${CURL_INCLUDE_DIRS})
                 target_link_libraries(testHttpGet ${CURL_LIBRARIES})
@@ -180,7 +198,7 @@ enable_testing(test)
     target_include_directories(testHttpPost PRIVATE BEFORE "libminifi/include/utils")
     target_include_directories(testHttpPost PRIVATE BEFORE "libminifi/include/processors")
     target_include_directories(testHttpPost PRIVATE BEFORE "libminifi/include/provenance")
-    target_link_libraries(testHttpPost ${CMAKE_THREAD_LIBS_INIT} ${UUID_LIBRARIES} ${LEVELDB_LIBRARIES} ${OPENSSL_LIBRARIES} minifi yaml-cpp c-library civetweb-cpp jsoncpp_lib_static)
+    target_link_libraries(testHttpPost ${CMAKE_THREAD_LIBS_INIT} ${UUID_LIBRARIES} ${LEVELDB_LIBRARIES} ${OPENSSL_LIBRARIES} minifi yaml-cpp c-library civetweb-cpp ${JSON_CPP_LIB})
     if (CURL_FOUND)
         target_include_directories(testHttpPost PRIVATE BEFORE ${CURL_INCLUDE_DIRS})
     	target_link_libraries(testHttpPost ${CURL_LIBRARIES})
@@ -204,7 +222,7 @@ enable_testing(test)
         target_include_directories(testExecuteProcess PRIVATE BEFORE ${CURL_INCLUDE_DIRS})
     	target_link_libraries(testExecuteProcess ${CURL_LIBRARIES})
     endif(CURL_FOUND)
-    target_link_libraries(testExecuteProcess ${CMAKE_THREAD_LIBS_INIT} ${UUID_LIBRARIES} ${LEVELDB_LIBRARIES} ${OPENSSL_LIBRARIES} minifi yaml-cpp c-library civetweb-cpp jsoncpp_lib_static)
+    target_link_libraries(testExecuteProcess ${CMAKE_THREAD_LIBS_INIT} ${UUID_LIBRARIES} ${LEVELDB_LIBRARIES} ${OPENSSL_LIBRARIES} minifi yaml-cpp c-library civetweb-cpp ${JSON_CPP_LIB})
     add_test(NAME ExecuteProcess COMMAND testExecuteProcess)
     
     file(GLOB LIBMINIFI_TEST_SOCKETS "libminifi/test/SocketTests.cpp")
@@ -224,7 +242,7 @@ enable_testing(test)
         target_include_directories(testSockets PRIVATE BEFORE ${CURL_INCLUDE_DIRS})
     	target_link_libraries(testSockets ${CURL_LIBRARIES})
     endif(CURL_FOUND)
-    target_link_libraries(testSockets ${CMAKE_THREAD_LIBS_INIT} ${UUID_LIBRARIES} ${LEVELDB_LIBRARIES} ${OPENSSL_LIBRARIES} minifi yaml-cpp c-library civetweb-cpp jsoncpp_lib_static)
+    target_link_libraries(testSockets ${CMAKE_THREAD_LIBS_INIT} ${UUID_LIBRARIES} ${LEVELDB_LIBRARIES} ${OPENSSL_LIBRARIES} minifi yaml-cpp c-library civetweb-cpp ${JSON_CPP_LIB})
     add_test(NAME TestSockets COMMAND testSockets)
 
 # Create a custom build target called "docker" that will invoke DockerBuild.sh and create the NiFi-MiNiFi-CPP Docker image

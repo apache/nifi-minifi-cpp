@@ -32,6 +32,7 @@ matrix:
           - doxygen
           - libleveldb-dev
           - openssl
+          - libcurl4-openssl-dev
       before_install:
         # Establish updated toolchain as default
         - sudo unlink /usr/bin/gcc && sudo ln -s /usr/bin/gcc-4.8 /usr/bin/gcc
@@ -47,6 +48,7 @@ matrix:
         - package='cmake'; [[ $(brew ls --versions ${package}) ]] && { brew outdated ${package} || brew upgrade ${package}; } || brew install ${package}
         - package='openssl'; [[ $(brew ls --versions ${package}) ]] && { brew outdated ${package} || brew upgrade ${package}; } || brew install ${package}
         - package='doxygen'; [[ $(brew ls --versions ${package}) ]] && { brew outdated ${package} || brew upgrade ${package}; } || brew install ${package}
+        - package='graphviz'; [[ $(brew ls --versions ${package}) ]] && { brew outdated ${package} || brew upgrade ${package}; } || brew install ${package}
     - os: osx
       osx_image: xcode8.3
       # https://docs.travis-ci.com/user/osx-ci-environment/#Homebrew
@@ -58,6 +60,7 @@ matrix:
         - package='cmake'; [[ $(brew ls --versions ${package}) ]] && { brew outdated ${package} || brew upgrade ${package}; } || brew install ${package}
         - package='openssl'; [[ $(brew ls --versions ${package}) ]] && { brew outdated ${package} || brew upgrade ${package}; } || brew install ${package}
         - package='doxygen'; [[ $(brew ls --versions ${package}) ]] && { brew outdated ${package} || brew upgrade ${package}; } || brew install ${package}
+        - package='graphviz'; [[ $(brew ls --versions ${package}) ]] && { brew outdated ${package} || brew upgrade ${package}; } || brew install ${package}
 
 script:
   - mkdir ./build && cd ./build && cmake .. && make && make test && make linter && make docs

@@ -44,7 +44,7 @@ find_package(OpenSSL REQUIRED)
 include_directories(${OPENSSL_INCLUDE_DIR})
 
 # Link against minifi, yaml-cpp, civetweb-cpp, uuid, openssl, jsoncpp and leveldb
-target_link_libraries(minifiexe minifi yaml-cpp c-library civetweb-cpp jsoncpp_lib_static ${UUID_LIBRARIES} ${LEVELDB_LIBRARIES} ${OPENSSL_LIBRARIES})
+target_link_libraries(minifiexe minifi yaml-cpp c-library civetweb-cpp ${JSON_CPP_LIB} ${UUID_LIBRARIES} ${LEVELDB_LIBRARIES} ${OPENSSL_LIBRARIES})
 set_target_properties(minifiexe
         PROPERTIES OUTPUT_NAME minifi)
 
