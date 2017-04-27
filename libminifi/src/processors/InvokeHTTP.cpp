@@ -155,8 +155,8 @@ core::Relationship InvokeHTTP::RelFailure(
     "timeout or general exception. It will have new attributes detailing the request.");
 
 void InvokeHTTP::set_request_method(CURL *curl, const std::string &method) {
-  std::string my_method;
-  std::transform(method.begin(), method.end(), my_method.begin(), ::toupper);
+  std::string my_method = method;
+  std::transform(my_method.begin(), my_method.end(), my_method.begin(), ::toupper);
   if (my_method == "POST") {
     curl_easy_setopt(curl, CURLOPT_POST, 1);
   } else if (my_method == "PUT") {

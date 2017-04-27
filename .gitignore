@@ -8,11 +8,15 @@ Makefile
 cmake_install.cmake
 install_manifest.txt
 CTestTestfile.cmake
+cmake-build-debug
+
+# Generated files
 build
 bin
 target
 thirdparty/**/*.o
 thirdparty/**/*.a
+docs/generated
 
 # Ignore source files that have been placed in the docker directory during build
 docker/minificppsource

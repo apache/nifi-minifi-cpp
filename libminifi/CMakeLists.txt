@@ -69,6 +69,9 @@ file(GLOB SPD_SOURCES "../include/spdlog/*")
 add_library(spdlog STATIC ${SPD_SOURCES})
 add_library(minifi STATIC ${SOURCES})
 
+add_dependencies(minifi jsoncpp_project)
+target_link_libraries(minifi ${JSONCPP_LIB})
+
 find_package(ZLIB REQUIRED)
 include_directories(${ZLIB_INCLUDE_DIRS})
 target_link_libraries (minifi ${ZLIB_LIBRARIES})
