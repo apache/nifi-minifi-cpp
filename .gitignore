@@ -1,3 +1,9 @@
+# Standard ignores
+.DS_Store
+
+# Ignore JetBrains project files
+.idea
+
 # Filter out generated files from the included libuuid
 thirdparty/uuid/tst_uuid*
 assemblies
@@ -20,4 +26,3 @@ docs/generated
 
 # Ignore source files that have been placed in the docker directory during build
 docker/minificppsource
-docker/.DS_STORE
