@@ -120,8 +120,6 @@ int8_t Socket::createConnection(const addrinfo *p, in_addr_t &addr) {
       if (connect(socket_file_descriptor_, p->ai_addr, p->ai_addrlen) == -1) {
         close(socket_file_descriptor_);
         socket_file_descriptor_ = -1;
-        logger_->log_warn("Could not connect to socket, error:%s",
-                          strerror(errno));
         return -1;
       }
     }
@@ -130,7 +128,6 @@ int8_t Socket::createConnection(const addrinfo *p, in_addr_t &addr) {
   // listen
   if (listeners_ > 0) {
     if (listen(socket_file_descriptor_, listeners_) == -1) {
-      logger_->log_warn("attempted connection, saw %s", strerror(errno));
       return -1;
     }
   }
