@@ -15,8 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_TEST_UNIT_PROVENANCETESTHELPER_H_
-#define LIBMINIFI_TEST_UNIT_PROVENANCETESTHELPER_H_
+#ifndef LIBMINIFI_TEST_UNIT_SITE2SITE_HELPER_H_
+#define LIBMINIFI_TEST_UNIT_SITE2SITE_HELPER_H_
 
 #include <queue>
 #include "io/BaseStream.h"
@@ -153,4 +153,4 @@ public:
 
 };
 
-#endif /* LIBMINIFI_TEST_UNIT_PROVENANCETESTHELPER_H_ */
+#endif /* LIBMINIFI_TEST_UNIT_SITE2SITE_HELPER_H_ */
