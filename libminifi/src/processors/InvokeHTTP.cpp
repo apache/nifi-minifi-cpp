@@ -17,11 +17,8 @@
  */
 
 #include "processors/InvokeHTTP.h"
-
 #include <curl/curlbuild.h>
 #include <curl/easy.h>
-#include <sys/_types/_size_t.h>
-#include <sys/_types/_uuid_t.h>
 #include <uuid/uuid.h>
 #include <memory>
 #include <algorithm>
