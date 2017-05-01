@@ -66,6 +66,7 @@ class FlowController : public core::CoreComponent {
    */
   FlowController(std::shared_ptr<core::Repository> provenance_repo,
                  std::shared_ptr<core::Repository> flow_file_repo,
+                 std::shared_ptr<Configure> configure,
                  std::unique_ptr<core::FlowConfiguration> flow_configuration,
                  const std::string name = DEFAULT_ROOT_GROUP_NAME,
                  bool headless_mode = false);
@@ -144,9 +145,6 @@ class FlowController : public core::CoreComponent {
 
   // flow controller mutex
   std::recursive_mutex mutex_;
-
-  // configuration object
-  Configure *configure_;
 
   // Configuration File Name
   std::string configuration_file_name_;

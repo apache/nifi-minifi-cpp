@@ -92,7 +92,7 @@ class OutputStreamAppender : public BaseLogger {
    * @param stream incoming stream reference.
    * @param config configuration.
    */
-  explicit OutputStreamAppender(Configure *config)
+  explicit OutputStreamAppender(std::shared_ptr<Configure> config)
       : BaseLogger("info") {
     auto ostream_sink = std::make_shared<spdlog::sinks::ostream_sink_mt>(
         std::cout);
@@ -133,7 +133,7 @@ class OutputStreamAppender : public BaseLogger {
    * @param stream incoming stream reference.
    * @param config configuration.
    */
-  OutputStreamAppender(std::ostream &stream, Configure *config)
+  OutputStreamAppender(std::ostream &stream, std::shared_ptr<Configure> config)
       : BaseLogger("info") {
     auto ostream_sink = std::make_shared<spdlog::sinks::ostream_sink_mt>(
         stream);
@@ -179,7 +179,7 @@ class RollingAppender : public BaseLogger {
    * Base Constructor.
    * @param config pointer to the configuration for this instance.
    */
-  explicit RollingAppender(Configure * config = 0)
+  explicit RollingAppender(std::shared_ptr<Configure> config = 0)
       : BaseLogger("info") {
     std::string file_name = "";
     if (NULL != config
@@ -260,7 +260,7 @@ class LogInstance {
    * the configuration within this instance.
    * @param config configuration for this instance.
    */
-  static std::unique_ptr<BaseLogger> getConfiguredLogger(Configure *config) {
+  static std::unique_ptr<BaseLogger> getConfiguredLogger(std::shared_ptr<Configure> config) {
     std::string appender = "";
 
     if (config->get(BaseLogger::nifi_log_appender, appender)) {

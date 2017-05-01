@@ -127,7 +127,7 @@ TEST_CASE("Test YAML Config 1", "[testyamlconfig1]") {
       "    timeout: 30 secs\n"
       "    batch size: 1000";
 
-  core::YamlConfiguration *yamlConfig = new core::YamlConfiguration(TEST_PROV_REPO, TEST_FF_REPO);
+  core::YamlConfiguration *yamlConfig = new core::YamlConfiguration(TEST_PROV_REPO, TEST_FF_REPO, std::make_shared<minifi::io::StreamFactory>(std::make_shared<minifi::Configure>()));
   std::istringstream yamlstream(TEST_YAML_WITHOUT_IDS);
   std::unique_ptr<core::ProcessGroup> rootFlowConfig = yamlConfig->getRoot(yamlstream);
 
@@ -178,7 +178,7 @@ TEST_CASE("Test YAML Config Missing Required Fields", "[testyamlconfig2]") {
       "            use compression: false\n"
       "\n";
 
-  core::YamlConfiguration *yamlConfig = new core::YamlConfiguration(TEST_PROV_REPO, TEST_FF_REPO);
+  core::YamlConfiguration *yamlConfig = new core::YamlConfiguration(TEST_PROV_REPO, TEST_FF_REPO, std::make_shared<minifi::io::StreamFactory>(std::make_shared<minifi::Configure>()));
   std::istringstream yamlstream(TEST_YAML_NO_RPG_PORT_ID);
 
   REQUIRE_THROWS_AS(yamlConfig->getRoot(yamlstream), std::invalid_argument);

@@ -195,7 +195,7 @@ void Processor::removeConnection(std::shared_ptr<Connectable> conn) {
 }
 
 std::shared_ptr<Site2SiteClientProtocol> Processor::obtainSite2SiteProtocol(
-    std::string host, uint16_t sport, uuid_t portId) {
+    std::shared_ptr<io::StreamFactory> stream_factory, std::string host, uint16_t sport, uuid_t portId) {
   std::lock_guard < std::mutex > lock(mutex_);
 
   if (!protocols_created_) {
@@ -206,8 +206,7 @@ std::shared_ptr<Site2SiteClientProtocol> Processor::obtainSite2SiteProtocol(
       protocol->setPortId(portId);
       std::unique_ptr<org::apache::nifi::minifi::io::DataStream> str =
           std::unique_ptr < org::apache::nifi::minifi::io::DataStream
-              > (org::apache::nifi::minifi::io::StreamFactory::getInstance()->createSocket(
-                  host, sport));
+              > (stream_factory->createSocket(host, sport));
       std::unique_ptr<Site2SitePeer> peer_ = std::unique_ptr < Site2SitePeer
           > (new Site2SitePeer(std::move(str), host, sport));
       protocol->setPeer(std::move(peer_));
@@ -225,8 +224,7 @@ std::shared_ptr<Site2SiteClientProtocol> Processor::obtainSite2SiteProtocol(
     protocol->setPortId(portId);
     std::unique_ptr<org::apache::nifi::minifi::io::DataStream> str =
         std::unique_ptr < org::apache::nifi::minifi::io::DataStream
-            > (org::apache::nifi::minifi::io::StreamFactory::getInstance()->createSocket(
-                host, sport));
+            > (stream_factory->createSocket(host, sport));
     std::unique_ptr<Site2SitePeer> peer_ = std::unique_ptr < Site2SitePeer
         > (new Site2SitePeer(std::move(str), host, sport));
     protocol->setPeer(std::move(peer_));

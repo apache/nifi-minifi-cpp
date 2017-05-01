@@ -50,7 +50,6 @@ class SchedulingAgent {
    * Create a new processor
    */
   SchedulingAgent(std::shared_ptr<core::Repository> repo) {
-    configure_ = Configure::getConfigure();
     logger_ = logging::Logger::getLogger();
     running_ = false;
     repo_ = repo;
@@ -87,8 +86,6 @@ class SchedulingAgent {
  protected:
   // Logger
   std::shared_ptr<logging::Logger> logger_;
-  // Configure
-  Configure *configure_;
   // Mutex for protection
   std::mutex mutex_;
   // Whether it is running

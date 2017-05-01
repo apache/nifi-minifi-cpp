@@ -49,6 +49,7 @@ namespace minifi {
 FlowController::FlowController(
     std::shared_ptr<core::Repository> provenance_repo,
     std::shared_ptr<core::Repository> flow_file_repo,
+    std::shared_ptr<Configure> configure,
     std::unique_ptr<core::FlowConfiguration> flow_configuration,
     const std::string name, bool headless_mode)
     : CoreComponent(core::getClassName<FlowController>()),
@@ -60,8 +61,8 @@ FlowController::FlowController(
       provenance_repo_(provenance_repo),
       flow_file_repo_(flow_file_repo),
       protocol_(0),
-      _timerScheduler(provenance_repo_),
-      _eventScheduler(provenance_repo_),
+      _timerScheduler(provenance_repo_, configure),
+      _eventScheduler(provenance_repo_, configure),
       flow_configuration_(std::move(flow_configuration)) {
   if (provenance_repo == nullptr)
     throw std::runtime_error("Provenance Repo should not be null");
@@ -81,14 +82,11 @@ FlowController::FlowController(
   initialized_ = false;
   root_ = NULL;
 
-  protocol_ = new FlowControlProtocol(this);
-
-  // NiFi config properties
-  configure_ = Configure::getConfigure();
+  protocol_ = new FlowControlProtocol(this, configure);
 
   if (!headless_mode) {
     std::string rawConfigFileString;
-    configure_->get(Configure::nifi_flow_configuration_file,
+    configure->get(Configure::nifi_flow_configuration_file,
                     rawConfigFileString);
 
     if (!rawConfigFileString.empty()) {
@@ -99,7 +97,7 @@ FlowController::FlowController(
     if (!configuration_filename_.empty()) {
       // perform a naive determination if this is a relative path
       if (configuration_filename_.c_str()[0] != '/') {
-        adjustedFilename = adjustedFilename + configure_->getHome() + "/"
+        adjustedFilename = adjustedFilename + configure->getHome() + "/"
             + configuration_filename_;
       } else {
         adjustedFilename = configuration_filename_;

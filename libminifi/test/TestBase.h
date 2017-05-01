@@ -27,6 +27,7 @@
 #include "core/logging/LogAppenders.h"
 #include "core/logging/Logger.h"
 #include "core/Core.h"
+#include "properties/Configure.h"
 
 class LogTestController {
  public:
@@ -72,12 +73,11 @@ class TestController {
     }
   }
 
-  void setDebugToConsole() {
+  void setDebugToConsole(std::shared_ptr<org::apache::nifi::minifi::Configure> configure) {
     std::ostringstream oss;
     std::unique_ptr<logging::BaseLogger> outputLogger = std::unique_ptr<
         logging::BaseLogger>(
-        new org::apache::nifi::minifi::core::logging::OutputStreamAppender(
-            std::cout, minifi::Configure::getConfigure()));
+        new org::apache::nifi::minifi::core::logging::OutputStreamAppender(std::cout, configure));
     std::shared_ptr<logging::Logger> logger = logging::Logger::getLogger();
     logger->updateLogger(std::move(outputLogger));
   }

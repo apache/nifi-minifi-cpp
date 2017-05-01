@@ -61,7 +61,6 @@ class Repository : public CoreComponent {
     max_partition_millis_ = maxPartitionMillis;
     max_partition_bytes_ = maxPartitionBytes;
     purge_period_ = purgePeriod;
-    configure_ = Configure::getConfigure();
     running_ = false;
     repo_full_ = false;
   }
@@ -72,7 +71,7 @@ class Repository : public CoreComponent {
   }
 
   // initialize
-  virtual bool initialize() {
+  virtual bool initialize(std::shared_ptr<Configure> configure) {
     return true;
   }
   // Put
@@ -119,8 +118,6 @@ class Repository : public CoreComponent {
   std::mutex mutex_;
   // repository directory
   std::string directory_;
-  // Configure
-  Configure *configure_;
   // max db entry life time
   int64_t max_partition_millis_;
   // max db size

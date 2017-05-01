@@ -106,7 +106,7 @@ void RemoteProcessorGroupPort::onTrigger(core::ProcessContext *context,
   }
 
   std::shared_ptr<Site2SiteClientProtocol> protocol_ =
-      this->obtainSite2SiteProtocol(host, sport, protocol_uuid_);
+      this->obtainSite2SiteProtocol(stream_factory_, host, sport, protocol_uuid_);
 
   if (!protocol_) {
     context->yield();

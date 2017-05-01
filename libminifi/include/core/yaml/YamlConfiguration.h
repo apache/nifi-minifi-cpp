@@ -24,6 +24,7 @@
 #include "Site2SiteClientProtocol.h"
 #include <string>
 #include "io/validation.h"
+#include "io/StreamFactory.h"
 
 namespace org {
 namespace apache {
@@ -43,8 +44,10 @@ class YamlConfiguration : public FlowConfiguration {
  public:
   YamlConfiguration(std::shared_ptr<core::Repository> repo,
                     std::shared_ptr<core::Repository> flow_file_repo,
+                    std::shared_ptr<io::StreamFactory> stream_factory,
                     const std::string path = DEFAULT_FLOW_YAML_FILE_NAME)
-      : FlowConfiguration(repo, flow_file_repo, path) {
+      : FlowConfiguration(repo, flow_file_repo, stream_factory, path) {
+       stream_factory_ = stream_factory;
     if (IsNullOrEmpty(config_path_)) {
       config_path_ = DEFAULT_FLOW_YAML_FILE_NAME;
     }
@@ -240,6 +243,9 @@ class YamlConfiguration : public FlowConfiguration {
                           const std::string &fieldName,
                           const std::string &yamlSection = "",
                           const std::string &errorMessage = "");
+
+ protected:
+  std::shared_ptr<io::StreamFactory> stream_factory_;
 };
 
 } /* namespace core */

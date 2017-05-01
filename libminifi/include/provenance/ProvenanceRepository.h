@@ -71,21 +71,21 @@ class ProvenanceRepository : public core::Repository,
 }
 
   // initialize
-  virtual bool initialize() {
+  virtual bool initialize(std::shared_ptr<org::apache::nifi::minifi::Configure> config) {
     std::string value;
-    if (configure_->get(Configure::nifi_provenance_repository_directory_default,
+    if (config->get(Configure::nifi_provenance_repository_directory_default,
                         value)) {
       directory_ = value;
     }
     logger_->log_info("NiFi Provenance Repository Directory %s",
                       directory_.c_str());
-    if (configure_->get(Configure::nifi_provenance_repository_max_storage_size,
+    if (config->get(Configure::nifi_provenance_repository_max_storage_size,
                         value)) {
       core::Property::StringToInt(value, max_partition_bytes_);
     }
     logger_->log_info("NiFi Provenance Max Partition Bytes %d",
                       max_partition_bytes_);
-    if (configure_->get(Configure::nifi_provenance_repository_max_storage_time,
+    if (config->get(Configure::nifi_provenance_repository_max_storage_time,
                         value)) {
       core::TimeUnit unit;
       if (core::Property::StringToTime(value, max_partition_millis_, unit)

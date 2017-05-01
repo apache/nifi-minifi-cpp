@@ -27,6 +27,7 @@
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
 #include "Site2SiteClientProtocol.h"
+#include "io/StreamFactory.h"
 
 namespace org {
 namespace apache {
@@ -39,10 +40,11 @@ class RemoteProcessorGroupPort : public core::Processor {
   /*!
    * Create a new processor
    */
-  RemoteProcessorGroupPort(std::string name, uuid_t uuid = NULL)
+  RemoteProcessorGroupPort(std::shared_ptr<io::StreamFactory> stream_factory, std::string name, uuid_t uuid = NULL)
       : core::Processor(name, uuid),
         direction_(SEND),
         transmitting_(false) {
+    stream_factory_ = stream_factory;
     logger_ = logging::Logger::getLogger();
     uuid_copy(protocol_uuid_, uuid);
   }
@@ -82,7 +84,7 @@ class RemoteProcessorGroupPort : public core::Processor {
  protected:
 
  private:
-
+  std::shared_ptr<io::StreamFactory> stream_factory_;
   std::unique_ptr<Site2SiteClientProtocol> getNextProtocol();
   void returnProtocol(std::unique_ptr<Site2SiteClientProtocol> protocol);
 

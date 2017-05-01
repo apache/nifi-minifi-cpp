@@ -35,6 +35,8 @@
 #include "../include/FlowController.h"
 #include "../include/properties/Configure.h"
 #include "unit/ProvenanceTestHelper.h"
+#include "../include/io/StreamFactory.h"
+#include "../include/properties/Configure.h"
 
 std::string test_file_location;
 
@@ -62,7 +64,7 @@ int main(int argc, char **argv) {
   logger->updateLogger(std::move(outputLogger));
   logger->setLogLevel("debug");
 
-  minifi::Configure *configuration = minifi::Configure::getConfigure();
+  std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::Configure>();
 
   std::shared_ptr<core::Repository> test_repo =
       std::make_shared<TestRepository>();
@@ -71,19 +73,20 @@ int main(int argc, char **argv) {
 
   configuration->set(minifi::Configure::nifi_flow_configuration_file,
                      test_file_location);
+  std::shared_ptr<minifi::io::StreamFactory> stream_factory = std::make_shared<minifi::io::StreamFactory>(configuration);
 
   std::unique_ptr<core::FlowConfiguration> yaml_ptr = std::unique_ptr<
       core::YamlConfiguration>(
-      new core::YamlConfiguration(test_repo, test_repo, test_file_location));
+      new core::YamlConfiguration(test_repo, test_repo, stream_factory, test_file_location));
   std::shared_ptr<TestRepository> repo =
       std::static_pointer_cast<TestRepository>(test_repo);
 
   std::shared_ptr<minifi::FlowController> controller = std::make_shared<
-      minifi::FlowController>(test_repo, test_flow_repo, std::move(yaml_ptr),
+      minifi::FlowController>(test_repo, test_flow_repo, configuration, std::move(yaml_ptr),
   DEFAULT_ROOT_GROUP_NAME,
                               true);
 
-  core::YamlConfiguration yaml_config(test_repo, test_repo, test_file_location);
+  core::YamlConfiguration yaml_config(test_repo, test_repo, stream_factory, test_file_location);
 
   std::unique_ptr<core::ProcessGroup> ptr = yaml_config.getRoot(
       test_file_location);

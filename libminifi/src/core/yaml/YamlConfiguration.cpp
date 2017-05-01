@@ -527,7 +527,7 @@ void YamlConfiguration::parsePortYaml(YAML::Node *portNode,
   auto portId = inputPortsObj["id"].as<std::string>();
   uuid_parse(portId.c_str(), uuid);
 
-  port = std::make_shared<minifi::RemoteProcessorGroupPort>(nameStr, uuid);
+  port = std::make_shared<minifi::RemoteProcessorGroupPort>(stream_factory_, nameStr, uuid);
 
   processor = std::static_pointer_cast<core::Processor>(port);
   port->setDirection(direction);

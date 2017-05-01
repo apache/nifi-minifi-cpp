@@ -70,22 +70,22 @@ class FlowFileRepository : public core::Repository,
   }
 
   // initialize
-  virtual bool initialize() {
+  virtual bool initialize(std::shared_ptr<Configure> configure) {
     std::string value;
 
-    if (configure_->get(Configure::nifi_flowfile_repository_directory_default,
+    if (configure->get(Configure::nifi_flowfile_repository_directory_default,
                         value)) {
       directory_ = value;
     }
     logger_->log_info("NiFi FlowFile Repository Directory %s",
                       directory_.c_str());
-    if (configure_->get(Configure::nifi_flowfile_repository_max_storage_size,
+    if (configure->get(Configure::nifi_flowfile_repository_max_storage_size,
                         value)) {
       Property::StringToInt(value, max_partition_bytes_);
     }
     logger_->log_info("NiFi FlowFile Max Partition Bytes %d",
                       max_partition_bytes_);
-    if (configure_->get(Configure::nifi_flowfile_repository_max_storage_time,
+    if (configure->get(Configure::nifi_flowfile_repository_max_storage_time,
                         value)) {
       TimeUnit unit;
       if (Property::StringToTime(value, max_partition_millis_, unit)

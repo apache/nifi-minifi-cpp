@@ -28,8 +28,8 @@
 #include "io/BaseStream.h"
 #include "core/Core.h"
 #include "core/logging/Logger.h"
-
 #include "io/validation.h"
+#include "properties/Configure.h"
 
 namespace org {
 namespace apache {
@@ -37,6 +37,14 @@ namespace nifi {
 namespace minifi {
 namespace io {
 
+/**
+ * Context class for socket. This is currently only used as a parent class for TLSContext.  It is necessary so the Socket and TLSSocket constructors
+ * can be the same.  It also gives us a common place to set timeouts, etc from the Configure object in the future.
+ */ 
+class SocketContext {
+ public:
+  SocketContext(std::shared_ptr<Configure> configure) {}
+};
 /**
  * Socket class.
  * Purpose: Provides a general purpose socket interface that abstracts
@@ -55,7 +63,7 @@ class Socket : public BaseStream {
    * @param port connecting port
    * @param listeners number of listeners in the queue
    */
-  explicit Socket(const std::string &hostname, const uint16_t port,
+  explicit Socket(std::shared_ptr<SocketContext> context, const std::string &hostname, const uint16_t port,
                   const uint16_t listeners);
 
   /**
@@ -63,7 +71,7 @@ class Socket : public BaseStream {
    * @param hostname hostname we are connecting to.
    * @param port port we are connecting to.
    */
-  explicit Socket(const std::string &hostname, const uint16_t port);
+  explicit Socket(std::shared_ptr<SocketContext> context, const std::string &hostname, const uint16_t port);
 
   /**
    * Move constructor.
@@ -81,7 +89,7 @@ class Socket : public BaseStream {
     else {
       char hostname[1024];
       gethostname(hostname, 1024);
-      Socket mySock(hostname, 0);
+      Socket mySock(nullptr, hostname, 0);
       mySock.initialize();
       return mySock.getHostname();
     }

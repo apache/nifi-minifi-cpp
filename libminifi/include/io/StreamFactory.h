@@ -22,36 +22,15 @@
 #include "utils/StringUtils.h"
 #include "validation.h"
 
-#ifdef OPENSSL_SUPPORT
-#include "tls/TLSSocket.h"
-#endif
-
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
 namespace io {
 
-/**
- * Purpose: Socket Creator is a class that will determine if the provided socket type
- * exists per the compilation parameters
- */
-template<typename T>
-class SocketCreator {
-
-  template<bool cond, typename U>
-  using TypeCheck = typename std::enable_if< cond, U >::type;
-
+class AbstractStreamFactory {
  public:
-  template<typename U = T>
-  TypeCheck<true, U> *create(const std::string &host, const uint16_t port) {
-    return new T(host, port);
-  }
-  template<typename U = T>
-  TypeCheck<false, U> *create(const std::string &host, const uint16_t port) {
-    return new Socket(host, port);
-  }
-
+  virtual std::unique_ptr<Socket> createSocket(const std::string &host, const uint16_t port) = 0;
 };
 
 /**
@@ -63,69 +42,18 @@ class StreamFactory {
  public:
 
   /**
-   * Build an instance, creating a memory fence, which
-   * allows us to avoid locking. This is tantamount to double checked locking.
-   * @returns new StreamFactory;
-   */
-  static StreamFactory *getInstance() {
-    StreamFactory* atomic_context = context_instance_.load(
-        std::memory_order_relaxed);
-    std::atomic_thread_fence(std::memory_order_acquire);
-    if (atomic_context == nullptr) {
-      std::lock_guard<std::mutex> lock(context_mutex_);
-      atomic_context = context_instance_.load(std::memory_order_relaxed);
-      if (atomic_context == nullptr) {
-        atomic_context = new StreamFactory();
-        std::atomic_thread_fence(std::memory_order_release);
-        context_instance_.store(atomic_context, std::memory_order_relaxed);
-      }
-    }
-    return atomic_context;
-  }
-
-  /**
    * Creates a socket and returns a unique ptr
    *
    */
   std::unique_ptr<Socket> createSocket(const std::string &host,
                                        const uint16_t port) {
-    Socket *socket = 0;
-
-    if (is_secure_) {
-      socket = createSocket<TLSSocket>(host, port);
-    } else {
-      socket = createSocket<Socket>(host, port);
-    }
-    return std::unique_ptr<Socket>(socket);
+    return delegate_->createSocket(host, port);
   }
+
+  StreamFactory(std::shared_ptr<Configure> configure);
 
  protected:
-
-  /**
-   * Creates a socket and returns a unique ptr
-   *
-   */
-  template<typename T>
-  Socket *createSocket(const std::string &host, const uint16_t port) {
-    SocketCreator<T> creator;
-    return creator.create(host, port);
-  }
-
-  StreamFactory()
-      : configure_(Configure::getConfigure()) {
-    std::string secureStr;
-    is_secure_ = false;
-    if (configure_->get(Configure::nifi_remote_input_secure, secureStr)) {
-      org::apache::nifi::minifi::utils::StringUtils::StringToBool(secureStr,
-                                                                  is_secure_);
-    }
-  }
-
-  bool is_secure_;
-  static std::atomic<StreamFactory*> context_instance_;
-  static std::mutex context_mutex_;
-
-  Configure *configure_;
+  std::shared_ptr<AbstractStreamFactory> delegate_;
 };
 
 } /* namespace io */

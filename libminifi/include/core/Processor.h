@@ -33,6 +33,7 @@
 
 #include "Connectable.h"
 #include "ConfigurableComponent.h"
+#include "io/StreamFactory.h"
 #include "Property.h"
 #include "utils/TimeUtil.h"
 #include "Relationship.h"
@@ -243,7 +244,7 @@ class Processor : public Connectable, public ConfigurableComponent,
   std::atomic<bool> _triggerWhenEmpty;
 
 //! obtainSite2SiteProtocol for use
-  std::shared_ptr<Site2SiteClientProtocol> obtainSite2SiteProtocol(std::string host, uint16_t sport, uuid_t portId);
+  std::shared_ptr<Site2SiteClientProtocol> obtainSite2SiteProtocol(std::shared_ptr<io::StreamFactory> stream_factory, std::string host, uint16_t sport, uuid_t portId);
   //! returnSite2SiteProtocol after use
   void returnSite2SiteProtocol(std::shared_ptr<Site2SiteClientProtocol> protocol);private:
 

@@ -157,10 +157,9 @@ class FlowControlProtocol {
   /*!
    * Create a new control protocol
    */
-  FlowControlProtocol(FlowController *controller) {
+  FlowControlProtocol(FlowController *controller, std::shared_ptr<Configure> configure) {
     _controller = controller;
     logger_ = logging::Logger::getLogger();
-    configure_ = Configure::getConfigure();
     _socket = 0;
     _serverName = "localhost";
     _serverPort = DEFAULT_NIFI_SERVER_PORT;
@@ -173,15 +172,15 @@ class FlowControlProtocol {
 
     std::string value;
 
-    if (configure_->get(Configure::nifi_server_name, value)) {
+    if (configure->get(Configure::nifi_server_name, value)) {
       _serverName = value;
       logger_->log_info("NiFi Server Name %s", _serverName.c_str());
     }
-    if (configure_->get(Configure::nifi_server_port, value)
+    if (configure->get(Configure::nifi_server_port, value)
         && core::Property::StringToInt(value, _serverPort)) {
       logger_->log_info("NiFi Server Port: [%d]", _serverPort);
     }
-    if (configure_->get(Configure::nifi_server_report_interval, value)) {
+    if (configure->get(Configure::nifi_server_report_interval, value)) {
       core::TimeUnit unit;
       if (core::Property::StringToTime(value, _reportInterval, unit)
           && core::Property::ConvertTimeUnitToMS(_reportInterval, unit,
@@ -276,8 +275,6 @@ class FlowControlProtocol {
   std::mutex mutex_;
   // Logger
   std::shared_ptr<logging::Logger> logger_;
-  // Configure
-  Configure *configure_ = NULL;
   // NiFi server Name
   std::string _serverName;
   // NiFi server port
