@@ -25,7 +25,6 @@ namespace apache {
 namespace nifi {
 namespace minifi {
 
-Configure *Configure::configure_(NULL);
 const char *Configure::nifi_flow_configuration_file =
     "nifi.flow.configuration.file";
 const char *Configure::nifi_administrative_yield_duration =
@@ -125,7 +124,7 @@ void Configure::loadConfigureFile(const char *fileName) {
   if (fileName) {
     // perform a naive determination if this is a relative path
     if (fileName[0] != '/') {
-      adjustedFilename = adjustedFilename + configure_->getHome() + "/"
+      adjustedFilename = adjustedFilename + getHome() + "/"
           + fileName;
     } else {
       adjustedFilename += fileName;

@@ -158,7 +158,7 @@ TEST_CASE("Test log Levels change", "[ttl5]") {
 TEST_CASE("Test log LevelsConfigured", "[ttl6]") {
   std::ostringstream oss;
 
-  minifi::Configure *config = minifi::Configure::getConfigure();
+  std::shared_ptr<minifi::Configure> config = std::make_shared<minifi::Configure>();
 
   config->set(BaseLogger::nifi_log_appender, "OutputStreamAppender");
   config->set(

@@ -21,8 +21,6 @@
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 #include <cstdint>
-#include <atomic>
-#include <mutex>
 #include "../ClientSocket.h"
 
 #include "properties/Configure.h"
@@ -39,32 +37,11 @@ namespace io {
 #define TLS_ERROR_KEY_ERROR 4
 #define TLS_ERROR_CERT_ERROR 5
 
-class TLSContext {
+class TLSContext: public SocketContext {
 
  public:
-
-  /**
-   * Build an instance, creating a memory fence, which
-   * allows us to avoid locking. This is tantamount to double checked locking.
-   * @returns new TLSContext;
-   */
-  static TLSContext *getInstance() {
-    TLSContext* atomic_context = context_instance.load(
-        std::memory_order_relaxed);
-    std::atomic_thread_fence(std::memory_order_acquire);
-    if (atomic_context == nullptr) {
-      std::lock_guard<std::mutex> lock(context_mutex);
-      atomic_context = context_instance.load(std::memory_order_relaxed);
-      if (atomic_context == nullptr) {
-        atomic_context = new TLSContext();
-        atomic_context->initialize();
-        std::atomic_thread_fence(std::memory_order_release);
-        context_instance.store(atomic_context, std::memory_order_relaxed);
-      }
-    }
-    return atomic_context;
-  }
-
+  TLSContext(const std::shared_ptr<Configure> &configure);
+  
   virtual ~TLSContext() {
     if (0 != ctx)
       SSL_CTX_free(ctx);
@@ -82,10 +59,10 @@ class TLSContext {
 
  private:
 
-  static int pemPassWordCb(char *buf, int size, int rwflag, void *userdata) {
+  static int pemPassWordCb(char *buf, int size, int rwflag, void *configure) {
     std::string passphrase;
 
-    if (Configure::getConfigure()->get(
+    if (static_cast<Configure*>(configure)->get(
         Configure::nifi_security_client_pass_phrase, passphrase)) {
 
       std::ifstream file(passphrase.c_str(), std::ifstream::in);
@@ -106,17 +83,12 @@ class TLSContext {
     return 0;
   }
 
-  TLSContext();
 
   std::shared_ptr<logging::Logger> logger_;
-  Configure *configuration;
+  std::shared_ptr<Configure> configure_;
   SSL_CTX *ctx;
 
   int16_t error_value;
-
-  static std::atomic<TLSContext*> context_instance;
-  static std::mutex context_mutex;
-
 };
 
 class TLSSocket : public Socket {
@@ -125,19 +97,21 @@ class TLSSocket : public Socket {
   /**
    * Constructor that accepts host name, port and listeners. With this
    * contructor we will be creating a server socket
+   * @param context the TLSContext
    * @param hostname our host name
    * @param port connecting port
    * @param listeners number of listeners in the queue
    */
-  explicit TLSSocket(const std::string &hostname, const uint16_t port,
+  explicit TLSSocket(const std::shared_ptr<TLSContext> &context, const std::string &hostname, const uint16_t port,
                      const uint16_t listeners);
 
   /**
    * Constructor that creates a client socket.
+   * @param context the TLSContext
    * @param hostname hostname we are connecting to.
    * @param port port we are connecting to.
    */
-  explicit TLSSocket(const std::string &hostname, const uint16_t port);
+  explicit TLSSocket(const std::shared_ptr<TLSContext> &context, const std::string &hostname, const uint16_t port);
 
   /**
    * Move constructor.
@@ -183,7 +157,7 @@ class TLSSocket : public Socket {
   int writeData(uint8_t *value, int size);
 
  protected:
-
+  std::shared_ptr<TLSContext> context_;
   SSL* ssl;
 
 };

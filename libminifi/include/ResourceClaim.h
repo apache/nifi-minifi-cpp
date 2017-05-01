@@ -84,8 +84,6 @@ class ResourceClaim {
   std::atomic<uint64_t> _flowFileRecordOwnedCount;
 
  private:
-  // Configure
-  Configure *configure_;
   // Logger
   std::shared_ptr<logging::Logger> logger_;
   // Prevent default copy constructor and assignment operation

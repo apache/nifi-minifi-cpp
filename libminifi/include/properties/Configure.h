@@ -37,13 +37,6 @@ namespace minifi {
 
 class Configure {
  public:
-  // Get the singleton logger instance
-  static Configure * getConfigure() {
-    if (!configure_) {
-      configure_ = new Configure();
-    }
-    return configure_;
-  }
   // nifi.flow.configuration.file
   static const char *nifi_flow_configuration_file;
   static const char *nifi_administrative_yield_duration;
@@ -71,6 +64,14 @@ class Configure {
   static const char *nifi_security_client_pass_phrase;
   static const char *nifi_security_client_ca_certificate;
 
+  Configure() {
+    logger_ = logging::Logger::getLogger();
+  }
+  
+  virtual ~Configure() {
+
+  }
+  
   // Clear the load config
   void clear() {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -111,14 +112,6 @@ class Configure {
   std::shared_ptr<logging::Logger> logger_;
   // Home location for this executable
   std::string minifi_home_;
-
-  Configure() {
-    logger_ = logging::Logger::getLogger();
-  }
-  virtual ~Configure() {
-
-  }
-  static Configure *configure_;
 
  protected:
   std::map<std::string, std::string> properties_;

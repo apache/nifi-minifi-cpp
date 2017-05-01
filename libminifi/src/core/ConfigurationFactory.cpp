@@ -23,6 +23,7 @@
 #include <set>
 #include "core/ConfigurationFactory.h"
 #include "core/FlowConfiguration.h"
+#include "io/StreamFactory.h"
 
 #ifdef YAML_SUPPORT
 #include "core/yaml/YamlConfiguration.h"
@@ -40,6 +41,8 @@ class YamlConfiguration;
 std::unique_ptr<core::FlowConfiguration> createFlowConfiguration(
     std::shared_ptr<core::Repository> repo,
     std::shared_ptr<core::Repository> flow_file_repo,
+    std::shared_ptr<Configure> configure,
+    std::shared_ptr<io::StreamFactory> stream_factory,
     const std::string configuration_class_name, const std::string path,
     bool fail_safe) {
 
@@ -50,17 +53,17 @@ std::unique_ptr<core::FlowConfiguration> createFlowConfiguration(
     if (class_name_lc == "flowconfiguration") {
       // load the base configuration.
       return std::unique_ptr<core::FlowConfiguration>(
-          new core::FlowConfiguration(repo, flow_file_repo, path));
+          new core::FlowConfiguration(repo, flow_file_repo, stream_factory, path));
 
     } else if (class_name_lc == "yamlconfiguration") {
       // only load if the class is defined.
       return std::unique_ptr<core::FlowConfiguration>(
-          instantiate<core::YamlConfiguration>(repo, flow_file_repo, path));
+          instantiate<core::YamlConfiguration>(repo, flow_file_repo, stream_factory, path));
 
     } else {
       if (fail_safe) {
         return std::unique_ptr<core::FlowConfiguration>(
-            new core::FlowConfiguration(repo, flow_file_repo, path));
+            new core::FlowConfiguration(repo, flow_file_repo, stream_factory, path));
       } else {
         throw std::runtime_error(
             "Support for the provided configuration class could not be found");
@@ -69,7 +72,7 @@ std::unique_ptr<core::FlowConfiguration> createFlowConfiguration(
   } catch (const std::runtime_error &r) {
     if (fail_safe) {
       return std::unique_ptr<core::FlowConfiguration>(
-          new core::FlowConfiguration(repo, flow_file_repo, path));
+          new core::FlowConfiguration(repo, flow_file_repo, stream_factory, path));
     }
   }
 

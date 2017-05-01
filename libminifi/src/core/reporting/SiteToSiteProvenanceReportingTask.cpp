@@ -106,7 +106,7 @@ void SiteToSiteProvenanceReportingTask::onTrigger(core::ProcessContext *context,
     core::ProcessSession *session) {
 
   std::shared_ptr<Site2SiteClientProtocol> protocol_ =
-      this->obtainSite2SiteProtocol(host_, port_, port_uuid_);
+      this->obtainSite2SiteProtocol(stream_factory_, host_, port_, port_uuid_);
 
   if (!protocol_) {
     context->yield();

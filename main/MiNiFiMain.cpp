@@ -120,7 +120,7 @@ int main(int argc, char **argv) {
     return -1;
   }
 
-  minifi::Configure *configure = minifi::Configure::getConfigure();
+  std::shared_ptr<minifi::Configure> configure = std::make_shared<minifi::Configure>();
   configure->setHome(minifiHome);
   configure->loadConfigureFile(DEFAULT_NIFI_PROPERTIES_FILE);
 
@@ -160,7 +160,7 @@ int main(int argc, char **argv) {
   // Create repos for flow record and provenance
   std::shared_ptr<core::Repository> prov_repo = core::createRepository(
       prov_repo_class, true);
-  prov_repo->initialize();
+  prov_repo->initialize(configure);
 
   configure->get(minifi::Configure::nifi_flow_repository_class_name,
                  flow_repo_class);
@@ -168,17 +168,18 @@ int main(int argc, char **argv) {
   std::shared_ptr<core::Repository> flow_repo = core::createRepository(
       flow_repo_class, true);
 
-  flow_repo->initialize();
+  flow_repo->initialize(configure);
 
   configure->get(minifi::Configure::nifi_configuration_class_name,
                  nifi_configuration_class_name);
+  std::shared_ptr<minifi::io::StreamFactory> stream_factory = std::make_shared<minifi::io::StreamFactory>(configure);
 
   std::unique_ptr<core::FlowConfiguration> flow_configuration = std::move(
-      core::createFlowConfiguration(prov_repo, flow_repo,
+      core::createFlowConfiguration(prov_repo, flow_repo, configure, stream_factory,
                                    nifi_configuration_class_name));
 
   controller = std::unique_ptr<minifi::FlowController>(
-      new minifi::FlowController(prov_repo, flow_repo,
+      new minifi::FlowController(prov_repo, flow_repo, configure,
                                  std::move(flow_configuration)));
 
   // Load flow from specified configuration file

@@ -400,7 +400,6 @@ class Site2SiteClientProtocol {
    */
   Site2SiteClientProtocol(std::unique_ptr<Site2SitePeer> peer) {
     logger_ = logging::Logger::getLogger();
-    configure_ = Configure::getConfigure();
     peer_ = std::move(peer);
     _batchSize = 0;
     _batchCount = 0;
@@ -601,8 +600,6 @@ class Site2SiteClientProtocol {
   std::mutex mutex_;
   // Logger
   std::shared_ptr<logging::Logger> logger_;
-  // Configure
-  Configure *configure_;
   // Batch Count
   std::atomic<uint64_t> _batchCount;
   // Batch Size

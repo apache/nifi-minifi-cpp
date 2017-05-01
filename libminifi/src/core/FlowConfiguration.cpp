@@ -90,7 +90,7 @@ std::shared_ptr<core::Processor> FlowConfiguration::createProvenanceReportTask()
   std::shared_ptr<core::Processor> processor = nullptr;
 
   processor = std::make_shared<
-        org::apache::nifi::minifi::core::reporting::SiteToSiteProvenanceReportingTask>();
+        org::apache::nifi::minifi::core::reporting::SiteToSiteProvenanceReportingTask>(stream_factory_);
   // initialize the processor
   processor->initialize();
 

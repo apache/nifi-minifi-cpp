@@ -24,6 +24,7 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <cstdio>
+#include <memory>
 #include <utility>
 #include <vector>
 #include <cerrno>
@@ -39,7 +40,7 @@ namespace io {
 
 char *Socket::HOSTNAME = const_cast<char*>(Socket::getMyHostName(0).c_str());
 
-Socket::Socket(const std::string &hostname, const uint16_t port,
+Socket::Socket(const std::shared_ptr<SocketContext> &context, const std::string &hostname, const uint16_t port,
                const uint16_t listeners = -1)
     : requested_hostname_(hostname),
       port_(port),
@@ -53,8 +54,8 @@ Socket::Socket(const std::string &hostname, const uint16_t port,
   FD_ZERO(&read_fds_);
 }
 
-Socket::Socket(const std::string &hostname, const uint16_t port)
-    : Socket(hostname, port, 0) {
+Socket::Socket(const std::shared_ptr<SocketContext> &context, const std::string &hostname, const uint16_t port)
+    : Socket(context, hostname, port, 0) {
 }
 
 Socket::Socket(const Socket &&other)

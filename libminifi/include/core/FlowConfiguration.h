@@ -38,6 +38,7 @@
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/ProcessGroup.h"
+#include "io/StreamFactory.h"
 
 namespace org {
 namespace apache {
@@ -57,6 +58,7 @@ class FlowConfiguration : public CoreComponent {
    */
   FlowConfiguration(std::shared_ptr<core::Repository> repo,
                     std::shared_ptr<core::Repository> flow_file_repo,
+                    std::shared_ptr<io::StreamFactory> stream_factory,
                     const std::string path)
       : CoreComponent(core::getClassName<FlowConfiguration>()),
         flow_file_repo_(flow_file_repo),
@@ -108,7 +110,7 @@ class FlowConfiguration : public CoreComponent {
   std::string config_path_;
   // flow file repo
   std::shared_ptr<core::Repository> flow_file_repo_;
-
+  std::shared_ptr<io::StreamFactory> stream_factory_;
 };
 
 } /* namespace core */

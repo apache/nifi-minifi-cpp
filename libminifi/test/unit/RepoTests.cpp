@@ -23,6 +23,7 @@
 #include "FlowFileRecord.h"
 #include "core/Core.h"
 #include "core/repository/FlowFileRepository.h"
+#include "properties/Configure.h"
 
 TEST_CASE("Test Repo Empty Value Attribute", "[TestFFR1]") {
 
@@ -38,7 +39,7 @@ TEST_CASE("Test Repo Empty Value Attribute", "[TestFFR1]") {
           0,
           1);
 
-  repository->initialize();
+  repository->initialize(std::make_shared<minifi::Configure>());
 
   minifi::FlowFileRecord record(repository);
 
@@ -70,7 +71,7 @@ TEST_CASE("Test Repo Empty Key Attribute ", "[TestFFR2]") {
           0,
           1);
 
-  repository->initialize();
+  repository->initialize(std::make_shared<minifi::Configure>());
 
   minifi::FlowFileRecord record(repository);
 
@@ -106,7 +107,7 @@ TEST_CASE("Test Repo Key Attribute Verify ", "[TestFFR3]") {
           0,
           1);
 
-  repository->initialize();
+  repository->initialize(std::make_shared<org::apache::nifi::minifi::Configure>());
 
   minifi::FlowFileRecord record(repository);
 

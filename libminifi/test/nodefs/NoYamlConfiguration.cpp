@@ -28,7 +28,7 @@ TEST_CASE("NoYamlSupport1", "[NoYamlSupport1]") {
       "provenancerepository", true);
 REQUIRE(nullptr != prov_repo);
 std::unique_ptr<core::FlowConfiguration> flow_configuration = std::move(
-      core::createFlowConfiguration(prov_repo, prov_repo,
+      core::createFlowConfiguration(prov_repo, prov_repo, std::make_shared<minifi::Configure>(), std::make_shared<minifi::io::StreamFactory>(false),
                                    "yamlconfiguration"));
 
 
