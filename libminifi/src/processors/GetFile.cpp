@@ -24,13 +24,7 @@
 #include <dirent.h>
 #include <limits.h>
 #include <unistd.h>
-#if  (__GNUC__ >= 4)
-#if (__GNUC_MINOR__ < 9)
 #include <regex.h>
-#else
-#include <regex>
-#endif
-#endif
 #include <vector>
 #include <queue>
 #include <map>
@@ -267,9 +261,6 @@ bool GetFile::acceptFile(std::string fullName, std::string name,
     if (request.keepSourceFile == false && access(fullName.c_str(), W_OK) != 0)
       return false;
 
-#ifdef __GNUC__
-#if (__GNUC__ >= 4)
-#if (__GNUC_MINOR__ < 9)
     regex_t regex;
     int ret = regcomp(&regex, request.fileFilter.c_str(), 0);
     if (ret)
@@ -278,22 +269,7 @@ bool GetFile::acceptFile(std::string fullName, std::string name,
     regfree(&regex);
     if (ret)
       return false;
-#else
-    try {
-      std::regex re(fileFilter);
 
-      if (!std::regex_match(name, re)) {
-        return false;
-      }
-    } catch (std::regex_error e) {
-      logger_->log_error("Invalid File Filter regex: %s.", e.what());
-      return false;
-    }
-#endif
-#endif
-#else
-    logger_->log_info("Cannot support regex filtering");
-#endif
     return true;
   }
 
