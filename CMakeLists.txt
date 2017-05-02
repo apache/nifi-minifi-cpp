@@ -92,6 +92,7 @@ externalproject_add(jsoncpp_project
         SOURCE_DIR ${CMAKE_SOURCE_DIR}/thirdparty/jsoncpp
         CMAKE_ARGS
         "-G${CMAKE_GENERATOR}"
+        "-DCMAKE_INSTALL_LIBDIR=${JSONCPP_LIB_DIR}/lib"
         "-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}"
         "-DCMAKE_INSTALL_PREFIX=${JSONCPP_LIB_DIR}"
         )
