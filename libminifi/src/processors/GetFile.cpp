@@ -280,7 +280,7 @@ bool GetFile::acceptFile(std::string fullName, std::string name,
       return false;
 #else
     try {
-      std::regex re(fileFilter);
+      std::regex re(request.fileFilter);
 
       if (!std::regex_match(name, re)) {
         return false;
