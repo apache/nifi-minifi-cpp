@@ -15,24 +15,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#define CATCH_CONFIG_MAIN  // This tells Catch to provide a main() - only do this in one cpp file
 #include <uuid/uuid.h>
 #include <fstream>
-#include "FlowController.h"
-#include "ProvenanceTestHelper.h"
-#include "../TestBase.h"
+#include "unit/ProvenanceTestHelper.h"
+#include "TestBase.h"
 #include "core/logging/LogAppenders.h"
 #include "core/logging/BaseLogger.h"
 #include "processors/GetFile.h"
 #include "core/Core.h"
-#include "../../include/core/FlowFile.h"
+#include "core/FlowFile.h"
 #include "core/Processor.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/ProcessorNode.h"
+#include "core/reporting/SiteToSiteProvenanceReportingTask.h"
+
+
 
 TEST_CASE("Test Creation of GetFile", "[getfileCreate]") {
-  org::apache::nifi::minifi::processors::GetFile processor("processorname");
-  REQUIRE(processor.getName() == "processorname");
+  std::shared_ptr<core::Processor> processor = std::make_shared<
+        org::apache::nifi::minifi::processors::GetFile>("processorname");
+  REQUIRE(processor->getName() == "processorname");
 }
 
 TEST_CASE("Test Find file", "[getfileCreate2]") {
@@ -44,9 +48,9 @@ TEST_CASE("Test Find file", "[getfileCreate2]") {
   std::shared_ptr<core::Processor> processor = std::make_shared<
       org::apache::nifi::minifi::processors::GetFile>("getfileCreate2");
 
-  std::shared_ptr<core::Processor> processorReport = std::make_shared
-      < org::apache::nifi::minifi::core::reporting::SiteToSiteProvenanceReportingTask
-      > ();
+  std::shared_ptr<core::Processor> processorReport =
+      std::make_shared<
+          org::apache::nifi::minifi::core::reporting::SiteToSiteProvenanceReportingTask>();
 
   std::shared_ptr<core::Repository> test_repo =
       std::make_shared<TestRepository>();
@@ -81,7 +85,7 @@ TEST_CASE("Test Find file", "[getfileCreate2]") {
   core::ProcessContext context(node, test_repo);
   core::ProcessSessionFactory factory(&context);
   context.setProperty(org::apache::nifi::minifi::processors::GetFile::Directory,
-      dir);
+                      dir);
   core::ProcessSession session(&context);
 
   processor->onSchedule(&context, &factory);
@@ -126,7 +130,7 @@ TEST_CASE("Test Find file", "[getfileCreate2]") {
   for (auto entry : repo->getRepoMap()) {
     provenance::ProvenanceEventRecord newRecord;
     newRecord.DeSerialize((uint8_t*) entry.second.data(),
-        entry.second.length());
+                          entry.second.length());
 
     bool found = false;
     for (auto provRec : records) {
@@ -150,18 +154,27 @@ TEST_CASE("Test Find file", "[getfileCreate2]") {
   core::ProcessSessionFactory factoryReport(&contextReport);
   core::ProcessSession sessionReport(&contextReport);
   processorReport->onSchedule(&contextReport, &factoryReport);
-  std::shared_ptr<org::apache::nifi::minifi::core::reporting::SiteToSiteProvenanceReportingTask> taskReport = std::static_pointer_cast
-        < org::apache::nifi::minifi::core::reporting::SiteToSiteProvenanceReportingTask > (processorReport);
+  std::shared_ptr<
+      org::apache::nifi::minifi::core::reporting::SiteToSiteProvenanceReportingTask> taskReport =
+      std::static_pointer_cast<
+          org::apache::nifi::minifi::core::reporting::SiteToSiteProvenanceReportingTask>(
+          processorReport);
   taskReport->setBatchSize(1);
-  std::vector < std::shared_ptr < provenance::ProvenanceEventRecord >> recordsReport;
+  std::vector<std::shared_ptr<provenance::ProvenanceEventRecord>> recordsReport;
   processorReport->incrementActiveTasks();
   processorReport->setScheduledState(core::ScheduledState::RUNNING);
   std::string jsonStr;
   repo->getProvenanceRecord(recordsReport, 1);
-  taskReport->getJsonReport(&contextReport, &sessionReport, recordsReport, jsonStr);
+  taskReport->getJsonReport(&contextReport, &sessionReport, recordsReport,
+                            jsonStr);
   REQUIRE(recordsReport.size() == 1);
-  REQUIRE(taskReport->getName() == std::string(org::apache::nifi::minifi::core::reporting::SiteToSiteProvenanceReportingTask::ReportTaskName));
-  REQUIRE(jsonStr.find("\"componentType\" : \"getfileCreate2\"") != std::string::npos);
+  REQUIRE(
+      taskReport->getName()
+          == std::string(
+              org::apache::nifi::minifi::core::reporting::SiteToSiteProvenanceReportingTask::ReportTaskName));
+  REQUIRE(
+      jsonStr.find("\"componentType\" : \"getfileCreate2\"")
+          != std::string::npos);
 }
 
 TEST_CASE("Test GetFileLikeIt'sThreaded", "[getfileCreate3]") {
@@ -250,9 +263,9 @@ TEST_CASE("Test GetFileLikeIt'sThreaded", "[getfileCreate3]") {
     session.commit();
     std::shared_ptr<core::FlowFile> ffr = session.get();
 
-    REQUIRE((repo->getRepoMap().size()%2) == 0);
-    REQUIRE(repo->getRepoMap().size() == (prev+2));
-    prev+=2;
+    REQUIRE((repo->getRepoMap().size() % 2) == 0);
+    REQUIRE(repo->getRepoMap().size() == (prev + 2));
+    prev += 2;
 
   }
 

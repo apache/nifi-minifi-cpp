@@ -18,7 +18,7 @@
 
 #ifndef LIBMINIFI_INCLUDE_IO_BASESTREAM_H_
 #define LIBMINIFI_INCLUDE_IO_BASESTREAM_H_
-
+#include <iostream>
 #include <cstdint>
 #include "EndianCheck.h"
 #include "DataStream.h"
@@ -33,9 +33,14 @@ namespace io {
 class BaseStream : public DataStream, public Serializable {
 
  public:
-  BaseStream() {
-
+  BaseStream()
+      : composable_stream_(this) {
   }
+
+  BaseStream(DataStream *other)
+      : composable_stream_(other) {
+  }
+
   virtual ~BaseStream() {
 
   }
@@ -48,6 +53,8 @@ class BaseStream : public DataStream, public Serializable {
    **/
   virtual int write(uint32_t base_value, bool is_little_endian =
                         EndiannessCheck::IS_LITTLE);
+
+  int writeData(uint8_t *value, int size);
 
   /**
    * write 2 bytes to stream
@@ -101,6 +108,19 @@ class BaseStream : public DataStream, public Serializable {
   virtual int read(uint8_t &value);
 
   /**
+   * Reads data and places it into buf
+   * @param buf buffer in which we extract data
+   * @param buflen
+   */
+  virtual int readData(std::vector<uint8_t> &buf, int buflen);
+  /**
+   * Reads data and places it into buf
+   * @param buf buffer in which we extract data
+   * @param buflen
+   */
+  virtual int readData(uint8_t *buf, int buflen);
+
+  /**
    * reads two bytes from the stream
    * @param value reference in which will set the result
    * @param stream stream from which we will read
@@ -151,6 +171,8 @@ class BaseStream : public DataStream, public Serializable {
    * @return resulting read size
    **/
   virtual int readUTF(std::string &str, bool widen = false);
+ protected:
+  DataStream *composable_stream_;
 };
 
 } /* namespace io */

@@ -137,7 +137,7 @@ public:
   virtual int read(uint64_t &value, bool is_little_endian =
       minifi::io::EndiannessCheck::IS_LITTLE) {
     value = std::stoull(get_next_response());
-    return 4;
+    return 8;
   }
 
   /**

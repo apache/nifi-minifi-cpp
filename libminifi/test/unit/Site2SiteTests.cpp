@@ -100,7 +100,15 @@ void sunny_path_bootstrap(SiteToSiteResponder *collector) {
 }
 
 TEST_CASE("TestSiteToSiteVerifySend", "[S2S3]") {
+  std::ostringstream oss;
 
+   std::unique_ptr<logging::BaseLogger> outputLogger = std::unique_ptr<
+       logging::BaseLogger>(
+       new org::apache::nifi::minifi::core::logging::OutputStreamAppender(
+           std::cout, minifi::Configure::getConfigure()));
+   std::shared_ptr<logging::Logger> logger = logging::Logger::getLogger();
+   logger->updateLogger(std::move(outputLogger));
+   logger->setLogLevel("trace");
   SiteToSiteResponder *collector = new SiteToSiteResponder();
 
   sunny_path_bootstrap(collector);
@@ -108,7 +116,7 @@ TEST_CASE("TestSiteToSiteVerifySend", "[S2S3]") {
   std::unique_ptr<minifi::Site2SitePeer> peer = std::unique_ptr
       < minifi::Site2SitePeer
       > (new minifi::Site2SitePeer(
-          std::unique_ptr < minifi::io::DataStream > (collector), "fake_host",
+          std::unique_ptr < minifi::io::DataStream > (new BaseStream(collector)), "fake_host",
           65433));
 
   minifi::Site2SiteClientProtocol protocol(std::move(peer));
@@ -184,7 +192,7 @@ TEST_CASE("TestSiteToSiteVerifyNegotiationFail", "[S2S4]") {
   std::unique_ptr<minifi::Site2SitePeer> peer = std::unique_ptr
       < minifi::Site2SitePeer
       > (new minifi::Site2SitePeer(
-          std::unique_ptr < minifi::io::DataStream > (collector), "fake_host",
+          std::unique_ptr < minifi::io::DataStream > (new BaseStream(collector)), "fake_host",
           65433));
 
   minifi::Site2SiteClientProtocol protocol(std::move(peer));
