@@ -255,6 +255,7 @@ Additionally, users can utilize the MiNiFi Toolkit Converter (version 0.0.1 - sc
     Connections:
         - name: TransferFilesToRPG
           id: 471deef6-2a6e-4a7d-912a-81cc17e3a207
+          source name: GetFile
           source id: 471deef6-2a6e-4a7d-912a-81cc17e3a206 
           source relationship name: success
           destination id: 471deef6-2a6e-4a7d-912a-81cc17e3a204
