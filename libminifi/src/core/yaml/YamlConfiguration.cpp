@@ -206,7 +206,7 @@ void YamlConfiguration::parseProcessorNodeYaml(YAML::Node processorsNode, core::
     }
   } else {
     throw new std::invalid_argument("Cannot instantiate a MiNiFi instance without a defined "
-                                    "Processors configuration node.");
+                                        "Processors configuration node.");
   }
 }
 
@@ -365,11 +365,11 @@ void YamlConfiguration::parseControllerServices(YAML::Node *controllerServicesNo
         YAML::Node controllerServiceNode = iter.as<YAML::Node>();
         try {
           checkRequiredField(&controllerServiceNode, "name",
-          CONFIG_YAML_CONTROLLER_SERVICES_KEY);
+                             CONFIG_YAML_CONTROLLER_SERVICES_KEY);
           checkRequiredField(&controllerServiceNode, "id",
-          CONFIG_YAML_CONTROLLER_SERVICES_KEY);
+                             CONFIG_YAML_CONTROLLER_SERVICES_KEY);
           checkRequiredField(&controllerServiceNode, "class",
-          CONFIG_YAML_CONTROLLER_SERVICES_KEY);
+                             CONFIG_YAML_CONTROLLER_SERVICES_KEY);
 
           auto name = controllerServiceNode["name"].as<std::string>();
           auto id = controllerServiceNode["id"].as<std::string>();
@@ -434,7 +434,7 @@ void YamlConfiguration::parseConnectionYaml(YAML::Node *connectionsNode, core::P
           std::string connectionSrcProcId = connectionNode["source id"].as<std::string>();
           uuid_parse(connectionSrcProcId.c_str(), srcUUID);
           logger_->log_debug("Using 'source id' to match source with same id for "
-                             "connection '%s': source id => [%s]",
+                                 "connection '%s': source id => [%s]",
                              name, connectionSrcProcId);
         } else {
           // if we don't have a source id, try to resolve using source name. config schema v2 will make this unnecessary
@@ -445,7 +445,7 @@ void YamlConfiguration::parseConnectionYaml(YAML::Node *connectionsNode, core::P
             // the source name is a remote port id, so use that as the source id
             uuid_copy(srcUUID, tmpUUID);
             logger_->log_debug("Using 'source name' containing a remote port id to match the source for "
-                               "connection '%s': source name => [%s]",
+                                   "connection '%s': source name => [%s]",
                                name, connectionSrcProcName);
           } else {
             // lastly, look the processor up by name
@@ -453,7 +453,7 @@ void YamlConfiguration::parseConnectionYaml(YAML::Node *connectionsNode, core::P
             if (NULL != srcProcessor) {
               srcProcessor->getUUID(srcUUID);
               logger_->log_debug("Using 'source name' to match source with same name for "
-                                 "connection '%s': source name => [%s]",
+                                     "connection '%s': source name => [%s]",
                                  name, connectionSrcProcName);
             } else {
               // we ran out of ways to discover the source processor
@@ -470,7 +470,7 @@ void YamlConfiguration::parseConnectionYaml(YAML::Node *connectionsNode, core::P
           std::string connectionDestProcId = connectionNode["destination id"].as<std::string>();
           uuid_parse(connectionDestProcId.c_str(), destUUID);
           logger_->log_debug("Using 'destination id' to match destination with same id for "
-                             "connection '%s': destination id => [%s]",
+                                 "connection '%s': destination id => [%s]",
                              name, connectionDestProcId);
         } else {
           // we use the same logic as above for resolving the source processor
@@ -479,11 +479,11 @@ void YamlConfiguration::parseConnectionYaml(YAML::Node *connectionsNode, core::P
           std::string connectionDestProcName = connectionNode["destination name"].as<std::string>();
           uuid_t tmpUUID;
           if (!uuid_parse(connectionDestProcName.c_str(), tmpUUID) &&
-          NULL != parent->findProcessor(tmpUUID)) {
+              NULL != parent->findProcessor(tmpUUID)) {
             // the destination name is a remote port id, so use that as the dest id
             uuid_copy(destUUID, tmpUUID);
             logger_->log_debug("Using 'destination name' containing a remote port id to match the destination for "
-                               "connection '%s': destination name => [%s]",
+                                   "connection '%s': destination name => [%s]",
                                name, connectionDestProcName);
           } else {
             // look the processor up by name
@@ -491,7 +491,7 @@ void YamlConfiguration::parseConnectionYaml(YAML::Node *connectionsNode, core::P
             if (NULL != destProcessor) {
               destProcessor->getUUID(destUUID);
               logger_->log_debug("Using 'destination name' to match destination with same name for "
-                                 "connection '%s': destination name => [%s]",
+                                     "connection '%s': destination name => [%s]",
                                  name, connectionDestProcName);
             } else {
               // we ran out of ways to discover the destination processor
@@ -526,7 +526,7 @@ void YamlConfiguration::parsePortYaml(YAML::Node *portNode, core::ProcessGroup *
   checkRequiredField(&inputPortsObj, "name", CONFIG_YAML_REMOTE_PROCESS_GROUP_KEY);
   auto nameStr = inputPortsObj["name"].as<std::string>();
   checkRequiredField(&inputPortsObj, "id",
-  CONFIG_YAML_REMOTE_PROCESS_GROUP_KEY,
+                     CONFIG_YAML_REMOTE_PROCESS_GROUP_KEY,
                      "The field 'id' is required for "
                          "the port named '" + nameStr + "' in the YAML Config. If this port "
                          "is an input port for a NiFi Remote Process Group, the port "
@@ -608,7 +608,7 @@ std::string YamlConfiguration::getOrGenerateId(YAML::Node *yamlNode, const std::
       id = node[idField].as<std::string>();
     } else {
       throw std::invalid_argument("getOrGenerateId: idField is expected to reference YAML::Node "
-                                  "of YAML::NodeType::Scalar.");
+                                      "of YAML::NodeType::Scalar.");
     }
   } else {
     uuid_t uuid;
@@ -629,8 +629,8 @@ void YamlConfiguration::checkRequiredField(YAML::Node *yamlNode, const std::stri
       // invalid YAML config file, using the component name if present
       errMsg =
           yamlNode->as<YAML::Node>()["name"] ?
-              "Unable to parse configuration file for component named '" + yamlNode->as<YAML::Node>()["name"].as<std::string>() + "' as required field '" + fieldName + "' is missing" :
-              "Unable to parse configuration file as required field '" + fieldName + "' is missing";
+          "Unable to parse configuration file for component named '" + yamlNode->as<YAML::Node>()["name"].as<std::string>() + "' as required field '" + fieldName + "' is missing" :
+          "Unable to parse configuration file as required field '" + fieldName + "' is missing";
       if (!yamlSection.empty()) {
         errMsg += " [in '" + yamlSection + "' section of configuration file]";
       }

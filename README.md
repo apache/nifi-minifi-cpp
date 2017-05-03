@@ -77,6 +77,8 @@ Perspectives of the role of MiNiFi should be from the perspective of the agent a
 * libleveldb and libleveldb-devel
 * libuuid and uuid-dev
 * openssl
+* If building with GPS support
+  * libgps-dev
 
 ### To run
 
@@ -96,9 +98,13 @@ $ yum install cmake \
   libcurl-devel \
   leveldb-devel leveldb \
   libuuid libuuid-devel \
-  boost-devel \
-  libssl-dev \
+  boost-devel \ libssl-dev
+  libssl-dev
   doxygen
+
+# If building with GPS support
+$ yum install gpsd-devel
+
 ```
 
 Aptitude based Linux Distributions
@@ -109,8 +115,12 @@ $ apt-get install cmake \
   libcurl-dev \
   libleveldb-dev libleveldb1v5 \
   uuid-dev uuid \
-  libboost-all-dev libssl-dev \
+  libboost-all-dev libssl-dev
   doxygen
+
+# If building with GPS support
+$ apt-get install libgps-dev
+
 ```
 
 OS X Using Homebrew (with XCode Command Line Tools installed)
@@ -119,11 +129,13 @@ OS X Using Homebrew (with XCode Command Line Tools installed)
 $ brew install cmake \
   leveldb \
   ossp-uuid \
-  boost \
-  openssl \
+  boost \ openssl
   doxygen
 $ brew install curl
 $ brew link curl --force
+
+# If building with GPS support
+$ brew install gpsd
 ```
 
 
@@ -143,6 +155,16 @@ $ brew link curl --force
   ```
   # ~/Development/code/apache/nifi-minifi-cpp on git:master
   $ cmake ..
+  ...
+  -- Configuring done
+  -- Generating done
+  -- Build files have been written to: /Users/apiri/Development/code/apache/nifi-minifi-cpp/build
+  ```
+
+- To build with GPS support perform a 'cmake -DBUILD_GPS=ON ..' to generate the project files
+  ```
+  # ~/Development/code/apache/nifi-minifi-cpp on git:master
+  $ cmake -DBUILD_GPS=ON ..
   ...
   -- Configuring done
   -- Generating done

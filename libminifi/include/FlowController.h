@@ -47,6 +47,27 @@
 #include "ConfigurationListener.h"
 #include "HttpConfigurationListener.h"
 
+#include "RemoteProcessorGroupPort.h"
+#include "provenance/Provenance.h"
+#include "core/repository/FlowFileRepository.h"
+#include "processors/GetFile.h"
+
+#ifdef BUILD_GPS
+	#include "GetGPS.h"
+#endif
+ 
+#include "processors/PutFile.h"
+#include "processors/TailFile.h"
+#include "processors/ListenSyslog.h"
+#include "processors/ListenHTTP.h"
+#include "processors/ExecuteProcess.h"
+#include "processors/AppendHostInfo.h"
+// OpenSSL related
+#ifdef OPENSSL_SUPPORT
+  #include <openssl/ssl.h>
+  #include <openssl/err.h>
+#endif
+
 #include "core/Property.h"
 #include "utils/Id.h"
 

@@ -25,7 +25,6 @@ set(PROJECT_VERSION_MAJOR 0)
 set(PROJECT_VERSION_MINOR 3)
 set(PROJECT_VERSION_PATCH 0)
 
-
 #### Establish Project Configuration ####
 # Enable usage of the VERSION specifier
 # https://cmake.org/cmake/help/v3.0/policy/CMP0048.html#policy:CMP0048
@@ -105,7 +104,25 @@ if (OPENSSL_FOUND)
 	target_link_libraries (minifi ${OPENSSL_LIBRARIES})
 else ()
     message( FATAL_ERROR "OpenSSL was not found. Please install OpenSSL" )
-endif (OPENSSL_FOUND)
+
+# Build GPS Support
+if(BUILD_GPS)
+    add_definitions(-DBUILD_GPS)
+    file(GLOB GPS_SOURCES "src/gps/*.cpp")
+    add_library(minifi_gps STATIC ${GPS_SOURCES})
+
+    find_package (LibGPS REQUIRED)
+    # Include LibGPS
+    if (LIBGPS_FOUND)
+    	include_directories(${LIBGPS_INCLUDE_DIRS})
+		target_link_libraries(minifi_gps ${LIBGPS_LIBRARIES})
+		target_link_libraries(minifi minifi_gps)
+	else ()
+		message(FATAL_ERROR "LibGPS was not found. Please install LibGPS")
+	endif (LIBGPS_FOUND)
+
+endif(BUILD_GPS)
+
 endif ()
 
 add_subdirectory(src/utils)
