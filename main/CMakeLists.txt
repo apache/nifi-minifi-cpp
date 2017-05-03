@@ -67,8 +67,6 @@ else ()
 	endforeach()
 endif ()
 
-set_property(TARGET minifiexe PROPERTY INTERPROCEDURAL_OPTIMIZATION True)
-
 set_target_properties(minifiexe
         PROPERTIES OUTPUT_NAME minifi)
 

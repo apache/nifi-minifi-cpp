@@ -89,6 +89,7 @@ or greater is recommended.
 * openssl
 * Python 3 and development headers -- Required, unless Python support is disabled
 * Lua and development headers -- Optional, unless Lua support is enabled
+* libgps-dev -- Required if building libGPS support
 
 
 ** NOTE: IF ROCKSDB IS NOT INSTALLED, IT WILL BE BUILT FROM THE THIRD PARTY
@@ -135,6 +136,9 @@ $ yum install docker
 $ # (Optional) for system integration tests
 $ yum install docker python-virtualenv
 
+# If building with GPS support
+$ yum install gpsd-devel
+
 ```
 
 Aptitude based Linux Distributions
@@ -145,7 +149,7 @@ $ apt-get install cmake \
   libcurl-dev \
   librocksdb-dev librocksdb4.1 \
   uuid-dev uuid \
-  libboost-all-dev libssl-dev \
+  libboost-all-dev libssl-dev
   doxygen
 $ # (Optional) for building Python support
 $ apt-get install libpython3-dev
@@ -157,6 +161,10 @@ $ # (Optional) for building docker image
 $ apt-get install docker.io
 $ # (Optional) for system integration tests
 $ apt-get install docker.io python-virtualenv
+
+# If building with GPS support
+$ apt-get install libgps-dev
+
 ```
 
 OS X Using Homebrew (with XCode Command Line Tools installed)
@@ -177,6 +185,9 @@ $ brew install libusb libpng
 $ # (Optional) for building docker image/running system integration tests
 $ # Install docker using instructions at https://docs.docker.com/docker-for-mac/install/
 $ sudo pip install virtualenv
+
+# If building with GPS support
+$ brew install gpsd
 ```
 
 
@@ -205,6 +216,16 @@ $ sudo pip install virtualenv
   ```
   # ~/Development/code/apache/nifi-minifi-cpp on git:master
   $ cmake ..
+  ...
+  -- Configuring done
+  -- Generating done
+  -- Build files have been written to: /Users/apiri/Development/code/apache/nifi-minifi-cpp/build
+  ```
+
+- To build with GPS support perform a 'cmake -DBUILD_GPS=ON ..' to generate the project files
+  ```
+  # ~/Development/code/apache/nifi-minifi-cpp on git:master
+  $ cmake -DBUILD_GPS=ON ..
   ...
   -- Configuring done
   -- Generating done
