@@ -104,6 +104,7 @@ if (OPENSSL_FOUND)
 	target_link_libraries (minifi ${OPENSSL_LIBRARIES})
 else ()
     message( FATAL_ERROR "OpenSSL was not found. Please install OpenSSL" )
+endif(OPENSSL_FOUND)
 
 # Build GPS Support
 if(BUILD_GPS)
