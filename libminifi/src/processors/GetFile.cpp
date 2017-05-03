@@ -24,6 +24,7 @@
 #include <dirent.h>
 #include <limits.h>
 #include <unistd.h>
+#include <regex.h>
 #include <vector>
 #include <queue>
 #include <map>
