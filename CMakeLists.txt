@@ -25,7 +25,6 @@ set(PROJECT_VERSION_MINOR 3)
 set(PROJECT_VERSION_PATCH 0)
 option(SKIP_TESTS "Skips building all tests." OFF)
 
-
 include(FeatureSummary)
 
 # Use ccache if present
@@ -114,47 +113,41 @@ if (EXCLUDE_BOOST)
 	set(DISABLE_LIBARCHIVE "ON")
 endif(EXCLUDE_BOOST)
 
-## Add http-curl extensions
-createExtension(DISABLE_CURL 
-				HTTP-CURL 
-				"HTTP CURL" 
-				"This enables RESTProtocol, InvokeHTTP, and the HTTPClient for Site to Site" 
-				"extensions/http-curl"
-				"${TEST_DIR}/curl-tests")
+#### EXTENSION
+option(DISABLE_CURL "Disables libCurl Properties." OFF)
+if (NOT DISABLE_CURL)
+	createExtension(HTTP-CURL "HTTP CURL" "This enables RESTProtocol, InvokeHTTP, and the HTTPClient for Site to Site" "extensions/http-curl" "${TEST_DIR}/curl-tests")
+endif()
 
 ## Add the rocks DB extension
-if ( NOT ROCKSDB_FOUND OR BUILD_ROCKSDB )
+if (NOT ROCKSDB_FOUND OR BUILD_ROCKSDB)
 	set(BUILD_RD "TRUE")
 endif()
-createExtension(DISABLE_ROCKSDB 
-				ROCKSDB-REPOS 
-				"ROCKSDB REPOS" 
-				"This Enables persistent provenance, flowfile, and content repositories using RocksDB" 
-				"extensions/rocksdb-repos"
-				"${TEST_DIR}/rocksdb-tests"
-				BUILD_RD
-				"thirdparty/rocksdb/")
+
+option(DISABLE_ROCKSDB "Disables the RocksDB extension." OFF)
+if (NOT DISABLE_ROCKSDB)
+	createExtension(ROCKSDB-REPOS "ROCKSDB REPOS" "This Enables persistent provenance, flowfile, and content repositories using RocksDB" "extensions/rocksdb-repos" "${TEST_DIR}/rocksdb-tests" BUILD_RD "thirdparty/rocksdb/")
+endif()
 
 ## Create LibArchive Extension
-if ( NOT LibArchive_FOUND OR BUILD_LIBARCHIVE )
+if (NOT LibArchive_FOUND OR BUILD_LIBARCHIVE)
 	set(BUILD_TP "TRUE")
 endif()
-createExtension(DISABLE_LIBARCHIVE 
-				ARCHIVE-EXTENSIONS 
-				"ARCHIVE EXTENSIONS" 
-				"This Enables libarchive functionality including MergeContent, CompressContent, and (Un)FocusArchiveEntry" 
-				"extensions/libarchive"
-				"${TEST_DIR}/archive-tests"
-				BUILD_TP
-				"thirdparty/libarchive-3.3.2")
+option(DISABLE_LIBARCHIVE "Disables the lib archive extensions." OFF)
+if (NOT DISABLE_LIBARCHIVE)
+	createExtension(ARCHIVE-EXTENSIONS "ARCHIVE EXTENSIONS" "This Enables libarchive functionality including MergeContent, CompressContent, and (Un)FocusArchiveEntry" "extensions/libarchive" "${TEST_DIR}/archive-tests" BUILD_TP "thirdparty/libarchive-3.3.2")
+endif()
+
+option(ENABLE_GPS "Enables the GPS extension." OFF)
+if (ENABLE_GPS)
+	createExtension(GPS-EXTENSION "GPS EXTENSIONS" "Enables LibGPS Functionality and the GetGPS processor." "extensions/gps" "${TEST_DIR}/gps-tests")
+endif(ENABLE_GPS)
 
 ## Scripting extensions
-createExtension(DISABLE_SCRIPTING
-				SCRIPTING-EXTENSIONS
-				"SCRIPTING EXTENSIONS"
-				"This enables scripting"
-				"extensions/script"
-				"${TEST_DIR}/script-tests")
+option(DISABLE_SCRIPTING "Disables the scripting extensions." OFF)
+if (NOT DISABLE_SCRIPTING)
+createExtension(SCRIPTING-EXTENSIONS "SCRIPTING EXTENSIONS" "This enables scripting" "extensions/script" "${TEST_DIR}/script-tests")
+endif()
 
 ## NOW WE CAN ADD LIBRARIES AND EXTENSIONS TO MAIN
 
