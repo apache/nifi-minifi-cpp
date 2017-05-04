@@ -49,10 +49,10 @@ typename std::enable_if<class_operations<T>::value, T*>::type instantiate(
  * object.
  */
 std::unique_ptr<core::FlowConfiguration> createFlowConfiguration(
-    const std::shared_ptr<core::Repository> &repo,
-    const std::shared_ptr<core::Repository> &flow_file_repo,
-    const std::shared_ptr<Configure> &configure,
-    const std::shared_ptr<io::StreamFactory> &stream_factory,
+    std::shared_ptr<core::Repository> repo,
+    std::shared_ptr<core::Repository> flow_file_repo,
+    std::shared_ptr<Configure> configure,
+    std::shared_ptr<io::StreamFactory> stream_factory,
     const std::string configuration_class_name, const std::string path = "",
     bool fail_safe = false);
 

@@ -37,7 +37,7 @@ class TimerDrivenSchedulingAgent : public ThreadedSchedulingAgent {
   /*!
    * Create a new processor
    */
-  TimerDrivenSchedulingAgent(const std::shared_ptr<core::Repository> &repo, const std::shared_ptr<Configure> &configure)
+  TimerDrivenSchedulingAgent(std::shared_ptr<core::Repository> repo, std::shared_ptr<Configure> configure)
       : ThreadedSchedulingAgent(repo, configure) {
   }
   //  Destructor

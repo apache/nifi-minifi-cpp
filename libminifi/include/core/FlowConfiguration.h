@@ -56,9 +56,9 @@ class FlowConfiguration : public CoreComponent {
    * Constructor that will be used for configuring
    * the flow controller.
    */
-  FlowConfiguration(const std::shared_ptr<core::Repository> &repo,
-                    const std::shared_ptr<core::Repository> &flow_file_repo,
-                    const std::shared_ptr<io::StreamFactory> &stream_factory,
+  FlowConfiguration(std::shared_ptr<core::Repository> repo,
+                    std::shared_ptr<core::Repository> flow_file_repo,
+                    std::shared_ptr<io::StreamFactory> stream_factory,
                     const std::string path)
       : CoreComponent(core::getClassName<FlowConfiguration>()),
         flow_file_repo_(flow_file_repo),
