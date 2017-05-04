@@ -40,7 +40,7 @@ namespace io {
 
 char *Socket::HOSTNAME = const_cast<char*>(Socket::getMyHostName(0).c_str());
 
-Socket::Socket(std::shared_ptr<SocketContext> context, const std::string &hostname, const uint16_t port,
+Socket::Socket(const std::shared_ptr<SocketContext> &context, const std::string &hostname, const uint16_t port,
                const uint16_t listeners = -1)
     : requested_hostname_(hostname),
       port_(port),
@@ -54,7 +54,7 @@ Socket::Socket(std::shared_ptr<SocketContext> context, const std::string &hostna
   FD_ZERO(&read_fds_);
 }
 
-Socket::Socket(std::shared_ptr<SocketContext> context, const std::string &hostname, const uint16_t port)
+Socket::Socket(const std::shared_ptr<SocketContext> &context, const std::string &hostname, const uint16_t port)
     : Socket(context, hostname, port, 0) {
 }
 

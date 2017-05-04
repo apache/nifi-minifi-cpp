@@ -50,7 +50,7 @@ class StreamFactory {
     return delegate_->createSocket(host, port);
   }
 
-  StreamFactory(std::shared_ptr<Configure> configure);
+  StreamFactory(const std::shared_ptr<Configure> &configure);
 
  protected:
   std::shared_ptr<AbstractStreamFactory> delegate_;

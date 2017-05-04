@@ -157,7 +157,7 @@ class FlowControlProtocol {
   /*!
    * Create a new control protocol
    */
-  FlowControlProtocol(FlowController *controller, std::shared_ptr<Configure> configure) {
+  FlowControlProtocol(FlowController *controller, const std::shared_ptr<Configure> &configure) {
     _controller = controller;
     logger_ = logging::Logger::getLogger();
     _socket = 0;

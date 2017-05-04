@@ -70,7 +70,7 @@ class FlowFileRepository : public core::Repository,
   }
 
   // initialize
-  virtual bool initialize(std::shared_ptr<Configure> configure) {
+  virtual bool initialize(const std::shared_ptr<Configure> &configure) {
     std::string value;
 
     if (configure->get(Configure::nifi_flowfile_repository_directory_default,

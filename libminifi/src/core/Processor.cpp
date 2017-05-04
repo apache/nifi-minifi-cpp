@@ -195,7 +195,7 @@ void Processor::removeConnection(std::shared_ptr<Connectable> conn) {
 }
 
 std::shared_ptr<Site2SiteClientProtocol> Processor::obtainSite2SiteProtocol(
-    std::shared_ptr<io::StreamFactory> stream_factory, std::string host, uint16_t sport, uuid_t portId) {
+    const std::shared_ptr<io::StreamFactory> &stream_factory, std::string host, uint16_t sport, uuid_t portId) {
   std::lock_guard < std::mutex > lock(mutex_);
 
   if (!protocols_created_) {

@@ -42,9 +42,9 @@ namespace core {
 class YamlConfiguration : public FlowConfiguration {
 
  public:
-  YamlConfiguration(std::shared_ptr<core::Repository> repo,
-                    std::shared_ptr<core::Repository> flow_file_repo,
-                    std::shared_ptr<io::StreamFactory> stream_factory,
+  YamlConfiguration(const std::shared_ptr<core::Repository> &repo,
+                    const std::shared_ptr<core::Repository> &flow_file_repo,
+                    const std::shared_ptr<io::StreamFactory> &stream_factory,
                     const std::string path = DEFAULT_FLOW_YAML_FILE_NAME)
       : FlowConfiguration(repo, flow_file_repo, stream_factory, path) {
        stream_factory_ = stream_factory;

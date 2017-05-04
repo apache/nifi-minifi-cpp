@@ -40,7 +40,7 @@ namespace io {
 class TLSContext: public SocketContext {
 
  public:
-  TLSContext(std::shared_ptr<Configure> configure);
+  TLSContext(const std::shared_ptr<Configure> &configure);
   
   virtual ~TLSContext() {
     if (0 != ctx)
@@ -97,19 +97,21 @@ class TLSSocket : public Socket {
   /**
    * Constructor that accepts host name, port and listeners. With this
    * contructor we will be creating a server socket
+   * @param context the TLSContext
    * @param hostname our host name
    * @param port connecting port
    * @param listeners number of listeners in the queue
    */
-  explicit TLSSocket(std::shared_ptr<TLSContext> context, const std::string &hostname, const uint16_t port,
+  explicit TLSSocket(const std::shared_ptr<TLSContext> &context, const std::string &hostname, const uint16_t port,
                      const uint16_t listeners);
 
   /**
    * Constructor that creates a client socket.
+   * @param context the TLSContext
    * @param hostname hostname we are connecting to.
    * @param port port we are connecting to.
    */
-  explicit TLSSocket(std::shared_ptr<TLSContext> context, const std::string &hostname, const uint16_t port);
+  explicit TLSSocket(const std::shared_ptr<TLSContext> &context, const std::string &hostname, const uint16_t port);
 
   /**
    * Move constructor.

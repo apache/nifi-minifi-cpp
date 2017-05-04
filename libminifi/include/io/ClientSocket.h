@@ -43,7 +43,7 @@ namespace io {
  */ 
 class SocketContext {
  public:
-  SocketContext(std::shared_ptr<Configure> configure) {}
+  SocketContext(const std::shared_ptr<Configure> &configure) {}
 };
 /**
  * Socket class.
@@ -59,19 +59,21 @@ class Socket : public BaseStream {
   /**
    * Constructor that accepts host name, port and listeners. With this
    * contructor we will be creating a server socket
+   * @param context the SocketContext
    * @param hostname our host name
    * @param port connecting port
    * @param listeners number of listeners in the queue
    */
-  explicit Socket(std::shared_ptr<SocketContext> context, const std::string &hostname, const uint16_t port,
+  explicit Socket(const std::shared_ptr<SocketContext> &context, const std::string &hostname, const uint16_t port,
                   const uint16_t listeners);
 
   /**
    * Constructor that creates a client socket.
+   * @param context the SocketContext
    * @param hostname hostname we are connecting to.
    * @param port port we are connecting to.
    */
-  explicit Socket(std::shared_ptr<SocketContext> context, const std::string &hostname, const uint16_t port);
+  explicit Socket(const std::shared_ptr<SocketContext> &context, const std::string &hostname, const uint16_t port);
 
   /**
    * Move constructor.

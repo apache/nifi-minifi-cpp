@@ -43,7 +43,7 @@ public:
 	/*!
 	 * Create a new processor
 	 */
-	SiteToSiteProvenanceReportingTask(std::shared_ptr<io::StreamFactory> stream_factory) :
+	SiteToSiteProvenanceReportingTask(const std::shared_ptr<io::StreamFactory> &stream_factory) :
 			core::Processor(ReportTaskName) {
 		logger_ = logging::Logger::getLogger();
 		this->setTriggerWhenEmpty(true);

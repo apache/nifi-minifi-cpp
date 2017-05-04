@@ -30,16 +30,16 @@ namespace core {
 
 template<typename T>
 typename std::enable_if<!class_operations<T>::value, T*>::type instantiate(
-    std::shared_ptr<core::Repository> repo,
-    std::shared_ptr<core::Repository> flow_file_repo, const std::string path) {
+    const std::shared_ptr<core::Repository> &repo,
+    const std::shared_ptr<core::Repository> &flow_file_repo, const std::string path) {
   throw std::runtime_error("Cannot instantiate class");
 }
 
 template<typename T>
 typename std::enable_if<class_operations<T>::value, T*>::type instantiate(
-    std::shared_ptr<core::Repository> repo,
-    std::shared_ptr<core::Repository> flow_file_repo,
-    std::shared_ptr<io::StreamFactory> stream_factory,
+    const std::shared_ptr<core::Repository> &repo,
+    const std::shared_ptr<core::Repository> &flow_file_repo,
+    const std::shared_ptr<io::StreamFactory> &stream_factory,
     const std::string path) {
   return new T(repo, flow_file_repo, stream_factory, path);
 }
@@ -49,10 +49,10 @@ typename std::enable_if<class_operations<T>::value, T*>::type instantiate(
  * object.
  */
 std::unique_ptr<core::FlowConfiguration> createFlowConfiguration(
-    std::shared_ptr<core::Repository> repo,
-    std::shared_ptr<core::Repository> flow_file_repo,
-    std::shared_ptr<Configure> configure,
-    std::shared_ptr<io::StreamFactory> stream_factory,
+    const std::shared_ptr<core::Repository> &repo,
+    const std::shared_ptr<core::Repository> &flow_file_repo,
+    const std::shared_ptr<Configure> &configure,
+    const std::shared_ptr<io::StreamFactory> &stream_factory,
     const std::string configuration_class_name, const std::string path = "",
     bool fail_safe = false);
 

@@ -40,7 +40,7 @@ class RemoteProcessorGroupPort : public core::Processor {
   /*!
    * Create a new processor
    */
-  RemoteProcessorGroupPort(std::shared_ptr<io::StreamFactory> stream_factory, std::string name, uuid_t uuid = NULL)
+  RemoteProcessorGroupPort(const std::shared_ptr<io::StreamFactory> &stream_factory, std::string name, uuid_t uuid = NULL)
       : core::Processor(name, uuid),
         direction_(SEND),
         transmitting_(false) {

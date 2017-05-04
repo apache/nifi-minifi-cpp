@@ -71,7 +71,7 @@ class ProvenanceRepository : public core::Repository,
 }
 
   // initialize
-  virtual bool initialize(std::shared_ptr<org::apache::nifi::minifi::Configure> config) {
+  virtual bool initialize(const std::shared_ptr<org::apache::nifi::minifi::Configure> &config) {
     std::string value;
     if (config->get(Configure::nifi_provenance_repository_directory_default,
                         value)) {

@@ -64,9 +64,9 @@ class FlowController : public core::CoreComponent {
   /**
    * Flow controller constructor
    */
-  FlowController(std::shared_ptr<core::Repository> provenance_repo,
-                 std::shared_ptr<core::Repository> flow_file_repo,
-                 std::shared_ptr<Configure> configure,
+  FlowController(const std::shared_ptr<core::Repository> &provenance_repo,
+                 const std::shared_ptr<core::Repository> &flow_file_repo,
+                 const std::shared_ptr<Configure> &configure,
                  std::unique_ptr<core::FlowConfiguration> flow_configuration,
                  const std::string name = DEFAULT_ROOT_GROUP_NAME,
                  bool headless_mode = false);

@@ -42,7 +42,7 @@ class ThreadedSchedulingAgent : public SchedulingAgent {
   /*!
    * Create a new processor
    */
-  ThreadedSchedulingAgent(std::shared_ptr<core::Repository> repo, std::shared_ptr<Configure> configure)
+  ThreadedSchedulingAgent(const std::shared_ptr<core::Repository> &repo, const std::shared_ptr<Configure> &configure)
       : SchedulingAgent(repo) {
        configure_ = configure;
   }

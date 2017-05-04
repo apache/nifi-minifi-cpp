@@ -32,7 +32,7 @@ namespace nifi {
 namespace minifi {
 namespace io {
 
-TLSContext::TLSContext(std::shared_ptr<Configure> configure)
+TLSContext::TLSContext(const std::shared_ptr<Configure> &configure)
     : SocketContext(configure), error_value(0),
       ctx(0),
       logger_(logging::Logger::getLogger()),
@@ -143,14 +143,14 @@ TLSSocket::~TLSSocket() {
  * @param port connecting port
  * @param listeners number of listeners in the queue
  */
-TLSSocket::TLSSocket(std::shared_ptr<TLSContext> context, const std::string &hostname, const uint16_t port,
+TLSSocket::TLSSocket(const std::shared_ptr<TLSContext> &context, const std::string &hostname, const uint16_t port,
                      const uint16_t listeners)
     : Socket(context, hostname, port, listeners),
       ssl(0) {
         context_ = context;
 }
 
-TLSSocket::TLSSocket(std::shared_ptr<TLSContext> context, const std::string &hostname, const uint16_t port)
+TLSSocket::TLSSocket(const std::shared_ptr<TLSContext> &context, const std::string &hostname, const uint16_t port)
     : Socket(context, hostname, port, 0),
       ssl(0) {
         context_ = context;

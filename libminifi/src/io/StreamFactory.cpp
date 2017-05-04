@@ -47,11 +47,11 @@ class SocketCreator : public AbstractStreamFactory {
 
  public:
   template<typename Q = V>
-  ContextTypeCheck<true, std::shared_ptr<Q>> create(std::shared_ptr<Configure> configure) {
+  ContextTypeCheck<true, std::shared_ptr<Q>> create(const std::shared_ptr<Configure> &configure) {
     return std::make_shared<V>(configure);
   }
   template<typename Q = V>
-  ContextTypeCheck<false, std::shared_ptr<Q>> create(std::shared_ptr<Configure> configure) {
+  ContextTypeCheck<false, std::shared_ptr<Q>> create(const std::shared_ptr<Configure> &configure) {
     return std::make_shared<SocketContext>(configure);
   }
 
@@ -79,7 +79,7 @@ class SocketCreator : public AbstractStreamFactory {
 
 // std::atomic<StreamFactory*> StreamFactory::context_instance_;
 // std::mutex StreamFactory::context_mutex_;
-StreamFactory::StreamFactory(std::shared_ptr<Configure> configure) {
+StreamFactory::StreamFactory(const std::shared_ptr<Configure> &configure) {
   std::string secureStr;
   bool is_secure = false;
   if (configure->get(Configure::nifi_remote_input_secure, secureStr)) {
