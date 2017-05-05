@@ -42,17 +42,20 @@ Specific goals for MiNiFi are comprised of:
 Perspectives of the role of MiNiFi should be from the perspective of the agent acting immediately at, or directly adjacent to, source sensors, systems, or servers.
 
 ## Caveats
-* 0.0.1 represents the first release, APIs and interfaces are subject to change
+* 0.2.0 represents a non-GA release, APIs and interfaces are subject to change
 * Build and usage currently only supports Linux and OS X environments. Providing the needed tooling to support Windows will be established as part of [MINIFI-34](https://issues.apache.org/jira/browse/MINIFI-34).
 * Using Site to Site requires the additional manual step of specifying the remote socket.  This being autonegotiated through NiFi's REST API is captured in [MINIFI-70](https://issues.apache.org/jira/browse/MINIFI-70).
 * The processors currently implemented include:
-  * TailFile
+  * AppendHostInfo
+  * ExecuteProcess
   * GetFile
   * GenerateFlowFile
+  * InvokeHTTP
   * LogAttribute
+  * ListenHTTP
   * ListenSyslog
-  * ExecuteProcess
-  * AppendHostInfo
+  * PutFile
+  * TailFile
 * Provenance events generation is supported and are persisted using levelDB.
 
 ## System Requirements
@@ -70,7 +73,7 @@ Perspectives of the role of MiNiFi should be from the perspective of the agent a
 #### Libraries / Development Headers
 * libboost and boost-devel
   * 1.48.0 or greater
-* libCurl
+* libcurl
 * libleveldb and libleveldb-devel
 * libuuid and uuid-dev
 * openssl
