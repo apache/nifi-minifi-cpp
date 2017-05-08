@@ -71,7 +71,7 @@ add_library(spdlog STATIC ${SPD_SOURCES})
 add_library(minifi STATIC ${SOURCES})
 
 add_dependencies(minifi jsoncpp_project)
-target_link_libraries(minifi ${JSONCPP_LIB})
+target_link_libraries(minifi ${UUID_LIBRARIES} ${JSONCPP_LIB})
 
 find_package(ZLIB REQUIRED)
 include_directories(${ZLIB_INCLUDE_DIRS})
