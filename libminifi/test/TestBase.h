@@ -29,6 +29,13 @@
 #include "core/Core.h"
 #include "properties/Configure.h"
 
+/* Defining the root location of test resource files here in case it moves.   *
+ * Note, this resources directory is a path relative to the WORKING_DIRECTORY *
+ * location set in the CMake add_test(...) command.                           *
+ * Example usage in test cases:                                               *
+ *    std::string testFile = resourcesPath + "/myTestResourceFile.yml";       */
+static const std::string RESOURCE_PATH = "resources";
+
 class LogTestController {
  public:
   LogTestController(const std::string level = "debug") {

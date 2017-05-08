@@ -32,6 +32,7 @@ RUN apt-get update && apt-get install -y build-essential \
 	vim \
 	uuid-dev \
 	libleveldb-dev \
+	libcurl4-openssl-dev \
 	cmake \
 	git \
 	unzip \

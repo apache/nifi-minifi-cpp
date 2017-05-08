@@ -63,4 +63,4 @@ matrix:
         - package='graphviz'; [[ $(brew ls --versions ${package}) ]] && { brew outdated ${package} || brew upgrade ${package}; } || brew install ${package}
 
 script:
-  - mkdir ./build && cd ./build && cmake .. && make VERBOSE=1 && make test ARGS="-V" && make linter && make docs
+  - mkdir ./build && cd ./build && cmake .. && make VERBOSE=1 && make test ARGS="--output-on-failure" && make linter && make docs

@@ -56,35 +56,38 @@ endfunction()
 
 enable_testing(test)
 
-GETSOURCEFILES(UNIT_TESTS "${CMAKE_SOURCE_DIR}/libminifi/test/unit/")
-GETSOURCEFILES(INTEGRATION_TESTS "${CMAKE_SOURCE_DIR}/libminifi/test/integration/")
+SET(TEST_DIR ${CMAKE_SOURCE_DIR}/libminifi/test)
+SET(TEST_RESOURCES ${TEST_DIR}/resources)
+
+GETSOURCEFILES(UNIT_TESTS "${TEST_DIR}/unit/")
+GETSOURCEFILES(INTEGRATION_TESTS "${TEST_DIR}/integration/")
 
 SET(UNIT_TEST_COUNT 0)
 FOREACH(testfile ${UNIT_TESTS})
 	get_filename_component(testfilename "${testfile}" NAME_WE)
-	add_executable("${testfilename}" "${CMAKE_SOURCE_DIR}/libminifi/test/unit/${testfile}" ${SPD_SOURCES})
+	add_executable("${testfilename}" "${TEST_DIR}/unit/${testfile}" ${SPD_SOURCES})
 	createTests("${testfilename}")
  	MATH(EXPR UNIT_TEST_COUNT "${UNIT_TEST_COUNT}+1")
-	add_test(NAME "${testfilename}" COMMAND "${testfilename}")
+	add_test(NAME "${testfilename}" COMMAND "${testfilename}" WORKING_DIRECTORY ${TEST_DIR})
 ENDFOREACH()
 message("-- Finished building ${UNIT_TEST_COUNT} unit test file(s)...")
 
 SET(INT_TEST_COUNT 0)
 FOREACH(testfile ${INTEGRATION_TESTS})
 	get_filename_component(testfilename "${testfile}" NAME_WE)
-	add_executable("${testfilename}" "${CMAKE_SOURCE_DIR}/libminifi/test/integration/${testfile}" ${SPD_SOURCES})
+	add_executable("${testfilename}" "${TEST_DIR}/integration/${testfile}" ${SPD_SOURCES})
 	createTests("${testfilename}")
 	#message("Adding ${testfilename} from ${testfile}")
 	MATH(EXPR INT_TEST_COUNT "${INT_TEST_COUNT}+1")
 ENDFOREACH()
 message("-- Finished building ${INT_TEST_COUNT} integration test file(s)...")
 
-add_test(NAME ControllerServiceIntegrationTests COMMAND ControllerServiceIntegrationTests "${CMAKE_SOURCE_DIR}/libminifi/test/resources/TestControllerServices.yml" "${CMAKE_SOURCE_DIR}/libminifi/test/resources/") 
+add_test(NAME ControllerServiceIntegrationTests COMMAND ControllerServiceIntegrationTests "${TEST_RESOURCES}/TestControllerServices.yml" "${TEST_RESOURCES}/")
 
-add_test(NAME HttpGetIntegrationTest COMMAND HttpGetIntegrationTest "${CMAKE_SOURCE_DIR}/libminifi/test/resources/TestHTTPGet.yml"  "${CMAKE_SOURCE_DIR}/libminifi/test/resources/")
+add_test(NAME HttpGetIntegrationTest COMMAND HttpGetIntegrationTest "${TEST_RESOURCES}/TestHTTPGet.yml"  "${TEST_RESOURCES}/")
 
-add_test(NAME HttpGetIntegrationTestSecure COMMAND HttpGetIntegrationTest "${CMAKE_SOURCE_DIR}/libminifi/test/resources/TestHTTPGetSecure.yml"  "${CMAKE_SOURCE_DIR}/libminifi/test/resources/")
+add_test(NAME HttpGetIntegrationTestSecure COMMAND HttpGetIntegrationTest "${TEST_RESOURCES}/TestHTTPGetSecure.yml"  "${TEST_RESOURCES}/")
 
-add_test(NAME HttpPostIntegrationTest COMMAND HttpPostIntegrationTest "${CMAKE_SOURCE_DIR}/libminifi/test/resources/TestHTTPPost.yml" )
+add_test(NAME HttpPostIntegrationTest COMMAND HttpPostIntegrationTest "${TEST_RESOURCES}/TestHTTPPost.yml" )
 
 add_test(NAME TestExecuteProcess COMMAND TestExecuteProcess )

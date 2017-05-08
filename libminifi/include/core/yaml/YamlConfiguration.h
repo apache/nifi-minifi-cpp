@@ -63,17 +63,16 @@ class YamlConfiguration : public FlowConfiguration {
 
   /**
    * Returns a shared pointer to a ProcessGroup object containing the
-   * flow configuration. The yamlConfigStr argument must hold a string
-   * for the raw YAML configuration.
+   * flow configuration. The yamlConfigFile argument is the location
+   * of a YAML file containing the flow configuration.
    *
-   * @param yamlConfigStr a string holding the raw YAML to be parsed and
-   *                        loaded into a flow configuration tree
-   * @return              the root ProcessGroup node of the flow
+   * @param yamlConfigFile a string holding the location of the YAML file
+   *                        to be loaded into a flow configuration tree
+   * @return               the root ProcessGroup node of the flow
    *                        configuration tree
    */
-  std::unique_ptr<core::ProcessGroup> getRoot(
-      const std::string &yamlConfigStr) {
-    YAML::Node rootYamlNode = YAML::LoadFile(yamlConfigStr);
+  std::unique_ptr<core::ProcessGroup> getRoot(const std::string &yamlConfigFile) {
+    YAML::Node rootYamlNode = YAML::LoadFile(yamlConfigFile);
     return getRoot(&rootYamlNode);
   }
 
