@@ -201,11 +201,11 @@ $ brew install cmake \
 ```
 ~/Development/code/apache/nifi-minifi-cpp/build
 $ make docker
-NiFi-MiNiFi-CPP Version: 0.2.0
+NiFi-MiNiFi-CPP Version: 0.3.0
 Current Working Directory: /Users/jdyer/Development/github/nifi-minifi-cpp/docker
 CMake Source Directory: /Users/jdyer/Development/github/nifi-minifi-cpp
-MiNiFi Package: nifi-minifi-cpp-0.2.0-bin.tar.gz
-Docker Command: 'docker build --build-arg UID=1000 --build-arg GID=1000 --build-arg MINIFI_VERSION=0.2.0 --build-arg MINIFI_PACKAGE=nifi-minifi-cpp-0.2.0-bin.tar.gz -t apacheminificpp:0.2.0 .'
+MiNiFi Package: nifi-minifi-cpp-0.3.0-bin.tar.gz
+Docker Command: 'docker build --build-arg UID=1000 --build-arg GID=1000 --build-arg MINIFI_VERSION=0.3.0 --build-arg MINIFI_PACKAGE=nifi-minifi-cpp-0.3.0-bin.tar.gz -t apacheminificpp:0.3.0 .'
 Sending build context to Docker daemon 777.2 kB
 Step 1 : FROM alpine:3.5
  ---> 88e169ea8f46
