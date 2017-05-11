@@ -30,6 +30,7 @@
 #include "core/ProcessSession.h"
 #include "core/Core.h"
 #include "core/Resource.h"
+#include "core/logging/LoggerConfiguration.h"
 
 namespace org {
 namespace apache {
@@ -46,8 +47,8 @@ class ListenHTTP : public core::Processor {
    * Create a new processor
    */
   ListenHTTP(std::string name, uuid_t uuid = NULL)
-      : Processor(name, uuid) {
-    _logger = logging::Logger::getLogger();
+      : Processor(name, uuid),
+        logger_(logging::LoggerFactory<ListenHTTP>::getLogger()) {
   }
   // Destructor
   virtual ~ListenHTTP();
@@ -83,7 +84,7 @@ class ListenHTTP : public core::Processor {
     // Send HTTP 500 error response to client
     void sendErrorResponse(struct mg_connection *conn);
     // Logger
-    std::shared_ptr<logging::Logger> _logger;
+    std::shared_ptr<logging::Logger> logger_;
 
     std::regex _authDNRegex;
     std::regex _headersAsAttributesRegex;
@@ -100,7 +101,7 @@ class ListenHTTP : public core::Processor {
 
    private:
     // Logger
-    std::shared_ptr<logging::Logger> _logger;
+    std::shared_ptr<logging::Logger> logger_;
 
     struct mg_connection *_conn;
     const struct mg_request_info *_reqInfo;
@@ -108,7 +109,7 @@ class ListenHTTP : public core::Processor {
 
  private:
   // Logger
-  std::shared_ptr<logging::Logger> _logger;
+  std::shared_ptr<logging::Logger> logger_;
 
   std::unique_ptr<CivetServer> _server;
   std::unique_ptr<Handler> _handler;

@@ -308,6 +308,8 @@ class FlowController : public core::controller::ControllerServiceProvider,
   // flow configuration object.
   std::unique_ptr<core::FlowConfiguration> flow_configuration_;
 
+ private:
+  std::shared_ptr<logging::Logger> logger_;
 };
 
 } /* namespace minifi */

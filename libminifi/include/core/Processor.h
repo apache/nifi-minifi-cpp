@@ -257,6 +257,8 @@ class Processor : public Connectable, public ConfigurableComponent,
   Processor(const Processor &parent);
   Processor &operator=(const Processor &parent);
 
+ private:
+  std::shared_ptr<logging::Logger> logger_;
 };
 
 }

@@ -41,9 +41,7 @@ namespace core {
 class ConfigurableComponent {
  public:
 
-  ConfigurableComponent() = delete;
-
-  explicit ConfigurableComponent(std::shared_ptr<logging::Logger> logger);
+  ConfigurableComponent();
 
   explicit ConfigurableComponent(const ConfigurableComponent &&other);
 
@@ -108,7 +106,7 @@ class ConfigurableComponent {
   std::map<std::string, Property> properties_;
 
  private:
-  std::shared_ptr<logging::Logger> my_logger_;
+  std::shared_ptr<logging::Logger> logger_;
 
 };
 

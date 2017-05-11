@@ -21,7 +21,7 @@
 #define __THREADED_SCHEDULING_AGENT_H__
 
 #include "properties/Configure.h"
-#include "core/logging/Logger.h"
+#include "core/logging/LoggerConfiguration.h"
 #include "core/Processor.h"
 #include "core/Repository.h"
 #include "core/ProcessContext.h"
@@ -46,7 +46,7 @@ class ThreadedSchedulingAgent : public SchedulingAgent {
       std::shared_ptr<core::controller::ControllerServiceProvider> controller_service_provider,
       std::shared_ptr<core::Repository> repo,
       std::shared_ptr<Configure> configuration)
-      : SchedulingAgent(controller_service_provider, repo, configuration) {
+      : SchedulingAgent(controller_service_provider, repo, configuration), logger_(logging::LoggerFactory<ThreadedSchedulingAgent>::getLogger()) {
   }
   // Destructor
   virtual ~ThreadedSchedulingAgent() {
@@ -72,6 +72,7 @@ class ThreadedSchedulingAgent : public SchedulingAgent {
   // Only support pass by reference or pointer
   ThreadedSchedulingAgent(const ThreadedSchedulingAgent &parent);
   ThreadedSchedulingAgent &operator=(const ThreadedSchedulingAgent &parent);
+  std::shared_ptr<logging::Logger> logger_;
 };
 
 } /* namespace minifi */

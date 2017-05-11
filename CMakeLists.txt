@@ -25,7 +25,6 @@ set(PROJECT_VERSION_MINOR 3)
 set(PROJECT_VERSION_PATCH 0)
 option(test "Build all tests." ON)
 
-
 #### Establish Project Configuration ####
 # Enable usage of the VERSION specifier
 # https://cmake.org/cmake/help/v3.0/policy/CMP0048.html#policy:CMP0048
@@ -80,7 +79,7 @@ else ()
     message( FATAL_ERROR "LevelDB was not found. Please install LevelDB" )
 endif (LEVELDB_FOUND)
 find_package(UUID REQUIRED)
-file(GLOB SPD_SOURCES "include/spdlog/*")
+file(GLOB SPD_SOURCES "thirdparty/spdlog-0.13.0/include/spdlog/*")
 
 
 
@@ -117,7 +116,7 @@ set(CPACK_SOURCE_PACKAGE_FILE_NAME "${ASSEMBLY_BASE_NAME}-source")
 set(CPACK_SOURCE_IGNORE_FILES "/docs/generated/;/build/;~$;${CPACK_SOURCE_IGNORE_FILES};${CMAKE_SOURCE_DIR}/.git/;${CMAKE_SOURCE_DIR}/.idea/;${CMAKE_SOURCE_DIR}/cmake-build-debug/")
 
 # Generate binary assembly
-install(FILES conf/minifi.properties conf/config.yml
+install(FILES conf/minifi.properties conf/minifi-log.properties conf/config.yml
         DESTINATION conf
         COMPONENT bin)
 

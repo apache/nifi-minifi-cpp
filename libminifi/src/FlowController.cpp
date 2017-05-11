@@ -39,6 +39,7 @@
 #include "core/Core.h"
 #include "core/controller/ControllerServiceProvider.h"
 #include "core/repository/FlowFileRepository.h"
+#include "core/logging/LoggerConfiguration.h"
 
 namespace org {
 namespace apache {
@@ -69,7 +70,8 @@ FlowController::FlowController(
       event_scheduler_(nullptr),
       controller_service_provider_(nullptr),
       flow_configuration_(std::move(flow_configuration)),
-      configuration_(configure) {
+      configuration_(configure),
+      logger_(logging::LoggerFactory<FlowController>::getLogger())  {
   if (provenance_repo == nullptr)
     throw std::runtime_error("Provenance Repo should not be null");
   if (flow_file_repo == nullptr)

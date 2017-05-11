@@ -39,21 +39,21 @@ class ControllerServiceProvider : public CoreComponent,
 
   explicit ControllerServiceProvider(const std::string &name)
       : CoreComponent(name),
-        ConfigurableComponent(logging::Logger::getLogger()) {
+        ConfigurableComponent() {
     controller_map_ = std::make_shared<ControllerServiceMap>();
   }
 
   explicit ControllerServiceProvider(
       std::shared_ptr<ControllerServiceMap> services)
       : CoreComponent(core::getClassName<ControllerServiceProvider>()),
-        ConfigurableComponent(logging::Logger::getLogger()),
+        ConfigurableComponent(),
         controller_map_(services) {
   }
 
   explicit ControllerServiceProvider(
       const std::string &name, std::shared_ptr<ControllerServiceMap> services)
       : CoreComponent(name),
-        ConfigurableComponent(logging::Logger::getLogger()),
+        ConfigurableComponent(),
         controller_map_(services) {
   }
 

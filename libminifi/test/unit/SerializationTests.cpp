@@ -20,8 +20,7 @@
 #include "Site2SitePeer.h"
 #include "Site2SiteClientProtocol.h"
 #include <uuid/uuid.h>
-#include "core/logging/LogAppenders.h"
-#include "core/logging/BaseLogger.h"
+#include "SiteToSiteHelper.h"
 #include <algorithm>
 #include <string>
 #include <memory>

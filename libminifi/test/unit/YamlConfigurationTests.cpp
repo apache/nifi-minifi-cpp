@@ -25,6 +25,8 @@
 #include "../TestBase.h"
 
 TEST_CASE("Test YAML Config Processing", "[YamlConfiguration]") {
+  TestController test_controller;
+
   std::shared_ptr<core::Repository> testProvRepo = core::createRepository(
       "provenancerepository", true);
   std::shared_ptr<core::Repository> testFlowFileRepo = core::createRepository(

@@ -29,6 +29,7 @@
 #include "ControllerServiceNode.h"
 #include "StandardControllerServiceNode.h"
 #include "ControllerServiceProvider.h"
+#include "core/logging/LoggerConfiguration.h"
 
 namespace org {
 namespace apache {
@@ -50,7 +51,8 @@ class StandardControllerServiceProvider : public ControllerServiceProvider,
         root_group_(root_group),
         agent_(agent),
         extension_loader_(loader),
-        configuration_(configuration) {
+        configuration_(configuration),
+        logger_(logging::LoggerFactory<StandardControllerServiceProvider>::getLogger()) {
   }
 
   explicit StandardControllerServiceProvider(
@@ -61,7 +63,8 @@ class StandardControllerServiceProvider : public ControllerServiceProvider,
         root_group_(root_group),
         agent_(0),
         extension_loader_(loader),
-        configuration_(configuration) {
+        configuration_(configuration),
+        logger_(logging::LoggerFactory<StandardControllerServiceProvider>::getLogger()) {
   }
 
   explicit StandardControllerServiceProvider(
@@ -70,7 +73,8 @@ class StandardControllerServiceProvider : public ControllerServiceProvider,
         root_group_(std::move(other.root_group_)),
         agent_(std::move(other.agent_)),
         extension_loader_(other.extension_loader_),
-        configuration_(other.configuration_) {
+        configuration_(other.configuration_),
+        logger_(logging::LoggerFactory<StandardControllerServiceProvider>::getLogger()) {
 
   }
 
@@ -217,6 +221,8 @@ class StandardControllerServiceProvider : public ControllerServiceProvider,
 
   std::shared_ptr<ProcessGroup> root_group_;
 
+ private:
+  std::shared_ptr<logging::Logger> logger_;
 };
 
 } /* namespace controller */

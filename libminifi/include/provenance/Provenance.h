@@ -35,7 +35,7 @@
 #include "properties/Configure.h"
 #include "Connection.h"
 #include "FlowFileRecord.h"
-#include "core/logging/Logger.h"
+#include "core/logging/LoggerConfiguration.h"
 #include "ResourceClaim.h"
 #include "io/Serializable.h"
 #include "utils/TimeUtil.h"
@@ -162,7 +162,7 @@ class ProvenanceEventRecord :
    * Create a new provenance event record
    */
   ProvenanceEventRecord(ProvenanceEventType event, std::string componentId,
-                        std::string componentType) {
+                        std::string componentType): logger_(logging::LoggerFactory<ProvenanceEventRecord>::getLogger()) {
     _eventType = event;
     _componentId = componentId;
     _componentType = componentType;
@@ -172,12 +172,10 @@ class ProvenanceEventRecord :
     uuid_generate(_eventId);
     uuid_unparse_lower(_eventId, eventIdStr);
     _eventIdStr = eventIdStr;
-    logger_ = logging::Logger::getLogger();
   }
 
-  ProvenanceEventRecord() {
+  ProvenanceEventRecord(): logger_(logging::LoggerFactory<ProvenanceEventRecord>::getLogger()) {
     _eventTime = getTimeMillis();
-    logger_ = logging::Logger::getLogger();
   }
 
   // Destructor
@@ -443,8 +441,7 @@ class ProvenanceReporter {
    * Create a new provenance reporter associated with the process session
    */
   ProvenanceReporter(std::shared_ptr<core::Repository> repo,
-                     std::string componentId, std::string componentType) {
-    logger_ = logging::Logger::getLogger();
+                     std::string componentId, std::string componentType) : logger_(logging::LoggerFactory<ProvenanceReporter>::getLogger()) {
     _componentId = componentId;
     _componentType = componentType;
     repo_ = repo;

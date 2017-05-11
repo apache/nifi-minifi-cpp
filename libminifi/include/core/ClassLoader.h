@@ -158,10 +158,7 @@ class ClassLoader {
   /**
    * Constructor.
    */
-  ClassLoader()
-      : logger_(logging::Logger::getLogger()) {
-
-  }
+  ClassLoader();
 
   ~ClassLoader() {
     loaded_factories_.clear();
@@ -213,15 +210,14 @@ class ClassLoader {
 
  protected:
 
-  // logger shared ptr
-  std::shared_ptr<org::apache::nifi::minifi::core::logging::Logger> logger_;
-
   std::map<std::string, std::unique_ptr<ObjectFactory>> loaded_factories_;
 
   std::mutex internal_mutex_;
 
   std::vector<void *> dl_handles_;
 
+ private:
+   std::shared_ptr<logging::Logger> logger_;
 };
 
 template<class T>

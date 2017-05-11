@@ -36,6 +36,7 @@
 #include "core/ProcessSession.h"
 #include "core/ProcessSessionFactory.h"
 #include "../include/io/StreamFactory.h"
+#include "core/logging/LoggerConfiguration.h"
 
 namespace org {
 namespace apache {
@@ -44,8 +45,8 @@ namespace minifi {
 namespace core {
 
 Processor::Processor(std::string name, uuid_t uuid)
-    : Connectable(name, uuid),
-      ConfigurableComponent(logging::Logger::getLogger()) {
+    : Connectable(name, uuid), ConfigurableComponent(),
+    logger_(logging::LoggerFactory<Processor>::getLogger()) {
   has_work_.store(false);
   // Setup the default values
   state_ = DISABLED;
@@ -60,7 +61,6 @@ Processor::Processor(std::string name, uuid_t uuid)
   active_tasks_ = 0;
   yield_expiration_ = 0;
   incoming_connections_Iter = this->_incomingConnections.begin();
-  logger_ = logging::Logger::getLogger();
   logger_->log_info("Processor %s created UUID %s", name_.c_str(),
                     uuidStr_.c_str());
 }

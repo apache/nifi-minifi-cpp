@@ -192,7 +192,8 @@ class VolatileRepository : public core::Repository,
             "", maxPartitionMillis, maxPartitionBytes, purgePeriod),
         max_size_(maxPartitionBytes * 0.75),
         current_index_(0),
-        max_count_(10000)
+        max_count_(10000),
+        logger_(logging::LoggerFactory<VolatileRepository>::getLogger())
 
   {
 
@@ -358,7 +359,7 @@ class VolatileRepository : public core::Repository,
   std::vector<AtomicEntry*> value_vector_;
   uint32_t max_count_;
   uint32_t max_size_;
-
+  std::shared_ptr<logging::Logger> logger_;
 }
 ;
 

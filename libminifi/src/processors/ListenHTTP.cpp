@@ -34,6 +34,7 @@
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/ProcessSessionFactory.h"
+#include "core/logging/LoggerConfiguration.h"
 
 namespace org {
 namespace apache {
@@ -75,7 +76,7 @@ core::Relationship ListenHTTP::Success("success",
                                        "All files are routed to success");
 
 void ListenHTTP::initialize() {
-  _logger->log_info("Initializing ListenHTTP");
+  logger_->log_info("Initializing ListenHTTP");
 
   // Set the supported properties
   std::set<core::Property> properties;
@@ -99,7 +100,7 @@ void ListenHTTP::onSchedule(core::ProcessContext *context,
   std::string basePath;
 
   if (!context->getProperty(BasePath.getName(), basePath)) {
-    _logger->log_info(
+    logger_->log_info(
         "%s attribute is missing, so default value of %s will be used",
         BasePath.getName().c_str(), BasePath.getValue().c_str());
     basePath = BasePath.getValue();
@@ -110,7 +111,7 @@ void ListenHTTP::onSchedule(core::ProcessContext *context,
   std::string listeningPort;
 
   if (!context->getProperty(Port.getName(), listeningPort)) {
-    _logger->log_error("%s attribute is missing or invalid",
+    logger_->log_error("%s attribute is missing or invalid",
                        Port.getName().c_str());
     return;
   }
@@ -119,7 +120,7 @@ void ListenHTTP::onSchedule(core::ProcessContext *context,
 
   if (context->getProperty(AuthorizedDNPattern.getName(), authDNPattern)
       && !authDNPattern.empty()) {
-    _logger->log_info("ListenHTTP using %s: %s",
+    logger_->log_info("ListenHTTP using %s: %s",
                       AuthorizedDNPattern.getName().c_str(),
                       authDNPattern.c_str());
   }
@@ -128,7 +129,7 @@ void ListenHTTP::onSchedule(core::ProcessContext *context,
 
   if (context->getProperty(SSLCertificate.getName(), sslCertFile)
       && !sslCertFile.empty()) {
-    _logger->log_info("ListenHTTP using %s: %s",
+    logger_->log_info("ListenHTTP using %s: %s",
                       SSLCertificate.getName().c_str(), sslCertFile.c_str());
   }
 
@@ -141,23 +142,23 @@ void ListenHTTP::onSchedule(core::ProcessContext *context,
     if (context->getProperty(SSLCertificateAuthority.getName(),
                              sslCertAuthorityFile)
         && !sslCertAuthorityFile.empty()) {
-      _logger->log_info("ListenHTTP using %s: %s",
+      logger_->log_info("ListenHTTP using %s: %s",
                         SSLCertificateAuthority.getName().c_str(),
                         sslCertAuthorityFile.c_str());
     }
 
     if (context->getProperty(SSLVerifyPeer.getName(), sslVerifyPeer)) {
       if (sslVerifyPeer.empty() || sslVerifyPeer.compare("no") == 0) {
-        _logger->log_info("ListenHTTP will not verify peers");
+        logger_->log_info("ListenHTTP will not verify peers");
       } else {
-        _logger->log_info("ListenHTTP will verify peers");
+        logger_->log_info("ListenHTTP will verify peers");
       }
     } else {
-      _logger->log_info("ListenHTTP will not verify peers");
+      logger_->log_info("ListenHTTP will not verify peers");
     }
 
     if (context->getProperty(SSLMinimumVersion.getName(), sslMinVer)) {
-      _logger->log_info("ListenHTTP using %s: %s",
+      logger_->log_info("ListenHTTP using %s: %s",
                         SSLMinimumVersion.getName().c_str(), sslMinVer.c_str());
     }
   }
@@ -167,14 +168,14 @@ void ListenHTTP::onSchedule(core::ProcessContext *context,
   if (context->getProperty(HeadersAsAttributesRegex.getName(),
                            headersAsAttributesPattern)
       && !headersAsAttributesPattern.empty()) {
-    _logger->log_info("ListenHTTP using %s: %s",
+    logger_->log_info("ListenHTTP using %s: %s",
                       HeadersAsAttributesRegex.getName().c_str(),
                       headersAsAttributesPattern.c_str());
   }
 
   auto numThreads = getMaxConcurrentTasks();
 
-  _logger->log_info(
+  logger_->log_info(
       "ListenHTTP starting HTTP server on port %s and path %s with %d threads",
       listeningPort.c_str(), basePath.c_str(), numThreads);
 
@@ -255,7 +256,8 @@ ListenHTTP::Handler::Handler(core::ProcessContext *context,
                              std::string &&authDNPattern,
                              std::string &&headersAsAttributesPattern)
     : _authDNRegex(std::move(authDNPattern)),
-      _headersAsAttributesRegex(std::move(headersAsAttributesPattern)) {
+      _headersAsAttributesRegex(std::move(headersAsAttributesPattern)),
+      logger_(logging::LoggerFactory<ListenHTTP::Handler>::getLogger()) {
   _processContext = context;
   _processSessionFactory = sessionFactory;
 }
@@ -268,10 +270,8 @@ void ListenHTTP::Handler::sendErrorResponse(struct mg_connection *conn) {
 
 bool ListenHTTP::Handler::handlePost(CivetServer *server,
                                      struct mg_connection *conn) {
-  _logger = logging::Logger::getLogger();
-
   auto req_info = mg_get_request_info(conn);
-  _logger->log_info("ListenHTTP handling POST request of length %d",
+  logger_->log_info("ListenHTTP handling POST request of length %d",
                     req_info->content_length);
 
   // If this is a two-way TLS connection, authorize the peer against the configured pattern
@@ -280,7 +280,7 @@ bool ListenHTTP::Handler::handlePost(CivetServer *server,
       mg_printf(conn, "HTTP/1.1 403 Forbidden\r\n"
                 "Content-Type: text/html\r\n"
                 "Content-Length: 0\r\n\r\n");
-      _logger->log_warn("ListenHTTP client DN not authorized: %s",
+      logger_->log_warn("ListenHTTP client DN not authorized: %s",
                         req_info->client_cert->subject);
       return true;
     }
@@ -319,12 +319,12 @@ bool ListenHTTP::Handler::handlePost(CivetServer *server,
     session->transfer(flowFile, Success);
     session->commit();
   } catch (std::exception &exception) {
-    _logger->log_debug("ListenHTTP Caught Exception %s", exception.what());
+    logger_->log_debug("ListenHTTP Caught Exception %s", exception.what());
     sendErrorResponse(conn);
     session->rollback();
     throw;
   } catch (...) {
-    _logger->log_debug("ListenHTTP Caught Exception Processor::onTrigger");
+    logger_->log_debug("ListenHTTP Caught Exception Processor::onTrigger");
     sendErrorResponse(conn);
     session->rollback();
     throw;
@@ -337,9 +337,8 @@ bool ListenHTTP::Handler::handlePost(CivetServer *server,
   return true;
 }
 
-ListenHTTP::WriteCallback::WriteCallback(
-    struct mg_connection *conn, const struct mg_request_info *reqInfo) {
-  _logger = logging::Logger::getLogger();
+ListenHTTP::WriteCallback::WriteCallback(struct mg_connection *conn, const struct mg_request_info *reqInfo) :
+    logger_(logging::LoggerFactory<ListenHTTP::WriteCallback>::getLogger()) {
   _conn = conn;
   _reqInfo = reqInfo;
 }

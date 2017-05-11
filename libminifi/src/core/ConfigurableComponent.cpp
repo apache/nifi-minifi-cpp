@@ -22,24 +22,23 @@
 #include <string>
 #include <set>
 #include "core/Property.h"
-#include "core/logging/Logger.h"
+#include "core/logging/LoggerConfiguration.h"
 
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
 namespace core {
-
-ConfigurableComponent::ConfigurableComponent(
-    std::shared_ptr<logging::Logger> logger)
-    : my_logger_(logger) {
+ConfigurableComponent::ConfigurableComponent()
+    : logger_(logging::LoggerFactory<ConfigurableComponent>::getLogger()) {
 }
 
 ConfigurableComponent::ConfigurableComponent(
     const ConfigurableComponent &&other)
     : properties_(std::move(other.properties_)),
-      my_logger_(std::move(other.my_logger_)) {
+      logger_(logging::LoggerFactory<ConfigurableComponent>::getLogger()) {
 }
+
 ConfigurableComponent::~ConfigurableComponent() {
 }
 
@@ -71,7 +70,7 @@ bool ConfigurableComponent::getProperty(const std::string name,
   if (it != properties_.end()) {
     Property item = it->second;
     value = item.getValue();
-    my_logger_->log_info("Processor %s property name %s value %s", name,
+    logger_->log_info("Processor %s property name %s value %s", name,
                          item.getName(), value);
     return true;
   } else {
@@ -93,7 +92,7 @@ bool ConfigurableComponent::setProperty(const std::string name,
     Property item = it->second;
     item.setValue(value);
     properties_[item.getName()] = item;
-    my_logger_->log_info("Component %s property name %s value %s", name.c_str(),
+    logger_->log_info("Component %s property name %s value %s", name.c_str(),
                          item.getName().c_str(), value.c_str());
     return true;
   } else {
@@ -116,7 +115,7 @@ bool ConfigurableComponent::updateProperty(const std::string &name,
     Property item = it->second;
     item.addValue(value);
     properties_[item.getName()] = item;
-    my_logger_->log_info("Component %s property name %s value %s", name.c_str(),
+    logger_->log_info("Component %s property name %s value %s", name.c_str(),
                          item.getName().c_str(), value.c_str());
     return true;
   } else {
@@ -138,7 +137,7 @@ bool ConfigurableComponent::setProperty(Property &prop, std::string value) {
     Property item = it->second;
     item.setValue(value);
     properties_[item.getName()] = item;
-    my_logger_->log_info("property name %s value %s", prop.getName().c_str(),
+    logger_->log_info("property name %s value %s", prop.getName().c_str(),
                          item.getName().c_str(), value.c_str());
     return true;
   } else {

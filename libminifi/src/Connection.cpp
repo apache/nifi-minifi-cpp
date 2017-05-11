@@ -32,6 +32,7 @@
 #include "core/FlowFile.h"
 #include "Connection.h"
 #include "core/Processor.h"
+#include "core/logging/LoggerConfiguration.h"
 
 namespace org {
 namespace apache {
@@ -42,7 +43,8 @@ Connection::Connection(std::shared_ptr<core::Repository> flow_repository,
                        std::string name, uuid_t uuid, uuid_t srcUUID,
                        uuid_t destUUID)
     : core::Connectable(name, uuid),
-      flow_repository_(flow_repository) {
+      flow_repository_(flow_repository),
+      logger_(logging::LoggerFactory<Connection>::getLogger()) {
 
   if (srcUUID)
     uuid_copy(src_uuid_, srcUUID);
@@ -55,8 +57,6 @@ Connection::Connection(std::shared_ptr<core::Repository> flow_repository,
   max_data_queue_size_ = 0;
   expired_duration_ = 0;
   queued_data_size_ = 0;
-
-  logger_ = logging::Logger::getLogger();
 
   logger_->log_info("Connection %s created", name_.c_str());
 }

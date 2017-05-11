@@ -29,7 +29,7 @@
 #include "Property.h"
 #include "core/controller/ControllerServiceProvider.h"
 #include "core/controller/ControllerServiceLookup.h"
-#include "core/logging/Logger.h"
+#include "core/logging/LoggerConfiguration.h"
 #include "ProcessorNode.h"
 #include "core/Repository.h"
 
@@ -51,8 +51,7 @@ class ProcessContext : public controller::ControllerServiceLookup {
       std::shared_ptr<controller::ControllerServiceProvider> &controller_service_provider,
       std::shared_ptr<core::Repository> repo)
       : processor_node_(processor),
-        controller_service_provider_(controller_service_provider) {
-    logger_ = logging::Logger::getLogger();
+        controller_service_provider_(controller_service_provider), logger_(logging::LoggerFactory<ProcessContext>::getLogger())  {
     repo_ = repo;
   }
   // Destructor

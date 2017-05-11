@@ -24,8 +24,6 @@
 #include <utility>
 #include <thread>
 #include <type_traits>
-#include "core/logging/LogAppenders.h"
-#include "core/logging/BaseLogger.h"
 #include <vector>
 
 #include "../include/core/controller/ControllerServiceMap.h"
@@ -33,7 +31,7 @@
 #include "../include/core/controller/StandardControllerServiceProvider.h"
 #include "controllers/SSLContextService.h"
 #include "../include/core/Core.h"
-#include "../include/core/logging/Logger.h"
+#include "../include/core/logging/LoggerConfiguration.h"
 #include "../include/core/ProcessGroup.h"
 #include "../include/core/Resource.h"
 #include "../include/core/yaml/YamlConfiguration.h"
@@ -70,8 +68,6 @@ int main(int argc, char **argv) {
     test_file_location = argv[1];
     key_dir = argv[1];
   }
-
-  logging::Logger::getLogger()->setLogLevel("trace");
 
   std::shared_ptr<minifi::Configure> configuration = std::make_shared<
       minifi::Configure>();
@@ -138,8 +134,6 @@ int main(int argc, char **argv) {
   std::shared_ptr<core::controller::ControllerServiceNode> notexistNode = pg
       ->findControllerService("MockItLikeItsWrong");
   assert(notexistNode == nullptr);
-  logging::Logger::getLogger()->log_info(
-      "STARTING FLOW CONTROLLER INTEGRATION TEST");
   controller->load();
   controller->start();
   std::shared_ptr<core::controller::ControllerServiceNode> ssl_client_cont =

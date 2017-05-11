@@ -28,8 +28,6 @@
 #include <vector>
 #include "utils/StringUtils.h"
 #include "core/Core.h"
-#include "core/logging/LogAppenders.h"
-#include "core/logging/BaseLogger.h"
 #include "core/logging/Logger.h"
 #include "core/ProcessGroup.h"
 #include "core/yaml/YamlConfiguration.h"
@@ -37,6 +35,7 @@
 #include "properties/Configure.h"
 #include "../unit/ProvenanceTestHelper.h"
 #include "io/StreamFactory.h"
+#include "../TestBase.h"
 
 
 void waitToVerifyProcessor() {
@@ -51,14 +50,8 @@ int main(int argc, char **argv) {
   mkdir("/tmp/aljs39/", S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 
   mkdir("content_repository", S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-  std::ostringstream oss;
-  std::unique_ptr<logging::BaseLogger> outputLogger = std::unique_ptr<
-      logging::BaseLogger>(
-      new org::apache::nifi::minifi::core::logging::OutputStreamAppender(oss,
-                                                                         0));
-  std::shared_ptr<logging::Logger> logger = logging::Logger::getLogger();
-  logger->updateLogger(std::move(outputLogger));
-  logger->setLogLevel("debug");
+
+  LogTestController::getInstance().setDebug<core::ProcessGroup>();
 
   std::shared_ptr<minifi::Configure> configuration = std::make_shared<
       minifi::Configure>();
@@ -105,10 +98,9 @@ int main(int argc, char **argv) {
   waitToVerifyProcessor();
 
   controller->waitUnload(60000);
-  std::string logs = oss.str();
+  std::string logs = LogTestController::getInstance().log_output.str();
   assert(logs.find("Add processor SiteToSiteProvenanceReportingTask into process group MiNiFi Flow") != std::string::npos);
-
-
+  LogTestController::getInstance().reset();
   rmdir("./content_repository");
   rmdir("/tmp/aljs39/");
   return 0;

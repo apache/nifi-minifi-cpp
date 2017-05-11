@@ -23,8 +23,6 @@
 #include "FlowController.h"
 #include "../TestBase.h"
 #include "properties/Configure.h"
-#include "core/logging/LogAppenders.h"
-#include "core/logging/BaseLogger.h"
 #include "processors/GetFile.h"
 #include "core/Core.h"
 #include "Exception.h"
@@ -35,6 +33,7 @@
 #include "core/Processor.h"
 #include "core/controller/ControllerServiceMap.h"
 #include "core/controller/StandardControllerServiceNode.h"
+
 namespace ControllerServiceTests {
 
 TEST_CASE("Test ControllerServicesMap", "[cs1]") {
