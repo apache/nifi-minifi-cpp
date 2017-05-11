@@ -25,6 +25,7 @@
 #include "properties/Configure.h"
 #include "utils/StringUtils.h"
 #include "core/Property.h"
+#include "core/logging/LoggerConfiguration.h"
 
 namespace org {
 namespace apache {
@@ -39,7 +40,7 @@ TLSContext::TLSContext(const std::shared_ptr<Configure> &configure)
     : SocketContext(configure),
       error_value(0),
       ctx(0),
-      logger_(logging::Logger::getLogger()),
+      logger_(logging::LoggerFactory<TLSContext>::getLogger()),
       configure_(configure) {
 }
 /**
@@ -152,20 +153,20 @@ TLSSocket::TLSSocket(const std::shared_ptr<TLSContext> &context,
                      const std::string &hostname, const uint16_t port,
                      const uint16_t listeners)
     : Socket(context, hostname, port, listeners),
-      ssl(0) {
+      ssl(0), logger_(logging::LoggerFactory<TLSSocket>::getLogger()) {
   context_ = context;
 }
 
 TLSSocket::TLSSocket(const std::shared_ptr<TLSContext> &context,
                      const std::string &hostname, const uint16_t port)
     : Socket(context, hostname, port, 0),
-      ssl(0) {
+      ssl(0), logger_(logging::LoggerFactory<TLSSocket>::getLogger()) {
   context_ = context;
 }
 
 TLSSocket::TLSSocket(const TLSSocket &&d)
     : Socket(std::move(d)),
-      ssl(0) {
+      ssl(0), logger_(d.logger_) {
   context_ = d.context_;
 }
 

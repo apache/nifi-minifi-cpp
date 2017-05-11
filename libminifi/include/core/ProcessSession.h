@@ -30,7 +30,7 @@
 #include "ProcessContext.h"
 #include "FlowFileRecord.h"
 #include "Exception.h"
-#include "core/logging/Logger.h"
+#include "core/logging/LoggerConfiguration.h"
 #include "FlowFile.h"
 #include "provenance/Provenance.h"
 
@@ -48,8 +48,7 @@ class ProcessSession {
    * Create a new process session
    */
   ProcessSession(ProcessContext *processContext = NULL)
-      : process_context_(processContext) {
-    logger_ = logging::Logger::getLogger();
+      : process_context_(processContext), logger_(logging::LoggerFactory<ProcessSession>::getLogger()) {
     logger_->log_trace("ProcessSession created for %s",
                        process_context_->getProcessorNode().getName().c_str());
     auto repo = processContext->getProvenanceRepository();

@@ -25,6 +25,7 @@
 #include "core/ProcessSession.h"
 #include "core/Core.h"
 #include "core/Resource.h"
+#include "core/logging/LoggerConfiguration.h"
 
 namespace org {
 namespace apache {
@@ -47,7 +48,7 @@ class PutFile : public core::Processor {
    * Create a new processor
    */
   PutFile(std::string name, uuid_t uuid = NULL)
-      : core::Processor(name, uuid) {
+      : core::Processor(name, uuid), logger_(logging::LoggerFactory<PutFile>::getLogger()) {
   }
   // Destructor
   virtual ~PutFile() {
@@ -102,6 +103,7 @@ class PutFile : public core::Processor {
   bool putFile(core::ProcessSession *session,
                std::shared_ptr<FlowFileRecord> flowFile,
                const std::string &tmpFile, const std::string &destFile);
+  std::shared_ptr<logging::Logger> logger_;
 };
 
 REGISTER_RESOURCE(PutFile);

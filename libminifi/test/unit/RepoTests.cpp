@@ -43,8 +43,6 @@ TEST_CASE("Test Repo Empty Value Attribute", "[TestFFR1]") {
   REQUIRE(true == record.Serialize());
 
   repository->stop();
-
-  testController.setNullAppender();
 }
 
 TEST_CASE("Test Repo Empty Key Attribute ", "[TestFFR2]") {
@@ -66,8 +64,6 @@ TEST_CASE("Test Repo Empty Key Attribute ", "[TestFFR2]") {
   REQUIRE(true == record.Serialize());
 
   repository->stop();
-
-  testController.setNullAppender();
 }
 
 TEST_CASE("Test Repo Key Attribute Verify ", "[TestFFR3]") {

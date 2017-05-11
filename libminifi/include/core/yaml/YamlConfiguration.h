@@ -26,6 +26,7 @@
 #include <string>
 #include "io/validation.h"
 #include "io/StreamFactory.h"
+#include "core/logging/LoggerConfiguration.h"
 
 namespace org {
 namespace apache {
@@ -50,7 +51,8 @@ class YamlConfiguration : public FlowConfiguration {
                     std::shared_ptr<Configure> configuration,
                     const std::string path = DEFAULT_FLOW_YAML_FILE_NAME)
       : FlowConfiguration(repo, flow_file_repo, stream_factory, configuration,
-                          path) {
+                          path),
+         logger_(logging::LoggerFactory<YamlConfiguration>::getLogger()) {
     stream_factory_ = stream_factory;
     if (IsNullOrEmpty(config_path_)) {
       config_path_ = DEFAULT_FLOW_YAML_FILE_NAME;
@@ -275,6 +277,8 @@ class YamlConfiguration : public FlowConfiguration {
 
  protected:
   std::shared_ptr<io::StreamFactory> stream_factory_;
+ private:
+  std::shared_ptr<logging::Logger> logger_;
 };
 
 } /* namespace core */

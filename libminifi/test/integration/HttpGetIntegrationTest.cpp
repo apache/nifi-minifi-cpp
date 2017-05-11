@@ -29,9 +29,7 @@
 #include "../TestBase.h"
 #include "utils/StringUtils.h"
 #include "core/Core.h"
-#include "core/logging/LogAppenders.h"
-#include "core/logging/BaseLogger.h"
-#include "core/logging/Logger.h"
+#include "../include/core/logging/Logger.h"
 #include "core/ProcessGroup.h"
 #include "core/yaml/YamlConfiguration.h"
 #include "FlowController.h"
@@ -44,6 +42,7 @@ void waitToVerifyProcessor() {
 }
 
 int main(int argc, char **argv) {
+  LogTestController::getInstance().setInfo<minifi::processors::InvokeHTTP>();
   std::string key_dir, test_file_location;
   if (argc > 1) {
     test_file_location = argv[1];
@@ -53,14 +52,6 @@ int main(int argc, char **argv) {
       minifi::Configure>();
   configuration->set(minifi::Configure::nifi_default_directory, key_dir);
   mkdir("content_repository", S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-  std::ostringstream oss;
-  std::unique_ptr<logging::BaseLogger> outputLogger = std::unique_ptr<
-      logging::BaseLogger>(
-      new org::apache::nifi::minifi::core::logging::OutputStreamAppender(oss,
-                                                                         0));
-  std::shared_ptr<logging::Logger> logger = logging::Logger::getLogger();
-  logger->updateLogger(std::move(outputLogger));
-  logger->setLogLevel("debug");
 
   std::shared_ptr<core::Repository> test_repo =
       std::make_shared<TestRepository>();
@@ -98,8 +89,7 @@ int main(int argc, char **argv) {
   waitToVerifyProcessor();
 
   controller->waitUnload(60000);
-  std::string logs = oss.str();
-  std::cout << logs << std::endl;
+  std::string logs = LogTestController::getInstance().log_output.str();
   assert(logs.find("key:filename value:") != std::string::npos);
   assert(
       logs.find(
@@ -121,6 +111,7 @@ int main(int argc, char **argv) {
     if (loc == std::string::npos)
       break;
   }
+  LogTestController::getInstance().reset();
   rmdir("./content_repository");
   return 0;
 }

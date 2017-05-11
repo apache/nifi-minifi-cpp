@@ -28,7 +28,7 @@
 #include <string>
 #include <iostream>
 #include <fstream>
-#include "core/logging/Logger.h"
+#include "core/logging/LoggerConfiguration.h"
 #include "core/Relationship.h"
 #include "core/Repository.h"
 
@@ -44,7 +44,8 @@ FlowFileRecord::FlowFileRecord(
     std::map<std::string, std::string> attributes,
     std::shared_ptr<ResourceClaim> claim)
     : FlowFile(),
-      flow_repository_(flow_repository) {
+      flow_repository_(flow_repository),
+      logger_(logging::LoggerFactory<FlowFileRecord>::getLogger()) {
 
   id_ = local_flow_seq_number_.load();
   claim_ = claim;
@@ -65,7 +66,6 @@ FlowFileRecord::FlowFileRecord(
   if (claim_ != nullptr)
     // Increase the flow file record owned count for the resource claim
     claim_->increaseFlowFileRecordOwnedCount();
-  logger_ = logging::Logger::getLogger();
 }
 
 FlowFileRecord::FlowFileRecord(
@@ -73,7 +73,8 @@ FlowFileRecord::FlowFileRecord(
     std::shared_ptr<core::FlowFile> &event, const std::string &uuidConnection)
     : FlowFile(),
       snapshot_(""),
-      flow_repository_(flow_repository) {
+      flow_repository_(flow_repository),
+      logger_(logging::LoggerFactory<FlowFileRecord>::getLogger()) {
   entry_date_ = event->getEntryDate();
   lineage_start_date_ = event->getlineageStartDate();
   lineage_Identifiers_ = event->getlineageIdentifiers();
@@ -94,7 +95,8 @@ FlowFileRecord::FlowFileRecord(
     : FlowFile(),
       uuid_connection_(""),
       snapshot_(""),
-      flow_repository_(flow_repository) {
+      flow_repository_(flow_repository),
+      logger_(logging::LoggerFactory<FlowFileRecord>::getLogger()) {
 }
 
 FlowFileRecord::~FlowFileRecord() {

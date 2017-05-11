@@ -26,8 +26,6 @@
 #include <set>
 #include "FlowController.h"
 #include "../TestBase.h"
-#include "core/logging/LogAppenders.h"
-#include "core/logging/BaseLogger.h"
 #include "processors/GetFile.h"
 #include "core/Core.h"
 #include "../../include/core/FlowFile.h"
@@ -38,17 +36,8 @@
 #include "core/ProcessorNode.h"
 
 TEST_CASE("HTTPTestsPostNoResourceClaim", "[httptest1]") {
-  std::stringstream oss;
-  std::unique_ptr<logging::BaseLogger> outputLogger = std::unique_ptr<
-      logging::BaseLogger>(
-      new org::apache::nifi::minifi::core::logging::OutputStreamAppender(oss,
-                                                                         0));
-  std::shared_ptr<logging::Logger> logger = logging::Logger::getLogger();
-  logger->updateLogger(std::move(outputLogger));
-
   TestController testController;
-
-  testController.enableDebug();
+  LogTestController::getInstance().setInfo<org::apache::nifi::minifi::processors::InvokeHTTP>();
 
   std::shared_ptr<TestRepository> repo = std::make_shared<TestRepository>();
 
@@ -149,25 +138,13 @@ TEST_CASE("HTTPTestsPostNoResourceClaim", "[httptest1]") {
     REQUIRE(provEventRecord->getComponentType() == processor->getName());
   }
   std::shared_ptr<core::FlowFile> ffr = session2.get();
-  std::string log_attribute_output = oss.str();
-  std::cout << log_attribute_output << std::endl;
-  REQUIRE(
-      log_attribute_output.find("exiting because method is POST")
-          != std::string::npos);
+  REQUIRE(true == LogTestController::getInstance().contains("exiting because method is POST"));
+  LogTestController::getInstance().reset();
 }
 
 TEST_CASE("HTTPTestsWithNoResourceClaimPOST", "[httptest1]") {
-  std::stringstream oss;
-  std::unique_ptr<logging::BaseLogger> outputLogger = std::unique_ptr<
-      logging::BaseLogger>(
-      new org::apache::nifi::minifi::core::logging::OutputStreamAppender(oss,
-                                                                         0));
-  std::shared_ptr<logging::Logger> logger = logging::Logger::getLogger();
-  logger->updateLogger(std::move(outputLogger));
-
   TestController testController;
-
-  testController.enableDebug();
+  LogTestController::getInstance().setInfo<org::apache::nifi::minifi::processors::InvokeHTTP>();
 
   std::shared_ptr<TestRepository> repo = std::make_shared<TestRepository>();
 
@@ -279,10 +256,8 @@ TEST_CASE("HTTPTestsWithNoResourceClaimPOST", "[httptest1]") {
     REQUIRE(provEventRecord->getComponentType() == listenhttp->getName());
   }
   std::shared_ptr<core::FlowFile> ffr = session2.get();
-  std::string log_attribute_output = oss.str();
-  REQUIRE(
-      log_attribute_output.find("exiting because method is POST")
-          != std::string::npos);
+  REQUIRE(true == LogTestController::getInstance().contains("exiting because method is POST"));
+  LogTestController::getInstance().reset();
 }
 
 class CallBack : public minifi::OutputStreamCallback {
@@ -298,19 +273,11 @@ class CallBack : public minifi::OutputStreamCallback {
 };
 
 TEST_CASE("HTTPTestsWithResourceClaimPOST", "[httptest1]") {
-  std::stringstream oss;
-  std::unique_ptr<logging::BaseLogger> outputLogger = std::unique_ptr<
-      logging::BaseLogger>(
-      new org::apache::nifi::minifi::core::logging::OutputStreamAppender(oss,
-                                                                         0));
-  std::shared_ptr<logging::Logger> logger = logging::Logger::getLogger();
-  logger->updateLogger(std::move(outputLogger));
-
   TestController testController;
+  LogTestController::getInstance().setInfo<org::apache::nifi::minifi::processors::InvokeHTTP>();
 
-  testController.enableDebug();
-
-  std::shared_ptr<TestRepository> repo = std::make_shared<TestRepository>();
+  std::shared_ptr<TestRepository> repo = std::make_shared<
+      TestRepository>();
 
   std::shared_ptr<core::Processor> getfileprocessor = std::make_shared<
       org::apache::nifi::minifi::processors::GetFile>("getfileCreate2");
@@ -437,9 +404,7 @@ TEST_CASE("HTTPTestsWithResourceClaimPOST", "[httptest1]") {
     REQUIRE(provEventRecord->getComponentType() == listenhttp->getName());
   }
   std::shared_ptr<core::FlowFile> ffr = session2.get();
-  std::string log_attribute_output = oss.str();
-  REQUIRE(
-      log_attribute_output.find("exiting because method is POST")
-          != std::string::npos);
+  REQUIRE(true == LogTestController::getInstance().contains("exiting because method is POST"));
+  LogTestController::getInstance().reset();
 }
 

@@ -31,14 +31,13 @@
 #include <iostream>
 #include <string>
 #include "io/validation.h"
+#include "core/logging/LoggerConfiguration.h"
 
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
 namespace io {
-
-char *Socket::HOSTNAME = const_cast<char*>(Socket::getMyHostName(0).c_str());
 
 Socket::Socket(const std::shared_ptr<SocketContext> &context, const std::string &hostname, const uint16_t port,
                const uint16_t listeners = -1)
@@ -48,8 +47,8 @@ Socket::Socket(const std::shared_ptr<SocketContext> &context, const std::string 
       socket_file_descriptor_(-1),
       socket_max_(0),
       listeners_(listeners),
-      canonical_hostname_("") {
-  logger_ = logging::Logger::getLogger();
+      canonical_hostname_(""),
+      logger_(logging::LoggerFactory<Socket>::getLogger()) {
   FD_ZERO(&total_list_);
   FD_ZERO(&read_fds_);
 }
@@ -67,8 +66,8 @@ Socket::Socket(const Socket &&other)
       listeners_(other.listeners_),
       total_list_(other.total_list_),
       read_fds_(other.read_fds_),
-      canonical_hostname_(std::move(other.canonical_hostname_)) {
-  logger_ = logging::Logger::getLogger();
+      canonical_hostname_(std::move(other.canonical_hostname_)),
+      logger_(other.logger_) {
 }
 
 Socket::~Socket() {

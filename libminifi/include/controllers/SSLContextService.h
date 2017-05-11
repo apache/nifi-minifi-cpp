@@ -26,6 +26,7 @@
 #include "utils/StringUtils.h"
 #include "io/validation.h"
 #include "../core/controller/ControllerService.h"
+#include "core/logging/LoggerConfiguration.h"
 
 namespace org {
 namespace apache {
@@ -61,14 +62,14 @@ class SSLContextService : public core::controller::ControllerService {
   explicit SSLContextService(const std::string &name, const std::string &id)
       : ControllerService(name, id),
         initialized_(false),
-        valid_(false) {
-  }
+        valid_(false),
+        logger_(logging::LoggerFactory<SSLContextService>::getLogger()) {}
 
   explicit SSLContextService(const std::string &name, uuid_t uuid = 0)
       : ControllerService(name, uuid),
         initialized_(false),
-        valid_(false) {
-  }
+        valid_(false),
+        logger_(logging::LoggerFactory<SSLContextService>::getLogger()) {}
 
   virtual void initialize();
 
@@ -161,6 +162,9 @@ class SSLContextService : public core::controller::ControllerService {
   std::string passphrase_;
   std::string passphrase_file_;
   std::string ca_certificate_;
+
+ private:
+   std::shared_ptr<logging::Logger> logger_;
 };
 typedef int (SSLContextService::*ptr)(char *, int, int, void *);
 REGISTER_RESOURCE(SSLContextService);

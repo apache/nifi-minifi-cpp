@@ -55,7 +55,7 @@ else()
  message(STATUS "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
 endif()
 
-include_directories(../include)
+include_directories(../thirdparty/spdlog-0.13.0/include)
 include_directories(../thirdparty/yaml-cpp-yaml-cpp-0.5.3/include)
 include_directories(../thirdparty/civetweb-1.9.1/include)
 include_directories(../thirdparty/jsoncpp/include)
@@ -64,7 +64,7 @@ include_directories(include)
 
 file(GLOB SOURCES  "src/core/logging/*.cpp"  "src/io/*.cpp" "src/io/tls/*.cpp" "src/core/controller/*.cpp" "src/controllers/*.cpp" "src/core/*.cpp"  "src/core/repository/*.cpp" "src/core/yaml/*.cpp" "src/core/reporting/*.cpp"  "src/provenance/*.cpp" "src/processors/*.cpp" "src/*.cpp")
 
-file(GLOB SPD_SOURCES "../include/spdlog/*")
+file(GLOB SPD_SOURCES "../thirdparty/spdlog-0.13.0/include/spdlog/*")
 
 # Workaround the limitations of having a
 # header only library

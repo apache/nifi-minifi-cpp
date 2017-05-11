@@ -64,7 +64,7 @@ class ControllerService : public ConfigurableComponent, public Connectable {
    */
   explicit ControllerService()
       : Connectable(core::getClassName<ControllerService>(), 0),
-        ConfigurableComponent(logging::Logger::getLogger()),
+        ConfigurableComponent(),
         configuration_(std::make_shared<Configure>()) {
     current_state_ = DISABLED;
   }
@@ -74,7 +74,7 @@ class ControllerService : public ConfigurableComponent, public Connectable {
    */
   explicit ControllerService(const std::string &name, const std::string &id)
       : Connectable(name, 0),
-        ConfigurableComponent(logging::Logger::getLogger()),
+        ConfigurableComponent(),
         configuration_(std::make_shared<Configure>()) {
     current_state_ = DISABLED;
     uuid_parse(id.c_str(), uuid_);
@@ -88,7 +88,7 @@ class ControllerService : public ConfigurableComponent, public Connectable {
    */
   explicit ControllerService(const std::string &name, uuid_t uuid)
       : Connectable(name, uuid),
-        ConfigurableComponent(logging::Logger::getLogger()),
+        ConfigurableComponent(),
         configuration_(std::make_shared<Configure>()) {
     current_state_ = DISABLED;
   }

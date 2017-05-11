@@ -25,8 +25,6 @@
 #include <fstream>
 #include "../unit/ProvenanceTestHelper.h"
 #include "../TestBase.h"
-#include "core/logging/LogAppenders.h"
-#include "core/logging/BaseLogger.h"
 #include "processors/ListenHTTP.h"
 #include "processors/LogAttribute.h"
 #include "processors/GetFile.h"
@@ -39,6 +37,7 @@
 #include "core/reporting/SiteToSiteProvenanceReportingTask.h"
 
 TEST_CASE("Test Creation of GetFile", "[getfileCreate]") {
+  TestController testController;
   std::shared_ptr<core::Processor> processor = std::make_shared<
       org::apache::nifi::minifi::processors::GetFile>("processorname");
   REQUIRE(processor->getName() == "processorname");
@@ -46,8 +45,6 @@ TEST_CASE("Test Creation of GetFile", "[getfileCreate]") {
 
 TEST_CASE("Test Find file", "[getfileCreate2]") {
   TestController testController;
-
-  testController.enableDebug();
 
   std::shared_ptr<core::Processor> processor = std::make_shared<
       org::apache::nifi::minifi::processors::GetFile>("getfileCreate2");
@@ -187,8 +184,6 @@ TEST_CASE("Test Find file", "[getfileCreate2]") {
 TEST_CASE("Test GetFileLikeIt'sThreaded", "[getfileCreate3]") {
   TestController testController;
 
-  testController.enableDebug();
-
   std::shared_ptr<core::Processor> processor = std::make_shared<
       org::apache::nifi::minifi::processors::GetFile>("getfileCreate2");
 
@@ -275,17 +270,8 @@ TEST_CASE("Test GetFileLikeIt'sThreaded", "[getfileCreate3]") {
 }
 
 TEST_CASE("LogAttributeTest", "[getfileCreate3]") {
-  std::ostringstream oss;
-  std::unique_ptr<logging::BaseLogger> outputLogger = std::unique_ptr<
-      logging::BaseLogger>(
-      new org::apache::nifi::minifi::core::logging::OutputStreamAppender(oss,
-                                                                         0));
-  std::shared_ptr<logging::Logger> logger = logging::Logger::getLogger();
-  logger->updateLogger(std::move(outputLogger));
-
   TestController testController;
-
-  testController.enableDebug();
+  LogTestController::getInstance().setDebug<minifi::processors::LogAttribute>();
 
   std::shared_ptr<core::Repository> repo = std::make_shared<TestRepository>();
 
@@ -376,8 +362,6 @@ TEST_CASE("LogAttributeTest", "[getfileCreate3]") {
 
   records = reporter->getEvents();
   session.commit();
-  oss.str("");
-  oss.clear();
 
   logAttribute->incrementActiveTasks();
   logAttribute->setScheduledState(core::ScheduledState::RUNNING);
@@ -385,18 +369,10 @@ TEST_CASE("LogAttributeTest", "[getfileCreate3]") {
 
   records = reporter->getEvents();
 
-  std::string log_attribute_output = oss.str();
-  REQUIRE(
-      log_attribute_output.find("key:absolute.path value:" + ss.str())
-          != std::string::npos);
-  REQUIRE(log_attribute_output.find("Size:8 Offset:0") != std::string::npos);
-  REQUIRE(
-      log_attribute_output.find("key:path value:" + std::string(dir))
-          != std::string::npos);
-
-  outputLogger = std::unique_ptr<logging::BaseLogger>(
-      new org::apache::nifi::minifi::core::logging::NullAppender());
-  logger->updateLogger(std::move(outputLogger));
+  REQUIRE(true == LogTestController::getInstance().contains("key:absolute.path value:" + ss.str()));
+  REQUIRE(true == LogTestController::getInstance().contains("Size:8 Offset:0"));
+  REQUIRE(true == LogTestController::getInstance().contains("key:path value:" + std::string(dir)));
+  LogTestController::getInstance().reset();
 }
 
 int fileSize(const char *add) {

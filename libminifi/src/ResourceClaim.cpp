@@ -17,12 +17,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <vector>
-#include <queue>
+#include <uuid/uuid.h>
+
 #include <map>
+#include <queue>
 #include <string>
+#include <vector>
 
 #include "ResourceClaim.h"
+#include "core/logging/LoggerConfiguration.h"
 
 namespace org {
 namespace apache {
@@ -35,7 +38,8 @@ char *ResourceClaim::default_directory_path = const_cast<char*>(DEFAULT_CONTENT_
 
 ResourceClaim::ResourceClaim(const std::string contentDirectory)
     : _id(_localResourceClaimNumber.load()),
-      _flowFileRecordOwnedCount(0) {
+      _flowFileRecordOwnedCount(0),
+      logger_(logging::LoggerFactory<ResourceClaim>::getLogger()) {
 
   char uuidStr[37];
 
@@ -47,7 +51,6 @@ ResourceClaim::ResourceClaim(const std::string contentDirectory)
   // Create the full content path for the content
   _contentFullPath = contentDirectory + "/" + uuidStr;
 
-  logger_ = logging::Logger::getLogger();
   logger_->log_debug("Resource Claim created %s", _contentFullPath.c_str());
 }
 

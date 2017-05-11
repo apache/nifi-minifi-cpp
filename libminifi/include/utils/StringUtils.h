@@ -89,6 +89,25 @@ class StringUtils {
         s.end());
     return s;
   }
+  
+  static std::vector<std::string> split(const std::string &str, const std::string &delimiter) {
+    std::vector<std::string> result;
+    int last = 0;
+    int next = 0;
+    while ((next = str.find(delimiter, last)) != std::string::npos) {
+      result.push_back(str.substr(last, next - last));
+      last = next + delimiter.length();
+    }
+    result.push_back(str.substr(last, next - last));
+    return result;
+  }
+  
+  static inline bool starts_with(const std::string &str, const std::string &prefix) {
+    if (str.length() < prefix.length()) {
+     return false;
+    }
+    return str.rfind(prefix, 0) == 0;
+  }
 
   /**
    * Converts a string to a float

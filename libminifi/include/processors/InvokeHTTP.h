@@ -31,6 +31,7 @@
 #include "core/Resource.h"
 #include "controllers/SSLContextService.h"
 #include "utils/ByteInputCallBack.h"
+#include "core/logging/LoggerConfiguration.h"
 
 namespace org {
 namespace apache {
@@ -112,7 +113,8 @@ class InvokeHTTP : public core::Processor {
         penalize_no_retry_(false),
         read_timeout_(20000),
         always_output_response_(false),
-        ssl_context_service_(nullptr) {
+        ssl_context_service_(nullptr),
+        logger_(logging::LoggerFactory<InvokeHTTP>::getLogger()) {
     curl_global_init(CURL_GLOBAL_DEFAULT);
   }
   // Destructor
@@ -241,6 +243,9 @@ class InvokeHTTP : public core::Processor {
   bool always_output_response_;
   // penalize on no retry
   bool penalize_no_retry_;
+
+ private:
+  std::shared_ptr<logging::Logger> logger_;
 };
 
 REGISTER_RESOURCE(InvokeHTTP)

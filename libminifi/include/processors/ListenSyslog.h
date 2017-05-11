@@ -37,6 +37,7 @@
 #include "core/ProcessSession.h"
 #include "core/Core.h"
 #include "core/Resource.h"
+#include "core/logging/LoggerConfiguration.h"
 
 namespace org {
 namespace apache {
@@ -58,8 +59,8 @@ class ListenSyslog : public core::Processor {
    * Create a new processor
    */
   ListenSyslog(std::string name, uuid_t uuid = NULL)
-      : Processor(name, uuid) {
-    logger_ = logging::Logger::getLogger();
+      : Processor(name, uuid),
+        logger_(logging::LoggerFactory<ListenSyslog>::getLogger()) {
     _eventQueueByteSize = 0;
     _serverSocket = 0;
     _recvBufSize = 65507;

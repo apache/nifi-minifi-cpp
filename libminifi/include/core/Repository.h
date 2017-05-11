@@ -33,7 +33,7 @@
 #include <vector>
 
 #include "properties/Configure.h"
-#include "core/logging/Logger.h"
+#include "core/logging/LoggerConfiguration.h"
 #include "core/Property.h"
 #include "ResourceClaim.h"
 #include "io/Serializable.h"
@@ -63,7 +63,8 @@ class Repository : public CoreComponent {
              int64_t maxPartitionBytes = MAX_REPOSITORY_STORAGE_SIZE,
              uint64_t purgePeriod = REPOSITORY_PURGE_PERIOD)
       : CoreComponent(repo_name),
-        thread_() {
+        thread_(),
+        logger_(logging::LoggerFactory<Repository>::getLogger()) {
     directory_ = directory;
     max_partition_millis_ = maxPartitionMillis;
     max_partition_bytes_ = maxPartitionBytes;
@@ -145,6 +146,9 @@ class Repository : public CoreComponent {
   void threadExecutor() {
     run();
   }
+
+ private:
+  std::shared_ptr<logging::Logger> logger_;
 };
 
 } /* namespace core */

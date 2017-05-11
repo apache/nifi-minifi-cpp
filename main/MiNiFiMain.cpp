@@ -30,13 +30,13 @@
 
 #include "core/Core.h"
 
-#include "core/logging/BaseLogger.h"
-#include "core/logging/LogAppenders.h"
 #include "spdlog/spdlog.h"
 #include "core/FlowConfiguration.h"
 #include "core/ConfigurationFactory.h"
 #include "core/RepositoryFactory.h"
 #include "core/logging/Logger.h"
+#include "core/logging/LoggerConfiguration.h"
+#include "properties/Properties.h"
 #include "properties/Configure.h"
 #include "FlowController.h"
 
@@ -48,6 +48,8 @@
 #define DEFAULT_NIFI_CONFIG_YML "./conf/config.yml"
 //! Default nifi properties file path
 #define DEFAULT_NIFI_PROPERTIES_FILE "./conf/minifi.properties"
+
+#define DEFAULT_LOG_PROPERTIES_FILE "./conf/minifi-log.properties"
 //! Define home environment variable
 #define MINIFI_HOME_ENV_KEY "MINIFI_HOME"
 
@@ -78,10 +80,11 @@ void sigHandler(int signal) {
   }
 }
 
-int main(int argc, char **argv) {
-  std::shared_ptr<logging::Logger> logger = logging::Logger::getLogger();
+// For use in LoggerFactory call
+class Main {};
 
-  logger->setLogLevel(logging::info);
+int main(int argc, char **argv) {
+  std::shared_ptr<logging::Logger> logger = logging::LoggerFactory<Main>::getLogger();
 
   uint16_t stop_wait_time = STOP_WAIT_TIME_MS;
 
@@ -100,9 +103,9 @@ int main(int argc, char **argv) {
   std::string minifiHome;
   if (const char* env_p = std::getenv(MINIFI_HOME_ENV_KEY)) {
     minifiHome = env_p;
+    logger->log_info("MINIFI_HOME=%s", minifiHome);
   } else {
-    logger->log_info(
-        "MINIFI_HOME was not found, determining based on executable path.");
+    logger->log_info("MINIFI_HOME was not found, determining based on executable path.");
     char *path = NULL;
     char full_path[PATH_MAX];
     path = realpath(argv[0], full_path);
@@ -119,6 +122,14 @@ int main(int argc, char **argv) {
     return -1;
   }
 
+  std::shared_ptr<logging::LoggerProperties> log_properties = std::make_shared<logging::LoggerProperties>();
+  log_properties->setHome(minifiHome);
+  log_properties->loadConfigureFile(DEFAULT_LOG_PROPERTIES_FILE);
+  logging::LoggerConfiguration::getConfiguration().initialize(log_properties);
+
+  // Make a record of minifi home in the configured log file.
+  logger->log_info("MINIFI_HOME=%s", minifiHome);
+  
   std::shared_ptr<minifi::Configure> configure = std::make_shared<minifi::Configure>();
   configure->setHome(minifiHome);
   configure->loadConfigureFile(DEFAULT_NIFI_PROPERTIES_FILE);
@@ -141,18 +152,6 @@ int main(int argc, char **argv) {
                       minifi::Configure::nifi_graceful_shutdown_seconds,
                       STOP_WAIT_TIME_MS);
   }
-
-  std::string log_level;
-  if (configure->get(minifi::Configure::nifi_log_level,
-                     log_level)) {
-    logger->setLogLevel(log_level);
-  }
-
-  // set the log configuration.
-  std::unique_ptr<logging::BaseLogger> configured_logger =
-      logging::LogInstance::getConfiguredLogger(configure);
-
-  logger->updateLogger(std::move(configured_logger));
 
   configure->get(minifi::Configure::nifi_provenance_repository_class_name,
                  prov_repo_class);

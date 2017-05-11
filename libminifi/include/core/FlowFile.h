@@ -263,14 +263,14 @@ class FlowFile {
   // UUID string for all parents
   std::set<std::string> lineage_Identifiers_;
 
-  // Logger
-  std::shared_ptr<logging::Logger> logger_;
-
   // Connection queue that this flow file will be transfer or current in
   std::shared_ptr<core::Connectable> connection_;
   // Orginal connection queue that this flow file was dequeued from
   std::shared_ptr<core::Connectable> original_connection_;
 
+ private:
+  // Logger
+  std::shared_ptr<logging::Logger> logger_;
 };
 
 } /* namespace core */

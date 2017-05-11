@@ -153,8 +153,8 @@ PutFile::ReadCallback::ReadCallback(const std::string &tmpFile,
                                     const std::string &destFile)
     : _tmpFile(tmpFile),
       _tmpFileOs(tmpFile),
-      _destFile(destFile) {
-  logger_ = logging::Logger::getLogger();
+      _destFile(destFile),
+      logger_(logging::LoggerFactory<PutFile::ReadCallback>::getLogger()) {
 }
 
 // Copy the entire file contents to the temporary file

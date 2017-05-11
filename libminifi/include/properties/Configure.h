@@ -20,23 +20,14 @@
 #ifndef __CONFIGURE_H__
 #define __CONFIGURE_H__
 
-#include <stdio.h>
-#include <string>
-#include <map>
-#include <stdlib.h>
-#include <errno.h>
-#include <iostream>
-#include <fstream>
-#include "core/Core.h"
-#include "utils/StringUtils.h"
-#include "core/logging/Logger.h"
+#include "properties/Properties.h"
 
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
 
-class Configure {
+class Configure : public Properties {
  public:
   // nifi.flow.configuration.file
   static const char *nifi_default_directory;
@@ -67,64 +58,6 @@ class Configure {
   static const char *nifi_security_client_private_key;
   static const char *nifi_security_client_pass_phrase;
   static const char *nifi_security_client_ca_certificate;
-
-  Configure() {
-    logger_ = logging::Logger::getLogger();
-  }
-  
-  virtual ~Configure() {
-
-  }
-  
-  // Clear the load config
-  void clear() {
-    std::lock_guard<std::mutex> lock(mutex_);
-    properties_.clear();
-  }
-  // Set the config value
-  void set(std::string key, std::string value) {
-    std::lock_guard<std::mutex> lock(mutex_);
-    properties_[key] = std::string(value.c_str());
-  }
-  // Check whether the config value existed
-  bool has(std::string key) {
-    std::lock_guard<std::mutex> lock(mutex_);
-    return (properties_.find(key) != properties_.end());
-  }
-  // Get the config value
-  bool get(std::string key, std::string &value);
-
-  /**
-   * Returns the configuration value or an empty string.
-   * @return value corresponding to key or empty value.
-   */
-  int getInt(const std::string &key, int default_value);
-  // Parse one line in configure file like key=value
-  void parseConfigureFileLine(char *buf);
-  // Load Configure File
-  void loadConfigureFile(const char *fileName);
-  // Set the determined MINIFI_HOME
-  void setHome(std::string minifiHome) {
-    minifi_home_ = minifiHome;
-  }
-
-  // Get the determined MINIFI_HOME
-  std::string getHome() {
-    return minifi_home_;
-  }
-  // Parse Command Line
-  void parseCommandLine(int argc, char **argv);
-
- private:
-  // Mutex for protection
-  std::mutex mutex_;
-  // Logger
-  std::shared_ptr<logging::Logger> logger_;
-  // Home location for this executable
-  std::string minifi_home_;
-
- protected:
-  std::map<std::string, std::string> properties_;
 };
 
 } /* namespace minifi */

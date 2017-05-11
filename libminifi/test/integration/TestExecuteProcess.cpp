@@ -16,6 +16,13 @@
  * limitations under the License.
  */
 
+
+#include <cassert>
+#include <chrono>
+#include <string>
+#include <thread>
+#include <type_traits>
+#include <sys/stat.h>
 #include <uuid/uuid.h>
 #include <utility>
 #include <memory>
@@ -24,8 +31,6 @@
 
 #include "../unit/ProvenanceTestHelper.h"
 #include "FlowController.h"
-#include "core/logging/LogAppenders.h"
-#include "core/logging/BaseLogger.h"
 #include "processors/GetFile.h"
 #include "core/Core.h"
 #include "core/FlowFile.h"
@@ -36,20 +41,10 @@
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/ProcessorNode.h"
+#include "../TestBase.h"
 
 int main(int argc, char **argv) {
-  std::ostringstream oss;
-  std::unique_ptr<logging::BaseLogger> outputLogger = std::unique_ptr<
-      logging::BaseLogger>(
-      new org::apache::nifi::minifi::core::logging::OutputStreamAppender(oss,
-                                                                         0));
-  std::shared_ptr<logging::Logger> logger = logging::Logger::getLogger();
-  logger->updateLogger(std::move(outputLogger));
-
-  outputLogger = std::unique_ptr<logging::BaseLogger>(
-      new org::apache::nifi::minifi::core::logging::NullAppender());
-  logger->updateLogger(std::move(outputLogger));
-
+  TestController testController;
   std::shared_ptr<core::Processor> processor = std::make_shared<
       org::apache::nifi::minifi::processors::ExecuteProcess>("executeProcess");
   processor->setMaxConcurrentTasks(1);
@@ -118,9 +113,6 @@ int main(int argc, char **argv) {
                   t.join();
                 });
 
-  outputLogger = std::unique_ptr<logging::BaseLogger>(
-      new org::apache::nifi::minifi::core::logging::NullAppender());
-  logger->updateLogger(std::move(outputLogger));
 
   std::shared_ptr<org::apache::nifi::minifi::processors::ExecuteProcess> execp =
       std::static_pointer_cast<

@@ -45,7 +45,7 @@ class ControllerServiceNode : public CoreComponent, public ConfigurableComponent
   explicit ControllerServiceNode(std::shared_ptr<ControllerService> service,
                         const std::string &id, std::shared_ptr<Configure> configuration)
       : CoreComponent(id),
-        ConfigurableComponent(logging::Logger::getLogger()),
+        ConfigurableComponent(),
         controller_service_(service),
         configuration_(configuration),
         active(false) {

@@ -36,6 +36,7 @@
 #include "core/ProcessSession.h"
 #include "core/Core.h"
 #include "core/Resource.h"
+#include "core/logging/LoggerConfiguration.h"
 
 namespace org {
 namespace apache {
@@ -51,8 +52,8 @@ class ExecuteProcess : public core::Processor {
    * Create a new processor
    */
   ExecuteProcess(std::string name, uuid_t uuid = NULL)
-      : Processor(name, uuid) {
-    logger_ = logging::Logger::getLogger();
+      : Processor(name, uuid),
+        logger_(logging::LoggerFactory<ExecuteProcess>::getLogger()){
     _redirectErrorStream = false;
     _batchDuration = 0;
     _workingDir = ".";

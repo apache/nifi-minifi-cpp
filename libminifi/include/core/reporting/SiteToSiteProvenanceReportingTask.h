@@ -29,6 +29,7 @@
 #include "RemoteProcessorGroupPort.h"
 #include "Site2SiteClientProtocol.h"
 #include "io/StreamFactory.h"
+#include "core/logging/LoggerConfiguration.h"
 
 namespace org {
 namespace apache {
@@ -47,8 +48,8 @@ class SiteToSiteProvenanceReportingTask :
    */
   SiteToSiteProvenanceReportingTask(
       const std::shared_ptr<io::StreamFactory> &stream_factory)
-      : minifi::RemoteProcessorGroupPort(stream_factory, ReportTaskName) {
-    logger_ = logging::Logger::getLogger();
+      : minifi::RemoteProcessorGroupPort(stream_factory, ReportTaskName),
+        logger_(logging::LoggerFactory<SiteToSiteProvenanceReportingTask>::getLogger()) {
     this->setTriggerWhenEmpty(true);
     port_ = 0;
     batch_size_ = 100;
@@ -112,7 +113,7 @@ class SiteToSiteProvenanceReportingTask :
 
  private:
   int batch_size_;
-  //! Logger
+
   std::shared_ptr<logging::Logger> logger_;
 };
 

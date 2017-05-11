@@ -21,10 +21,10 @@
 #include "io/ClientSocket.h"
 #include "core/Processor.h"
 #include "core/ClassLoader.h"
-#include "processors/AppendHostInfo.h"
-#include "core/logging/LogAppenders.h"
+#include "core/yaml/YamlConfiguration.h"
 
 TEST_CASE("TestLoader", "[TestLoader]") {
+  TestController controller;
   REQUIRE(
       nullptr
           != core::ClassLoader::getDefaultClassLoader().instantiate(

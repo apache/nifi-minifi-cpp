@@ -30,7 +30,7 @@
 #include "utils/TimeUtil.h"
 #include "utils/ThreadPool.h"
 #include "core/Core.h"
-#include "core/logging/Logger.h"
+#include "core/logging/LoggerConfiguration.h"
 #include "properties/Configure.h"
 #include "FlowFileRecord.h"
 #include "core/logging/Logger.h"
@@ -58,8 +58,8 @@ class SchedulingAgent {
       : configure_(configuration),
         admin_yield_duration_(0),
         bored_yield_duration_(0),
-        controller_service_provider_(controller_service_provider) {
-    logger_ = logging::Logger::getLogger();
+        controller_service_provider_(controller_service_provider),
+        logger_(logging::LoggerFactory<SchedulingAgent>::getLogger()) {
     running_ = false;
     repo_ = repo;
     utils::ThreadPool<bool> pool = utils::ThreadPool<bool>(
@@ -103,8 +103,6 @@ class SchedulingAgent {
   SchedulingAgent(const SchedulingAgent &parent) = delete;
   SchedulingAgent &operator=(const SchedulingAgent &parent) = delete;
  protected:
-  // Logger
-  std::shared_ptr<logging::Logger> logger_;
   // Mutex for protection
   std::mutex mutex_;
   // Whether it is running
@@ -123,6 +121,8 @@ class SchedulingAgent {
   std::shared_ptr<core::controller::ControllerServiceProvider> controller_service_provider_;
 
  private:
+  // Logger
+  std::shared_ptr<logging::Logger> logger_;
   // Prevent default copy constructor and assignment operation
   // Only support pass by reference or pointer
 

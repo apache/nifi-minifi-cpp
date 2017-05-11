@@ -25,8 +25,6 @@
 #include "io/BaseStream.h"
 #include "Site2SitePeer.h"
 #include "Site2SiteClientProtocol.h"
-#include "core/logging/LogAppenders.h"
-#include "core/logging/BaseLogger.h"
 #include <algorithm>
 #include "../TestBase.h"
 #include "../unit/SiteToSiteHelper.h"
@@ -100,15 +98,6 @@ void sunny_path_bootstrap(SiteToSiteResponder *collector) {
 }
 
 TEST_CASE("TestSiteToSiteVerifySend", "[S2S3]") {
-  std::ostringstream oss;
-
-  std::unique_ptr<logging::BaseLogger> outputLogger = std::unique_ptr<
-      logging::BaseLogger>(
-      new org::apache::nifi::minifi::core::logging::OutputStreamAppender(
-          std::cout, std::make_shared<minifi::Configure>()));
-  std::shared_ptr<logging::Logger> logger = logging::Logger::getLogger();
-  logger->updateLogger(std::move(outputLogger));
-  logger->setLogLevel("trace");
   SiteToSiteResponder *collector = new SiteToSiteResponder();
 
   sunny_path_bootstrap(collector);

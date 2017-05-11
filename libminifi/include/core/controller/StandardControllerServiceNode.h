@@ -20,7 +20,7 @@
 
 #include "core/Core.h"
 #include "ControllerServiceNode.h"
-#include "core/logging/Logger.h"
+#include "core/logging/LoggerConfiguration.h"
 #include "core/ProcessGroup.h"
 
 namespace org {
@@ -38,14 +38,16 @@ class StandardControllerServiceNode : public ControllerServiceNode {
       std::shared_ptr<ControllerServiceProvider> provider,
       const std::string &id, std::shared_ptr<Configure> configuration)
       : ControllerServiceNode(service, id, configuration),
-        provider(provider) {
+        provider(provider),
+        logger_(logging::LoggerFactory<StandardControllerServiceNode>::getLogger()) {
   }
 
   explicit StandardControllerServiceNode(
       std::shared_ptr<ControllerService> service, const std::string &id,
       std::shared_ptr<Configure> configuration)
       : ControllerServiceNode(service, id, configuration),
-        provider(nullptr) {
+        provider(nullptr),
+        logger_(logging::LoggerFactory<StandardControllerServiceNode>::getLogger()) {
   }
 
   std::shared_ptr<core::ProcessGroup> &getProcessGroup();
@@ -95,6 +97,8 @@ class StandardControllerServiceNode : public ControllerServiceNode {
 
   std::mutex mutex_;
 
+ private:
+   std::shared_ptr<logging::Logger> logger_;
 };
 
 } /* namespace controller */
