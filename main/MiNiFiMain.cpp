@@ -158,14 +158,14 @@ int main(int argc, char **argv) {
                  prov_repo_class);
   // Create repos for flow record and provenance
   std::shared_ptr<core::Repository> prov_repo = core::createRepository(
-      prov_repo_class, true);
+      prov_repo_class, true,"provenance");
   prov_repo->initialize(configure);
 
   configure->get(minifi::Configure::nifi_flow_repository_class_name,
                  flow_repo_class);
 
   std::shared_ptr<core::Repository> flow_repo = core::createRepository(
-      flow_repo_class, true);
+      flow_repo_class, true, "flowfile");
 
   flow_repo->initialize(configure);
 
@@ -203,6 +203,10 @@ int main(int argc, char **argv) {
    * Trigger unload -- wait stop_wait_time
    */
   controller->waitUnload(stop_wait_time);
+  
+  flow_repo = nullptr;
+  
+  prov_repo = nullptr;
 
   logger->log_info("MiNiFi exit");
 

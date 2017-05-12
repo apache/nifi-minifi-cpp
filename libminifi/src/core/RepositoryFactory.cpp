@@ -24,6 +24,8 @@
 #include "provenance/ProvenanceRepository.h"
 #endif
 
+#include "core/repository/VolatileRepository.h"
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -40,7 +42,7 @@ class FlowFileRepository;
 #endif
 
 std::shared_ptr<core::Repository> createRepository(
-    const std::string configuration_class_name, bool fail_safe) {
+    const std::string configuration_class_name, bool fail_safe, const std::string repo_name) {
   std::shared_ptr<core::Repository> return_obj = nullptr;
   std::string class_name_lc = configuration_class_name;
   std::transform(class_name_lc.begin(), class_name_lc.end(),
@@ -48,9 +50,15 @@ std::shared_ptr<core::Repository> createRepository(
   try {
     std::shared_ptr<core::Repository> return_obj = nullptr;
     if (class_name_lc == "flowfilerepository") {
-      return_obj = instantiate<core::repository::FlowFileRepository>();
+      std::cout << "creating flow" << std::endl;
+      return_obj = instantiate<core::repository::FlowFileRepository>(repo_name);
     } else if (class_name_lc == "provenancerepository") {
-      return_obj = instantiate<provenance::ProvenanceRepository>();
+      return_obj = instantiate<provenance::ProvenanceRepository>(repo_name);
+    } else if (class_name_lc == "volatilerepository") {
+      return_obj = instantiate<repository::VolatileRepository>(repo_name);
+    } else if (class_name_lc == "nooprepository") {
+      std::cout << "creating noop" << std::endl;
+      return_obj = instantiate<core::Repository>(repo_name);
     }
 
     if (return_obj) {

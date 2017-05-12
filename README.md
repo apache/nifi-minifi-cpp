@@ -299,7 +299,19 @@ Additionally, users can utilize the MiNiFi Toolkit Converter (version 0.0.1 - sc
 
     if you do not want to enable client certificate base authorization
     nifi.security.need.ClientAuth=false
+    
+### Configuring Volatile and NO-OP Repositories
 
+     in minifi.properties 
+     
+     # For Volatile Repositories:
+     nifi.flow.repository.class.name=VolatileRepository
+     nifi.provenance.repository.class.name=VolatileRepository
+     
+     # For NO-OP Repositories:
+	 nifi.flow.repository.class.name=NoOpRepository
+     nifi.provenance.repository.class.name=NoOpRepository
+     
 ### Provenance Report
 
     Add Provenance Reporting to config.yml

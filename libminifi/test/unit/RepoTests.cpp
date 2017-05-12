@@ -31,7 +31,8 @@ TEST_CASE("Test Repo Empty Value Attribute", "[TestFFR1]") {
   char format[] = "/tmp/testRepo.XXXXXX";
   char *dir = testController.createTempDirectory(format);
   std::shared_ptr<core::repository::FlowFileRepository> repository =
-      std::make_shared<core::repository::FlowFileRepository>(dir, 0, 0, 1);
+      std::make_shared<core::repository::FlowFileRepository>("ff", dir, 0, 0,
+                                                             1);
 
   repository->initialize(std::make_shared<minifi::Configure>());
 
@@ -51,7 +52,8 @@ TEST_CASE("Test Repo Empty Key Attribute ", "[TestFFR2]") {
   char format[] = "/tmp/testRepo.XXXXXX";
   char *dir = testController.createTempDirectory(format);
   std::shared_ptr<core::repository::FlowFileRepository> repository =
-      std::make_shared<core::repository::FlowFileRepository>(dir, 0, 0, 1);
+      std::make_shared<core::repository::FlowFileRepository>("ff", dir, 0, 0,
+                                                             1);
 
   repository->initialize(std::make_shared<minifi::Configure>());
 
@@ -73,7 +75,8 @@ TEST_CASE("Test Repo Key Attribute Verify ", "[TestFFR3]") {
   char format[] = "/tmp/testRepo.XXXXXX";
   char *dir = testController.createTempDirectory(format);
   std::shared_ptr<core::repository::FlowFileRepository> repository =
-      std::make_shared<core::repository::FlowFileRepository>(dir, 0, 0, 1);
+      std::make_shared<core::repository::FlowFileRepository>("ff", dir, 0, 0,
+                                                             1);
 
   repository->initialize(
       std::make_shared<org::apache::nifi::minifi::Configure>());

@@ -47,21 +47,15 @@ class FlowFileRepository : public core::Repository,
  public:
   // Constructor
 
-  FlowFileRepository(std::string directory, int64_t maxPartitionMillis,
-                     int64_t maxPartitionBytes, uint64_t purgePeriod)
-      : Repository(core::getClassName<FlowFileRepository>(), directory,
+  FlowFileRepository(const std::string repo_name = "", std::string directory=FLOWFILE_REPOSITORY_DIRECTORY, int64_t maxPartitionMillis=MAX_FLOWFILE_REPOSITORY_ENTRY_LIFE_TIME,
+                     int64_t maxPartitionBytes=MAX_FLOWFILE_REPOSITORY_STORAGE_SIZE, uint64_t purgePeriod=FLOWFILE_REPOSITORY_PURGE_PERIOD)
+      : Repository(repo_name.length() > 0 ? repo_name : core::getClassName<FlowFileRepository>(), directory,
                    maxPartitionMillis, maxPartitionBytes, purgePeriod)
 
   {
     db_ = NULL;
   }
 
-  FlowFileRepository()
-      : FlowFileRepository(FLOWFILE_REPOSITORY_DIRECTORY,
-      MAX_FLOWFILE_REPOSITORY_ENTRY_LIFE_TIME,
-                           MAX_FLOWFILE_REPOSITORY_STORAGE_SIZE,
-                           FLOWFILE_REPOSITORY_PURGE_PERIOD) {
-  }
 
   // Destructor
   ~FlowFileRepository() {

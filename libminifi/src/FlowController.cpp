@@ -297,9 +297,11 @@ void FlowController::loadFlowRepo() {
     }
     logger_->log_debug("Number of connections from connectionMap %d",
                        connectionMap.size());
-    auto rep = std::static_pointer_cast<core::repository::FlowFileRepository>(
+    auto rep = std::dynamic_pointer_cast<core::repository::FlowFileRepository>(
         flow_file_repo_);
-    rep->setConnectionMap(connectionMap);
+    if (nullptr != rep) {
+      rep->setConnectionMap(connectionMap);
+    }
     flow_file_repo_->loadComponent();
   } else {
     logger_->log_debug("Flow file repository is not set");
