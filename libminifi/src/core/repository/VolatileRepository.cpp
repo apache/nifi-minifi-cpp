@@ -15,28 +15,49 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-#ifndef LIBMINIFI_INCLUDE_CORE_REPOSITORYFACTORY_H_
-#define LIBMINIFI_INCLUDE_CORE_REPOSITORYFACTORY_H_
-
-#include "core/Repository.h"
 #include "core/repository/VolatileRepository.h"
-#include "Core.h"
+#include <memory>
+#include <string>
+#include <vector>
+#include "FlowFileRecord.h"
 
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
-
 namespace core {
+namespace repository {
 
-std::shared_ptr<core::Repository> createRepository(
-    const std::string configuration_class_name, bool fail_safe = false);
+void VolatileRepository::run() {
+  repo_full_ = false;
+}
 
+/**
+ * Purge
+ */
+void VolatileRepository::purge() {
+  while (current_size_ > max_size_) {
+    for (auto ent : value_vector_) {
+      // let the destructor do the cleanup
+      RepoValue value;
+      if (ent->getValue(value)) {
+        current_size_ -= value.size();
+        logger_->log_info("VolatileRepository -- purge %s %d %d %d",
+                          value.getKey(), current_size_.load(), max_size_,
+                          current_index_.load());
+      }
+      if (current_size_ < max_size_)
+        break;
+    }
+  }
+}
+
+void VolatileRepository::loadComponent() {
+}
+
+} /* namespace repository */
 } /* namespace core */
 } /* namespace minifi */
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-
-#endif /* LIBMINIFI_INCLUDE_CORE_REPOSITORYFACTORY_H_ */

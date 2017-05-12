@@ -203,6 +203,10 @@ int main(int argc, char **argv) {
    * Trigger unload -- wait stop_wait_time
    */
   controller->waitUnload(stop_wait_time);
+  
+  flow_repo = nullptr;
+  
+  prov_repo = nullptr;
 
   logger->log_info("MiNiFi exit");
 

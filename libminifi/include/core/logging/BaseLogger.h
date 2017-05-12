@@ -54,7 +54,8 @@ typedef enum {
 
 template<typename ... Args>
 inline std::string format_string(char const* format_str, Args&&... args) {
-  char buf[LOG_BUFFER_SIZE];
+  char buf[LOG_BUFFER_SIZE+1] = {0};
+  
   std::snprintf(buf, LOG_BUFFER_SIZE, format_str, args...);
   return std::string(buf);
 }
