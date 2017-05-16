@@ -17,7 +17,6 @@
  */
 #define CATCH_CONFIG_MAIN  // This tells Catch to provide a main() - only do this in one cpp file
 #include <uuid/uuid.h>
-#include "core/ClassLoader.h"
 #include "../TestBase.h"
 #include "io/ClientSocket.h"
 #include "core/Processor.h"
@@ -25,12 +24,21 @@
 #include "processors/AppendHostInfo.h"
 #include "core/logging/LogAppenders.h"
 
-using namespace org::apache::nifi::minifi::io;
 TEST_CASE("TestLoader", "[TestLoader]") {
-  
-REQUIRE ( nullptr != core::ClassLoader::getDefaultClassLoader().instantiate("AppendHostInfo","hosty"));
-REQUIRE ( nullptr != core::ClassLoader::getDefaultClassLoader().instantiate("ListenHTTP","hosty2"));
-REQUIRE ( nullptr == core::ClassLoader::getDefaultClassLoader().instantiate("Don'tExist","hosty3"));
-REQUIRE ( nullptr == core::ClassLoader::getDefaultClassLoader().instantiate("","EmptyEmpty"));
-
+  REQUIRE(
+      nullptr
+          != core::ClassLoader::getDefaultClassLoader().instantiate(
+              "AppendHostInfo", "hosty"));
+  REQUIRE(
+      nullptr
+          != core::ClassLoader::getDefaultClassLoader().instantiate(
+              "ListenHTTP", "hosty2"));
+  REQUIRE(
+      nullptr
+          == core::ClassLoader::getDefaultClassLoader().instantiate(
+              "Don'tExist", "hosty3"));
+  REQUIRE(
+      nullptr
+          == core::ClassLoader::getDefaultClassLoader().instantiate(
+              "", "EmptyEmpty"));
 }

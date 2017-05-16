@@ -17,6 +17,7 @@
  */
 
 #define CATCH_CONFIG_MAIN  // This tells Catch to provide a main() - only do this in one cpp file
+#include <utility>
 #include <future>
 #include "../TestBase.h"
 #include "utils/ThreadPool.h"
@@ -31,9 +32,6 @@ TEST_CASE("ThreadPoolTest1", "[TPT1]") {
   utils::Worker<bool> functor(f_ex);
   pool.start();
   std::future<bool> fut = pool.execute(std::move(functor));
-
   fut.wait();
-
   REQUIRE(true == fut.get());
-
 }

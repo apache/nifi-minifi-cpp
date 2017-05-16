@@ -16,7 +16,6 @@
  * limitations under the License.
  */
 
+#include "io/CRCStream.h"
 #include <zlib.h>
 #include <memory>
-#include "io/CRCStream.h"
-

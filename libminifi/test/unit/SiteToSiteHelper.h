@@ -25,11 +25,11 @@
 /**
  * Test repository
  */
-class SiteToSiteResponder: public minifi::io::BaseStream {
-private:
+class SiteToSiteResponder : public minifi::io::BaseStream {
+ private:
   std::queue<std::string> server_responses_;
   std::queue<std::string> client_responses_;
-public:
+ public:
   SiteToSiteResponder() {
   }
   // initialize
@@ -80,7 +80,7 @@ public:
    * @return resulting read size
    **/
   virtual int read(uint16_t &base_value, bool is_little_endian =
-      minifi::io::EndiannessCheck::IS_LITTLE) {
+                       minifi::io::EndiannessCheck::IS_LITTLE) {
     base_value = std::stoi(get_next_response());
     return 2;
   }
@@ -123,7 +123,7 @@ public:
    * @return resulting read size
    **/
   virtual int read(uint32_t &value, bool is_little_endian =
-      minifi::io::EndiannessCheck::IS_LITTLE) {
+                       minifi::io::EndiannessCheck::IS_LITTLE) {
     value = std::stoul(get_next_response());
     return 4;
   }
@@ -135,7 +135,7 @@ public:
    * @return resulting read size
    **/
   virtual int read(uint64_t &value, bool is_little_endian =
-      minifi::io::EndiannessCheck::IS_LITTLE) {
+                       minifi::io::EndiannessCheck::IS_LITTLE) {
     value = std::stoull(get_next_response());
     return 8;
   }

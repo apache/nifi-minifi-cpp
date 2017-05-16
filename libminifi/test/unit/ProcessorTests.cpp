@@ -1,4 +1,3 @@
-
 /**
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
@@ -18,6 +17,11 @@
  */
 #define CATCH_CONFIG_MAIN  // This tells Catch to provide a main() - only do this in one cpp file
 #include <uuid/uuid.h>
+#include <utility>
+#include <memory>
+#include <string>
+#include <vector>
+#include <set>
 #include <fstream>
 #include "../unit/ProvenanceTestHelper.h"
 #include "../TestBase.h"
@@ -34,16 +38,13 @@
 #include "core/ProcessorNode.h"
 #include "core/reporting/SiteToSiteProvenanceReportingTask.h"
 
-
-
 TEST_CASE("Test Creation of GetFile", "[getfileCreate]") {
   std::shared_ptr<core::Processor> processor = std::make_shared<
-        org::apache::nifi::minifi::processors::GetFile>("processorname");
+      org::apache::nifi::minifi::processors::GetFile>("processorname");
   REQUIRE(processor->getName() == "processorname");
 }
 
 TEST_CASE("Test Find file", "[getfileCreate2]") {
-
   TestController testController;
 
   testController.enableDebug();
@@ -53,7 +54,9 @@ TEST_CASE("Test Find file", "[getfileCreate2]") {
 
   std::shared_ptr<core::Processor> processorReport =
       std::make_shared<
-          org::apache::nifi::minifi::core::reporting::SiteToSiteProvenanceReportingTask>(std::make_shared<org::apache::nifi::minifi::io::StreamFactory>(std::make_shared<org::apache::nifi::minifi::Configure>()));
+          org::apache::nifi::minifi::core::reporting::SiteToSiteProvenanceReportingTask>(
+          std::make_shared<org::apache::nifi::minifi::io::StreamFactory>(
+              std::make_shared<org::apache::nifi::minifi::Configure>()));
 
   std::shared_ptr<core::Repository> test_repo =
       std::make_shared<TestRepository>();
@@ -131,8 +134,9 @@ TEST_CASE("Test Find file", "[getfileCreate2]") {
 
   for (auto entry : repo->getRepoMap()) {
     provenance::ProvenanceEventRecord newRecord;
-    newRecord.DeSerialize((uint8_t*) entry.second.data(),
-                          entry.second.length());
+    newRecord.DeSerialize(
+        reinterpret_cast<uint8_t*>(const_cast<char*>(entry.second.data())),
+        entry.second.length());
 
     bool found = false;
     for (auto provRec : records) {
@@ -146,13 +150,14 @@ TEST_CASE("Test Find file", "[getfileCreate2]") {
         break;
       }
     }
-    if (!found)
+    if (!found) {
       throw std::runtime_error("Did not find record");
-
+    }
   }
 
   core::ProcessorNode nodeReport(processorReport);
-  core::ProcessContext contextReport(nodeReport,controller_services_provider, test_repo);
+  core::ProcessContext contextReport(nodeReport, controller_services_provider,
+                                     test_repo);
   core::ProcessSessionFactory factoryReport(&contextReport);
   core::ProcessSession sessionReport(&contextReport);
   processorReport->onSchedule(&contextReport, &factoryReport);
@@ -180,7 +185,6 @@ TEST_CASE("Test Find file", "[getfileCreate2]") {
 }
 
 TEST_CASE("Test GetFileLikeIt'sThreaded", "[getfileCreate3]") {
-
   TestController testController;
 
   testController.enableDebug();
@@ -227,7 +231,6 @@ TEST_CASE("Test GetFileLikeIt'sThreaded", "[getfileCreate3]") {
 
   int prev = 0;
   for (int i = 0; i < 10; i++) {
-
     core::ProcessSession session(&context);
     REQUIRE(processor->getName() == "getfileCreate2");
 
@@ -268,9 +271,7 @@ TEST_CASE("Test GetFileLikeIt'sThreaded", "[getfileCreate3]") {
     REQUIRE((repo->getRepoMap().size() % 2) == 0);
     REQUIRE(repo->getRepoMap().size() == (prev + 2));
     prev += 2;
-
   }
-
 }
 
 TEST_CASE("LogAttributeTest", "[getfileCreate3]") {
@@ -382,7 +383,6 @@ TEST_CASE("LogAttributeTest", "[getfileCreate3]") {
   logAttribute->setScheduledState(core::ScheduledState::RUNNING);
   logAttribute->onTrigger(&context2, &session2);
 
-  //session2.commit();
   records = reporter->getEvents();
 
   std::string log_attribute_output = oss.str();
@@ -397,7 +397,6 @@ TEST_CASE("LogAttributeTest", "[getfileCreate3]") {
   outputLogger = std::unique_ptr<logging::BaseLogger>(
       new org::apache::nifi::minifi::core::logging::NullAppender());
   logger->updateLogger(std::move(outputLogger));
-
 }
 
 int fileSize(const char *add) {

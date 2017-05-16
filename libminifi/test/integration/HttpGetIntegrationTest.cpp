@@ -16,7 +16,9 @@
  * limitations under the License.
  */
 
+#include <sys/stat.h>
 #include <cassert>
+#include <utility>
 #include <chrono>
 #include <fstream>
 #include <memory>
@@ -24,8 +26,7 @@
 #include <thread>
 #include <type_traits>
 #include <vector>
-#include <sys/stat.h>
-
+#include "../TestBase.h"
 #include "utils/StringUtils.h"
 #include "core/Core.h"
 #include "core/logging/LogAppenders.h"
@@ -38,20 +39,18 @@
 #include "../unit/ProvenanceTestHelper.h"
 #include "io/StreamFactory.h"
 
-
 void waitToVerifyProcessor() {
   std::this_thread::sleep_for(std::chrono::seconds(10));
 }
 
 int main(int argc, char **argv) {
-
-  std::string key_dir,test_file_location;
+  std::string key_dir, test_file_location;
   if (argc > 1) {
     test_file_location = argv[1];
     key_dir = argv[2];
   }
   std::shared_ptr<minifi::Configure> configuration = std::make_shared<
-        minifi::Configure>();
+      minifi::Configure>();
   configuration->set(minifi::Configure::nifi_default_directory, key_dir);
   mkdir("content_repository", S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
   std::ostringstream oss;
@@ -61,7 +60,7 @@ int main(int argc, char **argv) {
                                                                          0));
   std::shared_ptr<logging::Logger> logger = logging::Logger::getLogger();
   logger->updateLogger(std::move(outputLogger));
-  logger->setLogLevel("trace");
+  logger->setLogLevel("debug");
 
   std::shared_ptr<core::Repository> test_repo =
       std::make_shared<TestRepository>();
@@ -82,12 +81,11 @@ int main(int argc, char **argv) {
 
   std::shared_ptr<minifi::FlowController> controller = std::make_shared<
       minifi::FlowController>(test_repo, test_flow_repo, configuration,
-                              std::move(yaml_ptr),
-                              DEFAULT_ROOT_GROUP_NAME,
+                              std::move(yaml_ptr), DEFAULT_ROOT_GROUP_NAME,
                               true);
 
-  core::YamlConfiguration yaml_config(test_repo, test_repo, stream_factory,configuration,
-                                      test_file_location);
+  core::YamlConfiguration yaml_config(test_repo, test_repo, stream_factory,
+                                      configuration, test_file_location);
 
   std::unique_ptr<core::ProcessGroup> ptr = yaml_config.getRoot(
       test_file_location);

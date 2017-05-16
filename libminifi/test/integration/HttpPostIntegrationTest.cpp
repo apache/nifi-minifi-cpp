@@ -16,16 +16,16 @@
  * limitations under the License.
  */
 
+#include <sys/stat.h>
 #include <cassert>
 #include <chrono>
 #include <fstream>
+#include <utility>
 #include <memory>
 #include <string>
 #include <thread>
 #include <type_traits>
 #include <vector>
-#include <sys/stat.h>
-
 #include "utils/StringUtils.h"
 #include "core/Core.h"
 #include "core/logging/LogAppenders.h"
@@ -37,16 +37,14 @@
 #include "properties/Configure.h"
 #include "../unit/ProvenanceTestHelper.h"
 #include "io/StreamFactory.h"
-#include "properties/Configure.h"
 
-std::string test_file_location;
 
 void waitToVerifyProcessor() {
   std::this_thread::sleep_for(std::chrono::seconds(2));
 }
 
 int main(int argc, char **argv) {
-
+  std::string test_file_location;
   if (argc > 1) {
     test_file_location = argv[1];
   }

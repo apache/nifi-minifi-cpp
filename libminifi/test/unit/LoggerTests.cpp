@@ -16,12 +16,12 @@
  * limitations under the License.
  */
 #define CATCH_CONFIG_MAIN  // This tells Catch to provide a main() - only do this in one cpp file
+#include <utility>
+#include <string>
 #include <memory>
 #include <ctime>
 #include "../TestBase.h"
 #include "core/logging/LogAppenders.h"
-
-using namespace logging;
 
 bool contains(std::string stringA, std::string ending) {
   return (ending.length() > 0 && stringA.find(ending) != std::string::npos);
@@ -30,7 +30,8 @@ bool contains(std::string stringA, std::string ending) {
 TEST_CASE("Test log Levels", "[ttl1]") {
   std::ostringstream oss;
 
-  std::unique_ptr<BaseLogger> outputLogger = std::unique_ptr<BaseLogger>(
+  std::unique_ptr<logging::BaseLogger> outputLogger = std::unique_ptr<
+      logging::BaseLogger>(
       new org::apache::nifi::minifi::core::logging::OutputStreamAppender(oss,
                                                                          0));
   std::shared_ptr<logging::Logger> logger = logging::Logger::getLogger();
@@ -39,12 +40,10 @@ TEST_CASE("Test log Levels", "[ttl1]") {
   logger->log_info("hello world");
 
   REQUIRE(
-      true
-          == contains(
-              oss.str(),
-              "[minifi log -- org::apache::nifi::minifi::core::logging::OutputStreamAppender] [info] hello world"));
+      true == contains(oss.str(), "[minifi log -- org::apache::nifi::minifi::core::logging::OutputStreamAppender] [info] hello world"));
 
-  std::unique_ptr<BaseLogger> nullAppender = std::unique_ptr<BaseLogger>(
+  std::unique_ptr<logging::BaseLogger> nullAppender = std::unique_ptr<
+      logging::BaseLogger>(
       new org::apache::nifi::minifi::core::logging::NullAppender());
 
   logger->updateLogger(std::move(nullAppender));
@@ -53,7 +52,8 @@ TEST_CASE("Test log Levels", "[ttl1]") {
 TEST_CASE("Test log Levels debug", "[ttl2]") {
   std::ostringstream oss;
 
-  std::unique_ptr<BaseLogger> outputLogger = std::unique_ptr<BaseLogger>(
+  std::unique_ptr<logging::BaseLogger> outputLogger = std::unique_ptr<
+      logging::BaseLogger>(
       new org::apache::nifi::minifi::core::logging::OutputStreamAppender(oss,
                                                                          0));
   std::shared_ptr<logging::Logger> logger = logging::Logger::getLogger();
@@ -62,12 +62,10 @@ TEST_CASE("Test log Levels debug", "[ttl2]") {
   logger->log_debug("hello world");
 
   REQUIRE(
-      true
-          == contains(
-              oss.str(),
-              "[minifi log -- org::apache::nifi::minifi::core::logging::OutputStreamAppender] [debug] hello world"));
+      true == contains(oss.str(), "[minifi log -- org::apache::nifi::minifi::core::logging::OutputStreamAppender] [debug] hello world"));
 
-  std::unique_ptr<BaseLogger> nullAppender = std::unique_ptr<BaseLogger>(
+  std::unique_ptr<logging::BaseLogger> nullAppender = std::unique_ptr<
+      logging::BaseLogger>(
       new org::apache::nifi::minifi::core::logging::NullAppender());
 
   logger->updateLogger(std::move(nullAppender));
@@ -76,7 +74,8 @@ TEST_CASE("Test log Levels debug", "[ttl2]") {
 TEST_CASE("Test log Levels trace", "[ttl3]") {
   std::ostringstream oss;
 
-  std::unique_ptr<BaseLogger> outputLogger = std::unique_ptr<BaseLogger>(
+  std::unique_ptr<logging::BaseLogger> outputLogger = std::unique_ptr<
+      logging::BaseLogger>(
       new org::apache::nifi::minifi::core::logging::OutputStreamAppender(oss,
                                                                          0));
   std::shared_ptr<logging::Logger> logger = logging::Logger::getLogger();
@@ -86,12 +85,10 @@ TEST_CASE("Test log Levels trace", "[ttl3]") {
   logger->log_trace("hello world");
 
   REQUIRE(
-      true
-          == contains(
-              oss.str(),
-              "[minifi log -- org::apache::nifi::minifi::core::logging::OutputStreamAppender] [trace] hello world"));
+      true == contains(oss.str(), "[minifi log -- org::apache::nifi::minifi::core::logging::OutputStreamAppender] [trace] hello world"));
 
-  std::unique_ptr<BaseLogger> nullAppender = std::unique_ptr<BaseLogger>(
+  std::unique_ptr<logging::BaseLogger> nullAppender = std::unique_ptr<
+      logging::BaseLogger>(
       new org::apache::nifi::minifi::core::logging::NullAppender());
 
   logger->updateLogger(std::move(nullAppender));
@@ -100,7 +97,8 @@ TEST_CASE("Test log Levels trace", "[ttl3]") {
 TEST_CASE("Test log Levels error", "[ttl4]") {
   std::ostringstream oss;
 
-  std::unique_ptr<BaseLogger> outputLogger = std::unique_ptr<BaseLogger>(
+  std::unique_ptr<logging::BaseLogger> outputLogger = std::unique_ptr<
+      logging::BaseLogger>(
       new org::apache::nifi::minifi::core::logging::OutputStreamAppender(oss,
                                                                          0));
   std::shared_ptr<logging::Logger> logger = logging::Logger::getLogger();
@@ -110,12 +108,10 @@ TEST_CASE("Test log Levels error", "[ttl4]") {
   logger->log_error("hello world");
 
   REQUIRE(
-      true
-          == contains(
-              oss.str(),
-              "[minifi log -- org::apache::nifi::minifi::core::logging::OutputStreamAppender] [error] hello world"));
+      true == contains(oss.str(), "[minifi log -- org::apache::nifi::minifi::core::logging::OutputStreamAppender] [error] hello world"));
 
-  std::unique_ptr<BaseLogger> nullAppender = std::unique_ptr<BaseLogger>(
+  std::unique_ptr<logging::BaseLogger> nullAppender = std::unique_ptr<
+      logging::BaseLogger>(
       new org::apache::nifi::minifi::core::logging::NullAppender());
 
   logger->updateLogger(std::move(nullAppender));
@@ -124,7 +120,8 @@ TEST_CASE("Test log Levels error", "[ttl4]") {
 TEST_CASE("Test log Levels change", "[ttl5]") {
   std::ostringstream oss;
 
-  std::unique_ptr<BaseLogger> outputLogger = std::unique_ptr<BaseLogger>(
+  std::unique_ptr<logging::BaseLogger> outputLogger = std::unique_ptr<
+      logging::BaseLogger>(
       new org::apache::nifi::minifi::core::logging::OutputStreamAppender(oss,
                                                                          0));
   std::shared_ptr<logging::Logger> logger = logging::Logger::getLogger();
@@ -134,10 +131,7 @@ TEST_CASE("Test log Levels change", "[ttl5]") {
   logger->log_error("hello world");
 
   REQUIRE(
-      true
-          == contains(
-              oss.str(),
-              "[minifi log -- org::apache::nifi::minifi::core::logging::OutputStreamAppender] [error] hello world"));
+      true == contains(oss.str(), "[minifi log -- org::apache::nifi::minifi::core::logging::OutputStreamAppender] [error] hello world"));
   oss.str("");
   oss.clear();
   REQUIRE(0 == oss.str().length());
@@ -147,20 +141,20 @@ TEST_CASE("Test log Levels change", "[ttl5]") {
 
   REQUIRE(0 == oss.str().length());
 
-  std::unique_ptr<BaseLogger> nullAppender = std::unique_ptr<BaseLogger>(
+  std::unique_ptr<logging::BaseLogger> nullAppender = std::unique_ptr<
+      logging::BaseLogger>(
       new org::apache::nifi::minifi::core::logging::NullAppender());
 
   logger->updateLogger(std::move(nullAppender));
-
 }
-
 
 TEST_CASE("Test log LevelsConfigured", "[ttl6]") {
   std::ostringstream oss;
 
-  std::shared_ptr<minifi::Configure> config = std::make_shared<minifi::Configure>();
+  std::shared_ptr<minifi::Configure> config =
+      std::make_shared<minifi::Configure>();
 
-  config->set(BaseLogger::nifi_log_appender, "OutputStreamAppender");
+  config->set(logging::BaseLogger::nifi_log_appender, "OutputStreamAppender");
   config->set(
       org::apache::nifi::minifi::core::logging::OutputStreamAppender::nifi_log_output_stream_error_stderr,
       "true");
@@ -170,8 +164,8 @@ TEST_CASE("Test log LevelsConfigured", "[ttl6]") {
   auto oldrdbuf = std::cerr.rdbuf();
   std::cerr.rdbuf(oss.rdbuf());
 
-  std::unique_ptr<BaseLogger> newLogger = LogInstance::getConfiguredLogger(
-      config);
+  std::unique_ptr<logging::BaseLogger> newLogger =
+      logging::LogInstance::getConfiguredLogger(config);
 
   logger->updateLogger(std::move(newLogger));
 
@@ -181,16 +175,13 @@ TEST_CASE("Test log LevelsConfigured", "[ttl6]") {
   logger->log_error("hello world");
 
   REQUIRE(
-      true
-          == contains(
-              oss.str(),
-              "[minifi log -- org::apache::nifi::minifi::core::logging::OutputStreamAppender] [error] hello world"));
+      true == contains(oss.str(), "[minifi log -- org::apache::nifi::minifi::core::logging::OutputStreamAppender] [error] hello world"));
 
   std::cerr.rdbuf(oldrdbuf);
 
-  config->set(BaseLogger::nifi_log_appender, "nullappender");
+  config->set(logging::BaseLogger::nifi_log_appender, "nullappender");
 
-  newLogger = LogInstance::getConfiguredLogger(config);
+  newLogger = logging::LogInstance::getConfiguredLogger(config);
 
   logger->updateLogger(std::move(newLogger));
 
@@ -204,13 +195,13 @@ TEST_CASE("Test log LevelsConfigured", "[ttl6]") {
   logger->log_trace("hello world");
 
   REQUIRE(0 == oss.str().length());
-
 }
 
 TEST_CASE("Test log Levels With std::string", "[ttl1]") {
   std::ostringstream oss;
 
-  std::unique_ptr<BaseLogger> outputLogger = std::unique_ptr<BaseLogger>(
+  std::unique_ptr<logging::BaseLogger> outputLogger = std::unique_ptr<
+      logging::BaseLogger>(
       new org::apache::nifi::minifi::core::logging::OutputStreamAppender(oss,
                                                                          0));
   std::shared_ptr<logging::Logger> logger = logging::Logger::getLogger();
@@ -220,10 +211,7 @@ TEST_CASE("Test log Levels With std::string", "[ttl1]") {
   logger->log_error("hello %s", world);
 
   REQUIRE(
-      true
-          == contains(
-              oss.str(),
-              "[minifi log -- org::apache::nifi::minifi::core::logging::OutputStreamAppender] [error] hello world"));
+      true == contains(oss.str(), "[minifi log -- org::apache::nifi::minifi::core::logging::OutputStreamAppender] [error] hello world"));
   oss.str("");
   oss.clear();
   REQUIRE(0 == oss.str().length());
@@ -233,17 +221,18 @@ TEST_CASE("Test log Levels With std::string", "[ttl1]") {
 
   REQUIRE(0 == oss.str().length());
 
-  std::unique_ptr<BaseLogger> nullAppender = std::unique_ptr<BaseLogger>(
+  std::unique_ptr<logging::BaseLogger> nullAppender = std::unique_ptr<
+      logging::BaseLogger>(
       new org::apache::nifi::minifi::core::logging::NullAppender());
 
   logger->updateLogger(std::move(nullAppender));
-
 }
 
 TEST_CASE("Test log Levels debug With std::string ", "[ttl2]") {
   std::ostringstream oss;
 
-  std::unique_ptr<BaseLogger> outputLogger = std::unique_ptr<BaseLogger>(
+  std::unique_ptr<logging::BaseLogger> outputLogger = std::unique_ptr<
+      logging::BaseLogger>(
       new org::apache::nifi::minifi::core::logging::OutputStreamAppender(oss,
                                                                          0));
   std::shared_ptr<logging::Logger> logger = logging::Logger::getLogger();
@@ -253,12 +242,10 @@ TEST_CASE("Test log Levels debug With std::string ", "[ttl2]") {
   logger->log_debug("hello %s", world);
 
   REQUIRE(
-      true
-          == contains(
-              oss.str(),
-              "[minifi log -- org::apache::nifi::minifi::core::logging::OutputStreamAppender] [debug] hello world"));
+      true == contains(oss.str(), "[minifi log -- org::apache::nifi::minifi::core::logging::OutputStreamAppender] [debug] hello world"));
 
-  std::unique_ptr<BaseLogger> nullAppender = std::unique_ptr<BaseLogger>(
+  std::unique_ptr<logging::BaseLogger> nullAppender = std::unique_ptr<
+      logging::BaseLogger>(
       new org::apache::nifi::minifi::core::logging::NullAppender());
 
   logger->updateLogger(std::move(nullAppender));
@@ -267,7 +254,8 @@ TEST_CASE("Test log Levels debug With std::string ", "[ttl2]") {
 TEST_CASE("Test log Levels trace With std::string", "[ttl3]") {
   std::ostringstream oss;
 
-  std::unique_ptr<BaseLogger> outputLogger = std::unique_ptr<BaseLogger>(
+  std::unique_ptr<logging::BaseLogger> outputLogger = std::unique_ptr<
+      logging::BaseLogger>(
       new org::apache::nifi::minifi::core::logging::OutputStreamAppender(oss,
                                                                          0));
   std::shared_ptr<logging::Logger> logger = logging::Logger::getLogger();
@@ -277,12 +265,10 @@ TEST_CASE("Test log Levels trace With std::string", "[ttl3]") {
   logger->log_trace("hello %s", world);
 
   REQUIRE(
-      true
-          == contains(
-              oss.str(),
-              "[minifi log -- org::apache::nifi::minifi::core::logging::OutputStreamAppender] [trace] hello world"));
+      true == contains(oss.str(), "[minifi log -- org::apache::nifi::minifi::core::logging::OutputStreamAppender] [trace] hello world"));
 
-  std::unique_ptr<BaseLogger> nullAppender = std::unique_ptr<BaseLogger>(
+  std::unique_ptr<logging::BaseLogger> nullAppender = std::unique_ptr<
+      logging::BaseLogger>(
       new org::apache::nifi::minifi::core::logging::NullAppender());
 
   logger->updateLogger(std::move(nullAppender));
@@ -291,7 +277,8 @@ TEST_CASE("Test log Levels trace With std::string", "[ttl3]") {
 TEST_CASE("Test log Levels error With std::string ", "[ttl4]") {
   std::ostringstream oss;
 
-  std::unique_ptr<BaseLogger> outputLogger = std::unique_ptr<BaseLogger>(
+  std::unique_ptr<logging::BaseLogger> outputLogger = std::unique_ptr<
+      logging::BaseLogger>(
       new org::apache::nifi::minifi::core::logging::OutputStreamAppender(oss,
                                                                          0));
   std::shared_ptr<logging::Logger> logger = logging::Logger::getLogger();
@@ -302,12 +289,10 @@ TEST_CASE("Test log Levels error With std::string ", "[ttl4]") {
   logger->log_error("hello %s", world);
 
   REQUIRE(
-      true
-          == contains(
-              oss.str(),
-              "[minifi log -- org::apache::nifi::minifi::core::logging::OutputStreamAppender] [error] hello world"));
+      true == contains(oss.str(), "[minifi log -- org::apache::nifi::minifi::core::logging::OutputStreamAppender] [error] hello world"));
 
-  std::unique_ptr<BaseLogger> nullAppender = std::unique_ptr<BaseLogger>(
+  std::unique_ptr<logging::BaseLogger> nullAppender = std::unique_ptr<
+      logging::BaseLogger>(
       new org::apache::nifi::minifi::core::logging::NullAppender());
 
   logger->updateLogger(std::move(nullAppender));
@@ -316,7 +301,8 @@ TEST_CASE("Test log Levels error With std::string ", "[ttl4]") {
 TEST_CASE("Test log Levels change With std::string ", "[ttl5]") {
   std::ostringstream oss;
 
-  std::unique_ptr<BaseLogger> outputLogger = std::unique_ptr<BaseLogger>(
+  std::unique_ptr<logging::BaseLogger> outputLogger = std::unique_ptr<
+      logging::BaseLogger>(
       new org::apache::nifi::minifi::core::logging::OutputStreamAppender(oss,
                                                                          0));
   std::shared_ptr<logging::Logger> logger = logging::Logger::getLogger();
@@ -327,10 +313,7 @@ TEST_CASE("Test log Levels change With std::string ", "[ttl5]") {
   logger->log_error("hello %s", world);
 
   REQUIRE(
-      true
-          == contains(
-              oss.str(),
-              "[minifi log -- org::apache::nifi::minifi::core::logging::OutputStreamAppender] [error] hello world"));
+      true == contains(oss.str(), "[minifi log -- org::apache::nifi::minifi::core::logging::OutputStreamAppender] [error] hello world"));
   oss.str("");
   oss.clear();
   REQUIRE(0 == oss.str().length());
@@ -340,17 +323,18 @@ TEST_CASE("Test log Levels change With std::string ", "[ttl5]") {
 
   REQUIRE(0 == oss.str().length());
 
-  std::unique_ptr<BaseLogger> nullAppender = std::unique_ptr<BaseLogger>(
+  std::unique_ptr<logging::BaseLogger> nullAppender = std::unique_ptr<
+      logging::BaseLogger>(
       new org::apache::nifi::minifi::core::logging::NullAppender());
 
   logger->updateLogger(std::move(nullAppender));
-
 }
 
 TEST_CASE("Test log Levels change With std::string maybe ", "[ttl5]") {
   std::ostringstream oss;
 
-  std::unique_ptr<BaseLogger> outputLogger = std::unique_ptr<BaseLogger>(
+  std::unique_ptr<logging::BaseLogger> outputLogger = std::unique_ptr<
+      logging::BaseLogger>(
       new org::apache::nifi::minifi::core::logging::OutputStreamAppender(oss,
                                                                          0));
   std::shared_ptr<logging::Logger> logger = logging::Logger::getLogger();
@@ -360,10 +344,7 @@ TEST_CASE("Test log Levels change With std::string maybe ", "[ttl5]") {
   logger->log_error("hello %s", "world");
 
   REQUIRE(
-      true
-          == contains(
-              oss.str(),
-              "[minifi log -- org::apache::nifi::minifi::core::logging::OutputStreamAppender] [error] hello world"));
+      true == contains(oss.str(), "[minifi log -- org::apache::nifi::minifi::core::logging::OutputStreamAppender] [error] hello world"));
   oss.str("");
   oss.clear();
   REQUIRE(0 == oss.str().length());
@@ -373,9 +354,9 @@ TEST_CASE("Test log Levels change With std::string maybe ", "[ttl5]") {
 
   REQUIRE(0 == oss.str().length());
 
-  std::unique_ptr<BaseLogger> nullAppender = std::unique_ptr<BaseLogger>(
+  std::unique_ptr<logging::BaseLogger> nullAppender = std::unique_ptr<
+      logging::BaseLogger>(
       new org::apache::nifi::minifi::core::logging::NullAppender());
 
   logger->updateLogger(std::move(nullAppender));
-
 }

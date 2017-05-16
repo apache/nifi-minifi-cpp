@@ -17,88 +17,89 @@
  */
 #define CATCH_CONFIG_MAIN  // This tells Catch to provide a main() - only do this in one cpp file
 #include "../../include/core/Property.h"
+#include <string>
 #include "utils/StringUtils.h"
 #include "../TestBase.h"
 
-
 TEST_CASE("Test Boolean Conversion", "[testboolConversion]") {
-
-	bool b;
-	REQUIRE(true == org::apache::nifi::minifi::utils::StringUtils::StringToBool("true",b));
-	REQUIRE(true == org::apache::nifi::minifi::utils::StringUtils::StringToBool("True",b));
-	REQUIRE(true == org::apache::nifi::minifi::utils::StringUtils::StringToBool("TRue",b));
-	REQUIRE(true == org::apache::nifi::minifi::utils::StringUtils::StringToBool("tRUE",b));
-
-	REQUIRE(false == org::apache::nifi::minifi::utils::StringUtils::StringToBool("FALSE",b));
-	REQUIRE(false == org::apache::nifi::minifi::utils::StringUtils::StringToBool("FALLSEY",b));
-	REQUIRE(false == org::apache::nifi::minifi::utils::StringUtils::StringToBool("FaLSE",b));
-	REQUIRE(false == org::apache::nifi::minifi::utils::StringUtils::StringToBool("false",b));
-
+  bool b;
+  REQUIRE(
+      true == org::apache::nifi::minifi::utils::StringUtils::StringToBool("true", b));
+  REQUIRE(
+      true == org::apache::nifi::minifi::utils::StringUtils::StringToBool("True", b));
+  REQUIRE(
+      true == org::apache::nifi::minifi::utils::StringUtils::StringToBool("TRue", b));
+  REQUIRE(
+      true == org::apache::nifi::minifi::utils::StringUtils::StringToBool("tRUE", b));
+  REQUIRE(
+      false == org::apache::nifi::minifi::utils::StringUtils::StringToBool("FALSE", b));
+  REQUIRE(
+      false == org::apache::nifi::minifi::utils::StringUtils::StringToBool("FALLSEY", b));
+  REQUIRE(
+      false == org::apache::nifi::minifi::utils::StringUtils::StringToBool("FaLSE", b));
+  REQUIRE(
+      false == org::apache::nifi::minifi::utils::StringUtils::StringToBool("false", b));
 }
 
 TEST_CASE("Test Trimmer Right", "[testTrims]") {
+  std::string test = "a quick brown fox jumped over the road\t\n";
 
-	std::string test = "a quick brown fox jumped over the road\t\n";
+  REQUIRE(test.c_str()[test.length() - 1] == '\n');
+  REQUIRE(test.c_str()[test.length() - 2] == '\t');
+  test = org::apache::nifi::minifi::utils::StringUtils::trimRight(test);
 
-	REQUIRE(test.c_str()[test.length() - 1] == '\n');
-	REQUIRE(test.c_str()[test.length() - 2] == '\t');
-	test = org::apache::nifi::minifi::utils::StringUtils::trimRight(test);
+  REQUIRE(test.c_str()[test.length() - 1] == 'd');
+  REQUIRE(test.c_str()[test.length() - 2] == 'a');
 
-	REQUIRE(test.c_str()[test.length() - 1] == 'd');
-	REQUIRE(test.c_str()[test.length() - 2] == 'a');
+  test = "a quick brown fox jumped over the road\v\t";
 
-	test = "a quick brown fox jumped over the road\v\t";
+  REQUIRE(test.c_str()[test.length() - 1] == '\t');
+  REQUIRE(test.c_str()[test.length() - 2] == '\v');
 
-	REQUIRE(test.c_str()[test.length() - 1] == '\t');
-	REQUIRE(test.c_str()[test.length() - 2] == '\v');
+  test = org::apache::nifi::minifi::utils::StringUtils::trimRight(test);
 
-	test = org::apache::nifi::minifi::utils::StringUtils::trimRight(test);
+  REQUIRE(test.c_str()[test.length() - 1] == 'd');
+  REQUIRE(test.c_str()[test.length() - 2] == 'a');
 
-	REQUIRE(test.c_str()[test.length() - 1] == 'd');
-	REQUIRE(test.c_str()[test.length() - 2] == 'a');
+  test = "a quick brown fox jumped over the road \f";
 
-	test = "a quick brown fox jumped over the road \f";
+  REQUIRE(test.c_str()[test.length() - 1] == '\f');
+  REQUIRE(test.c_str()[test.length() - 2] == ' ');
 
-	REQUIRE(test.c_str()[test.length() - 1] == '\f');
-	REQUIRE(test.c_str()[test.length() - 2] == ' ');
+  test = org::apache::nifi::minifi::utils::StringUtils::trimRight(test);
 
-	test = org::apache::nifi::minifi::utils::StringUtils::trimRight(test);
-
-	REQUIRE(test.c_str()[test.length() - 1] == 'd');
-
+  REQUIRE(test.c_str()[test.length() - 1] == 'd');
 }
 
 TEST_CASE("Test Trimmer Left", "[testTrims]") {
+  std::string test = "\t\na quick brown fox jumped over the road\t\n";
 
-	std::string test = "\t\na quick brown fox jumped over the road\t\n";
+  REQUIRE(test.c_str()[0] == '\t');
+  REQUIRE(test.c_str()[1] == '\n');
 
-	REQUIRE(test.c_str()[0] == '\t');
-	REQUIRE(test.c_str()[1] == '\n');
+  test = org::apache::nifi::minifi::utils::StringUtils::trimLeft(test);
 
-	test = org::apache::nifi::minifi::utils::StringUtils::trimLeft(test);
+  REQUIRE(test.c_str()[0] == 'a');
+  REQUIRE(test.c_str()[1] == ' ');
 
-	REQUIRE(test.c_str()[0] == 'a');
-	REQUIRE(test.c_str()[1] == ' ');
+  test = "\v\ta quick brown fox jumped over the road\v\t";
 
-	test = "\v\ta quick brown fox jumped over the road\v\t";
+  REQUIRE(test.c_str()[0] == '\v');
+  REQUIRE(test.c_str()[1] == '\t');
 
-	REQUIRE(test.c_str()[0] == '\v');
-	REQUIRE(test.c_str()[1] == '\t');
+  test = org::apache::nifi::minifi::utils::StringUtils::trimLeft(test);
 
-	test = org::apache::nifi::minifi::utils::StringUtils::trimLeft(test);
+  REQUIRE(test.c_str()[0] == 'a');
+  REQUIRE(test.c_str()[1] == ' ');
 
-	REQUIRE(test.c_str()[0] == 'a');
-	REQUIRE(test.c_str()[1] == ' ');
+  test = " \fa quick brown fox jumped over the road \f";
 
-	test = " \fa quick brown fox jumped over the road \f";
+  REQUIRE(test.c_str()[0] == ' ');
+  REQUIRE(test.c_str()[1] == '\f');
 
-	REQUIRE(test.c_str()[0] == ' ');
-	REQUIRE(test.c_str()[1] == '\f');
+  test = org::apache::nifi::minifi::utils::StringUtils::trimLeft(test);
 
-	test = org::apache::nifi::minifi::utils::StringUtils::trimLeft(test);
-
-	REQUIRE(test.c_str()[0] == 'a');
-	REQUIRE(test.c_str()[1] == ' ');
-
+  REQUIRE(test.c_str()[0] == 'a');
+  REQUIRE(test.c_str()[1] == ' ');
 }
 
