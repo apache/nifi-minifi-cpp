@@ -21,6 +21,7 @@
 #include <fstream>
 #include <memory>
 #include <string>
+#include <utility>
 #include <thread>
 #include <type_traits>
 #include "core/logging/LogAppenders.h"
@@ -43,8 +44,6 @@
 
 REGISTER_RESOURCE(MockControllerService);
 REGISTER_RESOURCE(MockProcessor);
-std::string test_file_location;
-std::string key_dir;
 
 std::shared_ptr<core::controller::StandardControllerServiceNode> newCsNode(
     std::shared_ptr<core::controller::ControllerServiceProvider> provider,
@@ -63,6 +62,8 @@ void waitToVerifyProcessor() {
 }
 
 int main(int argc, char **argv) {
+  std::string test_file_location;
+  std::string key_dir;
 
   if (argc > 2) {
     test_file_location = argv[1];

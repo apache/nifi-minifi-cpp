@@ -30,7 +30,7 @@ MACRO(GETSOURCEFILES result curdir)
 ENDMACRO()
 
 function(createTests testName)
-  message ("File name is ${testName}")
+   message ("-- Adding test: ${testName}")
     target_include_directories(${testName} PRIVATE BEFORE ${UUID_INCLUDE_DIRS})
     target_include_directories(${testName} PRIVATE BEFORE "thirdparty/catch")
     target_include_directories(${testName} PRIVATE BEFORE "thirdparty/yaml-cpp-yaml-cpp-0.5.3/include")

@@ -77,7 +77,7 @@ class TestRepository : public core::Repository {
           std::make_shared<provenance::ProvenanceEventRecord>();
 
       if (eventRead->DeSerialize((uint8_t*) entry.second.data(),
-          entry.second.length())) {
+                                 entry.second.length())) {
         records.push_back(eventRead);
       }
     }
@@ -141,7 +141,7 @@ class TestFlowRepository : public core::repository::FlowFileRepository {
           std::make_shared<provenance::ProvenanceEventRecord>();
 
       if (eventRead->DeSerialize((uint8_t*) entry.second.data(),
-          entry.second.length())) {
+                                 entry.second.length())) {
         records.push_back(eventRead);
       }
     }
@@ -154,12 +154,14 @@ class TestFlowRepository : public core::repository::FlowFileRepository {
   std::map<std::string, std::string> repositoryResults;
 };
 
-class TestFlowController : public minifi::FlowController{
+class TestFlowController : public minifi::FlowController {
 
-public:
+ public:
   TestFlowController(std::shared_ptr<core::Repository> repo,
                      std::shared_ptr<core::Repository> flow_file_repo)
-      : minifi::FlowController(repo, flow_file_repo, std::make_shared<minifi::Configure>(), nullptr, "",true) {
+      : minifi::FlowController(repo, flow_file_repo,
+                               std::make_shared<minifi::Configure>(), nullptr,
+                               "", true) {
   }
   ~TestFlowController() {
 
@@ -206,10 +208,10 @@ public:
   }
 
   std::shared_ptr<minifi::Connection> createConnection(std::string name,
-      uuid_t uuid) {
+                                                       uuid_t uuid) {
     return 0;
   }
-protected:
+ protected:
   void initializePaths(const std::string &adjustedFilename) {
   }
 };

@@ -19,6 +19,11 @@
 #define CATCH_CONFIG_MAIN  // This tells Catch to provide a main() - only do this in one cpp file
 #include <uuid/uuid.h>
 #include <fstream>
+#include <map>
+#include <memory>
+#include <utility>
+#include <string>
+#include <set>
 #include "FlowController.h"
 #include "../TestBase.h"
 #include "core/logging/LogAppenders.h"
@@ -33,7 +38,6 @@
 #include "core/ProcessorNode.h"
 
 TEST_CASE("HTTPTestsPostNoResourceClaim", "[httptest1]") {
-
   std::stringstream oss;
   std::unique_ptr<logging::BaseLogger> outputLogger = std::unique_ptr<
       logging::BaseLogger>(
@@ -146,14 +150,13 @@ TEST_CASE("HTTPTestsPostNoResourceClaim", "[httptest1]") {
   }
   std::shared_ptr<core::FlowFile> ffr = session2.get();
   std::string log_attribute_output = oss.str();
+  std::cout << log_attribute_output << std::endl;
   REQUIRE(
       log_attribute_output.find("exiting because method is POST")
           != std::string::npos);
-
 }
 
 TEST_CASE("HTTPTestsWithNoResourceClaimPOST", "[httptest1]") {
-
   std::stringstream oss;
   std::unique_ptr<logging::BaseLogger> outputLogger = std::unique_ptr<
       logging::BaseLogger>(
@@ -280,16 +283,13 @@ TEST_CASE("HTTPTestsWithNoResourceClaimPOST", "[httptest1]") {
   REQUIRE(
       log_attribute_output.find("exiting because method is POST")
           != std::string::npos);
-
 }
 
 class CallBack : public minifi::OutputStreamCallback {
  public:
   CallBack() {
-
   }
   virtual ~CallBack() {
-
   }
   virtual void process(std::ofstream *stream) {
     std::string st = "we're gnna write some test stuff";
@@ -298,7 +298,6 @@ class CallBack : public minifi::OutputStreamCallback {
 };
 
 TEST_CASE("HTTPTestsWithResourceClaimPOST", "[httptest1]") {
-
   std::stringstream oss;
   std::unique_ptr<logging::BaseLogger> outputLogger = std::unique_ptr<
       logging::BaseLogger>(
@@ -442,6 +441,5 @@ TEST_CASE("HTTPTestsWithResourceClaimPOST", "[httptest1]") {
   REQUIRE(
       log_attribute_output.find("exiting because method is POST")
           != std::string::npos);
-
 }
 

@@ -17,6 +17,8 @@
  */
 #define CATCH_CONFIG_MAIN  // This tells Catch to provide a main() - only do this in one cpp file
 #include <uuid/uuid.h>
+#include <memory>
+#include <string>
 #include <fstream>
 #include "FlowController.h"
 #include "../TestBase.h"
@@ -50,8 +52,8 @@ TEST_CASE("Test ControllerServicesMap", "[cs1]") {
 
   REQUIRE(nullptr != map.getControllerServiceNode("ID"));
 
-  REQUIRE(false== map.put("",testNode));
-  REQUIRE(false== map.put("",nullptr));
+  REQUIRE(false== map.put("", testNode));
+  REQUIRE(false== map.put("", nullptr));
 
   // ensure the pointer is the same
 
@@ -86,5 +88,4 @@ std::shared_ptr<core::controller::StandardControllerServiceNode> newCsNode(
   return testNode;
 }
 
-
-}
+} /**  namespace ControllerServiceTests **/

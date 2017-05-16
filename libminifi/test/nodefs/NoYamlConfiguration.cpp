@@ -16,23 +16,20 @@
  * limitations under the License.
  */
 
-
 #include "core/Core.h"
+#include <memory>
 #include "core/RepositoryFactory.h"
-
 
 #include "core/ConfigurationFactory.h"
 
 TEST_CASE("NoYamlSupport1", "[NoYamlSupport1]") {
   std::shared_ptr<core::Repository> prov_repo = core::createRepository(
       "provenancerepository", true);
-REQUIRE(nullptr != prov_repo);
-std::unique_ptr<core::FlowConfiguration> flow_configuration = std::move(
+  REQUIRE(nullptr != prov_repo);
+  std::unique_ptr<core::FlowConfiguration> flow_configuration = std::move(
       core::createFlowConfiguration(prov_repo, prov_repo, std::make_shared<minifi::Configure>(), std::make_shared<minifi::io::StreamFactory>(false),
-                                   "yamlconfiguration"));
-
+          "yamlconfiguration"));
 
   REQUIRE(nullptr != flow_configuration);
-  
 }
 

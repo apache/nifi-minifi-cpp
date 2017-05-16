@@ -19,21 +19,25 @@
 #define CATCH_CONFIG_MAIN  // This tells Catch to provide a main() - only do this in one cpp file
 
 #include "../TestBase.h"
+#include <memory>
+#include <vector>
 #include "io/ClientSocket.h"
 
-using namespace org::apache::nifi::minifi::io;
 TEST_CASE("TestSocket", "[TestSocket1]") {
-
-  Socket socket(std::make_shared<SocketContext>(std::make_shared<minifi::Configure>()), "localhost", 8183);
+  org::apache::nifi::minifi::io::Socket socket(
+      std::make_shared<org::apache::nifi::minifi::io::SocketContext>(
+          std::make_shared<minifi::Configure>()),
+      "localhost", 8183);
   REQUIRE(-1 == socket.initialize());
   REQUIRE("localhost" == socket.getHostname());
   socket.closeStream();
-
 }
 
 TEST_CASE("TestSocketWriteTest1", "[TestSocket2]") {
-
-  Socket socket(std::make_shared<SocketContext>(std::make_shared<minifi::Configure>()), "localhost", 8183);
+  org::apache::nifi::minifi::io::Socket socket(
+      std::make_shared<org::apache::nifi::minifi::io::SocketContext>(
+          std::make_shared<minifi::Configure>()),
+      "localhost", 8183);
   REQUIRE(-1 == socket.initialize());
 
   socket.writeData(0, 0);
@@ -44,21 +48,23 @@ TEST_CASE("TestSocketWriteTest1", "[TestSocket2]") {
   REQUIRE(-1 == socket.writeData(buffer, 1));
 
   socket.closeStream();
-
 }
 
 TEST_CASE("TestSocketWriteTest2", "[TestSocket3]") {
-
   std::vector<uint8_t> buffer;
   buffer.push_back('a');
-  
-  std::shared_ptr<SocketContext> socket_context = std::make_shared<SocketContext>(std::make_shared<minifi::Configure>());
 
-  Socket server(socket_context, "localhost", 9183, 1);
+  std::shared_ptr<org::apache::nifi::minifi::io::SocketContext> socket_context =
+      std::make_shared<org::apache::nifi::minifi::io::SocketContext>(
+          std::make_shared<minifi::Configure>());
+
+  org::apache::nifi::minifi::io::Socket server(socket_context, "localhost",
+                                               9183, 1);
 
   REQUIRE(-1 != server.initialize());
 
-  Socket client(socket_context, "localhost", 9183);
+  org::apache::nifi::minifi::io::Socket client(socket_context, "localhost",
+                                               9183);
 
   REQUIRE(-1 != client.initialize());
 
@@ -74,27 +80,27 @@ TEST_CASE("TestSocketWriteTest2", "[TestSocket3]") {
   server.closeStream();
 
   client.closeStream();
-
 }
 
 TEST_CASE("TestGetHostName", "[TestSocket4]") {
-
-  REQUIRE(Socket::getMyHostName().length() > 0);
-
+  REQUIRE(org::apache::nifi::minifi::io::Socket::getMyHostName().length() > 0);
 }
 
 TEST_CASE("TestWriteEndian64", "[TestSocket4]") {
-
   std::vector<uint8_t> buffer;
   buffer.push_back('a');
-  
-  std::shared_ptr<SocketContext> socket_context = std::make_shared<SocketContext>(std::make_shared<minifi::Configure>());
 
-  Socket server(socket_context, "localhost", 9183, 1);
+  std::shared_ptr<org::apache::nifi::minifi::io::SocketContext> socket_context =
+      std::make_shared<org::apache::nifi::minifi::io::SocketContext>(
+          std::make_shared<minifi::Configure>());
+
+  org::apache::nifi::minifi::io::Socket server(socket_context, "localhost",
+                                               9183, 1);
 
   REQUIRE(-1 != server.initialize());
 
-  Socket client(socket_context, "localhost", 9183);
+  org::apache::nifi::minifi::io::Socket client(socket_context, "localhost",
+                                               9183);
 
   REQUIRE(-1 != client.initialize());
 
@@ -109,24 +115,25 @@ TEST_CASE("TestWriteEndian64", "[TestSocket4]") {
   server.closeStream();
 
   client.closeStream();
-
 }
 
 TEST_CASE("TestWriteEndian32", "[TestSocket5]") {
-
   std::vector<uint8_t> buffer;
   buffer.push_back('a');
 
-  std::shared_ptr<SocketContext> socket_context = std::make_shared<SocketContext>(std::make_shared<minifi::Configure>());
-  
-  Socket server(socket_context, "localhost", 9183, 1);
+  std::shared_ptr<org::apache::nifi::minifi::io::SocketContext> socket_context =
+      std::make_shared<org::apache::nifi::minifi::io::SocketContext>(
+          std::make_shared<minifi::Configure>());
+
+  org::apache::nifi::minifi::io::Socket server(socket_context, "localhost",
+                                               9183, 1);
 
   REQUIRE(-1 != server.initialize());
 
-  Socket client(socket_context, "localhost", 9183);
+  org::apache::nifi::minifi::io::Socket client(socket_context, "localhost",
+                                               9183);
 
   REQUIRE(-1 != client.initialize());
-
   {
     uint32_t negative_one = -1;
     REQUIRE(4 == client.write(negative_one));
@@ -136,7 +143,6 @@ TEST_CASE("TestWriteEndian32", "[TestSocket5]") {
 
     REQUIRE(negative_two == negative_one);
   }
-
   {
     uint16_t negative_one = -1;
     REQUIRE(2 == client.write(negative_one));
@@ -149,21 +155,23 @@ TEST_CASE("TestWriteEndian32", "[TestSocket5]") {
   server.closeStream();
 
   client.closeStream();
-
 }
 
 TEST_CASE("TestSocketWriteTestAfterClose", "[TestSocket6]") {
-
   std::vector<uint8_t> buffer;
   buffer.push_back('a');
 
-  std::shared_ptr<SocketContext> socket_context = std::make_shared<SocketContext>(std::make_shared<minifi::Configure>());
-  
-  Socket server(socket_context, "localhost", 9183, 1);
+  std::shared_ptr<org::apache::nifi::minifi::io::SocketContext> socket_context =
+      std::make_shared<org::apache::nifi::minifi::io::SocketContext>(
+          std::make_shared<minifi::Configure>());
+
+  org::apache::nifi::minifi::io::Socket server(socket_context, "localhost",
+                                               9183, 1);
 
   REQUIRE(-1 != server.initialize());
 
-  Socket client(socket_context, "localhost", 9183);
+  org::apache::nifi::minifi::io::Socket client(socket_context, "localhost",
+                                               9183);
 
   REQUIRE(-1 != client.initialize());
 
@@ -181,5 +189,4 @@ TEST_CASE("TestSocketWriteTestAfterClose", "[TestSocket6]") {
   REQUIRE(-1 == client.writeData(buffer, 1));
 
   server.closeStream();
-
 }

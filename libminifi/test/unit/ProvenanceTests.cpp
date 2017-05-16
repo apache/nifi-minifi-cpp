@@ -18,28 +18,28 @@
 
 #define CATCH_CONFIG_MAIN  // This tells Catch to provide a main() - only do this in one cpp file
 #include "../TestBase.h"
-#include "../unit/ProvenanceTestHelper.h"
-
+#include <utility>
+#include <memory>
+#include <string>
+#include <map>
+#include "ProvenanceTestHelper.h"
 #include "provenance/Provenance.h"
 #include "FlowFileRecord.h"
 #include "core/Core.h"
 #include "core/repository/FlowFileRepository.h"
 
 TEST_CASE("Test Provenance record create", "[Testprovenance::ProvenanceEventRecord]") {
-
   provenance::ProvenanceEventRecord record1(
       provenance::ProvenanceEventRecord::ProvenanceEventType::CREATE, "blah",
       "blahblah");
   REQUIRE(record1.getAttributes().size() == 0);
   REQUIRE(record1.getAlternateIdentifierUri().length() == 0);
-
 }
 
 TEST_CASE("Test Provenance record serialization", "[Testprovenance::ProvenanceEventRecordSerializeDeser]") {
-
   provenance::ProvenanceEventRecord record1(
-      provenance::ProvenanceEventRecord::ProvenanceEventType::CREATE, "componentid",
-      "componenttype");
+      provenance::ProvenanceEventRecord::ProvenanceEventType::CREATE,
+      "componentid", "componenttype");
 
   std::string eventId = record1.getEventId();
 
@@ -47,12 +47,13 @@ TEST_CASE("Test Provenance record serialization", "[Testprovenance::ProvenanceEv
   record1.setDetails(smileyface);
 
   uint64_t sample = 65555;
-  std::shared_ptr<core::Repository> testRepository =std::make_shared<TestRepository>();
+  std::shared_ptr<core::Repository> testRepository = std::make_shared<
+      TestRepository>();
   record1.setEventDuration(sample);
 
   record1.Serialize(testRepository);
   provenance::ProvenanceEventRecord record2;
-  REQUIRE(record2.DeSerialize(testRepository,eventId) == true);
+  REQUIRE(record2.DeSerialize(testRepository, eventId) == true);
   REQUIRE(record2.getEventId() == record1.getEventId());
   REQUIRE(record2.getComponentId() == record1.getComponentId());
   REQUIRE(record2.getComponentType() == record1.getComponentType());
@@ -62,32 +63,33 @@ TEST_CASE("Test Provenance record serialization", "[Testprovenance::ProvenanceEv
 }
 
 TEST_CASE("Test Flowfile record added to provenance", "[TestFlowAndProv1]") {
-
   provenance::ProvenanceEventRecord record1(
-      provenance::ProvenanceEventRecord::ProvenanceEventType::CLONE, "componentid",
-      "componenttype");
+      provenance::ProvenanceEventRecord::ProvenanceEventType::CLONE,
+      "componentid", "componenttype");
   std::string eventId = record1.getEventId();
   std::map<std::string, std::string> attributes;
   attributes.insert(std::pair<std::string, std::string>("potato", "potatoe"));
   attributes.insert(std::pair<std::string, std::string>("tomato", "tomatoe"));
-  std::shared_ptr<core::repository::FlowFileRepository> frepo = std::make_shared<core::repository::FlowFileRepository>("./content_repository",0,0,0);
+  std::shared_ptr<core::repository::FlowFileRepository> frepo =
+      std::make_shared<core::repository::FlowFileRepository>(
+          "./content_repository", 0, 0, 0);
   std::shared_ptr<minifi::FlowFileRecord> ffr1 = std::make_shared<
-      minifi::FlowFileRecord>(frepo,attributes);
+      minifi::FlowFileRecord>(frepo, attributes);
 
   record1.addChildFlowFile(ffr1);
 
-   uint64_t sample = 65555;
-  std::shared_ptr<core::Repository> testRepository =std::make_shared<TestRepository>();
+  uint64_t sample = 65555;
+  std::shared_ptr<core::Repository> testRepository = std::make_shared<
+      TestRepository>();
   record1.setEventDuration(sample);
 
   record1.Serialize(testRepository);
   provenance::ProvenanceEventRecord record2;
-  REQUIRE(record2.DeSerialize(testRepository,eventId) == true);
+  REQUIRE(record2.DeSerialize(testRepository, eventId) == true);
   REQUIRE(record1.getChildrenUuids().size() == 1);
   REQUIRE(record2.getChildrenUuids().size() == 1);
   std::string childId = record2.getChildrenUuids().at(0);
   REQUIRE(childId == ffr1->getUUIDStr());
   record2.removeChildUuid(childId);
   REQUIRE(record2.getChildrenUuids().size() == 0);
-
 }

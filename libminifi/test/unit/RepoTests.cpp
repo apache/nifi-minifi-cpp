@@ -17,8 +17,9 @@
  */
 #define CATCH_CONFIG_MAIN  // This tells Catch to provide a main() - only do this in one cpp file
 #include "../TestBase.h"
-#include "../unit/ProvenanceTestHelper.h"
-
+#include <memory>
+#include <string>
+#include "ProvenanceTestHelper.h"
 #include "provenance/Provenance.h"
 #include "FlowFileRecord.h"
 #include "core/Core.h"
@@ -26,18 +27,11 @@
 #include "properties/Configure.h"
 
 TEST_CASE("Test Repo Empty Value Attribute", "[TestFFR1]") {
-
   TestController testController;
-
-  //testController.setDebugToConsole();
-
   char format[] = "/tmp/testRepo.XXXXXX";
   char *dir = testController.createTempDirectory(format);
   std::shared_ptr<core::repository::FlowFileRepository> repository =
-      std::make_shared<core::repository::FlowFileRepository>(
-          dir, 0,
-          0,
-          1);
+      std::make_shared<core::repository::FlowFileRepository>(dir, 0, 0, 1);
 
   repository->initialize(std::make_shared<minifi::Configure>());
 
@@ -45,76 +39,50 @@ TEST_CASE("Test Repo Empty Value Attribute", "[TestFFR1]") {
 
   record.addAttribute("keyA", "");
 
-  REQUIRE( true == record.Serialize() );
+  REQUIRE(true == record.Serialize());
 
   repository->stop();
 
-
   testController.setNullAppender();
-
-
 }
 
-
-
 TEST_CASE("Test Repo Empty Key Attribute ", "[TestFFR2]") {
-
   TestController testController;
-
-  //testController.setDebugToConsole();
-
   char format[] = "/tmp/testRepo.XXXXXX";
   char *dir = testController.createTempDirectory(format);
   std::shared_ptr<core::repository::FlowFileRepository> repository =
-      std::make_shared<core::repository::FlowFileRepository>(
-          dir, 0,
-          0,
-          1);
+      std::make_shared<core::repository::FlowFileRepository>(dir, 0, 0, 1);
 
   repository->initialize(std::make_shared<minifi::Configure>());
 
   minifi::FlowFileRecord record(repository);
 
-
-
   record.addAttribute("keyA", "hasdgasdgjsdgasgdsgsadaskgasd");
 
   record.addAttribute("", "hasdgasdgjsdgasgdsgsadaskgasd");
 
-
-  REQUIRE( true == record.Serialize() );
+  REQUIRE(true == record.Serialize());
 
   repository->stop();
 
-
   testController.setNullAppender();
-
-
 }
 
-
 TEST_CASE("Test Repo Key Attribute Verify ", "[TestFFR3]") {
-
   TestController testController;
-
-  //testController.setDebugToConsole();
-
   char format[] = "/tmp/testRepo.XXXXXX";
   char *dir = testController.createTempDirectory(format);
   std::shared_ptr<core::repository::FlowFileRepository> repository =
-      std::make_shared<core::repository::FlowFileRepository>(
-          dir, 0,
-          0,
-          1);
+      std::make_shared<core::repository::FlowFileRepository>(dir, 0, 0, 1);
 
-  repository->initialize(std::make_shared<org::apache::nifi::minifi::Configure>());
+  repository->initialize(
+      std::make_shared<org::apache::nifi::minifi::Configure>());
 
   minifi::FlowFileRecord record(repository);
 
   minifi::FlowFileRecord record2(repository);
 
   std::string uuid = record.getUUIDStr();
-
 
   record.addAttribute("keyA", "hasdgasdgjsdgasgdsgsadaskgasd");
 
@@ -126,27 +94,21 @@ TEST_CASE("Test Repo Key Attribute Verify ", "[TestFFR3]") {
 
   record.addAttribute("", "sdgsdg");
 
-
-
-
-  REQUIRE( true == record.Serialize() );
+  REQUIRE(true == record.Serialize());
 
   repository->stop();
 
   record2.DeSerialize(uuid);
 
   std::string value;
-  REQUIRE(true == record2.getAttribute("",value));
+  REQUIRE(true == record2.getAttribute("", value));
 
-  REQUIRE( "hasdgasdgjsdgasgdsgsadaskgasd2" == value);
+  REQUIRE("hasdgasdgjsdgasgdsgsadaskgasd2" == value);
 
-  REQUIRE(false == record2.getAttribute("key",value));
-  REQUIRE(true == record2.getAttribute("keyA",value));
-  REQUIRE( "hasdgasdgjsdgasgdsgsadaskgasd" == value);
+  REQUIRE(false == record2.getAttribute("key", value));
+  REQUIRE(true == record2.getAttribute("keyA", value));
+  REQUIRE("hasdgasdgjsdgasgdsgsadaskgasd" == value);
 
-  REQUIRE(true == record2.getAttribute("keyB",value));
-  REQUIRE( "" == value);
-
-
-
+  REQUIRE(true == record2.getAttribute("keyB", value));
+  REQUIRE("" == value);
 }

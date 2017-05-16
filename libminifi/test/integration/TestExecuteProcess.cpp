@@ -17,6 +17,9 @@
  */
 
 #include <uuid/uuid.h>
+#include <utility>
+#include <memory>
+#include <vector>
 #include <fstream>
 
 #include "../unit/ProvenanceTestHelper.h"
@@ -34,9 +37,7 @@
 #include "core/ProcessSession.h"
 #include "core/ProcessorNode.h"
 
-int main(int argc, char  **argv)
-{
-
+int main(int argc, char **argv) {
   std::ostringstream oss;
   std::unique_ptr<logging::BaseLogger> outputLogger = std::unique_ptr<
       logging::BaseLogger>(
@@ -45,10 +46,9 @@ int main(int argc, char  **argv)
   std::shared_ptr<logging::Logger> logger = logging::Logger::getLogger();
   logger->updateLogger(std::move(outputLogger));
 
-
   outputLogger = std::unique_ptr<logging::BaseLogger>(
-        new org::apache::nifi::minifi::core::logging::NullAppender());
-    logger->updateLogger(std::move(outputLogger));
+      new org::apache::nifi::minifi::core::logging::NullAppender());
+  logger->updateLogger(std::move(outputLogger));
 
   std::shared_ptr<core::Processor> processor = std::make_shared<
       org::apache::nifi::minifi::processors::ExecuteProcess>("executeProcess");
@@ -89,49 +89,40 @@ int main(int argc, char  **argv)
   std::vector<std::thread> processor_workers;
 
   core::ProcessorNode node2(processor);
-  std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider = nullptr;
+  std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider =
+      nullptr;
   std::shared_ptr<core::ProcessContext> contextset = std::make_shared<
-      core::ProcessContext>(node2,controller_services_provider, test_repo);
+      core::ProcessContext>(node2, controller_services_provider, test_repo);
   core::ProcessSessionFactory factory(contextset.get());
   processor->onSchedule(contextset.get(), &factory);
 
   for (int i = 0; i < 1; i++) {
-    //
     processor_workers.push_back(
         std::thread(
-            [processor,test_repo,&is_ready]()
-            {
+            [processor, test_repo, &is_ready]() {
               core::ProcessorNode node(processor);
               std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider = nullptr;
-              std::shared_ptr<core::ProcessContext> context = std::make_shared<core::ProcessContext>(node,controller_services_provider, test_repo);
-              context->setProperty(org::apache::nifi::minifi::processors::ExecuteProcess::Command,"sleep 0.5");
-              //context->setProperty(org::apache::nifi::minifi::processors::ExecuteProcess::CommandArguments," 1 >>" + ss.str());
+              std::shared_ptr<core::ProcessContext> context = std::make_shared<core::ProcessContext>(node, controller_services_provider, test_repo);
+              context->setProperty(org::apache::nifi::minifi::processors::ExecuteProcess::Command, "sleep 0.5");
               std::shared_ptr<core::ProcessSession> session = std::make_shared<core::ProcessSession>(context.get());
-              while(!is_ready.load(std::memory_order_relaxed)) {
-
+              while (!is_ready.load(std::memory_order_relaxed)) {
               }
-
               processor->onTrigger(context.get(), session.get());
-
             }));
   }
 
   is_ready.store(true, std::memory_order_relaxed);
-  //is_ready.store(true);
 
   std::for_each(processor_workers.begin(), processor_workers.end(),
-                [](std::thread &t)
-                {
+                [](std::thread &t) {
                   t.join();
                 });
 
-    outputLogger = std::unique_ptr<logging::BaseLogger>(
+  outputLogger = std::unique_ptr<logging::BaseLogger>(
       new org::apache::nifi::minifi::core::logging::NullAppender());
   logger->updateLogger(std::move(outputLogger));
-
 
   std::shared_ptr<org::apache::nifi::minifi::processors::ExecuteProcess> execp =
       std::static_pointer_cast<
           org::apache::nifi::minifi::processors::ExecuteProcess>(processor);
-
 }
