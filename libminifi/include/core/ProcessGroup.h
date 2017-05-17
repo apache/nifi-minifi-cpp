@@ -120,12 +120,12 @@ class ProcessGroup {
   bool isRootProcessGroup();
   // set parent process group
   void setParent(ProcessGroup *parent) {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
     parent_process_group_ = parent;
   }
   // get parent process group
   ProcessGroup *getParent(void) {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
     return parent_process_group_;
   }
   // Add processor
@@ -197,7 +197,7 @@ class ProcessGroup {
  private:
 
   // Mutex for protection
-  std::mutex mutex_;
+  std::recursive_mutex mutex_;
   // Logger
   std::shared_ptr<logging::Logger> logger_;
   // Prevent default copy constructor and assignment operation

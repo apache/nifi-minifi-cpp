@@ -146,8 +146,8 @@ class CoreComponent {
   const std::string & getUUIDStr() {
     return uuidStr_;
   }
-  
-  void loadComponent(){
+
+  void loadComponent() {
   }
 
  protected:
