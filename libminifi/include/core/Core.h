@@ -40,8 +40,10 @@ namespace core {
 template<typename T>
 static inline std::string getClassName() {
   char *b = abi::__cxa_demangle(typeid(T).name(), 0, 0, 0);
+  if (b == nullptr)
+    return std::string();
   std::string name = b;
-  delete[] b;
+  std::free(b);
   return name;
 }
 
@@ -139,8 +141,8 @@ class CoreComponent {
   const std::string & getUUIDStr() {
     return uuidStr_;
   }
-  
-  void loadComponent(){
+
+  void loadComponent() {
   }
 
  protected:
