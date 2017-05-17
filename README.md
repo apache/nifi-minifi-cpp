@@ -310,6 +310,24 @@ Additionally, users can utilize the MiNiFi Toolkit Converter (version 0.0.1 - sc
       host: localhost
       port uuid: 471deef6-2a6e-4a7d-912a-81cc17e3a204
       batch size: 100
+      
+### Controller Services
+ If you need to reference a controller service in your config.yml file, use the following template. In the example, below, ControllerServiceClass is the name of the class defining the controller Service. ControllerService1 
+ is linked to ControllerService2, and requires the latter to be started for ControllerService1 to start. 
+     
+	Controller Services:
+      - name: ControllerService1
+ 	    id: 2438e3c8-015a-1000-79ca-83af40ec1974
+	  	class: ControllerServiceClass
+	  	Properties:
+	      Property one: value
+	      Linked Services:
+	        - value: ControllerService2
+	  - name: ControllerService2
+	    id: 2438e3c8-015a-1000-79ca-83af40ec1992
+	  	class: ControllerServiceClass
+	  	Properties:
+        
 
 ### Running
 After completing a [build](#building), the application can be run by issuing the following from :
@@ -340,6 +358,16 @@ the linter for the Google Style guide. Google provides an Eclipse formatter for 
 guide. It is located [here](https://github.com/google/styleguide/blob/gh-pages/eclipse-cpp-google-style.xml).
 New contributions are expected to follow the Google style guide when it is reasonable. 
 Additionally, all new files must include a copy of the Apache License Header. 
+
+MiNiFi C++ contains a dynamic loading mechanism that loads arbitrary objects. To maintain
+consistency of development amongst the NiFi ecosystem, it is called a class loader. If you
+are contributing a custom Processor or Controller Service, the mechanism to register your class
+into the default class loader is a pragma definition named:
+    
+    REGISTER_RESOURCE(CLASSNAME);
+    
+To use this include REGISTER_RESOURCE(YourClassName); in your header file. The default class
+loader will make instnaces of YourClassName available for inclusion.  
 
 Once you have completed your changes, including source code and tests, you can verify that
 you follow the Google style guide by running the following command:

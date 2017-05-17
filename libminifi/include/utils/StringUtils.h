@@ -18,7 +18,6 @@
 #define LIBMINIFI_INCLUDE_IO_STRINGUTILS_H_
 
 #include <algorithm>
-#include <memory>
 #include <sstream>
 #include "utils/FailurePolicy.h"
 

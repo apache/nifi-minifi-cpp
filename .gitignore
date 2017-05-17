@@ -22,6 +22,7 @@ bin
 target
 thirdparty/**/*.o
 thirdparty/**/*.a
+libminifi/test/**/*.a
 docs/generated
 
 # Ignore source files that have been placed in the docker directory during build

@@ -31,18 +31,5 @@ REQUIRE ( nullptr != core::ClassLoader::getDefaultClassLoader().instantiate("App
 REQUIRE ( nullptr != core::ClassLoader::getDefaultClassLoader().instantiate("ListenHTTP","hosty2"));
 REQUIRE ( nullptr == core::ClassLoader::getDefaultClassLoader().instantiate("Don'tExist","hosty3"));
 REQUIRE ( nullptr == core::ClassLoader::getDefaultClassLoader().instantiate("","EmptyEmpty"));
-/*
-  std::ostringstream oss;
-    std::unique_ptr<logging::BaseLogger> outputLogger = std::unique_ptr<
-        logging::BaseLogger>(
-        new org::apache::nifi::minifi::core::logging::OutputStreamAppender(oss,
-                                                                           0));
-    std::shared_ptr<logging::Logger> logger = logging::Logger::getLogger();
-    logger->updateLogger(std::move(outputLogger));
 
-  core::ClassLoader loader;
-loader.registerFileResource("/Users/mparisi/code/nifi-minifi-cpp-so/build/libminifi/libminifi.dylib");
-
-std::shared_ptr<core::Processor> processor=  loader.instantiate("loadermcloady");
-*/
 }
