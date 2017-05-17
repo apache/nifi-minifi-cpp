@@ -105,6 +105,7 @@ set(JSONCPP_LIB "${JSONCPP_LIB_DIR}/lib/${prefix}jsoncpp${suffix}")
 set(CIVETWEB_ENABLE_CXX ON CACHE BOOL "Enable civet C++ library")
 add_subdirectory(thirdparty/yaml-cpp-yaml-cpp-0.5.3)
 add_subdirectory(thirdparty/civetweb-1.9.1)
+include_directories(thirdparty/concurrentqueue)
 add_subdirectory(libminifi)
 add_subdirectory(main)
 
@@ -144,7 +145,7 @@ set(CPACK_COMPONENTS_ALL bin)
 include(CPack)
 
 include(BuildTests)
-       
+
 include(BuildDocs)
 
 include(DockerConfig)

@@ -25,7 +25,7 @@
 #include <memory>
 #include <sstream>
 #include <iostream>
-
+#include <utility>
 #include "core/reporting/SiteToSiteProvenanceReportingTask.h"
 #include "../include/io/StreamFactory.h"
 #include "io/ClientSocket.h"
@@ -50,8 +50,8 @@ const char *SiteToSiteProvenanceReportingTask::ProvenanceAppStr = "MiNiFi Flow";
 void SiteToSiteProvenanceReportingTask::initialize() {
 }
 
-void SiteToSiteProvenanceReportingTask::getJsonReport(core::ProcessContext *context,
-    core::ProcessSession *session,
+void SiteToSiteProvenanceReportingTask::getJsonReport(
+    core::ProcessContext *context, core::ProcessSession *session,
     std::vector<std::shared_ptr<provenance::ProvenanceEventRecord>> &records,
     std::string &report) {
 
@@ -63,7 +63,8 @@ void SiteToSiteProvenanceReportingTask::getJsonReport(core::ProcessContext *cont
     Json::Value childUuidJson;
     recordJson["eventId"] = record->getEventId().c_str();
     recordJson["eventType"] =
-        provenance::ProvenanceEventRecord::ProvenanceEventTypeStr[record->getEventType()];
+        provenance::ProvenanceEventRecord::ProvenanceEventTypeStr[record
+            ->getEventType()];
     recordJson["timestampMillis"] = record->getEventTime();
     recordJson["durationMillis"] = record->getEventDuration();
     recordJson["lineageStart"] = record->getlineageStartDate();
@@ -90,10 +91,10 @@ void SiteToSiteProvenanceReportingTask::getJsonReport(core::ProcessContext *cont
     }
     recordJson["childIds"] = childUuidJson;
     recordJson["transitUri"] = record->getTransitUri().c_str();
-    recordJson["remoteIdentifier"] =
-        record->getSourceSystemFlowFileIdentifier().c_str();
-    recordJson["alternateIdentifier"] =
-        record->getAlternateIdentifierUri().c_str();
+    recordJson["remoteIdentifier"] = record->getSourceSystemFlowFileIdentifier()
+        .c_str();
+    recordJson["alternateIdentifier"] = record->getAlternateIdentifierUri()
+        .c_str();
     recordJson["application"] = ProvenanceAppStr;
     array.append(recordJson);
   }
@@ -102,11 +103,15 @@ void SiteToSiteProvenanceReportingTask::getJsonReport(core::ProcessContext *cont
   report = writer.write(array);
 }
 
-void SiteToSiteProvenanceReportingTask::onTrigger(core::ProcessContext *context,
-    core::ProcessSession *session) {
+void SiteToSiteProvenanceReportingTask::onSchedule(
+    core::ProcessContext *context,
+    core::ProcessSessionFactory *sessionFactory) {
+}
 
-  std::shared_ptr<Site2SiteClientProtocol> protocol_ =
-      this->obtainSite2SiteProtocol(stream_factory_, host_, port_, port_uuid_);
+void SiteToSiteProvenanceReportingTask::onTrigger(
+    core::ProcessContext *context, core::ProcessSession *session) {
+
+  std::unique_ptr<Site2SiteClientProtocol> protocol_ = getNextProtocol(true);
 
   if (!protocol_) {
     context->yield();
@@ -116,32 +121,33 @@ void SiteToSiteProvenanceReportingTask::onTrigger(core::ProcessContext *context,
   if (!protocol_->bootstrap()) {
     // bootstrap the client protocol if needeed
     context->yield();
-    std::shared_ptr<Processor> processor = std::static_pointer_cast < Processor
-        > (context->getProcessorNode().getProcessor());
+    std::shared_ptr<Processor> processor = std::static_pointer_cast<Processor>(
+        context->getProcessorNode().getProcessor());
     logger_->log_error("Site2Site bootstrap failed yield period %d peer ",
-        processor->getYieldPeriodMsec());
-    returnSite2SiteProtocol(protocol_);
+                       processor->getYieldPeriodMsec());
+    returnProtocol(std::move(protocol_));
     return;
   }
 
-  std::vector < std::shared_ptr < provenance::ProvenanceEventRecord >> records;
-  std::shared_ptr<provenance::ProvenanceRepository> repo = std::static_pointer_cast
-      < provenance::ProvenanceRepository > (context->getProvenanceRepository());
+  std::vector<std::shared_ptr<provenance::ProvenanceEventRecord>> records;
+  std::shared_ptr<provenance::ProvenanceRepository> repo =
+      std::static_pointer_cast<provenance::ProvenanceRepository>(
+          context->getProvenanceRepository());
   repo->getProvenanceRecord(records, batch_size_);
   if (records.size() <= 0) {
-    returnSite2SiteProtocol(protocol_);
+    returnProtocol(std::move(protocol_));
     return;
   }
 
   std::string jsonStr;
   this->getJsonReport(context, session, records, jsonStr);
   if (jsonStr.length() <= 0) {
-    returnSite2SiteProtocol(protocol_);
+    returnProtocol(std::move(protocol_));
     return;
   }
 
   try {
-    std::map < std::string, std::string > attributes;
+    std::map<std::string, std::string> attributes;
     protocol_->transferString(context, session, jsonStr, attributes);
   } catch (...) {
     // if transfer bytes failed, return instead of purge the provenance records
@@ -150,7 +156,7 @@ void SiteToSiteProvenanceReportingTask::onTrigger(core::ProcessContext *context,
 
   // we transfer the record, purge the record from DB
   repo->purgeProvenanceRecord(records);
-  returnSite2SiteProtocol(protocol_);
+  returnProtocol(std::move(protocol_));
 }
 
 } /* namespace reporting */
