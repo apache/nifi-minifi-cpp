@@ -193,10 +193,6 @@ void Processor::removeConnection(std::shared_ptr<Connectable> conn) {
   }
 }
 
-/*
-
-}
-*/
 bool Processor::flowFilesQueued() {
   std::lock_guard<std::mutex> lock(mutex_);
 
