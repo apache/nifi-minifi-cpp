@@ -52,7 +52,6 @@ Processor::Processor(std::string name, uuid_t uuid)
   strategy_ = TIMER_DRIVEN;
   loss_tolerant_ = false;
   _triggerWhenEmpty = false;
-  protocols_created_ = false;
   scheduling_period_nano_ = MINIMUM_SCHEDULING_NANOS;
   run_durantion_nano_ = 0;
   yield_period_msec_ = DEFAULT_YIELD_PERIOD_SECONDS * 1000;
@@ -191,52 +190,6 @@ void Processor::removeConnection(std::shared_ptr<Connectable> conn) {
             connection->getName().c_str(), name_.c_str(), relationship.c_str());
       }
     }
-  }
-}
-
-std::shared_ptr<Site2SiteClientProtocol> Processor::obtainSite2SiteProtocol(
-    const std::shared_ptr<io::StreamFactory> &stream_factory, std::string host, uint16_t sport, uuid_t portId) {
-  std::lock_guard < std::mutex > lock(mutex_);
-
-  if (!protocols_created_) {
-    for (int i = 0; i < this->max_concurrent_tasks_; i++) {
-      // create the protocol pool based on max threads allowed
-      std::shared_ptr<Site2SiteClientProtocol> protocol = std::make_shared<Site2SiteClientProtocol>(nullptr);
-      protocols_created_ = true;
-      protocol->setPortId(portId);
-      std::unique_ptr<org::apache::nifi::minifi::io::DataStream> str =
-          std::unique_ptr < org::apache::nifi::minifi::io::DataStream
-              > (stream_factory->createSocket(host, sport));
-      std::unique_ptr<Site2SitePeer> peer_ = std::unique_ptr < Site2SitePeer
-          > (new Site2SitePeer(std::move(str), host, sport));
-      protocol->setPeer(std::move(peer_));
-      available_protocols_.push(protocol);
-    }
-  }
-  if (!available_protocols_.empty()) {
-    std::shared_ptr<Site2SiteClientProtocol> return_pointer =
-        available_protocols_.top();
-    available_protocols_.pop();
-    return return_pointer;
-  } else {
-    // create the protocol on demand if we exceed the pool
-    std::shared_ptr<Site2SiteClientProtocol> protocol = std::make_shared<Site2SiteClientProtocol>(nullptr);
-    protocol->setPortId(portId);
-    std::unique_ptr<org::apache::nifi::minifi::io::DataStream> str =
-        std::unique_ptr < org::apache::nifi::minifi::io::DataStream
-            > (stream_factory->createSocket(host, sport));
-    std::unique_ptr<Site2SitePeer> peer_ = std::unique_ptr < Site2SitePeer
-        > (new Site2SitePeer(std::move(str), host, sport));
-    protocol->setPeer(std::move(peer_));
-    return protocol;
-  }
-}
-
-void Processor::returnSite2SiteProtocol(
-    std::shared_ptr<Site2SiteClientProtocol> protocol) {
-  std::lock_guard < std::mutex > lock(mutex_);
-  if (protocol && available_protocols_.size() < max_concurrent_tasks_) {
-    available_protocols_.push(protocol);
   }
 }
 

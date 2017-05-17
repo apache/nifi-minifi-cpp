@@ -26,6 +26,7 @@
 #include "FlowFileRecord.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
+#include "RemoteProcessorGroupPort.h"
 #include "Site2SiteClientProtocol.h"
 #include "io/StreamFactory.h"
 
@@ -37,52 +38,59 @@ namespace core {
 namespace reporting {
 
 //! SiteToSiteProvenanceReportingTask Class
-class SiteToSiteProvenanceReportingTask: public core::Processor {
-public:
-	//! Constructor
-	/*!
-	 * Create a new processor
-	 */
-	SiteToSiteProvenanceReportingTask(const std::shared_ptr<io::StreamFactory> &stream_factory) :
-			core::Processor(ReportTaskName) {
-		logger_ = logging::Logger::getLogger();
-		this->setTriggerWhenEmpty(true);
-		port_ = 0;
-		batch_size_ = 100;
-	}
-	//! Destructor
-	virtual ~SiteToSiteProvenanceReportingTask() {
+class SiteToSiteProvenanceReportingTask :
+    public minifi::RemoteProcessorGroupPort {
+ public:
+  //! Constructor
+  /*!
+   * Create a new processor
+   */
+  SiteToSiteProvenanceReportingTask(
+      const std::shared_ptr<io::StreamFactory> &stream_factory)
+      : minifi::RemoteProcessorGroupPort(stream_factory, ReportTaskName) {
+    logger_ = logging::Logger::getLogger();
+    this->setTriggerWhenEmpty(true);
+    port_ = 0;
+    batch_size_ = 100;
+  }
+  //! Destructor
+  virtual ~SiteToSiteProvenanceReportingTask() {
 
-	}
-	//! Report Task Name
-	static constexpr char const* ReportTaskName = "SiteToSiteProvenanceReportingTask";
-	static const char *ProvenanceAppStr;
+  }
+  //! Report Task Name
+  static constexpr char const* ReportTaskName =
+      "SiteToSiteProvenanceReportingTask";
+  static const char *ProvenanceAppStr;
 
-public:
-	//! Get provenance json report
-	void getJsonReport(core::ProcessContext *context,
-	    core::ProcessSession *session, std::vector < std::shared_ptr < provenance::ProvenanceEventRecord >> &records,
-	    std::string &report);
-	//! OnTrigger method, implemented by NiFi SiteToSiteProvenanceReportingTask
-	virtual void onTrigger(core::ProcessContext *context, core::ProcessSession *session);
-	//! Initialize, over write by NiFi SiteToSiteProvenanceReportingTask
-	virtual void initialize(void);
-	//! Set Port UUID
-	void setPortUUID(uuid_t port_uuid) {
-	  uuid_copy(port_uuid_, port_uuid);
-	}
-	//! Set Host
-	void setHost(std::string host) {
-	  host_ = host;
-	}
-	//! Set Port
-	void setPort(uint16_t port) {
-	  port_ = port;
-	}
-	//! Set Batch Size
-	void setBatchSize(int size) {
-	  batch_size_ = size;
-	}
+ public:
+  //! Get provenance json report
+  void getJsonReport(
+      core::ProcessContext *context, core::ProcessSession *session,
+      std::vector<std::shared_ptr<provenance::ProvenanceEventRecord>> &records,
+      std::string &report);
+  void onSchedule(core::ProcessContext *context,
+                    core::ProcessSessionFactory *sessionFactory);
+  //! OnTrigger method, implemented by NiFi SiteToSiteProvenanceReportingTask
+  virtual void onTrigger(core::ProcessContext *context,
+                         core::ProcessSession *session);
+  //! Initialize, over write by NiFi SiteToSiteProvenanceReportingTask
+  virtual void initialize(void);
+  //! Set Port UUID
+  void setPortUUID(uuid_t port_uuid) {
+    uuid_copy(protocol_uuid_, port_uuid);
+  }
+  //! Set Host
+  void setHost(std::string host) {
+    host_ = host;
+  }
+  //! Set Port
+  void setPort(uint16_t port) {
+    port_ = port;
+  }
+  //! Set Batch Size
+  void setBatchSize(int size) {
+    batch_size_ = size;
+  }
   //! Get Host
   std::string getHost(void) {
     return (host_);
@@ -97,19 +105,15 @@ public:
   }
   //! Get Port UUID
   void getPortUUID(uuid_t port_uuid) {
-    uuid_copy(port_uuid, port_uuid_);
+    uuid_copy(port_uuid, protocol_uuid_);
   }
 
-protected:
+ protected:
 
-private:
-	uuid_t port_uuid_;
-	std::string host_;
-	uint16_t port_;
-	int batch_size_;
-	//! Logger
-	std::shared_ptr<logging::Logger> logger_;
-        std::shared_ptr<io::StreamFactory> stream_factory_;
+ private:
+  int batch_size_;
+  //! Logger
+  std::shared_ptr<logging::Logger> logger_;
 };
 
 // SiteToSiteProvenanceReportingTask 

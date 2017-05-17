@@ -23,6 +23,7 @@
 #include <mutex>
 #include <memory>
 #include <stack>
+#include "concurrentqueue.h"
 #include "FlowFileRecord.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
@@ -40,13 +41,17 @@ class RemoteProcessorGroupPort : public core::Processor {
   /*!
    * Create a new processor
    */
-  RemoteProcessorGroupPort(const std::shared_ptr<io::StreamFactory> &stream_factory, std::string name, uuid_t uuid = NULL)
+  RemoteProcessorGroupPort(
+      const std::shared_ptr<io::StreamFactory> &stream_factory,
+      std::string name, uuid_t uuid = nullptr)
       : core::Processor(name, uuid),
         direction_(SEND),
         transmitting_(false) {
     stream_factory_ = stream_factory;
     logger_ = logging::Logger::getLogger();
-    uuid_copy(protocol_uuid_, uuid);
+    if (uuid != nullptr) {
+      uuid_copy(protocol_uuid_, uuid);
+    }
   }
   // Destructor
   virtual ~RemoteProcessorGroupPort() {
@@ -61,6 +66,8 @@ class RemoteProcessorGroupPort : public core::Processor {
   // Supported Relationships
   static core::Relationship relation;
  public:
+  void onSchedule(core::ProcessContext *context,
+                  core::ProcessSessionFactory *sessionFactory);
   // OnTrigger method, implemented by NiFi RemoteProcessorGroupPort
   virtual void onTrigger(core::ProcessContext *context,
                          core::ProcessSession *session);
@@ -83,13 +90,12 @@ class RemoteProcessorGroupPort : public core::Processor {
 
  protected:
 
- private:
   std::shared_ptr<io::StreamFactory> stream_factory_;
-  std::unique_ptr<Site2SiteClientProtocol> getNextProtocol();
+  std::unique_ptr<Site2SiteClientProtocol> getNextProtocol(bool create);
   void returnProtocol(std::unique_ptr<Site2SiteClientProtocol> protocol);
 
-  std::stack<std::unique_ptr<Site2SiteClientProtocol>> available_protocols_;
-  std::mutex protocol_mutex_;
+  moodycamel::ConcurrentQueue<std::unique_ptr<Site2SiteClientProtocol>> available_protocols_;
+
   // Logger
   std::shared_ptr<logging::Logger> logger_;
   // Transaction Direction
@@ -100,6 +106,10 @@ class RemoteProcessorGroupPort : public core::Processor {
   uint64_t timeout_;
 
   uuid_t protocol_uuid_;
+
+  std::string host_;
+
+  uint16_t port_;
 
 };
 
