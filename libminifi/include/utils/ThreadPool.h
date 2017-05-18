@@ -17,6 +17,7 @@
 #ifndef LIBMINIFI_INCLUDE_THREAD_POOL_H
 #define LIBMINIFI_INCLUDE_THREAD_POOL_H
 
+#include <chrono>
 #include <iostream>
 #include <atomic>
 #include <mutex>
@@ -24,6 +25,7 @@
 #include <queue>
 #include <future>
 #include <thread>
+#include "concurrentqueue.h"
 namespace org {
 namespace apache {
 namespace nifi {
@@ -41,6 +43,9 @@ class Worker {
   explicit Worker(std::function<T()> &task)
       : task(task) {
     promise = std::make_shared<std::promise<T>>();
+  }
+
+  explicit Worker() {
   }
 
   /**
@@ -116,9 +121,10 @@ class ThreadPool {
    * a future
    * @param task this thread pool will subsume ownership of
    * the worker task
-   * @return future with the impending result.
+   * @param future future to move new promise to
+   * @return true if future can be created and thread pool is in a running state.
    */
-  std::future<T> execute(Worker<T> &&task);
+  bool execute(Worker<T> &&task, std::future<T> &future);
   /**
    * Starts the Thread Pool
    */
@@ -160,6 +166,7 @@ class ThreadPool {
 
     thread_queue_ = std::move(other.thread_queue_);
     worker_queue_ = std::move(other.worker_queue_);
+
     if (!running_) {
       start();
     }
@@ -189,7 +196,7 @@ class ThreadPool {
 // atomic running boolean
   std::atomic<bool> running_;
 // worker queue of worker objects
-  std::queue<Worker<T>> worker_queue_;
+  moodycamel::ConcurrentQueue<Worker<T>> worker_queue_;
 // notification for available work
   std::condition_variable tasks_available_;
 // manager mutex
@@ -206,20 +213,17 @@ class ThreadPool {
    * Runs worker tasks
    */
   void run_tasks();
-}
-;
+};
 
 template<typename T>
-std::future<T> ThreadPool<T>::execute(Worker<T> &&task) {
+bool ThreadPool<T>::execute(Worker<T> &&task, std::future<T> &future) {
 
-  std::unique_lock<std::mutex> lock(worker_queue_mutex_);
-  bool wasEmpty = worker_queue_.empty();
-  std::future<T> future = task.getPromise()->get_future();
-  worker_queue_.push(std::move(task));
-  if (wasEmpty) {
+  future = std::move(task.getPromise()->get_future());
+  bool enqueued = worker_queue_.enqueue(std::move(task));
+  if (running_) {
     tasks_available_.notify_one();
   }
-  return future;
+  return enqueued;
 }
 
 template<typename T>
@@ -241,20 +245,15 @@ void ThreadPool<T>::startWorkers() {
 }
 template<typename T>
 void ThreadPool<T>::run_tasks() {
+  auto waitperiod = std::chrono::milliseconds(1) * 100;
   while (running_.load()) {
-    std::unique_lock<std::mutex> lock(worker_queue_mutex_);
-    if (worker_queue_.empty()) {
 
-      tasks_available_.wait(lock);
-    }
-
-    if (!running_.load())
-      break;
-
-    if (worker_queue_.empty())
+    Worker<T> task;
+    if (!worker_queue_.try_dequeue(task)) {
+      std::unique_lock<std::mutex> lock(worker_queue_mutex_);
+      tasks_available_.wait_for(lock, waitperiod);
       continue;
-    Worker<T> task = std::move(worker_queue_.front());
-    worker_queue_.pop();
+    }
     task.run();
   }
   current_workers_--;
@@ -266,16 +265,16 @@ void ThreadPool<T>::start() {
   if (!running_) {
     running_ = true;
     manager_thread_ = std::thread(&ThreadPool::startWorkers, this);
-
+    if (worker_queue_.size_approx() > 0) {
+      tasks_available_.notify_all();
+    }
   }
 }
 
 template<typename T>
 void ThreadPool<T>::shutdown() {
-
-  std::lock_guard<std::recursive_mutex> lock(manager_mutex_);
   if (running_.load()) {
-
+    std::lock_guard<std::recursive_mutex> lock(manager_mutex_);
     running_.store(false);
 
     drain();
@@ -285,8 +284,10 @@ void ThreadPool<T>::shutdown() {
       std::unique_lock<std::mutex> lock(worker_queue_mutex_);
       thread_queue_.clear();
       current_workers_ = 0;
-      while (!worker_queue_.empty())
-        worker_queue_.pop();
+      while (worker_queue_.size_approx() > 0) {
+        Worker<T> task;
+        worker_queue_.try_dequeue(task);
+      }
     }
   }
 }

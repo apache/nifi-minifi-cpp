@@ -53,7 +53,8 @@ void SchedulingAgent::enableControllerService(
   utils::Worker<bool> functor(f_ex);
   // move the functor into the thread pool. While a future is returned
   // we aren't terribly concerned with the result.
-  component_lifecycle_thread_pool_.execute(std::move(functor));
+  std::future<bool> future;
+  component_lifecycle_thread_pool_.execute(std::move(functor), future);
 }
 
 void SchedulingAgent::disableControllerService(
@@ -67,7 +68,8 @@ void SchedulingAgent::disableControllerService(
   utils::Worker<bool> functor(f_ex);
   // move the functor into the thread pool. While a future is returned
   // we aren't terribly concerned with the result.
-  component_lifecycle_thread_pool_.execute(std::move(functor));
+  std::future<bool> future;
+  component_lifecycle_thread_pool_.execute(std::move(functor), future);
 }
 
 bool SchedulingAgent::hasTooMuchOutGoing(

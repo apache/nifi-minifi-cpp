@@ -17,11 +17,16 @@
  */
 
 #define CATCH_CONFIG_MAIN  // This tells Catch to provide a main() - only do this in one cpp file
-
-#include "../TestBase.h"
-#include <memory>
+#include <thread>
+#include <random>
+#include <chrono>
 #include <vector>
+#include <memory>
+#include <utility>
+#include "../TestBase.h"
 #include "io/ClientSocket.h"
+#include "io/tls/TLSSocket.h"
+#include "utils/ThreadPool.h"
 
 TEST_CASE("TestSocket", "[TestSocket1]") {
   org::apache::nifi::minifi::io::Socket socket(
@@ -53,7 +58,6 @@ TEST_CASE("TestSocketWriteTest1", "[TestSocket2]") {
 TEST_CASE("TestSocketWriteTest2", "[TestSocket3]") {
   std::vector<uint8_t> buffer;
   buffer.push_back('a');
-
   std::shared_ptr<org::apache::nifi::minifi::io::SocketContext> socket_context =
       std::make_shared<org::apache::nifi::minifi::io::SocketContext>(
           std::make_shared<minifi::Configure>());
@@ -89,7 +93,6 @@ TEST_CASE("TestGetHostName", "[TestSocket4]") {
 TEST_CASE("TestWriteEndian64", "[TestSocket4]") {
   std::vector<uint8_t> buffer;
   buffer.push_back('a');
-
   std::shared_ptr<org::apache::nifi::minifi::io::SocketContext> socket_context =
       std::make_shared<org::apache::nifi::minifi::io::SocketContext>(
           std::make_shared<minifi::Configure>());
@@ -127,7 +130,6 @@ TEST_CASE("TestWriteEndian32", "[TestSocket5]") {
 
   org::apache::nifi::minifi::io::Socket server(socket_context, "localhost",
                                                9183, 1);
-
   REQUIRE(-1 != server.initialize());
 
   org::apache::nifi::minifi::io::Socket client(socket_context, "localhost",
@@ -190,3 +192,47 @@ TEST_CASE("TestSocketWriteTestAfterClose", "[TestSocket6]") {
 
   server.closeStream();
 }
+
+std::atomic<uint8_t> counter;
+std::mt19937_64 seed { std::random_device { }() };
+bool createSocket() {
+  int mine = counter++;
+  std::shared_ptr<minifi::Configure> configuration = std::make_shared<
+      minifi::Configure>();
+
+  std::uniform_int_distribution<> distribution { 10, 100 };
+  std::this_thread::sleep_for(std::chrono::milliseconds { distribution(seed) });
+
+  for (int i = 0; i < 50; i++) {
+    std::shared_ptr<org::apache::nifi::minifi::io::TLSContext> socketA =
+        std::make_shared<org::apache::nifi::minifi::io::TLSContext>(
+            configuration);
+    socketA->initialize();
+  }
+
+  return true;
+}
+/**
+ * MINIFI-320 was created to address reallocations within TLSContext
+ * This test will create 20 threads that attempt to create contexts
+ * to ensure we no longer see the segfaults.
+ */
+TEST_CASE("TestTLSContextCreation", "[TestSocket6]") {
+  utils::ThreadPool<bool> pool(20, true);
+
+  std::vector<std::future<bool>> futures;
+  for (int i = 0; i < 20; i++) {
+    std::function<bool()> f_ex = createSocket;
+    utils::Worker<bool> functor(f_ex);
+    std::future<bool> fut;
+    REQUIRE(true == pool.execute(std::move(functor), fut));
+    futures.push_back(std::move(fut));
+  }
+  pool.start();
+  for (auto &&future : futures) {
+    future.wait();
+  }
+
+  REQUIRE(20 == counter.load());
+}
+
