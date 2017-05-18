@@ -32,8 +32,12 @@ namespace nifi {
 namespace minifi {
 namespace io {
 
+std::atomic<OpenSSLInitializer*> OpenSSLInitializer::context_instance;
+std::mutex OpenSSLInitializer::context_mutex;
+
 TLSContext::TLSContext(const std::shared_ptr<Configure> &configure)
-    : SocketContext(configure), error_value(0),
+    : SocketContext(configure),
+      error_value(0),
       ctx(0),
       logger_(logging::Logger::getLogger()),
       configure_(configure) {
@@ -45,20 +49,20 @@ int16_t TLSContext::initialize() {
   if (ctx != 0) {
     return error_value;
   }
+
+  if (nullptr == OpenSSLInitializer::getInstance()) {
+    return error_value;
+  }
+
   std::string clientAuthStr;
   bool needClientCert = true;
-  if (!(configure_->get(Configure::nifi_security_need_ClientAuth,
-                           clientAuthStr)
+  if (!(configure_->get(Configure::nifi_security_need_ClientAuth, clientAuthStr)
       && org::apache::nifi::minifi::utils::StringUtils::StringToBool(
           clientAuthStr, needClientCert))) {
     needClientCert = true;
   }
 
-  SSL_library_init();
   const SSL_METHOD *method;
-
-  OpenSSL_add_all_algorithms();
-  SSL_load_error_strings();
   method = TLSv1_2_client_method();
   ctx = SSL_CTX_new(method);
   if (ctx == NULL) {
@@ -74,9 +78,9 @@ int16_t TLSContext::initialize() {
     std::string caCertificate;
 
     if (!(configure_->get(Configure::nifi_security_client_certificate,
-                             certificate)
+                          certificate)
         && configure_->get(Configure::nifi_security_client_private_key,
-                              privatekey))) {
+                           privatekey))) {
       logger_->log_error(
           "Certificate and Private Key PEM file not configured, error: %s.",
           std::strerror(errno));
@@ -92,10 +96,11 @@ int16_t TLSContext::initialize() {
       return error_value;
     }
     if (configure_->get(Configure::nifi_security_client_pass_phrase,
-                           passphrase)) {
+                        passphrase)) {
       // if the private key has passphase
       SSL_CTX_set_default_passwd_cb(ctx, pemPassWordCb);
-      SSL_CTX_set_default_passwd_cb_userdata(ctx, static_cast<void*>(configure_.get()));
+      SSL_CTX_set_default_passwd_cb_userdata(
+          ctx, static_cast<void*>(configure_.get()));
     }
 
     int retp = SSL_CTX_use_PrivateKey_file(ctx, privatekey.c_str(),
@@ -117,7 +122,7 @@ int16_t TLSContext::initialize() {
     }
     // load CA certificates
     if (configure_->get(Configure::nifi_security_client_ca_certificate,
-                           caCertificate)) {
+                        caCertificate)) {
       retp = SSL_CTX_load_verify_locations(ctx, caCertificate.c_str(), 0);
       if (retp == 0) {
         logger_->log_error("Can not load CA certificate, Exiting, error : %s",
@@ -143,23 +148,25 @@ TLSSocket::~TLSSocket() {
  * @param port connecting port
  * @param listeners number of listeners in the queue
  */
-TLSSocket::TLSSocket(const std::shared_ptr<TLSContext> &context, const std::string &hostname, const uint16_t port,
+TLSSocket::TLSSocket(const std::shared_ptr<TLSContext> &context,
+                     const std::string &hostname, const uint16_t port,
                      const uint16_t listeners)
     : Socket(context, hostname, port, listeners),
       ssl(0) {
-        context_ = context;
+  context_ = context;
 }
 
-TLSSocket::TLSSocket(const std::shared_ptr<TLSContext> &context, const std::string &hostname, const uint16_t port)
+TLSSocket::TLSSocket(const std::shared_ptr<TLSContext> &context,
+                     const std::string &hostname, const uint16_t port)
     : Socket(context, hostname, port, 0),
       ssl(0) {
-        context_ = context;
+  context_ = context;
 }
 
 TLSSocket::TLSSocket(const TLSSocket &&d)
     : Socket(std::move(d)),
       ssl(0) {
-        context_ = d.context_;
+  context_ = d.context_;
 }
 
 int16_t TLSSocket::initialize() {

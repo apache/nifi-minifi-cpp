@@ -20,6 +20,7 @@
 
 #include <openssl/ssl.h>
 #include <openssl/err.h>
+#include <atomic>
 #include <cstdint>
 #include "../ClientSocket.h"
 
@@ -36,6 +37,36 @@ namespace io {
 #define TLS_ERROR_CERT_MISSING 3
 #define TLS_ERROR_KEY_ERROR 4
 #define TLS_ERROR_CERT_ERROR 5
+
+class OpenSSLInitializer
+{
+ public:
+  static OpenSSLInitializer *getInstance() {
+    OpenSSLInitializer* atomic_context = context_instance.load(
+         std::memory_order_relaxed);
+     std::atomic_thread_fence(std::memory_order_acquire);
+     if (atomic_context == nullptr) {
+       std::lock_guard<std::mutex> lock(context_mutex);
+       atomic_context = context_instance.load(std::memory_order_relaxed);
+       if (atomic_context == nullptr) {
+         atomic_context = new OpenSSLInitializer();
+         std::atomic_thread_fence(std::memory_order_release);
+         context_instance.store(atomic_context, std::memory_order_relaxed);
+       }
+     }
+     return atomic_context;
+   }
+
+  OpenSSLInitializer()
+  {
+    SSL_library_init();
+    OpenSSL_add_all_algorithms();
+    SSL_load_error_strings();
+  }
+ private:
+  static std::atomic<OpenSSLInitializer*> context_instance;
+  static std::mutex context_mutex;
+};
 
 class TLSContext: public SocketContext {
 
