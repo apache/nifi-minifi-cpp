@@ -121,9 +121,10 @@ class ThreadPool {
    * a future
    * @param task this thread pool will subsume ownership of
    * the worker task
-   * @return future with the impending result.
+   * @param future future to move new promise to
+   * @return true if future can be created and thread pool is in a running state.
    */
-  std::future<T> execute(Worker<T> &&task);
+  bool execute(Worker<T> &&task, std::future<T> &future);
   /**
    * Starts the Thread Pool
    */
@@ -215,15 +216,14 @@ class ThreadPool {
 };
 
 template<typename T>
-std::future<T> ThreadPool<T>::execute(Worker<T> &&task) {
+bool ThreadPool<T>::execute(Worker<T> &&task, std::future<T> &future) {
 
-  bool wasEmpty = worker_queue_.size_approx() == 0;
-  std::future<T> future = task.getPromise()->get_future();
-  worker_queue_.enqueue(std::move(task));
-  if (wasEmpty && running_) {
+  future = std::move(task.getPromise()->get_future());
+  bool enqueued = worker_queue_.enqueue(std::move(task));
+  if (running_) {
     tasks_available_.notify_one();
   }
-  return future;
+  return enqueued;
 }
 
 template<typename T>
@@ -273,10 +273,8 @@ void ThreadPool<T>::start() {
 
 template<typename T>
 void ThreadPool<T>::shutdown() {
-
-  std::lock_guard<std::recursive_mutex> lock(manager_mutex_);
   if (running_.load()) {
-
+    std::lock_guard<std::recursive_mutex> lock(manager_mutex_);
     running_.store(false);
 
     drain();

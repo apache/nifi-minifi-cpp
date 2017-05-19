@@ -31,7 +31,8 @@ TEST_CASE("ThreadPoolTest1", "[TPT1]") {
   std::function<bool()> f_ex = function;
   utils::Worker<bool> functor(f_ex);
   pool.start();
-  std::future<bool> fut = pool.execute(std::move(functor));
+  std::future<bool> fut;
+  REQUIRE(true == pool.execute(std::move(functor), fut));
   fut.wait();
   REQUIRE(true == fut.get());
 }
