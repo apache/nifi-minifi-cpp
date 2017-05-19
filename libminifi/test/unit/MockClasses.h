@@ -24,6 +24,7 @@
 #include "core/ProcessSession.h"
 
 std::atomic<bool> disabled;
+std::mutex control_mutex;
 
 class MockControllerService : public core::controller::ControllerService {
  public:
@@ -112,7 +113,7 @@ class MockProcessor : public core::Processor {
 
       std::shared_ptr<core::controller::ControllerService> service = context
           ->getControllerService(linked_service);
-
+      std::lock_guard<std::mutex> lock(control_mutex);
       if (!disabled.load()) {
         assert(true == context->isControllerServiceEnabled(linked_service));
         assert(nullptr != service);

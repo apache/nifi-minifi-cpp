@@ -61,6 +61,7 @@ void waitToVerifyProcessor() {
   std::this_thread::sleep_for(std::chrono::seconds(2));
 }
 
+
 int main(int argc, char **argv) {
   std::string test_file_location;
   std::string key_dir;
@@ -82,12 +83,6 @@ int main(int argc, char **argv) {
 
   configuration->set(minifi::Configure::nifi_flow_configuration_file,
                      test_file_location);
-  /*
-   * nifi.security.client.certificate=/Users/mparisi/Downloads/nifi-toolkit-1.1.1/bin/cn.crt.pem
-   nifi.security.client.private.key=/Users/mparisi/Downloads/nifi-toolkit-1.1.1/bin/cn.ckey.pem
-   nifi.security.client.pass.phrase=/Users/mparisi/Downloads/nifi-toolkit-1.1.1/bin/cn.pass
-   nifi.security.client.ca.certificate=/Users/mparisi/Downloads/nifi-toolkit-1.1.1/bin/nifi-cert.pem
-   */
   std::string client_cert = "cn.crt.pem";
   std::string priv_key_file = "cn.ckey.pem";
   std::string passphrase = "cn.pass";
@@ -147,7 +142,6 @@ int main(int argc, char **argv) {
       "STARTING FLOW CONTROLLER INTEGRATION TEST");
   controller->load();
   controller->start();
-  waitToVerifyProcessor();
   std::shared_ptr<core::controller::ControllerServiceNode> ssl_client_cont =
       controller->getControllerServiceNode("SSLClientServiceTest");
   ssl_client_cont->enable();
@@ -163,23 +157,34 @@ int main(int argc, char **argv) {
   std::shared_ptr<core::controller::ControllerServiceNode> cs_id = controller
       ->getControllerServiceNode("ID");
   assert(cs_id != nullptr);
-  controller->disableControllerService(cs_id);
-  disabled = true;
-  waitToVerifyProcessor();
-  controller->enableControllerService(cs_id);
-  disabled = false;
-  waitToVerifyProcessor();
+  {
+    std::lock_guard<std::mutex> lock(control_mutex);
+    controller->disableControllerService(cs_id);
+    disabled = true;
+    waitToVerifyProcessor();
+  }
+  {
+    std::lock_guard<std::mutex> lock(control_mutex);
+    controller->enableControllerService(cs_id);
+    disabled = false;
+    waitToVerifyProcessor();
+  }
   std::shared_ptr<core::controller::ControllerServiceNode> mock_cont =
       controller->getControllerServiceNode("MockItLikeIts1995");
   assert(cs_id->enabled());
-
-  controller->disableReferencingServices(mock_cont);
-  disabled = true;
-  waitToVerifyProcessor();
+  {
+    std::lock_guard<std::mutex> lock(control_mutex);
+    controller->disableReferencingServices(mock_cont);
+    disabled = true;
+    waitToVerifyProcessor();
+  }
   assert(cs_id->enabled() == false);
-  controller->enableReferencingServices(mock_cont);
-  disabled = false;
-  waitToVerifyProcessor();
+  {
+    std::lock_guard<std::mutex> lock(control_mutex);
+    controller->enableReferencingServices(mock_cont);
+    disabled = false;
+    waitToVerifyProcessor();
+  }
   assert(cs_id->enabled() == true);
 
   controller->waitUnload(60000);
