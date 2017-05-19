@@ -212,7 +212,11 @@ bool createSocket() {
 
   return true;
 }
-
+/**
+ * MINIFI-320 was created to address reallocations within TLSContext
+ * This test will create 20 threads that attempt to create contexts
+ * to ensure we no longer see the segfaults.
+ */
 TEST_CASE("TestTLSContextCreation", "[TestSocket6]") {
   utils::ThreadPool<bool> pool(20, true);
 

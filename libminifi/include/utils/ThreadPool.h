@@ -195,7 +195,6 @@ class ThreadPool {
 // atomic running boolean
   std::atomic<bool> running_;
 // worker queue of worker objects
-  //std::queue<Worker<T>> worker_queue_;
   moodycamel::ConcurrentQueue<Worker<T>> worker_queue_;
 // notification for available work
   std::condition_variable tasks_available_;
