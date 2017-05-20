@@ -65,7 +65,8 @@ class FlowConfiguration : public CoreComponent {
                              const std::string path)
       : CoreComponent(core::getClassName<FlowConfiguration>()),
         flow_file_repo_(flow_file_repo),
-        config_path_(path) {
+        config_path_(path),
+        stream_factory_(stream_factory) {
     controller_services_ = std::make_shared<
         core::controller::ControllerServiceMap>();
     service_provider_ = std::make_shared<
