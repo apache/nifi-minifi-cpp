@@ -37,7 +37,7 @@ namespace repository {
 #define FLOWFILE_REPOSITORY_DIRECTORY "./flowfile_repository"
 #define MAX_FLOWFILE_REPOSITORY_STORAGE_SIZE (10*1024*1024) // 10M
 #define MAX_FLOWFILE_REPOSITORY_ENTRY_LIFE_TIME (600000) // 10 minute
-#define FLOWFILE_REPOSITORY_PURGE_PERIOD (2500) // 2500 msec
+#define FLOWFILE_REPOSITORY_PURGE_PERIOD (2000) // 2000 msec
 
 /**
  * Flow File repository

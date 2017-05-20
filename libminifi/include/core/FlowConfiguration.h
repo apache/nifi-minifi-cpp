@@ -75,8 +75,8 @@ class FlowConfiguration : public CoreComponent {
   // Create Processor (Node/Input/Output Port) based on the name
   std::shared_ptr<core::Processor> createProcessor(std::string name, uuid_t uuid);
   // Create Root Processor Group
-  std::unique_ptr<core::ProcessGroup> createRootProcessGroup(std::string name, uuid_t uuid);
-
+  std::unique_ptr<core::ProcessGroup> createRootProcessGroup(std::string name,
+                                                             uuid_t uuid, int version);
   std::shared_ptr<core::controller::ControllerServiceNode> createControllerService(const std::string &class_name, const std::string &name, uuid_t uuid);
 
   // Create Remote Processor Group
@@ -96,6 +96,11 @@ class FlowConfiguration : public CoreComponent {
 
   virtual std::unique_ptr<core::ProcessGroup> getRoot() {
     return getRoot(config_path_);
+  }
+
+  virtual std::unique_ptr<core::ProcessGroup> getRootFromPayload(
+      std::string &yamlConfigPayload) {
+    return nullptr;
   }
 
   /**

@@ -33,6 +33,7 @@
 #include <utility>
 #include <memory>
 #include <string>
+#include "yaml-cpp/yaml.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessGroup.h"
 #include "utils/StringUtils.h"
@@ -84,9 +85,22 @@ FlowController::FlowController(std::shared_ptr<core::Repository> provenance_repo
   max_timer_driven_threads_ = DEFAULT_MAX_TIMER_DRIVEN_THREAD;
   running_ = false;
   initialized_ = false;
+<<<<<<< HEAD
   root_ = nullptr;
+=======
+  root_ = NULL;
+  memset(serial_number_, 0, 6);
+>>>>>>> More configuration listener
 
   protocol_ = new FlowControlProtocol(this, configure);
+
+  std::string listenerType;
+  // grab the value for configuration
+  if (configure->get(Configure::nifi_configuration_listener_type, listenerType)) {
+    if (listenerType == "http") {
+      this->http_configuration_listener_ = std::unique_ptr<minifi::HttpConfigurationListener>(new minifi::HttpConfigurationListener(this, configure));
+    }
+  }
 
   if (!headless_mode) {
     std::string rawConfigFileString;
@@ -152,6 +166,54 @@ FlowController::~FlowController() {
   provenance_repo_ = nullptr;
 }
 
+bool FlowController::applyConfiguration(std::string &configurePayload) {
+
+  std::unique_ptr<core::ProcessGroup> newRoot;
+  try {
+    newRoot = std::move(flow_configuration_->getRootFromPayload(configurePayload));
+  }
+  catch (const YAML::Exception& e) {
+    logger_->log_error("Invalid configuration payload");
+    return false;
+  }
+
+  if (newRoot == nullptr)
+    return false;
+
+  if (this->root_ != nullptr) {
+    // check for version/name/uuid for the flow controller
+    if (newRoot->getName() != root_->getName()) {
+      logger_->log_error("Configuration flow controller name mismatching");
+      return false;
+    }
+
+    uuid_t oldUUID;
+    uuid_t newUUID;
+
+    if (newRoot->getUUID(newUUID) && root_->getUUID(oldUUID) &&
+        uuid_compare(newUUID, oldUUID) != 0) {
+      logger_->log_error("Configuration flow controller UUID mismatching");
+      return false;
+    }
+
+    if (newRoot->getVersion() <= root_->getVersion()) {
+      logger_->log_error("Configuration flow controller version is not latest");
+      return false;
+    }
+  }
+
+  logger_->log_info("Starting to reload Flow Controller with flow control name %s, version %d",
+      newRoot->getName().c_str(), newRoot->getVersion());
+
+  std::lock_guard<std::recursive_mutex> flow_lock(mutex_);
+  stop(true);
+  waitUnload(30000);
+  this->root_ = std::move(newRoot);
+  loadFlowRepo();
+  initialized_ = true;
+  return start();
+}
+
 void FlowController::stop(bool force) {
   std::lock_guard<std::recursive_mutex> flow_lock(mutex_);
   if (running_) {
@@ -164,7 +226,7 @@ void FlowController::stop(bool force) {
     this->flow_file_repo_->stop();
     this->provenance_repo_->stop();
     // Wait for sometime for thread stop
-    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    std::this_thread::sleep_for(std::chrono::milliseconds(3000));
     if (this->root_)
       this->root_->stopProcessing(this->timer_scheduler_.get(), this->event_scheduler_.get());
   }

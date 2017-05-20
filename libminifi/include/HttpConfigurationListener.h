@@ -19,20 +19,15 @@
 #ifndef __HTTP_CONFIGURATION_LISTENER__
 #define __HTTP_CONFIGURATION_LISTENER__
 
-#include <memory>
-
 #include <curl/curl.h>
-#include "FlowController.h"
-#include "core/Processor.h"
 #include "core/Core.h"
 #include "core/Property.h"
+#include "ConfigurationListener.h"
 
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
-namespace core {
-
 /**
  * HTTP Response object
  */
@@ -43,9 +38,9 @@ struct HTTPRequestResponse {
    * Receive HTTP Response.
    */
   static size_t recieve_write(char * data, size_t size, size_t nmemb,
-                              void * p) {
+      void * p) {
     return static_cast<HTTPRequestResponse*>(p)->write_content(data, size,
-                                                               nmemb);
+        nmemb);
   }
 
   size_t write_content(char* ptr, size_t size, size_t nmemb) {
@@ -56,67 +51,38 @@ struct HTTPRequestResponse {
 };
 
 // HttpConfigurationListener Class
-class HttpConfigurationListener : public core::Processor {
- public:
+class HttpConfigurationListener: public ConfigurationListener {
+public:
 
   // Constructor
   /*!
    * Create a new processor
    */
-  HttpConfigurationListener(std::string name, uuid_t uuid = NULL)
-      : Processor(name, uuid),
-        connect_timeout_(20000),
-        read_timeout_(20000),
-        use_etag_(false) {
-    curl_global_init(CURL_GLOBAL_DEFAULT);
+  HttpConfigurationListener(FlowController *controller,
+      std::shared_ptr<Configure> configure) :
+      minifi::ConfigurationListener(controller, configure, "http") {
+      std::string value;
+
+      if (configure->get(Configure::nifi_configuration_listener_http_url, value)) {
+        url_ = value;
+        logger_->log_info("Http configuration listener URL %s", url_.c_str());
+      } else {
+        url_ = "";
+      }
+      curl_global_init (CURL_GLOBAL_DEFAULT);
   }
+
+  bool pullConfiguration(std::string &configuration);
+
   // Destructor
-  virtual ~HttpConfigurationListener();
-  // Processor Name
-  static const char *ProcessorName;
+  virtual ~HttpConfigurationListener() {
 
-  static const char* STATUS_CODE;
-  static const char* STATUS_MESSAGE;
-  static const char* RESPONSE_BODY;
-  static const char* REQUEST_URL;
-  static const char* TRANSACTION_ID;
-  static const char* REMOTE_DN;
-  static const char* EXCEPTION_CLASS;
-  static const char* EXCEPTION_MESSAGE;
+  }
 
-  void onTrigger(core::ProcessContext *context, core::ProcessSession *session);
-  void initialize();
-  void onSchedule(core::ProcessContext *context,
-                  core::ProcessSessionFactory *sessionFactory);
+protected:
 
- protected:
-
-  /**
-   * Generate a transaction ID
-   * @return transaction ID string.
-   */
-  std::string generateId();
-  /**
-   * Set the request method on the curl struct.
-   * @param curl pointer to this instance.
-   * @param string request method
-   */
-  void set_request_method(CURL *curl, const std::string &);
-
-  CURLcode res;
-  // http method
-  std::string method_;
-  // url
-  std::string url_;
-  // connection timeout
-  int64_t connect_timeout_;
-  // read timeout.
-  int64_t read_timeout_;
-  bool use_etag_;
-  std::string last_etag_;
 };
 
-} /* namespace core */
 } /* namespace minifi */
 } /* namespace nifi */
 } /* namespace apache */

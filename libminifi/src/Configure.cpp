@@ -43,11 +43,24 @@ const char *Configure::nifi_flowfile_repository_max_storage_size = "nifi.flowfil
 const char *Configure::nifi_flowfile_repository_max_storage_time = "nifi.flowfile.repository.max.storage.time";
 const char *Configure::nifi_flowfile_repository_directory_default = "nifi.flowfile.repository.directory.default";
 const char *Configure::nifi_remote_input_secure = "nifi.remote.input.secure";
-const char *Configure::nifi_security_need_ClientAuth = "nifi.security.need.ClientAuth";
-const char *Configure::nifi_security_client_certificate = "nifi.security.client.certificate";
-const char *Configure::nifi_security_client_private_key = "nifi.security.client.private.key";
-const char *Configure::nifi_security_client_pass_phrase = "nifi.security.client.pass.phrase";
-const char *Configure::nifi_security_client_ca_certificate = "nifi.security.client.ca.certificate";
+const char *Configure::nifi_security_need_ClientAuth =
+    "nifi.security.need.ClientAuth";
+const char *Configure::nifi_security_client_certificate =
+    "nifi.security.client.certificate";
+const char *Configure::nifi_security_client_private_key =
+    "nifi.security.client.private.key";
+const char *Configure::nifi_security_client_pass_phrase =
+    "nifi.security.client.pass.phrase";
+const char *Configure::nifi_security_client_ca_certificate =
+    "nifi.security.client.ca.certificate";
+const char *Configure::nifi_configuration_listener_pull_interval =
+    "nifi.configuration.listener.pull.interval";
+const char *Configure::nifi_configuration_listener_http_url =
+    "nifi.configuration.listener.http.url";
+const char *Configure::nifi_configuration_listener_rest_url =
+    "nifi.configuration.listener.rest.url";
+const char *Configure::nifi_configuration_listener_type =
+    "nifi.configuration.listener.type";
 
 } /* namespace minifi */
 } /* namespace nifi */
