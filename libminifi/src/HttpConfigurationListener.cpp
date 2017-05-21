@@ -84,7 +84,8 @@ bool HttpConfigurationListener::pullConfiguration(std::string &configuration) {
     bool body_empty = IsNullOrEmpty(content.data);
 
     if (isSuccess && !body_empty) {
-      ret = controller_->applyConfiguration(response_body);
+      configuration = std::move(response_body);
+      ret = true;
     } else {
       logger_->log_error("Cannot output body to content");
     }

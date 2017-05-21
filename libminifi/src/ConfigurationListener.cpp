@@ -27,6 +27,7 @@ void ConfigurationListener::start() {
   if (running_)
     return;
 
+  pull_interval_ = 60*1000;
   std::string value;
   // grab the value for configuration
   if (configure_->get(Configure::nifi_configuration_listener_pull_interval, value)) {
@@ -34,14 +35,11 @@ void ConfigurationListener::start() {
     if (core::Property::StringToTime(value, pull_interval_, unit)
         && core::Property::ConvertTimeUnitToMS(pull_interval_, unit,
             pull_interval_)) {
-      logger_->log_info("Configuration Listener pull interval: [%d] ms",
-          pull_interval_);
     }
-  } else {
-    pull_interval_ = 60*1000;
-    logger_->log_info("Configuration Listener pull interval: [%d] ms",
-            pull_interval_);
   }
+
+  logger_->log_info("Configuration Listener pull interval: [%d] ms",
+              pull_interval_);
 
   thread_ = std::thread(&ConfigurationListener::threadExecutor, this);
   thread_.detach();
