@@ -90,4 +90,6 @@ add_test(NAME HttpGetIntegrationTestSecure COMMAND HttpGetIntegrationTest "${TES
 
 add_test(NAME HttpPostIntegrationTest COMMAND HttpPostIntegrationTest "${TEST_RESOURCES}/TestHTTPPost.yml" )
 
+add_test(NAME ProvenanceReportingTest COMMAND ProvenanceReportingTest "${TEST_RESOURCES}/TestProvenanceReporting.yml" )
+
 add_test(NAME TestExecuteProcess COMMAND TestExecuteProcess )
