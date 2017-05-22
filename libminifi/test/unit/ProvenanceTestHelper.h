@@ -93,7 +93,7 @@ class TestRepository : public core::Repository {
 class TestFlowRepository : public core::repository::FlowFileRepository {
  public:
   TestFlowRepository()
-      : core::repository::FlowFileRepository("./dir", 1000, 100, 0) {
+      : core::repository::FlowFileRepository("ff","./dir", 1000, 100, 0) {
   }
   // initialize
   bool initialize() {

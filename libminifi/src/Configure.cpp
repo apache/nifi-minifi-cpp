@@ -41,6 +41,8 @@ const char *Configure::nifi_configuration_class_name =
     "nifi.flow.configuration.class.name";
 const char *Configure::nifi_flow_repository_class_name =
     "nifi.flow.repository.class.name";
+const char *Configure::nifi_volatile_repository_options =
+    "nifi.volatile.repository.options.";
 const char *Configure::nifi_provenance_repository_class_name =
     "nifi.provenance.repository.class.name";
 const char *Configure::nifi_server_port = "nifi.server.port";

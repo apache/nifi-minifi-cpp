@@ -28,6 +28,9 @@ namespace minifi {
 namespace core {
 namespace repository {
 
+const char *VolatileRepository::volatile_repo_max_count =
+    "max.count";
+
 void VolatileRepository::run() {
   repo_full_ = false;
 }

@@ -66,13 +66,18 @@ struct class_operations {
 };
 
 template<typename T>
-typename std::enable_if<!class_operations<T>::value, std::shared_ptr<T>>::type instantiate() {
+typename std::enable_if<!class_operations<T>::value, std::shared_ptr<T>>::type instantiate(const std::string name = "") {
   throw std::runtime_error("Cannot instantiate class");
 }
 
 template<typename T>
-typename std::enable_if<class_operations<T>::value, std::shared_ptr<T>>::type instantiate() {
-  return std::make_shared<T>();
+typename std::enable_if<class_operations<T>::value, std::shared_ptr<T>>::type instantiate(const std::string name = "") {
+  if (name.length() == 0){
+    return std::make_shared<T>();
+  }
+  else{
+    return std::make_shared<T>(name);
+  }
 }
 
 /**

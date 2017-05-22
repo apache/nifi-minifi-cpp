@@ -42,12 +42,12 @@ class ProvenanceRepository : public core::Repository,
   /*!
    * Create a new provenance repository
    */
-  ProvenanceRepository(std::string directory = PROVENANCE_DIRECTORY,
+  ProvenanceRepository(const std::string repo_name = "", std::string directory = PROVENANCE_DIRECTORY,
                        int64_t maxPartitionMillis =
                        MAX_PROVENANCE_ENTRY_LIFE_TIME,
                        int64_t maxPartitionBytes = MAX_PROVENANCE_STORAGE_SIZE,
                        uint64_t purgePeriod = PROVENANCE_PURGE_PERIOD)
-      : Repository(core::getClassName<ProvenanceRepository>(), directory,
+      : Repository(repo_name.length() > 0 ? repo_name : core::getClassName<ProvenanceRepository>(), directory,
                    maxPartitionMillis, maxPartitionBytes, purgePeriod) {
 
     db_ = NULL;

@@ -31,7 +31,7 @@ namespace minifi {
 namespace core {
 
 std::shared_ptr<core::Repository> createRepository(
-    const std::string configuration_class_name, bool fail_safe = false);
+    const std::string configuration_class_name, bool fail_safe = false,const std::string repo_name = "");
 
 } /* namespace core */
 } /* namespace minifi */
