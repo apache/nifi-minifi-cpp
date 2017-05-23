@@ -148,7 +148,10 @@ include(BuildTests)
 
 include(BuildDocs)
 
+include(RunApacheRAT)
+
 include(DockerConfig)
+
 
 # Create a custom build target that will run the linter.
 add_custom_target(
