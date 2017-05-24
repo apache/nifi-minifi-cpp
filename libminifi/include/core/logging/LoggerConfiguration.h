@@ -105,8 +105,7 @@ class LoggerConfiguration {
    protected:
   static std::shared_ptr<internal::LoggerNamespace> initialize_namespaces(const std::shared_ptr<LoggerProperties> &logger_properties);
   static std::shared_ptr<spdlog::logger> get_logger(std::shared_ptr<Logger> logger, const std::shared_ptr<internal::LoggerNamespace> &root_namespace, const std::string &name,
-                                                    std::shared_ptr<spdlog::formatter> formatter,
-                                                    bool remove_if_present = false);
+                                                    std::shared_ptr<spdlog::formatter> formatter, bool remove_if_present = false);
    private:
   static std::shared_ptr<internal::LoggerNamespace> create_default_root();
 

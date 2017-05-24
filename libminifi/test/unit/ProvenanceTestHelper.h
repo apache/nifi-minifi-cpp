@@ -18,11 +18,22 @@
 #ifndef LIBMINIFI_TEST_UNIT_PROVENANCETESTHELPER_H_
 #define LIBMINIFI_TEST_UNIT_PROVENANCETESTHELPER_H_
 
-#include "provenance/Provenance.h"
-#include "FlowController.h"
-#include "core/Repository.h"
-#include "core/repository/FlowFileRepository.h"
-#include "core/Core.h"
+#include <atomic>
+#include <cstdint>
+#include <iostream>
+#include <map>
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
+#include "core/repository/VolatileContentRepository.h"
+#include "../../include/core/Processor.h"
+#include "../../include/core/repository/FlowFileRepository.h"
+#include "../../include/Connection.h"
+#include "../../include/FlowController.h"
+#include "../../include/properties/Configure.h"
+#include "../../include/provenance/Provenance.h"
+
 /**
  * Test repository
  */
@@ -41,17 +52,22 @@ class TestRepository : public core::Repository {
 
   }
 
-  bool Put(std::string key, uint8_t *buf, int bufLen) {
+  bool Put(std::string key, const uint8_t *buf, size_t bufLen) {
     repositoryResults.insert(std::pair<std::string, std::string>(key, std::string((const char*) buf, bufLen)));
     return true;
   }
+
+  virtual bool Serialize(const std::string &key, const uint8_t *buffer, const size_t bufferSize) {
+    return Put(key, buffer, bufferSize);
+  }
+
   // Delete
   bool Delete(std::string key) {
     repositoryResults.erase(key);
     return true;
   }
   // Get
-  bool Get(std::string key, std::string &value) {
+  bool Get(const std::string &key, std::string &value) {
     auto result = repositoryResults.find(key);
     if (result != repositoryResults.end()) {
       value = result->second;
@@ -59,6 +75,39 @@ class TestRepository : public core::Repository {
     } else {
       return false;
     }
+  }
+
+  virtual bool Serialize(std::vector<std::shared_ptr<core::SerializableComponent>> &store, size_t max_size) {
+    return false;
+  }
+
+  virtual bool DeSerialize(std::vector<std::shared_ptr<core::SerializableComponent>> &store, size_t &max_size) {
+    max_size = 0;
+    for (auto entry : repositoryResults) {
+      std::shared_ptr<core::SerializableComponent> eventRead = store.at(max_size);
+
+      if (eventRead->DeSerialize((uint8_t*) entry.second.data(), entry.second.length())) {
+      }
+      if (+max_size >= store.size()) {
+        break;
+      }
+    }
+    return true;
+  }
+
+  virtual bool Serialize(const std::shared_ptr<core::SerializableComponent> &store) {
+    return false;
+  }
+
+  virtual bool DeSerialize(const std::shared_ptr<core::SerializableComponent> &store) {
+    std::string value;
+    Get(store->getUUIDStr(), value);
+    store->DeSerialize(reinterpret_cast<uint8_t*>(const_cast<char*>(value.c_str())), value.size());
+    return true;
+  }
+
+  virtual bool DeSerialize(const uint8_t *buffer, const size_t bufferSize) {
+    return false;
   }
 
   const std::map<std::string, std::string> &getRepoMap() const {
@@ -134,6 +183,9 @@ class TestFlowRepository : public core::repository::FlowFileRepository {
       }
     }
   }
+  
+  void loadComponent(const std::shared_ptr<core::ContentRepository> &content_repo) {
+  }
 
   void run() {
     // do nothing
@@ -145,8 +197,8 @@ class TestFlowRepository : public core::repository::FlowFileRepository {
 class TestFlowController : public minifi::FlowController {
 
  public:
-  TestFlowController(std::shared_ptr<core::Repository> repo, std::shared_ptr<core::Repository> flow_file_repo)
-      : minifi::FlowController(repo, flow_file_repo, std::make_shared<minifi::Configure>(), nullptr, "", true) {
+  TestFlowController(std::shared_ptr<core::Repository> repo, std::shared_ptr<core::Repository> flow_file_repo, std::shared_ptr<core::ContentRepository> content_repo)
+      : minifi::FlowController(repo, flow_file_repo,std::make_shared<minifi::Configure>(), nullptr, std::make_shared<core::repository::VolatileContentRepository>(), "", true) {
   }
   ~TestFlowController() {
 

@@ -549,7 +549,8 @@ class Site2SiteClientProtocol {
         : _packet(packet) {
     }
     DataPacket *_packet;
-    void process(std::ofstream *stream) {
+    //void process(std::ofstream *stream) {
+    int64_t process(std::shared_ptr<io::BaseStream> stream) {
       uint8_t buffer[8192];
       int len = _packet->_size;
       while (len > 0) {
@@ -557,11 +558,12 @@ class Site2SiteClientProtocol {
         int ret = _packet->_transaction->getStream().readData(buffer, size);
         if (ret != size) {
           _packet->_protocol->logger_->log_error("Site2Site Receive Flow Size %d Failed %d", size, ret);
-          break;
+          return -1;
         }
-        stream->write((const char *) buffer, size);
+        stream->write(buffer, size);
         len -= size;
       }
+      return len;
     }
   };
   // Nest Callback Class for read stream
@@ -571,22 +573,29 @@ class Site2SiteClientProtocol {
         : _packet(packet) {
     }
     DataPacket *_packet;
-    void process(std::ifstream *stream) {
+    int64_t process(std::shared_ptr<io::BaseStream> stream) {
       _packet->_size = 0;
-      uint8_t buffer[8192];
+      uint8_t buffer[8192] = { 0 };
       int readSize;
-      while (stream->good()) {
-        if (!stream->read((char *) buffer, 8192))
-          readSize = stream->gcount();
-        else
-          readSize = 8192;
+      size_t size = 0;
+      do {
+        readSize = stream->read(buffer, 8192);
+
+        if (readSize == 0) {
+          break;
+        }
+        if (readSize < 0) {
+          return -1;
+        }
         int ret = _packet->_transaction->getStream().writeData(buffer, readSize);
         if (ret != readSize) {
           _packet->_protocol->logger_->log_error("Site2Site Send Flow Size %d Failed %d", readSize, ret);
-          break;
+          return -1;
         }
-        _packet->_size += readSize;
-      }
+        size += readSize;
+      } while (size < stream->getSize());
+      _packet->_size = size;
+      return size;
     }
   };
 

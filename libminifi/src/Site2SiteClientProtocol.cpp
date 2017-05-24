@@ -726,12 +726,18 @@ bool Site2SiteClientProtocol::send(std::string transactionID, DataPacket *packet
     if (ret != 8) {
       return false;
     }
-    if (flowFile->getSize()) {
+    if (flowFile->getSize() > 0) {
       Site2SiteClientProtocol::ReadCallback callback(packet);
       session->read(flowFile, &callback);
       if (flowFile->getSize() != packet->_size) {
         return false;
       }
+    }
+    if (packet->payload_.length() == 0 && len == 0) {
+      if (flowFile->getResourceClaim() == nullptr)
+        logger_->log_debug("no claim");
+      else
+        logger_->log_debug("Flowfile empty %s", flowFile->getResourceClaim()->getContentFullPath());
     }
   } else if (packet->payload_.length() > 0) {
     len = packet->payload_.length();
@@ -1101,8 +1107,9 @@ void Site2SiteClientProtocol::transferFlowFiles(core::ProcessContext *context, c
 
   Transaction *transaction = NULL;
 
-  if (!flow)
+  if (!flow) {
     return;
+  }
 
   if (_peerState != READY) {
     bootstrap();
@@ -1158,11 +1165,15 @@ void Site2SiteClientProtocol::transferFlowFiles(core::ProcessContext *context, c
     }  // while true
 
     if (!confirm(transactionID)) {
-      throw Exception(SITE2SITE_EXCEPTION, "Confirm Failed");
+      std::stringstream ss;
+      ss << "Confirm Failed for " << transactionID;
+      throw Exception(SITE2SITE_EXCEPTION, ss.str().c_str());
       return;
     }
     if (!complete(transactionID)) {
-      throw Exception(SITE2SITE_EXCEPTION, "Complete Failed");
+      std::stringstream ss;
+      ss << "Complete Failed for " << transactionID;
+      throw Exception(SITE2SITE_EXCEPTION, ss.str().c_str());
       return;
     }
     logger_->log_info("Site2Site transaction %s successfully send flow record %d, content bytes %d", transactionID.c_str(), transaction->_transfers, transaction->_bytes);

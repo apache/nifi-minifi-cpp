@@ -31,7 +31,8 @@
 #include <string>
 #include <thread>
 #include <vector>
-
+#include "core/ContentRepository.h"
+#include "core/SerializableComponent.h"
 #include "properties/Configure.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "core/Property.h"
@@ -52,15 +53,15 @@ namespace core {
 #define MAX_REPOSITORY_ENTRY_LIFE_TIME (600000) // 10 minute
 #define REPOSITORY_PURGE_PERIOD (2500) // 2500 msec
 
-class Repository : public CoreComponent {
+class Repository : public core::SerializableComponent {
  public:
   /*
    * Constructor for the repository
    */
   Repository(std::string repo_name = "Repository", std::string directory = REPOSITORY_DIRECTORY, int64_t maxPartitionMillis = MAX_REPOSITORY_ENTRY_LIFE_TIME, int64_t maxPartitionBytes =
-  MAX_REPOSITORY_STORAGE_SIZE,
+                 MAX_REPOSITORY_STORAGE_SIZE,
              uint64_t purgePeriod = REPOSITORY_PURGE_PERIOD)
-      : CoreComponent(repo_name),
+      : core::SerializableComponent(repo_name),
         thread_(),
         logger_(logging::LoggerFactory<Repository>::getLogger()) {
     directory_ = directory;
@@ -81,7 +82,7 @@ class Repository : public CoreComponent {
     return true;
   }
   // Put
-  virtual bool Put(std::string key, uint8_t *buf, int bufLen) {
+  virtual bool Put(std::string key, const uint8_t *buf, size_t bufLen) {
     return true;
   }
   // Delete
@@ -89,7 +90,14 @@ class Repository : public CoreComponent {
     return true;
   }
 
-  virtual bool Get(std::string key, std::string &value) {
+  virtual bool Delete(std::vector<std::shared_ptr<core::SerializableComponent>> &storedValues) {
+    bool found = true;
+    for (auto storedValue : storedValues) {
+      found &= Delete(storedValue->getName());
+    }
+    return found;
+  }
+  virtual bool Get(const std::string &key, std::string &value) {
     return false;
   }
 
@@ -109,8 +117,80 @@ class Repository : public CoreComponent {
   virtual bool isRunning() {
     return running_;
   }
+
+  /**
+   * Specialization that allows us to serialize max_size objects into store.
+   * the lambdaConstructor will create objects to put into store
+   * @param store vector in which we can store serialized object
+   * @param max_size reference that stores the max number of objects to retrieve and serialize.
+   * upon return max_size will represent the number of serialized objects.
+   * @return status of this operation
+   *
+   * Base implementation returns true;
+   */
+  virtual bool Serialize(std::vector<std::shared_ptr<core::SerializableComponent>> &store, size_t max_size) {
+    return true;
+  }
+
+  /**
+   * Specialization that allows us to deserialize max_size objects into store.
+   * @param store vector in which we can store deserialized object
+   * @param max_size reference that stores the max number of objects to retrieve and deserialize.
+   * upon return max_size will represent the number of deserialized objects.
+   * @return status of this operation
+   *
+   * Base implementation returns true;
+   */
+  virtual bool DeSerialize(std::vector<std::shared_ptr<core::SerializableComponent>> &store, size_t &max_size) {
+    return true;
+  }
+
+  /**
+   * Specialization that allows us to deserialize max_size objects into store.
+   * the lambdaConstructor will create objects to put into store
+   * @param store vector in which we can store deserialized object
+   * @param max_size reference that stores the max number of objects to retrieve and deserialize.
+   * upon return max_size will represent the number of deserialized objects.
+   * @param lambdaConstructor reference that will create the objects for store
+   * @return status of this operation
+   *
+   * Base implementation returns true;
+   */
+  virtual bool DeSerialize(std::vector<std::shared_ptr<core::SerializableComponent>> &store, size_t &max_size, std::function<std::shared_ptr<core::SerializableComponent>()> lambdaConstructor) {
+    return true;
+  }
+
+  /**
+   * Base implementation returns true;
+   */
+  virtual bool Serialize(const std::shared_ptr<core::SerializableComponent> &store) {
+    return true;
+  }
+
+  /**
+   * Base implementation returns true;
+   */
+  virtual bool DeSerialize(const std::shared_ptr<core::SerializableComponent> &store) {
+    return true;
+  }
+
+  /**
+   * Base implementation returns true;
+   */
+  virtual bool DeSerialize(const uint8_t *buffer, const size_t bufferSize) {
+    return true;
+  }
+
+  virtual bool Serialize(const std::string &key, const uint8_t *buffer, const size_t bufferSize) {
+    return Put(key, buffer, bufferSize);
+  }
+
   uint64_t incrementSize(const char *fpath, const struct stat *sb, int typeflag) {
     return (repo_size_ += sb->st_size);
+  }
+
+  virtual void loadComponent(const std::shared_ptr<core::ContentRepository> &content_repo) {
+
   }
 
   // Prevent default copy constructor and assignment operation

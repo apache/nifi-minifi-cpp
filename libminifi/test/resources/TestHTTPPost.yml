@@ -46,7 +46,7 @@ Processors:
       auto-terminated relationships list: response
       Properties:
           HTTP Method: POST
-          Remote URL: http://requestb.in/u8ax9uu8
+          Remote URL: http://localhost:10003/urlofchampions
           
     - name: Loggit
       id: 2438e3c8-015a-1000-79ca-83af40ec1993

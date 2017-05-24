@@ -30,6 +30,11 @@ namespace nifi {
 namespace minifi {
 namespace io {
 
+/**
+ * Base Stream. Not intended to be thread safe as it is not intended to be shared
+ *
+ * Extensions may be thread safe and thus shareable, but that is up to the implementation.
+ */
 class BaseStream : public DataStream, public Serializable {
 
  public:
@@ -54,6 +59,14 @@ class BaseStream : public DataStream, public Serializable {
   virtual int write(uint32_t base_value, bool is_little_endian = EndiannessCheck::IS_LITTLE);
 
   int writeData(uint8_t *value, int size);
+
+  virtual void seek(uint32_t offset) {
+    if (composable_stream_ != this) {
+      composable_stream_->seek(offset);
+    } else {
+      DataStream::seek(offset);
+    }
+  }
 
   /**
    * write 2 bytes to stream

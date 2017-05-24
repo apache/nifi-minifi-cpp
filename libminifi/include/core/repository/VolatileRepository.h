@@ -22,9 +22,11 @@
 #include <chrono>
 #include <vector>
 #include <map>
+#include "core/SerializableComponent.h"
 #include "core/Core.h"
 #include "Connection.h"
 #include "utils/StringUtils.h"
+#include "AtomicRepoEntries.h"
 
 namespace org {
 namespace apache {
@@ -33,290 +35,89 @@ namespace minifi {
 namespace core {
 namespace repository {
 
-static uint16_t accounting_size = sizeof(std::vector<uint8_t>) + sizeof(std::string) + sizeof(size_t);
-
-class RepoValue {
- public:
-
-  explicit RepoValue() {
-  }
-
-  explicit RepoValue(std::string key, uint8_t *ptr, size_t size)
-      : key_(key) {
-    buffer_.resize(size);
-    std::memcpy(buffer_.data(), ptr, size);
-    fast_size_ = key.size() + size;
-  }
-
-  explicit RepoValue(RepoValue &&other)
-noexcept      : key_(std::move(other.key_)),
-      buffer_(std::move(other.buffer_)),
-      fast_size_(other.fast_size_) {
-      }
-
-      ~RepoValue()
-      {
-      }
-
-      std::string &getKey() {
-        return key_;
-      }
-
-      /**
-       * Return the size of the memory within the key
-       * buffer, the size of timestamp, and the general
-       * system word size
-       */
-      uint64_t size() {
-        return fast_size_;
-      }
-
-      size_t bufferSize() {
-        return buffer_.size();
-      }
-
-      void emplace(std::string &str) {
-        str.insert(0, reinterpret_cast<const char*>(buffer_.data()), buffer_.size());
-      }
-
-      RepoValue &operator=(RepoValue &&other) noexcept {
-        key_ = std::move(other.key_);
-        buffer_ = std::move(other.buffer_);
-        other.buffer_.clear();
-        return *this;
-      }
-
-    private:
-      size_t fast_size_;
-      std::string key_;
-      std::vector<uint8_t> buffer_;
-    };
-
-    /**
-     * Purpose: Atomic Entry allows us to create a statically
-     * sized ring buffer, with the ability to create
-     **/
-class AtomicEntry {
-
- public:
-  AtomicEntry()
-      : write_pending_(false),
-        has_value_(false) {
-
-  }
-
-  bool setRepoValue(RepoValue &new_value, size_t &prev_size) {
-    // delete the underlying pointer
-    bool lock = false;
-    if (!write_pending_.compare_exchange_weak(lock, true) && !lock)
-      return false;
-    if (has_value_) {
-      prev_size = value_.size();
-    }
-    value_ = std::move(new_value);
-    has_value_ = true;
-    try_unlock();
-    return true;
-  }
-
-  bool getValue(RepoValue &value) {
-    try_lock();
-    if (!has_value_) {
-      try_unlock();
-      return false;
-    }
-    value = std::move(value_);
-    has_value_ = false;
-    try_unlock();
-    return true;
-  }
-
-  bool getValue(const std::string &key, RepoValue &value) {
-    try_lock();
-    if (!has_value_) {
-      try_unlock();
-      return false;
-    }
-    if (value_.getKey() != key) {
-      try_unlock();
-      return false;
-    }
-    value = std::move(value_);
-    has_value_ = false;
-    try_unlock();
-    return true;
-  }
-
- private:
-
-  inline void try_lock() {
-    bool lock = false;
-    while (!write_pending_.compare_exchange_weak(lock, true) && !lock) {
-      // attempt again
-    }
-  }
-
-  inline void try_unlock() {
-    bool lock = true;
-    while (!write_pending_.compare_exchange_weak(lock, false) && lock) {
-      // attempt again
-    }
-  }
-
-  std::atomic<bool> write_pending_;
-  std::atomic<bool> has_value_;
-  RepoValue value_;
-};
-
 /**
  * Flow File repository
  * Design: Extends Repository and implements the run function, using LevelDB as the primary substrate.
  */
-class VolatileRepository : public core::Repository, public std::enable_shared_from_this<VolatileRepository> {
+template<typename T>
+class VolatileRepository : public core::Repository, public std::enable_shared_from_this<VolatileRepository<T>> {
  public:
 
   static const char *volatile_repo_max_count;
+  static const char *volatile_repo_max_bytes;
   // Constructor
 
-  VolatileRepository(std::string repo_name = "", std::string dir = REPOSITORY_DIRECTORY, int64_t maxPartitionMillis = MAX_REPOSITORY_ENTRY_LIFE_TIME, int64_t maxPartitionBytes =
+  explicit VolatileRepository(std::string repo_name = "", std::string dir = REPOSITORY_DIRECTORY, int64_t maxPartitionMillis = MAX_REPOSITORY_ENTRY_LIFE_TIME, int64_t maxPartitionBytes =
   MAX_REPOSITORY_STORAGE_SIZE,
-                     uint64_t purgePeriod = REPOSITORY_PURGE_PERIOD)
+                              uint64_t purgePeriod = REPOSITORY_PURGE_PERIOD)
       : Repository(repo_name.length() > 0 ? repo_name : core::getClassName<VolatileRepository>(), "", maxPartitionMillis, maxPartitionBytes, purgePeriod),
         max_size_(maxPartitionBytes * 0.75),
         current_index_(0),
         max_count_(10000),
+        current_size_(0),
         logger_(logging::LoggerFactory<VolatileRepository>::getLogger())
 
   {
-
+    purge_required_ = false;
   }
 
   // Destructor
-  ~VolatileRepository() {
-    for (auto ent : value_vector_) {
-      delete ent;
-    }
-  }
+  virtual ~VolatileRepository();
 
   /**
    * Initialize thevolatile repsitory
    **/
-  virtual bool initialize(const std::shared_ptr<Configure> &configure) {
-    std::string value = "";
 
-    if (configure != nullptr) {
-      int64_t max_cnt = 0;
-      std::stringstream strstream;
-      strstream << Configure::nifi_volatile_repository_options << getName() << "." << volatile_repo_max_count;
-      if (configure->get(strstream.str(), value)) {
-        if (core::Property::StringToInt(value, max_cnt)) {
-          max_count_ = max_cnt;
-        }
+  virtual bool initialize(const std::shared_ptr<Configure> &configure);
 
-      }
-    }
-
-    logger_->log_debug("Resizing value_vector_ for %s count is %d", getName(), max_count_);
-    value_vector_.reserve(max_count_);
-    for (int i = 0; i < max_count_; i++) {
-      value_vector_.emplace_back(new AtomicEntry());
-    }
-    return true;
-  }
-
-  virtual void run();
+  virtual void run() = 0;
 
   /**
    * Places a new object into the volatile memory area
    * @param key key to add to the repository
    * @param buf buffer 
    **/
-  virtual bool Put(std::string key, uint8_t *buf, int bufLen) {
-    RepoValue new_value(key, buf, bufLen);
+  virtual bool Put(T key, const uint8_t *buf, size_t bufLen);
 
-    const size_t size = new_value.size();
-    bool updated = false;
-    size_t reclaimed_size = 0;
-    do {
-
-      int private_index = current_index_.fetch_add(1);
-      // round robin through the beginning
-      if (private_index >= max_count_) {
-        uint16_t new_index = 0;
-        if (current_index_.compare_exchange_weak(new_index, 0)) {
-          private_index = 0;
-        } else {
-          continue;
-        }
-      }
-      logger_->log_info("Set repo value at %d out of %d", private_index, max_count_);
-      updated = value_vector_.at(private_index)->setRepoValue(new_value, reclaimed_size);
-
-      if (reclaimed_size > 0) {
-        current_size_ -= reclaimed_size;
-      }
-
-    } while (!updated);
-    current_size_ += size;
-
-    logger_->log_info("VolatileRepository -- put %s %d %d", key, current_size_.load(), current_index_.load());
-    return true;
-  }
   /**
-   *c
    * Deletes the key
    * @return status of the delete operation
    */
-  virtual bool Delete(std::string key) {
+  virtual bool Delete(T key);
 
-    logger_->log_info("VolatileRepository -- delete %s", key);
-    for (auto ent : value_vector_) {
-      // let the destructor do the cleanup
-      RepoValue value;
-      if (ent->getValue(key, value)) {
-        current_size_ -= value.size();
-        return true;
-      }
-
-    }
-    return false;
-  }
   /**
    * Sets the value from the provided key. Once the item is retrieved
    * it may not be retrieved again.
    * @return status of the get operation.
    */
-  virtual bool Get(std::string key, std::string &value) {
-    for (auto ent : value_vector_) {
-      // let the destructor do the cleanup
-      RepoValue repo_value;
+  virtual bool Get(const T &key, std::string &value);
+  /**
+   * Deserializes objects into store
+   * @param store vector in which we will store newly created objects.
+   * @param max_size size of objects deserialized
+   */
+  virtual bool DeSerialize(std::vector<std::shared_ptr<core::SerializableComponent>> &store, size_t &max_size, std::function<std::shared_ptr<core::SerializableComponent>()> lambda);
 
-      if (ent->getValue(key, repo_value)) {
-        current_size_ -= value.size();
-        repo_value.emplace(value);
-        logger_->log_info("VolatileRepository -- get %s %d", key, current_size_.load());
-        return true;
-      }
+  /**
+   * Deserializes objects into a store that contains a fixed number of objects in which
+   * we will deserialize from this repo
+   * @param store precreated object vector
+   * @param max_size size of objects deserialized
+   */
+  virtual bool DeSerialize(std::vector<std::shared_ptr<core::SerializableComponent>> &store, size_t &max_size);
 
-    }
-    return false;
-  }
+  /**
+   * Set the connection map
+   * @param connectionMap map of all connections through this repo.
+   */
+  void setConnectionMap(std::map<std::string, std::shared_ptr<minifi::Connection>> &connectionMap);
 
-  void setConnectionMap(std::map<std::string, std::shared_ptr<minifi::Connection>> &connectionMap) {
-    this->connectionMap = connectionMap;
-  }
-  void loadComponent();
+  /**
+   * Function to load this component.
+   */
+  virtual void loadComponent(const std::shared_ptr<core::ContentRepository> &content_repo);
 
-  void start() {
-    if (this->purge_period_ <= 0)
-      return;
-    if (running_)
-      return;
-    thread_ = std::thread(&VolatileRepository::run, shared_from_this());
-    thread_.detach();
-    running_ = true;
-    logger_->log_info("%s Repository Monitor Thread Start", name_.c_str());
-  }
+  virtual void start();
 
  protected:
 
@@ -331,22 +132,240 @@ class VolatileRepository : public core::Repository, public std::enable_shared_fr
     else
       return false;
   }
-  /**
-   * Purges the volatile repository.
-   */
-  void purge();
+
+  std::map<std::string, std::shared_ptr<minifi::Connection>> connectionMap;
+  // current size of the volatile repo.
+  std::atomic<size_t> current_size_;
+  // current index.
+  std::atomic<uint16_t> current_index_;
+  // value vector that exists for non blocking iteration over
+  // objects that store data for this repo instance.
+  std::vector<AtomicEntry<T>*> value_vector_;
+
+  // max count we are allowed to store.
+  uint32_t max_count_;
+  // maximum estimated size
+  size_t max_size_;
+
+  bool purge_required_;
+
+  std::mutex purge_mutex_;
+  // purge list
+  std::vector<T> purge_list_;
 
  private:
-  std::map<std::string, std::shared_ptr<minifi::Connection>> connectionMap;
-
-  std::atomic<uint32_t> current_size_;
-  std::atomic<uint16_t> current_index_;
-  std::vector<AtomicEntry*> value_vector_;
-  uint32_t max_count_;
-  uint32_t max_size_;
   std::shared_ptr<logging::Logger> logger_;
+
+};
+
+template<typename T>
+const char *VolatileRepository<T>::volatile_repo_max_count = "max.count";
+template<typename T>
+const char *VolatileRepository<T>::volatile_repo_max_bytes = "max.bytes";
+
+template<typename T>
+void VolatileRepository<T>::loadComponent(const std::shared_ptr<core::ContentRepository> &content_repo) {
 }
-;
+
+// Destructor
+template<typename T>
+VolatileRepository<T>::~VolatileRepository() {
+  for (auto ent : value_vector_) {
+    delete ent;
+  }
+}
+
+/**
+ * Initialize the volatile repsitory
+ **/
+template<typename T>
+bool VolatileRepository<T>::initialize(const std::shared_ptr<Configure> &configure) {
+  std::string value = "";
+
+  if (configure != nullptr) {
+    int64_t max_cnt = 0;
+    std::stringstream strstream;
+    strstream << Configure::nifi_volatile_repository_options << getName() << "." << volatile_repo_max_count;
+    if (configure->get(strstream.str(), value)) {
+      if (core::Property::StringToInt(value, max_cnt)) {
+        max_count_ = max_cnt;
+      }
+    }
+
+    strstream.str("");
+    strstream.clear();
+    int64_t max_bytes = 0;
+    strstream << Configure::nifi_volatile_repository_options << getName() << "." << volatile_repo_max_bytes;
+    if (configure->get(strstream.str(), value)) {
+      if (core::Property::StringToInt(value, max_bytes)) {
+        if (max_bytes <= 0) {
+          max_size_ = std::numeric_limits<uint32_t>::max();
+        } else {
+          max_size_ = max_bytes;
+        }
+      }
+    }
+  }
+
+  logger_->log_info("Resizing value_vector_ for %s count is %d", getName(), max_count_);
+  logger_->log_info("Using a maximum size of %u", max_size_);
+  value_vector_.reserve(max_count_);
+  for (int i = 0; i < max_count_; i++) {
+    value_vector_.emplace_back(new AtomicEntry<T>(&current_size_, &max_size_));
+  }
+  return true;
+}
+
+/**
+ * Places a new object into the volatile memory area
+ * @param key key to add to the repository
+ * @param buf buffer
+ **/
+template<typename T>
+bool VolatileRepository<T>::Put(T key, const uint8_t *buf, size_t bufLen) {
+  RepoValue<T> new_value(key, buf, bufLen);
+
+  const size_t size = new_value.size();
+  bool updated = false;
+  size_t reclaimed_size = 0;
+  RepoValue<T> old_value;
+  do {
+    int private_index = current_index_.fetch_add(1);
+    // round robin through the beginning
+    if (private_index >= max_count_) {
+      uint16_t new_index = 0;
+      if (current_index_.compare_exchange_weak(new_index, 0)) {
+        private_index = 0;
+      } else {
+        continue;
+      }
+    }
+    
+    updated = value_vector_.at(private_index)->setRepoValue(new_value, old_value, reclaimed_size);
+    logger_->log_debug("Set repo value at %d out of %d updated %d current_size %d, adding %d to  %d", private_index, max_count_,updated==true,reclaimed_size,size, current_size_.load());
+    if (updated && reclaimed_size > 0)
+    {
+      std::lock_guard<std::mutex> lock(mutex_);
+      purge_list_.push_back(old_value.getKey());
+    }
+    if (reclaimed_size > 0) {
+      /**
+       * this is okay since current_size_ is really an estimate.
+       * we don't need precise counts.
+       */
+      if (current_size_ < reclaimed_size) {
+        current_size_ = 0;
+      } else {
+        current_size_ -= reclaimed_size;
+      }
+    }
+  } while (!updated);
+  current_size_ += size;
+
+  logger_->log_debug("VolatileRepository -- put %d %d", current_size_.load(), current_index_.load());
+  return true;
+}
+/**
+ * Deletes the key
+ * @return status of the delete operation
+ */
+template<typename T>
+bool VolatileRepository<T>::Delete(T key) {
+  for (auto ent : value_vector_) {
+    // let the destructor do the cleanup
+    RepoValue<T> value;
+    if (ent->getValue(key, value)) {
+      current_size_ -= value.size();
+      return true;
+    }
+  }
+  return false;
+}
+/**
+ * Sets the value from the provided key. Once the item is retrieved
+ * it may not be retrieved again.
+ * @return status of the get operation.
+ */
+template<typename T>
+bool VolatileRepository<T>::Get(const T &key, std::string &value) {
+
+  for (auto ent : value_vector_) {
+    // let the destructor do the cleanup
+    RepoValue<T> repo_value;
+    if (ent->getValue(key, repo_value)) {
+      current_size_ -= value.size();
+      repo_value.emplace(value);
+      return true;
+    }
+  }
+  return false;
+}
+
+template<typename T>
+bool VolatileRepository<T>::DeSerialize(std::vector<std::shared_ptr<core::SerializableComponent>> &store, size_t &max_size, std::function<std::shared_ptr<core::SerializableComponent>()> lambda) {
+  size_t requested_batch = max_size;
+  max_size = 0;
+  for (auto ent : value_vector_) {
+    // let the destructor do the cleanup
+    RepoValue<T> repo_value;
+
+    if (ent->getValue(repo_value)) {
+      std::shared_ptr<core::SerializableComponent> newComponent = lambda();
+      // we've taken ownership of this repo value
+      newComponent->DeSerialize(repo_value.getBuffer(), repo_value.getBufferSize());
+
+      store.push_back(newComponent);
+
+      if (max_size++ >= requested_batch) {
+        break;
+      }
+    }
+  }
+  if (max_size > 0) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
+template<typename T>
+bool VolatileRepository<T>::DeSerialize(std::vector<std::shared_ptr<core::SerializableComponent>> &store, size_t &max_size) {
+  logger_->log_debug("VolatileRepository -- DeSerialize %d", current_size_.load());
+  max_size = 0;
+  for (auto ent : value_vector_) {
+    // let the destructor do the cleanup
+    RepoValue<T> repo_value;
+
+    if (ent->getValue(repo_value)) {
+      // we've taken ownership of this repo value
+      store.at(max_size)->DeSerialize(repo_value.getBuffer(), repo_value.getBufferSize());
+      if (max_size++ >= store.size()) {
+        break;
+      }
+    }
+  }
+  if (max_size > 0) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
+template<typename T>
+void VolatileRepository<T>::setConnectionMap(std::map<std::string, std::shared_ptr<minifi::Connection>> &connectionMap) {
+  this->connectionMap = connectionMap;
+}
+
+template<typename T>
+void VolatileRepository<T>::start() {
+  if (this->purge_period_ <= 0)
+    return;
+  if (running_)
+    return;
+  running_ = true;
+  thread_ = std::thread(&VolatileRepository<T>::run, std::enable_shared_from_this<VolatileRepository<T>>::shared_from_this());
+  logger_->log_info("%s Repository Monitor Thread Start", name_);
+}
 
 } /* namespace repository */
 } /* namespace core */

@@ -25,6 +25,8 @@
 #include "ResourceClaim.h"
 #include "catch.hpp"
 #include <vector>
+#include <set>
+#include <map>
 #include "core/logging/Logger.h"
 #include "core/Core.h"
 #include "properties/Configure.h"
@@ -33,6 +35,14 @@
 #include "utils/Id.h"
 #include "spdlog/sinks/ostream_sink.h"
 #include "spdlog/sinks/dist_sink.h"
+#include "unit/ProvenanceTestHelper.h"
+#include "core/Core.h"
+#include "core/FlowFile.h"
+#include "core/Processor.h"
+#include "core/ProcessContext.h"
+#include "core/ProcessSession.h"
+#include "core/ProcessorNode.h"
+#include "core/reporting/SiteToSiteProvenanceReportingTask.h"
 
 class LogTestController {
  public:
@@ -105,7 +115,7 @@ class LogTestController {
   std::ostringstream log_output;
 
   std::shared_ptr<logging::Logger> logger_;
- private:
+   private:
   class TestBootstrapLogger : public logging::Logger {
    public:
     TestBootstrapLogger(std::shared_ptr<spdlog::logger> logger)
@@ -138,6 +148,73 @@ class LogTestController {
   std::vector<std::string> modified_loggers;
 };
 
+class TestPlan {
+ public:
+
+  explicit TestPlan(std::shared_ptr<core::ContentRepository> content_repo, std::shared_ptr<core::Repository> flow_repo, std::shared_ptr<core::Repository> prov_repo);
+
+  std::shared_ptr<core::Processor> addProcessor(const std::shared_ptr<core::Processor> &processor, const std::string &name,
+                                                core::Relationship relationship = core::Relationship("success", "description"),
+                                                bool linkToPrevious = false);
+
+  std::shared_ptr<core::Processor> addProcessor(const std::string &processor_name, const std::string &name, core::Relationship relationship = core::Relationship("success", "description"),
+  bool linkToPrevious = false);
+
+  bool setProperty(const std::shared_ptr<core::Processor> proc, const std::string &prop, const std::string &value);
+
+  void reset();
+
+  bool runNextProcessor(std::function<void(core::ProcessContext*, core::ProcessSession*)> verify = nullptr);
+
+  std::set<provenance::ProvenanceEventRecord*> getProvenanceRecords();
+
+  std::shared_ptr<core::FlowFile> getCurrentFlowFile();
+
+  std::shared_ptr<core::Repository> getFlowRepo() {
+    return flow_repo_;
+  }
+
+  std::shared_ptr<core::Repository> getProvenanceRepo() {
+    return prov_repo_;
+  }
+
+  std::shared_ptr<core::ContentRepository> getContentRepo() {
+    return content_repo_;
+  }
+
+ protected:
+
+  void finalize();
+
+  std::shared_ptr<minifi::Connection> buildFinalConnection(std::shared_ptr<core::Processor> processor, bool setDest = false);
+
+  std::atomic<bool> finalized;
+
+  std::shared_ptr<core::ContentRepository> content_repo_;
+
+  std::shared_ptr<core::Repository> flow_repo_;
+  std::shared_ptr<core::Repository> prov_repo_;
+
+  std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider_;
+
+  std::recursive_mutex mutex;
+
+  int location;
+
+  std::shared_ptr<core::ProcessSession> current_session_;
+  std::shared_ptr<core::FlowFile> current_flowfile_;
+
+  std::map<std::string, std::shared_ptr<core::Processor>> processor_mapping_;
+  std::vector<std::shared_ptr<core::Processor>> processor_queue_;
+  std::vector<std::shared_ptr<core::Processor>> configured_processors_;
+  std::vector<std::shared_ptr<core::ProcessorNode>> processor_nodes_;
+  std::vector<std::shared_ptr<core::ProcessContext>> processor_contexts_;
+  std::vector<std::shared_ptr<core::ProcessSession>> process_sessions_;
+  std::vector<std::shared_ptr<core::ProcessSessionFactory>> factories_;
+  std::vector<std::shared_ptr<minifi::Connection>> relationships_;
+  core::Relationship termination_;
+};
+
 class TestController {
  public:
 
@@ -146,6 +223,25 @@ class TestController {
     minifi::ResourceClaim::default_directory_path = const_cast<char*>("./");
     log.reset();
     utils::IdGenerator::getIdGenerator()->initialize(std::make_shared<minifi::Properties>());
+  }
+
+  std::shared_ptr<TestPlan> createPlan()
+  {
+    std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::Configure>();
+    std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
+
+    content_repo->initialize(configuration);
+
+    std::shared_ptr<core::Repository> repo = std::make_shared<TestRepository>();
+    return std::make_shared<TestPlan>(content_repo, repo, repo);
+  }
+
+  void runSession(std::shared_ptr<TestPlan> &plan, bool runToCompletion = true, std::function<void(core::ProcessContext*, core::ProcessSession*)> verify = nullptr) {
+
+    while (plan->runNextProcessor(verify) && runToCompletion)
+    {
+
+    }
   }
 
   ~TestController() {
@@ -176,6 +272,10 @@ class TestController {
   }
 
  protected:
+
+  std::mutex test_mutex;
+  //std::map<std::string,>
+
   LogTestController &log;
   std::vector<char*> directories;
 

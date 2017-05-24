@@ -23,7 +23,7 @@
 #include "provenance/Provenance.h"
 #include "FlowFileRecord.h"
 #include "core/Core.h"
-#include "core/repository/FlowFileRepository.h"
+#include "../../include/core/repository/AtomicRepoEntries.h"
 #include "properties/Configure.h"
 
 TEST_CASE("Test Repo Empty Value Attribute", "[TestFFR1]") {
@@ -34,7 +34,8 @@ TEST_CASE("Test Repo Empty Value Attribute", "[TestFFR1]") {
 
   repository->initialize(std::make_shared<minifi::Configure>());
 
-  minifi::FlowFileRecord record(repository);
+  std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
+  minifi::FlowFileRecord record(repository, content_repo);
 
   record.addAttribute("keyA", "");
 
@@ -50,8 +51,8 @@ TEST_CASE("Test Repo Empty Key Attribute ", "[TestFFR2]") {
   std::shared_ptr<core::repository::FlowFileRepository> repository = std::make_shared<core::repository::FlowFileRepository>("ff", dir, 0, 0, 1);
 
   repository->initialize(std::make_shared<minifi::Configure>());
-
-  minifi::FlowFileRecord record(repository);
+  std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
+  minifi::FlowFileRecord record(repository, content_repo);
 
   record.addAttribute("keyA", "hasdgasdgjsdgasgdsgsadaskgasd");
 
@@ -70,9 +71,10 @@ TEST_CASE("Test Repo Key Attribute Verify ", "[TestFFR3]") {
 
   repository->initialize(std::make_shared<org::apache::nifi::minifi::Configure>());
 
-  minifi::FlowFileRecord record(repository);
+  std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
+  minifi::FlowFileRecord record(repository, content_repo);
 
-  minifi::FlowFileRecord record2(repository);
+  minifi::FlowFileRecord record2(repository, content_repo);
 
   std::string uuid = record.getUUIDStr();
 

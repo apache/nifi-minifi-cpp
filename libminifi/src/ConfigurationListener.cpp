@@ -35,14 +35,10 @@ void ConfigurationListener::start() {
   pull_interval_ = 60 * 1000;
   std::string value;
   // grab the value for configuration
-  if (configure_->get(Configure::nifi_configuration_listener_pull_interval,
-      value)) {
+  if (configure_->get(Configure::nifi_configuration_listener_pull_interval, value)) {
     core::TimeUnit unit;
-    if (core::Property::StringToTime(value, pull_interval_, unit)
-        && core::Property::ConvertTimeUnitToMS(pull_interval_, unit,
-            pull_interval_)) {
-      logger_->log_info("Configuration Listener pull interval: [%d] ms",
-           pull_interval_);
+    if (core::Property::StringToTime(value, pull_interval_, unit) && core::Property::ConvertTimeUnitToMS(pull_interval_, unit, pull_interval_)) {
+      logger_->log_info("Configuration Listener pull interval: [%d] ms", pull_interval_);
     }
   }
 
@@ -62,7 +58,7 @@ void ConfigurationListener::stop() {
 }
 
 void ConfigurationListener::run() {
-  std::unique_lock<std::mutex> lk(mutex_);
+  std::unique_lock < std::mutex > lk(mutex_);
   std::condition_variable cv;
   int64_t interval = 0;
   while (!cv.wait_for(lk, std::chrono::milliseconds(100), [this] {return (running_ == false);})) {

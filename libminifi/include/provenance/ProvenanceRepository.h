@@ -42,12 +42,11 @@ class ProvenanceRepository : public core::Repository, public std::enable_shared_
   /*!
    * Create a new provenance repository
    */
-  ProvenanceRepository(const std::string repo_name = "", std::string directory = PROVENANCE_DIRECTORY, int64_t maxPartitionMillis =
-  MAX_PROVENANCE_ENTRY_LIFE_TIME,
-                       int64_t maxPartitionBytes = MAX_PROVENANCE_STORAGE_SIZE, uint64_t purgePeriod = PROVENANCE_PURGE_PERIOD)
+  ProvenanceRepository(const std::string repo_name = "", std::string directory = PROVENANCE_DIRECTORY, int64_t maxPartitionMillis = MAX_PROVENANCE_ENTRY_LIFE_TIME, int64_t maxPartitionBytes =
+  MAX_PROVENANCE_STORAGE_SIZE,
+                       uint64_t purgePeriod = PROVENANCE_PURGE_PERIOD)
       : Repository(repo_name.length() > 0 ? repo_name : core::getClassName<ProvenanceRepository>(), directory, maxPartitionMillis, maxPartitionBytes, purgePeriod),
         logger_(logging::LoggerFactory<ProvenanceRepository>::getLogger()) {
-
     db_ = NULL;
   }
 
@@ -62,9 +61,8 @@ class ProvenanceRepository : public core::Repository, public std::enable_shared_
       return;
     if (running_)
       return;
-    thread_ = std::thread(&ProvenanceRepository::run, shared_from_this());
-    thread_.detach();
     running_ = true;
+    thread_ = std::thread(&ProvenanceRepository::run, shared_from_this());
     logger_->log_info("%s Repository Monitor Thread Start", name_.c_str());
   }
 
@@ -98,7 +96,7 @@ class ProvenanceRepository : public core::Repository, public std::enable_shared_
     return true;
   }
   // Put
-  virtual bool Put(std::string key, uint8_t *buf, int bufLen) {
+  virtual bool Put(std::string key, const uint8_t *buf, size_t bufLen) {
 
     if (repo_full_)
       return false;
@@ -122,7 +120,7 @@ class ProvenanceRepository : public core::Repository, public std::enable_shared_
       return false;
   }
   // Get
-  virtual bool Get(std::string key, std::string &value) {
+  virtual bool Get(const std::string &key, std::string &value) {
     leveldb::Status status;
     status = db_->Get(leveldb::ReadOptions(), key, &value);
     if (status.ok())
@@ -130,17 +128,53 @@ class ProvenanceRepository : public core::Repository, public std::enable_shared_
     else
       return false;
   }
-  // Persistent event
-  void registerEvent(std::shared_ptr<ProvenanceEventRecord> &event) {
-    event->Serialize(std::static_pointer_cast<core::Repository>(shared_from_this()));
-  }
+
   // Remove event
   void removeEvent(ProvenanceEventRecord *event) {
     Delete(event->getEventId());
   }
+
+  virtual bool get(std::vector<std::shared_ptr<core::CoreComponent>> &store, size_t max_size) {
+    leveldb::Iterator* it = db_->NewIterator(leveldb::ReadOptions());
+    for (it->SeekToFirst(); it->Valid(); it->Next()) {
+      std::shared_ptr<ProvenanceEventRecord> eventRead = std::make_shared<ProvenanceEventRecord>();
+      std::string key = it->key().ToString();
+      if (store.size() >= max_size)
+        break;
+      if (eventRead->DeSerialize((uint8_t *) it->value().data(), (int) it->value().size())) {
+        store.push_back(std::dynamic_pointer_cast<core::CoreComponent>(eventRead));
+      }
+    }
+    delete it;
+    return true;
+  }
+
+  virtual bool DeSerialize(std::vector<std::shared_ptr<core::SerializableComponent>> &records, size_t &max_size, std::function<std::shared_ptr<core::SerializableComponent>()> lambda) {
+    leveldb::Iterator* it = db_->NewIterator(leveldb::ReadOptions());
+    size_t requested_batch = max_size;
+    max_size = 0;
+    for (it->SeekToFirst(); it->Valid(); it->Next()) {
+
+      if (max_size >= requested_batch)
+        break;
+      std::shared_ptr<core::SerializableComponent> eventRead = lambda();
+      std::string key = it->key().ToString();
+      if (eventRead->DeSerialize((uint8_t *) it->value().data(), (int) it->value().size())) {
+        max_size++;
+        records.push_back(eventRead);
+      }
+
+    }
+    delete it;
+
+    if (max_size > 0) {
+      return true;
+    } else {
+      return false;
+    }
+  }
   //! get record
   void getProvenanceRecord(std::vector<std::shared_ptr<ProvenanceEventRecord>> &records, int maxSize) {
-    std::lock_guard<std::mutex> lock(mutex_);
     leveldb::Iterator* it = db_->NewIterator(leveldb::ReadOptions());
     for (it->SeekToFirst(); it->Valid(); it->Next()) {
       std::shared_ptr<ProvenanceEventRecord> eventRead = std::make_shared<ProvenanceEventRecord>();
@@ -153,9 +187,29 @@ class ProvenanceRepository : public core::Repository, public std::enable_shared_
     }
     delete it;
   }
+
+  virtual bool DeSerialize(std::vector<std::shared_ptr<core::SerializableComponent>> &store, size_t &max_size) {
+    leveldb::Iterator* it = db_->NewIterator(leveldb::ReadOptions());
+    max_size = 0;
+    for (it->SeekToFirst(); it->Valid(); it->Next()) {
+      std::shared_ptr<ProvenanceEventRecord> eventRead = std::make_shared<ProvenanceEventRecord>();
+      std::string key = it->key().ToString();
+
+      if (store.at(max_size)->DeSerialize((uint8_t *) it->value().data(), (int) it->value().size())) {
+        max_size++;
+      }
+      if (store.size() >= max_size)
+        break;
+    }
+    delete it;
+    if (max_size > 0) {
+      return true;
+    } else {
+      return false;
+    }
+  }
   //! purge record
   void purgeProvenanceRecord(std::vector<std::shared_ptr<ProvenanceEventRecord>> &records) {
-    std::lock_guard<std::mutex> lock(mutex_);
     for (auto record : records) {
       Delete(record->getEventId());
     }

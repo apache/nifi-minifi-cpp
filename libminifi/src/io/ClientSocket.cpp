@@ -170,6 +170,9 @@ int16_t Socket::initialize() {
   int hh_errno;
   gethostbyname_r(host, &he, buf, sizeof(buf), &h, &hh_errno);
 #endif
+  if (h == nullptr) {
+    return -1;
+  }
   memcpy(reinterpret_cast<char*>(&addr), h->h_addr_list[0], h->h_length);
 
   auto p = addr_info_;
@@ -197,7 +200,7 @@ int16_t Socket::select_descriptor(const uint16_t msec) {
   tv.tv_sec = msec / 1000;
   tv.tv_usec = (msec % 1000) * 1000;
 
-  std::lock_guard<std::recursive_mutex> guard(selection_mutex_);
+  std::lock_guard < std::recursive_mutex > guard(selection_mutex_);
 
   if (msec > 0)
     retval = select(socket_max_ + 1, &read_fds_, NULL, NULL, &tv);
@@ -241,14 +244,12 @@ int16_t Socket::setSocketOptions(const int sock) {
   bool nagle_off = true;
 #ifndef __MACH__
   if (nagle_off) {
-    if (setsockopt(sock, SOL_TCP, TCP_NODELAY, static_cast<void*>(&opt), sizeof(opt))
-        < 0) {
+    if (setsockopt(sock, SOL_TCP, TCP_NODELAY, static_cast<void*>(&opt), sizeof(opt)) < 0) {
       logger_->log_error("setsockopt() TCP_NODELAY failed");
       close(sock);
       return -1;
     }
-    if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, reinterpret_cast<char*>(&opt),
-            sizeof(opt)) < 0) {
+    if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, reinterpret_cast<char*>(&opt), sizeof(opt)) < 0) {
       logger_->log_error("setsockopt() SO_REUSEADDR failed");
       close(sock);
       return -1;
@@ -256,8 +257,7 @@ int16_t Socket::setSocketOptions(const int sock) {
   }
 
   int sndsize = 256 * 1024;
-  if (setsockopt(sock, SOL_SOCKET, SO_SNDBUF, reinterpret_cast<char *>( &sndsize),
-          sizeof(sndsize)) < 0) {
+  if (setsockopt(sock, SOL_SOCKET, SO_SNDBUF, reinterpret_cast<char *>(&sndsize), sizeof(sndsize)) < 0) {
     logger_->log_error("setsockopt() SO_SNDBUF failed");
     close(sock);
     return -1;

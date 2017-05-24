@@ -87,25 +87,27 @@ class LogAttribute : public core::Processor {
   // Nest Callback Class for read stream
   class ReadCallback : public InputStreamCallback {
    public:
-    ReadCallback(uint64_t size) {
-      _bufferSize = size;
-      _buffer = new char[_bufferSize];
+    ReadCallback(uint64_t size)
+        : read_size_(0) {
+      buffer_size_ = size;
+      buffer_ = new uint8_t[buffer_size_];
     }
     ~ReadCallback() {
-      if (_buffer)
-        delete[] _buffer;
+      if (buffer_)
+        delete[] buffer_;
     }
-    void process(std::ifstream *stream) {
-
-      stream->read(_buffer, _bufferSize);
+    int64_t process(std::shared_ptr<io::BaseStream> stream) {
+      int64_t ret = 0;
+      ret = stream->read(buffer_, buffer_size_);
       if (!stream)
-        _readSize = stream->gcount();
+        read_size_ = stream->getSize();
       else
-        _readSize = _bufferSize;
+        read_size_ = buffer_size_;
+      return ret;
     }
-    char *_buffer;
-    uint64_t _bufferSize;
-    uint64_t _readSize;
+    uint8_t *buffer_;
+    uint64_t buffer_size_;
+    uint64_t read_size_;
   };
 
  public:

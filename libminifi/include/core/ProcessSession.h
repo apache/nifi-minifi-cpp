@@ -50,7 +50,7 @@ class ProcessSession {
   ProcessSession(ProcessContext *processContext = NULL)
       : process_context_(processContext),
         logger_(logging::LoggerFactory<ProcessSession>::getLogger()) {
-    logger_->log_trace("ProcessSession created for %s", process_context_->getProcessorNode().getName().c_str());
+    logger_->log_trace("ProcessSession created for %s", process_context_->getProcessorNode().getName());
     auto repo = processContext->getProvenanceRepository();
     provenance_report_ = new provenance::ProvenanceReporter(repo, process_context_->getProcessorNode().getUUIDStr(), process_context_->getProcessorNode().getName());
   }

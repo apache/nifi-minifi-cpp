@@ -45,22 +45,22 @@ void waitToVerifyProcessor() {
   std::this_thread::sleep_for(std::chrono::seconds(10));
 }
 
-class ConfigHandler: public CivetHandler {
+class ConfigHandler : public CivetHandler {
  public:
   bool handleGet(CivetServer *server, struct mg_connection *conn) {
     static const std::string site2site_rest_resp = "{"
-           "\"revision\": {"
-           "\"clientId\": \"483d53eb-53ec-4e93-b4d4-1fc3d23dae6f\""
-           "},"
-           "\"controller\": {"
-           "\"id\": \"fe4a3a42-53b6-4af1-a80d-6fdfe60de97f\","
-           "\"name\": \"NiFi Flow\","
-           "\"remoteSiteListeningPort\": 10001,"
-           "\"siteToSiteSecure\": false"
-           "}}";
+        "\"revision\": {"
+        "\"clientId\": \"483d53eb-53ec-4e93-b4d4-1fc3d23dae6f\""
+        "},"
+        "\"controller\": {"
+        "\"id\": \"fe4a3a42-53b6-4af1-a80d-6fdfe60de97f\","
+        "\"name\": \"NiFi Flow\","
+        "\"remoteSiteListeningPort\": 10001,"
+        "\"siteToSiteSecure\": false"
+        "}}";
     mg_printf(conn, "HTTP/1.1 200 OK\r\nContent-Type: "
-        "text/plain\r\nContent-Length: %lu\r\nConnection: close\r\n\r\n",
-        site2site_rest_resp.length());
+              "text/plain\r\nContent-Length: %lu\r\nConnection: close\r\n\r\n",
+              site2site_rest_resp.length());
     mg_printf(conn, "%s", site2site_rest_resp.c_str());
     return true;
   }
@@ -71,7 +71,7 @@ int main(int argc, char **argv) {
   LogTestController::getInstance().setInfo<minifi::FlowController>();
 
   const char *options[] = { "document_root", ".", "listening_ports", "8082", 0 };
-  std::vector < std::string > cpp_options;
+  std::vector<std::string> cpp_options;
   for (int i = 0; i < (sizeof(options) / sizeof(options[0]) - 1); i++) {
     cpp_options.push_back(options[i]);
   }
@@ -106,28 +106,31 @@ int main(int argc, char **argv) {
       TestFlowRepository>();
 
   configuration->set(minifi::Configure::nifi_flow_configuration_file,
-      test_file_location);
+                     test_file_location);
 
   std::shared_ptr<minifi::io::StreamFactory> stream_factory = std::make_shared
-      < minifi::io::StreamFactory > (configuration);
-  std::unique_ptr<core::FlowConfiguration> yaml_ptr = std::unique_ptr
-      < core::YamlConfiguration
-      > (new core::YamlConfiguration(test_repo, test_repo, stream_factory,
-          configuration, test_file_location));
-  std::shared_ptr<TestRepository> repo = std::static_pointer_cast
-      < TestRepository > (test_repo);
+      <minifi::io::StreamFactory>(configuration);
+  std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
 
-  std::shared_ptr<minifi::FlowController> controller =
-      std::make_shared < minifi::FlowController
-          > (test_repo, test_flow_repo, configuration, std::move(yaml_ptr), DEFAULT_ROOT_GROUP_NAME, true);
+  content_repo->initialize(configuration);
 
-  core::YamlConfiguration yaml_config(test_repo, test_repo, stream_factory,
-      configuration, test_file_location);
+  std::unique_ptr<core::FlowConfiguration> yaml_ptr = std::unique_ptr<core::YamlConfiguration>(
+      new core::YamlConfiguration(test_repo, test_repo, content_repo, stream_factory, configuration, test_file_location));
+  std::shared_ptr<TestRepository> repo = std::static_pointer_cast<TestRepository>(test_repo);
+
+  std::shared_ptr<minifi::FlowController> controller = std::make_shared<minifi::FlowController>(test_repo, test_flow_repo, configuration, std::move(yaml_ptr),
+                                                                                                content_repo,
+                                                                                                DEFAULT_ROOT_GROUP_NAME,
+                                                                                                true);
+
+  core::YamlConfiguration yaml_config(test_repo, test_repo, content_repo, stream_factory,
+                                      configuration,
+                                      test_file_location);
 
   std::unique_ptr<core::ProcessGroup> ptr = yaml_config.getRoot(
-      test_file_location);
-  std::shared_ptr<core::ProcessGroup> pg = std::shared_ptr < core::ProcessGroup
-      > (ptr.get());
+                                                                test_file_location);
+  std::shared_ptr<core::ProcessGroup> pg = std::shared_ptr<core::ProcessGroup
+      >(ptr.get());
   ptr.release();
 
   controller->load();

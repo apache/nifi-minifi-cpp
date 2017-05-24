@@ -17,14 +17,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include "ResourceClaim.h"
 #include <uuid/uuid.h>
-
 #include <map>
 #include <queue>
 #include <string>
 #include <vector>
-
-#include "ResourceClaim.h"
+#include <memory>
+#include "core/StreamManager.h"
+#include "utils/Id.h"
 #include "core/logging/LoggerConfiguration.h"
 
 namespace org {
@@ -36,12 +37,20 @@ utils::NonRepeatingStringGenerator ResourceClaim::non_repeating_string_generator
 
 char *ResourceClaim::default_directory_path = const_cast<char*>(DEFAULT_CONTENT_DIRECTORY);
 
-ResourceClaim::ResourceClaim(const std::string contentDirectory)
+ResourceClaim::ResourceClaim(std::shared_ptr<core::StreamManager<ResourceClaim>> claim_manager, const std::string contentDirectory)
     : _flowFileRecordOwnedCount(0),
+      claim_manager_(claim_manager),
+      deleted_(false),
       logger_(logging::LoggerFactory<ResourceClaim>::getLogger()) {
   // Create the full content path for the content
   _contentFullPath = contentDirectory + "/" + non_repeating_string_generator_.generate();
   logger_->log_debug("Resource Claim created %s", _contentFullPath);
+}
+
+ResourceClaim::ResourceClaim(const std::string path, std::shared_ptr<core::StreamManager<ResourceClaim>> claim_manager, bool deleted)
+    : claim_manager_(claim_manager),
+      deleted_(deleted) {
+  _contentFullPath = path;
 }
 
 } /* namespace minifi */

@@ -32,19 +32,27 @@ namespace utils {
  */
 class ByteInputCallBack : public InputStreamCallback {
  public:
-  ByteInputCallBack() {
+  ByteInputCallBack()
+      : ptr(nullptr) {
   }
 
   virtual ~ByteInputCallBack() {
 
   }
 
-  virtual void process(std::ifstream *stream) {
+  int64_t process(std::shared_ptr<io::BaseStream> stream) {
 
-    std::vector<char> nv = std::vector<char>(std::istreambuf_iterator<char>(*stream), std::istreambuf_iterator<char>());
-    vec = std::move(nv);
+    stream->seek(0);
 
-    ptr = &vec[0];
+    if (stream->getSize() > 0) {
+      vec.resize(stream->getSize());
+
+      stream->readData(vec, stream->getSize());
+    }
+
+    ptr = (char*) &vec[0];
+
+    return vec.size();
 
   }
 
@@ -58,7 +66,7 @@ class ByteInputCallBack : public InputStreamCallback {
 
  private:
   char *ptr;
-  std::vector<char> vec;
+  std::vector<uint8_t> vec;
 };
 
 } /* namespace utils */

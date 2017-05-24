@@ -47,7 +47,7 @@ FlowFile::FlowFile()
   entry_date_ = getTimeMillis();
   lineage_start_date_ = entry_date_;
 
-  char uuidStr[37];
+  char uuidStr[37] = { 0 };
 
   // Generate the global UUID for the flow record
   id_generator_->generate(uuid_);

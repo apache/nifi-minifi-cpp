@@ -54,7 +54,6 @@ class SiteToSiteProvenanceReportingTask : public minifi::RemoteProcessorGroupPor
   }
   //! Destructor
   virtual ~SiteToSiteProvenanceReportingTask() {
-
   }
   //! Report Task Name
   static constexpr char const* ReportTaskName = "SiteToSiteProvenanceReportingTask";
@@ -62,7 +61,8 @@ class SiteToSiteProvenanceReportingTask : public minifi::RemoteProcessorGroupPor
 
  public:
   //! Get provenance json report
-  void getJsonReport(core::ProcessContext *context, core::ProcessSession *session, std::vector<std::shared_ptr<provenance::ProvenanceEventRecord>> &records, std::string &report);
+  void getJsonReport(core::ProcessContext *context, core::ProcessSession *session, std::vector<std::shared_ptr<core::SerializableComponent>> &records, std::string &report);
+
   void onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory);
   //! OnTrigger method, implemented by NiFi SiteToSiteProvenanceReportingTask
   virtual void onTrigger(core::ProcessContext *context, core::ProcessSession *session);

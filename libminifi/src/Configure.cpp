@@ -31,7 +31,8 @@ const char *Configure::nifi_graceful_shutdown_seconds = "nifi.flowcontroller.gra
 const char *Configure::nifi_log_level = "nifi.log.level";
 const char *Configure::nifi_server_name = "nifi.server.name";
 const char *Configure::nifi_configuration_class_name = "nifi.flow.configuration.class.name";
-const char *Configure::nifi_flow_repository_class_name = "nifi.flow.repository.class.name";
+const char *Configure::nifi_flow_repository_class_name = "nifi.flowfile.repository.class.name";
+const char *Configure::nifi_content_repository_class_name = "nifi.content.repository.class.name";
 const char *Configure::nifi_volatile_repository_options = "nifi.volatile.repository.options.";
 const char *Configure::nifi_provenance_repository_class_name = "nifi.provenance.repository.class.name";
 const char *Configure::nifi_server_port = "nifi.server.port";
@@ -43,39 +44,22 @@ const char *Configure::nifi_flowfile_repository_max_storage_size = "nifi.flowfil
 const char *Configure::nifi_flowfile_repository_max_storage_time = "nifi.flowfile.repository.max.storage.time";
 const char *Configure::nifi_flowfile_repository_directory_default = "nifi.flowfile.repository.directory.default";
 const char *Configure::nifi_remote_input_secure = "nifi.remote.input.secure";
-const char *Configure::nifi_security_need_ClientAuth =
-    "nifi.security.need.ClientAuth";
-const char *Configure::nifi_security_client_certificate =
-    "nifi.security.client.certificate";
-const char *Configure::nifi_security_client_private_key =
-    "nifi.security.client.private.key";
-const char *Configure::nifi_security_client_pass_phrase =
-    "nifi.security.client.pass.phrase";
-const char *Configure::nifi_security_client_ca_certificate =
-    "nifi.security.client.ca.certificate";
-const char *Configure::nifi_configuration_listener_pull_interval =
-    "nifi.configuration.listener.pull.interval";
-const char *Configure::nifi_configuration_listener_http_url =
-    "nifi.configuration.listener.http.url";
-const char *Configure::nifi_configuration_listener_rest_url =
-    "nifi.configuration.listener.rest.url";
-const char *Configure::nifi_configuration_listener_type =
-    "nifi.configuration.listener.type";
-const char *Configure::nifi_https_need_ClientAuth =
-    "nifi.https.need.ClientAuth";
-const char *Configure::nifi_https_client_certificate =
-    "nifi.https.client.certificate";
-const char *Configure::nifi_https_client_private_key =
-    "nifi.https.client.private.key";
-const char *Configure::nifi_https_client_pass_phrase =
-    "nifi.https.client.pass.phrase";
-const char *Configure::nifi_https_client_ca_certificate =
-    "nifi.https.client.ca.certificate";
-const char *Configure::nifi_rest_api_user_name =
-    "nifi.rest.api.user.name";
-const char *Configure::nifi_rest_api_password =
-    "nifi.rest.api.password";
-
+const char *Configure::nifi_security_need_ClientAuth = "nifi.security.need.ClientAuth";
+const char *Configure::nifi_security_client_certificate = "nifi.security.client.certificate";
+const char *Configure::nifi_security_client_private_key = "nifi.security.client.private.key";
+const char *Configure::nifi_security_client_pass_phrase = "nifi.security.client.pass.phrase";
+const char *Configure::nifi_security_client_ca_certificate = "nifi.security.client.ca.certificate";
+const char *Configure::nifi_configuration_listener_pull_interval = "nifi.configuration.listener.pull.interval";
+const char *Configure::nifi_configuration_listener_http_url = "nifi.configuration.listener.http.url";
+const char *Configure::nifi_configuration_listener_rest_url = "nifi.configuration.listener.rest.url";
+const char *Configure::nifi_configuration_listener_type = "nifi.configuration.listener.type";
+const char *Configure::nifi_https_need_ClientAuth = "nifi.https.need.ClientAuth";
+const char *Configure::nifi_https_client_certificate = "nifi.https.client.certificate";
+const char *Configure::nifi_https_client_private_key = "nifi.https.client.private.key";
+const char *Configure::nifi_https_client_pass_phrase = "nifi.https.client.pass.phrase";
+const char *Configure::nifi_https_client_ca_certificate = "nifi.https.client.ca.certificate";
+const char *Configure::nifi_rest_api_user_name = "nifi.rest.api.user.name";
+const char *Configure::nifi_rest_api_password = "nifi.rest.api.password";
 
 } /* namespace minifi */
 } /* namespace nifi */

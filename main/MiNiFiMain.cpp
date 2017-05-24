@@ -90,6 +90,7 @@ int main(int argc, char **argv) {
   std::string prov_repo_class = "provenancerepository";
   std::string flow_repo_class = "flowfilerepository";
   std::string nifi_configuration_class_name = "yamlconfiguration";
+  std::string content_repo_class = "filesystemrepository";
 
   running = sem_open("MiNiFiMain", O_CREAT, 0644, 0);
   if (running == SEM_FAILED || running == 0) {
@@ -108,14 +109,11 @@ int main(int argc, char **argv) {
     char full_path[PATH_MAX];
     path = realpath(argv[0], full_path);
     std::string minifiHomePath(path);
-    minifiHomePath = minifiHomePath.substr(0,
-                                           minifiHomePath.find_last_of("/\\"));  //Remove /minifi from path
+    minifiHomePath = minifiHomePath.substr(0, minifiHomePath.find_last_of("/\\"));  //Remove /minifi from path
     minifiHome = minifiHomePath.substr(0, minifiHomePath.find_last_of("/\\"));	//Remove /bin from path
   }
 
-  if (signal(SIGINT, sigHandler) == SIG_ERR
-      || signal(SIGTERM, sigHandler) == SIG_ERR
-      || signal(SIGPIPE, SIG_IGN) == SIG_ERR) {
+  if (signal(SIGINT, sigHandler) == SIG_ERR || signal(SIGTERM, sigHandler) == SIG_ERR || signal(SIGPIPE, SIG_IGN) == SIG_ERR) {
     logger->log_error("Can not install signal handler");
     return -1;
   }
@@ -132,56 +130,49 @@ int main(int argc, char **argv) {
 
   // Make a record of minifi home in the configured log file.
   logger->log_info("MINIFI_HOME=%s", minifiHome);
-  
+
   std::shared_ptr<minifi::Configure> configure = std::make_shared<minifi::Configure>();
   configure->setHome(minifiHome);
   configure->loadConfigureFile(DEFAULT_NIFI_PROPERTIES_FILE);
 
-  if (configure->get(minifi::Configure::nifi_graceful_shutdown_seconds,
-                     graceful_shutdown_seconds)) {
+  if (configure->get(minifi::Configure::nifi_graceful_shutdown_seconds, graceful_shutdown_seconds)) {
     try {
       stop_wait_time = std::stoi(graceful_shutdown_seconds);
     } catch (const std::out_of_range &e) {
-      logger->log_error("%s is out of range. %s",
-                        minifi::Configure::nifi_graceful_shutdown_seconds,
-                        e.what());
+      logger->log_error("%s is out of range. %s", minifi::Configure::nifi_graceful_shutdown_seconds, e.what());
     } catch (const std::invalid_argument &e) {
-      logger->log_error("%s contains an invalid argument set. %s",
-                        minifi::Configure::nifi_graceful_shutdown_seconds,
-                        e.what());
+      logger->log_error("%s contains an invalid argument set. %s", minifi::Configure::nifi_graceful_shutdown_seconds, e.what());
     }
   } else {
-    logger->log_debug("%s not set, defaulting to %d",
-                      minifi::Configure::nifi_graceful_shutdown_seconds,
-                      STOP_WAIT_TIME_MS);
+    logger->log_debug("%s not set, defaulting to %d", minifi::Configure::nifi_graceful_shutdown_seconds,
+    STOP_WAIT_TIME_MS);
   }
 
-  configure->get(minifi::Configure::nifi_provenance_repository_class_name,
-                 prov_repo_class);
+  configure->get(minifi::Configure::nifi_provenance_repository_class_name, prov_repo_class);
   // Create repos for flow record and provenance
-  std::shared_ptr<core::Repository> prov_repo = core::createRepository(
-      prov_repo_class, true,"provenance");
+  std::shared_ptr<core::Repository> prov_repo = core::createRepository(prov_repo_class, true, "provenance");
   prov_repo->initialize(configure);
 
-  configure->get(minifi::Configure::nifi_flow_repository_class_name,
-                 flow_repo_class);
+  configure->get(minifi::Configure::nifi_flow_repository_class_name, flow_repo_class);
 
-  std::shared_ptr<core::Repository> flow_repo = core::createRepository(
-      flow_repo_class, true, "flowfile");
+  std::shared_ptr<core::Repository> flow_repo = core::createRepository(flow_repo_class, true, "flowfile");
 
   flow_repo->initialize(configure);
 
-  configure->get(minifi::Configure::nifi_configuration_class_name,
-                 nifi_configuration_class_name);
+  configure->get(minifi::Configure::nifi_content_repository_class_name, content_repo_class);
+
+  std::shared_ptr<core::ContentRepository> content_repo = core::createContentRepository(content_repo_class, true, "content");
+
+  content_repo->initialize(configure);
+
+  configure->get(minifi::Configure::nifi_configuration_class_name, nifi_configuration_class_name);
+
   std::shared_ptr<minifi::io::StreamFactory> stream_factory = std::make_shared<minifi::io::StreamFactory>(configure);
 
-  std::unique_ptr<core::FlowConfiguration> flow_configuration = std::move(
-      core::createFlowConfiguration(prov_repo, flow_repo, configure, stream_factory,
-                                   nifi_configuration_class_name));
+  std::unique_ptr<core::FlowConfiguration> flow_configuration = std::move(core::createFlowConfiguration(prov_repo, flow_repo, content_repo, configure, stream_factory, nifi_configuration_class_name));
 
   std::shared_ptr<minifi::FlowController> controller = std::unique_ptr<minifi::FlowController>(
-      new minifi::FlowController(prov_repo, flow_repo, configure,
-                                 std::move(flow_configuration)));
+      new minifi::FlowController(prov_repo, flow_repo, configure, std::move(flow_configuration), content_repo));
 
   logger->log_info("Loading FlowController");
   // Load flow from specified configuration file
@@ -205,9 +196,9 @@ int main(int argc, char **argv) {
    * Trigger unload -- wait stop_wait_time
    */
   controller->waitUnload(stop_wait_time);
-  
+
   flow_repo = nullptr;
-  
+
   prov_repo = nullptr;
 
   logger->log_info("MiNiFi exit");

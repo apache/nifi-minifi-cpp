@@ -68,9 +68,11 @@ class GenerateFlowFile : public core::Processor {
     }
     char *_data;
     uint64_t _dataSize;
-    void process(std::ofstream *stream) {
+    int64_t process(std::shared_ptr<io::BaseStream> stream) {
+      int64_t ret = 0;
       if (_data && _dataSize > 0)
-        stream->write(_data, _dataSize);
+        ret = stream->write(reinterpret_cast<uint8_t*>(_data), _dataSize);
+      return ret;
     }
   };
 

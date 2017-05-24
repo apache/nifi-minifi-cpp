@@ -39,9 +39,11 @@ namespace apache {
 namespace nifi {
 namespace minifi {
 
-Connection::Connection(std::shared_ptr<core::Repository> flow_repository, std::string name, uuid_t uuid, uuid_t srcUUID, uuid_t destUUID)
+Connection::Connection(const std::shared_ptr<core::Repository> &flow_repository, const std::shared_ptr<core::ContentRepository> &content_repo, std::string name, uuid_t uuid, uuid_t srcUUID,
+                       uuid_t destUUID)
     : core::Connectable(name, uuid),
       flow_repository_(flow_repository),
+      content_repo_(content_repo),
       logger_(logging::LoggerFactory<Connection>::getLogger()) {
 
   if (srcUUID)
@@ -89,12 +91,12 @@ void Connection::put(std::shared_ptr<core::FlowFile> flow) {
 
     queued_data_size_ += flow->getSize();
 
-    logger_->log_debug("Enqueue flow file UUID %s to connection %s", flow->getUUIDStr().c_str(), name_.c_str());
+    logger_->log_debug("Enqueue flow file UUID %s to connection %s %d", flow->getUUIDStr(), name_, queue_.size());
   }
 
   if (!flow->isStored()) {
     // Save to the flowfile repo
-    FlowFileRecord event(flow_repository_, flow, this->uuidStr_);
+    FlowFileRecord event(flow_repository_, content_repo_, flow, this->uuidStr_);
     if (event.Serialize()) {
       flow->setStoredToRepository(true);
     }
@@ -102,6 +104,7 @@ void Connection::put(std::shared_ptr<core::FlowFile> flow) {
 
   // Notify receiving processor that work may be available
   if (dest_connectable_) {
+    logger_->log_debug("Notifying %s", dest_connectable_->getName());
     dest_connectable_->notifyWork();
   }
 }

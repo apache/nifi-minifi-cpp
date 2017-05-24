@@ -27,7 +27,7 @@
 #include <memory>
 #include <vector>
 #include <fstream>
-
+#include "core/repository/VolatileContentRepository.h"
 #include "../unit/ProvenanceTestHelper.h"
 #include "FlowController.h"
 #include "processors/GetFile.h"
@@ -47,15 +47,17 @@ int main(int argc, char **argv) {
   std::shared_ptr<core::Processor> processor = std::make_shared<org::apache::nifi::minifi::processors::ExecuteProcess>("executeProcess");
   processor->setMaxConcurrentTasks(1);
 
-  std::shared_ptr<core::Repository> test_repo = std::make_shared<TestRepository>();
-
-  std::shared_ptr<TestRepository> repo = std::static_pointer_cast<TestRepository>(test_repo);
-  std::shared_ptr<minifi::FlowController> controller = std::make_shared<TestFlowController>(test_repo, test_repo);
+  std::shared_ptr<core::Repository> test_repo =
+      std::make_shared<TestRepository>();
+  std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
+  std::shared_ptr<TestRepository> repo =
+      std::static_pointer_cast<TestRepository>(test_repo);
+  std::shared_ptr<minifi::FlowController> controller = std::make_shared<
+      TestFlowController>(test_repo, test_repo, content_repo);
 
   uuid_t processoruuid;
   assert(true == processor->getUUID(processoruuid));
-
-  std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(test_repo, "executeProcessConnection");
+  std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(test_repo, content_repo, "executeProcessConnection");
   connection->setRelationship(core::Relationship("success", "description"));
 
   // link the connections so that we can test results at the end for this
@@ -79,7 +81,7 @@ int main(int argc, char **argv) {
 
   core::ProcessorNode node2(processor);
   std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider = nullptr;
-  std::shared_ptr<core::ProcessContext> contextset = std::make_shared<core::ProcessContext>(node2, controller_services_provider, test_repo);
+  std::shared_ptr<core::ProcessContext> contextset = std::make_shared<core::ProcessContext>(node2, controller_services_provider, test_repo, test_repo);
   core::ProcessSessionFactory factory(contextset.get());
   processor->onSchedule(contextset.get(), &factory);
 
@@ -87,7 +89,7 @@ int main(int argc, char **argv) {
     processor_workers.push_back(std::thread([processor, test_repo, &is_ready]() {
       core::ProcessorNode node(processor);
       std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider = nullptr;
-      std::shared_ptr<core::ProcessContext> context = std::make_shared<core::ProcessContext>(node, controller_services_provider, test_repo);
+      std::shared_ptr<core::ProcessContext> context = std::make_shared<core::ProcessContext>(node, controller_services_provider, test_repo, test_repo);
       context->setProperty(org::apache::nifi::minifi::processors::ExecuteProcess::Command, "sleep 0.5");
       std::shared_ptr<core::ProcessSession> session = std::make_shared<core::ProcessSession>(context.get());
       while (!is_ready.load(std::memory_order_relaxed)) {
