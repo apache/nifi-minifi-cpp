@@ -25,9 +25,11 @@
 #include <vector>
 #include <queue>
 #include <map>
+#include <memory>
 #include <mutex>
 #include <atomic>
 #include "core/Core.h"
+#include "core/StreamManager.h"
 #include "properties/Configure.h"
 #include "utils/Id.h"
 
@@ -40,7 +42,7 @@ namespace minifi {
 #define DEFAULT_CONTENT_DIRECTORY "./content_repository"
 
 // ResourceClaim Class
-class ResourceClaim {
+class ResourceClaim : public std::enable_shared_from_this<ResourceClaim> {
 
  public:
 
@@ -49,7 +51,9 @@ class ResourceClaim {
   /*!
    * Create a new resource claim
    */
-  ResourceClaim(const std::string contentDirectory = default_directory_path);
+  ResourceClaim(std::shared_ptr<core::StreamManager<ResourceClaim>> claim_manager, const std::string contentDirectory = default_directory_path);
+
+  ResourceClaim(const std::string path, std::shared_ptr<core::StreamManager<ResourceClaim>> claim_manager , bool deleted = false);
   // Destructor
   virtual ~ResourceClaim() {
   }
@@ -59,7 +63,11 @@ class ResourceClaim {
   }
   // decreaseFlowFileRecordOwenedCount
   void decreaseFlowFileRecordOwnedCount() {
-    --_flowFileRecordOwnedCount;
+
+    if (_flowFileRecordOwnedCount > 0) {
+      _flowFileRecordOwnedCount--;
+    }
+
   }
   // getFlowFileRecordOwenedCount
   uint64_t getFlowFileRecordOwnedCount() {
@@ -74,14 +82,26 @@ class ResourceClaim {
     _contentFullPath = path;
   }
 
+  void deleteClaim() {
+    if (!deleted_)
+    {
+      deleted_ = true;
+    }
+
+  }
+
  protected:
+  std::atomic<bool> deleted_;
   // Full path to the content
   std::string _contentFullPath;
 
   // How many FlowFileRecord Own this cliam
   std::atomic<uint64_t> _flowFileRecordOwnedCount;
 
+  std::shared_ptr<core::StreamManager<ResourceClaim>> claim_manager_;
+
  private:
+
   // Logger
   std::shared_ptr<logging::Logger> logger_;
   // Prevent default copy constructor and assignment operation

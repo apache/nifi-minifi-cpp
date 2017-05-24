@@ -39,8 +39,8 @@
 #include "utils/StringUtils.h"
 #include "core/Core.h"
 #include "core/controller/ControllerServiceProvider.h"
-#include "core/repository/FlowFileRepository.h"
 #include "core/logging/LoggerConfiguration.h"
+#include "core/repository/FlowFileRepository.h"
 
 namespace org {
 namespace apache {
@@ -52,7 +52,7 @@ std::shared_ptr<utils::IdGenerator> FlowController::id_generator_ = utils::IdGen
 #define DEFAULT_CONFIG_NAME "conf/flow.yml"
 
 FlowController::FlowController(std::shared_ptr<core::Repository> provenance_repo, std::shared_ptr<core::Repository> flow_file_repo, std::shared_ptr<Configure> configure,
-                               std::unique_ptr<core::FlowConfiguration> flow_configuration, const std::string name, bool headless_mode)
+                               std::unique_ptr<core::FlowConfiguration> flow_configuration, std::shared_ptr<core::ContentRepository> content_repo, const std::string name, bool headless_mode)
     : core::controller::ControllerServiceProvider(core::getClassName<FlowController>()),
       root_(nullptr),
       max_timer_driven_threads_(0),
@@ -68,6 +68,7 @@ FlowController::FlowController(std::shared_ptr<core::Repository> provenance_repo
       controller_service_provider_(nullptr),
       flow_configuration_(std::move(flow_configuration)),
       configuration_(configure),
+      content_repo_(content_repo),
       logger_(logging::LoggerFactory<FlowController>::getLogger()) {
   if (provenance_repo == nullptr)
     throw std::runtime_error("Provenance Repo should not be null");
@@ -159,8 +160,7 @@ bool FlowController::applyConfiguration(std::string &configurePayload) {
   std::unique_ptr<core::ProcessGroup> newRoot;
   try {
     newRoot = std::move(flow_configuration_->getRootFromPayload(configurePayload));
-  }
-  catch (const YAML::Exception& e) {
+  } catch (const YAML::Exception& e) {
     logger_->log_error("Invalid configuration payload");
     return false;
   }
@@ -168,10 +168,9 @@ bool FlowController::applyConfiguration(std::string &configurePayload) {
   if (newRoot == nullptr)
     return false;
 
-  logger_->log_info("Starting to reload Flow Controller with flow control name %s, version %d",
-      newRoot->getName().c_str(), newRoot->getVersion());
+  logger_->log_info("Starting to reload Flow Controller with flow control name %s, version %d", newRoot->getName().c_str(), newRoot->getVersion());
 
-  std::lock_guard<std::recursive_mutex> flow_lock(mutex_);
+  std::lock_guard < std::recursive_mutex > flow_lock(mutex_);
   stop(true);
   waitUnload(30000);
   this->root_ = std::move(newRoot);
@@ -181,7 +180,7 @@ bool FlowController::applyConfiguration(std::string &configurePayload) {
 }
 
 void FlowController::stop(bool force) {
-  std::lock_guard<std::recursive_mutex> flow_lock(mutex_);
+  std::lock_guard < std::recursive_mutex > flow_lock(mutex_);
   if (running_) {
     // immediately indicate that we are not running
     running_ = false;
@@ -222,7 +221,7 @@ void FlowController::waitUnload(const uint64_t timeToWaitMs) {
 }
 
 void FlowController::unload() {
-  std::lock_guard<std::recursive_mutex> flow_lock(mutex_);
+  std::lock_guard < std::recursive_mutex > flow_lock(mutex_);
   if (running_) {
     stop(true);
   }
@@ -237,7 +236,7 @@ void FlowController::unload() {
 }
 
 void FlowController::load() {
-  std::lock_guard<std::recursive_mutex> flow_lock(mutex_);
+  std::lock_guard < std::recursive_mutex > flow_lock(mutex_);
   if (running_) {
     stop(true);
   }
@@ -246,29 +245,30 @@ void FlowController::load() {
     // grab the value for configuration
     if (this->http_configuration_listener_ == nullptr && configuration_->get(Configure::nifi_configuration_listener_type, listenerType)) {
       if (listenerType == "http") {
-        this->http_configuration_listener_ =
-              std::unique_ptr<minifi::HttpConfigurationListener>(new minifi::HttpConfigurationListener(shared_from_this(), configuration_));
+        this->http_configuration_listener_ = std::unique_ptr < minifi::HttpConfigurationListener > (new minifi::HttpConfigurationListener(shared_from_this(), configuration_));
       }
     }
 
     logger_->log_info("Initializing timers");
     if (nullptr == timer_scheduler_) {
-      timer_scheduler_ = std::make_shared<TimerDrivenSchedulingAgent>(std::static_pointer_cast<core::controller::ControllerServiceProvider>(shared_from_this()), provenance_repo_, configuration_);
+      timer_scheduler_ = std::make_shared < TimerDrivenSchedulingAgent
+          > (std::static_pointer_cast < core::controller::ControllerServiceProvider > (shared_from_this()), provenance_repo_, content_repo_, configuration_);
     }
     if (nullptr == event_scheduler_) {
-      event_scheduler_ = std::make_shared<EventDrivenSchedulingAgent>(std::static_pointer_cast<core::controller::ControllerServiceProvider>(shared_from_this()), provenance_repo_, configuration_);
+      event_scheduler_ = std::make_shared < EventDrivenSchedulingAgent
+          > (std::static_pointer_cast < core::controller::ControllerServiceProvider > (shared_from_this()), provenance_repo_, content_repo_, configuration_);
     }
     logger_->log_info("Load Flow Controller from file %s", configuration_filename_.c_str());
 
-    this->root_ = std::shared_ptr<core::ProcessGroup>(flow_configuration_->getRoot(configuration_filename_));
+    this->root_ = std::shared_ptr < core::ProcessGroup > (flow_configuration_->getRoot(configuration_filename_));
 
     logger_->log_info("Loaded root processor Group");
 
     controller_service_provider_ = flow_configuration_->getControllerServiceProvider();
 
-    std::static_pointer_cast<core::controller::StandardControllerServiceProvider>(controller_service_provider_)->setRootGroup(root_);
-    std::static_pointer_cast<core::controller::StandardControllerServiceProvider>(controller_service_provider_)->setSchedulingAgent(
-        std::static_pointer_cast<minifi::SchedulingAgent>(event_scheduler_));
+    std::static_pointer_cast < core::controller::StandardControllerServiceProvider > (controller_service_provider_)->setRootGroup(root_);
+    std::static_pointer_cast < core::controller::StandardControllerServiceProvider
+        > (controller_service_provider_)->setSchedulingAgent(std::static_pointer_cast < minifi::SchedulingAgent > (event_scheduler_));
 
     logger_->log_info("Loaded controller service provider");
     // Load Flow File from Repo
@@ -279,7 +279,7 @@ void FlowController::load() {
 }
 
 void FlowController::reload(std::string yamlFile) {
-  std::lock_guard<std::recursive_mutex> flow_lock(mutex_);
+  std::lock_guard < std::recursive_mutex > flow_lock(mutex_);
   logger_->log_info("Starting to reload Flow Controller with yaml %s", yamlFile.c_str());
   stop(true);
   unload();
@@ -305,18 +305,18 @@ void FlowController::loadFlowRepo() {
       this->root_->getConnections(connectionMap);
     }
     logger_->log_debug("Number of connections from connectionMap %d", connectionMap.size());
-    auto rep = std::dynamic_pointer_cast<core::repository::FlowFileRepository>(flow_file_repo_);
+    auto rep = std::dynamic_pointer_cast < core::repository::FlowFileRepository > (flow_file_repo_);
     if (nullptr != rep) {
       rep->setConnectionMap(connectionMap);
     }
-    flow_file_repo_->loadComponent();
+    flow_file_repo_->loadComponent(content_repo_);
   } else {
     logger_->log_debug("Flow file repository is not set");
   }
 }
 
 bool FlowController::start() {
-  std::lock_guard<std::recursive_mutex> flow_lock(mutex_);
+  std::lock_guard < std::recursive_mutex > flow_lock(mutex_);
   if (!initialized_) {
     logger_->log_error("Can not start Flow Controller because it has not been initialized");
     return false;
@@ -349,8 +349,7 @@ bool FlowController::start() {
  * @param id service identifier
  * @param firstTimeAdded first time this CS was added
  */
-std::shared_ptr<core::controller::ControllerServiceNode> FlowController::createControllerService(const std::string &type, const std::string &id,
-bool firstTimeAdded) {
+std::shared_ptr<core::controller::ControllerServiceNode> FlowController::createControllerService(const std::string &type, const std::string &id, bool firstTimeAdded) {
   return controller_service_provider_->createControllerService(type, id, firstTimeAdded);
 }
 

@@ -38,8 +38,9 @@ class EventDrivenSchedulingAgent : public ThreadedSchedulingAgent {
   /*!
    * Create a new event driven scheduling agent.
    */
-  EventDrivenSchedulingAgent(std::shared_ptr<core::controller::ControllerServiceProvider> controller_service_provider, std::shared_ptr<core::Repository> repo, std::shared_ptr<Configure> configuration)
-      : ThreadedSchedulingAgent(controller_service_provider, repo, configuration) {
+  EventDrivenSchedulingAgent(std::shared_ptr<core::controller::ControllerServiceProvider> controller_service_provider, std::shared_ptr<core::Repository> repo,
+                             std::shared_ptr<core::ContentRepository> content_repo, std::shared_ptr<Configure> configuration)
+      : ThreadedSchedulingAgent(controller_service_provider, repo, content_repo, configuration) {
   }
   // Destructor
   virtual ~EventDrivenSchedulingAgent() {

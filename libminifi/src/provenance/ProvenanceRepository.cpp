@@ -31,7 +31,6 @@ void ProvenanceRepository::run() {
   uint64_t purgeThreshold = max_partition_bytes_ * 3 / 4;
   while (running_) {
     std::this_thread::sleep_for(std::chrono::milliseconds(purge_period_));
-    std::this_thread::sleep_for(std::chrono::milliseconds(purge_period_));
     uint64_t curTime = getTimeMillis();
     uint64_t size = repoSize();
     if (size >= purgeThreshold) {

@@ -150,7 +150,7 @@ void GetFile::onTrigger(core::ProcessContext *context, core::ProcessSession *ses
         std::string fileName = list.front();
         list.pop();
         logger_->log_info("GetFile process %s", fileName.c_str());
-        std::shared_ptr<FlowFileRecord> flowFile = std::static_pointer_cast<FlowFileRecord>(session->create());
+        std::shared_ptr<FlowFileRecord> flowFile = std::static_pointer_cast < FlowFileRecord > (session->create());
         if (flowFile == nullptr)
           return;
         std::size_t found = fileName.find_last_of("/\\");
@@ -172,19 +172,19 @@ void GetFile::onTrigger(core::ProcessContext *context, core::ProcessSession *ses
 }
 
 bool GetFile::isListingEmpty() {
-  std::lock_guard<std::mutex> lock(mutex_);
+  std::lock_guard < std::mutex > lock(mutex_);
 
   return _dirList.empty();
 }
 
 void GetFile::putListing(std::string fileName) {
-  std::lock_guard<std::mutex> lock(mutex_);
+  std::lock_guard < std::mutex > lock(mutex_);
 
   _dirList.push(fileName);
 }
 
 void GetFile::pollListing(std::queue<std::string> &list, const GetFileRequest &request) {
-  std::lock_guard<std::mutex> lock(mutex_);
+  std::lock_guard < std::mutex > lock(mutex_);
 
   while (!_dirList.empty() && (request.maxSize == 0 || list.size() < request.maxSize)) {
     std::string fileName = _dirList.front();

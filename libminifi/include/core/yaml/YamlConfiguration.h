@@ -21,7 +21,7 @@
 #include "core/ProcessorConfig.h"
 #include "yaml-cpp/yaml.h"
 #include "processors/LoadProcessors.h"
-#include "../FlowConfiguration.h"
+#include "core/FlowConfiguration.h"
 #include "Site2SiteClientProtocol.h"
 #include <string>
 #include "io/validation.h"
@@ -46,13 +46,12 @@ namespace core {
 class YamlConfiguration : public FlowConfiguration {
 
  public:
-  explicit YamlConfiguration(std::shared_ptr<core::Repository> repo, std::shared_ptr<core::Repository> flow_file_repo, std::shared_ptr<io::StreamFactory> stream_factory,
-                             std::shared_ptr<Configure> configuration,
-                             const std::string path = DEFAULT_FLOW_YAML_FILE_NAME)
-      : FlowConfiguration(repo, flow_file_repo, stream_factory, configuration, path),
+  explicit YamlConfiguration(std::shared_ptr<core::Repository> repo, std::shared_ptr<core::Repository> flow_file_repo, std::shared_ptr<core::ContentRepository> content_repo,
+                             std::shared_ptr<io::StreamFactory> stream_factory, std::shared_ptr<Configure> configuration, const std::string path = DEFAULT_FLOW_YAML_FILE_NAME)
+      : FlowConfiguration(repo, flow_file_repo, content_repo, stream_factory, configuration, path),
         logger_(logging::LoggerFactory<YamlConfiguration>::getLogger()) {
     stream_factory_ = stream_factory;
-    if (IsNullOrEmpty(config_path_)) {
+    if (IsNullOrEmpty (config_path_)) {
       config_path_ = DEFAULT_FLOW_YAML_FILE_NAME;
     }
   }
@@ -93,20 +92,20 @@ class YamlConfiguration : public FlowConfiguration {
   }
 
   /**
-    * Returns a shared pointer to a ProcessGroup object containing the
-    * flow configuration. The yamlConfigPayload argument must be
-    * a payload for the raw YAML configuration.
-    *
-    * @param yamlConfigPayload an input payload for the raw YAML configuration
-    *                           to be parsed and loaded into the flow
-    *                           configuration tree
-    * @return                 the root ProcessGroup node of the flow
-    *                           configuration tree
-    */
-   std::unique_ptr<core::ProcessGroup> getRootFromPayload(std::string &yamlConfigPayload) {
-     YAML::Node rootYamlNode = YAML::Load(yamlConfigPayload);
-     return getRoot(&rootYamlNode);
-   }
+   * Returns a shared pointer to a ProcessGroup object containing the
+   * flow configuration. The yamlConfigPayload argument must be
+   * a payload for the raw YAML configuration.
+   *
+   * @param yamlConfigPayload an input payload for the raw YAML configuration
+   *                           to be parsed and loaded into the flow
+   *                           configuration tree
+   * @return                 the root ProcessGroup node of the flow
+   *                           configuration tree
+   */
+  std::unique_ptr<core::ProcessGroup> getRootFromPayload(std::string &yamlConfigPayload) {
+    YAML::Node rootYamlNode = YAML::Load(yamlConfigPayload);
+    return getRoot(&rootYamlNode);
+  }
 
  protected:
 

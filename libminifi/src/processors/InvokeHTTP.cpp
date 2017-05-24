@@ -42,6 +42,8 @@
 #include "io/StreamFactory.h"
 #include "ResourceClaim.h"
 #include "utils/StringUtils.h"
+#include "utils/ByteInputCallBack.h"
+#include "utils/HTTPUtils.h"
 
 namespace org {
 namespace apache {
@@ -210,7 +212,7 @@ void InvokeHTTP::onSchedule(core::ProcessContext *context, core::ProcessSessionF
   if (context->getProperty(SSLContext.getName(), context_name) && !IsNullOrEmpty(context_name)) {
     std::shared_ptr<core::controller::ControllerService> service = context->getControllerService(context_name);
     if (nullptr != service) {
-      ssl_context_service_ = std::static_pointer_cast<minifi::controllers::SSLContextService>(service);
+      ssl_context_service_ = std::static_pointer_cast < minifi::controllers::SSLContextService > (service);
     }
   }
 }
@@ -283,14 +285,14 @@ void InvokeHTTP::configure_secure_connection(CURL *http_session) {
 }
 
 void InvokeHTTP::onTrigger(core::ProcessContext *context, core::ProcessSession *session) {
-  std::shared_ptr<FlowFileRecord> flowFile = std::static_pointer_cast<FlowFileRecord>(session->get());
+  std::shared_ptr<FlowFileRecord> flowFile = std::static_pointer_cast < FlowFileRecord > (session->get());
 
   logger_->log_info("onTrigger InvokeHTTP with  %s", method_.c_str());
 
   if (flowFile == nullptr) {
     if (!emitFlowFile(method_)) {
       logger_->log_info("InvokeHTTP -- create flow file with  %s", method_.c_str());
-      flowFile = std::static_pointer_cast<FlowFileRecord>(session->create());
+      flowFile = std::static_pointer_cast < FlowFileRecord > (session->create());
     } else {
       logger_->log_info("exiting because method is %s", method_.c_str());
       return;
@@ -317,9 +319,9 @@ void InvokeHTTP::onTrigger(core::ProcessContext *context, core::ProcessSession *
   if (read_timeout_ > 0) {
     curl_easy_setopt(http_session, CURLOPT_TIMEOUT, read_timeout_);
   }
+
   utils::HTTPRequestResponse content;
-  curl_easy_setopt(http_session, CURLOPT_WRITEFUNCTION,
-                   &utils::HTTPRequestResponse::recieve_write);
+  curl_easy_setopt(http_session, CURLOPT_WRITEFUNCTION, &utils::HTTPRequestResponse::recieve_write);
 
   curl_easy_setopt(http_session, CURLOPT_WRITEDATA, static_cast<void*>(&content));
 
@@ -334,12 +336,10 @@ void InvokeHTTP::onTrigger(core::ProcessContext *context, core::ProcessSession *
       callbackObj->pos = 0;
       logger_->log_info("InvokeHTTP -- Setting callback");
       curl_easy_setopt(http_session, CURLOPT_UPLOAD, 1L);
-      curl_easy_setopt(http_session, CURLOPT_INFILESIZE_LARGE,
-                       (curl_off_t)callback->getBufferSize());
-      curl_easy_setopt(http_session, CURLOPT_READFUNCTION,
-                       &utils::HTTPRequestResponse::send_write);
-      curl_easy_setopt(http_session, CURLOPT_READDATA,
-                       static_cast<void*>(callbackObj));
+      curl_easy_setopt(http_session, CURLOPT_INFILESIZE_LARGE, (curl_off_t)callback->getBufferSize());
+      curl_easy_setopt(http_session, CURLOPT_READFUNCTION, &utils::HTTPRequestResponse::send_write);
+      curl_easy_setopt(http_session, CURLOPT_READDATA, static_cast<void*>(callbackObj));
+
     } else {
       logger_->log_error("InvokeHTTP -- no resource claim");
     }
@@ -382,9 +382,9 @@ void InvokeHTTP::onTrigger(core::ProcessContext *context, core::ProcessSession *
 
     if (output_body_to_content) {
       if (flowFile != nullptr) {
-        response_flow = std::static_pointer_cast<FlowFileRecord>(session->create(flowFile));
+        response_flow = std::static_pointer_cast < FlowFileRecord > (session->create(flowFile));
       } else {
-        response_flow = std::static_pointer_cast<FlowFileRecord>(session->create());
+        response_flow = std::static_pointer_cast < FlowFileRecord > (session->create());
       }
 
       std::string ct = content_type;
@@ -398,7 +398,7 @@ void InvokeHTTP::onTrigger(core::ProcessContext *context, core::ProcessSession *
       session->importFrom(stream, response_flow);
     } else {
       logger_->log_info("Cannot output body to content");
-      response_flow = std::static_pointer_cast<FlowFileRecord>(session->create());
+      response_flow = std::static_pointer_cast < FlowFileRecord > (session->create());
     }
     route(flowFile, response_flow, session, context, isSuccess, http_code);
   } else {

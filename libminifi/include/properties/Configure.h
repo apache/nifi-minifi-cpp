@@ -40,6 +40,7 @@ class Configure : public Properties {
   static const char *nifi_server_name;
   static const char *nifi_configuration_class_name;
   static const char *nifi_flow_repository_class_name;
+  static const char *nifi_content_repository_class_name;
   static const char *nifi_volatile_repository_options;
   static const char *nifi_provenance_repository_class_name;
   static const char *nifi_server_port;

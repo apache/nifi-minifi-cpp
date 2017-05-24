@@ -62,7 +62,9 @@ TEST_CASE("TailFileWithDelimiter", "[tailfiletest1]") {
         uuid_t logAttributeuuid;
         REQUIRE(true == logAttributeProcessor->getUUID(logAttributeuuid));
 
-        std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(repo, "logattributeconnection");
+        std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
+
+        std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(repo,content_repo, "logattributeconnection");
         connection->setRelationship(core::Relationship("success", "TailFile successful output"));
 
         // link the connections so that we can test results at the end for this
@@ -128,7 +130,9 @@ TEST_CASE("TailFileWithoutDelimiter", "[tailfiletest2]") {
         uuid_t logAttributeuuid;
         REQUIRE(true == logAttributeProcessor->getUUID(logAttributeuuid));
 
-        std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(repo, "logattributeconnection");
+        std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
+
+        std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(repo, content_repo, "logattributeconnection");
         connection->setRelationship(core::Relationship("success", "TailFile successful output"));
 
         // link the connections so that we can test results at the end for this

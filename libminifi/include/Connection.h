@@ -47,7 +47,7 @@ class Connection : public core::Connectable, public std::enable_shared_from_this
   /*
    * Create a new processor
    */
-  explicit Connection(std::shared_ptr<core::Repository> flow_repository, std::string name, uuid_t uuid = NULL, uuid_t srcUUID = NULL, uuid_t destUUID = NULL);
+  explicit Connection(const std::shared_ptr<core::Repository> &flow_repository, const std::shared_ptr<core::ContentRepository> &content_repo, std::string name, uuid_t uuid = NULL, uuid_t srcUUID = NULL,uuid_t destUUID = NULL);
   // Destructor
   virtual ~Connection() {
   }
@@ -123,7 +123,7 @@ class Connection : public core::Connectable, public std::enable_shared_from_this
   bool isFull();
   // Get queue size
   uint64_t getQueueSize() {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard < std::mutex > lock(mutex_);
     return queue_.size();
   }
   // Get queue data size
@@ -168,6 +168,8 @@ class Connection : public core::Connectable, public std::enable_shared_from_this
   std::atomic<uint64_t> expired_duration_;
   // flow file repository
   std::shared_ptr<core::Repository> flow_repository_;
+  // content repository reference.
+  std::shared_ptr<core::ContentRepository> content_repo_;
 
  private:
   // Mutex for protection

@@ -32,19 +32,23 @@ namespace utils {
  */
 class ByteInputCallBack : public InputStreamCallback {
  public:
-  ByteInputCallBack() {
+  ByteInputCallBack()
+      : ptr(nullptr) {
   }
 
   virtual ~ByteInputCallBack() {
 
   }
 
-  virtual void process(std::ifstream *stream) {
+  int64_t process(std::shared_ptr<io::BaseStream> stream) {
 
-    std::vector<char> nv = std::vector<char>(std::istreambuf_iterator<char>(*stream), std::istreambuf_iterator<char>());
+    std::vector<char> nv = std::vector<char>(reinterpret_cast<char*>(const_cast<uint8_t*>(stream->getBuffer())),
+                                             reinterpret_cast<char*>(const_cast<uint8_t*>(stream->getBuffer())) + stream->getSize());
     vec = std::move(nv);
 
     ptr = &vec[0];
+
+    return vec.size();
 
   }
 

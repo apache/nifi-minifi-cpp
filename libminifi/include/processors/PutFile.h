@@ -80,7 +80,8 @@ class PutFile : public core::Processor {
    public:
     ReadCallback(const std::string &tmpFile, const std::string &destFile);
     ~ReadCallback();
-    virtual void process(std::ifstream *stream);bool commit();
+    virtual int64_t process(std::shared_ptr<io::BaseStream> stream);
+    bool commit();
 
    private:
     std::shared_ptr<logging::Logger> logger_;

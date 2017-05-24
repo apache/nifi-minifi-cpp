@@ -92,7 +92,7 @@ class ListenHTTP : public core::Processor {
   class WriteCallback : public OutputStreamCallback {
    public:
     WriteCallback(struct mg_connection *conn, const struct mg_request_info *reqInfo);
-    void process(std::ofstream *stream);
+    int64_t process(std::shared_ptr<io::BaseStream> stream);
 
    private:
     // Logger

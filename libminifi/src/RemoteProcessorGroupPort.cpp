@@ -18,7 +18,7 @@
  * limitations under the License.
  */
 
-#include "../include/RemoteProcessorGroupPort.h"
+#include "RemoteProcessorGroupPort.h"
 
 #include <curl/curl.h>
 #include <curl/curlbuild.h>
@@ -30,18 +30,20 @@
 #include <deque>
 #include <iostream>
 #include <set>
+
 #include <string>
 #include <type_traits>
 #include <utility>
 #include "json/json.h"
 #include "json/writer.h"
 
-#include "../include/core/logging/Logger.h"
-#include "../include/core/ProcessContext.h"
-#include "../include/core/ProcessorNode.h"
-#include "../include/core/Property.h"
-#include "../include/core/Relationship.h"
-#include "../include/Site2SitePeer.h"
+#include "Exception.h"
+#include "core/logging/Logger.h"
+#include "core/ProcessContext.h"
+#include "core/ProcessorNode.h"
+#include "core/Property.h"
+#include "core/Relationship.h"
+#include "Site2SitePeer.h"
 
 namespace org {
 namespace apache {
@@ -54,8 +56,7 @@ core::Property RemoteProcessorGroupPort::port("Port", "Remote Port", "");
 core::Property RemoteProcessorGroupPort::portUUID("Port UUID", "Specifies remote NiFi Port UUID.", "");
 core::Relationship RemoteProcessorGroupPort::relation;
 
-std::unique_ptr<Site2SiteClientProtocol> RemoteProcessorGroupPort::getNextProtocol(
-bool create = true) {
+std::unique_ptr<Site2SiteClientProtocol> RemoteProcessorGroupPort::getNextProtocol(bool create = true) {
   std::unique_ptr<Site2SiteClientProtocol> nextProtocol = nullptr;
   if (!available_protocols_.try_dequeue(nextProtocol)) {
     if (create) {
@@ -170,31 +171,40 @@ void RemoteProcessorGroupPort::onTrigger(core::ProcessContext *context, core::Pr
     uuid_parse(value.c_str(), protocol_uuid_);
   }
 
-  std::unique_ptr<Site2SiteClientProtocol> protocol_ = getNextProtocol();
+  std::unique_ptr<Site2SiteClientProtocol> protocol_ = nullptr;
+  try {
+    protocol_ = getNextProtocol();
 
-  if (!protocol_) {
-    context->yield();
-    return;
-  }
+    if (!protocol_) {
+      context->yield();
+      return;
+    }
+    if (!protocol_->bootstrap()) {
+      // bootstrap the client protocol if needeed
+      context->yield();
+      std::shared_ptr<Processor> processor = std::static_pointer_cast < Processor > (context->getProcessorNode().getProcessor());
+      logger_->log_error("Site2Site bootstrap failed yield period %d peer ", processor->getYieldPeriodMsec());
 
-  if (!protocol_->bootstrap()) {
-    // bootstrap the client protocol if needeed
-    context->yield();
-    std::shared_ptr<Processor> processor = std::static_pointer_cast<Processor>(context->getProcessorNode().getProcessor());
-    logger_->log_error("Site2Site bootstrap failed yield period %d peer ", processor->getYieldPeriodMsec());
+      return;
+    }
+
+    if (direction_ == RECEIVE) {
+      protocol_->receiveFlowFiles(context, session);
+    } else {
+      protocol_->transferFlowFiles(context, session);
+    }
+
     returnProtocol(std::move(protocol_));
     return;
+  } catch (const minifi::Exception &ex2) {
+    context->yield();
+    session->rollback();
+  } catch (...) {
+    context->yield();
+    session->rollback();
   }
 
-  if (direction_ == RECEIVE) {
-    protocol_->receiveFlowFiles(context, session);
-  } else {
-    protocol_->transferFlowFiles(context, session);
-  }
-
-  returnProtocol(std::move(protocol_));
-
-  return;
+  throw std::exception();
 }
 
 void RemoteProcessorGroupPort::refreshRemoteSite2SiteInfo() {

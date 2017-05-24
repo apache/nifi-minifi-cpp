@@ -18,13 +18,17 @@
 #include <memory>
 #include <string>
 #include <algorithm>
+#include "core/ContentRepository.h"
+#include "core/repository/FileSystemRepository.h"
+#include "core/repository/VolatileContentRepository.h"
 #include "core/Repository.h"
 #ifdef LEVELDB_SUPPORT
 #include "core/repository/FlowFileRepository.h"
 #include "provenance/ProvenanceRepository.h"
 #endif
 
-#include "core/repository/VolatileRepository.h"
+#include "core/repository/VolatileProvenanceRepository.h"
+#include "core/repository/VolatileFlowFileRepository.h"
 
 namespace org {
 namespace apache {
@@ -48,14 +52,14 @@ std::shared_ptr<core::Repository> createRepository(const std::string configurati
   try {
     std::shared_ptr<core::Repository> return_obj = nullptr;
     if (class_name_lc == "flowfilerepository") {
-      std::cout << "creating flow" << std::endl;
       return_obj = instantiate<core::repository::FlowFileRepository>(repo_name);
     } else if (class_name_lc == "provenancerepository") {
       return_obj = instantiate<provenance::ProvenanceRepository>(repo_name);
-    } else if (class_name_lc == "volatilerepository") {
-      return_obj = instantiate<repository::VolatileRepository>(repo_name);
+    } else if (class_name_lc == "volatileflowfilerepository") {
+      return_obj = instantiate<repository::VolatileFlowFileRepository>(repo_name);
+    } else if (class_name_lc == "volatileprovenancefilerepository") {
+      return_obj = instantiate<repository::VolatileProvenanceRepository>(repo_name);
     } else if (class_name_lc == "nooprepository") {
-      std::cout << "creating noop" << std::endl;
       return_obj = instantiate<core::Repository>(repo_name);
     }
 
@@ -63,13 +67,42 @@ std::shared_ptr<core::Repository> createRepository(const std::string configurati
       return return_obj;
     }
     if (fail_safe) {
-      return std::make_shared<core::Repository>("fail_safe", "fail_safe", 1, 1, 1);
+      return std::make_shared < core::Repository > ("fail_safe", "fail_safe", 1, 1, 1);
     } else {
       throw std::runtime_error("Support for the provided configuration class could not be found");
     }
   } catch (const std::runtime_error &r) {
     if (fail_safe) {
-      return std::make_shared<core::Repository>("fail_safe", "fail_safe", 1, 1, 1);
+      return std::make_shared < core::Repository > ("fail_safe", "fail_safe", 1, 1, 1);
+    }
+  }
+
+  throw std::runtime_error("Support for the provided configuration class could not be found");
+}
+
+std::shared_ptr<core::ContentRepository> createContentRepository(const std::string configuration_class_name, bool fail_safe, const std::string repo_name) {
+  std::shared_ptr<core::ContentRepository> return_obj = nullptr;
+  std::string class_name_lc = configuration_class_name;
+  std::transform(class_name_lc.begin(), class_name_lc.end(), class_name_lc.begin(), ::tolower);
+  try {
+    std::shared_ptr<core::ContentRepository> return_obj = nullptr;
+    if (class_name_lc == "volatilecontentrepository") {
+      return_obj = instantiate<core::repository::VolatileContentRepository>(repo_name);
+    } else {
+      return_obj = instantiate<core::repository::FileSystemRepository>(repo_name);
+    }
+
+    if (return_obj) {
+      return return_obj;
+    }
+    if (fail_safe) {
+      return std::make_shared < core::repository::FileSystemRepository > ("fail_safe");
+    } else {
+      throw std::runtime_error("Support for the provided configuration class could not be found");
+    }
+  } catch (const std::runtime_error &r) {
+    if (fail_safe) {
+      return std::make_shared < core::repository::FileSystemRepository > ("fail_safe");
     }
   }
 

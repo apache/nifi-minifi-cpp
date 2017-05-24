@@ -70,10 +70,23 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
   /**
    * Flow controller constructor
    */
-  FlowController(std::shared_ptr<core::Repository> provenance_repo, std::shared_ptr<core::Repository> flow_file_repo, std::shared_ptr<Configure> configure,
-                 std::unique_ptr<core::FlowConfiguration> flow_configuration,
-                 const std::string name = DEFAULT_ROOT_GROUP_NAME,
-                 bool headless_mode = false);
+  explicit FlowController(std::shared_ptr<core::Repository> provenance_repo, std::shared_ptr<core::Repository> flow_file_repo, std::shared_ptr<Configure> configure,
+                          std::unique_ptr<core::FlowConfiguration> flow_configuration,
+                          std::shared_ptr<core::ContentRepository> content_repo, const std::string name, bool headless_mode);
+
+  explicit FlowController(std::shared_ptr<core::Repository> provenance_repo, std::shared_ptr<core::Repository> flow_file_repo, std::shared_ptr<Configure> configure,
+                          std::unique_ptr<core::FlowConfiguration> flow_configuration,
+                          std::shared_ptr<core::ContentRepository> content_repo)
+      : FlowController(provenance_repo, flow_file_repo, configure, std::move(flow_configuration), content_repo, DEFAULT_ROOT_GROUP_NAME, false)
+  {
+  }
+
+  explicit FlowController(std::shared_ptr<core::Repository> provenance_repo, std::shared_ptr<core::Repository> flow_file_repo, std::shared_ptr<Configure> configure,
+                          std::unique_ptr<core::FlowConfiguration> flow_configuration)
+      : FlowController(provenance_repo, flow_file_repo, configure, std::move(flow_configuration), std::make_shared<core::repository::FileSystemRepository>(), DEFAULT_ROOT_GROUP_NAME, false)
+  {
+    content_repo_->initialize(configure);
+  }
 
   // Destructor
   virtual ~FlowController();
@@ -300,6 +313,8 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
 
   // FlowFile Repo
   std::shared_ptr<core::Repository> flow_file_repo_;
+
+  std::shared_ptr<core::ContentRepository> content_repo_;
 
   // Flow Engines
   // Flow Timer Scheduler

@@ -29,7 +29,8 @@
 #include <string>
 #include <thread>
 #include <vector>
-
+#include "core/Core.h"
+#include "core/SerializableComponent.h"
 #include "core/Repository.h"
 #include "core/Property.h"
 #include "properties/Configure.h"
@@ -50,7 +51,7 @@ namespace provenance {
 #define PROVENANCE_EVENT_RECORD_SEG_SIZE 2048
 
 // Provenance Event Record
-class ProvenanceEventRecord : protected org::apache::nifi::minifi::io::Serializable {
+class ProvenanceEventRecord : public core::SerializableComponent {
  public:
   enum ProvenanceEventType {
 
@@ -163,7 +164,9 @@ class ProvenanceEventRecord : protected org::apache::nifi::minifi::io::Serializa
    */
   ProvenanceEventRecord(ProvenanceEventType event, std::string componentId, std::string componentType);
 
-  ProvenanceEventRecord() {
+
+  ProvenanceEventRecord()
+      : core::SerializableComponent(core::getClassName<ProvenanceEventRecord>()){
     _eventTime = getTimeMillis();
   }
 
@@ -172,7 +175,11 @@ class ProvenanceEventRecord : protected org::apache::nifi::minifi::io::Serializa
   }
   // Get the Event ID
   std::string getEventId() {
-    return _eventIdStr;
+    return uuidStr_;
+  }
+
+  void setEventId(const std::string &id) {
+    setUUIDStr(id);
   }
   // Get Attributes
   std::map<std::string, std::string> getAttributes() {
@@ -220,7 +227,7 @@ class ProvenanceEventRecord : protected org::apache::nifi::minifi::io::Serializa
   }
   // Get FlowFileUuid
   std::string getFlowFileUuid() {
-    return uuid_;
+    return flow_uuid_;
   }
   // Get content full path
   std::string getContentFullPath() {
@@ -333,7 +340,7 @@ class ProvenanceEventRecord : protected org::apache::nifi::minifi::io::Serializa
     _entryDate = flow->getEntryDate();
     _lineageStartDate = flow->getlineageStartDate();
     _lineageIdentifiers = flow->getlineageIdentifiers();
-    uuid_ = flow->getUUIDStr();
+    flow_uuid_ = flow->getUUIDStr();
     _attributes = flow->getAttributes();
     _size = flow->getSize();
     _offset = flow->getOffset();
@@ -344,15 +351,15 @@ class ProvenanceEventRecord : protected org::apache::nifi::minifi::io::Serializa
     }
   }
   // Serialize and Persistent to the repository
-  bool Serialize(const std::shared_ptr<core::Repository> &repo);
+  bool Serialize(const std::shared_ptr<core::SerializableComponent> &repo);
   // DeSerialize
-  bool DeSerialize(const uint8_t *buffer, const int bufferSize);
+  bool DeSerialize(const uint8_t *buffer, const size_t bufferSize);
   // DeSerialize
   bool DeSerialize(org::apache::nifi::minifi::io::DataStream &stream) {
     return DeSerialize(stream.getBuffer(), stream.getSize());
   }
   // DeSerialize
-  bool DeSerialize(const std::shared_ptr<core::Repository> &repo, std::string key);
+  bool DeSerialize(const std::shared_ptr<core::SerializableComponent> &repo);
 
  protected:
 
@@ -373,15 +380,13 @@ class ProvenanceEventRecord : protected org::apache::nifi::minifi::io::Serializa
   // Size in bytes of the data corresponding to this flow file
   uint64_t _size;
   // flow uuid
-  std::string uuid_;
+  std::string flow_uuid_;
   // Offset to the content
   uint64_t _offset;
   // Full path to the content
   std::string _contentFullPath;
   // Attributes key/values pairs for the flow record
   std::map<std::string, std::string> _attributes;
-  // provenance ID
-  uuid_t _eventId;
   // UUID string for all parents
   std::set<std::string> _lineageIdentifiers;
   // transitUri
@@ -396,8 +401,6 @@ class ProvenanceEventRecord : protected org::apache::nifi::minifi::io::Serializa
   std::string _details;
   // sourceQueueIdentifier
   std::string _sourceQueueIdentifier;
-  // event ID Str
-  std::string _eventIdStr;
   // relationship
   std::string _relationship;
   // alternateIdentifierUri;
@@ -496,10 +499,9 @@ class ProvenanceReporter {
 
  private:
 
+  std::shared_ptr<logging::Logger> logger_;
   // Incoming connection Iterator
   std::set<ProvenanceEventRecord *> _events;
-  // Logger
-  std::shared_ptr<logging::Logger> logger_;
   // provenance repository.
   std::shared_ptr<core::Repository> repo_;
 

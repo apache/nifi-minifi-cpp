@@ -17,20 +17,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "processors/PutFile.h"
-#include <stdio.h>
+
+#include "../../include/processors/PutFile.h"
+
+#include <sys/stat.h>
+#include <unistd.h>
 #include <uuid/uuid.h>
-#include <sstream>
-#include <string>
+#include <cstdint>
+#include <cstdio>
 #include <iostream>
 #include <memory>
 #include <set>
-#include <fstream>
-#include "io/validation.h"
-#include "utils/StringUtils.h"
-#include "utils/TimeUtil.h"
-#include "core/ProcessContext.h"
-#include "core/ProcessSession.h"
+#include <string>
+
+#include "../../include/core/logging/Logger.h"
+#include "../../include/core/ProcessContext.h"
+#include "../../include/core/Property.h"
+#include "../../include/core/Relationship.h"
+#include "../../include/io/BaseStream.h"
+#include "../../include/io/DataStream.h"
+#include "../../include/io/validation.h"
 
 namespace org {
 namespace apache {
@@ -76,7 +82,7 @@ void PutFile::onTrigger(core::ProcessContext *context, core::ProcessSession *ses
     return;
   }
 
-  std::shared_ptr<FlowFileRecord> flowFile = std::static_pointer_cast<FlowFileRecord>(session->get());
+  std::shared_ptr<FlowFileRecord> flowFile = std::static_pointer_cast < FlowFileRecord > (session->get());
 
   // Do nothing if there are no incoming files
   if (!flowFile) {
@@ -142,10 +148,23 @@ PutFile::ReadCallback::ReadCallback(const std::string &tmpFile, const std::strin
 }
 
 // Copy the entire file contents to the temporary file
-void PutFile::ReadCallback::process(std::ifstream *stream) {
+int64_t PutFile::ReadCallback::process(std::shared_ptr<io::BaseStream> stream) {
   // Copy file contents into tmp file
   _writeSucceeded = false;
-  _tmpFileOs << stream->rdbuf();
+  size_t size = 0;
+  uint8_t buffer[1024];
+  do {
+    int read = stream->read(buffer, 1024);
+    if (read < 0) {
+      return -1;
+    }
+    if (read == 0) {
+      break;
+    }
+    _tmpFileOs.write(reinterpret_cast<char*>(buffer), read);
+    size += read;
+  } while (size < stream->getSize());
+  return size;
   _writeSucceeded = true;
 }
 

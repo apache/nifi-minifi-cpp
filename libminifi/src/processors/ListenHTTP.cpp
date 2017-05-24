@@ -201,7 +201,7 @@ ListenHTTP::~ListenHTTP() {
 }
 
 void ListenHTTP::onTrigger(core::ProcessContext *context, core::ProcessSession *session) {
-  std::shared_ptr<FlowFileRecord> flowFile = std::static_pointer_cast<FlowFileRecord>(session->get());
+  std::shared_ptr<FlowFileRecord> flowFile = std::static_pointer_cast < FlowFileRecord > (session->get());
 
   // Do nothing if there are no incoming files
   if (!flowFile) {
@@ -243,7 +243,7 @@ bool ListenHTTP::Handler::handlePost(CivetServer *server, struct mg_connection *
 
   auto session = _processSessionFactory->createSession();
   ListenHTTP::WriteCallback callback(conn, req_info);
-  auto flowFile = std::static_pointer_cast<FlowFileRecord>(session->create());
+  auto flowFile = std::static_pointer_cast < FlowFileRecord > (session->create());
 
   if (!flowFile) {
     sendErrorResponse(conn);
@@ -295,11 +295,11 @@ ListenHTTP::WriteCallback::WriteCallback(struct mg_connection *conn, const struc
   _reqInfo = reqInfo;
 }
 
-void ListenHTTP::WriteCallback::process(std::ofstream *stream) {
+int64_t ListenHTTP::WriteCallback::process(std::shared_ptr<io::BaseStream> stream) {
   int64_t rlen;
   int64_t nlen = 0;
   int64_t tlen = _reqInfo->content_length;
-  char buf[16384];
+  uint8_t buf[16384];
 
   while (nlen < tlen) {
     rlen = tlen - nlen;
@@ -320,6 +320,8 @@ void ListenHTTP::WriteCallback::process(std::ofstream *stream) {
 
     nlen += rlen;
   }
+
+  return nlen;
 }
 
 } /* namespace processors */

@@ -25,8 +25,10 @@
 #include <mutex>
 #include <atomic>
 #include <algorithm>
-
+#include <memory>
 #include "Property.h"
+#include "core/ContentRepository.h"
+#include "core/repository/FileSystemRepository.h"
 #include "core/controller/ControllerServiceProvider.h"
 #include "core/controller/ControllerServiceLookup.h"
 #include "core/logging/LoggerConfiguration.h"
@@ -46,10 +48,12 @@ class ProcessContext : public controller::ControllerServiceLookup {
   /*!
    * Create a new process context associated with the processor/controller service/state manager
    */
-  ProcessContext(ProcessorNode &processor, std::shared_ptr<controller::ControllerServiceProvider> &controller_service_provider, std::shared_ptr<core::Repository> repo)
+  ProcessContext(ProcessorNode &processor, std::shared_ptr<controller::ControllerServiceProvider> &controller_service_provider, std::shared_ptr<core::Repository> repo,
+                 std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::FileSystemRepository>())
       : processor_node_(processor),
         controller_service_provider_(controller_service_provider),
-        logger_(logging::LoggerFactory<ProcessContext>::getLogger()) {
+        logger_(logging::LoggerFactory<ProcessContext>::getLogger()),
+        content_repo_(content_repo) {
     repo_ = repo;
   }
   // Destructor
@@ -90,6 +94,14 @@ class ProcessContext : public controller::ControllerServiceLookup {
 
   std::shared_ptr<core::Repository> getProvenanceRepository() {
     return repo_;
+  }
+
+  /**
+   * Returns a reference to the content repository for the running instance.
+   * @return content repository shared pointer.
+   */
+  std::shared_ptr<core::ContentRepository> getContentRepository() {
+    return content_repo_;
   }
 
   // Prevent default copy constructor and assignment operation
@@ -145,6 +157,9 @@ class ProcessContext : public controller::ControllerServiceLookup {
   std::shared_ptr<controller::ControllerServiceProvider> controller_service_provider_;
   // repository shared pointer.
   std::shared_ptr<core::Repository> repo_;
+
+  // repository shared pointer.
+  std::shared_ptr<core::ContentRepository> content_repo_;
   // Processor
   ProcessorNode processor_node_;
   // Logger

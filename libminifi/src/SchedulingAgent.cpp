@@ -42,7 +42,7 @@ bool SchedulingAgent::hasWorkToDo(std::shared_ptr<core::Processor> processor) {
 void SchedulingAgent::enableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) {
   logger_->log_trace("Enabling CSN in SchedulingAgent %s", serviceNode->getName());
   // reference the enable function from serviceNode
-  std::function<bool()> f_ex = [serviceNode] {
+  std::function < bool() > f_ex = [serviceNode] {
     return serviceNode->enable();
   };
   // create a functor that will be submitted to the thread pool.
@@ -55,7 +55,7 @@ void SchedulingAgent::enableControllerService(std::shared_ptr<core::controller::
 
 void SchedulingAgent::disableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) {
   // reference the disable function from serviceNode
-  std::function<bool()> f_ex = [serviceNode] {
+  std::function < bool() > f_ex = [serviceNode] {
     return serviceNode->disable();
   };
   // create a functor that will be submitted to the thread pool.

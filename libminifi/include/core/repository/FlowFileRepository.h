@@ -48,12 +48,10 @@ class FlowFileRepository : public core::Repository, public std::enable_shared_fr
   // Constructor
 
   FlowFileRepository(const std::string repo_name = "", std::string directory = FLOWFILE_REPOSITORY_DIRECTORY, int64_t maxPartitionMillis = MAX_FLOWFILE_REPOSITORY_ENTRY_LIFE_TIME,
-                     int64_t maxPartitionBytes = MAX_FLOWFILE_REPOSITORY_STORAGE_SIZE,
-                     uint64_t purgePeriod = FLOWFILE_REPOSITORY_PURGE_PERIOD)
+                     int64_t maxPartitionBytes = MAX_FLOWFILE_REPOSITORY_STORAGE_SIZE, uint64_t purgePeriod = FLOWFILE_REPOSITORY_PURGE_PERIOD)
       : Repository(repo_name.length() > 0 ? repo_name : core::getClassName<FlowFileRepository>(), directory, maxPartitionMillis, maxPartitionBytes, purgePeriod),
-        logger_(logging::LoggerFactory<FlowFileRepository>::getLogger())
-
-  {
+        logger_(logging::LoggerFactory<FlowFileRepository>::getLogger()),
+        content_repo_(nullptr) {
     db_ = NULL;
   }
 
@@ -66,6 +64,7 @@ class FlowFileRepository : public core::Repository, public std::enable_shared_fr
   // initialize
   virtual bool initialize(const std::shared_ptr<Configure> &configure) {
     std::string value;
+    std::cout << "initialize " << std::endl;
 
     if (configure->get(Configure::nifi_flowfile_repository_directory_default, value)) {
       directory_ = value;
@@ -95,7 +94,7 @@ class FlowFileRepository : public core::Repository, public std::enable_shared_fr
 
   virtual void run();
 
-  virtual bool Put(std::string key, uint8_t *buf, int bufLen) {
+  virtual bool Put(std::string key, const uint8_t *buf, size_t bufLen) {
 
     // persistent to the DB
     leveldb::Slice value((const char *) buf, bufLen);
@@ -123,7 +122,7 @@ class FlowFileRepository : public core::Repository, public std::enable_shared_fr
    * Sets the value from the provided key
    * @return status of the get operation.
    */
-  virtual bool Get(std::string key, std::string &value) {
+  virtual bool Get(const std::string &key, std::string &value) {
     leveldb::Status status;
     status = db_->Get(leveldb::ReadOptions(), key, &value);
     if (status.ok())
@@ -135,7 +134,7 @@ class FlowFileRepository : public core::Repository, public std::enable_shared_fr
   void setConnectionMap(std::map<std::string, std::shared_ptr<minifi::Connection>> &connectionMap) {
     this->connectionMap = connectionMap;
   }
-  void loadComponent();
+  virtual void loadComponent(const std::shared_ptr<core::ContentRepository> &content_repo);
 
   void start() {
     if (this->purge_period_ <= 0)
@@ -150,6 +149,7 @@ class FlowFileRepository : public core::Repository, public std::enable_shared_fr
 
  private:
   std::map<std::string, std::shared_ptr<minifi::Connection>> connectionMap;
+  std::shared_ptr<core::ContentRepository> content_repo_;
   leveldb::DB* db_;
   std::shared_ptr<logging::Logger> logger_;
 };

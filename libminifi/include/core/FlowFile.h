@@ -224,6 +224,10 @@ class FlowFile {
 
   void setStoredToRepository(bool storedInRepository) {
     stored = storedInRepository;
+    if (!stored && nullptr != claim_)
+        {
+      claim_->decreaseFlowFileRecordOwnedCount();
+    }
   }
 
   bool isStored() {

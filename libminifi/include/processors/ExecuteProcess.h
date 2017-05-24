@@ -31,6 +31,7 @@
 #include <iostream>
 #include <sys/types.h>
 #include <signal.h>
+#include "io/BaseStream.h"
 #include "FlowFileRecord.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
@@ -85,9 +86,12 @@ class ExecuteProcess : public core::Processor {
     }
     char *_data;
     uint64_t _dataSize;
-    void process(std::ofstream *stream) {
+    //void process(std::ofstream *stream) {
+    int64_t process(std::shared_ptr<io::BaseStream> stream) {
+      int64_t ret = 0;
       if (_data && _dataSize > 0)
-        stream->write(_data, _dataSize);
+        ret = stream->write(reinterpret_cast<uint8_t*>(_data), _dataSize);
+      return ret;
     }
   };
 

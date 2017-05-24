@@ -25,6 +25,7 @@
 #include <string>
 #include <set>
 #include "FlowController.h"
+#include "io/BaseStream.h"
 #include "../TestBase.h"
 #include "processors/GetFile.h"
 #include "core/Core.h"
@@ -37,6 +38,7 @@
 
 TEST_CASE("HTTPTestsPostNoResourceClaim", "[httptest1]") {
   TestController testController;
+  std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
   LogTestController::getInstance().setInfo<org::apache::nifi::minifi::processors::InvokeHTTP>();
 
   std::shared_ptr<TestRepository> repo = std::make_shared<TestRepository>();
@@ -50,10 +52,11 @@ TEST_CASE("HTTPTestsPostNoResourceClaim", "[httptest1]") {
   uuid_t invokehttp_uuid;
   REQUIRE(true == invokehttp->getUUID(invokehttp_uuid));
 
-  std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(repo, "getfileCreate2Connection");
+
+  std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(repo, content_repo, "getfileCreate2Connection");
   connection->setRelationship(core::Relationship("success", "description"));
 
-  std::shared_ptr<minifi::Connection> connection2 = std::make_shared<minifi::Connection>(repo, "listenhttp");
+  std::shared_ptr<minifi::Connection> connection2 = std::make_shared<minifi::Connection>(repo, content_repo, "listenhttp");
 
   connection2->setRelationship(core::Relationship("No Retry", "description"));
 
@@ -134,6 +137,7 @@ TEST_CASE("HTTPTestsPostNoResourceClaim", "[httptest1]") {
 
 TEST_CASE("HTTPTestsWithNoResourceClaimPOST", "[httptest1]") {
   TestController testController;
+  std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
   LogTestController::getInstance().setInfo<org::apache::nifi::minifi::processors::InvokeHTTP>();
 
   std::shared_ptr<TestRepository> repo = std::make_shared<TestRepository>();
@@ -154,16 +158,16 @@ TEST_CASE("HTTPTestsWithNoResourceClaimPOST", "[httptest1]") {
   uuid_t invokehttp_uuid;
   REQUIRE(true == invokehttp->getUUID(invokehttp_uuid));
 
-  std::shared_ptr<minifi::Connection> gcConnection = std::make_shared<minifi::Connection>(repo, "getfileCreate2Connection");
+  std::shared_ptr<minifi::Connection> gcConnection = std::make_shared<minifi::Connection>(repo, content_repo, "getfileCreate2Connection");
   gcConnection->setRelationship(core::Relationship("success", "description"));
 
-  std::shared_ptr<minifi::Connection> laConnection = std::make_shared<minifi::Connection>(repo, "logattribute");
+  std::shared_ptr<minifi::Connection> laConnection = std::make_shared<minifi::Connection>(repo, content_repo, "logattribute");
   laConnection->setRelationship(core::Relationship("success", "description"));
 
-  std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(repo, "getfileCreate2Connection");
+  std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(repo, content_repo, "getfileCreate2Connection");
   connection->setRelationship(core::Relationship("success", "description"));
 
-  std::shared_ptr<minifi::Connection> connection2 = std::make_shared<minifi::Connection>(repo, "listenhttp");
+  std::shared_ptr<minifi::Connection> connection2 = std::make_shared<minifi::Connection>(repo, content_repo, "listenhttp");
 
   connection2->setRelationship(core::Relationship("No Retry", "description"));
 
@@ -242,9 +246,10 @@ class CallBack : public minifi::OutputStreamCallback {
   }
   virtual ~CallBack() {
   }
-  virtual void process(std::ofstream *stream) {
+  virtual int64_t process(std::shared_ptr<minifi::io::BaseStream> stream) {
+    // leaving the typo for posterity sake
     std::string st = "we're gnna write some test stuff";
-    stream->write(st.c_str(), st.length());
+    return stream->write(reinterpret_cast<uint8_t*>(const_cast<char*>(st.c_str())), st.length());
   }
 };
 
@@ -270,16 +275,18 @@ TEST_CASE("HTTPTestsWithResourceClaimPOST", "[httptest1]") {
   uuid_t invokehttp_uuid;
   REQUIRE(true == invokehttp->getUUID(invokehttp_uuid));
 
-  std::shared_ptr<minifi::Connection> gcConnection = std::make_shared<minifi::Connection>(repo, "getfileCreate2Connection");
+  std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
+
+  std::shared_ptr<minifi::Connection> gcConnection = std::make_shared<minifi::Connection>(repo, content_repo, "getfileCreate2Connection");
   gcConnection->setRelationship(core::Relationship("success", "description"));
 
-  std::shared_ptr<minifi::Connection> laConnection = std::make_shared<minifi::Connection>(repo, "logattribute");
+  std::shared_ptr<minifi::Connection> laConnection = std::make_shared<minifi::Connection>(repo, content_repo, "logattribute");
   laConnection->setRelationship(core::Relationship("success", "description"));
 
-  std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(repo, "getfileCreate2Connection");
+  std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(repo, content_repo, "getfileCreate2Connection");
   connection->setRelationship(core::Relationship("success", "description"));
 
-  std::shared_ptr<minifi::Connection> connection2 = std::make_shared<minifi::Connection>(repo, "listenhttp");
+  std::shared_ptr<minifi::Connection> connection2 = std::make_shared<minifi::Connection>(repo, content_repo, "listenhttp");
 
   connection2->setRelationship(core::Relationship("No Retry", "description"));
 
@@ -317,14 +324,9 @@ TEST_CASE("HTTPTestsWithResourceClaimPOST", "[httptest1]") {
 
   CallBack callback;
 
-  /*
-   explicit FlowFileRecord(std::shared_ptr<core::Repository> flow_repository,
-   std::map<std::string, std::string> attributes,
-   std::shared_ptr<ResourceClaim> claim = nullptr);
-   */
   std::map<std::string, std::string> attributes;
   attributes["testy"] = "test";
-  std::shared_ptr<minifi::FlowFileRecord> flow = std::make_shared<minifi::FlowFileRecord>(repo, attributes);
+  std::shared_ptr<minifi::FlowFileRecord> flow = std::make_shared<minifi::FlowFileRecord>(repo, content_repo, attributes);
   session2.write(flow, &callback);
 
   invokehttp->incrementActiveTasks();

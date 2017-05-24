@@ -104,6 +104,12 @@ class InvokeHTTP : public core::Processor {
   void onTrigger(core::ProcessContext *context, core::ProcessSession *session);
   void initialize();
   void onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory);
+  /**
+   * Provides a reference to the URL.
+   */
+  const std::string &getUrl() {
+    return url_;
+  }
 
  protected:
 

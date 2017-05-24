@@ -53,7 +53,7 @@ bool Connectable::setSupportedRelationships(std::set<core::Relationship> relatio
     return false;
   }
 
-  std::lock_guard<std::mutex> lock(relationship_mutex_);
+  std::lock_guard < std::mutex > lock(relationship_mutex_);
 
   relationships_.clear();
   for (auto item : relationships) {
@@ -67,7 +67,7 @@ bool Connectable::setSupportedRelationships(std::set<core::Relationship> relatio
 bool Connectable::isSupportedRelationship(core::Relationship relationship) {
   const bool requiresLock = isRunning();
 
-  const auto conditionalLock = !requiresLock ? std::unique_lock<std::mutex>() : std::unique_lock<std::mutex>(relationship_mutex_);
+  const auto conditionalLock = !requiresLock ? std::unique_lock<std::mutex>() : std::unique_lock < std::mutex > (relationship_mutex_);
 
   const auto &it = relationships_.find(relationship.getName());
   if (it != relationships_.end()) {
@@ -83,7 +83,7 @@ bool Connectable::setAutoTerminatedRelationships(std::set<Relationship> relation
     return false;
   }
 
-  std::lock_guard<std::mutex> lock(relationship_mutex_);
+  std::lock_guard < std::mutex > lock(relationship_mutex_);
 
   auto_terminated_relationships_.clear();
   for (auto item : relationships) {
@@ -97,7 +97,7 @@ bool Connectable::setAutoTerminatedRelationships(std::set<Relationship> relation
 bool Connectable::isAutoTerminated(core::Relationship relationship) {
   const bool requiresLock = isRunning();
 
-  const auto conditionalLock = !requiresLock ? std::unique_lock<std::mutex>() : std::unique_lock<std::mutex>(relationship_mutex_);
+  const auto conditionalLock = !requiresLock ? std::unique_lock<std::mutex>() : std::unique_lock < std::mutex > (relationship_mutex_);
 
   const auto &it = auto_terminated_relationships_.find(relationship.getName());
   if (it != auto_terminated_relationships_.end()) {
@@ -111,7 +111,7 @@ void Connectable::waitForWork(uint64_t timeoutMs) {
   has_work_.store(isWorkAvailable());
 
   if (!has_work_.load()) {
-    std::unique_lock<std::mutex> lock(work_available_mutex_);
+    std::unique_lock < std::mutex > lock(work_available_mutex_);
     work_condition_.wait_for(lock, std::chrono::milliseconds(timeoutMs), [&] {return has_work_.load();});
   }
 }
@@ -143,7 +143,7 @@ std::set<std::shared_ptr<Connectable>> Connectable::getOutGoingConnections(std::
 }
 
 std::shared_ptr<Connectable> Connectable::getNextIncomingConnection() {
-  std::lock_guard<std::mutex> lock(relationship_mutex_);
+  std::lock_guard < std::mutex > lock(relationship_mutex_);
 
   if (_incomingConnections.size() == 0)
     return NULL;

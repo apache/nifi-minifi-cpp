@@ -43,7 +43,7 @@ uint16_t ClassLoader::registerResource(const std::string &resource) {
     logger_->log_error("Cannot load library: %s", dlerror());
     return RESOURCE_FAILURE;
   } else {
-    std::lock_guard<std::mutex> lock(internal_mutex_);
+    std::lock_guard < std::mutex > lock(internal_mutex_);
     dl_handles_.push_back(resource_ptr);
   }
 
@@ -60,9 +60,9 @@ uint16_t ClassLoader::registerResource(const std::string &resource) {
 
   ObjectFactory *factory = create_factory_func();
 
-  std::lock_guard<std::mutex> lock(internal_mutex_);
+  std::lock_guard < std::mutex > lock(internal_mutex_);
 
-  loaded_factories_[factory->getClassName()] = std::unique_ptr<ObjectFactory>(factory);
+  loaded_factories_[factory->getClassName()] = std::unique_ptr < ObjectFactory > (factory);
 
   return RESOURCE_SUCCESS;
 }

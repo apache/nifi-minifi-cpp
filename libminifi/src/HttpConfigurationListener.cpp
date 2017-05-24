@@ -63,17 +63,14 @@ bool HttpConfigurationListener::pullConfiguration(std::string &configuration) {
   }
 
   utils::HTTPRequestResponse content;
-  curl_easy_setopt(http_session, CURLOPT_WRITEFUNCTION,
-      &utils::HTTPRequestResponse::recieve_write);
+  curl_easy_setopt(http_session, CURLOPT_WRITEFUNCTION, &utils::HTTPRequestResponse::recieve_write);
 
-  curl_easy_setopt(http_session, CURLOPT_WRITEDATA,
-      static_cast<void*>(&content));
+  curl_easy_setopt(http_session, CURLOPT_WRITEDATA, static_cast<void*>(&content));
 
   CURLcode res = curl_easy_perform(http_session);
 
   if (res == CURLE_OK) {
-    logger_->log_debug("HttpConfigurationListener -- curl successful to %s",
-        fullUrl.c_str());
+    logger_->log_debug("HttpConfigurationListener -- curl successful to %s", fullUrl.c_str());
 
     std::string response_body(content.data.begin(), content.data.end());
     int64_t http_code = 0;
@@ -82,8 +79,7 @@ bool HttpConfigurationListener::pullConfiguration(std::string &configuration) {
     /* ask for the content-type */
     curl_easy_getinfo(http_session, CURLINFO_CONTENT_TYPE, &content_type);
 
-    bool isSuccess = ((int32_t) (http_code / 100)) == 2
-        && res != CURLE_ABORTED_BY_CALLBACK;
+    bool isSuccess = ((int32_t) (http_code / 100)) == 2 && res != CURLE_ABORTED_BY_CALLBACK;
     bool body_empty = IsNullOrEmpty(content.data);
 
     if (isSuccess && !body_empty) {
@@ -94,9 +90,7 @@ bool HttpConfigurationListener::pullConfiguration(std::string &configuration) {
       logger_->log_error("Cannot output body to content");
     }
   } else {
-    logger_->log_error(
-        "HttpConfigurationListener -- curl_easy_perform() failed %s\n",
-        curl_easy_strerror(res));
+    logger_->log_error("HttpConfigurationListener -- curl_easy_perform() failed %s\n", curl_easy_strerror(res));
   }
   curl_easy_cleanup(http_session);
 

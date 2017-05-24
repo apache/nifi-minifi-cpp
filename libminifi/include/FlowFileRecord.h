@@ -30,7 +30,8 @@
 #include <sstream>
 #include <fstream>
 #include <set>
-
+#include "core/ContentRepository.h"
+#include "io/BaseStream.h"
 #include "io/Serializable.h"
 #include "core/FlowFile.h"
 #include "utils/TimeUtil.h"
@@ -81,11 +82,21 @@ inline const char *FlowAttributeKey(FlowAttribute attribute) {
 // throw exception for error
 class InputStreamCallback {
  public:
-  virtual void process(std::ifstream *stream) = 0;
+  virtual ~InputStreamCallback() {
+
+  }
+  //virtual void process(std::ifstream *stream) = 0;
+
+  virtual int64_t process(std::shared_ptr<io::BaseStream> stream) = 0;
 };
 class OutputStreamCallback {
  public:
-  virtual void process(std::ofstream *stream) = 0;
+  virtual ~OutputStreamCallback() {
+
+  }
+  //virtual void process(std::ofstream *stream) = 0;
+  virtual int64_t process(std::shared_ptr<io::BaseStream> stream) = 0;
+
 };
 
 class FlowFileRecord : public core::FlowFile, public io::Serializable {
@@ -94,14 +105,17 @@ class FlowFileRecord : public core::FlowFile, public io::Serializable {
   /*
    * Create a new flow record
    */
-  explicit FlowFileRecord(std::shared_ptr<core::Repository> flow_repository, std::map<std::string, std::string> attributes, std::shared_ptr<ResourceClaim> claim = nullptr);
+  explicit FlowFileRecord(std::shared_ptr<core::Repository> flow_repository, const std::shared_ptr<core::ContentRepository> &content_repo, std::map<std::string, std::string> attributes,
+                          std::shared_ptr<ResourceClaim> claim = nullptr);
 
-  explicit FlowFileRecord(std::shared_ptr<core::Repository> flow_repository, std::shared_ptr<core::FlowFile> &event);
+  explicit FlowFileRecord(std::shared_ptr<core::Repository> flow_repository, const std::shared_ptr<core::ContentRepository> &content_repo, std::shared_ptr<core::FlowFile> &event);
 
-  explicit FlowFileRecord(std::shared_ptr<core::Repository> flow_repository, std::shared_ptr<core::FlowFile> &event, const std::string &uuidConnection);
+  explicit FlowFileRecord(std::shared_ptr<core::Repository> flow_repository, const std::shared_ptr<core::ContentRepository> &content_repo, std::shared_ptr<core::FlowFile> &event,
+                          const std::string &uuidConnection);
 
-  explicit FlowFileRecord(std::shared_ptr<core::Repository> flow_repository)
+  explicit FlowFileRecord(std::shared_ptr<core::Repository> flow_repository, const std::shared_ptr<core::ContentRepository> &content_repo)
       : FlowFile(),
+        content_repo_(content_repo),
         flow_repository_(flow_repository),
         snapshot_("") {
 
@@ -167,6 +181,9 @@ class FlowFileRecord : public core::FlowFile, public io::Serializable {
 
   // repository reference.
   std::shared_ptr<core::Repository> flow_repository_;
+
+  // content repo reference.
+  std::shared_ptr<core::ContentRepository> content_repo_;
 
   // Snapshot flow record for session rollback
   bool snapshot_;

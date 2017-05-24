@@ -19,13 +19,14 @@
 #include <arpa/inet.h>
 #include <cstdint>
 #include <vector>
+
+#include "../../include/core/repository/FlowFileRepository.h"
 #include "io/DataStream.h"
 #include "io/Serializable.h"
 #include "core/Relationship.h"
 #include "core/logging/Logger.h"
 #include "FlowController.h"
 #include "provenance/Provenance.h"
-#include "core/repository/FlowFileRepository.h"
 
 namespace org {
 namespace apache {
