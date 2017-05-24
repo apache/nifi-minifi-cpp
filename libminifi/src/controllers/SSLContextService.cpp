@@ -35,7 +35,7 @@ void SSLContextService::initialize() {
   if (initialized_)
     return;
 
-  std::lock_guard<std::mutex> lock(initialization_mutex_);
+  std::lock_guard < std::mutex > lock(initialization_mutex_);
 
   ControllerService::initialize();
 
@@ -75,31 +75,31 @@ std::unique_ptr<SSLContext> SSLContextService::createSSLContext() {
   if (retp == 0) {
     logger_->log_error("Can not load CA certificate, Exiting, error : %s", std::strerror(errno));
   }
-  return std::unique_ptr<SSLContext>(new SSLContext(ctx));
+  return std::unique_ptr < SSLContext > (new SSLContext(ctx));
 }
 
 const std::string &SSLContextService::getCertificateFile() {
-  std::lock_guard<std::mutex> lock(initialization_mutex_);
+  std::lock_guard < std::mutex > lock(initialization_mutex_);
   return certificate;
 }
 
 const std::string &SSLContextService::getPassphrase() {
-  std::lock_guard<std::mutex> lock(initialization_mutex_);
+  std::lock_guard < std::mutex > lock(initialization_mutex_);
   return passphrase_;
 }
 
 const std::string &SSLContextService::getPassphraseFile() {
-  std::lock_guard<std::mutex> lock(initialization_mutex_);
+  std::lock_guard < std::mutex > lock(initialization_mutex_);
   return passphrase_file_;
 }
 
 const std::string &SSLContextService::getPrivateKeyFile() {
-  std::lock_guard<std::mutex> lock(initialization_mutex_);
+  std::lock_guard < std::mutex > lock(initialization_mutex_);
   return private_key_;
 }
 
 const std::string &SSLContextService::getCACertificate() {
-  std::lock_guard<std::mutex> lock(initialization_mutex_);
+  std::lock_guard < std::mutex > lock(initialization_mutex_);
   return ca_certificate_;
 }
 

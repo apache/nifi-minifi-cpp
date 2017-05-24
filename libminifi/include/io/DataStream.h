@@ -30,6 +30,8 @@ namespace io {
 /**
  * DataStream defines the mechanism through which
  * binary data will be written to a sink
+ *
+ * This object is not intended to be thread safe.
  */
 class DataStream {
  public:
@@ -56,6 +58,10 @@ class DataStream {
     buffer.clear();
     readBuffer = 0;
     return 0;
+  }
+
+  virtual void seek(uint32_t offset) {
+    readBuffer += offset;
   }
 
   virtual void closeStream() {
@@ -111,7 +117,7 @@ class DataStream {
    * Retrieve size of data stream
    * @return size of data stream
    **/
-  const uint32_t getSize() const {
+  virtual const uint32_t getSize() const {
     return buffer.size();
   }
 

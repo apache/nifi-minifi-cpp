@@ -71,8 +71,9 @@ void LogAttribute::onTrigger(core::ProcessContext *context, core::ProcessSession
 
   std::shared_ptr<core::FlowFile> flow = session->get();
 
-  if (!flow)
+  if (!flow) {
     return;
+  }
 
   std::string value;
   if (context->getProperty(LogLevel.getName(), value)) {
@@ -107,10 +108,10 @@ void LogAttribute::onTrigger(core::ProcessContext *context, core::ProcessSession
     message << "\n" << "Payload:" << "\n";
     ReadCallback callback(flow->getSize());
     session->read(flow, &callback);
-    for (unsigned int i = 0, j = 0; i < callback._readSize; i++) {
-      message << std::hex << callback._buffer[i];
+    for (unsigned int i = 0, j = 0; i < callback.read_size_; i++) {
+      message << std::hex << callback.buffer_[i];
       j++;
-      if (j == 16) {
+      if (j == 80) {
         message << '\n';
         j = 0;
       }

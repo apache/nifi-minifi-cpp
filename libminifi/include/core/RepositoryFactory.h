@@ -19,8 +19,8 @@
 #ifndef LIBMINIFI_INCLUDE_CORE_REPOSITORYFACTORY_H_
 #define LIBMINIFI_INCLUDE_CORE_REPOSITORYFACTORY_H_
 
+#include "core/ContentRepository.h"
 #include "core/Repository.h"
-#include "core/repository/VolatileRepository.h"
 #include "Core.h"
 
 namespace org {
@@ -30,7 +30,21 @@ namespace minifi {
 
 namespace core {
 
+/**
+ * Create a repository represented by the configuration class name
+ * @param configuration_class_name configuration class name
+ * @param fail_safe determines whether or not to make the default class if configuration_class_name is invalid
+ * @param repo_name name of the repository
+ */
 std::shared_ptr<core::Repository> createRepository(const std::string configuration_class_name, bool fail_safe = false, const std::string repo_name = "");
+
+/**
+ * Create a context repository
+ * @param configuration_class_name configuration class name
+ * @param fail_safe determines whether or not to make the default class if configuration_class_name is invalid
+ * @param repo_name name of the repository
+ */
+std::shared_ptr<core::ContentRepository> createContentRepository(const std::string configuration_class_name, bool fail_safe = false, const std::string repo_name = "");
 
 } /* namespace core */
 } /* namespace minifi */

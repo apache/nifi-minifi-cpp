@@ -16,7 +16,9 @@
  * limitations under the License.
  */
 #include "core/repository/VolatileRepository.h"
+#include <map>
 #include <memory>
+#include <limits>
 #include <string>
 #include <vector>
 #include "FlowFileRecord.h"
@@ -27,33 +29,6 @@ namespace nifi {
 namespace minifi {
 namespace core {
 namespace repository {
-
-const char *VolatileRepository::volatile_repo_max_count = "max.count";
-
-void VolatileRepository::run() {
-  repo_full_ = false;
-}
-
-/**
- * Purge
- */
-void VolatileRepository::purge() {
-  while (current_size_ > max_size_) {
-    for (auto ent : value_vector_) {
-      // let the destructor do the cleanup
-      RepoValue value;
-      if (ent->getValue(value)) {
-        current_size_ -= value.size();
-        logger_->log_info("VolatileRepository -- purge %s %d %d %d", value.getKey(), current_size_.load(), max_size_, current_index_.load());
-      }
-      if (current_size_ < max_size_)
-        break;
-    }
-  }
-}
-
-void VolatileRepository::loadComponent() {
-}
 
 } /* namespace repository */
 } /* namespace core */

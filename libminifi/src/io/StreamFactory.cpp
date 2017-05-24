@@ -47,11 +47,11 @@ class SocketCreator : public AbstractStreamFactory {
  public:
   template<typename Q = V>
   ContextTypeCheck<true, std::shared_ptr<Q>> create(const std::shared_ptr<Configure> &configure) {
-    return std::make_shared<V>(configure);
+    return std::make_shared < V > (configure);
   }
   template<typename Q = V>
   ContextTypeCheck<false, std::shared_ptr<Q>> create(const std::shared_ptr<Configure> &configure) {
-    return std::make_shared<SocketContext>(configure);
+    return std::make_shared < SocketContext > (configure);
   }
 
   SocketCreator<T, V>(std::shared_ptr<Configure> configure) {
@@ -69,7 +69,7 @@ class SocketCreator : public AbstractStreamFactory {
 
   std::unique_ptr<Socket> createSocket(const std::string &host, const uint16_t port) {
     T *socket = create(host, port);
-    return std::unique_ptr<Socket>(socket);
+    return std::unique_ptr < Socket > (socket);
   }
 
  private:

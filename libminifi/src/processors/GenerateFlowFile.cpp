@@ -91,7 +91,7 @@ void GenerateFlowFile::onTrigger(core::ProcessContext *context, core::ProcessSes
     }
     for (int i = 0; i < batchSize; i++) {
       // For each batch
-      std::shared_ptr<FlowFileRecord> flowFile = std::static_pointer_cast<FlowFileRecord>(session->create());
+      std::shared_ptr<FlowFileRecord> flowFile = std::static_pointer_cast < FlowFileRecord > (session->create());
       if (!flowFile)
         return;
       if (fileSize > 0)
@@ -114,7 +114,7 @@ void GenerateFlowFile::onTrigger(core::ProcessContext *context, core::ProcessSes
     GenerateFlowFile::WriteCallback callback(_data, _dataSize);
     for (int i = 0; i < batchSize; i++) {
       // For each batch
-      std::shared_ptr<FlowFileRecord> flowFile = std::static_pointer_cast<FlowFileRecord>(session->create());
+      std::shared_ptr<FlowFileRecord> flowFile = std::static_pointer_cast < FlowFileRecord > (session->create());
       if (!flowFile)
         return;
       if (fileSize > 0)

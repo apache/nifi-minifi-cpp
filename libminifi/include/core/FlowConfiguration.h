@@ -58,11 +58,12 @@ class FlowConfiguration : public CoreComponent {
    * Constructor that will be used for configuring
    * the flow controller.
    */
-  explicit FlowConfiguration(std::shared_ptr<core::Repository> repo, std::shared_ptr<core::Repository> flow_file_repo, std::shared_ptr<io::StreamFactory> stream_factory,
-                             std::shared_ptr<Configure> configuration,
-                             const std::string path)
+  explicit FlowConfiguration(std::shared_ptr<core::Repository> repo, std::shared_ptr<core::Repository> flow_file_repo, std::shared_ptr<core::ContentRepository> content_repo,
+                             std::shared_ptr<io::StreamFactory> stream_factory,
+                             std::shared_ptr<Configure> configuration, const std::string path)
       : CoreComponent(core::getClassName<FlowConfiguration>()),
         flow_file_repo_(flow_file_repo),
+        content_repo_(content_repo),
         config_path_(path),
         stream_factory_(stream_factory),
         configuration_(configuration),
@@ -76,8 +77,9 @@ class FlowConfiguration : public CoreComponent {
   // Create Processor (Node/Input/Output Port) based on the name
   std::shared_ptr<core::Processor> createProcessor(std::string name, uuid_t uuid);
   // Create Root Processor Group
-  std::unique_ptr<core::ProcessGroup> createRootProcessGroup(std::string name,
-                                                             uuid_t uuid, int version);
+
+  std::unique_ptr<core::ProcessGroup> createRootProcessGroup(std::string name, uuid_t uuid, int version);
+
   std::shared_ptr<core::controller::ControllerServiceNode> createControllerService(const std::string &class_name, const std::string &name, uuid_t uuid);
 
   // Create Remote Processor Group
@@ -100,7 +102,7 @@ class FlowConfiguration : public CoreComponent {
   }
 
   virtual std::unique_ptr<core::ProcessGroup> getRootFromPayload(
-      std::string &yamlConfigPayload) {
+                                                                 std::string &yamlConfigPayload) {
     return nullptr;
   }
 
@@ -127,6 +129,8 @@ class FlowConfiguration : public CoreComponent {
   std::string config_path_;
   // flow file repo
   std::shared_ptr<core::Repository> flow_file_repo_;
+  // content repository.
+  std::shared_ptr<core::ContentRepository> content_repo_;
   // stream factory
   std::shared_ptr<io::StreamFactory> stream_factory_;
   std::shared_ptr<Configure> configuration_;

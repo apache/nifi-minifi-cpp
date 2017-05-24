@@ -39,8 +39,7 @@ namespace core {
 
 std::shared_ptr<utils::IdGenerator> ProcessGroup::id_generator_ = utils::IdGenerator::getIdGenerator();
 
-ProcessGroup::ProcessGroup(ProcessGroupType type, std::string name, uuid_t uuid, int version,
-                           ProcessGroup *parent)
+ProcessGroup::ProcessGroup(ProcessGroupType type, std::string name, uuid_t uuid, int version, ProcessGroup *parent)
     : logger_(logging::LoggerFactory<ProcessGroup>::getLogger()),
       name_(name),
       type_(type),
@@ -55,7 +54,7 @@ ProcessGroup::ProcessGroup(ProcessGroupType type, std::string name, uuid_t uuid,
   yield_period_msec_ = 0;
   transmitting_ = false;
 
-  logger_->log_info("ProcessGroup %s created", name_.c_str());
+  logger_->log_info("ProcessGroup %s created", name_);
 }
 
 ProcessGroup::~ProcessGroup() {
@@ -70,12 +69,12 @@ ProcessGroup::~ProcessGroup() {
 }
 
 bool ProcessGroup::isRootProcessGroup() {
-  std::lock_guard<std::recursive_mutex> lock(mutex_);
+  std::lock_guard < std::recursive_mutex > lock(mutex_);
   return (type_ == ROOT_PROCESS_GROUP);
 }
 
 void ProcessGroup::addProcessor(std::shared_ptr<Processor> processor) {
-  std::lock_guard<std::recursive_mutex> lock(mutex_);
+  std::lock_guard < std::recursive_mutex > lock(mutex_);
 
   if (processors_.find(processor) == processors_.end()) {
     // We do not have the same processor in this process group yet
@@ -85,7 +84,7 @@ void ProcessGroup::addProcessor(std::shared_ptr<Processor> processor) {
 }
 
 void ProcessGroup::removeProcessor(std::shared_ptr<Processor> processor) {
-  std::lock_guard<std::recursive_mutex> lock(mutex_);
+  std::lock_guard < std::recursive_mutex > lock(mutex_);
 
   if (processors_.find(processor) != processors_.end()) {
     // We do have the same processor in this process group yet
@@ -95,7 +94,7 @@ void ProcessGroup::removeProcessor(std::shared_ptr<Processor> processor) {
 }
 
 void ProcessGroup::addProcessGroup(ProcessGroup *child) {
-  std::lock_guard<std::recursive_mutex> lock(mutex_);
+  std::lock_guard < std::recursive_mutex > lock(mutex_);
 
   if (child_process_groups_.find(child) == child_process_groups_.end()) {
     // We do not have the same child process group in this process group yet
@@ -105,7 +104,7 @@ void ProcessGroup::addProcessGroup(ProcessGroup *child) {
 }
 
 void ProcessGroup::removeProcessGroup(ProcessGroup *child) {
-  std::lock_guard<std::recursive_mutex> lock(mutex_);
+  std::lock_guard < std::recursive_mutex > lock(mutex_);
 
   if (child_process_groups_.find(child) != child_process_groups_.end()) {
     // We do have the same child process group in this process group yet
@@ -115,7 +114,7 @@ void ProcessGroup::removeProcessGroup(ProcessGroup *child) {
 }
 
 void ProcessGroup::startProcessing(TimerDrivenSchedulingAgent *timeScheduler, EventDrivenSchedulingAgent *eventScheduler) {
-  std::lock_guard<std::recursive_mutex> lock(mutex_);
+  std::lock_guard < std::recursive_mutex > lock(mutex_);
 
   try {
     // Start all the processor node, input and output ports
@@ -143,7 +142,7 @@ void ProcessGroup::startProcessing(TimerDrivenSchedulingAgent *timeScheduler, Ev
 }
 
 void ProcessGroup::stopProcessing(TimerDrivenSchedulingAgent *timeScheduler, EventDrivenSchedulingAgent *eventScheduler) {
-  std::lock_guard<std::recursive_mutex> lock(mutex_);
+  std::lock_guard < std::recursive_mutex > lock(mutex_);
 
   try {
     // Stop all the processor node, input and output ports
@@ -169,7 +168,7 @@ void ProcessGroup::stopProcessing(TimerDrivenSchedulingAgent *timeScheduler, Eve
 }
 
 std::shared_ptr<Processor> ProcessGroup::findProcessor(uuid_t uuid) {
-  std::lock_guard<std::recursive_mutex> lock(mutex_);
+  std::lock_guard < std::recursive_mutex > lock(mutex_);
   std::shared_ptr<Processor> ret = NULL;
   for (auto processor : processors_) {
     logger_->log_info("find processor %s", processor->getName().c_str());
@@ -209,7 +208,7 @@ std::shared_ptr<core::controller::ControllerServiceNode> ProcessGroup::findContr
 }
 
 std::shared_ptr<Processor> ProcessGroup::findProcessor(const std::string &processorName) {
-  std::lock_guard<std::recursive_mutex> lock(mutex_);
+  std::lock_guard < std::recursive_mutex > lock(mutex_);
   std::shared_ptr<Processor> ret = NULL;
   for (auto processor : processors_) {
     logger_->log_debug("Current processor is %s", processor->getName().c_str());
@@ -225,7 +224,7 @@ std::shared_ptr<Processor> ProcessGroup::findProcessor(const std::string &proces
 }
 
 void ProcessGroup::updatePropertyValue(std::string processorName, std::string propertyName, std::string propertyValue) {
-  std::lock_guard<std::recursive_mutex> lock(mutex_);
+  std::lock_guard < std::recursive_mutex > lock(mutex_);
   for (auto processor : processors_) {
     if (processor->getName() == processorName) {
       processor->setProperty(propertyName, propertyValue);
@@ -247,7 +246,7 @@ void ProcessGroup::getConnections(std::map<std::string, std::shared_ptr<Connecti
 }
 
 void ProcessGroup::addConnection(std::shared_ptr<Connection> connection) {
-  std::lock_guard<std::recursive_mutex> lock(mutex_);
+  std::lock_guard < std::recursive_mutex > lock(mutex_);
 
   if (connections_.find(connection) == connections_.end()) {
     // We do not have the same connection in this process group yet
@@ -269,7 +268,7 @@ void ProcessGroup::addConnection(std::shared_ptr<Connection> connection) {
 }
 
 void ProcessGroup::removeConnection(std::shared_ptr<Connection> connection) {
-  std::lock_guard<std::recursive_mutex> lock(mutex_);
+  std::lock_guard < std::recursive_mutex > lock(mutex_);
 
   if (connections_.find(connection) != connections_.end()) {
     // We do not have the same connection in this process group yet

@@ -35,6 +35,11 @@ void CoreComponent::setUUID(uuid_t uuid) {
   uuid_unparse_lower(uuid_, uuidStr);
   uuidStr_ = uuidStr;
 }
+
+void CoreComponent::setUUIDStr(const std::string uuidStr) {
+  uuid_parse(uuidStr.c_str(), uuid_);
+  uuidStr_ = uuidStr;
+}
 // Get UUID
 bool CoreComponent::getUUID(uuid_t uuid) {
   if (uuid) {

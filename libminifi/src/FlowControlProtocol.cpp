@@ -63,15 +63,14 @@ int FlowControlProtocol::connectServer(const char *host, uint16_t port) {
       close(sock);
       return 0;
     }
-    if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR,
-            reinterpret_cast<char*>(&opt), sizeof(opt)) < 0) {
+    if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, reinterpret_cast<char*>(&opt), sizeof(opt)) < 0) {
       logger_->log_error("setsockopt() SO_REUSEADDR failed");
       close(sock);
       return 0;
     }
   }
 
-  int sndsize = 256*1024;
+  int sndsize = 256 * 1024;
   if (setsockopt(sock, SOL_SOCKET, SO_SNDBUF, reinterpret_cast<char*>(&sndsize), sizeof(sndsize)) < 0) {
     logger_->log_error("setsockopt() SO_SNDBUF failed");
     close(sock);

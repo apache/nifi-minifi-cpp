@@ -20,6 +20,7 @@
 #include <map>
 #include <memory>
 #include <string>
+#include "core/repository/VolatileContentRepository.h"
 #include <core/RepositoryFactory.h>
 #include "core/yaml/YamlConfiguration.h"
 #include "../TestBase.h"
@@ -30,8 +31,9 @@ TEST_CASE("Test YAML Config Processing", "[YamlConfiguration]") {
   std::shared_ptr<core::Repository> testProvRepo = core::createRepository("provenancerepository", true);
   std::shared_ptr<core::Repository> testFlowFileRepo = core::createRepository("flowfilerepository", true);
   std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::Configure>();
-  std::shared_ptr<minifi::io::StreamFactory> streamFactory = std::make_shared<minifi::io::StreamFactory>(configuration);
-  core::YamlConfiguration *yamlConfig = new core::YamlConfiguration(testProvRepo, testFlowFileRepo, streamFactory, configuration);
+  std::shared_ptr<minifi::io::StreamFactory> streamFactory = std::make_shared < minifi::io::StreamFactory > (configuration);
+  std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
+  core::YamlConfiguration *yamlConfig = new core::YamlConfiguration(testProvRepo, testFlowFileRepo, content_repo, streamFactory, configuration);
 
   SECTION("loading YAML without optional component IDs works") {
   static const std::string CONFIG_YAML_WITHOUT_IDS = ""
