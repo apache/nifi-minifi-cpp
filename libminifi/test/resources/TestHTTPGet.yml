@@ -32,7 +32,7 @@ Processors:
       auto-terminated relationships list:
       Properties:
           HTTP Method: GET
-          Remote URL: https://curl.haxx.se/libcurl/c/httpput.html
+          Remote URL: https://raw.githubusercontent.com/curl/curl/master/docs/examples/httpput.c
     - name: OhJeez
       id: 2438e3c8-015a-1000-79ca-83af40ec1992
       class: org.apache.nifi.processors.standard.LogAttribute

@@ -103,9 +103,9 @@ int main(int argc, char **argv) {
   assert(logs.find("key:filename value:") != std::string::npos);
   assert(
       logs.find(
-          "key:invokehttp.request.url value:https://curl.haxx.se/libcurl/c/httpput.html")
+          "key:invokehttp.request.url value:https://raw.githubusercontent.com/curl/curl/master/docs/examples/httpput.c")
           != std::string::npos);
-  assert(logs.find("Size:8970 Offset:0") != std::string::npos);
+  assert(logs.find("Size:3734 Offset:0") != std::string::npos);
   assert(
       logs.find("key:invokehttp.status.code value:200") != std::string::npos);
   std::string stringtofind = "Resource Claim created ./content_repository/";
