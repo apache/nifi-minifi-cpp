@@ -117,12 +117,13 @@ OS X Using Homebrew (with XCode Command Line Tools installed)
 ```
 # ~/Development/code/apache/nifi-minifi-cpp on git:master
 $ brew install cmake \
-  curl \
   leveldb \
   ossp-uuid \
   boost \
   openssl \
   doxygen
+$ brew install curl
+$ brew link curl --force
 ```
 
 
