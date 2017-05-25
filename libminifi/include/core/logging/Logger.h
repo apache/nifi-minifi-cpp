@@ -21,6 +21,7 @@
 #ifndef __LOGGER_H__
 #define __LOGGER_H__
 
+#include <atomic>
 #include <memory>
 
 #include "spdlog/spdlog.h"
@@ -107,18 +108,17 @@ class Logger {
   }
   
  protected:
-  Logger(std::shared_ptr<spdlog::logger> delegate) {
-   delegate_ = delegate;
-  }
+  Logger(std::shared_ptr<spdlog::logger> delegate) : delegate_(delegate) {}
   
   std::shared_ptr<spdlog::logger> delegate_;
  private:
   template<typename ... Args>
   inline void log(spdlog::level::level_enum level, const char * const format, const Args& ... args) {
-   if (!delegate_->should_log(level)) {
+   std::shared_ptr<spdlog::logger> delegate = std::atomic_load(&delegate_);
+   if (!delegate->should_log(level)) {
      return;
    }
-   delegate_->log(level, format_string(format, conditional_conversion(args)...));
+   delegate->log(level, format_string(format, conditional_conversion(args)...));
   }
   
   Logger(Logger const&);

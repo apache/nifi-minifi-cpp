@@ -18,7 +18,9 @@
 #ifndef LIBMINIFI_INCLUDE_CORE_CORE_H_
 #define LIBMINIFI_INCLUDE_CORE_CORE_H_
 
+#include <cstdlib>
 #include <memory>
+#include <string>
 #include <uuid/uuid.h>
 #include <cxxabi.h>
 /**
