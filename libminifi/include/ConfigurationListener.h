@@ -47,15 +47,17 @@ public:
   /*!
    * Create a new processor
    */
-  ConfigurationListener(FlowController *controller, std::shared_ptr<Configure> configure, std::string type):
-    connect_timeout_(20000), read_timeout_(20000), type_(type), configure_(configure), controller_(controller) {
+  ConfigurationListener(FlowController *controller,
+      std::shared_ptr<Configure> configure, std::string type) :
+      connect_timeout_(20000), read_timeout_(20000), type_(type), configure_(
+          configure), controller_(controller), need_client_certificate_(false) {
     logger_ = logging::Logger::getLogger();
+    running_ = false;
   }
   // Destructor
   virtual ~ConfigurationListener() {
     stop();
   }
-
 
   // Start the thread
   void start();
@@ -63,13 +65,12 @@ public:
   void stop();
   // whether the thread is enable
   bool isRunning() {
-     return running_;
+    return running_;
   }
   // pull the new configuration from the remote host
   virtual bool pullConfiguration(std::string &configuration) {
     return false;
   }
-
 
 protected:
 
@@ -98,10 +99,18 @@ protected:
   int64_t pull_interval_;
   // type (http/rest)
   std::string type_;
+  // last applied configuration
+  std::string lastAppliedConfiguration;
 
   std::shared_ptr<Configure> configure_;
   std::shared_ptr<logging::Logger> logger_;
   FlowController *controller_;
+
+  bool need_client_certificate_;
+  std::string certificate_;
+  std::string private_key_;
+  std::string passphrase_;
+  std::string ca_certificate_;
 };
 
 } /* namespace minifi */

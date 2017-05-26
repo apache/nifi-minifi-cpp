@@ -167,7 +167,6 @@ FlowController::~FlowController() {
 }
 
 bool FlowController::applyConfiguration(std::string &configurePayload) {
-
   std::unique_ptr<core::ProcessGroup> newRoot;
   try {
     newRoot = std::move(flow_configuration_->getRootFromPayload(configurePayload));
@@ -179,28 +178,6 @@ bool FlowController::applyConfiguration(std::string &configurePayload) {
 
   if (newRoot == nullptr)
     return false;
-
-  if (this->root_ != nullptr) {
-    // check for version/name/uuid for the flow controller
-    if (newRoot->getName() != root_->getName()) {
-      logger_->log_error("Configuration flow controller name mismatching");
-      return false;
-    }
-
-    uuid_t oldUUID;
-    uuid_t newUUID;
-
-    if (newRoot->getUUID(newUUID) && root_->getUUID(oldUUID) &&
-        uuid_compare(newUUID, oldUUID) != 0) {
-      logger_->log_error("Configuration flow controller UUID mismatching");
-      return false;
-    }
-
-    if (newRoot->getVersion() <= root_->getVersion()) {
-      logger_->log_error("Configuration flow controller version is not latest");
-      return false;
-    }
-  }
 
   logger_->log_info("Starting to reload Flow Controller with flow control name %s, version %d",
       newRoot->getName().c_str(), newRoot->getVersion());

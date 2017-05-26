@@ -323,6 +323,24 @@ Additionally, users can utilize the MiNiFi Toolkit Converter (version 0.0.1 - sc
       host: localhost
       port uuid: 471deef6-2a6e-4a7d-912a-81cc17e3a204
       batch size: 100
+
+### Http Configuration Listener
+
+    Http Configuration Listener will pull flow file configuration from the remote command control server, 
+    validate and apply the new flow configuration
+
+    in minifi.properties 
+
+    nifi.configuration.listener.type=http
+    nifi.configuration.listener.http.url=https://localhost:8080
+    nifi.configuration.listener.pull.interval=1 sec 
+    nifi.configuration.listener.client.ca.certificate=./conf/nifi-cert.pem
+
+    if you want to enable client certificate
+    nifi.configuration.listener.need.ClientAuth=true
+    nifi.configuration.listener.client.certificate=./conf/client.pem
+    nifi.configuration.listener.client.private.key=./conf/client.key
+    nifi.configuration.listener.client.pass.phrase=./conf/password
       
 ### Controller Services
  If you need to reference a controller service in your config.yml file, use the following template. In the example, below, ControllerServiceClass is the name of the class defining the controller Service. ControllerService1 

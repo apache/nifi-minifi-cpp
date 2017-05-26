@@ -69,14 +69,25 @@ public:
       } else {
         url_ = "";
       }
-      curl_global_init (CURL_GLOBAL_DEFAULT);
+
+      curl_global_init(CURL_GLOBAL_DEFAULT);
+      this->start();
   }
 
   bool pullConfiguration(std::string &configuration);
 
+  /**
+    * Configures a secure connection
+    */
+  void configureSecureConnection(CURL *http_session);
+
+  static CURLcode configureSSLContext(CURL *curl, void *ctx, void *param);
+  static int pemPassWordCb(char *buf, int size, int rwflag, void *param);
+
   // Destructor
   virtual ~HttpConfigurationListener() {
-
+    this->stop();
+    curl_global_cleanup();
   }
 
 protected:

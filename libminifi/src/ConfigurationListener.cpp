@@ -17,6 +17,11 @@
  */
 #include "ConfigurationListener.h"
 #include "FlowController.h"
+#include <openssl/ssl.h>
+#include <openssl/err.h>
+#include <string>
+#include <memory>
+#include <utility>
 
 namespace org {
 namespace apache {
@@ -27,19 +32,59 @@ void ConfigurationListener::start() {
   if (running_)
     return;
 
-  pull_interval_ = 60*1000;
+  pull_interval_ = 60 * 1000;
   std::string value;
   // grab the value for configuration
-  if (configure_->get(Configure::nifi_configuration_listener_pull_interval, value)) {
+  if (configure_->get(Configure::nifi_configuration_listener_pull_interval,
+      value)) {
     core::TimeUnit unit;
     if (core::Property::StringToTime(value, pull_interval_, unit)
         && core::Property::ConvertTimeUnitToMS(pull_interval_, unit,
             pull_interval_)) {
+      logger_->log_info("Configuration Listener pull interval: [%d] ms",
+           pull_interval_);
     }
   }
 
-  logger_->log_info("Configuration Listener pull interval: [%d] ms",
-              pull_interval_);
+  std::string clientAuthStr;
+  if (configure_->get(Configure::nifi_configuration_listener_need_ClientAuth, clientAuthStr)) {
+    org::apache::nifi::minifi::utils::StringUtils::StringToBool(clientAuthStr, this->need_client_certificate_);
+  }
+
+  if (configure_->get(
+          Configure::nifi_configuration_listener_client_ca_certificate,
+      this->ca_certificate_)) {
+    logger_->log_info("Configuration Listener CA certificates: [%s]",
+        this->ca_certificate_.c_str());
+  }
+
+  if (this->need_client_certificate_) {
+    std::string passphrase_file;
+
+    if (!(configure_->get(
+        Configure::nifi_configuration_listener_client_certificate, this->certificate_)
+        && configure_->get(Configure::nifi_configuration_listener_private_key,
+            this->private_key_))) {
+      logger_->log_error(
+          "Certificate and Private Key PEM file not configured for configuration listener, error: %s.",
+          std::strerror(errno));
+    }
+
+    if (configure_->get(
+        Configure::nifi_configuration_listener_client_pass_phrase,
+        passphrase_file)) {
+      // load the passphase from file
+      std::ifstream file(passphrase_file.c_str(), std::ifstream::in);
+      if (file.good()) {
+        this->passphrase_.assign((std::istreambuf_iterator<char>(file)),
+            std::istreambuf_iterator<char>());
+        file.close();
+      }
+    }
+
+    logger_->log_info("Configuration Listener certificate: [%s], private key: [%s], passphrase file: [%s]",
+            this->certificate_.c_str(), this->private_key_.c_str(), passphrase_file.c_str());
+  }
 
   thread_ = std::thread(&ConfigurationListener::threadExecutor, this);
   thread_.detach();
@@ -57,7 +102,6 @@ void ConfigurationListener::stop() {
 }
 
 void ConfigurationListener::run() {
-
   int64_t interval = 0;
   while (running_) {
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
@@ -67,13 +111,17 @@ void ConfigurationListener::run() {
       bool ret = false;
       ret = pullConfiguration(payload);
       if (ret) {
+        if (payload.empty() || payload == lastAppliedConfiguration) {
+          interval = 0;
+          continue;
+        }
         ret = this->controller_->applyConfiguration(payload);
+        if (ret)
+          this->lastAppliedConfiguration = payload;
       }
       interval = 0;
     }
   }
-  return;
-
 }
 
 } /* namespace minifi */
