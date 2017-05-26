@@ -80,11 +80,8 @@ void sigHandler(int signal) {
   }
 }
 
-// For use in LoggerFactory call
-class Main {};
-
 int main(int argc, char **argv) {
-  std::shared_ptr<logging::Logger> logger = logging::LoggerFactory<Main>::getLogger();
+  std::shared_ptr<logging::Logger> logger = logging::LoggerConfiguration::getConfiguration().getLogger("main");
 
   uint16_t stop_wait_time = STOP_WAIT_TIME_MS;
 

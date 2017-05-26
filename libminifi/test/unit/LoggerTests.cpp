@@ -23,7 +23,7 @@
 #include "../TestBase.h"
 
 TEST_CASE("Test log Levels", "[ttl1]") {
-  LogTestController::getInstance().setLevel<logging::Logger>(spdlog::level::trace);
+  LogTestController::getInstance().setTrace<logging::Logger>();
   std::shared_ptr<logging::Logger> logger = logging::LoggerFactory<logging::Logger>::getLogger();
   logger->log_info("hello %s", "world");
 
@@ -35,7 +35,7 @@ TEST_CASE("Test log Levels", "[ttl1]") {
 }
 
 TEST_CASE("Test log Levels debug", "[ttl2]") {
-  LogTestController::getInstance().setLevel<logging::Logger>(spdlog::level::trace);
+  LogTestController::getInstance().setTrace<logging::Logger>();
   std::shared_ptr<logging::Logger> logger = logging::LoggerFactory<logging::Logger>::getLogger();
   logger->log_debug("hello %s", "world");
 
@@ -47,7 +47,7 @@ TEST_CASE("Test log Levels debug", "[ttl2]") {
 }
 
 TEST_CASE("Test log Levels trace", "[ttl3]") {
-  LogTestController::getInstance().setLevel<logging::Logger>(spdlog::level::trace);
+  LogTestController::getInstance().setTrace<logging::Logger>();
   std::shared_ptr<logging::Logger> logger = logging::LoggerFactory<logging::Logger>::getLogger();
   logger->log_trace("hello %s", "world");
 
@@ -59,7 +59,7 @@ TEST_CASE("Test log Levels trace", "[ttl3]") {
 }
 
 TEST_CASE("Test log Levels error", "[ttl4]") {
-  LogTestController::getInstance().setLevel<logging::Logger>(spdlog::level::trace);
+  LogTestController::getInstance().setTrace<logging::Logger>();
   std::shared_ptr<logging::Logger> logger = logging::LoggerFactory<logging::Logger>::getLogger();
   logger->log_error("hello %s", "world");
 
@@ -71,7 +71,7 @@ TEST_CASE("Test log Levels error", "[ttl4]") {
 }
 
 TEST_CASE("Test log Levels change", "[ttl5]") {
-  LogTestController::getInstance().setLevel<logging::Logger>(spdlog::level::trace);
+  LogTestController::getInstance().setTrace<logging::Logger>();
   std::shared_ptr<logging::Logger> logger = logging::LoggerFactory<logging::Logger>::getLogger();
   logger->log_error("hello %s", "world");
 
@@ -80,7 +80,7 @@ TEST_CASE("Test log Levels change", "[ttl5]") {
           == LogTestController::getInstance().contains(
               "[org::apache::nifi::minifi::core::logging::Logger] [error] hello world"));
   LogTestController::getInstance().reset();
-  LogTestController::getInstance().setLevel<logging::Logger>(spdlog::level::off);
+  LogTestController::getInstance().setOff<logging::Logger>();
   logger->log_error("hello %s", "world");
 
   REQUIRE(

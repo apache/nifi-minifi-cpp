@@ -67,7 +67,7 @@ Socket::Socket(const Socket &&other)
       total_list_(other.total_list_),
       read_fds_(other.read_fds_),
       canonical_hostname_(std::move(other.canonical_hostname_)),
-      logger_(other.logger_) {
+      logger_(std::move(other.logger_)) {
 }
 
 Socket::~Socket() {

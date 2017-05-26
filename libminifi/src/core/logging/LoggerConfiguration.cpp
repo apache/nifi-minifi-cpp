@@ -25,6 +25,7 @@
 #include <map>
 #include <string>
 
+#include "core/Core.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/StringUtils.h"
 
@@ -41,22 +42,22 @@ namespace logging {
 
 const char* LoggerConfiguration::spdlog_default_pattern = "[%Y-%m-%d %H:%M:%S.%e] [%n] [%l] %v";
 
-std::shared_ptr< internal::LoggerImpl > internal::LoggerImpl::create(const std::string &name) {
-  std::shared_ptr<LoggerImpl> logger = std::shared_ptr<LoggerImpl>(new internal::LoggerImpl(name));
-  LoggerConfiguration::getConfiguration().init_logger(logger);
-  return logger;
-}
-
 std::vector< std::string > LoggerProperties::get_keys_of_type(const std::string &type) {
   std::vector<std::string> appenders;
   std::string prefix = type + ".";
   for (auto const & entry : properties_) {
-    if (utils::StringUtils::starts_with(entry.first, prefix) &&
+    if (entry.first.rfind(prefix, 0) == 0 &&
       entry.first.find(".", prefix.length() + 1) == std::string::npos) {
       appenders.push_back(entry.first);
     }
   }
   return appenders;
+}
+
+LoggerConfiguration::LoggerConfiguration() : root_namespace_(create_default_root()), loggers(std::vector<std::shared_ptr<LoggerImpl>>()),
+                                             formatter_(std::make_shared<spdlog::pattern_formatter>(spdlog_default_pattern)) {
+  logger_ = std::shared_ptr<LoggerImpl>(new LoggerImpl(core::getClassName<LoggerConfiguration>(), get_logger(nullptr, root_namespace_, core::getClassName<LoggerConfiguration>(), formatter_)));
+  loggers.push_back(logger_);
 }
 
 void LoggerConfiguration::initialize(const std::shared_ptr<LoggerProperties> &logger_properties)  {
@@ -82,10 +83,11 @@ void LoggerConfiguration::initialize(const std::shared_ptr<LoggerProperties> &lo
   logger_->log_debug("Set following pattern on loggers: %s", spdlog_pattern);
 }
 
-void LoggerConfiguration::init_logger(std::shared_ptr<internal::LoggerImpl> logger_impl) {
+std::shared_ptr<Logger> LoggerConfiguration::getLogger(const std::string &name) {
   std::lock_guard<std::mutex> lock(mutex);
-  loggers.push_back(logger_impl);
-  logger_impl->set_delegate(get_logger(logger_, root_namespace_, logger_impl->name, formatter_));
+  std::shared_ptr<LoggerImpl> result = std::make_shared<LoggerImpl>(name, get_logger(logger_, root_namespace_, name, formatter_));
+  loggers.push_back(result);
+  return result;
 }
 
 std::shared_ptr<internal::LoggerNamespace> LoggerConfiguration::

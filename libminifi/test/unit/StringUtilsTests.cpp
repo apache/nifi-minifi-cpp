@@ -24,18 +24,6 @@
 #include "core/Core.h"
 #include "utils/StringUtils.h"
 
-TEST_CASE("TestStringUtils::starts_with", "[test starts with string shorter than prefix]") {
-  REQUIRE(false == org::apache::nifi::minifi::utils::StringUtils::starts_with("hello", "hello."));
-}
-
-TEST_CASE("TestStringUtils::starts_with2", "[test starts with true]") {
-  REQUIRE(true == org::apache::nifi::minifi::utils::StringUtils::starts_with("hello.", "hello"));
-}
-
-TEST_CASE("TestStringUtils::starts_with3", "[test starts with false]") {
-  REQUIRE(false == org::apache::nifi::minifi::utils::StringUtils::starts_with("hello world", "hello."));
-}
-
 TEST_CASE("TestStringUtils::split", "[test split no delimiter]") {
   std::vector<std::string> expected = {"hello"};
   REQUIRE(expected == org::apache::nifi::minifi::utils::StringUtils::split("hello", ","));

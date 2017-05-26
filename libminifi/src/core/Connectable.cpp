@@ -39,7 +39,7 @@ Connectable::Connectable(std::string name, uuid_t uuid)
 Connectable::Connectable(const Connectable &&other)
     : CoreComponent(std::move(other)),
       max_concurrent_tasks_(std::move(other.max_concurrent_tasks_)),
-      logger_(other.logger_) {
+      logger_(std::move(other.logger_)) {
   has_work_ = other.has_work_.load();
   strategy_ = other.strategy_.load();
 }

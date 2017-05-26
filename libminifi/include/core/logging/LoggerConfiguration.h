@@ -39,19 +39,6 @@ namespace core {
 namespace logging {
 
 namespace internal {
-  /**
-   * This class should not be instantiated directly.  Use LoggerFactory to get an instance.
-   */
-  class LoggerImpl : public Logger {
-    public:
-     static std::shared_ptr<LoggerImpl> create(const std::string &name);
-     void set_delegate(std::shared_ptr<spdlog::logger> delegate) {
-       std::atomic_store(&delegate_, delegate);
-     }
-     const std::string name;
-     LoggerImpl(std::string name):Logger(nullptr), name(name) {}
-  };
-
   struct LoggerNamespace {
     spdlog::level::level_enum level;
     bool has_level;
@@ -88,18 +75,6 @@ class LoggerProperties : public Properties {
   std::map<std::string, std::shared_ptr<spdlog::sinks::sink>> sinks_;
 };
 
-template<typename T>
-class LoggerFactory {
- public:
-  /**
-   * Gets an initialized logger for the template class.
-   */
-  static std::shared_ptr<Logger> getLogger() {
-   static std::shared_ptr<Logger> logger = internal::LoggerImpl::create(core::getClassName<T>());
-   return logger;
-  }
-};
-
 class LoggerConfiguration {
  public:
   /**
@@ -116,25 +91,43 @@ class LoggerConfiguration {
   void initialize(const std::shared_ptr<LoggerProperties> &logger_properties);
 
   /**
-   * Used by logging framework to register logger implementations
+   * Can be used to get arbitrarily named Logger, LoggerFactory should be preferred within a class.
    */
-  void init_logger(std::shared_ptr<internal::LoggerImpl> logger_impl);
+  std::shared_ptr<Logger> getLogger(const std::string &name);
   static const char *spdlog_default_pattern;
  protected:
   static std::shared_ptr<internal::LoggerNamespace> initialize_namespaces(const std::shared_ptr<LoggerProperties>  &logger_properties);
   static std::shared_ptr<spdlog::logger> get_logger(std::shared_ptr<Logger> logger, const std::shared_ptr<internal::LoggerNamespace> &root_namespace, const std::string &name, std::shared_ptr<spdlog::formatter> formatter, bool remove_if_present = false);
  private:
   static std::shared_ptr<internal::LoggerNamespace> create_default_root();
-  LoggerConfiguration() : root_namespace_(create_default_root()), loggers(std::vector<std::shared_ptr<internal::LoggerImpl>>()), formatter_(std::make_shared<spdlog::pattern_formatter>(spdlog_default_pattern)) {
-    logger_ = std::make_shared<internal::LoggerImpl>(core::getClassName<LoggerConfiguration>());
-    logger_->set_delegate(get_logger(nullptr, root_namespace_, logger_->name, formatter_));
-    loggers.push_back(logger_);
-  }
+
+  class LoggerImpl : public Logger {
+    public:
+     LoggerImpl(std::string name, std::shared_ptr<spdlog::logger> delegate):Logger(delegate), name(name) {}
+     void set_delegate(std::shared_ptr<spdlog::logger> delegate) {
+       std::atomic_store(&delegate_, delegate);
+     }
+     const std::string name;
+  };
+
+  LoggerConfiguration();
   std::shared_ptr<internal::LoggerNamespace> root_namespace_;
-  std::vector<std::shared_ptr<internal::LoggerImpl>> loggers;
+  std::vector<std::shared_ptr<LoggerImpl>> loggers;
   std::shared_ptr<spdlog::formatter> formatter_;
   std::mutex mutex;
-  std::shared_ptr<internal::LoggerImpl> logger_ = nullptr;
+  std::shared_ptr<LoggerImpl> logger_ = nullptr;
+};
+
+template<typename T>
+class LoggerFactory {
+ public:
+  /**
+   * Gets an initialized logger for the template class.
+   */
+  static std::shared_ptr<Logger> getLogger() {
+   static std::shared_ptr<Logger> logger = LoggerConfiguration::getConfiguration().getLogger(core::getClassName<T>());
+   return logger;
+  }
 };
 
 } /* namespace logging */

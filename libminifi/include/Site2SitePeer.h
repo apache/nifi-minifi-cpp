@@ -74,7 +74,7 @@ class Site2SitePeer : public org::apache::nifi::minifi::io::BaseStream {
       : stream_(ss.stream_.release()),
         host_(std::move(ss.host_)),
         port_(std::move(ss.port_)),
-        logger_(ss.logger_) {
+        logger_(std::move(ss.logger_)) {
     _yieldExpiration.store(ss._yieldExpiration);
     _timeOut.store(ss._timeOut);
     _url = std::move(ss._url);

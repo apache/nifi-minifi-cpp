@@ -41,6 +41,11 @@ class LogTestController {
   }
   
   template<typename T>
+  void setTrace() {
+    setLevel<T>(spdlog::level::trace);
+  }
+  
+  template<typename T>
   void setDebug() {
     setLevel<T>(spdlog::level::debug);
   }
@@ -48,6 +53,21 @@ class LogTestController {
   template<typename T>
   void setInfo() {
     setLevel<T>(spdlog::level::info);
+  }
+  
+  template<typename T>
+  void setWarn() {
+    setLevel<T>(spdlog::level::warn);
+  }
+  
+  template<typename T>
+  void setError() {
+    setLevel<T>(spdlog::level::err);
+  }
+  
+  template<typename T>
+  void setOff() {
+    setLevel<T>(spdlog::level::off);
   }
   
   template<typename T>
@@ -76,7 +96,7 @@ class LogTestController {
     resetStream(log_output);
   }
   
-  inline bool resetStream(std::ostringstream &stream) {
+  inline void resetStream(std::ostringstream &stream) {
     stream.str("");
     stream.clear();
   }

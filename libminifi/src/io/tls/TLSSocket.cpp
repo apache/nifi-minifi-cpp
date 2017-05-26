@@ -166,7 +166,7 @@ TLSSocket::TLSSocket(const std::shared_ptr<TLSContext> &context,
 
 TLSSocket::TLSSocket(const TLSSocket &&d)
     : Socket(std::move(d)),
-      ssl(0), logger_(d.logger_) {
+      ssl(0), logger_(std::move(d.logger_)) {
   context_ = d.context_;
 }
 
