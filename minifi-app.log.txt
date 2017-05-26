@@ -1,0 +1,856 @@
+[2017-05-25 22:29:59.723] [minifi log] [info] Using configuration file located at /Users/binqiu/today/nifi-minifi-cpp/conf/minifi.properties
+[2017-05-25 22:29:59.724] [minifi log] [debug] nifi.flowcontroller.graceful.shutdown.period not set, defaulting to 30000
+[2017-05-25 22:29:59.724] [minifi log] [info] NiFi Provenance Repository Directory ./provenance_repository
+[2017-05-25 22:29:59.724] [minifi log] [info] NiFi Provenance Max Partition Bytes 1048576
+[2017-05-25 22:29:59.724] [minifi log] [info] NiFi Provenance Max Storage Time: [60000] ms
+[2017-05-25 22:29:59.746] [minifi log] [info] NiFi Provenance Repository database open ./provenance_repository success
+[2017-05-25 22:29:59.746] [minifi log] [info] NiFi FlowFile Repository Directory ./flowfile_repository
+[2017-05-25 22:29:59.746] [minifi log] [info] NiFi FlowFile Max Partition Bytes 10485760
+[2017-05-25 22:29:59.746] [minifi log] [info] NiFi FlowFile Max Storage Time: [600000] ms
+[2017-05-25 22:29:59.754] [minifi log] [info] NiFi FlowFile Repository database open ./flowfile_repository success
+[2017-05-25 22:29:59.754] [minifi log] [info] Http configuration listener URL https://bbende:443
+[2017-05-25 22:29:59.758] [minifi log] [info] Configuration Listener pull interval: [1000] ms
+[2017-05-25 22:29:59.758] [minifi log] [info] Configuration Listener CA certificates: [./conf/nifi-cert.pem]
+[2017-05-25 22:29:59.758] [minifi log] [info] Configuration Listener certificate: [./conf/client.pem], private key: [./conf/client.key], passphrase file: [./conf/password]
+[2017-05-25 22:29:59.758] [minifi log] [info] http ConfigurationListener Thread Start
+[2017-05-25 22:29:59.758] [minifi log] [info] FlowController NiFi Configuration file /Users/binqiu/today/nifi-minifi-cpp/conf/config.yml
+[2017-05-25 22:29:59.758] [minifi log] [info] FlowController content directory /Users/binqiu/today/nifi-minifi-cpp/content_repository
+[2017-05-25 22:29:59.758] [minifi log] [info] Loading FlowController
+[2017-05-25 22:29:59.758] [minifi log] [info] Initializing timers
+[2017-05-25 22:29:59.759] [minifi log] [info] Load Flow Controller from file /Users/binqiu/today/nifi-minifi-cpp/conf/config.yml
+[2017-05-25 22:29:59.761] [minifi log] [debug] parseRootProcessGroup: id => [471deef6-2a6e-4a7d-912a-81cc17e3a205], name => [MiNiFi Flow]
+[2017-05-25 22:29:59.761] [minifi log] [info] ProcessGroup MiNiFi Flow created
+[2017-05-25 22:29:59.761] [minifi log] [debug] parseProcessorNode: name => [GetFile] id => [471deef6-2a6e-4a7d-912a-81cc17e3a206]
+[2017-05-25 22:29:59.761] [minifi log] [debug] parseProcessorNode: class => [org.apache.nifi.processors.standard.GetFile]
+[2017-05-25 22:29:59.761] [minifi log] [info] Processor GetFile created UUID 471deef6-2a6e-4a7d-912a-81cc17e3a206
+[2017-05-25 22:29:59.762] [minifi log] [info] Processor GetFile supported relationship name success
+[2017-05-25 22:29:59.762] [minifi log] [debug] parseProcessorNode: scheduling strategy => [TIMER_DRIVEN]
+[2017-05-25 22:29:59.762] [minifi log] [debug] parseProcessorNode: scheduling period => [1 sec]
+[2017-05-25 22:29:59.762] [minifi log] [debug] parseProcessorNode: max concurrent tasks => [1]
+[2017-05-25 22:29:59.762] [minifi log] [debug] parseProcessorNode: penalization period => [30 sec]
+[2017-05-25 22:29:59.762] [minifi log] [debug] parseProcessorNode: yield period => [10 sec]
+[2017-05-25 22:29:59.762] [minifi log] [debug] parseProcessorNode: run duration nanos => []
+[2017-05-25 22:29:59.762] [minifi log] [info] Component Input Directory property name Input Directory value /tmp/getfile
+[2017-05-25 22:29:59.762] [minifi log] [info] Component Keep Source File property name Keep Source File value true
+[2017-05-25 22:29:59.762] [minifi log] [debug] convert: parseProcessorNode: schedulingPeriod => [1000000000] ns
+[2017-05-25 22:29:59.762] [minifi log] [debug] convert: parseProcessorNode: penalizationPeriod => [30000] ms
+[2017-05-25 22:29:59.762] [minifi log] [debug] setting scheduling strategy as TIMER_DRIVEN
+[2017-05-25 22:29:59.762] [minifi log] [debug] parseProcessorNode: maxConcurrentTasks => [1]
+[2017-05-25 22:29:59.762] [minifi log] [info] Add processor GetFile into process group MiNiFi Flow
+[2017-05-25 22:29:59.762] [minifi log] [debug] parseRemoteProcessGroupYaml: name => [NiFi Flow], id => [471deef6-2a6e-4a7d-912a-81cc17e3a208]
+[2017-05-25 22:29:59.762] [minifi log] [debug] parseRemoteProcessGroupYaml: url => [https://localhost:8081/nifi]
+[2017-05-25 22:29:59.762] [minifi log] [info] ProcessGroup NiFi Flow created
+[2017-05-25 22:29:59.762] [minifi log] [info] Add child process group NiFi Flow into process group MiNiFi Flow
+[2017-05-25 22:29:59.762] [minifi log] [debug] parseRemoteProcessGroupYaml: yield period => [10 sec]
+[2017-05-25 22:29:59.762] [minifi log] [debug] parseRemoteProcessGroupYaml: yieldPeriod => [10000] ms
+[2017-05-25 22:29:59.762] [minifi log] [debug] parseRemoteProcessGroupYaml: timeout => [30 secs]
+[2017-05-25 22:29:59.762] [minifi log] [debug] parseRemoteProcessGroupYaml: timeoutValue => [30000] ms
+[2017-05-25 22:29:59.762] [minifi log] [debug] Got a current port, iterating...
+[2017-05-25 22:29:59.762] [minifi log] [info] Processor From Node A created UUID 471deef6-2a6e-4a7d-912a-81cc17e3a204
+[2017-05-25 22:29:59.762] [minifi log] [info] Processor From Node A supported relationship name undefined
+[2017-05-25 22:29:59.762] [minifi log] [info] Component Port property name Port value 10001
+[2017-05-25 22:29:59.762] [minifi log] [info] Component Port UUID property name Port UUID value 471deef6-2a6e-4a7d-912a-81cc17e3a204
+[2017-05-25 22:29:59.762] [minifi log] [info] Component Host Name property name Host Name value localhost
+[2017-05-25 22:29:59.762] [minifi log] [info] Add processor From Node A into process group NiFi Flow
+[2017-05-25 22:29:59.762] [minifi log] [debug] parseProcessorNode: maxConcurrentTasks => [1]
+[2017-05-25 22:29:59.762] [minifi log] [info] Connection GenerateFlowFileS2S created
+[2017-05-25 22:29:59.762] [minifi log] [debug] Created connection with UUID 471deef6-2a6e-4a7d-912a-81cc17e3a207 and name GenerateFlowFileS2S
+[2017-05-25 22:29:59.762] [minifi log] [debug] parseConnection: relationship => [success]
+[2017-05-25 22:29:59.762] [minifi log] [debug] Using 'source id' to match source with same id for connection 'GenerateFlowFileS2S': source id => [471deef6-2a6e-4a7d-912a-81cc17e3a206]
+[2017-05-25 22:29:59.762] [minifi log] [debug] Using 'destination id' to match destination with same id for connection 'GenerateFlowFileS2S': destination id => [471deef6-2a6e-4a7d-912a-81cc17e3a204]
+[2017-05-25 22:29:59.762] [minifi log] [info] Add connection GenerateFlowFileS2S into process group MiNiFi Flow
+[2017-05-25 22:29:59.762] [minifi log] [info] find processor GetFile
+[2017-05-25 22:29:59.762] [minifi log] [info] Add connection GenerateFlowFileS2S into Processor GetFile outgoing connection for relationship success
+[2017-05-25 22:29:59.762] [minifi log] [info] find processor GetFile
+[2017-05-25 22:29:59.762] [minifi log] [info] find processor child NiFi Flow
+[2017-05-25 22:29:59.762] [minifi log] [info] find processor From Node A
+[2017-05-25 22:29:59.762] [minifi log] [info] Add connection GenerateFlowFileS2S into Processor From Node A incoming connection
+[2017-05-25 22:29:59.762] [minifi log] [info] Processor SiteToSiteProvenanceReportingTask created UUID 8c70d581-18f1-46ff-af18-a5957798f2f0
+[2017-05-25 22:29:59.762] [minifi log] [info] Add processor SiteToSiteProvenanceReportingTask into process group MiNiFi Flow
+[2017-05-25 22:29:59.762] [minifi log] [debug] ProvenanceReportingTask schedulingPeriod 1000000000 ns
+[2017-05-25 22:29:59.762] [minifi log] [debug] ProvenanceReportingTask scheduling strategy TIMER_DRIVEN
+[2017-05-25 22:29:59.763] [minifi log] [debug] ProvenanceReportingTask host localhost
+[2017-05-25 22:29:59.763] [minifi log] [debug] ProvenanceReportingTask port 10001
+[2017-05-25 22:29:59.763] [minifi log] [debug] ProvenanceReportingTask port uuid 471deef6-2a6e-4a7d-912a-81cc17e3a204
+[2017-05-25 22:29:59.763] [minifi log] [info] Loaded root processor Group
+[2017-05-25 22:29:59.763] [minifi log] [info] Loaded controller service provider
+[2017-05-25 22:29:59.763] [minifi log] [debug] Getting connection map
+[2017-05-25 22:29:59.763] [minifi log] [debug] Number of connections from connectionMap 1
+[2017-05-25 22:29:59.763] [minifi log] [info] Loaded flow repository
+[2017-05-25 22:29:59.763] [minifi log] [info] Starting Flow Controller
+[2017-05-25 22:29:59.763] [minifi log] [info] Enabling 0 controller services
+[2017-05-25 22:29:59.763] [minifi log] [debug] Starting GetFile
+[2017-05-25 22:29:59.763] [minifi log] [debug] nifi_administrative_yield_duration: [30000] ms
+[2017-05-25 22:29:59.763] [minifi log] [debug] nifi_bored_yield_duration: [10] ms
+[2017-05-25 22:29:59.763] [minifi log] [info] Processor Input Directory property name Input Directory value /tmp/getfile
+[2017-05-25 22:29:59.763] [minifi log] [info] Processor Batch Size property name Batch Size value 10
+[2017-05-25 22:29:59.763] [minifi log] [info] Processor Ignore Hidden Files property name Ignore Hidden Files value true
+[2017-05-25 22:29:59.763] [minifi log] [info] Processor Keep Source File property name Keep Source File value true
+[2017-05-25 22:29:59.763] [minifi log] [info] Processor Maximum File Age property name Maximum File Age value 0 sec
+[2017-05-25 22:29:59.763] [minifi log] [debug] successfully applied _maxAge
+[2017-05-25 22:29:59.763] [minifi log] [info] Processor Minimum File Age property name Minimum File Age value 0 sec
+[2017-05-25 22:29:59.763] [minifi log] [debug] successfully applied _minAge
+[2017-05-25 22:29:59.763] [minifi log] [info] Processor Maximum File Size property name Maximum File Size value 0 B
+[2017-05-25 22:29:59.763] [minifi log] [info] Processor Minimum File Size property name Minimum File Size value 0 B
+[2017-05-25 22:29:59.763] [minifi log] [info] Processor Polling Interval property name Polling Interval value 0 sec
+[2017-05-25 22:29:59.763] [minifi log] [debug] successfully applied _pollInterval
+[2017-05-25 22:29:59.763] [minifi log] [info] Processor Recurse Subdirectories property name Recurse Subdirectories value true
+[2017-05-25 22:29:59.763] [minifi log] [info] Processor File Filter property name File Filter value [^\.].*
+[2017-05-25 22:29:59.763] [minifi log] [info] Scheduled thread 0 running for process GetFile
+[2017-05-25 22:29:59.763] [minifi log] [debug] Starting SiteToSiteProvenanceReportingTask
+[2017-05-25 22:29:59.763] [minifi log] [debug] nifi_administrative_yield_duration: [30000] ms
+[2017-05-25 22:29:59.763] [minifi log] [debug] nifi_bored_yield_duration: [10] ms
+[2017-05-25 22:29:59.763] [minifi log] [info] Is listing empty 1
+[2017-05-25 22:29:59.763] [minifi log] [info] Performing file listing against /tmp/getfile
+[2017-05-25 22:29:59.763] [minifi log] [info] Scheduled thread 0 running for process SiteToSiteProvenanceReportingTask
+[2017-05-25 22:29:59.763] [minifi log] [debug] Starting From Node A
+[2017-05-25 22:29:59.763] [minifi log] [info] Performing file listing against /tmp/getfile
+[2017-05-25 22:29:59.763] [minifi log] [debug] nifi_administrative_yield_duration: [30000] ms
+[2017-05-25 22:29:59.763] [minifi log] [debug] nifi_bored_yield_duration: [10] ms
+[2017-05-25 22:29:59.764] [minifi log] [info] Processor Host Name property name Host Name value localhost
+[2017-05-25 22:29:59.764] [minifi log] [info] Processor Port property name Port value 10001
+[2017-05-25 22:29:59.764] [minifi log] [info] Processor Port UUID property name Port UUID value 471deef6-2a6e-4a7d-912a-81cc17e3a204
+[2017-05-25 22:29:59.764] [minifi log] [info] Scheduled thread 0 running for process From Node A
+[2017-05-25 22:29:59.764] [minifi log] [info] org::apache::nifi::minifi::provenance::ProvenanceRepository Repository Monitor Thread Start
+[2017-05-25 22:29:59.764] [minifi log] [info] org::apache::nifi::minifi::core::repository::FlowFileRepository Repository Monitor Thread Start
+[2017-05-25 22:29:59.764] [minifi log] [info] Started Flow Controller
+[2017-05-25 22:29:59.764] [minifi log] [info] MiNiFi started
+[2017-05-25 22:29:59.764] [minifi log] [info] Is listing empty 0
+[2017-05-25 22:29:59.764] [minifi log] [info] GetFile process /tmp/getfile/minifi-app.log.txt
+[2017-05-25 22:29:59.764] [minifi log] [debug] Create FlowFile with UUID 06e4a308-a065-460e-97a1-75ba8b46efaa
+[2017-05-25 22:29:59.764] [minifi log] [debug] Resource Claim created ./content_repository/ce638c86-375d-4213-9be7-1b6e33f8cf0b
+[2017-05-25 22:29:59.765] [minifi log] [debug] Import offset 0 length 36219 into content ./content_repository/ce638c86-375d-4213-9be7-1b6e33f8cf0b for FlowFile UUID 06e4a308-a065-460e-97a1-75ba8b46efaa
+[2017-05-25 22:29:59.766] [minifi log] [info] Negotiate protocol version with destination port 471deef6-2a6e-4a7d-912a-81cc17e3a204 current version 5
+[2017-05-25 22:29:59.766] [minifi log] [info] result of writing resource name is 22
+[2017-05-25 22:29:59.767] [minifi log] [info] status code is 20
+[2017-05-25 22:29:59.767] [minifi log] [info] Site2Site Protocol Negotiate protocol version OK
+[2017-05-25 22:29:59.767] [minifi log] [info] Site2Site socket established
+[2017-05-25 22:29:59.767] [minifi log] [info] Site2Site Protocol Perform hand shake with destination port 471deef6-2a6e-4a7d-912a-81cc17e3a204
+[2017-05-25 22:29:59.767] [minifi log] [info] Site2Site Protocol Send handshake properties GZIP false
+[2017-05-25 22:29:59.767] [minifi log] [info] Site2Site Protocol Send handshake properties PORT_IDENTIFIER 471deef6-2a6e-4a7d-912a-81cc17e3a204
+[2017-05-25 22:29:59.767] [minifi log] [info] Site2Site Protocol Send handshake properties REQUEST_EXPIRATION_MILLIS 30000
+[2017-05-25 22:29:59.768] [minifi log] [debug] Enqueue flow file UUID 06e4a308-a065-460e-97a1-75ba8b46efaa to connection GenerateFlowFileS2S
+[2017-05-25 22:29:59.768] [minifi log] [debug] NiFi FlowFile Store event 06e4a308-a065-460e-97a1-75ba8b46efaa size 337 success
+[2017-05-25 22:29:59.768] [minifi log] [debug] Delete SnapShot FlowFile UUID 06e4a308-a065-460e-97a1-75ba8b46efaa
+[2017-05-25 22:29:59.768] [minifi log] [debug] NiFi Provenance Store event 6ba5ea25-689f-4654-85c4-2875f28ca15d size 345 success
+[2017-05-25 22:29:59.768] [minifi log] [debug] NiFi Provenance Store event 68fec583-55bc-43c9-98bd-06453b0179ef size 471 success
+[2017-05-25 22:29:59.776] [minifi log] [info] Processor Host Name property name Host Name value localhost
+[2017-05-25 22:29:59.776] [minifi log] [info] Processor Port property name Port value 10001
+[2017-05-25 22:29:59.776] [minifi log] [info] Processor Port UUID property name Port UUID value 471deef6-2a6e-4a7d-912a-81cc17e3a204
+[2017-05-25 22:29:59.778] [minifi log] [info] Site2Site HandShake Completed
+[2017-05-25 22:29:59.778] [minifi log] [info] Negotiate protocol version with destination port 471deef6-2a6e-4a7d-912a-81cc17e3a204 current version 5
+[2017-05-25 22:29:59.778] [minifi log] [info] Site2Site Protocol Negotiate Codec with destination port 471deef6-2a6e-4a7d-912a-81cc17e3a204
+[2017-05-25 22:29:59.778] [minifi log] [info] result of writing resource name is 22
+[2017-05-25 22:29:59.778] [minifi log] [info] Negotiate Codec version with destination port 471deef6-2a6e-4a7d-912a-81cc17e3a204 current version 1
+[2017-05-25 22:29:59.779] [minifi log] [info] status code is 20
+[2017-05-25 22:29:59.779] [minifi log] [info] Site2Site Protocol Negotiate protocol version OK
+[2017-05-25 22:29:59.779] [minifi log] [info] Site2Site socket established
+[2017-05-25 22:29:59.779] [minifi log] [info] Site2Site Protocol Perform hand shake with destination port 471deef6-2a6e-4a7d-912a-81cc17e3a204
+[2017-05-25 22:29:59.779] [minifi log] [info] Site2Site Protocol Send handshake properties GZIP false
+[2017-05-25 22:29:59.779] [minifi log] [info] Site2Site Protocol Send handshake properties PORT_IDENTIFIER 471deef6-2a6e-4a7d-912a-81cc17e3a204
+[2017-05-25 22:29:59.779] [minifi log] [info] Site2Site Protocol Send handshake properties REQUEST_EXPIRATION_MILLIS 30000
+[2017-05-25 22:29:59.790] [minifi log] [info] Site2Site HandShake Completed
+[2017-05-25 22:29:59.791] [minifi log] [info] Site2Site Codec Negotiate version OK
+[2017-05-25 22:29:59.791] [minifi log] [info] Site2Site Protocol Negotiate Codec with destination port 471deef6-2a6e-4a7d-912a-81cc17e3a204
+[2017-05-25 22:29:59.791] [minifi log] [info] Site2Site Codec Completed and move to READY state for data transfer
+[2017-05-25 22:29:59.791] [minifi log] [info] Site2Site Ready For data transaction
+[2017-05-25 22:29:59.791] [minifi log] [info] Negotiate Codec version with destination port 471deef6-2a6e-4a7d-912a-81cc17e3a204 current version 1
+[2017-05-25 22:29:59.791] [minifi log] [info] Site2Site create transaction ea140105-e7a4-464b-8784-ab8b270bfa5f
+[2017-05-25 22:29:59.791] [minifi log] [info] Site2Site transaction ea140105-e7a4-464b-8784-ab8b270bfa5f send flow record 1, total length 1902
+[2017-05-25 22:29:59.791] [minifi log] [info] Site2Site transaction ea140105-e7a4-464b-8784-ab8b270bfa5f send bytes length 1902
+[2017-05-25 22:29:59.791] [minifi log] [info] Site2Site Send FINISH TRANSACTION for transaction ea140105-e7a4-464b-8784-ab8b270bfa5f
+[2017-05-25 22:29:59.803] [minifi log] [info] Site2Site Codec Negotiate version OK
+[2017-05-25 22:29:59.803] [minifi log] [info] Site2Site Codec Completed and move to READY state for data transfer
+[2017-05-25 22:29:59.803] [minifi log] [info] Site2Site Ready For data transaction
+[2017-05-25 22:29:59.803] [minifi log] [debug] Dequeue flow file UUID 06e4a308-a065-460e-97a1-75ba8b46efaa from connection GenerateFlowFileS2S
+[2017-05-25 22:29:59.803] [minifi log] [debug] Create Snapshot FlowFile with UUID 45ba7411-95e9-402a-a1b1-5196c831dcdf
+[2017-05-25 22:29:59.803] [minifi log] [debug] Delete FlowFile UUID 45ba7411-95e9-402a-a1b1-5196c831dcdf
+[2017-05-25 22:29:59.803] [minifi log] [info] Site2Site create transaction 08d59ed6-daf6-4250-bb91-be486de22108
+[2017-05-25 22:29:59.803] [minifi log] [info] Site2Site transaction 08d59ed6-daf6-4250-bb91-be486de22108 send attribute key absolute.path value /tmp/getfile/minifi-app.log.txt
+[2017-05-25 22:29:59.803] [minifi log] [info] Site2Site transaction 08d59ed6-daf6-4250-bb91-be486de22108 send attribute key filename value minifi-app.log.txt
+[2017-05-25 22:29:59.803] [minifi log] [info] Site2Site transaction 08d59ed6-daf6-4250-bb91-be486de22108 send attribute key path value /tmp/getfile
+[2017-05-25 22:29:59.803] [minifi log] [info] Site2Site transaction 08d59ed6-daf6-4250-bb91-be486de22108 send attribute key uuid value 06e4a308-a065-460e-97a1-75ba8b46efaa
+[2017-05-25 22:29:59.803] [minifi log] [info] Site2Site transaction ea140105-e7a4-464b-8784-ab8b270bfa5f peer confirm transaction with CRC 239634877
+[2017-05-25 22:29:59.803] [minifi log] [info] Site2Site transaction ea140105-e7a4-464b-8784-ab8b270bfa5f CRC matched
+[2017-05-25 22:29:59.803] [minifi log] [info] Site2Site transaction 08d59ed6-daf6-4250-bb91-be486de22108 send flow record 1, total length 36219
+[2017-05-25 22:29:59.803] [minifi log] [info] Site2Site transaction 08d59ed6-daf6-4250-bb91-be486de22108 send flow record 06e4a308-a065-460e-97a1-75ba8b46efaa
+[2017-05-25 22:29:59.803] [minifi log] [info] Site2Site Send FINISH TRANSACTION for transaction 08d59ed6-daf6-4250-bb91-be486de22108
+[2017-05-25 22:29:59.815] [minifi log] [info] Site2Site transaction ea140105-e7a4-464b-8784-ab8b270bfa5f peer finished transaction
+[2017-05-25 22:29:59.815] [minifi log] [info] Site2Site transaction ea140105-e7a4-464b-8784-ab8b270bfa5f successfully send flow record 1, content bytes 1902
+[2017-05-25 22:29:59.815] [minifi log] [info] Site2Site delete transaction ea140105-e7a4-464b-8784-ab8b270bfa5f
+[2017-05-25 22:29:59.816] [minifi log] [info] Site2Site transaction 08d59ed6-daf6-4250-bb91-be486de22108 peer confirm transaction with CRC 2452005643
+[2017-05-25 22:29:59.816] [minifi log] [info] Site2Site transaction 08d59ed6-daf6-4250-bb91-be486de22108 CRC matched
+[2017-05-25 22:29:59.827] [minifi log] [info] Site2Site transaction 08d59ed6-daf6-4250-bb91-be486de22108 peer finished transaction
+[2017-05-25 22:29:59.827] [minifi log] [info] Site2Site transaction 08d59ed6-daf6-4250-bb91-be486de22108 successfully send flow record 1, content bytes 36219
+[2017-05-25 22:29:59.827] [minifi log] [info] Site2Site delete transaction 08d59ed6-daf6-4250-bb91-be486de22108
+[2017-05-25 22:29:59.827] [minifi log] [debug] Delete FlowFile UUID 06e4a308-a065-460e-97a1-75ba8b46efaa
+[2017-05-25 22:29:59.827] [minifi log] [debug] Delete Resource Claim ./content_repository/ce638c86-375d-4213-9be7-1b6e33f8cf0b
+[2017-05-25 22:29:59.828] [minifi log] [debug] NiFi Provenance Store event d6c555da-ff88-406e-930d-f216570e7464 size 504 success
+[2017-05-25 22:29:59.828] [minifi log] [debug] NiFi Provenance Store event c85bc571-8882-43fa-99ab-3eb29e274b7a size 550 success
+[2017-05-25 22:30:00.770] [minifi log] [info] Is listing empty 1
+[2017-05-25 22:30:00.770] [minifi log] [info] Performing file listing against /tmp/getfile
+[2017-05-25 22:30:00.770] [minifi log] [info] Performing file listing against /tmp/getfile
+[2017-05-25 22:30:00.770] [minifi log] [info] Is listing empty 0
+[2017-05-25 22:30:00.770] [minifi log] [info] GetFile process /tmp/getfile/minifi-app.log.txt
+[2017-05-25 22:30:00.770] [minifi log] [debug] Create FlowFile with UUID 03ce4edc-c0a9-45f7-9793-cbcc12f3e8c6
+[2017-05-25 22:30:00.770] [minifi log] [debug] Resource Claim created ./content_repository/157415c6-ef77-4004-9f9a-b1df8c6ce54c
+[2017-05-25 22:30:00.771] [minifi log] [debug] Import offset 0 length 36219 into content ./content_repository/157415c6-ef77-4004-9f9a-b1df8c6ce54c for FlowFile UUID 03ce4edc-c0a9-45f7-9793-cbcc12f3e8c6
+[2017-05-25 22:30:00.774] [minifi log] [debug] Enqueue flow file UUID 03ce4edc-c0a9-45f7-9793-cbcc12f3e8c6 to connection GenerateFlowFileS2S
+[2017-05-25 22:30:00.774] [minifi log] [debug] NiFi FlowFile Store event 03ce4edc-c0a9-45f7-9793-cbcc12f3e8c6 size 337 success
+[2017-05-25 22:30:00.774] [minifi log] [debug] Delete SnapShot FlowFile UUID 03ce4edc-c0a9-45f7-9793-cbcc12f3e8c6
+[2017-05-25 22:30:00.774] [minifi log] [debug] NiFi Provenance Store event 042b7639-c864-46c2-a8b3-33e076c343c7 size 471 success
+[2017-05-25 22:30:00.774] [minifi log] [debug] NiFi Provenance Store event 0c8d2130-7c79-4ea8-97be-9f3c92b93e38 size 345 success
+[2017-05-25 22:30:00.778] [minifi log] [info] Processor Host Name property name Host Name value localhost
+[2017-05-25 22:30:00.778] [minifi log] [info] Processor Port property name Port value 10001
+[2017-05-25 22:30:00.778] [minifi log] [info] Processor Port UUID property name Port UUID value 471deef6-2a6e-4a7d-912a-81cc17e3a204
+[2017-05-25 22:30:00.778] [minifi log] [debug] Dequeue flow file UUID 03ce4edc-c0a9-45f7-9793-cbcc12f3e8c6 from connection GenerateFlowFileS2S
+[2017-05-25 22:30:00.778] [minifi log] [debug] Create Snapshot FlowFile with UUID 5f216db1-abeb-4edc-aab5-7db36d33f5c3
+[2017-05-25 22:30:00.778] [minifi log] [debug] Delete FlowFile UUID 5f216db1-abeb-4edc-aab5-7db36d33f5c3
+[2017-05-25 22:30:00.778] [minifi log] [info] Site2Site create transaction 2307ba45-6195-40ed-9a32-83ac59b16609
+[2017-05-25 22:30:00.778] [minifi log] [info] Site2Site transaction 2307ba45-6195-40ed-9a32-83ac59b16609 send attribute key absolute.path value /tmp/getfile/minifi-app.log.txt
+[2017-05-25 22:30:00.778] [minifi log] [info] Site2Site transaction 2307ba45-6195-40ed-9a32-83ac59b16609 send attribute key filename value minifi-app.log.txt
+[2017-05-25 22:30:00.778] [minifi log] [info] Site2Site transaction 2307ba45-6195-40ed-9a32-83ac59b16609 send attribute key path value /tmp/getfile
+[2017-05-25 22:30:00.778] [minifi log] [info] Site2Site transaction 2307ba45-6195-40ed-9a32-83ac59b16609 send attribute key uuid value 03ce4edc-c0a9-45f7-9793-cbcc12f3e8c6
+[2017-05-25 22:30:00.778] [minifi log] [info] Site2Site transaction 2307ba45-6195-40ed-9a32-83ac59b16609 send flow record 1, total length 36219
+[2017-05-25 22:30:00.778] [minifi log] [info] Site2Site transaction 2307ba45-6195-40ed-9a32-83ac59b16609 send flow record 03ce4edc-c0a9-45f7-9793-cbcc12f3e8c6
+[2017-05-25 22:30:00.778] [minifi log] [info] Site2Site Send FINISH TRANSACTION for transaction 2307ba45-6195-40ed-9a32-83ac59b16609
+[2017-05-25 22:30:00.790] [minifi log] [info] Site2Site transaction 2307ba45-6195-40ed-9a32-83ac59b16609 peer confirm transaction with CRC 1532199305
+[2017-05-25 22:30:00.790] [minifi log] [info] Site2Site transaction 2307ba45-6195-40ed-9a32-83ac59b16609 CRC matched
+[2017-05-25 22:30:00.802] [minifi log] [info] Site2Site transaction 2307ba45-6195-40ed-9a32-83ac59b16609 peer finished transaction
+[2017-05-25 22:30:00.802] [minifi log] [info] Site2Site transaction 2307ba45-6195-40ed-9a32-83ac59b16609 successfully send flow record 1, content bytes 36219
+[2017-05-25 22:30:00.802] [minifi log] [info] Site2Site delete transaction 2307ba45-6195-40ed-9a32-83ac59b16609
+[2017-05-25 22:30:00.802] [minifi log] [debug] Delete FlowFile UUID 03ce4edc-c0a9-45f7-9793-cbcc12f3e8c6
+[2017-05-25 22:30:00.802] [minifi log] [debug] Delete Resource Claim ./content_repository/157415c6-ef77-4004-9f9a-b1df8c6ce54c
+[2017-05-25 22:30:00.802] [minifi log] [debug] NiFi Provenance Store event a84e3e3c-f886-4ea3-9a28-b04388e08e88 size 550 success
+[2017-05-25 22:30:00.803] [minifi log] [debug] NiFi Provenance Store event 6d959d3e-a18f-4964-9d3b-b8816909af10 size 504 success
+[2017-05-25 22:30:00.819] [minifi log] [info] Site2Site create transaction 3758fa47-3a50-49f6-98b1-869ab08e0a6b
+[2017-05-25 22:30:00.819] [minifi log] [info] Site2Site transaction 3758fa47-3a50-49f6-98b1-869ab08e0a6b send flow record 1, total length 5982
+[2017-05-25 22:30:00.819] [minifi log] [info] Site2Site transaction 3758fa47-3a50-49f6-98b1-869ab08e0a6b send bytes length 5982
+[2017-05-25 22:30:00.819] [minifi log] [info] Site2Site Send FINISH TRANSACTION for transaction 3758fa47-3a50-49f6-98b1-869ab08e0a6b
+[2017-05-25 22:30:00.824] [minifi log] [info] Site2Site transaction 3758fa47-3a50-49f6-98b1-869ab08e0a6b peer confirm transaction with CRC 2217791887
+[2017-05-25 22:30:00.824] [minifi log] [info] Site2Site transaction 3758fa47-3a50-49f6-98b1-869ab08e0a6b CRC matched
+[2017-05-25 22:30:00.833] [minifi log] [debug] HttpConfigurationListener load Client Certificates OK
+[2017-05-25 22:30:00.837] [minifi log] [info] Site2Site transaction 3758fa47-3a50-49f6-98b1-869ab08e0a6b peer finished transaction
+[2017-05-25 22:30:00.837] [minifi log] [info] Site2Site transaction 3758fa47-3a50-49f6-98b1-869ab08e0a6b successfully send flow record 1, content bytes 5982
+[2017-05-25 22:30:00.837] [minifi log] [info] Site2Site delete transaction 3758fa47-3a50-49f6-98b1-869ab08e0a6b
+[2017-05-25 22:30:00.933] [minifi log] [debug] HttpConfigurationListener -- curl successful to https://bbende:443
+[2017-05-25 22:30:00.933] [minifi log] [debug] config # Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the \"License\"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an \"AS IS\" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+Flow Controller:
+    id: 471deef6-2a6e-4a7d-912a-81cc17e3a205
+    name: MiNiFi Flow
+    version: 1
+
+Processors:
+    - name: GetFile
+      id: 471deef6-2a6e-4a7d-912a-81cc17e3a206
+      class: org.apache.nifi.processors.standard.Ge
+[2017-05-25 22:30:00.934] [minifi log] [debug] parseRootProcessorGroup: version => [1]
+[2017-05-25 22:30:00.934] [minifi log] [debug] parseRootProcessGroup: id => [471deef6-2a6e-4a7d-912a-81cc17e3a205], name => [MiNiFi Flow]
+[2017-05-25 22:30:00.934] [minifi log] [info] ProcessGroup MiNiFi Flow created
+[2017-05-25 22:30:00.934] [minifi log] [debug] parseProcessorNode: name => [GetFile] id => [471deef6-2a6e-4a7d-912a-81cc17e3a206]
+[2017-05-25 22:30:00.934] [minifi log] [debug] parseProcessorNode: class => [org.apache.nifi.processors.standard.GetFile]
+[2017-05-25 22:30:00.934] [minifi log] [info] Processor GetFile created UUID 471deef6-2a6e-4a7d-912a-81cc17e3a206
+[2017-05-25 22:30:00.935] [minifi log] [info] Processor GetFile supported relationship name success
+[2017-05-25 22:30:00.935] [minifi log] [debug] parseProcessorNode: scheduling strategy => [TIMER_DRIVEN]
+[2017-05-25 22:30:00.935] [minifi log] [debug] parseProcessorNode: scheduling period => [1 sec]
+[2017-05-25 22:30:00.935] [minifi log] [debug] parseProcessorNode: max concurrent tasks => [1]
+[2017-05-25 22:30:00.935] [minifi log] [debug] parseProcessorNode: penalization period => [30 sec]
+[2017-05-25 22:30:00.935] [minifi log] [debug] parseProcessorNode: yield period => [10 sec]
+[2017-05-25 22:30:00.935] [minifi log] [debug] parseProcessorNode: run duration nanos => []
+[2017-05-25 22:30:00.935] [minifi log] [info] Component Input Directory property name Input Directory value /tmp/getfile
+[2017-05-25 22:30:00.935] [minifi log] [info] Component Keep Source File property name Keep Source File value true
+[2017-05-25 22:30:00.935] [minifi log] [debug] convert: parseProcessorNode: schedulingPeriod => [1000000000] ns
+[2017-05-25 22:30:00.935] [minifi log] [debug] convert: parseProcessorNode: penalizationPeriod => [30000] ms
+[2017-05-25 22:30:00.935] [minifi log] [debug] setting scheduling strategy as TIMER_DRIVEN
+[2017-05-25 22:30:00.935] [minifi log] [debug] parseProcessorNode: maxConcurrentTasks => [1]
+[2017-05-25 22:30:00.935] [minifi log] [info] Add processor GetFile into process group MiNiFi Flow
+[2017-05-25 22:30:00.935] [minifi log] [debug] parseRemoteProcessGroupYaml: name => [NiFi Flow], id => [471deef6-2a6e-4a7d-912a-81cc17e3a208]
+[2017-05-25 22:30:00.935] [minifi log] [debug] parseRemoteProcessGroupYaml: url => [https://localhost:8081/nifi]
+[2017-05-25 22:30:00.935] [minifi log] [info] ProcessGroup NiFi Flow created
+[2017-05-25 22:30:00.935] [minifi log] [info] Add child process group NiFi Flow into process group MiNiFi Flow
+[2017-05-25 22:30:00.935] [minifi log] [debug] parseRemoteProcessGroupYaml: yield period => [10 sec]
+[2017-05-25 22:30:00.935] [minifi log] [debug] parseRemoteProcessGroupYaml: yieldPeriod => [10000] ms
+[2017-05-25 22:30:00.935] [minifi log] [debug] parseRemoteProcessGroupYaml: timeout => [30 secs]
+[2017-05-25 22:30:00.935] [minifi log] [debug] parseRemoteProcessGroupYaml: timeoutValue => [30000] ms
+[2017-05-25 22:30:00.935] [minifi log] [debug] Got a current port, iterating...
+[2017-05-25 22:30:00.935] [minifi log] [info] Processor From Node A created UUID 471deef6-2a6e-4a7d-912a-81cc17e3a204
+[2017-05-25 22:30:00.935] [minifi log] [info] Processor From Node A supported relationship name undefined
+[2017-05-25 22:30:00.935] [minifi log] [info] Component Port property name Port value 10001
+[2017-05-25 22:30:00.935] [minifi log] [info] Component Host Name property name Host Name value localhost
+[2017-05-25 22:30:00.935] [minifi log] [info] Component Port UUID property name Port UUID value 471deef6-2a6e-4a7d-912a-81cc17e3a204
+[2017-05-25 22:30:00.935] [minifi log] [info] Add processor From Node A into process group NiFi Flow
+[2017-05-25 22:30:00.935] [minifi log] [debug] parseProcessorNode: maxConcurrentTasks => [1]
+[2017-05-25 22:30:00.935] [minifi log] [info] Connection GenerateFlowFileS2S created
+[2017-05-25 22:30:00.935] [minifi log] [debug] Created connection with UUID 471deef6-2a6e-4a7d-912a-81cc17e3a207 and name GenerateFlowFileS2S
+[2017-05-25 22:30:00.935] [minifi log] [debug] parseConnection: relationship => [success]
+[2017-05-25 22:30:00.935] [minifi log] [debug] Using 'source id' to match source with same id for connection 'GenerateFlowFileS2S': source id => [471deef6-2a6e-4a7d-912a-81cc17e3a206]
+[2017-05-25 22:30:00.935] [minifi log] [debug] Using 'destination id' to match destination with same id for connection 'GenerateFlowFileS2S': destination id => [471deef6-2a6e-4a7d-912a-81cc17e3a204]
+[2017-05-25 22:30:00.935] [minifi log] [info] Add connection GenerateFlowFileS2S into process group MiNiFi Flow
+[2017-05-25 22:30:00.935] [minifi log] [info] find processor GetFile
+[2017-05-25 22:30:00.935] [minifi log] [info] Add connection GenerateFlowFileS2S into Processor GetFile outgoing connection for relationship success
+[2017-05-25 22:30:00.935] [minifi log] [info] find processor GetFile
+[2017-05-25 22:30:00.935] [minifi log] [info] find processor child NiFi Flow
+[2017-05-25 22:30:00.935] [minifi log] [info] find processor From Node A
+[2017-05-25 22:30:00.935] [minifi log] [info] Add connection GenerateFlowFileS2S into Processor From Node A incoming connection
+[2017-05-25 22:30:00.935] [minifi log] [info] Processor SiteToSiteProvenanceReportingTask created UUID d4a7865a-c352-4fff-a918-4c837749a705
+[2017-05-25 22:30:00.935] [minifi log] [info] Add processor SiteToSiteProvenanceReportingTask into process group MiNiFi Flow
+[2017-05-25 22:30:00.935] [minifi log] [debug] ProvenanceReportingTask schedulingPeriod 1000000000 ns
+[2017-05-25 22:30:00.935] [minifi log] [debug] ProvenanceReportingTask scheduling strategy TIMER_DRIVEN
+[2017-05-25 22:30:00.935] [minifi log] [debug] ProvenanceReportingTask host localhost
+[2017-05-25 22:30:00.935] [minifi log] [debug] ProvenanceReportingTask port 10001
+[2017-05-25 22:30:00.935] [minifi log] [debug] ProvenanceReportingTask port uuid 471deef6-2a6e-4a7d-912a-81cc17e3a204
+[2017-05-25 22:30:00.935] [minifi log] [info] Starting to reload Flow Controller with flow control name MiNiFi Flow, version 1
+[2017-05-25 22:30:00.935] [minifi log] [info] Stop Flow Controller
+[2017-05-25 22:30:00.935] [minifi log] [info] org::apache::nifi::minifi::core::repository::FlowFileRepository Repository Monitor Thread Stop
+[2017-05-25 22:30:00.935] [minifi log] [info] org::apache::nifi::minifi::provenance::ProvenanceRepository Repository Monitor Thread Stop
+[2017-05-25 22:30:03.939] [minifi log] [info] Shutting down threads for processor GetFile/471deef6-2a6e-4a7d-912a-81cc17e3a206
+[2017-05-25 22:30:03.939] [minifi log] [info] Scheduled thread 0 deleted for process GetFile
+[2017-05-25 22:30:03.939] [minifi log] [info] Shutting down threads for processor SiteToSiteProvenanceReportingTask/8c70d581-18f1-46ff-af18-a5957798f2f0
+[2017-05-25 22:30:03.939] [minifi log] [info] Scheduled thread 0 deleted for process SiteToSiteProvenanceReportingTask
+[2017-05-25 22:30:03.939] [minifi log] [info] Shutting down threads for processor From Node A/471deef6-2a6e-4a7d-912a-81cc17e3a204
+[2017-05-25 22:30:03.939] [minifi log] [info] Scheduled thread 0 deleted for process From Node A
+[2017-05-25 22:30:03.939] [minifi log] [debug] Getting connection map
+[2017-05-25 22:30:03.939] [minifi log] [debug] Number of connections from connectionMap 1
+[2017-05-25 22:30:03.939] [minifi log] [info] Starting Flow Controller
+[2017-05-25 22:30:03.939] [minifi log] [info] Enabling 0 controller services
+[2017-05-25 22:30:03.939] [minifi log] [debug] Starting GetFile
+[2017-05-25 22:30:03.939] [minifi log] [debug] nifi_administrative_yield_duration: [30000] ms
+[2017-05-25 22:30:03.939] [minifi log] [debug] nifi_bored_yield_duration: [10] ms
+[2017-05-25 22:30:03.939] [minifi log] [info] Processor Input Directory property name Input Directory value /tmp/getfile
+[2017-05-25 22:30:03.939] [minifi log] [info] Processor Batch Size property name Batch Size value 10
+[2017-05-25 22:30:03.939] [minifi log] [info] Processor Ignore Hidden Files property name Ignore Hidden Files value true
+[2017-05-25 22:30:03.939] [minifi log] [info] Processor Keep Source File property name Keep Source File value true
+[2017-05-25 22:30:03.939] [minifi log] [info] Processor Maximum File Age property name Maximum File Age value 0 sec
+[2017-05-25 22:30:03.939] [minifi log] [debug] successfully applied _maxAge
+[2017-05-25 22:30:03.939] [minifi log] [info] Processor Minimum File Age property name Minimum File Age value 0 sec
+[2017-05-25 22:30:03.939] [minifi log] [debug] successfully applied _minAge
+[2017-05-25 22:30:03.939] [minifi log] [info] Processor Maximum File Size property name Maximum File Size value 0 B
+[2017-05-25 22:30:03.939] [minifi log] [info] Processor Minimum File Size property name Minimum File Size value 0 B
+[2017-05-25 22:30:03.939] [minifi log] [info] Processor Polling Interval property name Polling Interval value 0 sec
+[2017-05-25 22:30:03.939] [minifi log] [debug] successfully applied _pollInterval
+[2017-05-25 22:30:03.939] [minifi log] [info] Processor Recurse Subdirectories property name Recurse Subdirectories value true
+[2017-05-25 22:30:03.939] [minifi log] [info] Processor File Filter property name File Filter value [^\.].*
+[2017-05-25 22:30:03.939] [minifi log] [info] Is listing empty 1
+[2017-05-25 22:30:03.939] [minifi log] [info] Scheduled thread 0 running for process GetFile
+[2017-05-25 22:30:03.939] [minifi log] [info] Performing file listing against /tmp/getfile
+[2017-05-25 22:30:03.939] [minifi log] [debug] Starting SiteToSiteProvenanceReportingTask
+[2017-05-25 22:30:03.939] [minifi log] [debug] nifi_administrative_yield_duration: [30000] ms
+[2017-05-25 22:30:03.939] [minifi log] [debug] nifi_bored_yield_duration: [10] ms
+[2017-05-25 22:30:03.939] [minifi log] [info] Performing file listing against /tmp/getfile
+[2017-05-25 22:30:03.940] [minifi log] [info] Is listing empty 0
+[2017-05-25 22:30:03.940] [minifi log] [info] GetFile process /tmp/getfile/minifi-app.log.txt
+[2017-05-25 22:30:03.940] [minifi log] [info] Scheduled thread 0 running for process SiteToSiteProvenanceReportingTask
+[2017-05-25 22:30:03.940] [minifi log] [debug] Starting From Node A
+[2017-05-25 22:30:03.940] [minifi log] [debug] nifi_administrative_yield_duration: [30000] ms
+[2017-05-25 22:30:03.940] [minifi log] [debug] nifi_bored_yield_duration: [10] ms
+[2017-05-25 22:30:03.940] [minifi log] [debug] Create FlowFile with UUID 01bac7f1-ac06-447d-879b-c3065ad5d689
+[2017-05-25 22:30:03.940] [minifi log] [info] Processor Host Name property name Host Name value localhost
+[2017-05-25 22:30:03.940] [minifi log] [debug] Resource Claim created ./content_repository/ea1adede-b3e3-4870-ae2a-b3ca33b3314e
+[2017-05-25 22:30:03.940] [minifi log] [info] Processor Port property name Port value 10001
+[2017-05-25 22:30:03.940] [minifi log] [info] Processor Port UUID property name Port UUID value 471deef6-2a6e-4a7d-912a-81cc17e3a204
+[2017-05-25 22:30:03.940] [minifi log] [info] Scheduled thread 0 running for process From Node A
+[2017-05-25 22:30:03.940] [minifi log] [info] org::apache::nifi::minifi::provenance::ProvenanceRepository Repository Monitor Thread Start
+[2017-05-25 22:30:03.940] [minifi log] [info] org::apache::nifi::minifi::core::repository::FlowFileRepository Repository Monitor Thread Start
+[2017-05-25 22:30:03.940] [minifi log] [info] Started Flow Controller
+[2017-05-25 22:30:03.940] [minifi log] [debug] Import offset 0 length 36219 into content ./content_repository/ea1adede-b3e3-4870-ae2a-b3ca33b3314e for FlowFile UUID 01bac7f1-ac06-447d-879b-c3065ad5d689
+[2017-05-25 22:30:03.942] [minifi log] [info] Negotiate protocol version with destination port 471deef6-2a6e-4a7d-912a-81cc17e3a204 current version 5
+[2017-05-25 22:30:03.942] [minifi log] [info] result of writing resource name is 22
+[2017-05-25 22:30:03.943] [minifi log] [info] status code is 20
+[2017-05-25 22:30:03.943] [minifi log] [info] Site2Site Protocol Negotiate protocol version OK
+[2017-05-25 22:30:03.943] [minifi log] [info] Site2Site socket established
+[2017-05-25 22:30:03.943] [minifi log] [info] Site2Site Protocol Perform hand shake with destination port 471deef6-2a6e-4a7d-912a-81cc17e3a204
+[2017-05-25 22:30:03.943] [minifi log] [info] Site2Site Protocol Send handshake properties GZIP false
+[2017-05-25 22:30:03.943] [minifi log] [info] Site2Site Protocol Send handshake properties PORT_IDENTIFIER 471deef6-2a6e-4a7d-912a-81cc17e3a204
+[2017-05-25 22:30:03.943] [minifi log] [info] Site2Site Protocol Send handshake properties REQUEST_EXPIRATION_MILLIS 30000
+[2017-05-25 22:30:03.943] [minifi log] [debug] Enqueue flow file UUID 01bac7f1-ac06-447d-879b-c3065ad5d689 to connection GenerateFlowFileS2S
+[2017-05-25 22:30:03.943] [minifi log] [debug] NiFi FlowFile Store event 01bac7f1-ac06-447d-879b-c3065ad5d689 size 337 success
+[2017-05-25 22:30:03.943] [minifi log] [debug] Delete SnapShot FlowFile UUID 01bac7f1-ac06-447d-879b-c3065ad5d689
+[2017-05-25 22:30:03.943] [minifi log] [debug] NiFi Provenance Store event 56419305-b78d-4af1-8f71-604a71e2e625 size 471 success
+[2017-05-25 22:30:03.943] [minifi log] [debug] NiFi Provenance Store event 0a35c034-6625-4594-b0b2-e2f2b0da517b size 345 success
+[2017-05-25 22:30:03.952] [minifi log] [info] Processor Host Name property name Host Name value localhost
+[2017-05-25 22:30:03.952] [minifi log] [info] Processor Port property name Port value 10001
+[2017-05-25 22:30:03.952] [minifi log] [info] Processor Port UUID property name Port UUID value 471deef6-2a6e-4a7d-912a-81cc17e3a204
+[2017-05-25 22:30:03.954] [minifi log] [info] Site2Site HandShake Completed
+[2017-05-25 22:30:03.954] [minifi log] [info] Site2Site Protocol Negotiate Codec with destination port 471deef6-2a6e-4a7d-912a-81cc17e3a204
+[2017-05-25 22:30:03.954] [minifi log] [info] Negotiate Codec version with destination port 471deef6-2a6e-4a7d-912a-81cc17e3a204 current version 1
+[2017-05-25 22:30:03.954] [minifi log] [info] Negotiate protocol version with destination port 471deef6-2a6e-4a7d-912a-81cc17e3a204 current version 5
+[2017-05-25 22:30:03.954] [minifi log] [info] result of writing resource name is 22
+[2017-05-25 22:30:03.955] [minifi log] [info] status code is 20
+[2017-05-25 22:30:03.955] [minifi log] [info] Site2Site Protocol Negotiate protocol version OK
+[2017-05-25 22:30:03.955] [minifi log] [info] Site2Site socket established
+[2017-05-25 22:30:03.955] [minifi log] [info] Site2Site Protocol Perform hand shake with destination port 471deef6-2a6e-4a7d-912a-81cc17e3a204
+[2017-05-25 22:30:03.955] [minifi log] [info] Site2Site Protocol Send handshake properties GZIP false
+[2017-05-25 22:30:03.955] [minifi log] [info] Site2Site Protocol Send handshake properties PORT_IDENTIFIER 471deef6-2a6e-4a7d-912a-81cc17e3a204
+[2017-05-25 22:30:03.955] [minifi log] [info] Site2Site Protocol Send handshake properties REQUEST_EXPIRATION_MILLIS 30000
+[2017-05-25 22:30:03.967] [minifi log] [info] Site2Site Codec Negotiate version OK
+[2017-05-25 22:30:03.967] [minifi log] [info] Site2Site Codec Completed and move to READY state for data transfer
+[2017-05-25 22:30:03.967] [minifi log] [info] Site2Site Ready For data transaction
+[2017-05-25 22:30:03.967] [minifi log] [info] Site2Site create transaction 4562b6cc-567e-4438-932b-b40843af2be9
+[2017-05-25 22:30:03.967] [minifi log] [info] Site2Site transaction 4562b6cc-567e-4438-932b-b40843af2be9 send flow record 1, total length 1904
+[2017-05-25 22:30:03.967] [minifi log] [info] Site2Site transaction 4562b6cc-567e-4438-932b-b40843af2be9 send bytes length 1904
+[2017-05-25 22:30:03.967] [minifi log] [info] Site2Site Send FINISH TRANSACTION for transaction 4562b6cc-567e-4438-932b-b40843af2be9
+[2017-05-25 22:30:03.967] [minifi log] [info] Site2Site HandShake Completed
+[2017-05-25 22:30:03.967] [minifi log] [info] Site2Site Protocol Negotiate Codec with destination port 471deef6-2a6e-4a7d-912a-81cc17e3a204
+[2017-05-25 22:30:03.968] [minifi log] [info] Negotiate Codec version with destination port 471deef6-2a6e-4a7d-912a-81cc17e3a204 current version 1
+[2017-05-25 22:30:03.979] [minifi log] [info] Site2Site transaction 4562b6cc-567e-4438-932b-b40843af2be9 peer confirm transaction with CRC 1611766123
+[2017-05-25 22:30:03.979] [minifi log] [info] Site2Site transaction 4562b6cc-567e-4438-932b-b40843af2be9 CRC matched
+[2017-05-25 22:30:03.979] [minifi log] [info] Site2Site Codec Negotiate version OK
+[2017-05-25 22:30:03.979] [minifi log] [info] Site2Site Codec Completed and move to READY state for data transfer
+[2017-05-25 22:30:03.979] [minifi log] [info] Site2Site Ready For data transaction
+[2017-05-25 22:30:03.979] [minifi log] [debug] Dequeue flow file UUID 01bac7f1-ac06-447d-879b-c3065ad5d689 from connection GenerateFlowFileS2S
+[2017-05-25 22:30:03.979] [minifi log] [debug] Create Snapshot FlowFile with UUID 321e7825-9318-4633-9fab-0927c2f5f3c3
+[2017-05-25 22:30:03.979] [minifi log] [debug] Delete FlowFile UUID 321e7825-9318-4633-9fab-0927c2f5f3c3
+[2017-05-25 22:30:03.979] [minifi log] [info] Site2Site create transaction 2aacbe92-6b3c-40d5-9481-bc87ac42450c
+[2017-05-25 22:30:03.979] [minifi log] [info] Site2Site transaction 2aacbe92-6b3c-40d5-9481-bc87ac42450c send attribute key absolute.path value /tmp/getfile/minifi-app.log.txt
+[2017-05-25 22:30:03.979] [minifi log] [info] Site2Site transaction 2aacbe92-6b3c-40d5-9481-bc87ac42450c send attribute key filename value minifi-app.log.txt
+[2017-05-25 22:30:03.979] [minifi log] [info] Site2Site transaction 2aacbe92-6b3c-40d5-9481-bc87ac42450c send attribute key path value /tmp/getfile
+[2017-05-25 22:30:03.979] [minifi log] [info] Site2Site transaction 2aacbe92-6b3c-40d5-9481-bc87ac42450c send attribute key uuid value 01bac7f1-ac06-447d-879b-c3065ad5d689
+[2017-05-25 22:30:03.980] [minifi log] [info] Site2Site transaction 2aacbe92-6b3c-40d5-9481-bc87ac42450c send flow record 1, total length 36219
+[2017-05-25 22:30:03.980] [minifi log] [info] Site2Site transaction 2aacbe92-6b3c-40d5-9481-bc87ac42450c send flow record 01bac7f1-ac06-447d-879b-c3065ad5d689
+[2017-05-25 22:30:03.980] [minifi log] [info] Site2Site Send FINISH TRANSACTION for transaction 2aacbe92-6b3c-40d5-9481-bc87ac42450c
+[2017-05-25 22:30:03.993] [minifi log] [info] Site2Site transaction 4562b6cc-567e-4438-932b-b40843af2be9 peer finished transaction
+[2017-05-25 22:30:03.993] [minifi log] [info] Site2Site transaction 4562b6cc-567e-4438-932b-b40843af2be9 successfully send flow record 1, content bytes 1904
+[2017-05-25 22:30:03.993] [minifi log] [info] Site2Site delete transaction 4562b6cc-567e-4438-932b-b40843af2be9
+[2017-05-25 22:30:03.994] [minifi log] [info] Site2Site transaction 2aacbe92-6b3c-40d5-9481-bc87ac42450c peer confirm transaction with CRC 3636446315
+[2017-05-25 22:30:03.994] [minifi log] [info] Site2Site transaction 2aacbe92-6b3c-40d5-9481-bc87ac42450c CRC matched
+[2017-05-25 22:30:04.005] [minifi log] [info] Site2Site transaction 2aacbe92-6b3c-40d5-9481-bc87ac42450c peer finished transaction
+[2017-05-25 22:30:04.005] [minifi log] [info] Site2Site transaction 2aacbe92-6b3c-40d5-9481-bc87ac42450c successfully send flow record 1, content bytes 36219
+[2017-05-25 22:30:04.005] [minifi log] [info] Site2Site delete transaction 2aacbe92-6b3c-40d5-9481-bc87ac42450c
+[2017-05-25 22:30:04.005] [minifi log] [debug] Delete FlowFile UUID 01bac7f1-ac06-447d-879b-c3065ad5d689
+[2017-05-25 22:30:04.005] [minifi log] [debug] Delete Resource Claim ./content_repository/ea1adede-b3e3-4870-ae2a-b3ca33b3314e
+[2017-05-25 22:30:04.005] [minifi log] [debug] NiFi Provenance Store event bfb69abc-84e6-42a5-9924-0bf5399ce05f size 504 success
+[2017-05-25 22:30:04.005] [minifi log] [debug] NiFi Provenance Store event 8d2ad741-7659-476a-8f1f-6e8a1277252d size 550 success
+[2017-05-25 22:30:04.948] [minifi log] [info] Is listing empty 1
+[2017-05-25 22:30:04.948] [minifi log] [info] Performing file listing against /tmp/getfile
+[2017-05-25 22:30:04.948] [minifi log] [info] Performing file listing against /tmp/getfile
+[2017-05-25 22:30:04.948] [minifi log] [info] Is listing empty 0
+[2017-05-25 22:30:04.948] [minifi log] [info] GetFile process /tmp/getfile/minifi-app.log.txt
+[2017-05-25 22:30:04.948] [minifi log] [debug] Create FlowFile with UUID 9aac58de-d513-48c5-b2c1-a601ec67f656
+[2017-05-25 22:30:04.948] [minifi log] [debug] Resource Claim created ./content_repository/c06703c6-b16d-4ba6-afa2-ac7057b9e261
+[2017-05-25 22:30:04.948] [minifi log] [debug] Import offset 0 length 36219 into content ./content_repository/c06703c6-b16d-4ba6-afa2-ac7057b9e261 for FlowFile UUID 9aac58de-d513-48c5-b2c1-a601ec67f656
+[2017-05-25 22:30:04.951] [minifi log] [debug] Enqueue flow file UUID 9aac58de-d513-48c5-b2c1-a601ec67f656 to connection GenerateFlowFileS2S
+[2017-05-25 22:30:04.951] [minifi log] [debug] NiFi FlowFile Store event 9aac58de-d513-48c5-b2c1-a601ec67f656 size 337 success
+[2017-05-25 22:30:04.951] [minifi log] [debug] Delete SnapShot FlowFile UUID 9aac58de-d513-48c5-b2c1-a601ec67f656
+[2017-05-25 22:30:04.951] [minifi log] [debug] NiFi Provenance Store event b0396327-de9a-4403-aa7e-4464586feaf2 size 345 success
+[2017-05-25 22:30:04.951] [minifi log] [debug] NiFi Provenance Store event 7316b430-e266-41df-9133-3498ebba5f4b size 471 success
+[2017-05-25 22:30:04.959] [minifi log] [info] Processor Host Name property name Host Name value localhost
+[2017-05-25 22:30:04.960] [minifi log] [info] Processor Port property name Port value 10001
+[2017-05-25 22:30:04.960] [minifi log] [info] Processor Port UUID property name Port UUID value 471deef6-2a6e-4a7d-912a-81cc17e3a204
+[2017-05-25 22:30:04.960] [minifi log] [debug] Dequeue flow file UUID 9aac58de-d513-48c5-b2c1-a601ec67f656 from connection GenerateFlowFileS2S
+[2017-05-25 22:30:04.960] [minifi log] [debug] Create Snapshot FlowFile with UUID ecdc657d-db14-4150-a477-06249ee357a7
+[2017-05-25 22:30:04.960] [minifi log] [debug] Delete FlowFile UUID ecdc657d-db14-4150-a477-06249ee357a7
+[2017-05-25 22:30:04.960] [minifi log] [info] Site2Site create transaction 63ed3f1f-9964-4b5a-92e7-a070f9e8d8be
+[2017-05-25 22:30:04.960] [minifi log] [info] Site2Site transaction 63ed3f1f-9964-4b5a-92e7-a070f9e8d8be send attribute key absolute.path value /tmp/getfile/minifi-app.log.txt
+[2017-05-25 22:30:04.960] [minifi log] [info] Site2Site transaction 63ed3f1f-9964-4b5a-92e7-a070f9e8d8be send attribute key filename value minifi-app.log.txt
+[2017-05-25 22:30:04.960] [minifi log] [info] Site2Site transaction 63ed3f1f-9964-4b5a-92e7-a070f9e8d8be send attribute key path value /tmp/getfile
+[2017-05-25 22:30:04.960] [minifi log] [info] Site2Site transaction 63ed3f1f-9964-4b5a-92e7-a070f9e8d8be send attribute key uuid value 9aac58de-d513-48c5-b2c1-a601ec67f656
+[2017-05-25 22:30:04.960] [minifi log] [info] Site2Site transaction 63ed3f1f-9964-4b5a-92e7-a070f9e8d8be send flow record 1, total length 36219
+[2017-05-25 22:30:04.960] [minifi log] [info] Site2Site transaction 63ed3f1f-9964-4b5a-92e7-a070f9e8d8be send flow record 9aac58de-d513-48c5-b2c1-a601ec67f656
+[2017-05-25 22:30:04.960] [minifi log] [info] Site2Site Send FINISH TRANSACTION for transaction 63ed3f1f-9964-4b5a-92e7-a070f9e8d8be
+[2017-05-25 22:30:04.967] [minifi log] [info] Site2Site transaction 63ed3f1f-9964-4b5a-92e7-a070f9e8d8be peer confirm transaction with CRC 872125207
+[2017-05-25 22:30:04.967] [minifi log] [info] Site2Site transaction 63ed3f1f-9964-4b5a-92e7-a070f9e8d8be CRC matched
+[2017-05-25 22:30:04.979] [minifi log] [info] Site2Site transaction 63ed3f1f-9964-4b5a-92e7-a070f9e8d8be peer finished transaction
+[2017-05-25 22:30:04.979] [minifi log] [info] Site2Site transaction 63ed3f1f-9964-4b5a-92e7-a070f9e8d8be successfully send flow record 1, content bytes 36219
+[2017-05-25 22:30:04.979] [minifi log] [info] Site2Site delete transaction 63ed3f1f-9964-4b5a-92e7-a070f9e8d8be
+[2017-05-25 22:30:04.979] [minifi log] [debug] Delete FlowFile UUID 9aac58de-d513-48c5-b2c1-a601ec67f656
+[2017-05-25 22:30:04.979] [minifi log] [debug] Delete Resource Claim ./content_repository/c06703c6-b16d-4ba6-afa2-ac7057b9e261
+[2017-05-25 22:30:04.979] [minifi log] [debug] NiFi Provenance Store event 93a745dc-a4ef-48c3-b587-6ccc6db15194 size 550 success
+[2017-05-25 22:30:04.979] [minifi log] [debug] NiFi Provenance Store event ba3cf4db-83ff-42a0-a3c3-be09ad69dbc3 size 504 success
+[2017-05-25 22:30:04.983] [minifi log] [debug] HttpConfigurationListener load Client Certificates OK
+[2017-05-25 22:30:04.998] [minifi log] [info] Site2Site create transaction 35489d64-f920-4be7-b101-a3307c6c6ea4
+[2017-05-25 22:30:04.998] [minifi log] [info] Site2Site transaction 35489d64-f920-4be7-b101-a3307c6c6ea4 send flow record 1, total length 6002
+[2017-05-25 22:30:04.998] [minifi log] [info] Site2Site transaction 35489d64-f920-4be7-b101-a3307c6c6ea4 send bytes length 6002
+[2017-05-25 22:30:04.998] [minifi log] [info] Site2Site Send FINISH TRANSACTION for transaction 35489d64-f920-4be7-b101-a3307c6c6ea4
+[2017-05-25 22:30:05.005] [minifi log] [info] Site2Site transaction 35489d64-f920-4be7-b101-a3307c6c6ea4 peer confirm transaction with CRC 3543481630
+[2017-05-25 22:30:05.005] [minifi log] [info] Site2Site transaction 35489d64-f920-4be7-b101-a3307c6c6ea4 CRC matched
+[2017-05-25 22:30:05.017] [minifi log] [info] Site2Site transaction 35489d64-f920-4be7-b101-a3307c6c6ea4 peer finished transaction
+[2017-05-25 22:30:05.017] [minifi log] [info] Site2Site transaction 35489d64-f920-4be7-b101-a3307c6c6ea4 successfully send flow record 1, content bytes 6002
+[2017-05-25 22:30:05.017] [minifi log] [info] Site2Site delete transaction 35489d64-f920-4be7-b101-a3307c6c6ea4
+[2017-05-25 22:30:05.088] [minifi log] [debug] HttpConfigurationListener -- curl successful to https://bbende:443
+[2017-05-25 22:30:05.088] [minifi log] [debug] config # Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the \"License\"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an \"AS IS\" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+Flow Controller:
+    id: 471deef6-2a6e-4a7d-912a-81cc17e3a205
+    name: MiNiFi Flow
+    version: 1
+
+Processors:
+    - name: GetFile
+      id: 471deef6-2a6e-4a7d-912a-81cc17e3a206
+      class: org.apache.nifi.processors.standard.Ge
+[2017-05-25 22:30:05.954] [minifi log] [info] Is listing empty 1
+[2017-05-25 22:30:05.954] [minifi log] [info] Performing file listing against /tmp/getfile
+[2017-05-25 22:30:05.954] [minifi log] [info] Performing file listing against /tmp/getfile
+[2017-05-25 22:30:05.955] [minifi log] [info] Is listing empty 0
+[2017-05-25 22:30:05.955] [minifi log] [info] GetFile process /tmp/getfile/minifi-app.log.txt
+[2017-05-25 22:30:05.955] [minifi log] [debug] Create FlowFile with UUID 868a723a-db4f-4ead-b3f4-11450c4cc2d6
+[2017-05-25 22:30:05.955] [minifi log] [debug] Resource Claim created ./content_repository/cd8fa82c-f934-4811-a66b-deba027aa5fb
+[2017-05-25 22:30:05.955] [minifi log] [debug] Import offset 0 length 36219 into content ./content_repository/cd8fa82c-f934-4811-a66b-deba027aa5fb for FlowFile UUID 868a723a-db4f-4ead-b3f4-11450c4cc2d6
+[2017-05-25 22:30:05.958] [minifi log] [debug] Enqueue flow file UUID 868a723a-db4f-4ead-b3f4-11450c4cc2d6 to connection GenerateFlowFileS2S
+[2017-05-25 22:30:05.958] [minifi log] [debug] NiFi FlowFile Store event 868a723a-db4f-4ead-b3f4-11450c4cc2d6 size 337 success
+[2017-05-25 22:30:05.958] [minifi log] [debug] Delete SnapShot FlowFile UUID 868a723a-db4f-4ead-b3f4-11450c4cc2d6
+[2017-05-25 22:30:05.958] [minifi log] [debug] NiFi Provenance Store event df952f23-5eba-444a-b33f-7d756b17c81f size 471 success
+[2017-05-25 22:30:05.958] [minifi log] [debug] NiFi Provenance Store event 0b2939fe-6411-428c-954c-72bf5ef7da1c size 345 success
+[2017-05-25 22:30:05.965] [minifi log] [info] Processor Host Name property name Host Name value localhost
+[2017-05-25 22:30:05.965] [minifi log] [info] Processor Port property name Port value 10001
+[2017-05-25 22:30:05.965] [minifi log] [info] Processor Port UUID property name Port UUID value 471deef6-2a6e-4a7d-912a-81cc17e3a204
+[2017-05-25 22:30:05.965] [minifi log] [debug] Dequeue flow file UUID 868a723a-db4f-4ead-b3f4-11450c4cc2d6 from connection GenerateFlowFileS2S
+[2017-05-25 22:30:05.965] [minifi log] [debug] Create Snapshot FlowFile with UUID 6480c609-d2db-43fb-a6eb-5e81fd9491ce
+[2017-05-25 22:30:05.965] [minifi log] [debug] Delete FlowFile UUID 6480c609-d2db-43fb-a6eb-5e81fd9491ce
+[2017-05-25 22:30:05.965] [minifi log] [info] Site2Site create transaction 76819c0c-ecb0-4db8-af40-5b0183710336
+[2017-05-25 22:30:05.965] [minifi log] [info] Site2Site transaction 76819c0c-ecb0-4db8-af40-5b0183710336 send attribute key absolute.path value /tmp/getfile/minifi-app.log.txt
+[2017-05-25 22:30:05.965] [minifi log] [info] Site2Site transaction 76819c0c-ecb0-4db8-af40-5b0183710336 send attribute key filename value minifi-app.log.txt
+[2017-05-25 22:30:05.965] [minifi log] [info] Site2Site transaction 76819c0c-ecb0-4db8-af40-5b0183710336 send attribute key path value /tmp/getfile
+[2017-05-25 22:30:05.965] [minifi log] [info] Site2Site transaction 76819c0c-ecb0-4db8-af40-5b0183710336 send attribute key uuid value 868a723a-db4f-4ead-b3f4-11450c4cc2d6
+[2017-05-25 22:30:05.966] [minifi log] [info] Site2Site transaction 76819c0c-ecb0-4db8-af40-5b0183710336 send flow record 1, total length 36219
+[2017-05-25 22:30:05.966] [minifi log] [info] Site2Site transaction 76819c0c-ecb0-4db8-af40-5b0183710336 send flow record 868a723a-db4f-4ead-b3f4-11450c4cc2d6
+[2017-05-25 22:30:05.966] [minifi log] [info] Site2Site Send FINISH TRANSACTION for transaction 76819c0c-ecb0-4db8-af40-5b0183710336
+[2017-05-25 22:30:05.977] [minifi log] [info] Site2Site transaction 76819c0c-ecb0-4db8-af40-5b0183710336 peer confirm transaction with CRC 2714741500
+[2017-05-25 22:30:05.977] [minifi log] [info] Site2Site transaction 76819c0c-ecb0-4db8-af40-5b0183710336 CRC matched
+[2017-05-25 22:30:05.990] [minifi log] [info] Site2Site transaction 76819c0c-ecb0-4db8-af40-5b0183710336 peer finished transaction
+[2017-05-25 22:30:05.990] [minifi log] [info] Site2Site transaction 76819c0c-ecb0-4db8-af40-5b0183710336 successfully send flow record 1, content bytes 36219
+[2017-05-25 22:30:05.990] [minifi log] [info] Site2Site delete transaction 76819c0c-ecb0-4db8-af40-5b0183710336
+[2017-05-25 22:30:05.990] [minifi log] [debug] Delete FlowFile UUID 868a723a-db4f-4ead-b3f4-11450c4cc2d6
+[2017-05-25 22:30:05.990] [minifi log] [debug] Delete Resource Claim ./content_repository/cd8fa82c-f934-4811-a66b-deba027aa5fb
+[2017-05-25 22:30:05.990] [minifi log] [debug] NiFi Provenance Store event 94bf13c4-fe1d-4408-a827-e41764c5e669 size 550 success
+[2017-05-25 22:30:05.990] [minifi log] [debug] NiFi Provenance Store event 8c3d17f4-1b4c-41bd-99e0-0a94a213593d size 504 success
+[2017-05-25 22:30:06.021] [minifi log] [info] Site2Site create transaction d1d58f6e-a4cb-4a84-85a4-0ea9715a39c7
+[2017-05-25 22:30:06.021] [minifi log] [info] Site2Site transaction d1d58f6e-a4cb-4a84-85a4-0ea9715a39c7 send flow record 1, total length 3932
+[2017-05-25 22:30:06.021] [minifi log] [info] Site2Site transaction d1d58f6e-a4cb-4a84-85a4-0ea9715a39c7 send bytes length 3932
+[2017-05-25 22:30:06.021] [minifi log] [info] Site2Site Send FINISH TRANSACTION for transaction d1d58f6e-a4cb-4a84-85a4-0ea9715a39c7
+[2017-05-25 22:30:06.024] [minifi log] [info] Site2Site transaction d1d58f6e-a4cb-4a84-85a4-0ea9715a39c7 peer confirm transaction with CRC 1622701313
+[2017-05-25 22:30:06.024] [minifi log] [info] Site2Site transaction d1d58f6e-a4cb-4a84-85a4-0ea9715a39c7 CRC matched
+[2017-05-25 22:30:06.035] [minifi log] [info] Site2Site transaction d1d58f6e-a4cb-4a84-85a4-0ea9715a39c7 peer finished transaction
+[2017-05-25 22:30:06.035] [minifi log] [info] Site2Site transaction d1d58f6e-a4cb-4a84-85a4-0ea9715a39c7 successfully send flow record 1, content bytes 3932
+[2017-05-25 22:30:06.035] [minifi log] [info] Site2Site delete transaction d1d58f6e-a4cb-4a84-85a4-0ea9715a39c7
+[2017-05-25 22:30:06.127] [minifi log] [debug] HttpConfigurationListener load Client Certificates OK
+[2017-05-25 22:30:06.227] [minifi log] [debug] HttpConfigurationListener -- curl successful to https://bbende:443
+[2017-05-25 22:30:06.227] [minifi log] [debug] config # Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the \"License\"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an \"AS IS\" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+Flow Controller:
+    id: 471deef6-2a6e-4a7d-912a-81cc17e3a205
+    name: MiNiFi Flow
+    version: 1
+
+Processors:
+    - name: GetFile
+      id: 471deef6-2a6e-4a7d-912a-81cc17e3a206
+      class: org.apache.nifi.processors.standard.Ge
+[2017-05-25 22:30:06.963] [minifi log] [info] Is listing empty 1
+[2017-05-25 22:30:06.963] [minifi log] [info] Performing file listing against /tmp/getfile
+[2017-05-25 22:30:06.963] [minifi log] [info] Performing file listing against /tmp/getfile
+[2017-05-25 22:30:06.963] [minifi log] [info] Is listing empty 0
+[2017-05-25 22:30:06.963] [minifi log] [info] GetFile process /tmp/getfile/minifi-app.log.txt
+[2017-05-25 22:30:06.963] [minifi log] [debug] Create FlowFile with UUID 868411c5-96ac-4e81-8dfb-03ba20dcc6bb
+[2017-05-25 22:30:06.963] [minifi log] [debug] Resource Claim created ./content_repository/0376d019-f552-432c-b113-b1d4a751a1e7
+[2017-05-25 22:30:06.963] [minifi log] [debug] Import offset 0 length 36219 into content ./content_repository/0376d019-f552-432c-b113-b1d4a751a1e7 for FlowFile UUID 868411c5-96ac-4e81-8dfb-03ba20dcc6bb
+[2017-05-25 22:30:06.966] [minifi log] [debug] Enqueue flow file UUID 868411c5-96ac-4e81-8dfb-03ba20dcc6bb to connection GenerateFlowFileS2S
+[2017-05-25 22:30:06.966] [minifi log] [debug] NiFi FlowFile Store event 868411c5-96ac-4e81-8dfb-03ba20dcc6bb size 337 success
+[2017-05-25 22:30:06.966] [minifi log] [debug] Delete SnapShot FlowFile UUID 868411c5-96ac-4e81-8dfb-03ba20dcc6bb
+[2017-05-25 22:30:06.966] [minifi log] [debug] NiFi Provenance Store event 9772dc3c-0710-4a86-96ae-4e892a96162e size 345 success
+[2017-05-25 22:30:06.966] [minifi log] [debug] NiFi Provenance Store event 67b9e157-70ff-42bb-b831-296e64766867 size 471 success
+[2017-05-25 22:30:06.970] [minifi log] [info] Processor Host Name property name Host Name value localhost
+[2017-05-25 22:30:06.970] [minifi log] [info] Processor Port property name Port value 10001
+[2017-05-25 22:30:06.970] [minifi log] [info] Processor Port UUID property name Port UUID value 471deef6-2a6e-4a7d-912a-81cc17e3a204
+[2017-05-25 22:30:06.970] [minifi log] [debug] Dequeue flow file UUID 868411c5-96ac-4e81-8dfb-03ba20dcc6bb from connection GenerateFlowFileS2S
+[2017-05-25 22:30:06.970] [minifi log] [debug] Create Snapshot FlowFile with UUID 8c8852db-f5b4-4733-b3c4-b2d76f97eebf
+[2017-05-25 22:30:06.970] [minifi log] [debug] Delete FlowFile UUID 8c8852db-f5b4-4733-b3c4-b2d76f97eebf
+[2017-05-25 22:30:06.970] [minifi log] [info] Site2Site create transaction c52fa4a2-8131-450f-b4f8-3203353622e2
+[2017-05-25 22:30:06.970] [minifi log] [info] Site2Site transaction c52fa4a2-8131-450f-b4f8-3203353622e2 send attribute key absolute.path value /tmp/getfile/minifi-app.log.txt
+[2017-05-25 22:30:06.970] [minifi log] [info] Site2Site transaction c52fa4a2-8131-450f-b4f8-3203353622e2 send attribute key filename value minifi-app.log.txt
+[2017-05-25 22:30:06.970] [minifi log] [info] Site2Site transaction c52fa4a2-8131-450f-b4f8-3203353622e2 send attribute key path value /tmp/getfile
+[2017-05-25 22:30:06.970] [minifi log] [info] Site2Site transaction c52fa4a2-8131-450f-b4f8-3203353622e2 send attribute key uuid value 868411c5-96ac-4e81-8dfb-03ba20dcc6bb
+[2017-05-25 22:30:06.971] [minifi log] [info] Site2Site transaction c52fa4a2-8131-450f-b4f8-3203353622e2 send flow record 1, total length 36219
+[2017-05-25 22:30:06.971] [minifi log] [info] Site2Site transaction c52fa4a2-8131-450f-b4f8-3203353622e2 send flow record 868411c5-96ac-4e81-8dfb-03ba20dcc6bb
+[2017-05-25 22:30:06.971] [minifi log] [info] Site2Site Send FINISH TRANSACTION for transaction c52fa4a2-8131-450f-b4f8-3203353622e2
+[2017-05-25 22:30:06.982] [minifi log] [info] Site2Site transaction c52fa4a2-8131-450f-b4f8-3203353622e2 peer confirm transaction with CRC 1979837776
+[2017-05-25 22:30:06.982] [minifi log] [info] Site2Site transaction c52fa4a2-8131-450f-b4f8-3203353622e2 CRC matched
+[2017-05-25 22:30:06.993] [minifi log] [info] Site2Site transaction c52fa4a2-8131-450f-b4f8-3203353622e2 peer finished transaction
+[2017-05-25 22:30:06.993] [minifi log] [info] Site2Site transaction c52fa4a2-8131-450f-b4f8-3203353622e2 successfully send flow record 1, content bytes 36219
+[2017-05-25 22:30:06.993] [minifi log] [info] Site2Site delete transaction c52fa4a2-8131-450f-b4f8-3203353622e2
+[2017-05-25 22:30:06.993] [minifi log] [debug] Delete FlowFile UUID 868411c5-96ac-4e81-8dfb-03ba20dcc6bb
+[2017-05-25 22:30:06.993] [minifi log] [debug] Delete Resource Claim ./content_repository/0376d019-f552-432c-b113-b1d4a751a1e7
+[2017-05-25 22:30:06.993] [minifi log] [debug] NiFi Provenance Store event 32487f33-189f-4d07-bfdc-579e9d3ac8ef size 550 success
+[2017-05-25 22:30:06.994] [minifi log] [debug] NiFi Provenance Store event fa13f8c9-b1f1-4ac7-bf67-370937e4c744 size 504 success
+[2017-05-25 22:30:07.040] [minifi log] [info] Site2Site create transaction 37ab3c8f-aaba-4d05-a689-4541850320d0
+[2017-05-25 22:30:07.040] [minifi log] [info] Site2Site transaction 37ab3c8f-aaba-4d05-a689-4541850320d0 send flow record 1, total length 3933
+[2017-05-25 22:30:07.040] [minifi log] [info] Site2Site transaction 37ab3c8f-aaba-4d05-a689-4541850320d0 send bytes length 3933
+[2017-05-25 22:30:07.040] [minifi log] [info] Site2Site Send FINISH TRANSACTION for transaction 37ab3c8f-aaba-4d05-a689-4541850320d0
+[2017-05-25 22:30:07.048] [minifi log] [info] Site2Site transaction 37ab3c8f-aaba-4d05-a689-4541850320d0 peer confirm transaction with CRC 3894313933
+[2017-05-25 22:30:07.048] [minifi log] [info] Site2Site transaction 37ab3c8f-aaba-4d05-a689-4541850320d0 CRC matched
+[2017-05-25 22:30:07.059] [minifi log] [info] Site2Site transaction 37ab3c8f-aaba-4d05-a689-4541850320d0 peer finished transaction
+[2017-05-25 22:30:07.059] [minifi log] [info] Site2Site transaction 37ab3c8f-aaba-4d05-a689-4541850320d0 successfully send flow record 1, content bytes 3933
+[2017-05-25 22:30:07.059] [minifi log] [info] Site2Site delete transaction 37ab3c8f-aaba-4d05-a689-4541850320d0
+[2017-05-25 22:30:07.267] [minifi log] [debug] HttpConfigurationListener load Client Certificates OK
+[2017-05-25 22:30:07.367] [minifi log] [debug] HttpConfigurationListener -- curl successful to https://bbende:443
+[2017-05-25 22:30:07.367] [minifi log] [debug] config # Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the \"License\"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an \"AS IS\" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+Flow Controller:
+    id: 471deef6-2a6e-4a7d-912a-81cc17e3a205
+    name: MiNiFi Flow
+    version: 1
+
+Processors:
+    - name: GetFile
+      id: 471deef6-2a6e-4a7d-912a-81cc17e3a206
+      class: org.apache.nifi.processors.standard.Ge
+[2017-05-25 22:30:07.971] [minifi log] [info] Is listing empty 1
+[2017-05-25 22:30:07.971] [minifi log] [info] Performing file listing against /tmp/getfile
+[2017-05-25 22:30:07.971] [minifi log] [info] Performing file listing against /tmp/getfile
+[2017-05-25 22:30:07.971] [minifi log] [info] Is listing empty 0
+[2017-05-25 22:30:07.971] [minifi log] [info] GetFile process /tmp/getfile/minifi-app.log.txt
+[2017-05-25 22:30:07.971] [minifi log] [debug] Create FlowFile with UUID 7a832ebb-d8df-4f20-afad-9eea78c23972
+[2017-05-25 22:30:07.971] [minifi log] [debug] Resource Claim created ./content_repository/4ba970f2-2a03-43a6-8f42-ca153b5690e8
+[2017-05-25 22:30:07.972] [minifi log] [debug] Import offset 0 length 36219 into content ./content_repository/4ba970f2-2a03-43a6-8f42-ca153b5690e8 for FlowFile UUID 7a832ebb-d8df-4f20-afad-9eea78c23972
+[2017-05-25 22:30:07.974] [minifi log] [debug] Enqueue flow file UUID 7a832ebb-d8df-4f20-afad-9eea78c23972 to connection GenerateFlowFileS2S
+[2017-05-25 22:30:07.975] [minifi log] [debug] NiFi FlowFile Store event 7a832ebb-d8df-4f20-afad-9eea78c23972 size 337 success
+[2017-05-25 22:30:07.975] [minifi log] [debug] Delete SnapShot FlowFile UUID 7a832ebb-d8df-4f20-afad-9eea78c23972
+[2017-05-25 22:30:07.975] [minifi log] [debug] NiFi Provenance Store event cfdee20d-75fb-4070-bd54-6d5393bfaf5a size 471 success
+[2017-05-25 22:30:07.975] [minifi log] [debug] NiFi Provenance Store event d82c39d6-ddc8-4522-bfb3-751b11e43d31 size 345 success
+[2017-05-25 22:30:07.983] [minifi log] [info] Processor Host Name property name Host Name value localhost
+[2017-05-25 22:30:07.983] [minifi log] [info] Processor Port property name Port value 10001
+[2017-05-25 22:30:07.983] [minifi log] [info] Processor Port UUID property name Port UUID value 471deef6-2a6e-4a7d-912a-81cc17e3a204
+[2017-05-25 22:30:07.983] [minifi log] [debug] Dequeue flow file UUID 7a832ebb-d8df-4f20-afad-9eea78c23972 from connection GenerateFlowFileS2S
+[2017-05-25 22:30:07.984] [minifi log] [debug] Create Snapshot FlowFile with UUID 3221f7e0-c3b4-4d24-9df7-6a7a26868b61
+[2017-05-25 22:30:07.984] [minifi log] [debug] Delete FlowFile UUID 3221f7e0-c3b4-4d24-9df7-6a7a26868b61
+[2017-05-25 22:30:07.984] [minifi log] [info] Site2Site create transaction 998d3839-5b7a-42c3-99a1-696080eece46
+[2017-05-25 22:30:07.984] [minifi log] [info] Site2Site transaction 998d3839-5b7a-42c3-99a1-696080eece46 send attribute key absolute.path value /tmp/getfile/minifi-app.log.txt
+[2017-05-25 22:30:07.984] [minifi log] [info] Site2Site transaction 998d3839-5b7a-42c3-99a1-696080eece46 send attribute key filename value minifi-app.log.txt
+[2017-05-25 22:30:07.984] [minifi log] [info] Site2Site transaction 998d3839-5b7a-42c3-99a1-696080eece46 send attribute key path value /tmp/getfile
+[2017-05-25 22:30:07.984] [minifi log] [info] Site2Site transaction 998d3839-5b7a-42c3-99a1-696080eece46 send attribute key uuid value 7a832ebb-d8df-4f20-afad-9eea78c23972
+[2017-05-25 22:30:07.984] [minifi log] [info] Site2Site transaction 998d3839-5b7a-42c3-99a1-696080eece46 send flow record 1, total length 36219
+[2017-05-25 22:30:07.984] [minifi log] [info] Site2Site transaction 998d3839-5b7a-42c3-99a1-696080eece46 send flow record 7a832ebb-d8df-4f20-afad-9eea78c23972
+[2017-05-25 22:30:07.985] [minifi log] [info] Site2Site Send FINISH TRANSACTION for transaction 998d3839-5b7a-42c3-99a1-696080eece46
+[2017-05-25 22:30:07.992] [minifi log] [info] Site2Site transaction 998d3839-5b7a-42c3-99a1-696080eece46 peer confirm transaction with CRC 2009366010
+[2017-05-25 22:30:07.992] [minifi log] [info] Site2Site transaction 998d3839-5b7a-42c3-99a1-696080eece46 CRC matched
+[2017-05-25 22:30:08.003] [minifi log] [info] Site2Site transaction 998d3839-5b7a-42c3-99a1-696080eece46 peer finished transaction
+[2017-05-25 22:30:08.003] [minifi log] [info] Site2Site transaction 998d3839-5b7a-42c3-99a1-696080eece46 successfully send flow record 1, content bytes 36219
+[2017-05-25 22:30:08.003] [minifi log] [info] Site2Site delete transaction 998d3839-5b7a-42c3-99a1-696080eece46
+[2017-05-25 22:30:08.003] [minifi log] [debug] Delete FlowFile UUID 7a832ebb-d8df-4f20-afad-9eea78c23972
+[2017-05-25 22:30:08.003] [minifi log] [debug] Delete Resource Claim ./content_repository/4ba970f2-2a03-43a6-8f42-ca153b5690e8
+[2017-05-25 22:30:08.003] [minifi log] [debug] NiFi Provenance Store event b75d9212-7bea-4d14-b933-43bb6056dd6d size 504 success
+[2017-05-25 22:30:08.003] [minifi log] [debug] NiFi Provenance Store event 20487c58-481d-44cd-8a21-5814372c774b size 550 success
+[2017-05-25 22:30:08.063] [minifi log] [info] Site2Site create transaction d47eb1bc-7f0e-41a2-8b72-8559d4eabcf7
+[2017-05-25 22:30:08.063] [minifi log] [info] Site2Site transaction d47eb1bc-7f0e-41a2-8b72-8559d4eabcf7 send flow record 1, total length 3937
+[2017-05-25 22:30:08.063] [minifi log] [info] Site2Site transaction d47eb1bc-7f0e-41a2-8b72-8559d4eabcf7 send bytes length 3937
+[2017-05-25 22:30:08.063] [minifi log] [info] Site2Site Send FINISH TRANSACTION for transaction d47eb1bc-7f0e-41a2-8b72-8559d4eabcf7
+[2017-05-25 22:30:08.064] [minifi log] [info] Site2Site transaction d47eb1bc-7f0e-41a2-8b72-8559d4eabcf7 peer confirm transaction with CRC 2316116091
+[2017-05-25 22:30:08.064] [minifi log] [info] Site2Site transaction d47eb1bc-7f0e-41a2-8b72-8559d4eabcf7 CRC matched
+[2017-05-25 22:30:08.075] [minifi log] [info] Site2Site transaction d47eb1bc-7f0e-41a2-8b72-8559d4eabcf7 peer finished transaction
+[2017-05-25 22:30:08.075] [minifi log] [info] Site2Site transaction d47eb1bc-7f0e-41a2-8b72-8559d4eabcf7 successfully send flow record 1, content bytes 3937
+[2017-05-25 22:30:08.075] [minifi log] [info] Site2Site delete transaction d47eb1bc-7f0e-41a2-8b72-8559d4eabcf7
+[2017-05-25 22:30:08.404] [minifi log] [debug] HttpConfigurationListener load Client Certificates OK
+[2017-05-25 22:30:08.501] [minifi log] [debug] HttpConfigurationListener -- curl successful to https://bbende:443
+[2017-05-25 22:30:08.501] [minifi log] [debug] config # Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the \"License\"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an \"AS IS\" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+Flow Controller:
+    id: 471deef6-2a6e-4a7d-912a-81cc17e3a205
+    name: MiNiFi Flow
+    version: 1
+
+Processors:
+    - name: GetFile
+      id: 471deef6-2a6e-4a7d-912a-81cc17e3a206
+      class: org.apache.nifi.processors.standard.Ge
+[2017-05-25 22:30:08.979] [minifi log] [info] Is listing empty 1
+[2017-05-25 22:30:08.979] [minifi log] [info] Performing file listing against /tmp/getfile
+[2017-05-25 22:30:08.979] [minifi log] [info] Performing file listing against /tmp/getfile
+[2017-05-25 22:30:08.979] [minifi log] [info] Is listing empty 0
+[2017-05-25 22:30:08.979] [minifi log] [info] GetFile process /tmp/getfile/minifi-app.log.txt
+[2017-05-25 22:30:08.979] [minifi log] [debug] Create FlowFile with UUID fc099429-0b17-4763-b6fb-d377c19e8e5b
+[2017-05-25 22:30:08.979] [minifi log] [debug] Resource Claim created ./content_repository/ea2bbaae-bb8b-418c-8d1f-977acedcebf9
+[2017-05-25 22:30:08.980] [minifi log] [debug] Import offset 0 length 36219 into content ./content_repository/ea2bbaae-bb8b-418c-8d1f-977acedcebf9 for FlowFile UUID fc099429-0b17-4763-b6fb-d377c19e8e5b
+[2017-05-25 22:30:08.982] [minifi log] [debug] Enqueue flow file UUID fc099429-0b17-4763-b6fb-d377c19e8e5b to connection GenerateFlowFileS2S
+[2017-05-25 22:30:08.982] [minifi log] [debug] NiFi FlowFile Store event fc099429-0b17-4763-b6fb-d377c19e8e5b size 337 success
+[2017-05-25 22:30:08.982] [minifi log] [debug] Delete SnapShot FlowFile UUID fc099429-0b17-4763-b6fb-d377c19e8e5b
+[2017-05-25 22:30:08.982] [minifi log] [debug] NiFi Provenance Store event 3331f098-290f-4cb2-ba47-931551024568 size 471 success
+[2017-05-25 22:30:08.983] [minifi log] [debug] NiFi Provenance Store event fa8337e2-2b83-49b1-b48e-b4db01aacb6b size 345 success
+[2017-05-25 22:30:08.989] [minifi log] [info] Processor Host Name property name Host Name value localhost
+[2017-05-25 22:30:08.989] [minifi log] [info] Processor Port property name Port value 10001
+[2017-05-25 22:30:08.989] [minifi log] [info] Processor Port UUID property name Port UUID value 471deef6-2a6e-4a7d-912a-81cc17e3a204
+[2017-05-25 22:30:08.989] [minifi log] [debug] Dequeue flow file UUID fc099429-0b17-4763-b6fb-d377c19e8e5b from connection GenerateFlowFileS2S
+[2017-05-25 22:30:08.990] [minifi log] [debug] Create Snapshot FlowFile with UUID e56d9e2b-b27d-40cd-bd97-3a423e7d3b9f
+[2017-05-25 22:30:08.990] [minifi log] [debug] Delete FlowFile UUID e56d9e2b-b27d-40cd-bd97-3a423e7d3b9f
+[2017-05-25 22:30:08.990] [minifi log] [info] Site2Site create transaction 30cfc2e8-5371-4894-b366-3ff6542701e9
+[2017-05-25 22:30:08.990] [minifi log] [info] Site2Site transaction 30cfc2e8-5371-4894-b366-3ff6542701e9 send attribute key absolute.path value /tmp/getfile/minifi-app.log.txt
+[2017-05-25 22:30:08.990] [minifi log] [info] Site2Site transaction 30cfc2e8-5371-4894-b366-3ff6542701e9 send attribute key filename value minifi-app.log.txt
+[2017-05-25 22:30:08.990] [minifi log] [info] Site2Site transaction 30cfc2e8-5371-4894-b366-3ff6542701e9 send attribute key path value /tmp/getfile
+[2017-05-25 22:30:08.990] [minifi log] [info] Site2Site transaction 30cfc2e8-5371-4894-b366-3ff6542701e9 send attribute key uuid value fc099429-0b17-4763-b6fb-d377c19e8e5b
+[2017-05-25 22:30:08.990] [minifi log] [info] Site2Site transaction 30cfc2e8-5371-4894-b366-3ff6542701e9 send flow record 1, total length 36219
+[2017-05-25 22:30:08.990] [minifi log] [info] Site2Site transaction 30cfc2e8-5371-4894-b366-3ff6542701e9 send flow record fc099429-0b17-4763-b6fb-d377c19e8e5b
+[2017-05-25 22:30:08.990] [minifi log] [info] Site2Site Send FINISH TRANSACTION for transaction 30cfc2e8-5371-4894-b366-3ff6542701e9
+[2017-05-25 22:30:09.001] [minifi log] [info] Site2Site transaction 30cfc2e8-5371-4894-b366-3ff6542701e9 peer confirm transaction with CRC 208752716
+[2017-05-25 22:30:09.001] [minifi log] [info] Site2Site transaction 30cfc2e8-5371-4894-b366-3ff6542701e9 CRC matched
+[2017-05-25 22:30:09.013] [minifi log] [info] Site2Site transaction 30cfc2e8-5371-4894-b366-3ff6542701e9 peer finished transaction
+[2017-05-25 22:30:09.013] [minifi log] [info] Site2Site transaction 30cfc2e8-5371-4894-b366-3ff6542701e9 successfully send flow record 1, content bytes 36219
+[2017-05-25 22:30:09.013] [minifi log] [info] Site2Site delete transaction 30cfc2e8-5371-4894-b366-3ff6542701e9
+[2017-05-25 22:30:09.013] [minifi log] [debug] Delete FlowFile UUID fc099429-0b17-4763-b6fb-d377c19e8e5b
+[2017-05-25 22:30:09.013] [minifi log] [debug] Delete Resource Claim ./content_repository/ea2bbaae-bb8b-418c-8d1f-977acedcebf9
+[2017-05-25 22:30:09.013] [minifi log] [debug] NiFi Provenance Store event 3fb7354f-9f92-4dee-8534-0551e0feecc0 size 550 success
+[2017-05-25 22:30:09.013] [minifi log] [debug] NiFi Provenance Store event 6a47d995-0dda-4e7e-9f70-3f77fb5a6358 size 504 success
+[2017-05-25 22:30:09.079] [minifi log] [info] Site2Site create transaction dd8dcf42-3a82-4ca8-a19e-dbffc1480fe8
+[2017-05-25 22:30:09.079] [minifi log] [info] Site2Site transaction dd8dcf42-3a82-4ca8-a19e-dbffc1480fe8 send flow record 1, total length 3918
+[2017-05-25 22:30:09.079] [minifi log] [info] Site2Site transaction dd8dcf42-3a82-4ca8-a19e-dbffc1480fe8 send bytes length 3918
+[2017-05-25 22:30:09.079] [minifi log] [info] Site2Site Send FINISH TRANSACTION for transaction dd8dcf42-3a82-4ca8-a19e-dbffc1480fe8
+[2017-05-25 22:30:09.088] [minifi log] [info] Site2Site transaction dd8dcf42-3a82-4ca8-a19e-dbffc1480fe8 peer confirm transaction with CRC 2743550546
+[2017-05-25 22:30:09.088] [minifi log] [info] Site2Site transaction dd8dcf42-3a82-4ca8-a19e-dbffc1480fe8 CRC matched
+[2017-05-25 22:30:09.099] [minifi log] [info] Site2Site transaction dd8dcf42-3a82-4ca8-a19e-dbffc1480fe8 peer finished transaction
+[2017-05-25 22:30:09.099] [minifi log] [info] Site2Site transaction dd8dcf42-3a82-4ca8-a19e-dbffc1480fe8 successfully send flow record 1, content bytes 3918
+[2017-05-25 22:30:09.099] [minifi log] [info] Site2Site delete transaction dd8dcf42-3a82-4ca8-a19e-dbffc1480fe8
+[2017-05-25 22:30:09.537] [minifi log] [debug] HttpConfigurationListener load Client Certificates OK
+[2017-05-25 22:30:09.629] [minifi log] [info] Stop Flow Controller
+[2017-05-25 22:30:09.629] [minifi log] [info] org::apache::nifi::minifi::core::repository::FlowFileRepository Repository Monitor Thread Stop
+[2017-05-25 22:30:09.629] [minifi log] [info] org::apache::nifi::minifi::provenance::ProvenanceRepository Repository Monitor Thread Stop
+[2017-05-25 22:30:09.639] [minifi log] [debug] HttpConfigurationListener -- curl successful to https://bbende:443
+[2017-05-25 22:30:09.639] [minifi log] [debug] config # Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the \"License\"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an \"AS IS\" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+Flow Controller:
+    id: 471deef6-2a6e-4a7d-912a-81cc17e3a205
+    name: MiNiFi Flow
+    version: 1
+
+Processors:
+    - name: GetFile
+      id: 471deef6-2a6e-4a7d-912a-81cc17e3a206
+      class: org.apache.nifi.processors.standard.Ge
+[2017-05-25 22:30:10.678] [minifi log] [debug] HttpConfigurationListener load Client Certificates OK
+[2017-05-25 22:30:10.782] [minifi log] [debug] HttpConfigurationListener -- curl successful to https://bbende:443
+[2017-05-25 22:30:10.782] [minifi log] [debug] config # Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the \"License\"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an \"AS IS\" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+Flow Controller:
+    id: 471deef6-2a6e-4a7d-912a-81cc17e3a205
+    name: MiNiFi Flow
+    version: 1
+
+Processors:
+    - name: GetFile
+      id: 471deef6-2a6e-4a7d-912a-81cc17e3a206
+      class: org.apache.nifi.processors.standard.Ge
+[2017-05-25 22:30:11.813] [minifi log] [debug] HttpConfigurationListener load Client Certificates OK
+[2017-05-25 22:30:11.929] [minifi log] [debug] HttpConfigurationListener -- curl successful to https://bbende:443
+[2017-05-25 22:30:11.929] [minifi log] [debug] config # Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the \"License\"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an \"AS IS\" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+Flow Controller:
+    id: 471deef6-2a6e-4a7d-912a-81cc17e3a205
+    name: MiNiFi Flow
+    version: 1
+
+Processors:
+    - name: GetFile
+      id: 471deef6-2a6e-4a7d-912a-81cc17e3a206
+      class: org.apache.nifi.processors.standard.Ge
+[2017-05-25 22:30:12.632] [minifi log] [info] Shutting down threads for processor GetFile/471deef6-2a6e-4a7d-912a-81cc17e3a206
+[2017-05-25 22:30:12.632] [minifi log] [info] Scheduled thread 0 deleted for process GetFile
+[2017-05-25 22:30:12.632] [minifi log] [info] Shutting down threads for processor SiteToSiteProvenanceReportingTask/d4a7865a-c352-4fff-a918-4c837749a705
+[2017-05-25 22:30:12.632] [minifi log] [info] Scheduled thread 0 deleted for process SiteToSiteProvenanceReportingTask
+[2017-05-25 22:30:12.632] [minifi log] [info] Shutting down threads for processor From Node A/471deef6-2a6e-4a7d-912a-81cc17e3a204
+[2017-05-25 22:30:12.632] [minifi log] [info] Scheduled thread 0 deleted for process From Node A
+[2017-05-25 22:30:12.632] [minifi log] [info] Unload Flow Controller
+[2017-05-25 22:30:12.632] [minifi log] [debug] Drain connection GenerateFlowFileS2S
+[2017-05-25 22:30:12.632] [minifi log] [info] Site2Site Protocol tearDown
+[2017-05-25 22:30:12.633] [minifi log] [info] MiNiFi exit
