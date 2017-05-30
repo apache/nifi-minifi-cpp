@@ -43,6 +43,7 @@ void waitToVerifyProcessor() {
 
 int main(int argc, char **argv) {
   LogTestController::getInstance().setInfo<minifi::processors::InvokeHTTP>();
+  LogTestController::getInstance().setInfo<minifi::processors::LogAttribute>();
   std::string key_dir, test_file_location;
   if (argc > 1) {
     test_file_location = argv[1];
