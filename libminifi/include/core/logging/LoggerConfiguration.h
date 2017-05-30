@@ -21,7 +21,6 @@
 #ifndef __LOGGER_CONFIGURATION_H__
 #define __LOGGER_CONFIGURATION_H__
 
-#include <atomic>
 #include <map>
 #include <mutex>
 #include <string>
@@ -105,7 +104,8 @@ class LoggerConfiguration {
     public:
      LoggerImpl(std::string name, std::shared_ptr<spdlog::logger> delegate):Logger(delegate), name(name) {}
      void set_delegate(std::shared_ptr<spdlog::logger> delegate) {
-       std::atomic_store(&delegate_, delegate);
+       std::lock_guard<std::mutex> lock(mutex_);
+       delegate_ = delegate;
      }
      const std::string name;
   };
