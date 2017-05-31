@@ -31,7 +31,6 @@ namespace nifi {
 namespace minifi {
 namespace io {
 
-
 /**
  * Purpose: Socket Creator is a class that will determine if the provided socket type
  * exists per the compilation parameters
@@ -82,8 +81,7 @@ class SocketCreator : public AbstractStreamFactory {
 StreamFactory::StreamFactory(const std::shared_ptr<Configure> &configure) {
   std::string secureStr;
   bool is_secure = false;
-  if (configure->get(Configure::nifi_remote_input_secure, secureStr)) {
-    org::apache::nifi::minifi::utils::StringUtils::StringToBool(secureStr, is_secure);
+  if (configure->get(Configure::nifi_remote_input_secure, secureStr) && org::apache::nifi::minifi::utils::StringUtils::StringToBool(secureStr, is_secure)) {
     delegate_ = std::make_shared<SocketCreator<TLSSocket, TLSContext>>(configure);
   } else {
     delegate_ = std::make_shared<SocketCreator<Socket, SocketContext>>(configure);
