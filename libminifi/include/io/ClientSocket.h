@@ -84,7 +84,7 @@ class Socket : public BaseStream {
    * Static function to return the current machine's host name
    */
   static std::string getMyHostName() {
-    static char *HOSTNAME = init_hostname();
+    static std::string HOSTNAME = init_hostname();
     return HOSTNAME;
   }
 
@@ -245,12 +245,12 @@ class Socket : public BaseStream {
 
  private:
   std::shared_ptr<logging::Logger> logger_;
-  static char* init_hostname() {
+  static std::string init_hostname() {
     char hostname[1024];
     gethostname(hostname, 1024);
     Socket mySock(nullptr, hostname, 0);
     mySock.initialize();
-    return const_cast<char*>(mySock.getHostname().c_str());
+    return mySock.getHostname();
   }
 };
 
