@@ -15,6 +15,8 @@
 # specific language governing permissions and limitations
 # under the License.
 
+# This file is invoked in CMake script mode from the source root of the overall project
+
 # Find the preferred Apache mirror to use for the download by querying the list of mirrors and filtering out 'preferred'
 execute_process(COMMAND curl -s https://www.apache.org/dyn/closer.lua/?asjson=1
         COMMAND grep preferred
@@ -24,21 +26,22 @@ execute_process(COMMAND curl -s https://www.apache.org/dyn/closer.lua/?asjson=1
         OUTPUT_STRIP_TRAILING_WHITESPACE
         OUTPUT_VARIABLE MIRROR_URL )
 
-ExternalProject_Add(
-        rat-binary
-        PREFIX "apache-rat"
-        URL "${MIRROR_URL}creadur/apache-rat-0.12/apache-rat-0.12-bin.tar.gz"
-        URL_HASH SHA1=e84dffe8b354871c29f5078b823a726508474a6c
-        DOWNLOAD_DIR ${CMAKE_SOURCE_DIR}/thirdparty/apache-rat
-        CONFIGURE_COMMAND ""
-        BUILD_COMMAND ""
-        INSTALL_COMMAND ""
-)
+# Make use of parent thirdparty by adjusting relative to the source of this CMake file
+set(PARENT_THIRDPARTY_DIR "${CMAKE_SOURCE_DIR}/../thirdparty")
+set(RAT_BASENAME "apache-rat-0.12")
+set(RAT_DIR "${PARENT_THIRDPARTY_DIR}/apache-rat")
+set(RAT_BINARY "${RAT_DIR}/${RAT_BASENAME}-bin/${RAT_BASENAME}.jar")
 
-# Custom target to run Apache Release Audit Tool (RAT)
-add_custom_target(
-        apache-rat
-        COMMAND java -jar ${CMAKE_BINARY_DIR}/apache-rat/src/rat-binary/apache-rat-0.12.jar -E ${CMAKE_SOURCE_DIR}/thirdparty/apache-rat/.rat-excludes -d ${CMAKE_SOURCE_DIR} | grep -B 1 -A 15 Summary )
+file(DOWNLOAD
+        "${MIRROR_URL}creadur/${RAT_BASENAME}/${RAT_BASENAME}-bin.tar.gz"
+        "${RAT_DIR}/${RAT_BASENAME}-bin.tar.gz"
+        EXPECTED_HASH SHA512=460d53fa3e1546d960bd03ebd97c930a39306cffd98c9ebc09bf22f9e50a9723578b98c4e7dc71dd6f19dfb6dae00811cb11a4eabce70c21502a6cef2d9fd2fa )
 
-
-add_dependencies(apache-rat rat-binary)
+execute_process(
+        COMMAND tar xf "${RAT_DIR}/${RAT_BASENAME}-bin.tar.gz" -C "${RAT_DIR}"
+        COMMAND grep preferred
+        COMMAND awk "{print $2}"
+        COMMAND tr -d "\""
+        TIMEOUT 10
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+        OUTPUT_VARIABLE MIRROR_URL )
