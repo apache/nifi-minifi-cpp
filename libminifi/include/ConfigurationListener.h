@@ -47,7 +47,7 @@ public:
   /*!
    * Create a new processor
    */
-  ConfigurationListener(FlowController *controller,
+  ConfigurationListener(std::shared_ptr<FlowController> controller,
       std::shared_ptr<Configure> configure, std::string type) :
       connect_timeout_(20000), read_timeout_(20000), type_(type), configure_(
           configure), controller_(controller), need_client_certificate_(false) {
@@ -87,7 +87,7 @@ protected:
   // thread
   std::thread thread_;
   // whether the thread is running
-  bool running_;
+  std::atomic<bool> running_;
 
   // url
   std::string url_;
@@ -104,7 +104,7 @@ protected:
 
   std::shared_ptr<Configure> configure_;
   std::shared_ptr<logging::Logger> logger_;
-  FlowController *controller_;
+  std::shared_ptr<FlowController> controller_;
 
   bool need_client_certificate_;
   std::string certificate_;

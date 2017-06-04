@@ -23,32 +23,12 @@
 #include "core/Core.h"
 #include "core/Property.h"
 #include "ConfigurationListener.h"
+#include "utils/HTTPUtils.h"
 
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
-/**
- * HTTP Response object
- */
-struct HTTPRequestResponse {
-  std::vector<char> data;
-
-  /**
-   * Receive HTTP Response.
-   */
-  static size_t recieve_write(char * data, size_t size, size_t nmemb,
-      void * p) {
-    return static_cast<HTTPRequestResponse*>(p)->write_content(data, size,
-        nmemb);
-  }
-
-  size_t write_content(char* ptr, size_t size, size_t nmemb) {
-    data.insert(data.end(), ptr, ptr + size * nmemb);
-    return size * nmemb;
-  }
-
-};
 
 // HttpConfigurationListener Class
 class HttpConfigurationListener: public ConfigurationListener {
@@ -58,7 +38,7 @@ public:
   /*!
    * Create a new processor
    */
-  HttpConfigurationListener(FlowController *controller,
+  HttpConfigurationListener(std::shared_ptr<FlowController> controller,
       std::shared_ptr<Configure> configure) :
       minifi::ConfigurationListener(controller, configure, "http") {
       std::string value;

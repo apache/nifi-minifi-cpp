@@ -130,28 +130,14 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
       root_->updatePropertyValue(processorName, propertyName, propertyValue);
   }
 
-  // set 6 bytes SerialNumber
-  void setSerialNumber(uint8_t *number) {
-    memcpy(serial_number_, number, 6);
-  }
-
-  //get serial number
-  uint8_t *getSerialNumber() {
-    return serial_number_;
+  // set SerialNumber
+  void setSerialNumber(std::string number) {
+    serial_number_ = number;
   }
 
   // get serial number as string
-  std::string getSerialNumberStr() {
-    char str[18];
-    char *strPtr = &str[0];
-
-    for (int i = 0; i < 6; i++) {
-      strPtr += sprintf(strPtr, "%02x", serial_number_[i]);
-      if (i != 5)
-        strPtr += sprintf(strPtr, ":");
-    }
-    std::string value(str);
-    return value;
+  std::string getSerialNumber() {
+    return serial_number_;
   }
 
   // validate and apply passing yaml configuration payload
@@ -338,9 +324,7 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
   std::shared_ptr<logging::Logger> logger_;
   // http configuration listener object.
   std::unique_ptr<HttpConfigurationListener> http_configuration_listener_;
-
-  // Serial Number
-  uint8_t serial_number_[6];
+  std::string serial_number_;
 };
 
 } /* namespace minifi */

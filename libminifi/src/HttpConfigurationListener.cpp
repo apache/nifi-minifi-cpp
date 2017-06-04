@@ -120,9 +120,9 @@ bool HttpConfigurationListener::pullConfiguration(std::string &configuration) {
     configureSecureConnection(http_session);
   }
 
-  HTTPRequestResponse content;
+  utils::HTTPRequestResponse content;
   curl_easy_setopt(http_session, CURLOPT_WRITEFUNCTION,
-      &HTTPRequestResponse::recieve_write);
+      &utils::HTTPRequestResponse::recieve_write);
 
   curl_easy_setopt(http_session, CURLOPT_WRITEDATA,
       static_cast<void*>(&content));

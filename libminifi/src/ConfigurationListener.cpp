@@ -55,7 +55,7 @@ void ConfigurationListener::start() {
           Configure::nifi_configuration_listener_client_ca_certificate,
       this->ca_certificate_)) {
     logger_->log_info("Configuration Listener CA certificates: [%s]",
-        this->ca_certificate_.c_str());
+        this->ca_certificate_);
   }
 
   if (this->need_client_certificate_) {
@@ -83,13 +83,13 @@ void ConfigurationListener::start() {
     }
 
     logger_->log_info("Configuration Listener certificate: [%s], private key: [%s], passphrase file: [%s]",
-            this->certificate_.c_str(), this->private_key_.c_str(), passphrase_file.c_str());
+            this->certificate_, this->private_key_, passphrase_file);
   }
 
   thread_ = std::thread(&ConfigurationListener::threadExecutor, this);
   thread_.detach();
   running_ = true;
-  logger_->log_info("%s ConfigurationListener Thread Start", type_.c_str());
+  logger_->log_info("%s ConfigurationListener Thread Start", type_);
 }
 
 void ConfigurationListener::stop() {
@@ -98,7 +98,7 @@ void ConfigurationListener::stop() {
   running_ = false;
   if (thread_.joinable())
     thread_.join();
-  logger_->log_info("%s ConfigurationListener Thread Stop", type_.c_str());
+  logger_->log_info("%s ConfigurationListener Thread Stop", type_);
 }
 
 void ConfigurationListener::run() {

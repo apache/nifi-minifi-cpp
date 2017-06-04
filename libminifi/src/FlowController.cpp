@@ -85,12 +85,7 @@ FlowController::FlowController(std::shared_ptr<core::Repository> provenance_repo
   max_timer_driven_threads_ = DEFAULT_MAX_TIMER_DRIVEN_THREAD;
   running_ = false;
   initialized_ = false;
-<<<<<<< HEAD
   root_ = nullptr;
-=======
-  root_ = NULL;
-  memset(serial_number_, 0, 6);
->>>>>>> More configuration listener
 
   protocol_ = new FlowControlProtocol(this, configure);
 
@@ -98,7 +93,8 @@ FlowController::FlowController(std::shared_ptr<core::Repository> provenance_repo
   // grab the value for configuration
   if (configure->get(Configure::nifi_configuration_listener_type, listenerType)) {
     if (listenerType == "http") {
-      this->http_configuration_listener_ = std::unique_ptr<minifi::HttpConfigurationListener>(new minifi::HttpConfigurationListener(this, configure));
+      this->http_configuration_listener_ =
+          std::unique_ptr<minifi::HttpConfigurationListener>(new minifi::HttpConfigurationListener(shared_from_this(), configure));
     }
   }
 
