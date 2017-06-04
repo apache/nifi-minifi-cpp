@@ -32,6 +32,7 @@
 #include "core/Property.h"
 #include "properties/Configure.h"
 #include "core/logging/Logger.h"
+#include "core/logging/LoggerConfiguration.h"
 
 namespace org {
 namespace apache {
@@ -51,7 +52,7 @@ public:
       std::shared_ptr<Configure> configure, std::string type) :
       connect_timeout_(20000), read_timeout_(20000), type_(type), configure_(
           configure), controller_(controller), need_client_certificate_(false) {
-    logger_ = logging::Logger::getLogger();
+    logger_ = logging::LoggerFactory<ConfigurationListener>::getLogger();
     running_ = false;
   }
   // Destructor

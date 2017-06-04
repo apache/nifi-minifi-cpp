@@ -63,6 +63,12 @@ class Configure : public Properties {
   static const char *nifi_configuration_listener_http_url;
   static const char *nifi_configuration_listener_rest_url;
   static const char *nifi_configuration_listener_type; // http or rest
+  // configuration listener security config
+  static const char *nifi_configuration_listener_need_ClientAuth;
+  static const char *nifi_configuration_listener_client_certificate;
+  static const char *nifi_configuration_listener_private_key;
+  static const char *nifi_configuration_listener_client_pass_phrase;
+  static const char *nifi_configuration_listener_client_ca_certificate;
 };
 
 } /* namespace minifi */
