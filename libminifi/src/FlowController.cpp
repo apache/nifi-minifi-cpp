@@ -89,15 +89,6 @@ FlowController::FlowController(std::shared_ptr<core::Repository> provenance_repo
 
   protocol_ = new FlowControlProtocol(this, configure);
 
-  std::string listenerType;
-  // grab the value for configuration
-  if (configure->get(Configure::nifi_configuration_listener_type, listenerType)) {
-    if (listenerType == "http") {
-      this->http_configuration_listener_ =
-          std::unique_ptr<minifi::HttpConfigurationListener>(new minifi::HttpConfigurationListener(shared_from_this(), configure));
-    }
-  }
-
   if (!headless_mode) {
     std::string rawConfigFileString;
     configure->get(Configure::nifi_flow_configuration_file, rawConfigFileString);
@@ -249,6 +240,15 @@ void FlowController::load() {
     stop(true);
   }
   if (!initialized_) {
+    std::string listenerType;
+    // grab the value for configuration
+    if (this->http_configuration_listener_ == nullptr && configuration_->get(Configure::nifi_configuration_listener_type, listenerType)) {
+      if (listenerType == "http") {
+        this->http_configuration_listener_ =
+              std::unique_ptr<minifi::HttpConfigurationListener>(new minifi::HttpConfigurationListener(shared_from_this(), configuration_));
+      }
+    }
+
     logger_->log_info("Initializing timers");
     if (nullptr == timer_scheduler_) {
       timer_scheduler_ = std::make_shared<TimerDrivenSchedulingAgent>(std::static_pointer_cast<core::controller::ControllerServiceProvider>(shared_from_this()), provenance_repo_, configuration_);
