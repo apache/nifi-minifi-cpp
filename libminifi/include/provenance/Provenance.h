@@ -49,8 +49,7 @@ namespace provenance {
 #define PROVENANCE_EVENT_RECORD_SEG_SIZE 2048
 
 // Provenance Event Record
-class ProvenanceEventRecord :
-    protected org::apache::nifi::minifi::io::Serializable {
+class ProvenanceEventRecord : protected org::apache::nifi::minifi::io::Serializable {
  public:
   enum ProvenanceEventType {
 
@@ -155,14 +154,14 @@ class ProvenanceEventRecord :
      */
     REPLAY
   };
-  static const char *ProvenanceEventTypeStr[REPLAY+1];
- public:
+  static const char *ProvenanceEventTypeStr[REPLAY + 1];
+   public:
   // Constructor
   /*!
    * Create a new provenance event record
    */
-  ProvenanceEventRecord(ProvenanceEventType event, std::string componentId,
-                        std::string componentType): logger_(logging::LoggerFactory<ProvenanceEventRecord>::getLogger()) {
+  ProvenanceEventRecord(ProvenanceEventType event, std::string componentId, std::string componentType)
+      : logger_(logging::LoggerFactory<ProvenanceEventRecord>::getLogger()) {
     _eventType = event;
     _componentId = componentId;
     _componentType = componentType;
@@ -174,7 +173,8 @@ class ProvenanceEventRecord :
     _eventIdStr = eventIdStr;
   }
 
-  ProvenanceEventRecord(): logger_(logging::LoggerFactory<ProvenanceEventRecord>::getLogger()) {
+  ProvenanceEventRecord()
+      : logger_(logging::LoggerFactory<ProvenanceEventRecord>::getLogger()) {
     _eventTime = getTimeMillis();
   }
 
@@ -271,8 +271,7 @@ class ProvenanceEventRecord :
   }
   // Add Parent UUID
   void addParentUuid(std::string uuid) {
-    if (std::find(_parentUuids.begin(), _parentUuids.end(), uuid)
-        != _parentUuids.end())
+    if (std::find(_parentUuids.begin(), _parentUuids.end(), uuid) != _parentUuids.end())
       return;
     else
       _parentUuids.push_back(uuid);
@@ -284,9 +283,7 @@ class ProvenanceEventRecord :
   }
   // Remove Parent UUID
   void removeParentUuid(std::string uuid) {
-    _parentUuids.erase(
-        std::remove(_parentUuids.begin(), _parentUuids.end(), uuid),
-        _parentUuids.end());
+    _parentUuids.erase(std::remove(_parentUuids.begin(), _parentUuids.end(), uuid), _parentUuids.end());
   }
   // Remove Parent Flow File
   void removeParentFlowFile(std::shared_ptr<core::FlowFile> flow) {
@@ -299,8 +296,7 @@ class ProvenanceEventRecord :
   }
   // Add Child UUID
   void addChildUuid(std::string uuid) {
-    if (std::find(_childrenUuids.begin(), _childrenUuids.end(), uuid)
-        != _childrenUuids.end())
+    if (std::find(_childrenUuids.begin(), _childrenUuids.end(), uuid) != _childrenUuids.end())
       return;
     else
       _childrenUuids.push_back(uuid);
@@ -312,9 +308,7 @@ class ProvenanceEventRecord :
   }
   // Remove Child UUID
   void removeChildUuid(std::string uuid) {
-    _childrenUuids.erase(
-        std::remove(_childrenUuids.begin(), _childrenUuids.end(), uuid),
-        _childrenUuids.end());
+    _childrenUuids.erase(std::remove(_childrenUuids.begin(), _childrenUuids.end(), uuid), _childrenUuids.end());
   }
   // Remove Child Flow File
   void removeChildFlowFile(std::shared_ptr<core::FlowFile> flow) {
@@ -369,8 +363,7 @@ class ProvenanceEventRecord :
     return DeSerialize(stream.getBuffer(), stream.getSize());
   }
   // DeSerialize
-  bool DeSerialize(const std::shared_ptr<core::Repository> &repo,
-                   std::string key);
+  bool DeSerialize(const std::shared_ptr<core::Repository> &repo, std::string key);
 
  protected:
 
@@ -440,8 +433,8 @@ class ProvenanceReporter {
   /*!
    * Create a new provenance reporter associated with the process session
    */
-  ProvenanceReporter(std::shared_ptr<core::Repository> repo,
-                     std::string componentId, std::string componentType) : logger_(logging::LoggerFactory<ProvenanceReporter>::getLogger()) {
+  ProvenanceReporter(std::shared_ptr<core::Repository> repo, std::string componentId, std::string componentType)
+      : logger_(logging::LoggerFactory<ProvenanceReporter>::getLogger()) {
     _componentId = componentId;
     _componentType = componentType;
     repo_ = repo;
@@ -474,12 +467,8 @@ class ProvenanceReporter {
     _events.clear();
   }
   // allocate
-  ProvenanceEventRecord *allocate(
-      ProvenanceEventRecord::ProvenanceEventType eventType,
-      std::shared_ptr<core::FlowFile> flow) {
-    ProvenanceEventRecord *event = new ProvenanceEventRecord(eventType,
-                                                             _componentId,
-                                                             _componentType);
+  ProvenanceEventRecord *allocate(ProvenanceEventRecord::ProvenanceEventType eventType, std::shared_ptr<core::FlowFile> flow) {
+    ProvenanceEventRecord *event = new ProvenanceEventRecord(eventType, _componentId, _componentType);
     if (event)
       event->fromFlowFile(flow);
 
@@ -490,39 +479,27 @@ class ProvenanceReporter {
   // create
   void create(std::shared_ptr<core::FlowFile> flow, std::string detail);
   // route
-  void route(std::shared_ptr<core::FlowFile> flow, core::Relationship relation,
-             std::string detail, uint64_t processingDuration);
+  void route(std::shared_ptr<core::FlowFile> flow, core::Relationship relation, std::string detail, uint64_t processingDuration);
   // modifyAttributes
-  void modifyAttributes(std::shared_ptr<core::FlowFile> flow,
-                        std::string detail);
+  void modifyAttributes(std::shared_ptr<core::FlowFile> flow, std::string detail);
   // modifyContent
-  void modifyContent(std::shared_ptr<core::FlowFile> flow, std::string detail,
-                     uint64_t processingDuration);
+  void modifyContent(std::shared_ptr<core::FlowFile> flow, std::string detail, uint64_t processingDuration);
   // clone
-  void clone(std::shared_ptr<core::FlowFile> parent,
-             std::shared_ptr<core::FlowFile> child);
+  void clone(std::shared_ptr<core::FlowFile> parent, std::shared_ptr<core::FlowFile> child);
   // join
-  void join(std::vector<std::shared_ptr<core::FlowFile> > parents,
-            std::shared_ptr<core::FlowFile> child, std::string detail,
-            uint64_t processingDuration);
+  void join(std::vector<std::shared_ptr<core::FlowFile> > parents, std::shared_ptr<core::FlowFile> child, std::string detail, uint64_t processingDuration);
   // fork
-  void fork(std::vector<std::shared_ptr<core::FlowFile> > child,
-            std::shared_ptr<core::FlowFile> parent, std::string detail,
-            uint64_t processingDuration);
+  void fork(std::vector<std::shared_ptr<core::FlowFile> > child, std::shared_ptr<core::FlowFile> parent, std::string detail, uint64_t processingDuration);
   // expire
   void expire(std::shared_ptr<core::FlowFile> flow, std::string detail);
   // drop
   void drop(std::shared_ptr<core::FlowFile> flow, std::string reason);
   // send
-  void send(std::shared_ptr<core::FlowFile> flow, std::string transitUri,
-            std::string detail, uint64_t processingDuration, bool force);
+  void send(std::shared_ptr<core::FlowFile> flow, std::string transitUri, std::string detail, uint64_t processingDuration, bool force);
   // fetch
-  void fetch(std::shared_ptr<core::FlowFile> flow, std::string transitUri,
-             std::string detail, uint64_t processingDuration);
+  void fetch(std::shared_ptr<core::FlowFile> flow, std::string transitUri, std::string detail, uint64_t processingDuration);
   // receive
-  void receive(std::shared_ptr<core::FlowFile> flow, std::string transitUri,
-               std::string sourceSystemFlowFileIdentifier, std::string detail,
-               uint64_t processingDuration);
+  void receive(std::shared_ptr<core::FlowFile> flow, std::string transitUri, std::string sourceSystemFlowFileIdentifier, std::string detail, uint64_t processingDuration);
 
  protected:
 

@@ -68,17 +68,13 @@ class ListenHTTP : public core::Processor {
 
   void onTrigger(core::ProcessContext *context, core::ProcessSession *session);
   void initialize();
-  void onSchedule(core::ProcessContext *context,
-                  core::ProcessSessionFactory *sessionFactory);
+  void onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory);
 
   // HTTP request handler
   class Handler : public CivetHandler {
    public:
-    Handler(core::ProcessContext *context,
-            core::ProcessSessionFactory *sessionFactory,
-            std::string &&authDNPattern,
-            std::string &&headersAsAttributesPattern);
-    bool handlePost(CivetServer *server, struct mg_connection *conn);
+    Handler(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory, std::string &&authDNPattern, std::string &&headersAsAttributesPattern);bool handlePost(
+        CivetServer *server, struct mg_connection *conn);
 
    private:
     // Send HTTP 500 error response to client
@@ -95,8 +91,7 @@ class ListenHTTP : public core::Processor {
   // Write callback for transferring data from HTTP request to content repo
   class WriteCallback : public OutputStreamCallback {
    public:
-    WriteCallback(struct mg_connection *conn,
-                  const struct mg_request_info *reqInfo);
+    WriteCallback(struct mg_connection *conn, const struct mg_request_info *reqInfo);
     void process(std::ofstream *stream);
 
    private:
@@ -114,7 +109,6 @@ class ListenHTTP : public core::Processor {
   std::unique_ptr<CivetServer> _server;
   std::unique_ptr<Handler> _handler;
 };
-
 
 REGISTER_RESOURCE(ListenHTTP);
 

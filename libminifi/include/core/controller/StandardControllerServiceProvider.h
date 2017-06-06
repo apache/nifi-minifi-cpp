@@ -38,15 +38,12 @@ namespace minifi {
 namespace core {
 namespace controller {
 
-class StandardControllerServiceProvider : public ControllerServiceProvider,
-    public std::enable_shared_from_this<StandardControllerServiceProvider> {
+class StandardControllerServiceProvider : public ControllerServiceProvider, public std::enable_shared_from_this<StandardControllerServiceProvider> {
  public:
 
-  explicit StandardControllerServiceProvider(
-      std::shared_ptr<ControllerServiceMap> services,
-      std::shared_ptr<ProcessGroup> root_group, std::shared_ptr<Configure> configuration,
-      std::shared_ptr<minifi::SchedulingAgent> agent, ClassLoader &loader =
-          ClassLoader::getDefaultClassLoader())
+  explicit StandardControllerServiceProvider(std::shared_ptr<ControllerServiceMap> services, std::shared_ptr<ProcessGroup> root_group, std::shared_ptr<Configure> configuration,
+                                             std::shared_ptr<minifi::SchedulingAgent> agent,
+                                             ClassLoader &loader = ClassLoader::getDefaultClassLoader())
       : ControllerServiceProvider(services),
         root_group_(root_group),
         agent_(agent),
@@ -55,10 +52,8 @@ class StandardControllerServiceProvider : public ControllerServiceProvider,
         logger_(logging::LoggerFactory<StandardControllerServiceProvider>::getLogger()) {
   }
 
-  explicit StandardControllerServiceProvider(
-      std::shared_ptr<ControllerServiceMap> services,
-      std::shared_ptr<ProcessGroup> root_group, std::shared_ptr<Configure> configuration,
-      ClassLoader &loader = ClassLoader::getDefaultClassLoader())
+  explicit StandardControllerServiceProvider(std::shared_ptr<ControllerServiceMap> services, std::shared_ptr<ProcessGroup> root_group, std::shared_ptr<Configure> configuration, ClassLoader &loader =
+                                                 ClassLoader::getDefaultClassLoader())
       : ControllerServiceProvider(services),
         root_group_(root_group),
         agent_(0),
@@ -67,8 +62,7 @@ class StandardControllerServiceProvider : public ControllerServiceProvider,
         logger_(logging::LoggerFactory<StandardControllerServiceProvider>::getLogger()) {
   }
 
-  explicit StandardControllerServiceProvider(
-      const StandardControllerServiceProvider && other)
+  explicit StandardControllerServiceProvider(const StandardControllerServiceProvider && other)
       : ControllerServiceProvider(std::move(other)),
         root_group_(std::move(other.root_group_)),
         agent_(std::move(other.agent_)),
@@ -86,40 +80,33 @@ class StandardControllerServiceProvider : public ControllerServiceProvider,
     agent_ = agent;
   }
 
-  std::shared_ptr<ControllerServiceNode> createControllerService(
-      const std::string &type, const std::string &id,
-      bool firstTimeAdded) {
+  std::shared_ptr<ControllerServiceNode> createControllerService(const std::string &type, const std::string &id,
+  bool firstTimeAdded) {
 
-    std::shared_ptr<ControllerService> new_controller_service =
-        extension_loader_.instantiate<ControllerService>(type, id);
+    std::shared_ptr<ControllerService> new_controller_service = extension_loader_.instantiate<ControllerService>(type, id);
 
     if (nullptr == new_controller_service) {
       return nullptr;
     }
 
-    std::shared_ptr<ControllerServiceNode> new_service_node = std::make_shared<
-        StandardControllerServiceNode>(
-        new_controller_service,
-        std::static_pointer_cast<ControllerServiceProvider>(shared_from_this()),
-        id, configuration_);
+    std::shared_ptr<ControllerServiceNode> new_service_node = std::make_shared<StandardControllerServiceNode>(new_controller_service,
+                                                                                                              std::static_pointer_cast<ControllerServiceProvider>(shared_from_this()),
+                                                                                                              id,
+                                                                                                              configuration_);
 
     controller_map_->put(id, new_service_node);
     return new_service_node;
 
   }
 
-
-  void enableControllerService(
-      std::shared_ptr<ControllerServiceNode> &serviceNode) {
+  void enableControllerService(std::shared_ptr<ControllerServiceNode> &serviceNode) {
     if (serviceNode->canEnable()) {
       agent_->enableControllerService(serviceNode);
     }
   }
 
-
   virtual void enableAllControllerServices() {
-    logger_->log_info("Enabling %d controller services",
-                      controller_map_->getAllControllerServices().size());
+    logger_->log_info("Enabling %d controller services", controller_map_->getAllControllerServices().size());
     for (auto service : controller_map_->getAllControllerServices()) {
 
       if (service->canEnable()) {
@@ -131,43 +118,31 @@ class StandardControllerServiceProvider : public ControllerServiceProvider,
     }
   }
 
-
-  void enableControllerServices(
-      std::vector<std::shared_ptr<ControllerServiceNode>> serviceNodes) {
+  void enableControllerServices(std::vector<std::shared_ptr<ControllerServiceNode>> serviceNodes) {
     for (auto node : serviceNodes) {
       enableControllerService(node);
     }
   }
 
-
-  void disableControllerService(
-      std::shared_ptr<ControllerServiceNode> &serviceNode) {
+  void disableControllerService(std::shared_ptr<ControllerServiceNode> &serviceNode) {
     if (!IsNullOrEmpty(serviceNode.get()) && serviceNode->enabled()) {
       agent_->disableControllerService(serviceNode);
     }
   }
 
-
-  void verifyCanStopReferencingComponents(
-      std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) {
+  void verifyCanStopReferencingComponents(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) {
   }
 
-
-  std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> unscheduleReferencingComponents(
-      std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) {
-    std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> references =
-        findLinkedComponents(serviceNode);
+  std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> unscheduleReferencingComponents(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) {
+    std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> references = findLinkedComponents(serviceNode);
     for (auto ref : references) {
       agent_->disableControllerService(ref);
     }
     return references;
   }
 
-
-  void verifyCanDisableReferencingServices(
-      std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) {
-    std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> references =
-        findLinkedComponents(serviceNode);
+  void verifyCanDisableReferencingServices(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) {
+    std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> references = findLinkedComponents(serviceNode);
     for (auto ref : references) {
       if (!ref->canEnable()) {
         logger_->log_info("Cannot disable %s", ref->getName());
@@ -175,11 +150,8 @@ class StandardControllerServiceProvider : public ControllerServiceProvider,
     }
   }
 
-
-  virtual std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> disableReferencingServices(
-      std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) {
-    std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> references =
-        findLinkedComponents(serviceNode);
+  virtual std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> disableReferencingServices(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) {
+    std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> references = findLinkedComponents(serviceNode);
     for (auto ref : references) {
       agent_->disableControllerService(ref);
     }
@@ -187,20 +159,16 @@ class StandardControllerServiceProvider : public ControllerServiceProvider,
     return references;
   }
 
-  std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> enableReferencingServices(
-      std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) {
-    std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> references =
-        findLinkedComponents(serviceNode);
+  std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> enableReferencingServices(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) {
+    std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> references = findLinkedComponents(serviceNode);
     for (auto ref : references) {
       agent_->enableControllerService(ref);
     }
     return references;
   }
 
-  std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> scheduleReferencingComponents(
-      std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) {
-    std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> references =
-        findLinkedComponents(serviceNode);
+  std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> scheduleReferencingComponents(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) {
+    std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> references = findLinkedComponents(serviceNode);
     for (auto ref : references) {
       agent_->enableControllerService(ref);
     }

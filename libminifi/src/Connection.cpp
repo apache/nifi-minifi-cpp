@@ -39,9 +39,7 @@ namespace apache {
 namespace nifi {
 namespace minifi {
 
-Connection::Connection(std::shared_ptr<core::Repository> flow_repository,
-                       std::string name, uuid_t uuid, uuid_t srcUUID,
-                       uuid_t destUUID)
+Connection::Connection(std::shared_ptr<core::Repository> flow_repository, std::string name, uuid_t uuid, uuid_t srcUUID, uuid_t destUUID)
     : core::Connectable(name, uuid),
       flow_repository_(flow_repository),
       logger_(logging::LoggerFactory<Connection>::getLogger()) {
@@ -91,8 +89,7 @@ void Connection::put(std::shared_ptr<core::FlowFile> flow) {
 
     queued_data_size_ += flow->getSize();
 
-    logger_->log_debug("Enqueue flow file UUID %s to connection %s",
-                       flow->getUUIDStr().c_str(), name_.c_str());
+    logger_->log_debug("Enqueue flow file UUID %s to connection %s", flow->getUUIDStr().c_str(), name_.c_str());
   }
 
   if (!flow->isStored()) {
@@ -109,8 +106,7 @@ void Connection::put(std::shared_ptr<core::FlowFile> flow) {
   }
 }
 
-std::shared_ptr<core::FlowFile> Connection::poll(
-    std::set<std::shared_ptr<core::FlowFile>> &expiredFlowRecords) {
+std::shared_ptr<core::FlowFile> Connection::poll(std::set<std::shared_ptr<core::FlowFile>> &expiredFlowRecords) {
   std::lock_guard<std::mutex> lock(mutex_);
 
   while (!queue_.empty()) {
@@ -134,11 +130,9 @@ std::shared_ptr<core::FlowFile> Connection::poll(
           queued_data_size_ += item->getSize();
           break;
         }
-        std::shared_ptr<Connectable> connectable = std::static_pointer_cast<
-            Connectable>(shared_from_this());
+        std::shared_ptr<Connectable> connectable = std::static_pointer_cast<Connectable>(shared_from_this());
         item->setOriginalConnection(connectable);
-        logger_->log_debug("Dequeue flow file UUID %s from connection %s",
-                           item->getUUIDStr().c_str(), name_.c_str());
+        logger_->log_debug("Dequeue flow file UUID %s from connection %s", item->getUUIDStr().c_str(), name_.c_str());
 
         // delete from the flowfile repo
         if (flow_repository_->Delete(item->getUUIDStr())) {
@@ -155,11 +149,9 @@ std::shared_ptr<core::FlowFile> Connection::poll(
         queued_data_size_ += item->getSize();
         break;
       }
-      std::shared_ptr<Connectable> connectable = std::static_pointer_cast<
-          Connectable>(shared_from_this());
+      std::shared_ptr<Connectable> connectable = std::static_pointer_cast<Connectable>(shared_from_this());
       item->setOriginalConnection(connectable);
-      logger_->log_debug("Dequeue flow file UUID %s from connection %s",
-                         item->getUUIDStr().c_str(), name_.c_str());
+      logger_->log_debug("Dequeue flow file UUID %s from connection %s", item->getUUIDStr().c_str(), name_.c_str());
       // delete from the flowfile repo
       if (flow_repository_->Delete(item->getUUIDStr())) {
         item->setStoredToRepository(false);

@@ -34,7 +34,7 @@ TEST_CASE("TestLoggerProperties::get_keys_of_type", "[test get_keys_of_type]") {
   logger_properties.set("notappender.notrolling", "notrolling");
   logger_properties.set("appender.stdout", "stdout");
   logger_properties.set("appender.stdout2.ignore", "stdout");
-  std::vector<std::string> expected = {"appender.rolling", "appender.stdout"};
+  std::vector<std::string> expected = { "appender.rolling", "appender.stdout" };
   std::vector<std::string> actual = logger_properties.get_keys_of_type("appender");
   std::sort(actual.begin(), actual.end());
   REQUIRE(expected == actual);
@@ -42,7 +42,7 @@ TEST_CASE("TestLoggerProperties::get_keys_of_type", "[test get_keys_of_type]") {
 
 class TestLoggerConfiguration : public logging::LoggerConfiguration {
  public:
-  static std::shared_ptr<logging::internal::LoggerNamespace> initialize_namespaces(const std::shared_ptr<logging::LoggerProperties>  &logger_properties) {
+  static std::shared_ptr<logging::internal::LoggerNamespace> initialize_namespaces(const std::shared_ptr<logging::LoggerProperties> &logger_properties) {
     return logging::LoggerConfiguration::initialize_namespaces(logger_properties);
   }
   static std::shared_ptr<spdlog::logger> get_logger(const std::shared_ptr<logging::internal::LoggerNamespace> &root_namespace, const std::string &name, std::shared_ptr<spdlog::formatter> formatter) {

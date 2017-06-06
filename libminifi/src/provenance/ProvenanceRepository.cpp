@@ -40,14 +40,11 @@ void ProvenanceRepository::run() {
       for (it->SeekToFirst(); it->Valid(); it->Next()) {
         ProvenanceEventRecord eventRead;
         std::string key = it->key().ToString();
-        if (eventRead.DeSerialize(
-            reinterpret_cast<uint8_t*>(const_cast<char*>(it->value().data())),
-            it->value().size())) {
+        if (eventRead.DeSerialize(reinterpret_cast<uint8_t*>(const_cast<char*>(it->value().data())), it->value().size())) {
           if ((curTime - eventRead.getEventTime()) > max_partition_millis_)
             purgeList.push_back(key);
         } else {
-          logger_->log_debug("NiFi Provenance retrieve event %s fail",
-                             key.c_str());
+          logger_->log_debug("NiFi Provenance retrieve event %s fail", key.c_str());
           purgeList.push_back(key);
         }
       }
@@ -56,8 +53,7 @@ void ProvenanceRepository::run() {
 
       for (itPurge = purgeList.begin(); itPurge != purgeList.end(); itPurge++) {
         std::string eventId = *itPurge;
-        logger_->log_info("ProvenanceRepository Repo Purge %s",
-                          eventId.c_str());
+        logger_->log_info("ProvenanceRepository Repo Purge %s", eventId.c_str());
         Delete(eventId);
       }
     }

@@ -36,40 +36,40 @@
 class LogTestController {
  public:
   static LogTestController& getInstance() {
-   static LogTestController instance;
-   return instance;
+    static LogTestController instance;
+    return instance;
   }
-  
+
   template<typename T>
   void setTrace() {
     setLevel<T>(spdlog::level::trace);
   }
-  
+
   template<typename T>
   void setDebug() {
     setLevel<T>(spdlog::level::debug);
   }
-  
+
   template<typename T>
   void setInfo() {
     setLevel<T>(spdlog::level::info);
   }
-  
+
   template<typename T>
   void setWarn() {
     setLevel<T>(spdlog::level::warn);
   }
-  
+
   template<typename T>
   void setError() {
     setLevel<T>(spdlog::level::err);
   }
-  
+
   template<typename T>
   void setOff() {
     setLevel<T>(spdlog::level::off);
   }
-  
+
   template<typename T>
   void setLevel(spdlog::level::level_enum level) {
     logging::LoggerFactory<T>::getLogger();
@@ -77,17 +77,17 @@ class LogTestController {
     modified_loggers.push_back(name);
     setLevel(name, level);
   }
-  
+
   bool contains(const std::string &ending) {
-   return contains(log_output, ending);
+    return contains(log_output, ending);
   }
-  
+
   bool contains(const std::ostringstream &stream, const std::string &ending) {
     std::string str = stream.str();
     logger_->log_info("Looking for %s in %s.", ending, str);
     return (ending.length() > 0 && str.find(ending) != std::string::npos);
   }
-  
+
   void reset() {
     for (auto const & name : modified_loggers) {
       setLevel(name, spdlog::level::err);
@@ -95,35 +95,40 @@ class LogTestController {
     modified_loggers = std::vector<std::string>();
     resetStream(log_output);
   }
-  
+
   inline void resetStream(std::ostringstream &stream) {
     stream.str("");
     stream.clear();
   }
-  
+
   std::ostringstream log_output;
-  
+
   std::shared_ptr<logging::Logger> logger_;
  private:
-   class TestBootstrapLogger: public logging::Logger {
-    public:
-      TestBootstrapLogger(std::shared_ptr<spdlog::logger> logger):Logger(logger){};
-   };
+  class TestBootstrapLogger : public logging::Logger {
+   public:
+    TestBootstrapLogger(std::shared_ptr<spdlog::logger> logger)
+        : Logger(logger) {
+    }
+    ;
+  };
   LogTestController() {
-   std::shared_ptr<logging::LoggerProperties> logger_properties = std::make_shared<logging::LoggerProperties>();
-   logger_properties->set("logger.root", "ERROR,ostream");
-   logger_properties->set("logger." + core::getClassName<LogTestController>(), "INFO");
-   logger_properties->set("logger." + core::getClassName<logging::LoggerConfiguration>(), "DEBUG");
-   std::shared_ptr<spdlog::sinks::dist_sink_mt> dist_sink = std::make_shared<spdlog::sinks::dist_sink_mt>();
-   dist_sink->add_sink(std::make_shared<spdlog::sinks::ostream_sink_mt>(log_output, true));
-   dist_sink->add_sink(spdlog::sinks::stderr_sink_mt::instance());
-   logger_properties->add_sink("ostream", dist_sink);
-   logging::LoggerConfiguration::getConfiguration().initialize(logger_properties);
-   logger_ = logging::LoggerFactory<LogTestController>::getLogger();
+    std::shared_ptr<logging::LoggerProperties> logger_properties = std::make_shared<logging::LoggerProperties>();
+    logger_properties->set("logger.root", "ERROR,ostream");
+    logger_properties->set("logger." + core::getClassName<LogTestController>(), "INFO");
+    logger_properties->set("logger." + core::getClassName<logging::LoggerConfiguration>(), "DEBUG");
+    std::shared_ptr<spdlog::sinks::dist_sink_mt> dist_sink = std::make_shared<spdlog::sinks::dist_sink_mt>();
+    dist_sink->add_sink(std::make_shared<spdlog::sinks::ostream_sink_mt>(log_output, true));
+    dist_sink->add_sink(spdlog::sinks::stderr_sink_mt::instance());
+    logger_properties->add_sink("ostream", dist_sink);
+    logging::LoggerConfiguration::getConfiguration().initialize(logger_properties);
+    logger_ = logging::LoggerFactory<LogTestController>::getLogger();
   }
   LogTestController(LogTestController const&);
   LogTestController& operator=(LogTestController const&);
-  ~LogTestController() {};
+  ~LogTestController() {
+  }
+  ;
 
   void setLevel(const std::string name, spdlog::level::level_enum level) {
     logger_->log_info("Setting log level for %s to %s", name, spdlog::level::to_str(level));

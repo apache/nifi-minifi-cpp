@@ -25,20 +25,8 @@
 
 TEST_CASE("TestLoader", "[TestLoader]") {
   TestController controller;
-  REQUIRE(
-      nullptr
-          != core::ClassLoader::getDefaultClassLoader().instantiate(
-              "AppendHostInfo", "hosty"));
-  REQUIRE(
-      nullptr
-          != core::ClassLoader::getDefaultClassLoader().instantiate(
-              "ListenHTTP", "hosty2"));
-  REQUIRE(
-      nullptr
-          == core::ClassLoader::getDefaultClassLoader().instantiate(
-              "Don'tExist", "hosty3"));
-  REQUIRE(
-      nullptr
-          == core::ClassLoader::getDefaultClassLoader().instantiate(
-              "", "EmptyEmpty"));
+  REQUIRE(nullptr != core::ClassLoader::getDefaultClassLoader().instantiate("AppendHostInfo", "hosty"));
+  REQUIRE(nullptr != core::ClassLoader::getDefaultClassLoader().instantiate("ListenHTTP", "hosty2"));
+  REQUIRE(nullptr == core::ClassLoader::getDefaultClassLoader().instantiate("Don'tExist", "hosty3"));
+  REQUIRE(nullptr == core::ClassLoader::getDefaultClassLoader().instantiate("", "EmptyEmpty"));
 }

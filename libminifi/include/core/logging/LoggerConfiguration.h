@@ -38,15 +38,21 @@ namespace core {
 namespace logging {
 
 namespace internal {
-  struct LoggerNamespace {
-    spdlog::level::level_enum level;
-    bool has_level;
-    std::vector<std::shared_ptr<spdlog::sinks::sink>> sinks;
-    std::map<std::string, std::shared_ptr<LoggerNamespace>> children;
+struct LoggerNamespace {
+  spdlog::level::level_enum level;
+  bool has_level;
+  std::vector<std::shared_ptr<spdlog::sinks::sink>> sinks;
+  std::map<std::string, std::shared_ptr<LoggerNamespace>> children;
 
-    LoggerNamespace() : level(spdlog::level::off), has_level(false), sinks(std::vector<std::shared_ptr<spdlog::sinks::sink>>()), children(std::map<std::string, std::shared_ptr<LoggerNamespace>>()) {}
-  };
+  LoggerNamespace()
+      : level(spdlog::level::off),
+        has_level(false),
+        sinks(std::vector<std::shared_ptr<spdlog::sinks::sink>>()),
+        children(std::map<std::string, std::shared_ptr<LoggerNamespace>>()) {
+  }
 };
+}
+;
 
 class LoggerProperties : public Properties {
  public:
@@ -62,15 +68,15 @@ class LoggerProperties : public Properties {
    * Registers a sink witht the given name. This allows for programmatic definition of sinks.
    */
   void add_sink(const std::string &name, std::shared_ptr<spdlog::sinks::sink> sink) {
-   sinks_[name] = sink;
+    sinks_[name] = sink;
   }
   std::map<std::string, std::shared_ptr<spdlog::sinks::sink>> initial_sinks() {
-   return sinks_;
+    return sinks_;
   }
 
   static const char* appender_prefix;
   static const char* logger_prefix;
- private:
+   private:
   std::map<std::string, std::shared_ptr<spdlog::sinks::sink>> sinks_;
 };
 
@@ -80,8 +86,8 @@ class LoggerConfiguration {
    * Gets the current log configuration
    */
   static LoggerConfiguration& getConfiguration() {
-   static LoggerConfiguration logger_configuration;
-   return logger_configuration;
+    static LoggerConfiguration logger_configuration;
+    return logger_configuration;
   }
 
   /**
@@ -94,20 +100,25 @@ class LoggerConfiguration {
    */
   std::shared_ptr<Logger> getLogger(const std::string &name);
   static const char *spdlog_default_pattern;
- protected:
-  static std::shared_ptr<internal::LoggerNamespace> initialize_namespaces(const std::shared_ptr<LoggerProperties>  &logger_properties);
-  static std::shared_ptr<spdlog::logger> get_logger(std::shared_ptr<Logger> logger, const std::shared_ptr<internal::LoggerNamespace> &root_namespace, const std::string &name, std::shared_ptr<spdlog::formatter> formatter, bool remove_if_present = false);
- private:
+   protected:
+  static std::shared_ptr<internal::LoggerNamespace> initialize_namespaces(const std::shared_ptr<LoggerProperties> &logger_properties);
+  static std::shared_ptr<spdlog::logger> get_logger(std::shared_ptr<Logger> logger, const std::shared_ptr<internal::LoggerNamespace> &root_namespace, const std::string &name,
+                                                    std::shared_ptr<spdlog::formatter> formatter,
+                                                    bool remove_if_present = false);
+   private:
   static std::shared_ptr<internal::LoggerNamespace> create_default_root();
 
   class LoggerImpl : public Logger {
-    public:
-     LoggerImpl(std::string name, std::shared_ptr<spdlog::logger> delegate):Logger(delegate), name(name) {}
-     void set_delegate(std::shared_ptr<spdlog::logger> delegate) {
-       std::lock_guard<std::mutex> lock(mutex_);
-       delegate_ = delegate;
-     }
-     const std::string name;
+   public:
+    LoggerImpl(std::string name, std::shared_ptr<spdlog::logger> delegate)
+        : Logger(delegate),
+          name(name) {
+    }
+    void set_delegate(std::shared_ptr<spdlog::logger> delegate) {
+      std::lock_guard<std::mutex> lock(mutex_);
+      delegate_ = delegate;
+    }
+    const std::string name;
   };
 
   LoggerConfiguration();
@@ -125,8 +136,8 @@ class LoggerFactory {
    * Gets an initialized logger for the template class.
    */
   static std::shared_ptr<Logger> getLogger() {
-   static std::shared_ptr<Logger> logger = LoggerConfiguration::getConfiguration().getLogger(core::getClassName<T>());
-   return logger;
+    static std::shared_ptr<Logger> logger = LoggerConfiguration::getConfiguration().getLogger(core::getClassName<T>());
+    return logger;
   }
 };
 

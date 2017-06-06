@@ -45,8 +45,9 @@ namespace minifi {
 namespace core {
 
 Processor::Processor(std::string name, uuid_t uuid)
-    : Connectable(name, uuid), ConfigurableComponent(),
-    logger_(logging::LoggerFactory<Processor>::getLogger()) {
+    : Connectable(name, uuid),
+      ConfigurableComponent(),
+      logger_(logging::LoggerFactory<Processor>::getLogger()) {
   has_work_.store(false);
   // Setup the default values
   state_ = DISABLED;
@@ -61,8 +62,7 @@ Processor::Processor(std::string name, uuid_t uuid)
   active_tasks_ = 0;
   yield_expiration_ = 0;
   incoming_connections_Iter = this->_incomingConnections.begin();
-  logger_->log_info("Processor %s created UUID %s", name_.c_str(),
-                    uuidStr_.c_str());
+  logger_->log_info("Processor %s created UUID %s", name_.c_str(), uuidStr_.c_str());
 }
 
 bool Processor::isRunning() {
@@ -77,12 +77,10 @@ bool Processor::addConnection(std::shared_ptr<Connectable> conn) {
   bool ret = false;
 
   if (isRunning()) {
-    logger_->log_info("Can not add connection while the process %s is running",
-                      name_.c_str());
+    logger_->log_info("Can not add connection while the process %s is running", name_.c_str());
     return false;
   }
-  std::shared_ptr<Connection> connection = std::static_pointer_cast<Connection>(
-      conn);
+  std::shared_ptr<Connection> connection = std::static_pointer_cast<Connection>(conn);
   std::lock_guard<std::mutex> lock(mutex_);
 
   uuid_t srcUUID;
@@ -101,9 +99,7 @@ bool Processor::addConnection(std::shared_ptr<Connectable> conn) {
     if (_incomingConnections.find(connection) == _incomingConnections.end()) {
       _incomingConnections.insert(connection);
       connection->setDestination(shared_from_this());
-      logger_->log_info(
-          "Add connection %s into Processor %s incoming connection",
-          connection->getName().c_str(), name_.c_str());
+      logger_->log_info("Add connection %s into Processor %s incoming connection", connection->getName().c_str(), name_.c_str());
       incoming_connections_Iter = this->_incomingConnections.begin();
       ret = true;
     }
@@ -122,9 +118,7 @@ bool Processor::addConnection(std::shared_ptr<Connectable> conn) {
         existedConnection.insert(connection);
         connection->setSource(shared_from_this());
         out_going_connections_[relationship] = existedConnection;
-        logger_->log_info(
-            "Add connection %s into Processor %s outgoing connection for relationship %s",
-            connection->getName().c_str(), name_.c_str(), relationship.c_str());
+        logger_->log_info("Add connection %s into Processor %s outgoing connection for relationship %s", connection->getName().c_str(), name_.c_str(), relationship.c_str());
         ret = true;
       }
     } else {
@@ -133,9 +127,7 @@ bool Processor::addConnection(std::shared_ptr<Connectable> conn) {
       newConnection.insert(connection);
       connection->setSource(shared_from_this());
       out_going_connections_[relationship] = newConnection;
-      logger_->log_info(
-          "Add connection %s into Processor %s outgoing connection for relationship %s",
-          connection->getName().c_str(), name_.c_str(), relationship.c_str());
+      logger_->log_info("Add connection %s into Processor %s outgoing connection for relationship %s", connection->getName().c_str(), name_.c_str(), relationship.c_str());
       ret = true;
     }
   }
@@ -145,9 +137,7 @@ bool Processor::addConnection(std::shared_ptr<Connectable> conn) {
 
 void Processor::removeConnection(std::shared_ptr<Connectable> conn) {
   if (isRunning()) {
-    logger_->log_info(
-        "Can not remove connection while the process %s is running",
-        name_.c_str());
+    logger_->log_info("Can not remove connection while the process %s is running", name_.c_str());
     return;
   }
 
@@ -156,8 +146,7 @@ void Processor::removeConnection(std::shared_ptr<Connectable> conn) {
   uuid_t srcUUID;
   uuid_t destUUID;
 
-  std::shared_ptr<Connection> connection = std::static_pointer_cast<Connection>(
-      conn);
+  std::shared_ptr<Connection> connection = std::static_pointer_cast<Connection>(conn);
 
   connection->getSourceUUID(srcUUID);
   connection->getDestinationUUID(destUUID);
@@ -167,9 +156,7 @@ void Processor::removeConnection(std::shared_ptr<Connectable> conn) {
     if (_incomingConnections.find(connection) != _incomingConnections.end()) {
       _incomingConnections.erase(connection);
       connection->setDestination(NULL);
-      logger_->log_info(
-          "Remove connection %s into Processor %s incoming connection",
-          connection->getName().c_str(), name_.c_str());
+      logger_->log_info("Remove connection %s into Processor %s incoming connection", connection->getName().c_str(), name_.c_str());
       incoming_connections_Iter = this->_incomingConnections.begin();
     }
   }
@@ -181,13 +168,10 @@ void Processor::removeConnection(std::shared_ptr<Connectable> conn) {
     if (it == out_going_connections_.end()) {
       return;
     } else {
-      if (out_going_connections_[relationship].find(connection)
-          != out_going_connections_[relationship].end()) {
+      if (out_going_connections_[relationship].find(connection) != out_going_connections_[relationship].end()) {
         out_going_connections_[relationship].erase(connection);
         connection->setSource(NULL);
-        logger_->log_info(
-            "Remove connection %s into Processor %s outgoing connection for relationship %s",
-            connection->getName().c_str(), name_.c_str(), relationship.c_str());
+        logger_->log_info("Remove connection %s into Processor %s outgoing connection for relationship %s", connection->getName().c_str(), name_.c_str(), relationship.c_str());
       }
     }
   }
@@ -200,8 +184,7 @@ bool Processor::flowFilesQueued() {
     return false;
 
   for (auto &&conn : _incomingConnections) {
-    std::shared_ptr<Connection> connection =
-        std::static_pointer_cast<Connection>(conn);
+    std::shared_ptr<Connection> connection = std::static_pointer_cast<Connection>(conn);
     if (connection->getQueueSize() > 0)
       return true;
   }
@@ -216,8 +199,7 @@ bool Processor::flowFilesOutGoingFull() {
     // We already has connection for this relationship
     std::set<std::shared_ptr<Connectable>> existedConnection = connection.second;
     for (const auto conn : existedConnection) {
-      std::shared_ptr<Connection> connection = std::static_pointer_cast<
-          Connection>(conn);
+      std::shared_ptr<Connection> connection = std::static_pointer_cast<Connection>(conn);
       if (connection->isFull())
         return true;
     }
@@ -226,8 +208,7 @@ bool Processor::flowFilesOutGoingFull() {
   return false;
 }
 
-void Processor::onTrigger(ProcessContext *context,
-                          ProcessSessionFactory *sessionFactory) {
+void Processor::onTrigger(ProcessContext *context, ProcessSessionFactory *sessionFactory) {
   auto session = sessionFactory->createSession();
 
   try {
@@ -251,17 +232,15 @@ bool Processor::isWorkAvailable() {
 
   try {
     for (const auto &conn : _incomingConnections) {
-      std::shared_ptr<Connection> connection = std::static_pointer_cast<
-          Connection>(conn);
+      std::shared_ptr<Connection> connection = std::static_pointer_cast<Connection>(conn);
       if (connection->getQueueSize() > 0) {
         hasWork = true;
         break;
       }
     }
   } catch (...) {
-    logger_->log_error(
-        "Caught an exception while checking if work is available;"
-        " unless it was positively determined that work is available, assuming NO work is available!");
+    logger_->log_error("Caught an exception while checking if work is available;"
+                       " unless it was positively determined that work is available, assuming NO work is available!");
   }
 
   return hasWork;

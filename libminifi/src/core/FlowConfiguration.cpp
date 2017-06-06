@@ -30,14 +30,12 @@ namespace core {
 FlowConfiguration::~FlowConfiguration() {
 }
 
-std::shared_ptr<core::Processor> FlowConfiguration::createProcessor(
-    std::string name, uuid_t uuid) {
+std::shared_ptr<core::Processor> FlowConfiguration::createProcessor(std::string name, uuid_t uuid) {
   auto ptr = core::ClassLoader::getDefaultClassLoader().instantiate(name, uuid);
   if (nullptr == ptr) {
     logger_->log_error("No Processor defined for %s", name.c_str());
   }
-  std::shared_ptr<core::Processor> processor = std::static_pointer_cast<
-      core::Processor>(ptr);
+  std::shared_ptr<core::Processor> processor = std::static_pointer_cast<core::Processor>(ptr);
 
   // initialize the processor
   processor->initialize();
@@ -48,37 +46,27 @@ std::shared_ptr<core::Processor> FlowConfiguration::createProcessor(
 std::shared_ptr<core::Processor> FlowConfiguration::createProvenanceReportTask() {
   std::shared_ptr<core::Processor> processor = nullptr;
 
-  processor =
-      std::make_shared<
-          org::apache::nifi::minifi::core::reporting::SiteToSiteProvenanceReportingTask>(
-          stream_factory_);
+  processor = std::make_shared<org::apache::nifi::minifi::core::reporting::SiteToSiteProvenanceReportingTask>(stream_factory_);
   // initialize the processor
   processor->initialize();
 
   return processor;
 }
 
-std::unique_ptr<core::ProcessGroup> FlowConfiguration::createRootProcessGroup(
-    std::string name, uuid_t uuid) {
-  return std::unique_ptr<core::ProcessGroup>(
-      new core::ProcessGroup(core::ROOT_PROCESS_GROUP, name, uuid));
+std::unique_ptr<core::ProcessGroup> FlowConfiguration::createRootProcessGroup(std::string name, uuid_t uuid) {
+  return std::unique_ptr<core::ProcessGroup>(new core::ProcessGroup(core::ROOT_PROCESS_GROUP, name, uuid));
 }
 
-std::unique_ptr<core::ProcessGroup> FlowConfiguration::createRemoteProcessGroup(
-    std::string name, uuid_t uuid) {
-  return std::unique_ptr<core::ProcessGroup>(
-      new core::ProcessGroup(core::REMOTE_PROCESS_GROUP, name, uuid));
+std::unique_ptr<core::ProcessGroup> FlowConfiguration::createRemoteProcessGroup(std::string name, uuid_t uuid) {
+  return std::unique_ptr<core::ProcessGroup>(new core::ProcessGroup(core::REMOTE_PROCESS_GROUP, name, uuid));
 }
 
-std::shared_ptr<minifi::Connection> FlowConfiguration::createConnection(
-    std::string name, uuid_t uuid) {
+std::shared_ptr<minifi::Connection> FlowConfiguration::createConnection(std::string name, uuid_t uuid) {
   return std::make_shared<minifi::Connection>(flow_file_repo_, name, uuid);
 }
 
-std::shared_ptr<core::controller::ControllerServiceNode> FlowConfiguration::createControllerService(
-    const std::string &class_name, const std::string &name, uuid_t uuid) {
-  std::shared_ptr<core::controller::ControllerServiceNode> controllerServicesNode =
-      service_provider_->createControllerService(class_name, name, true);
+std::shared_ptr<core::controller::ControllerServiceNode> FlowConfiguration::createControllerService(const std::string &class_name, const std::string &name, uuid_t uuid) {
+  std::shared_ptr<core::controller::ControllerServiceNode> controllerServicesNode = service_provider_->createControllerService(class_name, name, true);
   if (nullptr != controllerServicesNode)
     controllerServicesNode->setUUID(uuid);
   return controllerServicesNode;

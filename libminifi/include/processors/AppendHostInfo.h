@@ -43,7 +43,7 @@ class AppendHostInfo : public core::Processor {
    */
   AppendHostInfo(std::string name, uuid_t uuid = NULL)
       : core::Processor(name, uuid),
-        logger_(logging::LoggerFactory<AppendHostInfo>::getLogger()){
+        logger_(logging::LoggerFactory<AppendHostInfo>::getLogger()) {
   }
   // Destructor
   virtual ~AppendHostInfo() {
@@ -60,8 +60,7 @@ class AppendHostInfo : public core::Processor {
 
  public:
   // OnTrigger method, implemented by NiFi AppendHostInfo
-  virtual void onTrigger(core::ProcessContext *context,
-                         core::ProcessSession *session);
+  virtual void onTrigger(core::ProcessContext *context, core::ProcessSession *session);
   // Initialize, over write by NiFi AppendHostInfo
   virtual void initialize(void);
 
@@ -73,7 +72,6 @@ class AppendHostInfo : public core::Processor {
 };
 
 REGISTER_RESOURCE(AppendHostInfo);
-
 
 } /* namespace processors */
 } /* namespace minifi */

@@ -68,8 +68,7 @@ class Connectable : public CoreComponent {
    * Get outgoing connection based on relationship
    * @return set of outgoing connections.
    */
-  std::set<std::shared_ptr<Connectable>> getOutGoingConnections(
-      std::string relationship);
+  std::set<std::shared_ptr<Connectable>> getOutGoingConnections(std::string relationship);
 
   /**
    * Get next incoming connection
@@ -147,7 +146,7 @@ class Connectable : public CoreComponent {
   // Incoming connections
   std::set<std::shared_ptr<Connectable>> _incomingConnections;
   // Outgoing connections map based on Relationship name
-  std::map<std::string, std::set<std::shared_ptr<Connectable>>> out_going_connections_;
+  std::map<std::string, std::set<std::shared_ptr<Connectable>>>out_going_connections_;
 
   // Mutex for protection
   std::mutex relationship_mutex_;
@@ -163,7 +162,7 @@ class Connectable : public CoreComponent {
   // Concurrent condition variable for whether there is incoming work to do
   std::condition_variable work_condition_;
 
- private:
+private:
   std::shared_ptr<logging::Logger> logger_;
 };
 

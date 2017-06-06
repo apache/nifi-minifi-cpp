@@ -64,9 +64,9 @@ class Logger {
    */
   template<typename ... Args>
   void log_error(const char * const format, const Args& ... args) {
-   log(spdlog::level::err, format, args...);
+    log(spdlog::level::err, format, args...);
   }
-  
+
   /**
    * @brief Log warn message
    * @param format format string ('man printf' for syntax)
@@ -74,9 +74,9 @@ class Logger {
    */
   template<typename ... Args>
   void log_warn(const char * const format, const Args& ... args) {
-   log(spdlog::level::warn, format, args...);
+    log(spdlog::level::warn, format, args...);
   }
-  
+
   /**
    * @brief Log info message
    * @param format format string ('man printf' for syntax)
@@ -84,9 +84,9 @@ class Logger {
    */
   template<typename ... Args>
   void log_info(const char * const format, const Args& ... args) {
-   log(spdlog::level::info, format, args...);
+    log(spdlog::level::info, format, args...);
   }
-  
+
   /**
    * @brief Log debug message
    * @param format format string ('man printf' for syntax)
@@ -94,9 +94,9 @@ class Logger {
    */
   template<typename ... Args>
   void log_debug(const char * const format, const Args& ... args) {
-   log(spdlog::level::debug, format, args...);
+    log(spdlog::level::debug, format, args...);
   }
-  
+
   /**
    * @brief Log trace message
    * @param format format string ('man printf' for syntax)
@@ -104,25 +104,27 @@ class Logger {
    */
   template<typename ... Args>
   void log_trace(const char * const format, const Args& ... args) {
-   log(spdlog::level::trace, format, args...);
+    log(spdlog::level::trace, format, args...);
   }
-  
+
  protected:
-  Logger(std::shared_ptr<spdlog::logger> delegate) : delegate_(delegate) {}
-  
+  Logger(std::shared_ptr<spdlog::logger> delegate)
+      : delegate_(delegate) {
+  }
+
   std::shared_ptr<spdlog::logger> delegate_;
 
   std::mutex mutex_;
- private:
+   private:
   template<typename ... Args>
   inline void log(spdlog::level::level_enum level, const char * const format, const Args& ... args) {
-   std::lock_guard<std::mutex> lock(mutex_);
-   if (!delegate_->should_log(level)) {
-     return;
-   }
-   delegate_->log(level, format_string(format, conditional_conversion(args)...));
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (!delegate_->should_log(level)) {
+      return;
+    }
+    delegate_->log(level, format_string(format, conditional_conversion(args)...));
   }
-  
+
   Logger(Logger const&);
   Logger& operator=(Logger const&);
 };

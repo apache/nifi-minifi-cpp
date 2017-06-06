@@ -28,7 +28,9 @@ namespace minifi {
 
 #define BUFFER_SIZE 512
 
-Properties::Properties() : logger_(logging::LoggerFactory<Properties>::getLogger()) {}
+Properties::Properties()
+    : logger_(logging::LoggerFactory<Properties>::getLogger()) {
+}
 
 // Get the config value
 bool Properties::get(std::string key, std::string &value) {
@@ -62,8 +64,7 @@ void Properties::parseConfigureFileLine(char *buf) {
     ++line;
 
   char first = line[0];
-  if ((first == '\0') || (first == '#') || (first == '\r') || (first == '\n')
-      || (first == '=')) {
+  if ((first == '\0') || (first == '#') || (first == '\r') || (first == '\n') || (first == '=')) {
     return;
   }
 
@@ -96,8 +97,7 @@ void Properties::loadConfigureFile(const char *fileName) {
   if (fileName) {
     // perform a naive determination if this is a relative path
     if (fileName[0] != '/') {
-      adjustedFilename = adjustedFilename + getHome() + "/"
-          + fileName;
+      adjustedFilename = adjustedFilename + getHome() + "/" + fileName;
     } else {
       adjustedFilename += fileName;
     }
@@ -115,8 +115,7 @@ void Properties::loadConfigureFile(const char *fileName) {
   this->clear();
 
   char buf[BUFFER_SIZE];
-  for (file.getline(buf, BUFFER_SIZE); file.good();
-      file.getline(buf, BUFFER_SIZE)) {
+  for (file.getline(buf, BUFFER_SIZE); file.good(); file.getline(buf, BUFFER_SIZE)) {
     parseConfigureFileLine(buf);
   }
 }

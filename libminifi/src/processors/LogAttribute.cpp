@@ -39,27 +39,14 @@ namespace apache {
 namespace nifi {
 namespace minifi {
 namespace processors {
-core::Property LogAttribute::LogLevel(
-    "Log Level", "The Log Level to use when logging the Attributes", "info");
-core::Property LogAttribute::AttributesToLog(
-    "Attributes to Log",
-    "A comma-separated list of Attributes to Log. If not specified, all attributes will be logged.",
-    "");
-core::Property LogAttribute::AttributesToIgnore(
-    "Attributes to Ignore",
-    "A comma-separated list of Attributes to ignore. If not specified, no attributes will be ignored.",
-    "");
-core::Property LogAttribute::LogPayload(
-    "Log Payload",
-    "If true, the FlowFile's payload will be logged, in addition to its attributes;"
-    "otherwise, just the Attributes will be logged.",
-    "false");
-core::Property LogAttribute::LogPrefix(
-    "Log prefix",
-    "Log prefix appended to the log lines. It helps to distinguish the output of multiple LogAttribute processors.",
-    "");
-core::Relationship LogAttribute::Success(
-    "success", "success operational on the flow record");
+core::Property LogAttribute::LogLevel("Log Level", "The Log Level to use when logging the Attributes", "info");
+core::Property LogAttribute::AttributesToLog("Attributes to Log", "A comma-separated list of Attributes to Log. If not specified, all attributes will be logged.", "");
+core::Property LogAttribute::AttributesToIgnore("Attributes to Ignore", "A comma-separated list of Attributes to ignore. If not specified, no attributes will be ignored.", "");
+core::Property LogAttribute::LogPayload("Log Payload", "If true, the FlowFile's payload will be logged, in addition to its attributes;"
+                                        "otherwise, just the Attributes will be logged.",
+                                        "false");
+core::Property LogAttribute::LogPrefix("Log prefix", "Log prefix appended to the log lines. It helps to distinguish the output of multiple LogAttribute processors.", "");
+core::Relationship LogAttribute::Success("success", "success operational on the flow record");
 
 void LogAttribute::initialize() {
   // Set the supported properties
@@ -76,8 +63,7 @@ void LogAttribute::initialize() {
   setSupportedRelationships(relationships);
 }
 
-void LogAttribute::onTrigger(core::ProcessContext *context,
-                             core::ProcessSession *session) {
+void LogAttribute::onTrigger(core::ProcessContext *context, core::ProcessSession *session) {
   std::string dashLine = "--------------------------------------------------";
   LogAttrLevel level = LogAttrLevelInfo;
   bool logPayload = false;
@@ -96,8 +82,7 @@ void LogAttribute::onTrigger(core::ProcessContext *context,
     dashLine = "-----" + value + "-----";
   }
   if (context->getProperty(LogPayload.getName(), value)) {
-    org::apache::nifi::minifi::utils::StringUtils::StringToBool(value,
-                                                                logPayload);
+    org::apache::nifi::minifi::utils::StringUtils::StringToBool(value, logPayload);
   }
 
   message << "Logging for flow file " << "\n";
@@ -105,10 +90,8 @@ void LogAttribute::onTrigger(core::ProcessContext *context,
   message << "\nStandard FlowFile Attributes";
   message << "\n" << "UUID:" << flow->getUUIDStr();
   message << "\n" << "EntryDate:" << getTimeStr(flow->getEntryDate());
-  message << "\n" << "lineageStartDate:"
-          << getTimeStr(flow->getlineageStartDate());
-  message << "\n" << "Size:" << flow->getSize() << " Offset:"
-          << flow->getOffset();
+  message << "\n" << "lineageStartDate:" << getTimeStr(flow->getlineageStartDate());
+  message << "\n" << "Size:" << flow->getSize() << " Offset:" << flow->getOffset();
   message << "\nFlowFile Attributes Map Content";
   std::map<std::string, std::string> attrs = flow->getAttributes();
   std::map<std::string, std::string>::iterator it;

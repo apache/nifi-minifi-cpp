@@ -58,9 +58,7 @@ class Site2SitePeer : public org::apache::nifi::minifi::io::BaseStream {
   /*
    * Create a new site2site peer
    */
-  explicit Site2SitePeer(
-      std::unique_ptr<org::apache::nifi::minifi::io::DataStream> injected_socket,
-      const std::string host_, uint16_t port_)
+  explicit Site2SitePeer(std::unique_ptr<org::apache::nifi::minifi::io::DataStream> injected_socket, const std::string host_, uint16_t port_)
       : host_(host_),
         port_(port_),
         stream_(injected_socket.release()),
@@ -147,8 +145,7 @@ class Site2SitePeer : public org::apache::nifi::minifi::io::BaseStream {
   // whether need be to yield
   bool isYield(std::string portId) {
     std::lock_guard<std::mutex> lock(mutex_);
-    std::map<std::string, uint64_t>::iterator it = this
-        ->_yieldExpirationPortIdMap.find(portId);
+    std::map<std::string, uint64_t>::iterator it = this->_yieldExpirationPortIdMap.find(portId);
     if (it != _yieldExpirationPortIdMap.end()) {
       uint64_t yieldExpiration = it->second;
       return (yieldExpiration >= getTimeMillis());
@@ -159,8 +156,7 @@ class Site2SitePeer : public org::apache::nifi::minifi::io::BaseStream {
   // clear yield expiration
   void clearYield(std::string portId) {
     std::lock_guard<std::mutex> lock(mutex_);
-    std::map<std::string, uint64_t>::iterator it = this
-        ->_yieldExpirationPortIdMap.find(portId);
+    std::map<std::string, uint64_t>::iterator it = this->_yieldExpirationPortIdMap.find(portId);
     if (it != _yieldExpirationPortIdMap.end()) {
       _yieldExpirationPortIdMap.erase(portId);
     }
@@ -219,9 +215,7 @@ class Site2SitePeer : public org::apache::nifi::minifi::io::BaseStream {
     return Serializable::read(value, stream_.get());
   }
   int readUTF(std::string &str, bool widen = false) {
-    return org::apache::nifi::minifi::io::Serializable::readUTF(str,
-                                                                stream_.get(),
-                                                                widen);
+    return org::apache::nifi::minifi::io::Serializable::readUTF(str, stream_.get(), widen);
   }
   // open connection to the peer
   bool Open();
@@ -232,8 +226,7 @@ class Site2SitePeer : public org::apache::nifi::minifi::io::BaseStream {
    * Move assignment operator.
    */
   Site2SitePeer& operator=(Site2SitePeer&& other) {
-    stream_ = std::unique_ptr<org::apache::nifi::minifi::io::DataStream>(
-        other.stream_.release());
+    stream_ = std::unique_ptr<org::apache::nifi::minifi::io::DataStream>(other.stream_.release());
     host_ = std::move(other.host_);
     port_ = std::move(other.port_);
     _yieldExpiration = 0;

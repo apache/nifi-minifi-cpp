@@ -53,7 +53,7 @@ class ExecuteProcess : public core::Processor {
    */
   ExecuteProcess(std::string name, uuid_t uuid = NULL)
       : Processor(name, uuid),
-        logger_(logging::LoggerFactory<ExecuteProcess>::getLogger()){
+        logger_(logging::LoggerFactory<ExecuteProcess>::getLogger()) {
     _redirectErrorStream = false;
     _batchDuration = 0;
     _workingDir = ".";
@@ -93,8 +93,7 @@ class ExecuteProcess : public core::Processor {
 
  public:
   // OnTrigger method, implemented by NiFi ExecuteProcess
-  virtual void onTrigger(core::ProcessContext *context,
-                         core::ProcessSession *session);
+  virtual void onTrigger(core::ProcessContext *context, core::ProcessSession *session);
   // Initialize, over write by NiFi ExecuteProcess
   virtual void initialize(void);
 
@@ -107,8 +106,7 @@ class ExecuteProcess : public core::Processor {
   std::string _command;
   std::string _commandArgument;
   std::string _workingDir;
-  int64_t _batchDuration;
-  bool _redirectErrorStream;
+  int64_t _batchDuration;bool _redirectErrorStream;
   // Full command
   std::string _fullCommand;
   // whether the process is running

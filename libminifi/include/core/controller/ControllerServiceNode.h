@@ -42,8 +42,7 @@ class ControllerServiceNode : public CoreComponent, public ConfigurableComponent
    * @param id identifier for this node.
    * @param configuration shared pointer configuration.
    */
-  explicit ControllerServiceNode(std::shared_ptr<ControllerService> service,
-                        const std::string &id, std::shared_ptr<Configure> configuration)
+  explicit ControllerServiceNode(std::shared_ptr<ControllerService> service, const std::string &id, std::shared_ptr<Configure> configuration)
       : CoreComponent(id),
         ConfigurableComponent(),
         controller_service_(service),
@@ -53,8 +52,7 @@ class ControllerServiceNode : public CoreComponent, public ConfigurableComponent
       throw Exception(GENERAL_EXCEPTION, "Service must be properly configured");
     }
     if (IsNullOrEmpty(configuration)) {
-      throw Exception(GENERAL_EXCEPTION,
-                      "Configuration must be properly configured");
+      throw Exception(GENERAL_EXCEPTION, "Configuration must be properly configured");
     }
     service->setConfiguration(configuration);
   }

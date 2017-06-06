@@ -42,9 +42,7 @@ class RemoteProcessorGroupPort : public core::Processor {
   /*!
    * Create a new processor
    */
-  RemoteProcessorGroupPort(
-      const std::shared_ptr<io::StreamFactory> &stream_factory,
-      std::string name, uuid_t uuid = nullptr)
+  RemoteProcessorGroupPort(const std::shared_ptr<io::StreamFactory> &stream_factory, std::string name, uuid_t uuid = nullptr)
       : core::Processor(name, uuid),
         direction_(SEND),
         transmitting_(false),
@@ -59,19 +57,17 @@ class RemoteProcessorGroupPort : public core::Processor {
 
   }
   // Processor Name
-  static const std::string ProcessorName;
+  static const char *ProcessorName;
   // Supported Properties
   static core::Property hostName;
   static core::Property port;
   static core::Property portUUID;
   // Supported Relationships
   static core::Relationship relation;
- public:
-  void onSchedule(core::ProcessContext *context,
-                  core::ProcessSessionFactory *sessionFactory);
+   public:
+  void onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory);
   // OnTrigger method, implemented by NiFi RemoteProcessorGroupPort
-  virtual void onTrigger(core::ProcessContext *context,
-                         core::ProcessSession *session);
+  virtual void onTrigger(core::ProcessContext *context, core::ProcessSession *session);
   // Initialize, over write by NiFi RemoteProcessorGroupPort
   virtual void initialize(void);
   // Set Direction

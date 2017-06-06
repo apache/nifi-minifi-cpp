@@ -27,10 +27,7 @@ TEST_CASE("Test log Levels", "[ttl1]") {
   std::shared_ptr<logging::Logger> logger = logging::LoggerFactory<logging::Logger>::getLogger();
   logger->log_info("hello %s", "world");
 
-  REQUIRE(
-      true
-          == LogTestController::getInstance().contains(
-              "[org::apache::nifi::minifi::core::logging::Logger] [info] hello world"));
+  REQUIRE(true == LogTestController::getInstance().contains("[org::apache::nifi::minifi::core::logging::Logger] [info] hello world"));
   LogTestController::getInstance().reset();
 }
 
@@ -39,10 +36,7 @@ TEST_CASE("Test log Levels debug", "[ttl2]") {
   std::shared_ptr<logging::Logger> logger = logging::LoggerFactory<logging::Logger>::getLogger();
   logger->log_debug("hello %s", "world");
 
-  REQUIRE(
-      true
-          == LogTestController::getInstance().contains(
-              "[org::apache::nifi::minifi::core::logging::Logger] [debug] hello world"));
+  REQUIRE(true == LogTestController::getInstance().contains("[org::apache::nifi::minifi::core::logging::Logger] [debug] hello world"));
   LogTestController::getInstance().reset();
 }
 
@@ -51,10 +45,7 @@ TEST_CASE("Test log Levels trace", "[ttl3]") {
   std::shared_ptr<logging::Logger> logger = logging::LoggerFactory<logging::Logger>::getLogger();
   logger->log_trace("hello %s", "world");
 
-  REQUIRE(
-      true
-          == LogTestController::getInstance().contains(
-              "[org::apache::nifi::minifi::core::logging::Logger] [trace] hello world"));
+  REQUIRE(true == LogTestController::getInstance().contains("[org::apache::nifi::minifi::core::logging::Logger] [trace] hello world"));
   LogTestController::getInstance().reset();
 }
 
@@ -63,10 +54,7 @@ TEST_CASE("Test log Levels error", "[ttl4]") {
   std::shared_ptr<logging::Logger> logger = logging::LoggerFactory<logging::Logger>::getLogger();
   logger->log_error("hello %s", "world");
 
-  REQUIRE(
-      true
-          == LogTestController::getInstance().contains(
-              "[org::apache::nifi::minifi::core::logging::Logger] [error] hello world"));
+  REQUIRE(true == LogTestController::getInstance().contains("[org::apache::nifi::minifi::core::logging::Logger] [error] hello world"));
   LogTestController::getInstance().reset();
 }
 
@@ -75,17 +63,11 @@ TEST_CASE("Test log Levels change", "[ttl5]") {
   std::shared_ptr<logging::Logger> logger = logging::LoggerFactory<logging::Logger>::getLogger();
   logger->log_error("hello %s", "world");
 
-  REQUIRE(
-      true
-          == LogTestController::getInstance().contains(
-              "[org::apache::nifi::minifi::core::logging::Logger] [error] hello world"));
+  REQUIRE(true == LogTestController::getInstance().contains("[org::apache::nifi::minifi::core::logging::Logger] [error] hello world"));
   LogTestController::getInstance().reset();
   LogTestController::getInstance().setOff<logging::Logger>();
   logger->log_error("hello %s", "world");
 
-  REQUIRE(
-      false
-          == LogTestController::getInstance().contains(
-              "[org::apache::nifi::minifi::core::logging::Logger] [error] hello world"));
+  REQUIRE(false == LogTestController::getInstance().contains("[org::apache::nifi::minifi::core::logging::Logger] [error] hello world"));
   LogTestController::getInstance().reset();
 }

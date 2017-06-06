@@ -35,37 +35,18 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-core::Property ListenSyslog::RecvBufSize(
-    "Receive Buffer Size",
-    "The size of each buffer used to receive Syslog messages.", "65507 B");
-core::Property ListenSyslog::MaxSocketBufSize(
-    "Max Size of Socket Buffer",
-    "The maximum size of the socket buffer that should be used.", "1 MB");
-core::Property ListenSyslog::MaxConnections(
-    "Max Number of TCP Connections",
-    "The maximum number of concurrent connections to accept Syslog messages in TCP mode.",
-    "2");
-core::Property ListenSyslog::MaxBatchSize(
-    "Max Batch Size",
-    "The maximum number of Syslog events to add to a single FlowFile.", "1");
-core::Property ListenSyslog::MessageDelimiter(
-    "Message Delimiter",
-    "Specifies the delimiter to place between Syslog messages when multiple "
-    "messages are bundled together (see <Max Batch Size> core::Property).",
-    "\n");
-core::Property ListenSyslog::ParseMessages(
-    "Parse Messages",
-    "Indicates if the processor should parse the Syslog messages. If set to false, each outgoing FlowFile will only.",
-    "false");
-core::Property ListenSyslog::Protocol("Protocol",
-                                      "The protocol for Syslog communication.",
-                                      "UDP");
-core::Property ListenSyslog::Port("Port", "The port for Syslog communication.",
-                                  "514");
-core::Relationship ListenSyslog::Success("success",
-                                         "All files are routed to success");
-core::Relationship ListenSyslog::Invalid("invalid",
-                                         "SysLog message format invalid");
+core::Property ListenSyslog::RecvBufSize("Receive Buffer Size", "The size of each buffer used to receive Syslog messages.", "65507 B");
+core::Property ListenSyslog::MaxSocketBufSize("Max Size of Socket Buffer", "The maximum size of the socket buffer that should be used.", "1 MB");
+core::Property ListenSyslog::MaxConnections("Max Number of TCP Connections", "The maximum number of concurrent connections to accept Syslog messages in TCP mode.", "2");
+core::Property ListenSyslog::MaxBatchSize("Max Batch Size", "The maximum number of Syslog events to add to a single FlowFile.", "1");
+core::Property ListenSyslog::MessageDelimiter("Message Delimiter", "Specifies the delimiter to place between Syslog messages when multiple "
+                                              "messages are bundled together (see <Max Batch Size> core::Property).",
+                                              "\n");
+core::Property ListenSyslog::ParseMessages("Parse Messages", "Indicates if the processor should parse the Syslog messages. If set to false, each outgoing FlowFile will only.", "false");
+core::Property ListenSyslog::Protocol("Protocol", "The protocol for Syslog communication.", "UDP");
+core::Property ListenSyslog::Port("Port", "The port for Syslog communication.", "514");
+core::Relationship ListenSyslog::Success("success", "All files are routed to success");
+core::Relationship ListenSyslog::Invalid("invalid", "SysLog message format invalid");
 
 void ListenSyslog::initialize() {
   // Set the supported properties
@@ -140,8 +121,7 @@ void ListenSyslog::runThread() {
       if (_protocol == "TCP")
         listen(sockfd, 5);
       _serverSocket = sockfd;
-      logger_->log_error("ListenSysLog Server socket %d bind OK to port %d",
-                         _serverSocket, portno);
+      logger_->log_error("ListenSysLog Server socket %d bind OK to port %d", _serverSocket, portno);
     }
     FD_ZERO(&_readfds);
     FD_SET(_serverSocket, &_readfds);
@@ -171,14 +151,11 @@ void ListenSyslog::runThread() {
         socklen_t clilen;
         struct sockaddr_in cli_addr;
         clilen = sizeof(cli_addr);
-        int newsockfd = accept(_serverSocket,
-                               reinterpret_cast<struct sockaddr *>(&cli_addr),
-                               &clilen);
+        int newsockfd = accept(_serverSocket, reinterpret_cast<struct sockaddr *>(&cli_addr), &clilen);
         if (newsockfd > 0) {
           if (_clientSockets.size() < _maxConnections) {
             _clientSockets.push_back(newsockfd);
-            logger_->log_info("ListenSysLog new client socket %d connection",
-                              newsockfd);
+            logger_->log_info("ListenSysLog new client socket %d connection", newsockfd);
             continue;
           } else {
             close(newsockfd);
@@ -188,10 +165,8 @@ void ListenSyslog::runThread() {
         socklen_t clilen;
         struct sockaddr_in cli_addr;
         clilen = sizeof(cli_addr);
-        int recvlen = recvfrom(_serverSocket, _buffer, sizeof(_buffer), 0,
-                               (struct sockaddr *) &cli_addr, &clilen);
-        if (recvlen > 0
-            && (recvlen + getEventQueueByteSize()) <= _recvBufSize) {
+        int recvlen = recvfrom(_serverSocket, _buffer, sizeof(_buffer), 0, (struct sockaddr *) &cli_addr, &clilen);
+        if (recvlen > 0 && (recvlen + getEventQueueByteSize()) <= _recvBufSize) {
           uint8_t *payload = new uint8_t[recvlen];
           memcpy(payload, _buffer, recvlen);
           putEvent(payload, recvlen);
@@ -205,8 +180,7 @@ void ListenSyslog::runThread() {
         int recvlen = readline(clientSocket, _buffer, sizeof(_buffer));
         if (recvlen <= 0) {
           close(clientSocket);
-          logger_->log_info("ListenSysLog client socket %d close",
-                            clientSocket);
+          logger_->log_info("ListenSysLog client socket %d close", clientSocket);
           it = _clientSockets.erase(it);
         } else {
           if ((recvlen + getEventQueueByteSize()) <= _recvBufSize) {
@@ -253,8 +227,7 @@ int ListenSyslog::readline(int fd, char *bufptr, size_t len) {
   return -1;
 }
 
-void ListenSyslog::onTrigger(core::ProcessContext *context,
-                             core::ProcessSession *session) {
+void ListenSyslog::onTrigger(core::ProcessContext *context, core::ProcessSession *session) {
   std::string value;
   bool needResetServerSocket = false;
   if (context->getProperty(Protocol.getName(), value)) {
@@ -275,8 +248,7 @@ void ListenSyslog::onTrigger(core::ProcessContext *context,
     _messageDelimiter = value;
   }
   if (context->getProperty(ParseMessages.getName(), value)) {
-    org::apache::nifi::minifi::utils::StringUtils::StringToBool(value,
-                                                                _parseMessages);
+    org::apache::nifi::minifi::utils::StringUtils::StringToBool(value, _parseMessages);
   }
   if (context->getProperty(Port.getName(), value)) {
     int64_t oldPort = _port;

@@ -27,16 +27,11 @@
 TEST_CASE("Test YAML Config Processing", "[YamlConfiguration]") {
   TestController test_controller;
 
-  std::shared_ptr<core::Repository> testProvRepo = core::createRepository(
-      "provenancerepository", true);
-  std::shared_ptr<core::Repository> testFlowFileRepo = core::createRepository(
-      "flowfilerepository", true);
-  std::shared_ptr<minifi::Configure> configuration = std::make_shared<
-      minifi::Configure>();
-  std::shared_ptr<minifi::io::StreamFactory> streamFactory = std::make_shared<
-      minifi::io::StreamFactory>(configuration);
-  core::YamlConfiguration *yamlConfig = new core::YamlConfiguration(
-      testProvRepo, testFlowFileRepo, streamFactory, configuration);
+  std::shared_ptr<core::Repository> testProvRepo = core::createRepository("provenancerepository", true);
+  std::shared_ptr<core::Repository> testFlowFileRepo = core::createRepository("flowfilerepository", true);
+  std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::Configure>();
+  std::shared_ptr<minifi::io::StreamFactory> streamFactory = std::make_shared<minifi::io::StreamFactory>(configuration);
+  core::YamlConfiguration *yamlConfig = new core::YamlConfiguration(testProvRepo, testFlowFileRepo, streamFactory, configuration);
 
   SECTION("loading YAML without optional component IDs works") {
   static const std::string CONFIG_YAML_WITHOUT_IDS = ""

@@ -127,8 +127,7 @@ class ListenSyslog : public core::Processor {
 
  public:
   // OnTrigger method, implemented by NiFi ListenSyslog
-  virtual void onTrigger(core::ProcessContext *context,
-                         core::ProcessSession *session);
+  virtual void onTrigger(core::ProcessContext *context, core::ProcessSession *session);
   // Initialize, over write by NiFi ListenSyslog
   virtual void initialize(void);
 
@@ -193,8 +192,7 @@ class ListenSyslog : public core::Processor {
   int64_t _maxBatchSize;
   std::string _messageDelimiter;
   std::string _protocol;
-  int64_t _port;
-  bool _parseMessages;
+  int64_t _port;bool _parseMessages;
   int _serverSocket;
   std::vector<int> _clientSockets;
   int _maxFds;
@@ -202,8 +200,7 @@ class ListenSyslog : public core::Processor {
   // thread
   std::thread *_thread;
   // whether to reset the server socket
-  bool _resetServerSocket;
-  bool _serverTheadRunning;
+  bool _resetServerSocket;bool _serverTheadRunning;
   // buffer for read socket
   char _buffer[2048];
 };

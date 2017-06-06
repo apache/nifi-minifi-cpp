@@ -33,8 +33,7 @@ class AbstractStreamFactory {
   virtual ~AbstractStreamFactory() {
   }
 
-  virtual std::unique_ptr<Socket> createSocket(const std::string &host,
-                                               const uint16_t port) = 0;
+  virtual std::unique_ptr<Socket> createSocket(const std::string &host, const uint16_t port) = 0;
 };
 
 /**
@@ -49,8 +48,7 @@ class StreamFactory {
    * Creates a socket and returns a unique ptr
    *
    */
-  std::unique_ptr<Socket> createSocket(const std::string &host,
-                                       const uint16_t port) {
+  std::unique_ptr<Socket> createSocket(const std::string &host, const uint16_t port) {
     return delegate_->createSocket(host, port);
   }
 

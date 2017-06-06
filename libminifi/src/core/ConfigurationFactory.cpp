@@ -39,50 +39,34 @@ namespace core {
 class YamlConfiguration;
 #endif
 
-std::unique_ptr<core::FlowConfiguration> createFlowConfiguration(
-    std::shared_ptr<core::Repository> repo,
-    std::shared_ptr<core::Repository> flow_file_repo,
-    std::shared_ptr<Configure> configure,
-    std::shared_ptr<io::StreamFactory> stream_factory,
-    const std::string configuration_class_name, const std::string path,
-    bool fail_safe) {
-
+std::unique_ptr<core::FlowConfiguration> createFlowConfiguration(std::shared_ptr<core::Repository> repo, std::shared_ptr<core::Repository> flow_file_repo, std::shared_ptr<Configure> configure,
+                                                                 std::shared_ptr<io::StreamFactory> stream_factory, const std::string configuration_class_name, const std::string path,
+                                                                 bool fail_safe) {
   std::string class_name_lc = configuration_class_name;
-  std::transform(class_name_lc.begin(), class_name_lc.end(),
-                 class_name_lc.begin(), ::tolower);
+  std::transform(class_name_lc.begin(), class_name_lc.end(), class_name_lc.begin(), ::tolower);
   try {
     if (class_name_lc == "flowconfiguration") {
       // load the base configuration.
-      return std::unique_ptr<core::FlowConfiguration>(
-          new core::FlowConfiguration(repo, flow_file_repo, stream_factory,
-                                      configure, path));
+      return std::unique_ptr<core::FlowConfiguration>(new core::FlowConfiguration(repo, flow_file_repo, stream_factory, configure, path));
 
     } else if (class_name_lc == "yamlconfiguration") {
       // only load if the class is defined.
-      return std::unique_ptr<core::FlowConfiguration>(
-          instantiate<core::YamlConfiguration>(repo, flow_file_repo,
-                                               stream_factory, configure, path));
+      return std::unique_ptr<core::FlowConfiguration>(instantiate<core::YamlConfiguration>(repo, flow_file_repo, stream_factory, configure, path));
 
     } else {
       if (fail_safe) {
-        return std::unique_ptr<core::FlowConfiguration>(
-            new core::FlowConfiguration(repo, flow_file_repo, stream_factory,
-                                        configure, path));
+        return std::unique_ptr<core::FlowConfiguration>(new core::FlowConfiguration(repo, flow_file_repo, stream_factory, configure, path));
       } else {
-        throw std::runtime_error(
-            "Support for the provided configuration class could not be found");
+        throw std::runtime_error("Support for the provided configuration class could not be found");
       }
     }
   } catch (const std::runtime_error &r) {
     if (fail_safe) {
-      return std::unique_ptr<core::FlowConfiguration>(
-          new core::FlowConfiguration(repo, flow_file_repo, stream_factory,
-                                      configure, path));
+      return std::unique_ptr<core::FlowConfiguration>(new core::FlowConfiguration(repo, flow_file_repo, stream_factory, configure, path));
     }
   }
 
-  throw std::runtime_error(
-      "Support for the provided configuration class could not be found");
+  throw std::runtime_error("Support for the provided configuration class could not be found");
 }
 
 } /* namespace core */

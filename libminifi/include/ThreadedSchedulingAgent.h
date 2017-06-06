@@ -42,20 +42,16 @@ class ThreadedSchedulingAgent : public SchedulingAgent {
   /*!
    * Create a new threaded scheduling agent.
    */
-  ThreadedSchedulingAgent(
-      std::shared_ptr<core::controller::ControllerServiceProvider> controller_service_provider,
-      std::shared_ptr<core::Repository> repo,
-      std::shared_ptr<Configure> configuration)
-      : SchedulingAgent(controller_service_provider, repo, configuration), logger_(logging::LoggerFactory<ThreadedSchedulingAgent>::getLogger()) {
+  ThreadedSchedulingAgent(std::shared_ptr<core::controller::ControllerServiceProvider> controller_service_provider, std::shared_ptr<core::Repository> repo, std::shared_ptr<Configure> configuration)
+      : SchedulingAgent(controller_service_provider, repo, configuration),
+        logger_(logging::LoggerFactory<ThreadedSchedulingAgent>::getLogger()) {
   }
   // Destructor
   virtual ~ThreadedSchedulingAgent() {
   }
 
   // Run function for the thread
-  virtual void run(std::shared_ptr<core::Processor> processor,
-                   core::ProcessContext *processContext,
-                   core::ProcessSessionFactory *sessionFactory) = 0;
+  virtual void run(std::shared_ptr<core::Processor> processor, core::ProcessContext *processContext, core::ProcessSessionFactory *sessionFactory) = 0;
 
  public:
   // schedule, overwritten by different DrivenTimerDrivenSchedulingAgent

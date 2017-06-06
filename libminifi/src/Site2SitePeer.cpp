@@ -44,9 +44,7 @@ bool Site2SitePeer::Open() {
 
   uint16_t data_size = sizeof MAGIC_BYTES;
 
-  if (stream_->writeData(
-      reinterpret_cast<uint8_t *>(const_cast<char*>(MAGIC_BYTES)), data_size)
-      != data_size) {
+  if (stream_->writeData(reinterpret_cast<uint8_t *>(const_cast<char*>(MAGIC_BYTES)), data_size) != data_size) {
     return false;
   }
 

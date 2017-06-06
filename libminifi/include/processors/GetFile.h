@@ -33,14 +33,11 @@ namespace minifi {
 namespace processors {
 
 struct GetFileRequest {
-  std::string directory = ".";
-  bool recursive = true;
-  bool keepSourceFile = false;
+  std::string directory = ".";bool recursive = true;bool keepSourceFile = false;
   int64_t minAge = 0;
   int64_t maxAge = 0;
   int64_t minSize = 0;
-  int64_t maxSize = 0;
-  bool ignoreHiddenFile = true;
+  int64_t maxSize = 0;bool ignoreHiddenFile = true;
   int64_t pollInterval = 0;
   int64_t batchSize = 10;
   std::string fileFilter = "[^\\.].*";
@@ -54,7 +51,8 @@ class GetFile : public core::Processor {
    * Create a new processor
    */
   explicit GetFile(std::string name, uuid_t uuid = NULL)
-      : Processor(name, uuid), logger_(logging::LoggerFactory<GetFile>::getLogger()) {
+      : Processor(name, uuid),
+        logger_(logging::LoggerFactory<GetFile>::getLogger()) {
 
   }
   // Destructor
@@ -84,15 +82,13 @@ class GetFile : public core::Processor {
    * @param sessionFactory process session factory that is used when creating
    * ProcessSession objects.
    */
-  void onSchedule(core::ProcessContext *context,
-                  core::ProcessSessionFactory *sessionFactory);
+  void onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory);
   /**
    * Execution trigger for the GetFile Processor
    * @param context processor context
    * @param session processor session reference.
    */
-  virtual void onTrigger(core::ProcessContext *context,
-                         core::ProcessSession *session);
+  virtual void onTrigger(core::ProcessContext *context, core::ProcessSession *session);
 
   // Initialize, over write by NiFi GetFile
   virtual void initialize(void);
@@ -119,11 +115,9 @@ class GetFile : public core::Processor {
   // Put full path file name into directory listing
   void putListing(std::string fileName);
   // Poll directory listing for files
-  void pollListing(std::queue<std::string> &list,
-                   const GetFileRequest &request);
+  void pollListing(std::queue<std::string> &list, const GetFileRequest &request);
   // Check whether file can be added to the directory listing
-  bool acceptFile(std::string fullName, std::string name,
-                  const GetFileRequest &request);
+  bool acceptFile(std::string fullName, std::string name, const GetFileRequest &request);
   // Get file request object.
   GetFileRequest request_;
   // Mutex for protection of the directory listing

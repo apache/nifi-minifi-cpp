@@ -48,14 +48,9 @@ namespace minifi {
 
 #define DEFAULT_CONFIG_NAME "conf/flow.yml"
 
-FlowController::FlowController(
-    std::shared_ptr<core::Repository> provenance_repo,
-    std::shared_ptr<core::Repository> flow_file_repo,
-    std::shared_ptr<Configure> configure,
-    std::unique_ptr<core::FlowConfiguration> flow_configuration,
-    const std::string name, bool headless_mode)
-    : core::controller::ControllerServiceProvider(
-          core::getClassName<FlowController>()),
+FlowController::FlowController(std::shared_ptr<core::Repository> provenance_repo, std::shared_ptr<core::Repository> flow_file_repo, std::shared_ptr<Configure> configure,
+                               std::unique_ptr<core::FlowConfiguration> flow_configuration, const std::string name, bool headless_mode)
+    : core::controller::ControllerServiceProvider(core::getClassName<FlowController>()),
       root_(nullptr),
       max_timer_driven_threads_(0),
       max_event_driven_threads_(0),
@@ -64,14 +59,13 @@ FlowController::FlowController(
       provenance_repo_(provenance_repo),
       flow_file_repo_(flow_file_repo),
       protocol_(0),
-      controller_service_map_(
-          std::make_shared<core::controller::ControllerServiceMap>()),
+      controller_service_map_(std::make_shared<core::controller::ControllerServiceMap>()),
       timer_scheduler_(nullptr),
       event_scheduler_(nullptr),
       controller_service_provider_(nullptr),
       flow_configuration_(std::move(flow_configuration)),
       configuration_(configure),
-      logger_(logging::LoggerFactory<FlowController>::getLogger())  {
+      logger_(logging::LoggerFactory<FlowController>::getLogger()) {
   if (provenance_repo == nullptr)
     throw std::runtime_error("Provenance Repo should not be null");
   if (flow_file_repo == nullptr)
@@ -96,8 +90,7 @@ FlowController::FlowController(
 
   if (!headless_mode) {
     std::string rawConfigFileString;
-    configure->get(Configure::nifi_flow_configuration_file,
-                   rawConfigFileString);
+    configure->get(Configure::nifi_flow_configuration_file, rawConfigFileString);
 
     if (!rawConfigFileString.empty()) {
       configuration_filename_ = rawConfigFileString;
@@ -107,8 +100,7 @@ FlowController::FlowController(
     if (!configuration_filename_.empty()) {
       // perform a naive determination if this is a relative path
       if (configuration_filename_.c_str()[0] != '/') {
-        adjustedFilename = adjustedFilename + configure->getHome() + "/"
-            + configuration_filename_;
+        adjustedFilename = adjustedFilename + configure->getHome() + "/" + configuration_filename_;
       } else {
         adjustedFilename = configuration_filename_;
       }
@@ -124,19 +116,16 @@ void FlowController::initializePaths(const std::string &adjustedFilename) {
   path = realpath(adjustedFilename.c_str(), full_path);
 
   if (path == NULL) {
-    throw std::runtime_error(
-        "Path is not specified. Either manually set MINIFI_HOME or ensure ../conf exists");
+    throw std::runtime_error("Path is not specified. Either manually set MINIFI_HOME or ensure ../conf exists");
   }
   std::string pathString(path);
   configuration_filename_ = pathString;
-  logger_->log_info("FlowController NiFi Configuration file %s",
-                    pathString.c_str());
+  logger_->log_info("FlowController NiFi Configuration file %s", pathString.c_str());
 
   // Create the content repo directory if needed
   struct stat contentDirStat;
 
-  if (stat(ResourceClaim::default_directory_path, &contentDirStat)
-      != -1&& S_ISDIR(contentDirStat.st_mode)) {
+  if (stat(ResourceClaim::default_directory_path, &contentDirStat) != -1 && S_ISDIR(contentDirStat.st_mode)) {
     path = realpath(ResourceClaim::default_directory_path, full_path);
     logger_->log_info("FlowController content directory %s", full_path);
   } else {
@@ -149,9 +138,7 @@ void FlowController::initializePaths(const std::string &adjustedFilename) {
   std::string clientAuthStr;
 
   if (!path) {
-    logger_->log_error(
-        "Could not locate path from provided configuration file name (%s).  Exiting.",
-        full_path);
+    logger_->log_error("Could not locate path from provided configuration file name (%s).  Exiting.", full_path);
     exit(1);
   }
 }
@@ -179,8 +166,7 @@ void FlowController::stop(bool force) {
     // Wait for sometime for thread stop
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     if (this->root_)
-      this->root_->stopProcessing(this->timer_scheduler_.get(),
-                                  this->event_scheduler_.get());
+      this->root_->stopProcessing(this->timer_scheduler_.get(), this->event_scheduler_.get());
   }
 }
 
@@ -196,13 +182,10 @@ void FlowController::stop(bool force) {
 void FlowController::waitUnload(const uint64_t timeToWaitMs) {
   if (running_) {
     // use the current time and increment with the provided argument.
-    std::chrono::system_clock::time_point wait_time =
-        std::chrono::system_clock::now()
-            + std::chrono::milliseconds(timeToWaitMs);
+    std::chrono::system_clock::time_point wait_time = std::chrono::system_clock::now() + std::chrono::milliseconds(timeToWaitMs);
 
     // create an asynchronous future.
-    std::future<void> unload_task = std::async(std::launch::async,
-                                               [this]() {unload();});
+    std::future<void> unload_task = std::async(std::launch::async, [this]() {unload();});
 
     if (std::future_status::ready == unload_task.wait_until(wait_time)) {
       running_ = false;
@@ -233,32 +216,21 @@ void FlowController::load() {
   if (!initialized_) {
     logger_->log_info("Initializing timers");
     if (nullptr == timer_scheduler_) {
-      timer_scheduler_ = std::make_shared<TimerDrivenSchedulingAgent>(
-          std::static_pointer_cast<core::controller::ControllerServiceProvider>(
-              shared_from_this()),
-          provenance_repo_, configuration_);
+      timer_scheduler_ = std::make_shared<TimerDrivenSchedulingAgent>(std::static_pointer_cast<core::controller::ControllerServiceProvider>(shared_from_this()), provenance_repo_, configuration_);
     }
     if (nullptr == event_scheduler_) {
-      event_scheduler_ = std::make_shared<EventDrivenSchedulingAgent>(
-          std::static_pointer_cast<core::controller::ControllerServiceProvider>(
-              shared_from_this()),
-          provenance_repo_, configuration_);
+      event_scheduler_ = std::make_shared<EventDrivenSchedulingAgent>(std::static_pointer_cast<core::controller::ControllerServiceProvider>(shared_from_this()), provenance_repo_, configuration_);
     }
-    logger_->log_info("Load Flow Controller from file %s",
-                      configuration_filename_.c_str());
+    logger_->log_info("Load Flow Controller from file %s", configuration_filename_.c_str());
 
-    this->root_ = std::shared_ptr<core::ProcessGroup>(
-        flow_configuration_->getRoot(configuration_filename_));
+    this->root_ = std::shared_ptr<core::ProcessGroup>(flow_configuration_->getRoot(configuration_filename_));
 
     logger_->log_info("Loaded root processor Group");
 
-    controller_service_provider_ = flow_configuration_
-        ->getControllerServiceProvider();
+    controller_service_provider_ = flow_configuration_->getControllerServiceProvider();
 
-    std::static_pointer_cast<core::controller::StandardControllerServiceProvider>(
-        controller_service_provider_)->setRootGroup(root_);
-    std::static_pointer_cast<core::controller::StandardControllerServiceProvider>(
-        controller_service_provider_)->setSchedulingAgent(
+    std::static_pointer_cast<core::controller::StandardControllerServiceProvider>(controller_service_provider_)->setRootGroup(root_);
+    std::static_pointer_cast<core::controller::StandardControllerServiceProvider>(controller_service_provider_)->setSchedulingAgent(
         std::static_pointer_cast<minifi::SchedulingAgent>(event_scheduler_));
 
     logger_->log_info("Loaded controller service provider");
@@ -271,8 +243,7 @@ void FlowController::load() {
 
 void FlowController::reload(std::string yamlFile) {
   std::lock_guard<std::recursive_mutex> flow_lock(mutex_);
-  logger_->log_info("Starting to reload Flow Controller with yaml %s",
-                    yamlFile.c_str());
+  logger_->log_info("Starting to reload Flow Controller with yaml %s", yamlFile.c_str());
   stop(true);
   unload();
   std::string oldYamlFile = this->configuration_filename_;
@@ -281,8 +252,7 @@ void FlowController::reload(std::string yamlFile) {
   start();
   if (this->root_ != nullptr) {
     this->configuration_filename_ = oldYamlFile;
-    logger_->log_info("Rollback Flow Controller to YAML %s",
-                      oldYamlFile.c_str());
+    logger_->log_info("Rollback Flow Controller to YAML %s", oldYamlFile.c_str());
     stop(true);
     unload();
     load();
@@ -297,10 +267,8 @@ void FlowController::loadFlowRepo() {
     if (this->root_ != nullptr) {
       this->root_->getConnections(connectionMap);
     }
-    logger_->log_debug("Number of connections from connectionMap %d",
-                       connectionMap.size());
-    auto rep = std::dynamic_pointer_cast<core::repository::FlowFileRepository>(
-        flow_file_repo_);
+    logger_->log_debug("Number of connections from connectionMap %d", connectionMap.size());
+    auto rep = std::dynamic_pointer_cast<core::repository::FlowFileRepository>(flow_file_repo_);
     if (nullptr != rep) {
       rep->setConnectionMap(connectionMap);
     }
@@ -313,8 +281,7 @@ void FlowController::loadFlowRepo() {
 bool FlowController::start() {
   std::lock_guard<std::recursive_mutex> flow_lock(mutex_);
   if (!initialized_) {
-    logger_->log_error(
-        "Can not start Flow Controller because it has not been initialized");
+    logger_->log_error("Can not start Flow Controller because it has not been initialized");
     return false;
   } else {
     if (!running_) {
@@ -323,8 +290,7 @@ bool FlowController::start() {
       this->timer_scheduler_->start();
       this->event_scheduler_->start();
       if (this->root_ != nullptr) {
-        this->root_->startProcessing(this->timer_scheduler_.get(),
-                                     this->event_scheduler_.get());
+        this->root_->startProcessing(this->timer_scheduler_.get(), this->event_scheduler_.get());
       }
       running_ = true;
       this->protocol_->start();
@@ -346,11 +312,9 @@ bool FlowController::start() {
  * @param id service identifier
  * @param firstTimeAdded first time this CS was added
  */
-std::shared_ptr<core::controller::ControllerServiceNode> FlowController::createControllerService(
-    const std::string &type, const std::string &id,
-    bool firstTimeAdded) {
-  return controller_service_provider_->createControllerService(type, id,
-                                                               firstTimeAdded);
+std::shared_ptr<core::controller::ControllerServiceNode> FlowController::createControllerService(const std::string &type, const std::string &id,
+bool firstTimeAdded) {
+  return controller_service_provider_->createControllerService(type, id, firstTimeAdded);
 }
 
 /**
@@ -361,8 +325,7 @@ std::shared_ptr<core::controller::ControllerServiceNode> FlowController::createC
  * @param serviceNode service node to be removed.
  */
 
-void FlowController::removeControllerService(
-    const std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) {
+void FlowController::removeControllerService(const std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) {
   controller_map_->removeControllerService(serviceNode);
 }
 
@@ -370,8 +333,7 @@ void FlowController::removeControllerService(
  * Enables the controller service services
  * @param serviceNode service node which will be disabled, along with linked services.
  */
-void FlowController::enableControllerService(
-    std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) {
+void FlowController::enableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) {
   return controller_service_provider_->enableControllerService(serviceNode);
 }
 
@@ -379,16 +341,14 @@ void FlowController::enableControllerService(
  * Enables controller services
  * @param serviceNoden vector of service nodes which will be enabled, along with linked services.
  */
-void FlowController::enableControllerServices(
-    std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> serviceNodes) {
+void FlowController::enableControllerServices(std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> serviceNodes) {
 }
 
 /**
  * Disables controller services
  * @param serviceNode service node which will be disabled, along with linked services.
  */
-void FlowController::disableControllerService(
-    std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) {
+void FlowController::disableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) {
   controller_service_provider_->disableControllerService(serviceNode);
 }
 
@@ -404,40 +364,33 @@ std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> FlowContro
  * @param id service identifier
  * @return shared pointer to the controller service node or nullptr if it does not exist.
  */
-std::shared_ptr<core::controller::ControllerServiceNode> FlowController::getControllerServiceNode(
-    const std::string &id) {
+std::shared_ptr<core::controller::ControllerServiceNode> FlowController::getControllerServiceNode(const std::string &id) {
   return controller_service_provider_->getControllerServiceNode(id);
 }
 
-void FlowController::verifyCanStopReferencingComponents(
-    std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) {
+void FlowController::verifyCanStopReferencingComponents(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) {
 }
 
 /**
  * Unschedules referencing components.
  */
-std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> FlowController::unscheduleReferencingComponents(
-    std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) {
-  return controller_service_provider_->unscheduleReferencingComponents(
-      serviceNode);
+std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> FlowController::unscheduleReferencingComponents(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) {
+  return controller_service_provider_->unscheduleReferencingComponents(serviceNode);
 }
 
 /**
  * Verify can disable referencing components
  * @param serviceNode service node whose referenced components will be scheduled.
  */
-void FlowController::verifyCanDisableReferencingServices(
-    std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) {
-  controller_service_provider_->verifyCanDisableReferencingServices(
-      serviceNode);
+void FlowController::verifyCanDisableReferencingServices(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) {
+  controller_service_provider_->verifyCanDisableReferencingServices(serviceNode);
 }
 
 /**
  * Disables referencing components
  * @param serviceNode service node whose referenced components will be scheduled.
  */
-std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> FlowController::disableReferencingServices(
-    std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) {
+std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> FlowController::disableReferencingServices(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) {
   return controller_service_provider_->disableReferencingServices(serviceNode);
 }
 
@@ -445,8 +398,7 @@ std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> FlowContro
  * Verify can enable referencing components
  * @param serviceNode service node whose referenced components will be scheduled.
  */
-void FlowController::verifyCanEnableReferencingServices(
-    std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) {
+void FlowController::verifyCanEnableReferencingServices(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) {
   controller_service_provider_->verifyCanEnableReferencingServices(serviceNode);
 }
 
@@ -461,8 +413,7 @@ bool FlowController::isControllerServiceEnabled(const std::string &identifier) {
  * Enables referencing components
  * @param serviceNode service node whose referenced components will be scheduled.
  */
-std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> FlowController::enableReferencingServices(
-    std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) {
+std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> FlowController::enableReferencingServices(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) {
   return controller_service_provider_->enableReferencingServices(serviceNode);
 }
 
@@ -470,20 +421,16 @@ std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> FlowContro
  * Schedules referencing components
  * @param serviceNode service node whose referenced components will be scheduled.
  */
-std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> FlowController::scheduleReferencingComponents(
-    std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) {
-  return controller_service_provider_->scheduleReferencingComponents(
-      serviceNode);
+std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> FlowController::scheduleReferencingComponents(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) {
+  return controller_service_provider_->scheduleReferencingComponents(serviceNode);
 }
 
 /**
  * Returns controller service components referenced by serviceIdentifier from the embedded
  * controller service provider;
  */
-std::shared_ptr<core::controller::ControllerService> FlowController::getControllerServiceForComponent(
-    const std::string &serviceIdentifier, const std::string &componentId) {
-  return controller_service_provider_->getControllerServiceForComponent(
-      serviceIdentifier, componentId);
+std::shared_ptr<core::controller::ControllerService> FlowController::getControllerServiceForComponent(const std::string &serviceIdentifier, const std::string &componentId) {
+  return controller_service_provider_->getControllerServiceForComponent(serviceIdentifier, componentId);
 }
 
 /**

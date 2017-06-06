@@ -58,8 +58,7 @@ namespace minifi {
  * Flow Controller class. Generally used by FlowController factory
  * as a singleton.
  */
-class FlowController : public core::controller::ControllerServiceProvider,
-    public std::enable_shared_from_this<FlowController> {
+class FlowController : public core::controller::ControllerServiceProvider, public std::enable_shared_from_this<FlowController> {
  public:
   static const int DEFAULT_MAX_TIMER_DRIVEN_THREAD = 10;
   static const int DEFAULT_MAX_EVENT_DRIVEN_THREAD = 5;
@@ -67,9 +66,7 @@ class FlowController : public core::controller::ControllerServiceProvider,
   /**
    * Flow controller constructor
    */
-  FlowController(std::shared_ptr<core::Repository> provenance_repo,
-                 std::shared_ptr<core::Repository> flow_file_repo,
-                 std::shared_ptr<Configure> configure,
+  FlowController(std::shared_ptr<core::Repository> provenance_repo, std::shared_ptr<core::Repository> flow_file_repo, std::shared_ptr<Configure> configure,
                  std::unique_ptr<core::FlowConfiguration> flow_configuration,
                  const std::string name = DEFAULT_ROOT_GROUP_NAME,
                  bool headless_mode = false);
@@ -125,8 +122,7 @@ class FlowController : public core::controller::ControllerServiceProvider,
   // Load new xml
   virtual void reload(std::string yamlFile);
   // update property value
-  void updatePropertyValue(std::string processorName, std::string propertyName,
-                           std::string propertyValue) {
+  void updatePropertyValue(std::string processorName, std::string propertyName, std::string propertyValue) {
     if (root_ != nullptr)
       root_->updatePropertyValue(processorName, propertyName, propertyValue);
   }
@@ -142,9 +138,8 @@ class FlowController : public core::controller::ControllerServiceProvider,
    * @param id service identifier
    * @param firstTimeAdded first time this CS was added
    */
-  virtual std::shared_ptr<core::controller::ControllerServiceNode> createControllerService(
-      const std::string &type, const std::string &id,
-      bool firstTimeAdded);
+  virtual std::shared_ptr<core::controller::ControllerServiceNode> createControllerService(const std::string &type, const std::string &id,
+  bool firstTimeAdded);
 
   /**
    * controller service provider
@@ -154,29 +149,25 @@ class FlowController : public core::controller::ControllerServiceProvider,
    * @param serviceNode service node to be removed.
    */
 
-  virtual void removeControllerService(
-      const std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode);
+  virtual void removeControllerService(const std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode);
 
   /**
    * Enables the controller service services
    * @param serviceNode service node which will be disabled, along with linked services.
    */
-  virtual void enableControllerService(
-      std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode);
+  virtual void enableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode);
 
   /**
    * Enables controller services
    * @param serviceNoden vector of service nodes which will be enabled, along with linked services.
    */
-  virtual void enableControllerServices(
-      std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> serviceNodes);
+  virtual void enableControllerServices(std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> serviceNodes);
 
   /**
    * Disables controller services
    * @param serviceNode service node which will be disabled, along with linked services.
    */
-  virtual void disableControllerService(
-      std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode);
+  virtual void disableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode);
 
   /**
    * Gets all controller services.
@@ -188,38 +179,32 @@ class FlowController : public core::controller::ControllerServiceProvider,
    * @param id service identifier
    * @return shared pointer to the controller service node or nullptr if it does not exist.
    */
-  virtual std::shared_ptr<core::controller::ControllerServiceNode> getControllerServiceNode(
-      const std::string &id);
+  virtual std::shared_ptr<core::controller::ControllerServiceNode> getControllerServiceNode(const std::string &id);
 
-  virtual void verifyCanStopReferencingComponents(
-      std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode);
+  virtual void verifyCanStopReferencingComponents(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode);
 
   /**
    * Unschedules referencing components.
    */
-  virtual std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> unscheduleReferencingComponents(
-      std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode);
+  virtual std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> unscheduleReferencingComponents(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode);
 
   /**
    * Verify can disable referencing components
    * @param serviceNode service node whose referenced components will be scheduled.
    */
-  virtual void verifyCanDisableReferencingServices(
-      std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode);
+  virtual void verifyCanDisableReferencingServices(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode);
 
   /**
    * Disables referencing components
    * @param serviceNode service node whose referenced components will be scheduled.
    */
-  virtual std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> disableReferencingServices(
-      std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode);
+  virtual std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> disableReferencingServices(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode);
 
   /**
    * Verify can enable referencing components
    * @param serviceNode service node whose referenced components will be scheduled.
    */
-  virtual void verifyCanEnableReferencingServices(
-      std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode);
+  virtual void verifyCanEnableReferencingServices(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode);
 
   /**
    * Determines if the controller service specified by identifier is enabled.
@@ -230,22 +215,19 @@ class FlowController : public core::controller::ControllerServiceProvider,
    * Enables referencing components
    * @param serviceNode service node whose referenced components will be scheduled.
    */
-  virtual std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> enableReferencingServices(
-      std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode);
+  virtual std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> enableReferencingServices(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode);
 
   /**
    * Schedules referencing components
    * @param serviceNode service node whose referenced components will be scheduled.
    */
-  virtual std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> scheduleReferencingComponents(
-      std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode);
+  virtual std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> scheduleReferencingComponents(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode);
 
   /**
    * Returns controller service components referenced by serviceIdentifier from the embedded
    * controller service provider;
    */
-  std::shared_ptr<core::controller::ControllerService> getControllerServiceForComponent(
-      const std::string &serviceIdentifier, const std::string &componentId);
+  std::shared_ptr<core::controller::ControllerService> getControllerServiceForComponent(const std::string &serviceIdentifier, const std::string &componentId);
 
   /**
    * Enables all controller services for the provider.

@@ -55,8 +55,7 @@ class ProcessGroup {
   /*!
    * Create a new process group
    */
-  ProcessGroup(ProcessGroupType type, std::string name, uuid_t uuid = NULL,
-               ProcessGroup *parent = NULL);
+  ProcessGroup(ProcessGroupType type, std::string name, uuid_t uuid = NULL, ProcessGroup *parent = NULL);
   // Destructor
   virtual ~ProcessGroup();
   // Set Processor Name
@@ -111,11 +110,9 @@ class ProcessGroup {
       return false;
   }
   // Start Processing
-  void startProcessing(TimerDrivenSchedulingAgent *timeScheduler,
-                       EventDrivenSchedulingAgent *eventScheduler);
+  void startProcessing(TimerDrivenSchedulingAgent *timeScheduler, EventDrivenSchedulingAgent *eventScheduler);
   // Stop Processing
-  void stopProcessing(TimerDrivenSchedulingAgent *timeScheduler,
-                      EventDrivenSchedulingAgent *eventScheduler);
+  void stopProcessing(TimerDrivenSchedulingAgent *timeScheduler, EventDrivenSchedulingAgent *eventScheduler);
   // Whether it is root process group
   bool isRootProcessGroup();
   // set parent process group
@@ -147,26 +144,21 @@ class ProcessGroup {
    * @param nodeId node identifier
    * @param node controller service node.
    */
-  void addControllerService(
-      const std::string &nodeId,
-      std::shared_ptr<core::controller::ControllerServiceNode> &node);
+  void addControllerService(const std::string &nodeId, std::shared_ptr<core::controller::ControllerServiceNode> &node);
 
   /**
    * Find controllerservice node will search child groups until the nodeId is found.
    * @param node node identifier
    * @return controller service node, if it exists.
    */
-  std::shared_ptr<core::controller::ControllerServiceNode> findControllerService(
-      const std::string &nodeId);
+  std::shared_ptr<core::controller::ControllerServiceNode> findControllerService(const std::string &nodeId);
 
   // removeConnection
   void removeConnection(std::shared_ptr<Connection> connection);
   // update property value
-  void updatePropertyValue(std::string processorName, std::string propertyName,
-                           std::string propertyValue);
+  void updatePropertyValue(std::string processorName, std::string propertyName, std::string propertyValue);
 
-  void getConnections(
-      std::map<std::string, std::shared_ptr<Connection>> &connectionMap);
+  void getConnections(std::map<std::string, std::shared_ptr<Connection>> &connectionMap);
 
  protected:
   // A global unique identifier

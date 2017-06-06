@@ -50,8 +50,7 @@ typedef enum {
 } FlowControlMsgType;
 
 // FlowControl Protocol Msg Type String
-static const char *FlowControlMsgTypeStr[MAX_FLOW_CONTROL_MSG_TYPE] = {
-    "REGISTER_REQ", "REGISTER_RESP", "REPORT_REQ", "REPORT_RESP" };
+static const char *FlowControlMsgTypeStr[MAX_FLOW_CONTROL_MSG_TYPE] = { "REGISTER_REQ", "REGISTER_RESP", "REPORT_REQ", "REPORT_RESP" };
 
 // Flow Control Msg Type to String
 inline const char *FlowControlMsgTypeToStr(FlowControlMsgType type) {
@@ -83,10 +82,8 @@ typedef enum {
 } FlowControlMsgID;
 
 // FlowControl Protocol Msg ID String
-static const char *FlowControlMsgIDStr[MAX_FLOW_MSG_ID] = {
-    "FLOW_SERIAL_NUMBER", "FLOW_YAML_NAME", "FLOW_YAML_CONTENT",
-    "REPORT_INTERVAL", "PROCESSOR_NAME"
-        "PROPERTY_NAME", "PROPERTY_VALUE", "REPORT_BLOB" };
+static const char *FlowControlMsgIDStr[MAX_FLOW_MSG_ID] = { "FLOW_SERIAL_NUMBER", "FLOW_YAML_NAME", "FLOW_YAML_CONTENT", "REPORT_INTERVAL", "PROCESSOR_NAME"
+    "PROPERTY_NAME", "PROPERTY_VALUE", "REPORT_BLOB" };
 
 #define TYPE_HDR_LEN 4 // Fix Hdr Type
 #define TLV_HDR_LEN 8 // Type 4 bytes and Len 4 bytes
@@ -122,9 +119,7 @@ typedef enum {
 } FlowControlRespCode;
 
 // FlowControl Resp Code str
-static const char *FlowControlRespCodeStr[MAX_RESP_CODE] = { "RESP_SUCCESS",
-    "RESP_TRIGGER_REGISTER", "RESP_START_FLOW_CONTROLLER",
-    "RESP_STOP_FLOW_CONTROLLER", "RESP_FAILURE" };
+static const char *FlowControlRespCodeStr[MAX_RESP_CODE] = { "RESP_SUCCESS", "RESP_TRIGGER_REGISTER", "RESP_START_FLOW_CONTROLLER", "RESP_STOP_FLOW_CONTROLLER", "RESP_FAILURE" };
 
 // Flow Control Resp Code to String
 inline const char *FlowControlRespCodeToStr(FlowControlRespCode code) {
@@ -332,8 +327,7 @@ int main(int argc, char *argv[]) {
     exit(1);
   }
 
-  if (signal(SIGINT, sigHandler) == SIG_ERR
-      || signal(SIGTERM, sigHandler) == SIG_ERR) {
+  if (signal(SIGINT, sigHandler) == SIG_ERR || signal(SIGTERM, sigHandler) == SIG_ERR) {
 
     return -1;
   }
@@ -360,13 +354,10 @@ int main(int argc, char *argv[]) {
       FlowControlProtocolHeader hdr;
       int status = readHdr(newsockfd, &hdr);
       if (status > 0) {
-        printf("Flow Control Protocol receive MsgType %s\n",
-               FlowControlMsgTypeToStr((FlowControlMsgType) hdr.msgType));
+        printf("Flow Control Protocol receive MsgType %s\n", FlowControlMsgTypeToStr((FlowControlMsgType) hdr.msgType));
         printf("Flow Control Protocol receive Seq Num %d\n", hdr.seqNumber);
-        printf("Flow Control Protocol receive Resp Code %s\n",
-               FlowControlRespCodeToStr((FlowControlRespCode) hdr.status));
-        printf("Flow Control Protocol receive Payload len %d\n",
-               hdr.payloadLen);
+        printf("Flow Control Protocol receive Resp Code %s\n", FlowControlRespCodeToStr((FlowControlRespCode) hdr.status));
+        printf("Flow Control Protocol receive Payload len %d\n", hdr.payloadLen);
         if (((FlowControlMsgType) hdr.msgType) == REGISTER_REQ) {
           printf("Flow Control Protocol Register Req receive\n");
           uint8_t *payload = new uint8_t[hdr.payloadLen];
@@ -384,12 +375,10 @@ int main(int argc, char *argv[]) {
             } else if (((FlowControlMsgID) msgID) == FLOW_YAML_NAME) {
               uint32_t len;
               payloadPtr = decode(payloadPtr, len);
-              printf("Flow Control Protocol receive YAML name length %d\n",
-                     len);
+              printf("Flow Control Protocol receive YAML name length %d\n", len);
               std::string flowName = (const char *) payloadPtr;
               payloadPtr += len;
-              printf("Flow Control Protocol receive YAML name %s\n",
-                     flowName.c_str());
+              printf("Flow Control Protocol receive YAML name %s\n", flowName.c_str());
             } else {
               break;
             }
@@ -399,11 +388,9 @@ int main(int argc, char *argv[]) {
           // Calculate the total payload msg size
           char *ymlContent;
           uint32_t yamlLen = readYAML(&ymlContent);
-          uint32_t payloadSize = FlowControlMsgIDEncodingLen(REPORT_INTERVAL,
-                                                             0);
+          uint32_t payloadSize = FlowControlMsgIDEncodingLen(REPORT_INTERVAL, 0);
           if (yamlLen > 0)
-            payloadSize += FlowControlMsgIDEncodingLen(FLOW_YAML_CONTENT,
-                                                       yamlLen);
+            payloadSize += FlowControlMsgIDEncodingLen(FLOW_YAML_CONTENT, yamlLen);
 
           uint32_t size = sizeof(FlowControlProtocolHeader) + payloadSize;
           uint8_t *data = new uint8_t[size];
@@ -444,12 +431,10 @@ int main(int argc, char *argv[]) {
             if (((FlowControlMsgID) msgID) == FLOW_YAML_NAME) {
               uint32_t len;
               payloadPtr = decode(payloadPtr, len);
-              printf("Flow Control Protocol receive YAML name length %d\n",
-                     len);
+              printf("Flow Control Protocol receive YAML name length %d\n", len);
               std::string flowName = (const char *) payloadPtr;
               payloadPtr += len;
-              printf("Flow Control Protocol receive YAML name %s\n",
-                     flowName.c_str());
+              printf("Flow Control Protocol receive YAML name %s\n", flowName.c_str());
             } else {
               break;
             }
@@ -475,16 +460,11 @@ int main(int argc, char *argv[]) {
             propertyValue2 = "41";
             flag = 0;
           }
-          uint32_t payloadSize = FlowControlMsgIDEncodingLen(
-              PROCESSOR_NAME, processor.size() + 1);
-          payloadSize += FlowControlMsgIDEncodingLen(PROPERTY_NAME,
-                                                     propertyName1.size() + 1);
-          payloadSize += FlowControlMsgIDEncodingLen(PROPERTY_VALUE,
-                                                     propertyValue1.size() + 1);
-          payloadSize += FlowControlMsgIDEncodingLen(PROPERTY_NAME,
-                                                     propertyName2.size() + 1);
-          payloadSize += FlowControlMsgIDEncodingLen(PROPERTY_VALUE,
-                                                     propertyValue2.size() + 1);
+          uint32_t payloadSize = FlowControlMsgIDEncodingLen(PROCESSOR_NAME, processor.size() + 1);
+          payloadSize += FlowControlMsgIDEncodingLen(PROPERTY_NAME, propertyName1.size() + 1);
+          payloadSize += FlowControlMsgIDEncodingLen(PROPERTY_VALUE, propertyValue1.size() + 1);
+          payloadSize += FlowControlMsgIDEncodingLen(PROPERTY_NAME, propertyName2.size() + 1);
+          payloadSize += FlowControlMsgIDEncodingLen(PROPERTY_VALUE, propertyValue2.size() + 1);
 
           uint32_t size = sizeof(FlowControlProtocolHeader) + payloadSize;
           uint8_t *data = new uint8_t[size];

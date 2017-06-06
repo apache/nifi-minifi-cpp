@@ -26,16 +26,14 @@
 
 TEST_CASE("Test CRC1", "[testcrc1]") {
   org::apache::nifi::minifi::io::BaseStream base;
-  org::apache::nifi::minifi::io::CRCStream<
-      org::apache::nifi::minifi::io::BaseStream> test(&base);
+  org::apache::nifi::minifi::io::CRCStream<org::apache::nifi::minifi::io::BaseStream> test(&base);
   test.writeData(reinterpret_cast<uint8_t*>(const_cast<char*>("cow")), 3);
   REQUIRE(2580823964 == test.getCRC());
 }
 
 TEST_CASE("Test CRC2", "[testcrc2]") {
   org::apache::nifi::minifi::io::BaseStream base;
-  org::apache::nifi::minifi::io::CRCStream<
-      org::apache::nifi::minifi::io::BaseStream> test(&base);
+  org::apache::nifi::minifi::io::CRCStream<org::apache::nifi::minifi::io::BaseStream> test(&base);
   std::string fox = "the quick brown fox jumped over the brown fox";
   std::vector<uint8_t> charvect(fox.begin(), fox.end());
   test.writeData(charvect, charvect.size());
@@ -44,8 +42,7 @@ TEST_CASE("Test CRC2", "[testcrc2]") {
 
 TEST_CASE("Test CRC3", "[testcrc3]") {
   org::apache::nifi::minifi::io::BaseStream base;
-  org::apache::nifi::minifi::io::CRCStream<
-      org::apache::nifi::minifi::io::BaseStream> test(&base);
+  org::apache::nifi::minifi::io::CRCStream<org::apache::nifi::minifi::io::BaseStream> test(&base);
   uint64_t number = 7;
   test.write(number);
   REQUIRE(4215687882 == test.getCRC());
@@ -53,8 +50,7 @@ TEST_CASE("Test CRC3", "[testcrc3]") {
 
 TEST_CASE("Test CRC4", "[testcrc4]") {
   org::apache::nifi::minifi::io::BaseStream base;
-  org::apache::nifi::minifi::io::CRCStream<
-      org::apache::nifi::minifi::io::BaseStream> test(&base);
+  org::apache::nifi::minifi::io::CRCStream<org::apache::nifi::minifi::io::BaseStream> test(&base);
   uint32_t number = 7;
   test.write(number);
   REQUIRE(3206564543 == test.getCRC());
@@ -62,8 +58,7 @@ TEST_CASE("Test CRC4", "[testcrc4]") {
 
 TEST_CASE("Test CRC5", "[testcrc5]") {
   org::apache::nifi::minifi::io::BaseStream base;
-  org::apache::nifi::minifi::io::CRCStream<
-      org::apache::nifi::minifi::io::BaseStream> test(&base);
+  org::apache::nifi::minifi::io::CRCStream<org::apache::nifi::minifi::io::BaseStream> test(&base);
   uint16_t number = 7;
   test.write(number);
   REQUIRE(3753740124 == test.getCRC());

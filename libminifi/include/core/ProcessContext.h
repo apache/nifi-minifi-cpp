@@ -46,12 +46,10 @@ class ProcessContext : public controller::ControllerServiceLookup {
   /*!
    * Create a new process context associated with the processor/controller service/state manager
    */
-  ProcessContext(
-      ProcessorNode &processor,
-      std::shared_ptr<controller::ControllerServiceProvider> &controller_service_provider,
-      std::shared_ptr<core::Repository> repo)
+  ProcessContext(ProcessorNode &processor, std::shared_ptr<controller::ControllerServiceProvider> &controller_service_provider, std::shared_ptr<core::Repository> repo)
       : processor_node_(processor),
-        controller_service_provider_(controller_service_provider), logger_(logging::LoggerFactory<ProcessContext>::getLogger())  {
+        controller_service_provider_(controller_service_provider),
+        logger_(logging::LoggerFactory<ProcessContext>::getLogger()) {
     repo_ = repo;
   }
   // Destructor
@@ -106,10 +104,8 @@ class ProcessContext : public controller::ControllerServiceLookup {
    * @return the ControllerService that is registered with the given
    * identifier
    */
-  std::shared_ptr<core::controller::ControllerService> getControllerService(
-      const std::string &identifier) {
-    return controller_service_provider_->getControllerServiceForComponent(
-        identifier, processor_node_.getUUIDStr());
+  std::shared_ptr<core::controller::ControllerService> getControllerService(const std::string &identifier) {
+    return controller_service_provider_->getControllerServiceForComponent(identifier, processor_node_.getUUIDStr());
   }
 
   /**

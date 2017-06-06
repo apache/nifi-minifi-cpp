@@ -40,20 +40,11 @@ namespace minifi {
 namespace processors {
 const char *GenerateFlowFile::DATA_FORMAT_BINARY = "Binary";
 const char *GenerateFlowFile::DATA_FORMAT_TEXT = "Text";
-core::Property GenerateFlowFile::FileSize(
-    "File Size", "The size of the file that will be used", "1 kB");
-core::Property GenerateFlowFile::BatchSize(
-    "Batch Size",
-    "The number of FlowFiles to be transferred in each invocation", "1");
-core::Property GenerateFlowFile::DataFormat(
-    "Data Format", "Specifies whether the data should be Text or Binary",
-    GenerateFlowFile::DATA_FORMAT_BINARY);
-core::Property GenerateFlowFile::UniqueFlowFiles(
-    "Unique FlowFiles",
-    "If true, each FlowFile that is generated will be unique. If false, a random value will be generated and all FlowFiles",
-    "true");
-core::Relationship GenerateFlowFile::Success(
-    "success", "success operational on the flow record");
+core::Property GenerateFlowFile::FileSize("File Size", "The size of the file that will be used", "1 kB");
+core::Property GenerateFlowFile::BatchSize("Batch Size", "The number of FlowFiles to be transferred in each invocation", "1");
+core::Property GenerateFlowFile::DataFormat("Data Format", "Specifies whether the data should be Text or Binary", GenerateFlowFile::DATA_FORMAT_BINARY);
+core::Property GenerateFlowFile::UniqueFlowFiles("Unique FlowFiles", "If true, each FlowFile that is generated will be unique. If false, a random value will be generated and all FlowFiles", "true");
+core::Relationship GenerateFlowFile::Success("success", "success operational on the flow record");
 
 void GenerateFlowFile::initialize() {
   // Set the supported properties
@@ -69,8 +60,7 @@ void GenerateFlowFile::initialize() {
   setSupportedRelationships(relationships);
 }
 
-void GenerateFlowFile::onTrigger(core::ProcessContext *context,
-                                 core::ProcessSession *session) {
+void GenerateFlowFile::onTrigger(core::ProcessContext *context, core::ProcessSession *session) {
   int64_t batchSize = 1;
   bool uniqueFlowFile = true;
   int64_t fileSize = 1024;
@@ -83,8 +73,7 @@ void GenerateFlowFile::onTrigger(core::ProcessContext *context,
     core::Property::StringToInt(value, batchSize);
   }
   if (context->getProperty(UniqueFlowFiles.getName(), value)) {
-    org::apache::nifi::minifi::utils::StringUtils::StringToBool(value,
-                                                                uniqueFlowFile);
+    org::apache::nifi::minifi::utils::StringUtils::StringToBool(value, uniqueFlowFile);
   }
 
   if (!uniqueFlowFile) {
@@ -102,8 +91,7 @@ void GenerateFlowFile::onTrigger(core::ProcessContext *context,
     }
     for (int i = 0; i < batchSize; i++) {
       // For each batch
-      std::shared_ptr<FlowFileRecord> flowFile = std::static_pointer_cast<
-          FlowFileRecord>(session->create());
+      std::shared_ptr<FlowFileRecord> flowFile = std::static_pointer_cast<FlowFileRecord>(session->create());
       if (!flowFile)
         return;
       if (fileSize > 0)
@@ -126,8 +114,7 @@ void GenerateFlowFile::onTrigger(core::ProcessContext *context,
     GenerateFlowFile::WriteCallback callback(_data, _dataSize);
     for (int i = 0; i < batchSize; i++) {
       // For each batch
-      std::shared_ptr<FlowFileRecord> flowFile = std::static_pointer_cast<
-          FlowFileRecord>(session->create());
+      std::shared_ptr<FlowFileRecord> flowFile = std::static_pointer_cast<FlowFileRecord>(session->create());
       if (!flowFile)
         return;
       if (fileSize > 0)

@@ -25,22 +25,21 @@
 #include "utils/StringUtils.h"
 
 TEST_CASE("TestStringUtils::split", "[test split no delimiter]") {
-  std::vector<std::string> expected = {"hello"};
+  std::vector<std::string> expected = { "hello" };
   REQUIRE(expected == org::apache::nifi::minifi::utils::StringUtils::split("hello", ","));
 }
 
 TEST_CASE("TestStringUtils::split2", "[test split single delimiter]") {
-  std::vector<std::string> expected = {"hello", "world"};
+  std::vector<std::string> expected = { "hello", "world" };
   REQUIRE(expected == org::apache::nifi::minifi::utils::StringUtils::split("hello world", " "));
 }
 
 TEST_CASE("TestStringUtils::split3", "[test split multiple delimiter]") {
-  std::vector<std::string> expected = {"hello", "world", "I'm", "a", "unit", "test"};
+  std::vector<std::string> expected = { "hello", "world", "I'm", "a", "unit", "test" };
   REQUIRE(expected == org::apache::nifi::minifi::utils::StringUtils::split("hello world I'm a unit test", " "));
 }
 
 TEST_CASE("TestStringUtils::split4", "[test split classname]") {
-  std::vector<std::string> expected = {"org", "apache", "nifi", "minifi", "utils", "StringUtils"};
-  REQUIRE(expected == org::apache::nifi::minifi::utils::StringUtils::split(
-    org::apache::nifi::minifi::core::getClassName<org::apache::nifi::minifi::utils::StringUtils>(), "::"));
+  std::vector<std::string> expected = { "org", "apache", "nifi", "minifi", "utils", "StringUtils" };
+  REQUIRE(expected == org::apache::nifi::minifi::utils::StringUtils::split(org::apache::nifi::minifi::core::getClassName<org::apache::nifi::minifi::utils::StringUtils>(), "::"));
 }

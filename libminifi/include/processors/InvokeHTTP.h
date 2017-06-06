@@ -53,10 +53,8 @@ struct HTTPRequestResponse {
   /**
    * Receive HTTP Response.
    */
-  static size_t recieve_write(char * data, size_t size, size_t nmemb,
-                              void * p) {
-    return static_cast<HTTPRequestResponse*>(p)->write_content(data, size,
-                                                               nmemb);
+  static size_t recieve_write(char * data, size_t size, size_t nmemb, void * p) {
+    return static_cast<HTTPRequestResponse*>(p)->write_content(data, size, nmemb);
   }
 
   /**
@@ -160,8 +158,7 @@ class InvokeHTTP : public core::Processor {
 
   void onTrigger(core::ProcessContext *context, core::ProcessSession *session);
   void initialize();
-  void onSchedule(core::ProcessContext *context,
-                  core::ProcessSessionFactory *sessionFactory);
+  void onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory);
 
  protected:
 
@@ -194,9 +191,7 @@ class InvokeHTTP : public core::Processor {
    */
   void set_request_method(CURL *curl, const std::string &);
 
-  struct curl_slist *build_header_list(
-      CURL *curl, std::string regex,
-      const std::map<std::string, std::string> &);
+  struct curl_slist *build_header_list(CURL *curl, std::string regex, const std::map<std::string, std::string> &);
 
   bool matches(const std::string &value, const std::string &sregex);
 
@@ -209,10 +204,8 @@ class InvokeHTTP : public core::Processor {
    * @param isSuccess success code or not
    * @param statuscode http response code.
    */
-  void route(std::shared_ptr<FlowFileRecord> &request,
-             std::shared_ptr<FlowFileRecord> &response,
-             core::ProcessSession *session, core::ProcessContext *context,
-             bool isSuccess,
+  void route(std::shared_ptr<FlowFileRecord> &request, std::shared_ptr<FlowFileRecord> &response, core::ProcessSession *session, core::ProcessContext *context,
+  bool isSuccess,
              int statusCode);
   /**
    * Determine if we should emit a new flowfile based on our activity

@@ -39,15 +39,13 @@ namespace core {
 namespace reporting {
 
 //! SiteToSiteProvenanceReportingTask Class
-class SiteToSiteProvenanceReportingTask :
-    public minifi::RemoteProcessorGroupPort {
+class SiteToSiteProvenanceReportingTask : public minifi::RemoteProcessorGroupPort {
  public:
   //! Constructor
   /*!
    * Create a new processor
    */
-  SiteToSiteProvenanceReportingTask(
-      const std::shared_ptr<io::StreamFactory> &stream_factory)
+  SiteToSiteProvenanceReportingTask(const std::shared_ptr<io::StreamFactory> &stream_factory)
       : minifi::RemoteProcessorGroupPort(stream_factory, ReportTaskName),
         logger_(logging::LoggerFactory<SiteToSiteProvenanceReportingTask>::getLogger()) {
     this->setTriggerWhenEmpty(true);
@@ -59,21 +57,15 @@ class SiteToSiteProvenanceReportingTask :
 
   }
   //! Report Task Name
-  static constexpr char const* ReportTaskName =
-      "SiteToSiteProvenanceReportingTask";
+  static constexpr char const* ReportTaskName = "SiteToSiteProvenanceReportingTask";
   static const char *ProvenanceAppStr;
 
  public:
   //! Get provenance json report
-  void getJsonReport(
-      core::ProcessContext *context, core::ProcessSession *session,
-      std::vector<std::shared_ptr<provenance::ProvenanceEventRecord>> &records,
-      std::string &report);
-  void onSchedule(core::ProcessContext *context,
-                    core::ProcessSessionFactory *sessionFactory);
+  void getJsonReport(core::ProcessContext *context, core::ProcessSession *session, std::vector<std::shared_ptr<provenance::ProvenanceEventRecord>> &records, std::string &report);
+  void onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory);
   //! OnTrigger method, implemented by NiFi SiteToSiteProvenanceReportingTask
-  virtual void onTrigger(core::ProcessContext *context,
-                         core::ProcessSession *session);
+  virtual void onTrigger(core::ProcessContext *context, core::ProcessSession *session);
   //! Initialize, over write by NiFi SiteToSiteProvenanceReportingTask
   virtual void initialize(void);
   //! Set Port UUID

@@ -57,9 +57,7 @@ int16_t TLSContext::initialize() {
 
   std::string clientAuthStr;
   bool needClientCert = true;
-  if (!(configure_->get(Configure::nifi_security_need_ClientAuth, clientAuthStr)
-      && org::apache::nifi::minifi::utils::StringUtils::StringToBool(
-          clientAuthStr, needClientCert))) {
+  if (!(configure_->get(Configure::nifi_security_need_ClientAuth, clientAuthStr) && org::apache::nifi::minifi::utils::StringUtils::StringToBool(clientAuthStr, needClientCert))) {
     needClientCert = true;
   }
 
@@ -67,8 +65,7 @@ int16_t TLSContext::initialize() {
   method = TLSv1_2_client_method();
   ctx = SSL_CTX_new(method);
   if (ctx == NULL) {
-    logger_->log_error("Could not create SSL context, error: %s.",
-                       std::strerror(errno));
+    logger_->log_error("Could not create SSL context, error: %s.", std::strerror(errno));
     error_value = TLS_ERROR_CONTEXT;
     return error_value;
   }
@@ -78,56 +75,40 @@ int16_t TLSContext::initialize() {
     std::string passphrase;
     std::string caCertificate;
 
-    if (!(configure_->get(Configure::nifi_security_client_certificate,
-                          certificate)
-        && configure_->get(Configure::nifi_security_client_private_key,
-                           privatekey))) {
-      logger_->log_error(
-          "Certificate and Private Key PEM file not configured, error: %s.",
-          std::strerror(errno));
+    if (!(configure_->get(Configure::nifi_security_client_certificate, certificate) && configure_->get(Configure::nifi_security_client_private_key, privatekey))) {
+      logger_->log_error("Certificate and Private Key PEM file not configured, error: %s.", std::strerror(errno));
       error_value = TLS_ERROR_PEM_MISSING;
       return error_value;
     }
     // load certificates and private key in PEM format
-    if (SSL_CTX_use_certificate_file(ctx, certificate.c_str(), SSL_FILETYPE_PEM)
-        <= 0) {
-      logger_->log_error("Could not create load certificate, error : %s",
-                         std::strerror(errno));
+    if (SSL_CTX_use_certificate_file(ctx, certificate.c_str(), SSL_FILETYPE_PEM) <= 0) {
+      logger_->log_error("Could not create load certificate, error : %s", std::strerror(errno));
       error_value = TLS_ERROR_CERT_MISSING;
       return error_value;
     }
-    if (configure_->get(Configure::nifi_security_client_pass_phrase,
-                        passphrase)) {
+    if (configure_->get(Configure::nifi_security_client_pass_phrase, passphrase)) {
       // if the private key has passphase
       SSL_CTX_set_default_passwd_cb(ctx, pemPassWordCb);
-      SSL_CTX_set_default_passwd_cb_userdata(
-          ctx, static_cast<void*>(configure_.get()));
+      SSL_CTX_set_default_passwd_cb_userdata(ctx, static_cast<void*>(configure_.get()));
     }
 
-    int retp = SSL_CTX_use_PrivateKey_file(ctx, privatekey.c_str(),
-                                           SSL_FILETYPE_PEM);
+    int retp = SSL_CTX_use_PrivateKey_file(ctx, privatekey.c_str(), SSL_FILETYPE_PEM);
     if (retp != 1) {
-      logger_->log_error(
-          "Could not create load private key,%i on %s error : %s", retp,
-          privatekey.c_str(), std::strerror(errno));
+      logger_->log_error("Could not create load private key,%i on %s error : %s", retp, privatekey.c_str(), std::strerror(errno));
       error_value = TLS_ERROR_KEY_ERROR;
       return error_value;
     }
     // verify private key
     if (!SSL_CTX_check_private_key(ctx)) {
-      logger_->log_error(
-          "Private key does not match the public certificate, error : %s",
-          std::strerror(errno));
+      logger_->log_error("Private key does not match the public certificate, error : %s", std::strerror(errno));
       error_value = TLS_ERROR_KEY_ERROR;
       return error_value;
     }
     // load CA certificates
-    if (configure_->get(Configure::nifi_security_client_ca_certificate,
-                        caCertificate)) {
+    if (configure_->get(Configure::nifi_security_client_ca_certificate, caCertificate)) {
       retp = SSL_CTX_load_verify_locations(ctx, caCertificate.c_str(), 0);
       if (retp == 0) {
-        logger_->log_error("Can not load CA certificate, Exiting, error : %s",
-                           std::strerror(errno));
+        logger_->log_error("Can not load CA certificate, Exiting, error : %s", std::strerror(errno));
         error_value = TLS_ERROR_CERT_ERROR;
         return error_value;
       }
@@ -149,24 +130,24 @@ TLSSocket::~TLSSocket() {
  * @param port connecting port
  * @param listeners number of listeners in the queue
  */
-TLSSocket::TLSSocket(const std::shared_ptr<TLSContext> &context,
-                     const std::string &hostname, const uint16_t port,
-                     const uint16_t listeners)
+TLSSocket::TLSSocket(const std::shared_ptr<TLSContext> &context, const std::string &hostname, const uint16_t port, const uint16_t listeners)
     : Socket(context, hostname, port, listeners),
-      ssl(0), logger_(logging::LoggerFactory<TLSSocket>::getLogger()) {
+      ssl(0),
+      logger_(logging::LoggerFactory<TLSSocket>::getLogger()) {
   context_ = context;
 }
 
-TLSSocket::TLSSocket(const std::shared_ptr<TLSContext> &context,
-                     const std::string &hostname, const uint16_t port)
+TLSSocket::TLSSocket(const std::shared_ptr<TLSContext> &context, const std::string &hostname, const uint16_t port)
     : Socket(context, hostname, port, 0),
-      ssl(0), logger_(logging::LoggerFactory<TLSSocket>::getLogger()) {
+      ssl(0),
+      logger_(logging::LoggerFactory<TLSSocket>::getLogger()) {
   context_ = context;
 }
 
 TLSSocket::TLSSocket(const TLSSocket &&d)
     : Socket(std::move(d)),
-      ssl(0), logger_(std::move(d.logger_)) {
+      ssl(0),
+      logger_(std::move(d.logger_)) {
   context_ = d.context_;
 }
 
@@ -178,15 +159,13 @@ int16_t TLSSocket::initialize() {
     ssl = SSL_new(context_->getContext());
     SSL_set_fd(ssl, socket_file_descriptor_);
     if (SSL_connect(ssl) == -1) {
-      logger_->log_error("SSL socket connect failed to %s %d",
-                         requested_hostname_.c_str(), port_);
+      logger_->log_error("SSL socket connect failed to %s %d", requested_hostname_.c_str(), port_);
       SSL_free(ssl);
       ssl = NULL;
       close(socket_file_descriptor_);
       return -1;
     } else {
-      logger_->log_info("SSL socket connect success to %s %d",
-                        requested_hostname_.c_str(), port_);
+      logger_->log_info("SSL socket connect success to %s %d", requested_hostname_.c_str(), port_);
       return 0;
     }
   }
@@ -213,8 +192,7 @@ int TLSSocket::writeData(uint8_t *value, int size) {
     sent = SSL_write(ssl, value + bytes, size - bytes);
     // check for errors
     if (sent < 0) {
-      logger_->log_error("Site2Site Peer socket %d send failed %s",
-                         socket_file_descriptor_, strerror(errno));
+      logger_->log_error("Site2Site Peer socket %d send failed %s", socket_file_descriptor_, strerror(errno));
       return sent;
     }
     bytes += sent;

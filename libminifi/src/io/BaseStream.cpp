@@ -33,9 +33,7 @@ namespace io {
  * @return resulting write size
  **/
 int BaseStream::write(uint32_t base_value, bool is_little_endian) {
-  return Serializable::write(base_value,
-                             reinterpret_cast<DataStream*>(composable_stream_),
-                             is_little_endian);
+  return Serializable::write(base_value, reinterpret_cast<DataStream*>(composable_stream_), is_little_endian);
 }
 
 int BaseStream::writeData(uint8_t *value, int size) {
@@ -54,9 +52,7 @@ int BaseStream::writeData(uint8_t *value, int size) {
  * @return resulting write size
  **/
 int BaseStream::write(uint16_t base_value, bool is_little_endian) {
-  return Serializable::write(base_value,
-                             reinterpret_cast<DataStream*>(composable_stream_),
-                             is_little_endian);
+  return Serializable::write(base_value, reinterpret_cast<DataStream*>(composable_stream_), is_little_endian);
 }
 
 /**
@@ -67,8 +63,7 @@ int BaseStream::write(uint16_t base_value, bool is_little_endian) {
  * @return resulting write size
  **/
 int BaseStream::write(uint8_t *value, int len) {
-  return Serializable::write(value, len,
-                             reinterpret_cast<DataStream*>(composable_stream_));
+  return Serializable::write(value, len, reinterpret_cast<DataStream*>(composable_stream_));
 }
 
 /**
@@ -79,9 +74,7 @@ int BaseStream::write(uint8_t *value, int len) {
  * @return resulting write size
  **/
 int BaseStream::write(uint64_t base_value, bool is_little_endian) {
-  return Serializable::write(base_value,
-                             reinterpret_cast<DataStream*>(composable_stream_),
-                             is_little_endian);
+  return Serializable::write(base_value, reinterpret_cast<DataStream*>(composable_stream_), is_little_endian);
 }
 
 /**
@@ -100,8 +93,7 @@ int BaseStream::write(bool value) {
  * @return resulting write size
  **/
 int BaseStream::writeUTF(std::string str, bool widen) {
-  return Serializable::writeUTF(
-      str, reinterpret_cast<DataStream*>(composable_stream_), widen);
+  return Serializable::writeUTF(str, reinterpret_cast<DataStream*>(composable_stream_), widen);
 }
 
 /**
@@ -111,8 +103,7 @@ int BaseStream::writeUTF(std::string str, bool widen) {
  * @return resulting read size
  **/
 int BaseStream::read(uint8_t &value) {
-  return Serializable::read(value,
-                            reinterpret_cast<DataStream*>(composable_stream_));
+  return Serializable::read(value, reinterpret_cast<DataStream*>(composable_stream_));
 }
 
 /**
@@ -122,8 +113,7 @@ int BaseStream::read(uint8_t &value) {
  * @return resulting read size
  **/
 int BaseStream::read(uint16_t &base_value, bool is_little_endian) {
-  return Serializable::read(base_value,
-                            reinterpret_cast<DataStream*>(composable_stream_));
+  return Serializable::read(base_value, reinterpret_cast<DataStream*>(composable_stream_));
 }
 
 /**
@@ -133,8 +123,7 @@ int BaseStream::read(uint16_t &base_value, bool is_little_endian) {
  * @return resulting read size
  **/
 int BaseStream::read(char &value) {
-  return Serializable::read(value,
-                            reinterpret_cast<DataStream*>(composable_stream_));
+  return Serializable::read(value, reinterpret_cast<DataStream*>(composable_stream_));
 }
 
 /**
@@ -145,8 +134,7 @@ int BaseStream::read(char &value) {
  * @return resulting read size
  **/
 int BaseStream::read(uint8_t *value, int len) {
-  return Serializable::read(value, len,
-                            reinterpret_cast<DataStream*>(composable_stream_));
+  return Serializable::read(value, len, reinterpret_cast<DataStream*>(composable_stream_));
 }
 
 /**
@@ -155,8 +143,7 @@ int BaseStream::read(uint8_t *value, int len) {
  * @param buflen
  */
 int BaseStream::readData(std::vector<uint8_t> &buf, int buflen) {
-  return Serializable::read(&buf[0], buflen,
-                            reinterpret_cast<DataStream*>(composable_stream_));
+  return Serializable::read(&buf[0], buflen, reinterpret_cast<DataStream*>(composable_stream_));
 }
 /**
  * Reads data and places it into buf
@@ -164,8 +151,7 @@ int BaseStream::readData(std::vector<uint8_t> &buf, int buflen) {
  * @param buflen
  */
 int BaseStream::readData(uint8_t *buf, int buflen) {
-  return Serializable::read(buf, buflen,
-                            reinterpret_cast<DataStream*>(composable_stream_));
+  return Serializable::read(buf, buflen, reinterpret_cast<DataStream*>(composable_stream_));
 }
 
 /**
@@ -175,9 +161,7 @@ int BaseStream::readData(uint8_t *buf, int buflen) {
  * @return resulting read size
  **/
 int BaseStream::read(uint32_t &value, bool is_little_endian) {
-  return Serializable::read(value,
-                            reinterpret_cast<DataStream*>(composable_stream_),
-                            is_little_endian);
+  return Serializable::read(value, reinterpret_cast<DataStream*>(composable_stream_), is_little_endian);
 }
 
 /**
@@ -187,9 +171,7 @@ int BaseStream::read(uint32_t &value, bool is_little_endian) {
  * @return resulting read size
  **/
 int BaseStream::read(uint64_t &value, bool is_little_endian) {
-  return Serializable::read(value,
-                            reinterpret_cast<DataStream*>(composable_stream_),
-                            is_little_endian);
+  return Serializable::read(value, reinterpret_cast<DataStream*>(composable_stream_), is_little_endian);
 }
 
 /**
@@ -199,8 +181,7 @@ int BaseStream::read(uint64_t &value, bool is_little_endian) {
  * @return resulting read size
  **/
 int BaseStream::readUTF(std::string &str, bool widen) {
-  return Serializable::readUTF(
-      str, reinterpret_cast<DataStream*>(composable_stream_), widen);
+  return Serializable::readUTF(str, reinterpret_cast<DataStream*>(composable_stream_), widen);
 }
 } /* namespace io */
 } /* namespace minifi */

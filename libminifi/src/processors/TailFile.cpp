@@ -46,16 +46,11 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-core::Property TailFile::FileName(
-    "File to Tail",
-    "Fully-qualified filename of the file that should be tailed", "");
-core::Property TailFile::StateFile(
-    "State File",
-    "Specifies the file that should be used for storing state about"
-    " what data has been ingested so that upon restart NiFi can resume from where it left off",
-    "TailFileState");
-core::Relationship TailFile::Success("success",
-                                     "All files are routed to success");
+core::Property TailFile::FileName("File to Tail", "Fully-qualified filename of the file that should be tailed", "");
+core::Property TailFile::StateFile("State File", "Specifies the file that should be used for storing state about"
+                                   " what data has been ingested so that upon restart NiFi can resume from where it left off",
+                                   "TailFileState");
+core::Relationship TailFile::Success("success", "All files are routed to success");
 
 void TailFile::initialize() {
   // Set the supported properties
@@ -84,8 +79,7 @@ void TailFile::parseStateFileLine(char *buf) {
     ++line;
 
   char first = line[0];
-  if ((first == '\0') || (first == '#') || (first == '\r') || (first == '\n')
-      || (first == '=')) {
+  if ((first == '\0') || (first == '#') || (first == '\r') || (first == '\n') || (first == '=')) {
     return;
   }
 
@@ -125,8 +119,7 @@ void TailFile::recoverState() {
     return;
   }
   char buf[BUFFER_SIZE];
-  for (file.getline(buf, BUFFER_SIZE); file.good();
-      file.getline(buf, BUFFER_SIZE)) {
+  for (file.getline(buf, BUFFER_SIZE); file.good(); file.getline(buf, BUFFER_SIZE)) {
     parseStateFileLine(buf);
   }
 }
@@ -142,12 +135,10 @@ void TailFile::storeState() {
   file.close();
 }
 
-static bool sortTailMatchedFileItem(TailMatchedFileItem i,
-                                    TailMatchedFileItem j) {
+static bool sortTailMatchedFileItem(TailMatchedFileItem i, TailMatchedFileItem j) {
   return (i.modifiedTime < j.modifiedTime);
 }
-void TailFile::checkRollOver(const std::string &fileLocation,
-                             const std::string &fileName) {
+void TailFile::checkRollOver(const std::string &fileLocation, const std::string &fileName) {
   struct stat statbuf;
   std::vector<TailMatchedFileItem> matchedFiles;
   std::string fullPath = fileLocation + "/" + _currentTailFileName;
@@ -157,8 +148,7 @@ void TailFile::checkRollOver(const std::string &fileLocation,
       // there are new input for the current tail file
       return;
 
-    uint64_t modifiedTimeCurrentTailFile =
-        ((uint64_t) (statbuf.st_mtime) * 1000);
+    uint64_t modifiedTimeCurrentTailFile = ((uint64_t) (statbuf.st_mtime) * 1000);
     std::string pattern = fileName;
     std::size_t found = fileName.find_last_of(".");
     if (found != std::string::npos)
@@ -176,10 +166,8 @@ void TailFile::checkRollOver(const std::string &fileLocation,
       if (!(entry->d_type & DT_DIR)) {
         std::string fileName = d_name;
         std::string fileFullName = fileLocation + "/" + d_name;
-        if (fileFullName.find(pattern) != std::string::npos
-            && stat(fileFullName.c_str(), &statbuf) == 0) {
-          if (((uint64_t) (statbuf.st_mtime) * 1000)
-              >= modifiedTimeCurrentTailFile) {
+        if (fileFullName.find(pattern) != std::string::npos && stat(fileFullName.c_str(), &statbuf) == 0) {
+          if (((uint64_t) (statbuf.st_mtime) * 1000) >= modifiedTimeCurrentTailFile) {
             TailMatchedFileItem item;
             item.fileName = fileName;
             item.modifiedTime = ((uint64_t) (statbuf.st_mtime) * 1000);
@@ -191,18 +179,14 @@ void TailFile::checkRollOver(const std::string &fileLocation,
     closedir(d);
 
     // Sort the list based on modified time
-    std::sort(matchedFiles.begin(), matchedFiles.end(),
-              sortTailMatchedFileItem);
-    for (std::vector<TailMatchedFileItem>::iterator it = matchedFiles.begin();
-        it != matchedFiles.end(); ++it) {
+    std::sort(matchedFiles.begin(), matchedFiles.end(), sortTailMatchedFileItem);
+    for (std::vector<TailMatchedFileItem>::iterator it = matchedFiles.begin(); it != matchedFiles.end(); ++it) {
       TailMatchedFileItem item = *it;
       if (item.fileName == _currentTailFileName) {
         ++it;
         if (it != matchedFiles.end()) {
           TailMatchedFileItem nextItem = *it;
-          logger_->log_info("TailFile File Roll Over from %s to %s",
-                            _currentTailFileName.c_str(),
-                            nextItem.fileName.c_str());
+          logger_->log_info("TailFile File Roll Over from %s to %s", _currentTailFileName.c_str(), nextItem.fileName.c_str());
           _currentTailFileName = nextItem.fileName;
           _currentTailFilePosition = 0;
           storeState();
@@ -215,8 +199,7 @@ void TailFile::checkRollOver(const std::string &fileLocation,
   }
 }
 
-void TailFile::onTrigger(core::ProcessContext *context,
-                         core::ProcessSession *session) {
+void TailFile::onTrigger(core::ProcessContext *context, core::ProcessSession *session) {
   std::lock_guard<std::mutex> tail_lock(tail_file_mutex_);
   std::string value;
   std::string fileLocation = "";
@@ -245,8 +228,7 @@ void TailFile::onTrigger(core::ProcessContext *context,
       context->yield();
       return;
     }
-    std::shared_ptr<FlowFileRecord> flowFile = std::static_pointer_cast<
-        FlowFileRecord>(session->create());
+    std::shared_ptr<FlowFileRecord> flowFile = std::static_pointer_cast<FlowFileRecord>(session->create());
     if (!flowFile)
       return;
     std::size_t found = _currentTailFileName.find_last_of(".");
@@ -256,12 +238,8 @@ void TailFile::onTrigger(core::ProcessContext *context,
     flowFile->addKeyedAttribute(ABSOLUTE_PATH, fullPath);
     session->import(fullPath, flowFile, true, this->_currentTailFilePosition);
     session->transfer(flowFile, Success);
-    logger_->log_info("TailFile %s for %d bytes", _currentTailFileName.c_str(),
-                      flowFile->getSize());
-    std::string logName = baseName + "."
-        + std::to_string(_currentTailFilePosition) + "-"
-        + std::to_string(_currentTailFilePosition + flowFile->getSize()) + "."
-        + extension;
+    logger_->log_info("TailFile %s for %d bytes", _currentTailFileName.c_str(), flowFile->getSize());
+    std::string logName = baseName + "." + std::to_string(_currentTailFilePosition) + "-" + std::to_string(_currentTailFilePosition + flowFile->getSize()) + "." + extension;
     flowFile->updateKeyedAttribute(FILENAME, logName);
     this->_currentTailFilePosition += flowFile->getSize();
     storeState();
