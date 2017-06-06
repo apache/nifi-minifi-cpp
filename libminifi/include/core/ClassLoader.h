@@ -62,8 +62,7 @@ class ObjectFactory {
   /**
    * Create a shared pointer to a new processor.
    */
-  virtual std::shared_ptr<Connectable> create(const std::string &name,
-                                              uuid_t uuid) {
+  virtual std::shared_ptr<Connectable> create(const std::string &name, uuid_t uuid) {
     return nullptr;
   }
 
@@ -111,8 +110,7 @@ class DefautObjectFactory : public ObjectFactory {
   /**
    * Create a shared pointer to a new processor.
    */
-  virtual std::shared_ptr<Connectable> create(const std::string &name,
-                                              uuid_t uuid) {
+  virtual std::shared_ptr<Connectable> create(const std::string &name, uuid_t uuid) {
     std::shared_ptr<T> ptr = std::make_shared<T>(name, uuid);
     return std::static_pointer_cast<Connectable>(ptr);
   }
@@ -177,14 +175,12 @@ class ClassLoader {
   /**
    * Register a class with the give ProcessorFactory
    */
-  void registerClass(const std::string &name,
-                     std::unique_ptr<ObjectFactory> factory) {
-    if (loaded_factories_.find(name) != loaded_factories_.end()){
+  void registerClass(const std::string &name, std::unique_ptr<ObjectFactory> factory) {
+    if (loaded_factories_.find(name) != loaded_factories_.end()) {
       return;
     }
 
     std::lock_guard<std::mutex> lock(internal_mutex_);
-
 
     loaded_factories_.insert(std::make_pair(name, std::move(factory)));
   }
@@ -196,8 +192,7 @@ class ClassLoader {
    * @return nullptr or object created from class_name definition.
    */
   template<class T = Connectable>
-  std::shared_ptr<T> instantiate(const std::string &class_name,
-                                 const std::string &name);
+  std::shared_ptr<T> instantiate(const std::string &class_name, const std::string &name);
 
   /**
    * Instantiate object based on class_name
@@ -217,12 +212,11 @@ class ClassLoader {
   std::vector<void *> dl_handles_;
 
  private:
-   std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<logging::Logger> logger_;
 };
 
 template<class T>
-std::shared_ptr<T> ClassLoader::instantiate(const std::string &class_name,
-                                            const std::string &name) {
+std::shared_ptr<T> ClassLoader::instantiate(const std::string &class_name, const std::string &name) {
   std::lock_guard<std::mutex> lock(internal_mutex_);
   auto factory_entry = loaded_factories_.find(class_name);
   if (factory_entry != loaded_factories_.end()) {
@@ -234,8 +228,7 @@ std::shared_ptr<T> ClassLoader::instantiate(const std::string &class_name,
 }
 
 template<class T>
-std::shared_ptr<T> ClassLoader::instantiate(const std::string &class_name,
-                                            uuid_t uuid) {
+std::shared_ptr<T> ClassLoader::instantiate(const std::string &class_name, uuid_t uuid) {
   std::lock_guard<std::mutex> lock(internal_mutex_);
   auto factory_entry = loaded_factories_.find(class_name);
   if (factory_entry != loaded_factories_.end()) {

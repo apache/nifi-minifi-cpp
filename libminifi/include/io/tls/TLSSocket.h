@@ -38,27 +38,24 @@ namespace io {
 #define TLS_ERROR_KEY_ERROR 4
 #define TLS_ERROR_CERT_ERROR 5
 
-class OpenSSLInitializer
-{
+class OpenSSLInitializer {
  public:
   static OpenSSLInitializer *getInstance() {
-    OpenSSLInitializer* atomic_context = context_instance.load(
-         std::memory_order_relaxed);
-     std::atomic_thread_fence(std::memory_order_acquire);
-     if (atomic_context == nullptr) {
-       std::lock_guard<std::mutex> lock(context_mutex);
-       atomic_context = context_instance.load(std::memory_order_relaxed);
-       if (atomic_context == nullptr) {
-         atomic_context = new OpenSSLInitializer();
-         std::atomic_thread_fence(std::memory_order_release);
-         context_instance.store(atomic_context, std::memory_order_relaxed);
-       }
-     }
-     return atomic_context;
-   }
+    OpenSSLInitializer* atomic_context = context_instance.load(std::memory_order_relaxed);
+    std::atomic_thread_fence(std::memory_order_acquire);
+    if (atomic_context == nullptr) {
+      std::lock_guard<std::mutex> lock(context_mutex);
+      atomic_context = context_instance.load(std::memory_order_relaxed);
+      if (atomic_context == nullptr) {
+        atomic_context = new OpenSSLInitializer();
+        std::atomic_thread_fence(std::memory_order_release);
+        context_instance.store(atomic_context, std::memory_order_relaxed);
+      }
+    }
+    return atomic_context;
+  }
 
-  OpenSSLInitializer()
-  {
+  OpenSSLInitializer() {
     SSL_library_init();
     OpenSSL_add_all_algorithms();
     SSL_load_error_strings();
@@ -68,11 +65,11 @@ class OpenSSLInitializer
   static std::mutex context_mutex;
 };
 
-class TLSContext: public SocketContext {
+class TLSContext : public SocketContext {
 
  public:
   TLSContext(const std::shared_ptr<Configure> &configure);
-  
+
   virtual ~TLSContext() {
     if (0 != ctx)
       SSL_CTX_free(ctx);
@@ -93,8 +90,7 @@ class TLSContext: public SocketContext {
   static int pemPassWordCb(char *buf, int size, int rwflag, void *configure) {
     std::string passphrase;
 
-    if (static_cast<Configure*>(configure)->get(
-        Configure::nifi_security_client_pass_phrase, passphrase)) {
+    if (static_cast<Configure*>(configure)->get(Configure::nifi_security_client_pass_phrase, passphrase)) {
 
       std::ifstream file(passphrase.c_str(), std::ifstream::in);
       if (!file.good()) {
@@ -103,8 +99,7 @@ class TLSContext: public SocketContext {
       }
 
       std::string password;
-      password.assign((std::istreambuf_iterator<char>(file)),
-                      std::istreambuf_iterator<char>());
+      password.assign((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
       file.close();
       memset(buf, 0x00, size);
       memcpy(buf, password.c_str(), password.length() - 1);
@@ -113,7 +108,6 @@ class TLSContext: public SocketContext {
     }
     return 0;
   }
-
 
   std::shared_ptr<logging::Logger> logger_;
   std::shared_ptr<Configure> configure_;
@@ -133,8 +127,7 @@ class TLSSocket : public Socket {
    * @param port connecting port
    * @param listeners number of listeners in the queue
    */
-  explicit TLSSocket(const std::shared_ptr<TLSContext> &context, const std::string &hostname, const uint16_t port,
-                     const uint16_t listeners);
+  explicit TLSSocket(const std::shared_ptr<TLSContext> &context, const std::string &hostname, const uint16_t port, const uint16_t listeners);
 
   /**
    * Constructor that creates a client socket.

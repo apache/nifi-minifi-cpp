@@ -33,8 +33,7 @@ namespace minifi {
 namespace core {
 namespace repository {
 
-static uint16_t accounting_size = sizeof(std::vector<uint8_t>)
-    + sizeof(std::string) + sizeof(size_t);
+static uint16_t accounting_size = sizeof(std::vector<uint8_t>) + sizeof(std::string) + sizeof(size_t);
 
 class RepoValue {
  public:
@@ -173,23 +172,16 @@ class AtomicEntry {
  * Flow File repository
  * Design: Extends Repository and implements the run function, using LevelDB as the primary substrate.
  */
-class VolatileRepository : public core::Repository,
-    public std::enable_shared_from_this<VolatileRepository> {
+class VolatileRepository : public core::Repository, public std::enable_shared_from_this<VolatileRepository> {
  public:
 
   static const char *volatile_repo_max_count;
   // Constructor
 
-  VolatileRepository(
-      std::string repo_name = "", std::string dir = REPOSITORY_DIRECTORY,
-      int64_t maxPartitionMillis = MAX_REPOSITORY_ENTRY_LIFE_TIME,
-      int64_t maxPartitionBytes =
-      MAX_REPOSITORY_STORAGE_SIZE,
-      uint64_t purgePeriod = REPOSITORY_PURGE_PERIOD)
-      : Repository(
-            repo_name.length() > 0 ?
-                repo_name : core::getClassName<VolatileRepository>(),
-            "", maxPartitionMillis, maxPartitionBytes, purgePeriod),
+  VolatileRepository(std::string repo_name = "", std::string dir = REPOSITORY_DIRECTORY, int64_t maxPartitionMillis = MAX_REPOSITORY_ENTRY_LIFE_TIME, int64_t maxPartitionBytes =
+  MAX_REPOSITORY_STORAGE_SIZE,
+                     uint64_t purgePeriod = REPOSITORY_PURGE_PERIOD)
+      : Repository(repo_name.length() > 0 ? repo_name : core::getClassName<VolatileRepository>(), "", maxPartitionMillis, maxPartitionBytes, purgePeriod),
         max_size_(maxPartitionBytes * 0.75),
         current_index_(0),
         max_count_(10000),
@@ -215,8 +207,7 @@ class VolatileRepository : public core::Repository,
     if (configure != nullptr) {
       int64_t max_cnt = 0;
       std::stringstream strstream;
-      strstream << Configure::nifi_volatile_repository_options << getName()
-                << "." << volatile_repo_max_count;
+      strstream << Configure::nifi_volatile_repository_options << getName() << "." << volatile_repo_max_count;
       if (configure->get(strstream.str(), value)) {
         if (core::Property::StringToInt(value, max_cnt)) {
           max_count_ = max_cnt;
@@ -225,8 +216,7 @@ class VolatileRepository : public core::Repository,
       }
     }
 
-    logger_->log_debug("Resizing value_vector_ for %s count is %d", getName(),
-                       max_count_);
+    logger_->log_debug("Resizing value_vector_ for %s count is %d", getName(), max_count_);
     value_vector_.reserve(max_count_);
     for (int i = 0; i < max_count_; i++) {
       value_vector_.emplace_back(new AtomicEntry());
@@ -259,10 +249,8 @@ class VolatileRepository : public core::Repository,
           continue;
         }
       }
-      logger_->log_info("Set repo value at %d out of %d", private_index,
-                        max_count_);
-      updated = value_vector_.at(private_index)->setRepoValue(new_value,
-                                                              reclaimed_size);
+      logger_->log_info("Set repo value at %d out of %d", private_index, max_count_);
+      updated = value_vector_.at(private_index)->setRepoValue(new_value, reclaimed_size);
 
       if (reclaimed_size > 0) {
         current_size_ -= reclaimed_size;
@@ -271,8 +259,7 @@ class VolatileRepository : public core::Repository,
     } while (!updated);
     current_size_ += size;
 
-    logger_->log_info("VolatileRepository -- put %s %d %d", key,
-                      current_size_.load(), current_index_.load());
+    logger_->log_info("VolatileRepository -- put %s %d %d", key, current_size_.load(), current_index_.load());
     return true;
   }
   /**
@@ -307,8 +294,7 @@ class VolatileRepository : public core::Repository,
       if (ent->getValue(key, repo_value)) {
         current_size_ -= value.size();
         repo_value.emplace(value);
-        logger_->log_info("VolatileRepository -- get %s %d", key,
-                          current_size_.load());
+        logger_->log_info("VolatileRepository -- get %s %d", key, current_size_.load());
         return true;
       }
 
@@ -316,8 +302,7 @@ class VolatileRepository : public core::Repository,
     return false;
   }
 
-  void setConnectionMap(
-      std::map<std::string, std::shared_ptr<minifi::Connection>> &connectionMap) {
+  void setConnectionMap(std::map<std::string, std::shared_ptr<minifi::Connection>> &connectionMap) {
     this->connectionMap = connectionMap;
   }
   void loadComponent();

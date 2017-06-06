@@ -33,8 +33,7 @@ ConfigurableComponent::ConfigurableComponent()
     : logger_(logging::LoggerFactory<ConfigurableComponent>::getLogger()) {
 }
 
-ConfigurableComponent::ConfigurableComponent(
-    const ConfigurableComponent &&other)
+ConfigurableComponent::ConfigurableComponent(const ConfigurableComponent &&other)
     : properties_(std::move(other.properties_)),
       logger_(logging::LoggerFactory<ConfigurableComponent>::getLogger()) {
 }
@@ -42,8 +41,7 @@ ConfigurableComponent::ConfigurableComponent(
 ConfigurableComponent::~ConfigurableComponent() {
 }
 
-bool ConfigurableComponent::getProperty(const std::string &name,
-                                        Property &prop) {
+bool ConfigurableComponent::getProperty(const std::string &name, Property &prop) {
   std::lock_guard<std::mutex> lock(configuration_mutex_);
 
   auto &&it = properties_.find(name);
@@ -62,16 +60,14 @@ bool ConfigurableComponent::getProperty(const std::string &name,
  * @param value value passed in by reference
  * @return result of getting property.
  */
-bool ConfigurableComponent::getProperty(const std::string name,
-                                        std::string &value) {
+bool ConfigurableComponent::getProperty(const std::string name, std::string &value) {
   std::lock_guard<std::mutex> lock(configuration_mutex_);
 
   auto &&it = properties_.find(name);
   if (it != properties_.end()) {
     Property item = it->second;
     value = item.getValue();
-    logger_->log_info("Processor %s property name %s value %s", name,
-                         item.getName(), value);
+    logger_->log_info("Processor %s property name %s value %s", name, item.getName(), value);
     return true;
   } else {
     return false;
@@ -83,8 +79,7 @@ bool ConfigurableComponent::getProperty(const std::string name,
  * @param value property value.
  * @return result of setting property.
  */
-bool ConfigurableComponent::setProperty(const std::string name,
-                                        std::string value) {
+bool ConfigurableComponent::setProperty(const std::string name, std::string value) {
   std::lock_guard<std::mutex> lock(configuration_mutex_);
   auto &&it = properties_.find(name);
 
@@ -92,8 +87,7 @@ bool ConfigurableComponent::setProperty(const std::string name,
     Property item = it->second;
     item.setValue(value);
     properties_[item.getName()] = item;
-    logger_->log_info("Component %s property name %s value %s", name.c_str(),
-                         item.getName().c_str(), value.c_str());
+    logger_->log_info("Component %s property name %s value %s", name.c_str(), item.getName().c_str(), value.c_str());
     return true;
   } else {
     return false;
@@ -106,8 +100,7 @@ bool ConfigurableComponent::setProperty(const std::string name,
  * @param value property value.
  * @return result of setting property.
  */
-bool ConfigurableComponent::updateProperty(const std::string &name,
-                                           const std::string &value) {
+bool ConfigurableComponent::updateProperty(const std::string &name, const std::string &value) {
   std::lock_guard<std::mutex> lock(configuration_mutex_);
   auto &&it = properties_.find(name);
 
@@ -115,8 +108,7 @@ bool ConfigurableComponent::updateProperty(const std::string &name,
     Property item = it->second;
     item.addValue(value);
     properties_[item.getName()] = item;
-    logger_->log_info("Component %s property name %s value %s", name.c_str(),
-                         item.getName().c_str(), value.c_str());
+    logger_->log_info("Component %s property name %s value %s", name.c_str(), item.getName().c_str(), value.c_str());
     return true;
   } else {
     return false;
@@ -137,14 +129,12 @@ bool ConfigurableComponent::setProperty(Property &prop, std::string value) {
     Property item = it->second;
     item.setValue(value);
     properties_[item.getName()] = item;
-    logger_->log_info("property name %s value %s", prop.getName().c_str(),
-                         item.getName().c_str(), value.c_str());
+    logger_->log_info("property name %s value %s", prop.getName().c_str(), item.getName().c_str(), value.c_str());
     return true;
   } else {
     Property newProp(prop);
     newProp.setValue(value);
-    properties_.insert(
-        std::pair<std::string, Property>(prop.getName(), newProp));
+    properties_.insert(std::pair<std::string, Property>(prop.getName(), newProp));
     return true;
   }
   return false;
@@ -155,8 +145,7 @@ bool ConfigurableComponent::setProperty(Property &prop, std::string value) {
  * @param supported properties
  * @return result of set operation.
  */
-bool ConfigurableComponent::setSupportedProperties(
-    std::set<Property> properties) {
+bool ConfigurableComponent::setSupportedProperties(std::set<Property> properties) {
   if (!canEdit()) {
     return false;
   }

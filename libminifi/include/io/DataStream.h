@@ -85,22 +85,19 @@ class DataStream {
    * Reads a system word
    * @param value value to write
    */
-  virtual int read(uint64_t &value, bool is_little_endian =
-                       EndiannessCheck::IS_LITTLE);
+  virtual int read(uint64_t &value, bool is_little_endian = EndiannessCheck::IS_LITTLE);
 
   /**
    * Reads a uint32_t
    * @param value value to write
    */
-  virtual int read(uint32_t &value, bool is_little_endian =
-                       EndiannessCheck::IS_LITTLE);
+  virtual int read(uint32_t &value, bool is_little_endian = EndiannessCheck::IS_LITTLE);
 
   /**
    * Reads a system short
    * @param value value to write
    */
-  virtual int read(uint16_t &value, bool is_little_endian =
-                       EndiannessCheck::IS_LITTLE);
+  virtual int read(uint16_t &value, bool is_little_endian = EndiannessCheck::IS_LITTLE);
 
   /**
    * Returns the underlying buffer

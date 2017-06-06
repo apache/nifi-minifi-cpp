@@ -33,18 +33,14 @@ namespace minifi {
 
 bool SchedulingAgent::hasWorkToDo(std::shared_ptr<core::Processor> processor) {
   // Whether it has work to do
-  if (processor->getTriggerWhenEmpty() || !processor->hasIncomingConnections()
-      || processor->flowFilesQueued())
+  if (processor->getTriggerWhenEmpty() || !processor->hasIncomingConnections() || processor->flowFilesQueued())
     return true;
   else
     return false;
 }
 
-void SchedulingAgent::enableControllerService(
-    std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) {
-
-  logger_->log_trace("Enabling CSN in SchedulingAgent %s",
-                     serviceNode->getName());
+void SchedulingAgent::enableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) {
+  logger_->log_trace("Enabling CSN in SchedulingAgent %s", serviceNode->getName());
   // reference the enable function from serviceNode
   std::function<bool()> f_ex = [serviceNode] {
     return serviceNode->enable();
@@ -57,9 +53,7 @@ void SchedulingAgent::enableControllerService(
   component_lifecycle_thread_pool_.execute(std::move(functor), future);
 }
 
-void SchedulingAgent::disableControllerService(
-    std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) {
-
+void SchedulingAgent::disableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) {
   // reference the disable function from serviceNode
   std::function<bool()> f_ex = [serviceNode] {
     return serviceNode->disable();
@@ -72,14 +66,11 @@ void SchedulingAgent::disableControllerService(
   component_lifecycle_thread_pool_.execute(std::move(functor), future);
 }
 
-bool SchedulingAgent::hasTooMuchOutGoing(
-    std::shared_ptr<core::Processor> processor) {
+bool SchedulingAgent::hasTooMuchOutGoing(std::shared_ptr<core::Processor> processor) {
   return processor->flowFilesOutGoingFull();
 }
 
-bool SchedulingAgent::onTrigger(std::shared_ptr<core::Processor> processor,
-                                core::ProcessContext *processContext,
-                                core::ProcessSessionFactory *sessionFactory) {
+bool SchedulingAgent::onTrigger(std::shared_ptr<core::Processor> processor, core::ProcessContext *processContext, core::ProcessSessionFactory *sessionFactory) {
   if (processor->isYield())
     return false;
 

@@ -33,31 +33,18 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-core::Property ExecuteProcess::Command(
-    "Command",
-    "Specifies the command to be executed; if just the name of an executable"
-    " is provided, it must be in the user's environment PATH.",
-    "");
-core::Property ExecuteProcess::CommandArguments(
-    "Command Arguments",
-    "The arguments to supply to the executable delimited by white space. White "
-    "space can be escaped by enclosing it in double-quotes.",
-    "");
-core::Property ExecuteProcess::WorkingDir(
-    "Working Directory",
-    "The directory to use as the current working directory when executing the command",
-    "");
-core::Property ExecuteProcess::BatchDuration(
-    "Batch Duration",
-    "If the process is expected to be long-running and produce textual output, a "
-    "batch duration can be specified.",
-    "0");
-core::Property ExecuteProcess::RedirectErrorStream(
-    "Redirect Error Stream",
-    "If true will redirect any error stream output of the process to the output stream.",
-    "false");
-core::Relationship ExecuteProcess::Success(
-    "success", "All created FlowFiles are routed to this relationship.");
+core::Property ExecuteProcess::Command("Command", "Specifies the command to be executed; if just the name of an executable"
+                                       " is provided, it must be in the user's environment PATH.",
+                                       "");
+core::Property ExecuteProcess::CommandArguments("Command Arguments", "The arguments to supply to the executable delimited by white space. White "
+                                                "space can be escaped by enclosing it in double-quotes.",
+                                                "");
+core::Property ExecuteProcess::WorkingDir("Working Directory", "The directory to use as the current working directory when executing the command", "");
+core::Property ExecuteProcess::BatchDuration("Batch Duration", "If the process is expected to be long-running and produce textual output, a "
+                                             "batch duration can be specified.",
+                                             "0");
+core::Property ExecuteProcess::RedirectErrorStream("Redirect Error Stream", "If true will redirect any error stream output of the process to the output stream.", "false");
+core::Relationship ExecuteProcess::Success("success", "All created FlowFiles are routed to this relationship.");
 
 void ExecuteProcess::initialize() {
   // Set the supported properties
@@ -74,8 +61,7 @@ void ExecuteProcess::initialize() {
   setSupportedRelationships(relationships);
 }
 
-void ExecuteProcess::onTrigger(core::ProcessContext *context,
-                               core::ProcessSession *session) {
+void ExecuteProcess::onTrigger(core::ProcessContext *context, core::ProcessSession *session) {
   std::string value;
   if (context->getProperty(Command.getName(), value)) {
     this->_command = value;
@@ -88,15 +74,12 @@ void ExecuteProcess::onTrigger(core::ProcessContext *context,
   }
   if (context->getProperty(BatchDuration.getName(), value)) {
     core::TimeUnit unit;
-    if (core::Property::StringToTime(value, _batchDuration, unit)
-        && core::Property::ConvertTimeUnitToMS(_batchDuration, unit,
-                                               _batchDuration)) {
+    if (core::Property::StringToTime(value, _batchDuration, unit) && core::Property::ConvertTimeUnitToMS(_batchDuration, unit, _batchDuration)) {
       logger_->log_info("Setting _batchDuration");
     }
   }
   if (context->getProperty(RedirectErrorStream.getName(), value)) {
-    org::apache::nifi::minifi::utils::StringUtils::StringToBool(
-        value, _redirectErrorStream);
+    org::apache::nifi::minifi::utils::StringUtils::StringToBool(value, _redirectErrorStream);
   }
   this->_fullCommand = _command + " " + _commandArgument;
   if (_fullCommand.length() == 0) {
@@ -106,8 +89,7 @@ void ExecuteProcess::onTrigger(core::ProcessContext *context,
   if (_workingDir.length() > 0 && _workingDir != ".") {
     // change to working directory
     if (chdir(_workingDir.c_str()) != 0) {
-      logger_->log_error("Execute Command can not chdir %s",
-                         _workingDir.c_str());
+      logger_->log_error("Execute Command can not chdir %s", _workingDir.c_str());
       yield();
       return;
     }
@@ -156,21 +138,18 @@ void ExecuteProcess::onTrigger(core::ProcessContext *context,
         close(_pipefd[1]);
         if (_batchDuration > 0) {
           while (1) {
-            std::this_thread::sleep_for(
-                std::chrono::milliseconds(_batchDuration));
+            std::this_thread::sleep_for(std::chrono::milliseconds(_batchDuration));
             char buffer[4096];
             int numRead = read(_pipefd[0], buffer, sizeof(buffer));
             if (numRead <= 0)
               break;
             logger_->log_info("Execute Command Respond %d", numRead);
             ExecuteProcess::WriteCallback callback(buffer, numRead);
-            std::shared_ptr<FlowFileRecord> flowFile = std::static_pointer_cast<
-                FlowFileRecord>(session->create());
+            std::shared_ptr<FlowFileRecord> flowFile = std::static_pointer_cast<FlowFileRecord>(session->create());
             if (!flowFile)
               continue;
             flowFile->addAttribute("command", _command.c_str());
-            flowFile->addAttribute("command.arguments",
-                                   _commandArgument.c_str());
+            flowFile->addAttribute("command.arguments", _commandArgument.c_str());
             session->write(flowFile, &callback);
             session->transfer(flowFile, Success);
             session->commit();
@@ -181,21 +160,18 @@ void ExecuteProcess::onTrigger(core::ProcessContext *context,
           int totalRead = 0;
           std::shared_ptr<FlowFileRecord> flowFile = nullptr;
           while (1) {
-            int numRead = read(_pipefd[0], bufPtr,
-                               (sizeof(buffer) - totalRead));
+            int numRead = read(_pipefd[0], bufPtr, (sizeof(buffer) - totalRead));
             if (numRead <= 0) {
               if (totalRead > 0) {
                 logger_->log_info("Execute Command Respond %d", totalRead);
                 // child exits and close the pipe
                 ExecuteProcess::WriteCallback callback(buffer, totalRead);
                 if (!flowFile) {
-                  flowFile = std::static_pointer_cast<FlowFileRecord>(
-                      session->create());
+                  flowFile = std::static_pointer_cast<FlowFileRecord>(session->create());
                   if (!flowFile)
                     break;
                   flowFile->addAttribute("command", _command.c_str());
-                  flowFile->addAttribute("command.arguments",
-                                         _commandArgument.c_str());
+                  flowFile->addAttribute("command.arguments", _commandArgument.c_str());
                   session->write(flowFile, &callback);
                 } else {
                   session->append(flowFile, &callback);
@@ -206,17 +182,14 @@ void ExecuteProcess::onTrigger(core::ProcessContext *context,
             } else {
               if (numRead == (sizeof(buffer) - totalRead)) {
                 // we reach the max buffer size
-                logger_->log_info("Execute Command Max Respond %d",
-                                  sizeof(buffer));
+                logger_->log_info("Execute Command Max Respond %d", sizeof(buffer));
                 ExecuteProcess::WriteCallback callback(buffer, sizeof(buffer));
                 if (!flowFile) {
-                  flowFile = std::static_pointer_cast<FlowFileRecord>(
-                      session->create());
+                  flowFile = std::static_pointer_cast<FlowFileRecord>(session->create());
                   if (!flowFile)
                     continue;
                   flowFile->addAttribute("command", _command.c_str());
-                  flowFile->addAttribute("command.arguments",
-                                         _commandArgument.c_str());
+                  flowFile->addAttribute("command.arguments", _commandArgument.c_str());
                   session->write(flowFile, &callback);
                 } else {
                   session->append(flowFile, &callback);
@@ -234,11 +207,9 @@ void ExecuteProcess::onTrigger(core::ProcessContext *context,
 
         died = wait(&status);
         if (WIFEXITED(status)) {
-          logger_->log_info("Execute Command Complete %s status %d pid %d",
-                            _fullCommand.c_str(), WEXITSTATUS(status), _pid);
+          logger_->log_info("Execute Command Complete %s status %d pid %d", _fullCommand.c_str(), WEXITSTATUS(status), _pid);
         } else {
-          logger_->log_info("Execute Command Complete %s status %d pid %d",
-                            _fullCommand.c_str(), WTERMSIG(status), _pid);
+          logger_->log_info("Execute Command Complete %s status %d pid %d", _fullCommand.c_str(), WTERMSIG(status), _pid);
         }
 
         close(_pipefd[0]);

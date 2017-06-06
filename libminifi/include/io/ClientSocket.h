@@ -40,10 +40,11 @@ namespace io {
 /**
  * Context class for socket. This is currently only used as a parent class for TLSContext.  It is necessary so the Socket and TLSSocket constructors
  * can be the same.  It also gives us a common place to set timeouts, etc from the Configure object in the future.
- */ 
+ */
 class SocketContext {
  public:
-  SocketContext(const std::shared_ptr<Configure> &configure) {}
+  SocketContext(const std::shared_ptr<Configure> &configure) {
+  }
 };
 /**
  * Socket class.
@@ -64,8 +65,7 @@ class Socket : public BaseStream {
    * @param port connecting port
    * @param listeners number of listeners in the queue
    */
-  explicit Socket(const std::shared_ptr<SocketContext> &context, const std::string &hostname, const uint16_t port,
-                  const uint16_t listeners);
+  explicit Socket(const std::shared_ptr<SocketContext> &context, const std::string &hostname, const uint16_t port, const uint16_t listeners);
 
   /**
    * Constructor that creates a client socket.
@@ -142,43 +142,37 @@ class Socket : public BaseStream {
    * Writes a system word
    * @param value value to write
    */
-  virtual int write(uint64_t value, bool is_little_endian =
-                        EndiannessCheck::IS_LITTLE);
+  virtual int write(uint64_t value, bool is_little_endian = EndiannessCheck::IS_LITTLE);
 
   /**
    * Writes a uint32_t
    * @param value value to write
    */
-  virtual int write(uint32_t value, bool is_little_endian =
-                        EndiannessCheck::IS_LITTLE);
+  virtual int write(uint32_t value, bool is_little_endian = EndiannessCheck::IS_LITTLE);
 
   /**
    * Writes a system short
    * @param value value to write
    */
-  virtual int write(uint16_t value, bool is_little_endian =
-                        EndiannessCheck::IS_LITTLE);
+  virtual int write(uint16_t value, bool is_little_endian = EndiannessCheck::IS_LITTLE);
 
   /**
    * Reads a system word
    * @param value value to write
    */
-  virtual int read(uint64_t &value, bool is_little_endian =
-                       EndiannessCheck::IS_LITTLE);
+  virtual int read(uint64_t &value, bool is_little_endian = EndiannessCheck::IS_LITTLE);
 
   /**
    * Reads a uint32_t
    * @param value value to write
    */
-  virtual int read(uint32_t &value, bool is_little_endian =
-                       EndiannessCheck::IS_LITTLE);
+  virtual int read(uint32_t &value, bool is_little_endian = EndiannessCheck::IS_LITTLE);
 
   /**
    * Reads a system short
    * @param value value to write
    */
-  virtual int read(uint16_t &value, bool is_little_endian =
-                       EndiannessCheck::IS_LITTLE);
+  virtual int read(uint16_t &value, bool is_little_endian = EndiannessCheck::IS_LITTLE);
 
   /**
    * Returns the underlying buffer

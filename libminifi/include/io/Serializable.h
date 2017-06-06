@@ -73,8 +73,7 @@ class Serializable {
    * @param is_little_endian endianness determination
    * @return resulting write size
    **/
-  int write(uint32_t base_value, DataStream *stream, bool is_little_endian =
-                EndiannessCheck::IS_LITTLE);
+  int write(uint32_t base_value, DataStream *stream, bool is_little_endian = EndiannessCheck::IS_LITTLE);
 
   /**
    * write 2 bytes to stream
@@ -83,8 +82,7 @@ class Serializable {
    * @param is_little_endian endianness determination
    * @return resulting write size
    **/
-  int write(uint16_t base_value, DataStream *stream, bool is_little_endian =
-                EndiannessCheck::IS_LITTLE);
+  int write(uint16_t base_value, DataStream *stream, bool is_little_endian = EndiannessCheck::IS_LITTLE);
 
   /**
    * write valueto stream
@@ -102,8 +100,7 @@ class Serializable {
    * @param is_little_endian endianness determination
    * @return resulting write size
    **/
-  int write(uint64_t base_value, DataStream *stream, bool is_little_endian =
-                EndiannessCheck::IS_LITTLE);
+  int write(uint64_t base_value, DataStream *stream, bool is_little_endian = EndiannessCheck::IS_LITTLE);
 
   /**
    * write bool to stream
@@ -133,8 +130,7 @@ class Serializable {
    * @param stream stream from which we will read
    * @return resulting read size
    **/
-  int read(uint16_t &base_value, DataStream *stream, bool is_little_endian =
-               EndiannessCheck::IS_LITTLE);
+  int read(uint16_t &base_value, DataStream *stream, bool is_little_endian = EndiannessCheck::IS_LITTLE);
 
   /**
    * reads a byte from the stream
@@ -159,8 +155,7 @@ class Serializable {
    * @param stream stream from which we will read
    * @return resulting read size
    **/
-  int read(uint32_t &value, DataStream *stream, bool is_little_endian =
-               EndiannessCheck::IS_LITTLE);
+  int read(uint32_t &value, DataStream *stream, bool is_little_endian = EndiannessCheck::IS_LITTLE);
 
   /**
    * reads eight byte from the stream
@@ -168,8 +163,7 @@ class Serializable {
    * @param stream stream from which we will read
    * @return resulting read size
    **/
-  int read(uint64_t &value, DataStream *stream, bool is_little_endian =
-               EndiannessCheck::IS_LITTLE);
+  int read(uint64_t &value, DataStream *stream, bool is_little_endian = EndiannessCheck::IS_LITTLE);
 
   /**
    * read UTF from stream

@@ -41,8 +41,7 @@ class ByteInputCallBack : public InputStreamCallback {
 
   virtual void process(std::ifstream *stream) {
 
-    std::vector<char> nv = std::vector<char>(std::istreambuf_iterator<char>(*stream),
-                                 std::istreambuf_iterator<char>());
+    std::vector<char> nv = std::vector<char>(std::istreambuf_iterator<char>(*stream), std::istreambuf_iterator<char>());
     vec = std::move(nv);
 
     ptr = &vec[0];
@@ -52,9 +51,6 @@ class ByteInputCallBack : public InputStreamCallback {
   char *getBuffer() {
     return ptr;
   }
-
-
-
 
   const size_t getBufferSize() {
     return vec.size();

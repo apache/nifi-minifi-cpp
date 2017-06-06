@@ -50,8 +50,7 @@ class TLSContext {
    * @returns new TLSContext;
    */
   static TLSContext *getInstance() {
-    TLSContext* atomic_context = context_instance.load(
-        std::memory_order_relaxed);
+    TLSContext* atomic_context = context_instance.load(std::memory_order_relaxed);
     std::atomic_thread_fence(std::memory_order_acquire);
     if (atomic_context == nullptr) {
       std::lock_guard<std::mutex> lock(context_mutex);
@@ -86,8 +85,7 @@ class TLSContext {
   static int pemPassWordCb(char *buf, int size, int rwflag, void *userdata) {
     std::string passphrase;
 
-    if (Configure::getConfigure()->get(
-        Configure::nifi_security_client_pass_phrase, passphrase)) {
+    if (Configure::getConfigure()->get(Configure::nifi_security_client_pass_phrase, passphrase)) {
 
       std::ifstream file(passphrase.c_str(), std::ifstream::in);
       if (!file.good()) {
@@ -96,8 +94,7 @@ class TLSContext {
       }
 
       std::string password;
-      password.assign((std::istreambuf_iterator<char>(file)),
-                      std::istreambuf_iterator<char>());
+      password.assign((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
       file.close();
       memset(buf, 0x00, size);
       memcpy(buf, password.c_str(), password.length() - 1);
@@ -129,8 +126,7 @@ class TLSSocket : public Socket {
    * @param port connecting port
    * @param listeners number of listeners in the queue
    */
-  explicit TLSSocket(const std::string &hostname, const uint16_t port,
-                     const uint16_t listeners);
+  explicit TLSSocket(const std::string &hostname, const uint16_t port, const uint16_t listeners);
 
   /**
    * Constructor that creates a client socket.

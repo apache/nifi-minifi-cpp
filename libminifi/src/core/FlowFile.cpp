@@ -178,8 +178,7 @@ void FlowFile::setLineageStartDate(const uint64_t date) {
  * Sets the original connection with a shared pointer.
  * @param connection shared connection.
  */
-void FlowFile::setOriginalConnection(
-    std::shared_ptr<core::Connectable> &connection) {
+void FlowFile::setOriginalConnection(std::shared_ptr<core::Connectable> &connection) {
   original_connection_ = connection;
 }
 

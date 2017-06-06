@@ -41,17 +41,13 @@ namespace nifi {
 namespace minifi {
 // Connection Class
 
-class Connection : public core::Connectable,
-    public std::enable_shared_from_this<Connection> {
+class Connection : public core::Connectable, public std::enable_shared_from_this<Connection> {
  public:
   // Constructor
   /*
    * Create a new processor
    */
-  explicit Connection(std::shared_ptr<core::Repository> flow_repository,
-                      std::string name, uuid_t uuid = NULL, uuid_t srcUUID =
-                      NULL,
-                      uuid_t destUUID = NULL);
+  explicit Connection(std::shared_ptr<core::Repository> flow_repository, std::string name, uuid_t uuid = NULL, uuid_t srcUUID = NULL, uuid_t destUUID = NULL);
   // Destructor
   virtual ~Connection() {
   }
@@ -137,8 +133,7 @@ class Connection : public core::Connectable,
   // Put the flow file into queue
   void put(std::shared_ptr<core::FlowFile> flow);
   // Poll the flow file from queue, the expired flow file record also being returned
-  std::shared_ptr<core::FlowFile> poll(
-      std::set<std::shared_ptr<core::FlowFile>> &expiredFlowRecords);
+  std::shared_ptr<core::FlowFile> poll(std::set<std::shared_ptr<core::FlowFile>> &expiredFlowRecords);
   // Drain the flow records
   void drain();
 

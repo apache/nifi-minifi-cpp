@@ -30,17 +30,13 @@
 #include "core/repository/VolatileRepository.h"
 
 TEST_CASE("Test Provenance record create", "[Testprovenance::ProvenanceEventRecord]") {
-  provenance::ProvenanceEventRecord record1(
-      provenance::ProvenanceEventRecord::ProvenanceEventType::CREATE, "blah",
-      "blahblah");
+  provenance::ProvenanceEventRecord record1(provenance::ProvenanceEventRecord::ProvenanceEventType::CREATE, "blah", "blahblah");
   REQUIRE(record1.getAttributes().size() == 0);
   REQUIRE(record1.getAlternateIdentifierUri().length() == 0);
 }
 
 TEST_CASE("Test Provenance record serialization", "[Testprovenance::ProvenanceEventRecordSerializeDeser]") {
-  provenance::ProvenanceEventRecord record1(
-      provenance::ProvenanceEventRecord::ProvenanceEventType::CREATE,
-      "componentid", "componenttype");
+  provenance::ProvenanceEventRecord record1(provenance::ProvenanceEventRecord::ProvenanceEventType::CREATE, "componentid", "componenttype");
 
   std::string eventId = record1.getEventId();
 
@@ -48,8 +44,7 @@ TEST_CASE("Test Provenance record serialization", "[Testprovenance::ProvenanceEv
   record1.setDetails(smileyface);
 
   uint64_t sample = 65555;
-  std::shared_ptr<core::Repository> testRepository = std::make_shared<
-      TestRepository>();
+  std::shared_ptr<core::Repository> testRepository = std::make_shared<TestRepository>();
   record1.setEventDuration(sample);
 
   record1.Serialize(testRepository);
@@ -64,24 +59,18 @@ TEST_CASE("Test Provenance record serialization", "[Testprovenance::ProvenanceEv
 }
 
 TEST_CASE("Test Flowfile record added to provenance", "[TestFlowAndProv1]") {
-  provenance::ProvenanceEventRecord record1(
-      provenance::ProvenanceEventRecord::ProvenanceEventType::CLONE,
-      "componentid", "componenttype");
+  provenance::ProvenanceEventRecord record1(provenance::ProvenanceEventRecord::ProvenanceEventType::CLONE, "componentid", "componenttype");
   std::string eventId = record1.getEventId();
   std::map<std::string, std::string> attributes;
   attributes.insert(std::pair<std::string, std::string>("potato", "potatoe"));
   attributes.insert(std::pair<std::string, std::string>("tomato", "tomatoe"));
-  std::shared_ptr<core::repository::FlowFileRepository> frepo =
-      std::make_shared<core::repository::FlowFileRepository>(
-          "ff", "./content_repository", 0, 0, 0);
-  std::shared_ptr<minifi::FlowFileRecord> ffr1 = std::make_shared<
-      minifi::FlowFileRecord>(frepo, attributes);
+  std::shared_ptr<core::repository::FlowFileRepository> frepo = std::make_shared<core::repository::FlowFileRepository>("ff", "./content_repository", 0, 0, 0);
+  std::shared_ptr<minifi::FlowFileRecord> ffr1 = std::make_shared<minifi::FlowFileRecord>(frepo, attributes);
 
   record1.addChildFlowFile(ffr1);
 
   uint64_t sample = 65555;
-  std::shared_ptr<core::Repository> testRepository = std::make_shared<
-      TestRepository>();
+  std::shared_ptr<core::Repository> testRepository = std::make_shared<TestRepository>();
   record1.setEventDuration(sample);
 
   record1.Serialize(testRepository);
@@ -96,9 +85,7 @@ TEST_CASE("Test Flowfile record added to provenance", "[TestFlowAndProv1]") {
 }
 
 TEST_CASE("Test Provenance record serialization Volatile", "[Testprovenance::ProvenanceEventRecordSerializeDeser]") {
-  provenance::ProvenanceEventRecord record1(
-      provenance::ProvenanceEventRecord::ProvenanceEventType::CREATE,
-      "componentid", "componenttype");
+  provenance::ProvenanceEventRecord record1(provenance::ProvenanceEventRecord::ProvenanceEventType::CREATE, "componentid", "componenttype");
 
   std::string eventId = record1.getEventId();
 
@@ -107,8 +94,7 @@ TEST_CASE("Test Provenance record serialization Volatile", "[Testprovenance::Pro
 
   uint64_t sample = 65555;
 
-  std::shared_ptr<core::Repository> testRepository = std::make_shared<
-      core::repository::VolatileRepository>();
+  std::shared_ptr<core::Repository> testRepository = std::make_shared<core::repository::VolatileRepository>();
   testRepository->initialize(0);
   record1.setEventDuration(sample);
 
@@ -124,24 +110,19 @@ TEST_CASE("Test Provenance record serialization Volatile", "[Testprovenance::Pro
 }
 
 TEST_CASE("Test Flowfile record added to provenance using Volatile Repo", "[TestFlowAndProv1]") {
-  provenance::ProvenanceEventRecord record1(
-      provenance::ProvenanceEventRecord::ProvenanceEventType::CLONE,
-      "componentid", "componenttype");
+  provenance::ProvenanceEventRecord record1(provenance::ProvenanceEventRecord::ProvenanceEventType::CLONE, "componentid", "componenttype");
   std::string eventId = record1.getEventId();
   std::map<std::string, std::string> attributes;
   attributes.insert(std::pair<std::string, std::string>("potato", "potatoe"));
   attributes.insert(std::pair<std::string, std::string>("tomato", "tomatoe"));
-  std::shared_ptr<core::Repository> frepo = std::make_shared<
-      core::repository::VolatileRepository>();
+  std::shared_ptr<core::Repository> frepo = std::make_shared<core::repository::VolatileRepository>();
   frepo->initialize(0);
-  std::shared_ptr<minifi::FlowFileRecord> ffr1 = std::make_shared<
-      minifi::FlowFileRecord>(frepo, attributes);
+  std::shared_ptr<minifi::FlowFileRecord> ffr1 = std::make_shared<minifi::FlowFileRecord>(frepo, attributes);
 
   record1.addChildFlowFile(ffr1);
 
   uint64_t sample = 65555;
-  std::shared_ptr<core::Repository> testRepository = std::make_shared<
-      core::repository::VolatileRepository>();
+  std::shared_ptr<core::Repository> testRepository = std::make_shared<core::repository::VolatileRepository>();
   testRepository->initialize(0);
   record1.setEventDuration(sample);
 
@@ -157,9 +138,7 @@ TEST_CASE("Test Flowfile record added to provenance using Volatile Repo", "[Test
 }
 
 TEST_CASE("Test Provenance record serialization NoOp", "[Testprovenance::ProvenanceEventRecordSerializeDeser]") {
-  provenance::ProvenanceEventRecord record1(
-      provenance::ProvenanceEventRecord::ProvenanceEventType::CREATE,
-      "componentid", "componenttype");
+  provenance::ProvenanceEventRecord record1(provenance::ProvenanceEventRecord::ProvenanceEventType::CREATE, "componentid", "componenttype");
 
   std::string eventId = record1.getEventId();
 
@@ -168,8 +147,7 @@ TEST_CASE("Test Provenance record serialization NoOp", "[Testprovenance::Provena
 
   uint64_t sample = 65555;
 
-  std::shared_ptr<core::Repository> testRepository = std::make_shared<
-      core::Repository>();
+  std::shared_ptr<core::Repository> testRepository = std::make_shared<core::Repository>();
   testRepository->initialize(0);
   record1.setEventDuration(sample);
 

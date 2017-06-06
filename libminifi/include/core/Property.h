@@ -56,8 +56,7 @@ class Property {
   /*!
    * Create a new property
    */
-  Property(const std::string name, const std::string description,
-           const std::string value)
+  Property(const std::string name, const std::string description, const std::string value)
       : name_(name),
         isCollection(false),
         description_(description) {
@@ -144,8 +143,7 @@ class Property {
     }
   }
   // Convert String
-  static bool StringToTime(std::string input, int64_t &output,
-                           TimeUnit &timeunit) {
+  static bool StringToTime(std::string input, int64_t &output, TimeUnit &timeunit) {
     if (input.size() == 0) {
       return false;
     }
@@ -165,28 +163,23 @@ class Property {
 
     std::string unit(pEnd);
 
-    if (unit == "sec" || unit == "s" || unit == "second" || unit == "seconds"
-        || unit == "secs") {
+    if (unit == "sec" || unit == "s" || unit == "second" || unit == "seconds" || unit == "secs") {
       timeunit = SECOND;
       output = ival;
       return true;
-    } else if (unit == "min" || unit == "m" || unit == "mins"
-        || unit == "minute" || unit == "minutes") {
+    } else if (unit == "min" || unit == "m" || unit == "mins" || unit == "minute" || unit == "minutes") {
       timeunit = MINUTE;
       output = ival;
       return true;
-    } else if (unit == "ns" || unit == "nano" || unit == "nanos"
-        || unit == "nanoseconds") {
+    } else if (unit == "ns" || unit == "nano" || unit == "nanos" || unit == "nanoseconds") {
       timeunit = NANOSECOND;
       output = ival;
       return true;
-    } else if (unit == "ms" || unit == "milli" || unit == "millis"
-        || unit == "milliseconds") {
+    } else if (unit == "ms" || unit == "milli" || unit == "millis" || unit == "milliseconds") {
       timeunit = MILLISECOND;
       output = ival;
       return true;
-    } else if (unit == "h" || unit == "hr" || unit == "hour" || unit == "hrs"
-        || unit == "hours") {
+    } else if (unit == "h" || unit == "hr" || unit == "hour" || unit == "hrs" || unit == "hours") {
       timeunit = HOUR;
       output = ival;
       return true;
@@ -219,8 +212,7 @@ class Property {
     }
 
     char end0 = toupper(pEnd[0]);
-    if ((end0 == 'K') || (end0 == 'M') || (end0 == 'G') || (end0 == 'T')
-        || (end0 == 'P')) {
+    if ((end0 == 'K') || (end0 == 'M') || (end0 == 'G') || (end0 == 'T') || (end0 == 'P')) {
       if (pEnd[1] == '\0') {
         unsigned long int multiplier = 1000;
 

@@ -41,7 +41,8 @@ class TailFile : public core::Processor {
    * Create a new processor
    */
   explicit TailFile(std::string name, uuid_t uuid = NULL)
-      : core::Processor(name, uuid), logger_(logging::LoggerFactory<TailFile>::getLogger()) {
+      : core::Processor(name, uuid),
+        logger_(logging::LoggerFactory<TailFile>::getLogger()) {
     _stateRecovered = false;
   }
   // Destructor
@@ -58,8 +59,7 @@ class TailFile : public core::Processor {
 
  public:
   // OnTrigger method, implemented by NiFi TailFile
-  virtual void onTrigger(core::ProcessContext *context,
-                         core::ProcessSession *session);
+  virtual void onTrigger(core::ProcessContext *context, core::ProcessSession *session);
   // Initialize, over write by NiFi TailFile
   virtual void initialize(void);
   // recoverState

@@ -185,23 +185,23 @@ class ThreadPool {
   }
 // determines if threads are detached
   bool daemon_threads_;
-// max worker threads
+  // max worker threads
   int max_worker_threads_;
-// current worker tasks.
+  // current worker tasks.
   std::atomic<int> current_workers_;
-// thread queue
+  // thread queue
   std::vector<std::thread> thread_queue_;
-// manager thread
+  // manager thread
   std::thread manager_thread_;
-// atomic running boolean
+  // atomic running boolean
   std::atomic<bool> running_;
-// worker queue of worker objects
+  // worker queue of worker objects
   moodycamel::ConcurrentQueue<Worker<T>> worker_queue_;
-// notification for available work
+  // notification for available work
   std::condition_variable tasks_available_;
-// manager mutex
+  // manager mutex
   std::recursive_mutex manager_mutex_;
-// work queue mutex
+  // work queue mutex
   std::mutex worker_queue_mutex_;
 
   /**

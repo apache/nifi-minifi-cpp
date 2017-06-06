@@ -39,8 +39,6 @@ std::vector<std::shared_ptr<ConfigurableComponent> > &ControllerServiceNode::get
   return linked_components_;
 }
 
-
-
 } /* namespace controller */
 } /* namespace core */
 } /* namespace minifi */

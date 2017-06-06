@@ -67,9 +67,7 @@ enum FlowAttribute {
 };
 
 // FlowFile Attribute Key
-static const char *FlowAttributeKeyArray[MAX_FLOW_ATTRIBUTES] = { "path",
-    "absolute.path", "filename", "uuid", "priority", "mime.type",
-    "discard.reason", "alternate.identifier" };
+static const char *FlowAttributeKeyArray[MAX_FLOW_ATTRIBUTES] = { "path", "absolute.path", "filename", "uuid", "priority", "mime.type", "discard.reason", "alternate.identifier" };
 
 // FlowFile Attribute Enum to Key
 inline const char *FlowAttributeKey(FlowAttribute attribute) {
@@ -96,22 +94,17 @@ class FlowFileRecord : public core::FlowFile, public io::Serializable {
   /*
    * Create a new flow record
    */
-  explicit FlowFileRecord(std::shared_ptr<core::Repository> flow_repository,
-                          std::map<std::string, std::string> attributes,
-                          std::shared_ptr<ResourceClaim> claim = nullptr);
+  explicit FlowFileRecord(std::shared_ptr<core::Repository> flow_repository, std::map<std::string, std::string> attributes, std::shared_ptr<ResourceClaim> claim = nullptr);
 
-  explicit FlowFileRecord(std::shared_ptr<core::Repository> flow_repository,
-                          std::shared_ptr<core::FlowFile> &event);
+  explicit FlowFileRecord(std::shared_ptr<core::Repository> flow_repository, std::shared_ptr<core::FlowFile> &event);
 
-  explicit FlowFileRecord(std::shared_ptr<core::Repository> flow_repository,
-                          std::shared_ptr<core::FlowFile> &event,
-                          const std::string &uuidConnection);
+  explicit FlowFileRecord(std::shared_ptr<core::Repository> flow_repository, std::shared_ptr<core::FlowFile> &event, const std::string &uuidConnection);
 
   explicit FlowFileRecord(std::shared_ptr<core::Repository> flow_repository)
       : FlowFile(),
         flow_repository_(flow_repository),
         snapshot_(""),
-        logger_(logging::LoggerFactory<FlowFileRecord>::getLogger())  {
+        logger_(logging::LoggerFactory<FlowFileRecord>::getLogger()) {
 
   }
   // Destructor

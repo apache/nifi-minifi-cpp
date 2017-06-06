@@ -35,26 +35,20 @@ namespace io {
 template<typename T>
 int Serializable::writeData(const T &t, DataStream *stream) {
   uint8_t bytes[sizeof t];
-  std::copy(static_cast<const char*>(static_cast<const void*>(&t)),
-            static_cast<const char*>(static_cast<const void*>(&t)) + sizeof t,
-            bytes);
+  std::copy(static_cast<const char*>(static_cast<const void*>(&t)), static_cast<const char*>(static_cast<const void*>(&t)) + sizeof t, bytes);
   return stream->writeData(bytes, sizeof t);
 }
 
 template<typename T>
 int Serializable::writeData(const T &t, uint8_t *to_vec) {
-  std::copy(static_cast<const char*>(static_cast<const void*>(&t)),
-            static_cast<const char*>(static_cast<const void*>(&t)) + sizeof t,
-            to_vec);
+  std::copy(static_cast<const char*>(static_cast<const void*>(&t)), static_cast<const char*>(static_cast<const void*>(&t)) + sizeof t, to_vec);
   return sizeof t;
 }
 
 template<typename T>
 int Serializable::writeData(const T &t, std::vector<uint8_t> &to_vec) {
   uint8_t bytes[sizeof t];
-  std::copy(static_cast<const char*>(static_cast<const void*>(&t)),
-            static_cast<const char*>(static_cast<const void*>(&t)) + sizeof t,
-            bytes);
+  std::copy(static_cast<const char*>(static_cast<const void*>(&t)), static_cast<const char*>(static_cast<const void*>(&t)) + sizeof t, bytes);
   to_vec.insert(to_vec.end(), &bytes[0], &bytes[sizeof t]);
   return sizeof t;
 }
@@ -97,36 +91,29 @@ int Serializable::read(uint8_t *value, int len, DataStream *stream) {
   return stream->readData(value, len);
 }
 
-int Serializable::read(uint16_t &value, DataStream *stream,
-                       bool is_little_endian) {
+int Serializable::read(uint16_t &value, DataStream *stream, bool is_little_endian) {
   return stream->read(value, is_little_endian);
 }
 
-int Serializable::read(uint32_t &value, DataStream *stream,
-                       bool is_little_endian) {
+int Serializable::read(uint32_t &value, DataStream *stream, bool is_little_endian) {
   return stream->read(value, is_little_endian);
 }
-int Serializable::read(uint64_t &value, DataStream *stream,
-                       bool is_little_endian) {
+int Serializable::read(uint64_t &value, DataStream *stream, bool is_little_endian) {
   return stream->read(value, is_little_endian);
 }
 
-int Serializable::write(uint32_t base_value, DataStream *stream,
-                        bool is_little_endian) {
+int Serializable::write(uint32_t base_value, DataStream *stream, bool is_little_endian) {
   const uint32_t value = is_little_endian ? htonl(base_value) : base_value;
 
   return writeData(value, stream);
 }
 
-int Serializable::write(uint64_t base_value, DataStream *stream,
-                        bool is_little_endian) {
-  const uint64_t value =
-      is_little_endian == 1 ? htonll_r(base_value) : base_value;
+int Serializable::write(uint64_t base_value, DataStream *stream, bool is_little_endian) {
+  const uint64_t value = is_little_endian == 1 ? htonll_r(base_value) : base_value;
   return writeData(value, stream);
 }
 
-int Serializable::write(uint16_t base_value, DataStream *stream,
-                        bool is_little_endian) {
+int Serializable::write(uint16_t base_value, DataStream *stream, bool is_little_endian) {
   const uint16_t value = is_little_endian == 1 ? htons(base_value) : base_value;
 
   return writeData(value, stream);

@@ -74,10 +74,9 @@ typename std::enable_if<!class_operations<T>::value, std::shared_ptr<T>>::type i
 
 template<typename T>
 typename std::enable_if<class_operations<T>::value, std::shared_ptr<T>>::type instantiate(const std::string name = "") {
-  if (name.length() == 0){
+  if (name.length() == 0) {
     return std::make_shared<T>();
-  }
-  else{
+  } else {
     return std::make_shared<T>(name);
   }
 }
@@ -106,7 +105,6 @@ class CoreComponent {
     uuid_unparse_lower(uuid_, uuidStr);
     uuidStr_ = uuidStr;
   }
-
 
   /**
    * Move Constructor.

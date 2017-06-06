@@ -48,7 +48,8 @@ class PutFile : public core::Processor {
    * Create a new processor
    */
   PutFile(std::string name, uuid_t uuid = NULL)
-      : core::Processor(name, uuid), logger_(logging::LoggerFactory<PutFile>::getLogger()) {
+      : core::Processor(name, uuid),
+        logger_(logging::LoggerFactory<PutFile>::getLogger()) {
   }
   // Destructor
   virtual ~PutFile() {
@@ -67,12 +68,10 @@ class PutFile : public core::Processor {
    * @param sessionFactory process session factory that is used when creating
    * ProcessSession objects.
    */
-  virtual void onSchedule(core::ProcessContext *context,
-                          core::ProcessSessionFactory *sessionFactory);
+  virtual void onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory);
 
   // OnTrigger method, implemented by NiFi PutFile
-  virtual void onTrigger(core::ProcessContext *context,
-                         core::ProcessSession *session);
+  virtual void onTrigger(core::ProcessContext *context, core::ProcessSession *session);
   // Initialize, over write by NiFi PutFile
   virtual void initialize(void);
 
@@ -80,13 +79,11 @@ class PutFile : public core::Processor {
    public:
     ReadCallback(const std::string &tmpFile, const std::string &destFile);
     ~ReadCallback();
-    virtual void process(std::ifstream *stream);
-    bool commit();
+    virtual void process(std::ifstream *stream);bool commit();
 
    private:
     std::shared_ptr<logging::Logger> logger_;
-    std::ofstream _tmpFileOs;
-    bool _writeSucceeded = false;
+    std::ofstream _tmpFileOs;bool _writeSucceeded = false;
     std::string _tmpFile;
     std::string _destFile;
   };
@@ -100,9 +97,7 @@ class PutFile : public core::Processor {
   // conflict resolution type.
   std::string conflict_resolution_;
 
-  bool putFile(core::ProcessSession *session,
-               std::shared_ptr<FlowFileRecord> flowFile,
-               const std::string &tmpFile, const std::string &destFile);
+  bool putFile(core::ProcessSession *session, std::shared_ptr<FlowFileRecord> flowFile, const std::string &tmpFile, const std::string &destFile);
   std::shared_ptr<logging::Logger> logger_;
 };
 

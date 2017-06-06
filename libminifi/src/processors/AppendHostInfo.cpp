@@ -46,19 +46,10 @@ namespace processors {
 #define HOST_NAME_MAX 255
 #endif
 
-core::Property AppendHostInfo::InterfaceName(
-    "Network Interface Name",
-    "Network interface from which to read an IP v4 address", "eth0");
-core::Property AppendHostInfo::HostAttribute(
-    "Hostname Attribute",
-    "Flowfile attribute to used to record the agent's hostname",
-    "source.hostname");
-core::Property AppendHostInfo::IPAttribute(
-    "IP Attribute",
-    "Flowfile attribute to used to record the agent's IP address",
-    "source.ipv4");
-core::Relationship AppendHostInfo::Success(
-    "success", "success operational on the flow record");
+core::Property AppendHostInfo::InterfaceName("Network Interface Name", "Network interface from which to read an IP v4 address", "eth0");
+core::Property AppendHostInfo::HostAttribute("Hostname Attribute", "Flowfile attribute to used to record the agent's hostname", "source.hostname");
+core::Property AppendHostInfo::IPAttribute("IP Attribute", "Flowfile attribute to used to record the agent's IP address", "source.ipv4");
+core::Relationship AppendHostInfo::Success("success", "success operational on the flow record");
 
 void AppendHostInfo::initialize() {
   // Set the supported properties
@@ -74,8 +65,7 @@ void AppendHostInfo::initialize() {
   setSupportedRelationships(relationships);
 }
 
-void AppendHostInfo::onTrigger(core::ProcessContext *context,
-                               core::ProcessSession *session) {
+void AppendHostInfo::onTrigger(core::ProcessContext *context, core::ProcessSession *session) {
   std::shared_ptr<core::FlowFile> flow = session->get();
   if (!flow)
     return;
@@ -84,8 +74,7 @@ void AppendHostInfo::onTrigger(core::ProcessContext *context,
 
   std::string hostAttribute = "";
   context->getProperty(HostAttribute.getName(), hostAttribute);
-  flow->addAttribute(hostAttribute.c_str(),
-                     org::apache::nifi::minifi::io::Socket::getMyHostName());
+  flow->addAttribute(hostAttribute.c_str(), org::apache::nifi::minifi::io::Socket::getMyHostName());
 
   // Get IP address for the specified interface
   std::string iface;
@@ -103,9 +92,7 @@ void AppendHostInfo::onTrigger(core::ProcessContext *context,
 
     std::string ipAttribute;
     context->getProperty(IPAttribute.getName(), ipAttribute);
-    flow->addAttribute(
-        ipAttribute.c_str(),
-        inet_ntoa(((struct sockaddr_in *) &ifr.ifr_addr)->sin_addr));
+    flow->addAttribute(ipAttribute.c_str(), inet_ntoa(((struct sockaddr_in *) &ifr.ifr_addr)->sin_addr));
   }
 
   // Transfer to the relationship

@@ -31,8 +31,7 @@ std::shared_ptr<core::ProcessGroup> &StandardControllerServiceNode::getProcessGr
   return process_group_;
 }
 
-void StandardControllerServiceNode::setProcessGroup(
-    std::shared_ptr<ProcessGroup> &processGroup) {
+void StandardControllerServiceNode::setProcessGroup(std::shared_ptr<ProcessGroup> &processGroup) {
   std::lock_guard<std::mutex> lock(mutex_);
   process_group_ = processGroup;
 }
@@ -44,8 +43,7 @@ bool StandardControllerServiceNode::enable() {
   if (getProperty(property.getName(), property)) {
     active = true;
     for (auto linked_service : property.getValues()) {
-      std::shared_ptr<ControllerServiceNode> csNode = provider
-          ->getControllerServiceNode(linked_service);
+      std::shared_ptr<ControllerServiceNode> csNode = provider->getControllerServiceNode(linked_service);
       if (nullptr != csNode) {
         std::lock_guard<std::mutex> lock(mutex_);
         linked_controller_services_.push_back(csNode);
@@ -53,8 +51,7 @@ bool StandardControllerServiceNode::enable() {
     }
   } else {
   }
-  std::shared_ptr<ControllerService> impl =
-      getControllerServiceImplementation();
+  std::shared_ptr<ControllerService> impl = getControllerServiceImplementation();
   if (nullptr != impl) {
     impl->onEnable();
   }

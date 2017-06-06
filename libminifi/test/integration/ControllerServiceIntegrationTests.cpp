@@ -43,14 +43,10 @@
 REGISTER_RESOURCE(MockControllerService);
 REGISTER_RESOURCE(MockProcessor);
 
-std::shared_ptr<core::controller::StandardControllerServiceNode> newCsNode(
-    std::shared_ptr<core::controller::ControllerServiceProvider> provider,
-    const std::string id) {
-  std::shared_ptr<core::controller::ControllerService> service =
-      std::make_shared<MockControllerService>();
-  std::shared_ptr<core::controller::StandardControllerServiceNode> testNode =
-      std::make_shared<core::controller::StandardControllerServiceNode>(
-          service, provider, id, std::make_shared<minifi::Configure>());
+std::shared_ptr<core::controller::StandardControllerServiceNode> newCsNode(std::shared_ptr<core::controller::ControllerServiceProvider> provider, const std::string id) {
+  std::shared_ptr<core::controller::ControllerService> service = std::make_shared<MockControllerService>();
+  std::shared_ptr<core::controller::StandardControllerServiceNode> testNode = std::make_shared<core::controller::StandardControllerServiceNode>(service, provider, id,
+                                                                                                                                                std::make_shared<minifi::Configure>());
 
   return testNode;
 }
@@ -58,7 +54,6 @@ std::shared_ptr<core::controller::StandardControllerServiceNode> newCsNode(
 void waitToVerifyProcessor() {
   std::this_thread::sleep_for(std::chrono::seconds(2));
 }
-
 
 int main(int argc, char **argv) {
   std::string test_file_location;
@@ -69,87 +64,60 @@ int main(int argc, char **argv) {
     key_dir = argv[1];
   }
 
-  std::shared_ptr<minifi::Configure> configuration = std::make_shared<
-      minifi::Configure>();
+  std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::Configure>();
 
-  std::shared_ptr<core::Repository> test_repo =
-      std::make_shared<TestRepository>();
-  std::shared_ptr<core::Repository> test_flow_repo = std::make_shared<
-      TestFlowRepository>();
+  std::shared_ptr<core::Repository> test_repo = std::make_shared<TestRepository>();
+  std::shared_ptr<core::Repository> test_flow_repo = std::make_shared<TestFlowRepository>();
 
-  configuration->set(minifi::Configure::nifi_flow_configuration_file,
-                     test_file_location);
+  configuration->set(minifi::Configure::nifi_flow_configuration_file, test_file_location);
   std::string client_cert = "cn.crt.pem";
   std::string priv_key_file = "cn.ckey.pem";
   std::string passphrase = "cn.pass";
   std::string ca_cert = "nifi-cert.pem";
-  configuration->set(minifi::Configure::nifi_security_client_certificate,
-                     test_file_location);
-  configuration->set(minifi::Configure::nifi_security_client_private_key,
-                     priv_key_file);
-  configuration->set(minifi::Configure::nifi_security_client_pass_phrase,
-                     passphrase);
+  configuration->set(minifi::Configure::nifi_security_client_certificate, test_file_location);
+  configuration->set(minifi::Configure::nifi_security_client_private_key, priv_key_file);
+  configuration->set(minifi::Configure::nifi_security_client_pass_phrase, passphrase);
   configuration->set(minifi::Configure::nifi_default_directory, key_dir);
 
-  std::shared_ptr<minifi::io::StreamFactory> stream_factory = std::make_shared<
-      minifi::io::StreamFactory>(configuration);
+  std::shared_ptr<minifi::io::StreamFactory> stream_factory = std::make_shared<minifi::io::StreamFactory>(configuration);
 
-  std::unique_ptr<core::FlowConfiguration> yaml_ptr = std::unique_ptr<
-      core::YamlConfiguration>(
-      new core::YamlConfiguration(test_repo, test_repo, stream_factory,
-                                  configuration, test_file_location));
-  std::shared_ptr<TestRepository> repo =
-      std::static_pointer_cast<TestRepository>(test_repo);
+  std::unique_ptr<core::FlowConfiguration> yaml_ptr = std::unique_ptr<core::YamlConfiguration>(new core::YamlConfiguration(test_repo, test_repo, stream_factory, configuration, test_file_location));
+  std::shared_ptr<TestRepository> repo = std::static_pointer_cast<TestRepository>(test_repo);
 
-  std::shared_ptr<minifi::FlowController> controller = std::make_shared<
-      minifi::FlowController>(test_repo, test_flow_repo, configuration,
-                              std::move(yaml_ptr),
-                              DEFAULT_ROOT_GROUP_NAME,
-                              true);
+  std::shared_ptr<minifi::FlowController> controller = std::make_shared<minifi::FlowController>(test_repo, test_flow_repo, configuration, std::move(yaml_ptr),
+  DEFAULT_ROOT_GROUP_NAME,
+                                                                                                true);
 
   disabled = false;
-  std::shared_ptr<core::controller::ControllerServiceMap> map =
-      std::make_shared<core::controller::ControllerServiceMap>();
+  std::shared_ptr<core::controller::ControllerServiceMap> map = std::make_shared<core::controller::ControllerServiceMap>();
 
-  core::YamlConfiguration yaml_config(test_repo, test_repo, stream_factory,
-                                      configuration, test_file_location);
+  core::YamlConfiguration yaml_config(test_repo, test_repo, stream_factory, configuration, test_file_location);
 
-  std::unique_ptr<core::ProcessGroup> ptr = yaml_config.getRoot(
-      test_file_location);
-  std::shared_ptr<core::ProcessGroup> pg = std::shared_ptr<core::ProcessGroup>(
-      ptr.get());
+  std::unique_ptr<core::ProcessGroup> ptr = yaml_config.getRoot(test_file_location);
+  std::shared_ptr<core::ProcessGroup> pg = std::shared_ptr<core::ProcessGroup>(ptr.get());
   ptr.release();
 
-  std::shared_ptr<core::controller::StandardControllerServiceProvider> provider =
-      std::make_shared<core::controller::StandardControllerServiceProvider>(
-          map, pg, std::make_shared<minifi::Configure>());
-  std::shared_ptr<core::controller::ControllerServiceNode> mockNode = pg
-      ->findControllerService("MockItLikeIts1995");
+  std::shared_ptr<core::controller::StandardControllerServiceProvider> provider = std::make_shared<core::controller::StandardControllerServiceProvider>(map, pg, std::make_shared<minifi::Configure>());
+  std::shared_ptr<core::controller::ControllerServiceNode> mockNode = pg->findControllerService("MockItLikeIts1995");
   assert(mockNode != nullptr);
   mockNode->enable();
-  std::vector<std::shared_ptr<core::controller::ControllerServiceNode> > linkedNodes =
-      mockNode->getLinkedControllerServices();
+  std::vector<std::shared_ptr<core::controller::ControllerServiceNode> > linkedNodes = mockNode->getLinkedControllerServices();
   assert(linkedNodes.size() == 1);
 
-  std::shared_ptr<core::controller::ControllerServiceNode> notexistNode = pg
-      ->findControllerService("MockItLikeItsWrong");
+  std::shared_ptr<core::controller::ControllerServiceNode> notexistNode = pg->findControllerService("MockItLikeItsWrong");
   assert(notexistNode == nullptr);
   controller->load();
   controller->start();
-  std::shared_ptr<core::controller::ControllerServiceNode> ssl_client_cont =
-      controller->getControllerServiceNode("SSLClientServiceTest");
+  std::shared_ptr<core::controller::ControllerServiceNode> ssl_client_cont = controller->getControllerServiceNode("SSLClientServiceTest");
   ssl_client_cont->enable();
   assert(ssl_client_cont != nullptr);
   assert(ssl_client_cont->getControllerServiceImplementation() != nullptr);
-  std::shared_ptr<minifi::controllers::SSLContextService> ssl_client =
-      std::static_pointer_cast<minifi::controllers::SSLContextService>(
-          ssl_client_cont->getControllerServiceImplementation());
+  std::shared_ptr<minifi::controllers::SSLContextService> ssl_client = std::static_pointer_cast<minifi::controllers::SSLContextService>(ssl_client_cont->getControllerServiceImplementation());
 
   assert(ssl_client->getCACertificate().length() > 0);
 
   // now let's disable one of the controller services.
-  std::shared_ptr<core::controller::ControllerServiceNode> cs_id = controller
-      ->getControllerServiceNode("ID");
+  std::shared_ptr<core::controller::ControllerServiceNode> cs_id = controller->getControllerServiceNode("ID");
   assert(cs_id != nullptr);
   {
     std::lock_guard<std::mutex> lock(control_mutex);
@@ -163,8 +131,7 @@ int main(int argc, char **argv) {
     disabled = false;
     waitToVerifyProcessor();
   }
-  std::shared_ptr<core::controller::ControllerServiceNode> mock_cont =
-      controller->getControllerServiceNode("MockItLikeIts1995");
+  std::shared_ptr<core::controller::ControllerServiceNode> mock_cont = controller->getControllerServiceNode("MockItLikeIts1995");
   assert(cs_id->enabled());
   {
     std::lock_guard<std::mutex> lock(control_mutex);

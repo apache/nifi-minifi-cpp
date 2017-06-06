@@ -41,12 +41,10 @@ namespace core {
 class FlowFileRepository;
 #endif
 
-std::shared_ptr<core::Repository> createRepository(
-    const std::string configuration_class_name, bool fail_safe, const std::string repo_name) {
+std::shared_ptr<core::Repository> createRepository(const std::string configuration_class_name, bool fail_safe, const std::string repo_name) {
   std::shared_ptr<core::Repository> return_obj = nullptr;
   std::string class_name_lc = configuration_class_name;
-  std::transform(class_name_lc.begin(), class_name_lc.end(),
-                 class_name_lc.begin(), ::tolower);
+  std::transform(class_name_lc.begin(), class_name_lc.end(), class_name_lc.begin(), ::tolower);
   try {
     std::shared_ptr<core::Repository> return_obj = nullptr;
     if (class_name_lc == "flowfilerepository") {
@@ -65,21 +63,17 @@ std::shared_ptr<core::Repository> createRepository(
       return return_obj;
     }
     if (fail_safe) {
-      return std::make_shared<core::Repository>("fail_safe", "fail_safe", 1, 1,
-                                                1);
+      return std::make_shared<core::Repository>("fail_safe", "fail_safe", 1, 1, 1);
     } else {
-      throw std::runtime_error(
-          "Support for the provided configuration class could not be found");
+      throw std::runtime_error("Support for the provided configuration class could not be found");
     }
   } catch (const std::runtime_error &r) {
     if (fail_safe) {
-      return std::make_shared<core::Repository>("fail_safe", "fail_safe", 1, 1,
-                                                1);
+      return std::make_shared<core::Repository>("fail_safe", "fail_safe", 1, 1, 1);
     }
   }
 
-  throw std::runtime_error(
-      "Support for the provided configuration class could not be found");
+  throw std::runtime_error("Support for the provided configuration class could not be found");
 }
 
 } /* namespace core */

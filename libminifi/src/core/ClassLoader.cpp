@@ -28,7 +28,9 @@ namespace nifi {
 namespace minifi {
 namespace core {
 
-ClassLoader::ClassLoader() : logger_(logging::LoggerFactory<ClassLoader>::getLogger()) {}
+ClassLoader::ClassLoader()
+    : logger_(logging::LoggerFactory<ClassLoader>::getLogger()) {
+}
 
 ClassLoader &ClassLoader::getDefaultClassLoader() {
   static ClassLoader ret;
@@ -49,8 +51,7 @@ uint16_t ClassLoader::registerResource(const std::string &resource) {
   dlerror();
 
   // load the symbols
-  createFactory* create_factory_func = reinterpret_cast<createFactory*>(dlsym(
-      resource_ptr, "createFactory"));
+  createFactory* create_factory_func = reinterpret_cast<createFactory*>(dlsym(resource_ptr, "createFactory"));
   const char* dlsym_error = dlerror();
   if (dlsym_error) {
     logger_->log_error("Cannot load library: %s", dlsym_error);
@@ -61,8 +62,7 @@ uint16_t ClassLoader::registerResource(const std::string &resource) {
 
   std::lock_guard<std::mutex> lock(internal_mutex_);
 
-  loaded_factories_[factory->getClassName()] = std::unique_ptr<ObjectFactory>(
-      factory);
+  loaded_factories_[factory->getClassName()] = std::unique_ptr<ObjectFactory>(factory);
 
   return RESOURCE_SUCCESS;
 }

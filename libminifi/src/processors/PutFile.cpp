@@ -38,19 +38,12 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-core::Property PutFile::Directory("Output Directory",
-                                  "The output directory to which to put files",
-                                  ".");
-core::Property PutFile::ConflictResolution(
-    "Conflict Resolution Strategy",
-    "Indicates what should happen when a file with the same name already exists in the output directory",
-    CONFLICT_RESOLUTION_STRATEGY_FAIL);
+core::Property PutFile::Directory("Output Directory", "The output directory to which to put files", ".");
+core::Property PutFile::ConflictResolution("Conflict Resolution Strategy", "Indicates what should happen when a file with the same name already exists in the output directory",
+                                           CONFLICT_RESOLUTION_STRATEGY_FAIL);
 
-core::Relationship PutFile::Success("success",
-                                    "All files are routed to success");
-core::Relationship PutFile::Failure(
-    "failure",
-    "Failed files (conflict, write failure, etc.) are transferred to failure");
+core::Relationship PutFile::Success("success", "All files are routed to success");
+core::Relationship PutFile::Failure("failure", "Failed files (conflict, write failure, etc.) are transferred to failure");
 
 void PutFile::initialize() {
   // Set the supported properties
@@ -65,28 +58,23 @@ void PutFile::initialize() {
   setSupportedRelationships(relationships);
 }
 
-void PutFile::onSchedule(core::ProcessContext *context,
-                         core::ProcessSessionFactory *sessionFactory) {
+void PutFile::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory) {
   if (!context->getProperty(Directory.getName(), directory_)) {
     logger_->log_error("Directory attribute is missing or invalid");
   }
 
-  if (!context->getProperty(ConflictResolution.getName(),
-                            conflict_resolution_)) {
-    logger_->log_error(
-        "Conflict Resolution Strategy attribute is missing or invalid");
+  if (!context->getProperty(ConflictResolution.getName(), conflict_resolution_)) {
+    logger_->log_error("Conflict Resolution Strategy attribute is missing or invalid");
   }
 }
 
-void PutFile::onTrigger(core::ProcessContext *context,
-                        core::ProcessSession *session) {
+void PutFile::onTrigger(core::ProcessContext *context, core::ProcessSession *session) {
   if (IsNullOrEmpty(directory_) || IsNullOrEmpty(conflict_resolution_)) {
     context->yield();
     return;
   }
 
-  std::shared_ptr<FlowFileRecord> flowFile = std::static_pointer_cast<
-      FlowFileRecord>(session->get());
+  std::shared_ptr<FlowFileRecord> flowFile = std::static_pointer_cast<FlowFileRecord>(session->get());
 
   // Do nothing if there are no incoming files
   if (!flowFile) {
@@ -111,16 +99,13 @@ void PutFile::onTrigger(core::ProcessContext *context,
   destFileSs << directory_ << "/" << filename;
   std::string destFile = destFileSs.str();
 
-  logger_->log_info("PutFile writing file %s into directory %s",
-                    filename.c_str(), directory_.c_str());
+  logger_->log_info("PutFile writing file %s into directory %s", filename.c_str(), directory_.c_str());
 
   // If file exists, apply conflict resolution strategy
   struct stat statResult;
 
   if (stat(destFile.c_str(), &statResult) == 0) {
-    logger_->log_info(
-        "Destination file %s exists; applying Conflict Resolution Strategy: %s",
-        destFile.c_str(), conflict_resolution_.c_str());
+    logger_->log_info("Destination file %s exists; applying Conflict Resolution Strategy: %s", destFile.c_str(), conflict_resolution_.c_str());
 
     if (conflict_resolution_ == CONFLICT_RESOLUTION_STRATEGY_REPLACE) {
       putFile(session, flowFile, tmpFile, destFile);
@@ -134,9 +119,7 @@ void PutFile::onTrigger(core::ProcessContext *context,
   }
 }
 
-bool PutFile::putFile(core::ProcessSession *session,
-                      std::shared_ptr<FlowFileRecord> flowFile,
-                      const std::string &tmpFile, const std::string &destFile) {
+bool PutFile::putFile(core::ProcessSession *session, std::shared_ptr<FlowFileRecord> flowFile, const std::string &tmpFile, const std::string &destFile) {
   ReadCallback cb(tmpFile, destFile);
   session->read(flowFile, &cb);
 
@@ -149,8 +132,7 @@ bool PutFile::putFile(core::ProcessSession *session,
   return false;
 }
 
-PutFile::ReadCallback::ReadCallback(const std::string &tmpFile,
-                                    const std::string &destFile)
+PutFile::ReadCallback::ReadCallback(const std::string &tmpFile, const std::string &destFile)
     : _tmpFile(tmpFile),
       _tmpFileOs(tmpFile),
       _destFile(destFile),
@@ -170,25 +152,19 @@ void PutFile::ReadCallback::process(std::ifstream *stream) {
 bool PutFile::ReadCallback::commit() {
   bool success = false;
 
-  logger_->log_info("PutFile committing put file operation to %s",
-                    _destFile.c_str());
+  logger_->log_info("PutFile committing put file operation to %s", _destFile.c_str());
 
   if (_writeSucceeded) {
     _tmpFileOs.close();
 
     if (rename(_tmpFile.c_str(), _destFile.c_str())) {
-      logger_->log_info(
-          "PutFile commit put file operation to %s failed because rename() call failed",
-          _destFile.c_str());
+      logger_->log_info("PutFile commit put file operation to %s failed because rename() call failed", _destFile.c_str());
     } else {
       success = true;
-      logger_->log_info("PutFile commit put file operation to %s succeeded",
-                        _destFile.c_str());
+      logger_->log_info("PutFile commit put file operation to %s succeeded", _destFile.c_str());
     }
   } else {
-    logger_->log_error(
-        "PutFile commit put file operation to %s failed because write failed",
-        _destFile.c_str());
+    logger_->log_error("PutFile commit put file operation to %s failed because write failed", _destFile.c_str());
   }
 
   return success;

@@ -30,9 +30,7 @@ TEST_CASE("Test Repo Empty Value Attribute", "[TestFFR1]") {
   TestController testController;
   char format[] = "/tmp/testRepo.XXXXXX";
   char *dir = testController.createTempDirectory(format);
-  std::shared_ptr<core::repository::FlowFileRepository> repository =
-      std::make_shared<core::repository::FlowFileRepository>("ff", dir, 0, 0,
-                                                             1);
+  std::shared_ptr<core::repository::FlowFileRepository> repository = std::make_shared<core::repository::FlowFileRepository>("ff", dir, 0, 0, 1);
 
   repository->initialize(std::make_shared<minifi::Configure>());
 
@@ -49,9 +47,7 @@ TEST_CASE("Test Repo Empty Key Attribute ", "[TestFFR2]") {
   TestController testController;
   char format[] = "/tmp/testRepo.XXXXXX";
   char *dir = testController.createTempDirectory(format);
-  std::shared_ptr<core::repository::FlowFileRepository> repository =
-      std::make_shared<core::repository::FlowFileRepository>("ff", dir, 0, 0,
-                                                             1);
+  std::shared_ptr<core::repository::FlowFileRepository> repository = std::make_shared<core::repository::FlowFileRepository>("ff", dir, 0, 0, 1);
 
   repository->initialize(std::make_shared<minifi::Configure>());
 
@@ -70,12 +66,9 @@ TEST_CASE("Test Repo Key Attribute Verify ", "[TestFFR3]") {
   TestController testController;
   char format[] = "/tmp/testRepo.XXXXXX";
   char *dir = testController.createTempDirectory(format);
-  std::shared_ptr<core::repository::FlowFileRepository> repository =
-      std::make_shared<core::repository::FlowFileRepository>("ff", dir, 0, 0,
-                                                             1);
+  std::shared_ptr<core::repository::FlowFileRepository> repository = std::make_shared<core::repository::FlowFileRepository>("ff", dir, 0, 0, 1);
 
-  repository->initialize(
-      std::make_shared<org::apache::nifi::minifi::Configure>());
+  repository->initialize(std::make_shared<org::apache::nifi::minifi::Configure>());
 
   minifi::FlowFileRecord record(repository);
 

@@ -37,10 +37,7 @@ class TimerDrivenSchedulingAgent : public ThreadedSchedulingAgent {
   /*!
    * Create a new processor
    */
-  TimerDrivenSchedulingAgent(
-      std::shared_ptr<core::controller::ControllerServiceProvider> controller_service_provider,
-      std::shared_ptr<core::Repository> repo,
-      std::shared_ptr<Configure> configure)
+  TimerDrivenSchedulingAgent(std::shared_ptr<core::controller::ControllerServiceProvider> controller_service_provider, std::shared_ptr<core::Repository> repo, std::shared_ptr<Configure> configure)
       : ThreadedSchedulingAgent(controller_service_provider, repo, configure) {
   }
   //  Destructor
@@ -49,16 +46,13 @@ class TimerDrivenSchedulingAgent : public ThreadedSchedulingAgent {
   /**
    * Run function that accepts the processor, context and session factory.
    */
-  void run(std::shared_ptr<core::Processor> processor,
-           core::ProcessContext *processContext,
-           core::ProcessSessionFactory *sessionFactory);
+  void run(std::shared_ptr<core::Processor> processor, core::ProcessContext *processContext, core::ProcessSessionFactory *sessionFactory);
 
  private:
   // Prevent default copy constructor and assignment operation
   // Only support pass by reference or pointer
   TimerDrivenSchedulingAgent(const TimerDrivenSchedulingAgent &parent);
-  TimerDrivenSchedulingAgent &operator=(
-      const TimerDrivenSchedulingAgent &parent);
+  TimerDrivenSchedulingAgent &operator=(const TimerDrivenSchedulingAgent &parent);
 
 };
 

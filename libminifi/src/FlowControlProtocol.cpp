@@ -65,18 +65,18 @@ int FlowControlProtocol::connectServer(const char *host, uint16_t port) {
     }
     if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR,
             reinterpret_cast<char*>(&opt), sizeof(opt)) < 0) {
-          logger_->log_error("setsockopt() SO_REUSEADDR failed");
-          close(sock);
-          return 0;
-        }
-      }
+      logger_->log_error("setsockopt() SO_REUSEADDR failed");
+      close(sock);
+      return 0;
+    }
+  }
 
-      int sndsize = 256*1024;
-      if (setsockopt(sock, SOL_SOCKET, SO_SNDBUF, reinterpret_cast<char*>(&sndsize), sizeof(sndsize)) < 0) {
-        logger_->log_error("setsockopt() SO_SNDBUF failed");
-        close(sock);
-        return 0;
-      }
+  int sndsize = 256*1024;
+  if (setsockopt(sock, SOL_SOCKET, SO_SNDBUF, reinterpret_cast<char*>(&sndsize), sizeof(sndsize)) < 0) {
+    logger_->log_error("setsockopt() SO_SNDBUF failed");
+    close(sock);
+    return 0;
+  }
 #endif
 
   struct sockaddr_in sa;
@@ -108,9 +108,7 @@ int FlowControlProtocol::connectServer(const char *host, uint16_t port) {
     return 0;
   }
 
-  logger_->log_info(
-      "Flow Control Protocol socket %d connect to server %s port %d success",
-      sock, host, port);
+  logger_->log_info("Flow Control Protocol socket %d connect to server %s port %d success", sock, host, port);
 
   return sock;
 }
@@ -224,8 +222,7 @@ void FlowControlProtocol::stop() {
 
 void FlowControlProtocol::run(FlowControlProtocol *protocol) {
   while (protocol->running_) {
-    std::this_thread::sleep_for(
-        std::chrono::milliseconds(protocol->_reportInterval));
+    std::this_thread::sleep_for(std::chrono::milliseconds(protocol->_reportInterval));
     if (!protocol->_registered) {
       // if it is not register yet
       protocol->sendRegisterReq();
@@ -251,9 +248,7 @@ int FlowControlProtocol::sendRegisterReq() {
     return -1;
 
   // Calculate the total payload msg size
-  uint32_t payloadSize = FlowControlMsgIDEncodingLen(FLOW_SERIAL_NUMBER, 0)
-      + FlowControlMsgIDEncodingLen(FLOW_YML_NAME,
-                                    this->_controller->getName().size() + 1);
+  uint32_t payloadSize = FlowControlMsgIDEncodingLen(FLOW_SERIAL_NUMBER, 0) + FlowControlMsgIDEncodingLen(FLOW_YML_NAME, this->_controller->getName().size() + 1);
   uint32_t size = sizeof(FlowControlProtocolHeader) + payloadSize;
 
   uint8_t *data = new uint8_t[size];
@@ -294,17 +289,13 @@ int FlowControlProtocol::sendRegisterReq() {
   if (status <= 0) {
     close(_socket);
     _socket = 0;
-    logger_->log_error(
-        "Flow Control Protocol Read Register Resp header failed");
+    logger_->log_error("Flow Control Protocol Read Register Resp header failed");
     return -1;
   }
-  logger_->log_info("Flow Control Protocol receive MsgType %s",
-                    FlowControlMsgTypeToStr((FlowControlMsgType) hdr.msgType));
+  logger_->log_info("Flow Control Protocol receive MsgType %s", FlowControlMsgTypeToStr((FlowControlMsgType) hdr.msgType));
   logger_->log_info("Flow Control Protocol receive Seq Num %d", hdr.seqNumber);
-  logger_->log_info("Flow Control Protocol receive Resp Code %s",
-                    FlowControlRespCodeToStr((FlowControlRespCode) hdr.status));
-  logger_->log_info("Flow Control Protocol receive Payload len %d",
-                    hdr.payloadLen);
+  logger_->log_info("Flow Control Protocol receive Resp Code %s", FlowControlRespCodeToStr((FlowControlRespCode) hdr.status));
+  logger_->log_info("Flow Control Protocol receive Payload len %d", hdr.payloadLen);
 
   if (hdr.status == RESP_SUCCESS && hdr.seqNumber == this->_seqNumber) {
     this->_registered = true;
@@ -327,8 +318,7 @@ int FlowControlProtocol::sendRegisterReq() {
         // Fixed 4 bytes
         uint32_t reportInterval;
         payloadPtr = this->decode(payloadPtr, reportInterval);
-        logger_->log_info("Flow Control Protocol receive report interval %d ms",
-                          reportInterval);
+        logger_->log_info("Flow Control Protocol receive report interval %d ms", reportInterval);
         this->_reportInterval = reportInterval;
       } else {
         break;
@@ -356,8 +346,7 @@ int FlowControlProtocol::sendReportReq() {
     return -1;
 
   // Calculate the total payload msg size
-  uint32_t payloadSize = FlowControlMsgIDEncodingLen(
-      FLOW_YML_NAME, this->_controller->getName().size() + 1);
+  uint32_t payloadSize = FlowControlMsgIDEncodingLen(FLOW_YML_NAME, this->_controller->getName().size() + 1);
   uint32_t size = sizeof(FlowControlProtocolHeader) + payloadSize;
 
   uint8_t *data = new uint8_t[size];
@@ -397,13 +386,10 @@ int FlowControlProtocol::sendReportReq() {
     logger_->log_error("Flow Control Protocol Read Report Resp header failed");
     return -1;
   }
-  logger_->log_info("Flow Control Protocol receive MsgType %s",
-                    FlowControlMsgTypeToStr((FlowControlMsgType) hdr.msgType));
+  logger_->log_info("Flow Control Protocol receive MsgType %s", FlowControlMsgTypeToStr((FlowControlMsgType) hdr.msgType));
   logger_->log_info("Flow Control Protocol receive Seq Num %d", hdr.seqNumber);
-  logger_->log_info("Flow Control Protocol receive Resp Code %s",
-                    FlowControlRespCodeToStr((FlowControlRespCode) hdr.status));
-  logger_->log_info("Flow Control Protocol receive Payload len %d",
-                    hdr.payloadLen);
+  logger_->log_info("Flow Control Protocol receive Resp Code %s", FlowControlRespCodeToStr((FlowControlRespCode) hdr.status));
+  logger_->log_info("Flow Control Protocol receive Payload len %d", hdr.payloadLen);
 
   if (hdr.status == RESP_SUCCESS && hdr.seqNumber == this->_seqNumber) {
     this->_seqNumber++;
@@ -428,27 +414,20 @@ int FlowControlProtocol::sendReportReq() {
         payloadPtr = this->decode(payloadPtr, len);
         processor = (const char *) payloadPtr;
         payloadPtr += len;
-        logger_->log_info(
-            "Flow Control Protocol receive report resp processor %s",
-            processor.c_str());
+        logger_->log_info("Flow Control Protocol receive report resp processor %s", processor.c_str());
       } else if (((FlowControlMsgID) msgID) == PROPERTY_NAME) {
         uint32_t len;
         payloadPtr = this->decode(payloadPtr, len);
         propertyName = (const char *) payloadPtr;
         payloadPtr += len;
-        logger_->log_info(
-            "Flow Control Protocol receive report resp property name %s",
-            propertyName.c_str());
+        logger_->log_info("Flow Control Protocol receive report resp property name %s", propertyName.c_str());
       } else if (((FlowControlMsgID) msgID) == PROPERTY_VALUE) {
         uint32_t len;
         payloadPtr = this->decode(payloadPtr, len);
         propertyValue = (const char *) payloadPtr;
         payloadPtr += len;
-        logger_->log_info(
-            "Flow Control Protocol receive report resp property value %s",
-            propertyValue.c_str());
-        this->_controller->updatePropertyValue(processor, propertyName,
-                                               propertyValue);
+        logger_->log_info("Flow Control Protocol receive report resp property value %s", propertyValue.c_str());
+        this->_controller->updatePropertyValue(processor, propertyName, propertyValue);
       } else {
         break;
       }
@@ -457,24 +436,21 @@ int FlowControlProtocol::sendReportReq() {
     close(_socket);
     _socket = 0;
     return 0;
-  } else if (hdr.status == RESP_TRIGGER_REGISTER
-      && hdr.seqNumber == this->_seqNumber) {
+  } else if (hdr.status == RESP_TRIGGER_REGISTER && hdr.seqNumber == this->_seqNumber) {
     logger_->log_info("Flow Control Protocol trigger reregister");
     this->_registered = false;
     this->_seqNumber++;
     close(_socket);
     _socket = 0;
     return 0;
-  } else if (hdr.status == RESP_STOP_FLOW_CONTROLLER
-      && hdr.seqNumber == this->_seqNumber) {
+  } else if (hdr.status == RESP_STOP_FLOW_CONTROLLER && hdr.seqNumber == this->_seqNumber) {
     logger_->log_info("Flow Control Protocol stop flow controller");
     this->_controller->stop(true);
     this->_seqNumber++;
     close(_socket);
     _socket = 0;
     return 0;
-  } else if (hdr.status == RESP_START_FLOW_CONTROLLER
-      && hdr.seqNumber == this->_seqNumber) {
+  } else if (hdr.status == RESP_START_FLOW_CONTROLLER && hdr.seqNumber == this->_seqNumber) {
     logger_->log_info("Flow Control Protocol start flow controller");
     this->_controller->start();
     this->_seqNumber++;

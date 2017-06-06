@@ -79,8 +79,7 @@ class SiteToSiteResponder : public minifi::io::BaseStream {
    * @param stream stream from which we will read
    * @return resulting read size
    **/
-  virtual int read(uint16_t &base_value, bool is_little_endian =
-                       minifi::io::EndiannessCheck::IS_LITTLE) {
+  virtual int read(uint16_t &base_value, bool is_little_endian = minifi::io::EndiannessCheck::IS_LITTLE) {
     base_value = std::stoi(get_next_response());
     return 2;
   }
@@ -122,8 +121,7 @@ class SiteToSiteResponder : public minifi::io::BaseStream {
    * @param stream stream from which we will read
    * @return resulting read size
    **/
-  virtual int read(uint32_t &value, bool is_little_endian =
-                       minifi::io::EndiannessCheck::IS_LITTLE) {
+  virtual int read(uint32_t &value, bool is_little_endian = minifi::io::EndiannessCheck::IS_LITTLE) {
     value = std::stoul(get_next_response());
     return 4;
   }
@@ -134,8 +132,7 @@ class SiteToSiteResponder : public minifi::io::BaseStream {
    * @param stream stream from which we will read
    * @return resulting read size
    **/
-  virtual int read(uint64_t &value, bool is_little_endian =
-                       minifi::io::EndiannessCheck::IS_LITTLE) {
+  virtual int read(uint64_t &value, bool is_little_endian = minifi::io::EndiannessCheck::IS_LITTLE) {
     value = std::stoull(get_next_response());
     return 8;
   }

@@ -51,10 +51,8 @@ std::unique_ptr<SSLContext> SSLContextService::createSSLContext() {
   method = TLSv1_2_client_method();
   SSL_CTX *ctx = SSL_CTX_new(method);
 
-  if (SSL_CTX_use_certificate_file(ctx, certificate.c_str(), SSL_FILETYPE_PEM)
-      <= 0) {
-    logger_->log_error("Could not create load certificate, error : %s",
-                       std::strerror(errno));
+  if (SSL_CTX_use_certificate_file(ctx, certificate.c_str(), SSL_FILETYPE_PEM) <= 0) {
+    logger_->log_error("Could not create load certificate, error : %s", std::strerror(errno));
     return nullptr;
   }
   if (!IsNullOrEmpty(passphrase_)) {
@@ -62,25 +60,20 @@ std::unique_ptr<SSLContext> SSLContextService::createSSLContext() {
     SSL_CTX_set_default_passwd_cb(ctx, pemPassWordCb);
   }
 
-  int retp = SSL_CTX_use_PrivateKey_file(ctx, private_key_.c_str(),
-                                         SSL_FILETYPE_PEM);
+  int retp = SSL_CTX_use_PrivateKey_file(ctx, private_key_.c_str(), SSL_FILETYPE_PEM);
   if (retp != 1) {
-    logger_->log_error("Could not create load private key,%i on %s error : %s",
-                       retp, private_key_, std::strerror(errno));
+    logger_->log_error("Could not create load private key,%i on %s error : %s", retp, private_key_, std::strerror(errno));
     return nullptr;
   }
 
   if (!SSL_CTX_check_private_key(ctx)) {
-    logger_->log_error(
-        "Private key does not match the public certificate, error : %s",
-        std::strerror(errno));
+    logger_->log_error("Private key does not match the public certificate, error : %s", std::strerror(errno));
     return nullptr;
   }
 
   retp = SSL_CTX_load_verify_locations(ctx, ca_certificate_.c_str(), 0);
   if (retp == 0) {
-    logger_->log_error("Can not load CA certificate, Exiting, error : %s",
-                       std::strerror(errno));
+    logger_->log_error("Can not load CA certificate, Exiting, error : %s", std::strerror(errno));
   }
   return std::unique_ptr<SSLContext>(new SSLContext(ctx));
 }
@@ -114,20 +107,16 @@ void SSLContextService::onEnable() {
   valid_ = true;
   core::Property property("Client Certificate", "Client Certificate");
   core::Property privKey("Private Key", "Private Key file");
-  core::Property passphrase_prop(
-      "Passphrase", "Client passphrase. Either a file or unencrypted text");
+  core::Property passphrase_prop("Passphrase", "Client passphrase. Either a file or unencrypted text");
   core::Property caCert("CA Certificate", "CA certificate file");
   std::string default_dir;
   if (nullptr != configuration_)
-  configuration_->get(Configure::nifi_default_directory, default_dir);
+    configuration_->get(Configure::nifi_default_directory, default_dir);
 
   logger_->log_trace("onEnable()");
 
-  if (getProperty(property.getName(), certificate)
-      && getProperty(privKey.getName(), private_key_)) {
-    logger_->log_error(
-        "Certificate and Private Key PEM file not configured, error: %s.",
-        std::strerror(errno));
+  if (getProperty(property.getName(), certificate) && getProperty(privKey.getName(), private_key_)) {
+    logger_->log_error("Certificate and Private Key PEM file not configured, error: %s.", std::strerror(errno));
 
     std::ifstream cert_file(certificate);
     std::ifstream priv_file(private_key_);
@@ -168,17 +157,14 @@ void SSLContextService::onEnable() {
     if (passphrase_file.good()) {
       passphrase_file_ = passphrase_;
       // we should read it from the file
-      passphrase_.assign((std::istreambuf_iterator<char>(passphrase_file)),
-                         std::istreambuf_iterator<char>());
+      passphrase_.assign((std::istreambuf_iterator<char>(passphrase_file)), std::istreambuf_iterator<char>());
     } else {
       std::string test_passphrase = default_dir + passphrase_;
       std::ifstream passphrase_file_test(test_passphrase);
       if (passphrase_file_test.good()) {
         passphrase_ = test_passphrase;
         passphrase_file_ = test_passphrase;
-        passphrase_.assign(
-            (std::istreambuf_iterator<char>(passphrase_file_test)),
-            std::istreambuf_iterator<char>());
+        passphrase_.assign((std::istreambuf_iterator<char>(passphrase_file_test)), std::istreambuf_iterator<char>());
       } else {
         valid_ = false;
       }
@@ -208,8 +194,7 @@ void SSLContextService::onEnable() {
 void SSLContextService::initializeTLS() {
   core::Property property("Client Certificate", "Client Certificate");
   core::Property privKey("Private Key", "Private Key file");
-  core::Property passphrase_prop(
-      "Passphrase", "Client passphrase. Either a file or unencrypted text");
+  core::Property passphrase_prop("Passphrase", "Client passphrase. Either a file or unencrypted text");
   core::Property caCert("CA Certificate", "CA certificate file");
   std::set<core::Property> supportedProperties;
   supportedProperties.insert(property);

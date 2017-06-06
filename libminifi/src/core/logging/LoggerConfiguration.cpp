@@ -42,25 +42,26 @@ namespace logging {
 
 const char* LoggerConfiguration::spdlog_default_pattern = "[%Y-%m-%d %H:%M:%S.%e] [%n] [%l] %v";
 
-std::vector< std::string > LoggerProperties::get_keys_of_type(const std::string &type) {
+std::vector<std::string> LoggerProperties::get_keys_of_type(const std::string &type) {
   std::vector<std::string> appenders;
   std::string prefix = type + ".";
   for (auto const & entry : properties_) {
-    if (entry.first.rfind(prefix, 0) == 0 &&
-      entry.first.find(".", prefix.length() + 1) == std::string::npos) {
+    if (entry.first.rfind(prefix, 0) == 0 && entry.first.find(".", prefix.length() + 1) == std::string::npos) {
       appenders.push_back(entry.first);
     }
   }
   return appenders;
 }
 
-LoggerConfiguration::LoggerConfiguration() : root_namespace_(create_default_root()), loggers(std::vector<std::shared_ptr<LoggerImpl>>()),
-                                             formatter_(std::make_shared<spdlog::pattern_formatter>(spdlog_default_pattern)) {
+LoggerConfiguration::LoggerConfiguration()
+    : root_namespace_(create_default_root()),
+      loggers(std::vector<std::shared_ptr<LoggerImpl>>()),
+      formatter_(std::make_shared<spdlog::pattern_formatter>(spdlog_default_pattern)) {
   logger_ = std::shared_ptr<LoggerImpl>(new LoggerImpl(core::getClassName<LoggerConfiguration>(), get_logger(nullptr, root_namespace_, core::getClassName<LoggerConfiguration>(), formatter_)));
   loggers.push_back(logger_);
 }
 
-void LoggerConfiguration::initialize(const std::shared_ptr<LoggerProperties> &logger_properties)  {
+void LoggerConfiguration::initialize(const std::shared_ptr<LoggerProperties> &logger_properties) {
   std::lock_guard<std::mutex> lock(mutex);
   root_namespace_ = initialize_namespaces(logger_properties);
   std::string spdlog_pattern;
@@ -90,8 +91,7 @@ std::shared_ptr<Logger> LoggerConfiguration::getLogger(const std::string &name) 
   return result;
 }
 
-std::shared_ptr<internal::LoggerNamespace> LoggerConfiguration::
-     initialize_namespaces(const std::shared_ptr<LoggerProperties> &logger_properties) {
+std::shared_ptr<internal::LoggerNamespace> LoggerConfiguration::initialize_namespaces(const std::shared_ptr<LoggerProperties> &logger_properties) {
   std::map<std::string, std::shared_ptr<spdlog::sinks::sink>> sink_map = logger_properties->initial_sinks();
 
   std::string appender_type = "appender";
@@ -117,16 +117,18 @@ std::shared_ptr<internal::LoggerNamespace> LoggerConfiguration::
         try {
           max_files = std::stoi(max_files_str);
         } catch (const std::invalid_argument &ia) {
-        } catch (const std::out_of_range &oor) {}
+        } catch (const std::out_of_range &oor) {
+        }
       }
 
-      int max_file_size = 5*1024*1024;
+      int max_file_size = 5 * 1024 * 1024;
       std::string max_file_size_str = "";
       if (logger_properties->get(appender_key + ".max_file_size", max_file_size_str)) {
         try {
           max_file_size = std::stoi(max_file_size_str);
         } catch (const std::invalid_argument &ia) {
-        } catch (const std::out_of_range &oor) {}
+        } catch (const std::out_of_range &oor) {
+        }
       }
       sink_map[appender_name] = std::make_shared<spdlog::sinks::rotating_file_sink_mt>(file_name, max_file_size, max_files);
     } else if ("stdout" == appender_type) {
@@ -170,8 +172,7 @@ std::shared_ptr<internal::LoggerNamespace> LoggerConfiguration::
     }
     std::shared_ptr<internal::LoggerNamespace> current_namespace = root_namespace;
     if (logger_key != "logger.root") {
-      for (auto const & name : utils::StringUtils::split(logger_key.substr(logger_type.length() + 1,
-          logger_key.length() - logger_type.length()), "::")) {
+      for (auto const & name : utils::StringUtils::split(logger_key.substr(logger_type.length() + 1, logger_key.length() - logger_type.length()), "::")) {
         auto child_pair = current_namespace->children.find(name);
         std::shared_ptr<internal::LoggerNamespace> child;
         if (child_pair == current_namespace->children.end()) {
@@ -190,8 +191,8 @@ std::shared_ptr<internal::LoggerNamespace> LoggerConfiguration::
   return root_namespace;
 }
 
-std::shared_ptr<spdlog::logger> LoggerConfiguration::get_logger(std::shared_ptr<Logger> logger, const std::shared_ptr<internal::LoggerNamespace> &root_namespace,
-                                                                const std::string &name, std::shared_ptr<spdlog::formatter> formatter, bool remove_if_present) {
+std::shared_ptr<spdlog::logger> LoggerConfiguration::get_logger(std::shared_ptr<Logger> logger, const std::shared_ptr<internal::LoggerNamespace> &root_namespace, const std::string &name,
+                                                                std::shared_ptr<spdlog::formatter> formatter, bool remove_if_present) {
   std::shared_ptr<spdlog::logger> spdlogger = spdlog::get(name);
   if (spdlogger) {
     if (remove_if_present) {

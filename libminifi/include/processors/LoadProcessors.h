@@ -30,5 +30,4 @@
 #include "PutFile.h"
 #include "TailFile.h"
 
-
 #endif /* LIBMINIFI_INCLUDE_PROCESSORS_LOADPROCESSORS_H_ */

@@ -38,11 +38,11 @@ namespace minifi {
 class Properties {
  public:
   Properties();
-  
+
   virtual ~Properties() {
 
   }
-  
+
   // Clear the load config
   void clear() {
     std::lock_guard<std::mutex> lock(mutex_);

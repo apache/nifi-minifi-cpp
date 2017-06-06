@@ -34,49 +34,37 @@ namespace nifi {
 namespace minifi {
 namespace provenance {
 
-const char *ProvenanceEventRecord::ProvenanceEventTypeStr[REPLAY+1] =
-{ "CREATE", "RECEIVE", "FETCH", "SEND", "DOWNLOAD", "DROP", "EXPIRE", "FORK",
-                "JOIN", "CLONE", "CONTENT_MODIFIED", "ATTRIBUTES_MODIFIED", "ROUTE",
-                "ADDINFO", "REPLAY"};
+const char *ProvenanceEventRecord::ProvenanceEventTypeStr[REPLAY + 1] = { "CREATE", "RECEIVE", "FETCH", "SEND", "DOWNLOAD", "DROP", "EXPIRE", "FORK", "JOIN", "CLONE", "CONTENT_MODIFIED",
+    "ATTRIBUTES_MODIFIED", "ROUTE", "ADDINFO", "REPLAY" };
 
 // DeSerialize
-bool ProvenanceEventRecord::DeSerialize(
-    const std::shared_ptr<core::Repository> &repo, std::string key) {
+bool ProvenanceEventRecord::DeSerialize(const std::shared_ptr<core::Repository> &repo, std::string key) {
   std::string value;
   bool ret;
 
   ret = repo->Get(key, value);
 
   if (!ret) {
-    logger_->log_error("NiFi Provenance Store event %s can not found",
-                       key.c_str());
+    logger_->log_error("NiFi Provenance Store event %s can not found", key.c_str());
     return false;
   } else {
-    logger_->log_debug("NiFi Provenance Read event %s length %d", key.c_str(),
-                       value.length());
+    logger_->log_debug("NiFi Provenance Read event %s length %d", key.c_str(), value.length());
   }
 
-  org::apache::nifi::minifi::io::DataStream stream(
-      (const uint8_t*) value.data(), value.length());
+  org::apache::nifi::minifi::io::DataStream stream((const uint8_t*) value.data(), value.length());
 
   ret = DeSerialize(stream);
 
   if (ret) {
-    logger_->log_debug(
-        "NiFi Provenance retrieve event %s size %d eventType %d success",
-        _eventIdStr.c_str(), stream.getSize(), _eventType);
+    logger_->log_debug("NiFi Provenance retrieve event %s size %d eventType %d success", _eventIdStr.c_str(), stream.getSize(), _eventType);
   } else {
-    logger_->log_debug(
-        "NiFi Provenance retrieve event %s size %d eventType %d fail",
-        _eventIdStr.c_str(), stream.getSize(), _eventType);
+    logger_->log_debug("NiFi Provenance retrieve event %s size %d eventType %d fail", _eventIdStr.c_str(), stream.getSize(), _eventType);
   }
 
   return ret;
 }
 
-bool ProvenanceEventRecord::Serialize(
-    const std::shared_ptr<core::Repository> &repo) {
-
+bool ProvenanceEventRecord::Serialize(const std::shared_ptr<core::Repository> &repo) {
   org::apache::nifi::minifi::io::DataStream outStream;
 
   int ret;
@@ -170,9 +158,7 @@ bool ProvenanceEventRecord::Serialize(
     return false;
   }
 
-  if (this->_eventType == ProvenanceEventRecord::FORK
-      || this->_eventType == ProvenanceEventRecord::CLONE
-      || this->_eventType == ProvenanceEventRecord::JOIN) {
+  if (this->_eventType == ProvenanceEventRecord::FORK || this->_eventType == ProvenanceEventRecord::CLONE || this->_eventType == ProvenanceEventRecord::JOIN) {
     // write UUIDs
     uint32_t number = this->_parentUuids.size();
     ret = write(number, &outStream);
@@ -196,8 +182,7 @@ bool ProvenanceEventRecord::Serialize(
         return false;
       }
     }
-  } else if (this->_eventType == ProvenanceEventRecord::SEND
-      || this->_eventType == ProvenanceEventRecord::FETCH) {
+  } else if (this->_eventType == ProvenanceEventRecord::SEND || this->_eventType == ProvenanceEventRecord::FETCH) {
     ret = writeUTF(this->_transitUri, &outStream);
     if (ret <= 0) {
       return false;
@@ -213,19 +198,15 @@ bool ProvenanceEventRecord::Serialize(
     }
   }
   // Persistent to the DB
-  if (repo->Put(_eventIdStr, const_cast<uint8_t*>(outStream.getBuffer()),
-                outStream.getSize())) {
-    logger_->log_debug("NiFi Provenance Store event %s size %d success",
-                       _eventIdStr.c_str(), outStream.getSize());
+  if (repo->Put(_eventIdStr, const_cast<uint8_t*>(outStream.getBuffer()), outStream.getSize())) {
+    logger_->log_debug("NiFi Provenance Store event %s size %d success", _eventIdStr.c_str(), outStream.getSize());
   } else {
-    logger_->log_error("NiFi Provenance Store event %s size %d fail",
-                       _eventIdStr.c_str(), outStream.getSize());
+    logger_->log_error("NiFi Provenance Store event %s size %d fail", _eventIdStr.c_str(), outStream.getSize());
   }
   return true;
 }
 
-bool ProvenanceEventRecord::DeSerialize(const uint8_t *buffer,
-                                        const int bufferSize) {
+bool ProvenanceEventRecord::DeSerialize(const uint8_t *buffer, const int bufferSize) {
   int ret;
 
   org::apache::nifi::minifi::io::DataStream outStream(buffer, bufferSize);
@@ -325,9 +306,7 @@ bool ProvenanceEventRecord::DeSerialize(const uint8_t *buffer,
     return false;
   }
 
-  if (this->_eventType == ProvenanceEventRecord::FORK
-      || this->_eventType == ProvenanceEventRecord::CLONE
-      || this->_eventType == ProvenanceEventRecord::JOIN) {
+  if (this->_eventType == ProvenanceEventRecord::FORK || this->_eventType == ProvenanceEventRecord::CLONE || this->_eventType == ProvenanceEventRecord::JOIN) {
     // read UUIDs
     uint32_t number = 0;
     ret = read(number, &outStream);
@@ -356,8 +335,7 @@ bool ProvenanceEventRecord::DeSerialize(const uint8_t *buffer,
       }
       this->addChildUuid(childUUID);
     }
-  } else if (this->_eventType == ProvenanceEventRecord::SEND
-      || this->_eventType == ProvenanceEventRecord::FETCH) {
+  } else if (this->_eventType == ProvenanceEventRecord::SEND || this->_eventType == ProvenanceEventRecord::FETCH) {
     ret = readUTF(this->_transitUri, &outStream);
     if (ret <= 0) {
       return false;
@@ -386,8 +364,7 @@ void ProvenanceReporter::commit() {
   }
 }
 
-void ProvenanceReporter::create(std::shared_ptr<core::FlowFile> flow,
-                                std::string detail) {
+void ProvenanceReporter::create(std::shared_ptr<core::FlowFile> flow, std::string detail) {
   ProvenanceEventRecord *event = allocate(ProvenanceEventRecord::CREATE, flow);
 
   if (event) {
@@ -396,9 +373,7 @@ void ProvenanceReporter::create(std::shared_ptr<core::FlowFile> flow,
   }
 }
 
-void ProvenanceReporter::route(std::shared_ptr<core::FlowFile> flow,
-                               core::Relationship relation, std::string detail,
-                               uint64_t processingDuration) {
+void ProvenanceReporter::route(std::shared_ptr<core::FlowFile> flow, core::Relationship relation, std::string detail, uint64_t processingDuration) {
   ProvenanceEventRecord *event = allocate(ProvenanceEventRecord::ROUTE, flow);
 
   if (event) {
@@ -409,10 +384,8 @@ void ProvenanceReporter::route(std::shared_ptr<core::FlowFile> flow,
   }
 }
 
-void ProvenanceReporter::modifyAttributes(std::shared_ptr<core::FlowFile> flow,
-                                          std::string detail) {
-  ProvenanceEventRecord *event = allocate(
-      ProvenanceEventRecord::ATTRIBUTES_MODIFIED, flow);
+void ProvenanceReporter::modifyAttributes(std::shared_ptr<core::FlowFile> flow, std::string detail) {
+  ProvenanceEventRecord *event = allocate(ProvenanceEventRecord::ATTRIBUTES_MODIFIED, flow);
 
   if (event) {
     event->setDetails(detail);
@@ -420,11 +393,8 @@ void ProvenanceReporter::modifyAttributes(std::shared_ptr<core::FlowFile> flow,
   }
 }
 
-void ProvenanceReporter::modifyContent(std::shared_ptr<core::FlowFile> flow,
-                                       std::string detail,
-                                       uint64_t processingDuration) {
-  ProvenanceEventRecord *event = allocate(
-      ProvenanceEventRecord::CONTENT_MODIFIED, flow);
+void ProvenanceReporter::modifyContent(std::shared_ptr<core::FlowFile> flow, std::string detail, uint64_t processingDuration) {
+  ProvenanceEventRecord *event = allocate(ProvenanceEventRecord::CONTENT_MODIFIED, flow);
 
   if (event) {
     event->setDetails(detail);
@@ -433,8 +403,7 @@ void ProvenanceReporter::modifyContent(std::shared_ptr<core::FlowFile> flow,
   }
 }
 
-void ProvenanceReporter::clone(std::shared_ptr<core::FlowFile> parent,
-                               std::shared_ptr<core::FlowFile> child) {
+void ProvenanceReporter::clone(std::shared_ptr<core::FlowFile> parent, std::shared_ptr<core::FlowFile> child) {
   ProvenanceEventRecord *event = allocate(ProvenanceEventRecord::CLONE, parent);
 
   if (event) {
@@ -444,10 +413,7 @@ void ProvenanceReporter::clone(std::shared_ptr<core::FlowFile> parent,
   }
 }
 
-void ProvenanceReporter::join(
-    std::vector<std::shared_ptr<core::FlowFile> > parents,
-    std::shared_ptr<core::FlowFile> child, std::string detail,
-    uint64_t processingDuration) {
+void ProvenanceReporter::join(std::vector<std::shared_ptr<core::FlowFile> > parents, std::shared_ptr<core::FlowFile> child, std::string detail, uint64_t processingDuration) {
   ProvenanceEventRecord *event = allocate(ProvenanceEventRecord::JOIN, child);
 
   if (event) {
@@ -463,10 +429,7 @@ void ProvenanceReporter::join(
   }
 }
 
-void ProvenanceReporter::fork(
-    std::vector<std::shared_ptr<core::FlowFile> > child,
-    std::shared_ptr<core::FlowFile> parent, std::string detail,
-    uint64_t processingDuration) {
+void ProvenanceReporter::fork(std::vector<std::shared_ptr<core::FlowFile> > child, std::shared_ptr<core::FlowFile> parent, std::string detail, uint64_t processingDuration) {
   ProvenanceEventRecord *event = allocate(ProvenanceEventRecord::FORK, parent);
 
   if (event) {
@@ -482,8 +445,7 @@ void ProvenanceReporter::fork(
   }
 }
 
-void ProvenanceReporter::expire(std::shared_ptr<core::FlowFile> flow,
-                                std::string detail) {
+void ProvenanceReporter::expire(std::shared_ptr<core::FlowFile> flow, std::string detail) {
   ProvenanceEventRecord *event = allocate(ProvenanceEventRecord::EXPIRE, flow);
 
   if (event) {
@@ -492,8 +454,7 @@ void ProvenanceReporter::expire(std::shared_ptr<core::FlowFile> flow,
   }
 }
 
-void ProvenanceReporter::drop(std::shared_ptr<core::FlowFile> flow,
-                              std::string reason) {
+void ProvenanceReporter::drop(std::shared_ptr<core::FlowFile> flow, std::string reason) {
   ProvenanceEventRecord *event = allocate(ProvenanceEventRecord::DROP, flow);
 
   if (event) {
@@ -503,9 +464,7 @@ void ProvenanceReporter::drop(std::shared_ptr<core::FlowFile> flow,
   }
 }
 
-void ProvenanceReporter::send(std::shared_ptr<core::FlowFile> flow,
-                              std::string transitUri, std::string detail,
-                              uint64_t processingDuration, bool force) {
+void ProvenanceReporter::send(std::shared_ptr<core::FlowFile> flow, std::string transitUri, std::string detail, uint64_t processingDuration, bool force) {
   ProvenanceEventRecord *event = allocate(ProvenanceEventRecord::SEND, flow);
 
   if (event) {
@@ -522,11 +481,7 @@ void ProvenanceReporter::send(std::shared_ptr<core::FlowFile> flow,
   }
 }
 
-void ProvenanceReporter::receive(std::shared_ptr<core::FlowFile> flow,
-                                 std::string transitUri,
-                                 std::string sourceSystemFlowFileIdentifier,
-                                 std::string detail,
-                                 uint64_t processingDuration) {
+void ProvenanceReporter::receive(std::shared_ptr<core::FlowFile> flow, std::string transitUri, std::string sourceSystemFlowFileIdentifier, std::string detail, uint64_t processingDuration) {
   ProvenanceEventRecord *event = allocate(ProvenanceEventRecord::RECEIVE, flow);
 
   if (event) {
@@ -538,9 +493,7 @@ void ProvenanceReporter::receive(std::shared_ptr<core::FlowFile> flow,
   }
 }
 
-void ProvenanceReporter::fetch(std::shared_ptr<core::FlowFile> flow,
-                               std::string transitUri, std::string detail,
-                               uint64_t processingDuration) {
+void ProvenanceReporter::fetch(std::shared_ptr<core::FlowFile> flow, std::string transitUri, std::string detail, uint64_t processingDuration) {
   ProvenanceEventRecord *event = allocate(ProvenanceEventRecord::FETCH, flow);
 
   if (event) {

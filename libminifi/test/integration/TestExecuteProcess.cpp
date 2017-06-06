@@ -16,7 +16,6 @@
  * limitations under the License.
  */
 
-
 #include <cassert>
 #include <chrono>
 #include <string>
@@ -45,23 +44,18 @@
 
 int main(int argc, char **argv) {
   TestController testController;
-  std::shared_ptr<core::Processor> processor = std::make_shared<
-      org::apache::nifi::minifi::processors::ExecuteProcess>("executeProcess");
+  std::shared_ptr<core::Processor> processor = std::make_shared<org::apache::nifi::minifi::processors::ExecuteProcess>("executeProcess");
   processor->setMaxConcurrentTasks(1);
 
-  std::shared_ptr<core::Repository> test_repo =
-      std::make_shared<TestRepository>();
+  std::shared_ptr<core::Repository> test_repo = std::make_shared<TestRepository>();
 
-  std::shared_ptr<TestRepository> repo =
-      std::static_pointer_cast<TestRepository>(test_repo);
-  std::shared_ptr<minifi::FlowController> controller = std::make_shared<
-      TestFlowController>(test_repo, test_repo);
+  std::shared_ptr<TestRepository> repo = std::static_pointer_cast<TestRepository>(test_repo);
+  std::shared_ptr<minifi::FlowController> controller = std::make_shared<TestFlowController>(test_repo, test_repo);
 
   uuid_t processoruuid;
   assert(true == processor->getUUID(processoruuid));
 
-  std::shared_ptr<minifi::Connection> connection = std::make_shared<
-      minifi::Connection>(test_repo, "executeProcessConnection");
+  std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(test_repo, "executeProcessConnection");
   connection->setRelationship(core::Relationship("success", "description"));
 
   // link the connections so that we can test results at the end for this
@@ -84,37 +78,29 @@ int main(int argc, char **argv) {
   std::vector<std::thread> processor_workers;
 
   core::ProcessorNode node2(processor);
-  std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider =
-      nullptr;
-  std::shared_ptr<core::ProcessContext> contextset = std::make_shared<
-      core::ProcessContext>(node2, controller_services_provider, test_repo);
+  std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider = nullptr;
+  std::shared_ptr<core::ProcessContext> contextset = std::make_shared<core::ProcessContext>(node2, controller_services_provider, test_repo);
   core::ProcessSessionFactory factory(contextset.get());
   processor->onSchedule(contextset.get(), &factory);
 
   for (int i = 0; i < 1; i++) {
-    processor_workers.push_back(
-        std::thread(
-            [processor, test_repo, &is_ready]() {
-              core::ProcessorNode node(processor);
-              std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider = nullptr;
-              std::shared_ptr<core::ProcessContext> context = std::make_shared<core::ProcessContext>(node, controller_services_provider, test_repo);
-              context->setProperty(org::apache::nifi::minifi::processors::ExecuteProcess::Command, "sleep 0.5");
-              std::shared_ptr<core::ProcessSession> session = std::make_shared<core::ProcessSession>(context.get());
-              while (!is_ready.load(std::memory_order_relaxed)) {
-              }
-              processor->onTrigger(context.get(), session.get());
-            }));
+    processor_workers.push_back(std::thread([processor, test_repo, &is_ready]() {
+      core::ProcessorNode node(processor);
+      std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider = nullptr;
+      std::shared_ptr<core::ProcessContext> context = std::make_shared<core::ProcessContext>(node, controller_services_provider, test_repo);
+      context->setProperty(org::apache::nifi::minifi::processors::ExecuteProcess::Command, "sleep 0.5");
+      std::shared_ptr<core::ProcessSession> session = std::make_shared<core::ProcessSession>(context.get());
+      while (!is_ready.load(std::memory_order_relaxed)) {
+      }
+      processor->onTrigger(context.get(), session.get());
+    }));
   }
 
   is_ready.store(true, std::memory_order_relaxed);
 
-  std::for_each(processor_workers.begin(), processor_workers.end(),
-                [](std::thread &t) {
-                  t.join();
-                });
+  std::for_each(processor_workers.begin(), processor_workers.end(), [](std::thread &t) {
+    t.join();
+  });
 
-
-  std::shared_ptr<org::apache::nifi::minifi::processors::ExecuteProcess> execp =
-      std::static_pointer_cast<
-          org::apache::nifi::minifi::processors::ExecuteProcess>(processor);
+  std::shared_ptr<org::apache::nifi::minifi::processors::ExecuteProcess> execp = std::static_pointer_cast<org::apache::nifi::minifi::processors::ExecuteProcess>(processor);
 }

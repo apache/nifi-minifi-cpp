@@ -76,8 +76,7 @@ class GenerateFlowFile : public core::Processor {
 
  public:
   // OnTrigger method, implemented by NiFi GenerateFlowFile
-  virtual void onTrigger(core::ProcessContext *context,
-                         core::ProcessSession *session);
+  virtual void onTrigger(core::ProcessContext *context, core::ProcessSession *session);
   // Initialize, over write by NiFi GenerateFlowFile
   virtual void initialize(void);
 

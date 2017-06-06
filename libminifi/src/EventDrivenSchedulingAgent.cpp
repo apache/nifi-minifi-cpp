@@ -32,22 +32,16 @@ namespace apache {
 namespace nifi {
 namespace minifi {
 
-void EventDrivenSchedulingAgent::run(
-    std::shared_ptr<core::Processor> processor,
-    core::ProcessContext *processContext,
-    core::ProcessSessionFactory *sessionFactory) {
+void EventDrivenSchedulingAgent::run(std::shared_ptr<core::Processor> processor, core::ProcessContext *processContext, core::ProcessSessionFactory *sessionFactory) {
   while (this->running_) {
-    bool shouldYield = this->onTrigger(processor, processContext,
-                                       sessionFactory);
+    bool shouldYield = this->onTrigger(processor, processContext, sessionFactory);
 
     if (processor->isYield()) {
       // Honor the yield
-      std::this_thread::sleep_for(
-          std::chrono::milliseconds(processor->getYieldTime()));
+      std::this_thread::sleep_for(std::chrono::milliseconds(processor->getYieldTime()));
     } else if (shouldYield && this->bored_yield_duration_ > 0) {
       // No work to do or need to apply back pressure
-      std::this_thread::sleep_for(
-          std::chrono::milliseconds(this->bored_yield_duration_));
+      std::this_thread::sleep_for(std::chrono::milliseconds(this->bored_yield_duration_));
     }
 
     // Block until work is available

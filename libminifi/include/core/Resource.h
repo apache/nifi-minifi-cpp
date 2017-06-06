@@ -32,8 +32,7 @@ class StaticClassType {
 
   StaticClassType(const std::string &name) {
     // Notify when the static member is created
-    ClassLoader::getDefaultClassLoader().registerClass(
-        name, std::unique_ptr<ObjectFactory>(new DefautObjectFactory<T>()));
+    ClassLoader::getDefaultClassLoader().registerClass(name, std::unique_ptr<ObjectFactory>(new DefautObjectFactory<T>()));
   }
 };
 

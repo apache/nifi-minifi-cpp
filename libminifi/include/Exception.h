@@ -44,9 +44,8 @@ enum ExceptionType {
 };
 
 // Exception String 
-static const char *ExceptionStr[MAX_EXCEPTION] = { "File Operation",
-    "Flow File Operation", "Processor Operation", "Process Session Operation",
-    "Process Schedule Operation", "Site2Site Protocol", "General Operation" };
+static const char *ExceptionStr[MAX_EXCEPTION] = { "File Operation", "Flow File Operation", "Processor Operation", "Process Session Operation", "Process Schedule Operation", "Site2Site Protocol",
+    "General Operation" };
 
 // Exception Type to String 
 inline const char *ExceptionTypeToString(ExceptionType type) {

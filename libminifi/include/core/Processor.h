@@ -62,8 +62,7 @@ namespace core {
 #define DEFAULT_PENALIZATION_PERIOD_SECONDS 30
 
 // Processor Class
-class Processor : public Connectable, public ConfigurableComponent,
-    public std::enable_shared_from_this<Processor> {
+class Processor : public Connectable, public ConfigurableComponent, public std::enable_shared_from_this<Processor> {
 
  public:
   // Constructor
@@ -192,8 +191,7 @@ class Processor : public Connectable, public ConfigurableComponent,
   bool flowFilesOutGoingFull();
 
   // Get outgoing connections based on relationship name
-  std::set<std::shared_ptr<Connection> > getOutGoingConnections(
-      std::string relationship);
+  std::set<std::shared_ptr<Connection> > getOutGoingConnections(std::string relationship);
   // Add connection
   bool addConnection(std::shared_ptr<Connectable> connection);
   // Remove connection
@@ -205,8 +203,7 @@ class Processor : public Connectable, public ConfigurableComponent,
   // Get the Next RoundRobin incoming connection
   std::shared_ptr<Connection> getNextIncomingConnection();
   // On Trigger
-  void onTrigger(ProcessContext *context,
-                 ProcessSessionFactory *sessionFactory);
+  void onTrigger(ProcessContext *context, ProcessSessionFactory *sessionFactory);
 
   virtual bool canEdit() {
     return !isRunning();
@@ -220,8 +217,7 @@ class Processor : public Connectable, public ConfigurableComponent,
   virtual void initialize() {
   }
   // Scheduled event hook, overridden by NiFi Process Designer
-  virtual void onSchedule(ProcessContext *context,
-                          ProcessSessionFactory *sessionFactory) {
+  virtual void onSchedule(ProcessContext *context, ProcessSessionFactory *sessionFactory) {
   }
 
  protected:
@@ -243,7 +239,7 @@ class Processor : public Connectable, public ConfigurableComponent,
   // Trigger the Processor even if the incoming connection is empty
   std::atomic<bool> _triggerWhenEmpty;
 
-  private:
+ private:
 
   // Mutex for protection
   std::mutex mutex_;

@@ -36,20 +36,16 @@ namespace provenance {
 #define MAX_PROVENANCE_ENTRY_LIFE_TIME (60000) // 1 minute
 #define PROVENANCE_PURGE_PERIOD (2500) // 2500 msec
 
-class ProvenanceRepository : public core::Repository,
-    public std::enable_shared_from_this<ProvenanceRepository> {
+class ProvenanceRepository : public core::Repository, public std::enable_shared_from_this<ProvenanceRepository> {
  public:
   // Constructor
   /*!
    * Create a new provenance repository
    */
-  ProvenanceRepository(const std::string repo_name = "", std::string directory = PROVENANCE_DIRECTORY,
-                       int64_t maxPartitionMillis =
-                       MAX_PROVENANCE_ENTRY_LIFE_TIME,
-                       int64_t maxPartitionBytes = MAX_PROVENANCE_STORAGE_SIZE,
-                       uint64_t purgePeriod = PROVENANCE_PURGE_PERIOD)
-      : Repository(repo_name.length() > 0 ? repo_name : core::getClassName<ProvenanceRepository>(), directory,
-                   maxPartitionMillis, maxPartitionBytes, purgePeriod),
+  ProvenanceRepository(const std::string repo_name = "", std::string directory = PROVENANCE_DIRECTORY, int64_t maxPartitionMillis =
+  MAX_PROVENANCE_ENTRY_LIFE_TIME,
+                       int64_t maxPartitionBytes = MAX_PROVENANCE_STORAGE_SIZE, uint64_t purgePeriod = PROVENANCE_PURGE_PERIOD)
+      : Repository(repo_name.length() > 0 ? repo_name : core::getClassName<ProvenanceRepository>(), directory, maxPartitionMillis, maxPartitionBytes, purgePeriod),
         logger_(logging::LoggerFactory<ProvenanceRepository>::getLogger()) {
 
     db_ = NULL;
@@ -60,53 +56,42 @@ class ProvenanceRepository : public core::Repository,
     if (db_)
       delete db_;
   }
-  
+
   void start() {
-  if (this->purge_period_ <= 0)
-    return;
-  if (running_)
-    return;
-  thread_ = std::thread(&ProvenanceRepository::run, shared_from_this());
-  thread_.detach();
-  running_ = true;
-  logger_->log_info("%s Repository Monitor Thread Start", name_.c_str());
-}
+    if (this->purge_period_ <= 0)
+      return;
+    if (running_)
+      return;
+    thread_ = std::thread(&ProvenanceRepository::run, shared_from_this());
+    thread_.detach();
+    running_ = true;
+    logger_->log_info("%s Repository Monitor Thread Start", name_.c_str());
+  }
 
   // initialize
   virtual bool initialize(const std::shared_ptr<org::apache::nifi::minifi::Configure> &config) {
     std::string value;
-    if (config->get(Configure::nifi_provenance_repository_directory_default,
-                        value)) {
+    if (config->get(Configure::nifi_provenance_repository_directory_default, value)) {
       directory_ = value;
     }
-    logger_->log_info("NiFi Provenance Repository Directory %s",
-                      directory_.c_str());
-    if (config->get(Configure::nifi_provenance_repository_max_storage_size,
-                        value)) {
+    logger_->log_info("NiFi Provenance Repository Directory %s", directory_.c_str());
+    if (config->get(Configure::nifi_provenance_repository_max_storage_size, value)) {
       core::Property::StringToInt(value, max_partition_bytes_);
     }
-    logger_->log_info("NiFi Provenance Max Partition Bytes %d",
-                      max_partition_bytes_);
-    if (config->get(Configure::nifi_provenance_repository_max_storage_time,
-                        value)) {
+    logger_->log_info("NiFi Provenance Max Partition Bytes %d", max_partition_bytes_);
+    if (config->get(Configure::nifi_provenance_repository_max_storage_time, value)) {
       core::TimeUnit unit;
-      if (core::Property::StringToTime(value, max_partition_millis_, unit)
-          && core::Property::ConvertTimeUnitToMS(max_partition_millis_, unit,
-                                                 max_partition_millis_)) {
+      if (core::Property::StringToTime(value, max_partition_millis_, unit) && core::Property::ConvertTimeUnitToMS(max_partition_millis_, unit, max_partition_millis_)) {
       }
     }
-    logger_->log_info("NiFi Provenance Max Storage Time: [%d] ms",
-                      max_partition_millis_);
+    logger_->log_info("NiFi Provenance Max Storage Time: [%d] ms", max_partition_millis_);
     leveldb::Options options;
     options.create_if_missing = true;
-    leveldb::Status status = leveldb::DB::Open(options, directory_.c_str(),
-                                               &db_);
+    leveldb::Status status = leveldb::DB::Open(options, directory_.c_str(), &db_);
     if (status.ok()) {
-      logger_->log_info("NiFi Provenance Repository database open %s success",
-                        directory_.c_str());
+      logger_->log_info("NiFi Provenance Repository database open %s success", directory_.c_str());
     } else {
-      logger_->log_error("NiFi Provenance Repository database open %s fail",
-                         directory_.c_str());
+      logger_->log_error("NiFi Provenance Repository database open %s fail", directory_.c_str());
       return false;
     }
 
@@ -115,8 +100,8 @@ class ProvenanceRepository : public core::Repository,
   // Put
   virtual bool Put(std::string key, uint8_t *buf, int bufLen) {
 
-	if (repo_full_)
-		return false;
+    if (repo_full_)
+      return false;
 
     // persistent to the DB
     leveldb::Slice value((const char *) buf, bufLen);
@@ -147,40 +132,33 @@ class ProvenanceRepository : public core::Repository,
   }
   // Persistent event
   void registerEvent(std::shared_ptr<ProvenanceEventRecord> &event) {
-    event->Serialize(
-        std::static_pointer_cast<core::Repository>(shared_from_this()));
+    event->Serialize(std::static_pointer_cast<core::Repository>(shared_from_this()));
   }
   // Remove event
   void removeEvent(ProvenanceEventRecord *event) {
     Delete(event->getEventId());
   }
   //! get record
-  void getProvenanceRecord(std::vector<std::shared_ptr<ProvenanceEventRecord>> &records, int maxSize)
-  {
-	std::lock_guard<std::mutex> lock(mutex_);
-	leveldb::Iterator* it = db_->NewIterator(
-				leveldb::ReadOptions());
-	for (it->SeekToFirst(); it->Valid(); it->Next()) {
-			std::shared_ptr<ProvenanceEventRecord> eventRead = std::make_shared<ProvenanceEventRecord>();
-			std::string key = it->key().ToString();
-			if (records.size() >= maxSize)
-				break;
-			if (eventRead->DeSerialize((uint8_t *) it->value().data(),
-					(int) it->value().size()))
-			{
-				records.push_back(eventRead);
-			}
-	}
-	delete it;
+  void getProvenanceRecord(std::vector<std::shared_ptr<ProvenanceEventRecord>> &records, int maxSize) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    leveldb::Iterator* it = db_->NewIterator(leveldb::ReadOptions());
+    for (it->SeekToFirst(); it->Valid(); it->Next()) {
+      std::shared_ptr<ProvenanceEventRecord> eventRead = std::make_shared<ProvenanceEventRecord>();
+      std::string key = it->key().ToString();
+      if (records.size() >= maxSize)
+        break;
+      if (eventRead->DeSerialize((uint8_t *) it->value().data(), (int) it->value().size())) {
+        records.push_back(eventRead);
+      }
+    }
+    delete it;
   }
   //! purge record
-  void purgeProvenanceRecord(std::vector<std::shared_ptr<ProvenanceEventRecord>> &records)
-  {
-	std::lock_guard<std::mutex> lock(mutex_);
-	for (auto record : records)
-	{
-		Delete(record->getEventId());
-	}
+  void purgeProvenanceRecord(std::vector<std::shared_ptr<ProvenanceEventRecord>> &records) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    for (auto record : records) {
+      Delete(record->getEventId());
+    }
   }
   // destroy
   void destroy() {

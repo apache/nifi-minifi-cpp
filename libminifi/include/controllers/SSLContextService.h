@@ -63,13 +63,15 @@ class SSLContextService : public core::controller::ControllerService {
       : ControllerService(name, id),
         initialized_(false),
         valid_(false),
-        logger_(logging::LoggerFactory<SSLContextService>::getLogger()) {}
+        logger_(logging::LoggerFactory<SSLContextService>::getLogger()) {
+  }
 
   explicit SSLContextService(const std::string &name, uuid_t uuid = 0)
       : ControllerService(name, uuid),
         initialized_(false),
         valid_(false),
-        logger_(logging::LoggerFactory<SSLContextService>::getLogger()) {}
+        logger_(logging::LoggerFactory<SSLContextService>::getLogger()) {
+  }
 
   virtual void initialize();
 
@@ -97,43 +99,35 @@ class SSLContextService : public core::controller::ControllerService {
     return false;
   }
 
- bool configure_ssl_context(SSL_CTX *ctx)
- {
-   if (SSL_CTX_use_certificate_file(ctx, certificate.c_str(), SSL_FILETYPE_PEM)
-         <= 0) {
-       logger_->log_error("Could not create load certificate, error : %s",
-                          std::strerror(errno));
-       return false;
-     }
-     if (!IsNullOrEmpty(passphrase_)) {
-       SSL_CTX_set_default_passwd_cb_userdata(ctx, &passphrase_);
-       SSL_CTX_set_default_passwd_cb(ctx, pemPassWordCb);
-     }
+  bool configure_ssl_context(SSL_CTX *ctx) {
+    if (SSL_CTX_use_certificate_file(ctx, certificate.c_str(), SSL_FILETYPE_PEM) <= 0) {
+      logger_->log_error("Could not create load certificate, error : %s", std::strerror(errno));
+      return false;
+    }
+    if (!IsNullOrEmpty(passphrase_)) {
+      SSL_CTX_set_default_passwd_cb_userdata(ctx, &passphrase_);
+      SSL_CTX_set_default_passwd_cb(ctx, pemPassWordCb);
+    }
 
-     int retp = SSL_CTX_use_PrivateKey_file(ctx, private_key_.c_str(),
-                                            SSL_FILETYPE_PEM);
-     if (retp != 1) {
-       logger_->log_error("Could not create load private key,%i on %s error : %s",
-                          retp, private_key_, std::strerror(errno));
-       return false;
-     }
+    int retp = SSL_CTX_use_PrivateKey_file(ctx, private_key_.c_str(), SSL_FILETYPE_PEM);
+    if (retp != 1) {
+      logger_->log_error("Could not create load private key,%i on %s error : %s", retp, private_key_, std::strerror(errno));
+      return false;
+    }
 
-     if (!SSL_CTX_check_private_key(ctx)) {
-       logger_->log_error(
-           "Private key does not match the public certificate, error : %s",
-           std::strerror(errno));
-       return false;
-     }
+    if (!SSL_CTX_check_private_key(ctx)) {
+      logger_->log_error("Private key does not match the public certificate, error : %s", std::strerror(errno));
+      return false;
+    }
 
-     retp = SSL_CTX_load_verify_locations(ctx, ca_certificate_.c_str(), 0);
-     if (retp == 0) {
-       logger_->log_error("Can not load CA certificate, Exiting, error : %s",
-                          std::strerror(errno));
-       return false;
-     }
+    retp = SSL_CTX_load_verify_locations(ctx, ca_certificate_.c_str(), 0);
+    if (retp == 0) {
+      logger_->log_error("Can not load CA certificate, Exiting, error : %s", std::strerror(errno));
+      return false;
+    }
 
-     return true;
- }
+    return true;
+  }
 
  protected:
 
@@ -164,7 +158,7 @@ class SSLContextService : public core::controller::ControllerService {
   std::string ca_certificate_;
 
  private:
-   std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<logging::Logger> logger_;
 };
 typedef int (SSLContextService::*ptr)(char *, int, int, void *);
 REGISTER_RESOURCE(SSLContextService);

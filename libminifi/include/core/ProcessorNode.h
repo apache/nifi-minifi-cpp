@@ -60,8 +60,7 @@ class ProcessorNode : public ConfigurableComponent, public Connectable {
    * @return result of getting property.
    */
   bool getProperty(const std::string name, std::string &value) {
-    const std::shared_ptr<ConfigurableComponent> processor_cast =
-        std::dynamic_pointer_cast<ConfigurableComponent>(processor_);
+    const std::shared_ptr<ConfigurableComponent> processor_cast = std::dynamic_pointer_cast<ConfigurableComponent>(processor_);
     if (nullptr != processor_cast)
       return processor_cast->getProperty(name, value);
     else {
@@ -75,8 +74,7 @@ class ProcessorNode : public ConfigurableComponent, public Connectable {
    * @return result of setting property.
    */
   bool setProperty(const std::string name, std::string value) {
-    const std::shared_ptr<ConfigurableComponent> processor_cast =
-        std::dynamic_pointer_cast<ConfigurableComponent>(processor_);
+    const std::shared_ptr<ConfigurableComponent> processor_cast = std::dynamic_pointer_cast<ConfigurableComponent>(processor_);
     bool ret = ConfigurableComponent::setProperty(name, value);
     if (nullptr != processor_cast)
       ret = processor_cast->setProperty(name, value);
@@ -92,8 +90,7 @@ class ProcessorNode : public ConfigurableComponent, public Connectable {
    * @return whether property was set or not
    */
   bool setProperty(Property &prop, std::string value) {
-    const std::shared_ptr<ConfigurableComponent> processor_cast =
-        std::dynamic_pointer_cast<ConfigurableComponent>(processor_);
+    const std::shared_ptr<ConfigurableComponent> processor_cast = std::dynamic_pointer_cast<ConfigurableComponent>(processor_);
     bool ret = ConfigurableComponent::setProperty(prop, value);
     if (nullptr != processor_cast)
       ret = processor_cast->setProperty(prop, value);
@@ -107,8 +104,7 @@ class ProcessorNode : public ConfigurableComponent, public Connectable {
    * @return result of set operation.
    */
   bool setSupportedProperties(std::set<Property> properties) {
-    const std::shared_ptr<ConfigurableComponent> processor_cast =
-        std::dynamic_pointer_cast<ConfigurableComponent>(processor_);
+    const std::shared_ptr<ConfigurableComponent> processor_cast = std::dynamic_pointer_cast<ConfigurableComponent>(processor_);
     bool ret = ConfigurableComponent::setSupportedProperties(properties);
     if (nullptr != processor_cast)
       ret = processor_cast->setSupportedProperties(properties);
@@ -164,8 +160,7 @@ class ProcessorNode : public ConfigurableComponent, public Connectable {
    * Get outgoing connection based on relationship
    * @return set of outgoing connections.
    */
-  std::set<std::shared_ptr<Connectable>> getOutGoingConnections(
-      std::string relationship) {
+  std::set<std::shared_ptr<Connectable>> getOutGoingConnections(std::string relationship) {
     return processor_->getOutGoingConnections(relationship);
   }
 

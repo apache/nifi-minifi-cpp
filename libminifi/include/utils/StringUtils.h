@@ -66,11 +66,7 @@ class StringUtils {
    * @returns modified string
    */
   static inline std::string trimLeft(std::string s) {
-    s.erase(
-        s.begin(),
-        std::find_if(
-            s.begin(), s.end(),
-            std::not1(std::pointer_to_unary_function<int, int>(std::isspace))));
+    s.erase(s.begin(), std::find_if(s.begin(), s.end(), std::not1(std::pointer_to_unary_function<int, int>(std::isspace))));
     return s;
   }
 
@@ -81,15 +77,10 @@ class StringUtils {
    */
 
   static inline std::string trimRight(std::string s) {
-    s.erase(
-        std::find_if(
-            s.rbegin(), s.rend(),
-            std::not1(std::pointer_to_unary_function<int, int>(std::isspace)))
-            .base(),
-        s.end());
+    s.erase(std::find_if(s.rbegin(), s.rend(), std::not1(std::pointer_to_unary_function<int, int>(std::isspace))).base(), s.end());
     return s;
   }
-  
+
   static std::vector<std::string> split(const std::string &str, const std::string &delimiter) {
     std::vector<std::string> result;
     int last = 0;
@@ -108,14 +99,13 @@ class StringUtils {
    * @param output output float
    * @param cp failure policy
    */
-  static bool StringToFloat(std::string input, float &output, FailurePolicy cp =
-                                RETURN) {
+  static bool StringToFloat(std::string input, float &output, FailurePolicy cp = RETURN) {
     try {
       output = std::stof(input);
     } catch (const std::invalid_argument &ie) {
       switch (cp) {
         case RETURN:
-        case NOTHING:
+          case NOTHING:
           return false;
         case EXIT:
           exit(1);
@@ -125,7 +115,7 @@ class StringUtils {
     } catch (const std::out_of_range &ofr) {
       switch (cp) {
         case RETURN:
-        case NOTHING:
+          case NOTHING:
           return false;
         case EXIT:
           exit(1);

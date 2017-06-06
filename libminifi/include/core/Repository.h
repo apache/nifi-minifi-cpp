@@ -57,10 +57,8 @@ class Repository : public CoreComponent {
   /*
    * Constructor for the repository
    */
-  Repository(std::string repo_name="Repository",
-             std::string directory = REPOSITORY_DIRECTORY,
-             int64_t maxPartitionMillis = MAX_REPOSITORY_ENTRY_LIFE_TIME,
-             int64_t maxPartitionBytes = MAX_REPOSITORY_STORAGE_SIZE,
+  Repository(std::string repo_name = "Repository", std::string directory = REPOSITORY_DIRECTORY, int64_t maxPartitionMillis = MAX_REPOSITORY_ENTRY_LIFE_TIME, int64_t maxPartitionBytes =
+  MAX_REPOSITORY_STORAGE_SIZE,
              uint64_t purgePeriod = REPOSITORY_PURGE_PERIOD)
       : CoreComponent(repo_name),
         thread_(),
@@ -111,8 +109,7 @@ class Repository : public CoreComponent {
   virtual bool isRunning() {
     return running_;
   }
-  uint64_t incrementSize(const char *fpath, const struct stat *sb,
-                         int typeflag) {
+  uint64_t incrementSize(const char *fpath, const struct stat *sb, int typeflag) {
     return (repo_size_ += sb->st_size);
   }
 

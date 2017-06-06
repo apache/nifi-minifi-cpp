@@ -45,8 +45,7 @@ class size_function_functor_checker {
  * Determines if the variable is null or ::size() == 0
  */
 template<typename T>
-static auto IsNullOrEmpty(
-    T &object) -> typename std::enable_if<size_function_functor_checker<T>::has_size_function==1, bool>::type {
+static auto IsNullOrEmpty(T &object) -> typename std::enable_if<size_function_functor_checker<T>::has_size_function==1, bool>::type {
   return object.size() == 0;
 }
 
@@ -54,8 +53,7 @@ static auto IsNullOrEmpty(
  * Determines if the variable is null or ::size() == 0
  */
 template<typename T>
-static auto IsNullOrEmpty(
-    T *object) -> typename std::enable_if<size_function_functor_checker<T>::has_size_function==1, bool>::type {
+static auto IsNullOrEmpty(T *object) -> typename std::enable_if<size_function_functor_checker<T>::has_size_function==1, bool>::type {
   return (nullptr == object || object->size() == 0);
 }
 
@@ -63,8 +61,7 @@ static auto IsNullOrEmpty(
  * Determines if the variable is null or ::size() == 0
  */
 template<typename T>
-static auto IsNullOrEmpty(
-    T *object) -> typename std::enable_if<not size_function_functor_checker<T>::has_size_function , bool>::type {
+static auto IsNullOrEmpty(T *object) -> typename std::enable_if<not size_function_functor_checker<T>::has_size_function , bool>::type {
   return (nullptr == object);
 }
 
@@ -72,8 +69,7 @@ static auto IsNullOrEmpty(
  * Determines if the variable is null or ::size() == 0
  */
 template<typename T>
-static auto IsNullOrEmpty(
-    std::shared_ptr<T> object) -> typename std::enable_if<not size_function_functor_checker<T>::has_size_function , bool>::type {
+static auto IsNullOrEmpty(std::shared_ptr<T> object) -> typename std::enable_if<not size_function_functor_checker<T>::has_size_function , bool>::type {
   return (nullptr == object || nullptr == object.get());
 }
 

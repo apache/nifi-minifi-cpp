@@ -58,8 +58,7 @@ typedef enum {
 } FlowControlMsgType;
 
 // FlowControl Protocol Msg Type String
-static const char *FlowControlMsgTypeStr[MAX_FLOW_CONTROL_MSG_TYPE] = {
-    "REGISTER_REQ", "REGISTER_RESP", "REPORT_REQ", "REPORT_RESP" };
+static const char *FlowControlMsgTypeStr[MAX_FLOW_CONTROL_MSG_TYPE] = { "REGISTER_REQ", "REGISTER_RESP", "REPORT_REQ", "REPORT_RESP" };
 
 // Flow Control Msg Type to String
 inline const char *FlowControlMsgTypeToStr(FlowControlMsgType type) {
@@ -91,10 +90,8 @@ typedef enum {
 } FlowControlMsgID;
 
 // FlowControl Protocol Msg ID String
-static const char *FlowControlMsgIDStr[MAX_FLOW_MSG_ID] = {
-    "FLOW_SERIAL_NUMBER", "FLOW_YAML_NAME", "FLOW_YAML_CONTENT",
-    "REPORT_INTERVAL", "PROCESSOR_NAME"
-        "PROPERTY_NAME", "PROPERTY_VALUE", "REPORT_BLOB" };
+static const char *FlowControlMsgIDStr[MAX_FLOW_MSG_ID] = { "FLOW_SERIAL_NUMBER", "FLOW_YAML_NAME", "FLOW_YAML_CONTENT", "REPORT_INTERVAL", "PROCESSOR_NAME"
+    "PROPERTY_NAME", "PROPERTY_VALUE", "REPORT_BLOB" };
 
 #define TYPE_HDR_LEN 4 // Fix Hdr Type
 #define TLV_HDR_LEN 8 // Type 4 bytes and Len 4 bytes
@@ -130,9 +127,7 @@ typedef enum {
 } FlowControlRespCode;
 
 // FlowControl Resp Code str
-static const char *FlowControlRespCodeStr[MAX_RESP_CODE] = { "RESP_SUCCESS",
-    "RESP_TRIGGER_REGISTER", "RESP_START_FLOW_CONTROLLER",
-    "RESP_STOP_FLOW_CONTROLLER", "RESP_FAILURE" };
+static const char *FlowControlRespCodeStr[MAX_RESP_CODE] = { "RESP_SUCCESS", "RESP_TRIGGER_REGISTER", "RESP_START_FLOW_CONTROLLER", "RESP_STOP_FLOW_CONTROLLER", "RESP_FAILURE" };
 
 // Flow Control Resp Code to String
 inline const char *FlowControlRespCodeToStr(FlowControlRespCode code) {
@@ -157,7 +152,8 @@ class FlowControlProtocol {
   /*!
    * Create a new control protocol
    */
-  FlowControlProtocol(FlowController *controller, const std::shared_ptr<Configure> &configure) : logger_(logging::LoggerFactory<FlowControlProtocol>::getLogger()) {
+  FlowControlProtocol(FlowController *controller, const std::shared_ptr<Configure> &configure)
+      : logger_(logging::LoggerFactory<FlowControlProtocol>::getLogger()) {
     _controller = controller;
     _socket = 0;
     _serverName = "localhost";
@@ -175,17 +171,13 @@ class FlowControlProtocol {
       _serverName = value;
       logger_->log_info("NiFi Server Name %s", _serverName.c_str());
     }
-    if (configure->get(Configure::nifi_server_port, value)
-        && core::Property::StringToInt(value, _serverPort)) {
+    if (configure->get(Configure::nifi_server_port, value) && core::Property::StringToInt(value, _serverPort)) {
       logger_->log_info("NiFi Server Port: [%d]", _serverPort);
     }
     if (configure->get(Configure::nifi_server_report_interval, value)) {
       core::TimeUnit unit;
-      if (core::Property::StringToTime(value, _reportInterval, unit)
-          && core::Property::ConvertTimeUnitToMS(_reportInterval, unit,
-                                                 _reportInterval)) {
-        logger_->log_info("NiFi server report interval: [%d] ms",
-                          _reportInterval);
+      if (core::Property::StringToTime(value, _reportInterval, unit) && core::Property::ConvertTimeUnitToMS(_reportInterval, unit, _reportInterval)) {
+        logger_->log_info("NiFi server report interval: [%d] ms", _reportInterval);
       }
     } else
       _reportInterval = 0;

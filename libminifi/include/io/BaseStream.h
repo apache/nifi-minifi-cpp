@@ -51,8 +51,7 @@ class BaseStream : public DataStream, public Serializable {
    * @param is_little_endian endianness determination
    * @return resulting write size
    **/
-  virtual int write(uint32_t base_value, bool is_little_endian =
-                        EndiannessCheck::IS_LITTLE);
+  virtual int write(uint32_t base_value, bool is_little_endian = EndiannessCheck::IS_LITTLE);
 
   int writeData(uint8_t *value, int size);
 
@@ -63,8 +62,7 @@ class BaseStream : public DataStream, public Serializable {
    * @param is_little_endian endianness determination
    * @return resulting write size
    **/
-  virtual int write(uint16_t base_value, bool is_little_endian =
-                        EndiannessCheck::IS_LITTLE);
+  virtual int write(uint16_t base_value, bool is_little_endian = EndiannessCheck::IS_LITTLE);
 
   /**
    * write valueto stream
@@ -82,8 +80,7 @@ class BaseStream : public DataStream, public Serializable {
    * @param is_little_endian endianness determination
    * @return resulting write size
    **/
-  virtual int write(uint64_t base_value, bool is_little_endian =
-                        EndiannessCheck::IS_LITTLE);
+  virtual int write(uint64_t base_value, bool is_little_endian = EndiannessCheck::IS_LITTLE);
 
   /**
    * write bool to stream
@@ -126,8 +123,7 @@ class BaseStream : public DataStream, public Serializable {
    * @param stream stream from which we will read
    * @return resulting read size
    **/
-  virtual int read(uint16_t &base_value, bool is_little_endian =
-                       EndiannessCheck::IS_LITTLE);
+  virtual int read(uint16_t &base_value, bool is_little_endian = EndiannessCheck::IS_LITTLE);
 
   /**
    * reads a byte from the stream
@@ -152,8 +148,7 @@ class BaseStream : public DataStream, public Serializable {
    * @param stream stream from which we will read
    * @return resulting read size
    **/
-  virtual int read(uint32_t &value, bool is_little_endian =
-                       EndiannessCheck::IS_LITTLE);
+  virtual int read(uint32_t &value, bool is_little_endian = EndiannessCheck::IS_LITTLE);
 
   /**
    * reads eight byte from the stream
@@ -161,8 +156,7 @@ class BaseStream : public DataStream, public Serializable {
    * @param stream stream from which we will read
    * @return resulting read size
    **/
-  virtual int read(uint64_t &value, bool is_little_endian =
-                       EndiannessCheck::IS_LITTLE);
+  virtual int read(uint64_t &value, bool is_little_endian = EndiannessCheck::IS_LITTLE);
 
   /**
    * read UTF from stream
@@ -171,7 +165,7 @@ class BaseStream : public DataStream, public Serializable {
    * @return resulting read size
    **/
   virtual int readUTF(std::string &str, bool widen = false);
- protected:
+   protected:
   DataStream *composable_stream_;
 };
 

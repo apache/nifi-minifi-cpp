@@ -42,38 +42,20 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-core::Property ListenHTTP::BasePath("Base Path",
-                                    "Base path for incoming connections",
-                                    "contentListener");
-core::Property ListenHTTP::Port(
-    "Listening Port", "The Port to listen on for incoming connections", "");
-core::Property ListenHTTP::AuthorizedDNPattern(
-    "Authorized DN Pattern",
-    "A Regular Expression to apply against the Distinguished Name of incoming"
-    " connections. If the Pattern does not match the DN, the connection will be refused.",
-    ".*");
-core::Property ListenHTTP::SSLCertificate(
-    "SSL Certificate",
-    "File containing PEM-formatted file including TLS/SSL certificate and key",
-    "");
-core::Property ListenHTTP::SSLCertificateAuthority(
-    "SSL Certificate Authority",
-    "File containing trusted PEM-formatted certificates", "");
-core::Property ListenHTTP::SSLVerifyPeer(
-    "SSL Verify Peer",
-    "Whether or not to verify the client's certificate (yes/no)", "no");
-core::Property ListenHTTP::SSLMinimumVersion(
-    "SSL Minimum Version",
-    "Minimum TLS/SSL version allowed (SSL2, SSL3, TLS1.0, TLS1.1, TLS1.2)",
-    "SSL2");
-core::Property ListenHTTP::HeadersAsAttributesRegex(
-    "HTTP Headers to receive as Attributes (Regex)",
-    "Specifies the Regular Expression that determines the names of HTTP Headers that"
-    " should be passed along as FlowFile attributes",
-    "");
+core::Property ListenHTTP::BasePath("Base Path", "Base path for incoming connections", "contentListener");
+core::Property ListenHTTP::Port("Listening Port", "The Port to listen on for incoming connections", "");
+core::Property ListenHTTP::AuthorizedDNPattern("Authorized DN Pattern", "A Regular Expression to apply against the Distinguished Name of incoming"
+                                               " connections. If the Pattern does not match the DN, the connection will be refused.",
+                                               ".*");
+core::Property ListenHTTP::SSLCertificate("SSL Certificate", "File containing PEM-formatted file including TLS/SSL certificate and key", "");
+core::Property ListenHTTP::SSLCertificateAuthority("SSL Certificate Authority", "File containing trusted PEM-formatted certificates", "");
+core::Property ListenHTTP::SSLVerifyPeer("SSL Verify Peer", "Whether or not to verify the client's certificate (yes/no)", "no");
+core::Property ListenHTTP::SSLMinimumVersion("SSL Minimum Version", "Minimum TLS/SSL version allowed (SSL2, SSL3, TLS1.0, TLS1.1, TLS1.2)", "SSL2");
+core::Property ListenHTTP::HeadersAsAttributesRegex("HTTP Headers to receive as Attributes (Regex)", "Specifies the Regular Expression that determines the names of HTTP Headers that"
+                                                    " should be passed along as FlowFile attributes",
+                                                    "");
 
-core::Relationship ListenHTTP::Success("success",
-                                       "All files are routed to success");
+core::Relationship ListenHTTP::Success("success", "All files are routed to success");
 
 void ListenHTTP::initialize() {
   logger_->log_info("Initializing ListenHTTP");
@@ -95,14 +77,11 @@ void ListenHTTP::initialize() {
   setSupportedRelationships(relationships);
 }
 
-void ListenHTTP::onSchedule(core::ProcessContext *context,
-                            core::ProcessSessionFactory *sessionFactory) {
+void ListenHTTP::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory) {
   std::string basePath;
 
   if (!context->getProperty(BasePath.getName(), basePath)) {
-    logger_->log_info(
-        "%s attribute is missing, so default value of %s will be used",
-        BasePath.getName().c_str(), BasePath.getValue().c_str());
+    logger_->log_info("%s attribute is missing, so default value of %s will be used", BasePath.getName().c_str(), BasePath.getValue().c_str());
     basePath = BasePath.getValue();
   }
 
@@ -111,26 +90,20 @@ void ListenHTTP::onSchedule(core::ProcessContext *context,
   std::string listeningPort;
 
   if (!context->getProperty(Port.getName(), listeningPort)) {
-    logger_->log_error("%s attribute is missing or invalid",
-                       Port.getName().c_str());
+    logger_->log_error("%s attribute is missing or invalid", Port.getName().c_str());
     return;
   }
 
   std::string authDNPattern;
 
-  if (context->getProperty(AuthorizedDNPattern.getName(), authDNPattern)
-      && !authDNPattern.empty()) {
-    logger_->log_info("ListenHTTP using %s: %s",
-                      AuthorizedDNPattern.getName().c_str(),
-                      authDNPattern.c_str());
+  if (context->getProperty(AuthorizedDNPattern.getName(), authDNPattern) && !authDNPattern.empty()) {
+    logger_->log_info("ListenHTTP using %s: %s", AuthorizedDNPattern.getName().c_str(), authDNPattern.c_str());
   }
 
   std::string sslCertFile;
 
-  if (context->getProperty(SSLCertificate.getName(), sslCertFile)
-      && !sslCertFile.empty()) {
-    logger_->log_info("ListenHTTP using %s: %s",
-                      SSLCertificate.getName().c_str(), sslCertFile.c_str());
+  if (context->getProperty(SSLCertificate.getName(), sslCertFile) && !sslCertFile.empty()) {
+    logger_->log_info("ListenHTTP using %s: %s", SSLCertificate.getName().c_str(), sslCertFile.c_str());
   }
 
   // Read further TLS/SSL options only if TLS/SSL usage is implied by virtue of certificate value being set
@@ -139,12 +112,8 @@ void ListenHTTP::onSchedule(core::ProcessContext *context,
   std::string sslMinVer;
 
   if (!sslCertFile.empty()) {
-    if (context->getProperty(SSLCertificateAuthority.getName(),
-                             sslCertAuthorityFile)
-        && !sslCertAuthorityFile.empty()) {
-      logger_->log_info("ListenHTTP using %s: %s",
-                        SSLCertificateAuthority.getName().c_str(),
-                        sslCertAuthorityFile.c_str());
+    if (context->getProperty(SSLCertificateAuthority.getName(), sslCertAuthorityFile) && !sslCertAuthorityFile.empty()) {
+      logger_->log_info("ListenHTTP using %s: %s", SSLCertificateAuthority.getName().c_str(), sslCertAuthorityFile.c_str());
     }
 
     if (context->getProperty(SSLVerifyPeer.getName(), sslVerifyPeer)) {
@@ -158,26 +127,19 @@ void ListenHTTP::onSchedule(core::ProcessContext *context,
     }
 
     if (context->getProperty(SSLMinimumVersion.getName(), sslMinVer)) {
-      logger_->log_info("ListenHTTP using %s: %s",
-                        SSLMinimumVersion.getName().c_str(), sslMinVer.c_str());
+      logger_->log_info("ListenHTTP using %s: %s", SSLMinimumVersion.getName().c_str(), sslMinVer.c_str());
     }
   }
 
   std::string headersAsAttributesPattern;
 
-  if (context->getProperty(HeadersAsAttributesRegex.getName(),
-                           headersAsAttributesPattern)
-      && !headersAsAttributesPattern.empty()) {
-    logger_->log_info("ListenHTTP using %s: %s",
-                      HeadersAsAttributesRegex.getName().c_str(),
-                      headersAsAttributesPattern.c_str());
+  if (context->getProperty(HeadersAsAttributesRegex.getName(), headersAsAttributesPattern) && !headersAsAttributesPattern.empty()) {
+    logger_->log_info("ListenHTTP using %s: %s", HeadersAsAttributesRegex.getName().c_str(), headersAsAttributesPattern.c_str());
   }
 
   auto numThreads = getMaxConcurrentTasks();
 
-  logger_->log_info(
-      "ListenHTTP starting HTTP server on port %s and path %s with %d threads",
-      listeningPort.c_str(), basePath.c_str(), numThreads);
+  logger_->log_info("ListenHTTP starting HTTP server on port %s and path %s with %d threads", listeningPort.c_str(), basePath.c_str(), numThreads);
 
   // Initialize web server
   std::vector<std::string> options;
@@ -231,19 +193,15 @@ void ListenHTTP::onSchedule(core::ProcessContext *context,
   }
 
   _server.reset(new CivetServer(options));
-  _handler.reset(
-      new Handler(context, sessionFactory, std::move(authDNPattern),
-                  std::move(headersAsAttributesPattern)));
+  _handler.reset(new Handler(context, sessionFactory, std::move(authDNPattern), std::move(headersAsAttributesPattern)));
   _server->addHandler(basePath, _handler.get());
 }
 
 ListenHTTP::~ListenHTTP() {
 }
 
-void ListenHTTP::onTrigger(core::ProcessContext *context,
-                           core::ProcessSession *session) {
-  std::shared_ptr<FlowFileRecord> flowFile = std::static_pointer_cast<
-      FlowFileRecord>(session->get());
+void ListenHTTP::onTrigger(core::ProcessContext *context, core::ProcessSession *session) {
+  std::shared_ptr<FlowFileRecord> flowFile = std::static_pointer_cast<FlowFileRecord>(session->get());
 
   // Do nothing if there are no incoming files
   if (!flowFile) {
@@ -251,10 +209,7 @@ void ListenHTTP::onTrigger(core::ProcessContext *context,
   }
 }
 
-ListenHTTP::Handler::Handler(core::ProcessContext *context,
-                             core::ProcessSessionFactory *sessionFactory,
-                             std::string &&authDNPattern,
-                             std::string &&headersAsAttributesPattern)
+ListenHTTP::Handler::Handler(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory, std::string &&authDNPattern, std::string &&headersAsAttributesPattern)
     : _authDNRegex(std::move(authDNPattern)),
       _headersAsAttributesRegex(std::move(headersAsAttributesPattern)),
       logger_(logging::LoggerFactory<ListenHTTP::Handler>::getLogger()) {
@@ -268,11 +223,9 @@ void ListenHTTP::Handler::sendErrorResponse(struct mg_connection *conn) {
             "Content-Length: 0\r\n\r\n");
 }
 
-bool ListenHTTP::Handler::handlePost(CivetServer *server,
-                                     struct mg_connection *conn) {
+bool ListenHTTP::Handler::handlePost(CivetServer *server, struct mg_connection *conn) {
   auto req_info = mg_get_request_info(conn);
-  logger_->log_info("ListenHTTP handling POST request of length %d",
-                    req_info->content_length);
+  logger_->log_info("ListenHTTP handling POST request of length %d", req_info->content_length);
 
   // If this is a two-way TLS connection, authorize the peer against the configured pattern
   if (req_info->is_ssl && req_info->client_cert != nullptr) {
@@ -280,8 +233,7 @@ bool ListenHTTP::Handler::handlePost(CivetServer *server,
       mg_printf(conn, "HTTP/1.1 403 Forbidden\r\n"
                 "Content-Type: text/html\r\n"
                 "Content-Length: 0\r\n\r\n");
-      logger_->log_warn("ListenHTTP client DN not authorized: %s",
-                        req_info->client_cert->subject);
+      logger_->log_warn("ListenHTTP client DN not authorized: %s", req_info->client_cert->subject);
       return true;
     }
   }
@@ -337,8 +289,8 @@ bool ListenHTTP::Handler::handlePost(CivetServer *server,
   return true;
 }
 
-ListenHTTP::WriteCallback::WriteCallback(struct mg_connection *conn, const struct mg_request_info *reqInfo) :
-    logger_(logging::LoggerFactory<ListenHTTP::WriteCallback>::getLogger()) {
+ListenHTTP::WriteCallback::WriteCallback(struct mg_connection *conn, const struct mg_request_info *reqInfo)
+    : logger_(logging::LoggerFactory<ListenHTTP::WriteCallback>::getLogger()) {
   _conn = conn;
   _reqInfo = reqInfo;
 }

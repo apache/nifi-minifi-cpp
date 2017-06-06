@@ -104,23 +104,18 @@ class MockProcessor : public core::Processor {
   }
 
   // OnTrigger method, implemented by NiFi Processor Designer
-  virtual void onTrigger(core::ProcessContext *context,
-                         core::ProcessSession *session) {
+  virtual void onTrigger(core::ProcessContext *context, core::ProcessSession *session) {
 
     std::string linked_service = "";
     getProperty("linkedService", linked_service);
     if (!IsNullOrEmpty(linked_service)) {
 
-      std::shared_ptr<core::controller::ControllerService> service = context
-          ->getControllerService(linked_service);
+      std::shared_ptr<core::controller::ControllerService> service = context->getControllerService(linked_service);
       std::lock_guard<std::mutex> lock(control_mutex);
       if (!disabled.load()) {
         assert(true == context->isControllerServiceEnabled(linked_service));
         assert(nullptr != service);
-        assert(
-            "pushitrealgood"
-                == std::static_pointer_cast<MockControllerService>(service)
-                    ->doSomething());
+        assert("pushitrealgood" == std::static_pointer_cast<MockControllerService>(service)->doSomething());
       } else {
         assert(false == context->isControllerServiceEnabled(linked_service));
       }

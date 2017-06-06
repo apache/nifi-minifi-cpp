@@ -191,9 +191,7 @@ class FlowFile {
 
   // Check whether it is still being penalized
   bool isPenalized() {
-    return (
-        penaltyExpiration_ms_ > 0 ?
-            penaltyExpiration_ms_ > getTimeMillis() : false);
+    return (penaltyExpiration_ms_ > 0 ? penaltyExpiration_ms_ > getTimeMillis() : false);
   }
 
   /**

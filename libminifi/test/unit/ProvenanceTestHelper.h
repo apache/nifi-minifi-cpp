@@ -42,9 +42,7 @@ class TestRepository : public core::Repository {
   }
 
   bool Put(std::string key, uint8_t *buf, int bufLen) {
-    repositoryResults.insert(
-        std::pair<std::string, std::string>(
-            key, std::string((const char*) buf, bufLen)));
+    repositoryResults.insert(std::pair<std::string, std::string>(key, std::string((const char*) buf, bufLen)));
     return true;
   }
   // Delete
@@ -67,17 +65,13 @@ class TestRepository : public core::Repository {
     return repositoryResults;
   }
 
-  void getProvenanceRecord(
-      std::vector<std::shared_ptr<provenance::ProvenanceEventRecord>> &records,
-      int maxSize) {
+  void getProvenanceRecord(std::vector<std::shared_ptr<provenance::ProvenanceEventRecord>> &records, int maxSize) {
     for (auto entry : repositoryResults) {
       if (records.size() >= maxSize)
         break;
-      std::shared_ptr<provenance::ProvenanceEventRecord> eventRead =
-          std::make_shared<provenance::ProvenanceEventRecord>();
+      std::shared_ptr<provenance::ProvenanceEventRecord> eventRead = std::make_shared<provenance::ProvenanceEventRecord>();
 
-      if (eventRead->DeSerialize((uint8_t*) entry.second.data(),
-                                 entry.second.length())) {
+      if (eventRead->DeSerialize((uint8_t*) entry.second.data(), entry.second.length())) {
         records.push_back(eventRead);
       }
     }
@@ -93,7 +87,7 @@ class TestRepository : public core::Repository {
 class TestFlowRepository : public core::repository::FlowFileRepository {
  public:
   TestFlowRepository()
-      : core::repository::FlowFileRepository("ff","./dir", 1000, 100, 0) {
+      : core::repository::FlowFileRepository("ff", "./dir", 1000, 100, 0) {
   }
   // initialize
   bool initialize() {
@@ -106,9 +100,7 @@ class TestFlowRepository : public core::repository::FlowFileRepository {
   }
 
   bool Put(std::string key, uint8_t *buf, int bufLen) {
-    repositoryResults.insert(
-        std::pair<std::string, std::string>(
-            key, std::string((const char*) buf, bufLen)));
+    repositoryResults.insert(std::pair<std::string, std::string>(key, std::string((const char*) buf, bufLen)));
     return true;
   }
   // Delete
@@ -131,17 +123,13 @@ class TestFlowRepository : public core::repository::FlowFileRepository {
     return repositoryResults;
   }
 
-  void getProvenanceRecord(
-      std::vector<std::shared_ptr<provenance::ProvenanceEventRecord>> &records,
-      int maxSize) {
+  void getProvenanceRecord(std::vector<std::shared_ptr<provenance::ProvenanceEventRecord>> &records, int maxSize) {
     for (auto entry : repositoryResults) {
       if (records.size() >= maxSize)
         break;
-      std::shared_ptr<provenance::ProvenanceEventRecord> eventRead =
-          std::make_shared<provenance::ProvenanceEventRecord>();
+      std::shared_ptr<provenance::ProvenanceEventRecord> eventRead = std::make_shared<provenance::ProvenanceEventRecord>();
 
-      if (eventRead->DeSerialize((uint8_t*) entry.second.data(),
-                                 entry.second.length())) {
+      if (eventRead->DeSerialize((uint8_t*) entry.second.data(), entry.second.length())) {
         records.push_back(eventRead);
       }
     }
@@ -157,11 +145,8 @@ class TestFlowRepository : public core::repository::FlowFileRepository {
 class TestFlowController : public minifi::FlowController {
 
  public:
-  TestFlowController(std::shared_ptr<core::Repository> repo,
-                     std::shared_ptr<core::Repository> flow_file_repo)
-      : minifi::FlowController(repo, flow_file_repo,
-                               std::make_shared<minifi::Configure>(), nullptr,
-                               "", true) {
+  TestFlowController(std::shared_ptr<core::Repository> repo, std::shared_ptr<core::Repository> flow_file_repo)
+      : minifi::FlowController(repo, flow_file_repo, std::make_shared<minifi::Configure>(), nullptr, "", true) {
   }
   ~TestFlowController() {
 
@@ -194,8 +179,7 @@ class TestFlowController : public minifi::FlowController {
     return true;
   }
 
-  std::shared_ptr<core::Processor> createProcessor(std::string name,
-                                                   uuid_t uuid) {
+  std::shared_ptr<core::Processor> createProcessor(std::string name, uuid_t uuid) {
     return 0;
   }
 
@@ -207,8 +191,7 @@ class TestFlowController : public minifi::FlowController {
     return 0;
   }
 
-  std::shared_ptr<minifi::Connection> createConnection(std::string name,
-                                                       uuid_t uuid) {
+  std::shared_ptr<minifi::Connection> createConnection(std::string name, uuid_t uuid) {
     return 0;
   }
  protected:

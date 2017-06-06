@@ -38,27 +38,20 @@ class EventDrivenSchedulingAgent : public ThreadedSchedulingAgent {
   /*!
    * Create a new event driven scheduling agent.
    */
-  EventDrivenSchedulingAgent(
-      std::shared_ptr<core::controller::ControllerServiceProvider> controller_service_provider,
-      std::shared_ptr<core::Repository> repo,
-      std::shared_ptr<Configure> configuration)
-      : ThreadedSchedulingAgent(controller_service_provider, repo,
-                                configuration) {
+  EventDrivenSchedulingAgent(std::shared_ptr<core::controller::ControllerServiceProvider> controller_service_provider, std::shared_ptr<core::Repository> repo, std::shared_ptr<Configure> configuration)
+      : ThreadedSchedulingAgent(controller_service_provider, repo, configuration) {
   }
   // Destructor
   virtual ~EventDrivenSchedulingAgent() {
   }
   // Run function for the thread
-  void run(std::shared_ptr<core::Processor> processor,
-           core::ProcessContext *processContext,
-           core::ProcessSessionFactory *sessionFactory);
+  void run(std::shared_ptr<core::Processor> processor, core::ProcessContext *processContext, core::ProcessSessionFactory *sessionFactory);
 
  private:
   // Prevent default copy constructor and assignment operation
   // Only support pass by reference or pointer
   EventDrivenSchedulingAgent(const EventDrivenSchedulingAgent &parent);
-  EventDrivenSchedulingAgent &operator=(
-      const EventDrivenSchedulingAgent &parent);
+  EventDrivenSchedulingAgent &operator=(const EventDrivenSchedulingAgent &parent);
 
 };
 

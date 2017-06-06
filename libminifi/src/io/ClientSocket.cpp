@@ -39,8 +39,7 @@ namespace nifi {
 namespace minifi {
 namespace io {
 
-Socket::Socket(const std::shared_ptr<SocketContext> &context, const std::string &hostname, const uint16_t port,
-               const uint16_t listeners = -1)
+Socket::Socket(const std::shared_ptr<SocketContext> &context, const std::string &hostname, const uint16_t port, const uint16_t listeners = -1)
     : requested_hostname_(hostname),
       port_(port),
       addr_info_(0),
@@ -86,8 +85,7 @@ void Socket::closeStream() {
 }
 
 int8_t Socket::createConnection(const addrinfo *p, in_addr_t &addr) {
-  if ((socket_file_descriptor_ = socket(p->ai_family, p->ai_socktype,
-                                        p->ai_protocol)) == -1) {
+  if ((socket_file_descriptor_ = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) {
     logger_->log_error("error while connecting to server socket");
     return -1;
   }
@@ -111,8 +109,7 @@ int8_t Socket::createConnection(const addrinfo *p, in_addr_t &addr) {
       sa_loc->sin_port = htons(port_);
       // use any address if you are connecting to the local machine for testing
       // otherwise we must use the requested hostname
-      if (IsNullOrEmpty(requested_hostname_)
-          || requested_hostname_ == "localhost") {
+      if (IsNullOrEmpty(requested_hostname_) || requested_hostname_ == "localhost") {
         sa_loc->sin_addr.s_addr = htonl(INADDR_ANY);
       } else {
         sa_loc->sin_addr.s_addr = addr;
@@ -149,12 +146,10 @@ int16_t Socket::initialize() {
     hints.ai_flags |= AI_PASSIVE;
   hints.ai_protocol = 0; /* any protocol */
 
-  int errcode = getaddrinfo(requested_hostname_.c_str(), 0, &hints,
-                            &addr_info_);
+  int errcode = getaddrinfo(requested_hostname_.c_str(), 0, &hints, &addr_info_);
 
   if (errcode != 0) {
-    logger_->log_error("Saw error during getaddrinfo, error: %s",
-                       strerror(errno));
+    logger_->log_error("Saw error during getaddrinfo, error: %s", strerror(errno));
     return -1;
   }
 
@@ -210,8 +205,7 @@ int16_t Socket::select_descriptor(const uint16_t msec) {
     retval = select(socket_max_ + 1, &read_fds_, NULL, NULL, NULL);
 
   if (retval < 0) {
-    logger_->log_error("Saw error during selection, error:%i %s", retval,
-                       strerror(errno));
+    logger_->log_error("Saw error during selection, error:%i %s", retval, strerror(errno));
     return retval;
   }
 
@@ -221,8 +215,7 @@ int16_t Socket::select_descriptor(const uint16_t msec) {
         if (listeners_ > 0) {
           struct sockaddr_storage remoteaddr;  // client address
           socklen_t addrlen = sizeof remoteaddr;
-          int newfd = accept(socket_file_descriptor_,
-                             (struct sockaddr *) &remoteaddr, &addrlen);
+          int newfd = accept(socket_file_descriptor_, (struct sockaddr *) &remoteaddr, &addrlen);
           FD_SET(newfd, &total_list_);  // add to master set
           if (newfd > socket_max_) {    // keep track of the max
             socket_max_ = newfd;
@@ -273,8 +266,7 @@ int16_t Socket::setSocketOptions(const int sock) {
 #else
   if (listeners_ > 0) {
     // lose the pesky "address already in use" error message
-    if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR,
-                   reinterpret_cast<char *>(&opt), sizeof(opt)) < 0) {
+    if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, reinterpret_cast<char *>(&opt), sizeof(opt)) < 0) {
       logger_->log_error("setsockopt() SO_REUSEADDR failed");
       close(sock);
       return -1;
@@ -304,16 +296,14 @@ int Socket::writeData(uint8_t *value, int size) {
     // check for errors
     if (ret <= 0) {
       close(socket_file_descriptor_);
-      logger_->log_error("Could not send to %d, error: %s",
-                         socket_file_descriptor_, strerror(errno));
+      logger_->log_error("Could not send to %d, error: %s", socket_file_descriptor_, strerror(errno));
       return ret;
     }
     bytes += ret;
   }
 
   if (ret)
-    logger_->log_trace("Send data size %d over socket %d", size,
-                       socket_file_descriptor_);
+    logger_->log_trace("Send data size %d over socket %d", size, socket_file_descriptor_);
   return bytes;
 }
 
@@ -341,15 +331,11 @@ int Socket::read(uint64_t &value, bool is_little_endian) {
   auto buf = readBuffer(value);
 
   if (is_little_endian) {
-    value = ((uint64_t) buf[0] << 56) | ((uint64_t) (buf[1] & 255) << 48)
-        | ((uint64_t) (buf[2] & 255) << 40) | ((uint64_t) (buf[3] & 255) << 32)
-        | ((uint64_t) (buf[4] & 255) << 24) | ((uint64_t) (buf[5] & 255) << 16)
-        | ((uint64_t) (buf[6] & 255) << 8) | ((uint64_t) (buf[7] & 255) << 0);
+    value = ((uint64_t) buf[0] << 56) | ((uint64_t) (buf[1] & 255) << 48) | ((uint64_t) (buf[2] & 255) << 40) | ((uint64_t) (buf[3] & 255) << 32) | ((uint64_t) (buf[4] & 255) << 24)
+        | ((uint64_t) (buf[5] & 255) << 16) | ((uint64_t) (buf[6] & 255) << 8) | ((uint64_t) (buf[7] & 255) << 0);
   } else {
-    value = ((uint64_t) buf[0] << 0) | ((uint64_t) (buf[1] & 255) << 8)
-        | ((uint64_t) (buf[2] & 255) << 16) | ((uint64_t) (buf[3] & 255) << 24)
-        | ((uint64_t) (buf[4] & 255) << 32) | ((uint64_t) (buf[5] & 255) << 40)
-        | ((uint64_t) (buf[6] & 255) << 48) | ((uint64_t) (buf[7] & 255) << 56);
+    value = ((uint64_t) buf[0] << 0) | ((uint64_t) (buf[1] & 255) << 8) | ((uint64_t) (buf[2] & 255) << 16) | ((uint64_t) (buf[3] & 255) << 24) | ((uint64_t) (buf[4] & 255) << 32)
+        | ((uint64_t) (buf[5] & 255) << 40) | ((uint64_t) (buf[6] & 255) << 48) | ((uint64_t) (buf[7] & 255) << 56);
   }
   return sizeof(value);
 }
@@ -397,8 +383,7 @@ int Socket::readData(uint8_t *buf, int buflen) {
       if (bytes_read == 0) {
         logger_->log_info("Other side hung up on %d", fd);
       } else {
-        logger_->log_error("Could not recv on %d, error: %s", fd,
-                           strerror(errno));
+        logger_->log_error("Could not recv on %d, error: %s", fd, strerror(errno));
       }
       return -1;
     }

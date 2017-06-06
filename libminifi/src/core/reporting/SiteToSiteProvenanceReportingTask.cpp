@@ -50,11 +50,8 @@ const char *SiteToSiteProvenanceReportingTask::ProvenanceAppStr = "MiNiFi Flow";
 void SiteToSiteProvenanceReportingTask::initialize() {
 }
 
-void SiteToSiteProvenanceReportingTask::getJsonReport(
-    core::ProcessContext *context, core::ProcessSession *session,
-    std::vector<std::shared_ptr<provenance::ProvenanceEventRecord>> &records,
-    std::string &report) {
-
+void SiteToSiteProvenanceReportingTask::getJsonReport(core::ProcessContext *context, core::ProcessSession *session, std::vector<std::shared_ptr<provenance::ProvenanceEventRecord>> &records,
+                                                      std::string &report) {
   Json::Value array;
   for (auto record : records) {
     Json::Value recordJson;
@@ -62,9 +59,7 @@ void SiteToSiteProvenanceReportingTask::getJsonReport(
     Json::Value parentUuidJson;
     Json::Value childUuidJson;
     recordJson["eventId"] = record->getEventId().c_str();
-    recordJson["eventType"] =
-        provenance::ProvenanceEventRecord::ProvenanceEventTypeStr[record
-            ->getEventType()];
+    recordJson["eventType"] = provenance::ProvenanceEventRecord::ProvenanceEventTypeStr[record->getEventType()];
     recordJson["timestampMillis"] = record->getEventTime();
     recordJson["durationMillis"] = record->getEventDuration();
     recordJson["lineageStart"] = record->getlineageStartDate();
@@ -91,10 +86,8 @@ void SiteToSiteProvenanceReportingTask::getJsonReport(
     }
     recordJson["childIds"] = childUuidJson;
     recordJson["transitUri"] = record->getTransitUri().c_str();
-    recordJson["remoteIdentifier"] = record->getSourceSystemFlowFileIdentifier()
-        .c_str();
-    recordJson["alternateIdentifier"] = record->getAlternateIdentifierUri()
-        .c_str();
+    recordJson["remoteIdentifier"] = record->getSourceSystemFlowFileIdentifier().c_str();
+    recordJson["alternateIdentifier"] = record->getAlternateIdentifierUri().c_str();
     recordJson["application"] = ProvenanceAppStr;
     array.append(recordJson);
   }
@@ -103,14 +96,10 @@ void SiteToSiteProvenanceReportingTask::getJsonReport(
   report = writer.write(array);
 }
 
-void SiteToSiteProvenanceReportingTask::onSchedule(
-    core::ProcessContext *context,
-    core::ProcessSessionFactory *sessionFactory) {
+void SiteToSiteProvenanceReportingTask::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory) {
 }
 
-void SiteToSiteProvenanceReportingTask::onTrigger(
-    core::ProcessContext *context, core::ProcessSession *session) {
-
+void SiteToSiteProvenanceReportingTask::onTrigger(core::ProcessContext *context, core::ProcessSession *session) {
   std::unique_ptr<Site2SiteClientProtocol> protocol_ = getNextProtocol(true);
 
   if (!protocol_) {
@@ -121,18 +110,14 @@ void SiteToSiteProvenanceReportingTask::onTrigger(
   if (!protocol_->bootstrap()) {
     // bootstrap the client protocol if needeed
     context->yield();
-    std::shared_ptr<Processor> processor = std::static_pointer_cast<Processor>(
-        context->getProcessorNode().getProcessor());
-    logger_->log_error("Site2Site bootstrap failed yield period %d peer ",
-                       processor->getYieldPeriodMsec());
+    std::shared_ptr<Processor> processor = std::static_pointer_cast<Processor>(context->getProcessorNode().getProcessor());
+    logger_->log_error("Site2Site bootstrap failed yield period %d peer ", processor->getYieldPeriodMsec());
     returnProtocol(std::move(protocol_));
     return;
   }
 
   std::vector<std::shared_ptr<provenance::ProvenanceEventRecord>> records;
-  std::shared_ptr<provenance::ProvenanceRepository> repo =
-      std::static_pointer_cast<provenance::ProvenanceRepository>(
-          context->getProvenanceRepository());
+  std::shared_ptr<provenance::ProvenanceRepository> repo = std::static_pointer_cast<provenance::ProvenanceRepository>(context->getProvenanceRepository());
   repo->getProvenanceRecord(records, batch_size_);
   if (records.size() <= 0) {
     returnProtocol(std::move(protocol_));
