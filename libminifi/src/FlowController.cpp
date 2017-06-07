@@ -33,6 +33,7 @@
 #include <utility>
 #include <memory>
 #include <string>
+#include "yaml-cpp/yaml.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessGroup.h"
 #include "utils/StringUtils.h"
@@ -152,6 +153,31 @@ FlowController::~FlowController() {
   provenance_repo_ = nullptr;
 }
 
+bool FlowController::applyConfiguration(std::string &configurePayload) {
+  std::unique_ptr<core::ProcessGroup> newRoot;
+  try {
+    newRoot = std::move(flow_configuration_->getRootFromPayload(configurePayload));
+  }
+  catch (const YAML::Exception& e) {
+    logger_->log_error("Invalid configuration payload");
+    return false;
+  }
+
+  if (newRoot == nullptr)
+    return false;
+
+  logger_->log_info("Starting to reload Flow Controller with flow control name %s, version %d",
+      newRoot->getName().c_str(), newRoot->getVersion());
+
+  std::lock_guard<std::recursive_mutex> flow_lock(mutex_);
+  stop(true);
+  waitUnload(30000);
+  this->root_ = std::move(newRoot);
+  loadFlowRepo();
+  initialized_ = true;
+  return start();
+}
+
 void FlowController::stop(bool force) {
   std::lock_guard<std::recursive_mutex> flow_lock(mutex_);
   if (running_) {
@@ -164,7 +190,7 @@ void FlowController::stop(bool force) {
     this->flow_file_repo_->stop();
     this->provenance_repo_->stop();
     // Wait for sometime for thread stop
-    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    std::this_thread::sleep_for(std::chrono::milliseconds(3000));
     if (this->root_)
       this->root_->stopProcessing(this->timer_scheduler_.get(), this->event_scheduler_.get());
   }
@@ -214,6 +240,15 @@ void FlowController::load() {
     stop(true);
   }
   if (!initialized_) {
+    std::string listenerType;
+    // grab the value for configuration
+    if (this->http_configuration_listener_ == nullptr && configuration_->get(Configure::nifi_configuration_listener_type, listenerType)) {
+      if (listenerType == "http") {
+        this->http_configuration_listener_ =
+              std::unique_ptr<minifi::HttpConfigurationListener>(new minifi::HttpConfigurationListener(shared_from_this(), configuration_));
+      }
+    }
+
     logger_->log_info("Initializing timers");
     if (nullptr == timer_scheduler_) {
       timer_scheduler_ = std::make_shared<TimerDrivenSchedulingAgent>(std::static_pointer_cast<core::controller::ControllerServiceProvider>(shared_from_this()), provenance_repo_, configuration_);

@@ -21,6 +21,7 @@
 #define __FLOW_CONTROLLER_H__
 
 #include <uuid/uuid.h>
+#include <stdio.h>
 #include <vector>
 #include <queue>
 #include <map>
@@ -43,6 +44,8 @@
 #include "TimerDrivenSchedulingAgent.h"
 #include "EventDrivenSchedulingAgent.h"
 #include "FlowControlProtocol.h"
+#include "ConfigurationListener.h"
+#include "HttpConfigurationListener.h"
 
 #include "core/Property.h"
 
@@ -127,9 +130,36 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
       root_->updatePropertyValue(processorName, propertyName, propertyValue);
   }
 
-  // set 8 bytes SerialNumber
-  virtual void setSerialNumber(uint8_t *number) {
-    protocol_->setSerialNumber(number);
+  // set SerialNumber
+  void setSerialNumber(std::string number) {
+    serial_number_ = number;
+  }
+
+  // get serial number as string
+  std::string getSerialNumber() {
+    return serial_number_;
+  }
+
+  // validate and apply passing yaml configuration payload
+  // first it will validate the payload with the current root node config for flowController
+  // like FlowController id/name is the same and new version is greater than the current version
+  // after that, it will apply the configuration
+  bool applyConfiguration(std::string &configurePayload);
+
+  // get name
+  std::string getName() {
+    if (root_ != nullptr)
+      return root_->getName();
+    else
+      return "";
+  }
+
+  // get version
+  int getVersion() {
+    if (root_ != nullptr)
+      return root_->getVersion();
+    else
+      return 0;
   }
 
   /**
@@ -292,6 +322,9 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
 
  private:
   std::shared_ptr<logging::Logger> logger_;
+  // http configuration listener object.
+  std::unique_ptr<HttpConfigurationListener> http_configuration_listener_;
+  std::string serial_number_;
 };
 
 } /* namespace minifi */

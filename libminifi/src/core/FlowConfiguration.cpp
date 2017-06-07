@@ -53,8 +53,10 @@ std::shared_ptr<core::Processor> FlowConfiguration::createProvenanceReportTask()
   return processor;
 }
 
-std::unique_ptr<core::ProcessGroup> FlowConfiguration::createRootProcessGroup(std::string name, uuid_t uuid) {
-  return std::unique_ptr<core::ProcessGroup>(new core::ProcessGroup(core::ROOT_PROCESS_GROUP, name, uuid));
+std::unique_ptr<core::ProcessGroup> FlowConfiguration::createRootProcessGroup(
+    std::string name, uuid_t uuid, int version) {
+  return std::unique_ptr<core::ProcessGroup>(
+      new core::ProcessGroup(core::ROOT_PROCESS_GROUP, name, uuid, version));
 }
 
 std::unique_ptr<core::ProcessGroup> FlowConfiguration::createRemoteProcessGroup(std::string name, uuid_t uuid) {

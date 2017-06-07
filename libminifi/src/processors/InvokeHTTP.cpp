@@ -315,8 +315,9 @@ void InvokeHTTP::onTrigger(core::ProcessContext *context, core::ProcessSession *
   if (read_timeout_ > 0) {
     curl_easy_setopt(http_session, CURLOPT_TIMEOUT, read_timeout_);
   }
-  HTTPRequestResponse content;
-  curl_easy_setopt(http_session, CURLOPT_WRITEFUNCTION, &HTTPRequestResponse::recieve_write);
+  utils::HTTPRequestResponse content;
+  curl_easy_setopt(http_session, CURLOPT_WRITEFUNCTION,
+                   &utils::HTTPRequestResponse::recieve_write);
 
   curl_easy_setopt(http_session, CURLOPT_WRITEDATA, static_cast<void*>(&content));
 
@@ -326,14 +327,17 @@ void InvokeHTTP::onTrigger(core::ProcessContext *context, core::ProcessSession *
     if (claim) {
       utils::ByteInputCallBack *callback = new utils::ByteInputCallBack();
       session->read(flowFile, callback);
-      CallBackPosition *callbackObj = new CallBackPosition;
+      utils::CallBackPosition *callbackObj = new utils::CallBackPosition;
       callbackObj->ptr = callback;
       callbackObj->pos = 0;
       logger_->log_info("InvokeHTTP -- Setting callback");
       curl_easy_setopt(http_session, CURLOPT_UPLOAD, 1L);
-      curl_easy_setopt(http_session, CURLOPT_INFILESIZE_LARGE, (curl_off_t)callback->getBufferSize());
-      curl_easy_setopt(http_session, CURLOPT_READFUNCTION, &HTTPRequestResponse::send_write);
-      curl_easy_setopt(http_session, CURLOPT_READDATA, static_cast<void*>(callbackObj));
+      curl_easy_setopt(http_session, CURLOPT_INFILESIZE_LARGE,
+                       (curl_off_t)callback->getBufferSize());
+      curl_easy_setopt(http_session, CURLOPT_READFUNCTION,
+                       &utils::HTTPRequestResponse::send_write);
+      curl_easy_setopt(http_session, CURLOPT_READDATA,
+                       static_cast<void*>(callbackObj));
     } else {
       logger_->log_error("InvokeHTTP -- no resource claim");
     }
