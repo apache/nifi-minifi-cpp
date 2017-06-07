@@ -32,69 +32,13 @@
 #include "controllers/SSLContextService.h"
 #include "utils/ByteInputCallBack.h"
 #include "core/logging/LoggerConfiguration.h"
+#include "utils/HTTPUtils.h"
 
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
 namespace processors {
-
-struct CallBackPosition {
-  utils::ByteInputCallBack *ptr;
-  size_t pos;
-};
-
-/**
- * HTTP Response object
- */
-struct HTTPRequestResponse {
-  std::vector<char> data;
-
-  /**
-   * Receive HTTP Response.
-   */
-  static size_t recieve_write(char * data, size_t size, size_t nmemb, void * p) {
-    return static_cast<HTTPRequestResponse*>(p)->write_content(data, size, nmemb);
-  }
-
-  /**
-   * Callback for post, put, and patch operations
-   * @param buffer
-   * @param size size of buffer
-   * @param nitems items to add
-   * @param insteam input stream object.
-   */
-
-  static size_t send_write(char * data, size_t size, size_t nmemb, void * p) {
-    if (p != 0) {
-      CallBackPosition *callback = (CallBackPosition*) p;
-      if (callback->pos <= callback->ptr->getBufferSize()) {
-        char *ptr = callback->ptr->getBuffer();
-        int len = callback->ptr->getBufferSize() - callback->pos;
-        if (len <= 0) {
-          delete callback->ptr;
-          delete callback;
-          return 0;
-        }
-        if (len > size * nmemb)
-          len = size * nmemb;
-        memcpy(data, callback->ptr->getBuffer() + callback->pos, len);
-        callback->pos += len;
-        return len;
-      }
-    } else {
-      return CURL_READFUNC_ABORT;
-    }
-
-    return 0;
-  }
-
-  size_t write_content(char* ptr, size_t size, size_t nmemb) {
-    data.insert(data.end(), ptr, ptr + size * nmemb);
-    return size * nmemb;
-  }
-
-};
 
 // InvokeHTTP Class
 class InvokeHTTP : public core::Processor {
