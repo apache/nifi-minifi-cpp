@@ -102,9 +102,10 @@ void ConfigurationListener::stop() {
 }
 
 void ConfigurationListener::run() {
+  std::unique_lock<std::mutex> lk(mutex_);
+  std::condition_variable cv;
   int64_t interval = 0;
-  while (running_) {
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+  while (!cv.wait_for(lk, std::chrono::milliseconds(100), [this] {return (running_ == false);})) {
     interval += 100;
     if (interval >= pull_interval_) {
       std::string payload;
