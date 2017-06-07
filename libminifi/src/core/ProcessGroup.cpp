@@ -37,10 +37,12 @@ namespace nifi {
 namespace minifi {
 namespace core {
 
-ProcessGroup::ProcessGroup(ProcessGroupType type, std::string name, uuid_t uuid, ProcessGroup *parent)
+ProcessGroup::ProcessGroup(ProcessGroupType type, std::string name, uuid_t uuid, int version,
+                           ProcessGroup *parent)
     : logger_(logging::LoggerFactory<ProcessGroup>::getLogger()),
       name_(name),
       type_(type),
+      version_(version),
       parent_process_group_(parent) {
   if (!uuid)
     // Generate the global UUID for the flow record

@@ -31,14 +31,24 @@ namespace core {
 
 core::ProcessGroup *YamlConfiguration::parseRootProcessGroupYaml(YAML::Node rootFlowNode) {
   uuid_t uuid;
+  int64_t version = 0;
 
   checkRequiredField(&rootFlowNode, "name", CONFIG_YAML_REMOTE_PROCESS_GROUP_KEY);
   std::string flowName = rootFlowNode["name"].as<std::string>();
   std::string id = getOrGenerateId(&rootFlowNode);
   uuid_parse(id.c_str(), uuid);
 
-  logger_->log_debug("parseRootProcessGroup: id => [%s], name => [%s]", id, flowName);
-  std::unique_ptr<core::ProcessGroup> group = FlowConfiguration::createRootProcessGroup(flowName, uuid);
+  if (rootFlowNode["version"]) {
+    std::string value = rootFlowNode["version"].as<std::string>();
+    if (core::Property::StringToInt(value, version)) {
+      logger_->log_debug("parseRootProcessorGroup: version => [%d]", version);
+    }
+  }
+
+  logger_->log_debug(
+      "parseRootProcessGroup: id => [%s], name => [%s]", id, flowName);
+  std::unique_ptr<core::ProcessGroup> group =
+      FlowConfiguration::createRootProcessGroup(flowName, uuid, version);
 
   this->name_ = flowName;
 

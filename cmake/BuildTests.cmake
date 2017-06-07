@@ -36,6 +36,7 @@ function(createTests testName)
     target_include_directories(${testName} PRIVATE BEFORE "thirdparty/spdlog-0.13.0/include")
     target_include_directories(${testName} PRIVATE BEFORE "thirdparty/yaml-cpp-yaml-cpp-0.5.3/include")
     target_include_directories(${testName} PRIVATE BEFORE "thirdparty/jsoncpp/include")
+    target_include_directories(${testName} PRIVATE BEFORE "thirdparty/civetweb-1.9.1/include")
     target_include_directories(${testName} PRIVATE BEFORE ${LEVELDB_INCLUDE_DIRS})
     target_include_directories(${testName} PRIVATE BEFORE "include")
     target_include_directories(${testName} PRIVATE BEFORE "libminifi/include/")
@@ -86,6 +87,8 @@ message("-- Finished building ${INT_TEST_COUNT} integration test file(s)...")
 add_test(NAME ControllerServiceIntegrationTests COMMAND ControllerServiceIntegrationTests "${TEST_RESOURCES}/TestControllerServices.yml" "${TEST_RESOURCES}/")
 
 add_test(NAME HttpGetIntegrationTest COMMAND HttpGetIntegrationTest "${TEST_RESOURCES}/TestHTTPGet.yml"  "${TEST_RESOURCES}/")
+
+add_test(NAME HttpConfigurationListenerTest COMMAND HttpConfigurationListenerTest "${TEST_RESOURCES}/TestHTTPGet.yml"  "${TEST_RESOURCES}/")
 
 add_test(NAME HttpGetIntegrationTestSecure COMMAND HttpGetIntegrationTest "${TEST_RESOURCES}/TestHTTPGetSecure.yml"  "${TEST_RESOURCES}/")
 

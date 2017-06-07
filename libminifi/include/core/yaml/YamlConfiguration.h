@@ -91,6 +91,22 @@ class YamlConfiguration : public FlowConfiguration {
     return getRoot(&rootYamlNode);
   }
 
+  /**
+    * Returns a shared pointer to a ProcessGroup object containing the
+    * flow configuration. The yamlConfigPayload argument must be
+    * a payload for the raw YAML configuration.
+    *
+    * @param yamlConfigPayload an input payload for the raw YAML configuration
+    *                           to be parsed and loaded into the flow
+    *                           configuration tree
+    * @return                 the root ProcessGroup node of the flow
+    *                           configuration tree
+    */
+   std::unique_ptr<core::ProcessGroup> getRootFromPayload(std::string &yamlConfigPayload) {
+     YAML::Node rootYamlNode = YAML::Load(yamlConfigPayload);
+     return getRoot(&rootYamlNode);
+   }
+
  protected:
 
   /**

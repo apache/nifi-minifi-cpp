@@ -55,7 +55,8 @@ class ProcessGroup {
   /*!
    * Create a new process group
    */
-  ProcessGroup(ProcessGroupType type, std::string name, uuid_t uuid = NULL, ProcessGroup *parent = NULL);
+  ProcessGroup(ProcessGroupType type, std::string name, uuid_t uuid = NULL, int version = 0,
+               ProcessGroup *parent = NULL);
   // Destructor
   virtual ~ProcessGroup();
   // Set Processor Name
@@ -108,6 +109,10 @@ class ProcessGroup {
       return true;
     } else
       return false;
+  }
+  // getVersion
+  int getVersion() {
+    return version_;
   }
   // Start Processing
   void startProcessing(TimerDrivenSchedulingAgent *timeScheduler, EventDrivenSchedulingAgent *eventScheduler);
@@ -165,6 +170,8 @@ class ProcessGroup {
   uuid_t uuid_;
   // Processor Group Name
   std::string name_;
+  // version
+  int version_;
   // Process Group Type
   ProcessGroupType type_;
   // Processors (ProcessNode) inside this process group which include Input/Output Port, Remote Process Group input/Output port
