@@ -40,7 +40,6 @@ FileStream::FileStream(const std::string &path, uint32_t offset)
   } else {
     length_ = 0;
   }
-  std::cout << "length is " << length_ << std::endl;
   seek(offset);
 }
 

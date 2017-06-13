@@ -564,7 +564,6 @@ void ProcessSession::import(std::string source, std::shared_ptr<core::FlowFile> 
       }
 
       if (!invalidWrite) {
-        std::cout << "Import " << stream->getSize() << std::endl;
         flow->setSize(stream->getSize());
         flow->setOffset(0);
         if (flow->getResourceClaim() != nullptr) {
@@ -749,7 +748,6 @@ void ProcessSession::import(std::string source, std::shared_ptr<core::FlowFile> 
         }
       }
       if (!invalidWrite) {
-
         flow->setSize(stream->getSize());
         flow->setOffset(0);
         if (flow->getResourceClaim() != nullptr) {
@@ -845,13 +843,14 @@ void ProcessSession::commit() {
       }
     }
 
-    // Do the samething for added flow file
+    // Do the same thing for added flow file
     for (const auto it : _addedFlowFiles) {
       std::shared_ptr<core::FlowFile> record = it.second;
       if (record->isDeleted())
         continue;
       std::map<std::string, Relationship>::iterator itRelationship = this->_transferRelationship.find(record->getUUIDStr());
       if (itRelationship != _transferRelationship.end()) {
+        logger_->log_debug("size is %d for there", _addedFlowFiles.size());
         Relationship relationship = itRelationship->second;
         // Find the relationship, we need to find the connections for that relationship
         std::set<std::shared_ptr<Connectable>> connections = process_context_->getProcessorNode().getOutGoingConnections(relationship.getName());
@@ -862,17 +861,21 @@ void ProcessSession::commit() {
             std::string message = "Connect empty for non auto terminated relationship " + relationship.getName();
             throw Exception(PROCESS_SESSION_EXCEPTION, message.c_str());
           } else {
+            logger_->log_debug("added flow file is auto terminated");
             // Autoterminated
             remove(record);
           }
         } else {
+          logger_->log_debug("size is %d for here", _addedFlowFiles.size());
           // We connections, clone the flow and assign the connection accordingly
           for (std::set<std::shared_ptr<Connectable>>::iterator itConnection = connections.begin(); itConnection != connections.end(); ++itConnection) {
             std::shared_ptr<Connectable> connection(*itConnection);
+            logger_->log_debug("size is %d for here %s", _addedFlowFiles.size(), connection->getName());
             if (itConnection == connections.begin()) {
               // First connection which the flow need be routed to
               record->setConnection(connection);
             } else {
+              logger_->log_debug("clone is %d for here %s", _addedFlowFiles.size(), connection->getName());
               // Clone the flow file and route to the connection
               std::shared_ptr<core::FlowFile> cloneRecord;
               cloneRecord = this->cloneDuringTransfer(record);
@@ -972,6 +975,7 @@ std::shared_ptr<core::FlowFile> ProcessSession::get() {
   std::shared_ptr<Connectable> first = process_context_->getProcessorNode().getNextIncomingConnection();
 
   if (first == NULL) {
+    logger_->log_debug("Get is null for %s", process_context_->getProcessorNode().getName());
     return NULL;
   }
 

@@ -71,8 +71,9 @@ void LogAttribute::onTrigger(core::ProcessContext *context, core::ProcessSession
 
   std::shared_ptr<core::FlowFile> flow = session->get();
 
-  if (!flow)
+  if (!flow) {
     return;
+  }
 
   std::string value;
   if (context->getProperty(LogLevel.getName(), value)) {

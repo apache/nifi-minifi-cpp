@@ -42,7 +42,6 @@ class AtomicEntryStream : public BaseStream {
     core::repository::RepoValue<T> *value;
     if (entry_->getValue(key, &value)) {
       length_ = value->getBufferSize();
-      std::cout << "Length is " << length_ << std::endl;
     } else {
       throw Exception(FILE_OPERATION_EXCEPTION, "Could not create valid entry");
     }
@@ -59,7 +58,6 @@ class AtomicEntryStream : public BaseStream {
   void seek(uint64_t offset);
 
   virtual const uint32_t getSize() const {
-    std::cout << "Length is " << length_ << std::endl;
     return length_;
   }
 

@@ -62,13 +62,13 @@ Connection::Connection(const std::shared_ptr<core::Repository> &flow_repository,
 }
 
 bool Connection::isEmpty() {
-  std::lock_guard < std::mutex > lock(mutex_);
+  std::lock_guard<std::mutex> lock(mutex_);
 
   return queue_.empty();
 }
 
 bool Connection::isFull() {
-  std::lock_guard < std::mutex > lock(mutex_);
+  std::lock_guard<std::mutex> lock(mutex_);
 
   if (max_queue_size_ <= 0 && max_data_queue_size_ <= 0)
     // No back pressure setting
@@ -85,7 +85,7 @@ bool Connection::isFull() {
 
 void Connection::put(std::shared_ptr<core::FlowFile> flow) {
   {
-    std::lock_guard < std::mutex > lock(mutex_);
+    std::lock_guard<std::mutex> lock(mutex_);
 
     queue_.push(flow);
 
@@ -104,12 +104,13 @@ void Connection::put(std::shared_ptr<core::FlowFile> flow) {
 
   // Notify receiving processor that work may be available
   if (dest_connectable_) {
+    logger_->log_debug("Notifying %s", dest_connectable_->getName());
     dest_connectable_->notifyWork();
   }
 }
 
 std::shared_ptr<core::FlowFile> Connection::poll(std::set<std::shared_ptr<core::FlowFile>> &expiredFlowRecords) {
-  std::lock_guard < std::mutex > lock(mutex_);
+  std::lock_guard<std::mutex> lock(mutex_);
 
   while (!queue_.empty()) {
     std::shared_ptr<core::FlowFile> item = queue_.front();
@@ -132,7 +133,7 @@ std::shared_ptr<core::FlowFile> Connection::poll(std::set<std::shared_ptr<core::
           queued_data_size_ += item->getSize();
           break;
         }
-        std::shared_ptr<Connectable> connectable = std::static_pointer_cast < Connectable > (shared_from_this());
+        std::shared_ptr<Connectable> connectable = std::static_pointer_cast<Connectable>(shared_from_this());
         item->setOriginalConnection(connectable);
         logger_->log_debug("Dequeue flow file UUID %s from connection %s", item->getUUIDStr().c_str(), name_.c_str());
 
@@ -151,7 +152,7 @@ std::shared_ptr<core::FlowFile> Connection::poll(std::set<std::shared_ptr<core::
         queued_data_size_ += item->getSize();
         break;
       }
-      std::shared_ptr<Connectable> connectable = std::static_pointer_cast < Connectable > (shared_from_this());
+      std::shared_ptr<Connectable> connectable = std::static_pointer_cast<Connectable>(shared_from_this());
       item->setOriginalConnection(connectable);
       logger_->log_debug("Dequeue flow file UUID %s from connection %s", item->getUUIDStr().c_str(), name_.c_str());
       // delete from the flowfile repo
@@ -167,7 +168,7 @@ std::shared_ptr<core::FlowFile> Connection::poll(std::set<std::shared_ptr<core::
 }
 
 void Connection::drain() {
-  std::lock_guard < std::mutex > lock(mutex_);
+  std::lock_guard<std::mutex> lock(mutex_);
 
   while (!queue_.empty()) {
     auto &&item = queue_.front();

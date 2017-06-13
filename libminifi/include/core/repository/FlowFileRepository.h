@@ -64,7 +64,6 @@ class FlowFileRepository : public core::Repository, public std::enable_shared_fr
   // initialize
   virtual bool initialize(const std::shared_ptr<Configure> &configure) {
     std::string value;
-    std::cout << "initialize " << std::endl;
 
     if (configure->get(Configure::nifi_flowfile_repository_directory_default, value)) {
       directory_ = value;
