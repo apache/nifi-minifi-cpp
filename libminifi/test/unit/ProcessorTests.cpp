@@ -74,7 +74,7 @@ TEST_CASE("Test GetFileLikeIt'sThreaded", "[getfileCreate3]") {
 
   core::ProcessorNode node(processor);
   std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider = nullptr;
-  core::ProcessContext context(node, controller_services_provider, test_repo);
+  core::ProcessContext context(node, controller_services_provider, test_repo, test_repo);
   core::ProcessSessionFactory factory(&context);
   context.setProperty(org::apache::nifi::minifi::processors::GetFile::Directory, dir);
   // replicate 10 threads

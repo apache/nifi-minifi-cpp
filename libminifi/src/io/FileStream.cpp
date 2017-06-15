@@ -28,10 +28,32 @@ namespace nifi {
 namespace minifi {
 namespace io {
 
-FileStream::FileStream(const std::string &path, uint32_t offset)
-    : logger_(logging::LoggerFactory<FileStream>::getLogger()) {
-  file_stream_ = std::unique_ptr < std::fstream > (new std::fstream());
-  file_stream_->open(path.c_str(), std::ios::in | std::ios::out | std::ios::binary);
+FileStream::FileStream(const std::string &path)
+    : logger_(logging::LoggerFactory<FileStream>::getLogger()),
+      path_(path),
+      offset_(0) {
+  file_stream_ = std::unique_ptr<std::fstream>(new std::fstream());
+  file_stream_->open(path.c_str(), std::fstream::out | std::fstream::binary);
+  file_stream_->seekg(0, file_stream_->end);
+  file_stream_->seekp(0, file_stream_->end);
+  int len = file_stream_->tellg();
+  if (len > 0) {
+    length_ = len;
+  } else {
+    length_ = 0;
+  }
+  seek(offset_);
+}
+
+FileStream::FileStream(const std::string &path, uint32_t offset, bool write_enable)
+    : logger_(logging::LoggerFactory<FileStream>::getLogger()),
+      path_(path) {
+  file_stream_ = std::unique_ptr<std::fstream>(new std::fstream());
+  if (write_enable) {
+    file_stream_->open(path.c_str(), std::fstream::in | std::fstream::out | std::fstream::binary);
+  } else {
+    file_stream_->open(path.c_str(), std::fstream::in | std::fstream::binary);
+  }
   file_stream_->seekg(0, file_stream_->end);
   file_stream_->seekp(0, file_stream_->end);
   int len = file_stream_->tellg();
@@ -43,8 +65,16 @@ FileStream::FileStream(const std::string &path, uint32_t offset)
   seek(offset);
 }
 
+void FileStream::closeStream() {
+  std::lock_guard<std::recursive_mutex> lock(file_lock_);
+  if (file_stream_ != nullptr) {
+    file_stream_->close();
+    file_stream_ = nullptr;
+  }
+}
+
 void FileStream::seek(uint64_t offset) {
-  std::lock_guard < std::recursive_mutex > lock(file_lock_);
+  std::lock_guard<std::recursive_mutex> lock(file_lock_);
   offset_ = offset;
   file_stream_->clear();
   file_stream_->seekg(offset_);
@@ -52,8 +82,9 @@ void FileStream::seek(uint64_t offset) {
 }
 
 int FileStream::writeData(std::vector<uint8_t> &buf, int buflen) {
-  if (buf.capacity() < buflen)
+  if (buf.capacity() < buflen) {
     return -1;
+  }
   return writeData(reinterpret_cast<uint8_t *>(&buf[0]), buflen);
 }
 
@@ -61,17 +92,20 @@ int FileStream::writeData(std::vector<uint8_t> &buf, int buflen) {
 
 int FileStream::writeData(uint8_t *value, int size) {
   if (!IsNullOrEmpty(value)) {
-    std::lock_guard < std::recursive_mutex > lock(file_lock_);
-    file_stream_->write(reinterpret_cast<const char*>(value), size);
-    offset_ += size;
-    if (offset_ > length_) {
-      length_ = offset_;
+    std::lock_guard<std::recursive_mutex> lock(file_lock_);
+    if (file_stream_->write(reinterpret_cast<const char*>(value), size)) {
+      offset_ += size;
+      if (offset_ > length_) {
+        length_ = offset_;
+      }
+      file_stream_->seekg(offset_);
+      file_stream_->flush();
+      return size;
+    } else {
+      return -1;
     }
-    file_stream_->seekg(offset_);
-    file_stream_->flush();
-    return size;
   } else {
-    return 0;
+    return -1;
   }
 }
 
@@ -97,12 +131,15 @@ int FileStream::readData(std::vector<uint8_t> &buf, int buflen) {
 
 int FileStream::readData(uint8_t *buf, int buflen) {
   if (!IsNullOrEmpty(buf)) {
-    std::lock_guard < std::recursive_mutex > lock(file_lock_);
+    std::lock_guard<std::recursive_mutex> lock(file_lock_);
     file_stream_->read(reinterpret_cast<char*>(buf), buflen);
     if ((file_stream_->rdstate() & (file_stream_->eofbit | file_stream_->failbit)) != 0) {
       file_stream_->clear();
-      offset_ = length_;
-      file_stream_->seekp(offset_);
+      file_stream_->seekg(0, file_stream_->end);
+      file_stream_->seekp(0, file_stream_->end);
+      int len = file_stream_->tellg();
+      offset_ = len;
+      length_ = len;
       return offset_;
     } else {
       offset_ += buflen;
@@ -111,7 +148,7 @@ int FileStream::readData(uint8_t *buf, int buflen) {
     }
 
   } else {
-    return 0;
+    return -1;
   }
 }
 

@@ -53,6 +53,7 @@ class SchedulingAgent {
    * Create a new scheduling agent.
    */
   SchedulingAgent(std::shared_ptr<core::controller::ControllerServiceProvider> controller_service_provider, std::shared_ptr<core::Repository> repo,
+		  std::shared_ptr<core::Repository> flow_repo,
                   std::shared_ptr<core::ContentRepository> content_repo,
                   std::shared_ptr<Configure> configuration)
       : configure_(configuration),
@@ -63,6 +64,7 @@ class SchedulingAgent {
         logger_(logging::LoggerFactory<SchedulingAgent>::getLogger()) {
     running_ = false;
     repo_ = repo;
+    flow_repo_ = flow_repo;
     utils::ThreadPool<bool> pool = utils::ThreadPool<bool>(configure_->getInt(Configure::nifi_flow_engine_threads, 8), true);
     component_lifecycle_thread_pool_ = std::move(pool);
     component_lifecycle_thread_pool_.start();
@@ -80,7 +82,6 @@ class SchedulingAgent {
   // start
   void start() {
     running_ = true;
-
   }
   // stop
   void stop() {
@@ -111,6 +112,8 @@ class SchedulingAgent {
   std::shared_ptr<Configure> configure_;
 
   std::shared_ptr<core::Repository> repo_;
+  
+  std::shared_ptr<core::Repository> flow_repo_;
 
   std::shared_ptr<core::ContentRepository> content_repo_;
   // thread pool for components.

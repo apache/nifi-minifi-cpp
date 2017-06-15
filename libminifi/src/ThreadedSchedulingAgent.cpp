@@ -68,7 +68,7 @@ void ThreadedSchedulingAgent::schedule(std::shared_ptr<core::Processor> processo
   }
 
   core::ProcessorNode processor_node(processor);
-  auto processContext = std::make_shared < core::ProcessContext > (processor_node, controller_service_provider_, repo_, content_repo_);
+  auto processContext = std::make_shared < core::ProcessContext > (processor_node, controller_service_provider_, repo_, flow_repo_, content_repo_);
   auto sessionFactory = std::make_shared < core::ProcessSessionFactory > (processContext.get());
 
   processor->onSchedule(processContext.get(), sessionFactory.get());

@@ -45,20 +45,19 @@ class FileStream : public io::BaseStream {
    * File Stream constructor that accepts an fstream shared pointer.
    * It must already be initialized for read and write.
    */
-  explicit FileStream(const std::string &path, uint32_t offset = 0);
+  explicit FileStream(const std::string &path, uint32_t offset,  bool write_enable = false);
+
+  /**
+   * File Stream constructor that accepts an fstream shared pointer.
+   * It must already be initialized for read and write.
+   */
+  explicit FileStream(const std::string &path);
 
   virtual ~FileStream() {
     closeStream();
   }
 
-  virtual void closeStream() {
-    std::lock_guard<std::recursive_mutex> lock(file_lock_);
-    if (file_stream_ != nullptr) {
-      file_stream_->close();
-      file_stream_ = nullptr;
-    }
-  }
-
+  virtual void closeStream();
   /**
    * Skip to the specified offset.
    * @param offset offset to which we will skip
@@ -119,6 +118,7 @@ class FileStream : public io::BaseStream {
   std::recursive_mutex file_lock_;
   std::unique_ptr<std::fstream> file_stream_;
   size_t offset_;
+  std::string path_;
   size_t length_;
 
  private:

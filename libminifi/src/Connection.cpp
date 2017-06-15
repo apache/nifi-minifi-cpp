@@ -91,7 +91,7 @@ void Connection::put(std::shared_ptr<core::FlowFile> flow) {
 
     queued_data_size_ += flow->getSize();
 
-    logger_->log_debug("Enqueue flow file UUID %s to connection %s", flow->getUUIDStr().c_str(), name_.c_str());
+    logger_->log_debug("Enqueue flow file UUID %s to connection %s %d", flow->getUUIDStr(), name_, queue_.size());
   }
 
   if (!flow->isStored()) {

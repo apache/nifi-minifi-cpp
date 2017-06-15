@@ -43,7 +43,6 @@ class FileSystemRepository : public core::ContentRepository, public core::CoreCo
 
   }
 
-
   virtual bool initialize(const std::shared_ptr<minifi::Configure> &configuration);
 
   virtual void stop();
@@ -53,12 +52,10 @@ class FileSystemRepository : public core::ContentRepository, public core::CoreCo
   virtual std::shared_ptr<io::BaseStream> read(const std::shared_ptr<minifi::ResourceClaim> &claim);
 
   virtual bool close(const std::shared_ptr<minifi::ResourceClaim> &claim) {
-    return true;
+    return remove(claim);
   }
 
-  virtual bool remove(const std::shared_ptr<minifi::ResourceClaim> &claim) {
-    return true;
-  }
+  virtual bool remove(const std::shared_ptr<minifi::ResourceClaim> &claim);
 
  private:
 

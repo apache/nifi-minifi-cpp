@@ -42,10 +42,14 @@ class AtomicEntryStream : public BaseStream {
     core::repository::RepoValue<T> *value;
     if (entry_->getValue(key, &value)) {
       length_ = value->getBufferSize();
+      entry_->decrementOwnership();
+      invalid_stream_ = false;
     } else {
-      throw Exception(FILE_OPERATION_EXCEPTION, "Could not create valid entry");
+      invalid_stream_ = true;
     }
   }
+  
+  virtual ~AtomicEntryStream();
 
   virtual void closeStream() {
 
@@ -103,12 +107,19 @@ class AtomicEntryStream : public BaseStream {
   size_t offset_;
   T key_;
   core::repository::AtomicEntry<T> *entry_;
+  std::atomic<bool> invalid_stream_;
   std::recursive_mutex entry_lock_;
 
   // Logger
   std::shared_ptr<logging::Logger> logger_;
 
 };
+
+template<typename T>
+AtomicEntryStream<T>::~AtomicEntryStream(){
+  logger_->log_debug("Decrementing");
+    entry_->decrementOwnership();
+}
 
 template<typename T>
 void AtomicEntryStream<T>::seek(uint64_t offset) {
@@ -118,7 +129,7 @@ void AtomicEntryStream<T>::seek(uint64_t offset) {
 
 template<typename T>
 int AtomicEntryStream<T>::writeData(std::vector<uint8_t> &buf, int buflen) {
-  if (buf.capacity() < buflen)
+  if (buf.capacity() < buflen || invalid_stream_)
     return -1;
   return writeData(reinterpret_cast<uint8_t *>(&buf[0]), buflen);
 }
@@ -126,7 +137,7 @@ int AtomicEntryStream<T>::writeData(std::vector<uint8_t> &buf, int buflen) {
 // data stream overrides
 template<typename T>
 int AtomicEntryStream<T>::writeData(uint8_t *value, int size) {
-  if (nullptr != value) {
+  if (nullptr != value && !invalid_stream_) {
     std::lock_guard<std::recursive_mutex> lock(entry_lock_);
     if (entry_->insert(key_, value, size)) {
       offset_ += size;
@@ -147,6 +158,9 @@ int AtomicEntryStream<T>::writeData(uint8_t *value, int size) {
 
 template<typename T>
 int AtomicEntryStream<T>::readData(std::vector<uint8_t> &buf, int buflen) {
+  if (invalid_stream_){
+    return -1;
+  }
   if (buf.capacity() < buflen) {
     buf.resize(buflen);
   }
@@ -160,7 +174,7 @@ int AtomicEntryStream<T>::readData(std::vector<uint8_t> &buf, int buflen) {
 
 template<typename T>
 int AtomicEntryStream<T>::readData(uint8_t *buf, int buflen) {
-  if (nullptr != buf) {
+  if (nullptr != buf && !invalid_stream_) {
     std::lock_guard<std::recursive_mutex> lock(entry_lock_);
     int len = buflen;
     core::repository::RepoValue<T> *value;
@@ -168,17 +182,18 @@ int AtomicEntryStream<T>::readData(uint8_t *buf, int buflen) {
       if (offset_ + len > value->getBufferSize()) {
         len = value->getBufferSize() - offset_;
         if (len <= 0) {
+	  entry_->decrementOwnership();
           return 0;
         }
       }
       std::memcpy(buf, reinterpret_cast<uint8_t*>(const_cast<uint8_t*>(value->getBuffer()) + offset_), len);
       offset_ += len;
-
+    entry_->decrementOwnership();
       return len;
     }
 
   }
-  return 0;
+  return -1;
 }
 
 } /* namespace io */

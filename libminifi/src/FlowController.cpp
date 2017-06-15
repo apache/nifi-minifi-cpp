@@ -252,11 +252,11 @@ void FlowController::load() {
     logger_->log_info("Initializing timers");
     if (nullptr == timer_scheduler_) {
       timer_scheduler_ = std::make_shared < TimerDrivenSchedulingAgent
-          > (std::static_pointer_cast < core::controller::ControllerServiceProvider > (shared_from_this()), provenance_repo_, content_repo_, configuration_);
+          > (std::static_pointer_cast < core::controller::ControllerServiceProvider > (shared_from_this()), provenance_repo_, flow_file_repo_, content_repo_, configuration_);
     }
     if (nullptr == event_scheduler_) {
       event_scheduler_ = std::make_shared < EventDrivenSchedulingAgent
-          > (std::static_pointer_cast < core::controller::ControllerServiceProvider > (shared_from_this()), provenance_repo_, content_repo_, configuration_);
+          > (std::static_pointer_cast < core::controller::ControllerServiceProvider > (shared_from_this()), provenance_repo_, flow_file_repo_, content_repo_, configuration_);
     }
     logger_->log_info("Load Flow Controller from file %s", configuration_filename_.c_str());
 

@@ -81,7 +81,7 @@ int main(int argc, char **argv) {
 
   core::ProcessorNode node2(processor);
   std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider = nullptr;
-  std::shared_ptr<core::ProcessContext> contextset = std::make_shared<core::ProcessContext>(node2, controller_services_provider, test_repo);
+  std::shared_ptr<core::ProcessContext> contextset = std::make_shared<core::ProcessContext>(node2, controller_services_provider, test_repo, test_repo);
   core::ProcessSessionFactory factory(contextset.get());
   processor->onSchedule(contextset.get(), &factory);
 
@@ -89,7 +89,7 @@ int main(int argc, char **argv) {
     processor_workers.push_back(std::thread([processor, test_repo, &is_ready]() {
       core::ProcessorNode node(processor);
       std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider = nullptr;
-      std::shared_ptr<core::ProcessContext> context = std::make_shared<core::ProcessContext>(node, controller_services_provider, test_repo);
+      std::shared_ptr<core::ProcessContext> context = std::make_shared<core::ProcessContext>(node, controller_services_provider, test_repo, test_repo);
       context->setProperty(org::apache::nifi::minifi::processors::ExecuteProcess::Command, "sleep 0.5");
       std::shared_ptr<core::ProcessSession> session = std::make_shared<core::ProcessSession>(context.get());
       while (!is_ready.load(std::memory_order_relaxed)) {

@@ -34,11 +34,16 @@ void FileSystemRepository::stop() {
 }
 
 std::shared_ptr<io::BaseStream> FileSystemRepository::write(const std::shared_ptr<minifi::ResourceClaim> &claim) {
-  return std::make_shared < io::FileStream > (claim->getContentFullPath());
+  return std::make_shared<io::FileStream>(claim->getContentFullPath());
 }
 
 std::shared_ptr<io::BaseStream> FileSystemRepository::read(const std::shared_ptr<minifi::ResourceClaim> &claim) {
-  return std::make_shared < io::FileStream > (claim->getContentFullPath());
+  return std::make_shared<io::FileStream>(claim->getContentFullPath(), 0, false);
+}
+
+bool FileSystemRepository::remove(const std::shared_ptr<minifi::ResourceClaim> &claim) {
+  std::remove(claim->getContentFullPath().c_str());
+  return true;
 }
 
 } /* namespace repository */

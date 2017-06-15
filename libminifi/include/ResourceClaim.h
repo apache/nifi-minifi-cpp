@@ -53,7 +53,7 @@ class ResourceClaim : public std::enable_shared_from_this<ResourceClaim> {
    */
   ResourceClaim(std::shared_ptr<core::StreamManager<ResourceClaim>> claim_manager, const std::string contentDirectory = default_directory_path);
 
-  ResourceClaim(const std::string path, std::shared_ptr<core::StreamManager<ResourceClaim>> claim_manager , bool deleted = false);
+  ResourceClaim(const std::string path, std::shared_ptr<core::StreamManager<ResourceClaim>> claim_manager, bool deleted = false);
   // Destructor
   virtual ~ResourceClaim() {
   }
@@ -90,6 +90,15 @@ class ResourceClaim : public std::enable_shared_from_this<ResourceClaim> {
 
   }
 
+  friend std::ostream& operator<<(std::ostream& stream, const ResourceClaim& claim) {
+    stream << claim._contentFullPath;
+    return stream;
+  }
+
+  friend std::ostream& operator<<(std::ostream& stream, const std::shared_ptr<ResourceClaim>& claim) {
+    stream << claim->_contentFullPath;
+    return stream;
+  }
  protected:
   std::atomic<bool> deleted_;
   // Full path to the content

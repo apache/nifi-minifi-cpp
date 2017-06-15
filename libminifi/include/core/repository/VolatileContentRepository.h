@@ -38,12 +38,23 @@ namespace repository {
  */
 class VolatileContentRepository : public core::ContentRepository, public core::repository::VolatileRepository<std::shared_ptr<minifi::ResourceClaim>> {
  public:
-  VolatileContentRepository(std::string name = getClassName<VolatileContentRepository>())
+   
+  static const char *minimal_locking;
+   
+  explicit VolatileContentRepository(std::string name = getClassName<VolatileContentRepository>())
       : core::repository::VolatileRepository<std::shared_ptr<minifi::ResourceClaim>>(name),
-        logger_(logging::LoggerFactory<VolatileContentRepository>::getLogger()) {
+        logger_(logging::LoggerFactory<VolatileContentRepository>::getLogger()), minimize_locking_(true) {
     max_count_ = 15000;
   }
   virtual ~VolatileContentRepository() {
+    if (!minimize_locking_){
+      std::lock_guard < std::mutex > lock(map_mutex_);
+      for(const auto &item : master_list_)
+      {
+	delete item.second;
+      }
+      master_list_.clear();
+    }
 
   }
 
@@ -98,6 +109,8 @@ class VolatileContentRepository : public core::ContentRepository, public core::r
   }
 
  private:
+   
+  bool minimize_locking_;
 
   // function pointers that are associated with the claims.
   std::function<bool(std::shared_ptr<minifi::ResourceClaim>, std::shared_ptr<minifi::ResourceClaim>)> resource_claim_comparator_;

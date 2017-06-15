@@ -86,8 +86,8 @@ TEST_CASE("HTTPTestsWithNoResourceClaimPOST", "[httptest1]") {
   core::ProcessorNode node(listenhttp);
   core::ProcessorNode node2(invokehttp);
   std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider = nullptr;
-  core::ProcessContext context(node, controller_services_provider, repo);
-  core::ProcessContext context2(node2, controller_services_provider, repo);
+  core::ProcessContext context(node, controller_services_provider, repo, repo, content_repo);
+  core::ProcessContext context2(node2, controller_services_provider, repo, repo, content_repo);
   context.setProperty(org::apache::nifi::minifi::processors::ListenHTTP::Port, "8686");
   context.setProperty(org::apache::nifi::minifi::processors::ListenHTTP::BasePath, "/testytesttest");
 
@@ -207,8 +207,8 @@ TEST_CASE("HTTPTestsWithResourceClaimPOST", "[httptest1]") {
   core::ProcessorNode node(invokehttp);
   core::ProcessorNode node2(listenhttp);
   std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider = nullptr;
-  core::ProcessContext context(node, controller_services_provider, repo);
-  core::ProcessContext context2(node2, controller_services_provider, repo);
+  core::ProcessContext context(node, controller_services_provider, repo, repo, content_repo);
+  core::ProcessContext context2(node2, controller_services_provider, repo, repo,  content_repo);
   context.setProperty(org::apache::nifi::minifi::processors::ListenHTTP::Port, "8680");
   context.setProperty(org::apache::nifi::minifi::processors::ListenHTTP::BasePath, "/testytesttest");
 

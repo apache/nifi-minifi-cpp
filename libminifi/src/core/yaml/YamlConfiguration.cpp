@@ -313,7 +313,7 @@ void YamlConfiguration::parseProvenanceReportingYaml(YAML::Node *reportNode, cor
 
   std::shared_ptr<core::Processor> processor = nullptr;
   processor = createProvenanceReportTask();
-  std::shared_ptr<core::reporting::SiteToSiteProvenanceReportingTask> reportTask = std::static_pointer_cast < core::reporting::SiteToSiteProvenanceReportingTask > (processor);
+  std::shared_ptr<core::reporting::SiteToSiteProvenanceReportingTask> reportTask = std::static_pointer_cast<core::reporting::SiteToSiteProvenanceReportingTask>(processor);
 
   YAML::Node node = reportNode->as<YAML::Node>();
 
@@ -401,9 +401,9 @@ void YamlConfiguration::parseControllerServices(YAML::Node *controllerServicesNo
             controller_service_node->initialize();
             YAML::Node propertiesNode = controllerServiceNode["Properties"];
             // we should propogate propertiets to the node and to the implementation
-            parsePropertiesNodeYaml(&propertiesNode, std::static_pointer_cast < core::ConfigurableComponent > (controller_service_node));
+            parsePropertiesNodeYaml(&propertiesNode, std::static_pointer_cast<core::ConfigurableComponent>(controller_service_node));
             if (controller_service_node->getControllerServiceImplementation() != nullptr) {
-              parsePropertiesNodeYaml(&propertiesNode, std::static_pointer_cast < core::ConfigurableComponent > (controller_service_node->getControllerServiceImplementation()));
+              parsePropertiesNodeYaml(&propertiesNode, std::static_pointer_cast<core::ConfigurableComponent>(controller_service_node->getControllerServiceImplementation()));
             }
           }
           controller_services_->put(id, controller_service_node);
@@ -449,6 +449,24 @@ void YamlConfiguration::parseConnectionYaml(YAML::Node *connectionsNode, core::P
         }
 
         uuid_t srcUUID;
+
+        if (connectionNode["max work queue size"]) {
+          auto max_work_queue_str = connectionNode["max work queue size"].as<std::string>();
+          int64_t max_work_queue_size = 0;
+          if (core::Property::StringToInt(max_work_queue_str, max_work_queue_size)) {
+            connection->setMaxQueueSize(max_work_queue_size);
+          }
+          logger_->log_debug("Setting %d as the max queue size for %s", max_work_queue_size, name);
+        }
+
+        if (connectionNode["max work queue data size"]) {
+          auto max_work_queue_str = connectionNode["max work queue data size"].as<std::string>();
+          int64_t max_work_queue_data_size = 0;
+          if (core::Property::StringToInt(max_work_queue_str, max_work_queue_data_size)) {
+            connection->setMaxQueueDataSize(max_work_queue_data_size);
+          }
+          logger_->log_debug("Setting %d as the max queue data size for %s", max_work_queue_data_size, name);
+        }
 
         if (connectionNode["source id"]) {
           std::string connectionSrcProcId = connectionNode["source id"].as<std::string>();
@@ -560,7 +578,7 @@ void YamlConfiguration::parsePortYaml(YAML::Node *portNode, core::ProcessGroup *
 
   port = std::make_shared<minifi::RemoteProcessorGroupPort>(stream_factory_, nameStr, parent->getURL(), this->configuration_, uuid);
 
-  processor = std::static_pointer_cast < core::Processor > (port);
+  processor = std::static_pointer_cast<core::Processor>(port);
   port->setDirection(direction);
   port->setTimeOut(parent->getTimeOut());
   port->setTransmitting(true);
@@ -570,7 +588,7 @@ void YamlConfiguration::parsePortYaml(YAML::Node *portNode, core::ProcessGroup *
   // handle port properties
   YAML::Node nodeVal = portNode->as<YAML::Node>();
   YAML::Node propertiesNode = nodeVal["Properties"];
-  parsePropertiesNodeYaml(&propertiesNode, std::static_pointer_cast < core::ConfigurableComponent > (processor));
+  parsePropertiesNodeYaml(&propertiesNode, std::static_pointer_cast<core::ConfigurableComponent>(processor));
 
   // add processor to parent
   parent->addProcessor(processor);
@@ -602,7 +620,7 @@ void YamlConfiguration::parsePropertiesNodeYaml(YAML::Node *propertiesNode, std:
             std::string rawValueString = propertiesNode.as<std::string>();
             logger_->log_info("Found %s=%s", propertyName, rawValueString);
             if (!processor->updateProperty(propertyName, rawValueString)) {
-              std::shared_ptr<core::Connectable> proc = std::dynamic_pointer_cast < core::Connectable > (processor);
+              std::shared_ptr<core::Connectable> proc = std::dynamic_pointer_cast<core::Connectable>(processor);
               if (proc != 0) {
                 logger_->log_warn("Received property %s with value %s but is not one of the properties for %s", propertyName, rawValueString, proc->getName());
               }
@@ -612,7 +630,7 @@ void YamlConfiguration::parsePropertiesNodeYaml(YAML::Node *propertiesNode, std:
       } else {
         std::string rawValueString = propertyValueNode.as<std::string>();
         if (!processor->setProperty(propertyName, rawValueString)) {
-          std::shared_ptr<core::Connectable> proc = std::dynamic_pointer_cast < core::Connectable > (processor);
+          std::shared_ptr<core::Connectable> proc = std::dynamic_pointer_cast<core::Connectable>(processor);
           if (proc != 0) {
             logger_->log_warn("Received property %s with value %s but is not one of the properties for %s", propertyName, rawValueString, proc->getName());
           }

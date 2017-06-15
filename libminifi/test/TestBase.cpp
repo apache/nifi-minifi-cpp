@@ -82,7 +82,7 @@ bool linkToPrevious) {
 
   processor_nodes_.push_back(node);
 
-  std::shared_ptr<core::ProcessContext> context = std::make_shared<core::ProcessContext>(*(node.get()), controller_services_provider_, flow_repo_, content_repo_);
+  std::shared_ptr<core::ProcessContext> context = std::make_shared<core::ProcessContext>(*(node.get()), controller_services_provider_, flow_repo_, prov_repo_, content_repo_);
   processor_contexts_.push_back(context);
 
   processor_queue_.push_back(processor);

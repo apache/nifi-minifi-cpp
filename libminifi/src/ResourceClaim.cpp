@@ -42,7 +42,6 @@ ResourceClaim::ResourceClaim(std::shared_ptr<core::StreamManager<ResourceClaim>>
       claim_manager_(claim_manager),
       deleted_(false),
       logger_(logging::LoggerFactory<ResourceClaim>::getLogger()) {
-
     // Create the full content path for the content
   _contentFullPath = contentDirectory + "/" + non_repeating_string_generator_.generate();
   logger_->log_debug("Resource Claim created %s", _contentFullPath);

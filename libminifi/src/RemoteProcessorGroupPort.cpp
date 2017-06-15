@@ -204,6 +204,7 @@ void RemoteProcessorGroupPort::onTrigger(core::ProcessContext *context, core::Pr
     session->rollback();
   }
 
+
   throw std::exception();
 }
 

@@ -2,7 +2,7 @@
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
+ * this work for additional information regarding copyright ref_count_hip.
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
@@ -186,7 +186,9 @@ class AtomicEntry {
       : write_pending_(false),
         has_value_(false),
         total_size_(total_size),
-        max_size_(max_size) {
+        max_size_(max_size),
+        ref_count_(0),
+        free_required(false) {
 
   }
 
@@ -200,8 +202,8 @@ class AtomicEntry {
   bool setRepoValue(RepoValue<T> &new_value, RepoValue<T> &old_value, size_t &prev_size) {
     // delete the underlying pointer
     bool lock = false;
-    if (!write_pending_.compare_exchange_weak(lock, true) && !lock)
-        {
+    if (!write_pending_.compare_exchange_weak(lock, true))
+    {
       return false;
     }
     if (has_value_) {
@@ -213,7 +215,20 @@ class AtomicEntry {
     try_unlock();
     return true;
   }
-
+  
+  
+  AtomicEntry<T> *takeOwnership()
+  {
+      bool lock = false;
+      if (!write_pending_.compare_exchange_weak(lock, true) )
+	return nullptr;
+      
+      ref_count_++;
+      
+      try_unlock();
+      
+      return this;
+  }
   /**
    * A test and set operation, which is used to allow a function to test
    * if an item can be released and a function used for reclaiming memory associated
@@ -221,10 +236,9 @@ class AtomicEntry {
    * A custom comparator can be provided to augment the key being added into value_
    */
   bool testAndSetKey(const T str, std::function<bool(T)> releaseTest = nullptr, std::function<void(T)> reclaimer = nullptr, std::function<bool(T, T)> comparator = nullptr) {
-    // delete the underlying pointer
     bool lock = false;
 
-    if (!write_pending_.compare_exchange_weak(lock, true) && !lock)
+    if (!write_pending_.compare_exchange_weak(lock, true) )
       return false;
 
     if (has_value_) {
@@ -234,12 +248,23 @@ class AtomicEntry {
                                                                         {
         reclaimer(value_.getKey());
       }
+      else if (free_required && ref_count_ == 0)
+      {
+	size_t bufferSize = value_.getBufferSize();
+	value_.clearBuffer();
+	has_value_ = false;
+	if (total_size_ != nullptr) {
+	  *total_size_ -= bufferSize;
+	}
+	free_required = false;  
+      }
       else {
         try_unlock();
         return false;
       }
 
     }
+    ref_count_=1;
     value_.setKey(str, comparator);
     has_value_ = true;
     try_unlock();
@@ -283,6 +308,30 @@ class AtomicEntry {
     try_unlock();
     return true;
   }
+  
+  void decrementOwnership(){
+    try_lock();
+    if (!has_value_) {
+      try_unlock();
+      return;
+    }
+    if (ref_count_ > 0){
+      ref_count_--;
+    }
+    if (ref_count_ == 0 && free_required)
+    {
+      size_t bufferSize = value_.getBufferSize();
+      value_.clearBuffer();
+      has_value_ = false;
+      if (total_size_ != nullptr) {
+	*total_size_ -= bufferSize;
+      }
+      free_required = false;
+    }
+    else{
+    }
+    try_unlock();
+  }
 
   /**
    * Moved the value into the argument
@@ -299,6 +348,7 @@ class AtomicEntry {
       try_unlock();
       return false;
     }
+    ref_count_++;
     *value = &value_;
     try_unlock();
     return true;
@@ -332,6 +382,16 @@ class AtomicEntry {
     try_unlock();
     return ref;
   }
+  
+  size_t getLength()
+  {
+    size_t size = 0;
+     try_lock();
+     size = value_.getBufferSize();
+     try_unlock();
+     return size;
+     
+  }
 
   /**
    * sets has_value to false; however, does not call
@@ -347,12 +407,19 @@ class AtomicEntry {
       try_unlock();
       return false;
     }
+    if (ref_count_ > 0)
+    {
+       free_required = true;
+       try_unlock();
+       return true;
+    }
     size_t bufferSize = value_.getBufferSize();
     value_.clearBuffer();
     has_value_ = false;
     if (total_size_ != nullptr) {
       *total_size_ -= bufferSize;
     }
+    free_required = false;
     try_unlock();
     return true;
   }
@@ -393,7 +460,8 @@ class AtomicEntry {
    */
   inline void try_lock() {
     bool lock = false;
-    while (!write_pending_.compare_exchange_weak(lock, true) && !lock) {
+    while (!write_pending_.compare_exchange_weak(lock, true,std::memory_order_acquire)) {
+      lock = false;
       // attempt again
     }
   }
@@ -403,7 +471,8 @@ class AtomicEntry {
    */
   inline void try_unlock() {
     bool lock = true;
-    while (!write_pending_.compare_exchange_weak(lock, false) && lock) {
+    while (!write_pending_.compare_exchange_weak(lock, false,std::memory_order_acquire)) {
+      lock = true;
       // attempt again
     }
   }
@@ -416,6 +485,8 @@ class AtomicEntry {
   std::atomic<bool> write_pending_;
   // used to determine if a value is present in this atomic entry.
   std::atomic<bool> has_value_;
+  std::atomic<uint16_t> ref_count_;
+  std::atomic<bool> free_required;
   // repo value.
   RepoValue<T> value_;
 };

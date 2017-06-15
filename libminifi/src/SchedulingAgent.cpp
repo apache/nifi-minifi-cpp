@@ -77,13 +77,15 @@ bool SchedulingAgent::onTrigger(std::shared_ptr<core::Processor> processor, core
   // No need to yield, reset yield expiration to 0
   processor->clearYield();
 
-  if (!hasWorkToDo(processor))
+  if (!hasWorkToDo(processor)) {
     // No work to do, yield
     return true;
-
-  if (hasTooMuchOutGoing(processor))
+  }
+  if (hasTooMuchOutGoing(processor)) {
+    logger_->log_debug("backpressure applied because too much outgoing");
     // need to apply backpressure
     return true;
+  }
 
   processor->incrementActiveTasks();
   try {

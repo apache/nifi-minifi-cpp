@@ -35,7 +35,7 @@ TEST_CASE("TestFileOverWrite", "[TestFiles]") {
   file << "tempFile";
   file.close();
 
-  minifi::io::FileStream stream(path);
+  minifi::io::FileStream stream(path, 0, true);
   std::vector<uint8_t> readBuffer;
   REQUIRE(stream.readData(readBuffer, stream.getSize()) == stream.getSize());
 
@@ -73,7 +73,7 @@ TEST_CASE("TestFileBadArgumentNoChange", "[TestLoader]") {
   file << "tempFile";
   file.close();
 
-  minifi::io::FileStream stream(path);
+  minifi::io::FileStream stream(path, 0, true);
   std::vector<uint8_t> readBuffer;
   REQUIRE(stream.readData(readBuffer, stream.getSize()) == stream.getSize());
 
@@ -111,7 +111,7 @@ TEST_CASE("TestFileBadArgumentNoChange2", "[TestLoader]") {
   file << "tempFile";
   file.close();
 
-  minifi::io::FileStream stream(path);
+  minifi::io::FileStream stream(path, 0, true);
   std::vector<uint8_t> readBuffer;
   REQUIRE(stream.readData(readBuffer, stream.getSize()) == stream.getSize());
 
@@ -149,7 +149,7 @@ TEST_CASE("TestFileBadArgumentNoChange3", "[TestLoader]") {
   file << "tempFile";
   file.close();
 
-  minifi::io::FileStream stream(path);
+  minifi::io::FileStream stream(path, 0, true);
   std::vector<uint8_t> readBuffer;
   REQUIRE(stream.readData(readBuffer, stream.getSize()) == stream.getSize());
 
@@ -165,7 +165,7 @@ TEST_CASE("TestFileBadArgumentNoChange3", "[TestLoader]") {
 
   std::vector<uint8_t> verifybuffer;
 
-  REQUIRE(stream.readData(nullptr, stream.getSize()) == 0);
+  REQUIRE(stream.readData(nullptr, stream.getSize()) == -1);
 
   data = verifybuffer.data();
 
@@ -188,7 +188,7 @@ TEST_CASE("TestFileBeyondEnd3", "[TestLoader]") {
   file << "tempFile";
   file.close();
 
-  minifi::io::FileStream stream(path);
+  minifi::io::FileStream stream(path, 0, true);
   std::vector<uint8_t> readBuffer;
   REQUIRE(stream.readData(readBuffer, stream.getSize()) == stream.getSize());
 
