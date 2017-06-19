@@ -23,6 +23,7 @@
 #include <mutex>
 #include <memory>
 #include <stack>
+#include "utils/HTTPUtils.h"
 #include "concurrentqueue.h"
 #include "FlowFileRecord.h"
 #include "core/Processor.h"
@@ -42,20 +43,30 @@ class RemoteProcessorGroupPort : public core::Processor {
   /*!
    * Create a new processor
    */
-  RemoteProcessorGroupPort(const std::shared_ptr<io::StreamFactory> &stream_factory, std::string name, uuid_t uuid = nullptr)
+  RemoteProcessorGroupPort(const std::shared_ptr<io::StreamFactory> &stream_factory, std::string name, std::string url, std::shared_ptr<Configure> configure, uuid_t uuid = nullptr)
       : core::Processor(name, uuid),
+        configure_(configure),
         direction_(SEND),
         transmitting_(false),
-        logger_(logging::LoggerFactory<RemoteProcessorGroupPort>::getLogger()) {
+        logger_(logging::LoggerFactory<RemoteProcessorGroupPort>::getLogger()),
+        url_(url),
+        securityConfig_(configure) {
     stream_factory_ = stream_factory;
     if (uuid != nullptr) {
       uuid_copy(protocol_uuid_, uuid);
     }
+    site2site_port_ = -1;
+    site2site_secure_ = false;
+    site2site_peer_index_ = -1;
+    // REST API port and host
+    port_ = -1;
+    utils::parse_url(url_, host_, port_, protocol_);
   }
   // Destructor
   virtual ~RemoteProcessorGroupPort() {
 
   }
+
   // Processor Name
   static const char *ProcessorName;
   // Supported Properties
@@ -84,6 +95,17 @@ class RemoteProcessorGroupPort : public core::Processor {
   void setTransmitting(bool val) {
     transmitting_ = val;
   }
+  // setURL
+  void setURL(std::string val) {
+    url_ = val;
+    utils::parse_url(url_, host_, port_, protocol_);
+  }
+
+  // refresh remoteSite2SiteInfo via nifi rest api
+  void refreshRemoteSite2SiteInfo();
+
+  // refresh site2site peer list
+  void refreshPeerList();
 
  protected:
 
@@ -93,6 +115,7 @@ class RemoteProcessorGroupPort : public core::Processor {
 
   moodycamel::ConcurrentQueue<std::unique_ptr<Site2SiteClientProtocol>> available_protocols_;
 
+  std::shared_ptr<Configure> configure_;
   // Logger
   std::shared_ptr<logging::Logger> logger_;
   // Transaction Direction
@@ -104,9 +127,21 @@ class RemoteProcessorGroupPort : public core::Processor {
 
   uuid_t protocol_uuid_;
 
+  // rest API end point info
   std::string host_;
+  int port_;
+  std::string protocol_;
+  std::string url_;
 
-  uint16_t port_;
+  // Remote Site2Site Info
+  int site2site_port_;
+  bool site2site_secure_;
+  std::vector<minifi::Site2SitePeerStatus> site2site_peer_status_list_;
+  std::atomic<int> site2site_peer_index_;
+  std::mutex site2site_peer_mutex_;
+  std::string rest_user_name_;
+  std::string rest_password_;
+  minifi::utils::HTTPSecurityConfiguration securityConfig_;
 
 };
 

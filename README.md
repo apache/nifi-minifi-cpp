@@ -278,8 +278,6 @@ Additionally, users can utilize the MiNiFi Toolkit Converter (version 0.0.1 - sc
                 name: From Node A
                 max concurrent tasks: 1
                 Properties:
-                    Port: 10001
-                    Host Name: localhost
 
 ### Site2Site Security Configuration
 
@@ -319,8 +317,7 @@ Additionally, users can utilize the MiNiFi Toolkit Converter (version 0.0.1 - sc
     Provenance Reporting:
       scheduling strategy: TIMER_DRIVEN
       scheduling period: 1 sec
-      port: 10001
-      host: localhost
+      url: http://localhost:8080/nifi
       port uuid: 471deef6-2a6e-4a7d-912a-81cc17e3a204
       batch size: 100
 
@@ -337,10 +334,22 @@ Additionally, users can utilize the MiNiFi Toolkit Converter (version 0.0.1 - sc
     nifi.configuration.listener.client.ca.certificate=./conf/nifi-cert.pem
 
     if you want to enable client certificate
-    nifi.configuration.listener.need.ClientAuth=true
-    nifi.configuration.listener.client.certificate=./conf/client.pem
-    nifi.configuration.listener.client.private.key=./conf/client.key
-    nifi.configuration.listener.client.pass.phrase=./conf/password
+    nifi.https.need.ClientAuth=true
+    nifi.https.client.certificate=./conf/client.pem
+    nifi.https.client.private.key=./conf/client.key
+    nifi.https.client.pass.phrase=./conf/password
+
+### REST API access
+
+    Configure REST API user name and password
+    nifi.rest.api.user.name=admin
+    nifi.rest.api.password=password
+
+    if you want to enable client certificate
+    nifi.https.need.ClientAuth=true
+    nifi.https.client.certificate=./conf/client.pem
+    nifi.https.client.private.key=./conf/client.key
+    nifi.https.client.pass.phrase=./conf/password
       
 ### Controller Services
  If you need to reference a controller service in your config.yml file, use the following template. In the example, below, ControllerServiceClass is the name of the class defining the controller Service. ControllerService1 
