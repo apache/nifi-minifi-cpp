@@ -84,7 +84,7 @@ Perspectives of the role of MiNiFi should be from the perspective of the agent a
 * libuuid
 * libleveldb
 * libcurl
-* libssl and libcrypto from openssl
+* libssl and libcrypto from openssl 
 
 The needed dependencies can be installed with the following commands for:
 
@@ -300,16 +300,45 @@ Additionally, users can utilize the MiNiFi Toolkit Converter (version 0.0.1 - sc
     nifi.security.need.ClientAuth=false
 
 ### Configuring Volatile and NO-OP Repositories
+Each of the repositories can be configured to be volatile ( state kept in memory and flushed
+ upon restart ) or persistent. Currently, the flow file and provenance repositories can persist
+ to LevelDB. The content repository will persist to the local file system if a volatile repo
+ is not configured.
+
+ To configure the repositories:
 
      in minifi.properties
-
      # For Volatile Repositories:
-     nifi.flow.repository.class.name=VolatileRepository
-     nifi.provenance.repository.class.name=VolatileRepository
+     nifi.flowfile.repository.class.name=VolatileFlowFileRepository
+     nifi.provenance.repository.class.name=VolatileProvenanceRepository
+     nifi.content.repository.class.name=VolatileContentRepository
 
+     # configuration options
+     # maximum number of entries to keep in memory
+     nifi.volatile.repository.options.flowfile.max.count=10000
+     # maximum number of bytes to keep in memory, also limited by option above
+     nifi.volatile.repository.options.flowfile.max.bytes=1M
+
+     # maximum number of entries to keep in memory
+     nifi.volatile.repository.options.provenance.max.count=10000
+     # maximum number of bytes to keep in memory, also limited by option above
+     nifi.volatile.repository.options.provenance.max.bytes=1M
+
+     # maximum number of entries to keep in memory
+     nifi.volatile.repository.options.content.max.count=100000
+     # maximum number of bytes to keep in memory, also limited by option above
+     nifi.volatile.repository.options.content.max.bytes=1M
+     # limits locking for the content repository
+     nifi.volatile.repository.options.content.minimal.locking=true
+     
      # For NO-OP Repositories:
-	 nifi.flow.repository.class.name=NoOpRepository
+	 nifi.flowfile.repository.class.name=NoOpRepository
      nifi.provenance.repository.class.name=NoOpRepository
+
+ #### Caveats
+ Systems that have limited memory must be cognizant of the options above. Limiting the max count for the number of entries limits memory consumption but also limits the number of events that can be stored. If you are limiting the amount of volatile content you are configuring, you may have excessive session rollback due to invalid stream errors that occur when a claim cannot be found.
+
+ The content repository has a default option for "minimal.locking" set to true. This will attempt to use lock free structures. This may or may not be optimal as this requires additional additional searching of the underlying vector. This may be optimal for cases where max.count is not excessively high. In cases where object permanence is low within the repositories, minimal locking will result in better performance. If there are many processors and/or timing is such that the content repository fills up quickly, performance may be reduced. In all cases a locking cache is used to avoid the worst case complexity of O(n) for the content repository; however, this caching is more heavily used when "minimal.locking" is set to false.
 
 ### Provenance Report
 
@@ -351,7 +380,7 @@ Additionally, users can utilize the MiNiFi Toolkit Converter (version 0.0.1 - sc
     nifi.https.client.private.key=./conf/client.key
     nifi.https.client.pass.phrase=./conf/password
     nifi.https.client.ca.certificate=./conf/nifi-cert.pem
-      
+
 ### UID generation
 
 MiNiFi needs to generate many unique identifiers in the course of operations.  There are a few different uid implementations available that can be configured in minifi-uid.properties.
