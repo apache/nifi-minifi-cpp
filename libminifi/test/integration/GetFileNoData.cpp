@@ -17,6 +17,7 @@
  */
 
 #include <sys/stat.h>
+#undef NDEBUG
 #include <cassert>
 #include <utility>
 #include <chrono>
@@ -38,66 +39,103 @@
 #include "properties/Configure.h"
 #include "../unit/ProvenanceTestHelper.h"
 #include "io/StreamFactory.h"
+#include "c2/C2Agent.h"
 #include "CivetServer.h"
-#include "RemoteProcessorGroupPort.h"
+#include <cstring>
+#include "../../include/c2/protocols/RESTSender.h"
 
 void waitToVerifyProcessor() {
   std::this_thread::sleep_for(std::chrono::seconds(10));
 }
 
+static std::vector<std::string> responses;
+
 class ConfigHandler : public CivetHandler {
  public:
-  bool handleGet(CivetServer *server, struct mg_connection *conn) {
-    static const std::string site2site_rest_resp = "{"
-        "\"revision\": {"
-        "\"clientId\": \"483d53eb-53ec-4e93-b4d4-1fc3d23dae6f\""
-        "},"
-        "\"controller\": {"
-        "\"id\": \"fe4a3a42-53b6-4af1-a80d-6fdfe60de97f\","
-        "\"name\": \"NiFi Flow\","
-        "\"remoteSiteListeningPort\": 10001,"
-        "\"siteToSiteSecure\": false"
-        "}}";
-    mg_printf(conn, "HTTP/1.1 200 OK\r\nContent-Type: "
-              "text/plain\r\nContent-Length: %lu\r\nConnection: close\r\n\r\n",
-              site2site_rest_resp.length());
-    mg_printf(conn, "%s", site2site_rest_resp.c_str());
+  bool handlePost(CivetServer *server, struct mg_connection *conn) {
+    if (responses.size() > 0) {
+      std::string top_str = responses.back();
+      responses.pop_back();
+      mg_printf(conn, "HTTP/1.1 200 OK\r\nContent-Type: "
+                "text/plain\r\nContent-Length: %lu\r\nConnection: close\r\n\r\n",
+                top_str.length());
+      mg_printf(conn, "%s", top_str.c_str());
+    } else {
+      mg_printf(conn, "HTTP/1.1 500 Internal Server Error\r\n");
+    }
+
     return true;
   }
+
+  bool handleGet(CivetServer *server, struct mg_connection *conn) {
+    std::ifstream myfile(test_file_location_.c_str());
+
+    if (myfile.is_open()) {
+      std::stringstream buffer;
+      buffer << myfile.rdbuf();
+      std::string str = buffer.str();
+      myfile.close();
+      mg_printf(conn, "HTTP/1.1 200 OK\r\nContent-Type: "
+                "text/plain\r\nContent-Length: %lu\r\nConnection: close\r\n\r\n",
+                str.length());
+      mg_printf(conn, "%s", str.c_str());
+    } else {
+      mg_printf(conn, "HTTP/1.1 500 Internal Server Error\r\n");
+    }
+
+    return true;
+  }
+  std::string test_file_location_;
 };
 
 int main(int argc, char **argv) {
-  LogTestController::getInstance().setInfo<minifi::RemoteProcessorGroupPort>();
+  mg_init_library(0);
   LogTestController::getInstance().setInfo<minifi::FlowController>();
+  LogTestController::getInstance().setDebug<minifi::utils::HTTPClient>();
+  LogTestController::getInstance().setDebug<minifi::c2::RESTSender>();
+  LogTestController::getInstance().setDebug<minifi::c2::C2Agent>();
 
-  const char *options[] = { "document_root", ".", "listening_ports", "8082", 0 };
+  const char *options[] = { "document_root", ".", "listening_ports", "9090", 0 };
   std::vector<std::string> cpp_options;
   for (int i = 0; i < (sizeof(options) / sizeof(options[0]) - 1); i++) {
     cpp_options.push_back(options[i]);
   }
 
-  mkdir("/tmp/site2siteGetFile/", S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-  std::fstream file;
-  std::stringstream ss;
-  ss << "/tmp/site2siteGetFile/" << "tstFile.ext";
-  file.open(ss.str(), std::ios::out);
-  file << "tempFile";
-  file.close();
-
   CivetServer server(cpp_options);
   ConfigHandler h_ex;
-  server.addHandler("/nifi-api/controller", h_ex);
-  LogTestController::getInstance().setDebug<minifi::RemoteProcessorGroupPort>();
-
+  server.addHandler("/update", h_ex);
   std::string key_dir, test_file_location;
   if (argc > 1) {
-    test_file_location = argv[1];
+    h_ex.test_file_location_ = test_file_location = argv[1];
     key_dir = argv[2];
+  }
+  std::string heartbeat_response = "{\"operation\" : \"heartbeat\",\"requested_operations\": [  {"
+      "\"operation\" : \"update\", "
+      "\"operationid\" : \"8675309\", "
+      "\"name\": \"configuration\""
+      "}]}";
+
+  responses.push_back(heartbeat_response);
+
+  std::ifstream myfile(test_file_location.c_str());
+
+  if (myfile.is_open()) {
+    std::stringstream buffer;
+    buffer << myfile.rdbuf();
+    std::string str = buffer.str();
+    myfile.close();
+    std::string response = "{\"operation\" : \"heartbeat\",\"requested_operations\": [  {"
+        "\"operation\" : \"update\", "
+        "\"operationid\" : \"8675309\", "
+        "\"name\": \"configuration\", \"content\": { \"location\": \"http://localhost:9090/update\"}}]}";
+    responses.push_back(response);
   }
 
   std::shared_ptr<minifi::Configure> configuration = std::make_shared<
       minifi::Configure>();
-  configuration->set(minifi::Configure::nifi_default_directory, key_dir);
+
+  configuration->set("c2.rest.url",
+                     "http://localhost:9090/update");
   mkdir("content_repository", S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 
   std::shared_ptr<core::Repository> test_repo =
@@ -111,17 +149,17 @@ int main(int argc, char **argv) {
   std::shared_ptr<minifi::io::StreamFactory> stream_factory = std::make_shared
       <minifi::io::StreamFactory>(configuration);
   std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
+  std::unique_ptr<core::FlowConfiguration> yaml_ptr = std::unique_ptr
+      <core::YamlConfiguration
+      >(new core::YamlConfiguration(test_repo, test_repo, content_repo, stream_factory,
+                                    configuration,
+                                    test_file_location));
+  std::shared_ptr<TestRepository> repo = std::static_pointer_cast
+      <TestRepository>(test_repo);
 
-  content_repo->initialize(configuration);
-
-  std::unique_ptr<core::FlowConfiguration> yaml_ptr = std::unique_ptr<core::YamlConfiguration>(
-      new core::YamlConfiguration(test_repo, test_repo, content_repo, stream_factory, configuration, test_file_location));
-  std::shared_ptr<TestRepository> repo = std::static_pointer_cast<TestRepository>(test_repo);
-
-  std::shared_ptr<minifi::FlowController> controller = std::make_shared<minifi::FlowController>(test_repo, test_flow_repo, configuration, std::move(yaml_ptr),
-                                                                                                content_repo,
-                                                                                                DEFAULT_ROOT_GROUP_NAME,
-                                                                                                true);
+  std::shared_ptr<minifi::FlowController> controller =
+      std::make_shared<minifi::FlowController
+      >(test_repo, test_flow_repo, configuration, std::move(yaml_ptr), content_repo, DEFAULT_ROOT_GROUP_NAME, true);
 
   core::YamlConfiguration yaml_config(test_repo, test_repo, content_repo, stream_factory,
                                       configuration,
@@ -139,10 +177,8 @@ int main(int argc, char **argv) {
 
   controller->waitUnload(60000);
   std::string logs = LogTestController::getInstance().log_output.str();
-  assert(logs.find("process group remote site2site port 10001, is secure 0") != std::string::npos);
+  assert(logs.find("Starting to reload Flow Controller with flow control name MiNiFi Flow, version 0") != std::string::npos);
   LogTestController::getInstance().reset();
-  unlink(ss.str().c_str());
-  rmdir("/tmp/site2siteGetFile/");
-  rmdir("./content_repository");
+
   return 0;
 }

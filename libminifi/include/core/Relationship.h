@@ -59,7 +59,7 @@ class Relationship {
       : name_(UNDEFINED_RELATIONSHIP) {
   }
   // Destructor
-  virtual ~Relationship() {
+  ~Relationship() {
   }
   // Get Name for the relationship
   std::string getName() const {

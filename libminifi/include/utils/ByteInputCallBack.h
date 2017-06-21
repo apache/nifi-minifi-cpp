@@ -47,13 +47,20 @@ class ByteInputCallBack : public InputStreamCallback {
     if (stream->getSize() > 0) {
       vec.resize(stream->getSize());
 
-      stream->readData(vec, stream->getSize());
+      stream->readData(reinterpret_cast<uint8_t*>(vec.data()), stream->getSize());
     }
 
     ptr = (char*) &vec[0];
 
     return vec.size();
 
+  }
+
+  void write(std::string content) {
+    //vec.resize(content.length());
+    //std::copy(content.begin(), content.end(), std::back_inserter(vec));
+    vec.assign(content.begin(),content.end());
+    ptr = &vec[0];
   }
 
   char *getBuffer() {
@@ -66,7 +73,7 @@ class ByteInputCallBack : public InputStreamCallback {
 
  private:
   char *ptr;
-  std::vector<uint8_t> vec;
+  std::vector<char> vec;
 };
 
 } /* namespace utils */

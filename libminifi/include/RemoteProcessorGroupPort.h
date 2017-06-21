@@ -23,13 +23,14 @@
 #include <mutex>
 #include <memory>
 #include <stack>
-#include "utils/HTTPUtils.h"
+#include "utils/HTTPClient.h"
 #include "concurrentqueue.h"
 #include "FlowFileRecord.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
 #include "Site2SiteClientProtocol.h"
 #include "io/StreamFactory.h"
+#include "controllers/SSLContextService.h"
 #include "core/logging/LoggerConfiguration.h"
 
 namespace org {
@@ -43,14 +44,15 @@ class RemoteProcessorGroupPort : public core::Processor {
   /*!
    * Create a new processor
    */
-  RemoteProcessorGroupPort(const std::shared_ptr<io::StreamFactory> &stream_factory, std::string name, std::string url, std::shared_ptr<Configure> configure, uuid_t uuid = nullptr)
+  RemoteProcessorGroupPort(const std::shared_ptr<io::StreamFactory> &stream_factory, std::string name, std::string url, const std::shared_ptr<Configure> &configure, uuid_t uuid = nullptr)
       : core::Processor(name, uuid),
         configure_(configure),
         direction_(SEND),
         transmitting_(false),
+        timeout_(0),
         logger_(logging::LoggerFactory<RemoteProcessorGroupPort>::getLogger()),
         url_(url),
-        securityConfig_(configure) {
+        ssl_service(std::make_shared<controllers::SSLContextService>("RemoteProcessorGroupPortSSLContextService", configure)) {
     stream_factory_ = stream_factory;
     if (uuid != nullptr) {
       uuid_copy(protocol_uuid_, uuid);
@@ -61,6 +63,8 @@ class RemoteProcessorGroupPort : public core::Processor {
     // REST API port and host
     port_ = -1;
     utils::parse_url(url_, host_, port_, protocol_);
+
+    ssl_service->onEnable();
   }
   // Destructor
   virtual ~RemoteProcessorGroupPort() {
@@ -149,7 +153,8 @@ class RemoteProcessorGroupPort : public core::Processor {
   std::mutex site2site_peer_mutex_;
   std::string rest_user_name_;
   std::string rest_password_;
-  minifi::utils::HTTPSecurityConfiguration securityConfig_;
+
+  std::shared_ptr<controllers::SSLContextService> ssl_service;
 
 };
 

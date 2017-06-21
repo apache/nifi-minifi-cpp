@@ -48,9 +48,9 @@ class ProcessContext : public controller::ControllerServiceLookup {
   /*!
    * Create a new process context associated with the processor/controller service/state manager
    */
-  ProcessContext(ProcessorNode &processor, std::shared_ptr<controller::ControllerServiceProvider> &controller_service_provider, std::shared_ptr<core::Repository> repo,
-		 std::shared_ptr<core::Repository> flow_repo,
-                 std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::FileSystemRepository>())
+  ProcessContext(const std::shared_ptr<ProcessorNode> &processor, std::shared_ptr<controller::ControllerServiceProvider> &controller_service_provider, const std::shared_ptr<core::Repository> &repo,
+		 const std::shared_ptr<core::Repository> &flow_repo,
+                 const std::shared_ptr<core::ContentRepository> &content_repo = std::make_shared<core::repository::FileSystemRepository>())
       : processor_node_(processor),
         controller_service_provider_(controller_service_provider),
         logger_(logging::LoggerFactory<ProcessContext>::getLogger()),
@@ -61,36 +61,36 @@ class ProcessContext : public controller::ControllerServiceLookup {
   virtual ~ProcessContext() {
   }
   // Get Processor associated with the Process Context
-  ProcessorNode &getProcessorNode() {
+  std::shared_ptr<ProcessorNode> getProcessorNode() {
     return processor_node_;
   }
-  bool getProperty(std::string name, std::string &value) {
-    return processor_node_.getProperty(name, value);
+  bool getProperty(const std::string &name, std::string &value) {
+    return processor_node_->getProperty(name, value);
   }
   // Sets the property value using the property's string name
-  bool setProperty(std::string name, std::string value) {
-    return processor_node_.setProperty(name, value);
+  bool setProperty(const std::string &name, std::string value) {
+    return processor_node_->setProperty(name, value);
   }
   // Sets the property value using the Property object
   bool setProperty(Property prop, std::string value) {
-    return processor_node_.setProperty(prop, value);
+    return processor_node_->setProperty(prop, value);
   }
   // Whether the relationship is supported
   bool isSupportedRelationship(Relationship relationship) {
-    return processor_node_.isSupportedRelationship(relationship);
+    return processor_node_->isSupportedRelationship(relationship);
   }
 
   // Check whether the relationship is auto terminated
   bool isAutoTerminated(Relationship relationship) {
-    return processor_node_.isAutoTerminated(relationship);
+    return processor_node_->isAutoTerminated(relationship);
   }
   // Get ProcessContext Maximum Concurrent Tasks
   uint8_t getMaxConcurrentTasks(void) {
-    return processor_node_.getMaxConcurrentTasks();
+    return processor_node_->getMaxConcurrentTasks();
   }
   // Yield based on the yield period
   void yield() {
-    processor_node_.yield();
+    processor_node_->yield();
   }
 
   std::shared_ptr<core::Repository> getProvenanceRepository() {
@@ -122,7 +122,7 @@ class ProcessContext : public controller::ControllerServiceLookup {
    * identifier
    */
   std::shared_ptr<core::controller::ControllerService> getControllerService(const std::string &identifier) {
-    return controller_service_provider_->getControllerServiceForComponent(identifier, processor_node_.getUUIDStr());
+    return controller_service_provider_->getControllerServiceForComponent(identifier, processor_node_->getUUIDStr());
   }
 
   /**
@@ -167,7 +167,7 @@ class ProcessContext : public controller::ControllerServiceLookup {
   // repository shared pointer.
   std::shared_ptr<core::ContentRepository> content_repo_;
   // Processor
-  ProcessorNode processor_node_;
+  std::shared_ptr<ProcessorNode> processor_node_;
   // Logger
   std::shared_ptr<logging::Logger> logger_;
 

@@ -45,6 +45,7 @@ FlowFile::FlowFile()
       connection_(nullptr),
       original_connection_() {
   entry_date_ = getTimeMillis();
+  event_time_ = entry_date_;
   lineage_start_date_ = entry_date_;
 
   char uuidStr[37] = { 0 };

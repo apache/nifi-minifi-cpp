@@ -68,7 +68,7 @@ bool ConfigurableComponent::getProperty(const std::string name, std::string &val
   if (it != properties_.end()) {
     Property item = it->second;
     value = item.getValue();
-    logger_->log_info("Processor %s property name %s value %s", name, item.getName(), value);
+    logger_->log_info("Component %s property name %s value %s", name, item.getName(), value);
     return true;
   } else {
     return false;

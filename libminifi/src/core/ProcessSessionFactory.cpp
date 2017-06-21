@@ -27,8 +27,8 @@ namespace nifi {
 namespace minifi {
 namespace core {
 
-std::unique_ptr<ProcessSession> ProcessSessionFactory::createSession() {
-  return std::unique_ptr < ProcessSession > (new ProcessSession(process_context_));
+std::shared_ptr<ProcessSession> ProcessSessionFactory::createSession() {
+  return std::make_shared < ProcessSession > (process_context_);
 }
 
 } /* namespace core */

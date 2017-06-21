@@ -71,6 +71,9 @@ bool Processor::isRunning() {
 
 void Processor::setScheduledState(ScheduledState state) {
   state_ = state;
+  if (state == STOPPED) {
+    notifyStop();
+  }
 }
 
 bool Processor::addConnection(std::shared_ptr<Connectable> conn) {
@@ -80,8 +83,8 @@ bool Processor::addConnection(std::shared_ptr<Connectable> conn) {
     logger_->log_info("Can not add connection while the process %s is running", name_.c_str());
     return false;
   }
-  std::shared_ptr<Connection> connection = std::static_pointer_cast < Connection > (conn);
-  std::lock_guard < std::mutex > lock(mutex_);
+  std::shared_ptr<Connection> connection = std::static_pointer_cast<Connection>(conn);
+  std::lock_guard<std::mutex> lock(mutex_);
 
   uuid_t srcUUID;
   uuid_t destUUID;
@@ -141,12 +144,12 @@ void Processor::removeConnection(std::shared_ptr<Connectable> conn) {
     return;
   }
 
-  std::lock_guard < std::mutex > lock(mutex_);
+  std::lock_guard<std::mutex> lock(mutex_);
 
   uuid_t srcUUID;
   uuid_t destUUID;
 
-  std::shared_ptr<Connection> connection = std::static_pointer_cast < Connection > (conn);
+  std::shared_ptr<Connection> connection = std::static_pointer_cast<Connection>(conn);
 
   connection->getSourceUUID(srcUUID);
   connection->getDestinationUUID(destUUID);
@@ -178,13 +181,13 @@ void Processor::removeConnection(std::shared_ptr<Connectable> conn) {
 }
 
 bool Processor::flowFilesQueued() {
-  std::lock_guard < std::mutex > lock(mutex_);
+  std::lock_guard<std::mutex> lock(mutex_);
 
   if (_incomingConnections.size() == 0)
     return false;
 
   for (auto &&conn : _incomingConnections) {
-    std::shared_ptr<Connection> connection = std::static_pointer_cast < Connection > (conn);
+    std::shared_ptr<Connection> connection = std::static_pointer_cast<Connection>(conn);
     if (connection->getQueueSize() > 0)
       return true;
   }
@@ -193,13 +196,13 @@ bool Processor::flowFilesQueued() {
 }
 
 bool Processor::flowFilesOutGoingFull() {
-  std::lock_guard < std::mutex > lock(mutex_);
+  std::lock_guard<std::mutex> lock(mutex_);
 
   for (auto &&connection : out_going_connections_) {
     // We already has connection for this relationship
     std::set<std::shared_ptr<Connectable>> existedConnection = connection.second;
     for (const auto conn : existedConnection) {
-      std::shared_ptr < Connection > connection = std::static_pointer_cast < Connection > (conn);
+      std::shared_ptr<Connection> connection = std::static_pointer_cast<Connection>(conn);
       if (connection->isFull())
         return true;
     }
@@ -226,13 +229,31 @@ void Processor::onTrigger(ProcessContext *context, ProcessSessionFactory *sessio
   }
 }
 
+void Processor::onTrigger(std::shared_ptr<ProcessContext> context, std::shared_ptr<ProcessSessionFactory> sessionFactory) {
+  auto session = sessionFactory->createSession();
+
+  try {
+    // Call the virtual trigger function
+    onTrigger(context, session);
+    session->commit();
+  } catch (std::exception &exception) {
+    logger_->log_debug("Caught Exception %s", exception.what());
+    session->rollback();
+    throw;
+  } catch (...) {
+    logger_->log_debug("Caught Exception Processor::onTrigger");
+    session->rollback();
+    throw;
+  }
+}
+
 bool Processor::isWorkAvailable() {
   // We have work if any incoming connection has work
   bool hasWork = false;
 
   try {
     for (const auto &conn : _incomingConnections) {
-      std::shared_ptr<Connection> connection = std::static_pointer_cast < Connection > (conn);
+      std::shared_ptr<Connection> connection = std::static_pointer_cast<Connection>(conn);
       if (connection->getQueueSize() > 0) {
         hasWork = true;
         break;

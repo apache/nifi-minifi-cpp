@@ -94,7 +94,6 @@ class OutputStreamCallback {
   virtual ~OutputStreamCallback() {
 
   }
-  //virtual void process(std::ofstream *stream) = 0;
   virtual int64_t process(std::shared_ptr<io::BaseStream> stream) = 0;
 
 };

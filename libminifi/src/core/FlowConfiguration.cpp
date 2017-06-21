@@ -40,6 +40,7 @@ std::shared_ptr<core::Processor> FlowConfiguration::createProcessor(std::string 
   // initialize the processor
   processor->initialize();
 
+  processor->setStreamFactory(stream_factory_);
   return processor;
 }
 

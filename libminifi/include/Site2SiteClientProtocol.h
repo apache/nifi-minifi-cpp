@@ -525,7 +525,7 @@ class Site2SiteClientProtocol {
   bool receive(std::string transactionID, DataPacket *packet, bool &eof);
   // Send the data packet from the transaction
   // Return false when any error occurs
-  bool send(std::string transactionID, DataPacket *packet, std::shared_ptr<FlowFileRecord> flowFile, core::ProcessSession *session);
+  int16_t send(std::string transactionID, DataPacket *packet, std::shared_ptr<FlowFileRecord> flowFile, core::ProcessSession *session);
   // Confirm the data that was sent or received by comparing CRC32's of the data sent and the data received.
   bool confirm(std::string transactionID);
   // Cancel the transaction

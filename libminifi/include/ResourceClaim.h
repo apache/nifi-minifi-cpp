@@ -41,12 +41,15 @@ namespace minifi {
 // Default content directory
 #define DEFAULT_CONTENT_DIRECTORY "./content_repository"
 
+extern std::string default_directory_path;
+
+extern void setDefaultDirectory(std::string);
+
 // ResourceClaim Class
 class ResourceClaim : public std::enable_shared_from_this<ResourceClaim> {
 
  public:
 
-  static char *default_directory_path;
   // Constructor
   /*!
    * Create a new resource claim
@@ -55,23 +58,20 @@ class ResourceClaim : public std::enable_shared_from_this<ResourceClaim> {
 
   ResourceClaim(const std::string path, std::shared_ptr<core::StreamManager<ResourceClaim>> claim_manager, bool deleted = false);
   // Destructor
-  virtual ~ResourceClaim() {
+  ~ResourceClaim() {
   }
   // increaseFlowFileRecordOwnedCount
   void increaseFlowFileRecordOwnedCount() {
-    ++_flowFileRecordOwnedCount;
+    claim_manager_->incrementStreamCount(shared_from_this());
   }
   // decreaseFlowFileRecordOwenedCount
   void decreaseFlowFileRecordOwnedCount() {
-
-    if (_flowFileRecordOwnedCount > 0) {
-      _flowFileRecordOwnedCount--;
-    }
+    claim_manager_->decrementStreamCount(shared_from_this());
 
   }
   // getFlowFileRecordOwenedCount
   uint64_t getFlowFileRecordOwnedCount() {
-    return _flowFileRecordOwnedCount;
+    return claim_manager_->getStreamCount(shared_from_this());
   }
   // Get the content full path
   std::string getContentFullPath() {
@@ -83,11 +83,17 @@ class ResourceClaim : public std::enable_shared_from_this<ResourceClaim> {
   }
 
   void deleteClaim() {
-    if (!deleted_)
-    {
+    if (!deleted_) {
       deleted_ = true;
     }
 
+  }
+
+  bool exists(){
+    if (claim_manager_ == nullptr){
+      return false;
+    }
+    return claim_manager_->exists(shared_from_this());
   }
 
   friend std::ostream& operator<<(std::ostream& stream, const ResourceClaim& claim) {
@@ -103,9 +109,6 @@ class ResourceClaim : public std::enable_shared_from_this<ResourceClaim> {
   std::atomic<bool> deleted_;
   // Full path to the content
   std::string _contentFullPath;
-
-  // How many FlowFileRecord Own this cliam
-  std::atomic<uint64_t> _flowFileRecordOwnedCount;
 
   std::shared_ptr<core::StreamManager<ResourceClaim>> claim_manager_;
 

@@ -99,9 +99,12 @@ class StandardControllerServiceProvider : public ControllerServiceProvider, publ
 
   }
 
-  void enableControllerService(std::shared_ptr<ControllerServiceNode> &serviceNode) {
+  std::future<bool> enableControllerService(std::shared_ptr<ControllerServiceNode> &serviceNode) {
     if (serviceNode->canEnable()) {
-      agent_->enableControllerService(serviceNode);
+      return agent_->enableControllerService(serviceNode);
+    } else {
+      std::future<bool> no_run = std::async(std::launch::async, []() {return false;});
+      return no_run;
     }
   }
 
@@ -124,9 +127,12 @@ class StandardControllerServiceProvider : public ControllerServiceProvider, publ
     }
   }
 
-  void disableControllerService(std::shared_ptr<ControllerServiceNode> &serviceNode) {
+  std::future<bool> disableControllerService(std::shared_ptr<ControllerServiceNode> &serviceNode) {
     if (!IsNullOrEmpty(serviceNode.get()) && serviceNode->enabled()) {
-      agent_->disableControllerService(serviceNode);
+      return agent_->disableControllerService(serviceNode);
+    } else {
+      std::future<bool> no_run = std::async(std::launch::async, []() {return false;});
+      return no_run;
     }
   }
 

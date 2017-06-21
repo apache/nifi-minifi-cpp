@@ -40,6 +40,8 @@ void SSLContextService::initialize() {
   ControllerService::initialize();
 
   initializeTLS();
+
+  initialized_ = true;
 }
 
 std::unique_ptr<SSLContext> SSLContextService::createSSLContext() {

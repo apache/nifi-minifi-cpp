@@ -140,6 +140,7 @@ int FileStream::readData(uint8_t *buf, int buflen) {
       int len = file_stream_->tellg();
       offset_ = len;
       length_ = len;
+      logger_->log_info("%s eof bit, ended at %d", path_, offset_);
       return offset_;
     } else {
       offset_ += buflen;

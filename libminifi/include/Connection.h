@@ -130,7 +130,7 @@ class Connection : public core::Connectable, public std::enable_shared_from_this
   }
   // Get queue data size
   uint64_t getQueueDataSize() {
-    return max_data_queue_size_;
+    return queued_data_size_;
   }
   // Put the flow file into queue
   void put(std::shared_ptr<core::FlowFile> flow);

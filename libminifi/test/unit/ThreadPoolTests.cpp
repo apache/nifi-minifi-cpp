@@ -19,12 +19,48 @@
 #define CATCH_CONFIG_MAIN  // This tells Catch to provide a main() - only do this in one cpp file
 #include <utility>
 #include <future>
+#include <memory>
 #include "../TestBase.h"
 #include "utils/ThreadPool.h"
 
 bool function() {
   return true;
 }
+
+class WorkerNumberExecutions : public utils::AfterExecute<int> {
+ public:
+  explicit WorkerNumberExecutions(int tasks)
+      : tasks(tasks),
+        runs(0) {
+  }
+
+  explicit WorkerNumberExecutions(WorkerNumberExecutions && other)
+      : runs(std::move(other.runs)),
+        tasks(std::move(other.tasks)) {
+  }
+
+  ~WorkerNumberExecutions() {
+  }
+
+  virtual bool isFinished(const int &result) {
+    if (result > 0 && ++runs < tasks) {
+      return false;
+    } else {
+      return true;
+    }
+  }
+  virtual bool isCancelled(const int &result) {
+    return false;
+  }
+
+  int getRuns() {
+    return runs;
+  }
+
+ protected:
+  int runs;
+  int tasks;
+};
 
 TEST_CASE("ThreadPoolTest1", "[TPT1]") {
   utils::ThreadPool<bool> pool(5);
@@ -35,4 +71,23 @@ TEST_CASE("ThreadPoolTest1", "[TPT1]") {
   REQUIRE(true == pool.execute(std::move(functor), fut));
   fut.wait();
   REQUIRE(true == fut.get());
+}
+
+std::atomic<int> counter;
+
+int counterFunction() {
+  return ++counter;
+}
+
+TEST_CASE("ThreadPoolTest2", "[TPT2]") {
+  counter = 0;
+  utils::ThreadPool<int> pool(5);
+  std::function<int()> f_ex = counterFunction;
+  std::unique_ptr<utils::AfterExecute<int>> after_execute = std::unique_ptr<utils::AfterExecute<int>>(new WorkerNumberExecutions(20));
+  utils::Worker<int> functor(f_ex, "id", std::move(after_execute));
+  pool.start();
+  std::future<int> fut;
+  REQUIRE(true == pool.execute(std::move(functor), fut));
+  fut.wait();
+  REQUIRE(20 == fut.get());
 }

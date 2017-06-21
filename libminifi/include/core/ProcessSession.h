@@ -47,12 +47,12 @@ class ProcessSession {
   /*!
    * Create a new process session
    */
-  ProcessSession(ProcessContext *processContext = NULL)
+  ProcessSession(std::shared_ptr<ProcessContext> processContext = nullptr)
       : process_context_(processContext),
         logger_(logging::LoggerFactory<ProcessSession>::getLogger()) {
-    logger_->log_trace("ProcessSession created for %s", process_context_->getProcessorNode().getName());
+    logger_->log_trace("ProcessSession created for %s", process_context_->getProcessorNode()->getName());
     auto repo = processContext->getProvenanceRepository();
-    provenance_report_ = new provenance::ProvenanceReporter(repo, process_context_->getProcessorNode().getUUIDStr(), process_context_->getProcessorNode().getName());
+    provenance_report_ = new provenance::ProvenanceReporter(repo, process_context_->getProcessorNode()->getName(), process_context_->getProcessorNode()->getName());
   }
 
 // Destructor
@@ -123,8 +123,9 @@ class ProcessSession {
   void import(std::string source, std::shared_ptr<core::FlowFile> &&flow,
   bool keepSource = true,
               uint64_t offset = 0);
-  void import(std::string source, std::vector<std::shared_ptr<FlowFileRecord>> flows,
-  bool keepSource, uint64_t offset, char inputDelimiter);
+  void import(std::string source, std::vector<std::shared_ptr<FlowFileRecord>> &flows,
+  bool keepSource,
+              uint64_t offset, char inputDelimiter);
 
 // Prevent default copy constructor and assignment operation
 // Only support pass by reference or pointer
@@ -149,7 +150,7 @@ class ProcessSession {
 // Clone the flow file during transfer to multiple connections for a relationship
   std::shared_ptr<core::FlowFile> cloneDuringTransfer(std::shared_ptr<core::FlowFile> &parent);
   // ProcessContext
-  ProcessContext *process_context_;
+  std::shared_ptr<ProcessContext> process_context_;
   // Logger
   std::shared_ptr<logging::Logger> logger_;
   // Provenance Report

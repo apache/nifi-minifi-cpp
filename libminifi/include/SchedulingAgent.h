@@ -65,7 +65,7 @@ class SchedulingAgent {
     running_ = false;
     repo_ = repo;
     flow_repo_ = flow_repo;
-    utils::ThreadPool<bool> pool = utils::ThreadPool<bool>(configure_->getInt(Configure::nifi_flow_engine_threads, 8), true);
+    utils::ThreadPool<bool> pool = utils::ThreadPool<bool>(configure_->getInt(Configure::nifi_flow_engine_threads, 2), true);
     component_lifecycle_thread_pool_ = std::move(pool);
     component_lifecycle_thread_pool_.start();
   }
@@ -74,7 +74,7 @@ class SchedulingAgent {
 
   }
   // onTrigger, return whether the yield is need
-  bool onTrigger(std::shared_ptr<core::Processor> processor, core::ProcessContext *processContext, core::ProcessSessionFactory *sessionFactory);
+  bool onTrigger(std::shared_ptr<core::Processor> processor, std::shared_ptr<core::ProcessContext> processContext, std::shared_ptr<core::ProcessSessionFactory> sessionFactory);
   // Whether agent has work to do
   bool hasWorkToDo(std::shared_ptr<core::Processor> processor);
   // Whether the outgoing need to be backpressure
@@ -82,6 +82,7 @@ class SchedulingAgent {
   // start
   void start() {
     running_ = true;
+    component_lifecycle_thread_pool_.start();
   }
   // stop
   virtual void stop() {
@@ -90,8 +91,8 @@ class SchedulingAgent {
   }
 
  public:
-  virtual void enableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode);
-  virtual void disableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode);
+  virtual std::future<bool> enableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode);
+  virtual std::future<bool> disableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode);
   // schedule, overwritten by different DrivenSchedulingAgent
   virtual void schedule(std::shared_ptr<core::Processor> processor) = 0;
   // unschedule, overwritten by different DrivenSchedulingAgent

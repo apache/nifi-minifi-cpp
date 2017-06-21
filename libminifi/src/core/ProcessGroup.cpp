@@ -207,6 +207,19 @@ std::shared_ptr<core::controller::ControllerServiceNode> ProcessGroup::findContr
   return controller_service_map_.getControllerServiceNode(nodeId);
 }
 
+void ProcessGroup::getAllProcessors(std::vector<std::shared_ptr<Processor>> &processor_vec) {
+  std::lock_guard<std::recursive_mutex> lock(mutex_);
+  std::shared_ptr<Processor> ret = NULL;
+
+  for (auto processor : processors_) {
+    logger_->log_debug("Current processor is %s", processor->getName().c_str());
+    processor_vec.push_back(processor);
+  }
+  for (auto processGroup : child_process_groups_) {
+    processGroup->getAllProcessors(processor_vec);
+  }
+}
+
 std::shared_ptr<Processor> ProcessGroup::findProcessor(const std::string &processorName) {
   std::lock_guard < std::recursive_mutex > lock(mutex_);
   std::shared_ptr<Processor> ret = NULL;
@@ -239,6 +252,7 @@ void ProcessGroup::updatePropertyValue(std::string processorName, std::string pr
 void ProcessGroup::getConnections(std::map<std::string, std::shared_ptr<Connection>> &connectionMap) {
   for (auto connection : connections_) {
     connectionMap[connection->getUUIDStr()] = connection;
+    connectionMap[connection->getName()] = connection;
   }
   for (auto processGroup : child_process_groups_) {
     processGroup->getConnections(connectionMap);

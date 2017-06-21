@@ -101,8 +101,7 @@ class FlowConfiguration : public CoreComponent {
     return getRoot(config_path_);
   }
 
-  virtual std::unique_ptr<core::ProcessGroup> getRootFromPayload(
-                                                                 std::string &yamlConfigPayload) {
+  virtual std::unique_ptr<core::ProcessGroup> getRootFromPayload(const std::string &yamlConfigPayload) {
     return nullptr;
   }
 

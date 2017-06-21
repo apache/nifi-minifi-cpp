@@ -35,9 +35,11 @@ namespace core {
  */
 class ProcessorNode : public ConfigurableComponent, public Connectable {
  public:
-  explicit ProcessorNode(const std::shared_ptr<Connectable> processor);
+  explicit ProcessorNode(const std::shared_ptr<Connectable> &processor);
 
   explicit ProcessorNode(const ProcessorNode &other);
+
+  explicit ProcessorNode(const ProcessorNode &&other);
 
   /**
    * Get property using the provided name.
@@ -59,7 +61,7 @@ class ProcessorNode : public ConfigurableComponent, public Connectable {
    * @param value value passed in by reference
    * @return result of getting property.
    */
-  bool getProperty(const std::string name, std::string &value) {
+  bool getProperty(const std::string &name, std::string &value) {
     const std::shared_ptr<ConfigurableComponent> processor_cast = std::dynamic_pointer_cast<ConfigurableComponent>(processor_);
     if (nullptr != processor_cast)
       return processor_cast->getProperty(name, value);
@@ -73,7 +75,7 @@ class ProcessorNode : public ConfigurableComponent, public Connectable {
    * @param value property value.
    * @return result of setting property.
    */
-  bool setProperty(const std::string name, std::string value) {
+  bool setProperty(const std::string &name, std::string value) {
     const std::shared_ptr<ConfigurableComponent> processor_cast = std::dynamic_pointer_cast<ConfigurableComponent>(processor_);
     bool ret = ConfigurableComponent::setProperty(name, value);
     if (nullptr != processor_cast)
@@ -137,7 +139,7 @@ class ProcessorNode : public ConfigurableComponent, public Connectable {
    * Set name.
    * @param name
    */
-  void setName(const std::string name) {
+  void setName(const std::string &name) {
     Connectable::setName(name);
     processor_->setName(name);
   }

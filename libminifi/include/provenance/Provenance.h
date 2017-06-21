@@ -483,14 +483,6 @@ class ProvenanceReporter {
     }
     _events.clear();
   }
-  // allocate
-  ProvenanceEventRecord *allocate(ProvenanceEventRecord::ProvenanceEventType eventType, std::shared_ptr<core::FlowFile> flow) {
-    ProvenanceEventRecord *event = new ProvenanceEventRecord(eventType, _componentId, _componentType);
-    if (event)
-      event->fromFlowFile(flow);
-
-    return event;
-  }
   // commit
   void commit();
   // create
@@ -519,6 +511,15 @@ class ProvenanceReporter {
   void receive(std::shared_ptr<core::FlowFile> flow, std::string transitUri, std::string sourceSystemFlowFileIdentifier, std::string detail, uint64_t processingDuration);
 
  protected:
+
+  // allocate
+   ProvenanceEventRecord *allocate(ProvenanceEventRecord::ProvenanceEventType eventType, std::shared_ptr<core::FlowFile> flow) {
+     ProvenanceEventRecord *event = new ProvenanceEventRecord(eventType, _componentId, _componentType);
+     if (event)
+       event->fromFlowFile(flow);
+
+     return event;
+   }
 
   // Component ID
   std::string _componentId;

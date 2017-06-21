@@ -31,6 +31,7 @@ TestPlan::TestPlan(std::shared_ptr<core::ContentRepository> content_repo, std::s
       finalized(false),
       current_flowfile_(nullptr),
       logger_(logging::LoggerFactory<TestPlan>::getLogger()) {
+  stream_factory = std::make_shared<org::apache::nifi::minifi::io::StreamFactory>(std::make_shared<minifi::Configure>());
 }
 
 std::shared_ptr<core::Processor> TestPlan::addProcessor(const std::shared_ptr<core::Processor> &processor, const std::string &name, core::Relationship relationship,
@@ -43,6 +44,7 @@ bool linkToPrevious) {
   uuid_t uuid;
   uuid_generate(uuid);
 
+  processor->setStreamFactory(stream_factory);
   // initialize the processor
   processor->initialize();
 
@@ -60,7 +62,7 @@ bool linkToPrevious) {
 
     std::stringstream connection_name;
     connection_name << last->getUUIDStr() << "-to-" << processor->getUUIDStr();
-    logger_->log_info("Creating %s connection for proc %d",connection_name.str(),processor_queue_.size()+1);
+    logger_->log_info("Creating %s connection for proc %d", connection_name.str(), processor_queue_.size() + 1);
     std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(flow_repo_, content_repo_, connection_name.str());
     connection->setRelationship(relationship);
 
@@ -84,7 +86,7 @@ bool linkToPrevious) {
 
   processor_nodes_.push_back(node);
 
-  std::shared_ptr<core::ProcessContext> context = std::make_shared<core::ProcessContext>(*(node.get()), controller_services_provider_, flow_repo_, prov_repo_, content_repo_);
+  std::shared_ptr<core::ProcessContext> context = std::make_shared<core::ProcessContext>(node, controller_services_provider_, prov_repo_, flow_repo_, content_repo_);
   processor_contexts_.push_back(context);
 
   processor_queue_.push_back(processor);
@@ -116,7 +118,7 @@ bool linkToPrevious) {
 bool TestPlan::setProperty(const std::shared_ptr<core::Processor> proc, const std::string &prop, const std::string &value) {
   std::lock_guard<std::recursive_mutex> guard(mutex);
   int i = 0;
-  logger_->log_info("Attempting to set property %s %s for %s",prop,value,proc->getName());
+  logger_->log_info("Attempting to set property %s %s for %s", prop, value, proc->getName());
   for (i = 0; i < processor_queue_.size(); i++) {
     if (processor_queue_.at(i) == proc) {
       break;
@@ -151,13 +153,13 @@ bool TestPlan::runNextProcessor(std::function<void(core::ProcessContext*, core::
   location++;
   std::shared_ptr<core::Processor> processor = processor_queue_.at(location);
   std::shared_ptr<core::ProcessContext> context = processor_contexts_.at(location);
-  std::shared_ptr<core::ProcessSessionFactory> factory = std::make_shared<core::ProcessSessionFactory>(context.get());
+  std::shared_ptr<core::ProcessSessionFactory> factory = std::make_shared<core::ProcessSessionFactory>(context);
   factories_.push_back(factory);
   if (std::find(configured_processors_.begin(), configured_processors_.end(), processor) == configured_processors_.end()) {
-    processor->onSchedule(context.get(), factory.get());
+    processor->onSchedule(context, factory);
     configured_processors_.push_back(processor);
   }
-  std::shared_ptr<core::ProcessSession> current_session = std::make_shared<core::ProcessSession>(context.get());
+  std::shared_ptr<core::ProcessSession> current_session = std::make_shared<core::ProcessSession>(context);
   process_sessions_.push_back(current_session);
   processor->incrementActiveTasks();
   processor->setScheduledState(core::ScheduledState::RUNNING);
@@ -165,7 +167,7 @@ bool TestPlan::runNextProcessor(std::function<void(core::ProcessContext*, core::
     verify(context.get(), current_session.get());
   } else {
     logger_->log_info("Running %s", processor->getName());
-    processor->onTrigger(context.get(), current_session.get());
+    processor->onTrigger(context, current_session);
   }
   current_session->commit();
   current_flowfile_ = current_session->get();

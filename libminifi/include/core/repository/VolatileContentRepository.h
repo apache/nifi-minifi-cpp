@@ -84,6 +84,8 @@ class VolatileContentRepository : public core::ContentRepository, public core::r
    */
   virtual std::shared_ptr<io::BaseStream> read(const std::shared_ptr<minifi::ResourceClaim> &claim);
 
+  virtual bool exists(const std::shared_ptr<minifi::ResourceClaim> &streamId);
+
   /**
    * Closes the claim.
    * @return whether or not the claim is associated with content stored in volatile memory.

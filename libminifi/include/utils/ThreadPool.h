@@ -21,6 +21,7 @@
 #include <iostream>
 #include <atomic>
 #include <mutex>
+#include <map>
 #include <vector>
 #include <queue>
 #include <future>
@@ -129,8 +130,8 @@ class Worker {
   virtual uint64_t getTimeSlice() {
     return time_slice_;
   }
-  
-  virtual uint64_t getWaitTime(){
+
+  virtual uint64_t getWaitTime() {
     return run_determinant_->wait_time();
   }
 
@@ -161,6 +162,16 @@ class Worker {
 };
 
 template<typename T>
+class WorkerComparator
+{
+ public:
+  bool operator()(Worker<T> &a, Worker<T> &b)
+                  {
+    return a.getTimeSlice() < b.getTimeSlice();
+  }
+};
+
+template<typename T>
 Worker<T>& Worker<T>::operator =(Worker<T> && other) {
   task = std::move(other.task);
   promise = other.promise;
@@ -185,7 +196,7 @@ template<typename T>
 class ThreadPool {
  public:
 
-  ThreadPool(int max_worker_threads = 8, bool daemon_threads = false)
+  ThreadPool(int max_worker_threads = 2, bool daemon_threads = false)
       : max_worker_threads_(max_worker_threads),
         daemon_threads_(daemon_threads),
         running_(false) {
@@ -298,6 +309,7 @@ class ThreadPool {
   std::atomic<bool> running_;
   // worker queue of worker objects
   moodycamel::ConcurrentQueue<Worker<T>> worker_queue_;
+  std::priority_queue<Worker<T>, std::vector<Worker<T>>, WorkerComparator<T>> worker_priority_queue_;
   // notification for available work
   std::condition_variable tasks_available_;
   // map to identify if a task should be
@@ -336,7 +348,7 @@ bool ThreadPool<T>::execute(Worker<T> &&task, std::future<T> &future) {
 template<typename T>
 void ThreadPool<T>::startWorkers() {
   for (int i = 0; i < max_worker_threads_; i++) {
-    thread_queue_.push_back(std::thread(&ThreadPool::run_tasks, this));
+    thread_queue_.push_back(std::move(std::thread(&ThreadPool::run_tasks, this)));
     current_workers_++;
   }
 
@@ -360,26 +372,33 @@ void ThreadPool<T>::run_tasks() {
     // they are eligible to run per the fact that the thread pool isn't shut down and the tasks are in a runnable state
     // BUT they've been continually timesliced, we will lower the wait decay to 100ms and continue incrementing from
     // there. This ensures we don't have arbitrarily long sleep cycles. 
-    if (wait_decay_ > 500000000L){
-     wait_decay_ = 100000000L;
+    if (wait_decay_ > 500000000L) {
+      wait_decay_ = 100000000L;
     }
     // if we are spinning, perform a wait. If something changes in the worker such that the timeslice has changed, we will pick that information up. Note that it's possible
     // we could starve for processing time if all workers are waiting. In the event that the number of workers far exceeds the number of threads, threads will spin and potentially
     // wait until they arrive at a task that can be run. In this case we reset the wait_decay and attempt to pick up a new task. This means that threads that recently ran should
     // be more likely to run. This is intentional.
-    
+
     if (wait_decay_ > 2000) {
       std::this_thread::sleep_for(std::chrono::nanoseconds(wait_decay_));
     }
     Worker<T> task;
     if (!worker_queue_.try_dequeue(task)) {
-
       std::unique_lock<std::mutex> lock(worker_queue_mutex_);
+      if (worker_priority_queue_.size() > 0) {
+        // this is safe as we are going to immediately pop the queue
+        while (!worker_priority_queue_.empty()) {
+          task = std::move(const_cast<Worker<T>&>(worker_priority_queue_.top()));
+          worker_priority_queue_.pop();
+          worker_queue_.enqueue(std::move(task));
+          continue;
+        }
+
+      }
       tasks_available_.wait_for(lock, waitperiod);
       continue;
-    }
-    else {
-
+    } else {
       std::unique_lock<std::mutex> lock(worker_queue_mutex_);
       if (!task_status_[task.getIdentifier()]) {
         continue;
@@ -388,12 +407,12 @@ void ThreadPool<T>::run_tasks() {
 
     bool wait_to_run = false;
     if (task.getTimeSlice() > 1) {
-      double wt = (double)task.getWaitTime();
+      double wt = (double) task.getWaitTime();
       auto now = std::chrono::system_clock::now().time_since_epoch();
       auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now).count();
       // if our differential is < 10% of the wait time we will not put the task into a wait state
       // since requeuing will break the time slice contract.
-      if (task.getTimeSlice() > ms && (task.getTimeSlice() - ms) > (wt*.10)) {
+      if (task.getTimeSlice() > ms && (task.getTimeSlice() - ms) > (wt * .10)) {
         wait_to_run = true;
       }
     }
@@ -404,8 +423,10 @@ void ThreadPool<T>::run_tasks() {
         if (!task_status_[task.getIdentifier()]) {
           continue;
         }
+        // put it on the priority queue
+        worker_priority_queue_.push(std::move(task));
       }
-      worker_queue_.enqueue(std::move(task));
+      //worker_queue_.enqueue(std::move(task));
 
       wait_decay_ += 25;
       continue;
@@ -423,7 +444,6 @@ void ThreadPool<T>::run_tasks() {
         }
       }
       worker_queue_.enqueue(std::move(task));
-
     }
   }
   current_workers_--;
@@ -434,7 +454,7 @@ void ThreadPool<T>::start() {
   std::lock_guard<std::recursive_mutex> lock(manager_mutex_);
   if (!running_) {
     running_ = true;
-    manager_thread_ = std::thread(&ThreadPool::startWorkers, this);
+    manager_thread_ = std::move(std::thread(&ThreadPool::startWorkers, this));
     if (worker_queue_.size_approx() > 0) {
       tasks_available_.notify_all();
     }
