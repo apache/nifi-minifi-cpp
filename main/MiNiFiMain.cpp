@@ -38,6 +38,7 @@
 #include "core/logging/LoggerConfiguration.h"
 #include "properties/Properties.h"
 #include "properties/Configure.h"
+#include "utils/Id.h"
 #include "FlowController.h"
 
 //! Main thread sleep interval 1 second
@@ -46,10 +47,10 @@
 #define STOP_WAIT_TIME_MS 30*1000
 //! Default YAML location
 #define DEFAULT_NIFI_CONFIG_YML "./conf/config.yml"
-//! Default nifi properties file path
+//! Default properties file paths
 #define DEFAULT_NIFI_PROPERTIES_FILE "./conf/minifi.properties"
-
 #define DEFAULT_LOG_PROPERTIES_FILE "./conf/minifi-log.properties"
+#define DEFAULT_UID_PROPERTIES_FILE "./conf/minifi-uid.properties"
 //! Define home environment variable
 #define MINIFI_HOME_ENV_KEY "MINIFI_HOME"
 
@@ -123,6 +124,11 @@ int main(int argc, char **argv) {
   log_properties->setHome(minifiHome);
   log_properties->loadConfigureFile(DEFAULT_LOG_PROPERTIES_FILE);
   logging::LoggerConfiguration::getConfiguration().initialize(log_properties);
+  
+  std::shared_ptr<minifi::Properties> uid_properties = std::make_shared<minifi::Properties>();
+  uid_properties->setHome(minifiHome);
+  uid_properties->loadConfigureFile(DEFAULT_UID_PROPERTIES_FILE);
+  utils::IdGenerator::getIdGenerator()->initialize(uid_properties);
 
   // Make a record of minifi home in the configured log file.
   logger->log_info("MINIFI_HOME=%s", minifiHome);

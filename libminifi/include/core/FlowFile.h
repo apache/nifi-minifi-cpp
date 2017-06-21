@@ -267,8 +267,8 @@ class FlowFile {
   std::shared_ptr<core::Connectable> original_connection_;
 
  private:
-  // Logger
-  std::shared_ptr<logging::Logger> logger_;
+  static std::shared_ptr<logging::Logger> logger_;
+  static std::shared_ptr<utils::IdGenerator> id_generator_;
 };
 
 } /* namespace core */

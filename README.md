@@ -84,7 +84,7 @@ Perspectives of the role of MiNiFi should be from the perspective of the agent a
 * libuuid
 * libleveldb
 * libcurl
-* libssl and libcrypto from openssl 
+* libssl and libcrypto from openssl
 
 The needed dependencies can be installed with the following commands for:
 
@@ -260,7 +260,7 @@ Additionally, users can utilize the MiNiFi Toolkit Converter (version 0.0.1 - sc
         - name: TransferFilesToRPG
           id: 471deef6-2a6e-4a7d-912a-81cc17e3a207
           source name: GetFile
-          source id: 471deef6-2a6e-4a7d-912a-81cc17e3a206 
+          source id: 471deef6-2a6e-4a7d-912a-81cc17e3a206
           source relationship name: success
           destination id: 471deef6-2a6e-4a7d-912a-81cc17e3a204
           max work queue size: 0
@@ -283,12 +283,12 @@ Additionally, users can utilize the MiNiFi Toolkit Converter (version 0.0.1 - sc
 
 ### Site2Site Security Configuration
 
-    in minifi.properties 
+    in minifi.properties
 
     enable tls ssl
     nifi.remote.input.secure=true
 
-    if you want to enable client certificate base authorization 
+    if you want to enable client certificate base authorization
     nifi.security.need.ClientAuth=true
     setup the client certificate and private key PEM files
     nifi.security.client.certificate=./conf/client.pem
@@ -300,19 +300,19 @@ Additionally, users can utilize the MiNiFi Toolkit Converter (version 0.0.1 - sc
 
     if you do not want to enable client certificate base authorization
     nifi.security.need.ClientAuth=false
-    
+
 ### Configuring Volatile and NO-OP Repositories
 
-     in minifi.properties 
-     
+     in minifi.properties
+
      # For Volatile Repositories:
      nifi.flow.repository.class.name=VolatileRepository
      nifi.provenance.repository.class.name=VolatileRepository
-     
+
      # For NO-OP Repositories:
 	 nifi.flow.repository.class.name=NoOpRepository
      nifi.provenance.repository.class.name=NoOpRepository
-     
+
 ### Provenance Report
 
     Add Provenance Reporting to config.yml
@@ -326,14 +326,14 @@ Additionally, users can utilize the MiNiFi Toolkit Converter (version 0.0.1 - sc
 
 ### Http Configuration Listener
 
-    Http Configuration Listener will pull flow file configuration from the remote command control server, 
+    Http Configuration Listener will pull flow file configuration from the remote command control server,
     validate and apply the new flow configuration
 
-    in minifi.properties 
+    in minifi.properties
 
     nifi.configuration.listener.type=http
     nifi.configuration.listener.http.url=https://localhost:8080
-    nifi.configuration.listener.pull.interval=1 sec 
+    nifi.configuration.listener.pull.interval=1 sec
     nifi.configuration.listener.client.ca.certificate=./conf/nifi-cert.pem
 
     if you want to enable client certificate
@@ -341,11 +341,29 @@ Additionally, users can utilize the MiNiFi Toolkit Converter (version 0.0.1 - sc
     nifi.configuration.listener.client.certificate=./conf/client.pem
     nifi.configuration.listener.client.private.key=./conf/client.key
     nifi.configuration.listener.client.pass.phrase=./conf/password
-      
+
+### UID generation
+
+MiNiFi needs to generate many unique identifiers in the course of operations.  There are a few different uid implementations available that can be configured in minifi-uid.properties.
+
+Implementation for uid generation can be selected using the uid.implementation property values:
+1. time - use uuid_generate_time (default option if the file or property value is missing or invalid)
+2. random - use uuid_generate_random
+3. uuid_default - use uuid_generate (will attempt to use uuid_generate_random and fall back to uuid_generate_time if no high quality randomness is available)
+4. minifi_uid - use custom uid algorthim
+
+If minifi_uuid is selected MiNiFi will use a custom uid algorthim consisting of first N bits device identifier, second M bits as bottom portion of a timestamp where N + M = 64, the last 64 bits is an atomic incrementor.
+
+This is faster than the random uuid generator and encodes the device id and a timestamp into every value, making tracing of flowfiles, etc easier.
+
+It does require more configuration.  uid.minifi.device.segment.bits is used to specify how many bits at the beginning to reserve for the device identifier.  It also puts a limit on how many distinct devices can be used.  With the default of 16 bits, there are a maximum of 65,535 unique device identifiers that can be used.  The 48 bit timestamp won't repeat for almost 9,000 years.  With 24 bits for the device identifier, there are a maximum of 16,777,215 unique device identifiers and the 40 bit timestamp won't repeat for about 35 years.
+
+Additionally, a unique hexadecimal uid.minifi.device.segment should be assigned to each MiNiFi instance.
+
 ### Controller Services
- If you need to reference a controller service in your config.yml file, use the following template. In the example, below, ControllerServiceClass is the name of the class defining the controller Service. ControllerService1 
- is linked to ControllerService2, and requires the latter to be started for ControllerService1 to start. 
-     
+ If you need to reference a controller service in your config.yml file, use the following template. In the example, below, ControllerServiceClass is the name of the class defining the controller Service. ControllerService1
+ is linked to ControllerService2, and requires the latter to be started for ControllerService1 to start.
+
 	Controller Services:
       - name: ControllerService1
  	    id: 2438e3c8-015a-1000-79ca-83af40ec1974
@@ -358,7 +376,7 @@ Additionally, users can utilize the MiNiFi Toolkit Converter (version 0.0.1 - sc
 	    id: 2438e3c8-015a-1000-79ca-83af40ec1992
 	  	class: ControllerServiceClass
 	  	Properties:
-        
+
 
 ### Running
 After completing a [build](#building), the application can be run by issuing the following from :
@@ -384,25 +402,25 @@ See https://nifi.apache.org/minifi for the latest documentation.
 
 ## Contributing
 
-We welcome all contributions to Apache MiNiFi. To make development easier, we've included 
+We welcome all contributions to Apache MiNiFi. To make development easier, we've included
 the linter for the Google Style guide. Google provides an Eclipse formatter for their style
 guide. It is located [here](https://github.com/google/styleguide/blob/gh-pages/eclipse-cpp-google-style.xml).
-New contributions are expected to follow the Google style guide when it is reasonable. 
-Additionally, all new files must include a copy of the Apache License Header. 
+New contributions are expected to follow the Google style guide when it is reasonable.
+Additionally, all new files must include a copy of the Apache License Header.
 
 MiNiFi C++ contains a dynamic loading mechanism that loads arbitrary objects. To maintain
 consistency of development amongst the NiFi ecosystem, it is called a class loader. If you
 are contributing a custom Processor or Controller Service, the mechanism to register your class
 into the default class loader is a pragma definition named:
-    
+
     REGISTER_RESOURCE(CLASSNAME);
-    
+
 To use this include REGISTER_RESOURCE(YourClassName); in your header file. The default class
 loader will make instnaces of YourClassName available for inclusion.  
 
 Once you have completed your changes, including source code and tests, you can verify that
 you follow the Google style guide by running the following command:
-     $ make linter. 
+     $ make linter.
 This will provide output for all source files.
 
 ## License

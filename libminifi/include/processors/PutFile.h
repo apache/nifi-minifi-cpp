@@ -26,6 +26,7 @@
 #include "core/Core.h"
 #include "core/Resource.h"
 #include "core/logging/LoggerConfiguration.h"
+#include "utils/Id.h"
 
 namespace org {
 namespace apache {
@@ -99,6 +100,7 @@ class PutFile : public core::Processor {
 
   bool putFile(core::ProcessSession *session, std::shared_ptr<FlowFileRecord> flowFile, const std::string &tmpFile, const std::string &destFile);
   std::shared_ptr<logging::Logger> logger_;
+  static std::shared_ptr<utils::IdGenerator> id_generator_;
 };
 
 REGISTER_RESOURCE(PutFile);
