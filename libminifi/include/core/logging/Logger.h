@@ -115,7 +115,7 @@ class Logger {
   std::shared_ptr<spdlog::logger> delegate_;
 
   std::mutex mutex_;
-   private:
+ private:
   template<typename ... Args>
   inline void log(spdlog::level::level_enum level, const char * const format, const Args& ... args) {
     std::lock_guard<std::mutex> lock(mutex_);

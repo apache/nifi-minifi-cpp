@@ -43,7 +43,7 @@ ConfigurableComponent::~ConfigurableComponent() {
 }
 
 bool ConfigurableComponent::getProperty(const std::string &name, Property &prop) {
-  std::lock_guard < std::mutex > lock(configuration_mutex_);
+  std::lock_guard<std::mutex> lock(configuration_mutex_);
 
   auto &&it = properties_.find(name);
 
@@ -62,13 +62,13 @@ bool ConfigurableComponent::getProperty(const std::string &name, Property &prop)
  * @return result of getting property.
  */
 bool ConfigurableComponent::getProperty(const std::string name, std::string &value) {
-  std::lock_guard < std::mutex > lock(configuration_mutex_);
+  std::lock_guard<std::mutex> lock(configuration_mutex_);
 
   auto &&it = properties_.find(name);
   if (it != properties_.end()) {
     Property item = it->second;
     value = item.getValue();
-    logger_->log_info("Processor %s property name %s value %s", name, item.getName(), value);
+    logger_->log_info("Component %s property name %s value %s", name, item.getName(), value);
     return true;
   } else {
     return false;
@@ -81,7 +81,7 @@ bool ConfigurableComponent::getProperty(const std::string name, std::string &val
  * @return result of setting property.
  */
 bool ConfigurableComponent::setProperty(const std::string name, std::string value) {
-  std::lock_guard < std::mutex > lock(configuration_mutex_);
+  std::lock_guard<std::mutex> lock(configuration_mutex_);
   auto &&it = properties_.find(name);
 
   if (it != properties_.end()) {
@@ -102,7 +102,7 @@ bool ConfigurableComponent::setProperty(const std::string name, std::string valu
  * @return result of setting property.
  */
 bool ConfigurableComponent::updateProperty(const std::string &name, const std::string &value) {
-  std::lock_guard < std::mutex > lock(configuration_mutex_);
+  std::lock_guard<std::mutex> lock(configuration_mutex_);
   auto &&it = properties_.find(name);
 
   if (it != properties_.end()) {
@@ -123,7 +123,7 @@ bool ConfigurableComponent::updateProperty(const std::string &name, const std::s
  * @return whether property was set or not
  */
 bool ConfigurableComponent::setProperty(Property &prop, std::string value) {
-  std::lock_guard < std::mutex > lock(configuration_mutex_);
+  std::lock_guard<std::mutex> lock(configuration_mutex_);
   auto it = properties_.find(prop.getName());
 
   if (it != properties_.end()) {
@@ -151,7 +151,7 @@ bool ConfigurableComponent::setSupportedProperties(std::set<Property> properties
     return false;
   }
 
-  std::lock_guard < std::mutex > lock(configuration_mutex_);
+  std::lock_guard<std::mutex> lock(configuration_mutex_);
 
   properties_.clear();
   for (auto item : properties) {

@@ -202,8 +202,7 @@ class AtomicEntry {
   bool setRepoValue(RepoValue<T> &new_value, RepoValue<T> &old_value, size_t &prev_size) {
     // delete the underlying pointer
     bool lock = false;
-    if (!write_pending_.compare_exchange_weak(lock, true))
-    {
+    if (!write_pending_.compare_exchange_weak(lock, true)) {
       return false;
     }
     if (has_value_) {
@@ -215,19 +214,17 @@ class AtomicEntry {
     try_unlock();
     return true;
   }
-  
-  
-  AtomicEntry<T> *takeOwnership()
-  {
-      bool lock = false;
-      if (!write_pending_.compare_exchange_weak(lock, true) )
-	return nullptr;
-      
-      ref_count_++;
-      
-      try_unlock();
-      
-      return this;
+
+  AtomicEntry<T> *takeOwnership() {
+    bool lock = false;
+    if (!write_pending_.compare_exchange_weak(lock, true))
+      return nullptr;
+
+    ref_count_++;
+
+    try_unlock();
+
+    return this;
   }
   /**
    * A test and set operation, which is used to allow a function to test
@@ -238,33 +235,29 @@ class AtomicEntry {
   bool testAndSetKey(const T str, std::function<bool(T)> releaseTest = nullptr, std::function<void(T)> reclaimer = nullptr, std::function<bool(T, T)> comparator = nullptr) {
     bool lock = false;
 
-    if (!write_pending_.compare_exchange_weak(lock, true) )
+    if (!write_pending_.compare_exchange_weak(lock, true))
       return false;
 
     if (has_value_) {
       // we either don't have a release test or we cannot release this
       // entity
-      if (releaseTest != nullptr && reclaimer != nullptr && releaseTest(value_.getKey()))
-                                                                        {
+      if (releaseTest != nullptr && reclaimer != nullptr && releaseTest(value_.getKey())) {
         reclaimer(value_.getKey());
-      }
-      else if (free_required && ref_count_ == 0)
-      {
-	size_t bufferSize = value_.getBufferSize();
-	value_.clearBuffer();
-	has_value_ = false;
-	if (accumulated_repo_size_ != nullptr) {
-	  *accumulated_repo_size_ -= bufferSize;
-	}
-	free_required = false;  
-      }
-      else {
+      } else if (free_required && ref_count_ == 0) {
+        size_t bufferSize = value_.getBufferSize();
+        value_.clearBuffer();
+        has_value_ = false;
+        if (accumulated_repo_size_ != nullptr) {
+          *accumulated_repo_size_ -= bufferSize;
+        }
+        free_required = false;
+      } else {
         try_unlock();
         return false;
       }
 
     }
-    ref_count_=1;
+    ref_count_ = 1;
     value_.setKey(str, comparator);
     has_value_ = true;
     try_unlock();
@@ -308,27 +301,25 @@ class AtomicEntry {
     try_unlock();
     return true;
   }
-  
-  void decrementOwnership(){
+
+  void decrementOwnership() {
     try_lock();
     if (!has_value_) {
       try_unlock();
       return;
     }
-    if (ref_count_ > 0){
+    if (ref_count_ > 0) {
       ref_count_--;
     }
-    if (ref_count_ == 0 && free_required)
-    {
+    if (ref_count_ == 0 && free_required) {
       size_t bufferSize = value_.getBufferSize();
       value_.clearBuffer();
       has_value_ = false;
       if (accumulated_repo_size_ != nullptr) {
-	*accumulated_repo_size_ -= bufferSize;
+        *accumulated_repo_size_ -= bufferSize;
       }
       free_required = false;
-    }
-    else{
+    } else {
     }
     try_unlock();
   }
@@ -382,15 +373,14 @@ class AtomicEntry {
     try_unlock();
     return ref;
   }
-  
-  size_t getLength()
-  {
+
+  size_t getLength() {
     size_t size = 0;
-     try_lock();
-     size = value_.getBufferSize();
-     try_unlock();
-     return size;
-     
+    try_lock();
+    size = value_.getBufferSize();
+    try_unlock();
+    return size;
+
   }
 
   /**
@@ -407,11 +397,10 @@ class AtomicEntry {
       try_unlock();
       return false;
     }
-    if (ref_count_ > 0)
-    {
-       free_required = true;
-       try_unlock();
-       return true;
+    if (ref_count_ > 0) {
+      free_required = true;
+      try_unlock();
+      return true;
     }
     size_t bufferSize = value_.getBufferSize();
     value_.clearBuffer();
@@ -460,7 +449,7 @@ class AtomicEntry {
    */
   inline void try_lock() {
     bool lock = false;
-    while (!write_pending_.compare_exchange_weak(lock, true,std::memory_order_acquire)) {
+    while (!write_pending_.compare_exchange_weak(lock, true, std::memory_order_acquire)) {
       lock = false;
       // attempt again
     }
@@ -471,7 +460,7 @@ class AtomicEntry {
    */
   inline void try_unlock() {
     bool lock = true;
-    while (!write_pending_.compare_exchange_weak(lock, false,std::memory_order_acquire)) {
+    while (!write_pending_.compare_exchange_weak(lock, false, std::memory_order_acquire)) {
       lock = true;
       // attempt again
     }

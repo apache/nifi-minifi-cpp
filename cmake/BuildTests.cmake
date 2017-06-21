@@ -40,10 +40,14 @@ function(createTests testName)
     target_include_directories(${testName} PRIVATE BEFORE ${LEVELDB_INCLUDE_DIRS})
     target_include_directories(${testName} PRIVATE BEFORE "include")
     target_include_directories(${testName} PRIVATE BEFORE "libminifi/include/")
+    target_include_directories(${testName} PRIVATE BEFORE "libminifi/include/c2/protocols")
+    target_include_directories(${testName} PRIVATE BEFORE "libminifi/include/c2")
     target_include_directories(${testName} PRIVATE BEFORE "libminifi/include/core")
     target_include_directories(${testName} PRIVATE BEFORE "libminifi/include/core/controller")
     target_include_directories(${testName} PRIVATE BEFORE "libminifi/include/core/repository")
     target_include_directories(${testName} PRIVATE BEFORE "libminifi/include/core/yaml")
+    target_include_directories(${testName} PRIVATE BEFORE "libminifi/include/core/statemanagement")
+    target_include_directories(${testName} PRIVATE BEFORE "libminifi/include/core/statemanagement/metrics")
     target_include_directories(${testName} PRIVATE BEFORE "libminifi/include/io")
     target_include_directories(${testName} PRIVATE BEFORE "libminifi/include/utils")
     target_include_directories(${testName} PRIVATE BEFORE "libminifi/include/processors")
@@ -88,12 +92,25 @@ add_test(NAME ControllerServiceIntegrationTests COMMAND ControllerServiceIntegra
 
 add_test(NAME HttpGetIntegrationTest COMMAND HttpGetIntegrationTest "${TEST_RESOURCES}/TestHTTPGet.yml"  "${TEST_RESOURCES}/")
 
-add_test(NAME HttpConfigurationListenerTest COMMAND HttpConfigurationListenerTest "${TEST_RESOURCES}/TestHTTPGet.yml"  "${TEST_RESOURCES}/")
+add_test(NAME C2UpdateTest COMMAND C2UpdateTest "${TEST_RESOURCES}/TestHTTPGet.yml"  "${TEST_RESOURCES}/")
 
 add_test(NAME HttpGetIntegrationTestSecure COMMAND HttpGetIntegrationTest "${TEST_RESOURCES}/TestHTTPGetSecure.yml"  "${TEST_RESOURCES}/")
 
-add_test(NAME HttpPostIntegrationTest COMMAND HttpPostIntegrationTest "${TEST_RESOURCES}/TestHTTPPost.yml" )
+add_test(NAME HttpPostIntegrationTest COMMAND HttpPostIntegrationTest "${TEST_RESOURCES}/TestHTTPPost.yml" "${TEST_RESOURCES}/")
 
-add_test(NAME Site2SiteRestTest COMMAND Site2SiteRestTest "${TEST_RESOURCES}/TestSite2SiteRest.yml" "${TEST_RESOURCES}/")
+add_test(NAME HttpPostIntegrationTestChunked COMMAND HttpPostIntegrationTest "${TEST_RESOURCES}/TestHTTPPostChunkedEncoding.yml" "${TEST_RESOURCES}/")
+
+add_test(NAME ThreadPoolAdjust COMMAND ThreadPoolAdjust "${TEST_RESOURCES}/TestHTTPPostChunkedEncoding.yml" "${TEST_RESOURCES}/")
+
+add_test(NAME C2VerifyServeResults COMMAND C2VerifyServeResults "${TEST_RESOURCES}/TestHTTPGet.yml" "${TEST_RESOURCES}/")
+
+add_test(NAME C2NullConfiguration COMMAND C2NullConfiguration "${TEST_RESOURCES}/TestHTTPGet.yml" "${TEST_RESOURCES}/")
+
+add_test(NAME C2VerifyHeartbeatAndStop COMMAND C2VerifyHeartbeatAndStop "${TEST_RESOURCES}/TestHTTPGet.yml" "${TEST_RESOURCES}/")
+
+add_test(NAME SiteToSiteRestTest COMMAND SiteToSiteRestTest "${TEST_RESOURCES}/TestSite2SiteRest.yml" "${TEST_RESOURCES}/" "http://localhost:8082/nifi-api/controller")
+
+## removed due to travis issues with our certs
+#add_test(NAME SiteToSiteRestTestSecure COMMAND SiteToSiteRestTest "${TEST_RESOURCES}/TestSite2SiteRestSecure.yml" "${TEST_RESOURCES}/" "https://localhost:8082/nifi-api/controller")
 
 add_test(NAME TestExecuteProcess COMMAND TestExecuteProcess )

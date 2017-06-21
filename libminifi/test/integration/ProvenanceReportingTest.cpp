@@ -17,6 +17,7 @@
  */
 
 #include <sys/stat.h>
+#undef NDEBUG
 #include <cassert>
 #include <chrono>
 #include <fstream>

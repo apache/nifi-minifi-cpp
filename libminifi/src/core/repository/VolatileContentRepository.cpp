@@ -132,6 +132,23 @@ std::shared_ptr<io::BaseStream> VolatileContentRepository::write(const std::shar
   return nullptr;
 }
 
+bool VolatileContentRepository::exists(const std::shared_ptr<minifi::ResourceClaim> &claim) {
+  logger_->log_debug("enter exists");
+  int size = 0;
+  {
+    std::lock_guard<std::mutex> lock(map_mutex_);
+    auto claim_check = master_list_.find(claim->getContentFullPath());
+    if (claim_check != master_list_.end()) {
+      auto ent = claim_check->second->takeOwnership();
+      if (ent == nullptr) {
+        return false;
+      }
+      return true;
+    }
+  }
+  return false;
+}
+
 std::shared_ptr<io::BaseStream> VolatileContentRepository::read(const std::shared_ptr<minifi::ResourceClaim> &claim) {
   logger_->log_debug("enter read");
   int size = 0;

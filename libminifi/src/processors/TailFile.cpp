@@ -247,11 +247,11 @@ void TailFile::onTrigger(core::ProcessContext *context, core::ProcessSession *se
 
     if (!this->_delimiter.empty()) {
       char delim = this->_delimiter.c_str()[0];
-      std::vector<std::shared_ptr<FlowFileRecord>> flowFiles = std::vector<std::shared_ptr<FlowFileRecord>>();
+      std::vector<std::shared_ptr<FlowFileRecord>> flowFiles;
       session->import(fullPath, flowFiles, true, this->_currentTailFilePosition, delim);
       logger_->log_info("%d flowfiles were received from TailFile input", flowFiles.size());
 
-      for (std::shared_ptr<FlowFileRecord> ffr : flowFiles) {
+      for (auto ffr : flowFiles) {
         logger_->log_info("TailFile %s for %d bytes", _currentTailFileName, ffr->getSize());
         std::string logName = baseName + "." + std::to_string(_currentTailFilePosition) + "-" + std::to_string(_currentTailFilePosition + ffr->getSize()) + "." + extension;
         ffr->updateKeyedAttribute(PATH, fileLocation);

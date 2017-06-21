@@ -144,6 +144,8 @@ class ProcessGroup {
   std::shared_ptr<Processor> findProcessor(uuid_t uuid);
   // findProcessor based on name
   std::shared_ptr<Processor> findProcessor(const std::string &processorName);
+
+  void getAllProcessors(std::vector<std::shared_ptr<Processor>> &processor_vec);
   /**
    * Add controller service
    * @param nodeId node identifier

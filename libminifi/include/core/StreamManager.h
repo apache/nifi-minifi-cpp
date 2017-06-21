@@ -70,6 +70,19 @@ class StreamManager {
    */
   virtual bool remove(const std::shared_ptr<T> &streamId) = 0;
 
+  /**
+   * Removes an item if it was orphan
+   */
+  virtual bool removeIfOrphaned(const std::shared_ptr<T> &streamId) = 0;
+
+  virtual uint32_t getStreamCount(const std::shared_ptr<T> &streamId) = 0;
+
+  virtual void incrementStreamCount(const std::shared_ptr<T> &streamId) = 0;
+
+  virtual void decrementStreamCount(const std::shared_ptr<T> &streamId) = 0;
+
+  virtual bool exists(const std::shared_ptr<T> &streamId) = 0;
+
 };
 
 } /* namespace core */

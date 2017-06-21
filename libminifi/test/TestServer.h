@@ -21,14 +21,14 @@
 #include <string>
 #include <iostream>
 #include "civetweb.h"
+#include "CivetServer.h"
+
 
 /* Server context handle */
-static struct mg_context *ctx;
 static std::string resp_str;
 
 static int responder(struct mg_connection *conn, void *response) {
   const char *msg = resp_str.c_str();
-
 
   mg_printf(conn, "HTTP/1.1 200 OK\r\n"
             "Content-Length: %lu\r\n"
@@ -45,42 +45,36 @@ void init_webserver() {
   mg_init_library(0);
 }
 
-void start_webserver(std::string &port, std::string &rooturi, const std::string &response, struct mg_callbacks *callbacks, std::string &cert) {
 
-  std::cout << "root uri is " << rooturi << ":" << port << "/" << std::endl;
-  resp_str = response;
-  const char *options[] = { "listening_ports", port.c_str(), "ssl_certificate", cert.c_str(), "ssl_protocol_version", "3", "ssl_cipher_list",
-      "ECDHE-RSA-AES256-GCM-SHA384:DES-CBC3-SHA:AES128-SHA:AES128-GCM-SHA256", 0 };
+CivetServer * start_webserver(std::string &port, std::string &rooturi, CivetHandler *handler, struct mg_callbacks *callbacks, std::string &cert, std::string &ca_cert) {
+  const char *options[] = { "listening_ports", port.c_str(), "error_log_file",
+      "error.log", "ssl_certificate", ca_cert.c_str(), "ssl_protocol_version", "0", "ssl_cipher_list",
+      "ALL", "ssl_verify_peer", "no", 0 };
 
-  if (!mg_check_feature(2)) {
-    std::cerr << "Error: Embedded example built with SSL support, " << "but civetweb library build without" << std::endl;
-    exit(1);
+  std::vector<std::string> cpp_options;
+  for (int i = 0; i < (sizeof(options) / sizeof(options[0]) - 1); i++) {
+    cpp_options.push_back(options[i]);
   }
+  CivetServer *server = new CivetServer(cpp_options);
 
-  ctx = mg_start(callbacks, 0, options);
-  if (ctx == nullptr) {
-    std::cerr << "Cannot start CivetWeb - mg_start failed." << std::endl;
-    exit(1);
-  }
+  server->addHandler(rooturi, handler);
 
-  mg_set_request_handler(ctx, rooturi.c_str(), responder, (void*) &resp_str);
+  return server;
 
 }
 
-void start_webserver(std::string &port, std::string &rooturi, const std::string &response) {
+CivetServer * start_webserver(std::string &port, std::string &rooturi, CivetHandler *handler) {
+  const char *options[] = { "document_root", ".", "listening_ports", port.c_str(), 0 };
 
-  std::cout << "root uri is " << rooturi << ":" << port << "/" << std::endl;
-  resp_str = response;
-
-  const char *options[] = { "listening_ports", port.c_str(), 0 };
-  ctx = mg_start(nullptr, 0, options);
-
-  if (ctx == nullptr) {
-    std::cerr << "Cannot start CivetWeb - mg_start failed." << std::endl;
-    exit(1);
+  std::vector<std::string> cpp_options;
+  for (int i = 0; i < (sizeof(options) / sizeof(options[0]) - 1); i++) {
+    cpp_options.push_back(options[i]);
   }
+  CivetServer *server = new CivetServer(cpp_options);
 
-  mg_set_request_handler(ctx, rooturi.c_str(), responder, (void*) &resp_str);
+  server->addHandler(rooturi, handler);
+
+  return server;
 
 }
 
@@ -126,9 +120,9 @@ bool parse_http_components(const std::string &url, std::string &port, std::strin
 
 }
 
-static void stop_webserver() {
-  /* Stop the server */
-  mg_stop(ctx);
+static void stop_webserver(CivetServer *server) {
+  if (server != nullptr)
+    delete server;
 
   /* Un-initialize the library */
   mg_exit_library();

@@ -51,7 +51,7 @@ class YamlConfiguration : public FlowConfiguration {
       : FlowConfiguration(repo, flow_file_repo, content_repo, stream_factory, configuration, path),
         logger_(logging::LoggerFactory<YamlConfiguration>::getLogger()) {
     stream_factory_ = stream_factory;
-    if (IsNullOrEmpty (config_path_)) {
+    if (IsNullOrEmpty(config_path_)) {
       config_path_ = DEFAULT_FLOW_YAML_FILE_NAME;
     }
   }
@@ -102,7 +102,7 @@ class YamlConfiguration : public FlowConfiguration {
    * @return                 the root ProcessGroup node of the flow
    *                           configuration tree
    */
-  std::unique_ptr<core::ProcessGroup> getRootFromPayload(std::string &yamlConfigPayload) {
+  std::unique_ptr<core::ProcessGroup> getRootFromPayload(const std::string &yamlConfigPayload) {
     YAML::Node rootYamlNode = YAML::Load(yamlConfigPayload);
     return getRoot(&rootYamlNode);
   }

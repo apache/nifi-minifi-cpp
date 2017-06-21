@@ -78,7 +78,7 @@ class Site2SitePeer : public org::apache::nifi::minifi::io::BaseStream {
     _url = std::move(ss._url);
   }
   // Destructor
-  virtual ~Site2SitePeer() {
+  ~Site2SitePeer() {
     Close();
   }
   // Set Processor yield period in MilliSecond

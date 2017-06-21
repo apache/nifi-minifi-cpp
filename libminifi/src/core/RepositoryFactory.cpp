@@ -67,13 +67,13 @@ std::shared_ptr<core::Repository> createRepository(const std::string configurati
       return return_obj;
     }
     if (fail_safe) {
-      return std::make_shared < core::Repository > ("fail_safe", "fail_safe", 1, 1, 1);
+      return std::make_shared<core::Repository>("fail_safe", "fail_safe", 1, 1, 1);
     } else {
       throw std::runtime_error("Support for the provided configuration class could not be found");
     }
   } catch (const std::runtime_error &r) {
     if (fail_safe) {
-      return std::make_shared < core::Repository > ("fail_safe", "fail_safe", 1, 1, 1);
+      return std::make_shared<core::Repository>("fail_safe", "fail_safe", 1, 1, 1);
     }
   }
 
@@ -96,13 +96,13 @@ std::shared_ptr<core::ContentRepository> createContentRepository(const std::stri
       return return_obj;
     }
     if (fail_safe) {
-      return std::make_shared < core::repository::FileSystemRepository > ("fail_safe");
+      return std::make_shared<core::repository::FileSystemRepository>("fail_safe");
     } else {
       throw std::runtime_error("Support for the provided configuration class could not be found");
     }
   } catch (const std::runtime_error &r) {
     if (fail_safe) {
-      return std::make_shared < core::repository::FileSystemRepository > ("fail_safe");
+      return std::make_shared<core::repository::FileSystemRepository>("fail_safe");
     }
   }
 

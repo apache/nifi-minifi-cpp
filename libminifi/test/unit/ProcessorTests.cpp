@@ -43,8 +43,9 @@ TEST_CASE("Test Creation of GetFile", "[getfileCreate]") {
   REQUIRE(processor->getName() == "processorname");
 }
 
-TEST_CASE("Test GetFileLikeIt'sThreaded", "[getfileCreate3]") {
+TEST_CASE("Test GetFileMultiple", "[getfileCreate3]") {
   TestController testController;
+  LogTestController::getInstance().setDebug<minifi::processors::GetFile>();
   std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
   std::shared_ptr<core::Processor> processor = std::make_shared<org::apache::nifi::minifi::processors::GetFile>("getfileCreate2");
 
@@ -71,27 +72,30 @@ TEST_CASE("Test GetFileLikeIt'sThreaded", "[getfileCreate3]") {
   processor->addConnection(connection);
   REQUIRE(dir != NULL);
 
-  core::ProcessorNode node(processor);
+  std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(processor);
   std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider = nullptr;
-  core::ProcessContext context(node, controller_services_provider, test_repo, test_repo);
-  core::ProcessSessionFactory factory(&context);
-  context.setProperty(org::apache::nifi::minifi::processors::GetFile::Directory, dir);
+  auto context = std::make_shared<core::ProcessContext>(node, controller_services_provider, repo, repo, content_repo);
+
+  context->setProperty(org::apache::nifi::minifi::processors::GetFile::Directory, dir);
   // replicate 10 threads
   processor->setScheduledState(core::ScheduledState::RUNNING);
-  processor->onSchedule(&context, &factory);
+
+  auto factory = std::make_shared<core::ProcessSessionFactory>(context);
+
+  processor->onSchedule(context, factory);
 
   int prev = 0;
   for (int i = 0; i < 10; i++) {
-    core::ProcessSession session(&context);
+    auto session = std::make_shared<core::ProcessSession>(context);
     REQUIRE(processor->getName() == "getfileCreate2");
 
     std::shared_ptr<core::FlowFile> record;
 
-    processor->onTrigger(&context, &session);
+    processor->onTrigger(context, session);
 
-    provenance::ProvenanceReporter *reporter = session.getProvenanceReporter();
+    provenance::ProvenanceReporter *reporter = session->getProvenanceReporter();
     std::set<provenance::ProvenanceEventRecord*> records = reporter->getEvents();
-    record = session.get();
+    record = session->get();
     REQUIRE(record == nullptr);
     REQUIRE(records.size() == 0);
 
@@ -104,9 +108,9 @@ TEST_CASE("Test GetFileLikeIt'sThreaded", "[getfileCreate3]") {
 
     processor->incrementActiveTasks();
     processor->setScheduledState(core::ScheduledState::RUNNING);
-    processor->onTrigger(&context, &session);
+    processor->onTrigger(context, session);
     unlink(ss.str().c_str());
-    reporter = session.getProvenanceReporter();
+    reporter = session->getProvenanceReporter();
 
     REQUIRE(processor->getName() == "getfileCreate2");
 
@@ -115,14 +119,15 @@ TEST_CASE("Test GetFileLikeIt'sThreaded", "[getfileCreate3]") {
     for (provenance::ProvenanceEventRecord *provEventRecord : records) {
       REQUIRE(provEventRecord->getComponentType() == processor->getName());
     }
-    session.commit();
-    std::shared_ptr<core::FlowFile> ffr = session.get();
+    session->commit();
+    std::shared_ptr<core::FlowFile> ffr = session->get();
 
-    REQUIRE((repo->getRepoMap().size() % 2) == 0);
-    REQUIRE(repo->getRepoMap().size() == (prev + 2));
-    prev += 2;
+    std::cout << repo->getRepoMap().size() << std::endl;
+    REQUIRE(repo->getRepoMap().size() == (prev + 1));
+    prev++;
   }
 }
+
 
 TEST_CASE("LogAttributeTest", "[getfileCreate3]") {
   TestController testController;
@@ -169,6 +174,7 @@ TEST_CASE("LogAttributeTest", "[getfileCreate3]") {
 
 TEST_CASE("Test Find file", "[getfileCreate3]") {
   TestController testController;
+  LogTestController::getInstance().setDebug<minifi::provenance::ProvenanceReporter>();
   std::shared_ptr<TestPlan> plan = testController.createPlan();
   std::shared_ptr<core::Processor> processor = plan->addProcessor("GetFile", "getfileCreate2");
   std::shared_ptr<core::Processor> processorReport = std::make_shared<org::apache::nifi::minifi::core::reporting::SiteToSiteProvenanceReportingTask>(

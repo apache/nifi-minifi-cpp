@@ -201,7 +201,7 @@ ListenHTTP::~ListenHTTP() {
 }
 
 void ListenHTTP::onTrigger(core::ProcessContext *context, core::ProcessSession *session) {
-  std::shared_ptr<FlowFileRecord> flowFile = std::static_pointer_cast < FlowFileRecord > (session->get());
+  std::shared_ptr<FlowFileRecord> flowFile = std::static_pointer_cast<FlowFileRecord>(session->get());
 
   // Do nothing if there are no incoming files
   if (!flowFile) {
@@ -243,7 +243,7 @@ bool ListenHTTP::Handler::handlePost(CivetServer *server, struct mg_connection *
 
   auto session = _processSessionFactory->createSession();
   ListenHTTP::WriteCallback callback(conn, req_info);
-  auto flowFile = std::static_pointer_cast < FlowFileRecord > (session->create());
+  auto flowFile = std::static_pointer_cast<FlowFileRecord>(session->create());
 
   if (!flowFile) {
     sendErrorResponse(conn);
@@ -301,8 +301,10 @@ int64_t ListenHTTP::WriteCallback::process(std::shared_ptr<io::BaseStream> strea
   int64_t tlen = _reqInfo->content_length;
   uint8_t buf[16384];
 
-  while (nlen < tlen) {
-    rlen = tlen - nlen;
+  // if we have no content length we should call mg_read until
+  // there is no data left from the stream to be HTTP/1.1 compliant
+  while (tlen == -1 || nlen < tlen) {
+    rlen = tlen == -1 ? sizeof(buf) : tlen - nlen;
 
     if (rlen > sizeof(buf)) {
       rlen = sizeof(buf);

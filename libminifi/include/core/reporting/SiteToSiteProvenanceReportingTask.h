@@ -53,7 +53,7 @@ class SiteToSiteProvenanceReportingTask : public minifi::RemoteProcessorGroupPor
     batch_size_ = 100;
   }
   //! Destructor
-  virtual ~SiteToSiteProvenanceReportingTask() {
+  ~SiteToSiteProvenanceReportingTask() {
   }
   //! Report Task Name
   static constexpr char const* ReportTaskName = "SiteToSiteProvenanceReportingTask";

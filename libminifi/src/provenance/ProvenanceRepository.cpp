@@ -17,6 +17,7 @@
  */
 
 #include "provenance/ProvenanceRepository.h"
+#include "leveldb/write_batch.h"
 #include <string>
 #include <vector>
 #include "provenance/Provenance.h"
@@ -26,13 +27,39 @@ namespace nifi {
 namespace minifi {
 namespace provenance {
 
+void ProvenanceRepository::flush() {
+  leveldb::WriteBatch batch;
+  std::string key;
+  std::string value;
+  leveldb::ReadOptions options;
+  uint64_t decrement_total = 0;
+  while (keys_to_delete.size_approx() > 0) {
+    if (keys_to_delete.try_dequeue(key)) {
+      db_->Get(options, key, &value);
+      decrement_total += value.size();
+      batch.Delete(key);
+      logger_->log_info("Removing %s", key);
+    }
+  }
+  if (db_->Write(leveldb::WriteOptions(), &batch).ok()) {
+    logger_->log_info("Decrementing %u from a repo size of %u", decrement_total, repo_size_.load());
+    if (decrement_total > repo_size_.load()) {
+      repo_size_ = 0;
+    } else {
+      repo_size_ -= decrement_total;
+    }
+  }
+}
+
 void ProvenanceRepository::run() {
-  // threshold for purge
-  uint64_t purgeThreshold = max_partition_bytes_ * 3 / 4;
   while (running_) {
     std::this_thread::sleep_for(std::chrono::milliseconds(purge_period_));
     uint64_t curTime = getTimeMillis();
-    uint64_t size = repoSize();
+    // threshold for purge
+    uint64_t purgeThreshold = max_partition_bytes_ * 3 / 4;
+
+    uint64_t size = getRepoSize();
+
     if (size >= purgeThreshold) {
       leveldb::Iterator* it = db_->NewIterator(leveldb::ReadOptions());
       for (it->SeekToFirst(); it->Valid(); it->Next()) {
@@ -49,12 +76,13 @@ void ProvenanceRepository::run() {
       }
       delete it;
     }
+    flush();
+    size = getRepoSize();
     if (size > max_partition_bytes_)
       repo_full_ = true;
     else
       repo_full_ = false;
   }
-  return;
 }
 } /* namespace provenance */
 } /* namespace minifi */

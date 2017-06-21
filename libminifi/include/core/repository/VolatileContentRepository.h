@@ -50,8 +50,7 @@ class VolatileContentRepository : public core::ContentRepository, public core::r
   virtual ~VolatileContentRepository() {
     if (!minimize_locking_) {
       std::lock_guard<std::mutex> lock(map_mutex_);
-      for (const auto &item : master_list_)
-      {
+      for (const auto &item : master_list_) {
         delete item.second;
       }
       master_list_.clear();
@@ -84,6 +83,8 @@ class VolatileContentRepository : public core::ContentRepository, public core::r
    */
   virtual std::shared_ptr<io::BaseStream> read(const std::shared_ptr<minifi::ResourceClaim> &claim);
 
+  virtual bool exists(const std::shared_ptr<minifi::ResourceClaim> &streamId);
+
   /**
    * Closes the claim.
    * @return whether or not the claim is associated with content stored in volatile memory.
@@ -104,8 +105,7 @@ class VolatileContentRepository : public core::ContentRepository, public core::r
   virtual void run();
 
   template<typename T2>
-  std::shared_ptr<T2> shared_from_parent()
-  {
+  std::shared_ptr<T2> shared_from_parent() {
     return std::static_pointer_cast<T2>(shared_from_this());
   }
 
