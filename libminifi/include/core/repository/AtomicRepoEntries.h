@@ -185,8 +185,8 @@ class AtomicEntry {
   explicit AtomicEntry(std::atomic<size_t> *total_size, size_t *max_size)
       : write_pending_(false),
         has_value_(false),
-        total_size_(total_size),
-        max_size_(max_size),
+        accumulated_repo_size_(total_size),
+        max_repo_size_(max_size),
         ref_count_(0),
         free_required(false) {
 
@@ -253,8 +253,8 @@ class AtomicEntry {
 	size_t bufferSize = value_.getBufferSize();
 	value_.clearBuffer();
 	has_value_ = false;
-	if (total_size_ != nullptr) {
-	  *total_size_ -= bufferSize;
+	if (accumulated_repo_size_ != nullptr) {
+	  *accumulated_repo_size_ -= bufferSize;
 	}
 	free_required = false;  
       }
@@ -323,8 +323,8 @@ class AtomicEntry {
       size_t bufferSize = value_.getBufferSize();
       value_.clearBuffer();
       has_value_ = false;
-      if (total_size_ != nullptr) {
-	*total_size_ -= bufferSize;
+      if (accumulated_repo_size_ != nullptr) {
+	*accumulated_repo_size_ -= bufferSize;
       }
       free_required = false;
     }
@@ -374,8 +374,8 @@ class AtomicEntry {
       value_.clearBuffer();
       ref = value_.getKey();
       has_value_ = false;
-      if (total_size_ != nullptr) {
-        *total_size_ -= bufferSize;
+      if (accumulated_repo_size_ != nullptr) {
+        *accumulated_repo_size_ -= bufferSize;
       }
 
     }
@@ -416,8 +416,8 @@ class AtomicEntry {
     size_t bufferSize = value_.getBufferSize();
     value_.clearBuffer();
     has_value_ = false;
-    if (total_size_ != nullptr) {
-      *total_size_ -= bufferSize;
+    if (accumulated_repo_size_ != nullptr) {
+      *accumulated_repo_size_ -= bufferSize;
     }
     free_required = false;
     try_unlock();
@@ -441,14 +441,14 @@ class AtomicEntry {
       return false;
     }
 
-    if ((total_size_ != nullptr && max_size_ != nullptr) && (*total_size_ + size > *max_size_)) {
+    if ((accumulated_repo_size_ != nullptr && max_repo_size_ != nullptr) && (*accumulated_repo_size_ + size > *max_repo_size_)) {
       // can't support this write
       try_unlock();
       return false;
     }
 
     value_.append(buffer, size);
-    (*total_size_) += size;
+    (*accumulated_repo_size_) += size;
     try_unlock();
     return true;
   }
@@ -478,9 +478,9 @@ class AtomicEntry {
   }
 
   // atomic size pointer.
-  std::atomic<size_t> *total_size_;
+  std::atomic<size_t> *accumulated_repo_size_;
   // max size
-  size_t *max_size_;
+  size_t *max_repo_size_;
   // determines if a write is pending.
   std::atomic<bool> write_pending_;
   // used to determine if a value is present in this atomic entry.

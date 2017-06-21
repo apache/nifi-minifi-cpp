@@ -138,7 +138,8 @@ class VolatileRepository : public core::Repository, public std::enable_shared_fr
   std::atomic<size_t> current_size_;
   // current index.
   std::atomic<uint16_t> current_index_;
-  // value vector.
+  // value vector that exists for non blocking iteration over
+  // objects that store data for this repo instance.
   std::vector<AtomicEntry<T>*> value_vector_;
 
   // max count we are allowed to store.
