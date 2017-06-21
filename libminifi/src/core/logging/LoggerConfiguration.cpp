@@ -18,6 +18,7 @@
  * limitations under the License.
  */
 
+#include "core/logging/LoggerConfiguration.h"
 #include <algorithm>
 #include <vector>
 #include <queue>
@@ -26,7 +27,6 @@
 #include <string>
 
 #include "core/Core.h"
-#include "core/logging/LoggerConfiguration.h"
 #include "utils/StringUtils.h"
 
 #include "spdlog/spdlog.h"

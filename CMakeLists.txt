@@ -116,7 +116,7 @@ set(CPACK_SOURCE_PACKAGE_FILE_NAME "${ASSEMBLY_BASE_NAME}-source")
 set(CPACK_SOURCE_IGNORE_FILES "/docs/generated/;/build/;~$;${CPACK_SOURCE_IGNORE_FILES};${CMAKE_SOURCE_DIR}/.git/;${CMAKE_SOURCE_DIR}/.idea/;${CMAKE_SOURCE_DIR}/cmake-build-debug/")
 
 # Generate binary assembly
-install(FILES conf/minifi.properties conf/minifi-log.properties conf/config.yml
+install(FILES conf/minifi.properties conf/minifi-log.properties conf/minifi-uid.properties conf/config.yml
         DESTINATION conf
         COMPONENT bin)
 

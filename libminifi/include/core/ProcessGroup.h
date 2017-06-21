@@ -34,6 +34,7 @@
 #include "core/logging/Logger.h"
 #include "controller/ControllerServiceNode.h"
 #include "controller/ControllerServiceMap.h"
+#include "utils/Id.h"
 
 namespace org {
 namespace apache {
@@ -203,6 +204,7 @@ class ProcessGroup {
   // Only support pass by reference or pointer
   ProcessGroup(const ProcessGroup &parent);
   ProcessGroup &operator=(const ProcessGroup &parent);
+  static std::shared_ptr<utils::IdGenerator> id_generator_;
 };
 } /* namespace core */
 } /* namespace minifi */

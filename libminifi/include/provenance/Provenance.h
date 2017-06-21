@@ -38,6 +38,7 @@
 #include "core/logging/LoggerConfiguration.h"
 #include "ResourceClaim.h"
 #include "io/Serializable.h"
+#include "utils/Id.h"
 #include "utils/TimeUtil.h"
 
 namespace org {
@@ -160,21 +161,9 @@ class ProvenanceEventRecord : protected org::apache::nifi::minifi::io::Serializa
   /*!
    * Create a new provenance event record
    */
-  ProvenanceEventRecord(ProvenanceEventType event, std::string componentId, std::string componentType)
-      : logger_(logging::LoggerFactory<ProvenanceEventRecord>::getLogger()) {
-    _eventType = event;
-    _componentId = componentId;
-    _componentType = componentType;
-    _eventTime = getTimeMillis();
-    char eventIdStr[37];
-    // Generate the global UUID for th event
-    uuid_generate(_eventId);
-    uuid_unparse_lower(_eventId, eventIdStr);
-    _eventIdStr = eventIdStr;
-  }
+  ProvenanceEventRecord(ProvenanceEventType event, std::string componentId, std::string componentType);
 
-  ProvenanceEventRecord()
-      : logger_(logging::LoggerFactory<ProvenanceEventRecord>::getLogger()) {
+  ProvenanceEventRecord() {
     _eventTime = getTimeMillis();
   }
 
@@ -415,15 +404,12 @@ class ProvenanceEventRecord : protected org::apache::nifi::minifi::io::Serializa
   std::string _alternateIdentifierUri;
 
  private:
-
-  // Logger
-  std::shared_ptr<logging::Logger> logger_;
-
   // Prevent default copy constructor and assignment operation
   // Only support pass by reference or pointer
   ProvenanceEventRecord(const ProvenanceEventRecord &parent);
   ProvenanceEventRecord &operator=(const ProvenanceEventRecord &parent);
-
+  static std::shared_ptr<logging::Logger> logger_;
+  static std::shared_ptr<utils::IdGenerator> id_generator_;
 };
 
 // Provenance Reporter

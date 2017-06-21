@@ -23,6 +23,9 @@
 #include <string>
 #include <uuid/uuid.h>
 #include <cxxabi.h>
+
+#include "utils/Id.h"
+
 /**
  * namespace aliasing
  */
@@ -97,7 +100,7 @@ class CoreComponent {
       : name_(name) {
     if (!uuid)
       // Generate the global UUID for the flow record
-      uuid_generate(uuid_);
+      id_generator_->generate(uuid_);
     else
       uuid_copy(uuid_, uuid);
 
@@ -156,6 +159,9 @@ class CoreComponent {
 
   // Connectable's name
   std::string name_;
+
+ private:
+  static std::shared_ptr<utils::IdGenerator> id_generator_;
 };
 
 namespace logging {

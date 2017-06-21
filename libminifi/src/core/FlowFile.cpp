@@ -21,11 +21,16 @@
 #include <string>
 #include <set>
 #include "core/logging/LoggerConfiguration.h"
+#include "utils/Id.h"
+
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
 namespace core {
+
+std::shared_ptr<utils::IdGenerator> FlowFile::id_generator_ = utils::IdGenerator::getIdGenerator();
+std::shared_ptr<logging::Logger> FlowFile::logger_ = logging::LoggerFactory<FlowFile>::getLogger();
 
 FlowFile::FlowFile()
     : size_(0),
@@ -38,15 +43,14 @@ FlowFile::FlowFile()
       claim_(nullptr),
       marked_delete_(false),
       connection_(nullptr),
-      original_connection_(),
-      logger_(logging::LoggerFactory<FlowFile>::getLogger()) {
+      original_connection_() {
   entry_date_ = getTimeMillis();
   lineage_start_date_ = entry_date_;
 
   char uuidStr[37];
 
   // Generate the global UUID for the flow record
-  uuid_generate(uuid_);
+  id_generator_->generate(uuid_);
 
   uuid_unparse_lower(uuid_, uuidStr);
   uuid_str_ = uuidStr;

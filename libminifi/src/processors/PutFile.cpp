@@ -38,6 +38,8 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
+std::shared_ptr<utils::IdGenerator> PutFile::id_generator_ = utils::IdGenerator::getIdGenerator();
+
 core::Property PutFile::Directory("Output Directory", "The output directory to which to put files", ".");
 core::Property PutFile::ConflictResolution("Conflict Resolution Strategy", "Indicates what should happen when a file with the same name already exists in the output directory",
                                            CONFLICT_RESOLUTION_STRATEGY_FAIL);
@@ -87,7 +89,7 @@ void PutFile::onTrigger(core::ProcessContext *context, core::ProcessSession *ses
   // Generate a safe (universally-unique) temporary filename on the same partition
   char tmpFileUuidStr[37];
   uuid_t tmpFileUuid;
-  uuid_generate(tmpFileUuid);
+  id_generator_->generate(tmpFileUuid);
   uuid_unparse_lower(tmpFileUuid, tmpFileUuidStr);
   std::stringstream tmpFileSs;
   tmpFileSs << directory_ << "/." << filename << "." << tmpFileUuidStr;
