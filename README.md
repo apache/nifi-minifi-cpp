@@ -344,10 +344,10 @@ Additionally, users can utilize the MiNiFi Toolkit Converter (version 0.0.1 - sc
 
 ### UID generation
 
-MiNiFi need to generate many unique identifiers in the course of operations.  There are a few different uid implementations available that can be configured in minifi-uid.properties.
+MiNiFi needs to generate many unique identifiers in the course of operations.  There are a few different uid implementations available that can be configured in minifi-uid.properties.
 
 Implementation for uid generation can be selected using the uid.implementation property values:
-1. time - use uuid_generate_time
+1. time - use uuid_generate_time (default option if the file or property value is missing or invalid)
 2. random - use uuid_generate_random
 3. uuid_default - use uuid_generate (will attempt to use uuid_generate_random and fall back to uuid_generate_time if no high quality randomness is available)
 4. minifi_uid - use custom uid algorthim
