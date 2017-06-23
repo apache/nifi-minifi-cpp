@@ -27,6 +27,7 @@
 #include "io/validation.h"
 #include "io/StreamFactory.h"
 #include "core/logging/LoggerConfiguration.h"
+#include "utils/Id.h"
 
 namespace org {
 namespace apache {
@@ -274,8 +275,9 @@ class YamlConfiguration : public FlowConfiguration {
 
  protected:
   std::shared_ptr<io::StreamFactory> stream_factory_;
-   private:
+ private:
   std::shared_ptr<logging::Logger> logger_;
+  static std::shared_ptr<utils::IdGenerator> id_generator_;
 };
 
 } /* namespace core */

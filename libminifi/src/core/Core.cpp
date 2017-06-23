@@ -17,12 +17,16 @@
  */
 
 #include "core/Core.h"
+#include <memory>
 #include <string>
+
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
 namespace core {
+
+std::shared_ptr<utils::IdGenerator> CoreComponent::id_generator_ = utils::IdGenerator::getIdGenerator();
 
 // Set UUID
 void CoreComponent::setUUID(uuid_t uuid) {

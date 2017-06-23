@@ -24,11 +24,13 @@
 #include <map>
 #include <mutex>
 #include <string>
+#include "spdlog/spdlog.h"
+#include "spdlog/formatter.h"
+
+#include "core/Core.h"
 #include "core/logging/Logger.h"
 #include "properties/Properties.h"
 
-#include "spdlog/spdlog.h"
-#include "spdlog/formatter.h"
 
 namespace org {
 namespace apache {

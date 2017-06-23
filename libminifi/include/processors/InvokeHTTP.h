@@ -32,6 +32,7 @@
 #include "controllers/SSLContextService.h"
 #include "utils/ByteInputCallBack.h"
 #include "core/logging/LoggerConfiguration.h"
+#include "utils/Id.h"
 #include "utils/HTTPUtils.h"
 
 namespace org {
@@ -183,6 +184,7 @@ class InvokeHTTP : public core::Processor {
 
  private:
   std::shared_ptr<logging::Logger> logger_;
+  static std::shared_ptr<utils::IdGenerator> id_generator_;
 };
 
 REGISTER_RESOURCE(InvokeHTTP)

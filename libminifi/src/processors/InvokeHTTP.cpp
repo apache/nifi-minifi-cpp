@@ -49,6 +49,8 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
+std::shared_ptr<utils::IdGenerator> InvokeHTTP::id_generator_ = utils::IdGenerator::getIdGenerator();
+
 const char *InvokeHTTP::ProcessorName = "InvokeHTTP";
 
 core::Property InvokeHTTP::Method("HTTP Method", "HTTP request method (GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS). "
@@ -235,7 +237,7 @@ inline bool InvokeHTTP::matches(const std::string &value, const std::string &sre
 
 std::string InvokeHTTP::generateId() {
   uuid_t txId;
-  uuid_generate(txId);
+  id_generator_->generate(txId);
   char uuidStr[37];
   uuid_unparse_lower(txId, uuidStr);
   return uuidStr;

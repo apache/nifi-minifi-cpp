@@ -47,6 +47,8 @@ namespace apache {
 namespace nifi {
 namespace minifi {
 
+std::shared_ptr<utils::IdGenerator> FlowController::id_generator_ = utils::IdGenerator::getIdGenerator();
+
 #define DEFAULT_CONFIG_NAME "conf/flow.yml"
 
 FlowController::FlowController(std::shared_ptr<core::Repository> provenance_repo, std::shared_ptr<core::Repository> flow_file_repo, std::shared_ptr<Configure> configure,
@@ -74,7 +76,7 @@ FlowController::FlowController(std::shared_ptr<core::Repository> provenance_repo
   if (IsNullOrEmpty(configuration_)) {
     throw std::runtime_error("Must supply a configuration.");
   }
-  uuid_generate(uuid_);
+  id_generator_->generate(uuid_);
   setUUID(uuid_);
 
   // Setup the default values

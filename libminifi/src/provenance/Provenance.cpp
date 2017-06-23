@@ -16,14 +16,16 @@
  * limitations under the License.
  */
 
+#include "provenance/Provenance.h"
+
 #include <arpa/inet.h>
 #include <cstdint>
 #include <memory>
 #include <string>
 #include <vector>
+
 #include "io/DataStream.h"
 #include "io/Serializable.h"
-#include "provenance/Provenance.h"
 #include "core/logging/Logger.h"
 #include "core/Relationship.h"
 #include "FlowController.h"
@@ -34,8 +36,23 @@ namespace nifi {
 namespace minifi {
 namespace provenance {
 
+std::shared_ptr<utils::IdGenerator> ProvenanceEventRecord::id_generator_ = utils::IdGenerator::getIdGenerator();
+std::shared_ptr<logging::Logger> ProvenanceEventRecord::logger_ = logging::LoggerFactory<ProvenanceEventRecord>::getLogger();
+
 const char *ProvenanceEventRecord::ProvenanceEventTypeStr[REPLAY + 1] = { "CREATE", "RECEIVE", "FETCH", "SEND", "DOWNLOAD", "DROP", "EXPIRE", "FORK", "JOIN", "CLONE", "CONTENT_MODIFIED",
     "ATTRIBUTES_MODIFIED", "ROUTE", "ADDINFO", "REPLAY" };
+
+ProvenanceEventRecord::ProvenanceEventRecord(ProvenanceEventRecord::ProvenanceEventType event, std::string componentId, std::string componentType) {
+  _eventType = event;
+  _componentId = componentId;
+  _componentType = componentType;
+  _eventTime = getTimeMillis();
+  char eventIdStr[37];
+  // Generate the global UUID for th event
+  id_generator_->generate(_eventId);
+  uuid_unparse_lower(_eventId, eventIdStr);
+  _eventIdStr = eventIdStr;
+}
 
 // DeSerialize
 bool ProvenanceEventRecord::DeSerialize(const std::shared_ptr<core::Repository> &repo, std::string key) {

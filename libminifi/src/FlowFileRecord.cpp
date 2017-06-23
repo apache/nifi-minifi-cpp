@@ -37,13 +37,12 @@ namespace apache {
 namespace nifi {
 namespace minifi {
 
+std::shared_ptr<logging::Logger> FlowFileRecord::logger_ = logging::LoggerFactory<FlowFileRecord>::getLogger();
 std::atomic<uint64_t> FlowFileRecord::local_flow_seq_number_(0);
 
 FlowFileRecord::FlowFileRecord(std::shared_ptr<core::Repository> flow_repository, std::map<std::string, std::string> attributes, std::shared_ptr<ResourceClaim> claim)
     : FlowFile(),
-      flow_repository_(flow_repository),
-      logger_(logging::LoggerFactory<FlowFileRecord>::getLogger()) {
-
+      flow_repository_(flow_repository) {
   id_ = local_flow_seq_number_.load();
   claim_ = claim;
   // Increase the local ID for the flow record
@@ -68,8 +67,7 @@ FlowFileRecord::FlowFileRecord(std::shared_ptr<core::Repository> flow_repository
 FlowFileRecord::FlowFileRecord(std::shared_ptr<core::Repository> flow_repository, std::shared_ptr<core::FlowFile> &event, const std::string &uuidConnection)
     : FlowFile(),
       snapshot_(""),
-      flow_repository_(flow_repository),
-      logger_(logging::LoggerFactory<FlowFileRecord>::getLogger()) {
+      flow_repository_(flow_repository) {
   entry_date_ = event->getEntryDate();
   lineage_start_date_ = event->getlineageStartDate();
   lineage_Identifiers_ = event->getlineageIdentifiers();
@@ -88,8 +86,7 @@ FlowFileRecord::FlowFileRecord(std::shared_ptr<core::Repository> flow_repository
     : FlowFile(),
       uuid_connection_(""),
       snapshot_(""),
-      flow_repository_(flow_repository),
-      logger_(logging::LoggerFactory<FlowFileRecord>::getLogger()) {
+      flow_repository_(flow_repository) {
 }
 
 FlowFileRecord::~FlowFileRecord() {
