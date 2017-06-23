@@ -627,7 +627,7 @@ bool keepSource,
 }
 
 void ProcessSession::import(std::string source, std::shared_ptr<core::FlowFile> &&flow,
-  bool keepSource, uint64_t offset, std::string inputDelimiter) {
+  bool keepSource, uint64_t offset, char inputDelimiter) {
   std::shared_ptr<ResourceClaim> claim = std::make_shared<ResourceClaim>();
 
   char *buf = NULL;
@@ -643,10 +643,9 @@ void ProcessSession::import(std::string source, std::shared_ptr<core::FlowFile> 
 
     if (fs.is_open() && input.is_open()) {
       // Open the source file and stream to the flow file
-      logger_->log_info("Running the getline operations .....");
       input.seekg(offset, fs.beg);
       while (input.good()) {
-        input.getline(buf, size, '|');
+        input.getline(buf, size, inputDelimiter);
         if (input)
           fs.write(buf, size);
         else

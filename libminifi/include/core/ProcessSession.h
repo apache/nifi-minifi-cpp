@@ -124,7 +124,7 @@ class ProcessSession {
   bool keepSource = true,
               uint64_t offset = 0);
   void import(std::string source, std::shared_ptr<core::FlowFile> &&flow,
-  bool keepSource, uint64_t offset, std::string inputDelimiter);
+  bool keepSource, uint64_t offset, char inputDelimiter);
 
 // Prevent default copy constructor and assignment operation
 // Only support pass by reference or pointer

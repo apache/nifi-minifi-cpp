@@ -50,7 +50,7 @@ core::Property TailFile::FileName("File to Tail", "Fully-qualified filename of t
 core::Property TailFile::StateFile("State File", "Specifies the file that should be used for storing state about"
                                    " what data has been ingested so that upon restart NiFi can resume from where it left off",
                                    "TailFileState");
-core::Property TailFile::Delimiter("Input Delimiter", "Specifies the std::string that should be used for delimiting the data being tailed"
+core::Property TailFile::Delimiter("Input Delimiter", "Specifies the character that should be used for delimiting the data being tailed"
                                     "from the incoming file.", "\n");
 core::Relationship TailFile::Success("success", "All files are routed to success");
 
@@ -68,7 +68,6 @@ void TailFile::initialize() {
 }
 
 void TailFile::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory) {
-  logger_->log_info("TailFile onSchedule called!!!!!!!");
   std::string value;
 
   if (context->getProperty(Delimiter.getName(), value)) {
@@ -250,10 +249,9 @@ void TailFile::onTrigger(core::ProcessContext *context, core::ProcessSession *se
     flowFile->addKeyedAttribute(ABSOLUTE_PATH, fullPath);
 
     if (!this->_delimiter.empty()) {
-      logger_->log_info("Reading Tailefile by delimtier!!!!!");
-      session->import(fullPath, flowFile, true, this->_currentTailFilePosition, this->_delimiter);
+      char delim = this->_delimiter.c_str()[0];
+      session->import(fullPath, flowFile, true, this->_currentTailFilePosition, delim);
     } else {
-      logger_->log_info("Tailfile WITHOUT DELIMITER");
       session->import(fullPath, flowFile, true, this->_currentTailFilePosition);
     }
 
