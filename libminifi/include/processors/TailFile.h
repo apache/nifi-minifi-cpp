@@ -54,10 +54,18 @@ class TailFile : public core::Processor {
   // Supported Properties
   static core::Property FileName;
   static core::Property StateFile;
+  static core::Property Delimiter;
   // Supported Relationships
   static core::Relationship Success;
 
  public:
+  /**
+   * Function that's executed when the processor is scheduled.
+   * @param context process context.
+   * @param sessionFactory process session factory that is used when creating
+   * ProcessSession objects.
+   */
+  void onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory);
   // OnTrigger method, implemented by NiFi TailFile
   virtual void onTrigger(core::ProcessContext *context, core::ProcessSession *session);
   // Initialize, over write by NiFi TailFile
@@ -75,6 +83,8 @@ class TailFile : public core::Processor {
   std::string _stateFile;
   // State related to the tailed file
   std::string _currentTailFileName;
+  // Delimiter for the data incoming from the tailed file.
+  std::string _delimiter;
   // determine if state is recovered;
   bool _stateRecovered;
   uint64_t _currentTailFilePosition;

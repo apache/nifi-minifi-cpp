@@ -50,6 +50,8 @@ core::Property TailFile::FileName("File to Tail", "Fully-qualified filename of t
 core::Property TailFile::StateFile("State File", "Specifies the file that should be used for storing state about"
                                    " what data has been ingested so that upon restart NiFi can resume from where it left off",
                                    "TailFileState");
+core::Property TailFile::Delimiter("Input Delimiter", "Specifies the std::string that should be used for delimiting the data being tailed"
+                                    "from the incoming file.", "\n");
 core::Relationship TailFile::Success("success", "All files are routed to success");
 
 void TailFile::initialize() {
@@ -57,11 +59,21 @@ void TailFile::initialize() {
   std::set<core::Property> properties;
   properties.insert(FileName);
   properties.insert(StateFile);
+  properties.insert(Delimiter);
   setSupportedProperties(properties);
   // Set the supported relationships
   std::set<core::Relationship> relationships;
   relationships.insert(Success);
   setSupportedRelationships(relationships);
+}
+
+void TailFile::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory) {
+  logger_->log_info("TailFile onSchedule called!!!!!!!");
+  std::string value;
+
+  if (context->getProperty(Delimiter.getName(), value)) {
+    _delimiter = value;
+  }
 }
 
 std::string TailFile::trimLeft(const std::string& s) {
@@ -224,7 +236,7 @@ void TailFile::onTrigger(core::ProcessContext *context, core::ProcessSession *se
   struct stat statbuf;
   if (stat(fullPath.c_str(), &statbuf) == 0) {
     if (statbuf.st_size <= this->_currentTailFilePosition) {
-      // there are no new input for the current tail fil
+      // there are no new input for the current tail file
       context->yield();
       return;
     }
@@ -236,7 +248,15 @@ void TailFile::onTrigger(core::ProcessContext *context, core::ProcessSession *se
     std::string extension = _currentTailFileName.substr(found + 1);
     flowFile->updateKeyedAttribute(PATH, fileLocation);
     flowFile->addKeyedAttribute(ABSOLUTE_PATH, fullPath);
-    session->import(fullPath, flowFile, true, this->_currentTailFilePosition);
+
+    if (!this->_delimiter.empty()) {
+      logger_->log_info("Reading Tailefile by delimtier!!!!!");
+      session->import(fullPath, flowFile, true, this->_currentTailFilePosition, this->_delimiter);
+    } else {
+      logger_->log_info("Tailfile WITHOUT DELIMITER");
+      session->import(fullPath, flowFile, true, this->_currentTailFilePosition);
+    }
+
     session->transfer(flowFile, Success);
     logger_->log_info("TailFile %s for %d bytes", _currentTailFileName.c_str(), flowFile->getSize());
     std::string logName = baseName + "." + std::to_string(_currentTailFilePosition) + "-" + std::to_string(_currentTailFilePosition + flowFile->getSize()) + "." + extension;

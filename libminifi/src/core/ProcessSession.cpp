@@ -627,6 +627,83 @@ bool keepSource,
 }
 
 void ProcessSession::import(std::string source, std::shared_ptr<core::FlowFile> &&flow,
+  bool keepSource, uint64_t offset, std::string inputDelimiter) {
+  std::shared_ptr<ResourceClaim> claim = std::make_shared<ResourceClaim>();
+
+  char *buf = NULL;
+  int size = 4096;
+  buf = new char[size];
+
+  try {
+    std::ofstream fs;
+    uint64_t startTime = getTimeMillis();
+    fs.open(claim->getContentFullPath().c_str(), std::fstream::out | std::fstream::binary | std::fstream::trunc);
+    std::ifstream input;
+    input.open(source.c_str(), std::fstream::in | std::fstream::binary);
+
+    if (fs.is_open() && input.is_open()) {
+      // Open the source file and stream to the flow file
+      logger_->log_info("Running the getline operations .....");
+      input.seekg(offset, fs.beg);
+      while (input.good()) {
+        input.getline(buf, size, '|');
+        if (input)
+          fs.write(buf, size);
+        else
+          fs.write(buf, input.gcount());
+      }
+
+      if (fs.good() && fs.tellp() >= 0) {
+        flow->setSize(fs.tellp());
+        flow->setOffset(0);
+        if (flow->getResourceClaim() != nullptr) {
+          // Remove the old claim
+          flow->getResourceClaim()->decreaseFlowFileRecordOwnedCount();
+          flow->clearResourceClaim();
+        }
+        flow->setResourceClaim(claim);
+        claim->increaseFlowFileRecordOwnedCount();
+
+        logger_->log_debug("Import offset %d length %d into content %s for FlowFile UUID %s", flow->getOffset(), flow->getSize(), flow->getResourceClaim()->getContentFullPath().c_str(),
+                           flow->getUUIDStr().c_str());
+
+        fs.close();
+        input.close();
+        if (!keepSource)
+          std::remove(source.c_str());
+        std::string details = process_context_->getProcessorNode().getName() + " modify flow record content " + flow->getUUIDStr();
+        uint64_t endTime = getTimeMillis();
+        provenance_report_->modifyContent(flow, details, endTime - startTime);
+      } else {
+        fs.close();
+        input.close();
+        throw Exception(FILE_OPERATION_EXCEPTION, "File Import Error");
+      }
+    } else {
+      throw Exception(FILE_OPERATION_EXCEPTION, "File Import Error");
+    }
+
+    delete[] buf;
+  } catch (std::exception &exception) {
+    if (flow && flow->getResourceClaim() == claim) {
+      flow->getResourceClaim()->decreaseFlowFileRecordOwnedCount();
+      flow->clearResourceClaim();
+    }
+    logger_->log_debug("Caught Exception %s", exception.what());
+    delete[] buf;
+    throw;
+  } catch (...) {
+    if (flow && flow->getResourceClaim() == claim) {
+      flow->getResourceClaim()->decreaseFlowFileRecordOwnedCount();
+      flow->clearResourceClaim();
+    }
+    logger_->log_debug("Caught Exception during process session write");
+    delete[] buf;
+    throw;
+  }
+}
+
+void ProcessSession::import(std::string source, std::shared_ptr<core::FlowFile> &&flow,
 bool keepSource,
                             uint64_t offset) {
   std::shared_ptr<ResourceClaim> claim = std::make_shared<ResourceClaim>();
