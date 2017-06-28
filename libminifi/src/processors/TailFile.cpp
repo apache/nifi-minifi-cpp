@@ -51,7 +51,7 @@ core::Property TailFile::StateFile("State File", "Specifies the file that should
                                    " what data has been ingested so that upon restart NiFi can resume from where it left off",
                                    "TailFileState");
 core::Property TailFile::Delimiter("Input Delimiter", "Specifies the character that should be used for delimiting the data being tailed"
-                                    "from the incoming file.", "\n");
+                                    "from the incoming file.", "");
 core::Relationship TailFile::Success("success", "All files are routed to success");
 
 void TailFile::initialize() {
@@ -233,6 +233,7 @@ void TailFile::onTrigger(core::ProcessContext *context, core::ProcessSession *se
   checkRollOver(fileLocation, fileName);
   std::string fullPath = fileLocation + "/" + _currentTailFileName;
   struct stat statbuf;
+
   if (stat(fullPath.c_str(), &statbuf) == 0) {
     if (statbuf.st_size <= this->_currentTailFilePosition) {
       // there are no new input for the current tail file
@@ -250,17 +251,32 @@ void TailFile::onTrigger(core::ProcessContext *context, core::ProcessSession *se
 
     if (!this->_delimiter.empty()) {
       char delim = this->_delimiter.c_str()[0];
-      session->import(fullPath, flowFile, true, this->_currentTailFilePosition, delim);
+      logger_->log_info("Running the process with a delimiter");
+      std::shared_ptr<std::vector<core::FlowFile>> flowFiles = std::make_shared<std::vector<core::FlowFile>>();
+      session->import(fullPath, flowFiles, true, this->_currentTailFilePosition, delim);
+      logger_->log_info("%d flowfiles were received from TailFile input", flowFiles->size());
+
+      for(core::FlowFile &ff : *flowFiles) {
+        session->transfer(std::make_shared<core::FlowFile>(ff), Success);
+        logger_->log_info("TailFile %s for %d bytes", _currentTailFileName.c_str(), ff.getSize());
+        std::string logName = baseName + "." + std::to_string(_currentTailFilePosition) + "-" + std::to_string(_currentTailFilePosition + flowFile->getSize()) + "." + extension;
+        flowFile->updateKeyedAttribute(FILENAME, logName);
+        this->_currentTailFilePosition += flowFile->getSize();
+        storeState();
+      }
+
     } else {
       session->import(fullPath, flowFile, true, this->_currentTailFilePosition);
+      session->transfer(flowFile, Success);
+      logger_->log_info("TailFile %s for %d bytes", _currentTailFileName.c_str(), flowFile->getSize());
+      std::string logName = baseName + "." + std::to_string(_currentTailFilePosition) + "-" + std::to_string(_currentTailFilePosition + flowFile->getSize()) + "." + extension;
+      flowFile->updateKeyedAttribute(FILENAME, logName);
+      this->_currentTailFilePosition += flowFile->getSize();
+      storeState();
     }
 
-    session->transfer(flowFile, Success);
-    logger_->log_info("TailFile %s for %d bytes", _currentTailFileName.c_str(), flowFile->getSize());
-    std::string logName = baseName + "." + std::to_string(_currentTailFilePosition) + "-" + std::to_string(_currentTailFilePosition + flowFile->getSize()) + "." + extension;
-    flowFile->updateKeyedAttribute(FILENAME, logName);
-    this->_currentTailFilePosition += flowFile->getSize();
-    storeState();
+  } else {
+    logger_->log_warn("Unable to stat file %s", fullPath.c_str());
   }
 }
 
