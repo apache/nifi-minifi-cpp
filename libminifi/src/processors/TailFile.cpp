@@ -240,32 +240,34 @@ void TailFile::onTrigger(core::ProcessContext *context, core::ProcessSession *se
       context->yield();
       return;
     }
-    std::shared_ptr<FlowFileRecord> flowFile = std::static_pointer_cast<FlowFileRecord>(session->create());
-    if (!flowFile)
-      return;
-    std::size_t found = _currentTailFileName.find_last_of(".");
-    std::string baseName = _currentTailFileName.substr(0, found);
-    std::string extension = _currentTailFileName.substr(found + 1);
-    flowFile->updateKeyedAttribute(PATH, fileLocation);
-    flowFile->addKeyedAttribute(ABSOLUTE_PATH, fullPath);
+
+      std::size_t found = _currentTailFileName.find_last_of(".");
+      std::string baseName = _currentTailFileName.substr(0, found);
+      std::string extension = _currentTailFileName.substr(found + 1);
 
     if (!this->_delimiter.empty()) {
       char delim = this->_delimiter.c_str()[0];
-      logger_->log_info("Running the process with a delimiter");
-      std::shared_ptr<std::vector<core::FlowFile>> flowFiles = std::make_shared<std::vector<core::FlowFile>>();
+      std::shared_ptr<std::vector<std::shared_ptr<FlowFileRecord>>> flowFiles = std::make_shared<std::vector<std::shared_ptr<FlowFileRecord>>>();
       session->import(fullPath, flowFiles, true, this->_currentTailFilePosition, delim);
       logger_->log_info("%d flowfiles were received from TailFile input", flowFiles->size());
 
-      for(core::FlowFile &ff : *flowFiles) {
-        session->transfer(std::make_shared<core::FlowFile>(ff), Success);
-        logger_->log_info("TailFile %s for %d bytes", _currentTailFileName.c_str(), ff.getSize());
-        std::string logName = baseName + "." + std::to_string(_currentTailFilePosition) + "-" + std::to_string(_currentTailFilePosition + flowFile->getSize()) + "." + extension;
-        flowFile->updateKeyedAttribute(FILENAME, logName);
-        this->_currentTailFilePosition += flowFile->getSize();
+      for(std::shared_ptr<FlowFileRecord> ffr : *flowFiles) {
+        logger_->log_info("TailFile %s for %d bytes", _currentTailFileName.c_str(), ffr->getSize());
+        std::string logName = baseName + "." + std::to_string(_currentTailFilePosition) + "-" + std::to_string(_currentTailFilePosition + ffr->getSize()) + "." + extension;
+          ffr->updateKeyedAttribute(PATH, fileLocation);
+          ffr->addKeyedAttribute(ABSOLUTE_PATH, fullPath);
+        ffr->updateKeyedAttribute(FILENAME, logName);
+          session->transfer(ffr, Success);
+        this->_currentTailFilePosition += ffr->getSize() + 1;    //TODO: Why am I having to add +1 here to get the output correct as expected????
         storeState();
       }
 
     } else {
+        std::shared_ptr<FlowFileRecord> flowFile = std::static_pointer_cast<FlowFileRecord>(session->create());
+        if (!flowFile)
+            return;
+        flowFile->updateKeyedAttribute(PATH, fileLocation);
+        flowFile->addKeyedAttribute(ABSOLUTE_PATH, fullPath);
       session->import(fullPath, flowFile, true, this->_currentTailFilePosition);
       session->transfer(flowFile, Success);
       logger_->log_info("TailFile %s for %d bytes", _currentTailFileName.c_str(), flowFile->getSize());
