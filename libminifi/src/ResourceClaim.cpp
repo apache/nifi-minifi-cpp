@@ -42,18 +42,15 @@ ResourceClaim::ResourceClaim(std::shared_ptr<core::StreamManager<ResourceClaim>>
       claim_manager_(claim_manager),
       deleted_(false),
       logger_(logging::LoggerFactory<ResourceClaim>::getLogger()) {
-    // Create the full content path for the content
+  // Create the full content path for the content
   _contentFullPath = contentDirectory + "/" + non_repeating_string_generator_.generate();
   logger_->log_debug("Resource Claim created %s", _contentFullPath);
 }
 
 ResourceClaim::ResourceClaim(const std::string path, std::shared_ptr<core::StreamManager<ResourceClaim>> claim_manager, bool deleted)
     : claim_manager_(claim_manager),
-      deleted_(deleted)
-{
+      deleted_(deleted) {
   _contentFullPath = path;
-
-
 }
 
 } /* namespace minifi */
