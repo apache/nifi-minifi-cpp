@@ -200,7 +200,7 @@ TEST_CASE("TestTLSContextCreation", "[TestSocket6]") {
   std::vector<std::future<bool>> futures;
   for (int i = 0; i < 20; i++) {
     std::function<bool()> f_ex = createSocket;
-    utils::Worker<bool> functor(f_ex);
+    utils::Worker<bool> functor(f_ex, "id");
     std::future<bool> fut;
     REQUIRE(true == pool.execute(std::move(functor), fut));
     futures.push_back(std::move(fut));

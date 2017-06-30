@@ -220,6 +220,9 @@ class Processor : public Connectable, public ConfigurableComponent, public std::
   virtual void onSchedule(ProcessContext *context, ProcessSessionFactory *sessionFactory) {
   }
 
+  // Check all incoming connections for work
+  bool isWorkAvailable();
+
  protected:
 
   // Processor state
@@ -246,8 +249,6 @@ class Processor : public Connectable, public ConfigurableComponent, public std::
   // Yield Expiration
   std::atomic<uint64_t> yield_expiration_;
 
-  // Check all incoming connections for work
-  bool isWorkAvailable();
   // Prevent default copy constructor and assignment operation
   // Only support pass by reference or pointer
   Processor(const Processor &parent);

@@ -84,7 +84,7 @@ class SchedulingAgent {
     running_ = true;
   }
   // stop
-  void stop() {
+  virtual void stop() {
     running_ = false;
     component_lifecycle_thread_pool_.shutdown();
   }
