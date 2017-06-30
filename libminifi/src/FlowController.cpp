@@ -183,17 +183,16 @@ void FlowController::stop(bool force) {
   std::lock_guard < std::recursive_mutex > flow_lock(mutex_);
   if (running_) {
     // immediately indicate that we are not running
-    running_ = false;
-
     logger_->log_info("Stop Flow Controller");
-    this->timer_scheduler_->stop();
-    this->event_scheduler_->stop();
-    this->flow_file_repo_->stop();
-    this->provenance_repo_->stop();
-    // Wait for sometime for thread stop
-    std::this_thread::sleep_for(std::chrono::milliseconds(3000));
     if (this->root_)
       this->root_->stopProcessing(this->timer_scheduler_.get(), this->event_scheduler_.get());
+    this->flow_file_repo_->stop();
+    this->provenance_repo_->stop();
+    // stop after we've attempted to stop the processors.
+    this->timer_scheduler_->stop();
+    this->event_scheduler_->stop();
+    running_ = false;
+
   }
 }
 

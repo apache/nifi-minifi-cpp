@@ -29,7 +29,7 @@ bool function() {
 TEST_CASE("ThreadPoolTest1", "[TPT1]") {
   utils::ThreadPool<bool> pool(5);
   std::function<bool()> f_ex = function;
-  utils::Worker<bool> functor(f_ex);
+  utils::Worker<bool> functor(f_ex, "id");
   pool.start();
   std::future<bool> fut;
   REQUIRE(true == pool.execute(std::move(functor), fut));
