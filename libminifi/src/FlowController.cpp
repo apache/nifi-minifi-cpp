@@ -192,7 +192,6 @@ void FlowController::stop(bool force) {
     this->timer_scheduler_->stop();
     this->event_scheduler_->stop();
     running_ = false;
-
   }
 }
 

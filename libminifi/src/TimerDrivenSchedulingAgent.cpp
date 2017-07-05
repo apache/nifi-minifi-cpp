@@ -37,14 +37,11 @@ uint64_t TimerDrivenSchedulingAgent::run(std::shared_ptr<core::Processor> proces
       return processor->getYieldTime();
     } else if (shouldYield && this->bored_yield_duration_ > 0) {
       // No work to do or need to apply back pressure
-      //std::this_thread::sleep_for(std::chrono::milliseconds(x));
       return this->bored_yield_duration_;
     }
     return processor->getSchedulingPeriodNano() / 1000000;
-    //std::this_thread::sleep_for(std::chrono::nanoseconds(processor->getSchedulingPeriodNano()));
   }
   return 0;
-  //return;
 }
 
 } /* namespace minifi */

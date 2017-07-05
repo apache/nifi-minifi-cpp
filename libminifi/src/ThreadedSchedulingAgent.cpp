@@ -21,6 +21,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <utility>
 #include <map>
 #include <thread>
 #include <iostream>
@@ -76,7 +77,6 @@ void ThreadedSchedulingAgent::schedule(std::shared_ptr<core::Processor> processo
 
   ThreadedSchedulingAgent *agent = this;
   for (int i = 0; i < processor->getMaxConcurrentTasks(); i++) {
-
     // reference the disable function from serviceNode
     std::function<uint64_t()> f_ex = [agent, processor, processContext, sessionFactory] () {
       return agent->run(processor, processContext.get(), sessionFactory.get());
@@ -88,10 +88,8 @@ void ThreadedSchedulingAgent::schedule(std::shared_ptr<core::Processor> processo
     // we aren't terribly concerned with the result.
     std::future<uint64_t> future;
     thread_pool_.execute(std::move(functor), future);
-
   }
   logger_->log_info("Scheduled thread %d concurrent workers for for process %s", processor->getMaxConcurrentTasks(), processor->getName().c_str());
-
   return;
 }
 
