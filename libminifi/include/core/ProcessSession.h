@@ -123,7 +123,7 @@ class ProcessSession {
   void import(std::string source, std::shared_ptr<core::FlowFile> &&flow,
   bool keepSource = true,
               uint64_t offset = 0);
-  void import(std::string source, std::shared_ptr<std::vector<std::shared_ptr<FlowFileRecord>>> flows,
+  void import(std::string source, std::vector<std::shared_ptr<FlowFileRecord>> flows,
   bool keepSource, uint64_t offset, char inputDelimiter);
 
 // Prevent default copy constructor and assignment operation

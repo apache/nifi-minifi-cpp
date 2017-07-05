@@ -626,11 +626,11 @@ bool keepSource,
   }
 }
 
-void ProcessSession::import(std::string source, std::shared_ptr<std::vector<std::shared_ptr<FlowFileRecord>>> flows,
+void ProcessSession::import(std::string source, std::vector<std::shared_ptr<FlowFileRecord>> flows,
   bool keepSource, uint64_t offset, char inputDelimiter) {
   std::shared_ptr<ResourceClaim> claim;
 
-    std::shared_ptr<FlowFileRecord> flowFile;
+  std::shared_ptr<FlowFileRecord> flowFile;
 
   char *buf = NULL;
   int size = 4096;
@@ -644,8 +644,8 @@ void ProcessSession::import(std::string source, std::shared_ptr<std::vector<std:
     if (input.is_open()) {
       input.seekg(offset, input.beg);
       while (input.good()) {
-          flowFile = std::static_pointer_cast<FlowFileRecord>(create());
-          claim = std::make_shared<ResourceClaim>();
+        flowFile = std::static_pointer_cast<FlowFileRecord>(create());
+        claim = std::make_shared<ResourceClaim>();
         uint64_t startTime = getTimeMillis();
         input.getline(buf, size, inputDelimiter);
         std::ofstream fs;
@@ -676,7 +676,7 @@ void ProcessSession::import(std::string source, std::shared_ptr<std::vector<std:
             std::string details = process_context_->getProcessorNode().getName() + " modify flow record content " + flowFile->getUUIDStr();
             uint64_t endTime = getTimeMillis();
             provenance_report_->modifyContent(flowFile, details, endTime - startTime);
-            flows->push_back(flowFile);
+            flows.push_back(flowFile);
 
           } else {
             fs.close();
