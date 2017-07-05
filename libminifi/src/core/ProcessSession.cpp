@@ -637,8 +637,7 @@ void ProcessSession::import(std::string source, std::vector<std::shared_ptr<Flow
   buf = new char[size];
 
   try {
-
-    //Open the input file and seek to the appropriate location.
+    // Open the input file and seek to the appropriate location.
     std::ifstream input;
     input.open(source.c_str(), std::fstream::in | std::fstream::binary);
     if (input.is_open()) {

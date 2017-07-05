@@ -35,18 +35,17 @@
 #include "core/ProcessorNode.h"
 #include <iostream>
 
-static const std::string NEWLINE_FILE = ""
+static const char *NEWLINE_FILE = ""
     "one,two,three\n"
     "four,five,six, seven";
-static const std::string TMP_FILE = "/tmp/minifi-tmpfile.txt";
-static const std::string STATE_FILE = "/tmp/minifi-state-file.txt";
+static const char *TMP_FILE = "/tmp/minifi-tmpfile.txt";
+static const char *STATE_FILE = "/tmp/minifi-state-file.txt";
 
 TEST_CASE("TailFileWithDelimiter", "[tailfiletest1]") {
-
     try {
-        //Create and write to the test file
+        // Create and write to the test file
         std::ofstream tmpfile;
-        tmpfile.open (TMP_FILE);
+        tmpfile.open(TMP_FILE);
         tmpfile << NEWLINE_FILE;
         tmpfile.close();
 
@@ -78,7 +77,7 @@ TEST_CASE("TailFileWithDelimiter", "[tailfiletest1]") {
         std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider = nullptr;
         core::ProcessContext context(node, controller_services_provider, repo);
         context.setProperty(org::apache::nifi::minifi::processors::TailFile::Delimiter, "\n");
-        context.setProperty(org::apache::nifi::minifi::processors::TailFile::FileName,TMP_FILE);
+        context.setProperty(org::apache::nifi::minifi::processors::TailFile::FileName, TMP_FILE);
         context.setProperty(org::apache::nifi::minifi::processors::TailFile::StateFile, STATE_FILE);
 
         core::ProcessSession session(&context);
@@ -97,26 +96,22 @@ TEST_CASE("TailFileWithDelimiter", "[tailfiletest1]") {
         record = session.get();
         REQUIRE(record == nullptr);
         std::shared_ptr<core::FlowFile> ff = session.get();
-        REQUIRE(provRecords.size() == 4); //2 creates and 2 modifies for flowfiles
+        REQUIRE(provRecords.size() == 4);   // 2 creates and 2 modifies for flowfiles
 
         LogTestController::getInstance().reset();
-    } catch (...) {
+    } catch (...) { }
 
-    }
-
-    //Delete the test and state file.
-    std::remove(TMP_FILE.c_str());
-    std::remove(STATE_FILE.c_str());
-
+    // Delete the test and state file.
+    std::remove(TMP_FILE);
+    std::remove(STATE_FILE);
 }
 
 
 TEST_CASE("TailFileWithoutDelimiter", "[tailfiletest2]") {
-
     try {
-        //Create and write to the test file
+        // Create and write to the test file
         std::ofstream tmpfile;
-        tmpfile.open (TMP_FILE);
+        tmpfile.open(TMP_FILE);
         tmpfile << NEWLINE_FILE;
         tmpfile.close();
 
@@ -168,11 +163,9 @@ TEST_CASE("TailFileWithoutDelimiter", "[tailfiletest2]") {
         REQUIRE(provRecords.size() == 2);
 
         LogTestController::getInstance().reset();
-    } catch (...) {
+    } catch (...) { }
 
-    }
-
-    //Delete the test and state file.
-    std::remove(TMP_FILE.c_str());
-    std::remove(STATE_FILE.c_str());
+    // Delete the test and state file.
+    std::remove(TMP_FILE);
+    std::remove(STATE_FILE);
 }
