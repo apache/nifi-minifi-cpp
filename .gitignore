@@ -22,6 +22,9 @@
 # Ignore JetBrains project files
 .idea
 
+# Ignore JetBrains cLion project files.
+.project
+
 # Ignore kdevelop metadata
 nifi-minifi-cpp.kdev4
 .kdev4
