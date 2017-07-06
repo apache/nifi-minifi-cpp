@@ -20,9 +20,9 @@
 #ifndef __GET_GPS_H__
 #define __GET_GPS_H__
 
-#include "FlowFileRecord.h"
-#include "core/Processor.h"
-#include "core/ProcessSession.h"
+#include "../FlowFileRecord.h"
+#include "../core/Processor.h"
+#include "../core/ProcessSession.h"
 
 namespace org {
 namespace apache {
@@ -60,6 +60,13 @@ public:
 	static core::Relationship Success;
 
 public:
+  /**
+   * Function that's executed when the processor is scheduled.
+   * @param context process context.
+   * @param sessionFactory process session factory that is used when creating
+   * ProcessSession objects.
+   */
+  void onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory);
 	//! OnTrigger method, implemented by NiFi GetGPS
 	virtual void onTrigger(core::ProcessContext *context, core::ProcessSession *session);
 	//! Initialize, over write by NiFi GetGPS
@@ -68,9 +75,11 @@ public:
 protected:
 
 private:
-	std::string gpsdHost_;
-	std::string gpsdPort_;
-	int64_t gpsdWaitTime_;
+  std::string gpsdHost_;
+  std::string gpsdPort_;
+  int64_t gpsdWaitTime_;
+  // Logger
+  std::shared_ptr<logging::Logger> logger_;
 };
 
 } /* namespace processors */

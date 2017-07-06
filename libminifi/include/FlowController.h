@@ -53,7 +53,7 @@
 #include "processors/GetFile.h"
 
 #ifdef BUILD_GPS
-	#include "GetGPS.h"
+	#include "processors/GetGPS.h"
 #endif
  
 #include "processors/PutFile.h"

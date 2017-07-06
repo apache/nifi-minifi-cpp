@@ -35,8 +35,7 @@
 #include <unistd.h>
 #include <regex>
 
-//#include "TimeUtil.h"
-#include "GetGPS.h"
+#include "processors/GetGPS.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 
@@ -60,6 +59,9 @@ void GetGPS::initialize()
 {
 	//! Set the supported properties
 	std::set<core::Property> properties;
+	properties.insert(GPSDHost);
+	properties.insert(GPSDPort);
+	properties.insert(GPSDWaitTime);
 	setSupportedProperties(properties);
 	//! Set the supported relationships
 	std::set<core::Relationship> relationships;
@@ -67,29 +69,24 @@ void GetGPS::initialize()
 	setSupportedRelationships(relationships);
 }
 
+void GetGPS::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory) {
+	std::string value;
+
+	if (context->getProperty(GPSDHost.getName(), value)) {
+		gpsdHost_ = value;
+	}
+	if (context->getProperty(GPSDPort.getName(), value)) {
+		gpsdPort_ = value;
+	}
+	if (context->getProperty(GPSDWaitTime.getName(), value)) {
+		core::Property::StringToInt(value, gpsdWaitTime_);
+	}
+}
+
 void GetGPS::onTrigger(core::ProcessContext *context, core::ProcessSession *session)
 {
 	try
 	{
-
-		std::string value;
-
-		logger_->log_debug("onTrigger GetGPS");
-		if (context->getProperty(GPSDHost.getName(), value))
-		{
-			gpsdHost_ = value;
-		}
-
-		if (context->getProperty(GPSDPort.getName(), value))
-		{
-			gpsdPort_ = value;
-		}
-
-		if (context->getProperty(GPSDWaitTime.getName(), value))
-		{
-			core::Property::StringToInt(value, gpsdWaitTime_);
-		}
-
 		gpsmm gps_rec(gpsdHost_.c_str(), gpsdPort_.c_str());
 
 	    if (gps_rec.stream(WATCH_ENABLE|WATCH_JSON) == NULL) {
