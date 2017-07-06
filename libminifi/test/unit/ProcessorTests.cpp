@@ -43,7 +43,6 @@ TEST_CASE("Test Creation of GetFile", "[getfileCreate]") {
   REQUIRE(processor->getName() == "processorname");
 }
 
-
 TEST_CASE("Test GetFileLikeIt'sThreaded", "[getfileCreate3]") {
   TestController testController;
   std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
@@ -173,7 +172,7 @@ TEST_CASE("Test Find file", "[getfileCreate3]") {
   std::shared_ptr<TestPlan> plan = testController.createPlan();
   std::shared_ptr<core::Processor> processor = plan->addProcessor("GetFile", "getfileCreate2");
   std::shared_ptr<core::Processor> processorReport = std::make_shared<org::apache::nifi::minifi::core::reporting::SiteToSiteProvenanceReportingTask>(
-      std::make_shared<org::apache::nifi::minifi::io::StreamFactory>(std::make_shared<org::apache::nifi::minifi::Configure>()));
+      std::make_shared<org::apache::nifi::minifi::io::StreamFactory>(std::make_shared<org::apache::nifi::minifi::Configure>()), std::make_shared<org::apache::nifi::minifi::Configure>());
   plan->addProcessor(processorReport, "reporter", core::Relationship("success", "description"), false);
   char format[] = "/tmp/gt.XXXXXX";
   char *dir = testController.createTempDirectory(format);

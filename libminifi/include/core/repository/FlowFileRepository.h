@@ -98,6 +98,7 @@ class FlowFileRepository : public core::Repository, public std::enable_shared_fr
     // persistent to the DB
     leveldb::Slice value((const char *) buf, bufLen);
     leveldb::Status status;
+    repo_size_+=bufLen;
     status = db_->Put(leveldb::WriteOptions(), key, value);
     if (status.ok())
       return true;
@@ -113,7 +114,9 @@ class FlowFileRepository : public core::Repository, public std::enable_shared_fr
     leveldb::Status status;
     status = db_->Delete(leveldb::WriteOptions(), key);
     if (status.ok())
+    {
       return true;
+    }
     else
       return false;
   }
@@ -137,12 +140,15 @@ class FlowFileRepository : public core::Repository, public std::enable_shared_fr
 
   void start() {
     if (this->purge_period_ <= 0)
+    {
       return;
+    }
     if (running_)
+    {
       return;
-    thread_ = std::thread(&FlowFileRepository::run, shared_from_this());
-    thread_.detach();
+    }
     running_ = true;
+    thread_ = std::thread(&FlowFileRepository::run, shared_from_this());
     logger_->log_info("%s Repository Monitor Thread Start", name_.c_str());
   }
 

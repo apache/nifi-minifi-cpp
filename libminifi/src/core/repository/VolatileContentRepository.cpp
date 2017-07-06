@@ -104,7 +104,7 @@ std::shared_ptr<io::BaseStream> VolatileContentRepository::write(const std::shar
 
   int size = 0;
   if (__builtin_expect(minimize_locking_ == true, 1)) {
-    logger_->log_debug("Minimize lkocking");
+    logger_->log_debug("Minimize locking");
     for (auto ent : value_vector_) {
       if (ent->testAndSetKey(claim, nullptr, nullptr, resource_claim_comparator_)) {
         std::lock_guard<std::mutex> lock(map_mutex_);

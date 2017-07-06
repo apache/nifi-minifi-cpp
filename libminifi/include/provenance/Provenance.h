@@ -164,9 +164,8 @@ class ProvenanceEventRecord : public core::SerializableComponent {
    */
   ProvenanceEventRecord(ProvenanceEventType event, std::string componentId, std::string componentType);
 
-
   ProvenanceEventRecord()
-      : core::SerializableComponent(core::getClassName<ProvenanceEventRecord>()){
+      : core::SerializableComponent(core::getClassName<ProvenanceEventRecord>()) {
     _eventTime = getTimeMillis();
   }
 
@@ -361,6 +360,34 @@ class ProvenanceEventRecord : public core::SerializableComponent {
   // DeSerialize
   bool DeSerialize(const std::shared_ptr<core::SerializableComponent> &repo);
 
+  uint64_t getEventTime(const uint8_t *buffer, const size_t bufferSize) {
+
+    int size = bufferSize > 72 ? 72 : bufferSize;
+    org::apache::nifi::minifi::io::DataStream outStream(buffer, size);
+
+    std::string uuid;
+    int ret = readUTF(uuid, &outStream);
+
+    if (ret <= 0) {
+      return 0;
+    }
+
+    uint32_t eventType;
+    ret = read(eventType, &outStream);
+    if (ret != 4) {
+      return 0;
+    }
+
+    uint64_t event_time;
+
+    ret = read(event_time, &outStream);
+    if (ret != 8) {
+      return 0;
+    }
+
+    return event_time;
+  }
+
  protected:
 
   // Event type
@@ -440,7 +467,7 @@ class ProvenanceReporter {
   // Add event
   void add(ProvenanceEventRecord *event) {
     _events.insert(event);
-    logger_->log_debug("Prove reporter now %d",_events.size());
+    logger_->log_debug("Prove reporter now %d", _events.size());
   }
   // Remove event
   void remove(ProvenanceEventRecord *event) {

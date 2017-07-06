@@ -362,9 +362,8 @@ void VolatileRepository<T>::start() {
     return;
   if (running_)
     return;
-  thread_ = std::thread(&VolatileRepository<T>::run, std::enable_shared_from_this<VolatileRepository<T>>::shared_from_this());
-  thread_.detach();
   running_ = true;
+  thread_ = std::thread(&VolatileRepository<T>::run, std::enable_shared_from_this<VolatileRepository<T>>::shared_from_this());
   logger_->log_info("%s Repository Monitor Thread Start", name_);
 }
 

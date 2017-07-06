@@ -42,11 +42,15 @@ class ByteInputCallBack : public InputStreamCallback {
 
   int64_t process(std::shared_ptr<io::BaseStream> stream) {
 
-    std::vector<char> nv = std::vector<char>(reinterpret_cast<char*>(const_cast<uint8_t*>(stream->getBuffer())),
-                                             reinterpret_cast<char*>(const_cast<uint8_t*>(stream->getBuffer())) + stream->getSize());
-    vec = std::move(nv);
+    stream->seek(0);
 
-    ptr = &vec[0];
+    if (stream->getSize() > 0) {
+      vec.resize(stream->getSize());
+
+      stream->readData(vec, stream->getSize());
+    }
+
+    ptr = (char*) &vec[0];
 
     return vec.size();
 
@@ -62,7 +66,7 @@ class ByteInputCallBack : public InputStreamCallback {
 
  private:
   char *ptr;
-  std::vector<char> vec;
+  std::vector<uint8_t> vec;
 };
 
 } /* namespace utils */

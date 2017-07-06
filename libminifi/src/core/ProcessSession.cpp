@@ -213,8 +213,7 @@ void ProcessSession::transfer(std::shared_ptr<core::FlowFile> &&flow, Relationsh
 }
 
 void ProcessSession::write(std::shared_ptr<core::FlowFile> &flow, OutputStreamCallback *callback) {
-  std::shared_ptr<ResourceClaim> claim = std::make_shared<ResourceClaim>(process_context_->getContentRepository(),
-  DEFAULT_CONTENT_DIRECTORY);
+  std::shared_ptr<ResourceClaim> claim = std::make_shared<ResourceClaim>(process_context_->getContentRepository());
 
   try {
     uint64_t startTime = getTimeMillis();
@@ -614,9 +613,7 @@ void ProcessSession::import(std::string source, std::shared_ptr<core::FlowFile> 
   }
 }
 
-void ProcessSession::import(std::string source, std::vector<std::shared_ptr<FlowFileRecord>> flows,
-bool keepSource,
-                            uint64_t offset, char inputDelimiter) {
+void ProcessSession::import(std::string source, std::vector<std::shared_ptr<FlowFileRecord>> flows, bool keepSource, uint64_t offset, char inputDelimiter) {
   std::shared_ptr<ResourceClaim> claim;
 
   std::shared_ptr<FlowFileRecord> flowFile;
@@ -628,6 +625,7 @@ bool keepSource,
   try {
     // Open the input file and seek to the appropriate location.
     std::ifstream input;
+    logger_->log_debug("Opening %s", source);
     input.open(source.c_str(), std::fstream::in | std::fstream::binary);
     if (input.is_open()) {
       input.seekg(offset, input.beg);
@@ -640,6 +638,7 @@ bool keepSource,
 
         std::shared_ptr<io::BaseStream> stream = process_context_->getContentRepository()->write(claim);
         if (nullptr == stream) {
+          logger_->log_debug("Stream is null");
           rollback();
           return;
         }
@@ -677,12 +676,11 @@ bool keepSource,
           uint64_t endTime = getTimeMillis();
           provenance_report_->modifyContent(flowFile, details, endTime - startTime);
           flows.push_back(flowFile);
-
         } else {
+          logger_->log_debug("Error while writing");
           stream->closeStream();
           throw Exception(FILE_OPERATION_EXCEPTION, "File Export Error creating Flowfile");
         }
-
       }
       input.close();
       if (!keepSource)
@@ -851,7 +849,6 @@ void ProcessSession::commit() {
         continue;
       std::map<std::string, Relationship>::iterator itRelationship = this->_transferRelationship.find(record->getUUIDStr());
       if (itRelationship != _transferRelationship.end()) {
-        logger_->log_debug("size is %d for there", _addedFlowFiles.size());
         Relationship relationship = itRelationship->second;
         // Find the relationship, we need to find the connections for that relationship
         std::set<std::shared_ptr<Connectable>> connections = process_context_->getProcessorNode().getOutGoingConnections(relationship.getName());
@@ -867,16 +864,13 @@ void ProcessSession::commit() {
             remove(record);
           }
         } else {
-          logger_->log_debug("size is %d for here", _addedFlowFiles.size());
           // We connections, clone the flow and assign the connection accordingly
           for (std::set<std::shared_ptr<Connectable>>::iterator itConnection = connections.begin(); itConnection != connections.end(); ++itConnection) {
             std::shared_ptr<Connectable> connection(*itConnection);
-            logger_->log_debug("size is %d for here %s", _addedFlowFiles.size(), connection->getName());
             if (itConnection == connections.begin()) {
               // First connection which the flow need be routed to
               record->setConnection(connection);
             } else {
-              logger_->log_debug("clone is %d for here %s", _addedFlowFiles.size(), connection->getName());
               // Clone the flow file and route to the connection
               std::shared_ptr<core::FlowFile> cloneRecord;
               cloneRecord = this->cloneDuringTransfer(record);

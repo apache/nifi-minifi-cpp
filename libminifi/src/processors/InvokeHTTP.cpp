@@ -115,7 +115,7 @@ void InvokeHTTP::set_request_method(CURL *curl, const std::string &method) {
   if (my_method == "POST") {
     curl_easy_setopt(curl, CURLOPT_POST, 1);
   } else if (my_method == "PUT") {
-    curl_easy_setopt(curl, CURLOPT_UPLOAD, 1);
+    curl_easy_setopt(curl, CURLOPT_PUT, 1);
   } else if (my_method == "GET") {
   } else {
     curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, my_method.c_str());
@@ -335,7 +335,6 @@ void InvokeHTTP::onTrigger(core::ProcessContext *context, core::ProcessSession *
       callbackObj->ptr = callback;
       callbackObj->pos = 0;
       logger_->log_info("InvokeHTTP -- Setting callback");
-      curl_easy_setopt(http_session, CURLOPT_UPLOAD, 1L);
       curl_easy_setopt(http_session, CURLOPT_INFILESIZE_LARGE, (curl_off_t)callback->getBufferSize());
       curl_easy_setopt(http_session, CURLOPT_READFUNCTION, &utils::HTTPRequestResponse::send_write);
       curl_easy_setopt(http_session, CURLOPT_READDATA, static_cast<void*>(callbackObj));
@@ -377,7 +376,7 @@ void InvokeHTTP::onTrigger(core::ProcessContext *context, core::ProcessSession *
     bool output_body_to_content = isSuccess && !putToAttribute;
     bool body_empty = IsNullOrEmpty(content.data);
 
-    logger_->log_info("isSuccess: %d", isSuccess);
+    logger_->log_info("isSuccess: %d, response code %d ", isSuccess, http_code);
     std::shared_ptr<FlowFileRecord> response_flow = nullptr;
 
     if (output_body_to_content) {
