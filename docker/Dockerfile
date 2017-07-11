@@ -16,7 +16,9 @@
 # under the License.
 #
 
-FROM ubuntu:16.10
+# First stage: the build environment
+# Edge required for leveldb
+FROM alpine:edge AS builder
 MAINTAINER Apache NiFi <dev@nifi.apache.org>
 
 ARG UID
@@ -25,27 +27,30 @@ ARG MINIFI_VERSION
 ARG MINIFI_SOURCE_CODE
 
 # Install the system dependencies needed for a build
-RUN apt-get update && apt-get install -y build-essential \
+# Add testing repo for leveldb
+RUN echo 'http://dl-cdn.alpinelinux.org/alpine/edge/testing' >> /etc/apk/repositories
+RUN apk --update --no-cache upgrade && apk --update --no-cache add gcc \
+	g++ \
+	make \
 	wget \
 	gdb \
-	libboost-all-dev \
+	musl-dev \
+	boost-dev \
 	vim \
-	uuid-dev \
-	libleveldb-dev \
-	libcurl4-openssl-dev \
+	util-linux-dev \
+	leveldb-dev \
+	curl-dev \
 	cmake \
 	git \
 	unzip \
-	libgps-dev \
-	gpsd \
-	gpsd-clients \
-	libssl-dev
+	gpsd-dev \
+	openssl-dev
 
 ENV USER minificpp
 ENV MINIFI_BASE_DIR /opt/minifi
 
 # Setup minificpp user
-RUN addgroup --gid $GID $USER && adduser --uid $UID --gid $GID --disabled-password --gecos "" $USER
+RUN addgroup -g $GID $USER && adduser -u $UID -D -G $USER -g "" $USER
 RUN mkdir -p $MINIFI_BASE_DIR 
 
 ADD $MINIFI_SOURCE_CODE $MINIFI_BASE_DIR
@@ -63,6 +68,39 @@ RUN cd $MINIFI_BASE_DIR \
 	&& make package \
 	&& tar -xzvf $MINIFI_BASE_DIR/build/nifi-minifi-cpp-$MINIFI_VERSION-bin.tar.gz -C $MINIFI_BASE_DIR
 
-# Start MiNiFi CPP in the foreground
-CMD cd $MINIFI_HOME && ./bin/minifi.sh run
+# Second stage: the runtime image
+# Edge required for leveldb
+FROM alpine:edge
 
+ARG UID
+ARG GID
+ARG MINIFI_VERSION
+ARG MINIFI_SOURCE_CODE
+
+# Add testing repo for leveldb
+RUN echo 'http://dl-cdn.alpinelinux.org/alpine/edge/testing' >> /etc/apk/repositories
+
+RUN apk --update --no-cache upgrade && apk add --update --no-cache \
+	util-linux \
+	leveldb \
+	curl \
+	unzip \
+	gpsd \
+	openssl
+
+# Start MiNiFi CPP in the foreground
+ENV USER minificpp
+ENV MINIFI_BASE_DIR /opt/minifi
+ENV MINIFI_HOME $MINIFI_BASE_DIR/nifi-minifi-cpp-$MINIFI_VERSION
+
+RUN addgroup -g $GID $USER && adduser -u $UID -D -G $USER -g "" $USER
+RUN mkdir -p $MINIFI_BASE_DIR 
+
+# Copy built minifi distribution from builder
+COPY --from=builder ${MINIFI_HOME} ${MINIFI_HOME}
+RUN chown -R ${USER}:${USER} /opt/minifi
+
+USER $USER
+
+WORKDIR ${MINIFI_HOME}
+CMD ./bin/minifi.sh run

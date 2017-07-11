@@ -79,7 +79,7 @@ else ()
     message( FATAL_ERROR "LevelDB was not found. Please install LevelDB" )
 endif (LEVELDB_FOUND)
 find_package(UUID REQUIRED)
-file(GLOB SPD_SOURCES "thirdparty/spdlog-0.13.0/include/spdlog/*")
+file(GLOB SPD_SOURCES "thirdparty/spdlog-20170710/include/spdlog/*")
 
 
 
