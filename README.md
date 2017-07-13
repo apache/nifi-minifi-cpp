@@ -99,6 +99,11 @@ $ yum install cmake \
   boost-devel \
   libssl-dev \
   doxygen
+$ # (Optional) for building docker image
+$ yum install docker
+$ # (Optional) for system integration tests
+$ yum install docker python-virtualenv
+
 ```
 
 Aptitude based Linux Distributions
@@ -111,6 +116,10 @@ $ apt-get install cmake \
   uuid-dev uuid \
   libboost-all-dev libssl-dev \
   doxygen
+$ # (Optional) for building docker image
+$ apt-get install docker.io
+$ # (Optional) for system integration tests
+$ apt-get install docker.io python-virtualenv
 ```
 
 OS X Using Homebrew (with XCode Command Line Tools installed)
@@ -124,6 +133,8 @@ $ brew install cmake \
   doxygen
 $ brew install curl
 $ brew link curl --force
+$ # (Optional) for building docker image/running system integration tests
+$ # Install docker using instructions at https://docs.docker.com/docker-for-mac/install/
 ```
 
 
@@ -219,6 +230,12 @@ Step 15 : CMD $MINIFI_HOME/bin/minifi.sh run
  ---> c390063d9bd1
 Successfully built c390063d9bd1
 Built target docker
+```
+
+- (Optional) Execute system integration tests using the docker image built locally on a docker daemon running locally.
+```
+~/Development/code/apache/nifi-minifi-cpp/build
+$ make docker-verify
 ```
 
 ### Cleaning
