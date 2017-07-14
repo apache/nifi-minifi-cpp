@@ -27,7 +27,6 @@
 #include <errno.h>
 #include <iostream>
 #include <fstream>
-#include "core/Core.h"
 #include "core/logging/Logger.h"
 
 namespace org {
@@ -90,7 +89,7 @@ class Properties {
   // Mutex for protection
   std::mutex mutex_;
   // Logger
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<minifi::core::logging::Logger> logger_;
   // Home location for this executable
   std::string minifi_home_;
 };

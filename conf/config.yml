@@ -14,7 +14,52 @@
 # limitations under the License.
 
 Flow Controller:
-  name: MiNiFi Flow
-Processors: []
-Connections: []
-Remote Processing Groups: []
+    id: 471deef6-2a6e-4a7d-912a-81cc17e3a205
+    name: MiNiFi Flow
+
+Processors:
+    - name: GetFile
+      id: 471deef6-2a6e-4a7d-912a-81cc17e3a206
+      class: org.apache.nifi.processors.standard.GetFile
+      max concurrent tasks: 1
+      scheduling strategy: TIMER_DRIVEN
+      scheduling period: 1 sec
+      penalization period: 30 sec
+      yield period: 10 sec
+      run duration nanos: 0
+      auto-terminated relationships list:
+      Properties:
+          Input Directory: /tmp/getfile
+          Keep Source File: true
+
+Connections:
+    - name: GenerateFlowFileS2S
+      id: 471deef6-2a6e-4a7d-912a-81cc17e3a207
+      source id: 471deef6-2a6e-4a7d-912a-81cc17e3a206 
+      source relationship name: success
+      destination id: 471deef6-2a6e-4a7d-912a-81cc17e3a204
+      max work queue size: 0
+      max work queue data size: 1 MB
+      flowfile expiration: 60 sec
+      queue prioritizer class: org.apache.nifi.prioritizer.NewestFlowFileFirstPrioritizer
+
+Remote Processing Groups:
+    - name: NiFi Flow
+      id: 471deef6-2a6e-4a7d-912a-81cc17e3a208
+      url: https://localhost:9443/nifi
+      timeout: 30 secs
+      yield period: 10 sec
+      Input Ports:
+          - id: 471deef6-2a6e-4a7d-912a-81cc17e3a204
+            name: From Node A
+            max concurrent tasks: 1
+            use compression: false
+            Properties: # Deviates from spec and will later be removed when this is autonegotiated
+                Port UUID: 471deef6-2a6e-4a7d-912a-81cc17e3a204
+
+Provenance Reporting:
+      scheduling strategy: TIMER_DRIVEN
+      scheduling period: 1 sec
+      url: https://localhost:9443/nifi
+      port uuid: 471deef6-2a6e-4a7d-912a-81cc17e3a204
+      batch size: 100

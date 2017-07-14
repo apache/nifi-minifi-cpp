@@ -43,6 +43,7 @@
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "io/CRCStream.h"
+#include "utils/Id.h"
 
 namespace org {
 namespace apache {
@@ -301,7 +302,7 @@ class Transaction {
     char uuidStr[37];
 
     // Generate the global UUID for the transaction
-    uuid_generate(_uuid);
+    id_generator_->generate(_uuid);
     uuid_unparse_lower(_uuid, uuidStr);
     _uuidStr = uuidStr;
   }
@@ -363,7 +364,7 @@ class Transaction {
   int _transfers;
   // Number of content bytes
   uint64_t _bytes;
-
+  static std::shared_ptr<utils::IdGenerator> id_generator_;
 };
 
 /**
@@ -630,6 +631,7 @@ class Site2SiteClientProtocol {
   // Only support pass by reference or pointer
   Site2SiteClientProtocol(const Site2SiteClientProtocol &parent);
   Site2SiteClientProtocol &operator=(const Site2SiteClientProtocol &parent);
+  static std::shared_ptr<utils::IdGenerator> id_generator_;
 };
 
 } /* namespace minifi */

@@ -48,6 +48,7 @@
 #include "HttpConfigurationListener.h"
 
 #include "core/Property.h"
+#include "utils/Id.h"
 
 namespace org {
 namespace apache {
@@ -325,6 +326,7 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
   // http configuration listener object.
   std::unique_ptr<HttpConfigurationListener> http_configuration_listener_;
   std::string serial_number_;
+  static std::shared_ptr<utils::IdGenerator> id_generator_;
 };
 
 } /* namespace minifi */

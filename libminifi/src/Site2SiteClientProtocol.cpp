@@ -37,6 +37,9 @@ namespace apache {
 namespace nifi {
 namespace minifi {
 
+std::shared_ptr<utils::IdGenerator> Site2SiteClientProtocol::id_generator_ = utils::IdGenerator::getIdGenerator();
+std::shared_ptr<utils::IdGenerator> Transaction::id_generator_ = utils::IdGenerator::getIdGenerator();
+
 bool Site2SiteClientProtocol::establish() {
   if (_peerState != IDLE) {
     logger_->log_error("Site2Site peer state is not idle while try to establish");
@@ -199,7 +202,7 @@ bool Site2SiteClientProtocol::handShake() {
   logger_->log_info("Site2Site Protocol Perform hand shake with destination port %s", _portIdStr.c_str());
   uuid_t uuid;
   // Generate the global UUID for the com identify
-  uuid_generate(uuid);
+  id_generator_->generate(uuid);
   char uuidStr[37];
   uuid_unparse_lower(uuid, uuidStr);
   _commsIdentifier = uuidStr;

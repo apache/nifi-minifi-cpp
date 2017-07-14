@@ -37,6 +37,8 @@ namespace nifi {
 namespace minifi {
 namespace core {
 
+std::shared_ptr<utils::IdGenerator> ProcessGroup::id_generator_ = utils::IdGenerator::getIdGenerator();
+
 ProcessGroup::ProcessGroup(ProcessGroupType type, std::string name, uuid_t uuid, int version,
                            ProcessGroup *parent)
     : logger_(logging::LoggerFactory<ProcessGroup>::getLogger()),
@@ -46,7 +48,7 @@ ProcessGroup::ProcessGroup(ProcessGroupType type, std::string name, uuid_t uuid,
       parent_process_group_(parent) {
   if (!uuid)
     // Generate the global UUID for the flow record
-    uuid_generate(uuid_);
+    id_generator_->generate(uuid_);
   else
     uuid_copy(uuid_, uuid);
 

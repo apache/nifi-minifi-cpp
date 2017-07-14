@@ -27,7 +27,9 @@
 #include <map>
 #include <mutex>
 #include <atomic>
+#include "core/Core.h"
 #include "properties/Configure.h"
+#include "utils/Id.h"
 
 namespace org {
 namespace apache {
@@ -73,10 +75,6 @@ class ResourceClaim {
   }
 
  protected:
-  // A global unique identifier
-  uuid_t _uuid;
-  // A local unique identifier
-  uint64_t _id;
   // Full path to the content
   std::string _contentFullPath;
 
@@ -91,8 +89,7 @@ class ResourceClaim {
   ResourceClaim(const ResourceClaim &parent);
   ResourceClaim &operator=(const ResourceClaim &parent);
 
-  // Local resource claim number
-  static std::atomic<uint64_t> _localResourceClaimNumber;
+  static utils::NonRepeatingStringGenerator non_repeating_string_generator_;
 };
 
 } /* namespace minifi */

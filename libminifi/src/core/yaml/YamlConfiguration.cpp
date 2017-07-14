@@ -29,6 +29,8 @@ namespace nifi {
 namespace minifi {
 namespace core {
 
+std::shared_ptr<utils::IdGenerator> YamlConfiguration::id_generator_ = utils::IdGenerator::getIdGenerator();
+
 core::ProcessGroup *YamlConfiguration::parseRootProcessGroupYaml(YAML::Node rootFlowNode) {
   uuid_t uuid;
   int64_t version = 0;
@@ -621,7 +623,7 @@ std::string YamlConfiguration::getOrGenerateId(YAML::Node *yamlNode, const std::
     }
   } else {
     uuid_t uuid;
-    uuid_generate(uuid);
+    id_generator_->generate(uuid);
     char uuid_str[37];
     uuid_unparse(uuid, uuid_str);
     id = uuid_str;
