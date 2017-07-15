@@ -99,6 +99,14 @@ class RemoteProcessorGroupPort : public core::Processor {
   void setURL(std::string val) {
     url_ = val;
     utils::parse_url(url_, host_, port_, protocol_);
+    if (port_ == -1) {
+      if (protocol_.find("https") != std::string::npos) {
+        port_ = 443;
+      }
+      else if (protocol_.find("http") != std::string::npos) {
+        port_ = 80;
+      }
+    }
   }
 
   // refresh remoteSite2SiteInfo via nifi rest api

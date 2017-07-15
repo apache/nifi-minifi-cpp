@@ -30,6 +30,7 @@
 #include "core/logging/Logger.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "properties/Configure.h"
+#include "io/validation.h"
 
 namespace org {
 namespace apache {
@@ -248,6 +249,51 @@ protected:
 private:
   std::shared_ptr<logging::Logger> logger_;
 };
+
+static std::string get_token(std::string loginUrl, std::string username, std::string password, HTTPSecurityConfiguration &securityConfig) {
+  utils::HTTPRequestResponse content;
+  std::string token;
+  CURL *login_session = curl_easy_init();
+  if (loginUrl.find("https") != std::string::npos) {
+     securityConfig.configureSecureConnection(login_session);
+   }
+  curl_easy_setopt(login_session, CURLOPT_URL, loginUrl.c_str());
+  struct curl_slist *list = NULL;
+  list = curl_slist_append(list, "Content-Type: application/x-www-form-urlencoded");
+  list = curl_slist_append(list, "Accept: text/plain");
+  curl_easy_setopt(login_session, CURLOPT_HTTPHEADER, list);
+  std::string payload = "username=" + username + "&" + "password=" + password;
+  char *output = curl_easy_escape(login_session, payload.c_str(), payload.length());
+  curl_easy_setopt(login_session, CURLOPT_WRITEFUNCTION,
+      &utils::HTTPRequestResponse::recieve_write);
+  curl_easy_setopt(login_session, CURLOPT_WRITEDATA,
+      static_cast<void*>(&content));
+  curl_easy_setopt(login_session, CURLOPT_POSTFIELDSIZE, strlen(output));
+  curl_easy_setopt(login_session, CURLOPT_POSTFIELDS, output);
+  curl_easy_setopt(login_session, CURLOPT_POST, 1);
+  CURLcode res = curl_easy_perform(login_session);
+  curl_slist_free_all(list);
+  curl_free(output);
+  if (res == CURLE_OK) {
+    std::string response_body(content.data.begin(), content.data.end());
+    int64_t http_code = 0;
+    curl_easy_getinfo(login_session, CURLINFO_RESPONSE_CODE, &http_code);
+    char *content_type;
+    /* ask for the content-type */
+    curl_easy_getinfo(login_session, CURLINFO_CONTENT_TYPE, &content_type);
+
+    bool isSuccess = ((int32_t) (http_code / 100)) == 2
+        && res != CURLE_ABORTED_BY_CALLBACK;
+    bool body_empty = IsNullOrEmpty(content.data);
+
+    if (isSuccess && !body_empty) {
+      token = "Bearer " + response_body;
+    }
+  }
+  curl_easy_cleanup(login_session);
+
+  return token;
+}
 
 
 } /* namespace utils */
