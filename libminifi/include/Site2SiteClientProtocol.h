@@ -388,6 +388,15 @@ class DataPacket {
 
 };
 
+/**
+  * Site2Site Peer
+  */
+ typedef struct Site2SitePeerStatus {
+   std::string host_;
+   int port_;
+   bool isSecure_;
+ } Site2SitePeerStatus;
+
 // Site2SiteClientProtocol Class
 class Site2SiteClientProtocol {
  public:
@@ -476,6 +485,8 @@ class Site2SiteClientProtocol {
   }
   // bootstrap the protocol to the ready for transaction state by going through the state machine
   bool bootstrap();
+  // get peerList
+  bool getPeerList(std::vector<minifi::Site2SitePeerStatus> &peer);
   // establish
   bool establish();
   // handShake

@@ -94,4 +94,6 @@ add_test(NAME HttpGetIntegrationTestSecure COMMAND HttpGetIntegrationTest "${TES
 
 add_test(NAME HttpPostIntegrationTest COMMAND HttpPostIntegrationTest "${TEST_RESOURCES}/TestHTTPPost.yml" )
 
+add_test(NAME Site2SiteRestTest COMMAND Site2SiteRestTest "${TEST_RESOURCES}/TestSite2SiteRest.yml" "${TEST_RESOURCES}/")
+
 add_test(NAME TestExecuteProcess COMMAND TestExecuteProcess )
