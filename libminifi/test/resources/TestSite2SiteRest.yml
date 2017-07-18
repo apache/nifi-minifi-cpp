@@ -29,7 +29,7 @@ Processors:
       run duration nanos: 0
       auto-terminated relationships list:
       Properties:
-          Input Directory: /tmp/getfile
+          Input Directory: /tmp/site2siteGetFile
           Keep Source File: true
 
 Connections:
@@ -46,7 +46,7 @@ Connections:
 Remote Processing Groups:
     - name: NiFi Flow
       id: 471deef6-2a6e-4a7d-912a-81cc17e3a208
-      url: https://localhost:9443/nifi
+      url: http://localhost:8082/nifi
       timeout: 30 secs
       yield period: 10 sec
       Input Ports:
@@ -56,10 +56,3 @@ Remote Processing Groups:
             use compression: false
             Properties: # Deviates from spec and will later be removed when this is autonegotiated
                 Port UUID: 471deef6-2a6e-4a7d-912a-81cc17e3a204
-
-Provenance Reporting:
-      scheduling strategy: TIMER_DRIVEN
-      scheduling period: 1 sec
-      url: https://localhost:9443/nifi
-      port uuid: 471deef6-2a6e-4a7d-912a-81cc17e3a204
-      batch size: 100

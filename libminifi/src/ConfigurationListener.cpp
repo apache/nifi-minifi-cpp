@@ -46,46 +46,6 @@ void ConfigurationListener::start() {
     }
   }
 
-  std::string clientAuthStr;
-  if (configure_->get(Configure::nifi_configuration_listener_need_ClientAuth, clientAuthStr)) {
-    org::apache::nifi::minifi::utils::StringUtils::StringToBool(clientAuthStr, this->need_client_certificate_);
-  }
-
-  if (configure_->get(
-          Configure::nifi_configuration_listener_client_ca_certificate,
-      this->ca_certificate_)) {
-    logger_->log_info("Configuration Listener CA certificates: [%s]",
-        this->ca_certificate_);
-  }
-
-  if (this->need_client_certificate_) {
-    std::string passphrase_file;
-
-    if (!(configure_->get(
-        Configure::nifi_configuration_listener_client_certificate, this->certificate_)
-        && configure_->get(Configure::nifi_configuration_listener_private_key,
-            this->private_key_))) {
-      logger_->log_error(
-          "Certificate and Private Key PEM file not configured for configuration listener, error: %s.",
-          std::strerror(errno));
-    }
-
-    if (configure_->get(
-        Configure::nifi_configuration_listener_client_pass_phrase,
-        passphrase_file)) {
-      // load the passphase from file
-      std::ifstream file(passphrase_file.c_str(), std::ifstream::in);
-      if (file.good()) {
-        this->passphrase_.assign((std::istreambuf_iterator<char>(file)),
-            std::istreambuf_iterator<char>());
-        file.close();
-      }
-    }
-
-    logger_->log_info("Configuration Listener certificate: [%s], private key: [%s], passphrase file: [%s]",
-            this->certificate_, this->private_key_, passphrase_file);
-  }
-
   thread_ = std::thread(&ConfigurationListener::threadExecutor, this);
   thread_.detach();
   running_ = true;

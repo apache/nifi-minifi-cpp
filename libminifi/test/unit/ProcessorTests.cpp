@@ -46,9 +46,10 @@ TEST_CASE("Test Find file", "[getfileCreate2]") {
   TestController testController;
 
   std::shared_ptr<core::Processor> processor = std::make_shared<org::apache::nifi::minifi::processors::GetFile>("getfileCreate2");
+  std::shared_ptr<org::apache::nifi::minifi::Configure> configure = std::make_shared<org::apache::nifi::minifi::Configure>();
 
   std::shared_ptr<core::Processor> processorReport = std::make_shared<org::apache::nifi::minifi::core::reporting::SiteToSiteProvenanceReportingTask>(
-      std::make_shared<org::apache::nifi::minifi::io::StreamFactory>(std::make_shared<org::apache::nifi::minifi::Configure>()));
+      std::make_shared<org::apache::nifi::minifi::io::StreamFactory>(configure), configure);
 
   std::shared_ptr<core::Repository> test_repo = std::make_shared<TestRepository>();
 

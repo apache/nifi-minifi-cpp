@@ -27,6 +27,7 @@
 #include <thread>
 #include <random>
 #include <iostream>
+#include <vector>
 #include "io/CRCStream.h"
 #include "Site2SitePeer.h"
 #include "Site2SiteClientProtocol.h"
@@ -57,9 +58,6 @@ bool Site2SiteClientProtocol::establish() {
 
   if (!ret) {
     logger_->log_error("Site2Site Protocol Version Negotiation failed");
-    /*
-     peer_->yield();
-     tearDown(); */
     return false;
   }
 
@@ -91,7 +89,6 @@ bool Site2SiteClientProtocol::initiateResourceNegotiation() {
 
   if (ret <= 0) {
     logger_->log_info("result of writing version is %i", ret);
-    // tearDown();
     return false;
   }
 
@@ -100,40 +97,36 @@ bool Site2SiteClientProtocol::initiateResourceNegotiation() {
 
   if (ret <= 0) {
     logger_->log_info("result of writing version status code  %i", ret);
-    // tearDown();
     return false;
   }
   logger_->log_info("status code is %i", statusCode);
   switch (statusCode) {
-    case RESOURCE_OK:
-      logger_->log_info("Site2Site Protocol Negotiate protocol version OK");
-      return true;
-    case DIFFERENT_RESOURCE_VERSION:
-      uint32_t serverVersion;
-      ret = peer_->read(serverVersion);
-      if (ret <= 0) {
-        // tearDown();
-        return false;
-      }
-      logger_->log_info("Site2Site Server Response asked for a different protocol version %d", serverVersion);
-      for (unsigned int i = (_currentVersionIndex + 1); i < sizeof(_supportedVersion) / sizeof(uint32_t); i++) {
-        if (serverVersion >= _supportedVersion[i]) {
-          _currentVersion = _supportedVersion[i];
-          _currentVersionIndex = i;
-          return initiateResourceNegotiation();
-        }
-      }
-      ret = -1;
-      // tearDown();
+  case RESOURCE_OK:
+    logger_->log_info("Site2Site Protocol Negotiate protocol version OK");
+    return true;
+  case DIFFERENT_RESOURCE_VERSION:
+    uint32_t serverVersion;
+    ret = peer_->read(serverVersion);
+    if (ret <= 0) {
       return false;
-    case NEGOTIATED_ABORT:
-      logger_->log_info("Site2Site Negotiate protocol response ABORT");
-      ret = -1;
-      // tearDown();
-      return false;
-    default:
-      logger_->log_info("Negotiate protocol response unknown code %d", statusCode);
-      return true;
+    }
+    logger_->log_info("Site2Site Server Response asked for a different protocol version %d", serverVersion);
+    for (unsigned int i = (_currentVersionIndex + 1); i < sizeof(_supportedVersion) / sizeof(uint32_t); i++) {
+      if (serverVersion >= _supportedVersion[i]) {
+        _currentVersion = _supportedVersion[i];
+        _currentVersionIndex = i;
+        return initiateResourceNegotiation();
+      }
+    }
+    ret = -1;
+    return false;
+  case NEGOTIATED_ABORT:
+    logger_->log_info("Site2Site Negotiate protocol response ABORT");
+    ret = -1;
+    return false;
+  default:
+    logger_->log_info("Negotiate protocol response unknown code %d", statusCode);
+    return true;
   }
 
   return true;
@@ -152,7 +145,6 @@ bool Site2SiteClientProtocol::initiateCodecResourceNegotiation() {
 
   if (ret <= 0) {
     logger_->log_debug("result of getCodecResourceName is %i", ret);
-    // tearDown();
     return false;
   }
 
@@ -160,7 +152,6 @@ bool Site2SiteClientProtocol::initiateCodecResourceNegotiation() {
 
   if (ret <= 0) {
     logger_->log_debug("result of _currentCodecVersion is %i", ret);
-    // tearDown();
     return false;
   }
 
@@ -168,40 +159,36 @@ bool Site2SiteClientProtocol::initiateCodecResourceNegotiation() {
   ret = peer_->read(statusCode);
 
   if (ret <= 0) {
-    // tearDown();
     return false;
   }
 
   switch (statusCode) {
-    case RESOURCE_OK:
-      logger_->log_info("Site2Site Codec Negotiate version OK");
-      return true;
-    case DIFFERENT_RESOURCE_VERSION:
-      uint32_t serverVersion;
-      ret = peer_->read(serverVersion);
-      if (ret <= 0) {
-        // tearDown();
-        return false;
-      }
-      logger_->log_info("Site2Site Server Response asked for a different codec version %d", serverVersion);
-      for (unsigned int i = (_currentCodecVersionIndex + 1); i < sizeof(_supportedCodecVersion) / sizeof(uint32_t); i++) {
-        if (serverVersion >= _supportedCodecVersion[i]) {
-          _currentCodecVersion = _supportedCodecVersion[i];
-          _currentCodecVersionIndex = i;
-          return initiateCodecResourceNegotiation();
-        }
-      }
-      ret = -1;
-      // tearDown();
+  case RESOURCE_OK:
+    logger_->log_info("Site2Site Codec Negotiate version OK");
+    return true;
+  case DIFFERENT_RESOURCE_VERSION:
+    uint32_t serverVersion;
+    ret = peer_->read(serverVersion);
+    if (ret <= 0) {
       return false;
-    case NEGOTIATED_ABORT:
-      logger_->log_info("Site2Site Codec Negotiate response ABORT");
-      ret = -1;
-      // tearDown();
-      return false;
-    default:
-      logger_->log_info("Negotiate Codec response unknown code %d", statusCode);
-      return true;
+    }
+    logger_->log_info("Site2Site Server Response asked for a different codec version %d", serverVersion);
+    for (unsigned int i = (_currentCodecVersionIndex + 1); i < sizeof(_supportedCodecVersion) / sizeof(uint32_t); i++) {
+      if (serverVersion >= _supportedCodecVersion[i]) {
+        _currentCodecVersion = _supportedCodecVersion[i];
+        _currentCodecVersionIndex = i;
+        return initiateCodecResourceNegotiation();
+      }
+    }
+    ret = -1;
+    return false;
+  case NEGOTIATED_ABORT:
+    logger_->log_info("Site2Site Codec Negotiate response ABORT");
+    ret = -1;
+    return false;
+  default:
+    logger_->log_info("Negotiate Codec response unknown code %d", statusCode);
+    return true;
   }
 
   return true;
@@ -223,11 +210,10 @@ bool Site2SiteClientProtocol::handShake() {
   int ret = peer_->writeUTF(_commsIdentifier);
 
   if (ret <= 0) {
-    // tearDown();
     return false;
   }
 
-  std::map<std::string, std::string> properties;
+  std::map < std::string, std::string > properties;
   properties[HandShakePropertyStr[GZIP]] = "false";
   properties[HandShakePropertyStr[PORT_IDENTIFIER]] = _portIdStr;
   properties[HandShakePropertyStr[REQUEST_EXPIRATION_MILLIS]] = std::to_string(this->_timeOut);
@@ -243,7 +229,6 @@ bool Site2SiteClientProtocol::handShake() {
   if (_currentVersion >= 3) {
     ret = peer_->writeUTF(peer_->getURL());
     if (ret <= 0) {
-      // tearDown();
       return false;
     }
   }
@@ -251,7 +236,6 @@ bool Site2SiteClientProtocol::handShake() {
   uint32_t size = properties.size();
   ret = peer_->write(size);
   if (ret <= 0) {
-    // tearDown();
     return false;
   }
 
@@ -259,12 +243,10 @@ bool Site2SiteClientProtocol::handShake() {
   for (it = properties.begin(); it != properties.end(); it++) {
     ret = peer_->writeUTF(it->first);
     if (ret <= 0) {
-      // tearDown();
       return false;
     }
     ret = peer_->writeUTF(it->second);
     if (ret <= 0) {
-      // tearDown();
       return false;
     }
     logger_->log_info("Site2Site Protocol Send handshake properties %s %s", it->first.c_str(), it->second.c_str());
@@ -276,31 +258,24 @@ bool Site2SiteClientProtocol::handShake() {
   ret = this->readRespond(code, message);
 
   if (ret <= 0) {
-    // tearDown();
     return false;
   }
 
   switch (code) {
-    case PROPERTIES_OK:
-      logger_->log_info("Site2Site HandShake Completed");
-      _peerState = HANDSHAKED;
-      return true;
-    case PORT_NOT_IN_VALID_STATE:
-    case UNKNOWN_PORT:
-    case PORTS_DESTINATION_FULL:
-      logger_->log_error("Site2Site HandShake Failed because destination port is either invalid or full");
-      ret = -1;
-      /*
-       peer_->yield();
-       tearDown(); */
-      return false;
-    default:
-      logger_->log_info("HandShake Failed because of unknown respond code %d", code);
-      ret = -1;
-      /*
-       peer_->yield();
-       tearDown(); */
-      return false;
+  case PROPERTIES_OK:
+    logger_->log_info("Site2Site HandShake Completed");
+    _peerState = HANDSHAKED;
+    return true;
+  case PORT_NOT_IN_VALID_STATE:
+  case UNKNOWN_PORT:
+  case PORTS_DESTINATION_FULL:
+    logger_->log_error("Site2Site HandShake Failed because destination port is either invalid or full");
+    ret = -1;
+    return false;
+  default:
+    logger_->log_info("HandShake Failed because of unknown respond code %d", code);
+    ret = -1;
+    return false;
   }
 
   return false;
@@ -320,6 +295,64 @@ void Site2SiteClientProtocol::tearDown() {
   _transactionMap.clear();
   peer_->Close();
   _peerState = IDLE;
+}
+
+bool Site2SiteClientProtocol::getPeerList(std::vector<minifi::Site2SitePeerStatus> &peer) {
+  if (establish() && handShake()) {
+    int status = this->writeRequestType(REQUEST_PEER_LIST);
+
+    if (status <= 0) {
+      tearDown();
+      return false;
+    }
+
+    uint32_t number;
+    status = peer_->read(number);
+
+    if (status <= 0) {
+      tearDown();
+      return false;
+    }
+
+    for (int i = 0; i < number; i++) {
+      std::string host;
+      status = peer_->readUTF(host);
+      if (status <= 0) {
+        tearDown();
+        return false;
+      }
+      uint32_t port;
+      status = peer_->read(port);
+      if (status <= 0) {
+        tearDown();
+        return false;
+      }
+      uint8_t secure;
+      status = peer_->read(secure);
+      if (status <= 0) {
+        tearDown();
+        return false;
+      }
+      uint32_t count;
+      status = peer_->read(count);
+      if (status <= 0) {
+        tearDown();
+        return false;
+      }
+      minifi::Site2SitePeerStatus status;
+      status.host_ = host;
+      status.isSecure_ = secure;
+      status.port_ = port;
+      peer.push_back(status);
+      logger_->log_info("Site2Site Peer host %s, port %d, Secure %d", host, port, secure);
+    }
+
+    tearDown();
+    return true;
+  } else {
+    tearDown();
+    return false;
+  }
 }
 
 int Site2SiteClientProtocol::writeRequestType(RequestType type) {
@@ -426,7 +459,6 @@ bool Site2SiteClientProtocol::negotiateCodec() {
   int status = this->writeRequestType(NEGOTIATE_FLOWFILE_CODEC);
 
   if (status <= 0) {
-    // tearDown();
     return false;
   }
 
@@ -435,9 +467,6 @@ bool Site2SiteClientProtocol::negotiateCodec() {
 
   if (!ret) {
     logger_->log_error("Site2Site Codec Version Negotiation failed");
-    /*
-     peer_->yield();
-     tearDown(); */
     return false;
   }
 
@@ -480,7 +509,6 @@ Transaction* Site2SiteClientProtocol::createTransaction(std::string &transaction
     ret = writeRequestType(RECEIVE_FLOWFILES);
 
     if (ret <= 0) {
-      // tearDown();
       return NULL;
     }
 
@@ -490,40 +518,37 @@ Transaction* Site2SiteClientProtocol::createTransaction(std::string &transaction
     ret = readRespond(code, message);
 
     if (ret <= 0) {
-      // tearDown();
       return NULL;
     }
 
     org::apache::nifi::minifi::io::CRCStream<Site2SitePeer> crcstream(peer_.get());
     switch (code) {
-      case MORE_DATA:
-        dataAvailable = true;
-        logger_->log_info("Site2Site peer indicates that data is available");
-        transaction = new Transaction(direction, crcstream);
-        _transactionMap[transaction->getUUIDStr()] = transaction;
-        transactionID = transaction->getUUIDStr();
-        transaction->setDataAvailable(dataAvailable);
-        logger_->log_info("Site2Site create transaction %s", transaction->getUUIDStr().c_str());
-        return transaction;
-      case NO_MORE_DATA:
-        dataAvailable = false;
-        logger_->log_info("Site2Site peer indicates that no data is available");
-        transaction = new Transaction(direction, crcstream);
-        _transactionMap[transaction->getUUIDStr()] = transaction;
-        transactionID = transaction->getUUIDStr();
-        transaction->setDataAvailable(dataAvailable);
-        logger_->log_info("Site2Site create transaction %s", transaction->getUUIDStr().c_str());
-        return transaction;
-      default:
-        logger_->log_info("Site2Site got unexpected response %d when asking for data", code);
-        // tearDown();
-        return NULL;
+    case MORE_DATA:
+      dataAvailable = true;
+      logger_->log_info("Site2Site peer indicates that data is available");
+      transaction = new Transaction(direction, crcstream);
+      _transactionMap[transaction->getUUIDStr()] = transaction;
+      transactionID = transaction->getUUIDStr();
+      transaction->setDataAvailable(dataAvailable);
+      logger_->log_info("Site2Site create transaction %s", transaction->getUUIDStr().c_str());
+      return transaction;
+    case NO_MORE_DATA:
+      dataAvailable = false;
+      logger_->log_info("Site2Site peer indicates that no data is available");
+      transaction = new Transaction(direction, crcstream);
+      _transactionMap[transaction->getUUIDStr()] = transaction;
+      transactionID = transaction->getUUIDStr();
+      transaction->setDataAvailable(dataAvailable);
+      logger_->log_info("Site2Site create transaction %s", transaction->getUUIDStr().c_str());
+      return transaction;
+    default:
+      logger_->log_info("Site2Site got unexpected response %d when asking for data", code);
+      return NULL;
     }
   } else {
     ret = writeRequestType(SEND_FLOWFILES);
 
     if (ret <= 0) {
-      // tearDown();
       return NULL;
     } else {
       org::apache::nifi::minifi::io::CRCStream<Site2SitePeer> crcstream(peer_.get());
@@ -760,7 +785,7 @@ void Site2SiteClientProtocol::receiveFlowFiles(core::ProcessContext *context, co
 
   try {
     while (true) {
-      std::map<std::string, std::string> empty;
+      std::map < std::string, std::string > empty;
       uint64_t startTime = getTimeMillis();
       std::string payload;
       DataPacket packet(this, transaction, empty, payload);
@@ -774,7 +799,7 @@ void Site2SiteClientProtocol::receiveFlowFiles(core::ProcessContext *context, co
         // transaction done
         break;
       }
-      std::shared_ptr<FlowFileRecord> flowFile = std::static_pointer_cast<FlowFileRecord>(session->create());
+      std::shared_ptr<FlowFileRecord> flowFile = std::static_pointer_cast < FlowFileRecord > (session->create());
 
       if (!flowFile) {
         throw Exception(SITE2SITE_EXCEPTION, "Flow File Creation Failed");
@@ -1072,7 +1097,7 @@ bool Site2SiteClientProtocol::complete(std::string transactionID) {
 }
 
 void Site2SiteClientProtocol::transferFlowFiles(core::ProcessContext *context, core::ProcessSession *session) {
-  std::shared_ptr<FlowFileRecord> flow = std::static_pointer_cast<FlowFileRecord>(session->get());
+  std::shared_ptr<FlowFileRecord> flow = std::static_pointer_cast < FlowFileRecord > (session->get());
 
   Transaction *transaction = NULL;
 
@@ -1125,7 +1150,7 @@ void Site2SiteClientProtocol::transferFlowFiles(core::ProcessContext *context, c
       if (transferNanos > _batchSendNanos)
         break;
 
-      flow = std::static_pointer_cast<FlowFileRecord>(session->get());
+      flow = std::static_pointer_cast < FlowFileRecord > (session->get());
 
       if (!flow) {
         continueTransaction = false;

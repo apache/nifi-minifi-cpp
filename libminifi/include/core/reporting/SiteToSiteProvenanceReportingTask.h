@@ -45,8 +45,8 @@ class SiteToSiteProvenanceReportingTask : public minifi::RemoteProcessorGroupPor
   /*!
    * Create a new processor
    */
-  SiteToSiteProvenanceReportingTask(const std::shared_ptr<io::StreamFactory> &stream_factory)
-      : minifi::RemoteProcessorGroupPort(stream_factory, ReportTaskName),
+  SiteToSiteProvenanceReportingTask(const std::shared_ptr<io::StreamFactory> &stream_factory, std::shared_ptr<Configure> configure)
+      : minifi::RemoteProcessorGroupPort(stream_factory, ReportTaskName, "", configure, NULL),
         logger_(logging::LoggerFactory<SiteToSiteProvenanceReportingTask>::getLogger()) {
     this->setTriggerWhenEmpty(true);
     port_ = 0;
