@@ -129,7 +129,7 @@ TEST_CASE("Test YAML Config Processing", "[YamlConfiguration]") {
   "    port name: provenance\n"
   "    port: 8090\n"
   "    port uuid: 2f389b8d-83f2-48d3-b465-048f28a1cb56\n"
-  "    destination url: https://localhost:8090/\n"
+  "    url: https://localhost:8090/\n"
   "    originating url: http://${hostname(true)}:8081/nifi\n"
   "    use compression: true\n"
   "    timeout: 30 secs\n"

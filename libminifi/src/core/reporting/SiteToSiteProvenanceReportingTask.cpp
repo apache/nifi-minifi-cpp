@@ -48,6 +48,7 @@ namespace reporting {
 const char *SiteToSiteProvenanceReportingTask::ProvenanceAppStr = "MiNiFi Flow";
 
 void SiteToSiteProvenanceReportingTask::initialize() {
+  RemoteProcessorGroupPort::initialize();
 }
 
 void SiteToSiteProvenanceReportingTask::getJsonReport(core::ProcessContext *context, core::ProcessSession *session, std::vector<std::shared_ptr<provenance::ProvenanceEventRecord>> &records,

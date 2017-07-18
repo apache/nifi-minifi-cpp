@@ -51,9 +51,10 @@ public:
   ConfigurationListener(std::shared_ptr<FlowController> controller,
       std::shared_ptr<Configure> configure, std::string type) :
       connect_timeout_(20000), read_timeout_(20000), type_(type), configure_(
-          configure), controller_(controller), need_client_certificate_(false) {
+          configure), controller_(controller) {
     logger_ = logging::LoggerFactory<ConfigurationListener>::getLogger();
     running_ = false;
+
   }
   // Destructor
   virtual ~ConfigurationListener() {
@@ -106,12 +107,6 @@ protected:
   std::shared_ptr<Configure> configure_;
   std::shared_ptr<logging::Logger> logger_;
   std::shared_ptr<FlowController> controller_;
-
-  bool need_client_certificate_;
-  std::string certificate_;
-  std::string private_key_;
-  std::string passphrase_;
-  std::string ca_certificate_;
 };
 
 } /* namespace minifi */
