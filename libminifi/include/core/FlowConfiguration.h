@@ -65,6 +65,7 @@ class FlowConfiguration : public CoreComponent {
         flow_file_repo_(flow_file_repo),
         config_path_(path),
         stream_factory_(stream_factory),
+        configuration_(configuration),
         logger_(logging::LoggerFactory<FlowConfiguration>::getLogger()) {
     controller_services_ = std::make_shared<core::controller::ControllerServiceMap>();
     service_provider_ = std::make_shared<core::controller::StandardControllerServiceProvider>(controller_services_, nullptr, configuration);
@@ -128,6 +129,7 @@ class FlowConfiguration : public CoreComponent {
   std::shared_ptr<core::Repository> flow_file_repo_;
   // stream factory
   std::shared_ptr<io::StreamFactory> stream_factory_;
+  std::shared_ptr<Configure> configuration_;
 
  private:
   std::shared_ptr<logging::Logger> logger_;

@@ -40,7 +40,8 @@ public:
    */
   HttpConfigurationListener(std::shared_ptr<FlowController> controller,
       std::shared_ptr<Configure> configure) :
-      minifi::ConfigurationListener(controller, configure, "http") {
+      minifi::ConfigurationListener(controller, configure, "http"),
+      securityConfig_(configure) {
       std::string value;
 
       if (configure->get(Configure::nifi_configuration_listener_http_url, value)) {
@@ -56,14 +57,6 @@ public:
 
   bool pullConfiguration(std::string &configuration);
 
-  /**
-    * Configures a secure connection
-    */
-  void configureSecureConnection(CURL *http_session);
-
-  static CURLcode configureSSLContext(CURL *curl, void *ctx, void *param);
-  static int pemPassWordCb(char *buf, int size, int rwflag, void *param);
-
   // Destructor
   virtual ~HttpConfigurationListener() {
     this->stop();
@@ -71,6 +64,7 @@ public:
   }
 
 protected:
+  minifi::utils::HTTPSecurityConfiguration securityConfig_;
 
 };
 
