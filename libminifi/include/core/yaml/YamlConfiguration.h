@@ -103,10 +103,10 @@ class YamlConfiguration : public FlowConfiguration {
     * @return                 the root ProcessGroup node of the flow
     *                           configuration tree
     */
-   std::unique_ptr<core::ProcessGroup> getRootFromPayload(std::string &yamlConfigPayload) {
-     YAML::Node rootYamlNode = YAML::Load(yamlConfigPayload);
-     return getRoot(&rootYamlNode);
-   }
+  std::unique_ptr<core::ProcessGroup> getRootFromPayload(std::string &yamlConfigPayload) {
+    YAML::Node rootYamlNode = YAML::Load(yamlConfigPayload);
+    return getRoot(&rootYamlNode);
+  }
 
  protected:
 
