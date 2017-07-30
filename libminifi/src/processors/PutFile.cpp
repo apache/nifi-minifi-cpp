@@ -164,8 +164,8 @@ int64_t PutFile::ReadCallback::process(std::shared_ptr<io::BaseStream> stream) {
     _tmpFileOs.write(reinterpret_cast<char*>(buffer), read);
     size += read;
   } while (size < stream->getSize());
-  return size;
   _writeSucceeded = true;
+  return size;
 }
 
 // Renames tmp file to final destination
