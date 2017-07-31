@@ -184,6 +184,9 @@ class TestPlan {
 
  protected:
 
+
+  std::shared_ptr<logging::Logger> logger_;
+
   void finalize();
 
   std::shared_ptr<minifi::Connection> buildFinalConnection(std::shared_ptr<core::Processor> processor, bool setDest = false);

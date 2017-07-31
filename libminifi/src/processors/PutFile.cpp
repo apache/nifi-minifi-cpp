@@ -18,7 +18,7 @@
  * limitations under the License.
  */
 
-#include "../../include/processors/PutFile.h"
+#include "processors/PutFile.h"
 
 #include <sys/stat.h>
 #include <unistd.h>
@@ -30,13 +30,13 @@
 #include <set>
 #include <string>
 
-#include "../../include/core/logging/Logger.h"
-#include "../../include/core/ProcessContext.h"
-#include "../../include/core/Property.h"
-#include "../../include/core/Relationship.h"
-#include "../../include/io/BaseStream.h"
-#include "../../include/io/DataStream.h"
-#include "../../include/io/validation.h"
+#include "core/logging/Logger.h"
+#include "core/ProcessContext.h"
+#include "core/Property.h"
+#include "core/Relationship.h"
+#include "io/BaseStream.h"
+#include "io/DataStream.h"
+#include "io/validation.h"
 
 namespace org {
 namespace apache {
@@ -82,7 +82,7 @@ void PutFile::onTrigger(core::ProcessContext *context, core::ProcessSession *ses
     return;
   }
 
-  std::shared_ptr<FlowFileRecord> flowFile = std::static_pointer_cast < FlowFileRecord > (session->get());
+  std::shared_ptr<FlowFileRecord> flowFile = std::static_pointer_cast<FlowFileRecord>(session->get());
 
   // Do nothing if there are no incoming files
   if (!flowFile) {
@@ -131,6 +131,7 @@ bool PutFile::putFile(core::ProcessSession *session, std::shared_ptr<FlowFileRec
   ReadCallback cb(tmpFile, destFile);
   session->read(flowFile, &cb);
 
+  logger_->log_info("Committing %s", destFile);
   if (cb.commit()) {
     session->transfer(flowFile, Success);
     return true;
