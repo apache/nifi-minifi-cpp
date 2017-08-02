@@ -46,7 +46,7 @@ void SchedulingAgent::enableControllerService(std::shared_ptr<core::controller::
     return serviceNode->enable();
   };
   // create a functor that will be submitted to the thread pool.
-  utils::Worker<bool> functor(f_ex);
+  utils::Worker<bool> functor(f_ex, serviceNode->getUUIDStr());
   // move the functor into the thread pool. While a future is returned
   // we aren't terribly concerned with the result.
   std::future<bool> future;
@@ -59,7 +59,7 @@ void SchedulingAgent::disableControllerService(std::shared_ptr<core::controller:
     return serviceNode->disable();
   };
   // create a functor that will be submitted to the thread pool.
-  utils::Worker<bool> functor(f_ex);
+  utils::Worker<bool> functor(f_ex, serviceNode->getUUIDStr());
   // move the functor into the thread pool. While a future is returned
   // we aren't terribly concerned with the result.
   std::future<bool> future;

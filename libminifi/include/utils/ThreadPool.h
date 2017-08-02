@@ -33,6 +33,35 @@ namespace minifi {
 namespace utils {
 
 /**
+ * Worker task helper that determines
+ * whether or not we will run
+ */
+template<typename T>
+class AfterExecute {
+ public:
+  virtual ~AfterExecute() {
+
+  }
+
+  explicit AfterExecute() {
+
+  }
+
+  explicit AfterExecute(AfterExecute &&other) {
+
+  }
+  virtual bool isFinished(const T &result) = 0;
+  virtual bool isCancelled(const T &result) = 0;
+  /**
+   * Time to wait before re-running this task if necessary
+   * @return milliseconds since epoch after which we are eligible to re-run this task.
+   */
+  virtual int64_t wait_time() {
+    return 0;
+  }
+};
+
+/**
  * Worker task
  * purpose: Provides a wrapper for the functor
  * and returns a future based on the template argument.
@@ -40,12 +69,29 @@ namespace utils {
 template<typename T>
 class Worker {
  public:
-  explicit Worker(std::function<T()> &task)
-      : task(task) {
+  explicit Worker(std::function<T()> &task, const std::string &identifier, std::unique_ptr<AfterExecute<T>> run_determinant)
+      : task(task),
+        run_determinant_(std::move(run_determinant)),
+        identifier_(identifier),
+        time_slice_(0) {
     promise = std::make_shared<std::promise<T>>();
   }
 
-  explicit Worker() {
+  explicit Worker(std::function<T()> &task, const std::string &identifier)
+      : task(task),
+        run_determinant_(nullptr),
+        identifier_(identifier),
+        time_slice_(0) {
+    promise = std::make_shared<std::promise<T>>();
+  }
+
+  explicit Worker(const std::string identifier = "")
+      : identifier_(identifier),
+        time_slice_(0) {
+  }
+
+  virtual ~Worker() {
+
   }
 
   /**
@@ -53,16 +99,39 @@ class Worker {
    */
   Worker(Worker &&other)
       : task(std::move(other.task)),
-        promise(other.promise) {
+        promise(other.promise),
+        time_slice_(std::move(other.time_slice_)),
+        identifier_(std::move(other.identifier_)),
+        run_determinant_(std::move(other.run_determinant_)) {
   }
 
   /**
-   * Runs the task and takes the output from the funtor
+   * Runs the task and takes the output from the functor
    * setting the result into the promise
+   * @return whether or not to continue running
+   *   false == finished || error
+   *   true == run again
    */
-  void run() {
+  virtual bool run() {
     T result = task();
-    promise->set_value(result);
+    if (run_determinant_ == nullptr || (run_determinant_->isFinished(result) || run_determinant_->isCancelled(result))) {
+      promise->set_value(result);
+      return false;
+    }
+    time_slice_ = increment_time(run_determinant_->wait_time());
+    return true;
+  }
+
+  virtual void setIdentifier(const std::string identifier) {
+    identifier_ = identifier;
+  }
+
+  virtual uint64_t getTimeSlice() {
+    return time_slice_;
+  }
+  
+  virtual uint64_t getWaitTime(){
+    return run_determinant_->wait_time();
   }
 
   Worker<T>(const Worker<T>&) = delete;
@@ -72,8 +141,22 @@ class Worker {
 
   std::shared_ptr<std::promise<T>> getPromise();
 
- private:
+  const std::string &getIdentifier() {
+    return identifier_;
+  }
+ protected:
+
+  inline uint64_t increment_time(const uint64_t &time) {
+    std::chrono::time_point<std::chrono::system_clock> now =
+        std::chrono::system_clock::now();
+    auto millis = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count();
+    return millis + time;
+  }
+
+  std::string identifier_;
+  uint64_t time_slice_;
   std::function<T()> task;
+  std::unique_ptr<AfterExecute<T>> run_determinant_;
   std::shared_ptr<std::promise<T>> promise;
 };
 
@@ -81,6 +164,9 @@ template<typename T>
 Worker<T>& Worker<T>::operator =(Worker<T> && other) {
   task = std::move(other.task);
   promise = other.promise;
+  time_slice_ = std::move(other.time_slice_);
+  identifier_ = std::move(other.identifier_);
+  run_determinant_ = std::move(other.run_determinant_);
   return *this;
 }
 
@@ -125,6 +211,21 @@ class ThreadPool {
    * @return true if future can be created and thread pool is in a running state.
    */
   bool execute(Worker<T> &&task, std::future<T> &future);
+
+  /**
+   * attempts to stop tasks with the provided identifier.
+   * @param identifier for worker tasks. Note that these tasks won't
+   * immediately stop.
+   */
+  void stopTasks(const std::string &identifier);
+
+  /**
+   * Returns true if a task is running.
+   */
+  bool isRunning(const std::string &identifier) {
+    return task_status_[identifier] == true;
+  }
+
   /**
    * Starts the Thread Pool
    */
@@ -199,6 +300,8 @@ class ThreadPool {
   moodycamel::ConcurrentQueue<Worker<T>> worker_queue_;
   // notification for available work
   std::condition_variable tasks_available_;
+  // map to identify if a task should be
+  std::map<std::string, bool> task_status_;
   // manager mutex
   std::recursive_mutex manager_mutex_;
   // work queue mutex
@@ -218,6 +321,10 @@ class ThreadPool {
 template<typename T>
 bool ThreadPool<T>::execute(Worker<T> &&task, std::future<T> &future) {
 
+  {
+    std::unique_lock<std::mutex> lock(worker_queue_mutex_);
+    task_status_[task.getIdentifier()] = true;
+  }
   future = std::move(task.getPromise()->get_future());
   bool enqueued = worker_queue_.enqueue(std::move(task));
   if (running_) {
@@ -246,15 +353,78 @@ void ThreadPool<T>::startWorkers() {
 template<typename T>
 void ThreadPool<T>::run_tasks() {
   auto waitperiod = std::chrono::milliseconds(1) * 100;
+  uint64_t wait_decay_ = 0;
   while (running_.load()) {
 
+    // if we exceed 500ms of wait due to not being able to run any tasks and there are tasks available, meaning
+    // they are eligible to run per the fact that the thread pool isn't shut down and the tasks are in a runnable state
+    // BUT they've been continually timesliced, we will lower the wait decay to 100ms and continue incrementing from
+    // there. This ensures we don't have arbitrarily long sleep cycles. 
+    if (wait_decay_ > 500000000L){
+     wait_decay_ = 100000000L;
+    }
+    // if we are spinning, perform a wait. If something changes in the worker such that the timeslice has changed, we will pick that information up. Note that it's possible
+    // we could starve for processing time if all workers are waiting. In the event that the number of workers far exceeds the number of threads, threads will spin and potentially
+    // wait until they arrive at a task that can be run. In this case we reset the wait_decay and attempt to pick up a new task. This means that threads that recently ran should
+    // be more likely to run. This is intentional.
+    
+    if (wait_decay_ > 2000) {
+      std::this_thread::sleep_for(std::chrono::nanoseconds(wait_decay_));
+    }
     Worker<T> task;
     if (!worker_queue_.try_dequeue(task)) {
+
       std::unique_lock<std::mutex> lock(worker_queue_mutex_);
       tasks_available_.wait_for(lock, waitperiod);
       continue;
     }
-    task.run();
+    else {
+
+      std::unique_lock<std::mutex> lock(worker_queue_mutex_);
+      if (!task_status_[task.getIdentifier()]) {
+        continue;
+      }
+    }
+
+    bool wait_to_run = false;
+    if (task.getTimeSlice() > 1) {
+      double wt = (double)task.getWaitTime();
+      auto now = std::chrono::system_clock::now().time_since_epoch();
+      auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now).count();
+      // if our differential is < 10% of the wait time we will not put the task into a wait state
+      // since requeuing will break the time slice contract.
+      if (task.getTimeSlice() > ms && (task.getTimeSlice() - ms) > (wt*.10)) {
+        wait_to_run = true;
+      }
+    }
+    // if we have to wait we re-queue the worker.
+    if (wait_to_run) {
+      {
+        std::unique_lock<std::mutex> lock(worker_queue_mutex_);
+        if (!task_status_[task.getIdentifier()]) {
+          continue;
+        }
+      }
+      worker_queue_.enqueue(std::move(task));
+
+      wait_decay_ += 25;
+      continue;
+    }
+
+    const bool task_renew = task.run();
+    wait_decay_ = 0;
+    if (task_renew) {
+
+      {
+        // even if we have more work to do we will not
+        std::unique_lock<std::mutex> lock(worker_queue_mutex_);
+        if (!task_status_[task.getIdentifier()]) {
+          continue;
+        }
+      }
+      worker_queue_.enqueue(std::move(task));
+
+    }
   }
   current_workers_--;
 
@@ -272,12 +442,19 @@ void ThreadPool<T>::start() {
 }
 
 template<typename T>
+void ThreadPool<T>::stopTasks(const std::string &identifier) {
+  std::unique_lock<std::mutex> lock(worker_queue_mutex_);
+  task_status_[identifier] = false;
+}
+
+template<typename T>
 void ThreadPool<T>::shutdown() {
   if (running_.load()) {
     std::lock_guard<std::recursive_mutex> lock(manager_mutex_);
     running_.store(false);
 
     drain();
+    task_status_.clear();
     if (manager_thread_.joinable())
       manager_thread_.join();
     {

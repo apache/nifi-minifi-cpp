@@ -21,6 +21,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <utility>
 #include <map>
 #include <thread>
 #include <iostream>
@@ -61,8 +62,7 @@ void ThreadedSchedulingAgent::schedule(std::shared_ptr<core::Processor> processo
     return;
   }
 
-  std::map<std::string, std::vector<std::thread *>>::iterator it = _threads.find(processor->getUUIDStr());
-  if (it != _threads.end()) {
+  if (thread_pool_.isRunning(processor->getUUIDStr())) {
     logger_->log_info("Can not schedule threads for processor %s because there are existing threads running");
     return;
   }
@@ -74,18 +74,28 @@ void ThreadedSchedulingAgent::schedule(std::shared_ptr<core::Processor> processo
   processor->onSchedule(processContext.get(), sessionFactory.get());
 
   std::vector<std::thread *> threads;
-  for (int i = 0; i < processor->getMaxConcurrentTasks(); i++) {
-    ThreadedSchedulingAgent *agent = this;
-    std::thread *thread = new std::thread([agent, processor, processContext, sessionFactory] () {
-      agent->run(processor, processContext.get(), sessionFactory.get());
-    });
-    thread->detach();
-    threads.push_back(thread);
-    logger_->log_info("Scheduled thread %d running for process %s", thread->get_id(), processor->getName().c_str());
-  }
-  _threads[processor->getUUIDStr().c_str()] = threads;
 
+  ThreadedSchedulingAgent *agent = this;
+  for (int i = 0; i < processor->getMaxConcurrentTasks(); i++) {
+    // reference the disable function from serviceNode
+    std::function<uint64_t()> f_ex = [agent, processor, processContext, sessionFactory] () {
+      return agent->run(processor, processContext.get(), sessionFactory.get());
+    };
+    // create a functor that will be submitted to the thread pool.
+    std::unique_ptr<TimerAwareMonitor> monitor = std::unique_ptr<TimerAwareMonitor>(new TimerAwareMonitor(&running_));
+    utils::Worker<uint64_t> functor(f_ex, processor->getUUIDStr(), std::move(monitor));
+    // move the functor into the thread pool. While a future is returned
+    // we aren't terribly concerned with the result.
+    std::future<uint64_t> future;
+    thread_pool_.execute(std::move(functor), future);
+  }
+  logger_->log_info("Scheduled thread %d concurrent workers for for process %s", processor->getMaxConcurrentTasks(), processor->getName().c_str());
   return;
+}
+
+void ThreadedSchedulingAgent::stop() {
+  SchedulingAgent::stop();
+  thread_pool_.shutdown();
 }
 
 void ThreadedSchedulingAgent::unschedule(std::shared_ptr<core::Processor> processor) {
@@ -97,18 +107,8 @@ void ThreadedSchedulingAgent::unschedule(std::shared_ptr<core::Processor> proces
     return;
   }
 
-  std::map<std::string, std::vector<std::thread *>>::iterator it = _threads.find(processor->getUUIDStr());
+  thread_pool_.stopTasks(processor->getUUIDStr());
 
-  if (it == _threads.end()) {
-    logger_->log_info("Cannot unschedule threads for processor %s because there are no existing threads running", processor->getName().c_str());
-    return;
-  }
-  for (std::vector<std::thread *>::iterator itThread = it->second.begin(); itThread != it->second.end(); ++itThread) {
-    std::thread *thread = *itThread;
-    logger_->log_info("Scheduled thread %d deleted for process %s", thread->get_id(), processor->getName().c_str());
-    delete thread;
-  }
-  _threads.erase(processor->getUUIDStr());
   processor->clearActiveTask();
 }
 
