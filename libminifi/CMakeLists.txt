@@ -80,9 +80,10 @@ target_link_libraries (minifi ${ZLIB_LIBRARIES})
 
 if (NOT IOS)
 # Include Boost System
-find_package(Boost COMPONENTS system REQUIRED)
+find_package(Boost COMPONENTS system filesystem REQUIRED)
 find_package(CURL)
 target_link_libraries(minifi ${Boost_SYSTEM_LIBRARY})
+target_link_libraries(minifi ${Boost_FILESYSTEM_LIBRARY})
 
 if (CURL_FOUND)
         include_directories(${CURL_INCLUDE_DIRS})
