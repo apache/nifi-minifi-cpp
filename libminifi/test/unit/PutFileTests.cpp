@@ -25,6 +25,8 @@
 #include <set>
 #include <fstream>
 
+#include <boost/filesystem.hpp>
+
 #include "../TestBase.h"
 #include "processors/ListenHTTP.h"
 #include "processors/LogAttribute.h"
@@ -43,18 +45,6 @@ TEST_CASE("Test Creation of PutFile", "[getfileCreate]") {
   TestController testController;
   std::shared_ptr<core::Processor> processor = std::make_shared<org::apache::nifi::minifi::processors::PutFile>("processorname");
   REQUIRE(processor->getName() == "processorname");
-}
-
-uint64_t getModificationTime(std::string filename) {
-  struct stat result;
-  if (stat(filename.c_str(), &result) == 0) {
-#if !defined(_POSIX_C_SOURCE) || defined(_DARWIN_C_SOURCE)
-    return result.st_mtimespec.tv_sec;
-#else
-    return result.st_mtime;
-#endif
-  }
-  return 0;
 }
 
 TEST_CASE("PutFileTest", "[getfileputpfile]") {
@@ -231,7 +221,7 @@ TEST_CASE("PutFileTestFileExistsIgnore", "[getfileputpfile]") {
   file.open(movedFile.str(), std::ios::out);
   file << "tempFile";
   file.close();
-  uint64_t filemodtime = getModificationTime(movedFile.str());
+  auto filemodtime = boost::filesystem::last_write_time(movedFile.str());
 
   std::this_thread::sleep_for(std::chrono::milliseconds(1000));
   plan->reset();
@@ -252,7 +242,7 @@ TEST_CASE("PutFileTestFileExistsIgnore", "[getfileputpfile]") {
   // verify that the fle was moved
   REQUIRE(false == std::ifstream(ss.str()).good());
   REQUIRE(true == std::ifstream(movedFile.str()).good());
-  REQUIRE(filemodtime == getModificationTime(movedFile.str()));
+  REQUIRE(filemodtime == boost::filesystem::last_write_time(movedFile.str()));
   LogTestController::getInstance().reset();
 }
 
@@ -299,7 +289,7 @@ TEST_CASE("PutFileTestFileExistsReplace", "[getfileputpfile]") {
   file.open(movedFile.str(), std::ios::out);
   file << "tempFile";
   file.close();
-  uint64_t filemodtime = getModificationTime(movedFile.str());
+  auto filemodtime = boost::filesystem::last_write_time(movedFile.str());
 
   std::this_thread::sleep_for(std::chrono::milliseconds(1000));
   plan->reset();
@@ -320,7 +310,7 @@ TEST_CASE("PutFileTestFileExistsReplace", "[getfileputpfile]") {
   // verify that the fle was moved
   REQUIRE(false == std::ifstream(ss.str()).good());
   REQUIRE(true == std::ifstream(movedFile.str()).good());
-  REQUIRE(filemodtime != getModificationTime(movedFile.str()));
+  REQUIRE(filemodtime != boost::filesystem::last_write_time(movedFile.str()));
   LogTestController::getInstance().reset();
 }
 
