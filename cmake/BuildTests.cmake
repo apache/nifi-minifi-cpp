@@ -21,7 +21,7 @@ MACRO(GETSOURCEFILES result curdir)
   FILE(GLOB children RELATIVE ${curdir} ${curdir}/*)
   SET(dirlist "")
   FOREACH(child ${children})
-    IF( "${curdir}/${child}" MATCHES .*\\.cpp)
+    IF( "${child}" MATCHES ^[^.].*\\.cpp)
   
       LIST(APPEND dirlist ${child})
     ENDIF()
