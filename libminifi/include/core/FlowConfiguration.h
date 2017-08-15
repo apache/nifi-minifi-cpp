@@ -69,9 +69,8 @@ class FlowConfiguration : public CoreComponent {
         logger_(logging::LoggerFactory<FlowConfiguration>::getLogger()) {
     controller_services_ = std::make_shared<core::controller::ControllerServiceMap>();
     service_provider_ = std::make_shared<core::controller::StandardControllerServiceProvider>(controller_services_, nullptr, configuration);
-    for(auto sl_func : statics_sl_funcs_){
-      registerResource("",sl_func);
-    }
+    // it is okay if this has already been called
+    initialize_static_functions();
   }
 
   virtual ~FlowConfiguration();
@@ -120,9 +119,17 @@ class FlowConfiguration : public CoreComponent {
     return service_provider_;
   }
 
-  static bool add_static_func(std::string functor){
+  static bool add_static_func(std::string functor) {
     statics_sl_funcs_.push_back(functor);
     return true;
+  }
+
+  static void initialize_static_functions() {
+    std::lock_guard<std::mutex> lock(atomic_initialization_);
+    for (auto sl_func : statics_sl_funcs_) {
+      core::ClassLoader::getDefaultClassLoader().registerResource("", sl_func);
+    }
+    statics_sl_funcs_.clear();
   }
 
  protected:
@@ -151,6 +158,7 @@ class FlowConfiguration : public CoreComponent {
 
  private:
   std::shared_ptr<logging::Logger> logger_;
+  static std::mutex atomic_initialization_;
   static std::vector<std::string> statics_sl_funcs_;
 };
 

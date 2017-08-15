@@ -51,6 +51,7 @@ class Configure : public Properties {
   static const char *nifi_provenance_repository_directory_default;
   static const char *nifi_provenance_repository_enable;
   static const char *nifi_flowfile_repository_max_storage_time;
+  static const char *nifi_dbcontent_repository_directory_default;
   static const char *nifi_flowfile_repository_max_storage_size;
   static const char *nifi_flowfile_repository_directory_default;
   static const char *nifi_flowfile_repository_enable;

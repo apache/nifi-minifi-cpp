@@ -57,7 +57,7 @@ Perspectives of the role of MiNiFi should be from the perspective of the agent a
   * PutFile
   * TailFile
   * MergeContent
-* Provenance events generation is supported and are persisted using levelDB.
+* Provenance events generation is supported and are persisted using RocksDB.
 
 ## System Requirements
 
@@ -75,15 +75,19 @@ Perspectives of the role of MiNiFi should be from the perspective of the agent a
 * libboost and boost-devel
   * 1.48.0 or greater
 * libcurl
-* libleveldb and libleveldb-devel
+* librocksdb4.1 and librocksdb-dev
 * libuuid and uuid-dev
 * openssl
+
+
+** NOTE: IF ROCKSDB IS NOT INSTALLED, IT WILL BE BUILT FROM THE THIRD PARTY
+DIRECTORY UNLESS YOU SPECIFY -DDISABLE_ROCKSDB=true WITH CMAKE ***
 
 ### To run
 
 #### Libraries
 * libuuid
-* libleveldb
+* librocksdb *** IF NOT INSTALLED, WILL BE BUILT FROM THIRD PARTY DIRECTORY ***
 * libcurl
 * libssl and libcrypto from openssl 
 
@@ -95,7 +99,7 @@ Yum based Linux Distributions
 $ yum install cmake \
   gcc gcc-c++ \
   libcurl-devel \
-  leveldb-devel leveldb \
+  rocksdb-dev rocksdb \
   libuuid libuuid-devel \
   boost-devel \
   libssl-dev \
@@ -113,7 +117,7 @@ Aptitude based Linux Distributions
 $ apt-get install cmake \
   gcc g++ \
   libcurl-dev \
-  libleveldb-dev libleveldb1v5 \
+  librocksdb-dev librocksdb4.1 \
   uuid-dev uuid \
   libboost-all-dev libssl-dev \
   doxygen
@@ -127,7 +131,7 @@ OS X Using Homebrew (with XCode Command Line Tools installed)
 ```
 # ~/Development/code/apache/nifi-minifi-cpp on git:master
 $ brew install cmake \
-  leveldb \
+  rocksdb \
   ossp-uuid \
   boost \
   openssl \
@@ -345,7 +349,7 @@ https://cwiki.apache.org/confluence/display/MINIFI/C2+Design+Proposal
 ### Configuring Volatile and NO-OP Repositories
 Each of the repositories can be configured to be volatile ( state kept in memory and flushed
  upon restart ) or persistent. Currently, the flow file and provenance repositories can persist
- to LevelDB. The content repository will persist to the local file system if a volatile repo
+ to RocksDB. The content repository will persist to the local file system if a volatile repo
  is not configured.
 
  To configure the repositories:

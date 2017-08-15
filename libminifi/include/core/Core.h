@@ -118,8 +118,12 @@ class CoreComponent {
     uuid_copy(uuid_, other.uuid_);
   }
 
+  virtual ~CoreComponent() {
+
+  }
+
   // Get component name Name
-  std::string getName();
+  virtual std::string getName();
 
   /**
    * Set name.

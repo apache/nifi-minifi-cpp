@@ -19,6 +19,7 @@
 #define LIBMINIFI_INCLUDE_CORE_SERIALIZABLECOMPONENT_H_
 
 #include "io/Serializable.h"
+#include "core/Connectable.h"
 #include "core/Core.h"
 
 namespace org {
@@ -30,12 +31,12 @@ namespace core {
 /**
  * Represents a component that is serializable and an extension point of core Component
  */
-class SerializableComponent : public core::CoreComponent, public minifi::io::Serializable {
+class SerializableComponent : public core::Connectable, public minifi::io::Serializable {
 
  public:
 
   SerializableComponent(const std::string name, uuid_t uuid = nullptr)
-      : core::CoreComponent(name, uuid) {
+      : core::Connectable(name, uuid) {
 
   }
 
@@ -74,6 +75,25 @@ class SerializableComponent : public core::CoreComponent, public minifi::io::Ser
    */
   virtual bool Serialize(const std::string &key, const uint8_t *buffer, const size_t bufferSize) {
     return false;
+  }
+
+  virtual void yield() {
+
+  }
+
+  /**
+   * Determines if we are connected and operating
+   */
+  virtual bool isRunning() {
+    return true;
+  }
+
+  /**
+   * Determines if work is available by this connectable
+   * @return boolean if work is available.
+   */
+  virtual bool isWorkAvailable() {
+    return true;
   }
 
 };

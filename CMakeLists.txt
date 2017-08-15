@@ -17,13 +17,15 @@
 # under the License.
 #
 
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 3.0)
 project(nifi-minifi-cpp)
 set(PROJECT_NAME "nifi-minifi-cpp")
 set(PROJECT_VERSION_MAJOR 0)
 set(PROJECT_VERSION_MINOR 3)
 set(PROJECT_VERSION_PATCH 0)
-option(test "Build all tests." ON)
+option(SKIP_TESTS "Skips building all tests." OFF)
+
+include(FeatureSummary)
 
 #### Establish Project Configuration ####
 # Enable usage of the VERSION specifier
@@ -50,10 +52,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Enable asan in DEBUG for compatibility with civet
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=address")
-
 # Search for threads
 find_package(Threads REQUIRED)
-find_package(CURL)
 
 # Set the right openssl root path
 if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
@@ -73,15 +73,9 @@ endif (OPENSSL_FOUND)
 # Provide custom modules for the project
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
-# Include LevelDB
-find_package (Leveldb REQUIRED)
-if (LEVELDB_FOUND)
-    include_directories(${LEVELDB_INCLUDE_DIRS})
-else ()
-    message( FATAL_ERROR "LevelDB was not found. Please install LevelDB" )
-endif (LEVELDB_FOUND)
 find_package(UUID REQUIRED)
 file(GLOB SPD_SOURCES "thirdparty/spdlog-20170710/include/spdlog/*")
+
 
 
 
@@ -109,10 +103,34 @@ add_subdirectory(thirdparty/yaml-cpp-yaml-cpp-0.5.3)
 add_subdirectory(thirdparty/civetweb-1.9.1 EXCLUDE_FROM_ALL)
 include_directories(thirdparty/concurrentqueue)
 add_subdirectory(libminifi)
-if (CURL_FOUND AND NOT DISABLE_CURL)
+if (NOT DISABLE_CURL)
+	find_package(CURL)
 	add_subdirectory(extensions/http-curl)
 	mark_as_advanced(HTTP-CURL)
-endif(CURL_FOUND)
+	
+endif()
+
+if (NOT DISABLE_ROCKSDB)
+	find_package(RocksDB)
+	if (NOT ROCKSDB_FOUND)
+		add_subdirectory(thirdparty/rocksdb/)
+		include_directories(thirdparty/rocksdb/include)
+	else()
+		include_directories(${ROCKSDB_INCLUDE_DIR})
+	endif()
+	
+	add_subdirectory(extensions/rocksdb-repos)
+	mark_as_advanced(ROCKSDB-REPOS)
+
+	
+endif()
+
+## ENABLE FEATURE INFORMATION
+ADD_FEATURE_INFO("HTTP CURL" HTTP-CURL "This enables RESTProtocol, InvokeHTTP, and the HTTPClient for Site to Site")
+ADD_FEATURE_INFO("ROCKSDB REPOS" ROCKSDB-REPOS "This Enables persistent provenance, flowfile, and content repositories using RocksDB")
+
+## NOW WE CAN ADD LIBRARIES AND EXTENSIONS TO MAIN
+
 add_subdirectory(main)
 
 
@@ -151,7 +169,9 @@ set(CPACK_COMPONENTS_ALL bin)
 
 include(CPack)
 
-include(BuildTests)
+if (NOT SKIP_TESTS)
+	include(BuildTests)
+endif()
 
 include(BuildDocs)
 
@@ -168,3 +188,5 @@ add_custom_target(
         apache-rat
         ${CMAKE_COMMAND} -P ${CMAKE_SOURCE_DIR}/cmake/RunApacheRAT.cmake
         COMMAND java -jar ${CMAKE_SOURCE_DIR}/thirdparty/apache-rat/apache-rat-0.12/apache-rat-0.12.jar -E ${CMAKE_SOURCE_DIR}/thirdparty/apache-rat/.rat-excludes -d ${CMAKE_SOURCE_DIR} | grep -B 1 -A 15 Summary )
+
+feature_summary(WHAT ALL FILENAME ${CMAKE_BINARY_DIR}/all.log)

@@ -21,7 +21,6 @@
 #include <mutex>
 #include <vector>
 #include <map>
-#include "Connectable.h"
 #include "utils/StringUtils.h"
 #include <dlfcn.h>
 #include "core/Core.h"
@@ -55,28 +54,28 @@ class ObjectFactory {
   /**
    * Create a shared pointer to a new processor.
    */
-  virtual std::shared_ptr<Connectable> create(const std::string &name) {
+  virtual std::shared_ptr<CoreComponent> create(const std::string &name) {
     return nullptr;
   }
 
   /**
    * Create a shared pointer to a new processor.
    */
-  virtual Connectable *createRaw(const std::string &name) {
+  virtual CoreComponent *createRaw(const std::string &name) {
     return nullptr;
   }
 
   /**
    * Create a shared pointer to a new processor.
    */
-  virtual std::shared_ptr<Connectable> create(const std::string &name, uuid_t uuid) {
+  virtual std::shared_ptr<CoreComponent> create(const std::string &name, uuid_t uuid) {
     return nullptr;
   }
 
   /**
    * Create a shared pointer to a new processor.
    */
-  virtual Connectable* createRaw(const std::string &name, uuid_t uuid) {
+  virtual CoreComponent* createRaw(const std::string &name, uuid_t uuid) {
     return nullptr;
   }
 
@@ -119,33 +118,33 @@ class DefautObjectFactory : public ObjectFactory {
   /**
    * Create a shared pointer to a new processor.
    */
-  virtual std::shared_ptr<Connectable> create(const std::string &name) {
+  virtual std::shared_ptr<CoreComponent> create(const std::string &name) {
     std::shared_ptr<T> ptr = std::make_shared<T>(name);
-    return std::static_pointer_cast<Connectable>(ptr);
+    return std::static_pointer_cast<CoreComponent>(ptr);
   }
 
   /**
    * Create a shared pointer to a new processor.
    */
-  virtual std::shared_ptr<Connectable> create(const std::string &name, uuid_t uuid) {
+  virtual std::shared_ptr<CoreComponent> create(const std::string &name, uuid_t uuid) {
     std::shared_ptr<T> ptr = std::make_shared<T>(name, uuid);
-    return std::static_pointer_cast<Connectable>(ptr);
+    return std::static_pointer_cast<CoreComponent>(ptr);
   }
 
   /**
    * Create a shared pointer to a new processor.
    */
-  virtual Connectable* createRaw(const std::string &name) {
+  virtual CoreComponent* createRaw(const std::string &name) {
     T *ptr = new T(name);
-    return dynamic_cast<Connectable*>(ptr);
+    return dynamic_cast<CoreComponent*>(ptr);
   }
 
   /**
    * Create a shared pointer to a new processor.
    */
-  virtual Connectable* createRaw(const std::string &name, uuid_t uuid) {
+  virtual CoreComponent* createRaw(const std::string &name, uuid_t uuid) {
     T *ptr = new T(name, uuid);
-    return dynamic_cast<Connectable*>(ptr);
+    return dynamic_cast<CoreComponent*>(ptr);
   }
 
   /**
@@ -234,7 +233,7 @@ class ClassLoader {
    * @param uuid uuid of object
    * @return nullptr or object created from class_name definition.
    */
-  template<class T = Connectable>
+  template<class T = CoreComponent>
   std::shared_ptr<T> instantiate(const std::string &class_name, const std::string &name);
 
   /**
@@ -243,7 +242,7 @@ class ClassLoader {
    * @param uuid uuid of object
    * @return nullptr or object created from class_name definition.
    */
-  template<class T = Connectable>
+  template<class T = CoreComponent>
   std::shared_ptr<T> instantiate(const std::string &class_name, uuid_t uuid);
 
   /**
@@ -252,7 +251,7 @@ class ClassLoader {
    * @param uuid uuid of object
    * @return nullptr or object created from class_name definition.
    */
-  template<class T = Connectable>
+  template<class T = CoreComponent>
   T *instantiateRaw(const std::string &class_name, const std::string &name);
 
   /**
@@ -261,7 +260,7 @@ class ClassLoader {
    * @param uuid uuid of object
    * @return nullptr or object created from class_name definition.
    */
-  template<class T = Connectable>
+  template<class T = CoreComponent>
   T *instantiateRaw(const std::string &class_name, uuid_t uuid);
 
  protected:
@@ -282,7 +281,7 @@ std::shared_ptr<T> ClassLoader::instantiate(const std::string &class_name, const
   auto factory_entry = loaded_factories_.find(class_name);
   if (factory_entry != loaded_factories_.end()) {
     auto obj = factory_entry->second->create(name);
-    return std::static_pointer_cast<T>(obj);
+    return std::dynamic_pointer_cast<T>(obj);
   } else {
     return nullptr;
   }
@@ -294,7 +293,7 @@ std::shared_ptr<T> ClassLoader::instantiate(const std::string &class_name, uuid_
   auto factory_entry = loaded_factories_.find(class_name);
   if (factory_entry != loaded_factories_.end()) {
     auto obj = factory_entry->second->create(class_name, uuid);
-    return std::static_pointer_cast<T>(obj);
+    return std::dynamic_pointer_cast<T>(obj);
   } else {
     return nullptr;
   }
