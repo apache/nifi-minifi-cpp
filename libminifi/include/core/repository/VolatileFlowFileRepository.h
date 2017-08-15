@@ -19,6 +19,7 @@
 #define LIBMINIFI_INCLUDE_CORE_REPOSITORY_VOLATILEFLOWFILEREPOSITORY_H_
 
 #include "VolatileRepository.h"
+#include "FlowFileRecord.h"
 
 namespace org {
 namespace apache {
@@ -36,7 +37,8 @@ class VolatileFlowFileRepository : public VolatileRepository<std::string> {
   explicit VolatileFlowFileRepository(std::string repo_name = "", std::string dir = REPOSITORY_DIRECTORY, int64_t maxPartitionMillis = MAX_REPOSITORY_ENTRY_LIFE_TIME, int64_t maxPartitionBytes =
   MAX_REPOSITORY_STORAGE_SIZE,
                                       uint64_t purgePeriod = REPOSITORY_PURGE_PERIOD)
-      : VolatileRepository(repo_name.length() > 0 ? repo_name : core::getClassName<VolatileRepository>(), "", maxPartitionMillis, maxPartitionBytes, purgePeriod)
+      : core::SerializableComponent(repo_name, 0),
+        VolatileRepository(repo_name.length() > 0 ? repo_name : core::getClassName<VolatileRepository>(), "", maxPartitionMillis, maxPartitionBytes, purgePeriod)
 
   {
     purge_required_ = true;
@@ -50,8 +52,11 @@ class VolatileFlowFileRepository : public VolatileRepository<std::string> {
       if (purge_required_ && nullptr != content_repo_) {
         std::lock_guard<std::mutex> lock(purge_mutex_);
         for (auto purgeItem : purge_list_) {
-          std::shared_ptr<minifi::ResourceClaim> newClaim = std::make_shared<minifi::ResourceClaim>(purgeItem, content_repo_, true);
-          content_repo_->remove(newClaim);
+          std::shared_ptr<FlowFileRecord> eventRead = std::make_shared<FlowFileRecord>(shared_from_this(), content_repo_);
+          if (eventRead->DeSerialize(reinterpret_cast<const uint8_t *>(purgeItem.data()), purgeItem.size())) {
+            std::shared_ptr<minifi::ResourceClaim> newClaim = eventRead->getResourceClaim();
+            content_repo_->remove(newClaim);
+          }
         }
         purge_list_.resize(0);
         purge_list_.clear();
@@ -65,6 +70,13 @@ class VolatileFlowFileRepository : public VolatileRepository<std::string> {
   }
 
  protected:
+
+  virtual void emplace(RepoValue<std::string> &old_value) {
+    std::string buffer;
+    old_value.emplace(buffer);
+    std::lock_guard<std::mutex> lock(purge_mutex_);
+    purge_list_.push_back(buffer);
+  }
 
   std::shared_ptr<core::ContentRepository> content_repo_;
 

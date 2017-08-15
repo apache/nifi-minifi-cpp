@@ -24,6 +24,7 @@
 #include "../ContentRepository.h"
 #include "core/repository/VolatileRepository.h"
 #include "properties/Configure.h"
+#include "core/Connectable.h"
 #include "core/logging/LoggerConfiguration.h"
 namespace org {
 namespace apache {
@@ -36,13 +37,14 @@ namespace repository {
  * Purpose: Stages content into a volatile area of memory. Note that   when the maximum number
  * of entries is consumed we will rollback a session to wait for others to be freed.
  */
-class VolatileContentRepository : public core::ContentRepository, public core::repository::VolatileRepository<std::shared_ptr<minifi::ResourceClaim>> {
+class VolatileContentRepository : public core::ContentRepository, public virtual core::repository::VolatileRepository<std::shared_ptr<minifi::ResourceClaim>> {
  public:
 
   static const char *minimal_locking;
 
   explicit VolatileContentRepository(std::string name = getClassName<VolatileContentRepository>())
       : core::repository::VolatileRepository<std::shared_ptr<minifi::ResourceClaim>>(name),
+        core::SerializableComponent(name,0),
         logger_(logging::LoggerFactory<VolatileContentRepository>::getLogger()),
         minimize_locking_(true) {
     max_count_ = 15000;
@@ -100,13 +102,14 @@ class VolatileContentRepository : public core::ContentRepository, public core::r
   virtual bool remove(const std::shared_ptr<minifi::ResourceClaim> &claim);
 
  protected:
+
   virtual void start();
 
   virtual void run();
 
   template<typename T2>
   std::shared_ptr<T2> shared_from_parent() {
-    return std::static_pointer_cast<T2>(shared_from_this());
+    return std::dynamic_pointer_cast<T2>(shared_from_this());
   }
 
  private:

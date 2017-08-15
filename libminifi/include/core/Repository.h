@@ -41,6 +41,7 @@
 #include "utils/TimeUtil.h"
 #include "utils/StringUtils.h"
 #include "Core.h"
+#include "core/Connectable.h"
 
 namespace org {
 namespace apache {
@@ -53,7 +54,7 @@ namespace core {
 #define MAX_REPOSITORY_ENTRY_LIFE_TIME (600000) // 10 minute
 #define REPOSITORY_PURGE_PERIOD (2500) // 2500 msec
 
-class Repository : public core::SerializableComponent {
+class Repository : public virtual core::SerializableComponent {
  public:
   /*
    * Constructor for the repository
@@ -100,6 +101,12 @@ class Repository : public core::SerializableComponent {
     }
     return found;
   }
+
+  void setConnectionMap(std::map<std::string, std::shared_ptr<core::Connectable>> &connectionMap) {
+      this->connectionMap = connectionMap;
+    }
+
+
   virtual bool Get(const std::string &key, std::string &value) {
     return false;
   }
@@ -204,6 +211,7 @@ class Repository : public core::SerializableComponent {
   Repository &operator=(const Repository &parent) = delete;
 
  protected:
+  std::map<std::string, std::shared_ptr<core::Connectable>> connectionMap;
   // Mutex for protection
   std::mutex mutex_;
   // repository directory

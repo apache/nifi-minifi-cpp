@@ -37,7 +37,7 @@ namespace repository {
 
 /**
  * Flow File repository
- * Design: Extends Repository and implements the run function, using LevelDB as the primary substrate.
+ * Design: Extends Repository and implements the run function, using RocksDB as the primary substrate.
  */
 template<typename T>
 class VolatileRepository : public core::Repository, public std::enable_shared_from_this<VolatileRepository<T>> {
@@ -120,6 +120,11 @@ class VolatileRepository : public core::Repository, public std::enable_shared_fr
   virtual void start();
 
  protected:
+
+  virtual void emplace(RepoValue<T> &old_value) {
+    std::lock_guard<std::mutex> lock(purge_mutex_);
+    purge_list_.push_back(old_value.getKey());
+  }
 
   /**
    * Tests whether or not the current size exceeds the capacity
@@ -208,7 +213,7 @@ bool VolatileRepository<T>::initialize(const std::shared_ptr<Configure> &configu
   }
 
   logger_->log_info("Resizing value_vector_ for %s count is %d", getName(), max_count_);
-  logger_->log_info("Using a maximum size of %u", max_size_);
+  logger_->log_info("Using a maximum size for %s of %u", getName(), max_size_);
   value_vector_.reserve(max_count_);
   for (int i = 0; i < max_count_; i++) {
     value_vector_.emplace_back(new AtomicEntry<T>(&current_size_, &max_size_));
@@ -245,7 +250,7 @@ bool VolatileRepository<T>::Put(T key, const uint8_t *buf, size_t bufLen) {
     logger_->log_debug("Set repo value at %d out of %d updated %d current_size %d, adding %d to  %d", private_index, max_count_, updated == true, reclaimed_size, size, current_size_.load());
     if (updated && reclaimed_size > 0) {
       std::lock_guard<std::mutex> lock(mutex_);
-      purge_list_.push_back(old_value.getKey());
+      emplace(old_value);
     }
     if (reclaimed_size > 0) {
       /**
@@ -270,11 +275,14 @@ bool VolatileRepository<T>::Put(T key, const uint8_t *buf, size_t bufLen) {
  */
 template<typename T>
 bool VolatileRepository<T>::Delete(T key) {
+  logger_->log_debug("Delete from volatile");
   for (auto ent : value_vector_) {
     // let the destructor do the cleanup
     RepoValue<T> value;
     if (ent->getValue(key, value)) {
       current_size_ -= value.size();
+      logger_->log_debug("Delete and pushed into purge_list from volatile");
+      emplace(value);
       return true;
     }
   }

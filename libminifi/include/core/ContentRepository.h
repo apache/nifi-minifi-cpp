@@ -23,6 +23,7 @@
 #include "io/DataStream.h"
 #include "io/BaseStream.h"
 #include "StreamManager.h"
+#include "core/Connectable.h"
 
 namespace org {
 namespace apache {
@@ -35,6 +36,7 @@ namespace core {
  */
 class ContentRepository : public StreamManager<minifi::ResourceClaim> {
  public:
+
   virtual ~ContentRepository() {
 
   }

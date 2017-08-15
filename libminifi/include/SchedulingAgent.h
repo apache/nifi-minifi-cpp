@@ -38,7 +38,6 @@
 #include "core/ProcessContext.h"
 #include "core/controller/ControllerServiceProvider.h"
 #include "core/controller/ControllerServiceNode.h"
-#include "provenance/ProvenanceRepository.h"
 
 namespace org {
 namespace apache {

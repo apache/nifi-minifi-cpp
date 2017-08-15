@@ -36,7 +36,7 @@ class VolatileProvenanceRepository : public VolatileRepository<std::string> {
   explicit VolatileProvenanceRepository(std::string repo_name = "", std::string dir = REPOSITORY_DIRECTORY, int64_t maxPartitionMillis = MAX_REPOSITORY_ENTRY_LIFE_TIME, int64_t maxPartitionBytes =
   MAX_REPOSITORY_STORAGE_SIZE,
                                         uint64_t purgePeriod = REPOSITORY_PURGE_PERIOD)
-      : VolatileRepository(repo_name.length() > 0 ? repo_name : core::getClassName<VolatileRepository>(), "", maxPartitionMillis, maxPartitionBytes, purgePeriod)
+      : core::SerializableComponent(repo_name, 0),VolatileRepository(repo_name.length() > 0 ? repo_name : core::getClassName<VolatileRepository>(), "", maxPartitionMillis, maxPartitionBytes, purgePeriod)
 
   {
     purge_required_ = false;
@@ -44,6 +44,10 @@ class VolatileProvenanceRepository : public VolatileRepository<std::string> {
 
   virtual void run() {
     repo_full_ = false;
+  }
+ protected:
+  virtual void emplace(RepoValue<std::string> &old_value) {
+    purge_list_.push_back(old_value.getKey());
   }
  private:
 

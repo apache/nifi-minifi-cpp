@@ -33,7 +33,8 @@ std::shared_ptr<utils::IdGenerator> FlowFile::id_generator_ = utils::IdGenerator
 std::shared_ptr<logging::Logger> FlowFile::logger_ = logging::LoggerFactory<FlowFile>::getLogger();
 
 FlowFile::FlowFile()
-    : size_(0),
+    : Connectable("FlowFile", 0),
+      size_(0),
       id_(0),
       stored(false),
       offset_(0),
@@ -47,14 +48,6 @@ FlowFile::FlowFile()
   entry_date_ = getTimeMillis();
   event_time_ = entry_date_;
   lineage_start_date_ = entry_date_;
-
-  char uuidStr[37] = { 0 };
-
-  // Generate the global UUID for the flow record
-  id_generator_->generate(uuid_);
-
-  uuid_unparse_lower(uuid_, uuidStr);
-  uuid_str_ = uuidStr;
 }
 
 FlowFile::~FlowFile() {
@@ -74,7 +67,7 @@ FlowFile& FlowFile::operator=(const FlowFile& other) {
   claim_ = other.claim_;
   if (claim_ != nullptr)
     this->claim_->increaseFlowFileRecordOwnedCount();
-  uuid_str_ = other.uuid_str_;
+  uuidStr_ = other.uuidStr_;
   connection_ = other.connection_;
   original_connection_ = other.original_connection_;
   return *this;

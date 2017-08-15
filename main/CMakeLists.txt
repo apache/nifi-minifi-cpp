@@ -23,7 +23,18 @@ IF(POLICY CMP0048)
   CMAKE_POLICY(SET CMP0048 OLD)
 ENDIF(POLICY CMP0048)
 
-include_directories(../libminifi/include  ../libminifi/include/c2  ../libminifi/include/c2/protocols/  ../libminifi/include/core/state ./libminifi/include/core/statemanagement/metrics  ../libminifi/include/core/yaml  ../libminifi/include/core  ../thirdparty/spdlog-20170710/include ../thirdparty/concurrentqueue ../thirdparty/yaml-cpp-yaml-cpp-0.5.3/include ../thirdparty/civetweb-1.9.1/include ../thirdparty/jsoncpp/include ../thirdparty/leveldb-1.18/include ../thirdparty/)
+include_directories(../libminifi/include  ../libminifi/include/c2  ../libminifi/include/c2/protocols/  ../libminifi/include/core/state ./libminifi/include/core/statemanagement/metrics  ../libminifi/include/core/yaml  ../libminifi/include/core  ../thirdparty/spdlog-20170710/include ../thirdparty/concurrentqueue ../thirdparty/yaml-cpp-yaml-cpp-0.5.3/include ../thirdparty/civetweb-1.9.1/include ../thirdparty/jsoncpp/include ../thirdparty/)
+
+include(CheckCXXCompilerFlag)
+CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
+CHECK_CXX_COMPILER_FLAG("-std=c++0x" COMPILER_SUPPORTS_CXX0X)
+if(COMPILER_SUPPORTS_CXX11)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Os")
+elseif(COMPILER_SUPPORTS_CXX0X)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x -Os")
+else()
+ message(STATUS "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
+endif()
 
 find_package(Boost REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS})
@@ -43,23 +54,28 @@ find_package(UUID REQUIRED)
 find_package(OpenSSL REQUIRED)
 include_directories(${OPENSSL_INCLUDE_DIR})
 
-# Link against minifi, yaml-cpp, civetweb-cpp, uuid, openssl, jsoncpp and leveldb
-target_link_libraries(minifiexe minifi yaml-cpp c-library civetweb-cpp ${JSON_CPP_LIB} ${UUID_LIBRARIES} ${LEVELDB_LIBRARIES} ${OPENSSL_LIBRARIES})
-message("**** HTTP Curl is from libminifi ${HTTP-CURL}")
+# Link against minifi, yaml-cpp, civetweb-cpp, uuid, openssl, jsoncpp and rocksdb
+target_link_libraries(minifiexe minifi yaml-cpp c-library civetweb-cpp ${JSON_CPP_LIB} ${UUID_LIBRARIES} ${OPENSSL_LIBRARIES})
 
 if (APPLE)
 	if (HTTP-CURL)    
     	target_link_libraries (minifiexe -Wl,-all_load ${HTTP-CURL})
     endif()
+    if (ROCKSDB-REPOS)    
+    	target_link_libraries (minifiexe -Wl,-all_load ${ROCKSDB-REPOS})
+    endif()
+    
 else ()
 	if (HTTP-CURL)
 	  target_link_libraries (minifiexe -Wl,--whole-archive ${HTTP-CURL} -Wl,--no-whole-archive)
-	endif()    
+	endif()
+	if (ROCKSDB-REPOS)
+	  target_link_libraries (minifiexe -Wl,--whole-archive ${ROCKSDB-REPOS} -Wl,--no-whole-archive)
+	endif()        
 endif ()
 
 set_property(TARGET minifiexe PROPERTY INTERPROCEDURAL_OPTIMIZATION True)
-#SET (MYLIB -Wl,-all_load minifi-accumulo)
-#TARGET_LINK_LIBRARIES(minifiexe ${MYLIB} )
+
 set_target_properties(minifiexe
         PROPERTIES OUTPUT_NAME minifi)
 
@@ -69,3 +85,7 @@ install(TARGETS minifiexe
         RUNTIME
         DESTINATION bin
         COMPONENT bin)
+        
+
+add_custom_command(TARGET minifiexe POST_BUILD
+           COMMAND cat ${CMAKE_BINARY_DIR}/all.log)

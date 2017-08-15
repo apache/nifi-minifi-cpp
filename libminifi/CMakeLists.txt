@@ -39,8 +39,8 @@ IF (IOS)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fobjc-abi-version=2 -fobjc-arc -std=gnu++11 -stdlib=libc++ -isysroot ${CMAKE_OSX_SYSROOT} -DIOS")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fobjc-abi-version=2 -fobjc-arc -isysroot ${CMAKE_OSX_SYSROOT} -DIOS")
 ELSE ()
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DLEVELDB_SUPPORT -DOPENSSL_SUPPORT -DYAML_SUPPORT")
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DLEVELDB_SUPPORT -DOPENSSL_SUPPORT -DYAML_SUPPORT")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DOPENSSL_SUPPORT -DYAML_SUPPORT")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DOPENSSL_SUPPORT -DYAML_SUPPORT")
 ENDIF()
 
 
@@ -61,6 +61,7 @@ include_directories(../thirdparty/yaml-cpp-yaml-cpp-0.5.3/include)
 include_directories(../thirdparty/civetweb-1.9.1/include)
 include_directories(../thirdparty/jsoncpp/include)
 include_directories(../thirdparty/concurrentqueue/)
+include_directories(../thirdparty/rocksdb/include)
 include_directories(include)
 
 file(GLOB SOURCES  "src/core/logging/*.cpp"  "src/core/state/*.cpp" "src/c2/protocols/*.cpp" "src/c2/*.cpp" "src/io/*.cpp" "src/io/tls/*.cpp" "src/core/controller/*.cpp" "src/controllers/*.cpp" "src/core/*.cpp"  "src/core/repository/*.cpp" "src/core/yaml/*.cpp" "src/core/reporting/*.cpp"  "src/provenance/*.cpp" "src/processors/*.cpp" "src/utils/*.cpp" "src/*.cpp")
@@ -90,14 +91,10 @@ find_package(Boost COMPONENTS system filesystem REQUIRED)
 target_link_libraries(minifi ${Boost_SYSTEM_LIBRARY})
 target_link_libraries(minifi ${Boost_FILESYSTEM_LIBRARY})
 
-# Include LevelDB
-find_package (Leveldb REQUIRED)
-if (LEVELDB_FOUND)
-	include_directories(${LEVELDB_INCLUDE_DIRS})
-	target_link_libraries (minifi ${LEVELDB_LIBRARIES})
-else ()
-    message( FATAL_ERROR "LevelDB was not found. Please install LevelDB" )
-endif (LEVELDB_FOUND)
+if (CURL_FOUND)
+        include_directories(${CURL_INCLUDE_DIRS})
+        target_link_libraries (minifi ${CURL_LIBRARIES})
+endif(CURL_FOUND)
 
 # Include OpenSSL
 find_package (OpenSSL REQUIRED)
