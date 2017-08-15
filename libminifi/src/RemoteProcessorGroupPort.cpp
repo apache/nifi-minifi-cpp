@@ -212,7 +212,7 @@ void RemoteProcessorGroupPort::refreshRemoteSite2SiteInfo() {
   if (this->host_.empty() || this->port_ == -1 || this->protocol_.empty())
       return;
 
-  std::string fullUrl = this->protocol_ + this->host_ + ":" + std::to_string(this->port_) + "/nifi-api/controller/";
+  std::string fullUrl = this->protocol_ + this->host_ + ":" + std::to_string(this->port_) + "/nifi-api/controller";
 
   this->site2site_port_ = -1;
   configure_->get(Configure::nifi_rest_api_user_name, this->rest_user_name_);
@@ -221,7 +221,7 @@ void RemoteProcessorGroupPort::refreshRemoteSite2SiteInfo() {
   std::string token;
 
   if (!rest_user_name_.empty()) {
-    std::string loginUrl = this->protocol_ + this->host_ + ":" + std::to_string(this->port_) + "/nifi-api/access/token/";
+    std::string loginUrl = this->protocol_ + this->host_ + ":" + std::to_string(this->port_) + "/nifi-api/access/token";
     token = utils::get_token(loginUrl, this->rest_user_name_, this->rest_password_, this->securityConfig_);
     logger_->log_debug("Token from NiFi REST Api endpoint %s", token);
     if (token.empty())
@@ -285,7 +285,7 @@ void RemoteProcessorGroupPort::refreshRemoteSite2SiteInfo() {
         logger_->log_info("process group remote site2site port %d, is secure %d", site2site_port_, site2site_secure_);
       }
     } else {
-      logger_->log_error("Cannot output body to content for ProcessGroup::refreshRemoteSite2SiteInfo");
+      logger_->log_error("Cannot output body to content for ProcessGroup::refreshRemoteSite2SiteInfo: received HTTP code %d from %s", http_code, fullUrl);
     }
   } else {
     logger_->log_error(
