@@ -167,6 +167,8 @@ class ProcessGroup {
 
   void getConnections(std::map<std::string, std::shared_ptr<Connection>> &connectionMap);
 
+  void getConnections(std::map<std::string, std::shared_ptr<Connectable>> &connectionMap);
+
  protected:
   // A global unique identifier
   uuid_t uuid_;

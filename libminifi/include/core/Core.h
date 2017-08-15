@@ -85,6 +85,7 @@ typename std::enable_if<class_operations<T>::value, std::shared_ptr<T>>::type in
   }
 }
 
+
 /**
  * Base component within MiNiFi
  * Purpose: Many objects store a name and UUID, therefore

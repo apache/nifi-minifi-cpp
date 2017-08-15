@@ -70,6 +70,10 @@ class __attribute__((visibility("default"))) Connectable : public CoreComponent 
    */
   std::set<std::shared_ptr<Connectable>> getOutGoingConnections(std::string relationship);
 
+  void put(std::shared_ptr<Connectable> flow) {
+
+  }
+
   /**
    * Get next incoming connection
    * @return next incoming connection
