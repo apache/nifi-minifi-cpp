@@ -23,7 +23,6 @@
 #include <vector>
 #include <iostream>
 #include <string>
-#include <curl/curlbuild.h>
 #include <curl/easy.h>
 #include <openssl/ssl.h>
 #include "ByteInputCallBack.h"
