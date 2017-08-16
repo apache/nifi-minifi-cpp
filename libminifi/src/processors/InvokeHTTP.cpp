@@ -18,7 +18,6 @@
 
 #include "processors/InvokeHTTP.h"
 #include <regex.h>
-#include <curl/curlbuild.h>
 #include <curl/easy.h>
 #include <uuid/uuid.h>
 #include <memory>
