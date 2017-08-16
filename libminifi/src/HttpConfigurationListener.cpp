@@ -18,7 +18,6 @@
 
 #include "HttpConfigurationListener.h"
 #include "FlowController.h"
-#include <curl/curlbuild.h>
 #include <curl/easy.h>
 #include <iostream>
 #include <iterator>
