@@ -139,7 +139,6 @@ class SingleNodeDockerCluster(Cluster):
 
 
 class Processor(object):
-
     def __init__(self,
                  clazz,
                  properties={},
@@ -189,15 +188,13 @@ class Processor(object):
 
         """
 
-        if (isinstance(other, tuple)):
-            if (isinstance(other[0], tuple)):
+        if isinstance(other, tuple):
+            if isinstance(other[0], tuple):
                 for rel_tuple in other:
-                    rel = {}
-                    rel[rel_tuple[0]] = rel_tuple[1]
+                    rel = {rel_tuple[0]: rel_tuple[1]}
                     self.out_proc.connect(rel)
             else:
-                rel = {}
-                rel[other[0]] = other[1]
+                rel = {other[0]: other[1]}
                 self.out_proc.connect(rel)
         else:
             self.out_proc.connect({'success': other})
@@ -245,8 +242,29 @@ def PutFile(output_dir):
                      auto_terminate=['success', 'failure'])
 
 
-def flow_yaml(processor, root=None, visited=[]):
+class ControllerService(object):
 
+    def __init__(self, properties=None):
+        if properties is None:
+            properties = {}
+        self.properties = properties
+
+
+class SSLContextService(ControllerService):
+
+    def __init__(self, name=None, ca_cert=None):
+
+        super(SSLContextService, self).__init__()
+
+        if name is None:
+            name = str(uuid.uuid4())
+            logging.info('Controller service name was not provided; using generated name \'%s\'', name)
+
+        if ca_cert is not None:
+            self.properties['CA Certificate'] = ca_cert
+
+
+def flow_yaml(processor, root=None, visited=[]):
     if root is None:
         res = {
             'Flow Controller': {

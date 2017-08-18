@@ -34,7 +34,7 @@ def test_invoke_listen_https_one_way():
 
     # TODO define SSLContextService class & generate config yml for services
     crt_file = '/tmp/resources/test-crt.pem'
-    
+
     invoke_flow = (GetFile('/tmp/input')
                    >> LogAttribute()
                    >> InvokeHTTP('https://minifi-listen/contentListener',
