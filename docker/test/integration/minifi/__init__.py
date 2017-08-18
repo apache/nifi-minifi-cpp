@@ -28,7 +28,7 @@ class Cluster(object):
     Docker swarms, or cloud compute/container services.
     """
 
-    def deploy_flow(self, flow):
+    def deploy_flow(self, flow, name=None, vols=None):
         """
         Deploys a flow to the cluster.
         """
@@ -44,6 +44,7 @@ class Cluster(object):
         Clean up ephemeral cluster resources.
         """
 
+
 class SingleNodeDockerCluster(Cluster):
     """
     A "cluster" which consists of a single docker node. Useful for
@@ -58,11 +59,14 @@ class SingleNodeDockerCluster(Cluster):
         # Get docker client
         self.client = docker.from_env()
 
-    def deploy_flow(self, flow, name=None, vols={}):
+    def deploy_flow(self, flow, name=None, vols=None):
         """
         Compiles the flow to YAML and maps it into the container using
         the docker volumes API.
         """
+
+        if vols is None:
+            vols = {}
 
         logging.info('Deploying flow...')
 
@@ -202,10 +206,13 @@ class Processor(object):
         return self
 
 
-def InvokeHTTP(url, method='GET'):
+def InvokeHTTP(url,
+               method='GET',
+               ssl_context_service=None):
     return Processor('InvokeHTTP',
                      properties={'Remote URL': url,
-                                 'HTTP Method': method},
+                                 'HTTP Method': method,
+                                 'SSL Context Service': ssl_context_service.name()},
                      auto_terminate=['success',
                                      'response',
                                      'retry',
@@ -213,9 +220,10 @@ def InvokeHTTP(url, method='GET'):
                                      'no retry'])
 
 
-def ListenHTTP(port):
+def ListenHTTP(port, cert=None):
     return Processor('ListenHTTP',
-                     properties={'Listening Port': port},
+                     properties={'Listening Port': port,
+                                 'SSL Certificate': cert},
                      auto_terminate=['success'])
 
 

@@ -13,22 +13,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 import logging
 import shutil
 import uuid
-
 from threading import Event
 
+import os
 from os import listdir
-from os.path import isfile, join
-
-from watchdog.observers import Observer
+from os.path import join
 from watchdog.events import FileSystemEventHandler
+from watchdog.observers import Observer
 
 from minifi import SingleNodeDockerCluster
 
 logging.basicConfig(level=logging.DEBUG)
+
+
+def put_file_contents(contents, file_abs_path):
+    logging.info('Writing %d bytes of content to file: %s', len(contents), file_abs_path)
+    with open(file_abs_path, 'w') as test_input_file:
+        test_input_file.write(contents)
 
 
 class DockerTestCluster(SingleNodeDockerCluster):
@@ -40,11 +44,14 @@ class DockerTestCluster(SingleNodeDockerCluster):
 
         self.tmp_test_output_dir = '/tmp/.minifi-test-output.' + test_cluster_id
         self.tmp_test_input_dir = '/tmp/.minifi-test-input.' + test_cluster_id
+        self.tmp_test_resources_dir = '/tmp/.minifi-test-resources.' + test_cluster_id
 
         logging.info('Creating tmp test input dir: %s', self.tmp_test_input_dir)
         os.makedirs(self.tmp_test_input_dir, mode=0777)
         logging.info('Creating tmp test output dir: %s', self.tmp_test_output_dir)
         os.makedirs(self.tmp_test_output_dir, mode=0777)
+        logging.info('Creating tmp test resource dir: %s', self.tmp_test_resources_dir)
+        os.makedirs(self.tmp_test_resources_dir, mode=0777)
 
         # Point output validator to ephemeral output dir
         self.output_validator = output_validator
@@ -59,15 +66,15 @@ class DockerTestCluster(SingleNodeDockerCluster):
 
         super(DockerTestCluster, self).__init__()
 
-    def deploy_flow(self, flow, name=None):
+    def deploy_flow(self, flow, name=None, vols=None):
         """
         Performs a standard container flow deployment with the addition
         of volumes supporting test input/output directories.
         """
 
-        vols = {}
-        vols[self.tmp_test_input_dir] = {'bind': '/tmp/input', 'mode': 'rw'}
-        vols[self.tmp_test_output_dir] = {'bind': '/tmp/output', 'mode': 'rw'}
+        vols = {self.tmp_test_input_dir: {'bind': '/tmp/input', 'mode': 'rw'},
+                self.tmp_test_output_dir: {'bind': '/tmp/output', 'mode': 'rw'},
+                self.tmp_test_resources_dir: {'bind': '/tmp/resources', 'mode': 'rw'}}
 
         super(DockerTestCluster, self).deploy_flow(flow, vols=vols, name=name)
 
@@ -77,11 +84,18 @@ class DockerTestCluster(SingleNodeDockerCluster):
         the given content to it.
         """
 
-        test_file_name = join(self.tmp_test_input_dir, str(uuid.uuid4()))
-        logging.info('Writing %d bytes of content to test file: %s', len(contents), test_file_name)
+        file_name = str(uuid.uuid4())
+        file_abs_path = join(self.tmp_test_input_dir, file_name)
+        put_file_contents(contents, file_abs_path)
 
-        with open(test_file_name, 'w') as test_input_file:
-            test_input_file.write(contents)
+    def put_test_resource(self, file_name, contents):
+        """
+        Creates a resource file in the test resource dir and writes
+        the given content to it.
+        """
+
+        file_abs_path = join(self.tmp_test_resources_dir, file_name)
+        put_file_contents(contents, file_abs_path)
 
     def wait_for_output(self, timeout_seconds):
         logging.info('Waiting up to %d seconds for test output...', timeout_seconds)
@@ -122,6 +136,8 @@ class DockerTestCluster(SingleNodeDockerCluster):
         shutil.rmtree(self.tmp_test_input_dir)
         logging.info('Removing tmp test output dir: %s', self.tmp_test_output_dir)
         shutil.rmtree(self.tmp_test_output_dir)
+        logging.info('Removing tmp test resources dir: %s', self.tmp_test_output_dir)
+        shutil.rmtree(self.tmp_test_resources_dir)
 
         super(DockerTestCluster, self).__exit__(exc_type, exc_val, exc_tb)
 

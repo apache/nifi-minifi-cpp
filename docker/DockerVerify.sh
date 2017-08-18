@@ -31,8 +31,13 @@ pip install --upgrade pip setuptools
 
 # Install test dependencies
 echo "Installing test dependencies..." 1>&2
-pip install --upgrade pytest docker PyYAML watchdog
+pip install --upgrade pytest \
+                      docker \
+                      PyYAML \
+                      m2crypto \
+                      watchdog
 
 export MINIFI_VERSION=0.3.0
 export PYTHONPATH="${PYTHONPATH}:${docker_dir}/test/integration"
-pytest -s -v "${docker_dir}"/test/integration
+
+exec pytest -s -v "${docker_dir}"/test/integration
