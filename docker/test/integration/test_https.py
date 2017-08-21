@@ -37,11 +37,11 @@ def test_invoke_listen_https_one_way():
 
     invoke_flow = (GetFile('/tmp/input')
                    >> LogAttribute()
-                   >> InvokeHTTP('https://minifi-listen/contentListener',
+                   >> InvokeHTTP('https://minifi-listen:4430/contentListener',
                                  method='POST',
                                  ssl_context_service=SSLContextService(ca_cert=crt_file)))
 
-    listen_flow = (ListenHTTP(443, cert=crt_file)
+    listen_flow = (ListenHTTP(4430, cert=crt_file)
                    >> LogAttribute()
                    >> PutFile('/tmp/output'))
 
