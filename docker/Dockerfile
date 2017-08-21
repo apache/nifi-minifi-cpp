@@ -100,6 +100,10 @@ RUN mkdir -p $MINIFI_BASE_DIR
 COPY --from=builder ${MINIFI_HOME} ${MINIFI_HOME}
 RUN chown -R ${USER}:${USER} /opt/minifi
 
+# Link crypto libs to known locations for civet
+RUN ln -s /usr/lib/libcrypto.so.1.0.0 /usr/lib/libcrypto.so
+RUN ln -s /usr/lib/libssl.so.1.0.0 /usr/lib/libssl.so
+
 USER $USER
 
 WORKDIR ${MINIFI_HOME}
