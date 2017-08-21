@@ -44,7 +44,8 @@ RUN apk --update --no-cache upgrade && apk --update --no-cache add gcc \
 	git \
 	unzip \
 	gpsd-dev \
-	openssl-dev
+	libressl-dev \
+	zlib-dev
 
 ENV USER minificpp
 ENV MINIFI_BASE_DIR /opt/minifi
@@ -86,7 +87,8 @@ RUN apk --update --no-cache upgrade && apk add --update --no-cache \
 	curl \
 	unzip \
 	gpsd \
-	openssl
+	libressl \
+	zlib
 
 # Start MiNiFi CPP in the foreground
 ENV USER minificpp
