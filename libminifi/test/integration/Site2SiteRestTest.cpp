@@ -86,7 +86,7 @@ int main(int argc, char **argv) {
 
   CivetServer server(cpp_options);
   ConfigHandler h_ex;
-  server.addHandler("/nifi-api/controller/", h_ex);
+  server.addHandler("/nifi-api/controller", h_ex);
   LogTestController::getInstance().setDebug<minifi::RemoteProcessorGroupPort>();
 
   std::string key_dir, test_file_location;
