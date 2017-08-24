@@ -50,6 +50,10 @@ std::shared_ptr<core::FlowFile> ProcessSession::create() {
   return record;
 }
 
+void ProcessSession::add(std::shared_ptr<core::FlowFile> &record) {
+  _addedFlowFiles[record->getUUIDStr()] = record;
+}
+
 std::shared_ptr<core::FlowFile> ProcessSession::create(std::shared_ptr<core::FlowFile> &&parent) {
   std::map<std::string, std::string> empty;
   std::shared_ptr<core::FlowFile> record = std::make_shared<FlowFileRecord>(process_context_->getFlowFileRepository(), process_context_->getContentRepository(), empty);

@@ -56,6 +56,7 @@ Perspectives of the role of MiNiFi should be from the perspective of the agent a
   * ListenSyslog
   * PutFile
   * TailFile
+  * MergeContent
 * Provenance events generation is supported and are persisted using levelDB.
 
 ## System Requirements
