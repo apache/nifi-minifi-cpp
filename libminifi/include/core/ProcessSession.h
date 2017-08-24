@@ -79,6 +79,8 @@ class ProcessSession {
   std::shared_ptr<core::FlowFile> create(std::shared_ptr<core::FlowFile> &parent) {
     return create(parent);
   }
+  // Add a FlowFile to the session
+  void add(std::shared_ptr<core::FlowFile> &flow);
 // Clone a new UUID FlowFile from parent both for content resource claim and attributes
   std::shared_ptr<core::FlowFile> clone(std::shared_ptr<core::FlowFile> &parent);
   // Clone a new UUID FlowFile from parent for attributes and sub set of parent content resource claim
