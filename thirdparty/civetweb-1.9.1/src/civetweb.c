@@ -11826,6 +11826,9 @@ ssl_get_client_cert_info(struct mg_connection *conn)
 		unsigned char buf[256];
 		int len;
 		unsigned int ulen;
+		int ilen;
+		unsigned char *tmp_buf;
+		unsigned char *tmp_p;
 
 		/* Handle to algorithm used for fingerprint */
 		const EVP_MD *digest = EVP_get_digestbyname("sha1");
@@ -11856,7 +11859,24 @@ ssl_get_client_cert_info(struct mg_connection *conn)
 
 		/* Calculate SHA1 fingerprint and store as a hex string */
 		ulen = 0;
-		ASN1_digest((int (*)())i2d_X509, digest, (char *)cert, buf, &ulen);
+
+		/* ASN1_digest is deprecated. Do the calculation manually,
+		 * using EVP_Digest. */
+		ilen = i2d_X509(cert, NULL);
+		tmp_buf =
+			(ilen > 0)
+				? (unsigned char *)mg_malloc((unsigned)ilen + 1)
+				: NULL;
+		if (tmp_buf) {
+			tmp_p = tmp_buf;
+			(void)i2d_X509(cert, &tmp_p);
+			if (!EVP_Digest(
+					tmp_buf, (unsigned)ilen, buf, &ulen, digest, NULL)) {
+				ulen = 0;
+			}
+			mg_free(tmp_buf);
+		}
+
 		if (!hexdump2string(
 		        buf, (int)ulen, str_finger, (int)sizeof(str_finger))) {
 			*str_finger = 0;
@@ -12109,7 +12129,11 @@ set_ssl_option(struct mg_context *ctx)
 	SSL_CTX_set_options(ctx->ssl_ctx, ssl_get_protocol(protocol_ver));
 	SSL_CTX_set_options(ctx->ssl_ctx, SSL_OP_SINGLE_DH_USE);
 	SSL_CTX_set_options(ctx->ssl_ctx, SSL_OP_CIPHER_SERVER_PREFERENCE);
+/* BEGIN Backport of commit from civetweb.c https://github.com/civetweb/civetweb/commit/e849ce4b54c09d5b4441e371f17cf13368ac2234 */
+#if !defined(NO_SSL_DL)
 	SSL_CTX_set_ecdh_auto(ctx->ssl_ctx, 1);
+#endif /* NO_SSL_DL */
+/* END Backport of commit from civetweb.c https://github.com/civetweb/civetweb/commit/e849ce4b54c09d5b4441e371f17cf13368ac2234 */
 
 	/* If a callback has been specified, call it. */
 	callback_ret =
