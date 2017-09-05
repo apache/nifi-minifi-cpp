@@ -21,4 +21,6 @@ add_custom_target(
     COMMAND ${CMAKE_SOURCE_DIR}/docker/DockerBuild.sh 1000 1000 ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH} minificppsource ${CMAKE_SOURCE_DIR}
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/docker/)
 
-
+add_custom_target(
+    docker-verify
+    COMMAND ${CMAKE_SOURCE_DIR}/docker/DockerVerify.sh)
