@@ -28,7 +28,7 @@ class Cluster(object):
     Docker swarms, or cloud compute/container services.
     """
 
-    def deploy_flow(self, flow):
+    def deploy_flow(self, flow, name=None, vols=None):
         """
         Deploys a flow to the cluster.
         """
@@ -44,6 +44,7 @@ class Cluster(object):
         Clean up ephemeral cluster resources.
         """
 
+
 class SingleNodeDockerCluster(Cluster):
     """
     A "cluster" which consists of a single docker node. Useful for
@@ -58,11 +59,14 @@ class SingleNodeDockerCluster(Cluster):
         # Get docker client
         self.client = docker.from_env()
 
-    def deploy_flow(self, flow, name=None, vols={}):
+    def deploy_flow(self, flow, name=None, vols=None):
         """
         Compiles the flow to YAML and maps it into the container using
         the docker volumes API.
         """
+
+        if vols is None:
+            vols = {}
 
         logging.info('Deploying flow...')
 
@@ -99,11 +103,11 @@ class SingleNodeDockerCluster(Cluster):
             self.network = self.client.networks.create(net_name)
 
         container = self.client.containers.run(
-            'apacheminificpp:' + minifi_version,
-            detach=True,
-            name=name,
-            network=self.network.name,
-            volumes=local_vols)
+                'apacheminificpp:' + minifi_version,
+                detach=True,
+                name=name,
+                network=self.network.name,
+                volumes=local_vols)
 
         logging.info('Started container \'%s\'', container.name)
         self.containers.append(container)
@@ -135,13 +139,26 @@ class SingleNodeDockerCluster(Cluster):
 
 
 class Processor(object):
-
     def __init__(self,
                  clazz,
-                 properties={},
-                 schedule={},
+                 properties=None,
+                 schedule=None,
                  name=None,
-                 auto_terminate=[]):
+                 auto_terminate=None,
+                 controller_services=None):
+
+        if controller_services is None:
+            controller_services = []
+
+        if auto_terminate is None:
+            auto_terminate = []
+
+        if schedule is None:
+            schedule = {}
+
+        if properties is None:
+            properties = {}
+
         self.connections = {}
         self.uuid = uuid.uuid4()
 
@@ -151,6 +168,7 @@ class Processor(object):
         self.clazz = clazz
         self.properties = properties
         self.auto_terminate = auto_terminate
+        self.controller_services = controller_services
 
         self.out_proc = self
 
@@ -185,15 +203,13 @@ class Processor(object):
 
         """
 
-        if (isinstance(other, tuple)):
-            if (isinstance(other[0], tuple)):
+        if isinstance(other, tuple):
+            if isinstance(other[0], tuple):
                 for rel_tuple in other:
-                    rel = {}
-                    rel[rel_tuple[0]] = rel_tuple[1]
+                    rel = {rel_tuple[0]: rel_tuple[1]}
                     self.out_proc.connect(rel)
             else:
-                rel = {}
-                rel[other[0]] = other[1]
+                rel = {other[0]: other[1]}
                 self.out_proc.connect(rel)
         else:
             self.out_proc.connect({'success': other})
@@ -202,10 +218,20 @@ class Processor(object):
         return self
 
 
-def InvokeHTTP(url, method='GET'):
+def InvokeHTTP(url,
+               method='GET',
+               ssl_context_service=None):
+    properties = {'Remote URL': url, 'HTTP Method': method}
+
+    controller_services = []
+
+    if ssl_context_service is not None:
+        properties['SSL Context Service'] = ssl_context_service.name
+        controller_services.append(ssl_context_service)
+
     return Processor('InvokeHTTP',
-                     properties={'Remote URL': url,
-                                 'HTTP Method': method},
+                     properties=properties,
+                     controller_services=controller_services,
                      auto_terminate=['success',
                                      'response',
                                      'retry',
@@ -213,9 +239,14 @@ def InvokeHTTP(url, method='GET'):
                                      'no retry'])
 
 
-def ListenHTTP(port):
+def ListenHTTP(port, cert=None):
+    properties = {'Listening Port': port}
+
+    if cert is not None:
+        properties['SSL Certificate'] = cert
+
     return Processor('ListenHTTP',
-                     properties={'Listening Port': port},
+                     properties=properties,
                      auto_terminate=['success'])
 
 
@@ -237,7 +268,42 @@ def PutFile(output_dir):
                      auto_terminate=['success', 'failure'])
 
 
-def flow_yaml(processor, root=None, visited=[]):
+class ControllerService(object):
+    def __init__(self, name=None, properties=None):
+
+        self.id = str(uuid.uuid4())
+
+        if name is None:
+            self.name = str(uuid.uuid4())
+            logging.info('Controller service name was not provided; using generated name \'%s\'', self.name)
+        else:
+            self.name = name
+
+        if properties is None:
+            properties = {}
+
+        self.properties = properties
+
+
+class SSLContextService(ControllerService):
+    def __init__(self, name=None, cert=None, key=None, ca_cert=None):
+        super(SSLContextService, self).__init__(name=name)
+
+        self.service_class = 'SSLContextService'
+
+        if cert is not None:
+            self.properties['Client Certificate'] = cert
+
+        if key is not None:
+            self.properties['Private Key'] = key
+
+        if ca_cert is not None:
+            self.properties['CA Certificate'] = ca_cert
+
+
+def flow_yaml(processor, root=None, visited=None):
+    if visited is None:
+        visited = []
 
     if root is None:
         res = {
@@ -246,7 +312,8 @@ def flow_yaml(processor, root=None, visited=[]):
             },
             'Processors': [],
             'Connections': [],
-            'Remote Processing Groups': []
+            'Remote Processing Groups': [],
+            'Controller Services': []
         }
     else:
         res = root
@@ -270,6 +337,18 @@ def flow_yaml(processor, root=None, visited=[]):
         'Properties': processor.properties,
         'auto-terminated relationships list': processor.auto_terminate
     })
+
+    for svc in processor.controller_services:
+        if svc in visited:
+            continue
+
+        visited.append(svc)
+        res['Controller Services'].append({
+            'name': svc.name,
+            'id': svc.id,
+            'class': svc.service_class,
+            'Properties': svc.properties
+        })
 
     for conn_name in processor.connections:
         conn_procs = processor.connections[conn_name]

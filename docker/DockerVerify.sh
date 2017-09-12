@@ -31,8 +31,23 @@ pip install --upgrade pip setuptools
 
 # Install test dependencies
 echo "Installing test dependencies..." 1>&2
-pip install --upgrade pytest docker PyYAML watchdog
+
+# hint include/library paths if homewbrew is in use
+if brew list 2> /dev/null | grep openssl > /dev/null 2>&1; then
+  echo "Using homebrew paths for openssl" 1>&2
+  export LDFLAGS="-L$(brew --prefix openssl)/lib"
+  export CFLAGS="-I$(brew --prefix openssl)/include"
+  export SWIG_FEATURES="-cpperraswarn -includeall -I$(brew --prefix openssl)/include"
+fi
+
+pip install --upgrade \
+            pytest \
+            docker \
+            PyYAML \
+            m2crypto \
+            watchdog
 
 export MINIFI_VERSION=0.3.0
 export PYTHONPATH="${PYTHONPATH}:${docker_dir}/test/integration"
-pytest -s -v "${docker_dir}"/test/integration
+
+exec pytest -s -v "${docker_dir}"/test/integration
