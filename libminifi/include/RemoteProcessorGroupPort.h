@@ -52,7 +52,7 @@ class RemoteProcessorGroupPort : public core::Processor {
         timeout_(0),
         logger_(logging::LoggerFactory<RemoteProcessorGroupPort>::getLogger()),
         url_(url),
-        ssl_service(std::make_shared<controllers::SSLContextService>("RemoteProcessorGroupPortSSLContextService", configure)) {
+        ssl_service(nullptr) {
     stream_factory_ = stream_factory;
     if (uuid != nullptr) {
       uuid_copy(protocol_uuid_, uuid);
@@ -63,8 +63,6 @@ class RemoteProcessorGroupPort : public core::Processor {
     // REST API port and host
     port_ = -1;
     utils::parse_url(url_, host_, port_, protocol_);
-
-    ssl_service->onEnable();
   }
   // Destructor
   virtual ~RemoteProcessorGroupPort() {
@@ -75,11 +73,12 @@ class RemoteProcessorGroupPort : public core::Processor {
   static const char *ProcessorName;
   // Supported Properties
   static core::Property hostName;
+  static core::Property SSLContext;
   static core::Property port;
   static core::Property portUUID;
   // Supported Relationships
   static core::Relationship relation;
-   public:
+ public:
   void onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory);
   // OnTrigger method, implemented by NiFi RemoteProcessorGroupPort
   virtual void onTrigger(core::ProcessContext *context, core::ProcessSession *session);
@@ -106,8 +105,7 @@ class RemoteProcessorGroupPort : public core::Processor {
     if (port_ == -1) {
       if (protocol_.find("https") != std::string::npos) {
         port_ = 443;
-      }
-      else if (protocol_.find("http") != std::string::npos) {
+      } else if (protocol_.find("http") != std::string::npos) {
         port_ = 80;
       }
     }
@@ -146,8 +144,7 @@ class RemoteProcessorGroupPort : public core::Processor {
   std::string url_;
 
   // Remote Site2Site Info
-  int site2site_port_;
-  bool site2site_secure_;
+  int site2site_port_;bool site2site_secure_;
   std::vector<minifi::Site2SitePeerStatus> site2site_peer_status_list_;
   std::atomic<int> site2site_peer_index_;
   std::mutex site2site_peer_mutex_;
@@ -156,6 +153,8 @@ class RemoteProcessorGroupPort : public core::Processor {
 
   std::shared_ptr<controllers::SSLContextService> ssl_service;
 
+ private:
+  static const char* RPG_SSL_CONTEXT_SERVICE_NAME;
 };
 
 } /* namespace minifi */

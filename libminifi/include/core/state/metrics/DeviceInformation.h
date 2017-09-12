@@ -99,8 +99,6 @@ class Device {
       break;
     }
 
-
-
   }
 
   std::string canonical_hostname_;

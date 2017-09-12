@@ -57,7 +57,7 @@ void SiteToSiteProvenanceReportingTask::getJsonReport(core::ProcessContext *cont
                                                       std::string &report) {
   Json::Value array;
   for (auto sercomp : records) {
-    std::shared_ptr<provenance::ProvenanceEventRecord> record = std::dynamic_pointer_cast < provenance::ProvenanceEventRecord > (sercomp);
+    std::shared_ptr<provenance::ProvenanceEventRecord> record = std::dynamic_pointer_cast<provenance::ProvenanceEventRecord>(sercomp);
     if (nullptr == record) {
       break;
     }
@@ -119,7 +119,7 @@ void SiteToSiteProvenanceReportingTask::onTrigger(core::ProcessContext *context,
   if (!protocol_->bootstrap()) {
     // bootstrap the client protocol if needeed
     context->yield();
-    std::shared_ptr<Processor> processor = std::static_pointer_cast < Processor > (context->getProcessorNode()->getProcessor());
+    std::shared_ptr<Processor> processor = std::static_pointer_cast<Processor>(context->getProcessorNode()->getProcessor());
     logger_->log_error("Site2Site bootstrap failed yield period %d peer ", processor->getYieldPeriodMsec());
     returnProtocol(std::move(protocol_));
     return;
@@ -130,7 +130,7 @@ void SiteToSiteProvenanceReportingTask::onTrigger(core::ProcessContext *context,
   logger_->log_debug("batch size %d records", batch_size_);
   size_t deserialized = batch_size_;
   std::shared_ptr<core::Repository> repo = context->getProvenanceRepository();
-  std::function < std::shared_ptr<core::SerializableComponent>() > constructor = []() {return std::make_shared<provenance::ProvenanceEventRecord>();};
+  std::function<std::shared_ptr<core::SerializableComponent>()> constructor = []() {return std::make_shared<provenance::ProvenanceEventRecord>();};
   if (!repo->DeSerialize(records, deserialized, constructor) && deserialized == 0) {
     logger_->log_debug("Not sending because deserialized is %d", deserialized);
     returnProtocol(std::move(protocol_));

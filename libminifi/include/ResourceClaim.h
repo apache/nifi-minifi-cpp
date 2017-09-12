@@ -89,8 +89,8 @@ class ResourceClaim : public std::enable_shared_from_this<ResourceClaim> {
 
   }
 
-  bool exists(){
-    if (claim_manager_ == nullptr){
+  bool exists() {
+    if (claim_manager_ == nullptr) {
       return false;
     }
     return claim_manager_->exists(shared_from_this());

@@ -148,8 +148,7 @@ class Worker {
  protected:
 
   inline uint64_t increment_time(const uint64_t &time) {
-    std::chrono::time_point<std::chrono::system_clock> now =
-        std::chrono::system_clock::now();
+    std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
     auto millis = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count();
     return millis + time;
   }
@@ -162,11 +161,9 @@ class Worker {
 };
 
 template<typename T>
-class WorkerComparator
-{
+class WorkerComparator {
  public:
-  bool operator()(Worker<T> &a, Worker<T> &b)
-                  {
+  bool operator()(Worker<T> &a, Worker<T> &b) {
     return a.getTimeSlice() < b.getTimeSlice();
   }
 };

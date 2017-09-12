@@ -18,6 +18,7 @@
 #include "utils/HTTPClient.h"
 #include <memory>
 #include <map>
+#include <vector>
 #include <string>
 #include <algorithm>
 
@@ -27,9 +28,7 @@ namespace nifi {
 namespace minifi {
 namespace utils {
 
-HTTPClient::HTTPClient(
-                       const std::string &url,
-                       const std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service)
+HTTPClient::HTTPClient(const std::string &url, const std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service)
     : ssl_context_service_(ssl_context_service),
       url_(url),
       logger_(logging::LoggerFactory<HTTPClient>::getLogger()),
@@ -38,6 +37,7 @@ HTTPClient::HTTPClient(
       content_type(nullptr),
       headers_(nullptr),
       http_code(0),
+      header_response_(1),
       res(CURLE_OK) {
   HTTPClientInitializer *initializer = HTTPClientInitializer::getInstance();
   http_session_ = curl_easy_init();
@@ -78,16 +78,12 @@ void HTTPClient::setReadTimeout(int64_t timeout) {
 void HTTPClient::setUploadCallback(HTTPUploadCallback *callbackObj) {
   logger_->log_info("Setting callback");
   if (method_ == "put" || method_ == "PUT") {
-    curl_easy_setopt(http_session_, CURLOPT_INFILESIZE_LARGE,
-                     (curl_off_t) callbackObj->ptr->getBufferSize());
+    curl_easy_setopt(http_session_, CURLOPT_INFILESIZE_LARGE, (curl_off_t) callbackObj->ptr->getBufferSize());
   } else {
-    curl_easy_setopt(http_session_, CURLOPT_POSTFIELDSIZE,
-                     (curl_off_t) callbackObj->ptr->getBufferSize());
+    curl_easy_setopt(http_session_, CURLOPT_POSTFIELDSIZE, (curl_off_t) callbackObj->ptr->getBufferSize());
   }
-  curl_easy_setopt(http_session_, CURLOPT_READFUNCTION,
-                   &utils::HTTPRequestResponse::send_write);
-  curl_easy_setopt(http_session_, CURLOPT_READDATA,
-                   static_cast<void*>(callbackObj));
+  curl_easy_setopt(http_session_, CURLOPT_READFUNCTION, &utils::HTTPRequestResponse::send_write);
+  curl_easy_setopt(http_session_, CURLOPT_READDATA, static_cast<void*>(callbackObj));
 }
 
 struct curl_slist *HTTPClient::build_header_list(std::string regex, const std::map<std::string, std::string> &attributes) {
@@ -124,7 +120,7 @@ void HTTPClient::setUseChunkedEncoding() {
   headers_ = curl_slist_append(headers_, "Transfer-Encoding: chunked");
 }
 
-CURLcode HTTPClient::submit() {
+bool HTTPClient::submit() {
   if (connect_timeout_ > 0) {
     curl_easy_setopt(http_session_, CURLOPT_CONNECTTIMEOUT, connect_timeout_);
   }
@@ -136,15 +132,20 @@ CURLcode HTTPClient::submit() {
 
   curl_easy_setopt(http_session_, CURLOPT_URL, url_.c_str());
   logger_->log_info("Submitting to %s", url_);
-  curl_easy_setopt(http_session_, CURLOPT_WRITEFUNCTION,
-                   &utils::HTTPRequestResponse::recieve_write);
-
+  curl_easy_setopt(http_session_, CURLOPT_WRITEFUNCTION, &utils::HTTPRequestResponse::recieve_write);
   curl_easy_setopt(http_session_, CURLOPT_WRITEDATA, static_cast<void*>(&content_));
+
+  curl_easy_setopt(http_session_, CURLOPT_HEADERFUNCTION, &utils::HTTPHeaderResponse::receive_headers);
+  curl_easy_setopt(http_session_, CURLOPT_HEADERDATA, static_cast<void*>(&header_response_));
 
   res = curl_easy_perform(http_session_);
   curl_easy_getinfo(http_session_, CURLINFO_RESPONSE_CODE, &http_code);
   curl_easy_getinfo(http_session_, CURLINFO_CONTENT_TYPE, &content_type);
-  return res;
+  if (res != CURLE_OK) {
+    logger_->log_error("curl_easy_perform() failed %s\n", curl_easy_strerror(res));
+    return false;
+  }
+  return true;
 }
 
 CURLcode HTTPClient::getResponseResult() {
@@ -159,9 +160,8 @@ const char *HTTPClient::getContentType() {
   return content_type;
 }
 
-std::string HTTPClient::getResponseBody() {
-  std::string response_body(content_.data.begin(), content_.data.end());
-  return response_body;
+const std::vector<char> &HTTPClient::getResponseBody() {
+  return content_.data;
 }
 
 void HTTPClient::set_request_method(const std::string method) {

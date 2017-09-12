@@ -51,9 +51,7 @@ namespace c2 {
 class C2Agent : public state::UpdateController, public state::metrics::MetricsSink, public std::enable_shared_from_this<C2Agent> {
  public:
 
-  C2Agent(const std::shared_ptr<core::controller::ControllerServiceProvider> &controller,
-          const std::shared_ptr<state::StateMonitor> &updateSink,
-          const std::shared_ptr<Configure> &configure);
+  C2Agent(const std::shared_ptr<core::controller::ControllerServiceProvider> &controller, const std::shared_ptr<state::StateMonitor> &updateSink, const std::shared_ptr<Configure> &configure);
 
   virtual ~C2Agent() {
 
@@ -182,7 +180,6 @@ class C2Agent : public state::UpdateController, public state::metrics::MetricsSi
   std::shared_ptr<Configure> configuration_;
 
   std::shared_ptr<Configure> running_configuration;
-
 
   std::mutex heartbeat_mutex;
 

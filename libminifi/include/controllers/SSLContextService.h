@@ -77,7 +77,7 @@ class SSLContextService : public core::controller::ControllerService {
       : ControllerService(name, nullptr),
         initialized_(false),
         valid_(false),
-        logger_(logging::LoggerFactory<SSLContextService>::getLogger()){
+        logger_(logging::LoggerFactory<SSLContextService>::getLogger()) {
     setConfiguration(configuration);
     initialize();
     // set the properties based on the configuration
@@ -145,8 +145,7 @@ class SSLContextService : public core::controller::ControllerService {
     if (!IsNullOrEmpty(private_key_)) {
       int retp = SSL_CTX_use_PrivateKey_file(ctx, private_key_.c_str(), SSL_FILETYPE_PEM);
       if (retp != 1) {
-        logger_->log_error("Could not create load private key,%i on %s error : %s", retp, private_key_,
-                           std::strerror(errno));
+        logger_->log_error("Could not create load private key,%i on %s error : %s", retp, private_key_, std::strerror(errno));
         return false;
       }
 
@@ -163,8 +162,6 @@ class SSLContextService : public core::controller::ControllerService {
       logger_->log_error("Can not load CA certificate, Exiting, error : %s", std::strerror(errno));
       return false;
     }
-
-
 
     return true;
   }
@@ -187,8 +184,6 @@ class SSLContextService : public core::controller::ControllerService {
   }
 
   virtual void initializeTLS();
-
-
 
   std::mutex initialization_mutex_;
   std::atomic<bool> initialized_;

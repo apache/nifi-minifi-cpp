@@ -47,8 +47,8 @@ class Connection : public core::Connectable, public std::enable_shared_from_this
   /*
    * Create a new processor
    */
-  explicit Connection(const std::shared_ptr<core::Repository> &flow_repository, const std::shared_ptr<core::ContentRepository> &content_repo, std::string name, uuid_t uuid = NULL,
-                      uuid_t srcUUID = NULL,
+  explicit Connection(const std::shared_ptr<core::Repository> &flow_repository, const std::shared_ptr<core::ContentRepository> &content_repo, std::string name, uuid_t uuid = NULL, uuid_t srcUUID =
+                          NULL,
                       uuid_t destUUID = NULL);
   // Destructor
   virtual ~Connection() {

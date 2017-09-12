@@ -31,11 +31,11 @@ namespace nifi {
 namespace minifi {
 namespace c2 {
 
-const C2Payload RESTProtocol::parseJsonResponse(const C2Payload &payload, const std::string response) {
+const C2Payload RESTProtocol::parseJsonResponse(const C2Payload &payload, const std::vector<char> &response) {
   Json::Reader reader;
   Json::Value root;
   try {
-    if (reader.parse(response, root)) {
+    if (reader.parse(std::string(response.data(), response.size()), root)) {
       std::string requested_operation = getOperation(payload);
 
       std::string identifier;
@@ -81,7 +81,6 @@ const C2Payload RESTProtocol::parseJsonResponse(const C2Payload &payload, const 
   return std::move(C2Payload(payload.getOperation(), state::UpdateState::READ_ERROR, true));
 }
 
-
 Json::Value RESTProtocol::serializeJsonPayload(Json::Value &json_root, const C2Payload &payload) {
   // get the name from the content
   Json::Value json_payload;
@@ -126,7 +125,6 @@ Json::Value RESTProtocol::serializeJsonPayload(Json::Value &json_root, const C2P
   }
   return json_payload;
 }
-
 
 std::string RESTProtocol::getOperation(const C2Payload &payload) {
   switch (payload.getOperation()) {

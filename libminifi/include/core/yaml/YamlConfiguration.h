@@ -51,7 +51,7 @@ class YamlConfiguration : public FlowConfiguration {
       : FlowConfiguration(repo, flow_file_repo, content_repo, stream_factory, configuration, path),
         logger_(logging::LoggerFactory<YamlConfiguration>::getLogger()) {
     stream_factory_ = stream_factory;
-    if (IsNullOrEmpty (config_path_)) {
+    if (IsNullOrEmpty(config_path_)) {
       config_path_ = DEFAULT_FLOW_YAML_FILE_NAME;
     }
   }

@@ -45,7 +45,7 @@ class FileStream : public io::BaseStream {
    * File Stream constructor that accepts an fstream shared pointer.
    * It must already be initialized for read and write.
    */
-  explicit FileStream(const std::string &path, uint32_t offset,  bool write_enable = false);
+  explicit FileStream(const std::string &path, uint32_t offset, bool write_enable = false);
 
   /**
    * File Stream constructor that accepts an fstream shared pointer.

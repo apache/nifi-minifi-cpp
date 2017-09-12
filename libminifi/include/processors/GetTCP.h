@@ -56,8 +56,8 @@ class SocketAfterExecute : public utils::AfterExecute<int> {
       std::lock_guard<std::mutex> lock(*mutex_);
       list_->erase(endpoint_);
       return true;
-    } else{
-    return false;
+    } else {
+      return false;
     }
   }
   virtual bool isCancelled(const int &result) {
@@ -175,7 +175,7 @@ class GetTCP : public core::Processor, public state::metrics::MetricsSource {
       : Processor(name, uuid),
         connection_attempts_(3),
         reconnect_interval_(5000),
-        receive_buffer_size_(16*1024*1024),
+        receive_buffer_size_(16 * 1024 * 1024),
         stay_connected_(true),
         endOfMessageByte(13),
         running_(false),
@@ -212,7 +212,7 @@ class GetTCP : public core::Processor, public state::metrics::MetricsSource {
    */
   virtual void onSchedule(std::shared_ptr<core::ProcessContext> processContext, std::shared_ptr<core::ProcessSessionFactory> sessionFactory);
 
-  void onSchedule(core::ProcessContext *processContext, core::ProcessSessionFactory *sessionFactory){
+  void onSchedule(core::ProcessContext *processContext, core::ProcessSessionFactory *sessionFactory) {
     throw std::exception();
   }
   /**
@@ -222,7 +222,7 @@ class GetTCP : public core::Processor, public state::metrics::MetricsSource {
    */
   virtual void onTrigger(std::shared_ptr<core::ProcessContext> context, std::shared_ptr<core::ProcessSession> session);
 
-  virtual void onTrigger(core::ProcessContext *context, core::ProcessSession *session){
+  virtual void onTrigger(core::ProcessContext *context, core::ProcessSession *session) {
     throw std::exception();
   }
 

@@ -15,8 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_C2_METRICS_METRICSBASE_H_
-#define LIBMINIFI_INCLUDE_C2_METRICS_METRICSBASE_H_
+#ifndef LIBMINIFI_INCLUDE_METRICS_METRICSBASE_H_
+#define LIBMINIFI_INCLUDE_METRICS_METRICSBASE_H_
 
 #include <vector>
 #include <memory>
@@ -44,18 +44,16 @@ struct MetricResponse {
 };
 
 /**
- * Purpose: Defines a metric. serialization is intended to be thread safe.
+ * Purpose: Defines a metric. Serialization is intended to be thread safe.
  */
-class Metrics : public core::Connectable
-{
+class Metrics : public core::Connectable {
  public:
   Metrics()
       : core::Connectable("metric", 0) {
   }
 
   Metrics(std::string name, uuid_t uuid)
-      : core::Connectable(name, uuid)
-  {
+      : core::Connectable(name, uuid) {
   }
   virtual ~Metrics() {
 
@@ -81,8 +79,7 @@ class Metrics : public core::Connectable
 class DeviceMetric : public Metrics {
  public:
   DeviceMetric(std::string name, uuid_t uuid)
-      : Metrics(name, uuid)
-  {
+      : Metrics(name, uuid) {
   }
 };
 
@@ -90,8 +87,7 @@ class DeviceMetric : public Metrics {
  * Purpose: Retrieves Metrics from the defined class. The current Metric, which is a consumable for any reader of Metrics must have the ability to set metrics.
  *
  */
-class MetricsSource
-{
+class MetricsSource {
  public:
 
   MetricsSource() {
@@ -113,8 +109,7 @@ class MetricsSource
 
 };
 
-class MetricsReporter
-{
+class MetricsReporter {
  public:
 
   MetricsReporter() {
@@ -125,7 +120,7 @@ class MetricsReporter
   }
 
   /**
-   * Retrieves all emtrics from this source.
+   * Retrieves all metrics from this source.
    * @param metric_vector -- metrics will be placed in this vector.
    * @return result of the get operation.
    *  0 Success
@@ -140,8 +135,7 @@ class MetricsReporter
  * Purpose: Sink interface for all metrics. The current Metric, which is a consumable for any reader of Metrics must have the ability to set metrics.
  *
  */
-class MetricsSink
-{
+class MetricsSink {
  public:
 
   virtual ~MetricsSink() {

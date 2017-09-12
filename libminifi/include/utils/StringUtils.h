@@ -105,7 +105,7 @@ class StringUtils {
     } catch (const std::invalid_argument &ie) {
       switch (cp) {
         case RETURN:
-          case NOTHING:
+        case NOTHING:
           return false;
         case EXIT:
           exit(1);
@@ -115,7 +115,7 @@ class StringUtils {
     } catch (const std::out_of_range &ofr) {
       switch (cp) {
         case RETURN:
-          case NOTHING:
+        case NOTHING:
           return false;
         case EXIT:
           exit(1);

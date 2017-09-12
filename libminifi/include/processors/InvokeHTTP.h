@@ -61,7 +61,6 @@ class InvokeHTTP : public core::Processor {
         use_chunked_encoding_(false),
         logger_(logging::LoggerFactory<InvokeHTTP>::getLogger()) {
     static utils::HTTPClientInitializer *initializer = utils::HTTPClientInitializer::getInstance();
-    res = CURLE_OK;
   }
   // Destructor
   virtual ~InvokeHTTP();
@@ -117,13 +116,11 @@ class InvokeHTTP : public core::Processor {
 
  protected:
 
-
   /**
    * Generate a transaction ID
    * @return transaction ID string.
    */
   std::string generateId();
-
 
   /**
    * Routes the flowfile to the proper destination
@@ -134,9 +131,7 @@ class InvokeHTTP : public core::Processor {
    * @param isSuccess success code or not
    * @param statuscode http response code.
    */
-  void route(std::shared_ptr<FlowFileRecord> &request, std::shared_ptr<FlowFileRecord> &response, core::ProcessSession *session, core::ProcessContext *context,
-  bool isSuccess,
-             int statusCode);
+  void route(std::shared_ptr<FlowFileRecord> &request, std::shared_ptr<FlowFileRecord> &response, core::ProcessSession *session, core::ProcessContext *context, bool isSuccess, int statusCode);
   /**
    * Determine if we should emit a new flowfile based on our activity
    * @param method method type
@@ -145,8 +140,6 @@ class InvokeHTTP : public core::Processor {
   bool emitFlowFile(const std::string &method);
 
   std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service_;
-
-  CURLcode res;
 
   // http method
   std::string method_;

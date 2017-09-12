@@ -31,8 +31,7 @@ namespace repository {
  * Volatile flow file repository. keeps a running counter of the current location, freeing
  * those which we no longer hold.
  */
-class VolatileFlowFileRepository : public VolatileRepository<std::string>
-{
+class VolatileFlowFileRepository : public VolatileRepository<std::string> {
  public:
   explicit VolatileFlowFileRepository(std::string repo_name = "", std::string dir = REPOSITORY_DIRECTORY, int64_t maxPartitionMillis = MAX_REPOSITORY_ENTRY_LIFE_TIME, int64_t maxPartitionBytes =
   MAX_REPOSITORY_STORAGE_SIZE,
@@ -48,11 +47,9 @@ class VolatileFlowFileRepository : public VolatileRepository<std::string>
     repo_full_ = false;
     while (running_) {
       std::this_thread::sleep_for(std::chrono::milliseconds(purge_period_));
-      if (purge_required_ && nullptr != content_repo_)
-          {
+      if (purge_required_ && nullptr != content_repo_) {
         std::lock_guard<std::mutex> lock(purge_mutex_);
-        for (auto purgeItem : purge_list_)
-        {
+        for (auto purgeItem : purge_list_) {
           std::shared_ptr<minifi::ResourceClaim> newClaim = std::make_shared<minifi::ResourceClaim>(purgeItem, content_repo_, true);
           content_repo_->remove(newClaim);
         }

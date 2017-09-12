@@ -84,10 +84,8 @@ class ThreadedSchedulingAgent : public SchedulingAgent {
   /*!
    * Create a new threaded scheduling agent.
    */
-  ThreadedSchedulingAgent(std::shared_ptr<core::controller::ControllerServiceProvider> controller_service_provider, std::shared_ptr<core::Repository> repo,
-                          std::shared_ptr<core::Repository> flow_repo,
-                          std::shared_ptr<core::ContentRepository> content_repo,
-                          std::shared_ptr<Configure> configuration)
+  ThreadedSchedulingAgent(std::shared_ptr<core::controller::ControllerServiceProvider> controller_service_provider, std::shared_ptr<core::Repository> repo, std::shared_ptr<core::Repository> flow_repo,
+                          std::shared_ptr<core::ContentRepository> content_repo, std::shared_ptr<Configure> configuration)
       : SchedulingAgent(controller_service_provider, repo, flow_repo, content_repo, configuration),
         logger_(logging::LoggerFactory<ThreadedSchedulingAgent>::getLogger()) {
 
@@ -101,7 +99,8 @@ class ThreadedSchedulingAgent : public SchedulingAgent {
   }
 
   // Run function for the thread
-  virtual uint64_t run(const std::shared_ptr<core::Processor> &processor, const std::shared_ptr<core::ProcessContext> &processContext, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) = 0;
+  virtual uint64_t run(const std::shared_ptr<core::Processor> &processor, const std::shared_ptr<core::ProcessContext> &processContext,
+                       const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) = 0;
 
  public:
   // schedule, overwritten by different DrivenTimerDrivenSchedulingAgent
@@ -110,11 +109,10 @@ class ThreadedSchedulingAgent : public SchedulingAgent {
   virtual void unschedule(std::shared_ptr<core::Processor> processor);
 
   virtual void stop();
-   protected:
+ protected:
   utils::ThreadPool<uint64_t> thread_pool_;
 
  protected:
-
 
  private:
   // Prevent default copy constructor and assignment operation

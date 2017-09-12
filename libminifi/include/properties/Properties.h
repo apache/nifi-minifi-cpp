@@ -75,11 +75,11 @@ class Properties {
     minifi_home_ = minifiHome;
   }
 
-  std::vector<std::string> getConfiguredKeys(){
+  std::vector<std::string> getConfiguredKeys() {
     std::vector<std::string> keys;
-      for(auto &property : properties_){
-          keys.push_back( property.first );
-      }
+    for (auto &property : properties_) {
+      keys.push_back(property.first);
+    }
     return keys;
   }
 

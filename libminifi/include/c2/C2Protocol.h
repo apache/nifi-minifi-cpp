@@ -54,7 +54,7 @@ class C2Protocol : public core::Connectable {
   virtual void update(const std::shared_ptr<Configure> &configure)=0;
 
   /**
-   * Send a C2 payload to the provided URI. The direction indicates to the protocol whether or not this a transmit or receive operatin.
+   * Send a C2 payload to the provided URI. The direction indicates to the protocol whether or not this a transmit or receive operation.
    * Depending on the protocol this may mean different things.
    *
    * @param url url.
@@ -66,7 +66,7 @@ class C2Protocol : public core::Connectable {
   virtual C2Payload consumePayload(const std::string &url, const C2Payload &operation, Direction direction = TRANSMIT, bool async = false) = 0;
 
   /**
-   * Send a C2 payload . The direction indicates to the protocol whether or not this a transmit or receive operatin.
+   * Send a C2 payload . The direction indicates to the protocol whether or not this a transmit or receive operation.
    * Depending on the protocol this may mean different things.
    *
    * @param operation payload to perform and/or send

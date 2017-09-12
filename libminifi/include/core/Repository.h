@@ -198,7 +198,6 @@ class Repository : public core::SerializableComponent {
 
   virtual uint64_t getRepoSize();
 
-
   // Prevent default copy constructor and assignment operation
   // Only support pass by reference or pointer
   Repository(const Repository &parent) = delete;

@@ -15,8 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_C2_RESTPROTOCOL_H_
-#define LIBMINIFI_INCLUDE_C2_RESTPROTOCOL_H_
+#ifndef LIBMINIFI_INCLUDE_C2_RESTSENDER_H_
+#define LIBMINIFI_INCLUDE_C2_RESTSENDER_H_
 
 #include "json/json.h"
 #include "json/writer.h"
@@ -60,7 +60,6 @@ class RESTSender : public RESTProtocol, public C2Protocol {
  protected:
 
   virtual const C2Payload sendPayload(const std::string url, const Direction direction, const C2Payload &payload, const std::string outputConfig);
-
 
   std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service_;
 

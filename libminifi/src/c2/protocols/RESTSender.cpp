@@ -117,7 +117,7 @@ const C2Payload RESTSender::sendPayload(const std::string url, const Direction d
     client.set_request_method("GET");
   }
   client.setContentType("application/json");
-  bool isOkay = client.submit() == CURLE_OK;
+  bool isOkay = client.submit();
   int64_t respCode = client.getResponseCode();
 
   if (isOkay && respCode) {

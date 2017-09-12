@@ -29,7 +29,7 @@
 #include <deque>
 #include <iostream>
 #include <set>
-
+#include <vector>
 #include <string>
 #include <type_traits>
 #include <utility>
@@ -50,8 +50,11 @@ namespace apache {
 namespace nifi {
 namespace minifi {
 
+const char *RemoteProcessorGroupPort::RPG_SSL_CONTEXT_SERVICE_NAME = "RemoteProcessorGroupPortSSLContextService";
+
 const char *RemoteProcessorGroupPort::ProcessorName("RemoteProcessorGroupPort");
 core::Property RemoteProcessorGroupPort::hostName("Host Name", "Remote Host Name.", "");
+core::Property RemoteProcessorGroupPort::SSLContext("SSL Context Service", "The SSL Context Service used to provide client certificate information for TLS/SSL (https) connections.", "");
 core::Property RemoteProcessorGroupPort::port("Port", "Remote Port", "");
 core::Property RemoteProcessorGroupPort::portUUID("Port UUID", "Specifies remote NiFi Port UUID.", "");
 core::Relationship RemoteProcessorGroupPort::relation;
@@ -108,6 +111,7 @@ void RemoteProcessorGroupPort::initialize() {
   std::set<core::Property> properties;
   properties.insert(hostName);
   properties.insert(port);
+  properties.insert(SSLContext);
   properties.insert(portUUID);
   setSupportedProperties(properties);
 // Set the supported relationships
@@ -147,6 +151,14 @@ void RemoteProcessorGroupPort::onSchedule(core::ProcessContext *context, core::P
   if (context->getProperty(portUUID.getName(), value)) {
     uuid_parse(value.c_str(), protocol_uuid_);
   }
+  std::string context_name;
+  if (!context->getProperty(SSLContext.getName(), context_name) || IsNullOrEmpty(context_name)) {
+    context_name = RPG_SSL_CONTEXT_SERVICE_NAME;
+  }
+  std::shared_ptr<core::controller::ControllerService> service = context->getControllerService(context_name);
+  if (nullptr != service) {
+    ssl_service = std::static_pointer_cast<minifi::controllers::SSLContextService>(service);
+  }
 }
 
 void RemoteProcessorGroupPort::onTrigger(core::ProcessContext *context, core::ProcessSession *session) {
@@ -182,7 +194,7 @@ void RemoteProcessorGroupPort::onTrigger(core::ProcessContext *context, core::Pr
     }
     logger_->log_info("got protocol");
     if (!protocol_->bootstrap()) {
-      // bootstrap the client protocol if needeed
+      // bootstrap the client protocol if needed
       context->yield();
       std::shared_ptr<Processor> processor = std::static_pointer_cast<Processor>(context->getProcessorNode()->getProcessor());
       logger_->log_error("Site2Site bootstrap failed yield period %d peer ", processor->getYieldPeriodMsec());
@@ -205,8 +217,6 @@ void RemoteProcessorGroupPort::onTrigger(core::ProcessContext *context, core::Pr
     context->yield();
     session->rollback();
   }
-  logger_->log_info("on trigger throw exception");
-  return;
 }
 
 void RemoteProcessorGroupPort::refreshRemoteSite2SiteInfo() {
@@ -242,10 +252,10 @@ void RemoteProcessorGroupPort::refreshRemoteSite2SiteInfo() {
     client.setHeaders(list);
   }
 
-  if (client.submit() == CURLE_OK && client.getResponseCode() == 200) {
-    const std::string response_body = client.getResponseBody();
+  if (client.submit() && client.getResponseCode() == 200) {
+    const std::vector<char> &response_body = client.getResponseBody();
     if (!response_body.empty()) {
-      std::string controller = std::move(response_body);
+      std::string controller = std::string(response_body.begin(), response_body.end());
       logger_->log_debug("controller config %s", controller.c_str());
       Json::Value value;
       Json::Reader reader;

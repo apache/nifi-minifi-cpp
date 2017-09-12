@@ -52,10 +52,8 @@ class SchedulingAgent {
   /*!
    * Create a new scheduling agent.
    */
-  SchedulingAgent(std::shared_ptr<core::controller::ControllerServiceProvider> controller_service_provider, std::shared_ptr<core::Repository> repo,
-		  std::shared_ptr<core::Repository> flow_repo,
-                  std::shared_ptr<core::ContentRepository> content_repo,
-                  std::shared_ptr<Configure> configuration)
+  SchedulingAgent(std::shared_ptr<core::controller::ControllerServiceProvider> controller_service_provider, std::shared_ptr<core::Repository> repo, std::shared_ptr<core::Repository> flow_repo,
+                  std::shared_ptr<core::ContentRepository> content_repo, std::shared_ptr<Configure> configuration)
       : configure_(configuration),
         admin_yield_duration_(0),
         bored_yield_duration_(0),
@@ -113,7 +111,7 @@ class SchedulingAgent {
   std::shared_ptr<Configure> configure_;
 
   std::shared_ptr<core::Repository> repo_;
-  
+
   std::shared_ptr<core::Repository> flow_repo_;
 
   std::shared_ptr<core::ContentRepository> content_repo_;

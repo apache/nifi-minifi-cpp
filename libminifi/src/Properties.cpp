@@ -34,7 +34,7 @@ Properties::Properties()
 
 // Get the config value
 bool Properties::get(std::string key, std::string &value) {
-  std::lock_guard < std::mutex > lock(mutex_);
+  std::lock_guard<std::mutex> lock(mutex_);
   auto it = properties_.find(key);
 
   if (it != properties_.end()) {
@@ -46,7 +46,7 @@ bool Properties::get(std::string key, std::string &value) {
 }
 
 int Properties::getInt(const std::string &key, int default_value) {
-  std::lock_guard < std::mutex > lock(mutex_);
+  std::lock_guard<std::mutex> lock(mutex_);
   auto it = properties_.find(key);
 
   if (it != properties_.end()) {

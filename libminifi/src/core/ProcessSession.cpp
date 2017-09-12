@@ -217,7 +217,6 @@ void ProcessSession::transfer(std::shared_ptr<core::FlowFile> &&flow, Relationsh
 void ProcessSession::write(std::shared_ptr<core::FlowFile> &flow, OutputStreamCallback *callback) {
   std::shared_ptr<ResourceClaim> claim = std::make_shared<ResourceClaim>(process_context_->getContentRepository());
 
-
   try {
     uint64_t startTime = getTimeMillis();
     claim->increaseFlowFileRecordOwnedCount();
@@ -668,9 +667,7 @@ void ProcessSession::import(std::string source, std::vector<std::shared_ptr<Flow
           flowFile->setResourceClaim(claim);
           claim->increaseFlowFileRecordOwnedCount();
 
-          logger_->log_debug("Import offset %d length %d into content %s for FlowFile UUID %s", flowFile->getOffset(),
-                             flowFile->getSize(),
-                             flowFile->getResourceClaim()->getContentFullPath().c_str(),
+          logger_->log_debug("Import offset %d length %d into content %s for FlowFile UUID %s", flowFile->getOffset(), flowFile->getSize(), flowFile->getResourceClaim()->getContentFullPath().c_str(),
                              flowFile->getUUIDStr().c_str());
 
           stream->closeStream();

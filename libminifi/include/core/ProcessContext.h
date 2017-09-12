@@ -49,12 +49,12 @@ class ProcessContext : public controller::ControllerServiceLookup {
    * Create a new process context associated with the processor/controller service/state manager
    */
   ProcessContext(const std::shared_ptr<ProcessorNode> &processor, std::shared_ptr<controller::ControllerServiceProvider> &controller_service_provider, const std::shared_ptr<core::Repository> &repo,
-		 const std::shared_ptr<core::Repository> &flow_repo,
-                 const std::shared_ptr<core::ContentRepository> &content_repo = std::make_shared<core::repository::FileSystemRepository>())
+                 const std::shared_ptr<core::Repository> &flow_repo, const std::shared_ptr<core::ContentRepository> &content_repo = std::make_shared<core::repository::FileSystemRepository>())
       : processor_node_(processor),
         controller_service_provider_(controller_service_provider),
         logger_(logging::LoggerFactory<ProcessContext>::getLogger()),
-        content_repo_(content_repo), flow_repo_(flow_repo) {
+        content_repo_(content_repo),
+        flow_repo_(flow_repo) {
     repo_ = repo;
   }
   // Destructor
@@ -104,7 +104,7 @@ class ProcessContext : public controller::ControllerServiceLookup {
   std::shared_ptr<core::ContentRepository> getContentRepository() {
     return content_repo_;
   }
-  
+
   std::shared_ptr<core::Repository> getFlowFileRepository() {
     return flow_repo_;
   }

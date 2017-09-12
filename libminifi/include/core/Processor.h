@@ -217,16 +217,16 @@ class Processor : public Connectable, public ConfigurableComponent, public std::
  public:
 
   // OnTrigger method, implemented by NiFi Processor Designer
-  virtual void onTrigger(std::shared_ptr<ProcessContext> context, std::shared_ptr<ProcessSession> session){
-    onTrigger(context.get(),session.get());
+  virtual void onTrigger(std::shared_ptr<ProcessContext> context, std::shared_ptr<ProcessSession> session) {
+    onTrigger(context.get(), session.get());
   }
   virtual void onTrigger(ProcessContext *context, ProcessSession *session) = 0;
   // Initialize, overridden by NiFi Process Designer
   virtual void initialize() {
   }
   // Scheduled event hook, overridden by NiFi Process Designer
-  virtual void onSchedule(std::shared_ptr<ProcessContext> context, std::shared_ptr<ProcessSessionFactory> sessionFactory){
-    onSchedule(context.get(),sessionFactory.get());
+  virtual void onSchedule(std::shared_ptr<ProcessContext> context, std::shared_ptr<ProcessSessionFactory> sessionFactory) {
+    onSchedule(context.get(), sessionFactory.get());
   }
   virtual void onSchedule(ProcessContext *context, ProcessSessionFactory *sessionFactory) {
   }

@@ -15,8 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_C2_UPDATECONTROLLER_H_
-#define LIBMINIFI_INCLUDE_C2_UPDATECONTROLLER_H_
+#ifndef LIBMINIFI_INCLUDE_UPDATECONTROLLER_H_
+#define LIBMINIFI_INCLUDE_UPDATECONTROLLER_H_
 
 #include <string>
 #include "utils/ThreadPool.h"
@@ -60,14 +60,13 @@ class UpdateStatus {
   UpdateStatus &operator=(const UpdateStatus &&other);
 
   UpdateStatus &operator=(const UpdateStatus &other);
-   private:
+ private:
   UpdateState state_;
   std::string error_;
   int16_t reason_;
 };
 
-class Update
-{
+class Update {
  public:
 
   Update(UpdateStatus status)
@@ -118,8 +117,7 @@ class Update
  * Design: Simply implements isFinished and isCancelled, which it receives by way of the AfterExecute
  * class.
  */
-class UpdateRunner : public utils::AfterExecute<Update>
-{
+class UpdateRunner : public utils::AfterExecute<Update> {
  public:
   explicit UpdateRunner(std::atomic<bool> &running)
       : running_(&running) {
@@ -234,8 +232,7 @@ class StateMonitor : public StateController {
  * Asks: what is being updated, what can be updated without a restart
  * what requires a restart, etc.
  */
-class UpdateController
-{
+class UpdateController {
  public:
 
   virtual std::vector<std::function<Update()>> getFunctions() = 0;

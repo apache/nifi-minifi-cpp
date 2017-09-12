@@ -15,8 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_C2_PROTOCOLS_RESTOPERATIONS_H_
-#define LIBMINIFI_INCLUDE_C2_PROTOCOLS_RESTOPERATIONS_H_
+#ifndef LIBMINIFI_INCLUDE_C2_PROTOCOLS_RESTPROTOCOL_H_
+#define LIBMINIFI_INCLUDE_C2_PROTOCOLS_RESTPROTOCOL_H_
 
 #include "json/json.h"
 #include "json/writer.h"
@@ -57,7 +57,7 @@ class RESTProtocol {
 
   virtual Json::Value serializeJsonPayload(Json::Value &json_root, const C2Payload &payload);
 
-  virtual const C2Payload parseJsonResponse(const C2Payload &payload, const std::string response);
+  virtual const C2Payload parseJsonResponse(const C2Payload &payload, const std::vector<char> &response);
 
   virtual std::string getOperation(const C2Payload &payload);
 

@@ -30,8 +30,7 @@ namespace repository {
 /**
  * Volatile provenance repository.
  */
-class VolatileProvenanceRepository : public VolatileRepository<std::string>
-{
+class VolatileProvenanceRepository : public VolatileRepository<std::string> {
 
  public:
   explicit VolatileProvenanceRepository(std::string repo_name = "", std::string dir = REPOSITORY_DIRECTORY, int64_t maxPartitionMillis = MAX_REPOSITORY_ENTRY_LIFE_TIME, int64_t maxPartitionBytes =

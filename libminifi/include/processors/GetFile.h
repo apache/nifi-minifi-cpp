@@ -38,8 +38,7 @@ struct GetFileRequest {
   int64_t minAge = 0;
   int64_t maxAge = 0;
   int64_t minSize = 0;
-  int64_t maxSize = 0;
-  bool ignoreHiddenFile = true;
+  int64_t maxSize = 0;bool ignoreHiddenFile = true;
   int64_t pollInterval = 0;
   int64_t batchSize = 10;
   std::string fileFilter = "[^\\.].*";
@@ -55,8 +54,7 @@ class GetFileMetrics : public state::metrics::Metrics {
   }
 
   GetFileMetrics(std::string name, uuid_t uuid)
-      : state::metrics::Metrics(name, uuid)
-  {
+      : state::metrics::Metrics(name, uuid) {
     iterations_ = 0;
     accepted_files_ = 0;
     input_bytes_ = 0;
@@ -70,7 +68,6 @@ class GetFileMetrics : public state::metrics::Metrics {
 
   virtual std::vector<state::metrics::MetricResponse> serialize() {
     std::vector<state::metrics::MetricResponse> resp;
-
 
     state::metrics::MetricResponse iter;
     iter.name = "OnTriggerInvocations";
@@ -89,7 +86,6 @@ class GetFileMetrics : public state::metrics::Metrics {
     input_bytes.value = std::to_string(input_bytes_.load());
 
     resp.push_back(input_bytes);
-
 
     return resp;
   }

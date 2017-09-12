@@ -169,6 +169,10 @@ void C2Payload::setRawData(const std::string &data) {
   raw_data_ = data;
 }
 
+void C2Payload::setRawData(const std::vector<char> &data) {
+  raw_data_ = std::string(data.data(), data.size());
+}
+
 std::string C2Payload::getRawData() const {
   return raw_data_;
 }

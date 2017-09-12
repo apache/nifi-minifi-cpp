@@ -35,8 +35,7 @@ namespace state {
 namespace metrics {
 
 /**
- * Justification and Purpose: Provides Connection queue metrics. Provides critical information to the
- * C2 server.
+ * Justification and Purpose: Provides system information, including critical device information.
  *
  */
 class SystemInformation : public DeviceInformation {
@@ -96,7 +95,6 @@ class SystemInformation : public DeviceInformation {
   }
 
  protected:
-
 
 };
 

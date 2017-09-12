@@ -15,8 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_C2_CONTROLLABLE_H_
-#define LIBMINIFI_INCLUDE_C2_CONTROLLABLE_H_
+#ifndef LIBMINIFI_INCLUDE_STATE_MANAGER_H
+#define LIBMINIFI_INCLUDE_STATE_MANAGER_H
 
 #include <map>
 #include <atomic>
@@ -40,8 +40,7 @@ namespace state {
  * the sink for external updates, and encapsulates the thread pool that runs the listeners for various update operations
  * that can be performed.
  */
-class StateManager : public metrics::MetricsReporter, public metrics::MetricsSink, public StateMonitor, public std::enable_shared_from_this<StateManager>
-{
+class StateManager : public metrics::MetricsReporter, public metrics::MetricsSink, public StateMonitor, public std::enable_shared_from_this<StateManager> {
  public:
 
   StateManager()

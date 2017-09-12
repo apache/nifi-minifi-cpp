@@ -37,16 +37,17 @@ namespace metrics {
  */
 class QueueMetrics : public Metrics {
  public:
-   
-      QueueMetrics(const std::string &name, uuid_t uuid) : Metrics(name,uuid)
-  {
-  }
-  
-   QueueMetrics(const std::string &name) : Metrics(name,0)
-  {
+
+  QueueMetrics(const std::string &name, uuid_t uuid)
+      : Metrics(name, uuid) {
   }
 
-  QueueMetrics() : Metrics("QueueMetrics",0){
+  QueueMetrics(const std::string &name)
+      : Metrics(name, 0) {
+  }
+
+  QueueMetrics()
+      : Metrics("QueueMetrics", 0) {
   }
 
   std::string getName() {

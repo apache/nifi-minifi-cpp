@@ -37,7 +37,7 @@ namespace nifi {
 namespace minifi {
 
 void ThreadedSchedulingAgent::schedule(std::shared_ptr<core::Processor> processor) {
-  std::lock_guard < std::mutex > lock(mutex_);
+  std::lock_guard<std::mutex> lock(mutex_);
 
   admin_yield_duration_ = 0;
   std::string yieldValue;
@@ -67,10 +67,10 @@ void ThreadedSchedulingAgent::schedule(std::shared_ptr<core::Processor> processo
     return;
   }
 
-  std::shared_ptr<core::ProcessorNode>  processor_node = std::make_shared<core::ProcessorNode>(processor);
+  std::shared_ptr<core::ProcessorNode> processor_node = std::make_shared<core::ProcessorNode>(processor);
 
-  auto processContext = std::make_shared < core::ProcessContext > (processor_node, controller_service_provider_, repo_, flow_repo_, content_repo_);
-  auto sessionFactory = std::make_shared < core::ProcessSessionFactory > (processContext);
+  auto processContext = std::make_shared<core::ProcessContext>(processor_node, controller_service_provider_, repo_, flow_repo_, content_repo_);
+  auto sessionFactory = std::make_shared<core::ProcessSessionFactory>(processContext);
 
   processor->onSchedule(processContext, sessionFactory);
 
@@ -103,7 +103,7 @@ void ThreadedSchedulingAgent::stop() {
 }
 
 void ThreadedSchedulingAgent::unschedule(std::shared_ptr<core::Processor> processor) {
-  std::lock_guard < std::mutex > lock(mutex_);
+  std::lock_guard<std::mutex> lock(mutex_);
   logger_->log_info("Shutting down threads for processor %s/%s", processor->getName().c_str(), processor->getUUIDStr().c_str());
 
   if (processor->getScheduledState() != core::RUNNING) {

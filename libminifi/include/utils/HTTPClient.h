@@ -45,6 +45,35 @@ struct HTTPUploadCallback {
   size_t pos;
 };
 
+struct HTTPHeaderResponse {
+ public:
+
+  HTTPHeaderResponse(int max)
+      : max_tokens_(max) {
+  }
+
+  void append(const std::string &header) {
+    if (header_tokens_.size() <= max_tokens_) {
+      header_tokens_.push_back(header);
+    }
+  }
+
+  int max_tokens_;
+  std::vector<std::string> header_tokens_;
+
+  static size_t receive_headers(void *buffer, size_t size, size_t nmemb, void *userp) {
+    HTTPHeaderResponse *pHeaders = (HTTPHeaderResponse *) (userp);
+    int result = 0;
+    if (pHeaders != NULL) {
+      std::string s = "";
+      s.append((char*) buffer, size * nmemb);
+      pHeaders->append(s);
+      result = size * nmemb;
+    }
+    return result;
+  }
+};
+
 /**
  * HTTP Response object
  */
@@ -54,10 +83,8 @@ struct HTTPRequestResponse {
   /**
    * Receive HTTP Response.
    */
-  static size_t recieve_write(char * data, size_t size, size_t nmemb,
-                              void * p) {
-    return static_cast<HTTPRequestResponse*>(p)->write_content(data, size,
-                                                               nmemb);
+  static size_t recieve_write(char * data, size_t size, size_t nmemb, void * p) {
+    return static_cast<HTTPRequestResponse*>(p)->write_content(data, size, nmemb);
   }
 
   /**
@@ -158,9 +185,7 @@ class HTTPClientInitializer {
  */
 class HTTPClient {
  public:
-  HTTPClient(
-      const std::string &url,
-      const std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service = nullptr);
+  HTTPClient(const std::string &url, const std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service = nullptr);
 
   ~HTTPClient();
 
@@ -184,7 +209,7 @@ class HTTPClient {
 
   void setHeaders(struct curl_slist *list);
 
-  CURLcode submit();
+  bool submit();
 
   CURLcode getResponseResult();
 
@@ -192,13 +217,18 @@ class HTTPClient {
 
   const char *getContentType();
 
-  std::string getResponseBody();
+  const std::vector<char> &getResponseBody();
 
   void set_request_method(const std::string method);
 
   void setUseChunkedEncoding();
 
   void setDisablePeerVerification();
+
+  const std::vector<std::string> &getHeaders() {
+    return header_response_.header_tokens_;
+
+  }
 
  protected:
 
@@ -217,6 +247,7 @@ class HTTPClient {
   bool isSecure(const std::string &url);
   struct curl_slist *headers_;
   utils::HTTPRequestResponse content_;
+  utils::HTTPHeaderResponse header_response_;
   CURLcode res;
   int64_t http_code;
   char *content_type;
@@ -249,9 +280,9 @@ static std::string get_token(HTTPClient &client, std::string username, std::stri
 
   client.submit();
 
-  if (client.submit() == CURLE_OK && client.getResponseCode() == 200) {
+  if (client.submit() && client.getResponseCode() == 200) {
 
-    std::string response_body = client.getResponseBody();
+    const std::string &response_body = std::string(client.getResponseBody().data(), client.getResponseBody().size());
 
     if (!response_body.empty()) {
       token = "Bearer " + response_body;

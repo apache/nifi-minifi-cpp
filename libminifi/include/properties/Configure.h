@@ -63,7 +63,7 @@ class Configure : public Properties {
   static const char *nifi_configuration_listener_pull_interval;
   static const char *nifi_configuration_listener_http_url;
   static const char *nifi_configuration_listener_rest_url;
-  static const char *nifi_configuration_listener_type; // http or rest
+  static const char *nifi_configuration_listener_type;  // http or rest
   // security config for all https service
   static const char *nifi_https_need_ClientAuth;
   static const char *nifi_https_client_certificate;

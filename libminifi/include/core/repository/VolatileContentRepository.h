@@ -50,8 +50,7 @@ class VolatileContentRepository : public core::ContentRepository, public core::r
   virtual ~VolatileContentRepository() {
     if (!minimize_locking_) {
       std::lock_guard<std::mutex> lock(map_mutex_);
-      for (const auto &item : master_list_)
-      {
+      for (const auto &item : master_list_) {
         delete item.second;
       }
       master_list_.clear();
@@ -106,8 +105,7 @@ class VolatileContentRepository : public core::ContentRepository, public core::r
   virtual void run();
 
   template<typename T2>
-  std::shared_ptr<T2> shared_from_parent()
-  {
+  std::shared_ptr<T2> shared_from_parent() {
     return std::static_pointer_cast<T2>(shared_from_this());
   }
 

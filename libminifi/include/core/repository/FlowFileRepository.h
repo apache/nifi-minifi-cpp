@@ -101,7 +101,7 @@ class FlowFileRepository : public core::Repository, public std::enable_shared_fr
     // persistent to the DB
     leveldb::Slice value((const char *) buf, bufLen);
     leveldb::Status status;
-    repo_size_+=bufLen;
+    repo_size_ += bufLen;
     status = db_->Put(leveldb::WriteOptions(), key, value);
     if (status.ok())
       return true;
@@ -138,12 +138,10 @@ class FlowFileRepository : public core::Repository, public std::enable_shared_fr
   virtual void loadComponent(const std::shared_ptr<core::ContentRepository> &content_repo);
 
   void start() {
-    if (this->purge_period_ <= 0)
-    {
+    if (this->purge_period_ <= 0) {
       return;
     }
-    if (running_)
-    {
+    if (running_) {
       return;
     }
     running_ = true;

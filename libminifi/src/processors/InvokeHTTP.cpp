@@ -286,9 +286,9 @@ void InvokeHTTP::onTrigger(core::ProcessContext *context, core::ProcessSession *
     logger_->log_info("InvokeHTTP -- reading flowfile");
     std::shared_ptr<ResourceClaim> claim = flowFile->getResourceClaim();
     if (claim) {
-      callback = std::unique_ptr<utils::ByteInputCallBack>( new utils::ByteInputCallBack() );
+      callback = std::unique_ptr<utils::ByteInputCallBack>(new utils::ByteInputCallBack());
       session->read(flowFile, callback.get());
-      callbackObj = std::unique_ptr<utils::HTTPUploadCallback>( new utils::HTTPUploadCallback );
+      callbackObj = std::unique_ptr<utils::HTTPUploadCallback>(new utils::HTTPUploadCallback);
       callbackObj->ptr = callback.get();
       callbackObj->pos = 0;
       logger_->log_info("InvokeHTTP -- Setting callback, size is %d", callback->getBufferSize());
@@ -305,23 +305,23 @@ void InvokeHTTP::onTrigger(core::ProcessContext *context, core::ProcessSession *
   client.build_header_list(attribute_to_send_regex_, flowFile->getAttributes());
 
   logger_->log_info("InvokeHTTP -- curl performed");
-  res = client.submit();
-
-  if (res == CURLE_OK) {
+  if (client.submit()) {
     logger_->log_info("InvokeHTTP -- curl successful");
 
     bool putToAttribute = !IsNullOrEmpty(put_attribute_name_);
 
-    std::string response_body = client.getResponseBody();
+    const std::vector<char> &response_body = client.getResponseBody();
+    const std::vector<std::string> &response_headers = client.getHeaders();
 
     int64_t http_code = client.getResponseCode();
     const char *content_type = client.getContentType();
     flowFile->addAttribute(STATUS_CODE, std::to_string(http_code));
-    flowFile->addAttribute(STATUS_MESSAGE, response_body);
+    if (response_headers.size() > 0)
+      flowFile->addAttribute(STATUS_MESSAGE, response_headers.at(0));
     flowFile->addAttribute(REQUEST_URL, url_);
     flowFile->addAttribute(TRANSACTION_ID, tx_id);
 
-    bool isSuccess = ((int32_t) (http_code / 100)) == 2 && res != CURLE_ABORTED_BY_CALLBACK;
+    bool isSuccess = ((int32_t) (http_code / 100)) == 2;
     bool output_body_to_requestAttr = (!isSuccess || putToAttribute) && flowFile != nullptr;
     bool output_body_to_content = isSuccess && !putToAttribute;
     bool body_empty = IsNullOrEmpty(response_body);
@@ -339,7 +339,8 @@ void InvokeHTTP::onTrigger(core::ProcessContext *context, core::ProcessSession *
       std::string ct = content_type;
       response_flow->addKeyedAttribute(MIME_TYPE, ct);
       response_flow->addAttribute(STATUS_CODE, std::to_string(http_code));
-      response_flow->addAttribute(STATUS_MESSAGE, response_body);
+      if (response_headers.size() > 0)
+        flowFile->addAttribute(STATUS_MESSAGE, response_headers.at(0));
       response_flow->addAttribute(REQUEST_URL, url_);
       response_flow->addAttribute(TRANSACTION_ID, tx_id);
       io::DataStream stream((const uint8_t*) response_body.data(), response_body.size());
@@ -350,8 +351,6 @@ void InvokeHTTP::onTrigger(core::ProcessContext *context, core::ProcessSession *
       response_flow = std::static_pointer_cast<FlowFileRecord>(session->create());
     }
     route(flowFile, response_flow, session, context, isSuccess, http_code);
-  } else {
-    logger_->log_error("InvokeHTTP -- curl_easy_perform() failed %s\n", curl_easy_strerror(res));
   }
 }
 

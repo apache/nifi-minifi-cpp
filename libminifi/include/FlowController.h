@@ -70,20 +70,16 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
    * Flow controller constructor
    */
   explicit FlowController(std::shared_ptr<core::Repository> provenance_repo, std::shared_ptr<core::Repository> flow_file_repo, std::shared_ptr<Configure> configure,
-                          std::unique_ptr<core::FlowConfiguration> flow_configuration,
-                          std::shared_ptr<core::ContentRepository> content_repo, const std::string name, bool headless_mode);
+                          std::unique_ptr<core::FlowConfiguration> flow_configuration, std::shared_ptr<core::ContentRepository> content_repo, const std::string name, bool headless_mode);
 
   explicit FlowController(std::shared_ptr<core::Repository> provenance_repo, std::shared_ptr<core::Repository> flow_file_repo, std::shared_ptr<Configure> configure,
-                          std::unique_ptr<core::FlowConfiguration> flow_configuration,
-                          std::shared_ptr<core::ContentRepository> content_repo)
-      : FlowController(provenance_repo, flow_file_repo, configure, std::move(flow_configuration), content_repo, DEFAULT_ROOT_GROUP_NAME, false)
-  {
+                          std::unique_ptr<core::FlowConfiguration> flow_configuration, std::shared_ptr<core::ContentRepository> content_repo)
+      : FlowController(provenance_repo, flow_file_repo, configure, std::move(flow_configuration), content_repo, DEFAULT_ROOT_GROUP_NAME, false) {
   }
 
   explicit FlowController(std::shared_ptr<core::Repository> provenance_repo, std::shared_ptr<core::Repository> flow_file_repo, std::shared_ptr<Configure> configure,
                           std::unique_ptr<core::FlowConfiguration> flow_configuration)
-      : FlowController(provenance_repo, flow_file_repo, configure, std::move(flow_configuration), std::make_shared<core::repository::FileSystemRepository>(), DEFAULT_ROOT_GROUP_NAME, false)
-  {
+      : FlowController(provenance_repo, flow_file_repo, configure, std::move(flow_configuration), std::make_shared<core::repository::FileSystemRepository>(), DEFAULT_ROOT_GROUP_NAME, false) {
     content_repo_->initialize(configure);
   }
 
@@ -143,7 +139,7 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
 
   virtual std::vector<std::shared_ptr<state::StateController>> getComponents(const std::string &name);
 
-  virtual std::vector<std::shared_ptr<StateController>> getAllComponents();
+  virtual std::vector<std::shared_ptr<state::StateController>> getAllComponents();
 
   virtual int16_t clearConnection(const std::string &connection);
 
@@ -386,17 +382,18 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
   // metrics cache
   std::map<std::string, std::shared_ptr<state::metrics::Metrics>> component_metrics_;
 
-  std::map<uint8_t, std::vector<std::shared_ptr<state::metrics::Metrics>>> component_metrics_by_id_;
+  std::map<uint8_t, std::vector<std::shared_ptr<state::metrics::Metrics>>>component_metrics_by_id_;
   // metrics last run
   std::chrono::steady_clock::time_point last_metrics_capture_;
 
- private:
+private:
   std::shared_ptr<logging::Logger> logger_;
   std::string serial_number_;
   static std::shared_ptr<utils::IdGenerator> id_generator_;
 };
 
-} /* namespace minifi */
+}
+/* namespace minifi */
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */

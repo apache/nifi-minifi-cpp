@@ -157,7 +157,7 @@ class ProvenanceEventRecord : public core::SerializableComponent {
     REPLAY
   };
   static const char *ProvenanceEventTypeStr[REPLAY + 1];
-   public:
+ public:
   // Constructor
   /*!
    * Create a new provenance event record
@@ -513,13 +513,13 @@ class ProvenanceReporter {
  protected:
 
   // allocate
-   ProvenanceEventRecord *allocate(ProvenanceEventRecord::ProvenanceEventType eventType, std::shared_ptr<core::FlowFile> flow) {
-     ProvenanceEventRecord *event = new ProvenanceEventRecord(eventType, _componentId, _componentType);
-     if (event)
-       event->fromFlowFile(flow);
+  ProvenanceEventRecord *allocate(ProvenanceEventRecord::ProvenanceEventType eventType, std::shared_ptr<core::FlowFile> flow) {
+    ProvenanceEventRecord *event = new ProvenanceEventRecord(eventType, _componentId, _componentType);
+    if (event)
+      event->fromFlowFile(flow);
 
-     return event;
-   }
+    return event;
+  }
 
   // Component ID
   std::string _componentId;

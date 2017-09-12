@@ -29,7 +29,6 @@
 #include "../C2Protocol.h"
 #include "controllers/SSLContextService.h"
 
-
 namespace org {
 namespace apache {
 namespace nifi {
@@ -96,7 +95,7 @@ class RESTReceiver : public RESTProtocol, public HeartBeatReporter {
   std::unique_ptr<CivetServer> listener;
   std::unique_ptr<ListeningProtocol> handler;
 
-  private:
+ private:
   std::shared_ptr<logging::Logger> logger_;
 };
 

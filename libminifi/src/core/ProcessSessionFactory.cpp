@@ -28,7 +28,7 @@ namespace minifi {
 namespace core {
 
 std::shared_ptr<ProcessSession> ProcessSessionFactory::createSession() {
-  return std::make_shared < ProcessSession > (process_context_);
+  return std::make_shared<ProcessSession>(process_context_);
 }
 
 } /* namespace core */

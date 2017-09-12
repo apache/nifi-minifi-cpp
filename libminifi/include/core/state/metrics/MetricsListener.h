@@ -31,7 +31,7 @@ namespace state {
 namespace metrics {
 
 /**
- * Purpose: Class that will represent the
+ * Purpose: Class that will represent the metrics updates, which can be performed asynchronously.
  */
 class MetricsUpdate : public Update {
  public:
@@ -44,16 +44,14 @@ class MetricsUpdate : public Update {
   }
 };
 
-class MetricsWatcher : public utils::AfterExecute<Update>
-{
+class MetricsWatcher : public utils::AfterExecute<Update> {
  public:
   explicit MetricsWatcher(std::atomic<bool> *running)
       : running_(running) {
   }
 
   explicit MetricsWatcher(MetricsWatcher && other)
-      : running_(std::move(other.running_))
-  {
+      : running_(std::move(other.running_)) {
 
   }
 
@@ -100,8 +98,7 @@ class MetricsListener {
     };
   }
 
-  void stop()
-  {
+  void stop() {
     running_ = false;
   }
 

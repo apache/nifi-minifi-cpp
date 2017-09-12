@@ -37,17 +37,19 @@ class HeartBeatReporter : public core::Connectable {
  public:
 
   HeartBeatReporter(std::string name, uuid_t uuid)
-      : core::Connectable(name, uuid), controller_(nullptr), configuration_(nullptr) {
+      : core::Connectable(name, uuid),
+        controller_(nullptr),
+        configuration_(nullptr) {
   }
 
-  virtual void initialize(const std::shared_ptr<core::controller::ControllerServiceProvider> &controller, const std::shared_ptr<Configure> &configure){
+  virtual void initialize(const std::shared_ptr<core::controller::ControllerServiceProvider> &controller, const std::shared_ptr<Configure> &configure) {
     controller_ = controller;
     configuration_ = configure;
   }
   virtual ~HeartBeatReporter() {
   }
   /**
-   * Send a C2 payload to the provided URI. The direction indicates to the protocol whether or not this a transmit or receive operatin.
+   * Send a C2 payloadd to the provided URI. The direction indicates to the protocol whether or not this a transmit or receive operation.
    * Depending on the protocol this may mean different things.
    *
    * @param url url.

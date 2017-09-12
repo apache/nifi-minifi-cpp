@@ -42,8 +42,7 @@ class StandardControllerServiceProvider : public ControllerServiceProvider, publ
  public:
 
   explicit StandardControllerServiceProvider(std::shared_ptr<ControllerServiceMap> services, std::shared_ptr<ProcessGroup> root_group, std::shared_ptr<Configure> configuration,
-                                             std::shared_ptr<minifi::SchedulingAgent> agent,
-                                             ClassLoader &loader = ClassLoader::getDefaultClassLoader())
+                                             std::shared_ptr<minifi::SchedulingAgent> agent, ClassLoader &loader = ClassLoader::getDefaultClassLoader())
       : ControllerServiceProvider(services),
         root_group_(root_group),
         agent_(agent),
@@ -90,8 +89,7 @@ class StandardControllerServiceProvider : public ControllerServiceProvider, publ
     }
 
     std::shared_ptr<ControllerServiceNode> new_service_node = std::make_shared<StandardControllerServiceNode>(new_controller_service,
-                                                                                                              std::static_pointer_cast<ControllerServiceProvider>(shared_from_this()),
-                                                                                                              id,
+                                                                                                              std::static_pointer_cast<ControllerServiceProvider>(shared_from_this()), id,
                                                                                                               configuration_);
 
     controller_map_->put(id, new_service_node);
