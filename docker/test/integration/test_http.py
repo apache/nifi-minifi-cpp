@@ -22,13 +22,13 @@ def test_invoke_listen():
     Verify sending using InvokeHTTP to a receiver using ListenHTTP.
     """
 
-    invoke_flow = (GetFile('/tmp/input') >> LogAttribute() >>
-                   InvokeHTTP('http://minifi-listen:8080/contentListener', method='POST'))
+    invoke_flow = (GetFile('/tmp/input')
+                   >> LogAttribute()
+                   >> InvokeHTTP('http://minifi-listen:8080/contentListener', method='POST'))
 
     listen_flow = ListenHTTP(8080) >> LogAttribute() >> PutFile('/tmp/output')
 
     with DockerTestCluster(SingleFileOutputValidator('test')) as cluster:
-
         cluster.put_test_data('test')
         cluster.deploy_flow(listen_flow, name='minifi-listen')
         cluster.deploy_flow(invoke_flow, name='minifi-invoke')

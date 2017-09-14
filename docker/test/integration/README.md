@@ -64,6 +64,32 @@ The following processors/parameters are supported:
 - method='GET'
 - ssl\_context\_service=None
 
+#### Remote Process Groups
+
+Remote process groups and input ports are supported.
+
+**Example InputPort/RemoteProcessGroup:**
+
+```python
+port = InputPort('from-minifi', RemoteProcessGroup('http://nifi:8080/nifi'))
+```
+
+InputPorts may be used as inputs or outputs in the flow DSL:
+
+```python
+recv_flow = (port
+             >> LogAttribute()
+             >> PutFile('/tmp/output'))
+
+send_flow = (GetFile('/tmp/input')
+             >> LogAttribute()
+             >> port)
+```
+
+These example flows could be deployed as separate NiFi/MiNiFi instances where
+the send\_flow would send data to the recv\_flow using the site-to-site
+protocol.
+
 ### Definition of an output validator
 
 The output validator is responsible for checking the state of a cluster for
@@ -146,6 +172,13 @@ be used.
 
 ```python
 cluster.deploy_flow(flow, name='test-flow')
+```
+
+The deploy\_flow function defaults to a MiNiFi - C++ engine, but other engines,
+such as NiFi may be used:
+
+```python
+cluster.deploy_flow(flow, engine='nifi')
 ```
 
 ### Execution of one or more flows

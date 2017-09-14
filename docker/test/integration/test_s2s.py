@@ -17,37 +17,24 @@ from minifi import *
 from minifi.test import *
 
 
-def test_get_put():
+def test_minifi_to_nifi():
     """
-    Verify basic file get/put operations.
+    Verify sending data from a MiNiFi - C++ to NiFi using S2S protocol.
     """
 
-    flow = GetFile('/tmp/input') >> LogAttribute() >> PutFile('/tmp/output')
+    port = InputPort('from-minifi', RemoteProcessGroup('http://nifi:8080/nifi'))
+
+    recv_flow = (port
+                 >> LogAttribute()
+                 >> PutFile('/tmp/output'))
+
+    send_flow = (GetFile('/tmp/input')
+                 >> LogAttribute()
+                 >> port)
 
     with DockerTestCluster(SingleFileOutputValidator('test')) as cluster:
         cluster.put_test_data('test')
-        cluster.deploy_flow(flow)
+        cluster.deploy_flow(recv_flow, name='nifi', engine='nifi')
+        cluster.deploy_flow(send_flow)
 
-        assert cluster.check_output()
-
-
-def test_file_exists_failure():
-    """
-    Verify that putting to a file that already exists fails.
-    """
-
-    flow = (GetFile('/tmp/input')
-
-            # First put should succeed
-            >> PutFile('/tmp')
-
-            # Second put should fail (file exists)
-            >> PutFile('/tmp')
-            >> (('success', LogAttribute()),
-                ('failure', LogAttribute() >> PutFile('/tmp/output'))))
-
-    with DockerTestCluster(SingleFileOutputValidator('test')) as cluster:
-        cluster.put_test_data('test')
-        cluster.deploy_flow(flow)
-
-        assert cluster.check_output()
+        assert cluster.check_output(60)
