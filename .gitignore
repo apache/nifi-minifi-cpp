@@ -58,3 +58,4 @@ docker/minificppsource
 .cproject
 .settings
 *.pyc
+/cmake-build-*
