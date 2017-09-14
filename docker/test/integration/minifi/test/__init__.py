@@ -36,15 +36,14 @@ def put_file_contents(contents, file_abs_path):
 
 
 class DockerTestCluster(SingleNodeDockerCluster):
-
     def __init__(self, output_validator):
 
         # Create test input/output directories
         test_cluster_id = str(uuid.uuid4())
 
-        self.tmp_test_output_dir = '/tmp/.minifi-test-output.' + test_cluster_id
-        self.tmp_test_input_dir = '/tmp/.minifi-test-input.' + test_cluster_id
-        self.tmp_test_resources_dir = '/tmp/.minifi-test-resources.' + test_cluster_id
+        self.tmp_test_output_dir = '/tmp/.nifi-test-output.' + test_cluster_id
+        self.tmp_test_input_dir = '/tmp/.nifi-test-input.' + test_cluster_id
+        self.tmp_test_resources_dir = '/tmp/.nifi-test-resources.' + test_cluster_id
 
         logging.info('Creating tmp test input dir: %s', self.tmp_test_input_dir)
         os.makedirs(self.tmp_test_input_dir, mode=0777)
@@ -66,17 +65,27 @@ class DockerTestCluster(SingleNodeDockerCluster):
 
         super(DockerTestCluster, self).__init__()
 
-    def deploy_flow(self, flow, name=None, vols=None):
+    def deploy_flow(self,
+                    flow,
+                    name=None,
+                    vols=None,
+                    engine='minifi-cpp'):
         """
         Performs a standard container flow deployment with the addition
         of volumes supporting test input/output directories.
         """
 
-        vols = {self.tmp_test_input_dir: {'bind': '/tmp/input', 'mode': 'rw'},
-                self.tmp_test_output_dir: {'bind': '/tmp/output', 'mode': 'rw'},
-                self.tmp_test_resources_dir: {'bind': '/tmp/resources', 'mode': 'rw'}}
+        if vols is None:
+            vols = {}
 
-        super(DockerTestCluster, self).deploy_flow(flow, vols=vols, name=name)
+        vols[self.tmp_test_input_dir] = {'bind': '/tmp/input', 'mode': 'rw'}
+        vols[self.tmp_test_output_dir] = {'bind': '/tmp/output', 'mode': 'rw'}
+        vols[self.tmp_test_resources_dir] = {'bind': '/tmp/resources', 'mode': 'rw'}
+
+        super(DockerTestCluster, self).deploy_flow(flow,
+                                                   vols=vols,
+                                                   name=name,
+                                                   engine=engine)
 
     def put_test_data(self, contents):
         """
@@ -103,14 +112,22 @@ class DockerTestCluster(SingleNodeDockerCluster):
         self.observer.stop()
         self.observer.join()
 
-    def log_minifi_output(self):
+    def log_nifi_output(self):
 
         for container in self.containers:
             container = self.client.containers.get(container.id)
             logging.info('Container logs for container \'%s\':\n%s', container.name, container.logs())
             if container.status == 'running':
-                app_logs = container.exec_run('cat ' + self.minifi_root + '/minifi-app.log')
-                logging.info('MiNiFi app logs for container \'%s\':\n%s', container.name, app_logs)
+                minifi_app_logs = container.exec_run('/bin/sh -c \'test -f ' + self.minifi_root + '/minifi-app.log '
+                                                                                                '&& cat ' +
+                                                     self.minifi_root + '/minifi-app.log\'')
+                if len(minifi_app_logs) > 0:
+                    logging.info('MiNiFi app logs for container \'%s\':\n%s', container.name, minifi_app_logs)
+                nifi_app_logs = container.exec_run('/bin/sh -c \'test -f ' + self.nifi_root + '/logs/nifi-app.log '
+                                                                                            '&& cat ' +
+                                                   self.nifi_root + '/logs/nifi-app.log\'')
+                if len(nifi_app_logs) > 0:
+                    logging.info('NiFi app logs for container \'%s\':\n%s', container.name, nifi_app_logs)
             else:
                 logging.info(container.status)
                 logging.info('Could not cat app logs for container \'%s\' because it is not running',
@@ -118,12 +135,12 @@ class DockerTestCluster(SingleNodeDockerCluster):
             stats = container.stats(decode=True, stream=False)
             logging.info('Container stats:\n%s', repr(stats))
 
-    def check_output(self):
+    def check_output(self, timeout=5):
         """
         Wait for flow output, validate it, and log minifi output.
         """
-        self.wait_for_output(5)
-        self.log_minifi_output()
+        self.wait_for_output(timeout)
+        self.log_nifi_output()
 
         return self.output_validator.validate()
 
@@ -143,7 +160,6 @@ class DockerTestCluster(SingleNodeDockerCluster):
 
 
 class OutputEventHandler(FileSystemEventHandler):
-
     def __init__(self, validator, done_event):
         self.validator = validator
         self.done_event = done_event
@@ -174,6 +190,7 @@ class OutputValidator(object):
         """
         Return True if output is valid; False otherwise.
         """
+
 
 class SingleFileOutputValidator(OutputValidator):
     """
