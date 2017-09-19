@@ -29,6 +29,8 @@
 #include <vector>
 #include <iostream>
 #include <sstream>
+#include "HTTPClient.h"
+#include "InvokeHTTP.h"
 #include "../TestBase.h"
 #include "utils/StringUtils.h"
 #include "core/Core.h"
@@ -45,9 +47,8 @@
 #include "controllers/SSLContextService.h"
 #include "../TestServer.h"
 #include "c2/C2Agent.h"
-#include "c2/protocols/RESTReceiver.h"
-
-#include "IntegrationBase.h"
+#include "RESTReceiver.h"
+#include "../integration/IntegrationBase.h"
 
 class VerifyC2Server : public IntegrationBase {
  public:

@@ -29,6 +29,8 @@
 #include <vector>
 #include <iostream>
 #include <sstream>
+#include "HTTPClient.h"
+#include "InvokeHTTP.h"
 #include "../TestBase.h"
 #include "utils/StringUtils.h"
 #include "core/Core.h"
@@ -42,7 +44,7 @@
 #include "c2/C2Agent.h"
 #include "CivetServer.h"
 #include <cstring>
-#include "../../include/c2/protocols/RESTSender.h"
+#include "RESTSender.h"
 
 void waitToVerifyProcessor() {
   std::this_thread::sleep_for(std::chrono::seconds(10));
@@ -179,6 +181,7 @@ int main(int argc, char **argv) {
   std::string logs = LogTestController::getInstance().log_output.str();
   assert(logs.find("Starting to reload Flow Controller with flow control name MiNiFi Flow, version 0") != std::string::npos);
   LogTestController::getInstance().reset();
+  rmdir("./content_repository");
 
   return 0;
 }

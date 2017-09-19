@@ -25,6 +25,8 @@
 #include <string>
 #include <memory>
 #include "core/state/UpdateController.h"
+#include "core/logging/Logger.h"
+#include "core/logging/LoggerConfiguration.h"
 
 namespace org {
 namespace apache {

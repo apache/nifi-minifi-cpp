@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-#include "c2/protocols/RESTProtocol.h"
+#include "RESTProtocol.h"
 
 #include <algorithm>
 #include <memory>

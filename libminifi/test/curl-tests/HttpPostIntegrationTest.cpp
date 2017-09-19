@@ -28,6 +28,8 @@
 #include <type_traits>
 #include <vector>
 #include <iostream>
+#include "HTTPClient.h"
+#include "InvokeHTTP.h"
 #include <sstream>
 #include "../TestBase.h"
 #include "utils/StringUtils.h"
@@ -44,7 +46,7 @@
 #include "core/ConfigurableComponent.h"
 #include "controllers/SSLContextService.h"
 #include "../TestServer.h"
-#include "IntegrationBase.h"
+#include "../integration/IntegrationBase.h"
 
 class HttpTestHarness : public IntegrationBase {
  public:
@@ -73,7 +75,7 @@ class HttpTestHarness : public IntegrationBase {
     file.open(ss.str(), std::ios::out);
     file << "tempFile";
     file.close();
-    configuration->set("nifi.flow.engine.threads", "1");
+    configuration->set("nifi.flow.engine.threads", "8");
   }
 
   void cleanup() {

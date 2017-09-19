@@ -15,17 +15,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_C2_RESTSENDER_H_
-#define LIBMINIFI_INCLUDE_C2_RESTSENDER_H_
+#ifndef LIBMINIFI_INCLUDE_C2_PROTOCOLS_RESTPROTOCOL_H_
+#define LIBMINIFI_INCLUDE_C2_PROTOCOLS_RESTPROTOCOL_H_
 
 #include "json/json.h"
 #include "json/writer.h"
 #include <string>
 #include <mutex>
 #include "CivetServer.h"
-#include "../C2Protocol.h"
-#include "RESTProtocol.h"
-#include "../HeartBeatReporter.h"
+#include "c2/C2Protocol.h"
+#include "c2/HeartBeatReporter.h"
 #include "controllers/SSLContextService.h"
 #include "utils/ByteInputCallBack.h"
 #include "utils/HTTPClient.h"
@@ -44,32 +43,27 @@ namespace c2 {
  * will encompass other protocols the context of its meaning here simply translates into POST and GET respectively.
  *
  */
-class RESTSender : public RESTProtocol, public C2Protocol {
+class RESTProtocol {
  public:
+  RESTProtocol() {
 
-  explicit RESTSender(std::string name, uuid_t uuid = nullptr);
+  }
 
-  virtual C2Payload consumePayload(const std::string &url, const C2Payload &payload, Direction direction, bool async);
+  virtual ~RESTProtocol() {
 
-  virtual C2Payload consumePayload(const C2Payload &payload, Direction direction, bool async);
-
-  virtual void update(const std::shared_ptr<Configure> &configure);
-
-  virtual void initialize(const std::shared_ptr<core::controller::ControllerServiceProvider> &controller, const std::shared_ptr<Configure> &configure);
+  }
 
  protected:
 
-  virtual const C2Payload sendPayload(const std::string url, const Direction direction, const C2Payload &payload, const std::string outputConfig);
+  virtual Json::Value serializeJsonPayload(Json::Value &json_root, const C2Payload &payload);
 
-  std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service_;
+  virtual const C2Payload parseJsonResponse(const C2Payload &payload, const std::vector<char> &response);
 
- private:
-  std::shared_ptr<logging::Logger> logger_;
-  std::string rest_uri_;
-  std::string ack_uri_;
+  virtual std::string getOperation(const C2Payload &payload);
+
+  virtual Operation stringToOperation(const std::string str);
+
 };
-
-REGISTER_RESOURCE(RESTSender);
 
 } /* namesapce c2 */
 } /* namespace minifi */
@@ -77,4 +71,4 @@ REGISTER_RESOURCE(RESTSender);
 } /* namespace apache */
 } /* namespace org */
 
-#endif /* LIBMINIFI_INCLUDE_C2_RESTPROTOCOL_H_ */
+#endif /* LIBMINIFI_INCLUDE_C2_PROTOCOLS_RESTOPERATIONS_H_ */

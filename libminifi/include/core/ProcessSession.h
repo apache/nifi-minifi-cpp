@@ -77,7 +77,29 @@ class ProcessSession {
   std::shared_ptr<core::FlowFile> create(std::shared_ptr<core::FlowFile> &&parent);
   // Create a new UUID FlowFile with no content resource claim and inherit all attributes from parent
   std::shared_ptr<core::FlowFile> create(std::shared_ptr<core::FlowFile> &parent) {
-    return create(parent);
+    std::map<std::string, std::string> empty;
+      std::shared_ptr<core::FlowFile> record = std::make_shared<FlowFileRecord>(process_context_->getFlowFileRepository(), process_context_->getContentRepository(), empty);
+
+      if (record) {
+        _addedFlowFiles[record->getUUIDStr()] = record;
+        logger_->log_debug("Create FlowFile with UUID %s", record->getUUIDStr().c_str());
+      }
+
+      if (record) {
+        // Copy attributes
+        std::map<std::string, std::string> parentAttributes = parent->getAttributes();
+        std::map<std::string, std::string>::iterator it;
+        for (it = parentAttributes.begin(); it != parentAttributes.end(); it++) {
+          if (it->first == FlowAttributeKey(ALTERNATE_IDENTIFIER) || it->first == FlowAttributeKey(DISCARD_REASON) || it->first == FlowAttributeKey(UUID))
+            // Do not copy special attributes from parent
+            continue;
+          record->setAttribute(it->first, it->second);
+        }
+        record->setLineageStartDate(parent->getlineageStartDate());
+        record->setLineageIdentifiers(parent->getlineageIdentifiers());
+        parent->getlineageIdentifiers().insert(parent->getUUIDStr());
+      }
+      return record;
   }
   // Add a FlowFile to the session
   void add(std::shared_ptr<core::FlowFile> &flow);

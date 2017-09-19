@@ -1,5 +1,4 @@
 /**
- * HTTPUtils class declaration
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -16,24 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __HTTP_UTILS_H__
-#define __HTTP_UTILS_H__
-
-#include <curl/curl.h>
-#include <vector>
-#include <iostream>
-#include <string>
-#include <curl/easy.h>
-#include <uuid/uuid.h>
-#include <regex.h>
-#include <vector>
-#include "controllers/SSLContextService.h"
+#ifndef LIBMINIFI_INCLUDE_UTILS_BaseHTTPClient_H_
+#define LIBMINIFI_INCLUDE_UTILS_BaseHTTPClient_H_
 #include "ByteInputCallBack.h"
-#include "core/logging/Logger.h"
-#include "core/logging/LoggerConfiguration.h"
-#include "properties/Configure.h"
-#include "io/validation.h"
-
+#include "controllers/SSLContextService.h"
 namespace org {
 namespace apache {
 namespace nifi {
@@ -111,7 +96,7 @@ struct HTTPRequestResponse {
         return len;
       }
     } else {
-      return CURL_READFUNC_ABORT;
+      return 0x10000000;
     }
 
     return 0;
@@ -123,6 +108,119 @@ struct HTTPRequestResponse {
   }
 
 };
+
+class BaseHTTPClient {
+ public:
+  explicit BaseHTTPClient(const std::string &url, const std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service = nullptr) {
+    response_code = -1;
+  }
+
+  explicit BaseHTTPClient() {
+    response_code = -1;
+  }
+
+  virtual ~BaseHTTPClient() {
+  }
+
+  virtual void setVerbose() {
+  }
+
+  virtual void initialize(const std::string &method, const std::string url = "", const std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service = nullptr) {
+  }
+
+  virtual void setConnectionTimeout(int64_t timeout) {
+  }
+
+  virtual void setReadTimeout(int64_t timeout) {
+  }
+
+  virtual void setUploadCallback(HTTPUploadCallback *callbackObj) {
+  }
+
+  virtual void setContentType(std::string content_type) {
+  }
+
+  virtual std::string escape(std::string string_to_escape) {
+    return "";
+  }
+
+  virtual void setPostFields(std::string input) {
+  }
+
+  virtual bool submit() {
+    return false;
+  }
+
+  virtual int64_t &getResponseCode() {
+    return response_code;
+  }
+
+  virtual const char *getContentType() {
+    return "";
+  }
+
+  virtual const std::vector<char> &getResponseBody() {
+    return response_body_;
+  }
+
+  virtual void appendHeader(const std::string &new_header) {
+
+  }
+
+  virtual void set_request_method(const std::string method) {
+  }
+
+  virtual void setUseChunkedEncoding() {
+  }
+
+  virtual void setDisablePeerVerification() {
+  }
+
+  virtual const std::vector<std::string> &getHeaders() {
+    return headers_;
+
+  }
+
+ protected:
+  int64_t response_code;
+  std::vector<char> response_body_;
+  std::vector<std::string> headers_;
+
+  virtual inline bool matches(const std::string &value, const std::string &sregex){
+    return false;
+  }
+
+};
+
+static std::string get_token(utils::BaseHTTPClient *client, std::string username, std::string password) {
+
+  if (nullptr == client) {
+    return "";
+  }
+  utils::HTTPRequestResponse content;
+  std::string token;
+
+  client->setContentType("application/x-www-form-urlencoded");
+
+  client->set_request_method("POST");
+
+  std::string payload = "username=" + username + "&" + "password=" + password;
+
+  client->setPostFields(client->escape(payload));
+
+  client->submit();
+
+  if (client->submit() && client->getResponseCode() == 200) {
+
+    const std::string &response_body = std::string(client->getResponseBody().data(), client->getResponseBody().size());
+
+    if (!response_body.empty()) {
+      token = "Bearer " + response_body;
+    }
+  }
+
+  return token;
+}
 
 static void parse_url(std::string &url, std::string &host, int &port, std::string &protocol) {
 
@@ -156,146 +254,10 @@ static void parse_url(std::string &url, std::string &host, int &port, std::strin
     }
   }
 }
-
-/**
- * Purpose and Justification: Initializes and cleans up curl once. Cleanup will only occur at the end of our execution since we are relying on a static variable.
- */
-class HTTPClientInitializer {
- public:
-  static HTTPClientInitializer *getInstance() {
-    static HTTPClientInitializer initializer;
-    return &initializer;
-  }
- private:
-  ~HTTPClientInitializer() {
-    curl_global_cleanup();
-  }
-  HTTPClientInitializer() {
-    curl_global_init(CURL_GLOBAL_DEFAULT);
-  }
-};
-
-/**
- * Purpose and Justification: Pull the basics for an HTTPClient into a self contained class. Simply provide
- * the URL and an SSLContextService ( can be null).
- *
- * Since several portions of the code have been relying on curl, we can encapsulate most CURL HTTP
- * operations here without maintaining it everywhere. Further, this will help with testing as we
- * only need to to test our usage of CURL once
- */
-class HTTPClient {
- public:
-  HTTPClient(const std::string &url, const std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service = nullptr);
-
-  ~HTTPClient();
-
-  void setVerbose();
-
-  void initialize(const std::string &method);
-
-  void setConnectionTimeout(int64_t timeout);
-
-  void setReadTimeout(int64_t timeout);
-
-  void setUploadCallback(HTTPUploadCallback *callbackObj);
-
-  struct curl_slist *build_header_list(std::string regex, const std::map<std::string, std::string> &attributes);
-
-  void setContentType(std::string content_type);
-
-  std::string escape(std::string string_to_escape);
-
-  void setPostFields(std::string input);
-
-  void setHeaders(struct curl_slist *list);
-
-  bool submit();
-
-  CURLcode getResponseResult();
-
-  int64_t &getResponseCode();
-
-  const char *getContentType();
-
-  const std::vector<char> &getResponseBody();
-
-  void set_request_method(const std::string method);
-
-  void setUseChunkedEncoding();
-
-  void setDisablePeerVerification();
-
-  const std::vector<std::string> &getHeaders() {
-    return header_response_.header_tokens_;
-
-  }
-
- protected:
-
-  inline bool matches(const std::string &value, const std::string &sregex);
-
-  static CURLcode configure_ssl_context(CURL *curl, void *ctx, void *param) {
-    minifi::controllers::SSLContextService *ssl_context_service = static_cast<minifi::controllers::SSLContextService*>(param);
-    if (!ssl_context_service->configure_ssl_context(static_cast<SSL_CTX*>(ctx))) {
-      return CURLE_FAILED_INIT;
-    }
-    return CURLE_OK;
-  }
-
-  void configure_secure_connection(CURL *http_session);
-
-  bool isSecure(const std::string &url);
-  struct curl_slist *headers_;
-  utils::HTTPRequestResponse content_;
-  utils::HTTPHeaderResponse header_response_;
-  CURLcode res;
-  int64_t http_code;
-  char *content_type;
-
-  int64_t connect_timeout_;
-  // read timeout.
-  int64_t read_timeout_;
-
-  std::string content_type_;
-
-  std::shared_ptr<logging::Logger> logger_;
-  CURL *http_session_;
-  std::string url_;
-  std::string method_;
-  std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service_;
-};
-
-//static std::string get_token(HTTPClientstd::string loginUrl, std::string username, std::string password, HTTPSecurityConfiguration &securityConfig) {
-static std::string get_token(HTTPClient &client, std::string username, std::string password) {
-  utils::HTTPRequestResponse content;
-  std::string token;
-
-  client.setContentType("application/x-www-form-urlencoded");
-
-  client.set_request_method("POST");
-
-  std::string payload = "username=" + username + "&" + "password=" + password;
-
-  client.setPostFields(client.escape(payload));
-
-  client.submit();
-
-  if (client.submit() && client.getResponseCode() == 200) {
-
-    const std::string &response_body = std::string(client.getResponseBody().data(), client.getResponseBody().size());
-
-    if (!response_body.empty()) {
-      token = "Bearer " + response_body;
-    }
-  }
-
-  return token;
-}
-
 } /* namespace utils */
 } /* namespace minifi */
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
 
-#endif
+#endif /* LIBMINIFI_INCLUDE_UTILS_BaseHTTPClient_H_ */

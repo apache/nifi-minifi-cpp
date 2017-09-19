@@ -26,7 +26,7 @@
 #include "core/Resource.h"
 #include "RESTProtocol.h"
 #include "CivetServer.h"
-#include "../C2Protocol.h"
+#include "c2/C2Protocol.h"
 #include "controllers/SSLContextService.h"
 
 namespace org {
