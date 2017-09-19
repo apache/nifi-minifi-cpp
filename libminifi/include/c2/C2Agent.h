@@ -29,8 +29,7 @@
 #include "C2Payload.h"
 #include "C2Protocol.h"
 #include "io/validation.h"
-#include "protocols/Protocols.h"
-
+#include "HeartBeatReporter.h"
 namespace org {
 namespace apache {
 namespace nifi {

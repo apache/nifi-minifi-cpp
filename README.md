@@ -479,6 +479,10 @@ MiNiFi can also be installed as a system service using minifi.sh with an optiona
 
     $ ./bin/minifi.sh install [service name]
 
+### Extensions
+
+Please see [Extensions.md](Extensions.md) on how to build and run conditionally built dependencies and extensions.
+
 ## Documentation
 See https://nifi.apache.org/minifi for the latest documentation.
 

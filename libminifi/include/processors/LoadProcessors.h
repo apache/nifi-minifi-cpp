@@ -20,7 +20,6 @@
 
 #include "core/Core.h"
 #include "core/Resource.h"
-
 #include "AppendHostInfo.h"
 #include "ExecuteProcess.h"
 #include "GenerateFlowFile.h"

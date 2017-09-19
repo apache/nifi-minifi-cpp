@@ -29,6 +29,8 @@
 #include <vector>
 #include <iostream>
 #include <sstream>
+#include "HTTPClient.h"
+#include "InvokeHTTP.h"
 #include "../TestBase.h"
 #include "utils/StringUtils.h"
 #include "core/Core.h"
@@ -45,33 +47,12 @@
 #include "controllers/SSLContextService.h"
 #include "../TestServer.h"
 #include "c2/C2Agent.h"
-#include "c2/protocols/RESTReceiver.h"
+#include "protocols/RESTReceiver.h"
+#include "../integration/IntegrationBase.h"
 
-#include "IntegrationBase.h"
-
-class Responder : public CivetHandler {
+class VerifyC2Server : public IntegrationBase {
  public:
-  explicit Responder(bool isSecure)
-      : isSecure(isSecure) {
-  }
-  bool handlePost(CivetServer *server, struct mg_connection *conn) {
-    std::string resp =
-        "{\"operation\" : \"heartbeat\", \"requested_operations\" : [{ \"operationid\" : 41, \"operation\" : \"stop\", \"name\" : \"invoke\"  }, "
-        "{ \"operationid\" : 42, \"operation\" : \"stop\", \"name\" : \"FlowController\"  } ]}";
-    mg_printf(conn, "HTTP/1.1 200 OK\r\nContent-Type: "
-              "text/plain\r\nContent-Length: %lu\r\nConnection: close\r\n\r\n",
-              resp.length());
-    mg_printf(conn, "%s", resp.c_str());
-    return true;
-  }
-
- protected:
-  bool isSecure;
-};
-
-class VerifyC2Heartbeat : public IntegrationBase {
- public:
-  explicit VerifyC2Heartbeat(bool isSecure)
+  explicit VerifyC2Server(bool isSecure)
       : isSecure(isSecure) {
     char format[] = "/tmp/ssth.XXXXXX";
     dir = testController.createTempDirectory(format);
@@ -79,11 +60,11 @@ class VerifyC2Heartbeat : public IntegrationBase {
 
   void testSetup() {
     LogTestController::getInstance().setDebug<utils::HTTPClient>();
-    LogTestController::getInstance().setTrace<minifi::c2::C2Agent>();
-    LogTestController::getInstance().setDebug<LogTestController>();
-    LogTestController::getInstance().setDebug<minifi::c2::RESTSender>();
-    LogTestController::getInstance().setDebug<minifi::c2::RESTProtocol>();
+    LogTestController::getInstance().setDebug<processors::InvokeHTTP>();
     LogTestController::getInstance().setDebug<minifi::c2::RESTReceiver>();
+      LogTestController::getInstance().setDebug<minifi::c2::C2Agent>();
+    LogTestController::getInstance().setDebug<processors::LogAttribute>();
+    LogTestController::getInstance().setDebug<minifi::core::ProcessSession>();
     std::fstream file;
     ss << dir << "/" << "tstFile.ext";
     file.open(ss.str(), std::ios::out);
@@ -92,16 +73,13 @@ class VerifyC2Heartbeat : public IntegrationBase {
   }
 
   void cleanup() {
-    LogTestController::getInstance().reset();
     unlink(ss.str().c_str());
   }
 
   void runAssertions() {
-    assert(LogTestController::getInstance().contains("Received Ack from Server") == true);
-
-    assert(LogTestController::getInstance().contains("C2Agent] [debug] Stopping component invoke") == true);
-
-    assert(LogTestController::getInstance().contains("C2Agent] [debug] Stopping component FlowController") == true);
+    assert(LogTestController::getInstance().contains("C2Agent] [info] Class is null") == true);
+    assert(LogTestController::getInstance().contains("C2Agent] [debug] Could not instantiate null") == true);
+    assert(LogTestController::getInstance().contains("Class is RESTSender") == true);
   }
 
   void queryRootProcessGroup(std::shared_ptr<core::ProcessGroup> pg) {
@@ -114,9 +92,18 @@ class VerifyC2Heartbeat : public IntegrationBase {
     std::string url = "";
     inv->getProperty(minifi::processors::InvokeHTTP::URL.getName(), url);
 
-    configuration->set("c2.rest.url", "http://localhost:8888/api/heartbeat");
-    configuration->set("c2.agent.heartbeat.period", "1000");
-    configuration->set("c2.rest.url.ack", "http://localhost:8888/api/heartbeat");
+    std::cout << "url is " << url << std::endl;
+
+    std::string port, scheme, path;
+    parse_http_components(url, port, scheme, path);
+    std::cout << "path is " << path << std::endl;
+    configuration->set("c2.agent.protocol.class", "null");
+    configuration->set("c2.rest.url", "null");
+    configuration->set("c2.rest.url.ack", "null");
+    configuration->set("c2.agent.heartbeat.reporter.classes", "null");
+    configuration->set("c2.rest.listener.port", "null");
+    configuration->set("c2.agent.heartbeat.period", "null");
+    configuration->set("c2.rest.listener.heartbeat.rooturi", "null");
   }
 
  protected:
@@ -128,7 +115,6 @@ class VerifyC2Heartbeat : public IntegrationBase {
 
 int main(int argc, char **argv) {
   std::string key_dir, test_file_location, url;
-  url = "http://localhost:8888/api/heartbeat";
   if (argc > 1) {
     test_file_location = argv[1];
     key_dir = argv[2];
@@ -139,15 +125,12 @@ int main(int argc, char **argv) {
     isSecure = true;
   }
 
-  VerifyC2Heartbeat harness(isSecure);
+  VerifyC2Server harness(isSecure);
 
   harness.setKeyDir(key_dir);
-
-  Responder responder(isSecure);
-
-  harness.setUrl(url, &responder);
 
   harness.run(test_file_location);
 
   return 0;
 }
+

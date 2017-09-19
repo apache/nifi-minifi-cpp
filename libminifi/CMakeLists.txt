@@ -25,7 +25,6 @@ set(PROJECT_VERSION_MAJOR 0)
 set(PROJECT_VERSION_MINOR 3)
 set(PROJECT_VERSION_PATCH 0)
 
-
 #### Establish Project Configuration ####
 # Enable usage of the VERSION specifier
 # https://cmake.org/cmake/help/v3.0/policy/CMP0048.html#policy:CMP0048
@@ -44,6 +43,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DLEVELDB_SUPPORT -DOPENSSL_SUPPORT -DYA
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DLEVELDB_SUPPORT -DOPENSSL_SUPPORT -DYAML_SUPPORT")
 ENDIF()
 
+
 include(CheckCXXCompilerFlag)
 CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
 CHECK_CXX_COMPILER_FLAG("-std=c++0x" COMPILER_SUPPORTS_CXX0X)
@@ -57,6 +57,7 @@ endif()
 
 include_directories(../thirdparty/spdlog-20170710/include)
 include_directories(../thirdparty/yaml-cpp-yaml-cpp-0.5.3/include)
+
 include_directories(../thirdparty/civetweb-1.9.1/include)
 include_directories(../thirdparty/jsoncpp/include)
 include_directories(../thirdparty/concurrentqueue/)
@@ -76,19 +77,18 @@ target_link_libraries(minifi ${UUID_LIBRARIES} ${JSONCPP_LIB})
 
 find_package(ZLIB REQUIRED)
 include_directories(${ZLIB_INCLUDE_DIRS})
+
 target_link_libraries (minifi ${ZLIB_LIBRARIES})
+
+
+
+
 
 if (NOT IOS)
 # Include Boost System
 find_package(Boost COMPONENTS system filesystem REQUIRED)
-find_package(CURL)
 target_link_libraries(minifi ${Boost_SYSTEM_LIBRARY})
 target_link_libraries(minifi ${Boost_FILESYSTEM_LIBRARY})
-
-if (CURL_FOUND)
-        include_directories(${CURL_INCLUDE_DIRS})
-        target_link_libraries (minifi ${CURL_LIBRARIES})
-endif(CURL_FOUND)
 
 # Include LevelDB
 find_package (Leveldb REQUIRED)
@@ -109,6 +109,7 @@ else ()
 endif (OPENSSL_FOUND)
 endif ()
 
-add_subdirectory(src/utils)
 
 set_property(TARGET minifi PROPERTY INTERPROCEDURAL_OPTIMIZATION True)
+
+SET (LIBMINIFI minifi PARENT_SCOPE)

@@ -28,7 +28,8 @@
 #include <thread>
 #include <type_traits>
 #include <vector>
-#include "utils/HTTPClient.h"
+#include "HTTPClient.h"
+#include "InvokeHTTP.h"
 #include "../TestServer.h"
 #include "../TestBase.h"
 #include "utils/StringUtils.h"

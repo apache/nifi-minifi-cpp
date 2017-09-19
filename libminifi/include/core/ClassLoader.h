@@ -86,11 +86,14 @@ class ObjectFactory {
    */
   virtual std::string getName() = 0;
 
+  virtual std::string getClassName() = 0;
   /**
    * Gets the class name for the object
    * @return class name for the processor.
    */
-  virtual std::string getClassName() = 0;
+  virtual std::vector<std::string> getClassNames() = 0;
+
+  virtual std::unique_ptr<ObjectFactory> assign(const std::string &class_name) = 0;
 
 };
 
@@ -161,6 +164,16 @@ class DefautObjectFactory : public ObjectFactory {
     return className;
   }
 
+  virtual std::vector<std::string> getClassNames() {
+    std::vector<std::string> container;
+    container.push_back(className);
+    return container;
+  }
+
+  virtual std::unique_ptr<ObjectFactory> assign(const std::string &class_name) {
+    return nullptr;
+  }
+
  protected:
   std::string className;
 
@@ -200,7 +213,7 @@ class ClassLoader {
    * This will attempt to load objects within this resource.
    * @return return code: RESOURCE_FAILURE or RESOURCE_SUCCESS
    */
-  uint16_t registerResource(const std::string &resource);
+  uint16_t registerResource(const std::string &resource, const std::string &resourceName);
 
   /**
    * Register a class with the give ProcessorFactory
