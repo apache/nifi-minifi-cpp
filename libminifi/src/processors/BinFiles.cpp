@@ -53,6 +53,7 @@ const char *BinFiles::SEGMENT_COUNT_ATTRIBUTE = "segment.count";
 const char *BinFiles::SEGMENT_ID_ATTRIBUTE = "segment.identifier";
 const char *BinFiles::SEGMENT_INDEX_ATTRIBUTE = "segment.index";
 const char *BinFiles::SEGMENT_ORIGINAL_FILENAME = "segment.original.filename";
+const char *BinFiles::TAR_PERMISSIONS_ATTRIBUTE = "tar.permissions";
 
 void BinFiles::initialize() {
   // Set the supported properties

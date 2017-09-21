@@ -21,6 +21,8 @@
 #define __MERGE_CONTENT_H__
 
 #include "processors/BinFiles.h"
+#include "archive_entry.h"
+#include "archive.h"
 
 namespace org {
 namespace apache {
@@ -119,6 +121,105 @@ public:
           return len;
         ret += len;
       }
+      return ret;
+    }
+  };
+};
+
+// TarMerge Class
+class TarMerge : public MergeBin {
+public:
+  static const char *mimeType;
+  std::string getMergedContentType() {
+    return mimeType;
+  }
+  std::shared_ptr<core::FlowFile> merge(core::ProcessContext *context, core::ProcessSession *session,
+          std::deque<std::shared_ptr<core::FlowFile>> &flows, std::string &header, std::string &footer, std::string &demarcator);
+  // Nest Callback Class for read stream
+  class ReadCallback : public InputStreamCallback {
+   public:
+    ReadCallback(uint64_t size, struct archive *arch, struct archive_entry *entry)
+        : buffer_size_(size), arch_(arch), entry_(entry) {
+    }
+    ~ReadCallback() {
+    }
+    int64_t process(std::shared_ptr<io::BaseStream> stream) {
+      uint8_t buffer[buffer_size_];
+      int64_t ret = 0;
+      uint64_t read_size;
+      ret = stream->read(buffer, buffer_size_);
+      if (!stream)
+        read_size = stream->getSize();
+      else
+        read_size = buffer_size_;
+      ret = archive_write_header(arch_, entry_);
+      ret += archive_write_data(arch_, buffer, read_size);
+      return ret;
+    }
+    uint64_t buffer_size_;
+    struct archive *arch_;
+    struct archive_entry *entry_;
+  };
+  // Nest Callback Class for write stream
+  class WriteCallback: public OutputStreamCallback {
+  public:
+    WriteCallback(std::string &header, std::string &footer, std::string &demarcator, std::deque<std::shared_ptr<core::FlowFile>> &flows, core::ProcessSession *session) :
+      header_(header), footer_(footer), demarcator_(demarcator), flows_(flows), session_(session) {
+    	allocatedSize_ = 0;
+    	writeBuffer_ = nullptr;
+    	used_ = 0;
+    	for (auto flow : flows_) {
+    		allocatedSize_ += flow->getSize();
+    	}
+    	writeBuffer_ = new char[allocatedSize_];
+    }
+    ~WriteCallback() {
+    	if (writeBuffer_)
+    		delete[] writeBuffer_;
+    }
+    std::string &header_;
+    std::string &footer_;
+    std::string &demarcator_;
+    std::deque<std::shared_ptr<core::FlowFile>> &flows_;
+    core::ProcessSession *session_;
+
+    // archive internal memory buffer;
+    char *writeBuffer_;
+    size_t used_;
+    size_t allocatedSize_;
+
+    int64_t process(std::shared_ptr<io::BaseStream> stream) {
+      int64_t ret = 0;
+      struct archive *arch;
+
+      arch = archive_write_new();
+      archive_write_set_format_pax_restricted(arch); // tar format
+      archive_write_open_memory(arch, writeBuffer_, allocatedSize_, &used_);
+
+      for (auto flow : flows_) {
+    	struct archive_entry *entry = archive_entry_new();
+    	std::string fileName;
+    	flow->getAttribute(FlowAttributeKey(FILENAME), fileName);
+    	archive_entry_set_pathname(entry, fileName.c_str());
+    	archive_entry_set_size(entry, flow->getSize());
+    	archive_entry_set_filetype(entry, AE_IFREG);
+    	archive_entry_set_perm(entry, 0644);
+    	std::string perm;
+    	int permInt;
+    	if (flow->getAttribute(BinFiles::TAR_PERMISSIONS_ATTRIBUTE, perm)) {
+    	    try {
+    	      permInt = std::stoi(perm);
+    	      archive_entry_set_perm(entry, (mode_t) permInt);
+    	    }
+    	    catch (...) {
+    	    }
+    	}
+        ReadCallback readCb(flow->getSize(), arch, entry);
+        session_->read(flow, &readCb);
+        archive_entry_free(entry);
+      }
+      archive_write_close(arch);
+      archive_write_free(arch);
       return ret;
     }
   };
