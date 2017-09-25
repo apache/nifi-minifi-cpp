@@ -717,4 +717,151 @@ TEST_CASE("MergeFileBinPack", "[mergefiletest4]") {
   }
 }
 
+TEST_CASE("MergeFileTar", "[mergefiletest4]") {
+  try {
+    std::ofstream expectfileFirst;
+    std::ofstream expectfileSecond;
+    expectfileFirst.open(EXPECT_MERGE_CONTENT_FIRST);
+    expectfileSecond.open(EXPECT_MERGE_CONTENT_SECOND);
+
+    // Create and write to the test file
+    for (int i = 0; i < 6; i++) {
+      std::ofstream tmpfile;
+      std::string flowFileName = std::string(FLOW_FILE) + "." + std::to_string(i) + ".txt";
+      tmpfile.open(flowFileName.c_str());
+      for (int j = 0; j < 32; j++) {
+        tmpfile << std::to_string(i);
+        if (i < 3)
+          expectfileFirst << std::to_string(i);
+        else
+          expectfileSecond << std::to_string(i);
+      }
+      tmpfile.close();
+    }
+    expectfileFirst.close();
+    expectfileSecond.close();
+
+    TestController testController;
+    LogTestController::getInstance().setTrace<org::apache::nifi::minifi::processors::MergeContent>();
+    LogTestController::getInstance().setTrace<org::apache::nifi::minifi::processors::LogAttribute>();
+    LogTestController::getInstance().setTrace<core::ProcessSession>();
+    LogTestController::getInstance().setTrace<core::repository::VolatileContentRepository>();
+    LogTestController::getInstance().setTrace<org::apache::nifi::minifi::processors::BinFiles>();
+    LogTestController::getInstance().setTrace<org::apache::nifi::minifi::processors::Bin>();
+    LogTestController::getInstance().setTrace<org::apache::nifi::minifi::processors::BinManager>();
+    LogTestController::getInstance().setTrace<org::apache::nifi::minifi::Connection>();
+    LogTestController::getInstance().setTrace<org::apache::nifi::minifi::core::Connectable>();
+
+    std::shared_ptr<TestRepository> repo = std::make_shared<TestRepository>();
+
+    std::shared_ptr<core::Processor> processor = std::make_shared<org::apache::nifi::minifi::processors::MergeContent>("mergecontent");
+    std::shared_ptr<core::Processor> logAttributeProcessor = std::make_shared<org::apache::nifi::minifi::processors::LogAttribute>("logattribute");
+
+    uuid_t processoruuid;
+    REQUIRE(true == processor->getUUID(processoruuid));
+    uuid_t logAttributeuuid;
+    REQUIRE(true == logAttributeProcessor->getUUID(logAttributeuuid));
+
+    std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
+    content_repo->initialize(std::make_shared<org::apache::nifi::minifi::Configure>());
+    // connection from merge processor to log attribute
+    std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(repo, content_repo, "logattributeconnection");
+    connection->setRelationship(core::Relationship("merged", "Merge successful output"));
+    connection->setSource(processor);
+    connection->setDestination(logAttributeProcessor);
+    connection->setSourceUUID(processoruuid);
+    connection->setDestinationUUID(logAttributeuuid);
+    processor->addConnection(connection);
+    // connection to merge processor
+    std::shared_ptr<minifi::Connection> mergeconnection = std::make_shared<minifi::Connection>(repo, content_repo, "mergeconnection");
+    mergeconnection->setDestination(processor);
+    mergeconnection->setDestinationUUID(processoruuid);
+    processor->addConnection(mergeconnection);
+
+    std::set<core::Relationship> autoTerminatedRelationships;
+    core::Relationship original("original", "");
+    core::Relationship failure("failure", "");
+    autoTerminatedRelationships.insert(original);
+    autoTerminatedRelationships.insert(failure);
+    processor->setAutoTerminatedRelationships(autoTerminatedRelationships);
+
+    processor->incrementActiveTasks();
+    processor->setScheduledState(core::ScheduledState::RUNNING);
+    logAttributeProcessor->incrementActiveTasks();
+    logAttributeProcessor->setScheduledState(core::ScheduledState::RUNNING);
+
+    core::ProcessorNode node(processor);
+    std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider = nullptr;
+    core::ProcessContext context(node, controller_services_provider, repo, repo, content_repo);
+    context.setProperty(org::apache::nifi::minifi::processors::MergeContent::MergeFormat, MERGE_FORMAT_TAR_VALUE);
+    context.setProperty(org::apache::nifi::minifi::processors::MergeContent::MergeStrategy, MERGE_STRATEGY_BIN_PACK);
+    context.setProperty(org::apache::nifi::minifi::processors::MergeContent::DelimiterStratgey, DELIMITER_STRATEGY_TEXT);
+    context.setProperty(org::apache::nifi::minifi::processors::MergeContent::MinSize, "96");
+    context.setProperty(org::apache::nifi::minifi::processors::MergeContent::CorrelationAttributeName, "tag");
+
+    core::ProcessSession sessionGenFlowFile(&context);
+    std::shared_ptr<core::FlowFile> record[6];
+
+    // Generate 6 flowfiles, first threes merged to one, second thress merged to one
+    std::shared_ptr<core::Connectable> income = node.getNextIncomingConnection();
+    std::shared_ptr<minifi::Connection> income_connection = std::static_pointer_cast<minifi::Connection>(income);
+    for (int i = 0; i < 6; i++) {
+      std::shared_ptr<core::FlowFile> flow = std::static_pointer_cast < core::FlowFile > (sessionGenFlowFile.create());
+      std::string flowFileName = std::string(FLOW_FILE) + "." + std::to_string(i) + ".txt";
+      sessionGenFlowFile.import(flowFileName, flow, true, 0);
+      flow->setAttribute("tag", "tag");
+      record[i] = flow;
+    }
+    income_connection->put(record[0]);
+    income_connection->put(record[1]);
+    income_connection->put(record[2]);
+    income_connection->put(record[3]);
+    income_connection->put(record[4]);
+    income_connection->put(record[5]);
+
+    REQUIRE(processor->getName() == "mergecontent");
+    core::ProcessSessionFactory factory(&context);
+    processor->onSchedule(&context, &factory);
+    for (int i = 0; i < 6; i++) {
+      core::ProcessSession session(&context);
+      processor->onTrigger(&context, &session);
+      session.commit();
+    }
+    // validate the merge content
+    std::set<std::shared_ptr<core::FlowFile>> expiredFlowRecords;
+    std::shared_ptr<core::FlowFile> flow1 = connection->poll(expiredFlowRecords);
+    std::shared_ptr<core::FlowFile> flow2 = connection->poll(expiredFlowRecords);
+    REQUIRE(flow1->getSize() == 96);
+    {
+      ReadCallback callback(flow1->getSize());
+      sessionGenFlowFile.read(flow1, &callback);
+      std::ifstream file1;
+      file1.open(EXPECT_MERGE_CONTENT_FIRST, std::ios::in);
+      std::string contents((std::istreambuf_iterator<char>(file1)), std::istreambuf_iterator<char>());
+      std::string expectContents(reinterpret_cast<char *> (callback.buffer_), callback.read_size_);
+      REQUIRE(expectContents == contents);
+      file1.close();
+    }
+    REQUIRE(flow2->getSize() == 96);
+    {
+      ReadCallback callback(flow2->getSize());
+      sessionGenFlowFile.read(flow2, &callback);
+      std::ifstream file2;
+      file2.open(EXPECT_MERGE_CONTENT_SECOND, std::ios::in);
+      std::string contents((std::istreambuf_iterator<char>(file2)), std::istreambuf_iterator<char>());
+      std::string expectContents(reinterpret_cast<char *> (callback.buffer_), callback.read_size_);
+      REQUIRE(expectContents == contents);
+      file2.close();
+    }
+    LogTestController::getInstance().reset();
+    for (int i = 0; i < 6; i++) {
+      std::string flowFileName = std::string(FLOW_FILE) + "." + std::to_string(i) + ".txt";
+      unlink(flowFileName.c_str());
+    }
+    unlink(EXPECT_MERGE_CONTENT_FIRST);
+    unlink(EXPECT_MERGE_CONTENT_SECOND);
+  } catch (...) {
+  }
+}
+
 

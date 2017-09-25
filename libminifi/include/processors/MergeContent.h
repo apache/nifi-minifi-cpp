@@ -220,7 +220,8 @@ public:
       }
       archive_write_close(arch);
       archive_write_free(arch);
-      return ret;
+      int64_t len = stream->write(reinterpret_cast<uint8_t*>(const_cast<char*>(writeBuffer_)), used_);
+      return len;
     }
   };
 };

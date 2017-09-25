@@ -1,0 +1,211 @@
+The system is: Darwin - 15.6.0 - x86_64
+Compiling the C compiler identification source file "CMakeCCompilerId.c" succeeded.
+Compiler: /Library/Developer/CommandLineTools/usr/bin/cc 
+Build flags: 
+Id flags:  
+
+The output was:
+0
+
+
+Compilation of the C compiler identification source "CMakeCCompilerId.c" produced "a.out"
+
+The C compiler identification is AppleClang, found in "/Users/bxq8958/example/thirdparty/libarchive-3.3.2/CMakeFiles/3.8.1/CompilerIdC/a.out"
+
+Determining if the C compiler works passed with the following output:
+Change Dir: /Users/bxq8958/example/thirdparty/libarchive-3.3.2/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/bin/make" "cmTC_112a7/fast"
+/Library/Developer/CommandLineTools/usr/bin/make -f CMakeFiles/cmTC_112a7.dir/build.make CMakeFiles/cmTC_112a7.dir/build
+Building C object CMakeFiles/cmTC_112a7.dir/testCCompiler.c.o
+/Library/Developer/CommandLineTools/usr/bin/cc    -o CMakeFiles/cmTC_112a7.dir/testCCompiler.c.o   -c /Users/bxq8958/example/thirdparty/libarchive-3.3.2/CMakeFiles/CMakeTmp/testCCompiler.c
+Linking C executable cmTC_112a7
+/usr/local/Cellar/cmake/3.8.1/bin/cmake -E cmake_link_script CMakeFiles/cmTC_112a7.dir/link.txt --verbose=1
+/Library/Developer/CommandLineTools/usr/bin/cc   -Wl,-search_paths_first -Wl,-headerpad_max_install_names   CMakeFiles/cmTC_112a7.dir/testCCompiler.c.o  -o cmTC_112a7 
+
+
+Detecting C compiler ABI info compiled with the following output:
+Change Dir: /Users/bxq8958/example/thirdparty/libarchive-3.3.2/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/bin/make" "cmTC_b8f9e/fast"
+/Library/Developer/CommandLineTools/usr/bin/make -f CMakeFiles/cmTC_b8f9e.dir/build.make CMakeFiles/cmTC_b8f9e.dir/build
+Building C object CMakeFiles/cmTC_b8f9e.dir/CMakeCCompilerABI.c.o
+/Library/Developer/CommandLineTools/usr/bin/cc    -o CMakeFiles/cmTC_b8f9e.dir/CMakeCCompilerABI.c.o   -c /usr/local/Cellar/cmake/3.8.1/share/cmake/Modules/CMakeCCompilerABI.c
+Linking C executable cmTC_b8f9e
+/usr/local/Cellar/cmake/3.8.1/bin/cmake -E cmake_link_script CMakeFiles/cmTC_b8f9e.dir/link.txt --verbose=1
+/Library/Developer/CommandLineTools/usr/bin/cc   -Wl,-search_paths_first -Wl,-headerpad_max_install_names  -v -Wl,-v CMakeFiles/cmTC_b8f9e.dir/CMakeCCompilerABI.c.o  -o cmTC_b8f9e 
+Apple LLVM version 8.0.0 (clang-800.0.42.1)
+Target: x86_64-apple-darwin15.6.0
+Thread model: posix
+InstalledDir: /Library/Developer/CommandLineTools/usr/bin
+ "/Library/Developer/CommandLineTools/usr/bin/ld" -demangle -dynamic -arch x86_64 -macosx_version_min 10.11.0 -o cmTC_b8f9e -search_paths_first -headerpad_max_install_names -v CMakeFiles/cmTC_b8f9e.dir/CMakeCCompilerABI.c.o -lSystem /Library/Developer/CommandLineTools/usr/bin/../lib/clang/8.0.0/lib/darwin/libclang_rt.osx.a
+@(#)PROGRAM:ld  PROJECT:ld64-274.2
+configured to support archs: armv6 armv7 armv7s arm64 i386 x86_64 x86_64h armv6m armv7k armv7m armv7em (tvOS)
+Library search paths:
+	/usr/lib
+	/usr/local/lib
+Framework search paths:
+	/Library/Frameworks/
+	/System/Library/Frameworks/
+
+
+Parsed C implicit link information from above output:
+  link line regex: [^( *|.*[/\])(ld|([^/\]+-)?ld|collect2)[^/\]*( |$)]
+  ignore line: [Change Dir: /Users/bxq8958/example/thirdparty/libarchive-3.3.2/CMakeFiles/CMakeTmp]
+  ignore line: []
+  ignore line: [Run Build Command:"/usr/bin/make" "cmTC_b8f9e/fast"]
+  ignore line: [/Library/Developer/CommandLineTools/usr/bin/make -f CMakeFiles/cmTC_b8f9e.dir/build.make CMakeFiles/cmTC_b8f9e.dir/build]
+  ignore line: [Building C object CMakeFiles/cmTC_b8f9e.dir/CMakeCCompilerABI.c.o]
+  ignore line: [/Library/Developer/CommandLineTools/usr/bin/cc    -o CMakeFiles/cmTC_b8f9e.dir/CMakeCCompilerABI.c.o   -c /usr/local/Cellar/cmake/3.8.1/share/cmake/Modules/CMakeCCompilerABI.c]
+  ignore line: [Linking C executable cmTC_b8f9e]
+  ignore line: [/usr/local/Cellar/cmake/3.8.1/bin/cmake -E cmake_link_script CMakeFiles/cmTC_b8f9e.dir/link.txt --verbose=1]
+  ignore line: [/Library/Developer/CommandLineTools/usr/bin/cc   -Wl,-search_paths_first -Wl,-headerpad_max_install_names  -v -Wl,-v CMakeFiles/cmTC_b8f9e.dir/CMakeCCompilerABI.c.o  -o cmTC_b8f9e ]
+  ignore line: [Apple LLVM version 8.0.0 (clang-800.0.42.1)]
+  ignore line: [Target: x86_64-apple-darwin15.6.0]
+  ignore line: [Thread model: posix]
+  ignore line: [InstalledDir: /Library/Developer/CommandLineTools/usr/bin]
+  link line: [ "/Library/Developer/CommandLineTools/usr/bin/ld" -demangle -dynamic -arch x86_64 -macosx_version_min 10.11.0 -o cmTC_b8f9e -search_paths_first -headerpad_max_install_names -v CMakeFiles/cmTC_b8f9e.dir/CMakeCCompilerABI.c.o -lSystem /Library/Developer/CommandLineTools/usr/bin/../lib/clang/8.0.0/lib/darwin/libclang_rt.osx.a]
+    arg [/Library/Developer/CommandLineTools/usr/bin/ld] ==> ignore
+    arg [-demangle] ==> ignore
+    arg [-dynamic] ==> ignore
+    arg [-arch] ==> ignore
+    arg [x86_64] ==> ignore
+    arg [-macosx_version_min] ==> ignore
+    arg [10.11.0] ==> ignore
+    arg [-o] ==> ignore
+    arg [cmTC_b8f9e] ==> ignore
+    arg [-search_paths_first] ==> ignore
+    arg [-headerpad_max_install_names] ==> ignore
+    arg [-v] ==> ignore
+    arg [CMakeFiles/cmTC_b8f9e.dir/CMakeCCompilerABI.c.o] ==> ignore
+    arg [-lSystem] ==> lib [System]
+    arg [/Library/Developer/CommandLineTools/usr/bin/../lib/clang/8.0.0/lib/darwin/libclang_rt.osx.a] ==> lib [/Library/Developer/CommandLineTools/usr/bin/../lib/clang/8.0.0/lib/darwin/libclang_rt.osx.a]
+  Library search paths: [;/usr/lib;/usr/local/lib]
+  Framework search paths: [;/Library/Frameworks/;/System/Library/Frameworks/]
+  remove lib [System]
+  remove lib [/Library/Developer/CommandLineTools/usr/bin/../lib/clang/8.0.0/lib/darwin/libclang_rt.osx.a]
+  collapse library dir [/usr/lib] ==> [/usr/lib]
+  collapse library dir [/usr/local/lib] ==> [/usr/local/lib]
+  collapse framework dir [/Library/Frameworks/] ==> [/Library/Frameworks]
+  collapse framework dir [/System/Library/Frameworks/] ==> [/System/Library/Frameworks]
+  implicit libs: []
+  implicit dirs: [/usr/lib;/usr/local/lib]
+  implicit fwks: [/Library/Frameworks;/System/Library/Frameworks]
+
+
+
+
+Detecting C [-std=c11] compiler features compiled with the following output:
+Change Dir: /Users/bxq8958/example/thirdparty/libarchive-3.3.2/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/bin/make" "cmTC_3166e/fast"
+/Library/Developer/CommandLineTools/usr/bin/make -f CMakeFiles/cmTC_3166e.dir/build.make CMakeFiles/cmTC_3166e.dir/build
+Building C object CMakeFiles/cmTC_3166e.dir/feature_tests.c.o
+/Library/Developer/CommandLineTools/usr/bin/cc   -std=c11 -o CMakeFiles/cmTC_3166e.dir/feature_tests.c.o   -c /Users/bxq8958/example/thirdparty/libarchive-3.3.2/CMakeFiles/feature_tests.c
+Linking C executable cmTC_3166e
+/usr/local/Cellar/cmake/3.8.1/bin/cmake -E cmake_link_script CMakeFiles/cmTC_3166e.dir/link.txt --verbose=1
+/Library/Developer/CommandLineTools/usr/bin/cc   -Wl,-search_paths_first -Wl,-headerpad_max_install_names   CMakeFiles/cmTC_3166e.dir/feature_tests.c.o  -o cmTC_3166e 
+
+
+    Feature record: C_FEATURE:1c_function_prototypes
+    Feature record: C_FEATURE:1c_restrict
+    Feature record: C_FEATURE:1c_static_assert
+    Feature record: C_FEATURE:1c_variadic_macros
+
+
+Detecting C [-std=c99] compiler features compiled with the following output:
+Change Dir: /Users/bxq8958/example/thirdparty/libarchive-3.3.2/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/bin/make" "cmTC_2df60/fast"
+/Library/Developer/CommandLineTools/usr/bin/make -f CMakeFiles/cmTC_2df60.dir/build.make CMakeFiles/cmTC_2df60.dir/build
+Building C object CMakeFiles/cmTC_2df60.dir/feature_tests.c.o
+/Library/Developer/CommandLineTools/usr/bin/cc   -std=c99 -o CMakeFiles/cmTC_2df60.dir/feature_tests.c.o   -c /Users/bxq8958/example/thirdparty/libarchive-3.3.2/CMakeFiles/feature_tests.c
+Linking C executable cmTC_2df60
+/usr/local/Cellar/cmake/3.8.1/bin/cmake -E cmake_link_script CMakeFiles/cmTC_2df60.dir/link.txt --verbose=1
+/Library/Developer/CommandLineTools/usr/bin/cc   -Wl,-search_paths_first -Wl,-headerpad_max_install_names   CMakeFiles/cmTC_2df60.dir/feature_tests.c.o  -o cmTC_2df60 
+
+
+    Feature record: C_FEATURE:1c_function_prototypes
+    Feature record: C_FEATURE:1c_restrict
+    Feature record: C_FEATURE:0c_static_assert
+    Feature record: C_FEATURE:1c_variadic_macros
+
+
+Detecting C [-std=c90] compiler features compiled with the following output:
+Change Dir: /Users/bxq8958/example/thirdparty/libarchive-3.3.2/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/bin/make" "cmTC_bfdf9/fast"
+/Library/Developer/CommandLineTools/usr/bin/make -f CMakeFiles/cmTC_bfdf9.dir/build.make CMakeFiles/cmTC_bfdf9.dir/build
+Building C object CMakeFiles/cmTC_bfdf9.dir/feature_tests.c.o
+/Library/Developer/CommandLineTools/usr/bin/cc   -std=c90 -o CMakeFiles/cmTC_bfdf9.dir/feature_tests.c.o   -c /Users/bxq8958/example/thirdparty/libarchive-3.3.2/CMakeFiles/feature_tests.c
+Linking C executable cmTC_bfdf9
+/usr/local/Cellar/cmake/3.8.1/bin/cmake -E cmake_link_script CMakeFiles/cmTC_bfdf9.dir/link.txt --verbose=1
+/Library/Developer/CommandLineTools/usr/bin/cc   -Wl,-search_paths_first -Wl,-headerpad_max_install_names   CMakeFiles/cmTC_bfdf9.dir/feature_tests.c.o  -o cmTC_bfdf9 
+
+
+    Feature record: C_FEATURE:1c_function_prototypes
+    Feature record: C_FEATURE:0c_restrict
+    Feature record: C_FEATURE:0c_static_assert
+    Feature record: C_FEATURE:0c_variadic_macros
+Determining if the BZ2_bzCompressInit exist passed with the following output:
+Change Dir: /Users/bxq8958/example/thirdparty/libarchive-3.3.2/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/bin/make" "cmTC_4e6f3/fast"
+/Library/Developer/CommandLineTools/usr/bin/make -f CMakeFiles/cmTC_4e6f3.dir/build.make CMakeFiles/cmTC_4e6f3.dir/build
+Building C object CMakeFiles/cmTC_4e6f3.dir/CheckSymbolExists.c.o
+/Library/Developer/CommandLineTools/usr/bin/cc   -Wall -Wformat -Wformat-security -Wall -Wformat -Wformat-security   -o CMakeFiles/cmTC_4e6f3.dir/CheckSymbolExists.c.o   -c /Users/bxq8958/example/thirdparty/libarchive-3.3.2/CMakeFiles/CMakeTmp/CheckSymbolExists.c
+Linking C executable cmTC_4e6f3
+/usr/local/Cellar/cmake/3.8.1/bin/cmake -E cmake_link_script CMakeFiles/cmTC_4e6f3.dir/link.txt --verbose=1
+/Library/Developer/CommandLineTools/usr/bin/cc  -Wall -Wformat -Wformat-security -Wall -Wformat -Wformat-security -Wl,-search_paths_first -Wl,-headerpad_max_install_names   CMakeFiles/cmTC_4e6f3.dir/CheckSymbolExists.c.o  -o cmTC_4e6f3 /usr/lib/libbz2.dylib 
+
+File /Users/bxq8958/example/thirdparty/libarchive-3.3.2/CMakeFiles/CMakeTmp/CheckSymbolExists.c:
+/* */
+#include <bzlib.h>
+
+int main(int argc, char** argv)
+{
+  (void)argv;
+#ifndef BZ2_bzCompressInit
+  return ((int*)(&BZ2_bzCompressInit))[argc];
+#else
+  (void)argc;
+  return 0;
+#endif
+}
+
+Determining if the function lzma_auto_decoder exists in the /usr/lib/liblzma.dylib passed with the following output:
+Change Dir: /Users/bxq8958/example/thirdparty/libarchive-3.3.2/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/bin/make" "cmTC_03b42/fast"
+/Library/Developer/CommandLineTools/usr/bin/make -f CMakeFiles/cmTC_03b42.dir/build.make CMakeFiles/cmTC_03b42.dir/build
+Building C object CMakeFiles/cmTC_03b42.dir/CheckFunctionExists.c.o
+/Library/Developer/CommandLineTools/usr/bin/cc   -Wall -Wformat -Wformat-security -DCHECK_FUNCTION_EXISTS=lzma_auto_decoder -Wall -Wformat -Wformat-security   -o CMakeFiles/cmTC_03b42.dir/CheckFunctionExists.c.o   -c /usr/local/Cellar/cmake/3.8.1/share/cmake/Modules/CheckFunctionExists.c
+Linking C executable cmTC_03b42
+/usr/local/Cellar/cmake/3.8.1/bin/cmake -E cmake_link_script CMakeFiles/cmTC_03b42.dir/link.txt --verbose=1
+/Library/Developer/CommandLineTools/usr/bin/cc  -Wall -Wformat -Wformat-security -DCHECK_FUNCTION_EXISTS=lzma_auto_decoder -Wall -Wformat -Wformat-security -Wl,-search_paths_first -Wl,-headerpad_max_install_names   CMakeFiles/cmTC_03b42.dir/CheckFunctionExists.c.o  -o cmTC_03b42 /usr/lib/liblzma.dylib 
+
+
+Determining if the function lzma_easy_encoder exists in the /usr/lib/liblzma.dylib passed with the following output:
+Change Dir: /Users/bxq8958/example/thirdparty/libarchive-3.3.2/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/bin/make" "cmTC_a5d86/fast"
+/Library/Developer/CommandLineTools/usr/bin/make -f CMakeFiles/cmTC_a5d86.dir/build.make CMakeFiles/cmTC_a5d86.dir/build
+Building C object CMakeFiles/cmTC_a5d86.dir/CheckFunctionExists.c.o
+/Library/Developer/CommandLineTools/usr/bin/cc   -Wall -Wformat -Wformat-security -DCHECK_FUNCTION_EXISTS=lzma_easy_encoder -Wall -Wformat -Wformat-security   -o CMakeFiles/cmTC_a5d86.dir/CheckFunctionExists.c.o   -c /usr/local/Cellar/cmake/3.8.1/share/cmake/Modules/CheckFunctionExists.c
+Linking C executable cmTC_a5d86
+/usr/local/Cellar/cmake/3.8.1/bin/cmake -E cmake_link_script CMakeFiles/cmTC_a5d86.dir/link.txt --verbose=1
+/Library/Developer/CommandLineTools/usr/bin/cc  -Wall -Wformat -Wformat-security -DCHECK_FUNCTION_EXISTS=lzma_easy_encoder -Wall -Wformat -Wformat-security -Wl,-search_paths_first -Wl,-headerpad_max_install_names   CMakeFiles/cmTC_a5d86.dir/CheckFunctionExists.c.o  -o cmTC_a5d86 /usr/lib/liblzma.dylib 
+
+
+Determining if the function lzma_lzma_preset exists in the /usr/lib/liblzma.dylib passed with the following output:
+Change Dir: /Users/bxq8958/example/thirdparty/libarchive-3.3.2/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/bin/make" "cmTC_c03af/fast"
+/Library/Developer/CommandLineTools/usr/bin/make -f CMakeFiles/cmTC_c03af.dir/build.make CMakeFiles/cmTC_c03af.dir/build
+Building C object CMakeFiles/cmTC_c03af.dir/CheckFunctionExists.c.o
+/Library/Developer/CommandLineTools/usr/bin/cc   -Wall -Wformat -Wformat-security -DCHECK_FUNCTION_EXISTS=lzma_lzma_preset -Wall -Wformat -Wformat-security   -o CMakeFiles/cmTC_c03af.dir/CheckFunctionExists.c.o   -c /usr/local/Cellar/cmake/3.8.1/share/cmake/Modules/CheckFunctionExists.c
+Linking C executable cmTC_c03af
+/usr/local/Cellar/cmake/3.8.1/bin/cmake -E cmake_link_script CMakeFiles/cmTC_c03af.dir/link.txt --verbose=1
+/Library/Developer/CommandLineTools/usr/bin/cc  -Wall -Wformat -Wformat-security -DCHECK_FUNCTION_EXISTS=lzma_lzma_preset -Wall -Wformat -Wformat-security -Wl,-search_paths_first -Wl,-headerpad_max_install_names   CMakeFiles/cmTC_c03af.dir/CheckFunctionExists.c.o  -o cmTC_c03af /usr/lib/liblzma.dylib 
+
+
