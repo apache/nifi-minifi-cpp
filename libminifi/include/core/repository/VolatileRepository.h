@@ -37,7 +37,7 @@ namespace repository {
 
 /**
  * Flow File repository
- * Design: Extends Repository and implements the run function, using LevelDB as the primary substrate.
+ * Design: Extends Repository and implements the run function, using RocksDB as the primary substrate.
  */
 template<typename T>
 class VolatileRepository : public core::Repository, public std::enable_shared_from_this<VolatileRepository<T>> {

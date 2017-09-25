@@ -21,12 +21,12 @@
 #include "core/Core.h"
 #include "core/RepositoryFactory.h"
 
-TEST_CASE("NoLevelDBTest1", "[NoLevelDBTest]") {
+TEST_CASE("NoRocksDBTest1", "[NoRocksDBTest]") {
   std::shared_ptr<core::Repository> prov_repo = core::createRepository("provenancerepository", true);
   REQUIRE(nullptr != prov_repo);
 }
 
-TEST_CASE("NoLevelDBTest2", "[NoLevelDBTest]") {
+TEST_CASE("NoRocksDBTest2", "[NoRocksDBTest]") {
   std::shared_ptr<core::Repository> prov_repo = core::createRepository("flowfilerepository", true);
   REQUIRE(nullptr != prov_repo);
 }
