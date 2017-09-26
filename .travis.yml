@@ -33,12 +33,16 @@ matrix:
           - openssl
           - libcurl4-openssl-dev
           - ccache
+          - libpython3.4-dev
+          - liblua5.1-0-dev
       before_install:
         # Establish updated toolchain as default
         - sudo unlink /usr/bin/gcc && sudo ln -s /usr/bin/gcc-4.8 /usr/bin/gcc
         - sudo unlink /usr/bin/g++ && sudo ln -s /usr/bin/g++-4.8 /usr/bin/g++
     - os: osx
       osx_image: xcode7.3
+      env:
+        - CMAKE_BUILD_OPTIONS="-DENABLE_LUA_SCRIPTING=1"
       # https://docs.travis-ci.com/user/osx-ci-environment/#Homebrew
       before_install:
         - brew update
@@ -49,8 +53,12 @@ matrix:
         - package='openssl'; [[ $(brew ls --versions ${package}) ]] && { brew outdated ${package} || brew upgrade ${package}; } || brew install ${package}
         - package='doxygen'; [[ $(brew ls --versions ${package}) ]] && { brew outdated ${package} || brew upgrade ${package}; } || brew install ${package}
         - package='graphviz'; [[ $(brew ls --versions ${package}) ]] && { brew outdated ${package} || brew upgrade ${package}; } || brew install ${package}
+        - package='python'; [[ $(brew ls --versions ${package}) ]] && { brew outdated ${package} || brew upgrade ${package}; } || brew install ${package}
+        - package='lua'; [[ $(brew ls --versions ${package}) ]] && { brew outdated ${package} || brew upgrade ${package}; } || brew install ${package}
     - os: osx
       osx_image: xcode8.3
+      env:
+        - CMAKE_BUILD_OPTIONS="-DENABLE_LUA_SCRIPTING=1"
       # https://docs.travis-ci.com/user/osx-ci-environment/#Homebrew
       before_install:
         - brew update
@@ -61,7 +69,9 @@ matrix:
         - package='openssl'; [[ $(brew ls --versions ${package}) ]] && { brew outdated ${package} || brew upgrade ${package}; } || brew install ${package}
         - package='doxygen'; [[ $(brew ls --versions ${package}) ]] && { brew outdated ${package} || brew upgrade ${package}; } || brew install ${package}
         - package='graphviz'; [[ $(brew ls --versions ${package}) ]] && { brew outdated ${package} || brew upgrade ${package}; } || brew install ${package}
+        - package='python'; [[ $(brew ls --versions ${package}) ]] && { brew outdated ${package} || brew upgrade ${package}; } || brew install ${package}
+        - package='lua'; [[ $(brew ls --versions ${package}) ]] && { brew outdated ${package} || brew upgrade ${package}; } || brew install ${package}
 
 script:
   # Travis instances typically have ~2 vcpus. Parallel testing is currently BROKEN due to socket tests; do not use.
-  - mkdir ./build && cd ./build && cmake .. && make -j2 VERBOSE=1 && make test ARGS="--output-on-failure" && make linter && make apache-rat && make docs
+  - mkdir ./build && cd ./build && cmake .. ${CMAKE_BUILD_OPTIONS} && make -j2 VERBOSE=1 && make test ARGS="--output-on-failure" && make linter && make apache-rat && make docs
