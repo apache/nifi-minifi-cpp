@@ -148,6 +148,14 @@ createExtension(DISABLE_LIBARCHIVE
 				BUILD_TP
 				"thirdparty/libarchive-3.3.2")
 
+## Scripting extensions
+createExtension(DISABLE_SCRIPTING
+				SCRIPTING-EXTENSIONS
+				"SCRIPTING EXTENSIONS"
+				"This enables scripting"
+				"extensions/script"
+				"${TEST_DIR}/script-tests")
+
 ## NOW WE CAN ADD LIBRARIES AND EXTENSIONS TO MAIN
 
 add_subdirectory(main)

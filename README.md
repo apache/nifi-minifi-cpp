@@ -48,6 +48,7 @@ Perspectives of the role of MiNiFi should be from the perspective of the agent a
 * The processors currently implemented include:
   * AppendHostInfo
   * ExecuteProcess
+  * ExecuteScript
   * GetFile
   * GenerateFlowFile
   * InvokeHTTP
@@ -74,6 +75,9 @@ Perspectives of the role of MiNiFi should be from the perspective of the agent a
   * 4.8.4 or greater
 * g++
   * 4.8.4 or greater
+  
+**NOTE** if Lua support is enabled, then a C++ compiler with support for c++-14 must be used. If using GCC, version 6.x
+or greater is recommended.
 
 #### Libraries / Development Headers
 * libboost and boost-devel
@@ -82,6 +86,8 @@ Perspectives of the role of MiNiFi should be from the perspective of the agent a
 * librocksdb4.1 and librocksdb-dev
 * libuuid and uuid-dev
 * openssl
+* Python 3 and development headers -- Required, unless Python support is disabled
+* Lua and development headers -- Optional, unless Lua support is enabled
 
 
 ** NOTE: IF ROCKSDB IS NOT INSTALLED, IT WILL BE BUILT FROM THE THIRD PARTY
@@ -95,20 +101,30 @@ DIRECTORY UNLESS YOU SPECIFY -DDISABLE_ROCKSDB=true WITH CMAKE ***
 * libcurl
 * libssl and libcrypto from openssl 
 * libarchive
+* Python 3 -- Required, unless Python support is disabled
+* Lua -- Optional, unless Lua support is enabled
 
 The needed dependencies can be installed with the following commands for:
 
 Yum based Linux Distributions
+
+**NOTE** if a newer compiler is required, such as when Lua support is enabled, it is recommended to use a newer compiler
+using a devtools-* package from the Software Collections (SCL). 
+
 ```
 # ~/Development/code/apache/nifi-minifi-cpp on git:master
 $ yum install cmake \
   gcc gcc-c++ \
   libcurl-devel \
-  rocksdb-dev rocksdb \
+  rocksdb-devel rocksdb \
   libuuid libuuid-devel \
   boost-devel \
-  libssl-dev \
+  openssl-devel \
   doxygen
+$ # (Optional) for building Python support
+$ yum install python34-devel
+$ # (Optional) for building Lua support
+$ yum install lua-devel
 $ # (Optional) for building docker image
 $ yum install docker
 $ # (Optional) for system integration tests
@@ -126,6 +142,10 @@ $ apt-get install cmake \
   uuid-dev uuid \
   libboost-all-dev libssl-dev \
   doxygen
+$ # (Optional) for building Python support
+$ apt-get install libpython3-dev
+$ # (Optional) for building Lua support
+$ apt-get install liblua5.1-0-dev
 $ # (Optional) for building docker image
 $ apt-get install docker.io
 $ # (Optional) for system integration tests
@@ -140,6 +160,8 @@ $ brew install cmake \
   ossp-uuid \
   boost \
   openssl \
+  python \
+  lua \
   doxygen
 $ brew install curl
 $ brew link curl --force
@@ -162,6 +184,14 @@ $ sudo pip install virtualenv
   ```
 
 - Perform a `cmake ..` to generate the project files
+  - Optionally, disable or enable features using any combination of the following flags (more information is available
+    on the [wiki](https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=74685143)):
+    - `-DDISABLE_CURL=1`
+    - `-DDISABLE_ROCKSDB=1`
+    - `-DDISABLE_LIBARCHIVE=1`
+    - `-DDISABLE_SCRIPTING=1`
+    - `-DDISABLE_PYTHON_SCRIPTING=1`
+    - `-DENABLE_LUA_SCRIPTING=1`
   ```
   # ~/Development/code/apache/nifi-minifi-cpp on git:master
   $ cmake ..

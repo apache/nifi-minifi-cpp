@@ -1,0 +1,75 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#include <memory>
+
+#include "LuaProcessSession.h"
+
+namespace org {
+namespace apache {
+namespace nifi {
+namespace minifi {
+namespace lua {
+
+LuaProcessSession::LuaProcessSession(std::shared_ptr<core::ProcessSession> session)
+    : session_(std::move(session)) {
+}
+
+std::shared_ptr<script::ScriptFlowFile> LuaProcessSession::get() {
+  auto flow_file = session_->get();
+
+  if (flow_file == nullptr) {
+    return nullptr;
+  }
+
+  return std::make_shared<script::ScriptFlowFile>(flow_file);
+}
+
+void LuaProcessSession::transfer(const std::shared_ptr<script::ScriptFlowFile> &flow_file,
+                                 core::Relationship relationship) {
+  session_->transfer(flow_file->getFlowFile(), relationship);
+}
+
+void LuaProcessSession::read(const std::shared_ptr<script::ScriptFlowFile> &flow_file,
+                             sol::table input_stream_callback) {
+  LuaInputStreamCallback lua_callback(input_stream_callback);
+  session_->read(flow_file->getFlowFile(), &lua_callback);
+}
+
+void LuaProcessSession::write(const std::shared_ptr<script::ScriptFlowFile> &flow_file,
+                              sol::table output_stream_callback) {
+  LuaOutputStreamCallback lua_callback(output_stream_callback);
+  session_->write(flow_file->getFlowFile(), &lua_callback);
+}
+
+std::shared_ptr<script::ScriptFlowFile> LuaProcessSession::create() {
+  return std::make_shared<script::ScriptFlowFile>(session_->create());
+}
+
+std::shared_ptr<script::ScriptFlowFile> LuaProcessSession::create(const std::shared_ptr<script::ScriptFlowFile> &flow_file) {
+  if (flow_file == nullptr) {
+    return std::make_shared<script::ScriptFlowFile>(session_->create());
+  } else {
+    return std::make_shared<script::ScriptFlowFile>(session_->create(flow_file->getFlowFile()));
+  }
+}
+
+} /* namespace lua */
+} /* namespace minifi */
+} /* namespace nifi */
+} /* namespace apache */
+} /* namespace org */
