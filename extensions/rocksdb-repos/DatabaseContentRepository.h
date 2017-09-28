@@ -19,6 +19,7 @@
 #define LIBMINIFI_INCLUDE_CORE_REPOSITORY_DatabaseContentRepository_H_
 
 #include "rocksdb/db.h"
+#include "rocksdb/merge_operator.h"
 #include "core/Core.h"
 #include "../ContentRepository.h"
 #include "properties/Configure.h"
@@ -30,6 +31,43 @@ namespace minifi {
 namespace core {
 namespace repository {
 
+class StringAppender : public rocksdb::AssociativeMergeOperator {
+ public:
+  // Constructor: specify delimiter
+  explicit StringAppender(){
+
+  }
+
+  virtual bool Merge(const rocksdb::Slice& key,
+                     const rocksdb::Slice* existing_value,
+                     const rocksdb::Slice& value,
+                     std::string* new_value,
+                     rocksdb::Logger* logger) const{
+    // Clear the *new_value for writing.
+     assert(new_value);
+     new_value->clear();
+
+     if (!existing_value) {
+       // No existing_value. Set *new_value = value
+       new_value->assign(value.data(),value.size());
+     } else {
+       new_value->reserve(existing_value->size()  + value.size());
+       new_value->assign(existing_value->data(),existing_value->size());
+       new_value->append(value.data(), value.size());
+     }
+
+     return true;
+  }
+
+  virtual const char* Name() const {
+    return "StringAppender";
+  }
+
+ private:
+
+
+};
+
 /**
  * DatabaseContentRepository is a content repository that stores data onto the local file system.
  */
@@ -37,12 +75,12 @@ class DatabaseContentRepository : public core::ContentRepository, public core::C
  public:
   DatabaseContentRepository(std::string name = getClassName<DatabaseContentRepository>())
       : core::CoreComponent(name),
-        logger_(logging::LoggerFactory<DatabaseContentRepository>::getLogger()) {
-    db_ = NULL;
+        logger_(logging::LoggerFactory<DatabaseContentRepository>::getLogger()),
+        is_valid_(false),
+        db_(nullptr) {
   }
   virtual ~DatabaseContentRepository() {
-    if (db_)
-          delete db_;
+    stop();
   }
 
   virtual bool initialize(const std::shared_ptr<minifi::Configure> &configuration);
@@ -60,6 +98,7 @@ class DatabaseContentRepository : public core::ContentRepository, public core::C
   virtual bool remove(const std::shared_ptr<minifi::ResourceClaim> &claim);
 
  private:
+  bool is_valid_;
   std::string directory_;
   rocksdb::DB* db_;
   std::shared_ptr<logging::Logger> logger_;

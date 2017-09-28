@@ -46,7 +46,7 @@ class RocksDbStream : public io::BaseStream {
    * File Stream constructor that accepts an fstream shared pointer.
    * It must already be initialized for read and write.
    */
-  explicit RocksDbStream(const std::string &path, rocksdb::DB *db,  bool write_enable = false);
+  explicit RocksDbStream(const std::string &path, rocksdb::DB *db, bool write_enable = false);
 
   /**
    * File Stream constructor that accepts an fstream shared pointer.
@@ -67,6 +67,45 @@ class RocksDbStream : public io::BaseStream {
 
   const uint32_t getSize() const {
     return size_;
+  }
+
+  virtual int read(uint16_t &value, bool is_little_endian) {
+    uint8_t buf[2];
+    if (readData(&buf[0], 2) < 0)
+      return -1;
+    if (is_little_endian) {
+      value = (buf[0] << 8) | buf[1];
+    } else {
+      value = buf[0] | buf[1] << 8;
+    }
+    return 2;
+  }
+
+  virtual int read(uint32_t &value, bool is_little_endian) {
+    uint8_t buf[4];
+    if (readData(&buf[0], 4) < 0)
+      return -1;
+
+    if (is_little_endian) {
+      value = (buf[0] << 24) | (buf[1] << 16) | (buf[2] << 8) | buf[3];
+    } else {
+      value = buf[0] | buf[1] << 8 | buf[2] << 16 | buf[3] << 24;
+    }
+
+    return 4;
+  }
+  virtual int read(uint64_t &value, bool is_little_endian) {
+    uint8_t buf[0];
+    if (readData(&buf[0], 8) < 0)
+      return -1;
+    if (is_little_endian) {
+      value = ((uint64_t) buf[0] << 56) | ((uint64_t) (buf[1] & 255) << 48) | ((uint64_t) (buf[2] & 255) << 40) | ((uint64_t) (buf[3] & 255) << 32) | ((uint64_t) (buf[4] & 255) << 24)
+          | ((uint64_t) (buf[5] & 255) << 16) | ((uint64_t) (buf[6] & 255) << 8) | ((uint64_t) (buf[7] & 255) << 0);
+    } else {
+      value = ((uint64_t) buf[0] << 0) | ((uint64_t) (buf[1] & 255) << 8) | ((uint64_t) (buf[2] & 255) << 16) | ((uint64_t) (buf[3] & 255) << 24) | ((uint64_t) (buf[4] & 255) << 32)
+          | ((uint64_t) (buf[5] & 255) << 40) | ((uint64_t) (buf[6] & 255) << 48) | ((uint64_t) (buf[7] & 255) << 56);
+    }
+    return 8;
   }
 
   // data stream extensions
@@ -116,11 +155,10 @@ class RocksDbStream : public io::BaseStream {
    */
   template<typename T>
   std::vector<uint8_t> readBuffer(const T&);
-  std::recursive_mutex file_lock_;
-  std::unique_ptr<std::fstream> file_stream_;
 
   std::string path_;
 
+  bool write_enable_;
 
   bool exists_;
 

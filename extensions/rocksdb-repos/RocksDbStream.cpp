@@ -29,9 +29,11 @@ namespace minifi {
 namespace io {
 
 RocksDbStream::RocksDbStream(const std::string &path, rocksdb::DB *db, bool write_enable)
-    : logger_(logging::LoggerFactory<RocksDbStream>::getLogger()),
+    : BaseStream(),
+      logger_(logging::LoggerFactory<RocksDbStream>::getLogger()),
       db_(db),
-      path_(path) {
+      path_(path),
+      write_enable_(write_enable) {
   rocksdb::Status status;
   status = db_->Get(rocksdb::ReadOptions(), path_, &value_);
   if (status.ok()) {
@@ -60,15 +62,18 @@ int RocksDbStream::writeData(std::vector<uint8_t> &buf, int buflen) {
 // data stream overrides
 
 int RocksDbStream::writeData(uint8_t *value, int size) {
-  if (!IsNullOrEmpty(value)) {
+  if (!IsNullOrEmpty(value) && write_enable_) {
     rocksdb::Slice slice_value((const char *) value, size);
     rocksdb::Status status;
     size_ += size;
-    db_->Merge(rocksdb::WriteOptions(), path_, slice_value);
-    if (status.ok())
+    rocksdb::WriteOptions opts;
+    opts.sync = true;
+    db_->Merge(opts, path_, slice_value);
+    if (status.ok()) {
       return 0;
-    else
+    } else {
       return -1;
+    }
   } else {
     return -1;
   }

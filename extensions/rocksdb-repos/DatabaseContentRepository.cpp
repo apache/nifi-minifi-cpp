@@ -20,6 +20,7 @@
 #include <memory>
 #include <string>
 #include "RocksDbStream.h"
+#include "rocksdb/merge_operator.h"
 
 namespace org {
 namespace apache {
@@ -39,27 +40,46 @@ bool DatabaseContentRepository::initialize(const std::shared_ptr<minifi::Configu
   options.create_if_missing = true;
   options.use_direct_io_for_flush_and_compaction = true;
   options.use_direct_reads = true;
+  options.merge_operator = std::make_shared<StringAppender>();
+  options.error_if_exists = false;
+  options.max_successive_merges = 0;
   rocksdb::Status status = rocksdb::DB::Open(options, directory_.c_str(), &db_);
   if (status.ok()) {
-    logger_->log_info("NiFi Content DB Repository database open %s success", directory_.c_str());
+    logger_->log_debug("NiFi Content DB Repository database open %s success", directory_.c_str());
+    is_valid_ = true;
   } else {
     logger_->log_error("NiFi Content DB Repository database open %s fail", directory_.c_str());
-    return false;
+    is_valid_ = false;
   }
-  return true;
+  return is_valid_;
 }
 void DatabaseContentRepository::stop() {
+  if (db_) {
+    db_->FlushWAL(true);
+    delete db_;
+    db_ = nullptr;
+  }
 }
 
 std::shared_ptr<io::BaseStream> DatabaseContentRepository::write(const std::shared_ptr<minifi::ResourceClaim> &claim) {
+  // the traditional approach with these has been to return -1 from the stream; however, since we have the ability here
+  // we can simply return a nullptr, which is also valid from the API when this stream is not valid.
+  if (nullptr == claim || !is_valid_ || !db_)
+    return nullptr;
   return std::make_shared<io::RocksDbStream>(claim->getContentFullPath(), db_, true);
 }
 
 std::shared_ptr<io::BaseStream> DatabaseContentRepository::read(const std::shared_ptr<minifi::ResourceClaim> &claim) {
+  // the traditional approach with these has been to return -1 from the stream; however, since we have the ability here
+  // we can simply return a nullptr, which is also valid from the API when this stream is not valid.
+  if (nullptr == claim || !is_valid_ || !db_)
+    return nullptr;
   return std::make_shared<io::RocksDbStream>(claim->getContentFullPath(), db_, false);
 }
 
 bool DatabaseContentRepository::remove(const std::shared_ptr<minifi::ResourceClaim> &claim) {
+  if (nullptr == claim || !is_valid_ || !db_)
+    return false;
   rocksdb::Status status;
   status = db_->Delete(rocksdb::WriteOptions(), claim->getContentFullPath());
   if (status.ok()) {

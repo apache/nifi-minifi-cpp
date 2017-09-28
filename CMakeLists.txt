@@ -40,9 +40,9 @@ CHECK_CXX_COMPILER_FLAG("-std=c++0x " COMPILER_SUPPORTS_CXX0X)
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ")
 SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS}")
 if(COMPILER_SUPPORTS_CXX11)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wno-c++98-compat")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 elseif(COMPILER_SUPPORTS_CXX0X)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x -Wno-c++98-compat")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
 else()
     message(STATUS "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
 endif()
@@ -74,7 +74,9 @@ endif (OPENSSL_FOUND)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 find_package(UUID REQUIRED)
+find_package(RocksDB) # not required
 file(GLOB SPD_SOURCES "thirdparty/spdlog-20170710/include/spdlog/*")
+
 
 
 
@@ -101,7 +103,6 @@ set(CIVETWEB_ENABLE_CXX ON CACHE BOOL "Enable civet C++ library")
 add_subdirectory(thirdparty/yaml-cpp-yaml-cpp-0.5.3)
 add_subdirectory(thirdparty/civetweb-1.9.1 EXCLUDE_FROM_ALL)
 include_directories(thirdparty/concurrentqueue)
-
 add_subdirectory(libminifi)
 if (NOT DISABLE_CURL)
 	find_package(CURL)
