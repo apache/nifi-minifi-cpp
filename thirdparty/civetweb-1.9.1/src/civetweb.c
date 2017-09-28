@@ -1376,12 +1376,10 @@ struct ssl_func {
 	(*(int (*)(ASN1_INTEGER *, unsigned char **))crypto_sw[16].ptr)
 #define EVP_get_digestbyname                                                   \
 	(*(const EVP_MD *(*)(const char *))crypto_sw[17].ptr)
-#define ASN1_digest                                                            \
-	(*(int (*)(int (*)(),                                                      \
-	           const EVP_MD *,                                                 \
-	           char *,                                                         \
-	           unsigned char *,                                                \
-	           unsigned int *))crypto_sw[18].ptr)
+#define EVP_Digest                                                             \
+	(*(int (*)(                                                                \
+	    const void *, size_t, void *, unsigned int *, const EVP_MD *, void *)) \
+	      crypto_sw[18].ptr)
 #define i2d_X509 (*(int (*)(X509 *, unsigned char **))crypto_sw[19].ptr)
 
 
@@ -1444,7 +1442,7 @@ static struct ssl_func crypto_sw[] = {{"CRYPTO_num_locks", NULL},
                                       {"X509_get_serialNumber", NULL},
                                       {"i2c_ASN1_INTEGER", NULL},
                                       {"EVP_get_digestbyname", NULL},
-                                      {"ASN1_digest", NULL},
+                                      {"EVP_Digest", NULL},
                                       {"i2d_X509", NULL},
                                       {NULL, NULL}};
 #endif /* NO_SSL_DL */
