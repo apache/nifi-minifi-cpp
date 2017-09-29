@@ -16,7 +16,9 @@
  * limitations under the License.
  */
 
+#define CURLOPT_SSL_VERIFYPEER_DISABLE 1
 #include <sys/stat.h>
+#undef NDEBUG
 #include <cassert>
 #include <utility>
 #include <chrono>
@@ -26,6 +28,7 @@
 #include <thread>
 #include <type_traits>
 #include <vector>
+#include "utils/HTTPClient.h"
 #include "../TestServer.h"
 #include "../TestBase.h"
 #include "utils/StringUtils.h"
@@ -52,11 +55,24 @@ int ssl_enable(void *ssl_context, void *user_data) {
   return 0;
 }
 
+class HttpResponder : public CivetHandler {
+ public:
+  bool handleGet(CivetServer *server, struct mg_connection *conn) {
+    static const std::string site2site_rest_resp = "hi this is a get test";
+    mg_printf(conn, "HTTP/1.1 200 OK\r\nContent-Type: "
+              "text/plain\r\nContent-Length: %lu\r\nConnection: close\r\n\r\n",
+              site2site_rest_resp.length());
+    mg_printf(conn, "%s", site2site_rest_resp.c_str());
+    return true;
+  }
+};
+
 int main(int argc, char **argv) {
   init_webserver();
   LogTestController::getInstance().setDebug<core::Processor>();
   LogTestController::getInstance().setDebug<core::ProcessSession>();
-  LogTestController::getInstance().setDebug<core::repository::VolatileContentRepository>();
+  LogTestController::getInstance().setDebug<utils::HTTPClient>();
+  LogTestController::getInstance().setDebug<minifi::controllers::SSLContextService>();
   LogTestController::getInstance().setDebug<minifi::processors::InvokeHTTP>();
   LogTestController::getInstance().setDebug<minifi::processors::LogAttribute>();
   std::string key_dir, test_file_location;
@@ -101,7 +117,10 @@ int main(int argc, char **argv) {
   std::string url = "";
   inv->getProperty(minifi::processors::InvokeHTTP::URL.getName(), url);
   ptr.release();
+  HttpResponder h_ex;
   std::string port, scheme, path;
+  CivetServer *server = nullptr;
+
   parse_http_components(url, port, scheme, path);
   struct mg_callbacks callback;
   if (url.find("localhost") != std::string::npos) {
@@ -110,11 +129,11 @@ int main(int argc, char **argv) {
       cert = key_dir + "nifi-cert.pem";
       memset(&callback, 0, sizeof(callback));
       callback.init_ssl = ssl_enable;
+      port +="s";
       callback.log_message = log_message;
-      std::cout << cert << std::endl;
-      start_webserver(port, path, "hi this is a get test", &callback, cert);
+      server = start_webserver(port, path, &h_ex, &callback, cert, cert);
     } else {
-      start_webserver(port, path, "hi this is a get test");
+      server = start_webserver(port, path, &h_ex);
     }
   }
   controller->load();
@@ -122,28 +141,18 @@ int main(int argc, char **argv) {
   waitToVerifyProcessor();
 
   controller->waitUnload(60000);
-  if (url.find("localhost") != std::string::npos) {
-    stop_webserver();
+  if (url.find("localhost") == std::string::npos) {
+    stop_webserver(server);
+    exit(1);
   }
   std::string logs = LogTestController::getInstance().log_output.str();
 
   assert(logs.find("key:filename value:") != std::string::npos);
   assert(logs.find("key:invokehttp.request.url value:" + url) != std::string::npos);
   assert(logs.find("key:invokehttp.status.code value:200") != std::string::npos);
-  std::string stringtofind = "Resource Claim created ./content_repository/";
 
-  size_t loc = logs.find(stringtofind);
-  while (loc > 0) {
-    std::string id = logs.substr(loc + stringtofind.size(), 36);
-
-    loc = logs.find(stringtofind, loc + 1);
-    std::string path = "content_repository/" + id;
-    unlink(path.c_str());
-
-    if (loc == std::string::npos)
-      break;
-  }
   LogTestController::getInstance().reset();
   rmdir("./content_repository");
+  stop_webserver(server);
   return 0;
 }

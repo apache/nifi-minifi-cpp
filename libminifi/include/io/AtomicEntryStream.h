@@ -48,7 +48,7 @@ class AtomicEntryStream : public BaseStream {
       invalid_stream_ = true;
     }
   }
-  
+
   virtual ~AtomicEntryStream();
 
   virtual void closeStream() {
@@ -116,9 +116,9 @@ class AtomicEntryStream : public BaseStream {
 };
 
 template<typename T>
-AtomicEntryStream<T>::~AtomicEntryStream(){
+AtomicEntryStream<T>::~AtomicEntryStream() {
   logger_->log_debug("Decrementing");
-    entry_->decrementOwnership();
+  entry_->decrementOwnership();
 }
 
 template<typename T>
@@ -141,13 +141,11 @@ int AtomicEntryStream<T>::writeData(uint8_t *value, int size) {
     std::lock_guard<std::recursive_mutex> lock(entry_lock_);
     if (entry_->insert(key_, value, size)) {
       offset_ += size;
-      if (offset_ > length_)
-          {
+      if (offset_ > length_) {
         length_ = offset_;
       }
       return size;
-    }
-    else {
+    } else {
       logger_->log_debug("Cannot insert %d bytes due to insufficient space in atomic entry", size);
     }
 
@@ -158,7 +156,7 @@ int AtomicEntryStream<T>::writeData(uint8_t *value, int size) {
 
 template<typename T>
 int AtomicEntryStream<T>::readData(std::vector<uint8_t> &buf, int buflen) {
-  if (invalid_stream_){
+  if (invalid_stream_) {
     return -1;
   }
   if (buf.capacity() < buflen) {
@@ -182,13 +180,13 @@ int AtomicEntryStream<T>::readData(uint8_t *buf, int buflen) {
       if (offset_ + len > value->getBufferSize()) {
         len = value->getBufferSize() - offset_;
         if (len <= 0) {
-	  entry_->decrementOwnership();
+          entry_->decrementOwnership();
           return 0;
         }
       }
       std::memcpy(buf, reinterpret_cast<uint8_t*>(const_cast<uint8_t*>(value->getBuffer()) + offset_), len);
       offset_ += len;
-    entry_->decrementOwnership();
+      entry_->decrementOwnership();
       return len;
     }
 

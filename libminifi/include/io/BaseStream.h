@@ -178,7 +178,7 @@ class BaseStream : public DataStream, public Serializable {
    * @return resulting read size
    **/
   virtual int readUTF(std::string &str, bool widen = false);
-   protected:
+ protected:
   DataStream *composable_stream_;
 };
 

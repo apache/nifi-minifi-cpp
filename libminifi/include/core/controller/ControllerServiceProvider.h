@@ -18,6 +18,7 @@
 #ifndef LIBMINIFI_INCLUDE_CORE_CONTROLLER_CONTROLLERSERVICEPROVIDER_H_
 #define LIBMINIFI_INCLUDE_CORE_CONTROLLER_CONTROLLERSERVICEPROVIDER_H_
 
+#include <future>
 #include <vector>
 #include "core/Core.h"
 #include "ControllerServiceLookup.h"
@@ -95,7 +96,7 @@ class ControllerServiceProvider : public CoreComponent, public ConfigurableCompo
    * Enables the provided controller service
    * @param serviceNode controller service node.
    */
-  virtual void enableControllerService(std::shared_ptr<ControllerServiceNode> &serviceNode) = 0;
+  virtual std::future<bool> enableControllerService(std::shared_ptr<ControllerServiceNode> &serviceNode) = 0;
 
   /**
    * Enables the provided controller service nodes
@@ -107,7 +108,7 @@ class ControllerServiceProvider : public CoreComponent, public ConfigurableCompo
    * Disables the provided controller service node
    * @param serviceNode controller service node.
    */
-  virtual void disableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) = 0;
+  virtual std::future<bool> disableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) = 0;
 
   /**
    * Gets a list of all controller services.

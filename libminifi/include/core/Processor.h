@@ -72,6 +72,7 @@ class Processor : public Connectable, public ConfigurableComponent, public std::
   Processor(std::string name, uuid_t uuid = NULL);
   // Destructor
   virtual ~Processor() {
+    notifyStop();
   }
 
   bool isRunning();
@@ -153,7 +154,8 @@ class Processor : public Connectable, public ConfigurableComponent, public std::
   }
   // decrement Active Task Counts
   void decrementActiveTask(void) {
-    active_tasks_--;
+    if (active_tasks_ > 0)
+      active_tasks_--;
   }
   void clearActiveTask(void) {
     active_tasks_ = 0;
@@ -183,7 +185,7 @@ class Processor : public Connectable, public ConfigurableComponent, public std::
     if (yield_expiration_ > curTime)
       return (yield_expiration_ - curTime);
     else
-      return 0;;
+      return 0;
   }
   // Whether flow file queued in incoming connection
   bool flowFilesQueued();
@@ -203,6 +205,9 @@ class Processor : public Connectable, public ConfigurableComponent, public std::
   // Get the Next RoundRobin incoming connection
   std::shared_ptr<Connection> getNextIncomingConnection();
   // On Trigger
+
+  void onTrigger(std::shared_ptr<ProcessContext> context, std::shared_ptr<ProcessSessionFactory> sessionFactory);
+
   void onTrigger(ProcessContext *context, ProcessSessionFactory *sessionFactory);
 
   virtual bool canEdit() {
@@ -212,18 +217,34 @@ class Processor : public Connectable, public ConfigurableComponent, public std::
  public:
 
   // OnTrigger method, implemented by NiFi Processor Designer
+  virtual void onTrigger(std::shared_ptr<ProcessContext> context, std::shared_ptr<ProcessSession> session) {
+    onTrigger(context.get(), session.get());
+  }
   virtual void onTrigger(ProcessContext *context, ProcessSession *session) = 0;
   // Initialize, overridden by NiFi Process Designer
   virtual void initialize() {
   }
   // Scheduled event hook, overridden by NiFi Process Designer
+  virtual void onSchedule(std::shared_ptr<ProcessContext> context, std::shared_ptr<ProcessSessionFactory> sessionFactory) {
+    onSchedule(context.get(), sessionFactory.get());
+  }
   virtual void onSchedule(ProcessContext *context, ProcessSessionFactory *sessionFactory) {
   }
 
   // Check all incoming connections for work
   bool isWorkAvailable();
 
+  void setStreamFactory(std::shared_ptr<minifi::io::StreamFactory> stream_factory) {
+    stream_factory_ = stream_factory;
+  }
+
  protected:
+
+  virtual void notifyStop() {
+
+  }
+
+  std::shared_ptr<minifi::io::StreamFactory> stream_factory_;
 
   // Processor state
   std::atomic<ScheduledState> state_;

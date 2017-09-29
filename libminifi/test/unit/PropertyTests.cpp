@@ -19,6 +19,7 @@
 #include "../../include/core/Property.h"
 #include <string>
 #include "utils/StringUtils.h"
+#include "core/Property.h"
 #include "../TestBase.h"
 
 TEST_CASE("Test Boolean Conversion", "[testboolConversion]") {
@@ -31,6 +32,18 @@ TEST_CASE("Test Boolean Conversion", "[testboolConversion]") {
   REQUIRE(false == org::apache::nifi::minifi::utils::StringUtils::StringToBool("FALLSEY", b));
   REQUIRE(false == org::apache::nifi::minifi::utils::StringUtils::StringToBool("FaLSE", b));
   REQUIRE(false == org::apache::nifi::minifi::utils::StringUtils::StringToBool("false", b));
+}
+
+
+TEST_CASE("Test Is it Time", "[testTime]") {
+  core::TimeUnit unit;
+  int64_t max_partition_millis_;
+
+  REQUIRE(true == org::apache::nifi::minifi::core::Property::StringToTime("1 SEC", max_partition_millis_, unit));
+  REQUIRE(true == org::apache::nifi::minifi::core::Property::StringToTime("1 sec", max_partition_millis_, unit));
+
+  REQUIRE(true == org::apache::nifi::minifi::core::Property::StringToTime("1 s", max_partition_millis_, unit));
+  REQUIRE(true == org::apache::nifi::minifi::core::Property::StringToTime("1 S", max_partition_millis_, unit));
 }
 
 TEST_CASE("Test Trimmer Right", "[testTrims]") {

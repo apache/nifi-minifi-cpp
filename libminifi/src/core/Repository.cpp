@@ -54,8 +54,11 @@ void Repository::stop() {
 }
 
 // repoSize
-uint64_t Repository::repoSize() {
+uint64_t Repository::getRepoSize() {
   return repo_size_;
+}
+
+void Repository::flush() {
 }
 
 } /* namespace core */

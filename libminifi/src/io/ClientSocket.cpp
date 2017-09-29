@@ -79,8 +79,21 @@ void Socket::closeStream() {
     addr_info_ = 0;
   }
   if (socket_file_descriptor_ >= 0) {
+    logger_->log_debug("Closing %d", socket_file_descriptor_);
     close(socket_file_descriptor_);
     socket_file_descriptor_ = -1;
+  }
+}
+
+void Socket::setNonBlocking() {
+  if (listeners_ <= 0) {
+    // Put the socket in non-blocking mode:
+    if (fcntl(socket_file_descriptor_, F_SETFL, O_NONBLOCK) < 0) {
+      // handle error
+      logger_->log_error("Could not create non blocking to socket", strerror(errno));
+    } else {
+      logger_->log_info("Successfully applied O_NONBLOCK to fd");
+    }
   }
 }
 
@@ -131,6 +144,7 @@ int8_t Socket::createConnection(const addrinfo *p, in_addr_t &addr) {
   // add the listener to the total set
   FD_SET(socket_file_descriptor_, &total_list_);
   socket_max_ = socket_file_descriptor_;
+  logger_->log_info("Created connection with file descriptor %d", socket_file_descriptor_);
   return 0;
 }
 
@@ -183,15 +197,21 @@ int16_t Socket::initialize() {
     }
     // we've successfully connected
     if (port_ > 0 && createConnection(p, addr) >= 0) {
+      logger_->log_info("Successfully created connection");
       return 0;
       break;
     }
   }
 
+  logger_->log_info("Could not find device for our connection");
   return -1;
 }
 
 int16_t Socket::select_descriptor(const uint16_t msec) {
+  if (listeners_ == 0) {
+    return socket_file_descriptor_;
+  }
+
   struct timeval tv;
   int retval;
 
@@ -200,7 +220,7 @@ int16_t Socket::select_descriptor(const uint16_t msec) {
   tv.tv_sec = msec / 1000;
   tv.tv_usec = (msec % 1000) * 1000;
 
-  std::lock_guard < std::recursive_mutex > guard(selection_mutex_);
+  std::lock_guard<std::recursive_mutex> guard(selection_mutex_);
 
   if (msec > 0)
     retval = select(socket_max_ + 1, &read_fds_, NULL, NULL, &tv);
@@ -235,6 +255,8 @@ int16_t Socket::select_descriptor(const uint16_t msec) {
       }
     }
   }
+
+  logger_->log_error("Could not find a suitable file descriptor");
 
   return -1;
 }
@@ -291,19 +313,20 @@ int Socket::writeData(std::vector<uint8_t> &buf, int buflen) {
 int Socket::writeData(uint8_t *value, int size) {
   int ret = 0, bytes = 0;
 
+  int fd = select_descriptor(1000);
   while (bytes < size) {
-    ret = send(socket_file_descriptor_, value + bytes, size - bytes, 0);
+    ret = send(fd, value + bytes, size - bytes, 0);
     // check for errors
     if (ret <= 0) {
-      close(socket_file_descriptor_);
-      logger_->log_error("Could not send to %d, error: %s", socket_file_descriptor_, strerror(errno));
+      close(fd);
+      logger_->log_error("Could not send to %d, error: %s", fd, strerror(errno));
       return ret;
     }
     bytes += ret;
   }
 
   if (ret)
-    logger_->log_trace("Send data size %d over socket %d", size, socket_file_descriptor_);
+    logger_->log_trace("Send data size %d over socket %d", size, fd);
   return bytes;
 }
 
@@ -362,27 +385,32 @@ int Socket::read(uint16_t &value, bool is_little_endian) {
   return sizeof(value);
 }
 
-int Socket::readData(std::vector<uint8_t> &buf, int buflen) {
+int Socket::readData(std::vector<uint8_t> &buf, int buflen, bool retrieve_all_bytes) {
   if (buf.capacity() < buflen) {
     buf.resize(buflen);
   }
-  return readData(reinterpret_cast<uint8_t*>(&buf[0]), buflen);
+  return readData(reinterpret_cast<uint8_t*>(&buf[0]), buflen, retrieve_all_bytes);
 }
 
-int Socket::readData(uint8_t *buf, int buflen) {
+int Socket::readData(uint8_t *buf, int buflen, bool retrieve_all_bytes) {
   int32_t total_read = 0;
   while (buflen) {
     int16_t fd = select_descriptor(1000);
     if (fd < 0) {
-      logger_->log_info("fd close %i", buflen);
+      logger_->log_info("fd %d close %i", fd, buflen);
       close(socket_file_descriptor_);
       return -1;
     }
     int bytes_read = recv(fd, buf, buflen, 0);
+    logger_->log_info("Recv call %d", bytes_read);
     if (bytes_read <= 0) {
       if (bytes_read == 0) {
         logger_->log_info("Other side hung up on %d", fd);
       } else {
+        if (errno == EAGAIN || errno == EWOULDBLOCK) {
+          // continue
+          return -2;
+        }
         logger_->log_error("Could not recv on %d, error: %s", fd, strerror(errno));
       }
       return -1;
@@ -390,6 +418,9 @@ int Socket::readData(uint8_t *buf, int buflen) {
     buflen -= bytes_read;
     buf += bytes_read;
     total_read += bytes_read;
+    if (!retrieve_all_bytes) {
+      break;
+    }
   }
   return total_read;
 }

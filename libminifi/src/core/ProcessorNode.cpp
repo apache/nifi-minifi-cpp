@@ -17,13 +17,14 @@
 
 #include "core/ProcessorNode.h"
 #include <memory>
+#include <utility>
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
 namespace core {
 
-ProcessorNode::ProcessorNode(const std::shared_ptr<Connectable> processor)
+ProcessorNode::ProcessorNode(const std::shared_ptr<Connectable> &processor)
     : processor_(processor),
       Connectable(processor->getName(), 0),
       ConfigurableComponent() {
@@ -38,6 +39,11 @@ ProcessorNode::ProcessorNode(const ProcessorNode &other)
   uuid_t copy;
   processor_->getUUID(copy);
   setUUID(copy);
+}
+
+ProcessorNode::ProcessorNode(const ProcessorNode &&other)
+    : Connectable(std::move(other)),
+      processor_(std::move(other.processor_)) {
 }
 
 ProcessorNode::~ProcessorNode() {

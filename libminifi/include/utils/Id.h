@@ -41,7 +41,7 @@ class IdGenerator {
  public:
   void generate(uuid_t output);
   void initialize(const std::shared_ptr<Properties> & properties);
-  
+
   static std::shared_ptr<IdGenerator> getIdGenerator() {
     static std::shared_ptr<IdGenerator> generator = std::shared_ptr<IdGenerator>(new IdGenerator());
     return generator;

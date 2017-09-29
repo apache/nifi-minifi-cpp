@@ -32,7 +32,8 @@ namespace apache {
 namespace nifi {
 namespace minifi {
 
-uint64_t EventDrivenSchedulingAgent::run(std::shared_ptr<core::Processor> processor, core::ProcessContext *processContext, core::ProcessSessionFactory *sessionFactory) {
+uint64_t EventDrivenSchedulingAgent::run(const std::shared_ptr<core::Processor> &processor, const std::shared_ptr<core::ProcessContext> &processContext,
+                                         const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
   while (this->running_) {
     bool shouldYield = this->onTrigger(processor, processContext, sessionFactory);
 

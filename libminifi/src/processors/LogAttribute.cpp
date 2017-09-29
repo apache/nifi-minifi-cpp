@@ -64,6 +64,7 @@ void LogAttribute::initialize() {
 }
 
 void LogAttribute::onTrigger(core::ProcessContext *context, core::ProcessSession *session) {
+  logger_->log_info("enter log attribute");
   std::string dashLine = "--------------------------------------------------";
   LogAttrLevel level = LogAttrLevelInfo;
   bool logPayload = false;

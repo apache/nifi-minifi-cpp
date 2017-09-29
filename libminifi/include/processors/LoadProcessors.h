@@ -25,6 +25,7 @@
 #include "ExecuteProcess.h"
 #include "GenerateFlowFile.h"
 #include "GetFile.h"
+#include "GetTCP.h"
 #include "ListenHTTP.h"
 #include "LogAttribute.h"
 #include "PutFile.h"

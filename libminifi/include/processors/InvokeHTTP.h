@@ -33,7 +33,7 @@
 #include "utils/ByteInputCallBack.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/Id.h"
-#include "utils/HTTPUtils.h"
+#include "utils/HTTPClient.h"
 
 namespace org {
 namespace apache {
@@ -56,9 +56,11 @@ class InvokeHTTP : public core::Processor {
         penalize_no_retry_(false),
         read_timeout_(20000),
         always_output_response_(false),
+        disable_peer_verification_(false),
         ssl_context_service_(nullptr),
+        use_chunked_encoding_(false),
         logger_(logging::LoggerFactory<InvokeHTTP>::getLogger()) {
-    curl_global_init(CURL_GLOBAL_DEFAULT);
+    static utils::HTTPClientInitializer *initializer = utils::HTTPClientInitializer::getInstance();
   }
   // Destructor
   virtual ~InvokeHTTP();
@@ -79,7 +81,8 @@ class InvokeHTTP : public core::Processor {
   static core::Property ProxyPassword;
   static core::Property ContentType;
   static core::Property SendBody;
-
+  static core::Property UseChunkedEncoding;
+  static core::Property DisablePeerVerification;
   static core::Property PropPutOutputAttributes;
 
   static core::Property AlwaysOutputResponse;
@@ -101,9 +104,9 @@ class InvokeHTTP : public core::Processor {
   static core::Relationship RelNoRetry;
   static core::Relationship RelFailure;
 
-  void onTrigger(core::ProcessContext *context, core::ProcessSession *session);
-  void initialize();
-  void onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory);
+  virtual void onTrigger(core::ProcessContext *context, core::ProcessSession *session);
+  virtual void initialize();
+  virtual void onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory);
   /**
    * Provides a reference to the URL.
    */
@@ -114,37 +117,10 @@ class InvokeHTTP : public core::Processor {
  protected:
 
   /**
-   * Configures the SSL Context. Relies on the Context service and OpenSSL's installation
-   */
-  static CURLcode configure_ssl_context(CURL *curl, void *ctx, void *param);
-
-  /**
-   * Determines if a secure connection is required
-   * @param url url we will be connecting to
-   * @returns true if secure connection is allowed/required
-   */
-  bool isSecure(const std::string &url);
-
-  /**
-   * Configures a secure connection
-   */
-  void configure_secure_connection(CURL *http_session);
-
-  /**
    * Generate a transaction ID
    * @return transaction ID string.
    */
   std::string generateId();
-  /**
-   * Set the request method on the curl struct.
-   * @param curl pointer to this instance.
-   * @param string request method
-   */
-  void set_request_method(CURL *curl, const std::string &);
-
-  struct curl_slist *build_header_list(CURL *curl, std::string regex, const std::map<std::string, std::string> &);
-
-  bool matches(const std::string &value, const std::string &sregex);
 
   /**
    * Routes the flowfile to the proper destination
@@ -155,9 +131,7 @@ class InvokeHTTP : public core::Processor {
    * @param isSuccess success code or not
    * @param statuscode http response code.
    */
-  void route(std::shared_ptr<FlowFileRecord> &request, std::shared_ptr<FlowFileRecord> &response, core::ProcessSession *session, core::ProcessContext *context,
-  bool isSuccess,
-             int statusCode);
+  void route(std::shared_ptr<FlowFileRecord> &request, std::shared_ptr<FlowFileRecord> &response, core::ProcessSession *session, core::ProcessContext *context, bool isSuccess, int statusCode);
   /**
    * Determine if we should emit a new flowfile based on our activity
    * @param method method type
@@ -166,8 +140,6 @@ class InvokeHTTP : public core::Processor {
   bool emitFlowFile(const std::string &method);
 
   std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service_;
-
-  CURLcode res;
 
   // http method
   std::string method_;
@@ -187,7 +159,12 @@ class InvokeHTTP : public core::Processor {
   bool always_output_response_;
   // penalize on no retry
   bool penalize_no_retry_;
-
+  // content type.
+  std::string content_type_;
+  // use chunked encoding.
+  bool use_chunked_encoding_;
+  // disable peer verification ( makes susceptible for MITM attacks )
+  bool disable_peer_verification_;
  private:
   std::shared_ptr<logging::Logger> logger_;
   static std::shared_ptr<utils::IdGenerator> id_generator_;

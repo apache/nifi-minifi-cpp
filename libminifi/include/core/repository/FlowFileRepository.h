@@ -26,6 +26,7 @@
 #include "core/Core.h"
 #include "Connection.h"
 #include "core/logging/LoggerConfiguration.h"
+#include "concurrentqueue.h"
 
 namespace org {
 namespace apache {
@@ -60,6 +61,8 @@ class FlowFileRepository : public core::Repository, public std::enable_shared_fr
     if (db_)
       delete db_;
   }
+
+  virtual void flush();
 
   // initialize
   virtual bool initialize(const std::shared_ptr<Configure> &configure) {
@@ -98,7 +101,7 @@ class FlowFileRepository : public core::Repository, public std::enable_shared_fr
     // persistent to the DB
     leveldb::Slice value((const char *) buf, bufLen);
     leveldb::Status status;
-    repo_size_+=bufLen;
+    repo_size_ += bufLen;
     status = db_->Put(leveldb::WriteOptions(), key, value);
     if (status.ok())
       return true;
@@ -111,20 +114,16 @@ class FlowFileRepository : public core::Repository, public std::enable_shared_fr
    * @return status of the delete operation
    */
   virtual bool Delete(std::string key) {
-    leveldb::Status status;
-    status = db_->Delete(leveldb::WriteOptions(), key);
-    if (status.ok())
-    {
-      return true;
-    }
-    else
-      return false;
+    keys_to_delete.enqueue(key);
+    return true;
   }
   /**
    * Sets the value from the provided key
    * @return status of the get operation.
    */
   virtual bool Get(const std::string &key, std::string &value) {
+    if (db_ == nullptr)
+      return false;
     leveldb::Status status;
     status = db_->Get(leveldb::ReadOptions(), key, &value);
     if (status.ok())
@@ -139,12 +138,10 @@ class FlowFileRepository : public core::Repository, public std::enable_shared_fr
   virtual void loadComponent(const std::shared_ptr<core::ContentRepository> &content_repo);
 
   void start() {
-    if (this->purge_period_ <= 0)
-    {
+    if (this->purge_period_ <= 0) {
       return;
     }
-    if (running_)
-    {
+    if (running_) {
       return;
     }
     running_ = true;
@@ -153,6 +150,7 @@ class FlowFileRepository : public core::Repository, public std::enable_shared_fr
   }
 
  private:
+  moodycamel::ConcurrentQueue<std::string> keys_to_delete;
   std::map<std::string, std::shared_ptr<minifi::Connection>> connectionMap;
   std::shared_ptr<core::ContentRepository> content_repo_;
   leveldb::DB* db_;
