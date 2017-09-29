@@ -127,19 +127,19 @@ public:
 };
 
 // TarMerge Class
-class TarMerge : public MergeBin {
+class TarMerge: public MergeBin {
 public:
   static const char *mimeType;
   std::string getMergedContentType() {
     return mimeType;
   }
-  std::shared_ptr<core::FlowFile> merge(core::ProcessContext *context, core::ProcessSession *session,
-          std::deque<std::shared_ptr<core::FlowFile>> &flows, std::string &header, std::string &footer, std::string &demarcator);
+  std::shared_ptr<core::FlowFile> merge(core::ProcessContext *context, core::ProcessSession *session, std::deque<std::shared_ptr<core::FlowFile>> &flows, std::string &header, std::string &footer,
+      std::string &demarcator);
   // Nest Callback Class for read stream
-  class ReadCallback : public InputStreamCallback {
-   public:
-    ReadCallback(uint64_t size, struct archive *arch, struct archive_entry *entry)
-        : buffer_size_(size), arch_(arch), entry_(entry) {
+  class ReadCallback: public InputStreamCallback {
+  public:
+    ReadCallback(uint64_t size, struct archive *arch, struct archive_entry *entry) :
+        buffer_size_(size), arch_(arch), entry_(entry) {
     }
     ~ReadCallback() {
     }
@@ -164,29 +164,28 @@ public:
   class WriteCallback: public OutputStreamCallback {
   public:
     WriteCallback(std::string &header, std::string &footer, std::string &demarcator, std::deque<std::shared_ptr<core::FlowFile>> &flows, core::ProcessSession *session) :
-      header_(header), footer_(footer), demarcator_(demarcator), flows_(flows), session_(session) {
-    	allocatedSize_ = 0;
-    	writeBuffer_ = nullptr;
-    	used_ = 0;
-    	for (auto flow : flows_) {
-    		allocatedSize_ += flow->getSize();
-    	}
-    	writeBuffer_ = new char[allocatedSize_];
+        header_(header), footer_(footer), demarcator_(demarcator), flows_(flows), session_(session) {
+      size_ = 0;
+      stream_ = nullptr;
     }
     ~WriteCallback() {
-    	if (writeBuffer_)
-    		delete[] writeBuffer_;
     }
+
     std::string &header_;
     std::string &footer_;
     std::string &demarcator_;
     std::deque<std::shared_ptr<core::FlowFile>> &flows_;
     core::ProcessSession *session_;
+    std::shared_ptr<io::BaseStream> stream_;
+    int64_t size_;
 
-    // archive internal memory buffer;
-    char *writeBuffer_;
-    size_t used_;
-    size_t allocatedSize_;
+    static la_ssize_t archive_write(struct archive *arch, void *context, const void *buff, size_t size) {
+      WriteCallback *callback = (WriteCallback *) context;
+      la_ssize_t ret = callback->stream_->write(reinterpret_cast<uint8_t*>(const_cast<void*>(buff)), size);
+      if (ret > 0)
+        callback->size_ += (int64_t) ret;
+      return ret;
+    }
 
     int64_t process(std::shared_ptr<io::BaseStream> stream) {
       int64_t ret = 0;
@@ -194,34 +193,36 @@ public:
 
       arch = archive_write_new();
       archive_write_set_format_pax_restricted(arch); // tar format
-      archive_write_open_memory(arch, writeBuffer_, allocatedSize_, &used_);
+      archive_write_set_bytes_per_block(arch, 0);
+      archive_write_add_filter_none(arch);
+      this->stream_ = stream;
+      archive_write_open(arch, this, NULL, archive_write, NULL);
 
       for (auto flow : flows_) {
-    	struct archive_entry *entry = archive_entry_new();
-    	std::string fileName;
-    	flow->getAttribute(FlowAttributeKey(FILENAME), fileName);
-    	archive_entry_set_pathname(entry, fileName.c_str());
-    	archive_entry_set_size(entry, flow->getSize());
-    	archive_entry_set_filetype(entry, AE_IFREG);
-    	archive_entry_set_perm(entry, 0644);
-    	std::string perm;
-    	int permInt;
-    	if (flow->getAttribute(BinFiles::TAR_PERMISSIONS_ATTRIBUTE, perm)) {
-    	    try {
-    	      permInt = std::stoi(perm);
-    	      archive_entry_set_perm(entry, (mode_t) permInt);
-    	    }
-    	    catch (...) {
-    	    }
-    	}
+        struct archive_entry *entry = archive_entry_new();
+        std::string fileName;
+        flow->getAttribute(FlowAttributeKey(FILENAME), fileName);
+        archive_entry_set_pathname(entry, fileName.c_str());
+        archive_entry_set_size(entry, flow->getSize());
+        archive_entry_set_mode(entry, S_IFREG);
+        archive_entry_set_perm(entry, 0644);
+        std::string perm;
+        int permInt;
+        if (flow->getAttribute(BinFiles::TAR_PERMISSIONS_ATTRIBUTE, perm)) {
+          try {
+            permInt = std::stoi(perm);
+            archive_entry_set_perm(entry, (mode_t) permInt);
+          } catch (...) {
+          }
+        }
         ReadCallback readCb(flow->getSize(), arch, entry);
         session_->read(flow, &readCb);
         archive_entry_free(entry);
       }
+
       archive_write_close(arch);
       archive_write_free(arch);
-      int64_t len = stream->write(reinterpret_cast<uint8_t*>(const_cast<char*>(writeBuffer_)), used_);
-      return len;
+      return size_;
     }
   };
 };

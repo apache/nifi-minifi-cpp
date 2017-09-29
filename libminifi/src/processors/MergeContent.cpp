@@ -237,12 +237,13 @@ bool MergeContent::processBin(core::ProcessContext *context, core::ProcessSessio
 
   std::unique_ptr<MergeBin> mergeBin;
   if (mergeFormat_ == MERGE_FORMAT_CONCAT_VALUE || mergeFormat_ == MERGE_FORMAT_TAR_VALUE) {
-	if (mergeFormat_ == MERGE_FORMAT_CONCAT_VALUE)
-		mergeBin = std::unique_ptr<MergeBin> (new BinaryConcatenationMerge());
-	else if (mergeFormat_ == MERGE_FORMAT_TAR_VALUE)
-		mergeBin = std::unique_ptr<MergeBin> (new TarMerge());
-	else
-		return false;
+    if (mergeFormat_ == MERGE_FORMAT_CONCAT_VALUE)
+      mergeBin = std::unique_ptr < MergeBin > (new BinaryConcatenationMerge());
+    else if (mergeFormat_ == MERGE_FORMAT_TAR_VALUE)
+      mergeBin = std::unique_ptr < MergeBin > (new TarMerge());
+    else
+      return false;
+
     std::shared_ptr<core::FlowFile> mergeFlow;
     try {
       mergeFlow = mergeBin->merge(context, session, bin->getFlowFile(), this->headerContent_, this->footerContent_, this->demarcatorContent_);
@@ -282,8 +283,8 @@ std::shared_ptr<core::FlowFile> BinaryConcatenationMerge::merge(core::ProcessCon
   return flowFile;
 }
 
-std::shared_ptr<core::FlowFile> TarMerge::merge(core::ProcessContext *context, core::ProcessSession *session,
-        std::deque<std::shared_ptr<core::FlowFile>> &flows, std::string &header, std::string &footer, std::string &demarcator) {
+std::shared_ptr<core::FlowFile> TarMerge::merge(core::ProcessContext *context, core::ProcessSession *session, std::deque<std::shared_ptr<core::FlowFile>> &flows, std::string &header,
+    std::string &footer, std::string &demarcator) {
   std::shared_ptr<FlowFileRecord> flowFile = std::static_pointer_cast < FlowFileRecord > (session->create());
   TarMerge::WriteCallback callback(header, footer, demarcator, flows, session);
   session->write(flowFile, &callback);
@@ -296,7 +297,7 @@ std::shared_ptr<core::FlowFile> TarMerge::merge(core::ProcessContext *context, c
     flows.front()->getAttribute(BinFiles::SEGMENT_ORIGINAL_FILENAME, fileName);
   }
   if (!fileName.empty()) {
-	fileName += ".tar";
+    fileName += ".tar";
     session->putAttribute(flowFile, FlowAttributeKey(FILENAME), fileName);
   }
   return flowFile;
