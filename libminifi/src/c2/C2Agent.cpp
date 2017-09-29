@@ -148,7 +148,7 @@ void C2Agent::configure(const std::shared_ptr<Configure> &configure, bool reconf
 void C2Agent::performHeartBeat() {
   C2Payload payload(Operation::HEARTBEAT);
 
-  logger_->log_debug("Performing heartbeat");
+  logger_->log_trace("Performing heartbeat");
 
   std::map<std::string, std::shared_ptr<state::metrics::Metrics>> metrics_copy;
   {
@@ -257,7 +257,7 @@ void C2Agent::extractPayload(const C2Payload &&resp) {
       logger_->log_debug("Received initiation event from protocol");
       break;
     case state::UpdateState::READ_COMPLETE:
-      logger_->log_debug("Received Ack from Server");
+      logger_->log_trace("Received Ack from Server");
       // we have a heartbeat response.
       for (const auto &server_response : resp.getContent()) {
         handle_c2_server_response(server_response);

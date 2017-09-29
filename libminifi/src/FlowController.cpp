@@ -67,6 +67,7 @@ FlowController::FlowController(std::shared_ptr<core::Repository> provenance_repo
       max_timer_driven_threads_(0),
       max_event_driven_threads_(0),
       running_(false),
+      c2_enabled_(true),
       initialized_(false),
       provenance_repo_(provenance_repo),
       flow_file_repo_(flow_file_repo),
@@ -348,12 +349,31 @@ int16_t FlowController::start() {
 }
 
 void FlowController::initializeC2() {
+  if (!c2_enabled_) {
+    return;
+  }
   if (!c2_initialized_) {
+    std::string c2_enable_str;
+
+    if (configuration_->get(Configure::nifi_c2_enable, c2_enable_str)) {
+      bool enable_c2 = true;
+      utils::StringUtils::StringToBool(c2_enable_str, enable_c2);
+      c2_enabled_ = enable_c2;
+      if (!c2_enabled_) {
+        return;
+      }
+    } else {
+      c2_enabled_ = true;
+    }
     state::StateManager::initialize();
     std::shared_ptr<c2::C2Agent> agent = std::make_shared<c2::C2Agent>(std::dynamic_pointer_cast<FlowController>(shared_from_this()), std::dynamic_pointer_cast<FlowController>(shared_from_this()),
                                                                        configuration_);
     registerUpdateListener(agent);
   }
+  if (!c2_enabled_) {
+    return;
+  }
+
   c2_initialized_ = true;
   metrics_.clear();
   component_metrics_.clear();

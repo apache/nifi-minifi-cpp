@@ -341,6 +341,7 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
   std::string configuration_filename_;
 
   std::atomic<bool> c2_initialized_;
+  std::atomic<bool> c2_enabled_;
   // Whether it has already been initialized (load the flow XML already)
   std::atomic<bool> initialized_;
   // Provenance Repo
