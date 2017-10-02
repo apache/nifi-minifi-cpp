@@ -143,18 +143,18 @@ TEST_CASE("MergeFileDefragment", "[mergefiletest1]") {
     logAttributeProcessor->incrementActiveTasks();
     logAttributeProcessor->setScheduledState(core::ScheduledState::RUNNING);
 
-    core::ProcessorNode node(processor);
+    std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(processor);
     std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider = nullptr;
-    core::ProcessContext context(node, controller_services_provider, repo, repo, content_repo);
-    context.setProperty(org::apache::nifi::minifi::processors::MergeContent::MergeFormat, MERGE_FORMAT_CONCAT_VALUE);
-    context.setProperty(org::apache::nifi::minifi::processors::MergeContent::MergeStrategy, MERGE_STRATEGY_DEFRAGMENT);
-    context.setProperty(org::apache::nifi::minifi::processors::MergeContent::DelimiterStratgey, DELIMITER_STRATEGY_TEXT);
+    auto context = std::make_shared<core::ProcessContext>(node, controller_services_provider, repo, repo, content_repo);
+    context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MergeFormat, MERGE_FORMAT_CONCAT_VALUE);
+    context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MergeStrategy, MERGE_STRATEGY_DEFRAGMENT);
+    context->setProperty(org::apache::nifi::minifi::processors::MergeContent::DelimiterStratgey, DELIMITER_STRATEGY_TEXT);
 
-    core::ProcessSession sessionGenFlowFile(&context);
+    core::ProcessSession sessionGenFlowFile(context);
     std::shared_ptr<core::FlowFile> record[6];
 
     // Generate 6 flowfiles, first threes merged to one, second thress merged to one
-    std::shared_ptr<core::Connectable> income = node.getNextIncomingConnection();
+    std::shared_ptr<core::Connectable> income = node->getNextIncomingConnection();
     std::shared_ptr<minifi::Connection> income_connection = std::static_pointer_cast<minifi::Connection>(income);
     for (int i = 0; i < 6; i++) {
       std::shared_ptr<core::FlowFile> flow = std::static_pointer_cast < core::FlowFile > (sessionGenFlowFile.create());
@@ -180,12 +180,12 @@ TEST_CASE("MergeFileDefragment", "[mergefiletest1]") {
     income_connection->put(record[3]);
 
     REQUIRE(processor->getName() == "mergecontent");
-    core::ProcessSessionFactory factory(&context);
-    processor->onSchedule(&context, &factory);
+    auto factory = std::make_shared<core::ProcessSessionFactory>(context);
+    processor->onSchedule(context, factory);
     for (int i = 0; i < 6; i++) {
-      core::ProcessSession session(&context);
-      processor->onTrigger(&context, &session);
-      session.commit();
+      auto session = std::make_shared<core::ProcessSession>(context);
+      processor->onTrigger(context, session);
+      session->commit();
     }
     // validate the merge content
     std::set<std::shared_ptr<core::FlowFile>> expiredFlowRecords;
@@ -315,21 +315,21 @@ TEST_CASE("MergeFileDefragmentDelimiter", "[mergefiletest2]") {
     logAttributeProcessor->incrementActiveTasks();
     logAttributeProcessor->setScheduledState(core::ScheduledState::RUNNING);
 
-    core::ProcessorNode node(processor);
+    std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(processor);
     std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider = nullptr;
-    core::ProcessContext context(node, controller_services_provider, repo, repo, content_repo);
-    context.setProperty(org::apache::nifi::minifi::processors::MergeContent::MergeFormat, MERGE_FORMAT_CONCAT_VALUE);
-    context.setProperty(org::apache::nifi::minifi::processors::MergeContent::MergeStrategy, MERGE_STRATEGY_DEFRAGMENT);
-    context.setProperty(org::apache::nifi::minifi::processors::MergeContent::DelimiterStratgey, DELIMITER_STRATEGY_FILENAME);
-    context.setProperty(org::apache::nifi::minifi::processors::MergeContent::Header, "/tmp/minifi-mergecontent.header");
-    context.setProperty(org::apache::nifi::minifi::processors::MergeContent::Footer, "/tmp/minifi-mergecontent.footer");
-    context.setProperty(org::apache::nifi::minifi::processors::MergeContent::Demarcator, "/tmp/minifi-mergecontent.demarcator");
+    auto context = std::make_shared<core::ProcessContext>(node, controller_services_provider, repo, repo, content_repo);
+    context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MergeFormat, MERGE_FORMAT_CONCAT_VALUE);
+    context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MergeStrategy, MERGE_STRATEGY_DEFRAGMENT);
+    context->setProperty(org::apache::nifi::minifi::processors::MergeContent::DelimiterStratgey, DELIMITER_STRATEGY_FILENAME);
+    context->setProperty(org::apache::nifi::minifi::processors::MergeContent::Header, "/tmp/minifi-mergecontent.header");
+    context->setProperty(org::apache::nifi::minifi::processors::MergeContent::Footer, "/tmp/minifi-mergecontent.footer");
+    context->setProperty(org::apache::nifi::minifi::processors::MergeContent::Demarcator, "/tmp/minifi-mergecontent.demarcator");
 
-    core::ProcessSession sessionGenFlowFile(&context);
+    core::ProcessSession sessionGenFlowFile(context);
     std::shared_ptr<core::FlowFile> record[6];
 
     // Generate 6 flowfiles, first threes merged to one, second thress merged to one
-    std::shared_ptr<core::Connectable> income = node.getNextIncomingConnection();
+    std::shared_ptr<core::Connectable> income = node->getNextIncomingConnection();
     std::shared_ptr<minifi::Connection> income_connection = std::static_pointer_cast<minifi::Connection>(income);
     for (int i = 0; i < 6; i++) {
       std::shared_ptr<core::FlowFile> flow = std::static_pointer_cast < core::FlowFile > (sessionGenFlowFile.create());
@@ -355,12 +355,12 @@ TEST_CASE("MergeFileDefragmentDelimiter", "[mergefiletest2]") {
     income_connection->put(record[3]);
 
     REQUIRE(processor->getName() == "mergecontent");
-    core::ProcessSessionFactory factory(&context);
-    processor->onSchedule(&context, &factory);
+    auto factory = std::make_shared<core::ProcessSessionFactory>(context);
+    processor->onSchedule(context, factory);
     for (int i = 0; i < 6; i++) {
-      core::ProcessSession session(&context);
-      processor->onTrigger(&context, &session);
-      session.commit();
+      auto session = std::make_shared<core::ProcessSession>(context);
+      processor->onTrigger(context, session);
+      session->commit();
     }
     // validate the merge content
     std::set<std::shared_ptr<core::FlowFile>> expiredFlowRecords;
@@ -478,19 +478,19 @@ TEST_CASE("MergeFileDefragmentDropFlow", "[mergefiletest3]") {
     logAttributeProcessor->incrementActiveTasks();
     logAttributeProcessor->setScheduledState(core::ScheduledState::RUNNING);
 
-    core::ProcessorNode node(processor);
+    std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(processor);
     std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider = nullptr;
-    core::ProcessContext context(node, controller_services_provider, repo, repo, content_repo);
-    context.setProperty(org::apache::nifi::minifi::processors::MergeContent::MergeFormat, MERGE_FORMAT_CONCAT_VALUE);
-    context.setProperty(org::apache::nifi::minifi::processors::MergeContent::MergeStrategy, MERGE_STRATEGY_DEFRAGMENT);
-    context.setProperty(org::apache::nifi::minifi::processors::MergeContent::DelimiterStratgey, DELIMITER_STRATEGY_TEXT);
-    context.setProperty(org::apache::nifi::minifi::processors::MergeContent::MaxBinAge, "1 sec");
+    auto context = std::make_shared<core::ProcessContext>(node, controller_services_provider, repo, repo, content_repo);
+    context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MergeFormat, MERGE_FORMAT_CONCAT_VALUE);
+    context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MergeStrategy, MERGE_STRATEGY_DEFRAGMENT);
+    context->setProperty(org::apache::nifi::minifi::processors::MergeContent::DelimiterStratgey, DELIMITER_STRATEGY_TEXT);
+    context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MaxBinAge, "1 sec");
 
-    core::ProcessSession sessionGenFlowFile(&context);
+    core::ProcessSession sessionGenFlowFile(context);
     std::shared_ptr<core::FlowFile> record[6];
 
     // Generate 6 flowfiles, first threes merged to one, second thress merged to one
-    std::shared_ptr<core::Connectable> income = node.getNextIncomingConnection();
+    std::shared_ptr<core::Connectable> income = node->getNextIncomingConnection();
     std::shared_ptr<minifi::Connection> income_connection = std::static_pointer_cast<minifi::Connection>(income);
     for (int i = 0; i < 6; i++) {
       if (i == 4)
@@ -517,19 +517,19 @@ TEST_CASE("MergeFileDefragmentDropFlow", "[mergefiletest3]") {
     income_connection->put(record[3]);
 
     REQUIRE(processor->getName() == "mergecontent");
-    core::ProcessSessionFactory factory(&context);
-    processor->onSchedule(&context, &factory);
+    auto factory = std::make_shared<core::ProcessSessionFactory>(context);
+    processor->onSchedule(context, factory);
     for (int i = 0; i < 6; i++) {
       if (i == 4)
         continue;
-      core::ProcessSession session(&context);
-      processor->onTrigger(&context, &session);
-      session.commit();
+      auto session = std::make_shared<core::ProcessSession>(context);
+      processor->onTrigger(context, session);
+      session->commit();
     }
     std::this_thread::sleep_for(std::chrono::milliseconds(2000));
     {
-      core::ProcessSession session(&context);
-      processor->onTrigger(&context, &session);
+      auto session = std::make_shared<core::ProcessSession>(context);
+      processor->onTrigger(context, session);
     }
     // validate the merge content
     std::set<std::shared_ptr<core::FlowFile>> expiredFlowRecords;
@@ -643,20 +643,20 @@ TEST_CASE("MergeFileBinPack", "[mergefiletest4]") {
     logAttributeProcessor->incrementActiveTasks();
     logAttributeProcessor->setScheduledState(core::ScheduledState::RUNNING);
 
-    core::ProcessorNode node(processor);
+    std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(processor);
     std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider = nullptr;
-    core::ProcessContext context(node, controller_services_provider, repo, repo, content_repo);
-    context.setProperty(org::apache::nifi::minifi::processors::MergeContent::MergeFormat, MERGE_FORMAT_CONCAT_VALUE);
-    context.setProperty(org::apache::nifi::minifi::processors::MergeContent::MergeStrategy, MERGE_STRATEGY_BIN_PACK);
-    context.setProperty(org::apache::nifi::minifi::processors::MergeContent::DelimiterStratgey, DELIMITER_STRATEGY_TEXT);
-    context.setProperty(org::apache::nifi::minifi::processors::MergeContent::MinSize, "96");
-    context.setProperty(org::apache::nifi::minifi::processors::MergeContent::CorrelationAttributeName, "tag");
+    auto context = std::make_shared<core::ProcessContext>(node, controller_services_provider, repo, repo, content_repo);
+    context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MergeFormat, MERGE_FORMAT_CONCAT_VALUE);
+    context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MergeStrategy, MERGE_STRATEGY_BIN_PACK);
+    context->setProperty(org::apache::nifi::minifi::processors::MergeContent::DelimiterStratgey, DELIMITER_STRATEGY_TEXT);
+    context->setProperty(org::apache::nifi::minifi::processors::MergeContent::MinSize, "96");
+    context->setProperty(org::apache::nifi::minifi::processors::MergeContent::CorrelationAttributeName, "tag");
 
-    core::ProcessSession sessionGenFlowFile(&context);
+    core::ProcessSession sessionGenFlowFile(context);
     std::shared_ptr<core::FlowFile> record[6];
 
     // Generate 6 flowfiles, first threes merged to one, second thress merged to one
-    std::shared_ptr<core::Connectable> income = node.getNextIncomingConnection();
+    std::shared_ptr<core::Connectable> income = node->getNextIncomingConnection();
     std::shared_ptr<minifi::Connection> income_connection = std::static_pointer_cast<minifi::Connection>(income);
     for (int i = 0; i < 6; i++) {
       std::shared_ptr<core::FlowFile> flow = std::static_pointer_cast < core::FlowFile > (sessionGenFlowFile.create());
@@ -673,12 +673,12 @@ TEST_CASE("MergeFileBinPack", "[mergefiletest4]") {
     income_connection->put(record[5]);
 
     REQUIRE(processor->getName() == "mergecontent");
-    core::ProcessSessionFactory factory(&context);
-    processor->onSchedule(&context, &factory);
+    auto factory = std::make_shared<core::ProcessSessionFactory>(context);
+    processor->onSchedule(context, factory);
     for (int i = 0; i < 6; i++) {
-      core::ProcessSession session(&context);
-      processor->onTrigger(&context, &session);
-      session.commit();
+      auto session = std::make_shared<core::ProcessSession>(context);
+      processor->onTrigger(context, session);
+      session->commit();
     }
     // validate the merge content
     std::set<std::shared_ptr<core::FlowFile>> expiredFlowRecords;

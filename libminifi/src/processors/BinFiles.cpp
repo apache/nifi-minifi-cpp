@@ -233,12 +233,12 @@ bool BinManager::offer(const std::string &group, std::shared_ptr<core::FlowFile>
   return true;
 }
 
-void BinFiles::onTrigger(core::ProcessContext *context, core::ProcessSession *session) {
+void BinFiles::onTrigger(std::shared_ptr<core::ProcessContext> context, std::shared_ptr<core::ProcessSession> session) {
   std::shared_ptr<FlowFileRecord> flow = std::static_pointer_cast < FlowFileRecord > (session->get());
 
   if (flow != nullptr) {
-    preprocessFlowFile(context, session, flow);
-    std::string groupId = getGroupId(context, flow);
+    preprocessFlowFile(context.get(), session.get(), flow);
+    std::string groupId = getGroupId(context.get(), flow);
 
     bool offer = this->binManager_.offer(groupId, flow);
     if (!offer) {
@@ -272,10 +272,10 @@ void BinFiles::onTrigger(core::ProcessContext *context, core::ProcessSession *se
       std::unique_ptr<Bin> bin = std::move(readyBins.front());
       readyBins.pop_front();
       // add bin's flows to the session
-      this->addFlowsToSession(context, &mergeSession, bin);
+      this->addFlowsToSession(context.get(), &mergeSession, bin);
       logger_->log_info("BinFiles start to process bin %s for group %s", bin->getUUIDStr(), bin->getGroupId());
-      if (!this->processBin(context, &mergeSession, bin))
-          this->transferFlowsToFail(context, &mergeSession, bin);
+      if (!this->processBin(context.get(), &mergeSession, bin))
+          this->transferFlowsToFail(context.get(), &mergeSession, bin);
     }
     mergeSession.commit();
   }
