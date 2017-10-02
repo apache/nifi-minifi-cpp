@@ -41,13 +41,17 @@ namespace processors {
 class Bin {
  public:
   // Constructor
-   /*!
-    * Create a new Bin. Note: this object is not thread safe
-    */
-  explicit Bin(const uint64_t &minSize, const uint64_t &maxSize, const int &minEntries, const int & maxEntries,
-      const std::string &fileCount, const std::string &groupId)
-      : minSize_(minSize), maxSize_(maxSize), maxEntries_(maxEntries), minEntries_(minEntries), fileCount_(fileCount),
-        groupId_(groupId), logger_(logging::LoggerFactory<Bin>::getLogger()) {
+  /*!
+   * Create a new Bin. Note: this object is not thread safe
+   */
+  explicit Bin(const uint64_t &minSize, const uint64_t &maxSize, const int &minEntries, const int & maxEntries, const std::string &fileCount, const std::string &groupId)
+      : minSize_(minSize),
+        maxSize_(maxSize),
+        maxEntries_(maxEntries),
+        minEntries_(minEntries),
+        fileCount_(fileCount),
+        groupId_(groupId),
+        logger_(logging::LoggerFactory<Bin>::getLogger()) {
     queued_data_size_ = 0;
     creation_dated_ = getTimeMillis();
     std::shared_ptr<utils::IdGenerator> id_generator = utils::IdGenerator::getIdGenerator();
@@ -103,8 +107,7 @@ class Bin {
 
     queue_.push_back(flow);
     queued_data_size_ += flow->getSize();
-    logger_->log_info("Bin %s for group %s offer size %d byte %d min_entry %d max_entry %d",
-        uuid_str_, groupId_, queue_.size(), queued_data_size_, minEntries_, maxEntries_);
+    logger_->log_info("Bin %s for group %s offer size %d byte %d min_entry %d max_entry %d", uuid_str_, groupId_, queue_.size(), queued_data_size_, minEntries_, maxEntries_);
 
     return true;
   }
@@ -132,7 +135,7 @@ class Bin {
   int minEntries_;
   // Queued data size
   uint64_t queued_data_size_;
-   // Queue for the Flow File
+  // Queue for the Flow File
   std::deque<std::shared_ptr<core::FlowFile>> queue_;
   uint64_t creation_dated_;
   std::string fileCount_;
@@ -148,11 +151,16 @@ class Bin {
 class BinManager {
  public:
   // Constructor
-   /*!
-    * Create a new BinManager
-    */
+  /*!
+   * Create a new BinManager
+   */
   BinManager()
-      : minSize_(0), maxSize_(ULLONG_MAX), maxEntries_(INT_MAX), minEntries_(1), binAge_(ULLONG_MAX), binCount_(0),
+      : minSize_(0),
+        maxSize_(ULLONG_MAX),
+        maxEntries_(INT_MAX),
+        minEntries_(1),
+        binAge_(ULLONG_MAX),
+        binCount_(0),
         logger_(logging::LoggerFactory<BinManager>::getLogger()) {
   }
   virtual ~BinManager() {
@@ -180,7 +188,7 @@ class BinManager {
     fileCount_ = value;
   }
   void purge() {
-    std::lock_guard < std::mutex > lock(mutex_);
+    std::lock_guard<std::mutex> lock(mutex_);
     groupBinMap_.clear();
     binCount_ = 0;
   }
@@ -204,7 +212,7 @@ class BinManager {
   std::string fileCount_;
   // Bin Age in msec
   uint64_t binAge_;
-  std::map<std::string, std::unique_ptr<std::deque<std::unique_ptr<Bin>>>> groupBinMap_;
+  std::map<std::string, std::unique_ptr<std::deque<std::unique_ptr<Bin>>> >groupBinMap_;
   std::deque<std::unique_ptr<Bin>> readyBin_;
   int binCount_;
   std::shared_ptr<logging::Logger> logger_;
@@ -258,7 +266,10 @@ class BinFiles : public core::Processor {
    */
   void onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory);
   // OnTrigger method, implemented by NiFi BinFiles
-  virtual void onTrigger(core::ProcessContext *context, core::ProcessSession *session);
+  virtual void onTrigger(core::ProcessContext *context, core::ProcessSession *session) {
+  }
+  // OnTrigger method, implemented by NiFi BinFiles
+  virtual void onTrigger(std::shared_ptr<core::ProcessContext> context, std::shared_ptr<core::ProcessSession> session);
   // Initialize, over write by NiFi BinFiles
   virtual void initialize(void);
 
