@@ -33,7 +33,7 @@
 #include "utils/ByteInputCallBack.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/Id.h"
-#include "utils/HTTPClient.h"
+#include "../client/HTTPClient.h"
 
 namespace org {
 namespace apache {

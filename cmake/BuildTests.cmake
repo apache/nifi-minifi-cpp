@@ -53,10 +53,19 @@ function(createTests testName)
     target_include_directories(${testName} PRIVATE BEFORE "libminifi/include/processors")
     target_include_directories(${testName} PRIVATE BEFORE "libminifi/include/provenance")
     target_link_libraries(${testName} ${CMAKE_THREAD_LIBS_INIT} ${UUID_LIBRARIES} ${LEVELDB_LIBRARIES} ${OPENSSL_LIBRARIES} minifi yaml-cpp c-library civetweb-cpp ${JSON_CPP_LIB})
-     if (CURL_FOUND)
+     if (HTTP-CURL)
         target_include_directories(${testName} PRIVATE BEFORE ${CURL_INCLUDE_DIRS})
-                target_link_libraries(${testName} ${CURL_LIBRARIES})
-        endif(CURL_FOUND)
+        target_include_directories(${testName} PRIVATE BEFORE "extensions/http-curl/")
+        target_include_directories(${testName} PRIVATE BEFORE "extensions/http-curl/client/")
+        target_include_directories(${testName} PRIVATE BEFORE "extensions/http-curl/processors/")
+        target_include_directories(${testName} PRIVATE BEFORE "extensions/http-curl/protocols/")
+        target_link_libraries(${testName} ${CURL_LIBRARIES} )
+        if (APPLE)    
+		    	target_link_libraries (${testName} -Wl,-all_load ${HTTP-CURL})
+		else ()
+			target_link_libraries (${testName} -Wl,--whole-archive ${HTTP-CURL} -Wl,--no-whole-archive)    
+		endif ()
+    endif()
 endfunction()
 
 
@@ -67,6 +76,7 @@ SET(TEST_RESOURCES ${TEST_DIR}/resources)
 
 GETSOURCEFILES(UNIT_TESTS "${TEST_DIR}/unit/")
 GETSOURCEFILES(INTEGRATION_TESTS "${TEST_DIR}/integration/")
+GETSOURCEFILES(CURL_INTEGRATION_TESTS "${TEST_DIR}/curl-tests/")
 
 SET(UNIT_TEST_COUNT 0)
 FOREACH(testfile ${UNIT_TESTS})
@@ -88,7 +98,19 @@ FOREACH(testfile ${INTEGRATION_TESTS})
 ENDFOREACH()
 message("-- Finished building ${INT_TEST_COUNT} integration test file(s)...")
 
-add_test(NAME ControllerServiceIntegrationTests COMMAND ControllerServiceIntegrationTests "${TEST_RESOURCES}/TestControllerServices.yml" "${TEST_RESOURCES}/")
+if (HTTP-CURL)
+
+SET(CURL_INT_TEST_COUNT 0)
+FOREACH(testfile ${CURL_INTEGRATION_TESTS})
+	get_filename_component(testfilename "${testfile}" NAME_WE)
+	add_executable("${testfilename}" "${TEST_DIR}/curl-tests/${testfile}" ${SPD_SOURCES} "${TEST_DIR}/TestBase.cpp")
+	createTests("${testfilename}")
+	#message("Adding ${testfilename} from ${testfile}")
+	MATH(EXPR CURL_INT_TEST_COUNT "${CURL_INT_TEST_COUNT}+1")
+ENDFOREACH()
+message("-- Finished building ${CURL_INT_TEST_COUNT} libcURL integration test file(s)...")
+
+
 
 add_test(NAME HttpGetIntegrationTest COMMAND HttpGetIntegrationTest "${TEST_RESOURCES}/TestHTTPGet.yml"  "${TEST_RESOURCES}/")
 
@@ -100,8 +122,6 @@ add_test(NAME HttpPostIntegrationTest COMMAND HttpPostIntegrationTest "${TEST_RE
 
 add_test(NAME HttpPostIntegrationTestChunked COMMAND HttpPostIntegrationTest "${TEST_RESOURCES}/TestHTTPPostChunkedEncoding.yml" "${TEST_RESOURCES}/")
 
-add_test(NAME ThreadPoolAdjust COMMAND ThreadPoolAdjust "${TEST_RESOURCES}/TestHTTPPostChunkedEncoding.yml" "${TEST_RESOURCES}/")
-
 add_test(NAME C2VerifyServeResults COMMAND C2VerifyServeResults "${TEST_RESOURCES}/TestHTTPGet.yml" "${TEST_RESOURCES}/")
 
 add_test(NAME C2NullConfiguration COMMAND C2NullConfiguration "${TEST_RESOURCES}/TestHTTPGet.yml" "${TEST_RESOURCES}/")
@@ -112,5 +132,11 @@ add_test(NAME SiteToSiteRestTest COMMAND SiteToSiteRestTest "${TEST_RESOURCES}/T
 
 ## removed due to travis issues with our certs
 #add_test(NAME SiteToSiteRestTestSecure COMMAND SiteToSiteRestTest "${TEST_RESOURCES}/TestSite2SiteRestSecure.yml" "${TEST_RESOURCES}/" "https://localhost:8082/nifi-api/controller")
+
+add_test(NAME ControllerServiceIntegrationTests COMMAND ControllerServiceIntegrationTests "${TEST_RESOURCES}/TestControllerServices.yml" "${TEST_RESOURCES}/")
+
+add_test(NAME ThreadPoolAdjust COMMAND ThreadPoolAdjust "${TEST_RESOURCES}/TestHTTPPostChunkedEncoding.yml" "${TEST_RESOURCES}/")
+
+endif(HTTP-CURL)
 
 add_test(NAME TestExecuteProcess COMMAND TestExecuteProcess )

@@ -15,10 +15,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_C2_PROTOCOLS_H_
-#define LIBMINIFI_INCLUDE_C2_PROTOCOLS_H_
+#include "HttpCurlLoader.h"
 
-#include "RESTReceiver.h"
-#include "RESTSender.h"
+#include "core/FlowConfiguration.h"
 
-#endif /* LIBMINIFI_INCLUDE_C2_RESTPROTOCOL_H_ */
+bool HttpCurlObjectFactory::added = core::FlowConfiguration::add_static_func("createHttpCurlFactory");
+
+extern "C" {
+
+void *createHttpCurlFactory(void) {
+  return new HttpCurlObjectFactory();
+}
+
+}

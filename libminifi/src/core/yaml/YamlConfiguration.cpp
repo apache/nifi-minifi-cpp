@@ -38,6 +38,14 @@ core::ProcessGroup *YamlConfiguration::parseRootProcessGroupYaml(YAML::Node root
   checkRequiredField(&rootFlowNode, "name",
   CONFIG_YAML_REMOTE_PROCESS_GROUP_KEY);
   std::string flowName = rootFlowNode["name"].as<std::string>();
+
+  auto class_loader_functions = rootFlowNode["Class Loader Functions"];
+  if (class_loader_functions && class_loader_functions.IsSequence()) {
+    for (auto function : class_loader_functions) {
+      registerResource(function.as<std::string>());
+    }
+  }
+
   std::string id = getOrGenerateId(&rootFlowNode);
   uuid_parse(id.c_str(), uuid);
 
@@ -80,6 +88,15 @@ void YamlConfiguration::parseProcessorNodeYaml(YAML::Node processorsNode, core::
         CONFIG_YAML_PROCESSORS_KEY);
         procCfg.name = procNode["name"].as<std::string>();
         procCfg.id = getOrGenerateId(&procNode);
+
+        auto lib_location = procNode["Library Location"];
+        auto lib_function = procNode["Library Function"];
+        if (lib_location && lib_function) {
+          auto lib_location_str = lib_location.as<std::string>();
+          auto lib_function_str = lib_function.as<std::string>();
+          registerResource(lib_location_str, lib_function_str);
+        }
+
         uuid_parse(procCfg.id.c_str(), uuid);
         logger_->log_debug("parseProcessorNode: name => [%s] id => [%s]", procCfg.name, procCfg.id);
         checkRequiredField(&procNode, "class", CONFIG_YAML_PROCESSORS_KEY);

@@ -62,7 +62,7 @@ namespace core {
 #define DEFAULT_PENALIZATION_PERIOD_SECONDS 30
 
 // Processor Class
-class Processor : public Connectable, public ConfigurableComponent, public std::enable_shared_from_this<Processor> {
+class __attribute__((visibility("default"))) Processor : public Connectable, public ConfigurableComponent, public std::enable_shared_from_this<Processor> {
 
  public:
   // Constructor

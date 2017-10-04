@@ -230,30 +230,39 @@ void RemoteProcessorGroupPort::refreshRemoteSite2SiteInfo() {
   configure_->get(Configure::nifi_rest_api_password, this->rest_password_);
 
   std::string token;
-
+  std::unique_ptr<utils::BaseHTTPClient> client = nullptr;
   if (!rest_user_name_.empty()) {
     std::string loginUrl = this->protocol_ + this->host_ + ":" + std::to_string(this->port_) + "/nifi-api/access/token";
-    utils::HTTPClient client(loginUrl, ssl_service);
-    client.setVerbose();
-    token = utils::get_token(client, this->rest_user_name_, this->rest_password_);
+
+    auto client_ptr = core::ClassLoader::getDefaultClassLoader().instantiateRaw("HTTPClient", "HTTPClient");
+    if (nullptr == client_ptr) {
+      logger_->log_error("Could not locate HTTPClient. You do not have cURL support!");
+      return;
+    }
+    client = std::unique_ptr<utils::BaseHTTPClient>(dynamic_cast<utils::BaseHTTPClient*>(client_ptr));
+    client->initialize("GET", loginUrl, ssl_service);
+
+    token = utils::get_token(client.get(), this->rest_user_name_, this->rest_password_);
     logger_->log_debug("Token from NiFi REST Api endpoint %s,  %s", loginUrl, token);
     if (token.empty())
       return;
   }
 
-  utils::HTTPClient client(fullUrl.c_str(), ssl_service);
+  auto client_ptr = core::ClassLoader::getDefaultClassLoader().instantiateRaw("HTTPClient", "HTTPClient");
+  if (nullptr == client_ptr) {
+      logger_->log_error("Could not locate HTTPClient. You do not have cURL support!");
+      return;
+    }
+  client = std::unique_ptr<utils::BaseHTTPClient>(dynamic_cast<utils::BaseHTTPClient*>(client_ptr));
+  client->initialize("GET", fullUrl.c_str(), ssl_service);
 
-  client.initialize("GET");
-
-  struct curl_slist *list = NULL;
   if (!token.empty()) {
     std::string header = "Authorization: " + token;
-    list = curl_slist_append(list, header.c_str());
-    client.setHeaders(list);
+    client->appendHeader(header);
   }
 
-  if (client.submit() && client.getResponseCode() == 200) {
-    const std::vector<char> &response_body = client.getResponseBody();
+  if (client->submit() && client->getResponseCode() == 200) {
+    const std::vector<char> &response_body = client->getResponseBody();
     if (!response_body.empty()) {
       std::string controller = std::string(response_body.begin(), response_body.end());
       logger_->log_debug("controller config %s", controller.c_str());
@@ -273,7 +282,7 @@ void RemoteProcessorGroupPort::refreshRemoteSite2SiteInfo() {
         logger_->log_info("process group remote site2site port %d, is secure %d", site2site_port_, site2site_secure_);
       }
     } else {
-      logger_->log_error("Cannot output body to content for ProcessGroup::refreshRemoteSite2SiteInfo: received HTTP code %d from %s", client.getResponseCode(), fullUrl);
+      logger_->log_error("Cannot output body to content for ProcessGroup::refreshRemoteSite2SiteInfo: received HTTP code %d from %s", client->getResponseCode(), fullUrl);
     }
   } else {
     logger_->log_error("ProcessGroup::refreshRemoteSite2SiteInfo -- curl_easy_perform() failed \n");

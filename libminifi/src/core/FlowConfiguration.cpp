@@ -18,6 +18,7 @@
 
 #include "core/FlowConfiguration.h"
 #include <memory>
+#include <vector>
 #include <string>
 #include "core/ClassLoader.h"
 
@@ -27,8 +28,12 @@ namespace nifi {
 namespace minifi {
 namespace core {
 
+std::vector<std::string> FlowConfiguration::statics_sl_funcs_;
+
 FlowConfiguration::~FlowConfiguration() {
 }
+
+
 
 std::shared_ptr<core::Processor> FlowConfiguration::createProcessor(std::string name, uuid_t uuid) {
   auto ptr = core::ClassLoader::getDefaultClassLoader().instantiate(name, uuid);

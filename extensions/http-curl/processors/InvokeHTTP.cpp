@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-#include "processors/InvokeHTTP.h"
+#include "InvokeHTTP.h"
 #include <regex.h>
 #include <curl/easy.h>
 #include <uuid/uuid.h>
@@ -42,7 +42,6 @@
 #include "ResourceClaim.h"
 #include "utils/StringUtils.h"
 #include "utils/ByteInputCallBack.h"
-#include "utils/HTTPClient.h"
 
 namespace org {
 namespace apache {
@@ -242,7 +241,7 @@ bool InvokeHTTP::emitFlowFile(const std::string &method) {
 }
 
 void InvokeHTTP::onTrigger(core::ProcessContext *context, core::ProcessSession *session) {
-  logger_->log_info("onTrigger InvokeHTTP with  %s", method_.c_str());
+  logger_->log_info("onTrigger InvokeHTTP with %s to %s", method_, url_);
 
   std::shared_ptr<FlowFileRecord> flowFile = std::static_pointer_cast<FlowFileRecord>(session->get());
 
@@ -262,7 +261,6 @@ void InvokeHTTP::onTrigger(core::ProcessContext *context, core::ProcessSession *
 
   utils::HTTPClient client(url_, ssl_context_service_);
 
-  client.setVerbose();
   client.initialize(method_);
   client.setConnectionTimeout(connect_timeout_);
   client.setReadTimeout(read_timeout_);

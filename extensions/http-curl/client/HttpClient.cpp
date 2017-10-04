@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "utils/HTTPClient.h"
+#include "HTTPClient.h"
 #include <memory>
 #include <map>
 #include <vector>
@@ -29,8 +29,41 @@ namespace minifi {
 namespace utils {
 
 HTTPClient::HTTPClient(const std::string &url, const std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service)
-    : ssl_context_service_(ssl_context_service),
+    : core::Connectable("HTTPClient", 0),
+      ssl_context_service_(ssl_context_service),
       url_(url),
+      logger_(logging::LoggerFactory<HTTPClient>::getLogger()),
+      connect_timeout_(0),
+      read_timeout_(0),
+      content_type(nullptr),
+      headers_(nullptr),
+      http_code(0),
+      header_response_(1),
+      res(CURLE_OK) {
+  HTTPClientInitializer *initializer = HTTPClientInitializer::getInstance();
+  http_session_ = curl_easy_init();
+}
+
+HTTPClient::HTTPClient(std::string name, uuid_t uuid)
+    : core::Connectable(name, uuid),
+      ssl_context_service_(nullptr),
+      url_(),
+      logger_(logging::LoggerFactory<HTTPClient>::getLogger()),
+      connect_timeout_(0),
+      read_timeout_(0),
+      content_type(nullptr),
+      headers_(nullptr),
+      http_code(0),
+      header_response_(1),
+      res(CURLE_OK) {
+  HTTPClientInitializer *initializer = HTTPClientInitializer::getInstance();
+  http_session_ = curl_easy_init();
+}
+
+HTTPClient::HTTPClient()
+    : core::Connectable("HTTPClient", 0),
+      ssl_context_service_(nullptr),
+      url_(),
       logger_(logging::LoggerFactory<HTTPClient>::getLogger()),
       connect_timeout_(0),
       read_timeout_(0),
@@ -54,9 +87,15 @@ void HTTPClient::setVerbose() {
   curl_easy_setopt(http_session_, CURLOPT_VERBOSE, 1L);
 }
 
-void HTTPClient::initialize(const std::string &method) {
+void HTTPClient::initialize(const std::string &method, const std::string url, const std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service) {
   method_ = method;
   set_request_method(method_);
+  if (ssl_context_service != nullptr) {
+    ssl_context_service_ = ssl_context_service;
+  }
+  if (!url.empty()) {
+    url_ = url;
+  }
   if (isSecure(url_) && ssl_context_service_ != nullptr) {
     configure_secure_connection(http_session_);
   }
@@ -78,9 +117,9 @@ void HTTPClient::setReadTimeout(int64_t timeout) {
 void HTTPClient::setUploadCallback(HTTPUploadCallback *callbackObj) {
   logger_->log_info("Setting callback");
   if (method_ == "put" || method_ == "PUT") {
-    curl_easy_setopt(http_session_, CURLOPT_INFILESIZE_LARGE, (curl_off_t) callbackObj->ptr->getBufferSize());
+    curl_easy_setopt(http_session_, CURLOPT_INFILESIZE_LARGE, (curl_off_t ) callbackObj->ptr->getBufferSize());
   } else {
-    curl_easy_setopt(http_session_, CURLOPT_POSTFIELDSIZE, (curl_off_t) callbackObj->ptr->getBufferSize());
+    curl_easy_setopt(http_session_, CURLOPT_POSTFIELDSIZE, (curl_off_t ) callbackObj->ptr->getBufferSize());
   }
   curl_easy_setopt(http_session_, CURLOPT_READFUNCTION, &utils::HTTPRequestResponse::send_write);
   curl_easy_setopt(http_session_, CURLOPT_READDATA, static_cast<void*>(callbackObj));
@@ -114,6 +153,10 @@ void HTTPClient::setPostFields(std::string input) {
 
 void HTTPClient::setHeaders(struct curl_slist *list) {
   headers_ = list;
+}
+
+void HTTPClient::appendHeader(const std::string &new_header) {
+  headers_ = curl_slist_append(headers_, new_header.c_str());
 }
 
 void HTTPClient::setUseChunkedEncoding() {

@@ -29,6 +29,8 @@
 #include "../TestBase.h"
 #include "processors/GetFile.h"
 #include "core/Core.h"
+#include "HTTPClient.h"
+#include "InvokeHTTP.h"
 #include "../../include/core/FlowFile.h"
 #include "../unit/ProvenanceTestHelper.h"
 #include "core/Processor.h"
