@@ -59,10 +59,11 @@ class Repository : public core::SerializableComponent {
    * Constructor for the repository
    */
   Repository(std::string repo_name = "Repository", std::string directory = REPOSITORY_DIRECTORY, int64_t maxPartitionMillis = MAX_REPOSITORY_ENTRY_LIFE_TIME, int64_t maxPartitionBytes =
-                 MAX_REPOSITORY_STORAGE_SIZE,
+  MAX_REPOSITORY_STORAGE_SIZE,
              uint64_t purgePeriod = REPOSITORY_PURGE_PERIOD)
       : core::SerializableComponent(repo_name),
         thread_(),
+        repo_size_(0),
         logger_(logging::LoggerFactory<Repository>::getLogger()) {
     directory_ = directory;
     max_partition_millis_ = maxPartitionMillis;
@@ -76,6 +77,8 @@ class Repository : public core::SerializableComponent {
   virtual ~Repository() {
     stop();
   }
+
+  virtual void flush();
 
   // initialize
   virtual bool initialize(const std::shared_ptr<Configure> &configure) {
@@ -193,6 +196,8 @@ class Repository : public core::SerializableComponent {
 
   }
 
+  virtual uint64_t getRepoSize();
+
   // Prevent default copy constructor and assignment operation
   // Only support pass by reference or pointer
   Repository(const Repository &parent) = delete;
@@ -216,7 +221,7 @@ class Repository : public core::SerializableComponent {
   // whether stop accepting provenace event
   std::atomic<bool> repo_full_;
   // repoSize
-  uint64_t repoSize();
+
   // size of the directory
   std::atomic<uint64_t> repo_size_;
   // Run function for the thread

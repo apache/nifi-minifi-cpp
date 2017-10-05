@@ -33,11 +33,20 @@
 #include <utility>
 #include <memory>
 #include <string>
+#include "core/state/metrics/QueueMetrics.h"
+#include "core/state/metrics/DeviceInformation.h"
+#include "core/state/metrics/SystemMetrics.h"
+#include "core/state/metrics/ProcessMetrics.h"
+#include "core/state/metrics/RepositoryMetrics.h"
+#include "core/state/ProcessorController.h"
 #include "yaml-cpp/yaml.h"
+#include "c2/C2Agent.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessGroup.h"
 #include "utils/StringUtils.h"
 #include "core/Core.h"
+#include "core/ClassLoader.h"
+#include "SchedulingAgent.h"
 #include "core/controller/ControllerServiceProvider.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "core/repository/FlowFileRepository.h"
@@ -58,6 +67,7 @@ FlowController::FlowController(std::shared_ptr<core::Repository> provenance_repo
       max_timer_driven_threads_(0),
       max_event_driven_threads_(0),
       running_(false),
+      c2_enabled_(true),
       initialized_(false),
       provenance_repo_(provenance_repo),
       flow_file_repo_(flow_file_repo),
@@ -88,6 +98,7 @@ FlowController::FlowController(std::shared_ptr<core::Repository> provenance_repo
   max_timer_driven_threads_ = DEFAULT_MAX_TIMER_DRIVEN_THREAD;
   running_ = false;
   initialized_ = false;
+  c2_initialized_ = false;
   root_ = nullptr;
 
   protocol_ = new FlowControlProtocol(this, configure);
@@ -129,11 +140,13 @@ void FlowController::initializePaths(const std::string &adjustedFilename) {
   // Create the content repo directory if needed
   struct stat contentDirStat;
 
-  if (stat(ResourceClaim::default_directory_path, &contentDirStat) != -1 && S_ISDIR(contentDirStat.st_mode)) {
-    path = realpath(ResourceClaim::default_directory_path, full_path);
+  minifi::setDefaultDirectory(DEFAULT_CONTENT_DIRECTORY);
+
+  if (stat(minifi::default_directory_path.c_str(), &contentDirStat) != -1 && S_ISDIR(contentDirStat.st_mode)) {
+    path = realpath(minifi::default_directory_path.c_str(), full_path);
     logger_->log_info("FlowController content directory %s", full_path);
   } else {
-    if (mkdir(ResourceClaim::default_directory_path, 0777) == -1) {
+    if (mkdir(minifi::default_directory_path.c_str(), 0777) == -1) {
       logger_->log_error("FlowController content directory creation failed");
       exit(1);
     }
@@ -156,11 +169,11 @@ FlowController::~FlowController() {
   provenance_repo_ = nullptr;
 }
 
-bool FlowController::applyConfiguration(std::string &configurePayload) {
+bool FlowController::applyConfiguration(const std::string &configurePayload) {
   std::unique_ptr<core::ProcessGroup> newRoot;
   try {
     newRoot = std::move(flow_configuration_->getRootFromPayload(configurePayload));
-  } catch (const YAML::Exception& e) {
+  } catch (...) {
     logger_->log_error("Invalid configuration payload");
     return false;
   }
@@ -170,7 +183,7 @@ bool FlowController::applyConfiguration(std::string &configurePayload) {
 
   logger_->log_info("Starting to reload Flow Controller with flow control name %s, version %d", newRoot->getName().c_str(), newRoot->getVersion());
 
-  std::lock_guard < std::recursive_mutex > flow_lock(mutex_);
+  std::lock_guard<std::recursive_mutex> flow_lock(mutex_);
   stop(true);
   waitUnload(30000);
   this->root_ = std::move(newRoot);
@@ -179,8 +192,8 @@ bool FlowController::applyConfiguration(std::string &configurePayload) {
   return start();
 }
 
-void FlowController::stop(bool force) {
-  std::lock_guard < std::recursive_mutex > flow_lock(mutex_);
+int16_t FlowController::stop(bool force, uint64_t timeToWait) {
+  std::lock_guard<std::recursive_mutex> flow_lock(mutex_);
   if (running_) {
     // immediately indicate that we are not running
     logger_->log_info("Stop Flow Controller");
@@ -193,6 +206,7 @@ void FlowController::stop(bool force) {
     this->event_scheduler_->stop();
     running_ = false;
   }
+  return 0;
 }
 
 /**
@@ -219,13 +233,12 @@ void FlowController::waitUnload(const uint64_t timeToWaitMs) {
 }
 
 void FlowController::unload() {
-  std::lock_guard < std::recursive_mutex > flow_lock(mutex_);
+  std::lock_guard<std::recursive_mutex> flow_lock(mutex_);
   if (running_) {
     stop(true);
   }
   if (initialized_) {
     logger_->log_info("Unload Flow Controller");
-    root_ = nullptr;
     initialized_ = false;
     name_ = "";
   }
@@ -234,39 +247,34 @@ void FlowController::unload() {
 }
 
 void FlowController::load() {
-  std::lock_guard < std::recursive_mutex > flow_lock(mutex_);
+  std::lock_guard<std::recursive_mutex> flow_lock(mutex_);
   if (running_) {
     stop(true);
   }
   if (!initialized_) {
-    std::string listenerType;
-    // grab the value for configuration
-    if (this->http_configuration_listener_ == nullptr && configuration_->get(Configure::nifi_configuration_listener_type, listenerType)) {
-      if (listenerType == "http") {
-        this->http_configuration_listener_ = std::unique_ptr < minifi::HttpConfigurationListener > (new minifi::HttpConfigurationListener(shared_from_this(), configuration_));
-      }
-    }
-
     logger_->log_info("Initializing timers");
+
     if (nullptr == timer_scheduler_) {
-      timer_scheduler_ = std::make_shared < TimerDrivenSchedulingAgent
-          > (std::static_pointer_cast < core::controller::ControllerServiceProvider > (shared_from_this()), provenance_repo_, flow_file_repo_, content_repo_, configuration_);
+      timer_scheduler_ = std::make_shared<TimerDrivenSchedulingAgent>(
+          std::static_pointer_cast<core::controller::ControllerServiceProvider>(std::dynamic_pointer_cast<FlowController>(shared_from_this())), provenance_repo_, flow_file_repo_, content_repo_,
+          configuration_);
     }
     if (nullptr == event_scheduler_) {
-      event_scheduler_ = std::make_shared < EventDrivenSchedulingAgent
-          > (std::static_pointer_cast < core::controller::ControllerServiceProvider > (shared_from_this()), provenance_repo_, flow_file_repo_, content_repo_, configuration_);
+      event_scheduler_ = std::make_shared<EventDrivenSchedulingAgent>(
+          std::static_pointer_cast<core::controller::ControllerServiceProvider>(std::dynamic_pointer_cast<FlowController>(shared_from_this())), provenance_repo_, flow_file_repo_, content_repo_,
+          configuration_);
     }
     logger_->log_info("Load Flow Controller from file %s", configuration_filename_.c_str());
 
-    this->root_ = std::shared_ptr < core::ProcessGroup > (flow_configuration_->getRoot(configuration_filename_));
+    this->root_ = std::shared_ptr<core::ProcessGroup>(flow_configuration_->getRoot(configuration_filename_));
 
     logger_->log_info("Loaded root processor Group");
 
     controller_service_provider_ = flow_configuration_->getControllerServiceProvider();
 
-    std::static_pointer_cast < core::controller::StandardControllerServiceProvider > (controller_service_provider_)->setRootGroup(root_);
-    std::static_pointer_cast < core::controller::StandardControllerServiceProvider
-        > (controller_service_provider_)->setSchedulingAgent(std::static_pointer_cast < minifi::SchedulingAgent > (event_scheduler_));
+    std::static_pointer_cast<core::controller::StandardControllerServiceProvider>(controller_service_provider_)->setRootGroup(root_);
+    std::static_pointer_cast<core::controller::StandardControllerServiceProvider>(controller_service_provider_)->setSchedulingAgent(
+        std::static_pointer_cast<minifi::SchedulingAgent>(event_scheduler_));
 
     logger_->log_info("Loaded controller service provider");
     // Load Flow File from Repo
@@ -277,7 +285,7 @@ void FlowController::load() {
 }
 
 void FlowController::reload(std::string yamlFile) {
-  std::lock_guard < std::recursive_mutex > flow_lock(mutex_);
+  std::lock_guard<std::recursive_mutex> flow_lock(mutex_);
   logger_->log_info("Starting to reload Flow Controller with yaml %s", yamlFile.c_str());
   stop(true);
   unload();
@@ -303,7 +311,7 @@ void FlowController::loadFlowRepo() {
       this->root_->getConnections(connectionMap);
     }
     logger_->log_debug("Number of connections from connectionMap %d", connectionMap.size());
-    auto rep = std::dynamic_pointer_cast < core::repository::FlowFileRepository > (flow_file_repo_);
+    auto rep = std::dynamic_pointer_cast<core::repository::FlowFileRepository>(flow_file_repo_);
     if (nullptr != rep) {
       rep->setConnectionMap(connectionMap);
     }
@@ -313,27 +321,149 @@ void FlowController::loadFlowRepo() {
   }
 }
 
-bool FlowController::start() {
-  std::lock_guard < std::recursive_mutex > flow_lock(mutex_);
+int16_t FlowController::start() {
+  std::lock_guard<std::recursive_mutex> flow_lock(mutex_);
   if (!initialized_) {
     logger_->log_error("Can not start Flow Controller because it has not been initialized");
-    return false;
+    return -1;
   } else {
     if (!running_) {
       logger_->log_info("Starting Flow Controller");
       controller_service_provider_->enableAllControllerServices();
       this->timer_scheduler_->start();
       this->event_scheduler_->start();
+
       if (this->root_ != nullptr) {
+        start_time_ = std::chrono::steady_clock::now();
         this->root_->startProcessing(this->timer_scheduler_.get(), this->event_scheduler_.get());
       }
+      initializeC2();
       running_ = true;
       this->protocol_->start();
       this->provenance_repo_->start();
       this->flow_file_repo_->start();
       logger_->log_info("Started Flow Controller");
     }
-    return true;
+    return 0;
+  }
+}
+
+void FlowController::initializeC2() {
+  if (!c2_enabled_) {
+    return;
+  }
+  if (!c2_initialized_) {
+    std::string c2_enable_str;
+
+    if (configuration_->get(Configure::nifi_c2_enable, c2_enable_str)) {
+      bool enable_c2 = true;
+      utils::StringUtils::StringToBool(c2_enable_str, enable_c2);
+      c2_enabled_ = enable_c2;
+      if (!c2_enabled_) {
+        return;
+      }
+    } else {
+      c2_enabled_ = true;
+    }
+    state::StateManager::initialize();
+    std::shared_ptr<c2::C2Agent> agent = std::make_shared<c2::C2Agent>(std::dynamic_pointer_cast<FlowController>(shared_from_this()), std::dynamic_pointer_cast<FlowController>(shared_from_this()),
+                                                                       configuration_);
+    registerUpdateListener(agent);
+  }
+  if (!c2_enabled_) {
+    return;
+  }
+
+  c2_initialized_ = true;
+  metrics_.clear();
+  component_metrics_.clear();
+  component_metrics_by_id_.clear();
+  std::string class_csv;
+
+  if (root_ != nullptr) {
+    std::shared_ptr<state::metrics::QueueMetrics> queueMetrics = std::make_shared<state::metrics::QueueMetrics>();
+
+    std::map<std::string, std::shared_ptr<Connection>> connections;
+    root_->getConnections(connections);
+    for (auto con : connections) {
+      queueMetrics->addConnection(con.second);
+    }
+    metrics_[queueMetrics->getName()] = queueMetrics;
+
+    std::shared_ptr<state::metrics::RepositoryMetrics> repoMetrics = std::make_shared<state::metrics::RepositoryMetrics>();
+
+    repoMetrics->addRepository(provenance_repo_);
+    repoMetrics->addRepository(flow_file_repo_);
+
+    metrics_[repoMetrics->getName()] = repoMetrics;
+  }
+
+  if (configuration_->get("nifi.flow.metrics.classes", class_csv)) {
+    std::vector<std::string> classes = utils::StringUtils::split(class_csv, ",");
+
+    for (std::string clazz : classes) {
+      auto ptr = core::ClassLoader::getDefaultClassLoader().instantiate(clazz, clazz);
+
+      if (nullptr == ptr) {
+        logger_->log_error("No metric defined for %s", clazz.c_str());
+        continue;
+      }
+
+      std::shared_ptr<state::metrics::Metrics> processor = std::static_pointer_cast<state::metrics::Metrics>(ptr);
+
+      std::lock_guard<std::mutex> lock(metrics_mutex_);
+
+      metrics_[processor->getName()] = processor;
+    }
+  }
+
+  // first we should get all component metrics, then
+  // we will build the mapping
+  std::vector<std::shared_ptr<core::Processor>> processors;
+  if (root_ != nullptr) {
+    root_->getAllProcessors(processors);
+    for (const auto &processor : processors) {
+      auto rep = std::dynamic_pointer_cast<state::metrics::MetricsSource>(processor);
+      // we have a metrics source.
+      if (nullptr != rep) {
+        std::vector<std::shared_ptr<state::metrics::Metrics>> metric_vector;
+        rep->getMetrics(metric_vector);
+        for (auto metric : metric_vector) {
+          component_metrics_[metric->getName()] = metric;
+        }
+      }
+    }
+  }
+
+  std::string class_definitions;
+  if (configuration_->get("nifi.flow.metrics.class.definitions", class_definitions)) {
+    std::vector<std::string> classes = utils::StringUtils::split(class_definitions, ",");
+
+    for (std::string metricsClass : classes) {
+      try {
+        int id = std::stoi(metricsClass);
+        std::stringstream option;
+        option << "nifi.flow.metrics.class.definitions." << metricsClass;
+        if (configuration_->get(option.str(), class_definitions)) {
+          std::vector<std::string> classes = utils::StringUtils::split(class_definitions, ",");
+
+          for (std::string clazz : classes) {
+            std::lock_guard<std::mutex> lock(metrics_mutex_);
+            auto ret = component_metrics_[clazz];
+            if (nullptr == ret) {
+              ret = metrics_[clazz];
+            }
+            if (nullptr == ret) {
+              logger_->log_error("No metric defined for %s", clazz.c_str());
+              continue;
+            }
+            component_metrics_by_id_[id].push_back(ret);
+          }
+        }
+      } catch (...) {
+        logger_->log_error("Could not create metrics class %s", metricsClass);
+      }
+    }
   }
 }
 /**
@@ -367,7 +497,7 @@ void FlowController::removeControllerService(const std::shared_ptr<core::control
  * Enables the controller service services
  * @param serviceNode service node which will be disabled, along with linked services.
  */
-void FlowController::enableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) {
+std::future<bool> FlowController::enableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) {
   return controller_service_provider_->enableControllerService(serviceNode);
 }
 
@@ -382,8 +512,8 @@ void FlowController::enableControllerServices(std::vector<std::shared_ptr<core::
  * Disables controller services
  * @param serviceNode service node which will be disabled, along with linked services.
  */
-void FlowController::disableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) {
-  controller_service_provider_->disableControllerService(serviceNode);
+std::future<bool> FlowController::disableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) {
+  return controller_service_provider_->disableControllerService(serviceNode);
 }
 
 /**
@@ -472,6 +602,94 @@ std::shared_ptr<core::controller::ControllerService> FlowController::getControll
  */
 void FlowController::enableAllControllerServices() {
   controller_service_provider_->enableAllControllerServices();
+}
+
+int16_t FlowController::applyUpdate(const std::string &configuration) {
+  applyConfiguration(configuration);
+  return 0;
+}
+
+int16_t FlowController::clearConnection(const std::string &connection) {
+  if (root_ != nullptr) {
+    logger_->log_info("Attempting to clear connection %s", connection);
+    std::map<std::string, std::shared_ptr<Connection>> connections;
+    root_->getConnections(connections);
+    auto conn = connections.find(connection);
+    if (conn != connections.end()) {
+      logger_->log_info("Clearing connection %s", connection);
+      conn->second->drain();
+    }
+  }
+  return -1;
+}
+
+int16_t FlowController::getMetrics(std::vector<std::shared_ptr<state::metrics::Metrics>> &metric_vector, uint8_t metricsClass) {
+  auto now = std::chrono::steady_clock::now();
+  auto time_since = std::chrono::duration_cast<std::chrono::milliseconds>(now - last_metrics_capture_).count();
+  std::lock_guard<std::mutex> lock(metrics_mutex_);
+  if (metricsClass == 0) {
+    for (auto metric : metrics_) {
+      metric_vector.push_back(metric.second);
+    }
+  } else {
+    auto metrics = component_metrics_by_id_[metricsClass];
+    for (const auto &metric : metrics) {
+      metric_vector.push_back(metric);
+    }
+  }
+  return 0;
+}
+
+std::vector<std::shared_ptr<state::StateController>> FlowController::getAllComponents() {
+  std::vector<std::shared_ptr<state::StateController>> vec;
+  vec.push_back(shared_from_this());
+  std::vector<std::shared_ptr<core::Processor>> processors;
+  if (root_ != nullptr) {
+    root_->getAllProcessors(processors);
+    for (auto &processor : processors) {
+      switch (processor->getSchedulingStrategy()) {
+        case core::SchedulingStrategy::TIMER_DRIVEN:
+          vec.push_back(std::make_shared<state::ProcessorController>(processor, timer_scheduler_));
+          break;
+        case core::SchedulingStrategy::EVENT_DRIVEN:
+          vec.push_back(std::make_shared<state::ProcessorController>(processor, event_scheduler_));
+          break;
+        default:
+          break;
+      }
+    }
+  }
+  return vec;
+}
+std::vector<std::shared_ptr<state::StateController>> FlowController::getComponents(const std::string &name) {
+  std::vector<std::shared_ptr<state::StateController>> vec;
+
+  if (name == "FlowController") {
+    vec.push_back(shared_from_this());
+  } else {
+    // check processors
+    std::shared_ptr<core::Processor> processor = root_->findProcessor(name);
+    if (processor != nullptr) {
+      switch (processor->getSchedulingStrategy()) {
+        case core::SchedulingStrategy::TIMER_DRIVEN:
+          vec.push_back(std::make_shared<state::ProcessorController>(processor, timer_scheduler_));
+          break;
+        case core::SchedulingStrategy::EVENT_DRIVEN:
+          vec.push_back(std::make_shared<state::ProcessorController>(processor, event_scheduler_));
+          break;
+        default:
+          break;
+      }
+    }
+  }
+
+  return vec;
+}
+
+uint64_t FlowController::getUptime() {
+  auto now = std::chrono::steady_clock::now();
+  auto time_since = std::chrono::duration_cast<std::chrono::milliseconds>(now - start_time_).count();
+  return time_since;
 }
 
 } /* namespace minifi */

@@ -101,6 +101,11 @@ class Socket : public BaseStream {
    */
   virtual int16_t initialize();
 
+  /**
+   * Sets the non blocking flag on the file descriptor.
+   */
+  void setNonBlocking();
+
   std::string getHostname() const;
 
   /**
@@ -114,14 +119,35 @@ class Socket : public BaseStream {
    * Reads data and places it into buf
    * @param buf buffer in which we extract data
    * @param buflen
+   * @param retrieve_all_bytes determines if we should read all bytes before returning
    */
-  virtual int readData(std::vector<uint8_t> &buf, int buflen);
+  virtual int readData(std::vector<uint8_t> &buf, int buflen) {
+    return readData(buf, buflen, true);
+  }
   /**
    * Reads data and places it into buf
    * @param buf buffer in which we extract data
    * @param buflen
+   * @param retrieve_all_bytes determines if we should read all bytes before returning
    */
-  virtual int readData(uint8_t *buf, int buflen);
+  virtual int readData(uint8_t *buf, int buflen) {
+    return readData(buf, buflen, true);
+  }
+
+  /**
+   * Reads data and places it into buf
+   * @param buf buffer in which we extract data
+   * @param buflen
+   * @param retrieve_all_bytes determines if we should read all bytes before returning
+   */
+  virtual int readData(std::vector<uint8_t> &buf, int buflen, bool retrieve_all_bytes);
+  /**
+   * Reads data and places it into buf
+   * @param buf buffer in which we extract data
+   * @param buflen
+   * @param retrieve_all_bytes determines if we should read all bytes before returning
+   */
+  virtual int readData(uint8_t *buf, int buflen, bool retrieve_all_bytes);
 
   /**
    * Write value to the stream using std::vector

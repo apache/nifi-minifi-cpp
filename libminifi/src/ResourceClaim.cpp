@@ -35,11 +35,14 @@ namespace minifi {
 
 utils::NonRepeatingStringGenerator ResourceClaim::non_repeating_string_generator_;
 
-char *ResourceClaim::default_directory_path = const_cast<char*>(DEFAULT_CONTENT_DIRECTORY);
+std::string default_directory_path = "";
+
+void setDefaultDirectory(std::string path) {
+  default_directory_path = path;
+}
 
 ResourceClaim::ResourceClaim(std::shared_ptr<core::StreamManager<ResourceClaim>> claim_manager, const std::string contentDirectory)
-    : _flowFileRecordOwnedCount(0),
-      claim_manager_(claim_manager),
+    : claim_manager_(claim_manager),
       deleted_(false),
       logger_(logging::LoggerFactory<ResourceClaim>::getLogger()) {
   // Create the full content path for the content

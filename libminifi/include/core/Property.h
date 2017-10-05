@@ -162,9 +162,14 @@ class Property {
     }
 
     std::string unit(pEnd);
+    std::transform(unit.begin(), unit.end(), unit.begin(), ::tolower);
 
     if (unit == "sec" || unit == "s" || unit == "second" || unit == "seconds" || unit == "secs") {
       timeunit = SECOND;
+      output = ival;
+      return true;
+    } else if (unit == "msec" || unit == "ms" || unit == "millisecond" || unit == "milliseconds" || unit == "msecs") {
+      timeunit = MILLISECOND;
       output = ival;
       return true;
     } else if (unit == "min" || unit == "m" || unit == "mins" || unit == "minute" || unit == "minutes") {

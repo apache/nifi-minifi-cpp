@@ -27,12 +27,12 @@ namespace minifi {
 namespace core {
 namespace controller {
 std::shared_ptr<core::ProcessGroup> &StandardControllerServiceNode::getProcessGroup() {
-  std::lock_guard < std::mutex > lock(mutex_);
+  std::lock_guard<std::mutex> lock(mutex_);
   return process_group_;
 }
 
 void StandardControllerServiceNode::setProcessGroup(std::shared_ptr<ProcessGroup> &processGroup) {
-  std::lock_guard < std::mutex > lock(mutex_);
+  std::lock_guard<std::mutex> lock(mutex_);
   process_group_ = processGroup;
 }
 
@@ -45,7 +45,7 @@ bool StandardControllerServiceNode::enable() {
     for (auto linked_service : property.getValues()) {
       std::shared_ptr<ControllerServiceNode> csNode = provider->getControllerServiceNode(linked_service);
       if (nullptr != csNode) {
-        std::lock_guard < std::mutex > lock(mutex_);
+        std::lock_guard<std::mutex> lock(mutex_);
         linked_controller_services_.push_back(csNode);
       }
     }

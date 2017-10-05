@@ -61,9 +61,11 @@ FlowFileRecord::FlowFileRecord(std::shared_ptr<core::Repository> flow_repository
 
   snapshot_ = false;
 
-  if (claim_ != nullptr)
+  if (claim_ != nullptr) {
     // Increase the flow file record owned count for the resource claim
     claim_->increaseFlowFileRecordOwnedCount();
+    content_full_fath_ = claim->getContentFullPath();
+  }
 }
 
 FlowFileRecord::FlowFileRecord(std::shared_ptr<core::Repository> flow_repository, const std::shared_ptr<core::ContentRepository> &content_repo, std::shared_ptr<core::FlowFile> &event,
@@ -82,6 +84,7 @@ FlowFileRecord::FlowFileRecord(std::shared_ptr<core::Repository> flow_repository
   event->getUUID(uuid_);
   uuid_connection_ = uuidConnection;
   if (event->getResourceClaim()) {
+    event->getResourceClaim()->increaseFlowFileRecordOwnedCount();
     content_full_fath_ = event->getResourceClaim()->getContentFullPath();
   }
 }
@@ -104,8 +107,9 @@ FlowFileRecord::~FlowFileRecord() {
     claim_->decreaseFlowFileRecordOwnedCount();
     std::string value;
     if (claim_->getFlowFileRecordOwnedCount() <= 0) {
-      logger_->log_debug("Delete Resource Claim %s", claim_->getContentFullPath().c_str());
-      if (!this->stored || !flow_repository_->Get(uuid_str_, value)) {
+      // we cannot rely on the stored variable here since we
+      if (flow_repository_ != nullptr && !flow_repository_->Get(uuid_str_, value)) {
+        logger_->log_debug("Delete Resource Claim %s", claim_->getContentFullPath().c_str());
         content_repo_->remove(claim_);
       }
     }

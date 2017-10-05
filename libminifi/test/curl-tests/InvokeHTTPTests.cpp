@@ -29,6 +29,8 @@
 #include "../TestBase.h"
 #include "processors/GetFile.h"
 #include "core/Core.h"
+#include "HTTPClient.h"
+#include "InvokeHTTP.h"
 #include "../../include/core/FlowFile.h"
 #include "../unit/ProvenanceTestHelper.h"
 #include "core/Processor.h"
@@ -83,60 +85,60 @@ TEST_CASE("HTTPTestsWithNoResourceClaimPOST", "[httptest1]") {
   invokehttp->addConnection(connection);
   invokehttp->addConnection(connection2);
 
-  core::ProcessorNode node(listenhttp);
-  core::ProcessorNode node2(invokehttp);
+  std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(listenhttp);
+  std::shared_ptr<core::ProcessorNode> node2 = std::make_shared<core::ProcessorNode>(invokehttp);
   std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider = nullptr;
-  core::ProcessContext context(node, controller_services_provider, repo, repo, content_repo);
-  core::ProcessContext context2(node2, controller_services_provider, repo, repo, content_repo);
-  context.setProperty(org::apache::nifi::minifi::processors::ListenHTTP::Port, "8686");
-  context.setProperty(org::apache::nifi::minifi::processors::ListenHTTP::BasePath, "/testytesttest");
+  std::shared_ptr<core::ProcessContext> context = std::make_shared<core::ProcessContext>(node, controller_services_provider, repo, repo, content_repo);
+  std::shared_ptr<core::ProcessContext> context2 = std::make_shared<core::ProcessContext>(node2, controller_services_provider, repo, repo, content_repo);
+  context->setProperty(org::apache::nifi::minifi::processors::ListenHTTP::Port, "8686");
+  context->setProperty(org::apache::nifi::minifi::processors::ListenHTTP::BasePath, "/testytesttest");
 
-  context2.setProperty(org::apache::nifi::minifi::processors::InvokeHTTP::Method, "POST");
-  context2.setProperty(org::apache::nifi::minifi::processors::InvokeHTTP::URL, "http://localhost:8686/testytesttest");
-  core::ProcessSession session(&context);
-  core::ProcessSession session2(&context2);
+  context2->setProperty(org::apache::nifi::minifi::processors::InvokeHTTP::Method, "POST");
+  context2->setProperty(org::apache::nifi::minifi::processors::InvokeHTTP::URL, "http://localhost:8686/testytesttest");
+  auto session = std::make_shared<core::ProcessSession>(context);
+  auto session2 = std::make_shared<core::ProcessSession>(context2);
 
   REQUIRE(listenhttp->getName() == "listenhttp");
 
-  core::ProcessSessionFactory factory(&context);
+  std::shared_ptr<core::ProcessSessionFactory> factory = std::make_shared<core::ProcessSessionFactory>(context);
 
   std::shared_ptr<core::FlowFile> record;
   listenhttp->setScheduledState(core::ScheduledState::RUNNING);
-  listenhttp->onSchedule(&context, &factory);
-  listenhttp->onTrigger(&context, &session);
+  listenhttp->onSchedule(context, factory);
+  listenhttp->onTrigger(context, session);
 
   invokehttp->incrementActiveTasks();
   invokehttp->setScheduledState(core::ScheduledState::RUNNING);
-  core::ProcessSessionFactory factory2(&context2);
-  invokehttp->onSchedule(&context2, &factory2);
-  invokehttp->onTrigger(&context2, &session2);
+  std::shared_ptr<core::ProcessSessionFactory> factory2 = std::make_shared<core::ProcessSessionFactory>(context2);
+  invokehttp->onSchedule(context2, factory2);
+  invokehttp->onTrigger(context2, session2);
 
-  provenance::ProvenanceReporter *reporter = session.getProvenanceReporter();
+  provenance::ProvenanceReporter *reporter = session->getProvenanceReporter();
   std::set<provenance::ProvenanceEventRecord*> records = reporter->getEvents();
-  record = session.get();
+  record = session->get();
   REQUIRE(record == nullptr);
   REQUIRE(records.size() == 0);
 
   listenhttp->incrementActiveTasks();
   listenhttp->setScheduledState(core::ScheduledState::RUNNING);
-  listenhttp->onTrigger(&context, &session);
+  listenhttp->onTrigger(context, session);
 
-  reporter = session.getProvenanceReporter();
+  reporter = session->getProvenanceReporter();
 
   records = reporter->getEvents();
-  session.commit();
+  session->commit();
 
   invokehttp->incrementActiveTasks();
   invokehttp->setScheduledState(core::ScheduledState::RUNNING);
-  invokehttp->onTrigger(&context2, &session2);
+  invokehttp->onTrigger(context2, session2);
 
-  session2.commit();
+  session2->commit();
   records = reporter->getEvents();
 
   for (provenance::ProvenanceEventRecord *provEventRecord : records) {
     REQUIRE(provEventRecord->getComponentType() == listenhttp->getName());
   }
-  std::shared_ptr<core::FlowFile> ffr = session2.get();
+  std::shared_ptr<core::FlowFile> ffr = session2->get();
   REQUIRE(true == LogTestController::getInstance().contains("exiting because method is POST"));
   LogTestController::getInstance().reset();
 }
@@ -204,22 +206,23 @@ TEST_CASE("HTTPTestsWithResourceClaimPOST", "[httptest1]") {
   invokehttp->addConnection(connection);
   invokehttp->addConnection(connection2);
 
-  core::ProcessorNode node(invokehttp);
-  core::ProcessorNode node2(listenhttp);
-  std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider = nullptr;
-  core::ProcessContext context(node, controller_services_provider, repo, repo, content_repo);
-  core::ProcessContext context2(node2, controller_services_provider, repo, repo,  content_repo);
-  context.setProperty(org::apache::nifi::minifi::processors::ListenHTTP::Port, "8680");
-  context.setProperty(org::apache::nifi::minifi::processors::ListenHTTP::BasePath, "/testytesttest");
 
-  context2.setProperty(org::apache::nifi::minifi::processors::InvokeHTTP::Method, "POST");
-  context2.setProperty(org::apache::nifi::minifi::processors::InvokeHTTP::URL, "http://localhost:8680/testytesttest");
-  core::ProcessSession session(&context);
-  core::ProcessSession session2(&context2);
+  std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(listenhttp);
+  std::shared_ptr<core::ProcessorNode> node2 = std::make_shared<core::ProcessorNode>(invokehttp);
+  std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider = nullptr;
+  std::shared_ptr<core::ProcessContext> context = std::make_shared<core::ProcessContext>(node, controller_services_provider, repo, repo, content_repo);
+  std::shared_ptr<core::ProcessContext> context2 = std::make_shared<core::ProcessContext>(node2, controller_services_provider, repo, repo, content_repo);
+  context->setProperty(org::apache::nifi::minifi::processors::ListenHTTP::Port, "8680");
+  context->setProperty(org::apache::nifi::minifi::processors::ListenHTTP::BasePath, "/testytesttest");
+
+  context2->setProperty(org::apache::nifi::minifi::processors::InvokeHTTP::Method, "POST");
+  context2->setProperty(org::apache::nifi::minifi::processors::InvokeHTTP::URL, "http://localhost:8680/testytesttest");
+  auto session = std::make_shared<core::ProcessSession>(context);
+  auto session2 = std::make_shared<core::ProcessSession>(context2);
 
   REQUIRE(listenhttp->getName() == "listenhttp");
 
-  core::ProcessSessionFactory factory(&context);
+  std::shared_ptr<core::ProcessSessionFactory> factory = std::make_shared<core::ProcessSessionFactory>(context);
 
   std::shared_ptr<core::FlowFile> record;
 
@@ -228,45 +231,45 @@ TEST_CASE("HTTPTestsWithResourceClaimPOST", "[httptest1]") {
   std::map<std::string, std::string> attributes;
   attributes["testy"] = "test";
   std::shared_ptr<minifi::FlowFileRecord> flow = std::make_shared<minifi::FlowFileRecord>(repo, content_repo, attributes);
-  session2.write(flow, &callback);
+  session2->write(flow, &callback);
 
   invokehttp->incrementActiveTasks();
   invokehttp->setScheduledState(core::ScheduledState::RUNNING);
-  core::ProcessSessionFactory factory2(&context2);
-  invokehttp->onSchedule(&context2, &factory2);
-  invokehttp->onTrigger(&context2, &session2);
+  std::shared_ptr<core::ProcessSessionFactory> factory2 = std::make_shared<core::ProcessSessionFactory>(context2);
+  invokehttp->onSchedule(context2, factory2);
+  invokehttp->onTrigger(context2, session2);
 
   listenhttp->incrementActiveTasks();
   listenhttp->setScheduledState(core::ScheduledState::RUNNING);
-  listenhttp->onSchedule(&context, &factory);
-  listenhttp->onTrigger(&context, &session);
+  listenhttp->onSchedule(context, factory);
+  listenhttp->onTrigger(context, session);
 
-  provenance::ProvenanceReporter *reporter = session.getProvenanceReporter();
+  provenance::ProvenanceReporter *reporter = session->getProvenanceReporter();
   std::set<provenance::ProvenanceEventRecord*> records = reporter->getEvents();
-  record = session.get();
+  record = session->get();
   REQUIRE(record == nullptr);
   REQUIRE(records.size() == 0);
 
   listenhttp->incrementActiveTasks();
   listenhttp->setScheduledState(core::ScheduledState::RUNNING);
-  listenhttp->onTrigger(&context, &session);
+  listenhttp->onTrigger(context, session);
 
-  reporter = session.getProvenanceReporter();
+  reporter = session->getProvenanceReporter();
 
   records = reporter->getEvents();
-  session.commit();
+  session->commit();
 
   invokehttp->incrementActiveTasks();
   invokehttp->setScheduledState(core::ScheduledState::RUNNING);
-  invokehttp->onTrigger(&context2, &session2);
+  invokehttp->onTrigger(context2, session2);
 
-  session2.commit();
+  session2->commit();
   records = reporter->getEvents();
 
   for (provenance::ProvenanceEventRecord *provEventRecord : records) {
     REQUIRE(provEventRecord->getComponentType() == listenhttp->getName());
   }
-  std::shared_ptr<core::FlowFile> ffr = session2.get();
+  std::shared_ptr<core::FlowFile> ffr = session2->get();
   REQUIRE(true == LogTestController::getInstance().contains("exiting because method is POST"));
   LogTestController::getInstance().reset();
 }

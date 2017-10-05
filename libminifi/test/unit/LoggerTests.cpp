@@ -19,8 +19,10 @@
 #include <utility>
 #include <string>
 #include <memory>
+#include <vector>
 #include <ctime>
 #include "../TestBase.h"
+
 
 TEST_CASE("Test log Levels", "[ttl1]") {
   LogTestController::getInstance().setTrace<logging::Logger>();
@@ -70,4 +72,8 @@ TEST_CASE("Test log Levels change", "[ttl5]") {
 
   REQUIRE(false == LogTestController::getInstance().contains("[org::apache::nifi::minifi::core::logging::Logger] [error] hello world"));
   LogTestController::getInstance().reset();
+}
+
+TEST_CASE("Test Demangle template", "[ttl6]") {
+  std::cout << core::getClassName<std::vector<int>>() << std::endl;
 }

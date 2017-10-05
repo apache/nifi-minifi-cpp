@@ -25,7 +25,6 @@ def test_get_put():
     flow = GetFile('/tmp/input') >> LogAttribute() >> PutFile('/tmp/output')
 
     with DockerTestCluster(SingleFileOutputValidator('test')) as cluster:
-
         cluster.put_test_data('test')
         cluster.deploy_flow(flow)
 
@@ -37,17 +36,17 @@ def test_file_exists_failure():
     Verify that putting to a file that already exists fails.
     """
 
-    flow = (GetFile('/tmp/input') >>
+    flow = (GetFile('/tmp/input')
 
             # First put should succeed
-            PutFile('/tmp') >>
+            >> PutFile('/tmp')
 
             # Second put should fail (file exists)
-            PutFile('/tmp') >> (('success', LogAttribute()),
-                                ('failure', LogAttribute() >> PutFile('/tmp/output'))))
+            >> PutFile('/tmp')
+            >> (('success', LogAttribute()),
+                ('failure', LogAttribute() >> PutFile('/tmp/output'))))
 
     with DockerTestCluster(SingleFileOutputValidator('test')) as cluster:
-
         cluster.put_test_data('test')
         cluster.deploy_flow(flow)
 

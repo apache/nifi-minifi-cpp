@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 #include "core/repository/FlowFileRepository.h"
+#include "leveldb/write_batch.h"
 #include <memory>
 #include <string>
 #include <utility>
@@ -29,46 +30,58 @@ namespace minifi {
 namespace core {
 namespace repository {
 
+void FlowFileRepository::flush() {
+  leveldb::WriteBatch batch;
+  std::string key;
+  std::string value;
+  leveldb::ReadOptions options;
+
+  std::vector<std::shared_ptr<FlowFileRecord>> purgeList;
+
+  uint64_t decrement_total = 0;
+  while (keys_to_delete.size_approx() > 0) {
+    if (keys_to_delete.try_dequeue(key)) {
+      db_->Get(options, key, &value);
+      decrement_total += value.size();
+      std::shared_ptr<FlowFileRecord> eventRead = std::make_shared<FlowFileRecord>(shared_from_this(), content_repo_);
+      if (eventRead->DeSerialize(reinterpret_cast<const uint8_t *>(value.data()), value.size())) {
+        purgeList.push_back(eventRead);
+      }
+      logger_->log_info("Issuing batch delete, including %s, Content path %s", eventRead->getUUIDStr(), eventRead->getContentFullPath());
+      batch.Delete(key);
+    }
+  }
+  if (db_->Write(leveldb::WriteOptions(), &batch).ok()) {
+    logger_->log_info("Decrementing %u from a repo size of %u", decrement_total, repo_size_.load());
+    if (decrement_total > repo_size_.load()) {
+      repo_size_ = 0;
+    } else {
+      repo_size_ -= decrement_total;
+    }
+  }
+
+  if (nullptr != content_repo_) {
+    for (const auto &ffr : purgeList) {
+      auto claim = ffr->getResourceClaim();
+      if (claim != nullptr) {
+        content_repo_->removeIfOrphaned(claim);
+      }
+    }
+  }
+}
+
 void FlowFileRepository::run() {
   // threshold for purge
   uint64_t purgeThreshold = max_partition_bytes_ * 3 / 4;
+
   while (running_) {
     std::this_thread::sleep_for(std::chrono::milliseconds(purge_period_));
     uint64_t curTime = getTimeMillis();
-    uint64_t size = repoSize();
-    if (size >= purgeThreshold) {
-      std::vector<std::shared_ptr<FlowFileRecord>> purgeList;
-      std::vector<std::pair<std::string, uint64_t>> keyRemovalList;
-      leveldb::Iterator* it = db_->NewIterator(leveldb::ReadOptions());
 
-      for (it->SeekToFirst(); it->Valid(); it->Next()) {
-        std::shared_ptr<FlowFileRecord> eventRead = std::make_shared<FlowFileRecord>(shared_from_this(), content_repo_);
-        std::string key = it->key().ToString();
-        if (eventRead->DeSerialize(reinterpret_cast<const uint8_t *>(it->value().data()), it->value().size())) {
-          if ((curTime - eventRead->getEventTime()) > max_partition_millis_) {
-            purgeList.push_back(eventRead);
-            keyRemovalList.push_back(std::make_pair(key, it->value().size()));
-          }
-        } else {
-          logger_->log_debug("NiFi %s retrieve event %s fail", name_.c_str(), key.c_str());
-          keyRemovalList.push_back(std::make_pair(key, it->value().size()));
-        }
-      }
-      delete it;
-      for (auto eventId : keyRemovalList) {
-        logger_->log_info("Repository Repo %s Purge %s", name_.c_str(), eventId.first.c_str());
-        if (Delete(eventId.first)) {
-          repo_size_ -= eventId.second;
-        }
-      }
+    flush();
 
-      for (const auto &ffr : purgeList) {
-        auto claim = ffr->getResourceClaim();
-        if (claim != nullptr) {
-          content_repo_->remove(claim);
-        }
-      }
-    }
+    uint64_t size = getRepoSize();
+
     if (size > max_partition_bytes_)
       repo_full_ = true;
     else
@@ -81,22 +94,25 @@ void FlowFileRepository::loadComponent(const std::shared_ptr<core::ContentReposi
   std::vector<std::pair<std::string, uint64_t>> purgeList;
   leveldb::Iterator* it = db_->NewIterator(leveldb::ReadOptions());
 
+  repo_size_ = 0;
   for (it->SeekToFirst(); it->Valid(); it->Next()) {
     std::shared_ptr<FlowFileRecord> eventRead = std::make_shared<FlowFileRecord>(shared_from_this(), content_repo_);
     std::string key = it->key().ToString();
     repo_size_ += it->value().size();
     if (eventRead->DeSerialize(reinterpret_cast<const uint8_t *>(it->value().data()), it->value().size())) {
+      logger_->log_info("Found connection for %s, path %s ", eventRead->getConnectionUuid(), eventRead->getContentFullPath());
       auto search = connectionMap.find(eventRead->getConnectionUuid());
       if (search != connectionMap.end()) {
         // we find the connection for the persistent flowfile, create the flowfile and enqueue that
         std::shared_ptr<core::FlowFile> flow_file_ref = std::static_pointer_cast<core::FlowFile>(eventRead);
-        std::shared_ptr<FlowFileRecord> record = std::make_shared<FlowFileRecord>(shared_from_this(), content_repo_);
-        // set store to repo to true so that we do need to persistent again in enqueue
-        record->setStoredToRepository(true);
-        search->second->put(record);
+        eventRead->setStoredToRepository(true);
+        search->second->put(eventRead);
       } else {
+        logger_->log_info("Could not find connectinon for %s, path %s ", eventRead->getConnectionUuid(), eventRead->getContentFullPath());
         if (eventRead->getContentFullPath().length() > 0) {
-          std::remove(eventRead->getContentFullPath().c_str());
+          if (nullptr != eventRead->getResourceClaim()) {
+            content_repo_->remove(eventRead->getResourceClaim());
+          }
         }
         purgeList.push_back(std::make_pair(key, it->value().size()));
       }

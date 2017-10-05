@@ -62,7 +62,21 @@ class ObjectFactory {
   /**
    * Create a shared pointer to a new processor.
    */
+  virtual Connectable *createRaw(const std::string &name) {
+    return nullptr;
+  }
+
+  /**
+   * Create a shared pointer to a new processor.
+   */
   virtual std::shared_ptr<Connectable> create(const std::string &name, uuid_t uuid) {
+    return nullptr;
+  }
+
+  /**
+   * Create a shared pointer to a new processor.
+   */
+  virtual Connectable* createRaw(const std::string &name, uuid_t uuid) {
     return nullptr;
   }
 
@@ -72,11 +86,14 @@ class ObjectFactory {
    */
   virtual std::string getName() = 0;
 
+  virtual std::string getClassName() = 0;
   /**
    * Gets the class name for the object
    * @return class name for the processor.
    */
-  virtual std::string getClassName() = 0;
+  virtual std::vector<std::string> getClassNames() = 0;
+
+  virtual std::unique_ptr<ObjectFactory> assign(const std::string &class_name) = 0;
 
 };
 
@@ -116,6 +133,22 @@ class DefautObjectFactory : public ObjectFactory {
   }
 
   /**
+   * Create a shared pointer to a new processor.
+   */
+  virtual Connectable* createRaw(const std::string &name) {
+    T *ptr = new T(name);
+    return dynamic_cast<Connectable*>(ptr);
+  }
+
+  /**
+   * Create a shared pointer to a new processor.
+   */
+  virtual Connectable* createRaw(const std::string &name, uuid_t uuid) {
+    T *ptr = new T(name, uuid);
+    return dynamic_cast<Connectable*>(ptr);
+  }
+
+  /**
    * Gets the name of the object.
    * @return class name of processor
    */
@@ -129,6 +162,16 @@ class DefautObjectFactory : public ObjectFactory {
    */
   virtual std::string getClassName() {
     return className;
+  }
+
+  virtual std::vector<std::string> getClassNames() {
+    std::vector<std::string> container;
+    container.push_back(className);
+    return container;
+  }
+
+  virtual std::unique_ptr<ObjectFactory> assign(const std::string &class_name) {
+    return nullptr;
   }
 
  protected:
@@ -170,7 +213,7 @@ class ClassLoader {
    * This will attempt to load objects within this resource.
    * @return return code: RESOURCE_FAILURE or RESOURCE_SUCCESS
    */
-  uint16_t registerResource(const std::string &resource);
+  uint16_t registerResource(const std::string &resource, const std::string &resourceName);
 
   /**
    * Register a class with the give ProcessorFactory
@@ -203,6 +246,24 @@ class ClassLoader {
   template<class T = Connectable>
   std::shared_ptr<T> instantiate(const std::string &class_name, uuid_t uuid);
 
+  /**
+   * Instantiate object based on class_name
+   * @param class_name class to create
+   * @param uuid uuid of object
+   * @return nullptr or object created from class_name definition.
+   */
+  template<class T = Connectable>
+  T *instantiateRaw(const std::string &class_name, const std::string &name);
+
+  /**
+   * Instantiate object based on class_name
+   * @param class_name class to create
+   * @param uuid uuid of object
+   * @return nullptr or object created from class_name definition.
+   */
+  template<class T = Connectable>
+  T *instantiateRaw(const std::string &class_name, uuid_t uuid);
+
  protected:
 
   std::map<std::string, std::unique_ptr<ObjectFactory>> loaded_factories_;
@@ -234,6 +295,30 @@ std::shared_ptr<T> ClassLoader::instantiate(const std::string &class_name, uuid_
   if (factory_entry != loaded_factories_.end()) {
     auto obj = factory_entry->second->create(class_name, uuid);
     return std::static_pointer_cast<T>(obj);
+  } else {
+    return nullptr;
+  }
+}
+
+template<class T>
+T *ClassLoader::instantiateRaw(const std::string &class_name, const std::string &name) {
+  std::lock_guard<std::mutex> lock(internal_mutex_);
+  auto factory_entry = loaded_factories_.find(class_name);
+  if (factory_entry != loaded_factories_.end()) {
+    auto obj = factory_entry->second->createRaw(name);
+    return dynamic_cast<T*>(obj);
+  } else {
+    return nullptr;
+  }
+}
+
+template<class T>
+T *ClassLoader::instantiateRaw(const std::string &class_name, uuid_t uuid) {
+  std::lock_guard<std::mutex> lock(internal_mutex_);
+  auto factory_entry = loaded_factories_.find(class_name);
+  if (factory_entry != loaded_factories_.end()) {
+    auto obj = factory_entry->second->createRaw(class_name, uuid);
+    return dynamic_cast<T*>(obj);
   } else {
     return nullptr;
   }

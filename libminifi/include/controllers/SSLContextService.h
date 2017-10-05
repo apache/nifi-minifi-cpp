@@ -73,6 +73,37 @@ class SSLContextService : public core::controller::ControllerService {
         logger_(logging::LoggerFactory<SSLContextService>::getLogger()) {
   }
 
+  explicit SSLContextService(const std::string &name, const std::shared_ptr<Configure> &configuration)
+      : ControllerService(name, nullptr),
+        initialized_(false),
+        valid_(false),
+        logger_(logging::LoggerFactory<SSLContextService>::getLogger()) {
+    setConfiguration(configuration);
+    initialize();
+    // set the properties based on the configuration
+    core::Property property("Client Certificate", "Client Certificate");
+    core::Property privKey("Private Key", "Private Key file");
+    core::Property passphrase_prop("Passphrase", "Client passphrase. Either a file or unencrypted text");
+    core::Property caCert("CA Certificate", "CA certificate file");
+
+    std::string value;
+    if (configuration_->get(Configure::nifi_security_client_certificate, value)) {
+      setProperty(property.getName(), value);
+    }
+
+    if (configuration_->get(Configure::nifi_security_client_private_key, value)) {
+      setProperty(privKey.getName(), value);
+    }
+
+    if (configuration_->get(Configure::nifi_security_client_pass_phrase, value)) {
+      setProperty(passphrase_prop.getName(), value);
+    }
+
+    if (configuration_->get(Configure::nifi_security_client_ca_certificate, value)) {
+      setProperty(caCert.getName(), value);
+    }
+  }
+
   virtual void initialize();
 
   std::unique_ptr<SSLContext> createSSLContext();
@@ -114,8 +145,7 @@ class SSLContextService : public core::controller::ControllerService {
     if (!IsNullOrEmpty(private_key_)) {
       int retp = SSL_CTX_use_PrivateKey_file(ctx, private_key_.c_str(), SSL_FILETYPE_PEM);
       if (retp != 1) {
-        logger_->log_error("Could not create load private key,%i on %s error : %s", retp, private_key_,
-                           std::strerror(errno));
+        logger_->log_error("Could not create load private key,%i on %s error : %s", retp, private_key_, std::strerror(errno));
         return false;
       }
 
@@ -136,6 +166,8 @@ class SSLContextService : public core::controller::ControllerService {
     return true;
   }
 
+  virtual void onEnable();
+
  protected:
 
   static int pemPassWordCb(char *buf, int size, int rwflag, void *userdata) {
@@ -152,8 +184,6 @@ class SSLContextService : public core::controller::ControllerService {
   }
 
   virtual void initializeTLS();
-
-  virtual void onEnable();
 
   std::mutex initialization_mutex_;
   std::atomic<bool> initialized_;

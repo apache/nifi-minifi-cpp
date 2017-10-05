@@ -25,6 +25,7 @@
 #include "core/Core.h"
 #include "core/Resource.h"
 #include "core/logging/LoggerConfiguration.h"
+#include "core/state/metrics/MetricsBase.h"
 
 namespace org {
 namespace apache {
@@ -43,8 +44,63 @@ struct GetFileRequest {
   std::string fileFilter = "[^\\.].*";
 };
 
+class GetFileMetrics : public state::metrics::Metrics {
+ public:
+  GetFileMetrics()
+      : state::metrics::Metrics("GetFileMetrics", 0) {
+    iterations_ = 0;
+    accepted_files_ = 0;
+    input_bytes_ = 0;
+  }
+
+  GetFileMetrics(std::string name, uuid_t uuid)
+      : state::metrics::Metrics(name, uuid) {
+    iterations_ = 0;
+    accepted_files_ = 0;
+    input_bytes_ = 0;
+  }
+  virtual ~GetFileMetrics() {
+
+  }
+  virtual std::string getName() {
+    return core::Connectable::getName();
+  }
+
+  virtual std::vector<state::metrics::MetricResponse> serialize() {
+    std::vector<state::metrics::MetricResponse> resp;
+
+    state::metrics::MetricResponse iter;
+    iter.name = "OnTriggerInvocations";
+    iter.value = std::to_string(iterations_.load());
+
+    resp.push_back(iter);
+
+    state::metrics::MetricResponse accepted_files;
+    accepted_files.name = "AcceptedFiles";
+    accepted_files.value = std::to_string(accepted_files_.load());
+
+    resp.push_back(accepted_files);
+
+    state::metrics::MetricResponse input_bytes;
+    input_bytes.name = "InputBytes";
+    input_bytes.value = std::to_string(input_bytes_.load());
+
+    resp.push_back(input_bytes);
+
+    return resp;
+  }
+
+ protected:
+  friend class GetFile;
+
+  std::atomic<size_t> iterations_;
+  std::atomic<size_t> accepted_files_;
+  std::atomic<size_t> input_bytes_;
+
+};
+
 // GetFile Class
-class GetFile : public core::Processor {
+class GetFile : public core::Processor, public state::metrics::MetricsSource {
  public:
   // Constructor
   /*!
@@ -53,7 +109,7 @@ class GetFile : public core::Processor {
   explicit GetFile(std::string name, uuid_t uuid = NULL)
       : Processor(name, uuid),
         logger_(logging::LoggerFactory<GetFile>::getLogger()) {
-
+    metrics_ = std::make_shared<GetFileMetrics>();
   }
   // Destructor
   virtual ~GetFile() {
@@ -99,9 +155,13 @@ class GetFile : public core::Processor {
    */
   void performListing(std::string dir, const GetFileRequest &request);
 
+  int16_t getMetrics(std::vector<std::shared_ptr<state::metrics::Metrics>> &metric_vector);
+
  protected:
 
  private:
+
+  std::shared_ptr<GetFileMetrics> metrics_;
 
   // Queue for store directory list
   std::queue<std::string> _dirList;

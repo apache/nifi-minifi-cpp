@@ -44,11 +44,10 @@
 #include "TimerDrivenSchedulingAgent.h"
 #include "EventDrivenSchedulingAgent.h"
 #include "FlowControlProtocol.h"
-#include "ConfigurationListener.h"
-#include "HttpConfigurationListener.h"
-
 #include "core/Property.h"
 #include "utils/Id.h"
+#include "core/state/metrics/MetricsBase.h"
+#include "core/state/StateManager.h"
 
 namespace org {
 namespace apache {
@@ -62,7 +61,7 @@ namespace minifi {
  * Flow Controller class. Generally used by FlowController factory
  * as a singleton.
  */
-class FlowController : public core::controller::ControllerServiceProvider, public std::enable_shared_from_this<FlowController> {
+class FlowController : public core::controller::ControllerServiceProvider, public state::StateManager {
  public:
   static const int DEFAULT_MAX_TIMER_DRIVEN_THREAD = 10;
   static const int DEFAULT_MAX_EVENT_DRIVEN_THREAD = 5;
@@ -71,20 +70,16 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
    * Flow controller constructor
    */
   explicit FlowController(std::shared_ptr<core::Repository> provenance_repo, std::shared_ptr<core::Repository> flow_file_repo, std::shared_ptr<Configure> configure,
-                          std::unique_ptr<core::FlowConfiguration> flow_configuration,
-                          std::shared_ptr<core::ContentRepository> content_repo, const std::string name, bool headless_mode);
+                          std::unique_ptr<core::FlowConfiguration> flow_configuration, std::shared_ptr<core::ContentRepository> content_repo, const std::string name, bool headless_mode);
 
   explicit FlowController(std::shared_ptr<core::Repository> provenance_repo, std::shared_ptr<core::Repository> flow_file_repo, std::shared_ptr<Configure> configure,
-                          std::unique_ptr<core::FlowConfiguration> flow_configuration,
-                          std::shared_ptr<core::ContentRepository> content_repo)
-      : FlowController(provenance_repo, flow_file_repo, configure, std::move(flow_configuration), content_repo, DEFAULT_ROOT_GROUP_NAME, false)
-  {
+                          std::unique_ptr<core::FlowConfiguration> flow_configuration, std::shared_ptr<core::ContentRepository> content_repo)
+      : FlowController(provenance_repo, flow_file_repo, configure, std::move(flow_configuration), content_repo, DEFAULT_ROOT_GROUP_NAME, false) {
   }
 
   explicit FlowController(std::shared_ptr<core::Repository> provenance_repo, std::shared_ptr<core::Repository> flow_file_repo, std::shared_ptr<Configure> configure,
                           std::unique_ptr<core::FlowConfiguration> flow_configuration)
-      : FlowController(provenance_repo, flow_file_repo, configure, std::move(flow_configuration), std::make_shared<core::repository::FileSystemRepository>(), DEFAULT_ROOT_GROUP_NAME, false)
-  {
+      : FlowController(provenance_repo, flow_file_repo, configure, std::move(flow_configuration), std::make_shared<core::repository::FileSystemRepository>(), DEFAULT_ROOT_GROUP_NAME, false) {
     content_repo_->initialize(configure);
   }
 
@@ -124,14 +119,33 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
   virtual bool isRunning() {
     return running_.load();
   }
+
   // Whether the Flow Controller has already been initialized (loaded flow XML)
   virtual bool isInitialized() {
     return initialized_.load();
   }
   // Start to run the Flow Controller which internally start the root process group and all its children
-  virtual bool start();
+  virtual int16_t start();
+  virtual int16_t pause() {
+    return -1;
+  }
   // Unload the current flow YAML, clean the root process group and all its children
-  virtual void stop(bool force);
+  virtual int16_t stop(bool force, uint64_t timeToWait = 0);
+  virtual int16_t applyUpdate(const std::string &configuration);
+  virtual int16_t drainRepositories() {
+
+    return -1;
+  }
+
+  virtual std::vector<std::shared_ptr<state::StateController>> getComponents(const std::string &name);
+
+  virtual std::vector<std::shared_ptr<state::StateController>> getAllComponents();
+
+  virtual int16_t clearConnection(const std::string &connection);
+
+  virtual int16_t applyUpdate(const std::shared_ptr<state::Update> &updateController) {
+    return -1;
+  }
   // Asynchronous function trigger unloading and wait for a period of time
   virtual void waitUnload(const uint64_t timeToWaitMs);
   // Unload the current flow xml, clean the root process group and all its children
@@ -158,7 +172,7 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
   // first it will validate the payload with the current root node config for flowController
   // like FlowController id/name is the same and new version is greater than the current version
   // after that, it will apply the configuration
-  bool applyConfiguration(std::string &configurePayload);
+  bool applyConfiguration(const std::string &configurePayload);
 
   // get name
   std::string getName() {
@@ -166,6 +180,10 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
       return root_->getName();
     else
       return "";
+  }
+
+  virtual std::string getComponentName() {
+    return "FlowController";
   }
 
   // get version
@@ -199,7 +217,7 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
    * Enables the controller service services
    * @param serviceNode service node which will be disabled, along with linked services.
    */
-  virtual void enableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode);
+  virtual std::future<bool> enableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode);
 
   /**
    * Enables controller services
@@ -211,7 +229,7 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
    * Disables controller services
    * @param serviceNode service node which will be disabled, along with linked services.
    */
-  virtual void disableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode);
+  virtual std::future<bool> disableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode);
 
   /**
    * Gets all controller services.
@@ -278,10 +296,24 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
    */
   virtual void enableAllControllerServices();
 
+  /**
+   * Retrieves all metrics from this source.
+   * @param metric_vector -- metrics will be placed in this vector.
+   * @return result of the get operation.
+   *  0 Success
+   *  1 No error condition, but cannot obtain lock in timely manner.
+   *  -1 failure
+   */
+  virtual int16_t getMetrics(std::vector<std::shared_ptr<state::metrics::Metrics>> &metric_vector, uint8_t metricsClass);
+
+  virtual uint64_t getUptime();
+
  protected:
 
   // function to load the flow file repo.
   void loadFlowRepo();
+
+  void initializeC2();
 
   /**
    * Initializes flow controller paths.
@@ -304,8 +336,12 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
   // FlowFile Repo
   // Whether it is running
   std::atomic<bool> running_;
+
   // conifiguration filename
   std::string configuration_filename_;
+
+  std::atomic<bool> c2_initialized_;
+  std::atomic<bool> c2_enabled_;
   // Whether it has already been initialized (load the flow XML already)
   std::atomic<bool> initialized_;
   // Provenance Repo
@@ -336,15 +372,29 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
   // flow configuration object.
   std::unique_ptr<core::FlowConfiguration> flow_configuration_;
 
- private:
+  // metrics information
+
+  std::chrono::steady_clock::time_point start_time_;
+
+  std::mutex metrics_mutex_;
+  // metrics cache
+  std::map<std::string, std::shared_ptr<state::metrics::Metrics>> metrics_;
+
+  // metrics cache
+  std::map<std::string, std::shared_ptr<state::metrics::Metrics>> component_metrics_;
+
+  std::map<uint8_t, std::vector<std::shared_ptr<state::metrics::Metrics>>>component_metrics_by_id_;
+  // metrics last run
+  std::chrono::steady_clock::time_point last_metrics_capture_;
+
+private:
   std::shared_ptr<logging::Logger> logger_;
-  // http configuration listener object.
-  std::unique_ptr<HttpConfigurationListener> http_configuration_listener_;
   std::string serial_number_;
   static std::shared_ptr<utils::IdGenerator> id_generator_;
 };
 
-} /* namespace minifi */
+}
+/* namespace minifi */
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */

@@ -16,7 +16,9 @@
  * limitations under the License.
  */
 
+#define CURLOPT_SSL_VERIFYPEER_DISABLE 1
 #include <sys/stat.h>
+#undef NDEBUG
 #include <cassert>
 #include <utility>
 #include <chrono>
@@ -26,8 +28,9 @@
 #include <thread>
 #include <type_traits>
 #include <vector>
-#include <iostream>
-#include <sstream>
+#include "HTTPClient.h"
+#include "InvokeHTTP.h"
+#include "../TestServer.h"
 #include "../TestBase.h"
 #include "utils/StringUtils.h"
 #include "core/Core.h"
@@ -38,26 +41,25 @@
 #include "properties/Configure.h"
 #include "../unit/ProvenanceTestHelper.h"
 #include "io/StreamFactory.h"
-#include "CivetServer.h"
-#include "RemoteProcessorGroupPort.h"
 
 void waitToVerifyProcessor() {
   std::this_thread::sleep_for(std::chrono::seconds(10));
 }
 
-class ConfigHandler : public CivetHandler {
+int log_message(const struct mg_connection *conn, const char *message) {
+  puts(message);
+  return 1;
+}
+
+int ssl_enable(void *ssl_context, void *user_data) {
+  struct ssl_ctx_st *ctx = (struct ssl_ctx_st *) ssl_context;
+  return 0;
+}
+
+class HttpResponder : public CivetHandler {
  public:
   bool handleGet(CivetServer *server, struct mg_connection *conn) {
-    static const std::string site2site_rest_resp = "{"
-        "\"revision\": {"
-        "\"clientId\": \"483d53eb-53ec-4e93-b4d4-1fc3d23dae6f\""
-        "},"
-        "\"controller\": {"
-        "\"id\": \"fe4a3a42-53b6-4af1-a80d-6fdfe60de97f\","
-        "\"name\": \"NiFi Flow\","
-        "\"remoteSiteListeningPort\": 10001,"
-        "\"siteToSiteSecure\": false"
-        "}}";
+    static const std::string site2site_rest_resp = "hi this is a get test";
     mg_printf(conn, "HTTP/1.1 200 OK\r\nContent-Type: "
               "text/plain\r\nContent-Length: %lu\r\nConnection: close\r\n\r\n",
               site2site_rest_resp.length());
@@ -67,49 +69,29 @@ class ConfigHandler : public CivetHandler {
 };
 
 int main(int argc, char **argv) {
-  LogTestController::getInstance().setInfo<minifi::RemoteProcessorGroupPort>();
-  LogTestController::getInstance().setInfo<minifi::FlowController>();
-
-  const char *options[] = { "document_root", ".", "listening_ports", "8082", 0 };
-  std::vector<std::string> cpp_options;
-  for (int i = 0; i < (sizeof(options) / sizeof(options[0]) - 1); i++) {
-    cpp_options.push_back(options[i]);
-  }
-
-  mkdir("/tmp/site2siteGetFile/", S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-  std::fstream file;
-  std::stringstream ss;
-  ss << "/tmp/site2siteGetFile/" << "tstFile.ext";
-  file.open(ss.str(), std::ios::out);
-  file << "tempFile";
-  file.close();
-
-  CivetServer server(cpp_options);
-  ConfigHandler h_ex;
-  server.addHandler("/nifi-api/controller", h_ex);
-  LogTestController::getInstance().setDebug<minifi::RemoteProcessorGroupPort>();
-
+  init_webserver();
+  LogTestController::getInstance().setDebug<core::Processor>();
+  LogTestController::getInstance().setDebug<core::ProcessSession>();
+  LogTestController::getInstance().setDebug<utils::HTTPClient>();
+  LogTestController::getInstance().setDebug<minifi::controllers::SSLContextService>();
+  LogTestController::getInstance().setDebug<minifi::processors::InvokeHTTP>();
+  LogTestController::getInstance().setDebug<minifi::processors::LogAttribute>();
   std::string key_dir, test_file_location;
   if (argc > 1) {
     test_file_location = argv[1];
     key_dir = argv[2];
   }
-
-  std::shared_ptr<minifi::Configure> configuration = std::make_shared<
-      minifi::Configure>();
+  std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::Configure>();
   configuration->set(minifi::Configure::nifi_default_directory, key_dir);
   mkdir("content_repository", S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 
-  std::shared_ptr<core::Repository> test_repo =
-      std::make_shared<TestRepository>();
-  std::shared_ptr<core::Repository> test_flow_repo = std::make_shared<
-      TestFlowRepository>();
+  std::shared_ptr<core::Repository> test_repo = std::make_shared<TestRepository>();
+  std::shared_ptr<core::Repository> test_flow_repo = std::make_shared<TestFlowRepository>();
 
-  configuration->set(minifi::Configure::nifi_flow_configuration_file,
-                     test_file_location);
+  configuration->set(minifi::Configure::nifi_flow_configuration_file, test_file_location);
 
-  std::shared_ptr<minifi::io::StreamFactory> stream_factory = std::make_shared
-      <minifi::io::StreamFactory>(configuration);
+  std::shared_ptr<minifi::io::StreamFactory> stream_factory = std::make_shared<minifi::io::StreamFactory>(configuration);
+
   std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
 
   content_repo->initialize(configuration);
@@ -123,26 +105,55 @@ int main(int argc, char **argv) {
                                                                                                 DEFAULT_ROOT_GROUP_NAME,
                                                                                                 true);
 
-  core::YamlConfiguration yaml_config(test_repo, test_repo, content_repo, stream_factory,
-                                      configuration,
-                                      test_file_location);
+  core::YamlConfiguration yaml_config(test_repo, test_repo, content_repo, stream_factory, configuration, test_file_location);
 
-  std::unique_ptr<core::ProcessGroup> ptr = yaml_config.getRoot(
-                                                                test_file_location);
-  std::shared_ptr<core::ProcessGroup> pg = std::shared_ptr<core::ProcessGroup
-      >(ptr.get());
+  std::unique_ptr<core::ProcessGroup> ptr = yaml_config.getRoot(test_file_location);
+  std::shared_ptr<core::ProcessGroup> pg = std::shared_ptr<core::ProcessGroup>(ptr.get());
+  std::shared_ptr<core::Processor> proc = ptr->findProcessor("invoke");
+  assert(proc != nullptr);
+
+  std::shared_ptr<minifi::processors::InvokeHTTP> inv = std::dynamic_pointer_cast<minifi::processors::InvokeHTTP>(proc);
+
+  assert(inv != nullptr);
+  std::string url = "";
+  inv->getProperty(minifi::processors::InvokeHTTP::URL.getName(), url);
   ptr.release();
+  HttpResponder h_ex;
+  std::string port, scheme, path;
+  CivetServer *server = nullptr;
 
+  parse_http_components(url, port, scheme, path);
+  struct mg_callbacks callback;
+  if (url.find("localhost") != std::string::npos) {
+    if (scheme == "https") {
+      std::string cert = "";
+      cert = key_dir + "nifi-cert.pem";
+      memset(&callback, 0, sizeof(callback));
+      callback.init_ssl = ssl_enable;
+      port +="s";
+      callback.log_message = log_message;
+      server = start_webserver(port, path, &h_ex, &callback, cert, cert);
+    } else {
+      server = start_webserver(port, path, &h_ex);
+    }
+  }
   controller->load();
   controller->start();
   waitToVerifyProcessor();
 
   controller->waitUnload(60000);
+  if (url.find("localhost") == std::string::npos) {
+    stop_webserver(server);
+    exit(1);
+  }
   std::string logs = LogTestController::getInstance().log_output.str();
-  assert(logs.find("process group remote site2site port 10001, is secure 0") != std::string::npos);
+
+  assert(logs.find("key:filename value:") != std::string::npos);
+  assert(logs.find("key:invokehttp.request.url value:" + url) != std::string::npos);
+  assert(logs.find("key:invokehttp.status.code value:200") != std::string::npos);
+
   LogTestController::getInstance().reset();
-  unlink(ss.str().c_str());
-  rmdir("/tmp/site2siteGetFile/");
   rmdir("./content_repository");
+  stop_webserver(server);
   return 0;
 }

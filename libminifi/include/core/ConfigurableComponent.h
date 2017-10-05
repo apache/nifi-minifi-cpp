@@ -38,7 +38,7 @@ namespace core {
  * Represents a configurable component
  * Purpose: Extracts configuration items for all components and localized them
  */
-class ConfigurableComponent {
+class __attribute__((visibility("default"))) ConfigurableComponent {
  public:
 
   ConfigurableComponent();

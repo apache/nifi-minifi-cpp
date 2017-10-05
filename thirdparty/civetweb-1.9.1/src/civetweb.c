@@ -137,10 +137,12 @@ mg_static_assert(sizeof(void *) >= sizeof(int), "data type size check");
 #ifdef __MACH__ /* Apple OSX section */
 
 #ifdef __clang__
-/* Avoid warnings for Xopen 7.00 and higher */
+#if (__clang_major__ == 3) && ((__clang_minor__ == 7) || (__clang_minor__ == 8))
+/* Avoid warnings for Xcode 7. It seems it does no longer exist in Xcode 8 */
 #pragma clang diagnostic ignored "-Wno-reserved-id-macro"
 #pragma clang diagnostic ignored "-Wno-keyword-macro"
 #endif
+#endif 
 
 #define CLOCK_MONOTONIC (1)
 #define CLOCK_REALTIME (2)
@@ -1376,12 +1378,10 @@ struct ssl_func {
 	(*(int (*)(ASN1_INTEGER *, unsigned char **))crypto_sw[16].ptr)
 #define EVP_get_digestbyname                                                   \
 	(*(const EVP_MD *(*)(const char *))crypto_sw[17].ptr)
-#define ASN1_digest                                                            \
-	(*(int (*)(int (*)(),                                                      \
-	           const EVP_MD *,                                                 \
-	           char *,                                                         \
-	           unsigned char *,                                                \
-	           unsigned int *))crypto_sw[18].ptr)
+#define EVP_Digest                                                             \
+	(*(int (*)(                                                                \
+	    const void *, size_t, void *, unsigned int *, const EVP_MD *, void *)) \
+	      crypto_sw[18].ptr)
 #define i2d_X509 (*(int (*)(X509 *, unsigned char **))crypto_sw[19].ptr)
 
 
@@ -1444,7 +1444,7 @@ static struct ssl_func crypto_sw[] = {{"CRYPTO_num_locks", NULL},
                                       {"X509_get_serialNumber", NULL},
                                       {"i2c_ASN1_INTEGER", NULL},
                                       {"EVP_get_digestbyname", NULL},
-                                      {"ASN1_digest", NULL},
+                                      {"EVP_Digest", NULL},
                                       {"i2d_X509", NULL},
                                       {NULL, NULL}};
 #endif /* NO_SSL_DL */

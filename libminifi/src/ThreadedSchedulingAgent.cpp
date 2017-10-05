@@ -37,7 +37,7 @@ namespace nifi {
 namespace minifi {
 
 void ThreadedSchedulingAgent::schedule(std::shared_ptr<core::Processor> processor) {
-  std::lock_guard < std::mutex > lock(mutex_);
+  std::lock_guard<std::mutex> lock(mutex_);
 
   admin_yield_duration_ = 0;
   std::string yieldValue;
@@ -67,20 +67,24 @@ void ThreadedSchedulingAgent::schedule(std::shared_ptr<core::Processor> processo
     return;
   }
 
-  core::ProcessorNode processor_node(processor);
-  auto processContext = std::make_shared < core::ProcessContext > (processor_node, controller_service_provider_, repo_, flow_repo_, content_repo_);
-  auto sessionFactory = std::make_shared < core::ProcessSessionFactory > (processContext.get());
+  std::shared_ptr<core::ProcessorNode> processor_node = std::make_shared<core::ProcessorNode>(processor);
 
-  processor->onSchedule(processContext.get(), sessionFactory.get());
+  auto processContext = std::make_shared<core::ProcessContext>(processor_node, controller_service_provider_, repo_, flow_repo_, content_repo_);
+  auto sessionFactory = std::make_shared<core::ProcessSessionFactory>(processContext);
+
+  processor->onSchedule(processContext, sessionFactory);
 
   std::vector<std::thread *> threads;
 
   ThreadedSchedulingAgent *agent = this;
   for (int i = 0; i < processor->getMaxConcurrentTasks(); i++) {
     // reference the disable function from serviceNode
+    processor->incrementActiveTasks();
+
     std::function<uint64_t()> f_ex = [agent, processor, processContext, sessionFactory] () {
-      return agent->run(processor, processContext.get(), sessionFactory.get());
+      return agent->run(processor, processContext, sessionFactory);
     };
+
     // create a functor that will be submitted to the thread pool.
     std::unique_ptr<TimerAwareMonitor> monitor = std::unique_ptr<TimerAwareMonitor>(new TimerAwareMonitor(&running_));
     utils::Worker<uint64_t> functor(f_ex, processor->getUUIDStr(), std::move(monitor));
@@ -99,7 +103,7 @@ void ThreadedSchedulingAgent::stop() {
 }
 
 void ThreadedSchedulingAgent::unschedule(std::shared_ptr<core::Processor> processor) {
-  std::lock_guard < std::mutex > lock(mutex_);
+  std::lock_guard<std::mutex> lock(mutex_);
   logger_->log_info("Shutting down threads for processor %s/%s", processor->getName().c_str(), processor->getUUIDStr().c_str());
 
   if (processor->getScheduledState() != core::RUNNING) {
@@ -110,6 +114,8 @@ void ThreadedSchedulingAgent::unschedule(std::shared_ptr<core::Processor> proces
   thread_pool_.stopTasks(processor->getUUIDStr());
 
   processor->clearActiveTask();
+
+  processor->setScheduledState(core::STOPPED);
 }
 
 } /* namespace minifi */

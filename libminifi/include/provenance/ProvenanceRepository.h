@@ -25,6 +25,7 @@
 #include "core/Core.h"
 #include "provenance/Provenance.h"
 #include "core/logging/LoggerConfiguration.h"
+#include "concurrentqueue.h"
 namespace org {
 namespace apache {
 namespace nifi {
@@ -55,6 +56,8 @@ class ProvenanceRepository : public core::Repository, public std::enable_shared_
     if (db_)
       delete db_;
   }
+
+  virtual void flush();
 
   void start() {
     if (this->purge_period_ <= 0)
@@ -98,12 +101,14 @@ class ProvenanceRepository : public core::Repository, public std::enable_shared_
   // Put
   virtual bool Put(std::string key, const uint8_t *buf, size_t bufLen) {
 
-    if (repo_full_)
+    if (repo_full_) {
       return false;
+    }
 
     // persistent to the DB
     leveldb::Slice value((const char *) buf, bufLen);
     leveldb::Status status;
+    repo_size_ += bufLen;
     status = db_->Put(leveldb::WriteOptions(), key, value);
     if (status.ok())
       return true;
@@ -112,12 +117,8 @@ class ProvenanceRepository : public core::Repository, public std::enable_shared_
   }
   // Delete
   virtual bool Delete(std::string key) {
-    leveldb::Status status;
-    status = db_->Delete(leveldb::WriteOptions(), key);
-    if (status.ok())
-      return true;
-    else
-      return false;
+    keys_to_delete.enqueue(key);
+    return true;
   }
   // Get
   virtual bool Get(const std::string &key, std::string &value) {
@@ -132,6 +133,10 @@ class ProvenanceRepository : public core::Repository, public std::enable_shared_
   // Remove event
   void removeEvent(ProvenanceEventRecord *event) {
     Delete(event->getEventId());
+  }
+
+  virtual bool Serialize(const std::string &key, const uint8_t *buffer, const size_t bufferSize) {
+    return Put(key, buffer, bufferSize);
   }
 
   virtual bool get(std::vector<std::shared_ptr<core::CoreComponent>> &store, size_t max_size) {
@@ -213,6 +218,7 @@ class ProvenanceRepository : public core::Repository, public std::enable_shared_
     for (auto record : records) {
       Delete(record->getEventId());
     }
+    flush();
   }
   // destroy
   void destroy() {
@@ -230,6 +236,7 @@ class ProvenanceRepository : public core::Repository, public std::enable_shared_
   ProvenanceRepository &operator=(const ProvenanceRepository &parent) = delete;
 
  private:
+  moodycamel::ConcurrentQueue<std::string> keys_to_delete;
   leveldb::DB* db_;
   std::shared_ptr<logging::Logger> logger_;
 };

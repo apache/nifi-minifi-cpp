@@ -47,12 +47,12 @@ class ProcessSession {
   /*!
    * Create a new process session
    */
-  ProcessSession(ProcessContext *processContext = NULL)
+  ProcessSession(std::shared_ptr<ProcessContext> processContext = nullptr)
       : process_context_(processContext),
         logger_(logging::LoggerFactory<ProcessSession>::getLogger()) {
-    logger_->log_trace("ProcessSession created for %s", process_context_->getProcessorNode().getName());
+    logger_->log_trace("ProcessSession created for %s", process_context_->getProcessorNode()->getName());
     auto repo = processContext->getProvenanceRepository();
-    provenance_report_ = new provenance::ProvenanceReporter(repo, process_context_->getProcessorNode().getUUIDStr(), process_context_->getProcessorNode().getName());
+    provenance_report_ = new provenance::ProvenanceReporter(repo, process_context_->getProcessorNode()->getName(), process_context_->getProcessorNode()->getName());
   }
 
 // Destructor
@@ -77,8 +77,32 @@ class ProcessSession {
   std::shared_ptr<core::FlowFile> create(std::shared_ptr<core::FlowFile> &&parent);
   // Create a new UUID FlowFile with no content resource claim and inherit all attributes from parent
   std::shared_ptr<core::FlowFile> create(std::shared_ptr<core::FlowFile> &parent) {
-    return create(parent);
+    std::map<std::string, std::string> empty;
+      std::shared_ptr<core::FlowFile> record = std::make_shared<FlowFileRecord>(process_context_->getFlowFileRepository(), process_context_->getContentRepository(), empty);
+
+      if (record) {
+        _addedFlowFiles[record->getUUIDStr()] = record;
+        logger_->log_debug("Create FlowFile with UUID %s", record->getUUIDStr().c_str());
+      }
+
+      if (record) {
+        // Copy attributes
+        std::map<std::string, std::string> parentAttributes = parent->getAttributes();
+        std::map<std::string, std::string>::iterator it;
+        for (it = parentAttributes.begin(); it != parentAttributes.end(); it++) {
+          if (it->first == FlowAttributeKey(ALTERNATE_IDENTIFIER) || it->first == FlowAttributeKey(DISCARD_REASON) || it->first == FlowAttributeKey(UUID))
+            // Do not copy special attributes from parent
+            continue;
+          record->setAttribute(it->first, it->second);
+        }
+        record->setLineageStartDate(parent->getlineageStartDate());
+        record->setLineageIdentifiers(parent->getlineageIdentifiers());
+        parent->getlineageIdentifiers().insert(parent->getUUIDStr());
+      }
+      return record;
   }
+  // Add a FlowFile to the session
+  void add(std::shared_ptr<core::FlowFile> &flow);
 // Clone a new UUID FlowFile from parent both for content resource claim and attributes
   std::shared_ptr<core::FlowFile> clone(std::shared_ptr<core::FlowFile> &parent);
   // Clone a new UUID FlowFile from parent for attributes and sub set of parent content resource claim
@@ -123,8 +147,9 @@ class ProcessSession {
   void import(std::string source, std::shared_ptr<core::FlowFile> &&flow,
   bool keepSource = true,
               uint64_t offset = 0);
-  void import(std::string source, std::vector<std::shared_ptr<FlowFileRecord>> flows,
-  bool keepSource, uint64_t offset, char inputDelimiter);
+  void import(std::string source, std::vector<std::shared_ptr<FlowFileRecord>> &flows,
+  bool keepSource,
+              uint64_t offset, char inputDelimiter);
 
 // Prevent default copy constructor and assignment operation
 // Only support pass by reference or pointer
@@ -149,7 +174,7 @@ class ProcessSession {
 // Clone the flow file during transfer to multiple connections for a relationship
   std::shared_ptr<core::FlowFile> cloneDuringTransfer(std::shared_ptr<core::FlowFile> &parent);
   // ProcessContext
-  ProcessContext *process_context_;
+  std::shared_ptr<ProcessContext> process_context_;
   // Logger
   std::shared_ptr<logging::Logger> logger_;
   // Provenance Report

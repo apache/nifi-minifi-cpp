@@ -56,6 +56,7 @@ Perspectives of the role of MiNiFi should be from the perspective of the agent a
   * ListenSyslog
   * PutFile
   * TailFile
+  * MergeContent
 * Provenance events generation is supported and are persisted using levelDB.
 
 ## System Requirements
@@ -316,6 +317,30 @@ Additionally, users can utilize the MiNiFi Toolkit Converter (version 0.0.1 - sc
 
     if you do not want to enable client certificate base authorization
     nifi.security.need.ClientAuth=false
+    
+### Command and Control Configuration
+For more more insight into the API used within the C2 agent, please visit:
+https://cwiki.apache.org/confluence/display/MINIFI/C2+Design+Proposal
+
+    in minifi.properties
+
+    #Disable/Enable C2
+    nifi.c2.enable=true
+
+	#specify metrics classes
+	nifi.flow.metrics.classes=DeviceInformation,SystemInformation,ProcessMetrics
+	
+	#specify C2 protocol
+	c2.agent.protocol.class=RESTSender
+	
+	#control c2 heartbeat interval in millisecocnds
+	c2.agent.heartbeat.period=3000
+	
+	# enable reporter classes
+	c2.agent.heartbeat.reporter.class=RESTReciver
+	
+	
+	     
 
 ### Configuring Volatile and NO-OP Repositories
 Each of the repositories can be configured to be volatile ( state kept in memory and flushed
@@ -453,6 +478,10 @@ MiNiFi can then be stopped by issuing:
 MiNiFi can also be installed as a system service using minifi.sh with an optional "service name" (default: minifi)
 
     $ ./bin/minifi.sh install [service name]
+
+### Extensions
+
+Please see [Extensions.md](Extensions.md) on how to build and run conditionally built dependencies and extensions.
 
 ## Documentation
 See https://nifi.apache.org/minifi for the latest documentation.

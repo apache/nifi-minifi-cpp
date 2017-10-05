@@ -49,6 +49,56 @@ class ContentRepository : public StreamManager<minifi::ResourceClaim> {
    */
   virtual void stop() = 0;
 
+  /**
+   * Removes an item if it was orphan
+   */
+  virtual bool removeIfOrphaned(const std::shared_ptr<minifi::ResourceClaim> &streamId) {
+    std::lock_guard<std::mutex> lock(count_map_mutex_);
+    const std::string str = streamId->getContentFullPath();
+    auto count = count_map_.find(str);
+    if (count != count_map_.end()) {
+      if (count_map_[str] == 0) {
+        remove(streamId);
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  virtual uint32_t getStreamCount(const std::shared_ptr<minifi::ResourceClaim> &streamId) {
+    std::lock_guard<std::mutex> lock(count_map_mutex_);
+    return count_map_[streamId->getContentFullPath()];
+  }
+
+  virtual void incrementStreamCount(const std::shared_ptr<minifi::ResourceClaim> &streamId) {
+    std::lock_guard<std::mutex> lock(count_map_mutex_);
+    const std::string str = streamId->getContentFullPath();
+    auto count = count_map_.find(str);
+    if (count != count_map_.end()) {
+      count_map_[str] = count->second + 1;
+    } else {
+      count_map_[str] = 1;
+    }
+  }
+
+  virtual void decrementStreamCount(const std::shared_ptr<minifi::ResourceClaim> &streamId) {
+    std::lock_guard<std::mutex> lock(count_map_mutex_);
+    const std::string str = streamId->getContentFullPath();
+    auto count = count_map_.find(str);
+    if (count != count_map_.end() && count->second > 0) {
+      count_map_[str] = count->second - 1;
+    } else {
+      count_map_[str] = 0;
+    }
+  }
+
+ protected:
+
+  std::mutex count_map_mutex_;
+
+  std::map<std::string, uint32_t> count_map_;
+
 };
 
 } /* namespace core */

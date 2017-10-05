@@ -218,10 +218,8 @@ bool ProvenanceEventRecord::Serialize(const std::shared_ptr<core::SerializableCo
       return false;
     }
   }
-  // Persistent to the DB
-  if (repo->Serialize(uuidStr_, const_cast<uint8_t*>(outStream.getBuffer()), outStream.getSize())) {
-    logger_->log_debug("NiFi Provenance Store event %s size %d success", uuidStr_, outStream.getSize());
-  } else {
+  // Persist to the DB
+  if (!repo->Serialize(uuidStr_, const_cast<uint8_t*>(outStream.getBuffer()), outStream.getSize())) {
     logger_->log_error("NiFi Provenance Store event %s size %d fail", uuidStr_, outStream.getSize());
   }
   return true;

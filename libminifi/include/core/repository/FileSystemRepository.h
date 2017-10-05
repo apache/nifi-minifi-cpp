@@ -47,6 +47,8 @@ class FileSystemRepository : public core::ContentRepository, public core::CoreCo
 
   virtual void stop();
 
+  bool exists(const std::shared_ptr<minifi::ResourceClaim> &streamId);
+
   virtual std::shared_ptr<io::BaseStream> write(const std::shared_ptr<minifi::ResourceClaim> &claim);
 
   virtual std::shared_ptr<io::BaseStream> read(const std::shared_ptr<minifi::ResourceClaim> &claim);

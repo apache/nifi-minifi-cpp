@@ -30,11 +30,11 @@
 #include "processors/TailFile.h"
 #include "processors/ListenSyslog.h"
 #include "processors/GenerateFlowFile.h"
-#include "processors/InvokeHTTP.h"
 #include "processors/ListenHTTP.h"
 #include "processors/LogAttribute.h"
 #include "processors/ExecuteProcess.h"
 #include "processors/AppendHostInfo.h"
+#include "processors/MergeContent.h"
 #include "core/Processor.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "core/ProcessContext.h"
@@ -59,8 +59,7 @@ class FlowConfiguration : public CoreComponent {
    * the flow controller.
    */
   explicit FlowConfiguration(std::shared_ptr<core::Repository> repo, std::shared_ptr<core::Repository> flow_file_repo, std::shared_ptr<core::ContentRepository> content_repo,
-                             std::shared_ptr<io::StreamFactory> stream_factory,
-                             std::shared_ptr<Configure> configuration, const std::string path)
+                             std::shared_ptr<io::StreamFactory> stream_factory, std::shared_ptr<Configure> configuration, const std::string path)
       : CoreComponent(core::getClassName<FlowConfiguration>()),
         flow_file_repo_(flow_file_repo),
         content_repo_(content_repo),
@@ -70,6 +69,9 @@ class FlowConfiguration : public CoreComponent {
         logger_(logging::LoggerFactory<FlowConfiguration>::getLogger()) {
     controller_services_ = std::make_shared<core::controller::ControllerServiceMap>();
     service_provider_ = std::make_shared<core::controller::StandardControllerServiceProvider>(controller_services_, nullptr, configuration);
+    for(auto sl_func : statics_sl_funcs_){
+      registerResource("",sl_func);
+    }
   }
 
   virtual ~FlowConfiguration();
@@ -101,8 +103,7 @@ class FlowConfiguration : public CoreComponent {
     return getRoot(config_path_);
   }
 
-  virtual std::unique_ptr<core::ProcessGroup> getRootFromPayload(
-                                                                 std::string &yamlConfigPayload) {
+  virtual std::unique_ptr<core::ProcessGroup> getRootFromPayload(const std::string &yamlConfigPayload) {
     return nullptr;
   }
 
@@ -119,7 +120,20 @@ class FlowConfiguration : public CoreComponent {
     return service_provider_;
   }
 
+  static bool add_static_func(std::string functor){
+    statics_sl_funcs_.push_back(functor);
+    return true;
+  }
+
  protected:
+
+  void registerResource(const std::string &resource_function) {
+    core::ClassLoader::getDefaultClassLoader().registerResource("", resource_function);
+  }
+
+  void registerResource(const std::string &resource_location, const std::string &resource_function) {
+    core::ClassLoader::getDefaultClassLoader().registerResource(resource_location, resource_function);
+  }
 
   // service provider reference.
   std::shared_ptr<core::controller::StandardControllerServiceProvider> service_provider_;
@@ -137,6 +151,7 @@ class FlowConfiguration : public CoreComponent {
 
  private:
   std::shared_ptr<logging::Logger> logger_;
+  static std::vector<std::string> statics_sl_funcs_;
 };
 
 } /* namespace core */

@@ -35,6 +35,8 @@ ENDIF(POLICY CMP0048)
 include(CheckCXXCompilerFlag)
 CHECK_CXX_COMPILER_FLAG("-std=c++11 " COMPILER_SUPPORTS_CXX11)
 CHECK_CXX_COMPILER_FLAG("-std=c++0x " COMPILER_SUPPORTS_CXX0X)
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ")
+SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS}")
 if(COMPILER_SUPPORTS_CXX11)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 elseif(COMPILER_SUPPORTS_CXX0X)
@@ -51,6 +53,7 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=address")
 
 # Search for threads
 find_package(Threads REQUIRED)
+find_package(CURL)
 
 # Set the right openssl root path
 if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
@@ -72,7 +75,6 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 # Include LevelDB
 find_package (Leveldb REQUIRED)
-find_package(CURL REQUIRED)
 if (LEVELDB_FOUND)
     include_directories(${LEVELDB_INCLUDE_DIRS})
 else ()
@@ -107,6 +109,10 @@ add_subdirectory(thirdparty/yaml-cpp-yaml-cpp-0.5.3)
 add_subdirectory(thirdparty/civetweb-1.9.1 EXCLUDE_FROM_ALL)
 include_directories(thirdparty/concurrentqueue)
 add_subdirectory(libminifi)
+if (CURL_FOUND AND NOT DISABLE_CURL)
+	add_subdirectory(extensions/http-curl)
+	mark_as_advanced(HTTP-CURL)
+endif(CURL_FOUND)
 add_subdirectory(main)
 
 

@@ -38,9 +38,14 @@ namespace utils {
 
 uint64_t timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 
-NonRepeatingStringGenerator::NonRepeatingStringGenerator() : prefix_((std::to_string(timestamp) + "-")) {}
+NonRepeatingStringGenerator::NonRepeatingStringGenerator()
+    : prefix_((std::to_string(timestamp) + "-")) {
+}
 
-IdGenerator::IdGenerator() : implementation_(UUID_TIME_IMPL), logger_(logging::LoggerFactory<IdGenerator>::getLogger()), incrementor_(0) {
+IdGenerator::IdGenerator()
+    : implementation_(UUID_TIME_IMPL),
+      logger_(logging::LoggerFactory<IdGenerator>::getLogger()),
+      incrementor_(0) {
 }
 
 uint64_t IdGenerator::getDeviceSegmentFromString(const std::string& str, int numBits) {
@@ -134,12 +139,12 @@ void IdGenerator::generate(uuid_t output) {
       uuid_generate(output);
       break;
     case MINIFI_UID_IMPL: {
-        std::memcpy(output, deterministic_prefix_, sizeof(deterministic_prefix_));
-        uint64_t incrementor_value = incrementor_++;
-        for (int i = 8; i < 16; i++) {
-          output[i] = (incrementor_value >> ((15 - i) * 8)) & UNSIGNED_CHAR_MAX;
-        }
+      std::memcpy(output, deterministic_prefix_, sizeof(deterministic_prefix_));
+      uint64_t incrementor_value = incrementor_++;
+      for (int i = 8; i < 16; i++) {
+        output[i] = (incrementor_value >> ((15 - i) * 8)) & UNSIGNED_CHAR_MAX;
       }
+    }
       break;
     default:
       uuid_generate_time(output);

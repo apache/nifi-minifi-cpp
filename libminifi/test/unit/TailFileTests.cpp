@@ -42,6 +42,80 @@ static const char *TMP_FILE = "/tmp/minifi-tmpfile.txt";
 static const char *STATE_FILE = "/tmp/minifi-state-file.txt";
 
 TEST_CASE("TailFileWithDelimiter", "[tailfiletest1]") {
+  // Create and write to the test file
+      std::ofstream tmpfile;
+      tmpfile.open(TMP_FILE);
+      tmpfile << NEWLINE_FILE;
+      tmpfile.close();
+
+  TestController testController;
+  LogTestController::getInstance().setDebug<minifi::processors::TailFile>();
+  LogTestController::getInstance().setDebug<core::ProcessSession>();
+  LogTestController::getInstance().setDebug<minifi::processors::LogAttribute>();
+
+  std::shared_ptr<TestPlan> plan = testController.createPlan();
+  std::shared_ptr<core::Processor> tailfile = plan->addProcessor("TailFile", "tailfileProc");
+
+  plan->addProcessor("LogAttribute", "logattribute", core::Relationship("success", "description"), true);
+
+  char format[] = "/tmp/gt.XXXXXX";
+  char *dir = testController.createTempDirectory(format);
+
+  plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::FileName.getName(), TMP_FILE);
+  plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::StateFile.getName(), STATE_FILE);
+  plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::Delimiter.getName(), "\n");
+
+  testController.runSession(plan, false);
+  std::set<provenance::ProvenanceEventRecord*> records = plan->getProvenanceRecords();
+  std::shared_ptr<core::FlowFile> record = plan->getCurrentFlowFile();
+  REQUIRE(record == nullptr);
+  REQUIRE(records.size() == 4);
+
+  LogTestController::getInstance().reset();
+
+  // Delete the test and state file.
+    std::remove(TMP_FILE);
+    std::remove(STATE_FILE);
+}
+
+TEST_CASE("TailFileWithOutDelimiter", "[tailfiletest2]") {
+  // Create and write to the test file
+      std::ofstream tmpfile;
+      tmpfile.open(TMP_FILE);
+      tmpfile << NEWLINE_FILE;
+      tmpfile.close();
+
+  TestController testController;
+  LogTestController::getInstance().setDebug<minifi::processors::LogAttribute>();
+
+  std::shared_ptr<TestPlan> plan = testController.createPlan();
+  std::shared_ptr<core::Processor> tailfile = plan->addProcessor("TailFile", "tailfileProc");
+
+  plan->addProcessor("LogAttribute", "logattribute", core::Relationship("success", "description"), true);
+
+  char format[] = "/tmp/gt.XXXXXX";
+  char *dir = testController.createTempDirectory(format);
+
+  plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::FileName.getName(), TMP_FILE);
+  plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::StateFile.getName(), STATE_FILE);
+
+
+  testController.runSession(plan, false);
+  std::set<provenance::ProvenanceEventRecord*> records = plan->getProvenanceRecords();
+  std::shared_ptr<core::FlowFile> record = plan->getCurrentFlowFile();
+  REQUIRE(record == nullptr);
+  REQUIRE(records.size() == 2);
+
+  testController.runSession(plan, false);
+
+  LogTestController::getInstance().reset();
+
+  // Delete the test and state file.
+    std::remove(TMP_FILE);
+    std::remove(STATE_FILE);
+}
+/*
+TEST_CASE("TailFileWithDelimiter", "[tailfiletest1]") {
   try {
     // Create and write to the test file
     std::ofstream tmpfile;
@@ -76,7 +150,7 @@ TEST_CASE("TailFileWithDelimiter", "[tailfiletest1]") {
 
     processor->addConnection(connection);
 
-    core::ProcessorNode node(processor);
+    std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(processor);
 
     std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider = nullptr;
     core::ProcessContext context(node, controller_services_provider, repo, repo, content_repo);
@@ -111,6 +185,7 @@ TEST_CASE("TailFileWithDelimiter", "[tailfiletest1]") {
   std::remove(STATE_FILE);
 }
 
+
 TEST_CASE("TailFileWithoutDelimiter", "[tailfiletest2]") {
   try {
     // Create and write to the test file
@@ -143,7 +218,7 @@ TEST_CASE("TailFileWithoutDelimiter", "[tailfiletest2]") {
 
     processor->addConnection(connection);
 
-    core::ProcessorNode node(processor);
+    std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(processor);
 
     std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider = nullptr;
     core::ProcessContext context(node, controller_services_provider, repo, repo, content_repo);
@@ -176,3 +251,4 @@ TEST_CASE("TailFileWithoutDelimiter", "[tailfiletest2]") {
   std::remove(TMP_FILE);
   std::remove(STATE_FILE);
 }
+*/

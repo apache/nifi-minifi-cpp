@@ -37,13 +37,20 @@ ClassLoader &ClassLoader::getDefaultClassLoader() {
   // populate ret
   return ret;
 }
-uint16_t ClassLoader::registerResource(const std::string &resource) {
-  void* resource_ptr = dlopen(resource.c_str(), RTLD_LAZY);
+uint16_t ClassLoader::registerResource(const std::string &resource, const std::string &resourceFunction) {
+  void *resource_ptr = nullptr;
+  if (resource.empty()) {
+    dlclose(dlopen(0, RTLD_LAZY | RTLD_GLOBAL));
+    resource_ptr = dlopen(0, RTLD_NOW | RTLD_GLOBAL);
+  } else {
+    dlclose(dlopen(resource.c_str(), RTLD_LAZY | RTLD_GLOBAL));
+    resource_ptr = dlopen(resource.c_str(), RTLD_NOW | RTLD_GLOBAL);
+  }
   if (!resource_ptr) {
     logger_->log_error("Cannot load library: %s", dlerror());
     return RESOURCE_FAILURE;
   } else {
-    std::lock_guard < std::mutex > lock(internal_mutex_);
+    std::lock_guard<std::mutex> lock(internal_mutex_);
     dl_handles_.push_back(resource_ptr);
   }
 
@@ -51,7 +58,7 @@ uint16_t ClassLoader::registerResource(const std::string &resource) {
   dlerror();
 
   // load the symbols
-  createFactory* create_factory_func = reinterpret_cast<createFactory*>(dlsym(resource_ptr, "createFactory"));
+  createFactory* create_factory_func = reinterpret_cast<createFactory*>(dlsym(resource_ptr, resourceFunction.c_str()));
   const char* dlsym_error = dlerror();
   if (dlsym_error) {
     logger_->log_error("Cannot load library: %s", dlsym_error);
@@ -60,9 +67,13 @@ uint16_t ClassLoader::registerResource(const std::string &resource) {
 
   ObjectFactory *factory = create_factory_func();
 
-  std::lock_guard < std::mutex > lock(internal_mutex_);
+  std::lock_guard<std::mutex> lock(internal_mutex_);
 
-  loaded_factories_[factory->getClassName()] = std::unique_ptr < ObjectFactory > (factory);
+  for (auto class_name : factory->getClassNames()) {
+    loaded_factories_[class_name] = std::unique_ptr<ObjectFactory>(factory->assign(class_name));
+  }
+
+  delete factory;
 
   return RESOURCE_SUCCESS;
 }

@@ -47,6 +47,18 @@ class TestRepository : public core::Repository {
     return true;
   }
 
+  void start() {
+    running_ = true;
+  }
+
+  void stop() {
+    running_ = false;
+  }
+
+  void setFull() {
+    repo_full_ = true;
+  }
+
   // Destructor
   virtual ~TestRepository() {
 
@@ -183,7 +195,7 @@ class TestFlowRepository : public core::repository::FlowFileRepository {
       }
     }
   }
-  
+
   void loadComponent(const std::shared_ptr<core::ContentRepository> &content_repo) {
   }
 
@@ -198,7 +210,7 @@ class TestFlowController : public minifi::FlowController {
 
  public:
   TestFlowController(std::shared_ptr<core::Repository> repo, std::shared_ptr<core::Repository> flow_file_repo, std::shared_ptr<core::ContentRepository> content_repo)
-      : minifi::FlowController(repo, flow_file_repo,std::make_shared<minifi::Configure>(), nullptr, std::make_shared<core::repository::VolatileContentRepository>(), "", true) {
+      : minifi::FlowController(repo, flow_file_repo, std::make_shared<minifi::Configure>(), nullptr, std::make_shared<core::repository::VolatileContentRepository>(), "", true) {
   }
   ~TestFlowController() {
 
@@ -207,16 +219,21 @@ class TestFlowController : public minifi::FlowController {
 
   }
 
-  bool start() {
+  int16_t start() {
     running_.store(true);
-    return true;
+    return 0;
   }
 
-  void stop(bool force) {
+  int16_t stop(bool force, uint64_t timeToWait = 0) {
     running_.store(false);
+    return 0;
   }
   void waitUnload(const uint64_t timeToWaitMs) {
     stop(true);
+  }
+
+  int16_t pause() {
+    return -1;
   }
 
   void unload() {

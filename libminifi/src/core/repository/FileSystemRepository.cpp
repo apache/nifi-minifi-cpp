@@ -37,6 +37,11 @@ std::shared_ptr<io::BaseStream> FileSystemRepository::write(const std::shared_pt
   return std::make_shared<io::FileStream>(claim->getContentFullPath());
 }
 
+bool FileSystemRepository::exists(const std::shared_ptr<minifi::ResourceClaim> &streamId) {
+  std::ifstream file(streamId->getContentFullPath());
+  return file.good();
+}
+
 std::shared_ptr<io::BaseStream> FileSystemRepository::read(const std::shared_ptr<minifi::ResourceClaim> &claim) {
   return std::make_shared<io::FileStream>(claim->getContentFullPath(), 0, false);
 }

@@ -31,7 +31,6 @@
 #include "core/logging/Logger.h"
 #include "properties/Properties.h"
 
-
 namespace org {
 namespace apache {
 namespace nifi {
@@ -78,7 +77,7 @@ class LoggerProperties : public Properties {
 
   static const char* appender_prefix;
   static const char* logger_prefix;
-   private:
+ private:
   std::map<std::string, std::shared_ptr<spdlog::sinks::sink>> sinks_;
 };
 
@@ -102,11 +101,11 @@ class LoggerConfiguration {
    */
   std::shared_ptr<Logger> getLogger(const std::string &name);
   static const char *spdlog_default_pattern;
-   protected:
+ protected:
   static std::shared_ptr<internal::LoggerNamespace> initialize_namespaces(const std::shared_ptr<LoggerProperties> &logger_properties);
   static std::shared_ptr<spdlog::logger> get_logger(std::shared_ptr<Logger> logger, const std::shared_ptr<internal::LoggerNamespace> &root_namespace, const std::string &name,
                                                     std::shared_ptr<spdlog::formatter> formatter, bool remove_if_present = false);
-   private:
+ private:
   static std::shared_ptr<internal::LoggerNamespace> create_default_root();
 
   class LoggerImpl : public Logger {

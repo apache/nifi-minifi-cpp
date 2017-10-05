@@ -39,10 +39,10 @@ bool SchedulingAgent::hasWorkToDo(std::shared_ptr<core::Processor> processor) {
     return false;
 }
 
-void SchedulingAgent::enableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) {
-  logger_->log_trace("Enabling CSN in SchedulingAgent %s", serviceNode->getName());
+std::future<bool> SchedulingAgent::enableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) {
+  logger_->log_info("Enabling CSN in SchedulingAgent %s", serviceNode->getName());
   // reference the enable function from serviceNode
-  std::function < bool() > f_ex = [serviceNode] {
+  std::function< bool()> f_ex = [serviceNode] {
     return serviceNode->enable();
   };
   // create a functor that will be submitted to the thread pool.
@@ -51,11 +51,14 @@ void SchedulingAgent::enableControllerService(std::shared_ptr<core::controller::
   // we aren't terribly concerned with the result.
   std::future<bool> future;
   component_lifecycle_thread_pool_.execute(std::move(functor), future);
+  future.wait();
+  return future;
 }
 
-void SchedulingAgent::disableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) {
+std::future<bool> SchedulingAgent::disableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) {
+  logger_->log_info("Disabling CSN in SchedulingAgent %s", serviceNode->getName());
   // reference the disable function from serviceNode
-  std::function < bool() > f_ex = [serviceNode] {
+  std::function< bool()> f_ex = [serviceNode] {
     return serviceNode->disable();
   };
   // create a functor that will be submitted to the thread pool.
@@ -64,15 +67,19 @@ void SchedulingAgent::disableControllerService(std::shared_ptr<core::controller:
   // we aren't terribly concerned with the result.
   std::future<bool> future;
   component_lifecycle_thread_pool_.execute(std::move(functor), future);
+  future.wait();
+  return future;
 }
 
 bool SchedulingAgent::hasTooMuchOutGoing(std::shared_ptr<core::Processor> processor) {
   return processor->flowFilesOutGoingFull();
 }
 
-bool SchedulingAgent::onTrigger(std::shared_ptr<core::Processor> processor, core::ProcessContext *processContext, core::ProcessSessionFactory *sessionFactory) {
-  if (processor->isYield())
+bool SchedulingAgent::onTrigger(std::shared_ptr<core::Processor> processor, std::shared_ptr<core::ProcessContext> processContext, std::shared_ptr<core::ProcessSessionFactory> sessionFactory) {
+  if (processor->isYield()) {
+    logger_->log_debug("Not running %s since it must yield", processor->getName());
     return false;
+  }
 
   // No need to yield, reset yield expiration to 0
   processor->clearYield();
@@ -89,6 +96,7 @@ bool SchedulingAgent::onTrigger(std::shared_ptr<core::Processor> processor, core
 
   processor->incrementActiveTasks();
   try {
+    logger_->log_debug("Triggering %s", processor->getName());
     processor->onTrigger(processContext, sessionFactory);
     processor->decrementActiveTask();
   } catch (Exception &exception) {
