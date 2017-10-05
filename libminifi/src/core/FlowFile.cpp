@@ -33,7 +33,8 @@ std::shared_ptr<utils::IdGenerator> FlowFile::id_generator_ = utils::IdGenerator
 std::shared_ptr<logging::Logger> FlowFile::logger_ = logging::LoggerFactory<FlowFile>::getLogger();
 
 FlowFile::FlowFile()
-    : Connectable("FlowFile",0), size_(0),
+    : Connectable("FlowFile", 0),
+      size_(0),
       id_(0),
       stored(false),
       offset_(0),

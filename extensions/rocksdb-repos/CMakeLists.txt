@@ -27,7 +27,7 @@ set(CMAKE_SHARED_LINKER_FLAGS "-Wl,--export-symbols")
 include_directories(../../libminifi/include ../../libminifi/include/c2  ../../libminifi/include/c2/protocols/  ../../libminifi/include/core/state ./libminifi/include/core/statemanagement/metrics  ../../libminifi/include/core/yaml  ../../libminifi/include/core  ../../thirdparty/spdlog-20170710/include ../../thirdparty/concurrentqueue ../../thirdparty/yaml-cpp-yaml-cpp-0.5.3/include ../../thirdparty/civetweb-1.9.1/include ../../thirdparty/jsoncpp/include ../../thirdparty/rocksdb/include ../../thirdparty/)
 
 find_package(Boost REQUIRED)
-find_package(RocksDB REQUIRED)
+find_package(RocksDB)
 
 SET_PACKAGE_INFO("HTTP-CURL" "libcURL implementation code that supports " )
 

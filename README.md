@@ -79,6 +79,10 @@ Perspectives of the role of MiNiFi should be from the perspective of the agent a
 * libuuid and uuid-dev
 * openssl
 
+
+** NOTE: IF ROCKSDB IS NOT INSTALLED, IT WILL BE BUILT FROM THE THIRD PARTY
+DIRECTORY UNLESS YOU SPECIFY -DDISABLE_ROCKSDB=true WITH CMAKE ***
+
 ### To run
 
 #### Libraries

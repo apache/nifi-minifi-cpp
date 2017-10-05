@@ -17,6 +17,7 @@
 #include "core/RepositoryFactory.h"
 #include <memory>
 #include <string>
+#include <utility>
 #include <algorithm>
 #include "core/ContentRepository.h"
 #include "core/repository/VolatileContentRepository.h"
@@ -36,7 +37,6 @@ std::shared_ptr<core::Repository> createRepository(const std::string configurati
   std::string class_name_lc = configuration_class_name;
   std::transform(class_name_lc.begin(), class_name_lc.end(), class_name_lc.begin(), ::tolower);
   try {
-
     std::shared_ptr<core::Repository> return_obj = nullptr;
 
     auto ptr = core::ClassLoader::getDefaultClassLoader().instantiateRaw<core::Repository>(configuration_class_name, configuration_class_name);
@@ -51,7 +51,7 @@ std::shared_ptr<core::Repository> createRepository(const std::string configurati
     // if the desired repos don't exist, we can try doing string matches and reoly on volatile repositories
     if (class_name_lc == "flowfilerepository" || class_name_lc == "volatileflowfilerepository") {
       return_obj = instantiate<repository::VolatileFlowFileRepository>(repo_name);
-    } else if (class_name_lc == "provenancerepository" || class_name_lc == "volatileprovenancefilerepository")  {
+    } else if (class_name_lc == "provenancerepository" || class_name_lc == "volatileprovenancefilerepository") {
       return_obj = instantiate<repository::VolatileProvenanceRepository>(repo_name);
     } else if (class_name_lc == "nooprepository") {
       return_obj = instantiate<core::Repository>(repo_name);
@@ -85,7 +85,6 @@ std::shared_ptr<core::ContentRepository> createContentRepository(const std::stri
     if (nullptr == ptr) {
       return_obj = std::move((std::unique_ptr<core::ContentRepository>(ptr)));
     }
-
     if (return_obj) {
       return return_obj;
     }

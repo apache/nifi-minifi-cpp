@@ -97,6 +97,8 @@ class DatabaseContentRepository : public core::ContentRepository, public core::C
 
   virtual bool remove(const std::shared_ptr<minifi::ResourceClaim> &claim);
 
+  virtual bool exists(const std::shared_ptr<minifi::ResourceClaim> &streamId);
+
  private:
   bool is_valid_;
   std::string directory_;

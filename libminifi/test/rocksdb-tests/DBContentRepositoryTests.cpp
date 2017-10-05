@@ -19,11 +19,11 @@
 #include "../TestBase.h"
 #include <memory>
 #include <string>
-#include "ProvenanceTestHelper.h"
+#include "../unit/ProvenanceTestHelper.h"
 #include "provenance/Provenance.h"
 #include "FlowFileRecord.h"
 #include "core/Core.h"
-#include "core/repository/DatabaseContentRepository.h"
+#include "DatabaseContentRepository.h"
 #include "properties/Configure.h"
 
 TEST_CASE("Write Claim", "[TestDBCR1]") {

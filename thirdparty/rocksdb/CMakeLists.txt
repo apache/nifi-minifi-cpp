@@ -471,11 +471,6 @@ set(SOURCES
         table/sst_file_writer.cc
         table/table_properties.cc
         table/two_level_iterator.cc
-        tools/db_bench_tool.cc
-        tools/dump/db_dump_tool.cc
-        tools/ldb_cmd.cc
-        tools/ldb_tool.cc
-        tools/sst_dump_tool.cc
         util/arena.cc
         util/auto_roll_logger.cc
         util/bloom.cc

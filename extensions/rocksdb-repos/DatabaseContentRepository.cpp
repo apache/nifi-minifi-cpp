@@ -77,6 +77,19 @@ std::shared_ptr<io::BaseStream> DatabaseContentRepository::read(const std::share
   return std::make_shared<io::RocksDbStream>(claim->getContentFullPath(), db_, false);
 }
 
+bool DatabaseContentRepository::exists(const std::shared_ptr<minifi::ResourceClaim> &streamId) {
+  std::string value;
+  rocksdb::Status status;
+  status = db_->Get(rocksdb::ReadOptions(), streamId->getContentFullPath(), &value);
+  if (status.ok()) {
+    logger_->log_debug("%s exists", streamId->getContentFullPath());
+    return true;
+  } else {
+    logger_->log_debug("%s does not exist", streamId->getContentFullPath());
+    return false;
+  }
+}
+
 bool DatabaseContentRepository::remove(const std::shared_ptr<minifi::ResourceClaim> &claim) {
   if (nullptr == claim || !is_valid_ || !db_)
     return false;
