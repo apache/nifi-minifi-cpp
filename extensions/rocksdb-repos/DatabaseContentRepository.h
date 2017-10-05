@@ -21,6 +21,7 @@
 #include "rocksdb/db.h"
 #include "rocksdb/merge_operator.h"
 #include "core/Core.h"
+#include "core/Connectable.h"
 #include "../ContentRepository.h"
 #include "properties/Configure.h"
 #include "core/logging/LoggerConfiguration.h"
@@ -34,29 +35,25 @@ namespace repository {
 class StringAppender : public rocksdb::AssociativeMergeOperator {
  public:
   // Constructor: specify delimiter
-  explicit StringAppender(){
+  explicit StringAppender() {
 
   }
 
-  virtual bool Merge(const rocksdb::Slice& key,
-                     const rocksdb::Slice* existing_value,
-                     const rocksdb::Slice& value,
-                     std::string* new_value,
-                     rocksdb::Logger* logger) const{
+  virtual bool Merge(const rocksdb::Slice& key, const rocksdb::Slice* existing_value, const rocksdb::Slice& value, std::string* new_value, rocksdb::Logger* logger) const {
     // Clear the *new_value for writing.
-     assert(new_value);
-     new_value->clear();
+    assert(new_value);
+    new_value->clear();
 
-     if (!existing_value) {
-       // No existing_value. Set *new_value = value
-       new_value->assign(value.data(),value.size());
-     } else {
-       new_value->reserve(existing_value->size()  + value.size());
-       new_value->assign(existing_value->data(),existing_value->size());
-       new_value->append(value.data(), value.size());
-     }
+    if (!existing_value) {
+      // No existing_value. Set *new_value = value
+      new_value->assign(value.data(), value.size());
+    } else {
+      new_value->reserve(existing_value->size() + value.size());
+      new_value->assign(existing_value->data(), existing_value->size());
+      new_value->append(value.data(), value.size());
+    }
 
-     return true;
+    return true;
   }
 
   virtual const char* Name() const {
@@ -65,16 +62,16 @@ class StringAppender : public rocksdb::AssociativeMergeOperator {
 
  private:
 
-
 };
 
 /**
  * DatabaseContentRepository is a content repository that stores data onto the local file system.
  */
-class DatabaseContentRepository : public core::ContentRepository, public core::CoreComponent {
+class DatabaseContentRepository : public core::ContentRepository, public core::Connectable {
  public:
-  DatabaseContentRepository(std::string name = getClassName<DatabaseContentRepository>())
-      : core::CoreComponent(name),
+
+  DatabaseContentRepository(std::string name = getClassName<DatabaseContentRepository>(), uuid_t uuid = 0)
+      : core::Connectable(name, uuid),
         logger_(logging::LoggerFactory<DatabaseContentRepository>::getLogger()),
         is_valid_(false),
         db_(nullptr) {
@@ -98,6 +95,25 @@ class DatabaseContentRepository : public core::ContentRepository, public core::C
   virtual bool remove(const std::shared_ptr<minifi::ResourceClaim> &claim);
 
   virtual bool exists(const std::shared_ptr<minifi::ResourceClaim> &streamId);
+
+  virtual void yield() {
+
+  }
+
+  /**
+   * Determines if we are connected and operating
+   */
+  virtual bool isRunning() {
+    return true;
+  }
+
+  /**
+   * Determines if work is available by this connectable
+   * @return boolean if work is available.
+   */
+  virtual bool isWorkAvailable() {
+    return true;
+  }
 
  private:
   bool is_valid_;

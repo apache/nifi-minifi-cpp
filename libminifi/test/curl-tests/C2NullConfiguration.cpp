@@ -98,8 +98,8 @@ class VerifyC2Server : public IntegrationBase {
     parse_http_components(url, port, scheme, path);
     std::cout << "path is " << path << std::endl;
     configuration->set("c2.agent.protocol.class", "null");
-    configuration->set("c2.rest.url", "null");
-    configuration->set("c2.rest.url.ack", "null");
+    configuration->set("c2.rest.url", "");
+    configuration->set("c2.rest.url.ack", "");
     configuration->set("c2.agent.heartbeat.reporter.classes", "null");
     configuration->set("c2.rest.listener.port", "null");
     configuration->set("c2.agent.heartbeat.period", "null");

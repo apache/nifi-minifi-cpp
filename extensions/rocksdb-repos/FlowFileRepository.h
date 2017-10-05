@@ -47,6 +47,11 @@ class FlowFileRepository : public core::Repository, public std::enable_shared_fr
  public:
   // Constructor
 
+  FlowFileRepository(std::string name, uuid_t uuid)
+      : FlowFileRepository() {
+
+  }
+
   FlowFileRepository(const std::string repo_name = "", std::string directory = FLOWFILE_REPOSITORY_DIRECTORY, int64_t maxPartitionMillis = MAX_FLOWFILE_REPOSITORY_ENTRY_LIFE_TIME,
                      int64_t maxPartitionBytes = MAX_FLOWFILE_REPOSITORY_STORAGE_SIZE, uint64_t purgePeriod = FLOWFILE_REPOSITORY_PURGE_PERIOD)
       : Repository(repo_name.length() > 0 ? repo_name : core::getClassName<FlowFileRepository>(), directory, maxPartitionMillis, maxPartitionBytes, purgePeriod),
@@ -132,7 +137,6 @@ class FlowFileRepository : public core::Repository, public std::enable_shared_fr
       return false;
   }
 
-
   virtual void loadComponent(const std::shared_ptr<core::ContentRepository> &content_repo);
 
   void start() {
@@ -144,7 +148,7 @@ class FlowFileRepository : public core::Repository, public std::enable_shared_fr
     }
     running_ = true;
     thread_ = std::thread(&FlowFileRepository::run, shared_from_this());
-    logger_->log_info("%s Repository Monitor Thread Start", name_.c_str());
+    logger_->log_info("%s Repository Monitor Thread Start", getName());
   }
 
  private:

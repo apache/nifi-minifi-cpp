@@ -29,11 +29,10 @@ namespace minifi {
 namespace core {
 
 std::vector<std::string> FlowConfiguration::statics_sl_funcs_;
+std::mutex FlowConfiguration::atomic_initialization_;
 
 FlowConfiguration::~FlowConfiguration() {
 }
-
-
 
 std::shared_ptr<core::Processor> FlowConfiguration::createProcessor(std::string name, uuid_t uuid) {
   auto ptr = core::ClassLoader::getDefaultClassLoader().instantiate(name, uuid);

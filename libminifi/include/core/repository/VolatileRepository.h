@@ -208,7 +208,7 @@ bool VolatileRepository<T>::initialize(const std::shared_ptr<Configure> &configu
   }
 
   logger_->log_info("Resizing value_vector_ for %s count is %d", getName(), max_count_);
-  logger_->log_info("Using a maximum size of %u", max_size_);
+  logger_->log_info("Using a maximum size for %s of %u", getName(), max_size_);
   value_vector_.reserve(max_count_);
   for (int i = 0; i < max_count_; i++) {
     value_vector_.emplace_back(new AtomicEntry<T>(&current_size_, &max_size_));

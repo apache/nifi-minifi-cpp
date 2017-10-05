@@ -88,6 +88,10 @@ std::shared_ptr<core::ContentRepository> createContentRepository(const std::stri
     if (return_obj) {
       return return_obj;
     }
+
+    if (class_name_lc == "volatilecontentrepository") {
+      return std::make_shared<core::repository::VolatileContentRepository>(repo_name);
+    }
     if (fail_safe) {
       return std::make_shared<core::repository::VolatileContentRepository>("fail_safe");
     } else {

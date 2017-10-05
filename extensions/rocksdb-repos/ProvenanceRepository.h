@@ -38,6 +38,11 @@ namespace provenance {
 
 class ProvenanceRepository : public core::Repository, public std::enable_shared_from_this<ProvenanceRepository> {
  public:
+
+  ProvenanceRepository(std::string name, uuid_t uuid)
+      : ProvenanceRepository() {
+
+  }
   // Constructor
   /*!
    * Create a new provenance repository
@@ -65,7 +70,7 @@ class ProvenanceRepository : public core::Repository, public std::enable_shared_
       return;
     running_ = true;
     thread_ = std::thread(&ProvenanceRepository::run, shared_from_this());
-    logger_->log_info("%s Repository Monitor Thread Start", name_.c_str());
+    logger_->log_info("%s Repository Monitor Thread Start", name_);
   }
 
   // initialize
