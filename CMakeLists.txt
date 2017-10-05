@@ -127,8 +127,8 @@ if (NOT DISABLE_ROCKSDB)
 endif()
 
 ## ENABLE FEATURE INFORMATION
-ADD_FEATURE_INFO(HTTP-CURL "NOT DISABLE_CURL" "This enables RESTProtocol, InvokeHTTP, and the HTTPClient for Site to Site")
-ADD_FEATURE_INFO(ROCKSDB-REPOS "NOT DISABLE_ROCKSDB" "This Enables persistent provenance, flowfile, and content repositories using RocksDB")
+ADD_FEATURE_INFO("HTTP CURL" HTTP-CURL "This enables RESTProtocol, InvokeHTTP, and the HTTPClient for Site to Site")
+ADD_FEATURE_INFO("ROCKSDB REPOS" ROCKSDB-REPOS "This Enables persistent provenance, flowfile, and content repositories using RocksDB")
 
 ## NOW WE CAN ADD LIBRARIES AND EXTENSIONS TO MAIN
 
