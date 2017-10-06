@@ -181,8 +181,7 @@ bool VolatileContentRepository::remove(const std::shared_ptr<minifi::ResourceCla
         return true;
       }
       master_list_.erase(claim->getContentFullPath());
-    }
-    else{
+    } else {
       logger_->log_debug("Could not remove for %s, size is %d", claim->getContentFullPath(), current_size_.load());
     }
   } else {
