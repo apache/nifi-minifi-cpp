@@ -259,6 +259,16 @@ void ProcessGroup::getConnections(std::map<std::string, std::shared_ptr<Connecti
   }
 }
 
+void ProcessGroup::getConnections(std::map<std::string, std::shared_ptr<Connectable>> &connectionMap) {
+  for (auto connection : connections_) {
+    connectionMap[connection->getUUIDStr()] = connection;
+    connectionMap[connection->getName()] = connection;
+  }
+  for (auto processGroup : child_process_groups_) {
+    processGroup->getConnections(connectionMap);
+  }
+}
+
 void ProcessGroup::addConnection(std::shared_ptr<Connection> connection) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
 

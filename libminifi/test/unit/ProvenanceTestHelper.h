@@ -28,7 +28,6 @@
 #include <vector>
 #include "core/repository/VolatileContentRepository.h"
 #include "../../include/core/Processor.h"
-#include "../../include/core/repository/FlowFileRepository.h"
 #include "../../include/Connection.h"
 #include "../../include/FlowController.h"
 #include "../../include/properties/Configure.h"
@@ -145,10 +144,10 @@ class TestRepository : public core::Repository {
   std::map<std::string, std::string> repositoryResults;
 };
 
-class TestFlowRepository : public core::repository::FlowFileRepository {
+class TestFlowRepository : public core::Repository {
  public:
   TestFlowRepository()
-      : core::repository::FlowFileRepository("ff", "./dir", 1000, 100, 0) {
+      : core::Repository("ff", "./dir", 1000, 100, 0) {
   }
   // initialize
   bool initialize() {
