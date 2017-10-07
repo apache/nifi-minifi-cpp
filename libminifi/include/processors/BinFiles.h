@@ -256,6 +256,7 @@ class BinFiles : public core::Processor {
   static const char *SEGMENT_INDEX_ATTRIBUTE;
   static const char *SEGMENT_COUNT_ATTRIBUTE;
   static const char *SEGMENT_ORIGINAL_FILENAME;
+  static const char *TAR_PERMISSIONS_ATTRIBUTE;
 
  public:
   /**
