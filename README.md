@@ -91,7 +91,6 @@ or greater is recommended.
 * Lua and development headers -- Optional, unless Lua support is enabled
 * libgps-dev -- Required if building libGPS support
 
-
 ** NOTE: IF ROCKSDB IS NOT INSTALLED, IT WILL BE BUILT FROM THE THIRD PARTY
 DIRECTORY UNLESS YOU SPECIFY -DDISABLE_ROCKSDB=true WITH CMAKE ***
 
@@ -107,6 +106,7 @@ DIRECTORY UNLESS YOU SPECIFY -DDISABLE_ROCKSDB=true WITH CMAKE ***
 * Lua -- Optional, unless Lua support is enabled
 * libusb -- Optional, unless USB Camera support is enabled
 * libpng -- Optional, unless USB Camera support is enabled
+* libpcap -- Optional, unless ENABLE_PCAP specified
 
 The needed dependencies can be installed with the following commands for:
 
@@ -135,10 +135,10 @@ $ # (Optional) for building docker image
 $ yum install docker
 $ # (Optional) for system integration tests
 $ yum install docker python-virtualenv
-
 # If building with GPS support
 $ yum install gpsd-devel
-
+$ # (Optional) for PacketCapture Processor
+$ yum install libpcap-devel
 ```
 
 Aptitude based Linux Distributions
@@ -161,10 +161,10 @@ $ # (Optional) for building docker image
 $ apt-get install docker.io
 $ # (Optional) for system integration tests
 $ apt-get install docker.io python-virtualenv
-
 # If building with GPS support
 $ apt-get install libgps-dev
-
+$ # (Optional) for PacketCapture Processor
+$ apt-get install libpcap-dev
 ```
 
 OS X Using Homebrew (with XCode Command Line Tools installed)
@@ -185,9 +185,10 @@ $ brew install libusb libpng
 $ # (Optional) for building docker image/running system integration tests
 $ # Install docker using instructions at https://docs.docker.com/docker-for-mac/install/
 $ sudo pip install virtualenv
-
 # If building with GPS support
 $ brew install gpsd
+$ # (Optional) for PacketCapture Processor
+$ sudo brew install libpcap
 ```
 
 
