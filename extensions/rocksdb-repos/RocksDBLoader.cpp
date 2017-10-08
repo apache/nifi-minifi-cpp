@@ -23,7 +23,6 @@ bool RocksDBFactory::added = core::FlowConfiguration::add_static_func("createRoc
 extern "C" {
 
 void *createRocksDBFactory(void) {
-  std::cout << "yo rocks" << std::endl;
   return new RocksDBFactory();
 }
 
