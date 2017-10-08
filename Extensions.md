@@ -109,3 +109,30 @@ To use your C function, you must define the sequence "Class Loader Functions" in
 
 Note that for the case of HTTP-CURL we have made it so that if libcURL exists and it is not disabled, the createHttpCurlFactory function is automatically loaded. To do this use the function FlowConfiguration::add_static_func -- this will add your function to the list of registered resources and will do so in a thread safe way. If you take this approach you cannot disable your library with an argument within the YAML file.
 
+
+#Enabling Modules
+
+#Enabling PacketCapture
+
+Packet Capture can be enabled to support capturing pcap files from all network interfaces on the machine. To do enable this, you must type the following when building MiNiFi C++
+```
+	cmake -DENABLE_PCAP=TRUE ..
+```
+
+The cmake process will include a notification that the third party dependency, PcapPlusPlus has created its platform specific modules. 
+
+You will see a message such as this when building. This configuration script will contain the name of your platforma and be an indication that 
+the configuration was successful:
+
+		****************************************
+		PcapPlusPlus Linux configuration script 
+		****************************************
+
+When the PCAP extension is built, you will be able to use the PacketCapture Processor, which has two major options: 'Batch Size' and 'Batch Directory'
+
+Batch Size will limit the number of packets taht are combined within a given PCAP. Batch Directory will allow the user to specify the scratch directory for network data to be written to. 
+
+Note that if Batch Directory is not specified, /tmp/ will be used.
+
+*Running PcapTests requires root privileges on Linux.
+
