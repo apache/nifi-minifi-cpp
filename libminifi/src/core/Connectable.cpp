@@ -65,9 +65,11 @@ bool Connectable::setSupportedRelationships(std::set<core::Relationship> relatio
 
 // Whether the relationship is supported
 bool Connectable::isSupportedRelationship(core::Relationship relationship) {
-  const bool requiresLock = isRunning();
+  // if we are running we do not need a lock since the function to change relationships_ ( setSupportedRelationships)
+  // cannot be executed while we are running
+  const bool isConnectableRunning = isRunning();
 
-  const auto conditionalLock = !requiresLock ? std::unique_lock<std::mutex>() : std::unique_lock<std::mutex>(relationship_mutex_);
+  const auto conditionalLock = isConnectableRunning ? std::unique_lock<std::mutex>() : std::unique_lock<std::mutex>(relationship_mutex_);
 
   const auto &it = relationships_.find(relationship.getName());
   if (it != relationships_.end()) {
@@ -95,9 +97,11 @@ bool Connectable::setAutoTerminatedRelationships(std::set<Relationship> relation
 
 // Check whether the relationship is auto terminated
 bool Connectable::isAutoTerminated(core::Relationship relationship) {
-  const bool requiresLock = isRunning();
+  // if we are running we do not need a lock since the function to change relationships_ ( setSupportedRelationships)
+    // cannot be executed while we are running
+  const bool isConnectableRunning = isRunning();
 
-  const auto conditionalLock = !requiresLock ? std::unique_lock<std::mutex>() : std::unique_lock<std::mutex>(relationship_mutex_);
+  const auto conditionalLock = isConnectableRunning ? std::unique_lock<std::mutex>() : std::unique_lock<std::mutex>(relationship_mutex_);
 
   const auto &it = auto_terminated_relationships_.find(relationship.getName());
   if (it != auto_terminated_relationships_.end()) {
