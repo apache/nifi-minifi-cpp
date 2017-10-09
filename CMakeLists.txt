@@ -74,7 +74,6 @@ endif (OPENSSL_FOUND)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 find_package(UUID REQUIRED)
-find_package(RocksDB) # not required
 file(GLOB SPD_SOURCES "thirdparty/spdlog-20170710/include/spdlog/*")
 
 
