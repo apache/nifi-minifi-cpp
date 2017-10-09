@@ -49,6 +49,8 @@ core::Property MergeContent::Demarcator("Demarcator File", "Filename specifying 
 core::Property MergeContent::KeepPath("Keep Path", "If using the Zip or Tar Merge Format, specifies whether or not the FlowFiles' paths should be included in their entry", "false");
 core::Relationship MergeContent::Merge("merged", "The FlowFile containing the merged content");
 const char *BinaryConcatenationMerge::mimeType = "application/octet-stream";
+const char *TarMerge::mimeType = "application/tar";
+const char *ZipMerge::mimeType = "application/zip";
 
 void MergeContent::initialize() {
   // Set the supported properties
@@ -235,8 +237,17 @@ bool MergeContent::processBin(core::ProcessContext *context, core::ProcessSessio
   }
 
   std::unique_ptr<MergeBin> mergeBin;
-  if (mergeFormat_ == MERGE_FORMAT_CONCAT_VALUE) {
-    mergeBin = std::unique_ptr<MergeBin> (new BinaryConcatenationMerge());
+  if (mergeFormat_ == MERGE_FORMAT_CONCAT_VALUE || mergeFormat_ == MERGE_FORMAT_TAR_VALUE
+      || mergeFormat_ == MERGE_FORMAT_ZIP_VALUE) {
+    if (mergeFormat_ == MERGE_FORMAT_CONCAT_VALUE)
+      mergeBin = std::unique_ptr < MergeBin > (new BinaryConcatenationMerge());
+    else if (mergeFormat_ == MERGE_FORMAT_TAR_VALUE)
+      mergeBin = std::unique_ptr < MergeBin > (new TarMerge());
+    else if (mergeFormat_ == MERGE_FORMAT_ZIP_VALUE)
+          mergeBin = std::unique_ptr < MergeBin > (new ZipMerge());
+    else
+      return false;
+
     std::shared_ptr<core::FlowFile> mergeFlow;
     try {
       mergeFlow = mergeBin->merge(context, session, bin->getFlowFile(), this->headerContent_, this->footerContent_, this->demarcatorContent_);
@@ -273,6 +284,46 @@ std::shared_ptr<core::FlowFile> BinaryConcatenationMerge::merge(core::ProcessCon
   }
   if (!fileName.empty())
     session->putAttribute(flowFile, FlowAttributeKey(FILENAME), fileName);
+  return flowFile;
+}
+
+std::shared_ptr<core::FlowFile> TarMerge::merge(core::ProcessContext *context, core::ProcessSession *session, std::deque<std::shared_ptr<core::FlowFile>> &flows, std::string &header,
+    std::string &footer, std::string &demarcator) {
+  std::shared_ptr<FlowFileRecord> flowFile = std::static_pointer_cast < FlowFileRecord > (session->create());
+  ArchiveMerge::WriteCallback callback(std::string(MERGE_FORMAT_TAR_VALUE), flows, session);
+  session->write(flowFile, &callback);
+  session->putAttribute(flowFile, FlowAttributeKey(MIME_TYPE), this->getMergedContentType());
+  std::string fileName;
+  flowFile->getAttribute(FlowAttributeKey(FILENAME), fileName);
+  if (flows.size() == 1) {
+    flows.front()->getAttribute(FlowAttributeKey(FILENAME), fileName);
+  } else {
+    flows.front()->getAttribute(BinFiles::SEGMENT_ORIGINAL_FILENAME, fileName);
+  }
+  if (!fileName.empty()) {
+    fileName += ".tar";
+    session->putAttribute(flowFile, FlowAttributeKey(FILENAME), fileName);
+  }
+  return flowFile;
+}
+
+std::shared_ptr<core::FlowFile> ZipMerge::merge(core::ProcessContext *context, core::ProcessSession *session, std::deque<std::shared_ptr<core::FlowFile>> &flows, std::string &header,
+    std::string &footer, std::string &demarcator) {
+  std::shared_ptr<FlowFileRecord> flowFile = std::static_pointer_cast < FlowFileRecord > (session->create());
+  ArchiveMerge::WriteCallback callback(std::string(MERGE_FORMAT_ZIP_VALUE), flows, session);
+  session->write(flowFile, &callback);
+  session->putAttribute(flowFile, FlowAttributeKey(MIME_TYPE), this->getMergedContentType());
+  std::string fileName;
+  flowFile->getAttribute(FlowAttributeKey(FILENAME), fileName);
+  if (flows.size() == 1) {
+    flows.front()->getAttribute(FlowAttributeKey(FILENAME), fileName);
+  } else {
+    flows.front()->getAttribute(BinFiles::SEGMENT_ORIGINAL_FILENAME, fileName);
+  }
+  if (!fileName.empty()) {
+    fileName += ".zip";
+    session->putAttribute(flowFile, FlowAttributeKey(FILENAME), fileName);
+  }
   return flowFile;
 }
 

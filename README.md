@@ -86,6 +86,7 @@ Perspectives of the role of MiNiFi should be from the perspective of the agent a
 * libleveldb
 * libcurl
 * libssl and libcrypto from openssl 
+* libarchive
 
 The needed dependencies can be installed with the following commands for:
 
