@@ -22,7 +22,7 @@
 #include "yaml-cpp/yaml.h"
 #include "processors/LoadProcessors.h"
 #include "core/FlowConfiguration.h"
-#include "Site2SiteClientProtocol.h"
+#include "sitetosite/SiteToSite.h"
 #include <string>
 #include "io/validation.h"
 #include "io/StreamFactory.h"
@@ -170,7 +170,7 @@ class YamlConfiguration : public FlowConfiguration {
    * @param parent    the parent ProcessGroup for the port
    * @param direction the TransferDirection of the port
    */
-  void parsePortYaml(YAML::Node *portNode, core::ProcessGroup *parent, TransferDirection direction);
+  void parsePortYaml(YAML::Node *portNode, core::ProcessGroup *parent, sitetosite::TransferDirection direction);
 
   /**
    * Parses the root level YAML node for the flow configuration and

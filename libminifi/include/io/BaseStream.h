@@ -58,7 +58,7 @@ class BaseStream : public DataStream, public Serializable {
    **/
   virtual int write(uint32_t base_value, bool is_little_endian = EndiannessCheck::IS_LITTLE);
 
-  int writeData(uint8_t *value, int size);
+  virtual int writeData(uint8_t *value, int size);
 
   virtual void seek(uint64_t offset) {
     if (composable_stream_ != this) {
@@ -170,6 +170,16 @@ class BaseStream : public DataStream, public Serializable {
    * @return resulting read size
    **/
   virtual int read(uint64_t &value, bool is_little_endian = EndiannessCheck::IS_LITTLE);
+
+  virtual const uint64_t getSize() const {
+      if (composable_stream_ == this){
+        return buffer.size();
+      }
+      else{
+        return composable_stream_->getSize();
+      }
+
+    }
 
   /**
    * read UTF from stream

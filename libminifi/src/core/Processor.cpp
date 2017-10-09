@@ -229,7 +229,7 @@ void Processor::onTrigger(ProcessContext *context, ProcessSessionFactory *sessio
   }
 }
 
-void Processor::onTrigger(std::shared_ptr<ProcessContext> context, std::shared_ptr<ProcessSessionFactory> sessionFactory) {
+void Processor::onTrigger(const std::shared_ptr<ProcessContext> &context, const std::shared_ptr<ProcessSessionFactory> &sessionFactory) {
   auto session = sessionFactory->createSession();
 
   try {

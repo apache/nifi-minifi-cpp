@@ -56,6 +56,7 @@ class Configure : public Properties {
   static const char *nifi_flowfile_repository_directory_default;
   static const char *nifi_flowfile_repository_enable;
   static const char *nifi_remote_input_secure;
+  static const char *nifi_remote_input_http;
   static const char *nifi_security_need_ClientAuth;
   // site2site security config
   static const char *nifi_security_client_certificate;

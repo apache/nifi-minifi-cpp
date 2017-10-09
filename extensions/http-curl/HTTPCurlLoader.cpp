@@ -15,12 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "HttpCurlLoader.h"
+#include "HTTPCurlLoader.h"
 
 #include "core/FlowConfiguration.h"
 
 bool HttpCurlObjectFactory::added = core::FlowConfiguration::add_static_func("createHttpCurlFactory");
-
 extern "C" {
 
 void *createHttpCurlFactory(void) {

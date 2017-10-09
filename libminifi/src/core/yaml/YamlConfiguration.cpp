@@ -296,7 +296,7 @@ void YamlConfiguration::parseRemoteProcessGroupYaml(YAML::Node *rpgNode, core::P
 
             YAML::Node currPort = portIter->as<YAML::Node>();
 
-            this->parsePortYaml(&currPort, group, SEND);
+            this->parsePortYaml(&currPort, group, sitetosite::SEND);
           }  // for node
         }
         YAML::Node outputPorts = currRpgNode["Output Ports"].as<YAML::Node>();
@@ -306,7 +306,7 @@ void YamlConfiguration::parseRemoteProcessGroupYaml(YAML::Node *rpgNode, core::P
 
             YAML::Node currPort = portIter->as<YAML::Node>();
 
-            this->parsePortYaml(&currPort, group, RECEIVE);
+            this->parsePortYaml(&currPort, group, sitetosite::RECEIVE);
           }  // for node
         }
       }
@@ -567,7 +567,7 @@ void YamlConfiguration::parseConnectionYaml(YAML::Node *connectionsNode, core::P
   }
 }
 
-void YamlConfiguration::parsePortYaml(YAML::Node *portNode, core::ProcessGroup *parent, TransferDirection direction) {
+void YamlConfiguration::parsePortYaml(YAML::Node *portNode, core::ProcessGroup *parent, sitetosite::TransferDirection direction) {
   uuid_t uuid;
   std::shared_ptr<core::Processor> processor = NULL;
   std::shared_ptr<minifi::RemoteProcessorGroupPort> port = NULL;

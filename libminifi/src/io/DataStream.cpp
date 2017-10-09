@@ -32,6 +32,8 @@ namespace minifi {
 namespace io {
 
 int DataStream::writeData(uint8_t *value, int size) {
+  if (value == nullptr)
+    return 0;
   std::copy(value, value + size, std::back_inserter(buffer));
   return size;
 }

@@ -22,12 +22,13 @@
 #include "json/writer.h"
 #include <string>
 #include <mutex>
+
+#include "utils/ByteArrayCallback.h"
 #include "CivetServer.h"
 #include "c2/C2Protocol.h"
 #include "RESTProtocol.h"
 #include "c2/HeartBeatReporter.h"
 #include "controllers/SSLContextService.h"
-#include "utils/ByteInputCallBack.h"
 #include "../client/HTTPClient.h"
 
 namespace org {
@@ -49,13 +50,13 @@ class RESTSender : public RESTProtocol, public C2Protocol {
 
   explicit RESTSender(std::string name, uuid_t uuid = nullptr);
 
-  virtual C2Payload consumePayload(const std::string &url, const C2Payload &payload, Direction direction, bool async);
+  virtual C2Payload consumePayload(const std::string &url, const C2Payload &payload, Direction direction, bool async) override;
 
-  virtual C2Payload consumePayload(const C2Payload &payload, Direction direction, bool async);
+  virtual C2Payload consumePayload(const C2Payload &payload, Direction direction, bool async) override;
 
-  virtual void update(const std::shared_ptr<Configure> &configure);
+  virtual void update(const std::shared_ptr<Configure> &configure) override;
 
-  virtual void initialize(const std::shared_ptr<core::controller::ControllerServiceProvider> &controller, const std::shared_ptr<Configure> &configure);
+  virtual void initialize(const std::shared_ptr<core::controller::ControllerServiceProvider> &controller, const std::shared_ptr<Configure> &configure) override;
 
  protected:
 

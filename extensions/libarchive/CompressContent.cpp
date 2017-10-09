@@ -87,7 +87,7 @@ void CompressContent::onSchedule(core::ProcessContext *context, core::ProcessSes
   fileExtension_[COMPRESSION_FORMAT_XZ_LZMA2] = ".xz";
 }
 
-void CompressContent::onTrigger(std::shared_ptr<core::ProcessContext> context, std::shared_ptr<core::ProcessSession> session) {
+void CompressContent::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
   std::shared_ptr<core::FlowFile> flowFile = session->get();
 
   if (!flowFile) {
@@ -153,8 +153,7 @@ void CompressContent::onTrigger(std::shared_ptr<core::ProcessContext> context, s
     } else {
       session->removeAttribute(processFlowFile, FlowAttributeKey(MIME_TYPE));
       if (updateFileName_) {
-        if (fileName.size() >= fileExtension.size() &&
-            fileName.compare(fileName.size() - fileExtension.size(), fileExtension.size(), fileExtension) == 0) {
+        if (fileName.size() >= fileExtension.size() && fileName.compare(fileName.size() - fileExtension.size(), fileExtension.size(), fileExtension) == 0) {
           fileName = fileName.substr(0, fileName.size() - fileExtension.size());
           session->putAttribute(processFlowFile, FlowAttributeKey(FILENAME), fileName);
         }

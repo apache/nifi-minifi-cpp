@@ -55,15 +55,13 @@ class __attribute__((visibility("default"))) ArchiveFactory : public core::Objec
   }
 
   virtual std::unique_ptr<ObjectFactory> assign(const std::string &class_name) {
-    std::string name = class_name;
-    std::transform(name.begin(), name.end(), name.begin(), ::tolower);
-    if (name == "mergecontent") {
+    if (utils::StringUtils::equalsIgnoreCase(class_name, "MergeContent")) {
       return std::unique_ptr<ObjectFactory>(new core::DefautObjectFactory<minifi::processors::MergeContent>());
-    } else if (name == "compresscontent") {
+    } else if (utils::StringUtils::equalsIgnoreCase(class_name, "CompressContent")) {
       return std::unique_ptr<ObjectFactory>(new core::DefautObjectFactory<minifi::processors::CompressContent>());
-    } else if (name == "focusarchiveentry") {
+    } else if (utils::StringUtils::equalsIgnoreCase(class_name,"FocusArchiveEntry")) {
       return std::unique_ptr<ObjectFactory>(new core::DefautObjectFactory<minifi::processors::FocusArchiveEntry>());
-    } else if (name == "unfocusarchiveentry") {
+    } else if (utils::StringUtils::equalsIgnoreCase(class_name,"UnfocusArchiveEntry")) {
       return std::unique_ptr<ObjectFactory>(new core::DefautObjectFactory<minifi::processors::UnfocusArchiveEntry>());
     } else {
       return nullptr;

@@ -21,11 +21,12 @@ find_package(CURL REQUIRED)
 
 set(CMAKE_EXE_LINKER_FLAGS "-Wl,--export-all-symbols")
 set(CMAKE_SHARED_LINKER_FLAGS "-Wl,--export-symbols")
+set(CMAKE_CXX_VISIBILITY_PRESET default)
 
 include_directories(../../libminifi/include  ../../libminifi/include/core/yaml  ../../libminifi/include/core  ../../thirdparty/spdlog-20170710/include ../../thirdparty/concurrentqueue ../../thirdparty/yaml-cpp-yaml-cpp-0.5.3/include ../../thirdparty/civetweb-1.9.1/include ../../thirdparty/jsoncpp/include  ../../thirdparty/)
-include_directories(protocols client processors)
+include_directories(protocols client processors sitetosite)
 
-file(GLOB SOURCES  "*.cpp" "protocols/*.cpp" "client/*.cpp" "processors/*.cpp")
+file(GLOB SOURCES  "*.cpp" "protocols/*.cpp" "client/*.cpp" "processors/*.cpp" "sitetosite/*.cpp")
 
 add_library(minifi-http-curl STATIC ${SOURCES})
 set_property(TARGET minifi-http-curl PROPERTY POSITION_INDEPENDENT_CODE ON)
@@ -43,8 +44,8 @@ endif(CURL_FOUND)
 
 # Include UUID
 find_package(UUID REQUIRED)
-target_link_libraries(minifi-http-curl ${LIBMINIFI} ${UUID_LIBRARIES} ${JSONCPP_LIB})
-add_dependencies(minifi-http-curl jsoncpp_project)
+#set(LINK_FLAGS ${LINK_FLAGS} "-Wl,-whole-archive")
+# Include OpenSSL
 find_package(OpenSSL REQUIRED)
 include_directories(${OPENSSL_INCLUDE_DIR})
 target_link_libraries(minifi-http-curl ${CMAKE_DL_LIBS} )
@@ -66,5 +67,4 @@ else ()
 endif ()
 
 SET (HTTP-CURL minifi-http-curl PARENT_SCOPE)
-
 register_extension(minifi-http-curl)

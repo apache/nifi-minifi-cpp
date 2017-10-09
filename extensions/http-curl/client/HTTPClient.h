@@ -1,5 +1,4 @@
 /**
- * HTTPUtils class declaration
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -28,8 +27,9 @@
 #include <uuid/uuid.h>
 #include <regex.h>
 #include <vector>
+
+#include "utils/ByteArrayCallback.h"
 #include "controllers/SSLContextService.h"
-#include "utils/ByteInputCallBack.h"
 #include "core/logging/Logger.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "properties/Configure.h"
@@ -78,53 +78,63 @@ class HTTPClient : public BaseHTTPClient, public core::Connectable {
 
   ~HTTPClient();
 
-  void setVerbose();
+  virtual void setVerbose() override ;
 
-  void initialize(const std::string &method, const std::string url = "", const std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service = nullptr);
+  void forceClose();
 
-  void setConnectionTimeout(int64_t timeout);
+  virtual void initialize(const std::string &method, const std::string url = "", const std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service = nullptr) override;
 
-  void setReadTimeout(int64_t timeout);
+  virtual void setConnectionTimeout(int64_t timeout) override;
 
-  void setUploadCallback(HTTPUploadCallback *callbackObj);
+  virtual void setReadTimeout(int64_t timeout) override;
+
+  virtual void setUploadCallback(HTTPUploadCallback *callbackObj) override;
+
+  virtual void setReadCallback(HTTPReadCallback *callbackObj) ;
 
   struct curl_slist *build_header_list(std::string regex, const std::map<std::string, std::string> &attributes);
 
-  void setContentType(std::string content_type);
+  virtual void setContentType(std::string content_type) override;
 
-  std::string escape(std::string string_to_escape);
+  virtual std::string escape(std::string string_to_escape) override;
 
-  void setPostFields(std::string input);
+  virtual void setPostFields(std::string input) override;
 
   void setHeaders(struct curl_slist *list);
 
-  void appendHeader(const std::string &new_header);
+  virtual void appendHeader(const std::string &new_header) override;
 
-  bool submit();
+  void appendHeader(const std::string &key, const std::string &value);
+
+  bool submit() override;
 
   CURLcode getResponseResult();
 
-  int64_t &getResponseCode();
+  int64_t &getResponseCode() override;
 
-  const char *getContentType();
+  const char *getContentType() override;
 
-  const std::vector<char> &getResponseBody();
+  const std::vector<char> &getResponseBody() override;
 
-  void set_request_method(const std::string method);
+  void set_request_method(const std::string method) override;
 
-  void setUseChunkedEncoding();
+  void setUseChunkedEncoding() override;
 
-  void setDisablePeerVerification();
+  void setDisablePeerVerification() override;
 
-  const std::vector<std::string> &getHeaders() {
+  const std::vector<std::string> &getHeaders() override{
     return header_response_.header_tokens_;
 
+  }
+
+  virtual const std::map<std::string, std::string> &getParsedHeaders() override{
+    return header_response_.header_mapping_;
   }
 
   /**
    * Determines if we are connected and operating
    */
-  virtual bool isRunning() {
+  virtual bool isRunning() override{
     return true;
   }
 
@@ -135,7 +145,7 @@ class HTTPClient : public BaseHTTPClient, public core::Connectable {
   void waitForWork(uint64_t timeoutMs) {
   }
 
-  virtual void yield() {
+  virtual void yield() override{
 
   }
 
@@ -143,13 +153,13 @@ class HTTPClient : public BaseHTTPClient, public core::Connectable {
    * Determines if work is available by this connectable
    * @return boolean if work is available.
    */
-  virtual bool isWorkAvailable() {
+  virtual bool isWorkAvailable() override{
     return true;
   }
 
  protected:
 
-  inline bool matches(const std::string &value, const std::string &sregex);
+  inline bool matches(const std::string &value, const std::string &sregex) override;
 
   static CURLcode configure_ssl_context(CURL *curl, void *ctx, void *param) {
     minifi::controllers::SSLContextService *ssl_context_service = static_cast<minifi::controllers::SSLContextService*>(param);
@@ -161,9 +171,12 @@ class HTTPClient : public BaseHTTPClient, public core::Connectable {
 
   void configure_secure_connection(CURL *http_session);
 
+  HTTPReadCallback *callback;
+
   bool isSecure(const std::string &url);
   struct curl_slist *headers_;
-  utils::HTTPRequestResponse content_;
+  HTTPReadCallback content_;
+  ByteOutputCallback read_callback_;
   utils::HTTPHeaderResponse header_response_;
   CURLcode res;
   int64_t http_code;

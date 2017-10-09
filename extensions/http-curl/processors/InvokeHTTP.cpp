@@ -33,6 +33,7 @@
 #include <utility>
 #include <vector>
 
+#include "utils/ByteArrayCallback.h"
 #include "core/FlowFile.h"
 #include "core/logging/Logger.h"
 #include "core/ProcessContext.h"
@@ -41,7 +42,6 @@
 #include "io/StreamFactory.h"
 #include "ResourceClaim.h"
 #include "utils/StringUtils.h"
-#include "utils/ByteInputCallBack.h"
 
 namespace org {
 namespace apache {
@@ -140,7 +140,7 @@ void InvokeHTTP::initialize() {
   setSupportedRelationships(relationships);
 }
 
-void InvokeHTTP::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory) {
+void InvokeHTTP::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
   if (!context->getProperty(Method.getName(), method_)) {
     logger_->log_info("%s attribute is missing, so default value of %s will be used", Method.getName().c_str(), Method.getValue().c_str());
     return;
@@ -240,7 +240,7 @@ bool InvokeHTTP::emitFlowFile(const std::string &method) {
   return ("POST" == method || "PUT" == method || "PATCH" == method);
 }
 
-void InvokeHTTP::onTrigger(core::ProcessContext *context, core::ProcessSession *session) {
+void InvokeHTTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
   logger_->log_info("onTrigger InvokeHTTP with %s to %s", method_, url_);
 
   std::shared_ptr<FlowFileRecord> flowFile = std::static_pointer_cast<FlowFileRecord>(session->get());
@@ -352,7 +352,7 @@ void InvokeHTTP::onTrigger(core::ProcessContext *context, core::ProcessSession *
   }
 }
 
-void InvokeHTTP::route(std::shared_ptr<FlowFileRecord> &request, std::shared_ptr<FlowFileRecord> &response, core::ProcessSession *session, core::ProcessContext *context, bool isSuccess,
+void InvokeHTTP::route(std::shared_ptr<FlowFileRecord> &request, std::shared_ptr<FlowFileRecord> &response, const std::shared_ptr<core::ProcessSession> &session, const std::shared_ptr<core::ProcessContext> &context, bool isSuccess,
                        int statusCode) {
   // check if we should yield the processor
   if (!isSuccess && request == nullptr) {

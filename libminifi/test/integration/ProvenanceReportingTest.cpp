@@ -73,7 +73,7 @@ int main(int argc, char **argv) {
   std::shared_ptr<core::ProcessGroup> pg = std::shared_ptr<core::ProcessGroup>(ptr.get());
   ptr.release();
   std::shared_ptr<org::apache::nifi::minifi::io::SocketContext> socket_context = std::make_shared<org::apache::nifi::minifi::io::SocketContext>(std::make_shared<minifi::Configure>());
-  org::apache::nifi::minifi::io::Socket server(socket_context, "localhost", 10001, 1);
+  org::apache::nifi::minifi::io::Socket server(socket_context, "localhost", 10005, 1);
 
   controller->load();
   controller->start();
