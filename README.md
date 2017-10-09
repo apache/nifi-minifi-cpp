@@ -307,7 +307,7 @@ Additionally, users can utilize the MiNiFi Toolkit Converter (version 0.0.1 - sc
                 max concurrent tasks: 1
                 Properties:
 
-### Site2Site Security Configuration
+### SiteToSite Security Configuration
 
     in minifi.properties
 
@@ -326,6 +326,11 @@ Additionally, users can utilize the MiNiFi Toolkit Converter (version 0.0.1 - sc
 
     if you do not want to enable client certificate base authorization
     nifi.security.need.ClientAuth=false
+    
+### HTTP SiteToSite Configuration
+To enable HTTPSiteToSite you must set the following flag to true
+	
+    nifi.remote.input.http.enabled=true
     
 ### Command and Control Configuration
 For more more insight into the API used within the C2 agent, please visit:

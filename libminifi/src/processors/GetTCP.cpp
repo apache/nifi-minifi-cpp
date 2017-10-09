@@ -98,7 +98,7 @@ void GetTCP::initialize() {
   setSupportedRelationships(relationships);
 }
 
-void GetTCP::onSchedule(std::shared_ptr<core::ProcessContext> context, std::shared_ptr<core::ProcessSessionFactory> sessionFactory) {
+void GetTCP::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
   std::string value;
   stay_connected_ = true;
   if (context->getProperty(EndpointList.getName(), value)) {
@@ -222,7 +222,7 @@ void GetTCP::notifyStop() {
     socket_ring_buffer_.try_dequeue(socket_ptr);
   }
 }
-void GetTCP::onTrigger(std::shared_ptr<core::ProcessContext> context, std::shared_ptr<core::ProcessSession> session) {
+void GetTCP::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
   // Perform directory list
   metrics_->iterations_++;
   std::lock_guard<std::mutex> lock(mutex_);

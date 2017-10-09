@@ -42,9 +42,7 @@
 #include "ProcessSession.h"
 #include "ProcessSessionFactory.h"
 #include "Scheduling.h"
-
 #include <stack>
-#include "Site2SiteClientProtocol.h"
 
 namespace org {
 namespace apache {
@@ -206,7 +204,7 @@ class __attribute__((visibility("default"))) Processor : public Connectable, pub
   std::shared_ptr<Connection> getNextIncomingConnection();
   // On Trigger
 
-  void onTrigger(std::shared_ptr<ProcessContext> context, std::shared_ptr<ProcessSessionFactory> sessionFactory);
+  void onTrigger(const std::shared_ptr<ProcessContext> &context, const std::shared_ptr<ProcessSessionFactory> &sessionFactory);
 
   void onTrigger(ProcessContext *context, ProcessSessionFactory *sessionFactory);
 
@@ -217,15 +215,17 @@ class __attribute__((visibility("default"))) Processor : public Connectable, pub
  public:
 
   // OnTrigger method, implemented by NiFi Processor Designer
-  virtual void onTrigger(std::shared_ptr<ProcessContext> context, std::shared_ptr<ProcessSession> session) {
+  virtual void onTrigger(const std::shared_ptr<ProcessContext> &context, const std::shared_ptr<ProcessSession> &session) {
     onTrigger(context.get(), session.get());
   }
-  virtual void onTrigger(ProcessContext *context, ProcessSession *session) = 0;
+  virtual void onTrigger(ProcessContext *context, ProcessSession *session){
+
+  }
   // Initialize, overridden by NiFi Process Designer
   virtual void initialize() {
   }
   // Scheduled event hook, overridden by NiFi Process Designer
-  virtual void onSchedule(std::shared_ptr<ProcessContext> context, std::shared_ptr<ProcessSessionFactory> sessionFactory) {
+  virtual void onSchedule(const std::shared_ptr<ProcessContext> &context, const std::shared_ptr<ProcessSessionFactory> &sessionFactory) {
     onSchedule(context.get(), sessionFactory.get());
   }
   virtual void onSchedule(ProcessContext *context, ProcessSessionFactory *sessionFactory) {

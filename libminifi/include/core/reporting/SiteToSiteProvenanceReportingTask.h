@@ -27,7 +27,6 @@
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
 #include "RemoteProcessorGroupPort.h"
-#include "Site2SiteClientProtocol.h"
 #include "io/StreamFactory.h"
 #include "core/logging/LoggerConfiguration.h"
 
@@ -61,11 +60,13 @@ class SiteToSiteProvenanceReportingTask : public minifi::RemoteProcessorGroupPor
 
  public:
   //! Get provenance json report
-  void getJsonReport(core::ProcessContext *context, core::ProcessSession *session, std::vector<std::shared_ptr<core::SerializableComponent>> &records, std::string &report);
+  void getJsonReport(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session, std::vector<std::shared_ptr<core::SerializableComponent>> &records, std::string &report);
 
-  void onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory);
+
+  void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory);
   //! OnTrigger method, implemented by NiFi SiteToSiteProvenanceReportingTask
-  virtual void onTrigger(core::ProcessContext *context, core::ProcessSession *session);
+  void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session);
+
   //! Initialize, over write by NiFi SiteToSiteProvenanceReportingTask
   virtual void initialize(void);
   //! Set Port UUID

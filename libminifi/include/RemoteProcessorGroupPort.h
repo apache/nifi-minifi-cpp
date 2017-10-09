@@ -28,7 +28,7 @@
 #include "FlowFileRecord.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
-#include "Site2SiteClientProtocol.h"
+#include "sitetosite/SiteToSiteClient.h"
 #include "io/StreamFactory.h"
 #include "controllers/SSLContextService.h"
 #include "core/logging/LoggerConfiguration.h"
@@ -47,7 +47,7 @@ class RemoteProcessorGroupPort : public core::Processor {
   RemoteProcessorGroupPort(const std::shared_ptr<io::StreamFactory> &stream_factory, std::string name, std::string url, const std::shared_ptr<Configure> &configure, uuid_t uuid = nullptr)
       : core::Processor(name, uuid),
         configure_(configure),
-        direction_(SEND),
+        direction_(sitetosite::SEND),
         transmitting_(false),
         timeout_(0),
         logger_(logging::LoggerFactory<RemoteProcessorGroupPort>::getLogger()),
@@ -59,7 +59,7 @@ class RemoteProcessorGroupPort : public core::Processor {
     }
     site2site_port_ = -1;
     site2site_secure_ = false;
-    site2site_peer_index_ = -1;
+    peer_index_ = -1;
     // REST API port and host
     port_ = -1;
     utils::parse_url(url_, host_, port_, protocol_);
@@ -79,15 +79,16 @@ class RemoteProcessorGroupPort : public core::Processor {
   // Supported Relationships
   static core::Relationship relation;
  public:
-  void onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory);
+  virtual void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory);
   // OnTrigger method, implemented by NiFi RemoteProcessorGroupPort
-  virtual void onTrigger(core::ProcessContext *context, core::ProcessSession *session);
+  virtual void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session);
+
   // Initialize, over write by NiFi RemoteProcessorGroupPort
   virtual void initialize(void);
   // Set Direction
-  void setDirection(TransferDirection direction) {
+  void setDirection(sitetosite::TransferDirection direction) {
     direction_ = direction;
-    if (direction_ == RECEIVE)
+    if (direction_ == sitetosite::RECEIVE)
       this->setTriggerWhenEmpty(true);
   }
   // Set Timeout
@@ -120,16 +121,16 @@ class RemoteProcessorGroupPort : public core::Processor {
  protected:
 
   std::shared_ptr<io::StreamFactory> stream_factory_;
-  std::unique_ptr<Site2SiteClientProtocol> getNextProtocol(bool create);
-  void returnProtocol(std::unique_ptr<Site2SiteClientProtocol> protocol);
+  std::unique_ptr<sitetosite::SiteToSiteClient> getNextProtocol(bool create);
+  void returnProtocol(std::unique_ptr<sitetosite::SiteToSiteClient> protocol);
 
-  moodycamel::ConcurrentQueue<std::unique_ptr<Site2SiteClientProtocol>> available_protocols_;
+  moodycamel::ConcurrentQueue<std::unique_ptr<sitetosite::SiteToSiteClient>> available_protocols_;
 
   std::shared_ptr<Configure> configure_;
   // Logger
   std::shared_ptr<logging::Logger> logger_;
   // Transaction Direction
-  TransferDirection direction_;
+  sitetosite::TransferDirection direction_;
   // Transmitting
   bool transmitting_;
   // timeout
@@ -142,12 +143,17 @@ class RemoteProcessorGroupPort : public core::Processor {
   int port_;
   std::string protocol_;
   std::string url_;
+  bool http_enabled_;
+
+  sitetosite::CLIENT_TYPE client_type_;
+
 
   // Remote Site2Site Info
-  int site2site_port_;bool site2site_secure_;
-  std::vector<minifi::Site2SitePeerStatus> site2site_peer_status_list_;
-  std::atomic<int> site2site_peer_index_;
-  std::mutex site2site_peer_mutex_;
+  int site2site_port_;
+  bool site2site_secure_;
+  std::vector<sitetosite::PeerStatus> peers_;
+  std::atomic<int> peer_index_;
+  std::mutex peer_mutex_;
   std::string rest_user_name_;
   std::string rest_password_;
 

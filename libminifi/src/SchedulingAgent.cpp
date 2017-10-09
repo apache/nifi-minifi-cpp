@@ -75,7 +75,8 @@ bool SchedulingAgent::hasTooMuchOutGoing(std::shared_ptr<core::Processor> proces
   return processor->flowFilesOutGoingFull();
 }
 
-bool SchedulingAgent::onTrigger(std::shared_ptr<core::Processor> processor, std::shared_ptr<core::ProcessContext> processContext, std::shared_ptr<core::ProcessSessionFactory> sessionFactory) {
+bool SchedulingAgent::onTrigger(const std::shared_ptr<core::Processor> &processor, const std::shared_ptr<core::ProcessContext> &processContext,
+                                const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
   if (processor->isYield()) {
     logger_->log_debug("Not running %s since it must yield", processor->getName());
     return false;
@@ -89,14 +90,13 @@ bool SchedulingAgent::onTrigger(std::shared_ptr<core::Processor> processor, std:
     return true;
   }
   if (hasTooMuchOutGoing(processor)) {
-    logger_->log_debug("backpressure applied because too much outgoing");
+    logger_->log_debug("backpressure applied because too much outgoing for %s", processor->getUUIDStr());
     // need to apply backpressure
     return true;
   }
 
   processor->incrementActiveTasks();
   try {
-    logger_->log_debug("Triggering %s", processor->getName());
     processor->onTrigger(processContext, sessionFactory);
     processor->decrementActiveTask();
   } catch (Exception &exception) {

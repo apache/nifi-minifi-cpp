@@ -215,7 +215,7 @@ class GetTCP : public core::Processor, public state::metrics::MetricsSource {
    * @param sessionFactory process session factory that is used when creating
    * ProcessSession objects.
    */
-  virtual void onSchedule(std::shared_ptr<core::ProcessContext> processContext, std::shared_ptr<core::ProcessSessionFactory> sessionFactory);
+  virtual void onSchedule(const std::shared_ptr<core::ProcessContext> &processContext, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory);
 
   void onSchedule(core::ProcessContext *processContext, core::ProcessSessionFactory *sessionFactory) {
     throw std::exception();
@@ -225,7 +225,7 @@ class GetTCP : public core::Processor, public state::metrics::MetricsSource {
    * @param context processor context
    * @param session processor session reference.
    */
-  virtual void onTrigger(std::shared_ptr<core::ProcessContext> context, std::shared_ptr<core::ProcessSession> session);
+  virtual void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session);
 
   virtual void onTrigger(core::ProcessContext *context, core::ProcessSession *session) {
     throw std::exception();

@@ -126,7 +126,6 @@ int Serializable::readUTF(std::string &str, DataStream *stream, bool widen) {
     uint16_t shortLength = 0;
     ret = read(shortLength, stream);
     utflen = shortLength;
-
     if (ret <= 0)
       return ret;
   } else {

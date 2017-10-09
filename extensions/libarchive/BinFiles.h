@@ -270,7 +270,7 @@ class BinFiles : public core::Processor {
   virtual void onTrigger(core::ProcessContext *context, core::ProcessSession *session) {
   }
   // OnTrigger method, implemented by NiFi BinFiles
-  virtual void onTrigger(std::shared_ptr<core::ProcessContext> context, std::shared_ptr<core::ProcessSession> session);
+  virtual void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session);
   // Initialize, over write by NiFi BinFiles
   virtual void initialize(void);
 

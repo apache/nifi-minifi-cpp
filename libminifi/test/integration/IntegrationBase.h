@@ -41,9 +41,7 @@ int ssl_enable(void *ssl_context, void *user_data) {
   return 0;
 }
 
-void waitToVerifyProcessor() {
-  std::this_thread::sleep_for(std::chrono::seconds(3));
-}
+
 
 class IntegrationBase {
  public:
@@ -65,6 +63,10 @@ class IntegrationBase {
   virtual void cleanup() = 0;
 
   virtual void runAssertions() = 0;
+
+  virtual void waitToVerifyProcessor() {
+    std::this_thread::sleep_for(std::chrono::seconds(3));
+  }
 
  protected:
 
@@ -160,6 +162,11 @@ void IntegrationBase::setUrl(std::string url, CivetHandler *handler) {
   parse_http_components(url, port, scheme, path);
   struct mg_callbacks callback;
   if (url.find("localhost") != std::string::npos) {
+
+    if (server != nullptr){
+      server->addHandler(path,handler);
+      return;
+    }
     if (scheme == "https" && !key_dir.empty()) {
       std::string cert = "";
       cert = key_dir + "nifi-cert.pem";

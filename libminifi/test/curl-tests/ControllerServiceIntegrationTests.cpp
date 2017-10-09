@@ -123,7 +123,6 @@ int main(int argc, char **argv) {
     ssl_client = std::static_pointer_cast<minifi::controllers::SSLContextService>(ssl_client_cont->getControllerServiceImplementation());
   }
   assert(ssl_client->getCACertificate().length() > 0);
-  std::cout << "Disabling ID" << std::endl;
   // now let's disable one of the controller services.
   std::shared_ptr<core::controller::ControllerServiceNode> cs_id = controller->getControllerServiceNode("ID");
   assert(cs_id != nullptr);
@@ -133,7 +132,6 @@ int main(int argc, char **argv) {
     disabled = true;
     waitToVerifyProcessor();
   }
-  std::cout << "Disabled ID" << std::endl;
   {
     std::lock_guard<std::mutex> lock(control_mutex);
     controller->enableControllerService(cs_id);
@@ -141,7 +139,6 @@ int main(int argc, char **argv) {
     waitToVerifyProcessor();
   }
   std::shared_ptr<core::controller::ControllerServiceNode> mock_cont = controller->getControllerServiceNode("MockItLikeIts1995");
-  std::cout << "Disabling MockItLikeIts1995" << std::endl;
   assert(cs_id->enabled());
 {
     std::lock_guard<std::mutex> lock(control_mutex);
@@ -149,7 +146,6 @@ int main(int argc, char **argv) {
     disabled = true;
     waitToVerifyProcessor();
   }
-std::cout << "Disabled MockItLikeIts1995" << std::endl;
     assert(cs_id->enabled() == false);
 {
     std::lock_guard<std::mutex> lock(control_mutex);
@@ -157,7 +153,6 @@ std::cout << "Disabled MockItLikeIts1995" << std::endl;
     disabled = false;
     waitToVerifyProcessor();
   }
-std::cout << "Enabled ref for MockItLikeIts1995" << std::endl;
   assert(cs_id->enabled() == true);
 
   controller->waitUnload(60000);

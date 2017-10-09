@@ -98,42 +98,38 @@ void RESTSender::update(const std::shared_ptr<Configure> &configure) {
 }
 
 const C2Payload RESTSender::sendPayload(const std::string url, const Direction direction, const C2Payload &payload, const std::string outputConfig) {
-  if (!url.empty()) {
-    utils::HTTPClient client(url, ssl_context_service_);
-    client.setConnectionTimeout(2);
+  utils::HTTPClient client(url, ssl_context_service_);
+  client.setConnectionTimeout(2);
 
-    std::unique_ptr<utils::ByteInputCallBack> input = nullptr;
-    std::unique_ptr<utils::HTTPUploadCallback> callback = nullptr;
-    if (direction == Direction::TRANSMIT) {
-      input = std::unique_ptr<utils::ByteInputCallBack>(new utils::ByteInputCallBack());
-      callback = std::unique_ptr<utils::HTTPUploadCallback>(new utils::HTTPUploadCallback);
-      input->write(outputConfig);
-      callback->ptr = input.get();
-      callback->pos = 0;
-      client.set_request_method("POST");
-      client.setUploadCallback(callback.get());
-    } else {
-      // we do not need to set the uplaod callback
-      // since we are not uploading anything on a get
-      client.set_request_method("GET");
-    }
-    client.setContentType("application/json");
-    bool isOkay = client.submit();
-    int64_t respCode = client.getResponseCode();
-
-    if (isOkay && respCode) {
-      if (payload.isRaw()) {
-        C2Payload response_payload(payload.getOperation(), state::UpdateState::READ_COMPLETE, true, true);
-
-        response_payload.setRawData(client.getResponseBody());
-        return std::move(response_payload);
-      }
-      return parseJsonResponse(payload, client.getResponseBody());
-    } else {
-      return C2Payload(payload.getOperation(), state::UpdateState::READ_ERROR, true);
-    }
+  std::unique_ptr<utils::ByteInputCallBack> input = nullptr;
+  std::unique_ptr<utils::HTTPUploadCallback> callback = nullptr;
+  if (direction == Direction::TRANSMIT) {
+    input = std::unique_ptr<utils::ByteInputCallBack>(new utils::ByteInputCallBack());
+    callback = std::unique_ptr<utils::HTTPUploadCallback>(new utils::HTTPUploadCallback);
+    input->write(outputConfig);
+    callback->ptr = input.get();
+    callback->pos = 0;
+    client.set_request_method("POST");
+    client.setUploadCallback(callback.get());
   } else {
-    return C2Payload(payload.getOperation(), state::UpdateState::READ_COMPLETE, true);
+    // we do not need to set the uplaod callback
+    // since we are not uploading anything on a get
+    client.set_request_method("GET");
+  }
+  client.setContentType("application/json");
+  bool isOkay = client.submit();
+  int64_t respCode = client.getResponseCode();
+
+  if (isOkay && respCode) {
+    if (payload.isRaw()) {
+      C2Payload response_payload(payload.getOperation(), state::UpdateState::READ_COMPLETE, true, true);
+
+      response_payload.setRawData(client.getResponseBody());
+      return std::move(response_payload);
+    }
+    return parseJsonResponse(payload, client.getResponseBody());
+  } else {
+    return C2Payload(payload.getOperation(), state::UpdateState::READ_ERROR, true);
   }
 }
 

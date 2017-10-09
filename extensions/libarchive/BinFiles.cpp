@@ -234,7 +234,7 @@ bool BinManager::offer(const std::string &group, std::shared_ptr<core::FlowFile>
   return true;
 }
 
-void BinFiles::onTrigger(std::shared_ptr<core::ProcessContext> context, std::shared_ptr<core::ProcessSession> session) {
+void BinFiles::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
   std::shared_ptr<FlowFileRecord> flow = std::static_pointer_cast < FlowFileRecord > (session->get());
 
   if (flow != nullptr) {

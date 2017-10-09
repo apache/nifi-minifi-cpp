@@ -144,7 +144,8 @@ void TestPlan::reset() {
   }
 }
 
-bool TestPlan::runNextProcessor(std::function<void(core::ProcessContext*, core::ProcessSession*)> verify) {
+
+bool TestPlan::runNextProcessor(std::function<void(const std::shared_ptr<core::ProcessContext>, const std::shared_ptr<core::ProcessSession>)> verify) {
   if (!finalized) {
     finalize();
   }
@@ -164,7 +165,7 @@ bool TestPlan::runNextProcessor(std::function<void(core::ProcessContext*, core::
   processor->incrementActiveTasks();
   processor->setScheduledState(core::ScheduledState::RUNNING);
   if (verify != nullptr) {
-    verify(context.get(), current_session.get());
+    verify(context, current_session);
   } else {
     logger_->log_info("Running %s", processor->getName());
     processor->onTrigger(context, current_session);

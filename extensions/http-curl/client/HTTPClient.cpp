@@ -17,6 +17,7 @@
  */
 #include "HTTPClient.h"
 #include <memory>
+#include <climits>
 #include <map>
 #include <vector>
 #include <string>
@@ -37,8 +38,10 @@ HTTPClient::HTTPClient(const std::string &url, const std::shared_ptr<minifi::con
       read_timeout_(0),
       content_type(nullptr),
       headers_(nullptr),
+      callback(nullptr),
       http_code(0),
-      header_response_(1),
+      read_callback_(INT_MAX),
+      header_response_(-1),
       res(CURLE_OK) {
   HTTPClientInitializer *initializer = HTTPClientInitializer::getInstance();
   http_session_ = curl_easy_init();
@@ -51,10 +54,12 @@ HTTPClient::HTTPClient(std::string name, uuid_t uuid)
       logger_(logging::LoggerFactory<HTTPClient>::getLogger()),
       connect_timeout_(0),
       read_timeout_(0),
+      callback(nullptr),
       content_type(nullptr),
+      read_callback_(INT_MAX),
       headers_(nullptr),
       http_code(0),
-      header_response_(1),
+      header_response_(-1),
       res(CURLE_OK) {
   HTTPClientInitializer *initializer = HTTPClientInitializer::getInstance();
   http_session_ = curl_easy_init();
@@ -63,6 +68,7 @@ HTTPClient::HTTPClient(std::string name, uuid_t uuid)
 HTTPClient::HTTPClient()
     : core::Connectable("HTTPClient", 0),
       ssl_context_service_(nullptr),
+      callback(nullptr),
       url_(),
       logger_(logging::LoggerFactory<HTTPClient>::getLogger()),
       connect_timeout_(0),
@@ -70,17 +76,26 @@ HTTPClient::HTTPClient()
       content_type(nullptr),
       headers_(nullptr),
       http_code(0),
-      header_response_(1),
+      read_callback_(INT_MAX),
+      header_response_(-1),
       res(CURLE_OK) {
   HTTPClientInitializer *initializer = HTTPClientInitializer::getInstance();
   http_session_ = curl_easy_init();
 }
 
 HTTPClient::~HTTPClient() {
+  forceClose();
+}
+
+void HTTPClient::forceClose(){
   if (nullptr != headers_) {
     curl_slist_free_all(headers_);
+    headers_ = nullptr;
   }
-  curl_easy_cleanup(http_session_);
+  if (http_session_ != nullptr){
+    curl_easy_cleanup(http_session_);
+    http_session_ = nullptr;
+  }
 }
 
 void HTTPClient::setVerbose() {
@@ -108,18 +123,23 @@ void HTTPClient::setDisablePeerVerification() {
 
 void HTTPClient::setConnectionTimeout(int64_t timeout) {
   connect_timeout_ = timeout;
+  curl_easy_setopt(http_session_,CURLOPT_NOSIGNAL,1);
 }
 
 void HTTPClient::setReadTimeout(int64_t timeout) {
   read_timeout_ = timeout;
 }
 
+void HTTPClient::setReadCallback(HTTPReadCallback *callbackObj) {
+  callback = callbackObj;
+  curl_easy_setopt(http_session_, CURLOPT_WRITEFUNCTION, &utils::HTTPRequestResponse::recieve_write);
+  curl_easy_setopt(http_session_, CURLOPT_WRITEDATA, static_cast<void*>(callbackObj));
+}
+
 void HTTPClient::setUploadCallback(HTTPUploadCallback *callbackObj) {
   logger_->log_info("Setting callback");
   if (method_ == "put" || method_ == "PUT") {
     curl_easy_setopt(http_session_, CURLOPT_INFILESIZE_LARGE, (curl_off_t ) callbackObj->ptr->getBufferSize());
-  } else {
-    curl_easy_setopt(http_session_, CURLOPT_POSTFIELDSIZE, (curl_off_t ) callbackObj->ptr->getBufferSize());
   }
   curl_easy_setopt(http_session_, CURLOPT_READFUNCTION, &utils::HTTPRequestResponse::send_write);
   curl_easy_setopt(http_session_, CURLOPT_READDATA, static_cast<void*>(callbackObj));
@@ -159,6 +179,12 @@ void HTTPClient::appendHeader(const std::string &new_header) {
   headers_ = curl_slist_append(headers_, new_header.c_str());
 }
 
+void HTTPClient::appendHeader(const std::string &key, const std::string &value) {
+  std::stringstream new_header;
+  new_header << key << ": " << value;
+  headers_ = curl_slist_append(headers_, new_header.str().c_str());
+}
+
 void HTTPClient::setUseChunkedEncoding() {
   headers_ = curl_slist_append(headers_, "Transfer-Encoding: chunked");
 }
@@ -175,18 +201,52 @@ bool HTTPClient::submit() {
 
   curl_easy_setopt(http_session_, CURLOPT_URL, url_.c_str());
   logger_->log_info("Submitting to %s", url_);
-  curl_easy_setopt(http_session_, CURLOPT_WRITEFUNCTION, &utils::HTTPRequestResponse::recieve_write);
-  curl_easy_setopt(http_session_, CURLOPT_WRITEDATA, static_cast<void*>(&content_));
-
+  if (callback == nullptr) {
+    content_.ptr = &read_callback_;
+    curl_easy_setopt(http_session_, CURLOPT_WRITEFUNCTION, &utils::HTTPRequestResponse::recieve_write);
+    curl_easy_setopt(http_session_, CURLOPT_WRITEDATA, static_cast<void*>(&content_));
+  }
   curl_easy_setopt(http_session_, CURLOPT_HEADERFUNCTION, &utils::HTTPHeaderResponse::receive_headers);
   curl_easy_setopt(http_session_, CURLOPT_HEADERDATA, static_cast<void*>(&header_response_));
-
+  curl_easy_setopt(http_session_, CURLOPT_TCP_KEEPALIVE, 0L);
   res = curl_easy_perform(http_session_);
   curl_easy_getinfo(http_session_, CURLINFO_RESPONSE_CODE, &http_code);
   curl_easy_getinfo(http_session_, CURLINFO_CONTENT_TYPE, &content_type);
   if (res != CURLE_OK) {
     logger_->log_error("curl_easy_perform() failed %s\n", curl_easy_strerror(res));
     return false;
+  }
+
+  logger_->log_info("Finished with %s", url_);
+  std::string key = "";
+  for (auto header_line : header_response_.header_tokens_) {
+    int i = 0;
+    for (i = 0; i < header_line.length(); i++) {
+      if (header_line.at(i) == ':') {
+        break;
+      }
+    }
+    if (i >= header_line.length()) {
+      if (key.empty())
+        header_response_.append("HEADER", header_line);
+      else
+        header_response_.append(key, header_line);
+    } else {
+      key = header_line.substr(0, i);
+      int length = header_line.length() - (i + 2);
+      if (length <= 0) {
+        continue;
+      }
+      std::string value = header_line.substr(i + 2, length);
+      int end_find = value.size() - 1;
+      for (; end_find > 0; end_find--) {
+        if (value.at(end_find) > 32) {
+          break;
+        }
+      }
+      value = value.substr(0, end_find + 1);
+      header_response_.append(key, value);
+    }
   }
   return true;
 }
@@ -204,7 +264,9 @@ const char *HTTPClient::getContentType() {
 }
 
 const std::vector<char> &HTTPClient::getResponseBody() {
-  return content_.data;
+  if (response_body_.size() == 0)
+    response_body_ = std::move(read_callback_.to_string());
+  return response_body_;
 }
 
 void HTTPClient::set_request_method(const std::string method) {

@@ -33,7 +33,7 @@ Processors:
       Properties:
           SSL Context Service: SSLContextService
           HTTP Method: GET
-          Remote URL: https://localhost:10003/geturl
+          Remote URL: https://localhost:10004/geturl
           Disable Peer Verification: true
     - name: LogAttribute
       id: 2438e3c8-015a-1000-79ca-83af40ec1992
