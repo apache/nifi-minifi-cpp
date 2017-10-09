@@ -21,6 +21,9 @@
 #define __MERGE_CONTENT_H__
 
 #include "processors/BinFiles.h"
+#include "archive_entry.h"
+#include "archive.h"
+#include "core/logging/LoggerConfiguration.h"
 
 namespace org {
 namespace apache {
@@ -67,15 +70,19 @@ public:
     ~ReadCallback() {
     }
     int64_t process(std::shared_ptr<io::BaseStream> stream) {
-      uint8_t buffer[buffer_size_];
+      int max_read = getpagesize();
+      uint8_t buffer[max_read];
       int64_t ret = 0;
-      uint64_t read_size;
-      ret = stream->read(buffer, buffer_size_);
-      if (!stream)
-        read_size = stream->getSize();
-      else
-        read_size = buffer_size_;
-      ret = stream_->write(buffer, read_size);
+      uint64_t read_size = 0;
+      while (read_size < buffer_size_) {
+        int readRet = stream->read(buffer, sizeof(buffer));
+        if (readRet > 0) {
+          ret += stream_->write(buffer, readRet);
+          read_size += readRet;
+        } else {
+          break;
+        }
+      }
       return ret;
     }
     uint64_t buffer_size_;
@@ -124,6 +131,135 @@ public:
   };
 };
 
+
+// Archive Class
+class ArchiveMerge {
+public:
+  // Nest Callback Class for read stream
+  class ReadCallback: public InputStreamCallback {
+  public:
+    ReadCallback(uint64_t size, struct archive *arch, struct archive_entry *entry) :
+        buffer_size_(size), arch_(arch), entry_(entry) {
+    }
+    ~ReadCallback() {
+    }
+    int64_t process(std::shared_ptr<io::BaseStream> stream) {
+      int max_read = getpagesize();
+      uint8_t buffer[max_read];
+      int64_t ret = 0;
+      uint64_t read_size = 0;
+      ret = archive_write_header(arch_, entry_);
+      while (read_size < buffer_size_) {
+        int readRet = stream->read(buffer, sizeof(buffer));
+        if (readRet > 0) {
+          ret += archive_write_data(arch_, buffer, readRet);
+          read_size += readRet;
+        }
+        else {
+          break;
+        }
+      }
+      return ret;
+    }
+    uint64_t buffer_size_;
+    struct archive *arch_;
+    struct archive_entry *entry_;
+  };
+  // Nest Callback Class for write stream
+  class WriteCallback: public OutputStreamCallback {
+  public:
+    WriteCallback(std::string merge_type, std::deque<std::shared_ptr<core::FlowFile>> &flows, core::ProcessSession *session) :
+        merge_type_(merge_type), flows_(flows), session_(session),
+        logger_(logging::LoggerFactory<ArchiveMerge>::getLogger()) {
+      size_ = 0;
+      stream_ = nullptr;
+    }
+    ~WriteCallback() {
+    }
+
+    std::string merge_type_;
+    std::deque<std::shared_ptr<core::FlowFile>> &flows_;
+    core::ProcessSession *session_;
+    std::shared_ptr<io::BaseStream> stream_;
+    int64_t size_;
+    std::shared_ptr<logging::Logger> logger_;
+
+    static la_ssize_t archive_write(struct archive *arch, void *context, const void *buff, size_t size) {
+      WriteCallback *callback = (WriteCallback *) context;
+      la_ssize_t ret = callback->stream_->write(reinterpret_cast<uint8_t*>(const_cast<void*>(buff)), size);
+      if (ret > 0)
+        callback->size_ += (int64_t) ret;
+      return ret;
+    }
+
+    int64_t process(std::shared_ptr<io::BaseStream> stream) {
+      int64_t ret = 0;
+      struct archive *arch;
+
+      arch = archive_write_new();
+      if (merge_type_ == MERGE_FORMAT_TAR_VALUE) {
+        archive_write_set_format_pax_restricted(arch); // tar format
+      }
+      if (merge_type_ == MERGE_FORMAT_ZIP_VALUE) {
+        archive_write_set_format_zip(arch); // zip format
+      }
+      archive_write_set_bytes_per_block(arch, 0);
+      archive_write_add_filter_none(arch);
+      this->stream_ = stream;
+      archive_write_open(arch, this, NULL, archive_write, NULL);
+
+      for (auto flow : flows_) {
+        struct archive_entry *entry = archive_entry_new();
+        std::string fileName;
+        flow->getAttribute(FlowAttributeKey(FILENAME), fileName);
+        archive_entry_set_pathname(entry, fileName.c_str());
+        archive_entry_set_size(entry, flow->getSize());
+        archive_entry_set_mode(entry, S_IFREG | 0755);
+        if (merge_type_ == MERGE_FORMAT_TAR_VALUE) {
+          std::string perm;
+          int permInt;
+          if (flow->getAttribute(BinFiles::TAR_PERMISSIONS_ATTRIBUTE, perm)) {
+            try {
+              permInt = std::stoi(perm);
+              logger_->log_info("Merge Tar File %s permission %s", fileName, perm);
+              archive_entry_set_perm(entry, (mode_t) permInt);
+            } catch (...) {
+            }
+          }
+        }
+        ReadCallback readCb(flow->getSize(), arch, entry);
+        session_->read(flow, &readCb);
+        archive_entry_free(entry);
+      }
+
+      archive_write_close(arch);
+      archive_write_free(arch);
+      return size_;
+    }
+  };
+};
+
+// TarMerge Class
+class TarMerge: public ArchiveMerge, public MergeBin {
+public:
+  static const char *mimeType;
+  std::shared_ptr<core::FlowFile> merge(core::ProcessContext *context, core::ProcessSession *session, std::deque<std::shared_ptr<core::FlowFile>> &flows, std::string &header, std::string &footer,
+        std::string &demarcator);
+  std::string getMergedContentType() {
+    return mimeType;
+  }
+};
+
+// ZipMerge Class
+class ZipMerge: public ArchiveMerge, public MergeBin {
+public:
+  static const char *mimeType;
+  std::shared_ptr<core::FlowFile> merge(core::ProcessContext *context, core::ProcessSession *session, std::deque<std::shared_ptr<core::FlowFile>> &flows, std::string &header, std::string &footer,
+        std::string &demarcator);
+  std::string getMergedContentType() {
+    return mimeType;
+  }
+};
 
 // MergeContent Class
 class MergeContent : public processors::BinFiles {
