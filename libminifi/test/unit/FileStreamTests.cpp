@@ -19,6 +19,7 @@
 #include "io/FileStream.h"
 #include <string>
 #include <vector>
+#include <iostream>
 #include <uuid/uuid.h>
 #include "../TestBase.h"
 
@@ -174,7 +175,6 @@ TEST_CASE("TestFileBadArgumentNoChange3", "[TestLoader]") {
   unlink(ss.str().c_str());
 }
 
-
 TEST_CASE("TestFileBeyondEnd3", "[TestLoader]") {
   TestController testController;
   char format[] = "/tmp/gt.XXXXXX";
@@ -205,6 +205,41 @@ TEST_CASE("TestFileBeyondEnd3", "[TestLoader]") {
   data = verifybuffer.data();
 
   REQUIRE(std::string(reinterpret_cast<char*>(data), verifybuffer.size()) == "tempFile");
+
+  unlink(ss.str().c_str());
+}
+
+TEST_CASE("TestFileExceedSize", "[TestLoader]") {
+  TestController testController;
+  char format[] = "/tmp/gt.XXXXXX";
+  char *dir = testController.createTempDirectory(format);
+
+  std::fstream file;
+  std::stringstream ss;
+  ss << dir << "/" << "tstFile.ext";
+  std::string path = ss.str();
+  file.open(path, std::ios::out);
+  for (int i = 0; i < 10240; i++)
+    file << "tempFile";
+  file.close();
+
+  minifi::io::FileStream stream(path, 0, true);
+  std::vector<uint8_t> readBuffer;
+  REQUIRE(stream.readData(readBuffer, stream.getSize()) == stream.getSize());
+
+  uint8_t* data = readBuffer.data();
+
+  stream.seek(0);
+
+  std::vector<uint8_t> verifybuffer;
+
+  for (int i = 0; i < 10; i++)
+    REQUIRE(stream.readData(verifybuffer, 8192) == 8192);
+  REQUIRE(stream.readData(verifybuffer, 8192) == 0);
+  stream.seek(0);
+  for (int i = 0; i < 10; i++)
+    REQUIRE(stream.readData(verifybuffer, 8192) == 8192);
+  REQUIRE(stream.readData(verifybuffer, 8192) == 0);
 
   unlink(ss.str().c_str());
 }

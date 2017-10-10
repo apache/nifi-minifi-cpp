@@ -135,13 +135,14 @@ int FileStream::readData(uint8_t *buf, int buflen) {
     file_stream_->read(reinterpret_cast<char*>(buf), buflen);
     if ((file_stream_->rdstate() & (file_stream_->eofbit | file_stream_->failbit)) != 0) {
       file_stream_->clear();
+      size_t prev_offset = offset_;
       file_stream_->seekg(0, file_stream_->end);
       file_stream_->seekp(0, file_stream_->end);
       int len = file_stream_->tellg();
       offset_ = len;
       length_ = len;
       logger_->log_info("%s eof bit, ended at %d", path_, offset_);
-      return offset_;
+      return offset_-prev_offset;
     } else {
       offset_ += buflen;
       file_stream_->seekp(offset_);
