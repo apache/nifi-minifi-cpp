@@ -29,7 +29,6 @@ include_directories(../../libminifi/include ../../libminifi/include/c2  ../../li
 find_package(Boost REQUIRED)
 find_package(RocksDB)
 
-SET_PACKAGE_INFO("HTTP-CURL" "libcURL implementation code that supports " )
 
 include_directories(${Boost_INCLUDE_DIRS})
 
@@ -56,7 +55,7 @@ add_dependencies(minifi-rocksdb-repos jsoncpp_project)
 find_package(OpenSSL REQUIRED)
 include_directories(${OPENSSL_INCLUDE_DIR})
 target_link_libraries(minifi-rocksdb-repos ${CMAKE_DL_LIBS} )
-if (ROCKSDB_FOUND)
+if (ROCKSDB_FOUND AND NOT BUILD_ROCKSDB)
 	target_link_libraries(minifi-rocksdb-repos ${ROCKSDB_LIBRARIES} )
 else()
 	target_link_libraries(minifi-rocksdb-repos rocksdb )
