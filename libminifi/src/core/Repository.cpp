@@ -20,7 +20,6 @@
 #include <cstdint>
 #include <vector>
 
-#include "../../include/core/repository/FlowFileRepository.h"
 #include "io/DataStream.h"
 #include "io/Serializable.h"
 #include "core/Relationship.h"

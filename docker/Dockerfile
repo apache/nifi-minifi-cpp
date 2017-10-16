@@ -17,7 +17,7 @@
 #
 
 # First stage: the build environment
-# Edge required for leveldb
+# Edge required for rocksdb
 FROM alpine:edge AS builder
 MAINTAINER Apache NiFi <dev@nifi.apache.org>
 
@@ -27,7 +27,7 @@ ARG MINIFI_VERSION
 ARG MINIFI_SOURCE_CODE
 
 # Install the system dependencies needed for a build
-# Add testing repo for leveldb
+# Add testing repo for rocksdb
 RUN echo 'http://dl-cdn.alpinelinux.org/alpine/edge/testing' >> /etc/apk/repositories
 RUN apk --update --no-cache upgrade && apk --update --no-cache add gcc \
 	g++ \
@@ -38,7 +38,7 @@ RUN apk --update --no-cache upgrade && apk --update --no-cache add gcc \
 	boost-dev \
 	vim \
 	util-linux-dev \
-	leveldb-dev \
+	rocksdb-dev \
 	curl-dev \
 	cmake \
 	git \
@@ -70,7 +70,7 @@ RUN cd $MINIFI_BASE_DIR \
 	&& tar -xzvf $MINIFI_BASE_DIR/build/nifi-minifi-cpp-$MINIFI_VERSION-bin.tar.gz -C $MINIFI_BASE_DIR
 
 # Second stage: the runtime image
-# Edge required for leveldb
+# Edge required for rocksdb
 FROM alpine:edge
 
 ARG UID
@@ -78,12 +78,12 @@ ARG GID
 ARG MINIFI_VERSION
 ARG MINIFI_SOURCE_CODE
 
-# Add testing repo for leveldb
+# Add testing repo for rocksdb
 RUN echo 'http://dl-cdn.alpinelinux.org/alpine/edge/testing' >> /etc/apk/repositories
 
 RUN apk --update --no-cache upgrade && apk add --update --no-cache \
 	util-linux \
-	leveldb \
+	rocksdb \
 	curl \
 	unzip \
 	gpsd \

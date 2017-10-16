@@ -83,11 +83,11 @@ void VolatileContentRepository::start() {
   thread_ = std::thread(&VolatileContentRepository::run, shared_from_parent<VolatileContentRepository>());
   thread_.detach();
   running_ = true;
-  logger_->log_info("%s Repository Monitor Thread Start", name_);
+  logger_->log_info("%s Repository Monitor Thread Start", getName());
 }
 
 std::shared_ptr<io::BaseStream> VolatileContentRepository::write(const std::shared_ptr<minifi::ResourceClaim> &claim) {
-  logger_->log_debug("enter write");
+  logger_->log_debug("enter write for %s", claim->getContentFullPath());
   {
     std::lock_guard<std::mutex> lock(map_mutex_);
     auto claim_check = master_list_.find(claim->getContentFullPath());
@@ -133,7 +133,7 @@ std::shared_ptr<io::BaseStream> VolatileContentRepository::write(const std::shar
 }
 
 bool VolatileContentRepository::exists(const std::shared_ptr<minifi::ResourceClaim> &claim) {
-  logger_->log_debug("enter exists");
+  logger_->log_debug("enter exists for %s", claim->getContentFullPath());
   int size = 0;
   {
     std::lock_guard<std::mutex> lock(map_mutex_);
@@ -150,7 +150,7 @@ bool VolatileContentRepository::exists(const std::shared_ptr<minifi::ResourceCla
 }
 
 std::shared_ptr<io::BaseStream> VolatileContentRepository::read(const std::shared_ptr<minifi::ResourceClaim> &claim) {
-  logger_->log_debug("enter read");
+  logger_->log_debug("enter read for %s", claim->getContentFullPath());
   int size = 0;
   {
     std::lock_guard<std::mutex> lock(map_mutex_);
@@ -175,19 +175,28 @@ bool VolatileContentRepository::remove(const std::shared_ptr<minifi::ResourceCla
     if (ent != master_list_.end()) {
       // if we cannot remove the entry we will let the owner's destructor
       // decrement the reference count and free it
+      master_list_.erase(claim->getContentFullPath());
       if (ent->second->freeValue(claim)) {
         logger_->log_debug("removed %s", claim->getContentFullPath());
+        logger_->log_debug("Remove for %s, reduced to %d", claim->getContentFullPath(), current_size_.load());
         return true;
+      } else {
+        logger_->log_debug("free failed for %s", claim->getContentFullPath());
       }
-      master_list_.erase(claim->getContentFullPath());
+    } else {
+      logger_->log_debug("Could not remove for %s, size is %d", claim->getContentFullPath(), current_size_.load());
     }
   } else {
     std::lock_guard<std::mutex> lock(map_mutex_);
+    auto size = master_list_[claim->getContentFullPath()]->getLength();
     delete master_list_[claim->getContentFullPath()];
     master_list_.erase(claim->getContentFullPath());
+    current_size_ -= size;
+    logger_->log_debug("Remove for %s, reduced to %d", claim->getContentFullPath(), current_size_.load());
     return true;
   }
 
+  logger_->log_debug("Remove for %s, reduced to %d", claim->getContentFullPath(), current_size_.load());
   logger_->log_debug("could not remove %s", claim->getContentFullPath());
   return false;
 }

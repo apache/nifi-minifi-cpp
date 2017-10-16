@@ -28,7 +28,7 @@ namespace nifi {
 namespace minifi {
 namespace core {
 
-class FlowFile {
+class FlowFile : public core::Connectable {
  public:
   FlowFile();
   ~FlowFile();
@@ -179,11 +179,6 @@ class FlowFile {
    */
   uint64_t getOffset();
 
-  // Get the UUID as string
-  std::string getUUIDStr() {
-    return uuid_str_;
-  }
-
   bool getUUID(uuid_t other) {
     uuid_copy(other, uuid_);
     return true;
@@ -193,6 +188,27 @@ class FlowFile {
   bool isPenalized() {
     return (penaltyExpiration_ms_ > 0 ? penaltyExpiration_ms_ > getTimeMillis() : false);
   }
+
+  /**
+     * Yield
+     */
+    virtual void yield(){
+
+    }
+    /**
+     * Determines if we are connected and operating
+     */
+    virtual bool isRunning(){
+      return true;
+    }
+
+    /**
+     * Determines if work is available by this connectable
+     * @return boolean if work is available.
+     */
+    virtual bool isWorkAvailable(){
+      return true;
+    }
 
   /**
    * Sets the original connection with a shared pointer.
@@ -245,7 +261,6 @@ class FlowFile {
   // Size in bytes of the data corresponding to this flow file
   uint64_t size_;
   // A global unique identifier
-  uuid_t uuid_;
   // A local unique identifier
   uint64_t id_;
   // Offset to the content
@@ -257,7 +272,7 @@ class FlowFile {
   // Pointer to the associated content resource claim
   std::shared_ptr<ResourceClaim> claim_;
   // UUID string
-  std::string uuid_str_;
+  //std::string uuid_str_;
   // UUID string for all parents
   std::set<std::string> lineage_Identifiers_;
 

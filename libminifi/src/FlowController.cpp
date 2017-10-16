@@ -49,7 +49,7 @@
 #include "SchedulingAgent.h"
 #include "core/controller/ControllerServiceProvider.h"
 #include "core/logging/LoggerConfiguration.h"
-#include "core/repository/FlowFileRepository.h"
+#include "core/Connectable.h"
 
 namespace org {
 namespace apache {
@@ -306,15 +306,12 @@ void FlowController::reload(std::string yamlFile) {
 void FlowController::loadFlowRepo() {
   if (this->flow_file_repo_ != nullptr) {
     logger_->log_debug("Getting connection map");
-    std::map<std::string, std::shared_ptr<Connection>> connectionMap;
+    std::map<std::string, std::shared_ptr<core::Connectable>> connectionMap;
     if (this->root_ != nullptr) {
       this->root_->getConnections(connectionMap);
     }
     logger_->log_debug("Number of connections from connectionMap %d", connectionMap.size());
-    auto rep = std::dynamic_pointer_cast<core::repository::FlowFileRepository>(flow_file_repo_);
-    if (nullptr != rep) {
-      rep->setConnectionMap(connectionMap);
-    }
+    flow_file_repo_->setConnectionMap(connectionMap);
     flow_file_repo_->loadComponent(content_repo_);
   } else {
     logger_->log_debug("Flow file repository is not set");
