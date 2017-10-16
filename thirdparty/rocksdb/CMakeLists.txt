@@ -348,10 +348,8 @@ endif()
 
 include_directories(${PROJECT_SOURCE_DIR})
 include_directories(${PROJECT_SOURCE_DIR}/include)
-include_directories(SYSTEM ${PROJECT_SOURCE_DIR}/third-party/gtest-1.7.0/fused-src)
 find_package(Threads REQUIRED)
 
-add_subdirectory(third-party/gtest-1.7.0/fused-src/gtest)
 
 # Main library source code
 
@@ -497,10 +495,8 @@ set(SOURCES
         util/status_message.cc
         util/string_util.cc
         util/sync_point.cc
-        util/testutil.cc
         util/thread_local.cc
         util/threadpool_imp.cc
-        util/transaction_test_util.cc
         util/xxhash.cc
         utilities/backupable/backupable_db.cc
         utilities/blob_db/blob_db.cc
@@ -630,24 +626,6 @@ else()
   message(STATUS "JNI library is disabled")
 endif()
 
-if(WITH_LIBRADOS)
-  list(APPEND TESTS utilities/env_librados_test.cc)
-endif()
-
-set(BENCHMARKS
-  cache/cache_bench.cc
-  memtable/memtablerep_bench.cc
-  tools/db_bench.cc
-  table/table_reader_bench.cc
-  utilities/column_aware_encoding_exp.cc
-  utilities/persistent_cache/hash_table_bench.cc)
-add_library(testharness OBJECT util/testharness.cc)
-foreach(sourcefile ${BENCHMARKS})
-  get_filename_component(exename ${sourcefile} NAME_WE)
-  add_executable(${exename}${ARTIFACT_SUFFIX} ${sourcefile}
-    $<TARGET_OBJECTS:testharness>)
-  target_link_libraries(${exename}${ARTIFACT_SUFFIX} gtest ${LIBS})
-endforeach(sourcefile ${BENCHMARKS})
 
 add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND})
 

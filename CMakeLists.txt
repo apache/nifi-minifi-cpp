@@ -112,7 +112,7 @@ endif()
 
 if (NOT DISABLE_ROCKSDB)
 	find_package(RocksDB)
-	if (NOT ROCKSDB_FOUND)
+	if (NOT ROCKSDB_FOUND OR BUILD_ROCKSDB)
 		add_subdirectory(thirdparty/rocksdb/)
 		include_directories(thirdparty/rocksdb/include)
 	else()
