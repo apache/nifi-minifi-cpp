@@ -28,6 +28,8 @@ matrix:
     - os: linux
       dist: trusty
       sudo: required
+      env:
+        - CMAKE_BUILD_OPTIONS="-DENABLE_BUSTACHE=1"
       addons:
         apt:
           sources:

@@ -193,6 +193,12 @@ if (ENABLE_TENSORFLOW)
     createExtension(TENSORFLOW-EXTENSIONS "TENSORFLOW EXTENSIONS" "This enables TensorFlow support" "extensions/tensorflow" "${TEST_DIR}/tensorflow-tests")
 endif()
 
+## Bustache/template extensions
+option(ENABLE_BUSTACHE "Enables Bustache (ApplyTemplate) support." OFF)
+if (ENABLE_BUSTACHE)
+    createExtension(BUSTACHE-EXTENSIONS "BUSTACHE EXTENSIONS" "This enables bustache functionality including ApplyTemplate." "extensions/bustache" "${TEST_DIR}/bustache-tests" "TRUE" "thirdparty/bustache")
+endif()
+
 ## NOW WE CAN ADD LIBRARIES AND EXTENSIONS TO MAIN
 
 add_subdirectory(main)
