@@ -1,6 +1,6 @@
 /**
  * @file FlowFileRecord.cpp
- * Flow file record class implementation 
+ * Flow file record class implementation
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -103,6 +103,16 @@ FlowFileRecord::~FlowFileRecord() {
   else
     logger_->log_debug("Delete SnapShot FlowFile UUID %s", uuidStr_.c_str());
   if (claim_) {
+    releaseClaim(claim_);
+  }
+
+  // Disown stash claims
+  for (const auto &stashPair : stashedContent_) {
+    releaseClaim(stashPair.second);
+  }
+}
+
+void FlowFileRecord::releaseClaim(std::shared_ptr<ResourceClaim> claim) {
     // Decrease the flow file record owned count for the resource claim
     claim_->decreaseFlowFileRecordOwnedCount();
     std::string value;
@@ -113,7 +123,6 @@ FlowFileRecord::~FlowFileRecord() {
         content_repo_->remove(claim_);
       }
     }
-  }
 }
 
 bool FlowFileRecord::addKeyedAttribute(FlowAttribute key, std::string value) {

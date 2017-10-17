@@ -34,6 +34,7 @@
 #include "processors/LogAttribute.h"
 #include "processors/ExecuteProcess.h"
 #include "processors/AppendHostInfo.h"
+
 #include "core/Processor.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "core/ProcessContext.h"

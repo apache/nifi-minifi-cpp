@@ -20,6 +20,8 @@
 
 #include "MergeContent.h"
 #include "CompressContent.h"
+#include "FocusArchiveEntry.h"
+#include "UnfocusArchiveEntry.h"
 #include "core/ClassLoader.h"
 
 class __attribute__((visibility("default"))) ArchiveFactory : public core::ObjectFactory {
@@ -47,6 +49,8 @@ class __attribute__((visibility("default"))) ArchiveFactory : public core::Objec
     std::vector<std::string> class_names;
     class_names.push_back("MergeContent");
     class_names.push_back("CompressContent");
+    class_names.push_back("FocusArchiveEntry");
+    class_names.push_back("UnfocusArchiveEntry");
     return class_names;
   }
 
@@ -57,6 +61,10 @@ class __attribute__((visibility("default"))) ArchiveFactory : public core::Objec
       return std::unique_ptr<ObjectFactory>(new core::DefautObjectFactory<minifi::processors::MergeContent>());
     } else if (name == "compresscontent") {
       return std::unique_ptr<ObjectFactory>(new core::DefautObjectFactory<minifi::processors::CompressContent>());
+    } else if (name == "focusarchiveentry") {
+      return std::unique_ptr<ObjectFactory>(new core::DefautObjectFactory<minifi::processors::FocusArchiveEntry>());
+    } else if (name == "unfocusarchiveentry") {
+      return std::unique_ptr<ObjectFactory>(new core::DefautObjectFactory<minifi::processors::UnfocusArchiveEntry>());
     } else {
       return nullptr;
     }

@@ -50,6 +50,33 @@ class FlowFile : public core::Connectable {
   void clearResourceClaim();
 
   /**
+   * Returns a pointer to this flow file record's
+   * claim at the given stash key
+   */
+  std::shared_ptr<ResourceClaim> getStashClaim(const std::string &key);
+
+  /**
+   * Sets the given stash key to the inbound claim argument
+   */
+  void setStashClaim(const std::string &key, const std::shared_ptr<ResourceClaim> &claim);
+
+  /**
+   * Clear the resource claim at the given stash key
+   */
+  void clearStashClaim(const std::string &key);
+
+  /**
+   * Return true if the given stash claim exists
+   */
+  bool hasStashClaim(const std::string &key);
+
+  /**
+   * Decrease the flow file record owned count for the resource claim and, if 
+   * its counter is at zero, remove it from the repo.
+   */
+  virtual void releaseClaim(const std::shared_ptr<ResourceClaim> claim) = 0;
+
+  /**
    * Get lineage identifiers
    */
   std::set<std::string> &getlineageIdentifiers();
@@ -271,6 +298,8 @@ class FlowFile : public core::Connectable {
   std::map<std::string, std::string> attributes_;
   // Pointer to the associated content resource claim
   std::shared_ptr<ResourceClaim> claim_;
+  // Pointers to stashed content resource claims
+  std::map<std::string, std::shared_ptr<ResourceClaim>> stashedContent_;
   // UUID string
   //std::string uuid_str_;
   // UUID string for all parents
