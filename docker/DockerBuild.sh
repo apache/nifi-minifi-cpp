@@ -38,6 +38,7 @@ cp -r $CMAKE_SOURCE_DIR/conf $CMAKE_SOURCE_DIR/docker/minificppsource/.
 cp -r $CMAKE_SOURCE_DIR/examples $CMAKE_SOURCE_DIR/docker/minificppsource/.
 cp -r $CMAKE_SOURCE_DIR/include $CMAKE_SOURCE_DIR/docker/minificppsource/.
 cp -r $CMAKE_SOURCE_DIR/libminifi $CMAKE_SOURCE_DIR/docker/minificppsource/.
+cp -r $CMAKE_SOURCE_DIR/extensions $CMAKE_SOURCE_DIR/docker/minificppsource/.
 cp -r $CMAKE_SOURCE_DIR/main $CMAKE_SOURCE_DIR/docker/minificppsource/.
 cp -r $CMAKE_SOURCE_DIR/thirdparty $CMAKE_SOURCE_DIR/docker/minificppsource/.
 cp -r $CMAKE_SOURCE_DIR/CMakeLists.txt $CMAKE_SOURCE_DIR/docker/minificppsource/.
