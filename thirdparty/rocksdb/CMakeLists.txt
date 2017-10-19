@@ -573,24 +573,12 @@ else()
 endif()
 
 set(ROCKSDB_STATIC_LIB rocksdb${ARTIFACT_SUFFIX})
-set(ROCKSDB_SHARED_LIB rocksdb-shared${ARTIFACT_SUFFIX})
-set(ROCKSDB_IMPORT_LIB ${ROCKSDB_SHARED_LIB})
 if(WIN32)
   set(SYSTEM_LIBS ${SYSTEM_LIBS} Shlwapi.lib Rpcrt4.lib)
   set(LIBS ${ROCKSDB_STATIC_LIB} ${THIRDPARTY_LIBS} ${SYSTEM_LIBS})
 else()
   set(SYSTEM_LIBS ${CMAKE_THREAD_LIBS_INIT})
-  set(LIBS ${ROCKSDB_SHARED_LIB} ${THIRDPARTY_LIBS} ${SYSTEM_LIBS})
 
-  add_library(${ROCKSDB_SHARED_LIB} SHARED ${SOURCES})
-  target_link_libraries(${ROCKSDB_SHARED_LIB}
-    ${THIRDPARTY_LIBS} ${SYSTEM_LIBS})
-  set_target_properties(${ROCKSDB_SHARED_LIB} PROPERTIES
-                        LINKER_LANGUAGE CXX
-                        VERSION ${ROCKSDB_VERSION}
-                        SOVERSION ${ROCKSDB_VERSION_MAJOR}
-                        CXX_STANDARD 11
-                        OUTPUT_NAME "rocksdb")
 endif()
 
 option(WITH_LIBRADOS "Build with librados" OFF)
@@ -605,7 +593,6 @@ target_link_libraries(${ROCKSDB_STATIC_LIB}
   ${THIRDPARTY_LIBS} ${SYSTEM_LIBS})
 
 if(WIN32)
-  add_library(${ROCKSDB_IMPORT_LIB} SHARED ${SOURCES})
   target_link_libraries(${ROCKSDB_IMPORT_LIB}
     ${THIRDPARTY_LIBS} ${SYSTEM_LIBS})
   set_target_properties(${ROCKSDB_IMPORT_LIB} PROPERTIES
@@ -634,7 +621,6 @@ add_subdirectory(tools)
 # Installation and packaging for Linux
 if(NOT WIN32)
 install(TARGETS ${ROCKSDB_STATIC_LIB} COMPONENT devel ARCHIVE DESTINATION lib64)
-install(TARGETS ${ROCKSDB_SHARED_LIB} COMPONENT runtime DESTINATION lib64)
 install(DIRECTORY "${PROJECT_SOURCE_DIR}/include/rocksdb/"
         COMPONENT devel
         DESTINATION include/rocksdb)
