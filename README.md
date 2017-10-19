@@ -90,6 +90,7 @@ DIRECTORY UNLESS YOU SPECIFY -DDISABLE_ROCKSDB=true WITH CMAKE ***
 * librocksdb *** IF NOT INSTALLED, WILL BE BUILT FROM THIRD PARTY DIRECTORY ***
 * libcurl
 * libssl and libcrypto from openssl 
+* libarchive
 
 The needed dependencies can be installed with the following commands for:
 

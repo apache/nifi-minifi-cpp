@@ -101,6 +101,7 @@ set(CIVETWEB_ENABLE_SSL_DYNAMIC_LOADING OFF CACHE BOOL "Disable dynamic SSL libr
 set(CIVETWEB_ENABLE_CXX ON CACHE BOOL "Enable civet C++ library")
 add_subdirectory(thirdparty/yaml-cpp-yaml-cpp-0.5.3)
 add_subdirectory(thirdparty/civetweb-1.9.1 EXCLUDE_FROM_ALL)
+add_subdirectory(thirdparty/libarchive-3.3.2)
 include_directories(thirdparty/concurrentqueue)
 add_subdirectory(libminifi)
 if (NOT DISABLE_CURL)
