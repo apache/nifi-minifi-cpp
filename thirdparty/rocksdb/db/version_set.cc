@@ -965,7 +965,7 @@ void Version::Get(const ReadOptions& read_options, const LookupKey& k,
                   PinnableSlice* value, Status* status,
                   MergeContext* merge_context,
                   RangeDelAggregator* range_del_agg, bool* value_found,
-                  bool* key_exists, SequenceNumber* seq) {
+                  bool* key_exists, SequenceNumber* seq, bool* is_blob) {
   Slice ikey = k.internal_key();
   Slice user_key = k.user_key();
 
@@ -981,7 +981,7 @@ void Version::Get(const ReadOptions& read_options, const LookupKey& k,
       user_comparator(), merge_operator_, info_log_, db_statistics_,
       status->ok() ? GetContext::kNotFound : GetContext::kMerge, user_key,
       value, value_found, merge_context, range_del_agg, this->env_, seq,
-      merge_operator_ ? &pinned_iters_mgr : nullptr);
+      merge_operator_ ? &pinned_iters_mgr : nullptr, is_blob);
 
   // Pin blocks that we read to hold merge operands
   if (merge_operator_) {
@@ -1030,6 +1030,12 @@ void Version::Get(const ReadOptions& read_options, const LookupKey& k,
         return;
       case GetContext::kMerge:
         break;
+      case GetContext::kBlobIndex:
+        ROCKS_LOG_ERROR(info_log_, "Encounter unexpected blob index.");
+        *status = Status::NotSupported(
+            "Encounter unexpected blob index. Please open DB with "
+            "rocksdb::blob_db::BlobDB instead.");
+        return;
     }
     f = fp.GetNextFile();
   }
@@ -2842,11 +2848,6 @@ Status VersionSet::Recover(
         cfd = column_family_set_->GetColumnFamily(edit.column_family_);
         // this should never happen since cf_in_builders is true
         assert(cfd != nullptr);
-        if (edit.max_level_ >= cfd->current()->storage_info()->num_levels()) {
-          s = Status::InvalidArgument(
-              "db has more levels than options.num_levels");
-          break;
-        }
 
         // if it is not column family add or column family drop,
         // then it's a file add/delete, which should be forwarded
@@ -2928,6 +2929,18 @@ Status VersionSet::Recover(
     s = Status::InvalidArgument(
         "You have to open all column families. Column families not opened: " +
         list_of_not_found);
+  }
+
+  if (s.ok()) {
+    for (auto cfd : *column_family_set_) {
+      assert(builders.count(cfd->GetID()) > 0);
+      auto* builder = builders[cfd->GetID()]->version_builder();
+      if (!builder->CheckConsistencyForNumLevels()) {
+        s = Status::InvalidArgument(
+            "db has more levels than options.num_levels");
+        break;
+      }
+    }
   }
 
   if (s.ok()) {
