@@ -113,6 +113,7 @@ set(JSONCPP_LIB "${JSONCPP_LIB_DIR}/lib/${prefix}jsoncpp${suffix}")
 
 set(CIVETWEB_ENABLE_SSL_DYNAMIC_LOADING OFF CACHE BOOL "Disable dynamic SSL library loading")
 set(CIVETWEB_ENABLE_CXX ON CACHE BOOL "Enable civet C++ library")
+SET(WITH_TESTS OFF CACHE BOOL "Build RocksDB library (not repo) tests")
 add_subdirectory(thirdparty/yaml-cpp-yaml-cpp-20171024)
 set(BUILD_CIVET_TESTING OFF)
 add_subdirectory(thirdparty/civetweb-1.10 EXCLUDE_FROM_ALL)
