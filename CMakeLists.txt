@@ -130,7 +130,7 @@ endif()
 ## ENABLE FEATURE INFORMATION
 ADD_FEATURE_INFO("HTTP CURL" HTTP-CURL "This enables RESTProtocol, InvokeHTTP, and the HTTPClient for Site to Site")
 ADD_FEATURE_INFO("ROCKSDB REPOS" ROCKSDB-REPOS "This Enables persistent provenance, flowfile, and content repositories using RocksDB")
-ADD_FEATURE_INFO("ARCHIVE EXTENSIONS" ARCHIVE-EXTENSIONS "This Enables libarchive functionality including MergeContent")
+ADD_FEATURE_INFO("ARCHIVE EXTENSIONS" ARCHIVE-EXTENSIONS "This Enables libarchive functionality including MergeContent, CompressContent")
 
 ## NOW WE CAN ADD LIBRARIES AND EXTENSIONS TO MAIN
 

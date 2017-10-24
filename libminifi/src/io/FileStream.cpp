@@ -47,7 +47,8 @@ FileStream::FileStream(const std::string &path)
 
 FileStream::FileStream(const std::string &path, uint32_t offset, bool write_enable)
     : logger_(logging::LoggerFactory<FileStream>::getLogger()),
-      path_(path) {
+      path_(path),
+      offset_(offset) {
   file_stream_ = std::unique_ptr<std::fstream>(new std::fstream());
   if (write_enable) {
     file_stream_->open(path.c_str(), std::fstream::in | std::fstream::out | std::fstream::binary);
