@@ -29,11 +29,6 @@ include(FeatureSummary)
 
 #### Establish Project Configuration ####
 # Enable usage of the VERSION specifier
-# https://cmake.org/cmake/help/v3.0/policy/CMP0048.html#policy:CMP0048
-IF(POLICY CMP0048)
-    CMAKE_POLICY(SET CMP0048 OLD)
-ENDIF(POLICY CMP0048)
-
 include(CheckCXXCompilerFlag)
 CHECK_CXX_COMPILER_FLAG("-std=c++11 " COMPILER_SUPPORTS_CXX11)
 CHECK_CXX_COMPILER_FLAG("-std=c++0x " COMPILER_SUPPORTS_CXX0X)
@@ -99,10 +94,10 @@ set(JSONCPP_LIB "${JSONCPP_LIB_DIR}/lib/${prefix}jsoncpp${suffix}")
 
 set(CIVETWEB_ENABLE_SSL_DYNAMIC_LOADING OFF CACHE BOOL "Disable dynamic SSL library loading")
 set(CIVETWEB_ENABLE_CXX ON CACHE BOOL "Enable civet C++ library")
-add_subdirectory(thirdparty/yaml-cpp-yaml-cpp-0.5.3)
+add_subdirectory(thirdparty/yaml-cpp-yaml-cpp-20171024)
 add_subdirectory(thirdparty/civetweb-1.9.1 EXCLUDE_FROM_ALL)
-add_subdirectory(thirdparty/libarchive-3.3.2)
 include_directories(thirdparty/concurrentqueue)
+include_directories(thirdparty/yaml-cpp-yaml-cpp-20171024/include)
 add_subdirectory(libminifi)
 if (NOT DISABLE_CURL)
 	find_package(CURL)
@@ -123,12 +118,21 @@ if (NOT DISABLE_ROCKSDB)
 	add_subdirectory(extensions/rocksdb-repos)
 	mark_as_advanced(ROCKSDB-REPOS)
 
-	
+endif()
+
+if (NOT DISABLE_LIBARCHIVE)
+	find_package(LibArchive)
+	if (NOT LibArchive_FOUND OR BUILD_LIBARCHIVE)
+		add_subdirectory(thirdparty/libarchive-3.3.2)
+	endif()
+	add_subdirectory(extensions/libarchive)
+	mark_as_advanced(ARCHIVE-EXTENSIONS)
 endif()
 
 ## ENABLE FEATURE INFORMATION
 ADD_FEATURE_INFO("HTTP CURL" HTTP-CURL "This enables RESTProtocol, InvokeHTTP, and the HTTPClient for Site to Site")
 ADD_FEATURE_INFO("ROCKSDB REPOS" ROCKSDB-REPOS "This Enables persistent provenance, flowfile, and content repositories using RocksDB")
+ADD_FEATURE_INFO("ARCHIVE EXTENSIONS" ARCHIVE-EXTENSIONS "This Enables libarchive functionality including MergeContent")
 
 ## NOW WE CAN ADD LIBRARIES AND EXTENSIONS TO MAIN
 

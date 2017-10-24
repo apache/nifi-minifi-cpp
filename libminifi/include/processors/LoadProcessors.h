@@ -29,6 +29,5 @@
 #include "LogAttribute.h"
 #include "PutFile.h"
 #include "TailFile.h"
-#include "MergeContent.h"
 
 #endif /* LIBMINIFI_INCLUDE_PROCESSORS_LOADPROCESSORS_H_ */
