@@ -45,8 +45,6 @@ endif()
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Enable asan in DEBUG for compatibility with civet
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=address")
 # Search for threads
 find_package(Threads REQUIRED)
 
