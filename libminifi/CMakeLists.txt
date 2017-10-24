@@ -19,19 +19,14 @@
 
 cmake_minimum_required (VERSION 2.6)
 
-project(nifi-libminifi)
-set(PROJECT_NAME "nifi-libminifi")
+project(nifi-libcore-minifi)
+set(PROJECT_NAME "nifi-libcore-minifi")
 set(PROJECT_VERSION_MAJOR 0)
 set(PROJECT_VERSION_MINOR 3)
 set(PROJECT_VERSION_PATCH 0)
 
 #### Establish Project Configuration ####
 # Enable usage of the VERSION specifier
-# https://cmake.org/cmake/help/v3.0/policy/CMP0048.html#policy:CMP0048
-IF(POLICY CMP0048)
-  CMAKE_POLICY(SET CMP0048 OLD)
-ENDIF(POLICY CMP0048)
-
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -56,59 +51,44 @@ else()
 endif()
 
 include_directories(../thirdparty/spdlog-20170710/include)
-include_directories(../thirdparty/yaml-cpp-yaml-cpp-0.5.3/include)
+include_directories(../thirdparty/yaml-cpp-yaml-cpp-20171024/include)
 
 include_directories(../thirdparty/civetweb-1.9.1/include)
 include_directories(../thirdparty/jsoncpp/include)
 include_directories(../thirdparty/concurrentqueue/)
-include_directories(../thirdparty/rocksdb/include)
-include_directories(../thirdparty/libarchive-3.3.2/libarchive)
 include_directories(include)
 
-file(GLOB SOURCES  "src/core/logging/*.cpp"  "src/core/state/*.cpp" "src/c2/protocols/*.cpp" "src/c2/*.cpp" "src/io/*.cpp" "src/io/tls/*.cpp" "src/core/controller/*.cpp" "src/controllers/*.cpp" "src/core/*.cpp"  "src/core/repository/*.cpp" "src/core/yaml/*.cpp" "src/core/reporting/*.cpp"  "src/provenance/*.cpp" "src/processors/*.cpp" "src/utils/*.cpp" "src/*.cpp")
+file(GLOB SOURCES  "src/core/logging/*.cpp"  "src/core/state/*.cpp" "src/c2/protocols/*.cpp" "src/c2/*.cpp" "src/io/*.cpp" "src/io/tls/*.cpp" "src/core/controller/*.cpp" "src/controllers/*.cpp" "src/core/*.cpp"  "src/core/repository/*.cpp" "src/core/yaml/*.cpp" "src/core/reporting/*.cpp"  "src/provenance/*.cpp" "src/utils/*.cpp" "src/*.cpp")
+
+file(GLOB PROCESSOR_SOURCES  "src/processors/*.cpp" )
 
 file(GLOB SPD_SOURCES "../thirdparty/spdlog-20170710/include/spdlog/*")
 
 # Workaround the limitations of having a
 # header only library
 add_library(spdlog STATIC ${SPD_SOURCES})
-add_library(minifi STATIC ${SOURCES})
-
-add_dependencies(minifi jsoncpp_project)
-target_link_libraries(minifi ${UUID_LIBRARIES} ${JSONCPP_LIB})
+add_library(core-minifi STATIC ${SOURCES})
+add_dependencies(core-minifi jsoncpp_project)
+target_link_libraries(core-minifi ${UUID_LIBRARIES} ${JSONCPP_LIB} yaml-cpp )
 
 find_package(ZLIB REQUIRED)
 include_directories(${ZLIB_INCLUDE_DIRS})
 
-target_link_libraries (minifi ${ZLIB_LIBRARIES})
-
-
-
-
-
-if (NOT IOS)
-# Include Boost System
-find_package(Boost COMPONENTS system filesystem REQUIRED)
-target_link_libraries(minifi ${Boost_SYSTEM_LIBRARY})
-target_link_libraries(minifi ${Boost_FILESYSTEM_LIBRARY})
-
-if (CURL_FOUND)
-        include_directories(${CURL_INCLUDE_DIRS})
-        target_link_libraries (minifi ${CURL_LIBRARIES})
-endif(CURL_FOUND)
+target_link_libraries (core-minifi ${ZLIB_LIBRARIES})
 
 # Include OpenSSL
 find_package (OpenSSL REQUIRED)
 if (OPENSSL_FOUND)
 	include_directories(${OPENSSL_INCLUDE_DIR})
-	target_link_libraries (minifi ${OPENSSL_LIBRARIES})
+	target_link_libraries (core-minifi ${OPENSSL_LIBRARIES})
 else ()
     message( FATAL_ERROR "OpenSSL was not found. Please install OpenSSL" )
 endif (OPENSSL_FOUND)
 
-endif ()
+add_library(minifi STATIC ${PROCESSOR_SOURCES})
 
+target_link_libraries(minifi core-minifi)
 
 set_property(TARGET minifi PROPERTY INTERPROCEDURAL_OPTIMIZATION True)
 
-SET (LIBMINIFI minifi PARENT_SCOPE)
+SET (LIBMINIFI core-minifi PARENT_SCOPE)

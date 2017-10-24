@@ -15,19 +15,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_PROCESSORS_LOADPROCESSORS_H_
-#define LIBMINIFI_INCLUDE_PROCESSORS_LOADPROCESSORS_H_
+#include "ArchiveLoader.h"
+#include "core/FlowConfiguration.h"
 
-#include "core/Core.h"
-#include "core/Resource.h"
-#include "AppendHostInfo.h"
-#include "ExecuteProcess.h"
-#include "GenerateFlowFile.h"
-#include "GetFile.h"
-#include "GetTCP.h"
-#include "ListenHTTP.h"
-#include "LogAttribute.h"
-#include "PutFile.h"
-#include "TailFile.h"
+bool ArchiveFactory::added = core::FlowConfiguration::add_static_func("createArchiveFactory");
 
-#endif /* LIBMINIFI_INCLUDE_PROCESSORS_LOADPROCESSORS_H_ */
+extern "C" {
+
+void *createArchiveFactory(void) {
+  return new ArchiveFactory();
+}
+
+}
