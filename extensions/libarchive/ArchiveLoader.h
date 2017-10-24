@@ -19,6 +19,7 @@
 #define EXTENSION_ARCHIVELOADER_H
 
 #include "MergeContent.h"
+#include "CompressContent.h"
 #include "core/ClassLoader.h"
 
 class __attribute__((visibility("default"))) ArchiveFactory : public core::ObjectFactory {
@@ -45,6 +46,7 @@ class __attribute__((visibility("default"))) ArchiveFactory : public core::Objec
   virtual std::vector<std::string> getClassNames() {
     std::vector<std::string> class_names;
     class_names.push_back("MergeContent");
+    class_names.push_back("CompressContent");
     return class_names;
   }
 
@@ -53,8 +55,11 @@ class __attribute__((visibility("default"))) ArchiveFactory : public core::Objec
     std::transform(name.begin(), name.end(), name.begin(), ::tolower);
     if (name == "mergecontent") {
       return std::unique_ptr<ObjectFactory>(new core::DefautObjectFactory<minifi::processors::MergeContent>());
+    } else if (name == "compresscontent") {
+      return std::unique_ptr<ObjectFactory>(new core::DefautObjectFactory<minifi::processors::CompressContent>());
+    } else {
+      return nullptr;
     }
-    return nullptr;
   }
 
   static bool added;

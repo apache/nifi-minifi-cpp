@@ -60,7 +60,7 @@ class BaseStream : public DataStream, public Serializable {
 
   int writeData(uint8_t *value, int size);
 
-  virtual void seek(uint32_t offset) {
+  virtual void seek(uint64_t offset) {
     if (composable_stream_ != this) {
       composable_stream_->seek(offset);
     } else {
