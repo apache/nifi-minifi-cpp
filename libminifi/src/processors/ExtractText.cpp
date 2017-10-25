@@ -21,10 +21,9 @@
 #include <string>
 #include <memory>
 #include <set>
-#include <sstream>
-#include <vector>
+
 #include <iostream>
-#include <algorithm>
+#include <sstream>
 
 #include "processors/ExtractText.h"
 #include "core/ProcessContext.h"
@@ -38,6 +37,7 @@ namespace minifi {
 namespace processors {
 
 core::Property ExtractText::Attribute("Attribute", "Attribute to set from content", "");
+core::Property ExtractText::SizeLimit("Size Limit", "Maximum number of bytes to read into the attribute. 0 for no limit. Default is 2MB.");
 core::Relationship ExtractText::Success("success", "success operational on the flow record");
 
 void ExtractText::initialize() {
@@ -65,23 +65,35 @@ void ExtractText::onTrigger(core::ProcessContext *context, core::ProcessSession 
 
 int64_t ExtractText::ReadCallback::process(std::shared_ptr<io::BaseStream> stream) {
     int64_t ret = 0;
+    int64_t size_limit = flowFile_->getSize();
     uint64_t read_size = 0;
+    uint64_t loop_read = max_read_;
 
-    std::string attrKey;
+    std::string attrKey, sizeLimitStr;
     ctx_->getProperty(Attribute.getName(), attrKey);
+    ctx_->getProperty(SizeLimit.getName(), sizeLimitStr);
+
+    if (sizeLimitStr == "")
+        size_limit = DEFAULT_SIZE_LIMIT;
+    else if (sizeLimitStr != "0")
+        size_limit = std::stoi(sizeLimitStr);
+
     std::ostringstream contentStream;
-    // (std::stringstream::out | std::stringstream::in | std::stringstream::binary)
     std::string contentStr;
 
-    while (read_size < flowFile_->getSize()) {
-        ret = stream->readData(buffer_, max_read_);
+    while (read_size < size_limit) {
+        if (size_limit - read_size < max_read_)
+            loop_read = size_limit - read_size;
+
+        ret = stream->readData(buffer_, loop_read);
+        buffer_.resize(ret);
 
         if (ret < 0) {
             return -1;
         }
 
         if (ret > 0) {
-            contentStream.write(reinterpret_cast<const char*>(buffer_), ret);
+            contentStream.write(reinterpret_cast<const char*>(&buffer_[0]), ret);
             if (contentStream.fail()) {
                 return -1;
             }
@@ -96,10 +108,11 @@ int64_t ExtractText::ReadCallback::process(std::shared_ptr<io::BaseStream> strea
 }
 
 ExtractText::ReadCallback::ReadCallback(std::shared_ptr<core::FlowFile> flowFile, core::ProcessContext *ctx)
-    : max_read_(getpagesize() * sizeof(uint8_t)),
-      buffer_(new uint8_t[max_read_]),
+    : max_read_(getpagesize()),
       flowFile_(flowFile),
-      ctx_(ctx) {}
+      ctx_(ctx) {
+          buffer_.resize(max_read_);
+      }
 
 } /* namespace processors */
 } /* namespace minifi */

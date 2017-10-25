@@ -25,6 +25,8 @@
 #include "core/ProcessSession.h"
 #include "core/Resource.h"
 
+#include <vector>
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -47,8 +49,11 @@ public:
     static constexpr char const* ProcessorName = "ExtractText";
     //! Supported Properties
     static core::Property Attribute;
+    static core::Property SizeLimit;
     //! Supported Relationships
     static core::Relationship Success;
+    //! Default maximum bytes to read into an attribute
+    static constexpr int DEFAULT_SIZE_LIMIT = 2 * 1024 * 1024;
 
     //! OnTrigger method, implemented by NiFi ExtractText
     void onTrigger(core::ProcessContext *context, core::ProcessSession *session);
@@ -58,13 +63,13 @@ public:
     class ReadCallback : public InputStreamCallback {
     public:
         ReadCallback(std::shared_ptr<core::FlowFile> flowFile, core::ProcessContext *ct);
-        ~ReadCallback() { delete[] buffer_; }
+        ~ReadCallback() {}
         int64_t process(std::shared_ptr<io::BaseStream> stream);
 
     private:
         std::shared_ptr<core::FlowFile> flowFile_;
         core::ProcessContext *ctx_;
-        uint8_t *buffer_;
+        std::vector<uint8_t> buffer_;
         int64_t max_read_;
     };
 
