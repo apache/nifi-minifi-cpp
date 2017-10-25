@@ -23,6 +23,7 @@
 #include <set>
 #include "core/reporting/SiteToSiteProvenanceReportingTask.h"
 #include "io/validation.h"
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -118,14 +119,18 @@ void YamlConfiguration::parseProcessorNodeYaml(YAML::Node processorsNode, core::
         }
         processor->setName(procCfg.name);
 
-        checkRequiredField(&procNode, "scheduling strategy",
-        CONFIG_YAML_PROCESSORS_KEY);
-        procCfg.schedulingStrategy = procNode["scheduling strategy"].as<std::string>();
+        auto strategyNode = getOptionalField(&procNode,
+                                             "scheduling strategy",
+                                             YAML::Node(DEFAULT_SCHEDULING_STRATEGY),
+                                             CONFIG_YAML_PROCESSORS_KEY);
+        procCfg.schedulingStrategy = strategyNode.as<std::string>();
         logger_->log_debug("parseProcessorNode: scheduling strategy => [%s]", procCfg.schedulingStrategy);
 
-        checkRequiredField(&procNode, "scheduling period",
-        CONFIG_YAML_PROCESSORS_KEY);
-        procCfg.schedulingPeriod = procNode["scheduling period"].as<std::string>();
+        auto periodNode = getOptionalField(&procNode,
+                                           "scheduling period",
+                                           YAML::Node(DEFAULT_SCHEDULING_PERIOD),
+                                           CONFIG_YAML_PROCESSORS_KEY);
+        procCfg.schedulingPeriod = periodNode.as<std::string>();
         logger_->log_debug("parseProcessorNode: scheduling period => [%s]", procCfg.schedulingPeriod);
 
         if (procNode["max concurrent tasks"]) {
@@ -696,6 +701,34 @@ void YamlConfiguration::checkRequiredField(YAML::Node *yamlNode, const std::stri
     logger_->log_error(errMsg.c_str());
     throw std::invalid_argument(errMsg);
   }
+}
+
+YAML::Node YamlConfiguration::getOptionalField(YAML::Node *yamlNode,
+                                               const std::string &fieldName,
+                                               const YAML::Node &defaultValue,
+                                               const std::string &yamlSection,
+                                               const std::string &providedInfoMessage) {
+  std::string infoMessage = providedInfoMessage;
+  auto result = yamlNode->as<YAML::Node>()[fieldName];
+  if (!result) {
+    if (infoMessage.empty()) {
+      // Build a helpful info message for the user to inform them that a default is being used
+      infoMessage =
+          yamlNode->as<YAML::Node>()["name"] ?
+          "Using default value for optional field '" + fieldName + "' in component named '"
+              + yamlNode->as<YAML::Node>()["name"].as<std::string>() + "'" :
+          "Using default value for optional field '" + fieldName + "' ";
+      if (!yamlSection.empty()) {
+        infoMessage += " [in '" + yamlSection + "' section of configuration file]: ";
+      }
+
+      infoMessage += defaultValue.as<std::string>();
+    }
+    logger_->log_info(infoMessage.c_str());
+    result = defaultValue;
+  }
+
+  return result;
 }
 
 } /* namespace core */
