@@ -272,6 +272,26 @@ class YamlConfiguration : public FlowConfiguration {
    */
   void checkRequiredField(YAML::Node *yamlNode, const std::string &fieldName, const std::string &yamlSection = "", const std::string &errorMessage = "");
 
+  /**
+   * This is a helper function for getting an optional value, if it exists.
+   * If it does not exist, returns the provided default value.
+   *
+   * @param yamlNode     the YAML node to check
+   * @param fieldName    the optional field key
+   * @param defaultValue the default value to use if field is not set
+   * @param yamlSection  [optional] the top level section of the YAML config
+   *                       for the yamlNode. This is used fpr generating a
+   *                       useful info message for troubleshooting.
+   * @param infoMessage  [optional] the info message string to use if
+   *                       the optional field is missing. If not provided,
+   *                       a default info message will be generated.
+   */
+  YAML::Node getOptionalField(YAML::Node *yamlNode,
+                              const std::string &fieldName,
+                              const YAML::Node &defaultValue,
+                              const std::string &yamlSection = "",
+                              const std::string &infoMessage = "");
+
  protected:
   std::shared_ptr<io::StreamFactory> stream_factory_;
  private:
