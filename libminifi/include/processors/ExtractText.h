@@ -38,39 +38,34 @@ public:
     /*!
      * Create a new processor
      */
-    ExtractText(std::string name, uuid_t uuid = NULL)
+    explicit ExtractText(std::string name, uuid_t uuid = nullptr)
     : Processor(name, uuid)
     {
         logger_ = logging::LoggerFactory<ExtractText>::getLogger();
     }
-    //! Destructor
-    virtual ~ExtractText()
-    {
-    }
     //! Processor Name
-    static constexpr char const* ProcessorName = "MergeContent";
+    static constexpr char const* ProcessorName = "ExtractText";
     //! Supported Properties
     static core::Property Attribute;
     //! Supported Relationships
     static core::Relationship Success;
 
     //! OnTrigger method, implemented by NiFi ExtractText
-    virtual void onTrigger(core::ProcessContext *context, core::ProcessSession *session);
+    void onTrigger(core::ProcessContext *context, core::ProcessSession *session);
     //! Initialize, over write by NiFi ExtractText
-    virtual void initialize(void);
+    void initialize(void);
 
     class ReadCallback : public InputStreamCallback {
     public:
         ReadCallback(std::shared_ptr<core::FlowFile> flowFile, core::ProcessContext *ct);
-        ~ReadCallback() { delete[] _buffer; }
+        ~ReadCallback() { delete[] buffer_; }
         int64_t process(std::shared_ptr<io::BaseStream> stream);
 
     private:
-        std::shared_ptr<logging::Logger> logger_;
-        std::shared_ptr<core::FlowFile> _flowFile;
-        core::ProcessContext *_ctx;
-        uint8_t *_buffer;
-        int64_t _max_read;
+        std::shared_ptr<core::FlowFile> flowFile_;
+        core::ProcessContext *ctx_;
+        uint8_t *buffer_;
+        int64_t max_read_;
     };
 
 protected:

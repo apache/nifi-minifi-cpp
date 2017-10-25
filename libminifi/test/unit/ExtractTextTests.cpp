@@ -46,7 +46,7 @@ TEST_CASE("Test Creation of ExtractText", "[extracttextCreate]") {
     std::shared_ptr<core::Processor> processor = std::make_shared<org::apache::nifi::minifi::processors::ExtractText>("processorname");
     REQUIRE(processor->getName() == "processorname");
     uuid_t processoruuid;
-    REQUIRE(true == processor->getUUID(processoruuid));
+    REQUIRE(processor->getUUID(processoruuid));
 }
 
 TEST_CASE("Test usage of ExtractText", "[extracttextTest]") {
@@ -95,7 +95,7 @@ TEST_CASE("Test usage of ExtractText", "[extracttextTest]") {
     ss2 << "key:" << TEST_ATTR << " value:" << TEST_TEXT;
     std::string log_check = ss2.str();
 
-    REQUIRE(true == LogTestController::getInstance().contains(log_check));
+    REQUIRE(LogTestController::getInstance().contains(log_check));
 
     LogTestController::getInstance().reset();
 }

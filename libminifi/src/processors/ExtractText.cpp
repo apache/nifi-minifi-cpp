@@ -21,6 +21,10 @@
 #include <string>
 #include <memory>
 #include <set>
+#include <sstream>
+#include <vector>
+#include <iostream>
+#include <algorithm>
 
 #include "processors/ExtractText.h"
 #include "core/ProcessContext.h"
@@ -33,7 +37,7 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-core::Property ExtractText::Attribute("Attribute", "Attribute to set from content (TEMPORARY)", "");
+core::Property ExtractText::Attribute("Attribute", "Attribute to set from content", "");
 core::Relationship ExtractText::Success("success", "success operational on the flow record");
 
 void ExtractText::initialize() {
@@ -64,39 +68,38 @@ int64_t ExtractText::ReadCallback::process(std::shared_ptr<io::BaseStream> strea
     uint64_t read_size = 0;
 
     std::string attrKey;
-    _ctx->getProperty(Attribute.getName(), attrKey);
-    std::stringstream contentStream(std::stringstream::out | std::stringstream::in);
+    ctx_->getProperty(Attribute.getName(), attrKey);
+    std::ostringstream contentStream;
+    // (std::stringstream::out | std::stringstream::in | std::stringstream::binary)
     std::string contentStr;
 
-    while (read_size < _flowFile->getSize()) {
-        ret = stream->read(_buffer, _max_read);
+    while (read_size < flowFile_->getSize()) {
+        ret = stream->readData(buffer_, max_read_);
+
         if (ret < 0) {
             return -1;
         }
 
         if (ret > 0) {
-            contentStream.write(reinterpret_cast<const char*>(_buffer), ret);
+            contentStream.write(reinterpret_cast<const char*>(buffer_), ret);
             if (contentStream.fail()) {
                 return -1;
             }
-            read_size += ret;
         } else {
             break;
         }
     }
 
     contentStr = contentStream.str();
-    _flowFile->setAttribute(attrKey, contentStr);
+    flowFile_->setAttribute(attrKey, contentStr);
     return read_size;
 }
 
-ExtractText::ReadCallback::ReadCallback(std::shared_ptr<core::FlowFile> flowFile, core::ProcessContext *ctx) {
-    _max_read = getpagesize() * sizeof(uint8_t);
-    _buffer = new uint8_t[_max_read];
-    logger_ = logging::LoggerFactory<ReadCallback>::getLogger();
-    _flowFile = flowFile;
-    _ctx = ctx;
-}
+ExtractText::ReadCallback::ReadCallback(std::shared_ptr<core::FlowFile> flowFile, core::ProcessContext *ctx)
+    : max_read_(getpagesize() * sizeof(uint8_t)),
+      buffer_(new uint8_t[max_read_]),
+      flowFile_(flowFile),
+      ctx_(ctx) {}
 
 } /* namespace processors */
 } /* namespace minifi */
