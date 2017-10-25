@@ -19,18 +19,14 @@
 
 cmake_minimum_required(VERSION 2.6)
 
-find_package(CURL REQUIRED)
 
 set(CMAKE_EXE_LINKER_FLAGS "-Wl,--export-all-symbols")
 set(CMAKE_SHARED_LINKER_FLAGS "-Wl,--export-symbols")
 
-include_directories(../../libminifi/include ../../libminifi/include/c2  ../../libminifi/include/c2/protocols/  ../../libminifi/include/core/state ./libminifi/include/core/statemanagement/metrics  ../../libminifi/include/core/yaml  ../../libminifi/include/core  ../../thirdparty/spdlog-20170710/include ../../thirdparty/concurrentqueue ../../thirdparty/yaml-cpp-yaml-cpp-0.5.3/include ../../thirdparty/civetweb-1.9.1/include ../../thirdparty/jsoncpp/include ../../thirdparty/rocksdb/include  ../../thirdparty/libarchive-3.3.2/libarchive ../../thirdparty/)
-
-find_package(Boost REQUIRED)
+include_directories(../../libminifi/include  ../../libminifi/include/core  ../../thirdparty/spdlog-20170710/include ../../thirdparty/concurrentqueue ../../thirdparty/yaml-cpp-yaml-cpp-0.5.3/include ../../thirdparty/civetweb-1.9.1/include ../../thirdparty/jsoncpp/include ../../thirdparty/rocksdb/include  ../../thirdparty/) 
 find_package(RocksDB)
 
 
-include_directories(${Boost_INCLUDE_DIRS})
 
 file(GLOB SOURCES  "*.cpp")
 
@@ -43,10 +39,6 @@ if(CMAKE_THREAD_LIBS_INIT)
   target_link_libraries(minifi-rocksdb-repos "${CMAKE_THREAD_LIBS_INIT}")
 endif()
 
-if (CURL_FOUND)
-        include_directories(${CURL_INCLUDE_DIRS})
-        target_link_libraries (minifi-rocksdb-repos ${CURL_LIBRARIES})
-endif(CURL_FOUND)
 
 # Include UUID
 find_package(UUID REQUIRED)

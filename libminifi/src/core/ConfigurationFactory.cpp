@@ -26,18 +26,13 @@
 #include "core/FlowConfiguration.h"
 #include "io/StreamFactory.h"
 
-#ifdef YAML_SUPPORT
 #include "core/yaml/YamlConfiguration.h"
-#endif
 
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
 namespace core {
-#ifndef YAML_SUPPORT
-class YamlConfiguration;
-#endif
 
 std::unique_ptr<core::FlowConfiguration> createFlowConfiguration(std::shared_ptr<core::Repository> repo, std::shared_ptr<core::Repository> flow_file_repo,
                                                                  std::shared_ptr<core::ContentRepository> content_repo, std::shared_ptr<Configure> configure,

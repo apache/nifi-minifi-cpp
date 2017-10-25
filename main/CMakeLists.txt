@@ -23,7 +23,7 @@ IF(POLICY CMP0048)
   CMAKE_POLICY(SET CMP0048 OLD)
 ENDIF(POLICY CMP0048)
 
-include_directories(../libminifi/include  ../libminifi/include/c2  ../libminifi/include/c2/protocols/  ../libminifi/include/core/state ./libminifi/include/core/statemanagement/metrics  ../libminifi/include/core/yaml  ../libminifi/include/core  ../thirdparty/spdlog-20170710/include ../thirdparty/concurrentqueue ../thirdparty/yaml-cpp-yaml-cpp-0.5.3/include ../thirdparty/civetweb-1.9.1/include ../thirdparty/jsoncpp/include ../thirdparty/libarchive-3.3.2/libarchive ../thirdparty/)
+include_directories(../libminifi/include  ../libminifi/include/c2  ../libminifi/include/c2/protocols/  ../libminifi/include/core/state ./libminifi/include/core/statemanagement/metrics  ../libminifi/include/core/yaml  ../libminifi/include/core  ../thirdparty/spdlog-20170710/include ../thirdparty/concurrentqueue ../thirdparty/yaml-cpp-yaml-cpp-20171024/include ../thirdparty/civetweb-1.9.1/include ../thirdparty/jsoncpp/include  ../thirdparty/)
 
 include(CheckCXXCompilerFlag)
 CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
@@ -35,9 +35,6 @@ elseif(COMPILER_SUPPORTS_CXX0X)
 else()
  message(STATUS "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
 endif()
-
-find_package(Boost REQUIRED)
-include_directories(${Boost_INCLUDE_DIRS})
 
 add_executable(minifiexe MiNiFiMain.cpp)
 if(THREADS_HAVE_PTHREAD_ARG)
@@ -55,7 +52,7 @@ find_package(OpenSSL REQUIRED)
 include_directories(${OPENSSL_INCLUDE_DIR})
 
 # Link against minifi, yaml-cpp, civetweb-cpp, uuid, openssl, jsoncpp and rocksdb
-target_link_libraries(minifiexe minifi yaml-cpp c-library civetweb-cpp ${JSON_CPP_LIB} ${UUID_LIBRARIES} ${OPENSSL_LIBRARIES} archive)
+target_link_libraries(minifiexe core-minifi minifi yaml-cpp c-library civetweb-cpp ${JSON_CPP_LIB} ${UUID_LIBRARIES} ${OPENSSL_LIBRARIES})
 
 if (APPLE)
 	if (HTTP-CURL)    
@@ -64,6 +61,9 @@ if (APPLE)
     if (ROCKSDB-REPOS)    
     	target_link_libraries (minifiexe -Wl,-all_load ${ROCKSDB-REPOS})
     endif()
+    if (ARCHIVE-EXTENSIONS)    
+    	target_link_libraries (minifiexe -Wl,-all_load ${ARCHIVE-EXTENSIONS})
+    endif()
     
 else ()
 	if (HTTP-CURL)
@@ -71,6 +71,9 @@ else ()
 	endif()
 	if (ROCKSDB-REPOS)
 	  target_link_libraries (minifiexe -Wl,--whole-archive ${ROCKSDB-REPOS} -Wl,--no-whole-archive)
+	endif()
+	if (ARCHIVE-EXTENSIONS)
+	  target_link_libraries (minifiexe -Wl,--whole-archive ${ARCHIVE-EXTENSIONS} -Wl,--no-whole-archive)
 	endif()        
 endif ()
 

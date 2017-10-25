@@ -22,7 +22,7 @@
 #include "rocksdb/merge_operator.h"
 #include "core/Core.h"
 #include "core/Connectable.h"
-#include "../ContentRepository.h"
+#include "core/ContentRepository.h"
 #include "properties/Configure.h"
 #include "core/logging/LoggerConfiguration.h"
 namespace org {
