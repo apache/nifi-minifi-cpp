@@ -134,7 +134,7 @@ if (NOT LibArchive_FOUND OR BUILD_LIBARCHIVE)
 endif()
 option(DISABLE_LIBARCHIVE "Disables the lib archive extensions." OFF)
 if (NOT DISABLE_LIBARCHIVE)
-	createExtension(ARCHIVE-EXTENSIONS "ARCHIVE EXTENSIONS" "This Enables libarchive functionality including MergeContent, CompressContent, and (Un)FocusArchiveEntry" "extensions/libarchive" "${TEST_DIR}/archive-tests" BUILD_TP "thirdparty/libarchive-3.3.2")
+	createExtension(ARCHIVE-EXTENSIONS "ARCHIVE EXTENSIONS" "This Enables libarchive functionality including MergeContent, CompressContent, (Un)FocusArchiveEntry and ManipulateArchive." "extensions/libarchive" "${TEST_DIR}/archive-tests" BUILD_TP "thirdparty/libarchive-3.3.2")
 endif()
 
 option(ENABLE_GPS "Enables the GPS extension." OFF)
