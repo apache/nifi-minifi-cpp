@@ -81,6 +81,17 @@ void sigHandler(int signal) {
   }
 }
 
+/**
+ * Validates a MINIFI_HOME value.
+ * @param home_path
+ * @return true if home_path represents a valid MINIFI_HOME
+ */
+bool validHome(const std::string &home_path) {
+  struct stat stat_result{};
+  auto properties_file_path = home_path + "/" + DEFAULT_NIFI_PROPERTIES_FILE;
+  return (stat(properties_file_path.c_str(), &stat_result) == 0);
+}
+
 int main(int argc, char **argv) {
   std::shared_ptr<logging::Logger> logger = logging::LoggerConfiguration::getConfiguration().getLogger("main");
 
@@ -103,20 +114,39 @@ int main(int argc, char **argv) {
   }
   // assumes POSIX compliant environment
   std::string minifiHome;
-  if (const char* env_p = std::getenv(MINIFI_HOME_ENV_KEY)) {
+  if (const char *env_p = std::getenv(MINIFI_HOME_ENV_KEY)) {
     minifiHome = env_p;
-    logger->log_info("MINIFI_HOME=%s", minifiHome);
+    logger->log_info("Using MINIFI_HOME=%s from environment.", minifiHome);
   } else {
-    logger->log_info("MINIFI_HOME was not found, determining based on executable path.");
-    char *path = NULL;
+    logger->log_info("MINIFI_HOME is not set; determining based on environment.");
+    char *path = nullptr;
     char full_path[PATH_MAX];
     path = realpath(argv[0], full_path);
-    std::string minifiHomePath(path);
-    minifiHomePath = minifiHomePath.substr(0, minifiHomePath.find_last_of("/\\"));  //Remove /minifi from path
-    minifiHome = minifiHomePath.substr(0, minifiHomePath.find_last_of("/\\"));	//Remove /bin from path
+
+    if (path != nullptr) {
+      std::string minifiHomePath(path);
+      if (minifiHomePath.find_last_of("/\\") != std::string::npos) {
+        minifiHomePath = minifiHomePath.substr(0, minifiHomePath.find_last_of("/\\"));  //Remove /minifi from path
+        minifiHome = minifiHomePath.substr(0, minifiHomePath.find_last_of("/\\"));    //Remove /bin from path
+      }
+    }
+
+    // attempt to use cwd as MINIFI_HOME
+    if (minifiHome.empty() || !validHome(minifiHome)) {
+      char cwd[PATH_MAX];
+      getcwd(cwd, PATH_MAX);
+      minifiHome = cwd;
+    }
   }
 
-  if (signal(SIGINT, sigHandler) == SIG_ERR || signal(SIGTERM, sigHandler) == SIG_ERR || signal(SIGPIPE, SIG_IGN) == SIG_ERR) {
+  if (!validHome(minifiHome)) {
+    logger->log_error("No valid MINIFI_HOME could be inferred. "
+                          "Please set MINIFI_HOME or run minifi from a valid location.");
+    return -1;
+  }
+
+  if (signal(SIGINT, sigHandler) == SIG_ERR || signal(SIGTERM, sigHandler) == SIG_ERR
+      || signal(SIGPIPE, SIG_IGN) == SIG_ERR) {
     logger->log_error("Can not install signal handler");
     return -1;
   }
@@ -125,7 +155,7 @@ int main(int argc, char **argv) {
   log_properties->setHome(minifiHome);
   log_properties->loadConfigureFile(DEFAULT_LOG_PROPERTIES_FILE);
   logging::LoggerConfiguration::getConfiguration().initialize(log_properties);
-  
+
   std::shared_ptr<minifi::Properties> uid_properties = std::make_shared<minifi::Properties>();
   uid_properties->setHome(minifiHome);
   uid_properties->loadConfigureFile(DEFAULT_UID_PROPERTIES_FILE);
@@ -144,11 +174,13 @@ int main(int argc, char **argv) {
     } catch (const std::out_of_range &e) {
       logger->log_error("%s is out of range. %s", minifi::Configure::nifi_graceful_shutdown_seconds, e.what());
     } catch (const std::invalid_argument &e) {
-      logger->log_error("%s contains an invalid argument set. %s", minifi::Configure::nifi_graceful_shutdown_seconds, e.what());
+      logger->log_error("%s contains an invalid argument set. %s",
+                        minifi::Configure::nifi_graceful_shutdown_seconds,
+                        e.what());
     }
   } else {
     logger->log_debug("%s not set, defaulting to %d", minifi::Configure::nifi_graceful_shutdown_seconds,
-    STOP_WAIT_TIME_MS);
+                      STOP_WAIT_TIME_MS);
   }
 
   configure->get(minifi::Configure::nifi_provenance_repository_class_name, prov_repo_class);
@@ -164,7 +196,8 @@ int main(int argc, char **argv) {
 
   configure->get(minifi::Configure::nifi_content_repository_class_name, content_repo_class);
 
-  std::shared_ptr<core::ContentRepository> content_repo = core::createContentRepository(content_repo_class, true, "content");
+  std::shared_ptr<core::ContentRepository>
+      content_repo = core::createContentRepository(content_repo_class, true, "content");
 
   content_repo->initialize(configure);
 
@@ -172,7 +205,12 @@ int main(int argc, char **argv) {
 
   std::shared_ptr<minifi::io::StreamFactory> stream_factory = std::make_shared<minifi::io::StreamFactory>(configure);
 
-  std::unique_ptr<core::FlowConfiguration> flow_configuration = std::move(core::createFlowConfiguration(prov_repo, flow_repo, content_repo, configure, stream_factory, nifi_configuration_class_name));
+  std::unique_ptr<core::FlowConfiguration> flow_configuration = std::move(core::createFlowConfiguration(prov_repo,
+                                                                                                        flow_repo,
+                                                                                                        content_repo,
+                                                                                                        configure,
+                                                                                                        stream_factory,
+                                                                                                        nifi_configuration_class_name));
 
   std::shared_ptr<minifi::FlowController> controller = std::unique_ptr<minifi::FlowController>(
       new minifi::FlowController(prov_repo, flow_repo, configure, std::move(flow_configuration), content_repo));
