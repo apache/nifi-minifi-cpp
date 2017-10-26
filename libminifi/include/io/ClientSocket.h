@@ -212,7 +212,7 @@ class Socket : public BaseStream {
    * Retrieve size of data stream
    * @return size of data stream
    **/
-  const uint32_t getSize() const {
+  const uint64_t getSize() const {
     return DataStream::getSize();
   }
 

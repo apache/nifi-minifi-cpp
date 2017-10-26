@@ -60,7 +60,7 @@ class DataStream {
     return 0;
   }
 
-  virtual void seek(uint32_t offset) {
+  virtual void seek(uint64_t offset) {
     readBuffer += offset;
   }
 
@@ -117,7 +117,7 @@ class DataStream {
    * Retrieve size of data stream
    * @return size of data stream
    **/
-  virtual const uint32_t getSize() const {
+  virtual const uint64_t getSize() const {
     return buffer.size();
   }
 

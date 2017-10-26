@@ -65,7 +65,7 @@ class RocksDbStream : public io::BaseStream {
    */
   void seek(uint64_t offset);
 
-  const uint32_t getSize() const {
+  const uint64_t getSize() const {
     return size_;
   }
 
