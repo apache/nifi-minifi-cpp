@@ -19,6 +19,7 @@
 #define __PROCESS_SESSION_H__
 
 #include <uuid/uuid.h>
+#include <boost/filesystem.hpp>
 #include <vector>
 #include <queue>
 #include <map>
@@ -151,6 +152,26 @@ class ProcessSession {
   bool keepSource,
               uint64_t offset, char inputDelimiter);
 
+  /**
+   * Exports the data stream to a file
+   * @param string file to export stream to
+   * @param flow flow file
+   * @param bool whether or not to keep the content in the flow file
+   */
+  bool exportContent(const std::string &destination,
+                     std::shared_ptr<core::FlowFile> &flow,
+                     bool keepContent);
+
+  bool exportContent(const std::string &destination,
+                     const std::string &tmpFileName,
+                     std::shared_ptr<core::FlowFile> &flow,
+                     bool keepContent);
+
+  // Stash the content to a key
+  void stash(const std::string &key, std::shared_ptr<core::FlowFile> flow);
+	// Restore content previously stashed to a key
+  void restore(const std::string &key, std::shared_ptr<core::FlowFile> flow);
+
 // Prevent default copy constructor and assignment operation
 // Only support pass by reference or pointer
   ProcessSession(const ProcessSession &parent) = delete;
@@ -180,8 +201,9 @@ class ProcessSession {
   // Provenance Report
   provenance::ProvenanceReporter *provenance_report_;
 
-}
-;
+  static std::shared_ptr<utils::IdGenerator> id_generator_;
+};
+
 } /* namespace core */
 } /* namespace minifi */
 } /* namespace nifi */

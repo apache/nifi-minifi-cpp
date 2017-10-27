@@ -27,6 +27,14 @@ option(SKIP_TESTS "Skips building all tests." OFF)
 
 include(FeatureSummary)
 
+# Use ccache if present
+find_program(CCACHE_FOUND ccache)
+if(CCACHE_FOUND)
+    set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
+    set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
+    message("-- Found ccache: ${CCACHE_FOUND}")
+endif(CCACHE_FOUND)
+
 #### Establish Project Configuration ####
 # Enable usage of the VERSION specifier
 include(CheckCXXCompilerFlag)
@@ -130,7 +138,7 @@ endif()
 ## ENABLE FEATURE INFORMATION
 ADD_FEATURE_INFO("HTTP CURL" HTTP-CURL "This enables RESTProtocol, InvokeHTTP, and the HTTPClient for Site to Site")
 ADD_FEATURE_INFO("ROCKSDB REPOS" ROCKSDB-REPOS "This Enables persistent provenance, flowfile, and content repositories using RocksDB")
-ADD_FEATURE_INFO("ARCHIVE EXTENSIONS" ARCHIVE-EXTENSIONS "This Enables libarchive functionality including MergeContent, CompressContent")
+ADD_FEATURE_INFO("ARCHIVE EXTENSIONS" ARCHIVE-EXTENSIONS "This Enables libarchive functionality including MergeContent, CompressContent, and (Un)FocusArchiveEntry")
 
 ## NOW WE CAN ADD LIBRARIES AND EXTENSIONS TO MAIN
 

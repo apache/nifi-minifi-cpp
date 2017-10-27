@@ -566,6 +566,9 @@ All libarchive C sources (including .c and .h files)
 and documentation files are subject to the copyright notice reproduced
 above.
 
+The following source files are in the public domain and have no copyright:
+libarchive/archive_getdate.c
+
 This libarchive includes below files 
 libarchive/archive_entry.c
 libarchive/archive_read_support_filter_compress.c

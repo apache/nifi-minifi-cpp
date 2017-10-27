@@ -102,6 +102,34 @@ void FlowFile::setResourceClaim(std::shared_ptr<ResourceClaim> &claim) {
   claim_ = claim;
 }
 
+std::shared_ptr<ResourceClaim> FlowFile::getStashClaim(const std::string &key) {
+  return stashedContent_[key];
+}
+
+void FlowFile::setStashClaim(
+    const std::string &key,
+    const std::shared_ptr<ResourceClaim> &claim) {
+
+  if (hasStashClaim(key)) {
+    logger_->log_warn(
+        "Stashing content of record %s to existing key %s; "
+        "existing content will be overwritten",
+        getUUIDStr().c_str(),
+        key.c_str());
+    releaseClaim(getStashClaim(key));
+  }
+
+  stashedContent_[key] = claim;
+}
+
+void FlowFile::clearStashClaim(const std::string &key) {
+  stashedContent_.erase(key);
+}
+
+bool FlowFile::hasStashClaim(const std::string &key) {
+  return stashedContent_.find(key) != stashedContent_.end();
+}
+
 // ! Get Entry Date
 uint64_t FlowFile::getEntryDate() {
   return entry_date_;

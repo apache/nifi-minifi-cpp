@@ -59,6 +59,8 @@ Perspectives of the role of MiNiFi should be from the perspective of the agent a
   * MergeContent
   * ExtractText
   * CompressContent
+  * FocusArchive
+  * UnfocusArchive
 * Provenance events generation is supported and are persisted using RocksDB.
 
 ## System Requirements
