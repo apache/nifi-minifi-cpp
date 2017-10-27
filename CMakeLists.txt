@@ -27,6 +27,14 @@ option(SKIP_TESTS "Skips building all tests." OFF)
 
 include(FeatureSummary)
 
+# Use ccache if present
+find_program(CCACHE_FOUND ccache)
+if(CCACHE_FOUND)
+    set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
+    set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
+    message("-- Found ccache: ${CCACHE_FOUND}")
+endif(CCACHE_FOUND)
+
 #### Establish Project Configuration ####
 # Enable usage of the VERSION specifier
 include(CheckCXXCompilerFlag)
