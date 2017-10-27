@@ -18,6 +18,7 @@
  * limitations under the License.
  */
 #include "core/ProcessSession.h"
+#include "core/ProcessSessionReadCallback.h"
 #include <sys/time.h>
 #include <time.h>
 #include <vector>
@@ -29,12 +30,15 @@
 #include <chrono>
 #include <thread>
 #include <iostream>
+#include <uuid/uuid.h>
 
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
 namespace core {
+
+std::shared_ptr<utils::IdGenerator> ProcessSession::id_generator_ = utils::IdGenerator::getIdGenerator();
 
 std::shared_ptr<core::FlowFile> ProcessSession::create() {
   std::map<std::string, std::string> empty;
@@ -797,6 +801,97 @@ void ProcessSession::import(std::string source, std::shared_ptr<core::FlowFile> 
     delete[] buf;
     throw;
   }
+}
+
+bool ProcessSession::exportContent(
+    const std::string &destination,
+    const std::string &tmpFile,
+    std::shared_ptr<core::FlowFile> &flow,
+    bool keepContent) {
+  logger_->log_info(
+      "Exporting content of %s to %s",
+      flow->getUUIDStr().c_str(),
+      destination.c_str());
+
+  ProcessSessionReadCallback cb(tmpFile, destination, logger_);
+  read(flow, &cb);
+
+  logger_->log_info("Committing %s", destination.c_str());
+  bool commit_ok = cb.commit();
+
+  if (commit_ok) {
+    logger_->log_info("Commit OK.");
+  } else {
+    logger_->log_error(
+      "Commit of %s to %s failed!",
+      flow->getUUIDStr().c_str(),
+      destination.c_str());
+  }
+  return commit_ok;
+}
+
+bool ProcessSession::exportContent(
+    const std::string &destination,
+    std::shared_ptr<core::FlowFile> &flow,
+    bool keepContent) {
+  char tmpFileUuidStr[37];
+  uuid_t tmpFileUuid;
+  id_generator_->generate(tmpFileUuid);
+  uuid_unparse_lower(tmpFileUuid, tmpFileUuidStr);
+  std::stringstream tmpFileSs;
+  tmpFileSs << destination << "." << tmpFileUuidStr;
+  std::string tmpFileName = tmpFileSs.str();
+
+  return exportContent(destination, tmpFileName, flow, keepContent);
+}
+
+void ProcessSession::stash(const std::string &key, std::shared_ptr<core::FlowFile> flow) {
+  logger_->log_info(
+      "Stashing content from %s to key %s",
+      flow->getUUIDStr().c_str(), key.c_str());
+
+  if (!flow->getResourceClaim()) {
+    logger_->log_warn(
+        "Attempted to stash content of record %s when "
+        "there is no resource claim",
+        flow->getUUIDStr().c_str());
+    return;
+  }
+
+  // Stash the claim
+  auto claim = flow->getResourceClaim();
+  flow->setStashClaim(key, claim);
+
+  // Clear current claim
+  flow->clearResourceClaim();
+}
+
+void ProcessSession::restore(const std::string &key, std::shared_ptr<core::FlowFile> flow) {
+  logger_->log_info(
+      "Restoring content to %s from key %s",
+      flow->getUUIDStr().c_str(), key.c_str());
+
+  // Restore the claim
+  if (!flow->hasStashClaim(key)) {
+    logger_->log_warn(
+        "Requested restore to record %s from unknown key %s",
+        flow->getUUIDStr().c_str(), key.c_str());
+    return;
+  }
+
+  // Disown current claim if existing
+  if (flow->getResourceClaim()) {
+    logger_->log_warn(
+        "Restoring stashed content of record %s from key %s when there is "
+        "existing content; existing content will be overwritten",
+        flow->getUUIDStr().c_str(), key.c_str());
+    flow->releaseClaim(flow->getResourceClaim());
+  }
+
+  // Restore the claim
+  auto stashClaim = flow->getStashClaim(key);
+  flow->setResourceClaim(stashClaim);
+  flow->clearStashClaim(key);
 }
 
 void ProcessSession::commit() {
