@@ -19,7 +19,6 @@
 #define __PROCESS_SESSION_H__
 
 #include <uuid/uuid.h>
-#include <boost/filesystem.hpp>
 #include <vector>
 #include <queue>
 #include <map>
