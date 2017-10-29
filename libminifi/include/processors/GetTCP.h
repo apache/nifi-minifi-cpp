@@ -67,6 +67,11 @@ class SocketAfterExecute : public utils::AfterExecute<int> {
       return false;
   }
 
+  virtual int64_t wait_time(){
+    // wait 500ms
+    return 500;
+  }
+
  protected:
   std::atomic<bool> running_;
   std::map<std::string, std::future<int>*> *list_;
