@@ -57,9 +57,7 @@ class AfterExecute {
    * Time to wait before re-running this task if necessary
    * @return milliseconds since epoch after which we are eligible to re-run this task.
    */
-  virtual int64_t wait_time() {
-    return 0;
-  }
+  virtual int64_t wait_time() = 0;
 };
 
 /**

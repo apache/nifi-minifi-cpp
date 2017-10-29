@@ -73,6 +73,11 @@ class C2Agent : public state::UpdateController, public state::metrics::MetricsSi
    */
   virtual int16_t setMetrics(const std::shared_ptr<state::metrics::Metrics> &metric);
 
+  int64_t getHeartBestDelay(){
+    std::lock_guard<std::mutex> lock(heartbeat_mutex);
+    return heart_beat_period_;
+  }
+
  protected:
 
   /**

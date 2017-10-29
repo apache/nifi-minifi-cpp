@@ -96,12 +96,13 @@ class StateManager : public metrics::MetricsReporter, public metrics::MetricsSin
    * Registers and update controller
    * @param updateController update controller to add.
    */
-  bool registerUpdateListener(const std::shared_ptr<UpdateController> &updateController);
+  bool registerUpdateListener(const std::shared_ptr<UpdateController> &updateController, const int64_t &delay);
+
 
   /**
    * Base metrics function will employ the default metrics listener.
    */
-  virtual bool startMetrics();
+  virtual bool startMetrics(const int64_t &delay);
 
  private:
 

@@ -57,6 +57,11 @@ class WorkerNumberExecutions : public utils::AfterExecute<int> {
     return runs;
   }
 
+  virtual int64_t wait_time() {
+    // wait 50ms
+    return 50;
+  }
+
  protected:
   int runs;
   int tasks;

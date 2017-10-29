@@ -119,12 +119,14 @@ class Update {
  */
 class UpdateRunner : public utils::AfterExecute<Update> {
  public:
-  explicit UpdateRunner(std::atomic<bool> &running)
-      : running_(&running) {
+  explicit UpdateRunner(std::atomic<bool> &running, const int64_t &delay)
+      : running_(&running),
+        delay_(delay) {
   }
 
   explicit UpdateRunner(UpdateRunner && other)
-      : running_(std::move(other.running_)) {
+      : running_(std::move(other.running_)),
+        delay_(std::move(other.delay_)) {
 
   }
 
@@ -143,9 +145,14 @@ class UpdateRunner : public utils::AfterExecute<Update> {
     return !*running_;
   }
 
+  virtual int64_t wait_time() {
+    return delay_;
+  }
  protected:
 
   std::atomic<bool> *running_;
+
+  int64_t delay_;
 
 };
 

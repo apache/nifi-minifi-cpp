@@ -34,7 +34,6 @@ void StateManager::initialize() {
   listener_thread_pool_.setMaxConcurrentTasks(3);
   listener_thread_pool_.start();
   controller_running_ = true;
-  startMetrics();
 }
 /**
  * State management operations.
@@ -99,14 +98,14 @@ int16_t StateManager::getMetrics(std::vector<std::shared_ptr<metrics::Metrics>> 
   return -1;
 }
 
-bool StateManager::registerUpdateListener(const std::shared_ptr<UpdateController> &updateController) {
+bool StateManager::registerUpdateListener(const std::shared_ptr<UpdateController> &updateController, const int64_t &delay) {
   auto functions = updateController->getFunctions();
 
   updateControllers.push_back(updateController);
   // run all functions independently
 
   for (auto function : functions) {
-    std::unique_ptr<utils::AfterExecute<Update>> after_execute = std::unique_ptr<utils::AfterExecute<Update>>(new UpdateRunner(isStateMonitorRunning()));
+    std::unique_ptr<utils::AfterExecute<Update>> after_execute = std::unique_ptr<utils::AfterExecute<Update>>(new UpdateRunner(isStateMonitorRunning(), delay));
     utils::Worker<Update> functor(function, "listeners", std::move(after_execute));
     std::future<Update> future;
     if (!listener_thread_pool_.execute(std::move(functor), future)) {
@@ -120,8 +119,8 @@ bool StateManager::registerUpdateListener(const std::shared_ptr<UpdateController
 /**
  * Base metrics function will employ the default metrics listener.
  */
-bool StateManager::startMetrics() {
-  std::unique_ptr<utils::AfterExecute<Update>> after_execute = std::unique_ptr<utils::AfterExecute<Update>>(new UpdateRunner(isStateMonitorRunning()));
+bool StateManager::startMetrics(const int64_t &delay) {
+  std::unique_ptr<utils::AfterExecute<Update>> after_execute = std::unique_ptr<utils::AfterExecute<Update>>(new UpdateRunner(isStateMonitorRunning(), delay));
   utils::Worker<Update> functor(metrics_listener_->getFunction(), "metrics", std::move(after_execute));
   if (!listener_thread_pool_.execute(std::move(functor), metrics_listener_->getFuture())) {
     // denote failure
