@@ -26,7 +26,6 @@ set(CMAKE_SHARED_LINKER_FLAGS "-Wl,--export-symbols")
 include_directories(../../libminifi/include  ../../libminifi/include/core  ../../thirdparty/spdlog-20170710/include ../../thirdparty/concurrentqueue ../../thirdparty/yaml-cpp-yaml-cpp-0.5.3/include ../../thirdparty/civetweb-1.9.1/include ../../thirdparty/jsoncpp/include  ../../thirdparty/) 
 
 include_directories(../../thirdparty/libarchive-3.3.2/libarchive)
-include_directories(${Boost_INCLUDE_DIRS})
 
 file(GLOB SOURCES  "*.cpp")
 
@@ -56,6 +55,7 @@ find_package(ZLIB REQUIRED)
 include_directories(${ZLIB_INCLUDE_DIRS})
 target_link_libraries (minifi-archive-extensions ${ZLIB_LIBRARIES})
 find_package(Boost COMPONENTS system filesystem REQUIRED)
+include_directories(${Boost_INCLUDE_DIRS})
 target_link_libraries(minifi-archive-extensions ${Boost_SYSTEM_LIBRARY})
 target_link_libraries(minifi-archive-extensions ${Boost_FILESYSTEM_LIBRARY})
 if (WIN32)
