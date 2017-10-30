@@ -55,34 +55,22 @@ include_directories(${OPENSSL_INCLUDE_DIR})
 target_link_libraries(minifiexe core-minifi minifi yaml-cpp c-library civetweb-cpp ${JSON_CPP_LIB} ${UUID_LIBRARIES} ${OPENSSL_LIBRARIES})
 
 if (APPLE)
-	if (HTTP-CURL)    
-    	target_link_libraries (minifiexe -Wl,-all_load ${HTTP-CURL})
-    endif()
-    if (ROCKSDB-REPOS)    
-    	target_link_libraries (minifiexe -Wl,-all_load ${ROCKSDB-REPOS})
-    endif()
-    if (ARCHIVE-EXTENSIONS)    
-    	target_link_libraries (minifiexe -Wl,-all_load ${ARCHIVE-EXTENSIONS})
-    endif()
-    
+	get_property(extensions GLOBAL PROPERTY EXTENSION-OPTIONS)
+	foreach(EXTENSION ${extensions})
+		message("Linking against ${EXTENSION}")
+		target_link_libraries (minifiexe -Wl,-all_load ${EXTENSION})
+	endforeach()    
 else ()
-	if (HTTP-CURL)
-	  target_link_libraries (minifiexe -Wl,--whole-archive ${HTTP-CURL} -Wl,--no-whole-archive)
-	endif()
-	if (ROCKSDB-REPOS)
-	  target_link_libraries (minifiexe -Wl,--whole-archive ${ROCKSDB-REPOS} -Wl,--no-whole-archive)
-	endif()
-	if (ARCHIVE-EXTENSIONS)
-	  target_link_libraries (minifiexe -Wl,--whole-archive ${ARCHIVE-EXTENSIONS} -Wl,--no-whole-archive)
-	endif()        
+	get_property(extensions GLOBAL PROPERTY EXTENSION-OPTIONS)
+	foreach(EXTENSION ${extensions})
+	  target_link_libraries (minifiexe -Wl,--whole-archive ${EXTENSION} -Wl,--no-whole-archive)
+	endforeach()
 endif ()
 
 set_property(TARGET minifiexe PROPERTY INTERPROCEDURAL_OPTIMIZATION True)
 
 set_target_properties(minifiexe
         PROPERTIES OUTPUT_NAME minifi)
-
-
 
 install(TARGETS minifiexe
         RUNTIME

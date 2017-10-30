@@ -17,8 +17,6 @@
 # under the License.
 #
 
-cmake_minimum_required(VERSION 2.6)
-
 find_package(CURL REQUIRED)
 
 set(CMAKE_EXE_LINKER_FLAGS "-Wl,--export-all-symbols")
@@ -67,7 +65,6 @@ else ()
     )
 endif ()
 
-
 SET (HTTP-CURL minifi-http-curl PARENT_SCOPE)
 
-
+register_extension(minifi-http-curl)

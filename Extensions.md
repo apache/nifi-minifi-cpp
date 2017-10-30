@@ -27,6 +27,27 @@ This folder contains a CMakeLists file so that we can conditionally build it. In
 
 Your CMAKE file should build a static library, that will be included into the run time. This must be added with your conditional to the libminifi CMAKE, along with a platform specific whole archive inclusion. Note that this will ensure that despite no direct linkage being found by the compiler, we will include the code so that we can dynamically find your code.
 
+# Including your extension in the build
+There is a new function that can be used in the root cmake to build and included your extension. An example is based on the LibArchive extension. The createExtension function has 8 possible arguments. The first five arguments are required.
+The first argument specifies the variable controlling the exclusion of this extension, followed by the variable that
+is used when including it into conditional statements. The third argument is the pretty name followed by the description of the extension and the extension directory. The first optional argument is the test directory, which must also contain a CMakeLists.txt file. The seventh argument can be a conditional variable that tells us whether or not to add a third party subdirectory specified by the final extension.
+
+In the lib archive example, we provide all arguments, but your extension may only need the first five and the the test folder. The seventh and eighth arguments must be included in tandem. 
+
+```cmake
+if ( NOT LibArchive_FOUND OR BUILD_LIBARCHIVE )
+	set(BUILD_TP "TRUE")
+endif()
+createExtension(DISABLE_LIBARCHIVE 
+				ARCHIVE-EXTENSIONS 
+				"ARCHIVE EXTENSIONS" 
+				"This Enables libarchive functionality including MergeContent, CompressContent, and (Un)FocusArchiveEntry" 
+				"extensions/libarchive"
+				"${TEST_DIR}/archive-tests"
+				BUILD_TP
+				"thirdparty/libarchive-3.3.2")
+```
+  
 # C bindings
 To find your classes, you must adhere to a dlsym call back that adheres to the core::ObjectFactory class, like the one below. This object factory will return a list of classes, that we can instantiate through the class loader mechanism. Note that since we are including your code directly into our runtime, we will take care of dlopen and dlsym calls. A map from the class name to the object factory is kept in memory.
 
