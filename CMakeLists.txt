@@ -25,6 +25,7 @@ set(PROJECT_VERSION_MINOR 3)
 set(PROJECT_VERSION_PATCH 0)
 option(SKIP_TESTS "Skips building all tests." OFF)
 
+
 include(FeatureSummary)
 
 # Use ccache if present
@@ -74,11 +75,13 @@ endif (OPENSSL_FOUND)
 # Provide custom modules for the project
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
+SET(TEST_DIR ${CMAKE_SOURCE_DIR}/libminifi/test)
+
+include(Extensions)
+
 find_package(UUID REQUIRED)
+
 file(GLOB SPD_SOURCES "thirdparty/spdlog-20170710/include/spdlog/*")
-
-
-
 
 include(ExternalProject)
 
@@ -105,40 +108,41 @@ add_subdirectory(thirdparty/civetweb-1.9.1 EXCLUDE_FROM_ALL)
 include_directories(thirdparty/concurrentqueue)
 include_directories(thirdparty/yaml-cpp-yaml-cpp-20171024/include)
 add_subdirectory(libminifi)
-if (NOT DISABLE_CURL)
-	find_package(CURL)
-	add_subdirectory(extensions/http-curl)
-	mark_as_advanced(HTTP-CURL)
-	
+#function(createExtension extensionCondition extensionGuard extensionName description dirName)
+
+## Add http-curl extensions
+createExtension(DISABLE_CURL 
+				HTTP-CURL 
+				"HTTP CURL" 
+				"This enables RESTProtocol, InvokeHTTP, and the HTTPClient for Site to Site" 
+				"extensions/http-curl"
+				"${TEST_DIR}/curl-tests")
+
+## Add the rocks DB extension
+if ( NOT ROCKSDB_FOUND OR BUILD_ROCKSDB )
+	set(BUILD_RD "TRUE")
 endif()
+createExtension(DISABLE_ROCKSDB 
+				ROCKSDB-REPOS 
+				"ROCKSDB REPOS" 
+				"This Enables persistent provenance, flowfile, and content repositories using RocksDB" 
+				"extensions/rocksdb-repos"
+				"${TEST_DIR}/rocksdb-tests"
+				BUILD_RD
+				"thirdparty/rocksdb/")
 
-if (NOT DISABLE_ROCKSDB)
-	find_package(RocksDB)
-	if (NOT ROCKSDB_FOUND OR BUILD_ROCKSDB)
-		add_subdirectory(thirdparty/rocksdb/)
-		include_directories(thirdparty/rocksdb/include)
-	else()
-		include_directories(${ROCKSDB_INCLUDE_DIR})
-	endif()
-	
-	add_subdirectory(extensions/rocksdb-repos)
-	mark_as_advanced(ROCKSDB-REPOS)
-
+## Create LibArchive Extension
+if ( NOT LibArchive_FOUND OR BUILD_LIBARCHIVE )
+	set(BUILD_TP "TRUE")
 endif()
-
-if (NOT DISABLE_LIBARCHIVE)
-	find_package(LibArchive)
-	if (NOT LibArchive_FOUND OR BUILD_LIBARCHIVE)
-		add_subdirectory(thirdparty/libarchive-3.3.2)
-	endif()
-	add_subdirectory(extensions/libarchive)
-	mark_as_advanced(ARCHIVE-EXTENSIONS)
-endif()
-
-## ENABLE FEATURE INFORMATION
-ADD_FEATURE_INFO("HTTP CURL" HTTP-CURL "This enables RESTProtocol, InvokeHTTP, and the HTTPClient for Site to Site")
-ADD_FEATURE_INFO("ROCKSDB REPOS" ROCKSDB-REPOS "This Enables persistent provenance, flowfile, and content repositories using RocksDB")
-ADD_FEATURE_INFO("ARCHIVE EXTENSIONS" ARCHIVE-EXTENSIONS "This Enables libarchive functionality including MergeContent, CompressContent, and (Un)FocusArchiveEntry")
+createExtension(DISABLE_LIBARCHIVE 
+				ARCHIVE-EXTENSIONS 
+				"ARCHIVE EXTENSIONS" 
+				"This Enables libarchive functionality including MergeContent, CompressContent, and (Un)FocusArchiveEntry" 
+				"extensions/libarchive"
+				"${TEST_DIR}/archive-tests"
+				BUILD_TP
+				"thirdparty/libarchive-3.3.2")
 
 ## NOW WE CAN ADD LIBRARIES AND EXTENSIONS TO MAIN
 
