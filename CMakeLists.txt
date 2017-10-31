@@ -108,7 +108,11 @@ add_subdirectory(thirdparty/civetweb-1.9.1 EXCLUDE_FROM_ALL)
 include_directories(thirdparty/concurrentqueue)
 include_directories(thirdparty/yaml-cpp-yaml-cpp-20171024/include)
 add_subdirectory(libminifi)
-#function(createExtension extensionCondition extensionGuard extensionName description dirName)
+
+if (EXCLUDE_BOOST)
+	message(" -- Excluding Boost dependent packages...")
+	set(DISABLE_LIBARCHIVE "ON")
+endif(EXCLUDE_BOOST)
 
 ## Add http-curl extensions
 createExtension(DISABLE_CURL 
