@@ -156,6 +156,16 @@ createExtension(DISABLE_SCRIPTING
 				"extensions/script"
 				"${TEST_DIR}/script-tests")
 
+## USB camera extensions
+createExtension(DISABLE_USB_CAMERA
+				USB-CAMERA-EXTENSIONS
+				"USB CAMERA EXTENSIONS"
+				"This enables USB camera support"
+				"extensions/usb-camera"
+				"${TEST_DIR}/usb-camera-tests"
+				"TRUE"
+				"thirdparty/libuvc-0.0.6")
+
 ## NOW WE CAN ADD LIBRARIES AND EXTENSIONS TO MAIN
 
 add_subdirectory(main)
