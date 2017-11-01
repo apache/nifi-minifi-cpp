@@ -50,6 +50,7 @@ Perspectives of the role of MiNiFi should be from the perspective of the agent a
   * ExecuteProcess
   * ExecuteScript
   * GetFile
+  * GetUSBCamera
   * GenerateFlowFile
   * InvokeHTTP
   * LogAttribute
@@ -103,6 +104,8 @@ DIRECTORY UNLESS YOU SPECIFY -DDISABLE_ROCKSDB=true WITH CMAKE ***
 * libarchive
 * Python 3 -- Required, unless Python support is disabled
 * Lua -- Optional, unless Lua support is enabled
+* libusb -- Optional, unless USB Camera support is enabled
+* libpng -- Optional, unless USB Camera support is enabled
 
 The needed dependencies can be installed with the following commands for:
 
@@ -125,6 +128,8 @@ $ # (Optional) for building Python support
 $ yum install python34-devel
 $ # (Optional) for building Lua support
 $ yum install lua-devel
+$ # (Optional) for building USB Camera support
+$ yum install libusb-devel libpng-devel
 $ # (Optional) for building docker image
 $ yum install docker
 $ # (Optional) for system integration tests
@@ -146,6 +151,8 @@ $ # (Optional) for building Python support
 $ apt-get install libpython3-dev
 $ # (Optional) for building Lua support
 $ apt-get install liblua5.1-0-dev
+$ # (Optional) for building USB Camera support
+$ apt-get install libusb-1.0.0-0-dev libpng12-dev
 $ # (Optional) for building docker image
 $ apt-get install docker.io
 $ # (Optional) for system integration tests
@@ -165,6 +172,8 @@ $ brew install cmake \
   doxygen
 $ brew install curl
 $ brew link curl --force
+$ # (Optional) for building USB Camera support
+$ brew install libusb libpng
 $ # (Optional) for building docker image/running system integration tests
 $ # Install docker using instructions at https://docs.docker.com/docker-for-mac/install/
 $ sudo pip install virtualenv
@@ -189,6 +198,7 @@ $ sudo pip install virtualenv
     - `-DDISABLE_CURL=1`
     - `-DDISABLE_ROCKSDB=1`
     - `-DDISABLE_LIBARCHIVE=1`
+    - `-DDISABLE_USB_CAMERA=1`
     - `-DDISABLE_SCRIPTING=1`
     - `-DDISABLE_PYTHON_SCRIPTING=1`
     - `-DENABLE_LUA_SCRIPTING=1`
