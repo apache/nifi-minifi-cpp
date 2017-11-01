@@ -71,7 +71,7 @@ class SchedulingAgent {
 
   }
   // onTrigger, return whether the yield is need
-  bool onTrigger(std::shared_ptr<core::Processor> processor, std::shared_ptr<core::ProcessContext> processContext, std::shared_ptr<core::ProcessSessionFactory> sessionFactory);
+  bool onTrigger(const std::shared_ptr<core::Processor> &processor, const std::shared_ptr<core::ProcessContext> &processContext, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory);
   // Whether agent has work to do
   bool hasWorkToDo(std::shared_ptr<core::Processor> processor);
   // Whether the outgoing need to be backpressure

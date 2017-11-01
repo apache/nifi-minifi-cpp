@@ -33,6 +33,9 @@
 #include <string>
 #include <type_traits>
 #include <utility>
+
+#include "sitetosite/Peer.h"
+#include "sitetosite/SiteToSiteFactory.h"
 #include "json/json.h"
 #include "json/writer.h"
 
@@ -42,7 +45,6 @@
 #include "core/ProcessorNode.h"
 #include "core/Property.h"
 #include "core/Relationship.h"
-#include "Site2SitePeer.h"
 #include "utils/HTTPClient.h"
 
 namespace org {
@@ -59,50 +61,45 @@ core::Property RemoteProcessorGroupPort::port("Port", "Remote Port", "");
 core::Property RemoteProcessorGroupPort::portUUID("Port UUID", "Specifies remote NiFi Port UUID.", "");
 core::Relationship RemoteProcessorGroupPort::relation;
 
-std::unique_ptr<Site2SiteClientProtocol> RemoteProcessorGroupPort::getNextProtocol(bool create = true) {
-  std::unique_ptr<Site2SiteClientProtocol> nextProtocol = nullptr;
+std::unique_ptr<sitetosite::SiteToSiteClient> RemoteProcessorGroupPort::getNextProtocol(bool create = true) {
+  std::unique_ptr<sitetosite::SiteToSiteClient> nextProtocol = nullptr;
   if (!available_protocols_.try_dequeue(nextProtocol)) {
     if (create) {
       // create
       if (url_.empty()) {
-        nextProtocol = std::unique_ptr<Site2SiteClientProtocol>(new Site2SiteClientProtocol(nullptr));
-        nextProtocol->setPortId(protocol_uuid_);
-        std::unique_ptr<org::apache::nifi::minifi::io::DataStream> str = std::unique_ptr<org::apache::nifi::minifi::io::DataStream>(stream_factory_->createSocket(host_, port_));
-        std::unique_ptr<Site2SitePeer> peer_ = std::unique_ptr<Site2SitePeer>(new Site2SitePeer(std::move(str), host_, port_));
-        nextProtocol->setPeer(std::move(peer_));
-      } else if (site2site_peer_index_ >= 0) {
-        nextProtocol = std::unique_ptr<Site2SiteClientProtocol>(new Site2SiteClientProtocol(nullptr));
-        minifi::Site2SitePeerStatus peer;
-        nextProtocol->setPortId(protocol_uuid_);
-        {
-          std::lock_guard<std::mutex> lock(site2site_peer_mutex_);
-          peer = site2site_peer_status_list_[this->site2site_peer_index_];
-          site2site_peer_index_++;
-          if (site2site_peer_index_ >= site2site_peer_status_list_.size()) {
-            site2site_peer_index_ = 0;
-          }
+        sitetosite::SiteToSiteClientConfiguration config(stream_factory_, std::make_shared<sitetosite::Peer>(protocol_uuid_, host_, port_, ssl_service != nullptr), client_type_);
+        nextProtocol = std::move(sitetosite::createClient(config));
+      } else if (peer_index_ >= 0) {
+        std::lock_guard<std::mutex> lock(peer_mutex_);
+        logger_->log_info("Creating client from peer %d", peer_index_.load());
+        sitetosite::SiteToSiteClientConfiguration config(stream_factory_, peers_[this->peer_index_].getPeer(), client_type_);
+
+        peer_index_++;
+        if (peer_index_ >= peers_.size()) {
+          peer_index_ = 0;
         }
-        logger_->log_info("creating new protocol with %s and %d", peer.host_, peer.port_);
-        std::unique_ptr<org::apache::nifi::minifi::io::DataStream> str = std::unique_ptr<org::apache::nifi::minifi::io::DataStream>(stream_factory_->createSocket(peer.host_, peer.port_));
-        std::unique_ptr<Site2SitePeer> peer_ = std::unique_ptr<Site2SitePeer>(new Site2SitePeer(std::move(str), peer.host_, peer.port_));
-        nextProtocol->setPeer(std::move(peer_));
+
+        nextProtocol = std::move(sitetosite::createClient(config));
       } else {
         logger_->log_info("Refreshing the peer list since there are none configured.");
         refreshPeerList();
       }
     }
   }
+  logger_->log_info("Obtained protocol from available_protocols_");
   return std::move(nextProtocol);
 }
 
-void RemoteProcessorGroupPort::returnProtocol(std::unique_ptr<Site2SiteClientProtocol> return_protocol) {
-  int count = site2site_peer_status_list_.size();
+void RemoteProcessorGroupPort::returnProtocol(std::unique_ptr<sitetosite::SiteToSiteClient> return_protocol) {
+  int count = peers_.size();
   if (max_concurrent_tasks_ > count)
     count = max_concurrent_tasks_;
   if (available_protocols_.size_approx() >= count) {
+    logger_->log_info("not enqueueing protocol %s", getUUIDStr());
     // let the memory be freed
     return;
   }
+  logger_->log_info("enqueueing protocol %s, have a total of %lu", getUUIDStr(), available_protocols_.size_approx());
   available_protocols_.enqueue(std::move(return_protocol));
 }
 
@@ -118,35 +115,43 @@ void RemoteProcessorGroupPort::initialize() {
   std::set<core::Relationship> relationships;
   relationships.insert(relation);
   setSupportedRelationships(relationships);
-  std::lock_guard<std::mutex> lock(site2site_peer_mutex_);
+
+  client_type_ = sitetosite::RAW;
+  std::string http_enabled_str;
+  if (configure_->get(Configure::nifi_remote_input_http, http_enabled_str)) {
+    if (utils::StringUtils::StringToBool(http_enabled_str, http_enabled_)) {
+      client_type_ = sitetosite::HTTP;
+    }
+  }
+
+  std::lock_guard<std::mutex> lock(peer_mutex_);
   if (!url_.empty()) {
     refreshPeerList();
-    if (site2site_peer_status_list_.size() > 0)
-      site2site_peer_index_ = 0;
+    if (peers_.size() > 0)
+      peer_index_ = 0;
   }
   // populate the site2site protocol for load balancing between them
-  if (site2site_peer_status_list_.size() > 0) {
-    int count = site2site_peer_status_list_.size();
+  if (peers_.size() > 0) {
+    int count = peers_.size();
     if (max_concurrent_tasks_ > count)
       count = max_concurrent_tasks_;
     for (int i = 0; i < count; i++) {
-      std::unique_ptr<Site2SiteClientProtocol> nextProtocol = nullptr;
-      nextProtocol = std::unique_ptr<Site2SiteClientProtocol>(new Site2SiteClientProtocol(nullptr));
-      nextProtocol->setPortId(protocol_uuid_);
-      minifi::Site2SitePeerStatus peer = site2site_peer_status_list_[this->site2site_peer_index_];
-      site2site_peer_index_++;
-      if (site2site_peer_index_ >= site2site_peer_status_list_.size()) {
-        site2site_peer_index_ = 0;
+      std::unique_ptr<sitetosite::SiteToSiteClient> nextProtocol = nullptr;
+      sitetosite::SiteToSiteClientConfiguration config(stream_factory_, peers_[this->peer_index_].getPeer(), client_type_);
+      peer_index_++;
+      if (peer_index_ >= peers_.size()) {
+        peer_index_ = 0;
       }
-      std::unique_ptr<org::apache::nifi::minifi::io::DataStream> str = std::unique_ptr<org::apache::nifi::minifi::io::DataStream>(stream_factory_->createSocket(peer.host_, peer.port_));
-      std::unique_ptr<Site2SitePeer> peer_ = std::unique_ptr<Site2SitePeer>(new Site2SitePeer(std::move(str), peer.host_, peer.port_));
-      nextProtocol->setPeer(std::move(peer_));
+      logger_->log_info("Creating client");
+      nextProtocol = std::move(sitetosite::createClient(config));
+      logger_->log_info("Created client, moving into available protocols");
       returnProtocol(std::move(nextProtocol));
     }
   }
+  logger_->log_info("Finished initialization");
 }
 
-void RemoteProcessorGroupPort::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory) {
+void RemoteProcessorGroupPort::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
   std::string value;
   if (context->getProperty(portUUID.getName(), value)) {
     uuid_parse(value.c_str(), protocol_uuid_);
@@ -161,13 +166,15 @@ void RemoteProcessorGroupPort::onSchedule(core::ProcessContext *context, core::P
   }
 }
 
-void RemoteProcessorGroupPort::onTrigger(core::ProcessContext *context, core::ProcessSession *session) {
+void RemoteProcessorGroupPort::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
+  logger_->log_info("On trigger %s", getUUIDStr());
   if (!transmitting_) {
     return;
   }
 
   std::string value;
 
+  logger_->log_info("On trigger %s", getUUIDStr());
   if (url_.empty()) {
     if (context->getProperty(hostName.getName(), value) && !value.empty()) {
       host_ = value;
@@ -183,29 +190,20 @@ void RemoteProcessorGroupPort::onTrigger(core::ProcessContext *context, core::Pr
     uuid_parse(value.c_str(), protocol_uuid_);
   }
 
-  std::unique_ptr<Site2SiteClientProtocol> protocol_ = nullptr;
+  std::unique_ptr<sitetosite::SiteToSiteClient> protocol_ = nullptr;
   try {
+    logger_->log_info("get protocol in on trigger");
     protocol_ = getNextProtocol();
 
     if (!protocol_) {
-      logger_->log_info("no protocol");
+      logger_->log_info("no protocol, yielding");
       context->yield();
       return;
     }
-    logger_->log_info("got protocol");
-    if (!protocol_->bootstrap()) {
-      // bootstrap the client protocol if needed
+
+    if (!protocol_->transfer(direction_, context, session)) {
+      logger_->log_info("protocol transmission failed, yielding");
       context->yield();
-      std::shared_ptr<Processor> processor = std::static_pointer_cast<Processor>(context->getProcessorNode()->getProcessor());
-      logger_->log_error("Site2Site bootstrap failed yield period %d peer ", processor->getYieldPeriodMsec());
-
-      return;
-    }
-
-    if (direction_ == RECEIVE) {
-      protocol_->receiveFlowFiles(context, session);
-    } else {
-      protocol_->transferFlowFiles(context, session);
     }
 
     returnProtocol(std::move(protocol_));
@@ -250,9 +248,9 @@ void RemoteProcessorGroupPort::refreshRemoteSite2SiteInfo() {
 
   auto client_ptr = core::ClassLoader::getDefaultClassLoader().instantiateRaw("HTTPClient", "HTTPClient");
   if (nullptr == client_ptr) {
-      logger_->log_error("Could not locate HTTPClient. You do not have cURL support!");
-      return;
-    }
+    logger_->log_error("Could not locate HTTPClient. You do not have cURL support!");
+    return;
+  }
   client = std::unique_ptr<utils::BaseHTTPClient>(dynamic_cast<utils::BaseHTTPClient*>(client_ptr));
   client->initialize("GET", fullUrl.c_str(), ssl_service);
 
@@ -273,8 +271,10 @@ void RemoteProcessorGroupPort::refreshRemoteSite2SiteInfo() {
         Json::Value controllerValue = value["controller"];
         if (!controllerValue.empty()) {
           Json::Value port = controllerValue["remoteSiteListeningPort"];
-          if (!port.empty())
+          if (client_type_ == sitetosite::CLIENT_TYPE::RAW && !port.empty())
             this->site2site_port_ = port.asInt();
+          else
+            this->site2site_port_ = port_;
           Json::Value secure = controllerValue["siteToSiteSecure"];
           if (!secure.empty())
             this->site2site_secure_ = secure.asBool();
@@ -294,18 +294,17 @@ void RemoteProcessorGroupPort::refreshPeerList() {
   if (site2site_port_ == -1)
     return;
 
-  this->site2site_peer_status_list_.clear();
+  this->peers_.clear();
 
-  std::unique_ptr<Site2SiteClientProtocol> protocol;
-  protocol = std::unique_ptr<Site2SiteClientProtocol>(new Site2SiteClientProtocol(nullptr));
-  protocol->setPortId(protocol_uuid_);
-  std::unique_ptr<org::apache::nifi::minifi::io::DataStream> str = std::unique_ptr<org::apache::nifi::minifi::io::DataStream>(stream_factory_->createSocket(host_, site2site_port_));
-  std::unique_ptr<Site2SitePeer> peer_ = std::unique_ptr<Site2SitePeer>(new Site2SitePeer(std::move(str), host_, site2site_port_));
-  protocol->setPeer(std::move(peer_));
-  protocol->getPeerList(site2site_peer_status_list_);
+  std::unique_ptr<sitetosite::SiteToSiteClient> protocol;
+  sitetosite::SiteToSiteClientConfiguration config(stream_factory_, std::make_shared<sitetosite::Peer>(protocol_uuid_, host_, site2site_port_, ssl_service != nullptr), client_type_);
+  protocol = std::move(sitetosite::createClient(config));
 
-  if (site2site_peer_status_list_.size() > 0)
-    site2site_peer_index_ = 0;
+  protocol->getPeerList(peers_);
+
+  logger_->log_info("Have %d peers", peers_.size());
+  if (peers_.size() > 0)
+    peer_index_ = 0;
 }
 
 } /* namespace minifi */

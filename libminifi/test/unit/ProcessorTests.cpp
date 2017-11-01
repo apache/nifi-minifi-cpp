@@ -122,12 +122,10 @@ TEST_CASE("Test GetFileMultiple", "[getfileCreate3]") {
     session->commit();
     std::shared_ptr<core::FlowFile> ffr = session->get();
 
-    std::cout << repo->getRepoMap().size() << std::endl;
     REQUIRE(repo->getRepoMap().size() == (prev + 1));
     prev++;
   }
 }
-
 
 TEST_CASE("LogAttributeTest", "[getfileCreate3]") {
   TestController testController;
@@ -240,12 +238,13 @@ TEST_CASE("Test Find file", "[getfileCreate3]") {
   std::string jsonStr;
   std::size_t deserialized = 0;
   repo->DeSerialize(recordsReport, deserialized);
-  std::function<void(core::ProcessContext*, core::ProcessSession*)> verifyReporter = [&](core::ProcessContext *context, core::ProcessSession *session) {
-    taskReport->getJsonReport(context, session, recordsReport, jsonStr);
-    REQUIRE(recordsReport.size() == 1);
-    REQUIRE(taskReport->getName() == std::string(org::apache::nifi::minifi::core::reporting::SiteToSiteProvenanceReportingTask::ReportTaskName));
-    REQUIRE(jsonStr.find("\"componentType\" : \"getfileCreate2\"") != std::string::npos);
-  };
+  std::function<void(const std::shared_ptr<core::ProcessContext> &, const std::shared_ptr<core::ProcessSession>&)> verifyReporter =
+      [&](const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
+        taskReport->getJsonReport(context, session, recordsReport, jsonStr);
+        REQUIRE(recordsReport.size() == 1);
+        REQUIRE(taskReport->getName() == std::string(org::apache::nifi::minifi::core::reporting::SiteToSiteProvenanceReportingTask::ReportTaskName));
+        REQUIRE(jsonStr.find("\"componentType\" : \"getfileCreate2\"") != std::string::npos);
+      };
 
   testController.runSession(plan, false, verifyReporter);
 }

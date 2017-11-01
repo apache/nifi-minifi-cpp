@@ -75,5 +75,4 @@ TEST_CASE("Test log Levels change", "[ttl5]") {
 }
 
 TEST_CASE("Test Demangle template", "[ttl6]") {
-  std::cout << core::getClassName<std::vector<int>>() << std::endl;
 }

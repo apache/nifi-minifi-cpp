@@ -160,7 +160,7 @@ TEST_CASE("GetTCPWithOEM", "[GetTCP2]") {
 
   TestController testController;
 
-  org::apache::nifi::minifi::io::Socket server(socket_context, "localhost", 9183, 1);
+  org::apache::nifi::minifi::io::Socket server(socket_context, "localhost", 9182, 1);
 
   REQUIRE(-1 != server.initialize());
 
@@ -211,7 +211,7 @@ TEST_CASE("GetTCPWithOEM", "[GetTCP2]") {
     std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider = nullptr;
     std::shared_ptr<core::ProcessContext> context = std::make_shared<core::ProcessContext>(node, controller_services_provider, repo, repo, content_repo);
     std::shared_ptr<core::ProcessContext> context2 = std::make_shared<core::ProcessContext>(node2, controller_services_provider, repo, repo, content_repo);
-  context->setProperty(org::apache::nifi::minifi::processors::GetTCP::EndpointList, "localhost:9183");
+  context->setProperty(org::apache::nifi::minifi::processors::GetTCP::EndpointList, "localhost:9182");
   context->setProperty(org::apache::nifi::minifi::processors::GetTCP::ReconnectInterval, "100 msec");
   // we're using new lines above
   context->setProperty(org::apache::nifi::minifi::processors::GetTCP::EndOfMessageByte, "10");
@@ -286,7 +286,7 @@ TEST_CASE("GetTCPWithOnlyOEM", "[GetTCP3]") {
 
   LogTestController::getInstance().setDebug<minifi::io::Socket>();
 
-  org::apache::nifi::minifi::io::Socket server(socket_context, "localhost", 9183, 1);
+  org::apache::nifi::minifi::io::Socket server(socket_context, "localhost", 9182, 1);
 
   REQUIRE(-1 != server.initialize());
 
@@ -336,7 +336,7 @@ TEST_CASE("GetTCPWithOnlyOEM", "[GetTCP3]") {
     std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider = nullptr;
     std::shared_ptr<core::ProcessContext> context = std::make_shared<core::ProcessContext>(node, controller_services_provider, repo, repo, content_repo);
     std::shared_ptr<core::ProcessContext> context2 = std::make_shared<core::ProcessContext>(node2, controller_services_provider, repo, repo, content_repo);
-  context->setProperty(org::apache::nifi::minifi::processors::GetTCP::EndpointList, "localhost:9183");
+  context->setProperty(org::apache::nifi::minifi::processors::GetTCP::EndpointList, "localhost:9182");
   context->setProperty(org::apache::nifi::minifi::processors::GetTCP::ReconnectInterval, "100 msec");
   // we're using new lines above
   context->setProperty(org::apache::nifi::minifi::processors::GetTCP::EndOfMessageByte, "10");
@@ -402,7 +402,7 @@ TEST_CASE("GetTCPEmptyNoConnect", "[GetTCP3]") {
 
   plan->addProcessor("LogAttribute", "logattribute", core::Relationship("success", "description"), true);
 
-  plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetTCP::EndpointList.getName(), "localhost:9183");
+  plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetTCP::EndpointList.getName(), "localhost:9182");
   plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetTCP::ReconnectInterval.getName(), "100 msec");
   // we're using new lines above
   plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetTCP::EndOfMessageByte.getName(), "10");
@@ -413,7 +413,7 @@ TEST_CASE("GetTCPEmptyNoConnect", "[GetTCP3]") {
   REQUIRE(record == nullptr);
   REQUIRE(records.size() == 0);
 
-  REQUIRE(true == LogTestController::getInstance().contains("Could not create socket during initialization for localhost:9183"));
+  REQUIRE(true == LogTestController::getInstance().contains("Could not create socket during initialization for localhost:9182"));
   LogTestController::getInstance().reset();
 }
 

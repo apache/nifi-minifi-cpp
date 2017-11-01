@@ -115,7 +115,7 @@ class LogTestController {
   std::ostringstream log_output;
 
   std::shared_ptr<logging::Logger> logger_;
-   private:
+ private:
   class TestBootstrapLogger : public logging::Logger {
    public:
     TestBootstrapLogger(std::shared_ptr<spdlog::logger> logger)
@@ -164,7 +164,7 @@ class TestPlan {
 
   void reset();
 
-  bool runNextProcessor(std::function<void(core::ProcessContext*, core::ProcessSession*)> verify = nullptr);
+  bool runNextProcessor(std::function<void(const std::shared_ptr<core::ProcessContext>, const std::shared_ptr<core::ProcessSession>)> verify = nullptr);
 
   std::set<provenance::ProvenanceEventRecord*> getProvenanceRecords();
 
@@ -183,7 +183,6 @@ class TestPlan {
   }
 
  protected:
-
 
   std::shared_ptr<logging::Logger> logger_;
 
@@ -230,8 +229,7 @@ class TestController {
     utils::IdGenerator::getIdGenerator()->initialize(std::make_shared<minifi::Properties>());
   }
 
-  std::shared_ptr<TestPlan> createPlan()
-  {
+  std::shared_ptr<TestPlan> createPlan() {
     std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::Configure>();
     std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
 
@@ -242,15 +240,14 @@ class TestController {
     return std::make_shared<TestPlan>(content_repo, flow_repo, repo);
   }
 
-  void runSession(std::shared_ptr<TestPlan> &plan, bool runToCompletion = true, std::function<void(core::ProcessContext*, core::ProcessSession*)> verify = nullptr) {
 
-    while (plan->runNextProcessor(verify) && runToCompletion)
-    {
+  void runSession(std::shared_ptr<TestPlan> &plan, bool runToCompletion = true, std::function<void(const std::shared_ptr<core::ProcessContext>&, const std::shared_ptr<core::ProcessSession>&)> verify =
+                      nullptr) {
+
+    while (plan->runNextProcessor(verify) && runToCompletion) {
 
     }
   }
-
-
 
   ~TestController() {
     for (auto dir : directories) {
@@ -281,8 +278,6 @@ class TestController {
   }
 
  protected:
-
-
 
   std::mutex test_mutex;
   //std::map<std::string,>

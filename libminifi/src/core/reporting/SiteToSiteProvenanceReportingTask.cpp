@@ -53,8 +53,8 @@ void SiteToSiteProvenanceReportingTask::initialize() {
   RemoteProcessorGroupPort::initialize();
 }
 
-void SiteToSiteProvenanceReportingTask::getJsonReport(core::ProcessContext *context, core::ProcessSession *session, std::vector<std::shared_ptr<core::SerializableComponent>> &records,
-                                                      std::string &report) {
+void SiteToSiteProvenanceReportingTask::getJsonReport(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session,
+                                                      std::vector<std::shared_ptr<core::SerializableComponent>> &records, std::string &report) {
   Json::Value array;
   for (auto sercomp : records) {
     std::shared_ptr<provenance::ProvenanceEventRecord> record = std::dynamic_pointer_cast<provenance::ProvenanceEventRecord>(sercomp);
@@ -103,37 +103,18 @@ void SiteToSiteProvenanceReportingTask::getJsonReport(core::ProcessContext *cont
   report = writer.write(array);
 }
 
-void SiteToSiteProvenanceReportingTask::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory) {
+void SiteToSiteProvenanceReportingTask::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
 }
 
-void SiteToSiteProvenanceReportingTask::onTrigger(core::ProcessContext *context, core::ProcessSession *session) {
-  std::unique_ptr<Site2SiteClientProtocol> protocol_ = getNextProtocol(true);
-
-  if (!protocol_) {
-    context->yield();
-    return;
-  }
-
+void SiteToSiteProvenanceReportingTask::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
   logger_->log_debug("SiteToSiteProvenanceReportingTask -- onTrigger");
-
-  if (!protocol_->bootstrap()) {
-    // bootstrap the client protocol if needeed
-    context->yield();
-    std::shared_ptr<Processor> processor = std::static_pointer_cast<Processor>(context->getProcessorNode()->getProcessor());
-    logger_->log_error("Site2Site bootstrap failed yield period %d peer ", processor->getYieldPeriodMsec());
-    returnProtocol(std::move(protocol_));
-    return;
-  }
-
   std::vector<std::shared_ptr<core::SerializableComponent>> records;
-
   logger_->log_debug("batch size %d records", batch_size_);
   size_t deserialized = batch_size_;
   std::shared_ptr<core::Repository> repo = context->getProvenanceRepository();
   std::function<std::shared_ptr<core::SerializableComponent>()> constructor = []() {return std::make_shared<provenance::ProvenanceEventRecord>();};
   if (!repo->DeSerialize(records, deserialized, constructor) && deserialized == 0) {
     logger_->log_debug("Not sending because deserialized is %d", deserialized);
-    returnProtocol(std::move(protocol_));
     return;
   }
 
@@ -143,13 +124,21 @@ void SiteToSiteProvenanceReportingTask::onTrigger(core::ProcessContext *context,
   std::string jsonStr;
   this->getJsonReport(context, session, records, jsonStr);
   if (jsonStr.length() <= 0) {
-    returnProtocol(std::move(protocol_));
+    return;
+  }
+
+  auto protocol_ = getNextProtocol(true);
+
+  if (!protocol_) {
+    context->yield();
     return;
   }
 
   try {
     std::map<std::string, std::string> attributes;
-    protocol_->transferString(context, session, jsonStr, attributes);
+    if (!protocol_->transmitPayload(context, session, jsonStr, attributes)) {
+      context->yield();
+    }
   } catch (...) {
     // if transfer bytes failed, return instead of purge the provenance records
     return;

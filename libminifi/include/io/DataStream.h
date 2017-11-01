@@ -19,6 +19,7 @@
 #ifndef LIBMINIFI_INCLUDE_IO_DATASTREAM_H_
 #define LIBMINIFI_INCLUDE_IO_DATASTREAM_H_
 
+#include <iostream>
 #include <cstdint>
 #include <vector>
 #include "EndianCheck.h"

@@ -14,8 +14,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_UTILS_BYTEINPUTCALLBACK_H_
-#define LIBMINIFI_INCLUDE_UTILS_BYTEINPUTCALLBACK_H_
+#ifndef LIBMINIFI_INCLUDE_UTILS_BYTEARRAYCALLBACK_H_
+#define LIBMINIFI_INCLUDE_UTILS_BYTEARRAYCALLBACK_H_
 
 #include <fstream>
 #include <iterator>
@@ -40,7 +40,7 @@ class ByteInputCallBack : public InputStreamCallback {
 
   }
 
-  int64_t process(std::shared_ptr<io::BaseStream> stream) {
+  virtual int64_t process(std::shared_ptr<io::BaseStream> stream) {
 
     stream->seek(0);
 
@@ -56,18 +56,26 @@ class ByteInputCallBack : public InputStreamCallback {
 
   }
 
-  void write(std::string content) {
+  virtual void seek(size_t pos) {
+
+  }
+
+  virtual void write(std::string content) {
     //vec.resize(content.length());
     //std::copy(content.begin(), content.end(), std::back_inserter(vec));
     vec.assign(content.begin(), content.end());
     ptr = &vec[0];
   }
 
-  char *getBuffer() {
-    return ptr;
+  virtual char *getBuffer(size_t pos) {
+    return ptr + pos;
   }
 
-  const size_t getBufferSize() {
+  virtual const size_t getRemaining(size_t pos) {
+    return getBufferSize() - pos;
+  }
+
+  virtual const size_t getBufferSize() {
     return vec.size();
   }
 
@@ -76,10 +84,60 @@ class ByteInputCallBack : public InputStreamCallback {
   std::vector<char> vec;
 };
 
+/**
+ * General vector based uint8_t callback.
+ */
+class ByteOutputCallback : public OutputStreamCallback {
+ public:
+  ByteOutputCallback(size_t max_hold)
+      : ptr(nullptr),
+        max_size_(max_hold) {
+    current_str_pos = 0;
+    size_ = 0;
+    is_alive_ = true;
+  }
+
+  virtual ~ByteOutputCallback() {
+
+  }
+
+  virtual int64_t process(std::shared_ptr<io::BaseStream> stream);
+
+  const std::vector<char> to_string();
+
+  void close();
+
+  size_t getSize();
+
+  bool waitingOps();
+
+  virtual void write(char *data, size_t size);
+
+  size_t readFully(char *buffer, size_t size);
+
+ private:
+
+  inline size_t read_current_str(char *buffer, size_t size);
+
+  inline void preload_next_str();
+
+  std::atomic<bool> is_alive_;
+  size_t max_size_;
+  std::condition_variable_any spinner_;
+  std::recursive_mutex vector_lock_;
+  std::atomic<size_t> size_;
+  char *ptr;
+
+  size_t current_str_pos;
+  std::string current_str;
+  std::queue<std::string> vec;
+}
+;
+
 } /* namespace utils */
 } /* namespace minifi */
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
 
-#endif /* LIBMINIFI_INCLUDE_UTILS_BYTEINPUTCALLBACK_H_ */
+#endif /* LIBMINIFI_INCLUDE_UTILS_BYTEARRAYCALLBACK_H_ */

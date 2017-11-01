@@ -81,6 +81,17 @@ class StringUtils {
     return s;
   }
 
+  /**
+   * Compares strings by lower casing them.
+   */
+  static inline bool equalsIgnoreCase(const std::string &left, const std::string right) {
+    if (left.length() == right.length()) {
+      return std::equal(right.begin(), right.end(), left.begin(), [](unsigned char lc, unsigned char rc) {return std::tolower(lc) == std::tolower(rc);});
+    } else {
+      return false;
+    }
+  }
+
   static std::vector<std::string> split(const std::string &str, const std::string &delimiter) {
     std::vector<std::string> result;
     int last = 0;

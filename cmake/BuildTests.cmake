@@ -86,7 +86,6 @@ FOREACH(testfile ${INTEGRATION_TESTS})
 ENDFOREACH()
 message("-- Finished building ${INT_TEST_COUNT} integration test file(s)...")
 
-
 get_property(extensions GLOBAL PROPERTY EXTENSION-TESTS)
 foreach(EXTENSION ${extensions})
 	message("Adding ${EXTENSION} ? ")

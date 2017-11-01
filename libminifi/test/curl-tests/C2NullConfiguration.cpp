@@ -92,11 +92,9 @@ class VerifyC2Server : public IntegrationBase {
     std::string url = "";
     inv->getProperty(minifi::processors::InvokeHTTP::URL.getName(), url);
 
-    std::cout << "url is " << url << std::endl;
 
     std::string port, scheme, path;
     parse_http_components(url, port, scheme, path);
-    std::cout << "path is " << path << std::endl;
     configuration->set("c2.agent.protocol.class", "null");
     configuration->set("c2.rest.url", "");
     configuration->set("c2.rest.url.ack", "");

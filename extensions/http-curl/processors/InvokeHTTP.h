@@ -23,6 +23,7 @@
 #include <regex>
 
 #include <curl/curl.h>
+#include "utils/ByteArrayCallback.h"
 #include "FlowFileRecord.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
@@ -30,7 +31,6 @@
 #include "core/Property.h"
 #include "core/Resource.h"
 #include "controllers/SSLContextService.h"
-#include "utils/ByteInputCallBack.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/Id.h"
 #include "../client/HTTPClient.h"
@@ -104,9 +104,9 @@ class InvokeHTTP : public core::Processor {
   static core::Relationship RelNoRetry;
   static core::Relationship RelFailure;
 
-  virtual void onTrigger(core::ProcessContext *context, core::ProcessSession *session);
-  virtual void initialize();
-  virtual void onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory);
+  virtual void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
+  virtual void initialize() override;
+  virtual void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
   /**
    * Provides a reference to the URL.
    */
@@ -131,7 +131,7 @@ class InvokeHTTP : public core::Processor {
    * @param isSuccess success code or not
    * @param statuscode http response code.
    */
-  void route(std::shared_ptr<FlowFileRecord> &request, std::shared_ptr<FlowFileRecord> &response, core::ProcessSession *session, core::ProcessContext *context, bool isSuccess, int statusCode);
+  void route(std::shared_ptr<FlowFileRecord> &request, std::shared_ptr<FlowFileRecord> &response, const std::shared_ptr<core::ProcessSession> &session, const std::shared_ptr<core::ProcessContext> &context, bool isSuccess, int statusCode);
   /**
    * Determine if we should emit a new flowfile based on our activity
    * @param method method type

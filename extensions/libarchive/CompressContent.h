@@ -146,7 +146,7 @@ public:
   class WriteCallback: public OutputStreamCallback {
   public:
     WriteCallback(std::string &compress_mode, int64_t compress_level, std::string &compress_format,
-        std::shared_ptr<core::FlowFile> &flow, std::shared_ptr<core::ProcessSession> &session) :
+        std::shared_ptr<core::FlowFile> &flow, const std::shared_ptr<core::ProcessSession> &session) :
         compress_mode_(compress_mode), compress_level_(compress_level), compress_format_(compress_format),
         flow_(flow), session_(session),
         logger_(logging::LoggerFactory<CompressContent>::getLogger()),
@@ -354,7 +354,7 @@ public:
   virtual void onTrigger(core::ProcessContext *context, core::ProcessSession *session) {
   }
   // OnTrigger method, implemented by NiFi CompressContent
-  virtual void onTrigger(std::shared_ptr<core::ProcessContext> context, std::shared_ptr<core::ProcessSession> session);
+  virtual void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session);
   // Initialize, over write by NiFi CompressContent
   virtual void initialize(void);
 

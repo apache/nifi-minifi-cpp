@@ -1,6 +1,4 @@
 /**
- * @file Site2SitePeer.h
- * Site2SitePeer class declaration for site to site peer  
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -17,8 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __SITE2SITE_PEER_H__
-#define __SITE2SITE_PEER_H__
+#ifndef LIBMINIFI_INCLUDE_SITETOSITE_PEER_H_
+#define LIBMINIFI_INCLUDE_SITETOSITE_PEER_H_
 
 #include <stdio.h>
 #include <fcntl.h>
@@ -26,6 +24,8 @@
 #include <netdb.h>
 #include <string>
 #include <errno.h>
+#include <uuid/uuid.h>
+#include <string>
 #include <mutex>
 #include <atomic>
 #include <memory>
@@ -41,71 +41,166 @@ namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
+namespace sitetosite {
+
+class Peer {
+ public:
+  explicit Peer(uuid_t port_id, const std::string &host, uint16_t port, bool secure = false)
+      : host_(host),
+        port_(port),
+        secure_(secure) {
+    uuid_copy(port_id_, port_id);
+  }
+
+  explicit Peer(const std::string &host, uint16_t port, bool secure = false)
+      : host_(host),
+        port_(port),
+        secure_(secure) {
+  }
+
+  explicit Peer(const Peer &other)
+      : host_(other.host_),
+        port_(other.port_),
+        secure_(other.secure_) {
+    uuid_copy(port_id_, other.port_id_);
+  }
+
+  explicit Peer(const Peer &&other)
+      : host_(std::move(other.host_)),
+        port_(std::move(other.port_)),
+        secure_(std::move(other.secure_)) {
+    uuid_copy(port_id_, other.port_id_);
+  }
+
+  uint16_t getPort() const {
+    return port_;
+  }
+
+  const std::string &getHost() const {
+    return host_;
+  }
+
+  bool isSecure() const {
+    return secure_;
+  }
+
+  void getPortId(uuid_t other) const {
+    uuid_copy(other, port_id_);
+  }
+
+ protected:
+  uint16_t port_;
+
+  std::string host_;
+
+  uuid_t port_id_;
+  // secore comms
+
+  bool secure_;
+};
+
+class PeerStatus {
+ public:
+  PeerStatus(const std::shared_ptr<Peer> &peer, uint32_t flow_file_count, bool query_for_peers)
+      : peer_(peer),
+        flow_file_count_(flow_file_count),
+        query_for_peers_(query_for_peers) {
+
+  }
+  PeerStatus(const PeerStatus &&other)
+      : peer_(std::move(other.peer_)),
+        flow_file_count_(std::move(other.flow_file_count_)),
+        query_for_peers_(std::move(other.query_for_peers_)) {
+
+  }
+  const std::shared_ptr<Peer> &getPeer() const {
+    return peer_;
+  }
+
+  uint32_t getFlowFileCount() {
+    return flow_file_count_;
+  }
+
+  bool getQueryForPeers() {
+    return query_for_peers_;
+  }
+ protected:
+  std::shared_ptr<Peer> peer_;
+  uint32_t flow_file_count_;
+  bool query_for_peers_;
+};
 
 static const char MAGIC_BYTES[] = { 'N', 'i', 'F', 'i' };
 
 // Site2SitePeer Class
-class Site2SitePeer : public org::apache::nifi::minifi::io::BaseStream {
+class SiteToSitePeer : public org::apache::nifi::minifi::io::BaseStream {
  public:
 
-  Site2SitePeer()
+  SiteToSitePeer()
       : stream_(nullptr),
         host_(""),
         port_(-1),
-        logger_(logging::LoggerFactory<Site2SitePeer>::getLogger()) {
+        logger_(logging::LoggerFactory<SiteToSitePeer>::getLogger()) {
 
   }
   /*
    * Create a new site2site peer
    */
-  explicit Site2SitePeer(std::unique_ptr<org::apache::nifi::minifi::io::DataStream> injected_socket, const std::string host_, uint16_t port_)
-      : host_(host_),
-        port_(port_),
-        stream_(injected_socket.release()),
-        logger_(logging::LoggerFactory<Site2SitePeer>::getLogger()) {
-    _yieldExpiration = 0;
-    _timeOut = 30000;  // 30 seconds
-    _url = "nifi://" + host_ + ":" + std::to_string(port_);
+  explicit SiteToSitePeer(std::unique_ptr<org::apache::nifi::minifi::io::DataStream> injected_socket, const std::string host, uint16_t port)
+      : SiteToSitePeer(host, port) {
+    stream_ = std::move(injected_socket);
   }
 
-  explicit Site2SitePeer(Site2SitePeer &&ss)
+  explicit SiteToSitePeer(const std::string &host, uint16_t port)
+      : host_(host),
+        port_(port),
+        stream_(nullptr),
+        yield_expiration_(0),
+        timeout_(30000),
+        logger_(logging::LoggerFactory<SiteToSitePeer>::getLogger()) {
+    url_ = "nifi://" + host_ + ":" + std::to_string(port_);
+    yield_expiration_ = 0;
+    timeout_ = 30000;  // 30 seconds
+  }
+
+  explicit SiteToSitePeer(SiteToSitePeer &&ss)
       : stream_(ss.stream_.release()),
         host_(std::move(ss.host_)),
         port_(std::move(ss.port_)),
         logger_(std::move(ss.logger_)) {
-    _yieldExpiration.store(ss._yieldExpiration);
-    _timeOut.store(ss._timeOut);
-    _url = std::move(ss._url);
+    yield_expiration_.store(ss.yield_expiration_);
+    timeout_.store(ss.timeout_);
+    url_ = std::move(ss.url_);
   }
   // Destructor
-  ~Site2SitePeer() {
+  ~SiteToSitePeer() {
     Close();
   }
   // Set Processor yield period in MilliSecond
   void setYieldPeriodMsec(uint64_t period) {
-    _yieldPeriodMsec = period;
+    yield_period_msec_ = period;
   }
   // get URL
   std::string getURL() {
-    return _url;
+    return url_;
   }
   // Get Processor yield period in MilliSecond
   uint64_t getYieldPeriodMsec(void) {
-    return (_yieldPeriodMsec);
+    return (yield_period_msec_);
   }
   // Yield based on the yield period
   void yield() {
-    _yieldExpiration = (getTimeMillis() + _yieldPeriodMsec);
+    yield_expiration_ = (getTimeMillis() + yield_period_msec_);
   }
   // setHostName
   void setHostName(std::string host_) {
     this->host_ = host_;
-    _url = "nifi://" + host_ + ":" + std::to_string(port_);
+    url_ = "nifi://" + host_ + ":" + std::to_string(port_);
   }
   // setPort
   void setPort(uint16_t port_) {
     this->port_ = port_;
-    _url = "nifi://" + host_ + ":" + std::to_string(port_);
+    url_ = "nifi://" + host_ + ":" + std::to_string(port_);
   }
   // getHostName
   std::string getHostName() {
@@ -117,36 +212,36 @@ class Site2SitePeer : public org::apache::nifi::minifi::io::BaseStream {
   }
   // Yield based on the input time
   void yield(uint64_t time) {
-    _yieldExpiration = (getTimeMillis() + time);
+    yield_expiration_ = (getTimeMillis() + time);
   }
   // whether need be to yield
   bool isYield() {
-    if (_yieldExpiration > 0)
-      return (_yieldExpiration >= getTimeMillis());
+    if (yield_expiration_ > 0)
+      return (yield_expiration_ >= getTimeMillis());
     else
       return false;
   }
   // clear yield expiration
   void clearYield() {
-    _yieldExpiration = 0;
+    yield_expiration_ = 0;
   }
   // Yield based on the yield period
   void yield(std::string portId) {
     std::lock_guard<std::mutex> lock(mutex_);
-    uint64_t yieldExpiration = (getTimeMillis() + _yieldPeriodMsec);
-    _yieldExpirationPortIdMap[portId] = yieldExpiration;
+    uint64_t yieldExpiration = (getTimeMillis() + yield_period_msec_);
+    yield_expiration_PortIdMap[portId] = yieldExpiration;
   }
   // Yield based on the input time
   void yield(std::string portId, uint64_t time) {
     std::lock_guard<std::mutex> lock(mutex_);
     uint64_t yieldExpiration = (getTimeMillis() + time);
-    _yieldExpirationPortIdMap[portId] = yieldExpiration;
+    yield_expiration_PortIdMap[portId] = yieldExpiration;
   }
   // whether need be to yield
   bool isYield(std::string portId) {
     std::lock_guard<std::mutex> lock(mutex_);
-    std::map<std::string, uint64_t>::iterator it = this->_yieldExpirationPortIdMap.find(portId);
-    if (it != _yieldExpirationPortIdMap.end()) {
+    std::map<std::string, uint64_t>::iterator it = this->yield_expiration_PortIdMap.find(portId);
+    if (it != yield_expiration_PortIdMap.end()) {
       uint64_t yieldExpiration = it->second;
       return (yieldExpiration >= getTimeMillis());
     } else {
@@ -156,19 +251,28 @@ class Site2SitePeer : public org::apache::nifi::minifi::io::BaseStream {
   // clear yield expiration
   void clearYield(std::string portId) {
     std::lock_guard<std::mutex> lock(mutex_);
-    std::map<std::string, uint64_t>::iterator it = this->_yieldExpirationPortIdMap.find(portId);
-    if (it != _yieldExpirationPortIdMap.end()) {
-      _yieldExpirationPortIdMap.erase(portId);
+    std::map<std::string, uint64_t>::iterator it = this->yield_expiration_PortIdMap.find(portId);
+    if (it != yield_expiration_PortIdMap.end()) {
+      yield_expiration_PortIdMap.erase(portId);
     }
   }
   // setTimeOut
   void setTimeOut(uint64_t time) {
-    _timeOut = time;
+    timeout_ = time;
   }
   // getTimeOut
   uint64_t getTimeOut() {
-    return _timeOut;
+    return timeout_;
   }
+
+  void setStream(std::unique_ptr<org::apache::nifi::minifi::io::DataStream> stream) {
+    stream_ = std::move(stream);
+  }
+
+  org::apache::nifi::minifi::io::DataStream *getStream() {
+    return stream_.get();
+  }
+
   int write(uint8_t value) {
     return Serializable::write(value, stream_.get());
   }
@@ -225,19 +329,19 @@ class Site2SitePeer : public org::apache::nifi::minifi::io::BaseStream {
   /**
    * Move assignment operator.
    */
-  Site2SitePeer& operator=(Site2SitePeer&& other) {
+  SiteToSitePeer& operator=(SiteToSitePeer&& other) {
     stream_ = std::unique_ptr<org::apache::nifi::minifi::io::DataStream>(other.stream_.release());
     host_ = std::move(other.host_);
     port_ = std::move(other.port_);
-    _yieldExpiration = 0;
-    _timeOut = 30000;  // 30 seconds
-    _url = "nifi://" + host_ + ":" + std::to_string(port_);
+    yield_expiration_ = 0;
+    timeout_ = 30000;  // 30 seconds
+    url_ = "nifi://" + host_ + ":" + std::to_string(port_);
 
     return *this;
   }
 
-  Site2SitePeer(const Site2SitePeer &parent) = delete;
-  Site2SitePeer &operator=(const Site2SitePeer &parent) = delete;
+  SiteToSitePeer(const SiteToSitePeer &parent) = delete;
+  SiteToSitePeer &operator=(const SiteToSitePeer &parent) = delete;
 
  protected:
 
@@ -251,25 +355,27 @@ class Site2SitePeer : public org::apache::nifi::minifi::io::BaseStream {
   // Mutex for protection
   std::mutex mutex_;
   // URL
-  std::string _url;
+  std::string url_;
   // socket timeout;
-  std::atomic<uint64_t> _timeOut;
+  std::atomic<uint64_t> timeout_;
   // Logger
   std::shared_ptr<logging::Logger> logger_;
   // Yield Period in Milliseconds
-  std::atomic<uint64_t> _yieldPeriodMsec;
+  std::atomic<uint64_t> yield_period_msec_;
   // Yield Expiration
-  std::atomic<uint64_t> _yieldExpiration;
+  std::atomic<uint64_t> yield_expiration_;
   // Yield Expiration per destination PortID
-  std::map<std::string, uint64_t> _yieldExpirationPortIdMap;
+  std::map<std::string, uint64_t> yield_expiration_PortIdMap;
   // OpenSSL connection state
   // Prevent default copy constructor and assignment operation
   // Only support pass by reference or pointer
 
 };
 
+} /* namespace sitetosite */
 } /* namespace minifi */
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-#endif
+
+#endif /* LIBMINIFI_INCLUDE_SITETOSITE_PEER_H_ */

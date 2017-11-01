@@ -17,7 +17,7 @@
  */
 #ifndef LIBMINIFI_INCLUDE_UTILS_BaseHTTPClient_H_
 #define LIBMINIFI_INCLUDE_UTILS_BaseHTTPClient_H_
-#include "ByteInputCallBack.h"
+#include "ByteArrayCallback.h"
 #include "controllers/SSLContextService.h"
 namespace org {
 namespace apache {
@@ -26,8 +26,25 @@ namespace minifi {
 namespace utils {
 
 struct HTTPUploadCallback {
+  std::mutex mutex;
   ByteInputCallBack *ptr;
   size_t pos;
+
+  size_t getPos() {
+    std::lock_guard<std::mutex> lock(mutex);
+    return pos;
+  }
+};
+
+struct HTTPReadCallback {
+  std::mutex mutex;
+  ByteOutputCallback *ptr;
+  size_t pos;
+
+  size_t getPos() {
+    std::lock_guard<std::mutex> lock(mutex);
+    return pos;
+  }
 };
 
 struct HTTPHeaderResponse {
@@ -38,13 +55,18 @@ struct HTTPHeaderResponse {
   }
 
   void append(const std::string &header) {
-    if (header_tokens_.size() <= max_tokens_) {
+    if (max_tokens_ == -1 || header_tokens_.size() <= max_tokens_) {
       header_tokens_.push_back(header);
     }
   }
 
+  void append(const std::string &key, const std::string &value) {
+    header_mapping_[key].append(value);
+  }
+
   int max_tokens_;
   std::vector<std::string> header_tokens_;
+  std::map<std::string, std::string> header_mapping_;
 
   static size_t receive_headers(void *buffer, size_t size, size_t nmemb, void *userp) {
     HTTPHeaderResponse *pHeaders = (HTTPHeaderResponse *) (userp);
@@ -62,14 +84,36 @@ struct HTTPHeaderResponse {
 /**
  * HTTP Response object
  */
-struct HTTPRequestResponse {
-  std::vector<char> data;
+class HTTPRequestResponse {
 
+  std::vector<char> data;
+  std::condition_variable space_available_;
+  std::mutex data_mutex_;
+
+  size_t max_queue;
+
+ public:
+
+  const std::vector<char> &getData() {
+    return data;
+  }
+
+  HTTPRequestResponse(const HTTPRequestResponse &other)
+      : max_queue(other.max_queue) {
+
+  }
+
+  HTTPRequestResponse(size_t max)
+      : max_queue(max) {
+
+  }
   /**
    * Receive HTTP Response.
    */
   static size_t recieve_write(char * data, size_t size, size_t nmemb, void * p) {
-    return static_cast<HTTPRequestResponse*>(p)->write_content(data, size, nmemb);
+    HTTPReadCallback *callback = static_cast<HTTPReadCallback*>(p);
+    callback->ptr->write(data, (size * nmemb));
+    return (size * nmemb);
   }
 
   /**
@@ -83,16 +127,21 @@ struct HTTPRequestResponse {
   static size_t send_write(char * data, size_t size, size_t nmemb, void * p) {
     if (p != 0) {
       HTTPUploadCallback *callback = (HTTPUploadCallback*) p;
-      if (callback->pos <= callback->ptr->getBufferSize()) {
-        char *ptr = callback->ptr->getBuffer();
-        int len = callback->ptr->getBufferSize() - callback->pos;
-        if (len <= 0) {
+      size_t buffer_size = callback->ptr->getBufferSize();
+      if (callback->getPos() <= buffer_size) {
+        int len = buffer_size - callback->pos;
+        if (len <= 0)
+          return 0;
+        char *ptr = callback->ptr->getBuffer(callback->getPos());
+
+        if (ptr == nullptr) {
           return 0;
         }
         if (len > size * nmemb)
           len = size * nmemb;
-        memcpy(data, callback->ptr->getBuffer() + callback->pos, len);
+        memcpy(data, ptr, len);
         callback->pos += len;
+        callback->ptr->seek(callback->getPos());
         return len;
       }
     } else {
@@ -102,7 +151,21 @@ struct HTTPRequestResponse {
     return 0;
   }
 
+  int read_data(uint8_t *buf, size_t size) {
+    size_t size_to_read = size;
+    if (size_to_read > data.size()) {
+      size_to_read = data.size();
+    }
+    memcpy(buf, data.data(), size_to_read);
+    return size_to_read;
+  }
+
   size_t write_content(char* ptr, size_t size, size_t nmemb) {
+
+    if (data.size() + (size * nmemb) > max_queue) {
+      std::unique_lock<std::mutex> lock(data_mutex_);
+      space_available_.wait(lock, [&] {return data.size() + (size*nmemb) < max_queue;});
+    }
     data.insert(data.end(), ptr, ptr + size * nmemb);
     return size * nmemb;
   }
@@ -181,12 +244,17 @@ class BaseHTTPClient {
 
   }
 
+  virtual const std::map<std::string, std::string> &getParsedHeaders() {
+    return header_mapping_;
+  }
+
  protected:
   int64_t response_code;
   std::vector<char> response_body_;
   std::vector<std::string> headers_;
+  std::map<std::string, std::string> header_mapping_;
 
-  virtual inline bool matches(const std::string &value, const std::string &sregex){
+  virtual inline bool matches(const std::string &value, const std::string &sregex) {
     return false;
   }
 
@@ -197,7 +265,6 @@ static std::string get_token(utils::BaseHTTPClient *client, std::string username
   if (nullptr == client) {
     return "";
   }
-  utils::HTTPRequestResponse content;
   std::string token;
 
   client->setContentType("application/x-www-form-urlencoded");

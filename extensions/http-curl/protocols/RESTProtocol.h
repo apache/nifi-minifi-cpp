@@ -22,11 +22,12 @@
 #include "json/writer.h"
 #include <string>
 #include <mutex>
+
+#include "utils/ByteArrayCallback.h"
 #include "CivetServer.h"
 #include "c2/C2Protocol.h"
 #include "c2/HeartBeatReporter.h"
 #include "controllers/SSLContextService.h"
-#include "utils/ByteInputCallBack.h"
 #include "utils/HTTPClient.h"
 
 namespace org {
