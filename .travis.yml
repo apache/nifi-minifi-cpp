@@ -14,6 +14,10 @@
 # limitations under the License.
 
 language: cpp
+cache:
+  directories:
+  - $HOME/.ccache
+  - $HOME/Library/Caches/Homebrew
 
 matrix:
     include:
@@ -73,5 +77,4 @@ matrix:
         - package='lua'; [[ $(brew ls --versions ${package}) ]] && { brew outdated ${package} || brew upgrade ${package}; } || brew install ${package}
 
 script:
-  # Travis instances typically have ~2 vcpus. Parallel testing is currently BROKEN due to socket tests; do not use.
-  - mkdir ./build && cd ./build && cmake .. ${CMAKE_BUILD_OPTIONS} && make -j2 VERBOSE=1 && make test ARGS="--output-on-failure" && make linter && make apache-rat && make docs
+  - mkdir ./build && cd ./build && cmake .. ${CMAKE_BUILD_OPTIONS} && make -j2 VERBOSE=1 && make test ARGS="-j2 --output-on-failure" && make linter && make apache-rat && make docs
