@@ -18,6 +18,7 @@ cache:
   directories:
   - $HOME/.ccache
   - $HOME/Library/Caches/Homebrew
+  timeout: 300
 
 matrix:
     include:
