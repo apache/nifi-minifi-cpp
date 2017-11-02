@@ -24,7 +24,7 @@
 #include <set>
 #include <iostream>
 
-#include "../TestBase.h"
+#include "test/TestBase.h"
 #include "core/Core.h"
 
 #include "core/FlowFile.h"

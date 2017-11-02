@@ -22,7 +22,7 @@
 #include <string>
 #include <vector>
 
-#include "PyBaseStream.h"
+#include "python/PyBaseStream.h"
 
 namespace org {
 namespace apache {

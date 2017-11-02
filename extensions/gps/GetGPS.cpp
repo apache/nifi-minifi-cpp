@@ -18,30 +18,18 @@
  * limitations under the License.
  */
 
-#include <vector>
-#include <queue>
-#include <map>
-#include <set>
-#include <sys/time.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <time.h>
-#include <sstream>
-#include <stdio.h>
-#include <string>
-#include <iostream>
-#include <dirent.h>
-#include <limits.h>
-#include <unistd.h>
-#include <regex>
-
-#include "GetGPS.h"
-#include "core/ProcessContext.h"
-#include "core/ProcessSession.h"
-
 #define policy_t gps_policy_t
 #include <libgpsmm.h>
 #undef  policy_t
+
+#include <set>
+#include <string>
+#include <memory>
+
+#include "processors/GetGPS.h"
+#include "core/ProcessContext.h"
+#include "core/ProcessSession.h"
+
 #define policy_t ambiguous use gps_policy_t
 
 namespace org {
@@ -50,11 +38,11 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-const std::string GetGPS::ProcessorName("GetGPS");
 core::Relationship GetGPS::Success("success", "All files are routed to success");
 core::Property GetGPS::GPSDHost("GPSD Host", "The host running the GPSD daemon", "localhost");
 core::Property GetGPS::GPSDPort("GPSD Port", "The GPSD daemon port", "2947");
 core::Property GetGPS::GPSDWaitTime("GPSD Wait Time", "Timeout value for waiting for data from the GPSD instance", "50000000");
+
 void GetGPS::initialize() {
   //! Set the supported properties
   std::set<core::Property> properties;
@@ -102,9 +90,7 @@ void GetGPS::onTrigger(const std::shared_ptr<core::ProcessContext> &context, con
         logger_->log_error("Read error");
         return;
       } else {
-
         if (gpsdata->status > 0) {
-
           if (gpsdata->fix.longitude != gpsdata->fix.longitude || gpsdata->fix.altitude != gpsdata->fix.altitude) {
             logger_->log_info("No GPS fix.\n");
             continue;
@@ -137,14 +123,13 @@ void GetGPS::onTrigger(const std::shared_ptr<core::ProcessContext> &context, con
 
           session->transfer(flowFile, Success);
 
-          //Break the for(;;) waiting loop
+          // Break the for(;;) waiting loop
           break;
         } else {
           logger_->log_info("Satellite lock has not yet been acquired");
         }
       }
     }
-
   } catch (std::exception &exception) {
     logger_->log_debug("GetGPS Caught Exception %s", exception.what());
     throw;

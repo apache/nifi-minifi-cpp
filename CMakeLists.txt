@@ -127,11 +127,11 @@ include_directories(thirdparty/yaml-cpp-yaml-cpp-20171024/include)
 option(DISABLE_EXPRESSION_LANGUAGE "Disables the scripting extensions." OFF)
 if (DISABLE_EXPRESSION_LANGUAGE)
     # Build expression language NoOp implementation, if necessary
-    include_directories("extensions/expression-language/noop")
+    include_directories("extensions/expression-language/noop/include")
     add_subdirectory(extensions/expression-language/noop)
 else()
-    include_directories("extensions/expression-language/impl")
-    createExtension(EXPRESSION-LANGUAGE-EXTENSIONS "EXPRESSION LANGUAGE EXTENSIONS" "This enables NiFi expression language" "extensions/expression-language" "${TEST_DIR}/expression-language-tests")
+    include_directories("extensions/expression-language/include")
+    createExtension(EXPRESSION-LANGUAGE-EXTENSIONS "EXPRESSION LANGUAGE EXTENSIONS" "This enables NiFi expression language" "extensions/expression-language" "extensions/expression-language/tests")
 endif()
 
 
@@ -140,7 +140,7 @@ add_subdirectory(libminifi)
 #### EXTENSION
 option(DISABLE_CURL "Disables libCurl Properties." OFF)
 if (NOT DISABLE_CURL)
-	createExtension(HTTP-CURL "HTTP CURL" "This enables RESTProtocol, InvokeHTTP, and the HTTPClient for Site to Site" "extensions/http-curl" "${TEST_DIR}/curl-tests")
+	createExtension(HTTP-CURL "HTTP CURL" "This enables RESTProtocol, InvokeHTTP, and the HTTPClient for Site to Site" "extensions/http-curl" "extensions/http-curl/tests")
 endif()
 
 ## Add the rocks DB extension
@@ -150,7 +150,7 @@ endif()
 
 option(DISABLE_ROCKSDB "Disables the RocksDB extension." OFF)
 if (NOT DISABLE_ROCKSDB)
-	createExtension(ROCKSDB-REPOS "ROCKSDB REPOS" "This Enables persistent provenance, flowfile, and content repositories using RocksDB" "extensions/rocksdb-repos" "${TEST_DIR}/rocksdb-tests" BUILD_RD "${ROCKSDB_THIRDPARTY_ROOT}")
+	createExtension(ROCKSDB-REPOS "ROCKSDB REPOS" "This Enables persistent provenance, flowfile, and content repositories using RocksDB" "extensions/rocksdb-repos" "extensions/rocksdb-repos/tests" BUILD_RD "${ROCKSDB_THIRDPARTY_ROOT}")
 endif()
 
 ## Create LibArchive Extension
@@ -159,49 +159,49 @@ if (NOT LibArchive_FOUND OR BUILD_LIBARCHIVE)
 endif()
 option(DISABLE_LIBARCHIVE "Disables the lib archive extensions." OFF)
 if (NOT DISABLE_LIBARCHIVE)
-	createExtension(ARCHIVE-EXTENSIONS "ARCHIVE EXTENSIONS" "This Enables libarchive functionality including MergeContent, CompressContent, (Un)FocusArchiveEntry and ManipulateArchive." "extensions/libarchive" "${TEST_DIR}/archive-tests" BUILD_TP "thirdparty/libarchive-3.3.2")
+	createExtension(ARCHIVE-EXTENSIONS "ARCHIVE EXTENSIONS" "This Enables libarchive functionality including MergeContent, CompressContent, (Un)FocusArchiveEntry and ManipulateArchive." "extensions/libarchive" "extensions/libarchive/tests" BUILD_TP "thirdparty/libarchive-3.3.2")
 endif()
 
 option(ENABLE_GPS "Enables the GPS extension." OFF)
 if (ENABLE_ALL OR ENABLE_GPS)
-	createExtension(GPS-EXTENSION "GPS EXTENSIONS" "Enables LibGPS Functionality and the GetGPS processor." "extensions/gps" "${TEST_DIR}/gps-tests")
+	createExtension(GPS-EXTENSION "GPS EXTENSIONS" "Enables LibGPS Functionality and the GetGPS processor." "extensions/gps" "extensions/gps/tests")
 endif()
 
 option(ENABLE_PCAP "Enables the PCAP extension." OFF)
 if(ENABLE_ALL OR ENABLE_PCAP)
-	createExtension(PCAP-EXTENSION "PCAP EXTENSIONS" "Enables libPCAP Functionality and the PacketCapture processor." "extensions/pcap" "${TEST_DIR}/pcap-tests")
+	createExtension(PCAP-EXTENSION "PCAP EXTENSIONS" "Enables libPCAP Functionality and the PacketCapture processor." "extensions/pcap" "extensions/pcap/tests")
 endif()
 
 ## Create LibRdKafka Extension
 option(ENABLE_LIBRDKAFKA "Enables the librdkafka extension." OFF)
 if (ENABLE_ALL OR ENABLE_LIBRDKAFKA)
-	createExtension(RDKAFKA-EXTENSIONS "RDKAFKA EXTENSIONS" "This Enables librdkafka functionality including PublishKafka" "extensions/librdkafka" "${TEST_DIR}/kafka-tests" "TRUE" "thirdparty/librdkafka-0.11.1")
+	createExtension(RDKAFKA-EXTENSIONS "RDKAFKA EXTENSIONS" "This Enables librdkafka functionality including PublishKafka" "extensions/librdkafka" "extensions/librdkafka/tests" "TRUE" "thirdparty/librdkafka-0.11.1")
 endif()
 
 ## Scripting extensions
 option(DISABLE_SCRIPTING "Disables the scripting extensions." OFF)
 if (NOT DISABLE_SCRIPTING)
-    createExtension(SCRIPTING-EXTENSIONS "SCRIPTING EXTENSIONS" "This enables scripting" "extensions/script" "${TEST_DIR}/script-tests")
+    createExtension(SCRIPTING-EXTENSIONS "SCRIPTING EXTENSIONS" "This enables scripting" "extensions/script" "extensions/script/tests")
 endif()
 
 
 ## USB camera extensions
 option(ENABLE_USB_CAMERA "Enables USB camera support." OFF)
 if (ENABLE_ALL OR ENABLE_USB_CAMERA)
-    createExtension(USB-CAMERA-EXTENSIONS "USB CAMERA EXTENSIONS" "This enables USB camera support" "extensions/usb-camera" "${TEST_DIR}/usb-camera-tests" "TRUE" "thirdparty/libuvc-0.0.6")
+    createExtension(USB-CAMERA-EXTENSIONS "USB CAMERA EXTENSIONS" "This enables USB camera support" "extensions/usb-camera" "extensions/usb-camera/tests" "TRUE" "thirdparty/libuvc-0.0.6")
 endif()
 
 ## TensorFlow extensions
 ## Disabled by default because TF can be complex/environment-specific to build
 option(ENABLE_TENSORFLOW "Disables the TensorFlow extensions." OFF)
 if (ENABLE_TENSORFLOW)
-    createExtension(TENSORFLOW-EXTENSIONS "TENSORFLOW EXTENSIONS" "This enables TensorFlow support" "extensions/tensorflow" "${TEST_DIR}/tensorflow-tests")
+    createExtension(TENSORFLOW-EXTENSIONS "TENSORFLOW EXTENSIONS" "This enables TensorFlow support" "extensions/tensorflow" "extensions/tensorflow/tests")
 endif()
 
 ## Bustache/template extensions
 option(ENABLE_BUSTACHE "Enables Bustache (ApplyTemplate) support." OFF)
 if (ENABLE_BUSTACHE)
-    createExtension(BUSTACHE-EXTENSIONS "BUSTACHE EXTENSIONS" "This enables bustache functionality including ApplyTemplate." "extensions/bustache" "${TEST_DIR}/bustache-tests" "TRUE" "thirdparty/bustache")
+    createExtension(BUSTACHE-EXTENSIONS "BUSTACHE EXTENSIONS" "This enables bustache functionality including ApplyTemplate." "extensions/bustache" "extensions/bustache/tests" "TRUE" "thirdparty/bustache")
 endif()
 
 ## NOW WE CAN ADD LIBRARIES AND EXTENSIONS TO MAIN
@@ -238,7 +238,7 @@ set(CPACK_PACKAGE_VENDOR "Apache NiFi")
 set(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
 set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
 set(CPACK_PACKAGE_FILE_NAME "${ASSEMBLY_BASE_NAME}")
-set(CPACK_BINARY_TGZ, "ON")
+set(CPACK_BINARY_TGZ "ON")
 set(CPACK_ARCHIVE_COMPONENT_INSTALL ON)
 set(CPACK_RDKAFKA_COMPONENT_INSTALL ON)
 set(CPACK_COMPONENTS_ALL bin)
@@ -257,10 +257,15 @@ include(BuildDocs)
 include(DockerConfig)
 
 # Create a custom build target that will run the linter.
-add_custom_target(
-    linter
-    COMMAND ${CMAKE_SOURCE_DIR}/thirdparty/google-styleguide/run_linter.sh ${CMAKE_SOURCE_DIR}/libminifi/include/ ${CMAKE_SOURCE_DIR}/libminifi/src/
-    COMMAND ${CMAKE_SOURCE_DIR}/thirdparty/google-styleguide/run_linter.sh ${CMAKE_SOURCE_DIR}/libminifi/include/ ${CMAKE_SOURCE_DIR}/libminifi/test/ )
+get_property(extensions GLOBAL PROPERTY EXTENSION-LINTERS)
+add_custom_target(linter
+    COMMAND ${CMAKE_SOURCE_DIR}/thirdparty/google-styleguide/run_linter.sh
+            ${CMAKE_SOURCE_DIR}/libminifi/include/ --
+            ${CMAKE_SOURCE_DIR}/libminifi/src/
+    COMMAND ${CMAKE_SOURCE_DIR}/thirdparty/google-styleguide/run_linter.sh
+            ${CMAKE_SOURCE_DIR}/libminifi/include/ --
+            ${CMAKE_SOURCE_DIR}/libminifi/test/
+    DEPENDS ${extensions})
 
 # Custom target to download and run Apache Release Audit Tool (RAT)
 add_custom_target(

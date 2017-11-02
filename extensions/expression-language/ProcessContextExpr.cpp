@@ -15,7 +15,10 @@
  * limitations under the License.
  */
 
-#include <core/ProcessContext.h>
+#include <memory>
+#include <string>
+
+#include "core/ProcessContext.h"
 
 namespace org {
 namespace apache {

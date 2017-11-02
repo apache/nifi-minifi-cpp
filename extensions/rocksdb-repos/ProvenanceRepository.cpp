@@ -16,12 +16,13 @@
  * limitations under the License.
  */
 
-#include "ProvenanceRepository.h"
-#include "rocksdb/write_batch.h"
 #include <string>
 #include <vector>
-#include "rocksdb/options.h"
+#include "ProvenanceRepository.h"
 #include "provenance/Provenance.h"
+#include "rocksdb/options.h"
+#include "rocksdb/write_batch.h"
+
 namespace org {
 namespace apache {
 namespace nifi {

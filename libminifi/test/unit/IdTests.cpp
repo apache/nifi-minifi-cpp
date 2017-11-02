@@ -19,7 +19,7 @@
 #include <string>
 #include <memory>
 #include <ctime>
-#include "../TestBase.h"
+#include "test/TestBase.h"
 #include "utils/Id.h"
 
 TEST_CASE("Test default is time", "[id]") {

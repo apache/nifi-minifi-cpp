@@ -18,10 +18,10 @@
 #include <memory>
 #include <string>
 
-#include "../ScriptProcessContext.h"
+#include "script/ScriptProcessContext.h"
 
-#include "LuaScriptEngine.h"
-#include "LuaProcessSession.h"
+#include "lua/LuaScriptEngine.h"
+#include "lua/LuaProcessSession.h"
 
 namespace org {
 namespace apache {

@@ -16,11 +16,12 @@
  * limitations under the License.
  */
 
-#include <memory>
-
 #include <pybind11/embed.h>
 
-#include "PyProcessSession.h"
+#include <memory>
+#include <utility>
+
+#include "python/PyProcessSession.h"
 
 namespace org {
 namespace apache {

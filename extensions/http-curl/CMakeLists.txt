@@ -22,8 +22,14 @@ find_package(CURL REQUIRED)
 set(CMAKE_EXE_LINKER_FLAGS "-Wl,--export-all-symbols")
 set(CMAKE_SHARED_LINKER_FLAGS "-Wl,--export-symbols")
 
-include_directories(../../libminifi/include  ../../libminifi/include/core/yaml  ../../libminifi/include/core  ../../thirdparty/spdlog-20170710/include ../../thirdparty/concurrentqueue ../../thirdparty/yaml-cpp-yaml-cpp-0.5.3/include ${CIVET_THIRDPARTY_ROOT}/include ../../thirdparty/jsoncpp/include  ../../thirdparty/)
-include_directories(protocols client processors sitetosite)
+include_directories(${CMAKE_SOURCE_DIR}/libminifi/include 
+                    ${CMAKE_SOURCE_DIR}/thirdparty/spdlog-20170710/include
+                    ${CMAKE_SOURCE_DIR}/thirdparty/concurrentqueue
+                    ${CMAKE_SOURCE_DIR}/thirdparty/yaml-cpp-yaml-cpp-0.5.3/include 
+                    ${CIVET_THIRDPARTY_ROOT}/include
+                    ${CMAKE_SOURCE_DIR}/thirdparty/jsoncpp/include 
+                    ${CMAKE_SOURCE_DIR}/thirdparty/)
+include_directories(./include)
 
 file(GLOB SOURCES  "*.cpp" "protocols/*.cpp" "client/*.cpp" "processors/*.cpp" "sitetosite/*.cpp")
 
@@ -67,3 +73,11 @@ endif ()
 
 SET (HTTP-CURL minifi-http-curl PARENT_SCOPE)
 register_extension(minifi-http-curl)
+
+add_custom_target(curl-extension-linter
+    COMMAND ${CMAKE_SOURCE_DIR}/thirdparty/google-styleguide/run_linter.sh
+            ${CMAKE_SOURCE_DIR}/libminifi/include/
+            ${CMAKE_CURRENT_LIST_DIR}/include --
+            ${CMAKE_CURRENT_LIST_DIR}/)
+
+register_extension_linter(curl-extension-linter)

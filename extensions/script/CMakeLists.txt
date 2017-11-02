@@ -37,9 +37,11 @@ endif()
 set(CMAKE_EXE_LINKER_FLAGS "-Wl,--export-all-symbols")
 set(CMAKE_SHARED_LINKER_FLAGS "-Wl,--export-symbols")
 
-include_directories(../../libminifi/include  ../../libminifi/include/core  ../../thirdparty/spdlog-20170710/include ../../thirdparty/concurrentqueue ../../thirdparty/yaml-cpp-yaml-cpp-0.5.3/include ${CIVET_THIRDPARTY_ROOT}/include ../../thirdparty/jsoncpp/include  ../../thirdparty/) 
+include_directories(${CMAKE_SOURCE_DIR}/libminifi/include
+                    ${CMAKE_SOURCE_DIR}/thirdparty/spdlog-20170710/include
+                    ./include/)
 
-file(GLOB SOURCES  "*.cpp")
+file(GLOB SOURCES "*.cpp")
 
 add_library(minifi-script-extensions STATIC ${SOURCES})
 set_property(TARGET minifi-script-extensions PROPERTY POSITION_INDEPENDENT_CODE ON)
@@ -61,12 +63,12 @@ if (NOT DISABLE_PYTHON_SCRIPTING)
     find_package(PythonLibs REQUIRED)
 
     include_directories(${PYTHON_INCLUDE_DIR})
-    include_directories(../../thirdparty/pybind11/include)
+    include_directories(${CMAKE_SOURCE_DIR}/thirdparty/pybind11/include)
 
     include_directories(python)
     add_definitions(-DPYTHON_SUPPORT)
 
-    file(GLOB PY_SOURCES  "python/*.cpp")
+    file(GLOB PY_SOURCES "python/*.cpp")
     add_library(minifi-python-extensions STATIC ${PY_SOURCES})
 
     target_link_libraries(minifi-python-extensions ${PYTHON_LIBRARIES})
@@ -77,7 +79,7 @@ if (ENABLE_LUA_SCRIPTING)
     find_package(Lua REQUIRED)
 
     include_directories(${LUA_INCLUDE_DIR})
-    include_directories(../../thirdparty/sol2-2.17.5)
+    include_directories(${CMAKE_SOURCE_DIR}/thirdparty/sol2-2.17.5)
 
     include_directories(lua)
     add_definitions(-DLUA_SUPPORT)
@@ -110,3 +112,10 @@ SET (SCRIPTING-EXTENSIONS minifi-script-extensions PARENT_SCOPE)
 
 register_extension(minifi-script-extensions)
 
+add_custom_target(script-extension-linter
+    COMMAND ${CMAKE_SOURCE_DIR}/thirdparty/google-styleguide/run_linter.sh
+            ${CMAKE_SOURCE_DIR}/libminifi/include/
+            ${CMAKE_CURRENT_LIST_DIR}/include --
+            ${CMAKE_CURRENT_LIST_DIR}/)
+
+register_extension_linter(script-extension-linter)

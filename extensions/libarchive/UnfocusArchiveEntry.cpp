@@ -17,17 +17,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "UnfocusArchiveEntry.h"
+#include "processors/UnfocusArchiveEntry.h"
 
 #include <string.h>
+#include <archive.h>
+#include <archive_entry.h>
+
 #include <iostream>
 #include <fstream>
 #include <memory>
 #include <string>
 #include <set>
 
-#include <archive.h>
-#include <archive_entry.h>
 #include "utils/file/FileManager.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
@@ -59,7 +60,6 @@ void UnfocusArchiveEntry::initialize() {
 }
 
 void UnfocusArchiveEntry::onTrigger(core::ProcessContext *context, core::ProcessSession *session) {
-
   auto flowFile = session->get();
 
   if (!flowFile) {

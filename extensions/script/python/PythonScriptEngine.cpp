@@ -18,8 +18,8 @@
 #include <memory>
 #include <string>
 
-#include "PythonBindings.h"
-#include "PythonScriptEngine.h"
+#include "python/PythonBindings.h"
+#include "python/PythonScriptEngine.h"
 
 namespace org {
 namespace apache {

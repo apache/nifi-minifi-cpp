@@ -20,7 +20,7 @@
 #include <memory>
 #include <vector>
 #include <ctime>
-#include "../TestBase.h"
+#include "test/TestBase.h"
 
 
 TEST_CASE("Test log Levels", "[ttl1]") {

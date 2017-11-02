@@ -40,6 +40,7 @@ matrix:
           - flex
           - libboost-all-dev
           - uuid-dev
+          - libuuid1
           - doxygen
           - openssl
           - libcurl4-openssl-dev

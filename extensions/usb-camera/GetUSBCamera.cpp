@@ -20,8 +20,12 @@
 #include <png.h>
 
 #include <utility>
+#include <memory>
+#include <string>
+#include <algorithm>
+#include <set>
 
-#include "GetUSBCamera.h"
+#include "processors/GetUSBCamera.h"
 
 namespace org {
 namespace apache {
@@ -227,7 +231,10 @@ void GetUSBCamera::onSchedule(core::ProcessContext *context, core::ProcessSessio
 
       logger_->log_info("Negotiating stream profile (looking for %dx%d @ %d)", width, height, fps);
 
-      res = uvc_get_stream_ctrl_format_size(devh_, &ctrl, UVC_FRAME_FORMAT_UNCOMPRESSED, width, height, fps);
+      res = uvc_get_stream_ctrl_format_size(
+          devh_, &ctrl,
+          UVC_FRAME_FORMAT_UNCOMPRESSED,
+          width, height, fps);
 
       if (res < 0) {
         logger_->log_error("Failed to find a matching stream profile: %s", uvc_strerror(res));
@@ -344,23 +351,26 @@ int64_t GetUSBCamera::PNGWriteCallback::process(std::shared_ptr<io::BaseStream> 
   }
 
   try {
-
     png_set_write_fn(png, this, [](png_structp out_png,
         png_bytep out_data,
         png_size_t num_bytes) {
       auto this_callback = reinterpret_cast<PNGWriteCallback *>(png_get_io_ptr(out_png));
       std::copy(out_data, out_data + num_bytes, std::back_inserter(this_callback->png_output_buf_));
-    },
-                     [](png_structp flush_png) {});
+    }, [](png_structp flush_png) {});
 
-    png_set_IHDR(png, info, width_, height_, 8,
-    PNG_COLOR_TYPE_RGB,
-                 PNG_INTERLACE_NONE,
-                 PNG_COMPRESSION_TYPE_DEFAULT,
-                 PNG_FILTER_TYPE_DEFAULT);
+    png_set_IHDR(
+        png,
+        info,
+        width_, height_,
+        8,
+        PNG_COLOR_TYPE_RGB,
+        PNG_INTERLACE_NONE,
+        PNG_COMPRESSION_TYPE_DEFAULT,
+        PNG_FILTER_TYPE_DEFAULT
+    ); // NOLINT
     png_write_info(png, info);
 
-    png_bytep row_pointers[height_];
+    png_bytepp row_pointers = new png_bytep[height_];
 
     for (uint32_t y = 0; y < height_; y++) {
       row_pointers[y] = reinterpret_cast<png_byte *>(frame_->data) + width_ * y * 3;

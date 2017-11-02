@@ -15,13 +15,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "HTTPClient.h"
 #include <memory>
 #include <climits>
 #include <map>
 #include <vector>
 #include <string>
 #include <algorithm>
+#include <utility>
+
+#include "client/HTTPClient.h"
 
 namespace org {
 namespace apache {
@@ -102,7 +104,6 @@ HTTPClient::~HTTPClient() {
 }
 
 void HTTPClient::forceClose() {
-
   if (nullptr != callback) {
     callback->stop = true;
   }
@@ -110,7 +111,6 @@ void HTTPClient::forceClose() {
   if (nullptr != write_callback_) {
     write_callback_->stop = true;
   }
-
 }
 
 void HTTPClient::setVerbose() {
@@ -155,7 +155,7 @@ void HTTPClient::setUploadCallback(HTTPUploadCallback *callbackObj) {
   logger_->log_info("Setting callback for %s", url_);
   write_callback_ = callbackObj;
   if (method_ == "put" || method_ == "PUT") {
-    curl_easy_setopt(http_session_, CURLOPT_INFILESIZE_LARGE, (curl_off_t ) callbackObj->ptr->getBufferSize());
+    curl_easy_setopt(http_session_, CURLOPT_INFILESIZE_LARGE, (curl_off_t)callbackObj->ptr->getBufferSize());
   }
   curl_easy_setopt(http_session_, CURLOPT_READFUNCTION, &utils::HTTPRequestResponse::send_write);
   curl_easy_setopt(http_session_, CURLOPT_READDATA, static_cast<void*>(callbackObj));

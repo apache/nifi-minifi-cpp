@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-#include "../TestBase.h"
+#include "test/TestBase.h"
 #include <memory>
 #include "core/Core.h"
 #include "core/RepositoryFactory.h"

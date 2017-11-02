@@ -22,7 +22,16 @@ cmake_minimum_required(VERSION 2.6)
 set(CMAKE_EXE_LINKER_FLAGS "-Wl,--export-all-symbols")
 set(CMAKE_SHARED_LINKER_FLAGS "-Wl,--export-symbols")
 
-include_directories(../../libminifi/include  ../../libminifi/include/core  ../../thirdparty/spdlog-20170710/include ../../thirdparty/concurrentqueue ../../thirdparty/yaml-cpp-yaml-cpp-0.5.3/include ../../thirdparty/civetweb-1.9.1/include ../../thirdparty/jsoncpp/include  ../../thirdparty/) 
+include_directories(${CMAKE_SOURCE_DIR}/libminifi/include
+                    ${CMAKE_SOURCE_DIR}/libminifi/include/core
+                    ${CMAKE_SOURCE_DIR}/thirdparty/spdlog-20170710/include
+                    ${CMAKE_SOURCE_DIR}/thirdparty/concurrentqueue
+                    ${CMAKE_SOURCE_DIR}/thirdparty/yaml-cpp-yaml-cpp-0.5.3/include
+                    ${CMAKE_SOURCE_DIR}/thirdparty/civetweb-1.9.1/include
+                    ${CMAKE_SOURCE_DIR}/thirdparty/jsoncpp/include
+                    ${CMAKE_SOURCE_DIR}/thirdparty/bustache/include
+                    ${CMAKE_SOURCE_DIR}/thirdparty/
+                    ./include/)
 
 find_package(Boost COMPONENTS system filesystem iostreams REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS})
@@ -60,3 +69,11 @@ endif ()
 SET (BUSTACHE-EXTENSIONS minifi-bustache-extensions PARENT_SCOPE)
 
 register_extension(minifi-bustache-extensions)
+
+add_custom_target(bustache-extension-linter
+    COMMAND ${CMAKE_SOURCE_DIR}/thirdparty/google-styleguide/run_linter.sh
+            ${CMAKE_SOURCE_DIR}/libminifi/include/
+            ${CMAKE_CURRENT_LIST_DIR}/include --
+            ${CMAKE_CURRENT_LIST_DIR}/)
+
+register_extension_linter(bustache-extension-linter)

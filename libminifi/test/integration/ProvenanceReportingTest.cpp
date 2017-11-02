@@ -34,9 +34,10 @@
 #include "core/yaml/YamlConfiguration.h"
 #include "FlowController.h"
 #include "properties/Configure.h"
-#include "../unit/ProvenanceTestHelper.h"
 #include "io/StreamFactory.h"
-#include "../TestBase.h"
+
+#include "test/TestBase.h"
+#include "test/unit/ProvenanceTestHelper.h"
 
 void waitToVerifyProcessor() {
   std::this_thread::sleep_for(std::chrono::seconds(2));

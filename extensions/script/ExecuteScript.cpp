@@ -24,14 +24,14 @@
 #include <utility>
 
 #ifdef PYTHON_SUPPORT
-#include <PythonScriptEngine.h>
+#include "python/PythonScriptEngine.h"
 #endif  // PYTHON_SUPPORT
 
 #ifdef LUA_SUPPORT
-#include <LuaScriptEngine.h>
+#include "lua/LuaScriptEngine.h"
 #endif  // LUA_SUPPORT
 
-#include "ExecuteScript.h"
+#include "processors/ExecuteScript.h"
 
 namespace org {
 namespace apache {

@@ -23,7 +23,7 @@
 #include <string>
 #include <memory>
 #include <utility>
-#include "../TestBase.h"
+#include "test/TestBase.h"
 #include "io/StreamFactory.h"
 #include "io/ClientSocket.h"
 #include "io/tls/TLSSocket.h"

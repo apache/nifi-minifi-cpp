@@ -29,7 +29,6 @@
 #include <vector>
 #include <fstream>
 #include "core/repository/VolatileContentRepository.h"
-#include "../unit/ProvenanceTestHelper.h"
 #include "FlowController.h"
 #include "processors/GetFile.h"
 #include "core/Core.h"
@@ -41,7 +40,9 @@
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/ProcessorNode.h"
-#include "../TestBase.h"
+
+#include "test/TestBase.h"
+#include "test/unit/ProvenanceTestHelper.h"
 
 int main(int argc, char **argv) {
   TestController testController;

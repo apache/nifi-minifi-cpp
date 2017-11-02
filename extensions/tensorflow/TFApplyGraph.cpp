@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include "TFApplyGraph.h"
+#include "processors/TFApplyGraph.h"
 
 #include "tensorflow/cc/ops/standard_ops.h"
 

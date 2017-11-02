@@ -25,8 +25,8 @@
 #include "sitetosite/Peer.h"
 #include "sitetosite/RawSocketProtocol.h"
 #include <algorithm>
-#include "../TestBase.h"
-#include "../unit/SiteToSiteHelper.h"
+#include "test/TestBase.h"
+#include "test/unit/SiteToSiteHelper.h"
 
 #define FMT_DEFAULT fmt_lower
 

@@ -20,11 +20,12 @@
 set(CMAKE_EXE_LINKER_FLAGS "-Wl,--export-all-symbols")
 set(CMAKE_SHARED_LINKER_FLAGS "-Wl,--export-symbols")
 
-include_directories(../../libminifi/include  ../../libminifi/include/core  ../../thirdparty/spdlog-20170710/include ../../thirdparty/concurrentqueue ../../thirdparty/yaml-cpp-yaml-cpp-0.5.3/include ${CIVET_THIRDPARTY_ROOT}/include ../../thirdparty/jsoncpp/include  ../../thirdparty/) 
-
-find_package(LibArchive)
-	
-include_directories(../../thirdparty/libarchive-3.3.2/libarchive)
+include_directories(${CMAKE_SOURCE_DIR}/libminifi/include
+                    ${CMAKE_SOURCE_DIR}/thirdparty/spdlog-20170710/include
+                    ${CIVET_THIRDPARTY_ROOT}/include
+                    ${CMAKE_SOURCE_DIR}/thirdparty/jsoncpp/include
+                    ${CMAKE_SOURCE_DIR}/thirdparty/
+                    ./include/)
 
 file(GLOB SOURCES  "*.cpp")
 
@@ -42,17 +43,24 @@ endif()
 find_package(UUID REQUIRED)
 target_link_libraries(minifi-archive-extensions ${LIBMINIFI} ${UUID_LIBRARIES} ${JSONCPP_LIB})
 add_dependencies(minifi-archive-extensions jsoncpp_project)
-find_package(OpenSSL REQUIRED)
-include_directories(${OPENSSL_INCLUDE_DIR})
-target_link_libraries(minifi-archive-extensions ${CMAKE_DL_LIBS} )
+
+#find_package(OpenSSL REQUIRED)
+#include_directories(${OPENSSL_INCLUDE_DIR})
+
+target_link_libraries(minifi-archive-extensions ${CMAKE_DL_LIBS})
+
+find_package(LibArchive)
+include_directories(${CMAKE_SOURCE_DIR}/thirdparty/libarchive-3.3.2/libarchive)
 if (LibArchive_FOUND AND NOT BUILD_LIBARCHIVE)
-	target_link_libraries(minifi-archive-extensions ${LibArchive_LIBRARIES} )
+	target_link_libraries(minifi-archive-extensions ${LibArchive_LIBRARIES})
 else()
-	target_link_libraries(minifi-archive-extensions archive_static )
+	target_link_libraries(minifi-archive-extensions archive_static)
 endif()
+
 find_package(ZLIB REQUIRED)
 include_directories(${ZLIB_INCLUDE_DIRS})
 target_link_libraries (minifi-archive-extensions ${ZLIB_LIBRARIES})
+
 if (WIN32)
     set_target_properties(minifi-archive-extensions PROPERTIES
         LINK_FLAGS "/WHOLEARCHIVE"
@@ -72,3 +80,10 @@ SET (ARCHIVE-EXTENSIONS minifi-archive-extensions PARENT_SCOPE)
 
 register_extension(minifi-archive-extensions)
 
+add_custom_target(archive-extension-linter
+    COMMAND ${CMAKE_SOURCE_DIR}/thirdparty/google-styleguide/run_linter.sh
+            ${CMAKE_SOURCE_DIR}/libminifi/include/
+            ${CMAKE_CURRENT_LIST_DIR}/include --
+            ${CMAKE_CURRENT_LIST_DIR}/)
+
+register_extension_linter(archive-extension-linter)

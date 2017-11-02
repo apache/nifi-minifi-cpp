@@ -17,13 +17,12 @@
  */
 #include "io/BaseStream.h"
 #include <uuid/uuid.h>
-#include "SiteToSiteHelper.h"
 #include <algorithm>
 #include <string>
 #include <memory>
 
-#include "../TestBase.h"
-#include "../unit/SiteToSiteHelper.h"
+#include "test/TestBase.h"
+#include "test/unit/SiteToSiteHelper.h"
 #define FMT_DEFAULT fmt_lower
 
 TEST_CASE("TestWriteUTF", "[MINIFI193]") {

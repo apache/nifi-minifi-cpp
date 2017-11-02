@@ -26,12 +26,12 @@
 
 
 #include "utils/file/FileUtils.h"
-#include "../TestBase.h"
+#include "test/TestBase.h"
 #include "processors/ListenHTTP.h"
 #include "processors/LogAttribute.h"
 #include "processors/GetFile.h"
 #include "processors/PutFile.h"
-#include "../unit/ProvenanceTestHelper.h"
+#include "test/unit/ProvenanceTestHelper.h"
 #include "core/Core.h"
 #include "core/FlowFile.h"
 #include "core/Processor.h"

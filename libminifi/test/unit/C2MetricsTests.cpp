@@ -17,7 +17,7 @@
  */
 #include <uuid/uuid.h>
 #include <memory>
-#include "../TestBase.h"
+#include "test/TestBase.h"
 #include "io/ClientSocket.h"
 #include "core/Processor.h"
 #include "core/ClassLoader.h"

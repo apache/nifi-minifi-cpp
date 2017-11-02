@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 #include <uuid/uuid.h>
-#include "../TestBase.h"
+#include "test/TestBase.h"
 #include "io/ClientSocket.h"
 #include "core/Processor.h"
 #include "core/ClassLoader.h"

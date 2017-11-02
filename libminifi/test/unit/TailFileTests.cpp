@@ -24,10 +24,10 @@
 #include <string>
 #include <set>
 #include "FlowController.h"
-#include "../TestBase.h"
+#include "test/TestBase.h"
 #include "core/Core.h"
-#include "../../include/core/FlowFile.h"
-#include "../unit/ProvenanceTestHelper.h"
+#include "core/FlowFile.h"
+#include "test/unit/ProvenanceTestHelper.h"
 #include "core/Processor.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"

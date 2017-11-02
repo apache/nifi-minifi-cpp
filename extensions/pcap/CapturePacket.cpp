@@ -40,7 +40,7 @@
 #include "core/logging/Logger.h"
 #include "core/ProcessContext.h"
 #include "core/Relationship.h"
-#include "CapturePacket.h"
+#include "processors/CapturePacket.h"
 #include "ResourceClaim.h"
 #include "utils/StringUtils.h"
 #include "utils/ByteArrayCallback.h"
@@ -68,19 +68,17 @@ std::string CapturePacket::generate_new_pcap(const std::string &base_path) {
 
 void CapturePacket::packet_callback(pcpp::RawPacket* packet, pcpp::PcapLiveDevice* dev, void* data) {
   // parse the packet
-  PacketMovers* capture_mechanism = (PacketMovers*) data;
+  PacketMovers* capture_mechanism = reinterpret_cast<PacketMovers*>(data);
 
   CapturePacketMechanism *capture;
 
   if (capture_mechanism->source.try_dequeue(capture)) {
-
     // if needed - write the packet to the output pcap file
 
     if (capture->writer_ != nullptr) {
       capture->writer_->writePacket(*packet);
 
       if (capture->incrementAndCheck()) {
-
         capture->writer_->close();
 
         capture_mechanism->sink.enqueue(capture);
@@ -89,7 +87,6 @@ void CapturePacket::packet_callback(pcpp::RawPacket* packet, pcpp::PcapLiveDevic
       } else {
         capture_mechanism->source.enqueue(capture);
       }
-
     }
   }
 }
@@ -120,15 +117,18 @@ void CapturePacket::initialize() {
 }
 
 void CapturePacket::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
-
   std::string value;
+
   if (context->getProperty(BatchSize.getName(), value)) {
     core::Property::StringToInt(value, pcap_batch_size_);
   }
+
   value = "";
+
   if (context->getProperty(BaseDir.getName(), value)) {
     base_dir_ = value;
   }
+
   if (IsNullOrEmpty(base_dir_)) {
     base_dir_ = "/tmp/";
   }
@@ -149,15 +149,18 @@ void CapturePacket::onSchedule(const std::shared_ptr<core::ProcessContext> &cont
       logger_->log_error("Could not open device %s", name);
       continue;
     }
+
     device_list_.push_back(iter);
     CapturePacketMechanism *aa = create_new_capture(getPath(), &pcap_batch_size_);
-    logger_->log_debug("Creating packet capture in %s",aa->getFile());
+    logger_->log_debug("Creating packet capture in %s", aa->getFile());
     mover->source.enqueue(aa);
   }
-  if (IsNullOrEmpty(devList)){
+
+  if (IsNullOrEmpty(devList)) {
     logger_->log_error("Could not open any devices");
     throw std::exception();
   }
+
   for (auto iter : devList) {
     logger_->log_debug("Starting capture on %s", iter->getName());
     iter->startCapture(packet_callback, mover.get());
@@ -180,8 +183,7 @@ void CapturePacket::onTrigger(const std::shared_ptr<core::ProcessContext> &conte
   }
 }
 
-}
-/* namespace processors */
+} /* namespace processors */
 } /* namespace minifi */
 } /* namespace nifi */
 } /* namespace apache */

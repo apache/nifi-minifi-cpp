@@ -17,7 +17,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "BinFiles.h"
+#include "processors/BinFiles.h"
 #include <stdio.h>
 #include <memory>
 #include <string>

@@ -23,7 +23,9 @@ cmake_minimum_required(VERSION 2.6)
 set(CMAKE_EXE_LINKER_FLAGS "-Wl,--export-all-symbols")
 set(CMAKE_SHARED_LINKER_FLAGS "-Wl,--export-symbols")
 
-include_directories(../../libminifi/include  ../../libminifi/include/core/yaml  ../../libminifi/include/core  ../../thirdparty/spdlog-20170710/include ../../thirdparty/concurrentqueue ../../thirdparty/yaml-cpp-yaml-cpp-0.5.3/include ${CIVET_THIRDPARTY_ROOT}/include ../../thirdparty/jsoncpp/include  ../../thirdparty/) 
+include_directories(${CMAKE_SOURCE_DIR}/libminifi/include
+                    ${CMAKE_SOURCE_DIR}/thirdparty/spdlog-20170710/include
+                    ./include/)
 
 find_package(LibGPS REQUIRED)
 
@@ -69,3 +71,11 @@ endif ()
 SET (GPS-EXTENSION minifi-gps PARENT_SCOPE)
 
 register_extension(minifi-gps)
+
+add_custom_target(gps-extension-linter
+    COMMAND ${CMAKE_SOURCE_DIR}/thirdparty/google-styleguide/run_linter.sh
+            ${CMAKE_SOURCE_DIR}/libminifi/include/
+            ${CMAKE_CURRENT_LIST_DIR}/include --
+            ${CMAKE_CURRENT_LIST_DIR}/)
+
+register_extension_linter(gps-extension-linter)

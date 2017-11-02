@@ -20,7 +20,7 @@
 #include <vector>
 #include "io/CRCStream.h"
 #include "io/DataStream.h"
-#include "../TestBase.h"
+#include "test/TestBase.h"
 
 TEST_CASE("Test CRC1", "[testcrc1]") {
   org::apache::nifi::minifi::io::BaseStream base;

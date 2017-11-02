@@ -27,24 +27,28 @@ find_package(FLEX REQUIRED)
 bison_target(
         el-parser
         ${CMAKE_CURRENT_SOURCE_DIR}/Parser.yy
-        ${CMAKE_CURRENT_SOURCE_DIR}/Parser.cpp
+        ${CMAKE_CURRENT_BINARY_DIR}/Parser.cpp
 )
 
 flex_target(
         el-scanner
         ${CMAKE_CURRENT_SOURCE_DIR}/Scanner.ll
-        ${CMAKE_CURRENT_SOURCE_DIR}/Scanner.cpp
+        ${CMAKE_CURRENT_BINARY_DIR}/Scanner.cpp
 )
 
 add_flex_bison_dependency(el-scanner el-parser)
 
-include_directories(../../libminifi/include  ../../libminifi/include/core  ../../thirdparty/spdlog-20170710/include ../../thirdparty/concurrentqueue ../../thirdparty/yaml-cpp-yaml-cpp-0.5.3/include ${CIVET_THIRDPARTY_ROOT}/include ../../thirdparty/jsoncpp/include  ../../thirdparty/)
-include_directories(impl)
+include_directories(${CMAKE_SOURCE_DIR}/libminifi/include
+                    ${CMAKE_SOURCE_DIR}/thirdparty/spdlog-20170710/include
+                    ${CMAKE_SOURCE_DIR}/thirdparty/
+                    ${CMAKE_CURRENT_BINARY_DIR}/
+                    ./include)
 
-file(GLOB SOURCES  "*.cpp")
+file(GLOB SOURCES "*.cpp")
 
 add_library(minifi-expression-language-extensions STATIC ${SOURCES} ${BISON_el-parser_OUTPUTS} ${FLEX_el-scanner_OUTPUTS})
 set_property(TARGET minifi-expression-language-extensions PROPERTY POSITION_INDEPENDENT_CODE ON)
+
 if(THREADS_HAVE_PTHREAD_ARG)
   target_compile_options(PUBLIC minifi-expression-language-extensions "-pthread")
 endif()
@@ -53,11 +57,13 @@ if(CMAKE_THREAD_LIBS_INIT)
 endif()
 
 find_package(UUID REQUIRED)
-target_link_libraries(minifi-expression-language-extensions ${LIBMINIFI} ${UUID_LIBRARIES} ${JSONCPP_LIB})
-add_dependencies(minifi-expression-language-extensions jsoncpp_project)
+target_link_libraries(minifi-expression-language-extensions ${LIBMINIFI})
+
 find_package(OpenSSL REQUIRED)
 include_directories(${OPENSSL_INCLUDE_DIR})
+
 target_link_libraries(minifi-expression-language-extensions ${CMAKE_DL_LIBS})
+
 find_package(ZLIB REQUIRED)
 include_directories(${ZLIB_INCLUDE_DIRS})
 target_link_libraries (minifi-expression-language-extensions ${ZLIB_LIBRARIES})
@@ -80,3 +86,10 @@ SET (EXPRESSION-LANGUAGE-EXTENSIONS minifi-expression-language-extensions PARENT
 
 register_extension(minifi-expression-language-extensions)
 
+add_custom_target(expression-language-extension-linter
+    COMMAND ${CMAKE_SOURCE_DIR}/thirdparty/google-styleguide/run_linter.sh
+            ${CMAKE_SOURCE_DIR}/libminifi/include/
+            ${CMAKE_CURRENT_LIST_DIR}/include --
+            ${CMAKE_CURRENT_LIST_DIR}/)
+
+register_extension_linter(expression-language-extension-linter)

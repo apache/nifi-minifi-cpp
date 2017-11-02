@@ -27,7 +27,14 @@ find_package(TensorFlow REQUIRED)
 
 message("-- Found TensorFlow: ${TENSORFLOW_INCLUDE_DIRS}")
 
-include_directories(../../libminifi/include  ../../libminifi/include/core  ../../thirdparty/spdlog-20170710/include ../../thirdparty/concurrentqueue ../../thirdparty/yaml-cpp-yaml-cpp-0.5.3/include ${CIVET_THIRDPARTY_ROOT}/include ../../thirdparty/jsoncpp/include  ../../thirdparty/) 
+include_directories(${CMAKE_SOURCE_DIR}/libminifi/include
+                    ${CMAKE_SOURCE_DIR}/thirdparty/spdlog-20170710/include
+                    ${CMAKE_SOURCE_DIR}/thirdparty/concurrentqueue
+                    ${CMAKE_SOURCE_DIR}/thirdparty/yaml-cpp-yaml-cpp-0.5.3/include
+                    ${CIVET_THIRDPARTY_ROOT}/include
+                    ${CMAKE_SOURCE_DIR}/thirdparty/jsoncpp/include
+                    ${CMAKE_SOURCE_DIR}/thirdparty/
+                    ./include/)
 
 include_directories(${TENSORFLOW_INCLUDE_DIRS})
 
@@ -45,10 +52,13 @@ endif()
 find_package(UUID REQUIRED)
 target_link_libraries(minifi-tensorflow-extensions ${LIBMINIFI} ${UUID_LIBRARIES} ${JSONCPP_LIB})
 add_dependencies(minifi-tensorflow-extensions jsoncpp_project)
+
 find_package(OpenSSL REQUIRED)
 include_directories(${OPENSSL_INCLUDE_DIR})
+
 target_link_libraries(minifi-tensorflow-extensions ${CMAKE_DL_LIBS})
 target_link_libraries(minifi-tensorflow-extensions ${TENSORFLOW_LIBRARIES})
+
 find_package(ZLIB REQUIRED)
 include_directories(${ZLIB_INCLUDE_DIRS})
 target_link_libraries (minifi-tensorflow-extensions ${ZLIB_LIBRARIES})

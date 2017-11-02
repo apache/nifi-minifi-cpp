@@ -19,7 +19,7 @@
 #include <string>
 #include <vector>
 
-#include "../TestBase.h"
+#include "test/TestBase.h"
 #include "core/Core.h"
 #include "utils/StringUtils.h"
 

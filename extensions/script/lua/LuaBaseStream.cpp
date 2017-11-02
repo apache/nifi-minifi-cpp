@@ -21,7 +21,7 @@
 #include <utility>
 #include <string>
 
-#include "LuaBaseStream.h"
+#include "lua/LuaBaseStream.h"
 
 namespace org {
 namespace apache {

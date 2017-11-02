@@ -18,7 +18,7 @@
 
 
 #include "utils/TimeUtil.h"
-#include "../TestBase.h"
+#include "test/TestBase.h"
 
 TEST_CASE("Test time conversion", "[testtimeconversion]") {
   REQUIRE("2017-02-16 20:14:56.196" == getTimeStr(1487276096196, true));

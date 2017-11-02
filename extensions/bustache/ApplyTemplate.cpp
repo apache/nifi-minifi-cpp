@@ -17,6 +17,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+#include <boost/iostreams/device/mapped_file.hpp>
+
+#include <bustache/model.hpp>
+#include <bustache/format.hpp>
+
 #include <string.h>
 #include <iostream>
 #include <fstream>
@@ -24,12 +30,7 @@
 #include <string>
 #include <set>
 
-#include <boost/iostreams/device/mapped_file.hpp>
-
-#include <bustache/model.hpp>
-#include <bustache/format.hpp>
-
-#include "ApplyTemplate.h"
+#include "processors/ApplyTemplate.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 

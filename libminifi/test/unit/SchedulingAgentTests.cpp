@@ -21,7 +21,7 @@
 #include <vector>
 #include "io/CRCStream.h"
 #include "io/DataStream.h"
-#include "../TestBase.h"
+#include "test/TestBase.h"
 #include "processors/GetFile.h"
 #include "processors/LogAttribute.h"
 #include "SchedulingAgent.h"

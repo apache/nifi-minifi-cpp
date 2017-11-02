@@ -35,11 +35,14 @@ define_property(GLOBAL PROPERTY EXTENSION-TESTS
 
 set_property(GLOBAL PROPERTY EXTENSION-TESTS "")
 
-macro(register_extension_test extension-dir) 
-  if (NOT SKIP_TESTS)
+macro(register_extension_test test-dir)
   	get_property(extensions GLOBAL PROPERTY EXTENSION-TESTS)
-  	set_property(GLOBAL APPEND PROPERTY EXTENSION-TESTS "${extension-dir}")
-  endif()
+    set_property(GLOBAL APPEND PROPERTY EXTENSION-TESTS "${test-dir}")
+endmacro()
+
+macro(register_extension_linter target-name)
+    get_property(extensions GLOBAL PROPERTY EXTENSION-LINTERS)
+    set_property(GLOBAL APPEND PROPERTY EXTENSION-LINTERS "${target-name}")
 endmacro()
 
 function(registerTest dirName)

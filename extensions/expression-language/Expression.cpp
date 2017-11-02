@@ -17,8 +17,12 @@
 
 #include <utility>
 #include <iostream>
+#include <string>
+#include <algorithm>
+#include <vector>
 
-#include <expression/Expression.h>
+
+#include "expression/Expression.h"
 #include "Driver.h"
 
 namespace org {

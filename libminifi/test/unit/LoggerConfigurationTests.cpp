@@ -21,7 +21,7 @@
 #include <string>
 #include <vector>
 
-#include "../TestBase.h"
+#include "test/TestBase.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "spdlog/formatter.h"
 

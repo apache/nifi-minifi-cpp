@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-#include "InvokeHTTP.h"
+#include "processors/InvokeHTTP.h"
 #include <regex.h>
 #include <curl/easy.h>
 #include <uuid/uuid.h>

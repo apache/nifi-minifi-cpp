@@ -20,7 +20,7 @@
 #include <vector>
 #include <iostream>
 #include <uuid/uuid.h>
-#include "../TestBase.h"
+#include "test/TestBase.h"
 
 TEST_CASE("TestFileOverWrite", "[TestFiles]") {
   TestController testController;

@@ -17,7 +17,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "PublishKafka.h"
+#include "processors/PublishKafka.h"
 #include <stdio.h>
 #include <algorithm>
 #include <memory>
@@ -227,7 +227,7 @@ void PublishKafka::onSchedule(core::ProcessContext *context, core::ProcessSessio
     return;
   }
 
-  rk_= rd_kafka_new(RD_KAFKA_PRODUCER, conf_,
+  rk_ = rd_kafka_new(RD_KAFKA_PRODUCER, conf_,
             errstr, sizeof(errstr));
 
   if (!rk_) {
@@ -241,7 +241,6 @@ void PublishKafka::onSchedule(core::ProcessContext *context, core::ProcessSessio
     logger_->log_error("Failed to create topic %s", errstr);
     return;
   }
-
 }
 
 void PublishKafka::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {

@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-#include "RESTReceiver.h"
+#include "protocols/RESTReceiver.h"
 #include <algorithm>
 #include <memory>
 #include <utility>

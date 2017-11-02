@@ -22,7 +22,11 @@ find_package(PCAP REQUIRED)
 set(CMAKE_EXE_LINKER_FLAGS "-Wl,--export-all-symbols")
 set(CMAKE_SHARED_LINKER_FLAGS "-Wl,--export-symbols")
 
-include_directories(../../libminifi/include ../../libminifi/include/c2  ../../libminifi/include/c2/protocols/  ../../libminifi/include/core/state ./libminifi/include/core/statemanagement/metrics  ../../libminifi/include/core/yaml  ../../libminifi/include/core  ../../thirdparty/spdlog-20170710/include ../../thirdparty/concurrentqueue ../../thirdparty/yaml-cpp-yaml-cpp-0.5.3/include ${CIVET_THIRDPARTY_ROOT}/include ../../thirdparty/jsoncpp/include  ../../thirdparty/)
+include_directories(${CMAKE_SOURCE_DIR}/libminifi/include
+                    ${CMAKE_SOURCE_DIR}/thirdparty/spdlog-20170710/include
+                    ${CIVET_THIRDPARTY_ROOT}/include
+                    ./include/)
+
 include_directories(/usr/include/netinet)
 
 set(PCAPPLUSPLUS_TP_BASE_DIR "${CMAKE_SOURCE_DIR}/thirdparty/pcap++/")
@@ -92,3 +96,10 @@ target_link_libraries (minifi-pcap ${ZLIB_LIBRARIES})
 SET (PCAP-EXTENSION minifi-pcap PARENT_SCOPE)
 register_extension(minifi-pcap)
 
+add_custom_target(pcap-extension-linter
+    COMMAND ${CMAKE_SOURCE_DIR}/thirdparty/google-styleguide/run_linter.sh
+            ${CMAKE_SOURCE_DIR}/libminifi/include/
+            ${CMAKE_CURRENT_LIST_DIR}/include --
+            ${CMAKE_CURRENT_LIST_DIR}/)
+
+register_extension_linter(pcap-extension-linter)

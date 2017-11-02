@@ -20,9 +20,16 @@
 set(CMAKE_EXE_LINKER_FLAGS "-Wl,--export-all-symbols")
 set(CMAKE_SHARED_LINKER_FLAGS "-Wl,--export-symbols")
 
-include_directories(../../libminifi/include  ../../libminifi/include/core  ../../thirdparty/spdlog-20170710/include ../../thirdparty/concurrentqueue ../../thirdparty/yaml-cpp-yaml-cpp-0.5.3/include ${CIVET_THIRDPARTY_ROOT}/include ../../thirdparty/jsoncpp/include  ../../thirdparty/)
-
-include_directories(../../thirdparty/librdkafka-0.11.1/src ./../thirdparty/librdkafka-0.11.1/src-cpp)
+include_directories(${CMAKE_SOURCE_DIR}/libminifi/include
+                    ${CMAKE_SOURCE_DIR}/thirdparty/librdkafka-0.11.1/src
+                    ${CMAKE_SOURCE_DIR}/thirdparty/librdkafka-0.11.1/src-cpp
+                    ${CMAKE_SOURCE_DIR}/thirdparty/spdlog-20170710/include
+                    ${CMAKE_SOURCE_DIR}/thirdparty/concurrentqueue
+                    ${CMAKE_SOURCE_DIR}/thirdparty/yaml-cpp-yaml-cpp-0.5.3/include
+                    ${CIVET_THIRDPARTY_ROOT}/include
+                    ${CMAKE_SOURCE_DIR}/thirdparty/jsoncpp/include
+                    ${CMAKE_SOURCE_DIR}/thirdparty/
+                    ./include/)
 
 file(GLOB SOURCES  "*.cpp")
 
@@ -48,9 +55,11 @@ if (LibRdKafka_FOUND AND NOT BUILD_LIBRDKAFKA)
 else()
 	target_link_libraries(minifi-rdkafka-extensions rdkafka )
 endif()
+
 find_package(ZLIB REQUIRED)
 include_directories(${ZLIB_INCLUDE_DIRS})
 target_link_libraries (minifi-rdkafka-extensions ${ZLIB_LIBRARIES})
+
 if (WIN32)
     set_target_properties(minifi-rdkafka-extensions PROPERTIES
         LINK_FLAGS "/WHOLERDKAFKA"
@@ -70,3 +79,10 @@ SET (RDKAFKA-EXTENSIONS minifi-rdkafka-extensions PARENT_SCOPE)
 
 register_extension(minifi-rdkafka-extensions)
 
+add_custom_target(rdkafka-extension-linter
+    COMMAND ${CMAKE_SOURCE_DIR}/thirdparty/google-styleguide/run_linter.sh
+            ${CMAKE_SOURCE_DIR}/libminifi/include/
+            ${CMAKE_CURRENT_LIST_DIR}/include --
+            ${CMAKE_CURRENT_LIST_DIR}/)
+
+register_extension_linter(rdkafka-extension-linter)

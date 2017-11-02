@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "HTTPProtocol.h"
+#include "sitetosite/HTTPProtocol.h"
 
 #include <sys/time.h>
 #include <stdio.h>
@@ -27,9 +27,10 @@
 #include <thread>
 #include <random>
 #include <iostream>
+#include <utility>
 #include <vector>
 
-#include "PeersEntity.h"
+#include "sitetosite/PeersEntity.h"
 #include "io/CRCStream.h"
 #include "sitetosite/Peer.h"
 #include "io/validation.h"
@@ -67,7 +68,7 @@ std::shared_ptr<Transaction> HttpSiteToSiteClient::createTransaction(std::string
   client->setPostFields("");
   client->submit();
   if (peer_->getStream() != nullptr)
-  logger_->log_info("Closing %s",((io::HttpStream*)peer_->getStream())->getClientRef()->getURL());
+  logger_->log_info("Closing %s", ((io::HttpStream*)peer_->getStream())->getClientRef()->getURL());
   if (client->getResponseCode() == 201) {
     // parse the headers
     auto headers = client->getParsedHeaders();
@@ -78,7 +79,6 @@ std::shared_ptr<Transaction> HttpSiteToSiteClient::createTransaction(std::string
       if (IsNullOrEmpty(&url)) {
         logger_->log_debug("Location is empty");
       } else {
-
         org::apache::nifi::minifi::io::CRCStream<SiteToSitePeer> crcstream(peer_.get());
         auto transaction = std::make_shared<HttpTransaction>(direction, crcstream);
         transaction->initialize(this, url);
@@ -114,7 +114,6 @@ std::shared_ptr<Transaction> HttpSiteToSiteClient::createTransaction(std::string
 
 int HttpSiteToSiteClient::readResponse(const std::shared_ptr<Transaction> &transaction, RespondCode &code, std::string &message) {
   if (current_code == FINISH_TRANSACTION) {
-
     if (transaction->getDirection() == SEND) {
       auto stream = dynamic_cast<io::HttpStream*>(peer_->getStream());
       stream->closeStream();
@@ -131,7 +130,6 @@ int HttpSiteToSiteClient::readResponse(const std::shared_ptr<Transaction> &trans
     }
   } else if (transaction->getDirection() == RECEIVE) {
     if (transaction->getState() == TRANSACTION_STARTED || transaction->getState() == DATA_EXCHANGED) {
-
       if (current_code == CONFIRM_TRANSACTION && transaction->getState() == DATA_EXCHANGED) {
         auto stream = dynamic_cast<io::HttpStream*>(peer_->getStream());
         if (!stream->isFinished()) {
@@ -163,8 +161,6 @@ int HttpSiteToSiteClient::readResponse(const std::shared_ptr<Transaction> &trans
     } else if (transaction->getState() == TRANSACTION_CONFIRMED) {
       closeTransaction(transaction->getUUIDStr());
       code = CONFIRM_TRANSACTION;
-    } else {
-
     }
     return 1;
   } else if (transaction->getState() == TRANSACTION_CONFIRMED) {
@@ -174,14 +170,13 @@ int HttpSiteToSiteClient::readResponse(const std::shared_ptr<Transaction> &trans
     return 1;
   }
   return SiteToSiteClient::readResponse(transaction, code, message);
-
 }
+
 // write respond
 int HttpSiteToSiteClient::writeResponse(const std::shared_ptr<Transaction> &transaction, RespondCode code, std::string message) {
   current_code = code;
   if (code == CONFIRM_TRANSACTION || code == FINISH_TRANSACTION) {
     return 1;
-
   } else if (code == CONTINUE_TRANSACTION) {
     logger_->log_info("Continuing HTTP transaction");
     return 1;
@@ -231,14 +226,12 @@ bool HttpSiteToSiteClient::transmitPayload(const std::shared_ptr<core::ProcessCo
 }
 
 void HttpSiteToSiteClient::tearDown() {
-
   if (peer_state_ >= ESTABLISHED) {
     logger_->log_info("Site2Site Protocol tearDown");
   }
   known_transactions_.clear();
   peer_->Close();
   peer_state_ = IDLE;
-
 }
 
 void HttpSiteToSiteClient::closeTransaction(const std::string &transactionID) {
@@ -291,7 +284,7 @@ void HttpSiteToSiteClient::closeTransaction(const std::string &transactionID) {
 
   logger_->log_debug("Received %d response code from delete", client->getResponseCode());
 
-  if (client->getResponseCode() == 400){
+  if (client->getResponseCode() == 400) {
     std::stringstream message;
     message << "Received "  << client->getResponseCode() << " from " << uri.str();
     throw Exception(SITE2SITE_EXCEPTION, message.str().c_str());
@@ -319,7 +312,6 @@ void HttpSiteToSiteClient::deleteTransaction(std::string transactionID) {
   closeTransaction(transactionID);
 
   known_transactions_.erase(transactionID);
-
 }
 
 } /* namespace sitetosite */

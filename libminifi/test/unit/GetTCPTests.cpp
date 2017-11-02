@@ -22,9 +22,8 @@
 #include <vector>
 #include <set>
 #include <fstream>
-#include "../unit/ProvenanceTestHelper.h"
-#include "../TestBase.h"
-#include "Scheduling.h"
+#include "test/unit/ProvenanceTestHelper.h"
+#include "test/TestBase.h"
 #include "processors/ListenHTTP.h"
 #include "processors/LogAttribute.h"
 #include "processors/GetTCP.h"
@@ -34,6 +33,7 @@
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/ProcessorNode.h"
+#include "core/Scheduling.h"
 #include "core/reporting/SiteToSiteProvenanceReportingTask.h"
 
 TEST_CASE("GetTCPWithoutEOM", "[GetTCP1]") {
