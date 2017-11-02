@@ -16,7 +16,6 @@
  * limitations under the License.
  */
 
-#define CATCH_CONFIG_MAIN
 #include <uuid/uuid.h>
 #include <iostream>
 #include <map>

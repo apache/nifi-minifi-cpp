@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#define CATCH_CONFIG_MAIN  // This tells Catch to provide a main() - only do this in one cpp file
 #include "io/BaseStream.h"
 #include <uuid/uuid.h>
 #include "SiteToSiteHelper.h"

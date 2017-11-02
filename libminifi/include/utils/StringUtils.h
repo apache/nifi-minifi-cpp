@@ -19,6 +19,7 @@
 
 #include <algorithm>
 #include <sstream>
+#include <vector>
 #include "utils/FailurePolicy.h"
 
 namespace org {

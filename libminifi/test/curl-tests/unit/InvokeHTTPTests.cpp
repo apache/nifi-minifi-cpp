@@ -16,7 +16,6 @@
  * limitations under the License.
  */
 
-#define CATCH_CONFIG_MAIN  // This tells Catch to provide a main() - only do this in one cpp file
 #include <uuid/uuid.h>
 #include <fstream>
 #include <map>
@@ -26,13 +25,13 @@
 #include <set>
 #include "FlowController.h"
 #include "io/BaseStream.h"
-#include "../TestBase.h"
+#include "../../TestBase.h"
 #include "processors/GetFile.h"
 #include "core/Core.h"
 #include "HTTPClient.h"
 #include "InvokeHTTP.h"
-#include "../../include/core/FlowFile.h"
-#include "../unit/ProvenanceTestHelper.h"
+#include "core/FlowFile.h"
+#include "../../unit/ProvenanceTestHelper.h"
 #include "core/Processor.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"

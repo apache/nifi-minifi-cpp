@@ -16,10 +16,5 @@
  * limitations under the License.
  */
 
-
-#include "utils/TimeUtil.h"
-#include "../TestBase.h"
-
-TEST_CASE("Test time conversion", "[testtimeconversion]") {
-  REQUIRE("2017-02-16 20:14:56.196" == getTimeStr(1487276096196, true));
-}
+#define CATCH_CONFIG_MAIN
+#include "catch.hpp"
