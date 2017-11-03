@@ -17,14 +17,15 @@
 # under the License.
 #
 
-file(GLOB ROCKSDB_INTEGRATION_TESTS  "*.cpp")
+file(GLOB ROCKSDB_UNIT_TESTS  "*.cpp")
 SET(ROCKSDB_TEST_COUNT 0)
-FOREACH(testfile ${ROCKSDB_INTEGRATION_TESTS})
+FOREACH(testfile ${ROCKSDB_UNIT_TESTS})
   	get_filename_component(testfilename "${testfile}" NAME_WE)
-  	add_executable("${testfilename}" "${testfile}" ${SPD_SOURCES} "${TEST_DIR}/TestBase.cpp")
-  	target_include_directories(${testfilename} PRIVATE BEFORE "${CMAKE_SOURCE_DIR}/extensions/rocksdb-repos/")
-  	target_include_directories(${testfilename} PRIVATE BEFORE "${CMAKE_SOURCE_DIR}/thirdparty/rocksdb/include")
+  	add_executable("${testfilename}" "${testfile}")
+  	target_include_directories(${testfilename} BEFORE PRIVATE "${CMAKE_SOURCE_DIR}/extensions/rocksdb-repos/")
+  	target_include_directories(${testfilename} BEFORE PRIVATE "${CMAKE_SOURCE_DIR}/thirdparty/rocksdb/include")
 	createTests("${testfilename}")	
+	target_link_libraries(${testfilename} ${CATCH_MAIN_LIB})
   	if (APPLE)
 		target_link_libraries (${testfilename} -Wl,-all_load minifi-rocksdb-repos)
 	else ()
