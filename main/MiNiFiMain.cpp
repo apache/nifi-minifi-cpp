@@ -30,15 +30,9 @@
 
 #include "core/Core.h"
 
-#include "spdlog/spdlog.h"
 #include "core/FlowConfiguration.h"
 #include "core/ConfigurationFactory.h"
 #include "core/RepositoryFactory.h"
-#include "core/logging/Logger.h"
-#include "core/logging/LoggerConfiguration.h"
-#include "properties/Properties.h"
-#include "properties/Configure.h"
-#include "utils/Id.h"
 #include "FlowController.h"
 
 //! Main thread sleep interval 1 second
@@ -216,8 +210,18 @@ int main(int argc, char **argv) {
       new minifi::FlowController(prov_repo, flow_repo, configure, std::move(flow_configuration), content_repo));
 
   logger->log_info("Loading FlowController");
+
   // Load flow from specified configuration file
-  controller->load();
+  try {
+    controller->load();
+  } catch (std::exception &e) {
+    logger->log_error("Failed to load configuration due to exception: %s", e.what());
+    return -1;
+  } catch (...) {
+    logger->log_error("Failed to load configuration due to unknown exception");
+    return -1;
+  }
+
   // Start Processing the flow
 
   controller->start();
