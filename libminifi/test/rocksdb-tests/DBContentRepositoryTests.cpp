@@ -243,3 +243,52 @@ TEST_CASE("Delete NonExistent Claim", "[TestDBCR5]") {
 
   REQUIRE(readstr == "well hello there");
 }
+
+TEST_CASE("Delete Remove Count Claim", "[TestDBCR6]") {
+  TestController testController;
+  char format[] = "/tmp/testRepo.XXXXXX";
+  char *dir = testController.createTempDirectory(format);
+  auto content_repo = std::make_shared<core::repository::DatabaseContentRepository>();
+
+  auto configuration = std::make_shared<org::apache::nifi::minifi::Configure>();
+  configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, dir);
+  REQUIRE(true == content_repo->initialize(configuration));
+
+  auto claim = std::make_shared<minifi::ResourceClaim>(content_repo, dir);
+  auto claim2 = std::make_shared<minifi::ResourceClaim>(content_repo, dir);
+  auto stream = content_repo->write(claim);
+
+  stream->writeUTF("well hello there");
+
+  stream->closeStream();
+
+  content_repo->stop();
+
+  // reclaim the memory
+  content_repo = nullptr;
+
+  content_repo = std::make_shared<core::repository::DatabaseContentRepository>();
+
+  configuration = std::make_shared<org::apache::nifi::minifi::Configure>();
+  configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, dir);
+  REQUIRE(true == content_repo->initialize(configuration));
+
+  // increment twice. verify we have 2 for the stream count
+  // and then test the removal and verify that the claim was removed by virtue of obtaining
+  // its count.
+  content_repo->incrementStreamCount(claim2);
+  content_repo->incrementStreamCount(claim2);
+  REQUIRE(content_repo->getStreamCount(claim2) == 2);
+  content_repo->decrementStreamCount(claim2);
+  content_repo->decrementStreamCount(claim2);
+  REQUIRE(true == content_repo->removeIfOrphaned(claim2));
+  REQUIRE(content_repo->getStreamCount(claim2) == 0);
+  auto read_stream = content_repo->read(claim);
+
+  std::string readstr;
+
+  // -1 tell us we have an invalid stream
+  read_stream->readUTF(readstr);
+
+  REQUIRE(readstr == "well hello there");
+}
