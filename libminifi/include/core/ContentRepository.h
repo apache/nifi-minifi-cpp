@@ -61,6 +61,7 @@ class ContentRepository : public StreamManager<minifi::ResourceClaim> {
     if (count != count_map_.end()) {
       if (count_map_[str] == 0) {
         remove(streamId);
+        count_map_.erase(str);
         return true;
       }
     }
@@ -70,7 +71,12 @@ class ContentRepository : public StreamManager<minifi::ResourceClaim> {
 
   virtual uint32_t getStreamCount(const std::shared_ptr<minifi::ResourceClaim> &streamId) {
     std::lock_guard<std::mutex> lock(count_map_mutex_);
-    return count_map_[streamId->getContentFullPath()];
+    auto cnt = count_map_.find(streamId->getContentFullPath());
+    if (cnt != count_map_.end()) {
+      return cnt->second;
+    } else {
+      return 0;
+    }
   }
 
   virtual void incrementStreamCount(const std::shared_ptr<minifi::ResourceClaim> &streamId) {
