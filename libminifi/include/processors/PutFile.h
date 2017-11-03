@@ -89,6 +89,14 @@ class PutFile : public core::Processor {
     std::string _destFile;
   };
 
+  /**
+   * Generate a safe (universally-unique) temporary filename on the same partition
+   *
+   * @param filename from which to generate temporary write file path
+   * @return
+   */
+  std::string tmpWritePath(const std::string &filename) const;
+
  protected:
 
  private:

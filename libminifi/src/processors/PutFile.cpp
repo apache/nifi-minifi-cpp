@@ -46,12 +46,21 @@ namespace processors {
 
 std::shared_ptr<utils::IdGenerator> PutFile::id_generator_ = utils::IdGenerator::getIdGenerator();
 
-core::Property PutFile::Directory("Directory", "The output directory to which to put files", ".");
-core::Property PutFile::ConflictResolution("Conflict Resolution Strategy", "Indicates what should happen when a file with the same name already exists in the output directory",
-                                           CONFLICT_RESOLUTION_STRATEGY_FAIL);
+core::Property PutFile::Directory(
+    "Directory",
+    "The output directory to which to put files",
+    ".");
+core::Property PutFile::ConflictResolution(
+    "Conflict Resolution Strategy",
+    "Indicates what should happen when a file with the same name already exists in the output directory",
+    CONFLICT_RESOLUTION_STRATEGY_FAIL);
 
-core::Relationship PutFile::Success("success", "All files are routed to success");
-core::Relationship PutFile::Failure("failure", "Failed files (conflict, write failure, etc.) are transferred to failure");
+core::Relationship PutFile::Success(
+    "success",
+    "All files are routed to success");
+core::Relationship PutFile::Failure(
+    "failure",
+    "Failed files (conflict, write failure, etc.) are transferred to failure");
 
 void PutFile::initialize() {
   // Set the supported properties
@@ -91,15 +100,8 @@ void PutFile::onTrigger(core::ProcessContext *context, core::ProcessSession *ses
 
   std::string filename;
   flowFile->getKeyedAttribute(FILENAME, filename);
+  std::string tmpFile = tmpWritePath(filename);
 
-  // Generate a safe (universally-unique) temporary filename on the same partition
-  char tmpFileUuidStr[37];
-  uuid_t tmpFileUuid;
-  id_generator_->generate(tmpFileUuid);
-  uuid_unparse_lower(tmpFileUuid, tmpFileUuidStr);
-  std::stringstream tmpFileSs;
-  tmpFileSs << directory_ << "/." << filename << "." << tmpFileUuidStr;
-  std::string tmpFile = tmpFileSs.str();
   logger_->log_info("PutFile using temporary file %s", tmpFile.c_str());
 
   // Determine dest full file paths
@@ -113,7 +115,9 @@ void PutFile::onTrigger(core::ProcessContext *context, core::ProcessSession *ses
   struct stat statResult;
 
   if (stat(destFile.c_str(), &statResult) == 0) {
-    logger_->log_info("Destination file %s exists; applying Conflict Resolution Strategy: %s", destFile.c_str(), conflict_resolution_.c_str());
+    logger_->log_info("Destination file %s exists; applying Conflict Resolution Strategy: %s",
+                      destFile.c_str(),
+                      conflict_resolution_.c_str());
 
     if (conflict_resolution_ == CONFLICT_RESOLUTION_STRATEGY_REPLACE) {
       putFile(session, flowFile, tmpFile, destFile);
@@ -127,7 +131,33 @@ void PutFile::onTrigger(core::ProcessContext *context, core::ProcessSession *ses
   }
 }
 
-bool PutFile::putFile(core::ProcessSession *session, std::shared_ptr<FlowFileRecord> flowFile, const std::string &tmpFile, const std::string &destFile) {
+std::string PutFile::tmpWritePath(const std::string &filename) const {
+  char tmpFileUuidStr[37];
+  uuid_t tmpFileUuid;
+  id_generator_->generate(tmpFileUuid);
+  uuid_unparse_lower(tmpFileUuid, tmpFileUuidStr);
+  std::stringstream tmpFileSs;
+  tmpFileSs << directory_;
+  auto lastSeparatorPos = filename.find_last_of("/");
+
+  if (lastSeparatorPos == std::string::npos) {
+    tmpFileSs << "/." << filename;
+  } else {
+    tmpFileSs << "/"
+              << filename.substr(0, lastSeparatorPos)
+              << "/."
+              << filename.substr(lastSeparatorPos + 1);
+  }
+
+  tmpFileSs << "." << tmpFileUuidStr;
+  std::string tmpFile = tmpFileSs.str();
+  return tmpFile;
+}
+
+bool PutFile::putFile(core::ProcessSession *session,
+                      std::shared_ptr<FlowFileRecord> flowFile,
+                      const std::string &tmpFile,
+                      const std::string &destFile) {
   ReadCallback cb(tmpFile, destFile);
   session->read(flowFile, &cb);
 
@@ -162,7 +192,7 @@ int64_t PutFile::ReadCallback::process(std::shared_ptr<io::BaseStream> stream) {
     if (read == 0) {
       break;
     }
-    _tmpFileOs.write(reinterpret_cast<char*>(buffer), read);
+    _tmpFileOs.write(reinterpret_cast<char *>(buffer), read);
     size += read;
   } while (size < stream->getSize());
   _writeSucceeded = true;
@@ -180,7 +210,8 @@ bool PutFile::ReadCallback::commit() {
     _tmpFileOs.close();
 
     if (rename(_tmpFile.c_str(), _destFile.c_str())) {
-      logger_->log_info("PutFile commit put file operation to %s failed because rename() call failed", _destFile.c_str());
+      logger_->log_info("PutFile commit put file operation to %s failed because rename() call failed",
+                        _destFile.c_str());
     } else {
       success = true;
       logger_->log_info("PutFile commit put file operation to %s succeeded", _destFile.c_str());
