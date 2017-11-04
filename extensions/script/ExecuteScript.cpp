@@ -94,7 +94,7 @@ void ExecuteScript::onTrigger(const std::shared_ptr<core::ProcessContext> &conte
 
     // Use an existing engine, if one is available
     if (script_engine_q_.try_dequeue(engine)) {
-      logger_->log_info("Using available %s script engine instance", script_engine_);
+      logger_->log_debug("Using available %s script engine instance", script_engine_);
     } else {
       logger_->log_info("Creating new %s script instance", script_engine_);
       logger_->log_info("Approximately %d %s script instances created for this processor",
@@ -144,7 +144,7 @@ void ExecuteScript::onTrigger(const std::shared_ptr<core::ProcessContext> &conte
 
     // Make engine available for use again
     if (script_engine_q_.size_approx() < getMaxConcurrentTasks()) {
-      logger_->log_info("Releasing %s script engine", script_engine_);
+      logger_->log_debug("Releasing %s script engine", script_engine_);
       script_engine_q_.enqueue(engine);
     } else {
       logger_->log_info("Destroying script engine because it is no longer needed");

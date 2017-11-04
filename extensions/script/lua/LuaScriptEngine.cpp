@@ -31,6 +31,15 @@ namespace lua {
 
 LuaScriptEngine::LuaScriptEngine()
     : lua_() {
+  lua_.open_libraries(sol::lib::base,
+                      sol::lib::os,
+                      sol::lib::coroutine,
+                      sol::lib::math,
+                      sol::lib::io,
+                      sol::lib::string,
+                      sol::lib::table,
+                      sol::lib::utf8,
+                      sol::lib::package);
   lua_.new_usertype<core::logging::Logger>(
       "Logger",
       "info", &core::logging::Logger::log_info<>);
