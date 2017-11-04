@@ -27,6 +27,7 @@
 #include "core/reporting/SiteToSiteProvenanceReportingTask.h"
 #include "processors/GetFile.h"
 #include "processors/PutFile.h"
+#include "processors/ExtractText.h"
 #include "processors/TailFile.h"
 #include "processors/ListenSyslog.h"
 #include "processors/GenerateFlowFile.h"
