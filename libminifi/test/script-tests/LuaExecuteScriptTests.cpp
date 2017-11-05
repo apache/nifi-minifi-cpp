@@ -25,6 +25,9 @@
 #include "../TestBase.h"
 
 #include <ExecuteScript.h>
+#include "processors/LogAttribute.h"
+#include "processors/GetFile.h"
+#include "processors/PutFile.h"
 
 TEST_CASE("Lua: Test Log", "[executescriptLuaLog]") { // NOLINT
   TestController testController;

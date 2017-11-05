@@ -29,6 +29,7 @@
 #include "ArchiveTests.h"
 #include "processors/GetFile.h"
 #include "processors/PutFile.h"
+#include "processors/LogAttribute.h"
 #include "FocusArchiveEntry.h"
 #include "UnfocusArchiveEntry.h"
 

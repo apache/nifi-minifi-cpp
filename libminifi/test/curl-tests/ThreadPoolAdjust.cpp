@@ -47,6 +47,9 @@
 #include "controllers/SSLContextService.h"
 #include "../TestServer.h"
 #include "../integration/IntegrationBase.h"
+#include "processors/InvokeHTTP.h"
+#include "processors/ListenHTTP.h"
+#include "processors/LogAttribute.h"
 
 class HttpTestHarness : public IntegrationBase {
  public:

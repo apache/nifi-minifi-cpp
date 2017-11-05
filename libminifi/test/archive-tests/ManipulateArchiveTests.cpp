@@ -28,6 +28,7 @@
 #include "../TestBase.h"
 #include "ArchiveTests.h"
 #include "processors/GetFile.h"
+#include "processors/LogAttribute.h"
 #include "processors/PutFile.h"
 #include "ManipulateArchive.h"
 
