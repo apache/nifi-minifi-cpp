@@ -336,3 +336,37 @@ TEST_CASE("Lua: Test Create", "[executescriptLuaCreate]") { // NOLINT
 
   logTestController.reset();
 }
+
+TEST_CASE("Lua: Test Require", "[executescriptLuaRequire]") { // NOLINT
+  TestController testController;
+
+  LogTestController &logTestController = LogTestController::getInstance();
+  logTestController.setDebug<TestPlan>();
+  logTestController.setDebug<minifi::processors::ExecuteScript>();
+
+  auto plan = testController.createPlan();
+
+  auto executeScript = plan->addProcessor("ExecuteScript",
+                                          "executeScript");
+
+  plan->setProperty(executeScript, processors::ExecuteScript::ScriptEngine.getName(), "lua");
+  plan->setProperty(executeScript, processors::ExecuteScript::ScriptBody.getName(), R"(
+    require 'os'
+    require 'coroutine'
+    require 'math'
+    require 'io'
+    require 'string'
+    require 'table'
+    require 'package'
+
+    log:info('OK')
+  )");
+
+  plan->reset();
+
+  testController.runSession(plan, false);
+
+  REQUIRE(LogTestController::getInstance().contains("[info] OK"));
+
+  logTestController.reset();
+}
