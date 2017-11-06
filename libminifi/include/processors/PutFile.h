@@ -38,11 +38,11 @@ namespace processors {
 class PutFile : public core::Processor {
  public:
 
-  static constexpr char const* CONFLICT_RESOLUTION_STRATEGY_REPLACE = "replace";
-  static constexpr char const* CONFLICT_RESOLUTION_STRATEGY_IGNORE = "ignore";
-  static constexpr char const* CONFLICT_RESOLUTION_STRATEGY_FAIL = "fail";
+  static constexpr char const *CONFLICT_RESOLUTION_STRATEGY_REPLACE = "replace";
+  static constexpr char const *CONFLICT_RESOLUTION_STRATEGY_IGNORE = "ignore";
+  static constexpr char const *CONFLICT_RESOLUTION_STRATEGY_FAIL = "fail";
 
-  static constexpr char const* ProcessorName = "PutFile";
+  static constexpr char const *ProcessorName = "PutFile";
 
   // Constructor
   /*!
@@ -59,6 +59,7 @@ class PutFile : public core::Processor {
   // Supported Properties
   static core::Property Directory;
   static core::Property ConflictResolution;
+  static core::Property CreateDirs;
   // Supported Relationships
   static core::Relationship Success;
   static core::Relationship Failure;
@@ -78,15 +79,19 @@ class PutFile : public core::Processor {
 
   class ReadCallback : public InputStreamCallback {
    public:
-    ReadCallback(const std::string &tmpFile, const std::string &destFile);
+    ReadCallback(const std::string &tmp_file,
+                 const std::string &dest_file,
+                 bool try_mkdirs);
     ~ReadCallback();
-    virtual int64_t process(std::shared_ptr<io::BaseStream> stream);bool commit();
+    virtual int64_t process(std::shared_ptr<io::BaseStream> stream);
+    bool commit();
 
    private:
     std::shared_ptr<logging::Logger> logger_;
-    std::ofstream _tmpFileOs;bool _writeSucceeded = false;
-    std::string _tmpFile;
-    std::string _destFile;
+    bool write_succeeded_ = false;
+    std::string tmp_file_;
+    std::string dest_file_;
+    bool try_mkdirs_;
   };
 
   /**
@@ -101,12 +106,14 @@ class PutFile : public core::Processor {
 
  private:
 
-  // directory
   std::string directory_;
-  // conflict resolution type.
   std::string conflict_resolution_;
+  bool try_mkdirs_ = true;
 
-  bool putFile(core::ProcessSession *session, std::shared_ptr<FlowFileRecord> flowFile, const std::string &tmpFile, const std::string &destFile);
+  bool putFile(core::ProcessSession *session,
+               std::shared_ptr<FlowFileRecord> flowFile,
+               const std::string &tmpFile,
+               const std::string &destFile);
   std::shared_ptr<logging::Logger> logger_;
   static std::shared_ptr<utils::IdGenerator> id_generator_;
 };
