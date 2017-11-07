@@ -254,17 +254,21 @@ void GetFile::performListing(std::string dir, const GetFileRequest &request) {
     if (!entry)
       break;
     std::string d_name = entry->d_name;
-    if ((entry->d_type & DT_DIR)) {
+    std::string path = dir + "/" + d_name;
+    struct stat statbuf{};
+    if (stat(path.c_str(), &statbuf) != 0) {
+      logger_->log_warn("Failed to stat %s", path);
+      break;
+    }
+    if (S_ISDIR(statbuf.st_mode)) {
       // if this is a directory
       if (request.recursive && strcmp(d_name.c_str(), "..") != 0 && strcmp(d_name.c_str(), ".") != 0) {
-        std::string path = dir + "/" + d_name;
         performListing(path, request);
       }
     } else {
-      std::string fileName = dir + "/" + d_name;
-      if (acceptFile(fileName, d_name, request)) {
+      if (acceptFile(path, d_name, request)) {
         // check whether we can take this file
-        putListing(fileName);
+        putListing(path);
       }
     }
   }
