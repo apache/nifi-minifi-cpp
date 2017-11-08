@@ -141,6 +141,16 @@ class StringUtils {
 
   }
 
+  static std::string& replaceAll(std::string& source_string, const std::string &from_string, const std::string &to_string) {
+    std::size_t loc = 0;
+    std::size_t lastFound;
+    while ((lastFound = source_string.find(from_string, loc)) != std::string::npos) {
+      source_string.replace(lastFound, from_string.size(), to_string);
+      loc = lastFound + to_string.size();
+    }
+    return source_string;
+  }
+
 };
 
 } /* namespace utils */

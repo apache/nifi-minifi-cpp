@@ -35,6 +35,8 @@ namespace apache {
 namespace nifi {
 namespace minifi {
 namespace utils {
+namespace file{
+}
 }
 namespace processors {
 }
@@ -178,6 +180,8 @@ namespace logging {
 }
 }
 }
+
+namespace fileutils = org::apache::nifi::minifi::utils::file;
 
 namespace minifi = org::apache::nifi::minifi;
 

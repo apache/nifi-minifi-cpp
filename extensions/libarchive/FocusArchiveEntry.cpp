@@ -24,8 +24,6 @@
 
 #include <string.h>
 
-#include <boost/filesystem.hpp>
-
 #include <string>
 #include <set>
 
@@ -47,13 +45,8 @@ namespace processors {
 
 std::shared_ptr<utils::IdGenerator> FocusArchiveEntry::id_generator_ = utils::IdGenerator::getIdGenerator();
 
-core::Property FocusArchiveEntry::Path(
-    "Path",
-    "The path within the archive to focus (\"/\" to focus the total archive)",
-    "");
-core::Relationship FocusArchiveEntry::Success(
-    "success",
-    "success operational on the flow record");
+core::Property FocusArchiveEntry::Path("Path", "The path within the archive to focus (\"/\" to focus the total archive)", "");
+core::Relationship FocusArchiveEntry::Success("success", "success operational on the flow record");
 
 bool FocusArchiveEntry::set_or_update_attr(std::shared_ptr<core::FlowFile> flowFile, const std::string& key, const std::string& value) const {
   if (flowFile->updateAttribute(key, value))
@@ -73,8 +66,7 @@ void FocusArchiveEntry::initialize() {
   setSupportedRelationships(relationships);
 }
 
-void FocusArchiveEntry::onTrigger(core::ProcessContext *context,
-                                  core::ProcessSession *session) {
+void FocusArchiveEntry::onTrigger(core::ProcessContext *context, core::ProcessSession *session) {
   auto flowFile = session->get();
   std::shared_ptr<FlowFileRecord> flowFileRecord = std::static_pointer_cast<FlowFileRecord>(flowFile);
 
@@ -82,13 +74,15 @@ void FocusArchiveEntry::onTrigger(core::ProcessContext *context,
     return;
   }
 
+  fileutils::FileManager file_man;
+
   std::string targetEntry;
   context->getProperty(Path.getName(), targetEntry);
 
   // Extract archive contents
   ArchiveMetadata archiveMetadata;
   archiveMetadata.focusedEntry = targetEntry;
-  ReadCallback cb(this, &archiveMetadata);
+  ReadCallback cb(this, &file_man, &archiveMetadata);
   session->read(flowFile, &cb);
 
   // For each extracted entry, import & stash to key
@@ -96,18 +90,13 @@ void FocusArchiveEntry::onTrigger(core::ProcessContext *context,
 
   for (auto &entryMetadata : archiveMetadata.entryMetadata) {
     if (entryMetadata.entryType == AE_IFREG) {
-      logger_->log_info("FocusArchiveEntry importing %s from %s",
-          entryMetadata.entryName.c_str(),
-          entryMetadata.tmpFileName.c_str());
+      logger_->log_info("FocusArchiveEntry importing %s from %s", entryMetadata.entryName.c_str(), entryMetadata.tmpFileName.c_str());
       session->import(entryMetadata.tmpFileName, flowFile, false, 0);
       char stashKey[37];
       uuid_t stashKeyUuid;
       id_generator_->generate(stashKeyUuid);
       uuid_unparse_lower(stashKeyUuid, stashKey);
-      logger_->log_debug(
-          "FocusArchiveEntry generated stash key %s for entry %s",
-          stashKey,
-          entryMetadata.entryName.c_str());
+      logger_->log_debug("FocusArchiveEntry generated stash key %s for entry %s", stashKey, entryMetadata.entryName.c_str());
       entryMetadata.stashKey.assign(stashKey);
 
       if (entryMetadata.entryName == targetEntry) {
@@ -123,9 +112,7 @@ void FocusArchiveEntry::onTrigger(core::ProcessContext *context,
   if (targetEntryStashKey != "") {
     session->restore(targetEntryStashKey, flowFile);
   } else {
-    logger_->log_warn(
-          "FocusArchiveEntry failed to locate target entry: %s",
-          targetEntry.c_str());
+    logger_->log_warn("FocusArchiveEntry failed to locate target entry: %s", targetEntry.c_str());
   }
 
   // Set new/updated lens stack to attribute
@@ -138,8 +125,7 @@ void FocusArchiveEntry::onTrigger(core::ProcessContext *context,
     if (flowFile->getAttribute("lens.archive.stack", existingLensStack)) {
       logger_->log_info("FocusArchiveEntry loading existing lens context");
       if (!reader.parse(existingLensStack, lensStack)) {
-        logger_->log_error("FocusArchiveEntry JSON parse error: %s",
-            reader.getFormattedErrorMessages());
+        logger_->log_error("FocusArchiveEntry JSON parse error: %s", reader.getFormattedErrorMessages());
         context->yield();
         return;
       }
@@ -161,17 +147,17 @@ void FocusArchiveEntry::onTrigger(core::ProcessContext *context,
       entryVal["entry_mtime_nsec"] = Json::Value(entryMetadata.entryMTimeNsec);
 
       if (entryMetadata.entryType == AE_IFREG) {
-          entryVal["stash_key"] = Json::Value(entryMetadata.stashKey);
+        entryVal["stash_key"] = Json::Value(entryMetadata.stashKey);
       }
 
       structVal.append(entryVal);
     }
 
     std::string archivenameStr;
-    Json::Value archiveName {Json::nullValue};
+    Json::Value archiveName { Json::nullValue };
 
     if (flowFile->getAttribute("filename", archivenameStr)) {
-       archiveName = Json::Value(archivenameStr);
+      archiveName = Json::Value(archivenameStr);
     }
 
     Json::Value lensVal(Json::objectValue);
@@ -221,8 +207,8 @@ ssize_t FocusArchiveEntry::ReadCallback::read_cb(struct archive * a, void *d, co
   } while (data->processor->isRunning() && last_read > 0 && read < 8196);
 
   if (!data->processor->isRunning()) {
-     archive_set_error(a, EINTR, "Processor shut down during read");
-     return -1;
+    archive_set_error(a, EINTR, "Processor shut down during read");
+    return -1;
   }
 
   return read;
@@ -244,10 +230,8 @@ int64_t FocusArchiveEntry::ReadCallback::process(std::shared_ptr<io::BaseStream>
   int res;
 
   if ((res = archive_read_open(inputArchive, &data, ok_cb, read_cb, ok_cb))) {
-      logger_->log_error(
-          "FocusArchiveEntry can't open due to archive error: %s",
-          archive_error_string(inputArchive));
-      return nlen;
+    logger_->log_error("FocusArchiveEntry can't open due to archive error: %s", archive_error_string(inputArchive));
+    return nlen;
   }
 
   while (isRunning()) {
@@ -258,22 +242,17 @@ int64_t FocusArchiveEntry::ReadCallback::process(std::shared_ptr<io::BaseStream>
     }
 
     if (res < ARCHIVE_OK) {
-      logger_->log_error(
-          "FocusArchiveEntry can't read header due to archive error: %s",
-          archive_error_string(inputArchive));
+      logger_->log_error("FocusArchiveEntry can't read header due to archive error: %s", archive_error_string(inputArchive));
       return nlen;
     }
 
     if (res < ARCHIVE_WARN) {
-      logger_->log_warn(
-          "FocusArchiveEntry got archive warning while reading header: %s",
-          archive_error_string(inputArchive));
+      logger_->log_warn("FocusArchiveEntry got archive warning while reading header: %s", archive_error_string(inputArchive));
       return nlen;
     }
 
     auto entryName = archive_entry_pathname(entry);
-    (*_archiveMetadata).archiveFormatName.assign(
-        archive_format_name(inputArchive));
+    (*_archiveMetadata).archiveFormatName.assign(archive_format_name(inputArchive));
     (*_archiveMetadata).archiveFormat = archive_format(inputArchive);
 
     // Record entry metadata
@@ -289,24 +268,15 @@ int64_t FocusArchiveEntry::ReadCallback::process(std::shared_ptr<io::BaseStream>
     metadata.entryMTime = archive_entry_mtime(entry);
     metadata.entryMTimeNsec = archive_entry_mtime_nsec(entry);
 
-    logger_->log_info(
-        "FocusArchiveEntry entry type of %s is: %d",
-        entryName,
-        metadata.entryType);
-    logger_->log_info(
-        "FocusArchiveEntry entry perm of %s is: %d",
-        entryName,
-        metadata.entryPerm);
+    logger_->log_info("FocusArchiveEntry entry type of %s is: %d", entryName, metadata.entryType);
+    logger_->log_info("FocusArchiveEntry entry perm of %s is: %d", entryName, metadata.entryPerm);
 
     // Write content to tmp file
     if (entryType == AE_IFREG) {
-      auto tmpFileName = boost::filesystem::unique_path().native();
+      auto tmpFileName = file_man_->unique_file(true);
       metadata.tmpFileName = tmpFileName;
       metadata.entryType = entryType;
-      logger_->log_info(
-          "FocusArchiveEntry extracting %s to: %s",
-          entryName,
-          tmpFileName.c_str());
+      logger_->log_info("FocusArchiveEntry extracting %s to: %s", entryName, tmpFileName.c_str());
 
       auto fd = fopen(tmpFileName.c_str(), "w");
 
@@ -325,9 +295,8 @@ int64_t FocusArchiveEntry::ReadCallback::process(std::shared_ptr<io::BaseStream>
   return nlen;
 }
 
-FocusArchiveEntry::ReadCallback::ReadCallback(
-    core::Processor *processor,
-    ArchiveMetadata *archiveMetadata) : proc_(processor) {
+FocusArchiveEntry::ReadCallback::ReadCallback(core::Processor *processor,fileutils::FileManager *file_man, ArchiveMetadata *archiveMetadata)
+    : proc_(processor), file_man_(file_man) {
   logger_ = logging::LoggerFactory<FocusArchiveEntry>::getLogger();
   _archiveMetadata = archiveMetadata;
 }
