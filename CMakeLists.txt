@@ -110,7 +110,6 @@ add_subdirectory(libminifi)
 
 if (EXCLUDE_BOOST)
 	message(" -- Excluding Boost dependent packages...")
-	set(DISABLE_LIBARCHIVE "ON")
 endif(EXCLUDE_BOOST)
 
 #### EXTENSION

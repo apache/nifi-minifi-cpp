@@ -24,8 +24,8 @@
 #include <set>
 #include <fstream>
 
-#include <boost/filesystem.hpp>
 
+#include "utils/file/FileUtils.h"
 #include "../TestBase.h"
 #include "processors/ListenHTTP.h"
 #include "processors/LogAttribute.h"
@@ -220,7 +220,7 @@ TEST_CASE("PutFileTestFileExistsIgnore", "[getfileputpfile]") {
   file.open(movedFile.str(), std::ios::out);
   file << "tempFile";
   file.close();
-  auto filemodtime = boost::filesystem::last_write_time(movedFile.str());
+  auto filemodtime = fileutils::FileUtils::last_write_time(movedFile.str());
 
   std::this_thread::sleep_for(std::chrono::milliseconds(1000));
   plan->reset();
@@ -241,7 +241,7 @@ TEST_CASE("PutFileTestFileExistsIgnore", "[getfileputpfile]") {
   // verify that the fle was moved
   REQUIRE(false == std::ifstream(ss.str()).good());
   REQUIRE(true == std::ifstream(movedFile.str()).good());
-  REQUIRE(filemodtime == boost::filesystem::last_write_time(movedFile.str()));
+  REQUIRE(filemodtime == fileutils::FileUtils::last_write_time(movedFile.str()));
   LogTestController::getInstance().reset();
 }
 
@@ -288,7 +288,7 @@ TEST_CASE("PutFileTestFileExistsReplace", "[getfileputpfile]") {
   file.open(movedFile.str(), std::ios::out);
   file << "tempFile";
   file.close();
-  auto filemodtime = boost::filesystem::last_write_time(movedFile.str());
+  auto filemodtime = fileutils::FileUtils::last_write_time(movedFile.str());
 
   std::this_thread::sleep_for(std::chrono::milliseconds(1000));
   plan->reset();
@@ -309,7 +309,7 @@ TEST_CASE("PutFileTestFileExistsReplace", "[getfileputpfile]") {
   // verify that the fle was moved
   REQUIRE(false == std::ifstream(ss.str()).good());
   REQUIRE(true == std::ifstream(movedFile.str()).good());
-  REQUIRE(filemodtime != boost::filesystem::last_write_time(movedFile.str()));
+  REQUIRE(filemodtime != fileutils::FileUtils::last_write_time(movedFile.str()));
   LogTestController::getInstance().reset();
 }
 
