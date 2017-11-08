@@ -106,6 +106,19 @@ add_subdirectory(thirdparty/yaml-cpp-yaml-cpp-20171024)
 add_subdirectory(thirdparty/civetweb-1.9.1 EXCLUDE_FROM_ALL)
 include_directories(thirdparty/concurrentqueue)
 include_directories(thirdparty/yaml-cpp-yaml-cpp-20171024/include)
+
+## Expression language extensions
+option(DISABLE_EXPRESSION_LANGUAGE "Disables the scripting extensions." OFF)
+if (DISABLE_EXPRESSION_LANGUAGE)
+    # Build expression language NoOp implementation, if necessary
+    include_directories("extensions/expression-language/noop")
+    add_subdirectory(extensions/expression-language/noop)
+else()
+    include_directories("extensions/expression-language/impl")
+    createExtension(EXPRESSION-LANGUAGE-EXTENSIONS "EXPRESSION LANGUAGE EXTENSIONS" "This enables NiFi expression language" "extensions/expression-language" "${TEST_DIR}/expression-language-tests")
+endif()
+
+
 add_subdirectory(libminifi)
 
 if (EXCLUDE_BOOST)

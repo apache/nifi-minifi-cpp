@@ -28,17 +28,8 @@
 #include <cstdio>
 #include <iostream>
 #include <memory>
-#include <set>
-#include <algorithm>
 #include <string>
-
-#include "core/logging/Logger.h"
-#include "core/ProcessContext.h"
-#include "core/Property.h"
-#include "core/Relationship.h"
-#include "io/BaseStream.h"
-#include "io/DataStream.h"
-#include "io/validation.h"
+#include <set>
 
 namespace org {
 namespace apache {
@@ -89,10 +80,6 @@ void PutFile::initialize() {
 }
 
 void PutFile::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory) {
-  if (!context->getProperty(Directory.getName(), directory_)) {
-    logger_->log_error("Directory attribute is missing or invalid");
-  }
-
   if (!context->getProperty(ConflictResolution.getName(), conflict_resolution_)) {
     logger_->log_error("Conflict Resolution Strategy attribute is missing or invalid");
   }
@@ -107,7 +94,8 @@ void PutFile::onSchedule(core::ProcessContext *context, core::ProcessSessionFact
 }
 
 void PutFile::onTrigger(core::ProcessContext *context, core::ProcessSession *session) {
-  if (IsNullOrEmpty(directory_) || IsNullOrEmpty(conflict_resolution_)) {
+  if (IsNullOrEmpty(conflict_resolution_)) {
+    logger_->log_error("Conflict resolution value is invalid");
     context->yield();
     return;
   }
@@ -119,29 +107,41 @@ void PutFile::onTrigger(core::ProcessContext *context, core::ProcessSession *ses
     return;
   }
 
+  std::string directory;
+
+  if (!context->getProperty(Directory.getName(), directory, flowFile)) {
+    logger_->log_error("Directory attribute is missing or invalid");
+  }
+
+  if (IsNullOrEmpty(directory)) {
+    logger_->log_error("Directory attribute evaluated to invalid value");
+    session->transfer(flowFile, Failure);
+    return;
+  }
+
   std::string filename;
   flowFile->getKeyedAttribute(FILENAME, filename);
-  std::string tmpFile = tmpWritePath(filename);
+  std::string tmpFile = tmpWritePath(filename, directory);
 
   logger_->log_info("PutFile using temporary file %s", tmpFile.c_str());
 
   // Determine dest full file paths
   std::stringstream destFileSs;
-  destFileSs << directory_ << "/" << filename;
+  destFileSs << directory << "/" << filename;
   std::string destFile = destFileSs.str();
 
-  logger_->log_info("PutFile writing file %s into directory %s", filename.c_str(), directory_.c_str());
+  logger_->log_info("PutFile writing file %s into directory %s", filename.c_str(), directory.c_str());
 
   // If file exists, apply conflict resolution strategy
   struct stat statResult;
 
-  if ((max_dest_files_ != -1) && (stat(directory_.c_str(), &statResult) == 0)) {
+  if ((max_dest_files_ != -1) && (stat(directory.c_str(), &statResult) == 0)) {
     // something exists at directory path
     if (S_ISDIR(statResult.st_mode)) {
       // it's a directory, count the files
-      DIR *myDir = opendir(directory_.c_str());
+      DIR *myDir = opendir(directory.c_str());
       if (!myDir) {
-        logger_->log_warn("Could not open %s", directory_.c_str());
+        logger_->log_warn("Could not open %s", directory.c_str());
         session->transfer(flowFile, Failure);
         return;
       }
@@ -153,7 +153,7 @@ void PutFile::onTrigger(core::ProcessContext *context, core::ProcessSession *ses
           ct++;
           if (ct >= max_dest_files_) {
             logger_->log_warn("Routing to failure because the output directory %s has at least %u files, which exceeds the "
-                "configured max number of files", directory_.c_str(), max_dest_files_);
+                "configured max number of files", directory.c_str(), max_dest_files_);
             session->transfer(flowFile, Failure);
             closedir(myDir);
             return;
@@ -170,24 +170,24 @@ void PutFile::onTrigger(core::ProcessContext *context, core::ProcessSession *ses
                       conflict_resolution_.c_str());
 
     if (conflict_resolution_ == CONFLICT_RESOLUTION_STRATEGY_REPLACE) {
-      putFile(session, flowFile, tmpFile, destFile);
+      putFile(session, flowFile, tmpFile, destFile, directory);
     } else if (conflict_resolution_ == CONFLICT_RESOLUTION_STRATEGY_IGNORE) {
       session->transfer(flowFile, Success);
     } else {
       session->transfer(flowFile, Failure);
     }
   } else {
-    putFile(session, flowFile, tmpFile, destFile);
+    putFile(session, flowFile, tmpFile, destFile, directory);
   }
 }
 
-std::string PutFile::tmpWritePath(const std::string &filename) const {
+std::string PutFile::tmpWritePath(const std::string &filename, const std::string &directory) const {
   char tmpFileUuidStr[37];
   uuid_t tmpFileUuid;
   id_generator_->generate(tmpFileUuid);
   uuid_unparse_lower(tmpFileUuid, tmpFileUuidStr);
   std::stringstream tmpFileSs;
-  tmpFileSs << directory_;
+  tmpFileSs << directory;
   auto lastSeparatorPos = filename.find_last_of("/");
 
   if (lastSeparatorPos == std::string::npos) {
@@ -207,7 +207,37 @@ std::string PutFile::tmpWritePath(const std::string &filename) const {
 bool PutFile::putFile(core::ProcessSession *session,
                       std::shared_ptr<FlowFileRecord> flowFile,
                       const std::string &tmpFile,
-                      const std::string &destFile) {
+                      const std::string &destFile,
+                      const std::string &destDir) {
+  struct stat dir_stat;
+
+  if (stat(destDir.c_str(), &dir_stat) && try_mkdirs_) {
+    // Attempt to create directories in file's path
+    std::stringstream dir_path_stream;
+
+    logger_->log_warn("Destination directory does not exist; will attempt to create: ", destDir);
+    size_t i = 0;
+    auto pos = destFile.find('/');
+
+    while (pos != std::string::npos) {
+      auto dir_path_component = destFile.substr(i, pos - i);
+      dir_path_stream << dir_path_component;
+      auto dir_path = dir_path_stream.str();
+
+      if (!dir_path_component.empty()) {
+        logger_->log_info("Attempting to create directory if it does not already exist: %s", dir_path);
+        mkdir(dir_path.c_str(), 0700);
+        dir_path_stream << '/';
+      } else if (pos == 0) {
+        // Support absolute paths
+        dir_path_stream << '/';
+      }
+
+      i = pos + 1;
+      pos = destFile.find('/', pos + 1);
+    }
+  }
+
   ReadCallback cb(tmpFile, destFile, try_mkdirs_);
   session->read(flowFile, &cb);
 
@@ -234,71 +264,30 @@ PutFile::ReadCallback::ReadCallback(const std::string &tmp_file,
 int64_t PutFile::ReadCallback::process(std::shared_ptr<io::BaseStream> stream) {
   // Copy file contents into tmp file
   write_succeeded_ = false;
-  bool try_mkdirs = false;
   size_t size = 0;
   uint8_t buffer[1024];
 
-  // Attempt writing file. After one failure, try to create parent directories if they don't already exist.
-  // This is done so that a stat syscall of the directory is not required on multiple file writes to a good dir,
-  // which is assumed to be a very common case.
-  while (!write_succeeded_) {
-    std::ofstream tmp_file_os(tmp_file_);
+  std::ofstream tmp_file_os(tmp_file_);
 
-    // Attempt to create directories in file's path
-    std::stringstream dir_path_stream;
+  do {
+    int read = stream->read(buffer, 1024);
 
-    if (try_mkdirs) {
-      size_t i = 0;
-      auto pos = tmp_file_.find('/');
-      while (pos != std::string::npos) {
-        auto dir_path_component = tmp_file_.substr(i, pos - i);
-        dir_path_stream << dir_path_component;
-        auto dir_path = dir_path_stream.str();
-
-        if (!dir_path_component.empty()) {
-          logger_->log_info("Attempting to create directory if it does not already exist: %s", dir_path);
-          mkdir(dir_path.c_str(), 0700);
-          dir_path_stream << '/';
-        }
-
-        i = pos + 1;
-        pos = tmp_file_.find('/', pos + 1);
-      }
+    if (read < 0) {
+      return -1;
     }
 
-    do {
-      int read = stream->read(buffer, 1024);
-
-      if (read < 0) {
-        return -1;
-      }
-
-      if (read == 0) {
-        break;
-      }
-
-      tmp_file_os.write(reinterpret_cast<char *>(buffer), read);
-      size += read;
-    } while (size < stream->getSize());
-
-    tmp_file_os.close();
-
-    if (tmp_file_os) {
-      write_succeeded_ = true;
-    } else {
-      if (try_mkdirs) {
-        // We already tried to create dirs, so give up
-        break;
-      } else {
-        if (try_mkdirs_) {
-          // This write failed; try creating the dir on another attempt
-          try_mkdirs = true;
-        } else {
-          // We've been instructed to not attempt to create dirs, so give up
-          break;
-        }
-      }
+    if (read == 0) {
+      break;
     }
+
+    tmp_file_os.write(reinterpret_cast<char *>(buffer), read);
+    size += read;
+  } while (size < stream->getSize());
+
+  tmp_file_os.close();
+
+  if (tmp_file_os) {
+    write_succeeded_ = true;
   }
 
   return size;

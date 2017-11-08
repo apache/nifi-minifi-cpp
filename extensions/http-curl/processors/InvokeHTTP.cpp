@@ -241,9 +241,9 @@ bool InvokeHTTP::emitFlowFile(const std::string &method) {
 }
 
 void InvokeHTTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
-  logger_->log_info("onTrigger InvokeHTTP with %s to %s", method_, url_);
-
   std::shared_ptr<FlowFileRecord> flowFile = std::static_pointer_cast<FlowFileRecord>(session->get());
+
+  std::string url = url_;
 
   if (flowFile == nullptr) {
     if (!emitFlowFile(method_)) {
@@ -254,12 +254,16 @@ void InvokeHTTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context,
       return;
     }
   } else {
-    logger_->log_info("InvokeHTTP -- Received flowfile ");
+    context->getProperty(URL.getName(), url, flowFile);
+    logger_->log_info("InvokeHTTP -- Received flowfile");
   }
+
+  logger_->log_info("onTrigger InvokeHTTP with %s to %s", method_, url);
+
   // create a transaction id
   std::string tx_id = generateId();
 
-  utils::HTTPClient client(url_, ssl_context_service_);
+  utils::HTTPClient client(url, ssl_context_service_);
 
   client.initialize(method_);
   client.setConnectionTimeout(connect_timeout_);
@@ -319,7 +323,7 @@ void InvokeHTTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context,
     flowFile->addAttribute(STATUS_CODE, std::to_string(http_code));
     if (response_headers.size() > 0)
       flowFile->addAttribute(STATUS_MESSAGE, response_headers.at(0));
-    flowFile->addAttribute(REQUEST_URL, url_);
+    flowFile->addAttribute(REQUEST_URL, url);
     flowFile->addAttribute(TRANSACTION_ID, tx_id);
 
     bool isSuccess = ((int32_t) (http_code / 100)) == 2;
@@ -342,7 +346,7 @@ void InvokeHTTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context,
       response_flow->addAttribute(STATUS_CODE, std::to_string(http_code));
       if (response_headers.size() > 0)
         flowFile->addAttribute(STATUS_MESSAGE, response_headers.at(0));
-      response_flow->addAttribute(REQUEST_URL, url_);
+      response_flow->addAttribute(REQUEST_URL, url);
       response_flow->addAttribute(TRANSACTION_ID, tx_id);
       io::DataStream stream((const uint8_t*) response_body.data(), response_body.size());
       // need an import from the data stream.
@@ -355,8 +359,12 @@ void InvokeHTTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context,
   }
 }
 
-void InvokeHTTP::route(std::shared_ptr<FlowFileRecord> &request, std::shared_ptr<FlowFileRecord> &response, const std::shared_ptr<core::ProcessSession> &session,
-                       const std::shared_ptr<core::ProcessContext> &context, bool isSuccess, int statusCode) {
+void InvokeHTTP::route(std::shared_ptr<FlowFileRecord> &request,
+                       std::shared_ptr<FlowFileRecord> &response,
+                       const std::shared_ptr<core::ProcessSession> &session,
+                       const std::shared_ptr<core::ProcessContext> &context,
+                       bool isSuccess,
+                       int statusCode) {
   // check if we should yield the processor
   if (!isSuccess && request == nullptr) {
     context->yield();
