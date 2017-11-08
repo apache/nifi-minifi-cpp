@@ -92,6 +92,7 @@ class PutFile : public core::Processor {
     bool write_succeeded_ = false;
     std::string tmp_file_;
     std::string dest_file_;
+    std::string dest_dir_;
     bool try_mkdirs_;
   };
 
@@ -101,13 +102,12 @@ class PutFile : public core::Processor {
    * @param filename from which to generate temporary write file path
    * @return
    */
-  std::string tmpWritePath(const std::string &filename) const;
+  std::string tmpWritePath(const std::string &filename, const std::string &directory) const;
 
  protected:
 
  private:
 
-  std::string directory_;
   std::string conflict_resolution_;
   bool try_mkdirs_ = true;
   int64_t max_dest_files_ = -1;
@@ -115,7 +115,8 @@ class PutFile : public core::Processor {
   bool putFile(core::ProcessSession *session,
                std::shared_ptr<FlowFileRecord> flowFile,
                const std::string &tmpFile,
-               const std::string &destFile);
+               const std::string &destFile,
+               const std::string &destDir);
   std::shared_ptr<logging::Logger> logger_;
   static std::shared_ptr<utils::IdGenerator> id_generator_;
 };
