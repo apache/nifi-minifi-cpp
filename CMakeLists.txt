@@ -147,6 +147,12 @@ if(ENABLE_PCAP)
 	createExtension(PCAP-EXTENSION "PCAP EXTENSIONS" "Enables libPCAP Functionality and the PacketCapture processor." "extensions/pcap" "${TEST_DIR}/pcap-tests")
 endif(ENABLE_PCAP)
 
+## Create LibRdKafka Extension
+option(ENABLE_LIBRDKAFKA "Enables the librdkafka extension." OFF)
+if (ENABLE_LIBRDKAFKA)
+	createExtension(RDKAFKA-EXTENSIONS "RDKAFKA EXTENSIONS" "This Enables librdkafka functionality including PutKafka" "extensions/librdkafka" "${TEST_DIR}/kafka-tests" "TRUE" "thirdparty/librdkafka-0.11.1")
+endif()
+
 ## Scripting extensions
 option(DISABLE_SCRIPTING "Disables the scripting extensions." OFF)
 if (NOT DISABLE_SCRIPTING)
@@ -193,6 +199,7 @@ set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
 set(CPACK_PACKAGE_FILE_NAME "${ASSEMBLY_BASE_NAME}")
 set(CPACK_BINARY_TGZ, "ON")
 set(CPACK_ARCHIVE_COMPONENT_INSTALL ON)
+set(CPACK_RDKAFKA_COMPONENT_INSTALL ON)
 set(CPACK_COMPONENTS_ALL bin)
 
 
