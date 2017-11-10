@@ -64,6 +64,7 @@ Perspectives of the role of MiNiFi should be from the perspective of the agent a
   * FocusArchive
   * UnfocusArchive
   * ManipulateArchive
+  * PutKafka 
 * Provenance events generation is supported and are persisted using RocksDB.
 
 ## System Requirements
@@ -103,6 +104,7 @@ DIRECTORY UNLESS YOU SPECIFY -DDISABLE_ROCKSDB=true WITH CMAKE ***
 * libcurl
 * libssl and libcrypto from openssl 
 * libarchive
+* librdkafka
 * Python 3 -- Required, unless Python support is disabled
 * Lua -- Optional, unless Lua support is enabled
 * libusb -- Optional, unless USB Camera support is enabled
@@ -212,6 +214,7 @@ $ sudo brew install libpcap
     - `-DDISABLE_ROCKSDB=1`
     - `-DDISABLE_LIBARCHIVE=1`
     - `-DDISABLE_USB_CAMERA=1`
+    - `-DDISABLE_LIBRDKAFKA=1`
     - `-DDISABLE_SCRIPTING=1`
     - `-DDISABLE_PYTHON_SCRIPTING=1`
     - `-DENABLE_LUA_SCRIPTING=1`
