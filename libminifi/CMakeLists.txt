@@ -89,6 +89,4 @@ add_library(minifi STATIC ${PROCESSOR_SOURCES})
 
 target_link_libraries(minifi core-minifi)
 
-set_property(TARGET minifi PROPERTY INTERPROCEDURAL_OPTIMIZATION True)
-
 SET (LIBMINIFI core-minifi PARENT_SCOPE)
