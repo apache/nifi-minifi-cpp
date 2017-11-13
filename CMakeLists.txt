@@ -146,18 +146,14 @@ endif(ENABLE_GPS)
 ## Scripting extensions
 option(DISABLE_SCRIPTING "Disables the scripting extensions." OFF)
 if (NOT DISABLE_SCRIPTING)
-createExtension(SCRIPTING-EXTENSIONS "SCRIPTING EXTENSIONS" "This enables scripting" "extensions/script" "${TEST_DIR}/script-tests")
+    createExtension(SCRIPTING-EXTENSIONS "SCRIPTING EXTENSIONS" "This enables scripting" "extensions/script" "${TEST_DIR}/script-tests")
 endif()
 
 ## USB camera extensions
-createExtension(DISABLE_USB_CAMERA
-				USB-CAMERA-EXTENSIONS
-				"USB CAMERA EXTENSIONS"
-				"This enables USB camera support"
-				"extensions/usb-camera"
-				"${TEST_DIR}/usb-camera-tests"
-				"TRUE"
-				"thirdparty/libuvc-0.0.6")
+option(ENABLE_USB_CAMERA "Enables USB camera support." OFF)
+if (ENABLE_USB_CAMERA)
+    createExtension(USB-CAMERA-EXTENSIONS "USB CAMERA EXTENSIONS" "This enables USB camera support" "extensions/usb-camera" "${TEST_DIR}/usb-camera-tests" "TRUE" "thirdparty/libuvc-0.0.6")
+endif()
 
 ## NOW WE CAN ADD LIBRARIES AND EXTENSIONS TO MAIN
 
