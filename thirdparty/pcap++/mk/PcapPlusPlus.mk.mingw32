@@ -1,0 +1,15 @@
+### WIN32 - MINGW32 ###
+
+# includes
+PCAPPP_INCLUDES += -I$(WINPCAP_HOME)/Include
+
+# libs dir
+PCAPPP_LIBS_DIR += -L$(WINPCAP_HOME)/lib -L$(MINGW_HOME)/lib
+
+# libs
+PCAPPP_LIBS += -lwpcap -lPacket -Wl,-Bstatic -lpthread -Wl,-Bdynamic -lws2_32 -liphlpapi
+
+# flags
+PCAPPP_BUILD_FLAGS += -static-libgcc -static-libstdc++
+
+

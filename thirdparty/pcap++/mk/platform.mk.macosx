@@ -1,0 +1,23 @@
+MAC_OS_X := 1
+
+BIN_EXT :=
+
+LIB_PREFIX := lib
+
+LIB_EXT := .a
+
+G++ := g++
+
+GCC := gcc
+
+AR := ar
+
+RM := rm
+
+CP := cp
+
+MKDIR := mkdir
+
+INSTALL_SCRIPT := install.sh
+
+UNINSTALL_SCRIPT := uninstall.sh

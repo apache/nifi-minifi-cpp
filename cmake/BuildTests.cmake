@@ -60,7 +60,6 @@ function(createTests testName)
     target_link_libraries(${testName} ${Boost_FILESYSTEM_LIBRARY})
 endfunction()
 
-
 enable_testing(test)
 
 SET(SPD_LIB spd_lib)
@@ -104,7 +103,6 @@ message("-- Finished building ${INT_TEST_COUNT} integration test file(s)...")
 
 get_property(extensions GLOBAL PROPERTY EXTENSION-TESTS)
 foreach(EXTENSION ${extensions})
-	message("Adding ${EXTENSION} ? ")
 	add_subdirectory(${EXTENSION})
 endforeach()
 

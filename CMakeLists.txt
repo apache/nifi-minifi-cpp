@@ -143,11 +143,17 @@ if (ENABLE_GPS)
 	createExtension(GPS-EXTENSION "GPS EXTENSIONS" "Enables LibGPS Functionality and the GetGPS processor." "extensions/gps" "${TEST_DIR}/gps-tests")
 endif(ENABLE_GPS)
 
+option(ENABLE_PCAP "Enables the PCAP extension." OFF)
+if(ENABLE_PCAP)
+	createExtension(PCAP-EXTENSION "PCAP EXTENSIONS" "Enables libPCAP Functionality and the PacketCapture processor." "extensions/pcap" "${TEST_DIR}/pcap-tests")
+endif(ENABLE_PCAP)
+
 ## Scripting extensions
 option(DISABLE_SCRIPTING "Disables the scripting extensions." OFF)
 if (NOT DISABLE_SCRIPTING)
     createExtension(SCRIPTING-EXTENSIONS "SCRIPTING EXTENSIONS" "This enables scripting" "extensions/script" "${TEST_DIR}/script-tests")
 endif()
+
 
 ## USB camera extensions
 option(ENABLE_USB_CAMERA "Enables USB camera support." OFF)
