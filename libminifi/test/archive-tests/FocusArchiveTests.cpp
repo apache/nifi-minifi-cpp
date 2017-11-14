@@ -26,6 +26,7 @@
 #include <utility>
 
 #include "../TestBase.h"
+#include "ArchiveTests.h"
 #include "processors/GetFile.h"
 #include "processors/PutFile.h"
 #include "FocusArchiveEntry.h"
@@ -33,20 +34,6 @@
 
 #include <archive.h>
 #include <archive_entry.h>
-
-typedef struct {
-    const char* content;
-    std::string name;
-    mode_t type;
-    mode_t perms;
-    uid_t uid;
-    gid_t gid;
-    time_t mtime;
-    uint32_t mtime_nsec;
-    size_t size;
-} TestArchiveEntry;
-
-typedef std::map<std::string, TestArchiveEntry> TAE_MAP_T;
 
 const char TEST_ARCHIVE_NAME[] = "focus_test_archive.tar";
 const int NUM_FILES = 2;
@@ -56,141 +43,6 @@ const char* FILE_CONTENT[NUM_FILES] = {"Test file 1\n", "Test file 2\n"};
 const char* FOCUSED_FILE = FILE_NAMES[0];
 const char* FOCUSED_CONTENT = FILE_CONTENT[0];
 
-TAE_MAP_T build_test_archive_map() {
-    TAE_MAP_T test_entries;
-
-    for (int i = 0; i < NUM_FILES; i++) {
-        std::string name {FILE_NAMES[i]};
-        TestArchiveEntry entry;
-
-        entry.name = name;
-        entry.content = FILE_CONTENT[i];
-        entry.size = strlen(FILE_CONTENT[i]);
-        entry.type = AE_IFREG;
-        entry.perms = 0765;
-        entry.uid = 12; entry.gid = 34;
-        entry.mtime = time(nullptr);
-        entry.mtime_nsec = 0;
-
-        test_entries[name] = entry;
-    }
-
-    return test_entries;
-}
-
-void build_test_archive(std::string path, TAE_MAP_T entries) {
-    std::cout << "Creating " << path << std::endl;
-    archive * test_archive = archive_write_new();
-
-    archive_write_set_format_ustar(test_archive);
-    archive_write_open_filename(test_archive, path.c_str());
-    struct archive_entry* entry = archive_entry_new();
-
-    for (auto &kvp : entries) {
-        std::string name = kvp.first;
-        TestArchiveEntry test_entry = kvp.second;
-
-        std::cout << "Adding entry: " << name << std::endl;
-
-        archive_entry_set_filetype(entry, test_entry.type);
-        archive_entry_set_pathname(entry, test_entry.name.c_str());
-        archive_entry_set_size(entry, test_entry.size);
-        archive_entry_set_perm(entry, test_entry.perms);
-        archive_entry_set_uid(entry, test_entry.uid);
-        archive_entry_set_gid(entry, test_entry.gid);
-        archive_entry_set_mtime(entry, test_entry.mtime, test_entry.mtime_nsec);
-
-        archive_write_header(test_archive, entry);
-        archive_write_data(test_archive, test_entry.content, test_entry.size);
-
-        archive_entry_clear(entry);
-    }
-
-    archive_entry_free(entry);
-    archive_write_close(test_archive);
-}
-
-bool check_archive_contents(std::string path, TAE_MAP_T entries) {
-    std::set<std::string> read_names;
-    std::set<std::string> extra_names;
-    bool ok = true;
-    struct archive *a = archive_read_new();
-    struct archive_entry *entry;
-
-    archive_read_support_format_all(a);
-    archive_read_support_filter_all(a);
-
-    int r = archive_read_open_filename(a, path.c_str(), 16384);
-
-    if (r != ARCHIVE_OK) {
-        std::cout << "Unable to open archive " << path << " for checking!" << std::endl;
-        return false;
-    }
-
-    while (archive_read_next_header(a, &entry) == ARCHIVE_OK) {
-        std::string name {archive_entry_pathname(entry)};
-        auto it = entries.find(name);
-        if (it == entries.end()) {
-            extra_names.insert(name);
-        } else {
-            read_names.insert(name);
-            TestArchiveEntry test_entry = it->second;
-            size_t size = archive_entry_size(entry);
-
-            std::cout << "Checking archive entry: " << name << std::endl;
-
-            REQUIRE(size == test_entry.size);
-
-            if (size > 0) {
-                int rlen, nlen = 0;
-                const char* buf[size];
-                bool read_ok = true;
-
-                for (;;) {
-                  rlen = archive_read_data(a, buf, size);
-                  nlen += rlen;
-                  if (rlen == 0) break;
-                  if (rlen < 0) {
-                    std::cout << "FAIL: Negative size read?" << std::endl;
-                    read_ok = false;
-                    break;
-                  }
-                }
-
-                if (read_ok) {
-                    REQUIRE(nlen == size);
-                    REQUIRE(memcmp(buf, test_entry.content, size) == 0);
-                }
-            }
-
-            REQUIRE(archive_entry_filetype(entry) == test_entry.type);
-            REQUIRE(archive_entry_uid(entry) == test_entry.uid);
-            REQUIRE(archive_entry_gid(entry) == test_entry.gid);
-            REQUIRE(archive_entry_perm(entry) == test_entry.perms);
-            REQUIRE(archive_entry_mtime(entry) == test_entry.mtime);
-        }
-    }
-
-    archive_read_close(a);
-    archive_read_free(a);
-
-    if (!extra_names.empty()) {
-        ok = false;
-        std::cout << "Extra files found: ";
-        for (std::string filename : extra_names) std::cout << filename << " ";
-        std::cout << std::endl;
-    }
-
-    REQUIRE(extra_names.empty());
-
-    std::set<std::string> test_file_entries;
-    std::transform(entries.begin(), entries.end(),
-                   std::inserter(test_file_entries, test_file_entries.end()),
-                   [](std::pair<std::string, TestArchiveEntry> p){ return p.first; });
-    REQUIRE(read_names == test_file_entries);
-
-    return ok;
-}
 
 TEST_CASE("Test Creation of FocusArchiveEntry", "[getfileCreate]") {
   TestController testController;
@@ -252,7 +104,7 @@ TEST_CASE("FocusArchive", "[testFocusArchive]") {
     ss1 << dir1 << "/" << TEST_ARCHIVE_NAME;
     std::string archive_path_1 = ss1.str();
 
-    TAE_MAP_T test_archive_map = build_test_archive_map();
+    TAE_MAP_T test_archive_map = build_test_archive_map(NUM_FILES, FILE_NAMES, FILE_CONTENT);
     build_test_archive(archive_path_1, test_archive_map);
 
     REQUIRE(check_archive_contents(archive_path_1, test_archive_map));

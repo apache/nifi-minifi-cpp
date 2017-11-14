@@ -22,6 +22,7 @@
 #include "CompressContent.h"
 #include "FocusArchiveEntry.h"
 #include "UnfocusArchiveEntry.h"
+#include "ManipulateArchive.h"
 #include "core/ClassLoader.h"
 
 class __attribute__((visibility("default"))) ArchiveFactory : public core::ObjectFactory {
@@ -51,6 +52,7 @@ class __attribute__((visibility("default"))) ArchiveFactory : public core::Objec
     class_names.push_back("CompressContent");
     class_names.push_back("FocusArchiveEntry");
     class_names.push_back("UnfocusArchiveEntry");
+    class_names.push_back("ManipulateArchive");
     return class_names;
   }
 
@@ -63,6 +65,8 @@ class __attribute__((visibility("default"))) ArchiveFactory : public core::Objec
       return std::unique_ptr<ObjectFactory>(new core::DefautObjectFactory<minifi::processors::FocusArchiveEntry>());
     } else if (utils::StringUtils::equalsIgnoreCase(class_name,"UnfocusArchiveEntry")) {
       return std::unique_ptr<ObjectFactory>(new core::DefautObjectFactory<minifi::processors::UnfocusArchiveEntry>());
+    } else if (utils::StringUtils::equalsIgnoreCase(class_name,"ManipulateArchive")) {
+      return std::unique_ptr<ObjectFactory>(new core::DefautObjectFactory<minifi::processors::ManipulateArchive>());
     } else {
       return nullptr;
     }
