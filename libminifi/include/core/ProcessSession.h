@@ -74,82 +74,43 @@ class ProcessSession {
   // Create a new UUID FlowFile with no content resource claim and without parent
   std::shared_ptr<core::FlowFile> create();
   // Create a new UUID FlowFile with no content resource claim and inherit all attributes from parent
-  std::shared_ptr<core::FlowFile> create(std::shared_ptr<core::FlowFile> &&parent);
+  //std::shared_ptr<core::FlowFile> create(std::shared_ptr<core::FlowFile> &&parent);
   // Create a new UUID FlowFile with no content resource claim and inherit all attributes from parent
-  std::shared_ptr<core::FlowFile> create(std::shared_ptr<core::FlowFile> &parent) {
-    std::map<std::string, std::string> empty;
-      std::shared_ptr<core::FlowFile> record = std::make_shared<FlowFileRecord>(process_context_->getFlowFileRepository(), process_context_->getContentRepository(), empty);
-
-      if (record) {
-        _addedFlowFiles[record->getUUIDStr()] = record;
-        logger_->log_debug("Create FlowFile with UUID %s", record->getUUIDStr().c_str());
-      }
-
-      if (record) {
-        // Copy attributes
-        std::map<std::string, std::string> parentAttributes = parent->getAttributes();
-        std::map<std::string, std::string>::iterator it;
-        for (it = parentAttributes.begin(); it != parentAttributes.end(); it++) {
-          if (it->first == FlowAttributeKey(ALTERNATE_IDENTIFIER) || it->first == FlowAttributeKey(DISCARD_REASON) || it->first == FlowAttributeKey(UUID))
-            // Do not copy special attributes from parent
-            continue;
-          record->setAttribute(it->first, it->second);
-        }
-        record->setLineageStartDate(parent->getlineageStartDate());
-        record->setLineageIdentifiers(parent->getlineageIdentifiers());
-        parent->getlineageIdentifiers().insert(parent->getUUIDStr());
-      }
-      return record;
-  }
+  std::shared_ptr<core::FlowFile> create(const std::shared_ptr<core::FlowFile> &parent);
   // Add a FlowFile to the session
-  void add(std::shared_ptr<core::FlowFile> &flow);
+  void add(const std::shared_ptr<core::FlowFile> &flow);
 // Clone a new UUID FlowFile from parent both for content resource claim and attributes
-  std::shared_ptr<core::FlowFile> clone(std::shared_ptr<core::FlowFile> &parent);
+  std::shared_ptr<core::FlowFile> clone(const std::shared_ptr<core::FlowFile> &parent);
   // Clone a new UUID FlowFile from parent for attributes and sub set of parent content resource claim
-  std::shared_ptr<core::FlowFile> clone(std::shared_ptr<core::FlowFile> &parent, int64_t offset, int64_t size);
+  std::shared_ptr<core::FlowFile> clone(const std::shared_ptr<core::FlowFile> &parent, int64_t offset, int64_t size);
   // Duplicate a FlowFile with the same UUID and all attributes and content resource claim for the roll back of the session
-  std::shared_ptr<core::FlowFile> duplicate(std::shared_ptr<core::FlowFile> &original);
+  std::shared_ptr<core::FlowFile> duplicate(const std::shared_ptr<core::FlowFile> &original);
   // Transfer the FlowFile to the relationship
-  void transfer(std::shared_ptr<core::FlowFile> &flow, Relationship relationship);
-  void transfer(std::shared_ptr<core::FlowFile> &&flow, Relationship relationship);
+  void transfer(const std::shared_ptr<core::FlowFile> &flow, Relationship relationship);
   // Put Attribute
-  void putAttribute(std::shared_ptr<core::FlowFile> &flow, std::string key, std::string value);
-  void putAttribute(std::shared_ptr<core::FlowFile> &&flow, std::string key, std::string value);
+  void putAttribute(const std::shared_ptr<core::FlowFile> &flow, std::string key, std::string value);
   // Remove Attribute
-  void removeAttribute(std::shared_ptr<core::FlowFile> &flow, std::string key);
-  void removeAttribute(std::shared_ptr<core::FlowFile> &&flow, std::string key);
+  void removeAttribute(const std::shared_ptr<core::FlowFile> &flow, std::string key);
   // Remove Flow File
-  void remove(std::shared_ptr<core::FlowFile> &flow);
-  void remove(std::shared_ptr<core::FlowFile> &&flow);
+  void remove(const std::shared_ptr<core::FlowFile> &flow);
   // Execute the given read callback against the content
-  void read(std::shared_ptr<core::FlowFile> &flow, InputStreamCallback *callback);
-  void read(std::shared_ptr<core::FlowFile> &&flow, InputStreamCallback *callback);
+  void read(const std::shared_ptr<core::FlowFile> &flow, InputStreamCallback *callback);
   // Execute the given write callback against the content
-  void write(std::shared_ptr<core::FlowFile> &flow, OutputStreamCallback *callback);
-  void write(std::shared_ptr<core::FlowFile> &&flow, OutputStreamCallback *callback);
+  void write(const std::shared_ptr<core::FlowFile> &flow, OutputStreamCallback *callback);
   // Execute the given write/append callback against the content
-  void append(std::shared_ptr<core::FlowFile> &flow, OutputStreamCallback *callback);
-  void append(std::shared_ptr<core::FlowFile> &&flow, OutputStreamCallback *callback);
+  void append(const std::shared_ptr<core::FlowFile> &flow, OutputStreamCallback *callback);
   // Penalize the flow
-  void penalize(std::shared_ptr<core::FlowFile> &flow);
-  void penalize(std::shared_ptr<core::FlowFile> &&flow);
+  void penalize(const std::shared_ptr<core::FlowFile> &flow);
 
   /**
    * Imports a file from the data stream
    * @param stream incoming data stream that contains the data to store into a file
    * @param flow flow file
    */
-  void importFrom(io::DataStream &stream, std::shared_ptr<core::FlowFile> &&flow);
+  void importFrom(io::DataStream &stream, const std::shared_ptr<core::FlowFile> &flow);
   // import from the data source.
-  void import(std::string source, std::shared_ptr<core::FlowFile> &flow,
-  bool keepSource = true,
-              uint64_t offset = 0);
-  void import(std::string source, std::shared_ptr<core::FlowFile> &&flow,
-  bool keepSource = true,
-              uint64_t offset = 0);
-  void import(std::string source, std::vector<std::shared_ptr<FlowFileRecord>> &flows,
-  bool keepSource,
-              uint64_t offset, char inputDelimiter);
+  void import(std::string source, const std::shared_ptr<core::FlowFile> &flow, bool keepSource = true, uint64_t offset = 0);
+  void import(std::string source, std::vector<std::shared_ptr<FlowFileRecord>> &flows, bool keepSource, uint64_t offset, char inputDelimiter);
 
   /**
    * Exports the data stream to a file
@@ -157,19 +118,16 @@ class ProcessSession {
    * @param flow flow file
    * @param bool whether or not to keep the content in the flow file
    */
-  bool exportContent(const std::string &destination,
-                     std::shared_ptr<core::FlowFile> &flow,
-                     bool keepContent);
+  bool exportContent(const std::string &destination, const std::shared_ptr<core::FlowFile> &flow,
+  bool keepContent);
 
-  bool exportContent(const std::string &destination,
-                     const std::string &tmpFileName,
-                     std::shared_ptr<core::FlowFile> &flow,
-                     bool keepContent);
+  bool exportContent(const std::string &destination, const std::string &tmpFileName, const std::shared_ptr<core::FlowFile> &flow,
+  bool keepContent);
 
   // Stash the content to a key
-  void stash(const std::string &key, std::shared_ptr<core::FlowFile> flow);
-	// Restore content previously stashed to a key
-  void restore(const std::string &key, std::shared_ptr<core::FlowFile> flow);
+  void stash(const std::string &key, const std::shared_ptr<core::FlowFile> &flow);
+  // Restore content previously stashed to a key
+  void restore(const std::string &key, const std::shared_ptr<core::FlowFile> &flow);
 
 // Prevent default copy constructor and assignment operation
 // Only support pass by reference or pointer

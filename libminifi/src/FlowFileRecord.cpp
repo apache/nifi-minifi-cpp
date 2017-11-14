@@ -98,12 +98,15 @@ FlowFileRecord::FlowFileRecord(std::shared_ptr<core::Repository> flow_repository
 }
 
 FlowFileRecord::~FlowFileRecord() {
+  logger_->log_debug("Destroying flow file record,  UUID %s", uuidStr_.c_str());
   if (!snapshot_)
     logger_->log_debug("Delete FlowFile UUID %s", uuidStr_.c_str());
   else
     logger_->log_debug("Delete SnapShot FlowFile UUID %s", uuidStr_.c_str());
   if (claim_) {
     releaseClaim(claim_);
+  } else {
+    logger_->log_debug("Claim is null ptr for %s", uuidStr_);
   }
 
   // Disown stash claims
@@ -113,16 +116,17 @@ FlowFileRecord::~FlowFileRecord() {
 }
 
 void FlowFileRecord::releaseClaim(std::shared_ptr<ResourceClaim> claim) {
-    // Decrease the flow file record owned count for the resource claim
-    claim_->decreaseFlowFileRecordOwnedCount();
-    std::string value;
-    if (claim_->getFlowFileRecordOwnedCount() <= 0) {
-      // we cannot rely on the stored variable here since we
-      if (flow_repository_ != nullptr && !flow_repository_->Get(uuidStr_, value)) {
-        logger_->log_debug("Delete Resource Claim %s", claim_->getContentFullPath().c_str());
-        content_repo_->remove(claim_);
-      }
+  // Decrease the flow file record owned count for the resource claim
+  claim_->decreaseFlowFileRecordOwnedCount();
+  std::string value;
+  logger_->log_debug("Delete Resource Claim %s, %s, attempt %d", getUUIDStr(), claim_->getContentFullPath().c_str(), claim_->getFlowFileRecordOwnedCount());
+  if (claim_->getFlowFileRecordOwnedCount() <= 0) {
+    // we cannot rely on the stored variable here since we aren't guaranteed atomicity
+    if (flow_repository_ != nullptr && !flow_repository_->Get(uuidStr_, value)) {
+      logger_->log_debug("Delete Resource Claim %s", claim_->getContentFullPath().c_str());
+      content_repo_->remove(claim_);
     }
+  }
 }
 
 bool FlowFileRecord::addKeyedAttribute(FlowAttribute key, std::string value) {

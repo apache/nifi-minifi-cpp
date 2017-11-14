@@ -51,6 +51,7 @@ FlowFile::FlowFile()
 }
 
 FlowFile::~FlowFile() {
+  logger_->log_debug("Deleteting %s", getUUIDStr());
 }
 
 FlowFile& FlowFile::operator=(const FlowFile& other) {
