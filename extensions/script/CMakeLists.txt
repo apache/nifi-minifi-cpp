@@ -92,11 +92,6 @@ endif()
 find_package(ZLIB REQUIRED)
 include_directories(${ZLIB_INCLUDE_DIRS})
 target_link_libraries (minifi-script-extensions ${ZLIB_LIBRARIES})
-find_package(Boost COMPONENTS system filesystem REQUIRED)
-include_directories(${Boost_INCLUDE_DIRS})
-target_link_libraries(minifi-script-extensions ${Boost_SYSTEM_LIBRARY})
-target_link_libraries(minifi-script-extensions ${Boost_FILESYSTEM_LIBRARY})
-
 if (WIN32)
     set_target_properties(minifi-script-extensions PROPERTIES
         LINK_FLAGS "/WHOLEARCHIVE"

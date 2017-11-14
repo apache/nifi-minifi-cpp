@@ -26,11 +26,9 @@
 #include <string>
 #include <set>
 
-#include <boost/filesystem.hpp>
-
 #include <archive.h>
 #include <archive_entry.h>
-
+#include "utils/file/FileManager.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "json/json.h"
@@ -60,134 +58,128 @@ void UnfocusArchiveEntry::initialize() {
   setSupportedRelationships(relationships);
 }
 
-void UnfocusArchiveEntry::onTrigger(
-    core::ProcessContext *context,
-    core::ProcessSession *session) {
+void UnfocusArchiveEntry::onTrigger(core::ProcessContext *context, core::ProcessSession *session) {
 
-    auto flowFile = session->get();
+  auto flowFile = session->get();
 
-    if (!flowFile) {
-      return;
-    }
+  if (!flowFile) {
+    return;
+  }
 
-    // Get lens stack from attribute
-    ArchiveMetadata lensArchiveMetadata;
+  fileutils::FileManager file_man;
 
-    Json::Value lensStack;
-    Json::Reader reader;
+  // Get lens stack from attribute
+  ArchiveMetadata lensArchiveMetadata;
 
-    std::string existingLensStack;
+  Json::Value lensStack;
+  Json::Reader reader;
 
-    if (flowFile->getAttribute("lens.archive.stack", existingLensStack)) {
-      logger_->log_info("UnfocusArchiveEntry loading existing lens context");
+  std::string existingLensStack;
 
-      // TODO(calebj) handle any exceptions that might arise from working with JSON data
-      if (!reader.parse(existingLensStack, lensStack)) {
-        logger_->log_error("UnfocusArchiveEntry JSON parse error: %s",
-            reader.getFormattedErrorMessages());
-        context->yield();
-        return;
-      }
+  if (flowFile->getAttribute("lens.archive.stack", existingLensStack)) {
+    logger_->log_info("UnfocusArchiveEntry loading existing lens context");
 
-    } else {
-      logger_->log_error("UnfocusArchiveEntry lens metadata not found");
+    // TODO(calebj) handle any exceptions that might arise from working with JSON data
+    if (!reader.parse(existingLensStack, lensStack)) {
+      logger_->log_error("UnfocusArchiveEntry JSON parse error: %s", reader.getFormattedErrorMessages());
       context->yield();
       return;
     }
 
-    Json::Value metadataDoc = lensStack[lensStack.size() - 1];
-    lensStack.resize(lensStack.size() - 1);
+  } else {
+    logger_->log_error("UnfocusArchiveEntry lens metadata not found");
+    context->yield();
+    return;
+  }
 
-    lensArchiveMetadata.archiveFormatName.assign(
-        metadataDoc["archive_format_name"].asString());
-    lensArchiveMetadata.archiveFormat =
-        metadataDoc["archive_format"].asUInt64();
-    lensArchiveMetadata.focusedEntry =
-        metadataDoc["focused_entry"].asString();
+  Json::Value metadataDoc = lensStack[lensStack.size() - 1];
+  lensStack.resize(lensStack.size() - 1);
 
-    for (auto itr = metadataDoc["archive_structure"].begin();
-         itr != metadataDoc["archive_structure"].end(); ++itr) {
-      const auto &entryVal = *itr;
-      ArchiveEntryMetadata metadata;
-      metadata.tmpFileName = boost::filesystem::unique_path("/tmp/%%%%-%%%%-%%%%-%%%%").native();
-      metadata.entryName.assign(entryVal["entry_name"].asString());
-      metadata.entryType = entryVal["entry_type"].asUInt64();
-      metadata.entryPerm = entryVal["entry_perm"].asUInt64();
-      metadata.entrySize = entryVal["entry_size"].asUInt64();
-      metadata.entryUID = entryVal["entry_uid"].asUInt64();
-      metadata.entryGID = entryVal["entry_gid"].asUInt64();
-      metadata.entryMTime = entryVal["entry_mtime"].asUInt64();
-      metadata.entryMTimeNsec = entryVal["entry_mtime_nsec"].asInt64();
+  lensArchiveMetadata.archiveFormatName.assign(metadataDoc["archive_format_name"].asString());
+  lensArchiveMetadata.archiveFormat = metadataDoc["archive_format"].asUInt64();
+  lensArchiveMetadata.focusedEntry = metadataDoc["focused_entry"].asString();
 
-      if (metadata.entryType == AE_IFREG)
-          metadata.stashKey.assign(entryVal["stash_key"].asString());
+  for (auto itr = metadataDoc["archive_structure"].begin(); itr != metadataDoc["archive_structure"].end(); ++itr) {
+    const auto &entryVal = *itr;
+    ArchiveEntryMetadata metadata;
+    metadata.tmpFileName = file_man.unique_file("/tmp/", true);
+    metadata.entryName.assign(entryVal["entry_name"].asString());
+    metadata.entryType = entryVal["entry_type"].asUInt64();
+    metadata.entryPerm = entryVal["entry_perm"].asUInt64();
+    metadata.entrySize = entryVal["entry_size"].asUInt64();
+    metadata.entryUID = entryVal["entry_uid"].asUInt64();
+    metadata.entryGID = entryVal["entry_gid"].asUInt64();
+    metadata.entryMTime = entryVal["entry_mtime"].asUInt64();
+    metadata.entryMTimeNsec = entryVal["entry_mtime_nsec"].asInt64();
 
-      lensArchiveMetadata.entryMetadata.push_back(metadata);
+    if (metadata.entryType == AE_IFREG)
+      metadata.stashKey.assign(entryVal["stash_key"].asString());
+
+    lensArchiveMetadata.entryMetadata.push_back(metadata);
+  }
+
+  // Export focused entry to tmp file
+  for (const auto &entry : lensArchiveMetadata.entryMetadata) {
+    if (entry.entryType != AE_IFREG || entry.entrySize == 0) {
+      continue;
     }
 
-    // Export focused entry to tmp file
-    for (const auto &entry : lensArchiveMetadata.entryMetadata) {
-      if (entry.entryType != AE_IFREG || entry.entrySize == 0) {
-        continue;
-      }
-
-      if (entry.entryName == lensArchiveMetadata.focusedEntry) {
-        logger_->log_debug("UnfocusArchiveEntry exporting focused entry to %s", entry.tmpFileName);
-        session->exportContent(entry.tmpFileName, flowFile, false);
-      }
-    }
-
-    // Restore/export entries from stash, one-by-one, to tmp files
-    for (const auto &entry : lensArchiveMetadata.entryMetadata) {
-      if (entry.entryType != AE_IFREG || entry.entrySize == 0) {
-        continue;
-      }
-
-      if (entry.entryName == lensArchiveMetadata.focusedEntry) {
-        continue;
-      }
-
-      logger_->log_debug("UnfocusArchiveEntry exporting entry %s to %s", entry.stashKey, entry.tmpFileName);
-      session->restore(entry.stashKey, flowFile);
-      // TODO(calebj) implement copy export/don't worry about multiple claims/optimal efficiency for *now*
+    if (entry.entryName == lensArchiveMetadata.focusedEntry) {
+      logger_->log_debug("UnfocusArchiveEntry exporting focused entry to %s", entry.tmpFileName);
       session->exportContent(entry.tmpFileName, flowFile, false);
     }
+  }
 
-    // Create archive by restoring each entry in the archive from tmp files
-    WriteCallback cb(&lensArchiveMetadata);
-    session->write(flowFile, &cb);
-
-    // Set new/updated lens stack to attribute (already 'popped' with resize())
-    Json::FastWriter writer;
-    std::string stackStr = writer.write(lensStack);
-
-    if (!flowFile->updateAttribute("lens.archive.stack", stackStr)) {
-      flowFile->addAttribute("lens.archive.stack", stackStr);
+  // Restore/export entries from stash, one-by-one, to tmp files
+  for (const auto &entry : lensArchiveMetadata.entryMetadata) {
+    if (entry.entryType != AE_IFREG || entry.entrySize == 0) {
+      continue;
     }
 
-    // Update filename to that of original archive
-    Json::Value archiveName = metadataDoc.get("archive_name", Json::Value(Json::nullValue));
-
-    if (archiveName.isNull()) {
-        flowFile->removeAttribute("filename");
-        flowFile->removeAttribute("path");
-        flowFile->removeAttribute("absolute.path");
-    } else {
-        std::string abs_path = archiveName.asString();
-        std::size_t found = abs_path.find_last_of("/\\");
-        std::string path = abs_path.substr(0, found);
-        std::string name = abs_path.substr(found + 1);
-        set_or_update_attr(flowFile, "filename", name);
-        set_or_update_attr(flowFile, "path", path);
-        set_or_update_attr(flowFile, "absolute.path", abs_path);
+    if (entry.entryName == lensArchiveMetadata.focusedEntry) {
+      continue;
     }
 
-    // Transfer to the relationship
-    session->transfer(flowFile, Success);
+    logger_->log_debug("UnfocusArchiveEntry exporting entry %s to %s", entry.stashKey, entry.tmpFileName);
+    session->restore(entry.stashKey, flowFile);
+    // TODO(calebj) implement copy export/don't worry about multiple claims/optimal efficiency for *now*
+    session->exportContent(entry.tmpFileName, flowFile, false);
+  }
+
+  // Create archive by restoring each entry in the archive from tmp files
+  WriteCallback cb(&lensArchiveMetadata);
+  session->write(flowFile, &cb);
+
+  // Set new/updated lens stack to attribute (already 'popped' with resize())
+  Json::FastWriter writer;
+  std::string stackStr = writer.write(lensStack);
+
+  if (!flowFile->updateAttribute("lens.archive.stack", stackStr)) {
+    flowFile->addAttribute("lens.archive.stack", stackStr);
+  }
+
+  // Update filename to that of original archive
+  Json::Value archiveName = metadataDoc.get("archive_name", Json::Value(Json::nullValue));
+
+  if (archiveName.isNull()) {
+    flowFile->removeAttribute("filename");
+    flowFile->removeAttribute("path");
+    flowFile->removeAttribute("absolute.path");
+  } else {
+    std::string abs_path = archiveName.asString();
+    std::size_t found = abs_path.find_last_of("/\\");
+    std::string path = abs_path.substr(0, found);
+    std::string name = abs_path.substr(found + 1);
+    set_or_update_attr(flowFile, "filename", name);
+    set_or_update_attr(flowFile, "path", path);
+    set_or_update_attr(flowFile, "absolute.path", abs_path);
+  }
+
+  // Transfer to the relationship
+  session->transfer(flowFile, Success);
 }
 
-UnfocusArchiveEntry::WriteCallback::WriteCallback(
-    ArchiveMetadata *archiveMetadata) {
+UnfocusArchiveEntry::WriteCallback::WriteCallback(ArchiveMetadata *archiveMetadata) {
   logger_ = logging::LoggerFactory<UnfocusArchiveEntry>::getLogger();
   _archiveMetadata = archiveMetadata;
 }
@@ -219,17 +211,15 @@ int64_t UnfocusArchiveEntry::WriteCallback::process(std::shared_ptr<io::BaseStre
   struct archive_entry* entry;
 
   for (const auto &entryMetadata : _archiveMetadata->entryMetadata) {
-       entry = archive_entry_new();
-    logger_->log_info("UnfocusArchiveEntry writing entry %s",
-        entryMetadata.entryName.c_str());
-
+    entry = archive_entry_new();
+    logger_->log_info("UnfocusArchiveEntry writing entry %s", entryMetadata.entryName.c_str());
 
     if (entryMetadata.entryType == AE_IFREG && entryMetadata.entrySize > 0) {
-        size_t stat_ok = stat(entryMetadata.tmpFileName.c_str(), &st);
-        if (stat_ok != 0) {
-          logger_->log_error("Error statting %s: %d", entryMetadata.tmpFileName.c_str(), stat_ok);
-        }
-        archive_entry_copy_stat(entry, &st);
+      size_t stat_ok = stat(entryMetadata.tmpFileName.c_str(), &st);
+      if (stat_ok != 0) {
+        logger_->log_error("Error statting %s: %d", entryMetadata.tmpFileName, stat_ok);
+      }
+      archive_entry_copy_stat(entry, &st);
     }
 
     archive_entry_set_filetype(entry, entryMetadata.entryType);
@@ -240,28 +230,17 @@ int64_t UnfocusArchiveEntry::WriteCallback::process(std::shared_ptr<io::BaseStre
     archive_entry_set_gid(entry, entryMetadata.entryGID);
     archive_entry_set_mtime(entry, entryMetadata.entryMTime, entryMetadata.entryMTimeNsec);
 
-    logger_->log_info("Writing %s with type %d, perms %d, size %d, uid %d, gid %d, mtime %d,%d",
-                      entryMetadata.entryName.c_str(),
-                      entryMetadata.entryType,
-                      entryMetadata.entryPerm,
-                      entryMetadata.entrySize,
-                      entryMetadata.entryUID,
-                      entryMetadata.entryGID,
-                      entryMetadata.entryMTime,
-                      entryMetadata.entryMTimeNsec);
+    logger_->log_info("Writing %s with type %d, perms %d, size %d, uid %d, gid %d, mtime %d,%d", entryMetadata.entryName.c_str(), entryMetadata.entryType, entryMetadata.entryPerm,
+                      entryMetadata.entrySize, entryMetadata.entryUID, entryMetadata.entryGID, entryMetadata.entryMTime, entryMetadata.entryMTimeNsec);
 
     archive_write_header(outputArchive, entry);
 
     // If entry is regular file, copy entry contents
     if (entryMetadata.entryType == AE_IFREG && entryMetadata.entrySize > 0) {
       logger_->log_info("UnfocusArchiveEntry writing %d bytes of "
-          "data from tmp file %s to archive entry %s",
-          st.st_size,
-          entryMetadata.tmpFileName.c_str(),
-          entryMetadata.entryName.c_str());
-      std::ifstream ifs(
-          entryMetadata.tmpFileName,
-          std::ifstream::in | std::ios::binary);
+                        "data from tmp file %s to archive entry %s",
+                        st.st_size, entryMetadata.tmpFileName.c_str(), entryMetadata.entryName.c_str());
+      std::ifstream ifs(entryMetadata.tmpFileName, std::ifstream::in | std::ios::binary);
 
       while (ifs.good()) {
         ifs.read(buf, sizeof(buf));
@@ -269,9 +248,8 @@ int64_t UnfocusArchiveEntry::WriteCallback::process(std::shared_ptr<io::BaseStre
         int64_t written = archive_write_data(outputArchive, buf, len);
         if (written < 0) {
           logger_->log_error("UnfocusArchiveEntry failed to write data to "
-              "archive entry %s due to error: %s",
-              entryMetadata.entryName.c_str(),
-              archive_error_string(outputArchive));
+                             "archive entry %s due to error: %s",
+                             entryMetadata.entryName.c_str(), archive_error_string(outputArchive));
         } else {
           nlen += written;
         }

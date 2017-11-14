@@ -32,6 +32,7 @@
 #include "core/Core.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "core/Resource.h"
+#include "utils/file/FileManager.h"
 
 namespace org {
 namespace apache {
@@ -90,12 +91,13 @@ class FocusArchiveEntry : public core::Processor {
 
   class ReadCallback : public InputStreamCallback {
    public:
-    explicit ReadCallback(core::Processor*, ArchiveMetadata *archiveMetadata);
+    explicit ReadCallback(core::Processor*,fileutils::FileManager *file_man , ArchiveMetadata *archiveMetadata);
     ~ReadCallback();
     virtual int64_t process(std::shared_ptr<io::BaseStream> stream);
     bool isRunning() {return proc_->isRunning();}
 
    private:
+    fileutils::FileManager *file_man_;
     core::Processor * const proc_;
     std::shared_ptr<logging::Logger> logger_;
     ArchiveMetadata *_archiveMetadata;
