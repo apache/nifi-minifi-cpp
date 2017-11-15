@@ -172,6 +172,7 @@ class HTTPClient : public BaseHTTPClient, public core::Connectable {
   void configure_secure_connection(CURL *http_session);
 
   HTTPReadCallback *callback;
+  HTTPUploadCallback *write_callback_;
 
   bool isSecure(const std::string &url);
   struct curl_slist *headers_;

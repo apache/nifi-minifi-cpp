@@ -64,28 +64,26 @@ bool ByteOutputCallback::waitingOps() {
 }
 
 void ByteOutputCallback::write(char *data, size_t size) {
-  size_t amount_to_write = size;
-  size_t pos = 0;
-  do {
-    if (size_ > max_size_) {
-      std::unique_lock<std::recursive_mutex> lock(vector_lock_);
-      if (size_ > max_size_) {
-        spinner_.wait(lock, [&] {
-          return size_ < max_size_ || !is_alive_;});
-      }
-      // if we're not alive, we will let the write continue in the event that
-      // we do not wish to lose this data. In the event taht we don't care, we've simply
-      // spent wasted cycles on locking and notification.
-    }
-    {
-      std::lock_guard<std::recursive_mutex> lock(vector_lock_);
-      vec.push(std::string(data + pos, size));
-      size_ += size;
-      pos += size;
-      amount_to_write -= size;
-      spinner_.notify_all();
-    }
-  } while (amount_to_write > 0);
+  if (!read_started_) {
+    std::unique_lock<std::recursive_mutex> lock(vector_lock_);
+    spinner_.wait(lock, [&] {
+      return read_started_ || !is_alive_;});
+
+    std::cout << "unlock" << std::endl;
+    if (!is_alive_)
+      return;
+  }
+  write_and_notify(data, size);
+}
+
+void ByteOutputCallback::write_and_notify(char *data, size_t size) {
+  queue_.enqueue(std::string(data, size));
+  size_ += size;
+  total_written_ += size;
+  if (size_ > max_size_) {
+    logger_->log_trace("Size exceeds desired limits, please adjust write tempo");
+  }
+  spinner_.notify_all();
 }
 
 size_t ByteOutputCallback::readFully(char *buffer, size_t size) {
@@ -95,58 +93,67 @@ size_t ByteOutputCallback::readFully(char *buffer, size_t size) {
 size_t ByteOutputCallback::read_current_str(char *buffer, size_t size) {
   size_t amount_to_read = size;
   size_t curr_buf_pos = 0;
+  /**
+   * Avoid paying the startup cost for our writers. This can save on memory
+   * and help avoid writes when we won't be reading at all -- failure at startup
+   */
+  read_started_ = true;
   do {
-    {
-      std::lock_guard<std::recursive_mutex> lock(vector_lock_);
+    std::lock_guard<std::recursive_mutex> lock(vector_lock_);
+    if (current_str_pos <= current_str.length() && current_str.length() > 0) {
+      size_t str_remaining = current_str.length() - current_str_pos;
+      size_t current_str_read = str_remaining;
+      if (str_remaining > amount_to_read) {
+        current_str_read = amount_to_read;
+      }
 
-      if (current_str_pos < current_str.length() && current_str.length() > 0) {
-        size_t str_remaining = current_str.length() - current_str_pos;
-        size_t current_str_read = str_remaining;
-        if (str_remaining > amount_to_read) {
-          current_str_read = amount_to_read;
-        }
+      if (str_remaining > 0) {
         memcpy(buffer + curr_buf_pos, current_str.data() + current_str_pos, current_str_read);
         curr_buf_pos += current_str_read;
         amount_to_read -= current_str_read;
         current_str_pos += current_str_read;
-        size_ -= current_str_read;
+        total_read_ += current_str_read;
+
         if (current_str.length() - current_str_read <= 0) {
-          preload_next_str();
+          // we have no more data after copying, so preload the next string
+          if (!preload_next_str())
+            return 0;
         }
       } else {
-        preload_next_str();
-      }
-    }
-    if (size_ < amount_to_read) {
-      {
-        std::unique_lock<std::recursive_mutex> lock(vector_lock_);
-        if (size_ < amount_to_read) {
-          spinner_.wait(lock, [&] {
-            return size_ >= amount_to_read || !is_alive_;});
-        }
-
-        if (size_ == 0 && !is_alive_) {
+        // no data left from the previous copy, so preload the next string
+        if (!preload_next_str())
           return 0;
-        }
       }
-      std::lock_guard<std::recursive_mutex> lock(vector_lock_);
-      preload_next_str();
+      continue;
+    } else {
+      // no more data left from a previous copy or another thread, so preload the next string.
+      if (!preload_next_str())
+        return 0;
     }
-  } while (amount_to_read > 0 && (is_alive_ || size_ > 0) && current_str.length() > 0);
+  } while (amount_to_read > 0 && (is_alive_ || size_ > 0 || (current_str.size() - current_str_pos > 0)));
 
-  spinner_.notify_all();
   return size - amount_to_read;
 }
 
-void ByteOutputCallback::preload_next_str() {
+bool ByteOutputCallback::preload_next_str() {
+  // wait until there is data or this stream has been stopped.
+  if (queue_.size_approx() == 0 && current_str.length() == 0) {
+    std::unique_lock<std::recursive_mutex> lock(vector_lock_);
+    if (queue_.size_approx() == 0 && current_str.length() == 0) {
+      spinner_.wait(lock, [&] {
+        return queue_.size_approx() > 0 || !is_alive_;});
+    }
+
+    if (queue_.size_approx() == 0 && !is_alive_) {
+      return false;
+    }
+  }
   // reset the current str.
   current_str = "";
-  if (!vec.empty()) {
-    current_str = std::move(vec.front());
-    current_str_pos = 0;
-    vec.pop();
-  } else {
-  }
+  queue_.try_dequeue(current_str);
+  current_str_pos = 0;
+  size_ -= current_str.size();
+  return true;
 }
 } /* namespace utils */
 } /* namespace minifi */

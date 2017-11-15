@@ -76,6 +76,7 @@ class HttpTestHarness : public IntegrationBase {
     file << "tempFile";
     file.close();
     configuration->set("nifi.flow.engine.threads", "8");
+    configuration->set("nifi.c2.enable", "false");
   }
 
   void cleanup() {

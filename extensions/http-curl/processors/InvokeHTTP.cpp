@@ -290,6 +290,9 @@ void InvokeHTTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context,
       callbackObj->ptr = callback.get();
       callbackObj->pos = 0;
       logger_->log_info("InvokeHTTP -- Setting callback, size is %d", callback->getBufferSize());
+      if (!use_chunked_encoding_) {
+        client.appendHeader("Content-Length", std::to_string(flowFile->getSize()));
+      }
       client.setUploadCallback(callbackObj.get());
     } else {
       logger_->log_error("InvokeHTTP -- no resource claim");
@@ -352,8 +355,8 @@ void InvokeHTTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context,
   }
 }
 
-void InvokeHTTP::route(std::shared_ptr<FlowFileRecord> &request, std::shared_ptr<FlowFileRecord> &response, const std::shared_ptr<core::ProcessSession> &session, const std::shared_ptr<core::ProcessContext> &context, bool isSuccess,
-                       int statusCode) {
+void InvokeHTTP::route(std::shared_ptr<FlowFileRecord> &request, std::shared_ptr<FlowFileRecord> &response, const std::shared_ptr<core::ProcessSession> &session,
+                       const std::shared_ptr<core::ProcessContext> &context, bool isSuccess, int statusCode) {
   // check if we should yield the processor
   if (!isSuccess && request == nullptr) {
     context->yield();

@@ -57,6 +57,7 @@ class HttpStream : public io::BaseStream {
   void forceClose(){
     closeStream();
     http_client_->forceClose();
+    http_client_future_.get();
   }
   /**
    * Skip to the specified offset.
@@ -112,21 +113,34 @@ class HttpStream : public io::BaseStream {
   }
 
   static bool submit_read_client( std::shared_ptr<utils::HTTPClient> client, utils::ByteOutputCallback *callback){
+    if (!client)
+      return false;
     bool submit_status = client->submit();
     callback->close();
-
     return submit_status;
   }
 
-  inline bool isFinished() {
-    if (http_client_future_.wait_for(std::chrono::seconds(0)) == std::future_status::ready && (http_read_callback_.getSize() == 0 && http_read_callback_.waitingOps())) {
-     // http_read_callback_.close();
+ inline bool isFinished(int seconds = 0) {
+    if (http_client_future_.wait_for(std::chrono::seconds(seconds)) == std::future_status::ready && (http_read_callback_.getSize() == 0 && http_read_callback_.waitingOps())) {
       return true;
     }
     else{
       return false;
     }
   }
+
+ /**
+  * Waits for more data to become available.
+  */
+ bool waitForDataAvailable(){
+   do{
+     logger_->log_trace("Waiting for more data");
+   }while(http_client_future_.wait_for(std::chrono::seconds(0)) != std::future_status::ready && http_read_callback_.getSize() == 0);
+
+   return http_read_callback_.getSize() > 0;
+ }
+
+
 
  protected:
 
