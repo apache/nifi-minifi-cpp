@@ -33,9 +33,7 @@
 
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
-
-#include "json/json.h"
-#include "json/writer.h"
+#include "Exception.h"
 
 namespace org {
 namespace apache {
@@ -76,17 +74,17 @@ void FocusArchiveEntry::onTrigger(core::ProcessContext *context, core::ProcessSe
 
   fileutils::FileManager file_man;
 
-  std::string targetEntry;
-  context->getProperty(Path.getName(), targetEntry);
-
   // Extract archive contents
   ArchiveMetadata archiveMetadata;
-  archiveMetadata.focusedEntry = targetEntry;
+  context->getProperty(Path.getName(), archiveMetadata.focusedEntry);
+  flowFile->getAttribute("filename", archiveMetadata.archiveName);
+
   ReadCallback cb(this, &file_man, &archiveMetadata);
   session->read(flowFile, &cb);
 
   // For each extracted entry, import & stash to key
   std::string targetEntryStashKey;
+  std::string targetEntry;
 
   for (auto &entryMetadata : archiveMetadata.entryMetadata) {
     if (entryMetadata.entryType == AE_IFREG) {
@@ -99,7 +97,7 @@ void FocusArchiveEntry::onTrigger(core::ProcessContext *context, core::ProcessSe
       logger_->log_debug("FocusArchiveEntry generated stash key %s for entry %s", stashKey, entryMetadata.entryName);
       entryMetadata.stashKey.assign(stashKey);
 
-      if (entryMetadata.entryName == targetEntry) {
+      if (entryMetadata.entryName == archiveMetadata.focusedEntry) {
         targetEntryStashKey = entryMetadata.stashKey;
       }
 
@@ -112,77 +110,45 @@ void FocusArchiveEntry::onTrigger(core::ProcessContext *context, core::ProcessSe
   if (targetEntryStashKey != "") {
     session->restore(targetEntryStashKey, flowFile);
   } else {
-    logger_->log_warn("FocusArchiveEntry failed to locate target entry: %s", targetEntry);
+    logger_->log_warn("FocusArchiveEntry failed to locate target entry: %s",
+                      archiveMetadata.focusedEntry.c_str());
   }
 
   // Set new/updated lens stack to attribute
   {
-    Json::Value lensStack;
-    Json::Reader reader;
+    ArchiveStack archiveStack;
 
     std::string existingLensStack;
 
     if (flowFile->getAttribute("lens.archive.stack", existingLensStack)) {
       logger_->log_info("FocusArchiveEntry loading existing lens context");
-      if (!reader.parse(existingLensStack, lensStack)) {
-        logger_->log_error("FocusArchiveEntry JSON parse error: %s", reader.getFormattedErrorMessages());
+      try {
+        archiveStack.loadJsonString(existingLensStack);
+      } catch (Exception &exception) {
+        logger_->log_debug(exception.what());
         context->yield();
         return;
       }
-    } else {
-      lensStack = Json::Value(Json::arrayValue);
     }
 
-    Json::Value structVal(Json::arrayValue);
+    archiveStack.push(archiveMetadata);
+    //logger_->log_debug(archiveMetadata.toJsonString());
 
-    for (const auto &entryMetadata : archiveMetadata.entryMetadata) {
-      Json::Value entryVal(Json::objectValue);
-      entryVal["entry_name"] = Json::Value(entryMetadata.entryName);
-      entryVal["entry_type"] = Json::Value(entryMetadata.entryType);
-      entryVal["entry_perm"] = Json::Value(entryMetadata.entryPerm);
-      entryVal["entry_size"] = Json::Value(entryMetadata.entrySize);
-      entryVal["entry_uid"] = Json::Value(entryMetadata.entryUID);
-      entryVal["entry_gid"] = Json::Value(entryMetadata.entryGID);
-      entryVal["entry_mtime"] = Json::Value(entryMetadata.entryMTime);
-      entryVal["entry_mtime_nsec"] = Json::Value(entryMetadata.entryMTimeNsec);
-
-      if (entryMetadata.entryType == AE_IFREG) {
-        entryVal["stash_key"] = Json::Value(entryMetadata.stashKey);
-      }
-
-      structVal.append(entryVal);
-    }
-
-    std::string archivenameStr;
-    Json::Value archiveName { Json::nullValue };
-
-    if (flowFile->getAttribute("filename", archivenameStr)) {
-      archiveName = Json::Value(archivenameStr);
-    }
-
-    Json::Value lensVal(Json::objectValue);
-    lensVal["archive_format_name"] = Json::Value(archiveMetadata.archiveFormatName);
-    lensVal["archive_name"] = archiveName;
-    lensVal["focused_entry"] = Json::Value(archiveMetadata.focusedEntry);
-    lensVal["archive_format"] = Json::Value(archiveMetadata.archiveFormat);
-    lensVal["archive_structure"] = structVal;
-    lensStack.append(lensVal);
-
-    Json::FastWriter writer;
-    std::string stackStr = writer.write(lensStack);
-
+    std::string stackStr = archiveStack.toJsonString();
+  
     if (!flowFile->updateAttribute("lens.archive.stack", stackStr)) {
       flowFile->addAttribute("lens.archive.stack", stackStr);
     }
+
   }
 
   // Update filename attribute to that of focused entry
-  std::size_t found = targetEntry.find_last_of("/\\");
-  std::string path = targetEntry.substr(0, found);
-  std::string name = targetEntry.substr(found + 1);
+  std::size_t found = archiveMetadata.focusedEntry.find_last_of("/\\");
+  std::string path = archiveMetadata.focusedEntry.substr(0, found);
+  std::string name = archiveMetadata.focusedEntry.substr(found + 1);
   set_or_update_attr(flowFile, "filename", name);
   set_or_update_attr(flowFile, "path", path);
-  set_or_update_attr(flowFile, "absolute.path", targetEntry);
+  set_or_update_attr(flowFile, "absolute.path", archiveMetadata.focusedEntry);
 
   // Transfer to the relationship
   session->transfer(flowFile, Success);

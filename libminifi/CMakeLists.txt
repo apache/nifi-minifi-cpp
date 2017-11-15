@@ -55,7 +55,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-reorder")
 include_directories(../thirdparty/spdlog-20170710/include)
 include_directories(../thirdparty/yaml-cpp-yaml-cpp-20171024/include)
 
-include_directories(../thirdparty/jsoncpp/include)
+include_directories(../thirdparty/rapidjson-1.1.0/include)
 include_directories(../thirdparty/concurrentqueue/)
 include_directories(include)
 
@@ -71,8 +71,7 @@ file(GLOB SPD_SOURCES "../thirdparty/spdlog-20170710/include/spdlog/*")
 # header only library
 add_library(spdlog STATIC ${SPD_SOURCES})
 add_library(core-minifi STATIC ${SOURCES})
-add_dependencies(core-minifi jsoncpp_project)
-target_link_libraries(core-minifi ${UUID_LIBRARIES} ${JSONCPP_LIB} yaml-cpp dl)
+target_link_libraries(core-minifi ${UUID_LIBRARIES} yaml-cpp)
 
 find_package(ZLIB REQUIRED)
 include_directories(${ZLIB_INCLUDE_DIRS})
@@ -91,7 +90,6 @@ endif (OPENSSL_FOUND)
 
 add_library(minifi STATIC ${PROCESSOR_SOURCES})
 add_library(capi STATIC ${CAPI_SOURCES})
-target_link_libraries(minifi c-library civetweb-cpp)
 
 target_link_libraries(minifi core-minifi)
 

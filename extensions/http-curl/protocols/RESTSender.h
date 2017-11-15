@@ -18,8 +18,6 @@
 #ifndef LIBMINIFI_INCLUDE_C2_RESTSENDER_H_
 #define LIBMINIFI_INCLUDE_C2_RESTSENDER_H_
 
-#include "json/json.h"
-#include "json/writer.h"
 #include <string>
 #include <mutex>
 
