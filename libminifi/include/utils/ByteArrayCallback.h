@@ -19,7 +19,9 @@
 
 #include <fstream>
 #include <iterator>
+#include "concurrentqueue.h"
 #include "FlowFileRecord.h"
+#include "core/logging/LoggerConfiguration.h"
 
 namespace org {
 namespace apache {
@@ -86,14 +88,23 @@ class ByteInputCallBack : public InputStreamCallback {
 
 /**
  * General vector based uint8_t callback.
+ *
+ * While calls are thread safe, the class is intended to have
+ * a single consumer.
  */
 class ByteOutputCallback : public OutputStreamCallback {
  public:
-  ByteOutputCallback(size_t max_hold)
+  ByteOutputCallback() = delete;
+
+  explicit ByteOutputCallback(size_t max_size, bool wait_on_read=false)
       : ptr(nullptr),
-        max_size_(max_hold) {
+        max_size_(max_size),
+        read_started_( wait_on_read ? false : true ),
+        logger_(logging::LoggerFactory<ByteOutputCallback>::getLogger()) {
     current_str_pos = 0;
     size_ = 0;
+    total_written_ = 0;
+    total_read_ = 0;
     is_alive_ = true;
   }
 
@@ -117,22 +128,33 @@ class ByteOutputCallback : public OutputStreamCallback {
 
  private:
 
+  inline void write_and_notify(char *data, size_t size);
+
   inline size_t read_current_str(char *buffer, size_t size);
 
-  inline void preload_next_str();
+  bool preload_next_str();
 
   std::atomic<bool> is_alive_;
   size_t max_size_;
   std::condition_variable_any spinner_;
   std::recursive_mutex vector_lock_;
   std::atomic<size_t> size_;
+  std::atomic<size_t> total_written_;
+  std::atomic<size_t> total_read_;
+
+  // flag to wait on writes until we have a consumer.
+  std::atomic<bool> read_started_;
+
   char *ptr;
 
   size_t current_str_pos;
   std::string current_str;
-  std::queue<std::string> vec;
-}
-;
+
+  moodycamel::ConcurrentQueue<std::string> queue_;
+
+  std::shared_ptr<logging::Logger> logger_;
+
+};
 
 } /* namespace utils */
 } /* namespace minifi */

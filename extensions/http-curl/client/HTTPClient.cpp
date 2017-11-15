@@ -39,6 +39,7 @@ HTTPClient::HTTPClient(const std::string &url, const std::shared_ptr<minifi::con
       content_type(nullptr),
       headers_(nullptr),
       callback(nullptr),
+      write_callback_(nullptr),
       http_code(0),
       read_callback_(INT_MAX),
       header_response_(-1),
@@ -55,6 +56,7 @@ HTTPClient::HTTPClient(std::string name, uuid_t uuid)
       connect_timeout_(0),
       read_timeout_(0),
       callback(nullptr),
+      write_callback_(nullptr),
       content_type(nullptr),
       read_callback_(INT_MAX),
       headers_(nullptr),
@@ -69,6 +71,7 @@ HTTPClient::HTTPClient()
     : core::Connectable("HTTPClient", 0),
       ssl_context_service_(nullptr),
       callback(nullptr),
+      write_callback_(nullptr),
       url_(),
       logger_(logging::LoggerFactory<HTTPClient>::getLogger()),
       connect_timeout_(0),
@@ -84,18 +87,26 @@ HTTPClient::HTTPClient()
 }
 
 HTTPClient::~HTTPClient() {
-  forceClose();
-}
-
-void HTTPClient::forceClose(){
   if (nullptr != headers_) {
     curl_slist_free_all(headers_);
     headers_ = nullptr;
   }
-  if (http_session_ != nullptr){
+  if (http_session_ != nullptr) {
     curl_easy_cleanup(http_session_);
     http_session_ = nullptr;
   }
+}
+
+void HTTPClient::forceClose() {
+
+  if (nullptr != callback) {
+    callback->stop = true;
+  }
+
+  if (nullptr != write_callback_) {
+    write_callback_->stop = true;
+  }
+
 }
 
 void HTTPClient::setVerbose() {
@@ -123,7 +134,7 @@ void HTTPClient::setDisablePeerVerification() {
 
 void HTTPClient::setConnectionTimeout(int64_t timeout) {
   connect_timeout_ = timeout;
-  curl_easy_setopt(http_session_,CURLOPT_NOSIGNAL,1);
+  curl_easy_setopt(http_session_, CURLOPT_NOSIGNAL, 1);
 }
 
 void HTTPClient::setReadTimeout(int64_t timeout) {
@@ -138,6 +149,7 @@ void HTTPClient::setReadCallback(HTTPReadCallback *callbackObj) {
 
 void HTTPClient::setUploadCallback(HTTPUploadCallback *callbackObj) {
   logger_->log_info("Setting callback");
+  write_callback_ = callbackObj;
   if (method_ == "put" || method_ == "PUT") {
     curl_easy_setopt(http_session_, CURLOPT_INFILESIZE_LARGE, (curl_off_t ) callbackObj->ptr->getBufferSize());
   }
@@ -190,6 +202,8 @@ void HTTPClient::setUseChunkedEncoding() {
 }
 
 bool HTTPClient::submit() {
+  if (IsNullOrEmpty(url_))
+    return false;
   if (connect_timeout_ > 0) {
     curl_easy_setopt(http_session_, CURLOPT_CONNECTTIMEOUT, connect_timeout_);
   }
@@ -208,8 +222,13 @@ bool HTTPClient::submit() {
   }
   curl_easy_setopt(http_session_, CURLOPT_HEADERFUNCTION, &utils::HTTPHeaderResponse::receive_headers);
   curl_easy_setopt(http_session_, CURLOPT_HEADERDATA, static_cast<void*>(&header_response_));
+#ifdef CURLOPT_TCP_KEEPALIVE
   curl_easy_setopt(http_session_, CURLOPT_TCP_KEEPALIVE, 0L);
+#endif
   res = curl_easy_perform(http_session_);
+  if (callback == nullptr) {
+    read_callback_.close();
+  }
   curl_easy_getinfo(http_session_, CURLINFO_RESPONSE_CODE, &http_code);
   curl_easy_getinfo(http_session_, CURLINFO_CONTENT_TYPE, &content_type);
   if (res != CURLE_OK) {
