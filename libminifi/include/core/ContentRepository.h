@@ -63,10 +63,13 @@ class ContentRepository : public StreamManager<minifi::ResourceClaim> {
         remove(streamId);
         count_map_.erase(str);
         return true;
+      } else {
+        return false;
       }
+    } else {
+      remove(streamId);
+      return true;
     }
-
-    return false;
   }
 
   virtual uint32_t getStreamCount(const std::shared_ptr<minifi::ResourceClaim> &streamId) {

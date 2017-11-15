@@ -50,6 +50,7 @@ class VolatileContentRepository : public core::ContentRepository, public virtual
     max_count_ = 15000;
   }
   virtual ~VolatileContentRepository() {
+    logger_->log_debug("Clearing repository");
     if (!minimize_locking_) {
       std::lock_guard<std::mutex> lock(map_mutex_);
       for (const auto &item : master_list_) {
