@@ -166,6 +166,8 @@ class HTTPClient : public BaseHTTPClient, public core::Connectable {
     return true;
   }
 
+  void setPostSize(size_t size);
+
  protected:
 
   inline bool matches(const std::string &value, const std::string &sregex) override;

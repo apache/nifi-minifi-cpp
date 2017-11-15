@@ -36,8 +36,8 @@
 
 #include "sitetosite/Peer.h"
 #include "sitetosite/SiteToSiteFactory.h"
-#include "json/json.h"
-#include "json/writer.h"
+
+#include "rapidjson/document.h"
 
 #include "Exception.h"
 #include "core/logging/Logger.h"
@@ -311,20 +311,25 @@ void RemoteProcessorGroupPort::refreshRemoteSite2SiteInfo() {
     if (!response_body.empty()) {
       std::string controller = std::string(response_body.begin(), response_body.end());
       logger_->log_debug("controller config %s", controller);
-      Json::Value value;
-      Json::Reader reader;
-      bool parsingSuccessful = reader.parse(controller, value);
-      if (parsingSuccessful && !value.empty()) {
-        Json::Value controllerValue = value["controller"];
-        if (!controllerValue.empty()) {
-          Json::Value port = controllerValue["remoteSiteListeningPort"];
-          if (client_type_ == sitetosite::CLIENT_TYPE::RAW && !port.empty())
-            this->site2site_port_ = port.asInt();
+      rapidjson::Document doc;
+      rapidjson::ParseResult ok = doc.Parse(controller.c_str());
+
+      if (ok && doc.IsObject() && !doc.ObjectEmpty()) {
+        rapidjson::Value::MemberIterator itr = doc.FindMember("controller");
+
+        if (itr != doc.MemberEnd() && itr->value.IsObject()) {
+          rapidjson::Value controllerValue = itr->value.GetObject();
+          rapidjson::Value::ConstMemberIterator end_itr = controllerValue.MemberEnd();
+          rapidjson::Value::ConstMemberIterator port_itr = controllerValue.FindMember("remoteSiteListeningPort");
+          rapidjson::Value::ConstMemberIterator secure_itr = controllerValue.FindMember("siteToSiteSecure");
+
+          if (client_type_ == sitetosite::CLIENT_TYPE::RAW && port_itr != end_itr && port_itr->value.IsNumber())
+            this->site2site_port_ = port_itr->value.GetInt();
           else
             this->site2site_port_ = port_;
-          Json::Value secure = controllerValue["siteToSiteSecure"];
-          if (!secure.empty())
-            this->site2site_secure_ = secure.asBool();
+
+          if (secure_itr != end_itr && secure_itr->value.IsBool())
+            this->site2site_secure_ = secure_itr->value.GetBool();
         }
         logger_->log_debug("process group remote site2site port %d, is secure %d", site2site_port_, site2site_secure_);
       }

@@ -147,7 +147,9 @@ class HTTPRequestResponse {
       if (callback->getPos() <= buffer_size) {
         size_t len = buffer_size - callback->pos;
         if (len <= 0)
+        {
           return 0;
+        }
         char *ptr = callback->ptr->getBuffer(callback->getPos());
 
         if (ptr == nullptr) {
@@ -155,6 +157,7 @@ class HTTPRequestResponse {
         }
         if (len > size * nmemb)
           len = size * nmemb;
+        auto strr = std::string(ptr,len);
         memcpy(data, ptr, len);
         callback->pos += len;
         callback->ptr->seek(callback->getPos());
@@ -163,7 +166,6 @@ class HTTPRequestResponse {
     } else {
       return 0x10000000;
     }
-
     return 0;
   }
 

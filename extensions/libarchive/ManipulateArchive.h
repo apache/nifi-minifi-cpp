@@ -24,6 +24,7 @@
 #include <string>
 
 #include "FlowFileRecord.h"
+#include "ArchiveMetadata.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
 
@@ -83,7 +84,6 @@ private:
 	//! Logger
 	std::shared_ptr<Logger> logger_;
 	std::string before_, after_, operation_, destination_, targetEntry_;
-	std::list<FocusArchiveEntry::ArchiveEntryMetadata>::iterator scanArchiveEntries(FocusArchiveEntry::ArchiveMetadata&, const std::string&);
 };
 
 REGISTER_RESOURCE(ManipulateArchive);

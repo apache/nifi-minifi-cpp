@@ -27,6 +27,7 @@
 
 #include "FocusArchiveEntry.h"
 #include "FlowFileRecord.h"
+#include "ArchiveMetadata.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
 #include "core/Core.h"
@@ -67,9 +68,6 @@ class UnfocusArchiveEntry : public core::Processor {
       core::ProcessSession *session);
   //! Initialize, over write by NiFi UnfocusArchiveEntry
   virtual void initialize(void);
-
-  typedef FocusArchiveEntry::ArchiveEntryMetadata ArchiveEntryMetadata;
-  typedef FocusArchiveEntry::ArchiveMetadata ArchiveMetadata;
 
   //! Write callback for reconstituting lensed archive into flow file content
   class WriteCallback : public OutputStreamCallback {

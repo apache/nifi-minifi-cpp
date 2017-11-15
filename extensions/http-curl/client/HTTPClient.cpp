@@ -136,7 +136,7 @@ void HTTPClient::setDisablePeerVerification() {
   curl_easy_setopt(http_session_, CURLOPT_SSL_VERIFYPEER, 0L);
 }
 
-void HTTPClient::setDisableHostVerification(){
+void HTTPClient::setDisableHostVerification() {
   logger_->log_debug("Disabling host verification");
   curl_easy_setopt(http_session_, CURLOPT_SSL_VERIFYHOST, 0L);
 }
@@ -190,6 +190,10 @@ std::string HTTPClient::escape(std::string string_to_escape) {
 void HTTPClient::setPostFields(std::string input) {
   curl_easy_setopt(http_session_, CURLOPT_POSTFIELDSIZE, input.length());
   curl_easy_setopt(http_session_, CURLOPT_POSTFIELDS, input.c_str());
+}
+
+void HTTPClient::setPostSize(size_t size) {
+  curl_easy_setopt(http_session_, CURLOPT_POSTFIELDSIZE, size);
 }
 
 void HTTPClient::setHeaders(struct curl_slist *list) {

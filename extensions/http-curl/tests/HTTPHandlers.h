@@ -251,7 +251,6 @@ class FlowFileResponder : public CivetHandler {
       }
       auto ret = mg_write(conn, serializer.getBuffer(), total);
     } else {
-      std::cout << "Nothing to transfer feed" << std::endl;
       mg_printf(conn, "HTTP/1.1 200 OK\r\nConnection: "
                 "close\r\nContent-Length: 0\r\n");
       mg_printf(conn, "Content-Type: text/plain\r\n\r\n");
