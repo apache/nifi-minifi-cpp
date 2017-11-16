@@ -26,6 +26,7 @@
 #include <core/Processor.h>
 
 #include "ScriptEngine.h"
+#include "ScriptProcessContext.h"
 
 namespace org {
 namespace apache {
@@ -54,7 +55,8 @@ class ExecuteScript : public core::Processor {
   void onTrigger(core::ProcessContext *context, core::ProcessSession *session) override {
     logger_->log_error("onTrigger invocation with raw pointers is not implemented");
   }
-  void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
+  void onTrigger(const std::shared_ptr<core::ProcessContext> &context,
+                 const std::shared_ptr<core::ProcessSession> &session) override;
 
  private:
   std::shared_ptr<logging::Logger> logger_;
@@ -82,7 +84,7 @@ class ExecuteScript : public core::Processor {
                               const std::shared_ptr<core::ProcessContext> &context,
                               const std::shared_ptr<core::ProcessSession> &session) const {
     auto typed_engine = std::static_pointer_cast<T>(engine);
-    typed_engine->call("onTrigger", context, session);
+    typed_engine->onTrigger(context, session);
   }
 };
 

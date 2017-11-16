@@ -30,42 +30,104 @@ LuaProcessSession::LuaProcessSession(std::shared_ptr<core::ProcessSession> sessi
 }
 
 std::shared_ptr<script::ScriptFlowFile> LuaProcessSession::get() {
+  if (!session_) {
+    throw std::runtime_error("Access of ProcessSession after it has been released");
+  }
+
   auto flow_file = session_->get();
 
   if (flow_file == nullptr) {
     return nullptr;
   }
 
-  return std::make_shared<script::ScriptFlowFile>(flow_file);
+  auto result = std::make_shared<script::ScriptFlowFile>(flow_file);
+  flow_files_.push_back(result);
+
+  return result;
 }
 
-void LuaProcessSession::transfer(const std::shared_ptr<script::ScriptFlowFile> &flow_file,
+void LuaProcessSession::transfer(const std::shared_ptr<script::ScriptFlowFile> &script_flow_file,
                                  core::Relationship relationship) {
-  session_->transfer(flow_file->getFlowFile(), relationship);
+  if (!session_) {
+    throw std::runtime_error("Access of ProcessSession after it has been released");
+  }
+
+  auto flow_file = script_flow_file->getFlowFile();
+
+  if (!flow_file) {
+    throw std::runtime_error("Access of FlowFile after it has been released");
+  }
+
+  session_->transfer(flow_file, relationship);
 }
 
-void LuaProcessSession::read(const std::shared_ptr<script::ScriptFlowFile> &flow_file,
+void LuaProcessSession::read(const std::shared_ptr<script::ScriptFlowFile> &script_flow_file,
                              sol::table input_stream_callback) {
+  if (!session_) {
+    throw std::runtime_error("Access of ProcessSession after it has been released");
+  }
+
+  auto flow_file = script_flow_file->getFlowFile();
+
+  if (!flow_file) {
+    throw std::runtime_error("Access of FlowFile after it has been released");
+  }
+
   LuaInputStreamCallback lua_callback(input_stream_callback);
-  session_->read(flow_file->getFlowFile(), &lua_callback);
+  session_->read(flow_file, &lua_callback);
 }
 
-void LuaProcessSession::write(const std::shared_ptr<script::ScriptFlowFile> &flow_file,
+void LuaProcessSession::write(const std::shared_ptr<script::ScriptFlowFile> &script_flow_file,
                               sol::table output_stream_callback) {
+  if (!session_) {
+    throw std::runtime_error("Access of ProcessSession after it has been released");
+  }
+
+  auto flow_file = script_flow_file->getFlowFile();
+
+  if (!flow_file) {
+    throw std::runtime_error("Access of FlowFile after it has been released");
+  }
+
   LuaOutputStreamCallback lua_callback(output_stream_callback);
-  session_->write(flow_file->getFlowFile(), &lua_callback);
+  session_->write(flow_file, &lua_callback);
 }
 
 std::shared_ptr<script::ScriptFlowFile> LuaProcessSession::create() {
-  return std::make_shared<script::ScriptFlowFile>(session_->create());
+  if (!session_) {
+    throw std::runtime_error("Access of ProcessSession after it has been released");
+  }
+
+  auto result = std::make_shared<script::ScriptFlowFile>(session_->create());
+  flow_files_.push_back(result);
+  return result;
 }
 
 std::shared_ptr<script::ScriptFlowFile> LuaProcessSession::create(const std::shared_ptr<script::ScriptFlowFile> &flow_file) {
-  if (flow_file == nullptr) {
-    return std::make_shared<script::ScriptFlowFile>(session_->create());
-  } else {
-    return std::make_shared<script::ScriptFlowFile>(session_->create(flow_file->getFlowFile()));
+  if (!session_) {
+    throw std::runtime_error("Access of ProcessSession after it has been released");
   }
+
+  std::shared_ptr<script::ScriptFlowFile> result;
+
+  if (flow_file == nullptr) {
+    result = std::make_shared<script::ScriptFlowFile>(session_->create());
+  } else {
+    result = std::make_shared<script::ScriptFlowFile>(session_->create(flow_file->getFlowFile()));
+  }
+
+  flow_files_.push_back(result);
+  return result;
+}
+
+void LuaProcessSession::releaseCoreResources() {
+  for (const auto &flow_file : flow_files_) {
+    if (flow_file) {
+      flow_file->releaseFlowFile();
+    }
+  }
+
+  session_.reset();
 }
 
 } /* namespace lua */

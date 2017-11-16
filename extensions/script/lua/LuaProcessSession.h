@@ -40,8 +40,18 @@ class LuaProcessSession {
   std::shared_ptr<script::ScriptFlowFile> create();
   std::shared_ptr<script::ScriptFlowFile> create(const std::shared_ptr<script::ScriptFlowFile> &flow_file);
   void transfer(const std::shared_ptr<script::ScriptFlowFile> &flow_file, core::Relationship relationship);
-  void read(const std::shared_ptr<script::ScriptFlowFile> &flow_file, sol::table input_stream_callback);
+  void read(const std::shared_ptr<script::ScriptFlowFile> &script_flow_file, sol::table input_stream_callback);
   void write(const std::shared_ptr<script::ScriptFlowFile> &flow_file, sol::table output_stream_callback);
+
+  /**
+   * Sometimes we want to release shared pointers to core resources when
+   * we know they are no longer in need. This method is for those times.
+   *
+   * For example, we do not want to hold on to shared pointers to FlowFiles
+   * after an onTrigger call, because doing so can be very expensive in terms
+   * of repository resources.
+   */
+  void releaseCoreResources();
 
   class LuaInputStreamCallback : public InputStreamCallback {
    public:
@@ -76,6 +86,7 @@ class LuaProcessSession {
   };
 
  private:
+  std::vector<std::shared_ptr<script::ScriptFlowFile>> flow_files_;
   std::shared_ptr<core::ProcessSession> session_;
 };
 

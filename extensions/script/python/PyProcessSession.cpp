@@ -36,38 +36,104 @@ PyProcessSession::PyProcessSession(std::shared_ptr<core::ProcessSession> session
 }
 
 std::shared_ptr<script::ScriptFlowFile> PyProcessSession::get() {
+  if (!session_) {
+    throw std::runtime_error("Access of ProcessSession after it has been released");
+  }
+
   auto flow_file = session_->get();
 
   if (flow_file == nullptr) {
     return nullptr;
   }
 
-  return std::make_shared<script::ScriptFlowFile>(flow_file);
+  auto result = std::make_shared<script::ScriptFlowFile>(flow_file);
+  flow_files_.push_back(result);
+
+  return result;
 }
 
-void PyProcessSession::transfer(std::shared_ptr<script::ScriptFlowFile> flow_file,
+void PyProcessSession::transfer(std::shared_ptr<script::ScriptFlowFile> script_flow_file,
                                 core::Relationship relationship) {
-  session_->transfer(flow_file->getFlowFile(), relationship);
+  if (!session_) {
+    throw std::runtime_error("Access of ProcessSession after it has been released");
+  }
+
+  auto flow_file = script_flow_file->getFlowFile();
+
+  if (!flow_file) {
+    throw std::runtime_error("Access of FlowFile after it has been released");
+  }
+
+  session_->transfer(flow_file, relationship);
 }
 
-void PyProcessSession::read(std::shared_ptr<script::ScriptFlowFile> flow_file,
+void PyProcessSession::read(std::shared_ptr<script::ScriptFlowFile> script_flow_file,
                             py::object input_stream_callback) {
+  if (!session_) {
+    throw std::runtime_error("Access of ProcessSession after it has been released");
+  }
+
+  auto flow_file = script_flow_file->getFlowFile();
+
+  if (!flow_file) {
+    throw std::runtime_error("Access of FlowFile after it has been released");
+  }
+
   PyInputStreamCallback py_callback(input_stream_callback);
-  session_->read(flow_file->getFlowFile(), &py_callback);
+  session_->read(flow_file, &py_callback);
 }
 
-void PyProcessSession::write(std::shared_ptr<script::ScriptFlowFile> flow_file,
+void PyProcessSession::write(std::shared_ptr<script::ScriptFlowFile> script_flow_file,
                              py::object output_stream_callback) {
+  if (!session_) {
+    throw std::runtime_error("Access of ProcessSession after it has been released");
+  }
+
+  auto flow_file = script_flow_file->getFlowFile();
+
+  if (!flow_file) {
+    throw std::runtime_error("Access of FlowFile after it has been released");
+  }
+
   PyOutputStreamCallback py_callback(output_stream_callback);
-  session_->write(flow_file->getFlowFile(), &py_callback);
+  session_->write(flow_file, &py_callback);
 }
 
 std::shared_ptr<script::ScriptFlowFile> PyProcessSession::create() {
-  return std::make_shared<script::ScriptFlowFile>(session_->create());
+  if (!session_) {
+    throw std::runtime_error("Access of ProcessSession after it has been released");
+  }
+
+  auto result = std::make_shared<script::ScriptFlowFile>(session_->create());
+  flow_files_.push_back(result);
+  return result;
 }
 
 std::shared_ptr<script::ScriptFlowFile> PyProcessSession::create(std::shared_ptr<script::ScriptFlowFile> flow_file) {
-  return std::make_shared<script::ScriptFlowFile>(session_->create(flow_file->getFlowFile()));
+  if (!session_) {
+    throw std::runtime_error("Access of ProcessSession after it has been released");
+  }
+
+  std::shared_ptr<script::ScriptFlowFile> result;
+
+  if (flow_file == nullptr) {
+    result = std::make_shared<script::ScriptFlowFile>(session_->create());
+  } else {
+    result = std::make_shared<script::ScriptFlowFile>(session_->create(flow_file->getFlowFile()));
+  }
+
+  flow_files_.push_back(result);
+  return result;
+}
+
+void PyProcessSession::releaseCoreResources() {
+  for (const auto &flow_file : flow_files_) {
+    if (flow_file) {
+      flow_file->releaseFlowFile();
+    }
+  }
+
+  session_.reset();
 }
 
 } /* namespace python */
