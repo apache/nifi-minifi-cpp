@@ -18,13 +18,12 @@
 #ifndef LIBMINIFI_INCLUDE_C2_RESTRCVR_H_
 #define LIBMINIFI_INCLUDE_C2_RESTRCVR_H_
 
-#include "RESTSender.h"
 #include "json/json.h"
 #include "json/writer.h"
 #include <string>
 #include <mutex>
 #include "core/Resource.h"
-#include "RESTProtocol.h"
+#include "c2/protocols/RESTProtocol.h"
 #include "CivetServer.h"
 #include "c2/C2Protocol.h"
 #include "controllers/SSLContextService.h"

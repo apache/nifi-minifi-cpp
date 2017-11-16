@@ -18,9 +18,8 @@
 #ifndef EXTENSIONS_HTTPCURLLOADER_H_
 #define EXTENSIONS_HTTPCURLLOADER_H_
 
-#include "protocols/RESTProtocol.h"
-#include "protocols/RESTSender.h"
-#include "protocols/RESTReceiver.h"
+#include "c2/protocols/RESTProtocol.h"
+#include "c2/protocols/RESTSender.h"
 #include "processors/InvokeHTTP.h"
 #include "client/HTTPClient.h"
 #include "core/ClassLoader.h"
@@ -52,7 +51,6 @@ class __attribute__((visibility("default"))) HttpCurlObjectFactory : public core
     std::vector<std::string> class_names;
     class_names.push_back("RESTProtocol");
     class_names.push_back("HttpProtocol");
-    class_names.push_back("RESTReceiver");
     class_names.push_back("RESTSender");
     class_names.push_back("InvokeHTTP");
     class_names.push_back("HTTPClient");
@@ -61,9 +59,7 @@ class __attribute__((visibility("default"))) HttpCurlObjectFactory : public core
   }
 
   virtual std::unique_ptr<ObjectFactory> assign(const std::string &class_name) override{
-    if (utils::StringUtils::equalsIgnoreCase(class_name, "RESTReceiver")) {
-      return std::unique_ptr<ObjectFactory>(new core::DefautObjectFactory<minifi::c2::RESTReceiver>());
-    } else if (utils::StringUtils::equalsIgnoreCase(class_name, "RESTSender")) {
+    if (utils::StringUtils::equalsIgnoreCase(class_name, "RESTSender")) {
       return std::unique_ptr<ObjectFactory>(new core::DefautObjectFactory<minifi::c2::RESTSender>());
     } else if (utils::StringUtils::equalsIgnoreCase(class_name, "InvokeHTTP")) {
       return std::unique_ptr<ObjectFactory>(new core::DefautObjectFactory<processors::InvokeHTTP>());

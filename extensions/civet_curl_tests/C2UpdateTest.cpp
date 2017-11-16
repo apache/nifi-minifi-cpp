@@ -31,20 +31,20 @@
 #include <sstream>
 #include "HTTPClient.h"
 #include "InvokeHTTP.h"
-#include "../TestBase.h"
+#include "TestBase.h"
 #include "utils/StringUtils.h"
 #include "core/Core.h"
-#include "../include/core/logging/Logger.h"
+#include "core/logging/Logger.h"
 #include "core/ProcessGroup.h"
 #include "core/yaml/YamlConfiguration.h"
 #include "FlowController.h"
 #include "properties/Configure.h"
-#include "../unit/ProvenanceTestHelper.h"
+#include "unit/ProvenanceTestHelper.h"
 #include "io/StreamFactory.h"
 #include "c2/C2Agent.h"
 #include "CivetServer.h"
 #include <cstring>
-#include "RESTSender.h"
+#include "c2/protocols/RESTSender.h"
 
 void waitToVerifyProcessor() {
   std::this_thread::sleep_for(std::chrono::seconds(10));

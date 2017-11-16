@@ -16,7 +16,6 @@
  * limitations under the License.
  */
 
-#define CURLOPT_SSL_VERIFYPEER_DISABLE 1
 #include <sys/stat.h>
 #undef NDEBUG
 #include <cassert>
@@ -32,71 +31,55 @@
 #include <sstream>
 #include "HTTPClient.h"
 #include "InvokeHTTP.h"
-#include "../TestBase.h"
+#include "processors/ListenHTTP.h"
+#include "TestBase.h"
 #include "utils/StringUtils.h"
 #include "core/Core.h"
-#include "../include/core/logging/Logger.h"
+#include "core/logging/Logger.h"
 #include "core/ProcessGroup.h"
 #include "core/yaml/YamlConfiguration.h"
 #include "FlowController.h"
 #include "properties/Configure.h"
-#include "../unit/ProvenanceTestHelper.h"
+#include "unit/ProvenanceTestHelper.h"
 #include "io/StreamFactory.h"
 #include "CivetServer.h"
 #include "RemoteProcessorGroupPort.h"
 #include "core/ConfigurableComponent.h"
 #include "controllers/SSLContextService.h"
-#include "../TestServer.h"
-#include "../integration/IntegrationBase.h"
+#include "TestServer.h"
+#include "integration/HTTPIntegrationBase.h"
+#include "processors/InvokeHTTP.h"
+#include "processors/ListenHTTP.h"
+#include "processors/LogAttribute.h"
 
-class Responder : public CivetHandler {
+class HttpTestHarness : public IntegrationBase {
  public:
-  explicit Responder(bool isSecure)
-      : isSecure(isSecure) {
-  }
-  bool handleGet(CivetServer *server, struct mg_connection *conn) {
-    std::string site2site_rest_resp = "{"
-        "\"revision\": {"
-        "\"clientId\": \"483d53eb-53ec-4e93-b4d4-1fc3d23dae6f\""
-        "},"
-        "\"controller\": {"
-        "\"id\": \"fe4a3a42-53b6-4af1-a80d-6fdfe60de97f\","
-        "\"name\": \"NiFi Flow\","
-        "\"remoteSiteListeningPort\": 10001,"
-        "\"siteToSiteSecure\": ";
-    site2site_rest_resp += (isSecure ? "true" : "false");
-    site2site_rest_resp += "}}";
-    mg_printf(conn, "HTTP/1.1 200 OK\r\nContent-Type: "
-              "text/plain\r\nContent-Length: %lu\r\nConnection: close\r\n\r\n",
-              site2site_rest_resp.length());
-    mg_printf(conn, "%s", site2site_rest_resp.c_str());
-    return true;
-  }
-
- protected:
-  bool isSecure;
-};
-
-class SiteToSiteTestHarness : public IntegrationBase {
- public:
-  explicit SiteToSiteTestHarness(bool isSecure)
-      : isSecure(isSecure) {
+  HttpTestHarness() {
     char format[] = "/tmp/ssth.XXXXXX";
     dir = testController.createTempDirectory(format);
   }
 
   void testSetup() {
-    LogTestController::getInstance().setDebug<minifi::RemoteProcessorGroupPort>();
+    LogTestController::getInstance().setDebug<minifi::FlowController>();
+    LogTestController::getInstance().setDebug<core::ProcessGroup>();
+    LogTestController::getInstance().setDebug<minifi::SchedulingAgent>();
+    LogTestController::getInstance().setDebug<core::ProcessContext>();
+    LogTestController::getInstance().setDebug<processors::InvokeHTTP>();
     LogTestController::getInstance().setDebug<utils::HTTPClient>();
-    LogTestController::getInstance().setTrace<minifi::controllers::SSLContextService>();
-    LogTestController::getInstance().setInfo<minifi::FlowController>();
-    LogTestController::getInstance().setDebug<core::ConfigurableComponent>();
-
+    LogTestController::getInstance().setDebug<processors::ListenHTTP>();
+    LogTestController::getInstance().setDebug<processors::ListenHTTP::WriteCallback>();
+    LogTestController::getInstance().setDebug<processors::ListenHTTP::Handler>();
+    LogTestController::getInstance().setDebug<processors::LogAttribute>();
+    LogTestController::getInstance().setDebug<core::Processor>();
+    LogTestController::getInstance().setDebug<minifi::ThreadedSchedulingAgent>();
+    LogTestController::getInstance().setDebug<minifi::TimerDrivenSchedulingAgent>();
+    LogTestController::getInstance().setDebug<minifi::core::ProcessSession>();
     std::fstream file;
     ss << dir << "/" << "tstFile.ext";
     file.open(ss.str(), std::ios::out);
     file << "tempFile";
     file.close();
+    configuration->set("nifi.flow.engine.threads", "1");
   }
 
   void cleanup() {
@@ -104,15 +87,12 @@ class SiteToSiteTestHarness : public IntegrationBase {
   }
 
   void runAssertions() {
-    if (isSecure) {
-      assert(LogTestController::getInstance().contains("process group remote site2site port 10001, is secure 1") == true);
-    } else {
-      assert(LogTestController::getInstance().contains("process group remote site2site port 10001, is secure 0") == true);
-    }
+    assert(LogTestController::getInstance().contains("curl performed") == true);
+    assert(LogTestController::getInstance().contains("Size:1024 Offset:0") == true);
+    assert(LogTestController::getInstance().contains("Size:0 Offset:0") == false);
   }
 
  protected:
-  bool isSecure;
   char *dir;
   std::stringstream ss;
   TestController testController;
@@ -123,21 +103,11 @@ int main(int argc, char **argv) {
   if (argc > 1) {
     test_file_location = argv[1];
     key_dir = argv[2];
-    url = argv[3];
   }
 
-  bool isSecure = false;
-  if (url.find("https") != std::string::npos) {
-    isSecure = true;
-  }
-
-  SiteToSiteTestHarness harness(isSecure);
-
-  Responder responder(isSecure);
+  HttpTestHarness harness;
 
   harness.setKeyDir(key_dir);
-
-  harness.setUrl(url, &responder);
 
   harness.run(test_file_location);
 

@@ -30,28 +30,28 @@
 #include <iostream>
 #include <sstream>
 #include "HTTPClient.h"
-#include "InvokeHTTP.h"
-#include "../TestBase.h"
+#include "processors/InvokeHTTP.h"
+#include "TestBase.h"
 #include "utils/StringUtils.h"
 #include "core/Core.h"
-#include "../include/core/logging/Logger.h"
+#include "core/logging/Logger.h"
 #include "core/ProcessGroup.h"
 #include "core/yaml/YamlConfiguration.h"
 #include "FlowController.h"
 #include "properties/Configure.h"
-#include "../unit/ProvenanceTestHelper.h"
+#include "unit/ProvenanceTestHelper.h"
 #include "io/StreamFactory.h"
 #include "CivetServer.h"
 #include "RemoteProcessorGroupPort.h"
 #include "core/ConfigurableComponent.h"
 #include "controllers/SSLContextService.h"
-#include "../TestServer.h"
+#include "TestServer.h"
 #include "c2/C2Agent.h"
-#include "protocols/RESTReceiver.h"
-#include "../integration/IntegrationBase.h"
+#include "c2/protocols/RESTReceiver.h"
+#include "integration/HTTPIntegrationBase.h"
 #include "processors/LogAttribute.h"
 
-class VerifyC2Server : public IntegrationBase {
+class VerifyC2Server : public HTTPIntegrationBase {
  public:
   explicit VerifyC2Server(bool isSecure)
       : isSecure(isSecure) {
@@ -78,9 +78,9 @@ class VerifyC2Server : public IntegrationBase {
   }
 
   void runAssertions() {
-    assert(LogTestController::getInstance().contains("C2Agent] [info] Class is null") == true);
-    assert(LogTestController::getInstance().contains("C2Agent] [debug] Could not instantiate null") == true);
-    assert(LogTestController::getInstance().contains("Class is RESTSender") == true);
+    assert(LogTestController::getInstance().contains("Import offset 0") == true);
+
+    assert(LogTestController::getInstance().contains("Outputting success and response") == true);
   }
 
   void queryRootProcessGroup(std::shared_ptr<core::ProcessGroup> pg) {
@@ -96,13 +96,10 @@ class VerifyC2Server : public IntegrationBase {
 
     std::string port, scheme, path;
     parse_http_components(url, port, scheme, path);
-    configuration->set("c2.agent.protocol.class", "null");
-    configuration->set("c2.rest.url", "");
-    configuration->set("c2.rest.url.ack", "");
-    configuration->set("c2.agent.heartbeat.reporter.classes", "null");
-    configuration->set("c2.rest.listener.port", "null");
-    configuration->set("c2.agent.heartbeat.period", "null");
-    configuration->set("c2.rest.listener.heartbeat.rooturi", "null");
+    configuration->set("c2.agent.heartbeat.reporter.classes", "RESTReceiver");
+    configuration->set("c2.rest.listener.port", port);
+    configuration->set("c2.agent.heartbeat.period", "10");
+    configuration->set("c2.rest.listener.heartbeat.rooturi", path);
   }
 
  protected:
@@ -132,4 +129,3 @@ int main(int argc, char **argv) {
 
   return 0;
 }
-
