@@ -25,6 +25,7 @@
 #include "core/controller/StandardControllerServiceProvider.h"
 #include "provenance/Provenance.h"
 #include "core/reporting/SiteToSiteProvenanceReportingTask.h"
+
 #include "core/Processor.h"
 #include "core/Resource.h"
 #include "core/logging/LoggerConfiguration.h"

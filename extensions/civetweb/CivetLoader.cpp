@@ -15,16 +15,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <uuid/uuid.h>
-#include "../TestBase.h"
-#include "io/ClientSocket.h"
-#include "core/Processor.h"
-#include "core/ClassLoader.h"
-#include "core/yaml/YamlConfiguration.h"
+#include "CivetLoader.h"
+#include "core/FlowConfiguration.h"
 
-TEST_CASE("TestLoader", "[TestLoader]") {
-  TestController controller;
-  REQUIRE(nullptr != core::ClassLoader::getDefaultClassLoader().instantiate("AppendHostInfo", "hosty"));
-  REQUIRE(nullptr == core::ClassLoader::getDefaultClassLoader().instantiate("Don'tExist", "hosty3"));
-  REQUIRE(nullptr == core::ClassLoader::getDefaultClassLoader().instantiate("", "EmptyEmpty"));
+bool CivetFactory::added = core::FlowConfiguration::add_static_func("createCivetFactory");
+
+extern "C" {
+
+void *createCivetFactory(void) {
+  return new CivetFactory();
+}
+
 }

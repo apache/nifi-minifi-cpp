@@ -44,10 +44,12 @@ endif(CURL_FOUND)
 # Include UUID
 find_package(UUID REQUIRED)
 #set(LINK_FLAGS ${LINK_FLAGS} "-Wl,-whole-archive")
+
 # Include OpenSSL
 find_package(OpenSSL REQUIRED)
 include_directories(${OPENSSL_INCLUDE_DIR})
-target_link_libraries(minifi-http-curl ${CMAKE_DL_LIBS} )
+target_link_libraries(minifi-http-curl ${CMAKE_DL_LIBS} ${OPENSSL_LIBRARIES})
+
 find_package(ZLIB REQUIRED)
 include_directories(${ZLIB_INCLUDE_DIRS})
 target_link_libraries (minifi-http-curl ${ZLIB_LIBRARIES})

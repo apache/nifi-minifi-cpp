@@ -27,19 +27,19 @@
 #include <type_traits>
 #include <vector>
 
-#include "../include/core/controller/ControllerServiceMap.h"
-#include "../include/core/controller/StandardControllerServiceNode.h"
-#include "../include/core/controller/StandardControllerServiceProvider.h"
+#include "core/controller/ControllerServiceMap.h"
+#include "core/controller/StandardControllerServiceNode.h"
+#include "core/controller/StandardControllerServiceProvider.h"
 #include "controllers/SSLContextService.h"
-#include "../include/core/Core.h"
-#include "../include/core/logging/LoggerConfiguration.h"
-#include "../include/core/ProcessGroup.h"
-#include "../include/core/Resource.h"
-#include "../include/core/yaml/YamlConfiguration.h"
-#include "../include/FlowController.h"
-#include "../include/properties/Configure.h"
-#include "../unit/MockClasses.h"
-#include "../unit/ProvenanceTestHelper.h"
+#include "core/Core.h"
+#include "core/logging/LoggerConfiguration.h"
+#include "core/ProcessGroup.h"
+#include "core/Resource.h"
+#include "core/yaml/YamlConfiguration.h"
+#include "FlowController.h"
+#include "properties/Configure.h"
+#include "unit/MockClasses.h"
+#include "unit/ProvenanceTestHelper.h"
 
 REGISTER_RESOURCE(MockControllerService);
 REGISTER_RESOURCE(MockProcessor);

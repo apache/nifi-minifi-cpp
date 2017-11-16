@@ -15,8 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_C2_PROTOCOLS_RESTPROTOCOL_H_
-#define LIBMINIFI_INCLUDE_C2_PROTOCOLS_RESTPROTOCOL_H_
+#ifndef LIBMINIFI_INCLUDE_C2_RESTSENDER_H_
+#define LIBMINIFI_INCLUDE_C2_RESTSENDER_H_
 
 #include "json/json.h"
 #include "json/writer.h"
@@ -24,11 +24,11 @@
 #include <mutex>
 
 #include "utils/ByteArrayCallback.h"
-#include "CivetServer.h"
 #include "c2/C2Protocol.h"
+#include "c2/protocols/RESTProtocol.h"
 #include "c2/HeartBeatReporter.h"
 #include "controllers/SSLContextService.h"
-#include "utils/HTTPClient.h"
+#include "../client/HTTPClient.h"
 
 namespace org {
 namespace apache {
@@ -44,27 +44,32 @@ namespace c2 {
  * will encompass other protocols the context of its meaning here simply translates into POST and GET respectively.
  *
  */
-class RESTProtocol {
+class RESTSender : public RESTProtocol, public C2Protocol {
  public:
-  RESTProtocol() {
 
-  }
+  explicit RESTSender(std::string name, uuid_t uuid = nullptr);
 
-  virtual ~RESTProtocol() {
+  virtual C2Payload consumePayload(const std::string &url, const C2Payload &payload, Direction direction, bool async) override;
 
-  }
+  virtual C2Payload consumePayload(const C2Payload &payload, Direction direction, bool async) override;
+
+  virtual void update(const std::shared_ptr<Configure> &configure) override;
+
+  virtual void initialize(const std::shared_ptr<core::controller::ControllerServiceProvider> &controller, const std::shared_ptr<Configure> &configure) override;
 
  protected:
 
-  virtual Json::Value serializeJsonPayload(Json::Value &json_root, const C2Payload &payload);
+  virtual const C2Payload sendPayload(const std::string url, const Direction direction, const C2Payload &payload, const std::string outputConfig);
 
-  virtual const C2Payload parseJsonResponse(const C2Payload &payload, const std::vector<char> &response);
+  std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service_;
 
-  virtual std::string getOperation(const C2Payload &payload);
-
-  virtual Operation stringToOperation(const std::string str);
-
+ private:
+  std::shared_ptr<logging::Logger> logger_;
+  std::string rest_uri_;
+  std::string ack_uri_;
 };
+
+REGISTER_RESOURCE(RESTSender);
 
 } /* namesapce c2 */
 } /* namespace minifi */
@@ -72,4 +77,4 @@ class RESTProtocol {
 } /* namespace apache */
 } /* namespace org */
 
-#endif /* LIBMINIFI_INCLUDE_C2_PROTOCOLS_RESTOPERATIONS_H_ */
+#endif /* LIBMINIFI_INCLUDE_C2_RESTPROTOCOL_H_ */

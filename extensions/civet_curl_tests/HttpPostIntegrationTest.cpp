@@ -33,24 +33,24 @@
 #include "processors/ListenHTTP.h"
 #include "processors/LogAttribute.h"
 #include <sstream>
-#include "../TestBase.h"
+#include "TestBase.h"
 #include "utils/StringUtils.h"
 #include "core/Core.h"
-#include "../include/core/logging/Logger.h"
+#include "core/logging/Logger.h"
 #include "core/ProcessGroup.h"
 #include "core/yaml/YamlConfiguration.h"
 #include "FlowController.h"
 #include "properties/Configure.h"
-#include "../unit/ProvenanceTestHelper.h"
+#include "unit/ProvenanceTestHelper.h"
 #include "io/StreamFactory.h"
 #include "CivetServer.h"
 #include "RemoteProcessorGroupPort.h"
 #include "core/ConfigurableComponent.h"
 #include "controllers/SSLContextService.h"
-#include "../TestServer.h"
-#include "../integration/IntegrationBase.h"
+#include "TestServer.h"
+#include "integration/HTTPIntegrationBase.h"
 
-class HttpTestHarness : public IntegrationBase {
+class HttpTestHarness : public HTTPIntegrationBase {
  public:
   HttpTestHarness() {
     char format[] = "/tmp/ssth.XXXXXX";

@@ -61,7 +61,7 @@ else ()
 endif ()
 
 
-target_link_libraries(minifiexe yaml-cpp c-library civetweb-cpp ${JSON_CPP_LIB} ${UUID_LIBRARIES} ${OPENSSL_LIBRARIES})
+target_link_libraries(minifiexe yaml-cpp ${JSON_CPP_LIB} ${UUID_LIBRARIES} ${OPENSSL_LIBRARIES})
 
 
 if (APPLE)
