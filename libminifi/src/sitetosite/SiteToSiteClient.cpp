@@ -545,7 +545,7 @@ int16_t SiteToSiteClient::send(std::string transactionID, DataPacket *packet, co
   transaction->total_transfers_++;
   transaction->_state = DATA_EXCHANGED;
   transaction->_bytes += len;
-  logger_->log_info("Site2Site transaction %s send flow record %d, total length %d", transactionID.c_str(), transaction->total_transfers_, transaction->_bytes);
+  logger_->log_info("Site2Site transaction %s send flow record %d, total length %d, added %d", transactionID.c_str(), transaction->total_transfers_, transaction->_bytes, len);
 
   return 0;
 }
@@ -610,6 +610,7 @@ bool SiteToSiteClient::receive(std::string transactionID, DataPacket *packet, bo
   }
 
   if (!transaction->isDataAvailable()) {
+    logger_->log_info("No data is available");
     eof = true;
     return true;
   }
@@ -617,6 +618,7 @@ bool SiteToSiteClient::receive(std::string transactionID, DataPacket *packet, bo
   // start to read the packet
   uint32_t numAttributes;
   ret = transaction->getStream().read(numAttributes);
+  logger_->log_info("returning true/false because ret is %d %d", ret, numAttributes);
   if (ret <= 0 || numAttributes > MAX_NUM_ATTRIBUTES) {
     return false;
   }
@@ -656,7 +658,7 @@ bool SiteToSiteClient::receive(std::string transactionID, DataPacket *packet, bo
   }
   transaction->_state = DATA_EXCHANGED;
   transaction->_bytes += len;
-  logger_->log_info("Site2Site transaction %s receives flow record %d, total length %d", transactionID.c_str(), transaction->total_transfers_, transaction->_bytes);
+  logger_->log_info("Site2Site transaction %s receives flow record %d, total length %d, added %d", transactionID.c_str(), transaction->total_transfers_, transaction->_bytes, len);
 
   return true;
 }
@@ -720,7 +722,11 @@ bool SiteToSiteClient::receiveFlowFiles(const std::shared_ptr<core::ProcessConte
         sitetosite::WriteCallback callback(&packet);
         session->write(flowFile, &callback);
         if (flowFile->getSize() != packet._size) {
-          throw Exception(SITE2SITE_EXCEPTION, "Receive Size Not Right");
+          std::stringstream message;
+          message << "Receive size not correct, expected to send " << flowFile->getSize() << " bytes, but actually sent " << packet._size;
+          throw Exception(SITE2SITE_EXCEPTION, message.str().c_str());
+        } else {
+          logger_->log_info("received %d with expected %d", flowFile->getSize(), packet._size);
         }
       }
       core::Relationship relation;  // undefined relationship

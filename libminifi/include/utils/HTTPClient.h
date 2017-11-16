@@ -26,7 +26,13 @@ namespace minifi {
 namespace utils {
 
 struct HTTPUploadCallback {
+  HTTPUploadCallback() {
+    stop = false;
+    ptr = nullptr;
+    pos = 0;
+  }
   std::mutex mutex;
+  std::atomic<bool> stop;
   ByteInputCallBack *ptr;
   size_t pos;
 
@@ -37,7 +43,13 @@ struct HTTPUploadCallback {
 };
 
 struct HTTPReadCallback {
+  HTTPReadCallback() {
+    stop = false;
+    ptr = nullptr;
+    pos = 0;
+  }
   std::mutex mutex;
+  std::atomic<bool> stop;
   ByteOutputCallback *ptr;
   size_t pos;
 
@@ -112,6 +124,8 @@ class HTTPRequestResponse {
    */
   static size_t recieve_write(char * data, size_t size, size_t nmemb, void * p) {
     HTTPReadCallback *callback = static_cast<HTTPReadCallback*>(p);
+    if (callback->stop)
+      return 0x10000000;
     callback->ptr->write(data, (size * nmemb));
     return (size * nmemb);
   }
@@ -127,6 +141,8 @@ class HTTPRequestResponse {
   static size_t send_write(char * data, size_t size, size_t nmemb, void * p) {
     if (p != 0) {
       HTTPUploadCallback *callback = (HTTPUploadCallback*) p;
+      if (callback->stop)
+        return 0x10000000;
       size_t buffer_size = callback->ptr->getBufferSize();
       if (callback->getPos() <= buffer_size) {
         int len = buffer_size - callback->pos;

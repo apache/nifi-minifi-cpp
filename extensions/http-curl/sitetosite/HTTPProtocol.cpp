@@ -134,6 +134,9 @@ int HttpSiteToSiteClient::readResponse(const std::shared_ptr<Transaction> &trans
         auto stream = dynamic_cast<io::HttpStream*>(peer_->getStream());
         if (!stream->isFinished()) {
           logger_->log_info("confirm read for %s, but not finished ", transaction->getUUIDStr());
+          if (stream->waitForDataAvailable()) {
+            code = CONTINUE_TRANSACTION;
+          }
         }
 
         closeTransaction(transaction->getUUIDStr());
@@ -141,10 +144,18 @@ int HttpSiteToSiteClient::readResponse(const std::shared_ptr<Transaction> &trans
       } else {
         auto stream = dynamic_cast<io::HttpStream*>(peer_->getStream());
         if (stream->isFinished()) {
+          logger_->log_info("Finished %s ", transaction->getUUIDStr());
           code = FINISH_TRANSACTION;
           current_code = FINISH_TRANSACTION;
         } else {
-          code = CONTINUE_TRANSACTION;
+          if (stream->waitForDataAvailable()) {
+            logger_->log_info("data is available, so continuing transaction  %s ", transaction->getUUIDStr());
+            code = CONTINUE_TRANSACTION;
+          } else {
+            logger_->log_info("No data available for transaction %s ", transaction->getUUIDStr());
+            code = FINISH_TRANSACTION;
+            current_code = FINISH_TRANSACTION;
+          }
         }
       }
     } else if (transaction->getState() == TRANSACTION_CONFIRMED) {
@@ -277,6 +288,12 @@ void HttpSiteToSiteClient::closeTransaction(const std::string &transactionID) {
   client->submit();
 
   logger_->log_debug("Received %d response code from delete", client->getResponseCode());
+
+  if (client->getResponseCode() == 400){
+    std::stringstream message;
+    message << "Received "  << client->getResponseCode() << " from " << uri.str();
+    throw Exception(SITE2SITE_EXCEPTION, message.str().c_str());
+  }
 
   transaction->closed_ = true;
 
