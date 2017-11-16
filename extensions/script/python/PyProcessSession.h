@@ -46,6 +46,16 @@ class PyProcessSession {
   void read(std::shared_ptr<script::ScriptFlowFile> flow_file, py::object input_stream_callback);
   void write(std::shared_ptr<script::ScriptFlowFile> flow_file, py::object output_stream_callback);
 
+  /**
+   * Sometimes we want to release shared pointers to core resources when
+   * we know they are no longer in need. This method is for those times.
+   *
+   * For example, we do not want to hold on to shared pointers to FlowFiles
+   * after an onTrigger call, because doing so can be very expensive in terms
+   * of repository resources.
+   */
+  void releaseCoreResources();
+
   class __attribute__((visibility("default"))) PyInputStreamCallback : public InputStreamCallback {
    public:
     explicit PyInputStreamCallback(const py::object &input_stream_callback) {
@@ -77,6 +87,7 @@ class PyProcessSession {
   };
 
  private:
+  std::vector<std::shared_ptr<script::ScriptFlowFile>> flow_files_;
   std::shared_ptr<core::ProcessSession> session_;
 };
 

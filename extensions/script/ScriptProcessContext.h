@@ -34,6 +34,7 @@ class ScriptProcessContext {
   explicit ScriptProcessContext(std::shared_ptr<core::ProcessContext> context);
 
   std::string getProperty(const std::string &name);
+  void releaseProcessContext();
 
  private:
   std::shared_ptr<core::ProcessContext> context_;

@@ -35,6 +35,7 @@ class ScriptFlowFile {
   bool updateAttribute(std::string key, std::string value);
   bool removeAttribute(std::string key);
   std::shared_ptr<core::FlowFile> getFlowFile();
+  void releaseFlowFile();
 
  private:
   std::shared_ptr<core::FlowFile> flow_file_;
