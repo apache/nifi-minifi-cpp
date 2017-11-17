@@ -166,6 +166,13 @@ if (ENABLE_USB_CAMERA)
     createExtension(USB-CAMERA-EXTENSIONS "USB CAMERA EXTENSIONS" "This enables USB camera support" "extensions/usb-camera" "${TEST_DIR}/usb-camera-tests" "TRUE" "thirdparty/libuvc-0.0.6")
 endif()
 
+## TensorFlow extensions
+## Disabled by default because TF can be complex/environment-specific to build
+option(ENABLE_TENSORFLOW "Disables the TensorFlow extensions." OFF)
+if (ENABLE_TENSORFLOW)
+    createExtension(TENSORFLOW-EXTENSIONS "TENSORFLOW EXTENSIONS" "This enables TensorFlow support" "extensions/tensorflow" "${TEST_DIR}/tensorflow-tests")
+endif()
+
 ## NOW WE CAN ADD LIBRARIES AND EXTENSIONS TO MAIN
 
 add_subdirectory(main)
