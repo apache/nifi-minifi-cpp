@@ -18,7 +18,7 @@
 
 # First stage: the build environment
 # Edge required for rocksdb
-FROM alpine:edge AS builder
+FROM alpine:3.5 AS builder
 MAINTAINER Apache NiFi <dev@nifi.apache.org>
 
 ARG UID
@@ -27,8 +27,6 @@ ARG MINIFI_VERSION
 ARG MINIFI_SOURCE_CODE
 
 # Install the system dependencies needed for a build
-# Add testing repo for rocksdb
-RUN echo 'http://dl-cdn.alpinelinux.org/alpine/edge/testing' >> /etc/apk/repositories
 RUN apk --update --no-cache upgrade && apk --update --no-cache add gcc \
 	g++ \
 	make \
@@ -38,14 +36,14 @@ RUN apk --update --no-cache upgrade && apk --update --no-cache add gcc \
 	boost-dev \
 	vim \
 	util-linux-dev \
-	rocksdb-dev \
 	curl-dev \
 	cmake \
 	git \
 	unzip \
 	gpsd-dev \
 	libressl-dev \
-	zlib-dev
+	zlib-dev \
+	python-dev
 
 ENV USER minificpp
 ENV MINIFI_BASE_DIR /opt/minifi
@@ -66,12 +64,12 @@ RUN cd $MINIFI_BASE_DIR \
 	&& mkdir build \
 	&& cd build \
 	&& cmake .. \
-	&& make package \
+	&& make -j8 package \
 	&& tar -xzvf $MINIFI_BASE_DIR/build/nifi-minifi-cpp-$MINIFI_VERSION-bin.tar.gz -C $MINIFI_BASE_DIR
 
 # Second stage: the runtime image
 # Edge required for rocksdb
-FROM alpine:edge
+FROM alpine:3.5
 
 ARG UID
 ARG GID
@@ -83,11 +81,11 @@ RUN echo 'http://dl-cdn.alpinelinux.org/alpine/edge/testing' >> /etc/apk/reposit
 
 RUN apk --update --no-cache upgrade && apk add --update --no-cache \
 	util-linux \
-	rocksdb \
 	curl \
 	unzip \
 	gpsd \
 	libressl \
+	python \
 	zlib
 
 # Start MiNiFi CPP in the foreground
