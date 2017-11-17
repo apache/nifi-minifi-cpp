@@ -37,6 +37,10 @@ std::string ScriptProcessContext::getProperty(const std::string &name) {
   return value;
 }
 
+void ScriptProcessContext::releaseProcessContext() {
+  context_.reset();
+}
+
 } /* namespace script */
 } /* namespace minifi */
 } /* namespace nifi */

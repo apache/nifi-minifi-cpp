@@ -51,7 +51,7 @@ LuaScriptEngine::LuaScriptEngine()
       "write", &lua::LuaProcessSession::write,
       "transfer", &lua::LuaProcessSession::transfer);
   lua_.new_usertype<script::ScriptFlowFile>(
-      "ProcessSession",
+      "FlowFile",
       "getAttribute", &script::ScriptFlowFile::getAttribute,
       "addAttribute", &script::ScriptFlowFile::addAttribute,
       "removeAttribute", &script::ScriptFlowFile::removeAttribute,

@@ -74,6 +74,32 @@ class __attribute__((visibility("default"))) PythonScriptEngine : public script:
     (*bindings_)[fn_name.c_str()](convert(args)...);
   }
 
+  class TriggerSession {
+   public:
+    TriggerSession(std::shared_ptr<script::ScriptProcessContext> script_context,
+                   std::shared_ptr<PyProcessSession> py_session)
+        : script_context_(std::move(script_context)),
+          py_session_(std::move(py_session)) {
+    }
+
+    ~TriggerSession() {
+      script_context_->releaseProcessContext();
+      py_session_->releaseCoreResources();
+    }
+
+   private:
+    std::shared_ptr<script::ScriptProcessContext> script_context_;
+    std::shared_ptr<PyProcessSession> py_session_;
+  };
+
+  void onTrigger(const std::shared_ptr<core::ProcessContext> &context,
+                 const std::shared_ptr<core::ProcessSession> &session) {
+    auto script_context = convertContext(context);
+    auto py_session = convertSession(session);
+    TriggerSession trigger_session(script_context, py_session);
+    call("onTrigger", script_context, py_session);
+  }
+
   /**
    * Binds an object into the scope of the python interpreter.
    * @tparam T
@@ -92,12 +118,12 @@ class __attribute__((visibility("default"))) PythonScriptEngine : public script:
     return py::cast(value);
   }
 
-  py::object convert(const std::shared_ptr<core::ProcessSession> &session) {
-    return py::cast(std::make_shared<PyProcessSession>(session));
+  std::shared_ptr<PyProcessSession> convertSession(const std::shared_ptr<core::ProcessSession> &session) {
+    return std::make_shared<PyProcessSession>(session);
   }
 
-  py::object convert(const std::shared_ptr<core::ProcessContext> &context) {
-    return py::cast(std::make_shared<script::ScriptProcessContext>(context));
+  std::shared_ptr<script::ScriptProcessContext> convertContext(const std::shared_ptr<core::ProcessContext> &context) {
+    return std::make_shared<script::ScriptProcessContext>(context);
   }
 
  private:

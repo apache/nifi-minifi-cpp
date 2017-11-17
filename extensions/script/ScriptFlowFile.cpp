@@ -35,25 +35,45 @@ ScriptFlowFile::ScriptFlowFile(std::shared_ptr<core::FlowFile> flow_file)
 }
 
 std::string ScriptFlowFile::getAttribute(const std::string &key) {
+  if (!flow_file_) {
+    throw std::runtime_error("Access of FlowFile after it has been released");
+  }
+
   std::string value;
   flow_file_->getAttribute(key, value);
   return value;
 }
 
 bool ScriptFlowFile::addAttribute(const std::string &key, const std::string &value) {
+  if (!flow_file_) {
+    throw std::runtime_error("Access of FlowFile after it has been released");
+  }
+
   return flow_file_->addAttribute(key, value);
 }
 
 bool ScriptFlowFile::updateAttribute(std::string key, std::string value) {
+  if (!flow_file_) {
+    throw std::runtime_error("Access of FlowFile after it has been released");
+  }
+
   return flow_file_->updateAttribute(std::move(key), std::move(value));
 }
 
 bool ScriptFlowFile::removeAttribute(std::string key) {
+  if (!flow_file_) {
+    throw std::runtime_error("Access of FlowFile after it has been released");
+  }
+
   return flow_file_->removeAttribute(std::move(key));
 }
 
 std::shared_ptr<core::FlowFile> ScriptFlowFile::getFlowFile() {
   return flow_file_;
+}
+
+void ScriptFlowFile::releaseFlowFile() {
+  flow_file_.reset();
 }
 
 } /* namespace script */
