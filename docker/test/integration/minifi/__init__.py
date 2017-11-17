@@ -426,7 +426,7 @@ class GetFile(Processor):
 class PutFile(Processor):
     def __init__(self, output_dir):
         super(PutFile, self).__init__('PutFile',
-                                      properties={'Output Directory': output_dir},
+                                      properties={'Directory': output_dir},
                                       auto_terminate=['success', 'failure'])
 
     def nifi_property_key(self, key):
