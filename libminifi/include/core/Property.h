@@ -217,7 +217,10 @@ class Property {
     }
 
     char end0 = toupper(pEnd[0]);
-    if ((end0 == 'K') || (end0 == 'M') || (end0 == 'G') || (end0 == 'T') || (end0 == 'P')) {
+    if (end0 == 'B') {
+      output = ival;
+      return true;
+    } else if ((end0 == 'K') || (end0 == 'M') || (end0 == 'G') || (end0 == 'T') || (end0 == 'P')) {
       if (pEnd[1] == '\0') {
         unsigned long int multiplier = 1000;
 
