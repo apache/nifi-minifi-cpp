@@ -45,6 +45,8 @@ core::Property GenerateFlowFile::BatchSize("Batch Size", "The number of FlowFile
 core::Property GenerateFlowFile::DataFormat("Data Format", "Specifies whether the data should be Text or Binary", GenerateFlowFile::DATA_FORMAT_BINARY);
 core::Property GenerateFlowFile::UniqueFlowFiles("Unique FlowFiles", "If true, each FlowFile that is generated will be unique. If false, a random value will be generated and all FlowFiles", "true");
 core::Relationship GenerateFlowFile::Success("success", "success operational on the flow record");
+const unsigned int TEXT_LEN = 90;
+static const char TEXT_CHARS[TEXT_LEN+1] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$%^&*()-_=+/?.,';:\"?<>\n\t ";
 
 void GenerateFlowFile::initialize() {
   // Set the supported properties
@@ -64,6 +66,7 @@ void GenerateFlowFile::onTrigger(core::ProcessContext *context, core::ProcessSes
   int64_t batchSize = 1;
   bool uniqueFlowFile = true;
   int64_t fileSize = 1024;
+  bool textData = false;
 
   std::string value;
   if (context->getProperty(FileSize.getName(), value)) {
@@ -71,6 +74,9 @@ void GenerateFlowFile::onTrigger(core::ProcessContext *context, core::ProcessSes
   }
   if (context->getProperty(BatchSize.getName(), value)) {
     core::Property::StringToInt(value, batchSize);
+  }
+  if (context->getProperty(DataFormat.getName(), value)) {
+    textData = (value == GenerateFlowFile::DATA_FORMAT_TEXT);
   }
   if (context->getProperty(UniqueFlowFiles.getName(), value)) {
     org::apache::nifi::minifi::utils::StringUtils::StringToBool(value, uniqueFlowFile);
@@ -84,10 +90,17 @@ void GenerateFlowFile::onTrigger(core::ProcessContext *context, core::ProcessSes
     uint64_t dataSize = fileSize;
     GenerateFlowFile::WriteCallback callback(data, dataSize);
     char *current = data;
-    for (int i = 0; i < fileSize; i += sizeof(int)) {
-      int randValue = random();
-      *(reinterpret_cast<int*>(current)) = randValue;
-      current += sizeof(int);
+    if (textData) {
+      for (int i = 0; i < fileSize; i++) {
+        int randValue = random();
+        data[i] = TEXT_CHARS[randValue % TEXT_LEN];
+      }
+    } else {
+      for (int i = 0; i < fileSize; i += sizeof(int)) {
+        int randValue = random();
+        *(reinterpret_cast<int*>(current)) = randValue;
+        current += sizeof(int);
+      }
     }
     for (int i = 0; i < batchSize; i++) {
       // For each batch
@@ -101,14 +114,21 @@ void GenerateFlowFile::onTrigger(core::ProcessContext *context, core::ProcessSes
     delete[] data;
   } else {
     if (!_data) {
-      // We have not create the unique data yet
+      // We have not created the unique data yet
       _data = new char[fileSize];
       _dataSize = fileSize;
       char *current = _data;
-      for (int i = 0; i < fileSize; i += sizeof(int)) {
-        int randValue = random();
-        *(reinterpret_cast<int*>(current)) = randValue;
-        current += sizeof(int);
+      if (textData) {
+        for (int i = 0; i < fileSize; i++) {
+          int randValue = random();
+          _data[i] = TEXT_CHARS[randValue % TEXT_LEN];
+        }
+      } else {
+        for (int i = 0; i < fileSize; i += sizeof(int)) {
+          int randValue = random();
+          *(reinterpret_cast<int*>(current)) = randValue;
+          current += sizeof(int);
+        }
       }
     }
     GenerateFlowFile::WriteCallback callback(_data, _dataSize);
