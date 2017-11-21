@@ -126,6 +126,8 @@ $ yum install cmake \
   libuuid libuuid-devel \
   boost-devel \
   openssl-devel \
+  bzip2-devel \
+  xz-devel \
   doxygen
 $ # (Optional) for building Python support
 $ yum install python34-devel
@@ -151,7 +153,9 @@ $ apt-get install cmake \
   libcurl-dev \
   librocksdb-dev librocksdb4.1 \
   uuid-dev uuid \
-  libboost-all-dev libssl-dev
+  libboost-all-dev libssl-dev \
+  bzip2-dev \
+  xz-dev \
   doxygen
 $ # (Optional) for building Python support
 $ apt-get install libpython3-dev
@@ -179,6 +183,8 @@ $ brew install cmake \
   openssl \
   python \
   lua \
+  xz \
+  bzip2 \
   doxygen
 $ brew install curl
 $ brew link curl --force
