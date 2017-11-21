@@ -164,4 +164,4 @@ TEST_CASE("TensorFlow: Apply Graph", "[executescriptTensorFlowApplyGraph]") { //
     float tensor_val = tensor.flat<float>().data()[0];
     REQUIRE(tensor_val == 4.0f);
   }
-} 
+}
