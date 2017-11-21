@@ -42,9 +42,8 @@ Specific goals for MiNiFi are comprised of:
 Perspectives of the role of MiNiFi should be from the perspective of the agent acting immediately at, or directly adjacent to, source sensors, systems, or servers.
 
 ## Caveats
-* 0.2.0 represents a non-GA release, APIs and interfaces are subject to change
-* Build and usage currently only supports Linux and OS X environments. Providing the needed tooling to support Windows will be established as part of [MINIFI-34](https://issues.apache.org/jira/browse/MINIFI-34).
-* Using Site to Site requires the additional manual step of specifying the remote socket.  This being autonegotiated through NiFi's REST API is captured in [MINIFI-70](https://issues.apache.org/jira/browse/MINIFI-70).
+* 0.3.0 represents a non-GA release, APIs and interfaces are subject to change
+* Build and usage currently only supports Linux and OS X environments. MiNiFi C++ can be built and run through the Windows Subsystem for Linux but we provide no support for this platform.
 * The processors currently implemented include:
   * AppendHostInfo
   * ExecuteProcess
@@ -65,7 +64,7 @@ Perspectives of the role of MiNiFi should be from the perspective of the agent a
   * UnfocusArchive
   * ManipulateArchive
   * PutKafka 
-* Provenance events generation is supported and are persisted using RocksDB.
+* Provenance events generation is supported and are persisted using RocksDB. Volatile repositories can be used on systems without persistent storage.
 
 ## System Requirements
 
