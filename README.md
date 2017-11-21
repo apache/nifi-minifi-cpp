@@ -154,8 +154,7 @@ $ apt-get install cmake \
   librocksdb-dev librocksdb4.1 \
   uuid-dev uuid \
   libboost-all-dev libssl-dev \
-  bzip2-dev \
-  xz-dev \
+  libbz2-dev liblzma-dev \
   doxygen
 $ # (Optional) for building Python support
 $ apt-get install libpython3-dev
