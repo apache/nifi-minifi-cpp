@@ -27,7 +27,7 @@ find_package(TensorFlow REQUIRED)
 
 message("-- Found TensorFlow: ${TENSORFLOW_INCLUDE_DIRS}")
 
-include_directories(../../libminifi/include  ../../libminifi/include/core  ../../thirdparty/spdlog-20170710/include ../../thirdparty/concurrentqueue ../../thirdparty/yaml-cpp-yaml-cpp-0.5.3/include ../../thirdparty/civetweb-1.9.1/include ../../thirdparty/jsoncpp/include  ../../thirdparty/) 
+include_directories(../../libminifi/include  ../../libminifi/include/core  ../../thirdparty/spdlog-20170710/include ../../thirdparty/concurrentqueue ../../thirdparty/yaml-cpp-yaml-cpp-0.5.3/include ${CIVET_THIRDPARTY_ROOT}/include ../../thirdparty/jsoncpp/include  ../../thirdparty/) 
 
 include_directories(${TENSORFLOW_INCLUDE_DIRS})
 

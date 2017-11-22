@@ -44,7 +44,7 @@ if (NOT PNG_FOUND)
     message(FATAL_ERROR "A compatible PNG library is required to build GetUSBCamera.")
 endif()
 
-include_directories(../../libminifi/include  ../../libminifi/include/core  ../../thirdparty/spdlog-20170710/include ../../thirdparty/concurrentqueue ../../thirdparty/yaml-cpp-yaml-cpp-0.5.3/include ../../thirdparty/civetweb-1.10/include ../../thirdparty/jsoncpp/include  ../../thirdparty/) 
+include_directories(../../libminifi/include  ../../libminifi/include/core  ../../thirdparty/spdlog-20170710/include ../../thirdparty/concurrentqueue ../../thirdparty/yaml-cpp-yaml-cpp-0.5.3/include ${CIVET_THIRDPARTY_ROOT}/include ../../thirdparty/jsoncpp/include  ../../thirdparty/) 
 
 include_directories(../../thirdparty/libuvc-0.0.6/include)
 

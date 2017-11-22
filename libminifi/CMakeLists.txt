@@ -55,7 +55,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-reorder")
 include_directories(../thirdparty/spdlog-20170710/include)
 include_directories(../thirdparty/yaml-cpp-yaml-cpp-20171024/include)
 
-include_directories(../thirdparty/civetweb-1.10/include)
+include_directories(${CIVET_THIRDPARTY_ROOT}/include)
 include_directories(../thirdparty/jsoncpp/include)
 include_directories(../thirdparty/concurrentqueue/)
 include_directories(include)
