@@ -22,7 +22,7 @@ docker_dir="$( cd ${0%/*} && pwd )"
 # Create virutal environment for testing
 if [[ ! -d ./test-env-py2 ]]; then
   echo "Creating virtual environment in ./test-env-py2" 1>&2
-  virtualenv ./test-env-py2
+  virtualenv --python=python2 ./test-env-py2
 fi
 
 echo "Activating virtual environment..." 1>&2
