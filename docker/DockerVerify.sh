@@ -47,7 +47,7 @@ pip install --upgrade \
             m2crypto \
             watchdog
 
-export MINIFI_VERSION=0.3.0
+export MINIFI_VERSION=0.4.0
 export PYTHONPATH="${PYTHONPATH}:${docker_dir}/test/integration"
 
 exec pytest -s -v "${docker_dir}"/test/integration

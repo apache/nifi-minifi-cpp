@@ -21,7 +21,7 @@ cmake_minimum_required(VERSION 3.0)
 project(nifi-minifi-cpp)
 set(PROJECT_NAME "nifi-minifi-cpp")
 set(PROJECT_VERSION_MAJOR 0)
-set(PROJECT_VERSION_MINOR 3)
+set(PROJECT_VERSION_MINOR 4)
 set(PROJECT_VERSION_PATCH 0)
 option(SKIP_TESTS "Skips building all tests." OFF)
 
