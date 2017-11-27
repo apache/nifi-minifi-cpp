@@ -35,6 +35,7 @@
 #include "MergeContent.h"
 #include <sstream>
 #include <iostream>
+#include "processors/LogAttribute.h"
 
 static const char* FLOW_FILE = "/tmp/minifi-mergecontent";
 static const char* EXPECT_MERGE_CONTENT_FIRST = "/tmp/minifi-expect-mergecontent1.txt";

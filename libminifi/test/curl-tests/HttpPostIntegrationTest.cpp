@@ -30,6 +30,8 @@
 #include <iostream>
 #include "HTTPClient.h"
 #include "InvokeHTTP.h"
+#include "processors/ListenHTTP.h"
+#include "processors/LogAttribute.h"
 #include <sstream>
 #include "../TestBase.h"
 #include "utils/StringUtils.h"

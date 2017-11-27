@@ -32,6 +32,8 @@
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/ProcessorNode.h"
+#include "processors/TailFile.h"
+#include "processors/LogAttribute.h"
 #include <iostream>
 
 static const char *NEWLINE_FILE = ""

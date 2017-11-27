@@ -37,6 +37,7 @@
 #include "FlowFileRecord.h"
 #include <sstream>
 #include <iostream>
+#include "processors/LogAttribute.h"
 
 static const char* EXPECT_COMPRESS_CONTENT = "/tmp/minifi-expect-compresscontent.txt";
 static const char* COMPRESS_CONTENT = "/tmp/minifi-compresscontent";

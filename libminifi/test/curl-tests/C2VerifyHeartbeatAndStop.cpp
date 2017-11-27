@@ -49,6 +49,7 @@
 #include "c2/C2Agent.h"
 #include "RESTReceiver.h"
 #include "../integration/IntegrationBase.h"
+#include "processors/LogAttribute.h"
 
 class Responder : public CivetHandler {
  public:

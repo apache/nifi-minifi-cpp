@@ -33,6 +33,8 @@
 #include "core/ProcessSession.h"
 #include "core/ProcessorNode.h"
 
+#include "processors/GetFile.h"
+#include "processors/PutFile.h"
 #include "processors/ExtractText.h"
 #include "processors/LogAttribute.h"
 
