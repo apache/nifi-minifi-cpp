@@ -86,6 +86,7 @@ else ()
 endif (OPENSSL_FOUND)
 
 add_library(minifi STATIC ${PROCESSOR_SOURCES})
+target_link_libraries(minifi c-library civetweb-cpp)
 
 target_link_libraries(minifi core-minifi)
 
