@@ -42,7 +42,7 @@ Specific goals for MiNiFi are comprised of:
 Perspectives of the role of MiNiFi should be from the perspective of the agent acting immediately at, or directly adjacent to, source sensors, systems, or servers.
 
 ## Caveats
-* 0.3.0 represents a non-GA release, APIs and interfaces are subject to change
+* 0.4.0 represents a non-GA release, APIs and interfaces are subject to change
 * Build and usage currently only supports Linux and OS X environments. MiNiFi C++ can be built and run through the Windows Subsystem for Linux but we provide no support for this platform.
 * The processors currently implemented include:
   * AppendHostInfo
@@ -294,11 +294,11 @@ $ sudo brew install libpcap
 ```
 ~/Development/code/apache/nifi-minifi-cpp/build
 $ make docker
-NiFi-MiNiFi-CPP Version: 0.3.0
+NiFi-MiNiFi-CPP Version: 0.4.0
 Current Working Directory: /Users/jdyer/Development/github/nifi-minifi-cpp/docker
 CMake Source Directory: /Users/jdyer/Development/github/nifi-minifi-cpp
-MiNiFi Package: nifi-minifi-cpp-0.3.0-bin.tar.gz
-Docker Command: 'docker build --build-arg UID=1000 --build-arg GID=1000 --build-arg MINIFI_VERSION=0.3.0 --build-arg MINIFI_PACKAGE=nifi-minifi-cpp-0.3.0-bin.tar.gz -t apacheminificpp:0.3.0 .'
+MiNiFi Package: nifi-minifi-cpp-0.4.0-bin.tar.gz
+Docker Command: 'docker build --build-arg UID=1000 --build-arg GID=1000 --build-arg MINIFI_VERSION=0.4.0 --build-arg MINIFI_PACKAGE=nifi-minifi-cpp-0.4.0-bin.tar.gz -t apacheminificpp:0.4.0 .'
 Sending build context to Docker daemon 777.2 kB
 Step 1 : FROM alpine:3.5
  ---> 88e169ea8f46
