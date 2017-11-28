@@ -63,7 +63,7 @@ Perspectives of the role of MiNiFi should be from the perspective of the agent a
   * FocusArchive
   * UnfocusArchive
   * ManipulateArchive
-  * PutKafka 
+  * PublishKafka 
 * Provenance events generation is supported and are persisted using RocksDB. Volatile repositories can be used on systems without persistent storage.
 
 ## System Requirements
