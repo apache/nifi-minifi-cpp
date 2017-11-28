@@ -18,7 +18,7 @@
 #ifndef EXTENSION_RDKAFKALOADER_H
 #define EXTENSION_RDKAFKALOADER_H
 
-#include "PutKafka.h"
+#include "PublishKafka.h"
 #include "core/ClassLoader.h"
 
 class __attribute__((visibility("default"))) RdKafkaFactory : public core::ObjectFactory {
@@ -44,13 +44,13 @@ class __attribute__((visibility("default"))) RdKafkaFactory : public core::Objec
    */
   virtual std::vector<std::string> getClassNames() {
     std::vector<std::string> class_names;
-    class_names.push_back("PutKafka");
+    class_names.push_back("PublishKafka");
     return class_names;
   }
 
   virtual std::unique_ptr<ObjectFactory> assign(const std::string &class_name) {
-    if (utils::StringUtils::equalsIgnoreCase(class_name, "PutKafka")) {
-      return std::unique_ptr<ObjectFactory>(new core::DefautObjectFactory<minifi::processors::PutKafka>());
+    if (utils::StringUtils::equalsIgnoreCase(class_name, "PublishKafka")) {
+      return std::unique_ptr<ObjectFactory>(new core::DefautObjectFactory<minifi::processors::PublishKafka>());
     } else {
       return nullptr;
     }
