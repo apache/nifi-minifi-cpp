@@ -1,6 +1,6 @@
 /**
- * @file PutKafka.h
- * PutKafka class declaration
+ * @file PublishKafka.h
+ * PublishKafka class declaration
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -48,23 +48,24 @@ namespace processors {
 #define SECURITY_PROTOCOL_SSL "ssl"
 #define SECURITY_PROTOCOL_SASL_PLAINTEXT "sasl_plaintext"
 #define SECURITY_PROTOCOL_SASL_SSL "sasl_ssl"
+#define KAFKA_KEY_ATTRIBUTE "kafka.key"
 
-// PutKafka Class
-class PutKafka: public core::Processor {
+// PublishKafka Class
+class PublishKafka: public core::Processor {
 public:
   // Constructor
   /*!
    * Create a new processor
    */
-  explicit PutKafka(std::string name, uuid_t uuid = NULL) :
-      core::Processor(name, uuid), logger_(logging::LoggerFactory<PutKafka>::getLogger()) {
+  explicit PublishKafka(std::string name, uuid_t uuid = NULL) :
+      core::Processor(name, uuid), logger_(logging::LoggerFactory<PublishKafka>::getLogger()) {
     conf_ = nullptr;
     rk_ = nullptr;
     topic_conf_ = nullptr;
     rkt_ = nullptr;
   }
   // Destructor
-  virtual ~PutKafka() {
+  virtual ~PublishKafka() {
     if (rk_)
       rd_kafka_flush(rk_, 10*1000); /* wait for max 10 seconds */
     if (rkt_)
@@ -73,7 +74,7 @@ public:
       rd_kafka_destroy(rk_);
   }
   // Processor Name
-  static constexpr char const* ProcessorName = "PutKafka";
+  static constexpr char const* ProcessorName = "PublishKafka";
   // Supported Properties
   static core::Property SeedBrokers;
   static core::Property Topic;
@@ -148,12 +149,12 @@ public:
    * ProcessSession objects.
    */
   void onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory);
-  // OnTrigger method, implemented by NiFi PutKafka
+  // OnTrigger method, implemented by NiFi PublishKafka
   virtual void onTrigger(core::ProcessContext *context, core::ProcessSession *session) {
   }
-  // OnTrigger method, implemented by NiFi PutKafka
+  // OnTrigger method, implemented by NiFi PublishKafka
   virtual void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session);
-  // Initialize, over write by NiFi PutKafka
+  // Initialize, over write by NiFi PublishKafka
   virtual void initialize(void);
 
 protected:
@@ -168,7 +169,7 @@ private:
   uint64_t max_seg_size_;
 };
 
-REGISTER_RESOURCE (PutKafka);
+REGISTER_RESOURCE (PublishKafka);
 
 } /* namespace processors */
 } /* namespace minifi */
