@@ -68,7 +68,7 @@ void ProvenanceRepository::run() {
         std::string key = it->key().ToString();
         uint64_t eventTime = eventRead.getEventTime(reinterpret_cast<uint8_t*>(const_cast<char*>(it->value().data())), it->value().size());
         if (eventTime > 0) {
-          if ((curTime - eventTime) > max_partition_millis_)
+          if ((curTime - eventTime) > (uint64_t)max_partition_millis_)
             Delete(key);
         } else {
           logger_->log_debug("NiFi Provenance retrieve event %s fail", key.c_str());
@@ -79,7 +79,7 @@ void ProvenanceRepository::run() {
     }
     flush();
     size = getRepoSize();
-    if (size > max_partition_bytes_)
+    if (size > (uint64_t)max_partition_bytes_)
       repo_full_ = true;
     else
       repo_full_ = false;

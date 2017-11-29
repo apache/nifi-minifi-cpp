@@ -149,8 +149,6 @@ int8_t Socket::createConnection(const addrinfo *p, in_addr_t &addr) {
 }
 
 int16_t Socket::initialize() {
-  struct sockaddr_in servAddr;
-
   addrinfo hints = { sizeof(addrinfo) };
   memset(&hints, 0, sizeof hints);  // make sure the struct is empty
   hints.ai_family = AF_UNSPEC;
@@ -175,10 +173,8 @@ int16_t Socket::initialize() {
   h = gethostbyname(requested_hostname_.c_str());
 #else
   const char *host;
-  uint16_t port;
 
   host = requested_hostname_.c_str();
-  port = port_;
   char buf[1024];
   struct hostent he;
   int hh_errno;
@@ -263,19 +259,16 @@ int16_t Socket::select_descriptor(const uint16_t msec) {
 
 int16_t Socket::setSocketOptions(const int sock) {
   int opt = 1;
-  bool nagle_off = true;
 #ifndef __MACH__
-  if (nagle_off) {
-    if (setsockopt(sock, SOL_TCP, TCP_NODELAY, static_cast<void*>(&opt), sizeof(opt)) < 0) {
-      logger_->log_error("setsockopt() TCP_NODELAY failed");
-      close(sock);
-      return -1;
-    }
-    if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, reinterpret_cast<char*>(&opt), sizeof(opt)) < 0) {
-      logger_->log_error("setsockopt() SO_REUSEADDR failed");
-      close(sock);
-      return -1;
-    }
+  if (setsockopt(sock, SOL_TCP, TCP_NODELAY, static_cast<void*>(&opt), sizeof(opt)) < 0) {
+    logger_->log_error("setsockopt() TCP_NODELAY failed");
+    close(sock);
+    return -1;
+  }
+  if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, reinterpret_cast<char*>(&opt), sizeof(opt)) < 0) {
+    logger_->log_error("setsockopt() SO_REUSEADDR failed");
+    close(sock);
+    return -1;
   }
 
   int sndsize = 256 * 1024;
@@ -303,7 +296,7 @@ std::string Socket::getHostname() const {
 }
 
 int Socket::writeData(std::vector<uint8_t> &buf, int buflen) {
-  if (buf.capacity() < buflen)
+  if (static_cast<int>(buf.capacity()) < buflen)
     return -1;
   return writeData(reinterpret_cast<uint8_t *>(&buf[0]), buflen);
 }
@@ -386,7 +379,7 @@ int Socket::read(uint16_t &value, bool is_little_endian) {
 }
 
 int Socket::readData(std::vector<uint8_t> &buf, int buflen, bool retrieve_all_bytes) {
-  if (buf.capacity() < buflen) {
+  if (static_cast<int>(buf.capacity()) < buflen) {
     buf.resize(buflen);
   }
   return readData(reinterpret_cast<uint8_t*>(&buf[0]), buflen, retrieve_all_bytes);

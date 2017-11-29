@@ -341,7 +341,7 @@ void C2Agent::handle_c2_server_response(const C2ContentResponse &resp) {
     case Operation::RESTART: {
       update_sink_->stop(true);
       C2Payload response(Operation::ACKNOWLEDGE, resp.ident, false, true);
-      C2Payload && ret = protocol_.load()->consumePayload(std::move(response));
+      protocol_.load()->consumePayload(std::move(response));
       exit(1);
     }
       break;

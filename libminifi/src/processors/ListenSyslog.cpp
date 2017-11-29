@@ -153,7 +153,7 @@ void ListenSyslog::runThread() {
         clilen = sizeof(cli_addr);
         int newsockfd = accept(_serverSocket, reinterpret_cast<struct sockaddr *>(&cli_addr), &clilen);
         if (newsockfd > 0) {
-          if (_clientSockets.size() < _maxConnections) {
+          if (_clientSockets.size() < (uint64_t)_maxConnections) {
             _clientSockets.push_back(newsockfd);
             logger_->log_info("ListenSysLog new client socket %d connection", newsockfd);
             continue;
@@ -166,7 +166,7 @@ void ListenSyslog::runThread() {
         struct sockaddr_in cli_addr;
         clilen = sizeof(cli_addr);
         int recvlen = recvfrom(_serverSocket, _buffer, sizeof(_buffer), 0, (struct sockaddr *) &cli_addr, &clilen);
-        if (recvlen > 0 && (recvlen + getEventQueueByteSize()) <= _recvBufSize) {
+        if (recvlen > 0 && (uint64_t)(recvlen + getEventQueueByteSize()) <= _recvBufSize) {
           uint8_t *payload = new uint8_t[recvlen];
           memcpy(payload, _buffer, recvlen);
           putEvent(payload, recvlen);
@@ -183,7 +183,7 @@ void ListenSyslog::runThread() {
           logger_->log_info("ListenSysLog client socket %d close", clientSocket);
           it = _clientSockets.erase(it);
         } else {
-          if ((recvlen + getEventQueueByteSize()) <= _recvBufSize) {
+          if ((uint64_t)(recvlen + getEventQueueByteSize()) <= _recvBufSize) {
             uint8_t *payload = new uint8_t[recvlen];
             memcpy(payload, _buffer, recvlen);
             putEvent(payload, recvlen);

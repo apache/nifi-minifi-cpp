@@ -236,7 +236,7 @@ void TailFile::onTrigger(core::ProcessContext *context, core::ProcessSession *se
   struct stat statbuf;
 
   if (stat(fullPath.c_str(), &statbuf) == 0) {
-    if (statbuf.st_size <= this->_currentTailFilePosition) {
+    if ((uint64_t)statbuf.st_size <= this->_currentTailFilePosition) {
       // there are no new input for the current tail file
       context->yield();
       return;

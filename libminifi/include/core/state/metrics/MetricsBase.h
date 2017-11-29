@@ -58,7 +58,7 @@ class Metrics : public core::Connectable {
   virtual ~Metrics() {
 
   }
-  virtual std::string getName() = 0;
+  virtual std::string getName() const = 0;
 
   virtual std::vector<MetricResponse> serialize() = 0;
 
@@ -127,7 +127,7 @@ class MetricsReporter {
    *  1 No error condition, but cannot obtain lock in timely manner.
    *  -1 failure
    */
-  virtual int16_t getMetrics(std::vector<std::shared_ptr<Metrics>> &metric_vector, uint8_t metricsClass) = 0;
+  virtual int16_t getMetrics(std::vector<std::shared_ptr<Metrics>> &metric_vector, uint16_t metricsClass) = 0;
 
 };
 

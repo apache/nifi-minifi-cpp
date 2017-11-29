@@ -58,21 +58,21 @@ class Property {
    */
   Property(const std::string name, const std::string description, const std::string value)
       : name_(name),
-        isCollection(false),
-        description_(description) {
+        description_(description),
+        isCollection(false) {
     values_.push_back(std::string(value.c_str()));
   }
 
   Property(const std::string name, const std::string description)
       : name_(name),
-        isCollection(true),
-        description_(description) {
+        description_(description),
+        isCollection(true) {
   }
 
   Property()
-      : isCollection(false),
-        name_(""),
-        description_("") {
+      : name_(""),
+        description_(""),
+        isCollection(false) {
 
   }
 
@@ -98,7 +98,8 @@ class Property {
   bool operator <(const Property & right) const;
 
   // Convert TimeUnit to MilliSecond
-  static bool ConvertTimeUnitToMS(int64_t input, TimeUnit unit, int64_t &out) {
+  template<typename T>
+  static bool ConvertTimeUnitToMS(int64_t input, TimeUnit unit, T &out) {
     if (unit == MILLISECOND) {
       out = input;
       return true;
@@ -121,8 +122,18 @@ class Property {
       return false;
     }
   }
+
+  static bool ConvertTimeUnitToMS(int64_t input, TimeUnit unit, int64_t &out) {
+    return ConvertTimeUnitToMS<int64_t>(input, unit, out);
+  }
+
+  static bool ConvertTimeUnitToMS(int64_t input, TimeUnit unit, uint64_t &out) {
+    return ConvertTimeUnitToMS<uint64_t>(input, unit, out);
+  }
+
   // Convert TimeUnit to NanoSecond
-  static bool ConvertTimeUnitToNS(int64_t input, TimeUnit unit, int64_t &out) {
+  template<typename T>
+  static bool ConvertTimeUnitToNS(int64_t input, TimeUnit unit, T &out) {
     if (unit == MILLISECOND) {
       out = input * 1000 * 1000;
       return true;
@@ -142,6 +153,71 @@ class Property {
       return false;
     }
   }
+
+  // Convert TimeUnit to NanoSecond
+  static bool ConvertTimeUnitToNS(int64_t input, TimeUnit unit, uint64_t &out) {
+    return ConvertTimeUnitToNS<uint64_t>(input, unit, out);
+  }
+
+  // Convert TimeUnit to NanoSecond
+  static bool ConvertTimeUnitToNS(int64_t input, TimeUnit unit, int64_t &out) {
+    return ConvertTimeUnitToNS<int64_t>(input, unit, out);
+  }
+
+  // Convert String
+  static bool StringToTime(std::string input, uint64_t &output, TimeUnit &timeunit) {
+    if (input.size() == 0) {
+      return false;
+    }
+
+    const char *cvalue = input.c_str();
+    char *pEnd;
+    long int ival = strtol(cvalue, &pEnd, 0);
+
+    if (pEnd[0] == '\0') {
+      return false;
+    }
+
+    while (*pEnd == ' ') {
+      // Skip the space
+      pEnd++;
+    }
+
+    std::string unit(pEnd);
+    std::transform(unit.begin(), unit.end(), unit.begin(), ::tolower);
+
+    if (unit == "sec" || unit == "s" || unit == "second" || unit == "seconds" || unit == "secs") {
+      timeunit = SECOND;
+      output = ival;
+      return true;
+    } else if (unit == "msec" || unit == "ms" || unit == "millisecond" || unit == "milliseconds" || unit == "msecs") {
+      timeunit = MILLISECOND;
+      output = ival;
+      return true;
+    } else if (unit == "min" || unit == "m" || unit == "mins" || unit == "minute" || unit == "minutes") {
+      timeunit = MINUTE;
+      output = ival;
+      return true;
+    } else if (unit == "ns" || unit == "nano" || unit == "nanos" || unit == "nanoseconds") {
+      timeunit = NANOSECOND;
+      output = ival;
+      return true;
+    } else if (unit == "ms" || unit == "milli" || unit == "millis" || unit == "milliseconds") {
+      timeunit = MILLISECOND;
+      output = ival;
+      return true;
+    } else if (unit == "h" || unit == "hr" || unit == "hour" || unit == "hrs" || unit == "hours") {
+      timeunit = HOUR;
+      output = ival;
+      return true;
+    } else if (unit == "d" || unit == "day" || unit == "days") {
+      timeunit = DAY;
+      output = ival;
+      return true;
+    } else
+      return false;
+  }
+
   // Convert String
   static bool StringToTime(std::string input, int64_t &output, TimeUnit &timeunit) {
     if (input.size() == 0) {
@@ -197,7 +273,8 @@ class Property {
   }
 
   // Convert String to Integer
-  static bool StringToInt(std::string input, int64_t &output) {
+  template<typename T>
+  static bool StringToInt(std::string input, T &output) {
     if (input.size() == 0) {
       return false;
     }
@@ -263,12 +340,21 @@ class Property {
     return false;
   }
 
+  static bool StringToInt(std::string input, int64_t &output) {
+    return StringToInt<int64_t>(input, output);
+  }
+
+  // Convert String to Integer
+  static bool StringToInt(std::string input, uint64_t &output) {
+    return StringToInt<uint64_t>(input, output);
+  }
+
  protected:
-  bool isCollection;
   // Name
   std::string name_;
   // Description
   std::string description_;
+  bool isCollection;
   // Value
   std::vector<std::string> values_;
 

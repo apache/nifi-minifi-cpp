@@ -12,7 +12,27 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-# Apache MiNiFi Extensions HowTo
+# Apache MiNiFi Extensions Guide
+
+Currently we support the following extension flags:
+ - `-DDISABLE_CURL=TRUE`
+ - `-DDISABLE_ROCKSDB=TRUE`
+ - `-DDISABLE_LIBARCHIVE=TRUE`
+ - `-DDISABLE_USB_CAMERA=TRUE`
+ - `-DDISABLE_LIBRDKAFKA=TRUE`
+ - `-DDISABLE_SCRIPTING=TRUE`
+ - `-DDISABLE_EXPRESSION_LANGUAGE=TRUE`
+ - `-DDISABLE_PYTHON_SCRIPTING=TRUE`
+ - `-DENABLE_LUA_SCRIPTING=TRUE`
+ - `-DENABLE_PCAP=TRUE`
+ - `-DENABLE_GPS=TRUE`
+ - `-DENABLE_TENSORFLOW=TRUE`
+
+For more information on these extensions, please visit [the Extension How-To on our wiki](https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=74685143)
+
+To enable all extensions for your platform, you may use -DENABLE_ALL=TRUE
+
+# Extensions by example
 
 Extensions consist of modules that are conditionally built into your client. Reasons why you may wish to do this with your modules/processors
 

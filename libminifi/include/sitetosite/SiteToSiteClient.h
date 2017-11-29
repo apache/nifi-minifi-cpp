@@ -46,10 +46,9 @@ class DataPacket {
   }
   std::map<std::string, std::string> _attributes;
   uint64_t _size;
-  std::shared_ptr<logging::Logger> logger_reference_;
   std::shared_ptr<Transaction> transaction_;
   const std::string & payload_;
-
+  std::shared_ptr<logging::Logger> logger_reference_;
 };
 
 class SiteToSiteClient : public core::Connectable {
@@ -233,8 +232,6 @@ class SiteToSiteClient : public core::Connectable {
   // Peer State
   PeerState peer_state_;
 
-  std::shared_ptr<logging::Logger> logger_;
-
   // portIDStr
   std::string port_id_str_;
 
@@ -261,6 +258,10 @@ class SiteToSiteClient : public core::Connectable {
   uint32_t _supportedCodecVersion[1];
   uint32_t _currentCodecVersion;
   int _currentCodecVersionIndex;
+
+ private:
+  std::shared_ptr<logging::Logger> logger_;
+
 
 };
 

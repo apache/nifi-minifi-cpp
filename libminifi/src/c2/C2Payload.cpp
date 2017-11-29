@@ -190,7 +190,7 @@ C2Payload &C2Payload::operator=(const C2Payload &&other) {
   op_ = std::move(other.op_);
   raw_ = other.raw_;
   if (raw_) {
-    raw_data_ = std::move(raw_data_);
+    raw_data_ = std::move(other.raw_data_);
   }
   label_ = std::move(other.label_);
   payloads_ = std::move(other.payloads_);

@@ -139,7 +139,7 @@ std::shared_ptr<core::FlowFile> ProcessSession::clone(const std::shared_ptr<core
   std::shared_ptr<core::FlowFile> record = this->create(parent);
   if (record) {
     if (parent->getResourceClaim()) {
-      if ((offset + size) > parent->getSize()) {
+      if ((uint64_t)(offset + size) > parent->getSize()) {
         // Set offset and size
         logger_->log_error("clone offset %d and size %d exceed parent size %d", offset, size, parent->getSize());
         // Remove the Add FlowFile for the session
@@ -326,7 +326,7 @@ void ProcessSession::read(const std::shared_ptr<core::FlowFile> &flow, InputStre
  */
 void ProcessSession::importFrom(io::DataStream &stream, const std::shared_ptr<core::FlowFile> &flow) {
   std::shared_ptr<ResourceClaim> claim = std::make_shared<ResourceClaim>(process_context_->getContentRepository());
-  int max_read = getpagesize();
+  size_t max_read = getpagesize();
   std::vector<uint8_t> charBuffer;
   charBuffer.resize(max_read);
 

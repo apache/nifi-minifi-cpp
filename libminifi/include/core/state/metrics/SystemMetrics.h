@@ -53,7 +53,7 @@ class SystemInformation : public DeviceInformation {
       : DeviceInformation("SystemInformation", 0) {
   }
 
-  std::string getName() {
+  virtual std::string getName() const{
     return "SystemInformation";
   }
 
@@ -62,7 +62,6 @@ class SystemInformation : public DeviceInformation {
 
     MetricResponse vcores;
     vcores.name = "vcores";
-    int cpus[2] = { 0 };
     size_t ncpus = std::thread::hardware_concurrency();
 
     vcores.value = std::to_string(ncpus);

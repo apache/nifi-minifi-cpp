@@ -202,10 +202,10 @@ bool GetFile::acceptFile(std::string fullName, std::string name, const GetFileRe
   struct stat statbuf;
 
   if (stat(fullName.c_str(), &statbuf) == 0) {
-    if (request.minSize > 0 && statbuf.st_size < request.minSize)
+    if (request.minSize > 0 && statbuf.st_size < (int32_t)request.minSize)
       return false;
 
-    if (request.maxSize > 0 && statbuf.st_size > request.maxSize)
+    if (request.maxSize > 0 && statbuf.st_size > (int32_t)request.maxSize)
       return false;
 
     uint64_t modifiedTime = ((uint64_t) (statbuf.st_mtime) * 1000);

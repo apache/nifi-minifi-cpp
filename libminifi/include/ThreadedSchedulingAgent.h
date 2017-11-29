@@ -39,9 +39,8 @@ namespace minifi {
 class TimerAwareMonitor : public utils::AfterExecute<uint64_t> {
  public:
   TimerAwareMonitor(std::atomic<bool> *run_monitor)
-      : run_monitor_(run_monitor),
-        current_wait_(0) {
-
+      : current_wait_(0),
+        run_monitor_(run_monitor) {
   }
   explicit TimerAwareMonitor(TimerAwareMonitor &&other)
       : AfterExecute(std::move(other)),

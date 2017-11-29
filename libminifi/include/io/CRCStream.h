@@ -45,14 +45,13 @@ class CRCStream : public BaseStream {
   explicit CRCStream(CRCStream<T> &&move);
 
   virtual ~CRCStream() {
-
   }
 
-  T *getstream(){
+  T *getstream() {
     return child_stream_;
   }
 
-  void disableEncoding(){
+  void disableEncoding() {
     disable_encoding_ = true;
   }
 
@@ -140,7 +139,6 @@ class CRCStream : public BaseStream {
     return crc_;
   }
 
-
   void reset();
  protected:
 
@@ -165,20 +163,22 @@ class CRCStream : public BaseStream {
 
 template<typename T>
 CRCStream<T>::CRCStream(T *other)
-    : child_stream_(other), disable_encoding_(false) {
+    : child_stream_(other),
+      disable_encoding_(false) {
   crc_ = crc32(0L, Z_NULL, 0);
 }
 
 template<typename T>
 CRCStream<T>::CRCStream(CRCStream<T> &&move)
-    : crc_(std::move(move.crc_)), disable_encoding_(false),
-      child_stream_(std::move(move.child_stream_)) {
+    : crc_(std::move(move.crc_)),
+      child_stream_(std::move(move.child_stream_)),
+      disable_encoding_(false) {
 }
 
 template<typename T>
 int CRCStream<T>::readData(std::vector<uint8_t> &buf, int buflen) {
 
-  if (buf.capacity() < buflen)
+  if ((int)buf.capacity() < buflen)
     buf.resize(buflen);
   return readData((uint8_t*) &buf[0], buflen);
 }
@@ -193,7 +193,7 @@ int CRCStream<T>::readData(uint8_t *buf, int buflen) {
 template<typename T>
 int CRCStream<T>::writeData(std::vector<uint8_t> &buf, int buflen) {
 
-  if (buf.capacity() < buflen)
+  if ((int)buf.capacity() < buflen)
     buf.resize(buflen);
   return writeData((uint8_t*) &buf[0], buflen);
 }
@@ -219,7 +219,7 @@ template<typename T>
 int CRCStream<T>::write(uint64_t base_value, bool is_little_endian) {
 
   if (disable_encoding_)
-    is_little_endian=false;
+    is_little_endian = false;
   const uint64_t value = is_little_endian == 1 ? htonll_r(base_value) : base_value;
   uint8_t bytes[sizeof value];
   std::copy(static_cast<const char*>(static_cast<const void*>(&value)), static_cast<const char*>(static_cast<const void*>(&value)) + sizeof value, bytes);
@@ -229,7 +229,7 @@ int CRCStream<T>::write(uint64_t base_value, bool is_little_endian) {
 template<typename T>
 int CRCStream<T>::write(uint32_t base_value, bool is_little_endian) {
   if (disable_encoding_)
-      is_little_endian=false;
+    is_little_endian = false;
   const uint32_t value = is_little_endian ? htonl(base_value) : base_value;
   uint8_t bytes[sizeof value];
   std::copy(static_cast<const char*>(static_cast<const void*>(&value)), static_cast<const char*>(static_cast<const void*>(&value)) + sizeof value, bytes);
@@ -239,7 +239,7 @@ int CRCStream<T>::write(uint32_t base_value, bool is_little_endian) {
 template<typename T>
 int CRCStream<T>::write(uint16_t base_value, bool is_little_endian) {
   if (disable_encoding_)
-      is_little_endian=false;
+    is_little_endian = false;
   const uint16_t value = is_little_endian == 1 ? htons(base_value) : base_value;
   uint8_t bytes[sizeof value];
   std::copy(static_cast<const char*>(static_cast<const void*>(&value)), static_cast<const char*>(static_cast<const void*>(&value)) + sizeof value, bytes);
@@ -249,7 +249,7 @@ int CRCStream<T>::write(uint16_t base_value, bool is_little_endian) {
 template<typename T>
 int CRCStream<T>::read(uint64_t &value, bool is_little_endian) {
   if (disable_encoding_)
-      is_little_endian=false;
+    is_little_endian = false;
   auto buf = readBuffer(value);
 
   if (is_little_endian) {
@@ -265,7 +265,7 @@ int CRCStream<T>::read(uint64_t &value, bool is_little_endian) {
 template<typename T>
 int CRCStream<T>::read(uint32_t &value, bool is_little_endian) {
   if (disable_encoding_)
-      is_little_endian=false;
+    is_little_endian = false;
   auto buf = readBuffer(value);
 
   if (is_little_endian) {
@@ -281,7 +281,7 @@ int CRCStream<T>::read(uint32_t &value, bool is_little_endian) {
 template<typename T>
 int CRCStream<T>::read(uint16_t &value, bool is_little_endian) {
   if (disable_encoding_)
-      is_little_endian=false;
+    is_little_endian = false;
   auto buf = readBuffer(value);
 
   if (is_little_endian) {

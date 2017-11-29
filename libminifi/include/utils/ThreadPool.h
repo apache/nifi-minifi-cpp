@@ -69,18 +69,18 @@ template<typename T>
 class Worker {
  public:
   explicit Worker(std::function<T()> &task, const std::string &identifier, std::unique_ptr<AfterExecute<T>> run_determinant)
-      : task(task),
-        run_determinant_(std::move(run_determinant)),
-        identifier_(identifier),
-        time_slice_(0) {
+      : identifier_(identifier),
+        time_slice_(0),
+        task(task),
+        run_determinant_(std::move(run_determinant)) {
     promise = std::make_shared<std::promise<T>>();
   }
 
   explicit Worker(std::function<T()> &task, const std::string &identifier)
-      : task(task),
-        run_determinant_(nullptr),
-        identifier_(identifier),
-        time_slice_(0) {
+      : identifier_(identifier),
+        time_slice_(0),
+        task(task),
+        run_determinant_(nullptr) {
     promise = std::make_shared<std::promise<T>>();
   }
 
@@ -97,11 +97,11 @@ class Worker {
    * Move constructor for worker tasks
    */
   Worker(Worker &&other)
-      : task(std::move(other.task)),
-        promise(other.promise),
+      : identifier_(std::move(other.identifier_)),
         time_slice_(std::move(other.time_slice_)),
-        identifier_(std::move(other.identifier_)),
-        run_determinant_(std::move(other.run_determinant_)) {
+        task(std::move(other.task)),
+        run_determinant_(std::move(other.run_determinant_)),
+        promise(other.promise) {
   }
 
   /**
@@ -192,15 +192,15 @@ class ThreadPool {
  public:
 
   ThreadPool(int max_worker_threads = 2, bool daemon_threads = false)
-      : max_worker_threads_(max_worker_threads),
-        daemon_threads_(daemon_threads),
+      : daemon_threads_(daemon_threads),
+        max_worker_threads_(max_worker_threads),
         running_(false) {
     current_workers_ = 0;
   }
 
   ThreadPool(const ThreadPool<T> &&other)
-      : max_worker_threads_(std::move(other.max_worker_threads_)),
-        daemon_threads_(std::move(other.daemon_threads_)),
+      : daemon_threads_(std::move(other.daemon_threads_)),
+        max_worker_threads_(std::move(other.max_worker_threads_)),
         running_(false) {
     current_workers_ = 0;
   }
@@ -407,7 +407,7 @@ void ThreadPool<T>::run_tasks() {
       auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now).count();
       // if our differential is < 10% of the wait time we will not put the task into a wait state
       // since requeuing will break the time slice contract.
-      if (task.getTimeSlice() > ms && (task.getTimeSlice() - ms) > (wt * .10)) {
+      if ((double)task.getTimeSlice() > ms && ((double)(task.getTimeSlice() - ms)) > (wt * .10)) {
         wait_to_run = true;
       }
     }

@@ -65,7 +65,7 @@ void ExtractText::onTrigger(core::ProcessContext *context, core::ProcessSession 
 
 int64_t ExtractText::ReadCallback::process(std::shared_ptr<io::BaseStream> stream) {
     int64_t ret = 0;
-    int64_t size_limit = flowFile_->getSize();
+    uint64_t size_limit = flowFile_->getSize();
     uint64_t read_size = 0;
     uint64_t loop_read = max_read_;
 
@@ -82,7 +82,7 @@ int64_t ExtractText::ReadCallback::process(std::shared_ptr<io::BaseStream> strea
     std::string contentStr;
 
     while (read_size < size_limit) {
-        if (size_limit - read_size < max_read_)
+        if (size_limit - read_size < (uint64_t)max_read_)
             loop_read = size_limit - read_size;
 
         ret = stream->readData(buffer_, loop_read);

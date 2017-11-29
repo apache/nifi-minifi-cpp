@@ -190,7 +190,7 @@ class ProvenanceRepository : public core::Repository, public std::enable_shared_
     for (it->SeekToFirst(); it->Valid(); it->Next()) {
       std::shared_ptr<ProvenanceEventRecord> eventRead = std::make_shared<ProvenanceEventRecord>();
       std::string key = it->key().ToString();
-      if (records.size() >= maxSize)
+      if (records.size() >= (uint64_t)maxSize)
         break;
       if (eventRead->DeSerialize((uint8_t *) it->value().data(), (int) it->value().size())) {
         records.push_back(eventRead);

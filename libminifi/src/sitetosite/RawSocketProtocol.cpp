@@ -312,7 +312,7 @@ bool RawSiteToSiteClient::getPeerList(std::vector<PeerStatus> &peers) {
       return false;
     }
 
-    for (int i = 0; i < number; i++) {
+    for (uint32_t i = 0; i < number; i++) {
       std::string host;
       status = peer_->readUTF(host);
       if (status <= 0) {

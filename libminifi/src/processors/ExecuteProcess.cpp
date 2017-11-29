@@ -105,7 +105,7 @@ void ExecuteProcess::onTrigger(core::ProcessContext *context, core::ProcessSessi
     argc++;
   }
   argv[argc] = NULL;
-  int status, died;
+  int status;
   if (!_processRunning) {
     _processRunning = true;
     // if the process has not launched yet
@@ -180,7 +180,7 @@ void ExecuteProcess::onTrigger(core::ProcessContext *context, core::ProcessSessi
               }
               break;
             } else {
-              if (numRead == (sizeof(buffer) - totalRead)) {
+              if (numRead == static_cast<int>((sizeof(buffer) - totalRead))) {
                 // we reach the max buffer size
                 logger_->log_info("Execute Command Max Respond %d", sizeof(buffer));
                 ExecuteProcess::WriteCallback callback(buffer, sizeof(buffer));
@@ -205,7 +205,7 @@ void ExecuteProcess::onTrigger(core::ProcessContext *context, core::ProcessSessi
           }
         }
 
-        died = wait(&status);
+        wait(&status);
         if (WIFEXITED(status)) {
           logger_->log_info("Execute Command Complete %s status %d pid %d", _fullCommand.c_str(), WEXITSTATUS(status), _pid);
         } else {

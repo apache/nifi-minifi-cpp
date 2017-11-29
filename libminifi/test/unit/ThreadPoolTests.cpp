@@ -29,8 +29,8 @@ bool function() {
 class WorkerNumberExecutions : public utils::AfterExecute<int> {
  public:
   explicit WorkerNumberExecutions(int tasks)
-      : tasks(tasks),
-        runs(0) {
+      : runs(0),
+        tasks(tasks) {
   }
 
   explicit WorkerNumberExecutions(WorkerNumberExecutions && other)

@@ -534,7 +534,7 @@ int16_t SiteToSiteClient::send(std::string transactionID, DataPacket *packet, co
     }
 
     ret = transaction->getStream().writeData(reinterpret_cast<uint8_t *>(const_cast<char*>(packet->payload_.c_str())), len);
-    if (ret != len) {
+    if (ret != (int64_t)len) {
       logger_->log_info("ret != len");
       return -1;
     }
