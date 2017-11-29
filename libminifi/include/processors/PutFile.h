@@ -60,6 +60,7 @@ class PutFile : public core::Processor {
   static core::Property Directory;
   static core::Property ConflictResolution;
   static core::Property CreateDirs;
+  static core::Property MaxDestFiles;
   // Supported Relationships
   static core::Relationship Success;
   static core::Relationship Failure;
@@ -109,6 +110,7 @@ class PutFile : public core::Processor {
   std::string directory_;
   std::string conflict_resolution_;
   bool try_mkdirs_ = true;
+  int64_t max_dest_files_ = -1;
 
   bool putFile(core::ProcessSession *session,
                std::shared_ptr<FlowFileRecord> flowFile,
