@@ -58,8 +58,6 @@ class Device {
     initialize();
   }
   void initialize() {
-    struct sockaddr_in servAddr;
-
     addrinfo hints = { sizeof(addrinfo) };
     memset(&hints, 0, sizeof hints);  // make sure the struct is empty
     hints.ai_family = AF_UNSPEC;
@@ -172,7 +170,6 @@ class Device {
     struct ifreq ifr;
     struct ifconf ifc;
     char buf[1024];
-    int success = 0;
     ifc.ifc_len = sizeof(buf);
     ifc.ifc_buf = buf;
     if (ioctl(sock, SIOCGIFCONF, &ifc) == -1) { /* handle error */}
@@ -207,7 +204,6 @@ class Device {
 #elif( defined(__unix__) || defined(__APPLE__) || defined(__MACH__) || defined(BSD))  // should work on bsd variants as well
   std::string getDeviceId() {
     ifaddrs* iflist;
-    bool found = false;
     std::hash<std::string> hash_fn;
     std::set<std::string> macs;
 
@@ -226,8 +222,6 @@ class Device {
           snprintf(mac_add, 13, "%02X%02X%02X%02X%02X%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
           ///macs += mac_add;
           macs.insert(mac_add);
-        } else if (cur->ifa_addr->sa_family == AF_INET) {
-          struct sockaddr_in* sockInfoIP = (struct sockaddr_in*) cur->ifa_addr;
         }
       }
 
@@ -273,7 +267,7 @@ class DeviceInformation : public DeviceMetric {
     device_id_ = device.device_id_;
   }
 
-  std::string getName() {
+  std::string getName() const{
     return "NetworkInfo";
   }
 

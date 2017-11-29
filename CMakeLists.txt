@@ -24,6 +24,7 @@ set(PROJECT_VERSION_MAJOR 0)
 set(PROJECT_VERSION_MINOR 4)
 set(PROJECT_VERSION_PATCH 0)
 option(SKIP_TESTS "Skips building all tests." OFF)
+option(PORTABLE "Instructs the compiler to remove architecture specific optimizations" ON)
 
 include(FeatureSummary)
 
@@ -48,6 +49,16 @@ elseif(COMPILER_SUPPORTS_CXX0X)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
 else()
     message(STATUS "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
+endif()
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
+
+if (NOT PORTABLE)
+  if(MSVC)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /arch:AVX2")
+  else()
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
+  endif()
 endif()
 
 set(CMAKE_CXX_STANDARD 11)
@@ -121,10 +132,6 @@ endif()
 
 add_subdirectory(libminifi)
 
-if (EXCLUDE_BOOST)
-	message(" -- Excluding Boost dependent packages...")
-endif(EXCLUDE_BOOST)
-
 #### EXTENSION
 option(DISABLE_CURL "Disables libCurl Properties." OFF)
 if (NOT DISABLE_CURL)
@@ -151,18 +158,18 @@ if (NOT DISABLE_LIBARCHIVE)
 endif()
 
 option(ENABLE_GPS "Enables the GPS extension." OFF)
-if (ENABLE_GPS)
+if (ENABLE_ALL OR ENABLE_GPS)
 	createExtension(GPS-EXTENSION "GPS EXTENSIONS" "Enables LibGPS Functionality and the GetGPS processor." "extensions/gps" "${TEST_DIR}/gps-tests")
 endif(ENABLE_GPS)
 
 option(ENABLE_PCAP "Enables the PCAP extension." OFF)
-if(ENABLE_PCAP)
+if(ENABLE_ALL OR ENABLE_PCAP)
 	createExtension(PCAP-EXTENSION "PCAP EXTENSIONS" "Enables libPCAP Functionality and the PacketCapture processor." "extensions/pcap" "${TEST_DIR}/pcap-tests")
-endif(ENABLE_PCAP)
+endif()
 
 ## Create LibRdKafka Extension
 option(ENABLE_LIBRDKAFKA "Enables the librdkafka extension." OFF)
-if (ENABLE_LIBRDKAFKA)
+if (ENABLE_ALL OR ENABLE_LIBRDKAFKA)
 	createExtension(RDKAFKA-EXTENSIONS "RDKAFKA EXTENSIONS" "This Enables librdkafka functionality including PublishKafka" "extensions/librdkafka" "${TEST_DIR}/kafka-tests" "TRUE" "thirdparty/librdkafka-0.11.1")
 endif()
 
@@ -175,7 +182,7 @@ endif()
 
 ## USB camera extensions
 option(ENABLE_USB_CAMERA "Enables USB camera support." OFF)
-if (ENABLE_USB_CAMERA)
+if (ENABLE_ALL OR ENABLE_USB_CAMERA)
     createExtension(USB-CAMERA-EXTENSIONS "USB CAMERA EXTENSIONS" "This enables USB camera support" "extensions/usb-camera" "${TEST_DIR}/usb-camera-tests" "TRUE" "thirdparty/libuvc-0.0.6")
 endif()
 

@@ -66,7 +66,7 @@ class MetricsWatcher : public utils::AfterExecute<Update> {
       return true;
     }
   }
-  virtual bool isCancelled(const UpdateStatus &result) {
+  virtual bool isCancelled(const Update &result) {
     return false;
   }
 
@@ -79,8 +79,8 @@ class MetricsListener {
  public:
   MetricsListener(const std::shared_ptr<metrics::MetricsReporter> &source, const std::shared_ptr<metrics::MetricsSink> &sink)
       : running_(true),
-        sink_(sink),
-        source_(source) {
+        source_(source),
+        sink_(sink){
 
     function_ = [&]() {
       while(running_) {

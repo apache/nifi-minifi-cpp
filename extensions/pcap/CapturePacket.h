@@ -45,8 +45,8 @@ class CapturePacketMechanism {
  public:
   explicit CapturePacketMechanism(const std::string &base_path, const std::string &file, int64_t *max_size)
       : writer_(nullptr),
-        file_(file),
         path_(base_path),
+        file_(file),
         max_size_(max_size) {
     atomic_count_.store(0);
   }

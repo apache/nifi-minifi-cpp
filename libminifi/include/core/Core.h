@@ -99,15 +99,15 @@ class CoreComponent {
   /**
    * Constructor that sets the name and uuid.
    */
-  explicit CoreComponent(const std::string name, uuid_t uuid = 0)
+  explicit CoreComponent(const std::string name, uuid_t uuid = nullptr)
       : name_(name) {
-    if (!uuid)
+    if (nullptr == uuid)
       // Generate the global UUID for the flow record
       id_generator_->generate(uuid_);
     else
       uuid_copy(uuid_, uuid);
 
-    char uuidStr[37];
+    char uuidStr[37] = {0};
     uuid_unparse_lower(uuid_, uuidStr);
     uuidStr_ = uuidStr;
   }
@@ -125,7 +125,7 @@ class CoreComponent {
   }
 
   // Get component name Name
-  virtual std::string getName();
+  virtual std::string getName() const;
 
   /**
    * Set name.

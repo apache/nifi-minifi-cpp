@@ -327,9 +327,7 @@ void InvokeHTTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context,
     flowFile->addAttribute(TRANSACTION_ID, tx_id);
 
     bool isSuccess = ((int32_t) (http_code / 100)) == 2;
-    bool output_body_to_requestAttr = (!isSuccess || putToAttribute) && flowFile != nullptr;
     bool output_body_to_content = isSuccess && !putToAttribute;
-    bool body_empty = IsNullOrEmpty(response_body);
 
     logger_->log_info("isSuccess: %d, response code %d", isSuccess, http_code);
     std::shared_ptr<FlowFileRecord> response_flow = nullptr;

@@ -31,6 +31,10 @@ namespace apache {
 namespace nifi {
 namespace minifi {
 namespace sitetosite {
+#if defined(__GNUC__) || defined(__GNUG__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-variable"
+#endif
 
 // Resource Negotiated Status Code
 #define RESOURCE_OK 20
@@ -245,7 +249,8 @@ typedef enum {
 // Respond Code Class
 typedef struct {
   RespondCode code;
-  const char *description;bool hasDescription;
+  const char *description;
+  bool hasDescription;
 } RespondCodeContext;
 
 // Respond Code Context
@@ -265,7 +270,8 @@ class Transaction {
    * Create a new transaction
    */
   explicit Transaction(TransferDirection direction, org::apache::nifi::minifi::io::CRCStream<SiteToSitePeer> &stream)
-      : crcStream(std::move(stream)), closed_(false) {
+      : closed_(false),
+        crcStream(std::move(stream)) {
     _state = TRANSACTION_STARTED;
     _direction = direction;
     _dataAvailable = false;
@@ -296,7 +302,6 @@ class Transaction {
     uuid_str_ = str;
     uuid_parse(str.c_str(), uuid_);
   }
-
 
   // getState
   TransactionState getState() {
@@ -406,6 +411,9 @@ class SiteToSiteClientConfiguration {
 
   std::shared_ptr<controllers::SSLContextService> ssl_service_;
 };
+#if defined(__GNUC__) || defined(__GNUG__)
+#pragma GCC diagnostic pop
+#endif
 
 } /* namespace sitetosite */
 } /* namespace minifi */

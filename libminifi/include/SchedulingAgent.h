@@ -53,9 +53,9 @@ class SchedulingAgent {
    */
   SchedulingAgent(std::shared_ptr<core::controller::ControllerServiceProvider> controller_service_provider, std::shared_ptr<core::Repository> repo, std::shared_ptr<core::Repository> flow_repo,
                   std::shared_ptr<core::ContentRepository> content_repo, std::shared_ptr<Configure> configuration)
-      : configure_(configuration),
-        admin_yield_duration_(0),
+      : admin_yield_duration_(0),
         bored_yield_duration_(0),
+        configure_(configuration),
         content_repo_(content_repo),
         controller_service_provider_(controller_service_provider),
         logger_(logging::LoggerFactory<SchedulingAgent>::getLogger()) {

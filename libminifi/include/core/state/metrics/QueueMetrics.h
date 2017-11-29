@@ -50,7 +50,7 @@ class QueueMetrics : public Metrics {
       : Metrics("QueueMetrics", 0) {
   }
 
-  std::string getName() {
+  virtual std::string getName() const{
     return "QueueMetrics";
   }
 

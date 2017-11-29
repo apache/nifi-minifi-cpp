@@ -44,9 +44,9 @@ class StandardControllerServiceProvider : public ControllerServiceProvider, publ
   explicit StandardControllerServiceProvider(std::shared_ptr<ControllerServiceMap> services, std::shared_ptr<ProcessGroup> root_group, std::shared_ptr<Configure> configuration,
                                              std::shared_ptr<minifi::SchedulingAgent> agent, ClassLoader &loader = ClassLoader::getDefaultClassLoader())
       : ControllerServiceProvider(services),
-        root_group_(root_group),
         agent_(agent),
         extension_loader_(loader),
+        root_group_(root_group),
         configuration_(configuration),
         logger_(logging::LoggerFactory<StandardControllerServiceProvider>::getLogger()) {
   }
@@ -54,18 +54,18 @@ class StandardControllerServiceProvider : public ControllerServiceProvider, publ
   explicit StandardControllerServiceProvider(std::shared_ptr<ControllerServiceMap> services, std::shared_ptr<ProcessGroup> root_group, std::shared_ptr<Configure> configuration, ClassLoader &loader =
                                                  ClassLoader::getDefaultClassLoader())
       : ControllerServiceProvider(services),
-        root_group_(root_group),
-        agent_(0),
+        agent_(nullptr),
         extension_loader_(loader),
+        root_group_(root_group),
         configuration_(configuration),
         logger_(logging::LoggerFactory<StandardControllerServiceProvider>::getLogger()) {
   }
 
   explicit StandardControllerServiceProvider(const StandardControllerServiceProvider && other)
       : ControllerServiceProvider(std::move(other)),
-        root_group_(std::move(other.root_group_)),
         agent_(std::move(other.agent_)),
         extension_loader_(other.extension_loader_),
+        root_group_(std::move(other.root_group_)),
         configuration_(other.configuration_),
         logger_(logging::LoggerFactory<StandardControllerServiceProvider>::getLogger()) {
 
@@ -189,9 +189,10 @@ class StandardControllerServiceProvider : public ControllerServiceProvider, publ
 
   ClassLoader &extension_loader_;
 
+  std::shared_ptr<ProcessGroup> root_group_;
+
   std::shared_ptr<Configure> configuration_;
 
-  std::shared_ptr<ProcessGroup> root_group_;
 
  private:
   std::shared_ptr<logging::Logger> logger_;

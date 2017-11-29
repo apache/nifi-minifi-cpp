@@ -64,9 +64,9 @@ int Serializable::write(uint8_t *value, int len, DataStream *stream) {
   return stream->writeData(value, len);
 }
 
-int Serializable::write(bool value) {
+int Serializable::write(bool value, DataStream *stream) {
   uint8_t temp = value;
-  return write(temp);
+  return stream->writeData(&temp, 1);
 }
 
 int Serializable::read(uint8_t &value, DataStream *stream) {
@@ -150,9 +150,7 @@ int Serializable::readUTF(std::string &str, DataStream *stream, bool widen) {
 }
 
 int Serializable::writeUTF(std::string str, DataStream *stream, bool widen) {
-  int inLength = str.length();
   uint32_t utflen = 0;
-  int currentPtr = 0;
 
   utflen = str.length();
 
@@ -175,8 +173,6 @@ int Serializable::writeUTF(std::string str, DataStream *stream, bool widen) {
   } else {
     utf_to_write.resize(utflen);
   }
-
-  int i = 0;
 
   uint8_t *underlyingPtr = &utf_to_write[0];
   for (auto c : str) {

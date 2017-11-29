@@ -50,9 +50,11 @@ class RemoteProcessorGroupPort : public core::Processor {
         direction_(sitetosite::SEND),
         transmitting_(false),
         timeout_(0),
-        logger_(logging::LoggerFactory<RemoteProcessorGroupPort>::getLogger()),
         url_(url),
-        ssl_service(nullptr) {
+        http_enabled_(false),
+        ssl_service(nullptr),
+        logger_(logging::LoggerFactory<RemoteProcessorGroupPort>::getLogger()){
+    client_type_ = sitetosite::CLIENT_TYPE::RAW;
     stream_factory_ = stream_factory;
     if (uuid != nullptr) {
       uuid_copy(protocol_uuid_, uuid);
@@ -62,7 +64,7 @@ class RemoteProcessorGroupPort : public core::Processor {
     peer_index_ = -1;
     // REST API port and host
     port_ = -1;
-    utils::parse_url(url_, host_, port_, protocol_);
+    utils::parse_url(&url_, &host_, &port_, &protocol_);
   }
   // Destructor
   virtual ~RemoteProcessorGroupPort() {
@@ -102,7 +104,7 @@ class RemoteProcessorGroupPort : public core::Processor {
   // setURL
   void setURL(std::string val) {
     url_ = val;
-    utils::parse_url(url_, host_, port_, protocol_);
+    utils::parse_url(&url_, &host_, &port_, &protocol_);
     if (port_ == -1) {
       if (protocol_.find("https") != std::string::npos) {
         port_ = 443;
@@ -127,8 +129,6 @@ class RemoteProcessorGroupPort : public core::Processor {
   moodycamel::ConcurrentQueue<std::unique_ptr<sitetosite::SiteToSiteClient>> available_protocols_;
 
   std::shared_ptr<Configure> configure_;
-  // Logger
-  std::shared_ptr<logging::Logger> logger_;
   // Transaction Direction
   sitetosite::TransferDirection direction_;
   // Transmitting
@@ -160,6 +160,8 @@ class RemoteProcessorGroupPort : public core::Processor {
   std::shared_ptr<controllers::SSLContextService> ssl_service;
 
  private:
+  // Logger
+  std::shared_ptr<logging::Logger> logger_;
   static const char* RPG_SSL_CONTEXT_SERVICE_NAME;
 };
 

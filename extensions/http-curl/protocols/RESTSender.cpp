@@ -81,7 +81,7 @@ C2Payload RESTSender::consumePayload(const std::string &url, const C2Payload &pa
     outputConfig = writer.write(json_payload);
   }
 
-  return std::move(sendPayload(url, direction, payload, outputConfig));
+  return sendPayload(url, direction, payload, outputConfig);
 }
 
 C2Payload RESTSender::consumePayload(const C2Payload &payload, Direction direction, bool async) {
@@ -125,7 +125,7 @@ const C2Payload RESTSender::sendPayload(const std::string url, const Direction d
       C2Payload response_payload(payload.getOperation(), state::UpdateState::READ_COMPLETE, true, true);
 
       response_payload.setRawData(client.getResponseBody());
-      return std::move(response_payload);
+      return response_payload;
     }
     return parseJsonResponse(payload, client.getResponseBody());
   } else {

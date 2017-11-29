@@ -28,8 +28,6 @@
 #include <map>
 #include <iterator>
 
-static uint16_t accounting_size = sizeof(std::vector<uint8_t>) + sizeof(std::string) + sizeof(size_t);
-
 namespace org {
 namespace apache {
 namespace nifi {
@@ -183,13 +181,12 @@ class AtomicEntry {
    * size allowd by this and other atomic entries.
    */
   explicit AtomicEntry(std::atomic<size_t> *total_size, size_t *max_size)
-      : write_pending_(false),
-        has_value_(false),
-        accumulated_repo_size_(total_size),
+      : accumulated_repo_size_(total_size),
         max_repo_size_(max_size),
+        write_pending_(false),
+        has_value_(false),
         ref_count_(0),
         free_required(false) {
-
   }
 
   /**

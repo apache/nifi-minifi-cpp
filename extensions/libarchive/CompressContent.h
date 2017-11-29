@@ -206,7 +206,6 @@ public:
     }
 
     int64_t process(std::shared_ptr<io::BaseStream> stream) {
-      int64_t ret = 0;
       struct archive *arch;
       int r;
 

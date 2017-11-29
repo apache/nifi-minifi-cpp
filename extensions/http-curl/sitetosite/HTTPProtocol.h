@@ -179,9 +179,8 @@ class HttpSiteToSiteClient : public sitetosite::SiteToSiteClient {
 
  private:
 
-  std::shared_ptr<logging::Logger> logger_;
-
   RespondCode current_code;
+  std::shared_ptr<logging::Logger> logger_;
   // Prevent default copy constructor and assignment operation
   // Only support pass by reference or pointer
   HttpSiteToSiteClient(const HttpSiteToSiteClient &parent);

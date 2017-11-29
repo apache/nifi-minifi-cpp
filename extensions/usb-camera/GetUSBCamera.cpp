@@ -30,31 +30,19 @@ namespace minifi {
 namespace processors {
 
 core::Property GetUSBCamera::FPS(  // NOLINT
-    "FPS",
-    "Frames per second to capture from USB camera",
-    "1");
+    "FPS", "Frames per second to capture from USB camera", "1");
 core::Property GetUSBCamera::Format(  // NOLINT
-    "Format",
-    "Frame format (currently only PNG and RAW are supported; RAW is a binary pixel buffer of RGB values)",
-    "PNG");
+    "Format", "Frame format (currently only PNG and RAW are supported; RAW is a binary pixel buffer of RGB values)", "PNG");
 core::Property GetUSBCamera::VendorID(  // NOLINT
-    "USB Vendor ID",
-    "USB Vendor ID of camera device, in hexadecimal format",
-    "0x0");
+    "USB Vendor ID", "USB Vendor ID of camera device, in hexadecimal format", "0x0");
 core::Property GetUSBCamera::ProductID(  // NOLINT
-    "USB Product ID",
-    "USB Product ID of camera device, in hexadecimal format",
-    "0x0");
+    "USB Product ID", "USB Product ID of camera device, in hexadecimal format", "0x0");
 core::Property GetUSBCamera::SerialNo(  // NOLINT
-    "USB Serial No.",
-    "USB Serial No. of camera device",
-    "");
+    "USB Serial No.", "USB Serial No. of camera device", "");
 core::Relationship GetUSBCamera::Success(  // NOLINT
-    "success",
-    "Sucessfully captured images sent here");
+    "success", "Sucessfully captured images sent here");
 core::Relationship GetUSBCamera::Failure(  // NOLINT
-    "failure",
-    "Failures sent here");
+    "failure", "Failures sent here");
 
 void GetUSBCamera::initialize() {
   std::set<core::Property> properties;
@@ -109,18 +97,12 @@ void GetUSBCamera::onFrame(uvc_frame_t *frame, void *ptr) {
     std::shared_ptr<OutputStreamCallback> write_cb;
 
     if (cb_data->format == "PNG") {
-      write_cb = std::make_shared<GetUSBCamera::PNGWriteCallback>(cb_data->png_write_mtx,
-                                                                  cb_data->frame_buffer,
-                                                                  cb_data->device_width,
-                                                                  cb_data->device_height);
+      write_cb = std::make_shared<GetUSBCamera::PNGWriteCallback>(cb_data->png_write_mtx, cb_data->frame_buffer, cb_data->device_width, cb_data->device_height);
     } else if (cb_data->format == "RAW") {
       write_cb = std::make_shared<GetUSBCamera::RawWriteCallback>(cb_data->frame_buffer);
     } else {
       cb_data->logger->log_warn("Invalid format specified (%s); defaulting to PNG", cb_data->format);
-      write_cb = std::make_shared<GetUSBCamera::PNGWriteCallback>(cb_data->png_write_mtx,
-                                                                  cb_data->frame_buffer,
-                                                                  cb_data->device_width,
-                                                                  cb_data->device_height);
+      write_cb = std::make_shared<GetUSBCamera::PNGWriteCallback>(cb_data->png_write_mtx, cb_data->frame_buffer, cb_data->device_width, cb_data->device_height);
     }
 
     session->write(flow_file, write_cb.get());
@@ -133,8 +115,7 @@ void GetUSBCamera::onFrame(uvc_frame_t *frame, void *ptr) {
   }
 }
 
-void GetUSBCamera::onSchedule(core::ProcessContext *context,
-                              core::ProcessSessionFactory *session_factory) {
+void GetUSBCamera::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *session_factory) {
   std::lock_guard<std::recursive_mutex> lock(*dev_access_mtx_);
 
   double default_fps = 1;
@@ -179,7 +160,7 @@ void GetUSBCamera::onSchedule(core::ProcessContext *context,
   cleanupUvc();
   logger_->log_info("Beginning to capture frames from USB camera");
 
-  uvc_stream_ctrl_t ctrl{};
+  uvc_stream_ctrl_t ctrl { };
   uvc_error_t res;
   res = uvc_init(&ctx_, nullptr);
 
@@ -192,11 +173,7 @@ void GetUSBCamera::onSchedule(core::ProcessContext *context,
   logger_->log_info("UVC initialized");
 
   // Locate device
-  res = uvc_find_device(
-      ctx_, &dev_,
-      usb_vendor_id,
-      usb_product_id,
-      usb_serial_no);
+  res = uvc_find_device(ctx_, &dev_, usb_vendor_id, usb_product_id, usb_serial_no);
 
   if (res < 0) {
     logger_->log_error("Unable to find device: %s", uvc_strerror(res));
@@ -234,25 +211,23 @@ void GetUSBCamera::onSchedule(core::ProcessContext *context,
               }
             }
 
-          case UVC_VS_FORMAT_MJPEG:logger_->log_info("Skipping MJPEG frame formats");
+          case UVC_VS_FORMAT_MJPEG:
+            logger_->log_info("Skipping MJPEG frame formats");
 
-          default:logger_->log_info("Found unknown format");
+          default:
+            logger_->log_info("Found unknown format");
         }
       }
 
       if (fps == 0) {
         logger_->log_error("Could not find suitable frame format from device. "
-                               "Try changing configuration (lower FPS) or device.");
+                           "Try changing configuration (lower FPS) or device.");
         return;
       }
 
       logger_->log_info("Negotiating stream profile (looking for %dx%d @ %d)", width, height, fps);
 
-      res = uvc_get_stream_ctrl_format_size(
-          devh_, &ctrl,
-          UVC_FRAME_FORMAT_UNCOMPRESSED,
-          width, height, fps
-      );
+      res = uvc_get_stream_ctrl_format_size(devh_, &ctrl, UVC_FRAME_FORMAT_UNCOMPRESSED, width, height, fps);
 
       if (res < 0) {
         logger_->log_error("Failed to find a matching stream profile: %s", uvc_strerror(res));
@@ -329,8 +304,7 @@ void GetUSBCamera::cleanupUvc() {
   }
 }
 
-void GetUSBCamera::onTrigger(core::ProcessContext *context,
-                             core::ProcessSession *session) {
+void GetUSBCamera::onTrigger(core::ProcessContext *context, core::ProcessSession *session) {
   auto flowFile = session->get();
 
   if (flowFile) {
@@ -339,15 +313,12 @@ void GetUSBCamera::onTrigger(core::ProcessContext *context,
   }
 }
 
-GetUSBCamera::PNGWriteCallback::PNGWriteCallback(std::shared_ptr<std::mutex> write_mtx,
-                                                 uvc_frame_t *frame,
-                                                 uint32_t width,
-                                                 uint32_t height)
-    : logger_(logging::LoggerFactory<PNGWriteCallback>::getLogger()),
+GetUSBCamera::PNGWriteCallback::PNGWriteCallback(std::shared_ptr<std::mutex> write_mtx, uvc_frame_t *frame, uint32_t width, uint32_t height)
+    : png_write_mtx_(std::move(write_mtx)),
       frame_(frame),
       width_(width),
       height_(height),
-      png_write_mtx_(std::move(write_mtx)) {
+      logger_(logging::LoggerFactory<PNGWriteCallback>::getLogger()) {
 }
 
 int64_t GetUSBCamera::PNGWriteCallback::process(std::shared_ptr<io::BaseStream> stream) {
@@ -375,27 +346,23 @@ int64_t GetUSBCamera::PNGWriteCallback::process(std::shared_ptr<io::BaseStream> 
   try {
 
     png_set_write_fn(png, this, [](png_structp out_png,
-                                   png_bytep out_data,
-                                   png_size_t num_bytes) {
+        png_bytep out_data,
+        png_size_t num_bytes) {
       auto this_callback = reinterpret_cast<PNGWriteCallback *>(png_get_io_ptr(out_png));
       std::copy(out_data, out_data + num_bytes, std::back_inserter(this_callback->png_output_buf_));
-    }, [](png_structp flush_png) {});
+    },
+                     [](png_structp flush_png) {});
 
-    png_set_IHDR(
-        png,
-        info,
-        width_, height_,
-        8,
-        PNG_COLOR_TYPE_RGB,
-        PNG_INTERLACE_NONE,
-        PNG_COMPRESSION_TYPE_DEFAULT,
-        PNG_FILTER_TYPE_DEFAULT
-    );
+    png_set_IHDR(png, info, width_, height_, 8,
+    PNG_COLOR_TYPE_RGB,
+                 PNG_INTERLACE_NONE,
+                 PNG_COMPRESSION_TYPE_DEFAULT,
+                 PNG_FILTER_TYPE_DEFAULT);
     png_write_info(png, info);
 
     png_bytep row_pointers[height_];
 
-    for (int y = 0; y < height_; y++) {
+    for (uint32_t y = 0; y < height_; y++) {
       row_pointers[y] = reinterpret_cast<png_byte *>(frame_->data) + width_ * y * 3;
     }
 
@@ -414,8 +381,8 @@ int64_t GetUSBCamera::PNGWriteCallback::process(std::shared_ptr<io::BaseStream> 
 }
 
 GetUSBCamera::RawWriteCallback::RawWriteCallback(uvc_frame_t *frame)
-    : logger_(logging::LoggerFactory<RawWriteCallback>::getLogger()),
-      frame_(frame) {
+    : frame_(frame),
+      logger_(logging::LoggerFactory<RawWriteCallback>::getLogger()) {
 }
 
 int64_t GetUSBCamera::RawWriteCallback::process(std::shared_ptr<io::BaseStream> stream) {

@@ -51,16 +51,17 @@ class InvokeHTTP : public core::Processor {
    */
   InvokeHTTP(std::string name, uuid_t uuid = NULL)
       : Processor(name, uuid),
+        ssl_context_service_(nullptr),
         date_header_include_(true),
         connect_timeout_(20000),
-        penalize_no_retry_(false),
         read_timeout_(20000),
         always_output_response_(false),
-        disable_peer_verification_(false),
-        ssl_context_service_(nullptr),
         use_chunked_encoding_(false),
+        penalize_no_retry_(false),
+        disable_peer_verification_(false),
         logger_(logging::LoggerFactory<InvokeHTTP>::getLogger()) {
     static utils::HTTPClientInitializer *initializer = utils::HTTPClientInitializer::getInstance();
+    initializer->initialize();
   }
   // Destructor
   virtual ~InvokeHTTP();
@@ -131,7 +132,8 @@ class InvokeHTTP : public core::Processor {
    * @param isSuccess success code or not
    * @param statuscode http response code.
    */
-  void route(std::shared_ptr<FlowFileRecord> &request, std::shared_ptr<FlowFileRecord> &response, const std::shared_ptr<core::ProcessSession> &session, const std::shared_ptr<core::ProcessContext> &context, bool isSuccess, int statusCode);
+  void route(std::shared_ptr<FlowFileRecord> &request, std::shared_ptr<FlowFileRecord> &response, const std::shared_ptr<core::ProcessSession> &session,
+             const std::shared_ptr<core::ProcessContext> &context, bool isSuccess, int statusCode);
   /**
    * Determine if we should emit a new flowfile based on our activity
    * @param method method type
@@ -157,12 +159,12 @@ class InvokeHTTP : public core::Processor {
   std::string put_attribute_name_;
   // determine if we always output a response.
   bool always_output_response_;
-  // penalize on no retry
-  bool penalize_no_retry_;
   // content type.
   std::string content_type_;
   // use chunked encoding.
   bool use_chunked_encoding_;
+  // penalize on no retry
+  bool penalize_no_retry_;
   // disable peer verification ( makes susceptible for MITM attacks )
   bool disable_peer_verification_;
  private:

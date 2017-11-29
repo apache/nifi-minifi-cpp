@@ -107,7 +107,7 @@ class Serializable {
    * @param value non encoded value
    * @return resulting write size
    **/
-  int write(bool value);
+  int write(bool value, DataStream *stream);
 
   /**
    * write UTF string to stream

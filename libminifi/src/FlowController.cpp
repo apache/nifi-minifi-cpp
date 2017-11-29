@@ -172,7 +172,7 @@ FlowController::~FlowController() {
 bool FlowController::applyConfiguration(const std::string &configurePayload) {
   std::unique_ptr<core::ProcessGroup> newRoot;
   try {
-    newRoot = std::move(flow_configuration_->getRootFromPayload(configurePayload));
+    newRoot = flow_configuration_->getRootFromPayload(configurePayload);
   } catch (...) {
     logger_->log_error("Invalid configuration payload");
     return false;
@@ -623,9 +623,7 @@ int16_t FlowController::clearConnection(const std::string &connection) {
   return -1;
 }
 
-int16_t FlowController::getMetrics(std::vector<std::shared_ptr<state::metrics::Metrics>> &metric_vector, uint8_t metricsClass) {
-  auto now = std::chrono::steady_clock::now();
-  auto time_since = std::chrono::duration_cast<std::chrono::milliseconds>(now - last_metrics_capture_).count();
+int16_t FlowController::getMetrics(std::vector<std::shared_ptr<state::metrics::Metrics>> &metric_vector, uint16_t metricsClass) {
   std::lock_guard<std::mutex> lock(metrics_mutex_);
   if (metricsClass == 0) {
     for (auto metric : metrics_) {

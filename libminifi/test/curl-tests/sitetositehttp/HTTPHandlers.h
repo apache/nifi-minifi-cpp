@@ -19,8 +19,6 @@
 #include "CivetServer.h"
 #include "concurrentqueue.h"
 
-
-
 #include "CivetStream.h"
 #include "io/CRCStream.h"
 #ifndef LIBMINIFI_TEST_CURL_TESTS_SITETOSITEHTTP_HTTPHANDLERS_H_
@@ -35,8 +33,8 @@ class FlowObj {
 
   }
   explicit FlowObj(const FlowObj &&other)
-      : attributes(std::move(other.attributes)),
-        total_size(std::move(other.total_size)),
+      : total_size(std::move(other.total_size)),
+        attributes(std::move(other.attributes)),
         data(std::move(other.data)) {
 
   }
@@ -146,24 +144,23 @@ class TransactionResponder : public CivetHandler {
     return transaction_id_str;
   }
  protected:
-  moodycamel::ConcurrentQueue<std::shared_ptr<FlowObj>> *flow_files_feed_;
+  std::string base_url;
   std::string transaction_id_str;
-  std::string base_url;bool wrong_uri;bool empty_transaction_uri;bool input_port;
+  bool wrong_uri;
+  bool empty_transaction_uri;
+  bool input_port;
   std::string port_id;
+  moodycamel::ConcurrentQueue<std::shared_ptr<FlowObj>> *flow_files_feed_;
 };
 
 class FlowFileResponder : public CivetHandler {
-
-  moodycamel::ConcurrentQueue<std::shared_ptr<FlowObj>> flow_files_;
-  moodycamel::ConcurrentQueue<std::shared_ptr<FlowObj>> *flow_files_feed_;
-
  public:
 
   explicit FlowFileResponder(bool input_port, bool wrong_uri, bool invalid_checksum)
       : wrong_uri(wrong_uri),
         input_port(input_port),
-        flow_files_feed_(nullptr),
-        invalid_checksum(invalid_checksum) {
+        invalid_checksum(invalid_checksum),
+        flow_files_feed_(nullptr) {
   }
 
   moodycamel::ConcurrentQueue<std::shared_ptr<FlowObj>> *getFlows() {
@@ -269,30 +266,32 @@ class FlowFileResponder : public CivetHandler {
   }
 
  protected:
-// base url
+  // base url
   std::string base_url;
-// set the wrong url
+  // set the wrong url
   bool wrong_uri;
-// we are running an input port
+  // we are running an input port
   bool input_port;
-// invalid checksum is returned.
+  // invalid checksum is returned.
   bool invalid_checksum;
+  moodycamel::ConcurrentQueue<std::shared_ptr<FlowObj>> flow_files_;
+  moodycamel::ConcurrentQueue<std::shared_ptr<FlowObj>> *flow_files_feed_;
 };
 
 class DeleteTransactionResponder : public CivetHandler {
  public:
 
   explicit DeleteTransactionResponder(const std::string base_url, std::string response_code, int expected_resp_code)
-      : base_url(base_url),
-        response_code(response_code),
-        flow_files_feed_(nullptr) {
+      : flow_files_feed_(nullptr),
+        base_url(base_url),
+        response_code(response_code) {
     expected_resp_code_str = std::to_string(expected_resp_code);
   }
 
   explicit DeleteTransactionResponder(const std::string base_url, std::string response_code, moodycamel::ConcurrentQueue<std::shared_ptr<FlowObj>> *feed)
-      : base_url(base_url),
-        response_code(response_code),
-        flow_files_feed_(feed) {
+      : flow_files_feed_(feed),
+        base_url(base_url),
+        response_code(response_code) {
   }
 
   bool handleDelete(CivetServer *server, struct mg_connection *conn) {

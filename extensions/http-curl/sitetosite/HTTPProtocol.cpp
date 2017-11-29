@@ -66,7 +66,8 @@ std::shared_ptr<Transaction> HttpSiteToSiteClient::createTransaction(std::string
   client->setUseChunkedEncoding();
   client->setPostFields("");
   client->submit();
-  peer_->setStream(nullptr);
+  if (peer_->getStream() != nullptr)
+  logger_->log_info("Closing %s",((io::HttpStream*)peer_->getStream())->getClientRef()->getURL());
   if (client->getResponseCode() == 201) {
     // parse the headers
     auto headers = client->getParsedHeaders();
@@ -105,6 +106,7 @@ std::shared_ptr<Transaction> HttpSiteToSiteClient::createTransaction(std::string
       logger_->log_debug("Could not create transaction, intent is %s", intent_name);
     }
   } else {
+    peer_->setStream(nullptr);
     logger_->log_debug("Could not create transaction, received %d", client->getResponseCode());
   }
   return nullptr;
@@ -208,7 +210,7 @@ bool HttpSiteToSiteClient::getPeerList(std::vector<PeerStatus> &peers) {
 std::shared_ptr<minifi::utils::HTTPClient> HttpSiteToSiteClient::openConnectionForSending(const std::shared_ptr<HttpTransaction> &transaction) {
   std::stringstream uri;
   uri << transaction->getTransactionUrl() << "/flow-files";
-  std::shared_ptr<minifi::utils::HTTPClient> client = std::move(create_http_client(uri.str(), "POST"));
+  std::shared_ptr<minifi::utils::HTTPClient> client = create_http_client(uri.str(), "POST");
   client->setContentType("application/octet-stream");
   client->appendHeader("Accept", "text/plain");
   client->setUseChunkedEncoding();
@@ -218,7 +220,7 @@ std::shared_ptr<minifi::utils::HTTPClient> HttpSiteToSiteClient::openConnectionF
 std::shared_ptr<minifi::utils::HTTPClient> HttpSiteToSiteClient::openConnectionForReceive(const std::shared_ptr<HttpTransaction> &transaction) {
   std::stringstream uri;
   uri << transaction->getTransactionUrl() << "/flow-files";
-  std::shared_ptr<minifi::utils::HTTPClient> client = std::move(create_http_client(uri.str(), "GET"));
+  std::shared_ptr<minifi::utils::HTTPClient> client = create_http_client(uri.str(), "GET");
   return client;
 }
 

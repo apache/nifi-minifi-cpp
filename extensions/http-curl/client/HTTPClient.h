@@ -50,6 +50,9 @@ class HTTPClientInitializer {
     static HTTPClientInitializer initializer;
     return &initializer;
   }
+  void initialize() {
+
+  }
  private:
   ~HTTPClientInitializer() {
     curl_global_cleanup();
@@ -78,7 +81,7 @@ class HTTPClient : public BaseHTTPClient, public core::Connectable {
 
   ~HTTPClient();
 
-  virtual void setVerbose() override ;
+  virtual void setVerbose() override;
 
   void forceClose();
 
@@ -90,7 +93,7 @@ class HTTPClient : public BaseHTTPClient, public core::Connectable {
 
   virtual void setUploadCallback(HTTPUploadCallback *callbackObj) override;
 
-  virtual void setReadCallback(HTTPReadCallback *callbackObj) ;
+  virtual void setReadCallback(HTTPReadCallback *callbackObj);
 
   struct curl_slist *build_header_list(std::string regex, const std::map<std::string, std::string> &attributes);
 
@@ -122,19 +125,23 @@ class HTTPClient : public BaseHTTPClient, public core::Connectable {
 
   void setDisablePeerVerification() override;
 
-  const std::vector<std::string> &getHeaders() override{
+  std::string getURL() const{
+    return url_;
+  }
+
+  const std::vector<std::string> &getHeaders() override {
     return header_response_.header_tokens_;
 
   }
 
-  virtual const std::map<std::string, std::string> &getParsedHeaders() override{
+  virtual const std::map<std::string, std::string> &getParsedHeaders() override {
     return header_response_.header_mapping_;
   }
 
   /**
    * Determines if we are connected and operating
    */
-  virtual bool isRunning() override{
+  virtual bool isRunning() override {
     return true;
   }
 
@@ -145,7 +152,7 @@ class HTTPClient : public BaseHTTPClient, public core::Connectable {
   void waitForWork(uint64_t timeoutMs) {
   }
 
-  virtual void yield() override{
+  virtual void yield() override {
 
   }
 
@@ -153,7 +160,7 @@ class HTTPClient : public BaseHTTPClient, public core::Connectable {
    * Determines if work is available by this connectable
    * @return boolean if work is available.
    */
-  virtual bool isWorkAvailable() override{
+  virtual bool isWorkAvailable() override {
     return true;
   }
 
@@ -171,29 +178,36 @@ class HTTPClient : public BaseHTTPClient, public core::Connectable {
 
   void configure_secure_connection(CURL *http_session);
 
+  bool isSecure(const std::string &url);
+
+  HTTPReadCallback content_;
+
+  std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service_;
+  std::string url_;
+  int64_t connect_timeout_;
+  // read timeout.
+  int64_t read_timeout_;
+  char *content_type_str_;
+  std::string content_type_;
+  struct curl_slist *headers_;
   HTTPReadCallback *callback;
   HTTPUploadCallback *write_callback_;
-
-  bool isSecure(const std::string &url);
-  struct curl_slist *headers_;
-  HTTPReadCallback content_;
+  int64_t http_code;
   ByteOutputCallback read_callback_;
   utils::HTTPHeaderResponse header_response_;
+
   CURLcode res;
-  int64_t http_code;
-  char *content_type;
 
-  int64_t connect_timeout_;
-// read timeout.
-  int64_t read_timeout_;
 
-  std::string content_type_;
+
+
+
+  CURL *http_session_;
+
+  std::string method_;
 
   std::shared_ptr<logging::Logger> logger_;
-  CURL *http_session_;
-  std::string url_;
-  std::string method_;
-  std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service_;
+
 };
 
 } /* namespace utils */

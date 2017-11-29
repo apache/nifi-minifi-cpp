@@ -36,7 +36,6 @@ int log_message(const struct mg_connection *conn, const char *message) {
 }
 
 int ssl_protocol_en(void *ssl_context, void *user_data) {
-  struct ssl_ctx_st *ctx = (struct ssl_ctx_st *) ssl_context;
   return 0;
 }
 
@@ -57,9 +56,9 @@ void RESTReceiver::initialize(const std::shared_ptr<core::controller::Controller
     if (!listeningPort.empty() && !rootUri.empty()) {
       handler = std::unique_ptr<ListeningProtocol>(new ListeningProtocol());
       if (!caCert.empty()) {
-        listener = std::move(start_webserver(listeningPort, rootUri, dynamic_cast<CivetHandler*>(handler.get()), caCert));
+        listener = start_webserver(listeningPort, rootUri, dynamic_cast<CivetHandler*>(handler.get()), caCert);
       } else {
-        listener = std::move(start_webserver(listeningPort, rootUri, dynamic_cast<CivetHandler*>(handler.get())));
+        listener = start_webserver(listeningPort, rootUri, dynamic_cast<CivetHandler*>(handler.get()));
       }
     }
   }
@@ -117,7 +116,7 @@ std::unique_ptr<CivetServer> RESTReceiver::start_webserver(const std::string &po
       "ssl_verify_peer", "no", "num_threads", "1", 0 };
 
   std::vector<std::string> cpp_options;
-  for (int i = 0; i < (sizeof(options) / sizeof(options[0]) - 1); i++) {
+  for (uint32_t i = 0; i < (sizeof(options) / sizeof(options[0]) - 1); i++) {
     cpp_options.push_back(options[i]);
   }
   std::unique_ptr<CivetServer> server = std::unique_ptr<CivetServer>(new CivetServer(cpp_options));
@@ -131,7 +130,7 @@ std::unique_ptr<CivetServer> RESTReceiver::start_webserver(const std::string &po
   const char *options[] = { "document_root", ".", "listening_ports", port.c_str(), "num_threads", "1", 0 };
 
   std::vector<std::string> cpp_options;
-  for (int i = 0; i < (sizeof(options) / sizeof(options[0]) - 1); i++) {
+  for (uint32_t i = 0; i < (sizeof(options) / sizeof(options[0]) - 1); i++) {
     cpp_options.push_back(options[i]);
   }
   std::unique_ptr<CivetServer> server = std::unique_ptr<CivetServer>(new CivetServer(cpp_options));

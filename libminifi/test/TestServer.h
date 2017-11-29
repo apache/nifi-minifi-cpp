@@ -27,20 +27,6 @@
 /* Server context handle */
 static std::string resp_str;
 
-static int responder(struct mg_connection *conn, void *response) {
-  const char *msg = resp_str.c_str();
-
-  mg_printf(conn, "HTTP/1.1 200 OK\r\n"
-            "Content-Length: %lu\r\n"
-            "Content-Type: text/plain\r\n"
-            "Connection: close\r\n\r\n",
-            resp_str.size());
-
-  mg_write(conn, msg, resp_str.size());
-
-  return 200;
-}
-
 void init_webserver() {
   mg_init_library(0);
 }

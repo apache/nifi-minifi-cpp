@@ -94,7 +94,7 @@ int DataStream::readData(std::vector<uint8_t> &buf, int buflen) {
     return -1;
   }
 
-  if (buf.capacity() < buflen)
+  if ((int)buf.capacity() < buflen)
     buf.resize(buflen);
 
   buf.insert(buf.begin(), &buffer[readBuffer], &buffer[readBuffer + buflen]);

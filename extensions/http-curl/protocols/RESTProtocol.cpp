@@ -73,7 +73,7 @@ const C2Payload RESTProtocol::parseJsonResponse(const C2Payload &payload, const 
           new_payload.addPayload(std::move(nested_payload));
         }
         // we have a response for this request
-        return std::move(new_payload);
+        return new_payload;
       }
     }
   } catch (...) {

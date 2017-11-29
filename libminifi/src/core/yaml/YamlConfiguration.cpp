@@ -105,7 +105,7 @@ void YamlConfiguration::parseProcessorNodeYaml(YAML::Node processorsNode, core::
         logger_->log_debug("parseProcessorNode: class => [%s]", procCfg.javaClass);
 
         // Determine the processor name only from the Java class
-        int lastOfIdx = procCfg.javaClass.find_last_of(".");
+        auto lastOfIdx = procCfg.javaClass.find_last_of(".");
         if (lastOfIdx != std::string::npos) {
           lastOfIdx++;  // if a value is found, increment to move beyond the .
           int nameLength = procCfg.javaClass.length() - lastOfIdx;

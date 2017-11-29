@@ -38,8 +38,8 @@ namespace utils {
 class HttpStreamingCallback : public ByteInputCallBack {
  public:
   HttpStreamingCallback()
-      : ptr(nullptr),
-        is_alive_(true) {
+      : is_alive_(true),
+        ptr(nullptr) {
     previous_pos_ = 0;
     rolling_count_ = 0;
   }
@@ -121,8 +121,6 @@ class HttpStreamingCallback : public ByteInputCallBack {
     size_t absolute_position = pos - previous_pos_;
 
     current_pos_ = pos;
-    for (int i = 0; i < current_vec_.size(); i++) {
-    }
 
     return ptr + absolute_position;
   }

@@ -34,7 +34,13 @@ namespace nifi {
 namespace minifi {
 namespace core {
 namespace repository {
-
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Woverloaded-virtual"
+#elif defined(__GNUC__) || defined(__GNUG__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Woverloaded-virtual"
+#endif
 /**
  * Flow File repository
  * Design: Extends Repository and implements the run function, using RocksDB as the primary substrate.
@@ -52,10 +58,10 @@ class VolatileRepository : public core::Repository, public std::enable_shared_fr
                               uint64_t purgePeriod = REPOSITORY_PURGE_PERIOD)
       : core::SerializableComponent(repo_name, 0),
         Repository(repo_name.length() > 0 ? repo_name : core::getClassName<VolatileRepository>(), "", maxPartitionMillis, maxPartitionBytes, purgePeriod),
-        max_size_(maxPartitionBytes * 0.75),
+        current_size_(0),
         current_index_(0),
         max_count_(10000),
-        current_size_(0),
+        max_size_(maxPartitionBytes * 0.75),
         logger_(logging::LoggerFactory<VolatileRepository>::getLogger())
 
   {
@@ -216,7 +222,7 @@ bool VolatileRepository<T>::initialize(const std::shared_ptr<Configure> &configu
   logger_->log_info("Resizing value_vector_ for %s count is %d", getName(), max_count_);
   logger_->log_info("Using a maximum size for %s of %u", getName(), max_size_);
   value_vector_.reserve(max_count_);
-  for (int i = 0; i < max_count_; i++) {
+  for (uint32_t i = 0; i < max_count_; i++) {
     value_vector_.emplace_back(new AtomicEntry<T>(&current_size_, &max_size_));
   }
   return true;
@@ -236,7 +242,7 @@ bool VolatileRepository<T>::Put(T key, const uint8_t *buf, size_t bufLen) {
   size_t reclaimed_size = 0;
   RepoValue<T> old_value;
   do {
-    int private_index = current_index_.fetch_add(1);
+    uint16_t private_index = current_index_.fetch_add(1);
     // round robin through the beginning
     if (private_index >= max_count_) {
       uint16_t new_index = 0;
@@ -374,6 +380,12 @@ void VolatileRepository<T>::start() {
   thread_ = std::thread(&VolatileRepository<T>::run, std::enable_shared_from_this<VolatileRepository<T>>::shared_from_this());
   logger_->log_info("%s Repository Monitor Thread Start", name_);
 }
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#elif defined(__GNUC__) || defined(__GNUG__)
+#pragma GCC diagnostic pop
+#endif
+
 
 } /* namespace repository */
 } /* namespace core */

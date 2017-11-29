@@ -45,9 +45,9 @@ class ControllerServiceNode : public CoreComponent, public ConfigurableComponent
   explicit ControllerServiceNode(std::shared_ptr<ControllerService> service, const std::string &id, std::shared_ptr<Configure> configuration)
       : CoreComponent(id),
         ConfigurableComponent(),
-        controller_service_(service),
+        active(false),
         configuration_(configuration),
-        active(false) {
+        controller_service_(service){
     if (service == nullptr || IsNullOrEmpty(service.get())) {
       throw Exception(GENERAL_EXCEPTION, "Service must be properly configured");
     }

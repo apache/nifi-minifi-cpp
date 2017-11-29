@@ -33,18 +33,19 @@ HTTPClient::HTTPClient(const std::string &url, const std::shared_ptr<minifi::con
     : core::Connectable("HTTPClient", 0),
       ssl_context_service_(ssl_context_service),
       url_(url),
-      logger_(logging::LoggerFactory<HTTPClient>::getLogger()),
       connect_timeout_(0),
       read_timeout_(0),
-      content_type(nullptr),
+      content_type_str_(nullptr),
       headers_(nullptr),
       callback(nullptr),
       write_callback_(nullptr),
       http_code(0),
       read_callback_(INT_MAX),
       header_response_(-1),
-      res(CURLE_OK) {
+      res(CURLE_OK),
+      logger_(logging::LoggerFactory<HTTPClient>::getLogger()) {
   HTTPClientInitializer *initializer = HTTPClientInitializer::getInstance();
+  initializer->initialize();
   http_session_ = curl_easy_init();
 }
 
@@ -52,37 +53,39 @@ HTTPClient::HTTPClient(std::string name, uuid_t uuid)
     : core::Connectable(name, uuid),
       ssl_context_service_(nullptr),
       url_(),
-      logger_(logging::LoggerFactory<HTTPClient>::getLogger()),
       connect_timeout_(0),
       read_timeout_(0),
+      content_type_str_(nullptr),
+      headers_(nullptr),
       callback(nullptr),
       write_callback_(nullptr),
-      content_type(nullptr),
-      read_callback_(INT_MAX),
-      headers_(nullptr),
       http_code(0),
+      read_callback_(INT_MAX),
       header_response_(-1),
-      res(CURLE_OK) {
+      res(CURLE_OK),
+      logger_(logging::LoggerFactory<HTTPClient>::getLogger()) {
   HTTPClientInitializer *initializer = HTTPClientInitializer::getInstance();
+  initializer->initialize();
   http_session_ = curl_easy_init();
 }
 
 HTTPClient::HTTPClient()
     : core::Connectable("HTTPClient", 0),
       ssl_context_service_(nullptr),
-      callback(nullptr),
-      write_callback_(nullptr),
       url_(),
-      logger_(logging::LoggerFactory<HTTPClient>::getLogger()),
       connect_timeout_(0),
       read_timeout_(0),
-      content_type(nullptr),
+      content_type_str_(nullptr),
       headers_(nullptr),
+      callback(nullptr),
+      write_callback_(nullptr),
       http_code(0),
       read_callback_(INT_MAX),
       header_response_(-1),
-      res(CURLE_OK) {
+      res(CURLE_OK),
+      logger_(logging::LoggerFactory<HTTPClient>::getLogger()) {
   HTTPClientInitializer *initializer = HTTPClientInitializer::getInstance();
+  initializer->initialize();
   http_session_ = curl_easy_init();
 }
 
@@ -95,6 +98,7 @@ HTTPClient::~HTTPClient() {
     curl_easy_cleanup(http_session_);
     http_session_ = nullptr;
   }
+  logger_->log_info("Closing HTTPClient for %s", url_);
 }
 
 void HTTPClient::forceClose() {
@@ -148,7 +152,7 @@ void HTTPClient::setReadCallback(HTTPReadCallback *callbackObj) {
 }
 
 void HTTPClient::setUploadCallback(HTTPUploadCallback *callbackObj) {
-  logger_->log_info("Setting callback");
+  logger_->log_info("Setting callback for %s", url_);
   write_callback_ = callbackObj;
   if (method_ == "put" || method_ == "PUT") {
     curl_easy_setopt(http_session_, CURLOPT_INFILESIZE_LARGE, (curl_off_t ) callbackObj->ptr->getBufferSize());
@@ -230,7 +234,7 @@ bool HTTPClient::submit() {
     read_callback_.close();
   }
   curl_easy_getinfo(http_session_, CURLINFO_RESPONSE_CODE, &http_code);
-  curl_easy_getinfo(http_session_, CURLINFO_CONTENT_TYPE, &content_type);
+  curl_easy_getinfo(http_session_, CURLINFO_CONTENT_TYPE, &content_type_str_);
   if (res != CURLE_OK) {
     logger_->log_error("curl_easy_perform() failed %s\n", curl_easy_strerror(res));
     return false;
@@ -239,7 +243,7 @@ bool HTTPClient::submit() {
   logger_->log_info("Finished with %s", url_);
   std::string key = "";
   for (auto header_line : header_response_.header_tokens_) {
-    int i = 0;
+    unsigned int i = 0;
     for (i = 0; i < header_line.length(); i++) {
       if (header_line.at(i) == ':') {
         break;
@@ -279,12 +283,12 @@ int64_t &HTTPClient::getResponseCode() {
 }
 
 const char *HTTPClient::getContentType() {
-  return content_type;
+  return content_type_str_;
 }
 
 const std::vector<char> &HTTPClient::getResponseBody() {
   if (response_body_.size() == 0)
-    response_body_ = std::move(read_callback_.to_string());
+    response_body_ = read_callback_.to_string();
   return response_body_;
 }
 

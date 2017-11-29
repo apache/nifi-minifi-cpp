@@ -184,15 +184,11 @@ class TestPlan {
 
  protected:
 
-  std::shared_ptr<logging::Logger> logger_;
-
   void finalize();
 
   std::shared_ptr<minifi::Connection> buildFinalConnection(std::shared_ptr<core::Processor> processor, bool setDest = false);
 
   std::shared_ptr<org::apache::nifi::minifi::io::StreamFactory> stream_factory;
-
-  std::atomic<bool> finalized;
 
   std::shared_ptr<core::ContentRepository> content_repo_;
 
@@ -202,6 +198,8 @@ class TestPlan {
   std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider_;
 
   std::recursive_mutex mutex;
+
+  std::atomic<bool> finalized;
 
   int location;
 
@@ -217,6 +215,10 @@ class TestPlan {
   std::vector<std::shared_ptr<core::ProcessSessionFactory>> factories_;
   std::vector<std::shared_ptr<minifi::Connection>> relationships_;
   core::Relationship termination_;
+
+ private:
+
+  std::shared_ptr<logging::Logger> logger_;
 };
 
 class TestController {
