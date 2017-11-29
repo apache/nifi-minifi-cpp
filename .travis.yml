@@ -21,7 +21,8 @@ cache:
   timeout: 300
 
 env:
-   CMAKE_BUILD_OPTIONS="-DENABLE_PCAP=TRUE -DENABLE_BUSTACHE=1"
+   global:
+      CMAKE_BUILD_OPTIONS="-DENABLE_PCAP=TRUE -DENABLE_BUSTACHE=1"
 
 matrix:
     include:
