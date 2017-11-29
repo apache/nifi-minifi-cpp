@@ -21,15 +21,13 @@ cache:
   timeout: 300
 
 env:
-   CMAKE_BUILD_OPTIONS="-DENABLE_PCAP=TRUE"
+   CMAKE_BUILD_OPTIONS="-DENABLE_PCAP=TRUE -DENABLE_BUSTACHE=1"
 
 matrix:
     include:
     - os: linux
       dist: trusty
       sudo: required
-      env:
-        - CMAKE_BUILD_OPTIONS="-DENABLE_BUSTACHE=1"
       addons:
         apt:
           sources:
