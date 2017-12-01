@@ -21,6 +21,7 @@
 #include "processors/PutFile.h"
 
 #include <sys/stat.h>
+#include <dirent.h>
 #include <unistd.h>
 #include <uuid/uuid.h>
 #include <cstdint>
@@ -60,6 +61,10 @@ core::Property PutFile::CreateDirs(
     "If true, then missing destination directories will be created. "
         "If false, flowfiles are penalized and sent to failure.",
     "true");
+core::Property PutFile::MaxDestFiles(
+    "Maximum File Count",
+    "Specifies the maximum number of files that can exist in the output directory",
+    "-1");
 
 core::Relationship PutFile::Success(
     "success",
@@ -74,6 +79,7 @@ void PutFile::initialize() {
   properties.insert(Directory);
   properties.insert(ConflictResolution);
   properties.insert(CreateDirs);
+  properties.insert(MaxDestFiles);
   setSupportedProperties(properties);
   // Set the supported relationships
   std::set<core::Relationship> relationships;
@@ -91,9 +97,13 @@ void PutFile::onSchedule(core::ProcessContext *context, core::ProcessSessionFact
     logger_->log_error("Conflict Resolution Strategy attribute is missing or invalid");
   }
 
-  std::string try_mkdirs_conf;
-  context->getProperty(CreateDirs.getName(), try_mkdirs_conf);
-  utils::StringUtils::StringToBool(try_mkdirs_conf, try_mkdirs_);
+  std::string value;
+  context->getProperty(CreateDirs.getName(), value);
+  utils::StringUtils::StringToBool(value, try_mkdirs_);
+
+  if (context->getProperty(MaxDestFiles.getName(), value)) {
+    core::Property::StringToInt(value, max_dest_files_);
+  }
 }
 
 void PutFile::onTrigger(core::ProcessContext *context, core::ProcessSession *session) {
@@ -124,6 +134,35 @@ void PutFile::onTrigger(core::ProcessContext *context, core::ProcessSession *ses
 
   // If file exists, apply conflict resolution strategy
   struct stat statResult;
+
+  if ((max_dest_files_ != -1) && (stat(directory_.c_str(), &statResult) == 0)) {
+    // something exists at directory path
+    if (S_ISDIR(statResult.st_mode)) {
+      // it's a directory, count the files
+      DIR *myDir = opendir(directory_.c_str());
+      if (!myDir) {
+        logger_->log_warn("Could not open %s", directory_.c_str());
+        session->transfer(flowFile, Failure);
+        return;
+      }
+      struct dirent* entry = nullptr;
+
+      int64_t ct = 0;
+      while ((entry = readdir(myDir)) != nullptr) {
+        if ((strcmp(entry->d_name, ".") != 0) && (strcmp(entry->d_name, "..") != 0)) {
+          ct++;
+          if (ct >= max_dest_files_) {
+            logger_->log_warn("Routing to failure because the output directory %s has at least %u files, which exceeds the "
+                "configured max number of files", directory_.c_str(), max_dest_files_);
+            session->transfer(flowFile, Failure);
+            closedir(myDir);
+            return;
+          }
+        }
+      }
+      closedir(myDir);
+    }
+  }
 
   if (stat(destFile.c_str(), &statResult) == 0) {
     logger_->log_info("Destination file %s exists; applying Conflict Resolution Strategy: %s",
