@@ -180,7 +180,7 @@ void ExecuteProcess::onTrigger(core::ProcessContext *context, core::ProcessSessi
               }
               break;
             } else {
-              if (numRead == (int)(sizeof(buffer) - totalRead)) {
+              if (numRead == static_cast<int>((sizeof(buffer) - totalRead))) {
                 // we reach the max buffer size
                 logger_->log_info("Execute Command Max Respond %d", sizeof(buffer));
                 ExecuteProcess::WriteCallback callback(buffer, sizeof(buffer));

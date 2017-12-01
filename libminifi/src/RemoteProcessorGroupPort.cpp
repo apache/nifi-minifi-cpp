@@ -75,7 +75,7 @@ std::unique_ptr<sitetosite::SiteToSiteClient> RemoteProcessorGroupPort::getNextP
         sitetosite::SiteToSiteClientConfiguration config(stream_factory_, peers_[this->peer_index_].getPeer(), client_type_);
 
         peer_index_++;
-        if (peer_index_ >= (int)peers_.size()) {
+        if (peer_index_ >= static_cast<int>(peers_.size())) {
           peer_index_ = 0;
         }
 
@@ -139,7 +139,7 @@ void RemoteProcessorGroupPort::initialize() {
       std::unique_ptr<sitetosite::SiteToSiteClient> nextProtocol = nullptr;
       sitetosite::SiteToSiteClientConfiguration config(stream_factory_, peers_[this->peer_index_].getPeer(), client_type_);
       peer_index_++;
-      if (peer_index_ >= (int)peers_.size()) {
+      if (peer_index_ >= static_cast<int>(peers_.size())) {
         peer_index_ = 0;
       }
       logger_->log_info("Creating client");

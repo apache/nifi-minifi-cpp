@@ -160,7 +160,7 @@ endif()
 option(ENABLE_GPS "Enables the GPS extension." OFF)
 if (ENABLE_ALL OR ENABLE_GPS)
 	createExtension(GPS-EXTENSION "GPS EXTENSIONS" "Enables LibGPS Functionality and the GetGPS processor." "extensions/gps" "${TEST_DIR}/gps-tests")
-endif(ENABLE_GPS)
+endif()
 
 option(ENABLE_PCAP "Enables the PCAP extension." OFF)
 if(ENABLE_ALL OR ENABLE_PCAP)

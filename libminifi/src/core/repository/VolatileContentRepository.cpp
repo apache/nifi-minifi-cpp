@@ -177,11 +177,13 @@ bool VolatileContentRepository::remove(const std::shared_ptr<minifi::ResourceCla
     }
   } else {
     std::lock_guard<std::mutex> lock(map_mutex_);
-    auto size = master_list_[claim->getContentFullPath()]->getLength();
-    delete master_list_[claim->getContentFullPath()];
-    master_list_.erase(claim->getContentFullPath());
-    current_size_ -= size;
-
+    auto claim_item = master_list_.find(claim->getContentFullPath());
+    if (claim_item != master_list_.end()) {
+      auto size = claim_item->second->getLength();
+      delete claim_item->second;
+      master_list_.erase(claim->getContentFullPath());
+      current_size_ -= size;
+    }
     return true;
   }
 

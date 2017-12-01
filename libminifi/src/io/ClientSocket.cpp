@@ -296,7 +296,7 @@ std::string Socket::getHostname() const {
 }
 
 int Socket::writeData(std::vector<uint8_t> &buf, int buflen) {
-  if ((int)buf.capacity() < buflen)
+  if (static_cast<int>(buf.capacity()) < buflen)
     return -1;
   return writeData(reinterpret_cast<uint8_t *>(&buf[0]), buflen);
 }
@@ -379,7 +379,7 @@ int Socket::read(uint16_t &value, bool is_little_endian) {
 }
 
 int Socket::readData(std::vector<uint8_t> &buf, int buflen, bool retrieve_all_bytes) {
-  if ((int)buf.capacity() < buflen) {
+  if (static_cast<int>(buf.capacity()) < buflen) {
     buf.resize(buflen);
   }
   return readData(reinterpret_cast<uint8_t*>(&buf[0]), buflen, retrieve_all_bytes);

@@ -83,7 +83,7 @@ void FileStream::seek(uint64_t offset) {
 }
 
 int FileStream::writeData(std::vector<uint8_t> &buf, int buflen) {
-  if ((int)buf.capacity() < buflen) {
+  if (static_cast<int>(buf.capacity()) < buflen) {
     return -1;
   }
   return writeData(reinterpret_cast<uint8_t *>(&buf[0]), buflen);
@@ -119,7 +119,7 @@ inline std::vector<uint8_t> FileStream::readBuffer(const T& t) {
 }
 
 int FileStream::readData(std::vector<uint8_t> &buf, int buflen) {
-  if ((int)buf.capacity() < buflen) {
+  if (static_cast<int>(buf.capacity()) < buflen) {
     buf.resize(buflen);
   }
   int ret = readData(reinterpret_cast<uint8_t*>(&buf[0]), buflen);
