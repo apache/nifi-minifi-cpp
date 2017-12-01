@@ -315,6 +315,6 @@ TEST_CASE("PutFileTestFileExistsReplace", "[getfileputpfile]") {
 
 TEST_CASE("Test generation of temporary write path", "[putfileTmpWritePath]") {
   auto processor = std::make_shared<org::apache::nifi::minifi::processors::PutFile>("processorname");
-  REQUIRE(processor->tmpWritePath("a/b/c").substr(1, strlen("a/b/.c")) == "a/b/.c");
+  REQUIRE(processor->tmpWritePath("a/b/c", "").substr(1, strlen("a/b/.c")) == "a/b/.c");
 }
 

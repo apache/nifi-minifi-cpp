@@ -136,3 +136,10 @@ Note that if Batch Directory is not specified, /tmp/ will be used.
 
 *Running PcapTests requires root privileges on Linux.
 
+#Expressions
+
+To evaluate dynamic expressions using the [NiFi Expression Language](https://nifi.apache.org/docs/nifi-docs/html/expression-language-guide.html),
+use the `bool getProperty(const std::string &name, std::string &value, const std::shared_ptr<FlowFile> &flow_file);`
+method within processor extensions. The expression defined in the property will be compiled if it hasn't already been, and
+the expression will be evaluated against the provided flow file (may be `nullptr`). The result of the evaluation is
+stored into the `&value` parameter.

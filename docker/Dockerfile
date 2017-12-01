@@ -30,6 +30,8 @@ ARG MINIFI_SOURCE_CODE
 RUN apk --update --no-cache upgrade && apk --update --no-cache add gcc \
 	g++ \
 	make \
+	bison \
+	flex \
 	wget \
 	gdb \
 	musl-dev \

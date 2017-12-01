@@ -26,6 +26,7 @@
 #include <atomic>
 #include <algorithm>
 #include <memory>
+#include <expression/Expression.h>
 #include "Property.h"
 #include "core/ContentRepository.h"
 #include "core/repository/FileSystemRepository.h"
@@ -34,6 +35,7 @@
 #include "core/logging/LoggerConfiguration.h"
 #include "ProcessorNode.h"
 #include "core/Repository.h"
+#include "core/FlowFile.h"
 
 namespace org {
 namespace apache {
@@ -67,6 +69,7 @@ class ProcessContext : public controller::ControllerServiceLookup {
   bool getProperty(const std::string &name, std::string &value) {
     return processor_node_->getProperty(name, value);
   }
+  bool getProperty(const std::string &name, std::string &value, const std::shared_ptr<FlowFile> &flow_file);
   // Sets the property value using the property's string name
   bool setProperty(const std::string &name, std::string value) {
     return processor_node_->setProperty(name, value);
@@ -168,6 +171,9 @@ class ProcessContext : public controller::ControllerServiceLookup {
   std::shared_ptr<core::ContentRepository> content_repo_;
   // Processor
   std::shared_ptr<ProcessorNode> processor_node_;
+
+  std::map<std::string, org::apache::nifi::minifi::expression::Expression> expressions_;
+
   // Logger
   std::shared_ptr<logging::Logger> logger_;
 

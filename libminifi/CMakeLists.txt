@@ -74,6 +74,7 @@ target_link_libraries(core-minifi ${UUID_LIBRARIES} ${JSONCPP_LIB} yaml-cpp )
 find_package(ZLIB REQUIRED)
 include_directories(${ZLIB_INCLUDE_DIRS})
 
+target_link_libraries(core-minifi minifi-expression-language-extensions)
 target_link_libraries (core-minifi ${ZLIB_LIBRARIES})
 
 # Include OpenSSL

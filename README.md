@@ -77,6 +77,10 @@ Perspectives of the role of MiNiFi should be from the perspective of the agent a
   * 4.8.4 or greater
 * g++
   * 4.8.4 or greater
+* bison
+  * 3.0 or greater
+* flex
+  * 2.5 or greater
   
 **NOTE** if Lua support is enabled, then a C++ compiler with support for c++-14 must be used. If using GCC, version 6.x
 or greater is recommended.
@@ -121,6 +125,8 @@ using a devtools-* package from the Software Collections (SCL).
 # ~/Development/code/apache/nifi-minifi-cpp on git:master
 $ yum install cmake \
   gcc gcc-c++ \
+  bison \
+  flex \
   libcurl-devel \
   rocksdb-devel rocksdb \
   libuuid libuuid-devel \
@@ -150,6 +156,8 @@ Aptitude based Linux Distributions
 # ~/Development/code/apache/nifi-minifi-cpp on git:master
 $ apt-get install cmake \
   gcc g++ \
+  bison \
+  flex \
   libcurl-dev \
   librocksdb-dev librocksdb4.1 \
   uuid-dev uuid \
@@ -176,6 +184,8 @@ OS X Using Homebrew (with XCode Command Line Tools installed)
 ```
 # ~/Development/code/apache/nifi-minifi-cpp on git:master
 $ brew install cmake \
+  bison \
+  flex \
   rocksdb \
   ossp-uuid \
   boost \
