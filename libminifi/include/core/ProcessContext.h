@@ -125,7 +125,9 @@ class ProcessContext : public controller::ControllerServiceLookup {
    * identifier
    */
   std::shared_ptr<core::controller::ControllerService> getControllerService(const std::string &identifier) {
-    return controller_service_provider_->getControllerServiceForComponent(identifier, processor_node_->getUUIDStr());
+    if (controller_service_provider_ != nullptr)
+      return controller_service_provider_->getControllerServiceForComponent(identifier, processor_node_->getUUIDStr());
+    return nullptr;
   }
 
   /**

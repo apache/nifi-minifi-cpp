@@ -64,6 +64,8 @@ file(GLOB SOURCES  "src/sitetosite/*.cpp"  "src/core/logging/*.cpp"  "src/core/s
 
 file(GLOB PROCESSOR_SOURCES  "src/processors/*.cpp" )
 
+file(GLOB CAPI_SOURCES  "src/capi/*.cpp" )
+
 file(GLOB SPD_SOURCES "../thirdparty/spdlog-20170710/include/spdlog/*")
 
 # Workaround the limitations of having a
@@ -89,8 +91,10 @@ else ()
 endif (OPENSSL_FOUND)
 
 add_library(minifi STATIC ${PROCESSOR_SOURCES})
+add_library(capi STATIC ${CAPI_SOURCES})
 target_link_libraries(minifi c-library civetweb-cpp)
 
 target_link_libraries(minifi core-minifi)
+
 
 SET (LIBMINIFI core-minifi PARENT_SCOPE)

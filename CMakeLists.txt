@@ -196,6 +196,7 @@ endif()
 ## NOW WE CAN ADD LIBRARIES AND EXTENSIONS TO MAIN
 
 add_subdirectory(main)
+add_subdirectory(LibExample)
 
 
 # Generate source assembly
