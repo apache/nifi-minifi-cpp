@@ -61,10 +61,6 @@ target_link_libraries(minifi-expression-language-extensions ${CMAKE_DL_LIBS})
 find_package(ZLIB REQUIRED)
 include_directories(${ZLIB_INCLUDE_DIRS})
 target_link_libraries (minifi-expression-language-extensions ${ZLIB_LIBRARIES})
-find_package(Boost COMPONENTS system filesystem REQUIRED)
-include_directories(${Boost_INCLUDE_DIRS})
-target_link_libraries(minifi-expression-language-extensions ${Boost_SYSTEM_LIBRARY})
-target_link_libraries(minifi-expression-language-extensions ${Boost_FILESYSTEM_LIBRARY})
 
 if (WIN32)
     set_target_properties(minifi-expression-language-extensions PROPERTIES
