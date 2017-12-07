@@ -175,7 +175,7 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
   bool applyConfiguration(const std::string &configurePayload);
 
   // get name
-  std::string getName() {
+  std::string getName() const{
     if (root_ != nullptr)
       return root_->getName();
     else
@@ -304,7 +304,7 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
    *  1 No error condition, but cannot obtain lock in timely manner.
    *  -1 failure
    */
-  virtual int16_t getMetrics(std::vector<std::shared_ptr<state::metrics::Metrics>> &metric_vector, uint8_t metricsClass);
+  virtual int16_t getMetrics(std::vector<std::shared_ptr<state::metrics::Metrics>> &metric_vector, uint16_t metricsClass);
 
   virtual uint64_t getUptime();
 

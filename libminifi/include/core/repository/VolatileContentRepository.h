@@ -43,10 +43,10 @@ class VolatileContentRepository : public core::ContentRepository, public virtual
   static const char *minimal_locking;
 
   explicit VolatileContentRepository(std::string name = getClassName<VolatileContentRepository>())
-      : core::repository::VolatileRepository<std::shared_ptr<minifi::ResourceClaim>>(name),
-        core::SerializableComponent(name,0),
-        logger_(logging::LoggerFactory<VolatileContentRepository>::getLogger()),
-        minimize_locking_(true) {
+      : core::SerializableComponent(name, 0),
+        core::repository::VolatileRepository<std::shared_ptr<minifi::ResourceClaim>>(name),
+        minimize_locking_(true),
+        logger_(logging::LoggerFactory<VolatileContentRepository>::getLogger()) {
     max_count_ = 15000;
   }
   virtual ~VolatileContentRepository() {
@@ -122,14 +122,14 @@ class VolatileContentRepository : public core::ContentRepository, public virtual
   std::function<bool(std::shared_ptr<minifi::ResourceClaim>)> resource_claim_check_;
   std::function<void(std::shared_ptr<minifi::ResourceClaim>)> claim_reclaimer_;
 
-  // logger
-  std::shared_ptr<logging::Logger> logger_;
-
   // mutex and master list that represent a cache of Atomic entries. this exists so that we don't have to walk the atomic entry list.
   // The idea is to reduce the computational complexity while keeping access as maximally lock free as we can.
   std::mutex map_mutex_;
 
   std::map<std::string, AtomicEntry<std::shared_ptr<minifi::ResourceClaim>>*> master_list_;
+
+  // logger
+  std::shared_ptr<logging::Logger> logger_;
 };
 
 } /* namespace repository */

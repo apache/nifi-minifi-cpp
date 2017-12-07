@@ -73,18 +73,4 @@ static auto IsNullOrEmpty(std::shared_ptr<T> object) -> typename std::enable_if<
   return (nullptr == object || nullptr == object.get());
 }
 
-/**
- * Determines if the variable is null or strlen(str) == 0
- */
-static auto IsNullOrEmpty(const char *str)-> decltype(NULL !=str, bool()) {
-  return (NULL == str || strlen(str) == 0);
-}
-
-/**
- * Determines if the variable is null or strlen(str) == 0
- */
-static auto IsNullOrEmpty(char *str)-> decltype(NULL !=str, bool()) {
-  return (NULL == str || strlen(str) == 0);
-}
-
 #endif

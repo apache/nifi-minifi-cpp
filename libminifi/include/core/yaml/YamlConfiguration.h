@@ -69,9 +69,9 @@ class YamlConfiguration : public FlowConfiguration {
    * @return               the root ProcessGroup node of the flow
    *                        configuration tree
    */
-  std::unique_ptr<core::ProcessGroup> getRoot(const std::string &yamlConfigFile) {
+  virtual std::unique_ptr<core::ProcessGroup> getRoot(const std::string &yamlConfigFile) {
     YAML::Node rootYamlNode = YAML::LoadFile(yamlConfigFile);
-    return getRoot(&rootYamlNode);
+    return getYamlRoot(&rootYamlNode);
   }
 
   /**
@@ -85,9 +85,9 @@ class YamlConfiguration : public FlowConfiguration {
    * @return                 the root ProcessGroup node of the flow
    *                           configuration tree
    */
-  std::unique_ptr<core::ProcessGroup> getRoot(std::istream &yamlConfigStream) {
+  std::unique_ptr<core::ProcessGroup> getYamlRoot(std::istream &yamlConfigStream) {
     YAML::Node rootYamlNode = YAML::Load(yamlConfigStream);
-    return getRoot(&rootYamlNode);
+    return getYamlRoot(&rootYamlNode);
   }
 
   /**
@@ -103,7 +103,7 @@ class YamlConfiguration : public FlowConfiguration {
    */
   std::unique_ptr<core::ProcessGroup> getRootFromPayload(const std::string &yamlConfigPayload) {
     YAML::Node rootYamlNode = YAML::Load(yamlConfigPayload);
-    return getRoot(&rootYamlNode);
+    return getYamlRoot(&rootYamlNode);
   }
 
  protected:
@@ -119,7 +119,7 @@ class YamlConfiguration : public FlowConfiguration {
    * @return             the root ProcessGroup node of the flow
    *                       configuration tree
    */
-  std::unique_ptr<core::ProcessGroup> getRoot(YAML::Node *rootYamlNode) {
+  std::unique_ptr<core::ProcessGroup> getYamlRoot(YAML::Node *rootYamlNode) {
     YAML::Node rootYaml = *rootYamlNode;
     YAML::Node flowControllerNode = rootYaml[CONFIG_YAML_FLOW_CONTROLLER_KEY];
     YAML::Node processorsNode = rootYaml[CONFIG_YAML_PROCESSORS_KEY];

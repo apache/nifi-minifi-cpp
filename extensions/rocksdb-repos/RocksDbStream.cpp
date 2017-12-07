@@ -30,10 +30,10 @@ namespace io {
 
 RocksDbStream::RocksDbStream(const std::string &path, rocksdb::DB *db, bool write_enable)
     : BaseStream(),
-      logger_(logging::LoggerFactory<RocksDbStream>::getLogger()),
-      db_(db),
       path_(path),
-      write_enable_(write_enable) {
+      write_enable_(write_enable),
+      db_(db),
+      logger_(logging::LoggerFactory<RocksDbStream>::getLogger()) {
   rocksdb::Status status;
   status = db_->Get(rocksdb::ReadOptions(), path_, &value_);
   if (status.ok()) {

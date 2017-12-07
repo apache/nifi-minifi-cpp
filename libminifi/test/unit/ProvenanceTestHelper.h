@@ -27,11 +27,18 @@
 #include <utility>
 #include <vector>
 #include "core/repository/VolatileContentRepository.h"
-#include "../../include/core/Processor.h"
-#include "../../include/Connection.h"
-#include "../../include/FlowController.h"
-#include "../../include/properties/Configure.h"
-#include "../../include/provenance/Provenance.h"
+#include "core/Processor.h"
+#include "Connection.h"
+#include "FlowController.h"
+#include "properties/Configure.h"
+#include "provenance/Provenance.h"
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Woverloaded-virtual"
+#elif defined(__GNUC__) || defined(__GNUG__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Woverloaded-virtual"
+#endif
 
 /**
  * Test repository
@@ -39,7 +46,8 @@
 class TestRepository : public core::Repository {
  public:
   TestRepository()
-      : Repository("repo_name", "./dir", 1000, 100, 0), core::SerializableComponent("repo_name",0) {
+      : core::SerializableComponent("repo_name", 0),
+        Repository("repo_name", "./dir", 1000, 100, 0) {
   }
   // initialize
   bool initialize() {
@@ -127,7 +135,7 @@ class TestRepository : public core::Repository {
 
   void getProvenanceRecord(std::vector<std::shared_ptr<provenance::ProvenanceEventRecord>> &records, int maxSize) {
     for (auto entry : repositoryResults) {
-      if (records.size() >= maxSize)
+      if (records.size() >= (uint64_t)maxSize)
         break;
       std::shared_ptr<provenance::ProvenanceEventRecord> eventRead = std::make_shared<provenance::ProvenanceEventRecord>();
 
@@ -147,7 +155,8 @@ class TestRepository : public core::Repository {
 class TestFlowRepository : public core::Repository {
  public:
   TestFlowRepository()
-      : core::Repository("ff", "./dir", 1000, 100, 0), core::SerializableComponent("ff",0) {
+      : core::SerializableComponent("ff", 0),
+        core::Repository("ff", "./dir", 1000, 100, 0) {
   }
   // initialize
   bool initialize() {
@@ -185,7 +194,7 @@ class TestFlowRepository : public core::Repository {
 
   void getProvenanceRecord(std::vector<std::shared_ptr<provenance::ProvenanceEventRecord>> &records, int maxSize) {
     for (auto entry : repositoryResults) {
-      if (records.size() >= maxSize)
+      if (records.size() >= (uint64_t)maxSize)
         break;
       std::shared_ptr<provenance::ProvenanceEventRecord> eventRead = std::make_shared<provenance::ProvenanceEventRecord>();
 
@@ -266,5 +275,9 @@ class TestFlowController : public minifi::FlowController {
   void initializePaths(const std::string &adjustedFilename) {
   }
 };
-
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#elif defined(__GNUC__) || defined(__GNUG__)
+#pragma GCC diagnostic pop
+#endif
 #endif /* LIBMINIFI_TEST_UNIT_PROVENANCETESTHELPER_H_ */

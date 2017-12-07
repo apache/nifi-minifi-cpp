@@ -17,8 +17,6 @@
 #ifndef LIBMINIFI_INCLUDE_UTILS_BYTEARRAYCALLBACK_H_
 #define LIBMINIFI_INCLUDE_UTILS_BYTEARRAYCALLBACK_H_
 
-#include <fstream>
-#include <iterator>
 #include "concurrentqueue.h"
 #include "FlowFileRecord.h"
 #include "core/logging/LoggerConfiguration.h"
@@ -97,8 +95,7 @@ class ByteOutputCallback : public OutputStreamCallback {
   ByteOutputCallback() = delete;
 
   explicit ByteOutputCallback(size_t max_size, bool wait_on_read=false)
-      : ptr(nullptr),
-        max_size_(max_size),
+      : max_size_(max_size),
         read_started_( wait_on_read ? false : true ),
         logger_(logging::LoggerFactory<ByteOutputCallback>::getLogger()) {
     current_str_pos = 0;
@@ -144,8 +141,6 @@ class ByteOutputCallback : public OutputStreamCallback {
 
   // flag to wait on writes until we have a consumer.
   std::atomic<bool> read_started_;
-
-  char *ptr;
 
   size_t current_str_pos;
   std::string current_str;

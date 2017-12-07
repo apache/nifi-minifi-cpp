@@ -29,6 +29,7 @@
 #include <mutex>
 #include <atomic>
 #include <memory>
+#include "io/EndianCheck.h"
 
 #include "core/Property.h"
 #include "core/logging/LoggerConfiguration.h"
@@ -89,9 +90,9 @@ class Peer {
   }
 
  protected:
-  uint16_t port_;
-
   std::string host_;
+
+  uint16_t port_;
 
   uuid_t port_id_;
   // secore comms
@@ -152,11 +153,11 @@ class SiteToSitePeer : public org::apache::nifi::minifi::io::BaseStream {
   }
 
   explicit SiteToSitePeer(const std::string &host, uint16_t port)
-      : host_(host),
+      : stream_(nullptr),
+        host_(host),
         port_(port),
-        stream_(nullptr),
-        yield_expiration_(0),
         timeout_(30000),
+        yield_expiration_(0),
         logger_(logging::LoggerFactory<SiteToSitePeer>::getLogger()) {
     url_ = "nifi://" + host_ + ":" + std::to_string(port_);
     yield_expiration_ = 0;
@@ -266,6 +267,8 @@ class SiteToSitePeer : public org::apache::nifi::minifi::io::BaseStream {
   }
 
   void setStream(std::unique_ptr<org::apache::nifi::minifi::io::DataStream> stream) {
+    stream_ = nullptr;
+    if (stream)
     stream_ = std::move(stream);
   }
 
@@ -273,24 +276,22 @@ class SiteToSitePeer : public org::apache::nifi::minifi::io::BaseStream {
     return stream_.get();
   }
 
-  int write(uint8_t value) {
+  int write(uint8_t value, bool is_little_endian = minifi::io::EndiannessCheck::IS_LITTLE) {
     return Serializable::write(value, stream_.get());
   }
-  int write(char value) {
+  int write(char value, bool is_little_endian = minifi::io::EndiannessCheck::IS_LITTLE) {
     return Serializable::write(value, stream_.get());
   }
-  int write(uint32_t value) {
-
+  int write(uint32_t value, bool is_little_endian = minifi::io::EndiannessCheck::IS_LITTLE) {
     return Serializable::write(value, stream_.get());
-
   }
-  int write(uint16_t value) {
+  int write(uint16_t value, bool is_little_endian = minifi::io::EndiannessCheck::IS_LITTLE) {
     return Serializable::write(value, stream_.get());
   }
   int write(uint8_t *value, int len) {
     return Serializable::write(value, len, stream_.get());
   }
-  int write(uint64_t value) {
+  int write(uint64_t value, bool is_little_endian = minifi::io::EndiannessCheck::IS_LITTLE) {
     return Serializable::write(value, stream_.get());
   }
   int write(bool value) {
@@ -303,7 +304,7 @@ class SiteToSitePeer : public org::apache::nifi::minifi::io::BaseStream {
   int read(uint8_t &value) {
     return Serializable::read(value, stream_.get());
   }
-  int read(uint16_t &value) {
+  int read(uint16_t &value, bool is_little_endian = minifi::io::EndiannessCheck::IS_LITTLE) {
     return Serializable::read(value, stream_.get());
   }
   int read(char &value) {
@@ -312,10 +313,10 @@ class SiteToSitePeer : public org::apache::nifi::minifi::io::BaseStream {
   int read(uint8_t *value, int len) {
     return Serializable::read(value, len, stream_.get());
   }
-  int read(uint32_t &value) {
+  int read(uint32_t &value, bool is_little_endian = minifi::io::EndiannessCheck::IS_LITTLE) {
     return Serializable::read(value, stream_.get());
   }
-  int read(uint64_t &value) {
+  int read(uint64_t &value, bool is_little_endian = minifi::io::EndiannessCheck::IS_LITTLE) {
     return Serializable::read(value, stream_.get());
   }
   int readUTF(std::string &str, bool widen = false) {
@@ -350,6 +351,7 @@ class SiteToSitePeer : public org::apache::nifi::minifi::io::BaseStream {
   std::unique_ptr<org::apache::nifi::minifi::io::DataStream> stream_;
 
   std::string host_;
+
   uint16_t port_;
 
   // Mutex for protection
@@ -358,18 +360,14 @@ class SiteToSitePeer : public org::apache::nifi::minifi::io::BaseStream {
   std::string url_;
   // socket timeout;
   std::atomic<uint64_t> timeout_;
-  // Logger
-  std::shared_ptr<logging::Logger> logger_;
   // Yield Period in Milliseconds
   std::atomic<uint64_t> yield_period_msec_;
   // Yield Expiration
   std::atomic<uint64_t> yield_expiration_;
   // Yield Expiration per destination PortID
   std::map<std::string, uint64_t> yield_expiration_PortIdMap;
-  // OpenSSL connection state
-  // Prevent default copy constructor and assignment operation
-  // Only support pass by reference or pointer
-
+  // Logger
+  std::shared_ptr<logging::Logger> logger_;
 };
 
 } /* namespace sitetosite */

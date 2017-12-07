@@ -67,16 +67,16 @@ class SocketAfterExecute : public utils::AfterExecute<int> {
       return false;
   }
 
-  virtual int64_t wait_time(){
+  virtual int64_t wait_time() {
     // wait 500ms
     return 500;
   }
 
  protected:
   std::atomic<bool> running_;
-  std::map<std::string, std::future<int>*> *list_;
-  std::mutex *mutex_;
   std::string endpoint_;
+  std::mutex *mutex_;
+  std::map<std::string, std::future<int>*> *list_;
 };
 
 class DataHandlerCallback : public OutputStreamCallback {
@@ -132,7 +132,7 @@ class GetTCPMetrics : public state::metrics::Metrics {
   virtual ~GetTCPMetrics() {
 
   }
-  virtual std::string getName() {
+  virtual std::string getName() const {
     return core::Connectable::getName();
   }
 
@@ -178,14 +178,13 @@ class GetTCP : public core::Processor, public state::metrics::MetricsSource {
    */
   explicit GetTCP(std::string name, uuid_t uuid = NULL)
       : Processor(name, uuid),
-        connection_attempts_(3),
+        running_(false),
+        stay_connected_(true),
+        concurrent_handlers_(2),
+        endOfMessageByte(13),
         reconnect_interval_(5000),
         receive_buffer_size_(16 * 1024 * 1024),
-        stay_connected_(true),
-        endOfMessageByte(13),
-        running_(false),
         connection_attempt_limit_(3),
-        concurrent_handlers_(2),
         logger_(logging::LoggerFactory<GetTCP>::getLogger()) {
     metrics_ = std::make_shared<GetTCPMetrics>();
   }
@@ -266,8 +265,6 @@ class GetTCP : public core::Processor, public state::metrics::MetricsSource {
 
   int64_t receive_buffer_size_;
 
-  int8_t connection_attempts_;
-
   uint16_t connection_attempt_limit_;
 
   std::shared_ptr<GetTCPMetrics> metrics_;
@@ -280,6 +277,7 @@ class GetTCP : public core::Processor, public state::metrics::MetricsSource {
 // as the top level time.
 
   std::shared_ptr<logging::Logger> logger_;
+
 };
 
 REGISTER_RESOURCE(GetTCP);

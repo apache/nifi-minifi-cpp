@@ -67,7 +67,7 @@ struct HTTPHeaderResponse {
   }
 
   void append(const std::string &header) {
-    if (max_tokens_ == -1 || header_tokens_.size() <= max_tokens_) {
+    if (max_tokens_ == -1 || (int32_t)header_tokens_.size() <= max_tokens_) {
       header_tokens_.push_back(header);
     }
   }
@@ -76,7 +76,7 @@ struct HTTPHeaderResponse {
     header_mapping_[key].append(value);
   }
 
-  int max_tokens_;
+  int32_t max_tokens_;
   std::vector<std::string> header_tokens_;
   std::map<std::string, std::string> header_mapping_;
 
@@ -145,7 +145,7 @@ class HTTPRequestResponse {
         return 0x10000000;
       size_t buffer_size = callback->ptr->getBufferSize();
       if (callback->getPos() <= buffer_size) {
-        int len = buffer_size - callback->pos;
+        size_t len = buffer_size - callback->pos;
         if (len <= 0)
           return 0;
         char *ptr = callback->ptr->getBuffer(callback->getPos());
@@ -276,67 +276,9 @@ class BaseHTTPClient {
 
 };
 
-static std::string get_token(utils::BaseHTTPClient *client, std::string username, std::string password) {
+extern std::string get_token(utils::BaseHTTPClient *client, std::string username, std::string password);
 
-  if (nullptr == client) {
-    return "";
-  }
-  std::string token;
-
-  client->setContentType("application/x-www-form-urlencoded");
-
-  client->set_request_method("POST");
-
-  std::string payload = "username=" + username + "&" + "password=" + password;
-
-  client->setPostFields(client->escape(payload));
-
-  client->submit();
-
-  if (client->submit() && client->getResponseCode() == 200) {
-
-    const std::string &response_body = std::string(client->getResponseBody().data(), client->getResponseBody().size());
-
-    if (!response_body.empty()) {
-      token = "Bearer " + response_body;
-    }
-  }
-
-  return token;
-}
-
-static void parse_url(std::string &url, std::string &host, int &port, std::string &protocol) {
-
-  std::string http("http://");
-  std::string https("https://");
-
-  if (url.compare(0, http.size(), http) == 0)
-    protocol = http;
-
-  if (url.compare(0, https.size(), https) == 0)
-    protocol = https;
-
-  if (!protocol.empty()) {
-    size_t pos = url.find_first_of(":", protocol.size());
-
-    if (pos == std::string::npos) {
-      pos = url.size();
-    }
-
-    host = url.substr(protocol.size(), pos - protocol.size());
-
-    if (pos < url.size() && url[pos] == ':') {
-      size_t ppos = url.find_first_of("/", pos);
-      if (ppos == std::string::npos) {
-        ppos = url.size();
-      }
-      std::string portStr(url.substr(pos + 1, ppos - pos - 1));
-      if (portStr.size() > 0) {
-        port = std::stoi(portStr);
-      }
-    }
-  }
-}
+extern void parse_url(std::string *url, std::string *host, int *port, std::string *protocol);
 } /* namespace utils */
 } /* namespace minifi */
 } /* namespace nifi */

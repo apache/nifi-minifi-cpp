@@ -55,8 +55,8 @@ class FlowFileRepository : public core::Repository, public std::enable_shared_fr
   FlowFileRepository(const std::string repo_name = "", std::string directory = FLOWFILE_REPOSITORY_DIRECTORY, int64_t maxPartitionMillis = MAX_FLOWFILE_REPOSITORY_ENTRY_LIFE_TIME,
                      int64_t maxPartitionBytes = MAX_FLOWFILE_REPOSITORY_STORAGE_SIZE, uint64_t purgePeriod = FLOWFILE_REPOSITORY_PURGE_PERIOD)
       : core::SerializableComponent(repo_name,0), Repository(repo_name.length() > 0 ? repo_name : core::getClassName<FlowFileRepository>(), directory, maxPartitionMillis, maxPartitionBytes, purgePeriod),
-        logger_(logging::LoggerFactory<FlowFileRepository>::getLogger()),
-        content_repo_(nullptr) {
+        content_repo_(nullptr),
+        logger_(logging::LoggerFactory<FlowFileRepository>::getLogger()){
     db_ = NULL;
   }
 

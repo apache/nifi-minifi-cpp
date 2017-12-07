@@ -295,8 +295,9 @@ int64_t FocusArchiveEntry::ReadCallback::process(std::shared_ptr<io::BaseStream>
   return nlen;
 }
 
-FocusArchiveEntry::ReadCallback::ReadCallback(core::Processor *processor,fileutils::FileManager *file_man, ArchiveMetadata *archiveMetadata)
-    : proc_(processor), file_man_(file_man) {
+FocusArchiveEntry::ReadCallback::ReadCallback(core::Processor *processor, fileutils::FileManager *file_man, ArchiveMetadata *archiveMetadata)
+    : file_man_(file_man),
+      proc_(processor) {
   logger_ = logging::LoggerFactory<FocusArchiveEntry>::getLogger();
   _archiveMetadata = archiveMetadata;
 }

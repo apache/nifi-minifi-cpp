@@ -68,18 +68,18 @@ std::unique_ptr<sitetosite::SiteToSiteClient> RemoteProcessorGroupPort::getNextP
       // create
       if (url_.empty()) {
         sitetosite::SiteToSiteClientConfiguration config(stream_factory_, std::make_shared<sitetosite::Peer>(protocol_uuid_, host_, port_, ssl_service != nullptr), client_type_);
-        nextProtocol = std::move(sitetosite::createClient(config));
+        nextProtocol = sitetosite::createClient(config);
       } else if (peer_index_ >= 0) {
         std::lock_guard<std::mutex> lock(peer_mutex_);
         logger_->log_info("Creating client from peer %d", peer_index_.load());
         sitetosite::SiteToSiteClientConfiguration config(stream_factory_, peers_[this->peer_index_].getPeer(), client_type_);
 
         peer_index_++;
-        if (peer_index_ >= peers_.size()) {
+        if (peer_index_ >= static_cast<int>(peers_.size())) {
           peer_index_ = 0;
         }
 
-        nextProtocol = std::move(sitetosite::createClient(config));
+        nextProtocol = sitetosite::createClient(config);
       } else {
         logger_->log_info("Refreshing the peer list since there are none configured.");
         refreshPeerList();
@@ -87,11 +87,11 @@ std::unique_ptr<sitetosite::SiteToSiteClient> RemoteProcessorGroupPort::getNextP
     }
   }
   logger_->log_info("Obtained protocol from available_protocols_");
-  return std::move(nextProtocol);
+  return nextProtocol;
 }
 
 void RemoteProcessorGroupPort::returnProtocol(std::unique_ptr<sitetosite::SiteToSiteClient> return_protocol) {
-  int count = peers_.size();
+  auto count = peers_.size();
   if (max_concurrent_tasks_ > count)
     count = max_concurrent_tasks_;
   if (available_protocols_.size_approx() >= count) {
@@ -132,18 +132,18 @@ void RemoteProcessorGroupPort::initialize() {
   }
   // populate the site2site protocol for load balancing between them
   if (peers_.size() > 0) {
-    int count = peers_.size();
+    auto count = peers_.size();
     if (max_concurrent_tasks_ > count)
       count = max_concurrent_tasks_;
-    for (int i = 0; i < count; i++) {
+    for (uint32_t i = 0; i < count; i++) {
       std::unique_ptr<sitetosite::SiteToSiteClient> nextProtocol = nullptr;
       sitetosite::SiteToSiteClientConfiguration config(stream_factory_, peers_[this->peer_index_].getPeer(), client_type_);
       peer_index_++;
-      if (peer_index_ >= peers_.size()) {
+      if (peer_index_ >= static_cast<int>(peers_.size())) {
         peer_index_ = 0;
       }
       logger_->log_info("Creating client");
-      nextProtocol = std::move(sitetosite::createClient(config));
+      nextProtocol = sitetosite::createClient(config);
       logger_->log_info("Created client, moving into available protocols");
       returnProtocol(std::move(nextProtocol));
     }
@@ -298,7 +298,7 @@ void RemoteProcessorGroupPort::refreshPeerList() {
 
   std::unique_ptr<sitetosite::SiteToSiteClient> protocol;
   sitetosite::SiteToSiteClientConfiguration config(stream_factory_, std::make_shared<sitetosite::Peer>(protocol_uuid_, host_, site2site_port_, ssl_service != nullptr), client_type_);
-  protocol = std::move(sitetosite::createClient(config));
+  protocol = sitetosite::createClient(config);
 
   protocol->getPeerList(peers_);
 

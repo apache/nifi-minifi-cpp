@@ -129,7 +129,7 @@ void AtomicEntryStream<T>::seek(uint64_t offset) {
 
 template<typename T>
 int AtomicEntryStream<T>::writeData(std::vector<uint8_t> &buf, int buflen) {
-  if (buf.capacity() < buflen || invalid_stream_)
+  if ((int)buf.capacity() < buflen || invalid_stream_)
     return -1;
   return writeData(reinterpret_cast<uint8_t *>(&buf[0]), buflen);
 }
@@ -159,7 +159,7 @@ int AtomicEntryStream<T>::readData(std::vector<uint8_t> &buf, int buflen) {
   if (invalid_stream_) {
     return -1;
   }
-  if (buf.capacity() < buflen) {
+  if ((int)buf.capacity() < buflen) {
     buf.resize(buflen);
   }
   int ret = readData(reinterpret_cast<uint8_t*>(&buf[0]), buflen);

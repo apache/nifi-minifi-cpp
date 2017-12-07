@@ -237,7 +237,7 @@ void GetTCP::onTrigger(const std::shared_ptr<core::ProcessContext> &context, con
       std::vector<std::string> hostAndPort = utils::StringUtils::split(endpoint, ":");
       if (hostAndPort.size() == 2) {
         logger_->log_debug("Opening another socket to %s:%s", hostAndPort.at(0), hostAndPort.at(1));
-        std::unique_ptr<io::Socket> socket = std::move(stream_factory_->createSocket(hostAndPort.at(0), std::stoi(hostAndPort.at(1))));
+        std::unique_ptr<io::Socket> socket = stream_factory_->createSocket(hostAndPort.at(0), std::stoi(hostAndPort.at(1)));
 
         if (socket->initialize() != -1) {
           socket->setNonBlocking();

@@ -84,7 +84,7 @@ int BaseStream::write(uint64_t base_value, bool is_little_endian) {
  **/
 int BaseStream::write(bool value) {
   uint8_t v = value;
-  return Serializable::write(v);
+  return Serializable::write(v, reinterpret_cast<DataStream*>(composable_stream_));
 }
 
 /**

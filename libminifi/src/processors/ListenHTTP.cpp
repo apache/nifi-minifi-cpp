@@ -306,8 +306,8 @@ int64_t ListenHTTP::WriteCallback::process(std::shared_ptr<io::BaseStream> strea
   while (tlen == -1 || nlen < tlen) {
     rlen = tlen == -1 ? sizeof(buf) : tlen - nlen;
 
-    if (rlen > sizeof(buf)) {
-      rlen = sizeof(buf);
+    if (rlen > (int64_t)sizeof(buf)) {
+      rlen = (int64_t)sizeof(buf);
     }
 
     // Read a buffer of data from client

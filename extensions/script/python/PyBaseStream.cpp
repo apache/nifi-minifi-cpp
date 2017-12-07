@@ -52,7 +52,7 @@ py::bytes PyBaseStream::read(size_t len) {
   auto read = stream_->readData(buffer.data(), static_cast<int>(len));
   auto result = py::bytes(reinterpret_cast<char *>(buffer.data()), static_cast<size_t>(read));
 
-  return std::move(result);
+  return result;
 }
 
 size_t PyBaseStream::write(py::bytes buf) {

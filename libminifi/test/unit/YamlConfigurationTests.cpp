@@ -137,7 +137,7 @@ TEST_CASE("Test YAML Config Processing", "[YamlConfiguration]") {
   "    batch size: 1000";
 
   std::istringstream configYamlStream(CONFIG_YAML_WITHOUT_IDS);
-  std::unique_ptr<core::ProcessGroup> rootFlowConfig = yamlConfig->getRoot(configYamlStream);
+  std::unique_ptr<core::ProcessGroup> rootFlowConfig = yamlConfig->getYamlRoot(configYamlStream);
 
   REQUIRE(rootFlowConfig);
   REQUIRE(rootFlowConfig->findProcessor("TailFile"));
@@ -184,6 +184,6 @@ TEST_CASE("Test YAML Config Processing", "[YamlConfiguration]") {
   "\n";
 
   std::istringstream configYamlStream(CONFIG_YAML_NO_RPG_PORT_ID);
-  REQUIRE_THROWS_AS(yamlConfig->getRoot(configYamlStream), std::invalid_argument);
+  REQUIRE_THROWS_AS(yamlConfig->getYamlRoot(configYamlStream), std::invalid_argument);
 }
 }

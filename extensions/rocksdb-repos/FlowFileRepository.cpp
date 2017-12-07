@@ -72,17 +72,15 @@ void FlowFileRepository::flush() {
 
 void FlowFileRepository::run() {
   // threshold for purge
-  uint64_t purgeThreshold = max_partition_bytes_ * 3 / 4;
 
   while (running_) {
     std::this_thread::sleep_for(std::chrono::milliseconds(purge_period_));
-    uint64_t curTime = getTimeMillis();
 
     flush();
 
     uint64_t size = getRepoSize();
 
-    if (size > max_partition_bytes_)
+    if (size > (uint64_t)max_partition_bytes_)
       repo_full_ = true;
     else
       repo_full_ = false;

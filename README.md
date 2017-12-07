@@ -222,29 +222,11 @@ $ sudo brew install libpcap
   ```
 
 - Perform a `cmake ..` to generate the project files
-  - Optionally, disable or enable features using any combination of the following flags (more information is available
-    on the [wiki](https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=74685143)):
-    - `-DDISABLE_CURL=1`
-    - `-DDISABLE_ROCKSDB=1`
-    - `-DDISABLE_LIBARCHIVE=1`
-    - `-DDISABLE_USB_CAMERA=1`
-    - `-DDISABLE_LIBRDKAFKA=1`
-    - `-DDISABLE_SCRIPTING=1`
-    - `-DDISABLE_PYTHON_SCRIPTING=1`
-    - `-DENABLE_LUA_SCRIPTING=1`
+  - Optionally disable or enable extensions. Please visit our guide [extensions guide](Extensions.md) for flags or our wiki entry on
+    [customizing builds](https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=74685143) for more information on this topic. 
   ```
   # ~/Development/code/apache/nifi-minifi-cpp on git:master
   $ cmake ..
-  ...
-  -- Configuring done
-  -- Generating done
-  -- Build files have been written to: /Users/apiri/Development/code/apache/nifi-minifi-cpp/build
-  ```
-
-- To build with GPS support perform a 'cmake -DBUILD_GPS=ON ..' to generate the project files
-  ```
-  # ~/Development/code/apache/nifi-minifi-cpp on git:master
-  $ cmake -DBUILD_GPS=ON ..
   ...
   -- Configuring done
   -- Generating done

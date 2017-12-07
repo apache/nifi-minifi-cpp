@@ -27,8 +27,8 @@ TestPlan::TestPlan(std::shared_ptr<core::ContentRepository> content_repo, std::s
       content_repo_(content_repo),
       flow_repo_(flow_repo),
       prov_repo_(prov_repo),
-      location(-1),
       finalized(false),
+      location(-1),
       current_flowfile_(nullptr),
       logger_(logging::LoggerFactory<TestPlan>::getLogger()) {
   stream_factory = std::make_shared<org::apache::nifi::minifi::io::StreamFactory>(std::make_shared<minifi::Configure>());
@@ -117,7 +117,7 @@ bool linkToPrevious) {
 
 bool TestPlan::setProperty(const std::shared_ptr<core::Processor> proc, const std::string &prop, const std::string &value) {
   std::lock_guard<std::recursive_mutex> guard(mutex);
-  int i = 0;
+  uint32_t i = 0;
   logger_->log_info("Attempting to set property %s %s for %s", prop, value, proc->getName());
   for (i = 0; i < processor_queue_.size(); i++) {
     if (processor_queue_.at(i) == proc) {

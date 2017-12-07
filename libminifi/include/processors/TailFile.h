@@ -88,7 +88,6 @@ class TailFile : public core::Processor {
   // determine if state is recovered;
   bool _stateRecovered;
   uint64_t _currentTailFilePosition;
-  uint64_t _currentTailFileCreatedTime;
   static const int BUFFER_SIZE = 512;
 
   // Utils functions for parse state file

@@ -114,8 +114,8 @@ class FlowFileRecord : public core::FlowFile, public io::Serializable {
 
   explicit FlowFileRecord(std::shared_ptr<core::Repository> flow_repository, const std::shared_ptr<core::ContentRepository> &content_repo)
       : FlowFile(),
-        content_repo_(content_repo),
         flow_repository_(flow_repository),
+        content_repo_(content_repo),
         snapshot_("") {
 
   }

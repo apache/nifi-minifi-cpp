@@ -52,7 +52,7 @@ class ProcessMetrics : public Metrics {
   ProcessMetrics() {
   }
 
-  std::string getName() {
+  virtual std::string getName() const {
     return "ProcessMetrics";
   }
 

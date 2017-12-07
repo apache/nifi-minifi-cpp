@@ -60,7 +60,7 @@ void CoreComponent::setName(const std::string name) {
   name_ = name;
 }
 // Get Process Name
-std::string CoreComponent::getName() {
+std::string CoreComponent::getName() const {
   return name_;
 }
 } /* namespace core */

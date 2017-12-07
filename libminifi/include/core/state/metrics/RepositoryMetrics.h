@@ -50,7 +50,7 @@ class RepositoryMetrics : public Metrics {
       : Metrics("RepositoryMetrics", 0) {
   }
 
-  std::string getName() {
+  virtual std::string getName() const {
     return "RepositoryMetrics";
   }
 

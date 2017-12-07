@@ -72,9 +72,9 @@ class DatabaseContentRepository : public core::ContentRepository, public core::C
 
   DatabaseContentRepository(std::string name = getClassName<DatabaseContentRepository>(), uuid_t uuid = 0)
       : core::Connectable(name, uuid),
-        logger_(logging::LoggerFactory<DatabaseContentRepository>::getLogger()),
         is_valid_(false),
-        db_(nullptr) {
+        db_(nullptr),
+        logger_(logging::LoggerFactory<DatabaseContentRepository>::getLogger()) {
   }
   virtual ~DatabaseContentRepository() {
     stop();

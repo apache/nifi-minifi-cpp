@@ -33,13 +33,13 @@ namespace minifi {
 namespace io {
 
 HttpStream::HttpStream(std::shared_ptr<utils::HTTPClient> client)
-    : logger_(logging::LoggerFactory<HttpStream>::getLogger()),
-      http_client_(client),
+    : http_client_(client),
       written(0),
       // given the nature of the stream we don't want to slow libCURL, we will produce
       // a warning instead allowing us to adjust it server side or through the local configuration.
       http_read_callback_(66560,true),
-      started_(false) {
+      started_(false),
+      logger_(logging::LoggerFactory<HttpStream>::getLogger()){
   // submit early on
 }
 
@@ -54,7 +54,7 @@ void HttpStream::seek(uint64_t offset) {
 }
 
 int HttpStream::writeData(std::vector<uint8_t> &buf, int buflen) {
-  if (buf.capacity() < buflen) {
+  if ((int)buf.capacity() < buflen) {
     return -1;
   }
   return writeData(reinterpret_cast<uint8_t *>(&buf[0]), buflen);
@@ -90,7 +90,7 @@ inline std::vector<uint8_t> HttpStream::readBuffer(const T& t) {
 }
 
 int HttpStream::readData(std::vector<uint8_t> &buf, int buflen) {
-  if (buf.capacity() < buflen) {
+  if ((int)buf.capacity() < buflen) {
     buf.resize(buflen);
   }
   int ret = readData(reinterpret_cast<uint8_t*>(&buf[0]), buflen);

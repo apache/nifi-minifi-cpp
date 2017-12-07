@@ -42,7 +42,7 @@ class DataStream {
 
   }
 
-  ~DataStream() {
+  virtual ~DataStream() {
 
   }
 
