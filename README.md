@@ -22,6 +22,7 @@ MiNiFi is a child project effort of Apache NiFi.  This repository is for a nativ
 - [Caveats](#caveats)
 - [Getting Started](#getting-started)
   - [System Requirements](#system-requirements)
+  - [Bootstrapping](#bootstrapping)
   - [Building](#building)
   - [Cleaning](#cleaning)
   - [Configuring](#configuring)
@@ -210,6 +211,44 @@ $ sudo brew install libpcap
 
 
 ## Getting Started
+
+### Bootstrapping
+
+- MiNiFi C++ offers a bootstrap script in the root of our github repo that will boot strap the cmake and build process for you without the need to install dependencies yourself. To use this process, please run the command boostrap.sh from the root of the MiNiFi C++ source tree.
+
+
+- Per the table, below, you will be presented with a menu guided bootstrap process. You may enable and disable extensions ( further defined below ). Once you are finished selecting the features you wish to build, enter N to continue with the process. CMAKE dependencies will be resolved for your distro. You may enter command line options -n to force yes to all prompts ( including the package installation prompts ) and -b to automatically run make once the cmake process is complete. Alternatively, you may include the package argument to boostrap, -p, which will run make package.
+
+- If you provide -b or -p to bootstrap.sh, you do not need to follow the Building section, below. If you do not provide these arguments you may skip the cmake .. section from Building.
+
+  ```
+  # ~/Development/code/apache/nifi-minifi-cpp on git:master
+  $ ./bootstrap.sh
+  # CMAKE Build dir exists, should we overwrite your build directory before we begin?
+    If you have already bootstrapped, bootstrapping again isn't necessary to run make [ Y/N ] Y
+  $  ****************************************
+     Select MiNiFi C++ Features to toggle.
+    ****************************************
+    A. Persistent Repositories .....Enabled
+    B. Lib Curl Features ...........Enabled
+    C. Lib Archive Features ........Enabled
+    D. Execute Script support ......Enabled
+    E. Expression Langauge support .Enabled
+    F. Kafka support ...............Disabled
+    G. PCAP support ................Disabled
+    H. USB Camera support ..........Disabled
+    I. GPS support .................Disabled
+    J. TensorFlow Support ..........Disabled
+    K. Enable all extensions
+    L. Portable Build ..............Enabled
+    M. Build with Debug symbols ....Disabled
+    N. Continue with these options
+    Q. Exit
+    * Extension cannot be installed due to
+      version of cmake or other software
+    
+    Enter choice [ A - N ] 
+  ```
 
 ### Building
 
