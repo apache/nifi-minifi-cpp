@@ -171,20 +171,27 @@ attr_id: quoted_text exp_whitespaces { std::swap($$, $1); }
        | IDENTIFIER exp_whitespaces { std::swap($$, $1); }
        ;
 
-fn_arg: exp_content_val { $$ = $1; }
+/*fn_arg: exp_content_val exp_whitespaces { $$ = $1; }
+      | NUMBER exp_whitespaces { $$ = make_static(std::to_string($1)); }
+      ;*/
+
+fn_arg: quoted_text exp_whitespaces { $$ = make_static($1); }
+      | NUMBER exp_whitespaces { $$ = make_static(std::to_string($1)); }
+      | exp exp_whitespaces { $$ = $1; }
       ;
 
 fn_args: %empty {}
-       | fn_args fn_arg { $$.insert($$.end(), $1.begin(), $1.end()); $$.push_back($2); }
+       | fn_args COMMA exp_whitespaces fn_arg { $$.insert($$.end(), $1.begin(), $1.end()); $$.push_back($4); }
+       | fn_arg { $$.push_back($1); }
 
-fn_call: attr_id LPAREN fn_args RPAREN exp_whitespaces { $$ = make_dynamic_function(std::move($1), $3); }
+fn_call: attr_id LPAREN exp_whitespaces fn_args RPAREN exp_whitespaces { $$ = make_dynamic_function(std::move($1), $4); }
 
 exp_content_val: attr_id { $$ = make_dynamic_attr(std::move($1)); }
                | fn_call { $$ = $1; }
                ;
 
 exp_content: exp_content_val { $$ = $1; }
-           | exp_content_val COLON exp_whitespace fn_call { $$ = make_dynamic_function_postfix($1, $4); }
+           | exp_content_val COLON exp_whitespaces fn_call { $$ = make_dynamic_function_postfix($1, $4); }
            ;
 
 exp: DOLLAR LCURLY exp_whitespaces exp_content RCURLY { $$ = $4; }
