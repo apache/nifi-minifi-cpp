@@ -143,6 +143,13 @@ TEST_CASE("ToUpper function", "[expressionLanguageTestToUpperFunction]") {  // N
   REQUIRE("text_before__FLOW_A_ATTR_VALUE_A__text_after" == expr({flow_file_a}));
 }
 
+TEST_CASE("ToUpper function w/o whitespace", "[expressionLanguageTestToUpperFunctionWithoutWhitespace]") {  // NOLINT
+  auto expr = expression::compile(R"(text_before${attr_a:toUpper()}text_after)");
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("attr_a", "__flow_a_attr_value_a__");
+  REQUIRE("text_before__FLOW_A_ATTR_VALUE_A__text_after" == expr({flow_file_a}));
+}
+
 TEST_CASE("GetFile PutFile dynamic attribute", "[expressionLanguageTestGetFilePutFileDynamicAttribute]") {  // NOLINT
   TestController testController;
 
@@ -234,4 +241,66 @@ TEST_CASE("GetFile PutFile dynamic attribute", "[expressionLanguageTestGetFilePu
     output_str << out_file_stream.rdbuf();
     REQUIRE("extracted_attr" == output_str.str());
   }
+}
+
+TEST_CASE("Substring 2 arg", "[expressionLanguageSubstring2]") {  // NOLINT
+  auto expr = expression::compile("text_before${attr:substring(6, 8)}text_after");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("attr", "__flow_a_attr_value_a__");
+  REQUIRE("text_before_a_attr_text_after" == expr({flow_file_a}));
+}
+
+TEST_CASE("Substring 1 arg", "[expressionLanguageSubstring1]") {  // NOLINT
+  auto expr = expression::compile("text_before${attr:substring(6)}text_after");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("attr", "__flow_a_attr_value_a__");
+  REQUIRE("text_before_a_attr_value_a__text_after" == expr({flow_file_a}));
+}
+
+TEST_CASE("Substring Before", "[expressionLanguageSubstringBefore]") {  // NOLINT
+  auto expr = expression::compile("${attr:substringBefore('attr_value_a__')}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("attr", "__flow_a_attr_value_a__");
+  REQUIRE("__flow_a_" == expr({flow_file_a}));
+}
+
+TEST_CASE("Substring Before Last", "[expressionLanguageSubstringBeforeLast]") {  // NOLINT
+  auto expr = expression::compile("${attr:substringBeforeLast('_a')}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("attr", "__flow_a_attr_value_a__");
+  REQUIRE("__flow_a_attr_value" == expr({flow_file_a}));
+}
+
+TEST_CASE("Substring After", "[expressionLanguageSubstringAfter]") {  // NOLINT
+  auto expr = expression::compile("${attr:substringAfter('__flow_a')}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("attr", "__flow_a_attr_value_a__");
+  REQUIRE("_attr_value_a__" == expr({flow_file_a}));
+}
+
+TEST_CASE("Substring After Last", "[expressionLanguageSubstringAfterLast]") {  // NOLINT
+  auto expr = expression::compile("${attr:substringAfterLast('_a')}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("attr", "__flow_a_attr_value_a__");
+  REQUIRE("__" == expr({flow_file_a}));
+}
+
+TEST_CASE("Substring Before No Args", "[expressionLanguageSubstringBeforeNoArgs]") {  // NOLINT
+  auto expr = expression::compile("${attr:substringBefore()}");
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("attr", "__flow_a_attr_value_a__");
+  REQUIRE_THROWS_WITH(expr({flow_file_a}), "Attempted to call incomplete function");
+}
+
+TEST_CASE("Substring After No Args", "[expressionLanguageSubstringAfterNoArgs]") {  // NOLINT
+  auto expr = expression::compile("${attr:substringAfter()}");
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("attr", "__flow_a_attr_value_a__");
+  REQUIRE_THROWS_WITH(expr({flow_file_a}), "Attempted to call incomplete function");
 }
