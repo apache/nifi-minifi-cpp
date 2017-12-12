@@ -41,29 +41,33 @@ Specific goals for MiNiFi are comprised of:
 
 Perspectives of the role of MiNiFi should be from the perspective of the agent acting immediately at, or directly adjacent to, source sensors, systems, or servers.
 
+### Processors
+
+MiNiFi - C++ supports the following processors:
+
+* [AppendHostInfo](PROCESSORS.md#appendhostinfo)
+* [ExecuteProcess](PROCESSORS.md#executeprocess)
+* [ExecuteScript](PROCESSORS.md#executescript)
+* [GetFile](PROCESSORS.md#getfile)
+* [GetUSBCamera](PROCESSORS.md#getusbcamera)
+* [GenerateFlowFile](PROCESSORS.md#generateflowfile)
+* [InvokeHTTP](PROCESSORS.md#invokehttp)
+* [LogAttribute](PROCESSORS.md#logattribute)
+* [ListenHTTP](PROCESSORS.md#listenhttp)
+* [ListenSyslog](PROCESSORS.md#listensyslog)
+* [PutFile](PROCESSORS.md#putfile)
+* [TailFile](PROCESSORS.md#tailfile)
+* [MergeContent](PROCESSORS.md#mergecontent)
+* [ExtractText](PROCESSORS.md#extracttext)
+* [CompressContent](PROCESSORS.md#compresscontent)
+* [FocusArchiveEntry](PROCESSORS.md#focusarchiveentry)
+* [UnfocusArchiveEntry](PROCESSORS.md#unfocusarchiveentry)
+* [ManipulateArchive](PROCESSORS.md#manipulatearchive)
+* [PublishKafka](PROCESSORS.md#publishkafka)
+
 ## Caveats
 * 0.4.0 represents a non-GA release, APIs and interfaces are subject to change
 * Build and usage currently only supports Linux and OS X environments. MiNiFi C++ can be built and run through the Windows Subsystem for Linux but we provide no support for this platform.
-* The processors currently implemented include:
-  * AppendHostInfo
-  * ExecuteProcess
-  * ExecuteScript
-  * GetFile
-  * GetUSBCamera
-  * GenerateFlowFile
-  * InvokeHTTP
-  * LogAttribute
-  * ListenHTTP
-  * ListenSyslog
-  * PutFile
-  * TailFile
-  * MergeContent
-  * ExtractText
-  * CompressContent
-  * FocusArchive
-  * UnfocusArchive
-  * ManipulateArchive
-  * PublishKafka 
 * Provenance events generation is supported and are persisted using RocksDB. Volatile repositories can be used on systems without persistent storage.
 
 ## System Requirements
