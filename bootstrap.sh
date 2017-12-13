@@ -189,6 +189,8 @@ add_dependency GPS_ENABLED "gpsd"
 
 add_disabled_option KAFKA_ENABLED ${FALSE} "ENABLE_LIBRDKAFKA" "3.4.0"
 
+add_disabled_option BUSTACHE_ENABLED ${FALSE} "ENABLE_BUSTACHE"
+
 ## currently need to limit on certain platforms
 #add_disabled_option TENSORFLOW_ENABLED ${FALSE} "ENABLE_TENSORFLOW"
 
@@ -281,6 +283,11 @@ print_feature_status(){
 }
 
 
+    	CLANG_VERSION=`clang --version | head -n 1 | awk '{print $4}'`
+	  CLANG_MAJOR=`echo $CLANG_VERSION | cut -d. -f1`
+  	CLANG_MINOR=`echo $CLANG_VERSION | cut -d. -f2`
+  	CLANG_REVISION=`echo $CLANG_VERSION | cut -d. -f3`
+  	
 ### parse the command line arguments
 
 while :; do
@@ -336,10 +343,11 @@ show_supported_features() {
   echo "H. USB Camera support ..........$(print_feature_status USB_ENABLED)"
   echo "I. GPS support .................$(print_feature_status GPS_ENABLED)"
   echo "J. TensorFlow Support ..........$(print_feature_status TENSORFLOW_ENABLED)"
-  echo "K. Enable all extensions"
-  echo "L. Portable Build ..............$(print_feature_status PORTABLE_BUILD)"
-  echo "M. Build with Debug symbols ....$(print_feature_status DEBUG_SYMBOLS)"
-  echo "N. Continue with these options"
+  echo "K. Bustache Support ............$(print_feature_status BUSTACHE_ENABLED)"
+  echo "L. Enable all extensions"
+  echo "M. Portable Build ..............$(print_feature_status PORTABLE_BUILD)"
+  echo "N. Build with Debug symbols ....$(print_feature_status DEBUG_SYMBOLS)"
+  echo "O. Continue with these options"
   echo "Q. Exit"
   echo "* Extension cannot be installed due to"
   echo -e "  version of cmake or other software\r\n"
@@ -359,10 +367,11 @@ read_options(){
     h) ToggleFeature USB_ENABLED ;;
     i) ToggleFeature GPS_ENABLED ;;
     j) ToggleFeature TENSORFLOW_ENABLED ;;
-    k) EnableAllFeatures ;;
-    l) ToggleFeature PORTABLE_BUILD ;;
-    m) ToggleFeature DEBUG_SYMBOLS ;;
-    n) FEATURES_SELECTED="true" ;;
+    k) ToggleFeature BUSTACHE_ENABLED ;;
+    l) EnableAllFeatures ;;
+    m) ToggleFeature PORTABLE_BUILD ;;
+    n) ToggleFeature DEBUG_SYMBOLS ;;
+    o) FEATURES_SELECTED="true" ;;
     q) exit 0;;
     *) echo -e "${RED}Please enter an option A-L...${NO_COLOR}" && sleep 2
   esac
