@@ -287,6 +287,7 @@ add_c_compiler_flag(-Wno-reserved-id-macros) # for system headers
 add_c_compiler_flag(-Wno-format-nonliteral) # printf(myFormatStringVar, ...)
 add_c_compiler_flag(-Wno-date-time) # using __DATE__ once
 add_c_compiler_flag(-Wno-cast-qual) # const cast
+add_c_compiler_flag(-Wno-unknown-warning-option) # Xcode 9
 add_c_compiler_flag(/Wd4820) # padding
 
 if (MINGW)
