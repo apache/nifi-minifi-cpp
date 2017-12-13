@@ -26,13 +26,26 @@
 #include "capi/Plan.h"
 #include "ResourceClaim.h"
 
+class DirectoryConfiguration {
+ protected:
+  DirectoryConfiguration() {
+    minifi::setDefaultDirectory(DEFAULT_CONTENT_DIRECTORY);
+  }
+ public:
+  static void initialize() {
+    static DirectoryConfiguration configure;
+  }
+};
+
 /**
  * Creates a NiFi Instance from the url and output port.
  * @param url http URL for NiFi instance
  * @param port Remote output port.
  */
 nifi_instance *create_instance(char *url, nifi_port *port) {
-  minifi::setDefaultDirectory(DEFAULT_CONTENT_DIRECTORY);
+  // make sure that we have a thread safe way of initializing the content directory
+  DirectoryConfiguration::initialize();
+
   nifi_instance *instance = new nifi_instance;
 
   instance->instance_ptr = new minifi::Instance(url, port->pord_id);
@@ -46,7 +59,7 @@ nifi_instance *create_instance(char *url, nifi_port *port) {
  */
 void initialize_instance(nifi_instance *instance) {
   auto minifi_instance_ref = static_cast<minifi::Instance*>(instance->instance_ptr);
-  minifi_instance_ref->initialize(instance->port.pord_id);
+  minifi_instance_ref->setRemotePort(instance->port.pord_id);
 }
 
 /**
@@ -157,8 +170,8 @@ uint8_t remove_attribute(flow_file_record *ff, char *key) {
 void transmit_flowfile(flow_file_record *ff, nifi_instance *instance) {
   auto minifi_instance_ref = static_cast<minifi::Instance*>(instance->instance_ptr);
   // in the unlikely event the user forgot to initialize the instance, we shall do it for them.
-  if (UNLIKELY(minifi_instance_ref->isInitialized() == false)) {
-    minifi_instance_ref->initialize(instance->port.pord_id);
+  if (UNLIKELY(minifi_instance_ref->isRPGConfigured() == false)) {
+    minifi_instance_ref->setRemotePort(instance->port.pord_id);
   }
 
   auto attribute_map = static_cast<std::map<std::string, std::string>*>(ff->attributes);

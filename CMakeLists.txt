@@ -196,7 +196,9 @@ endif()
 ## NOW WE CAN ADD LIBRARIES AND EXTENSIONS TO MAIN
 
 add_subdirectory(main)
-add_subdirectory(LibExample)
+if (NOT DISABLE_CURL)
+  add_subdirectory(LibExample)
+endif()
 
 
 # Generate source assembly

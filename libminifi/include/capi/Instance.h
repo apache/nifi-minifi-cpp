@@ -63,7 +63,7 @@ class Instance {
   explicit Instance(const std::string &url, const std::string &port)
       : configure_(std::make_shared<Configure>()),
         url_(url),
-        initialized_(false),
+        rpgInitialized_(false),
         content_repo_(std::make_shared<minifi::core::repository::FileSystemRepository>()),
         no_op_repo_(std::make_shared<minifi::core::Repository>()) {
     stream_factory_ = std::make_shared<minifi::io::StreamFactory>(configure_);
@@ -75,16 +75,15 @@ class Instance {
     content_repo_->initialize(configure_);
   }
 
-  bool isInitialized() {
-    std::cout << "are we initialized? " << initialized_ << std::endl;
-    return initialized_;
+  bool isRPGConfigured() {
+    return rpgInitialized_;
   }
 
-  void initialize(std::string remote_port) {
+  void setRemotePort(std::string remote_port) {
     rpg_->setProperty(minifi::RemoteProcessorGroupPort::portUUID, remote_port);
     rpg_->initialize();
     rpg_->setTransmitting(true);
-    initialized_ = true;
+    rpgInitialized_ = true;
   }
 
   std::shared_ptr<Configure> getConfiguration() {
@@ -115,7 +114,7 @@ class Instance {
 
  protected:
 
-  bool initialized_;
+  bool rpgInitialized_;
 
   std::shared_ptr<minifi::core::Repository> no_op_repo_;
 
