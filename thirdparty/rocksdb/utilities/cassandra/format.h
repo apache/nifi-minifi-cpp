@@ -177,6 +177,17 @@ private:
   Columns columns_;
   int64_t last_modified_time_;
 
+  FRIEND_TEST(RowValueTest, PurgeTtlShouldRemvoeAllColumnsExpired);
+  FRIEND_TEST(RowValueTest, ExpireTtlShouldConvertExpiredColumnsToTombstones);
+  FRIEND_TEST(RowValueMergeTest, Merge);
+  FRIEND_TEST(RowValueMergeTest, MergeWithRowTombstone);
+  FRIEND_TEST(CassandraFunctionalTest, SimpleMergeTest);
+  FRIEND_TEST(
+    CassandraFunctionalTest, CompactionShouldConvertExpiredColumnsToTombstone);
+  FRIEND_TEST(
+    CassandraFunctionalTest, CompactionShouldPurgeExpiredColumnsIfPurgeTtlIsOn);
+  FRIEND_TEST(
+    CassandraFunctionalTest, CompactionShouldRemoveRowWhenAllColumnExpiredIfPurgeTtlIsOn);
 };
 
 } // namepsace cassandrda
