@@ -1,7 +1,23 @@
 #!/bin/bash
 
 verify_enable() {
-  echo "true"
+  feature="$1"
+  feature_status=${!1}
+  if [ "$feature" = "BUSTACHE_ENABLED" ]; then
+  	BUSTACHE_MAX="9"
+    ## we should check the xcode version
+    CLANG_VERSION=`clang --version | head -n 1 | awk '{print $4}'`
+    CLANG_MAJOR=`echo $CLANG_VERSION | cut -d. -f1`
+    CLANG_MINOR=`echo $CLANG_VERSION | cut -d. -f2`
+    CLANG_REVISION=`echo $CLANG_VERSION | cut -d. -f3`
+    if [ "$CLANG_MAJOR" -ge "$BUSTACHE_MAX" ]; then
+      echo "false"
+    else
+      echo "true"
+    fi
+  else
+    echo "true"
+  fi
 }
 
 add_os_flags(){
