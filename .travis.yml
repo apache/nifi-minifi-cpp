@@ -121,4 +121,4 @@ matrix:
         - package='xz'; [[ $(brew ls --versions ${package}) ]] && { brew outdated ${package} || brew upgrade ${package}; } || brew install ${package}
 
 script:
-  - ./bootstrap.sh -e -t && cd build  && make -j2 VERBOSE=1 && sudo make test ARGS="-j2 --output-on-failure" && make linter && make apache-rat && make docs
+  - ./bootstrap.sh -e -t && cd build  && make -j2 VERBOSE=1 && sudo make test ARGS="-j2 --output-on-failure" && make linter && make apache-rat
