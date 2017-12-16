@@ -238,7 +238,7 @@ bool PutFile::putFile(core::ProcessSession *session,
     }
   }
 
-  ReadCallback cb(tmpFile, destFile, try_mkdirs_);
+  ReadCallback cb(tmpFile, destFile);
   session->read(flowFile, &cb);
 
   logger_->log_info("Committing %s", destFile);
@@ -252,11 +252,9 @@ bool PutFile::putFile(core::ProcessSession *session,
 }
 
 PutFile::ReadCallback::ReadCallback(const std::string &tmp_file,
-                                    const std::string &dest_file,
-                                    bool try_mkdirs)
+                                    const std::string &dest_file)
     : tmp_file_(tmp_file),
       dest_file_(dest_file),
-      try_mkdirs_(try_mkdirs),
       logger_(logging::LoggerFactory<PutFile::ReadCallback>::getLogger()) {
 }
 
