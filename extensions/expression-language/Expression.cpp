@@ -142,7 +142,7 @@ Expression Expression::operator+(const Expression &other_expr) const {
       result.append(other_val_fn(params));
       return result;
     });
-  } else if (!isDynamic() && !other_expr.isDynamic()) {
+  } else { // !isDynamic() && !other_expr.isDynamic()
     std::string result(val_);
     result.append(other_expr.val_);
     return make_static(result);
