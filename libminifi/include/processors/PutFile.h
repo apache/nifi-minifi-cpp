@@ -81,8 +81,7 @@ class PutFile : public core::Processor {
   class ReadCallback : public InputStreamCallback {
    public:
     ReadCallback(const std::string &tmp_file,
-                 const std::string &dest_file,
-                 bool try_mkdirs);
+                 const std::string &dest_file);
     ~ReadCallback();
     virtual int64_t process(std::shared_ptr<io::BaseStream> stream);
     bool commit();
@@ -93,7 +92,6 @@ class PutFile : public core::Processor {
     std::string tmp_file_;
     std::string dest_file_;
     std::string dest_dir_;
-    bool try_mkdirs_;
   };
 
   /**
