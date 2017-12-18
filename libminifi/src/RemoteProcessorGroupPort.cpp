@@ -156,6 +156,7 @@ void RemoteProcessorGroupPort::onSchedule(const std::shared_ptr<core::ProcessCon
   if (context->getProperty(portUUID.getName(), value)) {
     uuid_parse(value.c_str(), protocol_uuid_);
   }
+
   std::string context_name;
   if (!context->getProperty(SSLContext.getName(), context_name) || IsNullOrEmpty(context_name)) {
     context_name = RPG_SSL_CONTEXT_SERVICE_NAME;
