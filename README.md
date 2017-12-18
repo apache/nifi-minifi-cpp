@@ -104,6 +104,32 @@ or greater is recommended.
 ** NOTE: IF ROCKSDB IS NOT INSTALLED, IT WILL BE BUILT FROM THE THIRD PARTY
 DIRECTORY UNLESS YOU SPECIFY -DDISABLE_ROCKSDB=true WITH CMAKE ***
 
+#### CentOS 6
+
+Additional environmental preparations are required for CentOS 6 support. Before
+building, install and enable the devtoolset-6 SCL:
+
+```
+$ sudo yum install centos-release-scl
+$ sudo yum install devtoolset-6
+$ scl enable devtoolset-6 bash
+```
+
+Additionally, for expression language support, it is recommended to install GNU
+Bison 3.x:
+
+```
+$ wget https://ftp.gnu.org/gnu/bison/bison-3.0.4.tar.xz
+$ tar xvf bison-3.0.4.tar.xz
+$ cd bison-3.0.4
+$ ./configure
+$ make
+$ sudo make install
+```
+
+Finally, it is required to add the `-lrt` compiler flag by using the
+`-DCMAKE_CXX_FLAGS=-lrt` flag when invoking cmake.
+
 ### To run
 
 #### Libraries
@@ -121,7 +147,7 @@ DIRECTORY UNLESS YOU SPECIFY -DDISABLE_ROCKSDB=true WITH CMAKE ***
 
 The needed dependencies can be installed with the following commands for:
 
-Yum based Linux Distributions
+##### Yum based Linux Distributions
 
 **NOTE** if a newer compiler is required, such as when Lua support is enabled, it is recommended to use a newer compiler
 using a devtools-* package from the Software Collections (SCL). 
@@ -156,7 +182,7 @@ $ # (Optional) for PacketCapture Processor
 $ yum install libpcap-devel
 ```
 
-Aptitude based Linux Distributions
+##### Aptitude based Linux Distributions
 ```
 # ~/Development/code/apache/nifi-minifi-cpp on git:master
 $ apt-get install cmake \
@@ -185,7 +211,7 @@ $ # (Optional) for PacketCapture Processor
 $ apt-get install libpcap-dev
 ```
 
-OS X Using Homebrew (with XCode Command Line Tools installed)
+##### OS X Using Homebrew (with XCode Command Line Tools installed)
 ```
 # ~/Development/code/apache/nifi-minifi-cpp on git:master
 $ brew install cmake \
