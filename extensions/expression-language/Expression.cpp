@@ -64,12 +64,44 @@ std::string expr_toUpper(const std::vector<std::string> &args) {
   return result;
 }
 
+std::string expr_substring(const std::vector<std::string> &args) {
+  if (args.size() < 3) {
+    return args[0].substr(std::stoul(args[1]));
+  } else {
+    return args[0].substr(std::stoul(args[1]), std::stoul(args[2]));
+  }
+}
+
+std::string expr_substringBefore(const std::vector<std::string> &args) {
+  return args[0].substr(0, args[0].find(args[1]));
+}
+
+std::string expr_substringBeforeLast(const std::vector<std::string> &args) {
+  size_t last_pos = 0;
+  while (args[0].find(args[1], last_pos + 1) != std::string::npos) {
+    last_pos = args[0].find(args[1], last_pos + 1);
+  }
+  return args[0].substr(0, last_pos);
+}
+
+std::string expr_substringAfter(const std::vector<std::string> &args) {
+  return args[0].substr(args[0].find(args[1]) + args[1].length());
+}
+
+std::string expr_substringAfterLast(const std::vector<std::string> &args) {
+  size_t last_pos = 0;
+  while (args[0].find(args[1], last_pos + 1) != std::string::npos) {
+    last_pos = args[0].find(args[1], last_pos + 1);
+  }
+  return args[0].substr(last_pos + args[1].length());
+}
+
 template<std::string T(const std::vector<std::string> &)>
 Expression make_dynamic_function_incomplete(const std::string &function_name,
                                             const std::vector<Expression> &args,
                                             std::size_t num_args) {
-  if (args.size() == num_args) {
-    return make_dynamic([=](const Parameters &params) -> std::string {
+  if (args.size() >= num_args) {
+    auto result = make_dynamic([=](const Parameters &params) -> std::string {
       std::vector<std::string> evaluated_args;
 
       for (const auto &arg : args) {
@@ -78,6 +110,14 @@ Expression make_dynamic_function_incomplete(const std::string &function_name,
 
       return T(evaluated_args);
     });
+
+    result.complete = [function_name, args](Expression expr) -> Expression {
+      std::vector<Expression> complete_args = {expr};
+      complete_args.insert(complete_args.end(), args.begin(), args.end());
+      return make_dynamic_function(function_name, complete_args);
+    };
+
+    return result;
   } else {
     auto result = make_dynamic([](const Parameters &params) -> std::string {
       throw std::runtime_error("Attempted to call incomplete function");
@@ -93,11 +133,22 @@ Expression make_dynamic_function_incomplete(const std::string &function_name,
   }
 }
 
-Expression make_dynamic_function(const std::string &function_name, const std::vector<Expression> &args) {
+Expression make_dynamic_function(const std::string &function_name,
+                                 const std::vector<Expression> &args) {
   if (function_name == "hostname") {
     return make_dynamic_function_incomplete<expr_hostname>(function_name, args, 0);
   } else if (function_name == "toUpper") {
     return make_dynamic_function_incomplete<expr_toUpper>(function_name, args, 1);
+  } else if (function_name == "substring") {
+    return make_dynamic_function_incomplete<expr_substring>(function_name, args, 2);
+  } else if (function_name == "substringBefore") {
+    return make_dynamic_function_incomplete<expr_substringBefore>(function_name, args, 2);
+  } else if (function_name == "substringBeforeLast") {
+    return make_dynamic_function_incomplete<expr_substringBeforeLast>(function_name, args, 2);
+  } else if (function_name == "substringAfter") {
+    return make_dynamic_function_incomplete<expr_substringAfter>(function_name, args, 2);
+  } else if (function_name == "substringAfterLast") {
+    return make_dynamic_function_incomplete<expr_substringAfterLast>(function_name, args, 2);
   } else {
     std::string msg("Unknown expression function: ");
     msg.append(function_name);
@@ -146,6 +197,8 @@ Expression Expression::operator+(const Expression &other_expr) const {
     std::string result(val_);
     result.append(other_expr.val_);
     return make_static(result);
+  } else {
+    throw std::runtime_error("Invalid function composition");
   }
 }
 
