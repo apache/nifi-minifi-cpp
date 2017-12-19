@@ -115,6 +115,8 @@ OS_REVISION=`echo $EVR	 | cut -d. -f3`
 
 if [[ "$OS" = "Darwin" ]]; then
   source darwin.sh
+elif [[ "$OS" = Rasp* ]]; then
+  source ubuntu.sh
 elif [[ "$OS" = Ubuntu* ]]; then
   source ubuntu.sh
 elif [[ "$OS" = Red* ]]; then
@@ -189,7 +191,8 @@ add_dependency GPS_ENABLED "gpsd"
 
 add_disabled_option KAFKA_ENABLED ${FALSE} "ENABLE_LIBRDKAFKA" "3.4.0"
 
-add_disabled_option BUSTACHE_ENABLED ${FALSE} "ENABLE_BUSTACHE"
+#add_disabled_option BUSTACHE_ENABLED ${FALSE} "ENABLE_BUSTACHE"
+#add_dependency BUSTACHE_ENABLED "boost"
 
 ## currently need to limit on certain platforms
 #add_disabled_option TENSORFLOW_ENABLED ${FALSE} "ENABLE_TENSORFLOW"
@@ -283,11 +286,6 @@ print_feature_status(){
 }
 
 
-    	CLANG_VERSION=`clang --version | head -n 1 | awk '{print $4}'`
-	  CLANG_MAJOR=`echo $CLANG_VERSION | cut -d. -f1`
-  	CLANG_MINOR=`echo $CLANG_VERSION | cut -d. -f2`
-  	CLANG_REVISION=`echo $CLANG_VERSION | cut -d. -f3`
-  	
 ### parse the command line arguments
 
 while :; do
