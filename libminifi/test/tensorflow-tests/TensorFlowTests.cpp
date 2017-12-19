@@ -21,7 +21,12 @@
 
 #include <tensorflow/cc/framework/scope.h>
 #include <tensorflow/cc/ops/standard_ops.h>
+#include <processors/PutFile.h>
+#include <processors/GetFile.h>
+#include <processors/LogAttribute.h>
+#include <TFConvertImageToTensor.h>
 #include "TFApplyGraph.h"
+#include "TFConvertImageToTensor.h"
 
 #define CATCH_CONFIG_MAIN
 
@@ -163,5 +168,134 @@ TEST_CASE("TensorFlow: Apply Graph", "[executescriptTensorFlowApplyGraph]") { //
     // Verify output tensor
     float tensor_val = tensor.flat<float>().data()[0];
     REQUIRE(tensor_val == 4.0f);
+  }
+}
+
+TEST_CASE("TensorFlow: ConvertImageToTensor", "[executescriptTensorFlowConvertImageToTensor]") { // NOLINT
+  TestController testController;
+
+  LogTestController::getInstance().setTrace<TestPlan>();
+  LogTestController::getInstance().setTrace<processors::TFConvertImageToTensor>();
+  LogTestController::getInstance().setTrace<processors::PutFile>();
+  LogTestController::getInstance().setTrace<processors::GetFile>();
+  LogTestController::getInstance().setTrace<processors::LogAttribute>();
+
+  auto plan = testController.createPlan();
+  auto repo = std::make_shared<TestRepository>();
+
+  // Define directory for input protocol buffers
+  std::string in_dir("/tmp/gt.XXXXXX");
+  REQUIRE(testController.createTempDirectory(&in_dir[0]) != nullptr);
+
+  // Define input tensor protocol buffer file
+  std::string in_img_file(in_dir);
+  in_img_file.append("/img");
+
+  // Define directory for output protocol buffers
+  std::string out_dir("/tmp/gt.XXXXXX");
+  REQUIRE(testController.createTempDirectory(&out_dir[0]) != nullptr);
+
+  // Define output tensor protocol buffer file
+  std::string out_tensor_file(out_dir);
+  out_tensor_file.append("/img");
+
+  // Build MiNiFi processing graph
+  auto get_file = plan->addProcessor(
+      "GetFile",
+      "Get Proto");
+  plan->setProperty(
+      get_file,
+      processors::GetFile::Directory.getName(), in_dir);
+  plan->setProperty(
+      get_file,
+      processors::GetFile::KeepSourceFile.getName(),
+      "false");
+  plan->addProcessor(
+      "LogAttribute",
+      "Log Pre Graph Apply",
+      core::Relationship("success", "description"),
+      true);
+  auto tf_apply = plan->addProcessor(
+      "TFConvertImageToTensor",
+      "Convert Image",
+      core::Relationship("success", "description"),
+      true);
+  plan->addProcessor(
+      "LogAttribute",
+      "Log Post Graph Apply",
+      core::Relationship("success", "description"),
+      true);
+  plan->setProperty(
+      tf_apply,
+      processors::TFConvertImageToTensor::ImageFormat.getName(),
+      "RAW");
+  plan->setProperty(
+      tf_apply,
+      processors::TFConvertImageToTensor::InputWidth.getName(),
+      "2");
+  plan->setProperty(
+      tf_apply,
+      processors::TFConvertImageToTensor::InputHeight.getName(),
+      "2");
+  plan->setProperty(
+      tf_apply,
+      processors::TFConvertImageToTensor::OutputWidth.getName(),
+      "10");
+  plan->setProperty(
+      tf_apply,
+      processors::TFConvertImageToTensor::OutputHeight.getName(),
+      "10");
+  plan->setProperty(
+      tf_apply,
+      processors::TFConvertImageToTensor::NumChannels.getName(),
+      "1");
+  auto put_file = plan->addProcessor(
+      "PutFile",
+      "Put Output Tensor",
+      core::Relationship("success", "description"),
+      true);
+  plan->setProperty(
+      put_file,
+      processors::PutFile::Directory.getName(),
+      out_dir);
+  plan->setProperty(
+      put_file,
+      processors::PutFile::ConflictResolution.getName(),
+      processors::PutFile::CONFLICT_RESOLUTION_STRATEGY_REPLACE);
+
+  // Write test input image
+  {
+    // 2x2 single-channel 8 bit per channel
+    const uint8_t in_img_raw[2*2] = {0, 0,
+                                     0, 0};
+
+    std::ofstream in_file_stream(in_img_file);
+    in_file_stream << in_img_raw;
+  }
+
+  plan->reset();
+  plan->runNextProcessor();  // GetFile
+  plan->runNextProcessor();  // Log
+  plan->runNextProcessor();  // TFConvertImageToTensor
+  plan->runNextProcessor();  // Log
+  plan->runNextProcessor();  // PutFile
+
+  // Read test output tensor
+  {
+    std::ifstream out_file_stream(out_tensor_file);
+    tensorflow::TensorProto tensor_proto;
+    tensor_proto.ParseFromIstream(&out_file_stream);
+    tensorflow::Tensor tensor;
+    tensor.FromProto(tensor_proto);
+
+    // Verify output tensor
+    auto shape = tensor.shape();
+    auto shapeString = shape.DebugString();
+
+    // Ensure output tensor is of the expected shape
+    REQUIRE(shape.IsSameSize({1,     // Batch size
+                              10,    // Width
+                              10,    // Height
+                              1}));  // Channels
   }
 }

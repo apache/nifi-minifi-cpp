@@ -52,10 +52,6 @@ target_link_libraries(minifi-tensorflow-extensions ${TENSORFLOW_LIBRARIES})
 find_package(ZLIB REQUIRED)
 include_directories(${ZLIB_INCLUDE_DIRS})
 target_link_libraries (minifi-tensorflow-extensions ${ZLIB_LIBRARIES})
-find_package(Boost COMPONENTS system filesystem REQUIRED)
-include_directories(${Boost_INCLUDE_DIRS})
-target_link_libraries(minifi-tensorflow-extensions ${Boost_SYSTEM_LIBRARY})
-target_link_libraries(minifi-tensorflow-extensions ${Boost_FILESYSTEM_LIBRARY})
 
 if (WIN32)
     set_target_properties(minifi-tensorflow-extensions PROPERTIES
