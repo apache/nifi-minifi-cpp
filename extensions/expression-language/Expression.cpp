@@ -19,6 +19,7 @@
 #include <iostream>
 
 #include <expression/Expression.h>
+#include <regex>
 #include "Driver.h"
 
 namespace org {
@@ -96,6 +97,55 @@ std::string expr_substringAfterLast(const std::vector<std::string> &args) {
   return args[0].substr(last_pos + args[1].length());
 }
 
+#ifdef EXPRESSION_LANGUAGE_USE_REGEX
+
+std::string expr_replace(const std::vector<std::string> &args) {
+  std::string result = args[0];
+  const std::string find = args[1];
+  const std::string replace = args[2];
+
+  std::string::size_type match_pos = 0;
+  match_pos = result.find(find, match_pos);
+
+  while (match_pos != std::string::npos) {
+    result.replace(match_pos, find.size(), replace);
+    match_pos = result.find(find, match_pos + replace.size());
+  }
+
+  return result;
+}
+
+std::string expr_replaceFirst(const std::vector<std::string> &args) {
+  std::string result = args[0];
+  const std::regex find(args[1]);
+  const std::string replace = args[2];
+  return std::regex_replace(result, find, replace, std::regex_constants::format_first_only);
+}
+
+std::string expr_replaceAll(const std::vector<std::string> &args) {
+  std::string result = args[0];
+  const std::regex find(args[1]);
+  const std::string replace = args[2];
+  return std::regex_replace(result, find, replace);
+}
+
+std::string expr_replaceNull(const std::vector<std::string> &args) {
+  if (args[0].empty()) {
+    return args[1];
+  } else {
+    return args[0];
+  }
+}
+
+std::string expr_replaceEmpty(const std::vector<std::string> &args) {
+  std::string result = args[0];
+  const std::regex find("^[ \n\r\t]*$");
+  const std::string replace = args[1];
+  return std::regex_replace(result, find, replace);
+}
+
+#endif  // EXPRESSION_LANGUAGE_USE_REGEX
+
 template<std::string T(const std::vector<std::string> &)>
 Expression make_dynamic_function_incomplete(const std::string &function_name,
                                             const std::vector<Expression> &args,
@@ -149,6 +199,18 @@ Expression make_dynamic_function(const std::string &function_name,
     return make_dynamic_function_incomplete<expr_substringAfter>(function_name, args, 2);
   } else if (function_name == "substringAfterLast") {
     return make_dynamic_function_incomplete<expr_substringAfterLast>(function_name, args, 2);
+#ifdef EXPRESSION_LANGUAGE_USE_REGEX
+  } else if (function_name == "replace") {
+    return make_dynamic_function_incomplete<expr_replace>(function_name, args, 2);
+  } else if (function_name == "replaceFirst") {
+    return make_dynamic_function_incomplete<expr_replaceFirst>(function_name, args, 2);
+  } else if (function_name == "replaceAll") {
+    return make_dynamic_function_incomplete<expr_replaceAll>(function_name, args, 2);
+  } else if (function_name == "replaceNull") {
+    return make_dynamic_function_incomplete<expr_replaceNull>(function_name, args, 1);
+  } else if (function_name == "replaceEmpty") {
+    return make_dynamic_function_incomplete<expr_replaceEmpty>(function_name, args, 1);
+#endif  // EXPRESSION_LANGUAGE_USE_REGEX
   } else {
     std::string msg("Unknown expression function: ");
     msg.append(function_name);
