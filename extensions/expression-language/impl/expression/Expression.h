@@ -18,6 +18,13 @@
 #ifndef NIFI_MINIFI_CPP_EXPRESSION_H
 #define NIFI_MINIFI_CPP_EXPRESSION_H
 
+#define EXPRESSION_LANGUAGE_USE_REGEX
+
+// Disable regex in EL for incompatible compilers
+#if __GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 9)
+#undef EXPRESSION_LANGUAGE_USE_REGEX
+#endif
+
 #include <core/FlowFile.h>
 
 #include <string>
