@@ -348,10 +348,8 @@ endif()
 
 include_directories(${PROJECT_SOURCE_DIR})
 include_directories(${PROJECT_SOURCE_DIR}/include)
-include_directories(SYSTEM ${PROJECT_SOURCE_DIR}/third-party/gtest-1.7.0/fused-src)
 find_package(Threads REQUIRED)
 
-add_subdirectory(third-party/gtest-1.7.0/fused-src/gtest)
 
 # Main library source code
 
@@ -502,10 +500,8 @@ set(SOURCES
         util/status_message.cc
         util/string_util.cc
         util/sync_point.cc
-        util/testutil.cc
         util/thread_local.cc
         util/threadpool_imp.cc
-        util/transaction_test_util.cc
         util/xxhash.cc
         utilities/backupable/backupable_db.cc
         utilities/blob_db/blob_db.cc
@@ -588,25 +584,25 @@ else()
 endif()
 
 set(ROCKSDB_STATIC_LIB rocksdb${ARTIFACT_SUFFIX})
-set(ROCKSDB_SHARED_LIB rocksdb-shared${ARTIFACT_SUFFIX})
+#set(ROCKSDB_SHARED_LIB rocksdb-shared${ARTIFACT_SUFFIX})
 set(ROCKSDB_IMPORT_LIB ${ROCKSDB_SHARED_LIB})
-if(WIN32)
-  set(SYSTEM_LIBS ${SYSTEM_LIBS} Shlwapi.lib Rpcrt4.lib)
-  set(LIBS ${ROCKSDB_STATIC_LIB} ${THIRDPARTY_LIBS} ${SYSTEM_LIBS})
-else()
-  set(SYSTEM_LIBS ${CMAKE_THREAD_LIBS_INIT})
-  set(LIBS ${ROCKSDB_SHARED_LIB} ${THIRDPARTY_LIBS} ${SYSTEM_LIBS})
+#if(WIN32)
+#  set(SYSTEM_LIBS ${SYSTEM_LIBS} Shlwapi.lib Rpcrt4.lib)
+#  set(LIBS ${ROCKSDB_STATIC_LIB} ${THIRDPARTY_LIBS} ${SYSTEM_LIBS})
+#else()
+#  set(SYSTEM_LIBS ${CMAKE_THREAD_LIBS_INIT})
+#  set(LIBS ${ROCKSDB_SHARED_LIB} ${THIRDPARTY_LIBS} ${SYSTEM_LIBS})
 
-  add_library(${ROCKSDB_SHARED_LIB} SHARED ${SOURCES})
-  target_link_libraries(${ROCKSDB_SHARED_LIB}
-    ${THIRDPARTY_LIBS} ${SYSTEM_LIBS})
-  set_target_properties(${ROCKSDB_SHARED_LIB} PROPERTIES
-                        LINKER_LANGUAGE CXX
-                        VERSION ${ROCKSDB_VERSION}
-                        SOVERSION ${ROCKSDB_VERSION_MAJOR}
-                        CXX_STANDARD 11
-                        OUTPUT_NAME "rocksdb")
-endif()
+#  add_library(${ROCKSDB_SHARED_LIB} SHARED ${SOURCES})
+#  target_link_libraries(${ROCKSDB_SHARED_LIB}
+#    ${THIRDPARTY_LIBS} ${SYSTEM_LIBS})
+#  set_target_properties(${ROCKSDB_SHARED_LIB} PROPERTIES
+#                        LINKER_LANGUAGE CXX
+#                        VERSION ${ROCKSDB_VERSION}
+#                        SOVERSION ${ROCKSDB_VERSION_MAJOR}
+#                        CXX_STANDARD 11
+#                        OUTPUT_NAME "rocksdb")
+#endif()
 
 option(WITH_LIBRADOS "Build with librados" OFF)
 if(WITH_LIBRADOS)
@@ -806,7 +802,6 @@ if(WITH_TESTS)
         util/file_reader_writer_test.cc
         util/filelock_test.cc
         util/hash_test.cc
-        util/heap_test.cc
         util/rate_limiter_test.cc
         util/slice_transform_test.cc
         util/timer_queue_test.cc
@@ -845,21 +840,7 @@ if(WITH_TESTS)
     list(APPEND TESTS utilities/env_librados_test.cc)
   endif()
 
-  set(BENCHMARKS
-    cache/cache_bench.cc
-    memtable/memtablerep_bench.cc
-    tools/db_bench.cc
-    table/table_reader_bench.cc
-    utilities/column_aware_encoding_exp.cc
-    utilities/persistent_cache/hash_table_bench.cc)
-  add_library(testharness OBJECT util/testharness.cc)
-  foreach(sourcefile ${BENCHMARKS})
-    get_filename_component(exename ${sourcefile} NAME_WE)
-    add_executable(${exename}${ARTIFACT_SUFFIX} ${sourcefile}
-      $<TARGET_OBJECTS:testharness>)
-    target_link_libraries(${exename}${ARTIFACT_SUFFIX} gtest ${LIBS})
-  endforeach(sourcefile ${BENCHMARKS})
-
+ 
   # For test util library that is build only in DEBUG mode
   # and linked to tests. Add test only code that is not #ifdefed for Release here.
   set(TESTUTIL_SOURCE
@@ -884,23 +865,25 @@ if(WITH_TESTS)
         )
 
   # Tests are excluded from Release builds
-  set(TEST_EXES ${TESTS})
+  #set(TEST_EXES ${TESTS})
 
-  foreach(sourcefile ${TEST_EXES})
-      get_filename_component(exename ${sourcefile} NAME_WE)
-      add_executable(${exename}${ARTIFACT_SUFFIX} ${sourcefile}
-        $<TARGET_OBJECTS:testharness>)
-      set_target_properties(${exename}${ARTIFACT_SUFFIX}
-        PROPERTIES EXCLUDE_FROM_DEFAULT_BUILD_RELEASE 1
-        EXCLUDE_FROM_DEFAULT_BUILD_MINRELEASE 1
-        EXCLUDE_FROM_DEFAULT_BUILD_RELWITHDEBINFO 1
-        )
-      target_link_libraries(${exename}${ARTIFACT_SUFFIX} testutillib${ARTIFACT_SUFFIX} gtest ${LIBS})
-      if(NOT "${exename}" MATCHES "db_sanity_test")
-        add_test(NAME ${exename} COMMAND ${exename}${ARTIFACT_SUFFIX})
-        add_dependencies(check ${exename}${ARTIFACT_SUFFIX})
-      endif()
-  endforeach(sourcefile ${TEST_EXES})
+  # while tests are not built, we want to ensure that any reference to gtest is removed in case the user
+  # builds rocksdb manually from our third party directory
+  #foreach(sourcefile ${TEST_EXES})
+  #    get_filename_component(exename ${sourcefile} NAME_WE)
+  #    add_executable(${exename}${ARTIFACT_SUFFIX} ${sourcefile}
+  #      $<TARGET_OBJECTS:testharness>)
+  #    set_target_properties(${exename}${ARTIFACT_SUFFIX}
+  #      PROPERTIES EXCLUDE_FROM_DEFAULT_BUILD_RELEASE 1
+  #      EXCLUDE_FROM_DEFAULT_BUILD_MINRELEASE 1
+  #      EXCLUDE_FROM_DEFAULT_BUILD_RELWITHDEBINFO 1
+  #      )
+  #    target_link_libraries(${exename}${ARTIFACT_SUFFIX} testutillib${ARTIFACT_SUFFIX} gtest ${LIBS})
+  #    if(NOT "${exename}" MATCHES "db_sanity_test")
+  #      add_test(NAME ${exename} COMMAND ${exename}${ARTIFACT_SUFFIX})
+  #      add_dependencies(check ${exename}${ARTIFACT_SUFFIX})
+  #    endif()
+  #endforeach(sourcefile ${TEST_EXES})
 
   # C executables must link to a shared object
   set(C_TESTS db/c_test.c)
@@ -919,9 +902,4 @@ if(WITH_TESTS)
       add_test(NAME ${exename} COMMAND ${exename}${ARTIFACT_SUFFIX})
       add_dependencies(check ${exename}${ARTIFACT_SUFFIX})
   endforeach(sourcefile ${C_TEST_EXES})
-endif()
-
-option(WITH_TOOLS "build with tools" ON)
-if(WITH_TOOLS)
-  add_subdirectory(tools)
 endif()
