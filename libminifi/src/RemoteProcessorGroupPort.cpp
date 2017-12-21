@@ -222,7 +222,7 @@ void RemoteProcessorGroupPort::refreshRemoteSite2SiteInfo() {
   if (this->host_.empty() || this->port_ == -1 || this->protocol_.empty())
     return;
 
-  std::string fullUrl = this->protocol_ + this->host_ + ":" + std::to_string(this->port_) + "/nifi-api/controller";
+  std::string fullUrl = this->protocol_ + this->host_ + ":" + std::to_string(this->port_) + "/nifi-api/site-to-site";
 
   this->site2site_port_ = -1;
   configure_->get(Configure::nifi_rest_api_user_name, this->rest_user_name_);
