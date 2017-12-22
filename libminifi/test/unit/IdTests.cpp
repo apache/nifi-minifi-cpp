@@ -168,6 +168,6 @@ TEST_CASE("Test Hex Device Segment 18 bits", "[id]") {
   REQUIRE(128 == (uid[2] & 192));
   REQUIRE(1 == uid[15]);
 
-  REQUIRE(true == LogTestController::getInstance().contains("Using minifi uid prefix:  9af8"));
+  REQUIRE(true == LogTestController::getInstance().contains("Using minifi uid prefix: 9af8"));
   LogTestController::getInstance().reset();
 }

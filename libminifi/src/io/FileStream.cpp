@@ -142,7 +142,9 @@ int FileStream::readData(uint8_t *buf, int buflen) {
       size_t ret = len - offset_;
       offset_ = len;
       length_ = len;
-      logger_->log_info("%s eof bit, ended at %d", path_, offset_);
+      std::stringstream str;
+      str << path_ << " eof bit, ended at " << offset_;
+      logger_->log_info(str.str().c_str());
       return ret;
     } else {
       offset_ += buflen;

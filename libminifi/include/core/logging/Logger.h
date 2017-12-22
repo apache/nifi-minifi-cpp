@@ -1,7 +1,4 @@
 /**
- * @file Logger.h
- * Logger class declaration
- * This is a C++ wrapper for spdlog, a lightweight C++ logging library
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -23,6 +20,7 @@
 
 #include <mutex>
 #include <memory>
+#include <sstream>
 
 #include "spdlog/spdlog.h"
 
@@ -55,7 +53,72 @@ inline T conditional_conversion(T const& t) {
   return t;
 }
 
-class Logger {
+typedef enum {
+  trace = 0,
+  debug = 1,
+  info = 2,
+  warn = 3,
+  err = 4,
+  critical = 5,
+  off = 6
+} LOG_LEVEL;
+
+class BaseLogger {
+ public:
+
+  virtual ~BaseLogger() {
+
+  }
+  virtual void log_string(LOG_LEVEL level, std::string str) = 0;
+
+  virtual bool should_log(const LOG_LEVEL &level) {
+    return true;
+  }
+
+};
+
+/**
+ * LogBuilder is a class to facilitate using the LOG macros below and an associated put-to operator.
+ *
+ */
+class LogBuilder {
+ public:
+  LogBuilder(BaseLogger *l, LOG_LEVEL level)
+      : ignore(false),
+        ptr(l),
+        level(level) {
+    if (!l->should_log(level)) {
+      setIgnore();
+    }
+  }
+
+  ~LogBuilder() {
+    if (!ignore)
+      log_string(level);
+  }
+
+  void setIgnore() {
+    ignore = true;
+  }
+
+  void log_string(LOG_LEVEL level) {
+    ptr->log_string(level, str.str());
+  }
+
+  template<typename T>
+  LogBuilder &operator<<(const T &o) {
+    if (!ignore)
+      str << o;
+    return *this;
+  }
+
+  bool ignore;
+  BaseLogger *ptr;
+  std::stringstream str;
+  LOG_LEVEL level;
+};
+
+class Logger : public BaseLogger {
  public:
   /**
    * @brief Log error message
@@ -107,7 +170,64 @@ class Logger {
     log(spdlog::level::trace, format, args...);
   }
 
+  bool should_log(const LOG_LEVEL &level) {
+    spdlog::level::level_enum logger_level = spdlog::level::level_enum::info;
+    switch (level) {
+      case critical:
+        logger_level = spdlog::level::level_enum::critical;
+        break;
+      case err:
+        logger_level = spdlog::level::level_enum::err;
+        break;
+      case info:
+        break;
+      case debug:
+        logger_level = spdlog::level::level_enum::debug;
+        break;
+      case off:
+        logger_level = spdlog::level::level_enum::off;
+        break;
+      case trace:
+        logger_level = spdlog::level::level_enum::trace;
+        break;
+      case warn:
+        logger_level = spdlog::level::level_enum::warn;
+        break;
+    }
+
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (!delegate_->should_log(logger_level)) {
+      return false;
+    }
+    return true;
+  }
+
  protected:
+
+  virtual void log_string(LOG_LEVEL level, std::string str) {
+    switch (level) {
+      case critical:
+        log_warn(str.c_str());
+        break;
+      case err:
+        log_error(str.c_str());
+        break;
+      case info:
+        log_info(str.c_str());
+        break;
+      case debug:
+        log_debug(str.c_str());
+        break;
+      case trace:
+        log_trace(str.c_str());
+        break;
+      case warn:
+        log_warn(str.c_str());
+        break;
+      case off:
+        break;
+    }
+  }
   Logger(std::shared_ptr<spdlog::logger> delegate)
       : delegate_(delegate) {
   }
@@ -128,6 +248,16 @@ class Logger {
   Logger(Logger const&);
   Logger& operator=(Logger const&);
 };
+
+#define LOG_DEBUG(x) LogBuilder(x.get(),logging::LOG_LEVEL::debug)
+
+#define LOG_INFO(x) LogBuilder(x.get(),logging::LOG_LEVEL::info)
+
+#define LOG_TRACE(x) LogBuilder(x.get(),logging::LOG_LEVEL::trace)
+
+#define LOG_ERROR(x) LogBuilder(x.get(),logging::LOG_LEVEL::err)
+
+#define LOG_WARN(x) LogBuilder(x.get(),logging::LOG_LEVEL::warn)
 
 } /* namespace logging */
 } /* namespace core */

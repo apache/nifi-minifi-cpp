@@ -139,9 +139,9 @@ std::shared_ptr<core::FlowFile> ProcessSession::clone(const std::shared_ptr<core
   std::shared_ptr<core::FlowFile> record = this->create(parent);
   if (record) {
     if (parent->getResourceClaim()) {
-      if ((uint64_t)(offset + size) > parent->getSize()) {
+      if ((uint64_t) (offset + size) > parent->getSize()) {
         // Set offset and size
-        logger_->log_error("clone offset %d and size %d exceed parent size %d", offset, size, parent->getSize());
+        logger_->log_error("clone offset %ll and size %ll exceed parent size %llu", offset, size, parent->getSize());
         // Remove the Add FlowFile for the session
         std::map<std::string, std::shared_ptr<core::FlowFile> >::iterator it = this->_addedFlowFiles.find(record->getUUIDStr());
         if (it != this->_addedFlowFiles.end())
@@ -165,7 +165,7 @@ std::shared_ptr<core::FlowFile> ProcessSession::clone(const std::shared_ptr<core
 void ProcessSession::remove(const std::shared_ptr<core::FlowFile> &flow) {
   flow->setDeleted(true);
   flow->getResourceClaim()->decreaseFlowFileRecordOwnedCount();
-  logger_->log_debug("Auto terminated %s %d %s", flow->getResourceClaim()->getContentFullPath(), flow->getResourceClaim()->getFlowFileRecordOwnedCount(), flow->getUUIDStr());
+  logger_->log_debug("Auto terminated %s %llu %s", flow->getResourceClaim()->getContentFullPath(), flow->getResourceClaim()->getFlowFileRecordOwnedCount(), flow->getUUIDStr());
   process_context_->getFlowFileRepository()->Delete(flow->getUUIDStr());
   _deletedFlowFiles[flow->getUUIDStr()] = flow;
   std::string reason = process_context_->getProcessorNode()->getName() + " drop flow record " + flow->getUUIDStr();
@@ -331,7 +331,7 @@ void ProcessSession::importFrom(io::DataStream &stream, const std::shared_ptr<co
   charBuffer.resize(max_read);
 
   try {
-    uint64_t startTime = getTimeMillis();
+    auto startTime = getTimeMillis();
     claim->increaseFlowFileRecordOwnedCount();
     std::shared_ptr<io::BaseStream> content_stream = process_context_->getContentRepository()->write(claim);
 
@@ -367,13 +367,13 @@ void ProcessSession::importFrom(io::DataStream &stream, const std::shared_ptr<co
     }
     flow->setResourceClaim(claim);
 
-    logger_->log_debug("Import offset %d length %d into content %s for FlowFile UUID %s", flow->getOffset(), flow->getSize(), flow->getResourceClaim()->getContentFullPath().c_str(),
+    logger_->log_debug("Import offset %llu length %llu into content %s for FlowFile UUID %s", flow->getOffset(), flow->getSize(), flow->getResourceClaim()->getContentFullPath().c_str(),
                        flow->getUUIDStr().c_str());
 
     content_stream->closeStream();
     std::stringstream details;
     details << process_context_->getProcessorNode()->getName() << " modify flow record content " << flow->getUUIDStr();
-    uint64_t endTime = getTimeMillis();
+    auto endTime = getTimeMillis();
     provenance_report_->modifyContent(flow, details.str(), endTime - startTime);
   } catch (std::exception &exception) {
     if (flow && flow->getResourceClaim() == claim) {
@@ -400,7 +400,7 @@ void ProcessSession::import(std::string source, const std::shared_ptr<core::Flow
 
   try {
     //  std::ofstream fs;
-    uint64_t startTime = getTimeMillis();
+    auto startTime = getTimeMillis();
     std::ifstream input;
     input.open(source.c_str(), std::fstream::in | std::fstream::binary);
     claim->increaseFlowFileRecordOwnedCount();
@@ -439,7 +439,7 @@ void ProcessSession::import(std::string source, const std::shared_ptr<core::Flow
         }
         flow->setResourceClaim(claim);
 
-        logger_->log_debug("Import offset %d length %d into content %s for FlowFile UUID %s", flow->getOffset(), flow->getSize(), flow->getResourceClaim()->getContentFullPath().c_str(),
+        logger_->log_debug("Import offset %llu length %llu into content %s for FlowFile UUID %s", flow->getOffset(), flow->getSize(), flow->getResourceClaim()->getContentFullPath().c_str(),
                            flow->getUUIDStr().c_str());
 
         stream->closeStream();
@@ -448,7 +448,7 @@ void ProcessSession::import(std::string source, const std::shared_ptr<core::Flow
           std::remove(source.c_str());
         std::stringstream details;
         details << process_context_->getProcessorNode()->getName() << " modify flow record content " << flow->getUUIDStr();
-        uint64_t endTime = getTimeMillis();
+        auto endTime = getTimeMillis();
         provenance_report_->modifyContent(flow, details.str(), endTime - startTime);
       } else {
         stream->closeStream();
@@ -526,10 +526,8 @@ void ProcessSession::import(std::string source, std::vector<std::shared_ptr<Flow
           }
           flowFile->setResourceClaim(claim);
           claim->increaseFlowFileRecordOwnedCount();
-
-          logger_->log_debug("Import offset %d length %d into content %s for FlowFile UUID %s", flowFile->getOffset(), flowFile->getSize(), flowFile->getResourceClaim()->getContentFullPath().c_str(),
-                             flowFile->getUUIDStr().c_str());
-
+          logger_->log_debug("Import offset %llu length %llu into content %s for FlowFile UUID %s", flowFile->getOffset(), flowFile->getSize(),
+                             flowFile->getResourceClaim()->getContentFullPath().c_str(), flowFile->getUUIDStr().c_str());
           stream->closeStream();
           std::string details = process_context_->getProcessorNode()->getName() + " modify flow record content " + flowFile->getUUIDStr();
           uint64_t endTime = getTimeMillis();

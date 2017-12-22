@@ -145,8 +145,6 @@ int AtomicEntryStream<T>::writeData(uint8_t *value, int size) {
         length_ = offset_;
       }
       return size;
-    } else {
-      logger_->log_debug("Cannot insert %d bytes due to insufficient space in atomic entry", size);
     }
 
   }

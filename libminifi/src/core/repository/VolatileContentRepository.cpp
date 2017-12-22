@@ -167,13 +167,13 @@ bool VolatileContentRepository::remove(const std::shared_ptr<minifi::ResourceCla
       // decrement the reference count and free it
       master_list_.erase(claim->getContentFullPath());
       if (ptr->freeValue(claim)) {
-        logger_->log_debug("Remove for %s, reduced to %d", claim->getContentFullPath(), current_size_.load());
+        logger_->log_debug("Removed %s", claim->getContentFullPath());
         return true;
       } else {
         logger_->log_debug("free failed for %s", claim->getContentFullPath());
       }
     } else {
-      logger_->log_debug("Could not remove for %s, size is %d", claim->getContentFullPath(), current_size_.load());
+      logger_->log_debug("Could not remove %s", claim->getContentFullPath());
     }
   } else {
     std::lock_guard<std::mutex> lock(map_mutex_);

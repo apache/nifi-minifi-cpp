@@ -94,7 +94,7 @@ class ExecutionPlan {
 
   std::atomic<bool> finalized;
 
-  int location;
+  uint32_t location;
 
   std::shared_ptr<core::ProcessSession> current_session_;
   std::shared_ptr<core::FlowFile> current_flowfile_;

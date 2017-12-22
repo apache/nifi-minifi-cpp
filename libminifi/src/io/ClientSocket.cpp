@@ -79,7 +79,7 @@ void Socket::closeStream() {
     addr_info_ = 0;
   }
   if (socket_file_descriptor_ >= 0) {
-    logger_->log_debug("Closing %d", socket_file_descriptor_);
+    logging::LOG_INFO(logger_) <<  "Closing " << socket_file_descriptor_;
     close(socket_file_descriptor_);
     socket_file_descriptor_ = -1;
   }
@@ -92,7 +92,7 @@ void Socket::setNonBlocking() {
       // handle error
       logger_->log_error("Could not create non blocking to socket", strerror(errno));
     } else {
-      logger_->log_info("Successfully applied O_NONBLOCK to fd");
+      logger_->log_debug("Successfully applied O_NONBLOCK to fd");
     }
   }
 }
@@ -144,7 +144,7 @@ int8_t Socket::createConnection(const addrinfo *p, in_addr_t &addr) {
   // add the listener to the total set
   FD_SET(socket_file_descriptor_, &total_list_);
   socket_max_ = socket_file_descriptor_;
-  logger_->log_info("Created connection with file descriptor %d", socket_file_descriptor_);
+  logger_->log_debug("Created connection with file descriptor %d", socket_file_descriptor_);
   return 0;
 }
 
@@ -193,13 +193,13 @@ int16_t Socket::initialize() {
     }
     // we've successfully connected
     if (port_ > 0 && createConnection(p, addr) >= 0) {
-      logger_->log_info("Successfully created connection");
+      logger_->log_debug("Successfully created connection");
       return 0;
       break;
     }
   }
 
-  logger_->log_info("Could not find device for our connection");
+  logger_->log_debug("Could not find device for our connection");
   return -1;
 }
 
@@ -390,15 +390,15 @@ int Socket::readData(uint8_t *buf, int buflen, bool retrieve_all_bytes) {
   while (buflen) {
     int16_t fd = select_descriptor(1000);
     if (fd < 0) {
-      logger_->log_info("fd %d close %i", fd, buflen);
+      logger_->log_debug("fd %d close %i", fd, buflen);
       close(socket_file_descriptor_);
       return -1;
     }
     int bytes_read = recv(fd, buf, buflen, 0);
-    logger_->log_info("Recv call %d", bytes_read);
+    logger_->log_trace("Recv call %d", bytes_read);
     if (bytes_read <= 0) {
       if (bytes_read == 0) {
-        logger_->log_info("Other side hung up on %d", fd);
+        logger_->log_debug("Other side hung up on %d", fd);
       } else {
         if (errno == EAGAIN || errno == EWOULDBLOCK) {
           // continue
