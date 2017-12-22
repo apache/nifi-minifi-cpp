@@ -53,6 +53,7 @@ namespace nifi {
 namespace minifi {
 namespace sitetosite {
 
+
 /**
  * Site2Site Peer
  */
@@ -64,6 +65,10 @@ typedef struct Site2SitePeerStatus {
 // RawSiteToSiteClient Class
 class RawSiteToSiteClient : public sitetosite::SiteToSiteClient {
  public:
+
+  // HandShakeProperty Str
+  static const char *HandShakePropertyStr[MAX_HANDSHAKE_PROPERTY];
+
   // Constructor
   /*!
    * Create a new control protocol
@@ -153,9 +158,9 @@ class RawSiteToSiteClient : public sitetosite::SiteToSiteClient {
   virtual int writeRespond(const std::shared_ptr<Transaction> &transaction, RespondCode code, std::string message);
   // getRespondCodeContext
   virtual RespondCodeContext *getRespondCodeContext(RespondCode code) {
-    for (unsigned int i = 0; i < sizeof(respondCodeContext) / sizeof(RespondCodeContext); i++) {
-      if (respondCodeContext[i].code == code) {
-        return &respondCodeContext[i];
+    for (unsigned int i = 0; i < sizeof(SiteToSiteRequest::respondCodeContext) / sizeof(RespondCodeContext); i++) {
+      if (SiteToSiteRequest::respondCodeContext[i].code == code) {
+        return &SiteToSiteRequest::respondCodeContext[i];
       }
     }
     return NULL;

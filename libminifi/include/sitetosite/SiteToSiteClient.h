@@ -221,9 +221,9 @@ class SiteToSiteClient : public core::Connectable {
   virtual int writeResponse(const std::shared_ptr<Transaction> &transaction, RespondCode code, std::string message);
   // getRespondCodeContext
   virtual RespondCodeContext *getRespondCodeContext(RespondCode code) {
-    for (unsigned int i = 0; i < sizeof(respondCodeContext) / sizeof(RespondCodeContext); i++) {
-      if (respondCodeContext[i].code == code) {
-        return &respondCodeContext[i];
+    for (unsigned int i = 0; i < sizeof(SiteToSiteRequest::respondCodeContext) / sizeof(RespondCodeContext); i++) {
+      if (SiteToSiteRequest::respondCodeContext[i].code == code) {
+        return &SiteToSiteRequest::respondCodeContext[i];
       }
     }
     return NULL;
@@ -281,14 +281,14 @@ class WriteCallback : public OutputStreamCallback {
       int size = std::min(len, 16384);
       int ret = _packet->transaction_->getStream().readData(buffer, size);
       if (ret != size) {
-        _packet->logger_reference_->log_error("Site2Site Receive Flow Size %d Failed %d, should have received %d", size, ret, len);
+        logging::LOG_ERROR(_packet->logger_reference_) << "Site2Site Receive Flow Size " << size << " Failed " << ret << ", should have received " << len;
         return -1;
       }
       stream->write(buffer, size);
       len -= size;
       total += size;
     }
-    _packet->logger_reference_->log_info("Received %d from stream",len);
+    logging::LOG_INFO(_packet->logger_reference_) << "Received " << len << " from stream";
     return len;
   }
 };
@@ -315,7 +315,7 @@ class ReadCallback : public InputStreamCallback {
       }
       int ret = _packet->transaction_->getStream().writeData(buffer, readSize);
       if (ret != readSize) {
-        _packet->logger_reference_->log_error("Site2Site Send Flow Size %d Failed %d", readSize, ret);
+        logging::LOG_INFO(_packet->logger_reference_) << "Site2Site Send Flow Size " << readSize << " Failed " << ret;
         return -1;
       }
       size += readSize;

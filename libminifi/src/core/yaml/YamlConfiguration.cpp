@@ -18,6 +18,7 @@
 
 #include "core/yaml/YamlConfiguration.h"
 #include <memory>
+#include <cstdint>
 #include <string>
 #include <vector>
 #include <set>
@@ -34,7 +35,7 @@ std::shared_ptr<utils::IdGenerator> YamlConfiguration::id_generator_ = utils::Id
 
 core::ProcessGroup *YamlConfiguration::parseRootProcessGroupYaml(YAML::Node rootFlowNode) {
   uuid_t uuid;
-  int64_t version = 0;
+  int32_t version = 0;
 
   checkRequiredField(&rootFlowNode, "name",
   CONFIG_YAML_REMOTE_PROCESS_GROUP_KEY);
@@ -175,17 +176,17 @@ void YamlConfiguration::parseProcessorNodeYaml(YAML::Node processorsNode, core::
         // Take care of scheduling
         core::TimeUnit unit;
         if (core::Property::StringToTime(procCfg.schedulingPeriod, schedulingPeriod, unit) && core::Property::ConvertTimeUnitToNS(schedulingPeriod, unit, schedulingPeriod)) {
-          logger_->log_debug("convert: parseProcessorNode: schedulingPeriod => [%d] ns", schedulingPeriod);
+          logger_->log_debug("convert: parseProcessorNode: schedulingPeriod => [%ll] ns", schedulingPeriod);
           processor->setSchedulingPeriodNano(schedulingPeriod);
         }
 
         if (core::Property::StringToTime(procCfg.penalizationPeriod, penalizationPeriod, unit) && core::Property::ConvertTimeUnitToMS(penalizationPeriod, unit, penalizationPeriod)) {
-          logger_->log_debug("convert: parseProcessorNode: penalizationPeriod => [%d] ms", penalizationPeriod);
+          logger_->log_debug("convert: parseProcessorNode: penalizationPeriod => [%ll] ms", penalizationPeriod);
           processor->setPenalizationPeriodMsec(penalizationPeriod);
         }
 
         if (core::Property::StringToTime(procCfg.yieldPeriod, yieldPeriod, unit) && core::Property::ConvertTimeUnitToMS(yieldPeriod, unit, yieldPeriod)) {
-          logger_->log_debug("convert: parseProcessorNode: yieldPeriod => [%d] ms", yieldPeriod);
+          logger_->log_debug("convert: parseProcessorNode: yieldPeriod => [%ll] ms", yieldPeriod);
           processor->setYieldPeriodMsec(yieldPeriod);
         }
 
@@ -203,7 +204,7 @@ void YamlConfiguration::parseProcessorNodeYaml(YAML::Node processorsNode, core::
           logger_->log_debug("setting scheduling strategy as %s", procCfg.schedulingStrategy);
         }
 
-        int64_t maxConcurrentTasks;
+        int32_t maxConcurrentTasks;
         if (core::Property::StringToInt(procCfg.maxConcurrentTasks, maxConcurrentTasks)) {
           logger_->log_debug("parseProcessorNode: maxConcurrentTasks => [%d]", maxConcurrentTasks);
           processor->setMaxConcurrentTasks((uint8_t) maxConcurrentTasks);
@@ -274,7 +275,7 @@ void YamlConfiguration::parseRemoteProcessGroupYaml(YAML::Node *rpgNode, core::P
           logger_->log_debug("parseRemoteProcessGroupYaml: yield period => [%s]", yieldPeriod);
 
           if (core::Property::StringToTime(yieldPeriod, yieldPeriodValue, unit) && core::Property::ConvertTimeUnitToMS(yieldPeriodValue, unit, yieldPeriodValue) && group) {
-            logger_->log_debug("parseRemoteProcessGroupYaml: yieldPeriod => [%d] ms", yieldPeriodValue);
+            logger_->log_debug("parseRemoteProcessGroupYaml: yieldPeriod => [%ll] ms", yieldPeriodValue);
             group->setYieldPeriodMsec(yieldPeriodValue);
           }
         }
@@ -284,7 +285,7 @@ void YamlConfiguration::parseRemoteProcessGroupYaml(YAML::Node *rpgNode, core::P
           logger_->log_debug("parseRemoteProcessGroupYaml: timeout => [%s]", timeout);
 
           if (core::Property::StringToTime(timeout, timeoutValue, unit) && core::Property::ConvertTimeUnitToMS(timeoutValue, unit, timeoutValue) && group) {
-            logger_->log_debug("parseRemoteProcessGroupYaml: timeoutValue => [%d] ms", timeoutValue);
+            logger_->log_debug("parseRemoteProcessGroupYaml: timeoutValue => [%ll] ms", timeoutValue);
             group->setTimeOut(timeoutValue);
           }
         }
@@ -348,7 +349,7 @@ void YamlConfiguration::parseProvenanceReportingYaml(YAML::Node *reportNode, cor
 
   core::TimeUnit unit;
   if (core::Property::StringToTime(schedulingPeriodStr, schedulingPeriod, unit) && core::Property::ConvertTimeUnitToNS(schedulingPeriod, unit, schedulingPeriod)) {
-    logger_->log_debug("ProvenanceReportingTask schedulingPeriod %d ns", schedulingPeriod);
+    logger_->log_debug("ProvenanceReportingTask schedulingPeriod %ll ns", schedulingPeriod);
     processor->setSchedulingPeriodNano(schedulingPeriod);
   }
 
@@ -367,7 +368,7 @@ void YamlConfiguration::parseProvenanceReportingYaml(YAML::Node *reportNode, cor
   if (node["port"]) {
     auto portStr = node["port"].as<std::string>();
     if (core::Property::StringToInt(portStr, lvalue)) {
-      logger_->log_debug("ProvenanceReportingTask port %d", (uint16_t) lvalue);
+      logger_->log_debug("ProvenanceReportingTask port %ll", lvalue);
       reportTask->setPort((uint16_t) lvalue);
     }
   }
@@ -474,20 +475,20 @@ void YamlConfiguration::parseConnectionYaml(YAML::Node *connectionsNode, core::P
 
         if (connectionNode["max work queue size"]) {
           auto max_work_queue_str = connectionNode["max work queue size"].as<std::string>();
-          int64_t max_work_queue_size = 0;
+          uint64_t max_work_queue_size = 0;
           if (core::Property::StringToInt(max_work_queue_str, max_work_queue_size)) {
             connection->setMaxQueueSize(max_work_queue_size);
           }
-          logger_->log_debug("Setting %d as the max queue size for %s", max_work_queue_size, name);
+          logging::LOG_DEBUG(logger_) << "Setting " << max_work_queue_size << " as the max queue size for " << name;
         }
 
         if (connectionNode["max work queue data size"]) {
           auto max_work_queue_str = connectionNode["max work queue data size"].as<std::string>();
-          int64_t max_work_queue_data_size = 0;
+          uint64_t max_work_queue_data_size = 0;
           if (core::Property::StringToInt(max_work_queue_str, max_work_queue_data_size)) {
             connection->setMaxQueueDataSize(max_work_queue_data_size);
           }
-          logger_->log_debug("Setting %d as the max queue data size for %s", max_work_queue_data_size, name);
+          logging::LOG_DEBUG(logger_) << "Setting " << max_work_queue_data_size << " as the max queue data size for " << name;
         }
 
         if (connectionNode["source id"]) {
@@ -618,7 +619,7 @@ void YamlConfiguration::parsePortYaml(YAML::Node *portNode, core::ProcessGroup *
 
   if (inputPortsObj["max concurrent tasks"]) {
     auto rawMaxConcurrentTasks = inputPortsObj["max concurrent tasks"].as<std::string>();
-    int64_t maxConcurrentTasks;
+    int32_t maxConcurrentTasks;
     if (core::Property::StringToInt(rawMaxConcurrentTasks, maxConcurrentTasks)) {
       processor->setMaxConcurrentTasks(maxConcurrentTasks);
     }

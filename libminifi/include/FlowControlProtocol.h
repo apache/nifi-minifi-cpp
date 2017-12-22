@@ -172,12 +172,12 @@ class FlowControlProtocol {
       logger_->log_info("NiFi Server Name %s", _serverName.c_str());
     }
     if (configure->get(Configure::nifi_server_port, value) && core::Property::StringToInt(value, _serverPort)) {
-      logger_->log_info("NiFi Server Port: [%d]", _serverPort);
+      logger_->log_info("NiFi Server Port: [%ll]", _serverPort);
     }
     if (configure->get(Configure::nifi_server_report_interval, value)) {
       core::TimeUnit unit;
       if (core::Property::StringToTime(value, _reportInterval, unit) && core::Property::ConvertTimeUnitToMS(_reportInterval, unit, _reportInterval)) {
-        logger_->log_info("NiFi server report interval: [%d] ms", _reportInterval);
+        logger_->log_info("NiFi server report interval: [%ll] ms", _reportInterval);
       }
     } else
       _reportInterval = 0;

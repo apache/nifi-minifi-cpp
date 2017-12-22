@@ -349,6 +349,15 @@ class Property {
     return StringToInt<uint64_t>(input, output);
   }
 
+  static bool StringToInt(std::string input, int32_t &output) {
+    return StringToInt<int32_t>(input, output);
+  }
+
+  // Convert String to Integer
+  static bool StringToInt(std::string input, uint32_t &output) {
+    return StringToInt<uint32_t>(input, output);
+  }
+
  protected:
   // Name
   std::string name_;

@@ -71,7 +71,7 @@ std::unique_ptr<sitetosite::SiteToSiteClient> RemoteProcessorGroupPort::getNextP
         nextProtocol = sitetosite::createClient(config);
       } else if (peer_index_ >= 0) {
         std::lock_guard<std::mutex> lock(peer_mutex_);
-        logger_->log_info("Creating client from peer %d", peer_index_.load());
+        logger_->log_info("Creating client from peer %ll", peer_index_.load());
         sitetosite::SiteToSiteClientConfiguration config(stream_factory_, peers_[this->peer_index_].getPeer(), client_type_);
 
         peer_index_++;
@@ -283,7 +283,7 @@ void RemoteProcessorGroupPort::refreshRemoteSite2SiteInfo() {
         logger_->log_info("process group remote site2site port %d, is secure %d", site2site_port_, site2site_secure_);
       }
     } else {
-      logger_->log_error("Cannot output body to content for ProcessGroup::refreshRemoteSite2SiteInfo: received HTTP code %d from %s", client->getResponseCode(), fullUrl);
+      logger_->log_error("Cannot output body to content for ProcessGroup::refreshRemoteSite2SiteInfo: received HTTP code %ll from %s", client->getResponseCode(), fullUrl);
     }
   } else {
     logger_->log_error("ProcessGroup::refreshRemoteSite2SiteInfo -- curl_easy_perform() failed \n");
@@ -303,7 +303,8 @@ void RemoteProcessorGroupPort::refreshPeerList() {
 
   protocol->getPeerList(peers_);
 
-  logger_->log_info("Have %d peers", peers_.size());
+  logging::LOG_INFO(logger_) << "Have " << peers_.size() << " peers";
+
   if (peers_.size() > 0)
     peer_index_ = 0;
 }

@@ -29,7 +29,7 @@ int SiteToSiteClient::writeRequestType(RequestType type) {
   if (type >= MAX_REQUEST_TYPE)
     return -1;
 
-  return peer_->writeUTF(RequestTypeStr[type]);
+  return peer_->writeUTF(SiteToSiteRequest::RequestTypeStr[type]);
 }
 
 int SiteToSiteClient::readRequestType(RequestType &type) {
@@ -41,7 +41,7 @@ int SiteToSiteClient::readRequestType(RequestType &type) {
     return ret;
 
   for (int i = NEGOTIATE_FLOWFILE_CODEC; i <= SHUTDOWN; i++) {
-    if (RequestTypeStr[i] == requestTypeStr) {
+    if (SiteToSiteRequest::RequestTypeStr[i] == requestTypeStr) {
       type = (RequestType) i;
       return ret;
     }
@@ -218,7 +218,7 @@ bool SiteToSiteClient::transferFlowFiles(const std::shared_ptr<core::ProcessCont
       ss << "Complete Failed for " << transactionID;
       throw Exception(SITE2SITE_EXCEPTION, ss.str().c_str());
     }
-    logger_->log_debug("Site2Site transaction %s successfully send flow record %d, content bytes %d", transactionID.c_str(), transaction->total_transfers_, transaction->_bytes);
+    logger_->log_debug("Site2Site transaction %s successfully send flow record %d, content bytes %llu", transactionID.c_str(), transaction->total_transfers_, transaction->_bytes);
   } catch (std::exception &exception) {
     if (transaction)
       deleteTransaction(transactionID);
@@ -515,7 +515,7 @@ int16_t SiteToSiteClient::send(std::string transactionID, DataPacket *packet, co
       sitetosite::ReadCallback callback(packet);
       session->read(flowFile, &callback);
       if (flowFile->getSize() != packet->_size) {
-        logger_->log_debug("MisMatched sizes %d %d", flowFile->getSize(), packet->_size);
+        logger_->log_debug("MisMatched sizes %llu %llu", flowFile->getSize(), packet->_size);
         return -2;
       }
     }
@@ -545,7 +545,7 @@ int16_t SiteToSiteClient::send(std::string transactionID, DataPacket *packet, co
   transaction->total_transfers_++;
   transaction->_state = DATA_EXCHANGED;
   transaction->_bytes += len;
-  logger_->log_debug("Site2Site transaction %s send flow record %d, total length %d, added %d", transactionID.c_str(), transaction->total_transfers_, transaction->_bytes, len);
+  logger_->log_debug("Site2Site transaction %s send flow record %d, total length %llu, added %llu", transactionID.c_str(), transaction->total_transfers_, transaction->_bytes, len);
 
   return 0;
 }
@@ -618,13 +618,12 @@ bool SiteToSiteClient::receive(std::string transactionID, DataPacket *packet, bo
   // start to read the packet
   uint32_t numAttributes;
   ret = transaction->getStream().read(numAttributes);
-  logger_->log_debug("returning true/false because ret is %d %d", ret, numAttributes);
   if (ret <= 0 || numAttributes > MAX_NUM_ATTRIBUTES) {
     return false;
   }
 
   // read the attributes
-  logger_->log_debug("Site2Site transaction %s receives attribute key %llu", transactionID.c_str(), numAttributes);
+  logger_->log_debug("Site2Site transaction %s receives attribute key %d", transactionID.c_str(), numAttributes);
   for (unsigned int i = 0; i < numAttributes; i++) {
     std::string key;
     std::string value;
@@ -658,7 +657,7 @@ bool SiteToSiteClient::receive(std::string transactionID, DataPacket *packet, bo
   }
   transaction->_state = DATA_EXCHANGED;
   transaction->_bytes += len;
-  logger_->log_debug("Site2Site transaction %s receives flow record %d, total length %d, added %d", transactionID.c_str(), transaction->total_transfers_, transaction->_bytes, len);
+  logger_->log_debug("Site2Site transaction %s receives flow record %d, total length %llu, added %llu", transactionID.c_str(), transaction->total_transfers_, transaction->_bytes, len);
 
   return true;
 }
@@ -726,7 +725,7 @@ bool SiteToSiteClient::receiveFlowFiles(const std::shared_ptr<core::ProcessConte
           message << "Receive size not correct, expected to send " << flowFile->getSize() << " bytes, but actually sent " << packet._size;
           throw Exception(SITE2SITE_EXCEPTION, message.str().c_str());
         } else {
-          logger_->log_debug("received %d with expected %d", flowFile->getSize(), packet._size);
+          logger_->log_debug("received %llu with expected %llu", flowFile->getSize(), packet._size);
         }
       }
       core::Relationship relation;  // undefined relationship
@@ -748,7 +747,7 @@ bool SiteToSiteClient::receiveFlowFiles(const std::shared_ptr<core::ProcessConte
       transaction_str << "Complete Transaction " << transactionID << " Failed";
       throw Exception(SITE2SITE_EXCEPTION, transaction_str.str().c_str());
     }
-    logger_->log_info("Site2Site transaction %s successfully receive flow record %d, content bytes %d", transactionID.c_str(), transfers, bytes);
+    logger_->log_info("Site2Site transaction %s successfully receive flow record %d, content bytes %llu", transactionID.c_str(), transfers, bytes);
     // we yield the receive if we did not get anything
     if (transfers == 0)
       context->yield();

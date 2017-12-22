@@ -219,8 +219,8 @@ bool VolatileRepository<T>::initialize(const std::shared_ptr<Configure> &configu
     }
   }
 
-  logger_->log_info("Resizing value_vector_ for %s count is %d", getName(), max_count_);
-  logger_->log_info("Using a maximum size for %s of %u", getName(), max_size_);
+  logging::LOG_INFO(logger_) << "Resizing value_vector_ for " << getName() << " count is " << max_count_;
+  logging::LOG_INFO(logger_) << "Using a maximum size for " << getName() << " of  " << max_size_;
   value_vector_.reserve(max_count_);
   for (uint32_t i = 0; i < max_count_; i++) {
     value_vector_.emplace_back(new AtomicEntry<T>(&current_size_, &max_size_));
@@ -254,7 +254,7 @@ bool VolatileRepository<T>::Put(T key, const uint8_t *buf, size_t bufLen) {
     }
 
     updated = value_vector_.at(private_index)->setRepoValue(new_value, old_value, reclaimed_size);
-    logger_->log_debug("Set repo value at %d out of %d updated %d current_size %d, adding %d to  %d", private_index, max_count_, updated == true, reclaimed_size, size, current_size_.load());
+    logger_->log_debug("Set repo value at %ll out of %ll updated %ll current_size %ll, adding %ll to  %ll", private_index, max_count_, updated == true, reclaimed_size, size, current_size_.load());
     if (updated && reclaimed_size > 0) {
       std::lock_guard<std::mutex> lock(mutex_);
       emplace(old_value);
@@ -273,7 +273,7 @@ bool VolatileRepository<T>::Put(T key, const uint8_t *buf, size_t bufLen) {
   } while (!updated);
   current_size_ += size;
 
-  logger_->log_debug("VolatileRepository -- put %d %d", current_size_.load(), current_index_.load());
+  logger_->log_debug("VolatileRepository -- put %ll %ll", current_size_.load(), current_index_.load());
   return true;
 }
 /**
@@ -344,7 +344,7 @@ bool VolatileRepository<T>::DeSerialize(std::vector<std::shared_ptr<core::Serial
 
 template<typename T>
 bool VolatileRepository<T>::DeSerialize(std::vector<std::shared_ptr<core::SerializableComponent>> &store, size_t &max_size) {
-  logger_->log_debug("VolatileRepository -- DeSerialize %d", current_size_.load());
+  logger_->log_debug("VolatileRepository -- DeSerialize %ll", current_size_.load());
   max_size = 0;
   for (auto ent : value_vector_) {
     // let the destructor do the cleanup

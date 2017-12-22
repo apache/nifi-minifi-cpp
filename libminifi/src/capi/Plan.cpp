@@ -62,7 +62,6 @@ bool linkToPrevious) {
 
     std::stringstream connection_name;
     connection_name << last->getUUIDStr() << "-to-" << processor->getUUIDStr();
-    logger_->log_info("Creating %s connection for proc %d", connection_name.str(), processor_queue_.size() + 1);
     std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(flow_repo_, content_repo_, connection_name.str());
     connection->setRelationship(relationship);
 
@@ -146,7 +145,6 @@ bool ExecutionPlan::runNextProcessor(std::function<void(const std::shared_ptr<co
   if (!finalized) {
     finalize();
   }
-  logger_->log_info("Running next processor %d, processor_queue_.size %d, processor_contexts_.size %d", location, processor_queue_.size(), processor_contexts_.size());
 
   location++;
   std::shared_ptr<core::Processor> processor = processor_queue_.at(location);

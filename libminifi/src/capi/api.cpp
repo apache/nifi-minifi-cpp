@@ -240,7 +240,7 @@ flow_file_record *get_next_flow_file(nifi_instance *instance, flow *flow) {
 
 size_t get_flow_files(nifi_instance *instance, flow *flow, flow_file_record **ff_r, size_t size) {
   auto execution_plan = static_cast<ExecutionPlan*>(flow->plan);
-  int i = 0;
+  size_t i = 0;
   for (; i < size; i++) {
     execution_plan->reset();
     while (execution_plan->runNextProcessor()) {

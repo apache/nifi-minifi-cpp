@@ -79,7 +79,7 @@ void Socket::closeStream() {
     addr_info_ = 0;
   }
   if (socket_file_descriptor_ >= 0) {
-    logger_->log_debug("Closing %d", socket_file_descriptor_);
+    logging::LOG_INFO(logger_) <<  "Closing " << socket_file_descriptor_;
     close(socket_file_descriptor_);
     socket_file_descriptor_ = -1;
   }

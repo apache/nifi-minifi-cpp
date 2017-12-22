@@ -310,7 +310,6 @@ void FlowController::loadFlowRepo() {
     if (this->root_ != nullptr) {
       this->root_->getConnections(connectionMap);
     }
-    logger_->log_debug("Number of connections from connectionMap %d", connectionMap.size());
     flow_file_repo_->setConnectionMap(connectionMap);
     flow_file_repo_->loadComponent(content_repo_);
   } else {

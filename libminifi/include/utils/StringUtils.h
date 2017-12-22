@@ -95,13 +95,21 @@ class StringUtils {
 
   static std::vector<std::string> split(const std::string &str, const std::string &delimiter) {
     std::vector<std::string> result;
-    size_t last = 0;
-    size_t next = 0;
-    while ((next = str.find(delimiter, last)) != std::string::npos) {
-      result.push_back(str.substr(last, next - last));
-      last = next + delimiter.length();
+    auto curr = str.begin();
+    auto end = str.end();
+    auto is_func = [delimiter](int s) {
+      return delimiter.at(0) == s;
+    };
+    while (curr != end) {
+      curr = std::find_if_not(curr, end, is_func);
+      if (curr == end) {
+        break;
+      }
+      auto next = std::find_if(curr, end, is_func);
+      result.push_back(std::string(curr, next));
+      curr = next;
     }
-    result.push_back(str.substr(last, next - last));
+
     return result;
   }
 
