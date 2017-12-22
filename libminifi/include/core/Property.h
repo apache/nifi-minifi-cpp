@@ -172,7 +172,7 @@ class Property {
 
     const char *cvalue = input.c_str();
     char *pEnd;
-    long int ival = strtol(cvalue, &pEnd, 0);
+    auto ival = std::strtoll(cvalue, &pEnd, 0);
 
     if (pEnd[0] == '\0') {
       return false;
@@ -226,7 +226,7 @@ class Property {
 
     const char *cvalue = input.c_str();
     char *pEnd;
-    long int ival = strtol(cvalue, &pEnd, 0);
+    auto ival = std::strtoll(cvalue, &pEnd, 0);
 
     if (pEnd[0] == '\0') {
       return false;
@@ -281,7 +281,7 @@ class Property {
 
     const char *cvalue = input.c_str();
     char *pEnd;
-    long int ival = strtol(cvalue, &pEnd, 0);
+    auto ival = std::strtoll(cvalue, &pEnd, 0);
 
     if (pEnd[0] == '\0') {
       output = ival;
