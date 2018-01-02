@@ -24,7 +24,6 @@
 #include "utils/StringUtils.h"
 #include <dlfcn.h>
 #include "core/Core.h"
-#include "core/logging/Logger.h"
 #include "io/DataStream.h"
 
 namespace org {
@@ -270,9 +269,6 @@ class ClassLoader {
   std::mutex internal_mutex_;
 
   std::vector<void *> dl_handles_;
-
- private:
-  std::shared_ptr<logging::Logger> logger_;
 };
 
 template<class T>

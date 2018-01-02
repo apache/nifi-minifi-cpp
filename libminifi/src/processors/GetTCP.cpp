@@ -138,7 +138,7 @@ void GetTCP::onSchedule(const std::shared_ptr<core::ProcessContext> &context, co
     core::TimeUnit unit;
     if (core::Property::StringToTime(value, msec, unit) && core::Property::ConvertTimeUnitToMS(msec, unit, msec)) {
       reconnect_interval_ = msec;
-      logger_->log_debug("successfully applied reconnect interval of %d", reconnect_interval_);
+      logger_->log_debug("successfully applied reconnect interval of %ll", reconnect_interval_);
     }
   } else {
     reconnect_interval_ = 5000;
@@ -187,7 +187,7 @@ void GetTCP::onSchedule(const std::shared_ptr<core::ProcessContext> &context, co
               socket_ptr->closeStream();
               return -1;
             }
-            logger_->log_info("Sleeping for %d msec before attempting to reconnect", reconnect_interval_);
+            logger_->log_info("Sleeping for %ll msec before attempting to reconnect", reconnect_interval_);
             std::this_thread::sleep_for(std::chrono::milliseconds(reconnect_interval_));
             socket_ring_buffer_.enqueue(std::move(socket_ptr));
           } else {

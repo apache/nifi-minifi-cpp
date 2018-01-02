@@ -45,7 +45,7 @@ void ThreadedSchedulingAgent::schedule(std::shared_ptr<core::Processor> processo
   if (configure_->get(Configure::nifi_administrative_yield_duration, yieldValue)) {
     core::TimeUnit unit;
     if (core::Property::StringToTime(yieldValue, admin_yield_duration_, unit) && core::Property::ConvertTimeUnitToMS(admin_yield_duration_, unit, admin_yield_duration_)) {
-      logger_->log_debug("nifi_administrative_yield_duration: [%d] ms", admin_yield_duration_);
+      logger_->log_debug("nifi_administrative_yield_duration: [%ll] ms", admin_yield_duration_);
     }
   }
 
@@ -53,7 +53,7 @@ void ThreadedSchedulingAgent::schedule(std::shared_ptr<core::Processor> processo
   if (configure_->get(Configure::nifi_bored_yield_duration, yieldValue)) {
     core::TimeUnit unit;
     if (core::Property::StringToTime(yieldValue, bored_yield_duration_, unit) && core::Property::ConvertTimeUnitToMS(bored_yield_duration_, unit, bored_yield_duration_)) {
-      logger_->log_debug("nifi_bored_yield_duration: [%d] ms", bored_yield_duration_);
+      logger_->log_debug("nifi_bored_yield_duration: [%ll] ms", bored_yield_duration_);
     }
   }
 

@@ -225,7 +225,7 @@ void ListenHTTP::Handler::sendErrorResponse(struct mg_connection *conn) {
 
 bool ListenHTTP::Handler::handlePost(CivetServer *server, struct mg_connection *conn) {
   auto req_info = mg_get_request_info(conn);
-  logger_->log_info("ListenHTTP handling POST request of length %d", req_info->content_length);
+  logger_->log_info("ListenHTTP handling POST request of length %ll", req_info->content_length);
 
   // If this is a two-way TLS connection, authorize the peer against the configured pattern
   if (req_info->is_ssl && req_info->client_cert != nullptr) {

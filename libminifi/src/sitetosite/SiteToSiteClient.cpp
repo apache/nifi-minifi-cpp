@@ -29,7 +29,7 @@ int SiteToSiteClient::writeRequestType(RequestType type) {
   if (type >= MAX_REQUEST_TYPE)
     return -1;
 
-  return peer_->writeUTF(RequestTypeStr[type]);
+  return peer_->writeUTF(SiteToSiteRequest::RequestTypeStr[type]);
 }
 
 int SiteToSiteClient::readRequestType(RequestType &type) {
@@ -41,7 +41,7 @@ int SiteToSiteClient::readRequestType(RequestType &type) {
     return ret;
 
   for (int i = NEGOTIATE_FLOWFILE_CODEC; i <= SHUTDOWN; i++) {
-    if (RequestTypeStr[i] == requestTypeStr) {
+    if (SiteToSiteRequest::RequestTypeStr[i] == requestTypeStr) {
       type = (RequestType) i;
       return ret;
     }
@@ -99,7 +99,7 @@ void SiteToSiteClient::deleteTransaction(std::string transactionID) {
     transaction = it->second;
   }
 
-  logger_->log_info("Site2Site delete transaction %s", transaction->getUUIDStr().c_str());
+  logger_->log_debug("Site2Site delete transaction %s", transaction->getUUIDStr().c_str());
   known_transactions_.erase(transactionID);
 }
 
@@ -135,7 +135,7 @@ int SiteToSiteClient::writeResponse(const std::shared_ptr<Transaction> &transact
 
 void SiteToSiteClient::tearDown() {
   if (peer_state_ >= ESTABLISHED) {
-    logger_->log_info("Site2Site Protocol tearDown");
+    logger_->log_debug("Site2Site Protocol tearDown");
     // need to write shutdown request
     writeRequestType(SHUTDOWN);
   }
@@ -188,7 +188,7 @@ bool SiteToSiteClient::transferFlowFiles(const std::shared_ptr<core::ProcessCont
         throw Exception(SITE2SITE_EXCEPTION, "Send Failed");
       }
 
-      logger_->log_info("Site2Site transaction %s send flow record %s", transactionID.c_str(), flow->getUUIDStr().c_str());
+      logger_->log_debug("Site2Site transaction %s send flow record %s", transactionID.c_str(), flow->getUUIDStr().c_str());
       if (resp == 0) {
         uint64_t endTime = getTimeMillis();
         std::string transitUri = peer_->getURL() + "/" + flow->getUUIDStr();
@@ -218,7 +218,7 @@ bool SiteToSiteClient::transferFlowFiles(const std::shared_ptr<core::ProcessCont
       ss << "Complete Failed for " << transactionID;
       throw Exception(SITE2SITE_EXCEPTION, ss.str().c_str());
     }
-    logger_->log_info("Site2Site transaction %s successfully send flow record %d, content bytes %d", transactionID.c_str(), transaction->total_transfers_, transaction->_bytes);
+    logger_->log_debug("Site2Site transaction %s successfully send flow record %d, content bytes %llu", transactionID.c_str(), transaction->total_transfers_, transaction->_bytes);
   } catch (std::exception &exception) {
     if (transaction)
       deleteTransaction(transactionID);
@@ -280,7 +280,7 @@ bool SiteToSiteClient::confirm(std::string transactionID) {
     // time window involved in the entire transaction, it is reduced to a simple round-trip conversation.
     int64_t crcValue = transaction->getCRC();
     std::string crc = std::to_string(crcValue);
-    logger_->log_info("Site2Site Send confirm with CRC %d to transaction %s", transaction->getCRC(), transactionID.c_str());
+    logger_->log_debug("Site2Site Send confirm with CRC %d to transaction %s", transaction->getCRC(), transactionID.c_str());
     ret = writeResponse(transaction, CONFIRM_TRANSACTION, crc);
     if (ret <= 0)
       return false;
@@ -291,18 +291,18 @@ bool SiteToSiteClient::confirm(std::string transactionID) {
       return false;
 
     if (code == CONFIRM_TRANSACTION) {
-      logger_->log_info("Site2Site transaction %s peer confirm transaction", transactionID.c_str());
+      logger_->log_debug("Site2Site transaction %s peer confirm transaction", transactionID.c_str());
       transaction->_state = TRANSACTION_CONFIRMED;
       return true;
     } else if (code == BAD_CHECKSUM) {
-      logger_->log_info("Site2Site transaction %s peer indicate bad checksum", transactionID.c_str());
+      logger_->log_debug("Site2Site transaction %s peer indicate bad checksum", transactionID.c_str());
       return false;
     } else {
-      logger_->log_info("Site2Site transaction %s peer unknown respond code %d", transactionID.c_str(), code);
+      logger_->log_debug("Site2Site transaction %s peer unknown respond code %d", transactionID.c_str(), code);
       return false;
     }
   } else {
-    logger_->log_info("Site2Site Send FINISH TRANSACTION for transaction %s", transactionID.c_str());
+    logger_->log_debug("Site2Site Send FINISH TRANSACTION for transaction %s", transactionID.c_str());
     ret = writeResponse(transaction, FINISH_TRANSACTION, "FINISH_TRANSACTION");
     if (ret <= 0)
       return false;
@@ -312,19 +312,19 @@ bool SiteToSiteClient::confirm(std::string transactionID) {
 
     // we've sent a FINISH_TRANSACTION. Now we'll wait for the peer to send a 'Confirm Transaction' response
     if (code == CONFIRM_TRANSACTION) {
-      logger_->log_info("Site2Site transaction %s peer confirm transaction with CRC %s", transactionID.c_str(), message.c_str());
+      logger_->log_debug("Site2Site transaction %s peer confirm transaction with CRC %s", transactionID.c_str(), message.c_str());
       if (this->_currentVersion > 3) {
         int64_t crcValue = transaction->getCRC();
         std::string crc = std::to_string(crcValue);
         if (message == crc) {
-          logger_->log_info("Site2Site transaction %s CRC matched", transactionID.c_str());
+          logger_->log_debug("Site2Site transaction %s CRC matched", transactionID.c_str());
           ret = writeResponse(transaction, CONFIRM_TRANSACTION, "CONFIRM_TRANSACTION");
           if (ret <= 0)
             return false;
           transaction->_state = TRANSACTION_CONFIRMED;
           return true;
         } else {
-          logger_->log_info("Site2Site transaction %s CRC not matched %s", transactionID.c_str(), crc.c_str());
+          logger_->log_debug("Site2Site transaction %s CRC not matched %s", transactionID.c_str(), crc.c_str());
           ret = writeResponse(transaction, BAD_CHECKSUM, "BAD_CHECKSUM");
           return false;
         }
@@ -335,7 +335,7 @@ bool SiteToSiteClient::confirm(std::string transactionID) {
       transaction->_state = TRANSACTION_CONFIRMED;
       return true;
     } else {
-      logger_->log_info("Site2Site transaction %s peer unknown respond code %d", transactionID.c_str(), code);
+      logger_->log_debug("Site2Site transaction %s peer unknown respond code %d", transactionID.c_str(), code);
       return false;
     }
     return false;
@@ -413,7 +413,7 @@ bool SiteToSiteClient::complete(std::string transactionID) {
       transaction->_state = TRANSACTION_COMPLETED;
       return true;
     } else {
-      logger_->log_info("Site2Site transaction %s send finished", transactionID.c_str());
+      logger_->log_debug("Site2Site transaction %s send finished", transactionID.c_str());
       ret = this->writeResponse(transaction, TRANSACTION_FINISHED, "Finished");
       if (ret <= 0) {
         return false;
@@ -433,11 +433,11 @@ bool SiteToSiteClient::complete(std::string transactionID) {
       return false;
 
     if (code == TRANSACTION_FINISHED) {
-      logger_->log_info("Site2Site transaction %s peer finished transaction", transactionID.c_str());
+      logger_->log_debug("Site2Site transaction %s peer finished transaction", transactionID.c_str());
       transaction->_state = TRANSACTION_COMPLETED;
       return true;
     } else {
-      logger_->log_info("Site2Site transaction %s peer unknown respond code %d", transactionID.c_str(), code);
+      logger_->log_debug("Site2Site transaction %s peer unknown respond code %d", transactionID.c_str(), code);
       return false;
     }
   }
@@ -448,7 +448,7 @@ int16_t SiteToSiteClient::send(std::string transactionID, DataPacket *packet, co
   std::shared_ptr<Transaction> transaction = NULL;
 
   if (flowFile && !flowFile->getResourceClaim()->exists()) {
-    logger_->log_info("Claim %s does not exist for FlowFile %s", flowFile->getResourceClaim()->getContentFullPath(), flowFile->getUUIDStr());
+    logger_->log_debug("Claim %s does not exist for FlowFile %s", flowFile->getResourceClaim()->getContentFullPath(), flowFile->getUUIDStr());
     return -2;
   }
   if (peer_state_ != READY) {
@@ -467,12 +467,12 @@ int16_t SiteToSiteClient::send(std::string transactionID, DataPacket *packet, co
   }
 
   if (transaction->getState() != TRANSACTION_STARTED && transaction->getState() != DATA_EXCHANGED) {
-    logger_->log_info("Site2Site transaction %s is not at started or exchanged state", transactionID.c_str());
+    logger_->log_debug("Site2Site transaction %s is not at started or exchanged state", transactionID.c_str());
     return -1;
   }
 
   if (transaction->getDirection() != SEND) {
-    logger_->log_info("Site2Site transaction %s direction is wrong", transactionID.c_str());
+    logger_->log_debug("Site2Site transaction %s direction is wrong", transactionID.c_str());
     return -1;
   }
 
@@ -500,7 +500,7 @@ int16_t SiteToSiteClient::send(std::string transactionID, DataPacket *packet, co
     if (ret <= 0) {
       return -1;
     }
-    logger_->log_info("Site2Site transaction %s send attribute key %s value %s", transactionID.c_str(), itAttribute->first.c_str(), itAttribute->second.c_str());
+    logger_->log_debug("Site2Site transaction %s send attribute key %s value %s", transactionID.c_str(), itAttribute->first.c_str(), itAttribute->second.c_str());
   }
 
   uint64_t len = 0;
@@ -508,14 +508,14 @@ int16_t SiteToSiteClient::send(std::string transactionID, DataPacket *packet, co
     len = flowFile->getSize();
     ret = transaction->getStream().write(len);
     if (ret != 8) {
-      logger_->log_info("ret != 8");
+      logger_->log_debug("ret != 8");
       return -1;
     }
     if (flowFile->getSize() > 0) {
       sitetosite::ReadCallback callback(packet);
       session->read(flowFile, &callback);
       if (flowFile->getSize() != packet->_size) {
-        logger_->log_info("MisMatched sizes %d %d", flowFile->getSize(), packet->_size);
+        logger_->log_debug("MisMatched sizes %llu %llu", flowFile->getSize(), packet->_size);
         return -2;
       }
     }
@@ -535,7 +535,7 @@ int16_t SiteToSiteClient::send(std::string transactionID, DataPacket *packet, co
 
     ret = transaction->getStream().writeData(reinterpret_cast<uint8_t *>(const_cast<char*>(packet->payload_.c_str())), len);
     if (ret != (int64_t)len) {
-      logger_->log_info("ret != len");
+      logger_->log_debug("ret != len");
       return -1;
     }
     packet->_size += len;
@@ -545,7 +545,7 @@ int16_t SiteToSiteClient::send(std::string transactionID, DataPacket *packet, co
   transaction->total_transfers_++;
   transaction->_state = DATA_EXCHANGED;
   transaction->_bytes += len;
-  logger_->log_info("Site2Site transaction %s send flow record %d, total length %d, added %d", transactionID.c_str(), transaction->total_transfers_, transaction->_bytes, len);
+  logger_->log_debug("Site2Site transaction %s send flow record %d, total length %llu, added %llu", transactionID.c_str(), transaction->total_transfers_, transaction->_bytes, len);
 
   return 0;
 }
@@ -571,12 +571,12 @@ bool SiteToSiteClient::receive(std::string transactionID, DataPacket *packet, bo
   }
 
   if (transaction->getState() != TRANSACTION_STARTED && transaction->getState() != DATA_EXCHANGED) {
-    logger_->log_info("Site2Site transaction %s is not at started or exchanged state", transactionID.c_str());
+    logger_->log_debug("Site2Site transaction %s is not at started or exchanged state", transactionID.c_str());
     return false;
   }
 
   if (transaction->getDirection() != RECEIVE) {
-    logger_->log_info("Site2Site transaction %s direction is wrong", transactionID.c_str());
+    logger_->log_debug("Site2Site transaction %s direction is wrong", transactionID.c_str());
     return false;
   }
 
@@ -596,21 +596,21 @@ bool SiteToSiteClient::receive(std::string transactionID, DataPacket *packet, bo
       return false;
     }
     if (code == CONTINUE_TRANSACTION) {
-      logger_->log_info("Site2Site transaction %s peer indicate continue transaction", transactionID.c_str());
+      logger_->log_debug("Site2Site transaction %s peer indicate continue transaction", transactionID.c_str());
       transaction->_dataAvailable = true;
     } else if (code == FINISH_TRANSACTION) {
-      logger_->log_info("Site2Site transaction %s peer indicate finish transaction", transactionID.c_str());
+      logger_->log_debug("Site2Site transaction %s peer indicate finish transaction", transactionID.c_str());
       transaction->_dataAvailable = false;
       eof = true;
       return true;
     } else {
-      logger_->log_info("Site2Site transaction %s peer indicate wrong respond code %d", transactionID.c_str(), code);
+      logger_->log_debug("Site2Site transaction %s peer indicate wrong respond code %d", transactionID.c_str(), code);
       return false;
     }
   }
 
   if (!transaction->isDataAvailable()) {
-    logger_->log_info("No data is available");
+    logger_->log_debug("No data is available");
     eof = true;
     return true;
   }
@@ -618,13 +618,12 @@ bool SiteToSiteClient::receive(std::string transactionID, DataPacket *packet, bo
   // start to read the packet
   uint32_t numAttributes;
   ret = transaction->getStream().read(numAttributes);
-  logger_->log_info("returning true/false because ret is %d %d", ret, numAttributes);
   if (ret <= 0 || numAttributes > MAX_NUM_ATTRIBUTES) {
     return false;
   }
 
   // read the attributes
-  logger_->log_info("Site2Site transaction %s receives attribute key %llu", transactionID.c_str(), numAttributes);
+  logger_->log_debug("Site2Site transaction %s receives attribute key %d", transactionID.c_str(), numAttributes);
   for (unsigned int i = 0; i < numAttributes; i++) {
     std::string key;
     std::string value;
@@ -637,7 +636,7 @@ bool SiteToSiteClient::receive(std::string transactionID, DataPacket *packet, bo
       return false;
     }
     packet->_attributes[key] = value;
-    logger_->log_info("Site2Site transaction %s receives attribute key %s value %s", transactionID.c_str(), key.c_str(), value.c_str());
+    logger_->log_debug("Site2Site transaction %s receives attribute key %s value %s", transactionID.c_str(), key.c_str(), value.c_str());
   }
 
   uint64_t len;
@@ -651,14 +650,14 @@ bool SiteToSiteClient::receive(std::string transactionID, DataPacket *packet, bo
     transaction->current_transfers_++;
     transaction->total_transfers_++;
   } else {
-    logger_->log_info("Site2Site transaction %s receives attribute ?", transactionID);
+    logger_->log_debug("Site2Site transaction %s receives attribute ?", transactionID);
     transaction->_dataAvailable = false;
     eof = true;
     return true;
   }
   transaction->_state = DATA_EXCHANGED;
   transaction->_bytes += len;
-  logger_->log_info("Site2Site transaction %s receives flow record %d, total length %d, added %d", transactionID.c_str(), transaction->total_transfers_, transaction->_bytes, len);
+  logger_->log_debug("Site2Site transaction %s receives flow record %d, total length %llu, added %llu", transactionID.c_str(), transaction->total_transfers_, transaction->_bytes, len);
 
   return true;
 }
@@ -726,7 +725,7 @@ bool SiteToSiteClient::receiveFlowFiles(const std::shared_ptr<core::ProcessConte
           message << "Receive size not correct, expected to send " << flowFile->getSize() << " bytes, but actually sent " << packet._size;
           throw Exception(SITE2SITE_EXCEPTION, message.str().c_str());
         } else {
-          logger_->log_info("received %d with expected %d", flowFile->getSize(), packet._size);
+          logger_->log_debug("received %llu with expected %llu", flowFile->getSize(), packet._size);
         }
       }
       core::Relationship relation;  // undefined relationship
@@ -748,7 +747,7 @@ bool SiteToSiteClient::receiveFlowFiles(const std::shared_ptr<core::ProcessConte
       transaction_str << "Complete Transaction " << transactionID << " Failed";
       throw Exception(SITE2SITE_EXCEPTION, transaction_str.str().c_str());
     }
-    logger_->log_info("Site2Site transaction %s successfully receive flow record %d, content bytes %d", transactionID.c_str(), transfers, bytes);
+    logger_->log_info("Site2Site transaction %s successfully receive flow record %d, content bytes %llu", transactionID.c_str(), transfers, bytes);
     // we yield the receive if we did not get anything
     if (transfers == 0)
       context->yield();

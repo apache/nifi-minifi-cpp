@@ -40,6 +40,14 @@
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wsign-compare"
+#elif defined(__GNUC__) || defined(__GNUG__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wsign-compare"
+#endif
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -249,10 +257,10 @@ void TailFile::onTrigger(core::ProcessContext *context, core::ProcessSession *se
       char delim = this->_delimiter.c_str()[0];
       std::vector<std::shared_ptr<FlowFileRecord>> flowFiles;
       session->import(fullPath, flowFiles, true, this->_currentTailFilePosition, delim);
-      logger_->log_info("%d flowfiles were received from TailFile input", flowFiles.size());
+      logger_->log_info("%ll flowfiles were received from TailFile input", flowFiles.size());
 
       for (auto ffr : flowFiles) {
-        logger_->log_info("TailFile %s for %d bytes", _currentTailFileName, ffr->getSize());
+        logger_->log_info("TailFile %s for %llu bytes", _currentTailFileName, ffr->getSize());
         std::string logName = baseName + "." + std::to_string(_currentTailFilePosition) + "-" + std::to_string(_currentTailFilePosition + ffr->getSize()) + "." + extension;
         ffr->updateKeyedAttribute(PATH, fileLocation);
         ffr->addKeyedAttribute(ABSOLUTE_PATH, fullPath);
@@ -270,7 +278,7 @@ void TailFile::onTrigger(core::ProcessContext *context, core::ProcessSession *se
       flowFile->addKeyedAttribute(ABSOLUTE_PATH, fullPath);
       session->import(fullPath, flowFile, true, this->_currentTailFilePosition);
       session->transfer(flowFile, Success);
-      logger_->log_info("TailFile %s for %d bytes", _currentTailFileName, flowFile->getSize());
+      logger_->log_info("TailFile %s for %llu bytes", _currentTailFileName, flowFile->getSize());
       std::string logName = baseName + "." + std::to_string(_currentTailFilePosition) + "-" + std::to_string(_currentTailFilePosition + flowFile->getSize()) + "." + extension;
       flowFile->updateKeyedAttribute(FILENAME, logName);
       this->_currentTailFilePosition += flowFile->getSize();
@@ -287,3 +295,9 @@ void TailFile::onTrigger(core::ProcessContext *context, core::ProcessSession *se
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
+
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#elif defined(__GNUC__) || defined(__GNUG__)
+#pragma GCC diagnostic pop
+#endif

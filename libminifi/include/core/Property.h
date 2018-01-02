@@ -172,7 +172,7 @@ class Property {
 
     const char *cvalue = input.c_str();
     char *pEnd;
-    long int ival = strtol(cvalue, &pEnd, 0);
+    auto ival = std::strtoll(cvalue, &pEnd, 0);
 
     if (pEnd[0] == '\0') {
       return false;
@@ -226,7 +226,7 @@ class Property {
 
     const char *cvalue = input.c_str();
     char *pEnd;
-    long int ival = strtol(cvalue, &pEnd, 0);
+    auto ival = std::strtoll(cvalue, &pEnd, 0);
 
     if (pEnd[0] == '\0') {
       return false;
@@ -281,7 +281,7 @@ class Property {
 
     const char *cvalue = input.c_str();
     char *pEnd;
-    long int ival = strtol(cvalue, &pEnd, 0);
+    auto ival = std::strtoll(cvalue, &pEnd, 0);
 
     if (pEnd[0] == '\0') {
       output = ival;
@@ -347,6 +347,15 @@ class Property {
   // Convert String to Integer
   static bool StringToInt(std::string input, uint64_t &output) {
     return StringToInt<uint64_t>(input, output);
+  }
+
+  static bool StringToInt(std::string input, int32_t &output) {
+    return StringToInt<int32_t>(input, output);
+  }
+
+  // Convert String to Integer
+  static bool StringToInt(std::string input, uint32_t &output) {
+    return StringToInt<uint32_t>(input, output);
   }
 
  protected:

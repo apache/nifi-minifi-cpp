@@ -119,7 +119,7 @@ void FlowFileRecord::releaseClaim(std::shared_ptr<ResourceClaim> claim) {
   // Decrease the flow file record owned count for the resource claim
   claim_->decreaseFlowFileRecordOwnedCount();
   std::string value;
-  logger_->log_debug("Delete Resource Claim %s, %s, attempt %d", getUUIDStr(), claim_->getContentFullPath().c_str(), claim_->getFlowFileRecordOwnedCount());
+  logger_->log_debug("Delete Resource Claim %s, %s, attempt %llu", getUUIDStr(), claim_->getContentFullPath().c_str(), claim_->getFlowFileRecordOwnedCount());
   if (claim_->getFlowFileRecordOwnedCount() <= 0) {
     // we cannot rely on the stored variable here since we aren't guaranteed atomicity
     if (flow_repository_ != nullptr && !flow_repository_->Get(uuidStr_, value)) {
@@ -186,17 +186,15 @@ bool FlowFileRecord::DeSerialize(std::string key) {
   if (!ret) {
     logger_->log_error("NiFi FlowFile Store event %s can not found", key.c_str());
     return false;
-  } else {
-    logger_->log_debug("NiFi FlowFile Read event %s length %d", key.c_str(), value.length());
   }
   io::DataStream stream((const uint8_t*) value.data(), value.length());
 
   ret = DeSerialize(stream);
 
   if (ret) {
-    logger_->log_debug("NiFi FlowFile retrieve uuid %s size %d connection %s success", uuidStr_.c_str(), stream.getSize(), uuid_connection_.c_str());
+    logger_->log_debug("NiFi FlowFile retrieve uuid %s size %llu connection %s success", uuidStr_.c_str(), stream.getSize(), uuid_connection_.c_str());
   } else {
-    logger_->log_debug("NiFi FlowFile retrieve uuid %s size %d connection %d fail", uuidStr_.c_str(), stream.getSize(), uuid_connection_.c_str());
+    logger_->log_debug("NiFi FlowFile retrieve uuid %s size %llu connection %s fail", uuidStr_.c_str(), stream.getSize(), uuid_connection_.c_str());
   }
 
   return ret;
@@ -265,10 +263,10 @@ bool FlowFileRecord::Serialize() {
   }
 
   if (flow_repository_->Put(uuidStr_, const_cast<uint8_t*>(outStream.getBuffer()), outStream.getSize())) {
-    logger_->log_debug("NiFi FlowFile Store event %s size %d success", uuidStr_.c_str(), outStream.getSize());
+    logger_->log_debug("NiFi FlowFile Store event %s size %llu success", uuidStr_.c_str(), outStream.getSize());
     return true;
   } else {
-    logger_->log_error("NiFi FlowFile Store event %s size %d fail", uuidStr_.c_str(), outStream.getSize());
+    logger_->log_error("NiFi FlowFile Store event %s size %llu fail", uuidStr_.c_str(), outStream.getSize());
     return false;
   }
 

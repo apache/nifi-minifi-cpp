@@ -20,7 +20,6 @@
 #include <string>
 
 #include "core/ClassLoader.h"
-#include "core/logging/LoggerConfiguration.h"
 
 namespace org {
 namespace apache {
@@ -28,8 +27,7 @@ namespace nifi {
 namespace minifi {
 namespace core {
 
-ClassLoader::ClassLoader()
-    : logger_(logging::LoggerFactory<ClassLoader>::getLogger()) {
+ClassLoader::ClassLoader() {
 }
 
 ClassLoader &ClassLoader::getDefaultClassLoader() {
@@ -47,7 +45,6 @@ uint16_t ClassLoader::registerResource(const std::string &resource, const std::s
     resource_ptr = dlopen(resource.c_str(), RTLD_NOW | RTLD_GLOBAL);
   }
   if (!resource_ptr) {
-    logger_->log_error("Cannot load library: %s", dlerror());
     return RESOURCE_FAILURE;
   } else {
     std::lock_guard<std::mutex> lock(internal_mutex_);
@@ -61,7 +58,6 @@ uint16_t ClassLoader::registerResource(const std::string &resource, const std::s
   createFactory* create_factory_func = reinterpret_cast<createFactory*>(dlsym(resource_ptr, resourceFunction.c_str()));
   const char* dlsym_error = dlerror();
   if (dlsym_error) {
-    logger_->log_error("Cannot load library: %s", dlsym_error);
     return RESOURCE_FAILURE;
   }
 

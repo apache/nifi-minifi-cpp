@@ -42,6 +42,42 @@ namespace sitetosite {
 std::shared_ptr<utils::IdGenerator> RawSiteToSiteClient::id_generator_ = utils::IdGenerator::getIdGenerator();
 std::shared_ptr<utils::IdGenerator> Transaction::id_generator_ = utils::IdGenerator::getIdGenerator();
 
+const char *RawSiteToSiteClient::HandShakePropertyStr[MAX_HANDSHAKE_PROPERTY] = {
+/**
+ * Boolean value indicating whether or not the contents of a FlowFile should
+ * be GZipped when transferred.
+ */
+"GZIP",
+/**
+ * The unique identifier of the port to communicate with
+ */
+"PORT_IDENTIFIER",
+/**
+ * Indicates the number of milliseconds after the request was made that the
+ * client will wait for a response. If no response has been received by the
+ * time this value expires, the server can move on without attempting to
+ * service the request because the client will have already disconnected.
+ */
+"REQUEST_EXPIRATION_MILLIS",
+/**
+ * The preferred number of FlowFiles that the server should send to the
+ * client when pulling data. This property was introduced in version 5 of
+ * the protocol.
+ */
+"BATCH_COUNT",
+/**
+ * The preferred number of bytes that the server should send to the client
+ * when pulling data. This property was introduced in version 5 of the
+ * protocol.
+ */
+"BATCH_SIZE",
+/**
+ * The preferred amount of time that the server should send data to the
+ * client when pulling data. This property was introduced in version 5 of
+ * the protocol. Value is in milliseconds.
+ */
+"BATCH_DURATION" };
+
 bool RawSiteToSiteClient::establish() {
   if (peer_state_ != IDLE) {
     logger_->log_error("Site2Site peer state is not idle while try to establish");
@@ -112,7 +148,9 @@ bool RawSiteToSiteClient::initiateResourceNegotiation() {
       if (ret <= 0) {
         return false;
       }
-      logger_->log_info("Site2Site Server Response asked for a different protocol version %d", serverVersion);
+
+      logging::LOG_INFO(logger_) << "Site2Site Server Response asked for a different protocol version " << serverVersion;
+
       for (unsigned int i = (_currentVersionIndex + 1); i < sizeof(_supportedVersion) / sizeof(uint32_t); i++) {
         if (serverVersion >= _supportedVersion[i]) {
           _currentVersion = _supportedVersion[i];
@@ -174,7 +212,8 @@ bool RawSiteToSiteClient::initiateCodecResourceNegotiation() {
       if (ret <= 0) {
         return false;
       }
-      logger_->log_info("Site2Site Server Response asked for a different codec version %d", serverVersion);
+      logging::LOG_INFO(logger_) << "Site2Site Server Response asked for a different protocol version " << serverVersion;
+
       for (unsigned int i = (_currentCodecVersionIndex + 1); i < sizeof(_supportedCodecVersion) / sizeof(uint32_t); i++) {
         if (serverVersion >= _supportedCodecVersion[i]) {
           _currentCodecVersion = _supportedCodecVersion[i];
@@ -339,7 +378,9 @@ bool RawSiteToSiteClient::getPeerList(std::vector<PeerStatus> &peers) {
       }
       PeerStatus status(std::make_shared<Peer>(port_id_, host, port, secure), count, true);
       peers.push_back(std::move(status));
-      logger_->log_info("Site2Site Peer host %s, port %d, Secure %d", host, port, secure);
+      std::stringstream str;
+      str << "Site2Site Peer host " << host << " port " << port << " Secure " << secure;
+      logger_->log_info(str.str().c_str());
     }
 
     tearDown();
@@ -354,7 +395,7 @@ int RawSiteToSiteClient::writeRequestType(RequestType type) {
   if (type >= MAX_REQUEST_TYPE)
     return -1;
 
-  return peer_->writeUTF(RequestTypeStr[type]);
+  return peer_->writeUTF(SiteToSiteRequest::RequestTypeStr[type]);
 }
 
 int RawSiteToSiteClient::readRequestType(RequestType &type) {
@@ -366,7 +407,7 @@ int RawSiteToSiteClient::readRequestType(RequestType &type) {
     return ret;
 
   for (int i = NEGOTIATE_FLOWFILE_CODEC; i <= SHUTDOWN; i++) {
-    if (RequestTypeStr[i] == requestTypeStr) {
+    if (SiteToSiteRequest::RequestTypeStr[i] == requestTypeStr) {
       type = (RequestType) i;
       return ret;
     }
@@ -592,7 +633,7 @@ bool RawSiteToSiteClient::transmitPayload(const std::shared_ptr<core::ProcessCon
     if (resp == -1) {
       throw Exception(SITE2SITE_EXCEPTION, "Send Failed");
     }
-    logger_->log_info("Site2Site transaction %s send bytes length %d", transactionID.c_str(), payload.length());
+    logging::LOG_INFO(logger_) << "Site2Site transaction " << transactionID << " sent bytes length" << payload.length();
 
     if (!confirm(transactionID)) {
       throw Exception(SITE2SITE_EXCEPTION, "Confirm Failed");
@@ -600,7 +641,7 @@ bool RawSiteToSiteClient::transmitPayload(const std::shared_ptr<core::ProcessCon
     if (!complete(transactionID)) {
       throw Exception(SITE2SITE_EXCEPTION, "Complete Failed");
     }
-    logger_->log_info("Site2Site transaction %s successfully send flow record %d, content bytes %d", transactionID.c_str(), transaction->current_transfers_, transaction->_bytes);
+    logging::LOG_INFO(logger_) << "Site2Site transaction " << transactionID << " successfully send flow record " << transaction->current_transfers_ << " content bytes " << transaction->_bytes;
   } catch (std::exception &exception) {
     if (transaction)
       deleteTransaction(transactionID);

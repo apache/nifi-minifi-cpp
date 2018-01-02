@@ -70,9 +70,10 @@ class RESTReceiver : public RESTProtocol, public HeartBeatReporter {
         currentvalue = resp_;
       }
 
-      mg_printf(conn, "HTTP/1.1 200 OK\r\nContent-Type: "
-                "text/plain\r\nContent-Length: %lu\r\nConnection: close\r\n\r\n",
-                currentvalue.length());
+      std::stringstream output;
+      output << "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " << currentvalue.length() << "\r\nConnection: close\r\n\r\n";
+
+      mg_printf(conn, "%s", output.str().c_str());
       mg_printf(conn, "%s", currentvalue.c_str());
       return true;
     }
