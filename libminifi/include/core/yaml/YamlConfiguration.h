@@ -40,13 +40,18 @@ namespace core {
 #define CONFIG_YAML_CONNECTIONS_KEY "Connections"
 #define CONFIG_YAML_CONTROLLER_SERVICES_KEY "Controller Services"
 #define CONFIG_YAML_REMOTE_PROCESS_GROUP_KEY "Remote Processing Groups"
+#define CONFIG_YAML_REMOTE_PROCESS_GROUP_KEY_V3 "Remote Process Groups"
 #define CONFIG_YAML_PROVENANCE_REPORT_KEY "Provenance Reporting"
 
 class YamlConfiguration : public FlowConfiguration {
 
  public:
-  explicit YamlConfiguration(std::shared_ptr<core::Repository> repo, std::shared_ptr<core::Repository> flow_file_repo, std::shared_ptr<core::ContentRepository> content_repo,
-                             std::shared_ptr<io::StreamFactory> stream_factory, std::shared_ptr<Configure> configuration, const std::string path = DEFAULT_FLOW_YAML_FILE_NAME)
+  explicit YamlConfiguration(std::shared_ptr<core::Repository> repo,
+                             std::shared_ptr<core::Repository> flow_file_repo,
+                             std::shared_ptr<core::ContentRepository> content_repo,
+                             std::shared_ptr<io::StreamFactory> stream_factory,
+                             std::shared_ptr<Configure> configuration,
+                             const std::string path = DEFAULT_FLOW_YAML_FILE_NAME)
       : FlowConfiguration(repo, flow_file_repo, content_repo, stream_factory, configuration, path),
         logger_(logging::LoggerFactory<YamlConfiguration>::getLogger()) {
     stream_factory_ = stream_factory;
@@ -126,11 +131,16 @@ class YamlConfiguration : public FlowConfiguration {
     YAML::Node connectionsNode = rootYaml[CONFIG_YAML_CONNECTIONS_KEY];
     YAML::Node controllerServiceNode = rootYaml[CONFIG_YAML_CONTROLLER_SERVICES_KEY];
     YAML::Node remoteProcessingGroupsNode = rootYaml[CONFIG_YAML_REMOTE_PROCESS_GROUP_KEY];
+
+    if (!remoteProcessingGroupsNode) {
+      remoteProcessingGroupsNode = rootYaml[CONFIG_YAML_REMOTE_PROCESS_GROUP_KEY_V3];
+    }
+
     YAML::Node provenanceReportNode = rootYaml[CONFIG_YAML_PROVENANCE_REPORT_KEY];
 
     parseControllerServices(&controllerServiceNode);
     // Create the root process group
-    core::ProcessGroup * root = parseRootProcessGroupYaml(flowControllerNode);
+    core::ProcessGroup *root = parseRootProcessGroupYaml(flowControllerNode);
     parseProcessorNodeYaml(processorsNode, root);
     parseRemoteProcessGroupYaml(&remoteProcessingGroupsNode, root);
     parseConnectionYaml(&connectionsNode, root);
@@ -156,7 +166,7 @@ class YamlConfiguration : public FlowConfiguration {
    * @param parent        the parent ProcessGroup to which the the created
    *                        Processor should be added
    */
-  void parseProcessorNodeYaml(YAML::Node processorNode, core::ProcessGroup * parent);
+  void parseProcessorNodeYaml(YAML::Node processorNode, core::ProcessGroup *parent);
 
   /**
    * Parses a port from its corressponding YAML config node and adds
@@ -200,7 +210,7 @@ class YamlConfiguration : public FlowConfiguration {
    * @param parent the root node of flow configuration to which
    *                 to add the connections that are parsed
    */
-  void parseConnectionYaml(YAML::Node *node, core::ProcessGroup * parent);
+  void parseConnectionYaml(YAML::Node *node, core::ProcessGroup *parent);
 
   /**
    * Parses the Remote Process Group section of a configuration YAML.
@@ -211,7 +221,7 @@ class YamlConfiguration : public FlowConfiguration {
    * @param parent the root node of flow configuration to which
    *                 to add the process groups that are parsed
    */
-  void parseRemoteProcessGroupYaml(YAML::Node *node, core::ProcessGroup * parent);
+  void parseRemoteProcessGroupYaml(YAML::Node *node, core::ProcessGroup *parent);
 
   /**
    * Parses the Provenance Reporting section of a configuration YAML.
@@ -223,7 +233,7 @@ class YamlConfiguration : public FlowConfiguration {
    * @param parentGroup the root node of flow configuration to which
    *                      to add the provenance reporting config
    */
-  void parseProvenanceReportingYaml(YAML::Node *reportNode, core::ProcessGroup * parentGroup);
+  void parseProvenanceReportingYaml(YAML::Node *reportNode, core::ProcessGroup *parentGroup);
 
   /**
    * A helper function to parse the Properties Node YAML for a processor.
@@ -269,7 +279,10 @@ class YamlConfiguration : public FlowConfiguration {
    * @throws std::invalid_argument if the required field 'fieldName' is
    *                               not present in 'yamlNode'
    */
-  void checkRequiredField(YAML::Node *yamlNode, const std::string &fieldName, const std::string &yamlSection = "", const std::string &errorMessage = "");
+  void checkRequiredField(YAML::Node *yamlNode,
+                          const std::string &fieldName,
+                          const std::string &yamlSection = "",
+                          const std::string &errorMessage = "");
 
   /**
    * This is a helper function for getting an optional value, if it exists.
