@@ -65,6 +65,8 @@ MiNiFi - C++ supports the following processors:
 * [UnfocusArchiveEntry](PROCESSORS.md#unfocusarchiveentry)
 * [ManipulateArchive](PROCESSORS.md#manipulatearchive)
 * [PublishKafka](PROCESSORS.md#publishkafka)
+* [PublishMQTT](PROCESSORS.md#publishMQTT)
+* [ConsumeMQTT](PROCESSORS.md#consumeMQTT)
 
 ## Caveats
 * 0.4.0 represents a non-GA release, APIs and interfaces are subject to change

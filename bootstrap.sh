@@ -209,6 +209,8 @@ add_dependency GPS_ENABLED "gpsd"
 
 add_disabled_option KAFKA_ENABLED ${FALSE} "ENABLE_LIBRDKAFKA" "3.4.0"
 
+add_disabled_option MQTT_ENABLED ${FALSE} "ENABLE_MQTT"
+
 #add_disabled_option BUSTACHE_ENABLED ${FALSE} "ENABLE_BUSTACHE"
 #add_dependency BUSTACHE_ENABLED "boost"
 
@@ -360,10 +362,11 @@ show_supported_features() {
   echo "I. GPS support .................$(print_feature_status GPS_ENABLED)"
   echo "J. TensorFlow Support ..........$(print_feature_status TENSORFLOW_ENABLED)"
   echo "K. Bustache Support ............$(print_feature_status BUSTACHE_ENABLED)"
-  echo "L. Enable all extensions"
-  echo "M. Portable Build ..............$(print_feature_status PORTABLE_BUILD)"
-  echo "N. Build with Debug symbols ....$(print_feature_status DEBUG_SYMBOLS)"
-  echo "O. Continue with these options"
+  echo "L. MQTT Support ................$(print_feature_status MQTT_ENABLED)"
+  echo "M. Enable all extensions"
+  echo "N. Portable Build ..............$(print_feature_status PORTABLE_BUILD)"
+  echo "O. Build with Debug symbols ....$(print_feature_status DEBUG_SYMBOLS)"
+  echo "P. Continue with these options"
   echo "Q. Exit"
   echo "* Extension cannot be installed due to"
   echo -e "  version of cmake or other software\r\n"
@@ -384,10 +387,11 @@ read_options(){
     i) ToggleFeature GPS_ENABLED ;;
     j) ToggleFeature TENSORFLOW_ENABLED ;;
     k) ToggleFeature BUSTACHE_ENABLED ;;
-    l) EnableAllFeatures ;;
-    m) ToggleFeature PORTABLE_BUILD ;;
-    n) ToggleFeature DEBUG_SYMBOLS ;;
-    o) FEATURES_SELECTED="true" ;;
+    l) ToggleFeature MQTT_ENABLED ;;
+    m) EnableAllFeatures ;;
+    n) ToggleFeature PORTABLE_BUILD ;;
+    o) ToggleFeature DEBUG_SYMBOLS ;;
+    p) FEATURES_SELECTED="true" ;;
     q) exit 0;;
     *) echo -e "${RED}Please enter an option A-L...${NO_COLOR}" && sleep 2
   esac

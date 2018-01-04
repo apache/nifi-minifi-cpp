@@ -27,6 +27,7 @@ Currently we support the following extension flags:
  - `-DENABLE_PCAP=TRUE`
  - `-DENABLE_GPS=TRUE`
  - `-DENABLE_TENSORFLOW=TRUE`
+ - `-DENABLE_MQTT=TRUE`
 
 For more information on these extensions, please visit [the Extension How-To on our wiki](https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=74685143)
 
