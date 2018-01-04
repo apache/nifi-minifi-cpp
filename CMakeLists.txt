@@ -167,6 +167,12 @@ if (ENABLE_ALL OR ENABLE_GPS)
 	createExtension(GPS-EXTENSION "GPS EXTENSIONS" "Enables LibGPS Functionality and the GetGPS processor." "extensions/gps" "${TEST_DIR}/gps-tests")
 endif()
 
+## Create MQTT Extension
+option(ENABLE_MQTT "Enables the mqtt extension." OFF)
+if(ENABLE_ALL OR ENABLE_MQTT)
+        createExtension(MQTT-EXTENSIONS "MQTT EXTENSIONS" "This Enables MQTT functionality including PublishMQTT/ConsumeMQTT" "extensions/mqtt" "${TEST_DIR}/mqtt-tests" "TRUE" "thirdparty/paho.mqtt.c")
+endif()
+
 option(ENABLE_PCAP "Enables the PCAP extension." OFF)
 if(ENABLE_ALL OR ENABLE_PCAP)
 	createExtension(PCAP-EXTENSION "PCAP EXTENSIONS" "Enables libPCAP Functionality and the PacketCapture processor." "extensions/pcap" "${TEST_DIR}/pcap-tests")
@@ -241,6 +247,7 @@ set(CPACK_PACKAGE_FILE_NAME "${ASSEMBLY_BASE_NAME}")
 set(CPACK_BINARY_TGZ, "ON")
 set(CPACK_ARCHIVE_COMPONENT_INSTALL ON)
 set(CPACK_RDKAFKA_COMPONENT_INSTALL ON)
+set(CPACK_MQTT_COMPONENT_INSTALL ON)
 set(CPACK_COMPONENTS_ALL bin)
 
 
