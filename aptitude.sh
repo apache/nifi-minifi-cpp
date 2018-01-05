@@ -16,7 +16,7 @@ bootstrap_cmake(){
 }
 build_deps(){
 
-  COMMAND="sudo apt-get -y install cmake gcc g++ libssl-dev uuid uuid-dev"
+  COMMAND="sudo apt-get -y install cmake gcc g++ zlib1g-dev libssl-dev uuid uuid-dev"
   export DEBIAN_FRONTEND=noninteractive
   INSTALLED=()
   sudo apt-get -y update
