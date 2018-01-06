@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-#include "RESTSender.h"
+#include "c2/protocols/RESTSender.h"
 
 #include <algorithm>
 #include <memory>

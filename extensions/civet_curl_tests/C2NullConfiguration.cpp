@@ -31,27 +31,29 @@
 #include <sstream>
 #include "HTTPClient.h"
 #include "InvokeHTTP.h"
-#include "../TestBase.h"
+#include "TestBase.h"
 #include "utils/StringUtils.h"
 #include "core/Core.h"
-#include "../include/core/logging/Logger.h"
+#include "core/logging/Logger.h"
 #include "core/ProcessGroup.h"
 #include "core/yaml/YamlConfiguration.h"
 #include "FlowController.h"
 #include "properties/Configure.h"
-#include "../unit/ProvenanceTestHelper.h"
+#include "unit/ProvenanceTestHelper.h"
 #include "io/StreamFactory.h"
 #include "CivetServer.h"
 #include "RemoteProcessorGroupPort.h"
 #include "core/ConfigurableComponent.h"
 #include "controllers/SSLContextService.h"
-#include "../TestServer.h"
+#include "TestServer.h"
+#include "c2/protocols/RESTReceiver.h"
+#include "c2/protocols/RESTSender.h"
 #include "c2/C2Agent.h"
-#include "RESTReceiver.h"
-#include "../integration/IntegrationBase.h"
+#include "c2/protocols/RESTReceiver.h"
 #include "processors/LogAttribute.h"
+#include "integration/HTTPIntegrationBase.h"
 
-class VerifyC2Server : public IntegrationBase {
+class VerifyC2Server : public HTTPIntegrationBase {
  public:
   explicit VerifyC2Server(bool isSecure)
       : isSecure(isSecure) {
@@ -63,7 +65,7 @@ class VerifyC2Server : public IntegrationBase {
     LogTestController::getInstance().setDebug<utils::HTTPClient>();
     LogTestController::getInstance().setDebug<processors::InvokeHTTP>();
     LogTestController::getInstance().setDebug<minifi::c2::RESTReceiver>();
-      LogTestController::getInstance().setDebug<minifi::c2::C2Agent>();
+    LogTestController::getInstance().setDebug<minifi::c2::C2Agent>();
     LogTestController::getInstance().setDebug<processors::LogAttribute>();
     LogTestController::getInstance().setDebug<minifi::core::ProcessSession>();
     std::fstream file;
@@ -78,9 +80,9 @@ class VerifyC2Server : public IntegrationBase {
   }
 
   void runAssertions() {
-    assert(LogTestController::getInstance().contains("Import offset 0") == true);
-
-    assert(LogTestController::getInstance().contains("Outputting success and response") == true);
+    assert(LogTestController::getInstance().contains("C2Agent] [info] Class is null") == true);
+    assert(LogTestController::getInstance().contains("C2Agent] [debug] Could not instantiate null") == true);
+    assert(LogTestController::getInstance().contains("Class is RESTSender") == true);
   }
 
   void queryRootProcessGroup(std::shared_ptr<core::ProcessGroup> pg) {
@@ -96,10 +98,13 @@ class VerifyC2Server : public IntegrationBase {
 
     std::string port, scheme, path;
     parse_http_components(url, port, scheme, path);
-    configuration->set("c2.agent.heartbeat.reporter.classes", "RESTReceiver");
-    configuration->set("c2.rest.listener.port", port);
-    configuration->set("c2.agent.heartbeat.period", "10");
-    configuration->set("c2.rest.listener.heartbeat.rooturi", path);
+    configuration->set("c2.agent.protocol.class", "null");
+    configuration->set("c2.rest.url", "");
+    configuration->set("c2.rest.url.ack", "");
+    configuration->set("c2.agent.heartbeat.reporter.classes", "null");
+    configuration->set("c2.rest.listener.port", "null");
+    configuration->set("c2.agent.heartbeat.period", "null");
+    configuration->set("c2.rest.listener.heartbeat.rooturi", "null");
   }
 
  protected:
@@ -129,3 +134,4 @@ int main(int argc, char **argv) {
 
   return 0;
 }
+

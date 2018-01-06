@@ -25,7 +25,6 @@
 #include "../unit/ProvenanceTestHelper.h"
 #include "../TestBase.h"
 #include "Scheduling.h"
-#include "processors/ListenHTTP.h"
 #include "processors/LogAttribute.h"
 #include "processors/GetTCP.h"
 #include "core/Core.h"

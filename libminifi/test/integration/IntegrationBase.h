@@ -18,36 +18,20 @@
 #ifndef LIBMINIFI_TEST_INTEGRATION_INTEGRATIONBASE_H_
 #define LIBMINIFI_TEST_INTEGRATION_INTEGRATIONBASE_H_
 
-#include "../TestServer.h"
-#include "../include/core/logging/Logger.h"
+#include "core/logging/Logger.h"
 #include "core/ProcessGroup.h"
 #include "core/yaml/YamlConfiguration.h"
 #include "FlowController.h"
 #include "properties/Configure.h"
-#include "../unit/ProvenanceTestHelper.h"
+#include "unit/ProvenanceTestHelper.h"
 #include "io/StreamFactory.h"
-#include "CivetServer.h"
 #include "RemoteProcessorGroupPort.h"
 #include "core/ConfigurableComponent.h"
 #include "controllers/SSLContextService.h"
 
-int log_message(const struct mg_connection *conn, const char *message) {
-  puts(message);
-  return 1;
-}
-
-int ssl_enable(void *ssl_context, void *user_data) {
-  struct ssl_ctx_st *ctx = (struct ssl_ctx_st *) ssl_context;
-  return 0;
-}
-
-
-
 class IntegrationBase {
  public:
   IntegrationBase();
-
-  void setUrl(std::string url, CivetHandler *handler);
 
   virtual ~IntegrationBase();
 
@@ -75,23 +59,18 @@ class IntegrationBase {
   }
 
   void configureSecurity();
-  CivetServer *server;
   std::shared_ptr<minifi::Configure> configuration;
   std::string port, scheme, path;
   std::string key_dir;
 };
 
-IntegrationBase::IntegrationBase()
-    : server(nullptr),
-      configuration(std::make_shared<
-          minifi::Configure>())
-{
+IntegrationBase::IntegrationBase() 
+  : configuration(std::make_shared<minifi::Configure>()) {
   mkdir("content_repository", S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 }
 
 IntegrationBase::~IntegrationBase()
 {
-  stop_webserver(server);
   rmdir("./content_repository");
 }
 
@@ -155,30 +134,6 @@ void IntegrationBase::run(std::string test_file_location) {
   runAssertions();
 
   cleanup();
-}
-
-void IntegrationBase::setUrl(std::string url, CivetHandler *handler) {
-
-  parse_http_components(url, port, scheme, path);
-  struct mg_callbacks callback;
-  if (url.find("localhost") != std::string::npos) {
-
-    if (server != nullptr){
-      server->addHandler(path,handler);
-      return;
-    }
-    if (scheme == "https" && !key_dir.empty()) {
-      std::string cert = "";
-      cert = key_dir + "nifi-cert.pem";
-      memset(&callback, 0, sizeof(callback));
-      callback.init_ssl = ssl_enable;
-      port += "s";
-      callback.log_message = log_message;
-      server = start_webserver(port, path, handler, &callback, cert, cert);
-    } else {
-      server = start_webserver(port, path, handler);
-    }
-  }
 }
 
 #endif /* LIBMINIFI_TEST_INTEGRATION_INTEGRATIONBASE_H_ */

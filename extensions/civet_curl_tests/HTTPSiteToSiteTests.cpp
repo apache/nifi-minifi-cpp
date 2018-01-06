@@ -34,10 +34,10 @@
 #include "CivetServer.h"
 #include "sitetosite/HTTPProtocol.h"
 #include "InvokeHTTP.h"
-#include "../TestBase.h"
+#include "TestBase.h"
 #include "utils/StringUtils.h"
 #include "core/Core.h"
-#include "../include/core/logging/Logger.h"
+#include "core/logging/Logger.h"
 #include "core/ProcessGroup.h"
 #include "core/yaml/YamlConfiguration.h"
 #include "FlowController.h"
@@ -45,12 +45,12 @@
 #include "io/StreamFactory.h"
 #include "RemoteProcessorGroupPort.h"
 #include "core/ConfigurableComponent.h"
-#include "../TestServer.h"
-#include "../integration/IntegrationBase.h"
+#include "TestServer.h"
+#include "integration/HTTPIntegrationBase.h"
 #include "sitetositehttp/HTTPHandlers.h"
 #include "client/HTTPStream.h"
 
-class SiteToSiteTestHarness : public IntegrationBase {
+class SiteToSiteTestHarness : public HTTPIntegrationBase {
  public:
   explicit SiteToSiteTestHarness(bool isSecure)
       : isSecure(isSecure) {
