@@ -26,6 +26,7 @@
 #include "../TestBase.h"
 #include "io/StreamFactory.h"
 #include "io/ClientSocket.h"
+#include "io/ServerSocket.h"
 #include "io/tls/TLSSocket.h"
 #include "utils/ThreadPool.h"
 
@@ -55,7 +56,7 @@ TEST_CASE("TestSocketWriteTest2", "[TestSocket3]") {
   buffer.push_back('a');
   std::shared_ptr<org::apache::nifi::minifi::io::SocketContext> socket_context = std::make_shared<org::apache::nifi::minifi::io::SocketContext>(std::make_shared<minifi::Configure>());
 
-  org::apache::nifi::minifi::io::Socket server(socket_context, "localhost", 9183, 1);
+  org::apache::nifi::minifi::io::ServerSocket server(socket_context, "localhost", 9183, 1);
 
   REQUIRE(-1 != server.initialize());
 
@@ -86,7 +87,7 @@ TEST_CASE("TestWriteEndian64", "[TestSocket4]") {
   buffer.push_back('a');
   std::shared_ptr<org::apache::nifi::minifi::io::SocketContext> socket_context = std::make_shared<org::apache::nifi::minifi::io::SocketContext>(std::make_shared<minifi::Configure>());
 
-  org::apache::nifi::minifi::io::Socket server(socket_context, "localhost", 9183, 1);
+  org::apache::nifi::minifi::io::ServerSocket server(socket_context, "localhost", 9183, 1);
 
   REQUIRE(-1 != server.initialize());
 
@@ -113,7 +114,7 @@ TEST_CASE("TestWriteEndian32", "[TestSocket5]") {
 
   std::shared_ptr<org::apache::nifi::minifi::io::SocketContext> socket_context = std::make_shared<org::apache::nifi::minifi::io::SocketContext>(std::make_shared<minifi::Configure>());
 
-  org::apache::nifi::minifi::io::Socket server(socket_context, "localhost", 9183, 1);
+  org::apache::nifi::minifi::io::ServerSocket server(socket_context, "localhost", 9183, 1);
   REQUIRE(-1 != server.initialize());
 
   org::apache::nifi::minifi::io::Socket client(socket_context, "localhost", 9183);
@@ -148,7 +149,7 @@ TEST_CASE("TestSocketWriteTestAfterClose", "[TestSocket6]") {
 
   std::shared_ptr<org::apache::nifi::minifi::io::SocketContext> socket_context = std::make_shared<org::apache::nifi::minifi::io::SocketContext>(std::make_shared<minifi::Configure>());
 
-  org::apache::nifi::minifi::io::Socket server(socket_context, "localhost", 9183, 1);
+  org::apache::nifi::minifi::io::ServerSocket server(socket_context, "localhost", 9183, 1);
 
   REQUIRE(-1 != server.initialize());
 

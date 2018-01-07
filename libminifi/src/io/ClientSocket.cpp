@@ -45,6 +45,7 @@ Socket::Socket(const std::shared_ptr<SocketContext> &context, const std::string 
       addr_info_(0),
       socket_file_descriptor_(-1),
       socket_max_(0),
+      is_loopback_only_(false),
       listeners_(listeners),
       canonical_hostname_(""),
       logger_(logging::LoggerFactory<Socket>::getLogger()) {
@@ -59,6 +60,7 @@ Socket::Socket(const std::shared_ptr<SocketContext> &context, const std::string 
 Socket::Socket(const Socket &&other)
     : requested_hostname_(std::move(other.requested_hostname_)),
       port_(std::move(other.port_)),
+      is_loopback_only_(false),
       addr_info_(std::move(other.addr_info_)),
       socket_file_descriptor_(other.socket_file_descriptor_),
       socket_max_(other.socket_max_.load()),
@@ -79,7 +81,7 @@ void Socket::closeStream() {
     addr_info_ = 0;
   }
   if (socket_file_descriptor_ >= 0) {
-    logging::LOG_INFO(logger_) <<  "Closing " << socket_file_descriptor_;
+    logging::LOG_DEBUG(logger_) << "Closing " << socket_file_descriptor_;
     close(socket_file_descriptor_);
     socket_file_descriptor_ = -1;
   }
@@ -109,7 +111,11 @@ int8_t Socket::createConnection(const addrinfo *p, in_addr_t &addr) {
     struct sockaddr_in *sa_loc = (struct sockaddr_in*) p->ai_addr;
     sa_loc->sin_family = AF_INET;
     sa_loc->sin_port = htons(port_);
-    sa_loc->sin_addr.s_addr = htonl(INADDR_ANY);
+    if (is_loopback_only_) {
+      sa_loc->sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+    } else {
+      sa_loc->sin_addr.s_addr = htonl(INADDR_ANY);
+    }
     if (bind(socket_file_descriptor_, p->ai_addr, p->ai_addrlen) == -1) {
       logger_->log_error("Could not bind to socket", strerror(errno));
       return -1;
@@ -123,7 +129,11 @@ int8_t Socket::createConnection(const addrinfo *p, in_addr_t &addr) {
       // use any address if you are connecting to the local machine for testing
       // otherwise we must use the requested hostname
       if (IsNullOrEmpty(requested_hostname_) || requested_hostname_ == "localhost") {
-        sa_loc->sin_addr.s_addr = htonl(INADDR_ANY);
+        if (is_loopback_only_) {
+          sa_loc->sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+        } else {
+          sa_loc->sin_addr.s_addr = htonl(INADDR_ANY);
+        }
       } else {
         sa_loc->sin_addr.s_addr = addr;
       }
@@ -139,6 +149,8 @@ int8_t Socket::createConnection(const addrinfo *p, in_addr_t &addr) {
   if (listeners_ > 0) {
     if (listen(socket_file_descriptor_, listeners_) == -1) {
       return -1;
+    } else {
+      logger_->log_debug("Created connection with %d listeners", listeners_);
     }
   }
   // add the listener to the total set
@@ -209,7 +221,6 @@ int16_t Socket::select_descriptor(const uint16_t msec) {
   }
 
   struct timeval tv;
-  int retval;
 
   read_fds_ = total_list_;
 
@@ -219,14 +230,9 @@ int16_t Socket::select_descriptor(const uint16_t msec) {
   std::lock_guard<std::recursive_mutex> guard(selection_mutex_);
 
   if (msec > 0)
-    retval = select(socket_max_ + 1, &read_fds_, NULL, NULL, &tv);
+    select(socket_max_ + 1, &read_fds_, NULL, NULL, &tv);
   else
-    retval = select(socket_max_ + 1, &read_fds_, NULL, NULL, NULL);
-
-  if (retval < 0) {
-    logger_->log_error("Saw error during selection, error:%i %s", retval, strerror(errno));
-    return retval;
-  }
+    select(socket_max_ + 1, &read_fds_, NULL, NULL, NULL);
 
   for (int i = 0; i <= socket_max_; i++) {
     if (FD_ISSET(i, &read_fds_)) {
@@ -252,7 +258,7 @@ int16_t Socket::select_descriptor(const uint16_t msec) {
     }
   }
 
-  logger_->log_error("Could not find a suitable file descriptor");
+  logger_->log_debug("Could not find a suitable file descriptor or select timed out");
 
   return -1;
 }
@@ -390,8 +396,10 @@ int Socket::readData(uint8_t *buf, int buflen, bool retrieve_all_bytes) {
   while (buflen) {
     int16_t fd = select_descriptor(1000);
     if (fd < 0) {
-      logger_->log_debug("fd %d close %i", fd, buflen);
-      close(socket_file_descriptor_);
+      if (listeners_ <= 0) {
+        logger_->log_debug("fd %d close %i", fd, buflen);
+        close(socket_file_descriptor_);
+      }
       return -1;
     }
     int bytes_read = recv(fd, buf, buflen, 0);

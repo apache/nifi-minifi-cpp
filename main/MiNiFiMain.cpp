@@ -34,26 +34,7 @@
 #include "core/ConfigurationFactory.h"
 #include "core/RepositoryFactory.h"
 #include "FlowController.h"
-
-//! Main thread sleep interval 1 second
-#define SLEEP_INTERVAL 1
-//! Main thread stop wait time
-#define STOP_WAIT_TIME_MS 30*1000
-//! Default YAML location
-#define DEFAULT_NIFI_CONFIG_YML "./conf/config.yml"
-//! Default properties file paths
-#define DEFAULT_NIFI_PROPERTIES_FILE "./conf/minifi.properties"
-#define DEFAULT_LOG_PROPERTIES_FILE "./conf/minifi-log.properties"
-#define DEFAULT_UID_PROPERTIES_FILE "./conf/minifi-uid.properties"
-//! Define home environment variable
-#define MINIFI_HOME_ENV_KEY "MINIFI_HOME"
-
-/* Define Parser Values for Configuration YAML sections */
-#define CONFIG_YAML_PROCESSORS_KEY "Processors"
-#define CONFIG_YAML_FLOW_CONTROLLER_KEY "Flow Controller"
-#define CONFIG_YAML_CONNECTIONS_KEY "Connections"
-#define CONFIG_YAML_REMOTE_PROCESSING_GROUPS_KEY "Remote Processing Groups"
-
+#include "Main.h"
 // Variables that allow us to avoid a timed wait.
 sem_t *running;
 //! Flow Controller
@@ -73,17 +54,6 @@ void sigHandler(int signal) {
     // avoid stopping the controller here.
     sem_post(running);
   }
-}
-
-/**
- * Validates a MINIFI_HOME value.
- * @param home_path
- * @return true if home_path represents a valid MINIFI_HOME
- */
-bool validHome(const std::string &home_path) {
-  struct stat stat_result { };
-  auto properties_file_path = home_path + "/" + DEFAULT_NIFI_PROPERTIES_FILE;
-  return (stat(properties_file_path.c_str(), &stat_result) == 0);
 }
 
 int main(int argc, char **argv) {

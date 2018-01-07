@@ -39,11 +39,14 @@ class HeartBeatReporter : public core::Connectable {
   HeartBeatReporter(std::string name, uuid_t uuid)
       : core::Connectable(name, uuid),
         controller_(nullptr),
+        update_sink_(nullptr),
         configuration_(nullptr) {
   }
 
-  virtual void initialize(const std::shared_ptr<core::controller::ControllerServiceProvider> &controller, const std::shared_ptr<Configure> &configure) {
+  virtual void initialize(const std::shared_ptr<core::controller::ControllerServiceProvider> &controller, const std::shared_ptr<state::StateMonitor> &updateSink,
+                          const std::shared_ptr<Configure> &configure) {
     controller_ = controller;
+    update_sink_ = updateSink;
     configuration_ = configure;
   }
   virtual ~HeartBeatReporter() {
@@ -88,6 +91,8 @@ class HeartBeatReporter : public core::Connectable {
  protected:
 
   std::shared_ptr<core::controller::ControllerServiceProvider> controller_;
+
+  std::shared_ptr<state::StateMonitor> update_sink_;
 
   std::shared_ptr<Configure> configuration_;
 };

@@ -148,6 +148,11 @@ if (NOT DISABLE_CIVET)
 createExtension(CIVETWEB CIVETWEB "This enables ListenHTTP" "extensions/civetweb")
 endif()
 
+if (NOT DISABLE_CURL AND NOT DISABLE_CONTROLLER)
+	add_subdirectory(thirdparty/cxxopts)
+	add_subdirectory(controller)
+endif()
+
 ## Add the rocks DB extension
 if (NOT ROCKSDB_FOUND OR BUILD_ROCKSDB)
 	set(BUILD_RD "TRUE")
