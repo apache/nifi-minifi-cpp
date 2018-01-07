@@ -628,6 +628,61 @@ MiNiFi can then be stopped by issuing:
 MiNiFi can also be installed as a system service using minifi.sh with an optional "service name" (default: minifi)
 
     $ ./bin/minifi.sh install [service name]
+    
+### Managing MiNFI C++ through the MiNiFi Controller
+
+The MiNiFi controller is an executable in the bin directory that can be used to control the MiNFi C++ agent while it runs. Currently the controller will let you stop subcomponents within a running instance, clear queues, get the status of queues, and update the flow for a warm re-deploy.
+
+The minificontroller can track a single MiNiFi C++ agent through the use of three options. Port is required.
+The hostname is not and will default to localhost. Additionally, controller.socket.local.any.interface allows
+you to bind to any address when using localhost. Otherwise, we will bind only to the loopback adapter so only
+minificontroller on the local host can control the agent:
+
+	$ controller.socket.host=localhost
+	$ controller.socket.port=9998
+	$ controller.socket.local.any.interface=true/false ( default false)
+
+These are defined by default to the above values. If the port option is left undefined, the MiNiFi controller
+will be disabled in your deployment.
+
+ The executable is stored in the bin directory and is titled minificontroller. Available commands are listed below.
+ 
+ #### Specifying connecting information
+ 
+   ./minificontroller --host "host name" --port "port"
+
+        * By default these options use those defined in minifi.properties and are not required
+
+ #### Start Command
+ 
+   ./minificontroller --start "component name"
+ 
+ #### Stop command 
+   ./minificontroller --stop "component name"
+   	  
+ #### List connections command
+   ./minificontroller --list connections
+      
+ #### List components command
+   ./minificontroller --list components
+ 
+ #### Clear connection command
+   ./minificontroller --clear "connection name"
+      
+ #### GetSize command
+   ./minificontroller --getsize "connection name"
+
+       * Returns the size of the connection. The current size along with the max will be reported
+ 
+ #### Update flow
+   ./minificontroller --updateflow "config yml"
+    
+       *Updates the flow file reference and performs a warm re-deploy.
+ 
+ #### Get full connection command     
+   ./minificontroller --getfull 
+   
+       *Provides a list of full connections, if any.
 
 ### Extensions
 

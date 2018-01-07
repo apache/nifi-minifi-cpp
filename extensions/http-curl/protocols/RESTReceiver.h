@@ -50,7 +50,8 @@ class RESTReceiver : public RESTProtocol, public HeartBeatReporter {
  public:
   RESTReceiver(std::string name, uuid_t uuid = nullptr);
 
-  virtual void initialize(const std::shared_ptr<core::controller::ControllerServiceProvider> &controller, const std::shared_ptr<Configure> &configure) override;
+  virtual void initialize(const std::shared_ptr<core::controller::ControllerServiceProvider> &controller, const std::shared_ptr<state::StateMonitor> &updateSink,
+                          const std::shared_ptr<Configure> &configure) override;
   virtual int16_t heartbeat(const C2Payload &heartbeat) override;
 
  protected:

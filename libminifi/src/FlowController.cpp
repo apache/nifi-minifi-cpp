@@ -365,9 +365,9 @@ void FlowController::initializeC2() {
 
     std::shared_ptr<c2::C2Agent> agent = std::make_shared<c2::C2Agent>(std::dynamic_pointer_cast<FlowController>(shared_from_this()), std::dynamic_pointer_cast<FlowController>(shared_from_this()),
                                                                        configuration_);
-    registerUpdateListener(agent, agent->getHeartBestDelay());
+    registerUpdateListener(agent, agent->getHeartBeatDelay());
 
-    state::StateManager::startMetrics(agent->getHeartBestDelay());
+    state::StateManager::startMetrics(agent->getHeartBeatDelay());
   }
   if (!c2_enabled_) {
     return;

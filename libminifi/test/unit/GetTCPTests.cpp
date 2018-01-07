@@ -47,7 +47,7 @@ TEST_CASE("GetTCPWithoutEOM", "[GetTCP1]") {
 
   std::shared_ptr<org::apache::nifi::minifi::io::SocketContext> socket_context = std::make_shared<org::apache::nifi::minifi::io::SocketContext>(std::make_shared<minifi::Configure>());
   std::shared_ptr<org::apache::nifi::minifi::io::StreamFactory> stream_factory = std::make_shared<org::apache::nifi::minifi::io::StreamFactory>(std::make_shared<minifi::Configure>());
-  org::apache::nifi::minifi::io::Socket server(socket_context, "localhost", 9184, 1);
+  org::apache::nifi::minifi::io::ServerSocket server(socket_context, "localhost", 9184, 1);
 
   REQUIRE(-1 != server.initialize());
 
@@ -158,7 +158,7 @@ TEST_CASE("GetTCPWithOEM", "[GetTCP2]") {
 
   TestController testController;
 
-  org::apache::nifi::minifi::io::Socket server(socket_context, "localhost", 9182, 1);
+  org::apache::nifi::minifi::io::ServerSocket server(socket_context, "localhost", 9182, 1);
 
   REQUIRE(-1 != server.initialize());
 
@@ -284,7 +284,7 @@ TEST_CASE("GetTCPWithOnlyOEM", "[GetTCP3]") {
 
   LogTestController::getInstance().setDebug<minifi::io::Socket>();
 
-  org::apache::nifi::minifi::io::Socket server(socket_context, "localhost", 9182, 1);
+  org::apache::nifi::minifi::io::ServerSocket server(socket_context, "localhost", 9182, 1);
 
   REQUIRE(-1 != server.initialize());
 
