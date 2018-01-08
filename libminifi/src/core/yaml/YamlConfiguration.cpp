@@ -469,10 +469,16 @@ void YamlConfiguration::parseConnectionYaml(YAML::Node *connectionsNode, core::P
 
         // Configure basic connection
         uuid_t uuid;
-        checkRequiredField(&connectionNode, "name",
-                           CONFIG_YAML_CONNECTIONS_KEY);
-        std::string name = connectionNode["name"].as<std::string>();
         std::string id = getOrGenerateId(&connectionNode);
+
+        // Default name to be same as ID
+        std::string name = id;
+
+        // If name is specified in configuration, use the value
+        if (connectionNode["name"]) {
+          name = connectionNode["name"].as<std::string>();
+        }
+
         uuid_parse(id.c_str(), uuid);
         connection = this->createConnection(name, uuid);
         logger_->log_debug("Created connection with UUID %s and name %s", id, name);
