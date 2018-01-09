@@ -112,6 +112,9 @@ void YamlConfiguration::parseProcessorNodeYaml(YAML::Node processorsNode, core::
           int nameLength = procCfg.javaClass.length() - lastOfIdx;
           std::string processorName = procCfg.javaClass.substr(lastOfIdx, nameLength);
           processor = this->createProcessor(processorName, uuid);
+        } else {
+          // Allow unqualified class names for core processors
+          processor = this->createProcessor(procCfg.javaClass, uuid);
         }
 
         if (!processor) {
