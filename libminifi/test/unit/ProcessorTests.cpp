@@ -248,6 +248,56 @@ TEST_CASE("Test Find file", "[getfileCreate3]") {
   testController.runSession(plan, false, verifyReporter);
 }
 
+class TestProcessorNoContent : public minifi::core::Processor {
+ public:
+  explicit TestProcessorNoContent(std::string name, uuid_t uuid = NULL)
+      : Processor(name, uuid),
+        Success("success", "All files are routed to success") {
+  }
+  // Destructor
+  virtual ~TestProcessorNoContent() {
+  }
+
+  core::Relationship Success;
+
+  /**
+   * Function that's executed when the processor is scheduled.
+   * @param context process context.
+   * @param sessionFactory process session factory that is used when creating
+   * ProcessSession objects.
+   */
+  void onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory) {
+  }
+  /**
+   * Execution trigger for the GetFile Processor
+   * @param context processor context
+   * @param session processor session reference.
+   */
+  virtual void onTrigger(core::ProcessContext *context, core::ProcessSession *session) {
+    auto ff = session->create();
+    ff->addAttribute("Attribute", "AttributeValue");
+    session->transfer(ff, Success);
+  }
+};
+
+REGISTER_RESOURCE(TestProcessorNoContent);
+
+TEST_CASE("TestEmptyContent", "[emptyContent]") {
+  TestController testController;
+  LogTestController::getInstance().setDebug<minifi::processors::LogAttribute>();
+  LogTestController::getInstance().setDebug<minifi::core::ProcessSession>();
+  LogTestController::getInstance().setDebug<TestPlan>();
+
+  std::shared_ptr<TestPlan> plan = testController.createPlan();
+  std::shared_ptr<core::Processor> getfile = plan->addProcessor("TestProcessorNoContent", "TestProcessorNoContent");
+
+  plan->runNextProcessor();
+
+  // segfault
+
+  LogTestController::getInstance().reset();
+}
+
 int fileSize(const char *add) {
   std::ifstream mySource;
   mySource.open(add, std::ios_base::binary);
