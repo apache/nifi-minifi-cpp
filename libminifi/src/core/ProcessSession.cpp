@@ -164,8 +164,12 @@ std::shared_ptr<core::FlowFile> ProcessSession::clone(const std::shared_ptr<core
 
 void ProcessSession::remove(const std::shared_ptr<core::FlowFile> &flow) {
   flow->setDeleted(true);
-  flow->getResourceClaim()->decreaseFlowFileRecordOwnedCount();
-  logger_->log_debug("Auto terminated %s %llu %s", flow->getResourceClaim()->getContentFullPath(), flow->getResourceClaim()->getFlowFileRecordOwnedCount(), flow->getUUIDStr());
+  if (flow->getResourceClaim() != nullptr) {
+    flow->getResourceClaim()->decreaseFlowFileRecordOwnedCount();
+    logger_->log_debug("Auto terminated %s %llu %s", flow->getResourceClaim()->getContentFullPath(), flow->getResourceClaim()->getFlowFileRecordOwnedCount(), flow->getUUIDStr());
+  } else {
+    logger_->log_debug("Flow does not contain content. no resource claim to decrement.");
+  }
   process_context_->getFlowFileRepository()->Delete(flow->getUUIDStr());
   _deletedFlowFiles[flow->getUUIDStr()] = flow;
   std::string reason = process_context_->getProcessorNode()->getName() + " drop flow record " + flow->getUUIDStr();
