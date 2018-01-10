@@ -723,3 +723,65 @@ default values, and whether a property supports the NiFi Expression Language.
 | success | Any FlowFile that is successfully sent to Kafka will be routed to this Relationship |
 | failure | Any FlowFile that cannot be sent to Kafka will be routed to this Relationship |
 
+## PublishMQTT
+
+This Processor puts the contents of a FlowFile to a MQTT broker for a sepcified topic. The
+content of a FlowFile becomes the payload of the MQTT message.
+
+### Properties
+
+In the list below, the names of required properties appear in bold. Any other
+properties (not in bold) are considered optional. The table also indicates any
+default values, and whether a property supports the NiFi Expression Language.
+
+| Name | Default Value | Allowable Values | Description |
+| - | - | - | - |
+| **Broker URI** | | | The URI to use to connect to the MQTT broker |
+| **Topic** | | | The topic to publish the message to |
+| Session state | | | Whether to start afresh or resume previous flows |
+| Client ID | | | MQTT client ID to use |
+| Username | | | Username to use when connecting to the broker |
+| Password | | | Password to use when connecting to the broker |
+| Keep Alive Interval | | | Defines the maximum time interval between messages sent or received |
+| Connection Timeout | | | Maximum time interval the client will wait for the network connection to the MQTT server |
+| Quality of Service | | | The Quality of Service(QoS) to send the message with. Accepts three values '0', '1' and '2' |
+| Retain | | | Retain MQTT published record in broker |
+| Max Flow Segment Size | | Maximum flow content payload segment size for the MQTT record |
+
+### Relationships
+
+| Name | Description |
+| - | - |
+| success | Any FlowFile that is successfully sent to broker will be routed to this Relationship |
+| failure | Any FlowFile that cannot be sent to broker will be routed to this Relationship |
+
+## ConsumeMQTT
+
+This Processor gets the contents of a FlowFile from a MQTT broker for a sepcified topic. The
+the payload of the MQTT message becomes content of a FlowFile
+
+### Properties
+
+In the list below, the names of required properties appear in bold. Any other
+properties (not in bold) are considered optional. The table also indicates any
+default values, and whether a property supports the NiFi Expression Language.
+
+| Name | Default Value | Allowable Values | Description |
+| - | - | - | - |
+| **Broker URI** | | | The URI to use to connect to the MQTT broker |
+| **Topic** | | | The topic to publish the message to |
+| Session state | | | Whether to start afresh or resume previous flows |
+| Client ID | | | MQTT client ID to use |
+| Username | | | Username to use when connecting to the broker |
+| Password | | | Password to use when connecting to the broker |
+| Keep Alive Interval | | | Defines the maximum time interval between messages sent or received |
+| Connection Timeout | | | Maximum time interval the client will wait for the network connection to the MQTT server |
+| Quality of Service | | | The Quality of Service(QoS) to send the message with. Accepts three values '0', '1' and '2' |
+| Max Flow Segment Size | | Maximum flow content payload segment size for the MQTT record |
+
+### Relationships
+
+| Name | Description |
+| - | - |
+| success | Any FlowFile that is successfully sent to broker will be routed to this Relationship |
+
