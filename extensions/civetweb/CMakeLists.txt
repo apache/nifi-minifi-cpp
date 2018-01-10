@@ -35,7 +35,7 @@ add_subdirectory(${CIVET_THIRDPARTY_ROOT}
                  ${CIVET_BINARY_ROOT}
                  EXCLUDE_FROM_ALL)
 
-file(GLOB SOURCES  "*.cpp")
+file(GLOB SOURCES  "processors/*.cpp")
 
 add_library(minifi-civet-extensions STATIC ${SOURCES})
 set_property(TARGET minifi-civet-extensions PROPERTY POSITION_INDEPENDENT_CODE ON)

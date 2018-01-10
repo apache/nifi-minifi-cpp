@@ -46,8 +46,8 @@
 #include "RemoteProcessorGroupPort.h"
 #include "core/ConfigurableComponent.h"
 #include "TestServer.h"
-#include "integration/HTTPIntegrationBase.h"
-#include "sitetositehttp/HTTPHandlers.h"
+#include "HTTPIntegrationBase.h"
+#include "HTTPHandlers.h"
 #include "client/HTTPStream.h"
 
 class SiteToSiteTestHarness : public HTTPIntegrationBase {

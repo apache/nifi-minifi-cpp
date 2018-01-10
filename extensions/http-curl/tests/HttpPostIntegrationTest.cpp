@@ -28,9 +28,11 @@
 #include <type_traits>
 #include <vector>
 #include <iostream>
-#include <sstream>
 #include "HTTPClient.h"
 #include "InvokeHTTP.h"
+#include "processors/ListenHTTP.h"
+#include "processors/LogAttribute.h"
+#include <sstream>
 #include "TestBase.h"
 #include "utils/StringUtils.h"
 #include "core/Core.h"
@@ -45,34 +47,38 @@
 #include "RemoteProcessorGroupPort.h"
 #include "core/ConfigurableComponent.h"
 #include "controllers/SSLContextService.h"
-#include "TestServer.h"
-#include "c2/protocols/RESTReceiver.h"
-#include "c2/protocols/RESTSender.h"
-#include "c2/C2Agent.h"
-#include "c2/protocols/RESTReceiver.h"
-#include "processors/LogAttribute.h"
-#include "integration/HTTPIntegrationBase.h"
+#include "../tests/TestServer.h"
+#include "HTTPIntegrationBase.h"
 
-class VerifyC2Server : public HTTPIntegrationBase {
+class HttpTestHarness : public HTTPIntegrationBase {
  public:
-  explicit VerifyC2Server(bool isSecure)
-      : isSecure(isSecure) {
+  HttpTestHarness() {
     char format[] = "/tmp/ssth.XXXXXX";
     dir = testController.createTempDirectory(format);
   }
 
   void testSetup() {
-    LogTestController::getInstance().setDebug<utils::HTTPClient>();
+    LogTestController::getInstance().setDebug<minifi::FlowController>();
+    LogTestController::getInstance().setDebug<core::ProcessGroup>();
+    LogTestController::getInstance().setDebug<minifi::SchedulingAgent>();
+    LogTestController::getInstance().setDebug<core::ProcessContext>();
     LogTestController::getInstance().setDebug<processors::InvokeHTTP>();
-    LogTestController::getInstance().setDebug<minifi::c2::RESTReceiver>();
-    LogTestController::getInstance().setDebug<minifi::c2::C2Agent>();
+    LogTestController::getInstance().setDebug<utils::HTTPClient>();
+    LogTestController::getInstance().setDebug<processors::ListenHTTP>();
+    LogTestController::getInstance().setDebug<processors::ListenHTTP::WriteCallback>();
+    LogTestController::getInstance().setDebug<processors::ListenHTTP::Handler>();
     LogTestController::getInstance().setDebug<processors::LogAttribute>();
+    LogTestController::getInstance().setDebug<core::Processor>();
+    LogTestController::getInstance().setDebug<minifi::ThreadedSchedulingAgent>();
+    LogTestController::getInstance().setDebug<minifi::TimerDrivenSchedulingAgent>();
     LogTestController::getInstance().setDebug<minifi::core::ProcessSession>();
     std::fstream file;
     ss << dir << "/" << "tstFile.ext";
     file.open(ss.str(), std::ios::out);
     file << "tempFile";
     file.close();
+    configuration->set("nifi.flow.engine.threads", "8");
+    configuration->set("nifi.c2.enable", "false");
   }
 
   void cleanup() {
@@ -80,35 +86,12 @@ class VerifyC2Server : public HTTPIntegrationBase {
   }
 
   void runAssertions() {
-    assert(LogTestController::getInstance().contains("C2Agent] [info] Class is null") == true);
-    assert(LogTestController::getInstance().contains("C2Agent] [debug] Could not instantiate null") == true);
-    assert(LogTestController::getInstance().contains("Class is RESTSender") == true);
-  }
-
-  void queryRootProcessGroup(std::shared_ptr<core::ProcessGroup> pg) {
-    std::shared_ptr<core::Processor> proc = pg->findProcessor("invoke");
-    assert(proc != nullptr);
-
-    std::shared_ptr<minifi::processors::InvokeHTTP> inv = std::dynamic_pointer_cast<minifi::processors::InvokeHTTP>(proc);
-
-    assert(inv != nullptr);
-    std::string url = "";
-    inv->getProperty(minifi::processors::InvokeHTTP::URL.getName(), url);
-
-
-    std::string port, scheme, path;
-    parse_http_components(url, port, scheme, path);
-    configuration->set("c2.agent.protocol.class", "null");
-    configuration->set("c2.rest.url", "");
-    configuration->set("c2.rest.url.ack", "");
-    configuration->set("c2.agent.heartbeat.reporter.classes", "null");
-    configuration->set("c2.rest.listener.port", "null");
-    configuration->set("c2.agent.heartbeat.period", "null");
-    configuration->set("c2.rest.listener.heartbeat.rooturi", "null");
+    assert(LogTestController::getInstance().contains("curl performed") == true);
+    assert(LogTestController::getInstance().contains("Size:1024 Offset:0") == true);
+    assert(LogTestController::getInstance().contains("Size:0 Offset:0") == false);
   }
 
  protected:
-  bool isSecure;
   char *dir;
   std::stringstream ss;
   TestController testController;
@@ -121,12 +104,7 @@ int main(int argc, char **argv) {
     key_dir = argv[2];
   }
 
-  bool isSecure = false;
-  if (url.find("https") != std::string::npos) {
-    isSecure = true;
-  }
-
-  VerifyC2Server harness(isSecure);
+  HttpTestHarness harness;
 
   harness.setKeyDir(key_dir);
 
@@ -134,4 +112,3 @@ int main(int argc, char **argv) {
 
   return 0;
 }
-

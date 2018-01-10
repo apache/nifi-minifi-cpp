@@ -47,7 +47,7 @@
 #include "core/ConfigurableComponent.h"
 #include "controllers/SSLContextService.h"
 #include "TestServer.h"
-#include "integration/HTTPIntegrationBase.h"
+#include "HTTPIntegrationBase.h"
 #include "processors/InvokeHTTP.h"
 #include "processors/ListenHTTP.h"
 #include "processors/LogAttribute.h"
