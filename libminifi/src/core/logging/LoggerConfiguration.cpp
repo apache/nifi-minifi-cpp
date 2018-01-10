@@ -19,6 +19,8 @@
  */
 
 #include "core/logging/LoggerConfiguration.h"
+#include <sys/stat.h>
+#include <unistd.h>
 #include <algorithm>
 #include <vector>
 #include <queue>
@@ -109,6 +111,19 @@ std::shared_ptr<internal::LoggerNamespace> LoggerConfiguration::initialize_names
       std::string file_name = "";
       if (!logger_properties->get(appender_key + ".file_name", file_name)) {
         file_name = "minifi-app.log";
+      }
+      std::string directory = "";
+      directory = logger_properties->getHome();
+      if (!directory.empty()) {
+        // Create the log directory if needed
+        directory += "/logs";
+        struct stat logDirStat;
+        if (stat(directory.c_str(), &logDirStat) != 0 || !S_ISDIR(logDirStat.st_mode)) {
+          if (mkdir(directory.c_str(), 0777) == -1) {
+            exit(1);
+          }
+        }
+        file_name = directory + "/" + file_name;
       }
 
       int max_files = 3;
