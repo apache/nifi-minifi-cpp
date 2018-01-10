@@ -198,10 +198,6 @@ class HTTPClient : public BaseHTTPClient, public core::Connectable {
 
   CURLcode res;
 
-
-
-
-
   CURL *http_session_;
 
   std::string method_;

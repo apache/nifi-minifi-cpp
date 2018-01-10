@@ -19,7 +19,7 @@
 #define EXTENSIONS_HTTPCURLLOADER_H_
 
 #include "c2/protocols/RESTProtocol.h"
-#include "c2/protocols/RESTSender.h"
+#include "protocols/RESTSender.h"
 #include "processors/InvokeHTTP.h"
 #include "client/HTTPClient.h"
 #include "core/ClassLoader.h"

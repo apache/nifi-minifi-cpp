@@ -139,13 +139,13 @@ add_subdirectory(libminifi)
 
 #### EXTENSION
 option(DISABLE_CURL "Disables libCurl Properties." OFF)
-if (NOT DISABLE_CURL)
-	createExtension(HTTP-CURL "HTTP CURL" "This enables RESTProtocol, InvokeHTTP, and the HTTPClient for Site to Site" "extensions/http-curl")
+if (NOT DISABLE_CURL AND NOT DISABLE_CIVET)
+	createExtension(HTTP-CURL "HTTP CURL" "This enables RESTProtocol, InvokeHTTP, and the HTTPClient for Site to Site" "extensions/http-curl" "extensions/http-curl/tests/")
 endif()
 
 option(DISABLE_CIVET "Disables CivetWeb components." OFF)
 if (NOT DISABLE_CIVET)
-createExtension(CIVETWEB CIVETWEB "This enables ListenHTTP and several cURL tests" "extensions/civetweb")
+createExtension(CIVETWEB CIVETWEB "This enables ListenHTTP" "extensions/civetweb")
 endif()
 
 ## Add the rocks DB extension
@@ -262,9 +262,6 @@ include(CPack)
 
 if (NOT SKIP_TESTS)
 	include(BuildTests)
-    if (NOT (DISABLE_CURL OR DISABLE_CIVET))
-            add_subdirectory(extensions/civet_curl_tests)
-    endif()
 endif()
 
 include(BuildDocs)

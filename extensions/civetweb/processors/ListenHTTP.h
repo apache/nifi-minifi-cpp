@@ -73,19 +73,20 @@ class ListenHTTP : public core::Processor {
   // HTTP request handler
   class Handler : public CivetHandler {
    public:
-    Handler(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory, std::string &&authDNPattern, std::string &&headersAsAttributesPattern);bool handlePost(
-        CivetServer *server, struct mg_connection *conn);
+    Handler(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory, std::string &&authDNPattern, std::string &&headersAsAttributesPattern);
+    bool handlePost(CivetServer *server, struct mg_connection *conn);
 
    private:
     // Send HTTP 500 error response to client
     void sendErrorResponse(struct mg_connection *conn);
-    // Logger
-    std::shared_ptr<logging::Logger> logger_;
 
     std::regex _authDNRegex;
     std::regex _headersAsAttributesRegex;
     core::ProcessContext *_processContext;
     core::ProcessSessionFactory *_processSessionFactory;
+
+    // Logger
+    std::shared_ptr<logging::Logger> logger_;
   };
 
   // Write callback for transferring data from HTTP request to content repo
