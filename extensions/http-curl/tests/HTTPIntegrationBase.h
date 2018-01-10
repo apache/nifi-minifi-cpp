@@ -18,7 +18,7 @@
 #ifndef LIBMINIFI_TEST_INTEGRATION_HTTPINTEGRATIONBASE_H_
 #define LIBMINIFI_TEST_INTEGRATION_HTTPINTEGRATIONBASE_H_
 
-#include "TestServer.h"
+#include "../tests/TestServer.h"
 #include "CivetServer.h"
 #include "integration/IntegrationBase.h"
 

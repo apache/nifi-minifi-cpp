@@ -16,7 +16,6 @@
  * limitations under the License.
  */
 
-#define CURLOPT_SSL_VERIFYPEER_DISABLE 1
 #include <sys/stat.h>
 #undef NDEBUG
 #include <cassert>
@@ -47,29 +46,25 @@
 #include "core/ConfigurableComponent.h"
 #include "controllers/SSLContextService.h"
 #include "TestServer.h"
-#include "integration/HTTPIntegrationBase.h"
+#include "c2/C2Agent.h"
+#include "protocols/RESTReceiver.h"
+#include "protocols/RESTSender.h"
+#include "HTTPIntegrationBase.h"
+#include "processors/LogAttribute.h"
 
 class Responder : public CivetHandler {
  public:
   explicit Responder(bool isSecure)
       : isSecure(isSecure) {
   }
-  bool handleGet(CivetServer *server, struct mg_connection *conn) {
-    std::string site2site_rest_resp = "{"
-        "\"revision\": {"
-        "\"clientId\": \"483d53eb-53ec-4e93-b4d4-1fc3d23dae6f\""
-        "},"
-        "\"controller\": {"
-        "\"id\": \"fe4a3a42-53b6-4af1-a80d-6fdfe60de97f\","
-        "\"name\": \"NiFi Flow\","
-        "\"remoteSiteListeningPort\": 10001,"
-        "\"siteToSiteSecure\": ";
-    site2site_rest_resp += (isSecure ? "true" : "false");
-    site2site_rest_resp += "}}";
+  bool handlePost(CivetServer *server, struct mg_connection *conn) {
+    std::string resp =
+        "{\"operation\" : \"heartbeat\", \"requested_operations\" : [{ \"operationid\" : 41, \"operation\" : \"stop\", \"name\" : \"invoke\"  }, "
+        "{ \"operationid\" : 42, \"operation\" : \"stop\", \"name\" : \"FlowController\"  } ]}";
     mg_printf(conn, "HTTP/1.1 200 OK\r\nContent-Type: "
               "text/plain\r\nContent-Length: %lu\r\nConnection: close\r\n\r\n",
-              site2site_rest_resp.length());
-    mg_printf(conn, "%s", site2site_rest_resp.c_str());
+              resp.length());
+    mg_printf(conn, "%s", resp.c_str());
     return true;
   }
 
@@ -77,21 +72,21 @@ class Responder : public CivetHandler {
   bool isSecure;
 };
 
-class SiteToSiteTestHarness : public HTTPIntegrationBase {
+class VerifyC2Heartbeat : public HTTPIntegrationBase {
  public:
-  explicit SiteToSiteTestHarness(bool isSecure)
+  explicit VerifyC2Heartbeat(bool isSecure)
       : isSecure(isSecure) {
     char format[] = "/tmp/ssth.XXXXXX";
     dir = testController.createTempDirectory(format);
   }
 
   void testSetup() {
-    LogTestController::getInstance().setDebug<minifi::RemoteProcessorGroupPort>();
     LogTestController::getInstance().setDebug<utils::HTTPClient>();
-    LogTestController::getInstance().setTrace<minifi::controllers::SSLContextService>();
-    LogTestController::getInstance().setInfo<minifi::FlowController>();
-    LogTestController::getInstance().setDebug<core::ConfigurableComponent>();
-
+    LogTestController::getInstance().setTrace<minifi::c2::C2Agent>();
+    LogTestController::getInstance().setDebug<LogTestController>();
+    LogTestController::getInstance().setDebug<minifi::c2::RESTSender>();
+    LogTestController::getInstance().setDebug<minifi::c2::RESTProtocol>();
+    LogTestController::getInstance().setDebug<minifi::c2::RESTReceiver>();
     std::fstream file;
     ss << dir << "/" << "tstFile.ext";
     file.open(ss.str(), std::ios::out);
@@ -100,15 +95,31 @@ class SiteToSiteTestHarness : public HTTPIntegrationBase {
   }
 
   void cleanup() {
+    LogTestController::getInstance().reset();
     unlink(ss.str().c_str());
   }
 
   void runAssertions() {
-    if (isSecure) {
-      assert(LogTestController::getInstance().contains("process group remote site2site port 10001, is secure 1") == true);
-    } else {
-      assert(LogTestController::getInstance().contains("process group remote site2site port 10001, is secure 0") == true);
-    }
+    assert(LogTestController::getInstance().contains("Received Ack from Server") == true);
+
+    assert(LogTestController::getInstance().contains("C2Agent] [debug] Stopping component invoke") == true);
+
+    assert(LogTestController::getInstance().contains("C2Agent] [debug] Stopping component FlowController") == true);
+  }
+
+  void queryRootProcessGroup(std::shared_ptr<core::ProcessGroup> pg) {
+    std::shared_ptr<core::Processor> proc = pg->findProcessor("invoke");
+    assert(proc != nullptr);
+
+    std::shared_ptr<minifi::processors::InvokeHTTP> inv = std::dynamic_pointer_cast<minifi::processors::InvokeHTTP>(proc);
+
+    assert(inv != nullptr);
+    std::string url = "";
+    inv->getProperty(minifi::processors::InvokeHTTP::URL.getName(), url);
+
+    configuration->set("c2.rest.url", "http://localhost:8888/api/heartbeat");
+    configuration->set("c2.agent.heartbeat.period", "1000");
+    configuration->set("c2.rest.url.ack", "http://localhost:8888/api/heartbeat");
   }
 
  protected:
@@ -120,10 +131,10 @@ class SiteToSiteTestHarness : public HTTPIntegrationBase {
 
 int main(int argc, char **argv) {
   std::string key_dir, test_file_location, url;
+  url = "http://localhost:8888/api/heartbeat";
   if (argc > 1) {
     test_file_location = argv[1];
     key_dir = argv[2];
-    url = argv[3];
   }
 
   bool isSecure = false;
@@ -131,11 +142,11 @@ int main(int argc, char **argv) {
     isSecure = true;
   }
 
-  SiteToSiteTestHarness harness(isSecure);
-
-  Responder responder(isSecure);
+  VerifyC2Heartbeat harness(isSecure);
 
   harness.setKeyDir(key_dir);
+
+  Responder responder(isSecure);
 
   harness.setUrl(url, &responder);
 

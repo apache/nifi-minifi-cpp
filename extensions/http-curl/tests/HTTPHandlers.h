@@ -18,7 +18,7 @@
 #include "civetweb.h"
 #include "CivetServer.h"
 #include "concurrentqueue.h"
-#include "io/CivetStream.h"
+#include "CivetStream.h"
 #include "io/CRCStream.h"
 #ifndef LIBMINIFI_TEST_CURL_TESTS_SITETOSITEHTTP_HTTPHANDLERS_H_
 #define LIBMINIFI_TEST_CURL_TESTS_SITETOSITEHTTP_HTTPHANDLERS_H_

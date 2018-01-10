@@ -29,8 +29,6 @@
 #include <vector>
 #include <iostream>
 #include <sstream>
-#include "HTTPClient.h"
-#include "InvokeHTTP.h"
 #include "TestBase.h"
 #include "utils/StringUtils.h"
 #include "core/Core.h"
@@ -44,7 +42,7 @@
 #include "c2/C2Agent.h"
 #include "CivetServer.h"
 #include <cstring>
-#include "c2/protocols/RESTSender.h"
+#include "protocols/RESTSender.h"
 
 void waitToVerifyProcessor() {
   std::this_thread::sleep_for(std::chrono::seconds(10));
@@ -54,11 +52,7 @@ static std::vector<std::string> responses;
 
 class ConfigHandler : public CivetHandler {
  public:
-  ConfigHandler() {
-    calls_ = 0;
-  }
   bool handlePost(CivetServer *server, struct mg_connection *conn) {
-    calls_++;
     if (responses.size() > 0) {
       std::string top_str = responses.back();
       responses.pop_back();
@@ -92,7 +86,6 @@ class ConfigHandler : public CivetHandler {
     return true;
   }
   std::string test_file_location_;
-  std::atomic<size_t> calls_;
 };
 
 int main(int argc, char **argv) {
@@ -138,46 +131,54 @@ int main(int argc, char **argv) {
     responses.push_back(response);
   }
 
-  std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::Configure>();
+  std::shared_ptr<minifi::Configure> configuration = std::make_shared<
+      minifi::Configure>();
 
-  configuration->set("c2.rest.url", "http://localhost:9090/update");
-  configuration->set("c2.agent.heartbeat.period", "1000");
+  configuration->set("c2.rest.url",
+                     "http://localhost:9090/update");
   mkdir("content_repository", S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 
-  std::shared_ptr<core::Repository> test_repo = std::make_shared<TestRepository>();
-  std::shared_ptr<core::Repository> test_flow_repo = std::make_shared<TestFlowRepository>();
+  std::shared_ptr<core::Repository> test_repo =
+      std::make_shared<TestRepository>();
+  std::shared_ptr<core::Repository> test_flow_repo = std::make_shared<
+      TestFlowRepository>();
 
-  configuration->set(minifi::Configure::nifi_flow_configuration_file, test_file_location);
+  configuration->set(minifi::Configure::nifi_flow_configuration_file,
+                     test_file_location);
 
-  std::shared_ptr<minifi::io::StreamFactory> stream_factory = std::make_shared<minifi::io::StreamFactory>(configuration);
+  std::shared_ptr<minifi::io::StreamFactory> stream_factory = std::make_shared
+      <minifi::io::StreamFactory>(configuration);
   std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
-  std::unique_ptr<core::FlowConfiguration> yaml_ptr = std::unique_ptr<core::YamlConfiguration>(
-      new core::YamlConfiguration(test_repo, test_repo, content_repo, stream_factory, configuration, test_file_location));
-  std::shared_ptr<TestRepository> repo = std::static_pointer_cast<TestRepository>(test_repo);
+  std::unique_ptr<core::FlowConfiguration> yaml_ptr = std::unique_ptr
+      <core::YamlConfiguration
+      >(new core::YamlConfiguration(test_repo, test_repo, content_repo, stream_factory,
+                                    configuration,
+                                    test_file_location));
+  std::shared_ptr<TestRepository> repo = std::static_pointer_cast
+      <TestRepository>(test_repo);
 
-  std::shared_ptr<minifi::FlowController> controller = std::make_shared<minifi::FlowController>(test_repo, test_flow_repo, configuration, std::move(yaml_ptr), content_repo, DEFAULT_ROOT_GROUP_NAME,
-  true);
+  std::shared_ptr<minifi::FlowController> controller =
+      std::make_shared<minifi::FlowController
+      >(test_repo, test_flow_repo, configuration, std::move(yaml_ptr), content_repo, DEFAULT_ROOT_GROUP_NAME, true);
 
-  core::YamlConfiguration yaml_config(test_repo, test_repo, content_repo, stream_factory, configuration, test_file_location);
+  core::YamlConfiguration yaml_config(test_repo, test_repo, content_repo, stream_factory,
+                                      configuration,
+                                      test_file_location);
 
-  std::unique_ptr<core::ProcessGroup> ptr = yaml_config.getRoot(test_file_location);
-  std::shared_ptr<core::ProcessGroup> pg = std::shared_ptr<core::ProcessGroup>(ptr.get());
+  std::unique_ptr<core::ProcessGroup> ptr = yaml_config.getRoot(
+                                                                test_file_location);
+  std::shared_ptr<core::ProcessGroup> pg = std::shared_ptr<core::ProcessGroup
+      >(ptr.get());
   ptr.release();
-  auto start = std::chrono::system_clock::now();
 
   controller->load();
   controller->start();
   waitToVerifyProcessor();
 
   controller->waitUnload(60000);
-  auto then = std::chrono::system_clock::now();
-
-  auto milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(then - start).count();
   std::string logs = LogTestController::getInstance().log_output.str();
   assert(logs.find("Starting to reload Flow Controller with flow control name MiNiFi Flow, version 0") != std::string::npos);
   LogTestController::getInstance().reset();
-  rmdir("./content_repository");
-  assert(h_ex.calls_ <= (milliseconds / 1000) + 1);
 
   return 0;
 }
