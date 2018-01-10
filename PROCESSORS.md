@@ -18,24 +18,29 @@
 ## Table of Contents
 
 - [AppendHostInfo](#appendhostinfo)
+- [CompressContent](#compresscontent)
+* [ConsumeMQTT](#consumeMQTT)
 - [ExecuteProcess](#executeprocess)
 - [ExecuteScript](#executescript)
+- [ExtractText](#extracttext)
+- [FocusArchiveEntry](#focusarchiveentry)
+- [GenerateFlowFile](#generateflowfile)
 - [GetFile](#getfile)
 - [GetUSBCamera](#getusbcamera)
-- [GenerateFlowFile](#generateflowfile)
 - [InvokeHTTP](#invokehttp)
-- [LogAttribute](#logattribute)
 - [ListenHTTP](#listenhttp)
 - [ListenSyslog](#listensyslog)
+- [LogAttribute](#logattribute)
+- [ManipulateArchive](#manipulatearchive)
+- [MergeContent](#mergecontent)
+- [PublishKafka](#publishkafka)
+* [PublishMQTT](PROCESSORS.md#publishMQTT)
 - [PutFile](#putfile)
 - [TailFile](#tailfile)
-- [MergeContent](#mergecontent)
-- [ExtractText](#extracttext)
-- [CompressContent](#compresscontent)
-- [FocusArchiveEntry](#focusarchiveentry)
+- [TFApplyGraph](#tfapplygraph)
+- [TFConvertImageToTensor](#tfconvertimagetotensor)
+- [TFExtractTopLabels](#tfextracttoplabels)
 - [UnfocusArchiveEntry](#unfocusarchiveentry)
-- [ManipulateArchive](#manipulatearchive)
-- [PublishKafka](#publishkafka)
 
 ## AppendHostInfo
 
@@ -534,6 +539,101 @@ default values, and whether a property supports the NiFi Expression Language.
 | Name | Description |
 | - | - |
 | success | All FlowFiles are routed to this Relationship. |
+
+## TFApplyGraph
+
+### Description
+
+Applies a TensorFlow graph to the tensor protobuf supplied as input. The tensor
+is fed into the node specified by the `Input Node` property. The output
+FlowFile is a tensor protobuf extracted from the node specified by the `Output
+Node` property.
+
+TensorFlow graphs are read dynamically by feeding a graph protobuf to the
+processor with the `tf.type` property set to `graph`.
+
+### Properties
+
+In the list below, the names of required properties appear in bold. Any other
+properties (not in bold) are considered optional. The table also indicates any
+default values, and whether a property supports the NiFi Expression Language.
+
+| Name | Default Value | Allowable Values | Description |
+| - | - | - | - |
+| **Input Node** | | | The node of the TensorFlow graph to feed tensor inputs to |
+| **Output Node** | | | The node of the TensorFlow graph to read tensor outputs from |
+
+### Relationships
+
+| Name | Description |
+| - | - |
+| success | Successful graph application outputs as tensor protobufs |
+| retry | Inputs which fail graph application but may work if sent again |
+| failure | Failures which will not work if retried |
+
+## TFConvertImageToTensor
+
+### Description
+
+Converts the input image file into a tensor protobuf. The image will be resized
+to the given output tensor dimensions.
+
+### Properties
+
+In the list below, the names of required properties appear in bold. Any other
+properties (not in bold) are considered optional. The table also indicates any
+default values, and whether a property supports the NiFi Expression Language.
+
+| Name | Default Value | Allowable Values | Description |
+| - | - | - | - |
+| **Input Format** | | PNG, RAW | The format of the input image (PNG or RAW). RAW is RGB24. |
+| **Input Width** | | | The width, in pixels, of the input image. |
+| **Input Height** | | | The height, in pixels, of the input image. |
+| **Output Width** | | | The width, in pixels, of the output image. |
+| **Output Height** | | | The height, in pixels, of the output image. |
+| **Channels** | 3 | | The number of channels (e.g. 3 for RGB, 4 for RGBA) in the input image. |
+
+### Relationships
+
+| Name | Description |
+| - | - |
+| success | Successfully read tensor protobufs |
+| failure | Inputs which could not be converted to tensor protobufs |
+
+## TFExtractTopLabels
+
+### Description
+
+Extracts the top 5 labels for categorical inference models.
+
+Labels are fed as newline (`\n`) -delimited files where each line is a label
+for the tensor index equivalent to the line number. Label files must be fed in
+with the `tf.type` property set to `labels`.
+
+The top 5 labels are written to the following attributes:
+
+- `top_label_0`
+- `top_label_1`
+- `top_label_2`
+- `top_label_3`
+- `top_label_4`
+
+### Properties
+
+In the list below, the names of required properties appear in bold. Any other
+properties (not in bold) are considered optional. The table also indicates any
+default values, and whether a property supports the NiFi Expression Language.
+
+| Name | Default Value | Allowable Values | Description |
+| - | - | - | - |
+
+### Relationships
+
+| Name | Description |
+| - | - |
+| success | Successful FlowFiles are sent here with labels as attributes |
+| retry | Failures which might work if retried |
+| failure | Failures which will not work if retried |
 
 ## MergeContent
 

@@ -27,7 +27,7 @@ namespace processors {
 
 core::Property TFConvertImageToTensor::ImageFormat(  // NOLINT
     "Input Format",
-    "The node of the TensorFlow graph to feed tensor inputs to (PNG or RAW). RAW is RGB24.", "");
+    "The format of the input image (PNG or RAW). RAW is RGB24.", "");
 core::Property TFConvertImageToTensor::InputWidth(  // NOLINT
     "Input Width",
     "The width, in pixels, of the input image.", "");
