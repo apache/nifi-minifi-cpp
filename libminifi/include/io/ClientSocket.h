@@ -58,16 +58,6 @@ class SocketContext {
 class Socket : public BaseStream {
  public:
   /**
-   * Constructor that accepts host name, port and listeners. With this
-   * contructor we will be creating a server socket
-   * @param context the SocketContext
-   * @param hostname our host name
-   * @param port connecting port
-   * @param listeners number of listeners in the queue
-   */
-  explicit Socket(const std::shared_ptr<SocketContext> &context, const std::string &hostname, const uint16_t port, const uint16_t listeners);
-
-  /**
    * Constructor that creates a client socket.
    * @param context the SocketContext
    * @param hostname hostname we are connecting to.
@@ -219,6 +209,16 @@ class Socket : public BaseStream {
  protected:
 
   /**
+   * Constructor that accepts host name, port and listeners. With this
+   * contructor we will be creating a server socket
+   * @param context the SocketContext
+   * @param hostname our host name
+   * @param port connecting port
+   * @param listeners number of listeners in the queue
+   */
+  explicit Socket(const std::shared_ptr<SocketContext> &context, const std::string &hostname, const uint16_t port, const uint16_t listeners);
+
+  /**
    * Creates a vector and returns the vector using the provided
    * type name.
    * @param t incoming object
@@ -254,6 +254,8 @@ class Socket : public BaseStream {
   std::string requested_hostname_;
   std::string canonical_hostname_;
   uint16_t port_;
+
+  bool is_loopback_only_;
 
   // connection information
   int32_t socket_file_descriptor_;

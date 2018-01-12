@@ -44,8 +44,8 @@ RESTReceiver::RESTReceiver(std::string name, uuid_t uuid)
       logger_(logging::LoggerFactory<RESTReceiver>::getLogger()) {
 }
 
-void RESTReceiver::initialize(const std::shared_ptr<core::controller::ControllerServiceProvider> &controller, const std::shared_ptr<Configure> &configure) {
-  HeartBeatReporter::initialize(controller, configure);
+void RESTReceiver::initialize(const std::shared_ptr<core::controller::ControllerServiceProvider> &controller, const std::shared_ptr<state::StateMonitor> &updateSink, const std::shared_ptr<Configure> &configure) {
+  HeartBeatReporter::initialize(controller, updateSink, configure);
   logger_->log_debug("Initializing rest receiveer");
   if (nullptr != configuration_) {
     std::string listeningPort, rootUri, caCert;

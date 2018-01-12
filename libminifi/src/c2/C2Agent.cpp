@@ -24,6 +24,7 @@
 #include <map>
 #include <string>
 #include <memory>
+#include "c2/ControllerSocketProtocol.h"
 #include "core/state/UpdateController.h"
 #include "core/logging/Logger.h"
 #include "core/logging/LoggerConfiguration.h"
@@ -140,10 +141,20 @@ void C2Agent::configure(const std::shared_ptr<Configure> &configure, bool reconf
         logger_->log_debug("Could not instantiate %s", reporter);
       } else {
         std::shared_ptr<HeartBeatReporter> shp_reporter = std::static_pointer_cast<HeartBeatReporter>(heartbeat_reporter_obj);
-        shp_reporter->initialize(controller_, configuration_);
+        shp_reporter->initialize(controller_, update_sink_, configuration_);
         heartbeat_protocols_.push_back(shp_reporter);
       }
     }
+  }
+
+  auto base_reporter = "ControllerSocketProtocol";
+  auto heartbeat_reporter_obj = core::ClassLoader::getDefaultClassLoader().instantiate(base_reporter, base_reporter);
+  if (heartbeat_reporter_obj == nullptr) {
+    logger_->log_debug("Could not instantiate %s", base_reporter);
+  } else {
+    std::shared_ptr<HeartBeatReporter> shp_reporter = std::static_pointer_cast<HeartBeatReporter>(heartbeat_reporter_obj);
+    shp_reporter->initialize(controller_, update_sink_, configuration_);
+    heartbeat_protocols_.push_back(shp_reporter);
   }
 }
 
