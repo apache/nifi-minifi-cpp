@@ -497,6 +497,7 @@ default values, and whether a property supports the NiFi Expression Language.
 | **Directory** | | | The directory to which files should be written. You may use expression language such as `/aa/bb/${path}`<br>**Supports Expression Language: true** |
 | **Conflict Resolution Strategy** | fail | replace, ignore, fail | Indicates what should happen when a file with the same name already exists in the output directory |
 | **Create Missing Directories** | true | true, false | If true, then missing destination directories will be created. If false, flowfiles are penalized and sent to failure. |
+| **Maximum File Count** | | | Specifies the maximum number of files that can exist in the output directory |
 
 ### Relationships
 
