@@ -82,7 +82,7 @@ void GenerateFlowFile::onTrigger(core::ProcessContext *context, core::ProcessSes
     org::apache::nifi::minifi::utils::StringUtils::StringToBool(value, uniqueFlowFile);
   }
 
-  if (!uniqueFlowFile) {
+  if (uniqueFlowFile) {
     char *data;
     data = new char[fileSize];
     if (!data)
@@ -114,7 +114,7 @@ void GenerateFlowFile::onTrigger(core::ProcessContext *context, core::ProcessSes
     delete[] data;
   } else {
     if (!_data) {
-      // We have not created the unique data yet
+      // We have not created the data yet
       _data = new char[fileSize];
       _dataSize = fileSize;
       char *current = _data;
