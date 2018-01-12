@@ -191,7 +191,7 @@ TEST_CASE("TestGet", "[test1]") {
 
   socket = stream_factory->createSocket("localhost", 9997);
   std::stringstream ss;
-  listProcessors(std::move(socket), ss);
+  listComponents(std::move(socket), ss);
 
   REQUIRE(ss.str().find("TestStateController") != std::string::npos);
 }

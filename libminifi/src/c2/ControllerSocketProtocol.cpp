@@ -35,10 +35,24 @@ void ControllerSocketProtocol::initialize(const std::shared_ptr<core::controller
   HeartBeatReporter::initialize(controller, updateSink, configuration);
   stream_factory_ = std::make_shared<minifi::io::StreamFactory>(configuration);
 
-  std::string host, port, caCert;
-  if (nullptr != configuration_ && configuration_->get("controller.socket.host", host) && configuration_->get("controller.socket.port", port)) {
+  std::string host = "localhost", port, limitStr;
+  bool anyInterface = false;
+  if (configuration_->get("controller.socket.local.any.interface", limitStr)) {
+    utils::StringUtils::StringToBool(limitStr, anyInterface);
+  }
+
+  // if host name isn't defined we will use localhost
+  configuration_->get("controller.socket.host", host);
+
+  if (nullptr != configuration_ && configuration_->get("controller.socket.port", port)) {
     server_socket_ = std::unique_ptr<io::ServerSocket>(new io::ServerSocket(nullptr, host, std::stoi(port), 2));
-    server_socket_->initialize(true);
+    // if we have a localhost hostname and we did not manually specify any.interface we will
+    // bind only to the loopback adapter
+    if ((host == "localhost" || host == "127.0.0.1" || host == "::") && !anyInterface) {
+      server_socket_->initialize(true);
+    } else {
+      server_socket_->initialize(true);
+    }
 
     auto check = [this]() -> bool {
       return update_sink_->isRunning();
@@ -135,7 +149,7 @@ void ControllerSocketProtocol::initialize(const std::shared_ptr<core::controller
             resp.writeData(&head, 1);
             resp.writeUTF(response.str());
             write(fd, resp.getBuffer(), resp.getSize());
-          } else if (what == "processors") {
+          } else if (what == "components") {
             io::BaseStream resp;
             resp.writeData(&head, 1);
             uint16_t size = update_sink_->getAllComponents().size();

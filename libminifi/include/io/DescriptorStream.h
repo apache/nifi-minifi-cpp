@@ -98,15 +98,6 @@ class DescriptorStream : public io::BaseStream {
     throw std::runtime_error("Stream does not support this operation");
   }
 
-
-
-  /**
-   * write UTF string to stream
-   * @param str string to write
-   * @return resulting write size
-   **/
-  //virtual int writeUTF(std::string str, bool widen = false);
-
   /**
    * reads a byte from the stream
    * @param value reference in which will set the result

@@ -89,108 +89,129 @@ int main(int argc, char **argv) {
 
   auto stream_factory_ = std::make_shared<minifi::io::StreamFactory>(configuration);
 
-  std::string host, port, caCert;
-
-  if (!configuration->get("controller.socket.host", host) || !configuration->get("controller.socket.port", port)) {
-    std::cout << "MiNiFi Controller is disabled" << std::endl;
-    exit(0);
-  }
+  std::string host = "localhost", portStr, caCert;
+  int port = -1;
 
   cxxopts::Options options("MiNiFiController", "MiNiFi local agent controller");
   options.positional_help("[optional args]").show_positional_help();
 
   options.add_options()  //NOLINT
-  ("help", "Shows Help")  //NOLINT
+  ("h,help", "Shows Help")  //NOLINT
+  ("host", "Specifies connecting host name", cxxopts::value<std::string>())  //NOLINT
+  ("port", "Specifies connecting host port", cxxopts::value<int>())  //NOLINT
   ("stop", "Shuts down the provided component", cxxopts::value<std::vector<std::string>>())  //NOLINT
   ("start", "Starts provided component", cxxopts::value<std::vector<std::string>>())  //NOLINT
   ("l,list", "Provides a list of connections or processors", cxxopts::value<std::string>())  //NOLINT
   ("c,clear", "Clears the associated connection queue", cxxopts::value<std::vector<std::string>>())  //NOLINT
   ("getsize", "Reports the size of the associated connection queue", cxxopts::value<std::vector<std::string>>())  //NOLINT
   ("updateflow", "Updates the flow of the agent using the provided flow file", cxxopts::value<std::string>())  //NOLINT
-  ("getfull", "Reports a list of full connections");
+  ("getfull", "Reports a list of full connections")  //NOLINT
+  ("noheaders", "Removes headers from output streams");
 
-  auto result = options.parse(argc, argv);
+  bool show_headers = true;
 
-  if (result.count("help")) {
+  try {
+    auto result = options.parse(argc, argv);
+
+    if (result.count("help")) {
+      std::cout << options.help( { "", "Group" }) << std::endl;
+      exit(0);
+    }
+
+    if (result.count("host")) {
+      host = result["host"].as<std::string>();
+    } else {
+      configuration->get("controller.socket.host", host);
+    }
+
+    if (result.count("port")) {
+      port = result["port"].as<int>();
+    } else {
+      if (port == -1 && configuration->get("controller.socket.port", portStr)) {
+        port = std::stoi(portStr);
+      }
+    }
+
+    if ((IsNullOrEmpty(host) && port == -1)) {
+      std::cout << "MiNiFi Controller is disabled" << std::endl;
+      exit(0);
+    } else
+
+    if (result.count("noheaders")) {
+      show_headers = false;
+    }
+
+    if (result.count("stop") > 0) {
+      auto& components = result["stop"].as<std::vector<std::string>>();
+      for (const auto& component : components) {
+        auto socket = stream_factory_->createSocket(host, port);
+        if (!stopComponent(std::move(socket), component))
+          std::cout << component << " requested to stop" << std::endl;
+        else
+          std::cout << "Could not connect to remote host " << host << ":" << port << std::endl;
+      }
+    }
+
+    if (result.count("start") > 0) {
+      auto& components = result["start"].as<std::vector<std::string>>();
+      for (const auto& component : components) {
+        auto socket = stream_factory_->createSocket(host, port);
+        if (!startComponent(std::move(socket), component))
+          std::cout << component << " requested to start" << std::endl;
+        else
+          std::cout << "Could not connect to remote host " << host << ":" << port << std::endl;
+      }
+    }
+
+    if (result.count("c") > 0) {
+      auto& components = result["c"].as<std::vector<std::string>>();
+      for (const auto& connection : components) {
+        auto socket = stream_factory_->createSocket(host, port);
+        if (!clearConnection(std::move(socket), connection))
+          std::cout << "Cleared " << connection << std::endl;
+        else
+          std::cout << "Could not connect to remote host " << host << ":" << port << std::endl;
+      }
+    }
+
+    if (result.count("getsize") > 0) {
+      auto& components = result["getsize"].as<std::vector<std::string>>();
+      for (const auto& component : components) {
+        auto socket = stream_factory_->createSocket(host, port);
+        if (getConnectionSize(std::move(socket), std::cout, component) < 0)
+          std::cout << "Could not connect to remote host " << host << ":" << port << std::endl;
+      }
+
+    }
+
+    if (result.count("l") > 0) {
+      auto& option = result["l"].as<std::string>();
+      auto socket = stream_factory_->createSocket(host, port);
+      if (option == "components") {
+        if (listComponents(std::move(socket), std::cout, show_headers) < 0)
+          std::cout << "Could not connect to remote host " << host << ":" << port << std::endl;
+      } else if (option == "connections") {
+        if (listConnections(std::move(socket), std::cout, show_headers) < 0)
+          std::cout << "Could not connect to remote host " << host << ":" << port << std::endl;
+      }
+
+    }
+
+    if (result.count("getfull") > 0) {
+      auto socket = stream_factory_->createSocket(host, port);
+      if (getFullConnections(std::move(socket), std::cout) < 0)
+        std::cout << "Could not connect to remote host " << host << ":" << port << std::endl;
+    }
+
+    if (result.count("updateflow") > 0) {
+      auto& flow_file = result["updateflow"].as<std::string>();
+      auto socket = stream_factory_->createSocket(host, port);
+      if (updateFlow(std::move(socket), std::cout, flow_file) < 0)
+        std::cout << "Could not connect to remote host " << host << ":" << port << std::endl;
+    }
+  } catch (...) {
     std::cout << options.help( { "", "Group" }) << std::endl;
     exit(0);
   }
-
-  if (result.count("stop") > 0) {
-    auto& components = result["stop"].as<std::vector<std::string>>();
-    for (const auto& component : components) {
-      auto socket = stream_factory_->createSocket(host, std::stoi(port));
-      stopComponent(std::move(socket), component);
-      std::cout << component << " requested to stop" << std::endl;
-    }
-  }
-
-  if (result.count("start") > 0) {
-    auto& components = result["start"].as<std::vector<std::string>>();
-    for (const auto& component : components) {
-      auto socket = stream_factory_->createSocket(host, std::stoi(port));
-      startComponent(std::move(socket), component);
-      std::cout << component << " requested to start" << std::endl;
-    }
-  }
-
-  if (result.count("c") > 0) {
-    auto& components = result["c"].as<std::vector<std::string>>();
-    for (const auto& connection : components) {
-      auto socket = stream_factory_->createSocket(host, std::stoi(port));
-      clearConnection(std::move(socket), connection);
-      std::cout << "Cleared " << connection << std::endl;
-    }
-  }
-
-  if (result.count("getsize") > 0) {
-    auto& components = result["getsize"].as<std::vector<std::string>>();
-    for (const auto& component : components) {
-      auto socket = stream_factory_->createSocket(host, std::stoi(port));
-      getConnectionSize(std::move(socket), std::cout, component);
-    }
-
-  }
-
-  if (result.count("l") > 0) {
-    auto& option = result["l"].as<std::string>();
-    if (option == "processors" || option == "connections") {
-
-      auto socket = stream_factory_->createSocket(host, std::stoi(port));
-      socket->initialize();
-
-      uint8_t op = minifi::c2::Operation::DESCRIBE;
-      minifi::io::BaseStream stream;
-      stream.writeData(&op, 1);
-      stream.writeUTF(option);
-      socket->writeData(const_cast<uint8_t*>(stream.getBuffer()), stream.getSize());
-      uint16_t responses = 0;
-      socket->readData(&op, 1);
-      socket->read(responses);
-      if (option == "processors")
-        std::cout << "Processors:" << std::endl;
-      else {
-        std::cout << "Connection Names:" << std::endl;
-      }
-      for (int i = 0; i < responses; i++) {
-        std::string name;
-        socket->readUTF(name, false);
-        std::cout << name << std::endl;
-      }
-    }
-  }
-
-  if (result.count("getfull") > 0) {
-    auto socket = stream_factory_->createSocket(host, std::stoi(port));
-    getFullConnections(std::move(socket), std::cout);
-  }
-
-  if (result.count("updateflow") > 0) {
-    auto& flow_file = result["updateflow"].as<std::string>();
-    auto socket = stream_factory_->createSocket(host, std::stoi(port));
-    updateFlow(std::move(socket), std::cout, flow_file);
-
-  }
-
   return 0;
 }

@@ -67,7 +67,7 @@ bool clearConnection(std::unique_ptr<minifi::io::Socket> socket, std::string con
 /**
  * Updates the flow to the provided file
  */
-void updateFlow(std::unique_ptr<minifi::io::Socket> socket, std::ostream &out, std::string file) {
+int updateFlow(std::unique_ptr<minifi::io::Socket> socket, std::ostream &out, std::string file) {
   socket->initialize();
   std::vector<uint8_t> data;
   uint8_t op = minifi::c2::Operation::UPDATE;
@@ -75,8 +75,9 @@ void updateFlow(std::unique_ptr<minifi::io::Socket> socket, std::ostream &out, s
   stream.writeData(&op, 1);
   stream.writeUTF("flow");
   stream.writeUTF(file);
-  socket->writeData(const_cast<uint8_t*>(stream.getBuffer()), stream.getSize());
-
+  if (socket->writeData(const_cast<uint8_t*>(stream.getBuffer()), stream.getSize()) < 0) {
+    return -1;
+  }
   // read the response
   uint8_t resp = 0;
   socket->readData(&resp, 1);
@@ -90,21 +91,23 @@ void updateFlow(std::unique_ptr<minifi::io::Socket> socket, std::ostream &out, s
       out << fullcomponent << " is full" << std::endl;
     }
   }
+  return 0;
 }
 
 /**
  * Lists connections which are full
  * @param socket socket ptr
  */
-void getFullConnections(std::unique_ptr<minifi::io::Socket> socket, std::ostream &out) {
+int getFullConnections(std::unique_ptr<minifi::io::Socket> socket, std::ostream &out) {
   socket->initialize();
   std::vector<uint8_t> data;
   uint8_t op = minifi::c2::Operation::DESCRIBE;
   minifi::io::BaseStream stream;
   stream.writeData(&op, 1);
   stream.writeUTF("getfull");
-  socket->writeData(const_cast<uint8_t*>(stream.getBuffer()), stream.getSize());
-
+  if (socket->writeData(const_cast<uint8_t*>(stream.getBuffer()), stream.getSize()) < 0) {
+    return -1;
+  }
   // read the response
   uint8_t resp = 0;
   socket->readData(&resp, 1);
@@ -117,8 +120,8 @@ void getFullConnections(std::unique_ptr<minifi::io::Socket> socket, std::ostream
       socket->readUTF(fullcomponent);
       out << fullcomponent << " is full" << std::endl;
     }
-
   }
+  return 0;
 }
 
 /**
@@ -126,7 +129,7 @@ void getFullConnections(std::unique_ptr<minifi::io::Socket> socket, std::ostream
  * @param socket socket ptr
  * @param connection connection whose size will be returned.
  */
-void getConnectionSize(std::unique_ptr<minifi::io::Socket> socket, std::ostream &out, std::string connection) {
+int getConnectionSize(std::unique_ptr<minifi::io::Socket> socket, std::ostream &out, std::string connection) {
   socket->initialize();
   std::vector<uint8_t> data;
   uint8_t op = minifi::c2::Operation::DESCRIBE;
@@ -134,8 +137,9 @@ void getConnectionSize(std::unique_ptr<minifi::io::Socket> socket, std::ostream 
   stream.writeData(&op, 1);
   stream.writeUTF("queue");
   stream.writeUTF(connection);
-  socket->writeData(const_cast<uint8_t*>(stream.getBuffer()), stream.getSize());
-
+  if (socket->writeData(const_cast<uint8_t*>(stream.getBuffer()), stream.getSize()) < 0) {
+    return -1;
+  }
   // read the response
   uint8_t resp = 0;
   socket->readData(&resp, 1);
@@ -144,45 +148,53 @@ void getConnectionSize(std::unique_ptr<minifi::io::Socket> socket, std::ostream 
     socket->readUTF(size);
     out << "Size/Max of " << connection << " " << size << std::endl;
   }
+  return 0;
 }
 
-void listProcessors(std::unique_ptr<minifi::io::Socket> socket, std::ostream &out) {
+int listComponents(std::unique_ptr<minifi::io::Socket> socket, std::ostream &out, bool show_header = true) {
   socket->initialize();
   minifi::io::BaseStream stream;
   uint8_t op = minifi::c2::Operation::DESCRIBE;
   stream.writeData(&op, 1);
-  stream.writeUTF("processors");
-  socket->writeData(const_cast<uint8_t*>(stream.getBuffer()), stream.getSize());
+  stream.writeUTF("components");
+  if (socket->writeData(const_cast<uint8_t*>(stream.getBuffer()), stream.getSize()) < 0) {
+    return -1;
+  }
   uint16_t responses = 0;
   socket->readData(&op, 1);
   socket->read(responses);
-  out << "Processors:" << std::endl;
+  if (show_header)
+    out << "Components:" << std::endl;
 
   for (int i = 0; i < responses; i++) {
     std::string name;
     socket->readUTF(name, false);
     out << name << std::endl;
   }
+  return 0;
 }
 
-void listConnections(std::unique_ptr<minifi::io::Socket> socket, std::ostream &out) {
+int listConnections(std::unique_ptr<minifi::io::Socket> socket, std::ostream &out, bool show_header = true) {
   socket->initialize();
   minifi::io::BaseStream stream;
   uint8_t op = minifi::c2::Operation::DESCRIBE;
   stream.writeData(&op, 1);
   stream.writeUTF("connections");
-  socket->writeData(const_cast<uint8_t*>(stream.getBuffer()), stream.getSize());
+  if (socket->writeData(const_cast<uint8_t*>(stream.getBuffer()), stream.getSize()) < 0) {
+    return -1;
+  }
   uint16_t responses = 0;
   socket->readData(&op, 1);
   socket->read(responses);
-
-  out << "Connection Names:" << std::endl;
+  if (show_header)
+    out << "Connection Names:" << std::endl;
 
   for (int i = 0; i < responses; i++) {
     std::string name;
     socket->readUTF(name, false);
     out << name << std::endl;
   }
+  return 0;
 }
 
 #endif /* CONTROLLER_CONTROLLER_H_ */
