@@ -206,7 +206,6 @@ TEST_CASE("Test GetFile Ignore", "[getfileCreate3]") {
 
   REQUIRE(repo->getRepoMap().size() == 0);
   prev++;
-
 }
 
 TEST_CASE("LogAttributeTest", "[getfileCreate3]") {
