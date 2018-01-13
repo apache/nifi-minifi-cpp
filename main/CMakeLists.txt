@@ -52,7 +52,13 @@ find_package(OpenSSL REQUIRED)
 include_directories(${OPENSSL_INCLUDE_DIR})
 
 # Link against minifi, yaml-cpp, civetweb-cpp, uuid, openssl, jsoncpp and rocksdb
-target_link_libraries(minifiexe core-minifi)
+#target_link_libraries(minifiexe core-minifi)
+
+if (APPLE)
+	target_link_libraries (minifiexe -Wl,-all_load core-minifi)
+else ()
+	target_link_libraries (minifiexe -Wl,--whole-archive core-minifi -Wl,--no-whole-archive)
+endif ()
 
 if (APPLE)
 	target_link_libraries (minifiexe -Wl,-all_load minifi)
