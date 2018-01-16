@@ -72,6 +72,7 @@
   LSQUARE        "["
   RSQUARE        "]"
   PIPE           "|"
+  MINUS          "-"
   COMMA          ","
   COLON          ":"
   SEMI           ";"
@@ -86,7 +87,7 @@
 %token <std::string> IDENTIFIER "identifier"
 %token <std::string> MISC       "misc"
 %token <std::string> WHITESPACE "whitespace"
-%token <int>         NUMBER     "number"
+%token <std::string> NUMBER     "number"
 
 %type <std::string>             exp_whitespace
 %type <std::string>             exp_whitespaces
@@ -130,7 +131,7 @@ text_no_quote_no_dollar: IDENTIFIER { std::swap($$, $1); }
                        | BSLASH { $$ = "\\"; }
                        | STAR { $$ = "*"; }
                        | HASH { $$ = "#"; }
-                       | NUMBER { $$ = std::to_string($1); }
+                       | NUMBER { std::swap($$, $1); }
                        ;
 
 text_inc_quote_escaped_dollar: text_no_quote_no_dollar { std::swap($$, $1); }
@@ -170,13 +171,25 @@ exp_whitespaces: %empty {}
 attr_id: quoted_text exp_whitespaces { std::swap($$, $1); }
        | IDENTIFIER exp_whitespaces { std::swap($$, $1); }
        ;
+/*
+number_decimal: %empty { $$ = ""; }
+              | PERIOD NUMBER { $$ = "." + std::to_string($2); }
+              ;
 
-/*fn_arg: exp_content_val exp_whitespaces { $$ = $1; }
-      | NUMBER exp_whitespaces { $$ = make_static(std::to_string($1)); }
+number_sign: %empty { $$ = ""; }
+           | MINUS { $$ = "-"; }
+           ;
+
+number_exponent: %empty { $$ = ""; }
+               | BIGE number_sign NUMBER { $$ = "E" + $2 + std::to_string($3); }
+               | LITTLEE number_sign NUMBER { $$ = "e" + $2 + std::to_string($3); }
+               ;
+
+number: number_sign NUMBER number_decimal number_exponent { $$ = $1 + std::to_string($2) + $3 + $4; }
       ;*/
 
 fn_arg: quoted_text exp_whitespaces { $$ = make_static($1); }
-      | NUMBER exp_whitespaces { $$ = make_static(std::to_string($1)); }
+      | NUMBER exp_whitespaces { $$ = make_static($1); }
       | exp exp_whitespaces { $$ = $1; }
       ;
 
