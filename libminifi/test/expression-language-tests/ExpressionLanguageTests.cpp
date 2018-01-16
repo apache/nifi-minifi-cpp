@@ -304,3 +304,103 @@ TEST_CASE("Substring After No Args", "[expressionLanguageSubstringAfterNoArgs]")
   flow_file_a->addAttribute("attr", "__flow_a_attr_value_a__");
   REQUIRE_THROWS_WITH(expr({flow_file_a}), "Attempted to call incomplete function");
 }
+
+#ifdef EXPRESSION_LANGUAGE_USE_REGEX
+
+TEST_CASE("Replace", "[expressionLanguageReplace]") {  // NOLINT
+  auto expr = expression::compile("${attr:replace('.', '_')}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("attr", "a brand new filename.txt");
+  REQUIRE("a brand new filename_txt" == expr({flow_file_a}));
+}
+
+TEST_CASE("Replace 2", "[expressionLanguageReplace2]") {  // NOLINT
+  auto expr = expression::compile("${attr:replace(' ', '.')}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("attr", "a brand new filename.txt");
+  REQUIRE("a.brand.new.filename.txt" == expr({flow_file_a}));
+}
+
+TEST_CASE("Replace First", "[expressionLanguageReplaceFirst]") {  // NOLINT
+  auto expr = expression::compile("${attr:replaceFirst('a', 'the')}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("attr", "a brand new filename.txt");
+  REQUIRE("the brand new filename.txt" == expr({flow_file_a}));
+}
+
+TEST_CASE("Replace First Regex", "[expressionLanguageReplaceFirstRegex]") {  // NOLINT
+  auto expr = expression::compile("${attr:replaceFirst('[br]', 'g')}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("attr", "a brand new filename.txt");
+  REQUIRE("a grand new filename.txt" == expr({flow_file_a}));
+}
+
+TEST_CASE("Replace All", "[expressionLanguageReplaceAll]") {  // NOLINT
+  auto expr = expression::compile("${attr:replaceAll('\\..*', '')}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("attr", "a brand new filename.txt");
+  REQUIRE("a brand new filename" == expr({flow_file_a}));
+}
+
+TEST_CASE("Replace All 2", "[expressionLanguageReplaceAll2]") {  // NOLINT
+  auto expr = expression::compile("${attr:replaceAll('a brand (new)', '$1')}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("attr", "a brand new filename.txt");
+  REQUIRE("new filename.txt" == expr({flow_file_a}));
+}
+
+TEST_CASE("Replace All 3", "[expressionLanguageReplaceAll3]") {  // NOLINT
+  auto expr = expression::compile("${attr:replaceAll('XYZ', 'ZZZ')}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("attr", "a brand new filename.txt");
+  REQUIRE("a brand new filename.txt" == expr({flow_file_a}));
+}
+
+TEST_CASE("Replace Null", "[expressionLanguageReplaceNull]") {  // NOLINT
+  auto expr = expression::compile("${attr:replaceNull('abc')}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("attr", "a brand new filename.txt");
+  REQUIRE("a brand new filename.txt" == expr({flow_file_a}));
+}
+
+TEST_CASE("Replace Null 2", "[expressionLanguageReplaceNull2]") {  // NOLINT
+  auto expr = expression::compile("${attr:replaceNull('abc')}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("attr2", "a brand new filename.txt");
+  REQUIRE("abc" == expr({flow_file_a}));
+}
+
+TEST_CASE("Replace Empty", "[expressionLanguageReplaceEmpty]") {  // NOLINT
+  auto expr = expression::compile("${attr:replaceEmpty('abc')}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("attr", "a brand new filename.txt");
+  REQUIRE("a brand new filename.txt" == expr({flow_file_a}));
+}
+
+TEST_CASE("Replace Empty 2", "[expressionLanguageReplaceEmpty2]") {  // NOLINT
+  auto expr = expression::compile("${attr:replaceEmpty('abc')}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("attr", "  \t  \r  \n  ");
+  REQUIRE("abc" == expr({flow_file_a}));
+}
+
+TEST_CASE("Replace Empty 3", "[expressionLanguageReplaceEmpty2]") {  // NOLINT
+  auto expr = expression::compile("${attr:replaceEmpty('abc')}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("attr2", "test");
+  REQUIRE("abc" == expr({flow_file_a}));
+}
+
+#endif  // EXPRESSION_LANGUAGE_USE_REGEX
