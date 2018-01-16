@@ -79,8 +79,7 @@ class StandardControllerServiceProvider : public ControllerServiceProvider, publ
     agent_ = agent;
   }
 
-  std::shared_ptr<ControllerServiceNode> createControllerService(const std::string &type, const std::string &id,
-  bool firstTimeAdded) {
+  std::shared_ptr<ControllerServiceNode> createControllerService(const std::string &type, const std::string &id, bool firstTimeAdded) {
 
     std::shared_ptr<ControllerService> new_controller_service = extension_loader_.instantiate<ControllerService>(type, id);
 
@@ -97,11 +96,15 @@ class StandardControllerServiceProvider : public ControllerServiceProvider, publ
 
   }
 
-  std::future<bool> enableControllerService(std::shared_ptr<ControllerServiceNode> &serviceNode) {
+  std::future<uint64_t> enableControllerService(std::shared_ptr<ControllerServiceNode> &serviceNode) {
     if (serviceNode->canEnable()) {
       return agent_->enableControllerService(serviceNode);
     } else {
-      std::future<bool> no_run = std::async(std::launch::async, []() {return false;});
+
+      std::future<uint64_t> no_run = std::async(std::launch::async, []() {
+        uint64_t ret = 0;
+        return ret;
+      });
       return no_run;
     }
   }
@@ -125,11 +128,14 @@ class StandardControllerServiceProvider : public ControllerServiceProvider, publ
     }
   }
 
-  std::future<bool> disableControllerService(std::shared_ptr<ControllerServiceNode> &serviceNode) {
+  std::future<uint64_t> disableControllerService(std::shared_ptr<ControllerServiceNode> &serviceNode) {
     if (!IsNullOrEmpty(serviceNode.get()) && serviceNode->enabled()) {
       return agent_->disableControllerService(serviceNode);
     } else {
-      std::future<bool> no_run = std::async(std::launch::async, []() {return false;});
+      std::future<uint64_t> no_run = std::async(std::launch::async, []() {
+        uint64_t ret = 0;
+        return ret;
+      });
       return no_run;
     }
   }
@@ -192,7 +198,6 @@ class StandardControllerServiceProvider : public ControllerServiceProvider, publ
   std::shared_ptr<ProcessGroup> root_group_;
 
   std::shared_ptr<Configure> configuration_;
-
 
  private:
   std::shared_ptr<logging::Logger> logger_;

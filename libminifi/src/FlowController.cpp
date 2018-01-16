@@ -252,7 +252,15 @@ void FlowController::load() {
     stop(true);
   }
   if (!initialized_) {
+    logger_->log_info("Load Flow Controller from file %s", configuration_filename_.c_str());
+
+    this->root_ = std::shared_ptr<core::ProcessGroup>(flow_configuration_->getRoot(configuration_filename_));
+
+    logger_->log_info("Loaded root processor Group");
+
     logger_->log_info("Initializing timers");
+
+    controller_service_provider_ = flow_configuration_->getControllerServiceProvider();
 
     if (nullptr == timer_scheduler_) {
       timer_scheduler_ = std::make_shared<TimerDrivenSchedulingAgent>(
@@ -264,13 +272,6 @@ void FlowController::load() {
           std::static_pointer_cast<core::controller::ControllerServiceProvider>(std::dynamic_pointer_cast<FlowController>(shared_from_this())), provenance_repo_, flow_file_repo_, content_repo_,
           configuration_);
     }
-    logger_->log_info("Load Flow Controller from file %s", configuration_filename_.c_str());
-
-    this->root_ = std::shared_ptr<core::ProcessGroup>(flow_configuration_->getRoot(configuration_filename_));
-
-    logger_->log_info("Loaded root processor Group");
-
-    controller_service_provider_ = flow_configuration_->getControllerServiceProvider();
 
     std::static_pointer_cast<core::controller::StandardControllerServiceProvider>(controller_service_provider_)->setRootGroup(root_);
     std::static_pointer_cast<core::controller::StandardControllerServiceProvider>(controller_service_provider_)->setSchedulingAgent(
@@ -496,7 +497,7 @@ void FlowController::removeControllerService(const std::shared_ptr<core::control
  * Enables the controller service services
  * @param serviceNode service node which will be disabled, along with linked services.
  */
-std::future<bool> FlowController::enableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) {
+std::future<uint64_t> FlowController::enableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) {
   return controller_service_provider_->enableControllerService(serviceNode);
 }
 
@@ -511,7 +512,7 @@ void FlowController::enableControllerServices(std::vector<std::shared_ptr<core::
  * Disables controller services
  * @param serviceNode service node which will be disabled, along with linked services.
  */
-std::future<bool> FlowController::disableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) {
+std::future<uint64_t> FlowController::disableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) {
   return controller_service_provider_->disableControllerService(serviceNode);
 }
 
@@ -522,6 +523,14 @@ std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> FlowContro
   return controller_service_provider_->getAllControllerServices();
 }
 
+/**
+ * Gets the controller service for <code>identifier</code>
+ * @param identifier service identifier
+ * @return shared pointer to teh controller service implementation or nullptr if it does not exist.
+ */
+std::shared_ptr<core::controller::ControllerService> FlowController::getControllerService(const std::string &identifier) {
+  return controller_service_provider_->getControllerService(identifier);
+}
 /**
  * Gets controller service node specified by <code>id</code>
  * @param id service identifier

@@ -44,6 +44,67 @@ namespace apache {
 namespace nifi {
 namespace minifi {
 
+/**
+ * Uses the wait time for a given worker to determine if it is eligible to run
+ */
+class TimerAwareMonitor : public utils::AfterExecute<uint64_t> {
+ public:
+  TimerAwareMonitor(std::atomic<bool> *run_monitor)
+      : current_wait_(0),
+        run_monitor_(run_monitor) {
+  }
+  explicit TimerAwareMonitor(TimerAwareMonitor &&other)
+      : AfterExecute(std::move(other)),
+        run_monitor_(std::move(other.run_monitor_)) {
+    current_wait_.store(other.current_wait_.load());
+  }
+  virtual bool isFinished(const uint64_t &result) {
+    current_wait_.store(result);
+    if (*run_monitor_) {
+      return false;
+    }
+    return true;
+  }
+  virtual bool isCancelled(const uint64_t &result) {
+    if (*run_monitor_) {
+      return false;
+    }
+    return true;
+  }
+  /**
+   * Time to wait before re-running this task if necessary
+   * @return milliseconds since epoch after which we are eligible to re-run this task.
+   */
+  virtual int64_t wait_time() {
+    return current_wait_.load();
+  }
+ protected:
+
+  std::atomic<uint64_t> current_wait_;
+  std::atomic<bool> *run_monitor_;
+};
+
+class SingleRunMonitor : public TimerAwareMonitor {
+ public:
+  SingleRunMonitor(std::atomic<bool> *run_monitor)
+      : TimerAwareMonitor(run_monitor) {
+  }
+  explicit SingleRunMonitor(TimerAwareMonitor &&other)
+      : TimerAwareMonitor(std::move(other)){
+  }
+  virtual bool isFinished(const uint64_t &result) {
+    if (result == 0) {
+      return true;
+    } else {
+      current_wait_.store(result);
+      if (*run_monitor_) {
+        return false;
+      }
+      return true;
+    }
+  }
+};
+
 // SchedulingAgent Class
 class SchedulingAgent {
  public:
@@ -62,9 +123,9 @@ class SchedulingAgent {
     running_ = false;
     repo_ = repo;
     flow_repo_ = flow_repo;
-    utils::ThreadPool<bool> pool = utils::ThreadPool<bool>(configure_->getInt(Configure::nifi_flow_engine_threads, 2), true);
-    component_lifecycle_thread_pool_ = std::move(pool);
-    component_lifecycle_thread_pool_.start();
+    auto pool = utils::ThreadPool<uint64_t>(configure_->getInt(Configure::nifi_flow_engine_threads, 2), true, controller_service_provider);
+    thread_pool_ = std::move(pool);
+    thread_pool_.start();
   }
   // Destructor
   virtual ~SchedulingAgent() {
@@ -79,17 +140,17 @@ class SchedulingAgent {
   // start
   void start() {
     running_ = true;
-    component_lifecycle_thread_pool_.start();
+    thread_pool_.start();
   }
   // stop
   virtual void stop() {
     running_ = false;
-    component_lifecycle_thread_pool_.shutdown();
+    thread_pool_.shutdown();
   }
 
  public:
-  virtual std::future<bool> enableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode);
-  virtual std::future<bool> disableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode);
+  virtual std::future<uint64_t> enableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode);
+  virtual std::future<uint64_t> disableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode);
   // schedule, overwritten by different DrivenSchedulingAgent
   virtual void schedule(std::shared_ptr<core::Processor> processor) = 0;
   // unschedule, overwritten by different DrivenSchedulingAgent
@@ -115,7 +176,7 @@ class SchedulingAgent {
 
   std::shared_ptr<core::ContentRepository> content_repo_;
   // thread pool for components.
-  utils::ThreadPool<bool> component_lifecycle_thread_pool_;
+  utils::ThreadPool<uint64_t> thread_pool_;
   // controller service provider reference
   std::shared_ptr<core::controller::ControllerServiceProvider> controller_service_provider_;
 

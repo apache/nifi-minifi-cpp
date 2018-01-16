@@ -231,7 +231,6 @@ flow_file_record *get_next_flow_file(nifi_instance *instance, flow *flow) {
     claim->increaseFlowFileRecordOwnedCount();
     auto path = claim->getContentFullPath();
     auto ffr = create_flowfile(path.c_str());
-    std::cout << "dang created " << path << " " << ff->getSize() << std::endl;
     return ffr;
   } else {
     return nullptr;

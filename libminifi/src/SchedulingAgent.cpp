@@ -39,34 +39,41 @@ bool SchedulingAgent::hasWorkToDo(std::shared_ptr<core::Processor> processor) {
     return false;
 }
 
-std::future<bool> SchedulingAgent::enableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) {
+std::future<uint64_t> SchedulingAgent::enableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) {
   logger_->log_info("Enabling CSN in SchedulingAgent %s", serviceNode->getName());
   // reference the enable function from serviceNode
-  std::function< bool()> f_ex = [serviceNode] {
-    return serviceNode->enable();
+  std::function< uint64_t()> f_ex = [serviceNode] {
+    serviceNode->enable();
+    return 0;
   };
-  // create a functor that will be submitted to the thread pool.
-  utils::Worker<bool> functor(f_ex, serviceNode->getUUIDStr());
+
+  // only need to run this once.
+  std::unique_ptr<SingleRunMonitor> monitor = std::unique_ptr<SingleRunMonitor>(new SingleRunMonitor(&running_));
+  utils::Worker<uint64_t> functor(f_ex, serviceNode->getUUIDStr(), std::move(monitor));
   // move the functor into the thread pool. While a future is returned
   // we aren't terribly concerned with the result.
-  std::future<bool> future;
-  component_lifecycle_thread_pool_.execute(std::move(functor), future);
+  std::future<uint64_t> future;
+  thread_pool_.execute(std::move(functor), future);
   future.wait();
   return future;
 }
 
-std::future<bool> SchedulingAgent::disableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) {
+std::future<uint64_t> SchedulingAgent::disableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) {
   logger_->log_info("Disabling CSN in SchedulingAgent %s", serviceNode->getName());
   // reference the disable function from serviceNode
-  std::function< bool()> f_ex = [serviceNode] {
-    return serviceNode->disable();
+  std::function< uint64_t()> f_ex = [serviceNode] {
+    serviceNode->disable();
+    return 0;
   };
-  // create a functor that will be submitted to the thread pool.
-  utils::Worker<bool> functor(f_ex, serviceNode->getUUIDStr());
+
+  // only need to run this once.
+  std::unique_ptr<SingleRunMonitor> monitor = std::unique_ptr<SingleRunMonitor>(new SingleRunMonitor(&running_));
+  utils::Worker<uint64_t> functor(f_ex, serviceNode->getUUIDStr(), std::move(monitor));
+
   // move the functor into the thread pool. While a future is returned
   // we aren't terribly concerned with the result.
-  std::future<bool> future;
-  component_lifecycle_thread_pool_.execute(std::move(functor), future);
+  std::future<uint64_t> future;
+  thread_pool_.execute(std::move(functor), future);
   future.wait();
   return future;
 }

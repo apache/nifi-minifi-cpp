@@ -217,7 +217,7 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
    * Enables the controller service services
    * @param serviceNode service node which will be disabled, along with linked services.
    */
-  virtual std::future<bool> enableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode);
+  virtual std::future<uint64_t> enableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode);
 
   /**
    * Enables controller services
@@ -229,12 +229,14 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
    * Disables controller services
    * @param serviceNode service node which will be disabled, along with linked services.
    */
-  virtual std::future<bool> disableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode);
+  virtual std::future<uint64_t> disableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode);
 
   /**
    * Gets all controller services.
    */
   virtual std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> getAllControllerServices();
+
+  virtual std::shared_ptr<core::controller::ControllerService> getControllerService(const std::string &identifier);
 
   /**
    * Gets controller service node specified by <code>id</code>

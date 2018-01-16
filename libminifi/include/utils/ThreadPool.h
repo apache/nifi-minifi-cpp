@@ -26,7 +26,13 @@
 #include <queue>
 #include <future>
 #include <thread>
+#include <functional>
+
+#include "capi/expect.h"
+#include "controllers/ThreadManagementService.h"
 #include "concurrentqueue.h"
+#include "core/controller/ControllerService.h"
+#include "core/controller/ControllerServiceProvider.h"
 namespace org {
 namespace apache {
 namespace nifi {
@@ -181,6 +187,21 @@ std::shared_ptr<std::promise<T>> Worker<T>::getPromise() {
   return promise;
 }
 
+class WorkerThread {
+ public:
+  explicit WorkerThread(std::thread thread)
+      : is_running_(false),
+        thread_(std::move(thread)) {
+
+  }
+  WorkerThread()
+      : is_running_(false) {
+
+  }
+  std::atomic<bool> is_running_;
+  std::thread thread_;
+};
+
 /**
  * Thread pool
  * Purpose: Provides a thread pool with basic functionality similar to
@@ -191,20 +212,29 @@ template<typename T>
 class ThreadPool {
  public:
 
-  ThreadPool(int max_worker_threads = 2, bool daemon_threads = false)
+  ThreadPool(int max_worker_threads = 2, bool daemon_threads = false, const std::shared_ptr<core::controller::ControllerServiceProvider> &controller_service_provider = nullptr)
       : daemon_threads_(daemon_threads),
+        thread_reduction_count_(0),
         max_worker_threads_(max_worker_threads),
-        running_(false) {
+        adjust_threads_(false),
+        running_(false),
+        controller_service_provider_(controller_service_provider) {
     current_workers_ = 0;
+    thread_manager_ = nullptr;
   }
 
   ThreadPool(const ThreadPool<T> &&other)
       : daemon_threads_(std::move(other.daemon_threads_)),
+        thread_reduction_count_(0),
         max_worker_threads_(std::move(other.max_worker_threads_)),
-        running_(false) {
+        adjust_threads_(false),
+        running_(false),
+        controller_service_provider_(std::move(other.controller_service_provider_)),
+        thread_manager_(std::move(other.thread_manager_)) {
     current_workers_ = 0;
   }
-  virtual ~ThreadPool() {
+
+  ~ThreadPool() {
     shutdown();
   }
 
@@ -270,9 +300,15 @@ class ThreadPool {
     max_worker_threads_ = std::move(other.max_worker_threads_);
     daemon_threads_ = std::move(other.daemon_threads_);
     current_workers_ = 0;
+    thread_reduction_count_ = 0;
 
     thread_queue_ = std::move(other.thread_queue_);
     worker_queue_ = std::move(other.worker_queue_);
+
+    controller_service_provider_ = std::move(other.controller_service_provider_);
+    thread_manager_ = std::move(other.thread_manager_);
+
+    adjust_threads_ = false;
 
     if (!running_) {
       start();
@@ -281,6 +317,12 @@ class ThreadPool {
   }
 
  protected:
+
+  std::thread createThread(std::function<void()> &&functor) {
+    return std::thread([ functor ]() mutable {
+      functor();
+    });
+  }
 
   /**
    * Drain will notify tasks to stop following notification
@@ -292,37 +334,51 @@ class ThreadPool {
   }
 // determines if threads are detached
   bool daemon_threads_;
-  // max worker threads
+  std::atomic<int> thread_reduction_count_;
+// max worker threads
   int max_worker_threads_;
-  // current worker tasks.
+// current worker tasks.
   std::atomic<int> current_workers_;
-  // thread queue
-  std::vector<std::thread> thread_queue_;
-  // manager thread
+// thread queue
+  std::vector<std::shared_ptr<WorkerThread>> thread_queue_;
+// manager thread
   std::thread manager_thread_;
-  // atomic running boolean
+// conditional that's used to adjust the threads
+  std::atomic<bool> adjust_threads_;
+// atomic running boolean
   std::atomic<bool> running_;
-  // worker queue of worker objects
+// controller service provider
+  std::shared_ptr<core::controller::ControllerServiceProvider> controller_service_provider_;
+// integrated power manager
+  std::shared_ptr<controllers::ThreadManagementService> thread_manager_;
+  // thread queue for the recently deceased threads.
+  moodycamel::ConcurrentQueue<std::shared_ptr<WorkerThread>> deceased_thread_queue_;
+// worker queue of worker objects
   moodycamel::ConcurrentQueue<Worker<T>> worker_queue_;
   std::priority_queue<Worker<T>, std::vector<Worker<T>>, WorkerComparator<T>> worker_priority_queue_;
-  // notification for available work
+// notification for available work
   std::condition_variable tasks_available_;
-  // map to identify if a task should be
+// map to identify if a task should be
   std::map<std::string, bool> task_status_;
-  // manager mutex
+// manager mutex
   std::recursive_mutex manager_mutex_;
-  // work queue mutex
+// work queue mutex
   std::mutex worker_queue_mutex_;
 
   /**
    * Call for the manager to start worker threads
    */
-  void startWorkers();
+  void manageWorkers();
+
+  /**
+   * Function to adjust the workers up and down.
+   */
+  void adjustWorkers(int count);
 
   /**
    * Runs worker tasks
    */
-  void run_tasks();
+  void run_tasks(std::shared_ptr<WorkerThread> thread);
 };
 
 template<typename T>
@@ -341,32 +397,79 @@ bool ThreadPool<T>::execute(Worker<T> &&task, std::future<T> &future) {
 }
 
 template<typename T>
-void ThreadPool<T>::startWorkers() {
+void ThreadPool<T>::manageWorkers() {
   for (int i = 0; i < max_worker_threads_; i++) {
-    thread_queue_.push_back(std::move(std::thread(&ThreadPool::run_tasks, this)));
+    auto worker_thread = std::make_shared<WorkerThread>();
+    worker_thread->thread_ = createThread(std::bind(&ThreadPool::run_tasks, this, worker_thread));
+    thread_queue_.push_back(worker_thread);
     current_workers_++;
   }
 
   if (daemon_threads_) {
     for (auto &thread : thread_queue_) {
-      thread.detach();
+      thread->thread_.detach();
     }
   }
-  for (auto &thread : thread_queue_) {
-    if (thread.joinable())
-      thread.join();
+
+// likely don't have a thread manager
+  if (LIKELY(nullptr != thread_manager_)) {
+    while (running_) {
+      auto waitperiod = std::chrono::milliseconds(1) * 500;
+      {
+        if (thread_manager_->isAboveMax(current_workers_)) {
+          auto max = thread_manager_->getMaxConcurrentTasks();
+          auto differential = current_workers_ - max;
+          thread_reduction_count_ += differential;
+        } else if (thread_manager_->shouldReduce()) {
+          if (current_workers_ > 1)
+            thread_reduction_count_++;
+          thread_manager_->reduce();
+        } else if (thread_manager_->canIncrease() && max_worker_threads_ - current_workers_ > 0) {  // increase slowly
+          std::unique_lock<std::mutex> lock(worker_queue_mutex_);
+          auto worker_thread = std::make_shared<WorkerThread>();
+          worker_thread->thread_ = createThread(std::bind(&ThreadPool::run_tasks, this, worker_thread));
+          thread_queue_.push_back(worker_thread);
+          current_workers_++;
+        }
+      }
+      {
+        std::shared_ptr<WorkerThread> thread_ref;
+        while (deceased_thread_queue_.try_dequeue(thread_ref)) {
+          std::unique_lock<std::mutex> lock(worker_queue_mutex_);
+          if (thread_ref->thread_.joinable())
+            thread_ref->thread_.join();
+          thread_queue_.erase(std::remove(thread_queue_.begin(), thread_queue_.end(), thread_ref), thread_queue_.end());
+        }
+      }
+      std::this_thread::sleep_for(waitperiod);
+    }
+  } else {
+    for (auto &thread : thread_queue_) {
+      if (thread->thread_.joinable())
+        thread->thread_.join();
+    }
   }
 }
 template<typename T>
-void ThreadPool<T>::run_tasks() {
+void ThreadPool<T>::run_tasks(std::shared_ptr<WorkerThread> thread) {
   auto waitperiod = std::chrono::milliseconds(1) * 100;
   uint64_t wait_decay_ = 0;
+  uint64_t yield_backoff = 10;  // start at 10 ms
   while (running_.load()) {
 
+    if (UNLIKELY(thread_reduction_count_ > 0)) {
+      if (--thread_reduction_count_ >= 0) {
+        deceased_thread_queue_.enqueue(thread);
+        thread->is_running_ = false;
+        break;
+      } else {
+        thread_reduction_count_++;
+      }
+    }
     // if we exceed 500ms of wait due to not being able to run any tasks and there are tasks available, meaning
     // they are eligible to run per the fact that the thread pool isn't shut down and the tasks are in a runnable state
     // BUT they've been continually timesliced, we will lower the wait decay to 100ms and continue incrementing from
-    // there. This ensures we don't have arbitrarily long sleep cycles. 
+    // there. This ensures we don't have arbitrarily long sleep cycles.
     if (wait_decay_ > 500000000L) {
       wait_decay_ = 100000000L;
     }
@@ -377,6 +480,17 @@ void ThreadPool<T>::run_tasks() {
 
     if (wait_decay_ > 2000) {
       std::this_thread::sleep_for(std::chrono::nanoseconds(wait_decay_));
+    }
+
+    if (current_workers_ < max_worker_threads_) {
+      // we are in a reduced state. due to thread management
+      // let's institute a backoff up to 500ms
+      if (yield_backoff < 500) {
+        yield_backoff += 10;
+      }
+      std::this_thread::sleep_for(std::chrono::milliseconds(yield_backoff));
+    } else {
+      yield_backoff = 10;
     }
     Worker<T> task;
     if (!worker_queue_.try_dequeue(task)) {
@@ -407,7 +521,7 @@ void ThreadPool<T>::run_tasks() {
       auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now).count();
       // if our differential is < 10% of the wait time we will not put the task into a wait state
       // since requeuing will break the time slice contract.
-      if ((double)task.getTimeSlice() > ms && ((double)(task.getTimeSlice() - ms)) > (wt * .10)) {
+      if ((double) task.getTimeSlice() > ms && ((double) (task.getTimeSlice() - ms)) > (wt * .10)) {
         wait_to_run = true;
       }
     }
@@ -442,14 +556,19 @@ void ThreadPool<T>::run_tasks() {
     }
   }
   current_workers_--;
-
 }
 template<typename T>
 void ThreadPool<T>::start() {
+  if (nullptr != controller_service_provider_) {
+    auto thread_man = controller_service_provider_->getControllerService("ThreadPoolManager");
+    thread_manager_ = thread_man != nullptr ? std::dynamic_pointer_cast<controllers::ThreadManagementService>(thread_man) : nullptr;
+  } else {
+    thread_manager_ = nullptr;
+  }
   std::lock_guard<std::recursive_mutex> lock(manager_mutex_);
   if (!running_) {
     running_ = true;
-    manager_thread_ = std::move(std::thread(&ThreadPool::startWorkers, this));
+    manager_thread_ = std::move(std::thread(&ThreadPool::manageWorkers, this));
     if (worker_queue_.size_approx() > 0) {
       tasks_available_.notify_all();
     }

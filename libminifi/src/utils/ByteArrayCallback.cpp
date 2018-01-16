@@ -68,8 +68,6 @@ void ByteOutputCallback::write(char *data, size_t size) {
     std::unique_lock<std::recursive_mutex> lock(vector_lock_);
     spinner_.wait(lock, [&] {
       return read_started_ || !is_alive_;});
-
-    std::cout << "unlock" << std::endl;
     if (!is_alive_)
       return;
   }

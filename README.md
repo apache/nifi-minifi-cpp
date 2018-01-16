@@ -609,6 +609,21 @@ Additionally, a unique hexadecimal uid.minifi.device.segment should be assigned 
 	  	class: ControllerServiceClass
 	  	Properties:
 
+### Linux Power Manager Controller Service
+  The linux power manager controller service can be configured to monitor the battery level and status ( discharging or charging ) via the following configuration.
+  Simply provide the capacity path and status path along with your threshold for the trigger and low battery alarm and you can monitor your battery and throttle
+  the threadpools within MiNiFi C++. Note that the name is identified must be ThreadPoolManager.
+
+   Controller Services:
+    - name: ThreadPoolManager
+      id: 2438e3c8-015a-1000-79ca-83af40ec1888
+      class: LinuxPowerManagerService
+      Properties:
+          Battery Capacity Path: /path/to/battery/capacity
+          Battery Status Path: /path/to/battery/status
+          Trigger Threshold: 90
+          Low Battery Threshold: 50
+          Wait Period: 500 ms
 
 ### Running
 After completing a [build](#building), the application can be run by issuing the following from :
