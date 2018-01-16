@@ -87,7 +87,7 @@ class GenerateFlowFile : public core::Processor {
  private:
   // Generated data
   char * _data;
-  // Size of the generate data
+  // Size of the generated data
   uint64_t _dataSize;
 };
 
