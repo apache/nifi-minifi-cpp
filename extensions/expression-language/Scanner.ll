@@ -34,7 +34,7 @@
 %option c++
 
 id         [a-zA-Z][a-zA-Z_0-9]*
-int        [0-9]+
+num        [-]?[0-9]+[.]?[0-9]*([eE][+-]?[0-9]+)?
 whitespace [ \r\t]+
 
 %{
@@ -71,8 +71,8 @@ whitespace [ \r\t]+
   return Parser::token::TOK_WHITESPACE;
 }
 
-{int} {
-  yylval->build<int>(std::atoi(yytext));
+{num} {
+  yylval->build<std::string>(yytext);
   return Parser::token::TOK_NUMBER;
 }
 
