@@ -39,11 +39,11 @@ void ProvenanceRepository::flush() {
       db_->Get(options, key, &value);
       decrement_total += value.size();
       batch.Delete(key);
-      logger_->log_info("Removing %s", key);
+      logger_->log_debug("Removing %s", key);
     }
   }
   if (db_->Write(rocksdb::WriteOptions(), &batch).ok()) {
-    logger_->log_info("Decrementing %u from a repo size of %u", decrement_total, repo_size_.load());
+    logger_->log_debug("Decrementing %u from a repo size of %u", decrement_total, repo_size_.load());
     if (decrement_total > repo_size_.load()) {
       repo_size_ = 0;
     } else {
@@ -71,7 +71,7 @@ void ProvenanceRepository::run() {
           if ((curTime - eventTime) > (uint64_t)max_partition_millis_)
             Delete(key);
         } else {
-          logger_->log_debug("NiFi Provenance retrieve event %s fail", key.c_str());
+          logger_->log_debug("NiFi Provenance retrieve event %s fail", key);
           Delete(key);
         }
       }

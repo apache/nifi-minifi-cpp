@@ -75,7 +75,7 @@ void ConsumeMQTT::onSchedule(core::ProcessContext *context, core::ProcessSession
   value = "";
   if (context->getProperty(MaxQueueSize.getName(), value) && !value.empty() && core::Property::StringToInt(value, valInt)) {
     maxQueueSize_ = valInt;
-    logger_->log_info("ConsumeMQTT: max queue size [%ll]", maxQueueSize_);
+    logger_->log_debug("ConsumeMQTT: max queue size [%ll]", maxQueueSize_);
   }
 }
 

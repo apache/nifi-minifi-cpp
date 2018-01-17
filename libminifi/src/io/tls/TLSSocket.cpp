@@ -94,7 +94,7 @@ int16_t TLSContext::initialize() {
 
     int retp = SSL_CTX_use_PrivateKey_file(ctx, privatekey.c_str(), SSL_FILETYPE_PEM);
     if (retp != 1) {
-      logger_->log_error("Could not create load private key,%i on %s error : %s", retp, privatekey.c_str(), std::strerror(errno));
+      logger_->log_error("Could not create load private key,%i on %s error : %s", retp, privatekey, std::strerror(errno));
       error_value = TLS_ERROR_KEY_ERROR;
       return error_value;
     }
@@ -114,7 +114,7 @@ int16_t TLSContext::initialize() {
       }
     }
 
-    logger_->log_info("Load/Verify Client Certificate OK.");
+    logger_->log_debug("Load/Verify Client Certificate OK.");
   }
   return 0;
 }
@@ -159,13 +159,13 @@ int16_t TLSSocket::initialize() {
     ssl = SSL_new(context_->getContext());
     SSL_set_fd(ssl, socket_file_descriptor_);
     if (SSL_connect(ssl) == -1) {
-      logger_->log_error("SSL socket connect failed to %s %d", requested_hostname_.c_str(), port_);
+      logger_->log_error("SSL socket connect failed to %s %d", requested_hostname_, port_);
       SSL_free(ssl);
       ssl = NULL;
       close(socket_file_descriptor_);
       return -1;
     } else {
-      logger_->log_info("SSL socket connect success to %s %d", requested_hostname_.c_str(), port_);
+      logger_->log_debug("SSL socket connect success to %s %d", requested_hostname_, port_);
       return 0;
     }
   }

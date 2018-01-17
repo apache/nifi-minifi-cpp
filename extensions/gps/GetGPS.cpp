@@ -80,7 +80,7 @@ void GetGPS::onSchedule(const std::shared_ptr<core::ProcessContext> &context, co
   if (context->getProperty(GPSDWaitTime.getName(), value)) {
     core::Property::StringToInt(value, gpsdWaitTime_);
   }
-  logger_->log_info("GPSD client scheduled");
+  logger_->log_trace("GPSD client scheduled");
 }
 
 void GetGPS::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
@@ -106,7 +106,7 @@ void GetGPS::onTrigger(const std::shared_ptr<core::ProcessContext> &context, con
         if (gpsdata->status > 0) {
 
           if (gpsdata->fix.longitude != gpsdata->fix.longitude || gpsdata->fix.altitude != gpsdata->fix.altitude) {
-            logger_->log_info("No GPS fix.\n");
+            logger_->log_info("No GPS fix.");
             continue;
           }
 
@@ -146,7 +146,7 @@ void GetGPS::onTrigger(const std::shared_ptr<core::ProcessContext> &context, con
     }
 
   } catch (std::exception &exception) {
-    logger_->log_debug("GetGPS Caught Exception %s", exception.what());
+    logger_->log_error("GetGPS Caught Exception %s", exception.what());
     throw;
   }
 }

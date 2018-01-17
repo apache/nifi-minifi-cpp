@@ -135,7 +135,7 @@ void FlowController::initializePaths(const std::string &adjustedFilename) {
   }
   std::string pathString(path);
   configuration_filename_ = pathString;
-  logger_->log_info("FlowController NiFi Configuration file %s", pathString.c_str());
+  logger_->log_info("FlowController NiFi Configuration file %s", pathString);
 
   // Create the content repo directory if needed
   struct stat contentDirStat;
@@ -181,7 +181,7 @@ bool FlowController::applyConfiguration(const std::string &configurePayload) {
   if (newRoot == nullptr)
     return false;
 
-  logger_->log_info("Starting to reload Flow Controller with flow control name %s, version %d", newRoot->getName().c_str(), newRoot->getVersion());
+  logger_->log_info("Starting to reload Flow Controller with flow control name %s, version %d", newRoot->getName(), newRoot->getVersion());
 
   std::lock_guard<std::recursive_mutex> flow_lock(mutex_);
   stop(true);
@@ -287,7 +287,7 @@ void FlowController::load() {
 
 void FlowController::reload(std::string yamlFile) {
   std::lock_guard<std::recursive_mutex> flow_lock(mutex_);
-  logger_->log_info("Starting to reload Flow Controller with yaml %s", yamlFile.c_str());
+  logger_->log_info("Starting to reload Flow Controller with yaml %s", yamlFile);
   stop(true);
   unload();
   std::string oldYamlFile = this->configuration_filename_;
@@ -296,7 +296,7 @@ void FlowController::reload(std::string yamlFile) {
   start();
   if (this->root_ != nullptr) {
     this->configuration_filename_ = oldYamlFile;
-    logger_->log_info("Rollback Flow Controller to YAML %s", oldYamlFile.c_str());
+    logger_->log_info("Rollback Flow Controller to YAML %s", oldYamlFile);
     stop(true);
     unload();
     load();
@@ -405,7 +405,7 @@ void FlowController::initializeC2() {
       auto ptr = core::ClassLoader::getDefaultClassLoader().instantiate(clazz, clazz);
 
       if (nullptr == ptr) {
-        logger_->log_error("No metric defined for %s", clazz.c_str());
+        logger_->log_error("No metric defined for %s", clazz);
         continue;
       }
 
@@ -454,7 +454,7 @@ void FlowController::initializeC2() {
               ret = metrics_[clazz];
             }
             if (nullptr == ret) {
-              logger_->log_error("No metric defined for %s", clazz.c_str());
+              logger_->log_error("No metric defined for %s", clazz);
               continue;
             }
             component_metrics_by_id_[id].push_back(ret);

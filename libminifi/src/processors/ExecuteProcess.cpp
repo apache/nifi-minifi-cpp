@@ -85,7 +85,7 @@ void ExecuteProcess::onTrigger(core::ProcessContext *context, core::ProcessSessi
   if (context->getProperty(BatchDuration.getName(), value)) {
     core::TimeUnit unit;
     if (core::Property::StringToTime(value, _batchDuration, unit) && core::Property::ConvertTimeUnitToMS(_batchDuration, unit, _batchDuration)) {
-      logger_->log_info("Setting _batchDuration");
+      logger_->log_debug("Setting _batchDuration");
     }
   }
   if (context->getProperty(RedirectErrorStream.getName(), value)) {
@@ -99,12 +99,12 @@ void ExecuteProcess::onTrigger(core::ProcessContext *context, core::ProcessSessi
   if (_workingDir.length() > 0 && _workingDir != ".") {
     // change to working directory
     if (chdir(_workingDir.c_str()) != 0) {
-      logger_->log_error("Execute Command can not chdir %s", _workingDir.c_str());
+      logger_->log_error("Execute Command can not chdir %s", _workingDir);
       yield();
       return;
     }
   }
-  logger_->log_info("Execute Command %s", _fullCommand.c_str());
+  logger_->log_info("Execute Command %s", _fullCommand);
   // split the command into array
   char *p = std::strtok(const_cast<char*>(_fullCommand.c_str()), " ");
   int argc = 0;
@@ -153,13 +153,13 @@ void ExecuteProcess::onTrigger(core::ProcessContext *context, core::ProcessSessi
             int numRead = read(_pipefd[0], buffer, sizeof(buffer));
             if (numRead <= 0)
               break;
-            logger_->log_info("Execute Command Respond %d", numRead);
+            logger_->log_debug("Execute Command Respond %d", numRead);
             ExecuteProcess::WriteCallback callback(buffer, numRead);
             std::shared_ptr<FlowFileRecord> flowFile = std::static_pointer_cast<FlowFileRecord>(session->create());
             if (!flowFile)
               continue;
-            flowFile->addAttribute("command", _command.c_str());
-            flowFile->addAttribute("command.arguments", _commandArgument.c_str());
+            flowFile->addAttribute("command", _command);
+            flowFile->addAttribute("command.arguments", _commandArgument);
             session->write(flowFile, &callback);
             session->transfer(flowFile, Success);
             session->commit();
@@ -173,15 +173,15 @@ void ExecuteProcess::onTrigger(core::ProcessContext *context, core::ProcessSessi
             int numRead = read(_pipefd[0], bufPtr, (sizeof(buffer) - totalRead));
             if (numRead <= 0) {
               if (totalRead > 0) {
-                logger_->log_info("Execute Command Respond %d", totalRead);
+                logger_->log_debug("Execute Command Respond %d", totalRead);
                 // child exits and close the pipe
                 ExecuteProcess::WriteCallback callback(buffer, totalRead);
                 if (!flowFile) {
                   flowFile = std::static_pointer_cast<FlowFileRecord>(session->create());
                   if (!flowFile)
                     break;
-                  flowFile->addAttribute("command", _command.c_str());
-                  flowFile->addAttribute("command.arguments", _commandArgument.c_str());
+                  flowFile->addAttribute("command", _command);
+                  flowFile->addAttribute("command.arguments", _commandArgument);
                   session->write(flowFile, &callback);
                 } else {
                   session->append(flowFile, &callback);
@@ -192,14 +192,14 @@ void ExecuteProcess::onTrigger(core::ProcessContext *context, core::ProcessSessi
             } else {
               if (numRead == static_cast<int>((sizeof(buffer) - totalRead))) {
                 // we reach the max buffer size
-                logger_->log_info("Execute Command Max Respond %d", sizeof(buffer));
+                logger_->log_debug("Execute Command Max Respond %d", sizeof(buffer));
                 ExecuteProcess::WriteCallback callback(buffer, sizeof(buffer));
                 if (!flowFile) {
                   flowFile = std::static_pointer_cast<FlowFileRecord>(session->create());
                   if (!flowFile)
                     continue;
-                  flowFile->addAttribute("command", _command.c_str());
-                  flowFile->addAttribute("command.arguments", _commandArgument.c_str());
+                  flowFile->addAttribute("command", _command);
+                  flowFile->addAttribute("command.arguments", _commandArgument);
                   session->write(flowFile, &callback);
                 } else {
                   session->append(flowFile, &callback);
@@ -217,9 +217,9 @@ void ExecuteProcess::onTrigger(core::ProcessContext *context, core::ProcessSessi
 
         wait(&status);
         if (WIFEXITED(status)) {
-          logger_->log_info("Execute Command Complete %s status %d pid %d", _fullCommand.c_str(), WEXITSTATUS(status), _pid);
+          logger_->log_info("Execute Command Complete %s status %d pid %d", _fullCommand, WEXITSTATUS(status), _pid);
         } else {
-          logger_->log_info("Execute Command Complete %s status %d pid %d", _fullCommand.c_str(), WTERMSIG(status), _pid);
+          logger_->log_info("Execute Command Complete %s status %d pid %d", _fullCommand, WTERMSIG(status), _pid);
         }
 
         close(_pipefd[0]);

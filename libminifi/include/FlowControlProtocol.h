@@ -169,7 +169,7 @@ class FlowControlProtocol {
 
     if (configure->get(Configure::nifi_server_name, value)) {
       _serverName = value;
-      logger_->log_info("NiFi Server Name %s", _serverName.c_str());
+      logger_->log_info("NiFi Server Name %s", _serverName);
     }
     if (configure->get(Configure::nifi_server_port, value) && core::Property::StringToInt(value, _serverPort)) {
       logger_->log_info("NiFi Server Port: [%ll]", _serverPort);

@@ -90,13 +90,13 @@ void FocusArchiveEntry::onTrigger(core::ProcessContext *context, core::ProcessSe
 
   for (auto &entryMetadata : archiveMetadata.entryMetadata) {
     if (entryMetadata.entryType == AE_IFREG) {
-      logger_->log_info("FocusArchiveEntry importing %s from %s", entryMetadata.entryName.c_str(), entryMetadata.tmpFileName.c_str());
+      logger_->log_info("FocusArchiveEntry importing %s from %s", entryMetadata.entryName, entryMetadata.tmpFileName);
       session->import(entryMetadata.tmpFileName, flowFile, false, 0);
       char stashKey[37];
       uuid_t stashKeyUuid;
       id_generator_->generate(stashKeyUuid);
       uuid_unparse_lower(stashKeyUuid, stashKey);
-      logger_->log_debug("FocusArchiveEntry generated stash key %s for entry %s", stashKey, entryMetadata.entryName.c_str());
+      logger_->log_debug("FocusArchiveEntry generated stash key %s for entry %s", stashKey, entryMetadata.entryName);
       entryMetadata.stashKey.assign(stashKey);
 
       if (entryMetadata.entryName == targetEntry) {
@@ -112,7 +112,7 @@ void FocusArchiveEntry::onTrigger(core::ProcessContext *context, core::ProcessSe
   if (targetEntryStashKey != "") {
     session->restore(targetEntryStashKey, flowFile);
   } else {
-    logger_->log_warn("FocusArchiveEntry failed to locate target entry: %s", targetEntry.c_str());
+    logger_->log_warn("FocusArchiveEntry failed to locate target entry: %s", targetEntry);
   }
 
   // Set new/updated lens stack to attribute
@@ -276,7 +276,7 @@ int64_t FocusArchiveEntry::ReadCallback::process(std::shared_ptr<io::BaseStream>
       auto tmpFileName = file_man_->unique_file(true);
       metadata.tmpFileName = tmpFileName;
       metadata.entryType = entryType;
-      logger_->log_info("FocusArchiveEntry extracting %s to: %s", entryName, tmpFileName.c_str());
+      logger_->log_info("FocusArchiveEntry extracting %s to: %s", entryName, tmpFileName);
 
       auto fd = fopen(tmpFileName.c_str(), "w");
 

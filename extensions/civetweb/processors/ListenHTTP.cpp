@@ -58,7 +58,7 @@ core::Property ListenHTTP::HeadersAsAttributesRegex("HTTP Headers to receive as 
 core::Relationship ListenHTTP::Success("success", "All files are routed to success");
 
 void ListenHTTP::initialize() {
-  logger_->log_info("Initializing ListenHTTP");
+  logger_->log_trace("Initializing ListenHTTP");
 
   // Set the supported properties
   std::set<core::Property> properties;
@@ -81,7 +81,7 @@ void ListenHTTP::onSchedule(core::ProcessContext *context, core::ProcessSessionF
   std::string basePath;
 
   if (!context->getProperty(BasePath.getName(), basePath)) {
-    logger_->log_info("%s attribute is missing, so default value of %s will be used", BasePath.getName().c_str(), BasePath.getValue().c_str());
+    logger_->log_info("%s attribute is missing, so default value of %s will be used", BasePath.getName(), BasePath.getValue());
     basePath = BasePath.getValue();
   }
 
@@ -90,20 +90,20 @@ void ListenHTTP::onSchedule(core::ProcessContext *context, core::ProcessSessionF
   std::string listeningPort;
 
   if (!context->getProperty(Port.getName(), listeningPort)) {
-    logger_->log_error("%s attribute is missing or invalid", Port.getName().c_str());
+    logger_->log_error("%s attribute is missing or invalid", Port.getName());
     return;
   }
 
   std::string authDNPattern;
 
   if (context->getProperty(AuthorizedDNPattern.getName(), authDNPattern) && !authDNPattern.empty()) {
-    logger_->log_info("ListenHTTP using %s: %s", AuthorizedDNPattern.getName().c_str(), authDNPattern.c_str());
+    logger_->log_debug("ListenHTTP using %s: %s", AuthorizedDNPattern.getName(), authDNPattern);
   }
 
   std::string sslCertFile;
 
   if (context->getProperty(SSLCertificate.getName(), sslCertFile) && !sslCertFile.empty()) {
-    logger_->log_info("ListenHTTP using %s: %s", SSLCertificate.getName().c_str(), sslCertFile.c_str());
+    logger_->log_debug("ListenHTTP using %s: %s", SSLCertificate.getName(), sslCertFile);
   }
 
   // Read further TLS/SSL options only if TLS/SSL usage is implied by virtue of certificate value being set
@@ -113,33 +113,33 @@ void ListenHTTP::onSchedule(core::ProcessContext *context, core::ProcessSessionF
 
   if (!sslCertFile.empty()) {
     if (context->getProperty(SSLCertificateAuthority.getName(), sslCertAuthorityFile) && !sslCertAuthorityFile.empty()) {
-      logger_->log_info("ListenHTTP using %s: %s", SSLCertificateAuthority.getName().c_str(), sslCertAuthorityFile.c_str());
+      logger_->log_debug("ListenHTTP using %s: %s", SSLCertificateAuthority.getName(), sslCertAuthorityFile);
     }
 
     if (context->getProperty(SSLVerifyPeer.getName(), sslVerifyPeer)) {
       if (sslVerifyPeer.empty() || sslVerifyPeer.compare("no") == 0) {
-        logger_->log_info("ListenHTTP will not verify peers");
+        logger_->log_debug("ListenHTTP will not verify peers");
       } else {
-        logger_->log_info("ListenHTTP will verify peers");
+        logger_->log_debug("ListenHTTP will verify peers");
       }
     } else {
-      logger_->log_info("ListenHTTP will not verify peers");
+      logger_->log_debug("ListenHTTP will not verify peers");
     }
 
     if (context->getProperty(SSLMinimumVersion.getName(), sslMinVer)) {
-      logger_->log_info("ListenHTTP using %s: %s", SSLMinimumVersion.getName().c_str(), sslMinVer.c_str());
+      logger_->log_debug("ListenHTTP using %s: %s", SSLMinimumVersion.getName(), sslMinVer);
     }
   }
 
   std::string headersAsAttributesPattern;
 
   if (context->getProperty(HeadersAsAttributesRegex.getName(), headersAsAttributesPattern) && !headersAsAttributesPattern.empty()) {
-    logger_->log_info("ListenHTTP using %s: %s", HeadersAsAttributesRegex.getName().c_str(), headersAsAttributesPattern.c_str());
+    logger_->log_debug("ListenHTTP using %s: %s", HeadersAsAttributesRegex.getName(), headersAsAttributesPattern);
   }
 
   auto numThreads = getMaxConcurrentTasks();
 
-  logger_->log_info("ListenHTTP starting HTTP server on port %s and path %s with %d threads", listeningPort.c_str(), basePath.c_str(), numThreads);
+  logger_->log_info("ListenHTTP starting HTTP server on port %s and path %s with %d threads", listeningPort, basePath, numThreads);
 
   // Initialize web server
   std::vector<std::string> options;
@@ -225,7 +225,7 @@ void ListenHTTP::Handler::sendErrorResponse(struct mg_connection *conn) {
 
 bool ListenHTTP::Handler::handlePost(CivetServer *server, struct mg_connection *conn) {
   auto req_info = mg_get_request_info(conn);
-  logger_->log_info("ListenHTTP handling POST request of length %ll", req_info->content_length);
+  logger_->log_debug("ListenHTTP handling POST request of length %ll", req_info->content_length);
 
   // If this is a two-way TLS connection, authorize the peer against the configured pattern
   if (req_info->is_ssl && req_info->client_cert != nullptr) {
@@ -271,12 +271,12 @@ bool ListenHTTP::Handler::handlePost(CivetServer *server, struct mg_connection *
     session->transfer(flowFile, Success);
     session->commit();
   } catch (std::exception &exception) {
-    logger_->log_debug("ListenHTTP Caught Exception %s", exception.what());
+    logger_->log_error("ListenHTTP Caught Exception %s", exception.what());
     sendErrorResponse(conn);
     session->rollback();
     throw;
   } catch (...) {
-    logger_->log_debug("ListenHTTP Caught Exception Processor::onTrigger");
+    logger_->log_error("ListenHTTP Caught Exception Processor::onTrigger");
     sendErrorResponse(conn);
     session->rollback();
     throw;

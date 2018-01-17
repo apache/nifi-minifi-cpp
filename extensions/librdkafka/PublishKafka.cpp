@@ -95,7 +95,7 @@ void PublishKafka::onSchedule(core::ProcessContext *context, core::ProcessSessio
 
   if (context->getProperty(SeedBrokers.getName(), value) && !value.empty()) {
     result = rd_kafka_conf_set(conf_, "bootstrap.servers", value.c_str(), errstr, sizeof(errstr));
-    logger_->log_info("PublishKafka: bootstrap.servers [%s]", value);
+    logger_->log_debug("PublishKafka: bootstrap.servers [%s]", value);
     if (result != RD_KAFKA_CONF_OK)
       logger_->log_error("PublishKafka: configure error result [%s]", errstr);
   }
@@ -103,21 +103,21 @@ void PublishKafka::onSchedule(core::ProcessContext *context, core::ProcessSessio
   if (context->getProperty(MaxMessageSize.getName(), value) && !value.empty() && core::Property::StringToInt(value, valInt)) {
     valueConf = std::to_string(valInt);
     result = rd_kafka_conf_set(conf_, "message.max.bytes", valueConf.c_str(), errstr, sizeof(errstr));
-    logger_->log_info("PublishKafka: message.max.bytes [%s]", valueConf);
+    logger_->log_debug("PublishKafka: message.max.bytes [%s]", valueConf);
     if (result != RD_KAFKA_CONF_OK)
       logger_->log_error("PublishKafka: configure error result [%s]", errstr);
   }
   value = "";
   if (context->getProperty(ClientName.getName(), value) && !value.empty()) {
     rd_kafka_conf_set(conf_, "client.id", value.c_str(), errstr, sizeof(errstr));
-    logger_->log_info("PublishKafka: client.id [%s]", value);
+    logger_->log_debug("PublishKafka: client.id [%s]", value);
     if (result != RD_KAFKA_CONF_OK)
       logger_->log_error("PublishKafka: configure error result [%s]", errstr);
   }
   value = "";
   if (context->getProperty(QueueBufferMaxMessage.getName(), value) && !value.empty()) {
     rd_kafka_conf_set(conf_, "queue.buffering.max.messages", value.c_str(), errstr, sizeof(errstr));
-    logger_->log_info("PublishKafka: queue.buffering.max.messages [%s]", value);
+    logger_->log_debug("PublishKafka: queue.buffering.max.messages [%s]", value);
     if (result != RD_KAFKA_CONF_OK)
       logger_->log_error("PublishKafka: configure error result [%s]", errstr);
   }
@@ -126,7 +126,7 @@ void PublishKafka::onSchedule(core::ProcessContext *context, core::ProcessSessio
       valInt = valInt/1024;
       valueConf = std::to_string(valInt);
       rd_kafka_conf_set(conf_, "queue.buffering.max.kbytes", valueConf.c_str(), errstr, sizeof(errstr));
-      logger_->log_info("PublishKafka: queue.buffering.max.kbytes [%s]", valueConf);
+      logger_->log_debug("PublishKafka: queue.buffering.max.kbytes [%s]", valueConf);
       if (result != RD_KAFKA_CONF_OK)
         logger_->log_error("PublishKafka: configure error result [%s]", errstr);
   }
@@ -134,7 +134,7 @@ void PublishKafka::onSchedule(core::ProcessContext *context, core::ProcessSessio
   max_seg_size_ = ULLONG_MAX;
   if (context->getProperty(MaxFlowSegSize.getName(), value) && !value.empty() && core::Property::StringToInt(value, valInt)) {
     max_seg_size_ = valInt;
-    logger_->log_info("PublishKafka: max flow segment size [%d]", max_seg_size_);
+    logger_->log_debug("PublishKafka: max flow segment size [%d]", max_seg_size_);
   }
   value = "";
   if (context->getProperty(QueueBufferMaxTime.getName(), value) && !value.empty()) {
@@ -142,7 +142,7 @@ void PublishKafka::onSchedule(core::ProcessContext *context, core::ProcessSessio
     if (core::Property::StringToTime(value, valInt, unit) && core::Property::ConvertTimeUnitToMS(valInt, unit, valInt)) {
       valueConf = std::to_string(valInt);
       rd_kafka_conf_set(conf_, "queue.buffering.max.ms", valueConf.c_str(), errstr, sizeof(errstr));
-      logger_->log_info("PublishKafka: queue.buffering.max.ms [%s]", valueConf);
+      logger_->log_debug("PublishKafka: queue.buffering.max.ms [%s]", valueConf);
       if (result != RD_KAFKA_CONF_OK)
         logger_->log_error("PublishKafka: configure error result [%s]", errstr);
     }
@@ -150,21 +150,21 @@ void PublishKafka::onSchedule(core::ProcessContext *context, core::ProcessSessio
   value = "";
   if (context->getProperty(BatchSize.getName(), value) && !value.empty()) {
     rd_kafka_conf_set(conf_, "batch.num.messages", value.c_str(), errstr, sizeof(errstr));
-    logger_->log_info("PublishKafka: batch.num.messages [%s]", value);
+    logger_->log_debug("PublishKafka: batch.num.messages [%s]", value);
     if (result != RD_KAFKA_CONF_OK)
       logger_->log_error("PublishKafka: configure error result [%s]", errstr);
   }
   value = "";
   if (context->getProperty(CompressCodec.getName(), value) && !value.empty()) {
     rd_kafka_conf_set(conf_, "compression.codec", value.c_str(), errstr, sizeof(errstr));
-    logger_->log_info("PublishKafka: compression.codec [%s]", value);
+    logger_->log_debug("PublishKafka: compression.codec [%s]", value);
     if (result != RD_KAFKA_CONF_OK)
       logger_->log_error("PublishKafka: configure error result [%s]", errstr);
   }
   value = "";
   if (context->getProperty(DeliveryGuarantee.getName(), value) && !value.empty()) {
     rd_kafka_topic_conf_set(topic_conf_, "request.required.acks", value.c_str(), errstr, sizeof(errstr));
-    logger_->log_info("PublishKafka: request.required.acks [%s]", value);
+    logger_->log_debug("PublishKafka: request.required.acks [%s]", value);
     if (result != RD_KAFKA_CONF_OK)
       logger_->log_error("PublishKafka: configure error result [%s]", errstr);
   }
@@ -174,7 +174,7 @@ void PublishKafka::onSchedule(core::ProcessContext *context, core::ProcessSessio
     if (core::Property::StringToTime(value, valInt, unit) && core::Property::ConvertTimeUnitToMS(valInt, unit, valInt)) {
       valueConf = std::to_string(valInt);
       rd_kafka_topic_conf_set(topic_conf_, "request.timeout.ms", valueConf.c_str(), errstr, sizeof(errstr));
-      logger_->log_info("PublishKafka: request.timeout.ms [%s]", valueConf);
+      logger_->log_debug("PublishKafka: request.timeout.ms [%s]", valueConf);
       if (result != RD_KAFKA_CONF_OK)
         logger_->log_error("PublishKafka: configure error result [%s]", errstr);
     }
@@ -183,35 +183,35 @@ void PublishKafka::onSchedule(core::ProcessContext *context, core::ProcessSessio
   if (context->getProperty(SecurityProtocol.getName(), value) && !value.empty()) {
     if (value == SECURITY_PROTOCOL_SSL) {
       rd_kafka_conf_set(conf_, "security.protocol", value.c_str(), errstr, sizeof(errstr));
-      logger_->log_info("PublishKafka: security.protocol [%s]", value);
+      logger_->log_debug("PublishKafka: security.protocol [%s]", value);
       if (result != RD_KAFKA_CONF_OK) {
         logger_->log_error("PublishKafka: configure error result [%s]", errstr);
       } else {
         value = "";
         if (context->getProperty(SecurityCA.getName(), value) && !value.empty()) {
           rd_kafka_conf_set(conf_, "ssl.ca.location", value.c_str(), errstr, sizeof(errstr));
-          logger_->log_info("PublishKafka: ssl.ca.location [%s]", value);
+          logger_->log_debug("PublishKafka: ssl.ca.location [%s]", value);
           if (result != RD_KAFKA_CONF_OK)
             logger_->log_error("PublishKafka: configure error result [%s]", errstr);
         }
         value = "";
         if (context->getProperty(SecurityCert.getName(), value) && !value.empty()) {
           rd_kafka_conf_set(conf_, "ssl.certificate.location", value.c_str(), errstr, sizeof(errstr));
-          logger_->log_info("PublishKafka: ssl.certificate.location [%s]", value);
+          logger_->log_debug("PublishKafka: ssl.certificate.location [%s]", value);
           if (result != RD_KAFKA_CONF_OK)
             logger_->log_error("PublishKafka: configure error result [%s]", errstr);
         }
         value = "";
         if (context->getProperty(SecurityPrivateKey.getName(), value) && !value.empty()) {
           rd_kafka_conf_set(conf_, "ssl.key.location", value.c_str(), errstr, sizeof(errstr));
-          logger_->log_info("PublishKafka: ssl.key.location [%s]", value);
+          logger_->log_debug("PublishKafka: ssl.key.location [%s]", value);
           if (result != RD_KAFKA_CONF_OK)
             logger_->log_error("PublishKafka: configure error result [%s]", errstr);
         }
         value = "";
         if (context->getProperty(SecurityPrivateKeyPassWord.getName(), value) && !value.empty()) {
           rd_kafka_conf_set(conf_, "ssl.key.password", value.c_str(), errstr, sizeof(errstr));
-          logger_->log_info("PublishKafka: ssl.key.password [%s]", value);
+          logger_->log_debug("PublishKafka: ssl.key.password [%s]", value);
           if (result != RD_KAFKA_CONF_OK)
             logger_->log_error("PublishKafka: configure error result [%s]", errstr);
         }
@@ -221,9 +221,9 @@ void PublishKafka::onSchedule(core::ProcessContext *context, core::ProcessSessio
   value = "";
   if (context->getProperty(Topic.getName(), value) && !value.empty()) {
     topic_ = value;
-    logger_->log_info("PublishKafka: topic [%s]", topic_);
+    logger_->log_debug("PublishKafka: topic [%s]", topic_);
   } else {
-    logger_->log_info("PublishKafka: topic not configured");
+    logger_->log_warn("PublishKafka: topic not configured");
     return;
   }
 

@@ -99,7 +99,7 @@ bool RawSiteToSiteClient::establish() {
     return false;
   }
 
-  logger_->log_info("Site2Site socket established");
+  logger_->log_debug("Site2Site socket established");
   peer_state_ = ESTABLISHED;
 
   return true;
@@ -112,11 +112,11 @@ bool RawSiteToSiteClient::initiateResourceNegotiation() {
     return false;
   }
 
-  logger_->log_info("Negotiate protocol version with destination port %s current version %d", port_id_str_, _currentVersion);
+  logger_->log_debug("Negotiate protocol version with destination port %s current version %d", port_id_str_, _currentVersion);
 
   int ret = peer_->writeUTF(getResourceName());
 
-  logger_->log_info("result of writing resource name is %i", ret);
+  logger_->log_trace("result of writing resource name is %i", ret);
   if (ret <= 0) {
     logger_->log_debug("result of writing resource name is %i", ret);
     // tearDown();
@@ -126,7 +126,7 @@ bool RawSiteToSiteClient::initiateResourceNegotiation() {
   ret = peer_->write(_currentVersion);
 
   if (ret <= 0) {
-    logger_->log_info("result of writing version is %i", ret);
+    logger_->log_debug("result of writing version is %i", ret);
     return false;
   }
 
@@ -134,13 +134,13 @@ bool RawSiteToSiteClient::initiateResourceNegotiation() {
   ret = peer_->read(statusCode);
 
   if (ret <= 0) {
-    logger_->log_info("result of writing version status code  %i", ret);
+    logger_->log_debug("result of writing version status code  %i", ret);
     return false;
   }
-  logger_->log_info("status code is %i", statusCode);
+  logger_->log_debug("status code is %i", statusCode);
   switch (statusCode) {
     case RESOURCE_OK:
-      logger_->log_info("Site2Site Protocol Negotiate protocol version OK");
+      logger_->log_debug("Site2Site Protocol Negotiate protocol version OK");
       return true;
     case DIFFERENT_RESOURCE_VERSION:
       uint32_t serverVersion;
@@ -161,11 +161,11 @@ bool RawSiteToSiteClient::initiateResourceNegotiation() {
       ret = -1;
       return false;
     case NEGOTIATED_ABORT:
-      logger_->log_info("Site2Site Negotiate protocol response ABORT");
+      logger_->log_warn("Site2Site Negotiate protocol response ABORT");
       ret = -1;
       return false;
     default:
-      logger_->log_info("Negotiate protocol response unknown code %d", statusCode);
+      logger_->log_warn("Negotiate protocol response unknown code %d", statusCode);
       return true;
   }
 
@@ -179,7 +179,7 @@ bool RawSiteToSiteClient::initiateCodecResourceNegotiation() {
     return false;
   }
 
-  logger_->log_info("Negotiate Codec version with destination port %s current version %d", port_id_str_, _currentCodecVersion);
+  logger_->log_trace("Negotiate Codec version with destination port %s current version %d", port_id_str_, _currentCodecVersion);
 
   int ret = peer_->writeUTF(getCodecResourceName());
 
@@ -204,7 +204,7 @@ bool RawSiteToSiteClient::initiateCodecResourceNegotiation() {
 
   switch (statusCode) {
     case RESOURCE_OK:
-      logger_->log_info("Site2Site Codec Negotiate version OK");
+      logger_->log_trace("Site2Site Codec Negotiate version OK");
       return true;
     case DIFFERENT_RESOURCE_VERSION:
       uint32_t serverVersion;
@@ -224,11 +224,11 @@ bool RawSiteToSiteClient::initiateCodecResourceNegotiation() {
       ret = -1;
       return false;
     case NEGOTIATED_ABORT:
-      logger_->log_info("Site2Site Codec Negotiate response ABORT");
+      logger_->log_error("Site2Site Codec Negotiate response ABORT");
       ret = -1;
       return false;
     default:
-      logger_->log_info("Negotiate Codec response unknown code %d", statusCode);
+      logger_->log_error("Negotiate Codec response unknown code %d", statusCode);
       return true;
   }
 
@@ -240,7 +240,7 @@ bool RawSiteToSiteClient::handShake() {
     logger_->log_error("Site2Site peer state is not established while handshake");
     return false;
   }
-  logger_->log_info("Site2Site Protocol Perform hand shake with destination port %s", port_id_str_);
+  logger_->log_debug("Site2Site Protocol Perform hand shake with destination port %s", port_id_str_);
   uuid_t uuid;
   // Generate the global UUID for the com identify
   id_generator_->generate(uuid);
@@ -290,7 +290,7 @@ bool RawSiteToSiteClient::handShake() {
     if (ret <= 0) {
       return false;
     }
-    logger_->log_info("Site2Site Protocol Send handshake properties %s %s", it->first.c_str(), it->second.c_str());
+    logger_->log_debug("Site2Site Protocol Send handshake properties %s %s", it->first, it->second);
   }
 
   RespondCode code;
@@ -304,7 +304,7 @@ bool RawSiteToSiteClient::handShake() {
 
   switch (code) {
     case PROPERTIES_OK:
-      logger_->log_info("Site2Site HandShake Completed");
+      logger_->log_debug("Site2Site HandShake Completed");
       peer_state_ = HANDSHAKED;
       return true;
     case PORT_NOT_IN_VALID_STATE:
@@ -314,7 +314,7 @@ bool RawSiteToSiteClient::handShake() {
       ret = -1;
       return false;
     default:
-      logger_->log_info("HandShake Failed because of unknown respond code %d", code);
+      logger_->log_error("HandShake Failed because of unknown respond code %d", code);
       ret = -1;
       return false;
   }
@@ -324,7 +324,7 @@ bool RawSiteToSiteClient::handShake() {
 
 void RawSiteToSiteClient::tearDown() {
   if (peer_state_ >= ESTABLISHED) {
-    logger_->log_info("Site2Site Protocol tearDown");
+    logger_->log_trace("Site2Site Protocol tearDown");
     // need to write shutdown request
     writeRequestType(SHUTDOWN);
   }
@@ -378,9 +378,7 @@ bool RawSiteToSiteClient::getPeerList(std::vector<PeerStatus> &peers) {
       }
       PeerStatus status(std::make_shared<Peer>(port_id_, host, port, secure), count, true);
       peers.push_back(std::move(status));
-      std::stringstream str;
-      str << "Site2Site Peer host " << host << " port " << port << " Secure " << secure;
-      logger_->log_info(str.str().c_str());
+      logging::LOG_TRACE(logger_) << "Site2Site Peer host " << host << " port " << port << " Secure " << secure;
     }
 
     tearDown();
@@ -490,7 +488,7 @@ bool RawSiteToSiteClient::negotiateCodec() {
     return false;
   }
 
-  logger_->log_info("Site2Site Protocol Negotiate Codec with destination port %s", port_id_str_);
+  logger_->log_trace("Site2Site Protocol Negotiate Codec with destination port %s", port_id_str_);
 
   int status = writeRequestType(NEGOTIATE_FLOWFILE_CODEC);
 
@@ -506,7 +504,7 @@ bool RawSiteToSiteClient::negotiateCodec() {
     return false;
   }
 
-  logger_->log_info("Site2Site Codec Completed and move to READY state for data transfer");
+  logger_->log_trace("Site2Site Codec Completed and move to READY state for data transfer");
   peer_state_ = READY;
 
   return true;
@@ -519,7 +517,7 @@ bool RawSiteToSiteClient::bootstrap() {
   tearDown();
 
   if (establish() && handShake() && negotiateCodec()) {
-    logger_->log_info("Site2Site Ready For data transaction");
+    logger_->log_debug("Site to Site ready for data transaction");
     return true;
   } else {
     peer_->yield();
@@ -561,24 +559,24 @@ std::shared_ptr<Transaction> RawSiteToSiteClient::createTransaction(std::string 
     switch (code) {
       case MORE_DATA:
         dataAvailable = true;
-        logger_->log_info("Site2Site peer indicates that data is available");
+        logger_->log_trace("Site2Site peer indicates that data is available");
         transaction = std::make_shared<Transaction>(direction, crcstream);
         known_transactions_[transaction->getUUIDStr()] = transaction;
         transactionID = transaction->getUUIDStr();
         transaction->setDataAvailable(dataAvailable);
-        logger_->log_info("Site2Site create transaction %s", transaction->getUUIDStr().c_str());
+        logger_->log_trace("Site2Site create transaction %s", transaction->getUUIDStr());
         return transaction;
       case NO_MORE_DATA:
         dataAvailable = false;
-        logger_->log_info("Site2Site peer indicates that no data is available");
+        logger_->log_trace("Site2Site peer indicates that no data is available");
         transaction = std::make_shared<Transaction>(direction, crcstream);
         known_transactions_[transaction->getUUIDStr()] = transaction;
         transactionID = transaction->getUUIDStr();
         transaction->setDataAvailable(dataAvailable);
-        logger_->log_info("Site2Site create transaction %s", transaction->getUUIDStr().c_str());
+        logger_->log_trace("Site2Site create transaction %s", transaction->getUUIDStr());
         return transaction;
       default:
-        logger_->log_info("Site2Site got unexpected response %d when asking for data", code);
+        logger_->log_warn("Site2Site got unexpected response %d when asking for data", code);
         return NULL;
     }
   } else {
@@ -591,7 +589,7 @@ std::shared_ptr<Transaction> RawSiteToSiteClient::createTransaction(std::string 
       transaction = std::make_shared<Transaction>(direction, crcstream);
       known_transactions_[transaction->getUUIDStr()] = transaction;
       transactionID = transaction->getUUIDStr();
-      logger_->log_info("Site2Site create transaction %s", transaction->getUUIDStr().c_str());
+      logger_->log_trace("Site2Site create transaction %s", transaction->getUUIDStr());
       return transaction;
     }
   }

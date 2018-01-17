@@ -115,7 +115,7 @@ bool linkToPrevious) {
 
 bool ExecutionPlan::setProperty(const std::shared_ptr<core::Processor> proc, const std::string &prop, const std::string &value) {
   uint32_t i = 0;
-  logger_->log_info("Attempting to set property %s %s for %s", prop, value, proc->getName());
+  logger_->log_debug("Attempting to set property %s %s for %s", prop, value, proc->getName());
   for (i = 0; i < processor_queue_.size(); i++) {
     if (processor_queue_.at(i) == proc) {
       break;
@@ -162,7 +162,7 @@ bool ExecutionPlan::runNextProcessor(std::function<void(const std::shared_ptr<co
   if (verify != nullptr) {
     verify(context, current_session);
   } else {
-    logger_->log_info("Running %s", processor->getName());
+    logger_->log_debug("Running %s", processor->getName());
     processor->onTrigger(context, current_session);
   }
   current_session->commit();

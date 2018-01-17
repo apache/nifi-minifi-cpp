@@ -355,7 +355,7 @@ show_supported_features() {
   echo "B. Lib Curl Features ...........$(print_feature_status HTTP_CURL_ENABLED)"
   echo "C. Lib Archive Features ........$(print_feature_status LIBARCHIVE_ENABLED)"
   echo "D. Execute Script support ......$(print_feature_status EXECUTE_SCRIPT_ENABLED)"
-  echo "E. Expression Langauge support .$(print_feature_status EXPRESSION_LANGAUGE_ENABLED)"
+  echo "E. Expression Language support .$(print_feature_status EXPRESSION_LANGAUGE_ENABLED)"
   echo "F. Kafka support ...............$(print_feature_status KAFKA_ENABLED)"
   echo "G. PCAP support ................$(print_feature_status PCAP_ENABLED)"
   echo "H. USB Camera support ..........$(print_feature_status USB_ENABLED)"

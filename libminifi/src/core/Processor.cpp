@@ -62,7 +62,7 @@ Processor::Processor(std::string name, uuid_t uuid)
   active_tasks_ = 0;
   yield_expiration_ = 0;
   incoming_connections_Iter = this->_incomingConnections.begin();
-  logger_->log_info("Processor %s created UUID %s", name_, uuidStr_);
+  logger_->log_debug("Processor %s created UUID %s", name_, uuidStr_);
 }
 
 bool Processor::isRunning() {
@@ -80,7 +80,7 @@ bool Processor::addConnection(std::shared_ptr<Connectable> conn) {
   bool ret = false;
 
   if (isRunning()) {
-    logger_->log_info("Can not add connection while the process %s is running", name_.c_str());
+    logger_->log_warn("Can not add connection while the process %s is running", name_);
     return false;
   }
   std::shared_ptr<Connection> connection = std::static_pointer_cast<Connection>(conn);
@@ -102,7 +102,7 @@ bool Processor::addConnection(std::shared_ptr<Connectable> conn) {
     if (_incomingConnections.find(connection) == _incomingConnections.end()) {
       _incomingConnections.insert(connection);
       connection->setDestination(shared_from_this());
-      logger_->log_info("Add connection %s into Processor %s incoming connection", connection->getName().c_str(), name_.c_str());
+      logger_->log_debug("Add connection %s into Processor %s incoming connection", connection->getName(), name_);
       incoming_connections_Iter = this->_incomingConnections.begin();
       ret = true;
     }
@@ -121,7 +121,7 @@ bool Processor::addConnection(std::shared_ptr<Connectable> conn) {
         existedConnection.insert(connection);
         connection->setSource(shared_from_this());
         out_going_connections_[relationship] = existedConnection;
-        logger_->log_info("Add connection %s into Processor %s outgoing connection for relationship %s", connection->getName().c_str(), name_.c_str(), relationship.c_str());
+        logger_->log_debug("Add connection %s into Processor %s outgoing connection for relationship %s", connection->getName(), name_, relationship);
         ret = true;
       }
     } else {
@@ -130,7 +130,7 @@ bool Processor::addConnection(std::shared_ptr<Connectable> conn) {
       newConnection.insert(connection);
       connection->setSource(shared_from_this());
       out_going_connections_[relationship] = newConnection;
-      logger_->log_info("Add connection %s into Processor %s outgoing connection for relationship %s", connection->getName().c_str(), name_.c_str(), relationship.c_str());
+      logger_->log_debug("Add connection %s into Processor %s outgoing connection for relationship %s", connection->getName(), name_, relationship);
       ret = true;
     }
   }
@@ -140,7 +140,7 @@ bool Processor::addConnection(std::shared_ptr<Connectable> conn) {
 
 void Processor::removeConnection(std::shared_ptr<Connectable> conn) {
   if (isRunning()) {
-    logger_->log_info("Can not remove connection while the process %s is running", name_.c_str());
+    logger_->log_warn("Can not remove connection while the process %s is running", name_);
     return;
   }
 
@@ -159,7 +159,7 @@ void Processor::removeConnection(std::shared_ptr<Connectable> conn) {
     if (_incomingConnections.find(connection) != _incomingConnections.end()) {
       _incomingConnections.erase(connection);
       connection->setDestination(NULL);
-      logger_->log_info("Remove connection %s into Processor %s incoming connection", connection->getName().c_str(), name_.c_str());
+      logger_->log_debug("Remove connection %s into Processor %s incoming connection", connection->getName(), name_);
       incoming_connections_Iter = this->_incomingConnections.begin();
     }
   }
@@ -174,7 +174,7 @@ void Processor::removeConnection(std::shared_ptr<Connectable> conn) {
       if (out_going_connections_[relationship].find(connection) != out_going_connections_[relationship].end()) {
         out_going_connections_[relationship].erase(connection);
         connection->setSource(NULL);
-        logger_->log_info("Remove connection %s into Processor %s outgoing connection for relationship %s", connection->getName().c_str(), name_.c_str(), relationship.c_str());
+        logger_->log_debug("Remove connection %s into Processor %s outgoing connection for relationship %s", connection->getName(), name_, relationship);
       }
     }
   }

@@ -98,7 +98,7 @@ HTTPClient::~HTTPClient() {
     curl_easy_cleanup(http_session_);
     http_session_ = nullptr;
   }
-  logger_->log_info("Closing HTTPClient for %s", url_);
+  logger_->log_trace("Closing HTTPClient for %s", url_);
 }
 
 void HTTPClient::forceClose() {
@@ -132,7 +132,7 @@ void HTTPClient::initialize(const std::string &method, const std::string url, co
 }
 
 void HTTPClient::setDisablePeerVerification() {
-  logger_->log_info("Disabling peer verification");
+  logger_->log_debug("Disabling peer verification");
   curl_easy_setopt(http_session_, CURLOPT_SSL_VERIFYPEER, 0L);
 }
 
@@ -152,7 +152,7 @@ void HTTPClient::setReadCallback(HTTPReadCallback *callbackObj) {
 }
 
 void HTTPClient::setUploadCallback(HTTPUploadCallback *callbackObj) {
-  logger_->log_info("Setting callback for %s", url_);
+  logger_->log_debug("Setting callback for %s", url_);
   write_callback_ = callbackObj;
   if (method_ == "put" || method_ == "PUT") {
     curl_easy_setopt(http_session_, CURLOPT_INFILESIZE_LARGE, (curl_off_t ) callbackObj->ptr->getBufferSize());
@@ -218,7 +218,7 @@ bool HTTPClient::submit() {
   }
 
   curl_easy_setopt(http_session_, CURLOPT_URL, url_.c_str());
-  logger_->log_info("Submitting to %s", url_);
+  logger_->log_debug("Submitting to %s", url_);
   if (callback == nullptr) {
     content_.ptr = &read_callback_;
     curl_easy_setopt(http_session_, CURLOPT_WRITEFUNCTION, &utils::HTTPRequestResponse::recieve_write);
@@ -240,7 +240,7 @@ bool HTTPClient::submit() {
     return false;
   }
 
-  logger_->log_info("Finished with %s", url_);
+  logger_->log_debug("Finished with %s", url_);
   std::string key = "";
   for (auto header_line : header_response_.header_tokens_) {
     unsigned int i = 0;

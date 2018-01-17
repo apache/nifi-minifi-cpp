@@ -134,7 +134,7 @@ void SSLContextService::onEnable() {
         certificate = test_cert;
         logger_->log_debug("%s now good", certificate);
       } else {
-        logger_->log_debug("%s still not good", test_cert);
+        logger_->log_warn("%s still not good", test_cert);
         valid_ = false;
       }
       cert_file_test.close();

@@ -71,7 +71,7 @@ void ListenSyslog::startSocketThread() {
   if (_thread != NULL)
     return;
 
-  logger_->log_info("ListenSysLog Socket Thread Start");
+  logger_->log_trace("ListenSysLog Socket Thread Start");
   _serverTheadRunning = true;
   _thread = new std::thread(run, this);
   _thread->detach();
@@ -107,7 +107,7 @@ void ListenSyslog::runThread() {
       else
         sockfd = socket(AF_INET, SOCK_DGRAM, 0);
       if (sockfd < 0) {
-        logger_->log_info("ListenSysLog Server socket creation failed");
+        logger_->log_error("ListenSysLog Server socket creation failed");
         break;
       }
       bzero(reinterpret_cast<char *>(&serv_addr), sizeof(serv_addr));
@@ -180,7 +180,7 @@ void ListenSyslog::runThread() {
         int recvlen = readline(clientSocket, _buffer, sizeof(_buffer));
         if (recvlen <= 0) {
           close(clientSocket);
-          logger_->log_info("ListenSysLog client socket %d close", clientSocket);
+          logger_->log_debug("ListenSysLog client socket %d close", clientSocket);
           it = _clientSockets.erase(it);
         } else {
           if ((uint64_t)(recvlen + getEventQueueByteSize()) <= _recvBufSize) {

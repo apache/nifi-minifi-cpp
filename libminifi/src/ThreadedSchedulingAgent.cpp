@@ -58,12 +58,12 @@ void ThreadedSchedulingAgent::schedule(std::shared_ptr<core::Processor> processo
   }
 
   if (processor->getScheduledState() != core::RUNNING) {
-    logger_->log_info("Can not schedule threads for processor %s because it is not running", processor->getName().c_str());
+    logger_->log_debug("Can not schedule threads for processor %s because it is not running", processor->getName());
     return;
   }
 
   if (thread_pool_.isRunning(processor->getUUIDStr())) {
-    logger_->log_info("Can not schedule threads for processor %s because there are existing threads running");
+    logger_->log_warn("Can not schedule threads for processor %s because there are existing threads running");
     return;
   }
 
@@ -93,7 +93,7 @@ void ThreadedSchedulingAgent::schedule(std::shared_ptr<core::Processor> processo
     std::future<uint64_t> future;
     thread_pool_.execute(std::move(functor), future);
   }
-  logger_->log_info("Scheduled thread %d concurrent workers for for process %s", processor->getMaxConcurrentTasks(), processor->getName().c_str());
+  logger_->log_debug("Scheduled thread %d concurrent workers for for process %s", processor->getMaxConcurrentTasks(), processor->getName());
   return;
 }
 
@@ -104,10 +104,10 @@ void ThreadedSchedulingAgent::stop() {
 
 void ThreadedSchedulingAgent::unschedule(std::shared_ptr<core::Processor> processor) {
   std::lock_guard<std::mutex> lock(mutex_);
-  logger_->log_info("Shutting down threads for processor %s/%s", processor->getName().c_str(), processor->getUUIDStr().c_str());
+  logger_->log_debug("Shutting down threads for processor %s/%s", processor->getName(), processor->getUUIDStr());
 
   if (processor->getScheduledState() != core::RUNNING) {
-    logger_->log_info("Cannot unschedule threads for processor %s because it is not running", processor->getName().c_str());
+    logger_->log_warn("Cannot unschedule threads for processor %s because it is not running", processor->getName());
     return;
   }
 

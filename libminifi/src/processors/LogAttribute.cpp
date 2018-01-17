@@ -64,7 +64,7 @@ void LogAttribute::initialize() {
 }
 
 void LogAttribute::onTrigger(core::ProcessContext *context, core::ProcessSession *session) {
-  logger_->log_info("enter log attribute");
+  logger_->log_trace("enter log attribute");
   std::string dashLine = "--------------------------------------------------";
   LogAttrLevel level = LogAttrLevelInfo;
   bool logPayload = false;
@@ -123,19 +123,19 @@ void LogAttribute::onTrigger(core::ProcessContext *context, core::ProcessSession
 
   switch (level) {
     case LogAttrLevelInfo:
-      logger_->log_info("%s", output.c_str());
+      logger_->log_info("%s", output);
       break;
     case LogAttrLevelDebug:
-      logger_->log_debug("%s", output.c_str());
+      logger_->log_debug("%s", output);
       break;
     case LogAttrLevelError:
-      logger_->log_error("%s", output.c_str());
+      logger_->log_error("%s", output);
       break;
     case LogAttrLevelTrace:
-      logger_->log_trace("%s", output.c_str());
+      logger_->log_trace("%s", output);
       break;
     case LogAttrLevelWarn:
-      logger_->log_warn("%s", output.c_str());
+      logger_->log_warn("%s", output);
       break;
     default:
       break;

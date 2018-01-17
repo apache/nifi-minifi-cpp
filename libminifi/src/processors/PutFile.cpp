@@ -123,14 +123,14 @@ void PutFile::onTrigger(core::ProcessContext *context, core::ProcessSession *ses
   flowFile->getKeyedAttribute(FILENAME, filename);
   std::string tmpFile = tmpWritePath(filename, directory);
 
-  logger_->log_info("PutFile using temporary file %s", tmpFile.c_str());
+  logger_->log_debug("PutFile using temporary file %s", tmpFile);
 
   // Determine dest full file paths
   std::stringstream destFileSs;
   destFileSs << directory << "/" << filename;
   std::string destFile = destFileSs.str();
 
-  logger_->log_info("PutFile writing file %s into directory %s", filename.c_str(), directory.c_str());
+  logger_->log_debug("PutFile writing file %s into directory %s", filename, directory);
 
   // If file exists, apply conflict resolution strategy
   struct stat statResult;
@@ -141,7 +141,7 @@ void PutFile::onTrigger(core::ProcessContext *context, core::ProcessSession *ses
       // it's a directory, count the files
       DIR *myDir = opendir(directory.c_str());
       if (!myDir) {
-        logger_->log_warn("Could not open %s", directory.c_str());
+        logger_->log_warn("Could not open %s", directory);
         session->transfer(flowFile, Failure);
         return;
       }
@@ -153,7 +153,7 @@ void PutFile::onTrigger(core::ProcessContext *context, core::ProcessSession *ses
           ct++;
           if (ct >= max_dest_files_) {
             logger_->log_warn("Routing to failure because the output directory %s has at least %u files, which exceeds the "
-                "configured max number of files", directory.c_str(), max_dest_files_);
+                "configured max number of files", directory, max_dest_files_);
             session->transfer(flowFile, Failure);
             closedir(myDir);
             return;
@@ -165,9 +165,9 @@ void PutFile::onTrigger(core::ProcessContext *context, core::ProcessSession *ses
   }
 
   if (stat(destFile.c_str(), &statResult) == 0) {
-    logger_->log_info("Destination file %s exists; applying Conflict Resolution Strategy: %s",
-                      destFile.c_str(),
-                      conflict_resolution_.c_str());
+    logger_->log_warn("Destination file %s exists; applying Conflict Resolution Strategy: %s",
+                      destFile,
+                      conflict_resolution_);
 
     if (conflict_resolution_ == CONFLICT_RESOLUTION_STRATEGY_REPLACE) {
       putFile(session, flowFile, tmpFile, destFile, directory);
@@ -215,7 +215,7 @@ bool PutFile::putFile(core::ProcessSession *session,
     // Attempt to create directories in file's path
     std::stringstream dir_path_stream;
 
-    logger_->log_warn("Destination directory does not exist; will attempt to create: ", destDir);
+    logger_->log_debug("Destination directory does not exist; will attempt to create: ", destDir);
     size_t i = 0;
     auto pos = destFile.find('/');
 
@@ -225,7 +225,7 @@ bool PutFile::putFile(core::ProcessSession *session,
       auto dir_path = dir_path_stream.str();
 
       if (!dir_path_component.empty()) {
-        logger_->log_info("Attempting to create directory if it does not already exist: %s", dir_path);
+        logger_->log_debug("Attempting to create directory if it does not already exist: %s", dir_path);
         mkdir(dir_path.c_str(), 0700);
         dir_path_stream << '/';
       } else if (pos == 0) {
@@ -241,7 +241,7 @@ bool PutFile::putFile(core::ProcessSession *session,
   ReadCallback cb(tmpFile, destFile);
   session->read(flowFile, &cb);
 
-  logger_->log_info("Committing %s", destFile);
+  logger_->log_debug("Committing %s", destFile);
   if (cb.commit()) {
     session->transfer(flowFile, Success);
     return true;
@@ -296,18 +296,18 @@ int64_t PutFile::ReadCallback::process(std::shared_ptr<io::BaseStream> stream) {
 bool PutFile::ReadCallback::commit() {
   bool success = false;
 
-  logger_->log_info("PutFile committing put file operation to %s", dest_file_.c_str());
+  logger_->log_info("PutFile committing put file operation to %s", dest_file_);
 
   if (write_succeeded_) {
     if (rename(tmp_file_.c_str(), dest_file_.c_str())) {
       logger_->log_info("PutFile commit put file operation to %s failed because rename() call failed",
-                        dest_file_.c_str());
+                        dest_file_);
     } else {
       success = true;
-      logger_->log_info("PutFile commit put file operation to %s succeeded", dest_file_.c_str());
+      logger_->log_info("PutFile commit put file operation to %s succeeded", dest_file_);
     }
   } else {
-    logger_->log_error("PutFile commit put file operation to %s failed because write failed", dest_file_.c_str());
+    logger_->log_error("PutFile commit put file operation to %s failed because write failed", dest_file_);
   }
 
   return success;

@@ -64,19 +64,19 @@ int64_t ProcessSessionReadCallback::process(std::shared_ptr<io::BaseStream> stre
 bool ProcessSessionReadCallback::commit() {
   bool success = false;
 
-  logger_->log_info("committing export operation to %s", _destFile.c_str());
+  logger_->log_debug("committing export operation to %s", _destFile);
 
   if (_writeSucceeded) {
     _tmpFileOs.close();
 
     if (rename(_tmpFile.c_str(), _destFile.c_str())) {
-      logger_->log_info("commit export operation to %s failed because rename() call failed", _destFile.c_str());
+      logger_->log_warn("commit export operation to %s failed because rename() call failed", _destFile);
     } else {
       success = true;
-      logger_->log_info("commit export operation to %s succeeded", _destFile.c_str());
+      logger_->log_debug("commit export operation to %s succeeded", _destFile);
     }
   } else {
-    logger_->log_error("commit export operation to %s failed because write failed", _destFile.c_str());
+    logger_->log_error("commit export operation to %s failed because write failed", _destFile);
   }
   return success;
 }

@@ -88,7 +88,7 @@ bool ConfigurableComponent::setProperty(const std::string name, std::string valu
     Property item = it->second;
     item.setValue(value);
     properties_[item.getName()] = item;
-    logger_->log_debug("Component %s property name %s value %s", name.c_str(), item.getName().c_str(), value.c_str());
+    logger_->log_debug("Component %s property name %s value %s", name, item.getName(), value);
     return true;
   } else {
     return false;
@@ -109,7 +109,7 @@ bool ConfigurableComponent::updateProperty(const std::string &name, const std::s
     Property item = it->second;
     item.addValue(value);
     properties_[item.getName()] = item;
-    logger_->log_debug("Component %s property name %s value %s", name.c_str(), item.getName().c_str(), value.c_str());
+    logger_->log_debug("Component %s property name %s value %s", name, item.getName(), value);
     return true;
   } else {
     return false;
@@ -130,7 +130,7 @@ bool ConfigurableComponent::setProperty(Property &prop, std::string value) {
     Property item = it->second;
     item.setValue(value);
     properties_[item.getName()] = item;
-    logger_->log_debug("property name %s value %s", prop.getName().c_str(), item.getName().c_str(), value.c_str());
+    logger_->log_debug("property name %s value %s", prop.getName(), item.getName(), value);
     return true;
   } else {
     Property newProp(prop);

@@ -67,7 +67,7 @@ std::shared_ptr<Transaction> HttpSiteToSiteClient::createTransaction(std::string
   client->setPostFields("");
   client->submit();
   if (peer_->getStream() != nullptr)
-  logger_->log_info("Closing %s",((io::HttpStream*)peer_->getStream())->getClientRef()->getURL());
+  logger_->log_debug("Closing %s",((io::HttpStream*)peer_->getStream())->getClientRef()->getURL());
   if (client->getResponseCode() == 201) {
     // parse the headers
     auto headers = client->getParsedHeaders();
@@ -135,7 +135,7 @@ int HttpSiteToSiteClient::readResponse(const std::shared_ptr<Transaction> &trans
       if (current_code == CONFIRM_TRANSACTION && transaction->getState() == DATA_EXCHANGED) {
         auto stream = dynamic_cast<io::HttpStream*>(peer_->getStream());
         if (!stream->isFinished()) {
-          logger_->log_info("confirm read for %s, but not finished ", transaction->getUUIDStr());
+          logger_->log_debug("confirm read for %s, but not finished ", transaction->getUUIDStr());
           if (stream->waitForDataAvailable()) {
             code = CONTINUE_TRANSACTION;
           }
@@ -146,15 +146,15 @@ int HttpSiteToSiteClient::readResponse(const std::shared_ptr<Transaction> &trans
       } else {
         auto stream = dynamic_cast<io::HttpStream*>(peer_->getStream());
         if (stream->isFinished()) {
-          logger_->log_info("Finished %s ", transaction->getUUIDStr());
+          logger_->log_debug("Finished %s ", transaction->getUUIDStr());
           code = FINISH_TRANSACTION;
           current_code = FINISH_TRANSACTION;
         } else {
           if (stream->waitForDataAvailable()) {
-            logger_->log_info("data is available, so continuing transaction  %s ", transaction->getUUIDStr());
+            logger_->log_debug("data is available, so continuing transaction  %s ", transaction->getUUIDStr());
             code = CONTINUE_TRANSACTION;
           } else {
-            logger_->log_info("No data available for transaction %s ", transaction->getUUIDStr());
+            logger_->log_debug("No data available for transaction %s ", transaction->getUUIDStr());
             code = FINISH_TRANSACTION;
             current_code = FINISH_TRANSACTION;
           }
@@ -183,7 +183,7 @@ int HttpSiteToSiteClient::writeResponse(const std::shared_ptr<Transaction> &tran
     return 1;
 
   } else if (code == CONTINUE_TRANSACTION) {
-    logger_->log_info("Continuing HTTP transaction");
+    logger_->log_debug("Continuing HTTP transaction");
     return 1;
   }
   return SiteToSiteClient::writeResponse(transaction, code, message);
@@ -233,7 +233,7 @@ bool HttpSiteToSiteClient::transmitPayload(const std::shared_ptr<core::ProcessCo
 void HttpSiteToSiteClient::tearDown() {
 
   if (peer_state_ >= ESTABLISHED) {
-    logger_->log_info("Site2Site Protocol tearDown");
+    logger_->log_debug("Site2Site Protocol tearDown");
   }
   known_transactions_.clear();
   peer_->Close();
@@ -256,7 +256,7 @@ void HttpSiteToSiteClient::closeTransaction(const std::string &transactionID) {
   }
 
   std::string append_str;
-  logger_->log_info("Site2Site close transaction %s", transaction->getUUIDStr().c_str());
+  logger_->log_info("Site to Site closed transaction %s", transaction->getUUIDStr());
 
   int code = UNRECOGNIZED_RESPONSE_CODE;
   if (transaction->getState() == TRANSACTION_CONFIRMED) {
@@ -314,7 +314,7 @@ void HttpSiteToSiteClient::deleteTransaction(std::string transactionID) {
   }
 
   std::string append_str;
-  logger_->log_info("Site2Site delete transaction %s", transaction->getUUIDStr().c_str());
+  logger_->log_debug("Site2Site delete transaction %s", transaction->getUUIDStr());
 
   closeTransaction(transactionID);
 

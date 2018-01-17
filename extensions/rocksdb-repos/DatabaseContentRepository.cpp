@@ -45,10 +45,10 @@ bool DatabaseContentRepository::initialize(const std::shared_ptr<minifi::Configu
   options.max_successive_merges = 0;
   rocksdb::Status status = rocksdb::DB::Open(options, directory_.c_str(), &db_);
   if (status.ok()) {
-    logger_->log_debug("NiFi Content DB Repository database open %s success", directory_.c_str());
+    logger_->log_debug("NiFi Content DB Repository database open %s success", directory_);
     is_valid_ = true;
   } else {
-    logger_->log_error("NiFi Content DB Repository database open %s fail", directory_.c_str());
+    logger_->log_error("NiFi Content DB Repository database open %s fail", directory_);
     is_valid_ = false;
   }
   return is_valid_;

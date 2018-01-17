@@ -71,7 +71,7 @@ std::unique_ptr<sitetosite::SiteToSiteClient> RemoteProcessorGroupPort::getNextP
         nextProtocol = sitetosite::createClient(config);
       } else if (peer_index_ >= 0) {
         std::lock_guard<std::mutex> lock(peer_mutex_);
-        logger_->log_info("Creating client from peer %ll", peer_index_.load());
+        logger_->log_debug("Creating client from peer %ll", peer_index_.load());
         sitetosite::SiteToSiteClientConfiguration config(stream_factory_, peers_[this->peer_index_].getPeer(), client_type_);
 
         peer_index_++;
@@ -81,12 +81,12 @@ std::unique_ptr<sitetosite::SiteToSiteClient> RemoteProcessorGroupPort::getNextP
 
         nextProtocol = sitetosite::createClient(config);
       } else {
-        logger_->log_info("Refreshing the peer list since there are none configured.");
+        logger_->log_debug("Refreshing the peer list since there are none configured.");
         refreshPeerList();
       }
     }
   }
-  logger_->log_info("Obtained protocol from available_protocols_");
+  logger_->log_debug("Obtained protocol from available_protocols_");
   return nextProtocol;
 }
 
@@ -95,11 +95,11 @@ void RemoteProcessorGroupPort::returnProtocol(std::unique_ptr<sitetosite::SiteTo
   if (max_concurrent_tasks_ > count)
     count = max_concurrent_tasks_;
   if (available_protocols_.size_approx() >= count) {
-    logger_->log_info("not enqueueing protocol %s", getUUIDStr());
+    logger_->log_debug("not enqueueing protocol %s", getUUIDStr());
     // let the memory be freed
     return;
   }
-  logger_->log_info("enqueueing protocol %s, have a total of %lu", getUUIDStr(), available_protocols_.size_approx());
+  logger_->log_debug("enqueueing protocol %s, have a total of %lu", getUUIDStr(), available_protocols_.size_approx());
   available_protocols_.enqueue(std::move(return_protocol));
 }
 
@@ -142,13 +142,13 @@ void RemoteProcessorGroupPort::initialize() {
       if (peer_index_ >= static_cast<int>(peers_.size())) {
         peer_index_ = 0;
       }
-      logger_->log_info("Creating client");
+      logger_->log_trace("Creating client");
       nextProtocol = sitetosite::createClient(config);
-      logger_->log_info("Created client, moving into available protocols");
+      logger_->log_trace("Created client, moving into available protocols");
       returnProtocol(std::move(nextProtocol));
     }
   }
-  logger_->log_info("Finished initialization");
+  logger_->log_trace("Finished initialization");
 }
 
 void RemoteProcessorGroupPort::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
@@ -168,14 +168,14 @@ void RemoteProcessorGroupPort::onSchedule(const std::shared_ptr<core::ProcessCon
 }
 
 void RemoteProcessorGroupPort::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
-  logger_->log_info("On trigger %s", getUUIDStr());
+  logger_->log_trace("On trigger %s", getUUIDStr());
   if (!transmitting_) {
     return;
   }
 
   std::string value;
 
-  logger_->log_info("On trigger %s", getUUIDStr());
+  logger_->log_trace("On trigger %s", getUUIDStr());
   if (url_.empty()) {
     if (context->getProperty(hostName.getName(), value) && !value.empty()) {
       host_ = value;
@@ -193,7 +193,7 @@ void RemoteProcessorGroupPort::onTrigger(const std::shared_ptr<core::ProcessCont
 
   std::unique_ptr<sitetosite::SiteToSiteClient> protocol_ = nullptr;
   try {
-    logger_->log_info("get protocol in on trigger");
+    logger_->log_trace("get protocol in on trigger");
     protocol_ = getNextProtocol();
 
     if (!protocol_) {
@@ -203,7 +203,7 @@ void RemoteProcessorGroupPort::onTrigger(const std::shared_ptr<core::ProcessCont
     }
 
     if (!protocol_->transfer(direction_, context, session)) {
-      logger_->log_info("protocol transmission failed, yielding");
+      logger_->log_warn("protocol transmission failed, yielding");
       context->yield();
     }
 
@@ -264,7 +264,7 @@ void RemoteProcessorGroupPort::refreshRemoteSite2SiteInfo() {
     const std::vector<char> &response_body = client->getResponseBody();
     if (!response_body.empty()) {
       std::string controller = std::string(response_body.begin(), response_body.end());
-      logger_->log_debug("controller config %s", controller.c_str());
+      logger_->log_debug("controller config %s", controller);
       Json::Value value;
       Json::Reader reader;
       bool parsingSuccessful = reader.parse(controller, value);
@@ -280,7 +280,7 @@ void RemoteProcessorGroupPort::refreshRemoteSite2SiteInfo() {
           if (!secure.empty())
             this->site2site_secure_ = secure.asBool();
         }
-        logger_->log_info("process group remote site2site port %d, is secure %d", site2site_port_, site2site_secure_);
+        logger_->log_debug("process group remote site2site port %d, is secure %d", site2site_port_, site2site_secure_);
       }
     } else {
       logger_->log_error("Cannot output body to content for ProcessGroup::refreshRemoteSite2SiteInfo: received HTTP code %ll from %s", client->getResponseCode(), fullUrl);

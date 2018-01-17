@@ -40,7 +40,7 @@ void Repository::start() {
     return;
   running_ = true;
   thread_ = std::thread(&Repository::threadExecutor, this);
-  logger_->log_info("%s Repository Monitor Thread Start", name_.c_str());
+  logger_->log_debug("%s Repository Monitor Thread Start", name_);
 }
 
 void Repository::stop() {
@@ -49,7 +49,7 @@ void Repository::stop() {
   running_ = false;
   if (thread_.joinable())
     thread_.join();
-  logger_->log_info("%s Repository Monitor Thread Stop", name_.c_str());
+  logger_->log_debug("%s Repository Monitor Thread Stop", name_);
 }
 
 // repoSize

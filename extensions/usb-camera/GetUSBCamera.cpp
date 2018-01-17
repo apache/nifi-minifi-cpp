@@ -77,7 +77,7 @@ void GetUSBCamera::onFrame(uvc_frame_t *frame, void *ptr) {
 
   try {
     uvc_error_t ret;
-    cb_data->logger->log_info("Got frame");
+    cb_data->logger->log_debug("Got frame");
 
     ret = uvc_any2rgb(frame, cb_data->frame_buffer);
 
@@ -170,7 +170,7 @@ void GetUSBCamera::onSchedule(core::ProcessContext *context, core::ProcessSessio
     return;
   }
 
-  logger_->log_info("UVC initialized");
+  logger_->log_debug("UVC initialized");
 
   // Locate device
   res = uvc_find_device(ctx_, &dev_, usb_vendor_id, usb_product_id, usb_serial_no);
@@ -215,7 +215,7 @@ void GetUSBCamera::onSchedule(core::ProcessContext *context, core::ProcessSessio
             logger_->log_info("Skipping MJPEG frame formats");
 
           default:
-            logger_->log_info("Found unknown format");
+            logger_->log_warn("Found unknown format");
         }
       }
 
@@ -277,30 +277,30 @@ void GetUSBCamera::cleanupUvc() {
   std::lock_guard<std::recursive_mutex> lock(*dev_access_mtx_);
 
   if (frame_buffer_ != nullptr) {
-    logger_->log_info("Deallocating frame buffer");
+    logger_->log_debug("Deallocating frame buffer");
     uvc_free_frame(frame_buffer_);
   }
 
   if (devh_ != nullptr) {
-    logger_->log_info("Stopping UVC streaming");
+    logger_->log_debug("Stopping UVC streaming");
     uvc_stop_streaming(devh_);
-    logger_->log_info("Closing UVC device handle");
+    logger_->log_debug("Closing UVC device handle");
     uvc_close(devh_);
   }
 
   if (dev_ != nullptr) {
-    logger_->log_info("Closing UVC device descriptor");
+    logger_->log_debug("Closing UVC device descriptor");
     uvc_unref_device(dev_);
   }
 
   if (ctx_ != nullptr) {
-    logger_->log_info("Closing UVC context");
+    logger_->log_debug("Closing UVC context");
     uvc_exit(ctx_);
   }
 
   if (camera_thread_ != nullptr) {
     camera_thread_->join();
-    logger_->log_info("UVC thread ended");
+    logger_->log_debug("UVC thread ended");
   }
 }
 

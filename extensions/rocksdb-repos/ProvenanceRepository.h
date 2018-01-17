@@ -71,7 +71,7 @@ class ProvenanceRepository : public core::Repository, public std::enable_shared_
       return;
     running_ = true;
     thread_ = std::thread(&ProvenanceRepository::run, shared_from_this());
-    logger_->log_info("%s Repository Monitor Thread Start", name_);
+    logger_->log_debug("%s Repository Monitor Thread Start", name_);
   }
 
   // initialize
@@ -80,26 +80,26 @@ class ProvenanceRepository : public core::Repository, public std::enable_shared_
     if (config->get(Configure::nifi_provenance_repository_directory_default, value)) {
       directory_ = value;
     }
-    logger_->log_info("NiFi Provenance Repository Directory %s", directory_.c_str());
+    logger_->log_debug("NiFi Provenance Repository Directory %s", directory_);
     if (config->get(Configure::nifi_provenance_repository_max_storage_size, value)) {
       core::Property::StringToInt(value, max_partition_bytes_);
     }
-    logger_->log_info("NiFi Provenance Max Partition Bytes %d", max_partition_bytes_);
+    logger_->log_debug("NiFi Provenance Max Partition Bytes %d", max_partition_bytes_);
     if (config->get(Configure::nifi_provenance_repository_max_storage_time, value)) {
       core::TimeUnit unit;
       if (core::Property::StringToTime(value, max_partition_millis_, unit) && core::Property::ConvertTimeUnitToMS(max_partition_millis_, unit, max_partition_millis_)) {
       }
     }
-    logger_->log_info("NiFi Provenance Max Storage Time: [%d] ms", max_partition_millis_);
+    logger_->log_debug("NiFi Provenance Max Storage Time: [%d] ms", max_partition_millis_);
     rocksdb::Options options;
     options.create_if_missing = true;
     options.use_direct_io_for_flush_and_compaction = true;
     options.use_direct_reads = true;
-    rocksdb::Status status = rocksdb::DB::Open(options, directory_.c_str(), &db_);
+    rocksdb::Status status = rocksdb::DB::Open(options, directory_, &db_);
     if (status.ok()) {
-      logger_->log_info("NiFi Provenance Repository database open %s success", directory_.c_str());
+      logger_->log_debug("NiFi Provenance Repository database open %s success", directory_);
     } else {
-      logger_->log_error("NiFi Provenance Repository database open %s fail", directory_.c_str());
+      logger_->log_error("NiFi Provenance Repository database open %s fail", directory_);
       return false;
     }
 

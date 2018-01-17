@@ -212,7 +212,7 @@ int64_t UnfocusArchiveEntry::WriteCallback::process(std::shared_ptr<io::BaseStre
 
   for (const auto &entryMetadata : _archiveMetadata->entryMetadata) {
     entry = archive_entry_new();
-    logger_->log_info("UnfocusArchiveEntry writing entry %s", entryMetadata.entryName.c_str());
+    logger_->log_info("UnfocusArchiveEntry writing entry %s", entryMetadata.entryName);
 
     if (entryMetadata.entryType == AE_IFREG && entryMetadata.entrySize > 0) {
       size_t stat_ok = stat(entryMetadata.tmpFileName.c_str(), &st);
@@ -230,7 +230,7 @@ int64_t UnfocusArchiveEntry::WriteCallback::process(std::shared_ptr<io::BaseStre
     archive_entry_set_gid(entry, entryMetadata.entryGID);
     archive_entry_set_mtime(entry, entryMetadata.entryMTime, entryMetadata.entryMTimeNsec);
 
-    logger_->log_info("Writing %s with type %d, perms %d, size %d, uid %d, gid %d, mtime %d,%d", entryMetadata.entryName.c_str(), entryMetadata.entryType, entryMetadata.entryPerm,
+    logger_->log_info("Writing %s with type %d, perms %d, size %d, uid %d, gid %d, mtime %d,%d", entryMetadata.entryName, entryMetadata.entryType, entryMetadata.entryPerm,
                       entryMetadata.entrySize, entryMetadata.entryUID, entryMetadata.entryGID, entryMetadata.entryMTime, entryMetadata.entryMTimeNsec);
 
     archive_write_header(outputArchive, entry);
@@ -239,7 +239,7 @@ int64_t UnfocusArchiveEntry::WriteCallback::process(std::shared_ptr<io::BaseStre
     if (entryMetadata.entryType == AE_IFREG && entryMetadata.entrySize > 0) {
       logger_->log_info("UnfocusArchiveEntry writing %d bytes of "
                         "data from tmp file %s to archive entry %s",
-                        st.st_size, entryMetadata.tmpFileName.c_str(), entryMetadata.entryName.c_str());
+                        st.st_size, entryMetadata.tmpFileName, entryMetadata.entryName);
       std::ifstream ifs(entryMetadata.tmpFileName, std::ifstream::in | std::ios::binary);
 
       while (ifs.good()) {
@@ -249,7 +249,7 @@ int64_t UnfocusArchiveEntry::WriteCallback::process(std::shared_ptr<io::BaseStre
         if (written < 0) {
           logger_->log_error("UnfocusArchiveEntry failed to write data to "
                              "archive entry %s due to error: %s",
-                             entryMetadata.entryName.c_str(), archive_error_string(outputArchive));
+                             entryMetadata.entryName, archive_error_string(outputArchive));
         } else {
           nlen += written;
         }

@@ -112,7 +112,7 @@ core::Relationship InvokeHTTP::RelFailure("failure", "The original FlowFile will
                                           "timeout or general exception. It will have new attributes detailing the request.");
 
 void InvokeHTTP::initialize() {
-  logger_->log_info("Initializing InvokeHTTP");
+  logger_->log_trace("Initializing InvokeHTTP");
 
   // Set the supported properties
   std::set<core::Property> properties;
@@ -142,12 +142,12 @@ void InvokeHTTP::initialize() {
 
 void InvokeHTTP::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
   if (!context->getProperty(Method.getName(), method_)) {
-    logger_->log_info("%s attribute is missing, so default value of %s will be used", Method.getName().c_str(), Method.getValue().c_str());
+    logger_->log_debug("%s attribute is missing, so default value of %s will be used", Method.getName(), Method.getValue());
     return;
   }
 
   if (!context->getProperty(URL.getName(), url_)) {
-    logger_->log_info("%s attribute is missing, so default value of %s will be used", URL.getName().c_str(), URL.getValue().c_str());
+    logger_->log_debug("%s attribute is missing, so default value of %s will be used", URL.getName(), URL.getValue());
     return;
   }
 
@@ -158,7 +158,7 @@ void InvokeHTTP::onSchedule(const std::shared_ptr<core::ProcessContext> &context
     // set the timeout in curl options.
 
   } else {
-    logger_->log_info("%s attribute is missing, so default value of %s will be used", ConnectTimeout.getName().c_str(), ConnectTimeout.getValue().c_str());
+    logger_->log_debug("%s attribute is missing, so default value of %s will be used", ConnectTimeout.getName(), ConnectTimeout.getValue());
 
     return;
   }
@@ -172,34 +172,34 @@ void InvokeHTTP::onSchedule(const std::shared_ptr<core::ProcessContext> &context
     core::Property::StringToInt(timeoutStr, read_timeout_);
 
   } else {
-    logger_->log_info("%s attribute is missing, so default value of %s will be used", ReadTimeout.getName().c_str(), ReadTimeout.getValue().c_str());
+    logger_->log_debug("%s attribute is missing, so default value of %s will be used", ReadTimeout.getName(), ReadTimeout.getValue());
   }
 
   std::string dateHeaderStr;
   if (!context->getProperty(DateHeader.getName(), dateHeaderStr)) {
-    logger_->log_info("%s attribute is missing, so default value of %s will be used", DateHeader.getName().c_str(), DateHeader.getValue().c_str());
+    logger_->log_debug("%s attribute is missing, so default value of %s will be used", DateHeader.getName(), DateHeader.getValue());
   }
 
   date_header_include_ = utils::StringUtils::StringToBool(dateHeaderStr, date_header_include_);
 
   if (!context->getProperty(PropPutOutputAttributes.getName(), put_attribute_name_)) {
-    logger_->log_info("%s attribute is missing, so default value of %s will be used", PropPutOutputAttributes.getName().c_str(), PropPutOutputAttributes.getValue().c_str());
+    logger_->log_debug("%s attribute is missing, so default value of %s will be used", PropPutOutputAttributes.getName(), PropPutOutputAttributes.getValue());
   }
 
   if (!context->getProperty(AttributesToSend.getName(), attribute_to_send_regex_)) {
-    logger_->log_info("%s attribute is missing, so default value of %s will be used", AttributesToSend.getName().c_str(), AttributesToSend.getValue().c_str());
+    logger_->log_debug("%s attribute is missing, so default value of %s will be used", AttributesToSend.getName(), AttributesToSend.getValue());
   }
 
   std::string always_output_response = "false";
   if (!context->getProperty(AlwaysOutputResponse.getName(), always_output_response)) {
-    logger_->log_info("%s attribute is missing, so default value of %s will be used", AlwaysOutputResponse.getName().c_str(), AlwaysOutputResponse.getValue().c_str());
+    logger_->log_debug("%s attribute is missing, so default value of %s will be used", AlwaysOutputResponse.getName(), AlwaysOutputResponse.getValue());
   }
 
   utils::StringUtils::StringToBool(always_output_response, always_output_response_);
 
   std::string penalize_no_retry = "false";
   if (!context->getProperty(PenalizeOnNoRetry.getName(), penalize_no_retry)) {
-    logger_->log_info("%s attribute is missing, so default value of %s will be used", PenalizeOnNoRetry.getName().c_str(), PenalizeOnNoRetry.getValue().c_str());
+    logger_->log_debug("%s attribute is missing, so default value of %s will be used", PenalizeOnNoRetry.getName(), PenalizeOnNoRetry.getValue());
   }
 
   utils::StringUtils::StringToBool(penalize_no_retry, penalize_no_retry_);
@@ -214,7 +214,7 @@ void InvokeHTTP::onSchedule(const std::shared_ptr<core::ProcessContext> &context
 
   std::string useChunkedEncoding = "false";
   if (!context->getProperty(UseChunkedEncoding.getName(), useChunkedEncoding)) {
-    logger_->log_info("%s attribute is missing, so default value of %s will be used", UseChunkedEncoding.getName().c_str(), UseChunkedEncoding.getValue().c_str());
+    logger_->log_debug("%s attribute is missing, so default value of %s will be used", UseChunkedEncoding.getName(), UseChunkedEncoding.getValue());
   }
 
   utils::StringUtils::StringToBool(useChunkedEncoding, use_chunked_encoding_);
@@ -247,18 +247,18 @@ void InvokeHTTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context,
 
   if (flowFile == nullptr) {
     if (!emitFlowFile(method_)) {
-      logger_->log_info("InvokeHTTP -- create flow file with  %s", method_.c_str());
+      logger_->log_debug("InvokeHTTP -- create flow file with  %s", method_);
       flowFile = std::static_pointer_cast<FlowFileRecord>(session->create());
     } else {
-      logger_->log_info("exiting because method is %s", method_.c_str());
+      logger_->log_debug("exiting because method is %s", method_);
       return;
     }
   } else {
     context->getProperty(URL.getName(), url, flowFile);
-    logger_->log_info("InvokeHTTP -- Received flowfile");
+    logger_->log_debug("InvokeHTTP -- Received flowfile");
   }
 
-  logger_->log_info("onTrigger InvokeHTTP with %s to %s", method_, url);
+  logger_->log_debug("onTrigger InvokeHTTP with %s to %s", method_, url);
 
   // create a transaction id
   std::string tx_id = generateId();
@@ -285,7 +285,7 @@ void InvokeHTTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context,
   std::unique_ptr<utils::ByteInputCallBack> callback = nullptr;
   std::unique_ptr<utils::HTTPUploadCallback> callbackObj = nullptr;
   if (emitFlowFile(method_)) {
-    logger_->log_info("InvokeHTTP -- reading flowfile");
+    logger_->log_trace("InvokeHTTP -- reading flowfile");
     std::shared_ptr<ResourceClaim> claim = flowFile->getResourceClaim();
     if (claim) {
       callback = std::unique_ptr<utils::ByteInputCallBack>(new utils::ByteInputCallBack());
@@ -293,7 +293,7 @@ void InvokeHTTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context,
       callbackObj = std::unique_ptr<utils::HTTPUploadCallback>(new utils::HTTPUploadCallback);
       callbackObj->ptr = callback.get();
       callbackObj->pos = 0;
-      logger_->log_info("InvokeHTTP -- Setting callback, size is %d", callback->getBufferSize());
+      logger_->log_trace("InvokeHTTP -- Setting callback, size is %d", callback->getBufferSize());
       if (!use_chunked_encoding_) {
         client.appendHeader("Content-Length", std::to_string(flowFile->getSize()));
       }
@@ -303,15 +303,15 @@ void InvokeHTTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context,
     }
 
   } else {
-    logger_->log_info("InvokeHTTP -- Not emitting flowfile to HTTP Server");
+    logger_->log_trace("InvokeHTTP -- Not emitting flowfile to HTTP Server");
   }
 
   // append all headers
   client.build_header_list(attribute_to_send_regex_, flowFile->getAttributes());
 
-  logger_->log_info("InvokeHTTP -- curl performed");
+  logger_->log_trace("InvokeHTTP -- curl performed");
   if (client.submit()) {
-    logger_->log_info("InvokeHTTP -- curl successful");
+    logger_->log_trace("InvokeHTTP -- curl successful");
 
     bool putToAttribute = !IsNullOrEmpty(put_attribute_name_);
 
@@ -329,7 +329,7 @@ void InvokeHTTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context,
     bool isSuccess = ((int32_t) (http_code / 100)) == 2;
     bool output_body_to_content = isSuccess && !putToAttribute;
 
-    logger_->log_info("isSuccess: %d, response code %d", isSuccess, http_code);
+    logger_->log_debug("isSuccess: %d, response code %d", isSuccess, http_code);
     std::shared_ptr<FlowFileRecord> response_flow = nullptr;
 
     if (output_body_to_content) {
@@ -350,7 +350,7 @@ void InvokeHTTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context,
       // need an import from the data stream.
       session->importFrom(stream, response_flow);
     } else {
-      logger_->log_info("Cannot output body to content");
+      logger_->log_warn("Cannot output body to content");
       response_flow = std::static_pointer_cast<FlowFileRecord>(session->create());
     }
     route(flowFile, response_flow, session, context, isSuccess, http_code);
@@ -371,7 +371,7 @@ void InvokeHTTP::route(std::shared_ptr<FlowFileRecord> &request,
   // If the property to output the response flowfile regardless of status code is set then transfer it
   bool responseSent = false;
   if (always_output_response_ && response != nullptr) {
-    logger_->log_info("Outputting success and response");
+    logger_->log_debug("Outputting success and response");
     session->transfer(response, Success);
     responseSent = true;
   }
@@ -384,7 +384,7 @@ void InvokeHTTP::route(std::shared_ptr<FlowFileRecord> &request,
       session->transfer(request, Success);
     }
     if (response != nullptr && !responseSent) {
-      logger_->log_info("Outputting success and response");
+      logger_->log_debug("Outputting success and response");
       session->transfer(response, Success);
     }
 

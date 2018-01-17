@@ -67,11 +67,11 @@ void PublishMQTT::onSchedule(core::ProcessContext *context, core::ProcessSession
   value = "";
   if (context->getProperty(MaxFlowSegSize.getName(), value) && !value.empty() && core::Property::StringToInt(value, valInt)) {
     max_seg_size_ = valInt;
-    logger_->log_info("PublishMQTT: max flow segment size [%ll]", max_seg_size_);
+    logger_->log_debug("PublishMQTT: max flow segment size [%ll]", max_seg_size_);
   }
   value = "";
   if (context->getProperty(Retain.getName(), value) && !value.empty() && org::apache::nifi::minifi::utils::StringUtils::StringToBool(value, retain_)) {
-    logger_->log_info("PublishMQTT: Retain [%d]", retain_);
+    logger_->log_debug("PublishMQTT: Retain [%d]", retain_);
   }
 }
 

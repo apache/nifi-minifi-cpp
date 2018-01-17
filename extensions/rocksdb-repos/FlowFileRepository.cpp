@@ -47,12 +47,12 @@ void FlowFileRepository::flush() {
       if (eventRead->DeSerialize(reinterpret_cast<const uint8_t *>(value.data()), value.size())) {
         purgeList.push_back(eventRead);
       }
-      logger_->log_info("Issuing batch delete, including %s, Content path %s", eventRead->getUUIDStr(), eventRead->getContentFullPath());
+      logger_->log_debug("Issuing batch delete, including %s, Content path %s", eventRead->getUUIDStr(), eventRead->getContentFullPath());
       batch.Delete(key);
     }
   }
   if (db_->Write(rocksdb::WriteOptions(), &batch).ok()) {
-    logger_->log_info("Decrementing %u from a repo size of %u", decrement_total, repo_size_.load());
+    logger_->log_trace("Decrementing %u from a repo size of %u", decrement_total, repo_size_.load());
     if (decrement_total > repo_size_.load()) {
       repo_size_ = 0;
     } else {
@@ -98,7 +98,7 @@ void FlowFileRepository::loadComponent(const std::shared_ptr<core::ContentReposi
     std::string key = it->key().ToString();
     repo_size_ += it->value().size();
     if (eventRead->DeSerialize(reinterpret_cast<const uint8_t *>(it->value().data()), it->value().size())) {
-      logger_->log_info("Found connection for %s, path %s ", eventRead->getConnectionUuid(), eventRead->getContentFullPath());
+      logger_->log_debug("Found connection for %s, path %s ", eventRead->getConnectionUuid(), eventRead->getContentFullPath());
       auto search = connectionMap.find(eventRead->getConnectionUuid());
       if (search != connectionMap.end()) {
         // we find the connection for the persistent flowfile, create the flowfile and enqueue that
@@ -106,7 +106,7 @@ void FlowFileRepository::loadComponent(const std::shared_ptr<core::ContentReposi
         eventRead->setStoredToRepository(true);
         search->second->put(eventRead);
       } else {
-        logger_->log_info("Could not find connectinon for %s, path %s ", eventRead->getConnectionUuid(), eventRead->getContentFullPath());
+        logger_->log_warn("Could not find connectinon for %s, path %s ", eventRead->getConnectionUuid(), eventRead->getContentFullPath());
         if (eventRead->getContentFullPath().length() > 0) {
           if (nullptr != eventRead->getResourceClaim()) {
             content_repo_->remove(eventRead->getResourceClaim());
@@ -121,7 +121,7 @@ void FlowFileRepository::loadComponent(const std::shared_ptr<core::ContentReposi
 
   delete it;
   for (auto eventId : purgeList) {
-    logger_->log_info("Repository Repo %s Purge %s", name_.c_str(), eventId.first.c_str());
+    logger_->log_debug("Repository Repo %s Purge %s", name_, eventId.first);
     if (Delete(eventId.first)) {
       repo_size_ -= eventId.second;
     }

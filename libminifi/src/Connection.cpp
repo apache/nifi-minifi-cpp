@@ -58,7 +58,7 @@ Connection::Connection(const std::shared_ptr<core::Repository> &flow_repository,
   expired_duration_ = 0;
   queued_data_size_ = 0;
 
-  logger_->log_info("Connection %s created", name_.c_str());
+  logger_->log_debug("Connection %s created", name_);
 }
 
 bool Connection::isEmpty() {
@@ -122,7 +122,7 @@ std::shared_ptr<core::FlowFile> Connection::poll(std::set<std::shared_ptr<core::
       if (getTimeMillis() > (item->getEntryDate() + expired_duration_)) {
         // Flow record expired
         expiredFlowRecords.insert(item);
-        logger_->log_debug("Delete flow file UUID %s from connection %s, because it expired", item->getUUIDStr().c_str(), name_.c_str());
+        logger_->log_debug("Delete flow file UUID %s from connection %s, because it expired", item->getUUIDStr(), name_);
         if (flow_repository_->Delete(item->getUUIDStr())) {
           item->setStoredToRepository(false);
         }
@@ -136,7 +136,7 @@ std::shared_ptr<core::FlowFile> Connection::poll(std::set<std::shared_ptr<core::
         }
         std::shared_ptr<Connectable> connectable = std::static_pointer_cast<Connectable>(shared_from_this());
         item->setOriginalConnection(connectable);
-        logger_->log_debug("Dequeue flow file UUID %s from connection %s", item->getUUIDStr().c_str(), name_.c_str());
+        logger_->log_debug("Dequeue flow file UUID %s from connection %s", item->getUUIDStr(), name_);
         return item;
       }
     } else {
@@ -149,7 +149,7 @@ std::shared_ptr<core::FlowFile> Connection::poll(std::set<std::shared_ptr<core::
       }
       std::shared_ptr<Connectable> connectable = std::static_pointer_cast<Connectable>(shared_from_this());
       item->setOriginalConnection(connectable);
-      logger_->log_debug("Dequeue flow file UUID %s from connection %s", item->getUUIDStr().c_str(), name_.c_str());
+      logger_->log_debug("Dequeue flow file UUID %s from connection %s", item->getUUIDStr(), name_);
       return item;
     }
   }
@@ -163,13 +163,13 @@ void Connection::drain() {
   while (!queue_.empty()) {
     std::shared_ptr<core::FlowFile> item = queue_.front();
     queue_.pop();
-    logger_->log_debug("Delete flow file UUID %s from connection %s, because it expired", item->getUUIDStr().c_str(), name_.c_str());
+    logger_->log_debug("Delete flow file UUID %s from connection %s, because it expired", item->getUUIDStr(), name_);
     if (flow_repository_->Delete(item->getUUIDStr())) {
       item->setStoredToRepository(false);
     }
   }
   queued_data_size_ = 0;
-  logger_->log_debug("Drain connection %s", name_.c_str());
+  logger_->log_debug("Drain connection %s", name_);
 }
 
 } /* namespace minifi */

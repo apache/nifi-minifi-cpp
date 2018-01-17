@@ -378,7 +378,7 @@ void VolatileRepository<T>::start() {
     return;
   running_ = true;
   thread_ = std::thread(&VolatileRepository<T>::run, std::enable_shared_from_this<VolatileRepository<T>>::shared_from_this());
-  logger_->log_info("%s Repository Monitor Thread Start", name_);
+  logger_->log_debug("%s Repository Monitor Thread Start", name_);
 }
 #if defined(__clang__)
 #pragma clang diagnostic pop

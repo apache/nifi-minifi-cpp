@@ -309,8 +309,6 @@ void YamlConfiguration::parseRemoteProcessGroupYaml(YAML::Node *rpgNode, core::P
         YAML::Node inputPorts = currRpgNode["Input Ports"].as<YAML::Node>();
         if (inputPorts && inputPorts.IsSequence()) {
           for (YAML::const_iterator portIter = inputPorts.begin(); portIter != inputPorts.end(); ++portIter) {
-            logger_->log_debug("Got a current port, iterating...");
-
             YAML::Node currPort = portIter->as<YAML::Node>();
 
             this->parsePortYaml(&currPort, group, sitetosite::SEND);
@@ -688,7 +686,7 @@ void YamlConfiguration::parsePropertiesNodeYaml(YAML::Node *propertiesNode,
             YAML::Node propertiesNode = nodeVal["value"];
             // must insert the sequence in differently.
             std::string rawValueString = propertiesNode.as<std::string>();
-            logger_->log_info("Found %s=%s", propertyName, rawValueString);
+            logger_->log_debug("Found %s=%s", propertyName, rawValueString);
             if (!processor->updateProperty(propertyName, rawValueString)) {
               std::shared_ptr<core::Connectable> proc = std::dynamic_pointer_cast<core::Connectable>(processor);
               if (proc != 0) {
@@ -757,7 +755,8 @@ void YamlConfiguration::checkRequiredField(YAML::Node *yamlNode,
         errMsg += " [in '" + yamlSection + "' section of configuration file]";
       }
     }
-    logger_->log_error(errMsg.c_str());
+    logging::LOG_ERROR(logger_) << errMsg;
+
     throw std::invalid_argument(errMsg);
   }
 }
@@ -783,7 +782,7 @@ YAML::Node YamlConfiguration::getOptionalField(YAML::Node *yamlNode,
 
       infoMessage += defaultValue.as<std::string>();
     }
-    logger_->log_info(infoMessage.c_str());
+    logging::LOG_ERROR(logger_) << infoMessage;
     result = defaultValue;
   }
 

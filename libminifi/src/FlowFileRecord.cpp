@@ -98,11 +98,11 @@ FlowFileRecord::FlowFileRecord(std::shared_ptr<core::Repository> flow_repository
 }
 
 FlowFileRecord::~FlowFileRecord() {
-  logger_->log_debug("Destroying flow file record,  UUID %s", uuidStr_.c_str());
+  logger_->log_debug("Destroying flow file record,  UUID %s", uuidStr_);
   if (!snapshot_)
-    logger_->log_debug("Delete FlowFile UUID %s", uuidStr_.c_str());
+    logger_->log_debug("Delete FlowFile UUID %s", uuidStr_);
   else
-    logger_->log_debug("Delete SnapShot FlowFile UUID %s", uuidStr_.c_str());
+    logger_->log_debug("Delete SnapShot FlowFile UUID %s", uuidStr_);
   if (claim_) {
     releaseClaim(claim_);
   } else {
@@ -119,11 +119,11 @@ void FlowFileRecord::releaseClaim(std::shared_ptr<ResourceClaim> claim) {
   // Decrease the flow file record owned count for the resource claim
   claim_->decreaseFlowFileRecordOwnedCount();
   std::string value;
-  logger_->log_debug("Delete Resource Claim %s, %s, attempt %llu", getUUIDStr(), claim_->getContentFullPath().c_str(), claim_->getFlowFileRecordOwnedCount());
+  logger_->log_debug("Delete Resource Claim %s, %s, attempt %llu", getUUIDStr(), claim_->getContentFullPath(), claim_->getFlowFileRecordOwnedCount());
   if (claim_->getFlowFileRecordOwnedCount() <= 0) {
     // we cannot rely on the stored variable here since we aren't guaranteed atomicity
     if (flow_repository_ != nullptr && !flow_repository_->Get(uuidStr_, value)) {
-      logger_->log_debug("Delete Resource Claim %s", claim_->getContentFullPath().c_str());
+      logger_->log_debug("Delete Resource Claim %s", claim_->getContentFullPath());
       content_repo_->remove(claim_);
     }
   }
@@ -184,7 +184,7 @@ bool FlowFileRecord::DeSerialize(std::string key) {
   ret = flow_repository_->Get(key, value);
 
   if (!ret) {
-    logger_->log_error("NiFi FlowFile Store event %s can not found", key.c_str());
+    logger_->log_error("NiFi FlowFile Store event %s can not found", key);
     return false;
   }
   io::DataStream stream((const uint8_t*) value.data(), value.length());
@@ -192,9 +192,9 @@ bool FlowFileRecord::DeSerialize(std::string key) {
   ret = DeSerialize(stream);
 
   if (ret) {
-    logger_->log_debug("NiFi FlowFile retrieve uuid %s size %llu connection %s success", uuidStr_.c_str(), stream.getSize(), uuid_connection_.c_str());
+    logger_->log_debug("NiFi FlowFile retrieve uuid %s size %llu connection %s success", uuidStr_, stream.getSize(), uuid_connection_);
   } else {
-    logger_->log_debug("NiFi FlowFile retrieve uuid %s size %llu connection %s fail", uuidStr_.c_str(), stream.getSize(), uuid_connection_.c_str());
+    logger_->log_debug("NiFi FlowFile retrieve uuid %s size %llu connection %s fail", uuidStr_, stream.getSize(), uuid_connection_);
   }
 
   return ret;
@@ -263,10 +263,10 @@ bool FlowFileRecord::Serialize() {
   }
 
   if (flow_repository_->Put(uuidStr_, const_cast<uint8_t*>(outStream.getBuffer()), outStream.getSize())) {
-    logger_->log_debug("NiFi FlowFile Store event %s size %llu success", uuidStr_.c_str(), outStream.getSize());
+    logger_->log_debug("NiFi FlowFile Store event %s size %llu success", uuidStr_, outStream.getSize());
     return true;
   } else {
-    logger_->log_error("NiFi FlowFile Store event %s size %llu fail", uuidStr_.c_str(), outStream.getSize());
+    logger_->log_error("NiFi FlowFile Store event %s size %llu fail", uuidStr_, outStream.getSize());
     return false;
   }
 

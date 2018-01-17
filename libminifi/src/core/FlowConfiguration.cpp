@@ -37,7 +37,7 @@ FlowConfiguration::~FlowConfiguration() {
 std::shared_ptr<core::Processor> FlowConfiguration::createProcessor(std::string name, uuid_t uuid) {
   auto ptr = core::ClassLoader::getDefaultClassLoader().instantiate(name, uuid);
   if (nullptr == ptr) {
-    logger_->log_error("No Processor defined for %s", name.c_str());
+    logger_->log_error("No Processor defined for %s", name);
     return nullptr;
   }
   std::shared_ptr<core::Processor> processor = std::static_pointer_cast<core::Processor>(ptr);

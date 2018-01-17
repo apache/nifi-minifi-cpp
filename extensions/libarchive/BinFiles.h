@@ -59,10 +59,10 @@ class Bin {
     id_generator->generate(uuid_);
     uuid_unparse_lower(uuid_, uuidStr);
     uuid_str_ = uuidStr;
-    logger_->log_info("Bin %s for group %s created", uuid_str_, groupId_);
+    logger_->log_debug("Bin %s for group %s created", uuid_str_, groupId_);
   }
   virtual ~Bin() {
-    logger_->log_info("Bin %s for group %s destroyed", uuid_str_, groupId_);
+    logger_->log_debug("Bin %s for group %s destroyed", uuid_str_, groupId_);
   }
   // check whether the bin is full
   bool isFull() {
@@ -107,7 +107,7 @@ class Bin {
 
     queue_.push_back(flow);
     queued_data_size_ += flow->getSize();
-    logger_->log_info("Bin %s for group %s offer size %d byte %d min_entry %d max_entry %d", uuid_str_, groupId_, queue_.size(), queued_data_size_, minEntries_, maxEntries_);
+    logger_->log_debug("Bin %s for group %s offer size %d byte %d min_entry %d max_entry %d", uuid_str_, groupId_, queue_.size(), queued_data_size_, minEntries_, maxEntries_);
 
     return true;
   }

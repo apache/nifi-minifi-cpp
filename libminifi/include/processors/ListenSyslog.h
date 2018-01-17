@@ -91,7 +91,7 @@ class ListenSyslog : public core::Processor {
     }
     _clientSockets.clear();
     if (_serverSocket > 0) {
-      logger_->log_info("ListenSysLog Server socket %d close", _serverSocket);
+      logger_->log_debug("ListenSysLog Server socket %d close", _serverSocket);
       close(_serverSocket);
       _serverSocket = 0;
     }

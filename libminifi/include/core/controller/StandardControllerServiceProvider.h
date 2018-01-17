@@ -117,7 +117,7 @@ class StandardControllerServiceProvider : public ControllerServiceProvider, publ
         logger_->log_info("Enabling %s", service->getName());
         agent_->enableControllerService(service);
       } else {
-        logger_->log_info("Could not enable %s", service->getName());
+        logger_->log_warn("Could not enable %s", service->getName());
       }
     }
   }

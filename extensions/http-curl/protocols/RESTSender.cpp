@@ -43,7 +43,7 @@ void RESTSender::initialize(const std::shared_ptr<core::controller::ControllerSe
     configure->get("c2.rest.url", rest_uri_);
     configure->get("c2.rest.url.ack", ack_uri_);
   }
-  logger_->log_info("Submitting to %s", rest_uri_);
+  logger_->log_debug("Submitting to %s", rest_uri_);
 }
 C2Payload RESTSender::consumePayload(const std::string &url, const C2Payload &payload, Direction direction, bool async) {
   std::string operation_request_str = getOperation(payload);

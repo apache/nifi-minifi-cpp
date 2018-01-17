@@ -168,12 +168,12 @@ void GetTCP::onSchedule(const std::shared_ptr<core::ProcessContext> &context, co
                 }
               }
               if (startLoc > 0) {
-                logger_->log_info("Starting at %i, ending at %i", startLoc, size_read);
+                logger_->log_trace("Starting at %i, ending at %i", startLoc, size_read);
                 if (size_read-startLoc > 0) {
                   handler_->handle(socket_ptr->getHostname(), buffer.data()+startLoc, (size_read-startLoc), true);
                 }
               } else {
-                logger_->log_info("Handling at %i, ending at %i", startLoc, size_read);
+                logger_->log_trace("Handling at %i, ending at %i", startLoc, size_read);
                 if (size_read > 0) {
                   handler_->handle(socket_ptr->getHostname(), buffer.data(), size_read, false);
                 }
@@ -202,7 +202,7 @@ void GetTCP::onSchedule(const std::shared_ptr<core::ProcessContext> &context, co
           return -1;
         }
       }while (running_);
-      logger_->log_info("Ending private thread");
+      logger_->log_debug("Ending private thread");
       return 0;
     };
 
@@ -268,12 +268,12 @@ void GetTCP::onTrigger(const std::shared_ptr<core::ProcessContext> &context, con
           live_clients_[endpoint] = future;
         }
       } else {
-        logger_->log_info("Thread still running for %s", endPointFuture->first);
+        logger_->log_debug("Thread still running for %s", endPointFuture->first);
         // we have a thread corresponding to this.
       }
     }
   }
-  logger_->log_info("Updating endpoint");
+  logger_->log_debug("Updating endpoint");
   context->yield();
 }
 

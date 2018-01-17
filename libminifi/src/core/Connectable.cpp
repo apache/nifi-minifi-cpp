@@ -49,7 +49,7 @@ Connectable::~Connectable() {
 
 bool Connectable::setSupportedRelationships(std::set<core::Relationship> relationships) {
   if (isRunning()) {
-    logger_->log_info("Can not set processor supported relationship while the process %s is running", name_.c_str());
+    logger_->log_warn("Can not set processor supported relationship while the process %s is running", name_);
     return false;
   }
 
@@ -58,7 +58,7 @@ bool Connectable::setSupportedRelationships(std::set<core::Relationship> relatio
   relationships_.clear();
   for (auto item : relationships) {
     relationships_[item.getName()] = item;
-    logger_->log_info("Processor %s supported relationship name %s", name_.c_str(), item.getName().c_str());
+    logger_->log_debug("Processor %s supported relationship name %s", name_, item.getName());
   }
   return true;
 }
@@ -81,7 +81,7 @@ bool Connectable::isSupportedRelationship(core::Relationship relationship) {
 
 bool Connectable::setAutoTerminatedRelationships(std::set<Relationship> relationships) {
   if (isRunning()) {
-    logger_->log_info("Can not set processor auto terminated relationship while the process %s is running", name_.c_str());
+    logger_->log_warn("Can not set processor auto terminated relationship while the process %s is running", name_);
     return false;
   }
 
@@ -90,7 +90,7 @@ bool Connectable::setAutoTerminatedRelationships(std::set<Relationship> relation
   auto_terminated_relationships_.clear();
   for (auto item : relationships) {
     auto_terminated_relationships_[item.getName()] = item;
-    logger_->log_info("Processor %s auto terminated relationship name %s", name_.c_str(), item.getName().c_str());
+    logger_->log_debug("Processor %s auto terminated relationship name %s", name_, item.getName());
   }
   return true;
 }

@@ -110,7 +110,7 @@ int main(int argc, char **argv) {
   }
 
   if (signal(SIGINT, sigHandler) == SIG_ERR || signal(SIGTERM, sigHandler) == SIG_ERR || signal(SIGPIPE, SIG_IGN) == SIG_ERR) {
-    logger->log_error("Can not install signal handler");
+    std::cerr << "Cannot install signal handler" <<  std::endl;
     return -1;
   }
 
