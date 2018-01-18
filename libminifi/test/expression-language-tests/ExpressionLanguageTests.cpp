@@ -404,3 +404,141 @@ TEST_CASE("Replace Empty 3", "[expressionLanguageReplaceEmpty2]") {  // NOLINT
 }
 
 #endif  // EXPRESSION_LANGUAGE_USE_REGEX
+
+TEST_CASE("Plus Integer", "[expressionLanguagePlusInteger]") {  // NOLINT
+  auto expr = expression::compile("${attr:plus(13)}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("attr", "11");
+  REQUIRE("24" == expr({flow_file_a}));
+}
+
+TEST_CASE("Plus Decimal", "[expressionLanguagePlusDecimal]") {  // NOLINT
+  auto expr = expression::compile("${attr:plus(-13.34567)}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("attr", "11.1");
+  REQUIRE("-2.24567" == expr({flow_file_a}));
+}
+
+TEST_CASE("Plus Exponent", "[expressionLanguagePlusExponent]") {  // NOLINT
+  auto expr = expression::compile("${attr:plus(10e+6)}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("attr", "11");
+  REQUIRE("10000011" == expr({flow_file_a}));
+}
+
+TEST_CASE("Plus Exponent 2", "[expressionLanguagePlusExponent2]") {  // NOLINT
+  auto expr = expression::compile("${attr:plus(10e+6)}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("attr", "11.345678901234");
+  REQUIRE("10000011.345678901234351" == expr({flow_file_a}));
+}
+
+TEST_CASE("Minus Integer", "[expressionLanguageMinusInteger]") {  // NOLINT
+  auto expr = expression::compile("${attr:minus(13)}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("attr", "11");
+  REQUIRE("-2" == expr({flow_file_a}));
+}
+
+TEST_CASE("Minus Decimal", "[expressionLanguageMinusDecimal]") {  // NOLINT
+  auto expr = expression::compile("${attr:minus(-13.34567)}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("attr", "11.1");
+  REQUIRE("24.44567" == expr({flow_file_a}));
+}
+
+TEST_CASE("Multiply Integer", "[expressionLanguageMultiplyInteger]") {  // NOLINT
+  auto expr = expression::compile("${attr:multiply(13)}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("attr", "11");
+  REQUIRE("143" == expr({flow_file_a}));
+}
+
+TEST_CASE("Multiply Decimal", "[expressionLanguageMultiplyDecimal]") {  // NOLINT
+  auto expr = expression::compile("${attr:multiply(-13.34567)}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("attr", "11.1");
+  REQUIRE("-148.136937" == expr({flow_file_a}));
+}
+
+TEST_CASE("Divide Integer", "[expressionLanguageDivideInteger]") {  // NOLINT
+  auto expr = expression::compile("${attr:divide(13)}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("attr", "11");
+  REQUIRE("0.846153846153846" == expr({flow_file_a}));
+}
+
+TEST_CASE("Divide Decimal", "[expressionLanguageDivideDecimal]") {  // NOLINT
+  auto expr = expression::compile("${attr:divide(-13.34567)}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("attr", "11.1");
+  REQUIRE("-0.831730441409086" == expr({flow_file_a}));
+}
+
+TEST_CASE("To Radix", "[expressionLanguageToRadix]") {  // NOLINT
+  auto expr = expression::compile("${attr:toRadix(2,16)}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("attr", "10");
+  REQUIRE("0000000000001010" == expr({flow_file_a}));
+}
+
+TEST_CASE("To Radix 2", "[expressionLanguageToRadix2]") {  // NOLINT
+  auto expr = expression::compile("${attr:toRadix(16)}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("attr", "13");
+  REQUIRE("d" == expr({flow_file_a}));
+}
+
+TEST_CASE("To Radix 3", "[expressionLanguageToRadix3]") {  // NOLINT
+  auto expr = expression::compile("${attr:toRadix(23,8)}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("attr", "-2347");
+  REQUIRE("-000004a1" == expr({flow_file_a}));
+}
+
+TEST_CASE("From Radix", "[expressionLanguageFromRadix]") {  // NOLINT
+  auto expr = expression::compile("${attr:fromRadix(2)}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("attr", "0000000000001010");
+  REQUIRE("10" == expr({flow_file_a}));
+}
+
+TEST_CASE("From Radix 2", "[expressionLanguageFromRadix2]") {  // NOLINT
+  auto expr = expression::compile("${attr:fromRadix(16)}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("attr", "d");
+  REQUIRE("13" == expr({flow_file_a}));
+}
+
+TEST_CASE("From Radix 3", "[expressionLanguageFromRadix3]") {  // NOLINT
+  auto expr = expression::compile("${attr:fromRadix(23)}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("attr", "-000004a1");
+  REQUIRE("-2347" == expr({flow_file_a}));
+}
+
+TEST_CASE("Random", "[expressionLanguageRandom]") {  // NOLINT
+  auto expr = expression::compile("${random()}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  auto result = std::stoll(expr({flow_file_a}));
+  REQUIRE(result > 0);
+}
+
+// ${literal(64):toDouble():math("cbrt"):toNumber():math("max", 5)}

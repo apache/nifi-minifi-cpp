@@ -17,6 +17,9 @@
 
 #include <utility>
 #include <iostream>
+#include <iomanip>
+#include <string>
+#include <random>
 
 #include <expression/Expression.h>
 #include <regex>
@@ -146,6 +149,124 @@ std::string expr_replaceEmpty(const std::vector<std::string> &args) {
 
 #endif  // EXPRESSION_LANGUAGE_USE_REGEX
 
+std::string expr_binaryOp(const std::vector<std::string> &args,
+                          long double (*ldop)(long double, long double),
+                          int (*iop)(int, int),
+                          bool long_only = false) {
+  try {
+    if (!long_only &&
+        args[0].find('.') == args[0].npos &&
+        args[1].find('.') == args[1].npos &&
+        args[1].find('e') == args[1].npos &&
+        args[0].find('e') == args[0].npos &&
+        args[0].find('E') == args[0].npos &&
+        args[1].find('E') == args[1].npos) {
+      return std::to_string(iop(std::stoi(args[0]), std::stoi(args[1])));
+    } else {
+      std::stringstream ss;
+      ss << std::fixed << std::setprecision(std::numeric_limits<double>::digits10)
+         << ldop(std::stold(args[0]), std::stold(args[1]));
+      auto result = ss.str();
+      result.erase(result.find_last_not_of('0') + 1, std::string::npos);
+
+      if (result.find('.') == result.length() - 1) {
+        result.erase(result.length() - 1, std::string::npos);
+      }
+
+      return result;
+    }
+  } catch (const std::exception &e) {
+    return "";
+  }
+}
+
+std::string expr_plus(const std::vector<std::string> &args) {
+  return expr_binaryOp(args,
+                       [](long double a, long double b) { return a + b; },
+                       [](int a, int b) { return a + b; });
+}
+
+std::string expr_minus(const std::vector<std::string> &args) {
+  return expr_binaryOp(args,
+                       [](long double a, long double b) { return a - b; },
+                       [](int a, int b) { return a - b; });
+}
+
+std::string expr_multiply(const std::vector<std::string> &args) {
+  return expr_binaryOp(args,
+                       [](long double a, long double b) { return a * b; },
+                       [](int a, int b) { return a * b; });
+}
+
+std::string expr_divide(const std::vector<std::string> &args) {
+  return expr_binaryOp(args,
+                       [](long double a, long double b) { return a / b; },
+                       [](int a, int b) { return a / b; },
+                       true);
+}
+
+std::string expr_mod(const std::vector<std::string> &args) {
+  return expr_binaryOp(args,
+                       [](long double a, long double b) { return std::fmod(a, b); },
+                       [](int a, int b) { return a % b; });
+}
+
+std::string expr_toRadix(const std::vector<std::string> &args) {
+  int radix = std::stoi(args[1]);
+
+  if (radix < 2 || radix > 36) {
+    throw std::runtime_error("Cannot perform conversion due to invalid radix");
+  }
+
+  int pad_width = 0;
+
+  if (args.size() > 2) {
+    pad_width = std::stoi(args[2]);
+  }
+
+  auto value = std::stoll(args[0], nullptr, 10);
+
+  std::string sign;
+
+  if (value < 0) {
+    sign = "-";
+  }
+
+  const char chars[] =
+      "0123456789ab"
+      "cdefghijklmn"
+      "opqrstuvwxyz";
+  std::string str_num;
+
+  while (value) {
+    str_num += chars[std::abs(value % radix)];
+    value /= radix;
+  }
+
+  std::reverse(str_num.begin(), str_num.end());
+
+  std::stringstream ss;
+  ss << sign << std::setfill('0') << std::setw(pad_width) << str_num;
+  return ss.str();
+}
+
+std::string expr_fromRadix(const std::vector<std::string> &args) {
+  int radix = std::stoi(args[1]);
+
+  if (radix < 2 || radix > 36) {
+    throw std::runtime_error("Cannot perform conversion due to invalid radix");
+  }
+
+  return std::to_string(std::stoll(args[0], nullptr, radix));
+}
+
+std::string expr_random(const std::vector<std::string> &args) {
+  std::random_device random_device;
+  std::mt19937 generator(random_device());
+  std::uniform_int_distribution<long long> distribution(0, LLONG_MAX);
+  return std::to_string(distribution(generator));
+}
+
 template<std::string T(const std::vector<std::string> &)>
 Expression make_dynamic_function_incomplete(const std::string &function_name,
                                             const std::vector<Expression> &args,
@@ -211,6 +332,22 @@ Expression make_dynamic_function(const std::string &function_name,
   } else if (function_name == "replaceEmpty") {
     return make_dynamic_function_incomplete<expr_replaceEmpty>(function_name, args, 1);
 #endif  // EXPRESSION_LANGUAGE_USE_REGEX
+  } else if (function_name == "plus") {
+    return make_dynamic_function_incomplete<expr_plus>(function_name, args, 1);
+  } else if (function_name == "minus") {
+    return make_dynamic_function_incomplete<expr_minus>(function_name, args, 1);
+  } else if (function_name == "multiply") {
+    return make_dynamic_function_incomplete<expr_multiply>(function_name, args, 1);
+  } else if (function_name == "divide") {
+    return make_dynamic_function_incomplete<expr_divide>(function_name, args, 1);
+  } else if (function_name == "mod") {
+    return make_dynamic_function_incomplete<expr_mod>(function_name, args, 1);
+  } else if (function_name == "fromRadix") {
+    return make_dynamic_function_incomplete<expr_fromRadix>(function_name, args, 2);
+  } else if (function_name == "toRadix") {
+    return make_dynamic_function_incomplete<expr_toRadix>(function_name, args, 1);
+  } else if (function_name == "random") {
+    return make_dynamic_function_incomplete<expr_random>(function_name, args, 0);
   } else {
     std::string msg("Unknown expression function: ");
     msg.append(function_name);
