@@ -106,6 +106,8 @@
 %type <std::string>             quoted_text_content
 %type <Expression>              text_or_exp
 
+%type <std::vector<std::pair<std::string, std::vector<Expression>>>> fn_calls
+
 %%
 
 %start root;
@@ -171,22 +173,6 @@ exp_whitespaces: %empty {}
 attr_id: quoted_text exp_whitespaces { std::swap($$, $1); }
        | IDENTIFIER exp_whitespaces { std::swap($$, $1); }
        ;
-/*
-number_decimal: %empty { $$ = ""; }
-              | PERIOD NUMBER { $$ = "." + std::to_string($2); }
-              ;
-
-number_sign: %empty { $$ = ""; }
-           | MINUS { $$ = "-"; }
-           ;
-
-number_exponent: %empty { $$ = ""; }
-               | BIGE number_sign NUMBER { $$ = "E" + $2 + std::to_string($3); }
-               | LITTLEE number_sign NUMBER { $$ = "e" + $2 + std::to_string($3); }
-               ;
-
-number: number_sign NUMBER number_decimal number_exponent { $$ = $1 + std::to_string($2) + $3 + $4; }
-      ;*/
 
 fn_arg: quoted_text exp_whitespaces { $$ = make_static($1); }
       | NUMBER exp_whitespaces { $$ = make_static($1); }
@@ -199,12 +185,15 @@ fn_args: %empty {}
 
 fn_call: attr_id LPAREN exp_whitespaces fn_args RPAREN exp_whitespaces { $$ = make_dynamic_function(std::move($1), $4); }
 
+fn_calls: %empty {}
+        | COLON exp_whitespaces attr_id LPAREN exp_whitespaces fn_args RPAREN exp_whitespaces fn_calls { $$.push_back({$3, $6}); $$.insert($$.end(), $9.begin(), $9.end()); }
+        ;
+
 exp_content_val: attr_id { $$ = make_dynamic_attr(std::move($1)); }
                | fn_call { $$ = $1; }
                ;
 
-exp_content: exp_content_val { $$ = $1; }
-           | exp_content_val COLON exp_whitespaces fn_call { $$ = make_dynamic_function_postfix($1, $4); }
+exp_content: exp_content_val fn_calls { $$ = make_function_composition($1, $2); }
            ;
 
 exp: DOLLAR LCURLY exp_whitespaces exp_content RCURLY { $$ = $4; }
