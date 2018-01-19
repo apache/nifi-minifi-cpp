@@ -18,7 +18,6 @@
 #include <utility>
 #include <iostream>
 #include <iomanip>
-#include <string>
 #include <random>
 
 #include <expression/Expression.h>
@@ -271,37 +270,34 @@ template<std::string T(const std::vector<std::string> &)>
 Expression make_dynamic_function_incomplete(const std::string &function_name,
                                             const std::vector<Expression> &args,
                                             std::size_t num_args) {
-  if (args.size() >= num_args) {
-    auto result = make_dynamic([=](const Parameters &params) -> std::string {
-      std::vector<std::string> evaluated_args;
 
-      for (const auto &arg : args) {
-        evaluated_args.emplace_back(arg(params));
-      }
-
-      return T(evaluated_args);
-    });
-
-    result.complete = [function_name, args](Expression expr) -> Expression {
-      std::vector<Expression> complete_args = {expr};
-      complete_args.insert(complete_args.end(), args.begin(), args.end());
-      return make_dynamic_function(function_name, complete_args);
-    };
-
-    return result;
-  } else {
-    auto result = make_dynamic([](const Parameters &params) -> std::string {
-      throw std::runtime_error("Attempted to call incomplete function");
-    });
-
-    result.complete = [function_name, args](Expression expr) -> Expression {
-      std::vector<Expression> complete_args = {expr};
-      complete_args.insert(complete_args.end(), args.begin(), args.end());
-      return make_dynamic_function(function_name, complete_args);
-    };
-
-    return result;
+  if (args.size() < num_args) {
+    std::stringstream message_ss;
+    message_ss << "Expression language function "
+               << function_name
+               << " called with "
+               << args.size()
+               << " argument(s), but "
+               << num_args
+               << " are required";
+    throw std::runtime_error(message_ss.str());
   }
+
+  auto result = make_dynamic([=](const Parameters &params) -> std::string {
+    std::vector<std::string> evaluated_args;
+
+    for (const auto &arg : args) {
+      evaluated_args.emplace_back(arg(params));
+    }
+
+    return T(evaluated_args);
+  });
+
+  return result;
+}
+
+std::string expr_literal(const std::vector<std::string> &args) {
+  return args[0];
 }
 
 Expression make_dynamic_function(const std::string &function_name,
@@ -348,6 +344,8 @@ Expression make_dynamic_function(const std::string &function_name,
     return make_dynamic_function_incomplete<expr_toRadix>(function_name, args, 1);
   } else if (function_name == "random") {
     return make_dynamic_function_incomplete<expr_random>(function_name, args, 0);
+  } else if (function_name == "literal") {
+    return make_dynamic_function_incomplete<expr_literal>(function_name, args, 1);
   } else {
     std::string msg("Unknown expression function: ");
     msg.append(function_name);
@@ -355,8 +353,18 @@ Expression make_dynamic_function(const std::string &function_name,
   }
 }
 
-Expression make_dynamic_function_postfix(const Expression &subject, const Expression &fn) {
-  return fn.complete(subject);
+Expression make_function_composition(const Expression &arg,
+                                     const std::vector<std::pair<std::string, std::vector<Expression>>> &chain) {
+
+  auto expr = arg;
+
+  for (const auto &chain_part : chain) {
+    std::vector<Expression> complete_args = {expr};
+    complete_args.insert(complete_args.end(), chain_part.second.begin(), chain_part.second.end());
+    expr = make_dynamic_function(chain_part.first, complete_args);
+  }
+
+  return expr;
 }
 
 bool Expression::isDynamic() const {

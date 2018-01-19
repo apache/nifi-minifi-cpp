@@ -292,17 +292,13 @@ TEST_CASE("Substring After Last", "[expressionLanguageSubstringAfterLast]") {  /
 }
 
 TEST_CASE("Substring Before No Args", "[expressionLanguageSubstringBeforeNoArgs]") {  // NOLINT
-  auto expr = expression::compile("${attr:substringBefore()}");
-  auto flow_file_a = std::make_shared<MockFlowFile>();
-  flow_file_a->addAttribute("attr", "__flow_a_attr_value_a__");
-  REQUIRE_THROWS_WITH(expr({flow_file_a}), "Attempted to call incomplete function");
+  REQUIRE_THROWS_WITH(expression::compile("${attr:substringBefore()}"),
+                      "Expression language function substringBefore called with 1 argument(s), but 2 are required");
 }
 
 TEST_CASE("Substring After No Args", "[expressionLanguageSubstringAfterNoArgs]") {  // NOLINT
-  auto expr = expression::compile("${attr:substringAfter()}");
-  auto flow_file_a = std::make_shared<MockFlowFile>();
-  flow_file_a->addAttribute("attr", "__flow_a_attr_value_a__");
-  REQUIRE_THROWS_WITH(expr({flow_file_a}), "Attempted to call incomplete function");
+  REQUIRE_THROWS_WITH(expression::compile("${attr:substringAfter()}"); ,
+                      "Expression language function substringAfter called with 1 argument(s), but 2 are required");
 }
 
 #ifdef EXPRESSION_LANGUAGE_USE_REGEX
@@ -541,4 +537,25 @@ TEST_CASE("Random", "[expressionLanguageRandom]") {  // NOLINT
   REQUIRE(result > 0);
 }
 
-// ${literal(64):toDouble():math("cbrt"):toNumber():math("max", 5)}
+TEST_CASE("Chained call", "[expressionChainedCall]") {  // NOLINT
+  auto expr = expression::compile("${attr:multiply(3):plus(1)}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("attr", "7");
+  REQUIRE("22" == expr({flow_file_a}));
+}
+
+TEST_CASE("Chained call 2", "[expressionChainedCall2]") {  // NOLINT
+  auto expr = expression::compile("${literal(10):multiply(2):plus(1):multiply(2)}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  REQUIRE("42" == expr({flow_file_a}));
+}
+
+TEST_CASE("Chained call 3", "[expressionChainedCall3]") {  // NOLINT
+  auto expr = expression::compile("${literal(10):multiply(2):plus(${attr:multiply(2)}):multiply(${attr})}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("attr", "7");
+  REQUIRE("238" == expr({flow_file_a}));
+}
