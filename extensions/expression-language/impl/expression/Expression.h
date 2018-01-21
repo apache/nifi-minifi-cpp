@@ -44,8 +44,7 @@ typedef struct {
 static const std::function<std::string(const Parameters &params)> NOOP_FN;
 
 /**
- * A NiFi expression langauge expression which can be composed with other
- * expressions (via the + operator.
+ * A NiFi expression language expression.
  */
 class Expression {
  public:
@@ -67,7 +66,7 @@ class Expression {
   bool isDynamic() const;
 
   /**
-   * Combine this expression with another expression. Intermediate results
+   * Combine this expression with another expression by concatenation. Intermediate results
    * are computed when non-dynamic expressions are composed.
    *
    * @param other_expr
@@ -82,14 +81,6 @@ class Expression {
    * @return dynamically-computed result of expression
    */
   std::string operator()(const Parameters &params) const;
-
-  /**
-   * If this expression is incomplete (i.e. a function with incomplete arguments), then this
-   * will return a completed expression based on the provided expression.
-   */
-  std::function<Expression(Expression)> complete = [](Expression expr) -> Expression {
-    throw std::runtime_error("Attempted to complete already complete expression.");
-  };
 
  protected:
   std::string val_;
@@ -140,14 +131,14 @@ Expression make_dynamic_attr(const std::string &attribute_id);
 Expression make_dynamic_function(const std::string &function_name, const std::vector<Expression> &args);
 
 /**
- * Creates a dynamic expression which feeds the subject as the first argument into
- * the provided function expression. This enables expressions like attr:toLower()
+ * Creates a chained function composition.
  *
- * @param subject
- * @param fn
+ * @param arg
+ * @param chain
  * @return
  */
-Expression make_dynamic_function_postfix(const Expression &subject, const Expression &fn);
+Expression make_function_composition(const Expression &arg,
+                                     const std::vector<std::pair<std::string, std::vector<Expression>>> &chain);
 
 } /* namespace expression */
 } /* namespace minifi */
