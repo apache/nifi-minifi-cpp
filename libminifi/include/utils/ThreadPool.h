@@ -428,6 +428,9 @@ void ThreadPool<T>::manageWorkers() {
           std::unique_lock<std::mutex> lock(worker_queue_mutex_);
           auto worker_thread = std::make_shared<WorkerThread>();
           worker_thread->thread_ = createThread(std::bind(&ThreadPool::run_tasks, this, worker_thread));
+          if (daemon_threads_) {
+            worker_thread->thread_.detach();
+          }
           thread_queue_.push_back(worker_thread);
           current_workers_++;
         }
@@ -456,7 +459,6 @@ void ThreadPool<T>::run_tasks(std::shared_ptr<WorkerThread> thread) {
   uint64_t wait_decay_ = 0;
   uint64_t yield_backoff = 10;  // start at 10 ms
   while (running_.load()) {
-
     if (UNLIKELY(thread_reduction_count_ > 0)) {
       if (--thread_reduction_count_ >= 0) {
         deceased_thread_queue_.enqueue(thread);
@@ -553,6 +555,18 @@ void ThreadPool<T>::run_tasks(std::shared_ptr<WorkerThread> thread) {
         }
       }
       worker_queue_.enqueue(std::move(task));
+    }
+
+    std::unique_lock<std::mutex> lock(worker_queue_mutex_);
+    if (worker_priority_queue_.size() > 0) {
+      // this is safe as we are going to immediately pop the queue
+      while (!worker_priority_queue_.empty()) {
+        task = std::move(const_cast<Worker<T>&>(worker_priority_queue_.top()));
+        worker_priority_queue_.pop();
+        worker_queue_.enqueue(std::move(task));
+        continue;
+      }
+
     }
   }
   current_workers_--;
