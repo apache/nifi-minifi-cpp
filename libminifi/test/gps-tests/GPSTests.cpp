@@ -42,7 +42,7 @@ TEST_CASE("GPSD Create", "[gpsdtest1]") {
   TestController testController;
   core::ClassLoader::getDefaultClassLoader().registerResource("", "createGPSFactory");
 
-  LogTestController::getInstance().setDebug<minifi::processors::GetGPS>();
+  LogTestController::getInstance().setTrace<minifi::processors::GetGPS>();
 
   std::shared_ptr<TestPlan> plan = testController.createPlan();
 
