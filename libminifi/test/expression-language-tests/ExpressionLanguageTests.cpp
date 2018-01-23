@@ -150,6 +150,15 @@ TEST_CASE("ToUpper function w/o whitespace", "[expressionLanguageTestToUpperFunc
   REQUIRE("text_before__FLOW_A_ATTR_VALUE_A__text_after" == expr({flow_file_a}));
 }
 
+TEST_CASE("ToLower function", "[expressionLanguageTestToLowerFunction]") {  // NOLINT
+  auto expr = expression::compile(R"(text_before${
+                                       attr_a : toLower()
+                                     }text_after)");
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("attr_a", "__FLOW_A_ATTR_VALUE_A__");
+  REQUIRE("text_before__flow_a_attr_value_a__text_after" == expr({flow_file_a}));
+}
+
 TEST_CASE("GetFile PutFile dynamic attribute", "[expressionLanguageTestGetFilePutFileDynamicAttribute]") {  // NOLINT
   TestController testController;
 

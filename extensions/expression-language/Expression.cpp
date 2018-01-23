@@ -67,6 +67,12 @@ std::string expr_toUpper(const std::vector<std::string> &args) {
   return result;
 }
 
+std::string expr_toLower(const std::vector<std::string> &args) {
+  std::string result = args[0];
+  std::transform(result.begin(), result.end(), result.begin(), ::tolower);
+  return result;
+}
+
 std::string expr_substring(const std::vector<std::string> &args) {
   if (args.size() < 3) {
     return args[0].substr(std::stoul(args[1]));
@@ -306,6 +312,8 @@ Expression make_dynamic_function(const std::string &function_name,
     return make_dynamic_function_incomplete<expr_hostname>(function_name, args, 0);
   } else if (function_name == "toUpper") {
     return make_dynamic_function_incomplete<expr_toUpper>(function_name, args, 1);
+  } else if (function_name == "toLower") {
+    return make_dynamic_function_incomplete<expr_toLower>(function_name, args, 1);
   } else if (function_name == "substring") {
     return make_dynamic_function_incomplete<expr_substring>(function_name, args, 2);
   } else if (function_name == "substringBefore") {
