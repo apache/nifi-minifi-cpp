@@ -95,6 +95,7 @@ class CapturePacket : public core::Processor {
    */
   explicit CapturePacket(std::string name, uuid_t uuid = NULL)
       : Processor(name, uuid),
+        capture_bluetooth_(false),
         pcap_batch_size_(50),
         logger_(logging::LoggerFactory<CapturePacket>::getLogger()) {
     num_ = 0;
@@ -106,6 +107,7 @@ class CapturePacket : public core::Processor {
   static const char *ProcessorName;
   static core::Property BatchSize;
   static core::Property BaseDir;
+  static core::Property CaptureBluetooth;
   // Supported Relationships
   static core::Relationship Success;
 
@@ -118,24 +120,24 @@ class CapturePacket : public core::Processor {
  protected:
 
   virtual void notifyStop() override {
-    logger_->log_info("Stopping capture");
+    logger_->log_debug("Stopping capture");
     for (auto dev : device_list_) {
       dev->stopCapture();
       dev->close();
     }
-    logger_->log_info("Stopped device capture. clearing queues");
+    logger_->log_trace("Stopped device capture. clearing queues");
     CapturePacketMechanism *capture;
     while (mover->source.try_dequeue(capture)) {
       std::remove(capture->getFile().c_str());
       delete capture;
     }
-    logger_->log_info("Cleared source queue");
+    logger_->log_trace("Cleared source queue");
     while (mover->sink.try_dequeue(capture)) {
       std::remove(capture->getFile().c_str());
       delete capture;
     }
     device_list_.clear();
-    logger_->log_info("Cleared sink queue");
+    logger_->log_trace("Cleared sink queue");
   }
 
   static std::string generate_new_pcap(const std::string &base_path);
@@ -147,6 +149,7 @@ class CapturePacket : public core::Processor {
   inline std::string getPath() {
     return base_dir_ + "/" + base_path_;
   }
+  bool capture_bluetooth_;
   std::string base_dir_;
   std::string base_path_;
   int64_t pcap_batch_size_;
