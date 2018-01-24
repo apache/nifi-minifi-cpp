@@ -91,8 +91,8 @@ namespace pcpp
 		PcapThread* m_CaptureThread;
 		bool m_CaptureThreadStarted;
 		PcapThread* m_StatsThread;
-		bool m_StatsThreadStarted;
-		bool m_StopThread;
+		volatile bool m_StatsThreadStarted;
+		volatile bool m_StopThread;
 		OnPacketArrivesCallback m_cbOnPacketArrives;
 		void* m_cbOnPacketArrivesUserCookie;
 		OnStatsUpdateCallback m_cbOnStatsUpdate;

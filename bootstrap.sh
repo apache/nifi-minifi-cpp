@@ -87,6 +87,21 @@ while :; do
   shift
 done
 
+if [ -x "$(command -v hostname)" ]; then
+  HOSTNAME=`hostname`
+  PING_RESULT=`ping -c 1 ${HOSTNAME} 2>&1`
+  if [[ "$PING_RESULT" = *unknown* ]]; then
+    cntinu="N"
+    read -p "Cannot resolve your host name -- ${HOSTNAME} -- tests may fail, Continue?  [ Y/N ] " cntinu
+    if [ "$cntinu" = "Y" ] || [ "$cntinu" = "y" ]; then
+      echo "Continuing..."
+    else
+      exit
+    fi
+  fi
+fi
+
+
 if [ "$NO_PROMPT" = "true" ]; then
   agree="N"
   echo "****************************************"
@@ -117,6 +132,12 @@ elif [ -f /etc/lsb-release ]; then
 elif [ -f /etc/debian_version ]; then
   OS=Debian
   VER=$(cat /etc/debian_version)
+elif [ -f /etc/SUSE-brand ]; then
+  VER=`cat /etc/SUSE-brand | tr '\n' ' ' | sed s/.*=\ //`
+  OS=`cat /etc/SUSE-brand | tr '\n' ' ' | sed s/VERSION.*//`
+elif [ -f /etc/SUSE-release ]; then
+  VER=`cat /etc/SUSE-release | tr '\n' ' ' | sed s/.*=\ //`
+  OS=`cat /etc/SUSE-release | tr '\n' ' ' | sed s/VERSION.*//`
 elif [ -f /etc/redhat-release ]; then
   # Older Red Hat, CentOS, etc.
   ...
@@ -137,6 +158,15 @@ elif [[ "$OS" = Rasp* ]]; then
   source aptitude.sh
 elif [[ "$OS" = Ubuntu* ]]; then
   source aptitude.sh
+elif [[ "$OS" = *SUSE* ]]; then
+  source suse.sh
+elif [[ "$OS" = *SLE* ]]; then
+  if [[ "$VER" = 11* ]]; then
+    echo "Please install SLES11 manually...exiting"
+    exit
+  else
+    source ./suse.sh
+  fi
 elif [[ "$OS" = Red* ]]; then
   source rheldistro.sh
 elif [[ "$OS" = CentOS* ]]; then

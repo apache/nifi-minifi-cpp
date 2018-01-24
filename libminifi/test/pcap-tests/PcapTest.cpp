@@ -51,7 +51,7 @@ class PcapTestHarness : public IntegrationBase {
   }
 
   void testSetup() {
-    LogTestController::getInstance().setDebug<minifi::processors::CapturePacket>();
+    LogTestController::getInstance().setTrace<minifi::processors::CapturePacket>();
     LogTestController::getInstance().setDebug<minifi::FlowController>();
     LogTestController::getInstance().setDebug<minifi::SchedulingAgent>();
     LogTestController::getInstance().setDebug<minifi::core::ProcessGroup>();
