@@ -151,6 +151,17 @@ void RemoteProcessorGroupPort::initialize() {
   logger_->log_trace("Finished initialization");
 }
 
+void RemoteProcessorGroupPort::notifyStop(){
+  transmitting_ = false;
+  RPGLatch count(false); // we're just a monitor
+  // we use the latch
+  while(count.getCount() > 0);
+  std::unique_ptr<sitetosite::SiteToSiteClient> nextProtocol = nullptr;
+  while(available_protocols_.try_dequeue(nextProtocol)){
+    // clear all protocols now
+  }
+}
+
 void RemoteProcessorGroupPort::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
   std::string value;
   if (context->getProperty(portUUID.getName(), value)) {
@@ -172,6 +183,8 @@ void RemoteProcessorGroupPort::onTrigger(const std::shared_ptr<core::ProcessCont
   if (!transmitting_) {
     return;
   }
+
+  RPGLatch count;
 
   std::string value;
 
