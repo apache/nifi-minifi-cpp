@@ -76,7 +76,7 @@ MiNiFi - C++ supports the following processors:
 * [UnfocusArchiveEntry](PROCESSORS.md#unfocusarchiveentry)
 
 ## Caveats
-* 0.4.0 represents a non-GA release, APIs and interfaces are subject to change
+* 0.5.0 represents a non-GA release, APIs and interfaces are subject to change
 * Build and usage currently only supports Linux and OS X environments. MiNiFi C++ can be built and run through the Windows Subsystem for Linux but we provide no support for this platform.
 * Provenance events generation is supported and are persisted using RocksDB. Volatile repositories can be used on systems without persistent storage.
 
@@ -345,7 +345,7 @@ $ sudo brew install libpcap
   CPack: Install projects
   CPack: - Install directory: ~/Development/code/apache/nifi-minifi-cpp
   CPack: Create package
-  CPack: - package: ~/Development/code/apache/nifi-minifi-cpp/build/nifi-minifi-cpp-0.1.0-bin.tar.gz generated.
+  CPack: - package: ~/Development/code/apache/nifi-minifi-cpp/build/nifi-minifi-cpp-0.5.0-bin.tar.gz generated.
   ```
 
 - Create a source assembly located in your build directory with suffix -source.tar.gz
@@ -357,18 +357,18 @@ $ sudo brew install libpcap
   CPack: Install projects
   CPack: - Install directory: ~/Development/code/apache/nifi-minifi-cpp
   CPack: Create package
-  CPack: - package: ~/Development/code/apache/nifi-minifi-cpp/build/nifi-minifi-cpp-0.1.0-source.tar.gz generated.
+  CPack: - package: ~/Development/code/apache/nifi-minifi-cpp/build/nifi-minifi-cpp-0.5.0-source.tar.gz generated.
   ```
 
 - (Optional) Create a Docker image from the resulting binary assembly output from "make package".
 ```
 ~/Development/code/apache/nifi-minifi-cpp/build
 $ make docker
-NiFi-MiNiFi-CPP Version: 0.4.0
+NiFi-MiNiFi-CPP Version: 0.5.0
 Current Working Directory: /Users/jdyer/Development/github/nifi-minifi-cpp/docker
 CMake Source Directory: /Users/jdyer/Development/github/nifi-minifi-cpp
-MiNiFi Package: nifi-minifi-cpp-0.4.0-bin.tar.gz
-Docker Command: 'docker build --build-arg UID=1000 --build-arg GID=1000 --build-arg MINIFI_VERSION=0.4.0 --build-arg MINIFI_PACKAGE=nifi-minifi-cpp-0.4.0-bin.tar.gz -t apacheminificpp:0.4.0 .'
+MiNiFi Package: nifi-minifi-cpp-0.5.0-bin.tar.gz
+Docker Command: 'docker build --build-arg UID=1000 --build-arg GID=1000 --build-arg MINIFI_VERSION=0.5.0 --build-arg MINIFI_PACKAGE=nifi-minifi-cpp-0.5.0-bin.tar.gz -t apacheminificpp:0.5.0 .'
 Sending build context to Docker daemon 777.2 kB
 Step 1 : FROM alpine:3.5
  ---> 88e169ea8f46
