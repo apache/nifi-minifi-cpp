@@ -136,7 +136,7 @@ class TestUpdateSink : public minifi::state::StateMonitor {
    * < 0 is an error code
    * 0 is success
    */
-  virtual int16_t applyUpdate(const std::string &configuration) {
+  virtual int16_t applyUpdate(const std::string &source, const std::string &configuration) {
     update_calls++;
     return 0;
   }
@@ -145,7 +145,7 @@ class TestUpdateSink : public minifi::state::StateMonitor {
    * Apply an update that the agent must decode. This is useful for certain operations
    * that can't be encapsulated within these definitions.
    */
-  virtual int16_t applyUpdate(const std::shared_ptr<minifi::state::Update> &updateController) {
+  virtual int16_t applyUpdate(const std::string &source, const std::shared_ptr<minifi::state::Update> &updateController) {
     return 0;
   }
 

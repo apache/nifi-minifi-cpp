@@ -20,7 +20,8 @@
 #include <memory>
 #include <utility>
 #include <vector>
-#include "core/state/metrics/MetricsBase.h"
+
+#include "core/state/nodes/MetricsBase.h"
 
 namespace org {
 namespace apache {
@@ -29,9 +30,9 @@ namespace minifi {
 namespace state {
 
 void StateManager::initialize() {
-  metrics_listener_ = std::unique_ptr<state::metrics::MetricsListener>(new state::metrics::MetricsListener(shared_from_this(), shared_from_this()));
+  metrics_listener_ = std::unique_ptr<state::response::TreeUpdateListener>(new state::response::TreeUpdateListener(shared_from_this(), shared_from_this()));
   // manually add the c2 agent for now
-  listener_thread_pool_.setMaxConcurrentTasks(3);
+  listener_thread_pool_.setMaxConcurrentTasks(2);
   listener_thread_pool_.start();
   controller_running_ = true;
 }
@@ -49,7 +50,7 @@ int16_t StateManager::update(const std::shared_ptr<Update> &updateController) {
   if (isStateMonitorRunning()) {
     return -1;
   }
-  int16_t ret = applyUpdate(updateController);
+  int16_t ret = applyUpdate("StateManager", updateController);
   switch (ret) {
     case -1:
       return -1;
@@ -62,7 +63,7 @@ int16_t StateManager::update(const std::shared_ptr<Update> &updateController) {
  * Passes metrics to the update controllers if they are a metrics sink.
  * @param metrics metric to pass through
  */
-int16_t StateManager::setMetrics(const std::shared_ptr<metrics::Metrics> &metrics) {
+int16_t StateManager::setResponseNodes(const std::shared_ptr<response::ResponseNode> &metrics) {
   if (IsNullOrEmpty(metrics)) {
     return -1;
   }
@@ -70,9 +71,9 @@ int16_t StateManager::setMetrics(const std::shared_ptr<metrics::Metrics> &metric
   if (mutex_.try_lock_until(now + std::chrono::milliseconds(100))) {
     // update controllers can be metric sinks too
     for (auto controller : updateControllers) {
-      std::shared_ptr<metrics::MetricsSink> sink = std::dynamic_pointer_cast<metrics::MetricsSink>(controller);
+      std::shared_ptr<response::ResponseNodeSink> sink = std::dynamic_pointer_cast<response::ResponseNodeSink>(controller);
       if (sink != nullptr) {
-        sink->setMetrics(metrics);
+        sink->setResponseNodes(metrics);
       }
     }
     metrics_maps_[metrics->getName()] = metrics;
@@ -85,7 +86,7 @@ int16_t StateManager::setMetrics(const std::shared_ptr<metrics::Metrics> &metric
 /**
  * Metrics operations
  */
-int16_t StateManager::getMetrics(std::vector<std::shared_ptr<metrics::Metrics>> &metric_vector, uint16_t metricsClass) {
+int16_t StateManager::getResponseNodes(std::vector<std::shared_ptr<response::ResponseNode>> &metric_vector, uint16_t metricsClass) {
   auto now = std::chrono::steady_clock::now();
   const std::chrono::steady_clock::time_point wait_time = now + std::chrono::milliseconds(100);
   if (mutex_.try_lock_until(wait_time)) {

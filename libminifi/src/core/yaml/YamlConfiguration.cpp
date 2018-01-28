@@ -33,7 +33,7 @@ std::shared_ptr<utils::IdGenerator> YamlConfiguration::id_generator_ = utils::Id
 
 core::ProcessGroup *YamlConfiguration::parseRootProcessGroupYaml(YAML::Node rootFlowNode) {
   uuid_t uuid;
-  int32_t version = 0;
+  int version = 0;
 
   checkRequiredField(&rootFlowNode, "name",
                      CONFIG_YAML_REMOTE_PROCESS_GROUP_KEY);
@@ -50,10 +50,7 @@ core::ProcessGroup *YamlConfiguration::parseRootProcessGroupYaml(YAML::Node root
   uuid_parse(id.c_str(), uuid);
 
   if (rootFlowNode["version"]) {
-    std::string value = rootFlowNode["version"].as<std::string>();
-    if (core::Property::StringToInt(value, version)) {
-      logger_->log_debug("parseRootProcessorGroup: version => [%d]", version);
-    }
+    version = rootFlowNode["version"].as<int>();
   }
 
   logger_->log_debug("parseRootProcessGroup: id => [%s], name => [%s]", id, flowName);

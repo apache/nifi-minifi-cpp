@@ -27,6 +27,7 @@ MiNiFi is a child project effort of Apache NiFi.  This repository is for a nativ
   - [Cleaning](#cleaning)
   - [Configuring](#configuring)
   - [Running](#running)
+  - [Deploying](#deploying)
 - [Documentation](#documentation)
 - [License](#license)
 
@@ -550,25 +551,7 @@ To enable HTTP Proxy for a remote process group.
       proxy password:
 
 ### Command and Control Configuration
-For more more insight into the API used within the C2 agent, please visit:
-https://cwiki.apache.org/confluence/display/MINIFI/C2+Design+Proposal
-
-    in minifi.properties
-
-    #Disable/Enable C2
-    nifi.c2.enable=true
-
-	#specify metrics classes
-	nifi.flow.metrics.classes=DeviceInformation,SystemInformation,ProcessMetrics
-	
-	#specify C2 protocol
-	c2.agent.protocol.class=RESTSender
-	
-	#control c2 heartbeat interval in millisecocnds
-	c2.agent.heartbeat.period=3000
-	
-	# enable reporter classes
-	c2.agent.heartbeat.reporter.class=RESTReciver
+Please see the [C2 readme](C2.md) for more informatoin 
 	
 	
 ### Configuring Repository storage locations
@@ -715,6 +698,14 @@ MiNiFi can then be stopped by issuing:
 MiNiFi can also be installed as a system service using minifi.sh with an optional "service name" (default: minifi)
 
     $ ./bin/minifi.sh install [service name]
+    
+### Deploying
+MiNiFi C++ comes with a deployment script. This will build and package minifi. Additionally, a file named build_output will be
+created within the build directory that contains a manifest of build artifacts.
+
+    $ deploy.sh <build identifier> 
+
+The build identifier will be carried with the deployed binary for the configuration you specify. By default all extensions will be built.
     
 ### Managing MiNFI C++ through the MiNiFi Controller
 

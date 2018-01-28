@@ -15,39 +15,39 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CORE_STATE_METRICS_REPOSITORYMETRICS_H_
-#define LIBMINIFI_INCLUDE_CORE_STATE_METRICS_REPOSITORYMETRICS_H_
+#ifndef LIBMINIFI_INCLUDE_CORE_STATE_NODES_REPOSITORYMETRICS_H_
+#define LIBMINIFI_INCLUDE_CORE_STATE_NODES_REPOSITORYMETRICS_H_
 
 #include <sstream>
 #include <map>
 
-#include "MetricsBase.h"
+#include "../nodes/MetricsBase.h"
 #include "Connection.h"
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
 namespace state {
-namespace metrics {
+namespace response {
 
 /**
  * Justification and Purpose: Provides repository metrics. Provides critical information to the
  * C2 server.
  *
  */
-class RepositoryMetrics : public Metrics {
+class RepositoryMetrics : public ResponseNode {
  public:
 
   RepositoryMetrics(const std::string &name, uuid_t uuid)
-      : Metrics(name, uuid) {
+      : ResponseNode(name, uuid) {
   }
 
   RepositoryMetrics(const std::string &name)
-      : Metrics(name, 0) {
+      : ResponseNode(name, 0) {
   }
 
   RepositoryMetrics()
-      : Metrics("RepositoryMetrics", 0) {
+      : ResponseNode("RepositoryMetrics", 0) {
   }
 
   virtual std::string getName() const {
@@ -60,21 +60,21 @@ class RepositoryMetrics : public Metrics {
     }
   }
 
-  std::vector<MetricResponse> serialize() {
-    std::vector<MetricResponse> serialized;
+  std::vector<SerializedResponseNode> serialize() {
+    std::vector<SerializedResponseNode> serialized;
     for (auto conn : repositories) {
       auto repo = conn.second;
-      MetricResponse parent;
+      SerializedResponseNode parent;
       parent.name = repo->getName();
-      MetricResponse datasize;
+      SerializedResponseNode datasize;
       datasize.name = "running";
-      datasize.value = std::to_string(repo->isRunning());
+      datasize.value = repo->isRunning();
 
-      MetricResponse datasizemax;
+      SerializedResponseNode datasizemax;
       datasizemax.name = "full";
-      datasizemax.value = std::to_string(repo->isFull());
+      datasizemax.value = repo->isFull();
 
-      MetricResponse queuesize;
+      SerializedResponseNode queuesize;
       queuesize.name = "size";
       queuesize.value = std::to_string(repo->getRepoSize());
 

@@ -82,7 +82,7 @@ class Property {
   // Get Name for the property
   std::string getName() const;
   // Get Description for the property
-  std::string getDescription();
+  std::string getDescription() const;
   // Get value for the property
   std::string getValue() const;
   std::vector<std::string> &getValues();

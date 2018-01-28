@@ -225,6 +225,22 @@ case "\$1" in
           exit 3;
         fi
         ;;
+     update) 
+        if [  -f \${bin_dir}/minifi.update ]; then
+        	 \${bin_dir}/minifi.sh stop
+        	 cp \${bin_dir}/minifi \${bin_dir}/minifi.bak
+             cp \${bin_dir}/minifi.update \${bin_dir}/minifi
+             # ensure that the command is now running
+             \${bin_dir}/minifi.sh start
+             saved_pid=\$(get_pid)
+             if [ "\${saved_pid}" -gt 0 ]; then
+        	    if [ \$(active_pid \${saved_pid}) -ne 0 ]; then
+        	        cp \${bin_dir}/minifi.bak \${bin_dir}/minifi
+        	 		\${bin_dir}/minifi.sh start       
+        	    fi
+        	 fi
+		fi
+        ;;
     restart)
         echo Restarting MiNiFi service
         \${bin_dir}/minifi.sh stop
@@ -324,6 +340,22 @@ case "$1" in
         exit 3;
       fi
       ;;
+    update) 
+        if [  -f ${bin_dir}/minifi.update ]; then
+        	 ${bin_dir}/minifi.sh stop
+        	 cp ${bin_dir}/minifi ${bin_dir}/minifi.bak
+             cp ${bin_dir}/minifi.update ${bin_dir}/minifi
+             # ensure that the command is now running
+             ${bin_dir}/minifi.sh start
+             saved_pid=$(get_pid)
+             if [ "${saved_pid}" -gt 0 ]; then
+        	    if [ $(active_pid ${saved_pid}) -ne 0 ]; then
+        	        cp ${bin_dir}/minifi.bak ${bin_dir}/minifi
+        	 		${bin_dir}/minifi.sh start       
+        	    fi
+        	 fi
+		fi
+        ;;
     restart)
       echo Restarting MiNiFi service
       ${bin_dir}/minifi.sh stop

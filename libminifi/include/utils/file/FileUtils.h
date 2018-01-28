@@ -79,6 +79,15 @@ class FileUtils {
 #endif
     return -1;
   }
+  
+  static int copy_file(const std::string &path_from, const std::string dest_path) {
+    std::ifstream src(path_from, std::ios::binary);
+    if (!src.is_open())
+      return -1;
+    std::ofstream dest(dest_path, std::ios::binary);
+    dest << src.rdbuf();
+    return 0;
+  }
 
 };
 

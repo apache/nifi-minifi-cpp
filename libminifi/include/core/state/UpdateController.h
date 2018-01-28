@@ -217,13 +217,13 @@ class StateMonitor : public StateController {
    * < 0 is an error code
    * 0 is success
    */
-  virtual int16_t applyUpdate(const std::string &configuration) = 0;
+  virtual int16_t applyUpdate(const std::string & source, const std::string &configuration) = 0;
 
   /**
    * Apply an update that the agent must decode. This is useful for certain operations
    * that can't be encapsulated within these definitions.
    */
-  virtual int16_t applyUpdate(const std::shared_ptr<Update> &updateController) = 0;
+  virtual int16_t applyUpdate(const std::string &source, const std::shared_ptr<Update> &updateController) = 0;
 
   /**
    * Returns uptime for this module.

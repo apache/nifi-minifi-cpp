@@ -297,8 +297,13 @@ const char *HTTPClient::getContentType() {
 }
 
 const std::vector<char> &HTTPClient::getResponseBody() {
-  if (response_body_.size() == 0)
+  if (response_body_.size() == 0){
+    if (callback && callback->ptr){
+      response_body_ = callback->ptr->to_string();
+    }else{
     response_body_ = read_callback_.to_string();
+    }
+  }
   return response_body_;
 }
 

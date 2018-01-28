@@ -43,7 +43,7 @@ ProcessGroup::ProcessGroup(ProcessGroupType type, std::string name, uuid_t uuid,
     : logger_(logging::LoggerFactory<ProcessGroup>::getLogger()),
       name_(name),
       type_(type),
-      version_(version),
+      config_version_(version),
       parent_process_group_(parent) {
   if (!uuid)
     // Generate the global UUID for the flow record

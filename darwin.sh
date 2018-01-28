@@ -20,7 +20,7 @@ verify_enable() {
   feature="$1"
   feature_status=${!1}
   if [ "$feature" = "BUSTACHE_ENABLED" ]; then
-  	BUSTACHE_MAX="9"
+    BUSTACHE_MAX="9"
     ## we should check the xcode version
     CLANG_VERSION=`clang --version | head -n 1 | awk '{print $4}'`
     CLANG_MAJOR=`echo $CLANG_VERSION | cut -d. -f1`
@@ -73,6 +73,8 @@ build_deps(){
             INSTALLED+=("flex")
           elif [ "$FOUND_VALUE" = "python" ]; then
             INSTALLED+=("python")
+          elif [ "$FOUND_VALUE" = "boost" ]; then
+            INSTALLED+=("boost")
           elif [ "$FOUND_VALUE" = "lua" ]; then
             INSTALLED+=("lua")
           elif [ "$FOUND_VALUE" = "gpsd" ]; then

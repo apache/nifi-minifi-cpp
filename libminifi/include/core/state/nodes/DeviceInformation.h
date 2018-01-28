@@ -15,8 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CORE_STATE_METRICS_DEVICEINFORMATION_H_
-#define LIBMINIFI_INCLUDE_CORE_STATE_METRICS_DEVICEINFORMATION_H_
+#ifndef LIBMINIFI_INCLUDE_CORE_STATE_NODES_DEVICEINFORMATION_H_
+#define LIBMINIFI_INCLUDE_CORE_STATE_NODES_DEVICEINFORMATION_H_
 
 #include "core/Resource.h"
 #include <sys/socket.h>
@@ -27,6 +27,9 @@
 #if ( defined(__APPLE__) || defined(__MACH__) || defined(BSD)) 
 #include <net/if_dl.h>
 #include <net/if_types.h>
+#endif
+#ifndef _WIN32
+#include <sys/utsname.h>
 #endif
 #include <ifaddrs.h>
 #include <net/if.h> 
@@ -41,7 +44,7 @@
 #include <unistd.h>
 #include <sstream>
 #include <map>
-#include "MetricsBase.h"
+#include "../nodes/MetricsBase.h"
 #include "Connection.h"
 #include "io/ClientSocket.h"
 
@@ -50,7 +53,7 @@ namespace apache {
 namespace nifi {
 namespace minifi {
 namespace state {
-namespace metrics {
+namespace response {
 
 class Device {
  public:
@@ -248,48 +251,87 @@ class Device {
 /**
  * Justification and Purpose: Provides Device Information
  */
-class DeviceInformation : public DeviceMetric {
+class DeviceInfoNode : public DeviceInformation {
  public:
 
-  DeviceInformation(std::string name, uuid_t uuid)
-      : DeviceMetric(name, uuid) {
+  DeviceInfoNode(std::string name, uuid_t uuid)
+      : DeviceInformation(name, uuid) {
     static Device device;
     hostname_ = device.canonical_hostname_;
     ip_ = device.ip_;
     device_id_ = device.device_id_;
   }
 
-  DeviceInformation(const std::string &name)
-      : DeviceMetric(name, 0) {
+  DeviceInfoNode(const std::string &name)
+      : DeviceInformation(name, 0) {
     static Device device;
     hostname_ = device.canonical_hostname_;
     ip_ = device.ip_;
     device_id_ = device.device_id_;
   }
 
-  std::string getName() const{
-    return "NetworkInfo";
+  std::string getName() const {
+    return "deviceInfo";
   }
 
-  std::vector<MetricResponse> serialize() {
-    std::vector<MetricResponse> serialized;
+  std::vector<SerializedResponseNode> serialize() {
+    std::vector<SerializedResponseNode> serialized;
 
-    MetricResponse hostname;
+    SerializedResponseNode identifier;
+    identifier.name = "identifier";
+    identifier.value = device_id_;
+
+    SerializedResponseNode systemInfo;
+    systemInfo.name = "systemInfo";
+
+    SerializedResponseNode vcores;
+    vcores.name = "vCores";
+    size_t ncpus = std::thread::hardware_concurrency();
+
+    vcores.value = std::to_string(ncpus);
+
+    systemInfo.children.push_back(vcores);
+
+    SerializedResponseNode mem;
+    mem.name = "physicalMem";
+#if defined(_SC_PHYS_PAGES) && defined(_SC_PAGESIZE)
+    size_t mema = (size_t) sysconf( _SC_PHYS_PAGES) * (size_t) sysconf( _SC_PAGESIZE);
+#endif
+    mem.value = std::to_string(mema);
+
+    systemInfo.children.push_back(mem);
+
+    SerializedResponseNode arch;
+    arch.name = "machinearch";
+
+    utsname buf;
+
+    if (uname(&buf) == -1) {
+      arch.value = "unknown";
+    } else {
+      arch.value = buf.machine;
+    }
+
+    systemInfo.children.push_back(arch);
+
+    serialized.push_back(identifier);
+    serialized.push_back(systemInfo);
+
+    SerializedResponseNode networkinfo;
+    networkinfo.name = "networkInfo";
+
+    SerializedResponseNode hostname;
     hostname.name = "hostname";
     hostname.value = hostname_;
 
-    MetricResponse ip;
-    ip.name = "ip";
+    SerializedResponseNode ip;
+    ip.name = "ipAddress";
     ip.value = ip_;
 
-    serialized.push_back(hostname);
-    serialized.push_back(ip);
+    networkinfo.children.push_back(hostname);
+    networkinfo.children.push_back(ip);
 
-    MetricResponse device_id;
-    device_id.name = "deviceid";
-    device_id.value = device_id_;
-
-    serialized.push_back(device_id);
+    serialized.push_back(networkinfo);
 
     return serialized;
   }
@@ -301,7 +343,7 @@ class DeviceInformation : public DeviceMetric {
   std::string device_id_;
 };
 
-REGISTER_RESOURCE(DeviceInformation);
+REGISTER_RESOURCE(DeviceInfoNode);
 
 } /* namespace metrics */
 } /* namespace state */
@@ -310,4 +352,4 @@ REGISTER_RESOURCE(DeviceInformation);
 } /* namespace apache */
 } /* namespace org */
 
-#endif /* LIBMINIFI_INCLUDE_CORE_STATE_METRICS_DEVICEINFORMATION_H_ */
+#endif /* LIBMINIFI_INCLUDE_CORE_STATE_NODES_DEVICEINFORMATION_H_ */

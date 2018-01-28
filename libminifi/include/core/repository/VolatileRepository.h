@@ -126,6 +126,10 @@ class VolatileRepository : public core::Repository, public std::enable_shared_fr
 
   virtual void start();
 
+  virtual uint64_t getRepoSize() {
+    return current_size_;
+  }
+
  protected:
 
   virtual void emplace(RepoValue<T> &old_value) {
@@ -254,7 +258,7 @@ bool VolatileRepository<T>::Put(T key, const uint8_t *buf, size_t bufLen) {
     }
 
     updated = value_vector_.at(private_index)->setRepoValue(new_value, old_value, reclaimed_size);
-    logger_->log_debug("Set repo value at %ll out of %ll updated %ll current_size %ll, adding %ll to  %ll", private_index, max_count_, updated == true, reclaimed_size, size, current_size_.load());
+    logger_->log_debug("Set repo value at %u out of %u updated %u current_size %u, adding %u to  %u", private_index, max_count_, updated == true, reclaimed_size, size, current_size_.load());
     if (updated && reclaimed_size > 0) {
       std::lock_guard<std::mutex> lock(mutex_);
       emplace(old_value);
@@ -273,7 +277,7 @@ bool VolatileRepository<T>::Put(T key, const uint8_t *buf, size_t bufLen) {
   } while (!updated);
   current_size_ += size;
 
-  logger_->log_debug("VolatileRepository -- put %ll %ll", current_size_.load(), current_index_.load());
+  logger_->log_debug("VolatileRepository -- put %u %u", current_size_.load(), current_index_.load());
   return true;
 }
 /**
@@ -330,6 +334,8 @@ bool VolatileRepository<T>::DeSerialize(std::vector<std::shared_ptr<core::Serial
 
       store.push_back(newComponent);
 
+      current_size_ -= repo_value.getBufferSize();
+
       if (max_size++ >= requested_batch) {
         break;
       }
@@ -344,7 +350,7 @@ bool VolatileRepository<T>::DeSerialize(std::vector<std::shared_ptr<core::Serial
 
 template<typename T>
 bool VolatileRepository<T>::DeSerialize(std::vector<std::shared_ptr<core::SerializableComponent>> &store, size_t &max_size) {
-  logger_->log_debug("VolatileRepository -- DeSerialize %ll", current_size_.load());
+  logger_->log_debug("VolatileRepository -- DeSerialize %u", current_size_.load());
   max_size = 0;
   for (auto ent : value_vector_) {
     // let the destructor do the cleanup
@@ -353,6 +359,7 @@ bool VolatileRepository<T>::DeSerialize(std::vector<std::shared_ptr<core::Serial
     if (ent->getValue(repo_value)) {
       // we've taken ownership of this repo value
       store.at(max_size)->DeSerialize(repo_value.getBuffer(), repo_value.getBufferSize());
+      current_size_ -= repo_value.getBufferSize();
       if (max_size++ >= store.size()) {
         break;
       }
@@ -385,7 +392,6 @@ void VolatileRepository<T>::start() {
 #elif defined(__GNUC__) || defined(__GNUG__)
 #pragma GCC diagnostic pop
 #endif
-
 
 } /* namespace repository */
 } /* namespace core */

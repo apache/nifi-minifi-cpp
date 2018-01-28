@@ -15,39 +15,39 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CORE_STATE_METRICS_QUEUEMETRICS_H_
-#define LIBMINIFI_INCLUDE_CORE_STATE_METRICS_QUEUEMETRICS_H_
+#ifndef LIBMINIFI_INCLUDE_CORE_STATE_NODES_QUEUEMETRICS_H_
+#define LIBMINIFI_INCLUDE_CORE_STATE_NODES_QUEUEMETRICS_H_
 
 #include <sstream>
 #include <map>
 
-#include "MetricsBase.h"
+#include "../nodes/MetricsBase.h"
 #include "Connection.h"
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
 namespace state {
-namespace metrics {
+namespace response {
 
 /**
  * Justification and Purpose: Provides Connection queue metrics. Provides critical information to the
  * C2 server.
  *
  */
-class QueueMetrics : public Metrics {
+class QueueMetrics : public ResponseNode {
  public:
 
   QueueMetrics(const std::string &name, uuid_t uuid)
-      : Metrics(name, uuid) {
+      : ResponseNode(name, uuid) {
   }
 
   QueueMetrics(const std::string &name)
-      : Metrics(name, 0) {
+      : ResponseNode(name, 0) {
   }
 
   QueueMetrics()
-      : Metrics("QueueMetrics", 0) {
+      : ResponseNode("QueueMetrics", 0) {
   }
 
   virtual std::string getName() const{
@@ -60,25 +60,25 @@ class QueueMetrics : public Metrics {
     }
   }
 
-  std::vector<MetricResponse> serialize() {
-    std::vector<MetricResponse> serialized;
+  std::vector<SerializedResponseNode> serialize() {
+    std::vector<SerializedResponseNode> serialized;
     for (auto conn : connections) {
       auto connection = conn.second;
-      MetricResponse parent;
+      SerializedResponseNode parent;
       parent.name = connection->getName();
-      MetricResponse datasize;
+      SerializedResponseNode datasize;
       datasize.name = "datasize";
       datasize.value = std::to_string(connection->getQueueDataSize());
 
-      MetricResponse datasizemax;
+      SerializedResponseNode datasizemax;
       datasizemax.name = "datasizemax";
       datasizemax.value = std::to_string(connection->getMaxQueueDataSize());
 
-      MetricResponse queuesize;
+      SerializedResponseNode queuesize;
       queuesize.name = "queued";
       queuesize.value = std::to_string(connection->getQueueSize());
 
-      MetricResponse queuesizemax;
+      SerializedResponseNode queuesizemax;
       queuesizemax.name = "queuedmax";
       queuesizemax.value = std::to_string(connection->getMaxQueueSize());
 
@@ -103,4 +103,4 @@ class QueueMetrics : public Metrics {
 } /* namespace apache */
 } /* namespace org */
 
-#endif /* LIBMINIFI_INCLUDE_CORE_STATE_METRICS_QUEUEMETRICS_H_ */
+#endif /* LIBMINIFI_INCLUDE_CORE_STATE_NODES_QUEUEMETRICS_H_ */
