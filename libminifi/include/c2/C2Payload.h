@@ -22,6 +22,7 @@
 #include <string>
 #include <map>
 #include "core/state/UpdateController.h"
+#include "core/state/Value.h"
 
 namespace org {
 namespace apache {
@@ -38,7 +39,8 @@ enum Operation {
   HEARTBEAT,
   UPDATE,
   VALIDATE,
-  CLEAR
+  CLEAR,
+  TRANSFER
 };
 
 enum Direction {
@@ -58,6 +60,24 @@ class C2ContentResponse {
 
   C2ContentResponse & operator=(const C2ContentResponse &other);
 
+  inline bool operator==(const C2ContentResponse &rhs) const {
+    if (op != rhs.op)
+      return false;
+    if (required != rhs.required)
+      return false;
+    if (ident != rhs.ident)
+      return false;
+    if (name != rhs.name)
+      return false;
+    if (operation_arguments != rhs.operation_arguments)
+      return false;
+    return true;
+  }
+
+  inline bool operator!=(const C2ContentResponse &rhs) const {
+    return !(*this == rhs);
+  }
+
   Operation op;
   // determines if the operation is required
   bool required;
@@ -70,7 +90,7 @@ class C2ContentResponse {
   // name applied to commands
   std::string name;
   // commands that correspond with the operation.
-  std::map<std::string, std::string> operation_arguments;
+  std::map<std::string, state::response::ValueNode> operation_arguments;
 //  std::vector<std::string> content;
 };
 
@@ -147,13 +167,21 @@ class C2Payload : public state::Update {
   /**
    * Returns raw data.
    */
-  std::string getRawData() const;
+  std::vector<char> getRawData() const;
 
   /**
    * Add a nested payload.
    * @param payload payload to move into this object.
    */
   void addPayload(const C2Payload &&payload);
+
+  bool isContainer() const {
+    return is_container_;
+  }
+
+  void setContainer(bool is_container) {
+    is_container_ = is_container;
+  }
   /**
    * Get nested payloads.
    */
@@ -161,6 +189,35 @@ class C2Payload : public state::Update {
 
   C2Payload &operator=(const C2Payload &&other);
   C2Payload &operator=(const C2Payload &other);
+
+  inline bool operator==(const C2Payload &rhs) const {
+    if (op_ != rhs.op_) {
+      return false;
+    }
+    if (ident_ != rhs.ident_) {
+      return false;
+    }
+    if (label_ != rhs.label_) {
+      return false;
+    }
+    if (payloads_ != rhs.payloads_) {
+      return false;
+    }
+    if (content_ != rhs.content_) {
+      return false;
+    }
+    if (raw_ != rhs.raw_) {
+      return false;
+    }
+    if (raw_data_ != rhs.raw_data_) {
+      return false;
+    }
+    return true;
+  }
+
+  inline bool operator!=(const C2Payload &rhs) const {
+    return !(*this == rhs);
+  }
 
  protected:
 
@@ -177,9 +234,11 @@ class C2Payload : public state::Update {
 
   bool raw_;
 
-  std::string raw_data_;
+  std::vector<char> raw_data_;
 
   bool isResponse;
+
+  bool is_container_;
 
 };
 

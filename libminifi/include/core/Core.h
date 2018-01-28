@@ -153,7 +153,7 @@ class CoreComponent {
    * Return the UUID string
    * @param constant reference to the UUID str
    */
-  const std::string & getUUIDStr() {
+  const std::string & getUUIDStr() const {
     return uuidStr_;
   }
 

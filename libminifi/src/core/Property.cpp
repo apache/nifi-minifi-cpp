@@ -30,7 +30,7 @@ std::string Property::getName() const {
   return name_;
 }
 // Get Description for the property
-std::string Property::getDescription() {
+std::string Property::getDescription() const {
   return description_;
 }
 // Get value for the property
@@ -65,6 +65,7 @@ bool Property::operator <(const Property & right) const {
 const Property &Property::operator=(const Property &other) {
   name_ = other.name_;
   values_ = other.values_;
+  description_ = other.description_;
   isCollection = other.isCollection;
   return *this;
 }

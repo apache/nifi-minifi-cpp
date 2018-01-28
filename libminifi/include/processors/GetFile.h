@@ -19,13 +19,14 @@
 #define __GET_FILE_H__
 
 #include <atomic>
+
+#include "../core/state/nodes/MetricsBase.h"
 #include "FlowFileRecord.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
 #include "core/Core.h"
 #include "core/Resource.h"
 #include "core/logging/LoggerConfiguration.h"
-#include "core/state/metrics/MetricsBase.h"
 
 namespace org {
 namespace apache {
@@ -45,17 +46,17 @@ struct GetFileRequest {
   std::string fileFilter = "[^\\.].*";
 };
 
-class GetFileMetrics : public state::metrics::Metrics {
+class GetFileMetrics : public state::response::ResponseNode {
  public:
   GetFileMetrics()
-      : state::metrics::Metrics("GetFileMetrics", 0) {
+      : state::response::ResponseNode("GetFileMetrics", 0) {
     iterations_ = 0;
     accepted_files_ = 0;
     input_bytes_ = 0;
   }
 
   GetFileMetrics(std::string name, uuid_t uuid)
-      : state::metrics::Metrics(name, uuid) {
+      : state::response::ResponseNode(name, uuid) {
     iterations_ = 0;
     accepted_files_ = 0;
     input_bytes_ = 0;
@@ -67,24 +68,24 @@ class GetFileMetrics : public state::metrics::Metrics {
     return core::Connectable::getName();
   }
 
-  virtual std::vector<state::metrics::MetricResponse> serialize() {
-    std::vector<state::metrics::MetricResponse> resp;
+  virtual std::vector<state::response::SerializedResponseNode> serialize() {
+    std::vector<state::response::SerializedResponseNode> resp;
 
-    state::metrics::MetricResponse iter;
+    state::response::SerializedResponseNode iter;
     iter.name = "OnTriggerInvocations";
-    iter.value = std::to_string(iterations_.load());
+    iter.value = (uint32_t)iterations_.load();
 
     resp.push_back(iter);
 
-    state::metrics::MetricResponse accepted_files;
+    state::response::SerializedResponseNode accepted_files;
     accepted_files.name = "AcceptedFiles";
-    accepted_files.value = std::to_string(accepted_files_.load());
+    accepted_files.value = (uint32_t)accepted_files_.load();
 
     resp.push_back(accepted_files);
 
-    state::metrics::MetricResponse input_bytes;
+    state::response::SerializedResponseNode input_bytes;
     input_bytes.name = "InputBytes";
-    input_bytes.value = std::to_string(input_bytes_.load());
+    input_bytes.value = (uint32_t)input_bytes_.load();
 
     resp.push_back(input_bytes);
 
@@ -101,7 +102,7 @@ class GetFileMetrics : public state::metrics::Metrics {
 };
 
 // GetFile Class
-class GetFile : public core::Processor, public state::metrics::MetricsSource {
+class GetFile : public core::Processor, public state::response::MetricsNodeSource {
  public:
   // Constructor
   /*!
@@ -156,7 +157,7 @@ class GetFile : public core::Processor, public state::metrics::MetricsSource {
    */
   void performListing(std::string dir, const GetFileRequest &request);
 
-  int16_t getMetrics(std::vector<std::shared_ptr<state::metrics::Metrics>> &metric_vector);
+  int16_t getMetricNodes(std::vector<std::shared_ptr<state::response::ResponseNode>> &metric_vector);
 
  protected:
 

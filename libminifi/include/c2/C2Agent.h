@@ -24,8 +24,10 @@
 #include <memory>
 #include <mutex>
 #include <thread>
+
+#include "../core/state/nodes/MetricsBase.h"
 #include "core/state/UpdateController.h"
-#include "core/state/metrics/MetricsBase.h"
+#include "core/state/Value.h"
 #include "C2Payload.h"
 #include "C2Protocol.h"
 #include "io/validation.h"
@@ -47,13 +49,12 @@ namespace c2 {
  *   0 HeartBeat --  RESERVED
  *   1-255 Defined by the configuration file.
  */
-class C2Agent : public state::UpdateController, public state::metrics::MetricsSink, public std::enable_shared_from_this<C2Agent> {
+class C2Agent : public state::UpdateController, public state::response::ResponseNodeSink, public std::enable_shared_from_this<C2Agent> {
  public:
 
   C2Agent(const std::shared_ptr<core::controller::ControllerServiceProvider> &controller, const std::shared_ptr<state::StateMonitor> &updateSink, const std::shared_ptr<Configure> &configure);
 
   virtual ~C2Agent() {
-
   }
 
   /**
@@ -71,7 +72,14 @@ class C2Agent : public state::UpdateController, public state::metrics::MetricsSi
    * @param metric metric to set
    * @param return 0 on success, -1 on failure.
    */
-  virtual int16_t setMetrics(const std::shared_ptr<state::metrics::Metrics> &metric);
+  virtual int16_t setResponseNodes(const std::shared_ptr<state::response::ResponseNode> &metric);
+
+  /**
+    * Sets the metric within this sink
+    * @param metric metric to set
+    * @param return 0 on success, -1 on failure.
+    */
+   virtual int16_t setMetricsNodes(const std::shared_ptr<state::response::ResponseNode> &metric);
 
   int64_t getHeartBeatDelay(){
     std::lock_guard<std::mutex> lock(heartbeat_mutex);
@@ -79,6 +87,10 @@ class C2Agent : public state::UpdateController, public state::metrics::MetricsSi
   }
 
  protected:
+
+  void restart_agent();
+
+  void update_agent();
 
   /**
    * Configure the C2 agent
@@ -91,7 +103,7 @@ class C2Agent : public state::UpdateController, public state::metrics::MetricsSi
    * @param name name of this metric
    * @param metrics metrics to include.
    */
-  void serializeMetrics(C2Payload &parent_payload, const std::string &name, const std::vector<state::metrics::MetricResponse> &metrics);
+  void serializeMetrics(C2Payload &parent_payload, const std::string &name, const std::vector<state::response::SerializedResponseNode> &metrics, bool is_container = false);
 
   /**
    * Extract the payload
@@ -139,12 +151,17 @@ class C2Agent : public state::UpdateController, public state::metrics::MetricsSi
   void handle_describe(const C2ContentResponse &resp);
 
   std::timed_mutex metrics_mutex_;
-  std::map<std::string, std::shared_ptr<state::metrics::Metrics>> metrics_map_;
+  std::map<std::string, std::shared_ptr<state::response::ResponseNode>> metrics_map_;
+
+  /**
+     * Device information stored in the metrics format
+     */
+    std::map<std::string, std::shared_ptr<state::response::ResponseNode>> root_response_nodes_;
 
   /**
    * Device information stored in the metrics format
    */
-  std::map<std::string, std::shared_ptr<state::metrics::Metrics>> device_information_;
+  std::map<std::string, std::shared_ptr<state::response::ResponseNode>> device_information_;
   // queue mutex
   std::timed_mutex queue_mutex;
 
@@ -190,6 +207,12 @@ class C2Agent : public state::UpdateController, public state::metrics::MetricsSi
   std::vector<std::shared_ptr<HeartBeatReporter>> heartbeat_protocols_;
 
   std::atomic<C2Protocol*> protocol_;
+
+  bool allow_updates_;
+
+  std::string update_command_;
+
+  std::string update_location_;
 
   std::shared_ptr<logging::Logger> logger_;
 }

@@ -24,15 +24,15 @@
 #ifndef _WIN32
 #include <sys/utsname.h>
 #endif
-#include "MetricsBase.h"
+#include "../nodes/MetricsBase.h"
 #include "Connection.h"
-#include "DeviceInformation.h"
+#include "../nodes/DeviceInformation.h"
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
 namespace state {
-namespace metrics {
+namespace response {
 
 /**
  * Justification and Purpose: Provides system information, including critical device information.
@@ -50,34 +50,40 @@ class SystemInformation : public DeviceInformation {
   }
 
   SystemInformation()
-      : DeviceInformation("SystemInformation", 0) {
+      : DeviceInformation("systeminfo", 0) {
   }
 
-  virtual std::string getName() const{
-    return "SystemInformation";
+  virtual std::string getName() const {
+    return "systeminfo";
   }
 
-  std::vector<MetricResponse> serialize() {
-    std::vector<MetricResponse> serialized;
+  std::vector<SerializedResponseNode> serialize() {
+    std::vector<SerializedResponseNode> serialized;
+    SerializedResponseNode identifier;
+    identifier.name = "identifier";
+    identifier.value = "identifier";
 
-    MetricResponse vcores;
-    vcores.name = "vcores";
+    SerializedResponseNode systemInfo;
+    systemInfo.name = "systemInfo";
+
+    SerializedResponseNode vcores;
+    vcores.name = "vCores";
     size_t ncpus = std::thread::hardware_concurrency();
 
-    vcores.value = std::to_string(ncpus);
+    vcores.value = (uint32_t)ncpus;
 
-    serialized.push_back(vcores);
+    systemInfo.children.push_back(vcores);
 
-    MetricResponse mem;
-    mem.name = "physicalmem";
+    SerializedResponseNode mem;
+    mem.name = "physicalMem";
 #if defined(_SC_PHYS_PAGES) && defined(_SC_PAGESIZE)
     size_t mema = (size_t) sysconf( _SC_PHYS_PAGES) * (size_t) sysconf( _SC_PAGESIZE);
 #endif
-    mem.value = std::to_string(mema);
+    mem.value = (uint32_t)mema;
 
-    serialized.push_back(mem);
+    systemInfo.children.push_back(mem);
 
-    MetricResponse arch;
+    SerializedResponseNode arch;
     arch.name = "machinearch";
 
     utsname buf;
@@ -85,10 +91,13 @@ class SystemInformation : public DeviceInformation {
     if (uname(&buf) == -1) {
       arch.value = "unknown";
     } else {
-      arch.value = buf.machine;
+      arch.value = std::string(buf.machine);
     }
 
-    serialized.push_back(arch);
+    systemInfo.children.push_back(arch);
+
+    serialized.push_back(identifier);
+    serialized.push_back(systemInfo);
 
     return serialized;
   }

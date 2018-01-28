@@ -109,11 +109,11 @@ class ByteOutputCallback : public OutputStreamCallback {
 
   virtual int64_t process(std::shared_ptr<io::BaseStream> stream);
 
-  const std::vector<char> to_string();
+  virtual const std::vector<char> to_string();
 
-  void close();
+  virtual void close();
 
-  size_t getSize();
+  virtual size_t getSize();
 
   bool waitingOps();
 
@@ -121,7 +121,7 @@ class ByteOutputCallback : public OutputStreamCallback {
 
   size_t readFully(char *buffer, size_t size);
 
- private:
+ protected:
 
   inline void write_and_notify(char *data, size_t size);
 

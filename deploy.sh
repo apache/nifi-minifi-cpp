@@ -14,48 +14,14 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-#
+#!/bin/bash
 
-# Standard ignores
-.DS_Store
+build_identifier=$1
 
-# Ignore JetBrains project files
-.idea
+echo "${build_identifier}" > build_identifier
 
-# Ignore JetBrains cLion project files.
-.project
+./bootstrap.sh -d -p --build_identifier=${build_identifier}
 
-# Ignore kdevelop metadata
-nifi-minifi-cpp.kdev4
-.kdev4
-
-# Filter out generated files from the included libuuid
-thirdparty/uuid/tst_uuid*
-assemblies
-CMakeCache.txt
-CMakeFiles
-CMakeScripts
-cmake_install.cmake
-install_manifest.txt
-CTestTestfile.cmake
-cmake-build-debug
-
-# Generated files
-build
-bin
-target
-thirdparty/**/*.o
-thirdparty/**/*.a
-libminifi/test/**/*.a
-libminifi/include/agent/agent_version.h
-docs/generated
-thirdparty/apache-rat/apache-rat*
-
-# Ignore source files that have been placed in the docker directory during build
-docker/minificppsource
-*.swp
-.cache
-.cproject
-.settings
-*.pyc
-/cmake-build-*
+pushd build 
+ ./controller/minificontroller --manifest >> build_output
+popd

@@ -274,7 +274,7 @@ void GetFile::performListing(std::string dir, const GetFileRequest &request) {
   closedir(d);
 }
 
-int16_t GetFile::getMetrics(std::vector<std::shared_ptr<state::metrics::Metrics>> &metric_vector) {
+int16_t GetFile::getMetricNodes(std::vector<std::shared_ptr<state::response::ResponseNode>> &metric_vector) {
   metric_vector.push_back(metrics_);
   return 0;
 }

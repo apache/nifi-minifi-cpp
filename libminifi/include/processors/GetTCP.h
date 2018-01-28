@@ -19,6 +19,8 @@
 #define __GET_TCP_H__
 
 #include <atomic>
+
+#include "../core/state/nodes/MetricsBase.h"
 #include "FlowFileRecord.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
@@ -27,7 +29,6 @@
 #include "concurrentqueue.h"
 #include "utils/ThreadPool.h"
 #include "core/logging/LoggerConfiguration.h"
-#include "core/state/metrics/MetricsBase.h"
 #include "controllers/SSLContextService.h"
 
 namespace org {
@@ -115,17 +116,17 @@ class DataHandler {
 
 };
 
-class GetTCPMetrics : public state::metrics::Metrics {
+class GetTCPMetrics : public state::response::ResponseNode {
  public:
   GetTCPMetrics()
-      : state::metrics::Metrics("GetTCPMetrics", 0) {
+      : state::response::ResponseNode("GetTCPMetrics", 0) {
     iterations_ = 0;
     accepted_files_ = 0;
     input_bytes_ = 0;
   }
 
   GetTCPMetrics(std::string name, uuid_t uuid)
-      : state::metrics::Metrics(name, uuid) {
+      : state::response::ResponseNode(name, uuid) {
     iterations_ = 0;
     accepted_files_ = 0;
     input_bytes_ = 0;
@@ -137,24 +138,24 @@ class GetTCPMetrics : public state::metrics::Metrics {
     return core::Connectable::getName();
   }
 
-  virtual std::vector<state::metrics::MetricResponse> serialize() {
-    std::vector<state::metrics::MetricResponse> resp;
+  virtual std::vector<state::response::SerializedResponseNode> serialize() {
+    std::vector<state::response::SerializedResponseNode> resp;
 
-    state::metrics::MetricResponse iter;
+    state::response::SerializedResponseNode iter;
     iter.name = "OnTriggerInvocations";
-    iter.value = std::to_string(iterations_.load());
+    iter.value = (uint32_t)iterations_.load();
 
     resp.push_back(iter);
 
-    state::metrics::MetricResponse accepted_files;
+    state::response::SerializedResponseNode accepted_files;
     accepted_files.name = "AcceptedFiles";
-    accepted_files.value = std::to_string(accepted_files_.load());
+    accepted_files.value = (uint32_t)accepted_files_.load();
 
     resp.push_back(accepted_files);
 
-    state::metrics::MetricResponse input_bytes;
+    state::response::SerializedResponseNode input_bytes;
     input_bytes.name = "InputBytes";
-    input_bytes.value = std::to_string(input_bytes_.load());
+    input_bytes.value = (uint32_t)input_bytes_.load();
 
     resp.push_back(input_bytes);
 
@@ -171,7 +172,7 @@ class GetTCPMetrics : public state::metrics::Metrics {
 };
 
 // GetTCP Class
-class GetTCP : public core::Processor, public state::metrics::MetricsSource {
+class GetTCP : public core::Processor, public state::response::MetricsNodeSource {
  public:
 // Constructor
   /*!
@@ -236,7 +237,7 @@ class GetTCP : public core::Processor, public state::metrics::MetricsSource {
   // Initialize, over write by NiFi GetTCP
   virtual void initialize(void);
 
-  int16_t getMetrics(std::vector<std::shared_ptr<state::metrics::Metrics>> &metric_vector);
+  int16_t getMetricNodes(std::vector<std::shared_ptr<state::response::ResponseNode>> &metric_vector);
 
  protected:
 
@@ -286,6 +287,7 @@ class GetTCP : public core::Processor, public state::metrics::MetricsSource {
 };
 
 REGISTER_RESOURCE(GetTCP);
+
 
 } /* namespace processors */
 } /* namespace minifi */

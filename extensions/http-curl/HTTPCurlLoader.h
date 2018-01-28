@@ -49,7 +49,6 @@ class __attribute__((visibility("default"))) HttpCurlObjectFactory : public core
    */
   virtual std::vector<std::string> getClassNames() override{
     std::vector<std::string> class_names;
-    class_names.push_back("RESTProtocol");
     class_names.push_back("HttpProtocol");
     class_names.push_back("RESTSender");
     class_names.push_back("InvokeHTTP");

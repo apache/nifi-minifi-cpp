@@ -80,6 +80,52 @@ void parse_url(std::string *url, std::string *host, int *port, std::string *prot
   }
 }
 
+void parse_url(std::string *url, std::string *host, int *port, std::string *protocol, std::string *path, std::string *query) {
+  std::string http("http://");
+  std::string https("https://");
+
+  if (url->compare(0, http.size(), http) == 0)
+    *protocol = http;
+
+  if (url->compare(0, https.size(), https) == 0)
+    *protocol = https;
+
+  if (!protocol->empty()) {
+    size_t pos = url->find_first_of(":", protocol->size());
+
+    if (pos == std::string::npos) {
+      pos = url->size();
+    }
+    size_t ppos = url->find_first_of("/", protocol->size());
+    if (pos == url->size() && ppos < url->size()) {
+      *host = url->substr(protocol->size(), ppos - protocol->size());
+    } else {
+      if (ppos < url->size())
+        *host = url->substr(protocol->size(), pos - protocol->size());
+      else
+        return;
+    }
+    if (pos < url->size() && (*url)[pos] == ':') {
+      if (ppos == std::string::npos) {
+        ppos = url->size();
+      }
+      std::string portStr(url->substr(pos + 1, ppos - pos - 1));
+      if (portStr.size() > 0) {
+        *port = std::stoi(portStr);
+      }
+    }
+
+    auto query_loc = url->find_first_of("?", ppos);
+
+    if (query_loc < url->size()) {
+      *path = url->substr(ppos + 1, query_loc - ppos - 1);
+      *query = url->substr(query_loc + 1, url->size() - query_loc - 1);
+    } else {
+      *path = url->substr(ppos + 1, url->size() - ppos - 1);
+    }
+  }
+}
+
 } /* namespace utils */
 } /* namespace minifi */
 } /* namespace nifi */

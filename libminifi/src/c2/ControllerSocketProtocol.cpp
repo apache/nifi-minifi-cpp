@@ -158,7 +158,7 @@ void ControllerSocketProtocol::initialize(const std::shared_ptr<core::controller
               logger_->log_debug("Connection broke");
               break;
             }
-            update_sink_->applyUpdate(configuration);
+            update_sink_->applyUpdate("ControllerSocketProtocol", configuration);
           }
         }
         break;
@@ -239,7 +239,7 @@ void ControllerSocketProtocol::parse_content(const std::vector<C2ContentResponse
     if (payload_content.name == "Components") {
       for (auto content : payload_content.operation_arguments) {
         bool is_enabled = false;
-        minifi::utils::StringUtils::StringToBool(content.second, is_enabled);
+        minifi::utils::StringUtils::StringToBool(content.second.to_string(), is_enabled);
         std::lock_guard<std::mutex> lock(controller_mutex_);
         component_map_[content.first] = is_enabled;
       }
@@ -262,9 +262,9 @@ int16_t ControllerSocketProtocol::heartbeat(const C2Payload &payload) {
               uint64_t max = 0;
               for (auto content : payload_content.operation_arguments) {
                 if (content.first == "datasize") {
-                  size = std::stol(content.second);
+                  size = std::stol(content.second.to_string());
                 } else if (content.first == "datasizemax") {
-                  max = std::stol(content.second);
+                  max = std::stol(content.second.to_string());
                 }
               }
               std::lock_guard<std::mutex> lock(controller_mutex_);

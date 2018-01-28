@@ -100,9 +100,9 @@ int main(int argc, char **argv) {
   LogTestController::getInstance().setInfo<minifi::FlowController>();
   LogTestController::getInstance().setDebug<minifi::utils::HTTPClient>();
   LogTestController::getInstance().setDebug<minifi::c2::RESTSender>();
-  LogTestController::getInstance().setDebug<minifi::c2::C2Agent>();
+  LogTestController::getInstance().setTrace<minifi::c2::C2Agent>();
 
-  const char *options[] = { "document_root", ".", "listening_ports", "7070", 0 };
+  const char *options[] = { "document_root", ".", "listening_ports", "7072", 0 };
   std::vector<std::string> cpp_options;
   for (int i = 0; i < (sizeof(options) / sizeof(options[0]) - 1); i++) {
     cpp_options.push_back(options[i]);
@@ -119,7 +119,7 @@ int main(int argc, char **argv) {
   std::string heartbeat_response = "{\"operation\" : \"heartbeat\",\"requested_operations\": [  {"
       "\"operation\" : \"update\", "
       "\"operationid\" : \"8675309\", "
-      "\"name\": \"configuration\""
+      "\"name\": \"agent\""
       "}]}";
 
   responses.push_back(heartbeat_response);
@@ -134,13 +134,13 @@ int main(int argc, char **argv) {
     std::string response = "{\"operation\" : \"heartbeat\",\"requested_operations\": [  {"
         "\"operation\" : \"update\", "
         "\"operationid\" : \"8675309\", "
-        "\"name\": \"configuration\", \"content\": { \"location\": \"http://localhost:7070/update\"}}]}";
+        "\"name\": \"agent\", \"content\": { \"location\": \"http://localhost:7072/update\"}}]}";
     responses.push_back(response);
   }
 
   std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::Configure>();
 
-  configuration->set("c2.rest.url", "http://localhost:7070/update");
+  configuration->set("c2.rest.url", "http://localhost:7072/update");
   configuration->set("c2.agent.heartbeat.period", "1000");
   mkdir("content_repository", S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 
@@ -148,6 +148,7 @@ int main(int argc, char **argv) {
   std::shared_ptr<core::Repository> test_flow_repo = std::make_shared<TestFlowRepository>();
 
   configuration->set(minifi::Configure::nifi_flow_configuration_file, test_file_location);
+  configuration->set("c2.agent.update.command", "echo \"verification command\"");
 
   std::shared_ptr<minifi::io::StreamFactory> stream_factory = std::make_shared<minifi::io::StreamFactory>(configuration);
   std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
@@ -174,7 +175,7 @@ int main(int argc, char **argv) {
 
   auto milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(then - start).count();
   std::string logs = LogTestController::getInstance().log_output.str();
-  assert(logs.find("Starting to reload Flow Controller with flow control name MiNiFi Flow, version 0") != std::string::npos);
+  assert(logs.find("removing command") != std::string::npos);
   LogTestController::getInstance().reset();
   rmdir("./content_repository");
   assert(h_ex.calls_ <= (milliseconds / 1000) + 1);
