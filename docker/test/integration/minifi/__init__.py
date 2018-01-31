@@ -60,7 +60,7 @@ class SingleNodeDockerCluster(Cluster):
 
     def __init__(self):
         self.minifi_version = os.environ['MINIFI_VERSION']
-        self.nifi_version = '1.4.0-SNAPSHOT'
+        self.nifi_version = '1.5.0'
         self.minifi_root = '/opt/minifi/nifi-minifi-cpp-' + self.minifi_version
         self.nifi_root = '/opt/nifi/nifi-' + self.nifi_version
         self.network = None
@@ -159,7 +159,7 @@ class SingleNodeDockerCluster(Cluster):
                 RUN sed -i -e 's/^\(nifi.remote.input.socket.port\)=.*/\\1=5000/' {nifi_root}/conf/nifi.properties
                 USER nifi
                 """.format(name=name,
-                           base_image='apachenifi:' + self.nifi_version,
+                           base_image='apache/nifi:' + self.nifi_version,
                            nifi_root=self.nifi_root))
 
         test_flow_xml = nifi_flow_xml(flow, self.nifi_version)
