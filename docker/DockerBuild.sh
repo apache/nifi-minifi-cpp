@@ -46,6 +46,9 @@ cp -r $CMAKE_SOURCE_DIR/LICENSE $CMAKE_SOURCE_DIR/docker/minificppsource/.
 cp -r $CMAKE_SOURCE_DIR/NOTICE $CMAKE_SOURCE_DIR/docker/minificppsource/.
 cp -r $CMAKE_SOURCE_DIR/README.md $CMAKE_SOURCE_DIR/docker/minificppsource/.
 
+# Don't use EL files generated for the host
+rm -f $CMAKE_SOURCE_DIR/docker/minificppsource/extensions/expression-language/{*.hh,Parser.hpp,Scanner.cpp,Parser.cpp,Scanner.h}
+
 DOCKER_COMMAND="docker build --build-arg UID=$UID_ARG --build-arg GID=$GID_ARG --build-arg MINIFI_VERSION=$MINIFI_VERSION --build-arg MINIFI_SOURCE_CODE=$MINIFI_SOURCE_CODE -t apacheminificpp:$MINIFI_VERSION ."
 echo "Docker Command: '$DOCKER_COMMAND'"
 ${DOCKER_COMMAND}
