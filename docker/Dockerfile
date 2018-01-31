@@ -32,6 +32,7 @@ RUN apk --update --no-cache upgrade && apk --update --no-cache add gcc \
 	make \
 	bison \
 	flex \
+	flex-dev \
 	wget \
 	gdb \
 	musl-dev \
