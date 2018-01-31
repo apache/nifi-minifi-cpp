@@ -18,24 +18,33 @@
 include(FindPackageHandleStandardArgs)
 unset(TENSORFLOW_FOUND)
 
+if (TENSORFLOW_PATH)
+  message("-- Checking for TensorFlow in provided TENSORFLOW_PATH: ${TENSORFLOW_PATH}")
+endif()
+
 find_path(TENSORFLOW_INCLUDE_DIR
           NAMES
           tensorflow/core
           tensorflow/cc
           third_party
           HINTS
+          ${TENSORFLOW_PATH}
           /usr/local/include/google/tensorflow
           /usr/local/include/tensorflow
           /usr/include/google/tensorflow)
 
 find_library(TENSORFLOW_CC_LIBRARY NAMES tensorflow_cc
              HINTS
+             ${TENSORFLOW_PATH}
+             ${TENSORFLOW_PATH}/bazel-bin/tensorflow
              /usr/lib
              /usr/local/lib
              /usr/local/lib/tensorflow_cc)
 
 find_library(TENSORFLOW_FRAMEWORK_LIBRARY NAMES tensorflow_framework
              HINTS
+             ${TENSORFLOW_PATH}
+             ${TENSORFLOW_PATH}/bazel-bin/tensorflow
              /usr/lib
              /usr/local/lib
              /usr/local/lib/tensorflow_cc)
@@ -43,6 +52,8 @@ find_library(TENSORFLOW_FRAMEWORK_LIBRARY NAMES tensorflow_framework
 find_package_handle_standard_args(TENSORFLOW DEFAULT_MSG TENSORFLOW_INCLUDE_DIR TENSORFLOW_CC_LIBRARY TENSORFLOW_FRAMEWORK_LIBRARY)
 
 if(TENSORFLOW_FOUND)
+    message("-- Found TensorFlow includes: ${TENSORFLOW_INCLUDE_DIR}")
+    message("-- Found TensorFlow libraries: ${TENSORFLOW_CC_LIBRARY} ${TENSORFLOW_FRAMEWORK_LIBRARY}")
     set(TENSORFLOW_LIBRARIES ${TENSORFLOW_CC_LIBRARY} ${TENSORFLOW_FRAMEWORK_LIBRARY})
     set(TENSORFLOW_INCLUDE_DIRS
         ${TENSORFLOW_INCLUDE_DIR}
@@ -52,6 +63,8 @@ if(TENSORFLOW_FOUND)
         ${TENSORFLOW_INCLUDE_DIR}/tensorflow/contrib/makefile/downloads/gemmlowp
         ${TENSORFLOW_INCLUDE_DIR}/tensorflow/contrib/makefile/downloads/nsync/public
         ${TENSORFLOW_INCLUDE_DIR}/tensorflow/contrib/makefile/gen/protobuf-host/include)
+else()
+  message(FATAL_ERROR "TensorFlow was not found. Check or set TENSORFLOW_PATH to TensorFlow build, Install libtensorflow_cc.so and headers into the system, or disable the TensorFlow extension.")
 endif()
 
 mark_as_advanced(TENSORFLOW_INCLUDE_DIR TENSORFLOW_CC_LIBRARY TENSORFLOW_FRAMEWORK_LIBRARY)
