@@ -137,23 +137,6 @@ void FlowController::initializePaths(const std::string &adjustedFilename) {
   configuration_filename_ = pathString;
   logger_->log_info("FlowController NiFi Configuration file %s", pathString);
 
-  // Create the content repo directory if needed
-  struct stat contentDirStat;
-
-  minifi::setDefaultDirectory(DEFAULT_CONTENT_DIRECTORY);
-
-  if (stat(minifi::default_directory_path.c_str(), &contentDirStat) != -1 && S_ISDIR(contentDirStat.st_mode)) {
-    path = realpath(minifi::default_directory_path.c_str(), full_path);
-    logger_->log_info("FlowController content directory %s", full_path);
-  } else {
-    if (mkdir(minifi::default_directory_path.c_str(), 0777) == -1) {
-      logger_->log_error("FlowController content directory creation failed");
-      exit(1);
-    }
-  }
-
-  std::string clientAuthStr;
-
   if (!path) {
     logger_->log_error("Could not locate path from provided configuration file name (%s).  Exiting.", full_path);
     exit(1);

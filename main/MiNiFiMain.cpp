@@ -19,6 +19,7 @@
  */
 #include <fcntl.h>
 #include <stdio.h>
+#include <cstdlib>
 #include <semaphore.h>
 #include <signal.h>
 #include <vector>
@@ -27,7 +28,7 @@
 #include <unistd.h>
 #include <yaml-cpp/yaml.h>
 #include <iostream>
-
+#include "ResourceClaim.h"
 #include "core/Core.h"
 
 #include "core/FlowConfiguration.h"
@@ -101,6 +102,9 @@ int main(int argc, char **argv) {
       getcwd(cwd, PATH_MAX);
       minifiHome = cwd;
     }
+
+    logger->log_debug("Setting %s to %s", MINIFI_HOME_ENV_KEY, minifiHome);
+    setenv(MINIFI_HOME_ENV_KEY, minifiHome.c_str(), 0);
   }
 
   if (!validHome(minifiHome)) {
@@ -110,7 +114,7 @@ int main(int argc, char **argv) {
   }
 
   if (signal(SIGINT, sigHandler) == SIG_ERR || signal(SIGTERM, sigHandler) == SIG_ERR || signal(SIGPIPE, SIG_IGN) == SIG_ERR) {
-    std::cerr << "Cannot install signal handler" <<  std::endl;
+    std::cerr << "Cannot install signal handler" << std::endl;
     return -1;
   }
 
@@ -160,6 +164,12 @@ int main(int argc, char **argv) {
   std::shared_ptr<core::ContentRepository> content_repo = core::createContentRepository(content_repo_class, true, "content");
 
   content_repo->initialize(configure);
+
+  std::string content_repo_path;
+  if (configure->get(minifi::Configure::nifi_dbcontent_repository_directory_default, content_repo_path)){
+    std::cout << "setting default dir to " << content_repo_path<< std::endl;
+    minifi::setDefaultDirectory(content_repo_path);
+  }
 
   configure->get(minifi::Configure::nifi_configuration_class_name, nifi_configuration_class_name);
 
