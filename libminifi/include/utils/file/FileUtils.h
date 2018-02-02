@@ -21,6 +21,8 @@
 #include <boost/filesystem.hpp>
 #else
 #include <cstdlib>
+#include <sys/stat.h>
+#include <dirent.h>
 #endif
 #include <cstdio>
 #include <unistd.h>
@@ -55,6 +57,27 @@ class FileUtils {
     }
 #endif
     return 0;
+  }
+
+  static int create_dir(const std::string &path, bool create = true) {
+#ifdef BOOST_VERSION
+    boost::filesystem::path dir(path);
+    if(boost::filesystem::create_directory(dir))
+    {
+      return 0;
+    }
+    else
+    {
+      return -1;
+    }
+#else
+    struct stat dir_stat;
+    if (stat(path.c_str(), &dir_stat)) {
+      mkdir(path.c_str(), 0700);
+    }
+    return 0;
+#endif
+    return -1;
   }
 
 };

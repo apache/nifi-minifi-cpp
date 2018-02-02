@@ -18,27 +18,78 @@
 
 #include <string>
 #include <vector>
-
+#include <cstdlib>
 #include "../TestBase.h"
 #include "core/Core.h"
 #include "utils/StringUtils.h"
 
+using org::apache::nifi::minifi::utils::StringUtils;
+
 TEST_CASE("TestStringUtils::split", "[test split no delimiter]") {
   std::vector<std::string> expected = { "hello" };
-  REQUIRE(expected == org::apache::nifi::minifi::utils::StringUtils::split("hello", ","));
+  REQUIRE(expected == StringUtils::split("hello", ","));
 }
 
 TEST_CASE("TestStringUtils::split2", "[test split single delimiter]") {
   std::vector<std::string> expected = { "hello", "world" };
-  REQUIRE(expected == org::apache::nifi::minifi::utils::StringUtils::split("hello world", " "));
+  REQUIRE(expected == StringUtils::split("hello world", " "));
 }
 
 TEST_CASE("TestStringUtils::split3", "[test split multiple delimiter]") {
   std::vector<std::string> expected = { "hello", "world", "I'm", "a", "unit", "test" };
-  REQUIRE(expected == org::apache::nifi::minifi::utils::StringUtils::split("hello world I'm a unit test", " "));
+  REQUIRE(expected == StringUtils::split("hello world I'm a unit test", " "));
 }
 
 TEST_CASE("TestStringUtils::split4", "[test split classname]") {
   std::vector<std::string> expected = { "org", "apache", "nifi", "minifi", "utils", "StringUtils" };
-  REQUIRE(expected == org::apache::nifi::minifi::utils::StringUtils::split(org::apache::nifi::minifi::core::getClassName<org::apache::nifi::minifi::utils::StringUtils>(), "::"));
+  REQUIRE(expected == StringUtils::split(org::apache::nifi::minifi::core::getClassName<org::apache::nifi::minifi::utils::StringUtils>(), "::"));
+}
+
+TEST_CASE("TestStringUtils::testEnv1", "[test split classname]") {
+  std::string test_string = "hello world ${blahblahnamenamenotexist}";
+
+  setenv("blahblahnamenamenotexist", "computer", 0);
+
+  std::string expected = "hello world computer";
+
+  REQUIRE(expected == StringUtils::replaceEnvironmentVariables(test_string));
+}
+
+TEST_CASE("TestStringUtils::testEnv2", "[test split classname]") {
+  std::string test_string = "hello world ${blahblahnamenamenotexist";
+
+  setenv("blahblahnamenamenotexist", "computer", 0);
+
+  std::string expected = "hello world ${blahblahnamenamenotexist";
+
+  REQUIRE(expected == StringUtils::replaceEnvironmentVariables(test_string));
+}
+
+TEST_CASE("TestStringUtils::testEnv3", "[test split classname]") {
+  std::string test_string = "hello world $${blahblahnamenamenotexist}";
+
+  setenv("blahblahnamenamenotexist", "computer", 0);
+
+  std::string expected = "hello world $computer";
+
+  REQUIRE(expected == StringUtils::replaceEnvironmentVariables(test_string));
+}
+
+TEST_CASE("TestStringUtils::testEnv4", "[test split classname]") {
+  std::string test_string = "hello world \\${blahblahnamenamenotexist}";
+
+  setenv("blahblahnamenamenotexist", "computer", 0);
+
+  std::string expected = "hello world ${blahblahnamenamenotexist}";
+
+  REQUIRE(expected == StringUtils::replaceEnvironmentVariables(test_string));
+}
+
+TEST_CASE("TestStringUtils::testEnv5", "[test split classname]") {
+  // can't use blahblahnamenamenotexist because the setenv in other functions may have already set it
+  std::string test_string = "hello world ${blahblahnamenamenotexist2}";
+
+  std::string expected = "hello world ";
+
+  REQUIRE(expected == StringUtils::replaceEnvironmentVariables(test_string));
 }

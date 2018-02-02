@@ -46,6 +46,10 @@ class ContentRepository : public StreamManager<minifi::ResourceClaim> {
    */
   virtual bool initialize(const std::shared_ptr<Configure> &configure) = 0;
 
+  virtual std::string getStoragePath() {
+    return directory_;
+  }
+
   /**
    * Stops this repository.
    */
@@ -105,6 +109,8 @@ class ContentRepository : public StreamManager<minifi::ResourceClaim> {
   }
 
  protected:
+
+  std::string directory_;
 
   std::mutex count_map_mutex_;
 

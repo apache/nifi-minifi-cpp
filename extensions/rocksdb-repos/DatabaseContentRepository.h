@@ -117,7 +117,6 @@ class DatabaseContentRepository : public core::ContentRepository, public core::C
 
  private:
   bool is_valid_;
-  std::string directory_;
   rocksdb::DB* db_;
   std::shared_ptr<logging::Logger> logger_;
 };

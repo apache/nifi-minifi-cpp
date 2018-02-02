@@ -41,6 +41,8 @@ class StreamManager {
 
   }
 
+  virtual std::string getStoragePath() = 0;
+
   /**
    * Create a write stream using the streamId as a reference.
    * @param streamId stream identifier

@@ -54,9 +54,11 @@ class ResourceClaim : public std::enable_shared_from_this<ResourceClaim> {
   /*!
    * Create a new resource claim
    */
-  ResourceClaim(std::shared_ptr<core::StreamManager<ResourceClaim>> claim_manager, const std::string contentDirectory = default_directory_path);
+  //explicit ResourceClaim(std::shared_ptr<core::StreamManager<ResourceClaim>> claim_manager, const std::string contentDirectory);
 
-  ResourceClaim(const std::string path, std::shared_ptr<core::StreamManager<ResourceClaim>> claim_manager, bool deleted = false);
+  explicit ResourceClaim(std::shared_ptr<core::StreamManager<ResourceClaim>> claim_manager);
+
+  explicit ResourceClaim(const std::string path, std::shared_ptr<core::StreamManager<ResourceClaim>> claim_manager, bool deleted = false);
   // Destructor
   ~ResourceClaim() {
   }
