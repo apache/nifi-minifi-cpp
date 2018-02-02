@@ -37,6 +37,34 @@ namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
+
+/**
+ * Count down latch implementation that's used across
+ * all threads of the RPG. This is okay since the latch increments
+ * and decrements based on its construction. Using RAII we should
+ * never have the concern of thread safety.
+ */
+class RPGLatch{
+ public:
+  RPGLatch(bool increment = true){
+    static std::atomic<int> latch_count (0);
+    count = &latch_count;
+    if (increment)
+      count++;
+  }
+
+  ~RPGLatch(){
+    count--;
+  }
+
+  int getCount(){
+    return *count;
+  }
+
+ private:
+  std::atomic<int> *count;
+};
+
 // RemoteProcessorGroupPort Class
 class RemoteProcessorGroupPort : public core::Processor {
  public:
@@ -120,6 +148,8 @@ class RemoteProcessorGroupPort : public core::Processor {
   // refresh site2site peer list
   void refreshPeerList();
 
+  virtual void notifyStop();
+
  protected:
 
   std::shared_ptr<io::StreamFactory> stream_factory_;
@@ -132,7 +162,7 @@ class RemoteProcessorGroupPort : public core::Processor {
   // Transaction Direction
   sitetosite::TransferDirection direction_;
   // Transmitting
-  bool transmitting_;
+  std::atomic<bool> transmitting_;
   // timeout
   uint64_t timeout_;
 
