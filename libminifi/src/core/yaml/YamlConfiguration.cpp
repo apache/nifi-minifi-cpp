@@ -16,14 +16,12 @@
  * limitations under the License.
  */
 
-#include "core/yaml/YamlConfiguration.h"
 #include <memory>
-#include <cstdint>
 #include <string>
 #include <vector>
 #include <set>
-#include "core/reporting/SiteToSiteProvenanceReportingTask.h"
-#include "io/validation.h"
+
+#include "core/yaml/YamlConfiguration.h"
 
 namespace org {
 namespace apache {
@@ -690,10 +688,20 @@ void YamlConfiguration::parsePropertiesNodeYaml(YAML::Node *propertiesNode,
             if (!processor->updateProperty(propertyName, rawValueString)) {
               std::shared_ptr<core::Connectable> proc = std::dynamic_pointer_cast<core::Connectable>(processor);
               if (proc != 0) {
-                logger_->log_warn("Received property %s with value %s but is not one of the properties for %s",
+                logger_->log_warn("Received property %s with value %s but is not one of the properties for %s. "
+                                      "Attempting to add as dynamic property.",
                                   propertyName,
                                   rawValueString,
                                   proc->getName());
+                if (!processor->setDynamicProperty(propertyName, rawValueString)) {
+                  logger_->log_warn("Unable to set the dynamic property %s with value %s",
+                                    propertyName.c_str(),
+                                    rawValueString.c_str());
+                } else {
+                  logger_->log_warn("Dynamic property %s with value %s set",
+                                    propertyName.c_str(),
+                                    rawValueString.c_str());
+                }
               }
             }
           }
@@ -703,10 +711,20 @@ void YamlConfiguration::parsePropertiesNodeYaml(YAML::Node *propertiesNode,
         if (!processor->setProperty(propertyName, rawValueString)) {
           std::shared_ptr<core::Connectable> proc = std::dynamic_pointer_cast<core::Connectable>(processor);
           if (proc != 0) {
-            logger_->log_warn("Received property %s with value %s but is not one of the properties for %s",
+            logger_->log_warn("Received property %s with value %s but is not one of the properties for %s. "
+                                  "Attempting to add as dynamic property.",
                               propertyName,
                               rawValueString,
                               proc->getName());
+            if (!processor->setDynamicProperty(propertyName, rawValueString)) {
+              logger_->log_warn("Unable to set the dynamic property %s with value %s",
+                                propertyName.c_str(),
+                                rawValueString.c_str());
+            } else {
+              logger_->log_warn("Dynamic property %s with value %s set",
+                                propertyName.c_str(),
+                                rawValueString.c_str());
+            }
           }
         }
       }

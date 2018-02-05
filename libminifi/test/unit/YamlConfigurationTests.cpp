@@ -339,3 +339,40 @@ NiFi Properties Overrides: {}
     REQUIRE(it.second->getSource());
   }
 }
+
+TEST_CASE("Test Dynamic Unsupported", "[YamlConfigurationDynamicUnsupported]") {
+  TestController test_controller;
+
+  LogTestController &logTestController = LogTestController::getInstance();
+  logTestController.setDebug<TestPlan>();
+  logTestController.setDebug<core::YamlConfiguration>();
+
+  std::shared_ptr<core::Repository> testProvRepo = core::createRepository("provenancerepository", true);
+  std::shared_ptr<core::Repository> testFlowFileRepo = core::createRepository("flowfilerepository", true);
+  std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::Configure>();
+  std::shared_ptr<minifi::io::StreamFactory> streamFactory = std::make_shared<minifi::io::StreamFactory>(configuration);
+  std::shared_ptr<core::ContentRepository>
+      content_repo = std::make_shared<core::repository::VolatileContentRepository>();
+  core::YamlConfiguration *yamlConfig =
+      new core::YamlConfiguration(testProvRepo, testFlowFileRepo, content_repo, streamFactory, configuration);
+
+  static const std::string TEST_CONFIG_YAML = R"(
+Flow Controller:
+  name: Simple
+Processors:
+- name: PutFile
+  class: PutFile
+  Properties:
+    Dynamic Property: Bad
+      )";
+  std::istringstream configYamlStream(TEST_CONFIG_YAML);
+  std::unique_ptr<core::ProcessGroup> rootFlowConfig = yamlConfig->getYamlRoot(configYamlStream);
+
+  REQUIRE(rootFlowConfig);
+  REQUIRE(rootFlowConfig->findProcessor("PutFile"));
+  REQUIRE(NULL != rootFlowConfig->findProcessor("PutFile")->getUUID());
+  REQUIRE(!rootFlowConfig->findProcessor("PutFile")->getUUIDStr().empty());
+
+  REQUIRE(LogTestController::getInstance().contains("[warning] Unable to set the dynamic property "
+                                                        "Dynamic Property with value Bad"));
+}
