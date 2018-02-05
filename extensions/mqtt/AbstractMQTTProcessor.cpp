@@ -41,6 +41,11 @@ core::Property AbstractMQTTProcessor::KeepLiveInterval("Keep Alive Interval", "D
 core::Property AbstractMQTTProcessor::ConnectionTimeOut("Connection Timeout", "Maximum time interval the client will wait for the network connection to the MQTT server", "30 sec");
 core::Property AbstractMQTTProcessor::QOS("Quality of Service", "The Quality of Service(QoS) to send the message with. Accepts three values '0', '1' and '2'", "MQTT_QOS_0");
 core::Property AbstractMQTTProcessor::Topic("Topic", "The topic to publish the message to", "");
+core::Property AbstractMQTTProcessor::SecurityProtocol("Security Protocol", "Protocol used to communicate with brokers", "");
+core::Property AbstractMQTTProcessor::SecurityCA("Security CA", "File or directory path to CA certificate(s) for verifying the broker's key", "");
+core::Property AbstractMQTTProcessor::SecurityCert("Security Cert", "Path to client's public key (PEM) used for authentication", "");
+core::Property AbstractMQTTProcessor::SecurityPrivateKey("Security Private Key", "Path to client's private key (PEM) used for authentication", "");
+core::Property AbstractMQTTProcessor::SecurityPrivateKeyPassWord("Security Pass Phrase", "Private key passphrase", "");
 core::Relationship AbstractMQTTProcessor::Success("success", "FlowFiles that are sent successfully to the destination are transferred to this relationship");
 core::Relationship AbstractMQTTProcessor::Failure("failure", "FlowFiles that failed to send to the destination are transferred to this relationship");
 
@@ -62,6 +67,8 @@ void AbstractMQTTProcessor::initialize() {
   relationships.insert(Success);
   relationships.insert(Failure);
   setSupportedRelationships(relationships);
+  MQTTClient_SSLOptions sslopts_ = MQTTClient_SSLOptions_initializer;
+  sslEnabled_ = false;
 }
 
 void AbstractMQTTProcessor::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory) {
@@ -119,6 +126,38 @@ void AbstractMQTTProcessor::onSchedule(core::ProcessContext *context, core::Proc
     qos_ = valInt;
     logger_->log_debug("AbstractMQTTProcessor: QOS [%ll]", qos_);
   }
+  value = "";
+
+  if (context->getProperty(SecurityProtocol.getName(), value) && !value.empty()) {
+    if (value == MQTT_SECURITY_PROTOCOL_SSL) {
+      sslEnabled_ = true;
+      logger_->log_debug("AbstractMQTTProcessor: ssl enable");
+      value = "";
+      if (context->getProperty(SecurityCA.getName(), value) && !value.empty()) {
+        logger_->log_debug("AbstractMQTTProcessor: trustStore [%s]", value);
+        securityCA_ = value;
+        sslopts_.trustStore = securityCA_.c_str();
+      }
+      value = "";
+      if (context->getProperty(SecurityCert.getName(), value) && !value.empty()) {
+        logger_->log_debug("AbstractMQTTProcessor: keyStore [%s]", value);
+        securityCert_ = value;
+        sslopts_.keyStore = securityCert_.c_str();
+      }
+      value = "";
+      if (context->getProperty(SecurityPrivateKey.getName(), value) && !value.empty()) {
+        logger_->log_debug("AbstractMQTTProcessor: privateKey [%s]", value);
+        securityPrivateKey_ = value;
+        sslopts_.privateKey = securityPrivateKey_.c_str();
+      }
+      value = "";
+      if (context->getProperty(SecurityPrivateKeyPassWord.getName(), value) && !value.empty()) {
+        logger_->log_debug("AbstractMQTTProcessor: privateKeyPassword [%s]", value);
+        securityPrivateKeyPassWord_ = value;
+        sslopts_.privateKeyPassword = securityPrivateKeyPassWord_.c_str();
+      }
+    }
+  }
   if (!client_) {
     MQTTClient_create(&client_, uri_.c_str(), clientID_.c_str(), MQTTCLIENT_PERSISTENCE_NONE, NULL);
   }
@@ -141,6 +180,8 @@ bool AbstractMQTTProcessor::reconnect() {
     conn_opts.username = userName_.c_str();
     conn_opts.password = passWord_.c_str();
   }
+  if (sslEnabled_)
+    conn_opts.ssl = &sslopts_;
   if (MQTTClient_connect(client_, &conn_opts) != MQTTCLIENT_SUCCESS) {
     logger_->log_error("Failed to connect to MQTT broker %s", uri_);
     return false;

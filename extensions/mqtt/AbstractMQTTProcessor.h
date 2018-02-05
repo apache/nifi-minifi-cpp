@@ -38,6 +38,9 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
+#define MQTT_SECURITY_PROTOCOL_PLAINTEXT "plaintext"
+#define MQTT_SECURITY_PROTOCOL_SSL "ssl"
+
 // AbstractMQTTProcessor Class
 class AbstractMQTTProcessor : public core::Processor {
  public:
@@ -78,6 +81,11 @@ class AbstractMQTTProcessor : public core::Processor {
   static core::Property ConnectionTimeOut;
   static core::Property Topic;
   static core::Property QOS;
+  static core::Property SecurityProtocol;
+  static core::Property SecurityCA;
+  static core::Property SecurityCert;
+  static core::Property SecurityPrivateKey;
+  static core::Property SecurityPrivateKeyPassWord;
 
   // Supported Relationships
   static core::Relationship Failure;
@@ -141,6 +149,12 @@ class AbstractMQTTProcessor : public core::Processor {
 
  private:
   std::shared_ptr<logging::Logger> logger_;
+  MQTTClient_SSLOptions sslopts_;
+  std::string sslEnabled_;
+  std::string securityCA_;
+  std::string securityCert_;
+  std::string securityPrivateKey_;
+  std::string securityPrivateKeyPassWord_;
 };
 
 REGISTER_RESOURCE(AbstractMQTTProcessor);
