@@ -238,6 +238,10 @@ class __attribute__((visibility("default"))) Processor : public Connectable, pub
     stream_factory_ = stream_factory;
   }
 
+  virtual bool supportsDynamicProperties() {
+    return false;
+  }
+
  protected:
 
   virtual void notifyStop() {

@@ -120,6 +120,11 @@ class ControllerService : public ConfigurableComponent, public Connectable {
   void setState(ControllerServiceState state) {
     current_state_ = state;
   }
+
+  virtual bool supportsDynamicProperties() {
+    return false;
+  }
+
  protected:
 
   std::shared_ptr<Configure> configuration_;

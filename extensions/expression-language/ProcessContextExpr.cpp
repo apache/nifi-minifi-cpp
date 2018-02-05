@@ -36,6 +36,19 @@ bool ProcessContext::getProperty(const std::string &name, std::string &value,
   return true;
 }
 
+bool ProcessContext::getDynamicProperty(const std::string &name, std::string &value,
+                                 const std::shared_ptr<FlowFile> &flow_file) {
+  if (expressions_.find(name) == expressions_.end()) {
+    std::string expression_str;
+    getDynamicProperty(name, expression_str);
+    logger_->log_debug("Compiling expression for %s/%s: %s", getProcessorNode()->getName(), name, expression_str);
+    expressions_.emplace(name, expression::compile(expression_str));
+  }
+
+  value = expressions_[name]({flow_file});
+  return true;
+}
+
 } /* namespace core */
 } /* namespace minifi */
 } /* namespace nifi */
