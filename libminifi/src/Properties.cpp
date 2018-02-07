@@ -86,6 +86,7 @@ void Properties::parseConfigureFileLine(char *buf) {
   }
 
   std::string value = equal;
+  value = org::apache::nifi::minifi::utils::StringUtils::replaceEnvironmentVariables(value);
   key = org::apache::nifi::minifi::utils::StringUtils::trimRight(key);
   value = org::apache::nifi::minifi::utils::StringUtils::trimRight(value);
   set(key, value);

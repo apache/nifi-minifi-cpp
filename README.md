@@ -494,7 +494,16 @@ https://cwiki.apache.org/confluence/display/MINIFI/C2+Design+Proposal
 	c2.agent.heartbeat.reporter.class=RESTReciver
 	
 	
-	     
+### Configuring Repository storage locations
+Persistent repositories, such as the Flow File repository, use a configurable path to store data. 
+The repository locations and their defaults are defined below. By default the MINIFI_HOME env
+variable is used. If this is not specified we extrapolate the path and use the root installation
+folder. You may specify your own path in place of these defaults. 
+     
+     in minifi.properties
+     nifi.provenance.repository.directory.default=${MINIFI_HOME}/provenance_repository
+     nifi.flowfile.repository.directory.default=${MINIFI_HOME}/flowfile_repository
+	 nifi.database.content.repository.directory.default=${MINIFI_HOME}/content_repository
 
 ### Configuring Volatile and NO-OP Repositories
 Each of the repositories can be configured to be volatile ( state kept in memory and flushed

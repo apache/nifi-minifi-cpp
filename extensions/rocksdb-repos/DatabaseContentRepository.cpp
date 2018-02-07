@@ -34,7 +34,7 @@ bool DatabaseContentRepository::initialize(const std::shared_ptr<minifi::Configu
   if (configuration->get(Configure::nifi_dbcontent_repository_directory_default, value)) {
     directory_ = value;
   } else {
-    directory_ = "dbcontentrepository";
+    directory_ = configuration->getHome() + "/dbcontentrepository";
   }
   rocksdb::Options options;
   options.create_if_missing = true;

@@ -18,7 +18,9 @@
 
 #include "core/repository/FileSystemRepository.h"
 #include <memory>
+#include <string>
 #include "io/FileStream.h"
+#include "utils/file/FileUtils.h"
 
 namespace org {
 namespace apache {
@@ -28,6 +30,13 @@ namespace core {
 namespace repository {
 
 bool FileSystemRepository::initialize(const std::shared_ptr<minifi::Configure> &configuration) {
+  std::string value;
+  if (configuration->get(Configure::nifi_dbcontent_repository_directory_default, value)) {
+    directory_ = value;
+  } else {
+    directory_ = configuration->getHome() + "/contentrepository";
+  }
+  utils::file::FileUtils::create_dir(directory_);
   return true;
 }
 void FileSystemRepository::stop() {

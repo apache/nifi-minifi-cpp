@@ -16,7 +16,7 @@
  */
 #ifndef LIBMINIFI_INCLUDE_IO_STRINGUTILS_H_
 #define LIBMINIFI_INCLUDE_IO_STRINGUTILS_H_
-
+#include <iostream>
 #include <algorithm>
 #include <sstream>
 #include <vector>
@@ -147,6 +147,43 @@ class StringUtils {
 
     return true;
 
+  }
+
+  static std::string replaceEnvironmentVariables(std::string& original_string) {
+    int32_t beg_seq = 0;
+    int32_t end_seq = 0;
+    std::string source_string = original_string;
+    do {
+      beg_seq = source_string.find("${", beg_seq);
+      if (beg_seq > 0 && source_string.at(beg_seq - 1) == '\\') {
+        beg_seq += 2;
+        continue;
+      }
+      if (beg_seq < 0)
+        break;
+      end_seq = source_string.find("}", beg_seq + 2);
+      if (end_seq < 0)
+        break;
+      if (end_seq - (beg_seq + 2) < 0) {
+        beg_seq += 2;
+        continue;
+      }
+      const std::string env_field = source_string.substr(beg_seq + 2, end_seq - (beg_seq + 2));
+      const std::string env_field_wrapped = source_string.substr(beg_seq, end_seq + 1);
+      if (env_field.empty()) {
+        continue;
+      }
+      const auto strVal = std::getenv(env_field.c_str());
+      std::string env_value;
+      if (strVal != nullptr)
+        env_value = strVal;
+      source_string = replaceAll(source_string, env_field_wrapped, env_value);
+      beg_seq = 0;  // restart
+    } while (beg_seq >= 0);
+
+    source_string = replaceAll(source_string, "\\$", "$");
+
+    return source_string;
   }
 
   static std::string& replaceAll(std::string& source_string, const std::string &from_string, const std::string &to_string) {
