@@ -28,6 +28,11 @@ bool ProcessContext::getProperty(const std::string &name, std::string &value,
   return getProperty(name, value);
 }
 
+bool ProcessContext::getDynamicProperty(const std::string &name, std::string &value,
+                                 const std::shared_ptr<FlowFile> &flow_file) {
+  return getDynamicProperty(name, value);
+}
+
 } /* namespace core */
 } /* namespace minifi */
 } /* namespace nifi */

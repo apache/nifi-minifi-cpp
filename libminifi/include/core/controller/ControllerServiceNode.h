@@ -104,6 +104,10 @@ class ControllerServiceNode : public CoreComponent, public ConfigurableComponent
    */
   virtual bool disable() = 0;
 
+  virtual bool supportsDynamicProperties() {
+    return false;
+  }
+
   ControllerServiceNode(const ControllerServiceNode &other) = delete;
   ControllerServiceNode &operator=(const ControllerServiceNode &parent) = delete;
  protected:

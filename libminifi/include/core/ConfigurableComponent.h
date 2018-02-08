@@ -25,6 +25,8 @@
 #include <memory>
 #include <set>
 
+#define DEFAULT_DYNAMIC_PROPERTY_DESC "Dynamic Property"
+
 #include "logging/Logger.h"
 #include "Property.h"
 
@@ -90,6 +92,47 @@ class __attribute__((visibility("default"))) ConfigurableComponent {
    * @return result of set operation.
    */
 
+  /**
+   * Gets whether or not this processor supports dynamic properties.
+   *
+   * @return true if this component supports dynamic properties (default is false)
+   */
+  virtual bool supportsDynamicProperties() = 0;
+
+  /**
+   * Gets the value of a dynamic property (if it was set).
+   *
+   * @param name
+   * @param value
+   * @return
+   */
+  bool getDynamicProperty(const std::string name, std::string &value);
+
+  /**
+   * Sets the value of a new dynamic property.
+   *
+   * @param name
+   * @param value
+   * @return
+   */
+  bool setDynamicProperty(const std::string name, std::string value);
+
+  /**
+   * Updates the value of an existing dynamic property.
+   *
+   * @param name
+   * @param value
+   * @return
+   */
+  bool updateDynamicProperty(const std::string &name, const std::string &value);
+
+  /**
+   * Provides all dynamic property keys that have been set.
+   *
+   * @return vector of property keys
+   */
+  std::vector<std::string> getDynamicProperyKeys();
+
   virtual ~ConfigurableComponent();
 
  protected:
@@ -105,8 +148,13 @@ class __attribute__((visibility("default"))) ConfigurableComponent {
   // Supported properties
   std::map<std::string, Property> properties_;
 
+  // Dynamic properties
+  std::map<std::string, Property> dynamic_properties_;
+
  private:
   std::shared_ptr<logging::Logger> logger_;
+
+  bool createDynamicProperty(const std::string &name, const std::string &value);
 
 };
 

@@ -70,9 +70,19 @@ class ProcessContext : public controller::ControllerServiceLookup {
     return processor_node_->getProperty(name, value);
   }
   bool getProperty(const std::string &name, std::string &value, const std::shared_ptr<FlowFile> &flow_file);
+  bool getDynamicProperty(const std::string &name, std::string &value) {
+    return processor_node_->getDynamicProperty(name, value);
+  }
+  bool getDynamicProperty(const std::string &name, std::string &value, const std::shared_ptr<FlowFile> &flow_file);
+  std::vector<std::string> getDynamicPropertyKeys() {
+    return processor_node_->getDynamicProperyKeys();
+  }
   // Sets the property value using the property's string name
   bool setProperty(const std::string &name, std::string value) {
     return processor_node_->setProperty(name, value);
+  } // Sets the dynamic property value using the property's string name
+  bool setDynamicProperty(const std::string &name, std::string value) {
+    return processor_node_->setDynamicProperty(name, value);
   }
   // Sets the property value using the Property object
   bool setProperty(Property prop, std::string value) {

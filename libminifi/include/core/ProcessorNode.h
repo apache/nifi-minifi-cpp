@@ -214,6 +214,10 @@ class ProcessorNode : public ConfigurableComponent, public Connectable {
     processor_->setMaxConcurrentTasks(tasks);
   }
 
+  virtual bool supportsDynamicProperties() {
+    return false;
+  }
+
   virtual bool isRunning();
 
   virtual bool isWorkAvailable();
