@@ -35,7 +35,8 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-core::Property ConsumeMQTT::MaxQueueSize("Max Flow Segment Size", "Maximum flow content payload segment size for the MQTT record", "");
+core::Property ConsumeMQTT::MaxFlowSegSize("Max Flow Segment Size", "Maximum flow content payload segment size for the MQTT record", "");
+core::Property ConsumeMQTT::QueueBufferMaxMessage("Queue Max Message", "Maximum number of messages allowed on the received MQTT queue", "");
 
 void ConsumeMQTT::initialize() {
   // Set the supported properties
@@ -49,7 +50,8 @@ void ConsumeMQTT::initialize() {
   properties.insert(ConnectionTimeOut);
   properties.insert(QOS);
   properties.insert(Topic);
-  properties.insert(MaxQueueSize);
+  properties.insert(MaxFlowSegSize);
+  properties.insert(QueueBufferMaxMessage);
   setSupportedProperties(properties);
   // Set the supported relationships
   std::set<core::Relationship> relationships;
@@ -62,6 +64,8 @@ bool ConsumeMQTT::enqueueReceiveMQTTMsg(MQTTClient_message *message) {
     logger_->log_debug("MQTT queue full");
     return false;
   } else {
+    if (message->payloadlen > maxSegSize_)
+      message->payloadlen = maxSegSize_;
     queue_.enqueue(message);
     logger_->log_debug("enqueue MQTT message length %d", message->payloadlen);
     return true;
@@ -73,9 +77,14 @@ void ConsumeMQTT::onSchedule(core::ProcessContext *context, core::ProcessSession
   std::string value;
   int64_t valInt;
   value = "";
-  if (context->getProperty(MaxQueueSize.getName(), value) && !value.empty() && core::Property::StringToInt(value, valInt)) {
+  if (context->getProperty(QueueBufferMaxMessage.getName(), value) && !value.empty() && core::Property::StringToInt(value, valInt)) {
     maxQueueSize_ = valInt;
-    logger_->log_debug("ConsumeMQTT: max queue size [%ll]", maxQueueSize_);
+    logger_->log_debug("ConsumeMQTT: Queue Max Message [%ll]", maxQueueSize_);
+  }
+  value = "";
+  if (context->getProperty(MaxFlowSegSize.getName(), value) && !value.empty() && core::Property::StringToInt(value, valInt)) {
+    maxSegSize_ = valInt;
+    logger_->log_debug("ConsumeMQTT: Max Flow Segment Size [%ll]", maxSegSize_);
   }
 }
 

@@ -53,6 +53,7 @@ public:
     : processors::AbstractMQTTProcessor(name, uuid), logger_(logging::LoggerFactory<ConsumeMQTT>::getLogger()) {
     isSubscriber_ = true;
     maxQueueSize_ = 100;
+    maxSegsize_ = ULLONG_MAX;
   }
   // Destructor
   virtual ~ConsumeMQTT() {
@@ -64,7 +65,8 @@ public:
   // Processor Name
   static constexpr char const* ProcessorName = "ConsumeMQTT";
   // Supported Properties
-  static core::Property MaxQueueSize;
+  static core::Property MaxFlowSegSize;
+  static core::Property QueueBufferMaxMessage;
   // Nest Callback Class for write stream
   class WriteCallback: public OutputStreamCallback {
   public:
@@ -108,6 +110,7 @@ private:
   std::shared_ptr<logging::Logger> logger_;
   std::mutex mutex_;
   uint64_t maxQueueSize_;
+  uint64_t maxSegSize_;
   moodycamel::ConcurrentQueue<MQTTClient_message *> queue_;
 };
 
