@@ -78,7 +78,7 @@ TEST_CASE("Test Set Dynamic Property 3", "[testSetDynamicProperty2]") {
   component.setDynamicProperty("test", "value");
   component.setDynamicProperty("test2", "value2");
   std::string value;
-  auto propertyKeys = component.getDynamicProperyKeys();
+  auto propertyKeys = component.getDynamicPropertyKeys();
   REQUIRE(2 == propertyKeys.size());
   REQUIRE("test" == propertyKeys[0]);
   REQUIRE("test2" == propertyKeys[1]);

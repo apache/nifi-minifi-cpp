@@ -131,7 +131,7 @@ class __attribute__((visibility("default"))) ConfigurableComponent {
    *
    * @return vector of property keys
    */
-  std::vector<std::string> getDynamicProperyKeys();
+  std::vector<std::string> getDynamicPropertyKeys();
 
   virtual ~ConfigurableComponent();
 

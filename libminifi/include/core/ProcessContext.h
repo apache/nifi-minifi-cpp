@@ -75,7 +75,7 @@ class ProcessContext : public controller::ControllerServiceLookup {
   }
   bool getDynamicProperty(const std::string &name, std::string &value, const std::shared_ptr<FlowFile> &flow_file);
   std::vector<std::string> getDynamicPropertyKeys() {
-    return processor_node_->getDynamicProperyKeys();
+    return processor_node_->getDynamicPropertyKeys();
   }
   // Sets the property value using the property's string name
   bool setProperty(const std::string &name, std::string value) {
@@ -185,6 +185,7 @@ class ProcessContext : public controller::ControllerServiceLookup {
   std::shared_ptr<ProcessorNode> processor_node_;
 
   std::map<std::string, org::apache::nifi::minifi::expression::Expression> expressions_;
+  std::map<std::string, org::apache::nifi::minifi::expression::Expression> dynamic_property_expressions_;
 
   // Logger
   std::shared_ptr<logging::Logger> logger_;
