@@ -125,6 +125,8 @@ class HTTPClient : public BaseHTTPClient, public core::Connectable {
 
   void setDisablePeerVerification() override;
 
+  void setDisableHostVerification() override;
+
   std::string getURL() const{
     return url_;
   }

@@ -20,7 +20,7 @@
 #ifndef __CONSUME_MQTT_H__
 #define __CONSUME_MQTT_H__
 
-#include <climits>
+#include <limits>
 #include <deque>
 #include "FlowFileRecord.h"
 #include "core/Processor.h"
@@ -53,7 +53,7 @@ public:
     : processors::AbstractMQTTProcessor(name, uuid), logger_(logging::LoggerFactory<ConsumeMQTT>::getLogger()) {
     isSubscriber_ = true;
     maxQueueSize_ = 100;
-    maxSegsize_ = ULLONG_MAX;
+    maxSegSize_ = ULLONG_MAX;
   }
   // Destructor
   virtual ~ConsumeMQTT() {

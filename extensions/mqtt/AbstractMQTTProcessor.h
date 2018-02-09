@@ -150,7 +150,7 @@ class AbstractMQTTProcessor : public core::Processor {
  private:
   std::shared_ptr<logging::Logger> logger_;
   MQTTClient_SSLOptions sslopts_;
-  std::string sslEnabled_;
+  bool sslEnabled_;
   std::string securityCA_;
   std::string securityCert_;
   std::string securityPrivateKey_;

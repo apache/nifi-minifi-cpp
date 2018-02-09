@@ -467,8 +467,53 @@ Additionally, users can utilize the MiNiFi Toolkit Converter (version 0.0.1 - sc
     if you do not want to enable client certificate base authorization
     nifi.security.need.ClientAuth=false
     
+Alternatively you may specify an SSL Context Service definition for the RPGs. This will link
+to a corresponding SSL Context service defined in the flow. 
+    
+To do this specify the SSL Context Service Property in your RPGs and link it to 
+a defined controller service. If you do not take this approach the options, above, will be used
+for TCP and secure HTTPS communications.
+    
+    Remote Processing Groups:
+    - name: NiFi Flow
+      id: 2438e3c8-015a-1000-79ca-83af40ec1998
+      url: http://127.0.0.1:8080/nifi
+      timeout: 30 secs
+      yield period: 5 sec
+      Input Ports:
+          - id: 2438e3c8-015a-1000-79ca-83af40ec1999
+            name: fromnifi
+            max concurrent tasks: 1
+            Properties:
+                Port: 10443
+                SSL Context Service: SSLServiceName
+                Host Name: 127.0.0.1
+      Output Ports:
+          - id: ac82e521-015c-1000-2b21-41279516e19a
+            name: tominifi
+            max concurrent tasks: 2
+            Properties:
+                Port: 10443
+		        SSL Context Service: SSLServiceName
+		        Host Name: 127.0.0.1
+	Controller Services:
+    - name: SSLServiceName
+      id: 2438e3c8-015a-1000-79ca-83af40ec1974
+      class: SSLContextService
+      Properties:
+          Client Certificate: <client cert path>
+          Private Key: < private key path > 
+          Passphrase: <passphrase path or passphrase>
+          CA Certificate: <CA cert path>
+
+If during testing you have a need to disable host or peer verification, you may use the following options:
+
+    # in minifi.properties
+    nifi.security.client.disable.host.verification=true
+	nifi.security.client.disable.peer.verification=true
+    
 ### HTTP SiteToSite Configuration
-To enable HTTPSiteToSite you must set the following flag to true
+To enable HTTPSiteToSite you must set the following flag to true. 
 	
     nifi.remote.input.http.enabled=true
     

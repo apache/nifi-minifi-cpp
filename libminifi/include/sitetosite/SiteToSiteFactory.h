@@ -51,6 +51,7 @@ static std::unique_ptr<SiteToSiteClient> createRawSocket(const SiteToSiteClientC
   client_configuration.getPeer()->getPortId(uuid);
   auto ptr = std::unique_ptr<SiteToSiteClient>(new RawSiteToSiteClient(createStreamingPeer(client_configuration)));
   ptr->setPortId(uuid);
+  ptr->setSSLContextService(client_configuration.getSecurityContext());
   return ptr;
 }
 
@@ -70,6 +71,7 @@ static std::unique_ptr<SiteToSiteClient> createClient(const SiteToSiteClientConf
       auto http_protocol = core::ClassLoader::getDefaultClassLoader().instantiateRaw("HttpProtocol", "HttpProtocol");
       if (nullptr != http_protocol) {
         auto ptr = std::unique_ptr<SiteToSiteClient>(static_cast<SiteToSiteClient*>(http_protocol));
+        ptr->setSSLContextService(client_configuration.getSecurityContext());
         auto peer = std::unique_ptr<SiteToSitePeer>(new SiteToSitePeer(client_configuration.getPeer()->getHost(), client_configuration.getPeer()->getPort()));
         char idStr[37];
         uuid_unparse_lower(uuid, idStr);

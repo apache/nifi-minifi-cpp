@@ -73,7 +73,7 @@ std::unique_ptr<sitetosite::SiteToSiteClient> RemoteProcessorGroupPort::getNextP
         std::lock_guard<std::mutex> lock(peer_mutex_);
         logger_->log_debug("Creating client from peer %ll", peer_index_.load());
         sitetosite::SiteToSiteClientConfiguration config(stream_factory_, peers_[this->peer_index_].getPeer(), client_type_);
-
+        config.setSecurityContext(ssl_service);
         peer_index_++;
         if (peer_index_ >= static_cast<int>(peers_.size())) {
           peer_index_ = 0;
@@ -123,43 +123,7 @@ void RemoteProcessorGroupPort::initialize() {
       client_type_ = sitetosite::HTTP;
     }
   }
-
-  std::lock_guard<std::mutex> lock(peer_mutex_);
-  if (!url_.empty()) {
-    refreshPeerList();
-    if (peers_.size() > 0)
-      peer_index_ = 0;
-  }
-  // populate the site2site protocol for load balancing between them
-  if (peers_.size() > 0) {
-    auto count = peers_.size();
-    if (max_concurrent_tasks_ > count)
-      count = max_concurrent_tasks_;
-    for (uint32_t i = 0; i < count; i++) {
-      std::unique_ptr<sitetosite::SiteToSiteClient> nextProtocol = nullptr;
-      sitetosite::SiteToSiteClientConfiguration config(stream_factory_, peers_[this->peer_index_].getPeer(), client_type_);
-      peer_index_++;
-      if (peer_index_ >= static_cast<int>(peers_.size())) {
-        peer_index_ = 0;
-      }
-      logger_->log_trace("Creating client");
-      nextProtocol = sitetosite::createClient(config);
-      logger_->log_trace("Created client, moving into available protocols");
-      returnProtocol(std::move(nextProtocol));
-    }
-  }
   logger_->log_trace("Finished initialization");
-}
-
-void RemoteProcessorGroupPort::notifyStop(){
-  transmitting_ = false;
-  RPGLatch count(false); // we're just a monitor
-  // we use the latch
-  while(count.getCount() > 0);
-  std::unique_ptr<sitetosite::SiteToSiteClient> nextProtocol = nullptr;
-  while(available_protocols_.try_dequeue(nextProtocol)){
-    // clear all protocols now
-  }
 }
 
 void RemoteProcessorGroupPort::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
@@ -175,6 +139,60 @@ void RemoteProcessorGroupPort::onSchedule(const std::shared_ptr<core::ProcessCon
   std::shared_ptr<core::controller::ControllerService> service = context->getControllerService(context_name);
   if (nullptr != service) {
     ssl_service = std::static_pointer_cast<minifi::controllers::SSLContextService>(service);
+  } else {
+    std::string secureStr;
+    bool is_secure = false;
+    if (configure_->get(Configure::nifi_remote_input_secure, secureStr) && org::apache::nifi::minifi::utils::StringUtils::StringToBool(secureStr, is_secure)) {
+      ssl_service = std::make_shared<minifi::controllers::SSLContextService>(RPG_SSL_CONTEXT_SERVICE_NAME, configure_);
+      ssl_service->onEnable();
+    }
+  }
+
+  bool disable = false;
+  if (ssl_service && configure_->get(Configure::nifi_security_client_disable_host_verification, value) && org::apache::nifi::minifi::utils::StringUtils::StringToBool(value, disable)) {
+    ssl_service->setDisableHostVerification();
+  }
+  disable = false;
+  if (ssl_service && configure_->get(Configure::nifi_security_client_disable_peer_verification, value) && org::apache::nifi::minifi::utils::StringUtils::StringToBool(value, disable)) {
+    ssl_service->setDisablePeerVerification();
+  }
+
+  std::lock_guard<std::mutex> lock(peer_mutex_);
+  if (!url_.empty()) {
+    refreshPeerList();
+    if (peers_.size() > 0)
+      peer_index_ = 0;
+  }
+  // populate the site2site protocol for load balancing between them
+  if (peers_.size() > 0) {
+    auto count = peers_.size();
+    if (max_concurrent_tasks_ > count)
+      count = max_concurrent_tasks_;
+    for (uint32_t i = 0; i < count; i++) {
+      std::unique_ptr<sitetosite::SiteToSiteClient> nextProtocol = nullptr;
+      sitetosite::SiteToSiteClientConfiguration config(stream_factory_, peers_[this->peer_index_].getPeer(), client_type_);
+      config.setSecurityContext(ssl_service);
+      peer_index_++;
+      if (peer_index_ >= static_cast<int>(peers_.size())) {
+        peer_index_ = 0;
+      }
+      logger_->log_trace("Creating client");
+      nextProtocol = sitetosite::createClient(config);
+      logger_->log_trace("Created client, moving into available protocols");
+      returnProtocol(std::move(nextProtocol));
+    }
+  }
+}
+
+void RemoteProcessorGroupPort::notifyStop() {
+  transmitting_ = false;
+  RPGLatch count(false);  // we're just a monitor
+  // we use the latch
+  while (count.getCount() > 0) {
+  }
+  std::unique_ptr<sitetosite::SiteToSiteClient> nextProtocol = nullptr;
+  while (available_protocols_.try_dequeue(nextProtocol)) {
+    // clear all protocols now
   }
 }
 
@@ -253,6 +271,14 @@ void RemoteProcessorGroupPort::refreshRemoteSite2SiteInfo() {
     }
     client = std::unique_ptr<utils::BaseHTTPClient>(dynamic_cast<utils::BaseHTTPClient*>(client_ptr));
     client->initialize("GET", loginUrl, ssl_service);
+    if (ssl_service) {
+      if (ssl_service->getDisableHostVerification()) {
+        client->setDisableHostVerification();
+      }
+      if (ssl_service->getDisablePeerVerification()) {
+        client->setDisablePeerVerification();
+      }
+    }
 
     token = utils::get_token(client.get(), this->rest_user_name_, this->rest_password_);
     logger_->log_debug("Token from NiFi REST Api endpoint %s,  %s", loginUrl, token);
@@ -267,7 +293,14 @@ void RemoteProcessorGroupPort::refreshRemoteSite2SiteInfo() {
   }
   client = std::unique_ptr<utils::BaseHTTPClient>(dynamic_cast<utils::BaseHTTPClient*>(client_ptr));
   client->initialize("GET", fullUrl.c_str(), ssl_service);
-
+  if (ssl_service) {
+    if (ssl_service->getDisableHostVerification()) {
+      client->setDisableHostVerification();
+    }
+    if (ssl_service->getDisablePeerVerification()) {
+      client->setDisablePeerVerification();
+    }
+  }
   if (!token.empty()) {
     std::string header = "Authorization: " + token;
     client->appendHeader(header);
@@ -312,6 +345,7 @@ void RemoteProcessorGroupPort::refreshPeerList() {
 
   std::unique_ptr<sitetosite::SiteToSiteClient> protocol;
   sitetosite::SiteToSiteClientConfiguration config(stream_factory_, std::make_shared<sitetosite::Peer>(protocol_uuid_, host_, site2site_port_, ssl_service != nullptr), client_type_);
+  config.setSecurityContext(ssl_service);
   protocol = sitetosite::createClient(config);
 
   protocol->getPeerList(peers_);
