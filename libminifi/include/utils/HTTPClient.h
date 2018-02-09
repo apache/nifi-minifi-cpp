@@ -255,6 +255,9 @@ class BaseHTTPClient {
   virtual void setDisablePeerVerification() {
   }
 
+  virtual void setDisableHostVerification() {
+  }
+
   virtual const std::vector<std::string> &getHeaders() {
     return headers_;
 

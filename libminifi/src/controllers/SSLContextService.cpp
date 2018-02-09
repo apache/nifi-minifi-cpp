@@ -79,7 +79,7 @@ std::unique_ptr<SSLContext> SSLContextService::createSSLContext() {
 
   int retp = SSL_CTX_load_verify_locations(ctx, ca_certificate_.c_str(), 0);
   if (retp == 0) {
-    logger_->log_error("Can not load CA certificate, Exiting, error : %s", std::strerror(errno));
+    logger_->log_error("Can not load CA certificate %s, Exiting, error : %s", ca_certificate_, std::strerror(errno));
   }
   return std::unique_ptr<SSLContext>(new SSLContext(ctx));
 }
@@ -122,8 +122,6 @@ void SSLContextService::onEnable() {
   logger_->log_trace("onEnable()");
 
   if (getProperty(property.getName(), certificate) && getProperty(privKey.getName(), private_key_)) {
-    logger_->log_error("Certificate and Private Key PEM file not configured, error: %s.", std::strerror(errno));
-
     std::ifstream cert_file(certificate);
     std::ifstream priv_file(private_key_);
     if (!cert_file.good()) {

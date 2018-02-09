@@ -182,6 +182,36 @@ int TLSSocket::writeData(std::vector<uint8_t>& buf, int buflen) {
   return Socket::writeData(buf, buflen);
 }
 
+int TLSSocket::readData(std::vector<uint8_t> &buf, int buflen) {
+  if (buf.capacity() < buflen) {
+    buf.reserve(buflen);
+  }
+  if (IsNullOrEmpty(ssl))
+    return -1;
+  int total_read = 0;
+  int status = 0;
+  int loc = 0;
+  while (buflen) {
+    int16_t fd = select_descriptor(1000);
+    if (fd <= 0) {
+      close(socket_file_descriptor_);
+      return -1;
+    }
+
+    int sslStatus;
+    do {
+      status = SSL_read(ssl, buf.data() + loc, buflen);
+      sslStatus = SSL_get_error(ssl, status);
+    } while (status < 0 && sslStatus == SSL_ERROR_WANT_READ);
+
+    buflen -= status;
+    loc += status;
+    total_read += status;
+  }
+
+  return total_read;
+}
+
 int TLSSocket::writeData(uint8_t *value, int size) {
   if (IsNullOrEmpty(ssl))
     return -1;

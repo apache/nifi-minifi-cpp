@@ -136,6 +136,11 @@ void HTTPClient::setDisablePeerVerification() {
   curl_easy_setopt(http_session_, CURLOPT_SSL_VERIFYPEER, 0L);
 }
 
+void HTTPClient::setDisableHostVerification(){
+  logger_->log_debug("Disabling host verification");
+  curl_easy_setopt(http_session_, CURLOPT_SSL_VERIFYHOST, 0L);
+}
+
 void HTTPClient::setConnectionTimeout(int64_t timeout) {
   connect_timeout_ = timeout;
   curl_easy_setopt(http_session_, CURLOPT_NOSIGNAL, 1);
