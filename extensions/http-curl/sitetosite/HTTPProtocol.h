@@ -47,7 +47,6 @@
 #include "utils/Id.h"
 #include "../client/HTTPClient.h"
 
-
 namespace org {
 namespace apache {
 namespace nifi {
@@ -59,7 +58,8 @@ namespace sitetosite {
  */
 typedef struct Site2SitePeerStatus {
   std::string host_;
-  int port_;bool isSecure_;
+  int port_;
+  bool isSecure_;
 } Site2SitePeerStatus;
 
 // HttpSiteToSiteClient Class
@@ -154,7 +154,7 @@ class HttpSiteToSiteClient : public sitetosite::SiteToSiteClient {
   std::shared_ptr<minifi::utils::HTTPClient> openConnectionForReceive(const std::shared_ptr<HttpTransaction> &transaction);
 
   const std::string getBaseURI() {
-    std::string uri = "http://";
+    std::string uri = ssl_context_service_ != nullptr ? "https://" : "http://";
     uri.append(peer_->getHostName());
     uri.append(":");
     uri.append(std::to_string(peer_->getPort()));
@@ -167,8 +167,16 @@ class HttpSiteToSiteClient : public sitetosite::SiteToSiteClient {
   const std::string parseTransactionId(const std::string &uri);
 
   std::unique_ptr<utils::HTTPClient> create_http_client(const std::string &uri, const std::string &method = "POST", bool setPropertyHeaders = false) {
-    std::unique_ptr<utils::HTTPClient> http_client_ = std::unique_ptr<utils::HTTPClient>(new minifi::utils::HTTPClient(uri, nullptr));
-    http_client_->initialize(method, uri, nullptr);
+    std::unique_ptr<utils::HTTPClient> http_client_ = std::unique_ptr<utils::HTTPClient>(new minifi::utils::HTTPClient(uri, ssl_context_service_));
+    http_client_->initialize(method, uri, ssl_context_service_);
+    if (ssl_context_service_) {
+      if (ssl_context_service_->getDisableHostVerification()) {
+        http_client_->setDisableHostVerification();
+      }
+      if (ssl_context_service_->getDisablePeerVerification()) {
+        http_client_->setDisablePeerVerification();
+      }
+    }
     if (setPropertyHeaders) {
       if (_currentVersion >= 5) {
         // batch count, size, and duratin don't appear to be set through the interfaces.

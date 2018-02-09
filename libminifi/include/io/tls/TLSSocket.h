@@ -157,6 +157,8 @@ class TLSSocket : public Socket {
    */
   virtual int16_t select_descriptor(const uint16_t msec);
 
+  virtual int readData(std::vector<uint8_t> &buf, int buflen);
+
   /**
    * Reads data and places it into buf
    * @param buf buffer in which we extract data

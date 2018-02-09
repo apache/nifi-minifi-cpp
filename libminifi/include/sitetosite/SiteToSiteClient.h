@@ -59,6 +59,7 @@ class SiteToSiteClient : public core::Connectable {
       : core::Connectable("SitetoSiteClient", 0),
         peer_state_(IDLE),
         _batchSendNanos(5000000000),
+        ssl_context_service_(nullptr),
         logger_(logging::LoggerFactory<SiteToSiteClient>::getLogger()) {
     _supportedVersion[0] = 5;
     _supportedVersion[1] = 4;
@@ -74,6 +75,10 @@ class SiteToSiteClient : public core::Connectable {
 
   virtual ~SiteToSiteClient() {
 
+  }
+
+  void setSSLContextService(const std::shared_ptr<minifi::controllers::SSLContextService> &context_service) {
+    ssl_context_service_ = context_service;
   }
 
   /**
@@ -258,6 +263,8 @@ class SiteToSiteClient : public core::Connectable {
   uint32_t _supportedCodecVersion[1];
   uint32_t _currentCodecVersion;
   int _currentCodecVersionIndex;
+
+  std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service_;
 
  private:
   std::shared_ptr<logging::Logger> logger_;
