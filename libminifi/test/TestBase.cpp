@@ -17,10 +17,6 @@
  */
 
 #include "./TestBase.h"
-#include <memory>
-#include <vector>
-#include <set>
-#include <string>
 
 TestPlan::TestPlan(std::shared_ptr<core::ContentRepository> content_repo, std::shared_ptr<core::Repository> flow_repo, std::shared_ptr<core::Repository> prov_repo)
     :
@@ -115,7 +111,10 @@ bool linkToPrevious) {
   return addProcessor(processor, name, relationship, linkToPrevious);
 }
 
-bool TestPlan::setProperty(const std::shared_ptr<core::Processor> proc, const std::string &prop, const std::string &value) {
+bool TestPlan::setProperty(const std::shared_ptr<core::Processor> proc,
+                           const std::string &prop,
+                           const std::string &value,
+                           bool dynamic) {
   std::lock_guard<std::recursive_mutex> guard(mutex);
   uint32_t i = 0;
   logger_->log_info("Attempting to set property %s %s for %s", prop, value, proc->getName());
@@ -129,7 +128,11 @@ bool TestPlan::setProperty(const std::shared_ptr<core::Processor> proc, const st
     return false;
   }
 
-  return processor_contexts_.at(i)->setProperty(prop, value);
+  if (dynamic) {
+    return processor_contexts_.at(i)->setDynamicProperty(prop, value);
+  } else {
+    return processor_contexts_.at(i)->setProperty(prop, value);
+  }
 }
 
 void TestPlan::reset() {

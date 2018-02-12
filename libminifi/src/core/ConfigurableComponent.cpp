@@ -221,7 +221,7 @@ bool ConfigurableComponent::updateDynamicProperty(const std::string &name, const
   }
 }
 
-std::vector<std::string> ConfigurableComponent::getDynamicProperyKeys()  {
+std::vector<std::string> ConfigurableComponent::getDynamicPropertyKeys()  {
   std::lock_guard<std::mutex> lock(configuration_mutex_);
 
   std::vector<std::string> result;

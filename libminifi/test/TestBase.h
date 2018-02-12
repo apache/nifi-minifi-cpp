@@ -160,7 +160,10 @@ class TestPlan {
   std::shared_ptr<core::Processor> addProcessor(const std::string &processor_name, const std::string &name, core::Relationship relationship = core::Relationship("success", "description"),
   bool linkToPrevious = false);
 
-  bool setProperty(const std::shared_ptr<core::Processor> proc, const std::string &prop, const std::string &value);
+  bool setProperty(const std::shared_ptr<core::Processor> proc,
+                   const std::string &prop,
+                   const std::string &value,
+                   bool dynamic = false);
 
   void reset();
 

@@ -86,6 +86,53 @@ class ProcessorNode : public ConfigurableComponent, public Connectable {
   }
 
   /**
+   * Get dynamic property using the provided name.
+   * @param name property name.
+   * @param value value passed in by reference
+   * @return result of getting property.
+   */
+  bool getDynamicProperty(const std::string name, std::string &value) {
+    const auto &processor_cast = std::dynamic_pointer_cast<ConfigurableComponent>(processor_);
+    if (processor_cast) {
+      return processor_cast->getDynamicProperty(name, value);
+    } else {
+      return ConfigurableComponent::getDynamicProperty(name, value);
+    }
+  }
+
+  /**
+   * Sets the dynamic property using the provided name
+   * @param property name
+   * @param value property value.
+   * @return result of setting property.
+   */
+  bool setDynamicProperty(const std::string name, std::string value) {
+    const auto &processor_cast = std::dynamic_pointer_cast<ConfigurableComponent>(processor_);
+    auto ret = ConfigurableComponent::setDynamicProperty(name, value);
+
+    if (processor_cast) {
+      ret = processor_cast->setDynamicProperty(name, value);
+    }
+
+    return ret;
+  }
+
+  /**
+   * Gets list of dynamic property keys
+   * @param name property name.
+   * @param value value passed in by reference
+   * @return result of getting property.
+   */
+  std::vector<std::string> getDynamicPropertyKeys() {
+    const auto &processor_cast = std::dynamic_pointer_cast<ConfigurableComponent>(processor_);
+    if (processor_cast) {
+      return processor_cast->getDynamicPropertyKeys();
+    } else {
+      return ConfigurableComponent::getDynamicPropertyKeys();
+    }
+  }
+
+  /**
    * Sets the property using the provided name
    * @param property name
    * @param value property value.
