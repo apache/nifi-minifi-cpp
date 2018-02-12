@@ -64,38 +64,8 @@ void RESTReceiver::initialize(const std::shared_ptr<core::controller::Controller
   }
 }
 int16_t RESTReceiver::heartbeat(const C2Payload &payload) {
-  std::string operation_request_str = getOperation(payload);
-  std::string outputConfig;
-  Json::Value json_payload;
-  json_payload["operation"] = operation_request_str;
-  if (payload.getIdentifier().length() > 0) {
-    json_payload["operationid"] = payload.getIdentifier();
-  }
-  const std::vector<C2ContentResponse> &content = payload.getContent();
+  std::string outputConfig = serializeJsonRootPayload(payload);
 
-  for (const auto &payload_content : content) {
-    Json::Value payload_content_values;
-    bool use_sub_option = true;
-    if (payload_content.op == payload.getOperation()) {
-      for (auto content : payload_content.operation_arguments) {
-        if (payload_content.operation_arguments.size() == 1 && payload_content.name == content.first) {
-          json_payload[payload_content.name] = content.second;
-          use_sub_option = false;
-        } else {
-          payload_content_values[content.first] = content.second;
-        }
-      }
-    }
-    if (use_sub_option)
-      json_payload[payload_content.name] = payload_content_values;
-  }
-
-  for (const auto &nested_payload : payload.getNestedPayloads()) {
-    json_payload[nested_payload.getLabel()] = serializeJsonPayload(json_payload, nested_payload);
-  }
-
-  Json::StyledWriter writer;
-  outputConfig = writer.write(json_payload);
   if (handler != nullptr) {
     logger_->log_debug("Setting %s", outputConfig);
     handler->setResponse(outputConfig);

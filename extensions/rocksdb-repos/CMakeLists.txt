@@ -48,8 +48,7 @@ endif()
 
 # Include UUID
 find_package(UUID REQUIRED)
-target_link_libraries(minifi-rocksdb-repos ${LIBMINIFI} ${UUID_LIBRARIES} ${JSONCPP_LIB})
-add_dependencies(minifi-rocksdb-repos jsoncpp_project)
+target_link_libraries(minifi-rocksdb-repos ${LIBMINIFI} ${UUID_LIBRARIES})
 find_package(OpenSSL REQUIRED)
 include_directories(${OPENSSL_INCLUDE_DIR})
 target_link_libraries(minifi-rocksdb-repos ${CMAKE_DL_LIBS} )

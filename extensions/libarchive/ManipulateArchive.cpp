@@ -24,7 +24,6 @@
 #include <string>
 #include <set>
 #include <list>
-#include <algorithm>
 
 #include <archive.h>
 #include <archive_entry.h>
@@ -86,7 +85,6 @@ void ManipulateArchive::onSchedule(core::ProcessContext *context, core::ProcessS
         logger_->log_error("Invalid operation %s for ManipulateArchive.", operation_);
         invalid = true;
     }
-        
 
     context->getProperty(Target.getName(), targetEntry_);
     context->getProperty(Destination.getName(), destination_);
@@ -123,7 +121,7 @@ void ManipulateArchive::onTrigger(core::ProcessContext *context, core::ProcessSe
         return;
     }
 
-    FocusArchiveEntry::ArchiveMetadata archiveMetadata;
+    ArchiveMetadata archiveMetadata;
     fileutils::FileManager file_man;
 
     FocusArchiveEntry::ReadCallback readCallback(this, &file_man, &archiveMetadata);
@@ -131,7 +129,7 @@ void ManipulateArchive::onTrigger(core::ProcessContext *context, core::ProcessSe
 
     auto entries_end = archiveMetadata.entryMetadata.end();
 
-    auto target_position = scanArchiveEntries(archiveMetadata, targetEntry_);
+    auto target_position = archiveMetadata.find(targetEntry_);
 
     if (target_position == entries_end && operation_ != OPERATION_TOUCH) {
         logger_->log_warn("ManipulateArchive could not find entry %s to %s!",
@@ -144,7 +142,7 @@ void ManipulateArchive::onTrigger(core::ProcessContext *context, core::ProcessSe
     }
 
     if (!destination_.empty()) {
-        auto dest_position = scanArchiveEntries(archiveMetadata, destination_);
+        auto dest_position = archiveMetadata.find(destination_);
         if (dest_position != entries_end) {
             logger_->log_warn("ManipulateArchive cannot perform %s to existing destination_ %s!",
                               operation_, destination_);
@@ -153,14 +151,12 @@ void ManipulateArchive::onTrigger(core::ProcessContext *context, core::ProcessSe
         }
     }
 
-    std::list<FocusArchiveEntry::ArchiveEntryMetadata>::iterator position;
+    auto position = entries_end;
 
     // Small speedup for when neither before or after are provided or needed
-    if ((before_.empty() && after_.empty()) || operation_ == OPERATION_REMOVE) {
-        position = entries_end;
-    } else {
+    if ((!before_.empty() || !after_.empty()) && operation_ != OPERATION_REMOVE) {
         std::string positionEntry = after_.empty() ? before_ : after_;
-        position = scanArchiveEntries(archiveMetadata, positionEntry);
+        position = archiveMetadata.find(positionEntry);
 
         if (position == entries_end)
             logger_->log_warn("ManipulateArchive could not find entry %s to "
@@ -179,9 +175,9 @@ void ManipulateArchive::onTrigger(core::ProcessContext *context, core::ProcessSe
 
     if (operation_ == OPERATION_REMOVE) {
         std::remove((*target_position).tmpFileName.c_str());
-        target_position = archiveMetadata.entryMetadata.erase(target_position);
+        target_position = archiveMetadata.eraseEntry(target_position);
     } else if (operation_ == OPERATION_COPY) {
-        FocusArchiveEntry::ArchiveEntryMetadata copy = *target_position;
+        ArchiveEntryMetadata copy = *target_position;
 
         // Copy tmp file
         const auto origTmpFileName = copy.tmpFileName;
@@ -194,12 +190,12 @@ void ManipulateArchive::onTrigger(core::ProcessContext *context, core::ProcessSe
 
         archiveMetadata.entryMetadata.insert(position, copy);
     } else if (operation_ == OPERATION_MOVE) {
-        FocusArchiveEntry::ArchiveEntryMetadata moveEntry = *target_position;
-        target_position = archiveMetadata.entryMetadata.erase(target_position);
+        ArchiveEntryMetadata moveEntry = *target_position;
+        target_position = archiveMetadata.eraseEntry(target_position);
         moveEntry.entryName = destination_;
         archiveMetadata.entryMetadata.insert(position, moveEntry);
     } else if (operation_ == OPERATION_TOUCH) {
-        FocusArchiveEntry::ArchiveEntryMetadata touchEntry;
+        ArchiveEntryMetadata touchEntry;
         touchEntry.entryName = destination_;
         touchEntry.entryType = AE_IFREG;
         touchEntry.entrySize = 0;
@@ -216,18 +212,6 @@ void ManipulateArchive::onTrigger(core::ProcessContext *context, core::ProcessSe
     session->write(flowFile, &writeCallback);
 
     session->transfer(flowFile, Success);
-}
-
-std::list<FocusArchiveEntry::ArchiveEntryMetadata>::iterator ManipulateArchive::scanArchiveEntries(
-        FocusArchiveEntry::ArchiveMetadata& archiveMetadata,
-        const std::string& target) {
-    auto targetTest = [&](const FocusArchiveEntry::ArchiveEntryMetadata& entry) -> bool {
-        return entry.entryName == target;
-    };
-
-    return std::find_if(archiveMetadata.entryMetadata.begin(),
-                        archiveMetadata.entryMetadata.end(),
-                        targetTest);
 }
 
 } /* namespace processors */

@@ -45,40 +45,12 @@ void RESTSender::initialize(const std::shared_ptr<core::controller::ControllerSe
   }
   logger_->log_debug("Submitting to %s", rest_uri_);
 }
+
 C2Payload RESTSender::consumePayload(const std::string &url, const C2Payload &payload, Direction direction, bool async) {
-  std::string operation_request_str = getOperation(payload);
   std::string outputConfig;
+
   if (direction == Direction::TRANSMIT) {
-    Json::Value json_payload;
-    json_payload["operation"] = operation_request_str;
-    if (payload.getIdentifier().length() > 0) {
-      json_payload["operationid"] = payload.getIdentifier();
-    }
-    const std::vector<C2ContentResponse> &content = payload.getContent();
-
-    for (const auto &payload_content : content) {
-      Json::Value payload_content_values;
-      bool use_sub_option = true;
-      if (payload_content.op == payload.getOperation()) {
-        for (auto content : payload_content.operation_arguments) {
-          if (payload_content.operation_arguments.size() == 1 && payload_content.name == content.first) {
-            json_payload[payload_content.name] = content.second;
-            use_sub_option = false;
-          } else {
-            payload_content_values[content.first] = content.second;
-          }
-        }
-      }
-      if (use_sub_option)
-        json_payload[payload_content.name] = payload_content_values;
-    }
-
-    for (const auto &nested_payload : payload.getNestedPayloads()) {
-      json_payload[nested_payload.getLabel()] = serializeJsonPayload(json_payload, nested_payload);
-    }
-
-    Json::StyledWriter writer;
-    outputConfig = writer.write(json_payload);
+    outputConfig = serializeJsonRootPayload(payload);
   }
 
   return sendPayload(url, direction, payload, outputConfig);
@@ -111,11 +83,13 @@ const C2Payload RESTSender::sendPayload(const std::string url, const Direction d
     callback->pos = 0;
     client.set_request_method("POST");
     client.setUploadCallback(callback.get());
+    client.setPostSize(outputConfig.size());
   } else {
     // we do not need to set the uplaod callback
     // since we are not uploading anything on a get
     client.set_request_method("GET");
   }
+  client.appendHeader("Accept: application/json");
   client.setContentType("application/json");
   bool isOkay = client.submit();
   int64_t respCode = client.getResponseCode();

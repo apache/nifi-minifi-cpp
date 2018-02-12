@@ -26,6 +26,7 @@
 
 #include <archive.h>
 
+#include "ArchiveMetadata.h"
 #include "FlowFileRecord.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
@@ -69,29 +70,9 @@ class FocusArchiveEntry : public core::Processor {
   //! Initialize, over write by NiFi FocusArchiveEntry
   virtual void initialize(void);
 
-  typedef struct {
-    std::string entryName;
-    std::string tmpFileName;
-    std::string stashKey;
-    mode_t entryType;
-    mode_t entryPerm;
-    uid_t entryUID;
-    gid_t entryGID;
-    uint64_t entryMTime;
-    uint64_t entryMTimeNsec;
-    uint64_t entrySize;
-  } ArchiveEntryMetadata;
-
-  typedef struct {
-    std::string archiveFormatName;
-    int archiveFormat;
-    std::string focusedEntry;
-    std::list<ArchiveEntryMetadata> entryMetadata;
-  } ArchiveMetadata;
-
   class ReadCallback : public InputStreamCallback {
    public:
-    explicit ReadCallback(core::Processor*,fileutils::FileManager *file_man , ArchiveMetadata *archiveMetadata);
+    explicit ReadCallback(core::Processor*, fileutils::FileManager *file_man, ArchiveMetadata *archiveMetadata);
     ~ReadCallback();
     virtual int64_t process(std::shared_ptr<io::BaseStream> stream);
     bool isRunning() {return proc_->isRunning();}

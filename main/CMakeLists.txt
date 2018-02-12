@@ -23,7 +23,7 @@ IF(POLICY CMP0048)
   CMAKE_POLICY(SET CMP0048 OLD)
 ENDIF(POLICY CMP0048)
 
-include_directories(../libminifi/include  ../libminifi/include/c2  ../libminifi/include/c2/protocols/  ../libminifi/include/core/state ./libminifi/include/core/statemanagement/metrics  ../libminifi/include/core/yaml  ../libminifi/include/core  ../thirdparty/spdlog-20170710/include ../thirdparty/concurrentqueue ../thirdparty/yaml-cpp-yaml-cpp-20171024/include ${CIVET_THIRDPARTY_ROOT}/include ../thirdparty/jsoncpp/include  ../thirdparty/)
+include_directories(../libminifi/include ../thirdparty/spdlog-20170710/include ../thirdparty/concurrentqueue ../thirdparty/yaml-cpp-yaml-cpp-20171024/include ../thirdparty/rapidjson-1.1.0/include ../thirdparty/)
 
 include(CheckCXXCompilerFlag)
 CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
@@ -51,7 +51,7 @@ find_package(UUID REQUIRED)
 find_package(OpenSSL REQUIRED)
 include_directories(${OPENSSL_INCLUDE_DIR})
 
-# Link against minifi, yaml-cpp, civetweb-cpp, uuid, openssl, jsoncpp and rocksdb
+# Link against minifi, yaml-cpp, civetweb-cpp, uuid, openssl, and rocksdb
 #target_link_libraries(minifiexe core-minifi)
 
 if (APPLE)
@@ -66,9 +66,7 @@ else ()
 	target_link_libraries (minifiexe -Wl,--whole-archive minifi -Wl,--no-whole-archive)
 endif ()
 
-
-target_link_libraries(minifiexe yaml-cpp ${JSON_CPP_LIB} ${UUID_LIBRARIES} ${OPENSSL_LIBRARIES})
-
+target_link_libraries(minifiexe yaml-cpp ${UUID_LIBRARIES} ${OPENSSL_LIBRARIES})
 
 if (APPLE)
 	get_property(extensions GLOBAL PROPERTY EXTENSION-OPTIONS)

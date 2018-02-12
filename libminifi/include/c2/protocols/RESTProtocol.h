@@ -18,8 +18,11 @@
 #ifndef LIBMINIFI_INCLUDE_C2_PROTOCOLS_RESTPROTOCOL_H_
 #define LIBMINIFI_INCLUDE_C2_PROTOCOLS_RESTPROTOCOL_H_
 
-#include "json/json.h"
-#include "json/writer.h"
+#include "rapidjson/document.h"
+#include "rapidjson/writer.h"
+#include "rapidjson/stringbuffer.h"
+#include "rapidjson/prettywriter.h"
+
 #include <string>
 #include <mutex>
 
@@ -28,6 +31,7 @@
 #include "c2/HeartBeatReporter.h"
 #include "controllers/SSLContextService.h"
 #include "utils/HTTPClient.h"
+#include "Exception.h"
 
 namespace org {
 namespace apache {
@@ -55,7 +59,11 @@ class RESTProtocol {
 
  protected:
 
-  virtual Json::Value serializeJsonPayload(Json::Value &json_root, const C2Payload &payload);
+  virtual rapidjson::Value serializeJsonPayload(const C2Payload &payload, rapidjson::Document::AllocatorType &alloc);
+
+  virtual std::string serializeJsonRootPayload(const C2Payload& payload);
+  
+  virtual void mergePayloadContent(rapidjson::Value &target, const C2Payload &payload, rapidjson::Document::AllocatorType &alloc);
 
   virtual const C2Payload parseJsonResponse(const C2Payload &payload, const std::vector<char> &response);
 

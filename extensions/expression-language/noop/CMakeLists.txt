@@ -19,5 +19,5 @@
 
 message(STATUS "Expression language is disabled; using NoOp implementation")
 file(GLOB SOURCES "*.cpp")
-include_directories(../../../libminifi/include  ../../../libminifi/include/core  ../../../thirdparty/spdlog-20170710/include ../../../thirdparty/concurrentqueue ../../../thirdparty/yaml-cpp-yaml-cpp-0.5.3/include ${CIVET_THIRDPARTY_ROOT}/include ../../../thirdparty/jsoncpp/include  ../../../thirdparty/)
+include_directories(../../../libminifi/include  ../../../libminifi/include/core  ../../../thirdparty/spdlog-20170710/include ../../../thirdparty/concurrentqueue ../../../thirdparty/yaml-cpp-yaml-cpp-0.5.3/include ${CIVET_THIRDPARTY_ROOT}/include ../../../thirdparty/)
 add_library(minifi-expression-language-extensions STATIC ${SOURCES})

@@ -28,10 +28,9 @@
 
 #include <archive.h>
 #include <archive_entry.h>
-#include "utils/file/FileManager.h"
+
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
-#include "json/json.h"
 
 namespace org {
 namespace apache {
@@ -67,55 +66,41 @@ void UnfocusArchiveEntry::onTrigger(core::ProcessContext *context, core::Process
   }
 
   fileutils::FileManager file_man;
-
-  // Get lens stack from attribute
   ArchiveMetadata lensArchiveMetadata;
 
-  Json::Value lensStack;
-  Json::Reader reader;
+  // Get lens stack from attribute
+  {
+    ArchiveStack archiveStack;
+    {
+      std::string existingLensStack;
+    
+      if (flowFile->getAttribute("lens.archive.stack", existingLensStack)) {
+        logger_->log_info("FocusArchiveEntry loading existing lens context");
 
-  std::string existingLensStack;
-
-  if (flowFile->getAttribute("lens.archive.stack", existingLensStack)) {
-    logger_->log_info("UnfocusArchiveEntry loading existing lens context");
-
-    // TODO(calebj) handle any exceptions that might arise from working with JSON data
-    if (!reader.parse(existingLensStack, lensStack)) {
-      logger_->log_error("UnfocusArchiveEntry JSON parse error: %s", reader.getFormattedErrorMessages());
-      context->yield();
-      return;
+        try {
+          archiveStack.loadJsonString(existingLensStack);
+        } catch (Exception &exception) {
+          logger_->log_debug(exception.what());
+          context->yield();
+          return;
+        }
+      } else {
+        logger_->log_error("UnfocusArchiveEntry lens metadata not found");
+        context->yield();
+        return;
+      }
     }
 
-  } else {
-    logger_->log_error("UnfocusArchiveEntry lens metadata not found");
-    context->yield();
-    return;
-  }
+    lensArchiveMetadata = archiveStack.pop();
+    lensArchiveMetadata.seedTempPaths(&file_man, false);
 
-  Json::Value metadataDoc = lensStack[lensStack.size() - 1];
-  lensStack.resize(lensStack.size() - 1);
-
-  lensArchiveMetadata.archiveFormatName.assign(metadataDoc["archive_format_name"].asString());
-  lensArchiveMetadata.archiveFormat = metadataDoc["archive_format"].asUInt64();
-  lensArchiveMetadata.focusedEntry = metadataDoc["focused_entry"].asString();
-
-  for (auto itr = metadataDoc["archive_structure"].begin(); itr != metadataDoc["archive_structure"].end(); ++itr) {
-    const auto &entryVal = *itr;
-    ArchiveEntryMetadata metadata;
-    metadata.tmpFileName = file_man.unique_file("/tmp/", true);
-    metadata.entryName.assign(entryVal["entry_name"].asString());
-    metadata.entryType = entryVal["entry_type"].asUInt64();
-    metadata.entryPerm = entryVal["entry_perm"].asUInt64();
-    metadata.entrySize = entryVal["entry_size"].asUInt64();
-    metadata.entryUID = entryVal["entry_uid"].asUInt64();
-    metadata.entryGID = entryVal["entry_gid"].asUInt64();
-    metadata.entryMTime = entryVal["entry_mtime"].asUInt64();
-    metadata.entryMTimeNsec = entryVal["entry_mtime_nsec"].asInt64();
-
-    if (metadata.entryType == AE_IFREG)
-      metadata.stashKey.assign(entryVal["stash_key"].asString());
-
-    lensArchiveMetadata.entryMetadata.push_back(metadata);
+    {
+      std::string stackStr = archiveStack.toJsonString();
+    
+      if (!flowFile->updateAttribute("lens.archive.stack", stackStr)) {
+        flowFile->addAttribute("lens.archive.stack", stackStr);
+      }
+    }
   }
 
   // Export focused entry to tmp file
@@ -146,27 +131,12 @@ void UnfocusArchiveEntry::onTrigger(core::ProcessContext *context, core::Process
     session->exportContent(entry.tmpFileName, flowFile, false);
   }
 
-  // Create archive by restoring each entry in the archive from tmp files
-  WriteCallback cb(&lensArchiveMetadata);
-  session->write(flowFile, &cb);
-
-  // Set new/updated lens stack to attribute (already 'popped' with resize())
-  Json::FastWriter writer;
-  std::string stackStr = writer.write(lensStack);
-
-  if (!flowFile->updateAttribute("lens.archive.stack", stackStr)) {
-    flowFile->addAttribute("lens.archive.stack", stackStr);
-  }
-
-  // Update filename to that of original archive
-  Json::Value archiveName = metadataDoc.get("archive_name", Json::Value(Json::nullValue));
-
-  if (archiveName.isNull()) {
+  if (lensArchiveMetadata.archiveName.empty()) {
     flowFile->removeAttribute("filename");
     flowFile->removeAttribute("path");
     flowFile->removeAttribute("absolute.path");
   } else {
-    std::string abs_path = archiveName.asString();
+    std::string abs_path = lensArchiveMetadata.archiveName;
     std::size_t found = abs_path.find_last_of("/\\");
     std::string path = abs_path.substr(0, found);
     std::string name = abs_path.substr(found + 1);
@@ -174,6 +144,10 @@ void UnfocusArchiveEntry::onTrigger(core::ProcessContext *context, core::Process
     set_or_update_attr(flowFile, "path", path);
     set_or_update_attr(flowFile, "absolute.path", abs_path);
   }
+
+  // Create archive by restoring each entry in the archive from tmp files
+  WriteCallback cb(&lensArchiveMetadata);
+  session->write(flowFile, &cb);
 
   // Transfer to the relationship
   session->transfer(flowFile, Success);

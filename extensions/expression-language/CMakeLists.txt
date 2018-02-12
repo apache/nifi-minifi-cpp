@@ -38,7 +38,7 @@ flex_target(
 
 add_flex_bison_dependency(el-scanner el-parser)
 
-include_directories(../../libminifi/include  ../../libminifi/include/core  ../../thirdparty/spdlog-20170710/include ../../thirdparty/concurrentqueue ../../thirdparty/yaml-cpp-yaml-cpp-0.5.3/include ${CIVET_THIRDPARTY_ROOT}/include ../../thirdparty/jsoncpp/include  ../../thirdparty/)
+include_directories(../../libminifi/include  ../../libminifi/include/core  ../../thirdparty/spdlog-20170710/include ../../thirdparty/concurrentqueue ../../thirdparty/yaml-cpp-yaml-cpp-0.5.3/include ${CIVET_THIRDPARTY_ROOT}/include ../../thirdparty/)
 include_directories(impl)
 
 file(GLOB SOURCES  "*.cpp")
@@ -53,8 +53,7 @@ if(CMAKE_THREAD_LIBS_INIT)
 endif()
 
 find_package(UUID REQUIRED)
-target_link_libraries(minifi-expression-language-extensions ${LIBMINIFI} ${UUID_LIBRARIES} ${JSONCPP_LIB})
-add_dependencies(minifi-expression-language-extensions jsoncpp_project)
+target_link_libraries(minifi-expression-language-extensions ${LIBMINIFI} ${UUID_LIBRARIES})
 find_package(OpenSSL REQUIRED)
 include_directories(${OPENSSL_INCLUDE_DIR})
 target_link_libraries(minifi-expression-language-extensions ${CMAKE_DL_LIBS})
