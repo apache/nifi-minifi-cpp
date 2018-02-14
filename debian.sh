@@ -32,7 +32,12 @@ bootstrap_cmake(){
 }
 build_deps(){
   ## need to account for debian
-  COMMAND="sudo apt-get -y install cmake gcc g++ zlib1g-dev libssl-dev uuid uuid-dev"
+  sudo apt-get install libssl1.0-dev > /dev/null
+  RETVAL=$?
+  if ["$RETVAL" -ne "0"]; then  
+     sudo apt-get install libssl-dev > /dev/null
+  fi
+  COMMAND="sudo apt-get -y install cmake gcc g++ zlib1g-dev uuid uuid-dev"
   export DEBIAN_FRONTEND=noninteractive
   INSTALLED=()
   sudo apt-get -y update
@@ -68,6 +73,7 @@ build_deps(){
             INSTALLED+=("libgps-dev")
           elif [ "$FOUND_VALUE" = "libarchive" ]; then
             INSTALLED+=("liblzma-dev")
+            INSTALLED+=("libbz2-dev")
           fi
         fi
       done
