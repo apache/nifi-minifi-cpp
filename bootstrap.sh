@@ -132,7 +132,7 @@ OS_REVISION=`echo $EVR	 | cut -d. -f3`
 if [[ "$OS" = "Darwin" ]]; then
   source darwin.sh
 elif [[ "$OS" = Deb* ]]; then
-  source aptitude.sh
+  source debian.sh
 elif [[ "$OS" = Rasp* ]]; then
   source aptitude.sh
 elif [[ "$OS" = Ubuntu* ]]; then
