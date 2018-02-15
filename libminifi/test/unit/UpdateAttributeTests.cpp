@@ -41,7 +41,7 @@ TEST_CASE("UpdateAttributeTest", "[updateAttributeTest]") {
                                             true);
 
   plan->setProperty(update_proc, "test_attr_1", "test_val_1", true);
-  plan->setProperty(update_proc, "test_attr_2", "test_val_${literal(1):plus(1)}", true);
+  plan->setProperty(update_proc, "test_attr_2", "test_val_2", true);
 
   testController.runSession(plan, false); // generate
   testController.runSession(plan, false); // update
@@ -52,4 +52,3 @@ TEST_CASE("UpdateAttributeTest", "[updateAttributeTest]") {
 
   LogTestController::getInstance().reset();
 }
-
