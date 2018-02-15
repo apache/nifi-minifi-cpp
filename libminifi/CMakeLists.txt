@@ -71,7 +71,7 @@ file(GLOB SPD_SOURCES "../thirdparty/spdlog-20170710/include/spdlog/*")
 # header only library
 add_library(spdlog STATIC ${SPD_SOURCES})
 add_library(core-minifi STATIC ${SOURCES})
-target_link_libraries(core-minifi ${UUID_LIBRARIES} yaml-cpp)
+target_link_libraries(core-minifi ${CMAKE_DL_LIBS} ${UUID_LIBRARIES} yaml-cpp)
 
 find_package(ZLIB REQUIRED)
 include_directories(${ZLIB_INCLUDE_DIRS})

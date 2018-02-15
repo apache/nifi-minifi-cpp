@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 #include "../TestBase.h"
+#include <memory>
 #include "processors/LogAttribute.h"
 #include "processors/UpdateAttribute.h"
 #include "processors/GenerateFlowFile.h"
@@ -43,9 +44,9 @@ TEST_CASE("UpdateAttributeTest", "[updateAttributeTest]") {
   plan->setProperty(update_proc, "test_attr_1", "test_val_1", true);
   plan->setProperty(update_proc, "test_attr_2", "test_val_2", true);
 
-  testController.runSession(plan, false); // generate
-  testController.runSession(plan, false); // update
-  testController.runSession(plan, false); // log
+  testController.runSession(plan, false);  // generate
+  testController.runSession(plan, false);  // update
+  testController.runSession(plan, false);  // log
 
   REQUIRE(LogTestController::getInstance().contains("key:test_attr_1 value:test_val_1"));
   REQUIRE(LogTestController::getInstance().contains("key:test_attr_2 value:test_val_2"));

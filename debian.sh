@@ -73,6 +73,7 @@ build_deps(){
             INSTALLED+=("libgps-dev")
           elif [ "$FOUND_VALUE" = "libarchive" ]; then
             INSTALLED+=("liblzma-dev")
+            INSTALLED+=("libbz2-dev")
           fi
         fi
       done
