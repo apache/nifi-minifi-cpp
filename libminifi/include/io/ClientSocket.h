@@ -272,7 +272,8 @@ class Socket : public BaseStream {
     gethostname(hostname, 1024);
     Socket mySock(nullptr, hostname, 0);
     mySock.initialize();
-    return mySock.getHostname();
+    auto resolved_hostname = mySock.getHostname();
+    return !IsNullOrEmpty(resolved_hostname) ? resolved_hostname : hostname;
   }
 };
 

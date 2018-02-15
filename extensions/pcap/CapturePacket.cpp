@@ -54,6 +54,7 @@ namespace processors {
 std::shared_ptr<utils::IdGenerator> CapturePacket::id_generator_ = utils::IdGenerator::getIdGenerator();
 core::Property CapturePacket::BaseDir("Base Directory", "Scratch directory for PCAP files", "/tmp/");
 core::Property CapturePacket::BatchSize("Batch Size", "The number of packets to combine within a given PCAP", "50");
+core::Property CapturePacket::CaptureBluetooth("Capture Bluetooth", "True indicates that we support bluetooth interfaces", "false");
 
 const char *CapturePacket::ProcessorName = "CapturePacket";
 
@@ -112,6 +113,7 @@ void CapturePacket::initialize() {
   std::set<core::Property> properties;
   properties.insert(BatchSize);
   properties.insert(BaseDir);
+  properties.insert(CaptureBluetooth);
   setSupportedProperties(properties);
   // Set the supported relationships
   std::set<core::Relationship> relationships;
@@ -120,7 +122,6 @@ void CapturePacket::initialize() {
 }
 
 void CapturePacket::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
-
   std::string value;
   if (context->getProperty(BatchSize.getName(), value)) {
     core::Property::StringToInt(value, pcap_batch_size_);
@@ -128,6 +129,11 @@ void CapturePacket::onSchedule(const std::shared_ptr<core::ProcessContext> &cont
   value = "";
   if (context->getProperty(BaseDir.getName(), value)) {
     base_dir_ = value;
+  }
+
+  value = "";
+  if (context->getProperty(CaptureBluetooth.getName(), value)) {
+    utils::StringUtils::StringToBool(value, capture_bluetooth_);
   }
   if (IsNullOrEmpty(base_dir_)) {
     base_dir_ = "/tmp/";
@@ -149,18 +155,31 @@ void CapturePacket::onSchedule(const std::shared_ptr<core::ProcessContext> &cont
       logger_->log_error("Could not open device %s", name);
       continue;
     }
-    device_list_.push_back(iter);
-    CapturePacketMechanism *aa = create_new_capture(getPath(), &pcap_batch_size_);
-    logger_->log_debug("Creating packet capture in %s",aa->getFile());
-    mover->source.enqueue(aa);
+
+    if (!capture_bluetooth_) {
+      if (name.find("bluetooth") != std::string::npos) {
+        logger_->log_error("Skipping %s because blue tooth capture is not enabled", name);
+        continue;
+      }
+    }
+
+    if (name.find("dbus") != std::string::npos) {
+      logger_->log_error("Skipping %s because dbus capture is disabled", name);
+      continue;
+    }
+
+    if (iter->startCapture(packet_callback, mover.get())) {
+      logger_->log_debug("Starting capture on %s", iter->getName());
+      CapturePacketMechanism *aa = create_new_capture(getPath(), &pcap_batch_size_);
+      logger_->log_trace("Creating packet capture in %s", aa->getFile());
+      mover->source.enqueue(aa);
+      device_list_.push_back(iter);
+    }
   }
-  if (IsNullOrEmpty(devList)){
+
+  if (IsNullOrEmpty(devList)) {
     logger_->log_error("Could not open any devices");
     throw std::exception();
-  }
-  for (auto iter : devList) {
-    logger_->log_debug("Starting capture on %s", iter->getName());
-    iter->startCapture(packet_callback, mover.get());
   }
 }
 

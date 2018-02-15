@@ -139,6 +139,17 @@ $ sudo make install
 Finally, it is required to add the `-lrt` compiler flag by using the
 `-DCMAKE_CXX_FLAGS=-lrt` flag when invoking cmake.
 
+#### SLES
+  SLES 11 requires manual installation of the SDK using the following link:
+    https://www.novell.com/support/kb/doc.php?id=7015337
+  Once these are installed you will need to download and build CMAKE3, OpenSSL1.0,
+  and Python3. Once these are installed follow the cmake procedures. The bootstrap
+  script will not work.
+
+  SLES 12 requires you to enable the SDK module in YAST. It is advised that you use
+  the bootstrap script to help guide installation. Please see the Bootstrapping section
+  below.
+
 ### To run
 
 #### Libraries

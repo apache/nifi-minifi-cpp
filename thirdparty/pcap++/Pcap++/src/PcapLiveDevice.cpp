@@ -433,9 +433,10 @@ void PcapLiveDevice::stopCapture()
 		return;
 
 	m_StopThread = true;
+	LOG_DEBUG("Stopping Capture thread for device '%s'", m_Name);
 	if (m_CaptureThreadStarted)
 	{
-		LOG_DEBUG("Stopping capture thread, waiting for it to join...");
+	  LOG_DEBUG("Stopping capture thread, waiting for it to join...");
 		pthread_join(m_CaptureThread->pthread, NULL);
 		m_CaptureThreadStarted = false;
 	}
