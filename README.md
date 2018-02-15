@@ -462,7 +462,7 @@ Additionally, users can utilize the MiNiFi Toolkit Converter (version 0.0.1 - sc
 
     in minifi.properties
 
-    enable tls ssl
+    enable tls
     nifi.remote.input.secure=true
 
     if you want to enable client certificate base authorization
@@ -477,9 +477,9 @@ Additionally, users can utilize the MiNiFi Toolkit Converter (version 0.0.1 - sc
 
     if you do not want to enable client certificate base authorization
     nifi.security.need.ClientAuth=false
-    
-Alternatively you may specify an SSL Context Service definition for the RPGs. This will link
-to a corresponding SSL Context service defined in the flow. 
+  
+If you are using HTTP Site to Site, you have the option of specifying an SSL Context Service definition for the RPGs. 
+This will link to a corresponding SSL Context service defined in the flow. 
     
 To do this specify the SSL Context Service Property in your RPGs and link it to 
 a defined controller service. If you do not take this approach the options, above, will be used
