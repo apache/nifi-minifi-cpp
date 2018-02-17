@@ -227,3 +227,17 @@ TEST_CASE("TestTLSContextCreation2", "[TestSocket7]") {
   REQUIRE(tls == nullptr);
 }
 
+/**
+ * MINIFI-329 was created in regards to an option existing but not
+ * being properly evaluated.
+ */
+TEST_CASE("TestTLSContextCreationNullptr", "[TestSocket7]") {
+  std::shared_ptr<minifi::Configure> configure = std::make_shared<minifi::Configure>();
+  configure->set("nifi.remote.input.secure", "false");
+  minifi::io::StreamFactory factory(configure);
+  std::string host = "localhost";
+  minifi::io::Socket *socket = factory.createSecureSocket(host, 10001, nullptr).release();
+  minifi::io::TLSSocket *tls = dynamic_cast<minifi::io::TLSSocket*>(socket);
+  REQUIRE(tls == nullptr);
+}
+

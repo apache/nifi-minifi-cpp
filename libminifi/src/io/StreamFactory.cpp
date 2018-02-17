@@ -54,8 +54,9 @@ class SocketCreator : public AbstractStreamFactory {
     return std::make_shared<SocketContext>(configure);
   }
 
-  SocketCreator<T, V>(std::shared_ptr<Configure> configure) {
-    context_ = create(configure);
+  SocketCreator<T, V>(const std::shared_ptr<Configure> &configuration)
+      : configuration_(configuration) {
+    context_ = create(configuration);
   }
 
   template<typename U = T>
@@ -72,8 +73,23 @@ class SocketCreator : public AbstractStreamFactory {
     return std::unique_ptr<Socket>(socket);
   }
 
+  std::unique_ptr<Socket> createSecureSocket(const std::string &host, const uint16_t port, const std::shared_ptr<minifi::controllers::SSLContextService> &ssl_service) {
+#ifdef OPENSSL_SUPPORT
+    if (ssl_service != nullptr) {
+      auto ptr = std::make_shared<TLSContext>(configuration_, ssl_service);
+      TLSSocket *socket = new TLSSocket(ptr, host, port);
+      return std::unique_ptr<Socket>(socket);
+    } else {
+      return nullptr;
+    }
+#else
+    return nullptr;
+#endif
+  }
+
  private:
   std::shared_ptr<V> context_;
+  std::shared_ptr<Configure> configuration_;
 };
 
 // std::atomic<StreamFactory*> StreamFactory::context_instance_;

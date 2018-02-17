@@ -117,3 +117,5 @@ endforeach()
 
 add_test(NAME TestExecuteProcess COMMAND TestExecuteProcess )
 
+add_test(NAME SecureSocketGetTCPTest COMMAND SecureSocketGetTCPTest "${TEST_RESOURCES}/TestGetTCPSecure.yml"  "${TEST_RESOURCES}/")
+

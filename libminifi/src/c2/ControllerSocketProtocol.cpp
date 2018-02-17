@@ -51,7 +51,7 @@ void ControllerSocketProtocol::initialize(const std::shared_ptr<core::controller
     if ((host == "localhost" || host == "127.0.0.1" || host == "::") && !anyInterface) {
       server_socket_->initialize(true);
     } else {
-      server_socket_->initialize(true);
+      server_socket_->initialize(false);
     }
 
     auto check = [this]() -> bool {

@@ -21,7 +21,7 @@
 #include "Sockets.h"
 #include "utils/StringUtils.h"
 #include "validation.h"
-
+#include "controllers/SSLContextService.h"
 namespace org {
 namespace apache {
 namespace nifi {
@@ -34,6 +34,8 @@ class AbstractStreamFactory {
   }
 
   virtual std::unique_ptr<Socket> createSocket(const std::string &host, const uint16_t port) = 0;
+
+  virtual std::unique_ptr<Socket> createSecureSocket(const std::string &host, const uint16_t port, const std::shared_ptr<minifi::controllers::SSLContextService> &ssl_service) = 0;
 };
 
 /**
@@ -50,6 +52,14 @@ class StreamFactory {
    */
   std::unique_ptr<Socket> createSocket(const std::string &host, const uint16_t port) {
     return delegate_->createSocket(host, port);
+  }
+
+  /**
+   * Creates a socket and returns a unique ptr
+   *
+   */
+  std::unique_ptr<Socket> createSecureSocket(const std::string &host, const uint16_t port, const std::shared_ptr<minifi::controllers::SSLContextService> &ssl_service) {
+    return delegate_->createSecureSocket(host, port, ssl_service);
   }
 
   StreamFactory(const std::shared_ptr<Configure> &configure);

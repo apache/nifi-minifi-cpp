@@ -48,6 +48,7 @@ Socket::Socket(const std::shared_ptr<SocketContext> &context, const std::string 
       is_loopback_only_(false),
       listeners_(listeners),
       canonical_hostname_(""),
+      nonBlocking_(false),
       logger_(logging::LoggerFactory<Socket>::getLogger()) {
   FD_ZERO(&total_list_);
   FD_ZERO(&read_fds_);
@@ -68,6 +69,7 @@ Socket::Socket(const Socket &&other)
       total_list_(other.total_list_),
       read_fds_(other.read_fds_),
       canonical_hostname_(std::move(other.canonical_hostname_)),
+      nonBlocking_(false),
       logger_(std::move(other.logger_)) {
 }
 
@@ -89,13 +91,7 @@ void Socket::closeStream() {
 
 void Socket::setNonBlocking() {
   if (listeners_ <= 0) {
-    // Put the socket in non-blocking mode:
-    if (fcntl(socket_file_descriptor_, F_SETFL, O_NONBLOCK) < 0) {
-      // handle error
-      logger_->log_error("Could not create non blocking to socket", strerror(errno));
-    } else {
-      logger_->log_debug("Successfully applied O_NONBLOCK to fd");
-    }
+    nonBlocking_ = true;
   }
 }
 
@@ -117,7 +113,7 @@ int8_t Socket::createConnection(const addrinfo *p, in_addr_t &addr) {
       sa_loc->sin_addr.s_addr = htonl(INADDR_ANY);
     }
     if (bind(socket_file_descriptor_, p->ai_addr, p->ai_addrlen) == -1) {
-      logger_->log_error("Could not bind to socket", strerror(errno));
+      logger_->log_error("Could not bind to socket, reason %s", strerror(errno));
       return -1;
     }
   }
@@ -205,6 +201,15 @@ int16_t Socket::initialize() {
     }
     // we've successfully connected
     if (port_ > 0 && createConnection(p, addr) >= 0) {
+      // Put the socket in non-blocking mode:
+      if (nonBlocking_) {
+        if (fcntl(socket_file_descriptor_, F_SETFL, O_NONBLOCK) < 0) {
+          // handle error
+          logger_->log_error("Could not create non blocking to socket", strerror(errno));
+        } else {
+          logger_->log_debug("Successfully applied O_NONBLOCK to fd");
+        }
+      }
       logger_->log_debug("Successfully created connection");
       return 0;
       break;
