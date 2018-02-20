@@ -36,6 +36,7 @@
 - [PublishKafka](#publishkafka)
 * [PublishMQTT](PROCESSORS.md#publishMQTT)
 - [PutFile](#putfile)
+- [RouteOnAttribute](#routeonattribute)
 - [TailFile](#tailfile)
 - [TFApplyGraph](#tfapplygraph)
 - [TFConvertImageToTensor](#tfconvertimagetotensor)
@@ -506,6 +507,32 @@ default values, and whether a property supports the NiFi Expression Language.
 | - | - |
 | success | Files that have been successfully written to the output directory are transferred to this relationship |
 | failure | Files that could not be written to the output directory for some reason are transferred to this relationship |
+
+## RouteOnAttribute
+
+### Description
+
+Routes FlowFiles based on their Attributes using the Attribute Expression Language.
+
+### Dynamic Properties
+
+Dynamic Properties allow the user to specify both the name and value of a property.
+
+| Name | Value | Description |
+| - | - | - |
+| Relationship Name | Attribute Expression Language | Routes FlowFiles whose attributes match the Attribute Expression Language specified in the Dynamic Property Value to the Relationship specified in the Dynamic Property Key<br>**Supports Expression Language: true** |
+
+### Relationships
+
+| Name | Description |
+| - | - |
+| unmatched | FlowFiles that do not match any user-define expression will be routed here |
+
+### Dynamic Relationships
+
+| Name | Description |
+| - | - |
+| Name from Dynamic Property | FlowFiles that match the Dynamic Property's Attribute Expression Language |
 
 ## TailFile
 
