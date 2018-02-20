@@ -86,10 +86,12 @@ bool ConfigurableComponent::setProperty(const std::string name, std::string valu
   auto &&it = properties_.find(name);
 
   if (it != properties_.end()) {
-    Property item = it->second;
-    item.setValue(value);
-    properties_[item.getName()] = item;
-    logger_->log_debug("Component %s property name %s value %s", name, item.getName(), value);
+    Property &orig_property = it->second;
+    Property new_property = orig_property;
+    new_property.setValue(value);
+    properties_[new_property.getName()] = new_property;
+    onPropertyModified(orig_property, new_property);
+    logger_->log_debug("Component %s property name %s value %s", name, new_property.getName(), value);
     return true;
   } else {
     return false;
@@ -107,10 +109,12 @@ bool ConfigurableComponent::updateProperty(const std::string &name, const std::s
   auto &&it = properties_.find(name);
 
   if (it != properties_.end()) {
-    Property item = it->second;
-    item.addValue(value);
-    properties_[item.getName()] = item;
-    logger_->log_debug("Component %s property name %s value %s", name, item.getName(), value);
+    Property &orig_property = it->second;
+    Property new_property = orig_property;
+    new_property.addValue(value);
+    properties_[new_property.getName()] = new_property;
+    onPropertyModified(orig_property, new_property);
+    logger_->log_debug("Component %s property name %s value %s", name, new_property.getName(), value);
     return true;
   } else {
     return false;
@@ -128,18 +132,20 @@ bool ConfigurableComponent::setProperty(Property &prop, std::string value) {
   auto it = properties_.find(prop.getName());
 
   if (it != properties_.end()) {
-    Property item = it->second;
-    item.setValue(value);
-    properties_[item.getName()] = item;
-    logger_->log_debug("property name %s value %s", prop.getName(), item.getName(), value);
+    Property &orig_property = it->second;
+    Property new_property = orig_property;
+    new_property.setValue(value);
+    properties_[new_property.getName()] = new_property;
+    onPropertyModified(orig_property, new_property);
+    logger_->log_debug("property name %s value %s", prop.getName(), new_property.getName(), value);
     return true;
   } else {
-    Property newProp(prop);
-    newProp.setValue(value);
-    properties_.insert(std::pair<std::string, Property>(prop.getName(), newProp));
+    Property new_property(prop);
+    new_property.setValue(value);
+    properties_.insert(std::pair<std::string, Property>(prop.getName(), new_property));
+    onPropertyModified({}, new_property);
     return true;
   }
-  return false;
 }
 
 /**
@@ -182,12 +188,13 @@ bool ConfigurableComponent::createDynamicProperty(const std::string &name, const
     return false;
   }
 
-  Property dyn(name, DEFAULT_DYNAMIC_PROPERTY_DESC, value);
+  Property new_property(name, DEFAULT_DYNAMIC_PROPERTY_DESC, value);
   logger_->log_info("Processor %s dynamic property '%s' value '%s'",
                     name.c_str(),
-                    dyn.getName().c_str(),
+                    new_property.getName().c_str(),
                     value.c_str());
-  dynamic_properties_[dyn.getName()] = dyn;
+  dynamic_properties_[new_property.getName()] = new_property;
+  onDynamicPropertyModified({}, new_property);
   return true;
 }
 
@@ -196,10 +203,12 @@ bool ConfigurableComponent::setDynamicProperty(const std::string name, std::stri
   auto &&it = dynamic_properties_.find(name);
 
   if (it != dynamic_properties_.end()) {
-    Property item = it->second;
-    item.setValue(value);
-    dynamic_properties_[item.getName()] = item;
-    logger_->log_debug("Component %s dynamic property name %s value %s", name, item.getName(), value);
+    Property &orig_property = it->second;
+    Property new_property = orig_property;
+    new_property.setValue(value);
+    dynamic_properties_[new_property.getName()] = new_property;
+    onDynamicPropertyModified(orig_property, new_property);
+    logger_->log_debug("Component %s dynamic property name %s value %s", name, new_property.getName(), value);
     return true;
   } else {
     return createDynamicProperty(name, value);
@@ -211,10 +220,12 @@ bool ConfigurableComponent::updateDynamicProperty(const std::string &name, const
   auto &&it = dynamic_properties_.find(name);
 
   if (it != dynamic_properties_.end()) {
-    Property item = it->second;
-    item.addValue(value);
-    dynamic_properties_[item.getName()] = item;
-    logger_->log_debug("Component %s dynamic property name %s value %s", name, item.getName(), value);
+    Property &orig_property = it->second;
+    Property new_property = orig_property;
+    new_property.addValue(value);
+    dynamic_properties_[new_property.getName()] = new_property;
+    onDynamicPropertyModified(orig_property, new_property);
+    logger_->log_debug("Component %s dynamic property name %s value %s", name, new_property.getName(), value);
     return true;
   } else {
     return createDynamicProperty(name, value);

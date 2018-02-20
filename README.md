@@ -69,6 +69,7 @@ MiNiFi - C++ supports the following processors:
 * [PublishKafka](PROCESSORS.md#publishkafka)
 * [PublishMQTT](PROCESSORS.md#publishMQTT)
 * [PutFile](PROCESSORS.md#putfile)
+* [RouteOnAttribute](PROCESSORS.md#routeonattribute)
 * [TailFile](PROCESSORS.md#tailfile)
 * [TFApplyGraph](PROCESSORS.md#tfapplygraph)
 * [TFConvertImageToTensor](PROCESSORS.md#tfconvertimagetotensor)
