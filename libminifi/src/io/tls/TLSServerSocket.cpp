@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include "io/tls/SecureDescriptorStream.h"
 #include "io/tls/TLSServerSocket.h"
 #include <netinet/tcp.h>
 #include <sys/types.h>
@@ -54,6 +55,26 @@ TLSServerSocket::~TLSServerSocket() {
     server_read_thread_.join();
 }
 
+/**
+ * Initializes the socket
+ * @return result of the creation operation.
+ */
+void TLSServerSocket::registerCallback(std::function<bool()> accept_function, std::function<void(io::BaseStream *)> handler) {
+  auto fx = [this](std::function<bool()> accept_function, std::function<void(io::BaseStream *)> handler) {
+    while (running_) {
+      int fd = select_descriptor(1000);
+      if (fd >= 0) {
+        auto ssl = get_ssl(fd);
+        if (ssl != nullptr) {
+          io::SecureDescriptorStream stream(fd, ssl);
+          handler(&stream);
+          close_fd(fd);
+        }
+      }
+    }
+  };
+  server_read_thread_ = std::thread(fx, accept_function, handler);
+}
 /**
  * Initializes the socket
  * @return result of the creation operation.
@@ -103,8 +124,7 @@ void TLSServerSocket::registerCallback(std::function<bool()> accept_function, st
 
 void TLSServerSocket::close_fd(int fd) {
   std::lock_guard<std::recursive_mutex> guard(selection_mutex_);
-  close(fd);
-  FD_CLR(fd, &total_list_);
+  close_ssl(fd);
 }
 
 } /* namespace io */

@@ -149,7 +149,6 @@ class SecureSocketTest : public IntegrationBase {
     waitToVerifyProcessor();
     controller->waitUnload(60000);
     isRunning_ = false;
-    std::cout << "close?" << std::endl;
     server_socket->closeStream();
     server_socket = nullptr;
     runAssertions();

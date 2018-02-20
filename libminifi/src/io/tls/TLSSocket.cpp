@@ -236,8 +236,6 @@ void TLSSocket::close_ssl(int fd) {
 }
 
 int16_t TLSSocket::select_descriptor(const uint16_t msec) {
-//  if (ssl && SSL_pending(ssl))
-  //  return 1;
   if (listeners_ == 0 && connected_) {
     return socket_file_descriptor_;
   }
@@ -271,6 +269,7 @@ int16_t TLSSocket::select_descriptor(const uint16_t msec) {
           SSL_set_fd(ssl, newfd);
           auto accept_value = SSL_accept(ssl);
           if (accept_value != -1) {
+            logger_->log_trace("Accepted on %d", newfd);
             ssl_map_[newfd] = ssl;
             return newfd;
           } else {
@@ -439,8 +438,6 @@ int TLSSocket::writeData(uint8_t *value, int size) {
 }
 
 int TLSSocket::readData(uint8_t *buf, int buflen) {
-  // if (IsNullOrEmpty(ssl))
-//    return -1;
   int total_read = 0;
   int status = 0;
   while (buflen) {
@@ -458,6 +455,9 @@ int TLSSocket::readData(uint8_t *buf, int buflen) {
       status = SSL_read(fd_ssl, buf, buflen);
       sslStatus = SSL_get_error(fd_ssl, status);
     } while (status < 0 && sslStatus == SSL_ERROR_WANT_READ);
+
+    if (status < 0)
+      break;
 
     buflen -= status;
     buf += status;

@@ -26,17 +26,31 @@ namespace nifi {
 namespace minifi {
 namespace io {
 
+
+class BaseServerSocket  {
+
+ public:
+
+  virtual ~BaseServerSocket(){
+
+  }
+
+  virtual int16_t initialize(bool loopbackOnly) = 0;
+
+  virtual void registerCallback(std::function<bool()> accept_function, std::function<void(io::BaseStream *)> handler) = 0;
+
+};
 /**
  * Purpose: Server socket abstraction that makes focusing the accept/block paradigm
  * simpler.
  */
-class ServerSocket : public Socket {
+class ServerSocket : public BaseServerSocket, public Socket {
  public:
   explicit ServerSocket(const std::shared_ptr<SocketContext> &context, const std::string &hostname, const uint16_t port, const uint16_t listeners);
 
   virtual ~ServerSocket();
 
-  int16_t initialize(bool loopbackOnly){
+  virtual int16_t initialize(bool loopbackOnly){
     is_loopback_only_ = loopbackOnly;
     return Socket::initialize();
   }
@@ -48,7 +62,7 @@ class ServerSocket : public Socket {
   /**
    * Registers a call back and starts the read for the server socket.
    */
-  void registerCallback(std::function<bool()> accept_function, std::function<void(int)> handler);
+  virtual void registerCallback(std::function<bool()> accept_function, std::function<void(io::BaseStream *)> handler);
 
  private:
 
