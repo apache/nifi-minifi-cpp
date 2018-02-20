@@ -19,6 +19,7 @@
 #define LIBMINIFI_INCLUDE_IO_TLSSERVERSOCKET_H_
 
 #include "TLSSocket.h"
+#include "../ServerSocket.h"
 
 namespace org {
 namespace apache {
@@ -30,7 +31,7 @@ namespace io {
  * Purpose: Server socket abstraction that makes focusing the accept/block paradigm
  * simpler.
  */
-class TLSServerSocket : public TLSSocket {
+class TLSServerSocket : public BaseServerSocket, public TLSSocket {
  public:
   explicit TLSServerSocket(const std::shared_ptr<TLSContext> &context, const std::string &hostname, const uint16_t port, const uint16_t listeners);
 
@@ -49,6 +50,12 @@ class TLSServerSocket : public TLSSocket {
    * Registers a call back and starts the read for the server socket.
    */
   void registerCallback(std::function<bool()> accept_function, std::function<int(std::vector<uint8_t>*,int *)> handler);
+
+  /**
+   * Initializes the socket
+   * @return result of the creation operation.
+   */
+  virtual void registerCallback(std::function<bool()> accept_function, std::function<void(io::BaseStream *)> handler);
 
  private:
 

@@ -23,6 +23,8 @@
 
 #ifdef OPENSSL_SUPPORT
 #include "tls/TLSSocket.h"
+#include "tls/TLSServerSocket.h"
 #endif
+
 
 #endif /* LIBMINIFI_INCLUDE_IO_TLS_SECURESOCKET_H_ */

@@ -74,7 +74,7 @@ class ControllerSocketProtocol : public HeartBeatReporter {
 
   std::map<std::string, bool> component_map_;
 
-  std::unique_ptr<io::ServerSocket> server_socket_;
+  std::unique_ptr<io::BaseServerSocket> server_socket_;
 
   std::shared_ptr<minifi::io::StreamFactory> stream_factory_;
 
