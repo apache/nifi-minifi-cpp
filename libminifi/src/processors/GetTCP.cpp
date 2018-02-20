@@ -52,6 +52,7 @@ core::Property GetTCP::EndpointList("endpoint-list", "A comma delimited list of 
 core::Property GetTCP::ConcurrentHandlers("concurrent-handler-count", "Number of concurrent handlers for this session", "1");
 core::Property GetTCP::ReconnectInterval("reconnect-interval", "The number of seconds to wait before attempting to reconnect to the endpoint.", "5s");
 core::Property GetTCP::ReceiveBufferSize("receive-buffer-size", "The size of the buffer to receive data in. Default 16384 (16MB).", "16MB");
+core::Property GetTCP::SSLContextService("SSL Context Service", "SSL Context Service Name", "");
 core::Property GetTCP::StayConnected("Stay Connected", "Determines if we keep the same socket despite having no data", "true");
 core::Property GetTCP::ConnectionAttemptLimit("connection-attempt-timeout", "Maximum number of connection attempts before attempting backup hosts, if configured.", "3");
 core::Property GetTCP::EndOfMessageByte(
@@ -90,6 +91,7 @@ void GetTCP::initialize() {
   properties.insert(EndOfMessageByte);
   properties.insert(ReceiveBufferSize);
   properties.insert(StayConnected);
+  properties.insert(SSLContextService);
   setSupportedProperties(properties);
   // Set the supported relationships
   std::set<core::Relationship> relationships;
@@ -154,7 +156,6 @@ void GetTCP::onSchedule(const std::shared_ptr<core::ProcessContext> &context, co
       do {
         if ( socket_ring_buffer_.try_dequeue(socket_ptr) ) {
           int size_read = socket_ptr->readData(buffer, receive_buffer_size_, false);
-
           if (size_read >= 0) {
             if (size_read > 0) {
               // determine cut location
@@ -206,6 +207,13 @@ void GetTCP::onSchedule(const std::shared_ptr<core::ProcessContext> &context, co
       return 0;
     };
 
+  if (context->getProperty(SSLContextService.getName(), value)) {
+    std::shared_ptr<core::controller::ControllerService> service = context->getControllerService(value);
+    if (nullptr != service) {
+      ssl_service_ = std::static_pointer_cast<minifi::controllers::SSLContextService>(service);
+    }
+  }
+
   utils::ThreadPool<int> pool = utils::ThreadPool<int>(concurrent_handlers_);
   client_thread_pool_ = std::move(pool);
   client_thread_pool_.start();
@@ -230,29 +238,27 @@ void GetTCP::onTrigger(const std::shared_ptr<core::ProcessContext> &context, con
 
   for (auto &endpoint : endpoints) {
     auto endPointFuture = live_clients_.find(endpoint);
-
     // does not exist
     if (endPointFuture == live_clients_.end()) {
       logger_->log_info("creating endpoint for %s", endpoint);
       std::vector<std::string> hostAndPort = utils::StringUtils::split(endpoint, ":");
       if (hostAndPort.size() == 2) {
-        logger_->log_debug("Opening another socket to %s:%s", hostAndPort.at(0), hostAndPort.at(1));
-        std::unique_ptr<io::Socket> socket = stream_factory_->createSocket(hostAndPort.at(0), std::stoi(hostAndPort.at(1)));
-
+        logger_->log_debug("Opening another socket to %s:%s is secure %d", hostAndPort.at(0), hostAndPort.at(1), (ssl_service_ != nullptr));
+        std::unique_ptr<io::Socket> socket =
+            ssl_service_ != nullptr ?
+                stream_factory_->createSecureSocket(hostAndPort.at(0), std::stoi(hostAndPort.at(1)), ssl_service_) : stream_factory_->createSocket(hostAndPort.at(0), std::stoi(hostAndPort.at(1)));
+        socket->setNonBlocking();
         if (socket->initialize() != -1) {
-          socket->setNonBlocking();
           logger_->log_debug("Enqueueing socket into ring buffer %s:%s", hostAndPort.at(0), hostAndPort.at(1));
           socket_ring_buffer_.enqueue(std::move(socket));
-
         } else {
           logger_->log_error("Could not create socket during initialization for %s", endpoint);
+          continue;
         }
       } else {
         logger_->log_error("Could not create socket for %s", endpoint);
       }
-
       std::future<int> *future = new std::future<int>();
-
       std::unique_ptr<utils::AfterExecute<int>> after_execute = std::unique_ptr<utils::AfterExecute<int>>(new SocketAfterExecute(running_, endpoint, &live_clients_, &mutex_));
       utils::Worker<int> functor(f_ex, "workers", std::move(after_execute));
       if (client_thread_pool_.execute(std::move(functor), *future)) {

@@ -15,10 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_IO_SERVERSOCKET_H_
-#define LIBMINIFI_INCLUDE_IO_SERVERSOCKET_H_
+#ifndef LIBMINIFI_INCLUDE_IO_TLSSERVERSOCKET_H_
+#define LIBMINIFI_INCLUDE_IO_TLSSERVERSOCKET_H_
 
-#include "ClientSocket.h"
+#include "TLSSocket.h"
+#include "../ServerSocket.h"
 
 namespace org {
 namespace apache {
@@ -26,45 +27,39 @@ namespace nifi {
 namespace minifi {
 namespace io {
 
-
-class BaseServerSocket  {
-
- public:
-
-  virtual ~BaseServerSocket(){
-
-  }
-
-  virtual int16_t initialize(bool loopbackOnly) = 0;
-
-  virtual void registerCallback(std::function<bool()> accept_function, std::function<void(io::BaseStream *)> handler) = 0;
-
-};
 /**
  * Purpose: Server socket abstraction that makes focusing the accept/block paradigm
  * simpler.
  */
-class ServerSocket : public BaseServerSocket, public Socket {
+class TLSServerSocket : public BaseServerSocket, public TLSSocket {
  public:
-  explicit ServerSocket(const std::shared_ptr<SocketContext> &context, const std::string &hostname, const uint16_t port, const uint16_t listeners);
+  explicit TLSServerSocket(const std::shared_ptr<TLSContext> &context, const std::string &hostname, const uint16_t port, const uint16_t listeners);
 
-  virtual ~ServerSocket();
+  virtual ~TLSServerSocket();
 
-  virtual int16_t initialize(bool loopbackOnly){
+  int16_t initialize(bool loopbackOnly){
     is_loopback_only_ = loopbackOnly;
-    return Socket::initialize();
+    return TLSSocket::initialize();
   }
 
   virtual int16_t initialize(){
-    return Socket::initialize();
+    return TLSSocket::initialize();
   }
 
   /**
    * Registers a call back and starts the read for the server socket.
    */
+  void registerCallback(std::function<bool()> accept_function, std::function<int(std::vector<uint8_t>*,int *)> handler);
+
+  /**
+   * Initializes the socket
+   * @return result of the creation operation.
+   */
   virtual void registerCallback(std::function<bool()> accept_function, std::function<void(io::BaseStream *)> handler);
 
  private:
+
+  std::function<void(std::function<bool()> accept_function, std::function<int(std::vector<uint8_t>*,int *)> handler)> fx;
 
   void close_fd(int fd );
 
@@ -80,4 +75,4 @@ class ServerSocket : public BaseServerSocket, public Socket {
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-#endif /* LIBMINIFI_INCLUDE_IO_SERVERSOCKET_H_ */
+#endif /* LIBMINIFI_INCLUDE_IO_TLSSERVERSOCKET_H_ */

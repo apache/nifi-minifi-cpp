@@ -20,10 +20,11 @@
 
 #include <openssl/ssl.h>
 #include <openssl/err.h>
+#include "controllers/SSLContextService.h"
 #include <atomic>
 #include <cstdint>
-#include "../ClientSocket.h"
-
+#include "io/ClientSocket.h"
+#include "capi/expect.h"
 #include "properties/Configure.h"
 
 namespace org {
@@ -68,7 +69,7 @@ class OpenSSLInitializer {
 class TLSContext : public SocketContext {
 
  public:
-  TLSContext(const std::shared_ptr<Configure> &configure);
+  TLSContext(const std::shared_ptr<Configure> &configure, const std::shared_ptr<minifi::controllers::SSLContextService> &ssl_service = nullptr);
 
   virtual ~TLSContext() {
     if (0 != ctx)
@@ -83,34 +84,26 @@ class TLSContext : public SocketContext {
     return error_value;
   }
 
-  int16_t initialize();
+  int16_t initialize(bool server_method = false);
 
  private:
 
-  static int pemPassWordCb(char *buf, int size, int rwflag, void *configure) {
-    std::string passphrase;
+  static int pemPassWordCb(char *buf, int size, int rwflag, void *userdata) {
 
-    if (static_cast<Configure*>(configure)->get(Configure::nifi_security_client_pass_phrase, passphrase)) {
+    std::string *pass = (std::string*) userdata;
+    if (pass->length() > 0) {
 
-      std::ifstream file(passphrase.c_str(), std::ifstream::in);
-      if (!file.good()) {
-        memset(buf, 0x00, size);
-        return 0;
-      }
-
-      std::string password;
-      password.assign((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-      file.close();
       memset(buf, 0x00, size);
-      memcpy(buf, password.c_str(), password.length() - 1);
+      memcpy(buf, pass->c_str(), pass->length() - 1);
 
-      return password.length() - 1;
+      return pass->length() - 1;
     }
     return 0;
   }
 
   std::shared_ptr<logging::Logger> logger_;
   std::shared_ptr<Configure> configure_;
+  std::shared_ptr<minifi::controllers::SSLContextService> ssl_service_;
   SSL_CTX *ctx;
 
   int16_t error_value;
@@ -148,7 +141,11 @@ class TLSSocket : public Socket {
    * Initializes the socket
    * @return result of the creation operation.
    */
-  int16_t initialize();
+  int16_t initialize(){
+    return initialize(true);
+  }
+
+  int16_t initialize(bool blocking);
 
   /**
    * Attempt to select the socket file descriptor
@@ -158,6 +155,10 @@ class TLSSocket : public Socket {
   virtual int16_t select_descriptor(const uint16_t msec);
 
   virtual int readData(std::vector<uint8_t> &buf, int buflen);
+
+  virtual int readData(uint8_t *buf, int buflen, bool retrieve_all_bytes);
+
+  virtual int readData(std::vector<uint8_t> &buf, int buflen, bool retrieve_all_bytes);
 
   /**
    * Reads data and places it into buf
@@ -183,8 +184,25 @@ class TLSSocket : public Socket {
   int writeData(uint8_t *value, int size);
 
  protected:
+
+  int writeData(uint8_t *value, int size, int fd);
+
+  SSL *get_ssl(int fd) {
+    if (UNLIKELY(listeners_ > 0)) {
+      std::lock_guard<std::mutex> lock(ssl_mutex_);
+      return ssl_map_[fd];
+    }
+    else{
+      return ssl_;
+    }
+  }
+
+  void close_ssl(int fd);
+  std::atomic<bool> connected_;
   std::shared_ptr<TLSContext> context_;
-  SSL* ssl;
+  SSL* ssl_;
+  std::mutex ssl_mutex_;
+  std::map<int, SSL*> ssl_map_;
 
  private:
   std::shared_ptr<logging::Logger> logger_;

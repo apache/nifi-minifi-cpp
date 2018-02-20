@@ -34,7 +34,7 @@
 #include "core/RepositoryFactory.h"
 #include "FlowController.h"
 #include "Main.h"
-
+#include "properties/Configure.h"
 #include "Controller.h"
 #include "c2/ControllerSocketProtocol.h"
 
@@ -86,6 +86,39 @@ int main(int argc, char **argv) {
   log_properties->setHome(minifiHome);
   log_properties->loadConfigureFile(DEFAULT_LOG_PROPERTIES_FILE);
   logging::LoggerConfiguration::getConfiguration().initialize(log_properties);
+
+  std::string context_name;
+
+  std::shared_ptr<minifi::controllers::SSLContextService> secure_context = nullptr;
+
+  // if the user wishes to use a controller service we need to instantiate the flow
+  if (configuration->get("controller.ssl.context.service", context_name)) {
+    std::shared_ptr<core::controller::ControllerService> service = getControllerService(configuration, context_name);
+    if (nullptr != service) {
+      secure_context = std::static_pointer_cast<minifi::controllers::SSLContextService>(service);
+    }
+  }
+
+  if (nullptr == secure_context) {
+    std::string secureStr;
+    bool is_secure = false;
+    if (configuration->get(minifi::Configure::nifi_remote_input_secure, secureStr) && org::apache::nifi::minifi::utils::StringUtils::StringToBool(secureStr, is_secure)) {
+      std::cout << "Creating secure context" << std::endl;
+      secure_context = std::make_shared<minifi::controllers::SSLContextService>("ControllerSocketProtocolSSL", configuration);
+      secure_context->onEnable();
+    }
+  }
+
+  std::string value;
+
+  bool disable = false;
+  if (secure_context && configuration->get(minifi::Configure::nifi_security_client_disable_host_verification, value) && org::apache::nifi::minifi::utils::StringUtils::StringToBool(value, disable)) {
+    secure_context->setDisableHostVerification();
+  }
+  disable = false;
+  if (secure_context && configuration->get(minifi::Configure::nifi_security_client_disable_peer_verification, value) && org::apache::nifi::minifi::utils::StringUtils::StringToBool(value, disable)) {
+    secure_context->setDisablePeerVerification();
+  }
 
   auto stream_factory_ = std::make_shared<minifi::io::StreamFactory>(configuration);
 
@@ -144,7 +177,7 @@ int main(int argc, char **argv) {
     if (result.count("stop") > 0) {
       auto& components = result["stop"].as<std::vector<std::string>>();
       for (const auto& component : components) {
-        auto socket = stream_factory_->createSocket(host, port);
+        auto socket = secure_context != nullptr ? stream_factory_->createSecureSocket(host, port, secure_context) : stream_factory_->createSocket(host, port);
         if (!stopComponent(std::move(socket), component))
           std::cout << component << " requested to stop" << std::endl;
         else
@@ -155,7 +188,7 @@ int main(int argc, char **argv) {
     if (result.count("start") > 0) {
       auto& components = result["start"].as<std::vector<std::string>>();
       for (const auto& component : components) {
-        auto socket = stream_factory_->createSocket(host, port);
+        auto socket = secure_context != nullptr ? stream_factory_->createSecureSocket(host, port, secure_context) : stream_factory_->createSocket(host, port);
         if (!startComponent(std::move(socket), component))
           std::cout << component << " requested to start" << std::endl;
         else
@@ -166,7 +199,7 @@ int main(int argc, char **argv) {
     if (result.count("c") > 0) {
       auto& components = result["c"].as<std::vector<std::string>>();
       for (const auto& connection : components) {
-        auto socket = stream_factory_->createSocket(host, port);
+        auto socket = secure_context != nullptr ? stream_factory_->createSecureSocket(host, port, secure_context) : stream_factory_->createSocket(host, port);
         if (!clearConnection(std::move(socket), connection))
           std::cout << "Cleared " << connection << std::endl;
         else
@@ -177,7 +210,7 @@ int main(int argc, char **argv) {
     if (result.count("getsize") > 0) {
       auto& components = result["getsize"].as<std::vector<std::string>>();
       for (const auto& component : components) {
-        auto socket = stream_factory_->createSocket(host, port);
+        auto socket = secure_context != nullptr ? stream_factory_->createSecureSocket(host, port, secure_context) : stream_factory_->createSocket(host, port);
         if (getConnectionSize(std::move(socket), std::cout, component) < 0)
           std::cout << "Could not connect to remote host " << host << ":" << port << std::endl;
       }
@@ -186,7 +219,7 @@ int main(int argc, char **argv) {
 
     if (result.count("l") > 0) {
       auto& option = result["l"].as<std::string>();
-      auto socket = stream_factory_->createSocket(host, port);
+      auto socket = secure_context != nullptr ? stream_factory_->createSecureSocket(host, port, secure_context) : stream_factory_->createSocket(host, port);
       if (option == "components") {
         if (listComponents(std::move(socket), std::cout, show_headers) < 0)
           std::cout << "Could not connect to remote host " << host << ":" << port << std::endl;
@@ -198,14 +231,14 @@ int main(int argc, char **argv) {
     }
 
     if (result.count("getfull") > 0) {
-      auto socket = stream_factory_->createSocket(host, port);
+      auto socket = secure_context != nullptr ? stream_factory_->createSecureSocket(host, port, secure_context) : stream_factory_->createSocket(host, port);
       if (getFullConnections(std::move(socket), std::cout) < 0)
         std::cout << "Could not connect to remote host " << host << ":" << port << std::endl;
     }
 
     if (result.count("updateflow") > 0) {
       auto& flow_file = result["updateflow"].as<std::string>();
-      auto socket = stream_factory_->createSocket(host, port);
+      auto socket = secure_context != nullptr ? stream_factory_->createSecureSocket(host, port, secure_context) : stream_factory_->createSocket(host, port);
       if (updateFlow(std::move(socket), std::cout, flow_file) < 0)
         std::cout << "Could not connect to remote host " << host << ":" << port << std::endl;
     }

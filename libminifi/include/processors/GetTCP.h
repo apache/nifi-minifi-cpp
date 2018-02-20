@@ -28,6 +28,7 @@
 #include "utils/ThreadPool.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "core/state/metrics/MetricsBase.h"
+#include "controllers/SSLContextService.h"
 
 namespace org {
 namespace apache {
@@ -185,6 +186,7 @@ class GetTCP : public core::Processor, public state::metrics::MetricsSource {
         reconnect_interval_(5000),
         receive_buffer_size_(16 * 1024 * 1024),
         connection_attempt_limit_(3),
+        ssl_service_(nullptr),
         logger_(logging::LoggerFactory<GetTCP>::getLogger()) {
     metrics_ = std::make_shared<GetTCPMetrics>();
   }
@@ -200,6 +202,7 @@ class GetTCP : public core::Processor, public state::metrics::MetricsSource {
   static core::Property ReconnectInterval;
   static core::Property StayConnected;
   static core::Property ReceiveBufferSize;
+  static core::Property SSLContextService;
   static core::Property ConnectionAttemptLimit;
   static core::Property EndOfMessageByte;
 
@@ -273,8 +276,10 @@ class GetTCP : public core::Processor, public state::metrics::MetricsSource {
 
   std::mutex mutex_;
 
-// last listing time for root directory ( if recursive, we will consider the root
-// as the top level time.
+  std::shared_ptr<minifi::controllers::SSLContextService> ssl_service_;
+
+  // last listing time for root directory ( if recursive, we will consider the root
+  // as the top level time.
 
   std::shared_ptr<logging::Logger> logger_;
 

@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 #include "io/ServerSocket.h"
+#include "io/DescriptorStream.h"
 #include <netinet/tcp.h>
 #include <sys/types.h>
 #include <netdb.h>
@@ -55,12 +56,13 @@ ServerSocket::~ServerSocket() {
  * Initializes the socket
  * @return result of the creation operation.
  */
-void ServerSocket::registerCallback(std::function<bool()> accept_function, std::function<void(int)> handler) {
-  auto fx = [this](std::function<bool()> accept_function, std::function<void(int)> handler) {
+void ServerSocket::registerCallback(std::function<bool()> accept_function, std::function<void(io::BaseStream *)> handler) {
+  auto fx = [this](std::function<bool()> accept_function, std::function<void(io::BaseStream *stream)> handler) {
     while (running_) {
       int fd = select_descriptor(1000);
       if (fd >= 0) {
-        handler(fd);
+        io::DescriptorStream stream(fd);
+        handler(&stream);
         close_fd(fd);
       }
     }

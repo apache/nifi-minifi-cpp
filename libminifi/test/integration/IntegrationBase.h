@@ -23,7 +23,7 @@
 #include "core/yaml/YamlConfiguration.h"
 #include "FlowController.h"
 #include "properties/Configure.h"
-#include "unit/ProvenanceTestHelper.h"
+#include "../unit/ProvenanceTestHelper.h"
 #include "io/StreamFactory.h"
 #include "RemoteProcessorGroupPort.h"
 #include "core/ConfigurableComponent.h"

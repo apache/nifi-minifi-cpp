@@ -265,6 +265,8 @@ class Socket : public BaseStream {
   std::atomic<uint16_t> socket_max_;
   uint16_t listeners_;
 
+
+  bool nonBlocking_;
  private:
   std::shared_ptr<logging::Logger> logger_;
   static std::string init_hostname() {

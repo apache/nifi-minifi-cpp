@@ -36,10 +36,17 @@ namespace sitetosite {
  * @returns SiteToSitePeer
  */
 static std::unique_ptr<SiteToSitePeer> createStreamingPeer(const SiteToSiteClientConfiguration &client_configuration) {
-  std::unique_ptr<org::apache::nifi::minifi::io::DataStream> str = std::unique_ptr<org::apache::nifi::minifi::io::DataStream>(
-      client_configuration.getStreamFactory()->createSocket(client_configuration.getPeer()->getHost(), client_configuration.getPeer()->getPort()));
+  std::unique_ptr<org::apache::nifi::minifi::io::DataStream> str = nullptr;
+  if (nullptr != client_configuration.getSecurityContext()) {
+    str = std::unique_ptr<org::apache::nifi::minifi::io::DataStream>(
+        client_configuration.getStreamFactory()->createSecureSocket(client_configuration.getPeer()->getHost(), client_configuration.getPeer()->getPort(), client_configuration.getSecurityContext()));
+  } else {
+    str = std::unique_ptr<org::apache::nifi::minifi::io::DataStream>(
+        client_configuration.getStreamFactory()->createSocket(client_configuration.getPeer()->getHost(), client_configuration.getPeer()->getPort()));
+  }
   auto peer = std::unique_ptr<SiteToSitePeer>(new SiteToSitePeer(std::move(str), client_configuration.getPeer()->getHost(), client_configuration.getPeer()->getPort()));
   return peer;
+
 }
 
 /**

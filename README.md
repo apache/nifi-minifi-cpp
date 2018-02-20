@@ -478,7 +478,7 @@ Additionally, users can utilize the MiNiFi Toolkit Converter (version 0.0.1 - sc
     if you do not want to enable client certificate base authorization
     nifi.security.need.ClientAuth=false
   
-If you are using HTTP Site to Site, you have the option of specifying an SSL Context Service definition for the RPGs. 
+You have the option of specifying an SSL Context Service definition for the RPGs instead of the properties above. 
 This will link to a corresponding SSL Context service defined in the flow. 
     
 To do this specify the SSL Context Service Property in your RPGs and link it to 
