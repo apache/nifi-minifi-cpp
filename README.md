@@ -602,7 +602,7 @@ Each of the repositories can be configured to be volatile ( state kept in memory
 
  The content repository has a default option for "minimal.locking" set to true. This will attempt to use lock free structures. This may or may not be optimal as this requires additional additional searching of the underlying vector. This may be optimal for cases where max.count is not excessively high. In cases where object permanence is low within the repositories, minimal locking will result in better performance. If there are many processors and/or timing is such that the content repository fills up quickly, performance may be reduced. In all cases a locking cache is used to avoid the worst case complexity of O(n) for the content repository; however, this caching is more heavily used when "minimal.locking" is set to false.
 
-### Provenance Report
+### Provenance Reporter
 
     Add Provenance Reporting to config.yml
     Provenance Reporting:
@@ -611,24 +611,6 @@ Each of the repositories can be configured to be volatile ( state kept in memory
       url: http://localhost:8080/nifi
       port uuid: 471deef6-2a6e-4a7d-912a-81cc17e3a204
       batch size: 100
-
-### Http Configuration Listener
-
-    Http Configuration Listener will pull flow file configuration from the remote command control server,
-    validate and apply the new flow configuration
-
-    in minifi.properties
-
-    nifi.configuration.listener.type=http
-    nifi.configuration.listener.http.url=https://localhost:8080
-    nifi.configuration.listener.pull.interval=1 sec
-
-    if you want to enable client certificate
-    nifi.https.need.ClientAuth=true
-    nifi.https.client.certificate=./conf/client.pem
-    nifi.https.client.private.key=./conf/client.key
-    nifi.https.client.pass.phrase=./conf/password
-    nifi.https.client.ca.certificate=./conf/nifi-cert.pem
 
 ### REST API access
 

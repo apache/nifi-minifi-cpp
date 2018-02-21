@@ -65,16 +65,7 @@ class Configure : public Properties {
   static const char *nifi_security_client_ca_certificate;
   static const char *nifi_security_client_disable_host_verification;
   static const char *nifi_security_client_disable_peer_verification;
-  static const char *nifi_configuration_listener_pull_interval;
-  static const char *nifi_configuration_listener_http_url;
-  static const char *nifi_configuration_listener_rest_url;
-  static const char *nifi_configuration_listener_type;  // http or rest
-  // security config for all https service
-  static const char *nifi_https_need_ClientAuth;
-  static const char *nifi_https_client_certificate;
-  static const char *nifi_https_client_private_key;
-  static const char *nifi_https_client_pass_phrase;
-  static const char *nifi_https_client_ca_certificate;
+
   // nifi rest api user name and password
   static const char *nifi_rest_api_user_name;
   static const char *nifi_rest_api_password;

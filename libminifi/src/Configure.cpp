@@ -54,15 +54,6 @@ const char *Configure::nifi_security_client_pass_phrase = "nifi.security.client.
 const char *Configure::nifi_security_client_ca_certificate = "nifi.security.client.ca.certificate";
 const char *Configure::nifi_security_client_disable_host_verification = "nifi.security.client.disable.host.verification";
 const char *Configure::nifi_security_client_disable_peer_verification = "nifi.security.client.disable.peer.verification";
-const char *Configure::nifi_configuration_listener_pull_interval = "nifi.configuration.listener.pull.interval";
-const char *Configure::nifi_configuration_listener_http_url = "nifi.configuration.listener.http.url";
-const char *Configure::nifi_configuration_listener_rest_url = "nifi.configuration.listener.rest.url";
-const char *Configure::nifi_configuration_listener_type = "nifi.configuration.listener.type";
-const char *Configure::nifi_https_need_ClientAuth = "nifi.https.need.ClientAuth";
-const char *Configure::nifi_https_client_certificate = "nifi.https.client.certificate";
-const char *Configure::nifi_https_client_private_key = "nifi.https.client.private.key";
-const char *Configure::nifi_https_client_pass_phrase = "nifi.https.client.pass.phrase";
-const char *Configure::nifi_https_client_ca_certificate = "nifi.https.client.ca.certificate";
 const char *Configure::nifi_rest_api_user_name = "nifi.rest.api.user.name";
 const char *Configure::nifi_rest_api_password = "nifi.rest.api.password";
 
