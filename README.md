@@ -665,7 +665,7 @@ Additionally, a unique hexadecimal uid.minifi.device.segment should be assigned 
   Simply provide the capacity path and status path along with your threshold for the trigger and low battery alarm and you can monitor your battery and throttle
   the threadpools within MiNiFi C++. Note that the name is identified must be ThreadPoolManager.
 
-   Controller Services:
+    Controller Services:
     - name: ThreadPoolManager
       id: 2438e3c8-015a-1000-79ca-83af40ec1888
       class: LinuxPowerManagerService
@@ -712,6 +712,7 @@ These are defined by default to the above values. If the port option is left und
 will be disabled in your deployment.
 
  The executable is stored in the bin directory and is titled minificontroller. Available commands are listed below.
+ Note that with all commands an immediate response by the agent isn't guaranteed. In all cases the agent assumes the role of validating that a response was received, but execution of said command may take some time depending on a number of factors to include persistent storage type, size of queues, and speed of hardware. 
  
  #### Specifying connecting information
  

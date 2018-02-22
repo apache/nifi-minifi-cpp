@@ -103,7 +103,6 @@ int main(int argc, char **argv) {
     std::string secureStr;
     bool is_secure = false;
     if (configuration->get(minifi::Configure::nifi_remote_input_secure, secureStr) && org::apache::nifi::minifi::utils::StringUtils::StringToBool(secureStr, is_secure)) {
-      std::cout << "Creating secure context" << std::endl;
       secure_context = std::make_shared<minifi::controllers::SSLContextService>("ControllerSocketProtocolSSL", configuration);
       secure_context->onEnable();
     }
@@ -178,7 +177,7 @@ int main(int argc, char **argv) {
       auto& components = result["stop"].as<std::vector<std::string>>();
       for (const auto& component : components) {
         auto socket = secure_context != nullptr ? stream_factory_->createSecureSocket(host, port, secure_context) : stream_factory_->createSocket(host, port);
-        if (!stopComponent(std::move(socket), component))
+        if (stopComponent(std::move(socket), component))
           std::cout << component << " requested to stop" << std::endl;
         else
           std::cout << "Could not connect to remote host " << host << ":" << port << std::endl;
@@ -189,7 +188,7 @@ int main(int argc, char **argv) {
       auto& components = result["start"].as<std::vector<std::string>>();
       for (const auto& component : components) {
         auto socket = secure_context != nullptr ? stream_factory_->createSecureSocket(host, port, secure_context) : stream_factory_->createSocket(host, port);
-        if (!startComponent(std::move(socket), component))
+        if (startComponent(std::move(socket), component))
           std::cout << component << " requested to start" << std::endl;
         else
           std::cout << "Could not connect to remote host " << host << ":" << port << std::endl;
@@ -200,8 +199,12 @@ int main(int argc, char **argv) {
       auto& components = result["c"].as<std::vector<std::string>>();
       for (const auto& connection : components) {
         auto socket = secure_context != nullptr ? stream_factory_->createSecureSocket(host, port, secure_context) : stream_factory_->createSocket(host, port);
-        if (!clearConnection(std::move(socket), connection))
-          std::cout << "Cleared " << connection << std::endl;
+        if (clearConnection(std::move(socket), connection)){
+          std::cout << "Sent clear command to " << connection << ". Size before clear operation sent: " << std::endl;
+          socket = secure_context != nullptr ? stream_factory_->createSecureSocket(host, port, secure_context) : stream_factory_->createSocket(host, port);
+          if (getConnectionSize(std::move(socket), std::cout, connection) < 0)
+                    std::cout << "Could not connect to remote host " << host << ":" << port << std::endl;
+        }
         else
           std::cout << "Could not connect to remote host " << host << ":" << port << std::endl;
       }

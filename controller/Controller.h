@@ -35,8 +35,7 @@ bool sendSingleCommand(std::unique_ptr<minifi::io::Socket> socket, uint8_t op, c
   minifi::io::BaseStream stream;
   stream.writeData(&op, 1);
   stream.writeUTF(value);
-  socket->writeData(const_cast<uint8_t*>(stream.getBuffer()), stream.getSize());
-  return true;
+  return socket->writeData(const_cast<uint8_t*>(stream.getBuffer()), stream.getSize()) == stream.getSize();
 }
 
 /**
@@ -169,9 +168,10 @@ int listComponents(std::unique_ptr<minifi::io::Socket> socket, std::ostream &out
     out << "Components:" << std::endl;
 
   for (int i = 0; i < responses; i++) {
-    std::string name;
+    std::string name,status;
     socket->readUTF(name, false);
-    out << name << std::endl;
+    socket->readUTF(status, false);
+    out << name << ", running: " << status << std::endl;
   }
   return 0;
 }
