@@ -169,9 +169,10 @@ int listComponents(std::unique_ptr<minifi::io::Socket> socket, std::ostream &out
     out << "Components:" << std::endl;
 
   for (int i = 0; i < responses; i++) {
-    std::string name;
+    std::string name,status;
     socket->readUTF(name, false);
-    out << name << std::endl;
+    socket->readUTF(status, false);
+    out << name << ", running: " << status << std::endl;
   }
   return 0;
 }

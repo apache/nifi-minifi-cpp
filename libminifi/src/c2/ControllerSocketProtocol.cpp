@@ -193,6 +193,7 @@ void ControllerSocketProtocol::initialize(const std::shared_ptr<core::controller
             resp.write(size);
             for (const auto &component : update_sink_->getAllComponents()) {
               resp.writeUTF(component->getComponentName());
+              resp.writeUTF(component->isRunning() ? "true" : "false");
             }
             stream->writeData(const_cast<uint8_t*>(resp.getBuffer()), resp.getSize());
           } else if (what == "connections") {
