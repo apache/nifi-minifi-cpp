@@ -299,6 +299,12 @@ void YamlConfiguration::parseRemoteProcessGroupYaml(YAML::Node *rpgNode, core::P
           }
         }
 
+        if (currRpgNode["local network interface"]) {
+          std::string interface = currRpgNode["local network interface"].as<std::string>();
+          logger_->log_debug("parseRemoteProcessGroupYaml: local network interface => [%s]", interface);
+          group->setInterface(interface);
+        }
+
         group->setTransmitting(true);
         group->setURL(url);
 
@@ -649,6 +655,8 @@ void YamlConfiguration::parsePortYaml(YAML::Node *portNode,
   port->setTransmitting(true);
   processor->setYieldPeriodMsec(parent->getYieldPeriodMsec());
   processor->initialize();
+  if (!parent->getInterface().empty())
+    port->setInterface(parent->getInterface());
 
   // handle port properties
   YAML::Node nodeVal = portNode->as<YAML::Node>();

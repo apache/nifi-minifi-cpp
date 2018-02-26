@@ -331,9 +331,10 @@ class Transaction {
 
 class SiteToSiteClientConfiguration {
  public:
-  SiteToSiteClientConfiguration(std::shared_ptr<io::StreamFactory> stream_factory, const std::shared_ptr<Peer> &peer, CLIENT_TYPE type = RAW)
+  SiteToSiteClientConfiguration(std::shared_ptr<io::StreamFactory> stream_factory, const std::shared_ptr<Peer> &peer, const std::string &interface, CLIENT_TYPE type = RAW)
       : stream_factory_(stream_factory),
         peer_(peer),
+        local_network_interface_(interface),
         ssl_service_(nullptr) {
     client_type_ = type;
   }
@@ -360,6 +361,14 @@ class SiteToSiteClientConfiguration {
     return stream_factory_;
   }
 
+  // setInterface
+  void setInterface(std::string &interface) {
+    local_network_interface_ = interface;
+  }
+  std::string getInterface() const {
+    return local_network_interface_;
+  }
+
  protected:
 
   std::shared_ptr<io::StreamFactory> stream_factory_;
@@ -367,6 +376,8 @@ class SiteToSiteClientConfiguration {
   std::shared_ptr<Peer> peer_;
 
   CLIENT_TYPE client_type_;
+
+  std::string local_network_interface_;
 
   // secore comms
 

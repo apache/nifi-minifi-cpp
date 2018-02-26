@@ -131,6 +131,10 @@ class HTTPClient : public BaseHTTPClient, public core::Connectable {
     return url_;
   }
 
+  void setInterface(const std::string &interface) {
+    curl_easy_setopt(http_session_, CURLOPT_INTERFACE, interface.c_str());
+  }
+
   const std::vector<std::string> &getHeaders() override {
     return header_response_.header_tokens_;
 

@@ -95,6 +95,7 @@ class Peer {
   uint16_t port_;
 
   uuid_t port_id_;
+
   // secore comms
 
   bool secure_;
@@ -141,21 +142,23 @@ class SiteToSitePeer : public org::apache::nifi::minifi::io::BaseStream {
       : stream_(nullptr),
         host_(""),
         port_(-1),
+        local_network_interface_(""),
         logger_(logging::LoggerFactory<SiteToSitePeer>::getLogger()) {
 
   }
   /*
    * Create a new site2site peer
    */
-  explicit SiteToSitePeer(std::unique_ptr<org::apache::nifi::minifi::io::DataStream> injected_socket, const std::string host, uint16_t port)
-      : SiteToSitePeer(host, port) {
+  explicit SiteToSitePeer(std::unique_ptr<org::apache::nifi::minifi::io::DataStream> injected_socket, const std::string host, uint16_t port, const std::string &interface)
+      : SiteToSitePeer(host, port, interface) {
     stream_ = std::move(injected_socket);
   }
 
-  explicit SiteToSitePeer(const std::string &host, uint16_t port)
+  explicit SiteToSitePeer(const std::string &host, uint16_t port, const std::string &interface)
       : stream_(nullptr),
         host_(host),
         port_(port),
+        local_network_interface_(interface),
         timeout_(30000),
         yield_expiration_(0),
         logger_(logging::LoggerFactory<SiteToSitePeer>::getLogger()) {
@@ -168,6 +171,7 @@ class SiteToSitePeer : public org::apache::nifi::minifi::io::BaseStream {
       : stream_(ss.stream_.release()),
         host_(std::move(ss.host_)),
         port_(std::move(ss.port_)),
+        local_network_interface_(std::move(ss.local_network_interface_)),
         logger_(std::move(ss.logger_)) {
     yield_expiration_.store(ss.yield_expiration_);
     timeout_.store(ss.timeout_);
@@ -184,6 +188,13 @@ class SiteToSitePeer : public org::apache::nifi::minifi::io::BaseStream {
   // get URL
   std::string getURL() {
     return url_;
+  }
+  // setInterface
+  void setInterface(std::string &interface) {
+    local_network_interface_ = interface;
+  }
+  std::string getInterface() {
+    return local_network_interface_;
   }
   // Get Processor yield period in MilliSecond
   uint64_t getYieldPeriodMsec(void) {
@@ -334,6 +345,7 @@ class SiteToSitePeer : public org::apache::nifi::minifi::io::BaseStream {
     stream_ = std::unique_ptr<org::apache::nifi::minifi::io::DataStream>(other.stream_.release());
     host_ = std::move(other.host_);
     port_ = std::move(other.port_);
+    local_network_interface_ = std::move(other.local_network_interface_);
     yield_expiration_ = 0;
     timeout_ = 30000;  // 30 seconds
     url_ = "nifi://" + host_ + ":" + std::to_string(port_);
@@ -353,6 +365,8 @@ class SiteToSitePeer : public org::apache::nifi::minifi::io::BaseStream {
   std::string host_;
 
   uint16_t port_;
+
+  std::string local_network_interface_;
 
   // Mutex for protection
   std::mutex mutex_;

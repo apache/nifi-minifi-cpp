@@ -90,6 +90,13 @@ class ProcessGroup {
   uint64_t getTimeOut() {
     return timeOut_;
   }
+  // setInterface
+  void setInterface(std::string &interface) {
+    local_network_interface_ = interface;
+  }
+  std::string getInterface() {
+    return local_network_interface_;
+  }
   // Set Processor yield period in MilliSecond
   void setYieldPeriodMsec(uint64_t period) {
     yield_period_msec_ = period;
@@ -190,6 +197,8 @@ class ProcessGroup {
   std::atomic<uint64_t> timeOut_;
   // URL
   std::string url_;
+  // local network interface
+  std::string local_network_interface_;
   // Transmitting
   std::atomic<bool> transmitting_;
 
