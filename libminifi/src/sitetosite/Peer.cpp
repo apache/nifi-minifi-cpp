@@ -41,6 +41,9 @@ bool SiteToSitePeer::Open() {
   if (IsNullOrEmpty(host_))
     return false;
 
+  if (!this->local_network_interface_.empty())
+      stream_->setInterface(local_network_interface_);
+
   if (stream_->initialize() < 0)
     return false;
 

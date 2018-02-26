@@ -67,12 +67,12 @@ std::unique_ptr<sitetosite::SiteToSiteClient> RemoteProcessorGroupPort::getNextP
     if (create) {
       // create
       if (url_.empty()) {
-        sitetosite::SiteToSiteClientConfiguration config(stream_factory_, std::make_shared<sitetosite::Peer>(protocol_uuid_, host_, port_, ssl_service != nullptr), client_type_);
+        sitetosite::SiteToSiteClientConfiguration config(stream_factory_, std::make_shared<sitetosite::Peer>(protocol_uuid_, host_, port_, ssl_service != nullptr), this->getInterface(), client_type_);
         nextProtocol = sitetosite::createClient(config);
       } else if (peer_index_ >= 0) {
         std::lock_guard<std::mutex> lock(peer_mutex_);
         logger_->log_debug("Creating client from peer %ll", peer_index_.load());
-        sitetosite::SiteToSiteClientConfiguration config(stream_factory_, peers_[this->peer_index_].getPeer(), client_type_);
+        sitetosite::SiteToSiteClientConfiguration config(stream_factory_, peers_[this->peer_index_].getPeer(), local_network_interface_, client_type_);
         config.setSecurityContext(ssl_service);
         peer_index_++;
         if (peer_index_ >= static_cast<int>(peers_.size())) {
@@ -170,7 +170,7 @@ void RemoteProcessorGroupPort::onSchedule(const std::shared_ptr<core::ProcessCon
       count = max_concurrent_tasks_;
     for (uint32_t i = 0; i < count; i++) {
       std::unique_ptr<sitetosite::SiteToSiteClient> nextProtocol = nullptr;
-      sitetosite::SiteToSiteClientConfiguration config(stream_factory_, peers_[this->peer_index_].getPeer(), client_type_);
+      sitetosite::SiteToSiteClientConfiguration config(stream_factory_, peers_[this->peer_index_].getPeer(), this->getInterface(), client_type_);
       config.setSecurityContext(ssl_service);
       peer_index_++;
       if (peer_index_ >= static_cast<int>(peers_.size())) {
@@ -349,7 +349,8 @@ void RemoteProcessorGroupPort::refreshPeerList() {
   this->peers_.clear();
 
   std::unique_ptr<sitetosite::SiteToSiteClient> protocol;
-  sitetosite::SiteToSiteClientConfiguration config(stream_factory_, std::make_shared<sitetosite::Peer>(protocol_uuid_, host_, site2site_port_, ssl_service != nullptr), client_type_);
+  sitetosite::SiteToSiteClientConfiguration config(stream_factory_, std::make_shared<sitetosite::Peer>(protocol_uuid_, host_,
+    site2site_port_, ssl_service != nullptr), this->getInterface(), client_type_);
   config.setSecurityContext(ssl_service);
   protocol = sitetosite::createClient(config);
 

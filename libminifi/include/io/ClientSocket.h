@@ -91,6 +91,10 @@ class Socket : public BaseStream {
    */
   virtual int16_t initialize();
 
+  virtual void setInterface(std::string &interface) {
+    local_network_interface_ = interface;
+  }
+
   /**
    * Sets the non blocking flag on the file descriptor.
    */
@@ -256,6 +260,7 @@ class Socket : public BaseStream {
   uint16_t port_;
 
   bool is_loopback_only_;
+  std::string local_network_interface_;
 
   // connection information
   int32_t socket_file_descriptor_;

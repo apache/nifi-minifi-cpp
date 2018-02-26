@@ -129,6 +129,13 @@ class RemoteProcessorGroupPort : public core::Processor {
   void setTransmitting(bool val) {
     transmitting_ = val;
   }
+  // setInterface
+  void setInterface(const std::string &interface) {
+    local_network_interface_ = interface;
+  }
+  std::string getInterface() {
+    return local_network_interface_;
+  }
   // setURL
   void setURL(std::string val) {
     url_ = val;
@@ -165,6 +172,8 @@ class RemoteProcessorGroupPort : public core::Processor {
   std::atomic<bool> transmitting_;
   // timeout
   uint64_t timeout_;
+  // local network interface
+  std::string local_network_interface_;
 
   uuid_t protocol_uuid_;
 

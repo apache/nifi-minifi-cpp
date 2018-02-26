@@ -44,7 +44,8 @@ static std::unique_ptr<SiteToSitePeer> createStreamingPeer(const SiteToSiteClien
     str = std::unique_ptr<org::apache::nifi::minifi::io::DataStream>(
         client_configuration.getStreamFactory()->createSocket(client_configuration.getPeer()->getHost(), client_configuration.getPeer()->getPort()));
   }
-  auto peer = std::unique_ptr<SiteToSitePeer>(new SiteToSitePeer(std::move(str), client_configuration.getPeer()->getHost(), client_configuration.getPeer()->getPort()));
+  auto peer = std::unique_ptr<SiteToSitePeer>(new SiteToSitePeer(std::move(str), client_configuration.getPeer()->getHost(), client_configuration.getPeer()->getPort(),
+      client_configuration.getInterface()));
   return peer;
 
 }
@@ -79,7 +80,8 @@ static std::unique_ptr<SiteToSiteClient> createClient(const SiteToSiteClientConf
       if (nullptr != http_protocol) {
         auto ptr = std::unique_ptr<SiteToSiteClient>(static_cast<SiteToSiteClient*>(http_protocol));
         ptr->setSSLContextService(client_configuration.getSecurityContext());
-        auto peer = std::unique_ptr<SiteToSitePeer>(new SiteToSitePeer(client_configuration.getPeer()->getHost(), client_configuration.getPeer()->getPort()));
+        auto peer = std::unique_ptr<SiteToSitePeer>(new SiteToSitePeer(client_configuration.getPeer()->getHost(), client_configuration.getPeer()->getPort(),
+            client_configuration.getInterface()));
         char idStr[37];
         uuid_unparse_lower(uuid, idStr);
         ptr->setPortId(uuid);
