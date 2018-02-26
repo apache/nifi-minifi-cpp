@@ -590,6 +590,10 @@ default values, and whether a property supports the NiFi Expression Language.
 | **Input Format** | | PNG, RAW | The format of the input image (PNG or RAW). RAW is RGB24. |
 | **Input Width** | | | The width, in pixels, of the input image. |
 | **Input Height** | | | The height, in pixels, of the input image. |
+| Crop Offset X | | | The X (horizontal) offset, in pixels, to crop the input image (relative to top-left corner). |
+| Crop Offset Y | | | The Y (vertical) offset, in pixels, to crop the input image (relative to top-left corner). |
+| Crop Size X | | | The X (horizontal) size, in pixels, to crop the input image. |
+| Crop Size Y | | | The Y (vertical) size, in pixels, to crop the input image. |
 | **Output Width** | | | The width, in pixels, of the output image. |
 | **Output Height** | | | The height, in pixels, of the output image. |
 | **Channels** | 3 | | The number of channels (e.g. 3 for RGB, 4 for RGBA) in the input image. |
