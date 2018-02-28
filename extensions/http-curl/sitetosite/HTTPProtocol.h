@@ -182,6 +182,10 @@ class HttpSiteToSiteClient : public sitetosite::SiteToSiteClient {
         // batch count, size, and duratin don't appear to be set through the interfaces.
       }
     }
+    if (!this->peer_->getInterface().empty()) {
+      logger_->log_info("HTTP Site2Site bind local network interface", this->peer_->getInterface());
+      http_client_->setInterface(this->peer_->getInterface());
+    }
     return http_client_;
   }
 

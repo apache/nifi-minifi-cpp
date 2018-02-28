@@ -22,6 +22,9 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <sys/ioctl.h>
+#include <net/if.h>
+#include <ifaddrs.h>
 #include <unistd.h>
 #include <cstdio>
 #include <memory>
@@ -46,6 +49,7 @@ Socket::Socket(const std::shared_ptr<SocketContext> &context, const std::string 
       socket_file_descriptor_(-1),
       socket_max_(0),
       is_loopback_only_(false),
+      local_network_interface_(""),
       listeners_(listeners),
       canonical_hostname_(""),
       nonBlocking_(false),
@@ -62,6 +66,7 @@ Socket::Socket(const Socket &&other)
     : requested_hostname_(std::move(other.requested_hostname_)),
       port_(std::move(other.port_)),
       is_loopback_only_(false),
+      local_network_interface_(""),
       addr_info_(std::move(other.addr_info_)),
       socket_file_descriptor_(other.socket_file_descriptor_),
       socket_max_(other.socket_max_.load()),
@@ -102,6 +107,36 @@ int8_t Socket::createConnection(const addrinfo *p, in_addr_t &addr) {
   }
 
   setSocketOptions(socket_file_descriptor_);
+
+  if (listeners_ <= 0 && !local_network_interface_.empty()) {
+    // bind to local network interface
+    ifaddrs* list = NULL;
+    ifaddrs* item = NULL;
+    ifaddrs* itemFound = NULL;
+    int result = getifaddrs(&list);
+    if (result == 0) {
+      item = list;
+      while (item) {
+        if ((item->ifa_addr != NULL) && (item->ifa_name != NULL) && (AF_INET == item->ifa_addr->sa_family)) {
+          if (strcmp(item->ifa_name, local_network_interface_.c_str()) == 0) {
+            itemFound = item;
+            break;
+          }
+        }
+        item = item->ifa_next;
+      }
+
+      if (itemFound != NULL) {
+        result = bind(socket_file_descriptor_, itemFound->ifa_addr, sizeof(struct sockaddr_in));
+        if (result < 0)
+          logger_->log_info("Bind to interface %s failed %s", local_network_interface_, strerror(errno));
+        else
+          logger_->log_info("Bind to interface %s", local_network_interface_);
+      }
+
+      freeifaddrs(list);
+    }
+  }
 
   if (listeners_ > 0) {
     struct sockaddr_in *sa_loc = (struct sockaddr_in*) p->ai_addr;
