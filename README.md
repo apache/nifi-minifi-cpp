@@ -712,7 +712,7 @@ These are defined by default to the above values. If the port option is left und
 will be disabled in your deployment.
 
  The executable is stored in the bin directory and is titled minificontroller. Available commands are listed below.
- Note that with all commands and immediate response by the agent isn't guaranteed. In all cases the agent assumes the role of validating that a response was received, but execution of said command may take some time depending on a number of factors to include persistent storage type, size of queues, and speed of hardware. 
+ Note that with all commands an immediate response by the agent isn't guaranteed. In all cases the agent assumes the role of validating that a response was received, but execution of said command may take some time depending on a number of factors to include persistent storage type, size of queues, and speed of hardware. 
  
  #### Specifying connecting information
  

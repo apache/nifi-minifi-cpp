@@ -35,8 +35,7 @@ bool sendSingleCommand(std::unique_ptr<minifi::io::Socket> socket, uint8_t op, c
   minifi::io::BaseStream stream;
   stream.writeData(&op, 1);
   stream.writeUTF(value);
-  socket->writeData(const_cast<uint8_t*>(stream.getBuffer()), stream.getSize());
-  return true;
+  return socket->writeData(const_cast<uint8_t*>(stream.getBuffer()), stream.getSize()) == stream.getSize();
 }
 
 /**
