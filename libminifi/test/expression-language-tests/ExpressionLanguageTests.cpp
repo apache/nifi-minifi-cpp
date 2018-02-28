@@ -408,6 +408,30 @@ TEST_CASE("Replace Empty 3", "[expressionLanguageReplaceEmpty2]") {  // NOLINT
   REQUIRE("abc" == expr({flow_file_a}));
 }
 
+TEST_CASE("Matches", "[expressionLanguageMatches]") {  // NOLINT
+  auto expr = expression::compile("${attr:matches('^(Ct|Bt|At):.*t$')}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("attr", "At:est");
+  REQUIRE("true" == expr({flow_file_a}));
+}
+
+TEST_CASE("Matches 2", "[expressionLanguageMatches2]") {  // NOLINT
+  auto expr = expression::compile("${attr:matches('^(Ct|Bt|At):.*t$')}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("attr", "At:something");
+  REQUIRE("false" == expr({flow_file_a}));
+}
+
+TEST_CASE("Matches 3", "[expressionLanguageMatches3]") {  // NOLINT
+  auto expr = expression::compile("${attr:matches('(Ct|Bt|At):.*t')}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("attr", " At:est");
+  REQUIRE("false" == expr({flow_file_a}));
+}
+
 #endif  // EXPRESSION_LANGUAGE_USE_REGEX
 
 TEST_CASE("Plus Integer", "[expressionLanguagePlusInteger]") {  // NOLINT

@@ -173,6 +173,10 @@ token, filename.
 - [`fromRadix`](#fromradix)
 - [`random`](#random)
 
+### Searching
+
+- [`matches`](#matches)
+
 ## Planned Features
 
 ### String Manipulation
@@ -182,6 +186,17 @@ token, filename.
 - `append`
 - `prepend`
 - `length`
+
+### Searching
+
+- `startsWith`
+- `endsWith`
+- `contains`
+- `in`
+- `find`
+- `indexOf`
+- `lastIndexOf`
+- `jsonPath`
 
 ### Boolean Logic
 
@@ -752,3 +767,30 @@ random number generator.
 **Return Type**: Number
 
 **Examples**: `${random():mod(10):plus(1)}` returns random number between 1 and 10 inclusive.
+
+## Searching
+
+### matches
+
+**Description**: Returns true if the Subject exactly matches the Regular Expression provided by the argument.
+
+**Subject Type**: String
+
+**Arguments**: 
+
+| Argument | Description |
+| - | - |
+| Regex | The Regular Expression (in the Java Pattern syntax) to match against the Subject |
+
+**Return Type**: Boolean
+
+**Examples**:
+
+If the `filename` attribute has the value "a brand new filename.txt", then the
+following Expressions will provide the following results:
+
+| Expression | Value |
+| - | - |
+| `${filename:matches('a.*txt')}` | true |
+| `${filename:matches('brand')}` | false |
+| `${filename:matches('.brand.')}` | true |

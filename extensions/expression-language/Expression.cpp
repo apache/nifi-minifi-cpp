@@ -152,6 +152,17 @@ std::string expr_replaceEmpty(const std::vector<std::string> &args) {
   return std::regex_replace(result, find, replace);
 }
 
+std::string expr_matches(const std::vector<std::string> &args) {
+  const auto &subject = args[0];
+  const std::regex expr = std::regex(args[1]);
+
+  if (std::regex_match(subject.begin(), subject.end(), expr)) {
+    return "true";
+  } else {
+    return "false";
+  }
+}
+
 #endif  // EXPRESSION_LANGUAGE_USE_REGEX
 
 std::string expr_binaryOp(const std::vector<std::string> &args,
@@ -335,6 +346,8 @@ Expression make_dynamic_function(const std::string &function_name,
     return make_dynamic_function_incomplete<expr_replaceNull>(function_name, args, 1);
   } else if (function_name == "replaceEmpty") {
     return make_dynamic_function_incomplete<expr_replaceEmpty>(function_name, args, 1);
+  } else if (function_name == "matches") {
+    return make_dynamic_function_incomplete<expr_matches>(function_name, args, 1);
 #endif  // EXPRESSION_LANGUAGE_USE_REGEX
   } else if (function_name == "plus") {
     return make_dynamic_function_incomplete<expr_plus>(function_name, args, 1);
