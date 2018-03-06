@@ -300,6 +300,70 @@ TEST_CASE("Substring After Last", "[expressionLanguageSubstringAfterLast]") {  /
   REQUIRE("__" == expr({flow_file_a}));
 }
 
+TEST_CASE("Starts With", "[expressionLanguageStartsWith]") {  // NOLINT
+  auto expr = expression::compile("${attr:startsWith('a brand')}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("attr", "A BRAND TEST");
+  REQUIRE("false" == expr({flow_file_a}));
+}
+
+TEST_CASE("Starts With 2", "[expressionLanguageStartsWith2]") {  // NOLINT
+  auto expr = expression::compile("${attr:startsWith('a brand')}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("attr", "a brand TEST");
+  REQUIRE("true" == expr({flow_file_a}));
+}
+
+TEST_CASE("Ends With", "[expressionLanguageEndsWith]") {  // NOLINT
+  auto expr = expression::compile("${attr:endsWith('txt')}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("attr", "a brand new filename.TXT");
+  REQUIRE("false" == expr({flow_file_a}));
+}
+
+TEST_CASE("Ends With 2", "[expressionLanguageEndsWith2]") {  // NOLINT
+  auto expr = expression::compile("${attr:endsWith('TXT')}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("attr", "a brand new filename.TXT");
+  REQUIRE("true" == expr({flow_file_a}));
+}
+
+TEST_CASE("Contains", "[expressionLanguageContains]") {  // NOLINT
+  auto expr = expression::compile("${attr:contains('new')}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("attr", "a brand new filename.txt");
+  REQUIRE("true" == expr({flow_file_a}));
+}
+
+TEST_CASE("Contains 2", "[expressionLanguageContains2]") {  // NOLINT
+  auto expr = expression::compile("${attr:contains('NEW')}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("attr", "a brand new filename.txt");
+  REQUIRE("false" == expr({flow_file_a}));
+}
+
+TEST_CASE("In", "[expressionLanguageIn]") {  // NOLINT
+  auto expr = expression::compile("${attr:in('PAUL', 'JOHN', 'MIKE')}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("attr", "JOHN");
+  REQUIRE("true" == expr({flow_file_a}));
+}
+
+TEST_CASE("In 2", "[expressionLanguageIn2]") {  // NOLINT
+  auto expr = expression::compile("${attr:in('RED', 'GREEN', 'BLUE')}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("attr", "JOHN");
+  REQUIRE("false" == expr({flow_file_a}));
+}
+
 TEST_CASE("Substring Before No Args", "[expressionLanguageSubstringBeforeNoArgs]") {  // NOLINT
   REQUIRE_THROWS_WITH(expression::compile("${attr:substringBefore()}"),
                       "Expression language function substringBefore called with 1 argument(s), but 2 are required");
@@ -430,6 +494,94 @@ TEST_CASE("Matches 3", "[expressionLanguageMatches3]") {  // NOLINT
   auto flow_file_a = std::make_shared<MockFlowFile>();
   flow_file_a->addAttribute("attr", " At:est");
   REQUIRE("false" == expr({flow_file_a}));
+}
+
+TEST_CASE("Find", "[expressionLanguageFind]") {  // NOLINT
+  auto expr = expression::compile("${attr:find('a [Bb]rand [Nn]ew')}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("attr", "a brand new filename.txt");
+  REQUIRE("true" == expr({flow_file_a}));
+}
+
+TEST_CASE("Find 2", "[expressionLanguageFind2]") {  // NOLINT
+  auto expr = expression::compile("${attr:find('Brand.*')}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("attr", "a brand new filename.txt");
+  REQUIRE("false" == expr({flow_file_a}));
+}
+
+TEST_CASE("Find 3", "[expressionLanguageFind3]") {  // NOLINT
+  auto expr = expression::compile("${attr:find('brand')}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("attr", "a brand new filename.txt");
+  REQUIRE("true" == expr({flow_file_a}));
+}
+
+TEST_CASE("IndexOf", "[expressionLanguageIndexOf]") {  // NOLINT
+  auto expr = expression::compile("${attr:indexOf('a.*txt')}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("attr", "a brand new filename.txt");
+  REQUIRE("-1" == expr({flow_file_a}));
+}
+
+TEST_CASE("IndexOf2", "[expressionLanguageIndexOf2]") {  // NOLINT
+  auto expr = expression::compile("${attr:indexOf('.')}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("attr", "a brand new filename.txt");
+  REQUIRE("20" == expr({flow_file_a}));
+}
+
+TEST_CASE("IndexOf3", "[expressionLanguageIndexOf3]") {  // NOLINT
+  auto expr = expression::compile("${attr:indexOf('a')}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("attr", "a brand new filename.txt");
+  REQUIRE("0" == expr({flow_file_a}));
+}
+
+TEST_CASE("IndexOf4", "[expressionLanguageIndexOf4]") {  // NOLINT
+  auto expr = expression::compile("${attr:indexOf(' ')}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("attr", "a brand new filename.txt");
+  REQUIRE("1" == expr({flow_file_a}));
+}
+
+TEST_CASE("LastIndexOf", "[expressionLanguageLastIndexOf]") {  // NOLINT
+  auto expr = expression::compile("${attr:lastIndexOf('a.*txt')}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("attr", "a brand new filename.txt");
+  REQUIRE("-1" == expr({flow_file_a}));
+}
+
+TEST_CASE("LastIndexOf2", "[expressionLanguageLastIndexOf2]") {  // NOLINT
+  auto expr = expression::compile("${attr:lastIndexOf('.')}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("attr", "a brand new filename.txt");
+  REQUIRE("20" == expr({flow_file_a}));
+}
+
+TEST_CASE("LastIndexOf3", "[expressionLanguageLastIndexOf3]") {  // NOLINT
+  auto expr = expression::compile("${attr:lastIndexOf('a')}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("attr", "a brand new filename.txt");
+  REQUIRE("17" == expr({flow_file_a}));
+}
+
+TEST_CASE("LastIndexOf4", "[expressionLanguageLastIndexOf4]") {  // NOLINT
+  auto expr = expression::compile("${attr:lastIndexOf(' ')}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("attr", "a brand new filename.txt");
+  REQUIRE("11" == expr({flow_file_a}));
 }
 
 #endif  // EXPRESSION_LANGUAGE_USE_REGEX
