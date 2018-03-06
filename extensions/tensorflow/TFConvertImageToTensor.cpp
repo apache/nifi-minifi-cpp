@@ -43,6 +43,18 @@ core::Property TFConvertImageToTensor::OutputHeight(  // NOLINT
 core::Property TFConvertImageToTensor::NumChannels(  // NOLINT
     "Channels",
     "The number of channels (e.g. 3 for RGB, 4 for RGBA) in the input image", "3");
+core::Property TFConvertImageToTensor::CropOffsetX(  // NOLINT
+    "Crop Offset X",
+    "The X (horizontal) offset, in pixels, to crop the input image (relative to top-left corner).", "");
+core::Property TFConvertImageToTensor::CropOffsetY(  // NOLINT
+    "Crop Offset Y",
+    "The Y (vertical) offset, in pixels, to crop the input image (relative to top-left corner).", "");
+core::Property TFConvertImageToTensor::CropSizeX(  // NOLINT
+    "Crop Size X",
+    "The X (horizontal) size, in pixels, to crop the input image.", "");
+core::Property TFConvertImageToTensor::CropSizeY(  // NOLINT
+    "Crop Size Y",
+    "The Y (vertical) size, in pixels, to crop the input image.", "");
 
 core::Relationship TFConvertImageToTensor::Success(  // NOLINT
     "success",
@@ -105,6 +117,40 @@ void TFConvertImageToTensor::onSchedule(core::ProcessContext *context, core::Pro
   } else {
     logger_->log_error("Invalid channel count");
   }
+
+  do_crop_ = true;
+
+  if (context->getProperty(CropOffsetX.getName(), val)) {
+    core::Property::StringToInt(val, crop_offset_x_);
+  } else {
+    do_crop_ = false;
+  }
+
+  if (context->getProperty(CropOffsetY.getName(), val)) {
+    core::Property::StringToInt(val, crop_offset_y_);
+  } else {
+    do_crop_ = false;
+  }
+
+  if (context->getProperty(CropSizeX.getName(), val)) {
+    core::Property::StringToInt(val, crop_size_x_);
+  } else {
+    do_crop_ = false;
+  }
+
+  if (context->getProperty(CropSizeY.getName(), val)) {
+    core::Property::StringToInt(val, crop_size_y_);
+  } else {
+    do_crop_ = false;
+  }
+
+  if (do_crop_) {
+    logger_->log_info("Input images will be cropped at %d, %d by %d, %d pixels",
+                      crop_offset_x_,
+                      crop_offset_y_,
+                      crop_size_x_,
+                      crop_size_y_);
+  }
 }
 
 void TFConvertImageToTensor::onTrigger(const std::shared_ptr<core::ProcessContext> &context,
@@ -138,8 +184,29 @@ void TFConvertImageToTensor::onTrigger(const std::shared_ptr<core::ProcessContex
       // Cast pixel values to floats
       auto float_caster = tensorflow::ops::Cast(root.WithOpName("float_caster"), input, tensorflow::DT_FLOAT);
 
+      int crop_offset_x = 0;
+      int crop_offset_y = 0;
+      int crop_size_x = input_width_;
+      int crop_size_y = input_height_;
+
+      if (do_crop_) {
+        crop_offset_x = crop_offset_x_;
+        crop_offset_y = crop_offset_y_;
+        crop_size_x = crop_size_x_;
+        crop_size_y = crop_size_y_;
+      }
+
+      tensorflow::ops::Slice cropped = tensorflow::ops::Slice(root.WithOpName("crop"),
+                                                              float_caster,
+                                                              {crop_offset_y,
+                                                               crop_offset_x,
+                                                               0},
+                                                              {crop_size_y,
+                                                               crop_size_x,
+                                                               num_channels_});
+
       // Expand into batches (of size 1)
-      auto dims_expander = tensorflow::ops::ExpandDims(root, float_caster, 0);
+      auto dims_expander = tensorflow::ops::ExpandDims(root, cropped, 0);
 
       // Resize tensor to output dimensions
       auto resize = tensorflow::ops::ResizeBilinear(

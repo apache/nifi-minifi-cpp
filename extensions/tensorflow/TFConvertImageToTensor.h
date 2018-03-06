@@ -44,6 +44,10 @@ class TFConvertImageToTensor : public core::Processor {
   static core::Property InputHeight;
   static core::Property OutputWidth;
   static core::Property OutputHeight;
+  static core::Property CropOffsetX;
+  static core::Property CropOffsetY;
+  static core::Property CropSizeX;
+  static core::Property CropSizeY;
 
   static core::Relationship Success;
   static core::Relationship Failure;
@@ -93,6 +97,11 @@ class TFConvertImageToTensor : public core::Processor {
   int output_width_;
   int output_height_;
   int num_channels_;
+  bool do_crop_ = false;
+  int crop_offset_x_ = 0;
+  int crop_offset_y_ = 0;
+  int crop_size_x_ = 0;
+  int crop_size_y_ = 0;
 
   std::shared_ptr<tensorflow::GraphDef> graph_def_;
   moodycamel::ConcurrentQueue<std::shared_ptr<TFContext>> tf_context_q_;
