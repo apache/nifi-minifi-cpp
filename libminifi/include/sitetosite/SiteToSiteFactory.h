@@ -82,6 +82,7 @@ static std::unique_ptr<SiteToSiteClient> createClient(const SiteToSiteClientConf
         ptr->setSSLContextService(client_configuration.getSecurityContext());
         auto peer = std::unique_ptr<SiteToSitePeer>(new SiteToSitePeer(client_configuration.getPeer()->getHost(), client_configuration.getPeer()->getPort(),
             client_configuration.getInterface()));
+        peer->setHTTPProxy(client_configuration.getHTTPProxy());
         char idStr[37];
         uuid_unparse_lower(uuid, idStr);
         ptr->setPortId(uuid);

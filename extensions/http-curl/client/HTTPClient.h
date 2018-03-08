@@ -172,6 +172,18 @@ class HTTPClient : public BaseHTTPClient, public core::Connectable {
 
   void setPostSize(size_t size);
 
+  void setHTTPProxy(const utils::HTTPProxy &proxy) override {
+    if (!proxy.host.empty()) {
+      curl_easy_setopt(http_session_, CURLOPT_PROXY, proxy.host.c_str());
+      curl_easy_setopt(http_session_, CURLOPT_PROXYPORT, proxy.port);
+      if (!proxy.username.empty()) {
+        curl_easy_setopt(http_session_, CURLOPT_PROXYAUTH, CURLAUTH_ANY);
+        std::string value = proxy.username + ":" + proxy.password;
+        curl_easy_setopt(http_session_, CURLOPT_PROXYUSERPWD, value.c_str());
+      }
+    }
+  }
+
  protected:
 
   inline bool matches(const std::string &value, const std::string &sregex) override;

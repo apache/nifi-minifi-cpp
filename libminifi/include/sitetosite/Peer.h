@@ -37,6 +37,7 @@
 #include "io/ClientSocket.h"
 #include "io/BaseStream.h"
 #include "utils/TimeUtil.h"
+#include "utils/HTTPClient.h"
 
 namespace org {
 namespace apache {
@@ -172,6 +173,7 @@ class SiteToSitePeer : public org::apache::nifi::minifi::io::BaseStream {
         host_(std::move(ss.host_)),
         port_(std::move(ss.port_)),
         local_network_interface_(std::move(ss.local_network_interface_)),
+        proxy_(std::move(ss.proxy_)),
         logger_(std::move(ss.logger_)) {
     yield_expiration_.store(ss.yield_expiration_);
     timeout_.store(ss.timeout_);
@@ -276,6 +278,12 @@ class SiteToSitePeer : public org::apache::nifi::minifi::io::BaseStream {
   uint64_t getTimeOut() {
     return timeout_;
   }
+  void setHTTPProxy(const utils::HTTPProxy &proxy) {
+    this->proxy_ = proxy;
+  }
+  utils::HTTPProxy getHTTPProxy() {
+    return this->proxy_;
+  }
 
   void setStream(std::unique_ptr<org::apache::nifi::minifi::io::DataStream> stream) {
     stream_ = nullptr;
@@ -367,6 +375,8 @@ class SiteToSitePeer : public org::apache::nifi::minifi::io::BaseStream {
   uint16_t port_;
 
   std::string local_network_interface_;
+
+  utils::HTTPProxy proxy_;
 
   // Mutex for protection
   std::mutex mutex_;
