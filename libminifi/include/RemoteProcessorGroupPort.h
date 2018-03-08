@@ -148,7 +148,12 @@ class RemoteProcessorGroupPort : public core::Processor {
       }
     }
   }
-
+  void setHTTPProxy(const utils::HTTPProxy &proxy) {
+    this->proxy_ = proxy;
+  }
+  utils::HTTPProxy getHTTPProxy() {
+    return this->proxy_;
+  }
   // refresh remoteSite2SiteInfo via nifi rest api
   void refreshRemoteSite2SiteInfo();
 
@@ -156,6 +161,10 @@ class RemoteProcessorGroupPort : public core::Processor {
   void refreshPeerList();
 
   virtual void notifyStop();
+
+  void enableHTTP() {
+    client_type_ = sitetosite::HTTP;
+  }
 
  protected:
 
@@ -183,9 +192,10 @@ class RemoteProcessorGroupPort : public core::Processor {
   std::string protocol_;
   std::string url_;
   bool http_enabled_;
+  // http proxy
+  utils::HTTPProxy proxy_;
 
   sitetosite::CLIENT_TYPE client_type_;
-
 
   // Remote Site2Site Info
   int site2site_port_;

@@ -25,6 +25,13 @@ namespace nifi {
 namespace minifi {
 namespace utils {
 
+struct HTTPProxy {
+  std::string host;
+  std::string username;
+  std::string password;
+  int port;
+};
+
 struct HTTPUploadCallback {
   HTTPUploadCallback() {
     stop = false;
@@ -255,6 +262,9 @@ class BaseHTTPClient {
   }
 
   virtual void setDisablePeerVerification() {
+  }
+
+  virtual void setHTTPProxy(const utils::HTTPProxy &proxy) {
   }
 
   virtual void setDisableHostVerification() {

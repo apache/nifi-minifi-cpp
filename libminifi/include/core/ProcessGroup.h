@@ -35,6 +35,7 @@
 #include "controller/ControllerServiceNode.h"
 #include "controller/ControllerServiceMap.h"
 #include "utils/Id.h"
+#include "utils/HTTPClient.h"
 
 namespace org {
 namespace apache {
@@ -96,6 +97,39 @@ class ProcessGroup {
   }
   std::string getInterface() {
     return local_network_interface_;
+  }
+  void setTransportProtocol(std::string &protocol) {
+    transport_protocol_ = protocol;
+  }
+  std::string getTransportProtocol() {
+    return transport_protocol_;
+  }
+  void setHttpProxyHost(std::string &host) {
+    proxy_.host = host;
+  }
+  std::string getHttpProxyHost() {
+    return proxy_.host;
+  }
+  void setHttpProxyUserName(std::string &username) {
+    proxy_.username = username;
+  }
+  std::string getHttpProxyUserName() {
+    return proxy_.username;
+  }
+  void setHttpProxyPassWord(std::string &password) {
+    proxy_.password = password;
+  }
+  std::string getHttpProxyPassWord() {
+    return proxy_.password;
+  }
+  void setHttpProxyPort(int port) {
+    proxy_.port = port;
+  }
+  int getHttpProxyPort() {
+    return proxy_.port;
+  }
+  utils::HTTPProxy getHTTPProxy() {
+    return proxy_;
   }
   // Set Processor yield period in MilliSecond
   void setYieldPeriodMsec(uint64_t period) {
@@ -201,6 +235,9 @@ class ProcessGroup {
   std::string local_network_interface_;
   // Transmitting
   std::atomic<bool> transmitting_;
+  // http proxy
+  utils::HTTPProxy proxy_;
+  std::string transport_protocol_;
 
   // controller services
 
