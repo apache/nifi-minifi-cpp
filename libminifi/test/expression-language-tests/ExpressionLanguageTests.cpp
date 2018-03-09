@@ -32,24 +32,24 @@ class MockFlowFile : public core::FlowFile {
 };
 
 TEST_CASE("Trivial static expression", "[expressionLanguageTestTrivialStaticExpr]") {  // NOLINT
-  REQUIRE("a" == expression::make_static("a")({}));
+  REQUIRE("a" == expression::make_static("a")({}).asString());
 }
 
 TEST_CASE("Text expression", "[expressionLanguageTestTextExpression]") {  // NOLINT
   auto expr = expression::compile("text");
-  REQUIRE("text" == expr({}));
+  REQUIRE("text" == expr({}).asString());
 }
 
 TEST_CASE("Text expression with escaped dollar", "[expressionLanguageTestEscapedDollar]") {  // NOLINT
   auto expr = expression::compile("te$$xt");
-  REQUIRE("te$xt" == expr({}));
+  REQUIRE("te$xt" == expr({}).asString());
 }
 
 TEST_CASE("Attribute expression", "[expressionLanguageTestAttributeExpression]") {  // NOLINT
   auto flow_file = std::make_shared<MockFlowFile>();
   flow_file->addAttribute("attr_a", "__attr_value_a__");
   auto expr = expression::compile("text_before${attr_a}text_after");
-  REQUIRE("text_before__attr_value_a__text_after" == expr({flow_file}));
+  REQUIRE("text_before__attr_value_a__text_after" == expr({flow_file}).asString());
 }
 
 TEST_CASE("Multi-attribute expression", "[expressionLanguageTestMultiAttributeExpression]") {  // NOLINT
@@ -57,7 +57,7 @@ TEST_CASE("Multi-attribute expression", "[expressionLanguageTestMultiAttributeEx
   flow_file->addAttribute("attr_a", "__attr_value_a__");
   flow_file->addAttribute("attr_b", "__attr_value_b__");
   auto expr = expression::compile("text_before${attr_a}text_between${attr_b}text_after");
-  REQUIRE("text_before__attr_value_a__text_between__attr_value_b__text_after" == expr({flow_file}));
+  REQUIRE("text_before__attr_value_a__text_between__attr_value_b__text_after" == expr({flow_file}).asString());
 }
 
 TEST_CASE("Multi-flowfile attribute expression",
@@ -66,18 +66,18 @@ TEST_CASE("Multi-flowfile attribute expression",
 
   auto flow_file_a = std::make_shared<MockFlowFile>();
   flow_file_a->addAttribute("attr_a", "__flow_a_attr_value_a__");
-  REQUIRE("text_before__flow_a_attr_value_a__text_after" == expr({flow_file_a}));
+  REQUIRE("text_before__flow_a_attr_value_a__text_after" == expr({flow_file_a}).asString());
 
   auto flow_file_b = std::make_shared<MockFlowFile>();
   flow_file_b->addAttribute("attr_a", "__flow_b_attr_value_a__");
-  REQUIRE("text_before__flow_b_attr_value_a__text_after" == expr({flow_file_b}));
+  REQUIRE("text_before__flow_b_attr_value_a__text_after" == expr({flow_file_b}).asString());
 }
 
 TEST_CASE("Attribute expression with whitespace", "[expressionLanguageTestAttributeExpressionWhitespace]") {  // NOLINT
   auto flow_file = std::make_shared<MockFlowFile>();
   flow_file->addAttribute("attr_a", "__attr_value_a__");
   auto expr = expression::compile("text_before${\n\tattr_a \r}text_after");
-  REQUIRE("text_before__attr_value_a__text_after" == expr({flow_file}));
+  REQUIRE("text_before__attr_value_a__text_after" == expr({flow_file}).asString());
 }
 
 TEST_CASE("Special characters expression", "[expressionLanguageTestSpecialCharactersExpression]") {  // NOLINT
@@ -85,7 +85,7 @@ TEST_CASE("Special characters expression", "[expressionLanguageTestSpecialCharac
 
   auto flow_file_a = std::make_shared<MockFlowFile>();
   flow_file_a->addAttribute("attr_a", "__flow_a_attr_value_a__");
-  REQUIRE("text_before|{}()[],:;\\/*#'\" \t\r\n__flow_a_attr_value_a__}()text_after" == expr({flow_file_a}));
+  REQUIRE("text_before|{}()[],:;\\/*#'\" \t\r\n__flow_a_attr_value_a__}()text_after" == expr({flow_file_a}).asString());
 }
 
 TEST_CASE("UTF-8 characters expression", "[expressionLanguageTestUTF8Expression]") {  // NOLINT
@@ -93,7 +93,7 @@ TEST_CASE("UTF-8 characters expression", "[expressionLanguageTestUTF8Expression]
 
   auto flow_file_a = std::make_shared<MockFlowFile>();
   flow_file_a->addAttribute("attr_a", "__flow_a_attr_value_a__");
-  REQUIRE("text_before¥£€¢₡₢₣₤₥₦₧₨₩₪₫₭₮₯₹__flow_a_attr_value_a__text_after" == expr({flow_file_a}));
+  REQUIRE("text_before¥£€¢₡₢₣₤₥₦₧₨₩₪₫₭₮₯₹__flow_a_attr_value_a__text_after" == expr({flow_file_a}).asString());
 }
 
 TEST_CASE("UTF-8 characters attribute", "[expressionLanguageTestUTF8Attribute]") {  // NOLINT
@@ -101,7 +101,7 @@ TEST_CASE("UTF-8 characters attribute", "[expressionLanguageTestUTF8Attribute]")
 
   auto flow_file_a = std::make_shared<MockFlowFile>();
   flow_file_a->addAttribute("attr_a", "__¥£€¢₡₢₣₤₥₦₧₨₩₪₫₭₮₯₹__");
-  REQUIRE("text_before__¥£€¢₡₢₣₤₥₦₧₨₩₪₫₭₮₯₹__text_after" == expr({flow_file_a}));
+  REQUIRE("text_before__¥£€¢₡₢₣₤₥₦₧₨₩₪₫₭₮₯₹__text_after" == expr({flow_file_a}).asString());
 }
 
 TEST_CASE("Single quoted attribute expression", "[expressionLanguageTestSingleQuotedAttributeExpression]") {  // NOLINT
@@ -109,7 +109,7 @@ TEST_CASE("Single quoted attribute expression", "[expressionLanguageTestSingleQu
 
   auto flow_file_a = std::make_shared<MockFlowFile>();
   flow_file_a->addAttribute("|{}()[],:;\\/*# \t\r\n$", "__flow_a_attr_value_a__");
-  REQUIRE("text_before__flow_a_attr_value_a__text_after" == expr({flow_file_a}));
+  REQUIRE("text_before__flow_a_attr_value_a__text_after" == expr({flow_file_a}).asString());
 }
 
 TEST_CASE("Double quoted attribute expression", "[expressionLanguageTestDoubleQuotedAttributeExpression]") {  // NOLINT
@@ -117,7 +117,7 @@ TEST_CASE("Double quoted attribute expression", "[expressionLanguageTestDoubleQu
 
   auto flow_file_a = std::make_shared<MockFlowFile>();
   flow_file_a->addAttribute("|{}()[],:;\\/*# \t\r\n$", "__flow_a_attr_value_a__");
-  REQUIRE("text_before__flow_a_attr_value_a__text_after" == expr({flow_file_a}));
+  REQUIRE("text_before__flow_a_attr_value_a__text_after" == expr({flow_file_a}).asString());
 }
 
 TEST_CASE("Hostname function", "[expressionLanguageTestHostnameFunction]") {  // NOLINT
@@ -131,7 +131,7 @@ TEST_CASE("Hostname function", "[expressionLanguageTestHostnameFunction]") {  //
   expected.append("text_after");
 
   auto flow_file_a = std::make_shared<MockFlowFile>();
-  REQUIRE(expected == expr({flow_file_a}));
+  REQUIRE(expected == expr({flow_file_a}).asString());
 }
 
 TEST_CASE("ToUpper function", "[expressionLanguageTestToUpperFunction]") {  // NOLINT
@@ -140,14 +140,14 @@ TEST_CASE("ToUpper function", "[expressionLanguageTestToUpperFunction]") {  // N
                                      }text_after)");
   auto flow_file_a = std::make_shared<MockFlowFile>();
   flow_file_a->addAttribute("attr_a", "__flow_a_attr_value_a__");
-  REQUIRE("text_before__FLOW_A_ATTR_VALUE_A__text_after" == expr({flow_file_a}));
+  REQUIRE("text_before__FLOW_A_ATTR_VALUE_A__text_after" == expr({flow_file_a}).asString());
 }
 
 TEST_CASE("ToUpper function w/o whitespace", "[expressionLanguageTestToUpperFunctionWithoutWhitespace]") {  // NOLINT
   auto expr = expression::compile(R"(text_before${attr_a:toUpper()}text_after)");
   auto flow_file_a = std::make_shared<MockFlowFile>();
   flow_file_a->addAttribute("attr_a", "__flow_a_attr_value_a__");
-  REQUIRE("text_before__FLOW_A_ATTR_VALUE_A__text_after" == expr({flow_file_a}));
+  REQUIRE("text_before__FLOW_A_ATTR_VALUE_A__text_after" == expr({flow_file_a}).asString());
 }
 
 TEST_CASE("ToLower function", "[expressionLanguageTestToLowerFunction]") {  // NOLINT
@@ -156,7 +156,7 @@ TEST_CASE("ToLower function", "[expressionLanguageTestToLowerFunction]") {  // N
                                      }text_after)");
   auto flow_file_a = std::make_shared<MockFlowFile>();
   flow_file_a->addAttribute("attr_a", "__FLOW_A_ATTR_VALUE_A__");
-  REQUIRE("text_before__flow_a_attr_value_a__text_after" == expr({flow_file_a}));
+  REQUIRE("text_before__flow_a_attr_value_a__text_after" == expr({flow_file_a}).asString());
 }
 
 TEST_CASE("GetFile PutFile dynamic attribute", "[expressionLanguageTestGetFilePutFileDynamicAttribute]") {  // NOLINT
@@ -257,7 +257,7 @@ TEST_CASE("Substring 2 arg", "[expressionLanguageSubstring2]") {  // NOLINT
 
   auto flow_file_a = std::make_shared<MockFlowFile>();
   flow_file_a->addAttribute("attr", "__flow_a_attr_value_a__");
-  REQUIRE("text_before_a_attr_text_after" == expr({flow_file_a}));
+  REQUIRE("text_before_a_attr_text_after" == expr({flow_file_a}).asString());
 }
 
 TEST_CASE("Substring 1 arg", "[expressionLanguageSubstring1]") {  // NOLINT
@@ -265,7 +265,7 @@ TEST_CASE("Substring 1 arg", "[expressionLanguageSubstring1]") {  // NOLINT
 
   auto flow_file_a = std::make_shared<MockFlowFile>();
   flow_file_a->addAttribute("attr", "__flow_a_attr_value_a__");
-  REQUIRE("text_before_a_attr_value_a__text_after" == expr({flow_file_a}));
+  REQUIRE("text_before_a_attr_value_a__text_after" == expr({flow_file_a}).asString());
 }
 
 TEST_CASE("Substring Before", "[expressionLanguageSubstringBefore]") {  // NOLINT
@@ -273,7 +273,7 @@ TEST_CASE("Substring Before", "[expressionLanguageSubstringBefore]") {  // NOLIN
 
   auto flow_file_a = std::make_shared<MockFlowFile>();
   flow_file_a->addAttribute("attr", "__flow_a_attr_value_a__");
-  REQUIRE("__flow_a_" == expr({flow_file_a}));
+  REQUIRE("__flow_a_" == expr({flow_file_a}).asString());
 }
 
 TEST_CASE("Substring Before Last", "[expressionLanguageSubstringBeforeLast]") {  // NOLINT
@@ -281,7 +281,7 @@ TEST_CASE("Substring Before Last", "[expressionLanguageSubstringBeforeLast]") { 
 
   auto flow_file_a = std::make_shared<MockFlowFile>();
   flow_file_a->addAttribute("attr", "__flow_a_attr_value_a__");
-  REQUIRE("__flow_a_attr_value" == expr({flow_file_a}));
+  REQUIRE("__flow_a_attr_value" == expr({flow_file_a}).asString());
 }
 
 TEST_CASE("Substring After", "[expressionLanguageSubstringAfter]") {  // NOLINT
@@ -289,7 +289,7 @@ TEST_CASE("Substring After", "[expressionLanguageSubstringAfter]") {  // NOLINT
 
   auto flow_file_a = std::make_shared<MockFlowFile>();
   flow_file_a->addAttribute("attr", "__flow_a_attr_value_a__");
-  REQUIRE("_attr_value_a__" == expr({flow_file_a}));
+  REQUIRE("_attr_value_a__" == expr({flow_file_a}).asString());
 }
 
 TEST_CASE("Substring After Last", "[expressionLanguageSubstringAfterLast]") {  // NOLINT
@@ -297,7 +297,7 @@ TEST_CASE("Substring After Last", "[expressionLanguageSubstringAfterLast]") {  /
 
   auto flow_file_a = std::make_shared<MockFlowFile>();
   flow_file_a->addAttribute("attr", "__flow_a_attr_value_a__");
-  REQUIRE("__" == expr({flow_file_a}));
+  REQUIRE("__" == expr({flow_file_a}).asString());
 }
 
 TEST_CASE("Starts With", "[expressionLanguageStartsWith]") {  // NOLINT
@@ -305,7 +305,7 @@ TEST_CASE("Starts With", "[expressionLanguageStartsWith]") {  // NOLINT
 
   auto flow_file_a = std::make_shared<MockFlowFile>();
   flow_file_a->addAttribute("attr", "A BRAND TEST");
-  REQUIRE("false" == expr({flow_file_a}));
+  REQUIRE("false" == expr({flow_file_a}).asString());
 }
 
 TEST_CASE("Starts With 2", "[expressionLanguageStartsWith2]") {  // NOLINT
@@ -313,7 +313,7 @@ TEST_CASE("Starts With 2", "[expressionLanguageStartsWith2]") {  // NOLINT
 
   auto flow_file_a = std::make_shared<MockFlowFile>();
   flow_file_a->addAttribute("attr", "a brand TEST");
-  REQUIRE("true" == expr({flow_file_a}));
+  REQUIRE("true" == expr({flow_file_a}).asString());
 }
 
 TEST_CASE("Ends With", "[expressionLanguageEndsWith]") {  // NOLINT
@@ -321,7 +321,7 @@ TEST_CASE("Ends With", "[expressionLanguageEndsWith]") {  // NOLINT
 
   auto flow_file_a = std::make_shared<MockFlowFile>();
   flow_file_a->addAttribute("attr", "a brand new filename.TXT");
-  REQUIRE("false" == expr({flow_file_a}));
+  REQUIRE("false" == expr({flow_file_a}).asString());
 }
 
 TEST_CASE("Ends With 2", "[expressionLanguageEndsWith2]") {  // NOLINT
@@ -329,7 +329,7 @@ TEST_CASE("Ends With 2", "[expressionLanguageEndsWith2]") {  // NOLINT
 
   auto flow_file_a = std::make_shared<MockFlowFile>();
   flow_file_a->addAttribute("attr", "a brand new filename.TXT");
-  REQUIRE("true" == expr({flow_file_a}));
+  REQUIRE("true" == expr({flow_file_a}).asString());
 }
 
 TEST_CASE("Contains", "[expressionLanguageContains]") {  // NOLINT
@@ -337,7 +337,7 @@ TEST_CASE("Contains", "[expressionLanguageContains]") {  // NOLINT
 
   auto flow_file_a = std::make_shared<MockFlowFile>();
   flow_file_a->addAttribute("attr", "a brand new filename.txt");
-  REQUIRE("true" == expr({flow_file_a}));
+  REQUIRE("true" == expr({flow_file_a}).asString());
 }
 
 TEST_CASE("Contains 2", "[expressionLanguageContains2]") {  // NOLINT
@@ -345,7 +345,7 @@ TEST_CASE("Contains 2", "[expressionLanguageContains2]") {  // NOLINT
 
   auto flow_file_a = std::make_shared<MockFlowFile>();
   flow_file_a->addAttribute("attr", "a brand new filename.txt");
-  REQUIRE("false" == expr({flow_file_a}));
+  REQUIRE("false" == expr({flow_file_a}).asString());
 }
 
 TEST_CASE("In", "[expressionLanguageIn]") {  // NOLINT
@@ -353,7 +353,7 @@ TEST_CASE("In", "[expressionLanguageIn]") {  // NOLINT
 
   auto flow_file_a = std::make_shared<MockFlowFile>();
   flow_file_a->addAttribute("attr", "JOHN");
-  REQUIRE("true" == expr({flow_file_a}));
+  REQUIRE("true" == expr({flow_file_a}).asString());
 }
 
 TEST_CASE("In 2", "[expressionLanguageIn2]") {  // NOLINT
@@ -361,7 +361,7 @@ TEST_CASE("In 2", "[expressionLanguageIn2]") {  // NOLINT
 
   auto flow_file_a = std::make_shared<MockFlowFile>();
   flow_file_a->addAttribute("attr", "JOHN");
-  REQUIRE("false" == expr({flow_file_a}));
+  REQUIRE("false" == expr({flow_file_a}).asString());
 }
 
 TEST_CASE("Substring Before No Args", "[expressionLanguageSubstringBeforeNoArgs]") {  // NOLINT
@@ -381,7 +381,7 @@ TEST_CASE("Replace", "[expressionLanguageReplace]") {  // NOLINT
 
   auto flow_file_a = std::make_shared<MockFlowFile>();
   flow_file_a->addAttribute("attr", "a brand new filename.txt");
-  REQUIRE("a brand new filename_txt" == expr({flow_file_a}));
+  REQUIRE("a brand new filename_txt" == expr({flow_file_a}).asString());
 }
 
 TEST_CASE("Replace 2", "[expressionLanguageReplace2]") {  // NOLINT
@@ -389,7 +389,7 @@ TEST_CASE("Replace 2", "[expressionLanguageReplace2]") {  // NOLINT
 
   auto flow_file_a = std::make_shared<MockFlowFile>();
   flow_file_a->addAttribute("attr", "a brand new filename.txt");
-  REQUIRE("a.brand.new.filename.txt" == expr({flow_file_a}));
+  REQUIRE("a.brand.new.filename.txt" == expr({flow_file_a}).asString());
 }
 
 TEST_CASE("Replace First", "[expressionLanguageReplaceFirst]") {  // NOLINT
@@ -397,7 +397,7 @@ TEST_CASE("Replace First", "[expressionLanguageReplaceFirst]") {  // NOLINT
 
   auto flow_file_a = std::make_shared<MockFlowFile>();
   flow_file_a->addAttribute("attr", "a brand new filename.txt");
-  REQUIRE("the brand new filename.txt" == expr({flow_file_a}));
+  REQUIRE("the brand new filename.txt" == expr({flow_file_a}).asString());
 }
 
 TEST_CASE("Replace First Regex", "[expressionLanguageReplaceFirstRegex]") {  // NOLINT
@@ -405,7 +405,7 @@ TEST_CASE("Replace First Regex", "[expressionLanguageReplaceFirstRegex]") {  // 
 
   auto flow_file_a = std::make_shared<MockFlowFile>();
   flow_file_a->addAttribute("attr", "a brand new filename.txt");
-  REQUIRE("a grand new filename.txt" == expr({flow_file_a}));
+  REQUIRE("a grand new filename.txt" == expr({flow_file_a}).asString());
 }
 
 TEST_CASE("Replace All", "[expressionLanguageReplaceAll]") {  // NOLINT
@@ -413,7 +413,7 @@ TEST_CASE("Replace All", "[expressionLanguageReplaceAll]") {  // NOLINT
 
   auto flow_file_a = std::make_shared<MockFlowFile>();
   flow_file_a->addAttribute("attr", "a brand new filename.txt");
-  REQUIRE("a brand new filename" == expr({flow_file_a}));
+  REQUIRE("a brand new filename" == expr({flow_file_a}).asString());
 }
 
 TEST_CASE("Replace All 2", "[expressionLanguageReplaceAll2]") {  // NOLINT
@@ -421,7 +421,7 @@ TEST_CASE("Replace All 2", "[expressionLanguageReplaceAll2]") {  // NOLINT
 
   auto flow_file_a = std::make_shared<MockFlowFile>();
   flow_file_a->addAttribute("attr", "a brand new filename.txt");
-  REQUIRE("new filename.txt" == expr({flow_file_a}));
+  REQUIRE("new filename.txt" == expr({flow_file_a}).asString());
 }
 
 TEST_CASE("Replace All 3", "[expressionLanguageReplaceAll3]") {  // NOLINT
@@ -429,7 +429,7 @@ TEST_CASE("Replace All 3", "[expressionLanguageReplaceAll3]") {  // NOLINT
 
   auto flow_file_a = std::make_shared<MockFlowFile>();
   flow_file_a->addAttribute("attr", "a brand new filename.txt");
-  REQUIRE("a brand new filename.txt" == expr({flow_file_a}));
+  REQUIRE("a brand new filename.txt" == expr({flow_file_a}).asString());
 }
 
 TEST_CASE("Replace Null", "[expressionLanguageReplaceNull]") {  // NOLINT
@@ -437,7 +437,7 @@ TEST_CASE("Replace Null", "[expressionLanguageReplaceNull]") {  // NOLINT
 
   auto flow_file_a = std::make_shared<MockFlowFile>();
   flow_file_a->addAttribute("attr", "a brand new filename.txt");
-  REQUIRE("a brand new filename.txt" == expr({flow_file_a}));
+  REQUIRE("a brand new filename.txt" == expr({flow_file_a}).asString());
 }
 
 TEST_CASE("Replace Null 2", "[expressionLanguageReplaceNull2]") {  // NOLINT
@@ -445,7 +445,7 @@ TEST_CASE("Replace Null 2", "[expressionLanguageReplaceNull2]") {  // NOLINT
 
   auto flow_file_a = std::make_shared<MockFlowFile>();
   flow_file_a->addAttribute("attr2", "a brand new filename.txt");
-  REQUIRE("abc" == expr({flow_file_a}));
+  REQUIRE("abc" == expr({flow_file_a}).asString());
 }
 
 TEST_CASE("Replace Empty", "[expressionLanguageReplaceEmpty]") {  // NOLINT
@@ -453,7 +453,7 @@ TEST_CASE("Replace Empty", "[expressionLanguageReplaceEmpty]") {  // NOLINT
 
   auto flow_file_a = std::make_shared<MockFlowFile>();
   flow_file_a->addAttribute("attr", "a brand new filename.txt");
-  REQUIRE("a brand new filename.txt" == expr({flow_file_a}));
+  REQUIRE("a brand new filename.txt" == expr({flow_file_a}).asString());
 }
 
 TEST_CASE("Replace Empty 2", "[expressionLanguageReplaceEmpty2]") {  // NOLINT
@@ -461,7 +461,7 @@ TEST_CASE("Replace Empty 2", "[expressionLanguageReplaceEmpty2]") {  // NOLINT
 
   auto flow_file_a = std::make_shared<MockFlowFile>();
   flow_file_a->addAttribute("attr", "  \t  \r  \n  ");
-  REQUIRE("abc" == expr({flow_file_a}));
+  REQUIRE("abc" == expr({flow_file_a}).asString());
 }
 
 TEST_CASE("Replace Empty 3", "[expressionLanguageReplaceEmpty2]") {  // NOLINT
@@ -469,7 +469,7 @@ TEST_CASE("Replace Empty 3", "[expressionLanguageReplaceEmpty2]") {  // NOLINT
 
   auto flow_file_a = std::make_shared<MockFlowFile>();
   flow_file_a->addAttribute("attr2", "test");
-  REQUIRE("abc" == expr({flow_file_a}));
+  REQUIRE("abc" == expr({flow_file_a}).asString());
 }
 
 TEST_CASE("Matches", "[expressionLanguageMatches]") {  // NOLINT
@@ -477,7 +477,7 @@ TEST_CASE("Matches", "[expressionLanguageMatches]") {  // NOLINT
 
   auto flow_file_a = std::make_shared<MockFlowFile>();
   flow_file_a->addAttribute("attr", "At:est");
-  REQUIRE("true" == expr({flow_file_a}));
+  REQUIRE("true" == expr({flow_file_a}).asString());
 }
 
 TEST_CASE("Matches 2", "[expressionLanguageMatches2]") {  // NOLINT
@@ -485,7 +485,7 @@ TEST_CASE("Matches 2", "[expressionLanguageMatches2]") {  // NOLINT
 
   auto flow_file_a = std::make_shared<MockFlowFile>();
   flow_file_a->addAttribute("attr", "At:something");
-  REQUIRE("false" == expr({flow_file_a}));
+  REQUIRE("false" == expr({flow_file_a}).asString());
 }
 
 TEST_CASE("Matches 3", "[expressionLanguageMatches3]") {  // NOLINT
@@ -493,7 +493,7 @@ TEST_CASE("Matches 3", "[expressionLanguageMatches3]") {  // NOLINT
 
   auto flow_file_a = std::make_shared<MockFlowFile>();
   flow_file_a->addAttribute("attr", " At:est");
-  REQUIRE("false" == expr({flow_file_a}));
+  REQUIRE("false" == expr({flow_file_a}).asString());
 }
 
 TEST_CASE("Find", "[expressionLanguageFind]") {  // NOLINT
@@ -501,7 +501,7 @@ TEST_CASE("Find", "[expressionLanguageFind]") {  // NOLINT
 
   auto flow_file_a = std::make_shared<MockFlowFile>();
   flow_file_a->addAttribute("attr", "a brand new filename.txt");
-  REQUIRE("true" == expr({flow_file_a}));
+  REQUIRE("true" == expr({flow_file_a}).asString());
 }
 
 TEST_CASE("Find 2", "[expressionLanguageFind2]") {  // NOLINT
@@ -509,7 +509,7 @@ TEST_CASE("Find 2", "[expressionLanguageFind2]") {  // NOLINT
 
   auto flow_file_a = std::make_shared<MockFlowFile>();
   flow_file_a->addAttribute("attr", "a brand new filename.txt");
-  REQUIRE("false" == expr({flow_file_a}));
+  REQUIRE("false" == expr({flow_file_a}).asString());
 }
 
 TEST_CASE("Find 3", "[expressionLanguageFind3]") {  // NOLINT
@@ -517,7 +517,7 @@ TEST_CASE("Find 3", "[expressionLanguageFind3]") {  // NOLINT
 
   auto flow_file_a = std::make_shared<MockFlowFile>();
   flow_file_a->addAttribute("attr", "a brand new filename.txt");
-  REQUIRE("true" == expr({flow_file_a}));
+  REQUIRE("true" == expr({flow_file_a}).asString());
 }
 
 TEST_CASE("IndexOf", "[expressionLanguageIndexOf]") {  // NOLINT
@@ -525,7 +525,7 @@ TEST_CASE("IndexOf", "[expressionLanguageIndexOf]") {  // NOLINT
 
   auto flow_file_a = std::make_shared<MockFlowFile>();
   flow_file_a->addAttribute("attr", "a brand new filename.txt");
-  REQUIRE("-1" == expr({flow_file_a}));
+  REQUIRE("-1" == expr({flow_file_a}).asString());
 }
 
 TEST_CASE("IndexOf2", "[expressionLanguageIndexOf2]") {  // NOLINT
@@ -533,7 +533,7 @@ TEST_CASE("IndexOf2", "[expressionLanguageIndexOf2]") {  // NOLINT
 
   auto flow_file_a = std::make_shared<MockFlowFile>();
   flow_file_a->addAttribute("attr", "a brand new filename.txt");
-  REQUIRE("20" == expr({flow_file_a}));
+  REQUIRE("20" == expr({flow_file_a}).asString());
 }
 
 TEST_CASE("IndexOf3", "[expressionLanguageIndexOf3]") {  // NOLINT
@@ -541,7 +541,7 @@ TEST_CASE("IndexOf3", "[expressionLanguageIndexOf3]") {  // NOLINT
 
   auto flow_file_a = std::make_shared<MockFlowFile>();
   flow_file_a->addAttribute("attr", "a brand new filename.txt");
-  REQUIRE("0" == expr({flow_file_a}));
+  REQUIRE("0" == expr({flow_file_a}).asString());
 }
 
 TEST_CASE("IndexOf4", "[expressionLanguageIndexOf4]") {  // NOLINT
@@ -549,7 +549,7 @@ TEST_CASE("IndexOf4", "[expressionLanguageIndexOf4]") {  // NOLINT
 
   auto flow_file_a = std::make_shared<MockFlowFile>();
   flow_file_a->addAttribute("attr", "a brand new filename.txt");
-  REQUIRE("1" == expr({flow_file_a}));
+  REQUIRE("1" == expr({flow_file_a}).asString());
 }
 
 TEST_CASE("LastIndexOf", "[expressionLanguageLastIndexOf]") {  // NOLINT
@@ -557,7 +557,7 @@ TEST_CASE("LastIndexOf", "[expressionLanguageLastIndexOf]") {  // NOLINT
 
   auto flow_file_a = std::make_shared<MockFlowFile>();
   flow_file_a->addAttribute("attr", "a brand new filename.txt");
-  REQUIRE("-1" == expr({flow_file_a}));
+  REQUIRE("-1" == expr({flow_file_a}).asString());
 }
 
 TEST_CASE("LastIndexOf2", "[expressionLanguageLastIndexOf2]") {  // NOLINT
@@ -565,7 +565,7 @@ TEST_CASE("LastIndexOf2", "[expressionLanguageLastIndexOf2]") {  // NOLINT
 
   auto flow_file_a = std::make_shared<MockFlowFile>();
   flow_file_a->addAttribute("attr", "a brand new filename.txt");
-  REQUIRE("20" == expr({flow_file_a}));
+  REQUIRE("20" == expr({flow_file_a}).asString());
 }
 
 TEST_CASE("LastIndexOf3", "[expressionLanguageLastIndexOf3]") {  // NOLINT
@@ -573,7 +573,7 @@ TEST_CASE("LastIndexOf3", "[expressionLanguageLastIndexOf3]") {  // NOLINT
 
   auto flow_file_a = std::make_shared<MockFlowFile>();
   flow_file_a->addAttribute("attr", "a brand new filename.txt");
-  REQUIRE("17" == expr({flow_file_a}));
+  REQUIRE("17" == expr({flow_file_a}).asString());
 }
 
 TEST_CASE("LastIndexOf4", "[expressionLanguageLastIndexOf4]") {  // NOLINT
@@ -581,7 +581,7 @@ TEST_CASE("LastIndexOf4", "[expressionLanguageLastIndexOf4]") {  // NOLINT
 
   auto flow_file_a = std::make_shared<MockFlowFile>();
   flow_file_a->addAttribute("attr", "a brand new filename.txt");
-  REQUIRE("11" == expr({flow_file_a}));
+  REQUIRE("11" == expr({flow_file_a}).asString());
 }
 
 #endif  // EXPRESSION_LANGUAGE_USE_REGEX
@@ -591,7 +591,7 @@ TEST_CASE("Plus Integer", "[expressionLanguagePlusInteger]") {  // NOLINT
 
   auto flow_file_a = std::make_shared<MockFlowFile>();
   flow_file_a->addAttribute("attr", "11");
-  REQUIRE("24" == expr({flow_file_a}));
+  REQUIRE("24" == expr({flow_file_a}).asString());
 }
 
 TEST_CASE("Plus Decimal", "[expressionLanguagePlusDecimal]") {  // NOLINT
@@ -599,7 +599,7 @@ TEST_CASE("Plus Decimal", "[expressionLanguagePlusDecimal]") {  // NOLINT
 
   auto flow_file_a = std::make_shared<MockFlowFile>();
   flow_file_a->addAttribute("attr", "11.1");
-  REQUIRE("-2.24567" == expr({flow_file_a}));
+  REQUIRE("-2.24567" == expr({flow_file_a}).asString());
 }
 
 TEST_CASE("Plus Exponent", "[expressionLanguagePlusExponent]") {  // NOLINT
@@ -607,7 +607,7 @@ TEST_CASE("Plus Exponent", "[expressionLanguagePlusExponent]") {  // NOLINT
 
   auto flow_file_a = std::make_shared<MockFlowFile>();
   flow_file_a->addAttribute("attr", "11");
-  REQUIRE("10000011" == expr({flow_file_a}));
+  REQUIRE("10000011" == expr({flow_file_a}).asString());
 }
 
 TEST_CASE("Plus Exponent 2", "[expressionLanguagePlusExponent2]") {  // NOLINT
@@ -615,7 +615,7 @@ TEST_CASE("Plus Exponent 2", "[expressionLanguagePlusExponent2]") {  // NOLINT
 
   auto flow_file_a = std::make_shared<MockFlowFile>();
   flow_file_a->addAttribute("attr", "11.345678901234");
-  REQUIRE("10000011.345678901234351" == expr({flow_file_a}));
+  REQUIRE("10000011.345678901234351" == expr({flow_file_a}).asString());
 }
 
 TEST_CASE("Minus Integer", "[expressionLanguageMinusInteger]") {  // NOLINT
@@ -623,7 +623,7 @@ TEST_CASE("Minus Integer", "[expressionLanguageMinusInteger]") {  // NOLINT
 
   auto flow_file_a = std::make_shared<MockFlowFile>();
   flow_file_a->addAttribute("attr", "11");
-  REQUIRE("-2" == expr({flow_file_a}));
+  REQUIRE("-2" == expr({flow_file_a}).asString());
 }
 
 TEST_CASE("Minus Decimal", "[expressionLanguageMinusDecimal]") {  // NOLINT
@@ -631,7 +631,7 @@ TEST_CASE("Minus Decimal", "[expressionLanguageMinusDecimal]") {  // NOLINT
 
   auto flow_file_a = std::make_shared<MockFlowFile>();
   flow_file_a->addAttribute("attr", "11.1");
-  REQUIRE("24.44567" == expr({flow_file_a}));
+  REQUIRE("24.44567" == expr({flow_file_a}).asString());
 }
 
 TEST_CASE("Multiply Integer", "[expressionLanguageMultiplyInteger]") {  // NOLINT
@@ -639,7 +639,7 @@ TEST_CASE("Multiply Integer", "[expressionLanguageMultiplyInteger]") {  // NOLIN
 
   auto flow_file_a = std::make_shared<MockFlowFile>();
   flow_file_a->addAttribute("attr", "11");
-  REQUIRE("143" == expr({flow_file_a}));
+  REQUIRE("143" == expr({flow_file_a}).asString());
 }
 
 TEST_CASE("Multiply Decimal", "[expressionLanguageMultiplyDecimal]") {  // NOLINT
@@ -647,7 +647,7 @@ TEST_CASE("Multiply Decimal", "[expressionLanguageMultiplyDecimal]") {  // NOLIN
 
   auto flow_file_a = std::make_shared<MockFlowFile>();
   flow_file_a->addAttribute("attr", "11.1");
-  REQUIRE("-148.136937" == expr({flow_file_a}));
+  REQUIRE("-148.136937" == expr({flow_file_a}).asString());
 }
 
 TEST_CASE("Divide Integer", "[expressionLanguageDivideInteger]") {  // NOLINT
@@ -655,7 +655,7 @@ TEST_CASE("Divide Integer", "[expressionLanguageDivideInteger]") {  // NOLINT
 
   auto flow_file_a = std::make_shared<MockFlowFile>();
   flow_file_a->addAttribute("attr", "11");
-  REQUIRE("0.846153846153846" == expr({flow_file_a}));
+  REQUIRE("0.846153846153846" == expr({flow_file_a}).asString());
 }
 
 TEST_CASE("Divide Decimal", "[expressionLanguageDivideDecimal]") {  // NOLINT
@@ -663,7 +663,7 @@ TEST_CASE("Divide Decimal", "[expressionLanguageDivideDecimal]") {  // NOLINT
 
   auto flow_file_a = std::make_shared<MockFlowFile>();
   flow_file_a->addAttribute("attr", "11.1");
-  REQUIRE("-0.831730441409086" == expr({flow_file_a}));
+  REQUIRE("-0.831730441409086" == expr({flow_file_a}).asString());
 }
 
 TEST_CASE("To Radix", "[expressionLanguageToRadix]") {  // NOLINT
@@ -671,7 +671,7 @@ TEST_CASE("To Radix", "[expressionLanguageToRadix]") {  // NOLINT
 
   auto flow_file_a = std::make_shared<MockFlowFile>();
   flow_file_a->addAttribute("attr", "10");
-  REQUIRE("0000000000001010" == expr({flow_file_a}));
+  REQUIRE("0000000000001010" == expr({flow_file_a}).asString());
 }
 
 TEST_CASE("To Radix 2", "[expressionLanguageToRadix2]") {  // NOLINT
@@ -679,7 +679,7 @@ TEST_CASE("To Radix 2", "[expressionLanguageToRadix2]") {  // NOLINT
 
   auto flow_file_a = std::make_shared<MockFlowFile>();
   flow_file_a->addAttribute("attr", "13");
-  REQUIRE("d" == expr({flow_file_a}));
+  REQUIRE("d" == expr({flow_file_a}).asString());
 }
 
 TEST_CASE("To Radix 3", "[expressionLanguageToRadix3]") {  // NOLINT
@@ -687,7 +687,7 @@ TEST_CASE("To Radix 3", "[expressionLanguageToRadix3]") {  // NOLINT
 
   auto flow_file_a = std::make_shared<MockFlowFile>();
   flow_file_a->addAttribute("attr", "-2347");
-  REQUIRE("-000004a1" == expr({flow_file_a}));
+  REQUIRE("-000004a1" == expr({flow_file_a}).asString());
 }
 
 TEST_CASE("From Radix", "[expressionLanguageFromRadix]") {  // NOLINT
@@ -695,7 +695,7 @@ TEST_CASE("From Radix", "[expressionLanguageFromRadix]") {  // NOLINT
 
   auto flow_file_a = std::make_shared<MockFlowFile>();
   flow_file_a->addAttribute("attr", "0000000000001010");
-  REQUIRE("10" == expr({flow_file_a}));
+  REQUIRE("10" == expr({flow_file_a}).asString());
 }
 
 TEST_CASE("From Radix 2", "[expressionLanguageFromRadix2]") {  // NOLINT
@@ -703,7 +703,7 @@ TEST_CASE("From Radix 2", "[expressionLanguageFromRadix2]") {  // NOLINT
 
   auto flow_file_a = std::make_shared<MockFlowFile>();
   flow_file_a->addAttribute("attr", "d");
-  REQUIRE("13" == expr({flow_file_a}));
+  REQUIRE("13" == expr({flow_file_a}).asString());
 }
 
 TEST_CASE("From Radix 3", "[expressionLanguageFromRadix3]") {  // NOLINT
@@ -711,14 +711,14 @@ TEST_CASE("From Radix 3", "[expressionLanguageFromRadix3]") {  // NOLINT
 
   auto flow_file_a = std::make_shared<MockFlowFile>();
   flow_file_a->addAttribute("attr", "-000004a1");
-  REQUIRE("-2347" == expr({flow_file_a}));
+  REQUIRE("-2347" == expr({flow_file_a}).asString());
 }
 
 TEST_CASE("Random", "[expressionLanguageRandom]") {  // NOLINT
   auto expr = expression::compile("${random()}");
 
   auto flow_file_a = std::make_shared<MockFlowFile>();
-  auto result = std::stoll(expr({flow_file_a}));
+  auto result = expr({flow_file_a}).asSignedLong();
   REQUIRE(result > 0);
 }
 
@@ -727,14 +727,14 @@ TEST_CASE("Chained call", "[expressionChainedCall]") {  // NOLINT
 
   auto flow_file_a = std::make_shared<MockFlowFile>();
   flow_file_a->addAttribute("attr", "7");
-  REQUIRE("22" == expr({flow_file_a}));
+  REQUIRE("22" == expr({flow_file_a}).asString());
 }
 
 TEST_CASE("Chained call 2", "[expressionChainedCall2]") {  // NOLINT
   auto expr = expression::compile("${literal(10):multiply(2):plus(1):multiply(2)}");
 
   auto flow_file_a = std::make_shared<MockFlowFile>();
-  REQUIRE("42" == expr({flow_file_a}));
+  REQUIRE(42 == expr({flow_file_a}).asSignedLong());
 }
 
 TEST_CASE("Chained call 3", "[expressionChainedCall3]") {  // NOLINT
@@ -742,5 +742,5 @@ TEST_CASE("Chained call 3", "[expressionChainedCall3]") {  // NOLINT
 
   auto flow_file_a = std::make_shared<MockFlowFile>();
   flow_file_a->addAttribute("attr", "7");
-  REQUIRE("238" == expr({flow_file_a}));
+  REQUIRE("238" == expr({flow_file_a}).asString());
 }

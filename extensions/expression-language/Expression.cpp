@@ -39,138 +39,143 @@ Expression compile(const std::string &expr_str) {
 }
 
 Expression make_static(std::string val) {
-  return Expression(std::move(val));
+  return Expression(Value(val));
 }
 
-Expression make_dynamic(std::function<std::string(const Parameters &params)> val_fn) {
-  return Expression("", std::move(val_fn));
+Expression make_dynamic(const std::function<Value(const Parameters &params)> &val_fn) {
+  return Expression(Value(), std::move(val_fn));
 }
 
 Expression make_dynamic_attr(const std::string &attribute_id) {
-  return make_dynamic([attribute_id](const Parameters &params) -> std::string {
+  return make_dynamic([attribute_id](const Parameters &params) -> Value {
     std::string result;
-    params.flow_file.lock()->getAttribute(attribute_id, result);
-    return result;
+    if (params.flow_file.lock()->getAttribute(attribute_id, result)) {
+      return Value(result);
+    } else {
+      return Value();
+    }
   });
 }
 
-std::string expr_hostname(const std::vector<std::string> &args) {
+Value expr_hostname(const std::vector<Value> &args) {
   char hostname[1024];
   hostname[1023] = '\0';
   gethostname(hostname, 1023);
-  return std::string(hostname);
+  return Value(std::string(hostname));
 }
 
-std::string expr_toUpper(const std::vector<std::string> &args) {
-  std::string result = args[0];
+Value expr_toUpper(const std::vector<Value> &args) {
+  std::string result = args[0].asString();
   std::transform(result.begin(), result.end(), result.begin(), ::toupper);
-  return result;
+  return Value(result);
 }
 
-std::string expr_toLower(const std::vector<std::string> &args) {
-  std::string result = args[0];
+Value expr_toLower(const std::vector<Value> &args) {
+  std::string result = args[0].asString();
   std::transform(result.begin(), result.end(), result.begin(), ::tolower);
-  return result;
+  return Value(result);
 }
 
-std::string expr_substring(const std::vector<std::string> &args) {
+Value expr_substring(const std::vector<Value> &args) {
   if (args.size() < 3) {
-    return args[0].substr(std::stoul(args[1]));
+    return Value(args[0].asString().substr(args[1].asUnsignedLong()));
   } else {
-    return args[0].substr(std::stoul(args[1]), std::stoul(args[2]));
+    return Value(args[0].asString().substr(args[1].asUnsignedLong(), args[2].asUnsignedLong()));
   }
 }
 
-std::string expr_substringBefore(const std::vector<std::string> &args) {
-  return args[0].substr(0, args[0].find(args[1]));
+Value expr_substringBefore(const std::vector<Value> &args) {
+  const std::string &arg_0 = args[0].asString();
+  return Value(arg_0.substr(0, arg_0.find(args[1].asString())));
 }
 
-std::string expr_substringBeforeLast(const std::vector<std::string> &args) {
+Value expr_substringBeforeLast(const std::vector<Value> &args) {
   size_t last_pos = 0;
-  while (args[0].find(args[1], last_pos + 1) != std::string::npos) {
-    last_pos = args[0].find(args[1], last_pos + 1);
+  const std::string &arg_0 = args[0].asString();
+  const std::string &arg_1 = args[1].asString();
+  while (arg_0.find(arg_1, last_pos + 1) != std::string::npos) {
+    last_pos = arg_0.find(arg_1, last_pos + 1);
   }
-  return args[0].substr(0, last_pos);
+  return Value(arg_0.substr(0, last_pos));
 }
 
-std::string expr_substringAfter(const std::vector<std::string> &args) {
-  return args[0].substr(args[0].find(args[1]) + args[1].length());
+Value expr_substringAfter(const std::vector<Value> &args) {
+  const std::string &arg_0 = args[0].asString();
+  const std::string &arg_1 = args[1].asString();
+  return Value(arg_0.substr(arg_0.find(arg_1) + arg_1.length()));
 }
 
-std::string expr_substringAfterLast(const std::vector<std::string> &args) {
+Value expr_substringAfterLast(const std::vector<Value> &args) {
   size_t last_pos = 0;
-  while (args[0].find(args[1], last_pos + 1) != std::string::npos) {
-    last_pos = args[0].find(args[1], last_pos + 1);
+  const std::string &arg_0 = args[0].asString();
+  const std::string &arg_1 = args[1].asString();
+  while (arg_0.find(arg_1, last_pos + 1) != std::string::npos) {
+    last_pos = arg_0.find(arg_1, last_pos + 1);
   }
-  return args[0].substr(last_pos + args[1].length());
+  return Value(arg_0.substr(last_pos + arg_1.length()));
 }
 
-std::string expr_startsWith(const std::vector<std::string> &args) {
-  if (args[0].substr(0, args[1].length()) == args[1]) {
-    return "true";
-  } else {
-    return "false";
-  }
+Value expr_startsWith(const std::vector<Value> &args) {
+  const std::string &arg_0 = args[0].asString();
+  const std::string &arg_1 = args[1].asString();
+  return Value(arg_0.substr(0, arg_1.length()) == arg_1);
 }
 
-std::string expr_endsWith(const std::vector<std::string> &args) {
-  if (args[0].substr(args[0].length() - args[1].length()) == args[1]) {
-    return "true";
-  } else {
-    return "false";
-  }
+Value expr_endsWith(const std::vector<Value> &args) {
+  const std::string &arg_0 = args[0].asString();
+  const std::string &arg_1 = args[1].asString();
+  return Value(arg_0.substr(arg_0.length() - arg_1.length()) == arg_1);
 }
 
-std::string expr_contains(const std::vector<std::string> &args) {
-  if (std::string::npos != args[0].find(args[1])) {
-    return "true";
-  } else {
-    return "false";
-  }
+Value expr_contains(const std::vector<Value> &args) {
+  return Value(std::string::npos != args[0].asString().find(args[1].asString()));
 }
 
-std::string expr_in(const std::vector<std::string> &args) {
+Value expr_in(const std::vector<Value> &args) {
+  const std::string &arg_0 = args[0].asString();
   for (int i = 1; i < args.size(); i++) {
-    if (args[0] == args[i]) {
-      return "true";
+    if (arg_0 == args[i].asString()) {
+      return Value(true);
     }
   }
 
-  return "false";
+  return Value(false);
 }
 
-std::string expr_indexOf(const std::vector<std::string> &args) {
-  auto pos = args[0].find(args[1]);
+Value expr_indexOf(const std::vector<Value> &args) {
+  auto pos = args[0].asString().find(args[1].asString());
 
   if (pos == std::string::npos) {
-    return "-1";
+    return Value(static_cast<int64_t >(-1));
   } else {
-    return std::to_string(pos);
+    return Value(static_cast<int64_t >(pos));
   }
 }
 
-std::string expr_lastIndexOf(const std::vector<std::string> &args) {
+Value expr_lastIndexOf(const std::vector<Value> &args) {
   size_t pos = std::string::npos;
-  auto cur_pos = args[0].find(args[1], 0);
+  const std::string &arg_0 = args[0].asString();
+  const std::string &arg_1 = args[1].asString();
+  auto cur_pos = arg_0.find(arg_1, 0);
 
   while (cur_pos != std::string::npos) {
     pos = cur_pos;
-    cur_pos = args[0].find(args[1], pos + 1);
+    cur_pos = arg_0.find(arg_1, pos + 1);
   }
 
   if (pos == std::string::npos) {
-    return "-1";
+    return Value(static_cast<int64_t >(-1));
   } else {
-    return std::to_string(pos);
+    return Value(static_cast<int64_t >(pos));
   }
 }
 
 #ifdef EXPRESSION_LANGUAGE_USE_REGEX
 
-std::string expr_replace(const std::vector<std::string> &args) {
-  std::string result = args[0];
-  const std::string find = args[1];
-  const std::string replace = args[2];
+Value expr_replace(const std::vector<Value> &args) {
+  std::string result = args[0].asString();
+  const std::string &find = args[1].asString();
+  const std::string &replace = args[2].asString();
 
   std::string::size_type match_pos = 0;
   match_pos = result.find(find, match_pos);
@@ -180,126 +185,102 @@ std::string expr_replace(const std::vector<std::string> &args) {
     match_pos = result.find(find, match_pos + replace.size());
   }
 
-  return result;
+  return Value(result);
 }
 
-std::string expr_replaceFirst(const std::vector<std::string> &args) {
-  std::string result = args[0];
-  const std::regex find(args[1]);
-  const std::string replace = args[2];
-  return std::regex_replace(result, find, replace, std::regex_constants::format_first_only);
+Value expr_replaceFirst(const std::vector<Value> &args) {
+  std::string result = args[0].asString();
+  const std::regex find(args[1].asString());
+  const std::string &replace = args[2].asString();
+  return Value(std::regex_replace(result, find, replace, std::regex_constants::format_first_only));
 }
 
-std::string expr_replaceAll(const std::vector<std::string> &args) {
-  std::string result = args[0];
-  const std::regex find(args[1]);
-  const std::string replace = args[2];
-  return std::regex_replace(result, find, replace);
+Value expr_replaceAll(const std::vector<Value> &args) {
+  std::string result = args[0].asString();
+  const std::regex find(args[1].asString());
+  const std::string &replace = args[2].asString();
+  return Value(std::regex_replace(result, find, replace));
 }
 
-std::string expr_replaceNull(const std::vector<std::string> &args) {
-  if (args[0].empty()) {
+Value expr_replaceNull(const std::vector<Value> &args) {
+  if (args[0].isNull()) {
     return args[1];
   } else {
     return args[0];
   }
 }
 
-std::string expr_replaceEmpty(const std::vector<std::string> &args) {
-  std::string result = args[0];
+Value expr_replaceEmpty(const std::vector<Value> &args) {
+  std::string result = args[0].asString();
   const std::regex find("^[ \n\r\t]*$");
-  const std::string replace = args[1];
-  return std::regex_replace(result, find, replace);
+  const std::string &replace = args[1].asString();
+  return Value(std::regex_replace(result, find, replace));
 }
 
-std::string expr_matches(const std::vector<std::string> &args) {
-  const auto &subject = args[0];
-  const std::regex expr = std::regex(args[1]);
+Value expr_matches(const std::vector<Value> &args) {
+  const auto &subject = args[0].asString();
+  const std::regex expr = std::regex(args[1].asString());
 
-  if (std::regex_match(subject.begin(), subject.end(), expr)) {
-    return "true";
-  } else {
-    return "false";
-  }
+  return Value(std::regex_match(subject.begin(), subject.end(), expr));
 }
 
-std::string expr_find(const std::vector<std::string> &args) {
-  const auto &subject = args[0];
-  const std::regex expr = std::regex(args[1]);
+Value expr_find(const std::vector<Value> &args) {
+  const auto &subject = args[0].asString();
+  const std::regex expr = std::regex(args[1].asString());
 
-  if (std::regex_search(subject.begin(), subject.end(), expr)) {
-    return "true";
-  } else {
-    return "false";
-  }
+  return Value(std::regex_search(subject.begin(), subject.end(), expr));
 }
 
 #endif  // EXPRESSION_LANGUAGE_USE_REGEX
 
-std::string expr_binaryOp(const std::vector<std::string> &args,
-                          long double (*ldop)(long double, long double),
-                          int (*iop)(int, int),
-                          bool long_only = false) {
+Value expr_binary_op(const std::vector<Value> &args,
+                     long double (*ldop)(long double, long double),
+                     int64_t (*iop)(int64_t, int64_t),
+                     bool long_only = false) {
   try {
-    if (!long_only &&
-        args[0].find('.') == args[0].npos &&
-        args[1].find('.') == args[1].npos &&
-        args[1].find('e') == args[1].npos &&
-        args[0].find('e') == args[0].npos &&
-        args[0].find('E') == args[0].npos &&
-        args[1].find('E') == args[1].npos) {
-      return std::to_string(iop(std::stoi(args[0]), std::stoi(args[1])));
+    if (!long_only && !args[0].isDecimal() && !args[1].isDecimal()) {
+      return Value(iop(args[0].asSignedLong(), args[1].asSignedLong()));
     } else {
-      std::stringstream ss;
-      ss << std::fixed << std::setprecision(std::numeric_limits<double>::digits10)
-         << ldop(std::stold(args[0]), std::stold(args[1]));
-      auto result = ss.str();
-      result.erase(result.find_last_not_of('0') + 1, std::string::npos);
-
-      if (result.find('.') == result.length() - 1) {
-        result.erase(result.length() - 1, std::string::npos);
-      }
-
-      return result;
+      return Value(ldop(args[0].asLongDouble(), args[1].asLongDouble()));
     }
   } catch (const std::exception &e) {
-    return "";
+    return Value();
   }
 }
 
-std::string expr_plus(const std::vector<std::string> &args) {
-  return expr_binaryOp(args,
-                       [](long double a, long double b) { return a + b; },
-                       [](int a, int b) { return a + b; });
+Value expr_plus(const std::vector<Value> &args) {
+  return expr_binary_op(args,
+                        [](long double a, long double b) { return a + b; },
+                        [](int64_t a, int64_t b) { return a + b; });
 }
 
-std::string expr_minus(const std::vector<std::string> &args) {
-  return expr_binaryOp(args,
-                       [](long double a, long double b) { return a - b; },
-                       [](int a, int b) { return a - b; });
+Value expr_minus(const std::vector<Value> &args) {
+  return expr_binary_op(args,
+                        [](long double a, long double b) { return a - b; },
+                        [](int64_t a, int64_t b) { return a - b; });
 }
 
-std::string expr_multiply(const std::vector<std::string> &args) {
-  return expr_binaryOp(args,
-                       [](long double a, long double b) { return a * b; },
-                       [](int a, int b) { return a * b; });
+Value expr_multiply(const std::vector<Value> &args) {
+  return expr_binary_op(args,
+                        [](long double a, long double b) { return a * b; },
+                        [](int64_t a, int64_t b) { return a * b; });
 }
 
-std::string expr_divide(const std::vector<std::string> &args) {
-  return expr_binaryOp(args,
-                       [](long double a, long double b) { return a / b; },
-                       [](int a, int b) { return a / b; },
-                       true);
+Value expr_divide(const std::vector<Value> &args) {
+  return expr_binary_op(args,
+                        [](long double a, long double b) { return a / b; },
+                        [](int64_t a, int64_t b) { return a / b; },
+                        true);
 }
 
-std::string expr_mod(const std::vector<std::string> &args) {
-  return expr_binaryOp(args,
-                       [](long double a, long double b) { return std::fmod(a, b); },
-                       [](int a, int b) { return a % b; });
+Value expr_mod(const std::vector<Value> &args) {
+  return expr_binary_op(args,
+                        [](long double a, long double b) { return std::fmod(a, b); },
+                        [](int64_t a, int64_t b) { return a % b; });
 }
 
-std::string expr_toRadix(const std::vector<std::string> &args) {
-  int radix = std::stoi(args[1]);
+Value expr_toRadix(const std::vector<Value> &args) {
+  int64_t radix = args[1].asSignedLong();
 
   if (radix < 2 || radix > 36) {
     throw std::runtime_error("Cannot perform conversion due to invalid radix");
@@ -308,10 +289,11 @@ std::string expr_toRadix(const std::vector<std::string> &args) {
   int pad_width = 0;
 
   if (args.size() > 2) {
-    pad_width = std::stoi(args[2]);
+    pad_width = static_cast<int>(args[2].asUnsignedLong());
   }
 
-  auto value = std::stoll(args[0], nullptr, 10);
+//  auto value = std::stoll(args[0].asString(), nullptr, 10);
+  auto value = args[0].asSignedLong();
 
   std::string sign;
 
@@ -334,27 +316,27 @@ std::string expr_toRadix(const std::vector<std::string> &args) {
 
   std::stringstream ss;
   ss << sign << std::setfill('0') << std::setw(pad_width) << str_num;
-  return ss.str();
+  return Value(ss.str());
 }
 
-std::string expr_fromRadix(const std::vector<std::string> &args) {
-  int radix = std::stoi(args[1]);
+Value expr_fromRadix(const std::vector<Value> &args) {
+  auto radix = args[1].asSignedLong();
 
   if (radix < 2 || radix > 36) {
     throw std::runtime_error("Cannot perform conversion due to invalid radix");
   }
 
-  return std::to_string(std::stoll(args[0], nullptr, radix));
+  return Value(std::to_string(std::stoll(args[0].asString(), nullptr, radix)));
 }
 
-std::string expr_random(const std::vector<std::string> &args) {
+Value expr_random(const std::vector<Value> &args) {
   std::random_device random_device;
   std::mt19937 generator(random_device());
-  std::uniform_int_distribution<long long> distribution(0, LLONG_MAX);
-  return std::to_string(distribution(generator));
+  std::uniform_int_distribution<int64_t> distribution(0, LLONG_MAX);
+  return Value(distribution(generator));
 }
 
-template<std::string T(const std::vector<std::string> &)>
+template<Value T(const std::vector<Value> &)>
 Expression make_dynamic_function_incomplete(const std::string &function_name,
                                             const std::vector<Expression> &args,
                                             std::size_t num_args) {
@@ -371,8 +353,8 @@ Expression make_dynamic_function_incomplete(const std::string &function_name,
     throw std::runtime_error(message_ss.str());
   }
 
-  auto result = make_dynamic([=](const Parameters &params) -> std::string {
-    std::vector<std::string> evaluated_args;
+  auto result = make_dynamic([=](const Parameters &params) -> Value {
+    std::vector<Value> evaluated_args;
 
     for (const auto &arg : args) {
       evaluated_args.emplace_back(arg(params));
@@ -384,7 +366,7 @@ Expression make_dynamic_function_incomplete(const std::string &function_name,
   return result;
 }
 
-std::string expr_literal(const std::vector<std::string> &args) {
+Value expr_literal(const std::vector<Value> &args) {
   return args[0];
 }
 
@@ -485,37 +467,34 @@ Expression Expression::operator+(const Expression &other_expr) const {
   if (isDynamic() && other_expr.isDynamic()) {
     auto val_fn = val_fn_;
     auto other_val_fn = other_expr.val_fn_;
-    return make_dynamic([val_fn, other_val_fn](const Parameters &params) -> std::string {
-      std::string result = val_fn(params);
-      result.append(other_val_fn(params));
-      return result;
+    return make_dynamic([val_fn, other_val_fn](const Parameters &params) -> Value {
+      Value result = val_fn(params);
+      return Value(result.asString().append(other_val_fn(params).asString()));
     });
   } else if (isDynamic() && !other_expr.isDynamic()) {
     auto val_fn = val_fn_;
     auto other_val = other_expr.val_;
-    return make_dynamic([val_fn, other_val](const Parameters &params) -> std::string {
-      std::string result = val_fn(params);
-      result.append(other_val);
-      return result;
+    return make_dynamic([val_fn, other_val](const Parameters &params) -> Value {
+      Value result = val_fn(params);
+      return Value(result.asString().append(other_val.asString()));
     });
   } else if (!isDynamic() && other_expr.isDynamic()) {
     auto val = val_;
     auto other_val_fn = other_expr.val_fn_;
-    return make_dynamic([val, other_val_fn](const Parameters &params) -> std::string {
-      std::string result(val);
-      result.append(other_val_fn(params));
-      return result;
+    return make_dynamic([val, other_val_fn](const Parameters &params) -> Value {
+      Value result(val);
+      return Value(result.asString().append(other_val_fn(params).asString()));
     });
   } else if (!isDynamic() && !other_expr.isDynamic()) {
-    std::string result(val_);
-    result.append(other_expr.val_);
+    std::string result(val_.asString());
+    result.append(other_expr.val_.asString());
     return make_static(result);
   } else {
     throw std::runtime_error("Invalid function composition");
   }
 }
 
-std::string Expression::operator()(const Parameters &params) const {
+Value Expression::operator()(const Parameters &params) const {
   if (isDynamic()) {
     return val_fn_(params);
   } else {

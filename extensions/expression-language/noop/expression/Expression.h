@@ -19,6 +19,7 @@
 #define NIFI_MINIFI_CPP_EXPRESSION_H
 
 #include <core/FlowFile.h>
+#include <Value.h>
 
 namespace org {
 namespace apache {

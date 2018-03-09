@@ -110,6 +110,7 @@ include_directories(thirdparty/rapidjson-1.1.0/include)
 
 ## Expression language extensions
 option(DISABLE_EXPRESSION_LANGUAGE "Disables the scripting extensions." OFF)
+include_directories("extensions/expression-language/common")
 if (DISABLE_EXPRESSION_LANGUAGE)
     # Build expression language NoOp implementation, if necessary
     include_directories("extensions/expression-language/noop")

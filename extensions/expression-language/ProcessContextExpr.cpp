@@ -32,7 +32,7 @@ bool ProcessContext::getProperty(const std::string &name, std::string &value,
     expressions_.emplace(name, expression::compile(expression_str));
   }
 
-  value = expressions_[name]({flow_file});
+  value = expressions_[name]({flow_file}).asString();
   return true;
 }
 
@@ -45,7 +45,7 @@ bool ProcessContext::getDynamicProperty(const std::string &name, std::string &va
     dynamic_property_expressions_.emplace(name, expression::compile(expression_str));
   }
 
-  value = dynamic_property_expressions_[name]({flow_file});
+  value = dynamic_property_expressions_[name]({flow_file}).asString();
   return true;
 }
 
