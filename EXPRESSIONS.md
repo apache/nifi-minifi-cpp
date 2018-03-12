@@ -147,6 +147,22 @@ token, filename.
 
 ## Supported Features
 
+### Boolean Logic
+
+- [`isNull`](#isnull)
+- [`notNull`](#notnull)
+- [`isEmpty`](#isempty)
+- [`equals`](#equals)
+- [`equalsIgnoreCase`](#equalsignorecase)
+- [`gt`](#gt)
+- [`ge`](#ge)
+- [`lt`](#lt)
+- [`le`](#le)
+- [`and`](#and)
+- [`or`](#or)
+- [`not`](#not)
+- [`ifElse`](#ifelse)
+
 ### String Manipulation
 
 - [`toUpper`](#toupper)
@@ -197,22 +213,6 @@ token, filename.
 ### Searching
 
 - `jsonPath`
-
-### Boolean Logic
-
-- `isNull`
-- `notNull`
-- `isEmpty`
-- `equals`
-- `equalsIgnoreCase`
-- `gt`
-- `ge`
-- `lt`
-- `le`
-- `and`
-- `or`
-- `not`
-- `ifElse`
 
 ### Encode/Decode Functions
 
@@ -265,6 +265,282 @@ planned due to language/environment (Java vs. C++) differences:
 ### Mathematical Operations and Numeric Manipulation
 
 - `math`
+
+## Boolean Logic
+
+One of the most powerful features of the Expression Language is the ability to
+compare an attribute value against some other value. This is used often, for
+example, to configure how a Processor should route data. The following
+functions are used for performing boolean logic, such as comparing two values.
+Each of these functions are designed to work on values of type Boolean.
+
+### isNull
+
+**Description**: The `isNull` function returns `true` if the subject is `null`,
+`false` otherwise. This is typically used to determine if an attribute exists.
+
+**Subject Type**: Any
+
+**Arguments**: No arguments
+
+**Return Type**: Boolean
+
+**Examples**: `${filename:isNull()}` returns true if the `filename` attribute
+does not exist. It returns `false` if the attribute exists.
+
+### notNull
+
+**Description**: The `notNull` function returns the opposite value of the
+`isNull` function. That is, it will return `true` if the subject exists and
+`false` otherwise.
+
+**Subject Type**: Any
+
+**Arguments**: No arguments
+
+**Return Type**: Boolean
+
+**Examples**: `${filename:notNull()}` returns `true` if the `filename`
+attribute exists. It returns `false` if the attribute does not exist.
+
+### isEmpty
+
+**Description**: The `isEmpty` function returns `true` if the Subject is
+`null`, does not contain any characters or contains only white-space (new line,
+carriage return, space, tab), `false` otherwise.
+
+**Subject Type**: String
+
+**Arguments**: No arguments
+
+**Return Type**: Boolean
+
+**Examples**: `${filename:isEmpty()}` returns `true` if the `filename`
+attribute does not exist or contains only white space. `${literal("
+"):isEmpty()}` returns `true` as well as `${literal(""):isEmpty()}`.
+
+### equals
+
+**Description**: The `equals` function is very widely used and determines if
+its subject is equal to another String value. Note that the equals function
+performs a direct comparison of two String values. Take care not to confuse
+this function with the `matches` function, which evaluates its subject against
+a Regular Expression.
+
+**Subject Type**: Any
+
+**Arguments**: 
+
+| Argument | Description |
+| - | - |
+| value | The value to compare the Subject to. Must be same type as the Subject. |
+
+**Return Type**: Boolean
+
+**Examples**: We can check if the `filename` of a FlowFile is `hello.txt` by
+using the expression `${filename:equals('hello.txt')}`, or we could check if
+the value of the attribute `hello` is equal to the value of the `filename`
+attribute: `${hello:equals( ${filename} )}`.
+
+### equalsIgnoreCase
+
+**Description**: Similar to the equals function, the `equalsIgnoreCase`
+function compares its subject against a String value but returns `true` if the
+two values differ only by case (upper case vs. lower case).
+
+**Subject Type**: String
+
+**Arguments**: 
+
+| Argument | Description |
+| - | - |
+| value | The value to compare the Subject to. |
+
+**Return Type**: Boolean
+
+**Examples**: `${filename:equalsIgnoreCase('hello.txt')}` will evaluate to
+`true` if filename is equal to `hello.txt` or `HELLO.TXT` or `HeLLo.TxT`.
+
+### gt
+
+**Description**: The `gt` function is used for numeric comparison and returns
+`true` if the subject is Greater Than its argument. If either the subject or
+the argument cannot be coerced into a Number, this function returns `false`.
+
+**Subject Type**: Number
+
+**Arguments**: 
+
+| Argument | Description |
+| - | - |
+| value | The number to compare the Subject to. |
+
+**Return Type**: Boolean
+
+**Examples**: `${fileSize:gt( 1024 )}` will return `true` if the size of the
+FlowFile’s content is more than 1 kilobyte (1024 bytes). Otherwise, it will
+return `false`.
+
+### ge
+
+**Description**: The `ge` function is used for numeric comparison and returns
+`true` if the subject is Greater Than Or Equal To its argument. If either the
+subject or the argument cannot be coerced into a Number, this function returns
+`false`.
+
+**Subject Type**: Number
+
+**Arguments**: 
+
+| Argument | Description |
+| - | - |
+| value | The number to compare the Subject to. |
+
+**Return Type**: Boolean
+
+**Examples**: `${fileSize:ge( 1024 )}` will return `true` if the size of the
+FlowFile’s content is at least ( is greater than or equal to) 1 kilobyte (1024
+bytes). Otherwise, it will return `false`.
+
+### lt
+
+**Description**: The `lt` function is used for numeric comparison and returns
+`true` if the subject is Less Than its argument. If either the subject or the
+argument cannot be coerced into a Number, this function returns `false`.
+
+**Subject Type**: Number
+
+**Arguments**: 
+
+| Argument | Description |
+| - | - |
+| value | The number to compare the Subject to. |
+
+**Return Type**: Boolean
+
+**Examples**: `${fileSize:lt( 1048576 )}` will return `true` if the size of the
+FlowFile’s content is less than 1 megabyte (1048576 bytes). Otherwise, it will
+return `false`.
+
+### le
+
+**Description**: The `le` function is used for numeric comparison and returns
+`true` if the subject is Less Than Or Equal To its argument. If either the
+subject or the argument cannot be coerced into a Number, this function returns
+`false`.
+
+**Subject Type**: Number
+
+**Arguments**: 
+
+| Argument | Description |
+| - | - |
+| value | The number to compare the Subject to. |
+
+**Return Type**: Boolean
+
+**Examples**: `${fileSize:le( 1048576 )}` will return `true` if the size of the
+FlowFile’s content is at most (less than or equal to) 1 megabyte (1048576
+bytes). Otherwise, it will return `false`.
+
+### and
+
+**Description**: The `and` function takes as a single argument a Boolean value
+and returns `true` if both the Subject and the argument are `true`. If either
+the subject or the argument is `false` or cannot be coerced into a Boolean, the
+function returns `false`. Typically, this is used with an embedded Expression
+as the argument.
+
+**Subject Type**: Boolean
+
+**Arguments**: 
+
+| Argument | Description |
+| - | - |
+| condition | The right-hand-side of the `and` Expression |
+
+**Return Type**: Boolean
+
+**Examples**: We can check if the filename is both all lower-case and has at
+least 5 characters by using the Expression
+
+```
+${filename:toLower():equals( ${filename} ):and(
+	${filename:length():ge(5)}
+)}
+```
+
+### or
+
+**Description**: The `or` function takes as a single argument a Boolean value
+and returns `true` if either the Subject or the argument is `true`. If both the
+subject and the argument are `false`, the function returns `false`. If either
+the Subject or the argument cannot be coerced into a Boolean value, this
+function will return `false`.
+
+**Subject Type**: Boolean
+
+**Arguments**: 
+
+| Argument | Description |
+| - | - |
+| condition | The right-hand-side of the `or` Expression |
+
+**Return Type**: Boolean
+
+**Examples**: The following example will return `true` if either the filename
+has exactly 5 characters or if the filename is all lower-case.
+
+```
+${filename:toLower():equals( ${filename} ):or(
+	${filename:length():equals(5)}
+)}
+```
+
+### not
+
+**Description**: The `not` function returns the negation of the Boolean value of the subject.
+
+**Subject Type**: Boolean
+
+**Arguments**: No arguments
+
+**Return Type**: Boolean
+
+**Examples**: We can invert the value of another function by using the not
+function, as `${filename:equals('hello.txt'):not()}`. This will return `true`
+if the filename is NOT equal to `hello.txt` and will return `false` if the
+filename is `hello.txt`.
+
+### ifElse
+
+**Description**: Evaluates the first argument if the Subject evaluates to
+`true`, or the second argument if the Subject evaluates to `false`.
+
+**Subject Type**: Boolean
+
+| Argument | Description |
+| - | - |
+| EvaluateIfTrue | The value to return if the Subject is `true` |
+| EvaluateIfFalse | The value to return if the Subject is `false` |
+
+**Return Type**: String
+
+**Examples**:
+
+If the `filename` attribute has the value `a brand new filename.txt`, the
+`nullFilename` attribute has the value `null`, and the `bool` attribute has the
+value `true`, then the following expressions will provide the following
+results:
+
+| Expression | Value |
+| - | - |
+| `${bool:ifElse('a','b')}` | a |
+| `${literal(true):ifElse('a','b')}` | a |
+| `${nullFilename:isNull():ifElse('file does not exist', 'located file')}` | file does not exist |
+| `${nullFilename:ifElse('found', 'not_found')}` | not_found |
+| `${filename:ifElse('found', 'not_found')}` | not_found |
+| `${filename:isNull():not():ifElse('found', 'not_found')}` | found |
 
 ## String Manipulation
 
