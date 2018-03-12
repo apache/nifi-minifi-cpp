@@ -19,6 +19,7 @@
 #include <sstream>
 #include <iomanip>
 #include <limits>
+#include <algorithm>
 
 #ifndef NIFI_MINIFI_CPP_VALUE_H
 #define NIFI_MINIFI_CPP_VALUE_H
@@ -212,6 +213,28 @@ class Value {
       return std::stold(string_val_);
     } else {
       return 0.0;
+    }
+  }
+
+  bool asBoolean() const {
+    if (is_bool_) {
+      return bool_val_;
+    }
+    if (is_signed_long_) {
+      return signed_long_val_ != 0;
+    } else if (is_unsigned_long_) {
+      return unsigned_long_val_ != 0;
+    } else if (is_long_double_) {
+      return long_double_val_ != 0.0;
+    } else if (is_string_) {
+      std::string bool_str = string_val_;
+      std::transform(bool_str.begin(), bool_str.end(), bool_str.begin(), ::tolower);
+      std:: istringstream bools(bool_str);
+      bool bool_val;
+      bools >> std::boolalpha >> bool_val;
+      return bool_val;
+    } else {
+      return false;
     }
   }
 

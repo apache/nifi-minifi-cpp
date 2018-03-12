@@ -744,3 +744,275 @@ TEST_CASE("Chained call 3", "[expressionChainedCall3]") {  // NOLINT
   flow_file_a->addAttribute("attr", "7");
   REQUIRE("238" == expr({flow_file_a}).asString());
 }
+
+TEST_CASE("Is Null", "[expressionIsNull]") {  // NOLINT
+  auto expr = expression::compile("${filename:isNull()}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("attr", "7");
+  REQUIRE("true" == expr({flow_file_a}).asString());
+}
+
+TEST_CASE("Is Null 2", "[expressionIsNull2]") {  // NOLINT
+  auto expr = expression::compile("${filename:isNull()}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("filename", "7");
+  REQUIRE("false" == expr({flow_file_a}).asString());
+}
+
+TEST_CASE("Not Null", "[expressionNotNull]") {  // NOLINT
+  auto expr = expression::compile("${filename:notNull()}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("attr", "7");
+  REQUIRE("false" == expr({flow_file_a}).asString());
+}
+
+TEST_CASE("Not Null 2", "[expressionNotNull2]") {  // NOLINT
+  auto expr = expression::compile("${filename:notNull()}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("filename", "7");
+  REQUIRE("true" == expr({flow_file_a}).asString());
+}
+
+TEST_CASE("Is Empty", "[expressionIsEmpty]") {  // NOLINT
+  auto expr = expression::compile("${filename:isEmpty()}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("attr", "7");
+  REQUIRE("true" == expr({flow_file_a}).asString());
+}
+
+TEST_CASE("Is Empty 2", "[expressionIsEmpty2]") {  // NOLINT
+  auto expr = expression::compile("${attr:isEmpty()}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("attr", "7");
+  REQUIRE("false" == expr({flow_file_a}).asString());
+}
+
+TEST_CASE("Is Empty 3", "[expressionIsEmpty3]") {  // NOLINT
+  auto expr = expression::compile("${attr:isEmpty()}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("attr", " \t\r\n ");
+  REQUIRE("true" == expr({flow_file_a}).asString());
+}
+
+TEST_CASE("Is Empty 4", "[expressionIsEmpty4]") {  // NOLINT
+  auto expr = expression::compile("${attr:isEmpty()}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("attr", "");
+  REQUIRE("true" == expr({flow_file_a}).asString());
+}
+
+TEST_CASE("Is Empty 5", "[expressionIsEmpty5]") {  // NOLINT
+  auto expr = expression::compile("${attr:isEmpty()}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("attr", " \t\r\n a \t\r\n ");
+  REQUIRE("false" == expr({flow_file_a}).asString());
+}
+
+TEST_CASE("Equals", "[expressionEquals]") {  // NOLINT
+  auto expr = expression::compile("${attr:equals('hello.txt')}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("attr", "hello.txt");
+  REQUIRE("true" == expr({flow_file_a}).asString());
+}
+
+TEST_CASE("Equals 2", "[expressionEquals2]") {  // NOLINT
+  auto expr = expression::compile("${attr:equals('hello.txt')}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("attr", "helllo.txt");
+  REQUIRE("false" == expr({flow_file_a}).asString());
+}
+
+TEST_CASE("Equals 3", "[expressionEquals3]") {  // NOLINT
+  auto expr = expression::compile("${attr:plus(5):equals(6)}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("attr", "1");
+  REQUIRE("true" == expr({flow_file_a}).asString());
+}
+
+TEST_CASE("Equals Ignore Case", "[expressionEqualsIgnoreCase]") {  // NOLINT
+  auto expr = expression::compile("${attr:equalsIgnoreCase('hElLo.txt')}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("attr", "hello.txt");
+  REQUIRE("true" == expr({flow_file_a}).asString());
+}
+
+TEST_CASE("Equals Ignore Case 2", "[expressionEqualsIgnoreCase2]") {  // NOLINT
+  auto expr = expression::compile("${attr:plus(5):equalsIgnoreCase(6)}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("attr", "1");
+  REQUIRE("true" == expr({flow_file_a}).asString());
+}
+
+TEST_CASE("GT", "[expressionGT]") {  // NOLINT
+  auto expr = expression::compile("${attr:plus(5):gt(5)}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("attr", "1");
+  REQUIRE("true" == expr({flow_file_a}).asString());
+}
+
+TEST_CASE("GT2", "[expressionGT2]") {  // NOLINT
+  auto expr = expression::compile("${attr:plus(5.1):gt(6.05)}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("attr", "1");
+  REQUIRE("true" == expr({flow_file_a}).asString());
+}
+
+TEST_CASE("GT3", "[expressionGT3]") {  // NOLINT
+  auto expr = expression::compile("${attr:plus(5.1):gt(6.15)}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("attr", "1");
+  REQUIRE("false" == expr({flow_file_a}).asString());
+}
+
+TEST_CASE("GE", "[expressionGE]") {  // NOLINT
+  auto expr = expression::compile("${attr:plus(5):ge(6)}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("attr", "1");
+  REQUIRE("true" == expr({flow_file_a}).asString());
+}
+
+TEST_CASE("GE2", "[expressionGE2]") {  // NOLINT
+  auto expr = expression::compile("${attr:plus(5.1):ge(6.05)}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("attr", "1");
+  REQUIRE("true" == expr({flow_file_a}).asString());
+}
+
+TEST_CASE("GE3", "[expressionGE3]") {  // NOLINT
+  auto expr = expression::compile("${attr:plus(5.1):ge(6.15)}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("attr", "1");
+  REQUIRE("false" == expr({flow_file_a}).asString());
+}
+
+TEST_CASE("LT", "[expressionLT]") {  // NOLINT
+  auto expr = expression::compile("${attr:plus(5):lt(5)}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("attr", "1");
+  REQUIRE("false" == expr({flow_file_a}).asString());
+}
+
+TEST_CASE("LT2", "[expressionLT2]") {  // NOLINT
+  auto expr = expression::compile("${attr:plus(5.1):lt(6.05)}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("attr", "1");
+  REQUIRE("false" == expr({flow_file_a}).asString());
+}
+
+TEST_CASE("LT3", "[expressionLT3]") {  // NOLINT
+  auto expr = expression::compile("${attr:plus(5.1):lt(6.15)}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("attr", "1");
+  REQUIRE("true" == expr({flow_file_a}).asString());
+}
+
+TEST_CASE("LE", "[expressionLE]") {  // NOLINT
+  auto expr = expression::compile("${attr:plus(5):le(6)}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("attr", "1");
+  REQUIRE("true" == expr({flow_file_a}).asString());
+}
+
+TEST_CASE("LE2", "[expressionLE2]") {  // NOLINT
+  auto expr = expression::compile("${attr:plus(5.1):le(6.05)}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("attr", "1");
+  REQUIRE("false" == expr({flow_file_a}).asString());
+}
+
+TEST_CASE("LE3", "[expressionLE3]") {  // NOLINT
+  auto expr = expression::compile("${attr:plus(5.1):le(6.15)}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("attr", "1");
+  REQUIRE("true" == expr({flow_file_a}).asString());
+}
+
+TEST_CASE("And", "[expressionAnd]") {  // NOLINT
+  auto expr = expression::compile("${filename:toLower():equals( ${filename} ):and(${filename:substring(0, 2):equals('an')})}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("filename", "an example file.txt");
+  REQUIRE("true" == expr({flow_file_a}).asString());
+}
+
+TEST_CASE("And 2", "[expressionAnd2]") {  // NOLINT
+  auto expr = expression::compile("${filename:toLower():equals( ${filename} ):and(${filename:substring(0, 2):equals('ab')})}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("filename", "an example file.txt");
+  REQUIRE("false" == expr({flow_file_a}).asString());
+}
+
+TEST_CASE("Or", "[expressionOr]") {  // NOLINT
+  auto expr = expression::compile("${filename:toLower():equals( ${filename} ):or(${filename:substring(0, 2):equals('an')})}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("filename", "an example file.txt");
+  REQUIRE("true" == expr({flow_file_a}).asString());
+}
+
+TEST_CASE("Or 2", "[expressionOr2]") {  // NOLINT
+  auto expr = expression::compile("${filename:toLower():equals( ${filename} ):or(${filename:substring(0, 2):equals('ab')})}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("filename", "an example file.txt");
+  REQUIRE("true" == expr({flow_file_a}).asString());
+}
+
+TEST_CASE("Not", "[expressionNot]") {  // NOLINT
+  auto expr = expression::compile("${filename:toLower():equals( ${filename} ):and(${filename:substring(0, 2):equals('an')}):not()}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("filename", "an example file.txt");
+  REQUIRE("false" == expr({flow_file_a}).asString());
+}
+
+TEST_CASE("Not 2", "[expressionNot2]") {  // NOLINT
+  auto expr = expression::compile("${filename:toLower():equals( ${filename} ):and(${filename:substring(0, 2):equals('ab')}):not()}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("filename", "an example file.txt");
+  REQUIRE("true" == expr({flow_file_a}).asString());
+}
+
+TEST_CASE("If Else", "[expressionIfElse]") {  // NOLINT
+  auto expr = expression::compile("${filename:toLower():equals( ${filename}):ifElse('yes', 'no')}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("filename", "an example file.txt");
+  REQUIRE("yes" == expr({flow_file_a}).asString());
+}
+
+TEST_CASE("If Else 2", "[expressionIfElse2]") {  // NOLINT
+  auto expr = expression::compile("${filename:toLower():equals( ${filename}):ifElse('yes', 'no')}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("filename", "An example file.txt");
+  REQUIRE("no" == expr({flow_file_a}).asString());
+}
