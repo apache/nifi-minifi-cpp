@@ -334,6 +334,9 @@ void HTTPClient::configure_secure_connection(CURL *http_session) {
   logger_->log_debug("Using certificate file %s", ssl_context_service_->getCertificateFile());
   curl_easy_setopt(http_session, CURLOPT_SSL_CTX_FUNCTION, &configure_ssl_context);
   curl_easy_setopt(http_session, CURLOPT_SSL_CTX_DATA, static_cast<void*>(ssl_context_service_.get()));
+  if (!ssl_context_service_->getCACertificate().empty()) {
+    curl_easy_setopt(http_session, CURLOPT_CAINFO, ssl_context_service_->getCACertificate().c_str());
+  }
 }
 
 bool HTTPClient::isSecure(const std::string &url) {
