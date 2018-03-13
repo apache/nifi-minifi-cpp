@@ -102,7 +102,7 @@ or greater is recommended.
 #### Libraries / Development Headers
 * libboost and boost-devel
   * 1.48.0 or greater
-* libcurl
+* libcurl-openssl
 * librocksdb4.1 and librocksdb-dev
 * libuuid and uuid-dev
 * openssl
@@ -155,7 +155,7 @@ Finally, it is required to add the `-lrt` compiler flag by using the
 #### Libraries
 * libuuid
 * librocksdb *** IF NOT INSTALLED, WILL BE BUILT FROM THIRD PARTY DIRECTORY ***
-* libcurl
+* libcurl-openssl
 * libssl and libcrypto from openssl 
 * libarchive
 * librdkafka
@@ -178,7 +178,6 @@ $ yum install cmake \
   gcc gcc-c++ \
   bison \
   flex \
-  libcurl-devel \
   rocksdb-devel rocksdb \
   libuuid libuuid-devel \
   boost-devel \
@@ -200,6 +199,7 @@ $ yum install docker python-virtualenv
 $ yum install gpsd-devel
 $ # (Optional) for PacketCapture Processor
 $ yum install libpcap-devel
+$ #depending on your yum repo you may need to manually build libcurl-openssl if you do not have it.
 ```
 
 ##### Aptitude based Linux Distributions
@@ -209,7 +209,7 @@ $ apt-get install cmake \
   gcc g++ \
   bison \
   flex \
-  libcurl-dev \
+  libcurl4-openssl-dev \
   librocksdb-dev librocksdb4.1 \
   uuid-dev uuid \
   libboost-all-dev libssl-dev \
