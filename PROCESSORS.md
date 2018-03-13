@@ -41,6 +41,7 @@
 - [TFConvertImageToTensor](#tfconvertimagetotensor)
 - [TFExtractTopLabels](#tfextracttoplabels)
 - [UnfocusArchiveEntry](#unfocusarchiveentry)
+- [UpdateAttribute](#updateattribute)
 
 ## AppendHostInfo
 
@@ -890,3 +891,54 @@ default values, and whether a property supports the NiFi Expression Language.
 | - | - |
 | success | Any FlowFile that is successfully sent to broker will be routed to this Relationship |
 
+## UpdateAttribute
+
+This processor updates the attributes of a FlowFile using properties that are
+added by the user. This allows you to set default attribute changes that affect
+every FlowFile going through the processor, equivalent to the "basic" usage in
+Apache NiFi.
+
+### Properties
+
+The properties in this processor are added by the user. The expression language
+is supported in user-added properties for this processor. See the [NiFi
+Expression Language Guide](EXPRESSIONS.md) to learn how to formulate proper
+expression language statements to perform the desired functions.
+
+### Relationships
+
+| Name | Description |
+| - | - |
+| success | If the processor successfully updates the specified attribute(s), then the FlowFile follows this relationship. |
+
+### Basic Usage
+
+For basic usage, changes are made by adding a new processor property and
+referencing as its name the attribute you want to change. Then enter the
+desired attribute value as the Value. The Value can be as simple as any text
+string or it can be a NiFi Expression Language statement that specifies how to
+formulate the value. (See the [NiFi Expression Language Usage
+Guide](EXPRESSIONS.md) for details on crafting NiFi Expression Language
+statements.)
+
+As an example, to alter the standard `filename` attribute so that it has `.txt`
+appended to the end of it, add a new property and make the property name
+`filename` (to reference the desired attribute), and as the value, use the NiFi
+Expression Language statement shown below:
+
+- **Property**: `filename`
+- **Value**: `${filename}.txt`
+
+The preceding example illustrates how to modify an existing attribute. If an
+attribute does not already exist, this processor can also be used to add a new
+attribute. For example, the following property could be added to create a new
+attribute called `myAttribute` that has the value `myValue`:
+
+- **Property**: `myAttribute`
+- **Value**: `myValue`
+
+In this example, all FlowFiles passing through this processor will receive an
+additional FlowFile attribute called `myAttribute` with the value `myValue`. This
+type of configuration might be used in a flow where you want to tag every
+FlowFile with an attribute so that it can be used later in the flow, such as
+for routing in a `RouteOnAttribute` processor.
