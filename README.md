@@ -74,6 +74,7 @@ MiNiFi - C++ supports the following processors:
 * [TFConvertImageToTensor](PROCESSORS.md#tfconvertimagetotensor)
 * [TFExtractTopLabels](PROCESSORS.md#tfextracttoplabels)
 * [UnfocusArchiveEntry](PROCESSORS.md#unfocusarchiveentry)
+* [UpdateAttribute](PROCESSORS.md#updateattribute)
 
 ## Caveats
 * 0.5.0 represents a GA-release. We follow semver so you can expect API and ABI compatibility within minor releases. See [semver's website](https://semver.org/) for more information
