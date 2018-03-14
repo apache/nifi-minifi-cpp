@@ -175,7 +175,14 @@ token, filename.
 
 ### Searching
 
+- [`startsWith`](#startswith)
+- [`endsWith`](#endswith)
+- [`contains`](#contains)
+- [`in`](#in)
 - [`matches`](#matches)
+- [`find`](#find)
+- [`indexOf`](#indexof)
+- [`lastIndexOf`](#lastindexof)
 
 ## Planned Features
 
@@ -189,13 +196,6 @@ token, filename.
 
 ### Searching
 
-- `startsWith`
-- `endsWith`
-- `contains`
-- `in`
-- `find`
-- `indexOf`
-- `lastIndexOf`
 - `jsonPath`
 
 ### Boolean Logic
@@ -213,23 +213,6 @@ token, filename.
 - `or`
 - `not`
 - `ifElse`
-
-### Encode/Decode Functions
-
-- `escapeJson`
-- `escapeXml`
-- `escapeCsv`
-- `escapeHtml3`
-- `escapeHtml4`
-- `unescapeJson`
-- `unescapeXml`
-- `unescapeCsv`
-- `unescapeHtml3`
-- `unescapeHtml4`
-- `urlEncode`
-- `urlDecode`
-- `base64Encode`
-- `base64Decode`
 
 ### Encode/Decode Functions
 
@@ -281,7 +264,7 @@ planned due to language/environment (Java vs. C++) differences:
 
 ### Mathematical Operations and Numeric Manipulation
 
-- `math `
+- `math`
 
 ## String Manipulation
 
@@ -766,13 +749,15 @@ random number generator.
 
 **Return Type**: Number
 
-**Examples**: `${random():mod(10):plus(1)}` returns random number between 1 and 10 inclusive.
+**Examples**: `${random():mod(10):plus(1)}` returns random number between 1 and
+10 inclusive.
 
 ## Searching
 
-### matches
+### startsWith
 
-**Description**: Returns true if the Subject exactly matches the Regular Expression provided by the argument.
+**Description**: Returns `true` if the Subject starts with the String provided
+as the argument, `false` otherwise.
 
 **Subject Type**: String
 
@@ -780,7 +765,95 @@ random number generator.
 
 | Argument | Description |
 | - | - |
-| Regex | The Regular Expression (in the Java Pattern syntax) to match against the Subject |
+| value | The value to search for |
+
+**Return Type**: Boolean
+
+**Examples**:
+
+If the "filename" attribute has the value "a brand new filename.txt", then the
+Expression `${filename:startsWith('a brand')}` will return `true`.
+`${filename:startsWith('A BRAND')}` will return `false`.
+`${filename:toUpper():startsWith('A BRAND')}` returns `true`.
+
+### endsWith
+
+**Description**: Returns `true` if the Subject ends with the String provided as
+the argument, `false` otherwise.
+
+**Subject Type**: String
+
+**Arguments**: 
+
+| Argument | Description |
+| - | - |
+| value | The value to search for |
+
+**Return Type**: Boolean
+
+**Examples**:
+
+If the "filename" attribute has the value "a brand new filename.txt", then the
+Expression `${filename:endsWith('txt')}` will return `true`.
+`${filename:endsWith('TXT')}` will return `false`.
+`${filename:toUpper():endsWith('TXT')}` returns `true`.
+
+### contains
+
+**Description**: Returns `true` if the Subject contains the value of the
+argument anywhere in the value.
+
+**Subject Type**: String
+
+**Arguments**: 
+
+| Argument | Description |
+| - | - |
+| value | The value to search for |
+
+**Return Type**: Boolean
+
+**Examples**:
+
+If the "filename" attribute has the value "a brand new filename.txt", then the
+Expression `${filename:contains('new')}` will return `true`.
+`${filename:contains('NEW')}` will return `false`.
+`${filename:toUpper():contains('NEW')}` returns `true`.
+
+### in
+
+**Description**: Returns `true` if the Subject is matching one of the provided
+arguments.
+
+**Subject Type**: String
+
+**Arguments**: 
+
+| Argument | Description |
+| - | - |
+| value1 | First possible matching value |
+| valueN | Nth possible matching value |
+
+**Return Type**: Boolean
+
+**Examples**:
+
+If the "myEnum" attribute has the value "JOHN", then the Expression
+`${myEnum:in("PAUL", "JOHN", "MIKE")}` will return `true`. `${myEnum:in("RED",
+"GREEN", "BLUE")}` will return `false`.
+
+### find
+
+**Description**: Returns `true` if the Subject contains any sequence of
+characters that matches the Regular Expression provided by the argument.
+
+**Subject Type**: String
+
+**Arguments**: 
+
+| Argument | Description |
+| - | - |
+| Regex | The Regular Expression to match against the Subject |
 
 **Return Type**: Boolean
 
@@ -791,6 +864,93 @@ following Expressions will provide the following results:
 
 | Expression | Value |
 | - | - |
-| `${filename:matches('a.*txt')}` | true |
-| `${filename:matches('brand')}` | false |
-| `${filename:matches('.brand.')}` | true |
+| `${filename:find('a [Bb]rand [Nn]ew')}` | `true` |
+| `${filename:find('Brand.*')}` | `false` |
+| `${filename:find('brand')}` | `true` |
+
+### matches
+
+**Description**: Returns `true` if the Subject exactly matches the Regular Expression provided by the argument.
+
+**Subject Type**: String
+
+**Arguments**: 
+
+| Argument | Description |
+| - | - |
+| Regex | The Regular Expression to match against the Subject |
+
+**Return Type**: Boolean
+
+**Examples**:
+
+If the `filename` attribute has the value "a brand new filename.txt", then the
+following Expressions will provide the following results:
+
+| Expression | Value |
+| - | - |
+| `${filename:matches('a.*txt')}` | `true` |
+| `${filename:matches('brand')}` | `false` |
+| `${filename:matches('.brand.')}` | `true` |
+
+### indexOf
+
+**Description**: Returns the index of the first character in the Subject that
+matches the String value provided as an argument. If the argument is found
+multiple times within the Subject, the value returned is the starting index of
+the **first** occurrence. If the argument cannot be found in the Subject,
+returns `-1`. The index is zero-based. This means that if the search string is
+found at the beginning of the Subject, the value returned will be `0`, not `1`.
+
+**Subject Type**: String
+
+**Arguments**: 
+
+| Argument | Description |
+| - | - |
+| value | The value to search for in the Subject |
+
+**Return Type**: Boolean
+
+**Examples**:
+
+If the `filename` attribute has the value "a brand new filename.txt", then the
+following Expressions will provide the following results:
+
+| Expression | Value |
+| - | - |
+| `${filename:indexOf('a.*txt')}` | `-1` |
+| `${filename:indexOf('.')}` | `20` |
+| `${filename:indexOf('a')}` | `0` |
+| `${filename:indexOf(' ')}` | `1` |
+
+### lastIndexOf
+
+**Description**: Returns the index of the first character in the Subject that
+matches the String value provided as an argument. If the argument is found
+multiple times within the Subject, the value returned is the starting index of
+the **last** occurrence. If the argument cannot be found in the Subject,
+returns `-1`. The index is zero-based. This means that if the search string is
+found at the beginning of the Subject, the value returned will be `0`, not `1`.
+
+**Subject Type**: String
+
+**Arguments**: 
+
+| Argument | Description |
+| - | - |
+| value | The value to search for in the Subject |
+
+**Return Type**: Boolean
+
+**Examples**:
+
+If the `filename` attribute has the value "a brand new filename.txt", then the
+following Expressions will provide the following results:
+
+| Expression | Value |
+| - | - |
+| `${filename:lastIndexOf('a.*txt')}` | `-1` |
+| `${filename:lastIndexOf('.')}` | `20` |
+| `${filename:lastIndexOf('a')}` | `17` |
+| `${filename:lastIndexOf(' ')}` | `11` |

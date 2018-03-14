@@ -105,6 +105,66 @@ std::string expr_substringAfterLast(const std::vector<std::string> &args) {
   return args[0].substr(last_pos + args[1].length());
 }
 
+std::string expr_startsWith(const std::vector<std::string> &args) {
+  if (args[0].substr(0, args[1].length()) == args[1]) {
+    return "true";
+  } else {
+    return "false";
+  }
+}
+
+std::string expr_endsWith(const std::vector<std::string> &args) {
+  if (args[0].substr(args[0].length() - args[1].length()) == args[1]) {
+    return "true";
+  } else {
+    return "false";
+  }
+}
+
+std::string expr_contains(const std::vector<std::string> &args) {
+  if (std::string::npos != args[0].find(args[1])) {
+    return "true";
+  } else {
+    return "false";
+  }
+}
+
+std::string expr_in(const std::vector<std::string> &args) {
+  for (int i = 1; i < args.size(); i++) {
+    if (args[0] == args[i]) {
+      return "true";
+    }
+  }
+
+  return "false";
+}
+
+std::string expr_indexOf(const std::vector<std::string> &args) {
+  auto pos = args[0].find(args[1]);
+
+  if (pos == std::string::npos) {
+    return "-1";
+  } else {
+    return std::to_string(pos);
+  }
+}
+
+std::string expr_lastIndexOf(const std::vector<std::string> &args) {
+  size_t pos = std::string::npos;
+  auto cur_pos = args[0].find(args[1], 0);
+
+  while (cur_pos != std::string::npos) {
+    pos = cur_pos;
+    cur_pos = args[0].find(args[1], pos + 1);
+  }
+
+  if (pos == std::string::npos) {
+    return "-1";
+  } else {
+    return std::to_string(pos);
+  }
+}
+
 #ifdef EXPRESSION_LANGUAGE_USE_REGEX
 
 std::string expr_replace(const std::vector<std::string> &args) {
@@ -157,6 +217,17 @@ std::string expr_matches(const std::vector<std::string> &args) {
   const std::regex expr = std::regex(args[1]);
 
   if (std::regex_match(subject.begin(), subject.end(), expr)) {
+    return "true";
+  } else {
+    return "false";
+  }
+}
+
+std::string expr_find(const std::vector<std::string> &args) {
+  const auto &subject = args[0];
+  const std::regex expr = std::regex(args[1]);
+
+  if (std::regex_search(subject.begin(), subject.end(), expr)) {
     return "true";
   } else {
     return "false";
@@ -250,8 +321,8 @@ std::string expr_toRadix(const std::vector<std::string> &args) {
 
   const char chars[] =
       "0123456789ab"
-      "cdefghijklmn"
-      "opqrstuvwxyz";
+          "cdefghijklmn"
+          "opqrstuvwxyz";
   std::string str_num;
 
   while (value) {
@@ -335,6 +406,18 @@ Expression make_dynamic_function(const std::string &function_name,
     return make_dynamic_function_incomplete<expr_substringAfter>(function_name, args, 2);
   } else if (function_name == "substringAfterLast") {
     return make_dynamic_function_incomplete<expr_substringAfterLast>(function_name, args, 2);
+  } else if (function_name == "startsWith") {
+    return make_dynamic_function_incomplete<expr_startsWith>(function_name, args, 1);
+  } else if (function_name == "endsWith") {
+    return make_dynamic_function_incomplete<expr_endsWith>(function_name, args, 1);
+  } else if (function_name == "contains") {
+    return make_dynamic_function_incomplete<expr_contains>(function_name, args, 1);
+  } else if (function_name == "in") {
+    return make_dynamic_function_incomplete<expr_in>(function_name, args, 1);
+  } else if (function_name == "indexOf") {
+    return make_dynamic_function_incomplete<expr_indexOf>(function_name, args, 1);
+  } else if (function_name == "lastIndexOf") {
+    return make_dynamic_function_incomplete<expr_lastIndexOf>(function_name, args, 1);
 #ifdef EXPRESSION_LANGUAGE_USE_REGEX
   } else if (function_name == "replace") {
     return make_dynamic_function_incomplete<expr_replace>(function_name, args, 2);
@@ -348,6 +431,8 @@ Expression make_dynamic_function(const std::string &function_name,
     return make_dynamic_function_incomplete<expr_replaceEmpty>(function_name, args, 1);
   } else if (function_name == "matches") {
     return make_dynamic_function_incomplete<expr_matches>(function_name, args, 1);
+  } else if (function_name == "find") {
+    return make_dynamic_function_incomplete<expr_find>(function_name, args, 1);
 #endif  // EXPRESSION_LANGUAGE_USE_REGEX
   } else if (function_name == "plus") {
     return make_dynamic_function_incomplete<expr_plus>(function_name, args, 1);
