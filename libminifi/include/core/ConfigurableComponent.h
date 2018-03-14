@@ -127,6 +127,16 @@ class __attribute__((visibility("default"))) ConfigurableComponent {
   bool updateDynamicProperty(const std::string &name, const std::string &value);
 
   /**
+   * Invoked anytime a static property is modified
+   */
+  virtual void onPropertyModified(const Property &old_property, const Property &new_property) {}
+
+  /**
+   * Invoked anytime a dynamic property is modified.
+   */
+  virtual void onDynamicPropertyModified(const Property &old_property, const Property &new_property) {}
+
+  /**
    * Provides all dynamic property keys that have been set.
    *
    * @return vector of property keys
