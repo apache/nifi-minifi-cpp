@@ -41,7 +41,7 @@ class Driver : public yyFlexLexer {
  public:
   explicit Driver(std::istream *input = nullptr, std::ostream *output = nullptr)
       : yyFlexLexer(input, output),
-        result("") {
+        result(Value()) {
   }
   ~Driver() override = default;
   int lex(Parser::semantic_type *yylval,

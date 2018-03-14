@@ -25,6 +25,7 @@
 #undef EXPRESSION_LANGUAGE_USE_REGEX
 #endif
 
+#include <Value.h>
 #include <core/FlowFile.h>
 
 #include <string>
@@ -41,7 +42,7 @@ typedef struct {
   std::weak_ptr<core::FlowFile> flow_file;
 } Parameters;
 
-static const std::function<std::string(const Parameters &params)> NOOP_FN;
+static const std::function<Value(const Parameters &params)> NOOP_FN;
 
 /**
  * A NiFi expression language expression.
@@ -49,11 +50,15 @@ static const std::function<std::string(const Parameters &params)> NOOP_FN;
 class Expression {
  public:
 
-  explicit Expression(std::string val = "",
-                      std::function<std::string(const Parameters &)> val_fn = NOOP_FN)
-      : val_(std::move(val)),
-        val_fn_(std::move(val_fn)),
+  Expression() {
+    val_fn_ = NOOP_FN;
+  }
+
+  explicit Expression(Value val,
+                      std::function<Value(const Parameters &)> val_fn = NOOP_FN)
+      : val_fn_(std::move(val_fn)),
         fn_args_() {
+    val_ = val;
   }
 
   /**
@@ -80,11 +85,11 @@ class Expression {
    * @param params
    * @return dynamically-computed result of expression
    */
-  std::string operator()(const Parameters &params) const;
+  Value operator()(const Parameters &params) const;
 
  protected:
-  std::string val_;
-  std::function<std::string(const Parameters &params)> val_fn_;
+  Value val_;
+  std::function<Value(const Parameters &params)> val_fn_;
   std::vector<Expression> fn_args_;
 };
 
@@ -110,7 +115,7 @@ Expression make_static(std::string val);
  * @param val_fn
  * @return
  */
-Expression make_dynamic(std::function<std::string(const Parameters &params)> val_fn);
+Expression make_dynamic(const std::function<Value(const Parameters &params)> &val_fn);
 
 /**
  * Creates a dynamic expression which evaluates the given flow file attribute.
