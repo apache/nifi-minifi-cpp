@@ -200,6 +200,11 @@ token, filename.
 - [`indexOf`](#indexof)
 - [`lastIndexOf`](#lastindexof)
 
+### Encode/Decode Functions
+
+- [`escapeJson`](#escapejson)
+- [`unescapeJson`](#unescapejson)
+
 ## Planned Features
 
 ### String Manipulation
@@ -216,12 +221,10 @@ token, filename.
 
 ### Encode/Decode Functions
 
-- `escapeJson`
 - `escapeXml`
 - `escapeCsv`
 - `escapeHtml3`
 - `escapeHtml4`
-- `unescapeJson`
 - `unescapeXml`
 - `unescapeCsv`
 - `unescapeHtml3`
@@ -1230,3 +1233,36 @@ following Expressions will provide the following results:
 | `${filename:lastIndexOf('.')}` | `20` |
 | `${filename:lastIndexOf('a')}` | `17` |
 | `${filename:lastIndexOf(' ')}` | `11` |
+
+### escapeJson
+
+**Description**: This function prepares the Subject to be inserted into JSON
+document by escaping the characters in the String using Json String rules. The
+function correctly escapes quotes and control-chars (tab, backslash, cr, ff,
+etc.)
+
+**Subject Type**: String
+
+**Arguments**: No arguments
+
+**Return Type**: String
+
+**Examples**:
+
+If the "message" attribute is 'This is a "test!"', then the Expression
+`${message:escapeJson()}` will return 'This is a \"test!\"'
+
+### unescapeJson
+
+**Description**: This function unescapes any Json literals found in the String.
+
+**Subject Type**: String
+
+**Arguments**: No arguments
+
+**Return Type**: String
+
+**Examples**:
+
+If the "message" attribute is 'This is a \"test!\"', then the Expression
+`${message:unescapeJson()}` will return 'This is a "test!"'
