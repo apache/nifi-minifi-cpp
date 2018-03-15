@@ -19,6 +19,8 @@
 #include <iostream>
 #include <iomanip>
 #include <random>
+#include <algorithm>
+#include <string>
 
 #include <expression/Expression.h>
 #include <regex>
@@ -43,7 +45,7 @@ Expression make_static(std::string val) {
 }
 
 Expression make_dynamic(const std::function<Value(const Parameters &params)> &val_fn) {
-  return Expression(Value(), std::move(val_fn));
+  return Expression(Value(), val_fn);
 }
 
 Expression make_dynamic_attr(const std::string &attribute_id) {
@@ -370,6 +372,101 @@ Value expr_literal(const std::vector<Value> &args) {
   return args[0];
 }
 
+Value expr_isNull(const std::vector<Value> &args) {
+  return Value(args[0].isNull());
+}
+
+Value expr_notNull(const std::vector<Value> &args) {
+  return Value(!args[0].isNull());
+}
+
+Value expr_isEmpty(const std::vector<Value> &args) {
+  if (args[0].isNull()) {
+    return Value(true);
+  }
+
+  std::string arg_0 = args[0].asString();
+
+  for (char c : arg_0) {
+    if (c != ' '
+        && c != '\f'
+        && c != '\n'
+        && c != '\r'
+        && c != '\t'
+        && c != '\v') {
+      return Value(false);
+    }
+  }
+
+  return Value(true);
+}
+
+Value expr_equals(const std::vector<Value> &args) {
+  return Value(args[0].asString() == args[1].asString());
+}
+
+Value expr_equalsIgnoreCase(const std::vector<Value> &args) {
+  auto arg_0 = args[0].asString();
+  auto arg_1 = args[1].asString();
+
+  std::transform(arg_0.begin(), arg_0.end(), arg_0.begin(), ::tolower);
+  std::transform(arg_1.begin(), arg_1.end(), arg_1.begin(), ::tolower);
+
+  return Value(arg_0 == arg_1);
+}
+
+Value expr_gt(const std::vector<Value> &args) {
+  if (args[0].isDecimal() && args[1].isDecimal()) {
+    return Value(args[0].asLongDouble() > args[1].asLongDouble());
+  } else {
+    return Value(args[0].asSignedLong() > args[1].asSignedLong());
+  }
+}
+
+Value expr_ge(const std::vector<Value> &args) {
+  if (args[0].isDecimal() && args[1].isDecimal()) {
+    return Value(args[0].asLongDouble() >= args[1].asLongDouble());
+  } else {
+    return Value(args[0].asSignedLong() >= args[1].asSignedLong());
+  }
+}
+
+Value expr_lt(const std::vector<Value> &args) {
+  if (args[0].isDecimal() && args[1].isDecimal()) {
+    return Value(args[0].asLongDouble() < args[1].asLongDouble());
+  } else {
+    return Value(args[0].asSignedLong() < args[1].asSignedLong());
+  }
+}
+
+Value expr_le(const std::vector<Value> &args) {
+  if (args[0].isDecimal() && args[1].isDecimal()) {
+    return Value(args[0].asLongDouble() <= args[1].asLongDouble());
+  } else {
+    return Value(args[0].asSignedLong() <= args[1].asSignedLong());
+  }
+}
+
+Value expr_and(const std::vector<Value> &args) {
+  return Value(args[0].asBoolean() && args[1].asBoolean());
+}
+
+Value expr_or(const std::vector<Value> &args) {
+  return Value(args[0].asBoolean() || args[1].asBoolean());
+}
+
+Value expr_not(const std::vector<Value> &args) {
+  return Value(!args[0].asBoolean());
+}
+
+Value expr_ifElse(const std::vector<Value> &args) {
+  if (args[0].asBoolean()) {
+    return args[1];
+  } else {
+    return args[2];
+  }
+}
+
 Expression make_dynamic_function(const std::string &function_name,
                                  const std::vector<Expression> &args) {
   if (function_name == "hostname") {
@@ -434,6 +531,32 @@ Expression make_dynamic_function(const std::string &function_name,
     return make_dynamic_function_incomplete<expr_random>(function_name, args, 0);
   } else if (function_name == "literal") {
     return make_dynamic_function_incomplete<expr_literal>(function_name, args, 1);
+  } else if (function_name == "isNull") {
+    return make_dynamic_function_incomplete<expr_isNull>(function_name, args, 0);
+  } else if (function_name == "notNull") {
+    return make_dynamic_function_incomplete<expr_notNull>(function_name, args, 0);
+  } else if (function_name == "isEmpty") {
+    return make_dynamic_function_incomplete<expr_isEmpty>(function_name, args, 0);
+  } else if (function_name == "equals") {
+    return make_dynamic_function_incomplete<expr_equals>(function_name, args, 1);
+  } else if (function_name == "equalsIgnoreCase") {
+    return make_dynamic_function_incomplete<expr_equalsIgnoreCase>(function_name, args, 1);
+  } else if (function_name == "gt") {
+    return make_dynamic_function_incomplete<expr_gt>(function_name, args, 1);
+  } else if (function_name == "ge") {
+    return make_dynamic_function_incomplete<expr_ge>(function_name, args, 1);
+  } else if (function_name == "lt") {
+    return make_dynamic_function_incomplete<expr_lt>(function_name, args, 1);
+  } else if (function_name == "le") {
+    return make_dynamic_function_incomplete<expr_le>(function_name, args, 1);
+  } else if (function_name == "and") {
+    return make_dynamic_function_incomplete<expr_and>(function_name, args, 1);
+  } else if (function_name == "or") {
+    return make_dynamic_function_incomplete<expr_or>(function_name, args, 1);
+  } else if (function_name == "not") {
+    return make_dynamic_function_incomplete<expr_not>(function_name, args, 0);
+  } else if (function_name == "ifElse") {
+    return make_dynamic_function_incomplete<expr_ifElse>(function_name, args, 2);
   } else {
     std::string msg("Unknown expression function: ");
     msg.append(function_name);
