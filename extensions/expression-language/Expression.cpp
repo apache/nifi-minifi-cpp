@@ -20,6 +20,10 @@
 #include <iomanip>
 #include <random>
 
+#include "rapidjson/reader.h"
+#include "rapidjson/writer.h"
+#include "rapidjson/document.h"
+
 #include <expression/Expression.h>
 #include <regex>
 #include "Driver.h"
@@ -167,6 +171,29 @@ Value expr_lastIndexOf(const std::vector<Value> &args) {
     return Value(static_cast<int64_t >(-1));
   } else {
     return Value(static_cast<int64_t >(pos));
+  }
+}
+
+Value expr_escapeJson(const std::vector<Value> &args) {
+  const std::string &arg_0 = args[0].asString();
+  rapidjson::StringBuffer buf;
+  rapidjson::Writer<rapidjson::StringBuffer> writer(buf);
+  writer.String(arg_0.c_str());
+  std::string result(buf.GetString());
+  return Value(result.substr(1, result.length()-2));
+}
+
+Value expr_unescapeJson(const std::vector<Value> &args) {
+  std::stringstream arg_0_ss;
+  arg_0_ss << "\"" << args[0].asString() << "\"";
+  rapidjson::Reader reader;
+  rapidjson::StringStream ss(arg_0_ss.str().c_str());
+  rapidjson::Document doc;
+  doc.ParseStream(ss);
+  if (doc.IsString()) {
+    return Value(std::string(doc.GetString()));
+  } else {
+    return Value();
   }
 }
 
@@ -400,6 +427,10 @@ Expression make_dynamic_function(const std::string &function_name,
     return make_dynamic_function_incomplete<expr_indexOf>(function_name, args, 1);
   } else if (function_name == "lastIndexOf") {
     return make_dynamic_function_incomplete<expr_lastIndexOf>(function_name, args, 1);
+  } else if (function_name == "escapeJson") {
+    return make_dynamic_function_incomplete<expr_escapeJson>(function_name, args, 0);
+  } else if (function_name == "unescapeJson") {
+    return make_dynamic_function_incomplete<expr_unescapeJson>(function_name, args, 0);
 #ifdef EXPRESSION_LANGUAGE_USE_REGEX
   } else if (function_name == "replace") {
     return make_dynamic_function_incomplete<expr_replace>(function_name, args, 2);

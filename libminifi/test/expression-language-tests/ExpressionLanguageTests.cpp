@@ -744,3 +744,27 @@ TEST_CASE("Chained call 3", "[expressionChainedCall3]") {  // NOLINT
   flow_file_a->addAttribute("attr", "7");
   REQUIRE("238" == expr({flow_file_a}).asString());
 }
+
+TEST_CASE("Encode JSON", "[expressionEncodeJSON]") {  // NOLINT
+  auto expr = expression::compile("${message:escapeJson()}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("message", "This is a \"test!\"");
+  REQUIRE("This is a \\\"test!\\\"" == expr({flow_file_a}).asString());
+}
+
+TEST_CASE("Decode JSON", "[expressionDecodeJSON]") {  // NOLINT
+  auto expr = expression::compile("${message:unescapeJson()}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("message", "This is a \\\"test!\\\"");
+  REQUIRE("This is a \"test!\"" == expr({flow_file_a}).asString());
+}
+
+TEST_CASE("Encode Decode JSON", "[expressionEncodeDecodeJSON]") {  // NOLINT
+  auto expr = expression::compile("${message:escapeJson():unescapeJson()}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("message", "This is a \"test!\"");
+  REQUIRE("This is a \"test!\"" == expr({flow_file_a}).asString());
+}
