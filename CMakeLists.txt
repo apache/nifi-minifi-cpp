@@ -186,6 +186,11 @@ if (NOT DISABLE_SCRIPTING)
     createExtension(SCRIPTING-EXTENSIONS "SCRIPTING EXTENSIONS" "This enables scripting" "extensions/script" "${TEST_DIR}/script-tests")
 endif()
 
+## SQLite extensions
+option(ENABLE_SQLITE "Disables the scripting extensions." OFF)
+if (ENABLE_ALL OR ENABLE_SQLITE)
+    createExtension(SQLITE-EXTENSIONS "SQLITE EXTENSIONS" "This enables sqlite" "extensions/sqlite" "${TEST_DIR}/sqlite-tests" "TRUE" "thirdparty/sqlite")
+endif()
 
 ## USB camera extensions
 option(ENABLE_USB_CAMERA "Enables USB camera support." OFF)

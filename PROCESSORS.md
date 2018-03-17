@@ -19,7 +19,7 @@
 
 - [AppendHostInfo](#appendhostinfo)
 - [CompressContent](#compresscontent)
-* [ConsumeMQTT](#consumeMQTT)
+- [ConsumeMQTT](#consumemqtt)
 - [ExecuteProcess](#executeprocess)
 - [ExecuteScript](#executescript)
 - [ExtractText](#extracttext)
@@ -34,8 +34,9 @@
 - [ManipulateArchive](#manipulatearchive)
 - [MergeContent](#mergecontent)
 - [PublishKafka](#publishkafka)
-* [PublishMQTT](PROCESSORS.md#publishMQTT)
+- [PublishMQTT](#publishmqtt)
 - [PutFile](#putfile)
+- [PutSQL](#putsql)
 - [RouteOnAttribute](#routeonattribute)
 - [TailFile](#tailfile)
 - [TFApplyGraph](#tfapplygraph)
@@ -507,6 +508,43 @@ default values, and whether a property supports the NiFi Expression Language.
 | - | - |
 | success | Files that have been successfully written to the output directory are transferred to this relationship |
 | failure | Files that could not be written to the output directory for some reason are transferred to this relationship |
+
+## PutSQL
+
+### Description
+
+Executes a SQL UPDATE or INSERT command. The content of an incoming FlowFile is
+expected to be the SQL command to execute. The SQL command may use the `?`
+character to bind parameters. In this case, the parameters to use must exist as
+FlowFile attributes with the naming convention `sql.args.N.type` and
+`sql.args.N.value`, where `N` is a positive integer. The content of the
+FlowFile is expected to be in UTF-8 format.
+
+### Properties
+
+In the list below, the names of required properties appear in bold. Any other
+properties (not in bold) are considered optional. The table also indicates any
+default values, and whether a property supports the NiFi Expression Language.
+
+| Name | Default Value | Allowable Values | Description |
+| - | - | - | - |
+| **Connection URL** | | | The database connection URL (e.g. `sqlite://filename.db?cache=shared`) **Only SQLite is currently supported** |
+| SQL Statement | | | The SQL statement to execute. The statement can be empty, a constant value, or built from attributes using Expression Language. If this property is specified, it will be used regardless of the content of incoming flowfiles. If this property is empty, the content of the incoming flow file is expected to contain a valid SQL statement, to be issued by the processor to the database.<br>**Supports Expression Language: true** |
+| **Batch Size** | 1 | | The maximum number of FlowFiles to put to the database in a single transaction |
+
+### Relationships
+
+| Name | Description |
+| - | - |
+| retry | A FlowFile is routed to this relationship if the database cannot be updated but attempting the operation again may succeed |
+| success | A FlowFile is routed to this relationship after the database is successfully updated |
+| failure | A FlowFile is routed to this relationship if the database cannot be updated and retrying the operation will also fail, such as an invalid query or an integrity constraint violation |
+
+### Reads Attributes
+| Name | Description |
+| - | - |
+| sql.args.N.value | Incoming FlowFiles are expected to be parametrized SQL statements. The value of the Parameters are specified as `sql.args.1.value`, `sql.args.2.value`, `sql.args.3.value`, and so on. The type of the `sql.args.1.value` Parameter is specified by the `sql.args.1.type` attribute. |
+
 
 ## RouteOnAttribute
 
