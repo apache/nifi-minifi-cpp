@@ -183,6 +183,14 @@ class SQLiteStatement {
     return SQLITE_NULL == sqlite3_column_type(stmt_, col);
   }
 
+  std::string column_name(int col) {
+    return std::string(sqlite3_column_name(stmt_, col));
+  }
+
+  int column_count() {
+    return sqlite3_column_count(stmt_);
+  }
+
   void reset() {
     sqlite3_reset(stmt_);
   }

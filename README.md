@@ -55,6 +55,7 @@ MiNiFi - C++ supports the following processors:
 * [ConsumeMQTT](PROCESSORS.md#consumeMQTT)
 * [ExecuteProcess](PROCESSORS.md#executeprocess)
 * [ExecuteScript](PROCESSORS.md#executescript)
+- [ExecuteSQL](PROCESSORS.md#executesql)
 * [ExtractText](PROCESSORS.md#extracttext)
 * [FocusArchiveEntry](PROCESSORS.md#focusarchiveentry)
 * [GenerateFlowFile](PROCESSORS.md#generateflowfile)
