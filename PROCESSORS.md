@@ -22,6 +22,7 @@
 - [ConsumeMQTT](#consumemqtt)
 - [ExecuteProcess](#executeprocess)
 - [ExecuteScript](#executescript)
+- [ExecuteSQL](#executesql)
 - [ExtractText](#extracttext)
 - [FocusArchiveEntry](#focusarchiveentry)
 - [GenerateFlowFile](#generateflowfile)
@@ -247,6 +248,42 @@ default values, and whether a property supports the NiFi Expression Language.
 | - | - |
 | success | Script successes |
 | failure | Script failures |
+
+## ExecuteSQL
+
+### Description
+
+Execute provided SQL query. Query result rows will be outputted as new flow
+files with attribute keys equal to result column names and values equal to
+result values. There will be one output FlowFile per result row. This processor
+can be scheduled to run using the standard timer-based scheduling methods, or
+it can be triggered by an incoming FlowFile. If it is triggered by an incoming
+FlowFile, then attributes of that FlowFile will be available when evaluating
+the query.
+
+### Properties
+
+In the list below, the names of required properties appear in bold. Any other
+properties (not in bold) are considered optional. The table also indicates any
+default values, and whether a property supports the NiFi Expression Language.
+
+| Name | Default Value | Allowable Values | Description |
+| - | - | - | - |
+| **Connection URL** | | | The database connection URL (e.g. `sqlite://filename.db?cache=shared`) **Only SQLite is currently supported** |
+| SQL Statement | | | The SQL query to execute. The query can be empty, a constant value, or built from attributes using Expression Language. If this property is specified, it will be used regardless of the content of incoming flowfiles. If this property is empty, the content of the incoming flow file is expected to contain a valid SQL query, to be issued by the processor to the database. Note that Expression Language is not evaluated for flow file contents.<br>**Supports Expression Language: true** |
+
+### Relationships
+
+| Name | Description |
+| - | - |
+| original | Upon successful query execution, the original FlowFile is routed here. |
+| success | For each SQL result row, a FlowFile will be written to this relationships. Attributes will be written to result FlowFiles having the same names and values as present in result columns. |
+| failure | A FlowFile is routed to this relationship if the SQL statement cannot be executed and retrying the operation will also fail, such as an invalid query or an integrity constraint violation. |
+
+### Reads Attributes
+| Name | Description |
+| - | - |
+| sql.args.N.value | Incoming FlowFiles are expected to be parametrized SQL statements. The value of the Parameters are specified as `sql.args.1.value`, `sql.args.2.value`, `sql.args.3.value`, and so on. The type of the `sql.args.1.value` Parameter is specified by the `sql.args.1.type` attribute. |
 
 ## GetFile
 
@@ -544,7 +581,6 @@ default values, and whether a property supports the NiFi Expression Language.
 | Name | Description |
 | - | - |
 | sql.args.N.value | Incoming FlowFiles are expected to be parametrized SQL statements. The value of the Parameters are specified as `sql.args.1.value`, `sql.args.2.value`, `sql.args.3.value`, and so on. The type of the `sql.args.1.value` Parameter is specified by the `sql.args.1.type` attribute. |
-
 
 ## RouteOnAttribute
 
