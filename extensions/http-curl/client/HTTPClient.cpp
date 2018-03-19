@@ -332,10 +332,19 @@ bool HTTPClient::matches(const std::string &value, const std::string &sregex) {
 
 void HTTPClient::configure_secure_connection(CURL *http_session) {
   logger_->log_debug("Using certificate file %s", ssl_context_service_->getCertificateFile());
+#ifdef USE_CURL_NSS
+  curl_easy_setopt(http_session, CURLOPT_CAINFO, 0);
+  curl_easy_setopt(http_session, CURLOPT_SSLCERTTYPE, "PEM");
+  curl_easy_setopt(http_session, CURLOPT_SSLCERT, ssl_context_service_->getCertificateFile().c_str());
+  curl_easy_setopt(http_session, CURLOPT_SSLKEY, ssl_context_service_->getPrivateKeyFile().c_str());
+  curl_easy_setopt(http_session, CURLOPT_KEYPASSWD, ssl_context_service_->getPassphrase().c_str());
+  curl_easy_setopt(http_session, CURLOPT_CAINFO, ssl_context_service_->getCACertificate().c_str());
+#else
   curl_easy_setopt(http_session, CURLOPT_SSL_CTX_FUNCTION, &configure_ssl_context);
   curl_easy_setopt(http_session, CURLOPT_SSL_CTX_DATA, static_cast<void*>(ssl_context_service_.get()));
   curl_easy_setopt(http_session, CURLOPT_CAINFO, 0);
   curl_easy_setopt(http_session, CURLOPT_CAPATH, 0);
+#endif
 }
 
 bool HTTPClient::isSecure(const std::string &url) {
