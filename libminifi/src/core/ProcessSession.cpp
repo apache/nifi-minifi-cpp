@@ -417,10 +417,18 @@ void ProcessSession::import(std::string source, const std::shared_ptr<core::Flow
       rollback();
       return;
     }
-    if (input.is_open()) {
-      // Open the source file and stream to the flow file
-      input.seekg(offset);
+    if (input.is_open() && input.good()) {
       bool invalidWrite = false;
+      // Open the source file and stream to the flow file
+      if (offset != 0) {
+        input.seekg(offset);
+        if (!input.good()) {
+          logger_->log_error("Seeking to %d failed for file %s (does file/filesystem support seeking?)",
+                             offset,
+                             source);
+          invalidWrite = true;
+        }
+      }
       while (input.good()) {
         input.read(reinterpret_cast<char*>(charBuffer.data()), size);
         if (input) {
@@ -494,8 +502,16 @@ void ProcessSession::import(std::string source, std::vector<std::shared_ptr<Flow
     std::ifstream input;
     logger_->log_debug("Opening %s", source);
     input.open(source.c_str(), std::fstream::in | std::fstream::binary);
-    if (input.is_open()) {
-      input.seekg(offset, input.beg);
+    if (input.is_open() && input.good()) {
+      if (offset != 0) {
+        input.seekg(offset, input.beg);
+        if (!input.good()) {
+          logger_->log_error("Seeking to %d failed for file %s (does file/filesystem support seeking?)",
+                             offset,
+                             source);
+          throw Exception(FILE_OPERATION_EXCEPTION, "File Import Error");
+        }
+      }
       while (input.good()) {
         bool invalidWrite = false;
         flowFile = std::static_pointer_cast<FlowFileRecord>(create());
