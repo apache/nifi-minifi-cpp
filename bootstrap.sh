@@ -450,7 +450,6 @@ CMAKE_REVISION=`echo $CMAKE_VERSION | cut -d. -f3`
 
 CMAKE_BUILD_COMMAND="${CMAKE_COMMAND} "
 
-
 build_cmake_command(){
 
   for option in "${OPTIONS[@]}" ; do
@@ -500,7 +499,15 @@ build_cmake_command(){
 
   add_os_flags
 
+  curl -V | grep OpenSSL &> /dev/null
+  if [ $? == 0 ]; then
+    echo "Using libcurl-openssl..."
+  else
+    CMAKE_BUILD_COMMAND="${CMAKE_BUILD_COMMAND} -DUSE_CURL_NSS=true .."
+  fi
+
   CMAKE_BUILD_COMMAND="${CMAKE_BUILD_COMMAND} .."
+
   continue_with_plan="Y"
   if [ ! "$NO_PROMPT" = "true" ]; then
     read -p "Command will be '${CMAKE_BUILD_COMMAND}', run this? [ Y/N ] " continue_with_plan
@@ -513,8 +520,6 @@ build_cmake_command(){
 
 
 build_cmake_command
-
-
 
 ### run the cmake command
 ${CMAKE_BUILD_COMMAND}

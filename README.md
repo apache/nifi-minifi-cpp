@@ -104,7 +104,7 @@ or greater is recommended.
 #### Libraries / Development Headers
 * libboost and boost-devel
   * 1.48.0 or greater
-* libcurl-openssl
+* libcurl-openssl (If not available or desired, NSS will be used by applying -DUSE_CURL_NSS)
 * librocksdb4.1 and librocksdb-dev
 * libuuid and uuid-dev
 * openssl
@@ -157,7 +157,7 @@ Finally, it is required to add the `-lrt` compiler flag by using the
 #### Libraries
 * libuuid
 * librocksdb *** IF NOT INSTALLED, WILL BE BUILT FROM THIRD PARTY DIRECTORY ***
-* libcurl-openssl
+* libcurl-openssl (If not available or desired, NSS will be used by applying -DUSE_CURL_NSS)
 * libssl and libcrypto from openssl 
 * libarchive
 * librdkafka
@@ -201,7 +201,8 @@ $ yum install docker python-virtualenv
 $ yum install gpsd-devel
 $ # (Optional) for PacketCapture Processor
 $ yum install libpcap-devel
-$ #depending on your yum repo you may need to manually build libcurl-openssl if you do not have it.
+$ #depending on your yum repo you may need to manually build libcurl-openssl if you do not wish to use
+  libcurl with NSS support. By default we will use NSS when libcurl-openssl is not available.
 ```
 
 ##### Aptitude based Linux Distributions
