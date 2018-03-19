@@ -305,6 +305,37 @@ void YamlConfiguration::parseRemoteProcessGroupYaml(YAML::Node *rpgNode, core::P
           group->setInterface(interface);
         }
 
+        if (currRpgNode["transport protocol"]) {
+          std::string transport_protocol = currRpgNode["transport protocol"].as<std::string>();
+          logger_->log_debug("parseRemoteProcessGroupYaml: transport protocol => [%s]", transport_protocol);
+          if (transport_protocol == "HTTP") {
+            group->setTransportProtocol(transport_protocol);
+            if (currRpgNode["proxy host"]) {
+              std::string http_proxy_host = currRpgNode["proxy host"].as<std::string>();
+              logger_->log_debug("parseRemoteProcessGroupYaml: proxy host => [%s]", http_proxy_host);
+              group->setHttpProxyHost(http_proxy_host);
+              if (currRpgNode["proxy user"]) {
+                std::string http_proxy_username = currRpgNode["proxy user"].as<std::string>();
+                logger_->log_debug("parseRemoteProcessGroupYaml: proxy user => [%s]", http_proxy_username);
+                group->setHttpProxyUserName(http_proxy_username);
+              }
+              if (currRpgNode["proxy password"]) {
+                std::string http_proxy_password = currRpgNode["proxy password"].as<std::string>();
+                logger_->log_debug("parseRemoteProcessGroupYaml: proxy password => [%s]", http_proxy_password);
+                group->setHttpProxyPassWord(http_proxy_password);
+              }
+              if (currRpgNode["proxy port"]) {
+                std::string http_proxy_port = currRpgNode["proxy port"].as<std::string>();
+                int32_t port;
+                if (core::Property::StringToInt(http_proxy_port, port)) {
+                  logger_->log_debug("parseRemoteProcessGroupYaml: proxy port => [%d]", port);
+                  group->setHttpProxyPort(port);
+                }
+              }
+            }
+          }
+        }
+
         group->setTransmitting(true);
         group->setURL(url);
 
@@ -657,6 +688,11 @@ void YamlConfiguration::parsePortYaml(YAML::Node *portNode,
   processor->initialize();
   if (!parent->getInterface().empty())
     port->setInterface(parent->getInterface());
+  if (parent->getTransportProtocol() == "HTTP") {
+    port->enableHTTP();
+    if (!parent->getHttpProxyHost().empty())
+      port->setHTTPProxy(parent->getHTTPProxy());
+  }
 
   // handle port properties
   YAML::Node nodeVal = portNode->as<YAML::Node>();

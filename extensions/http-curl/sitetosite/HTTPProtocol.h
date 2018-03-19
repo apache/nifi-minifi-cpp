@@ -183,8 +183,12 @@ class HttpSiteToSiteClient : public sitetosite::SiteToSiteClient {
       }
     }
     if (!this->peer_->getInterface().empty()) {
-      logger_->log_info("HTTP Site2Site bind local network interface", this->peer_->getInterface());
+      logger_->log_info("HTTP Site2Site bind local network interface %s", this->peer_->getInterface());
       http_client_->setInterface(this->peer_->getInterface());
+    }
+    if (!this->peer_->getHTTPProxy().host.empty()) {
+      logger_->log_info("HTTP Site2Site setup http proxy host %s", this->peer_->getHTTPProxy().host);
+      http_client_->setHTTPProxy(this->peer_->getHTTPProxy());
     }
     return http_client_;
   }

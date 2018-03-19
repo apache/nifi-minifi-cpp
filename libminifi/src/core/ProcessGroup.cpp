@@ -53,6 +53,7 @@ ProcessGroup::ProcessGroup(ProcessGroupType type, std::string name, uuid_t uuid,
 
   yield_period_msec_ = 0;
   transmitting_ = false;
+  transport_protocol_ = "RAW";
 
   logger_->log_debug("ProcessGroup %s created", name_);
 }

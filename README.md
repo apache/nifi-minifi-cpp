@@ -526,10 +526,26 @@ If during testing you have a need to disable host or peer verification, you may 
 	nifi.security.client.disable.peer.verification=true
     
 ### HTTP SiteToSite Configuration
-To enable HTTPSiteToSite you must set the following flag to true. 
+To enable HTTPSiteToSite globally you must set the following flag to true.
 	
     nifi.remote.input.http.enabled=true
+
+To enable HTTPSiteToSite for a remote process group.
+    Remote Processing Groups:
+    - name: NiFi Flow
+      transport protocol: HTTP
     
+### HTTP SiteToSite Proxy Configuration
+To enable HTTP Proxy for a remote process group.
+
+    Remote Processing Groups:
+    - name: NiFi Flow
+      transport protocol: HTTP
+      proxy host: localhost
+      proxy port: 8888
+      proxy user:
+      proxy password:
+
 ### Command and Control Configuration
 For more more insight into the API used within the C2 agent, please visit:
 https://cwiki.apache.org/confluence/display/MINIFI/C2+Design+Proposal

@@ -68,6 +68,7 @@ std::unique_ptr<sitetosite::SiteToSiteClient> RemoteProcessorGroupPort::getNextP
       // create
       if (url_.empty()) {
         sitetosite::SiteToSiteClientConfiguration config(stream_factory_, std::make_shared<sitetosite::Peer>(protocol_uuid_, host_, port_, ssl_service != nullptr), this->getInterface(), client_type_);
+        config.setHTTPProxy(this->proxy_);
         nextProtocol = sitetosite::createClient(config);
       } else if (peer_index_ >= 0) {
         std::lock_guard<std::mutex> lock(peer_mutex_);
@@ -78,7 +79,7 @@ std::unique_ptr<sitetosite::SiteToSiteClient> RemoteProcessorGroupPort::getNextP
         if (peer_index_ >= static_cast<int>(peers_.size())) {
           peer_index_ = 0;
         }
-
+        config.setHTTPProxy(this->proxy_);
         nextProtocol = sitetosite::createClient(config);
       } else {
         logger_->log_debug("Refreshing the peer list since there are none configured.");
@@ -177,6 +178,7 @@ void RemoteProcessorGroupPort::onSchedule(const std::shared_ptr<core::ProcessCon
         peer_index_ = 0;
       }
       logger_->log_trace("Creating client");
+      config.setHTTPProxy(this->proxy_);
       nextProtocol = sitetosite::createClient(config);
       logger_->log_trace("Created client, moving into available protocols");
       returnProtocol(std::move(nextProtocol));
@@ -301,6 +303,9 @@ void RemoteProcessorGroupPort::refreshRemoteSite2SiteInfo() {
       client->setDisablePeerVerification();
     }
   }
+  if (!proxy_.host.empty()) {
+    client->setHTTPProxy(proxy_);
+  }
   if (!token.empty()) {
     std::string header = "Authorization: " + token;
     client->appendHeader(header);
@@ -352,6 +357,7 @@ void RemoteProcessorGroupPort::refreshPeerList() {
   sitetosite::SiteToSiteClientConfiguration config(stream_factory_, std::make_shared<sitetosite::Peer>(protocol_uuid_, host_,
     site2site_port_, ssl_service != nullptr), this->getInterface(), client_type_);
   config.setSecurityContext(ssl_service);
+  config.setHTTPProxy(this->proxy_);
   protocol = sitetosite::createClient(config);
 
   protocol->getPeerList(peers_);

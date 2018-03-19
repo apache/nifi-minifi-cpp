@@ -25,6 +25,7 @@
 #include "io/CRCStream.h"
 #include "io/StreamFactory.h"
 #include "utils/Id.h"
+#include "utils/HTTPClient.h"
 
 namespace org {
 namespace apache {
@@ -368,6 +369,12 @@ class SiteToSiteClientConfiguration {
   std::string getInterface() const {
     return local_network_interface_;
   }
+  void setHTTPProxy(const utils::HTTPProxy &proxy) {
+    proxy_ = proxy;
+  }
+  utils::HTTPProxy getHTTPProxy() const {
+    return this->proxy_;
+  }
 
  protected:
 
@@ -382,6 +389,8 @@ class SiteToSiteClientConfiguration {
   // secore comms
 
   std::shared_ptr<controllers::SSLContextService> ssl_service_;
+
+  utils::HTTPProxy proxy_;
 };
 #if defined(__GNUC__) || defined(__GNUG__)
 #pragma GCC diagnostic pop
