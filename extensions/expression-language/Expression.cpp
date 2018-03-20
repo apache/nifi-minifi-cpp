@@ -20,12 +20,12 @@
 #include <iomanip>
 #include <random>
 #include <algorithm>
-#include <string>
 
 #include "rapidjson/reader.h"
 #include "rapidjson/writer.h"
 #include "rapidjson/document.h"
 
+#include <utils/StringUtils.h>
 #include <expression/Expression.h>
 #include <regex>
 #include "Driver.h"
@@ -139,7 +139,7 @@ Value expr_contains(const std::vector<Value> &args) {
 
 Value expr_in(const std::vector<Value> &args) {
   const std::string &arg_0 = args[0].asString();
-  for (int i = 1; i < args.size(); i++) {
+  for (size_t i = 1; i < args.size(); i++) {
     if (arg_0 == args[i].asString()) {
       return Value(true);
     }
@@ -182,7 +182,7 @@ Value expr_escapeJson(const std::vector<Value> &args) {
   rapidjson::Writer<rapidjson::StringBuffer> writer(buf);
   writer.String(arg_0.c_str());
   std::string result(buf.GetString());
-  return Value(result.substr(1, result.length()-2));
+  return Value(result.substr(1, result.length() - 2));
 }
 
 Value expr_unescapeJson(const std::vector<Value> &args) {
@@ -196,6 +196,30 @@ Value expr_unescapeJson(const std::vector<Value> &args) {
   } else {
     return Value();
   }
+}
+
+Value expr_escapeXml(const std::vector<Value> &args) {
+  return Value(utils::StringUtils::replaceMap(
+      args[0].asString(),
+      {
+          {"\"", "&quot;"},
+          {"'", "&apos;"},
+          {"<", "&lt;"},
+          {">", "&gt;"},
+          {"&", "&amp;"}
+      }));
+}
+
+Value expr_unescapeXml(const std::vector<Value> &args) {
+  return Value(utils::StringUtils::replaceMap(
+      args[0].asString(),
+      {
+          {"&quot;", "\""},
+          {"&apos;", "'"},
+          {"&lt;", "<"},
+          {"&gt;", ">"},
+          {"&amp;", "&"}
+      }));
 }
 
 #ifdef EXPRESSION_LANGUAGE_USE_REGEX
@@ -527,6 +551,10 @@ Expression make_dynamic_function(const std::string &function_name,
     return make_dynamic_function_incomplete<expr_escapeJson>(function_name, args, 0);
   } else if (function_name == "unescapeJson") {
     return make_dynamic_function_incomplete<expr_unescapeJson>(function_name, args, 0);
+  } else if (function_name == "escapeXml") {
+    return make_dynamic_function_incomplete<expr_escapeXml>(function_name, args, 0);
+  } else if (function_name == "unescapeXml") {
+    return make_dynamic_function_incomplete<expr_unescapeXml>(function_name, args, 0);
 #ifdef EXPRESSION_LANGUAGE_USE_REGEX
   } else if (function_name == "replace") {
     return make_dynamic_function_incomplete<expr_replace>(function_name, args, 2);

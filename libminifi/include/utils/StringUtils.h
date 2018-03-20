@@ -20,6 +20,7 @@
 #include <algorithm>
 #include <sstream>
 #include <vector>
+#include <map>
 #include "utils/FailurePolicy.h"
 
 namespace org {
@@ -207,6 +208,19 @@ class StringUtils {
       return false;
     return std::equal(endString.rbegin(), endString.rend(), value.rbegin());
   }
+  
+  static std::string replaceMap(std::string source_string, const std::map<std::string, std::string> &replace_map) {
+    for (const auto &replace_pair : replace_map) {
+      size_t replace_pos = 0;
+      while ((replace_pos = source_string.find(replace_pair.first, replace_pos)) != std::string::npos) {
+        source_string.replace(replace_pos, replace_pair.first.length(), replace_pair.second);
+        replace_pos += replace_pair.second.length();
+      }
+    }
+
+    return source_string;
+  }
+
 };
 
 } /* namespace utils */

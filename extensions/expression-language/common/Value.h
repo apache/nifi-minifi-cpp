@@ -46,8 +46,8 @@ class Value {
   /**
    * Construct a string value
    */
-  explicit Value(const std::string &val) {
-    setString(val);
+  explicit Value(std::string val) {
+    setString(std::move(val));
   }
 
   /**
@@ -138,14 +138,14 @@ class Value {
     bool_val_ = val;
   }
 
-  void setString(const std::string &val) {
+  void setString(std::string val) {
     is_null_ = false;
     is_bool_ = false;
     is_signed_long_ = false;
     is_unsigned_long_ = false;
     is_long_double_ = false;
     is_string_ = true;
-    string_val_ = val;
+    string_val_ = std::move(val);
   }
 
   std::string asString() const {
