@@ -180,19 +180,19 @@ fi
 
 CMAKE_COMMAND=""
 
-if [ -x "$(command -v cmake)" ]; then
-  CMAKE_COMMAND="cmake"
-elif [ -x "$(command -v cmake3)" ]; then
+if [ -x "$(command -v cmake3)" ]; then
   CMAKE_COMMAND="cmake3"
+elif [ -x "$(command -v cmake)" ]; then
+  CMAKE_COMMAND="cmake"
 fi
 
 if [ -z "${CMAKE_COMMAND}" ]; then
   echo "CMAKE is not installed, attempting to install it..."
   bootstrap_cmake
-  if [ -x "$(command -v cmake)" ]; then
-    CMAKE_COMMAND="cmake"
-  elif [ -x "$(command -v cmake3)" ]; then
+  if [ -x "$(command -v cmake3)" ]; then
     CMAKE_COMMAND="cmake3"
+  elif [ -x "$(command -v cmake)" ]; then
+    CMAKE_COMMAND="cmake"
   fi
 fi
 
