@@ -187,13 +187,12 @@ Value expr_escapeJson(const std::vector<Value> &args) {
 
 Value expr_unescapeJson(const std::vector<Value> &args) {
   std::stringstream arg_0_ss;
-  arg_0_ss << "\"" << args[0].asString() << "\"";
+  arg_0_ss << "[\"" << args[0].asString() << "\"]";
   rapidjson::Reader reader;
-  rapidjson::StringStream ss(arg_0_ss.str().c_str());
   rapidjson::Document doc;
-  doc.ParseStream(ss);
-  if (doc.IsString()) {
-    return Value(std::string(doc.GetString()));
+  doc.Parse(arg_0_ss.str().c_str());
+  if (doc.IsArray() && doc.Size() == 1 && doc[0].IsString()) {
+    return Value(std::string(doc[0].GetString()));
   } else {
     return Value();
   }
