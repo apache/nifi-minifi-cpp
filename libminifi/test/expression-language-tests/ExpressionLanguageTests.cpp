@@ -1025,18 +1025,19 @@ TEST_CASE("Encode JSON", "[expressionEncodeJSON]") {  // NOLINT
   REQUIRE("This is a \\\"test!\\\"" == expr({flow_file_a}).asString());
 }
 
+
 TEST_CASE("Decode JSON", "[expressionDecodeJSON]") {  // NOLINT
   auto expr = expression::compile("${message:unescapeJson()}");
 
   auto flow_file_a = std::make_shared<MockFlowFile>();
-  flow_file_a->addAttribute("message", "This is a \\\"test!\\\"");
-  REQUIRE("This is a \"test!\"" == expr({flow_file_a}).asString());
+  flow_file_a->addAttribute("message", "{This is a \\\"test!\\\"}");
+  REQUIRE("{This is a \"test!\"}" == expr({flow_file_a}).asString());
 }
 
 TEST_CASE("Encode Decode JSON", "[expressionEncodeDecodeJSON]") {  // NOLINT
   auto expr = expression::compile("${message:escapeJson():unescapeJson()}");
 
   auto flow_file_a = std::make_shared<MockFlowFile>();
-  flow_file_a->addAttribute("message", "This is a \"test!\"");
-  REQUIRE("This is a \"test!\"" == expr({flow_file_a}).asString());
+  flow_file_a->addAttribute("message", "{This is a \"test!\"}");
+  REQUIRE("{This is a \"test!\"}" == expr({flow_file_a}).asString());
 }
