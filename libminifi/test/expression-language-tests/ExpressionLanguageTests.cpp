@@ -1040,3 +1040,27 @@ TEST_CASE("Encode Decode JSON", "[expressionEncodeDecodeJSON]") {  // NOLINT
   flow_file_a->addAttribute("message", "This is a \"test!\"");
   REQUIRE("This is a \"test!\"" == expr({flow_file_a}).asString());
 }
+
+TEST_CASE("Encode XML", "[expressionEncodeXML]") {  // NOLINT
+  auto expr = expression::compile("${message:escapeXml()}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("message", "Zero > One < \"two!\" & 'true'");
+  REQUIRE("Zero &gt; One &lt; &amp;quot;two!&amp;quot; &amp; &apos;true&apos;" == expr({flow_file_a}).asString());
+}
+
+TEST_CASE("Decode XML", "[expressionDecodeXML]") {  // NOLINT
+  auto expr = expression::compile("${message:unescapeXml()}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("message", "Zero &gt; One &lt; &amp;quot;two!&amp;quot; &amp; &apos;true&apos;");
+  REQUIRE("Zero > One < \"two!\" & 'true'" == expr({flow_file_a}).asString());
+}
+
+TEST_CASE("Encode Decode XML", "[expressionEncodeDecodeXML]") {  // NOLINT
+  auto expr = expression::compile("${message:escapeXml():unescapeXml()}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("message", "Zero > One < \"two!\" & 'true'");
+  REQUIRE("Zero > One < \"two!\" & 'true'" == expr({flow_file_a}).asString());
+}
