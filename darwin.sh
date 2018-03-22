@@ -58,7 +58,7 @@ build_deps(){
         if [ "$KEY" = "$option" ]; then
           FOUND_VALUE="$VALUE"
           if [ "$FOUND_VALUE" = "libcurl" ]; then
-            INSTALLED+=("curl")
+            brew install curl --with-openssl
           elif [ "$FOUND_VALUE" = "libpcap" ]; then
             INSTALLED+=("libpcap")
           elif [ "$FOUND_VALUE" = "openssl" ]; then

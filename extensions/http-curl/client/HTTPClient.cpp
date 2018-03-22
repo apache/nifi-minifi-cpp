@@ -22,6 +22,7 @@
 #include <vector>
 #include <string>
 #include <algorithm>
+#include "utils/StringUtils.h"
 
 namespace org {
 namespace apache {
@@ -332,10 +333,23 @@ bool HTTPClient::matches(const std::string &value, const std::string &sregex) {
 
 void HTTPClient::configure_secure_connection(CURL *http_session) {
 #ifdef USE_CURL_NSS
+  setVerbose();
   logger_->log_debug("Using NSS and certificate file %s", ssl_context_service_->getCertificateFile());
+  logger_->log_debug("Using NSS and CA certificate file %s", ssl_context_service_->getCACertificate());
   curl_easy_setopt(http_session, CURLOPT_CAINFO, 0);
-  curl_easy_setopt(http_session, CURLOPT_SSLCERTTYPE, "PEM");
+  if (utils::StringUtils::endsWithIgnoreCase(ssl_context_service_->getCertificateFile(),"p12")) {
+    curl_easy_setopt(http_session, CURLOPT_SSLCERTTYPE, "P12");
+  }
+  else {
+    curl_easy_setopt(http_session, CURLOPT_SSLCERTTYPE, "PEM");
+  }
   curl_easy_setopt(http_session, CURLOPT_SSLCERT, ssl_context_service_->getCertificateFile().c_str());
+  if (utils::StringUtils::endsWithIgnoreCase(ssl_context_service_->getPrivateKeyFile(),"p12")) {
+    curl_easy_setopt(http_session, CURLOPT_SSLKEYTYPE, "P12");
+  }
+  else {
+    curl_easy_setopt(http_session, CURLOPT_SSLKEYTYPE, "PEM");
+  }
   curl_easy_setopt(http_session, CURLOPT_SSLKEY, ssl_context_service_->getPrivateKeyFile().c_str());
   curl_easy_setopt(http_session, CURLOPT_KEYPASSWD, ssl_context_service_->getPassphrase().c_str());
   curl_easy_setopt(http_session, CURLOPT_CAINFO, ssl_context_service_->getCACertificate().c_str());
