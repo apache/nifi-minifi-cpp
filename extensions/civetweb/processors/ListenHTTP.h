@@ -24,6 +24,7 @@
 #include <regex>
 
 #include <CivetServer.h>
+#include <concurrentqueue.h>
 
 #include "FlowFileRecord.h"
 #include "core/Processor.h"
@@ -53,7 +54,7 @@ class ListenHTTP : public core::Processor {
   // Destructor
   virtual ~ListenHTTP();
   // Processor Name
-  static constexpr char const* ProcessorName = "ListenHTTP";
+  static constexpr char const *ProcessorName = "ListenHTTP";
   // Supported Properties
   static core::Property BasePath;
   static core::Property Port;
@@ -70,23 +71,80 @@ class ListenHTTP : public core::Processor {
   void initialize();
   void onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory);
 
+  struct response_body {
+    std::string uri;
+    std::string mime_type;
+    std::string body;
+  };
+
   // HTTP request handler
   class Handler : public CivetHandler {
    public:
-    Handler(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory, std::string &&authDNPattern, std::string &&headersAsAttributesPattern);
+    Handler(std::string base_uri,
+            core::ProcessContext *context,
+            core::ProcessSessionFactory *sessionFactory,
+            std::string &&authDNPattern,
+            std::string &&headersAsAttributesPattern);
     bool handlePost(CivetServer *server, struct mg_connection *conn);
+    bool handleGet(CivetServer *server, struct mg_connection *conn);
+
+    /**
+     * Sets a static response body string to be used for a given URI, with a number of seconds it will be kept in memory.
+     * @param response
+     */
+    void set_response_body(struct response_body response) {
+      std::lock_guard<std::mutex> guard(uri_map_mutex_);
+
+      if (response.body.empty()) {
+        logger_->log_info("Unregistering response body for URI '%s'",
+                          response.uri);
+        response_uri_map_.erase(response.uri);
+      } else {
+        logger_->log_info("Registering response body for URI '%s' of length %lu",
+                          response.uri,
+                          response.body.size());
+        response_uri_map_[response.uri] = std::move(response);
+      }
+    }
 
    private:
     // Send HTTP 500 error response to client
-    void sendErrorResponse(struct mg_connection *conn);
+    void send_error_response(struct mg_connection *conn);
+    bool auth_request(mg_connection *conn, const mg_request_info *req_info) const;
+    void set_header_attributes(const mg_request_info *req_info, const std::shared_ptr<FlowFileRecord> &flow_file) const;
+    void write_body(mg_connection *conn, const mg_request_info *req_info);
 
-    std::regex _authDNRegex;
-    std::regex _headersAsAttributesRegex;
-    core::ProcessContext *_processContext;
-    core::ProcessSessionFactory *_processSessionFactory;
+    std::string base_uri_;
+    std::regex auth_dn_regex_;
+    std::regex headers_as_attrs_regex_;
+    core::ProcessContext *process_context_;
+    core::ProcessSessionFactory *session_factory_;
 
     // Logger
     std::shared_ptr<logging::Logger> logger_;
+    std::map<std::string, response_body> response_uri_map_;
+    std::mutex uri_map_mutex_;
+  };
+
+  class ResponseBodyReadCallback : public InputStreamCallback {
+   public:
+    explicit ResponseBodyReadCallback(std::string *out_str)
+        : out_str_(out_str) {
+    }
+    int64_t process(std::shared_ptr<io::BaseStream> stream) {
+      out_str_->resize(stream->getSize());
+      auto num_read = stream->readData(reinterpret_cast<uint8_t *>(&(*out_str_)[0]),
+                                       static_cast<int>(stream->getSize()));
+
+      if (num_read != stream->getSize()) {
+        throw std::runtime_error("GraphReadCallback failed to fully read flow file input stream");
+      }
+
+      return num_read;
+    }
+
+   private:
+    std::string *out_str_;
   };
 
   // Write callback for transferring data from HTTP request to content repo
@@ -99,16 +157,16 @@ class ListenHTTP : public core::Processor {
     // Logger
     std::shared_ptr<logging::Logger> logger_;
 
-    struct mg_connection *_conn;
-    const struct mg_request_info *_reqInfo;
+    struct mg_connection *conn_;
+    const struct mg_request_info *req_info_;
   };
 
  private:
   // Logger
   std::shared_ptr<logging::Logger> logger_;
 
-  std::unique_ptr<CivetServer> _server;
-  std::unique_ptr<Handler> _handler;
+  std::unique_ptr<CivetServer> server_;
+  std::unique_ptr<Handler> handler_;
 };
 
 REGISTER_RESOURCE(ListenHTTP);
