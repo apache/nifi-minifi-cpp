@@ -210,15 +210,28 @@ class StringUtils {
   }
   
   static std::string replaceMap(std::string source_string, const std::map<std::string, std::string> &replace_map) {
+    auto result_string = source_string;
+
+    std::vector<std::pair<size_t, std::pair<size_t, std::string>>> replacements;
     for (const auto &replace_pair : replace_map) {
       size_t replace_pos = 0;
       while ((replace_pos = source_string.find(replace_pair.first, replace_pos)) != std::string::npos) {
-        source_string.replace(replace_pos, replace_pair.first.length(), replace_pair.second);
-        replace_pos += replace_pair.second.length();
+        replacements.emplace_back(std::make_pair(replace_pos,
+                                                 std::make_pair(replace_pair.first.length(), replace_pair.second)));
+        replace_pos += replace_pair.first.length();
       }
     }
 
-    return source_string;
+    std::sort(replacements.begin(), replacements.end(), [](const std::pair<size_t, std::pair<size_t, std::string>> a,
+                                                           const std::pair<size_t, std::pair<size_t, std::string>> &b) {
+      return a.first > b.first;
+    });
+
+    for (const auto &replacement : replacements) {
+      result_string = source_string.replace(replacement.first, replacement.second.first, replacement.second.second);
+    }
+
+    return result_string;
   }
 
 };
