@@ -222,6 +222,57 @@ Value expr_unescapeXml(const std::vector<Value> &args) {
       }));
 }
 
+Value expr_escapeCsv(const std::vector<Value> &args) {
+  auto result = args[0].asString();
+  const char quote_req_chars[] = {'"', '\r', '\n', ','};
+  bool quote_required = false;
+
+  for (const auto &c : quote_req_chars) {
+    if (result.find(c) != std::string::npos) {
+      quote_required = true;
+      break;
+    }
+  }
+
+  if (quote_required) {
+    std::string quoted_result = "\"";
+    quoted_result.append(utils::StringUtils::replaceMap(result, {{"\"", "\"\""}}));
+    quoted_result.append("\"");
+    return Value(quoted_result);
+  }
+
+  return Value(result);
+}
+
+Value expr_unescapeCsv(const std::vector<Value> &args) {
+  auto result = args[0].asString();
+
+  if (result[0] == '"' && result[result.size() - 1] == '"') {
+    bool quote_required = false;
+
+    size_t quote_pos = result.find('"', 1);
+
+    if (quote_pos != result.length() - 1) {
+      quote_required = true;
+    } else {
+      const char quote_req_chars[] = {'\r', '\n', ','};
+
+      for (const auto &c : quote_req_chars) {
+        if (result.find(c) != std::string::npos) {
+          quote_required = true;
+          break;
+        }
+      }
+    }
+
+    if (quote_required) {
+      return Value(utils::StringUtils::replaceMap(result.substr(1, result.size() - 2), {{"\"\"", "\""}}));
+    }
+  }
+
+  return Value(result);
+}
+
 #ifdef EXPRESSION_LANGUAGE_USE_REGEX
 
 Value expr_replace(const std::vector<Value> &args) {
@@ -555,6 +606,10 @@ Expression make_dynamic_function(const std::string &function_name,
     return make_dynamic_function_incomplete<expr_escapeXml>(function_name, args, 0);
   } else if (function_name == "unescapeXml") {
     return make_dynamic_function_incomplete<expr_unescapeXml>(function_name, args, 0);
+  } else if (function_name == "escapeCsv") {
+    return make_dynamic_function_incomplete<expr_escapeCsv>(function_name, args, 0);
+  } else if (function_name == "unescapeCsv") {
+    return make_dynamic_function_incomplete<expr_unescapeCsv>(function_name, args, 0);
 #ifdef EXPRESSION_LANGUAGE_USE_REGEX
   } else if (function_name == "replace") {
     return make_dynamic_function_incomplete<expr_replace>(function_name, args, 2);

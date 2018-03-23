@@ -204,6 +204,10 @@ token, filename.
 
 - [`escapeJson`](#escapejson)
 - [`unescapeJson`](#unescapejson)
+- [`escapeXml`](#escapexml)
+- [`escapeCsv`](#escapecsv)
+- [`unescapeXml`](#unescapexml)
+- [`unescapeCsv`](#unescapecsv)
 
 ## Planned Features
 
@@ -221,12 +225,8 @@ token, filename.
 
 ### Encode/Decode Functions
 
-- `escapeXml`
-- `escapeCsv`
 - `escapeHtml3`
 - `escapeHtml4`
-- `unescapeXml`
-- `unescapeCsv`
 - `unescapeHtml3`
 - `unescapeHtml4`
 - `urlEncode`
@@ -1266,3 +1266,75 @@ If the "message" attribute is 'This is a "test!"', then the Expression
 
 If the "message" attribute is 'This is a \"test!\"', then the Expression
 `${message:unescapeJson()}` will return 'This is a "test!"'
+
+### escapeXml
+
+**Description**: This function prepares the Subject to be inserted into XML
+document by escaping the characters in a String using XML entities. The
+function correctly escapes quotes, apostrophe, ampersand, `<`, `>` and
+control-chars.
+
+**Subject Type**: String
+
+**Arguments**: No arguments
+
+**Return Type**: String
+
+**Examples**:
+
+If the "message" attribute is `Zero > One < \"two!\" & 'true'`, then the
+Expression `${message:escapeXml()}` will return `Zero &gt; One &lt;
+&quot;two!&quot; &amp; &apos;true&apos;`
+
+### unescapeXml
+
+**Description**: This function unescapes a string containing XML entity escapes
+to a string containing the actual Unicode characters corresponding to the
+escapes. Supports only the five basic XML entities (gt, lt, quot, amp, apos).
+
+**Subject Type**: String
+
+**Arguments**: No arguments
+
+**Return Type**: String
+
+**Examples**:
+
+If the "message" attribute is `Zero &gt; One &lt; &quot;two!&quot; &amp;
+&apos;true&apos;`, then the Expression `${message:escapeXml()}` will return
+`Zero > One < \"two!\" & 'true'`
+
+### escapeCsv
+
+**Description**: This function prepares the Subject to be inserted into CSV
+document by escaping the characters in a String using the rules in RFC 4180.
+The function correctly escapes quotes and surround the string in quotes if
+needed.
+
+**Subject Type**: String
+
+**Arguments**: No arguments
+
+**Return Type**: String
+
+**Examples**:
+
+If the "message" attribute is `Zero > One < "two!" & 'true'`, then the
+Expression `${message:escapeCsv()}` will return `"Zero > One < ""two!"" &
+'true'"`
+
+### unescapeCsv
+
+**Description**: This function unescapes a String from a CSV document according
+to the rules of RFC 4180
+
+**Subject Type**: String
+
+**Arguments**: No arguments
+
+**Return Type**: String
+
+**Examples**:
+
+If the "message" attribute is `"Zero > One < ""two!"" & 'true'"`, then the
+Expression `${message:escapeCsv()}` will return `Zero > One < "two!" & 'true'`
