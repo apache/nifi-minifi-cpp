@@ -113,12 +113,13 @@ class SchedulingAgent {
    * Create a new scheduling agent.
    */
   SchedulingAgent(std::shared_ptr<core::controller::ControllerServiceProvider> controller_service_provider, std::shared_ptr<core::Repository> repo, std::shared_ptr<core::Repository> flow_repo,
-                  std::shared_ptr<core::ContentRepository> content_repo, std::shared_ptr<Configure> configuration)
+                  std::shared_ptr<core::ContentRepository> content_repo, std::shared_ptr<Configure> configuration, const std::shared_ptr<core::MetaInfoContainer> &meta_info)
       : admin_yield_duration_(0),
         bored_yield_duration_(0),
         configure_(configuration),
         content_repo_(content_repo),
         controller_service_provider_(controller_service_provider),
+        meta_info_container_(meta_info),
         logger_(logging::LoggerFactory<SchedulingAgent>::getLogger()) {
     running_ = false;
     repo_ = repo;
@@ -179,6 +180,9 @@ class SchedulingAgent {
   utils::ThreadPool<uint64_t> thread_pool_;
   // controller service provider reference
   std::shared_ptr<core::controller::ControllerServiceProvider> controller_service_provider_;
+
+  // meta info
+  std::shared_ptr<core::MetaInfoContainer> meta_info_container_;
 
  private:
   // Logger

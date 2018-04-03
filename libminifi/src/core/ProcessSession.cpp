@@ -51,6 +51,10 @@ std::shared_ptr<core::FlowFile> ProcessSession::create() {
   details << process_context_->getProcessorNode()->getName() << " creates flow record " << record->getUUIDStr();
   provenance_report_->create(record, details.str());
 
+  // update meta info
+  if (process_context_->getMetaInfoContainer())
+    process_context_->getMetaInfoContainer()->applyMetaInfo(record);
+
   return record;
 }
 

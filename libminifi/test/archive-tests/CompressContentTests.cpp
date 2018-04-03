@@ -148,7 +148,7 @@ TEST_CASE("CompressFileGZip", "[compressfiletest1]") {
 
     std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(processor);
     std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider = nullptr;
-    auto context = std::make_shared<core::ProcessContext>(node, controller_services_provider, repo, repo, content_repo);
+    auto context = std::make_shared<core::ProcessContext>(node, controller_services_provider, repo, repo, nullptr, content_repo);
     context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressMode, MODE_COMPRESS);
     context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressFormat, COMPRESSION_FORMAT_GZIP);
     context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressLevel, "9");
@@ -248,7 +248,7 @@ TEST_CASE("DecompressFileGZip", "[compressfiletest2]") {
 
     std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(processor);
     std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider = nullptr;
-    auto context = std::make_shared<core::ProcessContext>(node, controller_services_provider, repo, repo, content_repo);
+    auto context = std::make_shared<core::ProcessContext>(node, controller_services_provider, repo, repo, nullptr, content_repo);
     context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressMode, MODE_DECOMPRESS);
     context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressFormat, COMPRESSION_FORMAT_GZIP);
     context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressLevel, "9");
@@ -351,7 +351,7 @@ TEST_CASE("CompressFileBZip", "[compressfiletest3]") {
 
     std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(processor);
     std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider = nullptr;
-    auto context = std::make_shared<core::ProcessContext>(node, controller_services_provider, repo, repo, content_repo);
+    auto context = std::make_shared<core::ProcessContext>(node, controller_services_provider, repo, repo, nullptr, content_repo);
     context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressMode, MODE_COMPRESS);
     context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressFormat, COMPRESSION_FORMAT_BZIP2);
     context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressLevel, "9");
@@ -452,7 +452,7 @@ TEST_CASE("DecompressFileBZip", "[compressfiletest4]") {
 
     std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(processor);
     std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider = nullptr;
-    auto context = std::make_shared<core::ProcessContext>(node, controller_services_provider, repo, repo, content_repo);
+    auto context = std::make_shared<core::ProcessContext>(node, controller_services_provider, repo, repo, nullptr, content_repo);
     context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressMode, MODE_DECOMPRESS);
     context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressFormat, COMPRESSION_FORMAT_BZIP2);
     context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressLevel, "9");
@@ -555,7 +555,7 @@ TEST_CASE("CompressFileLZMA", "[compressfiletest5]") {
 
     std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(processor);
     std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider = nullptr;
-    auto context = std::make_shared<core::ProcessContext>(node, controller_services_provider, repo, repo, content_repo);
+    auto context = std::make_shared<core::ProcessContext>(node, controller_services_provider, repo, repo, nullptr, content_repo);
     context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressMode, MODE_COMPRESS);
     context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressFormat, COMPRESSION_FORMAT_LZMA);
     context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressLevel, "9");
@@ -662,7 +662,7 @@ TEST_CASE("DecompressFileLZMA", "[compressfiletest6]") {
 
     std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(processor);
     std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider = nullptr;
-    auto context = std::make_shared<core::ProcessContext>(node, controller_services_provider, repo, repo, content_repo);
+    auto context = std::make_shared<core::ProcessContext>(node, controller_services_provider, repo, repo, nullptr, content_repo);
     context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressMode, MODE_DECOMPRESS);
     context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressFormat, COMPRESSION_FORMAT_ATTRIBUTE);
     context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressLevel, "9");
@@ -772,7 +772,7 @@ TEST_CASE("CompressFileXYLZMA", "[compressfiletest7]") {
 
     std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(processor);
     std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider = nullptr;
-    auto context = std::make_shared<core::ProcessContext>(node, controller_services_provider, repo, repo, content_repo);
+    auto context = std::make_shared<core::ProcessContext>(node, controller_services_provider, repo, repo, nullptr, content_repo);
     context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressMode, MODE_COMPRESS);
     context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressFormat, COMPRESSION_FORMAT_XZ_LZMA2);
     context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressLevel, "9");
@@ -879,7 +879,7 @@ TEST_CASE("DecompressFileXYLZMA", "[compressfiletest8]") {
 
     std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(processor);
     std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider = nullptr;
-    auto context = std::make_shared<core::ProcessContext>(node, controller_services_provider, repo, repo, content_repo);
+    auto context = std::make_shared<core::ProcessContext>(node, controller_services_provider, repo, repo, nullptr, content_repo);
     context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressMode, MODE_DECOMPRESS);
     context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressFormat, COMPRESSION_FORMAT_ATTRIBUTE);
     context->setProperty(org::apache::nifi::minifi::processors::CompressContent::CompressLevel, "9");

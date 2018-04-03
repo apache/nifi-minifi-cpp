@@ -43,6 +43,7 @@
 #include "core/ProcessSession.h"
 #include "core/ProcessorNode.h"
 #include "core/reporting/SiteToSiteProvenanceReportingTask.h"
+#include "core/MetaInfo.h"
 
 class LogTestController {
  public:
@@ -185,6 +186,10 @@ class TestPlan {
     return content_repo_;
   }
 
+  std::shared_ptr<core::MetaInfoContainer> getMetaInfoContainer() {
+    return meta_info_container_;
+  }
+
  protected:
 
   void finalize();
@@ -197,6 +202,7 @@ class TestPlan {
 
   std::shared_ptr<core::Repository> flow_repo_;
   std::shared_ptr<core::Repository> prov_repo_;
+  std::shared_ptr<core::MetaInfoContainer> meta_info_container_;
 
   std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider_;
 

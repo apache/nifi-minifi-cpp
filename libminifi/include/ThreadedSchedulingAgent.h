@@ -45,8 +45,8 @@ class ThreadedSchedulingAgent : public SchedulingAgent {
    * Create a new threaded scheduling agent.
    */
   ThreadedSchedulingAgent(std::shared_ptr<core::controller::ControllerServiceProvider> controller_service_provider, std::shared_ptr<core::Repository> repo, std::shared_ptr<core::Repository> flow_repo,
-                          std::shared_ptr<core::ContentRepository> content_repo, std::shared_ptr<Configure> configuration)
-      : SchedulingAgent(controller_service_provider, repo, flow_repo, content_repo, configuration),
+                          std::shared_ptr<core::ContentRepository> content_repo, std::shared_ptr<Configure> configuration, const std::shared_ptr<core::MetaInfoContainer> &meta_info)
+      : SchedulingAgent(controller_service_provider, repo, flow_repo, content_repo, configuration, meta_info),
         logger_(logging::LoggerFactory<ThreadedSchedulingAgent>::getLogger()) {
   }
   // Destructor

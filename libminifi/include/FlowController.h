@@ -48,6 +48,7 @@
 #include "utils/Id.h"
 #include "core/state/metrics/MetricsBase.h"
 #include "core/state/StateManager.h"
+#include "core/MetaInfo.h"
 
 namespace org {
 namespace apache {
@@ -310,6 +311,10 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
 
   virtual uint64_t getUptime();
 
+  std::shared_ptr<core::MetaInfoContainer> getMetaInfoContainer() {
+    return meta_info_container_;
+  }
+
  protected:
 
   // function to load the flow file repo.
@@ -388,6 +393,8 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
   std::map<uint8_t, std::vector<std::shared_ptr<state::metrics::Metrics>>>component_metrics_by_id_;
   // metrics last run
   std::chrono::steady_clock::time_point last_metrics_capture_;
+  // meta info
+  std::shared_ptr<core::MetaInfoContainer> meta_info_container_;
 
 private:
   std::shared_ptr<logging::Logger> logger_;

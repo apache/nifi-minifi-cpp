@@ -38,8 +38,9 @@ class TimerDrivenSchedulingAgent : public ThreadedSchedulingAgent {
    * Create a new processor
    */
   TimerDrivenSchedulingAgent(std::shared_ptr<core::controller::ControllerServiceProvider> controller_service_provider, std::shared_ptr<core::Repository> repo,
-                             std::shared_ptr<core::Repository> flow_repo, std::shared_ptr<core::ContentRepository> content_repo, std::shared_ptr<Configure> configure)
-      : ThreadedSchedulingAgent(controller_service_provider, repo, flow_repo, content_repo, configure),
+                             std::shared_ptr<core::Repository> flow_repo, std::shared_ptr<core::ContentRepository> content_repo, std::shared_ptr<Configure> configure,
+                             const std::shared_ptr<core::MetaInfoContainer> &meta_info)
+      : ThreadedSchedulingAgent(controller_service_provider, repo, flow_repo, content_repo, configure, meta_info),
         logger_(logging::LoggerFactory<TimerDrivenSchedulingAgent>::getLogger()) {
   }
   //  Destructor

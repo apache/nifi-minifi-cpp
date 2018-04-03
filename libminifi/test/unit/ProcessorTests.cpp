@@ -72,7 +72,7 @@ TEST_CASE("Test GetFileMultiple", "[getfileCreate3]") {
 
   std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(processor);
   std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider = nullptr;
-  auto context = std::make_shared<core::ProcessContext>(node, controller_services_provider, repo, repo, content_repo);
+  auto context = std::make_shared<core::ProcessContext>(node, controller_services_provider, repo, repo, nullptr, content_repo);
 
   context->setProperty(org::apache::nifi::minifi::processors::GetFile::Directory, dir);
   // replicate 10 threads
@@ -156,7 +156,7 @@ TEST_CASE("Test GetFile Ignore", "[getfileCreate3]") {
 
   std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(processor);
   std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider = nullptr;
-  auto context = std::make_shared<core::ProcessContext>(node, controller_services_provider, repo, repo, content_repo);
+  auto context = std::make_shared<core::ProcessContext>(node, controller_services_provider, repo, repo, nullptr, content_repo);
 
   context->setProperty(org::apache::nifi::minifi::processors::GetFile::Directory, dir);
   // replicate 10 threads

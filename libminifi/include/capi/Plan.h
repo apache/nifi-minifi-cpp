@@ -41,6 +41,7 @@
 #include "core/ProcessSession.h"
 #include "core/ProcessorNode.h"
 #include "core/reporting/SiteToSiteProvenanceReportingTask.h"
+#include "core/MetaInfo.h"
 
 
 class ExecutionPlan {
@@ -89,6 +90,8 @@ class ExecutionPlan {
 
   std::shared_ptr<core::Repository> flow_repo_;
   std::shared_ptr<core::Repository> prov_repo_;
+  // meta info
+  std::shared_ptr<core::MetaInfoContainer> meta_info_container_;
 
   std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider_;
 
