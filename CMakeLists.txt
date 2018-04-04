@@ -26,6 +26,7 @@ set(PROJECT_VERSION_PATCH 0)
 option(SKIP_TESTS "Skips building all tests." OFF)
 option(PORTABLE "Instructs the compiler to remove architecture specific optimizations" ON)
 option(USE_SYSTEM_OPENSSL "Instructs the build system to search for and use an SSL library available in the host system" ON)
+option(USE_SYSTEM_UUID "Instructs the build system to search for and use an UUID library available in the host system" ON)
 
 include(FeatureSummary)
 include(ExternalProject)
@@ -120,7 +121,16 @@ SET(TEST_DIR ${CMAKE_SOURCE_DIR}/libminifi/test)
 
 include(Extensions)
 
-find_package(UUID REQUIRED)
+if (USE_SYSTEM_UUID)
+  list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/uuid/sys")
+  find_package(UUID REQUIRED)
+else()
+  list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/uuid/dummy")
+  include_directories("thirdparty/uuid/include")
+  add_subdirectory("thirdparty/uuid")
+  set(UUID_FOUND "YES")
+  set(UUID_LIBRARIES "uuid")
+endif()
 
 file(GLOB SPD_SOURCES "thirdparty/spdlog-20170710/include/spdlog/*")
 
