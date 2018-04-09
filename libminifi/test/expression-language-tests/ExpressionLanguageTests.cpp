@@ -1046,19 +1046,51 @@ TEST_CASE("Encode XML", "[expressionEncodeXML]") {  // NOLINT
 
   auto flow_file_a = std::make_shared<MockFlowFile>();
   flow_file_a->addAttribute("message", "Zero > One < \"two!\" & 'true'");
-  REQUIRE("Zero &gt; One &lt; &amp;quot;two!&amp;quot; &amp; &apos;true&apos;" == expr({flow_file_a}).asString());
+  REQUIRE("Zero &gt; One &lt; &quot;two!&quot; &amp; &apos;true&apos;" == expr({flow_file_a}).asString());
 }
 
 TEST_CASE("Decode XML", "[expressionDecodeXML]") {  // NOLINT
   auto expr = expression::compile("${message:unescapeXml()}");
 
   auto flow_file_a = std::make_shared<MockFlowFile>();
-  flow_file_a->addAttribute("message", "Zero &gt; One &lt; &amp;quot;two!&amp;quot; &amp; &apos;true&apos;");
+  flow_file_a->addAttribute("message", "Zero &gt; One &lt; &quot;two!&quot; &amp; &apos;true&apos;");
   REQUIRE("Zero > One < \"two!\" & 'true'" == expr({flow_file_a}).asString());
 }
 
 TEST_CASE("Encode Decode XML", "[expressionEncodeDecodeXML]") {  // NOLINT
   auto expr = expression::compile("${message:escapeXml():unescapeXml()}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("message", "Zero > One < \"two!\" & 'true'");
+  REQUIRE("Zero > One < \"two!\" & 'true'" == expr({flow_file_a}).asString());
+}
+
+TEST_CASE("Encode CSV", "[expressionEncodeCSV]") {  // NOLINT
+  auto expr = expression::compile("${message:escapeCsv()}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("message", "Zero > One < \"two!\" & 'true'");
+  REQUIRE("\"Zero > One < \"\"two!\"\" & 'true'\"" == expr({flow_file_a}).asString());
+}
+
+TEST_CASE("Decode CSV", "[expressionDecodeCSV]") {  // NOLINT
+  auto expr = expression::compile("${message:unescapeCsv()}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("message", R"("Zero > One < ""two!"" & 'true'")");
+  REQUIRE("Zero > One < \"two!\" & 'true'" == expr({flow_file_a}).asString());
+}
+
+TEST_CASE("Decode CSV 2", "[expressionDecodeCSV2]") {  // NOLINT
+  auto expr = expression::compile("${message:unescapeCsv()}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("message", R"("quoted")");
+  REQUIRE("\"quoted\"" == expr({flow_file_a}).asString());
+}
+
+TEST_CASE("Encode Decode CSV", "[expressionEncodeDecodeCSV]") {  // NOLINT
+  auto expr = expression::compile("${message:escapeCsv():unescapeCsv()}");
 
   auto flow_file_a = std::make_shared<MockFlowFile>();
   flow_file_a->addAttribute("message", "Zero > One < \"two!\" & 'true'");

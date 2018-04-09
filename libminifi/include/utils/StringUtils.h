@@ -68,7 +68,8 @@ class StringUtils {
    * @returns modified string
    */
   static inline std::string trimLeft(std::string s) {
-    s.erase(s.begin(), std::find_if(s.begin(), s.end(), std::not1(std::pointer_to_unary_function<int, int>(std::isspace))));
+    s.erase(s.begin(),
+            std::find_if(s.begin(), s.end(), std::not1(std::pointer_to_unary_function<int, int>(std::isspace))));
     return s;
   }
 
@@ -79,7 +80,9 @@ class StringUtils {
    */
 
   static inline std::string trimRight(std::string s) {
-    s.erase(std::find_if(s.rbegin(), s.rend(), std::not1(std::pointer_to_unary_function<int, int>(std::isspace))).base(), s.end());
+    s.erase(std::find_if(s.rbegin(),
+                         s.rend(),
+                         std::not1(std::pointer_to_unary_function<int, int>(std::isspace))).base(), s.end());
     return s;
   }
 
@@ -88,7 +91,10 @@ class StringUtils {
    */
   static inline bool equalsIgnoreCase(const std::string &left, const std::string right) {
     if (left.length() == right.length()) {
-      return std::equal(right.begin(), right.end(), left.begin(), [](unsigned char lc, unsigned char rc) {return std::tolower(lc) == std::tolower(rc);});
+      return std::equal(right.begin(),
+                        right.end(),
+                        left.begin(),
+                        [](unsigned char lc, unsigned char rc) { return std::tolower(lc) == std::tolower(rc); });
     } else {
       return false;
     }
@@ -150,7 +156,7 @@ class StringUtils {
 
   }
 
-  static std::string replaceEnvironmentVariables(std::string& original_string) {
+  static std::string replaceEnvironmentVariables(std::string &original_string) {
     int32_t beg_seq = 0;
     int32_t end_seq = 0;
     std::string source_string = original_string;
@@ -187,7 +193,9 @@ class StringUtils {
     return source_string;
   }
 
-  static std::string& replaceAll(std::string& source_string, const std::string &from_string, const std::string &to_string) {
+  static std::string &replaceAll(std::string &source_string,
+                                 const std::string &from_string,
+                                 const std::string &to_string) {
     std::size_t loc = 0;
     std::size_t lastFound;
     while ((lastFound = source_string.find(from_string, loc)) != std::string::npos) {
@@ -197,28 +205,44 @@ class StringUtils {
     return source_string;
   }
 
-  inline static bool endsWithIgnoreCase(const std::string &value, const std::string & endString) {
+  inline static bool endsWithIgnoreCase(const std::string &value, const std::string &endString) {
     if (endString.size() > value.size())
       return false;
-    return std::equal(endString.rbegin(), endString.rend(), value.rbegin(), [](unsigned char lc, unsigned char rc) {return std::tolower(lc) == std::tolower(rc);});
+    return std::equal(endString.rbegin(),
+                      endString.rend(),
+                      value.rbegin(),
+                      [](unsigned char lc, unsigned char rc) { return std::tolower(lc) == std::tolower(rc); });
   }
 
-  inline static bool endsWith(const std::string &value, const std::string & endString) {
+  inline static bool endsWith(const std::string &value, const std::string &endString) {
     if (endString.size() > value.size())
       return false;
     return std::equal(endString.rbegin(), endString.rend(), value.rbegin());
   }
-  
+
   static std::string replaceMap(std::string source_string, const std::map<std::string, std::string> &replace_map) {
+    auto result_string = source_string;
+
+    std::vector<std::pair<size_t, std::pair<size_t, std::string>>> replacements;
     for (const auto &replace_pair : replace_map) {
       size_t replace_pos = 0;
       while ((replace_pos = source_string.find(replace_pair.first, replace_pos)) != std::string::npos) {
-        source_string.replace(replace_pos, replace_pair.first.length(), replace_pair.second);
-        replace_pos += replace_pair.second.length();
+        replacements.emplace_back(std::make_pair(replace_pos,
+                                                 std::make_pair(replace_pair.first.length(), replace_pair.second)));
+        replace_pos += replace_pair.first.length();
       }
     }
 
-    return source_string;
+    std::sort(replacements.begin(), replacements.end(), [](const std::pair<size_t, std::pair<size_t, std::string>> a,
+                                                           const std::pair<size_t, std::pair<size_t, std::string>> &b) {
+      return a.first > b.first;
+    });
+
+    for (const auto &replacement : replacements) {
+      result_string = source_string.replace(replacement.first, replacement.second.first, replacement.second.second);
+    }
+
+    return result_string;
   }
 
 };
