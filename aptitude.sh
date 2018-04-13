@@ -18,11 +18,7 @@
 verify_enable(){
   feature="$1"
   feature_status=${!1}
-  if [ "$feature" = "USB_ENABLED" ]; then
-    echo "false"
-  else
     echo "true"
-  fi
 }
 add_os_flags() {
   CMAKE_BUILD_COMMAND="${CMAKE_BUILD_COMMAND} -DFAIL_ON_WARNINGS= "
@@ -53,6 +49,7 @@ build_deps(){
           elif [ "$FOUND_VALUE" = "openssl" ]; then
             INSTALLED+=("openssl")
           elif [ "$FOUND_VALUE" = "libusb" ]; then
+            INSTALLED+=("libusb-1.0-0-dev")
             INSTALLED+=("libusb-dev")
           elif [ "$FOUND_VALUE" = "libpng" ]; then
             INSTALLED+=("libpng-dev")
