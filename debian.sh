@@ -18,11 +18,7 @@
 verify_enable(){
   feature="$1"
   feature_status=${!1}
-  if [ "$feature" = "USB_ENABLED" ]; then
-    echo "false"
-  else
     echo "true"
-  fi
 }
 add_os_flags() {
   CMAKE_BUILD_COMMAND="${CMAKE_BUILD_COMMAND} -DFAIL_ON_WARNINGS= "
@@ -32,10 +28,10 @@ bootstrap_cmake(){
 }
 build_deps(){
   ## need to account for debian
-  sudo apt-get install libssl1.0-dev > /dev/null
+  sudo apt-get install -y libssl1.0-dev > /dev/null
   RETVAL=$?
-  if ["$RETVAL" -ne "0"]; then  
-     sudo apt-get install libssl-dev > /dev/null
+  if [ "$RETVAL" -ne "0"]; then  
+     sudo apt-get install -y libssl-dev > /dev/null
   fi
   COMMAND="sudo apt-get -y install cmake gcc g++ zlib1g-dev uuid uuid-dev"
   export DEBIAN_FRONTEND=noninteractive
@@ -58,6 +54,7 @@ build_deps(){
           elif [ "$FOUND_VALUE" = "openssl" ]; then
             INSTALLED+=("openssl")
           elif [ "$FOUND_VALUE" = "libusb" ]; then
+            INSTALLED+=("libusb-1.0-0-dev")
             INSTALLED+=("libusb-dev")
           elif [ "$FOUND_VALUE" = "libpng" ]; then
             INSTALLED+=("libpng-dev")
