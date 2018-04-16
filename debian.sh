@@ -27,6 +27,7 @@ bootstrap_cmake(){
   sudo apt-get -y install cmake
 }
 build_deps(){
+  sudo apt-get -y update 
   ## need to account for debian
   sudo apt-get install -y libssl1.0-dev > /dev/null
   RETVAL=$?
