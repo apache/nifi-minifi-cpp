@@ -145,11 +145,9 @@ else
   OS=$(uname -s)
   VER=$(uname -r)
 fi
-
 OS_MAJOR=`echo $VER | cut -d. -f1`
 OS_MINOR=`echo $VER | cut -d. -f2`
 OS_REVISION=`echo $EVR	 | cut -d. -f3`
-
 if [[ "$OS" = "Darwin" ]]; then
   source darwin.sh
 elif [[ "$OS" = Deb* ]]; then
@@ -230,7 +228,6 @@ add_disabled_option PCAP_ENABLED ${FALSE} "ENABLE_PCAP"
 add_dependency PCAP_ENABLED "libpcap"
 
 add_disabled_option USB_ENABLED ${FALSE} "ENABLE_USB_CAMERA"
-
 add_dependency USB_ENABLED "libusb"
 add_dependency USB_ENABLED "libpng"
 
