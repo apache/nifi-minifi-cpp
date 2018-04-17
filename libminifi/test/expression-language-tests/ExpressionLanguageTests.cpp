@@ -1089,6 +1089,30 @@ TEST_CASE("Encode Decode HTML3", "[expressionEncodeDecodeHTML3]") {  // NOLINT
   REQUIRE("&yen; &amp; &lt; &laquo;" == expr({flow_file_a}).asString());
 }
 
+TEST_CASE("Encode HTML4", "[expressionEncodeHTML4]") {  // NOLINT
+  auto expr = expression::compile("${message:escapeHtml4()}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("message", "¥ & Φ < «");
+  REQUIRE("&yen; &amp; &Phi; &lt; &laquo;" == expr({flow_file_a}).asString());
+}
+
+TEST_CASE("Decode HTML4", "[expressionDecodeHTML4]") {  // NOLINT
+  auto expr = expression::compile("${message:unescapeHtml4()}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("message", "&yen; &iota; &amp; &lt; &laquo;");
+  REQUIRE("¥ ι & < «" == expr({flow_file_a}).asString());
+}
+
+TEST_CASE("Encode Decode HTML4", "[expressionEncodeDecodeHTML4]") {  // NOLINT
+  auto expr = expression::compile("${message:escapeHtml4():unescapeHtml4()}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("message", "&yen; &amp; &lt; &Pi; &laquo;");
+  REQUIRE("&yen; &amp; &lt; &Pi; &laquo;" == expr({flow_file_a}).asString());
+}
+
 TEST_CASE("Encode CSV", "[expressionEncodeCSV]") {  // NOLINT
   auto expr = expression::compile("${message:escapeCsv()}");
 
