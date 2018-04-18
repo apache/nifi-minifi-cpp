@@ -20,6 +20,7 @@
 #define __INVOKE_HTTP_H__
 
 #include <memory>
+#include <string>
 #include <regex>
 
 #include <curl/curl.h>
@@ -67,6 +68,7 @@ class InvokeHTTP : public core::Processor {
   virtual ~InvokeHTTP();
   // Processor Name
   static const char *ProcessorName;
+  static std::string DefaultContentType;
   // Supported Properties
   static core::Property Method;
   static core::Property URL;
