@@ -52,6 +52,7 @@ namespace processors {
 std::shared_ptr<utils::IdGenerator> InvokeHTTP::id_generator_ = utils::IdGenerator::getIdGenerator();
 
 const char *InvokeHTTP::ProcessorName = "InvokeHTTP";
+std::string InvokeHTTP::DefaultContentType = "application/octet-stream";
 
 core::Property InvokeHTTP::Method("HTTP Method", "HTTP request method (GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS). "
                                   "Arbitrary methods are also supported. Methods other than POST, PUT and PATCH will be sent without a message body.",
@@ -339,8 +340,9 @@ void InvokeHTTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context,
         response_flow = std::static_pointer_cast<FlowFileRecord>(session->create());
       }
 
-      std::string ct = content_type;
-      response_flow->addKeyedAttribute(MIME_TYPE, ct);
+      // if content type isn't returned we should return application/octet-stream
+      // as per RFC 2046 -- 4.5.1
+      response_flow->addKeyedAttribute(MIME_TYPE, content_type ? std::string(content_type) : DefaultContentType);
       response_flow->addAttribute(STATUS_CODE, std::to_string(http_code));
       if (response_headers.size() > 0)
         flowFile->addAttribute(STATUS_MESSAGE, response_headers.at(0));
