@@ -204,7 +204,7 @@ endif()
 
 option(DISABLE_CIVET "Disables CivetWeb components." OFF)
 if (NOT DISABLE_CIVET)
-createExtension(CIVETWEB CIVETWEB "This enables ListenHTTP" "extensions/civetweb")
+	createExtension(CIVETWEB CIVETWEB "This enables ListenHTTP" "extensions/civetweb" "${TEST_DIR}/civetweb-tests")
 endif()
 
 if (NOT DISABLE_CURL AND NOT DISABLE_CONTROLLER)
