@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <signal.h>
 #include <sys/stat.h>
 #undef NDEBUG
 #include <cassert>
@@ -179,10 +180,6 @@ int main(int argc, char **argv) {
   if (argc > 1) {
     test_file_location = argv[1];
     key_dir = argv[2];
-  }
-  bool isSecure = false;
-  if (url.find("https") != std::string::npos) {
-    isSecure = true;
   }
 
   signal(SIGPIPE, sigpipe_handle);
