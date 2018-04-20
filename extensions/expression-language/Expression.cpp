@@ -28,6 +28,7 @@
 #include <utils/StringUtils.h>
 #include <expression/Expression.h>
 #include <regex>
+#include <curl/curl.h>
 #include "Driver.h"
 
 namespace org {
@@ -1109,6 +1110,50 @@ Value expr_unescapeCsv(const std::vector<Value> &args) {
   return Value(result);
 }
 
+Value expr_urlEncode(const std::vector<Value> &args) {
+  auto arg_0 = args[0].asString();
+  CURL *curl = curl_easy_init();
+  if (curl != nullptr) {
+    char *output = curl_easy_escape(curl,
+                                    arg_0.c_str(),
+                                    static_cast<int>(arg_0.length()));
+    if (output != nullptr) {
+      auto result = std::string(output);
+      curl_free(output);
+      curl_easy_cleanup(curl);
+      return Value(result);
+    } else {
+      curl_easy_cleanup(curl);
+      throw std::runtime_error("cURL failed to encode URL string");
+    }
+  } else {
+    throw std::runtime_error("Failed to initialize cURL");
+  }
+}
+
+Value expr_urlDecode(const std::vector<Value> &args) {
+  auto arg_0 = args[0].asString();
+  CURL *curl = curl_easy_init();
+  if (curl != nullptr) {
+    int out_len;
+    char *output = curl_easy_unescape(curl,
+                                      arg_0.c_str(),
+                                      static_cast<int>(arg_0.length()),
+                                      &out_len);
+    if (output != nullptr) {
+      auto result = std::string(output, static_cast<unsigned long>(out_len));
+      curl_free(output);
+      curl_easy_cleanup(curl);
+      return Value(result);
+    } else {
+      curl_easy_cleanup(curl);
+      throw std::runtime_error("cURL failed to decode URL string");
+    }
+  } else {
+    throw std::runtime_error("Failed to initialize cURL");
+  }
+}
+
 #ifdef EXPRESSION_LANGUAGE_USE_REGEX
 
 Value expr_replace(const std::vector<Value> &args) {
@@ -1242,8 +1287,8 @@ Value expr_toRadix(const std::vector<Value> &args) {
 
   const char chars[] =
       "0123456789ab"
-          "cdefghijklmn"
-          "opqrstuvwxyz";
+      "cdefghijklmn"
+      "opqrstuvwxyz";
   std::string str_num;
 
   while (value) {
@@ -1454,6 +1499,10 @@ Expression make_dynamic_function(const std::string &function_name,
     return make_dynamic_function_incomplete<expr_escapeCsv>(function_name, args, 0);
   } else if (function_name == "unescapeCsv") {
     return make_dynamic_function_incomplete<expr_unescapeCsv>(function_name, args, 0);
+  } else if (function_name == "urlEncode") {
+    return make_dynamic_function_incomplete<expr_urlEncode>(function_name, args, 0);
+  } else if (function_name == "urlDecode") {
+    return make_dynamic_function_incomplete<expr_urlDecode>(function_name, args, 0);
 #ifdef EXPRESSION_LANGUAGE_USE_REGEX
   } else if (function_name == "replace") {
     return make_dynamic_function_incomplete<expr_replace>(function_name, args, 2);
