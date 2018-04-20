@@ -16,6 +16,7 @@
 # under the License.
 #!/bin/bash
 
+script_directory="$(cd "$(dirname "$0")" && pwd)"
 
 #RED='\033[0;41;30m'
 RED='\033[0;101m'
@@ -149,28 +150,28 @@ OS_MAJOR=`echo $VER | cut -d. -f1`
 OS_MINOR=`echo $VER | cut -d. -f2`
 OS_REVISION=`echo $EVR	 | cut -d. -f3`
 if [[ "$OS" = "Darwin" ]]; then
-  source darwin.sh
+  . "${script_directory}/darwin.sh"
 elif [[ "$OS" = Deb* ]]; then
-  source debian.sh
+  . "${script_directory}/debian.sh"
 elif [[ "$OS" = Rasp* ]]; then
-  source aptitude.sh
+  . "${script_directory}/aptitude.sh"
 elif [[ "$OS" = Ubuntu* ]]; then
-  source aptitude.sh
+  . "${script_directory}/aptitude.sh"
 elif [[ "$OS" = *SUSE* ]]; then
-  source suse.sh
+  . "${script_directory}/suse.sh"
 elif [[ "$OS" = *SLE* ]]; then
   if [[ "$VER" = 11* ]]; then
     echo "Please install SLES11 manually...exiting"
     exit
   else
-    source ./suse.sh
+    . "${script_directory}/suse.sh"
   fi
 elif [[ "$OS" = Red* ]]; then
-  source rheldistro.sh
+  . "${script_directory}/rheldistro.sh"
 elif [[ "$OS" = CentOS* ]]; then
-  source centos.sh
+  . "${script_directory}/centos.sh"
 elif [[ "$OS" = Fedora* ]]; then
-  source fedora.sh
+  . "${script_directory}/fedora.sh"
 fi
 
 
