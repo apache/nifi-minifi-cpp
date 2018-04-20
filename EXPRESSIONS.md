@@ -208,6 +208,8 @@ token, filename.
 - [`escapeCsv`](#escapecsv)
 - [`unescapeXml`](#unescapexml)
 - [`unescapeCsv`](#unescapecsv)
+- [`urlEncode`](#urlencode)
+- [`urlDecode`](#urldecode)
 
 ## Planned Features
 
@@ -229,8 +231,6 @@ token, filename.
 - `escapeHtml4`
 - `unescapeHtml3`
 - `unescapeHtml4`
-- `urlEncode`
-- `urlDecode`
 - `base64Encode`
 - `base64Decode`
 
@@ -1338,3 +1338,37 @@ to the rules of RFC 4180
 
 If the "message" attribute is `"Zero > One < ""two!"" & 'true'"`, then the
 Expression `${message:escapeCsv()}` will return `Zero > One < "two!" & 'true'`
+
+### urlEncode
+
+**Description**: Returns a URL-friendly version of the Subject. This is useful,
+for instance, when using an attribute value to indicate the URL of a website.
+
+**Subject Type**: String
+
+**Arguments**: No arguments
+
+**Return Type**: String
+
+**Examples**:
+
+We can URL-Encode an attribute named "url" by using the Expression
+`${url:urlEncode()}`. If the value of the "url" attribute is "some value with
+spaces", this Expression will then return "some%20value%20with%20spaces".
+
+### urlDecode
+
+**Description**: Converts a URL-friendly version of the Subject into a
+human-readable form.
+
+**Subject Type**: String
+
+**Arguments**: No arguments
+
+**Return Type**: String
+
+**Examples**:
+
+If we have a URL-Encoded attribute named "url" with the value
+"some%20value%20with%20spaces", then the Expression `${url:urlDecode()}` will
+return "some value with spaces".
