@@ -37,6 +37,7 @@
 #include "../unit/ProvenanceTestHelper.h"
 #include "io/StreamFactory.h"
 #include "../TestBase.h"
+#include "controllers/NetworkManagementService.h"
 
 void waitToVerifyProcessor() {
   std::this_thread::sleep_for(std::chrono::seconds(2));
@@ -76,6 +77,10 @@ int main(int argc, char **argv) {
   org::apache::nifi::minifi::io::ServerSocket server(socket_context, "localhost", 10005, 1);
 
   controller->load();
+  std::shared_ptr<minifi::controllers::NetworkManagerService> network_service = stream_factory->getNetworkManagerService();
+  assert(network_service != nullptr);
+  assert(network_service->getBindInterface() == "en0");
+
   controller->start();
   waitToVerifyProcessor();
 

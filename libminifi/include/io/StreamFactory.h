@@ -22,6 +22,7 @@
 #include "utils/StringUtils.h"
 #include "validation.h"
 #include "controllers/SSLContextService.h"
+#include "controllers/NetworkManagementService.h"
 namespace org {
 namespace apache {
 namespace nifi {
@@ -51,7 +52,13 @@ class StreamFactory {
    *
    */
   std::unique_ptr<Socket> createSocket(const std::string &host, const uint16_t port) {
-    return delegate_->createSocket(host, port);
+    std::unique_ptr<Socket> socket = delegate_->createSocket(host, port);
+    if (network_mgnt_service_) {
+      std::string interface = network_mgnt_service_->getBindInterface();
+      if (!interface.empty())
+        socket->setInterface(interface);
+    }
+    return socket;
   }
 
   /**
@@ -59,13 +66,28 @@ class StreamFactory {
    *
    */
   std::unique_ptr<Socket> createSecureSocket(const std::string &host, const uint16_t port, const std::shared_ptr<minifi::controllers::SSLContextService> &ssl_service) {
-    return delegate_->createSecureSocket(host, port, ssl_service);
+    std::unique_ptr<Socket> socket = delegate_->createSecureSocket(host, port, ssl_service);
+    if (network_mgnt_service_) {
+      std::string interface = network_mgnt_service_->getBindInterface();
+      if (!interface.empty())
+        socket->setInterface(interface);
+    }
+    return socket;
   }
 
   StreamFactory(const std::shared_ptr<Configure> &configure);
 
+  void setNetworkManagerService(std::shared_ptr<minifi::controllers::NetworkManagerService> &network_mgnt_service) {
+    network_mgnt_service_ = network_mgnt_service;
+  }
+
+  std::shared_ptr<minifi::controllers::NetworkManagerService> getNetworkManagerService() {
+    return network_mgnt_service_;
+  }
+
  protected:
   std::shared_ptr<AbstractStreamFactory> delegate_;
+  std::shared_ptr<minifi::controllers::NetworkManagerService> network_mgnt_service_;
 };
 
 } /* namespace io */

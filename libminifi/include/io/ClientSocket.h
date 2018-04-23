@@ -261,6 +261,7 @@ class Socket : public BaseStream {
 
   bool is_loopback_only_;
   std::string local_network_interface_;
+  bool ip_v6_enable;
 
   // connection information
   int32_t socket_file_descriptor_;

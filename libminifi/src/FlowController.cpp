@@ -50,6 +50,7 @@
 #include "core/controller/ControllerServiceProvider.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "core/Connectable.h"
+#include "controllers/NetworkManagementService.h"
 
 namespace org {
 namespace apache {
@@ -264,6 +265,12 @@ void FlowController::load() {
     // Load Flow File from Repo
     loadFlowRepo();
     logger_->log_info("Loaded flow repository");
+    // tie the network management service with the stream factory
+    std::shared_ptr<core::controller::ControllerService> service = controller_service_provider_->getControllerService(minifi::controllers::NetworkManagerService::CONTEXT_SERVICE_NAME);
+    if (nullptr != service) {
+      std::shared_ptr<minifi::controllers::NetworkManagerService> network_service = std::static_pointer_cast < minifi::controllers::NetworkManagerService > (service);
+      flow_configuration_->getStreamFactory()->setNetworkManagerService(network_service);
+    }
     initialized_ = true;
   }
 }
