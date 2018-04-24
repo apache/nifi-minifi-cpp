@@ -51,6 +51,7 @@ A subset of the Apache NiFi [Expression Language](EXPRESSIONS.md) is supported.
 MiNiFi - C++ supports the following processors:
 
 * [AppendHostInfo](PROCESSORS.md#appendhostinfo)
+* [ApplyTemplate](PROCESSORS.md#applytemplate)
 * [CompressContent](PROCESSORS.md#compresscontent)
 * [ConsumeMQTT](PROCESSORS.md#consumeMQTT)
 * [ExecuteProcess](PROCESSORS.md#executeprocess)
