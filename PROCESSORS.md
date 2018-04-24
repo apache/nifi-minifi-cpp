@@ -322,9 +322,22 @@ default values, and whether a property supports the NiFi Expression Language.
 
 ### Description
 
-Gets images from USB Video Class (UVC)-compatible devices. Outputs one frame
-per flow file at the rate specified by the `FPS` property in the format
+Gets images from USB Video Class (UVC)-compatible devices. Outputs one flow
+file per frame at the rate specified by the `FPS` property in the format
 specified by the `Format` property.
+
+Camera frames are captured in a separate background thread and are emitted as
+flow files upon capture. The onTrigger of this processor is a NOOP and will
+report an error if inputs are flowed into the processor. Because of this, the
+standard event/timer driven scheduling options have no effect.
+
+If the camera supports multiple image size/quality settings, the highest
+quality is chosen for the given FPS. For example:
+
+- If the FPS is 10 and the camera supports a maximum of 1920x1080 at this FPS,
+  output images will be 1920x780
+- If the FPS is 60 and the camera supports a maximum of 320x240 at this FPS,
+  output images will be 320x240
 
 ### Properties
 
