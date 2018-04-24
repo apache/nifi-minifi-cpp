@@ -99,6 +99,16 @@ MiNiFi - C++ supports the following processors:
   * 3.0 or greater
 * flex
   * 2.5 or greater
+
+##### External Projects
+
+The following utilities are needed to build external projects, when bundled
+versions of LibreSSL, cURL, or zlib are used:
+
+* patch 
+* autoconf 
+* automake 
+* libtool 
   
 **NOTE** if Lua support is enabled, then a C++ compiler with support for c++-14 must be used. If using GCC, version 6.x
 or greater is recommended.
@@ -182,6 +192,10 @@ $ yum install cmake \
   gcc gcc-c++ \
   bison \
   flex \
+  patch \
+  autoconf \
+  automake \
+  libtool \
   rocksdb-devel rocksdb \
   libuuid libuuid-devel \
   boost-devel \
@@ -214,6 +228,10 @@ $ apt-get install cmake \
   gcc g++ \
   bison \
   flex \
+  patch \
+  autoconf \
+  automake \
+  libtool \
   libcurl4-openssl-dev \
   librocksdb-dev librocksdb4.1 \
   uuid-dev uuid \
@@ -242,6 +260,10 @@ $ apt-get install libpcap-dev
 $ brew install cmake \
   bison \
   flex \
+  patch \
+  autoconf \
+  automake \
+  libtool \
   rocksdb \
   ossp-uuid \
   boost \
