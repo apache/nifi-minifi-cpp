@@ -14,24 +14,7 @@
 -->
 # Apache MiNiFi Extensions Guide
 
-Currently we support the following extension flags:
- - `-DDISABLE_CURL=TRUE`
- - `-DDISABLE_ROCKSDB=TRUE`
- - `-DDISABLE_LIBARCHIVE=TRUE`
- - `-DDISABLE_USB_CAMERA=TRUE`
- - `-DDISABLE_LIBRDKAFKA=TRUE`
- - `-DDISABLE_SCRIPTING=TRUE`
- - `-DDISABLE_EXPRESSION_LANGUAGE=TRUE`
- - `-DDISABLE_PYTHON_SCRIPTING=TRUE`
- - `-DENABLE_LUA_SCRIPTING=TRUE`
- - `-DENABLE_PCAP=TRUE`
- - `-DENABLE_GPS=TRUE`
- - `-DENABLE_TENSORFLOW=TRUE`
- - `-DENABLE_MQTT=TRUE`
-
-For more information on these extensions, please visit [the Extension How-To on our wiki](https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=74685143)
-
-To enable all extensions for your platform, you may use -DENABLE_ALL=TRUE
+To enable all extensions for your platform, you may use -DENABLE_ALL=TRUE OR select option m in the bootstrap.sh guided build process defined in the [ReadMe](https://github.com/apache/nifi-minifi-cpp/#bootstrapping)
 
 # Extensions by example
 
@@ -68,6 +51,8 @@ createExtension(DISABLE_LIBARCHIVE
 				BUILD_TP
 				"thirdparty/libarchive-3.3.2")
 ```
+
+It is advised that you also add your extension to bootstrap.sh as that is the suggested method of configuring MiNiFi C++
   
 # C bindings
 To find your classes, you must adhere to a dlsym call back that adheres to the core::ObjectFactory class, like the one below. This object factory will return a list of classes, that we can instantiate through the class loader mechanism. Note that since we are including your code directly into our runtime, we will take care of dlopen and dlsym calls. A map from the class name to the object factory is kept in memory.
