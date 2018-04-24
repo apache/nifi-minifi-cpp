@@ -14,7 +14,7 @@
 -->
 # Apache MiNiFi Extensions Guide
 
-To enable all extensions for your platform, you may use -DENABLE_ALL=TRUE OR select option m in the bootstrap.sh guided build process.
+To enable all extensions for your platform, you may use -DENABLE_ALL=TRUE OR select option m in the bootstrap.sh guided build process defined in the [ReadMe](https://github.com/apache/nifi-minifi-cpp/#bootstrapping)
 
 # Extensions by example
 
