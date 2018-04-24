@@ -1221,3 +1221,27 @@ TEST_CASE("Length", "[expressionLength]") {  // NOLINT
   flow_file_a->addAttribute("message", "a brand new filename.txt");
   REQUIRE(24 == expr({flow_file_a}).asUnsignedLong());
 }
+
+TEST_CASE("Encode B64", "[expressionEncodeB64]") {  // NOLINT
+  auto expr = expression::compile("${message:base64Encode()}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("message", "admin:admin");
+  REQUIRE("YWRtaW46YWRtaW4=" == expr({flow_file_a}).asString());
+}
+
+TEST_CASE("Decode B64", "[expressionDecodeB64]") {  // NOLINT
+  auto expr = expression::compile("${message:base64Decode()}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("message", "YWRtaW46YWRtaW4=");
+  REQUIRE("admin:admin" == expr({flow_file_a}).asString());
+}
+
+TEST_CASE("Encode Decode B64", "[expressionEncodeDecodeB64]") {  // NOLINT
+  auto expr = expression::compile("${message:base64Encode():base64Decode()}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("message", "Zero > One < \"two!\" & 'true'");
+  REQUIRE("Zero > One < \"two!\" & 'true'" == expr({flow_file_a}).asString());
+}

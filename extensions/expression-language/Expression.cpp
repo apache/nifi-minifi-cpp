@@ -31,6 +31,7 @@
 #include <curl/curl.h>
 #include <netdb.h>
 #include <arpa/inet.h>
+#include "base64.h"
 #include "Driver.h"
 
 namespace org {
@@ -1225,6 +1226,33 @@ Value expr_urlDecode(const std::vector<Value> &args) {
   }
 }
 
+Value expr_base64Encode(const std::vector<Value> &args) {
+  auto arg_0 = args[0].asString();
+  char *b64_out = nullptr;
+  auto b64_len = Curl_base64_encode(arg_0.c_str(), arg_0.length(), &b64_out);
+  if (b64_out) {
+    std::string result(b64_out, b64_len);
+    free(b64_out);
+    return Value(result);
+  } else {
+    throw std::runtime_error("Failed to encode base64");
+  }
+}
+
+Value expr_base64Decode(const std::vector<Value> &args) {
+  auto arg_0 = args[0].asString();
+  unsigned char *decode_out = nullptr;
+  // size_t Curl_base64_decode(const char *src, unsigned char **outptr)
+  auto out_len = Curl_base64_decode(arg_0.c_str(), &decode_out);
+  if (decode_out) {
+    std::string result(reinterpret_cast<char *>(decode_out), out_len);
+    free(decode_out);
+    return Value(result);
+  } else {
+    throw std::runtime_error("Failed to encode base64");
+  }
+}
+
 #ifdef EXPRESSION_LANGUAGE_USE_REGEX
 
 Value expr_replace(const std::vector<Value> &args) {
@@ -1600,6 +1628,10 @@ Expression make_dynamic_function(const std::string &function_name,
     return make_dynamic_function_incomplete<expr_urlEncode>(function_name, args, 0);
   } else if (function_name == "urlDecode") {
     return make_dynamic_function_incomplete<expr_urlDecode>(function_name, args, 0);
+  } else if (function_name == "base64Encode") {
+    return make_dynamic_function_incomplete<expr_base64Encode>(function_name, args, 0);
+  } else if (function_name == "base64Decode") {
+    return make_dynamic_function_incomplete<expr_base64Decode>(function_name, args, 0);
 #ifdef EXPRESSION_LANGUAGE_USE_REGEX
   } else if (function_name == "replace") {
     return make_dynamic_function_incomplete<expr_replace>(function_name, args, 2);

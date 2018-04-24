@@ -214,6 +214,8 @@ token, filename.
 - [`unescapeCsv`](#unescapecsv)
 - [`urlEncode`](#urlencode)
 - [`urlDecode`](#urldecode)
+- [`base64Encode`](#base64encode)
+- [`base64Decode`](#base64decode)
 
 ### Subjectless Functions
 
@@ -238,8 +240,6 @@ token, filename.
 - `escapeHtml4`
 - `unescapeHtml3`
 - `unescapeHtml4`
-- `base64Encode`
-- `base64Decode`
 
 ### Date Manipulation
 
@@ -1448,6 +1448,40 @@ human-readable form.
 If we have a URL-Encoded attribute named "url" with the value
 "some%20value%20with%20spaces", then the Expression `${url:urlDecode()}` will
 return "some value with spaces".
+
+### base64Encode
+
+**Description**: Returns a Base64 encoded string. This is useful for being able
+to transfer binary data as ascii.
+
+**Subject Type**: String
+
+**Arguments**: No arguments
+
+**Return Type**: String
+
+**Examples**:
+
+We can Base64-Encoded an attribute named "payload" by using the Expression
+`${payload:base64Encode()}` If the attribute payload had a value of
+"admin:admin" then the Expression `${payload:base64Encode()}` will return
+"YWRtaW46YWRtaW4=".
+
+### base64Decode
+
+**Description**: Reverses the Base64 encoding on given string.
+
+**Subject Type**: String
+
+**Arguments**: No arguments
+
+**Return Type**: String
+
+**Examples**:
+
+If we have a Base64-Encoded attribute named "payload" with the value
+"YWRtaW46YWRtaW4=", then the Expression `${payload:base64Decode()}` will return
+"admin:admin".
 
 ## Subjectless Functions
 
