@@ -18,6 +18,7 @@
 ## Table of Contents
 
 - [AppendHostInfo](#appendhostinfo)
+- [ApplyTemplate](#applytemplate)
 - [CompressContent](#compresscontent)
 - [ConsumeMQTT](#consumemqtt)
 - [ExecuteProcess](#executeprocess)
@@ -64,6 +65,30 @@ default values, and whether a property supports the NiFi Expression Language.
 | **Network Interface Name** | eth0 | | Network interface from which to read an IP v4 address |
 | **Hostname Attribute** | source.hostname |  | Flowfile attribute to used to record the agent's hostname |
 | **IP Attribute** | source.ipv4 |  | Flowfile attribute to used to record the agent's IP address |
+
+### Relationships
+
+| Name | Description |
+| - | - |
+| success | All FlowFiles are routed to this relationship. |
+
+## ApplyTemplate
+
+### Description
+
+Applies the mustache template specified by the "Template" property and writes
+the output to the flow file content. FlowFile attributes are used as template
+parameters.
+
+### Properties
+
+In the list below, the names of required properties appear in bold. Any other
+properties (not in bold) are considered optional. The table also indicates any
+default values, and whether a property supports the NiFi Expression Language.
+
+| Name | Default Value | Allowable Values | Description |
+| - | - | - | - |
+| **Template** | | | Path to the input mustache template file |
 
 ### Relationships
 
