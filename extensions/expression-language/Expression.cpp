@@ -1172,6 +1172,27 @@ Value expr_find(const std::vector<Value> &args) {
 
 #endif  // EXPRESSION_LANGUAGE_USE_REGEX
 
+Value expr_trim(const std::vector<Value> &args) {
+  std::string result = args[0].asString();
+  auto ws_front = std::find_if_not(result.begin(), result.end(), [](int c) { return std::isspace(c); });
+  auto ws_back = std::find_if_not(result.rbegin(), result.rend(), [](int c) { return std::isspace(c); }).base();
+  return (ws_back <= ws_front ? Value(std::string()) : Value(std::string(ws_front, ws_back)));
+}
+
+Value expr_append(const std::vector<Value> &args) {
+  std::string result = args[0].asString();
+  return Value(result.append(args[1].asString()));
+}
+
+Value expr_prepend(const std::vector<Value> &args) {
+  std::string result = args[1].asString();
+  return Value(result.append(args[0].asString()));
+}
+
+Value expr_length(const std::vector<Value> &args) {
+  return Value(args[0].asString().length());
+}
+
 Value expr_binary_op(const std::vector<Value> &args,
                      long double (*ldop)(long double, long double),
                      int64_t (*iop)(int64_t, int64_t),
@@ -1242,8 +1263,8 @@ Value expr_toRadix(const std::vector<Value> &args) {
 
   const char chars[] =
       "0123456789ab"
-          "cdefghijklmn"
-          "opqrstuvwxyz";
+      "cdefghijklmn"
+      "opqrstuvwxyz";
   std::string str_num;
 
   while (value) {
@@ -1470,6 +1491,14 @@ Expression make_dynamic_function(const std::string &function_name,
   } else if (function_name == "find") {
     return make_dynamic_function_incomplete<expr_find>(function_name, args, 1);
 #endif  // EXPRESSION_LANGUAGE_USE_REGEX
+  } else if (function_name == "trim") {
+    return make_dynamic_function_incomplete<expr_trim>(function_name, args, 0);
+  } else if (function_name == "append") {
+    return make_dynamic_function_incomplete<expr_append>(function_name, args, 1);
+  } else if (function_name == "prepend") {
+    return make_dynamic_function_incomplete<expr_prepend>(function_name, args, 1);
+  } else if (function_name == "length") {
+    return make_dynamic_function_incomplete<expr_length>(function_name, args, 0);
   } else if (function_name == "plus") {
     return make_dynamic_function_incomplete<expr_plus>(function_name, args, 1);
   } else if (function_name == "minus") {
