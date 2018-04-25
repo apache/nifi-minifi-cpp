@@ -1189,3 +1189,35 @@ TEST_CASE("UUID", "[expressionUuid]") {  // NOLINT
   auto flow_file_a = std::make_shared<MockFlowFile>();
   REQUIRE(36 == expr({flow_file_a}).asString().length());
 }
+
+TEST_CASE("Trim", "[expressionTrim]") {  // NOLINT
+  auto expr = expression::compile("${message:trim()}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("message", " 1 2 3 ");
+  REQUIRE("1 2 3" == expr({flow_file_a}).asString());
+}
+
+TEST_CASE("Append", "[expressionAppend]") {  // NOLINT
+  auto expr = expression::compile("${message:append('.gz')}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("message", "a brand new filename.txt");
+  REQUIRE("a brand new filename.txt.gz" == expr({flow_file_a}).asString());
+}
+
+TEST_CASE("Prepend", "[expressionPrepend]") {  // NOLINT
+  auto expr = expression::compile("${message:prepend('a brand new ')}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("message", "filename.txt");
+  REQUIRE("a brand new filename.txt" == expr({flow_file_a}).asString());
+}
+
+TEST_CASE("Length", "[expressionLength]") {  // NOLINT
+  auto expr = expression::compile("${message:length()}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("message", "a brand new filename.txt");
+  REQUIRE(24 == expr({flow_file_a}).asUnsignedLong());
+}
