@@ -1144,3 +1144,27 @@ TEST_CASE("Encode Decode CSV", "[expressionEncodeDecodeCSV]") {  // NOLINT
   flow_file_a->addAttribute("message", "Zero > One < \"two!\" & 'true'");
   REQUIRE("Zero > One < \"two!\" & 'true'" == expr({flow_file_a}).asString());
 }
+
+TEST_CASE("Encode URL", "[expressionEncodeURL]") {  // NOLINT
+  auto expr = expression::compile("${message:urlEncode()}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("message", "some value with spaces");
+  REQUIRE("some%20value%20with%20spaces" == expr({flow_file_a}).asString());
+}
+
+TEST_CASE("Decode URL", "[expressionDecodeURL]") {  // NOLINT
+  auto expr = expression::compile("${message:urlDecode()}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("message", "some%20value%20with%20spaces");
+  REQUIRE("some value with spaces" == expr({flow_file_a}).asString());
+}
+
+TEST_CASE("Encode Decode URL", "[expressionEncodeDecodeURL]") {  // NOLINT
+  auto expr = expression::compile("${message:urlEncode():urlDecode()}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("message", "some value with spaces");
+  REQUIRE("some value with spaces" == expr({flow_file_a}).asString());
+}
