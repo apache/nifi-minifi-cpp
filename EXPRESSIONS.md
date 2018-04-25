@@ -177,6 +177,10 @@ token, filename.
 - [`replaceAll`](#replaceall)
 - [`replaceNull`](#replacenull)
 - [`replaceEmpty`](#replaceempty)
+- [`trim`](#trim)
+- [`append`](#append)
+- [`prepend`](#prepend)
+- [`length`](#length)
 
 ### Mathematical Operations and Numeric Manipulation
 
@@ -213,11 +217,7 @@ token, filename.
 
 ### String Manipulation
 
-- `trim`
 - `getDelimitedField`
-- `append`
-- `prepend`
-- `length`
 
 ### Searching
 
@@ -855,6 +855,74 @@ tab, space). Otherwise, returns the Subject.
 filename.txt` and the attribute `hello` has the value ` `, then the Expression
 `${filename:replaceEmpty('abc')}` will return `a brand new filename.txt`, while
 `${hello:replaceEmpty('abc')}` will return `abc`.
+
+### trim
+
+**Description**: The `trim` function will remove any leading or trailing white
+space from its subject.
+
+**Subject Type**: String
+
+**Arguments**: No Arguments
+
+**Return Type**: String
+
+**Examples**: If the attribute `attr` has the value " 1 2 3 ", then the
+Expression `${attr:trim()}` will return the value "1 2 3".
+
+### append
+
+**Description**: The `append` function returns the result of appending the
+argument to the value of the Subject. If the Subject is null, returns the
+argument itself.
+
+**Subject Type**: String
+
+**Arguments**:
+
+| Argument | Description |
+| - | - |
+| value | The String to append to the end of the Subject |
+
+**Return Type**: String
+
+**Examples**: If the "filename" attribute has the value "a brand new
+filename.txt", then the Expression `${filename:append('.gz')}` will return "a
+brand new filename.txt.gz".
+
+### prepend
+
+**Description**: The `prepend` function returns the result of prepending the
+argument to the value of the Subject. If the subject is null, returns the
+argument itself.
+
+**Subject Type**: String
+
+**Arguments**:
+
+| Argument | Description |
+| - | - |
+| value | The String to prepend to the beginning of the Subject |
+
+**Return Type**: String
+
+**Examples**: If the "filename" attribute has the value "filename.txt", then
+the Expression `${filename:prepend('a brand new ')}` will return "a brand new
+filename.txt".
+
+### length
+
+**Description**: Returns the length of the Subject
+
+**Subject Type**: String
+
+**Arguments**: No arguments
+
+**Return Type**: String
+
+**Examples**: If the attribute "filename" has a value of "a brand new
+filename.txt" and the attribute "hello" does not exist, then the Expression
+`${filename:length()}` will return 24. `${hello:length()}` will return 0.
 
 ## Mathematical Operations and Numeric Manipulation
 
