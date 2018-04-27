@@ -165,6 +165,7 @@ bool FlowController::applyConfiguration(const std::string &configurePayload) {
     return false;
 
   logger_->log_info("Starting to reload Flow Controller with flow control name %s, version %d", newRoot->getName(), newRoot->getVersion());
+  flow_file_repo_->setVersion(newRoot->getVersion());
 
   std::lock_guard<std::recursive_mutex> flow_lock(mutex_);
   stop(true);
@@ -244,6 +245,8 @@ void FlowController::load() {
     logger_->log_info("Initializing timers");
 
     controller_service_provider_ = flow_configuration_->getControllerServiceProvider();
+
+    flow_file_repo_->setVersion(this->root_->getVersion());
 
     if (nullptr == timer_scheduler_) {
       timer_scheduler_ = std::make_shared<TimerDrivenSchedulingAgent>(
