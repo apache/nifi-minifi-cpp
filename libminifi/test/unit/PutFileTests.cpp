@@ -56,6 +56,19 @@ TEST_CASE("PutFileTest", "[getfileputpfile]") {
 
   std::shared_ptr<TestPlan> plan = testController.createPlan();
 
+  // add meta info
+  std::shared_ptr<core::MetaInfoContainer> meta_info_container = plan->getMetaInfoContainer();
+  // add version, serial number as default meta info
+  std::unique_ptr<core::MetaInfo> version = std::unique_ptr < core::MetaInfo > (new core::VersionMetaInfo());
+  meta_info_container->addMetaInfo(std::move(version));
+  std::string serial_number;
+  org::apache::nifi::minifi::state::metrics::Device device;
+  serial_number = device.device_id_;
+  std::unique_ptr<core::MetaInfo> serial_number_meta_info = std::unique_ptr < core::MetaInfo > (new core::MetaInfo("device.id", serial_number));
+  meta_info_container->addMetaInfo(std::move(serial_number_meta_info));
+  std::unique_ptr<core::MetaInfo> hostname_meta_info = std::unique_ptr < core::MetaInfo > (new core::MetaInfo("hostname", device.canonical_hostname_));
+  meta_info_container->addMetaInfo(std::move(hostname_meta_info));
+
   std::shared_ptr<core::Processor> getfile = plan->addProcessor("GetFile", "getfileCreate2");
 
   std::shared_ptr<core::Processor> putfile = plan->addProcessor("PutFile", "putfile", core::Relationship("success", "description"), true);
@@ -97,6 +110,9 @@ TEST_CASE("PutFileTest", "[getfileputpfile]") {
   REQUIRE(true == LogTestController::getInstance().contains("key:absolute.path value:" + ss.str()));
   REQUIRE(true == LogTestController::getInstance().contains("Size:8 Offset:0"));
   REQUIRE(true == LogTestController::getInstance().contains("key:path value:" + std::string(dir)));
+  REQUIRE(true == LogTestController::getInstance().contains("key:agent.version"));
+  REQUIRE(true == LogTestController::getInstance().contains("key:device.id"));
+  REQUIRE(true == LogTestController::getInstance().contains("key:hostname"));
   // verify that the fle was moved
   REQUIRE(false == std::ifstream(ss.str()).good());
   std::stringstream movedFile;

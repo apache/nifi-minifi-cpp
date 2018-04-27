@@ -50,6 +50,7 @@
 #include "core/controller/ControllerServiceProvider.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "core/Connectable.h"
+#include "core/MetaInfo.h"
 
 namespace org {
 namespace apache {
@@ -79,6 +80,7 @@ FlowController::FlowController(std::shared_ptr<core::Repository> provenance_repo
       flow_configuration_(std::move(flow_configuration)),
       configuration_(configure),
       content_repo_(content_repo),
+      meta_info_container_(std::make_shared<core::MetaInfoContainer>(configure)),
       logger_(logging::LoggerFactory<FlowController>::getLogger()) {
   if (provenance_repo == nullptr)
     throw std::runtime_error("Provenance Repo should not be null");
@@ -166,6 +168,10 @@ bool FlowController::applyConfiguration(const std::string &configurePayload) {
 
   logger_->log_info("Starting to reload Flow Controller with flow control name %s, version %d", newRoot->getName(), newRoot->getVersion());
 
+  std::unique_ptr<core::MetaInfo> flow_version_meta_info = std::unique_ptr < core::MetaInfo >(new core::MetaInfo("flow.version",
+      std::to_string(newRoot->getVersion())));
+  meta_info_container_->addMetaInfo(std::move(flow_version_meta_info));
+
   std::lock_guard<std::recursive_mutex> flow_lock(mutex_);
   stop(true);
   waitUnload(30000);
@@ -248,12 +254,12 @@ void FlowController::load() {
     if (nullptr == timer_scheduler_) {
       timer_scheduler_ = std::make_shared<TimerDrivenSchedulingAgent>(
           std::static_pointer_cast<core::controller::ControllerServiceProvider>(std::dynamic_pointer_cast<FlowController>(shared_from_this())), provenance_repo_, flow_file_repo_, content_repo_,
-          configuration_);
+          configuration_, meta_info_container_);
     }
     if (nullptr == event_scheduler_) {
       event_scheduler_ = std::make_shared<EventDrivenSchedulingAgent>(
           std::static_pointer_cast<core::controller::ControllerServiceProvider>(std::dynamic_pointer_cast<FlowController>(shared_from_this())), provenance_repo_, flow_file_repo_, content_repo_,
-          configuration_);
+          configuration_, meta_info_container_);
     }
 
     std::static_pointer_cast<core::controller::StandardControllerServiceProvider>(controller_service_provider_)->setRootGroup(root_);

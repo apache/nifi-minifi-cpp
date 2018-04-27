@@ -36,6 +36,7 @@
 #include "core/ProcessSessionFactory.h"
 #include "core/controller/ControllerServiceProvider.h"
 #include "core/FlowConfiguration.h"
+#include "core/MetaInfo.h"
 #include "ReflexiveSession.h"
 namespace org {
 namespace apache {
@@ -73,6 +74,7 @@ class Instance {
     proc_node_ = std::make_shared<core::ProcessorNode>(rpg_);
     core::FlowConfiguration::initialize_static_functions();
     content_repo_->initialize(configure_);
+    meta_info_container_ = std::make_shared<core::MetaInfoContainer>(configure_);
   }
 
   bool isRPGConfigured() {
@@ -100,7 +102,7 @@ class Instance {
 
   void transfer(const std::shared_ptr<FlowFileRecord> &ff) {
     std::shared_ptr<core::controller::ControllerServiceProvider> controller_service_provider = nullptr;
-    auto processContext = std::make_shared<core::ProcessContext>(proc_node_, controller_service_provider, no_op_repo_, no_op_repo_, content_repo_);
+    auto processContext = std::make_shared<core::ProcessContext>(proc_node_, controller_service_provider, no_op_repo_, no_op_repo_, meta_info_container_, content_repo_);
     auto sessionFactory = std::make_shared<core::ProcessSessionFactory>(processContext);
 
     rpg_->onSchedule(processContext, sessionFactory);
@@ -125,6 +127,8 @@ class Instance {
   std::shared_ptr<io::StreamFactory> stream_factory_;
   std::string url_;
   std::shared_ptr<Configure> configure_;
+  // meta info
+  std::shared_ptr<core::MetaInfoContainer> meta_info_container_;
 };
 
 } /* namespace minifi */

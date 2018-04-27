@@ -95,8 +95,8 @@ TEST_CASE("GetTCPWithoutEOM", "[GetTCP1]") {
   std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(processor);
     std::shared_ptr<core::ProcessorNode> node2 = std::make_shared<core::ProcessorNode>(logAttribute);
     std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider = nullptr;
-    std::shared_ptr<core::ProcessContext> context = std::make_shared<core::ProcessContext>(node, controller_services_provider, repo, repo, content_repo);
-    std::shared_ptr<core::ProcessContext> context2 = std::make_shared<core::ProcessContext>(node2, controller_services_provider, repo, repo, content_repo);
+    std::shared_ptr<core::ProcessContext> context = std::make_shared<core::ProcessContext>(node, controller_services_provider, repo, repo, nullptr, content_repo);
+    std::shared_ptr<core::ProcessContext> context2 = std::make_shared<core::ProcessContext>(node2, controller_services_provider, repo, repo, nullptr, content_repo);
   context->setProperty(org::apache::nifi::minifi::processors::GetTCP::EndpointList, "localhost:9184");
   context->setProperty(org::apache::nifi::minifi::processors::GetTCP::ReconnectInterval, "100 msec");
   auto session = std::make_shared<core::ProcessSession>(context);
@@ -207,8 +207,8 @@ TEST_CASE("GetTCPWithOEM", "[GetTCP2]") {
   std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(processor);
     std::shared_ptr<core::ProcessorNode> node2 = std::make_shared<core::ProcessorNode>(logAttribute);
     std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider = nullptr;
-    std::shared_ptr<core::ProcessContext> context = std::make_shared<core::ProcessContext>(node, controller_services_provider, repo, repo, content_repo);
-    std::shared_ptr<core::ProcessContext> context2 = std::make_shared<core::ProcessContext>(node2, controller_services_provider, repo, repo, content_repo);
+    std::shared_ptr<core::ProcessContext> context = std::make_shared<core::ProcessContext>(node, controller_services_provider, repo, repo, nullptr, content_repo);
+    std::shared_ptr<core::ProcessContext> context2 = std::make_shared<core::ProcessContext>(node2, controller_services_provider, repo, repo, nullptr, content_repo);
   context->setProperty(org::apache::nifi::minifi::processors::GetTCP::EndpointList, "localhost:9182");
   context->setProperty(org::apache::nifi::minifi::processors::GetTCP::ReconnectInterval, "100 msec");
   // we're using new lines above
@@ -332,8 +332,8 @@ TEST_CASE("GetTCPWithOnlyOEM", "[GetTCP3]") {
   std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(processor);
     std::shared_ptr<core::ProcessorNode> node2 = std::make_shared<core::ProcessorNode>(logAttribute);
     std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider = nullptr;
-    std::shared_ptr<core::ProcessContext> context = std::make_shared<core::ProcessContext>(node, controller_services_provider, repo, repo, content_repo);
-    std::shared_ptr<core::ProcessContext> context2 = std::make_shared<core::ProcessContext>(node2, controller_services_provider, repo, repo, content_repo);
+    std::shared_ptr<core::ProcessContext> context = std::make_shared<core::ProcessContext>(node, controller_services_provider, repo, repo, nullptr, content_repo);
+    std::shared_ptr<core::ProcessContext> context2 = std::make_shared<core::ProcessContext>(node2, controller_services_provider, repo, repo, nullptr, content_repo);
   context->setProperty(org::apache::nifi::minifi::processors::GetTCP::EndpointList, "localhost:9182");
   context->setProperty(org::apache::nifi::minifi::processors::GetTCP::ReconnectInterval, "100 msec");
   // we're using new lines above

@@ -31,7 +31,9 @@ ExecutionPlan::ExecutionPlan(std::shared_ptr<core::ContentRepository> content_re
       location(-1),
       current_flowfile_(nullptr),
       logger_(logging::LoggerFactory<ExecutionPlan>::getLogger()) {
-  stream_factory = std::make_shared<org::apache::nifi::minifi::io::StreamFactory>(std::make_shared<minifi::Configure>());
+  std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::Configure>();
+  stream_factory = std::make_shared<org::apache::nifi::minifi::io::StreamFactory>(configuration);
+  meta_info_container_ = std::make_shared<core::MetaInfoContainer>(configuration);
 }
 
 std::shared_ptr<core::Processor> ExecutionPlan::addProcessor(const std::shared_ptr<core::Processor> &processor, const std::string &name, core::Relationship relationship,
@@ -85,7 +87,7 @@ bool linkToPrevious) {
 
   processor_nodes_.push_back(node);
 
-  std::shared_ptr<core::ProcessContext> context = std::make_shared<core::ProcessContext>(node, controller_services_provider_, prov_repo_, flow_repo_, content_repo_);
+  std::shared_ptr<core::ProcessContext> context = std::make_shared<core::ProcessContext>(node, controller_services_provider_, prov_repo_, flow_repo_, meta_info_container_, content_repo_);
   processor_contexts_.push_back(context);
 
   processor_queue_.push_back(processor);

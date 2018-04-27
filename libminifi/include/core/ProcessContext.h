@@ -36,6 +36,7 @@
 #include "ProcessorNode.h"
 #include "core/Repository.h"
 #include "core/FlowFile.h"
+#include "core/MetaInfo.h"
 
 namespace org {
 namespace apache {
@@ -51,12 +52,14 @@ class ProcessContext : public controller::ControllerServiceLookup {
    * Create a new process context associated with the processor/controller service/state manager
    */
   ProcessContext(const std::shared_ptr<ProcessorNode> &processor, std::shared_ptr<controller::ControllerServiceProvider> &controller_service_provider, const std::shared_ptr<core::Repository> &repo,
-                 const std::shared_ptr<core::Repository> &flow_repo, const std::shared_ptr<core::ContentRepository> &content_repo = std::make_shared<core::repository::FileSystemRepository>())
+                 const std::shared_ptr<core::Repository> &flow_repo, const std::shared_ptr<core::MetaInfoContainer> &meta_info = nullptr,
+                 const std::shared_ptr<core::ContentRepository> &content_repo = std::make_shared<core::repository::FileSystemRepository>())
       : controller_service_provider_(controller_service_provider),
         flow_repo_(flow_repo),
         content_repo_(content_repo),
         processor_node_(processor),
-        logger_(logging::LoggerFactory<ProcessContext>::getLogger()) {
+        logger_(logging::LoggerFactory<ProcessContext>::getLogger()),
+        meta_info_container_(meta_info) {
     repo_ = repo;
   }
   // Destructor
@@ -120,6 +123,10 @@ class ProcessContext : public controller::ControllerServiceLookup {
 
   std::shared_ptr<core::Repository> getFlowFileRepository() {
     return flow_repo_;
+  }
+
+  std::shared_ptr<core::MetaInfoContainer> getMetaInfoContainer() {
+    return meta_info_container_;
   }
 
   // Prevent default copy constructor and assignment operation
@@ -189,6 +196,9 @@ class ProcessContext : public controller::ControllerServiceLookup {
 
   // Logger
   std::shared_ptr<logging::Logger> logger_;
+
+  // meta info
+  std::shared_ptr<core::MetaInfoContainer> meta_info_container_;
 
 };
 
