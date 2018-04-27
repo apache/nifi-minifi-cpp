@@ -107,6 +107,10 @@ class FlowConfiguration : public CoreComponent {
     return nullptr;
   }
 
+  std::shared_ptr<io::StreamFactory> getStreamFactory() {
+    return stream_factory_;
+  }
+
   std::shared_ptr<core::controller::StandardControllerServiceProvider> &getControllerServiceProvider() {
     return service_provider_;
   }

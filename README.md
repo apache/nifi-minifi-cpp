@@ -719,6 +719,18 @@ Additionally, a unique hexadecimal uid.minifi.device.segment should be assigned 
           Low Battery Threshold: 50
           Wait Period: 500 ms
 
+### Network Manager Controller Service
+  The network manager controller service can be configured to manage various network related features like interface binding, ipv6, etc.
+  Note that the name is identified must be NetworkManagerService
+
+   Controller Services:
+   - name: NetworkManagerService
+     id: 2438e3c8-015a-1000-79ca-83af40ec1888
+     class: NetworkManagerService
+     Properties:
+         Bind Interface: en0
+         Ipv6: true
+
 ### Running
 After completing a [build](#building), the application can be run by issuing the following from :
 

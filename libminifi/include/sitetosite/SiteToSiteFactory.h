@@ -80,8 +80,17 @@ static std::unique_ptr<SiteToSiteClient> createClient(const SiteToSiteClientConf
       if (nullptr != http_protocol) {
         auto ptr = std::unique_ptr<SiteToSiteClient>(static_cast<SiteToSiteClient*>(http_protocol));
         ptr->setSSLContextService(client_configuration.getSecurityContext());
+        std::string interface = client_configuration.getInterface();
+        if (interface.empty()) {
+          std::shared_ptr<minifi::controllers::NetworkManagerService> network_mgnt_service =
+              client_configuration.getStreamFactory()->getNetworkManagerService();
+          // if we did not specified bind interface in site2site config, try the network controller service to see whether we configure the same
+          if (network_mgnt_service) {
+            interface = network_mgnt_service->getBindInterface();
+          }
+        }
         auto peer = std::unique_ptr<SiteToSitePeer>(new SiteToSitePeer(client_configuration.getPeer()->getHost(), client_configuration.getPeer()->getPort(),
-            client_configuration.getInterface()));
+            interface));
         peer->setHTTPProxy(client_configuration.getHTTPProxy());
         char idStr[37];
         uuid_unparse_lower(uuid, idStr);

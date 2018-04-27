@@ -49,6 +49,12 @@ Connections:
       flowfile expiration: 60 sec
       
 Controller Services:
+    - name: NetworkManagerService
+     id: 2438e3c8-015a-1000-79ca-83af40ec1888
+     class: NetworkManagerService
+     Properties:
+         Bind Interface: en0
+         Ipv6: true
     - name: MockItLikeIts1995
       id: 2438e3c8-015a-1000-79ca-83af40ec1991
       class: MockControllerService
