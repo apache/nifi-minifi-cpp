@@ -183,6 +183,10 @@ class Value {
       return unsigned_long_val_;
     } else if (is_string_) {
       return std::stoul(string_val_);
+    } else if (is_signed_long_) {
+      return signed_long_val_;
+    } else if (is_long_double_) {
+      return long_double_val_;
     } else {
       return 0.0;
     }

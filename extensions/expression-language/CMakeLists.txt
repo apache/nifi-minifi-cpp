@@ -41,6 +41,9 @@ add_flex_bison_dependency(el-scanner el-parser)
 include_directories(../../libminifi/include  ../../libminifi/include/core  ../../thirdparty/spdlog-20170710/include ../../thirdparty/concurrentqueue ../../thirdparty/yaml-cpp-yaml-cpp-0.5.3/include ${CIVET_THIRDPARTY_ROOT}/include ../../thirdparty/)
 include_directories(common)
 include_directories(impl)
+include_directories(../../thirdparty/date/include)
+
+add_subdirectory(../../thirdparty/date ${CMAKE_CURRENT_BINARY_DIR}/date)
 
 file(GLOB SOURCES  "*.cpp")
 
@@ -52,6 +55,8 @@ endif()
 if(CMAKE_THREAD_LIBS_INIT)
   target_link_libraries(minifi-expression-language-extensions "${CMAKE_THREAD_LIBS_INIT}")
 endif()
+
+target_link_libraries(minifi-expression-language-extensions ${LIBMINIFI} tz)
 
 find_package(UUID REQUIRED)
 target_link_libraries(minifi-expression-language-extensions ${LIBMINIFI} ${UUID_LIBRARIES})
