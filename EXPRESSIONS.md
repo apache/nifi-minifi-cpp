@@ -236,6 +236,12 @@ token, filename.
 - [`join`](#join)
 - [`count`](#count)
 
+### Date Manipulation
+
+- [`format`](#format)
+- [`toDate`](#todate)
+- [`now`](#now)
+
 ## Planned Features
 
 ### Searching
@@ -248,12 +254,6 @@ token, filename.
 - `escapeHtml4`
 - `unescapeHtml3`
 - `unescapeHtml4`
-
-### Date Manipulation
-
-- `format`
-- `toDate`
-- `now`
 
 ### Subjectless Functions
 
@@ -1820,3 +1820,82 @@ consider the following examples:
 | `${allDelineatedValues(${number_list}, ","):count()}` | `5` |
 | `${allAttributes("abc", "non-existent-attr", "xyz"):count()}` | `2` |
 | `${allMatchingAttributes(".*"):length():gt(10):count()}` | `2` |
+
+### format
+
+**Description**: Formats a number as a date/time according to the format
+specified by the argument. The argument must be a String that is a valid
+strftime format. The Subject is expected to be a Number that represents the
+number of milliseconds since Midnight GMT on January 1, 1970. The number will
+be evaluated using the local time zone unless specified in the second optional
+argument.
+
+**Subject Type**: Number
+
+**Arguments**:
+
+| Argument | Description |
+| - | - |
+| format | The format to use in the strftime syntax |
+| time zone | Optional argument that specifies the time zone to use from the IANA Time Zone Database (e.g. 'America/New_York') |
+
+**Return Type**: String
+
+**Examples**:
+
+If the attribute "time" has the value "1420058163264", then the following
+Expressions will yield the following results:
+
+| Expression | Value |
+| - | - |
+| `${time:format("%Y/%m/%d %H:%M:%S", "GMT")}` | `2014/12/31 20:36:03` |
+| `${time:format("%Y", "America/Los_Angeles")}` | `2014` |
+
+### toDate
+
+**Description**: Converts a String into a date represented by the number of
+milliseconds since the UNIX epoch, based on the format specified by the
+argument. The argument must be a String that is a valid strftime syntax. The
+Subject is expected to be a String that is formatted according the argument.
+The date will be evaluated using the local time zone unless specified in the
+second optional argument.
+
+**Subject Type**: String
+
+| format | The format to use in the strftime syntax |
+| time zone | Optional argument that specifies the time zone to use when parsing the subject, from the IANA Time Zone Database (e.g. 'America/New_York') |
+
+**Return Type**: Number
+
+**Examples**:
+
+If the attribute "year" has the value "2014" and the attribute "time" has the
+value "2014/12/31 15:36:03.264Z", then the Expression `${year:toDate('%Y',
+'GMT')}` will return a date with a value representing Midnight GMT on January
+1, 2014. The Expression `${time:toDate("%Y/%m/%d %H:%M:%S", "GMT")} will result
+in a date for 15:36:03 GMT on December 31, 2014.
+
+Often, this function is used in conjunction with the format function to change
+the format of a date/time. For example, if the attribute "date" has the value
+"12-24-2014" and we want to change the format to "2014/12/24", we can do so by
+chaining together the two functions:
+`${date:toDate('%m-%d-%Y'):format('%Y/%m/%d')}`.
+
+### now
+
+**Description**: Returns the current date and time as a Date data type object.
+
+**Subject Type**: String
+
+**Arguments**: No arguments
+
+**Return Type**: Number
+
+**Examples**:
+
+| Expression | Value |
+| - | - |
+| `${now()}` | `Count of milliseconds since the UNIX epoch` |
+| `${now():minus(86400000)` | `A number presenting the time 24 hours ago` |
+| `${now():format('Y')}` | `The current year` |
+| `${now():minus(86400000):format('%a')}` | `The day of the week that was yesterday, as a 3-letter abbreviation (For example, Wed)` |
