@@ -110,7 +110,7 @@ class StandardControllerServiceProvider : public ControllerServiceProvider, publ
   }
 
   virtual void enableAllControllerServices() {
-    logger_->log_info("Enabling %ll controller services", controller_map_->getAllControllerServices().size());
+    logger_->log_info("Enabling %u controller services", controller_map_->getAllControllerServices().size());
     for (auto service : controller_map_->getAllControllerServices()) {
 
       if (service->canEnable()) {

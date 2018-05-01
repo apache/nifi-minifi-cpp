@@ -185,6 +185,8 @@ elif [[ "$OS" = Deb* ]]; then
   . "${script_directory}/debian.sh"
 elif [[ "$OS" = Rasp* ]]; then
   . "${script_directory}/aptitude.sh"
+elif [[ "$OS" = Pop* ]]; then
+  . "${script_directory}/aptitude.sh"
 elif [[ "$OS" = Ubuntu* ]]; then
   . "${script_directory}/aptitude.sh"
 elif [[ "$OS" = *SUSE* ]]; then

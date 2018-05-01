@@ -125,8 +125,13 @@ class ControllerService : public ConfigurableComponent, public Connectable {
     return false;
   }
 
+  void setLinkedControllerServices( const std::vector<std::shared_ptr<controller::ControllerService> > &services ){
+    linked_services_ = services;
+  }
+
  protected:
 
+  std::vector<std::shared_ptr<controller::ControllerService> > linked_services_;
   std::shared_ptr<Configure> configuration_;
   std::atomic<ControllerServiceState> current_state_;
   virtual bool canEdit() {

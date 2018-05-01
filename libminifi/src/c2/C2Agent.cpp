@@ -108,6 +108,7 @@ void C2Agent::configure(const std::shared_ptr<Configure> &configure, bool reconf
     auto protocol = core::ClassLoader::getDefaultClassLoader().instantiateRaw(clazz, clazz);
 
     if (protocol == nullptr) {
+      logger_->log_info("Class %s not found", clazz);
       protocol = core::ClassLoader::getDefaultClassLoader().instantiateRaw("RESTSender", "RESTSender");
 
       if (!protocol) {
