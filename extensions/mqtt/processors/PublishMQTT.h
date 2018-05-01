@@ -104,7 +104,7 @@ public:
     std::string key_;
     MQTTClient client_;;
     int status_;
-    int read_size_;
+    size_t read_size_;
     int qos_;
     int retain_;
     MQTTClient_deliveryToken &token_;

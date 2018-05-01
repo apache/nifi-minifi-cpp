@@ -20,11 +20,11 @@
 set(CMAKE_EXE_LINKER_FLAGS "-Wl,--export-all-symbols")
 set(CMAKE_SHARED_LINKER_FLAGS "-Wl,--export-symbols")
 
-include_directories(../../libminifi/include  ../../libminifi/include/core  ../../thirdparty/spdlog-20170710/include ../../thirdparty/concurrentqueue ../../thirdparty/yaml-cpp-yaml-cpp-0.5.3/include ${CIVET_THIRDPARTY_ROOT}/include ../../thirdparty/)
+include_directories(./controllerservice ./processors ./protocol ../../libminifi/include  ../../libminifi/include/core  ../../thirdparty/spdlog-20170710/include ../../thirdparty/concurrentqueue ../../thirdparty/)
 
 include_directories(../../thirdparty/paho.mqtt.c/src)
 
-file(GLOB SOURCES  "*.cpp")
+file(GLOB SOURCES "*.cpp" "protocol/*.cpp" "processors/*.cpp" "controllerservice/*.cpp")
 
 add_library(minifi-mqtt-extensions STATIC ${SOURCES})
 set_property(TARGET minifi-mqtt-extensions PROPERTY POSITION_INDEPENDENT_CODE ON)
@@ -37,10 +37,10 @@ endif()
 
 
 # Include UUID
-find_package(UUID REQUIRED)
-target_link_libraries(minifi-mqtt-extensions ${LIBMINIFI} ${UUID_LIBRARIES} ${JSONCPP_LIB})
-find_package(OpenSSL REQUIRED)
-include_directories(${OPENSSL_INCLUDE_DIR})
+#find_package(UUID REQUIRED)
+#target_link_libraries(minifi-mqtt-extensions)
+#find_package(OpenSSL REQUIRED)
+#include_directories(${OPENSSL_INCLUDE_DIR})
 target_link_libraries(minifi-mqtt-extensions ${CMAKE_DL_LIBS} )
 if (MQTT_FOUND AND NOT BUILD_MQTT)
 	target_link_libraries(minifi-mqtt-extensions ${MQTT_LIBRARIES} )
@@ -55,7 +55,7 @@ include_directories(${ZLIB_INCLUDE_DIRS})
 target_link_libraries (minifi-mqtt-extensions ${ZLIB_LIBRARIES})
 if (WIN32)
     set_target_properties(minifi-mqtt-extensions PROPERTIES
-        LINK_FLAGS "/WHOLEMQTT"
+        LINK_FLAGS "/WHOLEARCHIVE"
     )
 elseif (APPLE)
     set_target_properties(minifi-mqtt-extensions PROPERTIES
@@ -63,7 +63,7 @@ elseif (APPLE)
     )
 else ()
     set_target_properties(minifi-mqtt-extensions PROPERTIES
-        LINK_FLAGS "-Wl,--whole-mqtt"
+        LINK_FLAGS "-Wl,--whole-archive"
     )
 endif ()
 

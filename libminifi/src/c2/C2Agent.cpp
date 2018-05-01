@@ -108,6 +108,7 @@ void C2Agent::configure(const std::shared_ptr<Configure> &configure, bool reconf
     auto protocol = core::ClassLoader::getDefaultClassLoader().instantiateRaw(clazz, clazz);
 
     if (protocol == nullptr) {
+      logger_->log_info("Class %s not found", clazz);
       protocol = core::ClassLoader::getDefaultClassLoader().instantiateRaw("RESTSender", "RESTSender");
 
       if (!protocol) {
@@ -287,7 +288,9 @@ void C2Agent::extractPayload(const C2Payload &&resp) {
     case state::UpdateState::READ_COMPLETE:
       logger_->log_trace("Received Ack from Server");
       // we have a heartbeat response.
+      std::cout << "got content ? " << resp.getContent().size() << std::endl;
       for (const auto &server_response : resp.getContent()) {
+        std::cout << "got content" << std::endl;
         handle_c2_server_response(server_response);
       }
       break;
@@ -493,6 +496,7 @@ void C2Agent::handle_describe(const C2ContentResponse &resp) {
 
 void C2Agent::handle_update(const C2ContentResponse &resp) {
   // we've been told to update something
+  std::cout << "got an update" << std::endl;
   if (resp.name == "configuration") {
     auto url = resp.operation_arguments.find("location");
 

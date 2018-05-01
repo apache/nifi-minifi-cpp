@@ -165,6 +165,11 @@ class C2Payload : public state::Update {
   void setRawData(const std::vector<char> &data);
 
   /**
+   * Sets raw data from a vector of uint8_t within this object.
+   */
+  void setRawData(const std::vector<uint8_t> &data);
+
+  /**
    * Returns raw data.
    */
   std::vector<char> getRawData() const;

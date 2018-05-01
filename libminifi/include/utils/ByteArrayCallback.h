@@ -92,9 +92,9 @@ class ByteOutputCallback : public OutputStreamCallback {
  public:
   ByteOutputCallback() = delete;
 
-  explicit ByteOutputCallback(size_t max_size, bool wait_on_read=false)
+  explicit ByteOutputCallback(size_t max_size, bool wait_on_read = false)
       : max_size_(max_size),
-        read_started_( wait_on_read ? false : true ),
+        read_started_(wait_on_read ? false : true),
         logger_(logging::LoggerFactory<ByteOutputCallback>::getLogger()) {
     current_str_pos = 0;
     size_ = 0;
@@ -147,6 +147,18 @@ class ByteOutputCallback : public OutputStreamCallback {
 
   std::shared_ptr<logging::Logger> logger_;
 
+};
+
+class StreamOutputCallback : public ByteOutputCallback {
+ public:
+  explicit StreamOutputCallback(size_t max_size, bool wait_on_read = false)
+      : ByteOutputCallback(max_size, wait_on_read) {
+
+  }
+
+  virtual void write(char *data, size_t size);
+
+  virtual int64_t process(std::shared_ptr<io::BaseStream> stream);
 };
 
 } /* namespace utils */

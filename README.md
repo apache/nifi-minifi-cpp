@@ -702,7 +702,17 @@ Additionally, a unique hexadecimal uid.minifi.device.segment should be assigned 
           Trigger Threshold: 90
           Low Battery Threshold: 50
           Wait Period: 500 ms
-
+### MQTT Controller service
+The MQTTController Service can be configured for MQTT connectivity and provide that capability to your processors when MQTT is built.
+    
+    Controller Services:
+    - name: mqttservice
+      id: 294491a38-015a-1000-0000-000000000001
+      class: MQTTContextService
+      Properties:
+          Broker URI: localhost:1883
+    	    Client ID: client ID
+          Quality of Service: 2
 ### Running
 After completing a [build](#building), the application can be run by issuing the following from :
 

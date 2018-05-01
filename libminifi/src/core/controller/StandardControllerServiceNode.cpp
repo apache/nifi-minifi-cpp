@@ -53,6 +53,12 @@ bool StandardControllerServiceNode::enable() {
   }
   std::shared_ptr<ControllerService> impl = getControllerServiceImplementation();
   if (nullptr != impl) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    std::vector<std::shared_ptr<ControllerService> > services;
+    for(auto service : linked_controller_services_ ){
+      services.push_back ( service->getControllerServiceImplementation());
+    }
+    impl->setLinkedControllerServices( services );
     impl->onEnable();
   }
   return true;

@@ -360,6 +360,13 @@ void FlowController::initializeC2() {
   } else {
     c2_enabled_ = true;
   }
+
+  std::string identifier_str;
+  if (!configuration_->get("nifi.c2.agent.identifier", identifier_str) || identifier_str.empty()) {
+    // set to the flow controller's identifier
+    identifier_str = uuidStr_;
+  }
+  configuration_->setAgentIdentifier(identifier_str);
   state::StateManager::initialize();
 
   std::shared_ptr<c2::C2Agent> agent = std::make_shared<c2::C2Agent>(std::dynamic_pointer_cast<FlowController>(shared_from_this()), std::dynamic_pointer_cast<FlowController>(shared_from_this()),
@@ -409,13 +416,8 @@ void FlowController::initializeC2() {
       auto identifier = std::dynamic_pointer_cast<state::response::AgentIdentifier>(processor);
 
       if (identifier != nullptr) {
-        std::string identifier_str;
-        if (configuration_->get("nifi.c2.agent.identifier", identifier_str) && !identifier_str.empty()) {
-          identifier->setIdentifier(identifier_str);
-        } else {
-          // set to the flow controller's identifier
-          identifier->setIdentifier(uuidStr_);
-        }
+
+        identifier->setIdentifier(identifier_str);
 
         std::string class_str;
         if (configuration_->get("nifi.c2.agent.class", class_str) && !class_str.empty()) {
