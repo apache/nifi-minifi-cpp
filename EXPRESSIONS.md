@@ -1234,6 +1234,11 @@ following Expressions will provide the following results:
 | `${filename:lastIndexOf('a')}` | `17` |
 | `${filename:lastIndexOf(' ')}` | `11` |
 
+### Encode/Decode Functions
+
+Each of the following functions will encode a string according the rules of the
+given data format.
+
 ### escapeJson
 
 **Description**: This function prepares the Subject to be inserted into JSON
