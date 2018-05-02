@@ -29,6 +29,8 @@
 #include <expression/Expression.h>
 #include <regex>
 #include <curl/curl.h>
+#include <netdb.h>
+#include <arpa/inet.h>
 #include "Driver.h"
 
 namespace org {
@@ -68,7 +70,76 @@ Value expr_hostname(const std::vector<Value> &args) {
   char hostname[1024];
   hostname[1023] = '\0';
   gethostname(hostname, 1023);
+
+  if (args.size() > 0 && args[0].asBoolean()) {
+    int status;
+    struct addrinfo hints, *result, *addr_cursor;
+    memset(&hints, 0, sizeof(hints));
+    hints.ai_family = AF_UNSPEC;
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_flags = AI_CANONNAME;
+
+    status = getaddrinfo(hostname, nullptr, &hints, &result);
+
+    if (status) {
+      std::string message("Failed to resolve local hostname to discover IP: ");
+      message.append(gai_strerror(status));
+      throw std::runtime_error(message);
+    }
+
+    for (addr_cursor = result; addr_cursor != nullptr; addr_cursor = addr_cursor->ai_next) {
+      if (strlen(addr_cursor->ai_canonname) > 0) {
+        std::string c_host(addr_cursor->ai_canonname);
+        freeaddrinfo(result);
+        return Value(c_host);
+      }
+    }
+
+    freeaddrinfo(result);
+  }
+
   return Value(std::string(hostname));
+}
+
+Value expr_ip(const std::vector<Value> &args) {
+  char hostname[1024];
+  hostname[1023] = '\0';
+  gethostname(hostname, 1023);
+
+  int status;
+  char ip_str[INET6_ADDRSTRLEN];
+  struct sockaddr_in *addr;
+  struct addrinfo hints, *result, *addr_cursor;
+  memset(&hints, 0, sizeof(hints));
+  hints.ai_family = AF_INET;
+
+  status = getaddrinfo(hostname, nullptr, &hints, &result);
+
+  if (status) {
+    std::string message("Failed to resolve local hostname to discover IP: ");
+    message.append(gai_strerror(status));
+    throw std::runtime_error(message);
+  }
+
+  for (addr_cursor = result; addr_cursor != nullptr; addr_cursor = addr_cursor->ai_next) {
+    if (addr_cursor->ai_family == AF_INET) {
+      addr = reinterpret_cast<struct sockaddr_in *>(addr_cursor->ai_addr);
+      inet_ntop(addr_cursor->ai_family, &(addr->sin_addr), ip_str, sizeof(ip_str));
+      freeaddrinfo(result);
+      return Value(std::string(ip_str));
+    }
+  }
+
+  freeaddrinfo(result);
+  return Value();
+}
+
+Value expr_uuid(const std::vector<Value> &args) {
+  uuid_t uuid;
+  utils::IdGenerator::getIdGenerator()->generate(uuid);
+  char uuid_str[37];
+  uuid_unparse_lower(uuid, uuid_str);
+  return Value(std::string(uuid_str));
 }
 
 Value expr_toUpper(const std::vector<Value> &args) {
@@ -1112,7 +1183,7 @@ Value expr_unescapeCsv(const std::vector<Value> &args) {
 
 Value expr_urlEncode(const std::vector<Value> &args) {
   auto arg_0 = args[0].asString();
-  CURL *curl = curl_easy_init();
+  CURL * curl = curl_easy_init();
   if (curl != nullptr) {
     char *output = curl_easy_escape(curl,
                                     arg_0.c_str(),
@@ -1133,7 +1204,7 @@ Value expr_urlEncode(const std::vector<Value> &args) {
 
 Value expr_urlDecode(const std::vector<Value> &args) {
   auto arg_0 = args[0].asString();
-  CURL *curl = curl_easy_init();
+  CURL * curl = curl_easy_init();
   if (curl != nullptr) {
     int out_len;
     char *output = curl_easy_unescape(curl,
@@ -1453,6 +1524,10 @@ Expression make_dynamic_function(const std::string &function_name,
                                  const std::vector<Expression> &args) {
   if (function_name == "hostname") {
     return make_dynamic_function_incomplete<expr_hostname>(function_name, args, 0);
+  } else if (function_name == "ip") {
+    return make_dynamic_function_incomplete<expr_ip>(function_name, args, 0);
+  } else if (function_name == "UUID") {
+    return make_dynamic_function_incomplete<expr_uuid>(function_name, args, 0);
   } else if (function_name == "toUpper") {
     return make_dynamic_function_incomplete<expr_toUpper>(function_name, args, 1);
   } else if (function_name == "toLower") {

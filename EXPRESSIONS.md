@@ -211,6 +211,13 @@ token, filename.
 - [`urlEncode`](#urlencode)
 - [`urlDecode`](#urldecode)
 
+### Subjectless Functions
+
+- [`ip`](#ip)
+- [`hostname`](#hostname)
+- [`UUID`](#uuid)
+- [`literal`](#literal)
+
 ## Planned Features
 
 ### String Manipulation
@@ -242,11 +249,7 @@ token, filename.
 
 ### Subjectless Functions
 
-- `ip`
-- `hostname`
-- `UUID`
 - `nextInt`
-- `literal`
 - `getStateValue`
 
 ### Evaluating Multiple Attributes
@@ -1372,3 +1375,82 @@ human-readable form.
 If we have a URL-Encoded attribute named "url" with the value
 "some%20value%20with%20spaces", then the Expression `${url:urlDecode()}` will
 return "some value with spaces".
+
+## Subjectless Functions
+
+While the majority of functions in the Expression Language are called by using
+the syntax `${attributeName:function()}`, there exist a few functions that are
+not expected to have subjects. In this case, the attribute name is not present.
+For example, the IP address of the machine can be obtained by using the
+Expression `${ip()}`. All of the functions in this section are to be called
+without a subject. Attempting to call a subjectless function and provide it a
+subject will result in an error when validating the function.
+
+### ip
+
+**Description**: Returns the IP address of the machine.
+
+**Subject Type**: No subject
+
+**Arguments**: No arguments
+
+**Return Type**: String
+
+**Examples**: The IP address of the machine can be obtained by using the Expression `${ip()}`.
+
+### hostname
+
+**Description**: eturns the Hostname of the machine. An optional argument of
+type Boolean can be provided to specify whether or not the Fully Qualified
+Domain Name should be used. If `false`, or not specified, the hostname will not
+be fully qualified. If the argument is true but the fully qualified hostname
+cannot be resolved, the simple hostname will be returned.
+
+**Subject Type**: No subject
+
+**Arguments**:
+
+| Argument | Description |
+| - | - |
+| Fully Qualified | Optional parameter that specifies whether or not the hostname should be fully qualified. If not specified, defaults to `false`. |
+
+**Return Type**: String
+
+**Examples**: The fully qualified hostname of the machine can be obtained by
+using the Expression `${hostname(true)}`, while the simple hostname can be
+obtained by using either `${hostname(false)}` or simply `${hostname()}`.
+
+### UUID
+
+**Description**: Returns a randomly generated UUID.
+
+**Subject Type**: No subject
+
+**Arguments**: No arguments
+
+**Return Type**: String
+
+**Examples**: `${UUID()}` returns a value similar to
+"de305d54-75b4-431b-adb2-eb6b9e546013"
+
+### literal
+
+**Description**: Returns its argument as a literal String value. This is useful
+in order to treat a string or a number at the beginning of an Expression as an
+actual value, rather than treating it as an attribute name. Additionally, it
+can be used when the argument is an embedded Expression that we would then like
+to evaluate additional functions against.
+
+**Subject Type**: No subject
+
+**Arguments**:
+
+| Argument | Description |
+| - | - |
+| value | The value to be treated as a literal string, number, or boolean value. |
+
+**Return Type**: String
+
+**Examples**: `${literal(2):gt(1)}` returns true.  `${literal(
+${allMatchingAttributes('a.*'):count()} ):gt(3)}` returns true if there are
+more than 3 attributes whose names begin with the letter a.
