@@ -61,6 +61,8 @@ class GetUSBCamera : public core::Processor {
   }
 
   static core::Property FPS;
+  static core::Property Width;
+  static core::Property Height;
   static core::Property Format;
   static core::Property VendorID;
   static core::Property ProductID;
