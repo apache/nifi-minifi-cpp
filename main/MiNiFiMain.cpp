@@ -151,23 +151,33 @@ int main(int argc, char **argv) {
   configure->get(minifi::Configure::nifi_provenance_repository_class_name, prov_repo_class);
   // Create repos for flow record and provenance
   std::shared_ptr<core::Repository> prov_repo = core::createRepository(prov_repo_class, true, "provenance");
-  prov_repo->initialize(configure);
+
+  if (!prov_repo->initialize(configure)) {
+    std::cerr << "Provenance repository failed to initialize, exiting.." << std::endl;
+    exit(1);
+  }
 
   configure->get(minifi::Configure::nifi_flow_repository_class_name, flow_repo_class);
 
   std::shared_ptr<core::Repository> flow_repo = core::createRepository(flow_repo_class, true, "flowfile");
 
-  flow_repo->initialize(configure);
+  if (!flow_repo->initialize(configure)) {
+    std::cerr << "Flow file repository failed to initialize, exiting.." << std::endl;
+    exit(1);
+  }
 
   configure->get(minifi::Configure::nifi_content_repository_class_name, content_repo_class);
 
   std::shared_ptr<core::ContentRepository> content_repo = core::createContentRepository(content_repo_class, true, "content");
 
-  content_repo->initialize(configure);
+  if (!content_repo->initialize(configure)) {
+    std::cerr << "Content repository failed to initialize, exiting.." << std::endl;
+    exit(1);
+  }
 
   std::string content_repo_path;
-  if (configure->get(minifi::Configure::nifi_dbcontent_repository_directory_default, content_repo_path)){
-    std::cout << "setting default dir to " << content_repo_path<< std::endl;
+  if (configure->get(minifi::Configure::nifi_dbcontent_repository_directory_default, content_repo_path)) {
+    std::cout << "setting default dir to " << content_repo_path << std::endl;
     minifi::setDefaultDirectory(content_repo_path);
   }
 
