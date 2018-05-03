@@ -1168,3 +1168,24 @@ TEST_CASE("Encode Decode URL", "[expressionEncodeDecodeURL]") {  // NOLINT
   flow_file_a->addAttribute("message", "some value with spaces");
   REQUIRE("some value with spaces" == expr({flow_file_a}).asString());
 }
+
+TEST_CASE("IP", "[expressionIP]") {  // NOLINT
+  auto expr = expression::compile("${ip()}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  REQUIRE("" != expr({flow_file_a}).asString());
+}
+
+TEST_CASE("Full Hostname", "[expressionFullHostname]") {  // NOLINT
+  auto expr = expression::compile("${hostname('true')}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  REQUIRE("" != expr({flow_file_a}).asString());
+}
+
+TEST_CASE("UUID", "[expressionUuid]") {  // NOLINT
+  auto expr = expression::compile("${UUID()}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  REQUIRE(36 == expr({flow_file_a}).asString().length());
+}
