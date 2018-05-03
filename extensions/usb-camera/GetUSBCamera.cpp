@@ -31,8 +31,14 @@ namespace processors {
 
 core::Property GetUSBCamera::FPS(  // NOLINT
     "FPS", "Frames per second to capture from USB camera", "1");
+core::Property GetUSBCamera::Width(  // NOLINT
+    "Width", "Target width of image to capture from USB camera", "");
+core::Property GetUSBCamera::Height(  // NOLINT
+    "Height", "Target height of image to capture from USB camera", "");
 core::Property GetUSBCamera::Format(  // NOLINT
-    "Format", "Frame format (currently only PNG and RAW are supported; RAW is a binary pixel buffer of RGB values)", "PNG");
+    "Format",
+    "Frame format (currently only PNG and RAW are supported; RAW is a binary pixel buffer of RGB values)",
+    "PNG");
 core::Property GetUSBCamera::VendorID(  // NOLINT
     "USB Vendor ID", "USB Vendor ID of camera device, in hexadecimal format", "0x0");
 core::Property GetUSBCamera::ProductID(  // NOLINT
@@ -47,6 +53,8 @@ core::Relationship GetUSBCamera::Failure(  // NOLINT
 void GetUSBCamera::initialize() {
   std::set<core::Property> properties;
   properties.insert(FPS);
+  properties.insert(Width);
+  properties.insert(Height);
   properties.insert(Format);
   properties.insert(VendorID);
   properties.insert(ProductID);
@@ -97,12 +105,18 @@ void GetUSBCamera::onFrame(uvc_frame_t *frame, void *ptr) {
     std::shared_ptr<OutputStreamCallback> write_cb;
 
     if (cb_data->format == "PNG") {
-      write_cb = std::make_shared<GetUSBCamera::PNGWriteCallback>(cb_data->png_write_mtx, cb_data->frame_buffer, cb_data->device_width, cb_data->device_height);
+      write_cb = std::make_shared<GetUSBCamera::PNGWriteCallback>(cb_data->png_write_mtx,
+                                                                  cb_data->frame_buffer,
+                                                                  cb_data->device_width,
+                                                                  cb_data->device_height);
     } else if (cb_data->format == "RAW") {
       write_cb = std::make_shared<GetUSBCamera::RawWriteCallback>(cb_data->frame_buffer);
     } else {
       cb_data->logger->log_warn("Invalid format specified (%s); defaulting to PNG", cb_data->format);
-      write_cb = std::make_shared<GetUSBCamera::PNGWriteCallback>(cb_data->png_write_mtx, cb_data->frame_buffer, cb_data->device_width, cb_data->device_height);
+      write_cb = std::make_shared<GetUSBCamera::PNGWriteCallback>(cb_data->png_write_mtx,
+                                                                  cb_data->frame_buffer,
+                                                                  cb_data->device_width,
+                                                                  cb_data->device_height);
     }
 
     session->write(flow_file, write_cb.get());
@@ -133,6 +147,34 @@ void GetUSBCamera::onSchedule(core::ProcessContext *context, core::ProcessSessio
     }
   }
 
+  uint16_t target_width = 0;
+  uint16_t target_height = 0;
+  std::string conf_width_str;
+  context->getProperty("Width", conf_width_str);
+
+  if (!conf_width_str.empty()) {
+    auto target_width_ul = std::stoul(conf_width_str);
+    if (target_width_ul > UINT16_MAX) {
+      logger_->log_error("Configured target width %s is out of range", conf_width_str);
+    } else {
+      target_width = static_cast<uint16_t>(target_width_ul);
+    }
+    logger_->log_info("Using configured target width: %i", target_width);
+  }
+
+  std::string conf_height_str;
+  context->getProperty("Height", conf_height_str);
+
+  if (!conf_height_str.empty()) {
+    auto target_height_ul = std::stoul(conf_height_str);
+    if (target_height_ul > UINT16_MAX) {
+      logger_->log_error("Configured target height %s is out of range", conf_height_str);
+    } else {
+      target_height = static_cast<uint16_t>(target_height_ul);
+    }
+    logger_->log_info("Using configured target height: %i", target_height);
+  }
+
   std::string conf_format_str;
   context->getProperty("Format", conf_format_str);
 
@@ -160,7 +202,7 @@ void GetUSBCamera::onSchedule(core::ProcessContext *context, core::ProcessSessio
   cleanupUvc();
   logger_->log_info("Beginning to capture frames from USB camera");
 
-  uvc_stream_ctrl_t ctrl { };
+  uvc_stream_ctrl_t ctrl{};
   uvc_error_t res;
   res = uvc_init(&ctx_, nullptr);
 
@@ -196,6 +238,11 @@ void GetUSBCamera::onSchedule(core::ProcessContext *context, core::ProcessSessio
       uint32_t max_size = 0;
       uint32_t fps = 0;
 
+      double min_diff = -1;
+      double current_diff = -1;
+      double current_width_diff = -1;
+      double current_height_diff = -1;
+
       for (auto fmt_desc = uvc_get_format_descs(devh_); fmt_desc; fmt_desc = fmt_desc->next) {
         uvc_frame_desc_t *frame_desc;
         switch (fmt_desc->bDescriptorSubtype) {
@@ -203,19 +250,45 @@ void GetUSBCamera::onSchedule(core::ProcessContext *context, core::ProcessSessio
           case UVC_VS_FORMAT_FRAME_BASED:
             for (frame_desc = fmt_desc->frame_descs; frame_desc; frame_desc = frame_desc->next) {
               uint32_t frame_fps = 10000000 / frame_desc->dwDefaultFrameInterval;
-              if (frame_desc->dwMaxVideoFrameBufferSize > max_size && frame_fps >= target_fps) {
-                width = frame_desc->wWidth;
-                height = frame_desc->wHeight;
-                max_size = frame_desc->dwMaxVideoFrameBufferSize;
-                fps = frame_fps;
+              logger_->log_info("Discovered supported format %ix%i @ %i",
+                                frame_desc->wWidth,
+                                frame_desc->wHeight,
+                                frame_fps);
+              if (target_height > 0 && target_width > 0) {
+                if (frame_fps >= target_fps) {
+                  current_width_diff = abs(frame_desc->wWidth - target_width) / static_cast<double>(target_width);
+                  logger_->log_debug("Current frame format width difference is %f", current_width_diff);
+                  current_height_diff = abs(frame_desc->wHeight - target_height) / static_cast<double>(target_height);
+                  logger_->log_debug("Current frame format height difference is %f", current_height_diff);
+                  current_diff = (current_width_diff + current_height_diff) / 2;
+                  logger_->log_debug("Current frame format difference is %f", current_diff);
+
+                  if (min_diff < 0 || current_diff < min_diff) {
+                    logger_->log_info("Format %ix%i @ %i is now closest to target",
+                                      frame_desc->wWidth,
+                                      frame_desc->wHeight,
+                                      frame_fps);
+                    width = frame_desc->wWidth;
+                    height = frame_desc->wHeight;
+                    max_size = frame_desc->dwMaxVideoFrameBufferSize;
+                    fps = frame_fps;
+                    min_diff = current_diff;
+                  }
+                }
+
+              } else {
+                if (frame_desc->dwMaxVideoFrameBufferSize > max_size && frame_fps >= target_fps) {
+                  width = frame_desc->wWidth;
+                  height = frame_desc->wHeight;
+                  max_size = frame_desc->dwMaxVideoFrameBufferSize;
+                  fps = frame_fps;
+                }
               }
             }
 
-          case UVC_VS_FORMAT_MJPEG:
-            logger_->log_info("Skipping MJPEG frame formats");
+          case UVC_VS_FORMAT_MJPEG:logger_->log_info("Skipping MJPEG frame formats");
 
-          default:
-            logger_->log_warn("Found unknown format");
+          default:logger_->log_warn("Found unknown format");
         }
       }
 
@@ -313,7 +386,10 @@ void GetUSBCamera::onTrigger(core::ProcessContext *context, core::ProcessSession
   }
 }
 
-GetUSBCamera::PNGWriteCallback::PNGWriteCallback(std::shared_ptr<std::mutex> write_mtx, uvc_frame_t *frame, uint32_t width, uint32_t height)
+GetUSBCamera::PNGWriteCallback::PNGWriteCallback(std::shared_ptr<std::mutex> write_mtx,
+                                                 uvc_frame_t *frame,
+                                                 uint32_t width,
+                                                 uint32_t height)
     : png_write_mtx_(std::move(write_mtx)),
       frame_(frame),
       width_(width),
@@ -346,15 +422,15 @@ int64_t GetUSBCamera::PNGWriteCallback::process(std::shared_ptr<io::BaseStream> 
   try {
 
     png_set_write_fn(png, this, [](png_structp out_png,
-        png_bytep out_data,
-        png_size_t num_bytes) {
-      auto this_callback = reinterpret_cast<PNGWriteCallback *>(png_get_io_ptr(out_png));
-      std::copy(out_data, out_data + num_bytes, std::back_inserter(this_callback->png_output_buf_));
-    },
+                                   png_bytep out_data,
+                                   png_size_t num_bytes) {
+                       auto this_callback = reinterpret_cast<PNGWriteCallback *>(png_get_io_ptr(out_png));
+                       std::copy(out_data, out_data + num_bytes, std::back_inserter(this_callback->png_output_buf_));
+                     },
                      [](png_structp flush_png) {});
 
     png_set_IHDR(png, info, width_, height_, 8,
-    PNG_COLOR_TYPE_RGB,
+                 PNG_COLOR_TYPE_RGB,
                  PNG_INTERLACE_NONE,
                  PNG_COMPRESSION_TYPE_DEFAULT,
                  PNG_FILTER_TYPE_DEFAULT);

@@ -331,8 +331,12 @@ flow files upon capture. The onTrigger of this processor is a NOOP and will
 report an error if inputs are flowed into the processor. Because of this, the
 standard event/timer driven scheduling options have no effect.
 
-If the camera supports multiple image size/quality settings, the highest
-quality is chosen for the given FPS. For example:
+If the Width/Height properties are set, the closest supported image frame
+dimensions to the given Width/Height properties are used.
+
+If no Width/Height properties are set, and the camera supports multiple image
+size/quality settings, the highest quality is chosen for the given FPS. For
+example:
 
 - If the FPS is 10 and the camera supports a maximum of 1920x1080 at this FPS,
   output images will be 1920x780
@@ -348,6 +352,8 @@ default values, and whether a property supports the NiFi Expression Language.
 | Name | Default Value | Allowable Values | Description |
 | - | - | - | - |
 | **FPS** | 1 | | Frames per second to capture from USB camera |
+| Width | | | Desired frame width (closest supported by camera hardware will be used) |
+| Height | | | Desired frame height (closest supported by camera hardware will be used) |
 | **Format** | PNG | PNG, RAW | Frame format (currently only PNG and RAW are supported; RAW is a binary pixel buffer of RGB values) |
 | USB Vendor ID | | | USB Vendor ID of camera device, in hexadecimal format |
 | USB Product ID | | | USB Product ID of camera device, in hexadecimal format|
