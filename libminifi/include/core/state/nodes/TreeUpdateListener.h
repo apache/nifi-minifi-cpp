@@ -20,7 +20,7 @@
 
 #include <vector>
 
-#include "MetricsBase.h"
+#include "../nodes/MetricsBase.h"
 #include "core/state/UpdateController.h"
 
 namespace org {
@@ -28,7 +28,7 @@ namespace apache {
 namespace nifi {
 namespace minifi {
 namespace state {
-namespace metrics {
+namespace response {
 
 /**
  * Purpose: Class that will represent the metrics updates, which can be performed asynchronously.
@@ -44,18 +44,18 @@ class MetricsUpdate : public Update {
   }
 };
 
-class MetricsWatcher : public utils::AfterExecute<Update> {
+class OperationWatcher : public utils::AfterExecute<Update> {
  public:
-  explicit MetricsWatcher(std::atomic<bool> *running)
+  explicit OperationWatcher(std::atomic<bool> *running)
       : running_(running) {
   }
 
-  explicit MetricsWatcher(MetricsWatcher && other)
+  explicit OperationWatcher(OperationWatcher && other)
       : running_(std::move(other.running_)) {
 
   }
 
-  ~MetricsWatcher() {
+  ~OperationWatcher() {
 
   }
 
@@ -75,21 +75,21 @@ class MetricsWatcher : public utils::AfterExecute<Update> {
 
 };
 
-class MetricsListener {
+class TreeUpdateListener {
  public:
-  MetricsListener(const std::shared_ptr<metrics::MetricsReporter> &source, const std::shared_ptr<metrics::MetricsSink> &sink)
+  TreeUpdateListener(const std::shared_ptr<response::NodeReporter> &source, const std::shared_ptr<response::ResponseNodeSink> &sink)
       : running_(true),
         source_(source),
         sink_(sink){
 
     function_ = [&]() {
       while(running_) {
-        std::vector<std::shared_ptr<metrics::Metrics>> metric_vector;
+        std::vector<std::shared_ptr<response::ResponseNode>> metric_vector;
         // simple pass through for the metrics
         if (nullptr != source_ && nullptr != sink_) {
-          source_->getMetrics(metric_vector,0);
+          source_->getResponseNodes(metric_vector,0);
           for(auto metric : metric_vector) {
-            sink_->setMetrics(metric);
+            sink_->setResponseNodes(metric);
           }
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
@@ -114,8 +114,8 @@ class MetricsListener {
   std::function<Update()> function_;
   std::future<Update> future_;
   std::atomic<bool> running_;
-  std::shared_ptr<metrics::MetricsReporter> source_;
-  std::shared_ptr<metrics::MetricsSink> sink_;
+  std::shared_ptr<response::NodeReporter> source_;
+  std::shared_ptr<response::ResponseNodeSink> sink_;
 };
 
 } /* namespace metrics */

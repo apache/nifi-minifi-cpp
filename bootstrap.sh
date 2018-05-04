@@ -24,17 +24,19 @@ NO_COLOR='\033[0;0;39m'
 CORES=1
 BUILD="false"
 PACKAGE="false"
-
+BUILD_IDENTIFIER=""
 TRUE="Enabled"
 FALSE="Disabled"
 FEATURES_SELECTED="false"
 AUTO_REMOVE_EXTENSIONS="true"
 export NO_PROMPT="false"
 
+DEPLOY="false"
 OPTIONS=()
 CMAKE_OPTIONS_ENABLED=()
 CMAKE_OPTIONS_DISABLED=()
 CMAKE_MIN_VERSION=()
+DEPLOY_LIMITS=()
 
 DEPENDENCIES=()
 
@@ -61,6 +63,12 @@ add_disabled_option(){
   if [ ! -z "$4" ]; then
     CMAKE_MIN_VERSION+=("$1:$4")
   fi
+
+  if [ ! -z "$5" ]; then
+    if [ "$5" = "true" ]; then
+      DEPLOY_LIMITS+=("$1")
+    fi
+  fi
 }
 
 add_dependency(){
@@ -69,10 +77,36 @@ add_dependency(){
 
 ### parse the command line arguments
 
+
+EnableAllFeatures(){
+  for option in "${OPTIONS[@]}" ; do
+    feature_status=${!option}
+    if [ "$feature_status" = "${FALSE}" ]; then
+      ToggleFeature $option
+    fi
+    #	eval "$option=${TRUE}"
+  done
+}
+
 while :; do
   case $1 in
     -n|--noprompt)
       NO_PROMPT="true"
+      ;;
+    -e|--enableall)
+      NO_PROMPT="true"
+      FEATURES_SELECTED="true"
+      EnableAllFeatures
+      ;;
+    -d|--deploy)
+      NO_PROMPT="true"
+      DEPLOY="true"
+      FEATURES_SELECTED="true"
+      EnableAllFeatures
+      ;;
+    -t|--travis)
+      NO_PROMPT="true"
+      FEATURES_SELECTED="true"
       ;;
     -p|--package)
       CORES=$(grep -c ^processor /proc/cpuinfo 2>/dev/null || sysctl -n hw.ncpu)
@@ -82,6 +116,9 @@ while :; do
     -b|--build)
       CORES=$(grep -c ^processor /proc/cpuinfo 2>/dev/null || sysctl -n hw.ncpu)
       BUILD="true"
+      ;;
+    "--build_identifier="* )
+      BUILD_IDENTIFIER="${1#*=}"
       ;;
     *) break
   esac
@@ -107,14 +144,7 @@ if [ "$NO_PROMPT" = "true" ]; then
   agree="N"
   echo "****************************************"
   echo "Welcome, this boostrap script will update your system to install MiNIFi C++"
-  echo "You have opted to skip prompts. Do you agree to this script installing"
-  echo "System packages without prompting you?"
-  read -p "Enter Y to continue, N to exit  [ Y/N ] " agree
-  if [ "$agree" = "Y" ] || [ "$agree" = "y" ]; then
-    echo "Continuing..."
-  else
-    exit
-  fi
+  echo "You have opted to skip prompts. "
 fi
 
 
@@ -239,18 +269,29 @@ add_disabled_option KAFKA_ENABLED ${FALSE} "ENABLE_LIBRDKAFKA" "3.4.0"
 
 add_disabled_option MQTT_ENABLED ${FALSE} "ENABLE_MQTT"
 
-#add_disabled_option BUSTACHE_ENABLED ${FALSE} "ENABLE_BUSTACHE"
-#add_dependency BUSTACHE_ENABLED "boost"
 
+# Since the following extensions have limitations on
+
+add_disabled_option BUSTACHE_ENABLED ${FALSE} "ENABLE_BUSTACHE" "2.6" ${TRUE}
+add_dependency BUSTACHE_ENABLED "boost"
 ## currently need to limit on certain platforms
-#add_disabled_option TENSORFLOW_ENABLED ${FALSE} "ENABLE_TENSORFLOW"
+add_disabled_option TENSORFLOW_ENABLED ${FALSE} "ENABLE_TENSORFLOW" "2.6" ${TRUE}
+add_dependency TENSORFLOW_ENABLED "tensorflow"
 
 
 pause(){
   read -p "Press [Enter] key to continue..." fackEnterKey
 }
 
-
+can_deploy(){
+  for option in "${DEPLOY_LIMITS[@]}" ; do
+    OPT=${option%%:*}
+    if [ "${OPT}" = "$1" ]; then
+      echo "false"
+    fi
+  done
+  echo "true"
+}
 
 ToggleFeature(){
   VARIABLE_VALUE=${!1}
@@ -278,21 +319,15 @@ ToggleFeature(){
       fi
     done
     CAN_ENABLE=$(verify_enable $1)
+    CAN_DEPLOY=$(can_deploy $1)
     if [ "$CAN_ENABLE" = "true" ]; then
-      eval "$1=${TRUE}"
+      if [[ "$DEPLOY" = "true" &&  "$CAN_DEPLOY" = "true" ]] || [[ "$DEPLOY" = "false" ]]; then
+        eval "$1=${TRUE}"
+      fi
     fi
   fi
 }
 
-EnableAllFeatures(){
-  for option in "${OPTIONS[@]}" ; do
-    feature_status=${!option}
-    if [ "$feature_status" = "${FALSE}" ]; then
-      ToggleFeature $option
-    fi
-    #	eval "$option=${TRUE}"
-  done
-}
 
 print_feature_status(){
   feature="$1"
@@ -334,24 +369,6 @@ print_feature_status(){
 }
 
 
-### parse the command line arguments
-
-while :; do
-  case $1 in
-    -e|--enableall)
-      NO_PROMPT="true"
-      FEATURES_SELECTED="true"
-      EnableAllFeatures
-      ;;
-    -t|--travis)
-      NO_PROMPT="true"
-      FEATURES_SELECTED="true"
-      ;;
-    *) break
-  esac
-  shift
-done
-
 if [ ! -d "build" ]; then
   mkdir build/
 else
@@ -371,7 +388,7 @@ fi
 
 ## change to the directory
 
-cd build
+pushd build
 
 
 show_supported_features() {
@@ -495,6 +512,8 @@ build_cmake_command(){
     CMAKE_BUILD_COMMAND="${CMAKE_BUILD_COMMAND} -DPORTABLE=OFF "
   fi
 
+  CMAKE_BUILD_COMMAND="${CMAKE_BUILD_COMMAND} -DBUILD_IDENTIFIER=${BUILD_IDENTIFIER}"
+
   add_os_flags
 
   curl -V | grep OpenSSL &> /dev/null
@@ -530,4 +549,4 @@ if [ "$PACKAGE" = "true" ]; then
   make package
 fi
 
-
+popd

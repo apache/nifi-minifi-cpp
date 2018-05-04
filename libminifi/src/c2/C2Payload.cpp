@@ -80,21 +80,24 @@ C2Payload::C2Payload(Operation op, std::string identifier, bool resp, bool isRaw
       op_(op),
       raw_(isRaw),
       ident_(identifier),
-      isResponse(resp) {
+      isResponse(resp),
+      is_container_(false) {
 }
 
 C2Payload::C2Payload(Operation op, bool resp, bool isRaw)
     : state::Update(state::UpdateStatus(state::UpdateState::INITIATE, 0)),
       op_(op),
       raw_(isRaw),
-      isResponse(resp) {
+      isResponse(resp),
+      is_container_(false) {
 }
 
 C2Payload::C2Payload(Operation op, state::UpdateState state, bool resp, bool isRaw)
     : state::Update(state::UpdateStatus(state, 0)),
       op_(op),
       raw_(isRaw),
-      isResponse(resp) {
+      isResponse(resp),
+      is_container_(false) {
 }
 
 C2Payload::C2Payload(const C2Payload &other)
@@ -106,7 +109,8 @@ C2Payload::C2Payload(const C2Payload &other)
       ident_(other.ident_),
       raw_data_(other.raw_data_),
       payloads_(other.payloads_),
-      content_(other.content_) {
+      content_(other.content_),
+      is_container_(other.is_container_) {
 }
 
 C2Payload::C2Payload(const C2Payload &&other)
@@ -118,7 +122,8 @@ C2Payload::C2Payload(const C2Payload &&other)
       ident_(std::move(other.ident_)),
       raw_data_(std::move(other.raw_data_)),
       payloads_(std::move(other.payloads_)),
-      content_(std::move(other.content_)) {
+      content_(std::move(other.content_)),
+      is_container_(std::move(other.is_container_)) {
 }
 
 void C2Payload::setIdentifier(const std::string &ident) {
@@ -166,14 +171,14 @@ bool C2Payload::isRaw() const {
 }
 
 void C2Payload::setRawData(const std::string &data) {
-  raw_data_ = data;
+  raw_data_.insert(std::end(raw_data_), std::begin(data), std::end(data));
 }
 
 void C2Payload::setRawData(const std::vector<char> &data) {
-  raw_data_ = std::string(data.data(), data.size());
+  raw_data_.insert(std::end(raw_data_), std::begin(data), std::end(data));
 }
 
-std::string C2Payload::getRawData() const {
+std::vector<char> C2Payload::getRawData() const {
   return raw_data_;
 }
 
@@ -195,6 +200,7 @@ C2Payload &C2Payload::operator=(const C2Payload &&other) {
   label_ = std::move(other.label_);
   payloads_ = std::move(other.payloads_);
   content_ = std::move(other.content_);
+  is_container_ = std::move(other.is_container_);
   return *this;
 }
 
@@ -209,6 +215,7 @@ C2Payload &C2Payload::operator=(const C2Payload &other) {
   label_ = other.label_;
   payloads_ = other.payloads_;
   content_ = other.content_;
+  is_container_ = other.is_container_;
   return *this;
 }
 

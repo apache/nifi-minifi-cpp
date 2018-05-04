@@ -283,7 +283,7 @@ void GetTCP::onTrigger(const std::shared_ptr<core::ProcessContext> &context, con
   context->yield();
 }
 
-int16_t GetTCP::getMetrics(std::vector<std::shared_ptr<state::metrics::Metrics>> &metric_vector) {
+int16_t GetTCP::getMetricNodes(std::vector<std::shared_ptr<state::response::ResponseNode>> &metric_vector) {
   metric_vector.push_back(metrics_);
   return 0;
 }

@@ -22,12 +22,12 @@
 #include <atomic>
 #include <algorithm>
 
-#include "core/state/metrics/MetricsBase.h"
-#include "core/state/metrics/MetricsListener.h"
 #include "UpdateController.h"
 #include "io/validation.h"
 #include "utils/ThreadPool.h"
 #include "core/Core.h"
+#include "nodes/MetricsBase.h"
+#include "nodes/TreeUpdateListener.h"
 
 namespace org {
 namespace apache {
@@ -40,7 +40,7 @@ namespace state {
  * the sink for external updates, and encapsulates the thread pool that runs the listeners for various update operations
  * that can be performed.
  */
-class StateManager : public metrics::MetricsReporter, public metrics::MetricsSink, public StateMonitor, public std::enable_shared_from_this<StateManager> {
+class StateManager : public response::NodeReporter, public response::ResponseNodeSink, public StateMonitor, public std::enable_shared_from_this<StateManager> {
  public:
 
   StateManager()
@@ -77,20 +77,31 @@ class StateManager : public metrics::MetricsReporter, public metrics::MetricsSin
    * Passes metrics to the update controllers if they are a metrics sink.
    * @param metrics metric to pass through
    */
-  int16_t setMetrics(const std::shared_ptr<metrics::Metrics> &metrics);
+  int16_t setResponseNodes(const std::shared_ptr<response::ResponseNode> &metrics);
 
   /**
    * Metrics operations
    */
-  virtual int16_t getMetrics(std::vector<std::shared_ptr<metrics::Metrics>> &metric_vector, uint16_t metricsClass);
+  virtual int16_t getResponseNodes(std::vector<std::shared_ptr<response::ResponseNode>> &metric_vector, uint16_t metricsClass);
+
+  virtual std::string getVersion(){
+    return "";
+  }
 
  protected:
 
+  void shutdownState(){
+    listener_thread_pool_.shutdown();
+    metrics_maps_.clear();
+    updateControllers.clear();
+  }
+
   /**
    * Function to apply updates for a given  update controller.
+   * @param source  source identifier
    * @param updateController update controller mechanism.
    */
-  virtual int16_t applyUpdate(const std::shared_ptr<Update> &updateController) = 0;
+  virtual int16_t applyUpdate(const std::string &source, const std::shared_ptr<Update> &updateController) = 0;
 
   /**
    * Registers and update controller
@@ -108,15 +119,17 @@ class StateManager : public metrics::MetricsReporter, public metrics::MetricsSin
 
   std::timed_mutex mutex_;
 
-  std::map<std::string, std::shared_ptr<metrics::Metrics>> metrics_maps_;
+  std::map<std::string, std::shared_ptr<response::ResponseNode>> metrics_maps_;
 
   std::vector<std::shared_ptr<UpdateController> > updateControllers;
 
-  std::unique_ptr<state::metrics::MetricsListener> metrics_listener_;
+  std::unique_ptr<state::response::TreeUpdateListener> metrics_listener_;
 
   utils::ThreadPool<Update> listener_thread_pool_;
 
 };
+
+
 
 } /* namespace state */
 } /* namespace minifi */

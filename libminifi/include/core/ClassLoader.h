@@ -226,6 +226,28 @@ class ClassLoader {
     loaded_factories_.insert(std::make_pair(name, std::move(factory)));
   }
 
+  std::vector<std::string> getGroups() {
+    std::vector<std::string> groups;
+    std::lock_guard<std::mutex> lock(internal_mutex_);
+    for (auto & resource : loaded_factories_) {
+      groups.push_back(resource.first);
+    }
+    return groups;
+  }
+
+  std::vector<std::string> getClasses() {
+    std::vector<std::string> groups;
+    std::lock_guard<std::mutex> lock(internal_mutex_);
+    for (auto & resource : loaded_factories_) {
+      if (nullptr != resource.second) {
+        auto classes = resource.second->getClassNames();
+        groups.insert(groups.end(), classes.begin(), classes.end());
+      }else{
+      }
+    }
+    return groups;
+  }
+
   /**
    * Instantiate object based on class_name
    * @param class_name class to create

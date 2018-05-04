@@ -153,7 +153,7 @@ class ProcessGroup {
   }
   // getVersion
   int getVersion() {
-    return version_;
+    return config_version_;
   }
   // Start Processing
   void startProcessing(TimerDrivenSchedulingAgent *timeScheduler, EventDrivenSchedulingAgent *eventScheduler);
@@ -216,7 +216,7 @@ class ProcessGroup {
   // Processor Group Name
   std::string name_;
   // version
-  int version_;
+  int config_version_;
   // Process Group Type
   ProcessGroupType type_;
   // Processors (ProcessNode) inside this process group which include Input/Output Port, Remote Process Group input/Output port

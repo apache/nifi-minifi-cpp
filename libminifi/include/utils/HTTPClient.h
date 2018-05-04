@@ -294,6 +294,7 @@ class BaseHTTPClient {
 extern std::string get_token(utils::BaseHTTPClient *client, std::string username, std::string password);
 
 extern void parse_url(std::string *url, std::string *host, int *port, std::string *protocol);
+extern void parse_url(std::string *url, std::string *host, int *port, std::string *protocol, std::string *path, std::string *query);
 } /* namespace utils */
 } /* namespace minifi */
 } /* namespace nifi */

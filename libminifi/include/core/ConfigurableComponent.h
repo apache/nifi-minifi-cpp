@@ -129,12 +129,14 @@ class __attribute__((visibility("default"))) ConfigurableComponent {
   /**
    * Invoked anytime a static property is modified
    */
-  virtual void onPropertyModified(const Property &old_property, const Property &new_property) {}
+  virtual void onPropertyModified(const Property &old_property, const Property &new_property) {
+  }
 
   /**
    * Invoked anytime a dynamic property is modified.
    */
-  virtual void onDynamicPropertyModified(const Property &old_property, const Property &new_property) {}
+  virtual void onDynamicPropertyModified(const Property &old_property, const Property &new_property) {
+  }
 
   /**
    * Provides all dynamic property keys that have been set.
@@ -143,7 +145,18 @@ class __attribute__((visibility("default"))) ConfigurableComponent {
    */
   std::vector<std::string> getDynamicPropertyKeys();
 
+  /**
+   * Returns a vector all properties
+   *
+   * @return map of property keys to their descriptions.
+   */
+  std::map<std::string, std::string> getProperties();
+
   virtual ~ConfigurableComponent();
+
+  virtual void initialize() {
+
+  }
 
  protected:
 

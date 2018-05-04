@@ -75,7 +75,7 @@ int main(int argc, char **argv) {
   if (!validHome(minifiHome)) {
     logger->log_error("No valid MINIFI_HOME could be inferred. "
                       "Please set MINIFI_HOME or run minifi from a valid location.");
-    return -1;
+    //return -1;
   }
 
   std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::Configure>();
@@ -138,6 +138,7 @@ int main(int argc, char **argv) {
   ("getsize", "Reports the size of the associated connection queue", cxxopts::value<std::vector<std::string>>())  //NOLINT
   ("updateflow", "Updates the flow of the agent using the provided flow file", cxxopts::value<std::string>())  //NOLINT
   ("getfull", "Reports a list of full connections")  //NOLINT
+  ("manifest", "Generates a manifest for the current binary")  //NOLINT
   ("noheaders", "Removes headers from output streams");
 
   bool show_headers = true;
@@ -245,6 +246,14 @@ int main(int argc, char **argv) {
       if (updateFlow(std::move(socket), std::cout, flow_file) < 0)
         std::cout << "Could not connect to remote host " << host << ":" << port << std::endl;
     }
+
+    if (result.count("manifest") > 0) {
+      printManifest(configuration);
+    }
+  }catch (const std::exception &exc)
+  {
+      // catch anything thrown within try block that derives from std::exception
+      std::cerr << exc.what() << std::endl;
   } catch (...) {
     std::cout << options.help( { "", "Group" }) << std::endl;
     exit(0);

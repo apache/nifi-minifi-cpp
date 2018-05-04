@@ -25,6 +25,7 @@ namespace minifi {
 const char *Configure::nifi_default_directory = "nifi.default.directory";
 const char *Configure::nifi_c2_enable = "nifi.c2.enable";
 const char *Configure::nifi_flow_configuration_file = "nifi.flow.configuration.file";
+const char *Configure::nifi_flow_configuration_file_backup_update = "nifi.flow.configuration.backup.on.update";
 const char *Configure::nifi_flow_engine_threads = "nifi.flow.engine.threads";
 const char *Configure::nifi_administrative_yield_duration = "nifi.administrative.yield.duration";
 const char *Configure::nifi_bored_yield_duration = "nifi.bored.yield.duration";

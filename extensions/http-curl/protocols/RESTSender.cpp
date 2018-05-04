@@ -19,11 +19,16 @@
 #include "RESTSender.h"
 
 #include <algorithm>
+#include <iostream>
 #include <memory>
 #include <utility>
 #include <map>
 #include <string>
 #include <vector>
+#include "utils/file/FileUtils.h"
+#include "utils/StringUtils.h"
+#include "utils/file/FileManager.h"
+#include "utils/FileOutputCallback.h"
 
 namespace org {
 namespace apache {
@@ -40,8 +45,17 @@ void RESTSender::initialize(const std::shared_ptr<core::controller::ControllerSe
   C2Protocol::initialize(controller, configure);
   // base URL when one is not specified.
   if (nullptr != configure) {
+    std::string update_str, ssl_context_service_str;
     configure->get("c2.rest.url", rest_uri_);
     configure->get("c2.rest.url.ack", ack_uri_);
+    if (configure->get("c2.rest.ssl.context.service", ssl_context_service_str)) {
+      auto service = controller->getControllerService(ssl_context_service_str);
+      if (nullptr != service) {
+        ssl_context_service_ = std::static_pointer_cast<minifi::controllers::SSLContextService>(service);
+      }
+    }
+    configure->get("c2.rest.heartbeat.minimize.updates", update_str);
+    utils::StringUtils::StringToBool(update_str, minimize_updates_);
   }
   logger_->log_debug("Submitting to %s", rest_uri_);
 }
@@ -52,7 +66,6 @@ C2Payload RESTSender::consumePayload(const std::string &url, const C2Payload &pa
   if (direction == Direction::TRANSMIT) {
     outputConfig = serializeJsonRootPayload(payload);
   }
-
   return sendPayload(url, direction, payload, outputConfig);
 }
 
@@ -72,7 +85,6 @@ void RESTSender::update(const std::shared_ptr<Configure> &configure) {
 const C2Payload RESTSender::sendPayload(const std::string url, const Direction direction, const C2Payload &payload, const std::string outputConfig) {
   utils::HTTPClient client(url, ssl_context_service_);
   client.setConnectionTimeout(2);
-
   std::unique_ptr<utils::ByteInputCallBack> input = nullptr;
   std::unique_ptr<utils::HTTPUploadCallback> callback = nullptr;
   if (direction == Direction::TRANSMIT) {
@@ -89,15 +101,25 @@ const C2Payload RESTSender::sendPayload(const std::string url, const Direction d
     // since we are not uploading anything on a get
     client.set_request_method("GET");
   }
-  client.appendHeader("Accept: application/json");
-  client.setContentType("application/json");
+
+  std::unique_ptr<utils::FileOutputCallback> file_callback = nullptr;
+  utils::HTTPReadCallback read;
+  if (payload.getOperation() == TRANSFER) {
+    utils::file::FileManager file_man;
+    auto file = file_man.unique_file(true);
+    file_callback = std::unique_ptr<utils::FileOutputCallback>(new utils::FileOutputCallback(file));
+    read.pos = 0;
+    read.ptr = file_callback.get();
+    client.setReadCallback(&read);
+  } else {
+    client.appendHeader("Accept: application/json");
+    client.setContentType("application/json");
+  }
   bool isOkay = client.submit();
   int64_t respCode = client.getResponseCode();
-
   if (isOkay && respCode) {
     if (payload.isRaw()) {
       C2Payload response_payload(payload.getOperation(), state::UpdateState::READ_COMPLETE, true, true);
-
       response_payload.setRawData(client.getResponseBody());
       return response_payload;
     }

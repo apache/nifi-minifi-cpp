@@ -24,6 +24,8 @@ verify_enable() {
       echo "false"
     elif [ "$feature" = "USB_ENABLED" ]; then
       echo "false"
+    elif [ "$feature" = "TENSORFLOW_ENABLED" ]; then
+      echo "false"
     else
       echo "true"
     fi
