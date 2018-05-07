@@ -76,7 +76,7 @@ if (ENABLE_LUA_SCRIPTING)
     find_package(Lua REQUIRED)
 
     include_directories(${LUA_INCLUDE_DIR})
-    include_directories(../../thirdparty/sol2-2.17.5)
+    include_directories(../../thirdparty/sol2-2.20.0)
 
     include_directories(lua)
     add_definitions(-DLUA_SUPPORT)
