@@ -30,27 +30,26 @@ echo "Current Working Directory: $(pwd)"
 echo "CMake Source Directory: $CMAKE_SOURCE_DIR"
 echo "MiNiFi Package: $MINIFI_SOURCE_CODE"
 
-# Copy the MiNiFi package to the Docker working directory before building
+# Copy the MiNiFi source tree to the Docker working directory before building
 mkdir -p $CMAKE_SOURCE_DIR/docker/minificppsource
-cp -r $CMAKE_SOURCE_DIR/bin $CMAKE_SOURCE_DIR/docker/minificppsource/.
-cp -r $CMAKE_SOURCE_DIR/cmake $CMAKE_SOURCE_DIR/docker/minificppsource/.
-cp -r $CMAKE_SOURCE_DIR/conf $CMAKE_SOURCE_DIR/docker/minificppsource/.
-cp -r $CMAKE_SOURCE_DIR/examples $CMAKE_SOURCE_DIR/docker/minificppsource/.
-cp -r $CMAKE_SOURCE_DIR/include $CMAKE_SOURCE_DIR/docker/minificppsource/.
-cp -r $CMAKE_SOURCE_DIR/controller $CMAKE_SOURCE_DIR/docker/minificppsource/.
-cp -r $CMAKE_SOURCE_DIR/LibExample $CMAKE_SOURCE_DIR/docker/minificppsource/.
-cp -r $CMAKE_SOURCE_DIR/libminifi $CMAKE_SOURCE_DIR/docker/minificppsource/.
-cp -r $CMAKE_SOURCE_DIR/extensions $CMAKE_SOURCE_DIR/docker/minificppsource/.
-cp -r $CMAKE_SOURCE_DIR/main $CMAKE_SOURCE_DIR/docker/minificppsource/.
-cp -r $CMAKE_SOURCE_DIR/thirdparty $CMAKE_SOURCE_DIR/docker/minificppsource/.
-cp -r $CMAKE_SOURCE_DIR/CMakeLists.txt $CMAKE_SOURCE_DIR/docker/minificppsource/.
-cp -r $CMAKE_SOURCE_DIR/LICENSE $CMAKE_SOURCE_DIR/docker/minificppsource/.
-cp -r $CMAKE_SOURCE_DIR/NOTICE $CMAKE_SOURCE_DIR/docker/minificppsource/.
-cp -r $CMAKE_SOURCE_DIR/README.md $CMAKE_SOURCE_DIR/docker/minificppsource/.
+rsync -avr \
+      --exclude '/*build*' \
+      --exclude '/docker' \
+      --exclude '.git' \
+      --exclude '/extensions/expression-language/Parser.*' \
+      --exclude '/extensions/expression-language/Scanner.cpp' \
+      --exclude '/extensions/expression-language/location.hh' \
+      --exclude '/extensions/expression-language/position.hh' \
+      --exclude '/extensions/expression-language/stack.hh' \
+      --delete \
+      $CMAKE_SOURCE_DIR/ \
+      $CMAKE_SOURCE_DIR/docker/minificppsource/
 
-# Don't use EL files generated for the host
-rm -f $CMAKE_SOURCE_DIR/docker/minificppsource/extensions/expression-language/{*.hh,Parser.hpp,Scanner.cpp,Parser.cpp,Scanner.h}
-
-DOCKER_COMMAND="docker build --build-arg UID=$UID_ARG --build-arg GID=$GID_ARG --build-arg MINIFI_VERSION=$MINIFI_VERSION --build-arg MINIFI_SOURCE_CODE=$MINIFI_SOURCE_CODE -t apacheminificpp:$MINIFI_VERSION ."
+DOCKER_COMMAND="docker build --build-arg UID=$UID_ARG \
+                             --build-arg GID=$GID_ARG \
+                             --build-arg MINIFI_VERSION=$MINIFI_VERSION \
+                             --build-arg MINIFI_SOURCE_CODE=$MINIFI_SOURCE_CODE \
+                             -t \
+                             apacheminificpp:$MINIFI_VERSION ."
 echo "Docker Command: '$DOCKER_COMMAND'"
 ${DOCKER_COMMAND}
