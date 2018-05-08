@@ -179,8 +179,8 @@ void C2Payload::setRawData(const std::vector<char> &data) {
 }
 
 void C2Payload::setRawData(const std::vector<uint8_t> &data) {
-  std::transform(std::begin(data), std::end(data), std::back_inserter(raw_data_),[](uint8_t c){
-    return (char)c;
+  std::transform(std::begin(data), std::end(data), std::back_inserter(raw_data_), [](uint8_t c){
+    return static_cast<char>(c);
   });
 }
 

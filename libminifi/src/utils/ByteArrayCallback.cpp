@@ -43,7 +43,6 @@ int64_t StreamOutputCallback::process(std::shared_ptr<io::BaseStream> stream) {
   auto written = readFully(buffer.get(), size_);
   stream->writeData(reinterpret_cast<uint8_t*>(buffer.get()), written);
   return stream->getSize();
-
 }
 
 void StreamOutputCallback::write(char *data, size_t size) {

@@ -416,7 +416,6 @@ void FlowController::initializeC2() {
       auto identifier = std::dynamic_pointer_cast<state::response::AgentIdentifier>(processor);
 
       if (identifier != nullptr) {
-
         identifier->setIdentifier(identifier_str);
 
         std::string class_str;
