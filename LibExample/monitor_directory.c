@@ -22,8 +22,11 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <dirent.h>
-#include "capi/api.h"
 
+#include "file_blocks.h"
+#include "comms.h"
+#include "capi/api.h"
+#include "capi/processors.h"
 int is_dir(const char *path) {
   struct stat stat_struct;
   if (stat(path, &stat_struct) != 0)
@@ -31,62 +34,61 @@ int is_dir(const char *path) {
   return S_ISDIR(stat_struct.st_mode);
 }
 
-void transfer_file_or_directory(nifi_instance *instance, char *file_or_dir) {
-  int size = 1;
+pthread_mutex_t mutex;
+pthread_cond_t condition;
 
-  if (is_dir(file_or_dir)) {
-    DIR *d;
+int stopped;
 
-    struct dirent *dir;
-    d = opendir(file_or_dir);
-    if (d) {
-      while ((dir = readdir(d)) != NULL) {
-        if (!memcmp(dir->d_name,".",1) )
-          continue;
-        char *file_path = malloc(strlen(file_or_dir) + strlen(dir->d_name) + 2);
-        sprintf(file_path,"%s/%s",file_or_dir,dir->d_name);
-        transfer_file_or_directory(instance,file_path);
-        free(file_path);
-      }
-      closedir(d);
-    }
-    printf("%s is a directory", file_or_dir);
-  } else {
-    printf("Transferring %s\n",file_or_dir);
+int stop_callback(char *c) {
+  pthread_mutex_lock(&mutex);
+  stopped = 1;
+  pthread_cond_signal(&condition);
+  pthread_mutex_unlock(&mutex);
+  return 0;
+}
 
-    flow_file_record *record = create_flowfile(file_or_dir, strlen(file_or_dir));
-
-    add_attribute(record, "addedattribute", "1", 2);
-
-    transmit_flowfile(record, instance);
-
-    free_flowfile(record);
-  }
+int is_stopped(void *ptr) {
+  int is_stop = 0;
+  pthread_mutex_lock(&mutex);
+  is_stop = stopped;
+  pthread_mutex_unlock(&mutex);
+  return is_stop;
 }
 
 /**
  * This is an example of the C API that transmits a flow file to a remote instance.
  */
 int main(int argc, char **argv) {
-
-  if (argc < 4) {
-    printf("Error: must run ./transmit_flow <instance> <remote port> <file or directory>\n");
+  if (argc < 5) {
+    printf("Error: must run ./monitor_directory <instance> <remote port> <directory to monitor>\n");
     exit(1);
   }
 
+  stopped = 0x00;
+
   char *instance_str = argv[1];
   char *portStr = argv[2];
-  char *file = argv[3];
+  char *directory = argv[3];
 
   nifi_port port;
 
   port.pord_id = portStr;
 
+  C2_Server server;
+  server.url = argv[4];
+  server.ack_url = argv[5];
+  server.identifier = "monitor_directory";
+  server.type = REST;
+
   nifi_instance *instance = create_instance(instance_str, &port);
 
-  // initializing will make the transmission slightly more efficient.
-  //initialize_instance(instance);
-  transfer_file_or_directory(instance,file);
+  // enable_async_c2(instance, &server, stop_callback, NULL, NULL);
+
+  flow *new_flow = monitor_directory(instance, directory, 0x00, KEEP_SOURCE);
+
+  transmit_to_nifi(instance, new_flow, is_stopped);
+
+  free_flow(new_flow);
 
   free_instance(instance);
 }

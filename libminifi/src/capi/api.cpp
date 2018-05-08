@@ -25,6 +25,23 @@
 #include "capi/Instance.h"
 #include "capi/Plan.h"
 #include "ResourceClaim.h"
+#include "processors/GetFile.h"
+#include "core/logging/LoggerConfiguration.h"
+
+class API_INITIALIZER {
+  static int initialized;
+};
+
+int API_INITIALIZER::initialized = initialize_api();
+
+int initialize_api() {
+  logging::LoggerConfiguration::getConfiguration().disableLogging();
+  return 1;
+}
+
+void enable_logging() {
+  logging::LoggerConfiguration::getConfiguration().enableLogging();
+}
 
 class DirectoryConfiguration {
  protected:
@@ -61,6 +78,18 @@ void initialize_instance(nifi_instance *instance) {
   auto minifi_instance_ref = static_cast<minifi::Instance*>(instance->instance_ptr);
   minifi_instance_ref->setRemotePort(instance->port.pord_id);
 }
+/*
+ typedef int c2_update_callback(char *);
+
+ typedef int c2_stop_callback(char *);
+
+ typedef int c2_start_callback(char *);
+
+ */
+void enable_async_c2(nifi_instance *instance, C2_Server *server, c2_stop_callback *c1, c2_start_callback *c2, c2_update_callback *c3) {
+  auto minifi_instance_ref = static_cast<minifi::Instance*>(instance->instance_ptr);
+  minifi_instance_ref->enableAsyncC2(server, c1, c2, c3);
+}
 
 /**
  * Sets a property within the nifi instance
@@ -88,24 +117,44 @@ void free_instance(nifi_instance* instance) {
  * Creates a flow file record
  * @param file file to place into the flow file.
  */
-flow_file_record* create_flowfile(const char *file) {
+flow_file_record* create_flowfile(const char *file, const size_t len) {
   flow_file_record *new_ff = new flow_file_record;
   new_ff->attributes = new std::map<std::string, std::string>();
-  new_ff->contentLocation = new char[strlen(file)];
-  snprintf(new_ff->contentLocation, strlen(file), "%s", file);
+  new_ff->contentLocation = new char[len + 1];
+  snprintf(new_ff->contentLocation, len + 1, "%s", file);
   std::ifstream in(file, std::ifstream::ate | std::ifstream::binary);
   // set the size of the flow file.
   new_ff->size = in.tellg();
-
   return new_ff;
 }
 
+/**
+ * Creates a flow file record
+ * @param file file to place into the flow file.
+ */
+flow_file_record* create_ff_object(const char *file, const size_t len, const uint64_t size) {
+  flow_file_record *new_ff = new flow_file_record;
+  new_ff->attributes = new std::map<std::string, std::string>();
+  new_ff->contentLocation = new char[len + 1];
+  snprintf(new_ff->contentLocation, len + 1, "%s", file);
+  std::ifstream in(file, std::ifstream::ate | std::ifstream::binary);
+  // set the size of the flow file.
+  new_ff->size = size;
+  return new_ff;
+}
 /**
  * Reclaims memory associated with a flow file object
  * @param ff flow file record.
  */
 void free_flowfile(flow_file_record *ff) {
   if (ff != nullptr) {
+    if (ff->in != nullptr) {
+      auto instance = static_cast<nifi_instance*>(ff->in);
+      auto minifi_instance_ref = static_cast<minifi::Instance*>(instance->instance_ptr);
+      auto content_repo = minifi_instance_ref->getContentRepository();
+      std::shared_ptr<minifi::ResourceClaim> claim = std::make_shared<minifi::ResourceClaim>(ff->contentLocation, content_repo);
+      content_repo->remove(claim);
+    }
     auto map = static_cast<std::map<std::string, std::string>*>(ff->attributes);
     delete[] ff->contentLocation;
     delete map;
@@ -207,6 +256,28 @@ flow *create_flow(nifi_instance *instance, const char *first_processor) {
   return new_flow;
 }
 
+flow *create_getfile(nifi_instance *instance, flow *parent_flow, GetFileConfig *c) {
+  std::string first_processor = "GetFile";
+  auto minifi_instance_ref = static_cast<minifi::Instance*>(instance->instance_ptr);
+  flow *new_flow = parent_flow == 0x00 ? new flow : parent_flow;
+
+  if (parent_flow == 0x00) {
+    auto execution_plan = new ExecutionPlan(minifi_instance_ref->getContentRepository(), minifi_instance_ref->getNoOpRepository(), minifi_instance_ref->getNoOpRepository());
+
+    new_flow->plan = execution_plan;
+  }
+
+  ExecutionPlan *plan = static_cast<ExecutionPlan*>(new_flow->plan);
+  // automatically adds it with success
+  auto getFile = plan->addProcessor(first_processor, first_processor);
+
+  plan->setProperty(getFile, processors::GetFile::Directory.getName(), c->directory);
+  plan->setProperty(getFile, processors::GetFile::KeepSourceFile.getName(), c->keep_source ? "true" : "false");
+  plan->setProperty(getFile, processors::GetFile::Recurse.getName(), c->recurse ? "true" : "false");
+
+  return new_flow;
+}
+
 void free_flow(flow *flow) {
   if (flow == nullptr)
     return;
@@ -230,7 +301,8 @@ flow_file_record *get_next_flow_file(nifi_instance *instance, flow *flow) {
     // create a flow file.
     claim->increaseFlowFileRecordOwnedCount();
     auto path = claim->getContentFullPath();
-    auto ffr = create_flowfile(path.c_str());
+    auto ffr = create_ff_object(path.c_str(), path.length(), ff->getSize());
+    ffr->in = instance;
     return ffr;
   } else {
     return nullptr;
@@ -254,7 +326,8 @@ size_t get_flow_files(nifi_instance *instance, flow *flow, flow_file_record **ff
 
       auto path = claim->getContentFullPath();
       // create a flow file.
-      ff_r[i] = create_flowfile(path.c_str());
+      ff_r[i] = create_ff_object(path.c_str(), path.length(), ff->getSize());
+      ff_r[i]->in = instance;
     } else {
       break;
     }

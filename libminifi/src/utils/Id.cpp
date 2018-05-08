@@ -38,7 +38,7 @@ namespace utils {
 uint64_t timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 
 NonRepeatingStringGenerator::NonRepeatingStringGenerator()
-    : prefix_((std::to_string(timestamp) + "-")) {
+    : prefix_((std::to_string(timestamp) + "-")), incrementor_(0) {
 }
 
 IdGenerator::IdGenerator()

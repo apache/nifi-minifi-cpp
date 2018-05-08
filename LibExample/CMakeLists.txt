@@ -23,7 +23,7 @@ IF(POLICY CMP0048)
   CMAKE_POLICY(SET CMP0048 OLD)
 ENDIF(POLICY CMP0048)
 
-include_directories(../libminifi/include  ../libminifi/include/c2  ../libminifi/include/c2/protocols/  ../libminifi/include/core/state ./libminifi/include/core/statemanagement/metrics  ../libminifi/include/core/yaml  ../libminifi/include/core  ../thirdparty/spdlog-20170710/include ../thirdparty/concurrentqueue ../thirdparty/yaml-cpp-yaml-cpp-20171024/include ../thirdparty/civetweb-1.9.1/include ../thirdparty/)
+include_directories(../blocks/ ../libminifi/include  ../libminifi/include/c2  ../libminifi/include/c2/protocols/  ../libminifi/include/core/state ./libminifi/include/core/statemanagement/metrics  ../libminifi/include/core/yaml  ../libminifi/include/core  ../thirdparty/spdlog-20170710/include ../thirdparty/concurrentqueue ../thirdparty/yaml-cpp-yaml-cpp-20171024/include ../thirdparty/civetweb-1.9.1/include ../thirdparty/)
 
 include(CheckCXXCompilerFlag)
 CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
@@ -38,7 +38,6 @@ endif()
 
 add_executable(transmit_flow transmit_flow.c)
 
-# Link against minifi, yaml-cpp, civetweb-cpp, uuid, openssl and rocksdb
 target_link_libraries(transmit_flow capi core-minifi minifi)
 
 if (APPLE)
@@ -50,7 +49,6 @@ endif ()
 
 add_executable(generate_flow generate_flow.c)
 
-# Link against minifi, yaml-cpp, civetweb-cpp, uuid, openssl and rocksdb
 target_link_libraries(generate_flow capi core-minifi minifi)
 
 if (APPLE)
@@ -59,3 +57,13 @@ else ()
 	target_link_libraries (generate_flow -Wl,--whole-archive minifi-http-curl -Wl,--no-whole-archive)
 endif ()
 
+
+add_executable(monitor_directory monitor_directory.c)
+
+target_link_libraries(monitor_directory capi core-minifi minifi)
+
+if (APPLE)
+	target_link_libraries (monitor_directory -Wl,-all_load minifi-http-curl)
+else ()
+	target_link_libraries (monitor_directory -Wl,--whole-archive minifi-http-curl -Wl,--no-whole-archive)
+endif ()
