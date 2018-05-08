@@ -21,6 +21,7 @@
 #include <mutex>
 #include <memory>
 #include <sstream>
+#include <iostream>
 
 #include "spdlog/spdlog.h"
 
@@ -32,6 +33,24 @@ namespace core {
 namespace logging {
 
 #define LOG_BUFFER_SIZE 1024
+
+class LoggerControl {
+ public:
+  LoggerControl()
+      : is_enabled_(true) {
+
+  }
+
+  bool is_enabled(){
+    return is_enabled_;
+  }
+
+  void setEnabled(bool status){
+    is_enabled_ = status;
+  }
+ protected:
+  std::atomic<bool> is_enabled_;
+};
 
 template<typename ... Args>
 inline std::string format_string(char const* format_str, Args&&... args) {
@@ -171,6 +190,8 @@ class Logger : public BaseLogger {
   }
 
   bool should_log(const LOG_LEVEL &level) {
+    if (controller_ && !controller_->is_enabled())
+      return false;
     spdlog::level::level_enum logger_level = spdlog::level::level_enum::info;
     switch (level) {
       case critical:
@@ -228,16 +249,24 @@ class Logger : public BaseLogger {
         break;
     }
   }
-  Logger(std::shared_ptr<spdlog::logger> delegate)
-      : delegate_(delegate) {
+  Logger(std::shared_ptr<spdlog::logger> delegate, std::shared_ptr<LoggerControl> controller)
+      : delegate_(delegate), controller_(controller) {
   }
 
+  Logger(std::shared_ptr<spdlog::logger> delegate)
+        : delegate_(delegate), controller_(nullptr) {
+    }
+
+
   std::shared_ptr<spdlog::logger> delegate_;
+  std::shared_ptr<LoggerControl> controller_;
 
   std::mutex mutex_;
  private:
   template<typename ... Args>
   inline void log(spdlog::level::level_enum level, const char * const format, const Args& ... args) {
+    if (controller_ && !controller_->is_enabled())
+         return;
     std::lock_guard<std::mutex> lock(mutex_);
     if (!delegate_->should_log(level)) {
       return;

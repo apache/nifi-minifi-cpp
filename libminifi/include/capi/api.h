@@ -18,27 +18,32 @@
 #ifndef LIBMINIFI_INCLUDE_CAPI_NANOFI_H_
 #define LIBMINIFI_INCLUDE_CAPI_NANOFI_H_
 
+#include <stddef.h>
 #include <stdint.h>
+#include "processors.h"
+
+int initialize_api();
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 #define API_VERSION "0.01"
+
+void enable_logging();
+
 /****
  * ##################################################################
  *  BASE NIFI OPERATIONS
  * ##################################################################
  */
 
-
 /**
  * NiFi Port struct
  */
 typedef struct {
-    char *pord_id;
-}nifi_port;
-
+  char *pord_id;
+} nifi_port;
 
 /**
  * Nifi instance struct
@@ -51,7 +56,6 @@ typedef struct {
 
 } nifi_instance;
 
-
 nifi_instance *create_instance(char *url, nifi_port *port);
 
 void set_property(nifi_instance *, char *, char *);
@@ -60,6 +64,32 @@ void initialize_instance(nifi_instance *);
 
 void free_instance(nifi_instance*);
 
+/****
+ * ##################################################################
+ *  C2 OPERATIONS
+ * ##################################################################
+ */
+
+enum C2_Server_Type{
+  REST,
+  MQTT
+};
+
+typedef struct {
+  char *url;
+  char *ack_url;
+  char *identifier;
+  char *topic;
+  enum C2_Server_Type type;
+} C2_Server;
+
+typedef int c2_update_callback(char *);
+
+typedef int c2_stop_callback(char *);
+
+typedef int c2_start_callback(char *);
+
+void enable_async_c2(nifi_instance *, C2_Server *, c2_stop_callback *, c2_start_callback *, c2_update_callback *);
 
 /****
  * ##################################################################
@@ -73,14 +103,13 @@ typedef struct {
 
 uint8_t run_processor(const processor *processor);
 
-
 /****
  * ##################################################################
  *  FLOWFILE OPERATIONS
  * ##################################################################
  */
 
-typedef struct{
+typedef struct {
   char *key;
   void *value;
   size_t value_size;
@@ -93,34 +122,35 @@ typedef struct{
 typedef struct {
   uint64_t size; /**< Size in bytes of the data corresponding to this flow file */
 
+  void * in;
+
   char * contentLocation; /**< Filesystem location of this object */
 
   void *attributes; /**< Hash map of attributes */
 
-
 } flow_file_record;
 
-
-
-typedef struct  {
-    void *plan;
+typedef struct {
+  void *plan;
 } flow;
 
-
 flow *create_flow(nifi_instance *, const char *);
+
+flow *create_getfile(nifi_instance *instance, flow *parent, GetFileConfig *c);
 
 void free_flow(flow *);
 
 flow_file_record *get_next_flow_file(nifi_instance *, flow *);
 
-size_t get_flow_files(nifi_instance *, flow *, flow_file_record **, size_t );
-
+size_t get_flow_files(nifi_instance *, flow *, flow_file_record **, size_t);
 
 /**
  * Creates a flow file object.
  * Will obtain the size of file
  */
-flow_file_record* create_flowfile(const char *file);
+flow_file_record* create_flowfile(const char *file, const size_t len);
+
+flow_file_record* create_ff_object(const char *file, const size_t len, const uint64_t size);
 
 void free_flowfile(flow_file_record*);
 
@@ -137,7 +167,6 @@ uint8_t remove_attribute(flow_file_record*, char *key);
  */
 
 void transmit_flowfile(flow_file_record *, nifi_instance *);
-
 
 /****
  * ##################################################################

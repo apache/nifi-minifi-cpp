@@ -122,9 +122,10 @@ bool ExecutionPlan::setProperty(const std::shared_ptr<core::Processor> proc, con
     }
   }
 
-  if (i >= processor_queue_.size() || i == 0 || i >= processor_contexts_.size()) {
+  if (i >= processor_queue_.size() || i >= processor_contexts_.size()) {
     return false;
   }
+
 
   return processor_contexts_.at(i)->setProperty(prop, value);
 }
