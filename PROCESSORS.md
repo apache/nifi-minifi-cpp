@@ -21,6 +21,9 @@
 - [ApplyTemplate](#applytemplate)
 - [CompressContent](#compresscontent)
 - [ConsumeMQTT](#consumemqtt)
+- [ConvertHeartBeat](#convertheartbeat)
+- [ConvertJSONAck](#convertjsonack)
+- [ConvertUpdate](#convertupdate)
 - [ExecuteProcess](#executeprocess)
 - [ExecuteScript](#executescript)
 - [ExecuteSQL](#executesql)
@@ -95,6 +98,60 @@ default values, and whether a property supports the NiFi Expression Language.
 | Name | Description |
 | - | - |
 | success | All FlowFiles are routed to this relationship. |
+
+## ConvertHeartBeat
+
+This Processor converts MQTT heartbeats into a JSON repreesntation.  
+
+### Properties
+
+In the list below, the names of required properties appear in bold. Any other
+properties (not in bold) are considered optional. The table also indicates any
+default values, and whether a property supports the NiFi Expression Language.
+
+| Name | Default Value | Allowable Values | Description |
+| - | - | - | - |
+| **MQTT Controller Service** | | | The MQTT Controller service |
+| Listening topic | | | The topic on which we will listen to get MQTT C2 messages |
+
+
+## ConvertJSONAck
+
+This Processor parses C2 respones (acknowledgements) and forwards them to the MQTT agent.    
+
+### Properties
+
+In the list below, the names of required properties appear in bold. Any other
+properties (not in bold) are considered optional. The table also indicates any
+default values, and whether a property supports the NiFi Expression Language.
+
+| Name | Default Value | Allowable Values | Description |
+| - | - | - | - |
+| **MQTT Controller Service** | | | The MQTT Controller service |
+| Listening topic | | | The topic on which we will listen to get MQTT C2 messages |
+
+### Relationships
+
+| Name | Description |
+| - | - |
+| success | Any successful http response flow file will be sent to this relationship |
+
+## ConvertUpdate
+
+This converts MQTT update messages into an HTTP request to retrieve an update. This
+processor requires cURL support. If it does not exist this processor will be a NOOP.
+
+### Properties
+
+In the list below, the names of required properties appear in bold. Any other
+properties (not in bold) are considered optional. The table also indicates any
+default values, and whether a property supports the NiFi Expression Language.
+
+| Name | Default Value | Allowable Values | Description |
+| - | - | - | - |
+| **MQTT Controller Service** | | | The MQTT Controller service |
+| SSL Context Service | | | SSL context service used for HTTP requestor.  |
+| Listening topic | | | The topic on which we will listen to get MQTT C2 messages |
 
 ## ExecuteProcess
 

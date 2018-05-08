@@ -20,6 +20,7 @@
 #ifndef __CONFIGURE_H__
 #define __CONFIGURE_H__
 
+#include <mutex>
 #include "properties/Properties.h"
 
 namespace org {
@@ -29,6 +30,15 @@ namespace minifi {
 
 class Configure : public Properties {
  public:
+
+  void setAgentIdentifier(const std::string &identifier) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    agent_identifier_ = identifier;
+  }
+  std::string getAgentIdentifier() {
+    std::lock_guard<std::mutex> lock(mutex_);
+    return agent_identifier_;
+  }
   // nifi.flow.configuration.file
   static const char *nifi_default_directory;
   static const char *nifi_c2_enable;
@@ -70,6 +80,10 @@ class Configure : public Properties {
   // nifi rest api user name and password
   static const char *nifi_rest_api_user_name;
   static const char *nifi_rest_api_password;
+
+ private:
+  std::string agent_identifier_;
+  std::mutex mutex_;
 };
 
 } /* namespace minifi */

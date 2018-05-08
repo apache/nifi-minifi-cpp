@@ -41,7 +41,9 @@ class StringAppender : public rocksdb::AssociativeMergeOperator {
 
   virtual bool Merge(const rocksdb::Slice& key, const rocksdb::Slice* existing_value, const rocksdb::Slice& value, std::string* new_value, rocksdb::Logger* logger) const {
     // Clear the *new_value for writing.
-    assert(new_value);
+    if (nullptr == new_value) {
+      return false;
+    }
     new_value->clear();
 
     if (!existing_value) {

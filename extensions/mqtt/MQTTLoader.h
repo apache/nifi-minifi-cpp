@@ -18,10 +18,14 @@
 #ifndef EXTENSION_MQTTLOADER_H
 #define EXTENSION_MQTTLOADER_H
 
-#include "PublishMQTT.h"
-#include "ConsumeMQTT.h"
+#include "controllerservice/MQTTControllerService.h"
+#include "processors/PublishMQTT.h"
+#include "processors/ConsumeMQTT.h"
+#include "MQTTC2Protocol.h"
 #include "core/ClassLoader.h"
-
+#include "ConvertHeartBeat.h"
+#include "ConvertJSONAck.h"
+#include "ConvertUpdate.h"
 class __attribute__((visibility("default"))) MQTTFactory : public core::ObjectFactory {
  public:
   MQTTFactory() {
@@ -47,17 +51,30 @@ class __attribute__((visibility("default"))) MQTTFactory : public core::ObjectFa
     std::vector<std::string> class_names;
     class_names.push_back("PublishMQTT");
     class_names.push_back("ConsumeMQTT");
+    class_names.push_back("MQTTContextService");
+    class_names.push_back("MQTTC2Protocol");
+    class_names.push_back("ConvertHeartBeat");
+    class_names.push_back("ConvertJSONAck");
+    class_names.push_back("ConvertUpdate");
     return class_names;
   }
 
   virtual std::unique_ptr<ObjectFactory> assign(const std::string &class_name) {
     if (utils::StringUtils::equalsIgnoreCase(class_name, "PublishMQTT")) {
       return std::unique_ptr<ObjectFactory>(new core::DefautObjectFactory<minifi::processors::PublishMQTT>());
-    }
-    else if (utils::StringUtils::equalsIgnoreCase(class_name, "ConsumeMQTT")) {
+    } else if (utils::StringUtils::equalsIgnoreCase(class_name, "ConsumeMQTT")) {
       return std::unique_ptr<ObjectFactory>(new core::DefautObjectFactory<minifi::processors::ConsumeMQTT>());
-    }
-    else {
+    } else if (utils::StringUtils::equalsIgnoreCase(class_name, "MQTTContextService")) {
+      return std::unique_ptr<ObjectFactory>(new core::DefautObjectFactory<minifi::controllers::MQTTControllerService>());
+    } else if (utils::StringUtils::equalsIgnoreCase(class_name, "MQTTC2Protocol")) {
+      return std::unique_ptr<ObjectFactory>(new core::DefautObjectFactory<minifi::c2::MQTTC2Protocol>());
+    } else if (utils::StringUtils::equalsIgnoreCase(class_name, "ConvertHeartBeat")) {
+      return std::unique_ptr<ObjectFactory>(new core::DefautObjectFactory<minifi::processors::ConvertHeartBeat>());
+    } else if (utils::StringUtils::equalsIgnoreCase(class_name, "ConvertJSONAck")) {
+      return std::unique_ptr<ObjectFactory>(new core::DefautObjectFactory<minifi::processors::ConvertJSONAck>());
+    } else if (utils::StringUtils::equalsIgnoreCase(class_name, "ConvertUpdate")) {
+          return std::unique_ptr<ObjectFactory>(new core::DefautObjectFactory<minifi::processors::ConvertUpdate>());
+    } else {
       return nullptr;
     }
   }

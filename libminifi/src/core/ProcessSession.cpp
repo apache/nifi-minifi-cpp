@@ -830,7 +830,7 @@ std::shared_ptr<core::FlowFile> ProcessSession::get() {
   std::shared_ptr<Connectable> first = process_context_->getProcessorNode()->getNextIncomingConnection();
 
   if (first == NULL) {
-    logger_->log_debug("Get is null for %s", process_context_->getProcessorNode()->getName());
+    logger_->log_trace("Get is null for %s", process_context_->getProcessorNode()->getName());
     return NULL;
   }
 

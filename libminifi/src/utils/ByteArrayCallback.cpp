@@ -37,6 +37,21 @@ int64_t ByteOutputCallback::process(std::shared_ptr<io::BaseStream> stream) {
   return size_.load();
 }
 
+int64_t StreamOutputCallback::process(std::shared_ptr<io::BaseStream> stream) {
+  stream->seek(0);
+  std::unique_ptr<char> buffer = std::unique_ptr<char>(new char[size_.load()]);
+  auto written = readFully(buffer.get(), size_);
+  stream->writeData(reinterpret_cast<uint8_t*>(buffer.get()), written);
+  return stream->getSize();
+
+}
+
+void StreamOutputCallback::write(char *data, size_t size) {
+  if (!is_alive_)
+    return;
+  write_and_notify(data, size);
+}
+
 const std::vector<char> ByteOutputCallback::to_string() {
   std::vector<char> buffer;
   buffer.resize(size_.load());
