@@ -1306,7 +1306,8 @@ Value expr_prepend(const std::vector<Value> &args) {
 }
 
 Value expr_length(const std::vector<Value> &args) {
-  return Value(args[0].asString().length());
+  uint64_t len = args[0].asString().length();
+  return Value(len);
 }
 
 Value expr_binary_op(const std::vector<Value> &args,
