@@ -37,10 +37,6 @@ endif()
 
 
 # Include UUID
-#find_package(UUID REQUIRED)
-#target_link_libraries(minifi-mqtt-extensions)
-#find_package(OpenSSL REQUIRED)
-#include_directories(${OPENSSL_INCLUDE_DIR})
 target_link_libraries(minifi-mqtt-extensions ${CMAKE_DL_LIBS} )
 if (MQTT_FOUND AND NOT BUILD_MQTT)
 	target_link_libraries(minifi-mqtt-extensions ${MQTT_LIBRARIES} )

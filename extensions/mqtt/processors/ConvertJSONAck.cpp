@@ -96,7 +96,7 @@ void ConvertJSONAck::onTrigger(const std::shared_ptr<core::ProcessContext> &cont
     c2::C2Payload response_payload(c2::Operation::HEARTBEAT, state::UpdateState::READ_COMPLETE, true, true);
 
     std::string str(callback.buffer_.data(),callback.buffer_.size());
-    auto payload = std::move( parseJsonResponse(response_payload, callback.buffer_));
+    auto payload = parseJsonResponse(response_payload, callback.buffer_);
 
     auto stream = c2::mqtt::PayloadSerializer::serialize(payload);
 

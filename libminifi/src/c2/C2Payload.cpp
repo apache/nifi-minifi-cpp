@@ -197,7 +197,6 @@ const std::vector<C2Payload> &C2Payload::getNestedPayloads() const {
 }
 
 C2Payload &C2Payload::operator=(const C2Payload &&other) {
-  std::cout << "moooovin" << op_ << " " << other.op_ << std::endl;
   state::Update::operator=(std::move(other));
   isResponse = other.isResponse;
   op_ = std::move(other.op_);

@@ -110,7 +110,7 @@ class MQTTControllerService : public core::controller::ControllerService {
   static core::Property BrokerURL;
   static core::Property ClientID;
   static core::Property UserName;
-  static core::Property PassWord;
+  static core::Property Password;
   static core::Property CleanSession;
   static core::Property KeepLiveInterval;
   static core::Property ConnectionTimeOut;

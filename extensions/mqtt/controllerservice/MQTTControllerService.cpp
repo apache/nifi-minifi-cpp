@@ -36,7 +36,7 @@ namespace controllers {
 core::Property MQTTControllerService::BrokerURL("Broker URI", "The URI to use to connect to the MQTT broker", "");
 core::Property MQTTControllerService::ClientID("Client ID", "MQTT client ID to use", "");
 core::Property MQTTControllerService::UserName("Username", "Username to use when connecting to the broker", "");
-core::Property MQTTControllerService::PassWord("Password", "Password to use when connecting to the broker", "");
+core::Property MQTTControllerService::Password("Password", "Password to use when connecting to the broker", "");
 core::Property MQTTControllerService::KeepLiveInterval("Keep Alive Interval", "Defines the maximum time interval between messages sent or received", "60 sec");
 core::Property MQTTControllerService::ConnectionTimeOut("Connection Timeout", "Maximum time interval the client will wait for the network connection to the MQTT server", "30 sec");
 core::Property MQTTControllerService::QOS("Quality of Service", "The Quality of Service(QoS) to send the message with. Accepts three values '0', '1' and '2'", "MQTT_QOS_0");
@@ -83,7 +83,7 @@ void MQTTControllerService::initializeProperties() {
   supportedProperties.insert(BrokerURL);
   supportedProperties.insert(ClientID);
   supportedProperties.insert(UserName);
-  supportedProperties.insert(PassWord);
+  supportedProperties.insert(Password);
 
   supportedProperties.insert(KeepLiveInterval);
   supportedProperties.insert(ConnectionTimeOut);

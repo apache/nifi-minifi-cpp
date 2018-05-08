@@ -54,7 +54,7 @@ class MQTTC2Protocol : public C2Protocol {
    * @param payload payload to consume.
    * @direction direction of operation.
    */
-  virtual C2Payload consumePayload(const std::string &url, const C2Payload &payload, Direction direction, bool async);
+  virtual C2Payload consumePayload(const std::string &url, const C2Payload &payload, Direction direction, bool async) override;
 
   virtual C2Payload consumePayload(const C2Payload &payload, Direction direction, bool async) override {
     return serialize(payload);

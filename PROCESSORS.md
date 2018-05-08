@@ -83,6 +83,22 @@ Applies the mustache template specified by the "Template" property and writes
 the output to the flow file content. FlowFile attributes are used as template
 parameters.
 
+### Properties
+
+In the list below, the names of required properties appear in bold. Any other
+properties (not in bold) are considered optional. The table also indicates any
+default values, and whether a property supports the NiFi Expression Language.
+
+| Name | Default Value | Allowable Values | Description |
+| - | - | - | - |
+| **Template** | | | Path to the input mustache template file |
+
+### Relationships
+
+| Name | Description |
+| - | - |
+| success | All FlowFiles are routed to this relationship. |
+
 ## ConvertHeartBeat
 
 This Processor converts MQTT heartbeats into a JSON repreesntation.  
@@ -111,20 +127,13 @@ default values, and whether a property supports the NiFi Expression Language.
 
 | Name | Default Value | Allowable Values | Description |
 | - | - | - | - |
-<<<<<<< HEAD
-| **Template** | | | Path to the input mustache template file |
-=======
 | **MQTT Controller Service** | | | The MQTT Controller service |
 | Listening topic | | | The topic on which we will listen to get MQTT C2 messages |
->>>>>>> MINIFICPP-394: Implement MQTT C2 protocol along with MQTT/REST
 
 ### Relationships
 
 | Name | Description |
 | - | - |
-<<<<<<< HEAD
-| success | All FlowFiles are routed to this relationship. |
-=======
 | success | Any successful http response flow file will be sent to this relationship |
 
 ## ConvertUpdate
@@ -143,7 +152,6 @@ default values, and whether a property supports the NiFi Expression Language.
 | **MQTT Controller Service** | | | The MQTT Controller service |
 | SSL Context Service | | | SSL context service used for HTTP requestor.  |
 | Listening topic | | | The topic on which we will listen to get MQTT C2 messages |
->>>>>>> MINIFICPP-394: Implement MQTT C2 protocol along with MQTT/REST
 
 ## ExecuteProcess
 
