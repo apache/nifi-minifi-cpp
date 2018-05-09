@@ -52,12 +52,13 @@ Expression make_static(std::string val) {
   return Expression(Value(val));
 }
 
-Expression make_dynamic(const std::function<Value(const Parameters &params)> &val_fn) {
+Expression make_dynamic(const std::function<Value(const Parameters &params,
+                                                  const std::vector<Expression> &sub_exprs)> &val_fn) {
   return Expression(Value(), val_fn);
 }
 
 Expression make_dynamic_attr(const std::string &attribute_id) {
-  return make_dynamic([attribute_id](const Parameters &params) -> Value {
+  return make_dynamic([attribute_id](const Parameters &params, const std::vector<Expression> &sub_exprs) -> Value {
     std::string result;
     if (params.flow_file.lock()->getAttribute(attribute_id, result)) {
       return Value(result);
@@ -1578,17 +1579,27 @@ Expression make_dynamic_function_incomplete(const std::string &function_name,
     throw std::runtime_error(message_ss.str());
   }
 
-  auto result = make_dynamic([=](const Parameters &params) -> Value {
-    std::vector<Value> evaluated_args;
+  if (!args.empty() && args[0].is_multi()) {
+    std::vector<Expression> multi_args;
 
-    for (const auto &arg : args) {
-      evaluated_args.emplace_back(arg(params));
+    for (auto it = std::next(args.begin()); it != args.end(); ++it) {
+      multi_args.emplace_back(*it);
     }
 
-    return T(evaluated_args);
-  });
+    return args[0].compose_multi([=](const std::vector<Value> &args) -> Value {
+      return T(args);
+    }, multi_args);
+  } else {
+    return make_dynamic([=](const Parameters &params, const std::vector<Expression> &sub_exprs) -> Value {
+      std::vector<Value> evaluated_args;
 
-  return result;
+      for (const auto &arg : args) {
+        evaluated_args.emplace_back(arg(params));
+      }
+
+      return T(evaluated_args);
+    });
+  }
 }
 
 Value expr_literal(const std::vector<Value> &args) {
@@ -1690,6 +1701,366 @@ Value expr_ifElse(const std::vector<Value> &args) {
   }
 }
 
+Expression make_allAttributes(const std::string &function_name, const std::vector<Expression> &args) {
+  if (args.size() < 1) {
+    std::stringstream message_ss;
+    message_ss << "Expression language function "
+               << function_name
+               << " called with "
+               << args.size()
+               << " argument(s), but "
+               << 1
+               << " are required";
+    throw std::runtime_error(message_ss.str());
+  }
+
+  auto result = make_dynamic([=](const Parameters &params, const std::vector<Expression> &sub_exprs) -> Value {
+    std::vector<Value> evaluated_args;
+
+    bool all_true = true;
+
+    for (const auto &sub_expr : sub_exprs) {
+      all_true = all_true && sub_expr(params).asBoolean();
+    }
+
+    return Value(all_true);
+  });
+
+  result.make_multi([=](const Parameters &params) -> std::vector<Expression> {
+    std::vector<Expression> out_exprs;
+
+    for (const auto &arg : args) {
+      out_exprs.emplace_back(make_dynamic([=](const Parameters &params,
+                                              const std::vector<Expression> &sub_exprs) -> Value {
+        std::string attr_id;
+        attr_id = arg(params).asString();
+        std::string attr_val;
+
+        if (params.flow_file.lock()->getAttribute(attr_id, attr_val)) {
+          return Value(attr_val);
+        } else {
+          return Value();
+        }
+      }));
+    }
+
+    return out_exprs;
+  });
+
+  return result;
+}
+
+Expression make_anyAttribute(const std::string &function_name, const std::vector<Expression> &args) {
+  if (args.size() < 1) {
+    std::stringstream message_ss;
+    message_ss << "Expression language function "
+               << function_name
+               << " called with "
+               << args.size()
+               << " argument(s), but "
+               << 1
+               << " are required";
+    throw std::runtime_error(message_ss.str());
+  }
+
+  auto result = make_dynamic([=](const Parameters &params, const std::vector<Expression> &sub_exprs) -> Value {
+    std::vector<Value> evaluated_args;
+
+    bool any_true = false;
+
+    for (const auto &sub_expr : sub_exprs) {
+      any_true = any_true || sub_expr(params).asBoolean();
+    }
+
+    return Value(any_true);
+  });
+
+  result.make_multi([=](const Parameters &params) -> std::vector<Expression> {
+    std::vector<Expression> out_exprs;
+
+    for (const auto &arg : args) {
+      out_exprs.emplace_back(make_dynamic([=](const Parameters &params,
+                                              const std::vector<Expression> &sub_exprs) -> Value {
+        std::string attr_id;
+        attr_id = arg(params).asString();
+        std::string attr_val;
+
+        if (params.flow_file.lock()->getAttribute(attr_id, attr_val)) {
+          return Value(attr_val);
+        } else {
+          return Value();
+        }
+      }));
+    }
+
+    return out_exprs;
+  });
+
+  return result;
+}
+
+#ifdef EXPRESSION_LANGUAGE_USE_REGEX
+
+Expression make_allMatchingAttributes(const std::string &function_name, const std::vector<Expression> &args) {
+  if (args.size() < 1) {
+    std::stringstream message_ss;
+    message_ss << "Expression language function "
+               << function_name
+               << " called with "
+               << args.size()
+               << " argument(s), but "
+               << 1
+               << " are required";
+    throw std::runtime_error(message_ss.str());
+  }
+
+  auto result = make_dynamic([=](const Parameters &params, const std::vector<Expression> &sub_exprs) -> Value {
+    std::vector<Value> evaluated_args;
+
+    bool all_true = !sub_exprs.empty();
+
+    for (const auto &sub_expr : sub_exprs) {
+      all_true = all_true && sub_expr(params).asBoolean();
+    }
+
+    return Value(all_true);
+  });
+
+  result.make_multi([=](const Parameters &params) -> std::vector<Expression> {
+    std::vector<Expression> out_exprs;
+
+    for (const auto &arg : args) {
+      const std::regex attr_regex = std::regex(arg(params).asString());
+      auto attrs = params.flow_file.lock()->getAttributes();
+
+      for (const auto &attr : attrs) {
+        if (std::regex_match(attr.first.begin(), attr.first.end(), attr_regex)) {
+          out_exprs.emplace_back(make_dynamic([=](const Parameters &params,
+                                                  const std::vector<Expression> &sub_exprs) -> Value {
+            std::string attr_val;
+
+            if (params.flow_file.lock()->getAttribute(attr.first, attr_val)) {
+              return Value(attr_val);
+            } else {
+              return Value();
+            }
+          }));
+        }
+      }
+    }
+
+    return out_exprs;
+  });
+
+  return result;
+}
+
+Expression make_anyMatchingAttribute(const std::string &function_name, const std::vector<Expression> &args) {
+  if (args.size() < 1) {
+    std::stringstream message_ss;
+    message_ss << "Expression language function "
+               << function_name
+               << " called with "
+               << args.size()
+               << " argument(s), but "
+               << 1
+               << " are required";
+    throw std::runtime_error(message_ss.str());
+  }
+
+  auto result = make_dynamic([=](const Parameters &params, const std::vector<Expression> &sub_exprs) -> Value {
+    std::vector<Value> evaluated_args;
+
+    bool any_true = false;
+
+    for (const auto &sub_expr : sub_exprs) {
+      any_true = any_true || sub_expr(params).asBoolean();
+    }
+
+    return Value(any_true);
+  });
+
+  result.make_multi([=](const Parameters &params) -> std::vector<Expression> {
+    std::vector<Expression> out_exprs;
+
+    for (const auto &arg : args) {
+      const std::regex attr_regex = std::regex(arg(params).asString());
+      auto attrs = params.flow_file.lock()->getAttributes();
+
+      for (const auto &attr : attrs) {
+        if (std::regex_match(attr.first.begin(), attr.first.end(), attr_regex)) {
+          out_exprs.emplace_back(make_dynamic([=](const Parameters &params,
+                                                  const std::vector<Expression> &sub_exprs) -> Value {
+            std::string attr_val;
+
+            if (params.flow_file.lock()->getAttribute(attr.first, attr_val)) {
+              return Value(attr_val);
+            } else {
+              return Value();
+            }
+          }));
+        }
+      }
+    }
+
+    return out_exprs;
+  });
+
+  return result;
+}
+
+#endif  // EXPRESSION_LANGUAGE_USE_REGEX
+
+Expression make_allDelineatedValues(const std::string &function_name, const std::vector<Expression> &args) {
+  if (args.size() != 2) {
+    std::stringstream message_ss;
+    message_ss << "Expression language function "
+               << function_name
+               << " called with "
+               << args.size()
+               << " argument(s), but "
+               << 2
+               << " are required";
+    throw std::runtime_error(message_ss.str());
+  }
+
+  auto result = make_dynamic([=](const Parameters &params, const std::vector<Expression> &sub_exprs) -> Value {
+    std::vector<Value> evaluated_args;
+
+    bool all_true = !sub_exprs.empty();
+
+    for (const auto &sub_expr : sub_exprs) {
+      all_true = all_true && sub_expr(params).asBoolean();
+    }
+
+    return Value(all_true);
+  });
+
+  result.make_multi([=](const Parameters &params) -> std::vector<Expression> {
+    std::vector<Expression> out_exprs;
+
+    for (const auto &val : utils::StringUtils::split(args[0](params).asString(), args[1](params).asString())) {
+      out_exprs.emplace_back(make_static(val));
+    }
+
+    return out_exprs;
+  });
+
+  return result;
+}
+
+Expression make_anyDelineatedValue(const std::string &function_name, const std::vector<Expression> &args) {
+  if (args.size() != 2) {
+    std::stringstream message_ss;
+    message_ss << "Expression language function "
+               << function_name
+               << " called with "
+               << args.size()
+               << " argument(s), but "
+               << 2
+               << " are required";
+    throw std::runtime_error(message_ss.str());
+  }
+
+  auto result = make_dynamic([=](const Parameters &params, const std::vector<Expression> &sub_exprs) -> Value {
+    std::vector<Value> evaluated_args;
+
+    bool any_true = false;
+
+    for (const auto &sub_expr : sub_exprs) {
+      any_true = any_true || sub_expr(params).asBoolean();
+    }
+
+    return Value(any_true);
+  });
+
+  result.make_multi([=](const Parameters &params) -> std::vector<Expression> {
+    std::vector<Expression> out_exprs;
+
+    for (const auto &val : utils::StringUtils::split(args[0](params).asString(), args[1](params).asString())) {
+      out_exprs.emplace_back(make_static(val));
+    }
+
+    return out_exprs;
+  });
+
+  return result;
+}
+
+Expression make_count(const std::string &function_name, const std::vector<Expression> &args) {
+  if (args.size() != 1) {
+    std::stringstream message_ss;
+    message_ss << "Expression language function "
+               << function_name
+               << " called with "
+               << args.size()
+               << " argument(s), but "
+               << 1
+               << " are required";
+    throw std::runtime_error(message_ss.str());
+  }
+
+  if (!args[0].is_multi()) {
+    std::stringstream message_ss;
+    message_ss << "Expression language function "
+               << function_name
+               << " called against singular expression.";
+    throw std::runtime_error(message_ss.str());
+  }
+
+  return args[0].make_aggregate([](const Parameters &params,
+                                   const std::vector<Expression> &sub_exprs) -> Value {
+    uint64_t count = 0;
+    for (const auto &sub_expr : sub_exprs) {
+      if (sub_expr(params).asBoolean()) {
+        count++;
+      }
+    }
+    return Value(count);
+  });
+}
+
+Expression make_join(const std::string &function_name, const std::vector<Expression> &args) {
+  if (args.size() != 2) {
+    std::stringstream message_ss;
+    message_ss << "Expression language function "
+               << function_name
+               << " called with "
+               << args.size()
+               << " argument(s), but "
+               << 2
+               << " are required";
+    throw std::runtime_error(message_ss.str());
+  }
+
+  if (!args[0].is_multi()) {
+    std::stringstream message_ss;
+    message_ss << "Expression language function "
+               << function_name
+               << " called against singular expression.";
+    throw std::runtime_error(message_ss.str());
+  }
+
+  auto delim_expr = args[1];
+
+  return args[0].make_aggregate([delim_expr](const Parameters &params,
+                                             const std::vector<Expression> &sub_exprs) -> Value {
+    std::string delim = delim_expr(params).asString();
+    std::stringstream out_ss;
+    bool first = true;
+
+    for (const auto &sub_expr : sub_exprs) {
+      if (!first) {
+        out_ss << delim;
+      }
+      out_ss << sub_expr(params).asString();
+      first = false;
+    }
+
+    return Value(out_ss.str());
+  });
+}
+
 Expression make_dynamic_function(const std::string &function_name,
                                  const std::vector<Expression> &args) {
   if (function_name == "hostname") {
@@ -1769,6 +2140,10 @@ Expression make_dynamic_function(const std::string &function_name,
     return make_dynamic_function_incomplete<expr_matches>(function_name, args, 1);
   } else if (function_name == "find") {
     return make_dynamic_function_incomplete<expr_find>(function_name, args, 1);
+  } else if (function_name == "allMatchingAttributes") {
+    return make_allMatchingAttributes(function_name, args);
+  } else if (function_name == "anyMatchingAttribute") {
+    return make_anyMatchingAttribute(function_name, args);
 #endif  // EXPRESSION_LANGUAGE_USE_REGEX
   } else if (function_name == "trim") {
     return make_dynamic_function_incomplete<expr_trim>(function_name, args, 0);
@@ -1822,6 +2197,18 @@ Expression make_dynamic_function(const std::string &function_name,
     return make_dynamic_function_incomplete<expr_not>(function_name, args, 0);
   } else if (function_name == "ifElse") {
     return make_dynamic_function_incomplete<expr_ifElse>(function_name, args, 2);
+  } else if (function_name == "allAttributes") {
+    return make_allAttributes(function_name, args);
+  } else if (function_name == "anyAttribute") {
+    return make_anyAttribute(function_name, args);
+  } else if (function_name == "allDelineatedValues") {
+    return make_allDelineatedValues(function_name, args);
+  } else if (function_name == "anyDelineatedValue") {
+    return make_anyDelineatedValue(function_name, args);
+  } else if (function_name == "count") {
+    return make_count(function_name, args);
+  } else if (function_name == "join") {
+    return make_join(function_name, args);
   } else {
     std::string msg("Unknown expression function: ");
     msg.append(function_name);
@@ -1843,7 +2230,7 @@ Expression make_function_composition(const Expression &arg,
   return expr;
 }
 
-bool Expression::isDynamic() const {
+bool Expression::is_dynamic() const {
   if (val_fn_) {
     return true;
   } else {
@@ -1852,28 +2239,42 @@ bool Expression::isDynamic() const {
 }
 
 Expression Expression::operator+(const Expression &other_expr) const {
-  if (isDynamic() && other_expr.isDynamic()) {
+  if (is_dynamic() && other_expr.is_dynamic()) {
     auto val_fn = val_fn_;
     auto other_val_fn = other_expr.val_fn_;
-    return make_dynamic([val_fn, other_val_fn](const Parameters &params) -> Value {
-      Value result = val_fn(params);
-      return Value(result.asString().append(other_val_fn(params).asString()));
+    auto sub_expr_generator = sub_expr_generator_;
+    auto other_sub_expr_generator = other_expr.sub_expr_generator_;
+    return make_dynamic([val_fn,
+                            other_val_fn,
+                            sub_expr_generator,
+                            other_sub_expr_generator](const Parameters &params,
+                                                      const std::vector<Expression> &sub_exprs) -> Value {
+      Value result = val_fn(params, sub_expr_generator(params));
+      return Value(result.asString().append(other_val_fn(params, other_sub_expr_generator(params)).asString()));
     });
-  } else if (isDynamic() && !other_expr.isDynamic()) {
+  } else if (is_dynamic() && !other_expr.is_dynamic()) {
     auto val_fn = val_fn_;
     auto other_val = other_expr.val_;
-    return make_dynamic([val_fn, other_val](const Parameters &params) -> Value {
-      Value result = val_fn(params);
+    auto sub_expr_generator = sub_expr_generator_;
+    return make_dynamic([val_fn,
+                            other_val,
+                            sub_expr_generator](const Parameters &params,
+                                                const std::vector<Expression> &sub_exprs) -> Value {
+      Value result = val_fn(params, sub_expr_generator(params));
       return Value(result.asString().append(other_val.asString()));
     });
-  } else if (!isDynamic() && other_expr.isDynamic()) {
+  } else if (!is_dynamic() && other_expr.is_dynamic()) {
     auto val = val_;
     auto other_val_fn = other_expr.val_fn_;
-    return make_dynamic([val, other_val_fn](const Parameters &params) -> Value {
+    auto other_sub_expr_generator = other_expr.sub_expr_generator_;
+    return make_dynamic([val,
+                            other_val_fn,
+                            other_sub_expr_generator](const Parameters &params,
+                                                      const std::vector<Expression> &sub_exprs) -> Value {
       Value result(val);
-      return Value(result.asString().append(other_val_fn(params).asString()));
+      return Value(result.asString().append(other_val_fn(params, other_sub_expr_generator(params)).asString()));
     });
-  } else if (!isDynamic() && !other_expr.isDynamic()) {
+  } else if (!is_dynamic() && !other_expr.is_dynamic()) {
     std::string result(val_.asString());
     result.append(other_expr.val_.asString());
     return make_static(result);
@@ -1883,11 +2284,51 @@ Expression Expression::operator+(const Expression &other_expr) const {
 }
 
 Value Expression::operator()(const Parameters &params) const {
-  if (isDynamic()) {
-    return val_fn_(params);
+  if (is_dynamic()) {
+    return val_fn_(params, sub_expr_generator_(params));
   } else {
     return val_;
   }
+}
+
+Expression Expression::compose_multi(const std::function<Value(const std::vector<Value> &)> fn,
+                                     const std::vector<Expression> &args) const {
+  auto result = make_dynamic(val_fn_);
+  auto compose_expr_generator = sub_expr_generator_;
+
+  result.sub_expr_generator_ = [=](const Parameters &params) -> std::vector<Expression> {
+    auto sub_exprs = compose_expr_generator(params);
+    std::vector<Expression> out_exprs{};
+    for (const auto &sub_expr : sub_exprs) {
+      out_exprs.emplace_back(make_dynamic([=](const Parameters &params,
+                                              const std::vector<Expression> &sub_exprs) {
+        std::vector<Value> evaluated_args;
+
+        evaluated_args.emplace_back(sub_expr(params));
+
+        for (const auto &arg : args) {
+          evaluated_args.emplace_back(arg(params));
+        }
+
+        return fn(evaluated_args);
+      }));
+    }
+    return out_exprs;
+  };
+
+  result.is_multi_ = true;
+
+  return result;
+}
+
+Expression Expression::make_aggregate(std::function<Value(const Parameters &params,
+                                                          const std::vector<Expression> &sub_exprs)> val_fn) const {
+  auto sub_expr_generator = sub_expr_generator_;
+  return make_dynamic([sub_expr_generator,
+                          val_fn](const Parameters &params,
+                                  const std::vector<Expression> &sub_exprs) -> Value {
+    return val_fn(params, sub_expr_generator(params));
+  });
 }
 
 } /* namespace expression */
