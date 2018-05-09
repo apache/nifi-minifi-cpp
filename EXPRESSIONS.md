@@ -225,6 +225,17 @@ token, filename.
 - [`UUID`](#uuid)
 - [`literal`](#literal)
 
+### Evaluating Multiple Attributes
+
+- [`anyAttribute`](#anyattribute)
+- [`allAttributes`](#allattributes)
+- [`anyMatchingAttribute`](#anymatchingattribute)
+- [`allMatchingAttributes`](#allmatchingattributes)
+- [`anyDelineatedValue`](#anydelineatedvalue)
+- [`allDelineatedValues`](#alldelineatedvalues)
+- [`join`](#join)
+- [`count`](#count)
+
 ## Planned Features
 
 ### Searching
@@ -248,17 +259,6 @@ token, filename.
 
 - `nextInt`
 - `getStateValue`
-
-### Evaluating Multiple Attributes
-
-- `anyAttribute`
-- `allAttributes`
-- `anyMatchingAttribute`
-- `allMatchingAttributes`
-- `anyDelineatedValue`
-- `allDelineatedValues`
-- `join`
-- `count`
 
 ## Unsupported Features
 
@@ -1589,3 +1589,234 @@ to evaluate additional functions against.
 **Examples**: `${literal(2):gt(1)}` returns true.  `${literal(
 ${allMatchingAttributes('a.*'):count()} ):gt(3)}` returns true if there are
 more than 3 attributes whose names begin with the letter a.
+
+## Evaluating Multiple Attributes
+
+When it becomes necessary to evaluate the same conditions against multiple
+attributes, this can be accomplished by means of the and and or functions.
+However, this quickly becomes tedious, error-prone, and difficult to maintain.
+For this reason, NiFi Expression Language provides several functions for
+evaluating the same conditions against groups of attributes at the same time.
+
+### anyAttribute
+
+**Description**: Checks to see if any of the given attributes, match the given
+condition. This function has no subject and takes one or more arguments that
+are the names of attributes to which the remainder of the Expression is to be
+applied. If any of the attributes specified, when evaluated against the rest of
+the Expression, returns a value of `true`, then this function will return
+`true`.  Otherwise, this function will return `false`.
+
+**Subject Type**: No Subject
+
+**Arguments**: 
+
+| Argument | Description |
+| - | - |
+| Attribute Names | One or more attribute names to evaluate |
+
+**Return Type**: Boolean
+
+**Examples**: Given that the "abc" attribute contains the value "hello world",
+"xyz" contains "good bye world", and "filename" contains "file.txt" consider
+the following examples:
+
+| Expression | Value |
+| - | - |
+| `${anyAttribute("abc", "xyz"):contains("bye")}` | `true` |
+| `${anyAttribute("filename","xyz"):toUpper():contains("e")}` | `false` |
+
+### allAttributes
+
+**Description**: Checks to see if all of the given attributes match the given
+condition. This function has no subject and takes one or more arguments that
+are the names of attributes to which the remainder of the Expression is to be
+applied. If all of the attributes specified, when evaluated against the rest of
+the Expression, returns a value of `true`, then this function will return
+`true`. Otherwise, this function will return `false`.
+
+**Subject Type**: No Subject
+
+**Arguments**: 
+
+| Argument | Description |
+| - | - |
+| Attribute Names | One or more attribute names to evaluate |
+
+**Return Type**: Boolean
+
+**Examples**: Given that the "abc" attribute contains the value "hello world",
+"xyz" contains "good bye world", and "filename" contains "file.txt" consider
+the following examples:
+
+| Expression | Value |
+| - | - |
+| `${allAttributes("abc", "xyz"):contains("world")}` | `true` |
+| `${allAttributes("abc", "filename","xyz"):toUpper():contains("e")}` | `false` |
+
+### anyMatchingAttribute
+
+**Description**: Checks to see if any of the given attributes, match the given
+condition. This function has no subject and takes one or more arguments that
+are Regular Expressions to match against attribute names. Any attribute whose
+name matches one of the supplied Regular Expressions will be evaluated against
+the rest of the Expression. If any of the attributes specified, when evaluated
+against the rest of the Expression, returns a value of `true`, then this
+function will return `true`. Otherwise, this function will return `false`.
+
+**Subject Type**: No Subject
+
+**Arguments**: 
+
+| Argument | Description |
+| - | - |
+| Regex | One or more Regular Expressions to evaluate against attribute names |
+
+**Return Type**: Boolean
+
+**Examples**: Given that the "abc" attribute contains the value "hello world",
+"xyz" contains "good bye world", and "filename" contains "file.txt" consider
+the following examples:
+
+| Expression | Value |
+| - | - |
+| `${anyMatchingAttribute("[ax].*"):contains('bye')}` | `true` |
+| `${anyMatchingAttribute(".*"):isNull()}` | `false` |
+
+### allMatchingAttributes
+
+**Description**: Checks to see if any of the given attributes, match the given
+condition. This function has no subject and takes one or more arguments that
+are Regular Expressions to match against attribute names. Any attribute whose
+name matches one of the supplied Regular Expressions will be evaluated against
+the rest of the Expression. If all of the attributes specified, when evaluated
+against the rest of the Expression, return a value of `true`, then this
+function will return `true`. Otherwise, this function will return `false`.
+
+**Subject Type**: No Subject
+
+**Arguments**: 
+
+| Argument | Description |
+| - | - |
+| Regex | One or more Regular Expressions to evaluate against attribute names |
+
+**Return Type**: Boolean
+
+**Examples**: Given that the "abc" attribute contains the value "hello world",
+"xyz" contains "good bye world", and "filename" contains "file.txt" consider
+the following examples:
+
+| Expression | Value |
+| - | - |
+| `${allMatchingAttributes("[ax].*"):contains("world")}` | `true` |
+| `${allMatchingAttributes(".*"):isNull()}` | `false` |
+| `${allMatchingAttributes("f.*"):count()}` | `1` |
+
+### anyDelineatedValue
+
+**Description**: Splits a String apart according to a delimiter that is
+provided, and then evaluates each of the values against the rest of the
+Expression. If the Expression, when evaluated against any of the individual
+values, returns `true`, this function returns `true`. Otherwise, the function
+returns `false`.
+
+**Subject Type**: No Subject
+
+**Arguments**: 
+
+| Argument | Description |
+| - | - |
+| Delineated Value | The value that is delineated. This is generally an embedded Expression, though it does not have to be. |
+| Delimiter | The value to use to split apart the delineatedValue argument. |
+
+**Return Type**: Boolean
+
+**Examples**: Given that the "number_list" attribute contains the value
+"1,2,3,4,5", and the "word_list" attribute contains the value "the,and,or,not",
+consider the following examples:
+
+| Expression | Value |
+| - | - |
+| `${anyDelineatedValue("${number_list}", ","):contains("5")}` | `true` |
+| `${anyDelineatedValue("this that and", ","):equals("${word_list}")}` | `false` |
+
+### allDelineatedValues
+
+**Description**: Splits a String apart according to a delimiter that is
+provided, and then evaluates each of the values against the rest of the
+Expression. If the Expression, when evaluated against all of the individual
+values, returns `true` in each case, then this function returns `true`.
+Otherwise, the function returns `false`.
+
+**Subject Type**: No Subject
+
+**Arguments**: 
+
+| Argument | Description |
+| - | - |
+| Delineated Value | The value that is delineated. This is generally an embedded Expression, though it does not have to be. |
+| Delimiter | The value to use to split apart the delineatedValue argument. |
+
+**Return Type**: Boolean
+
+**Examples**: Given that the "number_list" attribute contains the value
+"1,2,3,4,5", and the "word_list" attribute contains the value
+"those,known,or,not", consider the following examples:
+
+| Expression | Value |
+| - | - |
+| `${allDelineatedValues("${word_list}", ","):contains("o")}` | `true` |
+| `${allDelineatedValues("${number_list}", ","):count()}` | `4` |
+| `${allDelineatedValues("${number_list}", ","):matches("[0-9]+")}` | `true` |
+| `${allDelineatedValues("${word_list}", ","):matches('e')}` | `false` |
+
+### join
+
+**Description**: Aggregate function that concatenates multiple values with the
+specified delimiter. This function may be used only in conjunction with the
+`allAttributes`, `allMatchingAttributes`, and `allDelineatedValues` functions.
+
+**Subject Type**: String
+
+**Arguments**: 
+
+| Argument | Description |
+| - | - |
+| Delimiter | The String delimiter to use when joining values |
+
+**Return Type**: String
+
+**Examples**: Given that the "abc" attribute contains the value "hello world",
+"xyz" contains "good bye world", and "filename" contains "file.txt" consider
+the following examples:
+
+| Expression | Value |
+| - | - |
+| `${allMatchingAttributes("[ax].*"):substringBefore(" "):join("-")}` | `hello-good` |
+| `${allAttributes("abc", "xyz"):join(" now")}` | `hello world nowgood bye world now` |
+
+### count
+
+**Description**: Aggregate function that counts the number of non-null,
+non-false values returned by the `allAttributes`, `allMatchingAttributes`, and
+`allDelineatedValues`. This function may be used only in conjunction with the
+`allAttributes`, `allMatchingAttributes`, and `allDelineatedValues` functions.
+
+**Subject Type**: Any
+
+**Arguments**: No arguments
+
+**Return Type**: Number
+
+**Examples**: Given that the "abc" attribute contains the value "hello world",
+"xyz" contains "good bye world", and "number_list" contains "1,2,3,4,5"
+consider the following examples:
+
+| Expression | Value |
+| - | - |
+| `${allMatchingAttributes("[ax].*"):substringBefore(" "):count()}` | `2` |
+| `${allAttributes("abc", "xyz"):contains("world"):count()}` | `1` |
+| `${allDelineatedValues(${number_list}, ","):count()}` | `5` |
+| `${allAttributes("abc", "non-existent-attr", "xyz"):count()}` | `2` |
+| `${allMatchingAttributes(".*"):length():gt(10):count()}` | `2` |
