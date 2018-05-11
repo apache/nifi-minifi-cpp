@@ -130,7 +130,6 @@ text_no_quote_no_dollar: IDENTIFIER { std::swap($$, $1); }
                        | COLON { $$ = ":"; }
                        | SEMI { $$ = ";"; }
                        | FSLASH { $$ = "/"; }
-                       | BSLASH { $$ = "\\"; }
                        | STAR { $$ = "*"; }
                        | HASH { $$ = "#"; }
                        | NUMBER { std::swap($$, $1); }
@@ -139,11 +138,15 @@ text_no_quote_no_dollar: IDENTIFIER { std::swap($$, $1); }
 text_inc_quote_escaped_dollar: text_no_quote_no_dollar { std::swap($$, $1); }
                              | SQUOTE { $$ = "'"; }
                              | DQUOTE { $$ = "\""; }
+                             | BSLASH { $$ = "\\"; }
                              | DOLLAR DOLLAR { $$ = "$"; }
                              ;
 
 text_inc_dollar: text_no_quote_no_dollar { std::swap($$, $1); }
                | DOLLAR { $$ = "$"; }
+               | BSLASH SQUOTE { $$ = "'"; }
+               | BSLASH DQUOTE { $$ = "\""; }
+               | BSLASH BSLASH { $$ = "\\"; }
                ;
 
 quoted_text_content: %empty {}

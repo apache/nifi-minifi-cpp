@@ -105,7 +105,7 @@ TEST_CASE("UTF-8 characters attribute", "[expressionLanguageTestUTF8Attribute]")
 }
 
 TEST_CASE("Single quoted attribute expression", "[expressionLanguageTestSingleQuotedAttributeExpression]") {  // NOLINT
-  auto expr = expression::compile("text_before${'|{}()[],:;\\/*# \t\r\n$'}text_after");
+  auto expr = expression::compile("text_before${'|{}()[],:;\\\\/*# \t\r\n$'}text_after");
 
   auto flow_file_a = std::make_shared<MockFlowFile>();
   flow_file_a->addAttribute("|{}()[],:;\\/*# \t\r\n$", "__flow_a_attr_value_a__");
@@ -113,7 +113,7 @@ TEST_CASE("Single quoted attribute expression", "[expressionLanguageTestSingleQu
 }
 
 TEST_CASE("Double quoted attribute expression", "[expressionLanguageTestDoubleQuotedAttributeExpression]") {  // NOLINT
-  auto expr = expression::compile("text_before${\"|{}()[],:;\\/*# \t\r\n$\"}text_after");
+  auto expr = expression::compile("text_before${\"|{}()[],:;\\\\/*# \t\r\n$\"}text_after");
 
   auto flow_file_a = std::make_shared<MockFlowFile>();
   flow_file_a->addAttribute("|{}()[],:;\\/*# \t\r\n$", "__flow_a_attr_value_a__");
@@ -300,6 +300,30 @@ TEST_CASE("Substring After Last", "[expressionLanguageSubstringAfterLast]") {  /
   REQUIRE("__" == expr({flow_file_a}).asString());
 }
 
+TEST_CASE("Get Delimited", "[expressionLanguageGetDelimited]") {  // NOLINT
+  auto expr = expression::compile("${attr:getDelimitedField(2)}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("attr", "\"Jacobson, John\", 32, Mr.");
+  REQUIRE(" 32" == expr({flow_file_a}).asString());
+}
+
+TEST_CASE("Get Delimited 2", "[expressionLanguageGetDelimited2]") {  // NOLINT
+  auto expr = expression::compile("${attr:getDelimitedField(1)}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("attr", "\"Jacobson, John\", 32, Mr.");
+  REQUIRE("\"Jacobson, John\"" == expr({flow_file_a}).asString());
+}
+
+TEST_CASE("Get Delimited 3", "[expressionLanguageGetDelimited3]") {  // NOLINT
+  auto expr = expression::compile("${attr:getDelimitedField(1, ',', '\\\"', '\\\\', 'true')}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("attr", "\"Jacobson, John\", 32, Mr.");
+  REQUIRE("Jacobson, John" == expr({flow_file_a}).asString());
+}
+
 TEST_CASE("Starts With", "[expressionLanguageStartsWith]") {  // NOLINT
   auto expr = expression::compile("${attr:startsWith('a brand')}");
 
@@ -409,7 +433,7 @@ TEST_CASE("Replace First Regex", "[expressionLanguageReplaceFirstRegex]") {  // 
 }
 
 TEST_CASE("Replace All", "[expressionLanguageReplaceAll]") {  // NOLINT
-  auto expr = expression::compile("${attr:replaceAll('\\..*', '')}");
+  auto expr = expression::compile("${attr:replaceAll('\\\\..*', '')}");
 
   auto flow_file_a = std::make_shared<MockFlowFile>();
   flow_file_a->addAttribute("attr", "a brand new filename.txt");
