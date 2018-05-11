@@ -193,6 +193,126 @@ Value expr_substringAfterLast(const std::vector<Value> &args) {
   return Value(arg_0.substr(last_pos + arg_1.length()));
 }
 
+Value expr_getDelimitedField(const std::vector<Value> &args) {
+  const auto &subject = args[0].asString();
+  const auto &index = args[1].asUnsignedLong() - 1;
+  char delimiter_ch = ',';
+
+  if (args.size() > 2) {
+    delimiter_ch = args[2].asString()[0];
+  }
+
+  char quote_ch = '"';
+
+  if (args.size() > 3) {
+    quote_ch = args[3].asString()[0];
+  }
+
+  char escape_ch = '\\';
+
+  if (args.size() > 4) {
+    escape_ch = args[4].asString()[0];
+  }
+
+  bool strip_chars = false;
+
+  if (args.size() > 5) {
+    strip_chars = args[5].asBoolean();
+  }
+
+  enum parse_states {
+    value,
+    quote
+  };
+
+  parse_states parse_state = value;
+  uint64_t field_idx = 0;
+  size_t field_size = 0;
+  std::string result;
+  result.resize(1024);
+
+  for (uint64_t parse_pos = 0; parse_pos < subject.length(); parse_pos++) {
+    char cur_ch = subject[parse_pos];
+
+    if (cur_ch == escape_ch) {
+      if (!strip_chars && field_idx == index) {
+        field_size++;
+
+        if (field_size >= result.size()) {
+          result.resize(result.size() + 1024);
+        }
+
+        result[field_size - 1] = escape_ch;
+      }
+      parse_pos++;
+      if (parse_pos < subject.length()) {
+        cur_ch = subject[parse_pos];
+      } else {
+        break;
+      }
+    }
+
+    switch (parse_state) {
+      case value:
+        if (cur_ch == delimiter_ch) {
+          field_idx++;
+          if (field_idx > index) {
+            break;
+          }
+          continue;
+        } else if (cur_ch == quote_ch) {
+          if (!strip_chars && field_idx == index) {
+            field_size++;
+
+            if (field_size >= result.size()) {
+              result.resize(result.size() + 1024);
+            }
+
+            result[field_size - 1] = quote_ch;
+          }
+          parse_state = quote;
+          continue;
+        } else if (field_idx == index) {
+          field_size++;
+
+          if (field_size >= result.size()) {
+            result.resize(result.size() + 1024);
+          }
+
+          result[field_size - 1] = cur_ch;
+        }
+        break;
+      case quote:
+        if (cur_ch == quote_ch) {
+          if (!strip_chars && field_idx == index) {
+            field_size++;
+
+            if (field_size >= result.size()) {
+              result.resize(result.size() + 1024);
+            }
+
+            result[field_size - 1] = quote_ch;
+          }
+          parse_state = value;
+          continue;
+        } else if (field_idx == index) {
+          field_size++;
+
+          if (field_size >= result.size()) {
+            result.resize(result.size() + 1024);
+          }
+
+          result[field_size - 1] = cur_ch;
+        }
+        break;
+    }
+  }
+
+  result.resize(field_size);
+
+  return Value(result);
+}
+
 Value expr_startsWith(const std::vector<Value> &args) {
   const std::string &arg_0 = args[0].asString();
   const std::string &arg_1 = args[1].asString();
@@ -1183,7 +1303,7 @@ Value expr_unescapeCsv(const std::vector<Value> &args) {
 
 Value expr_urlEncode(const std::vector<Value> &args) {
   auto arg_0 = args[0].asString();
-  CURL * curl = curl_easy_init();
+  CURL *curl = curl_easy_init();
   if (curl != nullptr) {
     char *output = curl_easy_escape(curl,
                                     arg_0.c_str(),
@@ -1204,7 +1324,7 @@ Value expr_urlEncode(const std::vector<Value> &args) {
 
 Value expr_urlDecode(const std::vector<Value> &args) {
   auto arg_0 = args[0].asString();
-  CURL * curl = curl_easy_init();
+  CURL *curl = curl_easy_init();
   if (curl != nullptr) {
     int out_len;
     char *output = curl_easy_unescape(curl,
@@ -1564,6 +1684,8 @@ Expression make_dynamic_function(const std::string &function_name,
     return make_dynamic_function_incomplete<expr_substringAfter>(function_name, args, 2);
   } else if (function_name == "substringAfterLast") {
     return make_dynamic_function_incomplete<expr_substringAfterLast>(function_name, args, 2);
+  } else if (function_name == "getDelimitedField") {
+    return make_dynamic_function_incomplete<expr_getDelimitedField>(function_name, args, 2);
   } else if (function_name == "startsWith") {
     return make_dynamic_function_incomplete<expr_startsWith>(function_name, args, 1);
   } else if (function_name == "endsWith") {
