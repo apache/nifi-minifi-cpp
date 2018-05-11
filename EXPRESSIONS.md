@@ -172,6 +172,7 @@ token, filename.
 - [`substringBeforeLast`](#substringbeforelast)
 - [`substringAfter`](#substringafter)
 - [`substringAfterLast`](#substringafterlast)
+- [`getDelimitedField`](#getdelimitedfield)
 - [`replace`](#replace)
 - [`replaceFirst`](#replacefirst)
 - [`replaceAll`](#replaceall)
@@ -223,10 +224,6 @@ token, filename.
 - [`literal`](#literal)
 
 ## Planned Features
-
-### String Manipulation
-
-- `getDelimitedField`
 
 ### Searching
 
@@ -736,6 +733,37 @@ values:
 | `${filename:substringAfterLast(' ')}` | filename.txt |
 | `${filename:substringAfterLast(' n')}` | ew filename.txt |
 | `${filename:substringAfterLast('missing')}` | a brand new filename.txt |
+
+### getDelimitedField
+
+**Description**: Parses the Subject as a delimited line of text and returns
+just a single field from that delimited text.
+
+**Subject Type**: String
+
+**Arguments**:
+
+| Argument | Description |
+| - | - |
+| index | The index of the field to return. A value of 1 will return the first field, a value of 2 will return the second field, and so on. |
+| delimiter | Optional argument that provides the character to use as a field separator. If not specified, a comma will be used. This value must be exactly 1 character. |
+| quoteCHar | Optional argument that provides the character that can be used to quote values so that the delimiter can be used within a single field. If not specified, a double-quote (") will be used. This value must be exactly 1 character. |
+| escapeChar | Optional argument that provides the character that can be used to escape the Quote Character or the Delimiter within a field. If not specified, a backslash (\) is used. This value must be exactly 1 character. |
+| stripChars | Optional argument that specifies whether or not quote characters and escape characters should be stripped. For example, if we have a field value `"1, 2, 3"` and this value is `true`, we will get the value `1, 2, 3`, but if this value is false, we will get the value `"1, 2, 3"` with the quotes. The default value is `false`. This value must be either `true` or `false`. |
+
+**Return Type**: String
+
+**Examples**: If the "line" attribute contains the value "Jacobson, John", 32,
+Mr. and the "altLine" attribute contains the value Jacobson, John|32|Mr. then
+the following Expressions will result in the following values:
+
+| Expression | Value |
+| - | - |
+| `${line:getDelimitedField(2)}` | ` 32` |
+| `${line:getDelimitedField(2):trim()}` | `32` |
+| `${line:getDelimitedField(1)}` | `"Jacobson, John"` |
+| `${line:getDelimitedField(1, ',', '"', '\\', true)}` | `Jacobson, John` |
+| `${altLine:getDelimitedField(1, '|')}` | `Jacobson, John` |
 
 ### replace
 
