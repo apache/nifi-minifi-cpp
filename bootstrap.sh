@@ -1,3 +1,4 @@
+#!/bin/bash
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -14,7 +15,6 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-#!/bin/bash
 
 script_directory="$(cd "$(dirname "$0")" && pwd)"
 
@@ -143,7 +143,7 @@ fi
 if [ "$NO_PROMPT" = "true" ]; then
   agree="N"
   echo "****************************************"
-  echo "Welcome, this boostrap script will update your system to install MiNIFi C++"
+  echo "Welcome, this bootstrap script will update your system to install MiNIFi C++"
   echo "You have opted to skip prompts. "
 fi
 
