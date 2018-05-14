@@ -76,6 +76,16 @@ whitespace [ \r\t]+
   return Parser::token::TOK_NUMBER;
 }
 
+"true" {
+  yylval->build<std::string>(yytext);
+  return Parser::token::TOK_TRUE;
+}
+
+"false" {
+  yylval->build<std::string>(yytext);
+  return Parser::token::TOK_FALSE;
+}
+
 {id} {
   yylval->build<std::string>(yytext);
   return Parser::token::TOK_IDENTIFIER;

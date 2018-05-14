@@ -769,6 +769,22 @@ TEST_CASE("Chained call 3", "[expressionChainedCall3]") {  // NOLINT
   REQUIRE("238" == expr({flow_file_a}).asString());
 }
 
+TEST_CASE("LiteralBool", "[expressionLiteralBool]") {  // NOLINT
+  auto expr = expression::compile("${literal(true)}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("attr", "7");
+  REQUIRE(true == expr({flow_file_a}).asBoolean());
+}
+
+TEST_CASE("LiteralBool 2", "[expressionLiteralBool2]") {  // NOLINT
+  auto expr = expression::compile("${literal(false)}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("attr", "7");
+  REQUIRE(false == expr({flow_file_a}).asBoolean());
+}
+
 TEST_CASE("Is Null", "[expressionIsNull]") {  // NOLINT
   auto expr = expression::compile("${filename:isNull()}");
 

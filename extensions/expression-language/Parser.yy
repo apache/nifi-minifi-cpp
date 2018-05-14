@@ -84,6 +84,8 @@
   DQUOTE         "\""
 ;
 
+%token <std::string> TRUE       "true"
+%token <std::string> FALSE      "false"
 %token <std::string> IDENTIFIER "identifier"
 %token <std::string> MISC       "misc"
 %token <std::string> WHITESPACE "whitespace"
@@ -128,6 +130,8 @@ text_no_quote_no_dollar: IDENTIFIER { std::swap($$, $1); }
                        | PIPE { $$ = "|"; }
                        | COMMA { $$ = ","; }
                        | COLON { $$ = ":"; }
+                       | TRUE { $$ = std::string("true"); }
+                       | FALSE { $$ = std::string("false"); }
                        | SEMI { $$ = ";"; }
                        | FSLASH { $$ = "/"; }
                        | STAR { $$ = "*"; }
@@ -179,6 +183,8 @@ attr_id: quoted_text exp_whitespaces { std::swap($$, $1); }
 
 fn_arg: quoted_text exp_whitespaces { $$ = make_static($1); }
       | NUMBER exp_whitespaces { $$ = make_static($1); }
+      | TRUE { $$ = Expression(Value(true)); }
+      | FALSE { $$ = Expression(Value(false)); }
       | exp exp_whitespaces { $$ = $1; }
       ;
 
