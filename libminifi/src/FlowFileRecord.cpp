@@ -87,6 +87,14 @@ FlowFileRecord::FlowFileRecord(std::shared_ptr<core::Repository> flow_repository
     event->getResourceClaim()->increaseFlowFileRecordOwnedCount();
     content_full_fath_ = event->getResourceClaim()->getContentFullPath();
   }
+  if (event->getFlowIdentifier()) {
+    std::string attr;
+    event->getAttribute(FlowAttributeKey(FlowAttribute::FLOW_ID), attr);
+    setFlowIdentifier(event->getFlowIdentifier());
+    if (!attr.empty()) {
+      addKeyedAttribute(FlowAttribute::FLOW_ID, attr);
+    }
+  }
 }
 
 FlowFileRecord::FlowFileRecord(std::shared_ptr<core::Repository> flow_repository, const std::shared_ptr<core::ContentRepository> &content_repo, std::shared_ptr<core::FlowFile> &event)
@@ -95,6 +103,14 @@ FlowFileRecord::FlowFileRecord(std::shared_ptr<core::Repository> flow_repository
       snapshot_(""),
       content_repo_(content_repo),
       flow_repository_(flow_repository) {
+  if (event->getFlowIdentifier()) {
+    std::string attr;
+    event->getAttribute(FlowAttributeKey(FlowAttribute::FLOW_ID), attr);
+    setFlowIdentifier(event->getFlowIdentifier());
+    if (!attr.empty()) {
+      addKeyedAttribute(FlowAttribute::FLOW_ID, attr);
+    }
+  }
 }
 
 FlowFileRecord::~FlowFileRecord() {
@@ -129,7 +145,7 @@ void FlowFileRecord::releaseClaim(std::shared_ptr<ResourceClaim> claim) {
   }
 }
 
-bool FlowFileRecord::addKeyedAttribute(FlowAttribute key, std::string value) {
+bool FlowFileRecord::addKeyedAttribute(FlowAttribute key, const std::string &value) {
   const char *keyStr = FlowAttributeKey(key);
   if (keyStr) {
     const std::string keyString = keyStr;

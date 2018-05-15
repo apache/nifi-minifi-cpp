@@ -118,6 +118,8 @@ void YamlConfiguration::parseProcessorNodeYaml(YAML::Node processorsNode, core::
         }
         processor->setName(procCfg.name);
 
+        processor->setFlowIdentifier(flow_version_->getFlowIdentifier());
+
         auto strategyNode = getOptionalField(&procNode,
                                              "scheduling strategy",
                                              YAML::Node("EVENT_DRIVEN"),
