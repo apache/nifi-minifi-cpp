@@ -64,11 +64,13 @@ enum FlowAttribute {
   DISCARD_REASON,
   // Indicates an identifier other than the FlowFile's UUID that is known to refer to this FlowFile.
   ALTERNATE_IDENTIFIER,
+  // Flow identifier
+  FLOW_ID,
   MAX_FLOW_ATTRIBUTES
 };
 
 // FlowFile Attribute Key
-static const char *FlowAttributeKeyArray[MAX_FLOW_ATTRIBUTES] = { "path", "absolute.path", "filename", "uuid", "priority", "mime.type", "discard.reason", "alternate.identifier" };
+static const char *FlowAttributeKeyArray[MAX_FLOW_ATTRIBUTES] = { "path", "absolute.path", "filename", "uuid", "priority", "mime.type", "discard.reason", "alternate.identifier", "flow.id" };
 
 // FlowFile Attribute Enum to Key
 inline const char *FlowAttributeKey(FlowAttribute attribute) {
@@ -122,7 +124,7 @@ class FlowFileRecord : public core::FlowFile, public io::Serializable {
   // Destructor
   virtual ~FlowFileRecord();
   // addAttribute key is enum
-  bool addKeyedAttribute(FlowAttribute key, std::string value);
+  bool addKeyedAttribute(FlowAttribute key, const std::string &value);
   // removeAttribute key is enum
   bool removeKeyedAttribute(FlowAttribute key);
   // updateAttribute key is enum

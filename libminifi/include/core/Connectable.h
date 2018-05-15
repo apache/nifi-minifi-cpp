@@ -25,7 +25,7 @@
 #include "core/logging/Logger.h"
 #include "Relationship.h"
 #include "Scheduling.h"
-
+#include "core/state/FlowIdentifier.h"
 namespace org {
 namespace apache {
 namespace nifi {
@@ -133,6 +133,21 @@ class __attribute__((visibility("default"))) Connectable : public CoreComponent 
     return false;
   }
 
+  /**
+   * Sets the flow version for this connectable.
+   */
+  void setFlowIdentifier(const std::shared_ptr<state::FlowIdentifier> &version){
+    connectable_version_ = version;
+  }
+
+  /**
+   * Returns theflow version
+   * @returns flow version. can be null if a flow version is not tracked.
+   */
+  virtual std::shared_ptr<state::FlowIdentifier> getFlowIdentifier(){
+    return connectable_version_;
+  }
+
  protected:
 
   // Penalization Period in MilliSecond
@@ -165,6 +180,8 @@ class __attribute__((visibility("default"))) Connectable : public CoreComponent 
   std::atomic<SchedulingStrategy> strategy_;
   // Concurrent condition variable for whether there is incoming work to do
   std::condition_variable work_condition_;
+  // version under which this connectable was created.
+  std::shared_ptr<state::FlowIdentifier> connectable_version_;
 
 private:
   std::shared_ptr<logging::Logger> logger_;

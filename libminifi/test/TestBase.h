@@ -43,6 +43,7 @@
 #include "core/ProcessSession.h"
 #include "core/ProcessorNode.h"
 #include "core/reporting/SiteToSiteProvenanceReportingTask.h"
+#include "core/state/nodes/FlowInformation.h"
 
 class LogTestController {
  public:
@@ -151,19 +152,15 @@ class LogTestController {
 class TestPlan {
  public:
 
-  explicit TestPlan(std::shared_ptr<core::ContentRepository> content_repo, std::shared_ptr<core::Repository> flow_repo, std::shared_ptr<core::Repository> prov_repo);
+  explicit TestPlan(std::shared_ptr<core::ContentRepository> content_repo, std::shared_ptr<core::Repository> flow_repo, std::shared_ptr<core::Repository> prov_repo, const std::shared_ptr<minifi::state::response::FlowVersion> &flow_version);
 
   std::shared_ptr<core::Processor> addProcessor(const std::shared_ptr<core::Processor> &processor, const std::string &name,
-                                                core::Relationship relationship = core::Relationship("success", "description"),
-                                                bool linkToPrevious = false);
+                                                core::Relationship relationship = core::Relationship("success", "description"), bool linkToPrevious = false);
 
   std::shared_ptr<core::Processor> addProcessor(const std::string &processor_name, const std::string &name, core::Relationship relationship = core::Relationship("success", "description"),
-  bool linkToPrevious = false);
+                                                bool linkToPrevious = false);
 
-  bool setProperty(const std::shared_ptr<core::Processor> proc,
-                   const std::string &prop,
-                   const std::string &value,
-                   bool dynamic = false);
+  bool setProperty(const std::shared_ptr<core::Processor> proc, const std::string &prop, const std::string &value, bool dynamic = false);
 
   void reset();
 
@@ -209,6 +206,7 @@ class TestPlan {
   std::shared_ptr<core::ProcessSession> current_session_;
   std::shared_ptr<core::FlowFile> current_flowfile_;
 
+  std::shared_ptr<minifi::state::response::FlowVersion> flow_version_;
   std::map<std::string, std::shared_ptr<core::Processor>> processor_mapping_;
   std::vector<std::shared_ptr<core::Processor>> processor_queue_;
   std::vector<std::shared_ptr<core::Processor>> configured_processors_;
@@ -232,6 +230,7 @@ class TestController {
     minifi::setDefaultDirectory("./");
     log.reset();
     utils::IdGenerator::getIdGenerator()->initialize(std::make_shared<minifi::Properties>());
+    flow_version_ = std::make_shared<minifi::state::response::FlowVersion>("test", "test", "test");
   }
 
   std::shared_ptr<TestPlan> createPlan() {
@@ -242,9 +241,8 @@ class TestController {
 
     std::shared_ptr<core::Repository> flow_repo = std::make_shared<TestRepository>();
     std::shared_ptr<core::Repository> repo = std::make_shared<TestRepository>();
-    return std::make_shared<TestPlan>(content_repo, flow_repo, repo);
+    return std::make_shared<TestPlan>(content_repo, flow_repo, repo, flow_version_);
   }
-
 
   void runSession(std::shared_ptr<TestPlan> &plan, bool runToCompletion = true, std::function<void(const std::shared_ptr<core::ProcessContext>&, const std::shared_ptr<core::ProcessSession>&)> verify =
                       nullptr) {
@@ -283,6 +281,8 @@ class TestController {
   }
 
  protected:
+
+  std::shared_ptr<minifi::state::response::FlowVersion> flow_version_;
 
   std::mutex test_mutex;
   //std::map<std::string,>

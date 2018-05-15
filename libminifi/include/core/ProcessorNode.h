@@ -30,8 +30,6 @@ namespace core {
 
 /**
  * Processor node functions as a pass through to the implementing Connectables
- * ProcessorNode can be used by itself or with a pass through object, in which case
- * we need to function as a passthrough or not.
  */
 class ProcessorNode : public ConfigurableComponent, public Connectable {
  public:
@@ -97,6 +95,18 @@ class ProcessorNode : public ConfigurableComponent, public Connectable {
       return processor_cast->getDynamicProperty(name, value);
     } else {
       return ConfigurableComponent::getDynamicProperty(name, value);
+    }
+  }
+
+  /**
+   * Returns theflow version
+   * @returns flow version. can be null if a flow version is not tracked.
+   */
+  virtual std::shared_ptr<state::FlowIdentifier> getFlowIdentifier() {
+    if (processor_ != nullptr) {
+      return processor_->getFlowIdentifier();
+    } else {
+      return connectable_version_;
     }
   }
 

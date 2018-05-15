@@ -33,12 +33,14 @@ namespace core {
 Connectable::Connectable(std::string name, uuid_t uuid)
     : CoreComponent(name, uuid),
       max_concurrent_tasks_(1),
+      connectable_version_(nullptr),
       logger_(logging::LoggerFactory<Connectable>::getLogger()) {
 }
 
 Connectable::Connectable(const Connectable &&other)
     : CoreComponent(std::move(other)),
       max_concurrent_tasks_(std::move(other.max_concurrent_tasks_)),
+      connectable_version_(std::move(other.connectable_version_)),
       logger_(std::move(other.logger_)) {
   has_work_ = other.has_work_.load();
   strategy_ = other.strategy_.load();

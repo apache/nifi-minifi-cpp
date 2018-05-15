@@ -172,7 +172,7 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
   // first it will validate the payload with the current root node config for flowController
   // like FlowController id/name is the same and new version is greater than the current version
   // after that, it will apply the configuration
-  bool applyConfiguration(const std::string &configurePayload);
+  bool applyConfiguration(const std::string &source, const std::string &configurePayload);
 
   // get name
   std::string getName() const{
@@ -408,7 +408,6 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
   std::chrono::steady_clock::time_point last_metrics_capture_;
 
 private:
-  std::shared_ptr<state::response::FlowVersion> flow_version_;
   std::shared_ptr<logging::Logger> logger_;
   std::string serial_number_;
   static std::shared_ptr<utils::IdGenerator> id_generator_;

@@ -59,6 +59,35 @@ std::shared_ptr<core::Processor> FlowConfiguration::createProvenanceReportTask()
   return processor;
 }
 
+std::unique_ptr<core::ProcessGroup> FlowConfiguration::updateFromPayload(const std::string &source, const std::string &yamlConfigPayload) {
+    if (!source.empty()) {
+      std::string host, protocol, path, query, url = source;
+      int port;
+      utils::parse_url(&url, &host, &port, &protocol, &path, &query);
+
+      std::string flow_id, bucket_id;
+      auto path_split = utils::StringUtils::split(path, "/");
+      for (size_t i = 0; i < path_split.size(); i++) {
+        const std::string &str = path_split.at(i);
+        if (str == "flows") {
+          if (i + 1 < path_split.size()) {
+            flow_id = path_split.at(i + 1);
+            i++;
+          }
+        }
+
+        if (str == "bucket") {
+          if (i + 1 < path_split.size()) {
+            bucket_id = path_split.at(i + 1);
+            i++;
+          }
+        }
+      }
+      flow_version_->setFlowVersion(url, bucket_id, flow_id);
+    }
+    return getRootFromPayload(yamlConfigPayload);
+  }
+
 std::unique_ptr<core::ProcessGroup> FlowConfiguration::createRootProcessGroup(std::string name, uuid_t uuid, int version) {
   return std::unique_ptr<core::ProcessGroup>(new core::ProcessGroup(core::ROOT_PROCESS_GROUP, name, uuid, version));
 }
