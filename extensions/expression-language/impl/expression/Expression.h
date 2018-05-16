@@ -42,7 +42,9 @@ typedef struct {
   std::weak_ptr<core::FlowFile> flow_file;
 } Parameters;
 
-static const std::function<Value(const Parameters &params)> NOOP_FN;
+class Expression;
+
+static const std::function<Value(const Parameters &params, const std::vector<Expression> &sub_exprs)> NOOP_FN;
 
 /**
  * A NiFi expression language expression.
@@ -55,10 +57,12 @@ class Expression {
   }
 
   explicit Expression(Value val,
-                      std::function<Value(const Parameters &)> val_fn = NOOP_FN)
+                      std::function<Value(const Parameters &, const std::vector<Expression> &)> val_fn = NOOP_FN)
       : val_fn_(std::move(val_fn)),
-        fn_args_() {
+        fn_args_(),
+        is_multi_(false) {
     val_ = val;
+    sub_expr_generator_ = [](const Parameters &params) -> std::vector<Expression> { return {}; };
   }
 
   /**
@@ -68,7 +72,14 @@ class Expression {
    *
    * @return true if expression is dynamic
    */
-  bool isDynamic() const;
+  bool is_dynamic() const;
+
+  /**
+   * Whether or not this expression is a multi-expression.
+   */
+  bool is_multi() const {
+    return is_multi_;
+  }
 
   /**
    * Combine this expression with another expression by concatenation. Intermediate results
@@ -87,10 +98,35 @@ class Expression {
    */
   Value operator()(const Parameters &params) const;
 
+  /**
+   * Turn this expression into a multi-expression which generates subexpressions dynamically.
+   *
+   * @param sub_expr_generator function which generates expressions according to given params
+   */
+  void make_multi(std::function<std::vector<Expression>(const Parameters &params)> sub_expr_generator) {
+    this->sub_expr_generator_ = std::move(sub_expr_generator);
+    is_multi_ = true;
+  }
+
+  /**
+   * Composes a multi-expression statically with the given fn.
+   *
+   * @param fn Value function to compose with
+   * @param args function arguments
+   * @return composed multi-expression
+   */
+  Expression compose_multi(const std::function<Value(const std::vector<Value> &)> fn,
+                           const std::vector<Expression> &args) const;
+
+  Expression make_aggregate(std::function<Value(const Parameters &params,
+                                                const std::vector<Expression> &sub_exprs)> val_fn) const;
+
  protected:
   Value val_;
-  std::function<Value(const Parameters &params)> val_fn_;
+  std::function<Value(const Parameters &params, const std::vector<Expression> &sub_exprs)> val_fn_;
   std::vector<Expression> fn_args_;
+  std::function<std::vector<Expression>(const Parameters &params)> sub_expr_generator_;
+  bool is_multi_;
 };
 
 /**
@@ -115,7 +151,8 @@ Expression make_static(std::string val);
  * @param val_fn
  * @return
  */
-Expression make_dynamic(const std::function<Value(const Parameters &params)> &val_fn);
+Expression make_dynamic(const std::function<Value(const Parameters &params,
+                                                  const std::vector<Expression> &sub_exprs)> &val_fn);
 
 /**
  * Creates a dynamic expression which evaluates the given flow file attribute.

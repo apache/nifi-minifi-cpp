@@ -1285,3 +1285,202 @@ TEST_CASE("Encode Decode B64", "[expressionEncodeDecodeB64]") {  // NOLINT
   flow_file_a->addAttribute("message", "Zero > One < \"two!\" & 'true'");
   REQUIRE("Zero > One < \"two!\" & 'true'" == expr({flow_file_a}).asString());
 }
+
+TEST_CASE("All Contains", "[expressionAllContains]") {  // NOLINT
+  auto expr = expression::compile("${allAttributes('a', 'b'):contains('hello')}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("a", "hello 1");
+  flow_file_a->addAttribute("b", "hello 2");
+  REQUIRE(expr({flow_file_a}).asBoolean());
+}
+
+TEST_CASE("All Contains 2", "[expressionAllContains2]") {  // NOLINT
+  auto expr = expression::compile("${allAttributes('a', 'b'):contains('hello')}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("a", "hello 1");
+  flow_file_a->addAttribute("b", "mello 2");
+  REQUIRE(!expr({flow_file_a}).asBoolean());
+}
+
+TEST_CASE("Any Contains", "[expressionAnyContains]") {  // NOLINT
+  auto expr = expression::compile("${anyAttribute('a', 'b'):contains('hello')}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("a", "hello 1");
+  flow_file_a->addAttribute("b", "mello 2");
+  REQUIRE(expr({flow_file_a}).asBoolean());
+}
+
+TEST_CASE("Any Contains 2", "[expressionAnyContains2]") {  // NOLINT
+  auto expr = expression::compile("${anyAttribute('a', 'b'):contains('hello')}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("a", "mello 1");
+  flow_file_a->addAttribute("b", "mello 2");
+  REQUIRE(!expr({flow_file_a}).asBoolean());
+}
+
+#ifdef EXPRESSION_LANGUAGE_USE_REGEX
+
+TEST_CASE("All Matching Contains", "[expressionAllMatchingContains]") {  // NOLINT
+  auto expr = expression::compile("${allMatchingAttributes('xyz_.*'):contains('hello')}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("xyz_1", "hello 1");
+  flow_file_a->addAttribute("xyz_2", "hello 2");
+  REQUIRE(expr({flow_file_a}).asBoolean());
+}
+
+TEST_CASE("All Matching Contains 2", "[expressionAllMatchingContains2]") {  // NOLINT
+  auto expr = expression::compile("${allMatchingAttributes('abc_.*'):contains('hello')}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("xyz_1", "hello 1");
+  flow_file_a->addAttribute("xyz_2", "hello 2");
+  REQUIRE(!expr({flow_file_a}).asBoolean());
+}
+
+TEST_CASE("All Matching Contains 3", "[expressionAllMatchingContains3]") {  // NOLINT
+  auto expr = expression::compile("${allMatchingAttributes('abc_.*'):contains('hello')}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("xyz_1", "hello 1");
+  flow_file_a->addAttribute("abc_2", "hello 2");
+  REQUIRE(expr({flow_file_a}).asBoolean());
+}
+
+TEST_CASE("All Matching Contains 4", "[expressionAllMatchingContains4]") {  // NOLINT
+  auto expr = expression::compile("${allMatchingAttributes('xyz_.*'):contains('hello')}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("xyz_1", "hello 1");
+  flow_file_a->addAttribute("xyz_2", "2");
+  REQUIRE(!expr({flow_file_a}).asBoolean());
+}
+
+TEST_CASE("Any Matching Contains", "[expressionAnyMatchingContains]") {  // NOLINT
+  auto expr = expression::compile("${anyMatchingAttribute('xyz_.*'):contains('hello')}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("xyz_1", "hello 1");
+  flow_file_a->addAttribute("xyz_2", "mello 2");
+  REQUIRE(expr({flow_file_a}).asBoolean());
+}
+
+TEST_CASE("Any Matching Contains 2", "[expressionAnyMatchingContains2]") {  // NOLINT
+  auto expr = expression::compile("${anyMatchingAttribute('abc_.*'):contains('hello')}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("xyz_1", "hello 1");
+  flow_file_a->addAttribute("xyz_2", "mello 2");
+  REQUIRE(!expr({flow_file_a}).asBoolean());
+}
+
+TEST_CASE("Any Matching Contains 3", "[expressionAnyMatchingContains3]") {  // NOLINT
+  auto expr = expression::compile("${anyMatchingAttribute('abc_.*'):contains('hello')}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("abc_1", "hello 1");
+  flow_file_a->addAttribute("xyz_2", "mello 2");
+  REQUIRE(expr({flow_file_a}).asBoolean());
+}
+
+TEST_CASE("Any Matching Contains 4", "[expressionAnyMatchingContains4]") {  // NOLINT
+  auto expr = expression::compile("${anyMatchingAttribute('abc_.*'):contains('hello')}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("xyz_1", "mello 1");
+  flow_file_a->addAttribute("xyz_2", "mello 2");
+  REQUIRE(!expr({flow_file_a}).asBoolean());
+}
+
+#endif  // EXPRESSION_LANGUAGE_USE_REGEX
+
+TEST_CASE("All Delineated Contains", "[expressionAllDelineatedContains]") {  // NOLINT
+  auto expr = expression::compile("${allDelineatedValues(${word_list}, \",\"):contains('hello')}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("word_list", "hello_1,hello_2");
+  REQUIRE(expr({flow_file_a}).asBoolean());
+}
+
+TEST_CASE("All Delineated Contains 2", "[expressionAllDelineatedContains2]") {  // NOLINT
+  auto expr = expression::compile("${allDelineatedValues(${word_list}, \",\"):contains('hello')}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("word_list", "hello_1,mello_2");
+  REQUIRE(!expr({flow_file_a}).asBoolean());
+}
+
+TEST_CASE("All Delineated Contains 3", "[expressionAllDelineatedContains3]") {  // NOLINT
+  auto expr = expression::compile("${allDelineatedValues(${word_list}, \" \"):contains('1,h')}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("word_list", "hello_1,hello_2");
+  REQUIRE(expr({flow_file_a}).asBoolean());
+}
+
+TEST_CASE("Any Delineated Contains", "[expressionAnyDelineatedContains]") {  // NOLINT
+  auto expr = expression::compile("${anyDelineatedValue(${word_list}, \",\"):contains('hello')}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("word_list", "hello_1,mello_2");
+  REQUIRE(expr({flow_file_a}).asBoolean());
+}
+
+TEST_CASE("Any Delineated Contains 2", "[expressionAnyDelineatedContains2]") {  // NOLINT
+  auto expr = expression::compile("${anyDelineatedValue(${word_list}, \",\"):contains('hello')}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("word_list", "mello_1,mello_2");
+  REQUIRE(!expr({flow_file_a}).asBoolean());
+}
+
+TEST_CASE("Count", "[expressionCount]") {  // NOLINT
+  auto expr = expression::compile("${allAttributes('a', 'b'):contains('hello'):count()}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("a", "hello 1");
+  flow_file_a->addAttribute("b", "mello 2");
+  REQUIRE(1 == expr({flow_file_a}).asUnsignedLong());
+}
+
+TEST_CASE("Count 2", "[expressionCount2]") {  // NOLINT
+  auto expr = expression::compile("${allAttributes('a', 'b'):contains('mello'):count()}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("a", "mello 1");
+  flow_file_a->addAttribute("b", "mello 2");
+  flow_file_a->addAttribute("c", "hello 3");
+  REQUIRE(2 == expr({flow_file_a}).asUnsignedLong());
+}
+
+TEST_CASE("Count 3", "[expressionCount3]") {  // NOLINT
+  auto expr = expression::compile("abc${allAttributes('a', 'b'):contains('mello'):count()}xyz");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("a", "mello 1");
+  flow_file_a->addAttribute("b", "mello 2");
+  flow_file_a->addAttribute("c", "hello 3");
+  REQUIRE("abc2xyz" == expr({flow_file_a}).asString());
+}
+
+TEST_CASE("Join", "[expressionJoin]") {  // NOLINT
+  auto expr = expression::compile("abc_${allAttributes('a', 'b'):prepend('def_'):append('_ghi'):join(\"|\")}_xyz");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("a", "hello");
+  flow_file_a->addAttribute("b", "mello");
+  REQUIRE("abc_def_hello_ghi|def_mello_ghi_xyz" == expr({flow_file_a}).asString());
+}
+
+TEST_CASE("Join 2", "[expressionJoin2]") {  // NOLINT
+  auto expr = expression::compile("abc_${allAttributes('a', 'b'):join(\"|\"):prepend('def_'):append('_ghi')}_xyz");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("a", "hello");
+  flow_file_a->addAttribute("b", "mello");
+  REQUIRE("abc_def_hello|mello_ghi_xyz" == expr({flow_file_a}).asString());
+}
