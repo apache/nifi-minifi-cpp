@@ -148,9 +148,9 @@ class __attribute__((visibility("default"))) ConfigurableComponent {
   /**
    * Returns a vector all properties
    *
-   * @return map of property keys to their descriptions.
+   * @return map of property keys to Property instances.
    */
-  std::map<std::string, std::string> getProperties();
+  std::map<std::string, Property> getProperties();
 
   virtual ~ConfigurableComponent();
 
