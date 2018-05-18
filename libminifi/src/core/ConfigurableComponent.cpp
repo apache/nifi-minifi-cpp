@@ -190,7 +190,7 @@ bool ConfigurableComponent::createDynamicProperty(const std::string &name, const
     return false;
   }
 
-  Property new_property(name, DEFAULT_DYNAMIC_PROPERTY_DESC, value);
+  Property new_property(name, DEFAULT_DYNAMIC_PROPERTY_DESC, value, false);
   logger_->log_info("Processor %s dynamic property '%s' value '%s'", name.c_str(), new_property.getName().c_str(), value.c_str());
   dynamic_properties_[new_property.getName()] = new_property;
   onDynamicPropertyModified({}, new_property);
@@ -243,17 +243,17 @@ std::vector<std::string> ConfigurableComponent::getDynamicPropertyKeys() {
   return result;
 }
 
-std::map<std::string, std::string> ConfigurableComponent::getProperties() {
+std::map<std::string, Property> ConfigurableComponent::getProperties() {
   std::lock_guard<std::mutex> lock(configuration_mutex_);
 
-  std::map<std::string, std::string> result;
+  std::map<std::string, Property> result;
 
   for (const auto &pair : properties_) {
-    result.insert(std::pair<std::string, std::string>(pair.first, pair.second.getDescription()));
+    result.insert({pair.first, pair.second});
   }
 
   for (const auto &pair : dynamic_properties_) {
-    result.insert(std::pair<std::string, std::string>(pair.first, pair.second.getDescription()));
+    result.insert({pair.first, pair.second});
   }
 
   return result;
