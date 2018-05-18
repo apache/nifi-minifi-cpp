@@ -73,7 +73,6 @@ FlowController::FlowController(std::shared_ptr<core::Repository> provenance_repo
       max_event_driven_threads_(0),
       running_(false),
       updating_(false),
-      flow_version_(nullptr),
       c2_enabled_(true),
       initialized_(false),
       provenance_repo_(provenance_repo),
@@ -159,10 +158,10 @@ FlowController::~FlowController() {
   provenance_repo_ = nullptr;
 }
 
-bool FlowController::applyConfiguration(const std::string &configurePayload) {
+bool FlowController::applyConfiguration(const std::string &source, const std::string &configurePayload) {
   std::unique_ptr<core::ProcessGroup> newRoot;
   try {
-    newRoot = flow_configuration_->getRootFromPayload(configurePayload);
+    newRoot = flow_configuration_->updateFromPayload(source, configurePayload);
   } catch (...) {
     logger_->log_error("Invalid configuration payload");
     return false;
@@ -376,7 +375,6 @@ void FlowController::initializeC2() {
   state::StateManager::startMetrics(agent->getHeartBeatDelay());
 
   c2_initialized_ = true;
-  flow_version_ = std::make_shared<state::response::FlowVersion>("", "default", "");
   device_information_.clear();
   component_metrics_.clear();
   component_metrics_by_id_.clear();
@@ -443,7 +441,7 @@ void FlowController::initializeC2() {
         }
         flowMonitor->setStateMonitor(shared_from_this());
 
-        flowMonitor->setFlowVersion(flow_version_);
+        flowMonitor->setFlowVersion(flow_configuration_->getFlowVersion());
       }
 
       std::lock_guard<std::mutex> lock(metrics_mutex_);
@@ -806,32 +804,7 @@ void FlowController::enableAllControllerServices() {
 }
 
 int16_t FlowController::applyUpdate(const std::string &source, const std::string &configuration) {
-  if (!source.empty()) {
-    std::string host, protocol, path, query, url = source;
-    int port;
-    utils::parse_url(&url, &host, &port, &protocol, &path, &query);
-
-    std::string flow_id, bucket_id;
-    auto path_split = utils::StringUtils::split(path, "/");
-    for (size_t i = 0; i < path_split.size(); i++) {
-      const std::string &str = path_split.at(i);
-      if (str == "flows") {
-        if (i + 1 < path_split.size()) {
-          flow_id = path_split.at(i + 1);
-          i++;
-        }
-      }
-
-      if (str == "bucket") {
-        if (i + 1 < path_split.size()) {
-          bucket_id = path_split.at(i + 1);
-          i++;
-        }
-      }
-    }
-    flow_version_->setFlowVersion(url, bucket_id, flow_id);
-  }
-  if (applyConfiguration(configuration)) {
+  if (applyConfiguration(source, configuration)) {
     return 1;
   } else {
     return 0;

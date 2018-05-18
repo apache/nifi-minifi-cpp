@@ -18,7 +18,7 @@
 
 #include "./TestBase.h"
 
-TestPlan::TestPlan(std::shared_ptr<core::ContentRepository> content_repo, std::shared_ptr<core::Repository> flow_repo, std::shared_ptr<core::Repository> prov_repo)
+TestPlan::TestPlan(std::shared_ptr<core::ContentRepository> content_repo, std::shared_ptr<core::Repository> flow_repo, std::shared_ptr<core::Repository> prov_repo, const std::shared_ptr<minifi::state::response::FlowVersion> &flow_version)
     :
       content_repo_(content_repo),
       flow_repo_(flow_repo),
@@ -26,6 +26,7 @@ TestPlan::TestPlan(std::shared_ptr<core::ContentRepository> content_repo, std::s
       finalized(false),
       location(-1),
       current_flowfile_(nullptr),
+      flow_version_(flow_version),
       logger_(logging::LoggerFactory<TestPlan>::getLogger()) {
   stream_factory = std::make_shared<org::apache::nifi::minifi::io::StreamFactory>(std::make_shared<minifi::Configure>());
 }
@@ -43,6 +44,7 @@ bool linkToPrevious) {
   processor->setStreamFactory(stream_factory);
   // initialize the processor
   processor->initialize();
+  processor->setFlowIdentifier(flow_version_->getFlowIdentifier());
 
   processor_mapping_[processor->getUUIDStr()] = processor;
 
@@ -116,7 +118,7 @@ bool TestPlan::setProperty(const std::shared_ptr<core::Processor> proc,
                            const std::string &value,
                            bool dynamic) {
   std::lock_guard<std::recursive_mutex> guard(mutex);
-  uint32_t i = 0;
+  int32_t i = 0;
   logger_->log_info("Attempting to set property %s %s for %s", prop, value, proc->getName());
   for (i = 0; i < processor_queue_.size(); i++) {
     if (processor_queue_.at(i) == proc) {

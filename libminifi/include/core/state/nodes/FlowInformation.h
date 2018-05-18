@@ -45,6 +45,7 @@
 #include "Connection.h"
 #include "io/ClientSocket.h"
 #include "../nodes/StateMonitor.h"
+#include "../FlowIdentifier.h"
 
 namespace org {
 namespace apache {
@@ -58,61 +59,66 @@ class FlowVersion : public DeviceInformation {
 
   explicit FlowVersion()
       : DeviceInformation("FlowVersion", nullptr) {
+    setFlowVersion("", "", getUUIDStr());
   }
 
   explicit FlowVersion(const std::string &registry_url, const std::string &bucket_id, const std::string &flow_id)
-      : DeviceInformation("FlowVersion", nullptr),
-        registry_url_(registry_url),
-        bucket_id_(bucket_id),
-        flow_id_(flow_id) {
-    setFlowVersion(registry_url_, bucket_id_, flow_id_);
+      : DeviceInformation("FlowVersion", nullptr) {
+    setFlowVersion(registry_url, bucket_id, flow_id.empty() ? getUUIDStr() : flow_id);
   }
 
   explicit FlowVersion(FlowVersion &&fv)
       : DeviceInformation("FlowVersion", nullptr),
-        registry_url_(std::move(fv.registry_url_)),
-        bucket_id_(std::move(fv.bucket_id_)),
-        flow_id_(std::move(fv.flow_id_)) {
-    setFlowVersion(registry_url_, bucket_id_, flow_id_);
+        identifier(std::move(fv.identifier)) {
   }
 
   std::string getName() const {
     return "FlowVersion";
   }
 
-  std::string getRegistryUrl() const {
-    return registry_url_;
+  virtual std::shared_ptr<state::FlowIdentifier> getFlowIdentifier() {
+    std::lock_guard<std::mutex> lock(guard);
+    return identifier;
+  }
+  /**
+   * In most cases the lock guard isn't necessary for these getters; however,
+   * we don't want to cause issues if the FlowVersion object is ever used in a way
+   * that breaks the current paradigm.
+   */
+  std::string getRegistryUrl() {
+    std::lock_guard<std::mutex> lock(guard);
+    return identifier->getRegistryUrl();
   }
 
-  std::string getBucketId() const {
-    return bucket_id_;
+  std::string getBucketId() {
+    std::lock_guard<std::mutex> lock(guard);
+    return identifier->getBucketId();
   }
 
-  std::string getFlowId() const {
-    return flow_id_.empty() ? getUUIDStr() : flow_id_;
+  std::string getFlowId() {
+    std::lock_guard<std::mutex> lock(guard);
+    return identifier->getFlowId();
   }
 
   void setFlowVersion(const std::string &url, const std::string &bucket_id, const std::string &flow_id) {
-    registry_url_ = url;
-    bucket_id_ = bucket_id;
-    flow_id_ = flow_id;
+    std::lock_guard<std::mutex> lock(guard);
+    identifier = std::make_shared<FlowIdentifier>(url, bucket_id, flow_id);
   }
 
   std::vector<SerializedResponseNode> serialize() {
-    std::lock_guard<std::mutex> lock_guard(guard);
-
+    std::lock_guard<std::mutex> lock(guard);
     std::vector<SerializedResponseNode> serialized;
     SerializedResponseNode ru;
     ru.name = "registryUrl";
-    ru.value = registry_url_;
+    ru.value = identifier->getRegistryUrl();
 
     SerializedResponseNode bucketid;
     bucketid.name = "bucketId";
-    bucketid.value = bucket_id_;
+    bucketid.value = identifier->getBucketId();
 
     SerializedResponseNode flowId;
     flowId.name = "flowId";
-    flowId.value = getFlowId();
+    flowId.value = identifier->getFlowId();
 
     serialized.push_back(ru);
     serialized.push_back(bucketid);
@@ -121,19 +127,18 @@ class FlowVersion : public DeviceInformation {
   }
 
   FlowVersion &operator=(const FlowVersion &&fv) {
-    registry_url_ = (std::move(fv.registry_url_));
-    bucket_id_ = (std::move(fv.bucket_id_));
-    flow_id_ = (std::move(fv.flow_id_));
-    setFlowVersion(registry_url_, bucket_id_, flow_id_);
+    identifier = std::move(fv.identifier);
     return *this;
   }
  protected:
 
   std::mutex guard;
 
-  std::string registry_url_;
-  std::string bucket_id_;
-  std::string flow_id_;
+  /*std::string registry_url_;
+   std::string bucket_id_;
+   std::string flow_id_;
+   */
+  std::shared_ptr<FlowIdentifier> identifier;
 };
 
 class FlowMonitor : public StateMonitorNode {
@@ -263,7 +268,7 @@ class FlowInformation : public FlowMonitor {
 
 REGISTER_RESOURCE(FlowInformation);
 
-} /* namespace metrics */
+} /* namespace response */
 } /* namespace state */
 } /* namespace minifi */
 } /* namespace nifi */

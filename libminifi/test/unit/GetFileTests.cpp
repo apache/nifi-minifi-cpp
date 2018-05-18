@@ -77,6 +77,7 @@ TEST_CASE("GetFile: FIFO", "[getFileFifo]") { // NOLINT
   write_thread.join();
 
   // Check log output
+  REQUIRE(LogTestController::getInstance().contains("key:flow.id"));
   REQUIRE(LogTestController::getInstance().contains("Size:44 Offset:0"));
 }
 

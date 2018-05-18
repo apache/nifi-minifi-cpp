@@ -33,6 +33,7 @@
 #include "core/ProcessSession.h"
 #include "core/ProcessGroup.h"
 #include "io/StreamFactory.h"
+#include "core/state/nodes/FlowInformation.h"
 
 namespace org {
 namespace apache {
@@ -61,6 +62,7 @@ class FlowConfiguration : public CoreComponent {
         logger_(logging::LoggerFactory<FlowConfiguration>::getLogger()) {
     controller_services_ = std::make_shared<core::controller::ControllerServiceMap>();
     service_provider_ = std::make_shared<core::controller::StandardControllerServiceProvider>(controller_services_, nullptr, configuration);
+    flow_version_ = std::make_shared<state::response::FlowVersion>("", "default", "");
     // it is okay if this has already been called
     initialize_static_functions();
   }
@@ -82,6 +84,14 @@ class FlowConfiguration : public CoreComponent {
   // Create Provenance Report Task
   std::shared_ptr<core::Processor> createProvenanceReportTask(void);
 
+  std::shared_ptr<state::response::FlowVersion> getFlowVersion() const{
+    return flow_version_;
+  }
+
+  std::shared_ptr<Configure> getConfiguration() { // cannot be const as getters mutate the underlying map
+    return configuration_;
+  }
+
   /**
    * Returns the configuration path string
    * @return config_path_
@@ -93,6 +103,8 @@ class FlowConfiguration : public CoreComponent {
   virtual std::unique_ptr<core::ProcessGroup> getRoot() {
     return getRoot(config_path_);
   }
+
+  std::unique_ptr<core::ProcessGroup> updateFromPayload(const std::string &source, const std::string &yamlConfigPayload);
 
   virtual std::unique_ptr<core::ProcessGroup> getRootFromPayload(const std::string &yamlConfigPayload) {
     return nullptr;
@@ -147,7 +159,7 @@ class FlowConfiguration : public CoreComponent {
   // stream factory
   std::shared_ptr<io::StreamFactory> stream_factory_;
   std::shared_ptr<Configure> configuration_;
-
+  std::shared_ptr<state::response::FlowVersion> flow_version_;
  private:
   std::shared_ptr<logging::Logger> logger_;
   static std::mutex atomic_initialization_;

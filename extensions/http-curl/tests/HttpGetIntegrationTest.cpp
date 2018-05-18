@@ -154,6 +154,7 @@ int main(int argc, char **argv) {
   assert(logs.find("key:filename value:") != std::string::npos);
   assert(logs.find("key:invokehttp.request.url value:" + url) != std::string::npos);
   assert(logs.find("key:invokehttp.status.code value:200") != std::string::npos);
+  assert(logs.find("key:flow.id") != std::string::npos);
 
   LogTestController::getInstance().reset();
   rmdir("./content_repository");
