@@ -41,12 +41,16 @@ std::string Property::getValue() const {
     return "";
 }
 
+bool Property::getRequired() const {
+  return is_required_;
+}
+
 std::vector<std::string> &Property::getValues() {
   return values_;
 }
 // Set value for the property
 void Property::setValue(std::string value) {
-  if (!isCollection) {
+  if (!is_collection_) {
     values_.clear();
     values_.push_back(std::string(value.c_str()));
   } else {
@@ -66,7 +70,7 @@ const Property &Property::operator=(const Property &other) {
   name_ = other.name_;
   values_ = other.values_;
   description_ = other.description_;
-  isCollection = other.isCollection;
+  is_collection_ = other.is_collection_;
   return *this;
 }
 

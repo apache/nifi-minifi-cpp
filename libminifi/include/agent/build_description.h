@@ -26,21 +26,19 @@ namespace apache {
 namespace nifi {
 namespace minifi {
 
-
-
 struct ClassDescription {
   explicit ClassDescription(std::string name)
       : class_name_(name),
         support_dynamic_(false) {
   }
-  explicit ClassDescription(std::string name, std::map<std::string, std::string> props, bool dyn)
+  explicit ClassDescription(std::string name, std::map<std::string, core::Property> props, bool dyn)
       : class_name_(name),
         class_properties_(props),
         support_dynamic_(dyn) {
 
   }
   std::string class_name_;
-  std::map<std::string, std::string> class_properties_;
+  std::map<std::string, core::Property> class_properties_;
   bool support_dynamic_;
 };
 

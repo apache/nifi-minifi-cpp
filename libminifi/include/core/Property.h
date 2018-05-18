@@ -56,35 +56,45 @@ class Property {
   /*!
    * Create a new property
    */
+  Property(const std::string name, const std::string description, const std::string value, bool is_required)
+      : name_(name),
+        description_(description),
+        is_required_(is_required),
+        is_collection_(false) {
+    values_.push_back(std::string(value.c_str()));
+  }
+
   Property(const std::string name, const std::string description, const std::string value)
       : name_(name),
         description_(description),
-        isCollection(false) {
+        is_required_(false),
+        is_collection_(false) {
     values_.push_back(std::string(value.c_str()));
   }
 
   Property(const std::string name, const std::string description)
       : name_(name),
         description_(description),
-        isCollection(true) {
+        is_required_(false),
+        is_collection_(true) {
   }
 
   Property()
       : name_(""),
         description_(""),
-        isCollection(false) {
+        is_required_(false),
+        is_collection_(false) {
 
   }
 
   // Destructor
   virtual ~Property() {
   }
-  // Get Name for the property
+
   std::string getName() const;
-  // Get Description for the property
   std::string getDescription() const;
-  // Get value for the property
   std::string getValue() const;
+  bool getRequired() const;
   std::vector<std::string> &getValues();
 
   // Set value for the property
@@ -359,12 +369,10 @@ class Property {
   }
 
  protected:
-  // Name
   std::string name_;
-  // Description
   std::string description_;
-  bool isCollection;
-  // Value
+  bool is_required_;
+  bool is_collection_;
   std::vector<std::string> values_;
 
  private:

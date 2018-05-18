@@ -291,10 +291,15 @@ class ComponentManifest : public DeviceInformation {
 
             SerializedResponseNode descriptorDescription;
             descriptorDescription.name = "description";
-            descriptorDescription.value = prop.second;
+            descriptorDescription.value = prop.second.getDescription();
+
+            SerializedResponseNode descriptorRequired;
+            descriptorRequired.name = "required";
+            descriptorRequired.value = prop.second.getRequired();
 
             child.children.push_back(descriptorName);
             child.children.push_back(descriptorDescription);
+            child.children.push_back(descriptorRequired);
 
             props.children.push_back(child);
           }
@@ -515,7 +520,7 @@ class AgentInformation : public DeviceInformation, public AgentMonitor, public A
           for (auto && prop : group.class_properties_) {
             SerializedResponseNode child;
             child.name = prop.first;
-            child.value = prop.second;
+            child.value = prop.second.getDescription();
             props.children.push_back(child);
           }
 
@@ -550,7 +555,7 @@ class AgentInformation : public DeviceInformation, public AgentMonitor, public A
           for (auto && prop : group.class_properties_) {
             SerializedResponseNode child;
             child.name = prop.first;
-            child.value = prop.second;
+            child.value = prop.second.getDescription();
             props.children.push_back(child);
           }
 
