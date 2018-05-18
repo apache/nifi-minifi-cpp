@@ -25,6 +25,13 @@
 #undef EXPRESSION_LANGUAGE_USE_REGEX
 #endif
 
+#define EXPRESSION_LANGUAGE_USE_DATE
+
+// Disable date in EL for incompatible compilers
+#if __GNUC__ < 5
+#undef EXPRESSION_LANGUAGE_USE_DATE
+#endif
+
 #include <Value.h>
 #include <core/FlowFile.h>
 

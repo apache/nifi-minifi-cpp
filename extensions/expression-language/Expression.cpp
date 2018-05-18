@@ -34,6 +34,10 @@
 #include "base64.h"
 #include "Driver.h"
 
+#ifdef EXPRESSION_LANGUAGE_USE_DATE
+#include "date/tz.h"
+#endif  // EXPRESSION_LANGUAGE_USE_DATE
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -1273,6 +1277,42 @@ Value expr_escapeCsv(const std::vector<Value> &args) {
   return Value(result);
 }
 
+#ifdef EXPRESSION_LANGUAGE_USE_DATE
+
+Value expr_format(const std::vector<Value> &args) {
+  std::chrono::milliseconds dur(args[0].asUnsignedLong());
+  std::chrono::time_point<std::chrono::system_clock> dt(dur);
+  auto zone = date::current_zone();
+  if (args.size() > 2) {
+    zone = date::locate_zone(args[2].asString());
+  }
+  auto t = date::make_zoned(zone, dt);
+  std::stringstream result_s;
+  result_s << date::format(args[1].asString(), t);
+  return Value(result_s.str());
+}
+
+Value expr_toDate(const std::vector<Value> &args) {
+  auto arg_0 = args[0].asString();
+  std::istringstream arg_s{arg_0};
+  date::sys_time<std::chrono::milliseconds> t;
+  arg_s >> date::parse(args[1].asString(), t);
+  auto zone = date::current_zone();
+  if (args.size() > 2) {
+    zone = date::locate_zone(args[2].asString());
+  }
+  auto utc = date::locate_zone("UTC");
+  auto utct = date::make_zoned(utc, t);
+  auto zt = date::make_zoned(zone, utct.get_local_time());
+  return Value(std::chrono::duration_cast<std::chrono::milliseconds>(zt.get_sys_time().time_since_epoch()).count());
+}
+
+#endif  // EXPRESSION_LANGUAGE_USE_DATE
+
+Value expr_now(const std::vector<Value> &args) {
+  return Value(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
+}
+
 Value expr_unescapeCsv(const std::vector<Value> &args) {
   auto result = args[0].asString();
 
@@ -1822,6 +1862,14 @@ Expression make_dynamic_function(const std::string &function_name,
     return make_dynamic_function_incomplete<expr_not>(function_name, args, 0);
   } else if (function_name == "ifElse") {
     return make_dynamic_function_incomplete<expr_ifElse>(function_name, args, 2);
+#ifdef EXPRESSION_LANGUAGE_USE_DATE
+  } else if (function_name == "format") {
+    return make_dynamic_function_incomplete<expr_format>(function_name, args, 1);
+  } else if (function_name == "toDate") {
+    return make_dynamic_function_incomplete<expr_toDate>(function_name, args, 1);
+#endif  // EXPRESSION_LANGUAGE_USE_DATE
+  } else if (function_name == "now") {
+    return make_dynamic_function_incomplete<expr_now>(function_name, args, 0);
   } else {
     std::string msg("Unknown expression function: ");
     msg.append(function_name);
