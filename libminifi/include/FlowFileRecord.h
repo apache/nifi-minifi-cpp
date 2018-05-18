@@ -64,11 +64,13 @@ enum FlowAttribute {
   DISCARD_REASON,
   // Indicates an identifier other than the FlowFile's UUID that is known to refer to this FlowFile.
   ALTERNATE_IDENTIFIER,
+  // flow version
+  VERSION,
   MAX_FLOW_ATTRIBUTES
 };
 
 // FlowFile Attribute Key
-static const char *FlowAttributeKeyArray[MAX_FLOW_ATTRIBUTES] = { "path", "absolute.path", "filename", "uuid", "priority", "mime.type", "discard.reason", "alternate.identifier" };
+static const char *FlowAttributeKeyArray[MAX_FLOW_ATTRIBUTES] = { "path", "absolute.path", "filename", "uuid", "priority", "mime.type", "discard.reason", "alternate.identifier", "version" };
 
 // FlowFile Attribute Enum to Key
 inline const char *FlowAttributeKey(FlowAttribute attribute) {

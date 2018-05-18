@@ -53,6 +53,7 @@ FlowFileRecord::FlowFileRecord(std::shared_ptr<core::Repository> flow_repository
   addKeyedAttribute(FILENAME, std::to_string(getTimeNano()));
   addKeyedAttribute(PATH, DEFAULT_FLOWFILE_PATH);
   addKeyedAttribute(UUID, getUUIDStr());
+  addKeyedAttribute(VERSION, std::to_string(flow_repository->getVersion()));
   // Populate the attributes from the input
   std::map<std::string, std::string>::iterator it;
   for (it = attributes.begin(); it != attributes.end(); it++) {

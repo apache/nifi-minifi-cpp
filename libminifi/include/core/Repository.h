@@ -72,6 +72,7 @@ class Repository : public virtual core::SerializableComponent {
     purge_period_ = purgePeriod;
     running_ = false;
     repo_full_ = false;
+    version_ = 0;
   }
 
   // Destructor
@@ -205,6 +206,15 @@ class Repository : public virtual core::SerializableComponent {
 
   virtual uint64_t getRepoSize();
 
+  // get version
+  int getVersion() {
+    return version_;
+  }
+
+  void setVersion(int version) {
+    version_ = version;
+  }
+
   // Prevent default copy constructor and assignment operation
   // Only support pass by reference or pointer
   Repository(const Repository &parent) = delete;
@@ -239,6 +249,7 @@ class Repository : public virtual core::SerializableComponent {
 
  private:
   std::shared_ptr<logging::Logger> logger_;
+  int version_;
 };
 
 } /* namespace core */
