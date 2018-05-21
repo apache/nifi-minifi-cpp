@@ -71,7 +71,13 @@ const Property &Property::operator=(const Property &other) {
   values_ = other.values_;
   description_ = other.description_;
   is_collection_ = other.is_collection_;
+  is_required_ = other.is_required_;
+  dependent_properties_ = other.dependent_properties_;
   return *this;
+}
+
+std::vector<std::string> Property::getDependentProperties() const {
+  return dependent_properties_;
 }
 
 } /* namespace core */
