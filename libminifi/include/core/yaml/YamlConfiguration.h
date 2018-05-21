@@ -241,7 +241,10 @@ class YamlConfiguration : public FlowConfiguration {
    * @param propertiesNode the YAML::Node containing the properties
    * @param processor      the Processor to which to add the resulting properties
    */
-  void parsePropertiesNodeYaml(YAML::Node *propertiesNode, std::shared_ptr<core::ConfigurableComponent> processor);
+  void parsePropertiesNodeYaml(YAML::Node *propertiesNode,
+                               std::shared_ptr<core::ConfigurableComponent> processor,
+                               const std::string &component_name,
+                               const std::string &yaml_section);
 
   /**
    * A helper function for parsing or generating optional id fields.
