@@ -297,9 +297,19 @@ class ComponentManifest : public DeviceInformation {
             descriptorRequired.name = "required";
             descriptorRequired.value = prop.second.getRequired();
 
+            SerializedResponseNode descriptorDependentProperties;
+            descriptorDependentProperties.name = "dependentProperties";
+
+            for (const auto &propName : prop.second.getDependentProperties()) {
+              SerializedResponseNode descriptorDependentProperty;
+              descriptorDependentProperty.name = propName;
+              descriptorDependentProperties.children.push_back(descriptorDependentProperty);
+            }
+
             child.children.push_back(descriptorName);
             child.children.push_back(descriptorDescription);
             child.children.push_back(descriptorRequired);
+            child.children.push_back(descriptorDependentProperties);
 
             props.children.push_back(child);
           }

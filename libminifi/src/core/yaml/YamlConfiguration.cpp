@@ -17,7 +17,6 @@
  */
 
 #include <memory>
-#include <string>
 #include <vector>
 #include <set>
 
@@ -172,7 +171,7 @@ void YamlConfiguration::parseProcessorNodeYaml(YAML::Node processorsNode, core::
         // handle processor properties
         if (procNode["Properties"]) {
           YAML::Node propertiesNode = procNode["Properties"];
-          parsePropertiesNodeYaml(&propertiesNode, processor);
+          parsePropertiesNodeYaml(&propertiesNode, processor, procCfg.name, CONFIG_YAML_PROCESSORS_KEY);
         }
 
         // Take care of scheduling
@@ -237,7 +236,7 @@ void YamlConfiguration::parseProcessorNodeYaml(YAML::Node processorsNode, core::
     }
   } else {
     throw new std::invalid_argument("Cannot instantiate a MiNiFi instance without a defined "
-                                        "Processors configuration node.");
+                                    "Processors configuration node.");
   }
 }
 
@@ -468,12 +467,16 @@ void YamlConfiguration::parseControllerServices(YAML::Node *controllerServicesNo
             logger_->log_debug("Created Controller Service with UUID %s and name %s", id, name);
             controller_service_node->initialize();
             YAML::Node propertiesNode = controllerServiceNode["Properties"];
-            // we should propogate propertiets to the node and to the implementation
+            // we should propogate properties to the node and to the implementation
             parsePropertiesNodeYaml(&propertiesNode,
-                                    std::static_pointer_cast<core::ConfigurableComponent>(controller_service_node));
+                                    std::static_pointer_cast<core::ConfigurableComponent>(controller_service_node),
+                                    name,
+                                    CONFIG_YAML_CONTROLLER_SERVICES_KEY);
             if (controller_service_node->getControllerServiceImplementation() != nullptr) {
               parsePropertiesNodeYaml(&propertiesNode,
-                                      std::static_pointer_cast<core::ConfigurableComponent>(controller_service_node->getControllerServiceImplementation()));
+                                      std::static_pointer_cast<core::ConfigurableComponent>(controller_service_node->getControllerServiceImplementation()),
+                                      name,
+                                      CONFIG_YAML_CONTROLLER_SERVICES_KEY);
             }
           }
           controller_services_->put(id, controller_service_node);
@@ -563,7 +566,7 @@ void YamlConfiguration::parseConnectionYaml(YAML::Node *connectionsNode, core::P
           std::string connectionSrcProcId = connectionNode["source id"].as<std::string>();
           uuid_parse(connectionSrcProcId.c_str(), srcUUID);
           logger_->log_debug("Using 'source id' to match source with same id for "
-                                 "connection '%s': source id => [%s]",
+                             "connection '%s': source id => [%s]",
                              name, connectionSrcProcId);
         } else {
           // if we don't have a source id, try to resolve using source name. config schema v2 will make this unnecessary
@@ -575,7 +578,7 @@ void YamlConfiguration::parseConnectionYaml(YAML::Node *connectionsNode, core::P
             // the source name is a remote port id, so use that as the source id
             uuid_copy(srcUUID, tmpUUID);
             logger_->log_debug("Using 'source name' containing a remote port id to match the source for "
-                                   "connection '%s': source name => [%s]",
+                               "connection '%s': source name => [%s]",
                                name, connectionSrcProcName);
           } else {
             // lastly, look the processor up by name
@@ -583,7 +586,7 @@ void YamlConfiguration::parseConnectionYaml(YAML::Node *connectionsNode, core::P
             if (NULL != srcProcessor) {
               srcProcessor->getUUID(srcUUID);
               logger_->log_debug("Using 'source name' to match source with same name for "
-                                     "connection '%s': source name => [%s]",
+                                 "connection '%s': source name => [%s]",
                                  name, connectionSrcProcName);
             } else {
               // we ran out of ways to discover the source processor
@@ -602,7 +605,7 @@ void YamlConfiguration::parseConnectionYaml(YAML::Node *connectionsNode, core::P
           std::string connectionDestProcId = connectionNode["destination id"].as<std::string>();
           uuid_parse(connectionDestProcId.c_str(), destUUID);
           logger_->log_debug("Using 'destination id' to match destination with same id for "
-                                 "connection '%s': destination id => [%s]",
+                             "connection '%s': destination id => [%s]",
                              name, connectionDestProcId);
         } else {
           // we use the same logic as above for resolving the source processor
@@ -616,7 +619,7 @@ void YamlConfiguration::parseConnectionYaml(YAML::Node *connectionsNode, core::P
             // the destination name is a remote port id, so use that as the dest id
             uuid_copy(destUUID, tmpUUID);
             logger_->log_debug("Using 'destination name' containing a remote port id to match the destination for "
-                                   "connection '%s': destination name => [%s]",
+                               "connection '%s': destination name => [%s]",
                                name, connectionDestProcName);
           } else {
             // look the processor up by name
@@ -624,7 +627,7 @@ void YamlConfiguration::parseConnectionYaml(YAML::Node *connectionsNode, core::P
             if (NULL != destProcessor) {
               destProcessor->getUUID(destUUID);
               logger_->log_debug("Using 'destination name' to match destination with same name for "
-                                     "connection '%s': destination name => [%s]",
+                                 "connection '%s': destination name => [%s]",
                                  name, connectionDestProcName);
             } else {
               // we ran out of ways to discover the destination processor
@@ -666,10 +669,10 @@ void YamlConfiguration::parsePortYaml(YAML::Node *portNode,
   checkRequiredField(&inputPortsObj, "id",
                      CONFIG_YAML_REMOTE_PROCESS_GROUP_KEY,
                      "The field 'id' is required for "
-                         "the port named '" + nameStr + "' in the YAML Config. If this port "
-                         "is an input port for a NiFi Remote Process Group, the port "
-                         "id should match the corresponding id specified in the NiFi configuration. "
-                         "This is a UUID of the format XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX.");
+                     "the port named '" + nameStr + "' in the YAML Config. If this port "
+                                                    "is an input port for a NiFi Remote Process Group, the port "
+                                                    "id should match the corresponding id specified in the NiFi configuration. "
+                                                    "This is a UUID of the format XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX.");
   auto portId = inputPortsObj["id"].as<std::string>();
   uuid_parse(portId.c_str(), uuid);
 
@@ -696,7 +699,10 @@ void YamlConfiguration::parsePortYaml(YAML::Node *portNode,
   // handle port properties
   YAML::Node nodeVal = portNode->as<YAML::Node>();
   YAML::Node propertiesNode = nodeVal["Properties"];
-  parsePropertiesNodeYaml(&propertiesNode, std::static_pointer_cast<core::ConfigurableComponent>(processor));
+  parsePropertiesNodeYaml(&propertiesNode,
+                          std::static_pointer_cast<core::ConfigurableComponent>(processor),
+                          nameStr,
+                          CONFIG_YAML_REMOTE_PROCESS_GROUP_KEY);
 
   // add processor to parent
   parent->addProcessor(processor);
@@ -714,7 +720,9 @@ void YamlConfiguration::parsePortYaml(YAML::Node *portNode,
 }
 
 void YamlConfiguration::parsePropertiesNodeYaml(YAML::Node *propertiesNode,
-                                                std::shared_ptr<core::ConfigurableComponent> processor) {
+                                                std::shared_ptr<core::ConfigurableComponent> processor,
+                                                const std::string &component_name,
+                                                const std::string &yaml_section) {
   // Treat generically as a YAML node so we can perform inspection on entries to ensure they are populated
   for (YAML::const_iterator propsIter = propertiesNode->begin(); propsIter != propertiesNode->end(); ++propsIter) {
     std::string propertyName = propsIter->first.as<std::string>();
@@ -732,7 +740,7 @@ void YamlConfiguration::parsePropertiesNodeYaml(YAML::Node *propertiesNode,
               std::shared_ptr<core::Connectable> proc = std::dynamic_pointer_cast<core::Connectable>(processor);
               if (proc != 0) {
                 logger_->log_warn("Received property %s with value %s but is not one of the properties for %s. "
-                                      "Attempting to add as dynamic property.",
+                                  "Attempting to add as dynamic property.",
                                   propertyName,
                                   rawValueString,
                                   proc->getName());
@@ -755,7 +763,7 @@ void YamlConfiguration::parsePropertiesNodeYaml(YAML::Node *propertiesNode,
           std::shared_ptr<core::Connectable> proc = std::dynamic_pointer_cast<core::Connectable>(processor);
           if (proc != 0) {
             logger_->log_warn("Received property %s with value %s but is not one of the properties for %s. "
-                                  "Attempting to add as dynamic property.",
+                              "Attempting to add as dynamic property.",
                               propertyName,
                               rawValueString,
                               proc->getName());
@@ -773,6 +781,28 @@ void YamlConfiguration::parsePropertiesNodeYaml(YAML::Node *propertiesNode,
       }
     }
   }
+
+  // Validate required properties
+  for (const auto &prop_pair : processor->getProperties()) {
+    if (prop_pair.second.getRequired()) {
+      const auto &val = prop_pair.second.getValue();
+
+      if (val.empty()) {
+        // Build a helpful error message for the user so they can fix the
+        // invalid YAML config file, using the component name if present
+        std::string err_msg =
+            "Unable to parse configuration file for component named '"
+                + component_name
+                + "' because required property '" + prop_pair.second.getName() + "' is not set";
+        if (!yaml_section.empty()) {
+          err_msg += " [in '" + yaml_section + "' section of configuration file]";
+        }
+        logging::LOG_ERROR(logger_) << err_msg;
+
+        throw std::invalid_argument(err_msg);
+      }
+    }
+  }
 }
 
 std::string YamlConfiguration::getOrGenerateId(YAML::Node *yamlNode, const std::string &idField) {
@@ -784,7 +814,7 @@ std::string YamlConfiguration::getOrGenerateId(YAML::Node *yamlNode, const std::
       id = node[idField].as<std::string>();
     } else {
       throw std::invalid_argument("getOrGenerateId: idField is expected to reference YAML::Node "
-                                      "of YAML::NodeType::Scalar.");
+                                  "of YAML::NodeType::Scalar.");
     }
   } else {
     uuid_t uuid;

@@ -25,7 +25,7 @@
 #include "core/Processor.h"
 #include "core/ClassLoader.h"
 
-TEST_CASE("TestRequired", "[required]") {
+TEST_CASE("Test Required", "[required]") {
   minifi::state::response::ComponentManifest manifest("PutFile");
   auto serialized = manifest.serialize();
   REQUIRE(serialized.size() > 0);
@@ -42,4 +42,29 @@ TEST_CASE("TestRequired", "[required]") {
   const auto &prop_0_required = prop_0.children[2];
   REQUIRE("required" == prop_0_required.name);
   REQUIRE(!std::dynamic_pointer_cast<minifi::state::response::BoolValue>(prop_0_required.value.getValue())->getValue());
+}
+
+TEST_CASE("Test Dependent", "[dependent]") {
+  minifi::state::response::ComponentManifest manifest("manifest");
+  auto serialized = manifest.serialize();
+  REQUIRE(serialized.size() > 0);
+  const auto &resp = serialized[0];
+  REQUIRE(resp.children.size() > 0);
+  const auto &processors = resp.children[0];
+  REQUIRE(processors.children.size() > 0);
+  minifi::state::response::SerializedResponseNode proc_0;
+  for (const auto &node : processors.children) {
+    if ("org::apache::nifi::minifi::processors::PutFile" == node.name) {
+      proc_0 = node;
+    }
+  }
+  REQUIRE(proc_0.children.size() > 0);
+  const auto &prop_descriptors = proc_0.children[0];
+  REQUIRE(prop_descriptors.children.size() > 0);
+  const auto &prop_0 = prop_descriptors.children[1];
+  REQUIRE(prop_0.children.size() >= 3);
+  const auto &prop_0_dependent = prop_0.children[3];
+  REQUIRE("dependentProperties" == prop_0_dependent.name);
+  const auto &prop_0_dependent_0 = prop_0_dependent.children[0];
+  REQUIRE("Directory" == prop_0_dependent_0.name);
 }

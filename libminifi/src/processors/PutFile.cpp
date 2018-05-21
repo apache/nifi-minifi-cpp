@@ -51,7 +51,9 @@ core::Property PutFile::CreateDirs(
     "Create Missing Directories",
     "If true, then missing destination directories will be created. "
         "If false, flowfiles are penalized and sent to failure.",
-    "true");
+    "true",
+    true,
+    {"Directory"});
 core::Property PutFile::MaxDestFiles(
     "Maximum File Count",
     "Specifies the maximum number of files that can exist in the output directory",
