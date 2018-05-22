@@ -36,7 +36,8 @@ rsync -avr \
       --exclude '/*build*' \
       --exclude '/docker' \
       --exclude '.git' \
-      --exclude '/extensions/expression-language/Parser.*' \
+      --exclude '/extensions/expression-language/Parser.cpp' \
+      --exclude '/extensions/expression-language/Parser.hpp' \
       --exclude '/extensions/expression-language/Scanner.cpp' \
       --exclude '/extensions/expression-language/location.hh' \
       --exclude '/extensions/expression-language/position.hh' \
