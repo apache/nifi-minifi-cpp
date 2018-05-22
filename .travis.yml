@@ -53,6 +53,13 @@ matrix:
         # Establish updated toolchain as default
         - sudo unlink /usr/bin/gcc && sudo ln -s /usr/bin/gcc-4.8 /usr/bin/gcc
         - sudo unlink /usr/bin/g++ && sudo ln -s /usr/bin/g++-4.8 /usr/bin/g++
+    - os: linux
+      dist: trusty
+      sudo: required
+      services:
+        - docker
+      script:
+        - ./bootstrap.sh -e -t && cd build  && make docker
     - os: osx
       osx_image: xcode7.3
       env:
