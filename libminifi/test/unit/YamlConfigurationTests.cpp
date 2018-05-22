@@ -30,7 +30,7 @@ TEST_CASE("Test YAML Config Processing", "[YamlConfiguration]") {
   std::shared_ptr<core::Repository> testProvRepo = core::createRepository("provenancerepository", true);
   std::shared_ptr<core::Repository> testFlowFileRepo = core::createRepository("flowfilerepository", true);
   std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::Configure>();
-  std::shared_ptr<minifi::io::StreamFactory> streamFactory = std::make_shared<minifi::io::StreamFactory>(configuration);
+  std::shared_ptr<minifi::io::StreamFactory> streamFactory = minifi::io::StreamFactory::getInstance(configuration);
   std::shared_ptr<core::ContentRepository>
       content_repo = std::make_shared<core::repository::VolatileContentRepository>();
   core::YamlConfiguration *yamlConfig =
@@ -197,7 +197,7 @@ TEST_CASE("Test YAML v3 Config Processing", "[YamlConfiguration3]") {
   std::shared_ptr<core::Repository> testProvRepo = core::createRepository("provenancerepository", true);
   std::shared_ptr<core::Repository> testFlowFileRepo = core::createRepository("flowfilerepository", true);
   std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::Configure>();
-  std::shared_ptr<minifi::io::StreamFactory> streamFactory = std::make_shared<minifi::io::StreamFactory>(configuration);
+  std::shared_ptr<minifi::io::StreamFactory> streamFactory = minifi::io::StreamFactory::getInstance(configuration);
   std::shared_ptr<core::ContentRepository>
       content_repo = std::make_shared<core::repository::VolatileContentRepository>();
   core::YamlConfiguration *yamlConfig =
@@ -350,7 +350,7 @@ TEST_CASE("Test Dynamic Unsupported", "[YamlConfigurationDynamicUnsupported]") {
   std::shared_ptr<core::Repository> testProvRepo = core::createRepository("provenancerepository", true);
   std::shared_ptr<core::Repository> testFlowFileRepo = core::createRepository("flowfilerepository", true);
   std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::Configure>();
-  std::shared_ptr<minifi::io::StreamFactory> streamFactory = std::make_shared<minifi::io::StreamFactory>(configuration);
+  std::shared_ptr<minifi::io::StreamFactory> streamFactory = minifi::io::StreamFactory::getInstance(configuration);
   std::shared_ptr<core::ContentRepository>
       content_repo = std::make_shared<core::repository::VolatileContentRepository>();
   core::YamlConfiguration *yamlConfig =
@@ -388,7 +388,7 @@ TEST_CASE("Test Required Property", "[YamlConfigurationRequiredProperty]") {
   std::shared_ptr<core::Repository> testProvRepo = core::createRepository("provenancerepository", true);
   std::shared_ptr<core::Repository> testFlowFileRepo = core::createRepository("flowfilerepository", true);
   std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::Configure>();
-  std::shared_ptr<minifi::io::StreamFactory> streamFactory = std::make_shared<minifi::io::StreamFactory>(configuration);
+  std::shared_ptr<minifi::io::StreamFactory> streamFactory = minifi::io::StreamFactory::getInstance(configuration);
   std::shared_ptr<core::ContentRepository>
       content_repo = std::make_shared<core::repository::VolatileContentRepository>();
   core::YamlConfiguration *yamlConfig =
@@ -433,7 +433,7 @@ TEST_CASE("Test Required Property 2", "[YamlConfigurationRequiredProperty2]") {
   std::shared_ptr<core::Repository> testProvRepo = core::createRepository("provenancerepository", true);
   std::shared_ptr<core::Repository> testFlowFileRepo = core::createRepository("flowfilerepository", true);
   std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::Configure>();
-  std::shared_ptr<minifi::io::StreamFactory> streamFactory = std::make_shared<minifi::io::StreamFactory>(configuration);
+  std::shared_ptr<minifi::io::StreamFactory> streamFactory = minifi::io::StreamFactory::getInstance(configuration);
   std::shared_ptr<core::ContentRepository>
       content_repo = std::make_shared<core::repository::VolatileContentRepository>();
   core::YamlConfiguration *yamlConfig =

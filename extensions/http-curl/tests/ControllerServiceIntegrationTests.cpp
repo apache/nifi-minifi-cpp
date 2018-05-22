@@ -79,7 +79,7 @@ int main(int argc, char **argv) {
   configuration->set(minifi::Configure::nifi_security_client_pass_phrase, passphrase);
   configuration->set(minifi::Configure::nifi_default_directory, key_dir);
 
-  std::shared_ptr<minifi::io::StreamFactory> stream_factory = std::make_shared<minifi::io::StreamFactory>(configuration);
+  std::shared_ptr<minifi::io::StreamFactory> stream_factory = minifi::io::StreamFactory::getInstance(configuration);
   std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
   content_repo->initialize(configuration);
   std::unique_ptr<core::FlowConfiguration> yaml_ptr = std::unique_ptr<core::YamlConfiguration>(

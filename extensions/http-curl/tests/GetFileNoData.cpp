@@ -146,8 +146,7 @@ int main(int argc, char **argv) {
   configuration->set(minifi::Configure::nifi_flow_configuration_file,
                      test_file_location);
 
-  std::shared_ptr<minifi::io::StreamFactory> stream_factory = std::make_shared
-      <minifi::io::StreamFactory>(configuration);
+  std::shared_ptr<minifi::io::StreamFactory> stream_factory = minifi::io::StreamFactory::getInstance(configuration);
   std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
   std::unique_ptr<core::FlowConfiguration> yaml_ptr = std::unique_ptr
       <core::YamlConfiguration

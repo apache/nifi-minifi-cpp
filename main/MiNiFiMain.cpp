@@ -183,7 +183,7 @@ int main(int argc, char **argv) {
 
   configure->get(minifi::Configure::nifi_configuration_class_name, nifi_configuration_class_name);
 
-  std::shared_ptr<minifi::io::StreamFactory> stream_factory = std::make_shared<minifi::io::StreamFactory>(configure);
+  std::shared_ptr<minifi::io::StreamFactory> stream_factory = minifi::io::StreamFactory::getInstance(configure);
 
   std::unique_ptr<core::FlowConfiguration> flow_configuration = core::createFlowConfiguration(prov_repo, flow_repo, content_repo, configure, stream_factory, nifi_configuration_class_name);
 

@@ -71,8 +71,8 @@ class Instance {
         listener_thread_pool_(1),
         content_repo_(std::make_shared<minifi::core::repository::VolatileContentRepository>()),
         no_op_repo_(std::make_shared<minifi::core::Repository>()) {
-    stream_factory_ = std::make_shared<minifi::io::StreamFactory>(configure_);
     running_ = false;
+    stream_factory_ = minifi::io::StreamFactory::getInstance(configure_);
     uuid_t uuid;
     uuid_parse(port.c_str(), uuid);
     rpg_ = std::make_shared<minifi::RemoteProcessorGroupPort>(stream_factory_, url, url, configure_, uuid);

@@ -220,9 +220,9 @@ TEST_CASE("TestTLSContextCreation", "[TestSocket6]") {
 TEST_CASE("TestTLSContextCreation2", "[TestSocket7]") {
   std::shared_ptr<minifi::Configure> configure = std::make_shared<minifi::Configure>();
   configure->set("nifi.remote.input.secure", "false");
-  minifi::io::StreamFactory factory(configure);
+  auto factory = minifi::io::StreamFactory::getInstance(configure);
   std::string host = "localhost";
-  minifi::io::Socket *socket = factory.createSocket(host, 10001).release();
+  minifi::io::Socket *socket = factory->createSocket(host, 10001).release();
   minifi::io::TLSSocket *tls = dynamic_cast<minifi::io::TLSSocket*>(socket);
   REQUIRE(tls == nullptr);
 }
@@ -234,9 +234,9 @@ TEST_CASE("TestTLSContextCreation2", "[TestSocket7]") {
 TEST_CASE("TestTLSContextCreationNullptr", "[TestSocket7]") {
   std::shared_ptr<minifi::Configure> configure = std::make_shared<minifi::Configure>();
   configure->set("nifi.remote.input.secure", "false");
-  minifi::io::StreamFactory factory(configure);
+  auto factory = minifi::io::StreamFactory::getInstance(configure);
   std::string host = "localhost";
-  minifi::io::Socket *socket = factory.createSecureSocket(host, 10001, nullptr).release();
+  minifi::io::Socket *socket = factory->createSecureSocket(host, 10001, nullptr).release();
   minifi::io::TLSSocket *tls = dynamic_cast<minifi::io::TLSSocket*>(socket);
   REQUIRE(tls == nullptr);
 }

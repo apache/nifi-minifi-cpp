@@ -22,6 +22,7 @@
 #include "utils/StringUtils.h"
 #include "validation.h"
 #include "controllers/SSLContextService.h"
+#include "NetworkPrioritizer.h"
 namespace org {
 namespace apache {
 namespace nifi {
@@ -50,21 +51,49 @@ class StreamFactory {
    * Creates a socket and returns a unique ptr
    *
    */
-  std::unique_ptr<Socket> createSocket(const std::string &host, const uint16_t port) {
-    return delegate_->createSocket(host, port);
+  std::unique_ptr<Socket> createSocket(const std::string &host, const uint16_t port, uint32_t estimated_size = 0) {
+    auto socket = delegate_->createSocket(host, port);
+    auto prioritizer_ = NetworkPrioritizerFactory::getInstance()->getPrioritizer();
+    if (nullptr != prioritizer_) {
+      std::cout << "prioritizer" << std::endl;
+      auto &&ifc = prioritizer_->getInterface(estimated_size);
+      if (ifc.getInterface().empty()) {
+        return nullptr;
+      } else {
+        socket->setInterface(std::move(ifc));
+      }
+    }
+    return socket;
   }
 
   /**
    * Creates a socket and returns a unique ptr
    *
    */
-  std::unique_ptr<Socket> createSecureSocket(const std::string &host, const uint16_t port, const std::shared_ptr<minifi::controllers::SSLContextService> &ssl_service) {
-    return delegate_->createSecureSocket(host, port, ssl_service);
+  std::unique_ptr<Socket> createSecureSocket(const std::string &host, const uint16_t port, const std::shared_ptr<minifi::controllers::SSLContextService> &ssl_service, uint32_t estimated_size = 0) {
+    auto socket = delegate_->createSecureSocket(host, port, ssl_service);
+    auto prioritizer_ = NetworkPrioritizerFactory::getInstance()->getPrioritizer();
+    if (nullptr != prioritizer_) {
+      auto &&ifc = prioritizer_->getInterface(estimated_size);
+      if (ifc.getInterface().empty()) {
+        return nullptr;
+      } else {
+        socket->setInterface(std::move(ifc));
+      }
+    }
+    return socket;
   }
+
+  static std::shared_ptr<StreamFactory> getInstance(const std::shared_ptr<Configure> &configuration) {
+    // avoid invalid access
+    static std::shared_ptr<StreamFactory> factory = std::shared_ptr<StreamFactory>(new StreamFactory(configuration));
+    return factory;
+  }
+
+ protected:
 
   StreamFactory(const std::shared_ptr<Configure> &configure);
 
- protected:
   std::shared_ptr<AbstractStreamFactory> delegate_;
 };
 

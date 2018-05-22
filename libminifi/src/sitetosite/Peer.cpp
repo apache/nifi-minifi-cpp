@@ -41,8 +41,17 @@ bool SiteToSitePeer::Open() {
   if (IsNullOrEmpty(host_))
     return false;
 
-  if (!this->local_network_interface_.empty())
-      stream_->setInterface(local_network_interface_);
+  /**
+   * We may override the interface provided to us within the socket in this step; however, this is a
+   * known configuration path, and thus we will allow the RPG configuration to override anything provided to us
+   * previously by the socket preference.
+   */
+  if (!this->local_network_interface_.getInterface().empty()) {
+    auto socket = static_cast<io::Socket*>(stream_.get());
+    if (nullptr != socket) {
+      socket->setInterface(io::NetworkInterface(local_network_interface_.getInterface(), nullptr));
+    }
+  }
 
   if (stream_->initialize() < 0)
     return false;

@@ -18,9 +18,9 @@
 
 #include "./TestBase.h"
 
-TestPlan::TestPlan(std::shared_ptr<core::ContentRepository> content_repo, std::shared_ptr<core::Repository> flow_repo, std::shared_ptr<core::Repository> prov_repo, const std::shared_ptr<minifi::state::response::FlowVersion> &flow_version)
-    :
-      content_repo_(content_repo),
+TestPlan::TestPlan(std::shared_ptr<core::ContentRepository> content_repo, std::shared_ptr<core::Repository> flow_repo, std::shared_ptr<core::Repository> prov_repo,
+                   const std::shared_ptr<minifi::state::response::FlowVersion> &flow_version)
+    : content_repo_(content_repo),
       flow_repo_(flow_repo),
       prov_repo_(prov_repo),
       finalized(false),
@@ -28,11 +28,10 @@ TestPlan::TestPlan(std::shared_ptr<core::ContentRepository> content_repo, std::s
       current_flowfile_(nullptr),
       flow_version_(flow_version),
       logger_(logging::LoggerFactory<TestPlan>::getLogger()) {
-  stream_factory = std::make_shared<org::apache::nifi::minifi::io::StreamFactory>(std::make_shared<minifi::Configure>());
+  stream_factory = org::apache::nifi::minifi::io::StreamFactory::getInstance(std::make_shared<minifi::Configure>());
 }
 
-std::shared_ptr<core::Processor> TestPlan::addProcessor(const std::shared_ptr<core::Processor> &processor, const std::string &name, core::Relationship relationship,
-bool linkToPrevious) {
+std::shared_ptr<core::Processor> TestPlan::addProcessor(const std::shared_ptr<core::Processor> &processor, const std::string &name, core::Relationship relationship, bool linkToPrevious) {
   if (finalized) {
     return nullptr;
   }
@@ -92,8 +91,7 @@ bool linkToPrevious) {
   return processor;
 }
 
-std::shared_ptr<core::Processor> TestPlan::addProcessor(const std::string &processor_name, const std::string &name, core::Relationship relationship,
-bool linkToPrevious) {
+std::shared_ptr<core::Processor> TestPlan::addProcessor(const std::string &processor_name, const std::string &name, core::Relationship relationship, bool linkToPrevious) {
   if (finalized) {
     return nullptr;
   }
@@ -113,10 +111,7 @@ bool linkToPrevious) {
   return addProcessor(processor, name, relationship, linkToPrevious);
 }
 
-bool TestPlan::setProperty(const std::shared_ptr<core::Processor> proc,
-                           const std::string &prop,
-                           const std::string &value,
-                           bool dynamic) {
+bool TestPlan::setProperty(const std::shared_ptr<core::Processor> proc, const std::string &prop, const std::string &value, bool dynamic) {
   std::lock_guard<std::recursive_mutex> guard(mutex);
   int32_t i = 0;
   logger_->log_info("Attempting to set property %s %s for %s", prop, value, proc->getName());
@@ -148,7 +143,6 @@ void TestPlan::reset() {
     }
   }
 }
-
 
 bool TestPlan::runNextProcessor(std::function<void(const std::shared_ptr<core::ProcessContext>, const std::shared_ptr<core::ProcessSession>)> verify) {
   if (!finalized) {
