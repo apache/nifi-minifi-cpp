@@ -128,7 +128,7 @@ class SecureSocketTest : public IntegrationBase {
 
     std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
     content_repo->initialize(configuration);
-    std::shared_ptr<minifi::io::StreamFactory> stream_factory = std::make_shared<minifi::io::StreamFactory>(configuration);
+    std::shared_ptr<minifi::io::StreamFactory> stream_factory = minifi::io::StreamFactory::getInstance(configuration);
     std::unique_ptr<core::FlowConfiguration> yaml_ptr = std::unique_ptr<core::YamlConfiguration>(
         new core::YamlConfiguration(test_repo, test_repo, content_repo, stream_factory, configuration, test_file_location));
 

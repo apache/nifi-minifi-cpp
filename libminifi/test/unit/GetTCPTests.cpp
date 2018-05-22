@@ -46,7 +46,7 @@ TEST_CASE("GetTCPWithoutEOM", "[GetTCP1]") {
   content_repo->initialize(std::make_shared<minifi::Configure>());
 
   std::shared_ptr<org::apache::nifi::minifi::io::SocketContext> socket_context = std::make_shared<org::apache::nifi::minifi::io::SocketContext>(std::make_shared<minifi::Configure>());
-  std::shared_ptr<org::apache::nifi::minifi::io::StreamFactory> stream_factory = std::make_shared<org::apache::nifi::minifi::io::StreamFactory>(std::make_shared<minifi::Configure>());
+  std::shared_ptr<org::apache::nifi::minifi::io::StreamFactory> stream_factory = minifi::io::StreamFactory::getInstance(std::make_shared<minifi::Configure>());
   org::apache::nifi::minifi::io::ServerSocket server(socket_context, "localhost", 9184, 1);
 
   REQUIRE(-1 != server.initialize());
@@ -154,7 +154,7 @@ TEST_CASE("GetTCPWithOEM", "[GetTCP2]") {
   content_repo->initialize(std::make_shared<minifi::Configure>());
 
   std::shared_ptr<org::apache::nifi::minifi::io::SocketContext> socket_context = std::make_shared<org::apache::nifi::minifi::io::SocketContext>(std::make_shared<minifi::Configure>());
-  std::shared_ptr<org::apache::nifi::minifi::io::StreamFactory> stream_factory = std::make_shared<org::apache::nifi::minifi::io::StreamFactory>(std::make_shared<minifi::Configure>());
+  std::shared_ptr<org::apache::nifi::minifi::io::StreamFactory> stream_factory = minifi::io::StreamFactory::getInstance(std::make_shared<minifi::Configure>());
 
   TestController testController;
 
@@ -278,7 +278,7 @@ TEST_CASE("GetTCPWithOnlyOEM", "[GetTCP3]") {
   content_repo->initialize(std::make_shared<minifi::Configure>());
 
   std::shared_ptr<org::apache::nifi::minifi::io::SocketContext> socket_context = std::make_shared<org::apache::nifi::minifi::io::SocketContext>(std::make_shared<minifi::Configure>());
-  std::shared_ptr<org::apache::nifi::minifi::io::StreamFactory> stream_factory = std::make_shared<org::apache::nifi::minifi::io::StreamFactory>(std::make_shared<minifi::Configure>());
+  std::shared_ptr<org::apache::nifi::minifi::io::StreamFactory> stream_factory = minifi::io::StreamFactory::getInstance(std::make_shared<minifi::Configure>());
 
   TestController testController;
 

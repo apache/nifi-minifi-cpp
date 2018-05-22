@@ -69,9 +69,6 @@ class DataStream {
 
   }
 
-  virtual void setInterface(std::string &interface) {
-  }
-
   /**
    * Reads data and places it into buf
    * @param buf buffer in which we extract data

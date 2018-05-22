@@ -354,13 +354,14 @@ void RemoteProcessorGroupPort::refreshPeerList() {
   this->peers_.clear();
 
   std::unique_ptr<sitetosite::SiteToSiteClient> protocol;
-  sitetosite::SiteToSiteClientConfiguration config(stream_factory_, std::make_shared<sitetosite::Peer>(protocol_uuid_, host_,
-    site2site_port_, ssl_service != nullptr), this->getInterface(), client_type_);
+  sitetosite::SiteToSiteClientConfiguration config(stream_factory_, std::make_shared<sitetosite::Peer>(protocol_uuid_, host_, site2site_port_, ssl_service != nullptr), this->getInterface(),
+                                                   client_type_);
   config.setSecurityContext(ssl_service);
   config.setHTTPProxy(this->proxy_);
   protocol = sitetosite::createClient(config);
 
-  protocol->getPeerList(peers_);
+  if (protocol)
+    protocol->getPeerList(peers_);
 
   logging::LOG_INFO(logger_) << "Have " << peers_.size() << " peers";
 

@@ -143,7 +143,6 @@ class SiteToSitePeer : public org::apache::nifi::minifi::io::BaseStream {
       : stream_(nullptr),
         host_(""),
         port_(-1),
-        local_network_interface_(""),
         logger_(logging::LoggerFactory<SiteToSitePeer>::getLogger()) {
 
   }
@@ -159,13 +158,13 @@ class SiteToSitePeer : public org::apache::nifi::minifi::io::BaseStream {
       : stream_(nullptr),
         host_(host),
         port_(port),
-        local_network_interface_(interface),
         timeout_(30000),
         yield_expiration_(0),
         logger_(logging::LoggerFactory<SiteToSitePeer>::getLogger()) {
     url_ = "nifi://" + host_ + ":" + std::to_string(port_);
     yield_expiration_ = 0;
     timeout_ = 30000;  // 30 seconds
+    local_network_interface_= std::move(io::NetworkInterface(interface, nullptr));
   }
 
   explicit SiteToSitePeer(SiteToSitePeer &&ss)
@@ -193,10 +192,10 @@ class SiteToSitePeer : public org::apache::nifi::minifi::io::BaseStream {
   }
   // setInterface
   void setInterface(std::string &interface) {
-    local_network_interface_ = interface;
+    local_network_interface_ = std::move(io::NetworkInterface(interface,nullptr));
   }
   std::string getInterface() {
-    return local_network_interface_;
+    return local_network_interface_.getInterface();
   }
   // Get Processor yield period in MilliSecond
   uint64_t getYieldPeriodMsec(void) {
@@ -288,7 +287,7 @@ class SiteToSitePeer : public org::apache::nifi::minifi::io::BaseStream {
   void setStream(std::unique_ptr<org::apache::nifi::minifi::io::DataStream> stream) {
     stream_ = nullptr;
     if (stream)
-    stream_ = std::move(stream);
+      stream_ = std::move(stream);
   }
 
   org::apache::nifi::minifi::io::DataStream *getStream() {
@@ -374,7 +373,7 @@ class SiteToSitePeer : public org::apache::nifi::minifi::io::BaseStream {
 
   uint16_t port_;
 
-  std::string local_network_interface_;
+  io::NetworkInterface local_network_interface_;
 
   utils::HTTPProxy proxy_;
 

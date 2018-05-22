@@ -119,7 +119,7 @@ int main(int argc, char **argv) {
     secure_context->setDisablePeerVerification();
   }
 
-  auto stream_factory_ = std::make_shared<minifi::io::StreamFactory>(configuration);
+  auto stream_factory_ = minifi::io::StreamFactory::getInstance(configuration);
 
   std::string host = "localhost", portStr, caCert;
   int port = -1;

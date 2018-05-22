@@ -172,7 +172,7 @@ TEST_CASE("TestGet", "[test1]") {
   minifi::c2::ControllerSocketProtocol protocol("testprotocol");
   protocol.initialize(nullptr, ptr, configuration);
 
-  auto stream_factory = std::make_shared<minifi::io::StreamFactory>(configuration);
+  auto stream_factory = minifi::io::StreamFactory::getInstance(configuration);
 
   auto socket = stream_factory->createSocket("localhost", 9997);
 
@@ -205,7 +205,7 @@ TEST_CASE("TestClear", "[test1]") {
   minifi::c2::ControllerSocketProtocol protocol("testprotocol");
   protocol.initialize(nullptr, ptr, configuration);
 
-  auto stream_factory = std::make_shared<minifi::io::StreamFactory>(configuration);
+  auto stream_factory = minifi::io::StreamFactory::getInstance(configuration);
 
   auto socket = stream_factory->createSocket("localhost", 9997);
 
@@ -241,7 +241,7 @@ TEST_CASE("TestUpdate", "[test1]") {
   minifi::c2::ControllerSocketProtocol protocol("testprotocol");
   protocol.initialize(nullptr, ptr, configuration);
 
-  auto stream_factory = std::make_shared<minifi::io::StreamFactory>(configuration);
+  auto stream_factory = minifi::io::StreamFactory::getInstance(configuration);
 
   auto socket = stream_factory->createSocket("localhost", 9997);
 
