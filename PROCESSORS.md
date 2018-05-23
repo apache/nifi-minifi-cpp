@@ -91,7 +91,7 @@ default values, and whether a property supports the NiFi Expression Language.
 
 | Name | Default Value | Allowable Values | Description |
 | - | - | - | - |
-| **Template** | | | Path to the input mustache template file |
+| **Template** | | | Path to the input mustache template file<br>**Supports Expression Language: true** |
 
 ### Relationships
 
