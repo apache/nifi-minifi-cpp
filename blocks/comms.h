@@ -23,7 +23,7 @@
 #include "capi/processors.h"
 
 #define SUCCESS 0x00
-#define FINISHE_EARLY 0x01
+#define FINISHED_EARLY 0x01
 #define FAIL 0x02
 
 typedef int transmission_stop(void *);
@@ -35,7 +35,7 @@ uint8_t transmit_to_nifi(nifi_instance *instance, flow *flow, transmission_stop 
     record = get_next_flow_file(instance, flow);
 
     if (record == 0) {
-      return FINISHE_EARLY;
+      return FINISHED_EARLY;
     }
     transmit_flowfile(record, instance);
 

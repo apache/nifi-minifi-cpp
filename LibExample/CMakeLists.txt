@@ -38,7 +38,6 @@ endif()
 
 add_executable(transmit_flow transmit_flow.c)
 
-# Link against minifi, yaml-cpp, civetweb-cpp, uuid, openssl and rocksdb
 target_link_libraries(transmit_flow capi core-minifi minifi)
 
 if (APPLE)
@@ -50,7 +49,6 @@ endif ()
 
 add_executable(generate_flow generate_flow.c)
 
-# Link against minifi, yaml-cpp, civetweb-cpp, uuid, openssl and rocksdb
 target_link_libraries(generate_flow capi core-minifi minifi)
 
 if (APPLE)
@@ -62,7 +60,6 @@ endif ()
 
 add_executable(monitor_directory monitor_directory.c)
 
-# Link against minifi, yaml-cpp, civetweb-cpp, uuid, openssl and rocksdb
 target_link_libraries(monitor_directory capi core-minifi minifi)
 
 if (APPLE)

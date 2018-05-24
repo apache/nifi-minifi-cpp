@@ -42,7 +42,7 @@ void enable_logging();
  * NiFi Port struct
  */
 typedef struct {
-  char *pord_id;
+  char *port_id;
 } nifi_port;
 
 /**
