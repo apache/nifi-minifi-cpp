@@ -72,7 +72,7 @@ int main(int argc, char **argv) {
 
   nifi_port port;
 
-  port.pord_id = portStr;
+  port.port_id = portStr;
 
   C2_Server server;
   server.url = argv[4];
