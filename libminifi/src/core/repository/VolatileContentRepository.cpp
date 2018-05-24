@@ -83,16 +83,16 @@ void VolatileContentRepository::start() {
   thread_ = std::thread(&VolatileContentRepository::run, shared_from_parent<VolatileContentRepository>());
   thread_.detach();
   running_ = true;
-  logger_->log_debug("%s Repository Monitor Thread Start", getName());
+  logger_->log_info("%s Repository Monitor Thread Start", getName());
 }
 
 std::shared_ptr<io::BaseStream> VolatileContentRepository::write(const std::shared_ptr<minifi::ResourceClaim> &claim) {
-  logger_->log_debug("enter write for %s", claim->getContentFullPath());
+  logger_->log_info("enter write for %s", claim->getContentFullPath());
   {
     std::lock_guard<std::mutex> lock(map_mutex_);
     auto claim_check = master_list_.find(claim->getContentFullPath());
     if (claim_check != master_list_.end()) {
-      logger_->log_debug("Creating copy of atomic entry");
+      logger_->log_info("Creating copy of atomic entry");
       auto ent = claim_check->second->takeOwnership();
       if (ent == nullptr) {
         return nullptr;
@@ -107,7 +107,7 @@ std::shared_ptr<io::BaseStream> VolatileContentRepository::write(const std::shar
       if (ent->testAndSetKey(claim, nullptr, nullptr, resource_claim_comparator_)) {
         std::lock_guard<std::mutex> lock(map_mutex_);
         master_list_[claim->getContentFullPath()] = ent;
-        logger_->log_debug("Minimize locking, return stream for %s", claim->getContentFullPath());
+        logger_->log_info("Minimize locking, return stream for %s", claim->getContentFullPath());
         return std::make_shared<io::AtomicEntryStream<std::shared_ptr<minifi::ResourceClaim>>>(claim, ent);
       }
       size++;
@@ -125,7 +125,7 @@ std::shared_ptr<io::BaseStream> VolatileContentRepository::write(const std::shar
       }
     }
   }
-  logger_->log_debug("Cannot write %s %d, returning nullptr to roll back session. Repo is either full or locked", claim->getContentFullPath(), size);
+  logger_->log_info("Cannot write %s %d, returning nullptr to roll back session. Repo is either full or locked", claim->getContentFullPath(), size);
   return nullptr;
 }
 
@@ -166,14 +166,16 @@ bool VolatileContentRepository::remove(const std::shared_ptr<minifi::ResourceCla
       // if we cannot remove the entry we will let the owner's destructor
       // decrement the reference count and free it
       master_list_.erase(claim->getContentFullPath());
+      // because of the test and set we need to decrement ownership
+      ptr->decrementOwnership();
       if (ptr->freeValue(claim)) {
-        logger_->log_debug("Removed %s", claim->getContentFullPath());
+        logger_->log_info("Removed %s", claim->getContentFullPath());
         return true;
       } else {
-        logger_->log_debug("free failed for %s", claim->getContentFullPath());
+        logger_->log_info("free failed for %s", claim->getContentFullPath());
       }
     } else {
-      logger_->log_debug("Could not remove %s", claim->getContentFullPath());
+      logger_->log_info("Could not remove %s", claim->getContentFullPath());
     }
   } else {
     std::lock_guard<std::mutex> lock(map_mutex_);
@@ -187,7 +189,7 @@ bool VolatileContentRepository::remove(const std::shared_ptr<minifi::ResourceCla
     return true;
   }
 
-  logger_->log_debug("Could not remove %s, may not exist", claim->getContentFullPath());
+  logger_->log_info("Could not remove %s, may not exist", claim->getContentFullPath());
   return false;
 }
 

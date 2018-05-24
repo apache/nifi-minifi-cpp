@@ -59,7 +59,9 @@ LoggerConfiguration::LoggerConfiguration()
     : root_namespace_(create_default_root()),
       loggers(std::vector<std::shared_ptr<LoggerImpl>>()),
       formatter_(std::make_shared<spdlog::pattern_formatter>(spdlog_default_pattern)) {
-  logger_ = std::shared_ptr<LoggerImpl>(new LoggerImpl(core::getClassName<LoggerConfiguration>(), get_logger(nullptr, root_namespace_, core::getClassName<LoggerConfiguration>(), formatter_)));
+  controller_ = std::make_shared<LoggerControl>();
+  logger_ = std::shared_ptr<LoggerImpl>(
+      new LoggerImpl(core::getClassName<LoggerConfiguration>(), controller_, get_logger(nullptr, root_namespace_, core::getClassName<LoggerConfiguration>(), formatter_)));
   loggers.push_back(logger_);
 }
 
@@ -88,7 +90,7 @@ void LoggerConfiguration::initialize(const std::shared_ptr<LoggerProperties> &lo
 
 std::shared_ptr<Logger> LoggerConfiguration::getLogger(const std::string &name) {
   std::lock_guard<std::mutex> lock(mutex);
-  std::shared_ptr<LoggerImpl> result = std::make_shared<LoggerImpl>(name, get_logger(logger_, root_namespace_, name, formatter_));
+  std::shared_ptr<LoggerImpl> result = std::make_shared<LoggerImpl>(name, controller_, get_logger(logger_, root_namespace_, name, formatter_));
   loggers.push_back(result);
   return result;
 }

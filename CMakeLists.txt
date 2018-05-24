@@ -292,6 +292,7 @@ if (NOT DISABLE_CURL)
 endif()
 
 
+
 get_property(selected_extensions GLOBAL PROPERTY EXTENSION-OPTIONS)
 
 if (NOT BUILD_IDENTIFIER)

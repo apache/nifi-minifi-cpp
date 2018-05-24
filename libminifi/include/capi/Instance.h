@@ -29,6 +29,7 @@
 #include "core/repository/VolatileContentRepository.h"
 #include "core/Repository.h"
 
+#include "C2CallbackAgent.h"
 #include "core/Connectable.h"
 #include "core/ProcessorNode.h"
 #include "core/ProcessContext.h"
@@ -37,6 +38,8 @@
 #include "core/controller/ControllerServiceProvider.h"
 #include "core/FlowConfiguration.h"
 #include "ReflexiveSession.h"
+#include "utils/ThreadPool.h"
+#include "core/state/UpdateController.h"
 namespace org {
 namespace apache {
 namespace nifi {
@@ -63,10 +66,13 @@ class Instance {
   explicit Instance(const std::string &url, const std::string &port)
       : configure_(std::make_shared<Configure>()),
         url_(url),
+        agent_(nullptr),
         rpgInitialized_(false),
-        content_repo_(std::make_shared<minifi::core::repository::FileSystemRepository>()),
+        listener_thread_pool_(1),
+        content_repo_(std::make_shared<minifi::core::repository::VolatileContentRepository>()),
         no_op_repo_(std::make_shared<minifi::core::Repository>()) {
     stream_factory_ = std::make_shared<minifi::io::StreamFactory>(configure_);
+    running_ = false;
     uuid_t uuid;
     uuid_parse(port.c_str(), uuid);
     rpg_ = std::make_shared<minifi::RemoteProcessorGroupPort>(stream_factory_, url, url, configure_, uuid);
@@ -75,8 +81,26 @@ class Instance {
     content_repo_->initialize(configure_);
   }
 
+  ~Instance() {
+    running_ = false;
+    listener_thread_pool_.shutdown();
+  }
+
   bool isRPGConfigured() {
     return rpgInitialized_;
+  }
+
+  void enableAsyncC2(C2_Server *server,c2_stop_callback *c1, c2_start_callback *c2, c2_update_callback *c3) {
+    std::shared_ptr<core::controller::ControllerServiceProvider> controller_service_provider = nullptr;
+    running_ = true;
+    if (server->type != C2_Server_Type::MQTT){
+      configure_->set("c2.rest.url",server->url);
+      configure_->set("c2.rest.url.ack",server->ack_url);
+    }
+    agent_ = std::make_shared<c2::C2CallbackAgent>(controller_service_provider, nullptr, configure_);
+    listener_thread_pool_.start();
+    registerUpdateListener(agent_, 1000);
+    agent_->setStopCallback(c1);
   }
 
   void setRemotePort(std::string remote_port) {
@@ -114,6 +138,26 @@ class Instance {
 
  protected:
 
+  bool registerUpdateListener(const std::shared_ptr<state::UpdateController> &updateController, const int64_t &delay) {
+    auto functions = updateController->getFunctions();
+    // run all functions independently
+
+    for (auto function : functions) {
+      std::unique_ptr<utils::AfterExecute<state::Update>> after_execute = std::unique_ptr<utils::AfterExecute<state::Update>>(new state::UpdateRunner(running_, delay));
+      utils::Worker<state::Update> functor(function, "listeners", std::move(after_execute));
+      std::future<state::Update> future;
+      if (!listener_thread_pool_.execute(std::move(functor), future)) {
+        // denote failure
+        return false;
+      }
+    }
+    return true;
+  }
+
+  std::shared_ptr<c2::C2CallbackAgent> agent_;
+
+  std::atomic<bool> running_;
+
   bool rpgInitialized_;
 
   std::shared_ptr<minifi::core::Repository> no_op_repo_;
@@ -125,6 +169,8 @@ class Instance {
   std::shared_ptr<io::StreamFactory> stream_factory_;
   std::string url_;
   std::shared_ptr<Configure> configure_;
+
+  utils::ThreadPool<state::Update> listener_thread_pool_;
 };
 
 } /* namespace minifi */

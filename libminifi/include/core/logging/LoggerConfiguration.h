@@ -91,6 +91,13 @@ class LoggerConfiguration {
     return logger_configuration;
   }
 
+  void disableLogging(){
+    controller_->setEnabled(false);
+  }
+
+  void enableLogging(){
+      controller_->setEnabled(true);
+    }
   /**
    * (Re)initializes the logging configuation with the given logger properties.
    */
@@ -110,8 +117,8 @@ class LoggerConfiguration {
 
   class LoggerImpl : public Logger {
    public:
-    LoggerImpl(std::string name, std::shared_ptr<spdlog::logger> delegate)
-        : Logger(delegate),
+    LoggerImpl(std::string name, std::shared_ptr<LoggerControl> controller, std::shared_ptr<spdlog::logger> delegate)
+        : Logger(delegate,controller),
           name(name) {
     }
     void set_delegate(std::shared_ptr<spdlog::logger> delegate) {
@@ -119,6 +126,7 @@ class LoggerConfiguration {
       delegate_ = delegate;
     }
     const std::string name;
+
   };
 
   LoggerConfiguration();
@@ -127,6 +135,7 @@ class LoggerConfiguration {
   std::shared_ptr<spdlog::formatter> formatter_;
   std::mutex mutex;
   std::shared_ptr<LoggerImpl> logger_ = nullptr;
+  std::shared_ptr<LoggerControl> controller_;
 };
 
 template<typename T>

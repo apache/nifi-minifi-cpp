@@ -107,7 +107,6 @@ class ProvenanceRepository : public core::Repository, public std::enable_shared_
   }
   // Put
   virtual bool Put(std::string key, const uint8_t *buf, size_t bufLen) {
-
     if (repo_full_) {
       return false;
     }

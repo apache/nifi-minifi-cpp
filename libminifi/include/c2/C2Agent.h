@@ -137,7 +137,7 @@ class C2Agent : public state::UpdateController, public state::response::Response
    * Handles a C2 event requested by the server.
    * @param resp c2 server response.
    */
-  void handle_c2_server_response(const C2ContentResponse &resp);
+  virtual void handle_c2_server_response(const C2ContentResponse &resp);
 
   /**
    * Handles an update request
