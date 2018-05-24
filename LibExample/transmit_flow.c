@@ -80,7 +80,7 @@ int main(int argc, char **argv) {
 
   nifi_port port;
 
-  port.pord_id = portStr;
+  port.port_id = portStr;
 
   nifi_instance *instance = create_instance(instance_str, &port);
 
