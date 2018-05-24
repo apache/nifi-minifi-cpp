@@ -34,7 +34,6 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-// PutFile Class
 class PutFile : public core::Processor {
  public:
 
@@ -44,7 +43,6 @@ class PutFile : public core::Processor {
 
   static constexpr char const *ProcessorName = "PutFile";
 
-  // Constructor
   /*!
    * Create a new processor
    */
@@ -52,9 +50,8 @@ class PutFile : public core::Processor {
       : core::Processor(name, uuid),
         logger_(logging::LoggerFactory<PutFile>::getLogger()) {
   }
-  // Destructor
-  virtual ~PutFile() {
-  }
+
+  virtual ~PutFile() = default;
 
   // Supported Properties
   static core::Property Directory;
@@ -73,9 +70,7 @@ class PutFile : public core::Processor {
    */
   virtual void onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory);
 
-  // OnTrigger method, implemented by NiFi PutFile
   virtual void onTrigger(core::ProcessContext *context, core::ProcessSession *session);
-  // Initialize, over write by NiFi PutFile
   virtual void initialize(void);
 
   class ReadCallback : public InputStreamCallback {

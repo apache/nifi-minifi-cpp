@@ -38,7 +38,6 @@ namespace nifi {
 namespace minifi {
 namespace core {
 
-// Time Unit
 enum TimeUnit {
   DAY,
   HOUR,
@@ -48,11 +47,9 @@ enum TimeUnit {
   NANOSECOND
 };
 
-// Property Class
 class Property {
 
  public:
-  // Constructor
   /*!
    * Create a new property
    */
@@ -60,11 +57,13 @@ class Property {
            const std::string description,
            const std::string value,
            bool is_required,
-           std::vector<std::string> &&dependent_properties)
+           std::vector<std::string> &&dependent_properties,
+           std::vector<std::pair<std::string, std::string>> &&exclusive_of_properties)
       : name_(name),
         description_(description),
         is_required_(is_required),
         dependent_properties_(std::move(dependent_properties)),
+        exclusive_of_properties_(std::move(exclusive_of_properties)),
         is_collection_(false) {
     values_.push_back(std::string(value.c_str()));
   }
@@ -92,18 +91,16 @@ class Property {
 
   }
 
-  // Destructor
-  virtual ~Property() {
-  }
+  virtual ~Property() = default;
 
   std::string getName() const;
   std::string getDescription() const;
   std::string getValue() const;
   bool getRequired() const;
   std::vector<std::string> getDependentProperties() const;
+  std::vector<std::pair<std::string, std::string>> getExclusiveOfProperties() const;
   std::vector<std::string> &getValues();
 
-  // Set value for the property
   void setValue(std::string value);
   /**
    * Add value to the collection of values.
@@ -379,6 +376,7 @@ class Property {
   std::string description_;
   bool is_required_;
   std::vector<std::string> dependent_properties_;
+  std::vector<std::pair<std::string, std::string>> exclusive_of_properties_;
   bool is_collection_;
   std::vector<std::string> values_;
 

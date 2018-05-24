@@ -190,7 +190,7 @@ bool ConfigurableComponent::createDynamicProperty(const std::string &name, const
     return false;
   }
 
-  Property new_property(name, DEFAULT_DYNAMIC_PROPERTY_DESC, value, false, {});
+  Property new_property(name, DEFAULT_DYNAMIC_PROPERTY_DESC, value, false, {}, {});
   logger_->log_info("Processor %s dynamic property '%s' value '%s'", name.c_str(), new_property.getName().c_str(), value.c_str());
   dynamic_properties_[new_property.getName()] = new_property;
   onDynamicPropertyModified({}, new_property);
