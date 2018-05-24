@@ -376,3 +376,84 @@ Processors:
   REQUIRE(LogTestController::getInstance().contains("[warning] Unable to set the dynamic property "
                                                         "Dynamic Property with value Bad"));
 }
+
+
+TEST_CASE("Test Required Property", "[YamlConfigurationRequiredProperty]") {
+  TestController test_controller;
+
+  LogTestController &logTestController = LogTestController::getInstance();
+  logTestController.setDebug<TestPlan>();
+  logTestController.setDebug<core::YamlConfiguration>();
+
+  std::shared_ptr<core::Repository> testProvRepo = core::createRepository("provenancerepository", true);
+  std::shared_ptr<core::Repository> testFlowFileRepo = core::createRepository("flowfilerepository", true);
+  std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::Configure>();
+  std::shared_ptr<minifi::io::StreamFactory> streamFactory = std::make_shared<minifi::io::StreamFactory>(configuration);
+  std::shared_ptr<core::ContentRepository>
+      content_repo = std::make_shared<core::repository::VolatileContentRepository>();
+  core::YamlConfiguration *yamlConfig =
+      new core::YamlConfiguration(testProvRepo, testFlowFileRepo, content_repo, streamFactory, configuration);
+
+  static const std::string TEST_CONFIG_YAML = R"(
+Flow Controller:
+  name: Simple
+Processors:
+- name: XYZ
+  class: GetFile
+  Properties:
+    Input Directory: ""
+    Batch Size: 1
+      )";
+  std::istringstream configYamlStream(TEST_CONFIG_YAML);
+  bool caught_exception = false;
+
+  try {
+    std::unique_ptr<core::ProcessGroup> rootFlowConfig = yamlConfig->getYamlRoot(configYamlStream);
+
+    REQUIRE(rootFlowConfig);
+    REQUIRE(rootFlowConfig->findProcessor("GetFile"));
+    REQUIRE(NULL != rootFlowConfig->findProcessor("GetFile")->getUUID());
+    REQUIRE(!rootFlowConfig->findProcessor("GetFile")->getUUIDStr().empty());
+  } catch (const std::exception &e) {
+    caught_exception = true;
+    REQUIRE("Unable to parse configuration file for component named 'XYZ' because required property "
+            "'Input Directory' is not set [in 'Processors' section of configuration file]" == std::string(e.what()));
+  }
+
+  REQUIRE(caught_exception);
+}
+
+TEST_CASE("Test Required Property 2", "[YamlConfigurationRequiredProperty2]") {
+  TestController test_controller;
+
+  LogTestController &logTestController = LogTestController::getInstance();
+  logTestController.setDebug<TestPlan>();
+  logTestController.setDebug<core::YamlConfiguration>();
+
+  std::shared_ptr<core::Repository> testProvRepo = core::createRepository("provenancerepository", true);
+  std::shared_ptr<core::Repository> testFlowFileRepo = core::createRepository("flowfilerepository", true);
+  std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::Configure>();
+  std::shared_ptr<minifi::io::StreamFactory> streamFactory = std::make_shared<minifi::io::StreamFactory>(configuration);
+  std::shared_ptr<core::ContentRepository>
+      content_repo = std::make_shared<core::repository::VolatileContentRepository>();
+  core::YamlConfiguration *yamlConfig =
+      new core::YamlConfiguration(testProvRepo, testFlowFileRepo, content_repo, streamFactory, configuration);
+
+  static const std::string TEST_CONFIG_YAML = R"(
+Flow Controller:
+  name: Simple
+Processors:
+- name: XYZ
+  class: GetFile
+  Properties:
+    Input Directory: "/"
+    Batch Size: 1
+      )";
+  std::istringstream configYamlStream(TEST_CONFIG_YAML);
+  std::unique_ptr<core::ProcessGroup> rootFlowConfig = yamlConfig->getYamlRoot(configYamlStream);
+
+  REQUIRE(rootFlowConfig);
+  REQUIRE(rootFlowConfig->findProcessor("XYZ"));
+  REQUIRE(NULL != rootFlowConfig->findProcessor("XYZ")->getUUID());
+  REQUIRE(!rootFlowConfig->findProcessor("XYZ")->getUUIDStr().empty());
+}
