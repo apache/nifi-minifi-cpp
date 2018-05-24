@@ -17,23 +17,20 @@
  */
 
 #include "core/Property.h"
-#include <string>
-#include <vector>
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
 namespace core {
 
-// Get Name for the property
 std::string Property::getName() const {
   return name_;
 }
-// Get Description for the property
+
 std::string Property::getDescription() const {
   return description_;
 }
-// Get value for the property
+
 std::string Property::getValue() const {
   if (!values_.empty())
     return values_.front();
@@ -48,7 +45,7 @@ bool Property::getRequired() const {
 std::vector<std::string> &Property::getValues() {
   return values_;
 }
-// Set value for the property
+
 void Property::setValue(std::string value) {
   if (!is_collection_) {
     values_.clear();
@@ -61,8 +58,8 @@ void Property::setValue(std::string value) {
 void Property::addValue(const std::string &value) {
   values_.push_back(std::string(value.c_str()));
 }
-// Compare
-bool Property::operator <(const Property & right) const {
+
+bool Property::operator<(const Property &right) const {
   return name_ < right.name_;
 }
 
@@ -73,11 +70,16 @@ const Property &Property::operator=(const Property &other) {
   is_collection_ = other.is_collection_;
   is_required_ = other.is_required_;
   dependent_properties_ = other.dependent_properties_;
+  exclusive_of_properties_ = other.exclusive_of_properties_;
   return *this;
 }
 
 std::vector<std::string> Property::getDependentProperties() const {
   return dependent_properties_;
+}
+
+std::vector<std::pair<std::string, std::string>> Property::getExclusiveOfProperties() const {
+  return exclusive_of_properties_;
 }
 
 } /* namespace core */
