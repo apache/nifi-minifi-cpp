@@ -65,8 +65,8 @@ nifi_instance *create_instance(char *url, nifi_port *port) {
 
   nifi_instance *instance = new nifi_instance;
 
-  instance->instance_ptr = new minifi::Instance(url, port->pord_id);
-  instance->port.pord_id = port->pord_id;
+  instance->instance_ptr = new minifi::Instance(url, port->port_id);
+  instance->port.port_id = port->port_id;
 
   return instance;
 }
@@ -76,7 +76,7 @@ nifi_instance *create_instance(char *url, nifi_port *port) {
  */
 void initialize_instance(nifi_instance *instance) {
   auto minifi_instance_ref = static_cast<minifi::Instance*>(instance->instance_ptr);
-  minifi_instance_ref->setRemotePort(instance->port.pord_id);
+  minifi_instance_ref->setRemotePort(instance->port.port_id);
 }
 /*
  typedef int c2_update_callback(char *);
@@ -220,7 +220,7 @@ void transmit_flowfile(flow_file_record *ff, nifi_instance *instance) {
   auto minifi_instance_ref = static_cast<minifi::Instance*>(instance->instance_ptr);
   // in the unlikely event the user forgot to initialize the instance, we shall do it for them.
   if (UNLIKELY(minifi_instance_ref->isRPGConfigured() == false)) {
-    minifi_instance_ref->setRemotePort(instance->port.pord_id);
+    minifi_instance_ref->setRemotePort(instance->port.port_id);
   }
 
   auto attribute_map = static_cast<std::map<std::string, std::string>*>(ff->attributes);
@@ -237,7 +237,7 @@ void transmit_flowfile(flow_file_record *ff, nifi_instance *instance) {
   ffr->addAttribute("nanofi.version", API_VERSION);
   ffr->setSize(ff->size);
 
-  std::string port_uuid = instance->port.pord_id;
+  std::string port_uuid = instance->port.port_id;
 
   minifi_instance_ref->transfer(ffr);
 }
