@@ -56,10 +56,15 @@ class Property {
   /*!
    * Create a new property
    */
-  Property(const std::string name, const std::string description, const std::string value, bool is_required)
+  Property(const std::string name,
+           const std::string description,
+           const std::string value,
+           bool is_required,
+           std::vector<std::string> &&dependent_properties)
       : name_(name),
         description_(description),
         is_required_(is_required),
+        dependent_properties_(std::move(dependent_properties)),
         is_collection_(false) {
     values_.push_back(std::string(value.c_str()));
   }
@@ -95,6 +100,7 @@ class Property {
   std::string getDescription() const;
   std::string getValue() const;
   bool getRequired() const;
+  std::vector<std::string> getDependentProperties() const;
   std::vector<std::string> &getValues();
 
   // Set value for the property
@@ -372,6 +378,7 @@ class Property {
   std::string name_;
   std::string description_;
   bool is_required_;
+  std::vector<std::string> dependent_properties_;
   bool is_collection_;
   std::vector<std::string> values_;
 
