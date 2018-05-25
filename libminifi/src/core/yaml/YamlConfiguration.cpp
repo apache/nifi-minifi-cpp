@@ -873,7 +873,7 @@ YAML::Node YamlConfiguration::getOptionalField(YAML::Node *yamlNode,
 
       infoMessage += defaultValue.as<std::string>();
     }
-    logging::LOG_ERROR(logger_) << infoMessage;
+    logging::LOG_INFO(logger_) << infoMessage;
     result = defaultValue;
   }
 
