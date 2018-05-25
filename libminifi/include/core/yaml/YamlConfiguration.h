@@ -111,6 +111,18 @@ class YamlConfiguration : public FlowConfiguration {
     return getYamlRoot(&rootYamlNode);
   }
 
+  /**
+   * Iterates all component property validation rules and checks that configured state
+   * is valid. If state is determined to be invalid, conf parsing ends and an error is raised.
+   *
+   * @param component
+   * @param component_name
+   * @param yaml_section
+   */
+  void validateComponentProperties(const std::shared_ptr<ConfigurableComponent> &component,
+                                   const std::string &component_name,
+                                   const std::string &yaml_section) const;
+
  protected:
 
   /**
@@ -312,6 +324,17 @@ class YamlConfiguration : public FlowConfiguration {
  private:
   std::shared_ptr<logging::Logger> logger_;
   static std::shared_ptr<utils::IdGenerator> id_generator_;
+
+  /**
+   * Raises a human-readable configuration error for the given configuration component/section.
+   *
+   * @param component_name
+   * @param yaml_section
+   * @param reason
+   */
+  void raiseComponentError(const std::string &component_name,
+                           const std::string &yaml_section,
+                           const std::string &reason) const;
 };
 
 } /* namespace core */
