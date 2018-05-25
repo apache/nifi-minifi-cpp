@@ -249,7 +249,7 @@ class ComponentManifest : public DeviceInformation {
     std::vector<SerializedResponseNode> serialized;
     struct Components group = BuildDescription::getClassDescriptions();
     serializeClassDescription(group.processors_, "processors", serialized);
-    serializeClassDescription(group.controller_services_, "controllserServices", serialized);
+    serializeClassDescription(group.controller_services_, "controllerServices", serialized);
     return serialized;
   }
  protected:
