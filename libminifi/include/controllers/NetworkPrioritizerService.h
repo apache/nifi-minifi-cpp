@@ -20,6 +20,7 @@
 
 #include <iostream>
 #include <memory>
+#include <limits>
 #include "core/Resource.h"
 #include "utils/StringUtils.h"
 #include "io/validation.h"
@@ -43,8 +44,8 @@ class NetworkPrioritizerService : public core::controller::ControllerService, pu
   explicit NetworkPrioritizerService(const std::string &name, const std::string &id)
       : ControllerService(name, id),
         enabled_(false),
-        max_throughput_(LONG_LONG_MAX),
-        max_payload_(LONG_LONG_MAX),
+        max_throughput_(std::numeric_limits<uint64_t>::max()),
+        max_payload_(std::numeric_limits<uint64_t>::max()),
         tokens_per_ms(2),
         tokens_(1000),
         timestamp_(0),
@@ -56,8 +57,8 @@ class NetworkPrioritizerService : public core::controller::ControllerService, pu
   explicit NetworkPrioritizerService(const std::string &name, uuid_t uuid = 0)
       : ControllerService(name, uuid),
         enabled_(false),
-        max_throughput_(LONG_LONG_MAX),
-        max_payload_(LONG_LONG_MAX),
+        max_throughput_(std::numeric_limits<uint64_t>::max()),
+        max_payload_(std::numeric_limits<uint64_t>::max()),
         tokens_per_ms(2),
         tokens_(1000),
         timestamp_(0),
