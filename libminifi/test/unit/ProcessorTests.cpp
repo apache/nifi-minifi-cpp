@@ -257,7 +257,7 @@ TEST_CASE("Test Find file", "[getfileCreate3]") {
   std::shared_ptr<TestPlan> plan = testController.createPlan();
   std::shared_ptr<core::Processor> processor = plan->addProcessor("GetFile", "getfileCreate2");
   std::shared_ptr<core::Processor> processorReport = std::make_shared<org::apache::nifi::minifi::core::reporting::SiteToSiteProvenanceReportingTask>(
-      std::make_shared<org::apache::nifi::minifi::io::StreamFactory>(std::make_shared<org::apache::nifi::minifi::Configure>()), std::make_shared<org::apache::nifi::minifi::Configure>());
+      minifi::io::StreamFactory::getInstance(std::make_shared<org::apache::nifi::minifi::Configure>()), std::make_shared<org::apache::nifi::minifi::Configure>());
   plan->addProcessor(processorReport, "reporter", core::Relationship("success", "description"), false);
   char format[] = "/tmp/gt.XXXXXX";
   char *dir = testController.createTempDirectory(format);

@@ -231,7 +231,7 @@ std::shared_ptr<core::controller::ControllerService> getControllerService(const 
 
   configuration->get(minifi::Configure::nifi_configuration_class_name, nifi_configuration_class_name);
 
-  std::shared_ptr<minifi::io::StreamFactory> stream_factory = std::make_shared<minifi::io::StreamFactory>(configuration);
+  std::shared_ptr<minifi::io::StreamFactory> stream_factory = minifi::io::StreamFactory::getInstance(configuration);
 
   std::unique_ptr<core::FlowConfiguration> flow_configuration = core::createFlowConfiguration(prov_repo, flow_repo, content_repo, configuration, stream_factory, nifi_configuration_class_name);
 
@@ -288,7 +288,7 @@ std::shared_ptr<core::controller::ControllerService> getControllerService(const 
 
   configuration->get(minifi::Configure::nifi_configuration_class_name, nifi_configuration_class_name);
 
-  std::shared_ptr<minifi::io::StreamFactory> stream_factory = std::make_shared<minifi::io::StreamFactory>(configuration);
+  std::shared_ptr<minifi::io::StreamFactory> stream_factory = minifi::io::StreamFactory::getInstance(configuration);
 
   std::unique_ptr<core::FlowConfiguration> flow_configuration = core::createFlowConfiguration(prov_repo, flow_repo, content_repo, configuration, stream_factory, nifi_configuration_class_name);
 

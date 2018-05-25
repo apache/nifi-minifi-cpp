@@ -702,6 +702,7 @@ Additionally, a unique hexadecimal uid.minifi.device.segment should be assigned 
           Trigger Threshold: 90
           Low Battery Threshold: 50
           Wait Period: 500 ms
+          
 ### MQTT Controller service
 The MQTTController Service can be configured for MQTT connectivity and provide that capability to your processors when MQTT is built.
     
@@ -713,6 +714,41 @@ The MQTTController Service can be configured for MQTT connectivity and provide t
           Broker URI: localhost:1883
     	    Client ID: client ID
           Quality of Service: 2
+          
+### Network Prioritizer Controller Service
+  The network prioritizer controller service can be configured to manage prioritizing and binding to specific network interfaces. Linked Services, can be used
+  as a prioritized list to create a disjunction among multiple networking prioritizers. This allows you to create classes with different configurations that
+  create multiple prioritizations. Max Throughput is the maximum throughput in bytes per second. Max Payload is the maximum number of bytes supported by that
+  prioritizer. If a prioritizer is configured with the option "Default Prioritizer: true," then all socket communications will use that default prioritizer.
+  
+  In the configuration below there are two classes defined under "NetworkPrioritizerService", one class "NetworkPrioritizerService2" defines en0, and en1.
+  If en0 is down at any point, then en1 will be given priority before resorting to en2 and en3 of  "NetworkPrioritizerService3". If the throughput for 
+  "NetworkPrioritizerService2" exceeds the defined throughput or the max payload of 1024, then "NetworkPrioritizerService3" will be used. If Max Payload and 
+  Max Throughput are not defined, then they will not be limiting factors. For this release, 0.5.0, Max Payload will only be used for processors that custom 
+  implement that feature. RPGs will not support max payloads until 0.6.0. Additionally, since connection queues aren't prioritized, you must have a live connection
+  for your data to send it. Since connection queues can't be re-prioritized, this can create a starvation problem. The configuration is required to account for this.
+    
+   Controller Services:
+   - name: NetworkPrioritizerService
+     id: 2438e3c8-015a-1000-79ca-83af40ec1883
+     class: NetworkPrioritizerService
+     Properties:
+         Linked Services: NetworkPrioritizerService2,NetworkPrioritizerService3
+   - name: NetworkPrioritizerService2
+     id: 2438e3c8-015a-1000-79ca-83af40ec1884
+     class: NetworkPrioritizerService
+     Properties:
+         Network Controllers: en0,en1
+         Max Throughput: 1,024,1024
+         Max Payload: 1024
+   - name: NetworkPrioritizerService3
+     id: 2438e3c8-015a-1000-79ca-83af40ec1884
+     class: NetworkPrioritizerService
+     Properties:
+         Network Controllers: en2,en3
+         Max Throughput: 1,024,1024
+         Max Payload: 1,024,1024
+         
 ### Running
 After completing a [build](#building), the application can be run by issuing the following from :
 

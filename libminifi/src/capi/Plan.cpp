@@ -23,23 +23,20 @@
 #include <string>
 
 ExecutionPlan::ExecutionPlan(std::shared_ptr<core::ContentRepository> content_repo, std::shared_ptr<core::Repository> flow_repo, std::shared_ptr<core::Repository> prov_repo)
-    :
-      content_repo_(content_repo),
+    : content_repo_(content_repo),
       flow_repo_(flow_repo),
       prov_repo_(prov_repo),
       finalized(false),
       location(-1),
       current_flowfile_(nullptr),
       logger_(logging::LoggerFactory<ExecutionPlan>::getLogger()) {
-  stream_factory = std::make_shared<org::apache::nifi::minifi::io::StreamFactory>(std::make_shared<minifi::Configure>());
+  stream_factory = org::apache::nifi::minifi::io::StreamFactory::getInstance(std::make_shared<minifi::Configure>());
 }
 
-std::shared_ptr<core::Processor> ExecutionPlan::addProcessor(const std::shared_ptr<core::Processor> &processor, const std::string &name, core::Relationship relationship,
-bool linkToPrevious) {
+std::shared_ptr<core::Processor> ExecutionPlan::addProcessor(const std::shared_ptr<core::Processor> &processor, const std::string &name, core::Relationship relationship, bool linkToPrevious) {
   if (finalized) {
     return nullptr;
   }
-
 
   uuid_t uuid;
   uuid_generate(uuid);
@@ -93,8 +90,7 @@ bool linkToPrevious) {
   return processor;
 }
 
-std::shared_ptr<core::Processor> ExecutionPlan::addProcessor(const std::string &processor_name, const std::string &name, core::Relationship relationship,
-bool linkToPrevious) {
+std::shared_ptr<core::Processor> ExecutionPlan::addProcessor(const std::string &processor_name, const std::string &name, core::Relationship relationship, bool linkToPrevious) {
   if (finalized) {
     return nullptr;
   }
@@ -140,7 +136,6 @@ void ExecutionPlan::reset() {
     }
   }
 }
-
 
 bool ExecutionPlan::runNextProcessor(std::function<void(const std::shared_ptr<core::ProcessContext>, const std::shared_ptr<core::ProcessSession>)> verify) {
   if (!finalized) {

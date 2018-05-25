@@ -30,6 +30,7 @@
 #include "core/logging/Logger.h"
 #include "io/validation.h"
 #include "properties/Configure.h"
+#include "io/NetworkPrioritizer.h"
 
 namespace org {
 namespace apache {
@@ -91,8 +92,8 @@ class Socket : public BaseStream {
    */
   virtual int16_t initialize();
 
-  virtual void setInterface(std::string &interface) {
-    local_network_interface_ = interface;
+  virtual void setInterface(io::NetworkInterface &&interface) {
+    local_network_interface_ = std::move(interface);
   }
 
   /**
@@ -260,7 +261,7 @@ class Socket : public BaseStream {
   uint16_t port_;
 
   bool is_loopback_only_;
-  std::string local_network_interface_;
+  io::NetworkInterface local_network_interface_;
 
   // connection information
   int32_t socket_file_descriptor_;
@@ -268,6 +269,8 @@ class Socket : public BaseStream {
   fd_set total_list_;
   fd_set read_fds_;
   std::atomic<uint16_t> socket_max_;
+  std::atomic<uint64_t> total_written_;
+  std::atomic<uint64_t> total_read_;
   uint16_t listeners_;
 
 

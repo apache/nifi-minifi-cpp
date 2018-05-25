@@ -48,8 +48,9 @@ Socket::Socket(const std::shared_ptr<SocketContext> &context, const std::string 
       addr_info_(0),
       socket_file_descriptor_(-1),
       socket_max_(0),
+      total_written_(0),
+      total_read_(0),
       is_loopback_only_(false),
-      local_network_interface_(""),
       listeners_(listeners),
       canonical_hostname_(""),
       nonBlocking_(false),
@@ -66,7 +67,6 @@ Socket::Socket(const Socket &&other)
     : requested_hostname_(std::move(other.requested_hostname_)),
       port_(std::move(other.port_)),
       is_loopback_only_(false),
-      local_network_interface_(""),
       addr_info_(std::move(other.addr_info_)),
       socket_file_descriptor_(other.socket_file_descriptor_),
       socket_max_(other.socket_max_.load()),
@@ -76,6 +76,8 @@ Socket::Socket(const Socket &&other)
       canonical_hostname_(std::move(other.canonical_hostname_)),
       nonBlocking_(false),
       logger_(std::move(other.logger_)) {
+  total_written_ = other.total_written_.load();
+  total_read_ = other.total_read_.load();
 }
 
 Socket::~Socket() {
@@ -91,6 +93,14 @@ void Socket::closeStream() {
     logging::LOG_DEBUG(logger_) << "Closing " << socket_file_descriptor_;
     close(socket_file_descriptor_);
     socket_file_descriptor_ = -1;
+  }
+  if (total_written_ > 0) {
+    local_network_interface_.log_write(total_written_);
+    total_written_ = 0;
+  }
+  if (total_read_ > 0) {
+    local_network_interface_.log_read(total_read_);
+    total_read_ = 0;
   }
 }
 
@@ -108,7 +118,7 @@ int8_t Socket::createConnection(const addrinfo *p, in_addr_t &addr) {
 
   setSocketOptions(socket_file_descriptor_);
 
-  if (listeners_ <= 0 && !local_network_interface_.empty()) {
+  if (listeners_ <= 0 && !local_network_interface_.getInterface().empty()) {
     // bind to local network interface
     ifaddrs* list = NULL;
     ifaddrs* item = NULL;
@@ -118,7 +128,7 @@ int8_t Socket::createConnection(const addrinfo *p, in_addr_t &addr) {
       item = list;
       while (item) {
         if ((item->ifa_addr != NULL) && (item->ifa_name != NULL) && (AF_INET == item->ifa_addr->sa_family)) {
-          if (strcmp(item->ifa_name, local_network_interface_.c_str()) == 0) {
+          if (strcmp(item->ifa_name, local_network_interface_.getInterface().c_str()) == 0) {
             itemFound = item;
             break;
           }
@@ -129,11 +139,10 @@ int8_t Socket::createConnection(const addrinfo *p, in_addr_t &addr) {
       if (itemFound != NULL) {
         result = bind(socket_file_descriptor_, itemFound->ifa_addr, sizeof(struct sockaddr_in));
         if (result < 0)
-          logger_->log_info("Bind to interface %s failed %s", local_network_interface_, strerror(errno));
+          logger_->log_info("Bind to interface %s failed %s", local_network_interface_.getInterface(), strerror(errno));
         else
-          logger_->log_info("Bind to interface %s", local_network_interface_);
+          logger_->log_info("Bind to interface %s", local_network_interface_.getInterface());
       }
-
       freeifaddrs(list);
     }
   }
@@ -366,6 +375,7 @@ int Socket::writeData(uint8_t *value, int size) {
 
   if (ret)
     logger_->log_trace("Send data size %d over socket %d", size, fd);
+  total_written_+=bytes;
   return bytes;
 }
 
@@ -463,6 +473,7 @@ int Socket::readData(uint8_t *buf, int buflen, bool retrieve_all_bytes) {
       break;
     }
   }
+  total_read_+=total_read;
   return total_read;
 }
 
