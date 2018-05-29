@@ -53,6 +53,7 @@ core::Property PutFile::CreateDirs(
         "If false, flowfiles are penalized and sent to failure.",
     "true",
     true,
+    "",
     {"Directory"},
     {});
 core::Property PutFile::MaxDestFiles(

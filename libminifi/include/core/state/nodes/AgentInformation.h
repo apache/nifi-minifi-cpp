@@ -131,6 +131,10 @@ class ComponentManifest : public DeviceInformation {
             descriptorRequired.name = "required";
             descriptorRequired.value = prop.second.getRequired();
 
+            SerializedResponseNode descriptorValidRegex;
+            descriptorValidRegex.name = "validRegex";
+            descriptorValidRegex.value = prop.second.getValidRegex();
+
             SerializedResponseNode descriptorDependentProperties;
             descriptorDependentProperties.name = "dependentProperties";
 
@@ -153,6 +157,7 @@ class ComponentManifest : public DeviceInformation {
             child.children.push_back(descriptorName);
             child.children.push_back(descriptorDescription);
             child.children.push_back(descriptorRequired);
+            child.children.push_back(descriptorValidRegex);
             child.children.push_back(descriptorDependentProperties);
             child.children.push_back(descriptorExclusiveOfProperties);
 
@@ -390,7 +395,6 @@ class AgentMonitor {
   std::map<std::string, std::shared_ptr<core::Repository>> repositories_;
   std::shared_ptr<state::StateMonitor> monitor_;
 };
-
 
 /**
  * Justification and Purpose: Provides available extensions for the agent information block.

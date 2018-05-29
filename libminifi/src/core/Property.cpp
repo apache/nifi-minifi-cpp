@@ -42,6 +42,10 @@ bool Property::getRequired() const {
   return is_required_;
 }
 
+std::string Property::getValidRegex() const {
+  return valid_regex_;
+}
+
 std::vector<std::string> &Property::getValues() {
   return values_;
 }

@@ -45,7 +45,7 @@ namespace minifi {
 namespace processors {
 
 core::Property GetFile::BatchSize("Batch Size", "The maximum number of files to pull in each iteration", "10");
-core::Property GetFile::Directory("Input Directory", "The input directory from which to pull files", ".", true, {}, {});
+core::Property GetFile::Directory("Input Directory", "The input directory from which to pull files", ".", true, "", {}, {});
 core::Property GetFile::IgnoreHiddenFile("Ignore Hidden Files", "Indicates whether or not hidden files should be ignored", "true");
 core::Property GetFile::KeepSourceFile("Keep Source File", "If true, the file is not deleted after it has been copied to the Content Repository", "false");
 core::Property GetFile::MaxAge("Maximum File Age", "The minimum age that a file must be in order to be pulled;"
