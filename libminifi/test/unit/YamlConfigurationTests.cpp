@@ -480,8 +480,8 @@ TEST_CASE("Test Dependent Property", "[YamlConfigurationDependentProperty]") {
   core::YamlConfiguration yamlConfig(testProvRepo, testFlowFileRepo, content_repo, streamFactory, configuration);
   const auto component = std::make_shared<DummyComponent>();
   std::set<core::Property> props;
-  props.emplace(core::Property("Prop A", "Prop A desc", "val A", true, {}, {}));
-  props.emplace(core::Property("Prop B", "Prop B desc", "val B", true, {"Prop A"}, {}));
+  props.emplace(core::Property("Prop A", "Prop A desc", "val A", true, "", {}, {}));
+  props.emplace(core::Property("Prop B", "Prop B desc", "val B", true, "", {"Prop A"}, {}));
   component->setSupportedProperties(std::move(props));
   yamlConfig.validateComponentProperties(component, "component A", "section A");
   REQUIRE(true);  // Expected to get here w/o any exceptions
@@ -503,8 +503,8 @@ TEST_CASE("Test Dependent Property 2", "[YamlConfigurationDependentProperty2]") 
   core::YamlConfiguration yamlConfig(testProvRepo, testFlowFileRepo, content_repo, streamFactory, configuration);
   const auto component = std::make_shared<DummyComponent>();
   std::set<core::Property> props;
-  props.emplace(core::Property("Prop A", "Prop A desc", "", false, {}, {}));
-  props.emplace(core::Property("Prop B", "Prop B desc", "val B", true, {"Prop A"}, {}));
+  props.emplace(core::Property("Prop A", "Prop A desc", "", false, "", {}, {}));
+  props.emplace(core::Property("Prop B", "Prop B desc", "val B", true, "", {"Prop A"}, {}));
   component->setSupportedProperties(std::move(props));
   bool config_failed = false;
   try {
@@ -535,8 +535,8 @@ TEST_CASE("Test Exclusive Property", "[YamlConfigurationExclusiveProperty]") {
   core::YamlConfiguration yamlConfig(testProvRepo, testFlowFileRepo, content_repo, streamFactory, configuration);
   const auto component = std::make_shared<DummyComponent>();
   std::set<core::Property> props;
-  props.emplace(core::Property("Prop A", "Prop A desc", "val A", true, {}, {}));
-  props.emplace(core::Property("Prop B", "Prop B desc", "val B", true, {}, {{"Prop A", "^abcd.*$"}}));
+  props.emplace(core::Property("Prop A", "Prop A desc", "val A", true, "", {}, {}));
+  props.emplace(core::Property("Prop B", "Prop B desc", "val B", true, "", {}, {{"Prop A", "^abcd.*$"}}));
   component->setSupportedProperties(std::move(props));
   yamlConfig.validateComponentProperties(component, "component A", "section A");
   REQUIRE(true);  // Expected to get here w/o any exceptions
@@ -558,8 +558,8 @@ TEST_CASE("Test Exclusive Property 2", "[YamlConfigurationExclusiveProperty2]") 
   core::YamlConfiguration yamlConfig(testProvRepo, testFlowFileRepo, content_repo, streamFactory, configuration);
   const auto component = std::make_shared<DummyComponent>();
   std::set<core::Property> props;
-  props.emplace(core::Property("Prop A", "Prop A desc", "val A", true, {}, {}));
-  props.emplace(core::Property("Prop B", "Prop B desc", "val B", true, {}, {{"Prop A", "^val.*$"}}));
+  props.emplace(core::Property("Prop A", "Prop A desc", "val A", true, "", {}, {}));
+  props.emplace(core::Property("Prop B", "Prop B desc", "val B", true, "", {}, {{"Prop A", "^val.*$"}}));
   component->setSupportedProperties(std::move(props));
   bool config_failed = false;
   try {

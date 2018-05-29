@@ -70,6 +70,7 @@ core::Property InvokeHTTP::SSLContext("SSL Context Service",
                                       "information for TLS/SSL (https) connections.",
                                       "",
                                       false,
+                                      "",
                                       {},
                                       {{"Remote URL", "^http:.*$"}});
 core::Property InvokeHTTP::ProxyHost("Proxy Host", "The fully qualified hostname or IP address of the proxy server", "");
