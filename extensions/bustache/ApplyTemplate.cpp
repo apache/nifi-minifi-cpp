@@ -17,22 +17,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <string.h>
 #include <iostream>
 #include <fstream>
 #include <memory>
-#include <string>
 #include <set>
 
 #include <boost/iostreams/device/mapped_file.hpp>
 
 #include <bustache/model.hpp>
-#include <bustache/format.hpp>
 
 #include "ApplyTemplate.h"
-#include "core/ProcessContext.h"
-#include "core/ProcessSession.h"
-
 
 namespace org {
 namespace apache {
@@ -44,53 +38,54 @@ core::Property ApplyTemplate::Template("Template", "Path to the input mustache t
 core::Relationship ApplyTemplate::Success("success", "success operational on the flow record");
 
 void ApplyTemplate::initialize() {
-    //! Set the supported properties
-    std::set<core::Property> properties;
-    properties.insert(Template);
-    setSupportedProperties(properties);
-    //! Set the supported relationships
-    std::set<core::Relationship> relationships;
-    relationships.insert(Success);
-    setSupportedRelationships(relationships);
+  //! Set the supported properties
+  std::set<core::Property> properties;
+  properties.insert(Template);
+  setSupportedProperties(properties);
+  //! Set the supported relationships
+  std::set<core::Relationship> relationships;
+  relationships.insert(Success);
+  setSupportedRelationships(relationships);
 }
 
-void ApplyTemplate::onTrigger(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) {
-    auto flowFile = session->get();
+void ApplyTemplate::onTrigger(const std::shared_ptr<core::ProcessContext> &context,
+                              const std::shared_ptr<core::ProcessSession> &session) {
+  auto flow_file = session->get();
 
-    if (!flowFile) {
-        return;
-    }
+  if (!flow_file) {
+    return;
+  }
 
-    std::string templateFile;
-    context->getProperty(Template.getName(), templateFile);
-    WriteCallback cb(templateFile, flowFile);
-    session->write(flowFile, &cb);
-    session->transfer(flowFile, Success);
+  std::string template_file;
+  context->getProperty(Template.getName(), template_file, flow_file);
+  WriteCallback cb(template_file, flow_file);
+  session->write(flow_file, &cb);
+  session->transfer(flow_file, Success);
 }
 
-ApplyTemplate::WriteCallback::WriteCallback(const std::string& path, const std::shared_ptr<core::FlowFile>& flowFile) {
-    logger_ = logging::LoggerFactory<ApplyTemplate::WriteCallback>::getLogger();
-    templateFile_ = path;
-    flowFile_ = flowFile;
+ApplyTemplate::WriteCallback::WriteCallback(const std::string &path, const std::shared_ptr<core::FlowFile> &flow_file) {
+  logger_ = logging::LoggerFactory<ApplyTemplate::WriteCallback>::getLogger();
+  template_file_ = path;
+  flow_file_ = flow_file;
 }
 
 int64_t ApplyTemplate::WriteCallback::process(const std::shared_ptr<io::BaseStream> stream) {
-    logger_->log_info("ApplyTemplate reading template file from %s", templateFile_);
-    boost::iostreams::mapped_file_source file(templateFile_);
+  logger_->log_info("ApplyTemplate reading template file from %s", template_file_);
+  boost::iostreams::mapped_file_source file(template_file_);
 
-    bustache::format format(file);
-    bustache::object data;
+  bustache::format format(file);
+  bustache::object data;
 
-    for (const auto &attr : flowFile_->getAttributes()) {
-        data[attr.first] = attr.second;
-    }
+  for (const auto &attr : flow_file_->getAttributes()) {
+    data[attr.first] = attr.second;
+  }
 
-    // TODO(calebj) write ostream reciever for format() to prevent excessive copying
-    std::string ostring = to_string(format(data));
-    stream->writeData(reinterpret_cast<uint8_t*>(const_cast<char*>(ostring.c_str())),
-                      ostring.length());
+  // TODO(calebj) write ostream reciever for format() to prevent excessive copying
+  std::string ostring = to_string(format(data));
+  stream->writeData(reinterpret_cast<uint8_t *>(const_cast<char *>(ostring.c_str())),
+                    ostring.length());
 
-    return ostring.length();
+  return ostring.length();
 }
 
 } /* namespace processors */
