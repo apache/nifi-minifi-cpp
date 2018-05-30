@@ -196,7 +196,7 @@ endif()
 
 add_subdirectory(libminifi)
 
-#### EXTENSION
+#### EXTENSIONS
 option(DISABLE_CURL "Disables libCurl Properties." OFF)
 if (NOT DISABLE_CURL AND NOT DISABLE_CIVET)
 	createExtension(HTTP-CURL "HTTP CURL" "This enables RESTProtocol, InvokeHTTP, and the HTTPClient for Site to Site" "extensions/http-curl" "extensions/http-curl/tests/")
@@ -259,6 +259,13 @@ if (NOT DISABLE_SCRIPTING)
     createExtension(SCRIPTING-EXTENSIONS "SCRIPTING EXTENSIONS" "This enables scripting" "extensions/script" "${TEST_DIR}/script-tests")
 endif()
 
+option(ENABLE_SENSORS "Enables the Sensors package." OFF)
+if(ENABLE_ALL OR ENABLE_SENSORS)
+	add_subdirectory(thirdparty/RTIMULib/RTIMULib)
+	createExtension(SENSOR-EXTENSIONS "SENSOR EXTENSIONS" "Enables the package of sensor extensions." "extensions/sensors" "${TEST_DIR}/sensors-tests")
+endif()
+
+
 ## SQLite extensions
 option(ENABLE_SQLITE "Disables the scripting extensions." OFF)
 if (ENABLE_ALL OR ENABLE_SQLITE)
@@ -296,9 +303,7 @@ endif()
 get_property(selected_extensions GLOBAL PROPERTY EXTENSION-OPTIONS)
 
 if (NOT BUILD_IDENTIFIER)
-   message("empty identifier ${BUILD_IDENTIFIER}")
    if (NOT BUILD_IDENTIFIER)
-   message("empty identifier ${BUILD_IDENTIFIER}")
      string(RANDOM LENGTH 24 BUILD_IDENTIFIER)
      set(BUILD_IDENTIFIER "${BUILD_IDENTIFIER}" CACHE STRING "Build identifier")
    endif()
