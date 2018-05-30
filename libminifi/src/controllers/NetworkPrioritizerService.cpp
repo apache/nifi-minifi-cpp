@@ -65,8 +65,9 @@ void NetworkPrioritizerService::yield() {
 /**
  * If not an intersecting operation we will attempt to locate the highest priority interface available.
  */
-io::NetworkInterface &&NetworkPrioritizerService::getInterface(uint32_t size = 0) {
+io::NetworkInterface NetworkPrioritizerService::getInterface(uint32_t size = 0) {
   std::vector<std::string> controllers;
+  std::string ifc = "";
   if (!network_controllers_.empty()) {
     if (sufficient_tokens(size) && size < max_payload_) {
       controllers.insert(std::end(controllers), std::begin(network_controllers_), std::end(network_controllers_));
@@ -74,24 +75,28 @@ io::NetworkInterface &&NetworkPrioritizerService::getInterface(uint32_t size = 0
   }
 
   if (!controllers.empty()) {
-    auto ifc = get_nearest_interface(controllers);
+    ifc = get_nearest_interface(controllers);
     if (!ifc.empty()) {
       reduce_tokens(size);
-      return std::move(io::NetworkInterface(ifc, shared_from_this()));
+      io::NetworkInterface newifc(ifc, shared_from_this());
+      return newifc;
     }
   }
   for (size_t i = 0; i < linked_services_.size(); i++) {
     auto np = std::dynamic_pointer_cast<NetworkPrioritizerService>(linked_services_.at(i));
     if (np != nullptr) {
       auto ifcs = np->getInterfaces(size);
-      auto ifc = get_nearest_interface(ifcs);
+      ifc = get_nearest_interface(ifcs);
       if (!ifc.empty()) {
         np->reduce_tokens(size);
-        return std::move(io::NetworkInterface(ifc, np));
+        io::NetworkInterface newifc(ifc, np);
+        return newifc;
       }
     }
   }
-  return std::move(io::NetworkInterface("", nullptr));
+
+  io::NetworkInterface newifc(ifc, nullptr);
+  return newifc;
 }
 
 std::string NetworkPrioritizerService::get_nearest_interface(const std::vector<std::string> &ifcs) {

@@ -55,7 +55,6 @@ class StreamFactory {
     auto socket = delegate_->createSocket(host, port);
     auto prioritizer_ = NetworkPrioritizerFactory::getInstance()->getPrioritizer();
     if (nullptr != prioritizer_) {
-      std::cout << "prioritizer" << std::endl;
       auto &&ifc = prioritizer_->getInterface(estimated_size);
       if (ifc.getInterface().empty()) {
         return nullptr;

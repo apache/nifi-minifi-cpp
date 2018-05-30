@@ -35,7 +35,7 @@ class NetworkPrioritizer {
   virtual ~NetworkPrioritizer() {
   }
 
-  virtual NetworkInterface &&getInterface(uint32_t size) = 0;
+  virtual NetworkInterface getInterface(uint32_t size) = 0;
 
  protected:
   friend class NetworkInterface;
@@ -46,15 +46,21 @@ class NetworkPrioritizer {
 class NetworkInterface {
  public:
 
-  NetworkInterface() : prioritizer_(nullptr){
+  NetworkInterface()
+      : prioritizer_(nullptr) {
   }
 
-  virtual ~NetworkInterface(){
+  virtual ~NetworkInterface() {
   }
 
   explicit NetworkInterface(const std::string &ifc, const std::shared_ptr<NetworkPrioritizer> &prioritizer)
-      : ifc_(ifc),
-        prioritizer_(prioritizer) {
+      : prioritizer_(prioritizer) {
+    ifc_ = ifc;
+  }
+
+  NetworkInterface(const NetworkInterface &other)
+      : prioritizer_(other.prioritizer_) {
+    ifc_ = other.ifc_;
   }
 
   explicit NetworkInterface(const NetworkInterface &&other)
@@ -90,6 +96,10 @@ class NetworkInterface {
 
 class NetworkPrioritizerFactory {
  public:
+  NetworkPrioritizerFactory()
+      : np_(nullptr) {
+
+  }
   static std::shared_ptr<NetworkPrioritizerFactory> getInstance() {
     static std::shared_ptr<NetworkPrioritizerFactory> fa = std::make_shared<NetworkPrioritizerFactory>();
     return fa;

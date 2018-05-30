@@ -89,7 +89,7 @@ class NetworkPrioritizerService : public core::controller::ControllerService, pu
 
   virtual void onEnable();
 
-  virtual io::NetworkInterface &&getInterface(uint32_t size);
+  virtual io::NetworkInterface getInterface(uint32_t size);
 
  protected:
 
