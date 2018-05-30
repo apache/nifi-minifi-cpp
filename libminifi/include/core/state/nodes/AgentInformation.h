@@ -306,10 +306,21 @@ class ComponentManifest : public DeviceInformation {
               descriptorDependentProperties.children.push_back(descriptorDependentProperty);
             }
 
+            SerializedResponseNode descriptorExclusiveOfProperties;
+            descriptorExclusiveOfProperties.name = "exclusiveOfProperties";
+
+            for (const auto &exclusiveProp : prop.second.getExclusiveOfProperties()) {
+              SerializedResponseNode descriptorExclusiveOfProperty;
+              descriptorExclusiveOfProperty.name = exclusiveProp.first;
+              descriptorExclusiveOfProperty.value = exclusiveProp.second;
+              descriptorExclusiveOfProperties.children.push_back(descriptorExclusiveOfProperty);
+            }
+
             child.children.push_back(descriptorName);
             child.children.push_back(descriptorDescription);
             child.children.push_back(descriptorRequired);
             child.children.push_back(descriptorDependentProperties);
+            child.children.push_back(descriptorExclusiveOfProperties);
 
             props.children.push_back(child);
           }
