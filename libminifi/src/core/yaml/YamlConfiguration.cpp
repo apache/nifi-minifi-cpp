@@ -22,6 +22,10 @@
 
 #include "core/yaml/YamlConfiguration.h"
 
+#ifdef YAML_CONFIGURATION_USE_REGEX
+#include <regex>
+#endif  // YAML_CONFIGURATION_USE_REGEX
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -806,6 +810,10 @@ void YamlConfiguration::validateComponentProperties(const std::shared_ptr<Config
   for (const auto &prop_pair : component_properties) {
     const auto &dep_props = prop_pair.second.getDependentProperties();
 
+    if (prop_pair.second.getValue().empty()) {
+      continue;
+    }
+
     for (const auto &dep_prop_key : dep_props) {
       if (component_properties.at(dep_prop_key).getValue().empty()) {
         std::string reason("property '");
@@ -817,6 +825,33 @@ void YamlConfiguration::validateComponentProperties(const std::shared_ptr<Config
       }
     }
   }
+
+#ifdef YAML_CONFIGURATION_USE_REGEX
+  // Validate mutually-exclusive properties
+  for (const auto &prop_pair : component_properties) {
+    const auto &excl_props = prop_pair.second.getExclusiveOfProperties();
+
+    if (prop_pair.second.getValue().empty()) {
+      continue;
+    }
+
+    for (const auto &excl_pair : excl_props) {
+      std::regex excl_expr(excl_pair.second);
+      if (std::regex_match(component_properties.at(excl_pair.first).getValue(), excl_expr)) {
+        std::string reason("property '");
+        reason.append(prop_pair.second.getName());
+        reason.append("' is exclusive of property '");
+        reason.append(excl_pair.first);
+        reason.append("' values matching '");
+        reason.append(excl_pair.second);
+        reason.append("'");
+        raiseComponentError(component_name, yaml_section, reason);
+      }
+    }
+  }
+#else
+  logging::LOG_INFO(logger_) << "Validation of mutally-exclusive properties is disabled in this build.";
+#endif  // YAML_CONFIGURATION_USE_REGEX
 }
 
 void YamlConfiguration::raiseComponentError(const std::string &component_name,

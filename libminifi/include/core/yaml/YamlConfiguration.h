@@ -43,6 +43,13 @@ namespace core {
 #define CONFIG_YAML_REMOTE_PROCESS_GROUP_KEY_V3 "Remote Process Groups"
 #define CONFIG_YAML_PROVENANCE_REPORT_KEY "Provenance Reporting"
 
+#define YAML_CONFIGURATION_USE_REGEX
+
+// Disable regex in EL for incompatible compilers
+#if __GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 9)
+#undef YAML_CONFIGURATION_USE_REGEX
+#endif
+
 class YamlConfiguration : public FlowConfiguration {
 
  public:
