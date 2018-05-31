@@ -798,10 +798,9 @@ void YamlConfiguration::validateComponentProperties(const std::shared_ptr<Config
   for (const auto &prop_pair : component_properties) {
     if (prop_pair.second.getRequired()) {
       if (prop_pair.second.getValue().empty()) {
-        std::string reason("required property '");
-        reason.append(prop_pair.second.getName());
-        reason.append("' is not set");
-        raiseComponentError(component_name, yaml_section, reason);
+        std::stringstream reason;
+        reason << "required property '" << prop_pair.second.getName() << "' is not set";
+        raiseComponentError(component_name, yaml_section, reason.str());
       }
     }
   }
@@ -849,8 +848,27 @@ void YamlConfiguration::validateComponentProperties(const std::shared_ptr<Config
       }
     }
   }
+
+  // Validate regex properties
+  for (const auto &prop_pair : component_properties) {
+    const auto &prop_regex_str = prop_pair.second.getValidRegex();
+
+    if (!prop_regex_str.empty()) {
+      std::regex prop_regex(prop_regex_str);
+      if (!std::regex_match(prop_pair.second.getValue(), prop_regex)) {
+        std::stringstream reason;
+        reason << "property '"
+               << prop_pair.second.getName()
+               << "' does not match validation pattern '"
+               << prop_regex_str
+               << "'";
+        raiseComponentError(component_name, yaml_section, reason.str());
+      }
+    }
+  }
 #else
   logging::LOG_INFO(logger_) << "Validation of mutally-exclusive properties is disabled in this build.";
+  logging::LOG_INFO(logger_) << "Regex validation of properties is not available in this build.";
 #endif  // YAML_CONFIGURATION_USE_REGEX
 }
 
