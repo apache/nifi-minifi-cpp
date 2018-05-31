@@ -517,3 +517,59 @@ TEST_CASE("Test Dependent Property 2", "[YamlConfigurationDependentProperty2]") 
   }
   REQUIRE(config_failed);
 }
+
+#ifdef YAML_CONFIGURATION_USE_REGEX
+TEST_CASE("Test Exclusive Property", "[YamlConfigurationExclusiveProperty]") {
+  TestController test_controller;
+
+  LogTestController &logTestController = LogTestController::getInstance();
+  logTestController.setDebug<TestPlan>();
+  logTestController.setDebug<core::YamlConfiguration>();
+
+  std::shared_ptr<core::Repository> testProvRepo = core::createRepository("provenancerepository", true);
+  std::shared_ptr<core::Repository> testFlowFileRepo = core::createRepository("flowfilerepository", true);
+  std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::Configure>();
+  std::shared_ptr<minifi::io::StreamFactory> streamFactory = minifi::io::StreamFactory::getInstance(configuration);
+  std::shared_ptr<core::ContentRepository>
+      content_repo = std::make_shared<core::repository::VolatileContentRepository>();
+  core::YamlConfiguration yamlConfig(testProvRepo, testFlowFileRepo, content_repo, streamFactory, configuration);
+  const auto component = std::make_shared<DummyComponent>();
+  std::set<core::Property> props;
+  props.emplace(core::Property("Prop A", "Prop A desc", "val A", true, {}, {}));
+  props.emplace(core::Property("Prop B", "Prop B desc", "val B", true, {}, {{"Prop A", "^abcd.*$"}}));
+  component->setSupportedProperties(std::move(props));
+  yamlConfig.validateComponentProperties(component, "component A", "section A");
+  REQUIRE(true);  // Expected to get here w/o any exceptions
+}
+
+TEST_CASE("Test Exclusive Property 2", "[YamlConfigurationExclusiveProperty2]") {
+  TestController test_controller;
+
+  LogTestController &logTestController = LogTestController::getInstance();
+  logTestController.setDebug<TestPlan>();
+  logTestController.setDebug<core::YamlConfiguration>();
+
+  std::shared_ptr<core::Repository> testProvRepo = core::createRepository("provenancerepository", true);
+  std::shared_ptr<core::Repository> testFlowFileRepo = core::createRepository("flowfilerepository", true);
+  std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::Configure>();
+  std::shared_ptr<minifi::io::StreamFactory> streamFactory = minifi::io::StreamFactory::getInstance(configuration);
+  std::shared_ptr<core::ContentRepository>
+      content_repo = std::make_shared<core::repository::VolatileContentRepository>();
+  core::YamlConfiguration yamlConfig(testProvRepo, testFlowFileRepo, content_repo, streamFactory, configuration);
+  const auto component = std::make_shared<DummyComponent>();
+  std::set<core::Property> props;
+  props.emplace(core::Property("Prop A", "Prop A desc", "val A", true, {}, {}));
+  props.emplace(core::Property("Prop B", "Prop B desc", "val B", true, {}, {{"Prop A", "^val.*$"}}));
+  component->setSupportedProperties(std::move(props));
+  bool config_failed = false;
+  try {
+    yamlConfig.validateComponentProperties(component, "component A", "section A");
+  } catch (const std::exception &e) {
+    config_failed = true;
+    REQUIRE("Unable to parse configuration file for component named 'component A' because "
+            "property 'Prop B' is exclusive of property 'Prop A' values matching '^val.*$' "
+            "[in 'section A' section of configuration file]" == std::string(e.what()));
+  }
+  REQUIRE(config_failed);
+}
+#endif  // YAML_CONFIGURATION_USE_REGEX
