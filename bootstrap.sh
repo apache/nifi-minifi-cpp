@@ -531,7 +531,7 @@ build_cmake_command(){
   if [ ! "$NO_PROMPT" = "true" ]; then
     read -p "Command will be '${CMAKE_BUILD_COMMAND}', run this? [ Y/N ] " continue_with_plan
   fi
-  if [ "$overwrite" = "N" ] || [ "$overwrite" = "n" ]; then
+  if [ "$continue_with_plan" = "N" ] || [ "$continue_with_plan" = "n" ]; then
     echo "Exiting ...."
     exit
   fi
