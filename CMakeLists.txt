@@ -29,6 +29,7 @@ option(USE_SYSTEM_OPENSSL "Instructs the build system to search for and use an S
 option(USE_SYSTEM_UUID "Instructs the build system to search for and use an UUID library available in the host system" ON)
 option(USE_SYSTEM_CURL "Instructs the build system to search for and use a cURL library available in the host system" ON)
 option(USE_SYSTEM_ZLIB "Instructs the build system to search for and use a zlib library available in the host system" ON)
+option(BUILD_ROCKSDB "Instructs the build system to use RocksDB from the third party directory" ON)
 
 include(FeatureSummary)
 include(ExternalProject)
