@@ -33,7 +33,7 @@
 #include "core/logging/Logger.h"
 #include "core/ProcessContext.h"
 #include "core/Relationship.h"
-#include "GetMovementSensors.h"
+#include "SensorBase.h"
 #include "io/DataStream.h"
 #include "io/StreamFactory.h"
 #include "ResourceClaim.h"
@@ -45,51 +45,29 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-const char *GetMovementSensors::ProcessorName = "MovementSensors";
+core::Relationship SensorBase::Success("success", "All files are routed to success");
 
-core::Relationship GetMovementSensors::Success("success", "All files are routed to success");
-
-void GetMovementSensors::initialize() {
-  logger_->log_trace("Initializing EnvironmentalSensors");
-  // Set the supported properties
-  std::set<core::Property> properties;
-
-  setSupportedProperties(properties);
-  // Set the supported relationships
-  std::set<core::Relationship> relationships;
-  relationships.insert(Success);
-  setSupportedRelationships(relationships);
+void SensorBase::initialize() {
 }
 
-GetMovementSensors::~GetMovementSensors() {
-}
-
-void GetMovementSensors::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
-  auto flow_file_ = session->create();
-
-  if (imu->IMURead()) {
-    RTIMU_DATA imuData = imu->getIMUData();
-
-    if (imuData.accelValid) {
-      auto vector = imuData.accel;
-      std::string degrees = RTMath::displayDegrees("acceleration", vector);
-      flow_file_->addAttribute("ACCELERATION", degrees);
-    } else {
-      logger_->log_trace("Could not read accelerometer");
-    }
-    if (imuData.gyroValid) {
-      auto vector = imuData.gyro;
-      std::string degrees = RTMath::displayDegrees("gyro", vector);
-      flow_file_->addAttribute("GYRO", degrees);
-    } else {
-      logger_->log_trace("Could not read gyroscope");
-    }
-
-    WriteCallback callback("MovementSensors");
-    session->write(flow_file_, &callback);
-    session->transfer(flow_file_, Success);
+void SensorBase::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
+  imu = std::unique_ptr<RTIMU>(RTIMU::createIMU(&settings));
+  if (imu) {
+    imu->IMUInit();
+    imu->setGyroEnable(true);
+    imu->setAccelEnable(true);
+  } else {
+    throw std::runtime_error("RTIMU could not be initialized");
   }
+
 }
+
+SensorBase::~SensorBase() {
+}
+
+void SensorBase::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
+}
+
 } /* namespace processors */
 } /* namespace minifi */
 } /* namespace nifi */

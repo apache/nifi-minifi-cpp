@@ -15,8 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef EXTENSIONS_SENSORS_GETMOVEMENT_H_
-#define EXTENSIONS_SENSORS_GETMOVEMENT_H_
+#ifndef EXTENSIONS_SENSORS_SENSORBASE_H_
+#define EXTENSIONS_SENSORS_SENSORBASE_H_
 
 
 
@@ -31,7 +31,6 @@
 #include "core/Property.h"
 #include "core/Resource.h"
 #include "utils/Id.h"
-#include "SensorBase.h"
 #include "RTIMULib.h"
 #include "RTMath.h"
 
@@ -42,36 +41,52 @@ namespace minifi {
 namespace processors {
 
 // EnvironmentalSensors Class
-class GetMovementSensors : public SensorBase {
+class SensorBase : public core::Processor {
  public:
 
   // Constructor
   /*!
    * Create a new processor
    */
-  GetMovementSensors(std::string name, uuid_t uuid = NULL)
-      : SensorBase(name, uuid),
-        logger_(logging::LoggerFactory<GetMovementSensors>::getLogger()) {
+  SensorBase(std::string name, uuid_t uuid = NULL)
+      : Processor(name, uuid),
+        imu(nullptr),
+        logger_(logging::LoggerFactory<SensorBase>::getLogger()) {
   }
   // Destructor
-  virtual ~GetMovementSensors();
+  virtual ~SensorBase();
   // Processor Name
-  static const char *ProcessorName;
   static core::Relationship Success;
   // Supported Properties
 
   virtual void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
   virtual void initialize() override;
+  virtual void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
 
- private:
+  class WriteCallback : public OutputStreamCallback {
+     public:
+      WriteCallback(std::string data)
+          : _data(const_cast<char*>(data.data())),
+            _dataSize(data.size()) {
+      }
+      char *_data;
+      uint64_t _dataSize;
+      int64_t process(std::shared_ptr<io::BaseStream> stream) {
+        int64_t ret = 0;
+        if (_data && _dataSize > 0)
+          ret = stream->write(reinterpret_cast<uint8_t*>(_data), _dataSize);
+        return ret;
+      }
+    };
+ protected:
+  RTIMUSettings settings;
+  std::unique_ptr<RTIMU> imu;
   std::shared_ptr<logging::Logger> logger_;
 };
-
-REGISTER_RESOURCE(GetMovementSensors)
 
 } /* namespace processors */
 } /* namespace minifi */
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-#endif /* EXTENSIONS_SENSORS_GETMOVEMENT_H_ */
+#endif /* EXTENSIONS_SENSORS_SENSORBASE_H_ */

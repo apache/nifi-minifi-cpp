@@ -65,15 +65,7 @@ void GetEnvironmentalSensors::initialize() {
 }
 
 void GetEnvironmentalSensors::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
-
-  imu = RTIMU::createIMU(&settings);
-  if (imu) {
-    imu->IMUInit();
-    imu->setGyroEnable(true);
-    imu->setAccelEnable(true);
-  } else {
-    throw std::runtime_error("RTIMU could not be initialized");
-  }
+  SensorBase::onSchedule(context, sessionFactory);
 
   humidity_sensor_ = RTHumidity::createHumidity(&settings);
   if (humidity_sensor_) {
@@ -91,22 +83,25 @@ void GetEnvironmentalSensors::onSchedule(const std::shared_ptr<core::ProcessCont
 
 }
 
-GetEnvironmentalSensors::~GetEnvironmentalSensors() {
+void GetEnvironmentalSensors::notifyStop() {
   delete humidity_sensor_;
   delete pressure_sensor_;
+}
+
+GetEnvironmentalSensors::~GetEnvironmentalSensors() {
 }
 
 void GetEnvironmentalSensors::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
 
   auto flow_file_ = session->create();
 
-  flow_file_->setSize(0);
-
   if (imu->IMURead()) {
     RTIMU_DATA imuData = imu->getIMUData();
     auto vector = imuData.accel;
     std::string degrees = RTMath::displayDegrees("acceleration", vector);
     flow_file_->addAttribute("ACCELERATION", degrees);
+  } else {
+    logger_->log_trace("IMURead returned false. Could not gather acceleration");
   }
 
   RTIMU_DATA data;
@@ -120,6 +115,8 @@ void GetEnvironmentalSensors::onTrigger(const std::shared_ptr<core::ProcessConte
       ss << std::fixed << std::setprecision(2) << data.humidity;
       flow_file_->addAttribute("HUMIDITY", ss.str());
     }
+  } else {
+    logger_->log_trace("Could not read humidity sensors");
   }
 
   if (pressure_sensor_->pressureRead(data)) {
@@ -138,6 +135,8 @@ void GetEnvironmentalSensors::onTrigger(const std::shared_ptr<core::ProcessConte
       }
 
     }
+  } else {
+    logger_->log_trace("Could not read pressure sensors");
   }
 
   if (have_sensor) {
