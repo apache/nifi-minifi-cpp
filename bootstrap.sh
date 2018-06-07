@@ -30,6 +30,7 @@ FALSE="Disabled"
 FEATURES_SELECTED="false"
 AUTO_REMOVE_EXTENSIONS="true"
 export NO_PROMPT="false"
+ALL_FEATURES_ENABLED=${FALSE}
 
 DEPLOY="false"
 OPTIONS=()
@@ -87,7 +88,8 @@ EnableAllFeatures(){
     #	eval "$option=${TRUE}"
   done
 }
-
+MENU="features"
+GUIDED_INSTALL=${FALSE}
 while :; do
   case $1 in
     -n|--noprompt)
@@ -112,6 +114,12 @@ while :; do
       CORES=$(grep -c ^processor /proc/cpuinfo 2>/dev/null || sysctl -n hw.ncpu)
       BUILD="true"
       PACKAGE="true"
+      ;;
+    -i|--install)
+      GUIDED_INSTALL="Enabled"
+      EnableAllFeatures
+      MENU="main"
+      ALL_FEATURES_ENABLED=${TRUE}
       ;;
     -b|--build)
       CORES=$(grep -c ^processor /proc/cpuinfo 2>/dev/null || sysctl -n hw.ncpu)
@@ -238,6 +246,7 @@ CMAKE_REVISION=`echo $CMAKE_VERSION | cut -d. -f3`
 
 add_cmake_option PORTABLE_BUILD ${TRUE}
 add_cmake_option DEBUG_SYMBOLS ${FALSE}
+add_cmake_option BUILD_ROCKSDB ${TRUE}
 ## uses the source from the third party directory
 add_enabled_option ROCKSDB_ENABLED ${TRUE} "DISABLE_ROCKSDB"
 ## need libcurl installed
@@ -297,6 +306,7 @@ can_deploy(){
 
 ToggleFeature(){
   VARIABLE_VALUE=${!1}
+  ALL_FEATURES_ENABLED="Disabled"
   if [ $VARIABLE_VALUE = "Enabled" ]; then
     eval "$1=${FALSE}"
   else
@@ -390,7 +400,67 @@ fi
 
 ## change to the directory
 
+
+
 pushd build
+
+if [ "$GUIDED_INSTALL" == "${TRUE}" ]; then
+  EnableAllFeatures
+  ALL_FEATURES_ENABLED=${TRUE}
+fi
+
+
+show_main_menu() {
+  clear
+  echo "****************************************"
+  echo " MiNiFi C++ Main Menu."
+  echo "****************************************"
+  echo "A. Select MiNIFi C++ Features " 
+  if [ "$ALL_FEATURES_ENABLED" = "${TRUE}" ]; then
+    echo "  All features enabled  ........$(print_feature_status ALL_FEATURES_ENABLED)"
+  fi
+  echo "B. Select Advanced Features   "
+  echo "C. Continue with selected options   "
+  echo -e "Q. Exit\r\n"
+}
+
+read_main_menu_options(){
+  local choice
+  read -p "Enter choice [ A-C ] " choice
+  choice=$(echo ${choice} | tr '[:upper:]' '[:lower:]')
+  case $choice in
+    a) MENU="features" ;;
+    b) MENU="advanced" ;;
+    c) FEATURES_SELECTED="true" ;;
+    q) exit 0;;
+    *) echo -e "${RED}Please enter a valid option...${NO_COLOR}" && sleep 1
+  esac
+}
+
+show_advanced_features_menu() {
+  clear
+  echo "****************************************"
+  echo " MiNiFi C++ Advanced Features."
+  echo "****************************************"
+  echo "A. Portable Build ..............$(print_feature_status PORTABLE_BUILD)"
+  echo "B. Build with Debug symbols ....$(print_feature_status DEBUG_SYMBOLS)"
+  echo "C. Build RocksDB from source ...$(print_feature_status BUILD_ROCKSDB)"
+  echo -e "R. Return to Main Menu\r\n"
+}
+
+read_advanced_menu_options(){
+  local choice
+  read -p "Enter choice [ A-C ] " choice
+  choice=$(echo ${choice} | tr '[:upper:]' '[:lower:]')
+  case $choice in
+    a) ToggleFeature PORTABLE_BUILD ;;
+    b) ToggleFeature DEBUG_SYMBOLS ;;
+    c) ToggleFeature BUILD_ROCKSDB ;;
+    r) MENU="main" ;;
+    *) echo -e "${RED}Please enter a valid option...${NO_COLOR}" && sleep 1
+  esac
+}
+
 
 
 show_supported_features() {
@@ -411,14 +481,16 @@ show_supported_features() {
   echo "K. Bustache Support ............$(print_feature_status BUSTACHE_ENABLED)"
   echo "L. MQTT Support ................$(print_feature_status MQTT_ENABLED)"
   echo "M. Enable all extensions"
-  echo "N. Portable Build ..............$(print_feature_status PORTABLE_BUILD)"
-  echo "O. Build with Debug symbols ....$(print_feature_status DEBUG_SYMBOLS)"
   echo "P. Continue with these options"
-  echo "Q. Exit"
+  if [ "$GUIDED_INSTALL" = "${TRUE}" ]; then
+ 	 echo "R. Return to Main Menu"
+  fi
+  echo "Q. Quit"
   echo "* Extension cannot be installed due to"
   echo -e "  version of cmake or other software\r\n"
 }
-read_options(){
+
+read_feature_options(){
   local choice
   read -p "Enter choice [ A - N ] " choice
   choice=$(echo ${choice} | tr '[:upper:]' '[:lower:]')
@@ -436,9 +508,11 @@ read_options(){
     k) ToggleFeature BUSTACHE_ENABLED ;;
     l) ToggleFeature MQTT_ENABLED ;;
     m) EnableAllFeatures ;;
-    n) ToggleFeature PORTABLE_BUILD ;;
-    o) ToggleFeature DEBUG_SYMBOLS ;;
     p) FEATURES_SELECTED="true" ;;
+    r) if [ "$GUIDED_INSTALL" = "${TRUE}" ]; then
+	   MENU="main" 
+       fi
+       ;;
     q) exit 0;;
     *) echo -e "${RED}Please enter an option A-L...${NO_COLOR}" && sleep 2
   esac
@@ -446,10 +520,17 @@ read_options(){
 
 while [ ! "$FEATURES_SELECTED" == "true" ]
 do
-  show_supported_features
-  read_options
+  if [ "$MENU"  == "main" ]; then
+    show_main_menu
+    read_main_menu_options
+  elif [ "$MENU" == "advanced" ]; then
+    show_advanced_features_menu
+    read_advanced_menu_options
+  else
+    show_supported_features
+    read_feature_options 
+  fi
 done
-
 ### ensure we have all dependencies
 
 
@@ -512,6 +593,12 @@ build_cmake_command(){
     CMAKE_BUILD_COMMAND="${CMAKE_BUILD_COMMAND} -DPORTABLE=ON "
   else
     CMAKE_BUILD_COMMAND="${CMAKE_BUILD_COMMAND} -DPORTABLE=OFF "
+  fi
+
+  if [ "${BUILD_ROCKSDB}" = "${TRUE}" ]; then
+    CMAKE_BUILD_COMMAND="${CMAKE_BUILD_COMMAND} -DBUILD_ROCKSDB=ON "
+  else
+    CMAKE_BUILD_COMMAND="${CMAKE_BUILD_COMMAND} -DBUILD_ROCKSDB= "
   fi
 
   CMAKE_BUILD_COMMAND="${CMAKE_BUILD_COMMAND} -DBUILD_IDENTIFIER=${BUILD_IDENTIFIER}"
