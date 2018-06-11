@@ -54,6 +54,12 @@ TEST_CASE("Attribute expression", "[expressionLanguageTestAttributeExpression]")
   REQUIRE("text_before__attr_value_a__text_after" == expr({flow_file}).asString());
 }
 
+TEST_CASE("Attribute expression (Null)", "[expressionLanguageTestAttributeExpressionNull]") {  // NOLINT
+  auto expr = expression::compile("text_before${attr_a}text_after");
+  std::shared_ptr<MockFlowFile> flow_file = nullptr;
+  REQUIRE("text_beforetext_after" == expr({flow_file}).asString());
+}
+
 TEST_CASE("Multi-attribute expression", "[expressionLanguageTestMultiAttributeExpression]") {  // NOLINT
   auto flow_file = std::make_shared<MockFlowFile>();
   flow_file->addAttribute("attr_a", "__attr_value_a__");
