@@ -64,7 +64,8 @@ Expression make_dynamic(const std::function<Value(const Parameters &params,
 Expression make_dynamic_attr(const std::string &attribute_id) {
   return make_dynamic([attribute_id](const Parameters &params, const std::vector<Expression> &sub_exprs) -> Value {
     std::string result;
-    if (params.flow_file.lock()->getAttribute(attribute_id, result)) {
+    const auto cur_flow_file = params.flow_file.lock();
+    if (cur_flow_file && cur_flow_file->getAttribute(attribute_id, result)) {
       return Value(result);
     } else {
       return Value();
@@ -1776,7 +1777,9 @@ Expression make_allAttributes(const std::string &function_name, const std::vecto
         attr_id = arg(params).asString();
         std::string attr_val;
 
-        if (params.flow_file.lock()->getAttribute(attr_id, attr_val)) {
+        const auto cur_flow_file = params.flow_file.lock();
+
+        if (cur_flow_file && cur_flow_file->getAttribute(attr_id, attr_val)) {
           return Value(attr_val);
         } else {
           return Value();
@@ -1825,7 +1828,9 @@ Expression make_anyAttribute(const std::string &function_name, const std::vector
         attr_id = arg(params).asString();
         std::string attr_val;
 
-        if (params.flow_file.lock()->getAttribute(attr_id, attr_val)) {
+        const auto cur_flow_file = params.flow_file.lock();
+
+        if (cur_flow_file && cur_flow_file->getAttribute(attr_id, attr_val)) {
           return Value(attr_val);
         } else {
           return Value();
@@ -1871,7 +1876,12 @@ Expression make_allMatchingAttributes(const std::string &function_name, const st
 
     for (const auto &arg : args) {
       const std::regex attr_regex = std::regex(arg(params).asString());
-      auto attrs = params.flow_file.lock()->getAttributes();
+      const auto cur_flow_file = params.flow_file.lock();
+      std::map<std::string, std::string> attrs;
+
+      if (cur_flow_file) {
+        attrs = cur_flow_file->getAttributes();
+      }
 
       for (const auto &attr : attrs) {
         if (std::regex_match(attr.first.begin(), attr.first.end(), attr_regex)) {
@@ -1879,7 +1889,7 @@ Expression make_allMatchingAttributes(const std::string &function_name, const st
                                                   const std::vector<Expression> &sub_exprs) -> Value {
             std::string attr_val;
 
-            if (params.flow_file.lock()->getAttribute(attr.first, attr_val)) {
+            if (cur_flow_file && cur_flow_file->getAttribute(attr.first, attr_val)) {
               return Value(attr_val);
             } else {
               return Value();
@@ -1925,7 +1935,12 @@ Expression make_anyMatchingAttribute(const std::string &function_name, const std
 
     for (const auto &arg : args) {
       const std::regex attr_regex = std::regex(arg(params).asString());
-      auto attrs = params.flow_file.lock()->getAttributes();
+      const auto cur_flow_file = params.flow_file.lock();
+      std::map<std::string, std::string> attrs;
+
+      if (cur_flow_file) {
+        attrs = cur_flow_file->getAttributes();
+      }
 
       for (const auto &attr : attrs) {
         if (std::regex_match(attr.first.begin(), attr.first.end(), attr_regex)) {
@@ -1933,7 +1948,7 @@ Expression make_anyMatchingAttribute(const std::string &function_name, const std
                                                   const std::vector<Expression> &sub_exprs) -> Value {
             std::string attr_val;
 
-            if (params.flow_file.lock()->getAttribute(attr.first, attr_val)) {
+            if (cur_flow_file && cur_flow_file->getAttribute(attr.first, attr_val)) {
               return Value(attr_val);
             } else {
               return Value();
