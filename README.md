@@ -329,6 +329,9 @@ $ sudo brew install libpcap
     Enter choice [ A - N ] 
   ```
 
+- Boostrap now saves state between runs. State will automatically be saved. Provide -c or --clear to clear this state. The -i option provides a guided menu install with the ability to change 
+advanced features.
+
 ### Building
 
 - From your source checkout, create a directory to perform the build (e.g. build) and cd into that directory.

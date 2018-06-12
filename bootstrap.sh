@@ -31,6 +31,7 @@ FEATURES_SELECTED="false"
 AUTO_REMOVE_EXTENSIONS="true"
 export NO_PROMPT="false"
 ALL_FEATURES_ENABLED=${FALSE}
+BUILD_DIR="build"
 
 DEPLOY="false"
 OPTIONS=()
@@ -41,53 +42,8 @@ DEPLOY_LIMITS=()
 
 DEPENDENCIES=()
 
-add_option(){
-  eval "$1=$2"
-  OPTIONS+=("$1")
-  CMAKE_OPTIONS_ENABLED+=("$1:$3")
-  CMAKE_OPTIONS_DISABLED+=("$1:$4")
-}
+. "${script_directory}/bstrp_functions.sh"
 
-add_enabled_option(){
-  eval "$1=$2"
-  OPTIONS+=("$1")
-  CMAKE_OPTIONS_DISABLED+=("$1:$3")
-}
-add_cmake_option(){
-  eval "$1=$2"
-}
-
-add_disabled_option(){
-  eval "$1=$2"
-  OPTIONS+=("$1")
-  CMAKE_OPTIONS_ENABLED+=("$1:$3")
-  if [ ! -z "$4" ]; then
-    CMAKE_MIN_VERSION+=("$1:$4")
-  fi
-
-  if [ ! -z "$5" ]; then
-    if [ "$5" = "true" ]; then
-      DEPLOY_LIMITS+=("$1")
-    fi
-  fi
-}
-
-add_dependency(){
-  DEPENDENCIES+=("$1:$2")
-}
-
-### parse the command line arguments
-
-
-EnableAllFeatures(){
-  for option in "${OPTIONS[@]}" ; do
-    feature_status=${!option}
-    if [ "$feature_status" = "${FALSE}" ]; then
-      ToggleFeature $option
-    fi
-    #	eval "$option=${TRUE}"
-  done
-}
 MENU="features"
 GUIDED_INSTALL=${FALSE}
 while :; do
@@ -100,11 +56,17 @@ while :; do
       FEATURES_SELECTED="true"
       EnableAllFeatures
       ;;
+     -c|--clear)
+      rm ${script_directory}/state > /dev/null 2>&1
+      ;;
     -d|--deploy)
       NO_PROMPT="true"
       DEPLOY="true"
       FEATURES_SELECTED="true"
       EnableAllFeatures
+      ;;
+    "--build_dir="* )
+      BUILD_DIR="${1#*=}"
       ;;
     -t|--travis)
       NO_PROMPT="true"
@@ -289,234 +251,40 @@ add_dependency BUSTACHE_ENABLED "boost"
 add_disabled_option TENSORFLOW_ENABLED ${FALSE} "ENABLE_TENSORFLOW" "2.6" ${TRUE}
 add_dependency TENSORFLOW_ENABLED "tensorflow"
 
+if [ "$GUIDED_INSTALL" == "${TRUE}" ]; then
+  EnableAllFeatures
+  ALL_FEATURES_ENABLED=${TRUE}
+fi
 
-pause(){
-  read -p "Press [Enter] key to continue..." fackEnterKey
-}
+BUILD_DIR_D=${BUILD_DIR}
+load_state
+if [ "$BUILD_DIR_D" != "build" ] && [ "$BUILD_DIR_D" != "$BUILD_DIR" ]; then
+   read -p "Build dir will override stored state, $BUILD_DIR. Press any key to continue " overwrite
+   BUILD_DIR=$BUILD_DIR_D
+   
+fi
 
-can_deploy(){
-  for option in "${DEPLOY_LIMITS[@]}" ; do
-    OPT=${option%%:*}
-    if [ "${OPT}" = "$1" ]; then
-      echo "false"
-    fi
-  done
-  echo "true"
-}
-
-ToggleFeature(){
-  VARIABLE_VALUE=${!1}
-  ALL_FEATURES_ENABLED="Disabled"
-  if [ $VARIABLE_VALUE = "Enabled" ]; then
-    eval "$1=${FALSE}"
-  else
-    for option in "${CMAKE_MIN_VERSION[@]}" ; do
-      OPT=${option%%:*}
-      if [ "$OPT" = "$1" ]; then
-        NEEDED_VER=${option#*:}
-        NEEDED_MAJOR=`echo $NEEDED_VER | cut -d. -f1`
-        NEEDED_MINOR=`echo $NEEDED_VER | cut -d. -f2`
-        NEEDED_REVISION=`echo $NEEDED_VERSION | cut -d. -f3`
-        if (( NEEDED_MAJOR > CMAKE_MAJOR )); then
-          return 1
-        fi
-
-        if (( NEEDED_MINOR > CMAKE_MINOR )); then
-          return 1
-        fi
-
-        if (( NEEDED_REVISION > CMAKE_REVISION )); then
-          return 1
-        fi
-      fi
-    done
-    CAN_ENABLE=$(verify_enable $1)
-    CAN_DEPLOY=$(can_deploy $1)
-    if [ "$CAN_ENABLE" = "true" ]; then
-      if [[ "$DEPLOY" = "true" &&  "$CAN_DEPLOY" = "true" ]] || [[ "$DEPLOY" = "false" ]]; then
-        eval "$1=${TRUE}"
-      fi
-    fi
-  fi
-}
-
-
-print_feature_status(){
-  feature="$1"
-  feature_status=${!1}
-  if [ "$feature_status" = "Enabled" ]; then
-    echo "Enabled"
-  else
-    for option in "${CMAKE_MIN_VERSION[@]}" ; do
-      OPT=${option%%:*}
-      if [ "${OPT}" = "$1" ]; then
-        NEEDED_VER=${option#*:}
-        NEEDED_MAJOR=`echo $NEEDED_VER | cut -d. -f1`
-        NEEDED_MINOR=`echo $NEEDED_VER | cut -d. -f2`
-        NEEDED_REVISION=`echo $NEEDED_VERSION | cut -d. -f3`
-        if (( NEEDED_MAJOR > CMAKE_MAJOR )); then
-          echo -e "${RED}Disabled*${NO_COLOR}"
-          return 1
-        fi
-
-        if (( NEEDED_MINOR > CMAKE_MINOR )); then
-          echo -e "${RED}Disabled*${NO_COLOR}"
-          return 1
-        fi
-
-        if (( NEEDED_REVISION > CMAKE_REVISION )); then
-          echo -e "${RED}Disabled*${NO_COLOR}"
-          return 1
-        fi
-      fi
-    done
-    CAN_ENABLE=$(verify_enable $1)
-    if [ "$CAN_ENABLE" = "true" ]; then
-      echo -e "${RED}Disabled${NO_COLOR}"
-    else
-      echo -e "${RED}Disabled*${NO_COLOR}"
-    fi
-
-  fi
-}
-
-
-if [ ! -d "build" ]; then
-  mkdir build/
+if [ ! -d "${BUILD_DIR}" ]; then
+  mkdir ${BUILD_DIR}/
 else
 
   overwrite="Y"
   if [ "$NO_PROMPT" = "false" ] && [ "$FEATURES_SELECTED" = "false" ]; then
-    echo "CMAKE Build dir exists, should we overwrite your build directory before we begin?"
+    echo "CMAKE Build dir (${BUILD_DIR}) exists, should we overwrite your build directory before we begin?"
     read -p "If you have already bootstrapped, bootstrapping again isn't necessary to run make [ Y/N ] " overwrite
   fi
   if [ "$overwrite" = "N" ] || [ "$overwrite" = "n" ]; then
     echo "Exiting ...."
     exit
   else
-    rm build/CMakeCache.txt > /dev/null 2>&1
+    rm ${BUILD_DIR}/CMakeCache.txt > /dev/null 2>&1
   fi
 fi
 
 ## change to the directory
 
 
-
-pushd build
-
-if [ "$GUIDED_INSTALL" == "${TRUE}" ]; then
-  EnableAllFeatures
-  ALL_FEATURES_ENABLED=${TRUE}
-fi
-
-
-show_main_menu() {
-  clear
-  echo "****************************************"
-  echo " MiNiFi C++ Main Menu."
-  echo "****************************************"
-  echo "A. Select MiNIFi C++ Features " 
-  if [ "$ALL_FEATURES_ENABLED" = "${TRUE}" ]; then
-    echo "  All features enabled  ........$(print_feature_status ALL_FEATURES_ENABLED)"
-  fi
-  echo "B. Select Advanced Features   "
-  echo "C. Continue with selected options   "
-  echo -e "Q. Exit\r\n"
-}
-
-read_main_menu_options(){
-  local choice
-  read -p "Enter choice [ A-C ] " choice
-  choice=$(echo ${choice} | tr '[:upper:]' '[:lower:]')
-  case $choice in
-    a) MENU="features" ;;
-    b) MENU="advanced" ;;
-    c) FEATURES_SELECTED="true" ;;
-    q) exit 0;;
-    *) echo -e "${RED}Please enter a valid option...${NO_COLOR}" && sleep 1
-  esac
-}
-
-show_advanced_features_menu() {
-  clear
-  echo "****************************************"
-  echo " MiNiFi C++ Advanced Features."
-  echo "****************************************"
-  echo "A. Portable Build ..............$(print_feature_status PORTABLE_BUILD)"
-  echo "B. Build with Debug symbols ....$(print_feature_status DEBUG_SYMBOLS)"
-  echo "C. Build RocksDB from source ...$(print_feature_status BUILD_ROCKSDB)"
-  echo -e "R. Return to Main Menu\r\n"
-}
-
-read_advanced_menu_options(){
-  local choice
-  read -p "Enter choice [ A-C ] " choice
-  choice=$(echo ${choice} | tr '[:upper:]' '[:lower:]')
-  case $choice in
-    a) ToggleFeature PORTABLE_BUILD ;;
-    b) ToggleFeature DEBUG_SYMBOLS ;;
-    c) ToggleFeature BUILD_ROCKSDB ;;
-    r) MENU="main" ;;
-    *) echo -e "${RED}Please enter a valid option...${NO_COLOR}" && sleep 1
-  esac
-}
-
-
-
-show_supported_features() {
-  clear
-  echo "****************************************"
-  echo " Select MiNiFi C++ Features to toggle."
-  echo "****************************************"
-  echo "A. Persistent Repositories .....$(print_feature_status ROCKSDB_ENABLED)"
-  echo "B. Lib Curl Features ...........$(print_feature_status HTTP_CURL_ENABLED)"
-  echo "C. Lib Archive Features ........$(print_feature_status LIBARCHIVE_ENABLED)"
-  echo "D. Execute Script support ......$(print_feature_status EXECUTE_SCRIPT_ENABLED)"
-  echo "E. Expression Language support .$(print_feature_status EXPRESSION_LANGAUGE_ENABLED)"
-  echo "F. Kafka support ...............$(print_feature_status KAFKA_ENABLED)"
-  echo "G. PCAP support ................$(print_feature_status PCAP_ENABLED)"
-  echo "H. USB Camera support ..........$(print_feature_status USB_ENABLED)"
-  echo "I. GPS support .................$(print_feature_status GPS_ENABLED)"
-  echo "J. TensorFlow Support ..........$(print_feature_status TENSORFLOW_ENABLED)"
-  echo "K. Bustache Support ............$(print_feature_status BUSTACHE_ENABLED)"
-  echo "L. MQTT Support ................$(print_feature_status MQTT_ENABLED)"
-  echo "M. Enable all extensions"
-  echo "P. Continue with these options"
-  if [ "$GUIDED_INSTALL" = "${TRUE}" ]; then
- 	 echo "R. Return to Main Menu"
-  fi
-  echo "Q. Quit"
-  echo "* Extension cannot be installed due to"
-  echo -e "  version of cmake or other software\r\n"
-}
-
-read_feature_options(){
-  local choice
-  read -p "Enter choice [ A - N ] " choice
-  choice=$(echo ${choice} | tr '[:upper:]' '[:lower:]')
-  case $choice in
-    a) ToggleFeature ROCKSDB_ENABLED ;;
-    b) ToggleFeature HTTP_CURL_ENABLED ;;
-    c) ToggleFeature LIBARCHIVE_ENABLED ;;
-    d) ToggleFeature EXECUTE_SCRIPT_ENABLED ;;
-    e) ToggleFeature EXPRESSION_LANGAUGE_ENABLED ;;
-    f) ToggleFeature KAFKA_ENABLED ;;
-    g) ToggleFeature PCAP_ENABLED ;;
-    h) ToggleFeature USB_ENABLED ;;
-    i) ToggleFeature GPS_ENABLED ;;
-    j) ToggleFeature TENSORFLOW_ENABLED ;;
-    k) ToggleFeature BUSTACHE_ENABLED ;;
-    l) ToggleFeature MQTT_ENABLED ;;
-    m) EnableAllFeatures ;;
-    p) FEATURES_SELECTED="true" ;;
-    r) if [ "$GUIDED_INSTALL" = "${TRUE}" ]; then
-	   MENU="main" 
-       fi
-       ;;
-    q) exit 0;;
-    *) echo -e "${RED}Please enter an option A-L...${NO_COLOR}" && sleep 2
-  esac
-}
+pushd ${BUILD_DIR}
 
 while [ ! "$FEATURES_SELECTED" == "true" ]
 do
@@ -533,6 +301,7 @@ do
 done
 ### ensure we have all dependencies
 
+save_state
 
 build_deps
 
@@ -638,4 +407,6 @@ if [ "$PACKAGE" = "true" ]; then
   make package
 fi
 
+
 popd
+
