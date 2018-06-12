@@ -35,7 +35,8 @@ namespace minifi {
 namespace processors {
 
 struct GetFileRequest {
-  std::string directory = ".";bool recursive = true;bool keepSourceFile = false;
+  bool recursive = true;
+  bool keepSourceFile = false;
   uint64_t minAge = 0;
   uint64_t maxAge = 0;
   uint64_t minSize = 0;
