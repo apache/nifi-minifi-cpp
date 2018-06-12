@@ -383,7 +383,7 @@ default values, and whether a property supports the NiFi Expression Language.
 | Name | Default Value | Allowable Values | Description |
 | - | - | - | - |
 | **Batch Size** | 10 | | The maximum number of files to pull in each iteration |
-| **Input Directory** | . | | The input directory from which to pull files |
+| **Input Directory** | . | | The input directory from which to pull files<br>**Supports Expression Language: true** |
 | **Ignore Hidden Files** | true | | Indicates whether or not hidden files should be ignored |
 | **Keep Source File** | false | | If true, the file is not deleted after it has been copied to the Content Repository |
 | Maximum File Age | 0 sec | | The minimum age that a file must be in order to be pulled any file younger than this amount of time (according to last modification date) will be ignored |

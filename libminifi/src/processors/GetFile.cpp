@@ -84,10 +84,6 @@ void GetFile::initialize() {
 
 void GetFile::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory) {
   std::string value;
-
-  if (context->getProperty(Directory.getName(), value)) {
-    request_.directory = value;
-  }
   if (context->getProperty(BatchSize.getName(), value)) {
     core::Property::StringToInt(value, request_.batchSize);
   }
@@ -139,7 +135,12 @@ void GetFile::onTrigger(core::ProcessContext *context, core::ProcessSession *ses
   logger_->log_debug("Is listing empty %i", isListingEmpty());
   if (isListingEmpty()) {
     if (request_.pollInterval == 0 || (getTimeMillis() - last_listing_time_) > request_.pollInterval) {
-      performListing(request_.directory, request_);
+      std::string directory;
+      const std::shared_ptr<core::FlowFile> flow_file;
+      if (!context->getProperty(Directory.getName(), directory, flow_file)) {
+        logger_->log_warn("Resolved missing Input Directory property value");
+      }
+      performListing(directory, request_);
       last_listing_time_.store(getTimeMillis());
     }
   }
