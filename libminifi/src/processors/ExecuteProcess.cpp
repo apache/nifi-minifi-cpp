@@ -73,13 +73,14 @@ void ExecuteProcess::initialize() {
 
 void ExecuteProcess::onTrigger(core::ProcessContext *context, core::ProcessSession *session) {
   std::string value;
-  if (context->getProperty(Command.getName(), value)) {
+  std::shared_ptr<core::FlowFile> flow_file;
+  if (context->getProperty(Command.getName(), value, flow_file)) {
     this->_command = value;
   }
-  if (context->getProperty(CommandArguments.getName(), value)) {
+  if (context->getProperty(CommandArguments.getName(), value, flow_file)) {
     this->_commandArgument = value;
   }
-  if (context->getProperty(WorkingDir.getName(), value)) {
+  if (context->getProperty(WorkingDir.getName(), value, flow_file)) {
     this->_workingDir = value;
   }
   if (context->getProperty(BatchDuration.getName(), value)) {
