@@ -42,6 +42,7 @@ core::Property PublishKafka::MaxMessageSize("Max Request Size", "Maximum Kafka p
 core::Property PublishKafka::RequestTimeOut("Request Timeout", "The ack timeout of the producer request in milliseconds", "");
 core::Property PublishKafka::ClientName("Client Name", "Client Name to use when communicating with Kafka", "");
 core::Property PublishKafka::BatchSize("Batch Size", "Maximum number of messages batched in one MessageSet", "");
+core::Property PublishKafka::AttributeNameRegex("Attributes to Send as Headers", "Any attribute whose name matches the regex will be added to the Kafka messages as a Header", "");
 core::Property PublishKafka::QueueBufferMaxTime("Queue Buffering Max Time", "Delay to wait for messages in the producer queue to accumulate before constructing message batches", "");
 core::Property PublishKafka::QueueBufferMaxSize("Queue Max Buffer Size", "Maximum total message size sum allowed on the producer queue", "");
 core::Property PublishKafka::QueueBufferMaxMessage("Queue Max Message", "Maximum number of messages allowed on the producer queue", "");
@@ -64,6 +65,7 @@ void PublishKafka::initialize() {
   properties.insert(MaxMessageSize);
   properties.insert(RequestTimeOut);
   properties.insert(ClientName);
+  properties.insert(AttributeNameRegex);
   properties.insert(BatchSize);
   properties.insert(QueueBufferMaxTime);
   properties.insert(QueueBufferMaxSize);
@@ -120,6 +122,11 @@ void PublishKafka::onSchedule(core::ProcessContext *context, core::ProcessSessio
     logger_->log_debug("PublishKafka: queue.buffering.max.messages [%s]", value);
     if (result != RD_KAFKA_CONF_OK)
       logger_->log_error("PublishKafka: configure error result [%s]", errstr);
+  }
+  value = "";
+  if (context->getProperty(AttributeNameRegex.getName(), value) && !value.empty()) {
+    attributeNameRegex.assign(value);
+    logger_->log_debug("PublishKafka: AttributeNameRegex %s", value);
   }
   value = "";
   if (context->getProperty(QueueBufferMaxSize.getName(), value) && !value.empty() && core::Property::StringToInt(value, valInt)) {
@@ -262,7 +269,7 @@ void PublishKafka::onTrigger(const std::shared_ptr<core::ProcessContext> &contex
   if (flowFile->getAttribute(KAFKA_KEY_ATTRIBUTE, value))
     kafkaKey = value;
 
-  PublishKafka::ReadCallback callback(flowFile->getSize(), max_seg_size_, kafkaKey, rkt_);
+  PublishKafka::ReadCallback callback(max_seg_size_, kafkaKey, rkt_, rk_, flowFile, attributeNameRegex);
   session->read(flowFile, &callback);
   if (callback.status_ < 0) {
     logger_->log_error("Failed to send flow to kafka topic %s", topic_);
