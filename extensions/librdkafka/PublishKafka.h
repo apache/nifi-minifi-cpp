@@ -28,6 +28,7 @@
 #include "core/Property.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "rdkafka.h"
+#include <regex>
 
 namespace org {
 namespace apache {
@@ -83,6 +84,7 @@ public:
   static core::Property RequestTimeOut;
   static core::Property ClientName;
   static core::Property BatchSize;
+  static core::Property AttributeNameRegex;
   static core::Property QueueBufferMaxTime;
   static core::Property QueueBufferMaxSize;
   static core::Property QueueBufferMaxMessage;
@@ -101,12 +103,17 @@ public:
   // Nest Callback Class for read stream
   class ReadCallback: public InputStreamCallback {
   public:
-    ReadCallback(uint64_t flow_size, uint64_t max_seg_size, const std::string &key, rd_kafka_topic_t *rkt) :
-        flow_size_(flow_size), max_seg_size_(max_seg_size), key_(key), rkt_(rkt) {
+    ReadCallback(uint64_t max_seg_size, const std::string &key, rd_kafka_topic_t *rkt, rd_kafka_t *rk, const std::shared_ptr<core::FlowFile> &flowFile, const std::regex &attributeNameRegex)  :
+        max_seg_size_(max_seg_size), key_(key), rkt_(rkt), rk_(rk), flowFile_(flowFile), attributeNameRegex_(attributeNameRegex) {
+      flow_size_ = flowFile_->getSize();
       status_ = 0;
       read_size_ = 0;
+      hdrs = nullptr;
     }
     ~ReadCallback() {
+      if (hdrs) {
+        rd_kafka_headers_destroy(hdrs);
+      }
     }
     int64_t process(std::shared_ptr<io::BaseStream> stream) {
       if (flow_size_ < max_seg_size_)
@@ -115,6 +122,17 @@ public:
       buffer.reserve(max_seg_size_);
       read_size_ = 0;
       status_ = 0;
+      rd_kafka_resp_err_t err;
+
+      for (auto kv : flowFile_->getAttributes()) {
+        if (regex_match(kv.first, attributeNameRegex_)) {
+          if (!hdrs) {
+            hdrs = rd_kafka_headers_new(8);
+          }
+          err = rd_kafka_header_add(hdrs, kv.first.c_str(), kv.first.size(),  kv.second.c_str(), kv.second.size());
+        }
+      }
+
       while (read_size_ < flow_size_) {
         int readRet = stream->read(&buffer[0], max_seg_size_);
         if (readRet < 0) {
@@ -122,7 +140,17 @@ public:
           return read_size_;
         }
         if (readRet > 0) {
-          if (rd_kafka_produce(rkt_, RD_KAFKA_PARTITION_UA, RD_KAFKA_MSG_F_COPY, &buffer[0], readRet, key_.c_str(), key_.size(), NULL) == -1) {
+          if (hdrs) {
+            rd_kafka_headers_t *hdrs_copy;
+            hdrs_copy = rd_kafka_headers_copy(hdrs);
+            err = rd_kafka_producev(rk_, RD_KAFKA_V_RKT(rkt_), RD_KAFKA_V_PARTITION(RD_KAFKA_PARTITION_UA), RD_KAFKA_V_MSGFLAGS(RD_KAFKA_MSG_F_COPY), RD_KAFKA_V_VALUE(&buffer[0], readRet), RD_KAFKA_V_HEADERS(hdrs_copy), RD_KAFKA_V_KEY(key_.c_str(), key_.size()), RD_KAFKA_V_END);
+            if (err) {
+              rd_kafka_headers_destroy(hdrs_copy);
+            }
+          } else {
+            err = rd_kafka_producev(rk_, RD_KAFKA_V_RKT(rkt_), RD_KAFKA_V_PARTITION(RD_KAFKA_PARTITION_UA), RD_KAFKA_V_MSGFLAGS(RD_KAFKA_MSG_F_COPY), RD_KAFKA_V_VALUE(&buffer[0], readRet), RD_KAFKA_V_KEY(key_.c_str(), key_.size()), RD_KAFKA_V_END);
+          }
+          if (err) {
             status_ = -1;
             return read_size_;
           }
@@ -137,8 +165,12 @@ public:
     uint64_t max_seg_size_;
     std::string key_;
     rd_kafka_topic_t *rkt_;
+    rd_kafka_t *rk_;
+    rd_kafka_headers_t *hdrs;
+    std::shared_ptr<core::FlowFile> flowFile_;
     int status_;
     int read_size_;
+    std::regex attributeNameRegex_;
   };
 
 public:
@@ -167,6 +199,7 @@ private:
   rd_kafka_topic_t *rkt_;
   std::string topic_;
   uint64_t max_seg_size_;
+  std::regex attributeNameRegex;
 };
 
 REGISTER_RESOURCE (PublishKafka);
