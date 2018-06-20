@@ -81,8 +81,12 @@ get_pid() {
 # Performs a check to see if the provided pid is one that currently exists
 active_pid() {
   pid=${1}
-  kill -s 0 ${pid} > /dev/null 2>&1
-  echo $?
+  if [ ${pid} -eq -1 ]; then
+    echo 1
+  else
+    kill -s 0 ${pid} > /dev/null 2>&1
+    echo $?
+  fi
 }
 
 install() {
@@ -148,8 +152,12 @@ get_pid() {
 # Performs a check to see if the provided pid is one that currently exists
 active_pid() {
   pid=\${1}
-  kill -s 0 \${pid} > /dev/null 2>&1
-  echo \$?
+  if [ \${pid} -eq -1 ]; then
+    echo 1
+  else
+    kill -s 0 \${pid} > /dev/null 2>&1
+    echo \$?
+  fi
 }
 
 saved_pid=\$(get_pid)
