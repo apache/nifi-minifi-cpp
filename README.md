@@ -28,6 +28,7 @@ MiNiFi is a child project effort of Apache NiFi.  This repository is for a nativ
   - [Configuring](#configuring)
   - [Running](#running)
   - [Deploying](#deploying)
+- [Issue Tracking](#issue-tracking)
 - [Documentation](#documentation)
 - [License](#license)
 
@@ -838,6 +839,9 @@ will be disabled in your deployment.
 ### Extensions
 
 Please see [Extensions.md](Extensions.md) on how to build and run conditionally built dependencies and extensions.
+
+## Issue Tracking
+See https://issues.apache.org/jira/projects/MINIFICPP/issues for the issue tracker.
 
 ## Documentation
 See https://nifi.apache.org/minifi for the latest documentation.
