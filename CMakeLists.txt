@@ -114,7 +114,7 @@ else()
 
   # Include OpenSSL
   find_package (OpenSSL REQUIRED)
-endif(USE_SYSTEM_OPENSSL)
+endif()
 
 if (OPENSSL_FOUND)
   include_directories(${OPENSSL_INCLUDE_DIR})
