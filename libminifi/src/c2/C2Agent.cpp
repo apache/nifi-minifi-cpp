@@ -40,15 +40,20 @@ C2Agent::C2Agent(const std::shared_ptr<core::controller::ControllerServiceProvid
                  const std::shared_ptr<Configure> &configuration)
     : controller_(controller),
       update_sink_(updateSink),
+      update_service_(nullptr),
       configuration_(configuration),
       heart_beat_period_(3000),
       max_c2_responses(5),
       logger_(logging::LoggerFactory<C2Agent>::getLogger()) {
   allow_updates_ = true;
 
-  running_configuration = std::make_shared<Configure>();
+  running_c2_configuration = std::make_shared<Configure>();
 
   last_run_ = std::chrono::steady_clock::now();
+
+  if (nullptr != controller_) {
+    update_service_ = std::static_pointer_cast<controllers::UpdatePolicyControllerService>(controller_->getControllerService(C2_AGENT_UPDATE_NAME));
+  }
 
   configure(configuration, false);
 
@@ -582,18 +587,36 @@ void C2Agent::handle_update(const C2ContentResponse &resp) {
         }
       }
     }
+  } else if (resp.name == "properties") {
+    bool update_occurred = false;
+    for (auto entry : resp.operation_arguments) {
+      if (nullptr != update_service_) {
+        if (update_service_->canUpdate(entry.first)) {
+          configuration_->set(entry.first, entry.second.to_string());
+          update_occurred = true;
+        }
+      }
+    }
+    if (nullptr != update_service_ && update_occurred) {
+      // enable updates to persist the configuration.
+    }
   } else if (resp.name == "c2") {
     // prior configuration options were already in place. thus
     // we clear the map so that we don't go through replacing
     // unnecessary objects.
-    running_configuration->clear();
+    running_c2_configuration->clear();
 
     for (auto entry : resp.operation_arguments) {
-      running_configuration->set(entry.first, entry.second.to_string());
+      bool can_update = true;
+      if (nullptr != update_service_) {
+        can_update = update_service_->canUpdate(entry.first);
+      }
+      if (can_update)
+        running_c2_configuration->set(entry.first, entry.second.to_string());
     }
 
     if (resp.operation_arguments.size() > 0)
-      configure(running_configuration);
+      configure(running_c2_configuration);
     C2Payload response(Operation::ACKNOWLEDGE, resp.ident, false, true);
     enqueue_c2_response(std::move(response));
   } else if (resp.name == "agent") {
