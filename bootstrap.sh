@@ -57,7 +57,7 @@ while :; do
       EnableAllFeatures
       ;;
      -c|--clear)
-      rm ${script_directory}/state > /dev/null 2>&1
+      rm ${script_directory}/bt_state > /dev/null 2>&1
       ;;
     -d|--deploy)
       NO_PROMPT="true"

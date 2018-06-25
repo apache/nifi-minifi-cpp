@@ -72,8 +72,8 @@ pause(){
 
 
 load_state(){
-if [ -f ${script_directory}/state ]; then
- . ${script_directory}/state
+if [ -f ${script_directory}/bt_state ]; then
+ . ${script_directory}/bs_state
  for option in "${OPTIONS[@]}" ; do
       option_value="${!option}"
        if [ "${option_value}" = "${FALSE}" ]; then
@@ -85,11 +85,11 @@ fi
 
 echo_state_variable(){
 VARIABLE_VALUE=${!1}
-echo "$1=\"${VARIABLE_VALUE}\"" >> ${script_directory}/state
+echo "$1=\"${VARIABLE_VALUE}\"" >> ${script_directory}/bt_state
 }
 
 save_state(){
-   echo "VERSION=1" > ${script_directory}/state
+   echo "VERSION=1" > ${script_directory}/bt_state
    echo_state_variable BUILD_IDENTIFIER
    echo_state_variable BUILD_DIR
    for option in "${OPTIONS[@]}" ; do

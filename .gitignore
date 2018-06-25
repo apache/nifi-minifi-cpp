@@ -42,7 +42,7 @@ cmake-build-debug
 
 # Generated files
 build
-state
+bt_state
 bin
 target
 thirdparty/**/*.o
