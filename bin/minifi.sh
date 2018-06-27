@@ -329,9 +329,6 @@ case "$1" in
       ${minifi_executable}
       ;;
     status)
-      # interpret status as per LSB specifications
-      # see:  http://refspecs.linuxbase.org/LSB_3.1.0/LSB-Core-generic/LSB-Core-generic/iniscrptact.html
-
       if [ "${saved_pid}" -gt 0 ]; then
         if [ $(active_pid ${saved_pid}) -ne 0 ]; then
           # program is dead and pid file exists
@@ -345,7 +342,7 @@ case "$1" in
       else
         # program is not running
         echo "MiNiFi is not currently running."
-        exit 3;
+        exit 0;
       fi
       ;;
     update) 
