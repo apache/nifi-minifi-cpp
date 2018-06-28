@@ -31,6 +31,20 @@
 #define stat _stat
 #endif
 
+#ifdef BDIFF
+
+extern "C"
+{
+#include "bsdiff.h"
+#include "bspatch.h"
+}
+#else
+int apply_bsdiff_patch(const char *oldfile, const char *newfile, const char *patch) {
+  return -1;
+}
+
+#endif
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -79,7 +93,7 @@ class FileUtils {
 #endif
     return -1;
   }
-  
+
   static int copy_file(const std::string &path_from, const std::string dest_path) {
     std::ifstream src(path_from, std::ios::binary);
     if (!src.is_open())
@@ -87,6 +101,14 @@ class FileUtils {
     std::ofstream dest(dest_path, std::ios::binary);
     dest << src.rdbuf();
     return 0;
+  }
+
+  static int apply_binary_diff(const char *file_original, const char *file_new, const char *result_file) {
+    return apply_bsdiff_patch(file_original, file_new, result_file);
+  }
+
+  static int binary_diff(const char *file_original, const char *file_other, const char *patchfile) {
+    return -1;
   }
 
 };

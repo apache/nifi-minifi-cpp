@@ -167,6 +167,9 @@ void C2Agent::configure(const std::shared_ptr<Configure> &configure, bool reconf
 
       copy_path << cwd << "/minifi.update";
     }
+
+    // if not defined we won't beable to update
+    configure->get("c2.agent.bin.location", bin_location_);
   }
   std::string heartbeat_reporters;
   if (configure->get("c2.agent.heartbeat.reporter.classes", heartbeat_reporters)) {
@@ -622,6 +625,11 @@ void C2Agent::handle_update(const C2ContentResponse &resp) {
   } else if (resp.name == "agent") {
     // we are upgrading the agent. therefore we must be given a location
     auto location = resp.operation_arguments.find("location");
+    auto isPartialStr = resp.operation_arguments.find("partial");
+    bool partial_update = false;
+    if (isPartialStr != std::end(resp.operation_arguments)) {
+      partial_update = utils::StringUtils::equalsIgnoreCase(isPartialStr->second.to_string(), "true") ? true : false;
+    }
     if (location != resp.operation_arguments.end()) {
       // we will not have a raw payload
       C2Payload payload(Operation::TRANSFER, false, true);
@@ -639,9 +647,13 @@ void C2Agent::handle_update(const C2ContentResponse &resp) {
       protocol_.load()->consumePayload(std::move(transfer_response));
 
       if (allow_updates_) {
-        utils::file::FileUtils::copy_file(file_path, update_location_);
+        if (partial_update && !bin_location_.empty()) {
+          utils::file::FileUtils::apply_binary_diff(bin_location_.c_str(), file_path.c_str(), update_location_.c_str());
+        } else {
+          utils::file::FileUtils::copy_file(file_path, update_location_);
+        }
         // remove the downloaded file.
-        logger_->log_trace("removing command %s", file_path);
+        logger_->log_trace("removing file %s", file_path);
         unlink(file_path.c_str());
         update_agent();
       }
