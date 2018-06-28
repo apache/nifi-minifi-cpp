@@ -214,6 +214,8 @@ class C2Agent : public state::UpdateController, public state::response::Response
 
   std::string update_location_;
 
+  std::string bin_location_;
+
   std::shared_ptr<logging::Logger> logger_;
 }
 ;

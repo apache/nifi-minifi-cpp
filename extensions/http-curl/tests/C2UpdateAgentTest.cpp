@@ -175,7 +175,7 @@ int main(int argc, char **argv) {
 
   auto milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(then - start).count();
   std::string logs = LogTestController::getInstance().log_output.str();
-  assert(logs.find("removing command") != std::string::npos);
+  assert(logs.find("removing file") != std::string::npos);
   LogTestController::getInstance().reset();
   rmdir("./content_repository");
   assert(h_ex.calls_ <= (milliseconds / 1000) + 1);

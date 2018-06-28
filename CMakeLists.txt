@@ -286,6 +286,14 @@ if (ENABLE_TENSORFLOW)
     createExtension(TENSORFLOW-EXTENSIONS "TENSORFLOW EXTENSIONS" "This enables TensorFlow support" "extensions/tensorflow" "${TEST_DIR}/tensorflow-tests")
 endif()
 
+
+if (ENABLE_BINARY_DIFF)
+	find_package(bzip2)
+	include_directories("thirdparty/bsdiff/")
+	add_subdirectory("thirdparty/bsdiff")
+ENDIF(ENABLE_BINARY_DIFF)
+
+
 ## Bustache/template extensions
 option(ENABLE_BUSTACHE "Enables Bustache (ApplyTemplate) support." OFF)
 if (ENABLE_BUSTACHE)
