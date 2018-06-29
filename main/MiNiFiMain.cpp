@@ -71,7 +71,7 @@ int main(int argc, char **argv) {
   std::string nifi_configuration_class_name = "yamlconfiguration";
   std::string content_repo_class = "filesystemrepository";
 
-  running = sem_open("MiNiFiMain", O_CREAT, 0644, 0);
+  running = sem_open("/MiNiFiMain", O_CREAT, 0644, 0);
   if (running == SEM_FAILED || running == 0) {
 
     logger->log_error("could not initialize semaphore");
@@ -213,10 +213,14 @@ int main(int argc, char **argv) {
    * yield without the need for a more complex construct and
    * a spin lock
    */
-  if (sem_wait(running) != -1)
+  if (sem_wait(running) == -1)
     perror("sem_wait");
 
-  sem_unlink("MiNiFiMain");
+  if (sem_close(running) == -1)
+    perror("sem_close");
+
+  if (sem_unlink("/MiNiFiMain") == -1)
+    perror("sem_unlink");
 
   /**
    * Trigger unload -- wait stop_wait_time
