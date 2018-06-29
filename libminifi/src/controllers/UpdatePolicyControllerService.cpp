@@ -44,14 +44,14 @@ namespace nifi {
 namespace minifi {
 namespace controllers {
 
-core::Property UpdatePolicyControllerService::EnableAllProperties("Enable All Properties", "Enables all properties", "false");
+core::Property UpdatePolicyControllerService::AllowAllProperties("Allow All Properties", "Allows all properties, which are also not disallowed, to be updated", "false");
 core::Property UpdatePolicyControllerService::AllowedProperties("Allowed Properties", "Properties for which we will allow updates");
 core::Property UpdatePolicyControllerService::DisallowedProperties("Disallowed Properties", "Properties for which we will not allow updates");
-core::Property UpdatePolicyControllerService::PersistUpdates("Persist Updates", "Property that dictates whether updates should persist a restart");
+core::Property UpdatePolicyControllerService::PersistUpdates("Persist Updates", "Property that dictates whether updates should persist after a restart");
 
 void UpdatePolicyControllerService::initialize() {
   std::set<core::Property> supportedProperties;
-  supportedProperties.insert(EnableAllProperties);
+  supportedProperties.insert(AllowAllProperties);
   supportedProperties.insert(AllowedProperties);
   supportedProperties.insert(DisallowedProperties);
   supportedProperties.insert(PersistUpdates);
@@ -73,7 +73,7 @@ void UpdatePolicyControllerService::onEnable() {
   std::string enableStr, persistStr;
 
   bool enable_all = false;
-  if (getProperty(EnableAllProperties.getName(), enableStr)) {
+  if (getProperty(AllowAllProperties.getName(), enableStr)) {
     enable_all = utils::StringUtils::StringToBool(enableStr, enable_all);
   }
 
@@ -84,7 +84,7 @@ void UpdatePolicyControllerService::onEnable() {
   auto builder = state::UpdatePolicyBuilder::newBuilder(enable_all);
 
   core::Property all_prop("Allowed Properties", "Properties for which we will allow updates");
-  core::Property dall_prop("Disallowed Properties", "Properties for which we will allow updates");
+  core::Property dall_prop("Disallowed Properties", "Properties for which we will not allow updates");
 
   if (getProperty(AllowedProperties.getName(), all_prop)) {
     for (const auto &str : all_prop.getValues()) {

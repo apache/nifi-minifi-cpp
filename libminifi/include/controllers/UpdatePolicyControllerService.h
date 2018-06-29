@@ -60,7 +60,7 @@ class UpdatePolicyControllerService : public core::controller::ControllerService
     initialize();
   }
 
-  static core::Property EnableAllProperties;
+  static core::Property AllowAllProperties;
   static core::Property PersistUpdates;
   static core::Property AllowedProperties;
   static core::Property DisallowedProperties;
