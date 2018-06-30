@@ -287,11 +287,9 @@ if (ENABLE_TENSORFLOW)
 endif()
 
 
-if (ENABLE_BINARY_DIFF)
-	find_package(bzip2)
-	include_directories("thirdparty/bsdiff/")
-	add_subdirectory("thirdparty/bsdiff")
-ENDIF(ENABLE_BINARY_DIFF)
+find_package(bzip2)
+include_directories("thirdparty/bsdiff/")
+add_subdirectory("thirdparty/bsdiff")
 
 
 ## Bustache/template extensions
