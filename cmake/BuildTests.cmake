@@ -53,6 +53,11 @@ function(createTests testName)
     target_include_directories(${testName} BEFORE PRIVATE "${CMAKE_SOURCE_DIR}/libminifi/include/utils")
     target_include_directories(${testName} BEFORE PRIVATE "${CMAKE_SOURCE_DIR}/libminifi/include/processors")
     target_include_directories(${testName} BEFORE PRIVATE "${CMAKE_SOURCE_DIR}/libminifi/include/provenance")
+
+	if (ENABLE_BINARY_DIFF)
+    	target_include_directories(${testName} BEFORE PRIVATE "${CMAKE_SOURCE_DIR}/thirdparty/bsdiff/")
+    endif(ENABLE_BINARY_DIFF)
+
     if (Boost_FOUND)
         target_include_directories(${testName} BEFORE PRIVATE "${Boost_INCLUDE_DIRS}")
     endif()

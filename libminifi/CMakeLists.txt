@@ -36,6 +36,10 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fobjc-abi-version=2 -fobjc-arc -isysroot ${
 ELSE ()
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DOPENSSL_SUPPORT -DYAML_SUPPORT")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DOPENSSL_SUPPORT -DYAML_SUPPORT")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DBDIFF")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DBDIFF")
+include_directories("../thirdparty/bsdiff/")
+
 ENDIF()
 
 
@@ -73,11 +77,16 @@ add_library(spdlog STATIC ${SPD_SOURCES})
 add_library(core-minifi STATIC ${SOURCES})
 target_link_libraries(core-minifi ${CMAKE_DL_LIBS} ${UUID_LIBRARIES} yaml-cpp)
 
+target_link_libraries(core-minifi  PRIVATE bsdiff )
+
 find_package(ZLIB REQUIRED)
 include_directories(${ZLIB_INCLUDE_DIRS})
 
 target_link_libraries(core-minifi minifi-expression-language-extensions)
 target_link_libraries (core-minifi ${ZLIB_LIBRARIES})
+
+
+
 
 # Include OpenSSL
 find_package (OpenSSL REQUIRED)
@@ -92,6 +101,7 @@ add_library(minifi STATIC ${PROCESSOR_SOURCES})
 add_library(capi STATIC ${CAPI_SOURCES})
 
 target_link_libraries(minifi core-minifi)
+
 
 
 SET (LIBMINIFI core-minifi PARENT_SCOPE)

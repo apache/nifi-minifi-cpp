@@ -47,6 +47,7 @@ build_deps(){
 
   COMMAND="brew install cmake"
   INSTALLED=()
+  INSTALLED+=("bzip2")
   for option in "${OPTIONS[@]}" ; do
     option_value="${!option}"
     if [ "$option_value" = "${TRUE}" ]; then
@@ -80,7 +81,6 @@ build_deps(){
           elif [ "$FOUND_VALUE" = "gpsd" ]; then
             INSTALLED+=("gpsd")
           elif [ "$FOUND_VALUE" = "libarchive" ]; then
-            INSTALLED+=("xz")
             INSTALLED+=("bzip2")
           fi
         fi

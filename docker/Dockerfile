@@ -46,6 +46,7 @@ RUN apk --update --no-cache upgrade && apk --update --no-cache add gcc \
 	gpsd-dev \
 	libressl-dev \
 	zlib-dev \
+	bzip2-dev \
 	python-dev
 
 ENV USER minificpp

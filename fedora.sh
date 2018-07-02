@@ -35,6 +35,7 @@ build_deps(){
 
   COMMAND="sudo yum -y install gcc gcc-c++ libuuid libuuid-devel"
   INSTALLED=()
+  INSTALLED+=("bzip2-devel")
   for option in "${OPTIONS[@]}" ; do
     option_value="${!option}"
     if [ "$option_value" = "${TRUE}" ]; then
@@ -68,7 +69,6 @@ build_deps(){
             INSTALLED+=("gpsd-devel")
           elif [ "$FOUND_VALUE" = "libarchive" ]; then
             INSTALLED+=("xz-devel")
-            INSTALLED+=("bzip2-devel")
           fi
         fi
       done
