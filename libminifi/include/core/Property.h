@@ -55,7 +55,7 @@ class Property {
    */
   Property(const std::string name,
            const std::string description,
-           const std::string value,
+           std::string value,
            bool is_required,
            std::vector<std::string> &&dependent_properties,
            std::vector<std::pair<std::string, std::string>> &&exclusive_of_properties)
@@ -65,15 +65,15 @@ class Property {
         dependent_properties_(std::move(dependent_properties)),
         exclusive_of_properties_(std::move(exclusive_of_properties)),
         is_collection_(false) {
-    values_.push_back(std::string(value.c_str()));
+    values_.push_back(std::move(value));
   }
 
-  Property(const std::string name, const std::string description, const std::string value)
+  Property(const std::string name, const std::string description, std::string value)
       : name_(name),
         description_(description),
         is_required_(false),
         is_collection_(false) {
-    values_.push_back(std::string(value.c_str()));
+    values_.push_back(std::move(value));
   }
 
   Property(const std::string name, const std::string description)
@@ -105,7 +105,7 @@ class Property {
   /**
    * Add value to the collection of values.
    */
-  void addValue(const std::string &value);
+  void addValue(std::string value);
   const Property &operator=(const Property &other);
   // Compare
   bool operator <(const Property & right) const;

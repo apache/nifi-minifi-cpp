@@ -49,14 +49,14 @@ std::vector<std::string> &Property::getValues() {
 void Property::setValue(std::string value) {
   if (!is_collection_) {
     values_.clear();
-    values_.push_back(std::string(value.c_str()));
+    values_.push_back(std::move(value));
   } else {
-    values_.push_back(std::string(value.c_str()));
+    values_.push_back(std::move(value));
   }
 }
 
-void Property::addValue(const std::string &value) {
-  values_.push_back(std::string(value.c_str()));
+void Property::addValue(std::string value) {
+  values_.push_back(std::move(value));
 }
 
 bool Property::operator<(const Property &right) const {
