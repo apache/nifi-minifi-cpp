@@ -27,6 +27,7 @@
 
 #include "../core/state/nodes/MetricsBase.h"
 #include "core/state/UpdateController.h"
+#include "controllers/UpdatePolicyControllerService.h"
 #include "core/state/Value.h"
 #include "C2Payload.h"
 #include "C2Protocol.h"
@@ -38,6 +39,7 @@ namespace nifi {
 namespace minifi {
 namespace c2 {
 
+#define C2_AGENT_UPDATE_NAME "C2UpdatePolicy"
 /**
  * Purpose and Justification: C2 agent will be the mechanism that will abstract the protocol to do the work.
  *
@@ -195,12 +197,16 @@ class C2Agent : public state::UpdateController, public state::response::Response
   // functions that will be used for the udpate controller.
   std::vector<std::function<state::Update()>> functions_;
 
-  // controller service provider refernece.
+  std::shared_ptr<controllers::UpdatePolicyControllerService> update_service_;
+
+  // controller service provider reference.
   std::shared_ptr<core::controller::ControllerServiceProvider> controller_;
 
+  // shared pointer to the configuration of this agent
   std::shared_ptr<Configure> configuration_;
 
-  std::shared_ptr<Configure> running_configuration;
+  // shared pointer to the running c2 configuration.
+  std::shared_ptr<Configure> running_c2_configuration;
 
   std::mutex heartbeat_mutex;
 
