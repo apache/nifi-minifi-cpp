@@ -389,7 +389,7 @@ advanced features.
   CPack: Install projects
   CPack: - Install directory: ~/Development/code/apache/nifi-minifi-cpp
   CPack: Create package
-  CPack: - package: ~/Development/code/apache/nifi-minifi-cpp/build/nifi-minifi-cpp-0.5.0-bin.tar.gz generated.
+  CPack: - package: ~/Development/code/apache/nifi-minifi-cpp/build/nifi-minifi-cpp-0.6.0-bin.tar.gz generated.
   ```
 
 - Create a source assembly located in your build directory with suffix -source.tar.gz
@@ -401,18 +401,18 @@ advanced features.
   CPack: Install projects
   CPack: - Install directory: ~/Development/code/apache/nifi-minifi-cpp
   CPack: Create package
-  CPack: - package: ~/Development/code/apache/nifi-minifi-cpp/build/nifi-minifi-cpp-0.5.0-source.tar.gz generated.
+  CPack: - package: ~/Development/code/apache/nifi-minifi-cpp/build/nifi-minifi-cpp-0.6.0-source.tar.gz generated.
   ```
 
 - (Optional) Create a Docker image from the resulting binary assembly output from "make package".
 ```
 ~/Development/code/apache/nifi-minifi-cpp/build
 $ make docker
-NiFi-MiNiFi-CPP Version: 0.5.0
+NiFi-MiNiFi-CPP Version: 0.6.0
 Current Working Directory: /Users/jdyer/Development/github/nifi-minifi-cpp/docker
 CMake Source Directory: /Users/jdyer/Development/github/nifi-minifi-cpp
-MiNiFi Package: nifi-minifi-cpp-0.5.0-bin.tar.gz
-Docker Command: 'docker build --build-arg UID=1000 --build-arg GID=1000 --build-arg MINIFI_VERSION=0.5.0 --build-arg MINIFI_PACKAGE=nifi-minifi-cpp-0.5.0-bin.tar.gz -t apacheminificpp:0.5.0 .'
+MiNiFi Package: nifi-minifi-cpp-0.6.0-bin.tar.gz
+Docker Command: 'docker build --build-arg UID=1000 --build-arg GID=1000 --build-arg MINIFI_VERSION=0.6.0 --build-arg MINIFI_PACKAGE=nifi-minifi-cpp-0.6.0-bin.tar.gz -t apacheminificpp:0.6.0 .'
 Sending build context to Docker daemon 777.2 kB
 Step 1 : FROM alpine:3.5
  ---> 88e169ea8f46
@@ -728,7 +728,7 @@ The MQTTController Service can be configured for MQTT connectivity and provide t
   In the configuration below there are two classes defined under "NetworkPrioritizerService", one class "NetworkPrioritizerService2" defines en0, and en1.
   If en0 is down at any point, then en1 will be given priority before resorting to en2 and en3 of  "NetworkPrioritizerService3". If the throughput for 
   "NetworkPrioritizerService2" exceeds the defined throughput or the max payload of 1024, then "NetworkPrioritizerService3" will be used. If Max Payload and 
-  Max Throughput are not defined, then they will not be limiting factors. For this release, 0.5.0, Max Payload will only be used for processors that custom 
+  Max Throughput are not defined, then they will not be limiting factors. As of release, 0.5.0, Max Payload will only be used for processors that custom 
   implement that feature. RPGs will not support max payloads until 0.6.0. Additionally, since connection queues aren't prioritized, you must have a live connection
   for your data to send it. Since connection queues can't be re-prioritized, this can create a starvation problem. The configuration is required to account for this.
     
