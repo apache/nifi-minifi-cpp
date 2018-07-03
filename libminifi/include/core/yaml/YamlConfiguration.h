@@ -43,6 +43,13 @@ namespace core {
 #define CONFIG_YAML_REMOTE_PROCESS_GROUP_KEY_V3 "Remote Process Groups"
 #define CONFIG_YAML_PROVENANCE_REPORT_KEY "Provenance Reporting"
 
+#define YAML_CONFIGURATION_USE_REGEX
+
+// Disable regex in EL for incompatible compilers
+#if __GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 9)
+#undef YAML_CONFIGURATION_USE_REGEX
+#endif
+
 class YamlConfiguration : public FlowConfiguration {
 
  public:
@@ -110,6 +117,18 @@ class YamlConfiguration : public FlowConfiguration {
     YAML::Node rootYamlNode = YAML::Load(yamlConfigPayload);
     return getYamlRoot(&rootYamlNode);
   }
+
+  /**
+   * Iterates all component property validation rules and checks that configured state
+   * is valid. If state is determined to be invalid, conf parsing ends and an error is raised.
+   *
+   * @param component
+   * @param component_name
+   * @param yaml_section
+   */
+  void validateComponentProperties(const std::shared_ptr<ConfigurableComponent> &component,
+                                   const std::string &component_name,
+                                   const std::string &yaml_section) const;
 
  protected:
 
@@ -312,6 +331,17 @@ class YamlConfiguration : public FlowConfiguration {
  private:
   std::shared_ptr<logging::Logger> logger_;
   static std::shared_ptr<utils::IdGenerator> id_generator_;
+
+  /**
+   * Raises a human-readable configuration error for the given configuration component/section.
+   *
+   * @param component_name
+   * @param yaml_section
+   * @param reason
+   */
+  void raiseComponentError(const std::string &component_name,
+                           const std::string &yaml_section,
+                           const std::string &reason) const;
 };
 
 } /* namespace core */

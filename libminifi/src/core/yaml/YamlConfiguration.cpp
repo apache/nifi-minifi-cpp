@@ -22,6 +22,10 @@
 
 #include "core/yaml/YamlConfiguration.h"
 
+#ifdef YAML_CONFIGURATION_USE_REGEX
+#include <regex>
+#endif  // YAML_CONFIGURATION_USE_REGEX
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -782,27 +786,87 @@ void YamlConfiguration::parsePropertiesNodeYaml(YAML::Node *propertiesNode,
     }
   }
 
+  validateComponentProperties(processor, component_name, yaml_section);
+}
+
+void YamlConfiguration::validateComponentProperties(const std::shared_ptr<ConfigurableComponent> &component,
+                                                    const std::string &component_name,
+                                                    const std::string &yaml_section) const {
+  const auto &component_properties = component->getProperties();
+
   // Validate required properties
-  for (const auto &prop_pair : processor->getProperties()) {
+  for (const auto &prop_pair : component_properties) {
     if (prop_pair.second.getRequired()) {
-      const auto &val = prop_pair.second.getValue();
-
-      if (val.empty()) {
-        // Build a helpful error message for the user so they can fix the
-        // invalid YAML config file, using the component name if present
-        std::string err_msg =
-            "Unable to parse configuration file for component named '"
-                + component_name
-                + "' because required property '" + prop_pair.second.getName() + "' is not set";
-        if (!yaml_section.empty()) {
-          err_msg += " [in '" + yaml_section + "' section of configuration file]";
-        }
-        logging::LOG_ERROR(logger_) << err_msg;
-
-        throw std::invalid_argument(err_msg);
+      if (prop_pair.second.getValue().empty()) {
+        std::string reason("required property '");
+        reason.append(prop_pair.second.getName());
+        reason.append("' is not set");
+        raiseComponentError(component_name, yaml_section, reason);
       }
     }
   }
+
+  // Validate dependent properties
+  for (const auto &prop_pair : component_properties) {
+    const auto &dep_props = prop_pair.second.getDependentProperties();
+
+    if (prop_pair.second.getValue().empty()) {
+      continue;
+    }
+
+    for (const auto &dep_prop_key : dep_props) {
+      if (component_properties.at(dep_prop_key).getValue().empty()) {
+        std::string reason("property '");
+        reason.append(prop_pair.second.getName());
+        reason.append("' depends on property '");
+        reason.append(dep_prop_key);
+        reason.append("' which is not set");
+        raiseComponentError(component_name, yaml_section, reason);
+      }
+    }
+  }
+
+#ifdef YAML_CONFIGURATION_USE_REGEX
+  // Validate mutually-exclusive properties
+  for (const auto &prop_pair : component_properties) {
+    const auto &excl_props = prop_pair.second.getExclusiveOfProperties();
+
+    if (prop_pair.second.getValue().empty()) {
+      continue;
+    }
+
+    for (const auto &excl_pair : excl_props) {
+      std::regex excl_expr(excl_pair.second);
+      if (std::regex_match(component_properties.at(excl_pair.first).getValue(), excl_expr)) {
+        std::string reason("property '");
+        reason.append(prop_pair.second.getName());
+        reason.append("' is exclusive of property '");
+        reason.append(excl_pair.first);
+        reason.append("' values matching '");
+        reason.append(excl_pair.second);
+        reason.append("'");
+        raiseComponentError(component_name, yaml_section, reason);
+      }
+    }
+  }
+#else
+  logging::LOG_INFO(logger_) << "Validation of mutally-exclusive properties is disabled in this build.";
+#endif  // YAML_CONFIGURATION_USE_REGEX
+}
+
+void YamlConfiguration::raiseComponentError(const std::string &component_name,
+                                            const std::string &yaml_section,
+                                            const std::string &reason) const {
+  std::string err_msg = "Unable to parse configuration file for component named '";
+  err_msg.append(component_name);
+  err_msg.append("' because " + reason);
+  if (!yaml_section.empty()) {
+    err_msg.append(" [in '" + yaml_section + "' section of configuration file]");
+  }
+
+  logging::LOG_ERROR(logger_) << err_msg;
+
+  throw std::invalid_argument(err_msg);
 }
 
 std::string YamlConfiguration::getOrGenerateId(YAML::Node *yamlNode, const std::string &idField) {
