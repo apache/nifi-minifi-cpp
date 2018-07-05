@@ -116,6 +116,8 @@ versions of LibreSSL, cURL, or zlib are used:
 **NOTE** if Lua support is enabled, then a C++ compiler with support for c++-14 must be used. If using GCC, version 6.x
 or greater is recommended.
 
+**NOTE** if bustache (ApplyTemplate) support is enabled, a recent version of a compiler supporting c++-11 must be used. GCC versions >= 6.3.1 are known to work.
+
 #### Libraries / Development Headers
 * libboost and boost-devel
   * 1.48.0 or greater
