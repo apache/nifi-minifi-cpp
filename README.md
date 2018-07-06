@@ -116,6 +116,17 @@ versions of LibreSSL, cURL, or zlib are used:
 **NOTE** if Lua support is enabled, then a C++ compiler with support for c++-14 must be used. If using GCC, version 6.x
 or greater is recommended.
 
+**NOTE** if Expression Language support is enabled, FlexLexer must be in the include path and the version must be compatible with the version of flex used when generating lexer sources. Lexer source generation is automatically performed during CMake builds. To re-generate the sources, remove: 
+
+ * extensions/expression-language/Parser.cpp
+ * extensions/expression-language/Parser.hpp
+ * extensions/expression-language/Scanner.cpp
+ * extensions/expression-language/location.hh
+ * extensions/expression-language/position.hh
+ * extensions/expression-language/stack.hh
+
+and rebuild.
+
 #### Libraries / Development Headers
 * libboost and boost-devel
   * 1.48.0 or greater
