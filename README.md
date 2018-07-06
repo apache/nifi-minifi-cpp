@@ -118,6 +118,17 @@ or greater is recommended.
 
 **NOTE** if bustache (ApplyTemplate) support is enabled, a recent version of a compiler supporting c++-11 must be used. GCC versions >= 6.3.1 are known to work.
 
+**NOTE** if Expression Language support is enabled, FlexLexer must be in the include path and the version must be compatible with the version of flex used when generating lexer sources. Lexer source generation is automatically performed during CMake builds. To re-generate the sources, remove: 
+
+ * extensions/expression-language/Parser.cpp
+ * extensions/expression-language/Parser.hpp
+ * extensions/expression-language/Scanner.cpp
+ * extensions/expression-language/location.hh
+ * extensions/expression-language/position.hh
+ * extensions/expression-language/stack.hh
+
+and rebuild.
+
 #### Libraries / Development Headers
 * libboost and boost-devel
   * 1.48.0 or greater
