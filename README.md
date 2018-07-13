@@ -453,6 +453,16 @@ Remove the build directory created above.
 $ rm -rf ./build
 ```
 
+### Snapcraft
+
+Snapcraft builds are supported. As per Snapcraft's official recommendations, we recommend using Ubuntu 16.04 as a build system when building the Snap. To build the snap, run
+
+```
+$ snapcraft
+```
+
+from the project directory. Further instructions are available in the [Snapcraft documentation](https://docs.snapcraft.io/build-snaps/).
+
 ### Configuring
 The 'conf' directory in the root contains a template config.yml document.  
 
