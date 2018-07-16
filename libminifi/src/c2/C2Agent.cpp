@@ -28,6 +28,7 @@
 #include "core/state/UpdateController.h"
 #include "core/logging/Logger.h"
 #include "core/logging/LoggerConfiguration.h"
+#include "utils/file/DiffUtils.h"
 #include "utils/file/FileUtils.h"
 #include "utils/file/FileManager.h"
 namespace org {
@@ -648,7 +649,7 @@ void C2Agent::handle_update(const C2ContentResponse &resp) {
 
       if (allow_updates_) {
         if (partial_update && !bin_location_.empty()) {
-          utils::file::FileUtils::apply_binary_diff(bin_location_.c_str(), file_path.c_str(), update_location_.c_str());
+          utils::file::DiffUtils::apply_binary_diff(bin_location_.c_str(), file_path.c_str(), update_location_.c_str());
         } else {
           utils::file::FileUtils::copy_file(file_path, update_location_);
         }
