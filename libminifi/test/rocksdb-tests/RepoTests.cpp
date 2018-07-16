@@ -18,6 +18,8 @@
 #include "../TestBase.h"
 #include <memory>
 #include <string>
+#include <chrono>
+#include <thread>
 #include <map>
 #include "../unit/ProvenanceTestHelper.h"
 #include "provenance/Provenance.h"
@@ -151,6 +153,62 @@ TEST_CASE("Test Delete Content ", "[TestFFR4]") {
   repository->Delete(record.getUUIDStr());
 
   repository->flush();
+
+  repository->stop();
+
+  std::ifstream fileopen(ss.str());
+  REQUIRE(false == fileopen.good());
+
+  LogTestController::getInstance().reset();
+}
+
+
+TEST_CASE("Test Validate Checkpoint ", "[TestFFR5]") {
+  TestController testController;
+  char format[] = "/tmp/testRepo.XXXXXX";
+  LogTestController::getInstance().setDebug<core::ContentRepository>();
+  LogTestController::getInstance().setDebug<core::repository::FileSystemRepository>();
+  LogTestController::getInstance().setDebug<core::repository::FlowFileRepository>();
+
+  char *dir = testController.createTempDirectory(format);
+
+  std::shared_ptr<core::repository::FlowFileRepository> repository = std::make_shared<core::repository::FlowFileRepository>("ff", dir, 0, 0, 1);
+
+  std::map<std::string, std::string> attributes;
+
+  std::fstream file;
+  std::stringstream ss;
+  ss << dir << "/" << "tstFile.ext";
+  file.open(ss.str(), std::ios::out);
+  file << "tempFile";
+  file.close();
+
+  std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::FileSystemRepository>();
+
+  repository->initialize(std::make_shared<minifi::Configure>());
+
+  repository->loadComponent(content_repo);
+
+  std::shared_ptr<minifi::ResourceClaim> claim = std::make_shared<minifi::ResourceClaim>(ss.str(), content_repo);
+
+  minifi::FlowFileRecord record(repository, content_repo, attributes, claim);
+
+  record.addAttribute("keyA", "hasdgasdgjsdgasgdsgsadaskgasd");
+
+  record.addAttribute("", "hasdgasdgjsdgasgdsgsadaskgasd");
+
+  REQUIRE(true == record.Serialize());
+
+  repository->flush();
+
+  repository->stop();
+
+  repository->loadComponent(content_repo);
+
+  repository->start();
+
+  // sleep for 100 ms to let the delete work.
+  std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
   repository->stop();
 
