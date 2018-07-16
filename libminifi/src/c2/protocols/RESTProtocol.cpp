@@ -133,7 +133,6 @@ void setJsonStr(const std::string& key, const state::response::ValueNode& value,
   rapidjson::Value keyVal;
   rapidjson::Value valueVal;
   const char* c_key = key.c_str();
-
   auto base_type = value.getValue();
   keyVal.SetString(c_key, key.length(), alloc);
 
@@ -201,7 +200,9 @@ void RESTProtocol::mergePayloadContent(rapidjson::Value &target, const C2Payload
     bool use_sub_option = true;
     if (payload_content.op == payload.getOperation()) {
       for (auto content : payload_content.operation_arguments) {
-        setJsonStr(content.first, content.second, target, alloc);
+        if (!content.second.empty()) {
+          setJsonStr(content.first, content.second, target, alloc);
+        }
       }
     } else {
     }
