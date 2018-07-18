@@ -29,6 +29,7 @@ option(USE_SYSTEM_OPENSSL "Instructs the build system to search for and use an S
 option(USE_SYSTEM_UUID "Instructs the build system to search for and use an UUID library available in the host system" ON)
 option(USE_SYSTEM_CURL "Instructs the build system to search for and use a cURL library available in the host system" ON)
 option(USE_SYSTEM_ZLIB "Instructs the build system to search for and use a zlib library available in the host system" ON)
+option(USE_SYSTEM_BZIP2 "Instructs the build system to search for and use a bzip2 library available in the host system" ON)
 option(BUILD_ROCKSDB "Instructs the build system to use RocksDB from the third party directory" ON)
 
 include(FeatureSummary)
@@ -167,6 +168,37 @@ endif()
 
 if (ZLIB_FOUND)
   include_directories(${ZLIB_INCLUDE_DIRS})
+endif()
+
+if(NOT USE_SYSTEM_BZIP2)
+  message("Using bundled bzip2")
+
+  ExternalProject_Add(
+    bzip2-external
+    URL http://www.bzip.org/1.0.6/bzip2-1.0.6.tar.gz
+    URL_MD5 00b516f4704d4a7cb50a1d97e6e8e15b
+    SOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/bzip2-src"
+    CONFIGURE_COMMAND ""
+    BUILD_COMMAND make libbz2.a CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER}
+    BUILD_IN_SOURCE 1
+    BUILD_BYPRODUCTS "thirdparty/bzip2-src/libbz2.a"
+    INSTALL_COMMAND ""
+  )
+
+  list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/bzip2/dummy")
+  add_library(bz2 STATIC IMPORTED)
+  set_target_properties(bz2 PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/bzip2-src/libbz2.a")
+  add_dependencies(bz2 bzip2-external)
+  set(BZIP2_FOUND "YES")
+  set(BZIP2_INCLUDE_DIRS "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/bzip2-src")
+  set(BZIP2_LIBRARY bz2)
+  set(BZIP2_LIBRARIES ${BZIP2_LIBRARY})
+else()
+  find_package (BZip2 REQUIRED)
+endif()
+
+if (BZIP2_FOUND)
+  include_directories(${BZIP2_INCLUDE_DIRS})
 endif()
 
 SET(TEST_DIR ${CMAKE_SOURCE_DIR}/libminifi/test)
