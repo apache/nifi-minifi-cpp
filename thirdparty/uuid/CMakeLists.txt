@@ -17,6 +17,8 @@
 # under the License.
 #
 
+include_directories("include/uuid")
+
 add_library(
     uuid
     clear.c
