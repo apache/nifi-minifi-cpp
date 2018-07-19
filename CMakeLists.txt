@@ -34,6 +34,24 @@ option(BUILD_ROCKSDB "Instructs the build system to use RocksDB from the third p
 include(FeatureSummary)
 include(ExternalProject)
 
+set(PASSTHROUGH_CMAKE_ARGS -DANDROID_ABI=${ANDROID_ABI}
+                           -DANDROID_PLATFORM=${ANDROID_PLATFORM}
+                           -DANDROID_STL=${ANDROID_STL}
+                           -DCMAKE_LIBRARY_OUTPUT_DIRECTORY=${CMAKE_LIBRARY_OUTPUT_DIRECTORY}
+                           -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+                           -DANDROID_NDK=${ANDROID_NDK}
+                           -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}
+                           -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}
+                           -DCMAKE_MAKE_PROGRAM=${CMAKE_MAKE_PROGRAM}
+                           -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+                           -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+                           -DCMAKE_FIND_ROOT_PATH=${CMAKE_FIND_ROOT_PATH}
+                           -DCMAKE_FIND_ROOT_PATH_MODE_PROGRAM=${CMAKE_FIND_ROOT_PATH_MODE_PROGRAM}
+                           -DCMAKE_FIND_ROOT_PATH_MODE_LIBRARY=${CMAKE_FIND_ROOT_PATH_MODE_LIBRARY}
+                           -DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=${CMAKE_FIND_ROOT_PATH_MODE_INCLUDE}
+                           -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
+                           -G${CMAKE_GENERATOR})
+
 # Use ccache if present
 find_program(CCACHE_FOUND ccache)
 if(CCACHE_FOUND)
@@ -84,7 +102,8 @@ if(NOT USE_SYSTEM_OPENSSL)
     GIT_REPOSITORY "https://github.com/libressl-portable/portable.git"
     GIT_TAG "190bd346e75575b9436a2e9e14b28618f0234e1b"
     SOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-src"
-    CMAKE_ARGS "-DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-install"
+    CMAKE_ARGS ${PASSTHROUGH_CMAKE_ARGS}
+               "-DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-install"
     PATCH_COMMAND ./autogen.sh
   )
 
