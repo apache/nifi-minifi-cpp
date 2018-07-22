@@ -247,21 +247,22 @@ class ComponentManifest : public DeviceInformation {
 
   std::vector<SerializedResponseNode> serialize() {
     std::vector<SerializedResponseNode> serialized;
+    SerializedResponseNode resp;
+    resp.name = "componentManifest";
     struct Components group = BuildDescription::getClassDescriptions();
-    serializeClassDescription(group.processors_, "processors", serialized);
-    serializeClassDescription(group.controller_services_, "controllerServices", serialized);
+    serializeClassDescription(group.processors_, "processors", resp);
+    serializeClassDescription(group.controller_services_, "controllerServices", resp);
+    serialized.push_back(resp);
     return serialized;
   }
  protected:
 
-  void serializeClassDescription(const std::vector<ClassDescription> &descriptions, const std::string name, std::vector<SerializedResponseNode> &response) {
-    SerializedResponseNode resp;
-    resp.name = " resp";
+  void serializeClassDescription(const std::vector<ClassDescription> &descriptions, const std::string name, SerializedResponseNode &response) {
     if (!descriptions.empty()) {
-
       SerializedResponseNode type;
       type.name = name;
-
+      type.array = true;
+      std::vector<SerializedResponseNode> serialized;
       for (auto group : descriptions) {
 
         SerializedResponseNode desc;
@@ -370,9 +371,8 @@ class ComponentManifest : public DeviceInformation {
         desc.children.push_back(buildInfo);
         type.children.push_back(desc);
       }
-      resp.children.push_back(type);
+      response.children.push_back(type);
     }
-    response.push_back(resp);
 
   }
 };
@@ -473,10 +473,12 @@ class AgentInformation : public DeviceInformation, public AgentMonitor, public A
 
   AgentInformation(std::string name, uuid_t uuid)
       : DeviceInformation(name, uuid) {
+    setArray(false);
   }
 
   AgentInformation(const std::string &name)
       : DeviceInformation(name, 0) {
+    setArray(false);
   }
 
   std::string getName() const {
@@ -525,7 +527,7 @@ class AgentInformation : public DeviceInformation, public AgentMonitor, public A
   void serializeClass(const std::vector<ClassDescription> &processors, const std::vector<ClassDescription> &controller_services, const std::vector<ClassDescription> &other_components,
                       std::vector<SerializedResponseNode> &response) {
     SerializedResponseNode resp;
-    resp.name = " resp";
+    resp.name = "componentManifest";
     if (!processors.empty()) {
       SerializedResponseNode type;
       type.name = "Processors";

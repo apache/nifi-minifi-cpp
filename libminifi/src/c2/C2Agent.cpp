@@ -268,6 +268,9 @@ void C2Agent::serializeMetrics(C2Payload &metric_payload, const std::string &nam
   for (auto metric : metrics) {
     if (metric.children.size() > 0) {
       C2Payload child_metric_payload(metric_payload.getOperation());
+      if (metric.array) {
+        child_metric_payload.setContainer(true);
+      }
       child_metric_payload.setLabel(metric.name);
       serializeMetrics(child_metric_payload, metric.name, metric.children, is_container);
       metric_payload.addPayload(std::move(child_metric_payload));
