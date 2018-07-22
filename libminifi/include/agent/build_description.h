@@ -51,45 +51,45 @@ struct Components {
 class BuildDescription {
  public:
 
-  static struct Components getClassDescriptions() {
-    static struct Components classes;
-    if (UNLIKELY(IsNullOrEmpty(classes.processors_) && IsNullOrEmpty(classes.controller_services_))) {
-      for (auto clazz : core::ClassLoader::getDefaultClassLoader().getClasses()) {
-
+  static struct Components getClassDescriptions(const std::string group = "default") {
+    static std::map<std::string, struct Components> class_mappings;
+    if (UNLIKELY(IsNullOrEmpty(class_mappings[group].processors_) && IsNullOrEmpty(class_mappings[group].processors_))) {
+      for (auto clazz : core::ClassLoader::getDefaultClassLoader().getClasses(group)) {
+        std::string class_name = clazz;
         auto lastOfIdx = clazz.find_last_of("::");
         if (lastOfIdx != std::string::npos) {
           lastOfIdx++;  // if a value is found, increment to move beyond the .
           int nameLength = clazz.length() - lastOfIdx;
-          std::string class_name = clazz.substr(lastOfIdx, nameLength);
+          class_name = clazz.substr(lastOfIdx, nameLength);
+        }
+        auto obj = core::ClassLoader::getDefaultClassLoader().instantiate(class_name, class_name);
 
-          auto obj = core::ClassLoader::getDefaultClassLoader().instantiate(class_name, class_name);
+        std::shared_ptr<core::ConfigurableComponent> component = std::dynamic_pointer_cast<core::ConfigurableComponent>(obj);
 
-          std::shared_ptr<core::ConfigurableComponent> component = std::dynamic_pointer_cast<core::ConfigurableComponent>(obj);
+        ClassDescription description(clazz);
+        if (nullptr != component) {
 
-          ClassDescription description(clazz);
-          if (nullptr != component) {
+          bool is_processor = std::dynamic_pointer_cast<core::Processor>(obj) != nullptr;
+          bool is_controller_service = LIKELY(is_processor == true) ? false : std::dynamic_pointer_cast<core::controller::ControllerService>(obj) != nullptr;
 
-            bool is_processor = std::dynamic_pointer_cast<core::Processor>(obj) != nullptr;
-            bool is_controller_service = LIKELY(is_processor == true) ? false : std::dynamic_pointer_cast<core::controller::ControllerService>(obj) != nullptr;
-
-            component->initialize();
-            description.class_properties_ = component->getProperties();
-            description.support_dynamic_ = component->supportsDynamicProperties();
-            if (is_processor) {
-              classes.processors_.emplace_back(description);
-            } else if (is_controller_service) {
-              classes.controller_services_.emplace_back(description);
-            } else {
-              classes.other_components_.emplace_back(description);
-            }
+          component->initialize();
+          description.class_properties_ = component->getProperties();
+          description.support_dynamic_ = component->supportsDynamicProperties();
+          if (is_processor) {
+            class_mappings[group].processors_.emplace_back(description);
+          } else if (is_controller_service) {
+            class_mappings[group].controller_services_.emplace_back(description);
+          } else {
+            class_mappings[group].other_components_.emplace_back(description);
           }
         }
       }
     }
-    return classes;
+    return class_mappings[group];
   }
 
-};
+}
+;
 
 } /* namespace minifi */
 } /* namespace nifi */

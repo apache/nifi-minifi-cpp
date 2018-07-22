@@ -26,7 +26,7 @@
 #include "core/ClassLoader.h"
 
 TEST_CASE("Test Required", "[required]") {
-  minifi::state::response::ComponentManifest manifest("PutFile");
+  minifi::state::response::ComponentManifest manifest("default");
   auto serialized = manifest.serialize();
   REQUIRE(serialized.size() > 0);
   const auto &resp = serialized[0];
@@ -45,7 +45,7 @@ TEST_CASE("Test Required", "[required]") {
 }
 
 TEST_CASE("Test Dependent", "[dependent]") {
-  minifi::state::response::ComponentManifest manifest("manifest");
+  minifi::state::response::ComponentManifest manifest("default");
   auto serialized = manifest.serialize();
   REQUIRE(serialized.size() > 0);
   const auto &resp = serialized[0];
