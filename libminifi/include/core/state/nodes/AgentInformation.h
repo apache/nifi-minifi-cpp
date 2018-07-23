@@ -274,6 +274,13 @@ class ComponentManifest : public DeviceInformation {
         SerializedResponseNode artifact;
         artifact.name = "artifact";
         artifact.value = group.class_name_;
+
+
+        SerializedResponseNode className;
+        className.name = "type";
+        className.value = group.class_name_;
+
+
         SerializedResponseNode version;
         version.name = "version";
         version.value = AgentBuild::VERSION;
@@ -337,6 +344,7 @@ class ComponentManifest : public DeviceInformation {
 
         desc.children.push_back(bgroup);
         desc.children.push_back(artifact);
+        desc.children.push_back(className);
         desc.children.push_back(version);
 
         SerializedResponseNode buildInfo;
