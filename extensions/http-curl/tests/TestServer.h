@@ -38,7 +38,7 @@ CivetServer * start_webserver(std::string &port, std::string &rooturi, CivetHand
       "ALL", "ssl_verify_peer", "no", 0 };
 
   std::vector<std::string> cpp_options;
-  for (int i = 0; i < (sizeof(options) / sizeof(options[0]) - 1); i++) {
+  for (size_t i = 0; i < (sizeof(options) / sizeof(options[0]) - 1); i++) {
     cpp_options.push_back(options[i]);
   }
   CivetServer *server = new CivetServer(cpp_options);
@@ -53,7 +53,7 @@ CivetServer * start_webserver(std::string &port, std::string &rooturi, CivetHand
   const char *options[] = { "document_root", ".", "listening_ports", port.c_str(), 0 };
 
   std::vector<std::string> cpp_options;
-  for (int i = 0; i < (sizeof(options) / sizeof(options[0]) - 1); i++) {
+  for (size_t i = 0; i < (sizeof(options) / sizeof(options[0]) - 1); i++) {
     cpp_options.push_back(options[i]);
   }
   CivetServer *server = new CivetServer(cpp_options);
@@ -77,7 +77,7 @@ bool parse_http_components(const std::string &url, std::string &port, std::strin
   size_t potentialGroups = regex.re_nsub + 1;
   regmatch_t groups[potentialGroups];
   if (regexec(&regex, url.c_str(), potentialGroups, groups, 0) == 0) {
-    for (int i = 0; i < potentialGroups; i++) {
+    for (size_t i = 0; i < potentialGroups; i++) {
       if (groups[i].rm_so == -1)
         break;
 

@@ -40,7 +40,7 @@ class StaticClassType {
 #ifdef MODULE_NAME
     ClassLoader::getDefaultClassLoader().registerClass(MAKESTRING(MODULE_NAME), name, std::unique_ptr<ObjectFactory>(new DefautObjectFactory<T>()));
 #else
-    ClassLoader::getDefaultClassLoader().registerClass("default", name, std::unique_ptr<ObjectFactory>(new DefautObjectFactory<T>()));
+    ClassLoader::getDefaultClassLoader().registerClass("minifi-system", name, std::unique_ptr<ObjectFactory>(new DefautObjectFactory<T>()));
 #endif
   }
 };
