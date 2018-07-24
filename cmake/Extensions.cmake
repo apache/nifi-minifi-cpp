@@ -23,8 +23,9 @@ define_property(GLOBAL PROPERTY EXTENSION-OPTIONS
 set_property(GLOBAL PROPERTY EXTENSION-OPTIONS "")
 
 macro(register_extension extension-name)
-	get_property(extensions GLOBAL PROPERTY EXTENSION-OPTIONS)
+  get_property(extensions GLOBAL PROPERTY EXTENSION-OPTIONS)
   set_property(GLOBAL APPEND PROPERTY EXTENSION-OPTIONS ${extension-name})
+  target_compile_definitions(${extension-name} PRIVATE "MODULE_NAME=${extension-name}")
 endmacro()
 
 ### TESTING MACROS

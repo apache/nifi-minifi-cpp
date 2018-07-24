@@ -194,12 +194,17 @@ class ValueNode {
 struct SerializedResponseNode {
   std::string name;
   ValueNode value;
+  bool array;
+
+  SerializedResponseNode() : array(false){
+  }
 
   std::vector<SerializedResponseNode> children;
   SerializedResponseNode &operator=(const SerializedResponseNode &other) {
     name = other.name;
     value = other.value;
     children = other.children;
+    array = other.array;
     return *this;
   }
 };
