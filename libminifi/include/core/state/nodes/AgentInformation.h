@@ -58,6 +58,160 @@ namespace response {
 
 #define GROUP_STR "org::apache::nifi::minifi"
 
+
+class ComponentManifest : public DeviceInformation {
+ public:
+  ComponentManifest(std::string name, uuid_t uuid)
+      : DeviceInformation(name, uuid) {
+  }
+
+  ComponentManifest(const std::string &name)
+      : DeviceInformation(name, 0) {
+  }
+
+  std::string getName() const {
+    return CoreComponent::getName();
+  }
+
+  std::vector<SerializedResponseNode> serialize() {
+    std::vector<SerializedResponseNode> serialized;
+    SerializedResponseNode resp;
+    resp.name = "componentManifest";
+    struct Components group = BuildDescription::getClassDescriptions(getName());
+    serializeClassDescription(group.processors_, "processors", resp);
+    serializeClassDescription(group.controller_services_, "controllerServices", resp);
+    serialized.push_back(resp);
+    return serialized;
+  }
+ protected:
+
+  void serializeClassDescription(const std::vector<ClassDescription> &descriptions, const std::string name, SerializedResponseNode &response) {
+    if (!descriptions.empty()) {
+      SerializedResponseNode type;
+      type.name = name;
+      type.array = true;
+      std::vector<SerializedResponseNode> serialized;
+      for (auto group : descriptions) {
+
+        SerializedResponseNode desc;
+        desc.name = group.class_name_;
+
+        SerializedResponseNode bgroup;
+        bgroup.name = "group";
+        bgroup.value = GROUP_STR;
+        SerializedResponseNode artifact;
+        artifact.name = "artifact";
+        artifact.value = group.class_name_;
+
+        SerializedResponseNode className;
+        className.name = "type";
+        className.value = group.class_name_;
+
+        SerializedResponseNode version;
+        version.name = "version";
+        version.value = AgentBuild::VERSION;
+
+        if (!group.class_properties_.empty()) {
+          SerializedResponseNode props;
+          props.name = "propertyDescriptors";
+          for (auto && prop : group.class_properties_) {
+
+            SerializedResponseNode child;
+            child.name = prop.first;
+
+            SerializedResponseNode descriptorName;
+            descriptorName.name = "name";
+            descriptorName.value = prop.first;
+
+            SerializedResponseNode descriptorDescription;
+            descriptorDescription.name = "description";
+            descriptorDescription.value = prop.second.getDescription();
+
+            SerializedResponseNode descriptorRequired;
+            descriptorRequired.name = "required";
+            descriptorRequired.value = prop.second.getRequired();
+
+            SerializedResponseNode descriptorDependentProperties;
+            descriptorDependentProperties.name = "dependentProperties";
+
+            for (const auto &propName : prop.second.getDependentProperties()) {
+              SerializedResponseNode descriptorDependentProperty;
+              descriptorDependentProperty.name = propName;
+              descriptorDependentProperties.children.push_back(descriptorDependentProperty);
+            }
+
+            SerializedResponseNode descriptorExclusiveOfProperties;
+            descriptorExclusiveOfProperties.name = "exclusiveOfProperties";
+
+            for (const auto &exclusiveProp : prop.second.getExclusiveOfProperties()) {
+              SerializedResponseNode descriptorExclusiveOfProperty;
+              descriptorExclusiveOfProperty.name = exclusiveProp.first;
+              descriptorExclusiveOfProperty.value = exclusiveProp.second;
+              descriptorExclusiveOfProperties.children.push_back(descriptorExclusiveOfProperty);
+            }
+
+            child.children.push_back(descriptorName);
+            child.children.push_back(descriptorDescription);
+            child.children.push_back(descriptorRequired);
+            child.children.push_back(descriptorDependentProperties);
+            child.children.push_back(descriptorExclusiveOfProperties);
+
+            props.children.push_back(child);
+          }
+
+          desc.children.push_back(props);
+        }
+
+        SerializedResponseNode dyn_prop;
+        dyn_prop.name = "supportsDynamicProperties";
+        dyn_prop.value = group.support_dynamic_;
+
+        desc.children.push_back(dyn_prop);
+
+        desc.children.push_back(bgroup);
+        desc.children.push_back(artifact);
+        desc.children.push_back(className);
+        desc.children.push_back(version);
+
+        SerializedResponseNode buildInfo;
+        buildInfo.name = "buildInfo";
+
+        SerializedResponseNode build_version;
+        build_version.name = "version";
+        build_version.value = AgentBuild::VERSION;
+
+        SerializedResponseNode build_rev;
+        build_rev.name = "revision";
+        build_rev.value = AgentBuild::BUILD_REV;
+
+        SerializedResponseNode build_date;
+        build_date.name = "timestamp";
+        build_date.value = (uint64_t) std::stoull(AgentBuild::BUILD_DATE);
+
+        SerializedResponseNode compiler_command;
+        compiler_command.name = "compiler";
+        compiler_command.value = AgentBuild::COMPILER;
+
+        SerializedResponseNode compiler_flags;
+        compiler_flags.name = "flags";
+        compiler_flags.value = AgentBuild::COMPILER_FLAGS;
+
+        buildInfo.children.push_back(compiler_flags);
+        buildInfo.children.push_back(compiler_command);
+
+        buildInfo.children.push_back(build_version);
+        buildInfo.children.push_back(build_rev);
+        buildInfo.children.push_back(build_date);
+        desc.children.push_back(buildInfo);
+        type.children.push_back(desc);
+      }
+      response.children.push_back(type);
+    }
+
+  }
+};
+
+
 class Bundles : public DeviceInformation {
  public:
   Bundles(std::string name, uuid_t uuid)
@@ -94,6 +248,12 @@ class Bundles : public DeviceInformation {
       bundle.children.push_back(bgroup);
       bundle.children.push_back(artifact);
       bundle.children.push_back(version);
+
+      ComponentManifest compMan(group, nullptr);
+      // serialize the component information.
+      for (auto component : compMan.serialize()) {
+        bundle.children.push_back(component);
+      }
       serialized.push_back(bundle);
     }
 
@@ -192,7 +352,7 @@ class AgentStatus : public StateMonitorNode {
 class AgentIdentifier {
  public:
 
-  AgentIdentifier(){
+  AgentIdentifier() {
 
   }
 
@@ -200,7 +360,7 @@ class AgentIdentifier {
     identifier_ = identifier;
   }
 
-  void setAgentClass(const std::string &agentClass){
+  void setAgentClass(const std::string &agentClass) {
     agent_class_ = agentClass;
   }
 
@@ -231,159 +391,6 @@ class AgentMonitor {
   std::shared_ptr<state::StateMonitor> monitor_;
 };
 
-class ComponentManifest : public DeviceInformation {
- public:
-  ComponentManifest(std::string name, uuid_t uuid)
-      : DeviceInformation(name, uuid) {
-  }
-
-  ComponentManifest(const std::string &name)
-      : DeviceInformation(name, 0) {
-  }
-
-  std::string getName() const {
-    return "componentManifest";
-  }
-
-  std::vector<SerializedResponseNode> serialize() {
-    std::vector<SerializedResponseNode> serialized;
-    SerializedResponseNode resp;
-    resp.name = "componentManifest";
-    struct Components group = BuildDescription::getClassDescriptions();
-    serializeClassDescription(group.processors_, "processors", resp);
-    serializeClassDescription(group.controller_services_, "controllerServices", resp);
-    serialized.push_back(resp);
-    return serialized;
-  }
- protected:
-
-  void serializeClassDescription(const std::vector<ClassDescription> &descriptions, const std::string name, SerializedResponseNode &response) {
-    if (!descriptions.empty()) {
-      SerializedResponseNode type;
-      type.name = name;
-      type.array = true;
-      std::vector<SerializedResponseNode> serialized;
-      for (auto group : descriptions) {
-
-        SerializedResponseNode desc;
-        desc.name = group.class_name_;
-
-        SerializedResponseNode bgroup;
-        bgroup.name = "group";
-        bgroup.value = GROUP_STR;
-        SerializedResponseNode artifact;
-        artifact.name = "artifact";
-        artifact.value = group.class_name_;
-
-
-        SerializedResponseNode className;
-        className.name = "type";
-        className.value = group.class_name_;
-
-
-        SerializedResponseNode version;
-        version.name = "version";
-        version.value = AgentBuild::VERSION;
-
-        if (!group.class_properties_.empty()) {
-          SerializedResponseNode props;
-          props.name = "propertyDescriptors";
-          for (auto && prop : group.class_properties_) {
-
-            SerializedResponseNode child;
-            child.name = prop.first;
-
-            SerializedResponseNode descriptorName;
-            descriptorName.name = "name";
-            descriptorName.value = prop.first;
-
-            SerializedResponseNode descriptorDescription;
-            descriptorDescription.name = "description";
-            descriptorDescription.value = prop.second.getDescription();
-
-            SerializedResponseNode descriptorRequired;
-            descriptorRequired.name = "required";
-            descriptorRequired.value = prop.second.getRequired();
-
-            SerializedResponseNode descriptorDependentProperties;
-            descriptorDependentProperties.name = "dependentProperties";
-
-            for (const auto &propName : prop.second.getDependentProperties()) {
-              SerializedResponseNode descriptorDependentProperty;
-              descriptorDependentProperty.name = propName;
-              descriptorDependentProperties.children.push_back(descriptorDependentProperty);
-            }
-
-            SerializedResponseNode descriptorExclusiveOfProperties;
-            descriptorExclusiveOfProperties.name = "exclusiveOfProperties";
-
-            for (const auto &exclusiveProp : prop.second.getExclusiveOfProperties()) {
-              SerializedResponseNode descriptorExclusiveOfProperty;
-              descriptorExclusiveOfProperty.name = exclusiveProp.first;
-              descriptorExclusiveOfProperty.value = exclusiveProp.second;
-              descriptorExclusiveOfProperties.children.push_back(descriptorExclusiveOfProperty);
-            }
-
-            child.children.push_back(descriptorName);
-            child.children.push_back(descriptorDescription);
-            child.children.push_back(descriptorRequired);
-            child.children.push_back(descriptorDependentProperties);
-            child.children.push_back(descriptorExclusiveOfProperties);
-
-            props.children.push_back(child);
-          }
-
-          desc.children.push_back(props);
-        }
-
-        SerializedResponseNode dyn_prop;
-        dyn_prop.name = "supportsDynamicProperties";
-        dyn_prop.value = group.support_dynamic_;
-
-        desc.children.push_back(dyn_prop);
-
-        desc.children.push_back(bgroup);
-        desc.children.push_back(artifact);
-        desc.children.push_back(className);
-        desc.children.push_back(version);
-
-        SerializedResponseNode buildInfo;
-        buildInfo.name = "buildInfo";
-
-        SerializedResponseNode build_version;
-        build_version.name = "version";
-        build_version.value = AgentBuild::VERSION;
-
-        SerializedResponseNode build_rev;
-        build_rev.name = "revision";
-        build_rev.value = AgentBuild::BUILD_REV;
-
-        SerializedResponseNode build_date;
-        build_date.name = "timestamp";
-        build_date.value = (uint64_t)std::stoull(AgentBuild::BUILD_DATE);
-
-        SerializedResponseNode compiler_command;
-        compiler_command.name = "compiler";
-        compiler_command.value = AgentBuild::COMPILER;
-
-        SerializedResponseNode compiler_flags;
-        compiler_flags.name = "flags";
-        compiler_flags.value = AgentBuild::COMPILER_FLAGS;
-
-        buildInfo.children.push_back(compiler_flags);
-        buildInfo.children.push_back(compiler_command);
-
-        buildInfo.children.push_back(build_version);
-        buildInfo.children.push_back(build_rev);
-        buildInfo.children.push_back(build_date);
-        desc.children.push_back(buildInfo);
-        type.children.push_back(desc);
-      }
-      response.children.push_back(type);
-    }
-
-  }
-};
 
 /**
  * Justification and Purpose: Provides available extensions for the agent information block.
@@ -436,7 +443,7 @@ class AgentManifest : public DeviceInformation {
 
     SerializedResponseNode build_date;
     build_date.name = "timestamp";
-    build_date.value = (uint64_t)std::stoull(AgentBuild::BUILD_DATE);
+    build_date.value = (uint64_t) std::stoull(AgentBuild::BUILD_DATE);
 
     SerializedResponseNode compiler_command;
     compiler_command.name = "compiler";
@@ -463,7 +470,7 @@ class AgentManifest : public DeviceInformation {
       serialized.push_back(bundle);
     }
 
-    ComponentManifest compMan("componentManifest", nullptr);
+    ComponentManifest compMan("default", nullptr);
     // serialize the component information.
     for (auto component : compMan.serialize()) {
       serialized.push_back(component);

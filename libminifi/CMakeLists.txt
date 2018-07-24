@@ -25,6 +25,7 @@ set(PROJECT_VERSION_MAJOR 0)
 set(PROJECT_VERSION_MINOR 5)
 set(PROJECT_VERSION_PATCH 0)
 
+
 #### Establish Project Configuration ####
 # Enable usage of the VERSION specifier
 set(CMAKE_CXX_STANDARD 11)

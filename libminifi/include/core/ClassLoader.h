@@ -224,6 +224,27 @@ class ClassLoader {
     std::lock_guard<std::mutex> lock(internal_mutex_);
 
     loaded_factories_.insert(std::make_pair(name, std::move(factory)));
+
+  }
+
+  /**
+   * Register a class with the give ProcessorFactory
+   */
+  void registerClass(const std::string &group, const std::string &name, std::unique_ptr<ObjectFactory> factory) {
+    if (loaded_factories_.find(name) != loaded_factories_.end()) {
+      return;
+    }
+
+    std::lock_guard<std::mutex> lock(internal_mutex_);
+
+    module_mapping_[group].push_back(factory->getName());
+
+    loaded_factories_.insert(std::make_pair(name, std::move(factory)));
+  }
+
+  std::vector<std::string> getClasses(const std::string &group) {
+    std::lock_guard<std::mutex> lock(internal_mutex_);
+    return module_mapping_[group];
   }
 
   std::vector<std::string> getGroups() {
@@ -242,7 +263,7 @@ class ClassLoader {
       if (nullptr != resource.second) {
         auto classes = resource.second->getClassNames();
         groups.insert(groups.end(), classes.begin(), classes.end());
-      }else{
+      } else {
       }
     }
     return groups;
@@ -285,6 +306,8 @@ class ClassLoader {
   T *instantiateRaw(const std::string &class_name, uuid_t uuid);
 
  protected:
+
+  std::map<std::string, std::vector<std::string>> module_mapping_;
 
   std::map<std::string, std::unique_ptr<ObjectFactory>> loaded_factories_;
 

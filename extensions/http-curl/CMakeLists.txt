@@ -63,10 +63,7 @@ endif()
 
 find_package(CURL REQUIRED)
 
-set(CMAKE_EXE_LINKER_FLAGS "-Wl,--export-all-symbols")
-set(CMAKE_SHARED_LINKER_FLAGS "-Wl,--export-symbols")
-
-include_directories(../../libminifi/include  ../../libminifi/include/core/yaml  ../../libminifi/include/core  ../../thirdparty/spdlog-20170710/include ../../thirdparty/concurrentqueue ../../thirdparty/yaml-cpp-yaml-cpp-0.5.3/include ${CIVET_THIRDPARTY_ROOT}/include ../../thirdparty/)
+include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 include_directories(protocols client processors sitetosite)
 
 file(GLOB SOURCES  "*.cpp" "protocols/*.cpp" "client/*.cpp" "processors/*.cpp" "sitetosite/*.cpp")

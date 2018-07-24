@@ -51,7 +51,6 @@ class ResponseNode : public core::Connectable {
   virtual ~ResponseNode() {
 
   }
-  virtual std::string getName() const = 0;
 
   virtual std::vector<SerializedResponseNode> serialize() = 0;
 
