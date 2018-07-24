@@ -18,9 +18,11 @@
 #ifndef LIBMINIFI_INCLUDE_CORE_REPOSITORY_FLOWFILEREPOSITORY_H_
 #define LIBMINIFI_INCLUDE_CORE_REPOSITORY_FLOWFILEREPOSITORY_H_
 
+#include "utils/file/FileUtils.h"
 #include "rocksdb/db.h"
 #include "rocksdb/options.h"
 #include "rocksdb/slice.h"
+#include "rocksdb/utilities/checkpoint.h"
 #include "core/Repository.h"
 #include "core/Core.h"
 #include "Connection.h"
@@ -35,6 +37,7 @@ namespace core {
 namespace repository {
 
 #define FLOWFILE_REPOSITORY_DIRECTORY "./flowfile_repository"
+#define FLOWFILE_CHECKPOINT_DIRECTORY "./flowfile_checkpoint"
 #define MAX_FLOWFILE_REPOSITORY_STORAGE_SIZE (10*1024*1024) // 10M
 #define MAX_FLOWFILE_REPOSITORY_ENTRY_LIFE_TIME (600000) // 10 minute
 #define FLOWFILE_REPOSITORY_PURGE_PERIOD (2000) // 2000 msec
@@ -48,15 +51,16 @@ class FlowFileRepository : public core::Repository, public std::enable_shared_fr
   // Constructor
 
   FlowFileRepository(std::string name, uuid_t uuid)
-      : FlowFileRepository(name){
-
+      : FlowFileRepository(name) {
   }
 
   FlowFileRepository(const std::string repo_name = "", std::string directory = FLOWFILE_REPOSITORY_DIRECTORY, int64_t maxPartitionMillis = MAX_FLOWFILE_REPOSITORY_ENTRY_LIFE_TIME,
                      int64_t maxPartitionBytes = MAX_FLOWFILE_REPOSITORY_STORAGE_SIZE, uint64_t purgePeriod = FLOWFILE_REPOSITORY_PURGE_PERIOD)
-      : core::SerializableComponent(repo_name,0), Repository(repo_name.length() > 0 ? repo_name : core::getClassName<FlowFileRepository>(), directory, maxPartitionMillis, maxPartitionBytes, purgePeriod),
+      : core::SerializableComponent(repo_name, 0),
+        Repository(repo_name.length() > 0 ? repo_name : core::getClassName<FlowFileRepository>(), directory, maxPartitionMillis, maxPartitionBytes, purgePeriod),
         content_repo_(nullptr),
-        logger_(logging::LoggerFactory<FlowFileRepository>::getLogger()){
+        checkpoint_(nullptr),
+        logger_(logging::LoggerFactory<FlowFileRepository>::getLogger()) {
     db_ = NULL;
   }
 
@@ -152,9 +156,27 @@ class FlowFileRepository : public core::Repository, public std::enable_shared_fr
   }
 
  private:
+
+  /**
+   * Initialize the repository
+   */
+  void initialize_repository();
+
+  /**
+   * Returns true if a checkpoint is needed at startup
+   * @return true if a checkpoint is needed.
+   */
+  bool need_checkpoint();
+
+  /**
+   * Prunes stored flow files.
+   */
+  void prune_stored_flowfiles();
+
   moodycamel::ConcurrentQueue<std::string> keys_to_delete;
   std::shared_ptr<core::ContentRepository> content_repo_;
   rocksdb::DB* db_;
+  std::unique_ptr<rocksdb::Checkpoint> checkpoint_;
   std::shared_ptr<logging::Logger> logger_;
 };
 

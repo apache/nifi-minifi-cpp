@@ -17,6 +17,8 @@
 #ifndef LIBMINIFI_INCLUDE_UTILS_FILEUTILS_H_
 #define LIBMINIFI_INCLUDE_UTILS_FILEUTILS_H_
 
+#include <sstream>
+#include <fstream>
 #ifdef BOOST_VERSION
 #include <boost/filesystem.hpp>
 #else
@@ -29,20 +31,6 @@
 #include <fcntl.h>
 #ifdef WIN32
 #define stat _stat
-#endif
-
-#ifdef BDIFF
-
-extern "C"
-{
-#include "bsdiff.h"
-#include "bspatch.h"
-}
-#else
-int apply_bsdiff_patch(const char *oldfile, const char *newfile, const char *patch) {
-  return -1;
-}
-
 #endif
 
 namespace org {
@@ -60,6 +48,66 @@ class FileUtils {
  public:
 
   FileUtils() = delete;
+
+  /**
+   * Deletes a directory, deleting recursively if delete_files_recursively is true
+   * @param path current path to delete
+   * @param delete_files_recursively deletes recursively
+   */
+  static int64_t delete_dir(const std::string &path, bool delete_files_recursively = true) {
+#ifdef BOOST_VERSION
+    try {
+      if (boost::filesystem::exists(path)) {
+        if (delete_files_recursively) {
+          boost::filesystem::remove_all(path);
+        }
+        else {
+          boost::filesystem::remove(path);
+        }
+      }
+    } catch(boost::filesystem::filesystem_error const & e)
+    {
+      return -1;
+      //display error message
+    }
+    return 0;
+#else
+    DIR *current_directory = opendir(path.c_str());
+    int r = -1;
+    if (current_directory) {
+      struct dirent *p;
+      r = 0;
+      while (!r && (p = readdir(current_directory))) {
+        int r2 = -1;
+        std::stringstream newpath;
+        if (!strcmp(p->d_name, ".") || !strcmp(p->d_name, "..")) {
+          continue;
+        }
+        struct stat statbuf;
+
+        newpath << path << "/" << p->d_name;
+
+        if (!stat(newpath.str().c_str(), &statbuf)) {
+          if (S_ISDIR(statbuf.st_mode)) {
+            if (delete_files_recursively) {
+              r2 = delete_dir(newpath.str(), delete_files_recursively);
+            }
+          } else {
+            r2 = unlink(newpath.str().c_str());
+          }
+        }
+        r = r2;
+      }
+      closedir(current_directory);
+    }
+
+    if (!r) {
+      return rmdir(path.c_str());
+    }
+
+    return 0;
+#endif
+  }
 
   static uint64_t last_write_time(const std::string &path) {
 #ifdef BOOST_VERSION
@@ -101,14 +149,6 @@ class FileUtils {
     std::ofstream dest(dest_path, std::ios::binary);
     dest << src.rdbuf();
     return 0;
-  }
-
-  static int apply_binary_diff(const char *file_original, const char *file_new, const char *result_file) {
-    return apply_bsdiff_patch(file_original, file_new, result_file);
-  }
-
-  static int binary_diff(const char *file_original, const char *file_other, const char *patchfile) {
-    return -1;
   }
 
 };
