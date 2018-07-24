@@ -50,6 +50,7 @@
 #include "protocols/RESTReceiver.h"
 #include "protocols/RESTSender.h"
 #include "HTTPIntegrationBase.h"
+#include "agent/build_description.h"
 #include "processors/LogAttribute.h"
 
 class Responder : public CivetHandler {
@@ -57,9 +58,53 @@ class Responder : public CivetHandler {
   explicit Responder(bool isSecure)
       : isSecure(isSecure) {
   }
+
+  std::string readPost(struct mg_connection *conn) {
+    std::string response;
+    int blockSize = 1024 * sizeof(char), readBytes;
+
+    char buffer[blockSize];
+    while ((readBytes = mg_read(conn, buffer, blockSize)) > 0) {
+      response.append(buffer, 0, (readBytes / sizeof(char)));
+    }
+    return response;
+  }
   bool handlePost(CivetServer *server, struct mg_connection *conn) {
-    std::string resp =
-        "{\"operation\" : \"heartbeat\", \"requested_operations\" : [{ \"operationid\" : 41, \"operation\" : \"stop\", \"name\" : \"invoke\"  }, "
+    auto post_data = readPost(conn);
+
+    std::cerr << post_data << std::endl;
+
+    if (!IsNullOrEmpty(post_data)) {
+      rapidjson::Document root;
+      rapidjson::ParseResult ok = root.Parse(post_data.data(), post_data.size());
+      bool found = false;
+      auto operation = root["operation"].GetString();
+      if (operation == "heartbeat") {
+        assert(root.HasMember("agentInfo") == true);
+        assert(root["agentInfo"]["agentManifest"].HasMember("bundles") == true);
+
+        for (auto &bundle : root["agentInfo"]["agentManifest"]["bundles"].GetArray()) {
+          assert(bundle.HasMember("artifact"));
+          std::string str = bundle["artifact"].GetString();
+          if (str == "minifi-system") {
+
+            std::vector<std::string> classes;
+            for (auto &proc : bundle["componentManifest"]["processors"].GetArray()) {
+              classes.push_back(proc["type"].GetString());
+            }
+
+            auto group = minifi::BuildDescription::getClassDescriptions(str);
+            for (auto proc : group.processors_) {
+              assert(std::find(classes.begin(), classes.end(), proc.class_name_) != std::end(classes));
+              found = true;
+            }
+
+          }
+        }
+        assert(found == true);
+      }
+    }
+    std::string resp = "{\"operation\" : \"heartbeat\", \"requested_operations\" : [{ \"operationid\" : 41, \"operation\" : \"stop\", \"name\" : \"invoke\"  }, "
         "{ \"operationid\" : 42, \"operation\" : \"stop\", \"name\" : \"FlowController\"  } ]}";
     mg_printf(conn, "HTTP/1.1 200 OK\r\nContent-Type: "
               "text/plain\r\nContent-Length: %lu\r\nConnection: close\r\n\r\n",
@@ -120,6 +165,7 @@ class VerifyC2Heartbeat : public HTTPIntegrationBase {
     configuration->set("c2.rest.url", "http://localhost:8888/api/heartbeat");
     configuration->set("c2.agent.heartbeat.period", "1000");
     configuration->set("c2.rest.url.ack", "http://localhost:8888/api/heartbeat");
+    configuration->set("nifi.c2.root.classes", "DeviceInfoNode,AgentInformation,FlowInformation");
   }
 
  protected:

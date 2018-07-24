@@ -51,7 +51,7 @@ struct Components {
 class BuildDescription {
  public:
 
-  static struct Components getClassDescriptions(const std::string group = "default") {
+  static struct Components getClassDescriptions(const std::string group = "minifi-system") {
     static std::map<std::string, struct Components> class_mappings;
     if (UNLIKELY(IsNullOrEmpty(class_mappings[group].processors_) && IsNullOrEmpty(class_mappings[group].processors_))) {
       for (auto clazz : core::ClassLoader::getDefaultClassLoader().getClasses(group)) {
