@@ -19,6 +19,7 @@
 
 #include <sstream>
 #include <fstream>
+#include <cstring>
 #ifdef BOOST_VERSION
 #include <boost/filesystem.hpp>
 #else
