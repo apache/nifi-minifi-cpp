@@ -22,6 +22,7 @@
 #ifdef BOOST_VERSION
 #include <boost/filesystem.hpp>
 #else
+#include <cstring>
 #include <cstdlib>
 #include <sys/stat.h>
 #include <dirent.h>
