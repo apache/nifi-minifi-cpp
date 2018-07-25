@@ -44,6 +44,24 @@ TEST_CASE("Test Required", "[required]") {
   REQUIRE(!std::dynamic_pointer_cast<minifi::state::response::BoolValue>(prop_0_required.value.getValue())->getValue());
 }
 
+TEST_CASE("Test Valid Regex", "[validRegex]") {
+  minifi::state::response::ComponentManifest manifest("default");
+  auto serialized = manifest.serialize();
+  REQUIRE(serialized.size() > 0);
+  const auto &resp = serialized[0];
+  REQUIRE(resp.children.size() > 0);
+  const auto &processors = resp.children[0];
+  REQUIRE(processors.children.size() > 0);
+  const auto &proc_0 = processors.children[0];
+  REQUIRE(proc_0.children.size() > 0);
+  const auto &prop_descriptors = proc_0.children[0];
+  REQUIRE(prop_descriptors.children.size() > 0);
+  const auto &prop_0 = prop_descriptors.children[0];
+  REQUIRE(prop_0.children.size() >= 3);
+  const auto &prop_0_valid_regex = prop_0.children[3];
+  REQUIRE("validRegex" == prop_0_valid_regex.name);
+}
+
 TEST_CASE("Test Dependent", "[dependent]") {
   minifi::state::response::ComponentManifest manifest("default");
   auto serialized = manifest.serialize();
@@ -63,7 +81,7 @@ TEST_CASE("Test Dependent", "[dependent]") {
   REQUIRE(prop_descriptors.children.size() > 0);
   const auto &prop_0 = prop_descriptors.children[1];
   REQUIRE(prop_0.children.size() >= 3);
-  const auto &prop_0_dependent = prop_0.children[3];
+  const auto &prop_0_dependent = prop_0.children[4];
   REQUIRE("dependentProperties" == prop_0_dependent.name);
   const auto &prop_0_dependent_0 = prop_0_dependent.children[0];
   REQUIRE("Directory" == prop_0_dependent_0.name);
