@@ -19,7 +19,7 @@
 verify_enable(){
   feature="$1"
   feature_status=${!1}
-    echo "true"
+  verify_gcc_enable $feature
 }
 add_os_flags() {
   CMAKE_BUILD_COMMAND="${CMAKE_BUILD_COMMAND} -DFAIL_ON_WARNINGS= "

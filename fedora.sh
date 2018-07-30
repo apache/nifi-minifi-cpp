@@ -17,7 +17,9 @@
 # under the License.
 
 verify_enable(){
-  echo "true"
+  feature="$1"
+  feature_status=${!1}
+  verify_gcc_enable $feature
 }
 add_os_flags() {
   :

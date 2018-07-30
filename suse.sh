@@ -25,13 +25,13 @@ verify_enable() {
     elif [ "$feature" = "USB_ENABLED" ]; then
       echo "false"
     else
-      echo "true"
+      verify_gcc_enable $feature
     fi
   else
     if [ "$feature" = "USB_ENABLED" ]; then
       echo "false"
     else
-      echo "true"
+      verify_gcc_enable $feature
     fi
   fi
 }
