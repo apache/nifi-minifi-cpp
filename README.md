@@ -118,6 +118,8 @@ or greater is recommended.
 
 **NOTE** if bustache (ApplyTemplate) support is enabled, a recent version of a compiler supporting c++-11 must be used. GCC versions >= 6.3.1 are known to work.
 
+**NOTE** if Kafka support is enabled, a recent version of a compiler supporting C++-11 regexes must be used. GCC versions >= 4.9.x are recommended.
+
 **NOTE** if Expression Language support is enabled, FlexLexer must be in the include path and the version must be compatible with the version of flex used when generating lexer sources. Lexer source generation is automatically performed during CMake builds. To re-generate the sources, remove: 
 
  * extensions/expression-language/Parser.cpp

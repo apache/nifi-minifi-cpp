@@ -1023,6 +1023,7 @@ default values, and whether a property supports the NiFi Expression Language.
 | Request Timeout | | | The ack timeout of the producer request in milliseconds |
 | Client Name | | | Client Name to use when communicating with Kafka |
 | Batch Size | | | Maximum number of messages batched in one MessageSet |
+| Attributes to Send as Headers | | | Any attribute whose name matches the regex will be added to the Kafka messages as a Header |
 | Queue Buffering Max Time | | | Delay to wait for messages in the producer queue to accumulate before constructing message batches |
 | Queue Max Buffer Size | | | Maximum total message size sum allowed on the producer queue |
 | Queue Max Message | | | Maximum number of messages allowed on the producer queue |
