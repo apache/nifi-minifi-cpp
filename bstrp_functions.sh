@@ -72,29 +72,29 @@ pause(){
 
 
 load_state(){
-if [ -f ${script_directory}/bt_state ]; then
- . ${script_directory}/bt_state
- for option in "${OPTIONS[@]}" ; do
+  if [ -f ${script_directory}/bt_state ]; then
+    . ${script_directory}/bt_state
+    for option in "${OPTIONS[@]}" ; do
       option_value="${!option}"
-       if [ "${option_value}" = "${FALSE}" ]; then
-       	ALL_FEATURES_ENABLED=${FALSE}
-       fi
-   done
-fi
+      if [ "${option_value}" = "${FALSE}" ]; then
+        ALL_FEATURES_ENABLED=${FALSE}
+      fi
+    done
+  fi
 }
 
 echo_state_variable(){
-VARIABLE_VALUE=${!1}
-echo "$1=\"${VARIABLE_VALUE}\"" >> ${script_directory}/bt_state
+  VARIABLE_VALUE=${!1}
+  echo "$1=\"${VARIABLE_VALUE}\"" >> ${script_directory}/bt_state
 }
 
 save_state(){
-   echo "VERSION=1" > ${script_directory}/bt_state
-   echo_state_variable BUILD_IDENTIFIER
-   echo_state_variable BUILD_DIR
-   for option in "${OPTIONS[@]}" ; do
-       echo_state_variable $option
-   done
+  echo "VERSION=1" > ${script_directory}/bt_state
+  echo_state_variable BUILD_IDENTIFIER
+  echo_state_variable BUILD_DIR
+  for option in "${OPTIONS[@]}" ; do
+    echo_state_variable $option
+  done
 }
 
 can_deploy(){
@@ -189,7 +189,7 @@ show_main_menu() {
   echo "****************************************"
   echo " MiNiFi C++ Main Menu."
   echo "****************************************"
-  echo "A. Select MiNIFi C++ Features " 
+  echo "A. Select MiNIFi C++ Features "
   if [ "$ALL_FEATURES_ENABLED" = "${TRUE}" ]; then
     echo "  All features enabled  ........$(print_feature_status ALL_FEATURES_ENABLED)"
   fi
@@ -257,7 +257,7 @@ show_supported_features() {
   echo "M. Enable all extensions"
   echo "P. Continue with these options"
   if [ "$GUIDED_INSTALL" = "${TRUE}" ]; then
- 	 echo "R. Return to Main Menu"
+    echo "R. Return to Main Menu"
   fi
   echo "Q. Quit"
   echo "* Extension cannot be installed due to"
@@ -284,9 +284,9 @@ read_feature_options(){
     m) EnableAllFeatures ;;
     p) FEATURES_SELECTED="true" ;;
     r) if [ "$GUIDED_INSTALL" = "${TRUE}" ]; then
-	   MENU="main" 
-       fi
-       ;;
+        MENU="main"
+      fi
+      ;;
     q) exit 0;;
     *) echo -e "${RED}Please enter an option A-L...${NO_COLOR}" && sleep 2
   esac
