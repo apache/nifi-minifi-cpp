@@ -73,6 +73,7 @@ const Property &Property::operator=(const Property &other) {
   description_ = other.description_;
   is_collection_ = other.is_collection_;
   is_required_ = other.is_required_;
+  valid_regex_ = other.valid_regex_;
   dependent_properties_ = other.dependent_properties_;
   exclusive_of_properties_ = other.exclusive_of_properties_;
   return *this;
