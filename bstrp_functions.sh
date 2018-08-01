@@ -73,7 +73,7 @@ pause(){
 
 load_state(){
 if [ -f ${script_directory}/bt_state ]; then
- . ${script_directory}/bs_state
+ . ${script_directory}/bt_state
  for option in "${OPTIONS[@]}" ; do
       option_value="${!option}"
        if [ "${option_value}" = "${FALSE}" ]; then
