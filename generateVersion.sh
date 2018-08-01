@@ -34,7 +34,7 @@ fi
 
 IFS=';' read -r -a extensions_array <<< "$extensions"
 
-extension_list="${extension_list} } "    
+extension_list="${extension_list} } "
 
 cat >"$out_dir/agent_version.h" <<EOF
 #ifndef AGENT_BUILD_H

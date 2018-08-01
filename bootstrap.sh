@@ -56,7 +56,7 @@ while :; do
       FEATURES_SELECTED="true"
       EnableAllFeatures
       ;;
-     -c|--clear)
+    -c|--clear)
       rm ${script_directory}/bt_state > /dev/null 2>&1
       ;;
     -d|--deploy)
@@ -149,34 +149,52 @@ fi
 OS_MAJOR=`echo $VER | cut -d. -f1`
 OS_MINOR=`echo $VER | cut -d. -f2`
 OS_REVISION=`echo $EVR	 | cut -d. -f3`
-if [[ "$OS" = "Darwin" ]]; then
-  . "${script_directory}/darwin.sh"
-elif [[ "$OS" = Deb* ]]; then
-  . "${script_directory}/debian.sh"
-elif [[ "$OS" = Rasp* ]]; then
-  . "${script_directory}/aptitude.sh"
-elif [[ "$OS" = Pop* ]]; then
-  . "${script_directory}/aptitude.sh"
-elif [[ "$OS" = Ubuntu* ]]; then
-  . "${script_directory}/aptitude.sh"
-elif [[ "$OS" = *SUSE* ]]; then
-  . "${script_directory}/suse.sh"
-elif [[ "$OS" = *SLE* ]]; then
-  if [[ "$VER" = 11* ]]; then
-    echo "Please install SLES11 manually...exiting"
-    exit
-  else
-    . "${script_directory}/suse.sh"
-  fi
-elif [[ "$OS" = Red* ]]; then
-  . "${script_directory}/rheldistro.sh"
-elif [[ "$OS" = CentOS* ]]; then
-  . "${script_directory}/centos.sh"
-elif [[ "$OS" = Fedora* ]]; then
-  . "${script_directory}/fedora.sh"
+
+### Verify the compiler version
+
+COMPILER_VERSION="0.0.0"
+
+COMPILER_COMMAND=""
+
+if [ -x "$(command -v g++)" ]; then
+  COMPILER_COMMAND="g++"
+  COMPILER_VERSION=`${COMPILER_COMMAND} -dumpversion`
 fi
 
+COMPILER_MAJOR=`echo $COMPILER_VERSION | cut -d. -f1`
+COMPILER_MINOR=`echo $COMPILER_VERSION | cut -d. -f2`
+COMPILER_REVISION=`echo $COMPILER_VERSION | cut -d. -f3`
 
+
+if [[ "$OS" = "Darwin" ]]; then
+  . "${script_directory}/darwin.sh"
+else
+  . "${script_directory}/linux.sh"
+  if [[ "$OS" = Deb* ]]; then
+    . "${script_directory}/debian.sh"
+  elif [[ "$OS" = Rasp* ]]; then
+    . "${script_directory}/aptitude.sh"
+  elif [[ "$OS" = Pop* ]]; then
+    . "${script_directory}/aptitude.sh"
+  elif [[ "$OS" = Ubuntu* ]]; then
+    . "${script_directory}/aptitude.sh"
+  elif [[ "$OS" = *SUSE* ]]; then
+    . "${script_directory}/suse.sh"
+  elif [[ "$OS" = *SLE* ]]; then
+    if [[ "$VER" = 11* ]]; then
+      echo "Please install SLES11 manually...exiting"
+      exit
+    else
+      . "${script_directory}/suse.sh"
+    fi
+  elif [[ "$OS" = Red* ]]; then
+    . "${script_directory}/rheldistro.sh"
+  elif [[ "$OS" = CentOS* ]]; then
+    . "${script_directory}/centos.sh"
+  elif [[ "$OS" = Fedora* ]]; then
+    . "${script_directory}/fedora.sh"
+  fi
+fi
 ### verify the cmake version
 
 CMAKE_COMMAND=""
@@ -205,6 +223,8 @@ CMAKE_VERSION=`${CMAKE_COMMAND} --version | head -n 1 | awk '{print $3}'`
 CMAKE_MAJOR=`echo $CMAKE_VERSION | cut -d. -f1`
 CMAKE_MINOR=`echo $CMAKE_VERSION | cut -d. -f2`
 CMAKE_REVISION=`echo $CMAKE_VERSION | cut -d. -f3`
+
+
 
 add_cmake_option PORTABLE_BUILD ${TRUE}
 add_cmake_option DEBUG_SYMBOLS ${FALSE}
@@ -259,9 +279,9 @@ fi
 BUILD_DIR_D=${BUILD_DIR}
 load_state
 if [ "$BUILD_DIR_D" != "build" ] && [ "$BUILD_DIR_D" != "$BUILD_DIR" ]; then
-   read -p "Build dir will override stored state, $BUILD_DIR. Press any key to continue " overwrite
-   BUILD_DIR=$BUILD_DIR_D
-   
+  read -p "Build dir will override stored state, $BUILD_DIR. Press any key to continue " overwrite
+  BUILD_DIR=$BUILD_DIR_D
+
 fi
 
 if [ ! -d "${BUILD_DIR}" ]; then
@@ -296,7 +316,7 @@ do
     read_advanced_menu_options
   else
     show_supported_features
-    read_feature_options 
+    read_feature_options
   fi
 done
 ### ensure we have all dependencies

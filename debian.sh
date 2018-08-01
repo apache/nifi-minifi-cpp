@@ -19,7 +19,7 @@
 verify_enable(){
   feature="$1"
   feature_status=${!1}
-    echo "true"
+  verify_gcc_enable $feature
 }
 add_os_flags() {
   CMAKE_BUILD_COMMAND="${CMAKE_BUILD_COMMAND} -DFAIL_ON_WARNINGS= "
@@ -28,12 +28,12 @@ bootstrap_cmake(){
   sudo apt-get -y install cmake
 }
 build_deps(){
-  sudo apt-get -y update 
+  sudo apt-get -y update
   ## need to account for debian
   sudo apt-get install -y libssl1.0-dev > /dev/null
   RETVAL=$?
-  if [ "$RETVAL" -ne "0" ]; then  
-     sudo apt-get install -y libssl-dev > /dev/null
+  if [ "$RETVAL" -ne "0" ]; then
+    sudo apt-get install -y libssl-dev > /dev/null
   fi
   COMMAND="sudo apt-get -y install cmake gcc g++ zlib1g-dev uuid uuid-dev"
   export DEBIAN_FRONTEND=noninteractive
