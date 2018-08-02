@@ -83,7 +83,7 @@ class MQTTControllerService : public core::controller::ControllerService {
         logger_(logging::LoggerFactory<MQTTControllerService>::getLogger()) {
   }
 
-  explicit MQTTControllerService(const std::string &name, uuid_t uuid = 0)
+  explicit MQTTControllerService(const std::string &name, utils::Identifier uuid = utils::Identifier())
       : ControllerService(name, uuid),
         initialized_(false),
         client_(nullptr),
@@ -95,7 +95,7 @@ class MQTTControllerService : public core::controller::ControllerService {
   }
 
   explicit MQTTControllerService(const std::string &name, const std::shared_ptr<Configure> &configuration)
-      : ControllerService(name, nullptr),
+      : ControllerService(name),
         initialized_(false),
         client_(nullptr),
         keepAliveInterval_(0),

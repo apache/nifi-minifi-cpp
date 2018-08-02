@@ -19,10 +19,11 @@
 #define LIBMINIFI_INCLUDE_CORE_STATE_NODES_AGENTINFORMATION_H_
 
 #include "core/Resource.h"
+
+#ifndef WIN32
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include <functional>
 #include <sys/ioctl.h>
 #if ( defined(__APPLE__) || defined(__MACH__) || defined(BSD)) 
 #include <net/if_dl.h>
@@ -32,13 +33,17 @@
 #include <net/if.h> 
 #include <unistd.h>
 #include <netinet/in.h>
-#include <string.h>
+
 #include <sys/socket.h>
 #include <netdb.h>
 #include <ifaddrs.h>
+#include <unistd.h>
+#endif
+#include <functional>
+#include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
+#include <sstream>
 #include <sstream>
 #include <map>
 #include "core/state/nodes/MetricsBase.h"
@@ -62,12 +67,12 @@ namespace response {
 
 class ComponentManifest : public DeviceInformation {
  public:
-  ComponentManifest(std::string name, uuid_t uuid)
+  ComponentManifest(std::string name, utils::Identifier & uuid)
       : DeviceInformation(name, uuid) {
   }
 
   ComponentManifest(const std::string &name)
-      : DeviceInformation(name, 0) {
+      : DeviceInformation(name) {
   }
 
   std::string getName() const {
@@ -116,6 +121,10 @@ class ComponentManifest : public DeviceInformation {
             descriptorDescription.name = "description";
             descriptorDescription.value = prop.second.getDescription();
 
+            SerializedResponseNode supportsExpressionLanguageScope;
+            supportsExpressionLanguageScope.name = "expressionLanguageScope";
+            supportsExpressionLanguageScope.value = prop.second.supportsExpressionLangauge() ? "FLOWFILE_ATTRIBUTES" : "NONE";
+
             SerializedResponseNode descriptorRequired;
             descriptorRequired.name = "required";
             descriptorRequired.value = prop.second.getRequired();
@@ -155,7 +164,7 @@ class ComponentManifest : public DeviceInformation {
                 SerializedResponseNode typeNode;
                 typeNode.name = "type";
                 std::string typeClazz = type;
-                utils::StringUtils::replaceAll(typeClazz,"::",".");
+                utils::StringUtils::replaceAll(typeClazz, "::", ".");
                 typeNode.value = typeClazz;
                 allowed_type.children.push_back(typeNode);
 
@@ -184,6 +193,7 @@ class ComponentManifest : public DeviceInformation {
             }
             child.children.push_back(descriptorDescription);
             child.children.push_back(descriptorRequired);
+            child.children.push_back(supportsExpressionLanguageScope);
             child.children.push_back(descriptorDefaultValue);
             child.children.push_back(descriptorValidRegex);
             child.children.push_back(descriptorDependentProperties);
@@ -240,13 +250,13 @@ class ComponentManifest : public DeviceInformation {
 
 class Bundles : public DeviceInformation {
  public:
-  Bundles(std::string name, uuid_t uuid)
+  Bundles(std::string name, utils::Identifier & uuid)
       : DeviceInformation(name, uuid) {
     setArray(true);
   }
 
   Bundles(const std::string &name)
-      : DeviceInformation(name, 0) {
+      : DeviceInformation(name) {
     setArray(true);
   }
 
@@ -275,7 +285,7 @@ class Bundles : public DeviceInformation {
       bundle.children.push_back(artifact);
       bundle.children.push_back(version);
 
-      ComponentManifest compMan(group, nullptr);
+      ComponentManifest compMan(group);
       // serialize the component information.
       for (auto component : compMan.serialize()) {
         bundle.children.push_back(component);
@@ -294,13 +304,13 @@ class Bundles : public DeviceInformation {
 class AgentStatus : public StateMonitorNode {
  public:
 
-  AgentStatus(std::string name, uuid_t uuid)
+  AgentStatus(std::string name, utils::Identifier & uuid)
       : StateMonitorNode(name, uuid) {
 
   }
 
   AgentStatus(const std::string &name)
-      : StateMonitorNode(name, 0) {
+      : StateMonitorNode(name) {
   }
 
   std::string getName() const {
@@ -423,13 +433,13 @@ class AgentMonitor {
 class AgentManifest : public DeviceInformation {
  public:
 
-  AgentManifest(std::string name, uuid_t uuid)
+  AgentManifest(std::string name, utils::Identifier & uuid)
       : DeviceInformation(name, uuid) {
     //setArray(true);
   }
 
   AgentManifest(const std::string &name)
-      : DeviceInformation(name, 0) {
+      : DeviceInformation(name) {
     //  setArray(true);
   }
 
@@ -485,7 +495,7 @@ class AgentManifest : public DeviceInformation {
     buildInfo.children.push_back(build_rev);
     buildInfo.children.push_back(build_date);
 
-    Bundles bundles("bundles", nullptr);
+    Bundles bundles("bundles");
 
     serialized.push_back(ident);
     serialized.push_back(type);
@@ -495,7 +505,7 @@ class AgentManifest : public DeviceInformation {
       serialized.push_back(bundle);
     }
 
-    SchedulingDefaults defaults("schedulingDefaults", nullptr);
+    SchedulingDefaults defaults("schedulingDefaults");
 
     for (auto defaultNode : defaults.serialize()) {
       serialized.push_back(defaultNode);
@@ -511,13 +521,13 @@ class AgentManifest : public DeviceInformation {
 class AgentInformation : public DeviceInformation, public AgentMonitor, public AgentIdentifier {
  public:
 
-  AgentInformation(std::string name, uuid_t uuid)
+  AgentInformation(std::string name, utils::Identifier & uuid)
       : DeviceInformation(name, uuid) {
     setArray(false);
   }
 
   AgentInformation(const std::string &name)
-      : DeviceInformation(name, 0) {
+      : DeviceInformation(name) {
     setArray(false);
   }
 
@@ -537,7 +547,7 @@ class AgentInformation : public DeviceInformation, public AgentMonitor, public A
     agentClass.name = "agentClass";
     agentClass.value = agent_class_;
 
-    AgentManifest manifest("manifest", nullptr);
+    AgentManifest manifest("manifest");
 
     SerializedResponseNode agentManifest;
     agentManifest.name = "agentManifest";

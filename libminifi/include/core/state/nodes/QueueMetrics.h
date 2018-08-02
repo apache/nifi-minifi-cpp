@@ -38,16 +38,16 @@ namespace response {
 class QueueMetrics : public ResponseNode {
  public:
 
-  QueueMetrics(const std::string &name, uuid_t uuid)
+  QueueMetrics(const std::string &name, utils::Identifier &  uuid)
       : ResponseNode(name, uuid) {
   }
 
   QueueMetrics(const std::string &name)
-      : ResponseNode(name, 0) {
+      : ResponseNode(name) {
   }
 
   QueueMetrics()
-      : ResponseNode("QueueMetrics", 0) {
+      : ResponseNode("QueueMetrics") {
   }
 
   virtual std::string getName() const{

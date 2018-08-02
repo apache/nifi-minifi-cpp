@@ -23,7 +23,17 @@ IF(POLICY CMP0048)
   CMAKE_POLICY(SET CMP0048 OLD)
 ENDIF(POLICY CMP0048)
 
+
+
 include_directories(../main/ ../libminifi/include  ../libminifi/include/c2  ../libminifi/include/c2/protocols/  ../libminifi/include/core/state ./libminifi/include/core/statemanagement/metrics  ../libminifi/include/core/yaml  ../libminifi/include/core  ../thirdparty/spdlog-20170710/include ../thirdparty/concurrentqueue ../thirdparty/yaml-cpp-yaml-cpp-20171024/include ${CIVET_THIRDPARTY_ROOT}/include ../thirdparty/cxxopts/include  ../thirdparty/)
+
+
+if(WIN32)
+	include_directories(../libminifi/opsys/win)
+else()
+	include_directories(../libminifi/opsys/posix)
+endif()
+
 
 include(CheckCXXCompilerFlag)
 CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
@@ -60,6 +70,10 @@ else ()
 	target_link_libraries (minificontroller -Wl,--whole-archive minifi -Wl,--no-whole-archive)
 endif ()
 
+if (WIN32)
+	include_directories("../thirdparty/Simple-Windows-Posix-Semaphore")
+  	target_link_libraries(minificontroller semaphore)
+endif()
 
 target_link_libraries(minificontroller yaml-cpp c-library civetweb-cpp ${JSON_CPP_LIB} ${UUID_LIBRARIES} cxxopts)
 

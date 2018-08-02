@@ -17,7 +17,6 @@
  */
 
 #include "capi/C2CallbackAgent.h"
-#include <unistd.h>
 #include <csignal>
 #include <utility>
 #include <vector>

@@ -18,9 +18,6 @@
 #define __TIME_UTIL_H__
 
 #include <time.h>
-#include <sys/time.h>
-#include <string.h>
-#include <unistd.h>
 #include <string.h>
 #include <iomanip>
 #include <sstream>

@@ -25,7 +25,7 @@
 #include "ManipulateArchive.h"
 #include "core/ClassLoader.h"
 
-class __attribute__((visibility("default"))) ArchiveFactory : public core::ObjectFactory {
+class ArchiveFactory : public core::ObjectFactory {
  public:
   ArchiveFactory() {
 

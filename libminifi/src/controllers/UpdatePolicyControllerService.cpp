@@ -21,15 +21,8 @@
 #include <limits>
 #include <string>
 #include <vector>
-#include <sys/ioctl.h>
-#include <ifaddrs.h>
-#include <net/if.h>
-#include <netinet/in.h>
 #include <string.h>
-#include <sys/socket.h>
-#include <netdb.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <set>
 #include "utils/StringUtils.h"
 #if ( defined(__APPLE__) || defined(__MACH__) || defined(BSD))

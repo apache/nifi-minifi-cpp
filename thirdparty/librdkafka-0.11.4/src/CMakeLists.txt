@@ -101,7 +101,9 @@ if(WITHOUT_WIN32_CONFIG)
   endif(WITH_PLUGINS)
 endif()
 
-option(RDKAFKA_BUILD_STATIC "Build static rdkafka library" OFF)
+option(RDKAFKA_BUILD_STATIC "Build static rdkafka library" ON)
+
+SET(RDKAFKA_BUILD_STATIC "ON")
 
 if(RDKAFKA_BUILD_STATIC)
   set(CMAKE_POSITION_INDEPENDENT_CODE ON)
@@ -132,7 +134,7 @@ target_include_directories(rdkafka PUBLIC "$<BUILD_INTERFACE:${dummy}>")
 
 if(WITH_ZLIB)
   find_package(ZLIB REQUIRED)
-  target_link_libraries(rdkafka PUBLIC ZLIB::ZLIB)
+  target_link_libraries(rdkafka PUBLIC ${ZLIB_LIBRARY})
 endif()
 
 if(WITH_SSL)

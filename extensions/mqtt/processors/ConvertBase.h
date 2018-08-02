@@ -45,7 +45,7 @@ class ConvertBase : public core::Processor, public minifi::c2::RESTProtocol {
   /*!
    * Create a new processor
    */
-  explicit ConvertBase(std::string name, uuid_t uuid = NULL)
+  explicit ConvertBase(std::string name, utils::Identifier uuid = utils::Identifier())
       : core::Processor(name, uuid) {
   }
   // Destructor

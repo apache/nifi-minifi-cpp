@@ -21,8 +21,9 @@
 #include "core/Resource.h"
 #include <sstream>
 #include <map>
-#include <sys/time.h>
+#ifndef WIN32
 #include <sys/resource.h>
+#endif
 
 #include "../nodes/DeviceInformation.h"
 #include "../nodes/MetricsBase.h"
@@ -42,12 +43,12 @@ namespace response {
 class ProcessMetrics : public ResponseNode {
  public:
 
-  ProcessMetrics(const std::string &name, uuid_t uuid)
+  ProcessMetrics(const std::string &name, utils::Identifier &uuid)
       : ResponseNode(name, uuid) {
   }
 
   ProcessMetrics(const std::string &name)
-      : ResponseNode(name, 0) {
+      : ResponseNode(name) {
   }
 
   ProcessMetrics() {
@@ -60,6 +61,7 @@ class ProcessMetrics : public ResponseNode {
   std::vector<SerializedResponseNode> serialize() {
     std::vector<SerializedResponseNode> serialized;
 
+#ifndef WIN32
     struct rusage my_usage;
     getrusage(RUSAGE_SELF, &my_usage);
 
@@ -84,6 +86,7 @@ class ProcessMetrics : public ResponseNode {
     cpu.children.push_back(ics);
     serialized.push_back(cpu);
 
+#endif
     return serialized;
   }
 

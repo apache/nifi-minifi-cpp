@@ -18,7 +18,9 @@
 
 #ifndef LIBMINIFI_CAPI_PLAN_H_
 #define LIBMINIFI_CAPI_PLAN_H_
-#include <dirent.h>
+#ifndef WIN32
+	#include <dirent.h>
+#endif
 #include <cstdio>
 #include <cstdlib>
 #include <sstream>
@@ -111,6 +113,7 @@ class ExecutionPlan {
 
  private:
 
+  static std::shared_ptr<utils::IdGenerator> id_generator_;
   std::shared_ptr<logging::Logger> logger_;
 };
 

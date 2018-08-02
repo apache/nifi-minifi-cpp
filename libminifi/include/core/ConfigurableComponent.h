@@ -19,6 +19,7 @@
 #ifndef LIBMINIFI_INCLUDE_CORE_CONFIGURABLECOMPONENT_H_
 #define LIBMINIFI_INCLUDE_CORE_CONFIGURABLECOMPONENT_H_
 
+#include "Core.h"
 #include <mutex>
 #include <iostream>
 #include <map>
@@ -40,7 +41,7 @@ namespace core {
  * Represents a configurable component
  * Purpose: Extracts configuration items for all components and localized them
  */
-class __attribute__((visibility("default"))) ConfigurableComponent {
+class ConfigurableComponent {
  public:
 
   ConfigurableComponent();

@@ -35,10 +35,92 @@ namespace nifi {
 namespace minifi {
 namespace utils {
 
+Identifier::Identifier(UUID_FIELD u)
+    : IdentifierBase(u) {
+  build_string();
+}
+
+Identifier::Identifier()
+    : IdentifierBase() {
+}
+
+Identifier::Identifier(const Identifier &other) {
+  if (!other.convert().empty()) {
+    copyInto(other);
+    build_string();
+  }
+}
+
+Identifier::Identifier(const IdentifierBase &other) {
+  if (!other.convert().empty()) {
+    copyInto(other);
+    build_string();
+  }
+}
+
+Identifier &Identifier::operator=(const Identifier &other) {
+  if (!other.convert().empty()) {
+    IdentifierBase::operator =(other);
+    build_string();
+  }
+  return *this;
+}
+
+Identifier &Identifier::operator=(const IdentifierBase &other) {
+  if (!other.convert().empty()) {
+    IdentifierBase::operator =(other);
+    build_string();
+  }
+  return *this;
+}
+
+Identifier &Identifier::operator=(UUID_FIELD o) {
+  IdentifierBase::operator=(o);
+  build_string();
+  return *this;
+}
+
+Identifier &Identifier::operator=(std::string id) {
+  uuid_parse(id.c_str(), id_);
+  converted_ = id;
+  return *this;
+}
+
+bool Identifier::operator==(std::nullptr_t nullp) {
+  return converted_.empty();
+}
+
+bool Identifier::operator!=(std::nullptr_t nullp) {
+  return !converted_.empty();
+}
+
+bool Identifier::operator!=(const Identifier &other) {
+  return converted_ != other.converted_;
+}
+
+bool Identifier::operator==(const Identifier &other) {
+  return converted_ == other.converted_;
+}
+
+std::string Identifier::to_string() {
+  return convert();
+}
+
+unsigned char *Identifier::toArray() {
+  return id_;
+}
+
+void Identifier::build_string() {
+  char uuidStr[37] = { 0 };
+  uuid_unparse_lower(id_, uuidStr);
+  converted_ = uuidStr;
+}
+
 uint64_t timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 
 NonRepeatingStringGenerator::NonRepeatingStringGenerator()
-    : prefix_((std::to_string(timestamp) + "-")), incrementor_(0) {
+    : prefix_((std::to_string(timestamp) + "-")),
+      incrementor_(0) {
 }
 
 IdGenerator::IdGenerator()
@@ -69,7 +151,7 @@ uint64_t IdGenerator::getDeviceSegmentFromString(const std::string& str, int num
 
 uint64_t IdGenerator::getRandomDeviceSegment(int numBits) {
   uint64_t deviceSegment = 0;
-  uuid_t random_uuid;
+  UUID_FIELD random_uuid;
   for (int word = 0; word < 2; word++) {
     uuid_generate_random(random_uuid);
     for (int i = 0; i < 4; i++) {
@@ -122,14 +204,21 @@ void IdGenerator::initialize(const std::shared_ptr<Properties> & properties) {
     } else if ("time" == implementation_str) {
       logging::LOG_DEBUG(logger_) << "Using uuid_generate_time implementation for uids.";
     } else {
-      logging::LOG_DEBUG(logger_) << "Invalid value for uid.implementation ("  << implementation_str << "). Using uuid_generate_time implementation for uids.";
+      logging::LOG_DEBUG(logger_) << "Invalid value for uid.implementation (" << implementation_str << "). Using uuid_generate_time implementation for uids.";
     }
   } else {
     logging::LOG_DEBUG(logger_) << "Using uuid_generate_time implementation for uids.";
   }
 }
 
-void IdGenerator::generate(uuid_t output) {
+Identifier IdGenerator::generate() {
+  Identifier ident;
+  generate(ident);
+  return ident;
+}
+
+void IdGenerator::generate(Identifier &ident) {
+  UUID_FIELD output;
   switch (implementation_) {
     case UUID_RANDOM_IMPL:
       uuid_generate_random(output);
@@ -149,6 +238,7 @@ void IdGenerator::generate(uuid_t output) {
       uuid_generate_time(output);
       break;
   }
+  ident = output;
 }
 
 } /* namespace utils */

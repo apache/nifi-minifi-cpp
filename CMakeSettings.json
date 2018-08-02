@@ -1,0 +1,137 @@
+{
+  // See https://go.microsoft.com//fwlink//?linkid=834763 for more information about this file.
+  "configurations": [
+       {
+      "name": "x64-Debug",
+      "generator": "Visual Studio 14 2015 Win64",
+      "configurationType": "Debug",
+      "inheritEnvironments": [ "msvc_x64_x64" ],
+      "buildRoot": "${env.USERPROFILE}\\CMakeBuilds\\${workspaceHash}\\build\\${name}",
+      "installRoot": "${env.USERPROFILE}\\CMakeBuilds\\${workspaceHash}\\install\\${name}",
+      "cmakeCommandArgs": "",
+      "buildCommandArgs": "-v:minimal -m:8",
+      "variables": [
+        {
+          "name": "OPENSSL_OFF",
+          "value": "ON"
+        },
+        {
+          "name": "USE_SYSTEM_ZLIB",
+          "value": "OFF"
+        },
+        {
+          "name": "USE_SYSTEM_CURL",
+          "value": "OFF"
+        },
+        {
+          "name": "USE_SYSTEM_UUID",
+          "value": "OFF"
+        },
+        {
+          "name": "DISABLE_ROCKSDB",
+          "value": "FALSE"
+        },
+        {
+          "name": "ENABLE_WEL",
+          "value": "TRUE"
+        },
+        {
+          "name": "ENABLE_LIBRDKAFKA",
+          "value": "OFF"
+        },
+        {
+          "name": "DISABLE_CURL",
+          "value": "OFF"
+        },
+        {
+          "name": "DISABLE_LIBARCHIVE",
+          "value": "TRUE"
+        },
+        {
+          "name": "DISABLE_SCRIPTING",
+          "value": "TRUE"
+        },
+        {
+          "name": "EXCLUDE_BOOST",
+          "value": "TRUE"
+        },
+        {
+          "name": "DISABLE_EXPRESSION_LANGUAGE",
+          "value": "TRUE"
+        },
+        {
+          "name": "SKIP_TESTS",
+          "value": "TRUE"
+        }
+
+      ],
+      "ctestCommandArgs": ""
+    },
+    {
+      "name": "x64-Release",
+      "generator": "Ninja",
+      "configurationType": "RelWithDebInfo",
+      "inheritEnvironments": [ "msvc_x64_x64" ],
+      "buildRoot": "${env.USERPROFILE}\\CMakeBuilds\\${workspaceHash}\\build\\${name}",
+      "installRoot": "${env.USERPROFILE}\\CMakeBuilds\\${workspaceHash}\\install\\${name}",
+      "cmakeCommandArgs": "",
+      "buildCommandArgs": "-v",
+      "variables": [
+        {
+          "name": "OPENSSL_OFF",
+          "value": "ON"
+        },
+        {
+          "name": "USE_SYSTEM_ZLIB",
+          "value": "OFF"
+        },
+        {
+          "name": "USE_SYSTEM_CURL",
+          "value": "OFF"
+        },
+        {
+          "name": "USE_SYSTEM_UUID",
+          "value": "OFF"
+        },
+        {
+          "name": "DISABLE_ROCKSDB",
+          "value": "FALSE"
+        },
+        {
+          "name": "ENABLE_WEL",
+          "value": "TRUE"
+        },
+        {
+          "name": "ENABLE_LIBRDKAFKA",
+          "value": "OFF"
+        },
+        {
+          "name": "DISABLE_CURL",
+          "value": "OFF"
+        },
+        {
+          "name": "DISABLE_LIBARCHIVE",
+          "value": "TRUE"
+        },
+        {
+          "name": "DISABLE_SCRIPTING",
+          "value": "TRUE"
+        },
+        {
+          "name": "EXCLUDE_BOOST",
+          "value": "TRUE"
+        },
+        {
+          "name": "DISABLE_EXPRESSION_LANGUAGE",
+          "value": "TRUE"
+        },
+        {
+          "name": "SKIP_TESTS",
+          "value": "TRUE"
+        }
+
+      ],
+      "ctestCommandArgs": ""
+    }
+  ]
+}

@@ -38,16 +38,16 @@ namespace response {
 class RepositoryMetrics : public ResponseNode {
  public:
 
-  RepositoryMetrics(const std::string &name, uuid_t uuid)
+  RepositoryMetrics(const std::string &name, utils::Identifier &uuid)
       : ResponseNode(name, uuid) {
   }
 
   RepositoryMetrics(const std::string &name)
-      : ResponseNode(name, 0) {
+      : ResponseNode(name) {
   }
 
   RepositoryMetrics()
-      : ResponseNode("RepositoryMetrics", 0) {
+      : ResponseNode("RepositoryMetrics") {
   }
 
   virtual std::string getName() const {

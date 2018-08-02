@@ -19,16 +19,31 @@
 #define MAIN_MAIN_H_
 
 
+#ifdef WIN32
+#define FILE_SEPARATOR "\\"
+#else
+#define FILE_SEPARATOR "/"
+#endif
+
+#define WIN32_LEAN_AND_MEAN
 //! Main thread sleep interval 1 second
 #define SLEEP_INTERVAL 1
 //! Main thread stop wait time
 #define STOP_WAIT_TIME_MS 30*1000
 //! Default YAML location
+#ifdef WIN32
+#define DEFAULT_NIFI_CONFIG_YML "\\conf\\config.yml"
+//! Default properties file paths
+#define DEFAULT_NIFI_PROPERTIES_FILE "\\conf\\minifi.properties"
+#define DEFAULT_LOG_PROPERTIES_FILE "\\conf\\minifi-log.properties"
+#define DEFAULT_UID_PROPERTIES_FILE "\\conf\\minifi-uid.properties"
+#else
 #define DEFAULT_NIFI_CONFIG_YML "./conf/config.yml"
 //! Default properties file paths
 #define DEFAULT_NIFI_PROPERTIES_FILE "./conf/minifi.properties"
 #define DEFAULT_LOG_PROPERTIES_FILE "./conf/minifi-log.properties"
 #define DEFAULT_UID_PROPERTIES_FILE "./conf/minifi-uid.properties"
+#endif
 //! Define home environment variable
 #define MINIFI_HOME_ENV_KEY "MINIFI_HOME"
 
@@ -39,6 +54,12 @@
 #define CONFIG_YAML_REMOTE_PROCESSING_GROUPS_KEY "Remote Processing Groups"
 
 
+#ifdef _MSC_VER
+#ifndef PATH_MAX
+#define PATH_MAX 260
+#endif
+#endif
+
 /**
  * Validates a MINIFI_HOME value.
  * @param home_path
@@ -46,7 +67,12 @@
  */
 bool validHome(const std::string &home_path) {
   struct stat stat_result { };
-  auto properties_file_path = home_path + "/" + DEFAULT_NIFI_PROPERTIES_FILE;
+  std::string sep = FILE_SEPARATOR;
+#ifdef WIN32
+    sep = "";
+#endif
+  auto properties_file_path = home_path + sep + DEFAULT_NIFI_PROPERTIES_FILE;
+  std::cout << "looking for " << properties_file_path << std::endl;
   return (stat(properties_file_path.c_str(), &stat_result) == 0);
 }
 

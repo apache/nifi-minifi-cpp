@@ -19,9 +19,6 @@
 #define LIBMINIFI_INCLUDE_SITETOSITE_PEER_H_
 
 #include <stdio.h>
-#include <fcntl.h>
-#include <resolv.h>
-#include <netdb.h>
 #include <string>
 #include <errno.h>
 #include <uuid/uuid.h>
@@ -36,6 +33,7 @@
 #include "properties/Configure.h"
 #include "io/ClientSocket.h"
 #include "io/BaseStream.h"
+#include "io/DataStream.h"
 #include "utils/TimeUtil.h"
 #include "utils/HTTPClient.h"
 
@@ -47,11 +45,11 @@ namespace sitetosite {
 
 class Peer {
  public:
-  explicit Peer(uuid_t port_id, const std::string &host, uint16_t port, bool secure = false)
+  explicit Peer(utils::Identifier &port_id, const std::string &host, uint16_t port, bool secure = false)
       : host_(host),
         port_(port),
         secure_(secure) {
-    uuid_copy(port_id_, port_id);
+    port_id_ = port_id;
   }
 
   explicit Peer(const std::string &host, uint16_t port, bool secure = false)
@@ -64,14 +62,14 @@ class Peer {
       : host_(other.host_),
         port_(other.port_),
         secure_(other.secure_) {
-    uuid_copy(port_id_, other.port_id_);
+    port_id_ = other.port_id_;
   }
 
-  explicit Peer(const Peer &&other)
+  explicit Peer(Peer &&other)
       : host_(std::move(other.host_)),
         port_(std::move(other.port_)),
         secure_(std::move(other.secure_)) {
-    uuid_copy(port_id_, other.port_id_);
+    port_id_ = other.port_id_;
   }
 
   uint16_t getPort() const {
@@ -86,8 +84,8 @@ class Peer {
     return secure_;
   }
 
-  void getPortId(uuid_t other) const {
-    uuid_copy(other, port_id_);
+  void getPortId(utils::Identifier &other) const {
+    other = port_id_;
   }
 
  protected:
@@ -95,7 +93,7 @@ class Peer {
 
   uint16_t port_;
 
-  uuid_t port_id_;
+  utils::Identifier port_id_;
 
   // secore comms
 
@@ -149,12 +147,12 @@ class SiteToSitePeer : public org::apache::nifi::minifi::io::BaseStream {
   /*
    * Create a new site2site peer
    */
-  explicit SiteToSitePeer(std::unique_ptr<org::apache::nifi::minifi::io::DataStream> injected_socket, const std::string host, uint16_t port, const std::string &interface)
-      : SiteToSitePeer(host, port, interface) {
+  explicit SiteToSitePeer(std::unique_ptr<org::apache::nifi::minifi::io::DataStream> injected_socket, const std::string host, uint16_t port, const std::string &ifc)
+      : SiteToSitePeer(host, port, ifc) {
     stream_ = std::move(injected_socket);
   }
 
-  explicit SiteToSitePeer(const std::string &host, uint16_t port, const std::string &interface)
+  explicit SiteToSitePeer(const std::string &host, uint16_t port, const std::string &ifc)
       : stream_(nullptr),
         host_(host),
         port_(port),
@@ -164,7 +162,7 @@ class SiteToSitePeer : public org::apache::nifi::minifi::io::BaseStream {
     url_ = "nifi://" + host_ + ":" + std::to_string(port_);
     yield_expiration_ = 0;
     timeout_ = 30000;  // 30 seconds
-    local_network_interface_= std::move(io::NetworkInterface(interface, nullptr));
+    local_network_interface_= std::move(io::NetworkInterface(ifc, nullptr));
   }
 
   explicit SiteToSitePeer(SiteToSitePeer &&ss)
@@ -191,8 +189,8 @@ class SiteToSitePeer : public org::apache::nifi::minifi::io::BaseStream {
     return url_;
   }
   // setInterface
-  void setInterface(std::string &interface) {
-    local_network_interface_ = std::move(io::NetworkInterface(interface,nullptr));
+  void setInterface(std::string &ifc) {
+    local_network_interface_ = std::move(io::NetworkInterface(ifc,nullptr));
   }
   std::string getInterface() {
     return local_network_interface_.getInterface();

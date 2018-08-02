@@ -18,7 +18,6 @@
  * limitations under the License.
  */
 #include "processors/GenerateFlowFile.h"
-#include <sys/time.h>
 #include <time.h>
 #include <vector>
 #include <queue>
@@ -29,6 +28,10 @@
 #include <chrono>
 #include <thread>
 #include <random>
+#ifdef WIN32
+#define srandom srand
+#define random rand
+#endif
 #include "utils/StringUtils.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
@@ -46,7 +49,7 @@ core::Property GenerateFlowFile::DataFormat("Data Format", "Specifies whether th
 core::Property GenerateFlowFile::UniqueFlowFiles("Unique FlowFiles", "If true, each FlowFile that is generated will be unique. If false, a random value will be generated and all FlowFiles", "true");
 core::Relationship GenerateFlowFile::Success("success", "success operational on the flow record");
 const unsigned int TEXT_LEN = 90;
-static const char TEXT_CHARS[TEXT_LEN+1] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$%^&*()-_=+/?.,';:\"?<>\n\t ";
+static const char TEXT_CHARS[TEXT_LEN + 1] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$%^&*()-_=+/?.,';:\"?<>\n\t ";
 
 void GenerateFlowFile::initialize() {
   // Set the supported properties

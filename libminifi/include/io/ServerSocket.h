@@ -18,7 +18,7 @@
 #ifndef LIBMINIFI_INCLUDE_IO_SERVERSOCKET_H_
 #define LIBMINIFI_INCLUDE_IO_SERVERSOCKET_H_
 
-#include "ClientSocket.h"
+#include "io/ClientSocket.h"
 
 namespace org {
 namespace apache {

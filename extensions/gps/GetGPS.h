@@ -38,7 +38,7 @@ public:
 	/*!
 	 * Create a new processor
 	 */
-	GetGPS(std::string name, uuid_t uuid = NULL)
+	GetGPS(std::string name, utils::Identifier uuid = utils::Identifier())
 	: core::Processor(name, uuid), logger_(logging::LoggerFactory<GetGPS>::getLogger())
 	{
 		gpsdHost_ = "localhost";

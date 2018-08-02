@@ -23,14 +23,14 @@ namespace nifi {
 namespace minifi {
 namespace core {
 
-bool ProcessContext::getProperty(const std::string &name, std::string &value,
+bool ProcessContext::getProperty(const Property &property, std::string &value,
                                  const std::shared_ptr<FlowFile> &flow_file) {
-  return getProperty(name, value);
+  return getProperty(property.getName(), value);
 }
 
-bool ProcessContext::getDynamicProperty(const std::string &name, std::string &value,
+bool ProcessContext::getDynamicProperty(const Property &property, std::string &value,
                                  const std::shared_ptr<FlowFile> &flow_file) {
-  return getDynamicProperty(name, value);
+  return getDynamicProperty(property.getName(), value);
 }
 
 } /* namespace core */

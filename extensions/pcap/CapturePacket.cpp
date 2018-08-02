@@ -151,13 +151,11 @@ void CapturePacket::onSchedule(const std::shared_ptr<core::ProcessContext> &cont
     base_dir_ = "/tmp/";
   }
 
-  uuid_t dir_ext;
+  utils::Identifier dir_ext;
 
   id_generator_->generate(dir_ext);
 
-  char id[37];
-  uuid_unparse(dir_ext, id);
-  base_path_ = id;
+  base_path_ = dir_ext.to_string();
 
   const std::vector<pcpp::PcapLiveDevice*>& devList = pcpp::PcapLiveDeviceList::getInstance().getPcapLiveDevicesList();
   for (auto iter : devList) {

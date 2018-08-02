@@ -1,1 +1,33 @@
-build_script: echo NOOP
+image: Visual Studio 2015
+
+environment:
+  MSVC_DEFAULT_OPTIONS: ON
+  APPVEYOR_SAVE_CACHE_ON_ERROR: true
+  GENERATOR: Ninja
+  MAKE_PROGRAM: ninja
+  
+cache: 
+- build\curl-install\ -> appveyor.yml
+- build\libressl-install\ -> appveyor.yml
+- build\zlib-install\ -> appveyor.yml
+- build\thirdparty\civetweb-1.10 -> appveyor.yml
+- build\thirdparty\cxxopts -> appveyor.yml
+- build\thirdparty\rocksdb -> appveyor.yml
+- build\thirdparty\ -> appveyor.yml
+- build\thirdparty\yaml-cpp-yaml-cpp-20171024 -> appveyor.yml
+
+branches:
+ only: 
+  - windows
+  
+clone_folder: C:\projects\nifi-minifi-cpp
+  
+build_script:
+   - cd C:\projects\nifi-minifi-cpp
+   - mkdir build & exit 0
+   - cd build
+   - cmake -g"Ninja" -DWIN32=WIN32 -DOPENSSL_OFF=ON -DUSE_SYSTEM_ZLIB=OFF -DUSE_SYSTEM_CURL=OFF -DUSE_SYSTEM_UUID=OFF -DDISABLE_ROCKSDB=ON -DDISABLE_CURL=ON -DDISABLE_LIBARCHIVE=ON -DDISABLE_SCRIPTING=ON -DEXCLUDE_BOOST=ON -DDISABLE_EXPRESSION_LANGUAGE=ON  -DENABLE_WEL=TRUE -DSKIP_TESTS=ON ..
+   
+    set msbuild_platform=x64 
+   - msbuild nifi-minifi-cpp.sln
+   

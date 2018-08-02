@@ -17,10 +17,11 @@
 #ifndef LIBMINIFI_INCLUDE_UTILS_ID_H_
 #define LIBMINIFI_INCLUDE_UTILS_ID_H_
 
+#include <cstddef>
 #include <atomic>
 #include <memory>
 #include <string>
-#include <uuid/uuid.h>
+#include "uuid/uuid.h"
 
 #include "core/logging/Logger.h"
 #include "properties/Properties.h"
@@ -37,9 +38,91 @@ namespace nifi {
 namespace minifi {
 namespace utils {
 
+template<typename T, typename C>
+class IdentifierBase {
+ public:
+
+  IdentifierBase(T myid) {
+    copyInto(myid);
+  }
+
+  IdentifierBase(const IdentifierBase &other) {
+    copyInto(other.id_);
+  }
+
+  IdentifierBase() {
+  }
+
+  IdentifierBase &operator=(const IdentifierBase &other) {
+    copyInto(other.id_);
+    return *this;
+  }
+
+  IdentifierBase &operator=(T o) {
+    copyInto(o);
+    return *this;
+  }
+
+  void getIdentifier(T other) const {
+    copyOutOf(other);
+  }
+
+  C convert() const {
+    return converted_;
+  }
+
+ protected:
+
+  void copyInto(const IdentifierBase &other){
+    memcpy(id_, other.id_, sizeof(T));
+  }
+
+  void copyInto(const void *other) {
+    memcpy(id_, other, sizeof(T));
+  }
+
+  void copyOutOf(void *other) {
+    memcpy(other, id_, sizeof(T));
+  }
+
+  C converted_;
+
+  T id_;
+};
+
+class Identifier : public IdentifierBase<UUID_FIELD, std::string> {
+ public:
+  Identifier(UUID_FIELD u);
+  Identifier();
+  Identifier(const Identifier &other);
+  Identifier(const IdentifierBase &other);
+
+  Identifier &operator=(const IdentifierBase &other);
+  Identifier &operator=(const Identifier &other);
+  Identifier &operator=(UUID_FIELD o);
+
+  Identifier &operator=(std::string id);
+  bool operator==(std::nullptr_t nullp);
+
+  bool operator!=(std::nullptr_t nullp);
+
+  bool operator!=(const Identifier &other);
+  bool operator==(const Identifier &other);
+
+  std::string to_string();
+
+  unsigned char *toArray();
+
+ protected:
+
+  void build_string();
+
+};
+
 class IdGenerator {
  public:
-  void generate(uuid_t output);
+  void generate(Identifier &output);
+  Identifier generate();
   void initialize(const std::shared_ptr<Properties> & properties);
 
   static std::shared_ptr<IdGenerator> getIdGenerator() {

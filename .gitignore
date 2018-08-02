@@ -55,9 +55,12 @@ thirdparty/apache-rat/apache-rat*
 
 # Ignore source files that have been placed in the docker directory during build
 docker/minificppsource
+.vs/**
 *.swp
 .cache
 .cproject
 .settings
 *.pyc
 /cmake-build-*
+.vs/VSWorkspaceState.json
+.vs/slnx.sqlite

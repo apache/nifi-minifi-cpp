@@ -17,14 +17,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <sys/time.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <time.h>
 #include <stdio.h>
-#include <dirent.h>
+
 #include <limits.h>
+#ifndef WIN32
+#include <dirent.h>
 #include <unistd.h>
+#endif
 #include <vector>
 #include <queue>
 #include <map>
@@ -39,6 +41,10 @@
 #include "processors/TailFile.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
+
+#ifndef S_ISDIR
+#define S_ISDIR(mode)  (((mode) & S_IFMT) == S_IFDIR)
+#endif
 
 #if defined(__clang__)
 #pragma clang diagnostic push
@@ -173,6 +179,7 @@ void TailFile::checkRollOver(const std::string &fileLocation, const std::string 
     std::size_t found = fileName.find_last_of(".");
     if (found != std::string::npos)
       pattern = fileName.substr(0, found);
+#ifndef WIN32
     DIR *d;
     d = opendir(fileLocation.c_str());
     if (!d)
@@ -197,6 +204,33 @@ void TailFile::checkRollOver(const std::string &fileLocation, const std::string 
       }
     }
     closedir(d);
+#else
+
+    HANDLE hFind;
+    WIN32_FIND_DATA FindFileData;
+
+    if ((hFind = FindFirstFile(fileLocation.c_str(), &FindFileData)) != INVALID_HANDLE_VALUE) {
+      do {
+        struct stat statbuf {};
+        if (stat(FindFileData.cFileName, &statbuf) != 0) {
+          logger_->log_warn("Failed to stat %s", FindFileData.cFileName);
+          break;
+        }
+
+        std::string fileFullName = fileLocation + "/" + FindFileData.cFileName;
+
+        if (fileFullName.find(pattern) != std::string::npos && stat(fileFullName.c_str(), &statbuf) == 0) {
+          if (((uint64_t)(statbuf.st_mtime) * 1000) >= modifiedTimeCurrentTailFile) {
+            TailMatchedFileItem item;
+            item.fileName = fileName;
+            item.modifiedTime = ((uint64_t)(statbuf.st_mtime) * 1000);
+            matchedFiles.push_back(item);
+          }
+        }
+      }while (FindNextFile(hFind, &FindFileData));
+      FindClose(hFind);
+    }
+#endif
 
     // Sort the list based on modified time
     std::sort(matchedFiles.begin(), matchedFiles.end(), sortTailMatchedFileItem);
@@ -244,7 +278,7 @@ void TailFile::onTrigger(core::ProcessContext *context, core::ProcessSession *se
   struct stat statbuf;
 
   if (stat(fullPath.c_str(), &statbuf) == 0) {
-    if ((uint64_t)statbuf.st_size <= this->_currentTailFilePosition) {
+    if ((uint64_t) statbuf.st_size <= this->_currentTailFilePosition) {
       // there are no new input for the current tail file
       context->yield();
       return;

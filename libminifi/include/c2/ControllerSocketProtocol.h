@@ -36,7 +36,7 @@ namespace c2 {
 class ControllerSocketProtocol : public HeartBeatReporter {
  public:
 
-  ControllerSocketProtocol(std::string name, uuid_t uuid = nullptr)
+  ControllerSocketProtocol(std::string name, utils::Identifier uuid = utils::Identifier())
       : HeartBeatReporter(name, uuid),
         logger_(logging::LoggerFactory<ControllerSocketProtocol>::getLogger()) {
 

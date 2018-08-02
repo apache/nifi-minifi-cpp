@@ -30,12 +30,20 @@ namespace nifi {
 namespace minifi {
 namespace core {
 
-Connectable::Connectable(std::string name, uuid_t uuid)
+Connectable::Connectable(std::string name, utils::Identifier &uuid)
     : CoreComponent(name, uuid),
       max_concurrent_tasks_(1),
       connectable_version_(nullptr),
       logger_(logging::LoggerFactory<Connectable>::getLogger()) {
 }
+
+Connectable::Connectable(std::string name)
+    : CoreComponent(name),
+      max_concurrent_tasks_(1),
+      connectable_version_(nullptr),
+      logger_(logging::LoggerFactory<Connectable>::getLogger()) {
+}
+
 
 Connectable::Connectable(const Connectable &&other)
     : CoreComponent(std::move(other)),

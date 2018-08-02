@@ -31,6 +31,8 @@
 #include <chrono>
 #include <functional>
 
+#include "Core.h"
+#include <utils/Id.h>
 #include "Connectable.h"
 #include "ConfigurableComponent.h"
 #include "io/StreamFactory.h"
@@ -55,15 +57,19 @@ namespace core {
 
 // Default penalization period in second
 
+#define BUILDING_DLL 1
 // Processor Class
-class __attribute__((visibility("default"))) Processor : public Connectable, public ConfigurableComponent, public std::enable_shared_from_this<Processor> {
+class Processor : public Connectable, public ConfigurableComponent, public std::enable_shared_from_this<Processor> {
 
  public:
   // Constructor
   /*!
    * Create a new processor
    */
-  Processor(std::string name, uuid_t uuid = NULL);
+
+  Processor(std::string name, utils::Identifier &uuid);
+
+  Processor(std::string name);
   // Destructor
   virtual ~Processor() {
     notifyStop();
@@ -95,7 +101,9 @@ class __attribute__((visibility("default"))) Processor : public Connectable, pub
   // Set Processor Scheduling Period in Nano Second
   void setSchedulingPeriodNano(uint64_t period) {
     uint64_t minPeriod = MINIMUM_SCHEDULING_NANOS;
-    scheduling_period_nano_ = std::max(period, minPeriod);
+	// std::max has some variances on c++11-c++14 and then c++14 onward.
+    // to avoid macro conditional checks we can use this simple conditional expr. 
+	scheduling_period_nano_ = period > minPeriod ? period : minPeriod; 
   }
   // Get Processor Scheduling Period in Nano Second
   uint64_t getSchedulingPeriodNano(void) {

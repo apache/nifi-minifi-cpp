@@ -33,7 +33,7 @@ namespace processors {
 
 class TFApplyGraph : public core::Processor {
  public:
-  explicit TFApplyGraph(const std::string &name, uuid_t uuid = nullptr)
+  explicit TFApplyGraph(const std::string &name, utils::Identifier uuid = utils::Identifier())
       : Processor(name, uuid),
         logger_(logging::LoggerFactory<TFApplyGraph>::getLogger()) {
   }

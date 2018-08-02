@@ -22,6 +22,8 @@
 #include <set>
 #include <string>
 
+std::shared_ptr<utils::IdGenerator> ExecutionPlan::id_generator_ = utils::IdGenerator::getIdGenerator();
+
 ExecutionPlan::ExecutionPlan(std::shared_ptr<core::ContentRepository> content_repo, std::shared_ptr<core::Repository> flow_repo, std::shared_ptr<core::Repository> prov_repo)
     : content_repo_(content_repo),
       flow_repo_(flow_repo),
@@ -38,8 +40,8 @@ std::shared_ptr<core::Processor> ExecutionPlan::addProcessor(const std::shared_p
     return nullptr;
   }
 
-  uuid_t uuid;
-  uuid_generate(uuid);
+  utils::Identifier uuid;
+  id_generator_->generate(uuid);
 
   processor->setStreamFactory(stream_factory);
   // initialize the processor
@@ -66,7 +68,7 @@ std::shared_ptr<core::Processor> ExecutionPlan::addProcessor(const std::shared_p
     connection->setSource(last);
     connection->setDestination(processor);
 
-    uuid_t uuid_copy, uuid_copy_next;
+    utils::Identifier uuid_copy, uuid_copy_next;
     last->getUUID(uuid_copy);
     connection->setSourceUUID(uuid_copy);
     processor->getUUID(uuid_copy_next);
@@ -95,8 +97,8 @@ std::shared_ptr<core::Processor> ExecutionPlan::addProcessor(const std::string &
     return nullptr;
   }
 
-  uuid_t uuid;
-  uuid_generate(uuid);
+  utils::Identifier uuid;
+  id_generator_->generate(uuid);
 
   auto ptr = core::ClassLoader::getDefaultClassLoader().instantiate(processor_name, uuid);
   if (nullptr == ptr) {
@@ -186,7 +188,7 @@ std::shared_ptr<minifi::Connection> ExecutionPlan::buildFinalConnection(std::sha
   if (setDest)
     connection->setDestination(processor);
 
-  uuid_t uuid_copy;
+  utils::Identifier uuid_copy;
   last->getUUID(uuid_copy);
   connection->setSourceUUID(uuid_copy);
   if (setDest)

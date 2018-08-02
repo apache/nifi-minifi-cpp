@@ -205,7 +205,7 @@ class ProcessorNode : public ConfigurableComponent, public Connectable {
    * Set UUID in this instance
    * @param uuid uuid to apply to the internal representation.
    */
-  void setUUID(uuid_t uuid) {
+  void setUUID(utils::Identifier &uuid) {
     Connectable::setUUID(uuid);
     processor_->setUUID(uuid);
   }
@@ -243,13 +243,14 @@ class ProcessorNode : public ConfigurableComponent, public Connectable {
    * @param uuid uuid struct to which we will copy the memory
    * @return success of request
    */
-  bool getUUID(uuid_t uuid) {
+  bool getUUID(utils::Identifier &uuid) {
     return processor_->getUUID(uuid);
   }
+  /*
 
   unsigned const char *getUUID() {
     return processor_->getUUID();
-  }
+  }*/
   /**
    * Return the UUID string
    * @param constant reference to the UUID str

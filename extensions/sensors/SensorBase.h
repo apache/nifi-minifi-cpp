@@ -48,7 +48,7 @@ class SensorBase : public core::Processor {
   /*!
    * Create a new processor
    */
-  SensorBase(std::string name, uuid_t uuid = NULL)
+  SensorBase(std::string name, utils::Identifier uuid = utils::Identifier())
       : Processor(name, uuid),
         imu(nullptr),
         logger_(logging::LoggerFactory<SensorBase>::getLogger()) {

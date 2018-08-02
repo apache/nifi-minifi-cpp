@@ -22,7 +22,7 @@
 #include "core/ClassLoader.h"
 #include "utils/StringUtils.h"
 
-class __attribute__((visibility("default"))) GpsFactory : public core::ObjectFactory {
+class GpsFactory : public core::ObjectFactory {
  public:
   GpsFactory() {
 
@@ -62,6 +62,6 @@ class __attribute__((visibility("default"))) GpsFactory : public core::ObjectFac
 };
 
 extern "C" {
-void *createGPSFactory(void);
+DLL_EXPORT void *createGPSFactory(void);
 }
 #endif /* EXTENSIONS_ROCKSDBLOADER_H */

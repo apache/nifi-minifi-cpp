@@ -58,7 +58,7 @@ public:
   /*!
    * Create a new processor
    */
-  explicit PublishKafka(std::string name, uuid_t uuid = NULL) :
+  explicit PublishKafka(std::string name, utils::Identifier uuid = utils::Identifier()) :
       core::Processor(name, uuid), logger_(logging::LoggerFactory<PublishKafka>::getLogger()) {
     conf_ = nullptr;
     rk_ = nullptr;

@@ -16,13 +16,17 @@
  * limitations under the License.
  */
 #include "io/Serializable.h"
-#include <arpa/inet.h>
 #include <cstdio>
 #include <iostream>
 #include <vector>
 #include <string>
 #include <algorithm>
 #include "io/DataStream.h"
+#ifdef WIN32
+#include "Winsock2.h"
+#else
+#include <arpa/inet.h>
+#endif
 namespace org {
 namespace apache {
 namespace nifi {

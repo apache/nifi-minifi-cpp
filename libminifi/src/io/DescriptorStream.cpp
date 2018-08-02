@@ -18,7 +18,6 @@
 
 #include "io/DescriptorStream.h"
 #include <fstream>
-#include <unistd.h>
 #include <vector>
 #include <memory>
 #include <string>
