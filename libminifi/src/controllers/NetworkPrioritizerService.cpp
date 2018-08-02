@@ -21,15 +21,18 @@
 #include <limits>
 #include <string>
 #include <vector>
-#include <sys/ioctl.h>
+#ifndef WIN32
 #include <ifaddrs.h>
 #include <net/if.h>
+#include <sys/ioctl.h>
 #include <netinet/in.h>
-#include <string.h>
 #include <sys/socket.h>
 #include <netdb.h>
-#include <stdlib.h>
 #include <unistd.h>
+#endif
+#include <string.h>
+#include <stdlib.h>
+
 #include <set>
 #include "utils/StringUtils.h"
 #if ( defined(__APPLE__) || defined(__MACH__) || defined(BSD))
@@ -112,6 +115,7 @@ std::string NetworkPrioritizerService::get_nearest_interface(const std::vector<s
 }
 
 bool NetworkPrioritizerService::interface_online(const std::string &ifc) {
+#ifndef WIN32
   struct ifreq ifr;
   auto sockid = socket(PF_INET6, SOCK_DGRAM, IPPROTO_IP);
   memset(&ifr, 0, sizeof(ifr));
@@ -121,6 +125,9 @@ bool NetworkPrioritizerService::interface_online(const std::string &ifc) {
   }
   close(sockid);
   return (ifr.ifr_flags & IFF_UP) && (ifr.ifr_flags & IFF_RUNNING);
+#else
+  return false;
+#endif
 }
 
 std::vector<std::string> NetworkPrioritizerService::getInterfaces(uint32_t size = 0) {

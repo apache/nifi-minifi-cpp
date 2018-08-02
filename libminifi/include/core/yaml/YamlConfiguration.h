@@ -34,7 +34,7 @@ namespace nifi {
 namespace minifi {
 namespace core {
 
-#define DEFAULT_FLOW_YAML_FILE_NAME "conf/flow.yml"
+#define DEFAULT_FLOW_YAML_FILE_NAME "conf/config.yml"
 #define CONFIG_YAML_FLOW_CONTROLLER_KEY "Flow Controller"
 #define CONFIG_YAML_PROCESSORS_KEY "Processors"
 #define CONFIG_YAML_CONNECTIONS_KEY "Connections"

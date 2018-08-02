@@ -18,6 +18,8 @@
 #ifndef LIBMINIFI_INCLUDE_CORE_RESOURCE_H_
 #define LIBMINIFI_INCLUDE_CORE_RESOURCE_H_
 
+#define WIN32_LEAN_AND_MEAN 1
+
 #include "ClassLoader.h"
 
 namespace org {

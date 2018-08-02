@@ -104,8 +104,12 @@ void Properties::loadConfigureFile(const char *fileName) {
     }
   }
   char *path = NULL;
+#ifndef WIN32
   char full_path[PATH_MAX];
   path = realpath(adjustedFilename.c_str(), full_path);
+#else
+  path = const_cast<char*>(adjustedFilename.c_str());
+#endif
   logger_->log_info("Using configuration file located at %s", path);
 
   std::ifstream file(path, std::ifstream::in);

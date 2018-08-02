@@ -32,19 +32,22 @@ namespace minifi {
 namespace state {
 namespace response {
 
-
-
 /**
  * Purpose: Defines a metric. Serialization is intended to be thread safe.
  */
 class ResponseNode : public core::Connectable {
  public:
   ResponseNode()
-      : core::Connectable("metric", 0),
+      : core::Connectable("metric"),
         is_array_(false) {
   }
 
-  ResponseNode(std::string name, uuid_t uuid)
+  ResponseNode(std::string name)
+      : core::Connectable(name),
+        is_array_(false) {
+  }
+
+  ResponseNode(std::string name, utils::Identifier & uuid)
       : core::Connectable(name, uuid),
         is_array_(false) {
   }
@@ -67,7 +70,7 @@ class ResponseNode : public core::Connectable {
     return is_array_;
   }
 
-  virtual bool isEmpty(){
+  virtual bool isEmpty() {
     return false;
   }
 
@@ -86,8 +89,11 @@ class ResponseNode : public core::Connectable {
  */
 class DeviceInformation : public ResponseNode {
  public:
-  DeviceInformation(std::string name, uuid_t uuid)
+  DeviceInformation(std::string name, utils::Identifier & uuid)
       : ResponseNode(name, uuid) {
+  }
+  DeviceInformation(std::string name)
+      : ResponseNode(name) {
   }
 };
 
@@ -96,7 +102,7 @@ class DeviceInformation : public ResponseNode {
  */
 class ObjectNode : public ResponseNode {
  public:
-  ObjectNode(std::string name, uuid_t uuid)
+  ObjectNode(std::string name, utils::Identifier uuid = utils::Identifier())
       : ResponseNode(name, uuid) {
   }
 
@@ -111,7 +117,7 @@ class ObjectNode : public ResponseNode {
   virtual std::vector<SerializedResponseNode> serialize() {
     std::vector<SerializedResponseNode> serialized;
 //    SerializedResponseNode outer_node;
-  //  outer_node.name = getName();
+    //  outer_node.name = getName();
     for (auto &node : nodes_) {
       SerializedResponseNode inner_node;
       inner_node.name = node->getName();
@@ -120,11 +126,11 @@ class ObjectNode : public ResponseNode {
       }
       serialized.push_back(std::move(inner_node));
     }
-   //serialized.push_back(std::move(outer_node));
+    //serialized.push_back(std::move(outer_node));
     return serialized;
   }
 
-  virtual bool isEmpty(){
+  virtual bool isEmpty() {
     return nodes_.empty();
   }
 

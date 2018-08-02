@@ -50,6 +50,10 @@ bool Property::getRequired() const {
   return is_required_;
 }
 
+bool Property::supportsExpressionLangauge() const {
+  return supports_el_;
+}
+
 std::string Property::getValidRegex() const {
   return valid_regex_;
 }
@@ -65,6 +69,10 @@ void Property::setValue(std::string value) {
   } else {
     values_.push_back(std::move(value));
   }
+}
+
+void Property::setSupportsExpressionLanguage(bool supportEl) {
+  supports_el_ = supportEl;
 }
 
 void Property::addValue(std::string value) {
@@ -86,6 +94,7 @@ const Property &Property::operator=(const Property &other) {
   valid_regex_ = other.valid_regex_;
   dependent_properties_ = other.dependent_properties_;
   exclusive_of_properties_ = other.exclusive_of_properties_;
+  supports_el_ = other.supports_el_;
   return *this;
 }
 

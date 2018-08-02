@@ -57,7 +57,11 @@ class ProcessGroup {
   /*!
    * Create a new process group
    */
-  ProcessGroup(ProcessGroupType type, std::string name, uuid_t uuid = NULL, int version = 0, ProcessGroup *parent = NULL);
+
+  ProcessGroup(ProcessGroupType type, std::string name, utils::Identifier &uuid, int version, ProcessGroup *parent);
+  ProcessGroup(ProcessGroupType type, std::string name);
+  ProcessGroup(ProcessGroupType type, std::string name, utils::Identifier &uuid);
+  ProcessGroup(ProcessGroupType type, std::string name, utils::Identifier &uuid, int version);
   // Destructor
   virtual ~ProcessGroup();
   // Set Processor Name
@@ -92,8 +96,8 @@ class ProcessGroup {
     return timeOut_;
   }
   // setInterface
-  void setInterface(std::string &interface) {
-    local_network_interface_ = interface;
+  void setInterface(std::string &ifc) {
+    local_network_interface_ = ifc;
   }
   std::string getInterface() {
     return local_network_interface_;
@@ -140,16 +144,16 @@ class ProcessGroup {
     return (yield_period_msec_);
   }
   // Set UUID
-  void setUUID(uuid_t uuid) {
-    uuid_copy(uuid_, uuid);
+  void setUUID(utils::Identifier &uuid) {
+    uuid_ = uuid;
   }
   // Get UUID
-  bool getUUID(uuid_t uuid) {
-    if (uuid) {
-      uuid_copy(uuid, uuid_);
-      return true;
-    } else
+  bool getUUID(utils::Identifier &uuid) {
+    if (uuid_ == nullptr){
       return false;
+    }
+    uuid = uuid_;
+    return true;
   }
   // getVersion
   int getVersion() {
@@ -182,7 +186,7 @@ class ProcessGroup {
   // ! Add connections
   void addConnection(std::shared_ptr<Connection> connection);
   // findProcessor based on UUID
-  std::shared_ptr<Processor> findProcessor(uuid_t uuid);
+  std::shared_ptr<Processor> findProcessor(utils::Identifier &uuid);
   // findProcessor based on name
   std::shared_ptr<Processor> findProcessor(const std::string &processorName);
 
@@ -212,7 +216,7 @@ class ProcessGroup {
 
  protected:
   // A global unique identifier
-  uuid_t uuid_;
+  utils::Identifier uuid_;
   // Processor Group Name
   std::string name_;
   // version

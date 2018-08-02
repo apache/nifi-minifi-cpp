@@ -28,13 +28,15 @@ namespace nifi {
 namespace minifi {
 namespace core {
 
-std::vector<std::string> FlowConfiguration::statics_sl_funcs_;
-std::mutex FlowConfiguration::atomic_initialization_;
+static_initializers &get_static_functions() {
+  static static_initializers static_sl_funcs;
+  return static_sl_funcs;
+}
 
 FlowConfiguration::~FlowConfiguration() {
 }
 
-std::shared_ptr<core::Processor> FlowConfiguration::createProcessor(std::string name, uuid_t uuid) {
+std::shared_ptr<core::Processor> FlowConfiguration::createProcessor(std::string name, utils::Identifier &  uuid) {
   auto ptr = core::ClassLoader::getDefaultClassLoader().instantiate(name, uuid);
   if (nullptr == ptr) {
     logger_->log_error("No Processor defined for %s", name);
@@ -60,47 +62,47 @@ std::shared_ptr<core::Processor> FlowConfiguration::createProvenanceReportTask()
 }
 
 std::unique_ptr<core::ProcessGroup> FlowConfiguration::updateFromPayload(const std::string &source, const std::string &yamlConfigPayload) {
-    if (!source.empty()) {
-      std::string host, protocol, path, query, url = source;
-      int port;
-      utils::parse_url(&url, &host, &port, &protocol, &path, &query);
+  if (!source.empty()) {
+    std::string host, protocol, path, query, url = source;
+    int port;
+    utils::parse_url(&url, &host, &port, &protocol, &path, &query);
 
-      std::string flow_id, bucket_id;
-      auto path_split = utils::StringUtils::split(path, "/");
-      for (size_t i = 0; i < path_split.size(); i++) {
-        const std::string &str = path_split.at(i);
-        if (str == "flows") {
-          if (i + 1 < path_split.size()) {
-            flow_id = path_split.at(i + 1);
-            i++;
-          }
-        }
-
-        if (str == "bucket") {
-          if (i + 1 < path_split.size()) {
-            bucket_id = path_split.at(i + 1);
-            i++;
-          }
+    std::string flow_id, bucket_id;
+    auto path_split = utils::StringUtils::split(path, "/");
+    for (size_t i = 0; i < path_split.size(); i++) {
+      const std::string &str = path_split.at(i);
+      if (str == "flows") {
+        if (i + 1 < path_split.size()) {
+          flow_id = path_split.at(i + 1);
+          i++;
         }
       }
-      flow_version_->setFlowVersion(url, bucket_id, flow_id);
-    }
-    return getRootFromPayload(yamlConfigPayload);
-  }
 
-std::unique_ptr<core::ProcessGroup> FlowConfiguration::createRootProcessGroup(std::string name, uuid_t uuid, int version) {
+      if (str == "bucket") {
+        if (i + 1 < path_split.size()) {
+          bucket_id = path_split.at(i + 1);
+          i++;
+        }
+      }
+    }
+    flow_version_->setFlowVersion(url, bucket_id, flow_id);
+  }
+  return getRootFromPayload(yamlConfigPayload);
+}
+
+std::unique_ptr<core::ProcessGroup> FlowConfiguration::createRootProcessGroup(std::string name, utils::Identifier &  uuid, int version) {
   return std::unique_ptr<core::ProcessGroup>(new core::ProcessGroup(core::ROOT_PROCESS_GROUP, name, uuid, version));
 }
 
-std::unique_ptr<core::ProcessGroup> FlowConfiguration::createRemoteProcessGroup(std::string name, uuid_t uuid) {
+std::unique_ptr<core::ProcessGroup> FlowConfiguration::createRemoteProcessGroup(std::string name, utils::Identifier &  uuid) {
   return std::unique_ptr<core::ProcessGroup>(new core::ProcessGroup(core::REMOTE_PROCESS_GROUP, name, uuid));
 }
 
-std::shared_ptr<minifi::Connection> FlowConfiguration::createConnection(std::string name, uuid_t uuid) {
+std::shared_ptr<minifi::Connection> FlowConfiguration::createConnection(std::string name, utils::Identifier &  uuid) {
   return std::make_shared<minifi::Connection>(flow_file_repo_, content_repo_, name, uuid);
 }
 
-std::shared_ptr<core::controller::ControllerServiceNode> FlowConfiguration::createControllerService(const std::string &class_name, const std::string &name, uuid_t uuid) {
+std::shared_ptr<core::controller::ControllerServiceNode> FlowConfiguration::createControllerService(const std::string &class_name, const std::string &name, utils::Identifier &  uuid) {
   std::shared_ptr<core::controller::ControllerServiceNode> controllerServicesNode = service_provider_->createControllerService(class_name, name, true);
   if (nullptr != controllerServicesNode)
     controllerServicesNode->setUUID(uuid);

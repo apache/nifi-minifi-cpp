@@ -42,14 +42,17 @@ namespace apache {
 namespace nifi {
 namespace minifi {
 namespace processors {
-
-core::Property ExecuteProcess::Command("Command", "Specifies the command to be executed; if just the name of an executable"
-                                       " is provided, it must be in the user's environment PATH.",
-                                       "");
-core::Property ExecuteProcess::CommandArguments("Command Arguments", "The arguments to supply to the executable delimited by white space. White "
-                                                "space can be escaped by enclosing it in double-quotes.",
-                                                "");
-core::Property ExecuteProcess::WorkingDir("Working Directory", "The directory to use as the current working directory when executing the command", "");
+#ifndef WIN32
+core::Property ExecuteProcess::Command(
+    core::PropertyBuilder::createProperty("Command")->withDescription("Specifies the command to be executed; if just the name of an executable"
+                                                                      " is provided, it must be in the user's environment PATH.")->supportsExpressionLanguage(true)->withDefaultValue("")->build());
+core::Property ExecuteProcess::CommandArguments(
+    core::PropertyBuilder::createProperty("Command Arguments")->withDescription("The arguments to supply to the executable delimited by white space. White "
+                                                                                "space can be escaped by enclosing it in "
+                                                                                "double-quotes.")->supportsExpressionLanguage(true)->withDefaultValue("")->build());
+core::Property ExecuteProcess::WorkingDir(
+    core::PropertyBuilder::createProperty("Working Directory")->withDescription("The directory to use as the current working directory when executing the command")->supportsExpressionLanguage(true)
+        ->withDefaultValue("")->build());
 core::Property ExecuteProcess::BatchDuration("Batch Duration", "If the process is expected to be long-running and produce textual output, a "
                                              "batch duration can be specified.",
                                              "0");
@@ -74,13 +77,13 @@ void ExecuteProcess::initialize() {
 void ExecuteProcess::onTrigger(core::ProcessContext *context, core::ProcessSession *session) {
   std::string value;
   std::shared_ptr<core::FlowFile> flow_file;
-  if (context->getProperty(Command.getName(), value, flow_file)) {
+  if (context->getProperty(Command, value, flow_file)) {
     this->_command = value;
   }
-  if (context->getProperty(CommandArguments.getName(), value, flow_file)) {
+  if (context->getProperty(CommandArguments, value, flow_file)) {
     this->_commandArgument = value;
   }
-  if (context->getProperty(WorkingDir.getName(), value, flow_file)) {
+  if (context->getProperty(WorkingDir, value, flow_file)) {
     this->_workingDir = value;
   }
   if (context->getProperty(BatchDuration.getName(), value)) {
@@ -229,7 +232,7 @@ void ExecuteProcess::onTrigger(core::ProcessContext *context, core::ProcessSessi
     }
   }
 }
-
+#endif
 } /* namespace processors */
 } /* namespace minifi */
 } /* namespace nifi */

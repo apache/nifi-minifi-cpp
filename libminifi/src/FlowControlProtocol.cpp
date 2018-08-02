@@ -18,10 +18,8 @@
  * limitations under the License.
  */
 #include "FlowControlProtocol.h"
-#include <sys/time.h>
 #include <stdio.h>
 #include <time.h>
-#include <netinet/tcp.h>
 #include <chrono>
 #include <thread>
 #include <string>
@@ -35,96 +33,12 @@ namespace nifi {
 namespace minifi {
 
 int FlowControlProtocol::connectServer(const char *host, uint16_t port) {
-  in_addr_t addr;
-  int sock = 0;
-  struct hostent *h;
-#ifdef __MACH__
-  h = gethostbyname(host);
-#else
-  char buf[1024];
-  struct hostent he;
-  int hh_errno;
-  gethostbyname_r(host, &he, buf, sizeof(buf), &h, &hh_errno);
-#endif
-  memcpy(reinterpret_cast<char*>(&addr), h->h_addr_list[0], h->h_length);
-  sock = socket(AF_INET, SOCK_STREAM, 0);
-  if (sock < 0) {
-    logger_->log_error("Could not create socket to hostName %s", host);
-    return 0;
-  }
-
-#ifndef __MACH__
-  int opt = 1;
-  bool nagle_off = true;
-
-  if (nagle_off) {
-    if (setsockopt(sock, SOL_TCP, TCP_NODELAY, reinterpret_cast<void*>(&opt), sizeof(opt)) < 0) {
-      logger_->log_error("setsockopt() TCP_NODELAY failed");
-      close(sock);
-      return 0;
-    }
-    if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, reinterpret_cast<char*>(&opt), sizeof(opt)) < 0) {
-      logger_->log_error("setsockopt() SO_REUSEADDR failed");
-      close(sock);
-      return 0;
-    }
-  }
-
-  int sndsize = 256 * 1024;
-  if (setsockopt(sock, SOL_SOCKET, SO_SNDBUF, reinterpret_cast<char*>(&sndsize), sizeof(sndsize)) < 0) {
-    logger_->log_error("setsockopt() SO_SNDBUF failed");
-    close(sock);
-    return 0;
-  }
-#endif
-
-  struct sockaddr_in sa;
-  socklen_t socklen;
-  int status;
-
-  memset(&sa, 0, sizeof(sa));
-  sa.sin_family = AF_INET;
-  sa.sin_addr.s_addr = htonl(INADDR_ANY);
-  sa.sin_port = htons(0);
-  socklen = sizeof(sa);
-  if (bind(sock, (struct sockaddr *) &sa, socklen) < 0) {
-    logger_->log_error("socket bind failed");
-    close(sock);
-    return 0;
-  }
-
-  memset(&sa, 0, sizeof(sa));
-  sa.sin_family = AF_INET;
-  sa.sin_addr.s_addr = addr;
-  sa.sin_port = htons(port);
-  socklen = sizeof(sa);
-
-  status = connect(sock, (struct sockaddr *) &sa, socklen);
-
-  if (status < 0) {
-    logger_->log_error("socket connect failed to %s %ll", host, port);
-    close(sock);
-    return 0;
-  }
-
-  logger_->log_debug("Flow Control Protocol socket %ll connect to server %s port %ll success", sock, host, port);
-
-  return sock;
+  in_addr addr;
+  return 0;
 }
 
 int FlowControlProtocol::sendData(uint8_t *buf, int buflen) {
-  int ret = 0, bytes = 0;
-
-  while (bytes < buflen) {
-    ret = send(_socket, buf + bytes, buflen - bytes, 0);
-    // check for errors
-    if (ret == -1) {
-      return ret;
-    }
-    bytes += ret;
-  }
-
-  return bytes;
+  return 0;
 }
 
 int FlowControlProtocol::selectClient(int msec) {

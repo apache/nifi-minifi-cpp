@@ -18,7 +18,6 @@
  * limitations under the License.
  */
 #include "FlowFileRecord.h"
-#include <sys/time.h>
 #include <time.h>
 #include <cstdio>
 #include <vector>

@@ -37,8 +37,9 @@ std::shared_ptr<core::Processor> TestPlan::addProcessor(const std::shared_ptr<co
   }
   std::lock_guard<std::recursive_mutex> guard(mutex);
 
-  uuid_t uuid;
-  uuid_generate(uuid);
+  utils::Identifier uuid;
+
+  utils::IdGenerator::getIdGenerator()->generate(uuid);
 
   processor->setStreamFactory(stream_factory);
   // initialize the processor
@@ -67,7 +68,7 @@ std::shared_ptr<core::Processor> TestPlan::addProcessor(const std::shared_ptr<co
     connection->setSource(last);
     connection->setDestination(processor);
 
-    uuid_t uuid_copy, uuid_copy_next;
+    utils::Identifier uuid_copy, uuid_copy_next;
     last->getUUID(uuid_copy);
     connection->setSourceUUID(uuid_copy);
     processor->getUUID(uuid_copy_next);
@@ -97,8 +98,11 @@ std::shared_ptr<core::Processor> TestPlan::addProcessor(const std::string &proce
   }
   std::lock_guard<std::recursive_mutex> guard(mutex);
 
-  uuid_t uuid;
-  uuid_generate(uuid);
+  utils::Identifier uuid;
+
+  utils::IdGenerator::getIdGenerator()->generate(uuid);
+
+  std::cout << "generated " << uuid.to_string() << std::endl;
 
   auto ptr = core::ClassLoader::getDefaultClassLoader().instantiate(processor_name, uuid);
   if (nullptr == ptr) {
@@ -194,7 +198,7 @@ std::shared_ptr<minifi::Connection> TestPlan::buildFinalConnection(std::shared_p
   if (setDest)
     connection->setDestination(processor);
 
-  uuid_t uuid_copy;
+  utils::Identifier uuid_copy;
   last->getUUID(uuid_copy);
   connection->setSourceUUID(uuid_copy);
   if (setDest)

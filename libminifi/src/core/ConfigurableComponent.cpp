@@ -191,6 +191,7 @@ bool ConfigurableComponent::createDynamicProperty(const std::string &name, const
   }
 
   Property new_property(name, DEFAULT_DYNAMIC_PROPERTY_DESC, value, false, "", {}, {});
+  new_property.setSupportsExpressionLanguage(true);
   logger_->log_info("Processor %s dynamic property '%s' value '%s'", name.c_str(), new_property.getName().c_str(), value.c_str());
   dynamic_properties_[new_property.getName()] = new_property;
   onDynamicPropertyModified({}, new_property);
@@ -205,6 +206,7 @@ bool ConfigurableComponent::setDynamicProperty(const std::string name, std::stri
     Property &orig_property = it->second;
     Property new_property = orig_property;
     new_property.setValue(value);
+    new_property.setSupportsExpressionLanguage(true);
     dynamic_properties_[new_property.getName()] = new_property;
     onDynamicPropertyModified(orig_property, new_property);
     logger_->log_debug("Component %s dynamic property name %s value %s", name, new_property.getName(), value);
@@ -222,6 +224,7 @@ bool ConfigurableComponent::updateDynamicProperty(const std::string &name, const
     Property &orig_property = it->second;
     Property new_property = orig_property;
     new_property.addValue(value);
+    new_property.setSupportsExpressionLanguage(true);
     dynamic_properties_[new_property.getName()] = new_property;
     onDynamicPropertyModified(orig_property, new_property);
     logger_->log_debug("Component %s dynamic property name %s value %s", name, new_property.getName(), value);

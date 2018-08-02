@@ -56,7 +56,7 @@ class PyProcessSession {
    */
   void releaseCoreResources();
 
-  class __attribute__((visibility("default"))) PyInputStreamCallback : public InputStreamCallback {
+  class PyInputStreamCallback : public InputStreamCallback {
    public:
     explicit PyInputStreamCallback(const py::object &input_stream_callback) {
       py_callback_ = input_stream_callback;
@@ -71,7 +71,7 @@ class PyProcessSession {
     py::object py_callback_;
   };
 
-  class __attribute__((visibility("default"))) PyOutputStreamCallback : public OutputStreamCallback {
+  class PyOutputStreamCallback : public OutputStreamCallback {
    public:
     explicit PyOutputStreamCallback(const py::object &output_stream_callback) {
       py_callback_ = output_stream_callback;

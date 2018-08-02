@@ -21,7 +21,6 @@
 
 #include <memory>
 #include <string>
-#include <regex>
 
 #include <curl/curl.h>
 #include "utils/ByteArrayCallback.h"
@@ -50,7 +49,7 @@ class InvokeHTTP : public core::Processor {
   /*!
    * Create a new processor
    */
-  InvokeHTTP(std::string name, uuid_t uuid = NULL)
+  InvokeHTTP(std::string name, utils::Identifier uuid = utils::Identifier())
       : Processor(name, uuid),
         ssl_context_service_(nullptr),
         date_header_include_(true),

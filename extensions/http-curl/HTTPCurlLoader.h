@@ -18,6 +18,15 @@
 #ifndef EXTENSIONS_HTTPCURLLOADER_H_
 #define EXTENSIONS_HTTPCURLLOADER_H_
 
+#ifdef WIN32
+#pragma comment(lib, "wldap32.lib" )
+#pragma comment(lib, "crypt32.lib" )
+#pragma comment(lib, "Ws2_32.lib")
+
+#define CURL_STATICLIB 
+#include <curl/curl.h>
+#endif
+
 #include "c2/protocols/RESTProtocol.h"
 #include "protocols/RESTSender.h"
 #include "processors/InvokeHTTP.h"
@@ -26,7 +35,7 @@
 #include "sitetosite/HTTPProtocol.h"
 #include "utils/StringUtils.h"
 
-class __attribute__((visibility("default"))) HttpCurlObjectFactory : public core::ObjectFactory {
+class HttpCurlObjectFactory : public core::ObjectFactory {
  public:
   HttpCurlObjectFactory() {
 
@@ -76,6 +85,6 @@ class __attribute__((visibility("default"))) HttpCurlObjectFactory : public core
 };
 
 extern "C" {
-void *createHttpCurlFactory(void);
+	DLL_EXPORT void *createHttpCurlFactory(void);
 }
 #endif /* EXTENSIONS_HTTPCURLLOADER_H_ */

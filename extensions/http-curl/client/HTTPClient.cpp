@@ -31,7 +31,7 @@ namespace minifi {
 namespace utils {
 
 HTTPClient::HTTPClient(const std::string &url, const std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service)
-    : core::Connectable("HTTPClient", 0),
+    : core::Connectable("HTTPClient"),
       ssl_context_service_(ssl_context_service),
       url_(url),
       connect_timeout_(0),
@@ -50,7 +50,7 @@ HTTPClient::HTTPClient(const std::string &url, const std::shared_ptr<minifi::con
   http_session_ = curl_easy_init();
 }
 
-HTTPClient::HTTPClient(std::string name, uuid_t uuid)
+HTTPClient::HTTPClient(std::string name, utils::Identifier uuid)
     : core::Connectable(name, uuid),
       ssl_context_service_(nullptr),
       url_(),
@@ -71,7 +71,7 @@ HTTPClient::HTTPClient(std::string name, uuid_t uuid)
 }
 
 HTTPClient::HTTPClient()
-    : core::Connectable("HTTPClient", 0),
+    : core::Connectable("HTTPClient"),
       ssl_context_service_(nullptr),
       url_(),
       connect_timeout_(0),
@@ -324,6 +324,10 @@ bool HTTPClient::matches(const std::string &value, const std::string &sregex) {
   if (sregex == ".*")
     return true;
 
+#ifdef WIN32
+  std::regex rgx(sregex);
+  return std::regex_match(value, rgx);
+#else
   regex_t regex;
   int ret = regcomp(&regex, sregex.c_str(), 0);
   if (ret)
@@ -332,7 +336,7 @@ bool HTTPClient::matches(const std::string &value, const std::string &sregex) {
   regfree(&regex);
   if (ret)
     return false;
-
+#endif
   return true;
 }
 
@@ -374,6 +378,11 @@ bool HTTPClient::isSecure(const std::string &url) {
   }
   return false;
 }
+
+void HTTPClient::setInterface(const std::string &ifc) {
+	curl_easy_setopt(http_session_, CURLOPT_INTERFACE, ifc.c_str());
+}
+
 
 } /* namespace utils */
 } /* namespace minifi */

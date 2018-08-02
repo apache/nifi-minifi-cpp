@@ -17,7 +17,11 @@
  */
 
 #include "InvokeHTTP.h"
+#ifdef WIN32
+#include <regex>
+#else
 #include <regex.h>
+#endif
 #include <curl/easy.h>
 #include <uuid/uuid.h>
 #include <memory>
@@ -57,7 +61,9 @@ std::string InvokeHTTP::DefaultContentType = "application/octet-stream";
 core::Property InvokeHTTP::Method("HTTP Method", "HTTP request method (GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS). "
                                   "Arbitrary methods are also supported. Methods other than POST, PUT and PATCH will be sent without a message body.",
                                   "GET");
-core::Property InvokeHTTP::URL("Remote URL", "Remote URL which will be connected to, including scheme, host, port, path.", "");
+core::Property InvokeHTTP::URL(
+    core::PropertyBuilder::createProperty("Remote URL")->withDescription("Remote URL which will be connected to, including scheme, host, port, path.")->isRequired(false)->supportsExpressionLanguage(
+        true)->build());
 core::Property InvokeHTTP::ConnectTimeout("Connection Timeout", "Max wait time for connection to remote service.", "5 secs");
 core::Property InvokeHTTP::ReadTimeout("Read Timeout", "Max wait time for response from remote service.", "15 secs");
 core::Property InvokeHTTP::DateHeader("Include Date Header", "Include an RFC-2616 Date header in the request.", "True");
@@ -234,11 +240,9 @@ InvokeHTTP::~InvokeHTTP() {
 }
 
 std::string InvokeHTTP::generateId() {
-  uuid_t txId;
+  utils::Identifier txId;
   id_generator_->generate(txId);
-  char uuidStr[37];
-  uuid_unparse_lower(txId, uuidStr);
-  return uuidStr;
+  return txId.to_string();
 }
 
 bool InvokeHTTP::emitFlowFile(const std::string &method) {
@@ -259,7 +263,7 @@ void InvokeHTTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context,
       return;
     }
   } else {
-    context->getProperty(URL.getName(), url, flowFile);
+    context->getProperty(URL, url, flowFile);
     logger_->log_debug("InvokeHTTP -- Received flowfile");
   }
 

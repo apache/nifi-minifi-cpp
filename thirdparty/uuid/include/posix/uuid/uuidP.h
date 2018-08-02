@@ -35,11 +35,11 @@
 #ifdef HAVE_INTTYPES_H
 #include <inttypes.h>
 #else
-#include <uuid/uuid_types.h>
+#include <uuid/m_uuidypes.h>
 #endif
 #include <sys/types.h>
 
-#include <uuid/uuid.h>
+#include "uuid.h"
 
 /*
  * Offset between 15-Oct-1582 and 1-Jan-70
@@ -59,5 +59,5 @@ struct uuid {
 /*
  * prototypes
  */
-void uuid_pack(const struct uuid *uu, uuid_t ptr);
-void uuid_unpack(const uuid_t in, struct uuid *uu);
+void uuid_pack(const struct uuid *uu, UUID_FIELD ptr);
+void uuid_unpack(const UUID_FIELD in, struct uuid *uu);

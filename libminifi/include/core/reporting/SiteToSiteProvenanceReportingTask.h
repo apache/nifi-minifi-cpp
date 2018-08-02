@@ -45,7 +45,7 @@ class SiteToSiteProvenanceReportingTask : public minifi::RemoteProcessorGroupPor
    * Create a new processor
    */
   SiteToSiteProvenanceReportingTask(const std::shared_ptr<io::StreamFactory> &stream_factory, std::shared_ptr<Configure> configure)
-      : minifi::RemoteProcessorGroupPort(stream_factory, ReportTaskName, "", configure, NULL),
+      : minifi::RemoteProcessorGroupPort(stream_factory, ReportTaskName, "", configure),
         logger_(logging::LoggerFactory<SiteToSiteProvenanceReportingTask>::getLogger()) {
     this->setTriggerWhenEmpty(true);
     batch_size_ = 100;
@@ -69,8 +69,8 @@ class SiteToSiteProvenanceReportingTask : public minifi::RemoteProcessorGroupPor
   //! Initialize, over write by NiFi SiteToSiteProvenanceReportingTask
   virtual void initialize(void);
   //! Set Port UUID
-  void setPortUUID(uuid_t port_uuid) {
-    uuid_copy(protocol_uuid_, port_uuid);
+  void setPortUUID(utils::Identifier &port_uuid) {
+    protocol_uuid_ = port_uuid;
   }
 
   //! Set Batch Size
@@ -82,8 +82,8 @@ class SiteToSiteProvenanceReportingTask : public minifi::RemoteProcessorGroupPor
     return (batch_size_);
   }
   //! Get Port UUID
-  void getPortUUID(uuid_t port_uuid) {
-    uuid_copy(port_uuid, protocol_uuid_);
+  void getPortUUID(utils::Identifier & port_uuid) {
+    port_uuid = protocol_uuid_;
   }
 
  protected:

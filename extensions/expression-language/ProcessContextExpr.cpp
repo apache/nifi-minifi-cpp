@@ -23,8 +23,10 @@ namespace nifi {
 namespace minifi {
 namespace core {
 
-bool ProcessContext::getProperty(const std::string &name, std::string &value,
-                                 const std::shared_ptr<FlowFile> &flow_file) {
+bool ProcessContext::getProperty(const Property &property, std::string &value, const std::shared_ptr<FlowFile> &flow_file) {
+  if (!property.supportsExpressionLangauge())
+    return getProperty(property.getName(), value);
+  auto name = property.getName();
   if (expressions_.find(name) == expressions_.end()) {
     std::string expression_str;
     getProperty(name, expression_str);
@@ -32,12 +34,15 @@ bool ProcessContext::getProperty(const std::string &name, std::string &value,
     expressions_.emplace(name, expression::compile(expression_str));
   }
 
-  value = expressions_[name]({flow_file}).asString();
+  value = expressions_[name]( { flow_file }).asString();
   return true;
 }
 
-bool ProcessContext::getDynamicProperty(const std::string &name, std::string &value,
-                                 const std::shared_ptr<FlowFile> &flow_file) {
+bool ProcessContext::getDynamicProperty(const Property &property, std::string &value, const std::shared_ptr<FlowFile> &flow_file) {
+
+  if (!property.supportsExpressionLangauge())
+    return getDynamicProperty(property.getName(), value);
+  auto name = property.getName();
   if (dynamic_property_expressions_.find(name) == dynamic_property_expressions_.end()) {
     std::string expression_str;
     getDynamicProperty(name, expression_str);
@@ -45,7 +50,7 @@ bool ProcessContext::getDynamicProperty(const std::string &name, std::string &va
     dynamic_property_expressions_.emplace(name, expression::compile(expression_str));
   }
 
-  value = dynamic_property_expressions_[name]({flow_file}).asString();
+  value = dynamic_property_expressions_[name]( { flow_file }).asString();
   return true;
 }
 

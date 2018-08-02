@@ -65,7 +65,8 @@ class Property {
         valid_regex_(std::move(valid_regex)),
         dependent_properties_(std::move(dependent_properties)),
         exclusive_of_properties_(std::move(exclusive_of_properties)),
-        is_collection_(false) {
+        is_collection_(false),
+        supports_el_(false) {
     values_.push_back(std::move(value));
   }
 
@@ -73,7 +74,8 @@ class Property {
       : name_(name),
         description_(description),
         is_required_(false),
-        is_collection_(false) {
+        is_collection_(false),
+        supports_el_(false) {
     values_.push_back(std::move(value));
   }
 
@@ -81,7 +83,8 @@ class Property {
       : name_(name),
         description_(description),
         is_required_(false),
-        is_collection_(true) {
+        is_collection_(true),
+        supports_el_(false) {
   }
 
   Property(Property &&other)
@@ -94,7 +97,8 @@ class Property {
         is_collection_(other.is_collection_),
         values_(std::move(other.values_)),
         display_name_(std::move(other.display_name_)),
-        types_(std::move(other.types_)){
+        types_(std::move(other.types_)),
+        supports_el_(other.supports_el_) {
   }
 
   Property(const Property &other)
@@ -107,14 +111,16 @@ class Property {
         is_collection_(other.is_collection_),
         values_(other.values_),
         display_name_(other.display_name_),
-        types_(other.types_){
+        types_(other.types_),
+        supports_el_(other.supports_el_) {
   }
 
   Property()
       : name_(""),
         description_(""),
         is_required_(false),
-        is_collection_(false) {
+        is_collection_(false),
+        supports_el_(false) {
   }
 
   virtual ~Property() = default;
@@ -125,12 +131,14 @@ class Property {
   std::string getDescription() const;
   std::string getValue() const;
   bool getRequired() const;
+  bool supportsExpressionLangauge() const;
   std::string getValidRegex() const;
   std::vector<std::string> getDependentProperties() const;
   std::vector<std::pair<std::string, std::string>> getExclusiveOfProperties() const;
   std::vector<std::string> &getValues();
 
   void setValue(std::string value);
+  void setSupportsExpressionLanguage(bool supportEl);
   /**
    * Add value to the collection of values.
    */
@@ -414,6 +422,7 @@ class Property {
   // types represents the allowable types for this property
   // these types should be the canonical name.
   std::vector<std::string> types_;
+  bool supports_el_;
  private:
 
   friend class PropertyBuilder;
@@ -440,7 +449,12 @@ class PropertyBuilder : public std::enable_shared_from_this<PropertyBuilder> {
   }
 
   std::shared_ptr<PropertyBuilder> isRequired(bool required) {
-    prop.is_required_ = false;
+    prop.is_required_ = required;
+    return shared_from_this();
+  }
+
+  std::shared_ptr<PropertyBuilder> supportsExpressionLanguage(bool sel) {
+    prop.supports_el_ = sel;
     return shared_from_this();
   }
 

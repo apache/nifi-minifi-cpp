@@ -19,13 +19,7 @@
 #define __SITE2SITE_CLIENT_PROTOCOL_H__
 
 #include <stdio.h>
-#include <unistd.h>
 #include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <fcntl.h>
-#include <netdb.h>
 #include <string>
 #include <errno.h>
 #include <chrono>
@@ -71,7 +65,7 @@ class HttpSiteToSiteClient : public sitetosite::SiteToSiteClient {
   /*!
    * Create a new http protocol
    */
-  HttpSiteToSiteClient(std::string name, uuid_t uuid = 0)
+  HttpSiteToSiteClient(std::string name, utils::Identifier uuid = utils::Identifier())
       : SiteToSiteClient(),
         current_code(UNRECOGNIZED_RESPONSE_CODE),
         logger_(logging::LoggerFactory<HttpSiteToSiteClient>::getLogger()) {

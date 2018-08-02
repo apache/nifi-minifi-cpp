@@ -16,7 +16,6 @@
  * limitations under the License.
  */
 #include "core/Repository.h"
-#include <arpa/inet.h>
 #include <cstdint>
 #include <vector>
 

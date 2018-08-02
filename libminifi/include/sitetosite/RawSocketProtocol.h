@@ -21,13 +21,7 @@
 #define __SITE2SITE_CLIENT_PROTOCOL_H__
 
 #include <stdio.h>
-#include <unistd.h>
 #include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <fcntl.h>
-#include <netdb.h>
 #include <string>
 #include <errno.h>
 #include <chrono>

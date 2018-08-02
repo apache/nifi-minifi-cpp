@@ -23,7 +23,6 @@
 #include <cstdlib>
 #endif
 #include <cstdio>
-#include <unistd.h>
 #include <fcntl.h>
 #include "io/validation.h"
 #include "utils/Id.h"

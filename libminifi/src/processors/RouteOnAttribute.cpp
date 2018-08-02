@@ -30,32 +30,25 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-core::Relationship RouteOnAttribute::Unmatched(
-    "unmatched",
-    "Files which do not match any expression are routed here");
-core::Relationship RouteOnAttribute::Failure(
-    "failure",
-    "Failed files are transferred to failure");
+core::Relationship RouteOnAttribute::Unmatched("unmatched", "Files which do not match any expression are routed here");
+core::Relationship RouteOnAttribute::Failure("failure", "Failed files are transferred to failure");
 
 void RouteOnAttribute::initialize() {
   std::set<core::Property> properties;
   setSupportedProperties(properties);
 }
 
-void RouteOnAttribute::onDynamicPropertyModified(const core::Property &orig_property,
-                                                 const core::Property &new_property) {
+void RouteOnAttribute::onDynamicPropertyModified(const core::Property &orig_property, const core::Property &new_property) {
   // Update the routing table when routes are added via dynamic properties.
   route_properties_[new_property.getName()] = new_property;
 
   std::set<core::Relationship> relationships;
 
   for (const auto &route : route_properties_) {
-    core::Relationship route_rel{route.first, "Dynamic route"};
+    core::Relationship route_rel { route.first, "Dynamic route" };
     route_rels_[route.first] = route_rel;
     relationships.insert(route_rel);
-    logger_->log_info("RouteOnAttribute registered route '%s' with expression '%s'",
-                      route.first,
-                      route.second.getValue());
+    logger_->log_info("RouteOnAttribute registered route '%s' with expression '%s'", route.first, route.second.getValue());
   }
 
   relationships.insert(Unmatched);
@@ -63,8 +56,7 @@ void RouteOnAttribute::onDynamicPropertyModified(const core::Property &orig_prop
   setSupportedRelationships(relationships);
 }
 
-void RouteOnAttribute::onTrigger(core::ProcessContext *context,
-                                 core::ProcessSession *session) {
+void RouteOnAttribute::onTrigger(core::ProcessContext *context, core::ProcessSession *session) {
   auto flow_file = session->get();
 
   // Do nothing if there are no incoming files
@@ -78,7 +70,7 @@ void RouteOnAttribute::onTrigger(core::ProcessContext *context,
     // Perform dynamic routing logic
     for (const auto &route : route_properties_) {
       std::string do_route;
-      context->getDynamicProperty(route.second.getName(), do_route, flow_file);
+      context->getDynamicProperty(route.second, do_route, flow_file);
 
       if (do_route == "true") {
         did_match = true;

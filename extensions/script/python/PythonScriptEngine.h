@@ -35,10 +35,10 @@ namespace python {
 
 namespace py = pybind11;
 
-class __attribute__((visibility("default"))) PythonScriptEngine : public script::ScriptEngine {
+class PythonScriptEngine : public script::ScriptEngine {
  public:
   PythonScriptEngine();
-  ~PythonScriptEngine() {
+  virtual ~PythonScriptEngine() {
     py::gil_scoped_acquire gil{};
     (*bindings_).dec_ref();
     (*bindings_).release();

@@ -17,8 +17,7 @@
 # under the License.
 #
 
-set(CMAKE_EXE_LINKER_FLAGS "-Wl,--export-all-symbols")
-set(CMAKE_SHARED_LINKER_FLAGS "-Wl,--export-symbols")
+include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 
 find_package(PkgConfig)
 pkg_check_modules(LIBUSB libusb-1.0)
@@ -44,7 +43,6 @@ if (NOT PNG_FOUND)
     message(FATAL_ERROR "A compatible PNG library is required to build GetUSBCamera.")
 endif()
 
-include_directories(../../libminifi/include  ../../libminifi/include/core  ../../thirdparty/spdlog-20170710/include ../../thirdparty/concurrentqueue ../../thirdparty/yaml-cpp-yaml-cpp-0.5.3/include ${CIVET_THIRDPARTY_ROOT}/include ../../thirdparty/) 
 
 include_directories(../../thirdparty/libuvc-0.0.6/include)
 

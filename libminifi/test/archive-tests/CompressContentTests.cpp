@@ -113,9 +113,9 @@ TEST_CASE("CompressFileGZip", "[compressfiletest1]") {
     std::shared_ptr<core::Processor> processor = std::make_shared<org::apache::nifi::minifi::processors::CompressContent>("compresscontent");
     std::shared_ptr<core::Processor> logAttributeProcessor = std::make_shared<org::apache::nifi::minifi::processors::LogAttribute>("logattribute");
 
-    uuid_t processoruuid;
+    utils::Identifier processoruuid;
     REQUIRE(true == processor->getUUID(processoruuid));
-    uuid_t logAttributeuuid;
+    utils::Identifier logAttributeuuid;
     REQUIRE(true == logAttributeProcessor->getUUID(logAttributeuuid));
 
     std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
@@ -214,9 +214,9 @@ TEST_CASE("DecompressFileGZip", "[compressfiletest2]") {
     std::shared_ptr<core::Processor> processor = std::make_shared<org::apache::nifi::minifi::processors::CompressContent>("compresscontent");
     std::shared_ptr<core::Processor> logAttributeProcessor = std::make_shared<org::apache::nifi::minifi::processors::LogAttribute>("logattribute");
 
-    uuid_t processoruuid;
+    utils::Identifier processoruuid;
     REQUIRE(true == processor->getUUID(processoruuid));
-    uuid_t logAttributeuuid;
+    utils::Identifier logAttributeuuid;
     REQUIRE(true == logAttributeProcessor->getUUID(logAttributeuuid));
 
     std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
@@ -316,9 +316,9 @@ TEST_CASE("CompressFileBZip", "[compressfiletest3]") {
     std::shared_ptr<core::Processor> processor = std::make_shared<org::apache::nifi::minifi::processors::CompressContent>("compresscontent");
     std::shared_ptr<core::Processor> logAttributeProcessor = std::make_shared<org::apache::nifi::minifi::processors::LogAttribute>("logattribute");
 
-    uuid_t processoruuid;
+    utils::Identifier processoruuid;
     REQUIRE(true == processor->getUUID(processoruuid));
-    uuid_t logAttributeuuid;
+    utils::Identifier logAttributeuuid;
     REQUIRE(true == logAttributeProcessor->getUUID(logAttributeuuid));
 
     std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
@@ -418,9 +418,9 @@ TEST_CASE("DecompressFileBZip", "[compressfiletest4]") {
     std::shared_ptr<core::Processor> processor = std::make_shared<org::apache::nifi::minifi::processors::CompressContent>("compresscontent");
     std::shared_ptr<core::Processor> logAttributeProcessor = std::make_shared<org::apache::nifi::minifi::processors::LogAttribute>("logattribute");
 
-    uuid_t processoruuid;
+    utils::Identifier processoruuid;
     REQUIRE(true == processor->getUUID(processoruuid));
-    uuid_t logAttributeuuid;
+    utils::Identifier logAttributeuuid;
     REQUIRE(true == logAttributeProcessor->getUUID(logAttributeuuid));
 
     std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
@@ -520,9 +520,9 @@ TEST_CASE("CompressFileLZMA", "[compressfiletest5]") {
     std::shared_ptr<core::Processor> processor = std::make_shared<org::apache::nifi::minifi::processors::CompressContent>("compresscontent");
     std::shared_ptr<core::Processor> logAttributeProcessor = std::make_shared<org::apache::nifi::minifi::processors::LogAttribute>("logattribute");
 
-    uuid_t processoruuid;
+    utils::Identifier processoruuid;
     REQUIRE(true == processor->getUUID(processoruuid));
-    uuid_t logAttributeuuid;
+    utils::Identifier logAttributeuuid;
     REQUIRE(true == logAttributeProcessor->getUUID(logAttributeuuid));
 
     std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
@@ -628,9 +628,9 @@ TEST_CASE("DecompressFileLZMA", "[compressfiletest6]") {
     std::shared_ptr<core::Processor> processor = std::make_shared<org::apache::nifi::minifi::processors::CompressContent>("compresscontent");
     std::shared_ptr<core::Processor> logAttributeProcessor = std::make_shared<org::apache::nifi::minifi::processors::LogAttribute>("logattribute");
 
-    uuid_t processoruuid;
+    utils::Identifier processoruuid;
     REQUIRE(true == processor->getUUID(processoruuid));
-    uuid_t logAttributeuuid;
+    utils::Identifier logAttributeuuid;
     REQUIRE(true == logAttributeProcessor->getUUID(logAttributeuuid));
 
     std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
@@ -737,9 +737,9 @@ TEST_CASE("CompressFileXYLZMA", "[compressfiletest7]") {
     std::shared_ptr<core::Processor> processor = std::make_shared<org::apache::nifi::minifi::processors::CompressContent>("compresscontent");
     std::shared_ptr<core::Processor> logAttributeProcessor = std::make_shared<org::apache::nifi::minifi::processors::LogAttribute>("logattribute");
 
-    uuid_t processoruuid;
+    utils::Identifier processoruuid;
     REQUIRE(true == processor->getUUID(processoruuid));
-    uuid_t logAttributeuuid;
+    utils::Identifier logAttributeuuid;
     REQUIRE(true == logAttributeProcessor->getUUID(logAttributeuuid));
 
     std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
@@ -845,9 +845,9 @@ TEST_CASE("DecompressFileXYLZMA", "[compressfiletest8]") {
     std::shared_ptr<core::Processor> processor = std::make_shared<org::apache::nifi::minifi::processors::CompressContent>("compresscontent");
     std::shared_ptr<core::Processor> logAttributeProcessor = std::make_shared<org::apache::nifi::minifi::processors::LogAttribute>("logattribute");
 
-    uuid_t processoruuid;
+    utils::Identifier processoruuid;
     REQUIRE(true == processor->getUUID(processoruuid));
-    uuid_t logAttributeuuid;
+    utils::Identifier logAttributeuuid;
     REQUIRE(true == logAttributeProcessor->getUUID(logAttributeuuid));
 
     std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();

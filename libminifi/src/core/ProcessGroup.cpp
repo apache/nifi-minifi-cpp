@@ -18,7 +18,6 @@
  * limitations under the License.
  */
 #include "core/ProcessGroup.h"
-#include <sys/time.h>
 #include <time.h>
 #include <vector>
 #include <memory>
@@ -39,17 +38,40 @@ namespace core {
 
 std::shared_ptr<utils::IdGenerator> ProcessGroup::id_generator_ = utils::IdGenerator::getIdGenerator();
 
-ProcessGroup::ProcessGroup(ProcessGroupType type, std::string name, uuid_t uuid, int version, ProcessGroup *parent)
+ProcessGroup::ProcessGroup(ProcessGroupType type, std::string name, utils::Identifier &uuid)
+    : ProcessGroup(type, name, uuid, 0, 0) {
+}
+
+ProcessGroup::ProcessGroup(ProcessGroupType type, std::string name, utils::Identifier &uuid, int version)
+    : ProcessGroup(type, name, uuid, version, 0) {
+}
+
+ProcessGroup::ProcessGroup(ProcessGroupType type, std::string name, utils::Identifier &uuid, int version, ProcessGroup *parent)
     : logger_(logging::LoggerFactory<ProcessGroup>::getLogger()),
       name_(name),
       type_(type),
       config_version_(version),
       parent_process_group_(parent) {
-  if (!uuid)
-    // Generate the global UUID for the flow record
+  if (uuid == nullptr) {
     id_generator_->generate(uuid_);
-  else
-    uuid_copy(uuid_, uuid);
+  } else {
+    uuid_ = uuid;
+  }
+
+  yield_period_msec_ = 0;
+  transmitting_ = false;
+  transport_protocol_ = "RAW";
+
+  logger_->log_debug("ProcessGroup %s created", name_);
+}
+
+ProcessGroup::ProcessGroup(ProcessGroupType type, std::string name)
+    : logger_(logging::LoggerFactory<ProcessGroup>::getLogger()),
+      name_(name),
+      type_(type),
+      config_version_(0),
+      parent_process_group_(0) {
+  id_generator_->generate(uuid_);
 
   yield_period_msec_ = 0;
   transmitting_ = false;
@@ -168,20 +190,15 @@ void ProcessGroup::stopProcessing(TimerDrivenSchedulingAgent *timeScheduler, Eve
   }
 }
 
-std::shared_ptr<Processor> ProcessGroup::findProcessor(uuid_t uuid) {
+std::shared_ptr<Processor> ProcessGroup::findProcessor(utils::Identifier &uuid) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   std::shared_ptr<Processor> ret = NULL;
   for (auto processor : processors_) {
     logger_->log_debug("find processor %s", processor->getName());
-    uuid_t processorUUID;
+    utils::Identifier processorUUID;
 
     if (processor->getUUID(processorUUID)) {
-      char uuid_str[37];  // ex. "1b4e28ba-2fa1-11d2-883f-0016d3cca427" + "\0"
-      uuid_unparse_lower(processorUUID, uuid_str);
-      std::string processorUUIDstr = uuid_str;
-      uuid_unparse_lower(uuid, uuid_str);
-      std::string uuidStr = uuid_str;
-      if (processorUUIDstr == uuidStr) {
+      if (uuid == processorUUID) {
         return processor;
       }
     }
@@ -277,14 +294,14 @@ void ProcessGroup::addConnection(std::shared_ptr<Connection> connection) {
     // We do not have the same connection in this process group yet
     connections_.insert(connection);
     logger_->log_debug("Add connection %s into process group %s", connection->getName(), name_);
-    uuid_t sourceUUID;
+    utils::Identifier sourceUUID;
     std::shared_ptr<Processor> source = NULL;
     connection->getSourceUUID(sourceUUID);
     source = this->findProcessor(sourceUUID);
     if (source)
       source->addConnection(connection);
     std::shared_ptr<Processor> destination = NULL;
-    uuid_t destinationUUID;
+    utils::Identifier destinationUUID;
     connection->getDestinationUUID(destinationUUID);
     destination = this->findProcessor(destinationUUID);
     if (destination && destination != source)
@@ -299,14 +316,14 @@ void ProcessGroup::removeConnection(std::shared_ptr<Connection> connection) {
     // We do not have the same connection in this process group yet
     connections_.erase(connection);
     logger_->log_debug("Remove connection %s into process group %s", connection->getName(), name_);
-    uuid_t sourceUUID;
+    utils::Identifier sourceUUID;
     std::shared_ptr<Processor> source = NULL;
     connection->getSourceUUID(sourceUUID);
     source = this->findProcessor(sourceUUID);
     if (source)
       source->removeConnection(connection);
     std::shared_ptr<Processor> destination = NULL;
-    uuid_t destinationUUID;
+    utils::Identifier destinationUUID;
     connection->getDestinationUUID(destinationUUID);
     destination = this->findProcessor(destinationUUID);
     if (destination && destination != source)

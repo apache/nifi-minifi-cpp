@@ -20,14 +20,7 @@
 #include "processors/AppendHostInfo.h"
 #define __USE_POSIX
 #include <limits.h>
-#include <sys/time.h>
 #include <string.h>
-#include <netdb.h>
-#include <netinet/in.h>
-#include <sys/socket.h>
-#include <sys/ioctl.h>
-#include <net/if.h>
-#include <arpa/inet.h>
 #include <memory>
 #include <string>
 #include <set>
@@ -41,6 +34,15 @@ namespace apache {
 namespace nifi {
 namespace minifi {
 namespace processors {
+
+#ifndef WIN32
+#include <netdb.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
+#include <sys/ioctl.h>
+#include <net/if.h>
+#include <arpa/inet.h>
+#endif
 
 #ifndef HOST_NAME_MAX
 #define HOST_NAME_MAX 255
@@ -80,6 +82,7 @@ void AppendHostInfo::onTrigger(core::ProcessContext *context, core::ProcessSessi
   std::string iface;
   context->getProperty(InterfaceName.getName(), iface);
   // Confirm the specified interface name exists on this device
+#ifndef WIN32
   if (if_nametoindex(iface.c_str()) != 0) {
     struct ifreq ifr;
     int fd = socket(AF_INET, SOCK_DGRAM, 0);
@@ -94,6 +97,7 @@ void AppendHostInfo::onTrigger(core::ProcessContext *context, core::ProcessSessi
     context->getProperty(IPAttribute.getName(), ipAttribute);
     flow->addAttribute(ipAttribute.c_str(), inet_ntoa(((struct sockaddr_in *) &ifr.ifr_addr)->sin_addr));
   }
+#endif
 
   // Transfer to the relationship
   session->transfer(flow, Success);

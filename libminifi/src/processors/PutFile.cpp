@@ -19,10 +19,8 @@
  */
 
 #include "processors/PutFile.h"
-
+#include "utils/file/FileUtils.h"
 #include <sys/stat.h>
-#include <dirent.h>
-#include <unistd.h>
 #include <uuid/uuid.h>
 #include <cstdint>
 #include <cstdio>
@@ -30,6 +28,13 @@
 #include <memory>
 #include <string>
 #include <set>
+#ifdef WIN32
+#include <Windows.h>
+#endif
+
+#ifndef S_ISDIR
+#define S_ISDIR(mode)  (((mode) & S_IFMT) == S_IFDIR)
+#endif
 
 namespace org {
 namespace apache {
@@ -40,33 +45,16 @@ namespace processors {
 std::shared_ptr<utils::IdGenerator> PutFile::id_generator_ = utils::IdGenerator::getIdGenerator();
 
 core::Property PutFile::Directory(
-    "Directory",
-    "The output directory to which to put files",
-    ".");
-core::Property PutFile::ConflictResolution(
-    "Conflict Resolution Strategy",
-    "Indicates what should happen when a file with the same name already exists in the output directory",
-    CONFLICT_RESOLUTION_STRATEGY_FAIL);
-core::Property PutFile::CreateDirs(
-    "Create Missing Directories",
-    "If true, then missing destination directories will be created. "
-        "If false, flowfiles are penalized and sent to failure.",
-    "true",
-    true,
-    "",
-    {"Directory"},
-    {});
-core::Property PutFile::MaxDestFiles(
-    "Maximum File Count",
-    "Specifies the maximum number of files that can exist in the output directory",
-    "-1");
+    core::PropertyBuilder::createProperty("Directory")->withDescription("The output directory to which to put files")->supportsExpressionLanguage(true)->withDefaultValue(".")->build());
+core::Property PutFile::ConflictResolution("Conflict Resolution Strategy", "Indicates what should happen when a file with the same name already exists in the output directory",
+                                           CONFLICT_RESOLUTION_STRATEGY_FAIL);
+core::Property PutFile::CreateDirs("Create Missing Directories", "If true, then missing destination directories will be created. "
+                                   "If false, flowfiles are penalized and sent to failure.",
+                                   "true", true, "", { "Directory" }, { });
+core::Property PutFile::MaxDestFiles("Maximum File Count", "Specifies the maximum number of files that can exist in the output directory", "-1");
 
-core::Relationship PutFile::Success(
-    "success",
-    "All files are routed to success");
-core::Relationship PutFile::Failure(
-    "failure",
-    "Failed files (conflict, write failure, etc.) are transferred to failure");
+core::Relationship PutFile::Success("success", "All files are routed to success");
+core::Relationship PutFile::Failure("failure", "Failed files (conflict, write failure, etc.) are transferred to failure");
 
 void PutFile::initialize() {
   // Set the supported properties
@@ -113,7 +101,7 @@ void PutFile::onTrigger(core::ProcessContext *context, core::ProcessSession *ses
 
   std::string directory;
 
-  if (!context->getProperty(Directory.getName(), directory, flowFile)) {
+  if (!context->getProperty(Directory, directory, flowFile)) {
     logger_->log_error("Directory attribute is missing or invalid");
   }
 
@@ -143,6 +131,8 @@ void PutFile::onTrigger(core::ProcessContext *context, core::ProcessSession *ses
     // something exists at directory path
     if (S_ISDIR(statResult.st_mode)) {
       // it's a directory, count the files
+      int64_t ct = 0;
+#ifndef WIN32
       DIR *myDir = opendir(directory.c_str());
       if (!myDir) {
         logger_->log_warn("Could not open %s", directory);
@@ -151,13 +141,13 @@ void PutFile::onTrigger(core::ProcessContext *context, core::ProcessSession *ses
       }
       struct dirent* entry = nullptr;
 
-      int64_t ct = 0;
       while ((entry = readdir(myDir)) != nullptr) {
         if ((strcmp(entry->d_name, ".") != 0) && (strcmp(entry->d_name, "..") != 0)) {
           ct++;
           if (ct >= max_dest_files_) {
             logger_->log_warn("Routing to failure because the output directory %s has at least %u files, which exceeds the "
-                "configured max number of files", directory, max_dest_files_);
+                              "configured max number of files",
+                              directory, max_dest_files_);
             session->transfer(flowFile, Failure);
             closedir(myDir);
             return;
@@ -165,13 +155,31 @@ void PutFile::onTrigger(core::ProcessContext *context, core::ProcessSession *ses
         }
       }
       closedir(myDir);
+#else
+      HANDLE hFind;
+      WIN32_FIND_DATA FindFileData;
+
+      if ((hFind = FindFirstFile(directory.c_str(), &FindFileData)) != INVALID_HANDLE_VALUE) {
+        do {
+          if ((strcmp(FindFileData.cFileName, ".") != 0) && (strcmp(FindFileData.cFileName, "..") != 0)) {
+            ct++;
+            if (ct >= max_dest_files_) {
+              logger_->log_warn("Routing to failure because the output directory %s has at least %u files, which exceeds the "
+                  "configured max number of files", directory, max_dest_files_);
+              session->transfer(flowFile, Failure);
+              FindClose(hFind);
+              return;
+            }
+          }
+        }while (FindNextFile(hFind, &FindFileData));
+        FindClose(hFind);
+      }
+#endif
     }
   }
 
   if (stat(destFile.c_str(), &statResult) == 0) {
-    logger_->log_warn("Destination file %s exists; applying Conflict Resolution Strategy: %s",
-                      destFile,
-                      conflict_resolution_);
+    logger_->log_warn("Destination file %s exists; applying Conflict Resolution Strategy: %s", destFile, conflict_resolution_);
 
     if (conflict_resolution_ == CONFLICT_RESOLUTION_STRATEGY_REPLACE) {
       putFile(session, flowFile, tmpFile, destFile, directory);
@@ -186,10 +194,8 @@ void PutFile::onTrigger(core::ProcessContext *context, core::ProcessSession *ses
 }
 
 std::string PutFile::tmpWritePath(const std::string &filename, const std::string &directory) const {
-  char tmpFileUuidStr[37];
-  uuid_t tmpFileUuid;
+  utils::Identifier tmpFileUuid;
   id_generator_->generate(tmpFileUuid);
-  uuid_unparse_lower(tmpFileUuid, tmpFileUuidStr);
   std::stringstream tmpFileSs;
   tmpFileSs << directory;
   auto lastSeparatorPos = filename.find_last_of("/");
@@ -197,22 +203,15 @@ std::string PutFile::tmpWritePath(const std::string &filename, const std::string
   if (lastSeparatorPos == std::string::npos) {
     tmpFileSs << "/." << filename;
   } else {
-    tmpFileSs << "/"
-              << filename.substr(0, lastSeparatorPos)
-              << "/."
-              << filename.substr(lastSeparatorPos + 1);
+    tmpFileSs << "/" << filename.substr(0, lastSeparatorPos) << "/." << filename.substr(lastSeparatorPos + 1);
   }
 
-  tmpFileSs << "." << tmpFileUuidStr;
+  tmpFileSs << "." << tmpFileUuid.to_string();
   std::string tmpFile = tmpFileSs.str();
   return tmpFile;
 }
 
-bool PutFile::putFile(core::ProcessSession *session,
-                      std::shared_ptr<FlowFileRecord> flowFile,
-                      const std::string &tmpFile,
-                      const std::string &destFile,
-                      const std::string &destDir) {
+bool PutFile::putFile(core::ProcessSession *session, std::shared_ptr<FlowFileRecord> flowFile, const std::string &tmpFile, const std::string &destFile, const std::string &destDir) {
   struct stat dir_stat;
 
   if (stat(destDir.c_str(), &dir_stat) && try_mkdirs_) {
@@ -230,7 +229,7 @@ bool PutFile::putFile(core::ProcessSession *session,
 
       if (!dir_path_component.empty()) {
         logger_->log_debug("Attempting to create directory if it does not already exist: %s", dir_path);
-        mkdir(dir_path.c_str(), 0700);
+        utils::file::FileUtils::create_dir(dir_path);
         dir_path_stream << '/';
       } else if (pos == 0) {
         // Support absolute paths
@@ -255,8 +254,7 @@ bool PutFile::putFile(core::ProcessSession *session,
   return false;
 }
 
-PutFile::ReadCallback::ReadCallback(const std::string &tmp_file,
-                                    const std::string &dest_file)
+PutFile::ReadCallback::ReadCallback(const std::string &tmp_file, const std::string &dest_file)
     : tmp_file_(tmp_file),
       dest_file_(dest_file),
       logger_(logging::LoggerFactory<PutFile::ReadCallback>::getLogger()) {
@@ -304,8 +302,7 @@ bool PutFile::ReadCallback::commit() {
 
   if (write_succeeded_) {
     if (rename(tmp_file_.c_str(), dest_file_.c_str())) {
-      logger_->log_info("PutFile commit put file operation to %s failed because rename() call failed",
-                        dest_file_);
+      logger_->log_info("PutFile commit put file operation to %s failed because rename() call failed", dest_file_);
     } else {
       success = true;
       logger_->log_info("PutFile commit put file operation to %s succeeded", dest_file_);

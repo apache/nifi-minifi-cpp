@@ -41,7 +41,7 @@
 #endif
 #include <time.h>
 
-typedef unsigned char uuid_t[16];
+typedef unsigned char m_uuid[16];
 
 /* UUID Variant definitions */
 #define UUID_VARIANT_NCS 	0
@@ -56,45 +56,57 @@ typedef unsigned char uuid_t[16];
 /* Allow UUID constants to be defined */
 #ifdef __GNUC__
 #define UUID_DEFINE(name,u0,u1,u2,u3,u4,u5,u6,u7,u8,u9,u10,u11,u12,u13,u14,u15) \
-	static const uuid_t name __attribute__ ((unused)) = {u0,u1,u2,u3,u4,u5,u6,u7,u8,u9,u10,u11,u12,u13,u14,u15}
+	static const m_uuid name __attribute__ ((unused)) = {u0,u1,u2,u3,u4,u5,u6,u7,u8,u9,u10,u11,u12,u13,u14,u15}
 #else
 #define UUID_DEFINE(name,u0,u1,u2,u3,u4,u5,u6,u7,u8,u9,u10,u11,u12,u13,u14,u15) \
-	static const uuid_t name = {u0,u1,u2,u3,u4,u5,u6,u7,u8,u9,u10,u11,u12,u13,u14,u15}
+	static const m_uuid name = {u0,u1,u2,u3,u4,u5,u6,u7,u8,u9,u10,u11,u12,u13,u14,u15}
 #endif
+
+
+
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+#define UUID_FIELD m_uuid
+
+struct st_tm_val {
+  long    tv_sec;         /* seconds */
+  long    tv_usec;        /* and microseconds */
+};
+
+
+
 /* clear.c */
-void uuid_clear(uuid_t uu);
+void uuid_clear(m_uuid uu);
 
 /* compare.c */
-int uuid_compare(const uuid_t uu1, const uuid_t uu2);
+int uuid_compare(const m_uuid uu1, const m_uuid uu2);
 
 /* copy.c */
-void uuid_copy(uuid_t dst, const uuid_t src);
+void uuid_copy(m_uuid dst, const m_uuid src);
 
 /* gen_uuid.c */
-void uuid_generate(uuid_t out);
-void uuid_generate_random(uuid_t out);
-void uuid_generate_time(uuid_t out);
+void uuid_generate(m_uuid out);
+void uuid_generate_random(m_uuid out);
+void uuid_generate_time(m_uuid out);
 
 /* isnull.c */
-int uuid_is_null(const uuid_t uu);
+int uuid_is_null(const m_uuid uu);
 
 /* parse.c */
-int uuid_parse(const char *in, uuid_t uu);
+int uuid_parse(const char *in, m_uuid uu);
 
 /* unparse.c */
-void uuid_unparse(const uuid_t uu, char *out);
-void uuid_unparse_lower(const uuid_t uu, char *out);
-void uuid_unparse_upper(const uuid_t uu, char *out);
+void uuid_unparse(const m_uuid uu, char *out);
+void uuid_unparse_lower(const m_uuid uu, char *out);
+void uuid_unparse_upper(const m_uuid uu, char *out);
 
-/* uuid_time.c */
-time_t uuid_time(const uuid_t uu, struct timeval *ret_tv);
-int uuid_type(const uuid_t uu);
-int uuid_variant(const uuid_t uu);
+/* m_uuidime.c */
+time_t m_uuidime(const m_uuid uu, struct st_tm_val *ret_tv);
+int m_uuidype(const m_uuid uu);
+int uuid_variant(const m_uuid uu);
 
 #ifdef __cplusplus
 }

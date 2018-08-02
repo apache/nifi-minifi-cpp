@@ -37,14 +37,15 @@ namespace minifi {
 namespace processors {
 
 // PublishMQTT Class
-class PublishMQTT: public processors::AbstractMQTTProcessor {
-public:
+class PublishMQTT : public processors::AbstractMQTTProcessor {
+ public:
   // Constructor
   /*!
    * Create a new processor
    */
-  explicit PublishMQTT(std::string name, uuid_t uuid = NULL)
-    : processors::AbstractMQTTProcessor(name, uuid), logger_(logging::LoggerFactory<PublishMQTT>::getLogger()) {
+  explicit PublishMQTT(std::string name, utils::Identifier uuid = utils::Identifier())
+      : processors::AbstractMQTTProcessor(name, uuid),
+        logger_(logging::LoggerFactory<PublishMQTT>::getLogger()) {
     retain_ = false;
     max_seg_size_ = ULLONG_MAX;
   }
@@ -58,12 +59,16 @@ public:
   static core::Property MaxFlowSegSize;
 
   // Nest Callback Class for read stream
-  class ReadCallback: public InputStreamCallback {
-  public:
-    ReadCallback(uint64_t flow_size, uint64_t max_seg_size, const std::string &key, MQTTClient client,
-        int qos, bool retain, MQTTClient_deliveryToken &token) :
-        flow_size_(flow_size), max_seg_size_(max_seg_size), key_(key), client_(client),
-        qos_(qos), retain_(retain), token_(token) {
+  class ReadCallback : public InputStreamCallback {
+   public:
+    ReadCallback(uint64_t flow_size, uint64_t max_seg_size, const std::string &key, MQTTClient client, int qos, bool retain, MQTTClient_deliveryToken &token)
+        : flow_size_(flow_size),
+          max_seg_size_(max_seg_size),
+          key_(key),
+          client_(client),
+          qos_(qos),
+          retain_(retain),
+          token_(token) {
       status_ = 0;
       read_size_ = 0;
     }
@@ -102,7 +107,8 @@ public:
     uint64_t flow_size_;
     uint64_t max_seg_size_;
     std::string key_;
-    MQTTClient client_;;
+    MQTTClient client_;
+    ;
     int status_;
     size_t read_size_;
     int qos_;
@@ -110,7 +116,7 @@ public:
     MQTTClient_deliveryToken &token_;
   };
 
-public:
+ public:
   /**
    * Function that's executed when the processor is scheduled.
    * @param context process context.
@@ -123,15 +129,15 @@ public:
   // Initialize, over write by NiFi PublishMQTT
   virtual void initialize(void);
 
-protected:
+ protected:
 
-private:
+ private:
   uint64_t max_seg_size_;
   bool retain_;
   std::shared_ptr<logging::Logger> logger_;
 };
 
-REGISTER_RESOURCE (PublishMQTT);
+REGISTER_RESOURCE(PublishMQTT);
 
 } /* namespace processors */
 } /* namespace minifi */

@@ -55,10 +55,8 @@ class Bin {
     queued_data_size_ = 0;
     creation_dated_ = getTimeMillis();
     std::shared_ptr<utils::IdGenerator> id_generator = utils::IdGenerator::getIdGenerator();
-    char uuidStr[37] = { 0 };
     id_generator->generate(uuid_);
-    uuid_unparse_lower(uuid_, uuidStr);
-    uuid_str_ = uuidStr;
+    uuid_str_ = uuid_.to_string();
     logger_->log_debug("Bin %s for group %s created", uuid_str_, groupId_);
   }
   virtual ~Bin() {
@@ -142,7 +140,7 @@ class Bin {
   std::string groupId_;
   std::shared_ptr<logging::Logger> logger_;
   // A global unique identifier
-  uuid_t uuid_;
+  utils::Identifier uuid_;
   // UUID string
   std::string uuid_str_;
 };
@@ -225,7 +223,7 @@ class BinFiles : public core::Processor {
   /*!
    * Create a new processor
    */
-  explicit BinFiles(std::string name, uuid_t uuid = NULL)
+  explicit BinFiles(std::string name, utils::Identifier uuid = utils::Identifier())
       : core::Processor(name, uuid),
         logger_(logging::LoggerFactory<BinFiles>::getLogger()) {
     maxBinCount_ = 100;

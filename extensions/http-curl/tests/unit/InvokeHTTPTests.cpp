@@ -58,10 +58,10 @@ TEST_CASE("HTTPTestsWithNoResourceClaimPOST", "[httptest1]") {
   std::shared_ptr<core::Processor> listenhttp = std::make_shared<org::apache::nifi::minifi::processors::ListenHTTP>("listenhttp");
 
   std::shared_ptr<core::Processor> invokehttp = std::make_shared<org::apache::nifi::minifi::processors::InvokeHTTP>("invokehttp");
-  uuid_t processoruuid;
+  utils::Identifier processoruuid;
   REQUIRE(true == listenhttp->getUUID(processoruuid));
 
-  uuid_t invokehttp_uuid;
+  utils::Identifier invokehttp_uuid;
   REQUIRE(true == invokehttp->getUUID(invokehttp_uuid));
 
   std::shared_ptr<minifi::Connection> gcConnection = std::make_shared<minifi::Connection>(repo, content_repo, "getfileCreate2Connection");
@@ -175,10 +175,10 @@ TEST_CASE("HTTPTestsWithResourceClaimPOST", "[httptest1]") {
   std::shared_ptr<core::Processor> listenhttp = std::make_shared<org::apache::nifi::minifi::processors::ListenHTTP>("listenhttp");
 
   std::shared_ptr<core::Processor> invokehttp = std::make_shared<org::apache::nifi::minifi::processors::InvokeHTTP>("invokehttp");
-  uuid_t processoruuid;
+  utils::Identifier processoruuid;
   REQUIRE(true == listenhttp->getUUID(processoruuid));
 
-  uuid_t invokehttp_uuid;
+  utils::Identifier invokehttp_uuid;
   REQUIRE(true == invokehttp->getUUID(invokehttp_uuid));
 
   std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();

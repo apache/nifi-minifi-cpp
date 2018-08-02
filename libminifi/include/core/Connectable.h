@@ -37,10 +37,13 @@ namespace core {
  * Purpose: As in NiFi, this represents a connection point and allows the derived
  * object to be connected to other connectables.
  */
-class __attribute__((visibility("default"))) Connectable : public CoreComponent {
+class Connectable : public CoreComponent {
  public:
 
-  explicit Connectable(std::string name, uuid_t uuid);
+
+  explicit Connectable(std::string name);
+
+  explicit Connectable(std::string name, utils::Identifier &uuid);
 
   explicit Connectable(const Connectable &&other);
 

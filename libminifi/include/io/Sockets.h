@@ -18,7 +18,7 @@
 #ifndef LIBMINIFI_INCLUDE_IO_SOCKET_H_
 #define LIBMINIFI_INCLUDE_IO_SOCKET_H_
 
-#include "ClientSocket.h"
+#include "io/ClientSocket.h"
 #include "ServerSocket.h"
 
 #ifdef OPENSSL_SUPPORT

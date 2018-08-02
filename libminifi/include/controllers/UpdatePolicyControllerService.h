@@ -47,7 +47,7 @@ class UpdatePolicyControllerService : public core::controller::ControllerService
         logger_(logging::LoggerFactory<UpdatePolicyControllerService>::getLogger()) {
   }
 
-  explicit UpdatePolicyControllerService(const std::string &name, uuid_t uuid = 0)
+  explicit UpdatePolicyControllerService(const std::string &name, utils::Identifier uuid = utils::Identifier())
       : ControllerService(name, uuid),
         persist_updates_(false),
         policy_(new state::UpdatePolicy(false)),
@@ -55,7 +55,7 @@ class UpdatePolicyControllerService : public core::controller::ControllerService
   }
 
   explicit UpdatePolicyControllerService(const std::string &name, const std::shared_ptr<Configure> &configuration)
-      : UpdatePolicyControllerService(name, nullptr) {
+      : UpdatePolicyControllerService(name) {
     setConfiguration(configuration);
     initialize();
   }

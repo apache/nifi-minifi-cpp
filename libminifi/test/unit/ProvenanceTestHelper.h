@@ -46,7 +46,7 @@
 class TestRepository : public core::Repository {
  public:
   TestRepository()
-      : core::SerializableComponent("repo_name", 0),
+      : core::SerializableComponent("repo_name"),
         Repository("repo_name", "./dir", 1000, 100, 0) {
   }
   // initialize
@@ -155,7 +155,7 @@ class TestRepository : public core::Repository {
 class TestFlowRepository : public core::Repository {
  public:
   TestFlowRepository()
-      : core::SerializableComponent("ff", 0),
+      : core::SerializableComponent("ff"),
         core::Repository("ff", "./dir", 1000, 100, 0) {
   }
   // initialize
@@ -256,19 +256,19 @@ class TestFlowController : public minifi::FlowController {
     return true;
   }
 
-  std::shared_ptr<core::Processor> createProcessor(std::string name, uuid_t uuid) {
+  std::shared_ptr<core::Processor> createProcessor(std::string name, utils::Identifier &  uuid) {
     return 0;
   }
 
-  core::ProcessGroup *createRootProcessGroup(std::string name, uuid_t uuid) {
+  core::ProcessGroup *createRootProcessGroup(std::string name, utils::Identifier &  uuid) {
     return 0;
   }
 
-  core::ProcessGroup *createRemoteProcessGroup(std::string name, uuid_t uuid) {
+  core::ProcessGroup *createRemoteProcessGroup(std::string name, utils::Identifier &  uuid) {
     return 0;
   }
 
-  std::shared_ptr<minifi::Connection> createConnection(std::string name, uuid_t uuid) {
+  std::shared_ptr<minifi::Connection> createConnection(std::string name, utils::Identifier &  uuid) {
     return 0;
   }
  protected:

@@ -16,15 +16,17 @@
  * limitations under the License.
  */
 #include "processors/GetTCP.h"
-#include <sys/time.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <time.h>
 #include <stdio.h>
-#include <dirent.h>
+
 #include <limits.h>
+#ifndef WIN32
+#include <dirent.h>
 #include <unistd.h>
 #include <regex.h>
+#endif
 #include <vector>
 #include <queue>
 #include <map>

@@ -23,7 +23,7 @@ namespace nifi {
 namespace minifi {
 namespace c2 {
 
-MQTTC2Protocol::MQTTC2Protocol(std::string name, uuid_t uuid)
+MQTTC2Protocol::MQTTC2Protocol(std::string name, utils::Identifier uuid = utils::Identifier())
     : C2Protocol(name, uuid),
       logger_(logging::LoggerFactory<Connectable>::getLogger()) {
 }

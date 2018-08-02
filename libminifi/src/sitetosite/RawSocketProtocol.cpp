@@ -16,7 +16,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <sys/time.h>
 #include <stdio.h>
 #include <time.h>
 #include <chrono>
@@ -241,12 +240,10 @@ bool RawSiteToSiteClient::handShake() {
     return false;
   }
   logger_->log_debug("Site2Site Protocol Perform hand shake with destination port %s", port_id_str_);
-  uuid_t uuid;
+  utils::Identifier uuid;
   // Generate the global UUID for the com identify
   id_generator_->generate(uuid);
-  char uuidStr[37];
-  uuid_unparse_lower(uuid, uuidStr);
-  _commsIdentifier = uuidStr;
+  _commsIdentifier = uuid.to_string();
 
   int ret = peer_->writeUTF(_commsIdentifier);
 

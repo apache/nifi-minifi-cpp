@@ -36,7 +36,7 @@ namespace processors {
 class UpdateAttribute : public core::Processor {
  public:
 
-  UpdateAttribute(std::string name, uuid_t uuid = NULL)
+  UpdateAttribute(std::string name,  utils::Identifier uuid = utils::Identifier())
       : core::Processor(name, uuid),
         logger_(logging::LoggerFactory<UpdateAttribute>::getLogger()) {
   }
@@ -64,7 +64,7 @@ class UpdateAttribute : public core::Processor {
 
  private:
   std::shared_ptr<logging::Logger> logger_;
-  std::vector<std::string> attributes_;
+  std::vector<core::Property> attributes_;
 };
 
 REGISTER_RESOURCE(UpdateAttribute);

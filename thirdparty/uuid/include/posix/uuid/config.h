@@ -843,3 +843,5 @@
 #define glthread_once_singlethreaded  libintl_once_singlethreaded
 #define glthread_once_multithreaded   libintl_once_multithreaded
 
+
+#define LIBUUID_CLOCK_FILE "/var/lib/libuuid/clock.txt"

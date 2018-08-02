@@ -18,7 +18,6 @@
  * limitations under the License.
  */
 #include "processors/LogAttribute.h"
-#include <sys/time.h>
 #include <time.h>
 #include <string.h>
 #include <memory>

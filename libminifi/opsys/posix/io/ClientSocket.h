@@ -15,8 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_IO_CLIENTSOCKET_H_
-#define LIBMINIFI_INCLUDE_IO_CLIENTSOCKET_H_
+#ifndef LIBMINIFI_INCLUDE_IO_POSIX_CLIENTSOCKET_H_
+#define LIBMINIFI_INCLUDE_IO_POSIX_CLIENTSOCKET_H_
+
 
 #include <cstdint>
 #include <sys/types.h>
@@ -292,4 +293,4 @@ class Socket : public BaseStream {
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-#endif /* LIBMINIFI_INCLUDE_IO_CLIENTSOCKET_H_ */
+#endif /* LIBMINIFI_INCLUDE_IO_POSIX_CLIENTSOCKET_H_ */

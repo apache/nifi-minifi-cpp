@@ -29,31 +29,29 @@ namespace core {
 std::shared_ptr<utils::IdGenerator> CoreComponent::id_generator_ = utils::IdGenerator::getIdGenerator();
 
 // Set UUID
-void CoreComponent::setUUID(uuid_t uuid) {
-  uuid_copy(uuid_, uuid);
-  char uuidStr[37];
-  uuid_unparse_lower(uuid_, uuidStr);
-  uuidStr_ = uuidStr;
+void CoreComponent::setUUID(utils::Identifier &uuid) {
+  uuid_ = uuid;
+  uuidStr_ = uuid_.to_string();
 }
 
 void CoreComponent::setUUIDStr(const std::string uuidStr) {
-  uuid_parse(uuidStr.c_str(), uuid_);
+  uuid_ = uuidStr;
   uuidStr_ = uuidStr;
 }
 // Get UUID
-bool CoreComponent::getUUID(uuid_t uuid) {
-  if (uuid) {
-    uuid_copy(uuid, uuid_);
-    return true;
-  } else {
+bool CoreComponent::getUUID(utils::Identifier &uuid) {
+  if (uuid_ == nullptr) {
     return false;
   }
+  uuid = uuid_;
+  return true;
 }
 
 // Get UUID
-unsigned const char *CoreComponent::getUUID() {
-  return uuid_;
-}
+/*
+ unsigned const char *CoreComponent::getUUID() {
+ return uuid_.getIdentifier();
+ }*/
 
 // Set Processor Name
 void CoreComponent::setName(const std::string name) {

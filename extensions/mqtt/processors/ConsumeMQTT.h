@@ -43,14 +43,15 @@ namespace processors {
 #define MQTT_BROKER_ATTRIBUTE "mqtt.broker"
 
 // ConsumeMQTT Class
-class ConsumeMQTT: public processors::AbstractMQTTProcessor {
-public:
+class ConsumeMQTT : public processors::AbstractMQTTProcessor {
+ public:
   // Constructor
   /*!
    * Create a new processor
    */
-  explicit ConsumeMQTT(std::string name, uuid_t uuid = NULL)
-    : processors::AbstractMQTTProcessor(name, uuid), logger_(logging::LoggerFactory<ConsumeMQTT>::getLogger()) {
+  explicit ConsumeMQTT(std::string name, utils::Identifier uuid = utils::Identifier())
+      : processors::AbstractMQTTProcessor(name, uuid),
+        logger_(logging::LoggerFactory<ConsumeMQTT>::getLogger()) {
     isSubscriber_ = true;
     maxQueueSize_ = 100;
     maxSegSize_ = ULLONG_MAX;
@@ -68,10 +69,10 @@ public:
   static core::Property MaxFlowSegSize;
   static core::Property QueueBufferMaxMessage;
   // Nest Callback Class for write stream
-  class WriteCallback: public OutputStreamCallback {
-  public:
-    WriteCallback(MQTTClient_message *message) :
-      message_(message) {
+  class WriteCallback : public OutputStreamCallback {
+   public:
+    WriteCallback(MQTTClient_message *message)
+        : message_(message) {
       status_ = 0;
     }
     MQTTClient_message *message_;
@@ -84,7 +85,7 @@ public:
     int status_;
   };
 
-public:
+ public:
   /**
    * Function that's executed when the processor is scheduled.
    * @param context process context.
@@ -98,7 +99,7 @@ public:
   virtual void initialize(void);
   virtual bool enqueueReceiveMQTTMsg(MQTTClient_message *message);
 
-protected:
+ protected:
   void getReceivedMQTTMsg(std::deque<MQTTClient_message *> &msg_queue) {
     MQTTClient_message *message;
     while (queue_.try_dequeue(message)) {
@@ -106,7 +107,7 @@ protected:
     }
   }
 
-private:
+ private:
   std::shared_ptr<logging::Logger> logger_;
   std::mutex mutex_;
   uint64_t maxQueueSize_;
@@ -114,7 +115,7 @@ private:
   moodycamel::ConcurrentQueue<MQTTClient_message *> queue_;
 };
 
-REGISTER_RESOURCE (ConsumeMQTT);
+REGISTER_RESOURCE(ConsumeMQTT);
 
 } /* namespace processors */
 } /* namespace minifi */

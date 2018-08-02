@@ -39,7 +39,7 @@ namespace provenance {
 class ProvenanceRepository : public core::Repository, public std::enable_shared_from_this<ProvenanceRepository> {
  public:
 
-  ProvenanceRepository(std::string name, uuid_t uuid)
+  ProvenanceRepository(std::string name, utils::Identifier uuid)
       : ProvenanceRepository(name){
 
   }
@@ -50,7 +50,7 @@ class ProvenanceRepository : public core::Repository, public std::enable_shared_
   ProvenanceRepository(const std::string repo_name = "", std::string directory = PROVENANCE_DIRECTORY, int64_t maxPartitionMillis = MAX_PROVENANCE_ENTRY_LIFE_TIME, int64_t maxPartitionBytes =
   MAX_PROVENANCE_STORAGE_SIZE,
                        uint64_t purgePeriod = PROVENANCE_PURGE_PERIOD)
-      : core::SerializableComponent(repo_name, 0),
+      : core::SerializableComponent(repo_name),
         Repository(repo_name.length() > 0 ? repo_name : core::getClassName<ProvenanceRepository>(), directory, maxPartitionMillis, maxPartitionBytes, purgePeriod),
         logger_(logging::LoggerFactory<ProvenanceRepository>::getLogger()) {
     db_ = NULL;

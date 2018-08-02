@@ -34,10 +34,7 @@ if (ENABLE_LUA_SCRIPTING)
     set(CMAKE_CXX_STANDARD_REQUIRED ON)
 endif()
 
-set(CMAKE_EXE_LINKER_FLAGS "-Wl,--export-all-symbols")
-set(CMAKE_SHARED_LINKER_FLAGS "-Wl,--export-symbols")
-
-include_directories(../../libminifi/include  ../../libminifi/include/core  ../../thirdparty/spdlog-20170710/include ../../thirdparty/concurrentqueue ../../thirdparty/yaml-cpp-yaml-cpp-0.5.3/include ../../thirdparty/) 
+include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt) 
 
 file(GLOB SOURCES  "*.cpp")
 

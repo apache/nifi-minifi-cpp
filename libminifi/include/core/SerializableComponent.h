@@ -35,7 +35,12 @@ class SerializableComponent : public core::Connectable, public minifi::io::Seria
 
  public:
 
-  SerializableComponent(const std::string name, uuid_t uuid = nullptr)
+  SerializableComponent(const std::string name)
+        : core::Connectable(name) {
+
+    }
+
+  SerializableComponent(const std::string name, utils::Identifier &uuid )
       : core::Connectable(name, uuid) {
 
   }

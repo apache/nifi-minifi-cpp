@@ -40,7 +40,7 @@ class LogAttribute : public core::Processor {
   /*!
    * Create a new processor
    */
-  LogAttribute(std::string name, uuid_t uuid = NULL)
+  LogAttribute(std::string name,  utils::Identifier uuid = utils::Identifier())
       : Processor(name, uuid),
         logger_(logging::LoggerFactory<LogAttribute>::getLogger()) {
   }

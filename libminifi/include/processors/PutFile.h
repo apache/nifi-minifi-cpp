@@ -46,7 +46,7 @@ class PutFile : public core::Processor {
   /*!
    * Create a new processor
    */
-  PutFile(std::string name, uuid_t uuid = NULL)
+  PutFile(std::string name,  utils::Identifier uuid = utils::Identifier())
       : core::Processor(name, uuid),
         logger_(logging::LoggerFactory<PutFile>::getLogger()) {
   }

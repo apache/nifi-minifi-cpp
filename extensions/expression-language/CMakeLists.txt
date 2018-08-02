@@ -58,7 +58,6 @@ endif()
 
 target_link_libraries(minifi-expression-language-extensions ${LIBMINIFI} tz)
 
-find_package(UUID REQUIRED)
 target_link_libraries(minifi-expression-language-extensions ${LIBMINIFI} ${UUID_LIBRARIES})
 if (NOT DISABLE_CURL)
 find_package(CURL REQUIRED)

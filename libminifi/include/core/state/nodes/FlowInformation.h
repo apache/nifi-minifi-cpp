@@ -19,26 +19,14 @@
 #define LIBMINIFI_INCLUDE_CORE_STATE_NODES_FLOWINFORMATION_H_
 
 #include "core/Resource.h"
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
 #include <functional>
-#include <sys/ioctl.h>
 #if ( defined(__APPLE__) || defined(__MACH__) || defined(BSD)) 
 #include <net/if_dl.h>
 #include <net/if_types.h>
 #endif
-#include <ifaddrs.h>
-#include <net/if.h> 
-#include <unistd.h>
-#include <netinet/in.h>
 #include <string.h>
-#include <sys/socket.h>
-#include <netdb.h>
-#include <ifaddrs.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <sstream>
 #include <map>
 #include "../nodes/MetricsBase.h"
@@ -58,17 +46,17 @@ class FlowVersion : public DeviceInformation {
  public:
 
   explicit FlowVersion()
-      : DeviceInformation("FlowVersion", nullptr) {
+      : DeviceInformation("FlowVersion") {
     setFlowVersion("", "", getUUIDStr());
   }
 
   explicit FlowVersion(const std::string &registry_url, const std::string &bucket_id, const std::string &flow_id)
-      : DeviceInformation("FlowVersion", nullptr) {
+      : DeviceInformation("FlowVersion") {
     setFlowVersion(registry_url, bucket_id, flow_id.empty() ? getUUIDStr() : flow_id);
   }
 
   explicit FlowVersion(FlowVersion &&fv)
-      : DeviceInformation("FlowVersion", nullptr),
+      : DeviceInformation("FlowVersion"),
         identifier(std::move(fv.identifier)) {
   }
 
@@ -144,12 +132,12 @@ class FlowVersion : public DeviceInformation {
 class FlowMonitor : public StateMonitorNode {
  public:
 
-  FlowMonitor(std::string name, uuid_t uuid)
+  FlowMonitor(const std::string &name, utils::Identifier &uuid)
       : StateMonitorNode(name, uuid) {
   }
 
   FlowMonitor(const std::string &name)
-      : StateMonitorNode(name, 0) {
+      : StateMonitorNode(name) {
   }
 
   void addConnection(const std::shared_ptr<minifi::Connection> &connection) {
@@ -173,12 +161,12 @@ class FlowMonitor : public StateMonitorNode {
 class FlowInformation : public FlowMonitor {
  public:
 
-  FlowInformation(std::string name, uuid_t uuid)
+  FlowInformation(const std::string &name, utils::Identifier &uuid)
       : FlowMonitor(name, uuid) {
   }
 
   FlowInformation(const std::string &name)
-      : FlowMonitor(name, 0) {
+      : FlowMonitor(name) {
   }
 
   std::string getName() const {

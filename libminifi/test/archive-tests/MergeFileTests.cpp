@@ -134,9 +134,9 @@ TEST_CASE("MergeFileDefragment", "[mergefiletest1]") {
     std::shared_ptr<core::Processor> processor = std::make_shared<org::apache::nifi::minifi::processors::MergeContent>("mergecontent");
     std::shared_ptr<core::Processor> logAttributeProcessor = std::make_shared<org::apache::nifi::minifi::processors::LogAttribute>("logattribute");
 
-    uuid_t processoruuid;
+    utils::Identifier processoruuid;
     REQUIRE(true == processor->getUUID(processoruuid));
-    uuid_t logAttributeuuid;
+    utils::Identifier logAttributeuuid;
     REQUIRE(true == logAttributeProcessor->getUUID(logAttributeuuid));
 
     std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
@@ -306,9 +306,9 @@ TEST_CASE("MergeFileDefragmentDelimiter", "[mergefiletest2]") {
     std::shared_ptr<core::Processor> processor = std::make_shared<org::apache::nifi::minifi::processors::MergeContent>("mergecontent");
     std::shared_ptr<core::Processor> logAttributeProcessor = std::make_shared<org::apache::nifi::minifi::processors::LogAttribute>("logattribute");
 
-    uuid_t processoruuid;
+    utils::Identifier processoruuid;
     REQUIRE(true == processor->getUUID(processoruuid));
-    uuid_t logAttributeuuid;
+    utils::Identifier logAttributeuuid;
     REQUIRE(true == logAttributeProcessor->getUUID(logAttributeuuid));
 
     std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
@@ -469,9 +469,9 @@ TEST_CASE("MergeFileDefragmentDropFlow", "[mergefiletest3]") {
     std::shared_ptr<core::Processor> processor = std::make_shared<org::apache::nifi::minifi::processors::MergeContent>("mergecontent");
     std::shared_ptr<core::Processor> logAttributeProcessor = std::make_shared<org::apache::nifi::minifi::processors::LogAttribute>("logattribute");
 
-    uuid_t processoruuid;
+    utils::Identifier processoruuid;
     REQUIRE(true == processor->getUUID(processoruuid));
-    uuid_t logAttributeuuid;
+    utils::Identifier logAttributeuuid;
     REQUIRE(true == logAttributeProcessor->getUUID(logAttributeuuid));
 
     std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
@@ -634,9 +634,9 @@ TEST_CASE("MergeFileBinPack", "[mergefiletest4]") {
     std::shared_ptr<core::Processor> processor = std::make_shared<org::apache::nifi::minifi::processors::MergeContent>("mergecontent");
     std::shared_ptr<core::Processor> logAttributeProcessor = std::make_shared<org::apache::nifi::minifi::processors::LogAttribute>("logattribute");
 
-    uuid_t processoruuid;
+    utils::Identifier processoruuid;
     REQUIRE(true == processor->getUUID(processoruuid));
-    uuid_t logAttributeuuid;
+    utils::Identifier logAttributeuuid;
     REQUIRE(true == logAttributeProcessor->getUUID(logAttributeuuid));
 
     std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
@@ -782,9 +782,9 @@ TEST_CASE("MergeFileTar", "[mergefiletest4]") {
     std::shared_ptr<core::Processor> processor = std::make_shared<org::apache::nifi::minifi::processors::MergeContent>("mergecontent");
     std::shared_ptr<core::Processor> logAttributeProcessor = std::make_shared<org::apache::nifi::minifi::processors::LogAttribute>("logattribute");
 
-    uuid_t processoruuid;
+    utils::Identifier processoruuid;
     REQUIRE(true == processor->getUUID(processoruuid));
-    uuid_t logAttributeuuid;
+    utils::Identifier logAttributeuuid;
     REQUIRE(true == logAttributeProcessor->getUUID(logAttributeuuid));
 
     std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
@@ -939,9 +939,9 @@ TEST_CASE("MergeFileZip", "[mergefiletest5]") {
     std::shared_ptr<core::Processor> processor = std::make_shared<org::apache::nifi::minifi::processors::MergeContent>("mergecontent");
     std::shared_ptr<core::Processor> logAttributeProcessor = std::make_shared<org::apache::nifi::minifi::processors::LogAttribute>("logattribute");
 
-    uuid_t processoruuid;
+    utils::Identifier processoruuid;
     REQUIRE(true == processor->getUUID(processoruuid));
-    uuid_t logAttributeuuid;
+    utils::Identifier logAttributeuuid;
     REQUIRE(true == logAttributeProcessor->getUUID(logAttributeuuid));
 
     std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
