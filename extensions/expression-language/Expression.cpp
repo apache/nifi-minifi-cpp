@@ -28,7 +28,9 @@
 #include <utils/StringUtils.h>
 #include <expression/Expression.h>
 #include <regex>
+#ifndef DISABLE_CURL
 #include <curl/curl.h>
+#endif
 #include <netdb.h>
 #include <arpa/inet.h>
 #include "base64.h"
@@ -1345,6 +1347,7 @@ Value expr_unescapeCsv(const std::vector<Value> &args) {
 }
 
 Value expr_urlEncode(const std::vector<Value> &args) {
+#ifndef DISABLE_CURL
   auto arg_0 = args[0].asString();
   CURL *curl = curl_easy_init();
   if (curl != nullptr) {
@@ -1363,9 +1366,13 @@ Value expr_urlEncode(const std::vector<Value> &args) {
   } else {
     throw std::runtime_error("Failed to initialize cURL");
   }
+#else
+  throw std::runtime_error("Failed to initialize cURL");
+#endif
 }
 
 Value expr_urlDecode(const std::vector<Value> &args) {
+#ifndef DISABLE_CURL
   auto arg_0 = args[0].asString();
   CURL *curl = curl_easy_init();
   if (curl != nullptr) {
@@ -1386,6 +1393,9 @@ Value expr_urlDecode(const std::vector<Value> &args) {
   } else {
     throw std::runtime_error("Failed to initialize cURL");
   }
+#else
+  throw std::runtime_error("Failed to initialize cURL");
+#endif
 }
 
 Value expr_base64Encode(const std::vector<Value> &args) {

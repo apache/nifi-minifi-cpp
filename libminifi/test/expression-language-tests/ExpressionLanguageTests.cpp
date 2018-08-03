@@ -1185,6 +1185,7 @@ TEST_CASE("Decode CSV 2", "[expressionDecodeCSV2]") {  // NOLINT
   REQUIRE("\"quoted\"" == expr({flow_file_a}).asString());
 }
 
+
 TEST_CASE("Encode Decode CSV", "[expressionEncodeDecodeCSV]") {  // NOLINT
   auto expr = expression::compile("${message:escapeCsv():unescapeCsv()}");
 
@@ -1193,6 +1194,7 @@ TEST_CASE("Encode Decode CSV", "[expressionEncodeDecodeCSV]") {  // NOLINT
   REQUIRE("Zero > One < \"two!\" & 'true'" == expr({flow_file_a}).asString());
 }
 
+#ifndef DISABLE_CURL
 TEST_CASE("Encode URL", "[expressionEncodeURL]") {  // NOLINT
   auto expr = expression::compile("${message:urlEncode()}");
 
@@ -1216,6 +1218,31 @@ TEST_CASE("Encode Decode URL", "[expressionEncodeDecodeURL]") {  // NOLINT
   flow_file_a->addAttribute("message", "some value with spaces");
   REQUIRE("some value with spaces" == expr({flow_file_a}).asString());
 }
+#else
+TEST_CASE("Encode URL", "[expressionEncodeURLExcept]") {  // NOLINT
+  auto expr = expression::compile("${message:urlEncode()}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("message", "some value with spaces");
+  REQUIRE_THROWS(expr({flow_file_a}).asString());
+}
+
+TEST_CASE("Decode URL", "[expressionDecodeURLExcept]") {  // NOLINT
+  auto expr = expression::compile("${message:urlDecode()}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("message", "some%20value%20with%20spaces");
+  REQUIRE_THROWS(expr({flow_file_a}).asString());
+}
+
+TEST_CASE("Encode Decode URL", "[expressionEncodeDecodeURLExcept]") {  // NOLINT
+  auto expr = expression::compile("${message:urlEncode():urlDecode()}");
+
+  auto flow_file_a = std::make_shared<MockFlowFile>();
+  flow_file_a->addAttribute("message", "some value with spaces");
+  REQUIRE_THROWS(expr({flow_file_a}).asString());
+}
+#endif
 
 #ifdef EXPRESSION_LANGUAGE_USE_DATE
 
