@@ -17,6 +17,7 @@
 # under the License.
 #
 
+if(NOT DISABLE_CURL)
 file(GLOB CIVETWEB_INTEGRATION_TESTS "*.cpp")
 SET(CIVETWEB-EXTENSIONS_TEST_COUNT 0)
 FOREACH(testfile ${CIVETWEB_INTEGRATION_TESTS})
@@ -37,3 +38,4 @@ FOREACH(testfile ${CIVETWEB_INTEGRATION_TESTS})
   add_test(NAME "${testfilename}" COMMAND "${testfilename}" WORKING_DIRECTORY ${TEST_DIR})
 ENDFOREACH()
 message("-- Finished building ${CIVETWEB-EXTENSIONS_TEST_COUNT} civetweb related test file(s)...")
+endif()
