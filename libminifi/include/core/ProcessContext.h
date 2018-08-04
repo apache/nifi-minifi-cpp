@@ -80,7 +80,7 @@ class ProcessContext : public controller::ControllerServiceLookup {
   // Sets the property value using the property's string name
   bool setProperty(const std::string &name, std::string value) {
     return processor_node_->setProperty(name, value);
-  } // Sets the dynamic property value using the property's string name
+  }  // Sets the dynamic property value using the property's string name
   bool setDynamicProperty(const std::string &name, std::string value) {
     return processor_node_->setDynamicProperty(name, value);
   }
