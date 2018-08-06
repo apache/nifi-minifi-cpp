@@ -79,7 +79,7 @@ class PcapTestHarness : public IntegrationBase {
     assert(inv != nullptr);
 
     configuration->set(minifi::processors::CapturePacket::BaseDir.getName(), dir);
-    configuration->set(minifi::processors::CapturePacket::NetworkControllers.getName(), ".*");
+    configuration->set(minifi::processors::CapturePacket::NetworkController.getName(), ".*");
     configuration->set("nifi.c2.enable", "false");
   }
 

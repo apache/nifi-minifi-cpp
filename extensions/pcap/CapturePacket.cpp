@@ -54,7 +54,7 @@ namespace processors {
 std::shared_ptr<utils::IdGenerator> CapturePacket::id_generator_ = utils::IdGenerator::getIdGenerator();
 core::Property CapturePacket::BaseDir("Base Directory", "Scratch directory for PCAP files", "/tmp/");
 core::Property CapturePacket::BatchSize("Batch Size", "The number of packets to combine within a given PCAP", "50");
-core::Property CapturePacket::NetworkControllers("Network Controllers", "List of network controllers to attach to -- each may be a regex", ".*");
+core::Property CapturePacket::NetworkController("Network Controller", "Regular expression network controller(s) to which we will attach", ".*");
 core::Property CapturePacket::CaptureBluetooth("Capture Bluetooth", "True indicates that we support bluetooth interfaces", "false");
 
 const char *CapturePacket::ProcessorName = "CapturePacket";
@@ -62,7 +62,6 @@ const char *CapturePacket::ProcessorName = "CapturePacket";
 std::string CapturePacket::generate_new_pcap(const std::string &base_path) {
   std::string path = base_path;
   // can use relaxed for a counter
-  //int cnt = num_.fetch_add(1, std::memory_order_relaxed);
   int cnt = num_.fetch_add(1, std::memory_order_relaxed);
   std::string filename = std::to_string(cnt);
   path.append(filename);
@@ -116,7 +115,7 @@ void CapturePacket::initialize() {
   // Set the supported properties
   std::set<core::Property> properties;
   properties.insert(BatchSize);
-  properties.insert(NetworkControllers);
+  properties.insert(NetworkController);
   properties.insert(BaseDir);
   properties.insert(CaptureBluetooth);
   setSupportedProperties(properties);
