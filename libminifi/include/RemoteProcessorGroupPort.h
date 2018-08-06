@@ -44,20 +44,20 @@ namespace minifi {
  * and decrements based on its construction. Using RAII we should
  * never have the concern of thread safety.
  */
-class RPGLatch{
+class RPGLatch {
  public:
-  RPGLatch(bool increment = true){
-    static std::atomic<int> latch_count (0);
+  RPGLatch(bool increment = true) {
+    static std::atomic<int> latch_count(0);
     count = &latch_count;
     if (increment)
       count++;
   }
 
-  ~RPGLatch(){
+  ~RPGLatch() {
     count--;
   }
 
-  int getCount(){
+  int getCount() {
     return *count;
   }
 
@@ -80,8 +80,9 @@ class RemoteProcessorGroupPort : public core::Processor {
         timeout_(0),
         url_(url),
         http_enabled_(false),
+        bypass_rest_api_(false),
         ssl_service(nullptr),
-        logger_(logging::LoggerFactory<RemoteProcessorGroupPort>::getLogger()){
+        logger_(logging::LoggerFactory<RemoteProcessorGroupPort>::getLogger()) {
     client_type_ = sitetosite::CLIENT_TYPE::RAW;
     stream_factory_ = stream_factory;
     if (uuid != nullptr) {
@@ -168,6 +169,19 @@ class RemoteProcessorGroupPort : public core::Processor {
 
  protected:
 
+  /**
+   * Non static in case anything is loaded when this object is re-scheduled
+   */
+  bool is_http_disabled() {
+    auto ptr = core::ClassLoader::getDefaultClassLoader().instantiateRaw("HTTPClient", "HTTPClient");
+    if (ptr != nullptr) {
+      delete ptr;
+      return false;
+    } else {
+      return true;
+    }
+  }
+
   std::shared_ptr<io::StreamFactory> stream_factory_;
   std::unique_ptr<sitetosite::SiteToSiteClient> getNextProtocol(bool create);
   void returnProtocol(std::unique_ptr<sitetosite::SiteToSiteClient> protocol);
@@ -194,6 +208,8 @@ class RemoteProcessorGroupPort : public core::Processor {
   bool http_enabled_;
   // http proxy
   utils::HTTPProxy proxy_;
+
+  bool bypass_rest_api_;
 
   sitetosite::CLIENT_TYPE client_type_;
 
