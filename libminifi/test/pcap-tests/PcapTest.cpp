@@ -56,6 +56,7 @@ class PcapTestHarness : public IntegrationBase {
     LogTestController::getInstance().setDebug<minifi::SchedulingAgent>();
     LogTestController::getInstance().setDebug<minifi::core::ProcessGroup>();
     LogTestController::getInstance().setDebug<minifi::core::Processor>();
+    LogTestController::getInstance().setDebug<minifi::core::ConfigurableComponent>();
     LogTestController::getInstance().setDebug<minifi::ThreadedSchedulingAgent>();
   }
 
@@ -67,6 +68,7 @@ class PcapTestHarness : public IntegrationBase {
     assert(LogTestController::getInstance().contains("Starting capture") == true);
     assert(LogTestController::getInstance().contains("Stopping capture") == true);
     assert(LogTestController::getInstance().contains("Stopped device capture. clearing queues") == true);
+    assert(LogTestController::getInstance().contains("Accepting ") == true && LogTestController::getInstance().contains("because it matches .*") );
   }
 
   void queryRootProcessGroup(std::shared_ptr<core::ProcessGroup> pg) {
@@ -77,6 +79,7 @@ class PcapTestHarness : public IntegrationBase {
     assert(inv != nullptr);
 
     configuration->set(minifi::processors::CapturePacket::BaseDir.getName(), dir);
+    configuration->set(minifi::processors::CapturePacket::NetworkController.getName(), ".*");
     configuration->set("nifi.c2.enable", "false");
   }
 

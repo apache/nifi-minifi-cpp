@@ -56,7 +56,7 @@ class CapturePacketMechanism {
   }
 
   bool inline incrementAndCheck() {
-    return atomic_count_++ >= *max_size_;
+    return ++atomic_count_ >= *max_size_;
   }
 
   int64_t *getMaxSize() {
@@ -71,6 +71,10 @@ class CapturePacketMechanism {
 
   const std::string &getFile() {
     return file_;
+  }
+
+  long getSize() const{
+    return atomic_count_;
   }
  protected:
   CapturePacketMechanism &operator=(const CapturePacketMechanism &other) = delete;
@@ -98,7 +102,6 @@ class CapturePacket : public core::Processor {
         capture_bluetooth_(false),
         pcap_batch_size_(50),
         logger_(logging::LoggerFactory<CapturePacket>::getLogger()) {
-    num_ = 0;
     mover = std::unique_ptr<PacketMovers>(new PacketMovers());
   }
   // Destructor
@@ -106,6 +109,7 @@ class CapturePacket : public core::Processor {
   // Processor Name
   static const char *ProcessorName;
   static core::Property BatchSize;
+  static core::Property NetworkController;
   static core::Property BaseDir;
   static core::Property CaptureBluetooth;
   // Supported Relationships
@@ -151,6 +155,7 @@ class CapturePacket : public core::Processor {
   }
   bool capture_bluetooth_;
   std::string base_dir_;
+  std::vector<std::string> attached_controllers_;
   std::string base_path_;
   int64_t pcap_batch_size_;
   std::unique_ptr<PacketMovers> mover;

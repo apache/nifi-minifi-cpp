@@ -42,6 +42,16 @@ verify_gcc_enable(){
     else
       echo "false"
     fi
+   elif [ "$feature" = "PCAP_ENABLED" ]; then
+    if (( COMPILER_MAJOR >= 4 )); then
+      if (( COMPILER_MAJOR > 4 || COMPILER_MINOR >= 9 )); then
+        echo "true"
+      else
+        echo "false"
+      fi
+    else
+      echo "false"
+    fi
   else
     echo "true"
   fi

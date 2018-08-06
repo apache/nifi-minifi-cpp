@@ -90,7 +90,6 @@ class Property {
         description_(""),
         is_required_(false),
         is_collection_(false) {
-
   }
 
   virtual ~Property() = default;
