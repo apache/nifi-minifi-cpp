@@ -66,7 +66,7 @@ std::unique_ptr<sitetosite::SiteToSiteClient> RemoteProcessorGroupPort::getNextP
   if (!available_protocols_.try_dequeue(nextProtocol)) {
     if (create) {
       // create
-      if (url_.empty()) {
+      if (url_.empty() || bypass_rest_api_) {
         sitetosite::SiteToSiteClientConfiguration config(stream_factory_, std::make_shared<sitetosite::Peer>(protocol_uuid_, host_, port_, ssl_service != nullptr), this->getInterface(), client_type_);
         config.setHTTPProxy(this->proxy_);
         nextProtocol = sitetosite::createClient(config);
@@ -164,6 +164,20 @@ void RemoteProcessorGroupPort::onSchedule(const std::shared_ptr<core::ProcessCon
     if (peers_.size() > 0)
       peer_index_ = 0;
   }
+  /**
+   * If at this point we have no peers and HTTP support is disabled this means
+   * we must rely on the configured host/port
+   */
+  if (peers_.empty() && is_http_disabled()) {
+    context->getProperty(hostName.getName(), host_);
+
+    int64_t lvalue;
+    if (context->getProperty(port.getName(), value) && !value.empty() && core::Property::StringToInt(value, lvalue)) {
+      port_ = static_cast<int>(lvalue);
+      site2site_port_ = port_;
+    }
+    bypass_rest_api_ = true;
+  }
   // populate the site2site protocol for load balancing between them
   if (peers_.size() > 0) {
     auto count = peers_.size();
@@ -183,6 +197,8 @@ void RemoteProcessorGroupPort::onSchedule(const std::shared_ptr<core::ProcessCon
       logger_->log_trace("Created client, moving into available protocols");
       returnProtocol(std::move(nextProtocol));
     }
+  } else {
+    // we don't have any peers
   }
 }
 
@@ -209,7 +225,8 @@ void RemoteProcessorGroupPort::onTrigger(const std::shared_ptr<core::ProcessCont
   std::string value;
 
   logger_->log_trace("On trigger %s", getUUIDStr());
-  if (url_.empty()) {
+  /*
+  if (url_.empty() || !curl_enabled_) {
     if (context->getProperty(hostName.getName(), value) && !value.empty()) {
       host_ = value;
     }
@@ -222,7 +239,7 @@ void RemoteProcessorGroupPort::onTrigger(const std::shared_ptr<core::ProcessCont
 
   if (context->getProperty(portUUID.getName(), value) && !value.empty()) {
     uuid_parse(value.c_str(), protocol_uuid_);
-  }
+  }*/
 
   std::unique_ptr<sitetosite::SiteToSiteClient> protocol_ = nullptr;
   try {
@@ -257,7 +274,6 @@ void RemoteProcessorGroupPort::refreshRemoteSite2SiteInfo() {
 
   std::string fullUrl = this->protocol_ + this->host_ + ":" + std::to_string(this->port_) + "/nifi-api/site-to-site";
 
-  this->site2site_port_ = -1;
   configure_->get(Configure::nifi_rest_api_user_name, this->rest_user_name_);
   configure_->get(Configure::nifi_rest_api_password, this->rest_password_);
 
@@ -290,9 +306,10 @@ void RemoteProcessorGroupPort::refreshRemoteSite2SiteInfo() {
 
   auto client_ptr = core::ClassLoader::getDefaultClassLoader().instantiateRaw("HTTPClient", "HTTPClient");
   if (nullptr == client_ptr) {
-    logger_->log_error("Could not locate HTTPClient. You do not have cURL support!");
+    logger_->log_error("Could not locate HTTPClient. You do not have cURL support, defaulting to base configuration!");
     return;
   }
+  this->site2site_port_ = -1;
   client = std::unique_ptr<utils::BaseHTTPClient>(dynamic_cast<utils::BaseHTTPClient*>(client_ptr));
   client->initialize("GET", fullUrl.c_str(), ssl_service);
   if (ssl_service) {
@@ -315,7 +332,7 @@ void RemoteProcessorGroupPort::refreshRemoteSite2SiteInfo() {
     const std::vector<char> &response_body = client->getResponseBody();
     if (!response_body.empty()) {
       std::string controller = std::string(response_body.begin(), response_body.end());
-      logger_->log_debug("controller config %s", controller);
+      logger_->log_trace("controller config %s", controller);
       rapidjson::Document doc;
       rapidjson::ParseResult ok = doc.Parse(controller.c_str());
 
@@ -348,8 +365,10 @@ void RemoteProcessorGroupPort::refreshRemoteSite2SiteInfo() {
 
 void RemoteProcessorGroupPort::refreshPeerList() {
   refreshRemoteSite2SiteInfo();
-  if (site2site_port_ == -1)
+  if (site2site_port_ == -1) {
+    logger_->log_debug("No port configured");
     return;
+  }
 
   this->peers_.clear();
 
