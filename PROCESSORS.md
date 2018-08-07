@@ -19,6 +19,7 @@
 
 - [AppendHostInfo](#appendhostinfo)
 - [ApplyTemplate](#applytemplate)
+- [CapturePacket](#capturepacket)
 - [CompressContent](#compresscontent)
 - [ConsumeMQTT](#consumemqtt)
 - [ConvertHeartBeat](#convertheartbeat)
@@ -98,6 +99,36 @@ default values, and whether a property supports the NiFi Expression Language.
 | Name | Description |
 | - | - |
 | success | All FlowFiles are routed to this relationship. |
+
+
+## CapturePacket
+
+### Description
+
+CapturePacket captures and writes one or more packets into a PCAP file that will be used as the content
+of a flow file. Configuration options exist to adjust the batching of PCAP files. PCAP batching will 
+place a single PCAP into a flow file. A regular expression selects network interfaces. Bluetooth 
+network interfaces can be selected through a separate option. 
+
+### Properties
+
+In the list below, the names of required properties appear in bold. Any other
+properties (not in bold) are considered optional. The table also indicates any
+default values, and whether a property supports the NiFi Expression Language.
+
+| Name | Default Value | Allowable Values | Description |
+| - | - | - | - |
+| Base Directory | /tmp/ | | A base directory where pcap files are stored temporarily |
+| Batch Size | 50 |  | Number of captured packets written into a PCAP file |
+| Capture Bluetooth | false |  | Captures bluetooth interfaces if true  |
+| Network Controller | .* |  | Regular expression of the network controller(s) to which packet capture will be attached|
+
+### Relationships
+
+| Name | Description |
+| - | - |
+| success | All FlowFiles are routed to this relationship. |
+
 
 ## ConvertHeartBeat
 
