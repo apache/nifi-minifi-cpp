@@ -221,9 +221,8 @@ CapturePacket::~CapturePacket() {
 void CapturePacket::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
   CapturePacketMechanism *capture;
   if (mover->sink.try_dequeue(capture)) {
-    logger_->log_debug("Received packet capture in file %s %d", capture->getFile(), capture->getSize());
     auto ff = session->create();
-    session->import(capture->getFile(), ff, true, 0);
+    session->import(capture->getFile(), ff, false, 0);
     logger_->log_debug("Received packet capture in file %s %d for %s", capture->getFile(), capture->getSize(), ff->getResourceClaim()->getContentFullPath());
     session->transfer(ff, Success);
     delete capture;
