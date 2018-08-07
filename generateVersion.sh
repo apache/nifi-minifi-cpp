@@ -64,11 +64,12 @@ EOF
 for EXTENSION in "${extensions_array[@]}"
 do
 cat <<EOF >> "$out_dir/agent_version.h"
-    extensions.push_back("${EXTENSION}");
+      extensions.push_back("${EXTENSION}");
 EOF
 done
 
 cat <<EOF >> "$out_dir/agent_version.h"
+      extensions.push_back("minifi-system");
     }
   	return extensions;
   }

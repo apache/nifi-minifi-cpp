@@ -51,6 +51,28 @@
 #include "HTTPIntegrationBase.h"
 #include "processors/LogAttribute.h"
 
+
+class Responder : public CivetHandler {
+ public:
+  explicit Responder(bool isSecure)
+      : isSecure(isSecure) {
+  }
+  bool handlePost(CivetServer *server, struct mg_connection *conn) {
+    std::string resp =
+        "{\"operation\" : \"heartbeat\", \"requested_operations\" : [{ \"operationid\" : 41, \"operation\" : \"stop\", \"name\" : \"invoke\"  }, "
+        "{ \"operationid\" : 42, \"operation\" : \"stop\", \"name\" : \"FlowController\"  } ]}";
+    mg_printf(conn, "HTTP/1.1 200 OK\r\nContent-Type: "
+              "text/plain\r\nContent-Length: %lu\r\nConnection: close\r\n\r\n",
+              resp.length());
+    mg_printf(conn, "%s", resp.c_str());
+    return true;
+  }
+
+ protected:
+  bool isSecure;
+};
+
+
 class VerifyC2Server : public HTTPIntegrationBase {
  public:
   explicit VerifyC2Server(bool isSecure)
@@ -81,6 +103,7 @@ class VerifyC2Server : public HTTPIntegrationBase {
     assert(LogTestController::getInstance().contains("Import offset 0") == true);
 
     assert(LogTestController::getInstance().contains("Outputting success and response") == true);
+
   }
 
   void queryRootProcessGroup(std::shared_ptr<core::ProcessGroup> pg) {

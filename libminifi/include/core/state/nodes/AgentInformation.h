@@ -95,21 +95,10 @@ class ComponentManifest : public DeviceInformation {
 
         SerializedResponseNode desc;
         desc.name = group.class_name_;
-
-        SerializedResponseNode bgroup;
-        bgroup.name = "group";
-        bgroup.value = GROUP_STR;
-        SerializedResponseNode artifact;
-        artifact.name = "artifact";
-        artifact.value = group.class_name_;
-
         SerializedResponseNode className;
         className.name = "type";
         className.value = group.class_name_;
 
-        SerializedResponseNode version;
-        version.name = "version";
-        version.value = AgentBuild::VERSION;
 
         if (!group.class_properties_.empty()) {
           SerializedResponseNode props;
@@ -172,42 +161,7 @@ class ComponentManifest : public DeviceInformation {
         dyn_prop.value = group.support_dynamic_;
 
         desc.children.push_back(dyn_prop);
-
-        desc.children.push_back(bgroup);
-        desc.children.push_back(artifact);
         desc.children.push_back(className);
-        desc.children.push_back(version);
-
-        SerializedResponseNode buildInfo;
-        buildInfo.name = "buildInfo";
-
-        SerializedResponseNode build_version;
-        build_version.name = "version";
-        build_version.value = AgentBuild::VERSION;
-
-        SerializedResponseNode build_rev;
-        build_rev.name = "revision";
-        build_rev.value = AgentBuild::BUILD_REV;
-
-        SerializedResponseNode build_date;
-        build_date.name = "timestamp";
-        build_date.value = (uint64_t) std::stoull(AgentBuild::BUILD_DATE);
-
-        SerializedResponseNode compiler_command;
-        compiler_command.name = "compiler";
-        compiler_command.value = AgentBuild::COMPILER;
-
-        SerializedResponseNode compiler_flags;
-        compiler_flags.name = "flags";
-        compiler_flags.value = AgentBuild::COMPILER_FLAGS;
-
-        buildInfo.children.push_back(compiler_flags);
-        buildInfo.children.push_back(compiler_command);
-
-        buildInfo.children.push_back(build_version);
-        buildInfo.children.push_back(build_rev);
-        buildInfo.children.push_back(build_date);
-        desc.children.push_back(buildInfo);
         type.children.push_back(desc);
       }
       response.children.push_back(type);
@@ -472,12 +426,6 @@ class AgentManifest : public DeviceInformation {
     // serialize the bundle information.
     for (auto bundle : bundles.serialize()) {
       serialized.push_back(bundle);
-    }
-
-    ComponentManifest compMan("default", nullptr);
-    // serialize the component information.
-    for (auto component : compMan.serialize()) {
-      serialized.push_back(component);
     }
 
     return serialized;
