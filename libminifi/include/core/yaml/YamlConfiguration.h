@@ -28,6 +28,7 @@
 #include "io/StreamFactory.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/Id.h"
+#include "utils/StringUtils.h"
 
 namespace org {
 namespace apache {

@@ -89,6 +89,15 @@ class ControllerServiceMap {
     return true;
   }
 
+  void clear(){
+    std::lock_guard<std::mutex> lock(mutex_);
+    for(const auto &node : controller_services_list_){
+      node->disable();
+    }
+    controller_services_.clear();
+    controller_services_list_.clear();
+  }
+
   /**
    * Gets all controller services.
    * @return controller service node shared pointers.

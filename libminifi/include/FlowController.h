@@ -113,7 +113,7 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
   }
 
   // Load flow xml from disk, after that, create the root process group and its children, initialize the flows
-  virtual void load();
+  virtual void load(const std::shared_ptr<core::ProcessGroup> &root = nullptr, bool reload = false);
 
   // Whether the Flow Controller is start running
   virtual bool isRunning() {
@@ -175,21 +175,27 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
   bool applyConfiguration(const std::string &source, const std::string &configurePayload);
 
   // get name
-  std::string getName() const{
+  std::string getName() const {
     if (root_ != nullptr)
       return root_->getName();
     else
       return "";
   }
 
-  virtual std::string getComponentName() {
+  virtual std::string getComponentName() const {
     return "FlowController";
+  }
+
+  virtual std::string getComponentUUID() const {
+    utils::Identifier ident;
+    root_->getUUID(ident);
+    return ident.to_string();
   }
 
   // get version
   virtual std::string getVersion() {
     if (root_ != nullptr)
-      return std::to_string( root_->getVersion() );
+      return std::to_string(root_->getVersion());
     else
       return "0";
   }
@@ -200,8 +206,7 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
    * @param id service identifier
    * @param firstTimeAdded first time this CS was added
    */
-  virtual std::shared_ptr<core::controller::ControllerServiceNode> createControllerService(const std::string &type, const std::string &id,
-  bool firstTimeAdded);
+  virtual std::shared_ptr<core::controller::ControllerServiceNode> createControllerService(const std::string &type, const std::string &id, bool firstTimeAdded);
 
   /**
    * controller service provider
@@ -361,6 +366,7 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
   std::string configuration_filename_;
 
   std::atomic<bool> c2_initialized_;
+  std::atomic<bool> flow_update_;
   std::atomic<bool> c2_enabled_;
   // Whether it has already been initialized (load the flow XML already)
   std::atomic<bool> initialized_;
@@ -398,18 +404,18 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
 
   std::mutex metrics_mutex_;
   // root_nodes cache
-    std::map<std::string, std::shared_ptr<state::response::ResponseNode>> root_response_nodes_;
+  std::map<std::string, std::shared_ptr<state::response::ResponseNode>> root_response_nodes_;
   // metrics cache
   std::map<std::string, std::shared_ptr<state::response::ResponseNode>> device_information_;
 
   // metrics cache
   std::map<std::string, std::shared_ptr<state::response::ResponseNode>> component_metrics_;
 
-  std::map<uint8_t, std::vector<std::shared_ptr<state::response::ResponseNode>>>component_metrics_by_id_;
+  std::map<uint8_t, std::vector<std::shared_ptr<state::response::ResponseNode>>> component_metrics_by_id_;
   // metrics last run
   std::chrono::steady_clock::time_point last_metrics_capture_;
 
-private:
+ private:
   std::shared_ptr<logging::Logger> logger_;
   std::string serial_number_;
   static std::shared_ptr<utils::IdGenerator> id_generator_;

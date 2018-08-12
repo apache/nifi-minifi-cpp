@@ -39,7 +39,7 @@ class GenerateFlowFile : public core::Processor {
    * Create a new processor
    */
   GenerateFlowFile(std::string name, utils::Identifier uuid = utils::Identifier())
-      : Processor(name, uuid) {
+      : Processor(name, uuid), logger_(logging::LoggerFactory<GenerateFlowFile>::getLogger()) {
     _data = NULL;
     _dataSize = 0;
   }
@@ -89,6 +89,8 @@ class GenerateFlowFile : public core::Processor {
   char * _data;
   // Size of the generated data
   uint64_t _dataSize;
+  // logger instance
+  std::shared_ptr<logging::Logger> logger_;
 };
 
 REGISTER_RESOURCE(GenerateFlowFile, "This processor creates FlowFiles with random data or custom content. GenerateFlowFile is useful for load testing, configuration, and simulation.");

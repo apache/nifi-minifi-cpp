@@ -21,7 +21,7 @@
 #include <set>
 
 #include "core/yaml/YamlConfiguration.h"
-
+#include "core/state/Value.h"
 #ifdef YAML_CONFIGURATION_USE_REGEX
 #include <regex>
 #endif  // YAML_CONFIGURATION_USE_REGEX
@@ -119,6 +119,7 @@ void YamlConfiguration::parseProcessorNodeYaml(YAML::Node processorsNode, core::
           logger_->log_error("Could not create a processor %s with id %s", procCfg.name, procCfg.id);
           throw std::invalid_argument("Could not create processor " + procCfg.name);
         }
+
         processor->setName(procCfg.name);
 
         processor->setFlowIdentifier(flow_version_->getFlowIdentifier());
@@ -451,12 +452,26 @@ void YamlConfiguration::parseControllerServices(YAML::Node *controllerServicesNo
           CONFIG_YAML_CONTROLLER_SERVICES_KEY);
           checkRequiredField(&controllerServiceNode, "id",
           CONFIG_YAML_CONTROLLER_SERVICES_KEY);
-          checkRequiredField(&controllerServiceNode, "class",
-          CONFIG_YAML_CONTROLLER_SERVICES_KEY);
+          std::string type = "";
+
+          try {
+            checkRequiredField(&controllerServiceNode, "class", CONFIG_YAML_CONTROLLER_SERVICES_KEY);
+            type = controllerServiceNode["class"].as<std::string>();
+          } catch (const std::invalid_argument &e) {
+            checkRequiredField(&controllerServiceNode, "type", CONFIG_YAML_CONTROLLER_SERVICES_KEY);
+            type = controllerServiceNode["type"].as<std::string>();
+            logger_->log_debug("Using type %s for controller service node", type);
+          }
+
+          auto lastOfIdx = type.find_last_of(".");
+          if (lastOfIdx != std::string::npos) {
+            lastOfIdx++;  // if a value is found, increment to move beyond the .
+            int nameLength = type.length() - lastOfIdx;
+            type = type.substr(lastOfIdx, nameLength);
+          }
 
           auto name = controllerServiceNode["name"].as<std::string>();
           auto id = controllerServiceNode["id"].as<std::string>();
-          auto type = controllerServiceNode["class"].as<std::string>();
 
           utils::Identifier uuid;
           uuid = id;
@@ -472,6 +487,8 @@ void YamlConfiguration::parseControllerServices(YAML::Node *controllerServicesNo
               parsePropertiesNodeYaml(&propertiesNode, std::static_pointer_cast<core::ConfigurableComponent>(controller_service_node->getControllerServiceImplementation()), name,
               CONFIG_YAML_CONTROLLER_SERVICES_KEY);
             }
+          } else {
+            logger_->log_debug("Could not locate %s", type);
           }
           controller_services_->put(id, controller_service_node);
           controller_services_->put(name, controller_service_node);
@@ -704,9 +721,11 @@ void YamlConfiguration::parsePortYaml(YAML::Node *portNode, core::ProcessGroup *
 void YamlConfiguration::parsePropertiesNodeYaml(YAML::Node *propertiesNode, std::shared_ptr<core::ConfigurableComponent> processor, const std::string &component_name,
                                                 const std::string &yaml_section) {
   // Treat generically as a YAML node so we can perform inspection on entries to ensure they are populated
+  logger_->log_trace("Entered %s", component_name);
   for (YAML::const_iterator propsIter = propertiesNode->begin(); propsIter != propertiesNode->end(); ++propsIter) {
     std::string propertyName = propsIter->first.as<std::string>();
     YAML::Node propertyValueNode = propsIter->second;
+    logger_->log_trace("Encountered %s", propertyName);
     if (!propertyValueNode.IsNull() && propertyValueNode.IsDefined()) {
       if (propertyValueNode.IsSequence()) {
         for (auto iter : propertyValueNode) {
@@ -732,8 +751,56 @@ void YamlConfiguration::parsePropertiesNodeYaml(YAML::Node *propertiesNode, std:
           }
         }
       } else {
+        core::Property myProp;
+        processor->getProperty(propertyName, myProp);
+        PropertyValue defaultValue;
+        defaultValue = myProp.getDefaultValue();
+        auto defaultType = defaultValue.getTypeInfo();
+        PropertyValue coercedValue = defaultValue;
+
+        // coerce the types. upon failure we will either exit or use the default value.
+        // we do this here ( in addition to the PropertyValue class ) to get the earliest
+        // possible YAML failure.
+        try {
+          if (defaultType == typeid(std::string)) {
+            auto typedValue = propertyValueNode.as<std::string>();
+            coercedValue = typedValue;
+          } else if (defaultType == typeid(int64_t)) {
+            auto typedValue = propertyValueNode.as<int64_t>();
+            coercedValue = typedValue;
+          } else if (defaultType == typeid(uint64_t)) {
+            try {
+              auto typedValue = propertyValueNode.as<uint64_t>();
+              coercedValue = typedValue;
+            } catch (...) {
+              auto typedValue = propertyValueNode.as<std::string>();
+              coercedValue = typedValue;
+            }
+          } else if (defaultType == typeid(int)) {
+            auto typedValue = propertyValueNode.as<int>();
+            coercedValue = typedValue;
+          } else if (defaultType == typeid(bool)) {
+            auto typedValue = propertyValueNode.as<bool>();
+            coercedValue = typedValue;
+          } else {
+            auto typedValue = propertyValueNode.as<std::string>();
+            coercedValue = typedValue;
+          }
+        } catch (...) {
+          std::string eof;
+          bool exit_on_failure = false;
+          if (configuration_->get(Configure::nifi_flow_configuration_file_exit_failure, eof)) {
+            utils::StringUtils::StringToBool(eof, exit_on_failure);
+          }
+          logger_->log_error("Invalid conversion for field %s. Value %s", myProp.getName(), propertyValueNode.as<std::string>());
+          if (exit_on_failure) {
+            std::cerr << "Invalid conversion for " << myProp.getName() << " to " << defaultType.name() << std::endl;
+          } else {
+            coercedValue = defaultValue;
+          }
+        }
         std::string rawValueString = propertyValueNode.as<std::string>();
-        if (!processor->setProperty(propertyName, rawValueString)) {
+        if (!processor->setProperty(myProp, coercedValue)) {
           std::shared_ptr<core::Connectable> proc = std::dynamic_pointer_cast<core::Connectable>(processor);
           if (proc != 0) {
             logger_->log_warn("Received property %s with value %s but is not one of the properties for %s. "
@@ -759,9 +826,13 @@ void YamlConfiguration::validateComponentProperties(const std::shared_ptr<Config
   // Validate required properties
   for (const auto &prop_pair : component_properties) {
     if (prop_pair.second.getRequired()) {
-      if (prop_pair.second.getValue().empty()) {
+      if (prop_pair.second.getValue().to_string().empty()) {
         std::stringstream reason;
         reason << "required property '" << prop_pair.second.getName() << "' is not set";
+        raiseComponentError(component_name, yaml_section, reason.str());
+      } else if (!prop_pair.second.getValue().validate(prop_pair.first).valid()) {
+        std::stringstream reason;
+        reason << "Property '" << prop_pair.second.getName() << "' is not valid";
         raiseComponentError(component_name, yaml_section, reason.str());
       }
     }
@@ -771,12 +842,12 @@ void YamlConfiguration::validateComponentProperties(const std::shared_ptr<Config
   for (const auto &prop_pair : component_properties) {
     const auto &dep_props = prop_pair.second.getDependentProperties();
 
-    if (prop_pair.second.getValue().empty()) {
+    if (prop_pair.second.getValue().to_string().empty()) {
       continue;
     }
 
     for (const auto &dep_prop_key : dep_props) {
-      if (component_properties.at(dep_prop_key).getValue().empty()) {
+      if (component_properties.at(dep_prop_key).getValue().to_string().empty()) {
         std::string reason("property '");
         reason.append(prop_pair.second.getName());
         reason.append("' depends on property '");
@@ -798,7 +869,7 @@ void YamlConfiguration::validateComponentProperties(const std::shared_ptr<Config
 
     for (const auto &excl_pair : excl_props) {
       std::regex excl_expr(excl_pair.second);
-      if (std::regex_match(component_properties.at(excl_pair.first).getValue(), excl_expr)) {
+      if (std::regex_match(component_properties.at(excl_pair.first).getValue().to_string(), excl_expr)) {
         std::string reason("property '");
         reason.append(prop_pair.second.getName());
         reason.append("' is exclusive of property '");
@@ -817,7 +888,7 @@ void YamlConfiguration::validateComponentProperties(const std::shared_ptr<Config
 
     if (!prop_regex_str.empty()) {
       std::regex prop_regex(prop_regex_str);
-      if (!std::regex_match(prop_pair.second.getValue(), prop_regex)) {
+      if (!std::regex_match(prop_pair.second.getValue().to_string(), prop_regex)) {
         std::stringstream reason;
         reason << "property '" << prop_pair.second.getName() << "' does not match validation pattern '" << prop_regex_str << "'";
         raiseComponentError(component_name, yaml_section, reason.str());

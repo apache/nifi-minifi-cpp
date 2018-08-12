@@ -81,7 +81,8 @@ C2Payload::C2Payload(Operation op, std::string identifier, bool resp, bool isRaw
       raw_(isRaw),
       ident_(identifier),
       isResponse(resp),
-      is_container_(false) {
+      is_container_(false),
+      is_collapsible_(true) {
 }
 
 C2Payload::C2Payload(Operation op, bool resp, bool isRaw)
@@ -89,7 +90,8 @@ C2Payload::C2Payload(Operation op, bool resp, bool isRaw)
       op_(op),
       raw_(isRaw),
       isResponse(resp),
-      is_container_(false) {
+      is_container_(false),
+      is_collapsible_(true) {
 }
 
 C2Payload::C2Payload(Operation op, state::UpdateState state, bool resp, bool isRaw)
@@ -97,33 +99,8 @@ C2Payload::C2Payload(Operation op, state::UpdateState state, bool resp, bool isR
       op_(op),
       raw_(isRaw),
       isResponse(resp),
-      is_container_(false) {
-}
-
-C2Payload::C2Payload(const C2Payload &other)
-    : state::Update(other),
-      isResponse(other.isResponse),
-      op_(other.op_),
-      raw_(other.raw_),
-      label_(other.label_),
-      ident_(other.ident_),
-      raw_data_(other.raw_data_),
-      payloads_(other.payloads_),
-      content_(other.content_),
-      is_container_(other.is_container_) {
-}
-
-C2Payload::C2Payload(const C2Payload &&other)
-    : state::Update(std::move(other)),
-      isResponse(other.isResponse),
-      op_(std::move(other.op_)),
-      raw_(other.raw_),
-      label_(std::move(other.label_)),
-      ident_(std::move(other.ident_)),
-      raw_data_(std::move(other.raw_data_)),
-      payloads_(std::move(other.payloads_)),
-      content_(std::move(other.content_)),
-      is_container_(std::move(other.is_container_)) {
+      is_container_(false),
+      is_collapsible_(true) {
 }
 
 void C2Payload::setIdentifier(const std::string &ident) {
@@ -146,21 +123,13 @@ const std::vector<C2ContentResponse> &C2Payload::getContent() const {
   return content_;
 }
 
-void C2Payload::addContent(const C2ContentResponse &&content) {
-  for (auto &existing_content : content_) {
-    if (existing_content.name == content.name) {
-      for (auto subcontent : existing_content.operation_arguments) {
+void C2Payload::addContent(const C2ContentResponse &&content, bool collapsible) {
+  if (collapsible) {
+    for (auto &existing_content : content_) {
+      if (existing_content.name == content.name) {
+        existing_content.operation_arguments.insert(content.operation_arguments.begin(), content.operation_arguments.end());
+        return;
       }
-
-      for (auto subcontent : content.operation_arguments) {
-      }
-
-      existing_content.operation_arguments.insert(content.operation_arguments.begin(), content.operation_arguments.end());
-
-      for (auto subcontent : existing_content.operation_arguments) {
-      }
-
-      return;
     }
   }
   content_.push_back(std::move(content));
@@ -179,11 +148,10 @@ void C2Payload::setRawData(const std::vector<char> &data) {
 }
 
 void C2Payload::setRawData(const std::vector<uint8_t> &data) {
-  std::transform(std::begin(data), std::end(data), std::back_inserter(raw_data_), [](uint8_t c){
+  std::transform(std::begin(data), std::end(data), std::back_inserter(raw_data_), [](uint8_t c) {
     return static_cast<char>(c);
   });
 }
-
 
 std::vector<char> C2Payload::getRawData() const {
   return raw_data_;
@@ -194,36 +162,6 @@ void C2Payload::addPayload(const C2Payload &&payload) {
 }
 const std::vector<C2Payload> &C2Payload::getNestedPayloads() const {
   return payloads_;
-}
-
-C2Payload &C2Payload::operator=(const C2Payload &&other) {
-  state::Update::operator=(std::move(other));
-  isResponse = other.isResponse;
-  op_ = std::move(other.op_);
-  raw_ = other.raw_;
-  if (raw_) {
-    raw_data_ = std::move(other.raw_data_);
-  }
-  label_ = std::move(other.label_);
-  payloads_ = std::move(other.payloads_);
-  content_ = std::move(other.content_);
-  is_container_ = std::move(other.is_container_);
-  return *this;
-}
-
-C2Payload &C2Payload::operator=(const C2Payload &other) {
-  state::Update::operator=(other);
-  isResponse = other.isResponse;
-  op_ = other.op_;
-  raw_ = other.raw_;
-  if (raw_) {
-    raw_data_ = other.raw_data_;
-  }
-  label_ = other.label_;
-  payloads_ = other.payloads_;
-  content_ = other.content_;
-  is_container_ = other.is_container_;
-  return *this;
 }
 
 } /* namespace c2 */

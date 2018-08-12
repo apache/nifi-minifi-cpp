@@ -53,6 +53,7 @@
 #include "core/logging/LoggerConfiguration.h"
 #include "core/Connectable.h"
 #include "utils/HTTPClient.h"
+#include "io/NetworkPrioritizer.h"
 
 #ifdef _MSC_VER
 #ifndef PATH_MAX
@@ -100,6 +101,7 @@ FlowController::FlowController(std::shared_ptr<core::Repository> provenance_repo
   id_generator_->generate(uuid_);
   setUUID(uuid_);
 
+  flow_update_ = false;
   // Setup the default values
   if (flow_configuration_ != nullptr) {
     configuration_filename_ = flow_configuration_->getConfigurationPath();
@@ -185,12 +187,25 @@ bool FlowController::applyConfiguration(const std::string &source, const std::st
   std::lock_guard<std::recursive_mutex> flow_lock(mutex_);
   stop(true);
   waitUnload(30000);
+  controller_map_->clear();
   this->root_ = std::move(newRoot);
-  loadFlowRepo();
-  initialized_ = true;
+  initialized_ = false;
+  load(this->root_, true);
+  flow_update_ = true;
   bool started = start() == 0;
 
   updating_ = false;
+
+  if (started) {
+    auto flowVersion = flow_configuration_->getFlowVersion();
+    if (flowVersion) {
+      logger_->log_debug("Setting flow id to %s", flowVersion->getFlowId());
+      configuration_->set(Configure::nifi_c2_flow_id, flowVersion->getFlowId());
+      configuration_->set(Configure::nifi_c2_flow_url, flowVersion->getFlowIdentifier()->getRegistryUrl());
+    } else {
+      logger_->log_debug("Invalid flow version, not setting");
+    }
+  }
 
   return started;
 }
@@ -249,15 +264,23 @@ void FlowController::unload() {
   return;
 }
 
-void FlowController::load() {
+void FlowController::load(const std::shared_ptr<core::ProcessGroup> &root, bool reload) {
   std::lock_guard<std::recursive_mutex> flow_lock(mutex_);
   if (running_) {
     stop(true);
   }
   if (!initialized_) {
-    logger_->log_info("Load Flow Controller from file %s", configuration_filename_.c_str());
+    if (root) {
+      logger_->log_info("Load Flow Controller from provided root");
+    } else {
+      logger_->log_info("Load Flow Controller from file %s", configuration_filename_.c_str());
+    }
 
-    this->root_ = std::shared_ptr<core::ProcessGroup>(flow_configuration_->getRoot(configuration_filename_));
+    if (reload) {
+      io::NetworkPrioritizerFactory::getInstance()->clearPrioritizer();
+    }
+
+    this->root_ = root == nullptr ? std::shared_ptr<core::ProcessGroup>(flow_configuration_->getRoot(configuration_filename_)) : root;
 
     logger_->log_info("Loaded root processor Group");
 
@@ -265,12 +288,12 @@ void FlowController::load() {
 
     controller_service_provider_ = flow_configuration_->getControllerServiceProvider();
 
-    if (nullptr == timer_scheduler_) {
+    if (nullptr == timer_scheduler_ || reload) {
       timer_scheduler_ = std::make_shared<TimerDrivenSchedulingAgent>(
           std::static_pointer_cast<core::controller::ControllerServiceProvider>(std::dynamic_pointer_cast<FlowController>(shared_from_this())), provenance_repo_, flow_file_repo_, content_repo_,
           configuration_);
     }
-    if (nullptr == event_scheduler_) {
+    if (nullptr == event_scheduler_ || reload) {
       event_scheduler_ = std::make_shared<EventDrivenSchedulingAgent>(
           std::static_pointer_cast<core::controller::ControllerServiceProvider>(std::dynamic_pointer_cast<FlowController>(shared_from_this())), provenance_repo_, flow_file_repo_, content_repo_,
           configuration_);
@@ -352,8 +375,6 @@ void FlowController::initializeC2() {
   if (!c2_enabled_) {
     return;
   }
-  if (c2_initialized_)
-    return;
 
   std::string c2_enable_str;
   std::string class_str;
@@ -393,16 +414,22 @@ void FlowController::initializeC2() {
     // set to the flow controller's identifier
     identifier_str = uuidStr_;
   }
-  configuration_->setAgentIdentifier(identifier_str);
-  state::StateManager::initialize();
 
-  std::shared_ptr<c2::C2Agent> agent = std::make_shared<c2::C2Agent>(std::dynamic_pointer_cast<FlowController>(shared_from_this()), std::dynamic_pointer_cast<FlowController>(shared_from_this()),
-                                                                     configuration_);
-  registerUpdateListener(agent, agent->getHeartBeatDelay());
+  if (!c2_initialized_) {
+    configuration_->setAgentIdentifier(identifier_str);
+    state::StateManager::initialize();
+    std::shared_ptr<c2::C2Agent> agent = std::make_shared<c2::C2Agent>(std::dynamic_pointer_cast<FlowController>(shared_from_this()), std::dynamic_pointer_cast<FlowController>(shared_from_this()),
+                                                                       configuration_);
+    registerUpdateListener(agent, agent->getHeartBeatDelay());
 
-  state::StateManager::startMetrics(agent->getHeartBeatDelay());
+    state::StateManager::startMetrics(agent->getHeartBeatDelay());
 
-  c2_initialized_ = true;
+    c2_initialized_ = true;
+  } else {
+    if (!flow_update_) {
+      return;
+    }
+  }
   device_information_.clear();
   component_metrics_.clear();
   component_metrics_by_id_.clear();

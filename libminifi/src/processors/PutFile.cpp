@@ -46,12 +46,18 @@ std::shared_ptr<utils::IdGenerator> PutFile::id_generator_ = utils::IdGenerator:
 
 core::Property PutFile::Directory(
     core::PropertyBuilder::createProperty("Directory")->withDescription("The output directory to which to put files")->supportsExpressionLanguage(true)->withDefaultValue(".")->build());
-core::Property PutFile::ConflictResolution("Conflict Resolution Strategy", "Indicates what should happen when a file with the same name already exists in the output directory",
-                                           CONFLICT_RESOLUTION_STRATEGY_FAIL);
+
+core::Property PutFile::ConflictResolution(
+    core::PropertyBuilder::createProperty("Conflict Resolution Strategy")->withDescription("Indicates what should happen when a file with the same name already exists in the output directory")
+        ->withAllowableValue<std::string>(CONFLICT_RESOLUTION_STRATEGY_FAIL)->withAllowableValue(CONFLICT_RESOLUTION_STRATEGY_IGNORE)->withAllowableValue(CONFLICT_RESOLUTION_STRATEGY_REPLACE)
+        ->withDefaultValue(CONFLICT_RESOLUTION_STRATEGY_FAIL)->build());
+
 core::Property PutFile::CreateDirs("Create Missing Directories", "If true, then missing destination directories will be created. "
                                    "If false, flowfiles are penalized and sent to failure.",
                                    "true", true, "", { "Directory" }, { });
-core::Property PutFile::MaxDestFiles("Maximum File Count", "Specifies the maximum number of files that can exist in the output directory", "-1");
+
+core::Property PutFile::MaxDestFiles(
+    core::PropertyBuilder::createProperty("Maximum File Count")->withDescription("Specifies the maximum number of files that can exist in the output directory")->withDefaultValue<int>(-1)->build());
 
 core::Relationship PutFile::Success("success", "All files are routed to success");
 core::Relationship PutFile::Failure("failure", "Failed files (conflict, write failure, etc.) are transferred to failure");

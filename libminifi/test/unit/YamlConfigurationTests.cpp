@@ -471,7 +471,7 @@ TEST_CASE("Test Dynamic Unsupported", "[YamlConfigurationDynamicUnsupported]") {
 
   LogTestController &logTestController = LogTestController::getInstance();
   logTestController.setDebug<TestPlan>();
-  logTestController.setDebug<core::YamlConfiguration>();
+  logTestController.setTrace<core::YamlConfiguration>();
 
   std::shared_ptr<core::Repository> testProvRepo = core::createRepository("provenancerepository", true);
   std::shared_ptr<core::Repository> testFlowFileRepo = core::createRepository("flowfilerepository", true);
@@ -487,7 +487,7 @@ Processors:
 - name: PutFile
   class: PutFile
   Properties:
-    Dynamic Property: Bad
+     Dynamic Property: Bad
       )";
   std::istringstream configYamlStream(TEST_CONFIG_YAML);
   std::unique_ptr<core::ProcessGroup> rootFlowConfig = yamlConfig.getYamlRoot(configYamlStream);

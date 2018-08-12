@@ -18,6 +18,7 @@
 
 #include "c2/protocols/RESTProtocol.h"
 
+#include "core/TypedValues.h"
 #include <algorithm>
 #include <memory>
 #include <utility>
@@ -138,16 +139,33 @@ void setJsonStr(const std::string& key, const state::response::ValueNode& value,
   auto base_type = value.getValue();
   keyVal.SetString(c_key, key.length(), alloc);
 
-  if (auto sub_type = std::dynamic_pointer_cast<state::response::IntValue>(base_type)) {
-    valueVal.SetInt(sub_type->getValue());
-  } else if (auto sub_type = std::dynamic_pointer_cast<state::response::Int64Value>(base_type)) {
-    valueVal.SetInt64(sub_type->getValue());
-  } else if (auto sub_type = std::dynamic_pointer_cast<state::response::BoolValue>(base_type)) {
-    valueVal.SetBool(sub_type->getValue());
-  } else {
+  auto type_index = base_type->getTypeIndex();
+  if (auto sub_type = std::dynamic_pointer_cast<core::TransformableValue>(base_type)) {
     auto str = base_type->getStringValue();
     const char* c_val = str.c_str();
     valueVal.SetString(c_val, str.length(), alloc);
+  } else {
+    if (type_index == state::response::Value::BOOL_TYPE) {
+      bool value = false;
+      base_type->convertValue(value);
+      valueVal.SetBool(value);
+    } else if (type_index == state::response::Value::INT_TYPE) {
+      int value = 0;
+      base_type->convertValue(value);
+      valueVal.SetInt(value);
+    } else if (type_index == state::response::Value::INT64_TYPE) {
+      int64_t value = 0;
+      base_type->convertValue(value);
+      valueVal.SetInt64(value);
+    } else if (type_index == state::response::Value::UINT64_TYPE) {
+      int64_t value = 0;
+      base_type->convertValue(value);
+      valueVal.SetInt64(value);
+    } else {
+      auto str = base_type->getStringValue();
+      const char* c_val = str.c_str();
+      valueVal.SetString(c_val, str.length(), alloc);
+    }
   }
   parent.AddMember(keyVal, valueVal, alloc);
 }
@@ -184,10 +202,11 @@ void RESTProtocol::mergePayloadContent(rapidjson::Value &target, const C2Payload
       for (const auto& op_arg : payload_content.operation_arguments) {
         rapidjson::Value keyVal;
         keyVal.SetString(op_arg.first.c_str(), op_arg.first.length(), alloc);
-        if (is_parent_array)
+        if (is_parent_array) {
           target.PushBack(keyVal, alloc);
-        else
+        } else {
           arr.PushBack(keyVal, alloc);
+        }
       }
     }
 
@@ -261,20 +280,40 @@ rapidjson::Value RESTProtocol::serializeJsonPayload(const C2Payload &payload, ra
 // get the name from the content
   rapidjson::Value json_payload(payload.isContainer() ? rapidjson::kArrayType : rapidjson::kObjectType);
 
-  std::map<std::string, std::list<rapidjson::Value*>> children;
+  std::vector<ValueObject> children;
 
   for (const auto &nested_payload : payload.getNestedPayloads()) {
     rapidjson::Value* child_payload = new rapidjson::Value(serializeJsonPayload(nested_payload, alloc));
 
-    children[nested_payload.getLabel()].push_back(child_payload);
+    if (nested_payload.isCollapsible()) {
+      bool combine = false;
+      for (auto &subordinate : children) {
+        if (subordinate.name == nested_payload.getLabel()) {
+          subordinate.values.push_back(child_payload);
+          combine = true;
+          break;
+        }
+      }
+      if (!combine) {
+        ValueObject obj;
+        obj.name = nested_payload.getLabel();
+        obj.values.push_back(child_payload);
+        children.push_back(obj);
+      }
+    } else {
+      ValueObject obj;
+      obj.name = nested_payload.getLabel();
+      obj.values.push_back(child_payload);
+      children.push_back(obj);
+    }
   }
 
   for (auto child_vector : children) {
     rapidjson::Value children_json;
-    rapidjson::Value newMemberKey = getStringValue(child_vector.first, alloc);
-    if (child_vector.second.size() > 1) {
+    rapidjson::Value newMemberKey = getStringValue(child_vector.name, alloc);
+    if (child_vector.values.size() > 1) {
       children_json.SetArray();
-      for (auto child : child_vector.second) {
+      for (auto child : child_vector.values) {
         if (json_payload.IsArray())
           json_payload.PushBack(child->Move(), alloc);
         else
@@ -282,8 +321,8 @@ rapidjson::Value RESTProtocol::serializeJsonPayload(const C2Payload &payload, ra
       }
       if (!json_payload.IsArray())
         json_payload.AddMember(newMemberKey, children_json, alloc);
-    } else if (child_vector.second.size() == 1) {
-      rapidjson::Value* first = child_vector.second.front();
+    } else if (child_vector.values.size() == 1) {
+      rapidjson::Value* first = child_vector.values.front();
       if (first->IsObject() && first->HasMember(newMemberKey)) {
         if (json_payload.IsArray())
           json_payload.PushBack((*first)[newMemberKey].Move(), alloc);
@@ -297,7 +336,7 @@ rapidjson::Value RESTProtocol::serializeJsonPayload(const C2Payload &payload, ra
         }
       }
     }
-    for (rapidjson::Value* child : child_vector.second)
+    for (rapidjson::Value* child : child_vector.values)
       delete child;
   }
 

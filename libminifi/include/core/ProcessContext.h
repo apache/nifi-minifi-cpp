@@ -66,9 +66,12 @@ class ProcessContext : public controller::ControllerServiceLookup {
   std::shared_ptr<ProcessorNode> getProcessorNode() const {
     return processor_node_;
   }
-  bool getProperty(const std::string &name, std::string &value) const {
-    return processor_node_->getProperty(name, value);
+
+  template<typename T>
+  bool getProperty(const std::string &name, T &value) const {
+    return getPropertyImp<typename std::common_type<T>::type>(name, value);
   }
+
   bool getProperty(const Property &property, std::string &value, const std::shared_ptr<FlowFile> &flow_file);
   bool getDynamicProperty(const std::string &name, std::string &value) const {
     return processor_node_->getDynamicProperty(name, value);
@@ -172,6 +175,11 @@ class ProcessContext : public controller::ControllerServiceLookup {
   }
 
  private:
+
+  template<typename T>
+  bool getPropertyImp(const std::string &name, T &value) const {
+    return processor_node_->getProperty<typename std::common_type<T>::type>(name, value);
+  }
 
   // controller service provider.
   std::shared_ptr<controller::ControllerServiceProvider> controller_service_provider_;

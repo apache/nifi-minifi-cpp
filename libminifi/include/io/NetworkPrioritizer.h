@@ -105,6 +105,10 @@ class NetworkPrioritizerFactory {
     return fa;
   }
 
+  void clearPrioritizer(){
+    np_ = nullptr;
+  }
+
   int setPrioritizer(const std::shared_ptr<NetworkPrioritizer> &prioritizer) {
     if (np_ != nullptr)
       return -1;

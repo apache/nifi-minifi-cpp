@@ -35,6 +35,7 @@
 
 #include <set>
 #include "utils/StringUtils.h"
+#include "core/TypedValues.h"
 #if ( defined(__APPLE__) || defined(__MACH__) || defined(BSD))
 #include <net/if_dl.h>
 #include <net/if_types.h>
@@ -46,11 +47,22 @@ namespace nifi {
 namespace minifi {
 namespace controllers {
 
-core::Property NetworkPrioritizerService::NetworkControllers("Network Controllers", "Network controllers in order of priority for this prioritizer");
-core::Property NetworkPrioritizerService::MaxThroughput("Max Throughput", "Max throughput for these network controllers");
-core::Property NetworkPrioritizerService::MaxPayload("Max Payload", "Maximum payload for these network controllers");
-core::Property NetworkPrioritizerService::VerifyInterfaces("Verify Interfaces", "Verify that interfaces are operational", "true");
-core::Property NetworkPrioritizerService::DefaultPrioritizer("Default Prioritizer", "Sets this controller service as the default prioritizer for all comms");
+core::Property NetworkPrioritizerService::NetworkControllers(
+    core::PropertyBuilder::createProperty("Network Controllers")->withDescription("Comma separated list of network controllers in order of priority for this prioritizer")->isRequired(false)->build());
+
+core::Property NetworkPrioritizerService::MaxThroughput(
+    core::PropertyBuilder::createProperty("Max Throughput")->withDescription("Max throughput ( per second ) for these network controllers")->isRequired(true)->withDefaultValue<core::DataSizeValue>(
+        "1 MB")->build());
+
+core::Property NetworkPrioritizerService::MaxPayload(
+    core::PropertyBuilder::createProperty("Max Payload")->withDescription("Maximum payload for these network controllers")->isRequired(true)->withDefaultValue<core::DataSizeValue>("1 GB")->build());
+
+core::Property NetworkPrioritizerService::VerifyInterfaces(
+    core::PropertyBuilder::createProperty("Verify Interfaces")->withDescription("Verify that interfaces are operational")->isRequired(true)->withDefaultValue<bool>(true)->build());
+
+core::Property NetworkPrioritizerService::DefaultPrioritizer(
+    core::PropertyBuilder::createProperty("Default Prioritizer")->withDescription("Sets this controller service as the default prioritizer for all comms")->isRequired(false)->withDefaultValue<bool>(
+        false)->build());
 
 void NetworkPrioritizerService::initialize() {
   std::set<core::Property> supportedProperties;
@@ -117,10 +129,12 @@ std::string NetworkPrioritizerService::get_nearest_interface(const std::vector<s
 bool NetworkPrioritizerService::interface_online(const std::string &ifc) {
 #ifndef WIN32
   struct ifreq ifr;
-  auto sockid = socket(PF_INET6, SOCK_DGRAM, IPPROTO_IP);
+  auto sockid = socket(PF_INET, SOCK_DGRAM, IPPROTO_IP);
   memset(&ifr, 0, sizeof(ifr));
-  snprintf(ifr.ifr_name, ifc.length(), "%s", ifc.c_str());
+  memcpy(ifr.ifr_name, ifc.data(), ifc.length());
+  ifr.ifr_name[ifc.length()] = 0;
   if (ioctl(sockid, SIOCGIFFLAGS, &ifr) < 0) {
+    logger_->log_trace("Could not use ioctl on %s", ifc);
     return false;
   }
   close(sockid);
@@ -175,12 +189,12 @@ bool NetworkPrioritizerService::isWorkAvailable() {
 }
 
 void NetworkPrioritizerService::onEnable() {
-  std::string controllers, max_throughput, max_payload, df_prioritizer, intersect, verify_interfaces, roundrobin_interfaces;
+  std::string controllers, max_throughput, max_payload_, df_prioritizer, intersect, verify_interfaces, roundrobin_interfaces;
 // if we have defined controller services or we have linked services
   if (getProperty(NetworkControllers.getName(), controllers) || !linked_services_.empty()) {
     // if this controller service is defined, it will be an intersection of this config with linked services.
-    if (getProperty(MaxThroughput.getName(), max_throughput) && !max_throughput.empty()) {
-      max_throughput_ = std::stoi(max_throughput);
+    if (getProperty(MaxThroughput.getName(), max_throughput_)) {
+      logger_->log_trace("Max throughput is %d", max_throughput_);
       if (max_throughput_ < 1000) {
         bytes_per_token_ = 1;
         tokens_ = max_throughput_;
@@ -189,29 +203,26 @@ void NetworkPrioritizerService::onEnable() {
       }
     }
 
-    if (getProperty(MaxPayload.getName(), max_payload) && !max_payload.empty()) {
-      max_payload_ = std::stoi(max_payload);
-    }
+    getProperty(MaxPayload.getName(), max_payload_);
 
     if (!controllers.empty()) {
       network_controllers_ = utils::StringUtils::split(controllers, ",");
+      for (const auto &ifc : network_controllers_) {
+        logger_->log_trace("%s added to list of applied interfaces", ifc);
+      }
     }
-    if (getProperty(DefaultPrioritizer.getName(), df_prioritizer)) {
-      bool is_default = false;
-      if (utils::StringUtils::StringToBool(df_prioritizer, is_default)) {
-        if (is_default) {
-          if (io::NetworkPrioritizerFactory::getInstance()->setPrioritizer(shared_from_this()) < 0) {
-            std::runtime_error("Can only have one prioritizer");
-          }
+    bool is_default = false;
+    if (getProperty(DefaultPrioritizer.getName(), is_default)) {
+      if (is_default) {
+        if (io::NetworkPrioritizerFactory::getInstance()->setPrioritizer(shared_from_this()) < 0) {
+          std::runtime_error("Can only have one prioritizer");
         }
       }
     }
-    if (getProperty(VerifyInterfaces.getName(), verify_interfaces)) {
-      utils::StringUtils::StringToBool(verify_interfaces, verify_interfaces_);
-    }
+    getProperty(VerifyInterfaces.getName(), verify_interfaces_);
     timestamp_ = std::chrono::system_clock::now().time_since_epoch() / std::chrono::milliseconds(1);
     enabled_ = true;
-    logger_->log_trace("Enabled enable ");
+    logger_->log_trace("Enabled");
   } else {
     logger_->log_trace("Could not enable ");
   }

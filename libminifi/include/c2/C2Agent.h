@@ -26,9 +26,9 @@
 #include <thread>
 
 #include "../core/state/nodes/MetricsBase.h"
+#include "../core/state/Value.h"
 #include "core/state/UpdateController.h"
 #include "controllers/UpdatePolicyControllerService.h"
-#include "core/state/Value.h"
 #include "C2Payload.h"
 #include "C2Trigger.h"
 #include "C2Protocol.h"
@@ -118,7 +118,7 @@ class C2Agent : public state::UpdateController, public state::response::Response
    * @param name name of this metric
    * @param metrics metrics to include.
    */
-  void serializeMetrics(C2Payload &parent_payload, const std::string &name, const std::vector<state::response::SerializedResponseNode> &metrics, bool is_container = false);
+  void serializeMetrics(C2Payload &parent_payload, const std::string &name, const std::vector<state::response::SerializedResponseNode> &metrics, bool is_container = false, bool is_collapsible = true);
 
   /**
    * Extract the payload
@@ -164,6 +164,11 @@ class C2Agent : public state::UpdateController, public state::response::Response
    * Handles a description request
    */
   void handle_describe(const C2ContentResponse &resp);
+
+  /**
+   * Updates a property
+   */
+  bool update_property(const std::string &property_name, const std::string &property_value,  bool persist = false);
 
   std::timed_mutex metrics_mutex_;
   std::map<std::string, std::shared_ptr<state::response::ResponseNode>> metrics_map_;

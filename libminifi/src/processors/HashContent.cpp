@@ -77,6 +77,7 @@ void HashContent::onTrigger(core::ProcessContext *, core::ProcessSession *sessio
   std::shared_ptr<core::FlowFile> flowFile = session->get();
 
   if (!flowFile) {
+    logger_->log_trace("No flow file");
     return;
   }
 
@@ -84,6 +85,7 @@ void HashContent::onTrigger(core::ProcessContext *, core::ProcessSession *sessio
     session->transfer(flowFile, Failure);
   }
 
+  logger_->log_trace("attempting read");
   ReadCallback cb(flowFile, *this);
   session->read(flowFile, &cb);
   session->transfer(flowFile, Success);
@@ -91,6 +93,7 @@ void HashContent::onTrigger(core::ProcessContext *, core::ProcessSession *sessio
 
 int64_t HashContent::ReadCallback::process(std::shared_ptr<io::BaseStream> stream) {
   // This throws in case algo is not found, but that's fine
+  parent_.logger_->log_trace("Searching for %s", parent_.algoName_);
   auto algo = HashAlgos.at(parent_.algoName_);
 
   const auto& ret_val = algo(stream);

@@ -26,6 +26,7 @@
 #include "core/ProcessSession.h"
 #include "utils/StringUtils.h"
 #include "utils/TimeUtil.h"
+#include "core/TypedValues.h"
 
 #if defined(__clang__)
 #pragma clang diagnostic push
@@ -53,10 +54,15 @@ core::Property ExecuteProcess::CommandArguments(
 core::Property ExecuteProcess::WorkingDir(
     core::PropertyBuilder::createProperty("Working Directory")->withDescription("The directory to use as the current working directory when executing the command")->supportsExpressionLanguage(true)
         ->withDefaultValue("")->build());
-core::Property ExecuteProcess::BatchDuration("Batch Duration", "If the process is expected to be long-running and produce textual output, a "
-                                             "batch duration can be specified.",
-                                             "0");
-core::Property ExecuteProcess::RedirectErrorStream("Redirect Error Stream", "If true will redirect any error stream output of the process to the output stream.", "false");
+
+core::Property ExecuteProcess::BatchDuration(
+    core::PropertyBuilder::createProperty("Batch Duration")->withDescription("If the process is expected to be long-running and produce textual output, a "
+                                                                             "batch duration can be specified.")->withDefaultValue<core::TimePeriodValue>("0 sec")->build());
+
+core::Property ExecuteProcess::RedirectErrorStream(
+    core::PropertyBuilder::createProperty("Redirect Error Stream")->withDescription("If true will redirect any error stream output of the process to the output stream.")->withDefaultValue<bool>(false)
+        ->build());
+
 core::Relationship ExecuteProcess::Success("success", "All created FlowFiles are routed to this relationship.");
 
 void ExecuteProcess::initialize() {

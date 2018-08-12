@@ -18,6 +18,7 @@
 #include "properties/Properties.h"
 #include <string>
 #include "utils/StringUtils.h"
+#include "utils/file/FileUtils.h"
 #include "core/Core.h"
 #include "core/logging/LoggerConfiguration.h"
 
@@ -76,7 +77,7 @@ int Properties::getInt(const std::string &key, int default_value) {
 }
 
 // Parse one line in configure file like key=value
-void Properties::parseConfigureFileLine(char *buf) {
+bool Properties::parseConfigureFileLine(char *buf, std::string &prop_key, std::string &prop_value) {
   char *line = buf;
 
   while ((line[0] == ' ') || (line[0] == '\t'))
@@ -84,12 +85,12 @@ void Properties::parseConfigureFileLine(char *buf) {
 
   char first = line[0];
   if ((first == '\0') || (first == '#') || (first == '\r') || (first == '\n') || (first == '=')) {
-    return;
+    return true;
   }
 
   char *equal = strchr(line, '=');
   if (equal == NULL) {
-    return;
+    return false;  // invalid property as this is not a comment or property line
   }
 
   equal[0] = '\0';
@@ -101,14 +102,14 @@ void Properties::parseConfigureFileLine(char *buf) {
 
   first = equal[0];
   if ((first == '\0') || (first == '\r') || (first == '\n')) {
-    return;
+    return true;  // empty properties are okay
   }
 
   std::string value = equal;
   value = org::apache::nifi::minifi::utils::StringUtils::replaceEnvironmentVariables(value);
-  key = org::apache::nifi::minifi::utils::StringUtils::trimRight(key);
-  value = org::apache::nifi::minifi::utils::StringUtils::trimRight(value);
-  set(key, value);
+  prop_key = org::apache::nifi::minifi::utils::StringUtils::trimRight(key);
+  prop_value = org::apache::nifi::minifi::utils::StringUtils::trimRight(value);
+  return true;
 }
 
 // Load Configure File
@@ -129,7 +130,9 @@ void Properties::loadConfigureFile(const char *fileName) {
 #else
   path = const_cast<char*>(adjustedFilename.c_str());
 #endif
-  logger_->log_info("Using configuration file located at %s", path);
+  logger_->log_info("Using configuration file located at %s, from %s", path, fileName);
+
+  properties_file_ = path;
 
   std::ifstream file(path, std::ifstream::in);
   if (!file.good()) {
@@ -140,8 +143,110 @@ void Properties::loadConfigureFile(const char *fileName) {
 
   char buf[TRACE_BUFFER_SIZE];
   for (file.getline(buf, TRACE_BUFFER_SIZE); file.good(); file.getline(buf, TRACE_BUFFER_SIZE)) {
-    parseConfigureFileLine(buf);
+    std::string key, value;
+    if (parseConfigureFileLine(buf, key, value)) {
+      set(key, value);
+    }
   }
+  dirty_ = false;
+}
+
+bool Properties::validateConfigurationFile(const std::string &configFile) {
+  std::ifstream file(configFile, std::ifstream::in);
+  if (!file.good()) {
+    logger_->log_error("load configure file failed %s", configFile);
+    return false;
+  }
+
+  char buf[TRACE_BUFFER_SIZE];
+  for (file.getline(buf, TRACE_BUFFER_SIZE); file.good(); file.getline(buf, TRACE_BUFFER_SIZE)) {
+    std::string key, value;
+    if (!parseConfigureFileLine(buf, key, value)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+bool Properties::persistProperties() {
+  std::lock_guard<std::mutex> lock(mutex_);
+  if (!dirty_) {
+    logger_->log_info("Attempt to persist, but properties are not updated");
+    return true;
+  }
+  std::ifstream file(properties_file_, std::ifstream::in);
+  if (!file.good()) {
+    logger_->log_error("load configure file failed %s", properties_file_);
+    return false;
+  }
+
+  std::map<std::string, std::string> properties_copy = properties_;
+
+  std::string new_file = properties_file_ + ".new";
+
+  std::ofstream output_file(new_file, std::ios::out);
+
+  char buf[TRACE_BUFFER_SIZE];
+  for (file.getline(buf, TRACE_BUFFER_SIZE); file.good(); file.getline(buf, TRACE_BUFFER_SIZE)) {
+    char *line = buf;
+
+    char first = line[0];
+
+    if ((first == '\0') || (first == '#') || (first == '\r') || (first == '\n') || (first == '=')) {
+      // persist comments and newlines
+      output_file << line << std::endl;
+      continue;
+    }
+
+    char *equal = strchr(line, '=');
+    if (equal == NULL) {
+      output_file << line << std::endl;
+      continue;
+    }
+
+    equal[0] = '\0';
+    std::string key = line;
+
+    equal++;
+    while ((equal[0] == ' ') || (equal[0] == '\t'))
+      ++equal;
+
+    first = equal[0];
+    if ((first == '\0') || (first == '\r') || (first == '\n')) {
+      output_file << line << std::endl;
+      continue;
+    }
+
+    std::string value = equal;
+    value = org::apache::nifi::minifi::utils::StringUtils::replaceEnvironmentVariables(value);
+    key = org::apache::nifi::minifi::utils::StringUtils::trimRight(key);
+    value = org::apache::nifi::minifi::utils::StringUtils::trimRight(value);
+    auto hasIt = properties_copy.find(key);
+    if (hasIt != properties_copy.end() && !value.empty()) {
+      output_file << key << "=" << hasIt->second << std::endl;
+    }
+    properties_copy.erase(key);
+  }
+
+  for (const auto &kv : properties_copy) {
+    if (!kv.first.empty() && !kv.second.empty())
+      output_file << kv.first << "=" << kv.second << std::endl;
+  }
+  output_file.close();
+
+  if (validateConfigurationFile(new_file)) {
+    const std::string backup = properties_file_ + ".bak";
+    if (!utils::file::FileUtils::copy_file(properties_file_, backup) && !utils::file::FileUtils::copy_file(new_file, properties_file_)) {
+      logger_->log_info("Persisted %s", properties_file_);
+      return true;
+    } else {
+      logger_->log_error("Could not update %s", properties_file_);
+    }
+  }
+
+  dirty_ = false;
+
+  return false;
 }
 
 // Parse Command Line

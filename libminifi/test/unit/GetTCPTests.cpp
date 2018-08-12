@@ -170,7 +170,8 @@ TEST_CASE("GetTCPWithOEM", "[GetTCP2]") {
 
   LogTestController::getInstance().setDebug<minifi::processors::LogAttribute>();
   LogTestController::getInstance().setTrace<core::repository::VolatileContentRepository >();
-  LogTestController::getInstance().setDebug<minifi::processors::GetTCP>();
+  LogTestController::getInstance().setTrace<minifi::processors::GetTCP>();
+  LogTestController::getInstance().setTrace<core::ConfigurableComponent>();
   LogTestController::getInstance().setTrace<minifi::io::Socket>();
 
   std::shared_ptr<core::Repository> repo = std::make_shared<TestRepository>();

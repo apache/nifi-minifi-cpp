@@ -28,6 +28,15 @@
 #include <map>
 #include "utils/FailurePolicy.h"
 
+enum TimeUnit {
+  DAY,
+  HOUR,
+  MINUTE,
+  SECOND,
+  MILLISECOND,
+  NANOSECOND
+};
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -252,6 +261,19 @@ class StringUtils {
 };
 
 } /* namespace utils */
+
+namespace core{
+enum TimeUnit {
+  DAY,
+  HOUR,
+  MINUTE,
+  SECOND,
+  MILLISECOND,
+  NANOSECOND
+};
+
+} /* namespace core */
+
 } /* namespace minifi */
 } /* namespace nifi */
 } /* namespace apache */

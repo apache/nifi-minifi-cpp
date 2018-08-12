@@ -38,13 +38,22 @@ namespace apache {
 namespace nifi {
 namespace minifi {
 namespace processors {
-core::Property LogAttribute::LogLevel("Log Level", "The Log Level to use when logging the Attributes", "info");
-core::Property LogAttribute::AttributesToLog("Attributes to Log", "A comma-separated list of Attributes to Log. If not specified, all attributes will be logged.", "");
-core::Property LogAttribute::AttributesToIgnore("Attributes to Ignore", "A comma-separated list of Attributes to ignore. If not specified, no attributes will be ignored.", "");
-core::Property LogAttribute::LogPayload("Log Payload", "If true, the FlowFile's payload will be logged, in addition to its attributes;"
-                                        "otherwise, just the Attributes will be logged.",
-                                        "false");
-core::Property LogAttribute::LogPrefix("Log prefix", "Log prefix appended to the log lines. It helps to distinguish the output of multiple LogAttribute processors.", "");
+
+core::Property LogAttribute::LogLevel(core::PropertyBuilder::createProperty("Log Level")->withDescription("The Log Level to use when logging the Attributes")->withAllowableValues<std::string>({
+    "info", "trace", "error", "warn", "debug" })->build());
+
+core::Property LogAttribute::AttributesToLog(
+    core::PropertyBuilder::createProperty("Attributes to Log")->withDescription("A comma-separated list of Attributes to Log. If not specified, all attributes will be logged.")->build());
+
+core::Property LogAttribute::AttributesToIgnore(
+    core::PropertyBuilder::createProperty("Attributes to Ignore")->withDescription("A comma-separated list of Attributes to ignore. If not specified, no attributes will be ignored.")->build());
+
+core::Property LogAttribute::LogPayload(core::PropertyBuilder::createProperty("Log Payload")->withDescription("If true, the FlowFile's payload will be logged, in addition to its attributes."
+                                                                                                              "otherwise, just the Attributes will be logged")->withDefaultValue<bool>(false)->build());
+
+core::Property LogAttribute::LogPrefix(
+    core::PropertyBuilder::createProperty("Log Prefix")->withDescription("Log prefix appended to the log lines. It helps to distinguish the output of multiple LogAttribute processors.")->build());
+
 core::Relationship LogAttribute::Success("success", "success operational on the flow record");
 
 void LogAttribute::initialize() {
@@ -82,9 +91,8 @@ void LogAttribute::onTrigger(core::ProcessContext *context, core::ProcessSession
   if (context->getProperty(LogPrefix.getName(), value)) {
     dashLine = "-----" + value + "-----";
   }
-  if (context->getProperty(LogPayload.getName(), value)) {
-    org::apache::nifi::minifi::utils::StringUtils::StringToBool(value, logPayload);
-  }
+
+  context->getProperty(LogPayload.getName(), logPayload);
 
   message << "Logging for flow file " << "\n";
   message << dashLine;

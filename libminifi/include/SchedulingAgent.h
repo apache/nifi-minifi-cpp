@@ -128,7 +128,8 @@ class SchedulingAgent {
      * To facilitate traces we cannot use daemon threads -- this could potentially cause blocking on I/O; however, it's a better path
      * to be able to debug why an agent doesn't work and still allow a restart via updates in these cases.
      */
-    auto pool = utils::ThreadPool<uint64_t>(configure_->getInt(Configure::nifi_flow_engine_threads, 2), false, controller_service_provider, "SchedulingAgent");
+    auto csThreads = configure_->getInt(Configure::nifi_flow_engine_threads, 2);
+    auto pool = utils::ThreadPool<uint64_t>(csThreads, false, controller_service_provider, "SchedulingAgent");
     thread_pool_ = std::move(pool);
     thread_pool_.start();
   }

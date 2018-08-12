@@ -39,11 +39,11 @@ std::vector<std::string> Property::getAllowedTypes() const {
   return types_;
 }
 
-std::string Property::getValue() const {
+const PropertyValue &Property::getValue() const {
   if (!values_.empty())
     return values_.front();
   else
-    return "";
+    return default_value_;
 }
 
 bool Property::getRequired() const {
@@ -58,45 +58,32 @@ std::string Property::getValidRegex() const {
   return valid_regex_;
 }
 
-std::vector<std::string> &Property::getValues() {
-  return values_;
+std::shared_ptr<PropertyValidator> Property::getValidator() const {
+  return validator_;
 }
 
-void Property::setValue(std::string value) {
-  if (!is_collection_) {
-    values_.clear();
-    values_.push_back(std::move(value));
-  } else {
-    values_.push_back(std::move(value));
+std::vector<std::string> Property::getValues() {
+  std::vector<std::string> values;
+  for (const auto &v : values_) {
+    values.push_back(v.to_string());
   }
+  return values;
 }
 
 void Property::setSupportsExpressionLanguage(bool supportEl) {
   supports_el_ = supportEl;
 }
 
-void Property::addValue(std::string value) {
-  values_.push_back(std::move(value));
+void Property::addValue(const std::string &value) {
+  PropertyValue vn;
+  vn = value;
+  values_.push_back(std::move(vn));
 }
 
 bool Property::operator<(const Property &right) const {
   return name_ < right.name_;
 }
 
-const Property &Property::operator=(const Property &other) {
-  name_ = other.name_;
-  display_name_ = other.display_name_;
-  types_ = other.types_;
-  values_ = other.values_;
-  description_ = other.description_;
-  is_collection_ = other.is_collection_;
-  is_required_ = other.is_required_;
-  valid_regex_ = other.valid_regex_;
-  dependent_properties_ = other.dependent_properties_;
-  exclusive_of_properties_ = other.exclusive_of_properties_;
-  supports_el_ = other.supports_el_;
-  return *this;
-}
 
 std::vector<std::string> Property::getDependentProperties() const {
   return dependent_properties_;

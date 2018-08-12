@@ -638,6 +638,10 @@ void ThreadPool<T>::shutdown() {
       manager_thread_.join();
     {
       std::unique_lock<std::mutex> lock(worker_queue_mutex_);
+      for(const auto &thread : thread_queue_){
+        if (thread->thread_.joinable())
+        thread->thread_.join();
+      }
       thread_queue_.clear();
       current_workers_ = 0;
       while (worker_queue_.size_approx() > 0) {

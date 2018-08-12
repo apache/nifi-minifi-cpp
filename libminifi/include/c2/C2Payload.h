@@ -21,8 +21,9 @@
 #include <memory>
 #include <string>
 #include <map>
+
+#include "../core/state/Value.h"
 #include "core/state/UpdateController.h"
-#include "core/state/Value.h"
 
 namespace org {
 namespace apache {
@@ -113,9 +114,9 @@ class C2Payload : public state::Update {
 
   C2Payload(Operation op, state::UpdateState state, bool resp = false, bool isRaw = false);
 
-  C2Payload(const C2Payload &other);
+  C2Payload(const C2Payload &other) = default;
 
-  C2Payload(const C2Payload &&other);
+  C2Payload(C2Payload &&other) = default;
 
   void setIdentifier(const std::string &ident);
 
@@ -147,7 +148,7 @@ class C2Payload : public state::Update {
   /**
    * Add a content response to this payload.
    */
-  void addContent(const C2ContentResponse &&content);
+  void addContent(const C2ContentResponse &&content, bool collapsible = true);
 
   /**
    * Determines if this object contains raw data.
@@ -180,6 +181,14 @@ class C2Payload : public state::Update {
    */
   void addPayload(const C2Payload &&payload);
 
+  bool isCollapsible() const {
+    return is_collapsible_;
+  }
+
+  void setCollapsible(bool is_collapsible) {
+    is_collapsible_ = is_collapsible;
+  }
+
   bool isContainer() const {
     return is_container_;
   }
@@ -192,8 +201,8 @@ class C2Payload : public state::Update {
    */
   const std::vector<C2Payload> &getNestedPayloads() const;
 
-  C2Payload &operator=(const C2Payload &&other);
-  C2Payload &operator=(const C2Payload &other);
+  C2Payload &operator=(C2Payload &&other) = default;
+  C2Payload &operator=(const C2Payload &other) = default;
 
   inline bool operator==(const C2Payload &rhs) const {
     if (op_ != rhs.op_) {
@@ -244,6 +253,8 @@ class C2Payload : public state::Update {
   bool isResponse;
 
   bool is_container_;
+
+  bool is_collapsible_;
 
 };
 

@@ -367,7 +367,7 @@ class DeviceInfoNode : public DeviceInformation {
 	  vcores.name = "vCores";
 	  size_t ncpus = std::thread::hardware_concurrency();
 
-	  vcores.value = std::to_string(ncpus);
+	  vcores.value = ncpus;
 
 	  systemInfo.children.push_back(vcores);
 #if defined(_SC_PHYS_PAGES) && defined(_SC_PAGESIZE)

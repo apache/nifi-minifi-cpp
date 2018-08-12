@@ -25,6 +25,7 @@ namespace minifi {
 const char *Configure::nifi_default_directory = "nifi.default.directory";
 const char *Configure::nifi_c2_enable = "nifi.c2.enable";
 const char *Configure::nifi_flow_configuration_file = "nifi.flow.configuration.file";
+const char *Configure::nifi_flow_configuration_file_exit_failure = "nifi.flow.configuration.file.exit.onfailure";
 const char *Configure::nifi_flow_configuration_file_backup_update = "nifi.flow.configuration.backup.on.update";
 const char *Configure::nifi_flow_engine_threads = "nifi.flow.engine.threads";
 const char *Configure::nifi_administrative_yield_duration = "nifi.administrative.yield.duration";
@@ -56,6 +57,8 @@ const char *Configure::nifi_security_client_ca_certificate = "nifi.security.clie
 const char *Configure::nifi_rest_api_user_name = "nifi.rest.api.user.name";
 const char *Configure::nifi_rest_api_password = "nifi.rest.api.password";
 const char *Configure::nifi_c2_file_watch = "nifi.c2.file.watch";
+const char *Configure::nifi_c2_flow_id = "nifi.c2.flow.id";
+const char *Configure::nifi_c2_flow_url = "nifi.c2.flow.url";
 
 } /* namespace minifi */
 } /* namespace nifi */

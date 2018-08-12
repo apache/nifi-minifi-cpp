@@ -122,6 +122,14 @@ class ComponentManifest : public DeviceInformation {
             descriptorDescription.name = "description";
             descriptorDescription.value = prop.second.getDescription();
 
+            SerializedResponseNode validatorName;
+            validatorName.name = "validator";
+            if (prop.second.getValidator()) {
+              validatorName.value = prop.second.getValidator()->getName();
+            } else {
+              validatorName.value = "VALID";
+            }
+
             SerializedResponseNode supportsExpressionLanguageScope;
             supportsExpressionLanguageScope.name = "expressionLanguageScope";
             supportsExpressionLanguageScope.value = prop.second.supportsExpressionLangauge() ? "FLOWFILE_ATTRIBUTES" : "NONE";
@@ -193,12 +201,37 @@ class ComponentManifest : public DeviceInformation {
               child.children.push_back(displayName);
             }
             child.children.push_back(descriptorDescription);
+            child.children.push_back(validatorName);
             child.children.push_back(descriptorRequired);
             child.children.push_back(supportsExpressionLanguageScope);
             child.children.push_back(descriptorDefaultValue);
             child.children.push_back(descriptorValidRegex);
             child.children.push_back(descriptorDependentProperties);
             child.children.push_back(descriptorExclusiveOfProperties);
+
+            if (!prop.second.getAllowedValues().empty()) {
+              SerializedResponseNode allowedValues;
+              allowedValues.name = "allowableValues";
+              allowedValues.array = true;
+              for (const auto &av : prop.second.getAllowedValues()) {
+                SerializedResponseNode allowableValue;
+                allowableValue.name = "allowableValues";
+
+                SerializedResponseNode allowedValue;
+                allowedValue.name = "value";
+                allowedValue.value = av;
+                SerializedResponseNode allowedDisplayName;
+                allowedDisplayName.name = "displayName";
+                allowedDisplayName.value = av;
+
+                allowableValue.children.push_back(allowedValue);
+                allowableValue.children.push_back(allowedDisplayName);
+
+                allowedValues.children.push_back(allowableValue);
+              }
+              child.children.push_back(allowedValues);
+
+            }
 
             props.children.push_back(child);
           }
@@ -357,7 +390,7 @@ class AgentStatus : public StateMonitorNode {
 
       for (auto &repo : repositories_) {
         SerializedResponseNode repoNode;
-
+        repoNode.collapsible = false;
         repoNode.name = repo.first;
 
         SerializedResponseNode queuesize;
@@ -375,26 +408,28 @@ class AgentStatus : public StateMonitorNode {
     serialized.push_back(uptime);
 
     if (nullptr != monitor_) {
-      auto components = monitor_->getAllComponents();
-      SerializedResponseNode componentsNode;
+         auto components = monitor_->getAllComponents();
+         SerializedResponseNode componentsNode(false);
+         componentsNode.name = "components";
 
-      componentsNode.name = "components";
+         for (auto component : components) {
+           SerializedResponseNode componentNode(false);
+           componentNode.name = component->getComponentName();
 
-      for (auto component : components) {
-        SerializedResponseNode componentNode;
+           SerializedResponseNode uuidNode;
+           uuidNode.name = "uuid";
+           uuidNode.value = component->getComponentUUID();
 
-        componentNode.name = component->getComponentName();
+           SerializedResponseNode componentStatusNode;
+           componentStatusNode.name = "running";
+           componentStatusNode.value = component->isRunning();
 
-        SerializedResponseNode componentStatusNode;
-        componentStatusNode.name = "running";
-        componentStatusNode.value = component->isRunning();
-
-        componentNode.children.push_back(componentStatusNode);
-
-        componentsNode.children.push_back(componentNode);
-      }
-      serialized.push_back(componentsNode);
-    }
+           componentNode.children.push_back(componentStatusNode);
+           componentNode.children.push_back(uuidNode);
+           componentsNode.children.push_back(componentNode);
+         }
+         serialized.push_back(componentsNode);
+       }
 
     return serialized;
   }

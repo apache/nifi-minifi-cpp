@@ -19,6 +19,7 @@
 #include "c2/C2Agent.h"
 #include <csignal>
 #include <utility>
+#include <limits>
 #include <vector>
 #include <map>
 #include <string>
@@ -55,6 +56,10 @@ C2Agent::C2Agent(const std::shared_ptr<core::controller::ControllerServiceProvid
     update_service_ = std::static_pointer_cast<controllers::UpdatePolicyControllerService>(controller_->getControllerService(C2_AGENT_UPDATE_NAME));
   }
 
+  if (update_service_ == nullptr) {
+    // create a stubbed service for updating the flow identifier
+  }
+
   configure(configuration, false);
 
   c2_producer_ = [&]() {
@@ -82,7 +87,7 @@ C2Agent::C2Agent(const std::shared_ptr<core::controller::ControllerServiceProvid
 
       checkTriggers();
 
-      std::this_thread::sleep_for(std::chrono::milliseconds(500));
+      std::this_thread::sleep_for(std::chrono::milliseconds(heart_beat_period_ > 500 ? 500 : heart_beat_period_));
       return state::Update(state::UpdateStatus(state::UpdateState::READ_COMPLETE, false));
     };
 
@@ -306,21 +311,23 @@ void C2Agent::performHeartBeat() {
   }
 }
 
-void C2Agent::serializeMetrics(C2Payload &metric_payload, const std::string &name, const std::vector<state::response::SerializedResponseNode> &metrics, bool is_container) {
-  for (auto metric : metrics) {
+void C2Agent::serializeMetrics(C2Payload &metric_payload, const std::string &name, const std::vector<state::response::SerializedResponseNode> &metrics, bool is_container, bool is_collapsible) {
+  for (const auto &metric : metrics) {
     if (metric.children.size() > 0) {
       C2Payload child_metric_payload(metric_payload.getOperation());
       if (metric.array) {
         child_metric_payload.setContainer(true);
       }
+      auto collapsible = !metric.collapsible ? metric.collapsible : is_collapsible;
+      child_metric_payload.setCollapsible(collapsible);
       child_metric_payload.setLabel(metric.name);
-      serializeMetrics(child_metric_payload, metric.name, metric.children, is_container);
+      serializeMetrics(child_metric_payload, metric.name, metric.children, is_container, collapsible);
       metric_payload.addPayload(std::move(child_metric_payload));
     } else {
       C2ContentResponse response(metric_payload.getOperation());
       response.name = name;
       response.operation_arguments[metric.name] = metric.value;
-      metric_payload.addContent(std::move(response));
+      metric_payload.addContent(std::move(response), is_collapsible);
     }
   }
 }
@@ -633,15 +640,20 @@ void C2Agent::handle_update(const C2ContentResponse &resp) {
               writer.write(raw_data_str.data(), raw_data_str.size());
             }
             writer.close();
+
+            // update the flow id
+            configuration_->persistProperties();
           }
         }
       } else {
         logger_->log_debug("update failed.");
+        std::cout << raw_data_str << std::endl;
         C2Payload response(Operation::ACKNOWLEDGE, resp.ident, false, true);
         enqueue_c2_response(std::move(response));
       }
       // send
     } else {
+      logger_->log_debug("Did not have location within %s", resp.ident);
       auto update_text = resp.operation_arguments.find("configuration_data");
       if (update_text != resp.operation_arguments.end()) {
         if (update_sink_->applyUpdate(url->second.to_string(), update_text->second.to_string()) != 0 && persist != resp.operation_arguments.end()
@@ -679,14 +691,10 @@ void C2Agent::handle_update(const C2ContentResponse &resp) {
   } else if (resp.name == "properties") {
     bool update_occurred = false;
     for (auto entry : resp.operation_arguments) {
-      if (nullptr != update_service_) {
-        if (update_service_->canUpdate(entry.first)) {
-          configuration_->set(entry.first, entry.second.to_string());
-          update_occurred = true;
-        }
-      }
+      if (update_property(entry.first, entry.second.to_string()))
+        update_occurred = true;
     }
-    if (nullptr != update_service_ && update_occurred) {
+    if (update_occurred) {
       // enable updates to persist the configuration.
     }
   } else if (resp.name == "c2") {
@@ -745,6 +753,20 @@ void C2Agent::handle_update(const C2ContentResponse &resp) {
       }
     }
   }
+}
+
+/**
+ * Updates a property
+ */
+bool C2Agent::update_property(const std::string &property_name, const std::string &property_value, bool persist) {
+  if (update_service_->canUpdate(property_name)) {
+    configuration_->set(property_name, property_value);
+    if (persist) {
+      configuration_->persistProperties();
+      return true;
+    }
+  }
+  return false;
 }
 
 void C2Agent::restart_agent() {
