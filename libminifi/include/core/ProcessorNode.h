@@ -59,12 +59,13 @@ class ProcessorNode : public ConfigurableComponent, public Connectable {
    * @param value value passed in by reference
    * @return result of getting property.
    */
-  bool getProperty(const std::string &name, std::string &value) const {
+  template<typename T>
+  bool getProperty(const std::string &name, T &value) {
     const std::shared_ptr<ConfigurableComponent> processor_cast = std::dynamic_pointer_cast<ConfigurableComponent>(processor_);
     if (nullptr != processor_cast)
-      return processor_cast->getProperty(name, value);
+      return processor_cast->getProperty<T>(name, value);
     else {
-      return ConfigurableComponent::getProperty(name, value);
+      return ConfigurableComponent::getProperty<T>(name, value);
     }
   }
   /**
@@ -102,7 +103,7 @@ class ProcessorNode : public ConfigurableComponent, public Connectable {
    * Returns theflow version
    * @returns flow version. can be null if a flow version is not tracked.
    */
-  virtual std::shared_ptr<state::FlowIdentifier> getFlowIdentifier() const{
+  virtual std::shared_ptr<state::FlowIdentifier> getFlowIdentifier() const {
     if (processor_ != nullptr) {
       return processor_->getFlowIdentifier();
     } else {
@@ -248,9 +249,9 @@ class ProcessorNode : public ConfigurableComponent, public Connectable {
   }
   /*
 
-  unsigned const char *getUUID() {
-    return processor_->getUUID();
-  }*/
+   unsigned const char *getUUID() {
+   return processor_->getUUID();
+   }*/
   /**
    * Return the UUID string
    * @param constant reference to the UUID str

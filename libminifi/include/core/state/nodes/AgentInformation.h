@@ -122,6 +122,13 @@ class ComponentManifest : public DeviceInformation {
             descriptorDescription.name = "description";
             descriptorDescription.value = prop.second.getDescription();
 
+            SerializedResponseNode validatorName;
+            validatorName.name = "validator";
+            if (prop.second.getValidator())
+            validatorName.value = prop.second.getValidator()->getName();
+            else
+              validatorName.value = "VALID";
+
             SerializedResponseNode supportsExpressionLanguageScope;
             supportsExpressionLanguageScope.name = "expressionLanguageScope";
             supportsExpressionLanguageScope.value = prop.second.supportsExpressionLangauge() ? "FLOWFILE_ATTRIBUTES" : "NONE";
@@ -193,6 +200,7 @@ class ComponentManifest : public DeviceInformation {
               child.children.push_back(displayName);
             }
             child.children.push_back(descriptorDescription);
+            child.children.push_back(validatorName);
             child.children.push_back(descriptorRequired);
             child.children.push_back(supportsExpressionLanguageScope);
             child.children.push_back(descriptorDefaultValue);

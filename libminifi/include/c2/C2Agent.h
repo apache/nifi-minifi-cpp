@@ -26,9 +26,9 @@
 #include <thread>
 
 #include "../core/state/nodes/MetricsBase.h"
+#include "../core/state/Value.h"
 #include "core/state/UpdateController.h"
 #include "controllers/UpdatePolicyControllerService.h"
-#include "core/state/Value.h"
 #include "C2Payload.h"
 #include "C2Trigger.h"
 #include "C2Protocol.h"

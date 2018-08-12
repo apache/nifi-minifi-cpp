@@ -21,9 +21,10 @@
 #include <vector>
 #include <memory>
 #include <string>
+
+#include "../Value.h"
 #include "core/Core.h"
 #include "core/Connectable.h"
-#include "core/state/Value.h"
 
 namespace org {
 namespace apache {

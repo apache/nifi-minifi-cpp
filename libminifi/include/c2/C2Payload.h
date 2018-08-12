@@ -21,8 +21,9 @@
 #include <memory>
 #include <string>
 #include <map>
+
+#include "../core/state/Value.h"
 #include "core/state/UpdateController.h"
-#include "core/state/Value.h"
 
 namespace org {
 namespace apache {

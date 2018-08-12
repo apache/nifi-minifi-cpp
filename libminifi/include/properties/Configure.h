@@ -42,6 +42,7 @@ class Configure : public Properties {
   // nifi.flow.configuration.file
   static const char *nifi_default_directory;
   static const char *nifi_flow_configuration_file;
+  static const char *nifi_flow_configuration_file_exit_failure;
   static const char *nifi_flow_configuration_file_backup_update;
   static const char *nifi_flow_engine_threads;
   static const char *nifi_administrative_yield_duration;

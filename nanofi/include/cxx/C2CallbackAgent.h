@@ -25,8 +25,8 @@
 #include <mutex>
 #include <thread>
 
-#include "c2/C2Agent.h"
 #include "core/state/Value.h"
+#include "c2/C2Agent.h"
 #include "c2/C2Payload.h"
 #include "c2/C2Protocol.h"
 #include "io/validation.h"

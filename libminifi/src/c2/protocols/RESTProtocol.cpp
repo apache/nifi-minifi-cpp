@@ -18,6 +18,7 @@
 
 #include "c2/protocols/RESTProtocol.h"
 
+#include "core/TypedValues.h"
 #include <algorithm>
 #include <memory>
 #include <utility>
@@ -138,7 +139,11 @@ void setJsonStr(const std::string& key, const state::response::ValueNode& value,
   auto base_type = value.getValue();
   keyVal.SetString(c_key, key.length(), alloc);
 
-  if (auto sub_type = std::dynamic_pointer_cast<state::response::IntValue>(base_type)) {
+  if (auto sub_type = std::dynamic_pointer_cast<core::TransformableValue>(base_type)) {
+    auto str = base_type->getStringValue();
+    const char* c_val = str.c_str();
+    valueVal.SetString(c_val, str.length(), alloc);
+  } else if (auto sub_type = std::dynamic_pointer_cast<state::response::IntValue>(base_type)) {
     valueVal.SetInt(sub_type->getValue());
   } else if (auto sub_type = std::dynamic_pointer_cast<state::response::Int64Value>(base_type)) {
     valueVal.SetInt64(sub_type->getValue());

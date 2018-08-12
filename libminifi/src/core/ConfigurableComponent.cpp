@@ -58,25 +58,6 @@ bool ConfigurableComponent::getProperty(const std::string &name, Property &prop)
 }
 
 /**
- * Get property using the provided name.
- * @param name property name.
- * @param value value passed in by reference
- * @return result of getting property.
- */
-bool ConfigurableComponent::getProperty(const std::string name, std::string &value) const {
-  std::lock_guard<std::mutex> lock(configuration_mutex_);
-
-  auto &&it = properties_.find(name);
-  if (it != properties_.end()) {
-    Property item = it->second;
-    value = item.getValue();
-    logger_->log_debug("Component %s property name %s value %s", name, item.getName(), value);
-    return true;
-  } else {
-    return false;
-  }
-}
-/**
  * Sets the property using the provided name
  * @param property name
  * @param value property value.
@@ -149,6 +130,27 @@ bool ConfigurableComponent::setProperty(Property &prop, std::string value) {
   }
 }
 
+bool ConfigurableComponent::setProperty(Property &prop, PropertyValue &value) {
+  std::lock_guard<std::mutex> lock(configuration_mutex_);
+    auto it = properties_.find(prop.getName());
+
+    if (it != properties_.end()) {
+      Property &orig_property = it->second;
+      Property new_property = orig_property;
+      new_property.setValue(value);
+      properties_[new_property.getName()] = new_property;
+      onPropertyModified(orig_property, new_property);
+      logger_->log_debug("property name %s value %s", prop.getName(), new_property.getName(), value);
+      return true;
+    } else {
+      Property new_property(prop);
+      new_property.setValue(value);
+      properties_.insert(std::pair<std::string, Property>(prop.getName(), new_property));
+      onPropertyModified({}, new_property);
+      return true;
+    }
+}
+
 /**
  * Sets supported properties for the ConfigurableComponent
  * @param supported properties
@@ -174,7 +176,7 @@ bool ConfigurableComponent::getDynamicProperty(const std::string name, std::stri
   auto &&it = dynamic_properties_.find(name);
   if (it != dynamic_properties_.end()) {
     Property item = it->second;
-    value = item.getValue();
+    value = item.getValue().to_string();
     logger_->log_debug("Component %s dynamic property name %s value %s", name, item.getName(), value);
     return true;
   } else {

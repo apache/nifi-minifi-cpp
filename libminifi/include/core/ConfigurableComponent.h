@@ -54,7 +54,8 @@ class ConfigurableComponent {
    * @param value value passed in by reference
    * @return result of getting property.
    */
-  bool getProperty(const std::string name, std::string &value) const;
+  template<typename T>
+  bool getProperty(const std::string name, T &value) const;
 
   /**
    * Provides a reference for the property.
@@ -80,6 +81,14 @@ class ConfigurableComponent {
    * @return whether property was set or not
    */
   bool setProperty(Property &prop, std::string value);
+
+  /**
+     * Sets the property using the provided name
+     * @param property name
+     * @param value property value.
+     * @return whether property was set or not
+     */
+  bool setProperty(Property &prop, PropertyValue &value);
 
   /**
    * Sets supported properties for the ConfigurableComponent
@@ -190,6 +199,21 @@ class ConfigurableComponent {
   bool createDynamicProperty(const std::string &name, const std::string &value);
 
 };
+
+template<typename T>
+bool ConfigurableComponent::getProperty(const std::string name, T &value) const{
+  std::lock_guard<std::mutex> lock(configuration_mutex_);
+
+   auto &&it = properties_.find(name);
+   if (it != properties_.end()) {
+     Property item = it->second;
+     value = static_cast<T>(item.getValue());
+     logger_->log_debug("Component %s property name %s value %s", name, item.getName(), item.getValue().getValue()->getStringValue());
+     return true;
+   } else {
+     return false;
+   }
+}
 
 } /* namespace core */
 } /* namespace minifi */

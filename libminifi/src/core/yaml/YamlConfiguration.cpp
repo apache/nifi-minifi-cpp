@@ -732,8 +732,55 @@ void YamlConfiguration::parsePropertiesNodeYaml(YAML::Node *propertiesNode, std:
           }
         }
       } else {
+        core::Property myProp;
+        processor->getProperty(propertyName, myProp);
+        auto defaultValue = myProp.getDefaultValue();
+        auto defaultType = defaultValue.getTypeInfo();
+        PropertyValue coercedValue;
+
+        // coerce the types. upon failure we will either exit or use the default value.
+        try {
+          if (defaultType == typeid(std::string)) {
+            std::cout << " same as string for " << myProp.getName() << std::endl;
+            auto typedValue = propertyValueNode.as<std::string>();
+            coercedValue = typedValue;
+          } else if (defaultType == typeid(int64_t)) {
+            std::cout << " same as int64 for " << myProp.getName() << std::endl;
+            auto typedValue = propertyValueNode.as<int64_t>();
+            coercedValue = typedValue;
+          } else if (defaultType == typeid(uint64_t)) {
+            std::cout << " same as uint64 for " << myProp.getName() << std::endl;
+            auto typedValue = propertyValueNode.as<uint64_t>();
+            coercedValue = typedValue;
+          } else if (defaultType == typeid(int)) {
+            std::cout << " same as uint64 for " << myProp.getName() << std::endl;
+            auto typedValue = propertyValueNode.as<int>();
+            coercedValue = typedValue;
+          } else if (defaultType == typeid(bool)) {
+            std::cout << " same as uint64 for " << myProp.getName() << std::endl;
+            auto typedValue = propertyValueNode.as<bool>();
+            coercedValue = typedValue;
+          } else {
+            std::cout << " same as string for " << myProp.getName() << " " << defaultType.name() << std::endl;
+            auto typedValue = propertyValueNode.as<std::string>();
+            coercedValue = typedValue;
+          }
+        } catch (...) {
+          std::string eof;
+          bool exit_on_failure = false;
+          if (configuration_->get(Configure::nifi_flow_configuration_file_exit_failure, eof)) {
+            utils::StringUtils::StringToBool(eof, exit_on_failure);
+          }
+          logger_->log_error("Invalid conversion for %s", myProp.getName());
+          if (exit_on_failure) {
+            std::cerr << "Invalid conversion for " << myProp.getName() << " to " << defaultType.name() << std::endl;
+          } else {
+            coercedValue = defaultValue;
+          }
+        }
+        std::cout << defaultValue.getTypeInfo().name() << std::endl;
         std::string rawValueString = propertyValueNode.as<std::string>();
-        if (!processor->setProperty(propertyName, rawValueString)) {
+        if (!processor->setProperty(myProp, coercedValue)) {
           std::shared_ptr<core::Connectable> proc = std::dynamic_pointer_cast<core::Connectable>(processor);
           if (proc != 0) {
             logger_->log_warn("Received property %s with value %s but is not one of the properties for %s. "
@@ -759,9 +806,13 @@ void YamlConfiguration::validateComponentProperties(const std::shared_ptr<Config
   // Validate required properties
   for (const auto &prop_pair : component_properties) {
     if (prop_pair.second.getRequired()) {
-      if (prop_pair.second.getValue().empty()) {
+      if (prop_pair.second.getValue().to_string().empty()) {
         std::stringstream reason;
         reason << "required property '" << prop_pair.second.getName() << "' is not set";
+        raiseComponentError(component_name, yaml_section, reason.str());
+      } else if (!prop_pair.second.getValue().validate(prop_pair.first).valid()) {
+        std::stringstream reason;
+        reason << "Property '" << prop_pair.second.getName() << "' is not valid";
         raiseComponentError(component_name, yaml_section, reason.str());
       }
     }
@@ -771,12 +822,12 @@ void YamlConfiguration::validateComponentProperties(const std::shared_ptr<Config
   for (const auto &prop_pair : component_properties) {
     const auto &dep_props = prop_pair.second.getDependentProperties();
 
-    if (prop_pair.second.getValue().empty()) {
+    if (prop_pair.second.getValue().to_string().empty()) {
       continue;
     }
 
     for (const auto &dep_prop_key : dep_props) {
-      if (component_properties.at(dep_prop_key).getValue().empty()) {
+      if (component_properties.at(dep_prop_key).getValue().to_string().empty()) {
         std::string reason("property '");
         reason.append(prop_pair.second.getName());
         reason.append("' depends on property '");

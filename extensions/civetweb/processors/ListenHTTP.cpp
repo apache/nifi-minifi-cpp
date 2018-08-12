@@ -73,8 +73,8 @@ void ListenHTTP::onSchedule(core::ProcessContext *context, core::ProcessSessionF
   if (!context->getProperty(BasePath.getName(), basePath)) {
     logger_->log_info("%s attribute is missing, so default value of %s will be used",
                       BasePath.getName(),
-                      BasePath.getValue());
-    basePath = BasePath.getValue();
+                      BasePath.getValue().to_string());
+    basePath = BasePath.getValue().to_string();
   }
 
   basePath.insert(0, "/");

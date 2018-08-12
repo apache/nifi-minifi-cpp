@@ -48,7 +48,7 @@ void RouteOnAttribute::onDynamicPropertyModified(const core::Property &orig_prop
     core::Relationship route_rel { route.first, "Dynamic route" };
     route_rels_[route.first] = route_rel;
     relationships.insert(route_rel);
-    logger_->log_info("RouteOnAttribute registered route '%s' with expression '%s'", route.first, route.second.getValue());
+    logger_->log_info("RouteOnAttribute registered route '%s' with expression '%s'", route.first, route.second.getValue().to_string());
   }
 
   relationships.insert(Unmatched);

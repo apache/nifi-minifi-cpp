@@ -20,6 +20,9 @@
 
 #include <memory>
 #include <string>
+#include <vector>
+
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -46,7 +49,7 @@ class Value {
     return string_value;
   }
 
-  bool empty(){
+  bool empty() {
     return string_value.empty();
   }
 
@@ -54,6 +57,8 @@ class Value {
   std::string string_value;
 
 };
+
+using StringValue = Value;
 
 class IntValue : public Value {
  public:
@@ -98,41 +103,36 @@ class Int64Value : public Value {
 };
 
 
-static inline std::shared_ptr<Value> createValue(
-    const bool &object) {
+static inline std::shared_ptr<Value> createValue(const bool &object) {
   return std::make_shared<BoolValue>(object);
 }
 
-static inline std::shared_ptr<Value> createValue(
-    const char *object) {
+static inline std::shared_ptr<Value> createValue(const char *object) {
   return std::make_shared<Value>(object);
 }
 
-static inline std::shared_ptr<Value> createValue(
-    char *object) {
+static inline std::shared_ptr<Value> createValue(char *object) {
   return std::make_shared<Value>(std::string(object));
 }
 
-static inline std::shared_ptr<Value> createValue(
-    const std::string &object) {
+static inline std::shared_ptr<Value> createValue(const std::string &object) {
   return std::make_shared<Value>(object);
 }
 
-
-static inline std::shared_ptr<Value> createValue(
-    const uint32_t &object) {
+static inline std::shared_ptr<Value> createValue(const uint32_t &object) {
   return std::make_shared<Int64Value>(object);
 }
-static inline std::shared_ptr<Value> createValue(
-    const uint64_t &object) {
+static inline std::shared_ptr<Value> createValue(const uint64_t &object) {
   return std::make_shared<Int64Value>(object);
 }
 
-static inline std::shared_ptr<Value> createValue(
-    const int &object) {
+static inline std::shared_ptr<Value> createValue(const int64_t &object) {
+  return std::make_shared<Int64Value>(object);
+}
+
+static inline std::shared_ptr<Value> createValue(const int &object) {
   return std::make_shared<IntValue>(object);
 }
-
 
 /**
  * Purpose: ValueNode is the AST container for a value
@@ -144,23 +144,24 @@ class ValueNode {
 
   }
 
+  explicit ValueNode(ValueNode &&vn) = default;
+  explicit ValueNode(const ValueNode &vn) = default;
+
   /**
    * Define the representations and eventual storage relationships through
    * createValue
    */
   template<typename T>
-  auto operator=(
-      const T ref) -> typename std::enable_if<std::is_same<T, int >::value ||
-      std::is_same<T, uint32_t >::value ||
-      std::is_same<T, uint64_t >::value ||
-      std::is_same<T, bool >::value ||
-      std::is_same<T, char* >::value ||
-      std::is_same<T, const char* >::value ||
-      std::is_same<T, std::string>::value,ValueNode&>::type {
+  auto operator=(const T ref) -> typename std::enable_if<std::is_same<T, int >::value ||
+  std::is_same<T, uint32_t >::value ||
+  std::is_same<T, uint64_t >::value ||
+  std::is_same<T, bool >::value ||
+  std::is_same<T, char* >::value ||
+  std::is_same<T, const char* >::value ||
+  std::is_same<T, std::string>::value,ValueNode&>::type {
     value_ = createValue(ref);
     return *this;
   }
-
 
   ValueNode &operator=(const ValueNode &ref) {
     value_ = ref.value_;
@@ -200,7 +201,8 @@ struct SerializedResponseNode {
   ValueNode value;
   bool array;
 
-  SerializedResponseNode() : array(false){
+  SerializedResponseNode()
+      : array(false) {
   }
 
   std::vector<SerializedResponseNode> children;
@@ -213,11 +215,13 @@ struct SerializedResponseNode {
   }
 };
 
+
 } /* namespace metrics */
 } /* namespace state */
 } /* namespace minifi */
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
+
 
 #endif /* LIBMINIFI_INCLUDE_CORE_STATE_VALUE_H_ */
