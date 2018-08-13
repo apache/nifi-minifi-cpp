@@ -121,7 +121,7 @@ void ListenSyslog::runThread() {
       if (_protocol == "TCP")
         listen(sockfd, 5);
       _serverSocket = sockfd;
-      logger_->log_error("ListenSysLog Server socket %d bind OK to port %d", _serverSocket, portno);
+      logger_->log_info("ListenSysLog Server socket %d bind OK to port %d", _serverSocket, portno);
     }
     FD_ZERO(&_readfds);
     FD_SET(_serverSocket, &_readfds);
