@@ -208,8 +208,14 @@ bool ConfigurableComponent::getProperty(const std::string name, T &value) const{
    if (it != properties_.end()) {
      Property item = it->second;
      value = static_cast<T>(item.getValue());
-     logger_->log_debug("Component %s property name %s value %s", name, item.getName(), item.getValue().getValue()->getStringValue());
-     return true;
+     if (item.getValue().getValue() != nullptr){
+       logger_->log_debug("Component %s property name %s value %s", name, item.getName(), item.getValue().to_string());
+       return true;
+     }
+     else{
+       logger_->log_debug("Component %s property name %s, empty value", name, item.getName());
+       return false;
+     }
    } else {
      return false;
    }

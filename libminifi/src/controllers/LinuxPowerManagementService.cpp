@@ -28,12 +28,29 @@ namespace nifi {
 namespace minifi {
 namespace controllers {
 
-core::Property LinuxPowerManagerService::BatteryCapacityPath("Battery Capacity Path", "Path to the battery level");
-core::Property LinuxPowerManagerService::BatteryStatusPath("Battery Status Path", "Path to the battery status ( Discharging/Battery )");
-core::Property LinuxPowerManagerService::BatteryStatusDischargeKeyword("Battery Status Discharge", "Keyword to identify if battery is discharging");
-core::Property LinuxPowerManagerService::TriggerThreshold("Trigger Threshold", "Battery threshold before which we consider a slow reduction");
-core::Property LinuxPowerManagerService::LowBatteryThreshold("Low Battery Threshold", "Battery threshold before which we will aggressively reduce");
-core::Property LinuxPowerManagerService::WaitPeriod("Wait Period", "Decay between checking threshold and determining if a reduction is needed");
+core::Property LinuxPowerManagerService::BatteryCapacityPath(
+    core::PropertyBuilder::createProperty("Battery Capacity Path")->withDescription("Path to the battery level")->isRequired(true)->withDefaultValue<std::string>(
+        "/sys/class/power_supply/BAT0/capacity")->build());
+
+core::Property LinuxPowerManagerService::BatteryStatusPath(
+    core::PropertyBuilder::createProperty("Battery Status Path")->withDescription("Path to the battery status ( Discharging/Battery )")->isRequired(true)->withDefaultValue<std::string>(
+        "/sys/class/power_supply/BAT0/status")->build());
+
+core::Property LinuxPowerManagerService::BatteryStatusDischargeKeyword(
+    core::PropertyBuilder::createProperty("Battery Status Discharge")->withDescription("Keyword to identify if battery is discharging")->isRequired(true)->withDefaultValue<std::string>("Discharging")
+        ->build());
+
+core::Property LinuxPowerManagerService::TriggerThreshold(
+    core::PropertyBuilder::createProperty("Trigger Threshold")->withDescription("Battery threshold before which we consider a slow reduction. Should be a number from 1-100")->isRequired(true)
+        ->withDefaultValue<int>(75)->build());
+
+core::Property LinuxPowerManagerService::WaitPeriod(
+    core::PropertyBuilder::createProperty("Wait Period")->withDescription("Decay between checking threshold and determining if a reduction is needed")->isRequired(true)
+        ->withDefaultValue<core::TimePeriodValue>("100 msec")->build());
+
+core::Property LinuxPowerManagerService::LowBatteryThreshold(
+    core::PropertyBuilder::createProperty("Low Battery Threshold")->withDescription("Battery threshold before which we will aggressively reduce. Should be a number from 1-100")->isRequired(true)
+        ->withDefaultValue<int>(50)->build());
 
 bool LinuxPowerManagerService::isAboveMax(int new_tasks) {
   return false;
@@ -45,16 +62,20 @@ uint16_t LinuxPowerManagerService::getMaxThreads() {
 
 bool LinuxPowerManagerService::canIncrease() {
   for (const auto path_pair : paths_) {
-    auto capacity = path_pair.first;
-    auto status = path_pair.second;
+    try {
+      auto capacity = path_pair.first;
+      auto status = path_pair.second;
 
-    std::ifstream status_file(status);
-    std::string status_str;
-    std::getline(status_file, status_str);
-    status_file.close();
+      std::ifstream status_file(status);
+      std::string status_str;
+      std::getline(status_file, status_str);
+      status_file.close();
 
-    if (!utils::StringUtils::equalsIgnoreCase(status_keyword_, status_str)) {
-      return true;
+      if (!utils::StringUtils::equalsIgnoreCase(status_keyword_, status_str)) {
+        return true;
+      }
+    } catch (...) {
+      logger_->log_error("Could not read file paths. ignoring, temporarily");
     }
   }
   return false;
@@ -84,23 +105,28 @@ bool LinuxPowerManagerService::shouldReduce() {
 
   int battery_sum = 0;
   for (const auto path_pair : paths_) {
-    auto capacity = path_pair.first;
-    auto status = path_pair.second;
+    try {
+      auto capacity = path_pair.first;
+      auto status = path_pair.second;
 
-    std::ifstream capacity_file(capacity);
-    std::string capacity_str;
-    std::getline(capacity_file, capacity_str);
-    capacity_file.close();
-    int battery_level = std::stoi(capacity_str);
-    battery_sum += battery_level;
+      std::ifstream capacity_file(capacity);
+      std::string capacity_str;
+      std::getline(capacity_file, capacity_str);
+      capacity_file.close();
+      int battery_level = std::stoi(capacity_str);
+      battery_sum += battery_level;
 
-    std::ifstream status_file(status);
-    std::string status_str;
-    std::getline(status_file, status_str);
-    status_file.close();
+      std::ifstream status_file(status);
+      std::string status_str;
+      std::getline(status_file, status_str);
+      status_file.close();
 
-    if (!utils::StringUtils::equalsIgnoreCase(status_keyword_, status_str)) {
-      all_discharging &= false;
+      if (!utils::StringUtils::equalsIgnoreCase(status_keyword_, status_str)) {
+        all_discharging &= false;
+      }
+    } catch (...) {
+      logger_->log_error("Error caught while pulling paths");
+      return false;
     }
   }
 
@@ -159,25 +185,17 @@ void LinuxPowerManagerService::onEnable() {
     logger_->log_trace("Cannot enable Linux Power Manager");
     return;
   }
-  std::string trigger, wait;
   status_keyword_ = "Discharging";
   core::Property capacityPaths;
   core::Property statusPaths;
 
-  if (getProperty(TriggerThreshold.getName(), trigger) && getProperty(WaitPeriod.getName(), wait)) {
-    core::TimeUnit unit;
-    int64_t wait_time;
-    if (core::Property::StringToTime(wait, wait_time, unit) && core::Property::ConvertTimeUnitToMS(wait_time, unit, wait_time)) {
-      wait_period_ = wait_time;
-    }
+  uint64_t wait;
+  if (getProperty(TriggerThreshold.getName(), trigger_) && getProperty(WaitPeriod.getName(), wait)) {
+    wait_period_ = wait;
 
     getProperty(BatteryStatusDischargeKeyword.getName(), status_keyword_);
 
-    trigger_ = std::stoi(trigger);
-
-    if (getProperty(LowBatteryThreshold.getName(), trigger)) {
-      low_battery_trigger_ = std::stoi(trigger);
-    } else {
+    if (!getProperty(LowBatteryThreshold.getName(), low_battery_trigger_)) {
       low_battery_trigger_ = 0;
     }
     getProperty(BatteryCapacityPath.getName(), capacityPaths);
@@ -189,6 +207,7 @@ void LinuxPowerManagerService::onEnable() {
     } else {
       logger_->log_error("BatteryCapacityPath and BatteryStatusPath mis-configuration");
     }
+
     enabled_ = true;
     logger_->log_trace("Enabled enable ");
   } else {

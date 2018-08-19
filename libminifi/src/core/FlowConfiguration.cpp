@@ -36,7 +36,7 @@ static_initializers &get_static_functions() {
 FlowConfiguration::~FlowConfiguration() {
 }
 
-std::shared_ptr<core::Processor> FlowConfiguration::createProcessor(std::string name, utils::Identifier &  uuid) {
+std::shared_ptr<core::Processor> FlowConfiguration::createProcessor(std::string name, utils::Identifier & uuid) {
   auto ptr = core::ClassLoader::getDefaultClassLoader().instantiate(name, uuid);
   if (nullptr == ptr) {
     logger_->log_error("No Processor defined for %s", name);
@@ -62,7 +62,12 @@ std::shared_ptr<core::Processor> FlowConfiguration::createProvenanceReportTask()
 }
 
 std::unique_ptr<core::ProcessGroup> FlowConfiguration::updateFromPayload(const std::string &source, const std::string &yamlConfigPayload) {
-  if (!source.empty()) {
+  auto old_services = controller_services_;
+  auto old_provider = service_provider_;
+  controller_services_ = std::make_shared<core::controller::ControllerServiceMap>();
+  service_provider_ = std::make_shared<core::controller::StandardControllerServiceProvider>(controller_services_, nullptr, configuration_);
+  auto payload = getRootFromPayload(yamlConfigPayload);
+  if (!source.empty() && payload != nullptr) {
     std::string host, protocol, path, query, url = source;
     int port;
     utils::parse_url(&url, &host, &port, &protocol, &path, &query);
@@ -86,23 +91,26 @@ std::unique_ptr<core::ProcessGroup> FlowConfiguration::updateFromPayload(const s
       }
     }
     flow_version_->setFlowVersion(url, bucket_id, flow_id);
+  } else {
+    controller_services_ = old_services;
+    service_provider_ = old_provider;
   }
-  return getRootFromPayload(yamlConfigPayload);
+  return payload;
 }
 
-std::unique_ptr<core::ProcessGroup> FlowConfiguration::createRootProcessGroup(std::string name, utils::Identifier &  uuid, int version) {
+std::unique_ptr<core::ProcessGroup> FlowConfiguration::createRootProcessGroup(std::string name, utils::Identifier & uuid, int version) {
   return std::unique_ptr<core::ProcessGroup>(new core::ProcessGroup(core::ROOT_PROCESS_GROUP, name, uuid, version));
 }
 
-std::unique_ptr<core::ProcessGroup> FlowConfiguration::createRemoteProcessGroup(std::string name, utils::Identifier &  uuid) {
+std::unique_ptr<core::ProcessGroup> FlowConfiguration::createRemoteProcessGroup(std::string name, utils::Identifier & uuid) {
   return std::unique_ptr<core::ProcessGroup>(new core::ProcessGroup(core::REMOTE_PROCESS_GROUP, name, uuid));
 }
 
-std::shared_ptr<minifi::Connection> FlowConfiguration::createConnection(std::string name, utils::Identifier &  uuid) {
+std::shared_ptr<minifi::Connection> FlowConfiguration::createConnection(std::string name, utils::Identifier & uuid) {
   return std::make_shared<minifi::Connection>(flow_file_repo_, content_repo_, name, uuid);
 }
 
-std::shared_ptr<core::controller::ControllerServiceNode> FlowConfiguration::createControllerService(const std::string &class_name, const std::string &name, utils::Identifier &  uuid) {
+std::shared_ptr<core::controller::ControllerServiceNode> FlowConfiguration::createControllerService(const std::string &class_name, const std::string &name, utils::Identifier & uuid) {
   std::shared_ptr<core::controller::ControllerServiceNode> controllerServicesNode = service_provider_->createControllerService(class_name, name, true);
   if (nullptr != controllerServicesNode)
     controllerServicesNode->setUUID(uuid);

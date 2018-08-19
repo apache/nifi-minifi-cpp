@@ -42,10 +42,10 @@ bool SchedulingAgent::hasWorkToDo(std::shared_ptr<core::Processor> processor) {
 std::future<uint64_t> SchedulingAgent::enableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) {
   logger_->log_info("Enabling CSN in SchedulingAgent %s", serviceNode->getName());
   // reference the enable function from serviceNode
-  std::function< uint64_t()> f_ex = [serviceNode] {
-    serviceNode->enable();
-    return 0;
-  };
+  std::function<uint64_t()> f_ex = [serviceNode] {
+      serviceNode->enable();
+      return 0;
+    };
 
   // only need to run this once.
   std::unique_ptr<SingleRunMonitor> monitor = std::unique_ptr<SingleRunMonitor>(new SingleRunMonitor(&running_));
@@ -54,14 +54,15 @@ std::future<uint64_t> SchedulingAgent::enableControllerService(std::shared_ptr<c
   // we aren't terribly concerned with the result.
   std::future<uint64_t> future;
   thread_pool_.execute(std::move(functor), future);
-  future.wait();
+  if (future.valid())
+    future.wait();
   return future;
 }
 
 std::future<uint64_t> SchedulingAgent::disableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) {
   logger_->log_info("Disabling CSN in SchedulingAgent %s", serviceNode->getName());
   // reference the disable function from serviceNode
-  std::function< uint64_t()> f_ex = [serviceNode] {
+  std::function<uint64_t()> f_ex = [serviceNode] {
     serviceNode->disable();
     return 0;
   };
@@ -74,7 +75,8 @@ std::future<uint64_t> SchedulingAgent::disableControllerService(std::shared_ptr<
   // we aren't terribly concerned with the result.
   std::future<uint64_t> future;
   thread_pool_.execute(std::move(functor), future);
-  future.wait();
+  if (future.valid())
+    future.wait();
   return future;
 }
 

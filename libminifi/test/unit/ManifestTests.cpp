@@ -39,7 +39,7 @@ TEST_CASE("Test Required", "[required]") {
   REQUIRE(prop_descriptors.children.size() > 0);
   const auto &prop_0 = prop_descriptors.children[0];
   REQUIRE(prop_0.children.size() >= 3);
-  const auto &prop_0_required = prop_0.children[2];
+  const auto &prop_0_required = prop_0.children[3];
   REQUIRE("required" == prop_0_required.name);
   REQUIRE(!std::dynamic_pointer_cast<minifi::state::response::BoolValue>(prop_0_required.value.getValue())->getValue());
 }
@@ -59,11 +59,13 @@ TEST_CASE("Test Valid Regex", "[validRegex]") {
   const auto &prop_0 = prop_descriptors.children[0];
   REQUIRE(prop_0.children.size() >= 3);
   const auto &df = prop_0.children[3];
-  REQUIRE("expressionLanguageScope" == df.name);
-  const auto &prop_0_defv = prop_0.children[4];
-  REQUIRE("defaultValue" == prop_0_defv.name);
+  REQUIRE("required" == df.name);
+  const auto &prop_0_els = prop_0.children[4];
+  REQUIRE("expressionLanguageScope" == prop_0_els.name);
   const auto &prop_0_valid_regex = prop_0.children[5];
-  REQUIRE("validRegex" == prop_0_valid_regex.name);
+  REQUIRE("defaultValue" == prop_0_valid_regex.name);
+  const auto &prop_0_defv = prop_0.children[6];
+  REQUIRE("validRegex" == prop_0_defv.name);
 }
 
 TEST_CASE("Test Relationships", "[rel1]") {
@@ -112,8 +114,9 @@ TEST_CASE("Test Dependent", "[dependent]") {
   REQUIRE(prop_descriptors.children.size() > 0);
   const auto &prop_0 = prop_descriptors.children[1];
   REQUIRE(prop_0.children.size() >= 3);
-  REQUIRE("expressionLanguageScope" == prop_0.children[3].name);
-  REQUIRE("defaultValue" == prop_0.children[4].name);
+  REQUIRE("required" == prop_0.children[3].name);
+  REQUIRE("expressionLanguageScope" == prop_0.children[4].name);
+  REQUIRE("defaultValue" == prop_0.children[5].name);
   const auto &prop_0_dependent_0 = prop_descriptors.children[2];
   REQUIRE("Directory" == prop_0_dependent_0.name);
 }

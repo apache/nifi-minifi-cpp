@@ -48,9 +48,10 @@ class Properties {
     properties_.clear();
   }
   // Set the config value
-  void set(std::string key, std::string value) {
+  void set(const std::string &key, const std::string &value) {
     std::lock_guard<std::mutex> lock(mutex_);
     properties_[key] = value;
+    dirty_ = true;
   }
   // Check whether the config value existed
   bool has(std::string key) {
@@ -83,7 +84,7 @@ class Properties {
   int getInt(const std::string &key, int default_value);
 
   // Parse one line in configure file like key=value
-  void parseConfigureFileLine(char *buf);
+  bool parseConfigureFileLine(char *buf, std::string &prop_key, std::string &prop_value);
   // Load Configure File
   void loadConfigureFile(const char *fileName);
   // Set the determined MINIFI_HOME
@@ -106,10 +107,21 @@ class Properties {
   // Parse Command Line
   void parseCommandLine(int argc, char **argv);
 
+  bool persistProperties();
+
  protected:
+
+  bool validateConfigurationFile(const std::string &file);
+
   std::map<std::string, std::string> properties_;
 
+
  private:
+
+  std::atomic<bool> dirty_;
+
+  std::string properties_file_;
+
   // Mutex for protection
   std::mutex mutex_;
   // Logger

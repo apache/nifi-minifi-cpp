@@ -265,9 +265,9 @@ class GetTCP : public core::Processor, public state::response::MetricsNodeSource
 
   int8_t endOfMessageByte;
 
-  int64_t reconnect_interval_;
+  uint64_t reconnect_interval_;
 
-  int64_t receive_buffer_size_;
+  uint64_t receive_buffer_size_;
 
   uint16_t connection_attempt_limit_;
 

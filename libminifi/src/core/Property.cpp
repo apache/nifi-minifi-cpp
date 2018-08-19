@@ -58,7 +58,7 @@ std::string Property::getValidRegex() const {
   return valid_regex_;
 }
 
-std::shared_ptr<PropertyValidator> Property::getValidator() const{
+std::shared_ptr<PropertyValidator> Property::getValidator() const {
   return validator_;
 }
 
@@ -84,27 +84,6 @@ bool Property::operator<(const Property &right) const {
   return name_ < right.name_;
 }
 
-const Property &Property::operator=(const Property &other) {
-  name_ = other.name_;
-  display_name_ = other.display_name_;
-  types_ = other.types_;
-  values_ = other.values_;
-  description_ = other.description_;
-  is_collection_ = other.is_collection_;
-  is_required_ = other.is_required_;
-  valid_regex_ = other.valid_regex_;
-  dependent_properties_ = other.dependent_properties_;
-  exclusive_of_properties_ = other.exclusive_of_properties_;
-  supports_el_ = other.supports_el_;
-  validator_ = other.validator_;
-  default_value_ = other.default_value_;
-  if (validator_ != nullptr)
-  std::cout << "copying " << name_ << " " << typeid(validator_).name() << " " << std::endl;
-  else
-    std::cout << "copying " << name_ << " null "  << std::endl;
-  std::cout << default_value_.getTypeInfo().name() << " for " << name_ << std::endl;
-  return *this;
-}
 
 std::vector<std::string> Property::getDependentProperties() const {
   return dependent_properties_;

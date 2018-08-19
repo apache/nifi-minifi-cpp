@@ -44,15 +44,6 @@ namespace nifi {
 namespace minifi {
 namespace core {
 
-enum TimeUnit {
-  DAY,
-  HOUR,
-  MINUTE,
-  SECOND,
-  MILLISECOND,
-  NANOSECOND
-};
-
 class PropertyBuilder;
 
 class Property {
@@ -71,8 +62,7 @@ class Property {
         exclusive_of_properties_(std::move(exclusive_of_properties)),
         is_collection_(false),
         supports_el_(false) {
-    default_value_ = value;
-    validator_ = StandardValidators::VALID;
+    default_value_ = coerceDefaultValue(value);
   }
 
   Property(const std::string name, const std::string description, std::string value)
@@ -81,11 +71,7 @@ class Property {
         is_required_(false),
         is_collection_(false),
         supports_el_(false) {
-    default_value_ = value;
-    validator_ = StandardValidators::VALID;
-    if (validator_ == nullptr) {
-      std::cout << " for " << name << " we have a nully" << std::endl;
-    }
+    default_value_ = coerceDefaultValue(value);
   }
 
   Property(const std::string name, const std::string description)
@@ -97,37 +83,9 @@ class Property {
     validator_ = StandardValidators::VALID;
   }
 
-  Property(Property &&other)
-      : name_(std::move(other.name_)),
-        description_(std::move(other.description_)),
-        is_required_(other.is_required_),
-        valid_regex_(std::move(other.valid_regex_)),
-        dependent_properties_(std::move(other.dependent_properties_)),
-        exclusive_of_properties_(std::move(other.exclusive_of_properties_)),
-        is_collection_(other.is_collection_),
-        values_(std::move(other.values_)),
-        display_name_(std::move(other.display_name_)),
-        types_(std::move(other.types_)),
-        supports_el_(other.supports_el_) {
-    validator_ = std::move(other.validator_);
-    default_value_ = std::move(other.default_value_);
-  }
+  Property(Property &&other) = default;
 
-  Property(const Property &other)
-      : name_(other.name_),
-        description_(other.description_),
-        is_required_(other.is_required_),
-        valid_regex_(other.valid_regex_),
-        dependent_properties_(other.dependent_properties_),
-        exclusive_of_properties_(other.exclusive_of_properties_),
-        is_collection_(other.is_collection_),
-        values_(other.values_),
-        display_name_(other.display_name_),
-        types_(other.types_),
-        supports_el_(other.supports_el_) {
-    validator_ = other.validator_;
-    default_value_ = other.default_value_;
-  }
+  Property(const Property &other) = default;
 
   Property()
       : name_(""),
@@ -159,7 +117,7 @@ class Property {
 
   template<typename T = std::string>
   void setValue(const T &value) {
-    PropertyValue vn;
+    PropertyValue vn = default_value_;
     vn = value;
     if (validator_) {
       vn.setValidator(validator_);
@@ -196,11 +154,20 @@ class Property {
     }
   }
   void setSupportsExpressionLanguage(bool supportEl);
+
+  std::vector<PropertyValue> getAllowedValues() const {
+    return allowed_values_;
+  }
+
+  void addAllowedValue(const PropertyValue &value) {
+    allowed_values_.push_back(value);
+  }
   /**
    * Add value to the collection of values.
    */
   void addValue(const std::string &value);
-  const Property &operator=(const Property &other);
+  Property &operator=(const Property &other) = default;
+  Property &operator=(Property &&other) = default;
 // Compare
   bool operator <(const Property & right) const;
 
@@ -405,6 +372,23 @@ class Property {
 
  protected:
 
+  /**
+   * Coerce default values at construction.
+   */
+  PropertyValue coerceDefaultValue(const std::string &value) {
+    PropertyValue ret;
+    if (value == "false" || value == "true") {
+      bool val;
+      std::istringstream(value) >> std::boolalpha >> val;
+      ret = val;
+      validator_ = StandardValidators::getValidator(ret.getValue());
+    } else {
+      ret = value;
+      validator_ = StandardValidators::VALID;
+    }
+    return ret;
+  }
+
   std::string name_;
   std::string description_;
   bool is_required_;
@@ -416,6 +400,7 @@ class Property {
   std::vector<PropertyValue> values_;
   std::shared_ptr<PropertyValidator> validator_;
   std::string display_name_;
+  std::vector<PropertyValue> allowed_values_;
   // types represents the allowable types for this property
   // these types should be the canonical name.
   std::vector<std::string> types_;
@@ -423,13 +408,11 @@ class Property {
  private:
 
   friend class PropertyBuilder;
+
 };
 
 template<typename T>
 class ConstrainedProperty;
-
-
-
 
 class PropertyBuilder : public std::enable_shared_from_this<PropertyBuilder> {
  public:
@@ -480,8 +463,17 @@ class PropertyBuilder : public std::enable_shared_from_this<PropertyBuilder> {
   }
 
   template<typename T>
-  std::shared_ptr<ConstrainedProperty<T>> withAllowedValue(const T& df){
-    return nullptr;
+  std::shared_ptr<ConstrainedProperty<T>> withAllowableValue(const T& df) {
+    auto property = std::make_shared<ConstrainedProperty<T>>(shared_from_this());
+    property->withAllowableValue(df);
+    return property;
+  }
+
+  template<typename T>
+  std::shared_ptr<ConstrainedProperty<T>> withAllowableValues(const std::set<T> &df) {
+    auto property = std::make_shared<ConstrainedProperty<T>>(shared_from_this());
+    property->withAllowableValues(df);
+    return property;
   }
 
   template<typename T>
@@ -516,59 +508,79 @@ class PropertyBuilder : public std::enable_shared_from_this<PropertyBuilder> {
 
   PropertyBuilder() {
   }
+
 };
 
 template<typename T>
 class ConstrainedProperty : public std::enable_shared_from_this<ConstrainedProperty<T>> {
-public:
+ public:
   std::shared_ptr<ConstrainedProperty<T>> withDescription(const std::string &description) {
-      builder_->withDescription(description);
-      return this->shared_from_this();
-    }
+    builder_->withDescription(description);
+    return this->shared_from_this();
+  }
 
-    std::shared_ptr<ConstrainedProperty<T>> isRequired(bool required) {
-      builder_->isRequired(required);
-      return this->shared_from_this();
-    }
+  std::shared_ptr<ConstrainedProperty<T>> isRequired(bool required) {
+    builder_->isRequired(required);
+    return this->shared_from_this();
+  }
 
-    std::shared_ptr<ConstrainedProperty<T>> supportsExpressionLanguage(bool sel) {
-      builder_->supportsExpressionLanguage(sel);
-      return this->shared_from_this();
-    }
+  std::shared_ptr<ConstrainedProperty<T>> supportsExpressionLanguage(bool sel) {
+    builder_->supportsExpressionLanguage(sel);
+    return this->shared_from_this();
+  }
 
-    std::shared_ptr<ConstrainedProperty<T>> withDefaultValue(const T &df, const std::shared_ptr<PropertyValidator> &validator = nullptr) {
-      builder_->withDefaultValue(df,validator);
-      return this->shared_from_this();
-    }
+  std::shared_ptr<ConstrainedProperty<T>> withDefaultValue(const T &df, const std::shared_ptr<PropertyValidator> &validator = nullptr) {
+    builder_->withDefaultValue(df, validator);
+    return this->shared_from_this();
+  }
 
-    std::shared_ptr<ConstrainedProperty<T>> withAllowedValue(const T& df){
-      allowed_values_.push_back(df);
-      return this->shared_from_this();
-    }
+  std::shared_ptr<ConstrainedProperty<T>> withAllowableValue(const T& df) {
+    PropertyValue dn;
+    dn = df;
+    allowed_values_.emplace_back(dn);
+    return this->shared_from_this();
+  }
 
-
-    template<typename J>
-    std::shared_ptr<ConstrainedProperty<T>> asType() {
-      builder_->asType<J>();
-      return this->shared_from_this();
+  std::shared_ptr<ConstrainedProperty<T>> withAllowableValues(const std::set<T>& defaultValues) {
+    for (const auto &defaultValue : defaultValues) {
+      PropertyValue dn;
+      dn = defaultValue;
+      allowed_values_.emplace_back(dn);
     }
+    return this->shared_from_this();
+  }
 
-    std::shared_ptr<ConstrainedProperty<T>> withExclusiveProperty(const std::string &property, const std::string regex) {
-      builder_->withExclusiveProperty(property,regex);
-      return this->shared_from_this();
-    }
+  template<typename J>
+  std::shared_ptr<ConstrainedProperty<T>> asType() {
+    builder_->asType<J>();
+    return this->shared_from_this();
+  }
 
-    Property &&build() {
-      return builder_->build();
+  std::shared_ptr<ConstrainedProperty<T>> withExclusiveProperty(const std::string &property, const std::string regex) {
+    builder_->withExclusiveProperty(property, regex);
+    return this->shared_from_this();
+  }
+
+  Property &&build() {
+    Property &&prop = builder_->build();
+    for (const auto &value : allowed_values_) {
+      prop.addAllowedValue(value);
     }
- protected:
-  ConstrainedProperty(const std::shared_ptr<PropertyBuilder> &builder) : builder_(builder){
+    return std::move(prop);
+  }
+
+  ConstrainedProperty(const std::shared_ptr<PropertyBuilder> &builder)
+      : builder_(builder) {
 
   }
-  std::vector<T> allowed_values_;
-  std::shared_ptr<PropertyBuilder> builder_;
-};
 
+ protected:
+
+  std::vector<PropertyValue> allowed_values_;
+  std::shared_ptr<PropertyBuilder> builder_;
+
+  friend class PropertyBuilder;
+};
 
 } /* namespace core */
 } /* namespace minifi */

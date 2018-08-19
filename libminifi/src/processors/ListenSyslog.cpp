@@ -28,6 +28,7 @@
 #include "utils/StringUtils.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
+#include "core/TypedValues.h"
 
 namespace org {
 namespace apache {
@@ -35,16 +36,36 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 #ifndef WIN32
-core::Property ListenSyslog::RecvBufSize("Receive Buffer Size", "The size of each buffer used to receive Syslog messages.", "65507 B");
-core::Property ListenSyslog::MaxSocketBufSize("Max Size of Socket Buffer", "The maximum size of the socket buffer that should be used.", "1 MB");
-core::Property ListenSyslog::MaxConnections("Max Number of TCP Connections", "The maximum number of concurrent connections to accept Syslog messages in TCP mode.", "2");
-core::Property ListenSyslog::MaxBatchSize("Max Batch Size", "The maximum number of Syslog events to add to a single FlowFile.", "1");
-core::Property ListenSyslog::MessageDelimiter("Message Delimiter", "Specifies the delimiter to place between Syslog messages when multiple "
-                                              "messages are bundled together (see <Max Batch Size> core::Property).",
-                                              "\n");
-core::Property ListenSyslog::ParseMessages("Parse Messages", "Indicates if the processor should parse the Syslog messages. If set to false, each outgoing FlowFile will only.", "false");
-core::Property ListenSyslog::Protocol("Protocol", "The protocol for Syslog communication.", "UDP");
-core::Property ListenSyslog::Port("Port", "The port for Syslog communication.", "514");
+core::Property ListenSyslog::RecvBufSize(
+    core::PropertyBuilder::createProperty("Receive Buffer Size")->withDescription("The size of each buffer used to receive Syslog messages.")->
+    withDefaultValue<core::DataSizeValue>("65507 B")->build());
+
+core::Property ListenSyslog::MaxSocketBufSize(
+    core::PropertyBuilder::createProperty("Max Size of Socket Buffer")->withDescription("The maximum size of the socket buffer that should be used.")->withDefaultValue<core::DataSizeValue>("1 MB")
+        ->build());
+
+core::Property ListenSyslog::MaxConnections(
+    core::PropertyBuilder::createProperty("Max Number of TCP Connections")->withDescription("The maximum number of concurrent connections to accept Syslog messages in TCP mode.")
+        ->withDefaultValue<int>(2)->build());
+
+core::Property ListenSyslog::MaxBatchSize(
+    core::PropertyBuilder::createProperty("Max Batch Size")->withDescription("The maximum number of Syslog events to add to a single FlowFile.")->withDefaultValue<int>(1)->build());
+
+core::Property ListenSyslog::MessageDelimiter(
+    core::PropertyBuilder::createProperty("Message Delimiter")->withDescription("Specifies the delimiter to place between Syslog messages when multiple "
+                                                                                "messages are bundled together (see <Max Batch Size> core::Property).")->withDefaultValue("\n")->build());
+
+core::Property ListenSyslog::ParseMessages(
+    core::PropertyBuilder::createProperty("Parse Messages")->withDescription("Indicates if the processor should parse the Syslog messages. If set to false, each outgoing FlowFile will only.")
+        ->withDefaultValue<bool>(false)->build());
+
+core::Property ListenSyslog::Protocol(
+    core::PropertyBuilder::createProperty("Protocol")->withDescription("The protocol for Syslog communication.")->withAllowableValue<std::string>("UDP")->withAllowableValue("TCP")->withDefaultValue(
+        "UDP")->build());
+
+core::Property ListenSyslog::Port(
+    core::PropertyBuilder::createProperty("Port")->withDescription("The port for Syslog communication")->withDefaultValue<int64_t>(514, core::StandardValidators::PORT_VALIDATOR())->build());
+
 core::Relationship ListenSyslog::Success("success", "All files are routed to success");
 core::Relationship ListenSyslog::Invalid("invalid", "SysLog message format invalid");
 

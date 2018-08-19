@@ -26,23 +26,29 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-core::Property ListenHTTP::BasePath("Base Path", "Base path for incoming connections", "contentListener");
-core::Property ListenHTTP::Port("Listening Port", "The Port to listen on for incoming connections", "");
-core::Property ListenHTTP::AuthorizedDNPattern
-    ("Authorized DN Pattern", "A Regular Expression to apply against the Distinguished Name of incoming"
-         " connections. If the Pattern does not match the DN, the connection will be refused.",
-     ".*");
-core::Property ListenHTTP::SSLCertificate
-    ("SSL Certificate", "File containing PEM-formatted file including TLS/SSL certificate and key", "");
-core::Property ListenHTTP::SSLCertificateAuthority
-    ("SSL Certificate Authority", "File containing trusted PEM-formatted certificates", "");
-core::Property
-    ListenHTTP::SSLVerifyPeer("SSL Verify Peer", "Whether or not to verify the client's certificate (yes/no)", "no");
-core::Property ListenHTTP::SSLMinimumVersion
-    ("SSL Minimum Version", "Minimum TLS/SSL version allowed (SSL2, SSL3, TLS1.0, TLS1.1, TLS1.2)", "SSL2");
-core::Property ListenHTTP::HeadersAsAttributesRegex("HTTP Headers to receive as Attributes (Regex)",
-                                                    "Specifies the Regular Expression that determines the names of HTTP Headers that"
-                                                        " should be passed along as FlowFile attributes",
+core::Property ListenHTTP::BasePath(
+    core::PropertyBuilder::createProperty("Base Path")->withDescription("Base path for incoming connections")->isRequired(false)->withDefaultValue<std::string>("contentListener")->build());
+
+core::Property ListenHTTP::Port(
+    core::PropertyBuilder::createProperty("Listening Port")->withDescription("The Port to listen on for incoming connections")->isRequired(true)->withDefaultValue<int>(
+        80, core::StandardValidators::PORT_VALIDATOR())->build());
+
+core::Property ListenHTTP::AuthorizedDNPattern("Authorized DN Pattern", "A Regular Expression to apply against the Distinguished Name of incoming"
+                                               " connections. If the Pattern does not match the DN, the connection will be refused.",
+                                               ".*");
+core::Property ListenHTTP::SSLCertificate("SSL Certificate", "File containing PEM-formatted file including TLS/SSL certificate and key", "");
+core::Property ListenHTTP::SSLCertificateAuthority("SSL Certificate Authority", "File containing trusted PEM-formatted certificates", "");
+
+core::Property ListenHTTP::SSLVerifyPeer(
+    core::PropertyBuilder::createProperty("SSL Verify Peer")->withDescription("Whether or not to verify the client's certificate (yes/no)")->isRequired(false)->withAllowableValue<std::string>("yes")
+        ->withAllowableValue("no")->withDefaultValue("no")->build());
+
+core::Property ListenHTTP::SSLMinimumVersion(
+    core::PropertyBuilder::createProperty("SSL Minimum Version")->withDescription("Minimum TLS/SSL version allowed (SSL2, SSL3, TLS1.0, TLS1.1, TLS1.2)")->isRequired(false)
+        ->withAllowableValue<std::string>("SSL2")->withAllowableValue("SSL3")->withAllowableValue("TLS1.0")->withAllowableValue("TLS1.1")->withAllowableValue("TLS1.2")->withDefaultValue("SSL2")->build());
+
+core::Property ListenHTTP::HeadersAsAttributesRegex("HTTP Headers to receive as Attributes (Regex)", "Specifies the Regular Expression that determines the names of HTTP Headers that"
+                                                    " should be passed along as FlowFile attributes",
                                                     "");
 
 core::Relationship ListenHTTP::Success("success", "All files are routed to success");
@@ -71,9 +77,7 @@ void ListenHTTP::onSchedule(core::ProcessContext *context, core::ProcessSessionF
   std::string basePath;
 
   if (!context->getProperty(BasePath.getName(), basePath)) {
-    logger_->log_info("%s attribute is missing, so default value of %s will be used",
-                      BasePath.getName(),
-                      BasePath.getValue().to_string());
+    logger_->log_info("%s attribute is missing, so default value of %s will be used", BasePath.getName(), BasePath.getValue().to_string());
     basePath = BasePath.getValue().to_string();
   }
 
@@ -104,8 +108,7 @@ void ListenHTTP::onSchedule(core::ProcessContext *context, core::ProcessSessionF
   std::string sslMinVer;
 
   if (!sslCertFile.empty()) {
-    if (context->getProperty(SSLCertificateAuthority.getName(), sslCertAuthorityFile)
-        && !sslCertAuthorityFile.empty()) {
+    if (context->getProperty(SSLCertificateAuthority.getName(), sslCertAuthorityFile) && !sslCertAuthorityFile.empty()) {
       logger_->log_debug("ListenHTTP using %s: %s", SSLCertificateAuthority.getName(), sslCertAuthorityFile);
     }
 
@@ -126,17 +129,13 @@ void ListenHTTP::onSchedule(core::ProcessContext *context, core::ProcessSessionF
 
   std::string headersAsAttributesPattern;
 
-  if (context->getProperty(HeadersAsAttributesRegex.getName(), headersAsAttributesPattern)
-      && !headersAsAttributesPattern.empty()) {
+  if (context->getProperty(HeadersAsAttributesRegex.getName(), headersAsAttributesPattern) && !headersAsAttributesPattern.empty()) {
     logger_->log_debug("ListenHTTP using %s: %s", HeadersAsAttributesRegex.getName(), headersAsAttributesPattern);
   }
 
   auto numThreads = getMaxConcurrentTasks();
 
-  logger_->log_info("ListenHTTP starting HTTP server on port %s and path %s with %d threads",
-                    listeningPort,
-                    basePath,
-                    numThreads);
+  logger_->log_info("ListenHTTP starting HTTP server on port %s and path %s with %d threads", listeningPort, basePath, numThreads);
 
   // Initialize web server
   std::vector<std::string> options;
@@ -190,11 +189,7 @@ void ListenHTTP::onSchedule(core::ProcessContext *context, core::ProcessSessionF
   }
 
   server_.reset(new CivetServer(options));
-  handler_.reset(new Handler(basePath,
-                             context,
-                             sessionFactory,
-                             std::move(authDNPattern),
-                             std::move(headersAsAttributesPattern)));
+  handler_.reset(new Handler(basePath, context, sessionFactory, std::move(authDNPattern), std::move(headersAsAttributesPattern)));
   server_->addHandler(basePath, handler_.get());
 }
 
@@ -215,13 +210,12 @@ void ListenHTTP::onTrigger(core::ProcessContext *context, core::ProcessSession *
   if (type == "response_body") {
 
     if (handler_) {
-      struct response_body response{"", "", ""};
+      struct response_body response { "", "", "" };
       ResponseBodyReadCallback cb(&response.body);
       flow_file->getAttribute("filename", response.uri);
       flow_file->getAttribute("mime.type", response.mime_type);
       if (response.mime_type.empty()) {
-        logger_->log_warn("Using default mime type of application/octet-stream for response body file: %s",
-                          response.uri);
+        logger_->log_warn("Using default mime type of application/octet-stream for response body file: %s", response.uri);
         response.mime_type = "application/octet-stream";
       }
       session->read(flow_file, &cb);
@@ -232,11 +226,7 @@ void ListenHTTP::onTrigger(core::ProcessContext *context, core::ProcessSession *
   session->remove(flow_file);
 }
 
-ListenHTTP::Handler::Handler(std::string base_uri,
-                             core::ProcessContext *context,
-                             core::ProcessSessionFactory *session_factory,
-                             std::string &&auth_dn_regex,
-                             std::string &&header_as_attrs_regex)
+ListenHTTP::Handler::Handler(std::string base_uri, core::ProcessContext *context, core::ProcessSessionFactory *session_factory, std::string &&auth_dn_regex, std::string &&header_as_attrs_regex)
     : base_uri_(std::move(base_uri)),
       auth_dn_regex_(std::move(auth_dn_regex)),
       headers_as_attrs_regex_(std::move(header_as_attrs_regex)),
@@ -246,14 +236,12 @@ ListenHTTP::Handler::Handler(std::string base_uri,
 }
 
 void ListenHTTP::Handler::send_error_response(struct mg_connection *conn) {
-  mg_printf(conn,
-            "HTTP/1.1 500 Internal Server Error\r\n"
-                "Content-Type: text/html\r\n"
-                "Content-Length: 0\r\n\r\n");
+  mg_printf(conn, "HTTP/1.1 500 Internal Server Error\r\n"
+            "Content-Type: text/html\r\n"
+            "Content-Length: 0\r\n\r\n");
 }
 
-void ListenHTTP::Handler::set_header_attributes(const mg_request_info *req_info,
-                                                const std::shared_ptr<FlowFileRecord> &flow_file) const {
+void ListenHTTP::Handler::set_header_attributes(const mg_request_info *req_info, const std::shared_ptr<FlowFileRecord> &flow_file) const {
   // Add filename from "filename" header value (and pattern headers)
   for (int i = 0; i < req_info->num_headers; i++) {
     auto header = &req_info->http_headers[i];
@@ -324,8 +312,8 @@ bool ListenHTTP::Handler::auth_request(mg_connection *conn, const mg_request_inf
   if (req_info->is_ssl && req_info->client_cert != nullptr) {
     if (!std::regex_match(req_info->client_cert->subject, auth_dn_regex_)) {
       mg_printf(conn, "HTTP/1.1 403 Forbidden\r\n"
-          "Content-Type: text/html\r\n"
-          "Content-Length: 0\r\n\r\n");
+                "Content-Type: text/html\r\n"
+                "Content-Length: 0\r\n\r\n");
       logger_->log_warn("ListenHTTP client DN not authorized: %s", req_info->client_cert->subject);
       authorized = false;
     }
@@ -376,7 +364,7 @@ void ListenHTTP::Handler::write_body(mg_connection *conn, const mg_request_info 
   const auto &request_uri_str = std::string(req_info->request_uri);
 
   if (request_uri_str.size() > base_uri_.size() + 1) {
-    struct response_body response{};
+    struct response_body response { };
 
     {
       // Attempt to minimize time holding mutex (it would be nice to have a lock-free concurrent map here)
@@ -389,9 +377,7 @@ void ListenHTTP::Handler::write_body(mg_connection *conn, const mg_request_info 
     }
 
     if (!response.body.empty()) {
-      logger_->log_debug("Writing response body of %lu bytes for URI: %s",
-                         response.body.size(),
-                         req_info->request_uri);
+      logger_->log_debug("Writing response body of %lu bytes for URI: %s", response.body.size(), req_info->request_uri);
       mg_printf(conn, "Content-type: ");
       mg_printf(conn, "%s", response.mime_type.c_str());
       mg_printf(conn, "\r\n");

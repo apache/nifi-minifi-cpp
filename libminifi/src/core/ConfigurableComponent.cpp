@@ -76,6 +76,7 @@ bool ConfigurableComponent::setProperty(const std::string name, std::string valu
     logger_->log_debug("Component %s property name %s value %s", name, new_property.getName(), value);
     return true;
   } else {
+    logger_->log_debug("Component %s cannot be set to %s", name, value);
     return false;
   }
 }
@@ -119,7 +120,7 @@ bool ConfigurableComponent::setProperty(Property &prop, std::string value) {
     new_property.setValue(value);
     properties_[new_property.getName()] = new_property;
     onPropertyModified(orig_property, new_property);
-    logger_->log_debug("property name %s value %s", prop.getName(), new_property.getName(), value);
+    logger_->log_debug("property name %s value %s and new value is %s", prop.getName(), value, new_property.getValue().to_string());
     return true;
   } else {
     Property new_property(prop);
@@ -140,14 +141,18 @@ bool ConfigurableComponent::setProperty(Property &prop, PropertyValue &value) {
       new_property.setValue(value);
       properties_[new_property.getName()] = new_property;
       onPropertyModified(orig_property, new_property);
-      logger_->log_debug("property name %s value %s", prop.getName(), new_property.getName(), value);
+      logger_->log_debug("property name %s value %s and new value is %s", prop.getName(), new_property.getName(), value, new_property.getValue().to_string());
       return true;
     } else {
-      Property new_property(prop);
-      new_property.setValue(value);
-      properties_.insert(std::pair<std::string, Property>(prop.getName(), new_property));
-      onPropertyModified({}, new_property);
-      return true;
+      if (supportsDynamicProperties()) {
+        Property new_property(prop);
+        new_property.setValue(value);
+        properties_.insert(std::pair<std::string, Property>(prop.getName(), new_property));
+        onPropertyModified({}, new_property);
+        return true;
+      } else {
+        return false;
+      }
     }
 }
 

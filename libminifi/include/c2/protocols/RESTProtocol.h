@@ -47,6 +47,12 @@ namespace c2 {
  * will encompass other protocols the context of its meaning here simply translates into POST and GET respectively.
  *
  */
+
+struct ValueObject{
+  std::string name;
+  std::vector<rapidjson::Value*> values;
+};
+
 class RESTProtocol {
  public:
   RESTProtocol()

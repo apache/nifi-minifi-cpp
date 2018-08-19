@@ -23,13 +23,26 @@ namespace nifi {
 namespace minifi {
 namespace core {
 
-const std::shared_ptr<PropertyValidator> StandardValidators::VALID = std::make_shared<AlwaysValid>(true,"VALID");
-const std::shared_ptr<PropertyValidator> StandardValidators::INVALID = std::make_shared<AlwaysValid>(false,"INVALID");
-const std::shared_ptr<PropertyValidator> StandardValidators::INTEGER_VALIDATOR = std::make_shared<IntegerValidator>("INTEGER_VALIDATOR");
-const std::shared_ptr<PropertyValidator> StandardValidators::LONG_VALIDATOR = std::make_shared<LongValidator>("LONG_VALIDATOR");
-const std::shared_ptr<PropertyValidator> StandardValidators::SIZE_VALIDATOR = std::make_shared<DataSizeValidator>("DATA_SIZE_VALIDATOR");
-const std::shared_ptr<PropertyValidator> StandardValidators::BOOLEAN_VALIDATOR = std::make_shared<BooleanValidator>("BOOLEAN_VALIDATOR");
-
+std::shared_ptr<PropertyValidator> StandardValidators::VALID = std::make_shared<AlwaysValid>(true, "VALID");
+StandardValidators::StandardValidators() {
+  INVALID = std::make_shared<AlwaysValid>(false, "INVALID");
+  INTEGER_VALIDATOR = std::make_shared<IntegerValidator>("INTEGER_VALIDATOR");
+  LONG_VALIDATOR = std::make_shared<LongValidator>("LONG_VALIDATOR");
+  UNSIGNED_LONG_VALIDATOR = std::make_shared<UnsignedLongValidator>("LONG_VALIDATOR");
+  SIZE_VALIDATOR = std::make_shared<DataSizeValidator>("DATA_SIZE_VALIDATOR");
+  TIME_PERIOD_VALIDATOR = std::make_shared<TimePeriodValidator>("TIME_PERIOD_VALIDATOR");
+  BOOLEAN_VALIDATOR = std::make_shared<BooleanValidator>("BOOLEAN_VALIDATOR");
+}
+/*
+ const std::shared_ptr<PropertyValidator> StandardValidators::VALID = std::make_shared<AlwaysValid>(true, "VALID");
+ const std::shared_ptr<PropertyValidator> StandardValidators::INVALID = std::make_shared<AlwaysValid>(false, "INVALID");
+ const std::shared_ptr<PropertyValidator> StandardValidators::INTEGER_VALIDATOR = std::make_shared<IntegerValidator>("INTEGER_VALIDATOR");
+ const std::shared_ptr<PropertyValidator> StandardValidators::LONG_VALIDATOR = std::make_shared<LongValidator>("LONG_VALIDATOR");
+ const std::shared_ptr<PropertyValidator> StandardValidators::UNSIGNED_LONG_VALIDATOR = std::make_shared<UnsignedLongValidator>("LONG_VALIDATOR");
+ const std::shared_ptr<PropertyValidator> StandardValidators::SIZE_VALIDATOR = std::make_shared<DataSizeValidator>("DATA_SIZE_VALIDATOR");
+ const std::shared_ptr<PropertyValidator> StandardValidators::TIME_PERIOD_VALIDATOR = std::make_shared<DataTimeValidator>("TIME_PERIOD_VALIDATOR");
+ const std::shared_ptr<PropertyValidator> StandardValidators::BOOLEAN_VALIDATOR = std::make_shared<BooleanValidator>("BOOLEAN_VALIDATOR");
+ const std::shared_ptr<PropertyValidator> StandardValidators::PORT_VALIDATOR = std::make_shared<PortValidator>("PORT_VALIDATOR");*/
 } /* namespace core */
 } /* namespace minifi */
 } /* namespace nifi */

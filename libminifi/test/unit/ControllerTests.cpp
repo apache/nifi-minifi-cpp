@@ -36,9 +36,14 @@ class TestStateController : public minifi::state::StateController {
   virtual ~TestStateController() {
   }
 
-  virtual std::string getComponentName() {
+  virtual std::string getComponentName() const {
     return "TestStateController";
   }
+
+  virtual std::string getComponentUUID() const {
+    return "uuid";
+  }
+
   /**
    * Start the client
    */
@@ -85,9 +90,13 @@ class TestUpdateSink : public minifi::state::StateMonitor {
     return vec;
   }
 
-  virtual std::string getComponentName() {
+  virtual std::string getComponentName() const {
     return "TestUpdateSink";
   }
+
+  virtual std::string getComponentUUID() const {
+      return "uuid";
+    }
   /**
    * Start the client
    */

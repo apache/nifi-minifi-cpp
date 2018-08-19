@@ -38,6 +38,7 @@
 #include "GetGPS.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
+#include "core/PropertyValidation.h"
 
 #define policy_t gps_policy_t
 #include <libgpsmm.h>
@@ -52,9 +53,11 @@ namespace processors {
 
 const std::string GetGPS::ProcessorName("GetGPS");
 core::Relationship GetGPS::Success("success", "All files are routed to success");
-core::Property GetGPS::GPSDHost("GPSD Host", "The host running the GPSD daemon", "localhost");
-core::Property GetGPS::GPSDPort("GPSD Port", "The GPSD daemon port", "2947");
-core::Property GetGPS::GPSDWaitTime("GPSD Wait Time", "Timeout value for waiting for data from the GPSD instance", "50000000");
+core::Property GetGPS::GPSDHost(core::PropertyBuilder::createProperty("GPSD Host")->withDescription("The host running the GPSD daemon")->withDefaultValue<std::string>("localhost")->build());
+core::Property GetGPS::GPSDPort(
+    core::PropertyBuilder::createProperty("GPSD Port")->withDescription("The GPSD daemon port")->withDefaultValue<int64_t>(2947, core::StandardValidators::PORT_VALIDATOR())->build());
+core::Property GetGPS::GPSDWaitTime(
+    core::PropertyBuilder::createProperty("GPSD Wait Time")->withDescription("Timeout value for waiting for data from the GPSD instance")->withDefaultValue<uint64_t>(50000000)->build());
 void GetGPS::initialize() {
   //! Set the supported properties
   std::set<core::Property> properties;

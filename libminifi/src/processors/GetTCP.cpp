@@ -50,16 +50,35 @@ namespace processors {
 
 const char *DataHandler::SOURCE_ENDPOINT_ATTRIBUTE = "source.endpoint";
 
-core::Property GetTCP::EndpointList("endpoint-list", "A comma delimited list of the endpoints to connect to. The format should be <server_address>:<port>.", "");
-core::Property GetTCP::ConcurrentHandlers("concurrent-handler-count", "Number of concurrent handlers for this session", "1");
-core::Property GetTCP::ReconnectInterval("reconnect-interval", "The number of seconds to wait before attempting to reconnect to the endpoint.", "5s");
-core::Property GetTCP::ReceiveBufferSize("receive-buffer-size", "The size of the buffer to receive data in. Default 16384 (16MB).", "16MB");
-core::Property GetTCP::SSLContextService("SSL Context Service", "SSL Context Service Name", "");
-core::Property GetTCP::StayConnected("Stay Connected", "Determines if we keep the same socket despite having no data", "true");
-core::Property GetTCP::ConnectionAttemptLimit("connection-attempt-timeout", "Maximum number of connection attempts before attempting backup hosts, if configured.", "3");
+core::Property GetTCP::EndpointList(
+    core::PropertyBuilder::createProperty("endpoint-list")->withDescription("A comma delimited list of the endpoints to connect to. The format should be <server_address>:<port>.")->isRequired(true)
+        ->build());
+
+core::Property GetTCP::ConcurrentHandlers(
+    core::PropertyBuilder::createProperty("concurrent-handler-count")->withDescription("Number of concurrent handlers for this session")->withDefaultValue<int>(1)->build());
+
+core::Property GetTCP::ReconnectInterval(
+    core::PropertyBuilder::createProperty("reconnect-interval")->withDescription("The number of seconds to wait before attempting to reconnect to the endpoint.")
+        ->withDefaultValue<core::TimePeriodValue>("5 s")->build());
+
+core::Property GetTCP::ReceiveBufferSize(
+    core::PropertyBuilder::createProperty("receive-buffer-size")->withDescription("The size of the buffer to receive data in. Default 16384 (16MB).")->withDefaultValue<core::DataSizeValue>("16 MB")
+        ->build());
+
+core::Property GetTCP::SSLContextService(
+    core::PropertyBuilder::createProperty("SSL Context Service")->withDescription("SSL Context Service Name")->asType<minifi::controllers::SSLContextService>()->build());
+
+core::Property GetTCP::StayConnected(
+    core::PropertyBuilder::createProperty("Stay Connected")->withDescription("Determines if we keep the same socket despite having no data")->withDefaultValue<bool>(true)->build());
+
+core::Property GetTCP::ConnectionAttemptLimit(
+    core::PropertyBuilder::createProperty("connection-attempt-timeout")->withDescription("Maximum number of connection attempts before attempting backup hosts, if configured")->withDefaultValue<int>(
+        3)->build());
+
 core::Property GetTCP::EndOfMessageByte(
-    "end-of-message-byte",
-    "Byte value which denotes end of message. Must be specified as integer within the valid byte range  (-128 thru 127). For example, '13' = Carriage return and '10' = New line. Default '13'.", "13");
+    core::PropertyBuilder::createProperty("end-of-message-byte")->withDescription(
+        "Byte value which denotes end of message. Must be specified as integer within the valid byte range  (-128 thru 127). For example, '13' = Carriage return and '10' = New line. Default '13'.")
+        ->withDefaultValue("13")->build());
 
 core::Relationship GetTCP::Success("success", "All files are routed to success");
 core::Relationship GetTCP::Partial("partial", "Indicates an incomplete message as a result of encountering the end of message byte trigger");
@@ -109,9 +128,8 @@ void GetTCP::onSchedule(const std::shared_ptr<core::ProcessContext> &context, co
     endpoints = utils::StringUtils::split(value, ",");
   }
 
-  if (context->getProperty(ConcurrentHandlers.getName(), value)) {
-    int64_t handlers = 0;
-    core::Property::StringToInt(value, handlers);
+  int handlers = 0;
+  if (context->getProperty(ConcurrentHandlers.getName(), handlers)) {
     concurrent_handlers_ = handlers;
   }
 
@@ -120,33 +138,22 @@ void GetTCP::onSchedule(const std::shared_ptr<core::ProcessContext> &context, co
   } else {
     stay_connected_ = true;
   }
-  if (context->getProperty(ConnectionAttemptLimit.getName(), value)) {
-    int64_t connects = 0;
-    core::Property::StringToInt(value, connects);
+  int connects = 0;
+  if (context->getProperty(ConnectionAttemptLimit.getName(), connects)) {
     connection_attempt_limit_ = connects;
   }
-  if (context->getProperty(ReceiveBufferSize.getName(), value)) {
-    int64_t size = 0;
-    core::Property::StringToInt(value, size);
-    receive_buffer_size_ = size;
-  }
+  context->getProperty(ReceiveBufferSize.getName(), receive_buffer_size_);
 
   if (context->getProperty(EndOfMessageByte.getName(), value)) {
+    logger_->log_trace("EOM is passed in as %s", value);
     int64_t byteValue = 0;
     core::Property::StringToInt(value, byteValue);
     endOfMessageByte = byteValue & 0xFF;
   }
 
-  if (context->getProperty(ReconnectInterval.getName(), value)) {
-    int64_t msec;
-    core::TimeUnit unit;
-    if (core::Property::StringToTime(value, msec, unit) && core::Property::ConvertTimeUnitToMS(msec, unit, msec)) {
-      reconnect_interval_ = msec;
-      logger_->log_debug("successfully applied reconnect interval of %ll", reconnect_interval_);
-    }
-  } else {
-    reconnect_interval_ = 5000;
-  }
+  logger_->log_trace("EOM is defined as %i", endOfMessageByte);
+
+  context->getProperty(ReconnectInterval.getName(), reconnect_interval_);
 
   handler_ = std::unique_ptr<DataHandler>(new DataHandler(sessionFactory));
 

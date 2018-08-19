@@ -39,6 +39,7 @@
 #include "utils/TimeUtil.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
+#include "core/TypedValues.h"
 
 #ifndef S_ISDIR
 #define S_ISDIR(mode)  (((mode) & S_IFMT) == S_IFDIR)
@@ -53,23 +54,52 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-core::Property GetFile::BatchSize("Batch Size", "The maximum number of files to pull in each iteration", "10");
+core::Property GetFile::BatchSize(
+    core::PropertyBuilder::createProperty("Batch Size")->withDescription("The maximum number of files to pull in each iteration")->withDefaultValue<uint32_t>(10)
+        ->build());
+
 core::Property GetFile::Directory(
     core::PropertyBuilder::createProperty("Input Directory")->withDescription("The input directory from which to pull files")->isRequired(true)->supportsExpressionLanguage(true)->withDefaultValue(".")
         ->build());
-core::Property GetFile::IgnoreHiddenFile("Ignore Hidden Files", "Indicates whether or not hidden files should be ignored", "true");
-core::Property GetFile::KeepSourceFile("Keep Source File", "If true, the file is not deleted after it has been copied to the Content Repository", "false");
-core::Property GetFile::MaxAge("Maximum File Age", "The minimum age that a file must be in order to be pulled;"
-                               " any file younger than this amount of time (according to last modification date) will be ignored",
-                               "0 sec");
-core::Property GetFile::MinAge("Minimum File Age", "The maximum age that a file must be in order to be pulled; any file"
-                               "older than this amount of time (according to last modification date) will be ignored",
-                               "0 sec");
-core::Property GetFile::MaxSize("Maximum File Size", "The maximum size that a file can be in order to be pulled", "0 B");
-core::Property GetFile::MinSize("Minimum File Size", "The minimum size that a file must be in order to be pulled", "0 B");
-core::Property GetFile::PollInterval("Polling Interval", "Indicates how long to wait before performing a directory listing", "0 sec");
-core::Property GetFile::Recurse("Recurse Subdirectories", "Indicates whether or not to pull files from subdirectories", "true");
-core::Property GetFile::FileFilter("File Filter", "Only files whose names match the given regular expression will be picked up", "[^\\.].*");
+
+core::Property GetFile::IgnoreHiddenFile(
+    core::PropertyBuilder::createProperty("Ignore Hidden Files")->withDescription("Indicates whether or not hidden files should be ignored")->withDefaultValue<bool>(true)
+        ->build());
+
+core::Property GetFile::KeepSourceFile(
+    core::PropertyBuilder::createProperty("Keep Source File")->withDescription("If true, the file is not deleted after it has been copied to the Content Repository")->withDefaultValue<bool>(false)
+        ->build());
+
+core::Property GetFile::MaxAge(
+    core::PropertyBuilder::createProperty("Maximum File Age")->withDescription("The maximum age that a file must be in order to be pulled;"
+                               " any file older than this amount of time (according to last modification date) will be ignored")->withDefaultValue<core::TimePeriodValue>("0 sec")
+        ->build());
+
+core::Property GetFile::MinAge(
+    core::PropertyBuilder::createProperty("Minimum File Age")->withDescription("The minimum age that a file must be in order to be pulled;"
+                               " any file younger than this amount of time (according to last modification date) will be ignored")->withDefaultValue<core::TimePeriodValue>("0 sec")
+        ->build());
+
+core::Property GetFile::MaxSize(
+    core::PropertyBuilder::createProperty("Minimum File Size")->withDescription("The maximum size that a file can be in order to be pulled")->withDefaultValue<core::DataSizeValue>("0 B")
+        ->build());
+
+core::Property GetFile::MinSize(
+    core::PropertyBuilder::createProperty("Minimum File Size")->withDescription("The minimum size that a file can be in order to be pulled")->withDefaultValue<core::DataSizeValue>("0 B")
+        ->build());
+
+core::Property GetFile::PollInterval(
+    core::PropertyBuilder::createProperty("Polling Interval")->withDescription("Indicates how long to wait before performing a directory listing")->withDefaultValue<core::TimePeriodValue>("0 sec")
+        ->build());
+
+core::Property GetFile::Recurse(
+    core::PropertyBuilder::createProperty("Recurse Subdirectories")->withDescription("Indicates whether or not to pull files from subdirectories")->withDefaultValue<bool>(true)
+        ->build());
+
+core::Property GetFile::FileFilter(
+    core::PropertyBuilder::createProperty("File Filter")->withDescription("Only files whose names match the given regular expression will be picked up")->withDefaultValue("[^\\.].*")
+        ->build());
+
 core::Relationship GetFile::Success("success", "All files are routed to success");
 
 void GetFile::initialize() {
@@ -105,30 +135,18 @@ void GetFile::onSchedule(core::ProcessContext *context, core::ProcessSessionFact
     org::apache::nifi::minifi::utils::StringUtils::StringToBool(value, request_.keepSourceFile);
   }
 
-  if (context->getProperty(MaxAge.getName(), value)) {
-    core::TimeUnit unit;
-    if (core::Property::StringToTime(value, request_.maxAge, unit) && core::Property::ConvertTimeUnitToMS(request_.maxAge, unit, request_.maxAge)) {
-      logger_->log_debug("successfully applied _maxAge");
-    }
-  }
-  if (context->getProperty(MinAge.getName(), value)) {
-    core::TimeUnit unit;
-    if (core::Property::StringToTime(value, request_.minAge, unit) && core::Property::ConvertTimeUnitToMS(request_.minAge, unit, request_.minAge)) {
-      logger_->log_debug("successfully applied _minAge");
-    }
-  }
+  context->getProperty(MaxAge.getName(), request_.maxAge);
+  context->getProperty(MinAge.getName(), request_.minAge);
+
   if (context->getProperty(MaxSize.getName(), value)) {
     core::Property::StringToInt(value, request_.maxSize);
   }
   if (context->getProperty(MinSize.getName(), value)) {
     core::Property::StringToInt(value, request_.minSize);
   }
-  if (context->getProperty(PollInterval.getName(), value)) {
-    core::TimeUnit unit;
-    if (core::Property::StringToTime(value, request_.pollInterval, unit) && core::Property::ConvertTimeUnitToMS(request_.pollInterval, unit, request_.pollInterval)) {
-      logger_->log_debug("successfully applied _pollInterval");
-    }
-  }
+
+  context->getProperty(PollInterval.getName(), request_.pollInterval);
+
   if (context->getProperty(Recurse.getName(), value)) {
     org::apache::nifi::minifi::utils::StringUtils::StringToBool(value, request_.recursive);
   }

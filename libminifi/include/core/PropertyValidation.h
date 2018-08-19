@@ -181,25 +181,62 @@ class IntegerValidator : public PropertyValidator {
 
 class LongValidator : public PropertyValidator {
  public:
-  LongValidator(const std::string &name)
-      : PropertyValidator(name) {
+  explicit LongValidator(const std::string &name, int64_t min = (std::numeric_limits<int64_t>::min)(), int64_t max = (std::numeric_limits<int64_t>::max)())
+      : PropertyValidator(name),
+        min_(min),
+        max_(max) {
   }
   virtual ~LongValidator() {
 
   }
   ValidationResult validate(const std::string &subject, const std::shared_ptr<minifi::state::response::Value> &input) const {
-    return PropertyValidator::_validate_internal<minifi::state::response::Int64Value>(subject, input);
+    auto in64 = std::dynamic_pointer_cast<minifi::state::response::Int64Value>(input);
+    if (in64) {
+      return ValidationResult::Builder::createBuilder().withSubject(subject).withInput(in64->getStringValue()).isValid(in64->getValue() >= min_ && in64->getValue() <= max_).build();
+    } else {
+      auto intb = std::dynamic_pointer_cast<minifi::state::response::IntValue>(input);
+      return ValidationResult::Builder::createBuilder().withSubject(subject).withInput(intb->getStringValue()).isValid(intb->getValue() >= min_ && intb->getValue() <= max_).build();
+    }
   }
 
   ValidationResult validate(const std::string &subject, const std::string &input) const {
     try {
-      std::stoul(input);
+      auto res = std::stoll(input);
+
+      return ValidationResult::Builder::createBuilder().withSubject(subject).withInput(input).isValid(res >= min_ && res <= max_).build();
+    } catch (...) {
+
+    }
+    return ValidationResult::Builder::createBuilder().withSubject(subject).withInput(input).isValid(false).build();
+  }
+
+ private:
+  int64_t min_;
+  int64_t max_;
+};
+
+class UnsignedLongValidator : public PropertyValidator {
+ public:
+  explicit UnsignedLongValidator(const std::string &name)
+      : PropertyValidator(name) {
+  }
+  virtual ~UnsignedLongValidator() {
+
+  }
+  ValidationResult validate(const std::string &subject, const std::shared_ptr<minifi::state::response::Value> &input) const {
+    return PropertyValidator::_validate_internal<minifi::state::response::UInt64Value>(subject, input);
+  }
+
+  ValidationResult validate(const std::string &subject, const std::string &input) const {
+    try {
+      std::stoull(input);
       return ValidationResult::Builder::createBuilder().withSubject(subject).withInput(input).isValid(true).build();
     } catch (...) {
 
     }
     return ValidationResult::Builder::createBuilder().withSubject(subject).withInput(input).isValid(false).build();
   }
+
 };
 
 class DataSizeValidator : public PropertyValidator {
@@ -223,28 +260,81 @@ class DataSizeValidator : public PropertyValidator {
   }
 };
 
+class PortValidator : public LongValidator {
+ public:
+  PortValidator(const std::string &name)
+      : LongValidator(name, 1, 65535) {
+  }
+  virtual ~PortValidator() {
+
+  }
+};
+
+class TimePeriodValidator : public PropertyValidator {
+ public:
+  TimePeriodValidator(const std::string &name)
+      : PropertyValidator(name) {
+  }
+  virtual ~TimePeriodValidator() {
+
+  }
+  ValidationResult validate(const std::string &subject, const std::shared_ptr<minifi::state::response::Value> &input) const {
+    return PropertyValidator::_validate_internal<core::TimePeriodValue>(subject, input);
+  }
+
+  ValidationResult validate(const std::string &subject, const std::string &input) const {
+    uint64_t out;
+    TimeUnit outTimeUnit;
+    if (core::TimePeriodValue::StringToTime(input, out, outTimeUnit))
+      return ValidationResult::Builder::createBuilder().withSubject(subject).withInput(input).isValid(true).build();
+    else
+      return ValidationResult::Builder::createBuilder().withSubject(subject).withInput(input).isValid(false).build();
+  }
+};
+
 // STATIC DEFINITIONS
 
 class StandardValidators {
  public:
-  static const std::shared_ptr<PropertyValidator> VALID;
-  static const std::shared_ptr<PropertyValidator> INVALID;
-  static const std::shared_ptr<PropertyValidator> INTEGER_VALIDATOR;
-  static const std::shared_ptr<PropertyValidator> LONG_VALIDATOR;
-  static const std::shared_ptr<PropertyValidator> BOOLEAN_VALIDATOR;
-  static const std::shared_ptr<PropertyValidator> SIZE_VALIDATOR;
+
+  static std::shared_ptr<PropertyValidator> VALID;
 
   static const std::shared_ptr<PropertyValidator> &getValidator(const std::shared_ptr<minifi::state::response::Value> &input) {
+    static StandardValidators init;
     if (std::dynamic_pointer_cast<core::DataSizeValue>(input) != nullptr) {
-      return SIZE_VALIDATOR;
+      return init.SIZE_VALIDATOR;
+    } else if (std::dynamic_pointer_cast<core::TimePeriodValue>(input) != nullptr) {
+      return init.TIME_PERIOD_VALIDATOR;
+    } else if (std::dynamic_pointer_cast<core::DataSizeValue>(input) != nullptr) {
+      return init.SIZE_VALIDATOR;
+    } else if (std::dynamic_pointer_cast<minifi::state::response::BoolValue>(input) != nullptr) {
+      return init.BOOLEAN_VALIDATOR;
     } else if (std::dynamic_pointer_cast<minifi::state::response::IntValue>(input) != nullptr) {
-      return INTEGER_VALIDATOR;
+      return init.INTEGER_VALIDATOR;
     } else if (std::dynamic_pointer_cast<minifi::state::response::Int64Value>(input) != nullptr) {
-      return LONG_VALIDATOR;
+      return init.LONG_VALIDATOR;
+    } else if (std::dynamic_pointer_cast<minifi::state::response::UInt64Value>(input) != nullptr) {
+      return init.UNSIGNED_LONG_VALIDATOR;
     } else {
-      return VALID;
+      return init.VALID;
     }
   }
+
+  static const std::shared_ptr<PropertyValidator> PORT_VALIDATOR(){
+    static std::shared_ptr<PropertyValidator> validator = std::make_shared<PortValidator>("PORT_VALIDATOR");
+    return validator;
+  }
+
+ private:
+  std::shared_ptr<PropertyValidator> INVALID;
+  std::shared_ptr<PropertyValidator> INTEGER_VALIDATOR;
+  std::shared_ptr<PropertyValidator> LONG_VALIDATOR;
+  std::shared_ptr<PropertyValidator> UNSIGNED_LONG_VALIDATOR;
+  std::shared_ptr<PropertyValidator> BOOLEAN_VALIDATOR;
+  std::shared_ptr<PropertyValidator> SIZE_VALIDATOR;
+  std::shared_ptr<PropertyValidator> TIME_PERIOD_VALIDATOR;
+
+  StandardValidators();
 }
 ;
 

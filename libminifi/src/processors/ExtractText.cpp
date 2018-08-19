@@ -38,8 +38,13 @@ namespace processors {
 
 #define MAX_BUFFER_SIZE 4096
 
-core::Property ExtractText::Attribute("Attribute", "Attribute to set from content", "");
-core::Property ExtractText::SizeLimit("Size Limit", "Maximum number of bytes to read into the attribute. 0 for no limit. Default is 2MB.");
+core::Property ExtractText::Attribute(core::PropertyBuilder::createProperty("Attribute")->withDescription("Attribute to set from content")->build());
+
+// despite there being a size value, ExtractText was initially built with a numeric for this property
+core::Property ExtractText::SizeLimit(
+    core::PropertyBuilder::createProperty("Size Limit")->withDescription("Maximum number of bytes to read into the attribute. 0 for no limit. Default is 2MB.")->withDefaultValue<uint32_t>(
+        DEFAULT_SIZE_LIMIT)->build());
+
 core::Relationship ExtractText::Success("success", "success operational on the flow record");
 
 void ExtractText::initialize() {

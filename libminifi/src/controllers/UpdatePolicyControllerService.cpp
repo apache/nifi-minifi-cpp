@@ -30,6 +30,7 @@
 #include <net/if_types.h>
 #endif
 #include "core/state/UpdatePolicy.h"
+#include "core/PropertyValidation.h"
 
 namespace org {
 namespace apache {
@@ -37,10 +38,19 @@ namespace nifi {
 namespace minifi {
 namespace controllers {
 
-core::Property UpdatePolicyControllerService::AllowAllProperties("Allow All Properties", "Allows all properties, which are also not disallowed, to be updated", "false");
-core::Property UpdatePolicyControllerService::AllowedProperties("Allowed Properties", "Properties for which we will allow updates");
-core::Property UpdatePolicyControllerService::DisallowedProperties("Disallowed Properties", "Properties for which we will not allow updates");
-core::Property UpdatePolicyControllerService::PersistUpdates("Persist Updates", "Property that dictates whether updates should persist after a restart");
+core::Property UpdatePolicyControllerService::AllowAllProperties(
+    core::PropertyBuilder::createProperty("Allow All Properties")->withDescription("Allows all properties, which are also not disallowed, to be updated")->withDefaultValue<bool>(
+        false)->build());
+
+core::Property UpdatePolicyControllerService::AllowedProperties(
+    core::PropertyBuilder::createProperty("Allowed Properties")->withDescription("Properties for which we will allow updates")->isRequired(false)->build());
+
+core::Property UpdatePolicyControllerService::DisallowedProperties(
+    core::PropertyBuilder::createProperty("Disallowed Properties")->withDescription("Properties for which we will not allow updates")->isRequired(false)->build());
+
+core::Property UpdatePolicyControllerService::PersistUpdates(
+    core::PropertyBuilder::createProperty("Persist Updates")->withDescription("Property that dictates whether updates should persist after a restart")->isRequired(false)->withDefaultValue<bool>(false)
+        ->build());
 
 void UpdatePolicyControllerService::initialize() {
   std::set<core::Property> supportedProperties;

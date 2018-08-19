@@ -57,6 +57,8 @@ else ()
     set(LINK_END_FLAGS "")
 endif ()
 
+if (NOT WIN32)
+
 add_executable(generate_flow generate_flow.c)
 
 add_executable(terminate_handler terminate_handler.c)
@@ -64,8 +66,6 @@ add_executable(terminate_handler terminate_handler.c)
 target_link_libraries(generate_flow nanofi ${CMAKE_THREAD_LIBS_INIT} ${LINK_FLAGS} minifi-http-curl ${LINK_END_FLAGS})
 
 target_link_libraries(terminate_handler nanofi ${CMAKE_THREAD_LIBS_INIT} )
-
-if (NOT WIN32)
 
 add_executable(transmit_flow transmit_flow.c)
 

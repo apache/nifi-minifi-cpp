@@ -70,7 +70,11 @@ class FlowConfiguration : public CoreComponent {
         logger_(logging::LoggerFactory<FlowConfiguration>::getLogger()) {
     controller_services_ = std::make_shared<core::controller::ControllerServiceMap>();
     service_provider_ = std::make_shared<core::controller::StandardControllerServiceProvider>(controller_services_, nullptr, configuration);
-    flow_version_ = std::make_shared<state::response::FlowVersion>("", "default", "");
+    std::string flowUrl = "", bucket_id = "default", flowId = "";
+    configuration->get(Configure::nifi_c2_flow_id, flowId);
+    configuration->get(Configure::nifi_c2_flow_url, flowUrl);
+    flow_version_ = std::make_shared<state::response::FlowVersion>(flowUrl, bucket_id, flowId);
+
     // it is okay if this has already been called
     initialize_static_functions();
   }

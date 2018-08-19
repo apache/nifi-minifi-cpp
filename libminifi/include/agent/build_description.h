@@ -85,7 +85,6 @@ class BuildDescription {
         utils::StringUtils::replaceAll(classDescriptionName,"::",".");
         ClassDescription description(classDescriptionName);
         if (nullptr != component) {
-
           auto processor = std::dynamic_pointer_cast<core::Processor>(obj) ;
           bool is_processor = processor != nullptr;
           bool is_controller_service = LIKELY(is_processor == true) ? false : std::dynamic_pointer_cast<core::controller::ControllerService>(obj) != nullptr;

@@ -19,7 +19,7 @@
 #ifndef EXTENSIONS_MQTT_PROTOCOL_PAYLOADSERIALIZER_H_
 #define EXTENSIONS_MQTT_PROTOCOL_PAYLOADSERIALIZER_H_
 
-#include "../../../libminifi/include/core/state/StringValue.h"
+#include "core/state/Value.h"
 #include "c2/C2Protocol.h"
 #include "io/BaseStream.h"
 namespace org {
