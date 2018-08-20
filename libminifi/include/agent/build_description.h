@@ -29,17 +29,28 @@ namespace minifi {
 struct ClassDescription {
   explicit ClassDescription(std::string name)
       : class_name_(name),
-        support_dynamic_(false) {
+        dynamic_properties_(false),
+        dynamic_relationships_(false) {
   }
-  explicit ClassDescription(std::string name, std::map<std::string, core::Property> props, bool dyn)
+  explicit ClassDescription(std::string name, std::map<std::string, core::Property> props, bool dyn_prop)
       : class_name_(name),
         class_properties_(props),
-        support_dynamic_(dyn) {
+        dynamic_properties_(dyn_prop),
+        dynamic_relationships_(false) {
 
+  }
+  explicit ClassDescription(std::string name, std::map<std::string, core::Property> props, std::vector<core::Relationship> class_relationships, bool dyn_prop, bool dyn_rel)
+      : class_name_(name),
+        class_properties_(props),
+        class_relationships_(class_relationships),
+        dynamic_properties_(dyn_prop),
+        dynamic_relationships_(dyn_rel) {
   }
   std::string class_name_;
   std::map<std::string, core::Property> class_properties_;
-  bool support_dynamic_;
+  std::vector<core::Relationship> class_relationships_;
+  bool dynamic_properties_;
+  bool dynamic_relationships_;
 };
 
 struct Components {
@@ -69,13 +80,16 @@ class BuildDescription {
         ClassDescription description(clazz);
         if (nullptr != component) {
 
-          bool is_processor = std::dynamic_pointer_cast<core::Processor>(obj) != nullptr;
+          auto processor = std::dynamic_pointer_cast<core::Processor>(obj) ;
+          bool is_processor = processor != nullptr;
           bool is_controller_service = LIKELY(is_processor == true) ? false : std::dynamic_pointer_cast<core::controller::ControllerService>(obj) != nullptr;
 
           component->initialize();
           description.class_properties_ = component->getProperties();
-          description.support_dynamic_ = component->supportsDynamicProperties();
+          description.dynamic_properties_ = component->supportsDynamicProperties();
+          description.dynamic_relationships_ = component->supportsDynamicRelationships();
           if (is_processor) {
+            description.class_relationships_ = processor->getSupportedRelationships();
             class_mappings[group].processors_.emplace_back(description);
           } else if (is_controller_service) {
             class_mappings[group].controller_services_.emplace_back(description);

@@ -49,6 +49,8 @@ class __attribute__((visibility("default"))) Connectable : public CoreComponent 
   // Whether the relationship is supported
   bool isSupportedRelationship(Relationship relationship);
 
+  std::vector<Relationship> getSupportedRelationships() const;
+
   /**
    * Sets auto terminated relationships
    * @param relationships

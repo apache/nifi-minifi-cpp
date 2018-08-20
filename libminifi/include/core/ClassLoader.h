@@ -43,6 +43,14 @@ namespace core {
 class ObjectFactory {
 
  public:
+
+  ObjectFactory(const std::string &group)
+      : group_(group) {
+  }
+
+  ObjectFactory() {
+  }
+
   /**
    * Virtual destructor.
    */
@@ -84,6 +92,10 @@ class ObjectFactory {
    */
   virtual std::string getName() = 0;
 
+  virtual std::string getGroupName() const {
+    return group_;
+  }
+
   virtual std::string getClassName() = 0;
   /**
    * Gets the class name for the object
@@ -92,6 +104,10 @@ class ObjectFactory {
   virtual std::vector<std::string> getClassNames() = 0;
 
   virtual std::unique_ptr<ObjectFactory> assign(const std::string &class_name) = 0;
+
+ private:
+
+  std::string group_;
 
 };
 
@@ -105,6 +121,11 @@ class DefautObjectFactory : public ObjectFactory {
  public:
 
   DefautObjectFactory() {
+    className = core::getClassName<T>();
+  }
+
+  DefautObjectFactory(const std::string &group_name)
+      : ObjectFactory(group_name) {
     className = core::getClassName<T>();
   }
   /**
@@ -223,21 +244,14 @@ class ClassLoader {
 
     std::lock_guard<std::mutex> lock(internal_mutex_);
 
-    loaded_factories_.insert(std::make_pair(name, std::move(factory)));
+    auto canonical_name = factory->getClassName();
 
-  }
+    auto group_name = factory->getGroupName();
 
-  /**
-   * Register a class with the give ProcessorFactory
-   */
-  void registerClass(const std::string &group, const std::string &name, std::unique_ptr<ObjectFactory> factory) {
-    if (loaded_factories_.find(name) != loaded_factories_.end()) {
-      return;
-    }
-
-    std::lock_guard<std::mutex> lock(internal_mutex_);
-
-    module_mapping_[group].push_back(factory->getName());
+    module_mapping_[group_name].push_back(canonical_name);
+    if (canonical_name != name)
+      class_to_group_[canonical_name] = group_name;
+    class_to_group_[name] = group_name;
 
     loaded_factories_.insert(std::make_pair(name, std::move(factory)));
   }
@@ -267,6 +281,16 @@ class ClassLoader {
       }
     }
     return groups;
+  }
+
+  std::string getGroupForClass(const std::string &class_name) {
+    std::lock_guard<std::mutex> lock(internal_mutex_);
+    auto factory_entry = class_to_group_.find(class_name);
+    if (factory_entry != class_to_group_.end()) {
+      return factory_entry->second;
+    } else {
+      return "";
+    }
   }
 
   /**
@@ -310,6 +334,8 @@ class ClassLoader {
   std::map<std::string, std::vector<std::string>> module_mapping_;
 
   std::map<std::string, std::unique_ptr<ObjectFactory>> loaded_factories_;
+
+  std::map<std::string, std::string> class_to_group_;
 
   std::mutex internal_mutex_;
 

@@ -100,6 +100,15 @@ class __attribute__((visibility("default"))) ConfigurableComponent {
   virtual bool supportsDynamicProperties() = 0;
 
   /**
+   * Gets whether or not this processor supports dynamic relationships.
+   *
+   * @return true if this component supports dynamic relationships (default is false)
+   */
+  virtual bool supportsDynamicRelationships() {
+    return false;
+  }
+
+  /**
    * Gets the value of a dynamic property (if it was set).
    *
    * @param name

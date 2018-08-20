@@ -412,11 +412,10 @@ endif()
 
 get_property(selected_extensions GLOBAL PROPERTY EXTENSION-OPTIONS)
 
+# Generate the build identifier if one is not provided
 if (NOT BUILD_IDENTIFIER)
-   if (NOT BUILD_IDENTIFIER)
      string(RANDOM LENGTH 24 BUILD_IDENTIFIER)
-     set(BUILD_IDENTIFIER "${BUILD_IDENTIFIER}" CACHE STRING "Build identifier")
-   endif()
+     set(BUILD_IDENTIFIER "${BUILD_IDENTIFIER}" CACHE STRING "Build identifier" FORCE)
 endif()
 
 message("BUILD_IDENTIFIER is ${BUILD_IDENTIFIER}")

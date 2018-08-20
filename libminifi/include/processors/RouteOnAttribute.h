@@ -56,6 +56,11 @@ class RouteOnAttribute : public core::Processor {
     return true;
   };
 
+
+  virtual bool supportsDynamicRelationships() {
+    return true;
+  }
+
   virtual void onDynamicPropertyModified(const core::Property &orig_property,
                                          const core::Property &new_property);
   virtual void onTrigger(core::ProcessContext *context,
