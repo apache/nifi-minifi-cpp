@@ -48,6 +48,7 @@
 #include "agent/build_description.h"
 #include "core/ClassLoader.h"
 #include "../nodes/StateMonitor.h"
+#include "core/ProcessorConfig.h"
 
 namespace org {
 namespace apache {
@@ -57,7 +58,6 @@ namespace state {
 namespace response {
 
 #define GROUP_STR "org::apache::nifi::minifi"
-
 
 class ComponentManifest : public DeviceInformation {
  public:
@@ -99,7 +99,6 @@ class ComponentManifest : public DeviceInformation {
         className.name = "type";
         className.value = group.class_name_;
 
-
         if (!group.class_properties_.empty()) {
           SerializedResponseNode props;
           props.name = "propertyDescriptors";
@@ -124,6 +123,10 @@ class ComponentManifest : public DeviceInformation {
             descriptorValidRegex.name = "validRegex";
             descriptorValidRegex.value = prop.second.getValidRegex();
 
+            SerializedResponseNode descriptorDefaultValue;
+            descriptorDefaultValue.name = "defaultValue";
+            descriptorDefaultValue.value = prop.second.getValue();
+
             SerializedResponseNode descriptorDependentProperties;
             descriptorDependentProperties.name = "dependentProperties";
 
@@ -143,9 +146,42 @@ class ComponentManifest : public DeviceInformation {
               descriptorExclusiveOfProperties.children.push_back(descriptorExclusiveOfProperty);
             }
 
+            const auto &allowed_types = prop.second.getAllowedTypes();
+            if (!allowed_types.empty()) {
+              SerializedResponseNode allowed_type;
+              allowed_type.name = "typeProvidedByValue";
+              for (const auto &type : allowed_types) {
+                SerializedResponseNode typeNode;
+                typeNode.name = "type";
+                typeNode.value = type;
+                allowed_type.children.push_back(typeNode);
+
+                SerializedResponseNode bgroup;
+                bgroup.name = "group";
+                bgroup.value = GROUP_STR;
+                SerializedResponseNode artifact;
+                artifact.name = "artifact";
+                artifact.value = core::ClassLoader::getDefaultClassLoader().getGroupForClass(type);
+                allowed_type.children.push_back(typeNode);
+                allowed_type.children.push_back(bgroup);
+                allowed_type.children.push_back(artifact);
+
+              }
+              child.children.push_back(allowed_type);
+
+            }
+
             child.children.push_back(descriptorName);
+
+            if (prop.first != prop.second.getDisplayName()) {
+              SerializedResponseNode displayName;
+              displayName.name = "displayName";
+              displayName.value = prop.second.getDisplayName();
+              child.children.push_back(displayName);
+            }
             child.children.push_back(descriptorDescription);
             child.children.push_back(descriptorRequired);
+            child.children.push_back(descriptorDefaultValue);
             child.children.push_back(descriptorValidRegex);
             child.children.push_back(descriptorDependentProperties);
             child.children.push_back(descriptorExclusiveOfProperties);
@@ -158,10 +194,39 @@ class ComponentManifest : public DeviceInformation {
 
         SerializedResponseNode dyn_prop;
         dyn_prop.name = "supportsDynamicProperties";
-        dyn_prop.value = group.support_dynamic_;
+        dyn_prop.value = group.dynamic_properties_;
 
+        SerializedResponseNode dyn_relat;
+        dyn_relat.name = "supportsDynamicRelationships";
+        dyn_relat.value = group.dynamic_relationships_;
+
+        if (group.class_relationships_.size() > 0) {
+          SerializedResponseNode relationships;
+          relationships.name = "supportedRelationships";
+          relationships.array = true;
+
+          for (const auto &relationship : group.class_relationships_) {
+            SerializedResponseNode child;
+            child.name = "supportedRelationships";
+
+            SerializedResponseNode nameNode;
+            nameNode.name = "name";
+            nameNode.value = relationship.getName();
+
+            SerializedResponseNode descriptorDescription;
+            descriptorDescription.name = "description";
+            descriptorDescription.value = relationship.getDescription();
+            child.children.push_back(nameNode);
+            child.children.push_back(descriptorDescription);
+
+            relationships.children.push_back(child);
+          }
+          desc.children.push_back(relationships);
+        }
+        desc.children.push_back(dyn_relat);
         desc.children.push_back(dyn_prop);
         desc.children.push_back(className);
+
         type.children.push_back(desc);
       }
       response.children.push_back(type);
@@ -169,7 +234,6 @@ class ComponentManifest : public DeviceInformation {
 
   }
 };
-
 
 class Bundles : public DeviceInformation {
  public:
@@ -215,6 +279,57 @@ class Bundles : public DeviceInformation {
       }
       serialized.push_back(bundle);
     }
+
+    return serialized;
+  }
+
+};
+
+class SchedulingDefaults : public DeviceInformation {
+ public:
+  SchedulingDefaults(std::string name, uuid_t uuid)
+      : DeviceInformation(name, uuid) {
+  }
+
+  SchedulingDefaults(const std::string &name)
+      : DeviceInformation(name, 0) {
+  }
+
+  std::string getName() const {
+    return "schedulingDefaults";
+  }
+
+  std::vector<SerializedResponseNode> serialize() {
+    std::vector<SerializedResponseNode> serialized;
+
+    SerializedResponseNode schedulingDefaults;
+    schedulingDefaults.name = "schedulingDefaults";
+
+    SerializedResponseNode defaultSchedulingStrategy;
+    defaultSchedulingStrategy.name = "defaultSchedulingStrategy";
+    defaultSchedulingStrategy.value = DEFAULT_SCHEDULING_STRATEGY;
+
+    schedulingDefaults.children.push_back(defaultSchedulingStrategy);
+
+    SerializedResponseNode defaultSchedulingPeriod;
+    defaultSchedulingPeriod.name = "defaultSchedulingPeriod";
+    defaultSchedulingPeriod.value = DEFAULT_SCHEDULING_PERIOD;
+
+    schedulingDefaults.children.push_back(defaultSchedulingPeriod);
+
+    SerializedResponseNode defaultRunDuration;
+    defaultRunDuration.name = "defaultRunDurationNanos";
+    defaultRunDuration.value = DEFAULT_RUN_DURATION;
+
+    schedulingDefaults.children.push_back(defaultRunDuration);
+
+    SerializedResponseNode defaultMaxConcurrentTasks;
+    defaultMaxConcurrentTasks.name = "defaultMaxConcurrentTasks";
+    defaultMaxConcurrentTasks.value = DEFAULT_MAX_CONCURRENT_TASKS;
+
+    schedulingDefaults.children.push_back(defaultMaxConcurrentTasks);
+
+    serialized.push_back(schedulingDefaults);
 
     return serialized;
   }
@@ -428,6 +543,12 @@ class AgentManifest : public DeviceInformation {
       serialized.push_back(bundle);
     }
 
+    SchedulingDefaults defaults("schedulingDefaults", nullptr);
+
+    for (auto defaultNode : defaults.serialize()) {
+      serialized.push_back(defaultNode);
+    }
+
     return serialized;
   }
 };
@@ -519,7 +640,7 @@ class AgentInformation : public DeviceInformation, public AgentMonitor, public A
 
         SerializedResponseNode dyn_prop;
         dyn_prop.name = "supportsDynamicProperties";
-        dyn_prop.value = group.support_dynamic_;
+        dyn_prop.value = group.dynamic_properties_;
 
         desc.children.push_back(dyn_prop);
 
@@ -554,7 +675,7 @@ class AgentInformation : public DeviceInformation, public AgentMonitor, public A
 
         SerializedResponseNode dyn_prop;
         dyn_prop.name = "supportsDynamicProperties";
-        dyn_prop.value = group.support_dynamic_;
+        dyn_prop.value = group.dynamic_properties_;
 
         desc.children.push_back(dyn_prop);
 

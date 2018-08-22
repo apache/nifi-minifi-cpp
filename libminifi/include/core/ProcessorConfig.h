@@ -26,6 +26,14 @@ namespace nifi {
 namespace minifi {
 namespace core {
 
+
+#define DEFAULT_SCHEDULING_STRATEGY "TIMER_DRIVEN"
+#define DEFAULT_SCHEDULING_PERIOD "1 sec"
+#define DEFAULT_RUN_DURATION 0
+#define DEFAULT_MAX_CONCURRENT_TASKS 1
+// Default yield period in second
+#define DEFAULT_YIELD_PERIOD_SECONDS 1
+
 struct ProcessorConfig {
   std::string id;
   std::string name;

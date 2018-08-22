@@ -31,6 +31,7 @@
 #include <functional>
 #include <utility>
 #include "Connection.h"
+#include "core/ProcessorConfig.h"
 #include "core/Connectable.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
@@ -55,10 +56,10 @@ Processor::Processor(std::string name, uuid_t uuid)
   loss_tolerant_ = false;
   _triggerWhenEmpty = false;
   scheduling_period_nano_ = MINIMUM_SCHEDULING_NANOS;
-  run_durantion_nano_ = 0;
+  run_duration_nano_ = DEFAULT_RUN_DURATION;
   yield_period_msec_ = DEFAULT_YIELD_PERIOD_SECONDS * 1000;
   _penalizationPeriodMsec = DEFAULT_PENALIZATION_PERIOD_SECONDS * 1000;
-  max_concurrent_tasks_ = 1;
+  max_concurrent_tasks_ = DEFAULT_MAX_CONCURRENT_TASKS;
   active_tasks_ = 0;
   yield_expiration_ = 0;
   incoming_connections_Iter = this->_incomingConnections.begin();

@@ -46,6 +46,10 @@ class Value {
     return string_value;
   }
 
+  bool empty(){
+    return string_value.empty();
+  }
+
  protected:
   std::string string_value;
 
@@ -184,7 +188,7 @@ class ValueNode {
   }
 
   bool empty() const {
-    return value_ == nullptr;
+    return value_ == nullptr || value_->empty();
   }
 
  protected:

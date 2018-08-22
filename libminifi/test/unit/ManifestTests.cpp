@@ -58,8 +58,37 @@ TEST_CASE("Test Valid Regex", "[validRegex]") {
   REQUIRE(prop_descriptors.children.size() > 0);
   const auto &prop_0 = prop_descriptors.children[0];
   REQUIRE(prop_0.children.size() >= 3);
-  const auto &prop_0_valid_regex = prop_0.children[3];
+  const auto &df = prop_0.children[3];
+  REQUIRE("defaultValue" == df.name);
+  const auto &prop_0_valid_regex = prop_0.children[4];
   REQUIRE("validRegex" == prop_0_valid_regex.name);
+}
+
+TEST_CASE("Test Relationships", "[rel1]") {
+  minifi::state::response::ComponentManifest manifest("minifi-system");
+  auto serialized = manifest.serialize();
+  REQUIRE(serialized.size() > 0);
+  const auto &resp = serialized[0];
+  REQUIRE(resp.children.size() > 0);
+  const auto &processors = resp.children[0];
+  REQUIRE(processors.children.size() > 0);
+  minifi::state::response::SerializedResponseNode proc_0;
+  for (const auto &node : processors.children) {
+    if ("org::apache::nifi::minifi::processors::PutFile" == node.name) {
+      proc_0 = node;
+    }
+  }
+  REQUIRE(proc_0.children.size() > 0);
+  const auto &relationships = proc_0.children[1];
+  REQUIRE("supportedRelationships" == relationships.name);
+  // this is because they are now nested
+  REQUIRE("supportedRelationships" == relationships.children[0].name);
+  REQUIRE("name" == relationships.children[0].children[0].name);
+  REQUIRE("failure" == relationships.children[0].children[0].value.to_string());
+  REQUIRE("description" == relationships.children[0].children[1].name);
+
+  REQUIRE("success" == relationships.children[1].children[0].value.to_string());
+  REQUIRE("description" == relationships.children[1].children[1].name);
 }
 
 TEST_CASE("Test Dependent", "[dependent]") {
@@ -81,8 +110,34 @@ TEST_CASE("Test Dependent", "[dependent]") {
   REQUIRE(prop_descriptors.children.size() > 0);
   const auto &prop_0 = prop_descriptors.children[1];
   REQUIRE(prop_0.children.size() >= 3);
-  const auto &prop_0_dependent = prop_0.children[4];
-  REQUIRE("dependentProperties" == prop_0_dependent.name);
-  const auto &prop_0_dependent_0 = prop_0_dependent.children[0];
+  REQUIRE("defaultValue" == prop_0.children[3].name);
+  REQUIRE("validRegex" == prop_0.children[4].name);
+  const auto &prop_0_dependent_0 = prop_descriptors.children[2];
   REQUIRE("Directory" == prop_0_dependent_0.name);
+}
+
+TEST_CASE("Test Scheduling Defaults", "[schedDef]") {
+  minifi::state::response::AgentManifest manifest("minifi-system");
+  auto serialized = manifest.serialize();
+  REQUIRE(serialized.size() > 0);
+  minifi::state::response::SerializedResponseNode proc_0;
+  for (const auto &node : serialized) {
+    if ("schedulingDefaults" == node.name) {
+      proc_0 = node;
+    }
+  }
+  REQUIRE(proc_0.children.size() == 4);
+  for (const auto &child : proc_0.children) {
+    if ("defaultMaxConcurrentTasks" == child.name) {
+      REQUIRE("1" == child.value.to_string());
+    } else if ("defaultRunDurationNanos" == child.name) {
+      REQUIRE("0" == child.value.to_string());
+    } else if ("defaultSchedulingPeriod" == child.name) {
+      REQUIRE("1 sec" == child.value.to_string());
+    } else if ("defaultSchedulingStrategy" == child.name) {
+      REQUIRE("TIMER_DRIVEN" == child.value.to_string());
+    } else {
+      FAIL("UNKNOWQN NODE");
+    }
+  }
 }

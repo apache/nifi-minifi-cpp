@@ -55,6 +55,12 @@ class Relationship {
       : name_(name),
         description_(description) {
   }
+
+  Relationship(const Relationship &other)
+      : name_(other.name_),
+        description_(other.description_) {
+  }
+
   Relationship()
       : name_(UNDEFINED_RELATIONSHIP) {
   }
@@ -72,6 +78,12 @@ class Relationship {
   // Compare
   bool operator <(const Relationship & right) const {
     return name_ < right.name_;
+  }
+
+  Relationship &operator=(const Relationship &other) {
+    name_ = other.name_;
+    description_ = other.description_;
+    return *this;
   }
   // Whether it is a undefined relationship
   bool isRelationshipUndefined() {

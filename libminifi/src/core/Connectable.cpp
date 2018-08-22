@@ -65,6 +65,14 @@ bool Connectable::setSupportedRelationships(std::set<core::Relationship> relatio
   return true;
 }
 
+std::vector<Relationship> Connectable::getSupportedRelationships() const {
+  std::vector<Relationship> relationships;
+  for (auto const &item : relationships_) {
+    relationships.push_back(item.second);
+  }
+  return relationships;
+}
+
 // Whether the relationship is supported
 bool Connectable::isSupportedRelationship(core::Relationship relationship) {
   // if we are running we do not need a lock since the function to change relationships_ ( setSupportedRelationships)
@@ -100,7 +108,7 @@ bool Connectable::setAutoTerminatedRelationships(std::set<Relationship> relation
 // Check whether the relationship is auto terminated
 bool Connectable::isAutoTerminated(core::Relationship relationship) {
   // if we are running we do not need a lock since the function to change relationships_ ( setSupportedRelationships)
-    // cannot be executed while we are running
+  // cannot be executed while we are running
   const bool isConnectableRunning = isRunning();
 
   const auto conditionalLock = isConnectableRunning ? std::unique_lock<std::mutex>() : std::unique_lock<std::mutex>(relationship_mutex_);

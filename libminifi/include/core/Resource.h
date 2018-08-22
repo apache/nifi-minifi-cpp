@@ -26,10 +26,8 @@ namespace nifi {
 namespace minifi {
 namespace core {
 
-
 #define MKSOC(x) #x
 #define MAKESTRING(x) MKSOC(x)
-
 
 template<class T>
 class StaticClassType {
@@ -38,9 +36,9 @@ class StaticClassType {
   StaticClassType(const std::string &name) {
     // Notify when the static member is created
 #ifdef MODULE_NAME
-    ClassLoader::getDefaultClassLoader().registerClass(MAKESTRING(MODULE_NAME), name, std::unique_ptr<ObjectFactory>(new DefautObjectFactory<T>()));
+    ClassLoader::getDefaultClassLoader().registerClass(name, std::unique_ptr<ObjectFactory>(new DefautObjectFactory<T>(MAKESTRING(MODULE_NAME))));
 #else
-    ClassLoader::getDefaultClassLoader().registerClass("minifi-system", name, std::unique_ptr<ObjectFactory>(new DefautObjectFactory<T>()));
+    ClassLoader::getDefaultClassLoader().registerClass(name, std::unique_ptr<ObjectFactory>(new DefautObjectFactory<T>("minifi-system")));
 #endif
   }
 };

@@ -27,8 +27,16 @@ std::string Property::getName() const {
   return name_;
 }
 
+std::string Property::getDisplayName() const {
+  return display_name_.empty() ? name_ : display_name_;
+}
+
 std::string Property::getDescription() const {
   return description_;
+}
+
+std::vector<std::string> Property::getAllowedTypes() const {
+  return types_;
 }
 
 std::string Property::getValue() const {
@@ -69,6 +77,8 @@ bool Property::operator<(const Property &right) const {
 
 const Property &Property::operator=(const Property &other) {
   name_ = other.name_;
+  display_name_ = other.display_name_;
+  types_ = other.types_;
   values_ = other.values_;
   description_ = other.description_;
   is_collection_ = other.is_collection_;
