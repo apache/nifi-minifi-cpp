@@ -53,9 +53,6 @@ namespace core {
 // Minimum scheduling period in Nano Second
 #define MINIMUM_SCHEDULING_NANOS 30000
 
-// Default yield period in second
-#define DEFAULT_YIELD_PERIOD_SECONDS 1
-
 // Default penalization period in second
 #define DEFAULT_PENALIZATION_PERIOD_SECONDS 30
 
@@ -107,11 +104,11 @@ class __attribute__((visibility("default"))) Processor : public Connectable, pub
   }
   // Set Processor Run Duration in Nano Second
   void setRunDurationNano(uint64_t period) {
-    run_durantion_nano_ = period;
+    run_duration_nano_ = period;
   }
   // Get Processor Run Duration in Nano Second
   uint64_t getRunDurationNano(void) {
-    return (run_durantion_nano_);
+    return (run_duration_nano_);
   }
   // Set Processor yield period in MilliSecond
   void setYieldPeriodMsec(uint64_t period) {
@@ -258,7 +255,7 @@ class __attribute__((visibility("default"))) Processor : public Connectable, pub
   // SchedulePeriod in Nano Seconds
   std::atomic<uint64_t> scheduling_period_nano_;
   // Run Duration in Nano Seconds
-  std::atomic<uint64_t> run_durantion_nano_;
+  std::atomic<uint64_t> run_duration_nano_;
   // Yield Period in Milliseconds
   std::atomic<uint64_t> yield_period_msec_;
 
