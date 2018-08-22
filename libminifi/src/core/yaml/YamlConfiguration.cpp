@@ -132,7 +132,7 @@ void YamlConfiguration::parseProcessorNodeYaml(YAML::Node processorsNode, core::
 
         auto periodNode = getOptionalField(&procNode,
                                            "scheduling period",
-                                           YAML::Node(DEFAULT_SCHEDULING_PERIOD),
+                                           YAML::Node(DEFAULT_SCHEDULING_PERIOD_STR),
                                            CONFIG_YAML_PROCESSORS_KEY);
         procCfg.schedulingPeriod = periodNode.as<std::string>();
         logger_->log_debug("parseProcessorNode: scheduling period => [%s]", procCfg.schedulingPeriod);

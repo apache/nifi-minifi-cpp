@@ -41,14 +41,15 @@
 #include <unistd.h>
 #include <sstream>
 #include <map>
-#include "../nodes/MetricsBase.h"
+#include "core/state/nodes/MetricsBase.h"
 #include "Connection.h"
 #include "io/ClientSocket.h"
 #include "agent/agent_version.h"
 #include "agent/build_description.h"
 #include "core/ClassLoader.h"
-#include "../nodes/StateMonitor.h"
+#include "core/state/nodes/StateMonitor.h"
 #include "core/ProcessorConfig.h"
+#include "SchedulingNodes.h"
 
 namespace org {
 namespace apache {
@@ -279,57 +280,6 @@ class Bundles : public DeviceInformation {
       }
       serialized.push_back(bundle);
     }
-
-    return serialized;
-  }
-
-};
-
-class SchedulingDefaults : public DeviceInformation {
- public:
-  SchedulingDefaults(std::string name, uuid_t uuid)
-      : DeviceInformation(name, uuid) {
-  }
-
-  SchedulingDefaults(const std::string &name)
-      : DeviceInformation(name, 0) {
-  }
-
-  std::string getName() const {
-    return "schedulingDefaults";
-  }
-
-  std::vector<SerializedResponseNode> serialize() {
-    std::vector<SerializedResponseNode> serialized;
-
-    SerializedResponseNode schedulingDefaults;
-    schedulingDefaults.name = "schedulingDefaults";
-
-    SerializedResponseNode defaultSchedulingStrategy;
-    defaultSchedulingStrategy.name = "defaultSchedulingStrategy";
-    defaultSchedulingStrategy.value = DEFAULT_SCHEDULING_STRATEGY;
-
-    schedulingDefaults.children.push_back(defaultSchedulingStrategy);
-
-    SerializedResponseNode defaultSchedulingPeriod;
-    defaultSchedulingPeriod.name = "defaultSchedulingPeriod";
-    defaultSchedulingPeriod.value = DEFAULT_SCHEDULING_PERIOD;
-
-    schedulingDefaults.children.push_back(defaultSchedulingPeriod);
-
-    SerializedResponseNode defaultRunDuration;
-    defaultRunDuration.name = "defaultRunDurationNanos";
-    defaultRunDuration.value = DEFAULT_RUN_DURATION;
-
-    schedulingDefaults.children.push_back(defaultRunDuration);
-
-    SerializedResponseNode defaultMaxConcurrentTasks;
-    defaultMaxConcurrentTasks.name = "defaultMaxConcurrentTasks";
-    defaultMaxConcurrentTasks.value = DEFAULT_MAX_CONCURRENT_TASKS;
-
-    schedulingDefaults.children.push_back(defaultMaxConcurrentTasks);
-
-    serialized.push_back(schedulingDefaults);
 
     return serialized;
   }

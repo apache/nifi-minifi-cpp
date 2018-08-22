@@ -36,7 +36,7 @@
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/ProcessSessionFactory.h"
-#include "../include/io/StreamFactory.h"
+#include "io/StreamFactory.h"
 #include "core/logging/LoggerConfiguration.h"
 
 namespace org {

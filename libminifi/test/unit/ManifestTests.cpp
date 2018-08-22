@@ -126,18 +126,22 @@ TEST_CASE("Test Scheduling Defaults", "[schedDef]") {
       proc_0 = node;
     }
   }
-  REQUIRE(proc_0.children.size() == 4);
+  REQUIRE(proc_0.children.size() == 6);
   for (const auto &child : proc_0.children) {
     if ("defaultMaxConcurrentTasks" == child.name) {
       REQUIRE("1" == child.value.to_string());
     } else if ("defaultRunDurationNanos" == child.name) {
       REQUIRE("0" == child.value.to_string());
-    } else if ("defaultSchedulingPeriod" == child.name) {
-      REQUIRE("1 sec" == child.value.to_string());
+    } else if ("defaultSchedulingPeriodMillis" == child.name) {
+      REQUIRE("1000" == child.value.to_string());
     } else if ("defaultSchedulingStrategy" == child.name) {
       REQUIRE("TIMER_DRIVEN" == child.value.to_string());
+    } else if ("penalizationPeriodMillis" == child.name) {
+      REQUIRE("30000" == child.value.to_string());
+    } else if ("yieldDurationMillis" == child.name) {
+      REQUIRE("1000" == child.value.to_string());
     } else {
-      FAIL("UNKNOWQN NODE");
+      FAIL("UNKNOWN NODE");
     }
   }
 }
