@@ -125,14 +125,14 @@ void YamlConfiguration::parseProcessorNodeYaml(YAML::Node processorsNode, core::
 
         auto strategyNode = getOptionalField(&procNode,
                                              "scheduling strategy",
-                                             YAML::Node("EVENT_DRIVEN"),
+                                             YAML::Node(DEFAULT_SCHEDULING_STRATEGY),
                                              CONFIG_YAML_PROCESSORS_KEY);
         procCfg.schedulingStrategy = strategyNode.as<std::string>();
         logger_->log_debug("parseProcessorNode: scheduling strategy => [%s]", procCfg.schedulingStrategy);
 
         auto periodNode = getOptionalField(&procNode,
                                            "scheduling period",
-                                           YAML::Node("1 sec"),
+                                           YAML::Node(DEFAULT_SCHEDULING_PERIOD),
                                            CONFIG_YAML_PROCESSORS_KEY);
         procCfg.schedulingPeriod = periodNode.as<std::string>();
         logger_->log_debug("parseProcessorNode: scheduling period => [%s]", procCfg.schedulingPeriod);
@@ -153,7 +153,7 @@ void YamlConfiguration::parseProcessorNodeYaml(YAML::Node processorsNode, core::
         }
 
         if (procNode["run duration nanos"]) {
-          procCfg.yieldPeriod = procNode["run duration nanos"].as<std::string>();
+          procCfg.runDurationNanos = procNode["run duration nanos"].as<std::string>();
           logger_->log_debug("parseProcessorNode: run duration nanos => [%s]", procCfg.runDurationNanos);
         }
 
