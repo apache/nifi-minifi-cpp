@@ -54,7 +54,6 @@ namespace core {
 #define MINIMUM_SCHEDULING_NANOS 30000
 
 // Default penalization period in second
-#define DEFAULT_PENALIZATION_PERIOD_SECONDS 30
 
 // Processor Class
 class __attribute__((visibility("default"))) Processor : public Connectable, public ConfigurableComponent, public std::enable_shared_from_this<Processor> {
