@@ -25,6 +25,7 @@ CORES=1
 BUILD="false"
 PACKAGE="false"
 BUILD_IDENTIFIER=""
+BUILD_IDENTIFIER=""
 TRUE="Enabled"
 FALSE="Disabled"
 FEATURES_SELECTED="false"
@@ -277,7 +278,14 @@ if [ "$GUIDED_INSTALL" == "${TRUE}" ]; then
 fi
 
 BUILD_DIR_D=${BUILD_DIR}
+OVERRIDE_BUILD_IDENTIFIER=${BUILD_IDENTIFIER}
+
 load_state
+
+if [ "${OVERRIDE_BUILD_IDENTIFIER}" != "${BUILD_IDENTIFIER}" ]; then
+  BUILD_IDENTIFIER=${OVERRIDE_BUILD_IDENTIFIER}
+fi
+
 if [ "$BUILD_DIR_D" != "build" ] && [ "$BUILD_DIR_D" != "$BUILD_DIR" ]; then
   read -p "Build dir will override stored state, $BUILD_DIR. Press any key to continue " overwrite
   BUILD_DIR=$BUILD_DIR_D
