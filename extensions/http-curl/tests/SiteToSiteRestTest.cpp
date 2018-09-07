@@ -86,7 +86,7 @@ class SiteToSiteTestHarness : public HTTPIntegrationBase {
   }
 
   void testSetup() {
-    LogTestController::getInstance().setDebug<minifi::RemoteProcessorGroupPort>();
+    LogTestController::getInstance().setTrace<minifi::RemoteProcessorGroupPort>();
     LogTestController::getInstance().setDebug<utils::HTTPClient>();
     LogTestController::getInstance().setTrace<minifi::controllers::SSLContextService>();
     LogTestController::getInstance().setInfo<minifi::FlowController>();
@@ -109,6 +109,7 @@ class SiteToSiteTestHarness : public HTTPIntegrationBase {
     } else {
       assert(LogTestController::getInstance().contains("process group remote site2site port 10001, is secure 0") == true);
     }
+    assert(LogTestController::getInstance().contains("ProcessGroup::refreshRemoteSite2SiteInfo -- curl_easy_perform() failed ") == true);
   }
 
  protected:
