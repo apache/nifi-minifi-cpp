@@ -65,6 +65,12 @@ class RPGLatch {
   std::atomic<int> *count;
 };
 
+struct RPG {
+  std::string host_;
+  int port_;
+  std::string protocol_;
+};
+
 // RemoteProcessorGroupPort Class
 class RemoteProcessorGroupPort : public core::Processor {
  public:
@@ -78,7 +84,6 @@ class RemoteProcessorGroupPort : public core::Processor {
         direction_(sitetosite::SEND),
         transmitting_(false),
         timeout_(0),
-        url_(url),
         http_enabled_(false),
         bypass_rest_api_(false),
         ssl_service(nullptr),
@@ -88,12 +93,11 @@ class RemoteProcessorGroupPort : public core::Processor {
     if (uuid != nullptr) {
       uuid_copy(protocol_uuid_, uuid);
     }
-    site2site_port_ = -1;
+    //siteTosite_port_ = -1;
     site2site_secure_ = false;
     peer_index_ = -1;
     // REST API port and host
-    port_ = -1;
-    utils::parse_url(&url_, &host_, &port_, &protocol_);
+    setURL(url);
   }
   // Destructor
   virtual ~RemoteProcessorGroupPort() {
@@ -137,16 +141,27 @@ class RemoteProcessorGroupPort : public core::Processor {
   std::string getInterface() {
     return local_network_interface_;
   }
-  // setURL
+  /**
+   * Sets the url. Supports a CSV
+   */
   void setURL(std::string val) {
-    url_ = val;
-    utils::parse_url(&url_, &host_, &port_, &protocol_);
-    if (port_ == -1) {
-      if (protocol_.find("https") != std::string::npos) {
-        port_ = 443;
-      } else if (protocol_.find("http") != std::string::npos) {
-        port_ = 80;
+    auto urls = utils::StringUtils::split(val, ",");
+    //url_ = val;
+    for (auto url : urls) {
+      logger_->log_trace("Parsing %s", url);
+      std::string host, protocol;
+      int port;
+      url = utils::StringUtils::trim(url);
+      utils::parse_url(&url, &host, &port, &protocol);
+      logger_->log_trace("Parsed -%s- %s %s, %d", url, protocol, host, port);
+      if (port == -1) {
+        if (protocol.find("https") != std::string::npos) {
+          port = 443;
+        } else if (protocol.find("http") != std::string::npos) {
+          port = 80;
+        }
       }
+      nifi_instances_.push_back( { host, port, protocol });
     }
   }
   void setHTTPProxy(const utils::HTTPProxy &proxy) {
@@ -156,7 +171,7 @@ class RemoteProcessorGroupPort : public core::Processor {
     return this->proxy_;
   }
   // refresh remoteSite2SiteInfo via nifi rest api
-  void refreshRemoteSite2SiteInfo();
+  std::pair<std::string, int> refreshRemoteSite2SiteInfo();
 
   // refresh site2site peer list
   void refreshPeerList();
@@ -201,10 +216,9 @@ class RemoteProcessorGroupPort : public core::Processor {
   uuid_t protocol_uuid_;
 
   // rest API end point info
-  std::string host_;
-  int port_;
-  std::string protocol_;
-  std::string url_;
+  std::vector<struct RPG> nifi_instances_;
+
+  //std::vector<std::string> urls_;
   bool http_enabled_;
   // http proxy
   utils::HTTPProxy proxy_;
@@ -214,7 +228,6 @@ class RemoteProcessorGroupPort : public core::Processor {
   sitetosite::CLIENT_TYPE client_type_;
 
   // Remote Site2Site Info
-  int site2site_port_;
   bool site2site_secure_;
   std::vector<sitetosite::PeerStatus> peers_;
   std::atomic<int> peer_index_;

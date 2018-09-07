@@ -375,7 +375,7 @@ int Socket::writeData(uint8_t *value, int size) {
 
   if (ret)
     logger_->log_trace("Send data size %d over socket %d", size, fd);
-  total_written_+=bytes;
+  total_written_ += bytes;
   return bytes;
 }
 
@@ -462,7 +462,7 @@ int Socket::readData(uint8_t *buf, int buflen, bool retrieve_all_bytes) {
           // continue
           return -2;
         }
-        logger_->log_error("Could not recv on %d, error: %s", fd, strerror(errno));
+        logger_->log_error("Could not recv on %d ( port %d), error: %s", fd, port_, strerror(errno));
       }
       return -1;
     }
@@ -473,7 +473,7 @@ int Socket::readData(uint8_t *buf, int buflen, bool retrieve_all_bytes) {
       break;
     }
   }
-  total_read_+=total_read;
+  total_read_ += total_read;
   return total_read;
 }
 

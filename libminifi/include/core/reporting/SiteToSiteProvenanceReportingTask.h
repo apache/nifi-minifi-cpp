@@ -48,7 +48,6 @@ class SiteToSiteProvenanceReportingTask : public minifi::RemoteProcessorGroupPor
       : minifi::RemoteProcessorGroupPort(stream_factory, ReportTaskName, "", configure, NULL),
         logger_(logging::LoggerFactory<SiteToSiteProvenanceReportingTask>::getLogger()) {
     this->setTriggerWhenEmpty(true);
-    port_ = 0;
     batch_size_ = 100;
   }
   //! Destructor
@@ -73,25 +72,10 @@ class SiteToSiteProvenanceReportingTask : public minifi::RemoteProcessorGroupPor
   void setPortUUID(uuid_t port_uuid) {
     uuid_copy(protocol_uuid_, port_uuid);
   }
-  //! Set Host
-  void setHost(std::string host) {
-    host_ = host;
-  }
-  //! Set Port
-  void setPort(uint16_t port) {
-    port_ = port;
-  }
+
   //! Set Batch Size
   void setBatchSize(int size) {
     batch_size_ = size;
-  }
-  //! Get Host
-  std::string getHost(void) {
-    return (host_);
-  }
-  //! Get Port
-  uint16_t getPort(void) {
-    return (port_);
   }
   //! Get Batch Size
   int getBatchSize(void) {
