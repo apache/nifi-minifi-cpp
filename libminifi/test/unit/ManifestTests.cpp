@@ -74,7 +74,7 @@ TEST_CASE("Test Relationships", "[rel1]") {
   REQUIRE(processors.children.size() > 0);
   minifi::state::response::SerializedResponseNode proc_0;
   for (const auto &node : processors.children) {
-    if ("org::apache::nifi::minifi::processors::PutFile" == node.name) {
+    if ("org.apache.nifi.minifi.processors.PutFile" == node.name) {
       proc_0 = node;
     }
   }
@@ -101,7 +101,7 @@ TEST_CASE("Test Dependent", "[dependent]") {
   REQUIRE(processors.children.size() > 0);
   minifi::state::response::SerializedResponseNode proc_0;
   for (const auto &node : processors.children) {
-    if ("org::apache::nifi::minifi::processors::PutFile" == node.name) {
+    if ("org.apache.nifi.minifi.processors.PutFile" == node.name) {
       proc_0 = node;
     }
   }

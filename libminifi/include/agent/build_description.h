@@ -65,7 +65,7 @@ class BuildDescription {
   static struct Components getClassDescriptions(const std::string group = "minifi-system") {
     static std::map<std::string, struct Components> class_mappings;
     if (UNLIKELY(IsNullOrEmpty(class_mappings[group].processors_) && IsNullOrEmpty(class_mappings[group].processors_))) {
-      for (auto clazz : core::ClassLoader::getDefaultClassLoader().getClasses(group)) {
+      for (const auto clazz : core::ClassLoader::getDefaultClassLoader().getClasses(group)) {
         std::string class_name = clazz;
         auto lastOfIdx = clazz.find_last_of("::");
         if (lastOfIdx != std::string::npos) {
@@ -77,7 +77,9 @@ class BuildDescription {
 
         std::shared_ptr<core::ConfigurableComponent> component = std::dynamic_pointer_cast<core::ConfigurableComponent>(obj);
 
-        ClassDescription description(clazz);
+        std::string classDescriptionName = clazz;
+        utils::StringUtils::replaceAll(classDescriptionName,"::",".");
+        ClassDescription description(classDescriptionName);
         if (nullptr != component) {
 
           auto processor = std::dynamic_pointer_cast<core::Processor>(obj) ;
