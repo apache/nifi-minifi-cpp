@@ -58,7 +58,7 @@ namespace minifi {
 namespace state {
 namespace response {
 
-#define GROUP_STR "org::apache::nifi::minifi"
+#define GROUP_STR "org.apache.nifi.minifi"
 
 class ComponentManifest : public DeviceInformation {
  public:
@@ -154,7 +154,9 @@ class ComponentManifest : public DeviceInformation {
               for (const auto &type : allowed_types) {
                 SerializedResponseNode typeNode;
                 typeNode.name = "type";
-                typeNode.value = type;
+                std::string typeClazz = type;
+                utils::StringUtils::replaceAll(typeClazz,"::",".");
+                typeNode.value = typeClazz;
                 allowed_type.children.push_back(typeNode);
 
                 SerializedResponseNode bgroup;
