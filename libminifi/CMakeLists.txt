@@ -141,3 +141,43 @@ endif()
 
 
 SET (LIBMINIFI core-minifi PARENT_SCOPE)
+
+if (NOT APPLE)
+#### shared
+
+add_library(core-minifi-shared SHARED ${SOURCES})
+target_link_libraries(core-minifi-shared ${CMAKE_DL_LIBS} uuid-shared yaml-cpp)
+
+find_package(ZLIB REQUIRED)
+include_directories(${ZLIB_INCLUDE_DIRS})
+
+target_link_libraries(core-minifi-shared minifi-expression-language-extensions)
+target_link_libraries (core-minifi-shared ${ZLIB_LIBRARIES})
+if (WIN32)
+set_target_properties(core-minifi-shared PROPERTIES LINK_FLAGS "/WHOLEARCHIVE")
+endif()
+
+
+# Include OpenSSL
+
+if (OPENSSL_FOUND)
+	include_directories(${OPENSSL_INCLUDE_DIR})
+	target_link_libraries (core-minifi-shared ${OPENSSL_LIBRARIES})
+endif (OPENSSL_FOUND)
+
+add_library(minifi-shared SHARED ${PROCESSOR_SOURCES})
+add_library(capi-shared SHARED ${CAPI_SOURCES})
+
+
+target_link_libraries(minifi-shared core-minifi-shared)
+if (WIN32)
+set_target_properties(minifi-shared PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
+set_target_properties(minifi-shared PROPERTIES LINK_FLAGS "${LINK_FLAGS} /WHOLEARCHIVE:core-minifi-shared")
+endif()
+
+
+
+set_property(TARGET core-minifi-shared PROPERTY POSITION_INDEPENDENT_CODE ON)
+set_property(TARGET minifi-shared PROPERTY POSITION_INDEPENDENT_CODE ON)
+set_property(TARGET capi-shared PROPERTY POSITION_INDEPENDENT_CODE ON)
+endif()

@@ -57,6 +57,24 @@ class DirectoryConfiguration {
   }
 };
 
+nifi_port *create_port(char *port) {
+  if (nullptr == port)
+    return nullptr;
+  nifi_port *p = new nifi_port();
+  p->port_id = new char[strlen(port) + 1];
+  memset(p->port_id, 0x00, strlen(port) + 1);
+  strncpy(p->port_id, port, strlen(port));
+  return p;
+}
+
+int free_port(nifi_port *port) {
+  if (port == nullptr)
+    return -1;
+  delete[] port->port_id;
+  delete port;
+  return 0;
+}
+
 /**
  * Creates a NiFi Instance from the url and output port.
  * @param url http URL for NiFi instance
@@ -99,10 +117,15 @@ void enable_async_c2(nifi_instance *instance, C2_Server *server, c2_stop_callbac
  * @param instance nifi instance
  * @param key key in which we will set the valiue
  * @param value
+ * @return -1 when instance or key are null
  */
-void set_instance_property(nifi_instance *instance, char *key, char *value) {
+int set_instance_property(nifi_instance *instance, char *key, char *value) {
+  if (nullptr == instance || nullptr == instance->instance_ptr || nullptr == key) {
+    return -1;
+  }
   auto minifi_instance_ref = static_cast<minifi::Instance*>(instance->instance_ptr);
   minifi_instance_ref->getConfiguration()->set(key, value);
+  return 0;
 }
 
 /**
@@ -136,8 +159,23 @@ flow_file_record* create_flowfile(const char *file, const size_t len) {
  * @param file file to place into the flow file.
  */
 flow_file_record* create_ff_object(const char *file, const size_t len, const uint64_t size) {
+  if (nullptr == file) {
+    return nullptr;
+  }
   flow_file_record *new_ff = new flow_file_record;
   new_ff->attributes = new string_map();
+  new_ff->ffp = 0;
+  new_ff->contentLocation = new char[len + 1];
+  snprintf(new_ff->contentLocation, len + 1, "%s", file);
+  std::ifstream in(file, std::ifstream::ate | std::ifstream::binary);
+  // set the size of the flow file.
+  new_ff->size = size;
+  return new_ff;
+}
+
+flow_file_record* create_ff_object_na(const char *file, const size_t len, const uint64_t size) {
+  flow_file_record *new_ff = new flow_file_record;
+  new_ff->attributes = nullptr;
   new_ff->contentLocation = new char[len + 1];
   snprintf(new_ff->contentLocation, len + 1, "%s", file);
   std::ifstream in(file, std::ifstream::ate | std::ifstream::binary);
@@ -160,7 +198,8 @@ void free_flowfile(flow_file_record *ff) {
     }
     auto map = static_cast<string_map*>(ff->attributes);
     delete[] ff->contentLocation;
-    delete map;
+    if (ff->ffp != nullptr)  // don't delete map since it's a ref ptr
+      delete map;
     delete ff;
   }
 }
@@ -226,7 +265,7 @@ uint8_t remove_attribute(flow_file_record *ff, char *key) {
  * @param ff flow file record
  * @param instance nifi instance structure
  */
-void transmit_flowfile(flow_file_record *ff, nifi_instance *instance) {
+int transmit_flowfile(flow_file_record *ff, nifi_instance *instance) {
   auto minifi_instance_ref = static_cast<minifi::Instance*>(instance->instance_ptr);
   // in the unlikely event the user forgot to initialize the instance, we shall do it for them.
   if (UNLIKELY(minifi_instance_ref->isRPGConfigured() == false)) {
@@ -250,9 +289,25 @@ void transmit_flowfile(flow_file_record *ff, nifi_instance *instance) {
   std::string port_uuid = instance->port.port_id;
 
   minifi_instance_ref->transfer(ffr);
+
+  return 0;
+}
+
+flow *create_new_flow(nifi_instance *instance) {
+  auto minifi_instance_ref = static_cast<minifi::Instance*>(instance->instance_ptr);
+  flow *new_flow = new flow;
+
+  auto execution_plan = new ExecutionPlan(minifi_instance_ref->getContentRepository(), minifi_instance_ref->getNoOpRepository(), minifi_instance_ref->getNoOpRepository());
+
+  new_flow->plan = execution_plan;
+
+  return new_flow;
 }
 
 flow *create_flow(nifi_instance *instance, const char *first_processor) {
+  if (nullptr == instance || nullptr == instance->instance_ptr) {
+    return nullptr;
+  }
   auto minifi_instance_ref = static_cast<minifi::Instance*>(instance->instance_ptr);
   flow *new_flow = new flow;
 
@@ -265,6 +320,17 @@ flow *create_flow(nifi_instance *instance, const char *first_processor) {
     execution_plan->addProcessor(first_processor, first_processor);
   }
   return new_flow;
+}
+
+processor *add_python_processor(flow *flow, void (*ontrigger_callback)(processor_session *)) {
+  if (nullptr == flow || nullptr == flow->plan || nullptr == ontrigger_callback) {
+    return nullptr;
+  }
+  ExecutionPlan *plan = static_cast<ExecutionPlan*>(flow->plan);
+  auto proc = plan->addCallback(nullptr, ontrigger_callback);
+  processor *new_processor = new processor();
+  new_processor->processor_ptr = proc.get();
+  return new_processor;
 }
 
 flow *create_getfile(nifi_instance *instance, flow *parent_flow, GetFileConfig *c) {
@@ -283,6 +349,9 @@ flow *create_getfile(nifi_instance *instance, flow *parent_flow, GetFileConfig *
 }
 
 processor *add_processor(flow *flow, const char *processor_name) {
+  if (nullptr == flow || nullptr == processor_name) {
+    return nullptr;
+  }
   ExecutionPlan *plan = static_cast<ExecutionPlan*>(flow->plan);
   auto proc = plan->addProcessor(processor_name, processor_name);
   if (proc) {
@@ -300,17 +369,19 @@ int set_property(processor *proc, const char *name, const char *value) {
   return -1;
 }
 
-void free_flow(flow *flow) {
-  if (flow == nullptr)
-    return;
+int free_flow(flow *flow) {
+  if (flow == nullptr || nullptr == flow->plan)
+    return -1;
   auto execution_plan = static_cast<ExecutionPlan*>(flow->plan);
   delete execution_plan;
   delete flow;
+  return 0;
 }
 
 flow_file_record *get_next_flow_file(nifi_instance *instance, flow *flow) {
+  if (instance == nullptr || nullptr == flow || nullptr == flow->plan)
+    return nullptr;
   auto execution_plan = static_cast<ExecutionPlan*>(flow->plan);
-
   execution_plan->reset();
   while (execution_plan->runNextProcessor()) {
   }
@@ -323,7 +394,9 @@ flow_file_record *get_next_flow_file(nifi_instance *instance, flow *flow) {
     // create a flow file.
     claim->increaseFlowFileRecordOwnedCount();
     auto path = claim->getContentFullPath();
-    auto ffr = create_ff_object(path.c_str(), path.length(), ff->getSize());
+    auto ffr = create_ff_object_na(path.c_str(), path.length(), ff->getSize());
+    ffr->attributes = ff->getAttributesPtr();
+    ffr->ffp = ff.get();
     ffr->in = instance;
     return ffr;
   } else {
@@ -332,6 +405,8 @@ flow_file_record *get_next_flow_file(nifi_instance *instance, flow *flow) {
 }
 
 size_t get_flow_files(nifi_instance *instance, flow *flow, flow_file_record **ff_r, size_t size) {
+  if (nullptr == instance || nullptr == flow || nullptr == ff_r)
+    return 0;
   auto execution_plan = static_cast<ExecutionPlan*>(flow->plan);
   size_t i = 0;
   for (; i < size; i++) {
@@ -343,4 +418,48 @@ size_t get_flow_files(nifi_instance *instance, flow *flow, flow_file_record **ff
     ff_r[i] = ffr;
   }
   return i;
+}
+
+flow_file_record *get(nifi_instance *instance, flow *flow, processor_session *session) {
+  if (nullptr == instance || nullptr == flow || nullptr == session)
+    return nullptr;
+  auto sesh = static_cast<core::ProcessSession*>(session->session);
+  auto execution_plan = static_cast<ExecutionPlan*>(flow->plan);
+  auto ff = sesh->get();
+  execution_plan->setNextFlowFile(ff);
+  if (ff == nullptr) {
+    return nullptr;
+  }
+  auto claim = ff->getResourceClaim();
+
+  if (claim != nullptr) {
+    // create a flow file.
+    claim->increaseFlowFileRecordOwnedCount();
+    auto path = claim->getContentFullPath();
+    auto ffr = create_ff_object_na(path.c_str(), path.length(), ff->getSize());
+    ffr->attributes = ff->getAttributesPtr();
+    ffr->ffp = ff.get();
+    ffr->in = instance;
+    return ffr;
+  } else {
+    return nullptr;
+  }
+}
+
+int transfer(processor_session* session, flow *flow, const char *rel) {
+  if (nullptr == session || nullptr == flow || rel == nullptr) {
+    return -1;
+  }
+  auto sesh = static_cast<core::ProcessSession*>(session->session);
+  auto execution_plan = static_cast<ExecutionPlan*>(flow->plan);
+  if (nullptr == sesh || nullptr == execution_plan) {
+    return -1;
+  }
+  core::Relationship relationship(rel, rel);
+  auto ff = execution_plan->getNextFlowFile();
+  if (nullptr == ff) {
+    return -2;
+  }
+  sesh->transfer(ff, relationship);
+  return 0;
 }

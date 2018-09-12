@@ -17,10 +17,6 @@
 # under the License.
 #
 
-set(CMAKE_EXE_LINKER_FLAGS "-Wl,--export-all-symbols")
-set(CMAKE_SHARED_LINKER_FLAGS "-Wl,--export-symbols")
-
-
 find_package(BISON REQUIRED)
 find_package(FLEX REQUIRED)
 

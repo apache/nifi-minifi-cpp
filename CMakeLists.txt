@@ -303,6 +303,9 @@ set(CIVETWEB_ENABLE_CXX ON CACHE BOOL "Enable civet C++ library")
 set(CIVETWEB_ENABLE_SSL OFF CACHE BOOL "DISABLE SSL")
 
 SET(WITH_TOOLS OFF CACHE BOOL "Do not build RocksDB tools")
+if (NOT APPLE)
+SET(BUILD_SHARED_LIBS ON CACHE BOOL "build yaml cpp shared lib")
+endif()
 SET(WITH_TESTS OFF CACHE BOOL "Build RocksDB library (not repo) tests")
 set(CIVET_THIRDPARTY_ROOT "${CMAKE_SOURCE_DIR}/thirdparty/civetweb-1.10/" CACHE STRING "Path to CivetWeb root")
 set(CIVET_BINARY_ROOT "${CMAKE_BINARY_DIR}/thirdparty/civetweb-1.10/" CACHE STRING "Path to CivetWeb binary output")
@@ -447,7 +450,12 @@ endif()
 ## NOW WE CAN ADD LIBRARIES AND EXTENSIONS TO MAIN
 
 add_subdirectory(main)
-add_subdirectory(LibExample)
+if (NOT DISABLE_CURL)
+  add_subdirectory(LibExample)
+  if (NOT WIN32)
+  	add_subdirectory(python/library)
+  endif()
+endif()
 
 get_property(selected_extensions GLOBAL PROPERTY EXTENSION-OPTIONS)
 

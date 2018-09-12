@@ -5,8 +5,13 @@ set_target_properties(c-library PROPERTIES
   VERSION ${CIVETWEB_VERSION}
   SOVERSION ${CIVETWEB_VERSION}
 )
+
+set_property(TARGET c-library PROPERTY POSITION_INDEPENDENT_CODE ON)
+
 if (BUILD_SHARED_LIBS)
+if (APPLE)
   target_compile_definitions(c-library PRIVATE CIVETWEB_DLL_EXPORTS)
+ endif()
 endif()
 target_include_directories(
   c-library PUBLIC
@@ -273,14 +278,18 @@ endif()
 # The C++ API library
 if (CIVETWEB_ENABLE_CXX)
   add_library(civetweb-cpp CivetServer.cpp)
+  
+  set_property(TARGET civetweb-cpp PROPERTY POSITION_INDEPENDENT_CODE ON)
   set_target_properties(civetweb-cpp PROPERTIES
     OUTPUT_NAME "civetweb-cpp"
     VERSION ${CIVETWEB_VERSION}
     SOVERSION ${CIVETWEB_VERSION}
   )
   if (BUILD_SHARED_LIBS)
-    target_compile_definitions(civetweb-cpp PRIVATE CIVETWEB_DLL_EXPORTS)
-  endif()
+if (APPLE)
+  target_compile_definitions(civetweb-cpp PRIVATE CIVETWEB_DLL_EXPORTS)
+ endif()
+ endif()
   target_include_directories(
     civetweb-cpp PUBLIC
     ${PROJECT_SOURCE_DIR}/include)
