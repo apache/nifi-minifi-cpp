@@ -162,6 +162,14 @@ class FlowFile : public core::Connectable {
   }
 
   /**
+   * Returns the map of attributes
+   * @return attributes.
+   */
+  std::map<std::string, std::string> *getAttributesPtr() {
+    return &attributes_;
+  }
+
+  /**
    * adds an attribute if it does not exist
    *
    */
@@ -217,25 +225,25 @@ class FlowFile : public core::Connectable {
   }
 
   /**
-     * Yield
-     */
-    virtual void yield(){
+   * Yield
+   */
+  virtual void yield() {
 
-    }
-    /**
-     * Determines if we are connected and operating
-     */
-    virtual bool isRunning(){
-      return true;
-    }
+  }
+  /**
+   * Determines if we are connected and operating
+   */
+  virtual bool isRunning() {
+    return true;
+  }
 
-    /**
-     * Determines if work is available by this connectable
-     * @return boolean if work is available.
-     */
-    virtual bool isWorkAvailable(){
-      return true;
-    }
+  /**
+   * Determines if work is available by this connectable
+   * @return boolean if work is available.
+   */
+  virtual bool isWorkAvailable() {
+    return true;
+  }
 
   /**
    * Sets the original connection with a shared pointer.

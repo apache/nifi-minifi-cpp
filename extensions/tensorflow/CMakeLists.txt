@@ -20,9 +20,6 @@
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(CMAKE_EXE_LINKER_FLAGS "-Wl,--export-all-symbols")
-set(CMAKE_SHARED_LINKER_FLAGS "-Wl,--export-symbols")
-
 find_package(TensorFlow REQUIRED)
 
 message("-- Found TensorFlow: ${TENSORFLOW_INCLUDE_DIRS}")

@@ -22,7 +22,6 @@ namespace org {
  namespace apache { 
 namespace nifi { 
 namespace minifi { 
-
 class AgentDocs{ 
  public: 
      static std::string getDescription(const std::string &feature){ 

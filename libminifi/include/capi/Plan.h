@@ -43,12 +43,14 @@
 #include "core/ProcessSession.h"
 #include "core/ProcessorNode.h"
 #include "core/reporting/SiteToSiteProvenanceReportingTask.h"
-
+#include "capi/cstructs.h"
 
 class ExecutionPlan {
  public:
 
   explicit ExecutionPlan(std::shared_ptr<core::ContentRepository> content_repo, std::shared_ptr<core::Repository> flow_repo, std::shared_ptr<core::Repository> prov_repo);
+
+  std::shared_ptr<core::Processor> addCallback(void *, void (*fp)(processor_session *));
 
   std::shared_ptr<core::Processor> addProcessor(const std::shared_ptr<core::Processor> &processor, const std::string &name,
                                                 core::Relationship relationship = core::Relationship("success", "description"),
@@ -67,6 +69,8 @@ class ExecutionPlan {
 
   std::shared_ptr<core::FlowFile> getCurrentFlowFile();
 
+  std::shared_ptr<core::ProcessSession> getCurrentSession();
+
   std::shared_ptr<core::Repository> getFlowRepo() {
     return flow_repo_;
   }
@@ -80,6 +84,14 @@ class ExecutionPlan {
   }
 
   static std::shared_ptr<core::Processor> createProcessor(const std::string &processor_name, const std::string &name);
+
+  std::shared_ptr<core::FlowFile> getNextFlowFile(){
+    return next_ff_;
+  }
+
+  void setNextFlowFile(std::shared_ptr<core::FlowFile> ptr){
+    next_ff_ = ptr;
+  }
 
  protected:
 
@@ -112,6 +124,8 @@ class ExecutionPlan {
   std::vector<std::shared_ptr<core::ProcessSessionFactory>> factories_;
   std::vector<std::shared_ptr<minifi::Connection>> relationships_;
   core::Relationship termination_;
+
+  std::shared_ptr<core::FlowFile> next_ff_;
 
  private:
 

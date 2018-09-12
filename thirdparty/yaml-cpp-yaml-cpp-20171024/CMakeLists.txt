@@ -46,6 +46,8 @@ option(YAML_CPP_BUILD_CONTRIB "Enable contrib stuff in library" ON)
 #     http://www.cmake.org/cmake/help/cmake2.6docs.html#command:add_library
 option(BUILD_SHARED_LIBS "Build Shared Libraries" OFF)
 
+
+
 # --> Apple
 option(APPLE_UNIVERSAL_BIN "Apple: Build universal binary" OFF)
 

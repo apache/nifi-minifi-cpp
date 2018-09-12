@@ -17,6 +17,7 @@
  */
 
 #include "capi/Plan.h"
+#include "processors/CallbackProcessor.h"
 #include <memory>
 #include <vector>
 #include <set>
@@ -33,6 +34,45 @@ ExecutionPlan::ExecutionPlan(std::shared_ptr<core::ContentRepository> content_re
       current_flowfile_(nullptr),
       logger_(logging::LoggerFactory<ExecutionPlan>::getLogger()) {
   stream_factory = org::apache::nifi::minifi::io::StreamFactory::getInstance(std::make_shared<minifi::Configure>());
+}
+
+/**
+ * Add a callback to obtain and pass processor session to a generated processor
+ *
+ */
+std::shared_ptr<core::Processor> ExecutionPlan::addCallback(void *obj, void (*fp)(processor_session *)) {
+  if (finalized) {
+    return nullptr;
+  }
+
+  utils::Identifier uuid;
+  id_generator_->generate(uuid);
+
+  auto ptr = core::ClassLoader::getDefaultClassLoader().instantiate("CallbackProcessor", uuid);
+  if (nullptr == ptr) {
+    throw std::exception();
+  }
+  std::shared_ptr<processors::CallbackProcessor> processor = std::static_pointer_cast<processors::CallbackProcessor>(ptr);
+  processor->setCallback(obj, fp);
+  processor->setName("CallbackProcessor");
+
+  return addProcessor(processor, "CallbackProcessor", core::Relationship("success", "description"), true);
+}
+
+bool ExecutionPlan::setProperty(const std::shared_ptr<core::Processor> proc, const std::string &prop, const std::string &value) {
+  uint32_t i = 0;
+  logger_->log_debug("Attempting to set property %s %s for %s", prop, value, proc->getName());
+  for (i = 0; i < processor_queue_.size(); i++) {
+    if (processor_queue_.at(i) == proc) {
+      break;
+    }
+  }
+
+  if (i >= processor_queue_.size() || i >= processor_contexts_.size()) {
+    return false;
+  }
+
+  return processor_contexts_.at(i)->setProperty(prop, value);
 }
 
 std::shared_ptr<core::Processor> ExecutionPlan::addProcessor(const std::shared_ptr<core::Processor> &processor, const std::string &name, core::Relationship relationship, bool linkToPrevious) {
@@ -102,23 +142,6 @@ std::shared_ptr<core::Processor> ExecutionPlan::addProcessor(const std::string &
   return addProcessor(processor, name, relationship, linkToPrevious);
 }
 
-bool ExecutionPlan::setProperty(const std::shared_ptr<core::Processor> proc, const std::string &prop, const std::string &value) {
-  uint32_t i = 0;
-  logger_->log_debug("Attempting to set property %s %s for %s", prop, value, proc->getName());
-  for (i = 0; i < processor_queue_.size(); i++) {
-    if (processor_queue_.at(i) == proc) {
-      break;
-    }
-  }
-
-  if (i >= processor_queue_.size() || i >= processor_contexts_.size()) {
-    return false;
-  }
-
-
-  return processor_contexts_.at(i)->setProperty(prop, value);
-}
-
 void ExecutionPlan::reset() {
   process_sessions_.clear();
   factories_.clear();
@@ -134,7 +157,6 @@ bool ExecutionPlan::runNextProcessor(std::function<void(const std::shared_ptr<co
   if (!finalized) {
     finalize();
   }
-
   location++;
   if (location >= processor_queue_.size()) {
     return false;
@@ -159,7 +181,12 @@ bool ExecutionPlan::runNextProcessor(std::function<void(const std::shared_ptr<co
   }
   current_session->commit();
   current_flowfile_ = current_session->get();
-  return true;
+  auto hasMore = location + 1 < processor_queue_.size();
+  if (!hasMore && !current_flowfile_) {
+    std::set<std::shared_ptr<core::FlowFile>> expired;
+    current_flowfile_ = relationships_.back()->poll(expired);
+  }
+  return hasMore;
 }
 
 std::set<provenance::ProvenanceEventRecord*> ExecutionPlan::getProvenanceRecords() {
@@ -168,6 +195,10 @@ std::set<provenance::ProvenanceEventRecord*> ExecutionPlan::getProvenanceRecords
 
 std::shared_ptr<core::FlowFile> ExecutionPlan::getCurrentFlowFile() {
   return current_flowfile_;
+}
+
+std::shared_ptr<core::ProcessSession> ExecutionPlan::getCurrentSession() {
+  return current_session_;
 }
 
 std::shared_ptr<minifi::Connection> ExecutionPlan::buildFinalConnection(std::shared_ptr<core::Processor> processor, bool setDest) {
@@ -217,5 +248,4 @@ std::shared_ptr<core::Processor> ExecutionPlan::createProcessor(const std::strin
   processor->setName(name);
   return processor;
 }
-
 
