@@ -53,8 +53,6 @@ const char *Configure::nifi_security_client_certificate = "nifi.security.client.
 const char *Configure::nifi_security_client_private_key = "nifi.security.client.private.key";
 const char *Configure::nifi_security_client_pass_phrase = "nifi.security.client.pass.phrase";
 const char *Configure::nifi_security_client_ca_certificate = "nifi.security.client.ca.certificate";
-const char *Configure::nifi_security_client_disable_host_verification = "nifi.security.client.disable.host.verification";
-const char *Configure::nifi_security_client_disable_peer_verification = "nifi.security.client.disable.peer.verification";
 const char *Configure::nifi_rest_api_user_name = "nifi.rest.api.user.name";
 const char *Configure::nifi_rest_api_password = "nifi.rest.api.password";
 

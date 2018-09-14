@@ -74,8 +74,6 @@ class Configure : public Properties {
   static const char *nifi_security_client_private_key;
   static const char *nifi_security_client_pass_phrase;
   static const char *nifi_security_client_ca_certificate;
-  static const char *nifi_security_client_disable_host_verification;
-  static const char *nifi_security_client_disable_peer_verification;
 
   // nifi rest api user name and password
   static const char *nifi_rest_api_user_name;
