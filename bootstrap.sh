@@ -189,6 +189,8 @@ else
     fi
   elif [[ "$OS" = Red* ]]; then
     . "${script_directory}/rheldistro.sh"
+  elif [[ "$OS" = Amazon* ]]; then
+    . "${script_directory}/centos.sh"
   elif [[ "$OS" = CentOS* ]]; then
     . "${script_directory}/centos.sh"
   elif [[ "$OS" = Fedora* ]]; then
