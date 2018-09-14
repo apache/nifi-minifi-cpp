@@ -93,7 +93,6 @@ class RemoteProcessorGroupPort : public core::Processor {
     if (uuid != nullptr) {
       uuid_copy(protocol_uuid_, uuid);
     }
-    //siteTosite_port_ = -1;
     site2site_secure_ = false;
     peer_index_ = -1;
     // REST API port and host
@@ -146,7 +145,6 @@ class RemoteProcessorGroupPort : public core::Processor {
    */
   void setURL(std::string val) {
     auto urls = utils::StringUtils::split(val, ",");
-    //url_ = val;
     for (auto url : urls) {
       logger_->log_trace("Parsing %s", url);
       std::string host, protocol;
@@ -218,7 +216,6 @@ class RemoteProcessorGroupPort : public core::Processor {
   // rest API end point info
   std::vector<struct RPG> nifi_instances_;
 
-  //std::vector<std::string> urls_;
   bool http_enabled_;
   // http proxy
   utils::HTTPProxy proxy_;
