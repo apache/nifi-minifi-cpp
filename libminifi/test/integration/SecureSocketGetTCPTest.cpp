@@ -89,8 +89,6 @@ class SecureSocketTest : public IntegrationBase {
     assert(inv != nullptr);
     std::string url = "";
     configuration->set("nifi.remote.input.secure", "true");
-    configuration->set("nifi.security.client.disable.host.verification", "true");
-    configuration->set("nifi.security.client.disable.peer.verification", "true");
     std::string path = key_dir + "cn.crt.pem";
     configuration->set("nifi.security.client.certificate", path);
     path = key_dir + "cn.ckey.pem";

@@ -574,12 +574,6 @@ for TCP and secure HTTPS communications.
           Private Key: < private key path > 
           Passphrase: <passphrase path or passphrase>
           CA Certificate: <CA cert path>
-
-If during testing you have a need to disable host or peer verification, you may use the following options:
-
-    # in minifi.properties
-    nifi.security.client.disable.host.verification=true
-	nifi.security.client.disable.peer.verification=true
     
 ### HTTP SiteToSite Configuration
 To enable HTTPSiteToSite globally you must set the following flag to true.

@@ -110,15 +110,6 @@ int main(int argc, char **argv) {
 
   std::string value;
 
-  bool disable = false;
-  if (secure_context && configuration->get(minifi::Configure::nifi_security_client_disable_host_verification, value) && org::apache::nifi::minifi::utils::StringUtils::StringToBool(value, disable)) {
-    secure_context->setDisableHostVerification();
-  }
-  disable = false;
-  if (secure_context && configuration->get(minifi::Configure::nifi_security_client_disable_peer_verification, value) && org::apache::nifi::minifi::utils::StringUtils::StringToBool(value, disable)) {
-    secure_context->setDisablePeerVerification();
-  }
-
   auto stream_factory_ = minifi::io::StreamFactory::getInstance(configuration);
 
   std::string host = "localhost", portStr, caCert;
