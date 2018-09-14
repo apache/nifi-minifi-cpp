@@ -56,20 +56,11 @@ void ControllerSocketProtocol::initialize(const std::shared_ptr<core::controller
 
   std::string value;
 
-  bool disable = false;
-  if (secure_context && configuration->get(Configure::nifi_security_client_disable_host_verification, value) && org::apache::nifi::minifi::utils::StringUtils::StringToBool(value, disable)) {
-    secure_context->setDisableHostVerification();
-  }
-  disable = false;
-  if (secure_context && configuration->get(Configure::nifi_security_client_disable_peer_verification, value) && org::apache::nifi::minifi::utils::StringUtils::StringToBool(value, disable)) {
-    secure_context->setDisablePeerVerification();
-  }
-
   if (configuration_->get("controller.socket.local.any.interface", limitStr)) {
     utils::StringUtils::StringToBool(limitStr, anyInterface);
   }
 
-// if host name isn't defined we will use localhost
+  // if host name isn't defined we will use localhost
   configuration_->get("controller.socket.host", host);
 
   if (nullptr != configuration_ && configuration_->get("controller.socket.port", port)) {

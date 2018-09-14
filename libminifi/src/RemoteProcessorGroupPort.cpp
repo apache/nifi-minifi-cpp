@@ -153,15 +153,6 @@ void RemoteProcessorGroupPort::onSchedule(const std::shared_ptr<core::ProcessCon
     }
   }
 
-  bool disable = false;
-  if (ssl_service && configure_->get(Configure::nifi_security_client_disable_host_verification, value) && org::apache::nifi::minifi::utils::StringUtils::StringToBool(value, disable)) {
-    ssl_service->setDisableHostVerification();
-  }
-  disable = false;
-  if (ssl_service && configure_->get(Configure::nifi_security_client_disable_peer_verification, value) && org::apache::nifi::minifi::utils::StringUtils::StringToBool(value, disable)) {
-    ssl_service->setDisablePeerVerification();
-  }
-
   std::lock_guard<std::mutex> lock(peer_mutex_);
   if (!nifi_instances_.empty()) {
     refreshPeerList();
@@ -284,14 +275,6 @@ std::pair<std::string, int> RemoteProcessorGroupPort::refreshRemoteSite2SiteInfo
       }
       client = std::unique_ptr<utils::BaseHTTPClient>(dynamic_cast<utils::BaseHTTPClient*>(client_ptr));
       client->initialize("GET", loginUrl, ssl_service);
-      if (ssl_service) {
-        if (ssl_service->getDisableHostVerification()) {
-          client->setDisableHostVerification();
-        }
-        if (ssl_service->getDisablePeerVerification()) {
-          client->setDisablePeerVerification();
-        }
-      }
 
       token = utils::get_token(client.get(), this->rest_user_name_, this->rest_password_);
       logger_->log_debug("Token from NiFi REST Api endpoint %s,  %s", loginUrl, token);
@@ -307,14 +290,6 @@ std::pair<std::string, int> RemoteProcessorGroupPort::refreshRemoteSite2SiteInfo
     int siteTosite_port_ = -1;
     client = std::unique_ptr<utils::BaseHTTPClient>(dynamic_cast<utils::BaseHTTPClient*>(client_ptr));
     client->initialize("GET", fullUrl.c_str(), ssl_service);
-    if (ssl_service) {
-      if (ssl_service->getDisableHostVerification()) {
-        client->setDisableHostVerification();
-      }
-      if (ssl_service->getDisablePeerVerification()) {
-        client->setDisablePeerVerification();
-      }
-    }
     if (!proxy_.host.empty()) {
       client->setHTTPProxy(proxy_);
     }

@@ -63,8 +63,6 @@ class SSLContextService : public core::controller::ControllerService {
       : ControllerService(name, id),
         initialized_(false),
         valid_(false),
-        disable_host_verification_(false),
-        disable_peer_verification_(false),
         logger_(logging::LoggerFactory<SSLContextService>::getLogger()) {
   }
 
@@ -72,8 +70,6 @@ class SSLContextService : public core::controller::ControllerService {
       : ControllerService(name, uuid),
         initialized_(false),
         valid_(false),
-        disable_host_verification_(false),
-        disable_peer_verification_(false),
         logger_(logging::LoggerFactory<SSLContextService>::getLogger()) {
   }
 
@@ -81,8 +77,6 @@ class SSLContextService : public core::controller::ControllerService {
       : ControllerService(name, nullptr),
         initialized_(false),
         valid_(false),
-        disable_host_verification_(false),
-        disable_peer_verification_(false),
         logger_(logging::LoggerFactory<SSLContextService>::getLogger()) {
     setConfiguration(configuration);
     initialize();
@@ -108,13 +102,6 @@ class SSLContextService : public core::controller::ControllerService {
     if (configuration_->get(Configure::nifi_security_client_ca_certificate, value)) {
       setProperty(caCert.getName(), value);
     }
-
-    if (configuration_->get(Configure::nifi_security_client_disable_host_verification, value)) {
-      org::apache::nifi::minifi::utils::StringUtils::StringToBool(value, disable_host_verification_);
-    }
-    if (configuration_->get(Configure::nifi_security_client_disable_peer_verification, value)) {
-      org::apache::nifi::minifi::utils::StringUtils::StringToBool(value, disable_peer_verification_);
-    }
   }
 
   virtual void initialize();
@@ -130,22 +117,6 @@ class SSLContextService : public core::controller::ControllerService {
   const std::string &getPrivateKeyFile();
 
   const std::string &getCACertificate();
-
-  void setDisableHostVerification() {
-    disable_host_verification_ = true;
-  }
-
-  void setDisablePeerVerification() {
-    disable_peer_verification_ = true;
-  }
-
-  bool getDisableHostVerification() const {
-    return disable_host_verification_;
-  }
-
-  bool getDisablePeerVerification() const {
-    return disable_peer_verification_;
-  }
 
   void yield() {
 
@@ -222,8 +193,6 @@ class SSLContextService : public core::controller::ControllerService {
   std::string passphrase_;
   std::string passphrase_file_;
   std::string ca_certificate_;
-  bool disable_host_verification_;
-  bool disable_peer_verification_;
 
  private:
   std::shared_ptr<logging::Logger> logger_;

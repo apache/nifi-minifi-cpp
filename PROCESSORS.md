@@ -540,7 +540,6 @@ default values, and whether a property supports the NiFi Expression Language.
 | Put Response Body in Attribute | | | If set, the response body received back will be put into an attribute of the original FlowFile instead of a separate FlowFile. The attribute key to put to is determined by evaluating value of this property. |
 | Always Output Response | false | true, false | Will force a response FlowFile to be generated and routed to the 'Response' relationship regardless of what the server status code received is or if the processor is configured to put the server response body in the request attribute. In the later configuration a request FlowFile with the response body in the attribute and a typical response FlowFile will be emitted to their respective relationships. |
 | Penalize on "No Retry" | false | true, false | Enabling this property will penalize FlowFiles that are routed to the "No Retry" relationship. |
-| Disable Peer Verification | false | true, false | Disables peer verification for the SSL session |
 
 ### Relationships
 
