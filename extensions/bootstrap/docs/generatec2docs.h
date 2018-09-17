@@ -65,7 +65,7 @@ int generateC2Docs(const std::string &inputfile, const std::string &output) {
              "namespace apache { \n"
              "namespace nifi { \n"
              "namespace minifi { \n"
-             "  std::string toascii(const std::string& in) { \n"
+             "  std::string htoascii(const std::string& in) { \n"
              "    int len = in.length();\n"
              "    std::string newString;\n"
              "    for(int i=0; i< len; i+=2){\n"
@@ -90,7 +90,7 @@ int generateC2Docs(const std::string &inputfile, const std::string &output) {
     auto description = input.substr(0, nextBlock);
 
     auto desc = org::apache::nifi::minifi::utils::StringUtils::trim(description);
-    outputFile << "     extensions.insert(std::make_pair(\"" << processor << "\",toascii(\"" << toHex(desc) << "\")));\n";
+    outputFile << "     extensions.insert(std::make_pair(\"" << processor << "\",htoascii(\"" << toHex(desc) << "\")));\n";
   }
 
   outputFile << "}\n    return extensions[feature]; \n"
