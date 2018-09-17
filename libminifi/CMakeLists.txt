@@ -140,5 +140,4 @@ set_target_properties(minifi PROPERTIES LINK_FLAGS "${LINK_FLAGS} /WHOLEARCHIVE:
 endif()
 
 
-
 SET (LIBMINIFI core-minifi PARENT_SCOPE)

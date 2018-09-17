@@ -213,7 +213,18 @@ class StringUtils {
       return false;
     return std::equal(endString.rbegin(), endString.rend(), value.rbegin());
   }
-  
+
+  inline static std::string hex_ascii(const std::string& in) {
+    int len = in.length();
+    std::string newString;
+    for (int i = 0; i < len; i += 2) {
+      std::string sstr = in.substr(i, 2);
+      char chr = (char) (int) strtol(sstr.c_str(), 0x00, 16);
+      newString.push_back(chr);
+    }
+    return newString;
+  }
+
   static std::string replaceMap(std::string source_string, const std::map<std::string, std::string> &replace_map) {
     auto result_string = source_string;
 
@@ -221,14 +232,13 @@ class StringUtils {
     for (const auto &replace_pair : replace_map) {
       size_t replace_pos = 0;
       while ((replace_pos = source_string.find(replace_pair.first, replace_pos)) != std::string::npos) {
-        replacements.emplace_back(std::make_pair(replace_pos,
-                                                 std::make_pair(replace_pair.first.length(), replace_pair.second)));
+        replacements.emplace_back(std::make_pair(replace_pos, std::make_pair(replace_pair.first.length(), replace_pair.second)));
         replace_pos += replace_pair.first.length();
       }
     }
 
     std::sort(replacements.begin(), replacements.end(), [](const std::pair<size_t, std::pair<size_t, std::string>> a,
-                                                           const std::pair<size_t, std::pair<size_t, std::string>> &b) {
+        const std::pair<size_t, std::pair<size_t, std::string>> &b) {
       return a.first > b.first;
     });
 
