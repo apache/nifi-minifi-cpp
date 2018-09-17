@@ -299,7 +299,20 @@ else()
     createExtension(EXPRESSION-LANGUAGE-EXTENSIONS "EXPRESSION LANGUAGE EXTENSIONS" "This enables NiFi expression language" "extensions/expression-language" "${TEST_DIR}/expression-language-tests")
 endif()
 
+if(BOOTSTRAP)
+    add_subdirectory(thirdparty/cxxopts)
+    createExtension(BOOTSTRAP "BOOTSTRAP" "Bootstraps documentation and other features" "extensions/bootstrap")
+	execute_process(COMMAND ${CMAKE_BINARY_DIR}/extensions/bootstrap/bstrp --inputc2docs "${CMAKE_SOURCE_DIR}/PROCESSORS.md" --outputc2docs "${CMAKE_SOURCE_DIR}/libminifi/include/agent/agent_docs.h")
+    return()
+endif()
 
+execute_process(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}"
+                        -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+                        -DCMAKE_MAKE_PROGRAM=${CMAKE_MAKE_PROGRAM}
+                        -DBOOTSTRAP=ON
+                        ${CMAKE_SOURCE_DIR}
+               WORKING_DIRECTORY "${workdir}")
+               
 add_subdirectory(libminifi)
 
 #### EXTENSIONS
