@@ -60,20 +60,11 @@ int generateC2Docs(const std::string &inputfile, const std::string &output) {
      "*/\n" \
       "#ifndef AGENT_DOCS_H" << '\n';
   outputFile << "#define AGENT_DOCS_H" << '\n';
-  outputFile << "#include <string>\n#include <stdlib.h>\n";
+  outputFile << "#include <string>\n#include <stdlib.h>\n#include <utils/StringUtils.h>\n";
   outputFile << "namespace org {\n "
              "namespace apache { \n"
              "namespace nifi { \n"
              "namespace minifi { \n"
-             "  std::string htoascii(const std::string& in) { \n"
-             "    int len = in.length();\n"
-             "    std::string newString;\n"
-             "    for(int i=0; i< len; i+=2){\n"
-             "    std::string sstr = in.substr(i,2);\n"
-             "    char chr = (char) (int)strtol(sstr.c_str(), 0x00, 16);\n"
-             "    newString.push_back(chr);\n}\n"
-             "   return newString;\n"
-             "}\n"
              "class AgentDocs{ \n"
              " public: \n"
              "     static std::string getDescription(const std::string &feature){ \n"
@@ -90,7 +81,7 @@ int generateC2Docs(const std::string &inputfile, const std::string &output) {
     auto description = input.substr(0, nextBlock);
 
     auto desc = org::apache::nifi::minifi::utils::StringUtils::trim(description);
-    outputFile << "     extensions.insert(std::make_pair(\"" << processor << "\",htoascii(\"" << toHex(desc) << "\")));\n";
+    outputFile << "     extensions.insert(std::make_pair(\"" << processor << "\",utils::StringUtils::hex_ascii(\"" << toHex(desc) << "\")));\n";
   }
 
   outputFile << "}\n    return extensions[feature]; \n"
