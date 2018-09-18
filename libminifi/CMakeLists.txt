@@ -104,5 +104,4 @@ add_library(capi STATIC ${CAPI_SOURCES})
 target_link_libraries(minifi core-minifi)
 
 
-
 SET (LIBMINIFI core-minifi PARENT_SCOPE)

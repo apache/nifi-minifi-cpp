@@ -45,6 +45,7 @@
 #include "Connection.h"
 #include "io/ClientSocket.h"
 #include "agent/agent_version.h"
+#include "agent/agent_docs.h"
 #include "agent/build_description.h"
 #include "core/ClassLoader.h"
 #include "core/state/nodes/StateMonitor.h"
@@ -155,7 +156,7 @@ class ComponentManifest : public DeviceInformation {
                 SerializedResponseNode typeNode;
                 typeNode.name = "type";
                 std::string typeClazz = type;
-                utils::StringUtils::replaceAll(typeClazz,"::",".");
+                utils::StringUtils::replaceAll(typeClazz, "::", ".");
                 typeNode.value = typeClazz;
                 allowed_type.children.push_back(typeNode);
 
@@ -226,6 +227,23 @@ class ComponentManifest : public DeviceInformation {
           }
           desc.children.push_back(relationships);
         }
+
+        auto lastOfIdx = group.class_name_.find_last_of(".");
+        std::string processorName = group.class_name_;
+        if (lastOfIdx != std::string::npos) {
+          lastOfIdx++;  // if a value is found, increment to move beyond the .
+          int nameLength = group.class_name_.length() - lastOfIdx;
+          processorName = group.class_name_.substr(lastOfIdx, nameLength);
+        }
+        auto description = AgentDocs::getDescription(processorName);
+
+        if (!description.empty()) {
+          SerializedResponseNode proc_desc;
+          proc_desc.name = "typeDescription";
+          proc_desc.value = description;
+          desc.children.push_back(proc_desc);
+        }
+
         desc.children.push_back(dyn_relat);
         desc.children.push_back(dyn_prop);
         desc.children.push_back(className);
@@ -256,7 +274,6 @@ class Bundles : public DeviceInformation {
 
   std::vector<SerializedResponseNode> serialize() {
     std::vector<SerializedResponseNode> serialized;
-
     for (auto group : AgentBuild::getExtensions()) {
       SerializedResponseNode bundle;
       bundle.name = "bundles";
@@ -562,84 +579,6 @@ class AgentInformation : public DeviceInformation, public AgentMonitor, public A
     return serialized;
   }
 
- protected:
-
-  void serializeClass(const std::vector<ClassDescription> &processors, const std::vector<ClassDescription> &controller_services, const std::vector<ClassDescription> &other_components,
-                      std::vector<SerializedResponseNode> &response) {
-    SerializedResponseNode resp;
-    resp.name = "componentManifest";
-    if (!processors.empty()) {
-      SerializedResponseNode type;
-      type.name = "Processors";
-
-      for (auto group : processors) {
-        SerializedResponseNode desc;
-
-        desc.name = group.class_name_;
-
-        if (!group.class_properties_.empty()) {
-          SerializedResponseNode props;
-          props.name = "properties";
-          for (auto && prop : group.class_properties_) {
-            SerializedResponseNode child;
-            child.name = prop.first;
-            child.value = prop.second.getDescription();
-            props.children.push_back(child);
-          }
-
-          desc.children.push_back(props);
-        }
-
-        SerializedResponseNode dyn_prop;
-        dyn_prop.name = "supportsDynamicProperties";
-        dyn_prop.value = group.dynamic_properties_;
-
-        desc.children.push_back(dyn_prop);
-
-        type.children.push_back(desc);
-      }
-
-      resp.children.push_back(type);
-
-    }
-
-    if (!controller_services.empty()) {
-      SerializedResponseNode type;
-      type.name = "ControllerServices";
-
-      for (auto group : controller_services) {
-        SerializedResponseNode desc;
-
-        desc.name = group.class_name_;
-
-        if (!group.class_properties_.empty()) {
-          SerializedResponseNode props;
-          props.name = "properties";
-          for (auto && prop : group.class_properties_) {
-            SerializedResponseNode child;
-            child.name = prop.first;
-            child.value = prop.second.getDescription();
-            props.children.push_back(child);
-          }
-
-          desc.children.push_back(props);
-        }
-
-        SerializedResponseNode dyn_prop;
-        dyn_prop.name = "supportsDynamicProperties";
-        dyn_prop.value = group.dynamic_properties_;
-
-        desc.children.push_back(dyn_prop);
-
-        type.children.push_back(desc);
-      }
-
-      resp.children.push_back(type);
-
-    }
-    response.push_back(resp);
-
-  }
 };
 
 REGISTER_RESOURCE(AgentInformation);
