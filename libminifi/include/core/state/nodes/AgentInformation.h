@@ -121,9 +121,9 @@ class ComponentManifest : public DeviceInformation {
             descriptorDescription.name = "description";
             descriptorDescription.value = prop.second.getDescription();
 
-            SerializedResponseNode supportsEl;
-            supportsEl.name = "supportsExpressionLanguage";
-            supportsEl.value = prop.second.supportsExpressionLangauge();
+            SerializedResponseNode supportsExpressionLanguageScope;
+            supportsExpressionLanguageScope.name = "expressionLanguageScope";
+            supportsExpressionLanguageScope.value = prop.second.supportsExpressionLangauge() ? "FLOWFILE_ATTRIBUTES" : "NONE";
 
             SerializedResponseNode descriptorRequired;
             descriptorRequired.name = "required";
@@ -193,7 +193,7 @@ class ComponentManifest : public DeviceInformation {
             }
             child.children.push_back(descriptorDescription);
             child.children.push_back(descriptorRequired);
-            child.children.push_back(supportsEl);
+            child.children.push_back(supportsExpressionLanguageScope);
             child.children.push_back(descriptorDefaultValue);
             child.children.push_back(descriptorValidRegex);
             child.children.push_back(descriptorDependentProperties);

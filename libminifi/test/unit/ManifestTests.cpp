@@ -59,7 +59,7 @@ TEST_CASE("Test Valid Regex", "[validRegex]") {
   const auto &prop_0 = prop_descriptors.children[0];
   REQUIRE(prop_0.children.size() >= 3);
   const auto &df = prop_0.children[3];
-  REQUIRE("supportsExpressionLanguage" == df.name);
+  REQUIRE("expressionLanguageScope" == df.name);
   const auto &prop_0_defv = prop_0.children[4];
   REQUIRE("defaultValue" == prop_0_defv.name);
   const auto &prop_0_valid_regex = prop_0.children[5];
@@ -112,7 +112,7 @@ TEST_CASE("Test Dependent", "[dependent]") {
   REQUIRE(prop_descriptors.children.size() > 0);
   const auto &prop_0 = prop_descriptors.children[1];
   REQUIRE(prop_0.children.size() >= 3);
-  REQUIRE("supportsExpressionLanguage" == prop_0.children[3].name);
+  REQUIRE("expressionLanguageScope" == prop_0.children[3].name);
   REQUIRE("defaultValue" == prop_0.children[4].name);
   const auto &prop_0_dependent_0 = prop_descriptors.children[2];
   REQUIRE("Directory" == prop_0_dependent_0.name);
