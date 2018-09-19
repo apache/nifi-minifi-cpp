@@ -46,8 +46,8 @@ TEST_CASE("TestSystemMetrics", "[c2m5]") {
 
   REQUIRE(2 == metrics.serialize().size());
 
-  REQUIRE("identifier" == metrics.serialize().at(0).name);
-  REQUIRE("systemInfo" == metrics.serialize().at(1).name);
+  REQUIRE("systemInfo" == metrics.serialize().at(0).name);
+  REQUIRE("identifier" == metrics.serialize().at(1).name);
 }
 
 TEST_CASE("QueueMetricsTestNoConnections", "[c2m2]") {

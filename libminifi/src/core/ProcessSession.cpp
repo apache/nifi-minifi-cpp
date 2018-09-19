@@ -19,7 +19,6 @@
  */
 #include "core/ProcessSession.h"
 #include "core/ProcessSessionReadCallback.h"
-#include <sys/time.h>
 #include <time.h>
 #include <vector>
 #include <queue>
@@ -31,6 +30,25 @@
 #include <thread>
 #include <iostream>
 #include <uuid/uuid.h>
+/* This implementation is only for native Windows systems.  */
+#if (defined _WIN32 || defined __WIN32__) && !defined __CYGWIN__
+#define _WINSOCKAPI_
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#include <WinSock2.h>
+#include <WS2tcpip.h>
+#include <Windows.h>
+#pragma comment(lib, "Ws2_32.lib")
+#include <direct.h>
+
+int getpagesize(void) {
+  return 4096;
+  // SYSTEM_INFO system_info;
+  // GetSystemInfo(&system_info);
+  // return system_info.dwPageSize;
+}
+#endif
 
 namespace org {
 namespace apache {
@@ -619,12 +637,10 @@ bool ProcessSession::exportContent(const std::string &destination, const std::st
 }
 
 bool ProcessSession::exportContent(const std::string &destination, const std::shared_ptr<core::FlowFile> &flow, bool keepContent) {
-  char tmpFileUuidStr[37];
-  uuid_t tmpFileUuid;
+  utils::Identifier tmpFileUuid;
   id_generator_->generate(tmpFileUuid);
-  uuid_unparse_lower(tmpFileUuid, tmpFileUuidStr);
   std::stringstream tmpFileSs;
-  tmpFileSs << destination << "." << tmpFileUuidStr;
+  tmpFileSs << destination << "." << tmpFileUuid.to_string();
   std::string tmpFileName = tmpFileSs.str();
 
   return exportContent(destination, tmpFileName, flow, keepContent);

@@ -1,5 +1,5 @@
 /*
- * uuid_time.c --- Interpret the time field from a uuid.  This program
+ * m_uuidime.c --- Interpret the time field from a uuid.  This program
  * 	violates the UUID abstraction barrier by reaching into the guts
  *	of a UUID and interpreting it.
  *
@@ -55,9 +55,9 @@
 
 #include "uuidP.h"
 
-time_t uuid_time(const uuid_t uu, struct timeval *ret_tv)
+time_t m_uuidime(const UUID_FIELD uu, struct st_tm_val *ret_tv)
 {
-	struct timeval		tv;
+	struct st_tm_val		tv;
 	struct uuid		uuid;
 	uint32_t		high;
 	uint64_t		clock_reg;
@@ -77,7 +77,7 @@ time_t uuid_time(const uuid_t uu, struct timeval *ret_tv)
 	return tv.tv_sec;
 }
 
-int uuid_type(const uuid_t uu)
+int m_uuidype(const UUID_FIELD uu)
 {
 	struct uuid		uuid;
 
@@ -85,7 +85,7 @@ int uuid_type(const uuid_t uu)
 	return ((uuid.time_hi_and_version >> 12) & 0xF);
 }
 
-int uuid_variant(const uuid_t uu)
+int uuid_variant(const UUID_FIELD uu)
 {
 	struct uuid		uuid;
 	int			var;
@@ -121,9 +121,9 @@ static const char *variant_string(int variant)
 int
 main(int argc, char **argv)
 {
-	uuid_t		buf;
+	UUID_FIELD		buf;
 	time_t		time_reg;
-	struct timeval	tv;
+	struct st_tm_val	tv;
 	int		type, variant;
 
 	if (argc != 2) {
@@ -135,8 +135,8 @@ main(int argc, char **argv)
 		exit(1);
 	}
 	variant = uuid_variant(buf);
-	type = uuid_type(buf);
-	time_reg = uuid_time(buf, &tv);
+	type = m_uuidype(buf);
+	time_reg = m_uuidime(buf, &tv);
 
 	printf("UUID variant is %d (%s)\n", variant, variant_string(variant));
 	if (variant != UUID_VARIANT_DCE) {

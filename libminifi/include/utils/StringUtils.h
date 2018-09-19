@@ -17,6 +17,11 @@
 #ifndef LIBMINIFI_INCLUDE_IO_STRINGUTILS_H_
 #define LIBMINIFI_INCLUDE_IO_STRINGUTILS_H_
 #include <iostream>
+#include <functional>
+#ifdef WIN32
+	#include <cwctype>
+	#include <cctype>
+#endif
 #include <algorithm>
 #include <sstream>
 #include <vector>
@@ -68,7 +73,7 @@ class StringUtils {
    * @returns modified string
    */
   static inline std::string trimLeft(std::string s) {
-    s.erase(s.begin(), std::find_if(s.begin(), s.end(), std::not1(std::pointer_to_unary_function<int, int>(std::isspace))));
+    s.erase(s.begin(), std::find_if(s.begin(), s.end(), std::not1(std::pointer_to_unary_function<int, int>(isspace))));
     return s;
   }
 
@@ -79,7 +84,7 @@ class StringUtils {
    */
 
   static inline std::string trimRight(std::string s) {
-    s.erase(std::find_if(s.rbegin(), s.rend(), std::not1(std::pointer_to_unary_function<int, int>(std::isspace))).base(), s.end());
+    s.erase(std::find_if(s.rbegin(), s.rend(), std::not1(std::pointer_to_unary_function<int, int>(isspace))).base(), s.end());
     return s;
   }
 
@@ -88,7 +93,7 @@ class StringUtils {
    */
   static inline bool equalsIgnoreCase(const std::string &left, const std::string right) {
     if (left.length() == right.length()) {
-      return std::equal(right.begin(), right.end(), left.begin(), [](unsigned char lc, unsigned char rc) {return std::tolower(lc) == std::tolower(rc);});
+      return std::equal(right.begin(), right.end(), left.begin(), [](unsigned char lc, unsigned char rc) {return tolower(lc) == tolower(rc);});
     } else {
       return false;
     }
@@ -200,7 +205,7 @@ class StringUtils {
   inline static bool endsWithIgnoreCase(const std::string &value, const std::string & endString) {
     if (endString.size() > value.size())
       return false;
-    return std::equal(endString.rbegin(), endString.rend(), value.rbegin(), [](unsigned char lc, unsigned char rc) {return std::tolower(lc) == std::tolower(rc);});
+    return std::equal(endString.rbegin(), endString.rend(), value.rbegin(), [](unsigned char lc, unsigned char rc) {return tolower(lc) == tolower(rc);});
   }
 
   inline static bool endsWith(const std::string &value, const std::string & endString) {

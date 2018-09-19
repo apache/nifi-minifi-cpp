@@ -17,9 +17,7 @@
 # under the License.
 #
 
-set(CMAKE_EXE_LINKER_FLAGS "-Wl,--export-all-symbols")
-set(CMAKE_SHARED_LINKER_FLAGS "-Wl,--export-symbols")
-
+include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt) 
 include_directories(./controllerservice ./processors ./protocol ../../libminifi/include  ../../libminifi/include/core  ../../thirdparty/spdlog-20170710/include ../../thirdparty/concurrentqueue ../../thirdparty/)
 
 include_directories(../../thirdparty/paho.mqtt.c/src)

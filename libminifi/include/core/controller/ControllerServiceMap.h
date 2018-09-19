@@ -66,7 +66,7 @@ class ControllerServiceMap {
    *
    */
   virtual bool removeControllerService(const std::shared_ptr<ControllerServiceNode> &serviceNode) {
-    if (IsNullOrEmpty(serviceNode.get()))
+    if (serviceNode == nullptr || serviceNode.get() == nullptr)
       return false;
     std::lock_guard<std::mutex> lock(mutex_);
     controller_services_[serviceNode->getName()] = nullptr;
@@ -81,7 +81,7 @@ class ControllerServiceMap {
    *
    */
   virtual bool put(const std::string &id, const std::shared_ptr<ControllerServiceNode> &serviceNode) {
-    if (IsNullOrEmpty(id) || IsNullOrEmpty(serviceNode.get()))
+    if (id.empty() || serviceNode == nullptr || serviceNode.get() == nullptr)
       return false;
     std::lock_guard<std::mutex> lock(mutex_);
     controller_services_[id] = serviceNode;

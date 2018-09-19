@@ -19,10 +19,8 @@
 
 find_package(PCAP REQUIRED)
 
-set(CMAKE_EXE_LINKER_FLAGS "-Wl,--export-all-symbols")
-set(CMAKE_SHARED_LINKER_FLAGS "-Wl,--export-symbols")
+include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt) 
 
-include_directories(../../libminifi/include ../../thirdparty/spdlog-20170710/include ../../thirdparty/concurrentqueue ../../thirdparty/yaml-cpp-yaml-cpp-0.5.3/include ${CIVET_THIRDPARTY_ROOT}/include ../../thirdparty/)
 include_directories(/usr/include/netinet)
 
 set(PCAPPLUSPLUS_TP_BASE_DIR "${CMAKE_SOURCE_DIR}/thirdparty/pcap++/")

@@ -18,6 +18,7 @@
 
 #ifndef VALIDATION_H
 #define VALIDATION_H
+#include <functional>
 #include <type_traits>
 #include <string>
 #include <cstring>
@@ -41,14 +42,41 @@ class size_function_functor_checker {
   };
 };
 
-/**
- * Determines if the variable is null or ::size() == 0
- */
-template<typename T>
-static auto IsNullOrEmpty(T &object) -> typename std::enable_if<size_function_functor_checker<T>::has_size_function==1, bool>::type {
-  return object.size() == 0;
+
+
+#ifdef WIN32
+
+static auto IsNullOrEmpty(std::string object) {
+	return object.empty();
 }
 
+/**
+* Determines if the variable is null or ::size() == 0
+*/
+template<typename T>
+static auto IsNullOrEmpty(T *object) {
+	return (nullptr == object);
+}
+
+
+/**
+* Determines if the variable is null or ::size() == 0
+*/
+template<typename T>
+static auto IsNullOrEmpty(std::shared_ptr<T> object){
+	return (nullptr == object || nullptr == object.get());
+}
+
+
+#else
+
+/**
+* Determines if the variable is null or ::size() == 0
+*/
+template<typename T>
+static auto IsNullOrEmpty(T &object) -> typename std::enable_if<size_function_functor_checker<T>::has_size_function == 1, bool>::type {
+	return object.size() == 0;
+}
 /**
  * Determines if the variable is null or ::size() == 0
  */
@@ -65,12 +93,15 @@ static auto IsNullOrEmpty(T *object) -> typename std::enable_if<not size_functio
   return (nullptr == object);
 }
 
+
 /**
- * Determines if the variable is null or ::size() == 0
- */
+* Determines if the variable is null or ::size() == 0
+*/
 template<typename T>
-static auto IsNullOrEmpty(std::shared_ptr<T> object) -> typename std::enable_if<not size_function_functor_checker<T>::has_size_function , bool>::type {
-  return (nullptr == object || nullptr == object.get());
+static auto IsNullOrEmpty(std::shared_ptr<T> object) -> typename std::enable_if<not size_function_functor_checker<T>::has_size_function, bool>::type {
+	return (nullptr == object || nullptr == object.get());
 }
+
+#endif
 
 #endif

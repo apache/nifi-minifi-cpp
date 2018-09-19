@@ -40,7 +40,7 @@
 
 #include "uuidP.h"
 
-int uuid_parse(const char *in, uuid_t uu)
+int uuid_parse(const char *in, UUID_FIELD uu)
 {
 	struct uuid	uuid;
 	int 		i;

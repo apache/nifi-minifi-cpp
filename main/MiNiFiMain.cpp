@@ -17,6 +17,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+
+#ifdef WIN32
+#define WIN32_LEAN_AND_MEAN
+#include <WinSock2.h>
+#include <WS2tcpip.h>
+#include <Windows.h>
+#pragma comment(lib, "Ws2_32.lib")
+#include <direct.h>
+#endif
+
 #include <fcntl.h>
 #include <stdio.h>
 #include <cstdlib>
@@ -25,7 +36,6 @@
 #include <vector>
 #include <queue>
 #include <map>
-#include <unistd.h>
 #include <yaml-cpp/yaml.h>
 #include <iostream>
 #include "ResourceClaim.h"
@@ -86,7 +96,11 @@ int main(int argc, char **argv) {
     logger->log_info("MINIFI_HOME is not set; determining based on environment.");
     char *path = nullptr;
     char full_path[PATH_MAX];
+#ifndef WIN32
     path = realpath(argv[0], full_path);
+#else
+	path = nullptr;
+#endif
 
     if (path != nullptr) {
       std::string minifiHomePath(path);
@@ -99,24 +113,46 @@ int main(int argc, char **argv) {
     // attempt to use cwd as MINIFI_HOME
     if (minifiHome.empty() || !validHome(minifiHome)) {
       char cwd[PATH_MAX];
-      getcwd(cwd, PATH_MAX);
+#ifdef WIN32
+	  _getcwd(cwd,PATH_MAX);
+#else
+	  getcwd(cwd, PATH_MAX);
+#endif
       minifiHome = cwd;
     }
 
+	
     logger->log_debug("Setting %s to %s", MINIFI_HOME_ENV_KEY, minifiHome);
+#ifdef WIN32
+	SetEnvironmentVariable(MINIFI_HOME_ENV_KEY, minifiHome.c_str());
+#else
     setenv(MINIFI_HOME_ENV_KEY, minifiHome.c_str(), 0);
+#endif
   }
 
   if (!validHome(minifiHome)) {
-    logger->log_error("No valid MINIFI_HOME could be inferred. "
-                      "Please set MINIFI_HOME or run minifi from a valid location.");
-    return -1;
+	  minifiHome = minifiHome.substr(0, minifiHome.find_last_of("/\\"));    //Remove /bin from path
+	  if (!validHome(minifiHome)) {
+		  logger->log_error("No valid MINIFI_HOME could be inferred. "
+			  "Please set MINIFI_HOME or run minifi from a valid location. minifiHome is %s", minifiHome);
+		  return -1;
+	  }
   }
 
-  if (signal(SIGINT, sigHandler) == SIG_ERR || signal(SIGTERM, sigHandler) == SIG_ERR || signal(SIGPIPE, SIG_IGN) == SIG_ERR) {
+#ifdef WIN32
+
+  if (signal(SIGINT, sigHandler) == SIG_ERR || signal(SIGTERM, sigHandler) == SIG_ERR ) {
+	logger->log_error("Cannot install signal handler");
     std::cerr << "Cannot install signal handler" << std::endl;
     return -1;
   }
+
+#else
+  if (signal(SIGINT, sigHandler) == SIG_ERR || signal(SIGTERM, sigHandler) == SIG_ERR || signal(SIGPIPE, SIG_IGN) == SIG_ERR) {
+	  std::cerr << "Cannot install signal handler" << std::endl;
+	  return -1;
+  }
+#endif
 
   std::shared_ptr<logging::LoggerProperties> log_properties = std::make_shared<logging::LoggerProperties>();
   log_properties->setHome(minifiHome);
@@ -135,6 +171,7 @@ int main(int argc, char **argv) {
   configure->setHome(minifiHome);
   configure->loadConfigureFile(DEFAULT_NIFI_PROPERTIES_FILE);
 
+ 
   if (configure->get(minifi::Configure::nifi_graceful_shutdown_seconds, graceful_shutdown_seconds)) {
     try {
       stop_wait_time = std::stoi(graceful_shutdown_seconds);

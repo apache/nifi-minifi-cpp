@@ -70,7 +70,7 @@ class ControllerServiceNode : public CoreComponent, public ConfigurableComponent
     controller_service_->setName(name);
   }
 
-  void setUUID(uuid_t uuid) {
+  void setUUID(utils::Identifier &uuid) {
     CoreComponent::setUUID(uuid);
     controller_service_->setUUID(uuid);
   }

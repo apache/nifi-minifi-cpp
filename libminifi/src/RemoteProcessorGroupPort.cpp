@@ -20,8 +20,6 @@
 
 #include "RemoteProcessorGroupPort.h"
 
-#include <curl/curl.h>
-#include <curl/easy.h>
 #include <uuid/uuid.h>
 #include <algorithm>
 #include <cstdint>
@@ -133,8 +131,8 @@ void RemoteProcessorGroupPort::initialize() {
 
 void RemoteProcessorGroupPort::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
   std::string value;
-  if (context->getProperty(portUUID.getName(), value)) {
-    uuid_parse(value.c_str(), protocol_uuid_);
+  if (context->getProperty(portUUID.getName(), value) && !value.empty()) {
+    protocol_uuid_ = value;
   }
 
   std::string context_name;

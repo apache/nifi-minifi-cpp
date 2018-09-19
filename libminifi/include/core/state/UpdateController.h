@@ -69,6 +69,10 @@ class UpdateStatus {
 class Update {
  public:
 
+	Update()
+		: status_(UpdateStatus(UpdateState::INITIATE, 0)) {
+	}
+
   Update(UpdateStatus status)
       : status_(status) {
 

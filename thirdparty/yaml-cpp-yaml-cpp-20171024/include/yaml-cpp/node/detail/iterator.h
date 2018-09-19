@@ -8,8 +8,9 @@
 #endif
 
 #include "yaml-cpp/dll.h"
-#include "yaml-cpp/node/ptr.h"
 #include "yaml-cpp/node/detail/node_iterator.h"
+#include "yaml-cpp/node/node.h"
+#include "yaml-cpp/node/ptr.h"
 #include <cstddef>
 #include <iterator>
 
@@ -18,9 +19,11 @@ namespace detail {
 struct iterator_value;
 
 template <typename V>
+class iterator_base  {
+/*
 class iterator_base : public std::iterator<std::forward_iterator_tag, V,
-                                           std::ptrdiff_t, V*, V> {
-
+std::ptrdiff_t, V*, V> {
+*/
  private:
   template <typename>
   friend class iterator_base;
@@ -36,7 +39,12 @@ class iterator_base : public std::iterator<std::forward_iterator_tag, V,
   };
 
  public:
-  typedef typename iterator_base::value_type value_type;
+	 using iterator_category = std::forward_iterator_tag;
+	 using value_type = V;
+	 using difference_type = std::ptrdiff_t;
+	 using pointer = V * ;
+	 using reference = V;
+  //typedef typename iterator_base::value_type value_type;
 
  public:
   iterator_base() : m_iterator(), m_pMemory() {}

@@ -33,7 +33,7 @@ namespace processors {
 
 class TFConvertImageToTensor : public core::Processor {
  public:
-  explicit TFConvertImageToTensor(const std::string &name, uuid_t uuid = nullptr)
+  explicit TFConvertImageToTensor(const std::string &name, utils::Identifier uuid = utils::Identifier())
       : Processor(name, uuid),
         logger_(logging::LoggerFactory<TFConvertImageToTensor>::getLogger()) {
   }

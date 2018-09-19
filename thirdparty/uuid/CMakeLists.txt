@@ -17,7 +17,11 @@
 # under the License.
 #
 
-include_directories("include/uuid")
+if (WIN32)
+	include_directories("include/win32/uuid")
+else()
+	include_directories("include/posix/uuid")
+endif()
 
 add_library(
     uuid
@@ -28,7 +32,6 @@ add_library(
     isnull.c
     pack.c
     parse.c
-    tst_uuid.c
     unpack.c
     unparse.c
     uuid_time.c

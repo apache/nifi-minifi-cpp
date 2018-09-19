@@ -15,10 +15,8 @@
  * limitations under the License.
  */
 
-#include <sys/mman.h>
 #include <memory>
 #include <string>
-
 #include "core/ClassLoader.h"
 
 namespace org {
@@ -35,6 +33,7 @@ ClassLoader &ClassLoader::getDefaultClassLoader() {
   // populate ret
   return ret;
 }
+
 uint16_t ClassLoader::registerResource(const std::string &resource, const std::string &resourceFunction) {
   void *resource_ptr = nullptr;
   if (resource.empty()) {
@@ -57,7 +56,7 @@ uint16_t ClassLoader::registerResource(const std::string &resource, const std::s
   // load the symbols
   createFactory* create_factory_func = reinterpret_cast<createFactory*>(dlsym(resource_ptr, resourceFunction.c_str()));
   const char* dlsym_error = dlerror();
-  if (dlsym_error) {
+  if ((dlsym_error != nullptr && strlen(dlsym_error) > 0) || create_factory_func == nullptr) {
     return RESOURCE_FAILURE;
   }
 

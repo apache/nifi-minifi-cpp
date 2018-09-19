@@ -33,6 +33,7 @@ namespace minifi {
 namespace c2 {
 
 const C2Payload RESTProtocol::parseJsonResponse(const C2Payload &payload, const std::vector<char> &response) {
+#ifndef WIN32
   rapidjson::Document root;
 
   try {
@@ -126,6 +127,7 @@ const C2Payload RESTProtocol::parseJsonResponse(const C2Payload &payload, const 
     }
   } catch (...) {
   }
+#endif
   return std::move(C2Payload(payload.getOperation(), state::UpdateState::READ_COMPLETE, true));
 }
 

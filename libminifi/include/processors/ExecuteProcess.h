@@ -21,16 +21,18 @@
 #define __EXECUTE_PROCESS_H__
 
 #include <stdio.h>
-#include <unistd.h>
 #include <string>
 #include <errno.h>
 #include <chrono>
 #include <thread>
-#include <unistd.h>
-#include <sys/wait.h>
 #include <iostream>
 #include <sys/types.h>
 #include <signal.h>
+#ifndef WIN32
+#include <sys/wait.h>
+#include <sys/types.h>
+#include <signal.h>
+#endif
 #include "io/BaseStream.h"
 #include "FlowFileRecord.h"
 #include "core/Processor.h"
@@ -44,6 +46,7 @@ namespace apache {
 namespace nifi {
 namespace minifi {
 namespace processors {
+#ifndef WIN32
 
 // ExecuteProcess Class
 class ExecuteProcess : public core::Processor {
@@ -52,7 +55,7 @@ class ExecuteProcess : public core::Processor {
   /*!
    * Create a new processor
    */
-  ExecuteProcess(std::string name, uuid_t uuid = NULL)
+  ExecuteProcess(std::string name,  utils::Identifier uuid = utils::Identifier())
       : Processor(name, uuid),
         logger_(logging::LoggerFactory<ExecuteProcess>::getLogger()) {
     _redirectErrorStream = false;
@@ -120,7 +123,7 @@ class ExecuteProcess : public core::Processor {
 };
 
 REGISTER_RESOURCE(ExecuteProcess);
-
+#endif
 } /* namespace processors */
 } /* namespace minifi */
 } /* namespace nifi */

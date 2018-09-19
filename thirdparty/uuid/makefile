@@ -24,7 +24,7 @@ LFLAGS=
 LIBS=-lpthread
 
 # define the CPP source files
-SRCS=clear.c  compare.c  copy.c  gen_uuid.c  isnull.c  pack.c  parse.c  unpack.c  unparse.c  uuid_time.c
+SRCS=clear.c  compare.c  copy.c  gen_uuid.c  isnull.c  pack.c  parse.c  unpack.c  unparse.c  m_uuidime.c
 
 # define the C object files 
 #

@@ -22,6 +22,8 @@
 bool HttpCurlObjectFactory::added = core::FlowConfiguration::add_static_func("createHttpCurlFactory");
 extern "C" {
 
+
+
 void *createHttpCurlFactory(void) {
   return new HttpCurlObjectFactory();
 }

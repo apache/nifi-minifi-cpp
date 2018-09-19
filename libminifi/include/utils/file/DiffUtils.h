@@ -24,10 +24,8 @@
 #else
 #include <cstdlib>
 #include <sys/stat.h>
-#include <dirent.h>
 #endif
 #include <cstdio>
-#include <unistd.h>
 #include <fcntl.h>
 #ifdef WIN32
 #define stat _stat

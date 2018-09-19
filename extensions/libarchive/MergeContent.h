@@ -46,6 +46,10 @@ namespace processors {
 // MergeBin Class
 class MergeBin {
 public:
+
+  virtual ~MergeBin(){
+  }
+
   virtual std::string getMergedContentType() = 0;
   // merge the flows in the bin
   virtual std::shared_ptr<core::FlowFile> merge(core::ProcessContext *context, core::ProcessSession *session,
@@ -267,7 +271,7 @@ class MergeContent : public processors::BinFiles {
   /*!
    * Create a new processor
    */
-  explicit MergeContent(std::string name, uuid_t uuid = NULL)
+  explicit MergeContent(std::string name, utils::Identifier uuid = utils::Identifier())
       : processors::BinFiles(name, uuid),
         logger_(logging::LoggerFactory<MergeContent>::getLogger()) {
     mergeStratgey_ = MERGE_STRATEGY_DEFRAGMENT;

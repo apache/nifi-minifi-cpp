@@ -17,7 +17,6 @@
  */
 
 #include "provenance/Provenance.h"
-#include <arpa/inet.h>
 #include <cstdint>
 #include <memory>
 #include <string>

@@ -40,7 +40,7 @@ class TailFile : public core::Processor {
   /*!
    * Create a new processor
    */
-  explicit TailFile(std::string name, uuid_t uuid = NULL)
+  explicit TailFile(std::string name,  utils::Identifier uuid = utils::Identifier())
       : core::Processor(name, uuid),
         logger_(logging::LoggerFactory<TailFile>::getLogger()) {
     _stateRecovered = false;

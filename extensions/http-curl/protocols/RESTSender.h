@@ -45,7 +45,7 @@ namespace c2 {
 class RESTSender : public RESTProtocol, public C2Protocol {
  public:
 
-  explicit RESTSender(std::string name, uuid_t uuid = nullptr);
+  explicit RESTSender(std::string name, utils::Identifier uuid = utils::Identifier());
 
   virtual C2Payload consumePayload(const std::string &url, const C2Payload &payload, Direction direction, bool async) override;
 

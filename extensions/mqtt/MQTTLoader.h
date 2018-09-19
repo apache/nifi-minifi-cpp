@@ -26,7 +26,7 @@
 #include "ConvertHeartBeat.h"
 #include "ConvertJSONAck.h"
 #include "ConvertUpdate.h"
-class __attribute__((visibility("default"))) MQTTFactory : public core::ObjectFactory {
+class MQTTFactory : public core::ObjectFactory {
  public:
   MQTTFactory() {
 
@@ -84,6 +84,6 @@ class __attribute__((visibility("default"))) MQTTFactory : public core::ObjectFa
 };
 
 extern "C" {
-void *createMQTTFactory(void);
+DLL_EXPORT void *createMQTTFactory(void);
 }
 #endif /* EXTENSION_MQTTLOADER_H */

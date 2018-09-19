@@ -58,7 +58,7 @@ static std::unique_ptr<SiteToSitePeer> createStreamingPeer(const SiteToSiteClien
  * RawSiteToSiteClient will be instantiated and returned through a unique ptr.
  */
 static std::unique_ptr<SiteToSiteClient> createRawSocket(const SiteToSiteClientConfiguration &client_configuration) {
-  uuid_t uuid;
+  utils::Identifier uuid;
   client_configuration.getPeer()->getPortId(uuid);
   auto rsptr = createStreamingPeer(client_configuration);
   if (nullptr == rsptr){
@@ -77,7 +77,7 @@ static std::unique_ptr<SiteToSiteClient> createRawSocket(const SiteToSiteClientC
  * @returns site to site client or nullptr.
  */
 static std::unique_ptr<SiteToSiteClient> createClient(const SiteToSiteClientConfiguration &client_configuration) {
-  uuid_t uuid;
+  utils::Identifier uuid;
   client_configuration.getPeer()->getPortId(uuid);
   switch (client_configuration.getClientType()) {
     case RAW:
@@ -90,8 +90,7 @@ static std::unique_ptr<SiteToSiteClient> createClient(const SiteToSiteClientConf
         auto peer = std::unique_ptr<SiteToSitePeer>(new SiteToSitePeer(client_configuration.getPeer()->getHost(), client_configuration.getPeer()->getPort(),
             client_configuration.getInterface()));
         peer->setHTTPProxy(client_configuration.getHTTPProxy());
-        char idStr[37];
-        uuid_unparse_lower(uuid, idStr);
+
         ptr->setPortId(uuid);
         ptr->setPeer(std::move(peer));
         return ptr;

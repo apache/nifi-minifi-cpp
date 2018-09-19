@@ -18,7 +18,6 @@
  * limitations under the License.
  */
 #include "Connection.h"
-#include <sys/time.h>
 #include <time.h>
 #include <vector>
 #include <queue>
@@ -39,17 +38,64 @@ namespace apache {
 namespace nifi {
 namespace minifi {
 
-Connection::Connection(const std::shared_ptr<core::Repository> &flow_repository, const std::shared_ptr<core::ContentRepository> &content_repo, std::string name, uuid_t uuid, uuid_t srcUUID,
-                       uuid_t destUUID)
+Connection::Connection(const std::shared_ptr<core::Repository> &flow_repository, const std::shared_ptr<core::ContentRepository> &content_repo, std::string name)
+    : core::Connectable(name),
+      flow_repository_(flow_repository),
+      content_repo_(content_repo),
+      logger_(logging::LoggerFactory<Connection>::getLogger()) {
+  source_connectable_ = nullptr;
+  dest_connectable_ = nullptr;
+  max_queue_size_ = 0;
+  max_data_queue_size_ = 0;
+  expired_duration_ = 0;
+  queued_data_size_ = 0;
+
+  logger_->log_debug("Connection %s created", name_);
+}
+
+Connection::Connection(const std::shared_ptr<core::Repository> &flow_repository, const std::shared_ptr<core::ContentRepository> &content_repo, std::string name, utils::Identifier & uuid)
+    : core::Connectable(name, uuid),
+      flow_repository_(flow_repository),
+      content_repo_(content_repo),
+      logger_(logging::LoggerFactory<Connection>::getLogger()) {
+  source_connectable_ = nullptr;
+  dest_connectable_ = nullptr;
+  max_queue_size_ = 0;
+  max_data_queue_size_ = 0;
+  expired_duration_ = 0;
+  queued_data_size_ = 0;
+
+  logger_->log_debug("Connection %s created", name_);
+}
+
+Connection::Connection(const std::shared_ptr<core::Repository> &flow_repository, const std::shared_ptr<core::ContentRepository> &content_repo, std::string name, utils::Identifier & uuid,
+                       utils::Identifier & srcUUID)
     : core::Connectable(name, uuid),
       flow_repository_(flow_repository),
       content_repo_(content_repo),
       logger_(logging::LoggerFactory<Connection>::getLogger()) {
 
-  if (srcUUID)
-    uuid_copy(src_uuid_, srcUUID);
-  if (destUUID)
-    uuid_copy(dest_uuid_, destUUID);
+  src_uuid_ = srcUUID;
+
+  source_connectable_ = nullptr;
+  dest_connectable_ = nullptr;
+  max_queue_size_ = 0;
+  max_data_queue_size_ = 0;
+  expired_duration_ = 0;
+  queued_data_size_ = 0;
+
+  logger_->log_debug("Connection %s created", name_);
+}
+
+Connection::Connection(const std::shared_ptr<core::Repository> &flow_repository, const std::shared_ptr<core::ContentRepository> &content_repo, std::string name, utils::Identifier & uuid,
+                       utils::Identifier & srcUUID, utils::Identifier & destUUID)
+    : core::Connectable(name, uuid),
+      flow_repository_(flow_repository),
+      content_repo_(content_repo),
+      logger_(logging::LoggerFactory<Connection>::getLogger()) {
+
+  src_uuid_ = srcUUID;
+  dest_uuid_ = destUUID;
 
   source_connectable_ = nullptr;
   dest_connectable_ = nullptr;

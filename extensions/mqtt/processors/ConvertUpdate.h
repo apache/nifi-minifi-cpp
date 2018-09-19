@@ -50,7 +50,7 @@ class ConvertUpdate : public ConvertBase {
   /*!
    * Create a new processor
    */
-  explicit ConvertUpdate(std::string name, uuid_t uuid = NULL)
+  explicit ConvertUpdate(std::string name, utils::Identifier uuid = utils::Identifier())
     : ConvertBase(name, uuid), logger_(logging::LoggerFactory<ConvertUpdate>::getLogger()) {
   }
   // Destructor

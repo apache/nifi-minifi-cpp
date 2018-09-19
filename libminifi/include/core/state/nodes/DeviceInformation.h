@@ -19,29 +19,31 @@
 #define LIBMINIFI_INCLUDE_CORE_STATE_NODES_DEVICEINFORMATION_H_
 
 #include "core/Resource.h"
+
+#ifndef WIN32
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include <functional>
 #include <sys/ioctl.h>
+#include <sys/utsname.h>
 #if ( defined(__APPLE__) || defined(__MACH__) || defined(BSD)) 
 #include <net/if_dl.h>
 #include <net/if_types.h>
-#endif
-#ifndef _WIN32
-#include <sys/utsname.h>
 #endif
 #include <ifaddrs.h>
 #include <net/if.h> 
 #include <unistd.h>
 #include <netinet/in.h>
-#include <string.h>
+
 #include <sys/socket.h>
 #include <netdb.h>
 #include <ifaddrs.h>
+#include <unistd.h>
+#endif
+#include <functional>
+#include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <sstream>
 #include <map>
 #include "../nodes/MetricsBase.h"
@@ -109,6 +111,7 @@ class Device {
 
   std::vector<std::string> getIpAddresses() {
     std::vector<std::string> ips;
+#ifndef WIN32
     struct ifaddrs *ifaddr, *ifa;
     if (getifaddrs(&ifaddr) == -1) {
       perror("getifaddrs");
@@ -124,6 +127,7 @@ class Device {
     }
 
     freeifaddrs(ifaddr);
+#endif
     return ips;
   }
 
@@ -254,7 +258,7 @@ class Device {
 class DeviceInfoNode : public DeviceInformation {
  public:
 
-  DeviceInfoNode(std::string name, uuid_t uuid)
+  DeviceInfoNode(std::string name, utils::Identifier &  uuid)
       : DeviceInformation(name, uuid) {
     static Device device;
     hostname_ = device.canonical_hostname_;
@@ -263,7 +267,7 @@ class DeviceInfoNode : public DeviceInformation {
   }
 
   DeviceInfoNode(const std::string &name)
-      : DeviceInformation(name, 0) {
+      : DeviceInformation(name) {
     static Device device;
     hostname_ = device.canonical_hostname_;
     ip_ = device.ip_;
@@ -291,16 +295,18 @@ class DeviceInfoNode : public DeviceInformation {
     vcores.value = std::to_string(ncpus);
 
     systemInfo.children.push_back(vcores);
-
+#if defined(_SC_PHYS_PAGES) && defined(_SC_PAGESIZE)
     SerializedResponseNode mem;
     mem.name = "physicalMem";
-#if defined(_SC_PHYS_PAGES) && defined(_SC_PAGESIZE)
+
     size_t mema = (size_t) sysconf( _SC_PHYS_PAGES) * (size_t) sysconf( _SC_PAGESIZE);
-#endif
+
     mem.value = std::to_string(mema);
 
-    systemInfo.children.push_back(mem);
 
+    systemInfo.children.push_back(mem);
+#endif
+#ifndef WIN32
     SerializedResponseNode arch;
     arch.name = "machinearch";
 
@@ -313,7 +319,7 @@ class DeviceInfoNode : public DeviceInformation {
     }
 
     systemInfo.children.push_back(arch);
-
+#endif
     serialized.push_back(identifier);
     serialized.push_back(systemInfo);
 

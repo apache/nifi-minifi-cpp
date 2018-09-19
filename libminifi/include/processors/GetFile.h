@@ -50,13 +50,13 @@ struct GetFileRequest {
 class GetFileMetrics : public state::response::ResponseNode {
  public:
   GetFileMetrics()
-      : state::response::ResponseNode("GetFileMetrics", 0) {
+      : state::response::ResponseNode("GetFileMetrics") {
     iterations_ = 0;
     accepted_files_ = 0;
     input_bytes_ = 0;
   }
 
-  GetFileMetrics(std::string name, uuid_t uuid)
+  GetFileMetrics(std::string name, utils::Identifier &uuid)
       : state::response::ResponseNode(name, uuid) {
     iterations_ = 0;
     accepted_files_ = 0;
@@ -109,7 +109,7 @@ class GetFile : public core::Processor, public state::response::MetricsNodeSourc
   /*!
    * Create a new processor
    */
-  explicit GetFile(std::string name, uuid_t uuid = NULL)
+  explicit GetFile(std::string name, utils::Identifier uuid = utils::Identifier())
       : Processor(name, uuid),
         logger_(logging::LoggerFactory<GetFile>::getLogger()) {
     metrics_ = std::make_shared<GetFileMetrics>();

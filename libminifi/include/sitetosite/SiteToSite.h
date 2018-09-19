@@ -245,8 +245,7 @@ class Transaction {
 
     // Generate the global UUID for the transaction
     id_generator_->generate(uuid_);
-    uuid_unparse_lower(uuid_, uuidStr);
-    uuid_str_ = uuidStr;
+    uuid_str_ = uuid_.to_string();
   }
   // Destructor
   virtual ~Transaction() {
@@ -262,7 +261,7 @@ class Transaction {
 
   void setUUIDStr(const std::string &str) {
     uuid_str_ = str;
-    uuid_parse(str.c_str(), uuid_);
+    uuid_ = str;
   }
 
   // getState
@@ -323,7 +322,7 @@ class Transaction {
   TransferDirection _direction;
 
   // A global unique identifier
-  uuid_t uuid_;
+  utils::Identifier uuid_;
   // UUID string
   std::string uuid_str_;
 
@@ -332,10 +331,10 @@ class Transaction {
 
 class SiteToSiteClientConfiguration {
  public:
-  SiteToSiteClientConfiguration(std::shared_ptr<io::StreamFactory> stream_factory, const std::shared_ptr<Peer> &peer, const std::string &interface, CLIENT_TYPE type = RAW)
+  SiteToSiteClientConfiguration(std::shared_ptr<io::StreamFactory> stream_factory, const std::shared_ptr<Peer> &peer, const std::string &ifc, CLIENT_TYPE type = RAW)
       : stream_factory_(stream_factory),
         peer_(peer),
-        local_network_interface_(interface),
+        local_network_interface_(ifc),
         ssl_service_(nullptr) {
     client_type_ = type;
   }
@@ -363,8 +362,8 @@ class SiteToSiteClientConfiguration {
   }
 
   // setInterface
-  void setInterface(std::string &interface) {
-    local_network_interface_ = interface;
+  void setInterface(std::string &ifc) {
+    local_network_interface_ = ifc;
   }
   std::string getInterface() const {
     return local_network_interface_;

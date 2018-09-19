@@ -19,9 +19,12 @@
 #define LIBMINIFI_INCLUDE_IO_CRCSTREAM_H_
 
 #include <zlib.h>
-#include <arpa/inet.h>
 #include <memory>
-
+#ifdef WIN32
+#include <winsock2.h>
+#else
+#include <arpa/inet.h>
+#endif
 #include "BaseStream.h"
 #include "Serializable.h"
 

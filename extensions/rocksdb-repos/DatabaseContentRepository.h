@@ -72,7 +72,7 @@ class StringAppender : public rocksdb::AssociativeMergeOperator {
 class DatabaseContentRepository : public core::ContentRepository, public core::Connectable {
  public:
 
-  DatabaseContentRepository(std::string name = getClassName<DatabaseContentRepository>(), uuid_t uuid = 0)
+  DatabaseContentRepository(std::string name = getClassName<DatabaseContentRepository>(), utils::Identifier uuid = utils::Identifier())
       : core::Connectable(name, uuid),
         is_valid_(false),
         db_(nullptr),

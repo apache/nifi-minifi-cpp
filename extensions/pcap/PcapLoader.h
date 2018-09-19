@@ -22,7 +22,7 @@
 #include "CapturePacket.h"
 #include "utils/StringUtils.h"
 
-class __attribute__((visibility("default"))) PcapFactory : public core::ObjectFactory {
+class PcapFactory : public core::ObjectFactory {
  public:
   PcapFactory() {
 
@@ -62,6 +62,6 @@ class __attribute__((visibility("default"))) PcapFactory : public core::ObjectFa
 };
 
 extern "C" {
-void *createPcapFactory(void);
+DLL_EXPORT void *createPcapFactory(void);
 }
 #endif /* EXTENSIONS_PCAPLOADER_H */

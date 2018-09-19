@@ -21,14 +21,17 @@
 #define __LISTEN_SYSLOG_H__
 
 #include <stdio.h>
-#include <unistd.h>
 #include <sys/types.h>
+#ifndef WIN32
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include <errno.h>
 #include <sys/select.h>
 #include <sys/time.h>
+#else
+#include <WinSock2.h>
+#endif
+#include <errno.h>
 #include <sys/types.h>
 #include <chrono>
 #include <thread>
@@ -39,11 +42,14 @@
 #include "core/Resource.h"
 #include "core/logging/LoggerConfiguration.h"
 
+#ifndef WIN32
+
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
 namespace processors {
+
 
 // SyslogEvent
 typedef struct {
@@ -58,7 +64,7 @@ class ListenSyslog : public core::Processor {
   /*!
    * Create a new processor
    */
-  ListenSyslog(std::string name, uuid_t uuid = NULL)
+  ListenSyslog(std::string name,  utils::Identifier uuid = utils::Identifier())
       : Processor(name, uuid),
         logger_(logging::LoggerFactory<ListenSyslog>::getLogger()) {
     _eventQueueByteSize = 0;
@@ -214,5 +220,7 @@ REGISTER_RESOURCE(ListenSyslog);
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
+
+#endif
 
 #endif

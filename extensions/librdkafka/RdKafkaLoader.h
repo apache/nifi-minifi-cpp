@@ -21,7 +21,7 @@
 #include "PublishKafka.h"
 #include "core/ClassLoader.h"
 
-class __attribute__((visibility("default"))) RdKafkaFactory : public core::ObjectFactory {
+class RdKafkaFactory : public core::ObjectFactory {
  public:
   RdKafkaFactory() {
 
@@ -61,6 +61,6 @@ class __attribute__((visibility("default"))) RdKafkaFactory : public core::Objec
 };
 
 extern "C" {
-void *createRdKafkaFactory(void);
+DLL_EXPORT void *createRdKafkaFactory(void);
 }
 #endif /* EXTENSION_RDKAFKALOADER_H */

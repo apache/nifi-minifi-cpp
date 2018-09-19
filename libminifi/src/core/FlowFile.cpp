@@ -33,7 +33,7 @@ std::shared_ptr<utils::IdGenerator> FlowFile::id_generator_ = utils::IdGenerator
 std::shared_ptr<logging::Logger> FlowFile::logger_ = logging::LoggerFactory<FlowFile>::getLogger();
 
 FlowFile::FlowFile()
-    : Connectable("FlowFile", 0),
+    : Connectable("FlowFile"),
       size_(0),
       id_(0),
       stored(false),
@@ -54,7 +54,7 @@ FlowFile::~FlowFile() {
 }
 
 FlowFile& FlowFile::operator=(const FlowFile& other) {
-  uuid_copy(uuid_, other.uuid_);
+  uuid_ = other.uuid_;
   stored = other.stored;
   marked_delete_ = other.marked_delete_;
   entry_date_ = other.entry_date_;

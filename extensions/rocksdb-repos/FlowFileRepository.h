@@ -36,8 +36,13 @@ namespace minifi {
 namespace core {
 namespace repository {
 
+#ifdef WIN32
+#define FLOWFILE_REPOSITORY_DIRECTORY ".\\flowfile_repository"
+#define FLOWFILE_CHECKPOINT_DIRECTORY ".\\flowfile_checkpoint"
+#else
 #define FLOWFILE_REPOSITORY_DIRECTORY "./flowfile_repository"
 #define FLOWFILE_CHECKPOINT_DIRECTORY "./flowfile_checkpoint"
+#endif
 #define MAX_FLOWFILE_REPOSITORY_STORAGE_SIZE (10*1024*1024) // 10M
 #define MAX_FLOWFILE_REPOSITORY_ENTRY_LIFE_TIME (600000) // 10 minute
 #define FLOWFILE_REPOSITORY_PURGE_PERIOD (2000) // 2000 msec
@@ -50,13 +55,13 @@ class FlowFileRepository : public core::Repository, public std::enable_shared_fr
  public:
   // Constructor
 
-  FlowFileRepository(std::string name, uuid_t uuid)
+  FlowFileRepository(std::string name, utils::Identifier uuid)
       : FlowFileRepository(name) {
   }
 
   FlowFileRepository(const std::string repo_name = "", std::string directory = FLOWFILE_REPOSITORY_DIRECTORY, int64_t maxPartitionMillis = MAX_FLOWFILE_REPOSITORY_ENTRY_LIFE_TIME,
                      int64_t maxPartitionBytes = MAX_FLOWFILE_REPOSITORY_STORAGE_SIZE, uint64_t purgePeriod = FLOWFILE_REPOSITORY_PURGE_PERIOD)
-      : core::SerializableComponent(repo_name, 0),
+      : core::SerializableComponent(repo_name),
         Repository(repo_name.length() > 0 ? repo_name : core::getClassName<FlowFileRepository>(), directory, maxPartitionMillis, maxPartitionBytes, purgePeriod),
         content_repo_(nullptr),
         checkpoint_(nullptr),

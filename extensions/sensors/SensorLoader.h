@@ -23,7 +23,7 @@
 #include "GetMovementSensors.h"
 #include "utils/StringUtils.h"
 
-class __attribute__((visibility("default"))) SensorFactory : public core::ObjectFactory {
+class SensorFactory : public core::ObjectFactory {
  public:
   SensorFactory() {
 
@@ -66,6 +66,6 @@ class __attribute__((visibility("default"))) SensorFactory : public core::Object
 ;
 
 extern "C" {
-void *createSensorFactory(void);
+DLL_EXPORT void *createSensorFactory(void);
 }
 #endif /* EXTENSIONS_ROCKSDBLOADER_H */

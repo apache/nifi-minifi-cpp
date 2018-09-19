@@ -21,7 +21,7 @@
 #include "ApplyTemplate.h"
 #include "core/ClassLoader.h"
 
-class __attribute__((visibility("default"))) TemplateFactory : public core::ObjectFactory {
+class TemplateFactory : public core::ObjectFactory {
  public:
   TemplateFactory() {
 
@@ -61,6 +61,6 @@ class __attribute__((visibility("default"))) TemplateFactory : public core::Obje
 };
 
 extern "C" {
-void *createTemplateFactory(void);
+DLL_EXPORT void *createTemplateFactory(void);
 }
 #endif /* EXTENSION_TEMPLATELOADER_H */

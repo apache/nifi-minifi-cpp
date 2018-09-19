@@ -98,7 +98,11 @@ StreamFactory::StreamFactory(const std::shared_ptr<Configure> &configure) {
   std::string secureStr;
   bool is_secure = false;
   if (configure->get(Configure::nifi_remote_input_secure, secureStr) && org::apache::nifi::minifi::utils::StringUtils::StringToBool(secureStr, is_secure)) {
+#ifdef OPENSSL_SUPPORT
     delegate_ = std::make_shared<SocketCreator<TLSSocket, TLSContext>>(configure);
+#else
+    delegate_ = std::make_shared<SocketCreator<Socket, SocketContext>>(configure);
+#endif
   } else {
     delegate_ = std::make_shared<SocketCreator<Socket, SocketContext>>(configure);
   }

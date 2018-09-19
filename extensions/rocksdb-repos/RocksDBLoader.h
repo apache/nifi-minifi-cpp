@@ -24,7 +24,7 @@
 #include "RocksDbStream.h"
 #include "core/ClassLoader.h"
 
-class __attribute__((visibility("default"))) RocksDBFactory : public core::ObjectFactory {
+class RocksDBFactory : public core::ObjectFactory {
  public:
   RocksDBFactory() {
 
@@ -75,6 +75,6 @@ class __attribute__((visibility("default"))) RocksDBFactory : public core::Objec
 };
 
 extern "C" {
-void *createRocksDBFactory(void);
+DLL_EXPORT void *createRocksDBFactory(void);
 }
 #endif /* EXTENSIONS_ROCKSDBLOADER_H */

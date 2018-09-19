@@ -95,7 +95,7 @@ class RocksDbStream : public io::BaseStream {
     return 4;
   }
   virtual int read(uint64_t &value, bool is_little_endian) {
-    uint8_t buf[0];
+    uint8_t buf[8];
     if (readData(&buf[0], 8) < 0)
       return -1;
     if (is_little_endian) {

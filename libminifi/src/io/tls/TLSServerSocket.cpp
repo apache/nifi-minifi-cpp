@@ -17,13 +17,16 @@
  */
 #include "io/tls/SecureDescriptorStream.h"
 #include "io/tls/TLSServerSocket.h"
-#include <netinet/tcp.h>
+
 #include <sys/types.h>
+#ifndef WIN32
+#include <netinet/tcp.h>
 #include <netdb.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <unistd.h>
+#endif
 #include <cstdio>
 #include <memory>
 #include <chrono>

@@ -38,9 +38,9 @@ TEST_CASE("TestSetPortId", "[S2S1]") {
 
   std::string uuid_str = "c56a4180-65aa-42ec-a945-5fd21dec0538";
 
-  uuid_t fakeUUID;
+  utils::Identifier fakeUUID;
 
-  uuid_parse(uuid_str.c_str(), fakeUUID);
+  fakeUUID = uuid_str;
 
   protocol.setPortId(fakeUUID);
 
@@ -55,9 +55,9 @@ TEST_CASE("TestSetPortIdUppercase", "[S2S2]") {
 
   std::string uuid_str = "C56A4180-65AA-42EC-A945-5FD21DEC0538";
 
-  uuid_t fakeUUID;
+  utils::Identifier fakeUUID;
 
-  uuid_parse(uuid_str.c_str(), fakeUUID);
+  fakeUUID = uuid_str;
 
   protocol.setPortId(fakeUUID);
 
@@ -100,9 +100,9 @@ TEST_CASE("TestSiteToSiteVerifySend", "[S2S3]") {
 
   std::string uuid_str = "C56A4180-65AA-42EC-A945-5FD21DEC0538";
 
-  uuid_t fakeUUID;
+  utils::Identifier fakeUUID;
 
-  uuid_parse(uuid_str.c_str(), fakeUUID);
+  fakeUUID = uuid_str;
 
   protocol.setPortId(fakeUUID);
 
@@ -124,7 +124,7 @@ TEST_CASE("TestSiteToSiteVerifySend", "[S2S3]") {
   collector->get_next_client_response();
   REQUIRE(collector->get_next_client_response() == "PORT_IDENTIFIER");
   collector->get_next_client_response();
-  REQUIRE(collector->get_next_client_response() == "c56a4180-65aa-42ec-a945-5fd21dec0538");
+  REQUIRE(utils::StringUtils::equalsIgnoreCase(collector->get_next_client_response(), "c56a4180-65aa-42ec-a945-5fd21dec0538"));
   collector->get_next_client_response();
   REQUIRE(collector->get_next_client_response() == "REQUEST_EXPIRATION_MILLIS");
   collector->get_next_client_response();
@@ -169,9 +169,9 @@ TEST_CASE("TestSiteToSiteVerifyNegotiationFail", "[S2S4]") {
 
   std::string uuid_str = "C56A4180-65AA-42EC-A945-5FD21DEC0538";
 
-  uuid_t fakeUUID;
+  utils::Identifier fakeUUID;
 
-  uuid_parse(uuid_str.c_str(), fakeUUID);
+  fakeUUID = uuid_str;
 
   protocol.setPortId(fakeUUID);
 

@@ -162,7 +162,7 @@ void FlowFileRepository::initialize_repository() {
       checkpoint_ = std::unique_ptr<rocksdb::Checkpoint>(checkpoint);
       logger_->log_trace("Created checkpoint directory");
     } else {
-      logger_->log_trace("Could not create checkpoint directory. Not properly deleted?");
+      logger_->log_trace("Could not create checkpoint. Corrupt?");
     }
   } else
     logger_->log_trace("Could not create checkpoint directory. Not properly deleted?");
@@ -171,6 +171,7 @@ void FlowFileRepository::initialize_repository() {
 void FlowFileRepository::loadComponent(const std::shared_ptr<core::ContentRepository> &content_repo) {
   content_repo_ = content_repo;
   repo_size_ = 0;
+
   initialize_repository();
 }
 

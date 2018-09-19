@@ -53,7 +53,7 @@ TEST_CASE("Test GetFileMultiple", "[getfileCreate3]") {
   char format[] = "/tmp/gt.XXXXXX";
   char *dir = testController.createTempDirectory(format);
 
-  uuid_t processoruuid;
+  utils::Identifier processoruuid;
   REQUIRE(true == processor->getUUID(processoruuid));
 
   std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(test_repo, content_repo, "getfileCreate2Connection");
@@ -137,7 +137,7 @@ TEST_CASE("Test GetFile Ignore", "[getfileCreate3]") {
   char format[] = "/tmp/gt.XXXXXX";
   char *dir = testController.createTempDirectory(format);
 
-  uuid_t processoruuid;
+  utils::Identifier processoruuid;
   REQUIRE(true == processor->getUUID(processoruuid));
 
   std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(test_repo, content_repo, "getfileCreate2Connection");
@@ -332,7 +332,7 @@ TEST_CASE("Test Find file", "[getfileCreate3]") {
 
 class TestProcessorNoContent : public minifi::core::Processor {
  public:
-  explicit TestProcessorNoContent(std::string name, uuid_t uuid = NULL)
+  explicit TestProcessorNoContent(std::string name, utils::Identifier uuid = NULL)
       : Processor(name, uuid),
         Success("success", "All files are routed to success") {
   }

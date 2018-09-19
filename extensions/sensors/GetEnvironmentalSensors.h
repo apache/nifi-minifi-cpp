@@ -49,7 +49,7 @@ class GetEnvironmentalSensors : public SensorBase {
   /*!
    * Create a new processor
    */
-  GetEnvironmentalSensors(std::string name, uuid_t uuid = NULL)
+  GetEnvironmentalSensors(std::string name, utils::Identifier uuid = utils::Identifier())
       : SensorBase(name, uuid),
         humidity_sensor_(nullptr),
         pressure_sensor_(nullptr),

@@ -31,7 +31,7 @@ namespace nifi {
 namespace minifi {
 namespace c2 {
 
-AgentPrinter::AgentPrinter(std::string name, uuid_t uuid)
+AgentPrinter::AgentPrinter(std::string name, utils::Identifier uuid)
     : HeartBeatReporter(name, uuid),
       logger_(logging::LoggerFactory<AgentPrinter>::getLogger()) {
 }

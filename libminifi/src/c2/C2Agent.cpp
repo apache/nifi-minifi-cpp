@@ -17,7 +17,6 @@
  */
 
 #include "c2/C2Agent.h"
-#include <unistd.h>
 #include <csignal>
 #include <utility>
 #include <vector>

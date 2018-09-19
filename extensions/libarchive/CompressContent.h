@@ -52,7 +52,7 @@ public:
   /*!
    * Create a new processor
    */
-  explicit CompressContent(std::string name, uuid_t uuid = NULL) :
+  explicit CompressContent(std::string name, utils::Identifier uuid = utils::Identifier()) :
       core::Processor(name, uuid), logger_(logging::LoggerFactory<CompressContent>::getLogger()), updateFileName_(false) {
   }
   // Destructor

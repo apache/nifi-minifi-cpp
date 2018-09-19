@@ -25,7 +25,11 @@
 #include <string>
 #include <curl/easy.h>
 #include <uuid/uuid.h>
+#ifdef WIN32
+#include <regex>
+#else
 #include <regex.h>
+#endif
 #include <vector>
 
 #include "utils/ByteArrayCallback.h"
@@ -75,7 +79,7 @@ class HTTPClient : public BaseHTTPClient, public core::Connectable {
 
   HTTPClient();
 
-  HTTPClient(std::string name, uuid_t uuid);
+  HTTPClient(std::string name, utils::Identifier uuid);
 
   HTTPClient(const std::string &url, const std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service = nullptr);
 
@@ -131,14 +135,13 @@ class HTTPClient : public BaseHTTPClient, public core::Connectable {
     return url_;
   }
 
-  void setInterface(const std::string &interface) {
-    curl_easy_setopt(http_session_, CURLOPT_INTERFACE, interface.c_str());
-  }
 
   const std::vector<std::string> &getHeaders() override {
     return header_response_.header_tokens_;
 
   }
+
+  void setInterface(const std::string &);
 
   virtual const std::map<std::string, std::string> &getParsedHeaders() override {
     return header_response_.header_mapping_;
@@ -189,11 +192,15 @@ class HTTPClient : public BaseHTTPClient, public core::Connectable {
   inline bool matches(const std::string &value, const std::string &sregex) override;
 
   static CURLcode configure_ssl_context(CURL *curl, void *ctx, void *param) {
+#ifdef OPENSSL_SUPPORT
     minifi::controllers::SSLContextService *ssl_context_service = static_cast<minifi::controllers::SSLContextService*>(param);
     if (!ssl_context_service->configure_ssl_context(static_cast<SSL_CTX*>(ctx))) {
       return CURLE_FAILED_INIT;
     }
     return CURLE_OK;
+#else
+	  return CURLE_FAILED_INIT;
+#endif
   }
 
   void configure_secure_connection(CURL *http_session);

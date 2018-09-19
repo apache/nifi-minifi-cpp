@@ -15,10 +15,11 @@ option(ENABLE_SHAREDPTR_DEBUG "Enable sharedptr debugging" OFF)
 set(TRYCOMPILE_SRC_DIR "${CMAKE_CURRENT_LIST_DIR}/packaging/cmake/try_compile")
 
 # ZLIB {
-find_package(ZLIB QUIET)
 if(ZLIB_FOUND)
+message("ZLIB FOUND")
   set(with_zlib_default ON)
 else()
+message("ZLIB FOUND")
   set(with_zlib_default OFF)
 endif()
 option(WITH_ZLIB "With ZLIB" ${with_zlib_default})

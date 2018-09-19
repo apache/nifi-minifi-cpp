@@ -18,7 +18,6 @@
  * limitations under the License.
  */
 #include "core/Processor.h"
-#include <sys/time.h>
 #include <time.h>
 #include <vector>
 #include <queue>
@@ -45,8 +44,8 @@ namespace nifi {
 namespace minifi {
 namespace core {
 
-Processor::Processor(std::string name, uuid_t uuid)
-    : Connectable(name, uuid),
+Processor::Processor(std::string name)
+    : Connectable(name),
       ConfigurableComponent(),
       logger_(logging::LoggerFactory<Processor>::getLogger()) {
   has_work_.store(false);
@@ -64,6 +63,27 @@ Processor::Processor(std::string name, uuid_t uuid)
   yield_expiration_ = 0;
   incoming_connections_Iter = this->_incomingConnections.begin();
   logger_->log_debug("Processor %s created UUID %s", name_, uuidStr_);
+}
+
+Processor::Processor(std::string name, utils::Identifier &uuid)
+    : Connectable(name, uuid),
+      ConfigurableComponent(),
+      logger_(logging::LoggerFactory<Processor>::getLogger()) {
+  has_work_.store(false);
+  // Setup the default values
+  state_ = DISABLED;
+  strategy_ = TIMER_DRIVEN;
+  loss_tolerant_ = false;
+  _triggerWhenEmpty = false;
+  scheduling_period_nano_ = MINIMUM_SCHEDULING_NANOS;
+  run_duration_nano_ = DEFAULT_RUN_DURATION;
+  yield_period_msec_ = DEFAULT_YIELD_PERIOD_SECONDS * 1000;
+  _penalizationPeriodMsec = DEFAULT_PENALIZATION_PERIOD_SECONDS * 1000;
+  max_concurrent_tasks_ = DEFAULT_MAX_CONCURRENT_TASKS;
+  active_tasks_ = 0;
+  yield_expiration_ = 0;
+  incoming_connections_Iter = this->_incomingConnections.begin();
+  logger_->log_debug("Processor %s created UUID %s with uuid %s", name_, uuidStr_, uuid.to_string());
 }
 
 bool Processor::isRunning() {
@@ -87,17 +107,13 @@ bool Processor::addConnection(std::shared_ptr<Connectable> conn) {
   std::shared_ptr<Connection> connection = std::static_pointer_cast<Connection>(conn);
   std::lock_guard<std::mutex> lock(mutex_);
 
-  uuid_t srcUUID;
-  uuid_t destUUID;
+  utils::Identifier srcUUID;
+  utils::Identifier destUUID;
 
   connection->getSourceUUID(srcUUID);
   connection->getDestinationUUID(destUUID);
-  char uuid_str[37];
-
-  uuid_unparse_lower(uuid_, uuid_str);
-  std::string my_uuid = uuid_str;
-  uuid_unparse_lower(destUUID, uuid_str);
-  std::string destination_uuid = uuid_str;
+  std::string my_uuid = uuid_.to_string();
+  std::string destination_uuid = destUUID.to_string();
   if (my_uuid == destination_uuid) {
     // Connection is destination to the current processor
     if (_incomingConnections.find(connection) == _incomingConnections.end()) {
@@ -108,8 +124,7 @@ bool Processor::addConnection(std::shared_ptr<Connectable> conn) {
       ret = true;
     }
   }
-  uuid_unparse_lower(srcUUID, uuid_str);
-  std::string source_uuid = uuid_str;
+  std::string source_uuid = srcUUID.to_string();
   if (my_uuid == source_uuid) {
     std::string relationship = connection->getRelationship().getName();
     // Connection is source from the current processor
@@ -147,15 +162,15 @@ void Processor::removeConnection(std::shared_ptr<Connectable> conn) {
 
   std::lock_guard<std::mutex> lock(mutex_);
 
-  uuid_t srcUUID;
-  uuid_t destUUID;
+  utils::Identifier srcUUID;
+  utils::Identifier destUUID;
 
   std::shared_ptr<Connection> connection = std::static_pointer_cast<Connection>(conn);
 
   connection->getSourceUUID(srcUUID);
   connection->getDestinationUUID(destUUID);
 
-  if (uuid_compare(uuid_, destUUID) == 0) {
+  if (uuid_ == destUUID) {
     // Connection is destination to the current processor
     if (_incomingConnections.find(connection) != _incomingConnections.end()) {
       _incomingConnections.erase(connection);
@@ -165,7 +180,7 @@ void Processor::removeConnection(std::shared_ptr<Connectable> conn) {
     }
   }
 
-  if (uuid_compare(uuid_, srcUUID) == 0) {
+  if (uuid_ == srcUUID) {
     std::string relationship = connection->getRelationship().getName();
     // Connection is source from the current processor
     auto &&it = out_going_connections_.find(relationship);

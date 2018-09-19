@@ -43,7 +43,7 @@ class VolatileContentRepository : public core::ContentRepository, public virtual
   static const char *minimal_locking;
 
   explicit VolatileContentRepository(std::string name = getClassName<VolatileContentRepository>())
-      : core::SerializableComponent(name, 0),
+      : core::SerializableComponent(name),
         core::repository::VolatileRepository<std::shared_ptr<minifi::ResourceClaim>>(name),
         minimize_locking_(true),
         logger_(logging::LoggerFactory<VolatileContentRepository>::getLogger()) {
