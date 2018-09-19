@@ -46,13 +46,11 @@ RESTReceiver::RESTReceiver(std::string name, uuid_t uuid)
 
 void RESTReceiver::initialize(const std::shared_ptr<core::controller::ControllerServiceProvider> &controller, const std::shared_ptr<state::StateMonitor> &updateSink, const std::shared_ptr<Configure> &configure) {
   HeartBeatReporter::initialize(controller, updateSink, configure);
-  logger_->log_debug("Initializing rest receiveer");
+  logger_->log_trace("Initializing rest receiver");
   if (nullptr != configuration_) {
-    std::string listeningPort, rootUri, caCert;
+    std::string listeningPort,rootUri="/", caCert;
     configuration_->get("c2.rest.listener.port", listeningPort);
-    configuration_->get("c2.rest.listener.heartbeat.rooturi", rootUri);
     configuration_->get("c2.rest.listener.cacert", caCert);
-
     if (!listeningPort.empty() && !rootUri.empty()) {
       handler = std::unique_ptr<ListeningProtocol>(new ListeningProtocol());
       if (!caCert.empty()) {
@@ -67,7 +65,7 @@ int16_t RESTReceiver::heartbeat(const C2Payload &payload) {
   std::string outputConfig = serializeJsonRootPayload(payload);
 
   if (handler != nullptr) {
-    logger_->log_debug("Setting %s", outputConfig);
+    logger_->log_trace("Setting %s", outputConfig);
     handler->setResponse(outputConfig);
   }
 
