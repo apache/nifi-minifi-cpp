@@ -67,7 +67,7 @@ class BuildDescription {
 #ifndef WIN32
 	if (UNLIKELY(IsNullOrEmpty(class_mappings[group].processors_) && IsNullOrEmpty(class_mappings[group].processors_))) {
 #else
-	if (!class_mappings[group].processors_.empty()) {
+	if (class_mappings[group].processors_.empty()) {
 #endif
       for (auto clazz : core::ClassLoader::getDefaultClassLoader().getClasses(group)) {
         std::string class_name = clazz;
