@@ -465,69 +465,69 @@ class AgentManifest : public DeviceInformation {
   }
 
   std::vector<SerializedResponseNode> serialize() {
-    std::vector<SerializedResponseNode> serialized;
+    static std::vector<SerializedResponseNode> serialized;
+    if (serialized.empty()) {
+      SerializedResponseNode ident;
 
-    SerializedResponseNode ident;
+      ident.name = "identifier";
+      ident.value = AgentBuild::BUILD_IDENTIFIER;
 
-    ident.name = "identifier";
-    ident.value = AgentBuild::BUILD_IDENTIFIER;
+      SerializedResponseNode type;
 
-    SerializedResponseNode type;
+      type.name = "agentType";
+      type.value = "cpp";
 
-    type.name = "agentType";
-    type.value = "cpp";
+      SerializedResponseNode version;
 
-    SerializedResponseNode version;
+      version.name = "version";
+      version.value = AgentBuild::VERSION;
 
-    version.name = "version";
-    version.value = AgentBuild::VERSION;
+      SerializedResponseNode buildInfo;
+      buildInfo.name = "buildInfo";
 
-    SerializedResponseNode buildInfo;
-    buildInfo.name = "buildInfo";
+      SerializedResponseNode build_version;
+      build_version.name = "version";
+      build_version.value = AgentBuild::VERSION;
 
-    SerializedResponseNode build_version;
-    build_version.name = "version";
-    build_version.value = AgentBuild::VERSION;
+      SerializedResponseNode build_rev;
+      build_rev.name = "revision";
+      build_rev.value = AgentBuild::BUILD_REV;
 
-    SerializedResponseNode build_rev;
-    build_rev.name = "revision";
-    build_rev.value = AgentBuild::BUILD_REV;
+      SerializedResponseNode build_date;
+      build_date.name = "timestamp";
+      build_date.value = (uint64_t) std::stoull(AgentBuild::BUILD_DATE);
 
-    SerializedResponseNode build_date;
-    build_date.name = "timestamp";
-    build_date.value = (uint64_t) std::stoull(AgentBuild::BUILD_DATE);
+      SerializedResponseNode compiler_command;
+      compiler_command.name = "compiler";
+      compiler_command.value = AgentBuild::COMPILER;
 
-    SerializedResponseNode compiler_command;
-    compiler_command.name = "compiler";
-    compiler_command.value = AgentBuild::COMPILER;
+      SerializedResponseNode compiler_flags;
+      compiler_flags.name = "flags";
+      compiler_flags.value = AgentBuild::COMPILER_FLAGS;
 
-    SerializedResponseNode compiler_flags;
-    compiler_flags.name = "flags";
-    compiler_flags.value = AgentBuild::COMPILER_FLAGS;
+      buildInfo.children.push_back(compiler_flags);
+      buildInfo.children.push_back(compiler_command);
 
-    buildInfo.children.push_back(compiler_flags);
-    buildInfo.children.push_back(compiler_command);
+      buildInfo.children.push_back(build_version);
+      buildInfo.children.push_back(build_rev);
+      buildInfo.children.push_back(build_date);
 
-    buildInfo.children.push_back(build_version);
-    buildInfo.children.push_back(build_rev);
-    buildInfo.children.push_back(build_date);
+      Bundles bundles("bundles");
 
-    Bundles bundles("bundles");
+      serialized.push_back(ident);
+      serialized.push_back(type);
+      serialized.push_back(buildInfo);
+      // serialize the bundle information.
+      for (auto bundle : bundles.serialize()) {
+        serialized.push_back(bundle);
+      }
 
-    serialized.push_back(ident);
-    serialized.push_back(type);
-    serialized.push_back(buildInfo);
-    // serialize the bundle information.
-    for (auto bundle : bundles.serialize()) {
-      serialized.push_back(bundle);
+      SchedulingDefaults defaults("schedulingDefaults");
+
+      for (auto defaultNode : defaults.serialize()) {
+        serialized.push_back(defaultNode);
+      }
     }
-
-    SchedulingDefaults defaults("schedulingDefaults");
-
-    for (auto defaultNode : defaults.serialize()) {
-      serialized.push_back(defaultNode);
-    }
-
     return serialized;
   }
 };
