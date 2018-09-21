@@ -16,10 +16,6 @@ cache:
 - build\thirdparty\ -> appveyor.yml
 - build\thirdparty\yaml-cpp-yaml-cpp-20171024 -> appveyor.yml
 
-branches:
- only: 
-  - windows
-  
 clone_folder: C:\projects\nifi-minifi-cpp
   
 build_script:
