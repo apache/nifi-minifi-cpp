@@ -39,6 +39,9 @@
 #include <netdb.h>
 #include <ifaddrs.h>
 #include <unistd.h>
+#else
+#pragma comment(lib, "iphlpapi.lib")
+#include <iphlpapi.h>
 #endif
 #include <functional>
 #include <string.h>
@@ -95,8 +98,9 @@ class Device {
     canonical_hostname_ = hostname;
 
     std::stringstream ips;
-    for (auto ip : getIpAddresses()) {
-      if (ip.find("127") == 0 || ip.find("192") == 0)
+	auto ipaddressess = getIpAddresses();
+    for (auto ip : ipaddressess) {
+      if (ipaddressess.size() > 1 && (ip.find("127") == 0 || ip.find("192") == 0))
         continue;
       ip_ = ip;
       break;
@@ -109,25 +113,59 @@ class Device {
   std::string device_id_;
  protected:
 
-  std::vector<std::string> getIpAddresses() {
-    std::vector<std::string> ips;
+	 std::vector<std::string> getIpAddresses() {
+		 static std::vector<std::string> ips;
+		 if (ips.empty()) {
 #ifndef WIN32
-    struct ifaddrs *ifaddr, *ifa;
-    if (getifaddrs(&ifaddr) == -1) {
-      perror("getifaddrs");
-      exit(EXIT_FAILURE);
-    }
+		 struct ifaddrs *ifaddr, *ifa;
+		 if (getifaddrs(&ifaddr) == -1) {
+			 perror("getifaddrs");
+			 exit(EXIT_FAILURE);
+		 }
 
-    for (ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next) {
-      if ((strcmp("lo", ifa->ifa_name) == 0) || !(ifa->ifa_flags & (IFF_RUNNING)))
-        continue;
-      if ((ifa->ifa_addr != NULL) && (ifa->ifa_addr->sa_family == AF_INET)) {
-        ips.push_back(inet_ntoa(((struct sockaddr_in *) ifa->ifa_addr)->sin_addr));
-      }
-    }
+		 for (ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next) {
+			 if ((strcmp("lo", ifa->ifa_name) == 0) || !(ifa->ifa_flags & (IFF_RUNNING)))
+				 continue;
+			 if ((ifa->ifa_addr != NULL) && (ifa->ifa_addr->sa_family == AF_INET)) {
+				 ips.push_back(inet_ntoa(((struct sockaddr_in *) ifa->ifa_addr)->sin_addr));
+			 }
+		 }
 
-    freeifaddrs(ifaddr);
+		 freeifaddrs(ifaddr);
+#else
+		 PIP_ADAPTER_INFO adapterPtr;
+		 PIP_ADAPTER_INFO adapter = NULL;
+
+		 DWORD dwRetVal = 0;
+
+		 std::hash<std::string> hash_fn;
+		 std::set<std::string> macs;
+		 
+		 ULONG adapterLen = sizeof(IP_ADAPTER_INFO);
+		 adapterPtr = (IP_ADAPTER_INFO *)malloc(sizeof(IP_ADAPTER_INFO));
+		 if (adapterPtr == NULL) {
+			 return ips;
+		 }
+		 if (GetAdaptersInfo(adapterPtr, &adapterLen) == ERROR_BUFFER_OVERFLOW) {
+			 free(adapterPtr);
+			 adapterPtr = (IP_ADAPTER_INFO *)malloc(adapterLen);
+			 if (adapterPtr == NULL) {
+				 return ips;
+			 }
+		 }
+
+		 if ((dwRetVal = GetAdaptersInfo(adapterPtr, &adapterLen)) == NO_ERROR) {
+			 adapter = adapterPtr;
+			 while (adapter) {
+				 ips.emplace_back(adapter->IpAddressList.IpAddress.String);
+				 adapter = adapter->Next;
+			 }
+		 }
+
+		 if (adapterPtr)
+			 free(adapterPtr);
 #endif
+	 }
     return ips;
   }
 
@@ -241,9 +279,46 @@ class Device {
     return macstr.length() > 0 ? std::to_string(hash_fn(macstr)) : "8675309";
   }
 #else
-  std::string getDeviceId() {
-    return "NaD";
-  }
+std::string getDeviceId() {
+	PIP_ADAPTER_INFO adapterPtr;
+	PIP_ADAPTER_INFO adapter = NULL;
+
+	DWORD dwRetVal = 0;
+
+	std::hash<std::string> hash_fn;
+	std::set<std::string> macs;
+	
+	ULONG adapterLen = sizeof(IP_ADAPTER_INFO);
+	adapterPtr = (IP_ADAPTER_INFO *)malloc(sizeof(IP_ADAPTER_INFO));
+	if (adapterPtr == NULL) {
+		return "";
+	}
+	if (GetAdaptersInfo(adapterPtr, &adapterLen) == ERROR_BUFFER_OVERFLOW) {
+		free(adapterPtr);
+		adapterPtr = (IP_ADAPTER_INFO *)malloc(adapterLen);
+		if (adapterPtr == NULL) {
+			return "";
+		}
+	}
+
+	if ((dwRetVal = GetAdaptersInfo(adapterPtr, &adapterLen)) == NO_ERROR) {
+		adapter = adapterPtr;
+		while (adapter) {
+			char mac_add[13];
+			snprintf(mac_add, 13, "%02X%02X%02X%02X%02X%02X", adapter->Address[0], adapter->Address[1], adapter->Address[2], adapter->Address[3], adapter->Address[4], adapter->Address[5]);
+			macs.insert(mac_add);
+			adapter = adapter->Next;
+		}
+	}
+	
+	if (adapterPtr)
+		free(adapterPtr);
+	 std::string macstr;
+    for (auto &mac : macs) {
+      macstr += mac;
+    }
+	return macstr.length() > 0 ? std::to_string(hash_fn(macstr)) : "8675309";
+}
 #endif
 
   // connection information
@@ -279,46 +354,89 @@ class DeviceInfoNode : public DeviceInformation {
   }
 
   std::vector<SerializedResponseNode> serialize() {
-    std::vector<SerializedResponseNode> serialized;
+	  std::vector<SerializedResponseNode> serialized;
 
-    SerializedResponseNode identifier;
-    identifier.name = "identifier";
-    identifier.value = device_id_;
+	  SerializedResponseNode identifier;
+	  identifier.name = "identifier";
+	  identifier.value = device_id_;
 
-    SerializedResponseNode systemInfo;
-    systemInfo.name = "systemInfo";
+	  SerializedResponseNode systemInfo;
+	  systemInfo.name = "systemInfo";
 
-    SerializedResponseNode vcores;
-    vcores.name = "vCores";
-    size_t ncpus = std::thread::hardware_concurrency();
+	  SerializedResponseNode vcores;
+	  vcores.name = "vCores";
+	  size_t ncpus = std::thread::hardware_concurrency();
 
-    vcores.value = std::to_string(ncpus);
+	  vcores.value = std::to_string(ncpus);
 
-    systemInfo.children.push_back(vcores);
+	  systemInfo.children.push_back(vcores);
 #if defined(_SC_PHYS_PAGES) && defined(_SC_PAGESIZE)
-    SerializedResponseNode mem;
-    mem.name = "physicalMem";
+	  SerializedResponseNode mem;
+	  mem.name = "physicalMem";
 
-    size_t mema = (size_t) sysconf( _SC_PHYS_PAGES) * (size_t) sysconf( _SC_PAGESIZE);
+	  uint64_t mema = (size_t)sysconf(_SC_PHYS_PAGES) * (size_t)sysconf(_SC_PAGESIZE);
 
-    mem.value = std::to_string(mema);
+	  mem.value = mema;
 
 
-    systemInfo.children.push_back(mem);
+	  systemInfo.children.push_back(mem);
 #endif
 #ifndef WIN32
-    SerializedResponseNode arch;
-    arch.name = "machinearch";
+	  SerializedResponseNode arch;
+	  arch.name = "machinearch";
 
-    utsname buf;
+	  utsname buf;
 
-    if (uname(&buf) == -1) {
-      arch.value = "unknown";
-    } else {
-      arch.value = buf.machine;
-    }
+	  if (uname(&buf) == -1) {
+		  arch.value = "unknown";
+	  }
+	  else {
+		  arch.value = buf.machine;
+	  }
 
-    systemInfo.children.push_back(arch);
+	  systemInfo.children.push_back(arch);
+#else
+	  SYSTEM_INFO si;
+	  GetSystemInfo(&si);
+
+	  SerializedResponseNode mem;
+	  mem.name = "physicalMem";
+
+	  MEMORYSTATUSEX statex;
+
+	  statex.dwLength = sizeof(statex);
+
+	  GlobalMemoryStatusEx(&statex);
+
+	  mem.value = statex.ullTotalPhys;
+
+	  systemInfo.children.push_back(mem);
+
+	  SerializedResponseNode arch;
+	  arch.name = "machinearch";
+
+	  switch (si.wProcessorArchitecture)
+	  {
+	  case PROCESSOR_ARCHITECTURE_ARM:
+		  arch.value = "arm32";
+		  break;
+	  case PROCESSOR_ARCHITECTURE_ARM64:
+		  arch.value = "arm64";
+		  break;
+	  case PROCESSOR_ARCHITECTURE_INTEL:
+	  case PROCESSOR_ARCHITECTURE_IA32_ON_ARM64:
+		  arch.value = "x32";
+		  break;
+	  case PROCESSOR_ARCHITECTURE_AMD64:
+	  case PROCESSOR_ARCHITECTURE_IA64:
+		  arch.value = "x64";
+		  break;
+	  default:
+		  arch.value = "unknown";
+	  }
+	
+
+	systemInfo.children.push_back(arch);
 #endif
     serialized.push_back(identifier);
     serialized.push_back(systemInfo);
@@ -332,7 +450,7 @@ class DeviceInfoNode : public DeviceInformation {
 
     SerializedResponseNode ip;
     ip.name = "ipAddress";
-    ip.value = ip_;
+    ip.value = !ip_.empty() ? ip_ : "127.0.0.1";
 
     networkinfo.children.push_back(hostname);
     networkinfo.children.push_back(ip);
