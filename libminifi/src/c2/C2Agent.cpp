@@ -62,7 +62,7 @@ C2Agent::C2Agent(const std::shared_ptr<core::controller::ControllerServiceProvid
     auto time_since = std::chrono::duration_cast<std::chrono::milliseconds>(now - last_run_).count();
 
     // place priority on messages to send to the c2 server
-      if ( request_mutex.try_lock_until(now + std::chrono::seconds(1)) ) {
+      if ( protocol_ != nullptr && request_mutex.try_lock_until(now + std::chrono::seconds(1)) ) {
         if (requests.size() > 0) {
           int count = 0;
           do {
@@ -79,6 +79,8 @@ C2Agent::C2Agent(const std::shared_ptr<core::controller::ControllerServiceProvid
         last_run_ = now;
         performHeartBeat();
       }
+
+      checkTriggers();
 
       std::this_thread::sleep_for(std::chrono::milliseconds(500));
       return state::Update(state::UpdateStatus(state::UpdateState::READ_COMPLETE, false));
@@ -102,11 +104,31 @@ C2Agent::C2Agent(const std::shared_ptr<core::controller::ControllerServiceProvid
   functions_.push_back(c2_consumer_);
 }
 
+void C2Agent::checkTriggers() {
+  logger_->log_info("Checking %d triggers", triggers_.size());
+  for (const auto &trigger : triggers_) {
+    if (trigger->triggered()) {
+      /**
+       * Action was triggered, so extract it.
+       */
+      C2Payload &&triggerAction = trigger->getAction();
+      logger_->log_trace("%s action triggered", trigger->getName());
+      // handle the response the same way. This means that
+      // acknowledgements will be sent to the c2 server for every trigger action.
+      // this is expected
+      extractPayload(std::move(triggerAction));
+      // call reset if the trigger supports this activity
+      trigger->reset();
+    } else {
+      logger_->log_trace("%s action not triggered", trigger->getName());
+    }
+  }
+}
 void C2Agent::configure(const std::shared_ptr<Configure> &configure, bool reconfigure) {
   std::string clazz, heartbeat_period, device;
 
   if (!reconfigure) {
-    if (!configure->get("c2.agent.protocol.class", clazz)) {
+    if (!configure->get("nifi.c2.agent.protocol.class", "c2.agent.protocol.class", clazz)) {
       clazz = "RESTSender";
     }
     logger_->log_info("Class is %s", clazz);
@@ -132,7 +154,7 @@ void C2Agent::configure(const std::shared_ptr<Configure> &configure, bool reconf
     protocol_.load()->update(configure);
   }
 
-  if (configure->get("c2.agent.heartbeat.period", heartbeat_period)) {
+  if (configure->get("nifi.c2.agent.heartbeat.period", "c2.agent.heartbeat.period", heartbeat_period)) {
     try {
       heart_beat_period_ = std::stoi(heartbeat_period);
     } catch (const std::invalid_argument &ie) {
@@ -144,12 +166,12 @@ void C2Agent::configure(const std::shared_ptr<Configure> &configure, bool reconf
   }
 
   std::string update_settings;
-  if (configure->get("c2.agent.update.allow", update_settings) && utils::StringUtils::StringToBool(update_settings, allow_updates_)) {
+  if (configure->get("nifi.c2.agent.update.allow", "c2.agent.update.allow", update_settings) && utils::StringUtils::StringToBool(update_settings, allow_updates_)) {
     // allow the agent to be updated. we then need to get an update command to execute after
   }
 
   if (allow_updates_) {
-    if (!configure->get("c2.agent.update.command", update_command_)) {
+    if (!configure->get("nifi.c2.agent.update.command", "c2.agent.update.command", update_command_)) {
       char cwd[1024];
       getcwd(cwd, sizeof(cwd));
 
@@ -158,7 +180,7 @@ void C2Agent::configure(const std::shared_ptr<Configure> &configure, bool reconf
       update_command_ = command.str();
     }
 
-    if (!configure->get("c2.agent.update.temp.location", update_location_)) {
+    if (!configure->get("nifi.c2.agent.update.temp.location", "c2.agent.update.temp.location", update_location_)) {
       char cwd[1024];
       getcwd(cwd, sizeof(cwd));
 
@@ -169,10 +191,10 @@ void C2Agent::configure(const std::shared_ptr<Configure> &configure, bool reconf
     }
 
     // if not defined we won't beable to update
-    configure->get("c2.agent.bin.location", bin_location_);
+    configure->get("nifi.c2.agent.bin.location", "c2.agent.bin.location", bin_location_);
   }
   std::string heartbeat_reporters;
-  if (configure->get("c2.agent.heartbeat.reporter.classes", heartbeat_reporters)) {
+  if (configure->get("nifi.c2.agent.heartbeat.reporter.classes", "c2.agent.heartbeat.reporter.classes", heartbeat_reporters)) {
     std::vector<std::string> reporters = utils::StringUtils::split(heartbeat_reporters, ",");
     std::lock_guard<std::mutex> lock(heartbeat_mutex);
     for (auto reporter : reporters) {
@@ -183,6 +205,22 @@ void C2Agent::configure(const std::shared_ptr<Configure> &configure, bool reconf
         std::shared_ptr<HeartBeatReporter> shp_reporter = std::static_pointer_cast<HeartBeatReporter>(heartbeat_reporter_obj);
         shp_reporter->initialize(controller_, update_sink_, configuration_);
         heartbeat_protocols_.push_back(shp_reporter);
+      }
+    }
+  }
+
+  std::string trigger_classes;
+  if (configure->get("nifi.c2.agent.trigger.classes", "c2.agent.trigger.classes", trigger_classes)) {
+    std::vector<std::string> triggers = utils::StringUtils::split(trigger_classes, ",");
+    std::lock_guard<std::mutex> lock(heartbeat_mutex);
+    for (auto trigger : triggers) {
+      auto trigger_obj = core::ClassLoader::getDefaultClassLoader().instantiate(trigger, trigger);
+      if (trigger_obj == nullptr) {
+        logger_->log_debug("Could not instantiate %s", trigger);
+      } else {
+        std::shared_ptr<C2Trigger> trg_impl = std::static_pointer_cast<C2Trigger>(trigger_obj);
+        trg_impl->initialize(configuration_);
+        triggers_.push_back(trg_impl);
       }
     }
   }
@@ -514,23 +552,38 @@ void C2Agent::handle_update(const C2ContentResponse &resp) {
       // just get the raw data.
       C2Payload payload(Operation::TRANSFER, false, true);
 
-      C2Payload &&response = protocol_.load()->consumePayload(url->second.to_string(), payload, RECEIVE, false);
+      auto urlStr = url->second.to_string();
 
-      auto raw_data = response.getRawData();
-      std::string file_path = std::string(raw_data.data(), raw_data.size());
+      std::string file_path = urlStr;
+      if (nullptr != protocol_ && file_path.find("http") != std::string::npos) {
+        C2Payload &&response = protocol_.load()->consumePayload(urlStr, payload, RECEIVE, false);
+
+        auto raw_data = response.getRawData();
+        file_path = std::string(raw_data.data(), raw_data.size());
+      }
 
       std::ifstream new_conf(file_path);
       std::string raw_data_str((std::istreambuf_iterator<char>(new_conf)), std::istreambuf_iterator<char>());
       unlink(file_path.c_str());
       // if we can apply the update, we will acknowledge it and then backup the configuration file.
-      if (update_sink_->applyUpdate(url->second.to_string(), raw_data_str)) {
+      if (update_sink_->applyUpdate(urlStr, raw_data_str)) {
         C2Payload response(Operation::ACKNOWLEDGE, resp.ident, false, true);
         enqueue_c2_response(std::move(response));
 
         if (persist != resp.operation_arguments.end() && utils::StringUtils::equalsIgnoreCase(persist->second.to_string(), "true")) {
           // update nifi.flow.configuration.file=./conf/config.yml
           std::string config_file;
+
           configuration_->get(minifi::Configure::nifi_flow_configuration_file, config_file);
+          std::string adjustedFilename;
+          if (config_file[0] != '/') {
+            adjustedFilename = adjustedFilename + configuration_->getHome() + "/" + config_file;
+          } else {
+            adjustedFilename += config_file;
+          }
+
+          config_file = adjustedFilename;
+
           std::stringstream config_file_backup;
           config_file_backup << config_file << ".bak";
           // we must be able to successfuly copy the file.
@@ -540,14 +593,15 @@ void C2Agent::handle_update(const C2ContentResponse &resp) {
 
           if (configuration_->get(minifi::Configure::nifi_flow_configuration_file_backup_update, backup_config) && utils::StringUtils::StringToBool(backup_config, backup_file)) {
             if (utils::file::FileUtils::copy_file(config_file, config_file_backup.str()) != 0) {
+              logger_->log_debug("Cannot copy %s to %s", config_file, config_file_backup.str());
               persist_config = false;
             }
           }
+          logger_->log_debug("Copy %s to %s %d", config_file, config_file_backup.str(), persist_config);
           if (persist_config) {
             std::ofstream writer(config_file);
             if (writer.is_open()) {
-              auto output = response.getRawData();
-              writer.write(output.data(), output.size());
+              writer.write(raw_data_str.data(), raw_data_str.size());
             }
             writer.close();
           }
