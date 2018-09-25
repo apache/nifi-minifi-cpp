@@ -189,7 +189,7 @@ bool FlowController::applyConfiguration(const std::string &source, const std::st
   this->root_ = std::move(newRoot);
   loadFlowRepo();
   initialized_ = true;
-  bool started = start();
+  bool started = start() == 0;
 
   updating_ = false;
 

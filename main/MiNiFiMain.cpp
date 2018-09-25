@@ -36,7 +36,6 @@
 #include <vector>
 #include <queue>
 #include <map>
-#include <yaml-cpp/yaml.h>
 #include <iostream>
 #include "ResourceClaim.h"
 #include "core/Core.h"
