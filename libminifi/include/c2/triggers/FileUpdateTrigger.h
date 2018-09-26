@@ -54,7 +54,7 @@ class FileUpdateTrigger : public C2Trigger {
 
 
   virtual bool triggered() {
-    if (last_update_ == -1)
+    if (last_update_ == 0)
       return false;
     auto update_time = utils::file::FileUtils::last_write_time(file_);
     if (update_time > last_update_) {
@@ -95,7 +95,6 @@ class FileUpdateTrigger : public C2Trigger {
   }
 
  protected:
-  std::mutex mutex_;
   std::string file_;
   std::atomic<uint64_t> last_update_;
   std::atomic<bool> update_;

@@ -88,7 +88,7 @@ TEST_CASE("test valid file update", "[t4]") {
   configuration->set(minifi::Configure::nifi_c2_file_watch, path);
   trigger.initialize(configuration);
 
-  std::this_thread::sleep_for(std::chrono::milliseconds(105));
+  std::this_thread::sleep_for(std::chrono::milliseconds(1000));
   file.open(path, std::ios::out);
   file << "tempFiles";
   file.close();
