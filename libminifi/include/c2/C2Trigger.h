@@ -53,6 +53,8 @@ class C2Trigger : public core::Connectable{
    */
   virtual bool triggered() = 0;
 
+  virtual void reset() = 0;
+
   /**
    * Returns a payload implementing a C2 action
    */

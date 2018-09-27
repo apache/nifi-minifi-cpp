@@ -45,6 +45,25 @@ bool Properties::get(std::string key, std::string &value) {
   }
 }
 
+bool Properties::get(std::string key, std::string alternate_key, std::string &value) {
+  std::lock_guard<std::mutex> lock(mutex_);
+  auto it = properties_.find(key);
+
+  if (it == properties_.end()) {
+    it = properties_.find(alternate_key);
+    if (it != properties_.end()) {
+      logger_->log_warn("%s is an alternate property that may not be supported in future releases. Please use %s instead.", alternate_key, key);
+    }
+  }
+
+  if (it != properties_.end()) {
+    value = it->second;
+    return true;
+  } else {
+    return false;
+  }
+}
+
 int Properties::getInt(const std::string &key, int default_value) {
   std::lock_guard<std::mutex> lock(mutex_);
   auto it = properties_.find(key);

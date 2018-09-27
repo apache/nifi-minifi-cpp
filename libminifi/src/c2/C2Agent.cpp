@@ -113,7 +113,9 @@ void C2Agent::checkTriggers() {
       // handle the response the same way. This means that
       // acknowledgements will be sent to the c2 server for every trigger action.
       // this is expected
-      enqueue_c2_server_response(std::move(triggerAction));
+      extractPayload(std::move(triggerAction));
+
+      trigger->reset();
     }
   }
 }
@@ -121,7 +123,7 @@ void C2Agent::configure(const std::shared_ptr<Configure> &configure, bool reconf
   std::string clazz, heartbeat_period, device;
 
   if (!reconfigure) {
-    if (!configure->get("c2.agent.protocol.class", clazz)) {
+    if (!configure->get("nifi.c2.agent.protocol.class", "c2.agent.protocol.class", clazz)) {
       clazz = "RESTSender";
     }
     logger_->log_info("Class is %s", clazz);
@@ -147,7 +149,7 @@ void C2Agent::configure(const std::shared_ptr<Configure> &configure, bool reconf
     protocol_.load()->update(configure);
   }
 
-  if (configure->get("c2.agent.heartbeat.period", heartbeat_period)) {
+  if (configure->get("nifi.c2.agent.heartbeat.period", "c2.agent.heartbeat.period", heartbeat_period)) {
     try {
       heart_beat_period_ = std::stoi(heartbeat_period);
     } catch (const std::invalid_argument &ie) {
@@ -159,12 +161,12 @@ void C2Agent::configure(const std::shared_ptr<Configure> &configure, bool reconf
   }
 
   std::string update_settings;
-  if (configure->get("c2.agent.update.allow", update_settings) && utils::StringUtils::StringToBool(update_settings, allow_updates_)) {
+  if (configure->get("nifi.c2.agent.update.allow", "c2.agent.update.allow", update_settings) && utils::StringUtils::StringToBool(update_settings, allow_updates_)) {
     // allow the agent to be updated. we then need to get an update command to execute after
   }
 
   if (allow_updates_) {
-    if (!configure->get("c2.agent.update.command", update_command_)) {
+    if (!configure->get("nifi.c2.agent.update.command", "c2.agent.update.command", update_command_)) {
       char cwd[1024];
       getcwd(cwd, sizeof(cwd));
 
@@ -173,7 +175,7 @@ void C2Agent::configure(const std::shared_ptr<Configure> &configure, bool reconf
       update_command_ = command.str();
     }
 
-    if (!configure->get("c2.agent.update.temp.location", update_location_)) {
+    if (!configure->get("nifi.c2.agent.update.temp.location", "c2.agent.update.temp.location", update_location_)) {
       char cwd[1024];
       getcwd(cwd, sizeof(cwd));
 
@@ -184,10 +186,10 @@ void C2Agent::configure(const std::shared_ptr<Configure> &configure, bool reconf
     }
 
     // if not defined we won't beable to update
-    configure->get("c2.agent.bin.location", bin_location_);
+    configure->get("nifi.c2.agent.bin.location", "c2.agent.bin.location", bin_location_);
   }
   std::string heartbeat_reporters;
-  if (configure->get("c2.agent.heartbeat.reporter.classes", heartbeat_reporters)) {
+  if (configure->get("nifi.c2.agent.heartbeat.reporter.classes", "c2.agent.heartbeat.reporter.classes", heartbeat_reporters)) {
     std::vector<std::string> reporters = utils::StringUtils::split(heartbeat_reporters, ",");
     std::lock_guard<std::mutex> lock(heartbeat_mutex);
     for (auto reporter : reporters) {
@@ -203,7 +205,7 @@ void C2Agent::configure(const std::shared_ptr<Configure> &configure, bool reconf
   }
 
   std::string trigger_classes;
-  if (configure->get("c2.agent.trigger.classes", trigger_classes)) {
+  if (configure->get("nifi.c2.agent.trigger.classes", "c2.agent.trigger.classes", trigger_classes)) {
     std::vector<std::string> triggers = utils::StringUtils::split(trigger_classes, ",");
     std::lock_guard<std::mutex> lock(heartbeat_mutex);
     for (auto trigger : triggers) {

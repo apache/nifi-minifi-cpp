@@ -45,13 +45,12 @@ class FileUpdateTrigger : public C2Trigger {
 
   void initialize(const std::shared_ptr<minifi::Configure> &configuration) {
     if (nullptr != configuration) {
-      if (configuration->get(minifi::Configure::nifi_c2_file_watch, file_)) {
+      if (configuration->get(minifi::Configure::nifi_c2_file_watch, "c2.file.watch", file_)) {
         last_update_ = utils::file::FileUtils::last_write_time(file_);
       }
 
     }
   }
-
 
   virtual bool triggered() {
     if (last_update_ == 0)
@@ -63,6 +62,11 @@ class FileUpdateTrigger : public C2Trigger {
       return true;
     }
     return false;
+  }
+
+  virtual void reset() {
+    last_update_ = utils::file::FileUtils::last_write_time(file_);
+    update_ = false;
   }
 
   /**

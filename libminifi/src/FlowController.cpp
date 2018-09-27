@@ -54,7 +54,6 @@
 #include "core/Connectable.h"
 #include "utils/HTTPClient.h"
 
-
 #ifdef _MSC_VER
 #ifndef PATH_MAX
 #define PATH_MAX 260
@@ -358,7 +357,7 @@ void FlowController::initializeC2() {
 
   std::string c2_enable_str;
 
-  if (configuration_->get(Configure::nifi_c2_enable, c2_enable_str)) {
+  if (configuration_->get(Configure::nifi_c2_enable, "c2.enable", c2_enable_str)) {
     bool enable_c2 = true;
     utils::StringUtils::StringToBool(c2_enable_str, enable_c2);
     c2_enabled_ = enable_c2;
