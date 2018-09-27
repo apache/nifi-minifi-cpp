@@ -46,15 +46,15 @@ void RESTSender::initialize(const std::shared_ptr<core::controller::ControllerSe
   // base URL when one is not specified.
   if (nullptr != configure) {
     std::string update_str, ssl_context_service_str;
-    configure->get("c2.rest.url", rest_uri_);
-    configure->get("c2.rest.url.ack", ack_uri_);
-    if (configure->get("c2.rest.ssl.context.service", ssl_context_service_str)) {
+    configure->get("nifi.c2.rest.url","c2.rest.url", rest_uri_);
+    configure->get("nifi.c2.rest.url.ack","c2.rest.url.ack", ack_uri_);
+    if (configure->get("nifi.c2.rest.ssl.context.service","c2.rest.ssl.context.service", ssl_context_service_str)) {
       auto service = controller->getControllerService(ssl_context_service_str);
       if (nullptr != service) {
         ssl_context_service_ = std::static_pointer_cast<minifi::controllers::SSLContextService>(service);
       }
     }
-    configure->get("c2.rest.heartbeat.minimize.updates", update_str);
+    configure->get("nifi.c2.rest.heartbeat.minimize.updates","c2.rest.heartbeat.minimize.updates", update_str);
     utils::StringUtils::StringToBool(update_str, minimize_updates_);
   }
   logger_->log_debug("Submitting to %s", rest_uri_);
@@ -78,8 +78,8 @@ C2Payload RESTSender::consumePayload(const C2Payload &payload, Direction directi
 
 void RESTSender::update(const std::shared_ptr<Configure> &configure) {
   std::string url;
-  configure->get("c2.rest.url", url);
-  configure->get("c2.rest.url.ack", url);
+  configure->get("nifi.c2.rest.url","c2.rest.url", url);
+  configure->get("nifi.c2.rest.url.ack","c2.rest.url.ack", url);
 }
 
 const C2Payload RESTSender::sendPayload(const std::string url, const Direction direction, const C2Payload &payload, const std::string outputConfig) {

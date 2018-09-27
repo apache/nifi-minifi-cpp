@@ -60,6 +60,9 @@ class Properties {
   // Get the config value
   bool get(std::string key, std::string &value);
 
+  // Get the config value
+  bool get(std::string key, std::string alternate_key, std::string &value);
+
   /**
    * Returns the configuration value or an empty string.
    * @return value corresponding to key or empty value.

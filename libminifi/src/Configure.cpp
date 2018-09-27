@@ -55,6 +55,7 @@ const char *Configure::nifi_security_client_pass_phrase = "nifi.security.client.
 const char *Configure::nifi_security_client_ca_certificate = "nifi.security.client.ca.certificate";
 const char *Configure::nifi_rest_api_user_name = "nifi.rest.api.user.name";
 const char *Configure::nifi_rest_api_password = "nifi.rest.api.password";
+const char *Configure::nifi_c2_file_watch = "nifi.c2.file.watch";
 
 } /* namespace minifi */
 } /* namespace nifi */
