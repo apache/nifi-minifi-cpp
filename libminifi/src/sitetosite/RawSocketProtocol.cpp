@@ -299,23 +299,32 @@ bool RawSiteToSiteClient::handShake() {
     return false;
   }
 
+  std::string error;
+
   switch (code) {
     case PROPERTIES_OK:
       logger_->log_debug("Site2Site HandShake Completed");
       peer_state_ = HANDSHAKED;
       return true;
     case PORT_NOT_IN_VALID_STATE:
+      error = "in invalid state";
+      break;
     case UNKNOWN_PORT:
+      error = "an unknown port";
+      break;
     case PORTS_DESTINATION_FULL:
-      logger_->log_error("Site2Site HandShake Failed because destination port, %s, is either invalid or full", port_id_str_);
-      ret = -1;
-      return false;
+      error = "full";
+      break;
+    // Unknown error
     default:
       logger_->log_error("HandShake Failed because of unknown respond code %d", code);
       ret = -1;
       return false;
   }
 
+  // All known error cases handled here
+  logger_->log_error("Site2Site HandShake Failed because destination port, %s, is %s", port_id_str_, error);
+  ret = -1;
   return false;
 }
 
