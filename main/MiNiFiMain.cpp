@@ -57,10 +57,9 @@ sem_t *running;
  * Semaphores are a portable choice when using signal handlers. Threads,
  * mutexes, and condition variables are not guaranteed to work within
  * a signal handler. Consequently we will use the semaphore to avoid thread
- * safety issues and.
+ * safety issues.
  */
 void sigHandler(int signal) {
-
   if (signal == SIGINT || signal == SIGTERM) {
     // avoid stopping the controller here.
     sem_post(running);
@@ -99,7 +98,7 @@ int main(int argc, char **argv) {
 #ifndef WIN32
     path = realpath(argv[0], full_path);
 #else
-	path = nullptr;
+    path = nullptr;
 #endif
 
     if (path != nullptr) {
