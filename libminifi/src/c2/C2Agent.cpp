@@ -631,7 +631,7 @@ void C2Agent::handle_update(const C2ContentResponse &resp) {
     auto isPartialStr = resp.operation_arguments.find("partial");
     bool partial_update = false;
     if (isPartialStr != std::end(resp.operation_arguments)) {
-      partial_update = utils::StringUtils::equalsIgnoreCase(isPartialStr->second.to_string(), "true") ? true : false;
+      partial_update = utils::StringUtils::equalsIgnoreCase(isPartialStr->second.to_string(), "true");
     }
     if (location != resp.operation_arguments.end()) {
       // we will not have a raw payload
