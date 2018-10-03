@@ -160,12 +160,12 @@ rapidjson::Value RESTProtocol::getStringValue(const std::string& value, rapidjso
 
 void RESTProtocol::mergePayloadContent(rapidjson::Value &target, const C2Payload &payload, rapidjson::Document::AllocatorType &alloc) {
   const std::vector<C2ContentResponse> &content = payload.getContent();
-  bool all_empty = content.size() > 0 ? true : false;
+  bool all_empty = !content.empty();
   bool is_parent_array = target.IsArray();
 
   for (const auto &payload_content : content) {
-    for (auto content : payload_content.operation_arguments) {
-      if (!content.second.empty()) {
+    for (const auto &op_arg : payload_content.operation_arguments) {
+      if (!op_arg.second.empty()) {
         all_empty = false;
         break;
       }
@@ -181,9 +181,9 @@ void RESTProtocol::mergePayloadContent(rapidjson::Value &target, const C2Payload
     }
     rapidjson::Value arr(rapidjson::kArrayType);
     for (const auto &payload_content : content) {
-      for (auto content : payload_content.operation_arguments) {
+      for (const auto& op_arg : payload_content.operation_arguments) {
         rapidjson::Value keyVal;
-        keyVal.SetString(content.first.c_str(), content.first.length(), alloc);
+        keyVal.SetString(op_arg.first.c_str(), op_arg.first.length(), alloc);
         if (is_parent_array)
           target.PushBack(keyVal, alloc);
         else
@@ -201,9 +201,9 @@ void RESTProtocol::mergePayloadContent(rapidjson::Value &target, const C2Payload
     rapidjson::Value payload_content_values(rapidjson::kObjectType);
     bool use_sub_option = true;
     if (payload_content.op == payload.getOperation()) {
-      for (auto content : payload_content.operation_arguments) {
-        if (!content.second.empty()) {
-          setJsonStr(content.first, content.second, target, alloc);
+      for (const auto& op_arg : payload_content.operation_arguments) {
+        if (!op_arg.second.empty()) {
+          setJsonStr(op_arg.first, op_arg.second, target, alloc);
         }
       }
     } else {

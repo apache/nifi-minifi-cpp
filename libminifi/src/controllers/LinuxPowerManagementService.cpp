@@ -80,7 +80,7 @@ bool LinuxPowerManagerService::shouldReduce() {
 
   auto prev_level = battery_level_.load();
 
-  bool all_discharging = paths_.size() > 0 ? true : false;
+  bool all_discharging = !paths_.empty();
 
   int battery_sum = 0;
   for (const auto path_pair : paths_) {
