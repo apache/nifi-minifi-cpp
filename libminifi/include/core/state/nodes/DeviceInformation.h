@@ -417,9 +417,11 @@ class DeviceInfoNode : public DeviceInformation {
 
 	  switch (si.wProcessorArchitecture)
 	  {
+#ifdef PROCESSOR_ARCHITECTURE_ARM
 	  case PROCESSOR_ARCHITECTURE_ARM:
 		  arch.value = "arm32";
 		  break;
+#endif
 #ifdef PROCESSOR_ARCHITECTURE_ARM64
 	  case PROCESSOR_ARCHITECTURE_ARM64:
 		  arch.value = "arm64";
