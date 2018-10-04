@@ -145,8 +145,11 @@ bool ExecutionPlan::runNextProcessor(std::function<void(const std::shared_ptr<co
   }
 
   location++;
-  std::shared_ptr<core::Processor> processor = processor_queue_.at(location);
-  std::shared_ptr<core::ProcessContext> context = processor_contexts_.at(location);
+  if (location >= processor_queue_.size()) {
+    return false;
+  }
+  std::shared_ptr<core::Processor> processor = processor_queue_[location];
+  std::shared_ptr<core::ProcessContext> context = processor_contexts_[location];
   std::shared_ptr<core::ProcessSessionFactory> factory = std::make_shared<core::ProcessSessionFactory>(context);
   factories_.push_back(factory);
   if (std::find(configured_processors_.begin(), configured_processors_.end(), processor) == configured_processors_.end()) {
@@ -165,7 +168,7 @@ bool ExecutionPlan::runNextProcessor(std::function<void(const std::shared_ptr<co
   }
   current_session->commit();
   current_flowfile_ = current_session->get();
-  return location + 1 < processor_queue_.size();
+  return true;
 }
 
 std::set<provenance::ProvenanceEventRecord*> ExecutionPlan::getProvenanceRecords() {
