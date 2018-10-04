@@ -380,6 +380,75 @@ TEST_CASE("TestEmptyContent", "[emptyContent]") {
   LogTestController::getInstance().reset();
 }
 
+/**
+ * Tests the RPG bypass feature
+ * @param host to configure
+ * @param port port string to configure
+ * @param portVal port value to search in the corresponding log message
+ * @param hasException dictates if a failure should occur
+ */
+void testRPGBypass(const std::string &host, const std::string &port, const std::string &portVal = "-1", bool hasException = true) {
+  TestController testController;
+  LogTestController::getInstance().setTrace<minifi::RemoteProcessorGroupPort>();
+  LogTestController::getInstance().setTrace<minifi::core::ProcessSession>();
+  LogTestController::getInstance().setTrace<TestPlan>();
+
+  auto configuration = std::make_shared<org::apache::nifi::minifi::Configure>();
+  auto factory = minifi::io::StreamFactory::getInstance(configuration);
+
+  std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
+
+  std::shared_ptr<core::Repository> test_repo = std::make_shared<TestRepository>();
+  std::shared_ptr<TestRepository> repo = std::static_pointer_cast<TestRepository>(test_repo);
+
+  auto rpg = std::make_shared<minifi::RemoteProcessorGroupPort>(factory, "rpg", "http://localhost:8989/nifi", configuration);
+  rpg->setProperty(minifi::RemoteProcessorGroupPort::hostName, host);
+  rpg->setProperty(minifi::RemoteProcessorGroupPort::port, port);
+  std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(rpg);
+  std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider = nullptr;
+  auto context = std::make_shared<core::ProcessContext>(node, controller_services_provider, repo, repo, content_repo);
+  auto psf = std::make_shared<core::ProcessSessionFactory>(context);
+  if (hasException) {
+    auto expected_error = "Site2Site Protocol:HTTPClient not resolvable. No peers configured or any port specific hostname and port -- cannot schedule";
+    try {
+      rpg->onSchedule(context, psf);
+    } catch (std::exception &e) {
+      REQUIRE(expected_error == std::string(e.what()));
+    }
+    std::stringstream search_expr;
+    search_expr << " " << host << "/" << port << "/" << portVal << " -- configuration values after eval of configuration options";
+    REQUIRE(LogTestController::getInstance().contains(search_expr.str()));
+  }
+  LogTestController::getInstance().reset();
+}
+
+/**
+ * Since there is no curl loaded in this test folder, we will have is_http_disabled be true.
+ */
+TEST_CASE("TestRPGNoSettings", "[TestRPG1]") {
+  testRPGBypass("", "");
+}
+
+TEST_CASE("TestRPGWithHost", "[TestRPG2]") {
+  testRPGBypass("hostname", "");
+}
+
+TEST_CASE("TestRPGWithHostInvalidPort", "[TestRPG3]") {
+  testRPGBypass("hostname", "hostname");
+}
+
+TEST_CASE("TestRPGWithoutHostValidPort", "[TestRPG4]") {
+  testRPGBypass("", "8080");
+}
+
+TEST_CASE("TestRPGWithoutHostInvalidPort", "[TestRPG5]") {
+  testRPGBypass("", "hostname");
+}
+
+TEST_CASE("TestRPGValid", "[TestRPG6]") {
+  testRPGBypass("", "8080", "8080", false);
+}
+
 int fileSize(const char *add) {
   std::ifstream mySource;
   mySource.open(add, std::ios_base::binary);
