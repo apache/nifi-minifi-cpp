@@ -28,6 +28,8 @@
 #include "processors/GetFile.h"
 #include "core/logging/LoggerConfiguration.h"
 
+using string_map = std::map<std::string, std::string>;
+
 class API_INITIALIZER {
   static int initialized;
 };
@@ -119,7 +121,7 @@ void free_instance(nifi_instance* instance) {
  */
 flow_file_record* create_flowfile(const char *file, const size_t len) {
   flow_file_record *new_ff = new flow_file_record;
-  new_ff->attributes = new std::map<std::string, std::string>();
+  new_ff->attributes = new string_map();
   new_ff->contentLocation = new char[len + 1];
   snprintf(new_ff->contentLocation, len + 1, "%s", file);
   std::ifstream in(file, std::ifstream::ate | std::ifstream::binary);
@@ -134,7 +136,7 @@ flow_file_record* create_flowfile(const char *file, const size_t len) {
  */
 flow_file_record* create_ff_object(const char *file, const size_t len, const uint64_t size) {
   flow_file_record *new_ff = new flow_file_record;
-  new_ff->attributes = new std::map<std::string, std::string>();
+  new_ff->attributes = new string_map();
   new_ff->contentLocation = new char[len + 1];
   snprintf(new_ff->contentLocation, len + 1, "%s", file);
   std::ifstream in(file, std::ifstream::ate | std::ifstream::binary);
@@ -155,7 +157,7 @@ void free_flowfile(flow_file_record *ff) {
       std::shared_ptr<minifi::ResourceClaim> claim = std::make_shared<minifi::ResourceClaim>(ff->contentLocation, content_repo);
       content_repo->remove(claim);
     }
-    auto map = static_cast<std::map<std::string, std::string>*>(ff->attributes);
+    auto map = static_cast<string_map*>(ff->attributes);
     delete[] ff->contentLocation;
     delete map;
     delete ff;
@@ -168,12 +170,24 @@ void free_flowfile(flow_file_record *ff) {
  * @param key key
  * @param value value to add
  * @param size size of value
- * @return 0
+ * @return 0 or -1 based on whether the attributed existed previously (-1) or not (0)
  */
 uint8_t add_attribute(flow_file_record *ff, char *key, void *value, size_t size) {
-  auto attribute_map = static_cast<std::map<std::string, std::string>*>(ff->attributes);
-  attribute_map->insert(std::pair<std::string, std::string>(key, std::string(static_cast<char*>(value), size)));
-  return 0;
+  auto attribute_map = static_cast<string_map*>(ff->attributes);
+  const auto& ret = attribute_map->insert(std::pair<std::string, std::string>(key, std::string(static_cast<char*>(value), size)));
+  return ret.second ? 0 : -1;
+}
+
+/**
+ * Updates (or adds) an attribute
+ * @param ff flow file record
+ * @param key key
+ * @param value value to add
+ * @param size size of value
+ */
+void update_attribute(flow_file_record *ff, char *key, void *value, size_t size) {
+  auto attribute_map = static_cast<string_map*>(ff->attributes);
+  (*attribute_map)[key] = std::string(static_cast<char*>(value), size);
 }
 
 /*
@@ -184,7 +198,7 @@ uint8_t add_attribute(flow_file_record *ff, char *key, void *value, size_t size)
  * @return 0 if successful, -1 if the key does not exist
  */
 uint8_t get_attribute(flow_file_record *ff, char *key, attribute *caller_attribute) {
-  auto attribute_map = static_cast<std::map<std::string, std::string>*>(ff->attributes);
+  auto attribute_map = static_cast<string_map*>(ff->attributes);
   auto find = attribute_map->find(key);
   if (find != attribute_map->end()) {
     caller_attribute->key = key;
@@ -202,13 +216,8 @@ uint8_t get_attribute(flow_file_record *ff, char *key, attribute *caller_attribu
  * @return 0 if removed, -1 otherwise
  */
 uint8_t remove_attribute(flow_file_record *ff, char *key) {
-  auto attribute_map = static_cast<std::map<std::string, std::string>*>(ff->attributes);
-  auto find = attribute_map->find(key);
-  if (find != attribute_map->end()) {
-    attribute_map->erase(find);
-    return 0;
-  }
-  return -1;
+  auto attribute_map = static_cast<string_map*>(ff->attributes);
+  return attribute_map->erase(key) - 1;  // erase by key returns the number of elements removed (0 or 1)
 }
 
 /**
@@ -223,7 +232,7 @@ void transmit_flowfile(flow_file_record *ff, nifi_instance *instance) {
     minifi_instance_ref->setRemotePort(instance->port.port_id);
   }
 
-  auto attribute_map = static_cast<std::map<std::string, std::string>*>(ff->attributes);
+  auto attribute_map = static_cast<string_map*>(ff->attributes);
 
   auto no_op = minifi_instance_ref->getNoOpRepository();
 
