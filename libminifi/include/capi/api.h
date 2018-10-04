@@ -156,6 +156,8 @@ void free_flowfile(flow_file_record*);
 
 uint8_t add_attribute(flow_file_record*, char *key, void *value, size_t size);
 
+void update_attribute(flow_file_record*, char *key, void *value, size_t size);
+
 void *get_attribute(flow_file_record*, char *key);
 
 uint8_t remove_attribute(flow_file_record*, char *key);
