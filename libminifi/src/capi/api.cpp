@@ -259,22 +259,16 @@ flow *create_flow(nifi_instance *instance, const char *first_processor) {
 
   new_flow->plan = execution_plan;
 
-  // automatically adds it with success
-  execution_plan->addProcessor(first_processor, first_processor);
-
+  if (first_processor != nullptr && strlen(first_processor) > 0) {
+    // automatically adds it with success
+    execution_plan->addProcessor(first_processor, first_processor);
+  }
   return new_flow;
 }
 
 flow *create_getfile(nifi_instance *instance, flow *parent_flow, GetFileConfig *c) {
-  std::string first_processor = "GetFile";
-  auto minifi_instance_ref = static_cast<minifi::Instance*>(instance->instance_ptr);
-  flow *new_flow = parent_flow == 0x00 ? new flow : parent_flow;
-
-  if (parent_flow == 0x00) {
-    auto execution_plan = new ExecutionPlan(minifi_instance_ref->getContentRepository(), minifi_instance_ref->getNoOpRepository(), minifi_instance_ref->getNoOpRepository());
-
-    new_flow->plan = execution_plan;
-  }
+  static const std::string first_processor = "GetFile";
+  flow *new_flow = parent_flow == nullptr ? create_flow(instance, nullptr) : parent_flow;
 
   ExecutionPlan *plan = static_cast<ExecutionPlan*>(new_flow->plan);
   // automatically adds it with success
@@ -323,23 +317,11 @@ size_t get_flow_files(nifi_instance *instance, flow *flow, flow_file_record **ff
   size_t i = 0;
   for (; i < size; i++) {
     execution_plan->reset();
-    while (execution_plan->runNextProcessor()) {
-    }
-    auto ff = execution_plan->getCurrentFlowFile();
-    if (ff == nullptr)
-      break;
-    auto claim = ff->getResourceClaim();
-
-    if (claim != nullptr) {
-      claim->increaseFlowFileRecordOwnedCount();
-
-      auto path = claim->getContentFullPath();
-      // create a flow file.
-      ff_r[i] = create_ff_object(path.c_str(), path.length(), ff->getSize());
-      ff_r[i]->in = instance;
-    } else {
+    auto ffr = get_next_flow_file(instance, flow);
+    if (ffr == nullptr) {
       break;
     }
+    ff_r[i] = ffr;
   }
   return i;
 }
