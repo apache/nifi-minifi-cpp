@@ -27,6 +27,7 @@
 #include "ResourceClaim.h"
 #include "processors/GetFile.h"
 #include "core/logging/LoggerConfiguration.h"
+#include "utils/StringUtils.h"
 
 using string_map = std::map<std::string, std::string>;
 
@@ -99,7 +100,7 @@ void enable_async_c2(nifi_instance *instance, C2_Server *server, c2_stop_callbac
  * @param key key in which we will set the valiue
  * @param value
  */
-void set_property(nifi_instance *instance, char *key, char *value) {
+void set_instance_property(nifi_instance *instance, char *key, char *value) {
   auto minifi_instance_ref = static_cast<minifi::Instance*>(instance->instance_ptr);
   minifi_instance_ref->getConfiguration()->set(key, value);
 }
@@ -285,6 +286,24 @@ flow *create_getfile(nifi_instance *instance, flow *parent_flow, GetFileConfig *
   plan->setProperty(getFile, processors::GetFile::Recurse.getName(), c->recurse ? "true" : "false");
 
   return new_flow;
+}
+
+processor *add_processor(flow *flow, const char *processor_name) {
+  ExecutionPlan *plan = static_cast<ExecutionPlan*>(flow->plan);
+  auto proc = plan->addProcessor(processor_name, processor_name);
+  if (proc) {
+    processor *new_processor = new processor();
+    new_processor->processor_ptr = proc.get();
+    return new_processor;
+  }
+  return nullptr;
+}
+int set_property(processor *proc, const char *name, const char *value) {
+  if (name != nullptr && value != nullptr && proc != nullptr) {
+    core::Processor *p = static_cast<core::Processor*>(proc->processor_ptr);
+    return p->setProperty(name, value) ? 0 : -2;
+  }
+  return -1;
 }
 
 void free_flow(flow *flow) {

@@ -97,16 +97,7 @@ std::shared_ptr<core::Processor> ExecutionPlan::addProcessor(const std::string &
     return nullptr;
   }
 
-  utils::Identifier uuid;
-  id_generator_->generate(uuid);
-
-  auto ptr = core::ClassLoader::getDefaultClassLoader().instantiate(processor_name, uuid);
-  if (nullptr == ptr) {
-    throw std::exception();
-  }
-  std::shared_ptr<core::Processor> processor = std::static_pointer_cast<core::Processor>(ptr);
-
-  processor->setName(name);
+  auto processor = ExecutionPlan::createProcessor(processor_name, name);
 
   return addProcessor(processor, name, relationship, linkToPrevious);
 }
@@ -212,4 +203,19 @@ void ExecutionPlan::finalize() {
 
   finalized = true;
 }
+
+std::shared_ptr<core::Processor> ExecutionPlan::createProcessor(const std::string &processor_name, const std::string &name) {
+  utils::Identifier uuid;
+  id_generator_->generate(uuid);
+
+  auto ptr = core::ClassLoader::getDefaultClassLoader().instantiate(processor_name, uuid);
+  if (nullptr == ptr) {
+    throw std::exception();
+  }
+  std::shared_ptr<core::Processor> processor = std::static_pointer_cast<core::Processor>(ptr);
+
+  processor->setName(name);
+  return processor;
+}
+
 
