@@ -39,15 +39,13 @@ void enable_logging();
  *  BASE NIFI OPERATIONS
  * ##################################################################
  */
-
-
-nifi_port *create_port(char *port);
+nifi_port *create_port(const char *port);
 
 int free_port(nifi_port *port);
 
 
 
-nifi_instance *create_instance(char *url, nifi_port *port);
+nifi_instance *create_instance(const char *url, nifi_port *port);
 
 void initialize_instance(nifi_instance *);
 
@@ -79,15 +77,13 @@ flow *create_getfile(nifi_instance *instance, flow *parent, GetFileConfig *c);
 
 processor *add_processor(flow *, const char *);
 
+processor *add_processor_with_linkage(flow *flow, const char *processor_name);
+
 processor *add_python_processor(flow *, void (*ontrigger_callback)(processor_session *session));
 
 int set_property(processor *, const char *, const char *);
 
-int set_instance_property(nifi_instance *instance, char *key, char *value);
-
-processor *add_processor(flow *parent_flow, const char *processor_name);
-
-int set_property(processor *proc, const char *name, const char *value);
+int set_instance_property(nifi_instance *instance, const char*, const char *);
 
 int free_flow(flow *);
 
@@ -111,11 +107,15 @@ flow_file_record* create_ff_object_na(const char *file, const size_t len, const 
 
 void free_flowfile(flow_file_record*);
 
-uint8_t add_attribute(flow_file_record*, char *key, void *value, size_t size);
+uint8_t add_attribute(flow_file_record*, const char *key, void *value, size_t size);
 
-void update_attribute(flow_file_record*, char *key, void *value, size_t size);
+void update_attribute(flow_file_record*, const char *key, void *value, size_t size);
 
-void *get_attribute(flow_file_record*, char *key);
+uint8_t get_attribute(flow_file_record *ff, attribute *caller_attribute);
+
+int get_attribute_qty(const flow_file_record* ff);
+
+int get_all_attributes(const flow_file_record* ff, attribute_set *target);
 
 uint8_t remove_attribute(flow_file_record*, char *key);
 
