@@ -136,9 +136,10 @@ std::shared_ptr<core::Processor> ExecutionPlan::addProcessor(const std::string &
   if (finalized) {
     return nullptr;
   }
-
   auto processor = ExecutionPlan::createProcessor(processor_name, name);
-
+  if (!processor) {
+    return nullptr;
+  }
   return addProcessor(processor, name, relationship, linkToPrevious);
 }
 
@@ -241,7 +242,7 @@ std::shared_ptr<core::Processor> ExecutionPlan::createProcessor(const std::strin
 
   auto ptr = core::ClassLoader::getDefaultClassLoader().instantiate(processor_name, uuid);
   if (nullptr == ptr) {
-    throw std::exception();
+    return nullptr;
   }
   std::shared_ptr<core::Processor> processor = std::static_pointer_cast<core::Processor>(ptr);
 

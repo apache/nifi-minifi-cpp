@@ -86,10 +86,15 @@ typedef struct {
  */
 
 typedef struct {
-  char *key;
+  const char *key;
   void *value;
   size_t value_size;
 } attribute;
+
+typedef struct {
+  attribute * attributes;
+  size_t  size;
+} attribute_set;
 
 /**
  * State of a flow file
