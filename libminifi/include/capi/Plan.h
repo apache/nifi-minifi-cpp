@@ -44,13 +44,15 @@
 #include "core/ProcessorNode.h"
 #include "core/reporting/SiteToSiteProvenanceReportingTask.h"
 #include "capi/cstructs.h"
+#include "capi/api.h"
+
 
 class ExecutionPlan {
  public:
 
   explicit ExecutionPlan(std::shared_ptr<core::ContentRepository> content_repo, std::shared_ptr<core::Repository> flow_repo, std::shared_ptr<core::Repository> prov_repo);
 
-  std::shared_ptr<core::Processor> addCallback(void *, void (*fp)(processor_session *));
+  std::shared_ptr<core::Processor> addCallback(void *, std::function<void(processor_session*)>);
 
   std::shared_ptr<core::Processor> addProcessor(const std::shared_ptr<core::Processor> &processor, const std::string &name,
                                                 core::Relationship relationship = core::Relationship("success", "description"),
@@ -64,6 +66,8 @@ class ExecutionPlan {
   void reset();
 
   bool runNextProcessor(std::function<void(const std::shared_ptr<core::ProcessContext>, const std::shared_ptr<core::ProcessSession>)> verify = nullptr);
+
+  bool setFailureCallback(void (*onerror_callback)(const flow_file_record*));
 
   std::set<provenance::ProvenanceEventRecord*> getProvenanceRecords();
 
@@ -83,8 +87,6 @@ class ExecutionPlan {
     return content_repo_;
   }
 
-  static std::shared_ptr<core::Processor> createProcessor(const std::string &processor_name, const std::string &name);
-
   std::shared_ptr<core::FlowFile> getNextFlowFile(){
     return next_ff_;
   }
@@ -93,11 +95,50 @@ class ExecutionPlan {
     next_ff_ = ptr;
   }
 
+  static std::shared_ptr<core::Processor> createProcessor(const std::string &processor_name, const std::string &name);
+
  protected:
+  class FailureHandler {
+   public:
+    FailureHandler() {
+      callback_ = nullptr;
+    }
+    void setCallback(void (*onerror_callback)(const flow_file_record*)) {
+      callback_=onerror_callback;
+    }
+    void operator()(const processor_session* ps)
+    {
+      auto ses = static_cast<core::ProcessSession*>(ps->session);
+
+      auto ff = ses->get();
+      if (ff == nullptr) {
+        return;
+      }
+      auto claim = ff->getResourceClaim();
+
+      if (claim != nullptr && callback_ != nullptr) {
+        // create a flow file.
+        auto path = claim->getContentFullPath();
+        auto ffr = create_ff_object_na(path.c_str(), path.length(), ff->getSize());
+        ffr->attributes = ff->getAttributesPtr();
+        ffr->ffp = ff.get();
+        callback_(ffr);
+      }
+      // This deletes the content of the flowfile as ff gets out of scope
+      // It's the users responsibility to copy all the data
+      ses->remove(ff);
+
+    }
+   private:
+    void (*callback_)(const flow_file_record*);
+  };
 
   void finalize();
 
-  std::shared_ptr<minifi::Connection> buildFinalConnection(std::shared_ptr<core::Processor> processor, bool setDest = false);
+  std::shared_ptr<minifi::Connection> buildFinalConnection(std::shared_ptr<core::Processor> processor, bool set_dst = false);
+
+  std::shared_ptr<minifi::Connection> connectProcessors(std::shared_ptr<core::Processor> src_proc, std::shared_ptr<core::Processor> dst_proc,
+                                                        core::Relationship relationship = core::Relationship("success", "description"), bool set_dst = false);
 
   std::shared_ptr<org::apache::nifi::minifi::io::StreamFactory> stream_factory;
 
@@ -131,6 +172,7 @@ class ExecutionPlan {
 
   static std::shared_ptr<utils::IdGenerator> id_generator_;
   std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<FailureHandler> failure_handler_;
 };
 
 #endif /* LIBMINIFI_CAPI_PLAN_H_ */

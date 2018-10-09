@@ -79,6 +79,13 @@ processor *add_processor_with_linkage(flow *flow, const char *processor_name);
 
 processor *add_python_processor(flow *, void (*ontrigger_callback)(processor_session *session));
 
+/**
+* Register your callback to received flow files that the flow failed to process
+* The flow file is deleted after the callback is executed, make sure to copy all the data you need!
+* The first callback should be registered before the flow is used. Can be changed later during runtime.
+*/
+int add_failure_callback(flow *flow, void (*onerror_callback)(const flow_file_record*));
+
 int set_property(processor *, const char *, const char *);
 
 int set_instance_property(nifi_instance *instance, const char*, const char *);
