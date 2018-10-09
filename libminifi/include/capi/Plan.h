@@ -79,6 +79,8 @@ class ExecutionPlan {
     return content_repo_;
   }
 
+  static std::shared_ptr<core::Processor> createProcessor(const std::string &processor_name, const std::string &name);
+
  protected:
 
   void finalize();
