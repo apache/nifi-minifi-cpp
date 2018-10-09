@@ -185,7 +185,7 @@ TEST_CASE("Test manipulation of attributes", "[testAttributes]") {
   const char * new_testattr_value = "S0me t3st t3xt";
 
   // Attribute already exist, should fail
-  REQUIRE(add_attribute(record, test_attr.key, (void* )new_testattr_value, strlen(new_testattr_value)) != 0);  // NOLINT
+  REQUIRE(add_attribute(record, test_attr.key, (void*) new_testattr_value, strlen(new_testattr_value)) != 0);  // NOLINT
 
   // Update overwrites values
   update_attribute(record, test_attr.key, (void*) new_testattr_value, strlen(new_testattr_value));  // NOLINT

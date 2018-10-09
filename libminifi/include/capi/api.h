@@ -37,6 +37,8 @@ extern "C" {
 
 void enable_logging();
 
+void set_terminate_callback(void (*terminate_callback)());
+
 /****
  * ##################################################################
  *  BASE NIFI OPERATIONS

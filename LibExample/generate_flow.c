@@ -22,7 +22,6 @@
 #include <sys/stat.h>
 #include "capi/api.h"
 
-
 /**
  * This is an example of the C API that transmits a flow file to a remote instance.
  */
@@ -42,7 +41,7 @@ int main(int argc, char **argv) {
 
   nifi_instance *instance = create_instance(instance_str, &port);
 
-  flow *new_flow = create_flow(instance,"GenerateFlowFile");
+  flow *new_flow = create_flow(instance, "GenerateFlowFile");
 
   flow_file_record *record = get_next_flow_file(instance, new_flow );
 
