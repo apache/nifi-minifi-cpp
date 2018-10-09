@@ -19,6 +19,7 @@
 #include <map>
 #include <memory>
 #include <utility>
+#include <exception>
 #include "core/Core.h"
 #include "capi/api.h"
 #include "capi/expect.h"
@@ -45,6 +46,10 @@ int initialize_api() {
 
 void enable_logging() {
   logging::LoggerConfiguration::getConfiguration().enableLogging();
+}
+
+void set_terminate_callback(void (*terminate_callback)()) {
+  std::set_terminate(terminate_callback);
 }
 
 class DirectoryConfiguration {

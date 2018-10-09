@@ -23,7 +23,7 @@ IF(POLICY CMP0048)
   CMAKE_POLICY(SET CMP0048 OLD)
 ENDIF(POLICY CMP0048)
 
-include_directories(../blocks/ ../libminifi/include  ../libminifi/include/c2  ../libminifi/include/c2/protocols/  ../libminifi/include/core/state ./libminifi/include/core/statemanagement/metrics  ../libminifi/include/core/yaml  ../libminifi/include/core  ../thirdparty/spdlog-20170710/include ../thirdparty/concurrentqueue ../thirdparty/yaml-cpp-yaml-cpp-20171024/include ../thirdparty/civetweb-1.9.1/include ../thirdparty/)
+include_directories(../blocks/ ../libminifi/include ../libminifi/include/c2  ../libminifi/include/c2/protocols/  ../libminifi/include/core/state ./libminifi/include/core/statemanagement/metrics  ../libminifi/include/core/yaml  ../libminifi/include/core  ../thirdparty/spdlog-20170710/include ../thirdparty/concurrentqueue ../thirdparty/yaml-cpp-yaml-cpp-20171024/include ../thirdparty/civetweb-1.9.1/include ../thirdparty/)
 
 include(CheckCXXCompilerFlag)
 if (WIN32)
@@ -46,23 +46,33 @@ endif()
 
 endif()
 
+if (WIN32)
+    set(LINK_FLAGS "/WHOLEARCHIVE")
+    set(LINK_END_FLAGS "")
+elseif (APPLE)
+    set(LINK_FLAGS "-Wl,-all_load")
+    set(LINK_END_FLAGS "")
+else ()
+    set(LINK_FLAGS "-Wl,--whole-archive")
+    set(LINK_END_FLAGS "-Wl,--no-whole-archive")
+endif ()
 
 add_executable(generate_flow generate_flow.c)
 
-target_link_libraries(generate_flow capi core-minifi minifi  ${CMAKE_THREAD_LIBS_INIT})
+add_executable(terminate_handler terminate_handler.c)
+
+target_link_libraries(generate_flow capi ${CMAKE_THREAD_LIBS_INIT} ${LINK_FLAGS} minifi ${LINK_END_FLAGS})
+
+target_link_libraries(terminate_handler capi ${CMAKE_THREAD_LIBS_INIT} ${LINK_FLAGS} minifi ${LINK_END_FLAGS})
 
 if (NOT WIN32)
 
 add_executable(transmit_flow transmit_flow.c)
 
-target_link_libraries(transmit_flow capi core-minifi minifi  ${CMAKE_THREAD_LIBS_INIT})
-
-
-
-
+target_link_libraries(transmit_flow capi ${CMAKE_THREAD_LIBS_INIT} ${LINK_FLAGS} minifi ${LINK_END_FLAGS})
 
 add_executable(monitor_directory monitor_directory.c)
 
-target_link_libraries(monitor_directory capi core-minifi minifi  ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(monitor_directory capi ${CMAKE_THREAD_LIBS_INIT} ${LINK_FLAGS} minifi ${LINK_END_FLAGS})
 
 endif()
