@@ -32,6 +32,7 @@
 using string_map = std::map<std::string, std::string>;
 
 class API_INITIALIZER {
+ public:
   static int initialized;
 };
 
@@ -353,7 +354,7 @@ processor *add_python_processor(flow *flow, void (*ontrigger_callback)(processor
     return nullptr;
   }
   ExecutionPlan *plan = static_cast<ExecutionPlan*>(flow->plan);
-  auto proc = plan->addCallback(nullptr, ontrigger_callback);
+  auto proc = plan->addCallback(nullptr, std::bind(ontrigger_callback, std::placeholders::_1));
   processor *new_processor = new processor();
   new_processor->processor_ptr = proc.get();
   return new_processor;
@@ -397,6 +398,11 @@ processor *add_processor_with_linkage(flow *flow, const char *processor_name) {
     return new_processor;
   }
   return nullptr;
+}
+
+int add_failure_callback(flow *flow, void (*onerror_callback)(const flow_file_record*)) {
+  ExecutionPlan *plan = static_cast<ExecutionPlan*>(flow->plan);
+  return plan->setFailureCallback(onerror_callback) ? 0 : 1;
 }
 
 int set_property(processor *proc, const char *name, const char *value) {

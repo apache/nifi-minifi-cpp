@@ -40,21 +40,17 @@ ExecutionPlan::ExecutionPlan(std::shared_ptr<core::ContentRepository> content_re
  * Add a callback to obtain and pass processor session to a generated processor
  *
  */
-std::shared_ptr<core::Processor> ExecutionPlan::addCallback(void *obj, void (*fp)(processor_session *)) {
+std::shared_ptr<core::Processor> ExecutionPlan::addCallback(void *obj, std::function<void(processor_session*)> fp) {
   if (finalized) {
     return nullptr;
   }
 
-  utils::Identifier uuid;
-  id_generator_->generate(uuid);
+  auto ptr = createProcessor("CallbackProcessor", "CallbackProcessor");
+  if (!ptr)
+    return nullptr;
 
-  auto ptr = core::ClassLoader::getDefaultClassLoader().instantiate("CallbackProcessor", uuid);
-  if (nullptr == ptr) {
-    throw std::exception();
-  }
   std::shared_ptr<processors::CallbackProcessor> processor = std::static_pointer_cast<processors::CallbackProcessor>(ptr);
   processor->setCallback(obj, fp);
-  processor->setName("CallbackProcessor");
 
   return addProcessor(processor, "CallbackProcessor", core::Relationship("success", "description"), true);
 }
@@ -99,25 +95,7 @@ std::shared_ptr<core::Processor> ExecutionPlan::addProcessor(const std::shared_p
       termination_ = relationship;
     }
 
-    std::stringstream connection_name;
-    connection_name << last->getUUIDStr() << "-to-" << processor->getUUIDStr();
-    std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(flow_repo_, content_repo_, connection_name.str());
-    connection->setRelationship(relationship);
-
-    // link the connections so that we can test results at the end for this
-    connection->setSource(last);
-    connection->setDestination(processor);
-
-    utils::Identifier uuid_copy, uuid_copy_next;
-    last->getUUID(uuid_copy);
-    connection->setSourceUUID(uuid_copy);
-    processor->getUUID(uuid_copy_next);
-    connection->setDestinationUUID(uuid_copy_next);
-    last->addConnection(connection);
-    if (last != processor) {
-      processor->addConnection(connection);
-    }
-    relationships_.push_back(connection);
+    relationships_.push_back(connectProcessors(last, processor, relationship, true));
   }
 
   std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(processor);
@@ -202,29 +180,31 @@ std::shared_ptr<core::ProcessSession> ExecutionPlan::getCurrentSession() {
   return current_session_;
 }
 
-std::shared_ptr<minifi::Connection> ExecutionPlan::buildFinalConnection(std::shared_ptr<core::Processor> processor, bool setDest) {
-  std::stringstream connection_name;
-  std::shared_ptr<core::Processor> last = processor;
-  connection_name << last->getUUIDStr() << "-to-" << processor->getUUIDStr();
-  std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(flow_repo_, content_repo_, connection_name.str());
-  connection->setRelationship(termination_);
-
-  // link the connections so that we can test results at the end for this
-  connection->setSource(last);
-  if (setDest)
-    connection->setDestination(processor);
-
-  utils::Identifier uuid_copy;
-  last->getUUID(uuid_copy);
-  connection->setSourceUUID(uuid_copy);
-  if (setDest)
-    connection->setDestinationUUID(uuid_copy);
-
-  processor->addConnection(connection);
-  return connection;
+std::shared_ptr<minifi::Connection> ExecutionPlan::buildFinalConnection(std::shared_ptr<core::Processor> processor, bool set_dst) {
+  return connectProcessors(processor, processor, termination_, set_dst);
 }
 
 void ExecutionPlan::finalize() {
+  if (failure_handler_) {
+    auto failure_proc = createProcessor("CallbackProcessor", "CallbackProcessor");
+
+    std::shared_ptr<processors::CallbackProcessor> callback_proc = std::static_pointer_cast<processors::CallbackProcessor>(failure_proc);
+    callback_proc->setCallback(nullptr, std::bind(&FailureHandler::operator(), failure_handler_, std::placeholders::_1));
+
+    for (const auto& proc : processor_queue_) {
+      relationships_.push_back(connectProcessors(proc, failure_proc, core::Relationship("failure", "failure collector"), true));
+    }
+
+    std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(failure_proc);
+
+    processor_nodes_.push_back(node);
+
+    std::shared_ptr<core::ProcessContext> context = std::make_shared<core::ProcessContext>(node, controller_services_provider_, prov_repo_, flow_repo_, content_repo_);
+    processor_contexts_.push_back(context);
+
+    processor_queue_.push_back(failure_proc);
+  }
+
   if (relationships_.size() > 0) {
     relationships_.push_back(buildFinalConnection(processor_queue_.back()));
   } else {
@@ -248,5 +228,42 @@ std::shared_ptr<core::Processor> ExecutionPlan::createProcessor(const std::strin
 
   processor->setName(name);
   return processor;
+}
+
+std::shared_ptr<minifi::Connection> ExecutionPlan::connectProcessors(std::shared_ptr<core::Processor> src_proc, std::shared_ptr<core::Processor> dst_proc,
+                                                      core::Relationship relationship, bool set_dst) {
+  std::stringstream connection_name;
+  connection_name << src_proc->getUUIDStr() << "-to-" << dst_proc->getUUIDStr();
+  std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(flow_repo_, content_repo_, connection_name.str());
+  connection->setRelationship(relationship);
+
+  // link the connections so that we can test results at the end for this
+  connection->setSource(src_proc);
+
+  utils::Identifier uuid_copy, uuid_copy_next;
+  src_proc->getUUID(uuid_copy);
+  connection->setSourceUUID(uuid_copy);
+  if (set_dst) {
+    connection->setDestination(dst_proc);
+    dst_proc->getUUID(uuid_copy_next);
+    connection->setDestinationUUID(uuid_copy_next);
+    if (src_proc != dst_proc) {
+      dst_proc->addConnection(connection);
+    }
+  }
+  src_proc->addConnection(connection);
+
+  return connection;
+}
+
+bool ExecutionPlan::setFailureCallback(void (*onerror_callback)(const flow_file_record*)) {
+  if (finalized && !failure_handler_) {
+    return false;  // Already finalized the flow without failure handler processor
+  }
+  if (!failure_handler_) {
+    failure_handler_ = std::make_shared<FailureHandler>();
+  }
+  failure_handler_->setCallback(onerror_callback);
+  return true;
 }
 

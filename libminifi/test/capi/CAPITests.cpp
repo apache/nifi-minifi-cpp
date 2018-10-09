@@ -38,6 +38,17 @@ static nifi_instance *create_instance_obj(const char *name = "random_instance") 
   return create_instance("random_instance", &port);
 }
 
+static int failure_count = 0;
+
+void failure_counter(const flow_file_record * fr) {
+  failure_count++;
+  REQUIRE(get_attribute_qty(fr) > 0);
+}
+
+void big_failure_counter(const flow_file_record * fr) {
+  failure_count += 100;
+}
+
 TEST_CASE("Test Creation of instance, one processor", "[createInstanceAndFlow]") {
   auto instance = create_instance_obj();
   REQUIRE(instance != nullptr);
@@ -116,6 +127,9 @@ TEST_CASE("get file and put file", "[getAndPutFile]") {
 
   REQUIRE(test_file_content == put_data);
 
+  // No failure handler can be added after the flow is finalized
+  REQUIRE(add_failure_callback(test_flow, failure_counter) == 1);
+
   free_flowfile(record);
 
   free_flow(test_flow);
@@ -125,8 +139,6 @@ TEST_CASE("get file and put file", "[getAndPutFile]") {
 
 TEST_CASE("Test manipulation of attributes", "[testAttributes]") {
   TestController testController;
-
-  enable_logging();
 
   char src_format[] = "/tmp/gt.XXXXXX";
   const char *sourcedir = testController.createTempDirectory(src_format);
@@ -197,6 +209,59 @@ TEST_CASE("Test manipulation of attributes", "[testAttributes]") {
   REQUIRE(test_attr_found == true);
 
   free_flowfile(record);
+
+  free_flow(test_flow);
+  free_instance(instance);
+}
+
+TEST_CASE("Test error handling callback", "[errorHandling]") {
+  TestController testController;
+
+  char src_format[] = "/tmp/gt.XXXXXX";
+  const char *sourcedir = testController.createTempDirectory(src_format);
+  std::string test_file_content = "C API raNdOMcaSe test d4t4 th1s is!";
+
+  auto instance = create_instance_obj();
+  REQUIRE(instance != nullptr);
+  flow *test_flow = create_flow(instance, nullptr);
+  REQUIRE(test_flow != nullptr);
+
+  REQUIRE(add_failure_callback(test_flow, failure_counter) == 0);
+
+  processor *get_proc = add_processor(test_flow, "GetFile");
+  REQUIRE(get_proc != nullptr);
+  processor *put_proc = add_processor_with_linkage(test_flow, "PutFile");
+  REQUIRE(put_proc != nullptr);
+  REQUIRE(set_property(get_proc, "Input Directory", sourcedir) == 0);
+  REQUIRE(set_property(put_proc, "Directory", "/tmp/never_existed") == 0);
+  REQUIRE(set_property(put_proc, "Create Missing Directories", "false") == 0);
+
+  std::fstream file;
+  std::stringstream ss;
+
+  ss << sourcedir << "/" << "tstFile.ext";
+  file.open(ss.str(), std::ios::out);
+  file << test_file_content;
+  file.close();
+
+
+  REQUIRE(get_next_flow_file(instance, test_flow) == nullptr);
+
+  REQUIRE(failure_count == 1);
+
+  // Failure handler function can be replaced runtime
+  REQUIRE(add_failure_callback(test_flow, big_failure_counter) == 0);
+
+  // Create new testfile to trigger failure again
+  ss << "2";
+  file.open(ss.str(), std::ios::out);
+  file << test_file_content;
+  file.close();
+
+  REQUIRE(get_next_flow_file(instance, test_flow) == nullptr);
+  REQUIRE(failure_count > 100);
+
+  failure_count = 0;
 
   free_flow(test_flow);
   free_instance(instance);

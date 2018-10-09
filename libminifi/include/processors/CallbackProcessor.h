@@ -65,7 +65,7 @@ class CallbackProcessor : public core::Processor {
 
  public:
 
-  void setCallback(void *obj, void (*ontrigger_callback)(processor_session *)) {
+  void setCallback(void *obj,std::function<void(processor_session*)> ontrigger_callback) {
     objref_ = obj;
     callback_ = ontrigger_callback;
   }
@@ -82,7 +82,7 @@ class CallbackProcessor : public core::Processor {
 
  protected:
   void *objref_;
-  void (*callback_)(processor_session*);
+  std::function<void(processor_session*)> callback_;
  private:
   // Logger
   std::shared_ptr<logging::Logger> logger_;
