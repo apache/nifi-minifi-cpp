@@ -21,10 +21,13 @@ This readme provides a how-to guide on using the Python bindings for MiNiFi C++.
 ## Table of Contents
 
 - [Description](#description)
+- [Enabling](#enabling)
+- [Example](#example)
+- [Limitations](#limitations)
 
 ## Description
 
-Apache NiFi MiNiFi C++ communicates using python bindings. These bindings connect
+Apache NiFi MiNiFI C++ can communicates using python bindings. These bindings connect
 to the C API that exists. In doing so they can utilize the building blocks within the CAPI.
 
 The design is predicated upon a MiNiFi instance. There is a getFile example that shows
@@ -41,7 +44,14 @@ created at build time.
 ## Enabling
 	At build time you must specify -DENABLE_PYTHON=ON to enable python bindings to be built.
 	
+	Further, you may have to install CFFI for python bindings.
+	
+	This can typically be performed through pip, with `pip install cffi`
+	
 ## Example
    The python directory contains an example where we use a MiNiFI C++ processor along with a
    a python processor. The implementation of the python processor requires that a call back
    method be defined for ontrigger.
+   
+## Limitations
+   Python bindings currently don't build on WIN32.
