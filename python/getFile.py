@@ -26,14 +26,14 @@ class GetFilePrinterProcessor(PyProcessor):
     def __init__(self,instance, minifi, flow):
         PyProcessor.__init__(self,instance,minifi,flow)
         self._callback = None
-    
+
     def _onTriggerCallback(self):
         def onTrigger(session):
             flow_file = self.get(session)
             flow_file.add_attribute("python_test","value")
             self.transfer(session,flow_file, "success")
         return CALLBACK(onTrigger)
-   
+
 
 parser = ArgumentParser()
 parser.add_argument("-s", "--dll", dest="dll_file",
@@ -44,10 +44,10 @@ parser.add_argument("-n", "--nifi", dest="nifi_instance",
 
 parser.add_argument("-i", "--input", dest="input_port",
                     help="NiFi Input Port")
-                    
+
 parser.add_argument("-d", "--dir", dest="dir",
-        	help="GetFile Dir to monitor", metavar="FILE")
-                    
+                help="GetFile Dir to monitor", metavar="FILE")
+
 args = parser.parse_args()
 
 """ dll_file is the path to the shared object """
@@ -66,4 +66,4 @@ processor = minifi.create_python_processor(current_module,"GetFilePrinterProcess
 
 ff = minifi.get_next_flowfile()
 if ff:
-	minifi.transmit_flowfile(ff)
+    minifi.transmit_flowfile(ff)

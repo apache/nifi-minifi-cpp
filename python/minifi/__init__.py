@@ -16,7 +16,7 @@
 from ctypes import cdll
 import ctypes
 from abc import  abstractmethod
- 
+
 
 
 class RPG_PORT(ctypes.Structure):
@@ -38,7 +38,7 @@ class CFlowFile(ctypes.Structure):
 
 class CProcessor(ctypes.Structure):
     _fields_ = [('processor_ptr', ctypes.c_void_p)]
-    
+
 class CProcessSession(ctypes.Structure):
     _fields_ = [('process_session', ctypes.c_void_p)]
 
@@ -51,8 +51,8 @@ class Processor(object):
         self._minifi = minifi
 
     def set_property(self, name, value):
-    	self._minifi.set_property( self._proc, name.encode("UTF-8"), value.encode("UTF-8"))
-        
+        self._minifi.set_property( self._proc, name.encode("UTF-8"), value.encode("UTF-8"))
+
 class PyProcessor(object):
     def __init__(self, instance, minifi, flow):
         super(PyProcessor, self).__init__()
@@ -66,24 +66,24 @@ class PyProcessor(object):
     def get(self, session):
         ff = self._minifi.get(self._instance.get_instance(),self._flow, session)
         return FlowFile(self._minifi, ff)
-    
+
     def transfer(self, session, ff, rel):
-        self._minifi.transfer(session, self._flow, rel.encode("UTF-8"))         
+        self._minifi.transfer(session, self._flow, rel.encode("UTF-8"))
 
     @abstractmethod
     def _onTriggerCallback(self):
-         pass
-     
+        pass
+
     def getTriggerCallback(self):
         if self._callback is None:
             print("creating ptr")
             self._callback = self._onTriggerCallback()
-        return self._callback 
+        return self._callback
 
     @abstractmethod
     def onSchedule(self):
         pass
-        
+
 
 class RPG(object):
     def __init__(self, nifi_struct):
@@ -156,48 +156,47 @@ class MiNiFi(object):
         self._minifi.init_api.argtype = ctypes.c_char_p
         self._minifi.init_api.restype = ctypes.c_int
         self._minifi.init_api(dll_file.encode("UTF-8"))
-        
+
         self._instance = self.__open_rpg(url,port)
         self._flow = self._minifi.create_new_flow( self._instance.get_instance() )
         self._minifi.enable_logging()
-        
-        
+
+
 
     def __open_rpg(self, url, port):
-         rpgPort = self._minifi.create_port(port)
-         rpg = self._minifi.create_instance(url, rpgPort)
-         ret = RPG(rpg)
-         return ret
+        rpgPort = self._minifi.create_port(port)
+        rpg = self._minifi.create_instance(url, rpgPort)
+        ret = RPG(rpg)
+        return ret
 
     def get_c_lib(self):
         return self._minifi
-    
+
     def set_property(self, name, value):
-    	self._minifi.set_instance_property(self._instance.get_instance(), name.encode("UTF-8"), value.encode("UTF-8"))
-    	
-               
+        self._minifi.set_instance_property(self._instance.get_instance(), name.encode("UTF-8"), value.encode("UTF-8"))
+
+
     def add_processor(self, processor):
-    	proc = self._minifi.add_processor(self._flow, processor.get_name().encode("UTF-8"))
-    	return Processor(proc,self._minifi)
- 
+        proc = self._minifi.add_processor(self._flow, processor.get_name().encode("UTF-8"))
+        return Processor(proc,self._minifi)
+
     def create_python_processor(self, module, processor):
         m =  getattr(module,processor)(self._instance,self._minifi,self._flow)
         proc = self._minifi.add_python_processor(self._flow, m.getTriggerCallback())
         m.setBase(proc)
         return m
-    
+
     def get_next_flowfile(self):
-    	ff = self._minifi.get_next_flow_file(self._instance.get_instance(), self._flow)
-    	return FlowFile(self._minifi, ff)
-    	
+        ff = self._minifi.get_next_flow_file(self._instance.get_instance(), self._flow)
+        return FlowFile(self._minifi, ff)
+
     def transmit_flowfile(self, ff):
-    	if ff.get_instance():
-    		self._minifi.transmit_flowfile(ff.get_instance(),self._instance.get_instance())
+        if ff.get_instance():
+            self._minifi.transmit_flowfile(ff.get_instance(),self._instance.get_instance())
 
 class GetFile(object):
     def __init__(self):
         super(GetFile, self).__init__()
-       
+
     def get_name(self):
-    	return "GetFile"
-        
+        return "GetFile"
