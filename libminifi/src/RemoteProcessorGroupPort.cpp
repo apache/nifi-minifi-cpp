@@ -33,6 +33,7 @@
 #include <utility>
 
 #include "sitetosite/Peer.h"
+#include "Exception.h"
 #include "sitetosite/SiteToSiteFactory.h"
 
 #include "rapidjson/document.h"
@@ -162,16 +163,19 @@ void RemoteProcessorGroupPort::onSchedule(const std::shared_ptr<core::ProcessCon
    * we must rely on the configured host/port
    */
   if (peers_.empty() && is_http_disabled()) {
-    std::string host;
-    int configured_port;
+    std::string host, portStr;
+    int configured_port = -1;
+    // place hostname/port into the log message if we have it
     context->getProperty(hostName.getName(), host);
-
-    int64_t lvalue;
-    if (context->getProperty(port.getName(), value) && !value.empty() && core::Property::StringToInt(value, lvalue)) {
-      configured_port = static_cast<int>(lvalue);
+    context->getProperty(port.getName(), portStr);
+    if (!host.empty() && !portStr.empty() && !portStr.empty() && core::Property::StringToInt(portStr, configured_port)) {
+      nifi_instances_.push_back({ host, configured_port, "" });
+      bypass_rest_api_ = true;
+    } else {
+      // we cannot proceed, so log error and throw an exception
+      logger_->log_error("%s/%s/%d -- configuration values after eval of configuration options", host, portStr, configured_port);
+      throw(Exception(SITE2SITE_EXCEPTION, "HTTPClient not resolvable. No peers configured or any port specific hostname and port -- cannot schedule"));
     }
-    nifi_instances_.push_back({ host, configured_port, "" });
-    bypass_rest_api_ = true;
   }
   // populate the site2site protocol for load balancing between them
   if (peers_.size() > 0) {
@@ -194,6 +198,7 @@ void RemoteProcessorGroupPort::onSchedule(const std::shared_ptr<core::ProcessCon
     }
   } else {
     // we don't have any peers
+    logger_->log_error("No peers selected during scheduling");
   }
 }
 
