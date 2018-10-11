@@ -37,3 +37,11 @@ the CAPI but not the Python library.
 
 To run the getfile example you will need to provide the fullpath to the python-lib shared object
 created at build time.
+
+## Enabling
+	At build time you must specify -DENABLE_PYTHON=ON to enable python bindings to be built.
+	
+## Example
+   The python directory contains an example where we use a MiNiFI C++ processor along with a
+   a python processor. The implementation of the python processor requires that a call back
+   method be defined for ontrigger.

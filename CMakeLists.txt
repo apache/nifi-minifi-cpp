@@ -34,7 +34,7 @@ option(USE_SYSTEM_ZLIB "Instructs the build system to search for and use a zlib 
 else()
 option(USE_SYSTEM_ZLIB "Instructs the build system to search for and use a zlib library available in the host system" ON)
 endif()
-
+option(ENABLE_PYTHON "Instructs the build system to enable building shared objects for the python lib" OFF)
 option(USE_SYSTEM_BZIP2 "Instructs the build system to search for and use a bzip2 library available in the host system" ON)
 option(BUILD_ROCKSDB "Instructs the build system to use RocksDB from the third party directory" ON)
 
@@ -452,9 +452,11 @@ endif()
 add_subdirectory(main)
 if (NOT DISABLE_CURL)
   add_subdirectory(LibExample)
-  if (NOT WIN32)
-  	add_subdirectory(python/library)
-  endif()
+  if (ENABLE_PYTHON)
+  	if (NOT WIN32)
+  		add_subdirectory(python/library)
+  	endif()
+  endif(ENABLE_PYTHON)
 endif()
 
 get_property(selected_extensions GLOBAL PROPERTY EXTENSION-OPTIONS)
