@@ -15,23 +15,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CAPI_PROCESSORS_H_
-#define LIBMINIFI_INCLUDE_CAPI_PROCESSORS_H_
+#include "processors/CallbackProcessor.h"
+namespace org {
+namespace apache {
+namespace nifi {
+namespace minifi {
+namespace processors {
 
-
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-typedef struct {
-  char *directory;
-  unsigned keep_source :1;
-  unsigned recurse :1;
-} GetFileConfig;
-
-#ifdef __cplusplus
+void CallbackProcessor::onTrigger(core::ProcessContext *context, core::ProcessSession *session) {
+  if (callback_ != nullptr) {
+    processor_session sesh;
+    sesh.session = session;
+    callback_(&sesh);
+  }
 }
-#endif
 
-#endif /* LIBMINIFI_INCLUDE_CAPI_PROCESSORS_H_ */
+} /* namespace processors */
+} /* namespace minifi */
+} /* namespace nifi */
+} /* namespace apache */
+} /* namespace org */

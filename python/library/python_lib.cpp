@@ -15,8 +15,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CAPI_PROCESSORS_H_
-#define LIBMINIFI_INCLUDE_CAPI_PROCESSORS_H_
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <dirent.h>
+#include "capi/api.h"
+#include "file_blocks.h"
+#include "comms.h"
+#include "capi/api.h"
+#include "capi/processors.h"
+#include "HTTPCurlLoader.h"
+#include "python_lib.h"
 
 
 
@@ -24,14 +36,12 @@
 extern "C" {
 #endif
 
-typedef struct {
-  char *directory;
-  unsigned keep_source :1;
-  unsigned recurse :1;
-} GetFileConfig;
+
+int init_api(const char *resource){
+  core::ClassLoader::getDefaultClassLoader().registerResource(resource, "createHttpCurlFactory");
+  return 0;
+}
 
 #ifdef __cplusplus
 }
 #endif
-
-#endif /* LIBMINIFI_INCLUDE_CAPI_PROCESSORS_H_ */

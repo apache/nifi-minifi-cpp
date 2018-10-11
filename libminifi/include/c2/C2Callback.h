@@ -15,23 +15,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CAPI_PROCESSORS_H_
-#define LIBMINIFI_INCLUDE_CAPI_PROCESSORS_H_
+#ifndef LIBMINIFI_INCLUDE_C2_C2CALLBACK_H_
+#define LIBMINIFI_INCLUDE_C2_C2CALLBACK_H_
 
 
+#include "C2Agent.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+/**
+ * Purpose: Provides a callback with very specific accesses
+ */
+class C2Callback {
 
-typedef struct {
-  char *directory;
-  unsigned keep_source :1;
-  unsigned recurse :1;
-} GetFileConfig;
+ public:
+  C2Callback(const std::shared_ptr<C2>)
 
-#ifdef __cplusplus
-}
-#endif
+};
 
-#endif /* LIBMINIFI_INCLUDE_CAPI_PROCESSORS_H_ */
+
+#endif /* LIBMINIFI_INCLUDE_C2_C2CALLBACK_H_ */

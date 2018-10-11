@@ -36,3 +36,20 @@ add_library(
     unparse.c
     uuid_time.c
 )
+
+
+add_library(
+    uuid-shared
+    clear.c
+    compare.c
+    copy.c
+    gen_uuid.c
+    isnull.c
+    pack.c
+    parse.c
+    unpack.c
+    unparse.c
+    uuid_time.c
+)
+
+set_property(TARGET uuid-shared PROPERTY POSITION_INDEPENDENT_CODE ON)

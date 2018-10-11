@@ -11,7 +11,7 @@ set( CMAKE_CXX_STANDARD 14 CACHE STRING "The C++ standard whose features are req
 
 option( USE_SYSTEM_TZ_DB "Use the operating system's timezone database" OFF )
 option( USE_TZ_DB_IN_DOT "Save the timezone database in the current folder" OFF )
-option( BUILD_SHARED_LIBS  "Build a shared version of library" OFF )
+option( BUILD_SHARED_LIBS  "Build a shared version of library" ON )
 option( ENABLE_DATE_TESTING "Enable unit tests" ON )
 
 function( print_option OPT )

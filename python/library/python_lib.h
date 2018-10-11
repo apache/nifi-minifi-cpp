@@ -15,23 +15,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CAPI_PROCESSORS_H_
-#define LIBMINIFI_INCLUDE_CAPI_PROCESSORS_H_
-
-
+#ifndef PYTHON_LIBRARY_PYTHON_LIB_H_
+#define PYTHON_LIBRARY_PYTHON_LIB_H_
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-typedef struct {
-  char *directory;
-  unsigned keep_source :1;
-  unsigned recurse :1;
-} GetFileConfig;
+int init_api(const char *);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* LIBMINIFI_INCLUDE_CAPI_PROCESSORS_H_ */
+
+
+#endif /* PYTHON_LIBRARY_PYTHON_LIB_H_ */

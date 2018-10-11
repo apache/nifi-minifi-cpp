@@ -24,6 +24,7 @@
 #include <string>
 #include <uuid/uuid.h>
 
+
 #ifdef WIN32
 #pragma comment(lib, "shlwapi.lib")
 #endif

@@ -61,7 +61,7 @@ void C2CallbackAgent::handle_c2_server_response(const C2ContentResponse &resp) {
       auto str = resp.name.c_str();
 
       if (nullptr != stop)
-      stop(const_cast<char*>(str));
+        stop(const_cast<char*>(str));
 
       break;
     }
