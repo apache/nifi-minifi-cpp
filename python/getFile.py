@@ -30,8 +30,9 @@ class GetFilePrinterProcessor(PyProcessor):
     def _onTriggerCallback(self):
         def onTrigger(session):
             flow_file = self.get(session)
-            flow_file.add_attribute("python_test","value")
-            self.transfer(session,flow_file, "success")
+            if flow_file:
+              flow_file.add_attribute("python_test","value")
+              self.transfer(session,flow_file, "success")
         return CALLBACK(onTrigger)
 
 

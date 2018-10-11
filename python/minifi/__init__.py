@@ -65,7 +65,10 @@ class PyProcessor(object):
 
     def get(self, session):
         ff = self._minifi.get(self._instance.get_instance(),self._flow, session)
-        return FlowFile(self._minifi, ff)
+        if ff:
+          return FlowFile(self._minifi, ff)
+        else:
+          return None
 
     def transfer(self, session, ff, rel):
         self._minifi.transfer(session, self._flow, rel.encode("UTF-8"))
