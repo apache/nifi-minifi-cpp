@@ -41,7 +41,6 @@ class Configure : public Properties {
   }
   // nifi.flow.configuration.file
   static const char *nifi_default_directory;
-  static const char *nifi_c2_enable;
   static const char *nifi_flow_configuration_file;
   static const char *nifi_flow_configuration_file_backup_update;
   static const char *nifi_flow_engine_threads;
@@ -78,6 +77,10 @@ class Configure : public Properties {
   // nifi rest api user name and password
   static const char *nifi_rest_api_user_name;
   static const char *nifi_rest_api_password;
+  // c2 options
+
+  static const char *nifi_c2_enable;
+  static const char *nifi_c2_file_watch;
 
  private:
   std::string agent_identifier_;
