@@ -57,38 +57,28 @@ class DirectoryConfiguration {
   }
 };
 
-nifi_port *create_port(const char *port) {
-  if (nullptr == port)
-    return nullptr;
-  nifi_port *p = new nifi_port();
-  p->port_id = new char[strlen(port) + 1];
-  memset(p->port_id, 0x00, strlen(port) + 1);
-  strncpy(p->port_id, port, strlen(port));
-  return p;
-}
-
-int free_port(nifi_port *port) {
-  if (port == nullptr)
-    return -1;
-  delete[] port->port_id;
-  delete port;
-  return 0;
-}
-
 /**
  * Creates a NiFi Instance from the url and output port.
  * @param url http URL for NiFi instance
  * @param port Remote output port.
+ * @Deprecated for 0.6.0 in favor of
+ * nifi_instance *create_instance(nifi_port const *port) {
  */
 nifi_instance *create_instance(const char *url, nifi_port *port) {
   // make sure that we have a thread safe way of initializing the content directory
   DirectoryConfiguration::initialize();
 
-  nifi_instance *instance = new nifi_instance;
-
+  // need reinterpret cast until we move to C for this module.
+  nifi_instance *instance = reinterpret_cast<nifi_instance*>( malloc(sizeof(nifi_instance)) );
+  /**
+   * This API will gradually move away from C++, hence malloc is used for nifi_instance
+   * Since minifi::Instance is currently being used, then we need to use new in that case.
+   */
   instance->instance_ptr = new minifi::Instance(url, port->port_id);
-  instance->port.port_id = port->port_id;
-
+  // may have to translate port ID here in the future
+  // need reinterpret cast until we move to C for this module.
+  instance->port.port_id = reinterpret_cast<char*>(malloc(strlen(port->port_id) + 1));
+  snprintf(instance->port.port_id, strlen(port->port_id) + 1, "%s", port->port_id);
   return instance;
 }
 
@@ -135,7 +125,8 @@ int set_instance_property(nifi_instance *instance, const char *key, const char *
 void free_instance(nifi_instance* instance) {
   if (instance != nullptr) {
     delete ((minifi::Instance*) instance->instance_ptr);
-    delete instance;
+    free(instance->port.port_id);
+    free(instance);
   }
 }
 

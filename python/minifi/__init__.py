@@ -66,9 +66,9 @@ class PyProcessor(object):
     def get(self, session):
         ff = self._minifi.get(self._instance.get_instance(),self._flow, session)
         if ff:
-          return FlowFile(self._minifi, ff)
+            return FlowFile(self._minifi, ff)
         else:
-          return None
+            return None
 
     def transfer(self, session, ff, rel):
         self._minifi.transfer(session, self._flow, rel.encode("UTF-8"))
@@ -119,12 +119,6 @@ class MiNiFi(object):
         """ create instance """
         self._minifi.create_instance.argtypes = [ctypes.c_char_p , ctypes.POINTER(RPG_PORT)]
         self._minifi.create_instance.restype = ctypes.POINTER(NIFI_STRUCT)
-        """ create port """
-        self._minifi.create_port.argtype = ctypes.c_char_p
-        self._minifi.create_port.restype = ctypes.POINTER(RPG_PORT)
-        """ free port """
-        self._minifi.free_port.argtype = ctypes.POINTER(RPG_PORT)
-        self._minifi.free_port.restype = ctypes.c_int
         """ create new flow """
         self._minifi.create_new_flow.argtype = ctypes.POINTER(NIFI_STRUCT)
         self._minifi.create_new_flow.restype = ctypes.POINTER(CFlow)
@@ -167,7 +161,7 @@ class MiNiFi(object):
 
 
     def __open_rpg(self, url, port):
-        rpgPort = self._minifi.create_port(port)
+        rpgPort = (RPG_PORT)(port)
         rpg = self._minifi.create_instance(url, rpgPort)
         ret = RPG(rpg)
         return ret
