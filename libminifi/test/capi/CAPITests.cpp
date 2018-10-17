@@ -24,7 +24,6 @@
 #include <set>
 #include <fstream>
 
-
 #include "utils/file/FileUtils.h"
 #include "../TestBase.h"
 
@@ -33,8 +32,14 @@
 #include <chrono>
 #include <thread>
 
+static nifi_instance *create_instance_obj(const char *name = "random_instance") {
+  nifi_port port;
+  port.port_id = "12345";
+  return create_instance("random_instance", &port);
+}
+
 TEST_CASE("Test Creation of instance, one processor", "[createInstanceAndFlow]") {
-  nifi_instance *instance = create_instance("random_instance", create_port("12345"));
+  auto instance = create_instance_obj();
   REQUIRE(instance != nullptr);
   flow *test_flow = create_flow(instance, nullptr);
   REQUIRE(test_flow != nullptr);
@@ -45,7 +50,7 @@ TEST_CASE("Test Creation of instance, one processor", "[createInstanceAndFlow]")
 }
 
 TEST_CASE("Invalid processor returns null", "[addInvalidProcessor]") {
-  nifi_instance *instance = create_instance("random_instance", create_port("12345"));
+  auto instance = create_instance_obj();
   REQUIRE(instance != nullptr);
   flow *test_flow = create_flow(instance, nullptr);
   processor *test_proc = add_processor(test_flow, "NeverExisted");
@@ -57,7 +62,7 @@ TEST_CASE("Invalid processor returns null", "[addInvalidProcessor]") {
 }
 
 TEST_CASE("Set valid and invalid properties", "[setProcesssorProperties]") {
-  nifi_instance *instance = create_instance("random_instance", create_port("12345"));
+  auto instance = create_instance_obj();
   REQUIRE(instance != nullptr);
   flow *test_flow = create_flow(instance, nullptr);
   REQUIRE(test_flow != nullptr);
@@ -82,8 +87,7 @@ TEST_CASE("get file and put file", "[getAndPutFile]") {
   const char *sourcedir = testController.createTempDirectory(src_format);
   const char *putfiledir = testController.createTempDirectory(put_format);
   std::string test_file_content = "C API raNdOMcaSe test d4t4 th1s is!";
-
-  nifi_instance *instance = create_instance("random_instance", create_port("12345"));
+  auto instance = create_instance_obj();
   REQUIRE(instance != nullptr);
   flow *test_flow = create_flow(instance, nullptr);
   REQUIRE(test_flow != nullptr);
@@ -135,8 +139,7 @@ TEST_CASE("Test manipulation of attributes", "[testAttributes]") {
   file.open(ss.str(), std::ios::out);
   file << test_file_content;
   file.close();
-
-  nifi_instance *instance = create_instance("random_instance", create_port("12345"));
+  auto instance = create_instance_obj();
   REQUIRE(instance != nullptr);
   flow *test_flow = create_flow(instance, nullptr);
   REQUIRE(test_flow != nullptr);
@@ -144,14 +147,13 @@ TEST_CASE("Test manipulation of attributes", "[testAttributes]") {
   processor *get_proc = add_processor(test_flow, "GetFile");
   REQUIRE(get_proc != nullptr);
   REQUIRE(set_property(get_proc, "Input Directory", sourcedir) == 0);
-  processor *extract_test  = add_processor_with_linkage(test_flow, "ExtractText");
+  processor *extract_test = add_processor_with_linkage(test_flow, "ExtractText");
   REQUIRE(extract_test != nullptr);
   REQUIRE(set_property(extract_test, "Attribute", "TestAttr") == 0);
-  // TODO(aboda): enable this after decision made in MINIFICPP-640
   /*processor *update_attribute = add_processor_with_linkage(test_flow, "UpdateAttribute");
-  REQUIRE(update_attribute != nullptr);
+   REQUIRE(update_attribute != nullptr);
 
-  REQUIRE(set_property(update_attribute, "TestAttribute", "TestValue") == 0);*/
+   REQUIRE(set_property(update_attribute, "TestAttribute", "TestValue") == 0);*/
 
   flow_file_record *record = get_next_flow_file(instance, test_flow);
 
@@ -171,17 +173,17 @@ TEST_CASE("Test manipulation of attributes", "[testAttributes]") {
   const char * new_testattr_value = "S0me t3st t3xt";
 
   // Attribute already exist, should fail
-  REQUIRE(add_attribute(record, test_attr.key, (void*)new_testattr_value, strlen(new_testattr_value)) != 0); // NOLINT
+  REQUIRE(add_attribute(record, test_attr.key, (void* )new_testattr_value, strlen(new_testattr_value)) != 0);  // NOLINT
 
   // Update overwrites values
-  update_attribute(record, test_attr.key, (void*)new_testattr_value, strlen(new_testattr_value)); // NOLINT
+  update_attribute(record, test_attr.key, (void*) new_testattr_value, strlen(new_testattr_value));  // NOLINT
 
   int attr_size = get_attribute_qty(record);
   REQUIRE(attr_size > 0);
 
   attribute_set attr_set;
   attr_set.size = attr_size;
-  attr_set.attributes = (attribute*)malloc(attr_set.size * sizeof(attribute)); // NOLINT
+  attr_set.attributes = (attribute*) malloc(attr_set.size * sizeof(attribute));  // NOLINT
 
   REQUIRE(get_all_attributes(record, &attr_set) == attr_set.size);
 

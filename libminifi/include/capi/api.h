@@ -30,7 +30,10 @@ int initialize_api();
 extern "C" {
 #endif
 
-#define API_VERSION "0.01"
+/**
+ * Updates with every release
+ */
+#define API_VERSION "0.02"
 
 void enable_logging();
 
@@ -39,11 +42,6 @@ void enable_logging();
  *  BASE NIFI OPERATIONS
  * ##################################################################
  */
-nifi_port *create_port(const char *port);
-
-int free_port(nifi_port *port);
-
-
 
 nifi_instance *create_instance(const char *url, nifi_port *port);
 
