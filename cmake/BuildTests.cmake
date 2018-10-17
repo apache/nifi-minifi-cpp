@@ -105,6 +105,7 @@ target_include_directories(${CATCH_MAIN_LIB} BEFORE PRIVATE "${CMAKE_SOURCE_DIR}
 SET(TEST_RESOURCES ${TEST_DIR}/resources)
 
 GETSOURCEFILES(UNIT_TESTS "${TEST_DIR}/unit/")
+GETSOURCEFILES(CAPI_UNIT_TESTS "${TEST_DIR}/capi/")
 GETSOURCEFILES(INTEGRATION_TESTS "${TEST_DIR}/integration/")
 
 SET(UNIT_TEST_COUNT 0)
@@ -117,6 +118,17 @@ FOREACH(testfile ${UNIT_TESTS})
   add_test(NAME "${testfilename}" COMMAND "${testfilename}" WORKING_DIRECTORY ${TEST_DIR})
 ENDFOREACH()
 message("-- Finished building ${UNIT_TEST_COUNT} unit test file(s)...")
+
+SET(UNIT_TEST_COUNT 0)
+FOREACH(testfile ${CAPI_UNIT_TESTS})
+    get_filename_component(testfilename "${testfile}" NAME_WE)
+    add_executable("${testfilename}" "${TEST_DIR}/capi/${testfile}")
+    createTests("${testfilename}")
+    target_link_libraries(${testfilename} ${CATCH_MAIN_LIB} capi)
+    MATH(EXPR UNIT_TEST_COUNT "${UNIT_TEST_COUNT}+1")
+    add_test(NAME "${testfilename}" COMMAND "${testfilename}" WORKING_DIRECTORY ${TEST_DIR})
+ENDFOREACH()
+message("-- Finished building ${UNIT_TEST_COUNT} capi unit test file(s)...")
 
 SET(INT_TEST_COUNT 0)
 FOREACH(testfile ${INTEGRATION_TESTS})

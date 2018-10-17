@@ -57,7 +57,7 @@ class DirectoryConfiguration {
   }
 };
 
-nifi_port *create_port(char *port) {
+nifi_port *create_port(const char *port) {
   if (nullptr == port)
     return nullptr;
   nifi_port *p = new nifi_port();
@@ -80,7 +80,7 @@ int free_port(nifi_port *port) {
  * @param url http URL for NiFi instance
  * @param port Remote output port.
  */
-nifi_instance *create_instance(char *url, nifi_port *port) {
+nifi_instance *create_instance(const char *url, nifi_port *port) {
   // make sure that we have a thread safe way of initializing the content directory
   DirectoryConfiguration::initialize();
 
@@ -119,7 +119,7 @@ void enable_async_c2(nifi_instance *instance, C2_Server *server, c2_stop_callbac
  * @param value
  * @return -1 when instance or key are null
  */
-int set_instance_property(nifi_instance *instance, char *key, char *value) {
+int set_instance_property(nifi_instance *instance, const char *key, const char *value) {
   if (nullptr == instance || nullptr == instance->instance_ptr || nullptr == key) {
     return -1;
   }
@@ -196,10 +196,11 @@ void free_flowfile(flow_file_record *ff) {
       std::shared_ptr<minifi::ResourceClaim> claim = std::make_shared<minifi::ResourceClaim>(ff->contentLocation, content_repo);
       content_repo->remove(claim);
     }
-    auto map = static_cast<string_map*>(ff->attributes);
-    delete[] ff->contentLocation;
-    if (ff->ffp != nullptr)  // don't delete map since it's a ref ptr
+    if (ff->ffp == nullptr) {
+      auto map = static_cast<string_map*>(ff->attributes);
       delete map;
+    }
+    delete[] ff->contentLocation;
     delete ff;
   }
 }
@@ -212,7 +213,7 @@ void free_flowfile(flow_file_record *ff) {
  * @param size size of value
  * @return 0 or -1 based on whether the attributed existed previously (-1) or not (0)
  */
-uint8_t add_attribute(flow_file_record *ff, char *key, void *value, size_t size) {
+uint8_t add_attribute(flow_file_record *ff, const char *key, void *value, size_t size) {
   auto attribute_map = static_cast<string_map*>(ff->attributes);
   const auto& ret = attribute_map->insert(std::pair<std::string, std::string>(key, std::string(static_cast<char*>(value), size)));
   return ret.second ? 0 : -1;
@@ -225,7 +226,7 @@ uint8_t add_attribute(flow_file_record *ff, char *key, void *value, size_t size)
  * @param value value to add
  * @param size size of value
  */
-void update_attribute(flow_file_record *ff, char *key, void *value, size_t size) {
+void update_attribute(flow_file_record *ff, const char *key, void *value, size_t size) {
   auto attribute_map = static_cast<string_map*>(ff->attributes);
   (*attribute_map)[key] = std::string(static_cast<char*>(value), size);
 }
@@ -237,16 +238,50 @@ void update_attribute(flow_file_record *ff, char *key, void *value, size_t size)
  * @param caller_attribute caller supplied object in which we will copy the data ptr
  * @return 0 if successful, -1 if the key does not exist
  */
-uint8_t get_attribute(flow_file_record *ff, char *key, attribute *caller_attribute) {
+uint8_t get_attribute(flow_file_record *ff, attribute *caller_attribute) {
+  if (ff == nullptr) {
+    return -1;
+  }
   auto attribute_map = static_cast<string_map*>(ff->attributes);
-  auto find = attribute_map->find(key);
+  if (!attribute_map) {
+    return -1;
+  }
+  auto find = attribute_map->find(caller_attribute->key);
   if (find != attribute_map->end()) {
-    caller_attribute->key = key;
     caller_attribute->value = static_cast<void*>(const_cast<char*>(find->second.data()));
     caller_attribute->value_size = find->second.size();
     return 0;
   }
   return -1;
+}
+
+int get_attribute_qty(const flow_file_record* ff) {
+  if (ff == nullptr) {
+    return 0;
+  }
+  auto attribute_map = static_cast<string_map*>(ff->attributes);
+  return attribute_map ? attribute_map->size() : 0;
+}
+
+int get_all_attributes(const flow_file_record* ff, attribute_set *target) {
+  if (ff == nullptr) {
+    return 0;
+  }
+  auto attribute_map = static_cast<string_map*>(ff->attributes);
+  if (!attribute_map || attribute_map->empty()) {
+    return 0;
+  }
+  int i = 0;
+  for (const auto& kv : *attribute_map) {
+    if (i >= target->size) {
+      break;
+    }
+    target->attributes[i].key = kv.first.data();
+    target->attributes[i].value = static_cast<void*>(const_cast<char*>(kv.second.data()));
+    target->attributes[i].value_size = kv.second.size();
+    ++i;
+  }
+  return i;
 }
 
 /**
@@ -255,7 +290,7 @@ uint8_t get_attribute(flow_file_record *ff, char *key, attribute *caller_attribu
  * @param key key to remove
  * @return 0 if removed, -1 otherwise
  */
-uint8_t remove_attribute(flow_file_record *ff, char *key) {
+uint8_t remove_attribute(flow_file_record *ff, const char *key) {
   auto attribute_map = static_cast<string_map*>(ff->attributes);
   return attribute_map->erase(key) - 1;  // erase by key returns the number of elements removed (0 or 1)
 }
@@ -361,6 +396,18 @@ processor *add_processor(flow *flow, const char *processor_name) {
   }
   return nullptr;
 }
+
+processor *add_processor_with_linkage(flow *flow, const char *processor_name) {
+  ExecutionPlan *plan = static_cast<ExecutionPlan*>(flow->plan);
+  auto proc = plan->addProcessor(processor_name, processor_name, core::Relationship("success", "description"), true);
+  if (proc) {
+    processor *new_processor = new processor();
+    new_processor->processor_ptr = proc.get();
+    return new_processor;
+  }
+  return nullptr;
+}
+
 int set_property(processor *proc, const char *name, const char *value) {
   if (name != nullptr && value != nullptr && proc != nullptr) {
     core::Processor *p = static_cast<core::Processor*>(proc->processor_ptr);
@@ -386,8 +433,9 @@ flow_file_record *get_next_flow_file(nifi_instance *instance, flow *flow) {
   while (execution_plan->runNextProcessor()) {
   }
   auto ff = execution_plan->getCurrentFlowFile();
-  if (ff == nullptr)
+  if (ff == nullptr) {
     return nullptr;
+  }
   auto claim = ff->getResourceClaim();
 
   if (claim != nullptr) {
@@ -395,8 +443,8 @@ flow_file_record *get_next_flow_file(nifi_instance *instance, flow *flow) {
     claim->increaseFlowFileRecordOwnedCount();
     auto path = claim->getContentFullPath();
     auto ffr = create_ff_object_na(path.c_str(), path.length(), ff->getSize());
-    ffr->attributes = ff->getAttributesPtr();
     ffr->ffp = ff.get();
+    ffr->attributes = ff->getAttributesPtr();
     ffr->in = instance;
     return ffr;
   } else {
