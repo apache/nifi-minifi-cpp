@@ -36,8 +36,6 @@ endif()
 # Include UUID
 find_package(UUID REQUIRED)
 target_link_libraries(minifi-rdkafka-extensions ${LIBMINIFI} ${UUID_LIBRARIES})
-find_package(OpenSSL REQUIRED)
-include_directories(${OPENSSL_INCLUDE_DIR})
 target_link_libraries(minifi-rdkafka-extensions ${CMAKE_DL_LIBS} )
 if (LibRdKafka_FOUND AND NOT BUILD_LIBRDKAFKA)
 	target_link_libraries(minifi-rdkafka-extensions ${LibRdKafka_LIBRARIES} )

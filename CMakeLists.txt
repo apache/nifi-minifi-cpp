@@ -37,9 +37,14 @@ endif()
 option(ENABLE_PYTHON "Instructs the build system to enable building shared objects for the python lib" OFF)
 option(USE_SYSTEM_BZIP2 "Instructs the build system to search for and use a bzip2 library available in the host system" ON)
 option(BUILD_ROCKSDB "Instructs the build system to use RocksDB from the third party directory" ON)
+option(FORCE_WINDOWS "Instructs the build system to force Windows builds when WIN32 is specified" OFF)
 
 include(FeatureSummary)
 include(ExternalProject)
+
+if (OPENSSL_ROOT_DIR )
+	set(OPENSSL_PASSTHROUGH "-DOPENSSL_ROOT_DIR=${OPENSSL_ROOT_DIR}")
+endif()
 
 set(PASSTHROUGH_CMAKE_ARGS -DANDROID_ABI=${ANDROID_ABI}
                            -DANDROID_PLATFORM=${ANDROID_PLATFORM}
@@ -57,6 +62,7 @@ set(PASSTHROUGH_CMAKE_ARGS -DANDROID_ABI=${ANDROID_ABI}
                            -DCMAKE_FIND_ROOT_PATH_MODE_LIBRARY=${CMAKE_FIND_ROOT_PATH_MODE_LIBRARY}
                            -DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=${CMAKE_FIND_ROOT_PATH_MODE_INCLUDE}
                            -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
+						   ${OPENSSL_PASSTHROUGH}
                            -G${CMAKE_GENERATOR})
 
 # Use ccache if present
@@ -71,6 +77,9 @@ endif(CCACHE_FOUND)
 # Enable usage of the VERSION specifier
 include(CheckCXXCompilerFlag)
 if (WIN32)
+	if (NOT FORCE_WINDOWS)
+	  message(FATAL_ERROR "Windows builds can only be built with FORCE_WINDOWS")
+	endif()
 	add_definitions(-DWIN32_LEAN_AND_MEAN)
   if ((MSVC_VERSION GREATER "1900") OR (MSVC_VERSION EQUAL "1900"))
     CHECK_CXX_COMPILER_FLAG("/std:c++14" _cpp_latest_flag_supported)
@@ -160,6 +169,8 @@ else()
 	
 	# Include OpenSSL
 	find_package (OpenSSL REQUIRED)
+
+	   
 	
 	if (OPENSSL_FOUND)
 		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DOPENSSL_SUPPORT")
@@ -273,15 +284,17 @@ if(NOT DISABLE_CURL AND (NOT USE_SYSTEM_CURL))
     BUILD_BYPRODUCTS "thirdparty/${BYPRODUCT}"
   )
 
-  if(NOT USE_SYSTEM_OPENSSL)
+  if(USE_SYSTEM_OPENSSL STREQUAL "OFF")
     add_dependencies(curl-external libressl-portable)
   endif()
 
   list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/curl/dummy")
   add_library(curl STATIC IMPORTED)
   set_target_properties(curl PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/${BYPRODUCT}")
-  if (OPENSSL_FOUND)
-  set_target_properties(curl PROPERTIES INTERFACE_LINK_LIBRARIES ${OPENSSL_LIBRARIES})
+  if (OPENSSL_FOUND) 
+     if (NOT WIN32)
+       set_target_properties(curl PROPERTIES INTERFACE_LINK_LIBRARIES ${OPENSSL_LIBRARIES})
+	 endif()
   endif(OPENSSL_FOUND)
   add_dependencies(curl curl-external)
   set(CURL_FOUND "YES")
@@ -303,7 +316,7 @@ set(CIVETWEB_ENABLE_CXX ON CACHE BOOL "Enable civet C++ library")
 set(CIVETWEB_ENABLE_SSL OFF CACHE BOOL "DISABLE SSL")
 
 SET(WITH_TOOLS OFF CACHE BOOL "Do not build RocksDB tools")
-if (NOT APPLE)
+if (ENABLE_PYTHON)
 SET(BUILD_SHARED_LIBS ON CACHE BOOL "build yaml cpp shared lib")
 endif()
 SET(WITH_TESTS OFF CACHE BOOL "Build RocksDB library (not repo) tests")

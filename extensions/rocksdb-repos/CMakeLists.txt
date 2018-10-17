@@ -43,8 +43,6 @@ endif()
 # Include UUID
 find_package(UUID REQUIRED)
 target_link_libraries(minifi-rocksdb-repos ${LIBMINIFI} ${UUID_LIBRARIES})
-find_package(OpenSSL REQUIRED)
-include_directories(${OPENSSL_INCLUDE_DIR})
 target_link_libraries(minifi-rocksdb-repos ${CMAKE_DL_LIBS} )
 if (ROCKSDB_FOUND AND NOT BUILD_ROCKSDB)
 	target_link_libraries(minifi-rocksdb-repos ${ROCKSDB_LIBRARIES} )

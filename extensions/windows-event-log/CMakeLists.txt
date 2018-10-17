@@ -34,8 +34,6 @@ endif()
 # Include UUID
 find_package(UUID REQUIRED)
 target_link_libraries(minifi-wel ${LIBMINIFI} ${UUID_LIBRARIES})
-find_package(OpenSSL REQUIRED)
-include_directories(${OPENSSL_INCLUDE_DIR})
 target_link_libraries(minifi-wel ${CMAKE_DL_LIBS} )
 find_package(ZLIB REQUIRED)
 include_directories(${ZLIB_INCLUDE_DIRS})

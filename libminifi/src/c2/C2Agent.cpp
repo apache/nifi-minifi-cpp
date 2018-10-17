@@ -62,7 +62,7 @@ C2Agent::C2Agent(const std::shared_ptr<core::controller::ControllerServiceProvid
     auto time_since = std::chrono::duration_cast<std::chrono::milliseconds>(now - last_run_).count();
 
     // place priority on messages to send to the c2 server
-      if ( protocol_ != nullptr && request_mutex.try_lock_until(now + std::chrono::seconds(1)) ) {
+      if ( protocol_.load() != nullptr && request_mutex.try_lock_until(now + std::chrono::seconds(1)) ) {
         if (requests.size() > 0) {
           int count = 0;
           do {
@@ -555,7 +555,7 @@ void C2Agent::handle_update(const C2ContentResponse &resp) {
       auto urlStr = url->second.to_string();
 
       std::string file_path = urlStr;
-      if (nullptr != protocol_ && file_path.find("http") != std::string::npos) {
+      if (nullptr != protocol_.load() && file_path.find("http") != std::string::npos) {
         C2Payload &&response = protocol_.load()->consumePayload(urlStr, payload, RECEIVE, false);
 
         auto raw_data = response.getRawData();
