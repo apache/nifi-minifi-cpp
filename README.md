@@ -85,6 +85,8 @@ MiNiFi - C++ supports the following processors:
 ## Caveats
 * 0.5.0 represents a GA-release. We follow semver so you can expect API and ABI compatibility within minor releases. See [semver's website](https://semver.org/) for more information
 * Build and usage currently only supports Linux and OS X environments. MiNiFi C++ can be built and run through the Windows Subsystem for Linux but we provide no support for this platform.
+* Native Windows builds are possible with limited support. Please note that you must enable them manually with -DFORCE_WINDOWS=ON on a windows platform. OPENSSL_ROOT_DIR must be specified
+	to support OpenSSL support within your build.
 * Provenance events generation is supported and are persisted using RocksDB. Volatile repositories can be used on systems without persistent storage.
 
 ## System Requirements
