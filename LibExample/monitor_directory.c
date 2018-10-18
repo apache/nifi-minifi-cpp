@@ -22,6 +22,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <dirent.h>
+#include <pthread.h>
 
 #include "file_blocks.h"
 #include "comms.h"

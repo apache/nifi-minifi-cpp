@@ -393,12 +393,12 @@ void ListenHTTP::Handler::write_body(mg_connection *conn, const mg_request_info 
                          response.body.size(),
                          req_info->request_uri);
       mg_printf(conn, "Content-type: ");
-      mg_printf(conn, response.mime_type.c_str());
+      mg_printf(conn, "%s", response.mime_type.c_str());
       mg_printf(conn, "\r\n");
       mg_printf(conn, "Content-length: ");
-      mg_printf(conn, std::to_string(response.body.size()).c_str());
+      mg_printf(conn, "%s", std::to_string(response.body.size()).c_str());
       mg_printf(conn, "\r\n\r\n");
-      mg_printf(conn, response.body.c_str());
+      mg_printf(conn, "%s", response.body.c_str());
 
     } else {
       logger_->log_debug("No response body available for URI: %s", req_info->request_uri);

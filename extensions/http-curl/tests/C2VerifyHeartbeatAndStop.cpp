@@ -78,7 +78,7 @@ class Responder : public CivetHandler {
       rapidjson::Document root;
       rapidjson::ParseResult ok = root.Parse(post_data.data(), post_data.size());
       bool found = false;
-      auto operation = root["operation"].GetString();
+      std::string operation = root["operation"].GetString();
       if (operation == "heartbeat") {
         assert(root.HasMember("agentInfo") == true);
         assert(root["agentInfo"]["agentManifest"].HasMember("bundles") == true);
