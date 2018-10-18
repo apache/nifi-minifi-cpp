@@ -33,7 +33,6 @@ namespace nifi {
 namespace minifi {
 
 int FlowControlProtocol::connectServer(const char *host, uint16_t port) {
-  in_addr addr;
   return 0;
 }
 
