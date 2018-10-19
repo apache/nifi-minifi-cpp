@@ -61,7 +61,7 @@ class DirectoryConfiguration {
  * Creates a NiFi Instance from the url and output port.
  * @param url http URL for NiFi instance
  * @param port Remote output port.
- * @Deprecated for 0.6.0 in favor of
+ * @Deprecated for API version 0.2 in favor of the following prototype
  * nifi_instance *create_instance(nifi_port const *port) {
  */
 nifi_instance *create_instance(const char *url, nifi_port *port) {
