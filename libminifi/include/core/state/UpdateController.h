@@ -20,6 +20,7 @@
 
 #include <string>
 #include "utils/ThreadPool.h"
+#include "utils/BackTrace.h"
 
 namespace org {
 namespace apache {
@@ -69,9 +70,9 @@ class UpdateStatus {
 class Update {
  public:
 
-	Update()
-		: status_(UpdateStatus(UpdateState::INITIATE, 0)) {
-	}
+  Update()
+      : status_(UpdateStatus(UpdateState::INITIATE, 0)) {
+  }
 
   Update(UpdateStatus status)
       : status_(status) {
@@ -234,6 +235,13 @@ class StateMonitor : public StateController {
    * @return uptime for the current state monitor.
    */
   virtual uint64_t getUptime() = 0;
+
+  /**
+   * Returns a vector of backtraces
+   * @return backtraces from the state monitor.
+   */
+  virtual std::vector<BackTrace> getTraces() = 0;
+
 
  protected:
   std::atomic<bool> controller_running_;

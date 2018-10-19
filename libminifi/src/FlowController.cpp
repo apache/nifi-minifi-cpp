@@ -910,6 +910,15 @@ uint64_t FlowController::getUptime() {
   return time_since;
 }
 
+std::vector<BackTrace> FlowController::getTraces() {
+    std::vector<BackTrace> traces;
+  auto timer_driven = timer_scheduler_->getTraces();
+  traces.insert(traces.end(), std::make_move_iterator(timer_driven.begin()), std::make_move_iterator(timer_driven.end()));
+  auto event_driven = event_scheduler_->getTraces();
+  traces.insert(traces.end(), std::make_move_iterator(event_driven.begin()), std::make_move_iterator(event_driven.end()));
+  return traces;
+}
+
 } /* namespace minifi */
 } /* namespace nifi */
 } /* namespace apache */

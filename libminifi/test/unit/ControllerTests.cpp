@@ -110,6 +110,10 @@ class TestUpdateSink : public minifi::state::StateMonitor {
   virtual int16_t pause() {
     return 0;
   }
+  virtual std::vector<BackTrace> getTraces() {
+    std::vector<BackTrace> traces;
+    return traces;
+  }
 
   /**
    * Operational controllers

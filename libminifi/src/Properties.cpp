@@ -26,7 +26,7 @@ namespace apache {
 namespace nifi {
 namespace minifi {
 
-#define BUFFER_SIZE 512
+#define TRACE_BUFFER_SIZE 512
 
 Properties::Properties()
     : logger_(logging::LoggerFactory<Properties>::getLogger()) {
@@ -138,8 +138,8 @@ void Properties::loadConfigureFile(const char *fileName) {
   }
   this->clear();
 
-  char buf[BUFFER_SIZE];
-  for (file.getline(buf, BUFFER_SIZE); file.good(); file.getline(buf, BUFFER_SIZE)) {
+  char buf[TRACE_BUFFER_SIZE];
+  for (file.getline(buf, TRACE_BUFFER_SIZE); file.good(); file.getline(buf, TRACE_BUFFER_SIZE)) {
     parseConfigureFileLine(buf);
   }
 }

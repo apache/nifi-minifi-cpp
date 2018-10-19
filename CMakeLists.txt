@@ -27,6 +27,7 @@ option(SKIP_TESTS "Skips building all tests." OFF)
 option(PORTABLE "Instructs the compiler to remove architecture specific optimizations" ON)
 option(USE_SYSTEM_OPENSSL "Instructs the build system to search for and use an SSL library available in the host system" ON)
 option(OPENSSL_OFF "Disables OpenSSL" OFF)
+option(ENABLE_OPS "Enable Operations Tools" ON)
 option(USE_SYSTEM_UUID "Instructs the build system to search for and use an UUID library available in the host system" OFF)
 option(USE_SYSTEM_CURL "Instructs the build system to search for and use a cURL library available in the host system" ON)
 if (WIN32)
@@ -39,6 +40,7 @@ option(USE_SYSTEM_BZIP2 "Instructs the build system to search for and use a bzip
 option(BUILD_ROCKSDB "Instructs the build system to use RocksDB from the third party directory" ON)
 option(FORCE_WINDOWS "Instructs the build system to force Windows builds when WIN32 is specified" OFF)
 
+include(CheckIncludeFile)
 include(FeatureSummary)
 include(ExternalProject)
 
@@ -72,6 +74,12 @@ if(CCACHE_FOUND)
     set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
     message("-- Found ccache: ${CCACHE_FOUND}")
 endif(CCACHE_FOUND)
+
+# check for exec info before we enable the backtrace features.
+CHECK_INCLUDE_FILE("execinfo.h" HAS_EXECINFO)
+if (ENABLE_OPS AND HAS_EXECINFO AND NOT WIN32)
+  add_definitions("-DHAS_EXECINFO=1")
+endif()
 
 #### Establish Project Configuration ####
 # Enable usage of the VERSION specifier

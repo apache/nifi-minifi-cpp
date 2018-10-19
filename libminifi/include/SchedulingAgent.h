@@ -29,6 +29,7 @@
 #include <thread>
 #include "utils/TimeUtil.h"
 #include "utils/ThreadPool.h"
+#include "utils/BackTrace.h"
 #include "core/Core.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "properties/Configure.h"
@@ -90,7 +91,7 @@ class SingleRunMonitor : public TimerAwareMonitor {
       : TimerAwareMonitor(run_monitor) {
   }
   explicit SingleRunMonitor(TimerAwareMonitor &&other)
-      : TimerAwareMonitor(std::move(other)){
+      : TimerAwareMonitor(std::move(other)) {
   }
   virtual bool isFinished(const uint64_t &result) {
     if (result == 0) {
@@ -123,7 +124,11 @@ class SchedulingAgent {
     running_ = false;
     repo_ = repo;
     flow_repo_ = flow_repo;
-    auto pool = utils::ThreadPool<uint64_t>(configure_->getInt(Configure::nifi_flow_engine_threads, 2), true, controller_service_provider);
+    /**
+     * To facilitate traces we cannot use daemon threads -- this could potentially cause blocking on I/O; however, it's a better path
+     * to be able to debug why an agent doesn't work and still allow a restart via updates in these cases.
+     */
+    auto pool = utils::ThreadPool<uint64_t>(configure_->getInt(Configure::nifi_flow_engine_threads, 2), false, controller_service_provider, "SchedulingAgent");
     thread_pool_ = std::move(pool);
     thread_pool_.start();
   }
@@ -146,6 +151,10 @@ class SchedulingAgent {
   virtual void stop() {
     running_ = false;
     thread_pool_.shutdown();
+  }
+
+  std::vector<BackTrace> getTraces() {
+    return thread_pool_.getTraces();
   }
 
  public:
