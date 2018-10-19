@@ -319,6 +319,8 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
 
   virtual uint64_t getUptime();
 
+  virtual std::vector<BackTrace> getTraces();
+
   void initializeC2();
 
  protected:

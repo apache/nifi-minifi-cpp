@@ -18,6 +18,7 @@
 #define LIBMINIFI_INCLUDE_THREAD_POOL_H
 
 #include <chrono>
+#include <sstream>
 #include <iostream>
 #include <atomic>
 #include <mutex>
@@ -28,6 +29,7 @@
 #include <thread>
 #include <functional>
 
+#include "BackTrace.h"
 #include "capi/expect.h"
 #include "controllers/ThreadManagementService.h"
 #include "concurrentqueue.h"
@@ -189,17 +191,20 @@ std::shared_ptr<std::promise<T>> Worker<T>::getPromise() {
 
 class WorkerThread {
  public:
-  explicit WorkerThread(std::thread thread)
+  explicit WorkerThread(std::thread thread, const std::string &name = "NamelessWorker")
       : is_running_(false),
-        thread_(std::move(thread)) {
+        thread_(std::move(thread)),
+        name_(name) {
 
   }
-  WorkerThread()
-      : is_running_(false) {
+  WorkerThread(const std::string &name = "NamelessWorker")
+      : is_running_(false),
+        name_(name) {
 
   }
   std::atomic<bool> is_running_;
   std::thread thread_;
+  std::string name_;
 };
 
 /**
@@ -212,13 +217,15 @@ template<typename T>
 class ThreadPool {
  public:
 
-  ThreadPool(int max_worker_threads = 2, bool daemon_threads = false, const std::shared_ptr<core::controller::ControllerServiceProvider> &controller_service_provider = nullptr)
+  ThreadPool(int max_worker_threads = 2, bool daemon_threads = false, const std::shared_ptr<core::controller::ControllerServiceProvider> &controller_service_provider = nullptr,
+             const std::string &name = "NamelessPool")
       : daemon_threads_(daemon_threads),
         thread_reduction_count_(0),
         max_worker_threads_(max_worker_threads),
         adjust_threads_(false),
         running_(false),
-        controller_service_provider_(controller_service_provider) {
+        controller_service_provider_(controller_service_provider),
+        name_(name) {
     current_workers_ = 0;
     task_count_ = 0;
     thread_manager_ = nullptr;
@@ -231,7 +238,8 @@ class ThreadPool {
         adjust_threads_(false),
         running_(false),
         controller_service_provider_(std::move(other.controller_service_provider_)),
-        thread_manager_(std::move(other.thread_manager_)) {
+        thread_manager_(std::move(other.thread_manager_)),
+        name_(std::move(other.name_)) {
     current_workers_ = 0;
     task_count_ = 0;
   }
@@ -262,6 +270,22 @@ class ThreadPool {
    */
   bool isRunning(const std::string &identifier) {
     return task_status_[identifier] == true;
+  }
+
+  std::vector<BackTrace> getTraces() {
+    std::vector<BackTrace> traces;
+    std::lock_guard<std::recursive_mutex> lock(manager_mutex_);
+    std::unique_lock<std::mutex> wlock(worker_queue_mutex_);
+    // while we may be checking if running, we don't want to
+    // use the threads outside of the manager mutex's lock -- therefore we will
+    // obtain a lock so we can keep the threads in memory
+    if (running_) {
+      for (const auto &worker : thread_queue_) {
+        if (worker->is_running_)
+          traces.emplace_back(TraceResolver::getResolver().getBackTrace(worker->name_, worker->thread_.native_handle()));
+      }
+    }
+    return traces;
   }
 
   /**
@@ -315,6 +339,8 @@ class ThreadPool {
     if (!running_) {
       start();
     }
+
+    name_ = other.name_;
     return *this;
   }
 
@@ -367,6 +393,8 @@ class ThreadPool {
   std::recursive_mutex manager_mutex_;
 // work queue mutex
   std::mutex worker_queue_mutex_;
+  // thread pool name
+  std::string name_;
 
   /**
    * Call for the manager to start worker threads
@@ -404,7 +432,9 @@ bool ThreadPool<T>::execute(Worker<T> &&task, std::future<T> &future) {
 template<typename T>
 void ThreadPool<T>::manageWorkers() {
   for (int i = 0; i < max_worker_threads_; i++) {
-    auto worker_thread = std::make_shared<WorkerThread>();
+    std::stringstream thread_name;
+    thread_name << name_ << " #" << i;
+    auto worker_thread = std::make_shared<WorkerThread>(thread_name.str());
     worker_thread->thread_ = createThread(std::bind(&ThreadPool::run_tasks, this, worker_thread));
     thread_queue_.push_back(worker_thread);
     current_workers_++;
@@ -461,6 +491,7 @@ void ThreadPool<T>::manageWorkers() {
 template<typename T>
 void ThreadPool<T>::run_tasks(std::shared_ptr<WorkerThread> thread) {
   auto waitperiod = std::chrono::milliseconds(1) * 100;
+  thread->is_running_ = true;
   uint64_t wait_decay_ = 0;
   uint64_t yield_backoff = 10;  // start at 10 ms
   while (running_.load()) {

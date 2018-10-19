@@ -129,6 +129,7 @@ int main(int argc, char **argv) {
   ("getsize", "Reports the size of the associated connection queue", cxxopts::value<std::vector<std::string>>())  //NOLINT
   ("updateflow", "Updates the flow of the agent using the provided flow file", cxxopts::value<std::string>())  //NOLINT
   ("getfull", "Reports a list of full connections")  //NOLINT
+  ("jstack", "Returns backtraces from the agent")  //NOLINT
   ("manifest", "Generates a manifest for the current binary")  //NOLINT
   ("noheaders", "Removes headers from output streams");
 
@@ -191,13 +192,12 @@ int main(int argc, char **argv) {
       auto& components = result["c"].as<std::vector<std::string>>();
       for (const auto& connection : components) {
         auto socket = secure_context != nullptr ? stream_factory_->createSecureSocket(host, port, secure_context) : stream_factory_->createSocket(host, port);
-        if (clearConnection(std::move(socket), connection)){
+        if (clearConnection(std::move(socket), connection)) {
           std::cout << "Sent clear command to " << connection << ". Size before clear operation sent: " << std::endl;
           socket = secure_context != nullptr ? stream_factory_->createSecureSocket(host, port, secure_context) : stream_factory_->createSocket(host, port);
           if (getConnectionSize(std::move(socket), std::cout, connection) < 0)
-                    std::cout << "Could not connect to remote host " << host << ":" << port << std::endl;
-        }
-        else
+            std::cout << "Could not connect to remote host " << host << ":" << port << std::endl;
+        } else
           std::cout << "Could not connect to remote host " << host << ":" << port << std::endl;
       }
     }
@@ -231,6 +231,12 @@ int main(int argc, char **argv) {
         std::cout << "Could not connect to remote host " << host << ":" << port << std::endl;
     }
 
+    if (result.count("jstack") > 0) {
+      auto socket = secure_context != nullptr ? stream_factory_->createSecureSocket(host, port, secure_context) : stream_factory_->createSocket(host, port);
+      if (getJstacks(std::move(socket), std::cout) < 0)
+        std::cout << "Could not connect to remote host " << host << ":" << port << std::endl;
+    }
+
     if (result.count("updateflow") > 0) {
       auto& flow_file = result["updateflow"].as<std::string>();
       auto socket = secure_context != nullptr ? stream_factory_->createSecureSocket(host, port, secure_context) : stream_factory_->createSocket(host, port);
@@ -241,10 +247,9 @@ int main(int argc, char **argv) {
     if (result.count("manifest") > 0) {
       printManifest(configuration);
     }
-  }catch (const std::exception &exc)
-  {
-      // catch anything thrown within try block that derives from std::exception
-      std::cerr << exc.what() << std::endl;
+  } catch (const std::exception &exc) {
+    // catch anything thrown within try block that derives from std::exception
+    std::cerr << exc.what() << std::endl;
   } catch (...) {
     std::cout << options.help( { "", "Group" }) << std::endl;
     exit(0);

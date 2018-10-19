@@ -23,11 +23,12 @@ MiNiFi is a child project effort of Apache NiFi.  This repository is for a nativ
 - [Getting Started](#getting-started)
   - [System Requirements](#system-requirements)
   - [Bootstrapping](#bootstrapping)
-  - [Building](#building)
   - [Cleaning](#cleaning)
   - [Configuring](#configuring)
   - [Running](#running)
   - [Deploying](#deploying)
+  - [Extensions](#extensions)
+- [Operations](#operations)
 - [Issue Tracking](#issue-tracking)
 - [Documentation](#documentation)
 - [License](#license)
@@ -801,65 +802,12 @@ created within the build directory that contains a manifest of build artifacts.
 
 The build identifier will be carried with the deployed binary for the configuration you specify. By default all extensions will be built.
     
-### Managing MiNiFi C++ through the MiNiFi Controller
-
-The MiNiFi controller is an executable in the bin directory that can be used to control the MiNiFi C++ agent while it runs -- utilizing the [Command and Control Protocol](https://cwiki.apache.org/confluence/display/MINIFI/C2+Design+Proposal). Currently the controller will let you stop subcomponents within a running instance, clear queues, get the status of queues, and update the flow for a warm re-deploy.
-
-The minificontroller can track a single MiNiFi C++ agent through the use of three options. Port is required.
-The hostname is not and will default to localhost. Additionally, controller.socket.local.any.interface allows
-you to bind to any address when using localhost. Otherwise, we will bind only to the loopback adapter so only
-minificontroller on the local host can control the agent:
-
-	$ controller.socket.host=localhost
-	$ controller.socket.port=9998
-	$ controller.socket.local.any.interface=true/false ( default false)
-
-These are defined by default to the above values. If the port option is left undefined, the MiNiFi controller
-will be disabled in your deployment.
-
- The executable is stored in the bin directory and is titled minificontroller. Available commands are listed below.
- Note that with all commands an immediate response by the agent isn't guaranteed. In all cases the agent assumes the role of validating that a response was received, but execution of said command may take some time depending on a number of factors to include persistent storage type, size of queues, and speed of hardware. 
- 
- #### Specifying connecting information
- 
-   ./minificontroller --host "host name" --port "port"
-
-        * By default these options use those defined in minifi.properties and are not required
-
- #### Start Command
- 
-   ./minificontroller --start "component name"
- 
- #### Stop command 
-   ./minificontroller --stop "component name"
-   	  
- #### List connections command
-   ./minificontroller --list connections
-      
- #### List components command
-   ./minificontroller --list components
- 
- #### Clear connection command
-   ./minificontroller --clear "connection name"
-      
- #### GetSize command
-   ./minificontroller --getsize "connection name"
-
-       * Returns the size of the connection. The current size along with the max will be reported
- 
- #### Update flow
-   ./minificontroller --updateflow "config yml"
-    
-       *Updates the flow file reference and performs a warm re-deploy.
- 
- #### Get full connection command     
-   ./minificontroller --getfull 
-   
-       *Provides a list of full connections, if any.
-
 ### Extensions
 
 Please see [Extensions.md](Extensions.md) on how to build and run conditionally built dependencies and extensions.
+
+## Operations
+See our [operations documentation for additional inforomation on how to manage instances](OPS.md)
 
 ## Issue Tracking
 See https://issues.apache.org/jira/projects/MINIFICPP/issues for the issue tracker.

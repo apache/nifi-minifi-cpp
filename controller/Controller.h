@@ -125,6 +125,40 @@ int getFullConnections(std::unique_ptr<minifi::io::Socket> socket, std::ostream 
   return 0;
 }
 
+int getJstacks(std::unique_ptr<minifi::io::Socket> socket, std::ostream &out) {
+  socket->initialize();
+  std::vector<uint8_t> data;
+  uint8_t op = minifi::c2::Operation::DESCRIBE;
+  minifi::io::BaseStream stream;
+  stream.writeData(&op, 1);
+  stream.writeUTF("jstack");
+  if (socket->writeData(const_cast<uint8_t*>(stream.getBuffer()), stream.getSize()) < 0) {
+    return -1;
+  }
+  // read the response
+  uint8_t resp = 0;
+  socket->readData(&resp, 1);
+  if (resp == minifi::c2::Operation::DESCRIBE) {
+
+    uint64_t size = 0;
+    socket->read(size);
+
+    for (int i = 0; i < size; i++) {
+      std::string name;
+      uint64_t lines;
+      socket->readUTF(name);
+      socket->read(lines);
+      for (int j = 0; j < lines; j++) {
+        std::string line;
+        socket->readUTF(line);
+        out << name << " -- " << line << std::endl;
+      }
+
+    }
+  }
+  return 0;
+}
+
 /**
  * Prints the connection size for the provided connection.
  * @param socket socket ptr
@@ -168,7 +202,7 @@ int listComponents(std::unique_ptr<minifi::io::Socket> socket, std::ostream &out
     out << "Components:" << std::endl;
 
   for (int i = 0; i < responses; i++) {
-    std::string name,status;
+    std::string name, status;
     socket->readUTF(name, false);
     socket->readUTF(status, false);
     out << name << ", running: " << status << std::endl;
@@ -244,7 +278,7 @@ std::shared_ptr<core::controller::ControllerService> getControllerService(const 
   return service;
 }
 
- void printManifest(const std::shared_ptr<minifi::Configure> &configuration) {
+void printManifest(const std::shared_ptr<minifi::Configure> &configuration) {
 
   std::string prov_repo_class = "volatileprovenancerepository";
   std::string flow_repo_class = "volatileflowfilerepository";
@@ -252,12 +286,12 @@ std::shared_ptr<core::controller::ControllerService> getControllerService(const 
   std::string content_repo_class = "volatilecontentrepository";
 
   std::shared_ptr<logging::LoggerProperties> log_properties = std::make_shared<logging::LoggerProperties>();
-    log_properties->setHome("./");
-    log_properties->set("appender.stdout","stdout");
-    log_properties->set("logger.org::apache::nifi::minifi","OFF,stdout");
-    logging::LoggerConfiguration::getConfiguration().initialize(log_properties);
+  log_properties->setHome("./");
+  log_properties->set("appender.stdout", "stdout");
+  log_properties->set("logger.org::apache::nifi::minifi", "OFF,stdout");
+  logging::LoggerConfiguration::getConfiguration().initialize(log_properties);
 
-  configuration->set(minifi::Configure::nifi_flow_configuration_file,"../conf/config.yml");
+  configuration->set(minifi::Configure::nifi_flow_configuration_file, "../conf/config.yml");
   configuration->get(minifi::Configure::nifi_provenance_repository_class_name, prov_repo_class);
   // Create repos for flow record and provenance
   std::shared_ptr<core::Repository> prov_repo = core::createRepository(prov_repo_class, true, "provenance");
@@ -280,11 +314,11 @@ std::shared_ptr<core::controller::ControllerService> getControllerService(const 
     minifi::setDefaultDirectory(content_repo_path);
   }
 
-  configuration->set("c2.agent.heartbeat.period","25");
-  configuration->set("nifi.c2.root.classes","AgentInformation");
-  configuration->set("nifi.c2.enable","true");
-  configuration->set("c2.agent.listen","true");
-  configuration->set("c2.agent.heartbeat.reporter.classes","AgentPrinter");
+  configuration->set("c2.agent.heartbeat.period", "25");
+  configuration->set("nifi.c2.root.classes", "AgentInformation");
+  configuration->set("nifi.c2.enable", "true");
+  configuration->set("c2.agent.listen", "true");
+  configuration->set("c2.agent.heartbeat.reporter.classes", "AgentPrinter");
 
   configuration->get(minifi::Configure::nifi_configuration_class_name, nifi_configuration_class_name);
 
@@ -293,7 +327,7 @@ std::shared_ptr<core::controller::ControllerService> getControllerService(const 
   std::unique_ptr<core::FlowConfiguration> flow_configuration = core::createFlowConfiguration(prov_repo, flow_repo, content_repo, configuration, stream_factory, nifi_configuration_class_name);
 
   std::shared_ptr<minifi::FlowController> controller = std::unique_ptr<minifi::FlowController>(
-      new minifi::FlowController(prov_repo, flow_repo, configuration, std::move(flow_configuration), content_repo,"manifest",false));
+      new minifi::FlowController(prov_repo, flow_repo, configuration, std::move(flow_configuration), content_repo, "manifest", false));
   controller->load();
   controller->start();
   std::this_thread::sleep_for(std::chrono::milliseconds(10000));

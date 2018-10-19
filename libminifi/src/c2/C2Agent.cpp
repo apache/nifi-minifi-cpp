@@ -173,21 +173,25 @@ void C2Agent::configure(const std::shared_ptr<Configure> &configure, bool reconf
   if (allow_updates_) {
     if (!configure->get("nifi.c2.agent.update.command", "c2.agent.update.command", update_command_)) {
       char cwd[1024];
-      getcwd(cwd, sizeof(cwd));
+      if (getcwd(cwd, sizeof(cwd)) == nullptr) {
+        logger_->log_error("Could not set update command, reason %s", std::strerror(errno));
 
-      std::stringstream command;
-      command << cwd << "/minifi.sh update";
-      update_command_ = command.str();
+      } else {
+        std::stringstream command;
+        command << cwd << "/minifi.sh update";
+        update_command_ = command.str();
+      }
     }
 
     if (!configure->get("nifi.c2.agent.update.temp.location", "c2.agent.update.temp.location", update_location_)) {
       char cwd[1024];
-      getcwd(cwd, sizeof(cwd));
-
-      std::stringstream copy_path;
-      std::stringstream command;
-
-      copy_path << cwd << "/minifi.update";
+      if (getcwd(cwd, sizeof(cwd)) == nullptr) {
+        logger_->log_error("Could not set copy path, reason %s", std::strerror(errno));
+      } else {
+        std::stringstream copy_path;
+        std::stringstream command;
+        copy_path << cwd << "/minifi.update";
+      }
     }
 
     // if not defined we won't beable to update
@@ -536,6 +540,31 @@ void C2Agent::handle_describe(const C2ContentResponse &resp) {
 
     enqueue_c2_response(std::move(response));
     return;
+  } else if (resp.name == "jstack") {
+    if (update_sink_->isRunning()) {
+      const std::vector<BackTrace> traces = update_sink_->getTraces();
+      for (const auto &trace : traces) {
+        for (const auto & line : trace.getTraces()) {
+          logger_->log_trace("%s -- %s", trace.getName(), line);
+        }
+      }
+      auto keys = configuration_->getConfiguredKeys();
+      C2Payload response(Operation::ACKNOWLEDGE, resp.ident, false, true);
+      response.setLabel("configuration_options");
+      for (const auto &trace : traces) {
+        C2Payload options(Operation::ACKNOWLEDGE, resp.ident, false, true);
+        options.setLabel(trace.getName());
+        std::string value;
+        for (const auto &line : trace.getTraces()) {
+          C2ContentResponse option(Operation::ACKNOWLEDGE);
+          option.name = line;
+          option.operation_arguments[line] = line;
+          options.addContent(std::move(option));
+        }
+        response.addPayload(std::move(options));
+      }
+      enqueue_c2_response(std::move(response));
+    }
   }
   C2Payload response(Operation::ACKNOWLEDGE, resp.ident, false, true);
   enqueue_c2_response(std::move(response));
@@ -720,14 +749,19 @@ void C2Agent::handle_update(const C2ContentResponse &resp) {
 
 void C2Agent::restart_agent() {
   char cwd[1024];
-  getcwd(cwd, sizeof(cwd));
+  if (getcwd(cwd, sizeof(cwd)) == nullptr) {
+    logger_->log_error("Could not restart agent, reason %s", std::strerror(errno));
+    return;
+  }
 
   std::stringstream command;
   command << cwd << "/minifi.sh restart";
 }
 
 void C2Agent::update_agent() {
-  system(update_command_.c_str());
+  if (!system(update_command_.c_str())) {
+    logger_->log_warn("May not have command processor");
+  }
 }
 
 int16_t C2Agent::setResponseNodes(const std::shared_ptr<state::response::ResponseNode> &metric) {

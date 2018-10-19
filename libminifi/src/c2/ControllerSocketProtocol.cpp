@@ -187,6 +187,22 @@ void ControllerSocketProtocol::initialize(const std::shared_ptr<core::controller
               resp.writeUTF(component->isRunning() ? "true" : "false");
             }
             stream->writeData(const_cast<uint8_t*>(resp.getBuffer()), resp.getSize());
+          } else if (what == "jstack") {
+            io::BaseStream resp;
+            resp.writeData(&head, 1);
+            auto traces = update_sink_->getTraces();
+            uint64_t trace_size = traces.size();
+            resp.write(trace_size);
+            for (const auto &trace : traces) {
+              const auto &lines = trace.getTraces();
+              resp.writeUTF(trace.getName());
+              uint64_t lsize = lines.size();
+              resp.write(lsize);
+              for (const auto &line : lines) {
+                resp.writeUTF(line);
+              }
+            }
+            stream->writeData(const_cast<uint8_t*>(resp.getBuffer()), resp.getSize());
           } else if (what == "connections") {
             io::BaseStream resp;
             resp.writeData(&head, 1);
