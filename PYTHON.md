@@ -27,7 +27,7 @@ This readme provides a how-to guide on using the Python bindings for MiNiFi C++.
 
 ## Description
 
-Apache NiFi MiNiFI C++ can communicates using python bindings. These bindings connect
+Apache NiFi MiNiFi C++ can communicates using python bindings. These bindings connect
 to the C API that exists. In doing so they can utilize the building blocks within the CAPI.
 
 The design is predicated upon a MiNiFi instance. There is a getFile example that shows
@@ -49,7 +49,7 @@ created at build time.
 	This can typically be performed through pip, with `pip install cffi`
 	
 ## Example
-   The python directory contains an example where we use a MiNiFI C++ processor along with a
+   The python directory contains an example where we use a MiNiFi C++ processor along with a
    a python processor. The implementation of the python processor requires that a call back
    method be defined for ontrigger.
    
