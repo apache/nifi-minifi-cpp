@@ -7,7 +7,7 @@ to ensure the following steps have been taken:
 - [ ] Is there a JIRA ticket associated with this PR? Is it referenced
      in the commit message?
 
-- [ ] Does your PR title start with MINIFI-XXXX where XXXX is the JIRA number you are trying to resolve? Pay particular attention to the hyphen "-" character.
+- [ ] Does your PR title start with MINIFICPP-XXXX where XXXX is the JIRA number you are trying to resolve? Pay particular attention to the hyphen "-" character.
 
 - [ ] Has your PR been rebased against the latest commit within the target branch (typically master)?
 

@@ -113,7 +113,7 @@ fi
 if [ "$NO_PROMPT" = "true" ]; then
   agree="N"
   echo "****************************************"
-  echo "Welcome, this bootstrap script will update your system to install MiNIFi C++"
+  echo "Welcome, this bootstrap script will update your system to install MiNiFi C++"
   echo "You have opted to skip prompts. "
 fi
 
