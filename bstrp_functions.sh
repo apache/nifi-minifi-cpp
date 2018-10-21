@@ -189,7 +189,7 @@ show_main_menu() {
   echo "****************************************"
   echo " MiNiFi C++ Main Menu."
   echo "****************************************"
-  echo "A. Select MiNIFi C++ Features "
+  echo "A. Select MiNiFi C++ Features "
   if [ "$ALL_FEATURES_ENABLED" = "${TRUE}" ]; then
     echo "  All features enabled  ........$(print_feature_status ALL_FEATURES_ENABLED)"
   fi
