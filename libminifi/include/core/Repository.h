@@ -41,6 +41,8 @@
 #include "utils/StringUtils.h"
 #include "Core.h"
 #include "core/Connectable.h"
+#include "core/TraceableResource.h"
+#include "utils/BackTrace.h"
 
 namespace org {
 namespace apache {
@@ -53,7 +55,7 @@ namespace core {
 #define MAX_REPOSITORY_ENTRY_LIFE_TIME (600000) // 10 minute
 #define REPOSITORY_PURGE_PERIOD (2500) // 2500 msec
 
-class Repository : public virtual core::SerializableComponent {
+class Repository : public virtual core::SerializableComponent, public core::TraceableResource {
  public:
   /*
    * Constructor for the repository
@@ -102,9 +104,8 @@ class Repository : public virtual core::SerializableComponent {
   }
 
   void setConnectionMap(std::map<std::string, std::shared_ptr<core::Connectable>> &connectionMap) {
-      this->connectionMap = connectionMap;
-    }
-
+    this->connectionMap = connectionMap;
+  }
 
   virtual bool Get(const std::string &key, std::string &value) {
     return false;
@@ -114,6 +115,14 @@ class Repository : public virtual core::SerializableComponent {
   virtual void run() {
     // no op
   }
+
+  /**
+   * Since SerializableComponents represent a runnable object, we should return traces
+   */
+  virtual BackTrace &&getTraces() {
+    return TraceResolver::getResolver().getBackTrace(getName(), thread_.native_handle());
+  }
+
   // Start the repository monitor thread
   virtual void start();
   // Stop the repository monitor thread
