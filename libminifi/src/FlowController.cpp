@@ -911,11 +911,18 @@ uint64_t FlowController::getUptime() {
 }
 
 std::vector<BackTrace> FlowController::getTraces() {
-    std::vector<BackTrace> traces;
+  std::vector<BackTrace> traces;
   auto timer_driven = timer_scheduler_->getTraces();
   traces.insert(traces.end(), std::make_move_iterator(timer_driven.begin()), std::make_move_iterator(timer_driven.end()));
   auto event_driven = event_scheduler_->getTraces();
   traces.insert(traces.end(), std::make_move_iterator(event_driven.begin()), std::make_move_iterator(event_driven.end()));
+  // repositories
+  auto prov_repo_trace = provenance_repo_->getTraces();
+  traces.emplace_back(std::move(prov_repo_trace));
+  auto flow_repo_trace = flow_file_repo_->getTraces();
+  traces.emplace_back(std::move(flow_repo_trace));
+  auto my_traces = TraceResolver::getResolver().getBackTrace("main");
+  traces.emplace_back(std::move(my_traces));
   return traces;
 }
 
