@@ -51,7 +51,9 @@ will be disabled in your deployment.
 ### Debug
   
   Agents have the ability to return a list of stacks of currently running threads. The Jstack command provides a list of call stacks
-  for threads within the agent. This may allow users and maintainers to view stacks of running threads to diagnose issues.
+  for threads within the agent. This may allow users and maintainers to view stacks of running threads to diagnose issues. The name
+  is an homage to the jstack command used by Java developers. The design is fundamentally the same as that of Java -- signal handlers
+  notify signals to interrupt and provide traces. This feature is currently not built into Windows builds.
  
 ### Commands
  #### Specifying connecting information
@@ -66,7 +68,7 @@ will be disabled in your deployment.
  
  #### Stack command
    ./minificontroller --jstack
- 
+    
  #### Stop command 
    ./minificontroller --stop "component name"
    	  
