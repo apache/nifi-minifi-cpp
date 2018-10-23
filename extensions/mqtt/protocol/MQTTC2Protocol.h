@@ -30,7 +30,7 @@
 #include "c2/C2Protocol.h"
 #include "io/BaseStream.h"
 #include "agent/agent_version.h"
-#include "PayloadSerializer.h"
+#include "c2/PayloadSerializer.h"
 
 namespace org {
 namespace apache {

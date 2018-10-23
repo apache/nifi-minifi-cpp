@@ -98,7 +98,7 @@ class ConfigHandler : public CivetHandler {
 int main(int argc, char **argv) {
   mg_init_library(0);
   LogTestController::getInstance().setInfo<minifi::FlowController>();
-  LogTestController::getInstance().setDebug<minifi::utils::HTTPClient>();
+  LogTestController::getInstance().setTrace<minifi::utils::HTTPClient>();
   LogTestController::getInstance().setDebug<minifi::c2::RESTSender>();
   LogTestController::getInstance().setTrace<minifi::c2::C2Agent>();
 
@@ -142,6 +142,7 @@ int main(int argc, char **argv) {
 
   configuration->set("c2.enable", "true");
   configuration->set("c2.agent.class", "test");
+  configuration->set("c2.agent.update.allow","true");
   configuration->set("c2.rest.url", "http://localhost:7072/update");
   configuration->set("c2.agent.heartbeat.period", "1000");
   mkdir("content_repository", S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
@@ -178,6 +179,7 @@ int main(int argc, char **argv) {
   auto milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(then - start).count();
   std::string logs = LogTestController::getInstance().log_output.str();
   assert(logs.find("removing file") != std::string::npos);
+  assert(logs.find("May not have command processor") != std::string::npos);
   LogTestController::getInstance().reset();
   rmdir("./content_repository");
   assert(h_ex.calls_ <= (milliseconds / 1000) + 1);

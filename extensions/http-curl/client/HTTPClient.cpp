@@ -250,7 +250,7 @@ bool HTTPClient::submit() {
   curl_easy_getinfo(http_session_, CURLINFO_RESPONSE_CODE, &http_code);
   curl_easy_getinfo(http_session_, CURLINFO_CONTENT_TYPE, &content_type_str_);
   if (res != CURLE_OK) {
-    logger_->log_error("curl_easy_perform() failed %s\n", curl_easy_strerror(res));
+    logger_->log_error("curl_easy_perform() failed %s on %s\n", curl_easy_strerror(res), url_);
     return false;
   }
 
@@ -301,11 +301,11 @@ const char *HTTPClient::getContentType() {
 }
 
 const std::vector<char> &HTTPClient::getResponseBody() {
-  if (response_body_.size() == 0){
-    if (callback && callback->ptr){
+  if (response_body_.size() == 0) {
+    if (callback && callback->ptr) {
       response_body_ = callback->ptr->to_string();
-    }else{
-    response_body_ = read_callback_.to_string();
+    } else {
+      response_body_ = read_callback_.to_string();
     }
   }
   return response_body_;
@@ -384,9 +384,8 @@ bool HTTPClient::isSecure(const std::string &url) {
 }
 
 void HTTPClient::setInterface(const std::string &ifc) {
-	curl_easy_setopt(http_session_, CURLOPT_INTERFACE, ifc.c_str());
+  curl_easy_setopt(http_session_, CURLOPT_INTERFACE, ifc.c_str());
 }
-
 
 } /* namespace utils */
 } /* namespace minifi */

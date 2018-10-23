@@ -102,6 +102,10 @@ build_deps(){
             INSTALLED+=("boost")
           elif [ "$FOUND_VALUE" = "lua" ]; then
             INSTALLED+=("lua")
+          elif [ "$FOUND_VALUE" = "libtool" ]; then
+            INSTALLED+=("libtool")
+          elif [ "$FOUND_VALUE" = "automake" ]; then
+            INSTALLED+=("automake")
           elif [ "$FOUND_VALUE" = "gpsd" ]; then
             INSTALLED+=("gpsd")
           elif [ "$FOUND_VALUE" = "libarchive" ]; then

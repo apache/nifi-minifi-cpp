@@ -26,7 +26,7 @@
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "ConvertHeartBeat.h"
-#include "PayloadSerializer.h"
+#include "c2/PayloadSerializer.h"
 #include "utils/ByteArrayCallback.h"
 namespace org {
 namespace apache {
@@ -49,7 +49,7 @@ void ConvertHeartBeat::onTrigger(const std::shared_ptr<core::ProcessContext> &co
   // while we have heartbeats we can continue to loop.
   while (mqtt_service_->get(100, listening_topic, heartbeat)) {
     if (heartbeat.size() > 0) {
-      c2::C2Payload payload = c2::mqtt::PayloadSerializer::deserialize(heartbeat);
+      c2::C2Payload payload = c2::PayloadSerializer::deserialize(heartbeat);
       auto serialized = serializeJsonRootPayload(payload);
       logger_->log_debug("Converted JSON output %s", serialized);
       minifi::utils::StreamOutputCallback byteCallback(serialized.size() + 1);

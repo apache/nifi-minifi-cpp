@@ -228,7 +228,6 @@ class SingleFileOutputValidator(OutputValidator):
 
         return False
 
-
 class SegfaultValidator(OutputValidator):
     """
     Validate that a file was received.

@@ -35,7 +35,7 @@ class IntegrationBase {
 
   virtual ~IntegrationBase();
 
-  void run(std::string test_file_location);
+  virtual void run(std::string test_file_location);
 
   void setKeyDir(const std::string key_dir) {
     this->key_dir = key_dir;
@@ -123,7 +123,6 @@ void IntegrationBase::run(std::string test_file_location) {
 
   shutdownBeforeFlowController();
   controller->unload();
-
   runAssertions();
 
   cleanup();

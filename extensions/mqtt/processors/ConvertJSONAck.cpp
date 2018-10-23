@@ -27,7 +27,7 @@
 #include "utils/StringUtils.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
-#include "PayloadSerializer.h"
+#include "c2/PayloadSerializer.h"
 #include "utils/ByteArrayCallback.h"
 namespace org {
 namespace apache {
@@ -98,7 +98,7 @@ void ConvertJSONAck::onTrigger(const std::shared_ptr<core::ProcessContext> &cont
     std::string str(callback.buffer_.data(),callback.buffer_.size());
     auto payload = parseJsonResponse(response_payload, callback.buffer_);
 
-    auto stream = c2::mqtt::PayloadSerializer::serialize(payload);
+    auto stream = c2::PayloadSerializer::serialize(1,payload);
 
     mqtt_service_->send(topic, stream->getBuffer(), stream->getSize());
 

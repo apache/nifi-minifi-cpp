@@ -77,7 +77,7 @@ class Responder : public CivetHandler {
   bool isSecure;
 };
 
-class SiteToSiteTestHarness : public HTTPIntegrationBase {
+class SiteToSiteTestHarness : public CoapIntegrationBase {
  public:
   explicit SiteToSiteTestHarness(bool isSecure)
       : isSecure(isSecure) {

@@ -44,6 +44,10 @@ enum Operation {
   TRANSFER
 };
 
+#define PAYLOAD_NO_STATUS 0
+#define PAYLOAD_SUCCESS 1
+#define PAYLOAD_FAILURE 2
+
 enum Direction {
   TRANSMIT,
   RECEIVE
@@ -108,7 +112,9 @@ class C2Payload : public state::Update {
 
   }
 
-  C2Payload(Operation op, std::string identifier, bool resp = false, bool isRaw = false);
+  C2Payload(Operation op, const std::string &identifier, bool resp = false, bool isRaw = false);
+
+  C2Payload(Operation op, state::UpdateState state,const std::string &identifier, bool resp = false, bool isRaw = false);
 
   C2Payload(Operation op, bool resp = false, bool isRaw = false);
 

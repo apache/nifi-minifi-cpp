@@ -50,7 +50,7 @@
 #include "../tests/TestServer.h"
 #include "HTTPIntegrationBase.h"
 
-class HttpTestHarness : public HTTPIntegrationBase {
+class HttpTestHarness : public CoapIntegrationBase {
  public:
   HttpTestHarness() {
     char format[] = "/tmp/ssth.XXXXXX";

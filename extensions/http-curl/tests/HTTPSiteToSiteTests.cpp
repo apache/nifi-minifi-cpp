@@ -50,10 +50,10 @@
 #include "HTTPHandlers.h"
 #include "client/HTTPStream.h"
 
-class SiteToSiteTestHarness : public HTTPIntegrationBase {
+class SiteToSiteTestHarness : public CoapIntegrationBase {
  public:
   explicit SiteToSiteTestHarness(bool isSecure)
-      : HTTPIntegrationBase(2000), isSecure(isSecure) {
+      : CoapIntegrationBase(2000), isSecure(isSecure) {
     char format[] = "/tmp/ssth.XXXXXX";
     dir = testController.createTempDirectory(format);
   }
