@@ -57,7 +57,7 @@ void ApplyTemplate::onTrigger(const std::shared_ptr<core::ProcessContext> &conte
   }
 
   std::string template_file;
-  context->getProperty(Template.getName(), template_file, flow_file);
+  context->getProperty(Template, template_file, flow_file);
   WriteCallback cb(template_file, flow_file);
   session->write(flow_file, &cb);
   session->transfer(flow_file, Success);

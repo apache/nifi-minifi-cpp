@@ -17,9 +17,10 @@
 # under the License.
 #
 
+
+include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 cmake_minimum_required(VERSION 2.6)
 
-include_directories(../../libminifi/include  ../../libminifi/include/core  ../../thirdparty/spdlog-20170710/include ../../thirdparty/concurrentqueue ../../thirdparty/yaml-cpp-yaml-cpp-0.5.3/include ../../thirdparty/civetweb-1.9.1/include ../../thirdparty/) 
 
 find_package(Boost COMPONENTS system filesystem iostreams REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS})

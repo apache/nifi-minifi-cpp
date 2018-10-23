@@ -45,7 +45,7 @@ namespace c2 {
 class RESTSender : public RESTProtocol, public C2Protocol {
  public:
 
-  explicit RESTSender(std::string name, utils::Identifier uuid = utils::Identifier());
+  explicit RESTSender(const std::string &name, const utils::Identifier &uuid = utils::Identifier());
 
   virtual C2Payload consumePayload(const std::string &url, const C2Payload &payload, Direction direction, bool async) override;
 
@@ -61,10 +61,11 @@ class RESTSender : public RESTProtocol, public C2Protocol {
 
   std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service_;
 
- private:
-  std::shared_ptr<logging::Logger> logger_;
   std::string rest_uri_;
   std::string ack_uri_;
+
+ private:
+  std::shared_ptr<logging::Logger> logger_;
 };
 
 REGISTER_RESOURCE(RESTSender);

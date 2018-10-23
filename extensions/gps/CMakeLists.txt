@@ -17,9 +17,8 @@
 # under the License.
 #
 
-cmake_minimum_required(VERSION 2.6)
+include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 
-include_directories(../../libminifi/include  ../../libminifi/include/core/yaml  ../../libminifi/include/core  ../../thirdparty/spdlog-20170710/include ../../thirdparty/concurrentqueue ../../thirdparty/yaml-cpp-yaml-cpp-0.5.3/include ${CIVET_THIRDPARTY_ROOT}/include ../../thirdparty/) 
 
 find_package(LibGPS REQUIRED)
 

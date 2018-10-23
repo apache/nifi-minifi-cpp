@@ -27,7 +27,6 @@ namespace apache {
 namespace nifi {
 namespace minifi {
 namespace c2 {
-namespace mqtt {
 
 class PayloadSerializer {
  public:
@@ -37,6 +36,11 @@ class PayloadSerializer {
    */
   static void serializeValueNode(state::response::ValueNode &value, std::shared_ptr<io::BaseStream> stream) {
     auto base_type = value.getValue();
+    if (!base_type) {
+      uint8_t type = 0;
+      stream->write(&type, 1);
+      return;
+    }
     uint8_t type = 0x00;
     if (auto sub_type = std::dynamic_pointer_cast<state::response::IntValue>(base_type)) {
       type = 1;
@@ -64,13 +68,13 @@ class PayloadSerializer {
       stream->writeUTF(str);
     }
   }
-  static void serialize(uint8_t op, const C2Payload &payload, std::shared_ptr<io::BaseStream> stream) {
+  static void serialize(uint16_t op, const C2Payload &payload, std::shared_ptr<io::BaseStream> stream) {
     uint8_t st;
     uint32_t size = payload.getNestedPayloads().size();
     stream->write(size);
     for (auto nested_payload : payload.getNestedPayloads()) {
       op = opToInt(nested_payload.getOperation());
-      stream->write(&op, 1);
+      stream->write(op);
       stream->write(&st, 1);
       stream->writeUTF(nested_payload.getLabel());
       stream->writeUTF(nested_payload.getIdentifier());
@@ -126,11 +130,13 @@ class PayloadSerializer {
     }
     return op;
   }
-  static std::shared_ptr<io::BaseStream> serialize(const C2Payload &payload) {
+  static std::shared_ptr<io::BaseStream> serialize(uint16_t version, const C2Payload &payload) {
     std::shared_ptr<io::BaseStream> stream = std::make_shared<io::BaseStream>();
-    uint8_t op, st = 0;
+    uint16_t op = 0;
+    uint8_t st = 0;
     op = opToInt(payload.getOperation());
-    stream->write(&op, 1);
+    stream->write(version);
+    stream->write(op);
     if (payload.getStatus().getState() == state::UpdateState::NESTED) {
       st = 1;
       stream->write(&st, 1);
@@ -308,7 +314,6 @@ class PayloadSerializer {
   virtual ~PayloadSerializer();
 };
 
-} /* namespace mqtt */
 } /* namespace c2 */
 } /* namespace minifi */
 } /* namespace nifi */

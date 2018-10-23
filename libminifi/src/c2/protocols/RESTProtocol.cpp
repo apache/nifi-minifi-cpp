@@ -50,7 +50,7 @@ const C2Payload RESTProtocol::parseJsonResponse(const C2Payload &payload, const 
         identifier = root["identifier"].GetString();
       }
       if (root["requested_operations"].Size() == 0 && root["requestedOperations"].Size() == 0)
-        return std::move(C2Payload(payload.getOperation(), state::UpdateState::READ_COMPLETE, true));
+        return C2Payload(payload.getOperation(), state::UpdateState::READ_COMPLETE, true);
 
       C2Payload new_payload(payload.getOperation(), state::UpdateState::NESTED, true);
 
@@ -128,7 +128,7 @@ const C2Payload RESTProtocol::parseJsonResponse(const C2Payload &payload, const 
   } catch (...) {
   }
 #endif
-  return std::move(C2Payload(payload.getOperation(), state::UpdateState::READ_COMPLETE, true));
+  return C2Payload(payload.getOperation(), state::UpdateState::READ_COMPLETE, true);
 }
 
 void setJsonStr(const std::string& key, const state::response::ValueNode& value, rapidjson::Value& parent, rapidjson::Document::AllocatorType& alloc) {  // NOLINT

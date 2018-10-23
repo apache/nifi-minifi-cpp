@@ -23,7 +23,7 @@ namespace nifi {
 namespace minifi {
 namespace c2 {
 
-MQTTC2Protocol::MQTTC2Protocol(std::string name, utils::Identifier uuid = utils::Identifier())
+MQTTC2Protocol::MQTTC2Protocol(std::string name, utils::Identifier uuid)
     : C2Protocol(name, uuid),
       logger_(logging::LoggerFactory<Connectable>::getLogger()) {
 }
@@ -86,12 +86,12 @@ C2Payload MQTTC2Protocol::serialize(const C2Payload &payload) {
 
   std::lock_guard<std::mutex> lock(input_mutex_);
 
-  auto stream = c2::mqtt::PayloadSerializer::serialize(payload);
+  auto stream = c2::mqtt::PayloadSerializer::serialize(0x00, payload);
 
   auto transmit_id = mqtt_service_->send(heartbeat_topic_, stream->getBuffer(), stream->getSize());
   std::vector<uint8_t> response;
   if (transmit_id > 0 && mqtt_service_->awaitResponse(5000, transmit_id, in_topic_, response)) {
-    return  c2::mqtt::PayloadSerializer::deserialize(response);
+    return c2::mqtt::PayloadSerializer::deserialize(response);
   }
   return C2Payload(payload.getOperation(), state::UpdateState::READ_ERROR, true);
 }

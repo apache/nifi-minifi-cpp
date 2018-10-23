@@ -43,6 +43,10 @@ enum Operation {
   TRANSFER
 };
 
+#define PAYLOAD_NO_STATUS 0
+#define PAYLOAD_SUCCESS 1
+#define PAYLOAD_FAILURE 2
+
 enum Direction {
   TRANSMIT,
   RECEIVE
@@ -109,13 +113,15 @@ class C2Payload : public state::Update {
 
   C2Payload(Operation op, std::string identifier, bool resp = false, bool isRaw = false);
 
+  C2Payload(Operation op, state::UpdateState state, std::string identifier, bool resp = false, bool isRaw = false);
+
   C2Payload(Operation op, bool resp = false, bool isRaw = false);
 
   C2Payload(Operation op, state::UpdateState state, bool resp = false, bool isRaw = false);
 
-  C2Payload(const C2Payload &other);
+  C2Payload(const C2Payload &other) = default;
 
-  C2Payload(const C2Payload &&other);
+  C2Payload(C2Payload &&other) = default;
 
   void setIdentifier(const std::string &ident);
 
@@ -192,8 +198,8 @@ class C2Payload : public state::Update {
    */
   const std::vector<C2Payload> &getNestedPayloads() const;
 
-  C2Payload &operator=(const C2Payload &&other);
-  C2Payload &operator=(const C2Payload &other);
+  C2Payload &operator=(C2Payload &&other) = default;
+  C2Payload &operator=(const C2Payload &other) = default;
 
   inline bool operator==(const C2Payload &rhs) const {
     if (op_ != rhs.op_) {
@@ -244,7 +250,6 @@ class C2Payload : public state::Update {
   bool isResponse;
 
   bool is_container_;
-
 };
 
 } /* namesapce c2 */

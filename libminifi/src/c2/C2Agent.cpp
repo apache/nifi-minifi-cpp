@@ -409,8 +409,6 @@ void C2Agent::handle_c2_server_response(const C2ContentResponse &resp) {
       break;
     case Operation::UPDATE: {
       handle_update(resp);
-      C2Payload response(Operation::ACKNOWLEDGE, resp.ident, false, true);
-      enqueue_c2_response(std::move(response));
     }
       break;
 
@@ -596,7 +594,7 @@ void C2Agent::handle_update(const C2ContentResponse &resp) {
       unlink(file_path.c_str());
       // if we can apply the update, we will acknowledge it and then backup the configuration file.
       if (update_sink_->applyUpdate(urlStr, raw_data_str)) {
-        C2Payload response(Operation::ACKNOWLEDGE, resp.ident, false, true);
+        C2Payload response(Operation::ACKNOWLEDGE, state::UpdateState::FULLY_APPLIED, resp.ident, false, true);
         enqueue_c2_response(std::move(response));
 
         if (persist != resp.operation_arguments.end() && utils::StringUtils::equalsIgnoreCase(persist->second.to_string(), "true")) {
@@ -637,7 +635,7 @@ void C2Agent::handle_update(const C2ContentResponse &resp) {
         }
       } else {
         logger_->log_debug("update failed.");
-        C2Payload response(Operation::ACKNOWLEDGE, resp.ident, false, true);
+        C2Payload response(Operation::ACKNOWLEDGE, state::UpdateState::SET_ERROR, resp.ident, false, true);
         enqueue_c2_response(std::move(response));
       }
       // send
@@ -646,7 +644,7 @@ void C2Agent::handle_update(const C2ContentResponse &resp) {
       if (update_text != resp.operation_arguments.end()) {
         if (update_sink_->applyUpdate(url->second.to_string(), update_text->second.to_string()) != 0 && persist != resp.operation_arguments.end()
             && utils::StringUtils::equalsIgnoreCase(persist->second.to_string(), "true")) {
-          C2Payload response(Operation::ACKNOWLEDGE, resp.ident, false, true);
+          C2Payload response(Operation::ACKNOWLEDGE, state::UpdateState::FULLY_APPLIED, resp.ident, false, true);
           enqueue_c2_response(std::move(response));
           // update nifi.flow.configuration.file=./conf/config.yml
           std::string config_file;
@@ -671,7 +669,7 @@ void C2Agent::handle_update(const C2ContentResponse &resp) {
             writer.close();
           }
         } else {
-          C2Payload response(Operation::ACKNOWLEDGE, resp.ident, false, true);
+          C2Payload response(Operation::ACKNOWLEDGE, state::UpdateState::SET_ERROR, resp.ident, false, true);
           enqueue_c2_response(std::move(response));
         }
       }
@@ -706,7 +704,7 @@ void C2Agent::handle_update(const C2ContentResponse &resp) {
 
     if (resp.operation_arguments.size() > 0)
       configure(running_c2_configuration);
-    C2Payload response(Operation::ACKNOWLEDGE, resp.ident, false, true);
+    C2Payload response(Operation::ACKNOWLEDGE, state::UpdateState::FULLY_APPLIED, resp.ident, false, true);
     enqueue_c2_response(std::move(response));
   } else if (resp.name == "agent") {
     // we are upgrading the agent. therefore we must be given a location
@@ -728,7 +726,7 @@ void C2Agent::handle_update(const C2ContentResponse &resp) {
 
       // acknowledge the transfer. For a transfer, the response identifier should be the checksum of the
       // file transferred.
-      C2Payload transfer_response(Operation::ACKNOWLEDGE, response.getIdentifier(), false, true);
+      C2Payload transfer_response(Operation::ACKNOWLEDGE, state::UpdateState::FULLY_APPLIED, response.getIdentifier(), false, true);
 
       protocol_.load()->consumePayload(std::move(transfer_response));
 
@@ -744,6 +742,9 @@ void C2Agent::handle_update(const C2ContentResponse &resp) {
         update_agent();
       }
     }
+  } else {
+    C2Payload response(Operation::ACKNOWLEDGE, state::UpdateState::NOT_APPLIED, resp.ident, false, true);
+    enqueue_c2_response(std::move(response));
   }
 }
 
