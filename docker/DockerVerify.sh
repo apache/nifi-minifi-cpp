@@ -20,14 +20,14 @@ set -e
 docker_dir="$( cd ${0%/*} && pwd )"
 
 # Create virutal environment for testing
-if [[ ! -d ./test-env-py2 ]]; then
-  echo "Creating virtual environment in ./test-env-py2" 1>&2
-  virtualenv --python=python2 ./test-env-py2
+if [[ ! -d ./test-env-py3 ]]; then
+  echo "Creating virtual environment in ./test-env-py3" 1>&2
+  virtualenv --python=python3 ./test-env-py3
 fi
 
 echo "Activating virtual environment..." 1>&2
-. ./test-env-py2/bin/activate
-pip install --upgrade pip setuptools
+. ./test-env-py3/bin/activate
+pip install --trusted-host pypi.python.org --upgrade pip setuptools
 
 # Install test dependencies
 echo "Installing test dependencies..." 1>&2
@@ -47,7 +47,7 @@ pip install --upgrade \
             m2crypto \
             watchdog
 
-export MINIFI_VERSION=0.4.0
+export MINIFI_VERSION=0.6.0
 export PYTHONPATH="${PYTHONPATH}:${docker_dir}/test/integration"
 
 exec pytest -s -v "${docker_dir}"/test/integration

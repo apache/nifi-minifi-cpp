@@ -18,7 +18,7 @@ import tarfile
 import uuid
 import xml.etree.cElementTree as elementTree
 from xml.etree.cElementTree import Element
-from StringIO import StringIO
+from io import StringIO
 from io import BytesIO
 from textwrap import dedent
 
@@ -60,7 +60,7 @@ class SingleNodeDockerCluster(Cluster):
 
     def __init__(self):
         self.minifi_version = os.environ['MINIFI_VERSION']
-        self.nifi_version = '1.5.0'
+        self.nifi_version = '1.7.0'
         self.minifi_root = '/opt/minifi/nifi-minifi-cpp-' + self.minifi_version
         self.nifi_root = '/opt/nifi/nifi-' + self.nifi_version
         self.network = None
@@ -83,7 +83,7 @@ class SingleNodeDockerCluster(Cluster):
         if vols is None:
             vols = {}
 
-        logging.info('Deploying %s flow...', engine)
+        logging.info('Deploying %s flow...%s', engine,name)
 
         if name is None:
             name = engine + '-' + str(uuid.uuid4())
@@ -110,17 +110,17 @@ class SingleNodeDockerCluster(Cluster):
                 ADD config.yml {minifi_root}/conf/config.yml
                 RUN chown minificpp:minificpp {minifi_root}/conf/config.yml
                 USER minificpp
-                """.format(name=name,
+                """.format(name=name,hostname=name,
                            base_image='apacheminificpp:' + self.minifi_version,
                            minifi_root=self.minifi_root))
 
         test_flow_yaml = minifi_flow_yaml(flow)
         logging.info('Using generated flow config yml:\n%s', test_flow_yaml)
 
-        conf_file_buffer = StringIO()
+        conf_file_buffer = BytesIO()
 
         try:
-            conf_file_buffer.write(test_flow_yaml)
+            conf_file_buffer.write(test_flow_yaml.encode('utf-8'))
             conf_file_len = conf_file_buffer.tell()
             conf_file_buffer.seek(0)
 
@@ -140,7 +140,7 @@ class SingleNodeDockerCluster(Cluster):
         logging.info('Creating and running docker container for flow...')
 
         container = self.client.containers.run(
-                configured_image,
+                configured_image[0],
                 detach=True,
                 name=name,
                 network=self.network.name,
@@ -169,7 +169,7 @@ class SingleNodeDockerCluster(Cluster):
 
         try:
             with gzip.GzipFile(mode='wb', fileobj=conf_file_buffer) as conf_gz_file_buffer:
-                conf_gz_file_buffer.write(test_flow_xml)
+                conf_gz_file_buffer.write(test_flow_xml.encode())
             conf_file_len = conf_file_buffer.tell()
             conf_file_buffer.seek(0)
 
@@ -189,9 +189,10 @@ class SingleNodeDockerCluster(Cluster):
         logging.info('Creating and running docker container for flow...')
 
         container = self.client.containers.run(
-                configured_image,
+                configured_image[0],
                 detach=True,
                 name=name,
+                hostname=name,
                 network=self.network.name,
                 volumes=vols)
 
@@ -200,17 +201,17 @@ class SingleNodeDockerCluster(Cluster):
         self.containers.append(container)
 
     def build_image(self, dockerfile, context_files):
-        conf_dockerfile_buffer = StringIO()
+        conf_dockerfile_buffer = BytesIO()
         docker_context_buffer = BytesIO()
 
         try:
             # Overlay conf onto base nifi image
-            conf_dockerfile_buffer.write(dockerfile)
+            conf_dockerfile_buffer.write(dockerfile.encode())
             conf_dockerfile_buffer.seek(0)
 
             with tarfile.open(mode='w', fileobj=docker_context_buffer) as docker_context:
                 dockerfile_info = tarfile.TarInfo('Dockerfile')
-                dockerfile_info.size = conf_dockerfile_buffer.len
+                dockerfile_info.size = len(conf_dockerfile_buffer.getvalue())
                 docker_context.addfile(dockerfile_info,
                                        fileobj=conf_dockerfile_buffer)
 
@@ -252,8 +253,8 @@ class SingleNodeDockerCluster(Cluster):
 
         # Clean up images
         for image in self.images:
-            logging.info('Cleaning up image: %s', image.id)
-            self.client.images.remove(image.id, force=True)
+            logging.info('Cleaning up image: %s', image[0].id)
+            self.client.images.remove(image[0].id, force=True)
 
         # Clean up network
         if self.network is not None:
@@ -403,6 +404,7 @@ class ListenHTTP(Processor):
 
         if cert is not None:
             properties['SSL Certificate'] = cert
+            properties['SSL Verify Peer'] = 'no'
 
         super(ListenHTTP, self).__init__('ListenHTTP',
                                          properties=properties,
@@ -421,6 +423,14 @@ class GetFile(Processor):
                                       properties={'Input Directory': input_dir},
                                       schedule={'scheduling period': '0 sec'},
                                       auto_terminate=['success'])
+
+class GenerateFlowFile(Processor):
+    def __init__(self, file_size):
+        super(GenerateFlowFile, self).__init__('GenerateFlowFile',
+                                      properties={'File Size': file_size},
+                                      schedule={'scheduling period': '0 sec'},
+                                      auto_terminate=['success'])
+
 
 
 class PutFile(Processor):
@@ -664,8 +674,8 @@ def nifi_flow_xml(connectable, nifi_version=None, root=None, visited=None):
         input_port_max_concurrent_tasks = Element('maxConcurrentTasks')
         input_port_max_concurrent_tasks.text = '1'
         input_port.append(input_port_max_concurrent_tasks)
-
-        res.iterfind('rootGroup').next().append(input_port)
+        next( res.iterfind('rootGroup') ).append(input_port)
+        """ res.iterfind('rootGroup').next().append(input_port) """
 
     if isinstance(connectable, Processor):
         conn_destination = Element('processor')
@@ -738,7 +748,7 @@ def nifi_flow_xml(connectable, nifi_version=None, root=None, visited=None):
         proc_run_duration_nanos.text = str(connectable.schedule['run duration nanos'])
         conn_destination.append(proc_run_duration_nanos)
 
-        for property_key, property_value in connectable.properties.iteritems():
+        for property_key, property_value in connectable.properties.items():
             proc_property = Element('property')
             proc_property_name = Element('name')
             proc_property_name.text = connectable.nifi_property_key(property_key)
@@ -752,8 +762,8 @@ def nifi_flow_xml(connectable, nifi_version=None, root=None, visited=None):
             proc_auto_terminated_relationship = Element('autoTerminatedRelationship')
             proc_auto_terminated_relationship.text = auto_terminate_rel
             conn_destination.append(proc_auto_terminated_relationship)
-
-        res.iterfind('rootGroup').next().append(conn_destination)
+        next( res.iterfind('rootGroup') ).append(conn_destination)
+        """ res.iterfind('rootGroup').next().append(conn_destination) """
 
         for svc in connectable.controller_services:
             if svc in visited:
@@ -801,8 +811,8 @@ def nifi_flow_xml(connectable, nifi_version=None, root=None, visited=None):
                 controller_service_property_value.text = property_value
                 controller_service_property.append(controller_service_property_value)
                 controller_service.append(controller_service_property)
-
-            res.iterfind('rootGroup').next().append(controller_service)
+            next( res.iterfind('rootGroup') ).append(controller_service)
+            """ res.iterfind('rootGroup').next().append(controller_service)"""
 
     for conn_name in connectable.connections:
         conn_destinations = connectable.connections[conn_name]
@@ -816,8 +826,8 @@ def nifi_flow_xml(connectable, nifi_version=None, root=None, visited=None):
                                                       label_index,
                                                       conn_destination,
                                                       z_index)
-
-                res.iterfind('rootGroup').next().append(connection)
+                next( res.iterfind('rootGroup') ).append(connection)
+                """ res.iterfind('rootGroup').next().append(connection) """
 
                 if conn_destination not in visited:
                     nifi_flow_xml(conn_destination, nifi_version, res, visited)
@@ -829,8 +839,8 @@ def nifi_flow_xml(connectable, nifi_version=None, root=None, visited=None):
                                                   label_index,
                                                   conn_destinations,
                                                   z_index)
-
-            res.iterfind('rootGroup').next().append(connection)
+            next( res.iterfind('rootGroup') ).append(connection)
+            """ res.iterfind('rootGroup').next().append(connection) """
 
             if conn_destinations not in visited:
                 nifi_flow_xml(conn_destinations, nifi_version, res, visited)
@@ -838,7 +848,7 @@ def nifi_flow_xml(connectable, nifi_version=None, root=None, visited=None):
     if root is None:
         return ('<?xml version="1.0" encoding="UTF-8" standalone="no"?>'
                 + "\n"
-                + elementTree.tostring(res, encoding='utf-8'))
+                + elementTree.tostring(res, encoding='utf-8').decode('utf-8'))
 
 
 def nifi_flow_xml_connection(res, bend_points, conn_name, connectable, label_index, destination, z_index):
@@ -860,7 +870,8 @@ def nifi_flow_xml_connection(res, bend_points, conn_name, connectable, label_ind
     connection.append(connection_source_id)
 
     connection_source_group_id = Element('sourceGroupId')
-    connection_source_group_id.text = res.iterfind('rootGroup/id').next().text
+    connection_source_group_id.text = next( res.iterfind('rootGroup/id') ).text
+    """connection_source_group_id.text = res.iterfind('rootGroup/id').next().text"""
     connection.append(connection_source_group_id)
 
     connection_source_type = Element('sourceType')
@@ -877,7 +888,8 @@ def nifi_flow_xml_connection(res, bend_points, conn_name, connectable, label_ind
     connection.append(connection_destination_id)
 
     connection_destination_group_id = Element('destinationGroupId')
-    connection_destination_group_id.text = res.iterfind('rootGroup/id').next().text
+    connection_destination_group_id.text = next(res.iterfind('rootGroup/id')).text
+    """ connection_destination_group_id.text = res.iterfind('rootGroup/id').next().text """
     connection.append(connection_destination_group_id)
 
     connection_destination_type = Element('destinationType')

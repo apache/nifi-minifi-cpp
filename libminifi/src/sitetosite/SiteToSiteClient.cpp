@@ -447,8 +447,9 @@ int16_t SiteToSiteClient::send(std::string transactionID, DataPacket *packet, co
   int ret;
   std::shared_ptr<Transaction> transaction = NULL;
 
-  if (flowFile && !flowFile->getResourceClaim()->exists()) {
-    logger_->log_debug("Claim %s does not exist for FlowFile %s", flowFile->getResourceClaim()->getContentFullPath(), flowFile->getUUIDStr());
+  if (flowFile && (flowFile->getResourceClaim() == nullptr || !flowFile->getResourceClaim()->exists())) {
+    auto path = flowFile->getResourceClaim() != nullptr ? flowFile->getResourceClaim()->getContentFullPath() : "nullclaim";
+    logger_->log_debug("Claim %s does not exist for FlowFile %s", path, flowFile->getUUIDStr());
     return -2;
   }
   if (peer_state_ != READY) {

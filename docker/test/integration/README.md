@@ -19,6 +19,9 @@ Apache MiNiFi includes a suite of docker-based system integration tests. These
 tests are designed to test the integration between distinct MiNiFi instances as
 well as other systems which are available in docker, such as Apache NiFi.
 
+* Currently test_https.py does not work due to the upgrade to NiFi 1.7. This will be resolved as
+  soon as possible.
+  
 ## Test Execution Lifecycle
 
 Each test involves the following stages as part of its execution lifecycle:
