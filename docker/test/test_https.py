@@ -36,10 +36,9 @@ def test_invoke_listen_https_one_way():
     crt_file = '/tmp/resources/test-crt.pem'
 
     invoke_flow = (GetFile('/tmp/input')
-                   >> LogAttribute()
                    >> InvokeHTTP('https://minifi-listen:4430/contentListener',
                                  method='POST',
-                                 ssl_context_service=SSLContextService(ca_cert=crt_file)))
+                                 ssl_context_service=SSLContextService(cert=crt_file, ca_cert=crt_file)))
 
     listen_flow = (ListenHTTP(4430, cert=crt_file)
                    >> LogAttribute()
@@ -67,7 +66,7 @@ def gen_cert():
     cert.set_serial_number(1)
     cert.set_version(2)
     cert.set_subject(subject)
-    t = long(time.time())
+    t = int(time.time())
     now = ASN1.ASN1_UTCTIME()
     now.set_time(t)
     now_plus_year = ASN1.ASN1_UTCTIME()
