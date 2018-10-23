@@ -117,7 +117,7 @@ class Responder : public CivetHandler {
   bool isSecure;
 };
 
-class VerifyC2Heartbeat : public HTTPIntegrationBase {
+class VerifyC2Heartbeat : public CoapIntegrationBase {
  public:
   explicit VerifyC2Heartbeat(bool isSecure)
       : isSecure(isSecure) {

@@ -36,7 +36,7 @@ namespace nifi {
 namespace minifi {
 namespace c2 {
 
-RESTSender::RESTSender(std::string name, utils::Identifier uuid)
+RESTSender::RESTSender(const std::string &name, const utils::Identifier &uuid)
     : C2Protocol(name, uuid),
       logger_(logging::LoggerFactory<Connectable>::getLogger()) {
 }
@@ -83,6 +83,9 @@ void RESTSender::update(const std::shared_ptr<Configure> &configure) {
 }
 
 const C2Payload RESTSender::sendPayload(const std::string url, const Direction direction, const C2Payload &payload, const std::string outputConfig) {
+  if (url.empty()){
+    return C2Payload(payload.getOperation(), state::UpdateState::READ_ERROR, true);
+  }
   utils::HTTPClient client(url, ssl_context_service_);
   client.setConnectionTimeout(2);
   std::unique_ptr<utils::ByteInputCallBack> input = nullptr;
@@ -117,6 +120,7 @@ const C2Payload RESTSender::sendPayload(const std::string url, const Direction d
   }
   bool isOkay = client.submit();
   int64_t respCode = client.getResponseCode();
+  auto rs = client.getResponseBody();
   if (isOkay && respCode) {
     if (payload.isRaw()) {
       C2Payload response_payload(payload.getOperation(), state::UpdateState::READ_COMPLETE, true, true);

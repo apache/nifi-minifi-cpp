@@ -17,9 +17,7 @@
 # under the License.
 #
 
-cmake_minimum_required(VERSION 2.6)
-
-include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt) 
+include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 
 find_package(LibGPS REQUIRED)
 

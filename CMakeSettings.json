@@ -44,6 +44,10 @@
           "value": "FALSE"
         },
         {
+            "name": "ENABLE_COAP",
+            "value": "OFF"
+        },
+        {
           "name": "ENABLE_WEL",
           "value": "TRUE"
         },
@@ -75,7 +79,6 @@
           "name": "SKIP_TESTS",
           "value": "TRUE"
         }
-
       ],
       "ctestCommandArgs": ""
     },
@@ -136,6 +139,14 @@
         },
         {
           "name": "DISABLE_CURL",
+          "value": "OFF"
+        },
+        {
+          "name": "FORCE_WINDOWS",
+          "value": "ON"
+        },
+        {
+          "name": "ENABLE_COAP",
           "value": "OFF"
         },
         {

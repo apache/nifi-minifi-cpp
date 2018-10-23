@@ -5,7 +5,7 @@
  * this work for additional information regarding copyright ownership.
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+ 8 * the License.  You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
@@ -73,8 +73,16 @@ C2Agent::C2Agent(const std::shared_ptr<core::controller::ControllerServiceProvid
           do {
             const C2Payload payload(std::move(requests.back()));
             requests.pop_back();
-            C2Payload && response = protocol_.load()->consumePayload(payload);
-            enqueue_c2_server_response(std::move(response));
+            try {
+              C2Payload && response = protocol_.load()->consumePayload(payload);
+              enqueue_c2_server_response(std::move(response));
+            }
+            catch(const std::exception &e) {
+              logger_->log_error("Exception occurred while consuming payload. error: %s", e.what());
+            }
+            catch(...) {
+              logger_->log_error("Unknonwn exception occurred while consuming payload.");
+            }
           }while(requests.size() > 0 && ++count < max_c2_responses);
         }
         request_mutex.unlock();
@@ -82,7 +90,15 @@ C2Agent::C2Agent(const std::shared_ptr<core::controller::ControllerServiceProvid
 
       if ( time_since > heart_beat_period_ ) {
         last_run_ = now;
-        performHeartBeat();
+        try {
+          performHeartBeat();
+        }
+        catch(const std::exception &e) {
+          logger_->log_error("Exception occurred while performing heartbeat. error: %s", e.what());
+        }
+        catch(...) {
+          logger_->log_error("Unknonwn exception occurred while performing heartbeat.");
+        }
       }
 
       checkTriggers();
@@ -416,8 +432,6 @@ void C2Agent::handle_c2_server_response(const C2ContentResponse &resp) {
       break;
     case Operation::UPDATE: {
       handle_update(resp);
-      C2Payload response(Operation::ACKNOWLEDGE, resp.ident, false, true);
-      enqueue_c2_response(std::move(response));
     }
       break;
 
@@ -603,7 +617,7 @@ void C2Agent::handle_update(const C2ContentResponse &resp) {
       unlink(file_path.c_str());
       // if we can apply the update, we will acknowledge it and then backup the configuration file.
       if (update_sink_->applyUpdate(urlStr, raw_data_str)) {
-        C2Payload response(Operation::ACKNOWLEDGE, resp.ident, false, true);
+        C2Payload response(Operation::ACKNOWLEDGE, state::UpdateState::FULLY_APPLIED, resp.ident, false, true);
         enqueue_c2_response(std::move(response));
 
         if (persist != resp.operation_arguments.end() && utils::StringUtils::equalsIgnoreCase(persist->second.to_string(), "true")) {
@@ -647,8 +661,7 @@ void C2Agent::handle_update(const C2ContentResponse &resp) {
         }
       } else {
         logger_->log_debug("update failed.");
-        std::cout << raw_data_str << std::endl;
-        C2Payload response(Operation::ACKNOWLEDGE, resp.ident, false, true);
+        C2Payload response(Operation::ACKNOWLEDGE, state::UpdateState::SET_ERROR, resp.ident, false, true);
         enqueue_c2_response(std::move(response));
       }
       // send
@@ -658,7 +671,7 @@ void C2Agent::handle_update(const C2ContentResponse &resp) {
       if (update_text != resp.operation_arguments.end()) {
         if (update_sink_->applyUpdate(url->second.to_string(), update_text->second.to_string()) != 0 && persist != resp.operation_arguments.end()
             && utils::StringUtils::equalsIgnoreCase(persist->second.to_string(), "true")) {
-          C2Payload response(Operation::ACKNOWLEDGE, resp.ident, false, true);
+          C2Payload response(Operation::ACKNOWLEDGE, state::UpdateState::FULLY_APPLIED, resp.ident, false, true);
           enqueue_c2_response(std::move(response));
           // update nifi.flow.configuration.file=./conf/config.yml
           std::string config_file;
@@ -683,7 +696,7 @@ void C2Agent::handle_update(const C2ContentResponse &resp) {
             writer.close();
           }
         } else {
-          C2Payload response(Operation::ACKNOWLEDGE, resp.ident, false, true);
+          C2Payload response(Operation::ACKNOWLEDGE, state::UpdateState::SET_ERROR, resp.ident, false, true);
           enqueue_c2_response(std::move(response));
         }
       }
@@ -714,17 +727,19 @@ void C2Agent::handle_update(const C2ContentResponse &resp) {
 
     if (resp.operation_arguments.size() > 0)
       configure(running_c2_configuration);
-    C2Payload response(Operation::ACKNOWLEDGE, resp.ident, false, true);
+    C2Payload response(Operation::ACKNOWLEDGE, state::UpdateState::FULLY_APPLIED, resp.ident, false, true);
     enqueue_c2_response(std::move(response));
   } else if (resp.name == "agent") {
     // we are upgrading the agent. therefore we must be given a location
     auto location = resp.operation_arguments.find("location");
     auto isPartialStr = resp.operation_arguments.find("partial");
+
     bool partial_update = false;
     if (isPartialStr != std::end(resp.operation_arguments)) {
       partial_update = utils::StringUtils::equalsIgnoreCase(isPartialStr->second.to_string(), "true");
     }
     if (location != resp.operation_arguments.end()) {
+      logger_->log_trace("Update agent with location %s", location->second.to_string());
       // we will not have a raw payload
       C2Payload payload(Operation::TRANSFER, false, true);
 
@@ -734,13 +749,16 @@ void C2Agent::handle_update(const C2ContentResponse &resp) {
 
       std::string file_path = std::string(raw_data.data(), raw_data.size());
 
+      logger_->log_trace("Update requested with file %s", file_path);
+
       // acknowledge the transfer. For a transfer, the response identifier should be the checksum of the
       // file transferred.
-      C2Payload transfer_response(Operation::ACKNOWLEDGE, response.getIdentifier(), false, true);
+      C2Payload transfer_response(Operation::ACKNOWLEDGE, state::UpdateState::FULLY_APPLIED, response.getIdentifier(), false, true);
 
       protocol_.load()->consumePayload(std::move(transfer_response));
 
       if (allow_updates_) {
+        logger_->log_trace("Update allowed from file %s", file_path);
         if (partial_update && !bin_location_.empty()) {
           utils::file::DiffUtils::apply_binary_diff(bin_location_.c_str(), file_path.c_str(), update_location_.c_str());
         } else {
@@ -750,8 +768,16 @@ void C2Agent::handle_update(const C2ContentResponse &resp) {
         logger_->log_trace("removing file %s", file_path);
         unlink(file_path.c_str());
         update_agent();
+      } else {
+        logger_->log_trace("Update disallowed from file %s", file_path);
       }
+
+    } else {
+      logger_->log_trace("No location present");
     }
+  } else {
+    C2Payload response(Operation::ACKNOWLEDGE, state::UpdateState::NOT_APPLIED, resp.ident, false, true);
+    enqueue_c2_response(std::move(response));
   }
 }
 

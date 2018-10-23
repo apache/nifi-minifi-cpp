@@ -32,16 +32,16 @@ int ssl_enable(void *ssl_context, void *user_data) {
   return 0;
 }
 
-class HTTPIntegrationBase : public IntegrationBase {
+class CoapIntegrationBase : public IntegrationBase {
  public:
-  HTTPIntegrationBase(uint64_t waitTime = 60000)
+  CoapIntegrationBase(uint64_t waitTime = 60000)
       : IntegrationBase(waitTime),
         server(nullptr) {
   }
 
   void setUrl(std::string url, CivetHandler *handler);
 
-  virtual ~HTTPIntegrationBase();
+  virtual ~CoapIntegrationBase();
 
   void shutdownBeforeFlowController() {
     stop_webserver(server);
@@ -51,11 +51,11 @@ class HTTPIntegrationBase : public IntegrationBase {
   CivetServer *server;
 };
 
-HTTPIntegrationBase::~HTTPIntegrationBase() {
+CoapIntegrationBase::~CoapIntegrationBase() {
 
 }
 
-void HTTPIntegrationBase::setUrl(std::string url, CivetHandler *handler) {
+void CoapIntegrationBase::setUrl(std::string url, CivetHandler *handler) {
 
   parse_http_components(url, port, scheme, path);
   struct mg_callbacks callback;

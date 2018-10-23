@@ -15,14 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "PayloadSerializer.h"
+#include "c2/PayloadSerializer.h"
 
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
 namespace c2 {
-namespace mqtt {
 
 PayloadSerializer::PayloadSerializer() {
 }
@@ -30,7 +29,6 @@ PayloadSerializer::PayloadSerializer() {
 PayloadSerializer::~PayloadSerializer() {
 }
 
-} /* namespace mqtt */
 } /* namespace c2 */
 } /* namespace minifi */
 } /* namespace nifi */

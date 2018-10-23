@@ -17,9 +17,9 @@
 # under the License.
 #
 
-cmake_minimum_required(VERSION 2.6)
 
-include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt) 
+include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
+cmake_minimum_required(VERSION 2.6)
 
 find_package(Boost COMPONENTS system filesystem iostreams REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS})

@@ -75,14 +75,18 @@ C2ContentResponse &C2ContentResponse::operator=(const C2ContentResponse &other) 
   return *this;
 }
 
-C2Payload::C2Payload(Operation op, std::string identifier, bool resp, bool isRaw)
-    : state::Update(state::UpdateStatus(state::UpdateState::INITIATE, 0)),
+C2Payload::C2Payload(Operation op, state::UpdateState state, const std::string &identifier, bool resp, bool isRaw)
+    : state::Update(state::UpdateStatus(state, 0)),
       op_(op),
       raw_(isRaw),
       ident_(identifier),
       isResponse(resp),
       is_container_(false),
       is_collapsible_(true) {
+}
+
+C2Payload::C2Payload(Operation op, const std::string &identifier, bool resp, bool isRaw)
+    : C2Payload(op, state::UpdateState::FULLY_APPLIED, identifier, resp, isRaw) {
 }
 
 C2Payload::C2Payload(Operation op, bool resp, bool isRaw)

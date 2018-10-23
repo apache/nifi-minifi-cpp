@@ -271,6 +271,8 @@ add_disabled_option MQTT_ENABLED ${FALSE} "ENABLE_MQTT"
 add_disabled_option PYTHON_ENABLED ${FALSE} "ENABLE_PYTHON"
 add_dependency PYTHON_ENABLED "python"
 
+add_disabled_option COAP_ENABLED ${FALSE} "ENABLE_COAP"
+
 TESTS_DISABLED=${FALSE}
 add_disabled_option SQLITE_ENABLED ${FALSE} "ENABLE_SQLITE"
 
@@ -377,7 +379,7 @@ build_cmake_command(){
         fi
       done
       if [ "$FOUND" = "1" ]; then
-        CMAKE_BUILD_COMMAND="${CMAKE_BUILD_COMMAND} -D${FOUND_VALUE}=TRUE"
+        CMAKE_BUILD_COMMAND="${CMAKE_BUILD_COMMAND} -D${FOUND_VALUE}=ON"
       fi
     else
       FOUND=""
@@ -393,7 +395,7 @@ build_cmake_command(){
         done
       fi
       if [ "$FOUND" = "1" ]; then
-        CMAKE_BUILD_COMMAND="${CMAKE_BUILD_COMMAND} -D${FOUND_VALUE}=TRUE"
+        CMAKE_BUILD_COMMAND="${CMAKE_BUILD_COMMAND} -D${FOUND_VALUE}=ON"
       fi
     fi
   done

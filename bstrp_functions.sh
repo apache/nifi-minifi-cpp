@@ -257,6 +257,7 @@ show_supported_features() {
   echo "L. MQTT Support ................$(print_feature_status MQTT_ENABLED)"
   echo "M. SQLite Support ..............$(print_feature_status SQLITE_ENABLED)"
   echo "N. Python Support ..............$(print_feature_status PYTHON_ENABLED)"
+  echo "O. COAP Support ................$(print_feature_status COAP_ENABLED)"
   echo "****************************************"
   echo "            Build Options."
   echo "****************************************"
@@ -290,6 +291,7 @@ read_feature_options(){
     l) ToggleFeature MQTT_ENABLED ;;
     m) ToggleFeature SQLLITE_ENABLED ;;
     n) ToggleFeature PYTHON_ENABLED ;;
+    o) ToggleFeature COAP_ENABLED ;;
     1) ToggleFeature TESTS_DISABLED ;;
     2) EnableAllFeatures ;;
     p) FEATURES_SELECTED="true" ;;
