@@ -46,6 +46,41 @@
 #include "capi/cstructs.h"
 #include "capi/api.h"
 
+using failure_callback_type = std::function<void(flow_file_record*)>;
+using content_repo_sptr = std::shared_ptr<core::ContentRepository>;
+
+namespace {
+
+  void failureStrategyAsIs(core::ProcessSession *session, failure_callback_type user_callback, content_repo_sptr cr_ptr) {
+    auto ff = session->get();
+    if (ff == nullptr) {
+      return;
+    }
+
+    auto claim = ff->getResourceClaim();
+
+    if (claim != nullptr && user_callback != nullptr) {
+      claim->increaseFlowFileRecordOwnedCount();
+      // create a flow file.
+      auto path = claim->getContentFullPath();
+      auto ffr = create_ff_object_na(path.c_str(), path.length(), ff->getSize());
+      ffr->attributes = ff->getAttributesPtr();
+      ffr->ffp = ff.get();
+      auto content_repo_ptr = static_cast<std::shared_ptr<minifi::core::ContentRepository>*>(ffr->crp);
+      *content_repo_ptr = cr_ptr;
+      user_callback(ffr);
+    }
+    session->remove(ff);
+  }
+
+  void failureStrategyRollback(core::ProcessSession *session, failure_callback_type user_callback, content_repo_sptr cr_ptr) {
+    session->rollback();
+    failureStrategyAsIs(session, user_callback, cr_ptr);
+  }
+}
+
+static const std::map<FailureStrategy, const std::function<void(core::ProcessSession*, failure_callback_type, content_repo_sptr)>> FailureStrategies =
+    { { FailureStrategy::AS_IS, failureStrategyAsIs }, {FailureStrategy::ROLLBACK, failureStrategyRollback } };
 
 class ExecutionPlan {
  public:
@@ -67,7 +102,9 @@ class ExecutionPlan {
 
   bool runNextProcessor(std::function<void(const std::shared_ptr<core::ProcessContext>, const std::shared_ptr<core::ProcessSession>)> verify = nullptr);
 
-  bool setFailureCallback(void (*onerror_callback)(const flow_file_record*));
+  bool setFailureCallback(failure_callback_type onerror_callback);
+
+  bool setFailureStrategy(FailureStrategy start);
 
   std::set<provenance::ProvenanceEventRecord*> getProvenanceRecords();
 
@@ -100,37 +137,25 @@ class ExecutionPlan {
  protected:
   class FailureHandler {
    public:
-    FailureHandler() {
+    FailureHandler(content_repo_sptr cr_ptr) {
       callback_ = nullptr;
+      strategy_ = FailureStrategy::AS_IS;
+      content_repo_ = cr_ptr;
     }
-    void setCallback(void (*onerror_callback)(const flow_file_record*)) {
+    void setCallback(failure_callback_type onerror_callback) {
       callback_=onerror_callback;
     }
-    void operator()(const processor_session* ps)
-    {
+    void setStrategy(FailureStrategy strat) {
+      strategy_ = strat;
+    }
+    void operator()(const processor_session* ps) {
       auto ses = static_cast<core::ProcessSession*>(ps->session);
-
-      auto ff = ses->get();
-      if (ff == nullptr) {
-        return;
-      }
-      auto claim = ff->getResourceClaim();
-
-      if (claim != nullptr && callback_ != nullptr) {
-        // create a flow file.
-        auto path = claim->getContentFullPath();
-        auto ffr = create_ff_object_na(path.c_str(), path.length(), ff->getSize());
-        ffr->attributes = ff->getAttributesPtr();
-        ffr->ffp = ff.get();
-        callback_(ffr);
-      }
-      // This deletes the content of the flowfile as ff gets out of scope
-      // It's the users responsibility to copy all the data
-      ses->remove(ff);
-
+      FailureStrategies.at(strategy_)(ses, callback_, content_repo_);
     }
    private:
-    void (*callback_)(const flow_file_record*);
+    failure_callback_type callback_;
+    FailureStrategy strategy_;
+    content_repo_sptr content_repo_;
   };
 
   void finalize();
@@ -142,7 +167,7 @@ class ExecutionPlan {
 
   std::shared_ptr<org::apache::nifi::minifi::io::StreamFactory> stream_factory;
 
-  std::shared_ptr<core::ContentRepository> content_repo_;
+  content_repo_sptr content_repo_;
 
   std::shared_ptr<core::Repository> flow_repo_;
   std::shared_ptr<core::Repository> prov_repo_;

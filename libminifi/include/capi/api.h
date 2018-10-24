@@ -83,10 +83,19 @@ processor *add_python_processor(flow *, void (*ontrigger_callback)(processor_ses
 
 /**
 * Register your callback to received flow files that the flow failed to process
-* The flow file is deleted after the callback is executed, make sure to copy all the data you need!
+* The flow file ownership is transferred to the caller!
 * The first callback should be registered before the flow is used. Can be changed later during runtime.
 */
-int add_failure_callback(flow *flow, void (*onerror_callback)(const flow_file_record*));
+int add_failure_callback(flow *flow, void (*onerror_callback)(flow_file_record*));
+
+
+/**
+* Set failure strategy. Please use the enum defined in cstructs.h
+* Return values: 0 (success), -1 (strategy cannot be set - no failure callback added?)
+* Can be changed runtime.
+* The defailt strategy is AS IS.
+*/
+int set_failure_strategy(flow *flow, FailureStrategy strategy);
 
 int set_property(processor *, const char *, const char *);
 
