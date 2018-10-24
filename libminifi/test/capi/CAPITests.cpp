@@ -34,19 +34,22 @@
 
 static nifi_instance *create_instance_obj(const char *name = "random_instance") {
   nifi_port port;
-  port.port_id = "12345";
+  char port_str[] = "12345";
+  port.port_id = port_str;
   return create_instance("random_instance", &port);
 }
 
 static int failure_count = 0;
 
-void failure_counter(const flow_file_record * fr) {
+void failure_counter(flow_file_record * fr) {
   failure_count++;
   REQUIRE(get_attribute_qty(fr) > 0);
+  free_flowfile(fr);
 }
 
-void big_failure_counter(const flow_file_record * fr) {
+void big_failure_counter(flow_file_record * fr) {
   failure_count += 100;
+  free_flowfile(fr);
 }
 
 TEST_CASE("Test Creation of instance, one processor", "[createInstanceAndFlow]") {
@@ -226,6 +229,8 @@ TEST_CASE("Test error handling callback", "[errorHandling]") {
   flow *test_flow = create_flow(instance, nullptr);
   REQUIRE(test_flow != nullptr);
 
+  // Failure strategy cannot be set before a valid callback is added
+  REQUIRE(set_failure_strategy(test_flow, FailureStrategy::AS_IS) != 0);
   REQUIRE(add_failure_callback(test_flow, failure_counter) == 0);
 
   processor *get_proc = add_processor(test_flow, "GetFile");
@@ -251,6 +256,7 @@ TEST_CASE("Test error handling callback", "[errorHandling]") {
 
   // Failure handler function can be replaced runtime
   REQUIRE(add_failure_callback(test_flow, big_failure_counter) == 0);
+  REQUIRE(set_failure_strategy(test_flow, FailureStrategy::ROLLBACK) == 0);
 
   // Create new testfile to trigger failure again
   ss << "2";

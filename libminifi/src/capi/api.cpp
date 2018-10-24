@@ -154,14 +154,9 @@ flow_file_record* create_ff_object(const char *file, const size_t len, const uin
   if (nullptr == file) {
     return nullptr;
   }
-  flow_file_record *new_ff = new flow_file_record;
+  flow_file_record *new_ff = create_ff_object_na(file, len, size);
   new_ff->attributes = new string_map();
   new_ff->ffp = 0;
-  new_ff->contentLocation = new char[len + 1];
-  snprintf(new_ff->contentLocation, len + 1, "%s", file);
-  std::ifstream in(file, std::ifstream::ate | std::ifstream::binary);
-  // set the size of the flow file.
-  new_ff->size = size;
   return new_ff;
 }
 
@@ -170,9 +165,9 @@ flow_file_record* create_ff_object_na(const char *file, const size_t len, const 
   new_ff->attributes = nullptr;
   new_ff->contentLocation = new char[len + 1];
   snprintf(new_ff->contentLocation, len + 1, "%s", file);
-  std::ifstream in(file, std::ifstream::ate | std::ifstream::binary);
   // set the size of the flow file.
   new_ff->size = size;
+  new_ff->crp = static_cast<void*>(new std::shared_ptr<minifi::core::ContentRepository>);
   return new_ff;
 }
 /**
@@ -180,21 +175,21 @@ flow_file_record* create_ff_object_na(const char *file, const size_t len, const 
  * @param ff flow file record.
  */
 void free_flowfile(flow_file_record *ff) {
-  if (ff != nullptr) {
-    if (ff->in != nullptr) {
-      auto instance = static_cast<nifi_instance*>(ff->in);
-      auto minifi_instance_ref = static_cast<minifi::Instance*>(instance->instance_ptr);
-      auto content_repo = minifi_instance_ref->getContentRepository();
-      std::shared_ptr<minifi::ResourceClaim> claim = std::make_shared<minifi::ResourceClaim>(ff->contentLocation, content_repo);
-      content_repo->remove(claim);
-    }
-    if (ff->ffp == nullptr) {
-      auto map = static_cast<string_map*>(ff->attributes);
-      delete map;
-    }
-    delete[] ff->contentLocation;
-    delete ff;
+  if (ff == nullptr) {
+    return;
   }
+  auto content_repo_ptr = static_cast<std::shared_ptr<minifi::core::ContentRepository>*>(ff->crp);
+  if (content_repo_ptr->get()) {
+    std::shared_ptr<minifi::ResourceClaim> claim = std::make_shared<minifi::ResourceClaim>(ff->contentLocation, *content_repo_ptr);
+    (*content_repo_ptr)->remove(claim);
+  }
+  if (ff->ffp == nullptr) {
+    auto map = static_cast<string_map*>(ff->attributes);
+    delete map;
+  }
+  delete[] ff->contentLocation;
+  delete ff;
+  delete content_repo_ptr;
 }
 
 /**
@@ -400,9 +395,13 @@ processor *add_processor_with_linkage(flow *flow, const char *processor_name) {
   return nullptr;
 }
 
-int add_failure_callback(flow *flow, void (*onerror_callback)(const flow_file_record*)) {
+int add_failure_callback(flow *flow, void (*onerror_callback)(flow_file_record*)) {
   ExecutionPlan *plan = static_cast<ExecutionPlan*>(flow->plan);
   return plan->setFailureCallback(onerror_callback) ? 0 : 1;
+}
+
+int set_failure_strategy(flow *flow, FailureStrategy strategy) {
+  return static_cast<ExecutionPlan*>(flow->plan)->setFailureStrategy(strategy) ? 0 : -1;
 }
 
 int set_property(processor *proc, const char *name, const char *value) {
@@ -442,7 +441,8 @@ flow_file_record *get_next_flow_file(nifi_instance *instance, flow *flow) {
     auto ffr = create_ff_object_na(path.c_str(), path.length(), ff->getSize());
     ffr->ffp = ff.get();
     ffr->attributes = ff->getAttributesPtr();
-    ffr->in = instance;
+    auto content_repo_ptr = static_cast<std::shared_ptr<minifi::core::ContentRepository>*>(ffr->crp);
+    *content_repo_ptr = execution_plan->getContentRepo();
     return ffr;
   } else {
     return nullptr;
@@ -484,7 +484,8 @@ flow_file_record *get(nifi_instance *instance, flow *flow, processor_session *se
     auto ffr = create_ff_object_na(path.c_str(), path.length(), ff->getSize());
     ffr->attributes = ff->getAttributesPtr();
     ffr->ffp = ff.get();
-    ffr->in = instance;
+    auto content_repo_ptr = static_cast<std::shared_ptr<minifi::core::ContentRepository>*>(ffr->crp);
+    *content_repo_ptr = execution_plan->getContentRepo();
     return ffr;
   } else {
     return nullptr;

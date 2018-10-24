@@ -23,6 +23,18 @@
 #include <set>
 #include <string>
 
+bool intToFailureStragey(int in, FailureStrategy *out) {
+  auto tmp = static_cast<FailureStrategy>(in);
+  switch (tmp) {
+    case AS_IS:
+    case ROLLBACK:
+      *out = tmp;
+      return true;
+    default:
+      return false;
+  }
+}
+
 std::shared_ptr<utils::IdGenerator> ExecutionPlan::id_generator_ = utils::IdGenerator::getIdGenerator();
 
 ExecutionPlan::ExecutionPlan(std::shared_ptr<core::ContentRepository> content_repo, std::shared_ptr<core::Repository> flow_repo, std::shared_ptr<core::Repository> prov_repo)
@@ -192,7 +204,12 @@ void ExecutionPlan::finalize() {
     callback_proc->setCallback(nullptr, std::bind(&FailureHandler::operator(), failure_handler_, std::placeholders::_1));
 
     for (const auto& proc : processor_queue_) {
-      relationships_.push_back(connectProcessors(proc, failure_proc, core::Relationship("failure", "failure collector"), true));
+      for (const auto& rel : proc->getSupportedRelationships()) {
+        if (rel.getName() == "failure") {
+          relationships_.push_back(connectProcessors(proc, failure_proc, core::Relationship("failure", "failure collector"), true));
+          break;
+        }
+      }
     }
 
     std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(failure_proc);
@@ -256,14 +273,22 @@ std::shared_ptr<minifi::Connection> ExecutionPlan::connectProcessors(std::shared
   return connection;
 }
 
-bool ExecutionPlan::setFailureCallback(void (*onerror_callback)(const flow_file_record*)) {
+bool ExecutionPlan::setFailureCallback(std::function<void(flow_file_record*)> onerror_callback) {
   if (finalized && !failure_handler_) {
     return false;  // Already finalized the flow without failure handler processor
   }
   if (!failure_handler_) {
-    failure_handler_ = std::make_shared<FailureHandler>();
+    failure_handler_ = std::make_shared<FailureHandler>(getContentRepo());
   }
   failure_handler_->setCallback(onerror_callback);
+  return true;
+}
+
+bool ExecutionPlan::setFailureStrategy(FailureStrategy start) {
+  if (!failure_handler_) {
+    return false;
+  }
+  failure_handler_->setStrategy(start);
   return true;
 }
 

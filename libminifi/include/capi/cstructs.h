@@ -19,6 +19,8 @@
 #ifndef LIBMINIFI_SRC_CAPI_CSTRUCTS_H_
 #define LIBMINIFI_SRC_CAPI_CSTRUCTS_H_
 
+#include <stddef.h>
+#include <stdint.h>
 
 /**
  * NiFi Port struct
@@ -105,6 +107,8 @@ typedef struct {
 
   void * in;
 
+  void * crp;
+
   char * contentLocation; /**< Filesystem location of this object */
 
   void *attributes; /**< Hash map of attributes */
@@ -118,6 +122,6 @@ typedef struct {
   void *plan;
 } flow;
 
-
+typedef  enum FS { AS_IS, ROLLBACK } FailureStrategy;
 
 #endif /* LIBMINIFI_SRC_CAPI_CSTRUCTS_H_ */
