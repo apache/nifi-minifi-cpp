@@ -182,7 +182,7 @@ void SSLContextService::onEnable() {
         passphrase_file_ = test_passphrase;
         passphrase_.assign((std::istreambuf_iterator<char>(passphrase_file_test)), std::istreambuf_iterator<char>());
       } else {
-        valid_ = false;
+        // not an invalid file since we support a passphrase of unencrypted text
       }
       passphrase_file_test.close();
     }

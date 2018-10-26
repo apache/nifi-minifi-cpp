@@ -50,7 +50,7 @@ def test_invoke_listen_https_one_way():
         cluster.deploy_flow(listen_flow, name='minifi-listen')
         cluster.deploy_flow(invoke_flow, name='minifi-invoke')
 
-        assert cluster.check_output(60)
+        assert cluster.check_output()
 
 
 def gen_cert():
