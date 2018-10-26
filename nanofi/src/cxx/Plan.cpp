@@ -23,19 +23,8 @@
 #include <set>
 #include <string>
 
-bool intToFailureStragey(int in, FailureStrategy *out) {
-  auto tmp = static_cast<FailureStrategy>(in);
-  switch (tmp) {
-    case AS_IS:
-    case ROLLBACK:
-      *out = tmp;
-      return true;
-    default:
-      return false;
-  }
-}
-
 std::shared_ptr<utils::IdGenerator> ExecutionPlan::id_generator_ = utils::IdGenerator::getIdGenerator();
+std::unordered_map<std::string, std::shared_ptr<ExecutionPlan>> ExecutionPlan::proc_plan_map_ = {};
 
 ExecutionPlan::ExecutionPlan(std::shared_ptr<core::ContentRepository> content_repo, std::shared_ptr<core::Repository> flow_repo, std::shared_ptr<core::Repository> prov_repo)
     : content_repo_(content_repo),
@@ -144,7 +133,8 @@ void ExecutionPlan::reset() {
   }
 }
 
-bool ExecutionPlan::runNextProcessor(std::function<void(const std::shared_ptr<core::ProcessContext>, const std::shared_ptr<core::ProcessSession>)> verify) {
+bool ExecutionPlan::runNextProcessor(std::function<void(const std::shared_ptr<core::ProcessContext>, const std::shared_ptr<core::ProcessSession>)> verify,
+    const flow_file_record* input_ff) {
   if (!finalized) {
     finalize();
   }
@@ -152,6 +142,7 @@ bool ExecutionPlan::runNextProcessor(std::function<void(const std::shared_ptr<co
   if (location >= processor_queue_.size()) {
     return false;
   }
+
   std::shared_ptr<core::Processor> processor = processor_queue_[location];
   std::shared_ptr<core::ProcessContext> context = processor_contexts_[location];
   std::shared_ptr<core::ProcessSessionFactory> factory = std::make_shared<core::ProcessSessionFactory>(context);
@@ -162,6 +153,21 @@ bool ExecutionPlan::runNextProcessor(std::function<void(const std::shared_ptr<co
   }
   std::shared_ptr<core::ProcessSession> current_session = std::make_shared<core::ProcessSession>(context);
   process_sessions_.push_back(current_session);
+  if (input_ff != nullptr) {
+    auto content_repo = static_cast<std::shared_ptr<minifi::core::ContentRepository>*>(input_ff->crp);
+    std::shared_ptr<minifi::ResourceClaim> claim = std::make_shared<minifi::ResourceClaim>(input_ff->contentLocation, *content_repo);
+    auto stream = (*content_repo)->read(claim);
+    std::shared_ptr<minifi::FlowFileRecord> flowFile = std::static_pointer_cast<minifi::FlowFileRecord>(current_session->create());
+    auto map = static_cast<std::map<std::string, std::string>*>(input_ff->attributes);
+    if (map) {
+      for (const auto& attr: *map) {
+        flowFile->setAttribute(attr.first, attr.second);
+      }
+    }
+    current_session->importFrom(*stream, flowFile);
+    current_session->transfer(flowFile, core::Relationship("success", "success"));
+    relationships_[relationships_.size()-1]->put(std::static_pointer_cast<core::FlowFile>(flowFile));
+  }
   processor->incrementActiveTasks();
   processor->setScheduledState(core::ScheduledState::RUNNING);
   if (verify != nullptr) {

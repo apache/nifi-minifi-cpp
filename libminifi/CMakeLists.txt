@@ -141,11 +141,14 @@ endif()
 SET (LIBMINIFI core-minifi PARENT_SCOPE)
 
 if (ENABLE_PYTHON)
-if (NOT APPLE)
 #### shared
 
 add_library(core-minifi-shared SHARED ${SOURCES})
-target_link_libraries(core-minifi-shared ${CMAKE_DL_LIBS} uuid-shared yaml-cpp)
+if (APPLE)
+	target_link_libraries(core-minifi-shared ${CMAKE_DL_LIBS} yaml-cpp)
+else()
+	target_link_libraries(core-minifi-shared ${CMAKE_DL_LIBS} uuid-shared yaml-cpp)
+endif()
 
 find_package(ZLIB REQUIRED)
 include_directories(${ZLIB_INCLUDE_DIRS})
@@ -175,5 +178,5 @@ endif()
 
 set_property(TARGET core-minifi-shared PROPERTY POSITION_INDEPENDENT_CODE ON)
 set_property(TARGET minifi-shared PROPERTY POSITION_INDEPENDENT_CODE ON)
-endif()
+#endif()
 endif(ENABLE_PYTHON)

@@ -101,7 +101,7 @@ class ExecutionPlan {
 
   void reset();
 
-  bool runNextProcessor(std::function<void(const std::shared_ptr<core::ProcessContext>, const std::shared_ptr<core::ProcessSession>)> verify = nullptr);
+  bool runNextProcessor(std::function<void(const std::shared_ptr<core::ProcessContext>, const std::shared_ptr<core::ProcessSession>)> verify = nullptr, const flow_file_record * = nullptr);
 
   bool setFailureCallback(failure_callback_type onerror_callback);
 
@@ -133,7 +133,28 @@ class ExecutionPlan {
     next_ff_ = ptr;
   }
 
+  bool hasProcessor() {
+    return !processor_queue_.empty();
+  }
+
   static std::shared_ptr<core::Processor> createProcessor(const std::string &processor_name, const std::string &name);
+
+  static std::shared_ptr<ExecutionPlan> getPlan(const std::string& uuid) {
+    auto it = proc_plan_map_.find(uuid);
+    return it != proc_plan_map_.end() ? it->second : nullptr;
+  }
+
+  static void addProcWithPlan(const std::string& uuid, std::shared_ptr<ExecutionPlan> plan) {
+    proc_plan_map_[uuid] = plan;
+  }
+
+  static bool removeProcWithPlan(const std::string& uuid) {
+    return proc_plan_map_.erase(uuid) > 0;
+  }
+
+  static size_t getProcWithPlanQty() {
+    return proc_plan_map_.size();
+  }
 
  protected:
   class FailureHandler {
@@ -199,6 +220,7 @@ class ExecutionPlan {
   static std::shared_ptr<utils::IdGenerator> id_generator_;
   std::shared_ptr<logging::Logger> logger_;
   std::shared_ptr<FailureHandler> failure_handler_;
+  static std::unordered_map<std::string, std::shared_ptr<ExecutionPlan>> proc_plan_map_;
 };
 
 #endif /* LIBMINIFI_CAPI_PLAN_H_ */

@@ -19,6 +19,9 @@
 #ifndef LIBMINIFI_SRC_CAPI_CSTRUCTS_H_
 #define LIBMINIFI_SRC_CAPI_CSTRUCTS_H_
 
+#include <stddef.h>
+#include <stdint.h>
+
 /**
  * NiFi Port struct
  */
@@ -65,6 +68,10 @@ typedef struct {
 typedef struct {
   void *processor_ptr;
 } processor;
+
+typedef struct {
+  void *processor_ptr;
+} standalone_processor;
 
 typedef struct {
   void *session;

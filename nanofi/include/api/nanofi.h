@@ -79,9 +79,11 @@ flow *create_getfile(nifi_instance *instance, flow *parent, GetFileConfig *c);
 
 processor *add_processor(flow *, const char *);
 
-processor *add_processor_with_linkage(flow *flow, const char *processor_name);
-
 processor *add_python_processor(flow *, void (*ontrigger_callback)(processor_session *session));
+
+standalone_processor *create_processor(const char *);
+
+void free_standalone_processor(standalone_processor*);
 
 /**
 * Register your callback to received flow files that the flow failed to process
@@ -101,6 +103,8 @@ int set_failure_strategy(flow *flow, FailureStrategy strategy);
 
 int set_property(processor *, const char *, const char *);
 
+int set_standalone_property(standalone_processor*, const char*, const char *);
+
 int set_instance_property(nifi_instance *instance, const char*, const char *);
 
 int free_flow(flow *);
@@ -110,6 +114,10 @@ flow_file_record *get_next_flow_file(nifi_instance *, flow *);
 size_t get_flow_files(nifi_instance *, flow *, flow_file_record **, size_t);
 
 flow_file_record *get(nifi_instance *,flow *, processor_session *);
+
+flow_file_record *invoke(standalone_processor* proc);
+
+flow_file_record *invoke_ff(standalone_processor* proc, const flow_file_record *input_ff);
 
 int transfer(processor_session* session, flow *flow, const char *rel);
 

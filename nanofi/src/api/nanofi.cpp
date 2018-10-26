@@ -30,6 +30,7 @@
 #include "processors/GetFile.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/StringUtils.h"
+#include "io/DataStream.h"
 
 using string_map = std::map<std::string, std::string>;
 
@@ -39,6 +40,8 @@ class API_INITIALIZER {
 };
 
 int API_INITIALIZER::initialized = initialize_api();
+
+static nifi_instance* standalone_instance = nullptr;
 
 int initialize_api() {
   logging::LoggerConfiguration::getConfiguration().disableLogging();
@@ -87,6 +90,42 @@ nifi_instance *create_instance(const char *url, nifi_port *port) {
   instance->port.port_id = reinterpret_cast<char*>(malloc(strlen(port->port_id) + 1));
   snprintf(instance->port.port_id, strlen(port->port_id) + 1, "%s", port->port_id);
   return instance;
+}
+
+standalone_processor *create_processor(const char *name) {
+  static int proc_counter = 0;
+  auto ptr = ExecutionPlan::createProcessor(name, name);
+  if (!ptr) {
+    return nullptr;
+  }
+  if (standalone_instance == nullptr) {
+    nifi_port port;
+    char portnum[] = "98765";
+    port.port_id = portnum;
+    standalone_instance = create_instance("internal_standalone", &port);
+  }
+  std::string flow_name = std::to_string(proc_counter++);
+  auto flow = create_flow(standalone_instance, flow_name.c_str());
+  std::shared_ptr<ExecutionPlan> plan(static_cast<ExecutionPlan*>(flow->plan));
+  plan->addProcessor(ptr, name);
+  ExecutionPlan::addProcWithPlan(ptr->getUUIDStr(), plan);
+  standalone_processor *new_processor = new standalone_processor();
+  new_processor->processor_ptr = ptr.get();
+  return new_processor;
+}
+
+void free_standalone_processor(standalone_processor* proc) {
+  if (proc == nullptr) {
+    return;
+  }
+  ExecutionPlan::removeProcWithPlan(static_cast<core::Processor*>(proc->processor_ptr)->getUUIDStr());
+  delete proc;
+
+  if (ExecutionPlan::getProcWithPlanQty() == 0) {
+    // The instance is not needed any more as there are no standalone processors in the system
+    free_instance(standalone_instance);
+    standalone_instance = nullptr;
+  }
 }
 
 /**
@@ -381,18 +420,8 @@ processor *add_processor(flow *flow, const char *processor_name) {
     return nullptr;
   }
   ExecutionPlan *plan = static_cast<ExecutionPlan*>(flow->plan);
-  auto proc = plan->addProcessor(processor_name, processor_name);
-  if (proc) {
-    processor *new_processor = (processor*) malloc(sizeof(processor));
-    new_processor->processor_ptr = proc.get();
-    return new_processor;
-  }
-  return nullptr;
-}
 
-processor *add_processor_with_linkage(flow *flow, const char *processor_name) {
-  ExecutionPlan *plan = static_cast<ExecutionPlan*>(flow->plan);
-  auto proc = plan->addProcessor(processor_name, processor_name, core::Relationship("success", "description"), true);
+  auto proc = plan->addProcessor(processor_name, processor_name, core::Relationship("success", "description"), plan->hasProcessor());
   if (proc) {
     processor *new_processor = (processor*) malloc(sizeof(processor));
     new_processor->processor_ptr = proc.get();
@@ -410,11 +439,24 @@ int set_failure_strategy(flow *flow, FailureStrategy strategy) {
   return static_cast<ExecutionPlan*>(flow->plan)->setFailureStrategy(strategy) ? 0 : -1;
 }
 
-int set_property(processor *proc, const char *name, const char *value) {
+int set_propery_internal(core::Processor* proc, const char *name, const char *value) {
   if (name != nullptr && value != nullptr && proc != nullptr) {
-    core::Processor *p = static_cast<core::Processor*>(proc->processor_ptr);
-    bool success = p->setProperty(name, value) || (p->supportsDynamicProperties() && p->setDynamicProperty(name, value));
+    bool success = proc->setProperty(name, value) || (proc->supportsDynamicProperties() && proc->setDynamicProperty(name, value));
     return success ? 0 : -2;
+  }
+  return -1;
+}
+
+int set_property(processor *proc, const char *name, const char *value) {
+  if (proc != nullptr) {
+    return set_propery_internal(static_cast<core::Processor*>(proc->processor_ptr), name, value);
+  }
+  return -1;
+}
+
+int set_standalone_property(standalone_processor *proc, const char *name, const char *value) {
+  if (proc != nullptr) {
+    return set_propery_internal(static_cast<core::Processor*>(proc->processor_ptr), name, value);
   }
   return -1;
 }
@@ -428,6 +470,26 @@ int free_flow(flow *flow) {
   return 0;
 }
 
+flow_file_record* flowfile_to_record(std::shared_ptr<core::FlowFile> ff, ExecutionPlan* plan) {
+  if (ff == nullptr) {
+    return nullptr;
+  }
+  auto claim = ff->getResourceClaim();
+  if(claim == nullptr) {
+    return nullptr;
+  }
+
+  // create a flow file.
+  claim->increaseFlowFileRecordOwnedCount();
+  auto path = claim->getContentFullPath();
+  auto ffr = create_ff_object_na(path.c_str(), path.length(), ff->getSize());
+  ffr->ffp = ff.get();
+  ffr->attributes = ff->getAttributesPtr();
+  auto content_repo_ptr = static_cast<std::shared_ptr<minifi::core::ContentRepository>*>(ffr->crp);
+  *content_repo_ptr = plan->getContentRepo();
+  return ffr;
+}
+
 flow_file_record * get_next_flow_file(nifi_instance * instance, flow * flow) {
   if (instance == nullptr || nullptr == flow || nullptr == flow->plan)
     return nullptr;
@@ -435,25 +497,7 @@ flow_file_record * get_next_flow_file(nifi_instance * instance, flow * flow) {
   execution_plan->reset();
   while (execution_plan->runNextProcessor()) {
   }
-  auto ff = execution_plan->getCurrentFlowFile();
-  if (ff == nullptr) {
-    return nullptr;
-  }
-  auto claim = ff->getResourceClaim();
-
-  if (claim != nullptr) {
-    // create a flow file.
-    claim->increaseFlowFileRecordOwnedCount();
-    auto path = claim->getContentFullPath();
-    auto ffr = create_ff_object_na(path.c_str(), path.length(), ff->getSize());
-    ffr->ffp = ff.get();
-    ffr->attributes = ff->getAttributesPtr();
-    auto content_repo_ptr = static_cast<std::shared_ptr<minifi::core::ContentRepository>*>(ffr->crp);
-    *content_repo_ptr = execution_plan->getContentRepo();
-    return ffr;
-  } else {
-    return nullptr;
-  }
+  return flowfile_to_record(execution_plan->getCurrentFlowFile(), execution_plan);
 }
 
 size_t get_flow_files(nifi_instance *instance, flow *flow, flow_file_record **ff_r, size_t size) {
@@ -479,24 +523,28 @@ flow_file_record * get(nifi_instance * instance, flow * flow, processor_session 
   auto execution_plan = static_cast<ExecutionPlan*>(flow->plan);
   auto ff = sesh->get();
   execution_plan->setNextFlowFile(ff);
-  if (ff == nullptr) {
-    return nullptr;
-  }
-  auto claim = ff->getResourceClaim();
+  return flowfile_to_record(ff, execution_plan);
+}
 
-  if (claim != nullptr) {
-    // create a flow file.
-    claim->increaseFlowFileRecordOwnedCount();
-    auto path = claim->getContentFullPath();
-    auto ffr = create_ff_object_na(path.c_str(), path.length(), ff->getSize());
-    ffr->attributes = ff->getAttributesPtr();
-    ffr->ffp = ff.get();
-    auto content_repo_ptr = static_cast<std::shared_ptr<minifi::core::ContentRepository>*>(ffr->crp);
-    *content_repo_ptr = execution_plan->getContentRepo();
-    return ffr;
-  } else {
+flow_file_record *invoke(standalone_processor* proc) {
+  return invoke_ff(proc, nullptr);
+}
+
+
+flow_file_record *invoke_ff(standalone_processor* proc, const flow_file_record *input_ff) {
+  if (proc == nullptr) {
     return nullptr;
   }
+  core::Processor *p = static_cast<core::Processor*>(proc->processor_ptr);
+  auto plan = ExecutionPlan::getPlan(p->getUUIDStr());
+  if (!plan) {
+    // This is not a standalone processor, shouldn't be used with invoke!
+    return nullptr;
+  }
+  plan->reset();
+  while (plan->runNextProcessor(nullptr, input_ff)) {
+  }
+  return flowfile_to_record(plan->getCurrentFlowFile(), plan.get());
 }
 
 int transfer(processor_session* session, flow *flow, const char *rel) {
