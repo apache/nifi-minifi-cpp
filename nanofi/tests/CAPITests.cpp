@@ -31,6 +31,11 @@
 #include <thread>
 #include "api/nanofi.h"
 
+char src_format[] = "/tmp/gt.XXXXXX";
+char put_format[] = "/tmp/pt.XXXXXX";
+std::string test_file_content = "C API raNdOMcaSe test d4t4 th1s is!";
+std::string test_file_name = "tstFile.ext";
+
 static nifi_instance *create_instance_obj(const char *name = "random_instance") {
   nifi_port port;
   char port_str[] = "12345";
@@ -49,6 +54,16 @@ void failure_counter(flow_file_record * fr) {
 void big_failure_counter(flow_file_record * fr) {
   failure_count += 100;
   free_flowfile(fr);
+}
+
+std::string create_testfile_for_getfile(const char* sourcedir, const std::string& filename = test_file_name) {
+  std::fstream file;
+  std::stringstream ss;
+  ss << sourcedir << "/" << filename;
+  file.open(ss.str(), std::ios::out);
+  file << test_file_content;
+  file.close();
+  return ss.str();
 }
 
 TEST_CASE("Test Creation of instance, one processor", "[createInstanceAndFlow]") {
@@ -95,35 +110,27 @@ TEST_CASE("Set valid and invalid properties", "[setProcesssorProperties]") {
 TEST_CASE("get file and put file", "[getAndPutFile]") {
   TestController testController;
 
-  char src_format[] = "/tmp/gt.XXXXXX";
-  char put_format[] = "/tmp/pt.XXXXXX";
   const char *sourcedir = testController.createTempDirectory(src_format);
   const char *putfiledir = testController.createTempDirectory(put_format);
-  std::string test_file_content = "C API raNdOMcaSe test d4t4 th1s is!";
   auto instance = create_instance_obj();
   REQUIRE(instance != nullptr);
   flow *test_flow = create_flow(instance, nullptr);
   REQUIRE(test_flow != nullptr);
   processor *get_proc = add_processor(test_flow, "GetFile");
   REQUIRE(get_proc != nullptr);
-  processor *put_proc = add_processor_with_linkage(test_flow, "PutFile");
+  processor *put_proc = add_processor(test_flow, "PutFile");
   REQUIRE(put_proc != nullptr);
   REQUIRE(set_property(get_proc, "Input Directory", sourcedir) == 0);
   REQUIRE(set_property(put_proc, "Directory", putfiledir) == 0);
 
-  std::fstream file;
-  std::stringstream ss;
-  ss << sourcedir << "/" << "tstFile.ext";
-  file.open(ss.str(), std::ios::out);
-  file << test_file_content;
-  file.close();
+  create_testfile_for_getfile(sourcedir);
 
   flow_file_record *record = get_next_flow_file(instance, test_flow);
   REQUIRE(record != nullptr);
 
-  ss.str("");
+  std::stringstream ss;
 
-  ss << putfiledir << "/" << "tstFile.ext";
+  ss << putfiledir << "/" << test_file_name;
   std::ifstream t(ss.str());
   std::string put_data((std::istreambuf_iterator<char>(t)), std::istreambuf_iterator<char>());
 
@@ -131,6 +138,14 @@ TEST_CASE("get file and put file", "[getAndPutFile]") {
 
   // No failure handler can be added after the flow is finalized
   REQUIRE(add_failure_callback(test_flow, failure_counter) == 1);
+
+  uint8_t* content = (uint8_t*)malloc(record->size* sizeof(uint8_t));
+
+  REQUIRE(get_content(record, content, record->size) == record->size);
+
+  REQUIRE(test_file_content == std::string(reinterpret_cast<char*>(content), record->size));
+
+  free(content);
 
   free_flowfile(record);
 
@@ -142,17 +157,10 @@ TEST_CASE("get file and put file", "[getAndPutFile]") {
 TEST_CASE("Test manipulation of attributes", "[testAttributes]") {
   TestController testController;
 
-  char src_format[] = "/tmp/gt.XXXXXX";
   const char *sourcedir = testController.createTempDirectory(src_format);
 
-  std::string test_file_content = "C API raNdOMcaSe test d4t4 th1s is!";
+  create_testfile_for_getfile(sourcedir);
 
-  std::fstream file;
-  std::stringstream ss;
-  ss << sourcedir << "/" << "tstFile.ext";
-  file.open(ss.str(), std::ios::out);
-  file << test_file_content;
-  file.close();
   auto instance = create_instance_obj();
   REQUIRE(instance != nullptr);
   flow *test_flow = create_flow(instance, nullptr);
@@ -161,10 +169,10 @@ TEST_CASE("Test manipulation of attributes", "[testAttributes]") {
   processor *get_proc = add_processor(test_flow, "GetFile");
   REQUIRE(get_proc != nullptr);
   REQUIRE(set_property(get_proc, "Input Directory", sourcedir) == 0);
-  processor *extract_test = add_processor_with_linkage(test_flow, "ExtractText");
+  processor *extract_test = add_processor(test_flow, "ExtractText");
   REQUIRE(extract_test != nullptr);
   REQUIRE(set_property(extract_test, "Attribute", "TestAttr") == 0);
-  processor *update_attr = add_processor_with_linkage(test_flow, "UpdateAttribute");
+  processor *update_attr = add_processor(test_flow, "UpdateAttribute");
   REQUIRE(update_attr != nullptr);
 
   REQUIRE(set_property(update_attr, "UpdatedAttribute", "UpdatedValue") == 0);
@@ -224,9 +232,7 @@ TEST_CASE("Test manipulation of attributes", "[testAttributes]") {
 TEST_CASE("Test error handling callback", "[errorHandling]") {
   TestController testController;
 
-  char src_format[] = "/tmp/gt.XXXXXX";
   const char *sourcedir = testController.createTempDirectory(src_format);
-  std::string test_file_content = "C API raNdOMcaSe test d4t4 th1s is!";
 
   auto instance = create_instance_obj();
   REQUIRE(instance != nullptr);
@@ -239,19 +245,13 @@ TEST_CASE("Test error handling callback", "[errorHandling]") {
 
   processor *get_proc = add_processor(test_flow, "GetFile");
   REQUIRE(get_proc != nullptr);
-  processor *put_proc = add_processor_with_linkage(test_flow, "PutFile");
+  processor *put_proc = add_processor(test_flow, "PutFile");
   REQUIRE(put_proc != nullptr);
   REQUIRE(set_property(get_proc, "Input Directory", sourcedir) == 0);
   REQUIRE(set_property(put_proc, "Directory", "/tmp/never_existed") == 0);
   REQUIRE(set_property(put_proc, "Create Missing Directories", "false") == 0);
 
-  std::fstream file;
-  std::stringstream ss;
-
-  ss << sourcedir << "/" << "tstFile.ext";
-  file.open(ss.str(), std::ios::out);
-  file << test_file_content;
-  file.close();
+  create_testfile_for_getfile(sourcedir);
 
 
   REQUIRE(get_next_flow_file(instance, test_flow) == nullptr);
@@ -263,10 +263,7 @@ TEST_CASE("Test error handling callback", "[errorHandling]") {
   REQUIRE(set_failure_strategy(test_flow, FailureStrategy::ROLLBACK) == 0);
 
   // Create new testfile to trigger failure again
-  ss << "2";
-  file.open(ss.str(), std::ios::out);
-  file << test_file_content;
-  file.close();
+  create_testfile_for_getfile(sourcedir, test_file_name + "2");
 
   REQUIRE(get_next_flow_file(instance, test_flow) == nullptr);
   REQUIRE(failure_count > 100);
@@ -275,4 +272,119 @@ TEST_CASE("Test error handling callback", "[errorHandling]") {
 
   free_flow(test_flow);
   free_instance(instance);
+}
+
+TEST_CASE("Test standalone processors", "[testStandalone]") {
+  TestController testController;
+
+  const char *sourcedir = testController.createTempDirectory(src_format);
+
+  create_testfile_for_getfile(sourcedir);
+
+  standalone_processor* getfile_proc = create_processor("GetFile");
+  REQUIRE(set_standalone_property(getfile_proc, "Input Directory", sourcedir) == 0);
+
+  flow_file_record* ffr = invoke(getfile_proc);
+
+  REQUIRE(ffr != nullptr);
+  REQUIRE(get_attribute_qty(ffr) > 0);
+
+  standalone_processor* extract_test = create_processor("ExtractText");
+  REQUIRE(extract_test != nullptr);
+  REQUIRE(set_standalone_property(extract_test, "Attribute", "TestAttr") == 0);
+
+  flow_file_record* ffr2 = invoke_ff(extract_test, ffr);
+
+  free_flowfile(ffr);
+
+  // Verify the transfer of attributes
+  REQUIRE(ffr2 != nullptr);
+  REQUIRE(get_attribute_qty(ffr2) > 0);
+
+  char filename_key[] = "filename";
+  attribute attr;
+  attr.key = filename_key;
+  attr.value_size = 0;
+
+  REQUIRE(get_attribute(ffr2, &attr) == 0);
+  REQUIRE(attr.value_size > 0);
+
+  // Verify extracttext behavior
+  char test_attr[] = "TestAttr";
+  attr.key = test_attr;
+  attr.value_size = 0;
+  REQUIRE(get_attribute(ffr2, &attr) == 0);
+  REQUIRE(std::string(static_cast<char*>(attr.value), attr.value_size) == test_file_content);
+
+  free_flowfile(ffr2);
+  free_standalone_processor(getfile_proc);
+}
+
+TEST_CASE("Test interaction of flow and standlone processors", "[testStandaloneWithFlow]") {
+  TestController testController;
+
+  const char *sourcedir = testController.createTempDirectory(src_format);
+  const char *putfiledir = testController.createTempDirectory(put_format);
+
+  create_testfile_for_getfile(sourcedir);
+
+  auto instance = create_instance_obj();
+  REQUIRE(instance != nullptr);
+  flow *test_flow = create_flow(instance, nullptr);
+  REQUIRE(test_flow != nullptr);
+
+  processor *get_proc = add_processor(test_flow, "GetFile");
+  REQUIRE(get_proc != nullptr);
+  REQUIRE(set_property(get_proc, "Input Directory", sourcedir) == 0);
+
+  flow_file_record *record = get_next_flow_file(instance, test_flow);
+  REQUIRE(record != nullptr);
+
+  standalone_processor* putfile_proc = create_processor("PutFile");
+  REQUIRE(set_standalone_property(putfile_proc, "Directory", putfiledir) == 0);
+
+  flow_file_record* put_record = invoke_ff(putfile_proc, record);
+  REQUIRE(put_record != nullptr);
+
+  free_flowfile(record);
+  free_flowfile(put_record);
+
+  std::stringstream ss;
+
+  ss << putfiledir << "/" << test_file_name;
+  std::ifstream t(ss.str());
+  std::string put_data((std::istreambuf_iterator<char>(t)), std::istreambuf_iterator<char>());
+
+  REQUIRE(test_file_content == put_data);
+
+  free_flow(test_flow);
+  free_instance(instance);
+  free_standalone_processor(putfile_proc);
+}
+
+TEST_CASE("Test standalone processors with file input", "[testStandaloneWithFile]") {
+  TestController testController;
+
+  enable_logging();
+
+  const char *sourcedir = testController.createTempDirectory(src_format);
+  std::string path = create_testfile_for_getfile(sourcedir);
+
+  standalone_processor* extract_test = create_processor("ExtractText");
+  REQUIRE(extract_test != nullptr);
+  REQUIRE(set_standalone_property(extract_test, "Attribute", "TestAttr") == 0);
+
+  flow_file_record* ffr = invoke_file(extract_test, path.c_str());
+
+  REQUIRE(ffr != nullptr);
+
+  attribute attr;
+  char test_attr[] = "TestAttr";
+  attr.key = test_attr;
+  attr.value_size = 0;
+  REQUIRE(get_attribute(ffr, &attr) == 0);
+  REQUIRE(std::string(static_cast<char*>(attr.value), attr.value_size) == test_file_content);
+
+  free_flowfile(ffr);
+  free_standalone_processor(extract_test);
 }

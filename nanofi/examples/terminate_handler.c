@@ -42,7 +42,7 @@ int main(int argc, char **argv) {
 
   flow *new_flow = create_flow(instance, "GenerateFlowFile");
 
-  processor *put_proc = add_processor_with_linkage(new_flow, "PutFile");
+  processor *put_proc = add_processor(new_flow, "PutFile");
 
   // Target directory for PutFile is missing, it's not allowed to create, so tries to transmit to failure relationship
   // As it doesn't exist, an exception is thrown

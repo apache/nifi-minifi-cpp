@@ -23,19 +23,8 @@
 #include <set>
 #include <string>
 
-bool intToFailureStragey(int in, FailureStrategy *out) {
-  auto tmp = static_cast<FailureStrategy>(in);
-  switch (tmp) {
-    case AS_IS:
-    case ROLLBACK:
-      *out = tmp;
-      return true;
-    default:
-      return false;
-  }
-}
-
 std::shared_ptr<utils::IdGenerator> ExecutionPlan::id_generator_ = utils::IdGenerator::getIdGenerator();
+std::unordered_map<std::string, std::shared_ptr<ExecutionPlan>> ExecutionPlan::proc_plan_map_ = {};
 
 ExecutionPlan::ExecutionPlan(std::shared_ptr<core::ContentRepository> content_repo, std::shared_ptr<core::Repository> flow_repo, std::shared_ptr<core::Repository> prov_repo)
     : content_repo_(content_repo),
@@ -52,7 +41,7 @@ ExecutionPlan::ExecutionPlan(std::shared_ptr<core::ContentRepository> content_re
  * Add a callback to obtain and pass processor session to a generated processor
  *
  */
-std::shared_ptr<core::Processor> ExecutionPlan::addCallback(void *obj, std::function<void(processor_session*)> fp) {
+std::shared_ptr<core::Processor> ExecutionPlan::addCallback(void *obj, std::function<void(core::ProcessSession*)> fp) {
   if (finalized) {
     return nullptr;
   }
@@ -144,7 +133,8 @@ void ExecutionPlan::reset() {
   }
 }
 
-bool ExecutionPlan::runNextProcessor(std::function<void(const std::shared_ptr<core::ProcessContext>, const std::shared_ptr<core::ProcessSession>)> verify) {
+bool ExecutionPlan::runNextProcessor(std::function<void(const std::shared_ptr<core::ProcessContext>, const std::shared_ptr<core::ProcessSession>)> verify,
+                                     std::shared_ptr<flowfile_input_params> input_ff_params) {
   if (!finalized) {
     finalize();
   }
@@ -152,6 +142,7 @@ bool ExecutionPlan::runNextProcessor(std::function<void(const std::shared_ptr<co
   if (location >= processor_queue_.size()) {
     return false;
   }
+
   std::shared_ptr<core::Processor> processor = processor_queue_[location];
   std::shared_ptr<core::ProcessContext> context = processor_contexts_[location];
   std::shared_ptr<core::ProcessSessionFactory> factory = std::make_shared<core::ProcessSessionFactory>(context);
@@ -162,6 +153,15 @@ bool ExecutionPlan::runNextProcessor(std::function<void(const std::shared_ptr<co
   }
   std::shared_ptr<core::ProcessSession> current_session = std::make_shared<core::ProcessSession>(context);
   process_sessions_.push_back(current_session);
+  if (input_ff_params) {
+    std::shared_ptr<minifi::FlowFileRecord> flowFile = std::static_pointer_cast<minifi::FlowFileRecord>(current_session->create());
+    for(const auto& kv : input_ff_params->attributes) {
+      flowFile->setAttribute(kv.first, kv.second);
+    }
+    current_session->importFrom(*(input_ff_params->content_stream.get()), flowFile);
+    current_session->transfer(flowFile, core::Relationship("success", "success"));
+    relationships_[relationships_.size()-1]->put(std::static_pointer_cast<core::FlowFile>(flowFile));
+  }
   processor->incrementActiveTasks();
   processor->setScheduledState(core::ScheduledState::RUNNING);
   if (verify != nullptr) {

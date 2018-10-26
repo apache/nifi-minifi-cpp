@@ -19,6 +19,9 @@
 #ifndef LIBMINIFI_SRC_CAPI_CSTRUCTS_H_
 #define LIBMINIFI_SRC_CAPI_CSTRUCTS_H_
 
+#include <stddef.h>
+#include <stdint.h>
+
 /**
  * NiFi Port struct
  */
@@ -62,13 +65,11 @@ typedef struct {
  * ##################################################################
  */
 
-typedef struct {
-  void *processor_ptr;
-} processor;
+typedef struct processor processor;
 
-typedef struct {
-  void *session;
-} processor_session;
+typedef struct standalone_processor standalone_processor;
+
+typedef struct processor_session processor_session;
 
 /****
  * ##################################################################
@@ -106,9 +107,7 @@ typedef struct {
 
 } flow_file_record;
 
-typedef struct {
-  void *plan;
-} flow;
+typedef struct flow flow;
 
 typedef enum FS {
   AS_IS,
