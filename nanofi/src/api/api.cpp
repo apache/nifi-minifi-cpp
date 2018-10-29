@@ -20,11 +20,12 @@
 #include <memory>
 #include <utility>
 #include <exception>
+
+#include "../../include/api/nanofi.h"
 #include "core/Core.h"
-#include "capi/api.h"
-#include "capi/expect.h"
-#include "capi/Instance.h"
-#include "capi/Plan.h"
+#include "core/expect.h"
+#include "cxx/Instance.h"
+#include "cxx/Plan.h"
 #include "ResourceClaim.h"
 #include "processors/GetFile.h"
 #include "core/logging/LoggerConfiguration.h"
@@ -75,7 +76,7 @@ nifi_instance *create_instance(const char *url, nifi_port *port) {
   DirectoryConfiguration::initialize();
 
   // need reinterpret cast until we move to C for this module.
-  nifi_instance *instance = reinterpret_cast<nifi_instance*>( malloc(sizeof(nifi_instance)) );
+  nifi_instance *instance = reinterpret_cast<nifi_instance*>(malloc(sizeof(nifi_instance)));
   /**
    * This API will gradually move away from C++, hence malloc is used for nifi_instance
    * Since minifi::Instance is currently being used, then we need to use new in that case.
@@ -141,9 +142,9 @@ void free_instance(nifi_instance* instance) {
  * @param file file to place into the flow file.
  */
 flow_file_record* create_flowfile(const char *file, const size_t len) {
-  flow_file_record *new_ff = new flow_file_record;
+  flow_file_record *new_ff = (flow_file_record*) malloc(sizeof(flow_file_record));
   new_ff->attributes = new string_map();
-  new_ff->contentLocation = new char[len + 1];
+  new_ff->contentLocation = (char*) malloc(sizeof(char) * (len + 1));
   snprintf(new_ff->contentLocation, len + 1, "%s", file);
   std::ifstream in(file, std::ifstream::ate | std::ifstream::binary);
   // set the size of the flow file.
@@ -159,10 +160,10 @@ flow_file_record* create_ff_object(const char *file, const size_t len, const uin
   if (nullptr == file) {
     return nullptr;
   }
-  flow_file_record *new_ff = new flow_file_record;
+  flow_file_record *new_ff = (flow_file_record*) malloc(sizeof(flow_file_record));
   new_ff->attributes = new string_map();
   new_ff->ffp = 0;
-  new_ff->contentLocation = new char[len + 1];
+  new_ff->contentLocation = (char*) malloc(sizeof(char) * (len + 1));
   snprintf(new_ff->contentLocation, len + 1, "%s", file);
   std::ifstream in(file, std::ifstream::ate | std::ifstream::binary);
   // set the size of the flow file.
@@ -197,8 +198,8 @@ void free_flowfile(flow_file_record *ff) {
       auto map = static_cast<string_map*>(ff->attributes);
       delete map;
     }
-    delete[] ff->contentLocation;
-    delete ff;
+    free(ff->contentLocation);
+    free(ff);
   }
 }
 
@@ -327,7 +328,7 @@ int transmit_flowfile(flow_file_record *ff, nifi_instance *instance) {
 
 flow *create_new_flow(nifi_instance *instance) {
   auto minifi_instance_ref = static_cast<minifi::Instance*>(instance->instance_ptr);
-  flow *new_flow = new flow;
+  flow *new_flow = (flow*) malloc(sizeof(flow));
 
   auto execution_plan = new ExecutionPlan(minifi_instance_ref->getContentRepository(), minifi_instance_ref->getNoOpRepository(), minifi_instance_ref->getNoOpRepository());
 
@@ -341,7 +342,7 @@ flow *create_flow(nifi_instance *instance, const char *first_processor) {
     return nullptr;
   }
   auto minifi_instance_ref = static_cast<minifi::Instance*>(instance->instance_ptr);
-  flow *new_flow = new flow;
+  flow *new_flow = (flow*) malloc(sizeof(flow));
 
   auto execution_plan = new ExecutionPlan(minifi_instance_ref->getContentRepository(), minifi_instance_ref->getNoOpRepository(), minifi_instance_ref->getNoOpRepository());
 
@@ -360,7 +361,7 @@ processor *add_python_processor(flow *flow, void (*ontrigger_callback)(processor
   }
   ExecutionPlan *plan = static_cast<ExecutionPlan*>(flow->plan);
   auto proc = plan->addCallback(nullptr, std::bind(ontrigger_callback, std::placeholders::_1));
-  processor *new_processor = new processor();
+  processor *new_processor = (processor*) malloc(sizeof(processor));
   new_processor->processor_ptr = proc.get();
   return new_processor;
 }
@@ -387,7 +388,7 @@ processor *add_processor(flow *flow, const char *processor_name) {
   ExecutionPlan *plan = static_cast<ExecutionPlan*>(flow->plan);
   auto proc = plan->addProcessor(processor_name, processor_name);
   if (proc) {
-    processor *new_processor = new processor();
+    processor *new_processor = (processor*) malloc(sizeof(processor));
     new_processor->processor_ptr = proc.get();
     return new_processor;
   }
@@ -398,7 +399,7 @@ processor *add_processor_with_linkage(flow *flow, const char *processor_name) {
   ExecutionPlan *plan = static_cast<ExecutionPlan*>(flow->plan);
   auto proc = plan->addProcessor(processor_name, processor_name, core::Relationship("success", "description"), true);
   if (proc) {
-    processor *new_processor = new processor();
+    processor *new_processor = (processor*) malloc(sizeof(processor));
     new_processor->processor_ptr = proc.get();
     return new_processor;
   }
@@ -423,7 +424,7 @@ int free_flow(flow *flow) {
     return -1;
   auto execution_plan = static_cast<ExecutionPlan*>(flow->plan);
   delete execution_plan;
-  delete flow;
+  free(flow);
   return 0;
 }
 

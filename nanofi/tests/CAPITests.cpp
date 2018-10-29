@@ -25,12 +25,11 @@
 #include <fstream>
 
 #include "utils/file/FileUtils.h"
-#include "../TestBase.h"
-
-#include "capi/api.h"
+#include "TestBase.h"
 
 #include <chrono>
 #include <thread>
+#include "api/nanofi.h"
 
 static nifi_instance *create_instance_obj(const char *name = "random_instance") {
   nifi_port port;

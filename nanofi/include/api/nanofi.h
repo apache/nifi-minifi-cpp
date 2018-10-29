@@ -21,8 +21,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "cstructs.h"
-#include "processors.h"
+#include "core/cstructs.h"
+#include "core/processors.h"
 
 int initialize_api();
 
@@ -31,7 +31,9 @@ extern "C" {
 #endif
 
 /**
- * Updates with every release
+ * Updates with every release. Functions used here constitute the public API of NanoFi.
+ *
+ * Changes here will follow semver
  */
 #define API_VERSION "0.02"
 

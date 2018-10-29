@@ -30,7 +30,7 @@
 #include <functional>
 
 #include "BackTrace.h"
-#include "capi/expect.h"
+#include "core/expect.h"
 #include "controllers/ThreadManagementService.h"
 #include "concurrentqueue.h"
 #include "core/controller/ControllerService.h"

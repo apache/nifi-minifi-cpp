@@ -22,11 +22,10 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <dirent.h>
-#include "capi/api.h"
-#include "file_blocks.h"
-#include "comms.h"
-#include "capi/api.h"
-#include "capi/processors.h"
+#include "api/nanofi.h"
+#include "blocks/file_blocks.h"
+#include "blocks/comms.h"
+#include "core/processors.h"
 #include "HTTPCurlLoader.h"
 #include "python_lib.h"
 

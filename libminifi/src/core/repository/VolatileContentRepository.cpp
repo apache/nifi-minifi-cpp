@@ -17,7 +17,7 @@
  */
 
 #include "core/repository/VolatileContentRepository.h"
-#include "capi/expect.h"
+#include "core/expect.h"
 #include <cstdio>
 #include <string>
 #include <memory>

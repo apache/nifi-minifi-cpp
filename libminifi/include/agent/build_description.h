@@ -19,7 +19,7 @@
 #define BUILD_DESCRPTION_H
 
 #include <vector>
-#include "capi/expect.h"
+#include "core/expect.h"
 
 namespace org {
 namespace apache {

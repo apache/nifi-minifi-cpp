@@ -18,7 +18,8 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include "capi/api.h"
+
+#include "api/nanofi.h"
 
 /**
  * This is an example of the C API that registers terminate handler and generates an exception.

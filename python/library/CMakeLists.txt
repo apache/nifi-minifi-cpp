@@ -23,7 +23,7 @@ IF(POLICY CMP0048)
   CMAKE_POLICY(SET CMP0048 OLD)
 ENDIF(POLICY CMP0048)
 
-include_directories(../../blocks/ ../../libminifi/include  ../../libminifi/include/c2  ../../libminifi/include/c2/protocols/  ../../libminifi/include/core/state ./libminifi/include/core/statemanagement/metrics  ../../libminifi/include/core/yaml  ../../libminifi/include/core  ../../thirdparty/spdlog-20170710/include ../../thirdparty/concurrentqueue ../../thirdparty/yaml-cpp-yaml-cpp-20171024/include ../../thirdparty/civetweb-1.9.1/include ../../thirdparty/)
+include_directories(../../nanofi/include/ ../../libminifi/include  ../../libminifi/include/c2  ../../libminifi/include/c2/protocols/  ../../libminifi/include/core/state ./libminifi/include/core/statemanagement/metrics  ../../libminifi/include/core/yaml  ../../libminifi/include/core  ../../thirdparty/spdlog-20170710/include ../../thirdparty/concurrentqueue ../../thirdparty/yaml-cpp-yaml-cpp-20171024/include ../../thirdparty/civetweb-1.9.1/include ../../thirdparty/)
 if(WIN32)
 	include_directories(../../libminifi/opsys/win)
 else()
@@ -33,9 +33,9 @@ include_directories(../../extensions/http-curl/ ../../extensions/http-curl/clien
 
 add_library(python-lib SHARED python_lib.cpp)
 if (APPLE)
-	target_link_libraries(python-lib capi core-minifi minifi)
+	target_link_libraries(python-lib nanofi core-minifi minifi)
 else()
-	target_link_libraries(python-lib capi-shared core-minifi-shared minifi-shared)
+	target_link_libraries(python-lib nanofi-shared core-minifi-shared minifi-shared)
 endif(APPLE)
 
 if (WIN32)

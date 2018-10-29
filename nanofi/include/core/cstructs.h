@@ -19,14 +19,12 @@
 #ifndef LIBMINIFI_SRC_CAPI_CSTRUCTS_H_
 #define LIBMINIFI_SRC_CAPI_CSTRUCTS_H_
 
-
 /**
  * NiFi Port struct
  */
 typedef struct {
   char *port_id;
 } nifi_port;
-
 
 /**
  * Nifi instance struct
@@ -39,14 +37,13 @@ typedef struct {
 
 } nifi_instance;
 
-
 /****
  * ##################################################################
  *  C2 OPERATIONS
  * ##################################################################
  */
 
-enum C2_Server_Type{
+enum C2_Server_Type {
   REST,
   MQTT
 };
@@ -59,7 +56,6 @@ typedef struct {
   enum C2_Server_Type type;
 } C2_Server;
 
-
 /****
  * ##################################################################
  *  Processor OPERATIONS
@@ -70,14 +66,9 @@ typedef struct {
   void *processor_ptr;
 } processor;
 
-
 typedef struct {
-
   void *session;
-
 } processor_session;
-
-
 
 /****
  * ##################################################################
@@ -93,7 +84,7 @@ typedef struct {
 
 typedef struct {
   attribute * attributes;
-  size_t  size;
+  size_t size;
 } attribute_set;
 
 /**
@@ -113,11 +104,8 @@ typedef struct {
 
 } flow_file_record;
 
-
 typedef struct {
   void *plan;
 } flow;
-
-
 
 #endif /* LIBMINIFI_SRC_CAPI_CSTRUCTS_H_ */
