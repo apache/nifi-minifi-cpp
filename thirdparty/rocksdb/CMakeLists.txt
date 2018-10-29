@@ -584,6 +584,7 @@ else()
 endif()
 
 set(ROCKSDB_STATIC_LIB rocksdb${ARTIFACT_SUFFIX})
+# commented out to avoid building the shared lib
 #set(ROCKSDB_SHARED_LIB rocksdb-shared${ARTIFACT_SUFFIX})
 set(ROCKSDB_IMPORT_LIB ${ROCKSDB_SHARED_LIB})
 if(WIN32)
@@ -592,16 +593,19 @@ if(WIN32)
   set(LIBS ${ROCKSDB_STATIC_LIB} ${THIRDPARTY_LIBS} ${SYSTEM_LIBS})
 else()
   set(SYSTEM_LIBS ${CMAKE_THREAD_LIBS_INIT})
-  set(LIBS ${ROCKSDB_SHARED_LIB} ${THIRDPARTY_LIBS} ${SYSTEM_LIBS})
-  add_library(${ROCKSDB_SHARED_LIB} SHARED ${SOURCES})
- # target_link_libraries(${ROCKSDB_SHARED_LIB}
+  set(LIBS ${ROCKSDB_STATIC_LIB} ${THIRDPARTY_LIBS} ${SYSTEM_LIBS})
+# commented out to avoid building the shared lib
+# as there is no reason
+#add_library(${ROCKSDB_SHARED_LIB} SHARED ${SOURCES})
+
+# target_link_libraries(${ROCKSDB_SHARED_LIB}
 #    ${THIRDPARTY_LIBS} ${SYSTEM_LIBS})
-  set_target_properties(${ROCKSDB_SHARED_LIB} PROPERTIES
-                        LINKER_LANGUAGE CXX
-                        VERSION ${ROCKSDB_VERSION}
-                        SOVERSION ${ROCKSDB_VERSION_MAJOR}
-                        CXX_STANDARD 11
-                        OUTPUT_NAME "rocksdb")
+#  set_target_properties(${ROCKSDB_SHARED_LIB} PROPERTIES
+#                        LINKER_LANGUAGE CXX
+#                        VERSION ${ROCKSDB_VERSION}
+#                        SOVERSION ${ROCKSDB_VERSION_MAJOR}
+#                        CXX_STANDARD 11
+#                        OUTPUT_NAME "rocksdb")
 endif()
 
 option(WITH_LIBRADOS "Build with librados" OFF)

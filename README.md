@@ -102,7 +102,7 @@ MiNiFi - C++ supports the following processors:
 * g++
   * 4.8.4 or greater
 * bison
-  * 3.0 or greater
+  * 3.0.x (3.2 has been shown to fail builds)
 * flex
   * 2.5 or greater
 
@@ -160,7 +160,7 @@ $ scl enable devtoolset-6 bash
 ```
 
 Additionally, for expression language support, it is recommended to install GNU
-Bison 3.x:
+Bison 3.0.4:
 
 ```
 $ wget https://ftp.gnu.org/gnu/bison/bison-3.0.4.tar.xz
@@ -279,7 +279,6 @@ $ apt-get install libpcap-dev
 ```
 # ~/Development/code/apache/nifi-minifi-cpp on git:master
 $ brew install cmake \
-  bison \
   flex \
   patch \
   autoconf \
@@ -305,6 +304,7 @@ $ sudo pip install virtualenv
 $ brew install gpsd
 $ # (Optional) for PacketCapture Processor
 $ sudo brew install libpcap
+$ # It is recommended that you install bison from source as HomeBrew now uses an incompatible version of Bison
 ```
 
 

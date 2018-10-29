@@ -24,7 +24,7 @@
 #include <atomic>
 #include <cstdint>
 #include "io/ClientSocket.h"
-#include "capi/expect.h"
+#include "core/expect.h"
 #include "properties/Configure.h"
 
 namespace org {

@@ -19,8 +19,9 @@
 #define BLOCKS_COMMS_H_
 
 #include <stdio.h>
-#include "capi/api.h"
-#include "capi/processors.h"
+
+#include "../api/nanofi.h"
+#include "core/processors.h"
 
 #define SUCCESS 0x00
 #define FINISHED_EARLY 0x01
@@ -40,7 +41,7 @@ uint8_t transmit_to_nifi(nifi_instance *instance, flow *flow, transmission_stop 
     transmit_flowfile(record, instance);
 
     free_flowfile(record);
-  } while (record != 0x00 && !( stop_callback != 0x00 && stop_callback(0x00)));
+  } while (record != 0x00 && !(stop_callback != 0x00 && stop_callback(0x00)));
   return SUCCESS;
 }
 

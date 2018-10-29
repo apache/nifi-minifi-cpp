@@ -23,7 +23,18 @@ IF(POLICY CMP0048)
   CMAKE_POLICY(SET CMP0048 OLD)
 ENDIF(POLICY CMP0048)
 
-include_directories(../blocks/ ../libminifi/include ../libminifi/include/c2  ../libminifi/include/c2/protocols/  ../libminifi/include/core/state ./libminifi/include/core/statemanagement/metrics  ../libminifi/include/core/yaml  ../libminifi/include/core  ../thirdparty/spdlog-20170710/include ../thirdparty/concurrentqueue ../thirdparty/yaml-cpp-yaml-cpp-20171024/include ../thirdparty/civetweb-1.9.1/include ../thirdparty/)
+include_directories(include)
+include_directories(../libminifi/include ../thirdparty/spdlog-20170710/include)
+
+if(WIN32)
+include_directories(../libminifi/opsys/win)
+else()
+include_directories(../libminifi/opsys/posix)
+endif()
+
+file(GLOB NANOFI_SOURCES  "src/api/*.cpp" "src/cxx/*.cpp" )
+
+file(GLOB NANOFI_EXAMPLES_SOURCES  "examples/*.c" )
 
 include(CheckCXXCompilerFlag)
 if (WIN32)
@@ -34,6 +45,7 @@ if (WIN32)
 	    endif()
 	endif()
 else()
+
 CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
 CHECK_CXX_COMPILER_FLAG("-std=c++0x" COMPILER_SUPPORTS_CXX0X)
 if(COMPILER_SUPPORTS_CXX11)
@@ -46,33 +58,43 @@ endif()
 
 endif()
 
-if (WIN32)
-    set(LINK_FLAGS "/WHOLEARCHIVE")
-    set(LINK_END_FLAGS "")
-elseif (APPLE)
-    set(LINK_FLAGS "-Wl,-all_load")
-    set(LINK_END_FLAGS "")
-else ()
-    set(LINK_FLAGS "-Wl,--whole-archive")
-    set(LINK_END_FLAGS "-Wl,--no-whole-archive")
+add_library(nanofi STATIC ${NANOFI_SOURCES})
+
+if (APPLE)
+	target_link_libraries (nanofi -Wl,-all_load core-minifi minifi)
+elseif(NOT WIN32)
+	target_link_libraries (nanofi -Wl,--whole-archive core-minifi minifi -Wl,--no-whole-archive)
+else()
+    set(WIN32_ARCHIVES "${WIN32_ARCHIVES} /WHOLEARCHIVE:core-minifi")
+	set(WIN32_ARCHIVES "${WIN32_ARCHIVES} /WHOLEARCHIVE:minifi")
 endif ()
 
-add_executable(generate_flow generate_flow.c)
+if(WIN32)
+	set_target_properties(nanofi PROPERTIES LINK_FLAGS "${WIN32_ARCHIVES}")
+endif()
 
-add_executable(terminate_handler terminate_handler.c)
+if (ENABLE_PYTHON)
 
-target_link_libraries(generate_flow capi ${CMAKE_THREAD_LIBS_INIT} ${LINK_FLAGS} minifi ${LINK_END_FLAGS})
+add_library(nanofi-shared SHARED ${NANOFI_SOURCES})
 
-target_link_libraries(terminate_handler capi ${CMAKE_THREAD_LIBS_INIT} ${LINK_FLAGS} minifi ${LINK_END_FLAGS})
+if (APPLE)
+	target_link_libraries (nanofi-shared -Wl,-all_load core-minifi-shared minifi-shared)
+elseif(NOT WIN32)
+	target_link_libraries (nanofi-shared -Wl,--whole-archive core-minifi-shared minifi-shared -Wl,--no-whole-archive)
+else()
+    set(WIN32_ARCHIVES "${WIN32_ARCHIVES} /WHOLEARCHIVE:core-minifi-shared")
+	set(WIN32_ARCHIVES "${WIN32_ARCHIVES} /WHOLEARCHIVE:minifi-shared")
+endif ()
 
-if (NOT WIN32)
 
-add_executable(transmit_flow transmit_flow.c)
+if(WIN32)
+	set_target_properties(nanofi-shared PROPERTIES LINK_FLAGS "${WIN32_ARCHIVES}")
+endif()
 
-target_link_libraries(transmit_flow capi ${CMAKE_THREAD_LIBS_INIT} ${LINK_FLAGS} minifi ${LINK_END_FLAGS})
+set_property(TARGET nanofi-shared PROPERTY POSITION_INDEPENDENT_CODE ON)
 
-add_executable(monitor_directory monitor_directory.c)
+endif(ENABLE_PYTHON)
 
-target_link_libraries(monitor_directory capi ${CMAKE_THREAD_LIBS_INIT} ${LINK_FLAGS} minifi ${LINK_END_FLAGS})
-
+if (NOT DISABLE_CURL)
+add_subdirectory(examples)
 endif()

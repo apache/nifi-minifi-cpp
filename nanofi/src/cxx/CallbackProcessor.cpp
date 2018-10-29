@@ -15,24 +15,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef BLOCKS_FILE_BLOCKS_H_
-#define BLOCKS_FILE_BLOCKS_H_
+#include "cxx/CallbackProcessor.h"
+namespace org {
+namespace apache {
+namespace nifi {
+namespace minifi {
+namespace processors {
 
-#include "capi/api.h"
-#include "capi/processors.h"
-
-#define KEEP_SOURCE 0x01
-#define RECURSE 0x02
-
-/**
- * Monitor directory can be combined into a current flow. to create an execution plan
- */
-flow *monitor_directory(nifi_instance *instance, char *directory, flow *parent_flow, char flags) {
-  GetFileConfig config;
-  config.directory = directory;
-  config.keep_source = flags & KEEP_SOURCE;
-  config.recurse = flags & RECURSE;
-  return create_getfile(instance, parent_flow, &config);
+void CallbackProcessor::onTrigger(core::ProcessContext *context, core::ProcessSession *session) {
+  if (callback_ != nullptr) {
+    processor_session sesh;
+    sesh.session = session;
+    callback_(&sesh);
+  }
 }
 
-#endif /* BLOCKS_FILE_BLOCKS_H_ */
+} /* namespace processors */
+} /* namespace minifi */
+} /* namespace nifi */
+} /* namespace apache */
+} /* namespace org */
