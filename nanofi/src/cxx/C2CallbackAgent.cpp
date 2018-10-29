@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-#include "capi/C2CallbackAgent.h"
+#include "cxx/C2CallbackAgent.h"
 #include <csignal>
 #include <utility>
 #include <vector>

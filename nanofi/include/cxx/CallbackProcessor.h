@@ -28,7 +28,7 @@
 #include <functional>
 #include <iostream>
 #include <sys/types.h>
-#include "capi/cstructs.h"
+#include "core/cstructs.h"
 #include "io/BaseStream.h"
 #include "FlowFileRecord.h"
 #include "core/Processor.h"

@@ -101,7 +101,6 @@ file(GLOB SOURCES  "src/sitetosite/*.cpp"  "src/core/logging/*.cpp"  "src/core/s
 
 file(GLOB PROCESSOR_SOURCES  "src/processors/*.cpp" )
 
-file(GLOB CAPI_SOURCES  "src/capi/*.cpp" )
 
 file(GLOB SPD_SOURCES "../thirdparty/spdlog-20170710/include/spdlog/*")
 
@@ -130,7 +129,6 @@ if (OPENSSL_FOUND)
 endif (OPENSSL_FOUND)
 
 add_library(minifi STATIC ${PROCESSOR_SOURCES})
-add_library(capi STATIC ${CAPI_SOURCES})
 
 
 target_link_libraries(minifi core-minifi)
@@ -167,8 +165,6 @@ if (OPENSSL_FOUND)
 endif (OPENSSL_FOUND)
 
 add_library(minifi-shared SHARED ${PROCESSOR_SOURCES})
-add_library(capi-shared SHARED ${CAPI_SOURCES})
-
 
 target_link_libraries(minifi-shared core-minifi-shared)
 if (WIN32)
@@ -177,9 +173,7 @@ set_target_properties(minifi-shared PROPERTIES LINK_FLAGS "${LINK_FLAGS} /WHOLEA
 endif()
 
 
-
 set_property(TARGET core-minifi-shared PROPERTY POSITION_INDEPENDENT_CODE ON)
 set_property(TARGET minifi-shared PROPERTY POSITION_INDEPENDENT_CODE ON)
-set_property(TARGET capi-shared PROPERTY POSITION_INDEPENDENT_CODE ON)
 endif()
 endif(ENABLE_PYTHON)

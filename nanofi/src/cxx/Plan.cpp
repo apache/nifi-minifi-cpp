@@ -16,8 +16,8 @@
  * limitations under the License.
  */
 
-#include "capi/Plan.h"
-#include "processors/CallbackProcessor.h"
+#include "cxx/Plan.h"
+#include "cxx/CallbackProcessor.h"
 #include <memory>
 #include <vector>
 #include <set>
@@ -247,8 +247,8 @@ std::shared_ptr<core::Processor> ExecutionPlan::createProcessor(const std::strin
   return processor;
 }
 
-std::shared_ptr<minifi::Connection> ExecutionPlan::connectProcessors(std::shared_ptr<core::Processor> src_proc, std::shared_ptr<core::Processor> dst_proc,
-                                                      core::Relationship relationship, bool set_dst) {
+std::shared_ptr<minifi::Connection> ExecutionPlan::connectProcessors(std::shared_ptr<core::Processor> src_proc, std::shared_ptr<core::Processor> dst_proc, core::Relationship relationship,
+                                                                     bool set_dst) {
   std::stringstream connection_name;
   connection_name << src_proc->getUUIDStr() << "-to-" << dst_proc->getUUIDStr();
   std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(flow_repo_, content_repo_, connection_name.str());

@@ -18,6 +18,7 @@
 
 #ifndef LIBMINIFI_CAPI_PLAN_H_
 #define LIBMINIFI_CAPI_PLAN_H_
+
 #ifndef WIN32
 	#include <dirent.h>
 #endif
@@ -43,8 +44,8 @@
 #include "core/ProcessSession.h"
 #include "core/ProcessorNode.h"
 #include "core/reporting/SiteToSiteProvenanceReportingTask.h"
-#include "capi/cstructs.h"
-#include "capi/api.h"
+#include "core/cstructs.h"
+#include "api/nanofi.h"
 
 using failure_callback_type = std::function<void(flow_file_record*)>;
 using content_repo_sptr = std::shared_ptr<core::ContentRepository>;
