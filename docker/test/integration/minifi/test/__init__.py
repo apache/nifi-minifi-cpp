@@ -39,7 +39,7 @@ class DockerTestCluster(SingleNodeDockerCluster):
 
         # Create test input/output directories
         test_cluster_id = str(uuid.uuid4())
-        
+
         self.segfault = False
 
         self.tmp_test_output_dir = '/tmp/.nifi-test-output.' + test_cluster_id
@@ -56,7 +56,7 @@ class DockerTestCluster(SingleNodeDockerCluster):
         # Point output validator to ephemeral output dir
         self.output_validator = output_validator
         if isinstance(output_validator, SingleFileOutputValidator):
-          output_validator.set_output_dir(self.tmp_test_output_dir)
+            output_validator.set_output_dir(self.tmp_test_output_dir)
 
         # Start observing output dir
         self.done_event = Event()
@@ -120,14 +120,14 @@ class DockerTestCluster(SingleNodeDockerCluster):
             container = self.client.containers.get(container.id)
             logging.info('Container logs for container \'%s\':\n%s', container.name, container.logs())
             if b'Segmentation fault' in container.logs():
-                      self.segfault=true
+                self.segfault=true
             if container.status == 'running':
                 minifi_app_logs = container.exec_run('/bin/sh -c \'test -f ' + self.minifi_root + '/logs/minifi-app.log '
                                                                                                 '&& cat ' +
                                                      self.minifi_root + '/logs/minifi-app.log\'')
                 if len(minifi_app_logs) > 0:
                     logging.info('MiNiFi app logs for container \'%s\':\n%s', container.name, minifi_app_logs)
-                    
+
                 nifi_app_logs = container.exec_run('/bin/sh -c \'test -f ' + self.nifi_root + '/logs/nifi-app.log '
                                                                                             '&& cat ' +
                                                    self.nifi_root + '/logs/nifi-app.log\'')
@@ -228,10 +228,10 @@ class SingleFileOutputValidator(OutputValidator):
 
         return False
 
-        
+
 class SegfaultValidator(OutputValidator):
     """
     Validate that a file was received.
     """
-    def validate(self):        
+    def validate(self):
         return True

@@ -675,7 +675,6 @@ def nifi_flow_xml(connectable, nifi_version=None, root=None, visited=None):
         input_port_max_concurrent_tasks.text = '1'
         input_port.append(input_port_max_concurrent_tasks)
         next( res.iterfind('rootGroup') ).append(input_port)
-        """ res.iterfind('rootGroup').next().append(input_port) """
 
     if isinstance(connectable, Processor):
         conn_destination = Element('processor')
