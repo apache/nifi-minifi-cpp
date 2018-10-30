@@ -61,10 +61,11 @@ endif()
 add_library(nanofi STATIC ${NANOFI_SOURCES})
 
 if (APPLE)
-	target_link_libraries (nanofi -Wl,-all_load minifi)
+	target_link_libraries (nanofi -Wl,-all_load core-minifi minifi)
 elseif(NOT WIN32)
-	target_link_libraries (nanofi -Wl,--whole-archive minifi -Wl,--no-whole-archive)
+	target_link_libraries (nanofi -Wl,--whole-archive core-minifi minifi -Wl,--no-whole-archive)
 else()
+    set(WIN32_ARCHIVES "${WIN32_ARCHIVES} /WHOLEARCHIVE:core-minifi")
 	set(WIN32_ARCHIVES "${WIN32_ARCHIVES} /WHOLEARCHIVE:minifi")
 endif ()
 
@@ -72,14 +73,16 @@ if(WIN32)
 	set_target_properties(nanofi PROPERTIES LINK_FLAGS "${WIN32_ARCHIVES}")
 endif()
 
+if (ENABLE_PYTHON)
+
 add_library(nanofi-shared SHARED ${NANOFI_SOURCES})
 
-if (ENABLE_PYTHON)
 if (APPLE)
-	target_link_libraries (nanofi-shared -Wl,-all_load minifi-shared)
+	target_link_libraries (nanofi-shared -Wl,-all_load core-minifi-shared minifi-shared)
 elseif(NOT WIN32)
-	target_link_libraries (nanofi-shared -Wl,--whole-archive minifi-shared -Wl,--no-whole-archive)
+	target_link_libraries (nanofi-shared -Wl,--whole-archive core-minifi-shared minifi-shared -Wl,--no-whole-archive)
 else()
+    set(WIN32_ARCHIVES "${WIN32_ARCHIVES} /WHOLEARCHIVE:core-minifi-shared")
 	set(WIN32_ARCHIVES "${WIN32_ARCHIVES} /WHOLEARCHIVE:minifi-shared")
 endif ()
 
@@ -92,4 +95,6 @@ set_property(TARGET nanofi-shared PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 endif(ENABLE_PYTHON)
 
+if (NOT DISABLE_CURL)
 add_subdirectory(examples)
+endif()
