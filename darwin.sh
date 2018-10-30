@@ -40,6 +40,30 @@ add_os_flags(){
   :
 }
 
+install_bison() {
+  BISON_INSTALLED="false"
+  if [ -x "$(command -v bison)" ]; then
+    BISON_VERSION=`bison --version | head -n 1 | awk '{print $4}'`
+    BISON_MAJOR=`echo $BISON_VERSION | cut -d. -f1`
+    if (( BISON_MAJOR >= 3 )); then
+      BISON_INSTALLED="true"
+    fi
+  fi
+  if [ "$BISON_INSTALLED" = "false" ]; then
+    ## ensure that the toolchain is installed
+    INSTALL_BASE="sudo zypper in -y gcc gcc-c++"
+    ${INSTALL_BASE}
+    wget https://ftp.gnu.org/gnu/bison/bison-3.0.4.tar.xz
+    tar xvf bison-3.0.4.tar.xz
+    pushd bison-3.0.4
+    ./configure
+    make
+    sudo make install
+    popd
+  fi
+
+}
+
 bootstrap_cmake(){
   brew install cmake
 }
@@ -69,7 +93,7 @@ build_deps(){
           elif [ "$FOUND_VALUE" = "libpng" ]; then
             INSTALLED+=("libpng")
           elif [ "$FOUND_VALUE" = "bison" ]; then
-            INSTALLED+=("bison")
+            install_bison
           elif [ "$FOUND_VALUE" = "flex" ]; then
             INSTALLED+=("flex")
           elif [ "$FOUND_VALUE" = "python" ]; then
@@ -101,5 +125,4 @@ build_deps(){
       brew link curl --force > /dev/null 2>&1
     fi
   done
-
 }
