@@ -412,7 +412,8 @@ int set_failure_strategy(flow *flow, FailureStrategy strategy) {
 int set_property(processor *proc, const char *name, const char *value) {
   if (name != nullptr && value != nullptr && proc != nullptr) {
     core::Processor *p = static_cast<core::Processor*>(proc->processor_ptr);
-    return p->setProperty(name, value) ? 0 : -2;
+    bool success = p->setProperty(name, value) || (p->supportsDynamicProperties() && p->setDynamicProperty(name, value));
+    return success ? 0 : -2;
   }
   return -1;
 }
