@@ -24,7 +24,6 @@
 #include <string>
 #include <memory>
 #include "c2/ControllerSocketProtocol.h"
-#include "core/state/UpdateController.h"
 #include "core/logging/Logger.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/file/FileUtils.h"
