@@ -165,10 +165,10 @@ TEST_CASE("Test manipulation of attributes", "[testAttributes]") {
   processor *extract_test = add_processor_with_linkage(test_flow, "ExtractText");
   REQUIRE(extract_test != nullptr);
   REQUIRE(set_property(extract_test, "Attribute", "TestAttr") == 0);
-  /*processor *update_attribute = add_processor_with_linkage(test_flow, "UpdateAttribute");
-   REQUIRE(update_attribute != nullptr);
+  processor *update_attr = add_processor_with_linkage(test_flow, "UpdateAttribute");
+  REQUIRE(update_attr != nullptr);
 
-   REQUIRE(set_property(update_attribute, "TestAttribute", "TestValue") == 0);*/
+  REQUIRE(set_property(update_attr, "UpdatedAttribute", "UpdatedValue") == 0);
 
   flow_file_record *record = get_next_flow_file(instance, test_flow);
 
@@ -203,12 +203,17 @@ TEST_CASE("Test manipulation of attributes", "[testAttributes]") {
   REQUIRE(get_all_attributes(record, &attr_set) == attr_set.size);
 
   bool test_attr_found = false;
+  bool updated_attr_found = false;
   for (int i = 0; i < attr_set.size; ++i) {
     if (strcmp(attr_set.attributes[i].key, test_attr.key) == 0) {
       test_attr_found = true;
       REQUIRE(std::string(static_cast<char*>(attr_set.attributes[i].value), attr_set.attributes[i].value_size) == new_testattr_value);
+    } else if (strcmp(attr_set.attributes[i].key, "UpdatedAttribute") == 0) {
+      updated_attr_found = true;
+      REQUIRE(std::string(static_cast<char*>(attr_set.attributes[i].value), attr_set.attributes[i].value_size) == "UpdatedValue");
     }
   }
+  REQUIRE(updated_attr_found == true);
   REQUIRE(test_attr_found == true);
 
   free_flowfile(record);
