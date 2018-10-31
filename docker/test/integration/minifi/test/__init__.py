@@ -120,7 +120,7 @@ class DockerTestCluster(SingleNodeDockerCluster):
             container = self.client.containers.get(container.id)
             logging.info('Container logs for container \'%s\':\n%s', container.name, container.logs())
             if b'Segmentation fault' in container.logs():
-                self.segfault=true
+                self.segfault=True
             if container.status == 'running':
                 minifi_app_logs = container.exec_run('/bin/sh -c \'test -f ' + self.minifi_root + '/logs/minifi-app.log '
                                                                                                 '&& cat ' +
@@ -147,7 +147,7 @@ class DockerTestCluster(SingleNodeDockerCluster):
         self.wait_for_output(timeout)
         self.log_nifi_output()
 
-        return self.output_validator.validate() & ~self.segfault
+        return self.output_validator.validate() and not self.segfault
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         """
