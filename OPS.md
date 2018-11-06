@@ -27,7 +27,8 @@ This readme defines operational commands for managing instances.
 ## Description
 
 Apache NiFi MiNiFi C++ can be managed through our [C2 protocol](https://cwiki.apache.org/confluence/display/MINIFI/C2+Design+Proposal) 
-or through a local interface called the MiNiFi Controller
+or through a local interface called the MiNiFi Controller. This feature is disabled by default, and requires that C2 be enabled
+and configured with an agent class before using the MiNiFi controller features outlined here.
 
 ## Managing MiNiFi
 

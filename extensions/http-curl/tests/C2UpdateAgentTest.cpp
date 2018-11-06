@@ -140,6 +140,8 @@ int main(int argc, char **argv) {
 
   std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::Configure>();
 
+  configuration->set("c2.enable", "true");
+  configuration->set("c2.agent.class", "test");
   configuration->set("c2.rest.url", "http://localhost:7072/update");
   configuration->set("c2.agent.heartbeat.period", "1000");
   mkdir("content_repository", S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
@@ -157,7 +159,7 @@ int main(int argc, char **argv) {
   std::shared_ptr<TestRepository> repo = std::static_pointer_cast<TestRepository>(test_repo);
 
   std::shared_ptr<minifi::FlowController> controller = std::make_shared<minifi::FlowController>(test_repo, test_flow_repo, configuration, std::move(yaml_ptr), content_repo, DEFAULT_ROOT_GROUP_NAME,
-  true);
+                                                                                                true);
 
   core::YamlConfiguration yaml_config(test_repo, test_repo, content_repo, stream_factory, configuration, test_file_location);
 
