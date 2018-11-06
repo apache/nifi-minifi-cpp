@@ -356,16 +356,36 @@ void FlowController::initializeC2() {
     return;
 
   std::string c2_enable_str;
+  std::string class_str;
+
+  // don't need to worry about the return code, only whether class_str is defined.
+  configuration_->get("nifi.c2.agent.class", "c2.agent.class", class_str);
 
   if (configuration_->get(Configure::nifi_c2_enable, "c2.enable", c2_enable_str)) {
     bool enable_c2 = true;
     utils::StringUtils::StringToBool(c2_enable_str, enable_c2);
     c2_enabled_ = enable_c2;
-    if (!c2_enabled_) {
-      return;
+    if (c2_enabled_ && class_str.empty()) {
+      logger_->log_error("Class name must be defined when C2 is enabled");
+      std::cerr << "Class name must be defined when C2 is enabled" << std::endl;
+      stop(true);
+      exit(1);
     }
   } else {
-    c2_enabled_ = true;
+    /**
+     * To require a C2 agent class we will disable C2 by default. If a registration process
+     * is implemented we can re-enable. The reason for always enabling C2 is because this allows the controller
+     * mechanism that can be used for local config/access to be used. Without this agent information cannot be
+     * gathered even if a remote C2 server is enabled.
+     *
+     * The ticket that impacts this, MINIFICPP-664, should be reversed in the event that agent registration
+     * can be performed and agent classes needn't be defined a priori.
+     */
+    c2_enabled_ = false;
+  }
+
+  if (!c2_enabled_) {
+    return;
   }
 
   std::string identifier_str;
@@ -424,13 +444,7 @@ void FlowController::initializeC2() {
       if (identifier != nullptr) {
         identifier->setIdentifier(identifier_str);
 
-        std::string class_str;
-        if (configuration_->get("nifi.c2.agent.class", class_str) && !class_str.empty()) {
-          identifier->setAgentClass(class_str);
-        } else {
-          // set to the flow controller's identifier
-          identifier->setAgentClass("default");
-        }
+        identifier->setAgentClass(class_str);
       }
 
       auto monitor = std::dynamic_pointer_cast<state::response::AgentMonitor>(processor);

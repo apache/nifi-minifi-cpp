@@ -51,15 +51,13 @@
 #include "HTTPIntegrationBase.h"
 #include "processors/LogAttribute.h"
 
-
 class Responder : public CivetHandler {
  public:
   explicit Responder(bool isSecure)
       : isSecure(isSecure) {
   }
   bool handlePost(CivetServer *server, struct mg_connection *conn) {
-    std::string resp =
-        "{\"operation\" : \"heartbeat\", \"requested_operations\" : [{ \"operationid\" : 41, \"operation\" : \"stop\", \"name\" : \"invoke\"  }, "
+    std::string resp = "{\"operation\" : \"heartbeat\", \"requested_operations\" : [{ \"operationid\" : 41, \"operation\" : \"stop\", \"name\" : \"invoke\"  }, "
         "{ \"operationid\" : 42, \"operation\" : \"stop\", \"name\" : \"FlowController\"  } ]}";
     mg_printf(conn, "HTTP/1.1 200 OK\r\nContent-Type: "
               "text/plain\r\nContent-Length: %lu\r\nConnection: close\r\n\r\n",
@@ -71,7 +69,6 @@ class Responder : public CivetHandler {
  protected:
   bool isSecure;
 };
-
 
 class VerifyC2Server : public HTTPIntegrationBase {
  public:
@@ -85,7 +82,7 @@ class VerifyC2Server : public HTTPIntegrationBase {
     LogTestController::getInstance().setDebug<utils::HTTPClient>();
     LogTestController::getInstance().setDebug<processors::InvokeHTTP>();
     LogTestController::getInstance().setDebug<minifi::c2::RESTReceiver>();
-      LogTestController::getInstance().setDebug<minifi::c2::C2Agent>();
+    LogTestController::getInstance().setDebug<minifi::c2::C2Agent>();
     LogTestController::getInstance().setDebug<processors::LogAttribute>();
     LogTestController::getInstance().setDebug<minifi::core::ProcessSession>();
     std::fstream file;
@@ -116,9 +113,10 @@ class VerifyC2Server : public HTTPIntegrationBase {
     std::string url = "";
     inv->getProperty(minifi::processors::InvokeHTTP::URL.getName(), url);
 
-
     std::string port, scheme, path;
     parse_http_components(url, port, scheme, path);
+    configuration->set("c2.enable", "true");
+    configuration->set("c2.agent.class", "test");
     configuration->set("c2.agent.heartbeat.reporter.classes", "RESTReceiver");
     configuration->set("c2.rest.listener.port", port);
     configuration->set("c2.agent.heartbeat.period", "10");
