@@ -44,7 +44,6 @@
 #include "core/ProcessSession.h"
 #include "core/ProcessorNode.h"
 #include "core/reporting/SiteToSiteProvenanceReportingTask.h"
-#include "core/cstructs.h"
 #include "api/nanofi.h"
 
 using failure_callback_type = std::function<void(flow_file_record*)>;
@@ -88,7 +87,7 @@ class ExecutionPlan {
 
   explicit ExecutionPlan(std::shared_ptr<core::ContentRepository> content_repo, std::shared_ptr<core::Repository> flow_repo, std::shared_ptr<core::Repository> prov_repo);
 
-  std::shared_ptr<core::Processor> addCallback(void *, std::function<void(processor_session*)>);
+  std::shared_ptr<core::Processor> addCallback(void *, std::function<void(core::ProcessSession*)>);
 
   std::shared_ptr<core::Processor> addProcessor(const std::shared_ptr<core::Processor> &processor, const std::string &name,
                                                 core::Relationship relationship = core::Relationship("success", "description"),
@@ -144,7 +143,7 @@ class ExecutionPlan {
     return it != proc_plan_map_.end() ? it->second : nullptr;
   }
 
-  static void addProcWithPlan(const std::string& uuid, std::shared_ptr<ExecutionPlan> plan) {
+  static void addProcessorWithPlan(const std::string &uuid, std::shared_ptr<ExecutionPlan> plan) {
     proc_plan_map_[uuid] = plan;
   }
 
@@ -170,9 +169,8 @@ class ExecutionPlan {
     void setStrategy(FailureStrategy strat) {
       strategy_ = strat;
     }
-    void operator()(const processor_session* ps) {
-      auto ses = static_cast<core::ProcessSession*>(ps->session);
-      FailureStrategies.at(strategy_)(ses, callback_, content_repo_);
+    void operator()(core::ProcessSession* ps) {
+      FailureStrategies.at(strategy_)(ps, callback_, content_repo_);
     }
    private:
     failure_callback_type callback_;

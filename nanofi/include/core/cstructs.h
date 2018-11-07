@@ -65,17 +65,11 @@ typedef struct {
  * ##################################################################
  */
 
-typedef struct {
-  void *processor_ptr;
-} processor;
+typedef struct processor processor;
 
-typedef struct {
-  void *processor_ptr;
-} standalone_processor;
+typedef struct standalone_processor standalone_processor;
 
-typedef struct {
-  void *session;
-} processor_session;
+typedef struct processor_session processor_session;
 
 /****
  * ##################################################################
@@ -113,9 +107,7 @@ typedef struct {
 
 } flow_file_record;
 
-typedef struct {
-  void *plan;
-} flow;
+typedef struct flow flow;
 
 typedef enum FS {
   AS_IS,

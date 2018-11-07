@@ -15,22 +15,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "cxx/CallbackProcessor.h"
-#include "core/cxxstructs.h"
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
 
-void CallbackProcessor::onTrigger(core::ProcessContext *context, core::ProcessSession *session) {
-  if (callback_ != nullptr) {
-    callback_(session);
-  }
-}
+#ifndef NIFI_MINIFI_CPP_CXXSTRUCTS_H
+#define NIFI_MINIFI_CPP_CXXSTRUCTS_H
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+#include "cstructs.h"
+#include "cxx/Plan.h"
+
+struct flow : public ExecutionPlan {
+  using ExecutionPlan::ExecutionPlan;
+};
+
+struct standalone_processor : public core::Processor {
+  using core::Processor::Processor;
+};
+
+struct processor : public core::Processor {
+  using core::Processor::Processor;
+};
+
+struct processor_session : public core::ProcessSession {
+  using core::ProcessSession::ProcessSession;
+};
+
+#endif //NIFI_MINIFI_CPP_CXXSTRUCTS_H

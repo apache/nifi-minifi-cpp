@@ -41,7 +41,7 @@ ExecutionPlan::ExecutionPlan(std::shared_ptr<core::ContentRepository> content_re
  * Add a callback to obtain and pass processor session to a generated processor
  *
  */
-std::shared_ptr<core::Processor> ExecutionPlan::addCallback(void *obj, std::function<void(processor_session*)> fp) {
+std::shared_ptr<core::Processor> ExecutionPlan::addCallback(void *obj, std::function<void(core::ProcessSession*)> fp) {
   if (finalized) {
     return nullptr;
   }
