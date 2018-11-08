@@ -111,7 +111,6 @@ TEST_CASE("get file and put file", "[getAndPutFile]") {
 
   const char *sourcedir = testController.createTempDirectory(src_format);
   const char *putfiledir = testController.createTempDirectory(put_format);
-  std::string test_file_content = "C API raNdOMcaSe test d4t4 th1s is!";
   auto instance = create_instance_obj();
   REQUIRE(instance != nullptr);
   flow *test_flow = create_flow(instance, nullptr);
@@ -138,6 +137,14 @@ TEST_CASE("get file and put file", "[getAndPutFile]") {
 
   // No failure handler can be added after the flow is finalized
   REQUIRE(add_failure_callback(test_flow, failure_counter) == 1);
+
+  uint8_t* content = (uint8_t*)malloc(record->size* sizeof(uint8_t));
+
+  REQUIRE(get_content(record, content, record->size) == record->size);
+
+  REQUIRE(test_file_content == std::string(reinterpret_cast<char*>(content), record->size));
+
+  free(content);
 
   free_flowfile(record);
 

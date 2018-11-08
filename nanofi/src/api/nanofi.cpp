@@ -325,6 +325,16 @@ uint8_t remove_attribute(flow_file_record *ff, const char *key) {
   return attribute_map->erase(key) - 1;  // erase by key returns the number of elements removed (0 or 1)
 }
 
+int get_content(const flow_file_record* ff, uint8_t* target, int size) {
+  if (ff == nullptr || target == nullptr || size == 0) {
+    return 0;
+  }
+  auto content_repo = static_cast<std::shared_ptr<minifi::core::ContentRepository>*>(ff->crp);
+  std::shared_ptr<minifi::ResourceClaim> claim = std::make_shared<minifi::ResourceClaim>(ff->contentLocation, *content_repo);
+  auto stream = (*content_repo)->read(claim);
+  return stream->read(target, size);
+}
+
 /**
  * Transmits the flowfile
  * @param ff flow file record

@@ -143,6 +143,14 @@ int get_attribute_qty(const flow_file_record* ff);
 
 int get_all_attributes(const flow_file_record* ff, attribute_set *target);
 
+/**
+ * reads the content of a flow file
+ * @param target reference in which will set the result
+ * @param size max number of bytes to read (use flow_file_record->size to get the whole content)
+ * @return resulting read size (<=size)
+ **/
+int get_content(const flow_file_record* ff, uint8_t* target, int size);
+
 uint8_t remove_attribute(flow_file_record*, char *key);
 
 /****
