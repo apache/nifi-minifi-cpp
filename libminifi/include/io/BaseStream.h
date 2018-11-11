@@ -23,6 +23,7 @@
 #include "EndianCheck.h"
 #include "DataStream.h"
 #include "Serializable.h"
+#include "core/expect.h"
 
 namespace org {
 namespace apache {
@@ -31,7 +32,10 @@ namespace minifi {
 namespace io {
 
 /**
- * Base Stream. Not intended to be thread safe as it is not intended to be shared
+ * Base Stream is the base of a composable stream architecture.
+ * Intended to be the base of layered streams ala DatInputStreams in Java.
+ *
+ * ** Not intended to be thread safe as it is not intended to be shared**
  *
  * Extensions may be thread safe and thus shareable, but that is up to the implementation.
  */
@@ -61,7 +65,7 @@ class BaseStream : public DataStream, public Serializable {
   virtual int writeData(uint8_t *value, int size);
 
   virtual void seek(uint64_t offset) {
-    if (composable_stream_ != this) {
+    if (LIKELY(composable_stream_ != this)) {
       composable_stream_->seek(offset);
     } else {
       DataStream::seek(offset);
@@ -172,14 +176,13 @@ class BaseStream : public DataStream, public Serializable {
   virtual int read(uint64_t &value, bool is_little_endian = EndiannessCheck::IS_LITTLE);
 
   virtual const uint64_t getSize() const {
-      if (composable_stream_ == this){
-        return buffer.size();
-      }
-      else{
-        return composable_stream_->getSize();
-      }
-
+    if (LIKELY(composable_stream_ == this)) {
+      return buffer.size();
+    } else {
+      return composable_stream_->getSize();
     }
+
+  }
 
   /**
    * read UTF from stream
@@ -189,8 +192,12 @@ class BaseStream : public DataStream, public Serializable {
    **/
   virtual int readUTF(std::string &str, bool widen = false);
  protected:
+  /**
+   * Changed to private to facilitate easier management of composable_stream_ and make it immutable
+   */
   DataStream *composable_stream_;
-};
+}
+;
 
 } /* namespace io */
 } /* namespace minifi */
