@@ -14,7 +14,7 @@
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/StringUtils.h"
 
-using string_map = std::map<std::string, std::string>;
+#include "cxx/nanofi_cpp_layer.h"
 
 class API_INITIALIZER {
  public:

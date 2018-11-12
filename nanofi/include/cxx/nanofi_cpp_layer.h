@@ -2,6 +2,8 @@
 #include "api/nanofi.h"
 #include "core/processors.h"
 
+using string_map = std::map<std::string, std::string>;
+
 void *create_cxx_instance(const char *url, nifi_port *port);
 
 void initialize_cxx_instance(nifi_instance *instance);

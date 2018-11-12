@@ -30,39 +30,8 @@
 #include "processors/GetFile.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/StringUtils.h"
+#include "cxx/nanofi_cpp_layer.h"
 
-using string_map = std::map<std::string, std::string>;
-
-class API_INITIALIZER {
- public:
-  static int initialized;
-};
-
-int API_INITIALIZER::initialized = initialize_api();
-
-int initialize_api() {
-  logging::LoggerConfiguration::getConfiguration().disableLogging();
-  return 1;
-}
-
-void enable_logging() {
-  logging::LoggerConfiguration::getConfiguration().enableLogging();
-}
-
-void set_terminate_callback(void (*terminate_callback)()) {
-  std::set_terminate(terminate_callback);
-}
-
-class DirectoryConfiguration {
- protected:
-  DirectoryConfiguration() {
-    minifi::setDefaultDirectory(DEFAULT_CONTENT_DIRECTORY);
-  }
- public:
-  static void initialize() {
-    static DirectoryConfiguration configure;
-  }
-};
 
 /**
  * Creates a NiFi Instance from the url and output port.
@@ -72,19 +41,17 @@ class DirectoryConfiguration {
  * nifi_instance *create_instance(nifi_port const *port) {
  */
 nifi_instance *create_instance(const char *url, nifi_port *port) {
-  // make sure that we have a thread safe way of initializing the content directory
-  DirectoryConfiguration::initialize();
-
-  // need reinterpret cast until we move to C for this module.
-  nifi_instance *instance = reinterpret_cast<nifi_instance*>(malloc(sizeof(nifi_instance)));
+    // need reinterpret cast until we move to C for this module.
+  nifi_instance *instance = (nifi_instance*)(malloc(sizeof(nifi_instance)));
   /**
    * This API will gradually move away from C++, hence malloc is used for nifi_instance
    * Since minifi::Instance is currently being used, then we need to use new in that case.
    */
-  instance->instance_ptr = new minifi::Instance(url, port->port_id);
+  instance->instance_ptr = create_cxx_instance(url,port);
   // may have to translate port ID here in the future
   // need reinterpret cast until we move to C for this module.
-  instance->port.port_id = reinterpret_cast<char*>(malloc(strlen(port->port_id) + 1));
+  instance->port.port_id = (char*)(malloc(strlen(port->port_id) + 1));
+
   snprintf(instance->port.port_id, strlen(port->port_id) + 1, "%s", port->port_id);
   return instance;
 }
@@ -93,8 +60,7 @@ nifi_instance *create_instance(const char *url, nifi_port *port) {
  * Initializes the instance
  */
 void initialize_instance(nifi_instance *instance) {
-  auto minifi_instance_ref = static_cast<minifi::Instance*>(instance->instance_ptr);
-  minifi_instance_ref->setRemotePort(instance->port.port_id);
+  initialize_cxx_instance(instance);
 }
 /*
  typedef int c2_update_callback(char *);
@@ -105,8 +71,7 @@ void initialize_instance(nifi_instance *instance) {
 
  */
 void enable_async_c2(nifi_instance *instance, C2_Server *server, c2_stop_callback *c1, c2_start_callback *c2, c2_update_callback *c3) {
-  auto minifi_instance_ref = static_cast<minifi::Instance*>(instance->instance_ptr);
-  minifi_instance_ref->enableAsyncC2(server, c1, c2, c3);
+  enable_async_cxx_c2(instance,server,c1,c2,c3);
 }
 
 /**
