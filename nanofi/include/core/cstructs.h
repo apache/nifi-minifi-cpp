@@ -19,6 +19,8 @@
 #ifndef LIBMINIFI_SRC_CAPI_CSTRUCTS_H_
 #define LIBMINIFI_SRC_CAPI_CSTRUCTS_H_
 
+#include "uthash.h"
+#include "utlist.h"
 /**
  * NiFi Port struct
  */
@@ -30,7 +32,7 @@ typedef struct {
  * Nifi instance struct
  */
 typedef struct {
-
+  // should go away as we transition from C++ Instances to C implementations
   void *instance_ptr;
 
   nifi_port port;
@@ -63,10 +65,12 @@ typedef struct {
  */
 
 typedef struct {
+  // should go away as we transition from C++ Instances to C implementations
   void *processor_ptr;
 } processor;
 
 typedef struct {
+  // should go away as we transition from C++ Instances to C implementations
   void *session;
 } processor_session;
 
@@ -75,6 +79,12 @@ typedef struct {
  *  FLOWFILE OPERATIONS
  * ##################################################################
  */
+
+typedef struct{
+  char *key;
+  char *value;
+  UT_hash_handle handle;
+} key_value;
 
 typedef struct {
   const char *key;
@@ -92,6 +102,17 @@ typedef struct {
  *
  */
 typedef struct {
+  // structural definitions for moving way from C++
+  unsigned modified:1;
+  unsigned flushed:1;
+  unsigned inmem:1;
+  uint64_t id;
+  uint64_t entry_date;
+  uint64_t lineage_start;
+  uint64_t penalty_ms;
+  key_value *attribute_map;
+  // structural definitions for moving way from C++
+
   uint64_t size; /**< Size in bytes of the data corresponding to this flow file */
 
   void * in;
@@ -102,7 +123,7 @@ typedef struct {
 
   void *attributes; /**< Hash map of attributes */
 
-  void *ffp;
+  void *ffp;// should go away as we transition from C++ Instances to C implementations
 
 } flow_file_record;
 
