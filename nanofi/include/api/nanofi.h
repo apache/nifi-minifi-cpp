@@ -119,6 +119,10 @@ flow_file_record *invoke(standalone_processor* proc);
 
 flow_file_record *invoke_ff(standalone_processor* proc, const flow_file_record *input_ff);
 
+flow_file_record *invoke_file(standalone_processor* proc, const char* path);
+
+flow_file_record *invoke_chunck(standalone_processor* proc, uint8_t* buf, uint64_t);
+
 int transfer(processor_session* session, flow *flow, const char *rel);
 
 /**

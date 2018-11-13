@@ -56,13 +56,14 @@ void big_failure_counter(flow_file_record * fr) {
   free_flowfile(fr);
 }
 
-void create_testfile_for_getfile(const char* sourcedir, const std::string& filename = test_file_name) {
+std::string create_testfile_for_getfile(const char* sourcedir, const std::string& filename = test_file_name) {
   std::fstream file;
   std::stringstream ss;
   ss << sourcedir << "/" << filename;
   file.open(ss.str(), std::ios::out);
   file << test_file_content;
   file.close();
+  return ss.str();
 }
 
 TEST_CASE("Test Creation of instance, one processor", "[createInstanceAndFlow]") {
@@ -322,8 +323,6 @@ TEST_CASE("Test standalone processors", "[testStandalone]") {
 TEST_CASE("Test interaction of flow and standlone processors", "[testStandaloneWithFlow]") {
   TestController testController;
 
-  enable_logging();
-
   const char *sourcedir = testController.createTempDirectory(src_format);
   const char *putfiledir = testController.createTempDirectory(put_format);
 
@@ -361,4 +360,31 @@ TEST_CASE("Test interaction of flow and standlone processors", "[testStandaloneW
   free_flow(test_flow);
   free_instance(instance);
   free_standalone_processor(putfile_proc);
+}
+
+TEST_CASE("Test standalone processors with file input", "[testStandaloneWithFile]") {
+  TestController testController;
+
+  enable_logging();
+
+  const char *sourcedir = testController.createTempDirectory(src_format);
+  std::string path = create_testfile_for_getfile(sourcedir);
+
+  standalone_processor* extract_test = create_processor("ExtractText");
+  REQUIRE(extract_test != nullptr);
+  REQUIRE(set_standalone_property(extract_test, "Attribute", "TestAttr") == 0);
+
+  flow_file_record* ffr = invoke_file(extract_test, path.c_str());
+
+  REQUIRE(ffr != nullptr);
+
+  attribute attr;
+  char test_attr[] = "TestAttr";
+  attr.key = test_attr;
+  attr.value_size = 0;
+  REQUIRE(get_attribute(ffr, &attr) == 0);
+  REQUIRE(std::string(static_cast<char*>(attr.value), attr.value_size) == test_file_content);
+
+  free_flowfile(ffr);
+  free_standalone_processor(extract_test);
 }

@@ -134,7 +134,7 @@ void ExecutionPlan::reset() {
 }
 
 bool ExecutionPlan::runNextProcessor(std::function<void(const std::shared_ptr<core::ProcessContext>, const std::shared_ptr<core::ProcessSession>)> verify,
-    const flow_file_record* input_ff) {
+                                     std::shared_ptr<flowfile_input_params> input_ff_params) {
   if (!finalized) {
     finalize();
   }
@@ -153,18 +153,12 @@ bool ExecutionPlan::runNextProcessor(std::function<void(const std::shared_ptr<co
   }
   std::shared_ptr<core::ProcessSession> current_session = std::make_shared<core::ProcessSession>(context);
   process_sessions_.push_back(current_session);
-  if (input_ff != nullptr) {
-    auto content_repo = static_cast<std::shared_ptr<minifi::core::ContentRepository>*>(input_ff->crp);
-    std::shared_ptr<minifi::ResourceClaim> claim = std::make_shared<minifi::ResourceClaim>(input_ff->contentLocation, *content_repo);
-    auto stream = (*content_repo)->read(claim);
+  if (input_ff_params) {
     std::shared_ptr<minifi::FlowFileRecord> flowFile = std::static_pointer_cast<minifi::FlowFileRecord>(current_session->create());
-    auto map = static_cast<std::map<std::string, std::string>*>(input_ff->attributes);
-    if (map) {
-      for (const auto& attr: *map) {
-        flowFile->setAttribute(attr.first, attr.second);
-      }
+    for(const auto& kv : input_ff_params->attributes) {
+      flowFile->setAttribute(kv.first, kv.second);
     }
-    current_session->importFrom(*stream, flowFile);
+    current_session->importFrom(*(input_ff_params->content_stream.get()), flowFile);
     current_session->transfer(flowFile, core::Relationship("success", "success"));
     relationships_[relationships_.size()-1]->put(std::static_pointer_cast<core::FlowFile>(flowFile));
   }

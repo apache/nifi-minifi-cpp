@@ -49,6 +49,11 @@
 using failure_callback_type = std::function<void(flow_file_record*)>;
 using content_repo_sptr = std::shared_ptr<core::ContentRepository>;
 
+struct flowfile_input_params {
+  std::shared_ptr<minifi::io::DataStream> content_stream;
+  std::map<std::string, std::string> attributes;
+};
+
 namespace {
 
   void failureStrategyAsIs(core::ProcessSession *session, failure_callback_type user_callback, content_repo_sptr cr_ptr) {
@@ -100,7 +105,7 @@ class ExecutionPlan {
 
   void reset();
 
-  bool runNextProcessor(std::function<void(const std::shared_ptr<core::ProcessContext>, const std::shared_ptr<core::ProcessSession>)> verify = nullptr, const flow_file_record * = nullptr);
+  bool runNextProcessor(std::function<void(const std::shared_ptr<core::ProcessContext>, const std::shared_ptr<core::ProcessSession>)> verify = nullptr, std::shared_ptr<flowfile_input_params> = nullptr);
 
   bool setFailureCallback(failure_callback_type onerror_callback);
 

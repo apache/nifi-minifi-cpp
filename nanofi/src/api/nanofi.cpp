@@ -20,6 +20,7 @@
 #include <memory>
 #include <utility>
 #include <exception>
+#include <stdio.h>
 
 #include "api/nanofi.h"
 #include "core/Core.h"
@@ -532,10 +533,68 @@ flow_file_record *invoke_ff(standalone_processor* proc, const flow_file_record *
     // This is not a standalone processor, shouldn't be used with invoke!
     return nullptr;
   }
+
   plan->reset();
-  while (plan->runNextProcessor(nullptr, input_ff)) {
+
+  if (input_ff) {
+    auto ff_data = std::make_shared<flowfile_input_params>();
+    auto content_repo = static_cast<std::shared_ptr<minifi::core::ContentRepository> *>(input_ff->crp);
+    std::shared_ptr<minifi::ResourceClaim> claim = std::make_shared<minifi::ResourceClaim>(input_ff->contentLocation,
+                                                                                           *content_repo);
+    ff_data->content_stream = (*content_repo)->read(claim);
+    ff_data->attributes = *static_cast<std::map<std::string, std::string> *>(input_ff->attributes);
+
+    plan->runNextProcessor(nullptr, ff_data);
+  }
+  while (plan->runNextProcessor()) {
   }
   return flowfile_to_record(plan->getCurrentFlowFile(), plan.get());
+}
+
+flow_file_record *invoke_chunk(standalone_processor* proc, uint8_t* buf, uint64_t size) {
+  if (proc == nullptr || buf == nullptr || size == 0) {
+    return nullptr;
+  }
+
+  auto plan = ExecutionPlan::getPlan(proc->getUUIDStr());
+  if (!plan) {
+    // This is not a standalone processor, shouldn't be used with invoke!
+    return nullptr;
+  }
+
+  plan->reset();
+
+  auto ff_data = std::make_shared<flowfile_input_params>();
+  ff_data->content_stream = std::make_shared<minifi::io::DataStream>();
+  ff_data->content_stream->writeData(buf, size);
+
+  plan->runNextProcessor(nullptr, ff_data);
+  while (plan->runNextProcessor()) {
+  }
+
+  return flowfile_to_record(plan->getCurrentFlowFile(), plan.get());
+}
+
+flow_file_record *invoke_file(standalone_processor* proc, const char* path) {
+  FILE *fileptr;
+  uint8_t *buffer;
+  uint64_t filelen;
+
+  fileptr = fopen(path, "rb");
+  if (fileptr == nullptr) {
+    return nullptr;
+  }
+  fseek(fileptr, 0, SEEK_END);
+  filelen = ftell(fileptr);
+  rewind(fileptr);
+
+  buffer = (uint8_t *)malloc((filelen+1)*sizeof(uint8_t)); // Enough memory for file + \0
+  fread(buffer, filelen, 1, fileptr);
+  fclose(fileptr);
+
+  flow_file_record* ffr = invoke_chunk(proc, buffer, filelen);
+  free(buffer);
+  return ffr;
 }
 
 int transfer(processor_session* session, flow *flow, const char *rel) {
