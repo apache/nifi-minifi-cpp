@@ -36,7 +36,7 @@ int NonConvertingStream::write(uint32_t base_value, bool is_little_endian) {
   return Serializable::write(base_value, reinterpret_cast<DataStream*>(composable_stream_), is_little_endian);
 }
 
-int NonConvertingStream::writeData(uint8_t *value, int size) {
+int NonConvertingStream::writeData(const uint8_t * const value, int size) {
   if (composable_stream_ == this) {
     return DataStream::writeData(value, size);
   } else {
@@ -62,7 +62,7 @@ int NonConvertingStream::write(uint16_t base_value, bool is_little_endian) {
  * @param strema output stream
  * @return resulting write size
  **/
-int NonConvertingStream::write(uint8_t *value, int len) {
+int NonConvertingStream::write(const uint8_t * const value, int len) {
   return Serializable::write(value, len, reinterpret_cast<DataStream*>(composable_stream_));
 }
 

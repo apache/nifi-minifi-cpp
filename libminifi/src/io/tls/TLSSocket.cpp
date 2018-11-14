@@ -393,7 +393,7 @@ int TLSSocket::readData(std::vector<uint8_t> &buf, int buflen) {
   return total_read;
 }
 
-int TLSSocket::writeData(uint8_t *value, int size, int fd) {
+int TLSSocket::writeData(const uint8_t * const value, int size, int fd) {
   int bytes = 0;
   int sent = 0;
   auto fd_ssl = get_ssl(fd);
@@ -416,7 +416,7 @@ int TLSSocket::writeData(uint8_t *value, int size, int fd) {
   return size;
 }
 
-int TLSSocket::writeData(uint8_t *value, int size) {
+int TLSSocket::writeData(const uint8_t * const value, int size) {
   int bytes = 0;
   int sent = 0;
   int fd = select_descriptor(1000);

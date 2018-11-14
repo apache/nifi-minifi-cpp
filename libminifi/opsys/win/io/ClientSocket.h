@@ -178,7 +178,7 @@ public:
 	 * @param value value to write
 	 * @param size size of value
 	 */
-	virtual int writeData(uint8_t *value, int size);
+	virtual int writeData(const uint8_t * const value, int size);
 
 	/**
 	 * Writes a system word

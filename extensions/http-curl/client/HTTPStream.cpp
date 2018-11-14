@@ -57,12 +57,12 @@ int HttpStream::writeData(std::vector<uint8_t> &buf, int buflen) {
   if ((int)buf.capacity() < buflen) {
     return -1;
   }
-  return writeData(reinterpret_cast<uint8_t *>(&buf[0]), buflen);
+  return writeData((&buf[0]), buflen);
 }
 
 // data stream overrides
 
-int HttpStream::writeData(uint8_t *value, int size) {
+int HttpStream::writeData(const uint8_t * const value, int size) {
   if (!IsNullOrEmpty(value)) {
     if (!started_) {
       std::lock_guard<std::mutex> lock(mutex_);

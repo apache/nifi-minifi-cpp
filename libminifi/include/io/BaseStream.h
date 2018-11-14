@@ -62,7 +62,7 @@ class BaseStream : public DataStream, public Serializable {
    **/
   virtual int write(uint32_t base_value, bool is_little_endian = EndiannessCheck::IS_LITTLE);
 
-  virtual int writeData(uint8_t *value, int size);
+  virtual int writeData(const uint8_t * const value, int size);
 
   virtual void seek(uint64_t offset) {
     if (LIKELY(composable_stream_ != this)) {
@@ -88,7 +88,7 @@ class BaseStream : public DataStream, public Serializable {
    * @param strema output stream
    * @return resulting write size
    **/
-  virtual int write(uint8_t *value, int len);
+  virtual int write(const uint8_t * const value, int len);
 
   /**
    * write 8 bytes to stream

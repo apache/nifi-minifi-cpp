@@ -84,7 +84,7 @@ class CRCStream : public BaseStream {
    * @param value value to write
    * @param size size of value
    */
-  virtual int writeData(uint8_t *value, int size);
+  virtual int writeData(const uint8_t * const value, int size);
 
   /**
    * write 4 bytes to stream
@@ -195,14 +195,13 @@ int CRCStream<T>::readData(uint8_t *buf, int buflen) {
 
 template<typename T>
 int CRCStream<T>::writeData(std::vector<uint8_t> &buf, int buflen) {
-
   if ((int)buf.capacity() < buflen)
     buf.resize(buflen);
-  return writeData((uint8_t*) &buf[0], buflen);
+  return writeData(&buf[0], buflen);
 }
 
 template<typename T>
-int CRCStream<T>::writeData(uint8_t *value, int size) {
+int CRCStream<T>::writeData(const uint8_t * const value, int size) {
 
   int ret = child_stream_->write(value, size);
   crc_ = crc32(crc_, value, size);

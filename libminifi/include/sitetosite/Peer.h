@@ -304,7 +304,7 @@ class SiteToSitePeer : public org::apache::nifi::minifi::io::BaseStream {
   int write(uint16_t value, bool is_little_endian = minifi::io::EndiannessCheck::IS_LITTLE) {
     return Serializable::write(value, stream_.get());
   }
-  int write(uint8_t *value, int len) {
+  int write(const uint8_t * const value, int len) {
     return Serializable::write(value, len, stream_.get());
   }
   int write(uint64_t value, bool is_little_endian = minifi::io::EndiannessCheck::IS_LITTLE) {

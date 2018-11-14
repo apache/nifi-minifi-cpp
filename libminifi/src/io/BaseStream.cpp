@@ -37,7 +37,7 @@ int BaseStream::write(uint32_t base_value, bool is_little_endian) {
   return Serializable::write(base_value, composable_stream_, is_little_endian);
 }
 
-int BaseStream::writeData(uint8_t *value, int size) {
+int BaseStream::writeData(const uint8_t * const value, int size) {
   if (LIKELY(composable_stream_ == this)) {
     return DataStream::writeData(value, size);
   } else {
@@ -63,7 +63,7 @@ int BaseStream::write(uint16_t base_value, bool is_little_endian) {
  * @param strema output stream
  * @return resulting write size
  **/
-int BaseStream::write(uint8_t *value, int len) {
+int BaseStream::write(const uint8_t * const value, int len) {
   return Serializable::write(value, len, composable_stream_);
 }
 

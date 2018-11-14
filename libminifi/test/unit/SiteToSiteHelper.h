@@ -47,7 +47,7 @@ class SiteToSiteResponder : public minifi::io::BaseStream {
     return ret;
   }
 
-  int writeData(uint8_t *value, int size) {
+  int writeData(const uint8_t * const value, int size) {
     client_responses_.push(std::string((char*) value, size));
     return size;
   }

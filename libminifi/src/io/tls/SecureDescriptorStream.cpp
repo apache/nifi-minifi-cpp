@@ -42,12 +42,12 @@ int SecureDescriptorStream::writeData(std::vector<uint8_t> &buf, int buflen) {
   if (static_cast<int>(buf.capacity()) < buflen) {
     return -1;
   }
-  return writeData(reinterpret_cast<uint8_t *>(&buf[0]), buflen);
+  return writeData(reinterpret_cast<const uint8_t * const>(&buf[0]), buflen);
 }
 
 // data stream overrides
 
-int SecureDescriptorStream::writeData(uint8_t *value, int size) {
+int SecureDescriptorStream::writeData(const uint8_t * const value, int size) {
   if (!IsNullOrEmpty(value)) {
     std::lock_guard<std::recursive_mutex> lock(file_lock_);
     int bytes = 0;

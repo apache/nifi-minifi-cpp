@@ -58,7 +58,7 @@ class NonConvertingStream : public BaseStream  {
    **/
   virtual int write(uint32_t base_value, bool is_little_endian = false);
 
-  int writeData(uint8_t *value, int size);
+  int writeData(const uint8_t * const value, int size);
 
   virtual void seek(uint64_t offset) {
     if (composable_stream_ != this) {
@@ -84,7 +84,7 @@ class NonConvertingStream : public BaseStream  {
    * @param strema output stream
    * @return resulting write size
    **/
-  virtual int write(uint8_t *value, int len);
+  virtual int write(const uint8_t * const value, int len);
 
   /**
    * write 8 bytes to stream

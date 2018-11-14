@@ -56,12 +56,12 @@ int RocksDbStream::writeData(std::vector<uint8_t> &buf, int buflen) {
   if (buf.capacity() < buflen) {
     return -1;
   }
-  return writeData(reinterpret_cast<uint8_t *>(&buf[0]), buflen);
+  return writeData(reinterpret_cast<const uint8_t * const>(&buf[0]), buflen);
 }
 
 // data stream overrides
 
-int RocksDbStream::writeData(uint8_t *value, int size) {
+int RocksDbStream::writeData(const uint8_t * const value, int size) {
   if (!IsNullOrEmpty(value) && write_enable_) {
     rocksdb::Slice slice_value((const char *) value, size);
     rocksdb::Status status;

@@ -150,7 +150,7 @@ noexcept      : key_(std::move(other.key_)),
        * Appends ptr to the end of buffer.
        * @param ptr pointer containing data to add to buffer_
        */
-      void append(uint8_t *ptr, size_t size)
+      void append(const uint8_t * const ptr, size_t size)
       {
         buffer_.insert(buffer_.end(), ptr, ptr + size);
       }
@@ -414,7 +414,7 @@ class AtomicEntry {
    * Appends buffer onto this atomic entry if key matches
    * the current RepoValue's key.
    */
-  bool insert(const T key, uint8_t *buffer, size_t size) {
+  bool insert(const T key, const uint8_t * const buffer, size_t size) {
     try_lock();
 
     if (!has_value_) {

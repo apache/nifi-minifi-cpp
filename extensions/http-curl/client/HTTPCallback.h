@@ -78,7 +78,7 @@ class HttpStreamingCallback : public ByteInputCallBack {
 
   }
 
-  virtual int64_t process(uint8_t *vector, size_t size) {
+  virtual int64_t process(const uint8_t * const vector, size_t size) {
 
     std::vector<char> vec;
 

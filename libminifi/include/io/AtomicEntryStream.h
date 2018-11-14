@@ -92,7 +92,7 @@ class AtomicEntryStream : public BaseStream {
    * @param value value to write
    * @param size size of value
    */
-  virtual int writeData(uint8_t *value, int size);
+  virtual int writeData(const uint8_t * const value, int size);
 
   /**
    * Returns the underlying buffer
@@ -131,12 +131,12 @@ template<typename T>
 int AtomicEntryStream<T>::writeData(std::vector<uint8_t> &buf, int buflen) {
   if ((int)buf.capacity() < buflen || invalid_stream_)
     return -1;
-  return writeData(reinterpret_cast<uint8_t *>(&buf[0]), buflen);
+  return writeData(reinterpret_cast<const uint8_t * const>(&buf[0]), buflen);
 }
 
 // data stream overrides
 template<typename T>
-int AtomicEntryStream<T>::writeData(uint8_t *value, int size) {
+int AtomicEntryStream<T>::writeData(const uint8_t * const value, int size) {
   if (nullptr != value && !invalid_stream_) {
     std::lock_guard<std::recursive_mutex> lock(entry_lock_);
     if (entry_->insert(key_, value, size)) {

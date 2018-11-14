@@ -70,3 +70,23 @@ TEST_CASE("TestWriteUTF3", "[MINIFI193]") {
   REQUIRE(verifyString == stringOne);
 }
 
+TEST_CASE("TestWriteUint64t", "[MINIFI676]") {
+  org::apache::nifi::minifi::io::DataStream baseStream;
+
+  org::apache::nifi::minifi::io::Serializable ser;
+
+  uint64_t test_num = 1;
+  ser.write(test_num, &baseStream, true);
+  uint64_t received_num = 0;
+  ser.read(received_num, &baseStream, true);
+
+  REQUIRE(test_num == received_num);
+
+  test_num = 2;
+  ser.write(test_num, &baseStream, false);
+  received_num = 0;
+  ser.read(received_num, &baseStream, false);
+
+  REQUIRE(test_num == received_num);
+}
+
