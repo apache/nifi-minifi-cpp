@@ -59,10 +59,10 @@ class SiteToSiteTestHarness : public HTTPIntegrationBase {
   }
 
   void testSetup() {
-    LogTestController::getInstance().setDebug<minifi::RemoteProcessorGroupPort>();
-    LogTestController::getInstance().setDebug<minifi::sitetosite::HttpSiteToSiteClient>();
-    LogTestController::getInstance().setDebug<minifi::sitetosite::SiteToSiteClient>();
-    LogTestController::getInstance().setDebug<utils::HTTPClient>();
+    LogTestController::getInstance().setTrace<minifi::RemoteProcessorGroupPort>();
+    LogTestController::getInstance().setTrace<minifi::sitetosite::HttpSiteToSiteClient>();
+    LogTestController::getInstance().setTrace<minifi::sitetosite::SiteToSiteClient>();
+    LogTestController::getInstance().setTrace<utils::HTTPClient>();
     LogTestController::getInstance().setTrace<minifi::controllers::SSLContextService>();
     LogTestController::getInstance().setInfo<minifi::FlowController>();
     LogTestController::getInstance().setDebug<core::ConfigurableComponent>();
@@ -75,7 +75,7 @@ class SiteToSiteTestHarness : public HTTPIntegrationBase {
 
     configuration->set("nifi.c2.enable", "false");
     configuration->set("nifi.remote.input.http.enabled", "true");
-    configuration->set("nifi.remote.input.socket.port", "8082");
+    configuration->set("nifi.remote.input.socket.port", "8099");
   }
 
   virtual void waitToVerifyProcessor() {
@@ -123,17 +123,22 @@ struct test_profile {
 void run_variance(std::string test_file_location, bool isSecure, std::string url, const struct test_profile &profile) {
   SiteToSiteTestHarness harness(isSecure);
 
-  SiteToSiteLocationResponder responder(isSecure);
+  SiteToSiteLocationResponder *responder = new SiteToSiteLocationResponder(isSecure);
 
-  TransactionResponder transaction_response(url, "471deef6-2a6e-4a7d-912a-81cc17e3a204", true, profile.transaction_url_broken, profile.empty_transaction_url);
+  TransactionResponder *transaction_response = new TransactionResponder(url, "471deef6-2a6e-4a7d-912a-81cc17e3a204", true, profile.transaction_url_broken, profile.empty_transaction_url);
 
-  std::string transaction_id = transaction_response.getTransactionId();
+  std::string transaction_id = transaction_response->getTransactionId();
 
   harness.setKeyDir("");
 
   std::string controller_loc = url + "/controller";
 
-  harness.setUrl(controller_loc, &responder);
+  std::string basesitetosite = url + "/site-to-site";
+  SiteToSiteBaseResponder *base = new SiteToSiteBaseResponder(basesitetosite);
+
+  harness.setUrl(basesitetosite,base);
+
+  harness.setUrl(controller_loc, responder);
 
   std::string transaction_url = url + "/data-transfer/input-ports/471deef6-2a6e-4a7d-912a-81cc17e3a204/transactions";
   std::string action_url = url + "/site-to-site/input-ports/471deef6-2a6e-4a7d-912a-81cc17e3a204/transactions";
@@ -141,43 +146,43 @@ void run_variance(std::string test_file_location, bool isSecure, std::string url
   std::string transaction_output_url = url + "/data-transfer/output-ports/471deef6-2a6e-4a7d-912a-81cc17e3a203/transactions";
   std::string action_output_url = url + "/site-to-site/output-ports/471deef6-2a6e-4a7d-912a-81cc17e3a203/transactions";
 
-  harness.setUrl(transaction_url, &transaction_response);
+  harness.setUrl(transaction_url, transaction_response);
 
   std::string peer_url = url + "/site-to-site/peers";
 
-  PeerResponder peer_response(url);
+  PeerResponder *peer_response = new PeerResponder(url);
 
-  harness.setUrl(peer_url, &peer_response);
+  harness.setUrl(peer_url, peer_response);
 
   std::string flow_url = action_url + "/" + transaction_id + "/flow-files";
 
-  FlowFileResponder flowResponder(true, profile.flow_url_broken, profile.invalid_checksum);
-  flowResponder.setFlowUrl(flow_url);
-  auto producedFlows = flowResponder.getFlows();
+  FlowFileResponder *flowResponder = new FlowFileResponder(true, profile.flow_url_broken, profile.invalid_checksum);
+  flowResponder->setFlowUrl(flow_url);
+  auto producedFlows = flowResponder->getFlows();
 
-  TransactionResponder transaction_response_output(url, "471deef6-2a6e-4a7d-912a-81cc17e3a203", false, profile.transaction_url_broken, profile.empty_transaction_url);
-  std::string transaction_output_id = transaction_response_output.getTransactionId();
-  transaction_response_output.setFeed(producedFlows);
+  TransactionResponder *transaction_response_output = new TransactionResponder(url, "471deef6-2a6e-4a7d-912a-81cc17e3a203", false, profile.transaction_url_broken, profile.empty_transaction_url);
+  std::string transaction_output_id = transaction_response_output->getTransactionId();
+  transaction_response_output->setFeed(producedFlows);
 
-  harness.setUrl(transaction_output_url, &transaction_response_output);
+  harness.setUrl(transaction_output_url, transaction_response_output);
 
   std::string flow_output_url = action_output_url + "/" + transaction_output_id + "/flow-files";
 
-  FlowFileResponder flowOutputResponder(false, profile.flow_url_broken, profile.invalid_checksum);
-  flowOutputResponder.setFlowUrl(flow_output_url);
-  flowOutputResponder.setFeed(producedFlows);
+  FlowFileResponder* flowOutputResponder = new FlowFileResponder(false, profile.flow_url_broken, profile.invalid_checksum);
+  flowOutputResponder->setFlowUrl(flow_output_url);
+  flowOutputResponder->setFeed(producedFlows);
 
-  harness.setUrl(flow_url, &flowResponder);
-  harness.setUrl(flow_output_url, &flowOutputResponder);
+  harness.setUrl(flow_url, flowResponder);
+  harness.setUrl(flow_output_url, flowOutputResponder);
 
   if (!profile.no_delete) {
     std::string delete_url = transaction_url + "/" + transaction_id;
-    DeleteTransactionResponder deleteResponse(delete_url, "201 OK", 12);
-    harness.setUrl(delete_url, &deleteResponse);
+    DeleteTransactionResponder *deleteResponse = new DeleteTransactionResponder(delete_url, "201 OK", 12);
+    harness.setUrl(delete_url, deleteResponse);
 
     std::string delete_output_url = transaction_output_url + "/" + transaction_output_id;
-    DeleteTransactionResponder deleteOutputResponse(delete_output_url, "201 OK", producedFlows);
-    harness.setUrl(delete_output_url, &deleteOutputResponse);
+    DeleteTransactionResponder *deleteOutputResponse = new DeleteTransactionResponder(delete_output_url, "201 OK", producedFlows);
+    harness.setUrl(delete_output_url, deleteOutputResponse);
   }
 
   harness.run(test_file_location);

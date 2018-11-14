@@ -62,13 +62,12 @@ std::shared_ptr<Transaction> HttpSiteToSiteClient::createTransaction(std::string
   client->setPostFields("");
   client->submit();
   if (peer_->getStream() != nullptr)
-  logger_->log_debug("Closing %s",((io::HttpStream*)peer_->getStream())->getClientRef()->getURL());
+    logger_->log_debug("Closing %s", ((io::HttpStream*) peer_->getStream())->getClientRef()->getURL());
   if (client->getResponseCode() == 201) {
     // parse the headers
-    auto headers = client->getParsedHeaders();
-    auto intent_name = headers["x-location-uri-intent"];
-    if (intent_name == "transaction-url") {
-      auto url = headers["Location"];
+    auto intent_name = client->getHeaderValue("x-location-uri-intent");
+    if (utils::StringUtils::equalsIgnoreCase(intent_name, "transaction-url")) {
+      auto url = client->getHeaderValue("Location");
 
       if (IsNullOrEmpty(&url)) {
         logger_->log_debug("Location is empty");
@@ -286,9 +285,9 @@ void HttpSiteToSiteClient::closeTransaction(const std::string &transactionID) {
 
   logger_->log_debug("Received %d response code from delete", client->getResponseCode());
 
-  if (client->getResponseCode() == 400){
+  if (client->getResponseCode() == 400) {
     std::stringstream message;
-    message << "Received "  << client->getResponseCode() << " from " << uri.str();
+    message << "Received " << client->getResponseCode() << " from " << uri.str();
     throw Exception(SITE2SITE_EXCEPTION, message.str().c_str());
   }
 
