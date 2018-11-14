@@ -131,10 +131,9 @@ class HTTPClient : public BaseHTTPClient, public core::Connectable {
 
   void setDisableHostVerification() override;
 
-  std::string getURL() const{
+  std::string getURL() const {
     return url_;
   }
-
 
   const std::vector<std::string> &getHeaders() override {
     return header_response_.header_tokens_;
@@ -145,6 +144,24 @@ class HTTPClient : public BaseHTTPClient, public core::Connectable {
 
   virtual const std::map<std::string, std::string> &getParsedHeaders() override {
     return header_response_.header_mapping_;
+  }
+
+  /**
+   * Locates the header value ignoring case. This is differente than returning a mapping
+   * of all parsed headers.
+   * This function acknowledges that header entries should searched case insensitively.
+   * @param key key to search
+   * @return header value.
+   */
+  const std::string getHeaderValue(const std::string &key) {
+    std::string ret;
+    for (const auto &kv : header_response_.header_mapping_) {
+      if (utils::StringUtils::equalsIgnoreCase(key, kv.first)) {
+        ret = kv.second;
+        break;
+      }
+    }
+    return ret;
   }
 
   /**
@@ -199,7 +216,7 @@ class HTTPClient : public BaseHTTPClient, public core::Connectable {
     }
     return CURLE_OK;
 #else
-	  return CURLE_FAILED_INIT;
+    return CURLE_FAILED_INIT;
 #endif
   }
 

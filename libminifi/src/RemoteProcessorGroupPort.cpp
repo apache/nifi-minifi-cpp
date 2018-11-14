@@ -261,7 +261,13 @@ std::pair<std::string, int> RemoteProcessorGroupPort::refreshRemoteSite2SiteInfo
     std::string host = nifi.host_;
     std::string protocol = nifi.protocol_;
     int port = nifi.port_;
-    std::string fullUrl = protocol + host + ":" + std::to_string(port) + "/nifi-api/site-to-site";
+    std::stringstream fullUrl;
+    fullUrl << protocol << host;
+    // don't append port if it is 0 ( undefined )
+    if (port > 0) {
+      fullUrl << ":" << std::to_string(port);
+    }
+    fullUrl << "/nifi-api/site-to-site";
 
     configure_->get(Configure::nifi_rest_api_user_name, this->rest_user_name_);
     configure_->get(Configure::nifi_rest_api_password, this->rest_password_);
@@ -269,7 +275,13 @@ std::pair<std::string, int> RemoteProcessorGroupPort::refreshRemoteSite2SiteInfo
     std::string token;
     std::unique_ptr<utils::BaseHTTPClient> client = nullptr;
     if (!rest_user_name_.empty()) {
-      std::string loginUrl = protocol + host + ":" + std::to_string(port) + "/nifi-api/access/token";
+      std::stringstream loginUrl;
+      fullUrl << protocol << host;
+      // don't append port if it is 0 ( undefined )
+      if (port > 0) {
+        fullUrl << ":" << std::to_string(port);
+      }
+      fullUrl << "/nifi-api/access/token";
 
       auto client_ptr = core::ClassLoader::getDefaultClassLoader().instantiateRaw("HTTPClient", "HTTPClient");
       if (nullptr == client_ptr) {
@@ -277,10 +289,10 @@ std::pair<std::string, int> RemoteProcessorGroupPort::refreshRemoteSite2SiteInfo
         return std::make_pair("", -1);
       }
       client = std::unique_ptr<utils::BaseHTTPClient>(dynamic_cast<utils::BaseHTTPClient*>(client_ptr));
-      client->initialize("GET", loginUrl, ssl_service);
+      client->initialize("GET", loginUrl.str(), ssl_service);
 
       token = utils::get_token(client.get(), this->rest_user_name_, this->rest_password_);
-      logger_->log_debug("Token from NiFi REST Api endpoint %s,  %s", loginUrl, token);
+      logger_->log_debug("Token from NiFi REST Api endpoint %s,  %s", loginUrl.str(), token);
       if (token.empty())
         return std::make_pair("", -1);
     }
@@ -292,7 +304,7 @@ std::pair<std::string, int> RemoteProcessorGroupPort::refreshRemoteSite2SiteInfo
     }
     int siteTosite_port_ = -1;
     client = std::unique_ptr<utils::BaseHTTPClient>(dynamic_cast<utils::BaseHTTPClient*>(client_ptr));
-    client->initialize("GET", fullUrl.c_str(), ssl_service);
+    client->initialize("GET", fullUrl.str().c_str(), ssl_service);
     if (!proxy_.host.empty()) {
       client->setHTTPProxy(proxy_);
     }
@@ -330,10 +342,10 @@ std::pair<std::string, int> RemoteProcessorGroupPort::refreshRemoteSite2SiteInfo
           return std::make_pair(host, siteTosite_port_);
         }
       } else {
-        logger_->log_error("Cannot output body to content for ProcessGroup::refreshRemoteSite2SiteInfo: received HTTP code %ll from %s", client->getResponseCode(), fullUrl);
+        logger_->log_error("Cannot output body to content for ProcessGroup::refreshRemoteSite2SiteInfo: received HTTP code %ll from %s", client->getResponseCode(), fullUrl.str());
       }
     } else {
-      logger_->log_error("ProcessGroup::refreshRemoteSite2SiteInfo -- curl_easy_perform() failed \n");
+      logger_->log_error("ProcessGroup::refreshRemoteSite2SiteInfo -- curl_easy_perform() failed , response code %d\n", client->getResponseCode());
     }
   }
   return std::make_pair("", -1);

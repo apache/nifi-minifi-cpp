@@ -67,7 +67,7 @@ Connections:
 Remote Processing Groups:
     - name: NiFi Flow
       id: 471deef6-2a6e-4a7d-912a-81cc17e3a208
-      url: http://localhost:8082/nifi
+      url: http://localhost:8099/nifi
       timeout: 30 secs
       yield period: 1 sec
       Input Ports:

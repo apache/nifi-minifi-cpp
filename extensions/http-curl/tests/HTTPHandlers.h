@@ -78,7 +78,28 @@ class PeerResponder : public CivetHandler {
   }
 
   bool handleGet(CivetServer *server, struct mg_connection *conn) {
-    std::string site2site_rest_resp = "{\"peers\" : [{ \"hostname\": \"localhost\", \"port\": 8082,  \"secure\": false, \"flowFileCount\" : 0 }] }";
+    std::string site2site_rest_resp = "{\"peers\" : [{ \"hostname\": \"localhost\", \"port\": 8099,  \"secure\": false, \"flowFileCount\" : 0 }] }";
+    std::stringstream headers;
+    headers << "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: " << site2site_rest_resp.length() << "\r\nConnection: close\r\n\r\n";
+    mg_printf(conn, "%s", headers.str().c_str());
+    mg_printf(conn, "%s", site2site_rest_resp.c_str());
+    return true;
+  }
+
+ protected:
+  std::string base_url;
+};
+
+class SiteToSiteBaseResponder : public CivetHandler {
+ public:
+
+  explicit SiteToSiteBaseResponder(const std::string base_url)
+      : base_url(base_url) {
+  }
+
+  bool handleGet(CivetServer *server, struct mg_connection *conn) {
+    std::string site2site_rest_resp =
+        "{\"controller\":{\"id\":\"96dab149-0162-1000-7924-ed3122d6ea2b\",\"name\":\"NiFi Flow\",\"comments\":\"\",\"runningCount\":3,\"stoppedCount\":6,\"invalidCount\":1,\"disabledCount\":0,\"inputPortCount\":1,\"outputPortCount\":1,\"remoteSiteListeningPort\":10443,\"siteToSiteSecure\":false,\"instanceId\":\"13881505-0167-1000-be72-aa29341a3e9a\",\"inputPorts\":[{\"id\":\"471deef6-2a6e-4a7d-912a-81cc17e3a204\",\"name\":\"RPGIN\",\"comments\":\"\",\"state\":\"RUNNING\"}],\"outputPorts\":[{\"id\":\"9cf15a63-0166-1000-1b29-027406d96013\",\"name\":\"ddsga\",\"comments\":\"\",\"state\":\"STOPPED\"}]}}";
     std::stringstream headers;
     headers << "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: " << site2site_rest_resp.length() << "\r\nConnection: close\r\n\r\n";
     mg_printf(conn, "%s", headers.str().c_str());
@@ -115,7 +136,7 @@ class TransactionResponder : public CivetHandler {
   bool handlePost(CivetServer *server, struct mg_connection *conn) {
     std::string site2site_rest_resp = "";
     std::stringstream headers;
-    headers << "HTTP/1.1 201 OK\r\nContent-Type: application/json\r\nContent-Length: " << site2site_rest_resp.length() << "\r\nx-location-uri-intent: ";
+    headers << "HTTP/1.1 201 OK\r\nContent-Type: application/json\r\nContent-Length: " << site2site_rest_resp.length() << "\r\nX-Location-Uri-Intent: ";
     if (wrong_uri)
       headers << "ohstuff\r\n";
     else
@@ -128,7 +149,7 @@ class TransactionResponder : public CivetHandler {
     else
       port_type = "output-ports";
     if (!empty_transaction_uri)
-      headers << "Location: " << base_url << "/site-to-site/" << port_type << "/" << port_id << "/transactions/" << transaction_id_str << "\r\n";
+      headers << "locAtion: " << base_url << "/site-to-site/" << port_type << "/" << port_id << "/transactions/" << transaction_id_str << "\r\n";
     headers << "Connection: close\r\n\r\n";
     mg_printf(conn, "%s", headers.str().c_str());
     mg_printf(conn, "%s", site2site_rest_resp.c_str());
@@ -176,7 +197,7 @@ class FlowFileResponder : public CivetHandler {
 
     if (!wrong_uri) {
       minifi::io::CivetStream civet_stream(conn);
-      minifi::io::CRCStream<minifi::io::CivetStream> stream(&civet_stream);
+      minifi::io::CRCStream < minifi::io::CivetStream > stream(&civet_stream);
       uint32_t num_attributes;
       uint64_t total_size = 0;
       total_size += stream.read(num_attributes);
@@ -237,7 +258,7 @@ class FlowFileResponder : public CivetHandler {
                 "Connection: close\r\n\r\n",
                 total);
       minifi::io::BaseStream serializer;
-      minifi::io::CRCStream<minifi::io::BaseStream> stream(&serializer);
+      minifi::io::CRCStream < minifi::io::BaseStream > stream(&serializer);
       for (auto flow : flows) {
         uint32_t num_attributes = flow->attributes.size();
         stream.write(num_attributes);
