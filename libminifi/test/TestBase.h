@@ -256,7 +256,7 @@ class TestController {
     for (auto dir : directories) {
       DIR *created_dir;
       struct dirent *dir_entry;
-      created_dir = opendir(dir);
+      created_dir = opendir(dir.c_str());
       if (created_dir != NULL) {
         while ((dir_entry = readdir(created_dir)) != NULL) {
           if (dir_entry->d_name[0] != '.') {
@@ -270,13 +270,21 @@ class TestController {
         closedir(created_dir);
       }
 
-      rmdir(dir);
+      rmdir(dir.c_str());
     }
   }
 
+  /**
+   * format will be changed by mkdtemp, so don't rely on a shared variable.
+   */
   char *createTempDirectory(char *format) {
     char *dir = mkdtemp(format);
+    if (NULL == dir){
+      perror("mkdtemp failed: ");
+    }
     directories.push_back(dir);
+    // TODO: return const char or don't return char* at all and use the format passed in as mkdtemp
+    // but I'm inclined to keep as-is for the time being.
     return dir;
   }
 
@@ -285,10 +293,9 @@ class TestController {
   std::shared_ptr<minifi::state::response::FlowVersion> flow_version_;
 
   std::mutex test_mutex;
-  //std::map<std::string,>
 
   LogTestController &log;
-  std::vector<char*> directories;
+  std::vector<std::string> directories;
 
 };
 
