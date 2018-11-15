@@ -205,7 +205,7 @@ flow_file_record* create_ff_object(const char *file, const size_t len, const uin
 }
 
 flow_file_record* create_ff_object_na(const char *file, const size_t len, const uint64_t size) {
-  flow_file_record *new_ff = new flow_file_record;
+  flow_file_record *new_ff = (flow_file_record*) malloc(sizeof(flow_file_record));
   new_ff->attributes = nullptr;
   new_ff->contentLocation = (char*) malloc(sizeof(char) * (len + 1));
   snprintf(new_ff->contentLocation, len + 1, "%s", file);
@@ -463,7 +463,7 @@ int set_standalone_property(standalone_processor *proc, const char *name, const 
 int free_flow(flow *flow) {
   if (flow == nullptr)
     return -1;
-  delete flow;
+  free(flow);
   return 0;
 }
 
