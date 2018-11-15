@@ -34,18 +34,25 @@ int ssl_enable(void *ssl_context, void *user_data) {
 
 class HTTPIntegrationBase : public IntegrationBase {
  public:
-  HTTPIntegrationBase() : IntegrationBase(), server(nullptr) {}
+  HTTPIntegrationBase(uint64_t waitTime = 60000)
+      : IntegrationBase(waitTime),
+        server(nullptr) {
+  }
 
   void setUrl(std::string url, CivetHandler *handler);
 
   virtual ~HTTPIntegrationBase();
+
+  void shutdownBeforeFlowController() {
+    stop_webserver(server);
+  }
 
  protected:
   CivetServer *server;
 };
 
 HTTPIntegrationBase::~HTTPIntegrationBase() {
-  stop_webserver(server);
+
 }
 
 void HTTPIntegrationBase::setUrl(std::string url, CivetHandler *handler) {
@@ -53,8 +60,8 @@ void HTTPIntegrationBase::setUrl(std::string url, CivetHandler *handler) {
   parse_http_components(url, port, scheme, path);
   struct mg_callbacks callback;
   if (url.find("localhost") != std::string::npos) {
-    if (server != nullptr){
-      server->addHandler(path,handler);
+    if (server != nullptr) {
+      server->addHandler(path, handler);
       return;
     }
     if (scheme == "https" && !key_dir.empty()) {

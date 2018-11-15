@@ -53,7 +53,7 @@
 class SiteToSiteTestHarness : public HTTPIntegrationBase {
  public:
   explicit SiteToSiteTestHarness(bool isSecure)
-      : isSecure(isSecure) {
+      : HTTPIntegrationBase(2000), isSecure(isSecure) {
     char format[] = "/tmp/ssth.XXXXXX";
     dir = testController.createTempDirectory(format);
   }

@@ -37,9 +37,9 @@ HttpStream::HttpStream(std::shared_ptr<utils::HTTPClient> client)
       written(0),
       // given the nature of the stream we don't want to slow libCURL, we will produce
       // a warning instead allowing us to adjust it server side or through the local configuration.
-      http_read_callback_(66560,true),
+      http_read_callback_(66560, true),
       started_(false),
-      logger_(logging::LoggerFactory<HttpStream>::getLogger()){
+      logger_(logging::LoggerFactory<HttpStream>::getLogger()) {
   // submit early on
 }
 
@@ -54,7 +54,7 @@ void HttpStream::seek(uint64_t offset) {
 }
 
 int HttpStream::writeData(std::vector<uint8_t> &buf, int buflen) {
-  if ((int)buf.capacity() < buflen) {
+  if ((int) buf.capacity() < buflen) {
     return -1;
   }
   return writeData(reinterpret_cast<uint8_t *>(&buf[0]), buflen);
@@ -70,11 +70,11 @@ int HttpStream::writeData(uint8_t *value, int size) {
         callback_.ptr = &http_callback_;
         callback_.pos = 0;
         http_client_->setUploadCallback(&callback_);
-        http_client_future_ = std::async(submit_client, http_client_);
+        http_client_future_ = std::async(std::launch::async, submit_client, http_client_);
         started_ = true;
       }
     }
-    http_callback_.process(value,size);
+    http_callback_.process(value, size);
     return size;
   } else {
     return -1;
@@ -90,7 +90,7 @@ inline std::vector<uint8_t> HttpStream::readBuffer(const T& t) {
 }
 
 int HttpStream::readData(std::vector<uint8_t> &buf, int buflen) {
-  if ((int)buf.capacity() < buflen) {
+  if ((int) buf.capacity() < buflen) {
     buf.resize(buflen);
   }
   int ret = readData(reinterpret_cast<uint8_t*>(&buf[0]), buflen);
@@ -109,11 +109,10 @@ int HttpStream::readData(uint8_t *buf, int buflen) {
         read_callback_.ptr = &http_read_callback_;
         read_callback_.pos = 0;
         http_client_->setReadCallback(&read_callback_);
-        http_client_future_ = std::async(submit_read_client, http_client_, &http_read_callback_);
+        http_client_future_ = std::async(std::launch::async, submit_read_client, http_client_, &http_read_callback_);
         started_ = true;
       }
     }
-
     return http_read_callback_.readFully((char*) buf, buflen);
 
   } else {
