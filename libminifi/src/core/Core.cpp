@@ -34,12 +34,12 @@ void CoreComponent::setUUID(utils::Identifier &uuid) {
   uuidStr_ = uuid_.to_string();
 }
 
-void CoreComponent::setUUIDStr(const std::string uuidStr) {
+void CoreComponent::setUUIDStr(const std::string &uuidStr) {
   uuid_ = uuidStr;
   uuidStr_ = uuidStr;
 }
 // Get UUID
-bool CoreComponent::getUUID(utils::Identifier &uuid) {
+bool CoreComponent::getUUID(utils::Identifier &uuid) const {
   if (uuid_ == nullptr) {
     return false;
   }
@@ -47,14 +47,8 @@ bool CoreComponent::getUUID(utils::Identifier &uuid) {
   return true;
 }
 
-// Get UUID
-/*
- unsigned const char *CoreComponent::getUUID() {
- return uuid_.getIdentifier();
- }*/
-
 // Set Processor Name
-void CoreComponent::setName(const std::string name) {
+void CoreComponent::setName(const std::string &name) {
   name_ = name;
 }
 // Get Process Name
