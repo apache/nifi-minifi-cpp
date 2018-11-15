@@ -24,7 +24,6 @@
 #include <string>
 #include <uuid/uuid.h>
 
-
 #ifdef WIN32
 #pragma comment(lib, "shlwapi.lib")
 #endif
@@ -142,7 +141,7 @@ class CoreComponent {
    * Constructor that sets the name and uuid.
    */
 
-  explicit CoreComponent(const std::string name, utils::Identifier uuid)
+  explicit CoreComponent(const std::string &name, utils::Identifier uuid)
       : name_(name) {
     if (uuid == nullptr) {
       // Generate the global UUID for the flow record
@@ -150,44 +149,22 @@ class CoreComponent {
     } else {
       uuid_ = uuid;
     }
-
     uuidStr_ = uuid_.to_string();
   }
 
-  explicit CoreComponent(const std::string name)
+  explicit CoreComponent(const std::string &name)
       : name_(name) {
-
     // Generate the global UUID for the flow record
     id_generator_->generate(uuid_);
-
     uuidStr_ = uuid_.to_string();
   }
-  /*
-   #ifdef WIN32
-   #else
 
-   explicit CoreComponent(const std::string name, Identifier uuid = nullptr)
-   : name_(name) {
-   if (nullptr == uuid)
-   // Generate the global UUID for the flow record
-   id_generator_->generate(uuid_);
-   else
-   uuid_copy(uuid_, uuid);
-
-   char uuidStr[37] = { 0 };
-   uuid_unparse_lower(uuid_, uuidStr);
-   uuidStr_ = uuidStr;
-   }
-   #endif
-   */
+  explicit CoreComponent(const CoreComponent &other) = default;
   /**
    * Move Constructor.
    */
-  explicit CoreComponent(const CoreComponent &&other)
-      : name_(std::move(other.name_)) {
-    uuid_ = other.uuid_;
-    //uuid_copy(uuid_, other.uuid_);
-  }
+
+  explicit CoreComponent(CoreComponent &&other) = default;
 
   virtual ~CoreComponent() {
 
@@ -200,7 +177,7 @@ class CoreComponent {
    * Set name.
    * @param name
    */
-  void setName(const std::string name);
+  void setName(const std::string &name);
 
   /**
    * Set UUID in this instance
@@ -208,15 +185,14 @@ class CoreComponent {
    */
   void setUUID(utils::Identifier &uuid);
 
-  void setUUIDStr(const std::string uuidStr);
+  void setUUIDStr(const std::string &uuidStr);
 
   /**
    * Returns the UUID through the provided object.
    * @param uuid uuid struct to which we will copy the memory
    * @return success of request
    */
-  //bool getUUID(m_uuid uuid);
-  bool getUUID(utils::Identifier &uuid);
+  bool getUUID(utils::Identifier &uuid) const;
 
   //unsigned const char *getUUID();
   /**

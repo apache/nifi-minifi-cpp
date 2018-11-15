@@ -30,20 +30,19 @@ namespace nifi {
 namespace minifi {
 namespace core {
 
-Connectable::Connectable(std::string name, utils::Identifier &uuid)
+Connectable::Connectable(const std::string &name, const utils::Identifier &uuid)
     : CoreComponent(name, uuid),
       max_concurrent_tasks_(1),
       connectable_version_(nullptr),
       logger_(logging::LoggerFactory<Connectable>::getLogger()) {
 }
 
-Connectable::Connectable(std::string name)
+Connectable::Connectable(const std::string &name)
     : CoreComponent(name),
       max_concurrent_tasks_(1),
       connectable_version_(nullptr),
       logger_(logging::LoggerFactory<Connectable>::getLogger()) {
 }
-
 
 Connectable::Connectable(const Connectable &&other)
     : CoreComponent(std::move(other)),
@@ -57,7 +56,7 @@ Connectable::Connectable(const Connectable &&other)
 Connectable::~Connectable() {
 }
 
-bool Connectable::setSupportedRelationships(std::set<core::Relationship> relationships) {
+bool Connectable::setSupportedRelationships(const std::set<core::Relationship> &relationships) {
   if (isRunning()) {
     logger_->log_warn("Can not set processor supported relationship while the process %s is running", name_);
     return false;
@@ -82,7 +81,7 @@ std::vector<Relationship> Connectable::getSupportedRelationships() const {
 }
 
 // Whether the relationship is supported
-bool Connectable::isSupportedRelationship(core::Relationship relationship) {
+bool Connectable::isSupportedRelationship(const core::Relationship &relationship) const {
   // if we are running we do not need a lock since the function to change relationships_ ( setSupportedRelationships)
   // cannot be executed while we are running
   const bool isConnectableRunning = isRunning();
@@ -97,7 +96,7 @@ bool Connectable::isSupportedRelationship(core::Relationship relationship) {
   }
 }
 
-bool Connectable::setAutoTerminatedRelationships(std::set<Relationship> relationships) {
+bool Connectable::setAutoTerminatedRelationships(const std::set<Relationship> &relationships) {
   if (isRunning()) {
     logger_->log_warn("Can not set processor auto terminated relationship while the process %s is running", name_);
     return false;
@@ -114,7 +113,7 @@ bool Connectable::setAutoTerminatedRelationships(std::set<Relationship> relation
 }
 
 // Check whether the relationship is auto terminated
-bool Connectable::isAutoTerminated(core::Relationship relationship) {
+bool Connectable::isAutoTerminated(const core::Relationship &relationship) const {
   // if we are running we do not need a lock since the function to change relationships_ ( setSupportedRelationships)
   // cannot be executed while we are running
   const bool isConnectableRunning = isRunning();
@@ -153,12 +152,12 @@ void Connectable::notifyWork() {
   }
 }
 
-std::set<std::shared_ptr<Connectable>> Connectable::getOutGoingConnections(std::string relationship) {
+std::set<std::shared_ptr<Connectable>> Connectable::getOutGoingConnections(const std::string &relationship) const {
   std::set<std::shared_ptr<Connectable>> empty;
 
-  auto &&it = out_going_connections_.find(relationship);
+  const auto &&it = out_going_connections_.find(relationship);
   if (it != out_going_connections_.end()) {
-    return out_going_connections_[relationship];
+    return it->second;
   } else {
     return empty;
   }

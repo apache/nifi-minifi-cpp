@@ -51,6 +51,10 @@ Identifier::Identifier(const Identifier &other) {
   }
 }
 
+Identifier::Identifier(Identifier &&other)
+    : IdentifierBase(std::move(other)) {
+}
+
 Identifier::Identifier(const IdentifierBase &other) {
   if (!other.convert().empty()) {
     copyInto(other);
@@ -86,27 +90,27 @@ Identifier &Identifier::operator=(std::string id) {
   return *this;
 }
 
-bool Identifier::operator==(std::nullptr_t nullp) {
+bool Identifier::operator==(const std::nullptr_t nullp) const {
   return converted_.empty();
 }
 
-bool Identifier::operator!=(std::nullptr_t nullp) {
+bool Identifier::operator!=(const std::nullptr_t nullp) const {
   return !converted_.empty();
 }
 
-bool Identifier::operator!=(const Identifier &other) {
+bool Identifier::operator!=(const Identifier &other) const {
   return converted_ != other.converted_;
 }
 
-bool Identifier::operator==(const Identifier &other) {
+bool Identifier::operator==(const Identifier &other) const {
   return converted_ == other.converted_;
 }
 
-std::string Identifier::to_string() {
+std::string Identifier::to_string() const {
   return convert();
 }
 
-unsigned char *Identifier::toArray() {
+const unsigned char * const Identifier::toArray() const {
   return id_;
 }
 
@@ -129,7 +133,7 @@ IdGenerator::IdGenerator()
       incrementor_(0) {
 }
 
-uint64_t IdGenerator::getDeviceSegmentFromString(const std::string& str, int numBits) {
+uint64_t IdGenerator::getDeviceSegmentFromString(const std::string& str, int numBits) const {
   uint64_t deviceSegment = 0;
   for (size_t i = 0; i < str.length(); i++) {
     unsigned char c = toupper(str[i]);
@@ -149,7 +153,7 @@ uint64_t IdGenerator::getDeviceSegmentFromString(const std::string& str, int num
   return deviceSegment;
 }
 
-uint64_t IdGenerator::getRandomDeviceSegment(int numBits) {
+uint64_t IdGenerator::getRandomDeviceSegment(int numBits) const {
   uint64_t deviceSegment = 0;
   UUID_FIELD random_uuid;
   for (int word = 0; word < 2; word++) {

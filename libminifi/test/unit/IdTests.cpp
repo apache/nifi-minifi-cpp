@@ -47,6 +47,23 @@ TEST_CASE("Test time", "[id]") {
   LogTestController::getInstance().reset();
 }
 
+TEST_CASE("Test Generate Move", "[id]") {
+  TestController test_controller;
+
+  LogTestController::getInstance().setDebug<utils::IdGenerator>();
+  std::shared_ptr<minifi::Properties> id_props = std::make_shared<minifi::Properties>();
+  id_props->set("uid.implementation", "TiMe");
+
+  std::shared_ptr<utils::IdGenerator> generator = utils::IdGenerator::getIdGenerator();
+  generator->initialize(id_props);
+
+  auto generated = generator->generate();
+  auto str = generated.to_string();
+  utils::Identifier moved = std::move(generated);
+  auto str2 = moved.to_string();
+  REQUIRE(str == str2);
+}
+
 TEST_CASE("Test random", "[id]") {
   TestController test_controller;
 
@@ -173,7 +190,6 @@ TEST_CASE("Test Hex Device Segment 18 bits", "[id]") {
   REQUIRE(0xaf == uid[1]);
   REQUIRE(128 == (uid[2] & 192));
   REQUIRE(1 == uid[15]);
-
 
   utils::Identifier uuid2;
   generator->generate(uuid2);

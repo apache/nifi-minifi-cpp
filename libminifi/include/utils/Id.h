@@ -50,6 +50,11 @@ class IdentifierBase {
     copyInto(other.id_);
   }
 
+  IdentifierBase(IdentifierBase &&other)
+      : converted_(std::move(other.converted_)) {
+    copyInto(other.id_);
+  }
+
   IdentifierBase() {
   }
 
@@ -73,7 +78,7 @@ class IdentifierBase {
 
  protected:
 
-  void copyInto(const IdentifierBase &other){
+  void copyInto(const IdentifierBase &other) {
     memcpy(id_, other.id_, sizeof(T));
   }
 
@@ -95,23 +100,29 @@ class Identifier : public IdentifierBase<UUID_FIELD, std::string> {
   Identifier(UUID_FIELD u);
   Identifier();
   Identifier(const Identifier &other);
-  Identifier(const IdentifierBase &other);
+  Identifier(Identifier &&other);
 
+  /**
+   * I believe these exist to make windows builds happy -- need more testing
+   * to ensure this doesn't cause any issues.
+   */
+  Identifier(const IdentifierBase &other);
   Identifier &operator=(const IdentifierBase &other);
+
   Identifier &operator=(const Identifier &other);
   Identifier &operator=(UUID_FIELD o);
 
   Identifier &operator=(std::string id);
-  bool operator==(std::nullptr_t nullp);
+  bool operator==(const std::nullptr_t nullp) const;
 
-  bool operator!=(std::nullptr_t nullp);
+  bool operator!=(std::nullptr_t nullp) const;
 
-  bool operator!=(const Identifier &other);
-  bool operator==(const Identifier &other);
+  bool operator!=(const Identifier &other) const;
+  bool operator==(const Identifier &other) const;
 
-  std::string to_string();
+  std::string to_string() const;
 
-  unsigned char *toArray();
+  const unsigned char * const toArray() const;
 
  protected:
 
@@ -130,8 +141,8 @@ class IdGenerator {
     return generator;
   }
  protected:
-  uint64_t getDeviceSegmentFromString(const std::string & str, int numBits);
-  uint64_t getRandomDeviceSegment(int numBits);
+  uint64_t getDeviceSegmentFromString(const std::string & str, int numBits) const;
+  uint64_t getRandomDeviceSegment(int numBits) const;
  private:
   IdGenerator();
   int implementation_;

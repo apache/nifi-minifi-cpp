@@ -64,7 +64,7 @@ class FlowVersion : public DeviceInformation {
     return "FlowVersion";
   }
 
-  virtual std::shared_ptr<state::FlowIdentifier> getFlowIdentifier() {
+  virtual std::shared_ptr<state::FlowIdentifier> getFlowIdentifier() const {
     std::lock_guard<std::mutex> lock(guard);
     return identifier;
   }
@@ -120,12 +120,8 @@ class FlowVersion : public DeviceInformation {
   }
  protected:
 
-  std::mutex guard;
+  mutable std::mutex guard;
 
-  /*std::string registry_url_;
-   std::string bucket_id_;
-   std::string flow_id_;
-   */
   std::shared_ptr<FlowIdentifier> identifier;
 };
 
