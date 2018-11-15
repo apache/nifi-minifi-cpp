@@ -99,6 +99,10 @@ HTTPClient::~HTTPClient() {
     curl_easy_cleanup(http_session_);
     http_session_ = nullptr;
   }
+  // added forceClose as a function of behavior, but that path shouldn't
+  // be needed here.
+  forceClose();
+  read_callback_.close();
   logger_->log_trace("Closing HTTPClient for %s", url_);
 }
 

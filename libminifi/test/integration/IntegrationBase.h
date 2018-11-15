@@ -31,7 +31,7 @@
 
 class IntegrationBase {
  public:
-  IntegrationBase();
+  IntegrationBase(uint64_t waitTime = 60000);
 
   virtual ~IntegrationBase();
 
@@ -43,6 +43,10 @@ class IntegrationBase {
   }
 
   virtual void testSetup() = 0;
+
+  virtual void shutdownBeforeFlowController() {
+
+  }
 
   virtual void cleanup() = 0;
 
@@ -60,17 +64,18 @@ class IntegrationBase {
 
   void configureSecurity();
   std::shared_ptr<minifi::Configure> configuration;
+  uint64_t wait_time_;
   std::string port, scheme, path;
   std::string key_dir;
 };
 
-IntegrationBase::IntegrationBase() 
-  : configuration(std::make_shared<minifi::Configure>()) {
+IntegrationBase::IntegrationBase(uint64_t waitTime)
+    : configuration(std::make_shared<minifi::Configure>()),
+      wait_time_(waitTime) {
   mkdir("content_repository", S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 }
 
-IntegrationBase::~IntegrationBase()
-{
+IntegrationBase::~IntegrationBase() {
   rmdir("./content_repository");
 }
 
@@ -87,48 +92,37 @@ void IntegrationBase::configureSecurity() {
 void IntegrationBase::run(std::string test_file_location) {
   testSetup();
 
-  std::shared_ptr<core::Repository> test_repo =
-      std::make_shared<TestRepository>();
-  std::shared_ptr<core::Repository> test_flow_repo = std::make_shared<
-      TestFlowRepository>();
+  std::shared_ptr<core::Repository> test_repo = std::make_shared<TestRepository>();
+  std::shared_ptr<core::Repository> test_flow_repo = std::make_shared<TestFlowRepository>();
 
-  configuration->set(minifi::Configure::nifi_flow_configuration_file,
-                     test_file_location);
+  configuration->set(minifi::Configure::nifi_flow_configuration_file, test_file_location);
 
   std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
   content_repo->initialize(configuration);
   std::shared_ptr<minifi::io::StreamFactory> stream_factory = minifi::io::StreamFactory::getInstance(configuration);
-  std::unique_ptr<core::FlowConfiguration> yaml_ptr = std::unique_ptr
-      <core::YamlConfiguration
-      >(new core::YamlConfiguration(test_repo, test_repo, content_repo, stream_factory,
-                                    configuration,
-                                    test_file_location));
+  std::unique_ptr<core::FlowConfiguration> yaml_ptr = std::unique_ptr<core::YamlConfiguration>(
+      new core::YamlConfiguration(test_repo, test_repo, content_repo, stream_factory, configuration, test_file_location));
 
-  core::YamlConfiguration yaml_config(test_repo, test_repo, content_repo, stream_factory,
-                                      configuration,
-                                      test_file_location);
+  core::YamlConfiguration yaml_config(test_repo, test_repo, content_repo, stream_factory, configuration, test_file_location);
 
-  std::unique_ptr<core::ProcessGroup> ptr = yaml_config.getRoot(
-                                                                test_file_location);
-  std::shared_ptr<core::ProcessGroup> pg = std::shared_ptr<core::ProcessGroup
-      >(ptr.get());
+  std::unique_ptr<core::ProcessGroup> ptr = yaml_config.getRoot(test_file_location);
+  std::shared_ptr<core::ProcessGroup> pg = std::shared_ptr<core::ProcessGroup>(ptr.get());
 
   queryRootProcessGroup(pg);
 
   ptr.release();
 
-  std::shared_ptr<TestRepository> repo = std::static_pointer_cast
-      <TestRepository>(test_repo);
+  std::shared_ptr<TestRepository> repo = std::static_pointer_cast<TestRepository>(test_repo);
 
-  std::shared_ptr<minifi::FlowController> controller =
-      std::make_shared<minifi::FlowController
-      >(test_repo, test_flow_repo, configuration, std::move(yaml_ptr), content_repo, DEFAULT_ROOT_GROUP_NAME, true);
+  std::shared_ptr<minifi::FlowController> controller = std::make_shared<minifi::FlowController>(test_repo, test_flow_repo, configuration, std::move(yaml_ptr), content_repo, DEFAULT_ROOT_GROUP_NAME,
+                                                                                                true);
 
   controller->load();
   controller->start();
   waitToVerifyProcessor();
 
-  controller->waitUnload(60000);
+  shutdownBeforeFlowController();
+  controller->unload();
 
   runAssertions();
 

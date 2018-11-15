@@ -59,6 +59,9 @@ class HttpStream : public io::BaseStream {
 
   void forceClose() {
     if (started_) {
+      // lock shouldn't be needed here as call paths currently guarantee
+      // flow, but we should be safe anyway.
+      std::lock_guard<std::mutex> lock(mutex_);
       closeStream();
       http_client_->forceClose();
       if (http_client_future_.valid()) {
