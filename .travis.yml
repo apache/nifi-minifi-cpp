@@ -60,28 +60,7 @@ matrix:
         - docker
       script:
         - ./bootstrap.sh -e -t && cd build  && make docker
-    - os: osx
-      osx_image: xcode7.3
-      env:
-        - CMAKE_BUILD_OPTIONS="${CMAKE_BUILD_OPTIONS} -DENABLE_LUA_SCRIPTING=1"
-      # https://docs.travis-ci.com/user/osx-ci-environment/#Homebrew
-      before_install:
-        - brew update
-        - package='ossp-uuid'; [[ $(brew ls --versions ${package}) ]] && { brew outdated ${package} || brew upgrade ${package}; } || brew install ${package}
-        - package='boost'; [[ $(brew ls --versions ${package}) ]] && { brew outdated ${package} || brew upgrade ${package}; } || brew install ${package}
-        - package='cmake'; [[ $(brew ls --versions ${package}) ]] && { brew outdated ${package} || brew upgrade ${package}; } || brew install ${package}
-        - package='flex'; [[ $(brew ls --versions ${package}) ]] && { brew outdated ${package} || brew upgrade ${package}; } || brew install ${package}; brew link flex --force
-        - package='ccache'; [[ $(brew ls --versions ${package}) ]] && { brew outdated ${package} || brew upgrade ${package}; } || brew install ${package}
-        - package='openssl'; [[ $(brew ls --versions ${package}) ]] && { brew outdated ${package} || brew upgrade ${package}; } || brew install ${package}
-        - package='doxygen'; [[ $(brew ls --versions ${package}) ]] && { brew outdated ${package} || brew upgrade ${package}; } || brew install ${package}
-        - package='graphviz'; [[ $(brew ls --versions ${package}) ]] && { brew outdated ${package} || brew upgrade ${package}; } || brew install ${package}
-        - package='python'; [[ $(brew ls --versions ${package}) ]] && { brew outdated ${package} || brew upgrade ${package}; } || brew install ${package}
-        - package='lua'; [[ $(brew ls --versions ${package}) ]] && { brew outdated ${package} || brew upgrade ${package}; } || brew install ${package}
-        - package='libusb'; [[ $(brew ls --versions ${package}) ]] && { brew outdated ${package} || brew upgrade ${package}; } || brew install ${package}
-        - package='libpng'; [[ $(brew ls --versions ${package}) ]] && { brew outdated ${package} || brew upgrade ${package}; } || brew install ${package}
-        - package='libpcap'; [[ $(brew ls --versions ${package}) ]] && { brew outdated ${package} || brew upgrade ${package}; } || brew install ${package}
-        - package='xz'; [[ $(brew ls --versions ${package}) ]] && { brew outdated ${package} || brew upgrade ${package}; } || brew install ${package}
-    - os: osx
+   - os: osx
       osx_image: xcode8.3
       env:
         - CMAKE_BUILD_OPTIONS="${CMAKE_BUILD_OPTIONS} -DENABLE_LUA_SCRIPTING=1"
