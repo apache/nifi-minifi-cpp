@@ -40,17 +40,16 @@ namespace core {
 class Connectable : public CoreComponent {
  public:
 
+  explicit Connectable(const std::string &name);
 
-  explicit Connectable(std::string name);
-
-  explicit Connectable(std::string name, utils::Identifier &uuid);
+  explicit Connectable(const std::string &name, const utils::Identifier &uuid);
 
   explicit Connectable(const Connectable &&other);
 
-  bool setSupportedRelationships(std::set<Relationship> relationships);
+  bool setSupportedRelationships(const std::set<Relationship> &relationships);
 
   // Whether the relationship is supported
-  bool isSupportedRelationship(Relationship relationship);
+  bool isSupportedRelationship(const Relationship &relationship) const;
 
   std::vector<Relationship> getSupportedRelationships() const;
 
@@ -59,13 +58,13 @@ class Connectable : public CoreComponent {
    * @param relationships
    * @return result of set operation.
    */
-  bool setAutoTerminatedRelationships(std::set<Relationship> relationships);
+  bool setAutoTerminatedRelationships(const std::set<Relationship> &relationships);
 
   // Check whether the relationship is auto terminated
-  bool isAutoTerminated(Relationship relationship);
+  bool isAutoTerminated(const Relationship &relationship) const;
 
   // Get Processor penalization period in MilliSecond
-  uint64_t getPenalizationPeriodMsec(void) {
+  uint64_t getPenalizationPeriodMsec(void) const {
     return (_penalizationPeriodMsec);
   }
 
@@ -73,14 +72,14 @@ class Connectable : public CoreComponent {
    * Get outgoing connection based on relationship
    * @return set of outgoing connections.
    */
-  std::set<std::shared_ptr<Connectable>> getOutGoingConnections(std::string relationship);
+  std::set<std::shared_ptr<Connectable>> getOutGoingConnections(const std::string &relationship) const;
 
   void put(std::shared_ptr<Connectable> flow) {
 
   }
 
   /**
-   * Get next incoming connection
+   * Gets and sets next incoming connection
    * @return next incoming connection
    */
   std::shared_ptr<Connectable> getNextIncomingConnection();
@@ -88,11 +87,11 @@ class Connectable : public CoreComponent {
   /**
    * @return true if incoming connections > 0
    */
-  bool hasIncomingConnections() {
+  bool hasIncomingConnections() const {
     return (_incomingConnections.size() > 0);
   }
 
-  uint8_t getMaxConcurrentTasks() {
+  uint8_t getMaxConcurrentTasks() const {
     return max_concurrent_tasks_;
   }
 
@@ -141,7 +140,7 @@ class Connectable : public CoreComponent {
   /**
    * Sets the flow version for this connectable.
    */
-  void setFlowIdentifier(const std::shared_ptr<state::FlowIdentifier> &version){
+  void setFlowIdentifier(const std::shared_ptr<state::FlowIdentifier> &version) {
     connectable_version_ = version;
   }
 
@@ -149,7 +148,7 @@ class Connectable : public CoreComponent {
    * Returns theflow version
    * @returns flow version. can be null if a flow version is not tracked.
    */
-  virtual std::shared_ptr<state::FlowIdentifier> getFlowIdentifier(){
+  virtual std::shared_ptr<state::FlowIdentifier> getFlowIdentifier() const{
     return connectable_version_;
   }
 
@@ -170,10 +169,10 @@ class Connectable : public CoreComponent {
   // Incoming connections
   std::set<std::shared_ptr<Connectable>> _incomingConnections;
   // Outgoing connections map based on Relationship name
-  std::map<std::string, std::set<std::shared_ptr<Connectable>>>out_going_connections_;
+  std::map<std::string, std::set<std::shared_ptr<Connectable>>> out_going_connections_;
 
   // Mutex for protection
-  std::mutex relationship_mutex_;
+  mutable std::mutex relationship_mutex_;
 
   ///// work conditionals and locking mechanisms
 
@@ -188,7 +187,7 @@ class Connectable : public CoreComponent {
   // version under which this connectable was created.
   std::shared_ptr<state::FlowIdentifier> connectable_version_;
 
-private:
+ private:
   std::shared_ptr<logging::Logger> logger_;
 };
 

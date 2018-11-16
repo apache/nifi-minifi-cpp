@@ -102,7 +102,7 @@ class ProcessorNode : public ConfigurableComponent, public Connectable {
    * Returns theflow version
    * @returns flow version. can be null if a flow version is not tracked.
    */
-  virtual std::shared_ptr<state::FlowIdentifier> getFlowIdentifier() {
+  virtual std::shared_ptr<state::FlowIdentifier> getFlowIdentifier() const{
     if (processor_ != nullptr) {
       return processor_->getFlowIdentifier();
     } else {
