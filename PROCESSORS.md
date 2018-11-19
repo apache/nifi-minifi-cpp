@@ -33,6 +33,7 @@
 - [GenerateFlowFile](#generateflowfile)
 - [GetFile](#getfile)
 - [GetUSBCamera](#getusbcamera)
+- [HashContent](#hashcontent)
 - [InvokeHTTP](#invokehttp)
 - [ListenHTTP](#listenhttp)
 - [ListenSyslog](#listensyslog)
@@ -122,6 +123,31 @@ default values, and whether a property supports the NiFi Expression Language.
 | Batch Size | 50 |  | Number of captured packets written into a PCAP file |
 | Capture Bluetooth | false |  | Captures bluetooth interfaces if true  |
 | Network Controller | .* |  | Regular expression of the network controller(s) to which packet capture will be attached|
+
+### Relationships
+
+| Name | Description |
+| - | - |
+| success | All FlowFiles are routed to this relationship. |
+
+
+## HashContent
+
+### Description
+
+HashContent calculates the checksum of the content of the flowfile and adds it as an attribute.
+Configuration options exist to select hashing algorithm and set the name of the attribute. 
+
+### Properties
+
+In the list below, the names of required properties appear in bold. Any other
+properties (not in bold) are considered optional. The table also indicates any
+default values, and whether a property supports the NiFi Expression Language.
+
+| Name | Default Value | Allowable Values | Description |
+| - | - | - | - |
+| Hash Attribute | Checksum | | Name of the attribute the processor will use to add the checksum |
+| Hash Algorithm | MD5 | MD5, SHA1, SHA256 | Name of the algorithm used to calculate the checksum |
 
 ### Relationships
 
