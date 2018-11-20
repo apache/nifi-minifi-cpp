@@ -30,6 +30,7 @@ CoAPPDU *create_connection(uint8_t type, const char * const server, const char *
   uri.path.s = (uint8_t*)endpoint; // ^ same as above for paths.
   uri.path.length = strlen(endpoint);
   uri.port = port;
+  uri.scheme = COAP_URI_SCHEME_COAP;
 
   fd_set readfds;
   coap_pdu_t* request;
@@ -50,8 +51,6 @@ CoAPPDU *create_connection(uint8_t type, const char * const server, const char *
   switch (pdu->dst_addr.addr.sa.sa_family) {
     case AF_INET:
       addrptr = &pdu->dst_addr.addr.sin.sin_addr;
-
-      /* create context for IPv4 */
       if (!create_session(&pdu->ctx, &pdu->session, node_str[0] == 0 ? "0.0.0.0" : node_str, port_str, &pdu->dst_addr)) {
         break;
       } else {
@@ -59,8 +58,6 @@ CoAPPDU *create_connection(uint8_t type, const char * const server, const char *
       }
     case AF_INET6:
       addrptr = &pdu->dst_addr.addr.sin6.sin6_addr;
-
-      /* create context for IPv6 */
       if (!create_session(&pdu->ctx, &pdu->session, node_str[0] == 0 ? "::" : node_str, port_str, &pdu->dst_addr)) {
         break;
       } else {
@@ -83,29 +80,26 @@ CoAPPDU *create_connection(uint8_t type, const char * const server, const char *
 
   coap_register_option(pdu->ctx, COAP_OPTION_BLOCK2);
 
-  coap_register_option(pdu->ctx, COAP_OPTION_BLOCK2);
-
   // set the response handler
   coap_register_response_handler(pdu->ctx, response_handler);
 
   pdu->session->max_retransmit = 1;
-  coap_optlist_t *optlist = NULL;
+  pdu->optlist = NULL;
 
   // add the URI option to the options lsit
-  coap_insert_optlist(&optlist, coap_new_optlist(COAP_OPTION_URI_PATH, uri.path.length, uri.path.s));
+  coap_insert_optlist(&pdu->optlist, coap_new_optlist(COAP_OPTION_URI_PATH, uri.path.length, uri.path.s));
 
   // next, create the PDU.
-  if (!(request = create_request(pdu->ctx, pdu->session, &optlist, type, &pld)))
+  if (!(request = create_request(pdu->ctx, pdu->session, &pdu->optlist, type, &pld)))
     return NULL;
 
   // send the PDU using the session.
   coap_send(pdu->session, request);
-
   return pdu;
 }
 
 int8_t send_pdu(const CoAPPDU * const pdu) {
-  uint64_t wait_ms = 1 * 1000;
+  uint64_t wait_ms = 1 * 200;
   // run once will attempt to send the first time
   int runResponse = coap_run_once(pdu->ctx, wait_ms);
   // if no data is received, we will attempt re-transmission

@@ -31,6 +31,7 @@ namespace c2 {
 
 
 
+
 uint8_t CoapProtocol::REGISTRATION_MSG[8] = { 0x72, 0x65, 0x67, 0x69, 0x73, 0x74, 0x65, 0x72 };
 
 CoapProtocol::CoapProtocol(const std::string &name, const utils::Identifier &uuid)
@@ -141,12 +142,13 @@ int CoapProtocol::writeHeartbeat(io::BaseStream *stream, const minifi::c2::C2Pay
         try {
           running = myParser.getAs<bool>("running");
         }
-        catch(const minifi::c2::ParseException &e) {
+        catch(const minifi::c2::PayloadParseException &e) {
           logger_->log_error("Could not find running in components");
         }
         stream->write(running);
       });
-
+      size = queueParser.getSize();
+      stream->write(size);
       queueParser.foreach([this, stream](const minifi::c2::C2Payload &component) {
         auto myParser = minifi::c2::PayloadParser::getInstance(component);
         stream->writeUTF(component.getLabel());
@@ -157,7 +159,7 @@ int CoapProtocol::writeHeartbeat(io::BaseStream *stream, const minifi::c2::C2Pay
           qsize = myParser.getAs<uint64_t>("size");
           sizemax = myParser.getAs<uint64_t>("sizeMax");
         }
-        catch(const minifi::c2::ParseException &e) {
+        catch(const minifi::c2::PayloadParseException &e) {
           logger_->log_error("Could not find queue sizes");
         }
         stream->write(datasize);
@@ -172,7 +174,7 @@ int CoapProtocol::writeHeartbeat(io::BaseStream *stream, const minifi::c2::C2Pay
       stream->writeUTF(bucketId);
       stream->writeUTF(flowId);
 
-    } catch (const minifi::c2::ParseException &pe) {
+    } catch (const minifi::c2::PayloadParseException &pe) {
       // okay to ignore
       byte = false;
       stream->write(byte);
@@ -250,7 +252,7 @@ int CoapProtocol::writeHeartbeat(io::BaseStream *stream, const minifi::c2::C2Pay
      byte = false;
      stream->write(byte);
      }*/
-  } catch (const minifi::c2::ParseException &e) {
+  } catch (const minifi::c2::PayloadParseException &e) {
     logger_->log_error("Parser exception occurred, reason %s", e.what());
     return -1;
   }
@@ -322,6 +324,7 @@ minifi::c2::C2Payload CoapProtocol::serialize(const minifi::c2::C2Payload &paylo
       payload_type = 1;
       stream.write(&payload_type, 1);
       if (writeHeartbeat(&stream, payload) != 0) {
+        logger_->log_error("Could not write heartbeat");
         return minifi::c2::C2Payload(payload.getOperation(), state::UpdateState::READ_ERROR, true);
       }
       break;
@@ -336,7 +339,7 @@ minifi::c2::C2Payload CoapProtocol::serialize(const minifi::c2::C2Payload &paylo
   msg.data_ = const_cast<uint8_t *>(stream.getBuffer());
   msg.size_ = bsize;
 
-  coap::controllers::CoAPResponse message(coap_service_->sendPayload(COAP_REQUEST_POST, endpoint, &msg));
+  coap::controllers::CoAPResponse message = coap_service_->sendPayload(COAP_REQUEST_POST, endpoint, &msg);
 
   if (isRegistrationMessage(message)) {
     require_registration_ = true;
@@ -345,16 +348,18 @@ minifi::c2::C2Payload CoapProtocol::serialize(const minifi::c2::C2Payload &paylo
     io::BaseStream responseStream(&byteStream);
     responseStream.read(version);
     responseStream.read(size);
+    logger_->log_trace("Received ack. version %d. number of operations %d",version,size);
     minifi::c2::C2Payload new_payload(payload.getOperation(), state::UpdateState::NESTED, true);
     for (int i = 0; i < size; i++) {
 
       uint8_t operationType;
       uint16_t argsize = 0;
       std::string operand, id;
-      responseStream.read(operationType);
-      responseStream.readUTF(id, false);
-      responseStream.readUTF(operand, false);
+      REQUIRE_SIZE_IF(1, responseStream.read(operationType))
+      REQUIRE_VALID( responseStream.readUTF(id, false) )
+      REQUIRE_VALID( responseStream.readUTF(operand, false) )
 
+      logger_->log_trace("Received op %d, with id %s and operand %s",operationType,id,operand);
       auto newOp = getOperation(operationType);
       minifi::c2::C2Payload nested_payload(newOp, state::UpdateState::READ_COMPLETE, true);
       nested_payload.setIdentifier(id);
@@ -367,8 +372,8 @@ minifi::c2::C2Payload CoapProtocol::serialize(const minifi::c2::C2Payload &paylo
       responseStream.read(argsize);
       for (int j = 0; j < argsize; j++) {
         std::string key, value;
-        responseStream.readUTF(key);
-        responseStream.readUTF(value);
+        REQUIRE_VALID( responseStream.readUTF(key) )
+        REQUIRE_VALID( responseStream.readUTF(value) )
         new_command.operation_arguments[key] = value;
       }
 

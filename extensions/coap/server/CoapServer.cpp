@@ -16,6 +16,8 @@
  * limitations under the License.
  */
 #include "CoapServer.h"
+#include <coap2/utlist.h>
+#include <coap2/coap.h>
 
 namespace org {
 namespace apache {
@@ -24,7 +26,10 @@ namespace minifi {
 namespace coap {
 
 
+std::map<coap_resource_t*, std::function<CoAPResponse(CoAPQuery)>> CoapServer::functions_;
 CoapServer::~CoapServer() {
+  running_ = false;
+  future.get();
   if(server_){
     free_server(server_);
   }

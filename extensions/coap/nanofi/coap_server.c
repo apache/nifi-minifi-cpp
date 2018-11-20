@@ -26,9 +26,6 @@ CoAPServer * const create_server(const char *const server_hostname, const char *
   if ( create_endpoint_context(&server->ctx,server_hostname,port) ) {
     free_server(server);
   }
-//  server->base_resource = coap_resource_init(NULL, 0);
-
-  //coap_add_attr(server->base_resource, coap_make_str_const("title"), coap_make_str_const(title), 0);
 
   return server;
 }
@@ -37,8 +34,18 @@ CoAPEndpoint *const create_endpoint(CoAPServer * const server, const char * cons
   CoAPEndpoint *endpoint = (CoAPEndpoint*)malloc(sizeof(CoAPEndpoint));
   memset(endpoint,0x00, sizeof(CoAPEndpoint));
   endpoint->server = server;
-  endpoint->resource = coap_resource_init(coap_make_str_const(resource_path), COAP_RESOURCE_FLAGS_NOTIFY_CON);
-  add_endpoint(endpoint,method,handler);
+  int8_t flags = COAP_RESOURCE_FLAGS_NOTIFY_CON;
+  coap_str_const_t *path = NULL;
+  if (NULL != resource_path){
+      path = coap_new_str_const((const uint8_t *)resource_path,strlen(resource_path));
+  }
+  endpoint->resource = coap_resource_init(path, flags);
+  coap_add_attr(endpoint->resource, coap_make_str_const("title"), coap_make_str_const("\"Internal Clock\""), 0);
+  assert( !add_endpoint(endpoint,method,handler) );
+  coap_add_resource(server->ctx,endpoint->resource);
+  if (path){
+    coap_delete_str_const(path);
+  }
   return endpoint;
 
 }
@@ -48,7 +55,7 @@ int8_t add_endpoint(CoAPEndpoint * const endpoint, uint8_t method, coap_method_h
     return -1;
 
   coap_register_handler(endpoint->resource, method, handler);
-
+//  coap_resource_set_get_observable(endpoint->resource, 1);
   return 0;
 }
 
@@ -63,6 +70,7 @@ void free_endpoint(CoAPEndpoint * const endpoint){
 }
 void free_server(CoAPServer * const server){
   if (server){
+    coap_delete_all_resources( server->ctx );
     coap_free_context( server->ctx );
     free(server);
   }

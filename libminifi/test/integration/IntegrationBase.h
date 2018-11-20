@@ -122,8 +122,8 @@ void IntegrationBase::run(std::string test_file_location) {
   waitToVerifyProcessor();
 
   shutdownBeforeFlowController();
-  controller->unload();
-
+  //controller->unload();
+  controller->waitUnload(wait_time_);
   runAssertions();
 
   cleanup();

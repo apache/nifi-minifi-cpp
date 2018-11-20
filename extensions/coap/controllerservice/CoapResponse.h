@@ -36,21 +36,22 @@ class CoAPResponse {
  public:
 
   /**
-   * Creates a CoAPResponse to a CoAPMessage, taking ownership of the data.
+   * Creates a CoAPResponse to a CoAPMessage. Takes ownership of the argument
+   * and copies the data.
    */
   explicit CoAPResponse(CoAPMessage * const msg)
       : code_(msg->code_),
         size_(msg->size_) {
     // we take ownership of data_;
-    data_ = std::unique_ptr<uint8_t>(msg->data_);
-    msg->data_ = 0x00;
+    data_ = std::unique_ptr<uint8_t>(new uint8_t[msg->size_]);
+    memcpy(data_.get(), msg->data_, size_);
     free_coap_message(msg);
   }
 
   explicit CoAPResponse(uint32_t code)
       : code_(code),
         size_(0),
-        data_(new uint8_t[0]) {
+        data_(nullptr) {
 
   }
 
@@ -90,9 +91,9 @@ class CoAPResponse {
    * @param data, data pointer.
    * @size_t size of the data.
    */
-  void takeOwnership(uint8_t *data, size_t &size) {
+  void takeOwnership(uint8_t **data, size_t &size) {
     size = size_;
-    data = data_.release();
+    *data = data_.release();
   }
 
   CoAPResponse &operator=(const CoAPResponse &other) = delete;

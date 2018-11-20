@@ -25,8 +25,5 @@ CoAPMessage * const create_coap_message(const coap_pdu_t * const pdu){
 
 
 void free_coap_message(CoAPMessage *msg){
-  if (msg->data_ != 0x00){
-    free(msg->data_);
-  }
   free(msg);
 }

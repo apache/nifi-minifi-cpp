@@ -45,11 +45,14 @@
 #include "RemoteProcessorGroupPort.h"
 #include "core/ConfigurableComponent.h"
 #include "controllers/SSLContextService.h"
-#include "TestServer.h"
 #include "c2/C2Agent.h"
 #include "protocols/RESTReceiver.h"
 #include "HTTPIntegrationBase.h"
 #include "processors/LogAttribute.h"
+#include "CoapC2Protocol.h"
+#include "CoapServer.h"
+#include "io/BaseStream.h"
+#include "concurrentqueue.h"
 
 class Responder : public CivetHandler {
  public:
@@ -80,11 +83,12 @@ class VerifyCoAPServer : public HTTPIntegrationBase {
 
   void testSetup() {
     LogTestController::getInstance().setDebug<utils::HTTPClient>();
-    LogTestController::getInstance().setDebug<processors::InvokeHTTP>();
+    LogTestController::getInstance().setOff<processors::InvokeHTTP>();
     LogTestController::getInstance().setDebug<minifi::c2::RESTReceiver>();
     LogTestController::getInstance().setDebug<minifi::c2::C2Agent>();
-    LogTestController::getInstance().setDebug<processors::LogAttribute>();
-    LogTestController::getInstance().setDebug<minifi::core::ProcessSession>();
+    LogTestController::getInstance().setTrace<minifi::coap::c2::CoapProtocol>();
+    LogTestController::getInstance().setOff<processors::LogAttribute>();
+    LogTestController::getInstance().setOff<minifi::core::ProcessSession>();
     std::fstream file;
     ss << dir << "/" << "tstFile.ext";
     file.open(ss.str(), std::ios::out);
@@ -97,10 +101,12 @@ class VerifyCoAPServer : public HTTPIntegrationBase {
   }
 
   void runAssertions() {
-    assert(LogTestController::getInstance().contains("Import offset 0") == true);
 
-    assert(LogTestController::getInstance().contains("Outputting success and response") == true);
-
+    std::this_thread::sleep_for(std::chrono::milliseconds(3000));
+    assert(LogTestController::getInstance().contains("Received ack. version 3. number of operations 1") == true);
+    assert(LogTestController::getInstance().contains("Received ack. version 3. number of operations 0") == true);
+    assert(LogTestController::getInstance().contains("Received error event from protocol") == true);
+    assert(LogTestController::getInstance().contains("Received op 1, with id id and operand operand") == true);
   }
 
   void queryRootProcessGroup(std::shared_ptr<core::ProcessGroup> pg) {
@@ -114,17 +120,76 @@ class VerifyCoAPServer : public HTTPIntegrationBase {
     inv->getProperty(minifi::processors::InvokeHTTP::URL.getName(), url);
 
     std::string port, scheme, path;
+
     parse_http_components(url, port, scheme, path);
+    auto new_port_str = std::to_string(std::stoi(port) + 2);
+
+    server = std::unique_ptr<minifi::coap::CoapServer>(new minifi::coap::CoapServer("127.0.0.1", std::stoi(port) + 2));
+
+    server->add_endpoint(minifi::coap::METHOD::POST, [](minifi::coap::CoAPQuery)->minifi::coap::CoAPResponse {
+      minifi::coap::CoAPResponse response(205,0x00,0);
+      return response;
+
+    });
+
+    {
+      // valid response version 3, 0 ops
+      uint8_t *data = new uint8_t[5] { 0x00, 0x03, 0x00, 0x01, 0x00 };
+      minifi::coap::CoAPResponse response(205, std::unique_ptr<uint8_t>(data), 5);
+      responses.enqueue(std::move(response));
+    }
+
+    {
+      // valid response
+      uint8_t *data = new uint8_t[5] { 0x00, 0x03, 0x00, 0x00, 0x00 };
+      minifi::coap::CoAPResponse response(205, std::unique_ptr<uint8_t>(data), 5);
+      responses.enqueue(std::move(response));
+    }
+
+    {
+      // should result in valid operation
+      minifi::io::BaseStream stream;
+      uint16_t version=0, size=1;
+      uint8_t operation = 1;
+      stream.write(version);
+      stream.write(size);
+      stream.write(&operation,1);
+      stream.writeUTF("id");
+      stream.writeUTF("operand");
+
+      uint8_t *data = new uint8_t[ stream.getSize() ];
+      memcpy(data,stream.getBuffer(), stream.getSize() );
+      minifi::coap::CoAPResponse response(205, std::unique_ptr<uint8_t>(data), stream.getSize());
+      responses.enqueue(std::move(response));
+    }
+
+    server->add_endpoint("heartbeat", minifi::coap::METHOD::POST, [&](minifi::coap::CoAPQuery)-> minifi::coap::CoAPResponse {
+      if (responses.size_approx() > 0) {
+        minifi::coap::CoAPResponse resp(500,0,0);;
+        responses.try_dequeue(resp);
+        return resp;
+      }
+      else {
+        minifi::coap::CoAPResponse response(500,0,0);
+        return response;
+      }
+
+    });
+
+    server->start();
     configuration->set("c2.enable", "true");
     configuration->set("c2.agent.class", "test");
+    configuration->set("nifi.c2.root.classes", "DeviceInfoNode,AgentInformation,FlowInformation,RepositoryMetrics");
     configuration->set("nifi.c2.agent.protocol.class", "CoapProtocol");
-    configuration->set("nifi.c2.agent.coap.host","localhost");
-    configuration->set("nifi.c2.agent.coap.port", port);
+    configuration->set("nifi.c2.agent.coap.host", "127.0.0.1");
+    configuration->set("nifi.c2.agent.coap.port", new_port_str);
     configuration->set("c2.agent.heartbeat.period", "10");
     configuration->set("c2.rest.listener.heartbeat.rooturi", path);
   }
 
  protected:
+  moodycamel::ConcurrentQueue<minifi::coap::CoAPResponse> responses;
+  std::unique_ptr<minifi::coap::CoapServer> server;
   bool isSecure;
   char *dir;
   std::stringstream ss;

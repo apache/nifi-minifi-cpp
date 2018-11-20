@@ -38,12 +38,31 @@ typedef struct {
 } CoAPPDU;
 
 
-
+/**
+ * Creates a connection to the server
+ * @param type connection type
+ * @param server server name
+ * @param endpoint endpoint to connect to
+ * @param port CoAP port
+ * @param message message to send
+ * @return CoAPPDU object.
+ */
 CoAPPDU *create_connection(uint8_t type, const char * const server, const char * const endpoint, int port, const CoAPMessage * const message);
 
+/**
+ * Sends the pdu
+ * @param pdu to send
+ * @return result 0 if success, failure otherwise
+ */
 int8_t send_pdu(const CoAPPDU *const pdu);
+/**
+ * Frees the pdu
+ * @param pdu to free
+ * @return result 0 if success, failure otherwise
+ */
 
 int8_t free_pdu(CoAPPDU *pdu);
+
 #ifdef __cplusplus
 }
 #endif

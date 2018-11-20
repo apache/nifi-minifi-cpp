@@ -111,9 +111,9 @@ class C2Payload : public state::Update {
 
   }
 
-  C2Payload(Operation op, std::string identifier, bool resp = false, bool isRaw = false);
+  C2Payload(Operation op, const std::string &identifier, bool resp = false, bool isRaw = false);
 
-  C2Payload(Operation op, state::UpdateState state, std::string identifier, bool resp = false, bool isRaw = false);
+  C2Payload(Operation op, state::UpdateState state,const std::string &identifier, bool resp = false, bool isRaw = false);
 
   C2Payload(Operation op, bool resp = false, bool isRaw = false);
 

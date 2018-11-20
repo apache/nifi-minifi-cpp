@@ -44,50 +44,6 @@ class CoapConnectorService : public core::controller::ControllerService {
  public:
 
   /**
-   * CoapMessage is in internal message format that is sent to and from consumers of this controller service.
-   */
-  /*
-   class CoAPMessage {
-   public:
-
-   explicit CoAPMessage(unsigned int code = 0)
-   : code_(code) {
-   }
-
-   explicit CoAPMessage(unsigned int code, unsigned char *data, size_t dataLen)
-   : code_(code) {
-   if (data && dataLen > 0)
-   std::copy(data, data + dataLen, std::back_inserter(data_));
-   }
-
-   CoAPMessage(const CoAPMessage &other) = delete;
-
-   CoAPMessage(CoAPMessage &&other) = default;
-
-   ~CoAPMessage() {
-   }
-
-   size_t getSize() const {
-   return data_.size();
-   }
-   unsigned char const *getData() const {
-   return data_.data();
-   }
-
-   bool isRegistrationRequest() {
-   if (data_.size() != 8) {
-   return false;
-   }
-   return code_ == COAP_RESPONSE_400 && std::string((char*) data_.data(), data_.size()) == "register";
-   }
-   CoAPMessage &operator=(const CoAPMessage &other) = delete;
-   CoAPMessage &operator=(CoAPMessage &&other) = default;
-   private:
-   unsigned int code_;
-   std::vector<unsigned char> data_;
-   };*/
-
-  /**
    * Constructors for the controller service.
    */
   explicit CoapConnectorService(const std::string &name, const std::string &id)
@@ -182,7 +138,7 @@ class CoapMessaging {
   /**
    * Determines if the pointer is present in the internal map.
    */
-  bool hasResponse(coap_context_t *ctx) {
+  bool hasResponse(coap_context_t *ctx) const {
     std::lock_guard<std::mutex> lock(connector_mutex_);
     return messages_.find(ctx) != messages_.end();
   }
@@ -218,19 +174,18 @@ class CoapMessaging {
  private:
   CoapMessaging() {
     callback_pointers ptrs;
-        ptrs.data_received = receiveMessage;
-        ptrs.received_error = receiveError;
-        init_coap_api(&CoapMessaging::getInstance(), &ptrs);
+    ptrs.data_received = receiveMessage;
+    ptrs.received_error = receiveError;
+    init_coap_api(this, &ptrs);
 
   }
   // connector
-  std::mutex connector_mutex_;
+  mutable std::mutex connector_mutex_;
   // map of messages based on the context. We only allow a single message per context
   // at any given time.
   std::unordered_map<coap_context_t*, CoAPResponse> messages_;
 
 };
-
 
 } /* namespace controllers */
 } /* namespace coap */

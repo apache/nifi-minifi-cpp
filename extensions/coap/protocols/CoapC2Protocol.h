@@ -48,6 +48,16 @@ namespace minifi {
 namespace coap {
 namespace c2 {
 
+#define REQUIRE_VALID(x) \
+  if (-1 == x){ \
+    return minifi::c2::C2Payload(payload.getOperation(), state::UpdateState::READ_ERROR, true); \
+  }
+
+#define REQUIRE_SIZE_IF(y,x) \
+  if (y != x){ \
+    return minifi::c2::C2Payload(payload.getOperation(), state::UpdateState::READ_ERROR, true); \
+  }
+
 /**
  * CoAP is the Constrained Application Protocol, which defines a specialized web transfer protocol that can be
  * used on devices with constrained resources.
@@ -67,7 +77,7 @@ class CoapProtocol : public minifi::c2::RESTSender {
   virtual minifi::c2::C2Payload consumePayload(const std::string &url, const minifi::c2::C2Payload &payload, minifi::c2::Direction direction, bool async) override;
 
   virtual minifi::c2::C2Payload consumePayload(const minifi::c2::C2Payload &payload, minifi::c2::Direction direction, bool async) override {
-    return serialize(payload);
+      return serialize(payload);
   }
 
   virtual void update(const std::shared_ptr<Configure> &configure) override {

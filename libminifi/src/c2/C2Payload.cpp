@@ -75,7 +75,7 @@ C2ContentResponse &C2ContentResponse::operator=(const C2ContentResponse &other) 
   return *this;
 }
 
-C2Payload::C2Payload(Operation op, state::UpdateState state, std::string identifier, bool resp, bool isRaw)
+C2Payload::C2Payload(Operation op, state::UpdateState state, const std::string &identifier, bool resp, bool isRaw)
     : state::Update(state::UpdateStatus(state, 0)),
       op_(op),
       raw_(isRaw),
@@ -84,7 +84,7 @@ C2Payload::C2Payload(Operation op, state::UpdateState state, std::string identif
       is_container_(false) {
 }
 
-C2Payload::C2Payload(Operation op, std::string identifier, bool resp, bool isRaw)
+C2Payload::C2Payload(Operation op, const std::string &identifier, bool resp, bool isRaw)
     : C2Payload(op, state::UpdateState::FULLY_APPLIED, identifier, resp, isRaw) {
 }
 
@@ -127,17 +127,7 @@ const std::vector<C2ContentResponse> &C2Payload::getContent() const {
 void C2Payload::addContent(const C2ContentResponse &&content) {
   for (auto &existing_content : content_) {
     if (existing_content.name == content.name) {
-      for (auto subcontent : existing_content.operation_arguments) {
-      }
-
-      for (auto subcontent : content.operation_arguments) {
-      }
-
       existing_content.operation_arguments.insert(content.operation_arguments.begin(), content.operation_arguments.end());
-
-      for (auto subcontent : existing_content.operation_arguments) {
-      }
-
       return;
     }
   }

@@ -410,9 +410,9 @@ if (ENABLE_ALL OR ENABLE_GPS)
 	createExtension(GPS-EXTENSION "GPS EXTENSIONS" "Enables LibGPS Functionality and the GetGPS processor." "extensions/gps" "${TEST_DIR}/gps-tests")
 endif()
 
-option(ENABLE_COAP "Enables the GPS extension." ON)
+option(ENABLE_COAP "Enables the CoAP extension." ON)
 if (ENABLE_ALL OR ENABLE_COAP)
-	createExtension(COAP-EXTENSION "COAP EXTENSIONS" "Enables LibCOAP Functionality." "extensions/coap" ""extensions/coap/tests/"")
+	createExtension(COAP-EXTENSION "COAP EXTENSIONS" "Enables LibCOAP Functionality." "extensions/coap" "extensions/coap/tests/")
 endif()
 
 if (WIN32)

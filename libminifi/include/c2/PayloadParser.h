@@ -28,12 +28,9 @@ namespace nifi {
 namespace minifi {
 namespace c2 {
 
-//template<typename T, class C> struct convert_if_base;
-//template<typename T> struct convert_if;
-
-class ParseException : public std::runtime_error {
+class PayloadParseException : public std::runtime_error {
  public:
-  ParseException(const std::string &msg)
+  PayloadParseException(const std::string &msg)
       : std::runtime_error(msg) {
   }
 
@@ -50,7 +47,7 @@ class convert_if_base {
   T operator()() const {
     if (auto sub_type = std::dynamic_pointer_cast<C>(node_))
       return sub_type->getValue();
-    throw ParseException("No known type");
+    throw PayloadParseException("No known type");
   }
 };
 
@@ -61,7 +58,7 @@ struct convert_if {
 
 
   std::string operator()() const {
-    throw ParseException("No known type");
+    throw PayloadParseException("No known type");
   }
 };
 
@@ -99,6 +96,8 @@ struct convert_if<bool> : public convert_if_base<bool, state::response::BoolValu
 
 /**
  * Defines a fluent parser that uses Exception management for flow control.
+ *
+ * Note that this isn't functionally complete.
  */
 class PayloadParser {
 
@@ -110,11 +109,13 @@ class PayloadParser {
 
   inline PayloadParser in(const std::string &payload) {
     for (const auto &pl : ref_.getNestedPayloads()) {
-      if (pl.getLabel() == payload) {
-        return PayloadParser(ref_);
+      if (pl.getLabel() == payload || pl.getIdentifier() == payload) {
+        return PayloadParser(pl);
       }
     }
-    throw ParseException("Invalid payload");
+    std::stringstream ss;
+    ss << "Invalid payload. Could not find " << payload;
+    throw PayloadParseException(ss.str());
   }
 
   template<typename Functor>
@@ -132,7 +133,9 @@ class PayloadParser {
         return convert_if<T>(exists->second.getValue())();
       }
     }
-    throw ParseException("Invalid payload");
+    std::stringstream ss;
+    ss << "Invalid Field. Could not find " << field << " in " << ref_.getLabel();
+    throw PayloadParseException(ss.str());
   }
 
   template<typename T>
