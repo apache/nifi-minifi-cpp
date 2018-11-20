@@ -49,7 +49,7 @@ class Connectable : public CoreComponent {
   bool setSupportedRelationships(const std::set<Relationship> &relationships);
 
   // Whether the relationship is supported
-  bool isSupportedRelationship(const Relationship &relationship) const;
+  bool isSupportedRelationship(const Relationship &relationship);
 
   std::vector<Relationship> getSupportedRelationships() const;
 
@@ -61,7 +61,7 @@ class Connectable : public CoreComponent {
   bool setAutoTerminatedRelationships(const std::set<Relationship> &relationships);
 
   // Check whether the relationship is auto terminated
-  bool isAutoTerminated(const Relationship &relationship) const;
+  bool isAutoTerminated(const Relationship &relationship);
 
   // Get Processor penalization period in MilliSecond
   uint64_t getPenalizationPeriodMsec(void) const {
