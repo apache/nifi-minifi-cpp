@@ -34,7 +34,6 @@
 #include "core/ProcessorNode.h"
 
 #include "processors/GetFile.h"
-#include "processors/PutFile.h"
 #include "processors/ExtractText.h"
 #include "processors/LogAttribute.h"
 
@@ -42,7 +41,7 @@ const char* TEST_TEXT = "Test text\n";
 const char* TEST_FILE = "test_file.txt";
 const char* TEST_ATTR = "ExtractedText";
 
-TEST_CASE("Test Creation of ExtractText", "[extracttextCreate]") {
+TEST_CASE("Test creation of ExtractText", "[extracttextCreate]") {
     TestController testController;
     std::shared_ptr<core::Processor> processor = std::make_shared<org::apache::nifi::minifi::processors::ExtractText>("processorname");
     REQUIRE(processor->getName() == "processorname");
@@ -53,7 +52,6 @@ TEST_CASE("Test Creation of ExtractText", "[extracttextCreate]") {
 TEST_CASE("Test usage of ExtractText", "[extracttextTest]") {
     TestController testController;
     LogTestController::getInstance().setTrace<org::apache::nifi::minifi::processors::ExtractText>();
-    LogTestController::getInstance().setTrace<org::apache::nifi::minifi::processors::PutFile>();
     LogTestController::getInstance().setTrace<org::apache::nifi::minifi::processors::GetFile>();
     LogTestController::getInstance().setTrace<org::apache::nifi::minifi::processors::LogAttribute>();
     LogTestController::getInstance().setTrace<core::ProcessSession>();
@@ -96,6 +94,30 @@ TEST_CASE("Test usage of ExtractText", "[extracttextTest]") {
     ss2 << "key:" << TEST_ATTR << " value:" << TEST_TEXT;
     std::string log_check = ss2.str();
 
+    REQUIRE(LogTestController::getInstance().contains(log_check));
+
+    plan->reset();
+
+    plan->setProperty(maprocessor, org::apache::nifi::minifi::processors::ExtractText::SizeLimit.getName(), "4");
+
+    LogTestController::getInstance().reset();
+    LogTestController::getInstance().setTrace<org::apache::nifi::minifi::processors::LogAttribute>();
+
+    std::ofstream test_file_2(test_file_path + "2");
+    if (test_file_2.is_open()) {
+        test_file_2 << TEST_TEXT << std::endl;
+        test_file_2.close();
+    }
+
+    plan->runNextProcessor();  // GetFile
+    plan->runNextProcessor();  // ExtractText
+    plan->runNextProcessor();  // LogAttribute
+
+    REQUIRE(LogTestController::getInstance().contains(log_check) == false);
+
+    ss2.str("");
+    ss2 << "key:" << TEST_ATTR << " value:" << "Test";
+    log_check = ss2.str();
     REQUIRE(LogTestController::getInstance().contains(log_check));
 
     LogTestController::getInstance().reset();

@@ -56,9 +56,9 @@ public:
     static constexpr int DEFAULT_SIZE_LIMIT = 2 * 1024 * 1024;
 
     //! OnTrigger method, implemented by NiFi ExtractText
-    void onTrigger(core::ProcessContext *context, core::ProcessSession *session);
+    void onTrigger(core::ProcessContext *context, core::ProcessSession *session) override;
     //! Initialize, over write by NiFi ExtractText
-    void initialize(void);
+    void initialize(void) override;
 
     class ReadCallback : public InputStreamCallback {
     public:
@@ -70,7 +70,6 @@ public:
         std::shared_ptr<core::FlowFile> flowFile_;
         core::ProcessContext *ctx_;
         std::vector<uint8_t> buffer_;
-        int64_t max_read_;
     };
 
 protected:
