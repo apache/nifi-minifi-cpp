@@ -59,7 +59,7 @@ class ProcessorNode : public ConfigurableComponent, public Connectable {
    * @param value value passed in by reference
    * @return result of getting property.
    */
-  bool getProperty(const std::string &name, std::string &value) {
+  bool getProperty(const std::string &name, std::string &value) const {
     const std::shared_ptr<ConfigurableComponent> processor_cast = std::dynamic_pointer_cast<ConfigurableComponent>(processor_);
     if (nullptr != processor_cast)
       return processor_cast->getProperty(name, value);
@@ -89,7 +89,7 @@ class ProcessorNode : public ConfigurableComponent, public Connectable {
    * @param value value passed in by reference
    * @return result of getting property.
    */
-  bool getDynamicProperty(const std::string name, std::string &value) {
+  bool getDynamicProperty(const std::string name, std::string &value) const {
     const auto &processor_cast = std::dynamic_pointer_cast<ConfigurableComponent>(processor_);
     if (processor_cast) {
       return processor_cast->getDynamicProperty(name, value);
@@ -133,7 +133,7 @@ class ProcessorNode : public ConfigurableComponent, public Connectable {
    * @param value value passed in by reference
    * @return result of getting property.
    */
-  std::vector<std::string> getDynamicPropertyKeys() {
+  std::vector<std::string> getDynamicPropertyKeys() const {
     const auto &processor_cast = std::dynamic_pointer_cast<ConfigurableComponent>(processor_);
     if (processor_cast) {
       return processor_cast->getDynamicPropertyKeys();
