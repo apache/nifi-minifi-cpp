@@ -25,6 +25,7 @@
 
 std::shared_ptr<utils::IdGenerator> ExecutionPlan::id_generator_ = utils::IdGenerator::getIdGenerator();
 std::unordered_map<std::string, std::shared_ptr<ExecutionPlan>> ExecutionPlan::proc_plan_map_ = {};
+std::map<std::string, processor_logic*> ExecutionPlan::custom_processors = {};
 
 ExecutionPlan::ExecutionPlan(std::shared_ptr<core::ContentRepository> content_repo, std::shared_ptr<core::Repository> flow_repo, std::shared_ptr<core::Repository> prov_repo)
     : content_repo_(content_repo),
@@ -41,19 +42,27 @@ ExecutionPlan::ExecutionPlan(std::shared_ptr<core::ContentRepository> content_re
  * Add a callback to obtain and pass processor session to a generated processor
  *
  */
-std::shared_ptr<core::Processor> ExecutionPlan::addCallback(void *obj, std::function<void(core::ProcessSession*)> fp) {
+std::shared_ptr<core::Processor> ExecutionPlan::addSimpleCallback(void *obj, std::function<void(core::ProcessSession*)> fp) {
   if (finalized) {
     return nullptr;
   }
 
-  auto ptr = createProcessor("CallbackProcessor", "CallbackProcessor");
-  if (!ptr)
+  auto simple_func_wrapper = [fp](core::ProcessSession *session, core::ProcessContext *context)->void { fp(session); };
+
+  return addCallback(obj, simple_func_wrapper);
+}
+
+std::shared_ptr<core::Processor> ExecutionPlan::addCallback(void *obj, std::function<void(core::ProcessSession*, core::ProcessContext *)> fp) {
+  if (finalized) {
+    return nullptr;
+  }
+
+  auto proc = createCallback(obj, fp);
+
+  if (!proc)
     return nullptr;
 
-  std::shared_ptr<processors::CallbackProcessor> processor = std::static_pointer_cast<processors::CallbackProcessor>(ptr);
-  processor->setCallback(obj, fp);
-
-  return addProcessor(processor, "CallbackProcessor", core::Relationship("success", "description"), true);
+  return addProcessor(proc, CallbackProcessorName, core::Relationship("success", "description"), true);
 }
 
 bool ExecutionPlan::setProperty(const std::shared_ptr<core::Processor> proc, const std::string &prop, const std::string &value) {
@@ -198,7 +207,7 @@ std::shared_ptr<minifi::Connection> ExecutionPlan::buildFinalConnection(std::sha
 
 void ExecutionPlan::finalize() {
   if (failure_handler_) {
-    auto failure_proc = createProcessor("CallbackProcessor", "CallbackProcessor");
+    auto failure_proc = createProcessor(CallbackProcessorName, CallbackProcessorName);
 
     std::shared_ptr<processors::CallbackProcessor> callback_proc = std::static_pointer_cast<processors::CallbackProcessor>(failure_proc);
     callback_proc->setCallback(nullptr, std::bind(&FailureHandler::operator(), failure_handler_, std::placeholders::_1));
@@ -237,6 +246,17 @@ std::shared_ptr<core::Processor> ExecutionPlan::createProcessor(const std::strin
   utils::Identifier uuid;
   id_generator_->generate(uuid);
 
+  auto custom_proc = custom_processors.find(processor_name);
+
+  if(custom_proc != custom_processors.end()) {
+    auto c_func = custom_proc->second;
+    auto wrapper_func = [c_func](core::ProcessSession * session, core::ProcessContext * context) {
+      return c_func(reinterpret_cast<processor_session*>(session), reinterpret_cast<processor_context*>(context));
+    };
+    return createCallback(nullptr, wrapper_func);
+  }
+
+
   auto ptr = core::ClassLoader::getDefaultClassLoader().instantiate(processor_name, uuid);
   if (nullptr == ptr) {
     return nullptr;
@@ -245,6 +265,17 @@ std::shared_ptr<core::Processor> ExecutionPlan::createProcessor(const std::strin
 
   processor->setName(name);
   return processor;
+}
+
+std::shared_ptr<core::Processor> ExecutionPlan::createCallback(void *obj, std::function<void(core::ProcessSession*, core::ProcessContext *)> fp) {
+  auto ptr = createProcessor(CallbackProcessorName, CallbackProcessorName);
+  if (!ptr)
+    return nullptr;
+
+  std::shared_ptr<processors::CallbackProcessor> processor = std::static_pointer_cast<processors::CallbackProcessor>(ptr);
+  processor->setCallback(obj, fp);
+
+  return ptr;
 }
 
 std::shared_ptr<minifi::Connection> ExecutionPlan::connectProcessors(std::shared_ptr<core::Processor> src_proc, std::shared_ptr<core::Processor> dst_proc, core::Relationship relationship,
@@ -290,5 +321,21 @@ bool ExecutionPlan::setFailureStrategy(FailureStrategy start) {
   }
   failure_handler_->setStrategy(start);
   return true;
+}
+
+bool ExecutionPlan::addCustomProcessor(const char * name, processor_logic* logic) {
+  if(CallbackProcessorName == name) {
+    return false;  // This name cannot be registered
+  }
+
+  if (custom_processors.count(name) > 0 ) {
+    return false;  // Already exists
+  }
+  custom_processors[name] = logic;
+  return true;
+}
+
+int ExecutionPlan::deleteCustomProcessor(const char * name) {
+  return custom_processors.erase(name);
 }
 

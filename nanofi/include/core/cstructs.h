@@ -22,6 +22,14 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#ifdef _MSC_VER
+#define DEPRECATED __declspec(deprecated)
+#elif defined(__GNUC__) | defined(__clang__)
+#define DEPRECATED __attribute__((__deprecated__))
+#else
+#define DEPRECATED
+#endif
+
 /**
  * NiFi Port struct
  */
@@ -71,6 +79,8 @@ typedef struct standalone_processor standalone_processor;
 
 typedef struct processor_session processor_session;
 
+typedef struct processor_context processor_context;
+
 /****
  * ##################################################################
  *  FLOWFILE OPERATIONS
@@ -105,6 +115,8 @@ typedef struct {
 
   void *ffp;
 
+  uint8_t keepContent;
+
 } flow_file_record;
 
 typedef struct flow flow;
@@ -113,5 +125,7 @@ typedef enum FS {
   AS_IS,
   ROLLBACK
 } FailureStrategy;
+
+typedef void (processor_logic)(processor_session*, processor_context *);
 
 #endif /* LIBMINIFI_SRC_CAPI_CSTRUCTS_H_ */

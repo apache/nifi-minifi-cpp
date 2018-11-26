@@ -46,6 +46,8 @@ namespace processors {
 // CallbackProcessor Class
 class CallbackProcessor : public core::Processor {
  public:
+  static core::Relationship Success;
+  static core::Relationship Failure;
   // Constructor
   /*!
    * Create a new processor
@@ -65,24 +67,23 @@ class CallbackProcessor : public core::Processor {
 
  public:
 
-  void setCallback(void *obj,std::function<void(core::ProcessSession*)> ontrigger_callback) {
+  void setCallback(void *obj,std::function<void(core::ProcessSession*, core::ProcessContext *context)> ontrigger_callback) {
     objref_ = obj;
     callback_ = ontrigger_callback;
   }
 
   // OnTrigger method, implemented by NiFi CallbackProcessor
-  virtual void onTrigger(core::ProcessContext *context, core::ProcessSession *session);
+  virtual void onTrigger(core::ProcessContext *context, core::ProcessSession *session);  // override;
   // Initialize, over write by NiFi CallbackProcessor
-  virtual void initialize() {
-    std::set<core::Relationship> relationships;
-    core::Relationship Success("success", "description");
-    relationships.insert(Success);
-    setSupportedRelationships(relationships);
+  virtual void initialize();  // override;
+
+  virtual bool supportsDynamicProperties() /*override*/ {
+    return true;
   }
 
  protected:
   void *objref_;
-  std::function<void(core::ProcessSession*)> callback_;
+  std::function<void(core::ProcessSession*, core::ProcessContext *context)> callback_;
  private:
   // Logger
   std::shared_ptr<logging::Logger> logger_;

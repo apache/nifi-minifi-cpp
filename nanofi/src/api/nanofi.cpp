@@ -27,6 +27,7 @@
 #include "core/expect.h"
 #include "cxx/Instance.h"
 #include "cxx/Plan.h"
+#include "cxx/CallbackProcessor.h"
 #include "ResourceClaim.h"
 #include "processors/GetFile.h"
 #include "core/logging/LoggerConfiguration.h"
@@ -95,7 +96,6 @@ nifi_instance *create_instance(const char *url, nifi_port *port) {
 }
 
 standalone_processor *create_processor(const char *name) {
-  static int proc_counter = 0;
   auto ptr = ExecutionPlan::createProcessor(name, name);
   if (!ptr) {
     return nullptr;
@@ -106,8 +106,7 @@ standalone_processor *create_processor(const char *name) {
     port.port_id = portnum;
     standalone_instance = create_instance("internal_standalone", &port);
   }
-  std::string flow_name = std::to_string(proc_counter++);
-  auto flow = create_flow(standalone_instance, flow_name.c_str());
+  auto flow = create_new_flow(standalone_instance);
   std::shared_ptr<ExecutionPlan> plan(flow);
   plan->addProcessor(ptr, name);
   ExecutionPlan::addProcessorWithPlan(ptr->getUUIDStr(), plan);
@@ -187,6 +186,7 @@ flow_file_record* create_flowfile(const char *file, const size_t len) {
   std::ifstream in(file, std::ifstream::ate | std::ifstream::binary);
   // set the size of the flow file.
   new_ff->size = in.tellg();
+  new_ff->keepContent = 0;
   return new_ff;
 }
 
@@ -212,6 +212,7 @@ flow_file_record* create_ff_object_na(const char *file, const size_t len, const 
   // set the size of the flow file.
   new_ff->size = size;
   new_ff->crp = static_cast<void*>(new std::shared_ptr<minifi::core::ContentRepository>);
+  new_ff->keepContent = 0;
   return new_ff;
 }
 /**
@@ -223,13 +224,16 @@ void free_flowfile(flow_file_record *ff) {
     return;
   }
   auto content_repo_ptr = static_cast<std::shared_ptr<minifi::core::ContentRepository>*>(ff->crp);
-  if (content_repo_ptr->get()) {
+  if (content_repo_ptr->get() && (ff->keepContent == 0)) {
     std::shared_ptr<minifi::ResourceClaim> claim = std::make_shared<minifi::ResourceClaim>(ff->contentLocation, *content_repo_ptr);
     (*content_repo_ptr)->remove(claim);
   }
   if (ff->ffp == nullptr) {
     auto map = static_cast<string_map*>(ff->attributes);
     delete map;
+  } else {
+    auto ff_sptr = reinterpret_cast<std::shared_ptr<core::FlowFile>*>(ff->ffp);
+    delete ff_sptr;
   }
   free(ff->contentLocation);
   free(ff);
@@ -269,7 +273,7 @@ void update_attribute(flow_file_record *ff, const char *key, void *value, size_t
  * @param caller_attribute caller supplied object in which we will copy the data ptr
  * @return 0 if successful, -1 if the key does not exist
  */
-uint8_t get_attribute(flow_file_record * ff, attribute * caller_attribute) {
+uint8_t get_attribute(const flow_file_record * ff, attribute * caller_attribute) {
   if (ff == nullptr) {
     return -1;
   }
@@ -286,7 +290,7 @@ uint8_t get_attribute(flow_file_record * ff, attribute * caller_attribute) {
   return -1;
 }
 
-int get_attribute_qty(const flow_file_record* ff) {
+int get_attribute_quantity(const flow_file_record *ff) {
   if (ff == nullptr) {
     return 0;
   }
@@ -370,15 +374,6 @@ int transmit_flowfile(flow_file_record *ff, nifi_instance *instance) {
 }
 
 flow * create_new_flow(nifi_instance * instance) {
-  auto minifi_instance_ref = static_cast<minifi::Instance*>(instance->instance_ptr);
-  flow * area = static_cast<flow*>(malloc(1*sizeof(flow)));
-  if(area == nullptr) {
-    return nullptr;
-  }
-  return new(area) flow(minifi_instance_ref->getContentRepository(), minifi_instance_ref->getNoOpRepository(), minifi_instance_ref->getNoOpRepository());
-}
-
-flow *create_flow(nifi_instance *instance, const char *first_processor) {
   if (nullptr == instance || nullptr == instance->instance_ptr) {
     return nullptr;
   }
@@ -387,9 +382,15 @@ flow *create_flow(nifi_instance *instance, const char *first_processor) {
   if(area == nullptr) {
     return nullptr;
   }
-  flow *new_flow = new(area) flow(minifi_instance_ref->getContentRepository(), minifi_instance_ref->getNoOpRepository(), minifi_instance_ref->getNoOpRepository());
 
-  if (first_processor != nullptr && strlen(first_processor) > 0) {
+  flow *new_flow = new(area) flow(minifi_instance_ref->getContentRepository(), minifi_instance_ref->getNoOpRepository(), minifi_instance_ref->getNoOpRepository());
+  return new_flow;
+}
+
+flow *create_flow(nifi_instance *instance, const char *first_processor) {
+  auto new_flow = create_new_flow(instance);
+
+  if(new_flow != nullptr && first_processor != nullptr && strlen(first_processor) > 0) {
     // automatically adds it with success
     new_flow->addProcessor(first_processor, first_processor);
   }
@@ -403,13 +404,13 @@ processor *add_python_processor(flow *flow, void (*ontrigger_callback)(processor
   auto lambda = [ontrigger_callback](core::ProcessSession *ps) {
     ontrigger_callback(static_cast<processor_session*>(ps));  //Meh, sorry for this
   };
-  auto proc = flow->addCallback(nullptr, lambda);
+  auto proc = flow->addSimpleCallback(nullptr, lambda);
   return static_cast<processor*>(proc.get());
 }
 
 flow * create_getfile(nifi_instance * instance, flow * parent_flow, GetFileConfig * c) {
   static const std::string first_processor = "GetFile";
-  flow *new_flow = parent_flow == nullptr ? create_flow(instance, nullptr) : parent_flow;
+  flow *new_flow = parent_flow == nullptr ? create_new_flow(instance) : parent_flow;
 
   // automatically adds it with success
   auto getFile = new_flow->addProcessor(first_processor, first_processor);
@@ -460,17 +461,27 @@ int set_standalone_property(standalone_processor *proc, const char *name, const 
   return -1;
 }
 
+char * get_property(const processor_context *  context, const char * name) {
+  std::string value;
+  if(!context->getDynamicProperty(name, value)) {
+    return nullptr;
+  }
+  size_t len = value.length();
+  char * ret_val = (char*)malloc((len +1) * sizeof(char));
+  strncpy(ret_val, value.data(), len);
+  ret_val[len] = '\0';
+  return ret_val;
+}
+
 int free_flow(flow *flow) {
   if (flow == nullptr)
     return -1;
+  flow->~flow();
   free(flow);
   return 0;
 }
 
-flow_file_record* flowfile_to_record(std::shared_ptr<core::FlowFile> ff, ExecutionPlan* plan) {
-  if (ff == nullptr) {
-    return nullptr;
-  }
+flow_file_record* flowfile_to_record(std::shared_ptr<core::FlowFile> ff, const std::shared_ptr<minifi::core::ContentRepository>& crp) {
   auto claim = ff->getResourceClaim();
   if(claim == nullptr) {
     return nullptr;
@@ -480,10 +491,30 @@ flow_file_record* flowfile_to_record(std::shared_ptr<core::FlowFile> ff, Executi
   claim->increaseFlowFileRecordOwnedCount();
   auto path = claim->getContentFullPath();
   auto ffr = create_ff_object_na(path.c_str(), path.length(), ff->getSize());
-  ffr->ffp = ff.get();
+  ffr->ffp = static_cast<void*>(new std::shared_ptr<core::FlowFile>(ff));
   ffr->attributes = ff->getAttributesPtr();
   auto content_repo_ptr = static_cast<std::shared_ptr<minifi::core::ContentRepository>*>(ffr->crp);
-  *content_repo_ptr = plan->getContentRepo();
+  *content_repo_ptr = crp;
+  return ffr;
+}
+
+flow_file_record* flowfile_to_record(std::shared_ptr<core::FlowFile> ff, ExecutionPlan* plan) {
+  if (ff == nullptr) {
+    return nullptr;
+  }
+
+  return flowfile_to_record(ff, plan->getContentRepo());
+}
+
+flow_file_record* get_flowfile(processor_session* session, processor_context* context) {
+  auto ff = session->get();
+  if(!ff) {
+    return nullptr;
+  }
+
+  auto ffr = flowfile_to_record(ff, context->getContentRepository());
+  // The content of the flow file must be kept in a processor logic
+  ffr->keepContent = 1;
   return ffr;
 }
 
@@ -608,5 +639,22 @@ int transfer(processor_session* session, flow *flow, const char *rel) {
     return -2;
   }
   session->transfer(ff, relationship);
+  return 0;
+}
+
+int add_custom_processor(const char * name, processor_logic* logic) {
+  return ExecutionPlan::addCustomProcessor(name, logic) ? 0 : -1;
+}
+
+int delete_custom_processor(const char * name) {
+  return ExecutionPlan::deleteCustomProcessor(name) - 1;
+}
+
+int transfer_to_relationship(flow_file_record * ffr, processor_session * ps, const char * relationship) {
+  if(ffr == nullptr || ffr->ffp == nullptr || ps == nullptr || relationship == nullptr || strlen(relationship) == 0) {
+    return -1;
+  }
+  auto ff_sptr = reinterpret_cast<std::shared_ptr<core::FlowFile>*>(ffr->ffp);
+  ps->transfer(*ff_sptr, core::Relationship(relationship, "desc"));
   return 0;
 }
