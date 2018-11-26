@@ -37,6 +37,9 @@ extern "C" {
  */
 #define API_VERSION "0.02"
 
+#define SUCCESS_RELATIONSHIP "success"
+#define FAILURE_RELATIONSHIP "failure"
+
 void enable_logging();
 
 void set_terminate_callback(void (*terminate_callback)());
@@ -97,7 +100,7 @@ int add_failure_callback(flow *flow, void (*onerror_callback)(flow_file_record*)
 * Set failure strategy. Please use the enum defined in cstructs.h
 * Return values: 0 (success), -1 (strategy cannot be set - no failure callback added?)
 * Can be changed runtime.
-* The defailt strategy is AS IS.
+* The default strategy is AS IS.
 */
 int set_failure_strategy(flow *flow, FailureStrategy strategy);
 
@@ -106,6 +109,8 @@ int set_property(processor *, const char *, const char *);
 int set_standalone_property(standalone_processor*, const char*, const char *);
 
 int set_instance_property(nifi_instance *instance, const char*, const char *);
+
+char * get_property(const processor_context *  context, const char * name);
 
 int free_flow(flow *);
 
@@ -135,13 +140,18 @@ flow_file_record* create_ff_object(const char *file, const size_t len, const uin
 
 flow_file_record* create_ff_object_na(const char *file, const size_t len, const uint64_t size);
 
+/**
+ * Get incoming flow file. To be used in processor logic callbacks.
+ */
+flow_file_record* get_flowfile(processor_session* session, processor_context* context);
+
 void free_flowfile(flow_file_record*);
 
 uint8_t add_attribute(flow_file_record*, const char *key, void *value, size_t size);
 
 void update_attribute(flow_file_record*, const char *key, void *value, size_t size);
 
-uint8_t get_attribute(flow_file_record *ff, attribute *caller_attribute);
+uint8_t get_attribute(const flow_file_record *ff, attribute *caller_attribute);
 
 int get_attribute_qty(const flow_file_record* ff);
 
@@ -164,6 +174,12 @@ uint8_t remove_attribute(flow_file_record*, char *key);
  */
 
 int transmit_flowfile(flow_file_record *, nifi_instance *);
+
+int add_custom_processor(const char * name, processor_logic* logic);
+
+int delete_custom_processor(const char * name);
+
+int transfer_to_relationship(flow_file_record * ffr, processor_session * ps, const char * relationship);
 
 /****
  * ##################################################################

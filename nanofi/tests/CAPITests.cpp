@@ -54,6 +54,36 @@ void big_failure_counter(flow_file_record * fr) {
   free_flowfile(fr);
 }
 
+void custom_processor_logic(processor_session * ps, processor_context * ctx) {
+  flow_file_record * ffr = get_flowfile(ps, ctx);
+  REQUIRE(ffr != nullptr);
+  uint8_t * buffer = (uint8_t*)malloc(ffr->size* sizeof(uint8_t));
+  get_content(ffr, buffer, ffr->size);
+  REQUIRE(strncmp(reinterpret_cast<const char *>(buffer), test_file_content.c_str(), test_file_content.size()) == 0);
+
+  attribute attr;
+  attr.key = "filename";
+  attr.value_size = 0;
+  REQUIRE(get_attribute(ffr, &attr) == 0);
+  REQUIRE(attr.value_size > 0);
+
+  const char * custom_value = "custom value";
+
+  REQUIRE(add_attribute(ffr, "custom attribute", (void*)custom_value, strlen(custom_value)) == 0);
+
+  char * prop_value = get_property(ctx, "Some test propery");
+
+  REQUIRE(prop_value != nullptr);
+  REQUIRE(strncmp("test value", prop_value, strlen(prop_value)) == 0);
+
+  free(prop_value);
+
+  transfer_to_relationship(ffr, ps, SUCCESS_RELATIONSHIP);
+
+  free_flowfile(ffr);
+  free(buffer);
+}
+
 std::string create_testfile_for_getfile(const char* sourcedir, const std::string& filename = test_file_name) {
   std::fstream file;
   std::stringstream ss;
@@ -391,4 +421,34 @@ TEST_CASE("Test standalone processors with file input", "[testStandaloneWithFile
 
   free_flowfile(ffr);
   free_standalone_processor(extract_test);
+}
+
+TEST_CASE("Test custom processor", "[TestCutomProcessor]") {
+  TestController testController;
+
+  char src_format[] = "/tmp/gt.XXXXXX";
+  const char *sourcedir = testController.createTempDirectory(src_format);
+
+  create_testfile_for_getfile(sourcedir);
+
+  add_custom_processor("myproc", custom_processor_logic);
+
+  auto instance = create_instance_obj();
+  REQUIRE(instance != nullptr);
+  flow *test_flow = create_flow(instance, nullptr);
+  REQUIRE(test_flow != nullptr);
+
+  processor *get_proc = add_processor(test_flow, "GetFile");
+  REQUIRE(get_proc != nullptr);
+
+  REQUIRE(set_property(get_proc, "Input Directory", sourcedir) == 0);
+
+  processor *my_proc = add_processor(test_flow, "myproc");
+  REQUIRE(my_proc != nullptr);
+
+  REQUIRE(set_property(my_proc, "Some test propery", "test value") == 0);
+
+  flow_file_record *record = get_next_flow_file(instance, test_flow);
+
+  REQUIRE(record != nullptr);
 }

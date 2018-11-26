@@ -71,6 +71,8 @@ typedef struct standalone_processor standalone_processor;
 
 typedef struct processor_session processor_session;
 
+typedef struct processor_context processor_context;
+
 /****
  * ##################################################################
  *  FLOWFILE OPERATIONS
@@ -105,6 +107,8 @@ typedef struct {
 
   void *ffp;
 
+  uint8_t keepContent;
+
 } flow_file_record;
 
 typedef struct flow flow;
@@ -113,5 +117,7 @@ typedef enum FS {
   AS_IS,
   ROLLBACK
 } FailureStrategy;
+
+typedef void (processor_logic)(processor_session*, processor_context *);
 
 #endif /* LIBMINIFI_SRC_CAPI_CSTRUCTS_H_ */

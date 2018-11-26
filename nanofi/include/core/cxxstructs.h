@@ -38,4 +38,8 @@ struct processor_session : public core::ProcessSession {
   using core::ProcessSession::ProcessSession;
 };
 
+struct processor_context : public core::ProcessContext {
+  using core::ProcessContext::ProcessContext;
+};
+
 #endif //NIFI_MINIFI_CPP_CXXSTRUCTS_H

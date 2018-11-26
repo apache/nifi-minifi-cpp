@@ -46,6 +46,8 @@
 #include "core/reporting/SiteToSiteProvenanceReportingTask.h"
 #include "api/nanofi.h"
 
+static const std::string CallbackProcessorName = "CallbackProcessor";
+
 using failure_callback_type = std::function<void(flow_file_record*)>;
 using content_repo_sptr = std::shared_ptr<core::ContentRepository>;
 
@@ -70,7 +72,7 @@ namespace {
       auto path = claim->getContentFullPath();
       auto ffr = create_ff_object_na(path.c_str(), path.length(), ff->getSize());
       ffr->attributes = ff->getAttributesPtr();
-      ffr->ffp = ff.get();
+      ffr->ffp = static_cast<void*>(new std::shared_ptr<minifi::core::FlowFile>(ff));
       auto content_repo_ptr = static_cast<std::shared_ptr<minifi::core::ContentRepository>*>(ffr->crp);
       *content_repo_ptr = cr_ptr;
       user_callback(ffr);
@@ -92,7 +94,9 @@ class ExecutionPlan {
 
   explicit ExecutionPlan(std::shared_ptr<core::ContentRepository> content_repo, std::shared_ptr<core::Repository> flow_repo, std::shared_ptr<core::Repository> prov_repo);
 
-  std::shared_ptr<core::Processor> addCallback(void *, std::function<void(core::ProcessSession*)>);
+  std::shared_ptr<core::Processor> addSimpleCallback(void *, std::function<void(core::ProcessSession*)>);
+
+  std::shared_ptr<core::Processor> addCallback(void *obj, std::function<void(core::ProcessSession*, core::ProcessContext *)> fp);
 
   std::shared_ptr<core::Processor> addProcessor(const std::shared_ptr<core::Processor> &processor, const std::string &name,
                                                 core::Relationship relationship = core::Relationship("success", "description"),
@@ -143,6 +147,8 @@ class ExecutionPlan {
 
   static std::shared_ptr<core::Processor> createProcessor(const std::string &processor_name, const std::string &name);
 
+  static std::shared_ptr<core::Processor> createCallback(void *obj, std::function<void(core::ProcessSession*, core::ProcessContext *)> fp);
+
   static std::shared_ptr<ExecutionPlan> getPlan(const std::string& uuid) {
     auto it = proc_plan_map_.find(uuid);
     return it != proc_plan_map_.end() ? it->second : nullptr;
@@ -159,6 +165,10 @@ class ExecutionPlan {
   static size_t getProcWithPlanQty() {
     return proc_plan_map_.size();
   }
+
+  static bool addCustomProcessor(const char * name, processor_logic* logic);
+
+  static int deleteCustomProcessor(const char * name);
 
  protected:
   class FailureHandler {
@@ -224,6 +234,7 @@ class ExecutionPlan {
   std::shared_ptr<logging::Logger> logger_;
   std::shared_ptr<FailureHandler> failure_handler_;
   static std::unordered_map<std::string, std::shared_ptr<ExecutionPlan>> proc_plan_map_;
+  static std::map<std::string, processor_logic*> custom_processors;
 };
 
 #endif /* LIBMINIFI_CAPI_PLAN_H_ */
