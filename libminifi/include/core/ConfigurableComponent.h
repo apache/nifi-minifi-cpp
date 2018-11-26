@@ -54,12 +54,12 @@ class ConfigurableComponent {
    * @param value value passed in by reference
    * @return result of getting property.
    */
-  bool getProperty(const std::string name, std::string &value);
+  bool getProperty(const std::string name, std::string &value) const;
 
   /**
    * Provides a reference for the property.
    */
-  bool getProperty(const std::string &name, Property &prop);
+  bool getProperty(const std::string &name, Property &prop) const;
   /**
    * Sets the property using the provided name
    * @param property name
@@ -116,7 +116,7 @@ class ConfigurableComponent {
    * @param value
    * @return
    */
-  bool getDynamicProperty(const std::string name, std::string &value);
+  bool getDynamicProperty(const std::string name, std::string &value) const;
 
   /**
    * Sets the value of a new dynamic property.
@@ -153,14 +153,14 @@ class ConfigurableComponent {
    *
    * @return vector of property keys
    */
-  std::vector<std::string> getDynamicPropertyKeys();
+  std::vector<std::string> getDynamicPropertyKeys() const;
 
   /**
    * Returns a vector all properties
    *
    * @return map of property keys to Property instances.
    */
-  std::map<std::string, Property> getProperties();
+  std::map<std::string, Property> getProperties() const;
 
   virtual ~ConfigurableComponent();
 
@@ -176,7 +176,7 @@ class ConfigurableComponent {
    */
   virtual bool canEdit()= 0;
 
-  std::mutex configuration_mutex_;
+  mutable std::mutex configuration_mutex_;
 
   // Supported properties
   std::map<std::string, Property> properties_;

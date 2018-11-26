@@ -44,7 +44,7 @@ ConfigurableComponent::ConfigurableComponent(const ConfigurableComponent &&other
 ConfigurableComponent::~ConfigurableComponent() {
 }
 
-bool ConfigurableComponent::getProperty(const std::string &name, Property &prop) {
+bool ConfigurableComponent::getProperty(const std::string &name, Property &prop) const {
   std::lock_guard<std::mutex> lock(configuration_mutex_);
 
   auto &&it = properties_.find(name);
@@ -63,7 +63,7 @@ bool ConfigurableComponent::getProperty(const std::string &name, Property &prop)
  * @param value value passed in by reference
  * @return result of getting property.
  */
-bool ConfigurableComponent::getProperty(const std::string name, std::string &value) {
+bool ConfigurableComponent::getProperty(const std::string name, std::string &value) const {
   std::lock_guard<std::mutex> lock(configuration_mutex_);
 
   auto &&it = properties_.find(name);
@@ -168,7 +168,7 @@ bool ConfigurableComponent::setSupportedProperties(std::set<Property> properties
   return true;
 }
 
-bool ConfigurableComponent::getDynamicProperty(const std::string name, std::string &value) {
+bool ConfigurableComponent::getDynamicProperty(const std::string name, std::string &value) const {
   std::lock_guard<std::mutex> lock(configuration_mutex_);
 
   auto &&it = dynamic_properties_.find(name);
@@ -234,7 +234,7 @@ bool ConfigurableComponent::updateDynamicProperty(const std::string &name, const
   }
 }
 
-std::vector<std::string> ConfigurableComponent::getDynamicPropertyKeys() {
+std::vector<std::string> ConfigurableComponent::getDynamicPropertyKeys() const {
   std::lock_guard<std::mutex> lock(configuration_mutex_);
 
   std::vector<std::string> result;
@@ -246,7 +246,7 @@ std::vector<std::string> ConfigurableComponent::getDynamicPropertyKeys() {
   return result;
 }
 
-std::map<std::string, Property> ConfigurableComponent::getProperties() {
+std::map<std::string, Property> ConfigurableComponent::getProperties() const {
   std::lock_guard<std::mutex> lock(configuration_mutex_);
 
   std::map<std::string, Property> result;

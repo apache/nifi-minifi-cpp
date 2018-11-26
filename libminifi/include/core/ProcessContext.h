@@ -63,18 +63,18 @@ class ProcessContext : public controller::ControllerServiceLookup {
   virtual ~ProcessContext() {
   }
   // Get Processor associated with the Process Context
-  std::shared_ptr<ProcessorNode> getProcessorNode() {
+  std::shared_ptr<ProcessorNode> getProcessorNode() const {
     return processor_node_;
   }
-  bool getProperty(const std::string &name, std::string &value) {
+  bool getProperty(const std::string &name, std::string &value) const {
     return processor_node_->getProperty(name, value);
   }
   bool getProperty(const Property &property, std::string &value, const std::shared_ptr<FlowFile> &flow_file);
-  bool getDynamicProperty(const std::string &name, std::string &value) {
+  bool getDynamicProperty(const std::string &name, std::string &value) const {
     return processor_node_->getDynamicProperty(name, value);
   }
   bool getDynamicProperty(const Property &property, std::string &value, const std::shared_ptr<FlowFile> &flow_file);
-  std::vector<std::string> getDynamicPropertyKeys() {
+  std::vector<std::string> getDynamicPropertyKeys() const {
     return processor_node_->getDynamicPropertyKeys();
   }
   // Sets the property value using the property's string name
@@ -89,16 +89,16 @@ class ProcessContext : public controller::ControllerServiceLookup {
     return processor_node_->setProperty(prop, value);
   }
   // Whether the relationship is supported
-  bool isSupportedRelationship(Relationship relationship) {
+  bool isSupportedRelationship(Relationship relationship) const {
     return processor_node_->isSupportedRelationship(relationship);
   }
 
   // Check whether the relationship is auto terminated
-  bool isAutoTerminated(Relationship relationship) {
+  bool isAutoTerminated(Relationship relationship) const {
     return processor_node_->isAutoTerminated(relationship);
   }
   // Get ProcessContext Maximum Concurrent Tasks
-  uint8_t getMaxConcurrentTasks(void) {
+  uint8_t getMaxConcurrentTasks(void) const {
     return processor_node_->getMaxConcurrentTasks();
   }
   // Yield based on the yield period
@@ -114,11 +114,11 @@ class ProcessContext : public controller::ControllerServiceLookup {
    * Returns a reference to the content repository for the running instance.
    * @return content repository shared pointer.
    */
-  std::shared_ptr<core::ContentRepository> getContentRepository() {
+  std::shared_ptr<core::ContentRepository> getContentRepository() const {
     return content_repo_;
   }
 
-  std::shared_ptr<core::Repository> getFlowFileRepository() {
+  std::shared_ptr<core::Repository> getFlowFileRepository() const {
     return flow_repo_;
   }
 
