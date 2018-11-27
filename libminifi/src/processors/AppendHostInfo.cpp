@@ -67,35 +67,34 @@ void AppendHostInfo::initialize() {
   setSupportedRelationships(relationships);
 }
 
+void AppendHostInfo::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory) {
+  context->getProperty(HostAttribute.getName(), hostAttribute_);
+  context->getProperty(InterfaceName.getName(), iface_);
+  context->getProperty(IPAttribute.getName(), ipAttribute_);
+}
+
 void AppendHostInfo::onTrigger(core::ProcessContext *context, core::ProcessSession *session) {
   std::shared_ptr<core::FlowFile> flow = session->get();
   if (!flow)
     return;
 
   // Get Hostname
-
-  std::string hostAttribute = "";
-  context->getProperty(HostAttribute.getName(), hostAttribute);
-  flow->addAttribute(hostAttribute.c_str(), org::apache::nifi::minifi::io::Socket::getMyHostName());
+  flow->addAttribute(hostAttribute_.c_str(), org::apache::nifi::minifi::io::Socket::getMyHostName());
 
   // Get IP address for the specified interface
-  std::string iface;
-  context->getProperty(InterfaceName.getName(), iface);
   // Confirm the specified interface name exists on this device
 #ifndef WIN32
-  if (if_nametoindex(iface.c_str()) != 0) {
+  if (if_nametoindex(iface_.c_str()) != 0) {
     struct ifreq ifr;
     int fd = socket(AF_INET, SOCK_DGRAM, 0);
     // Type of address to retrieve - IPv4 IP address
     ifr.ifr_addr.sa_family = AF_INET;
     // Copy the interface name in the ifreq structure
-    strncpy(ifr.ifr_name, iface.c_str(), IFNAMSIZ - 1);
+    strncpy(ifr.ifr_name, iface_.c_str(), IFNAMSIZ - 1);
     ioctl(fd, SIOCGIFADDR, &ifr);
     close(fd);
 
-    std::string ipAttribute;
-    context->getProperty(IPAttribute.getName(), ipAttribute);
-    flow->addAttribute(ipAttribute.c_str(), inet_ntoa(((struct sockaddr_in *) &ifr.ifr_addr)->sin_addr));
+    flow->addAttribute(ipAttribute_.c_str(), inet_ntoa(((struct sockaddr_in *) &ifr.ifr_addr)->sin_addr));
   }
 #endif
 

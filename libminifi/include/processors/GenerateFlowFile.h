@@ -42,6 +42,10 @@ class GenerateFlowFile : public core::Processor {
       : Processor(name, uuid) {
     _data = NULL;
     _dataSize = 0;
+    _batchSize = 1;
+    _fileSize = 1024;
+    _uniqueFlowFile = true;
+    _textData = false;
   }
   // Destructor
   virtual ~GenerateFlowFile() {
@@ -78,9 +82,11 @@ class GenerateFlowFile : public core::Processor {
 
  public:
   // OnTrigger method, implemented by NiFi GenerateFlowFile
-  virtual void onTrigger(core::ProcessContext *context, core::ProcessSession *session);
+  void onTrigger(core::ProcessContext *context, core::ProcessSession *session) override;
   // Initialize, over write by NiFi GenerateFlowFile
-  virtual void initialize(void);
+  void initialize(void) override;
+
+  void onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory) override;
 
  protected:
 
@@ -89,6 +95,11 @@ class GenerateFlowFile : public core::Processor {
   char * _data;
   // Size of the generated data
   uint64_t _dataSize;
+  uint64_t _batchSize;
+  uint64_t _fileSize;
+  bool _uniqueFlowFile;
+  bool _textData;
+
 };
 
 REGISTER_RESOURCE(GenerateFlowFile);

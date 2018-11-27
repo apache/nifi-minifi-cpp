@@ -65,52 +65,49 @@ void GenerateFlowFile::initialize() {
   setSupportedRelationships(relationships);
 }
 
-void GenerateFlowFile::onTrigger(core::ProcessContext *context, core::ProcessSession *session) {
-  int64_t batchSize = 1;
-  bool uniqueFlowFile = true;
-  int64_t fileSize = 1024;
-  bool textData = false;
-
+void GenerateFlowFile::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory) {
   std::string value;
   if (context->getProperty(FileSize.getName(), value)) {
-    core::Property::StringToInt(value, fileSize);
+    core::Property::StringToInt(value, _fileSize);
   }
   if (context->getProperty(BatchSize.getName(), value)) {
-    core::Property::StringToInt(value, batchSize);
+    core::Property::StringToInt(value, _batchSize);
   }
   if (context->getProperty(DataFormat.getName(), value)) {
-    textData = (value == GenerateFlowFile::DATA_FORMAT_TEXT);
+    _textData = (value == GenerateFlowFile::DATA_FORMAT_TEXT);
   }
   if (context->getProperty(UniqueFlowFiles.getName(), value)) {
-    org::apache::nifi::minifi::utils::StringUtils::StringToBool(value, uniqueFlowFile);
+    org::apache::nifi::minifi::utils::StringUtils::StringToBool(value, _uniqueFlowFile);
   }
+}
 
-  if (uniqueFlowFile) {
+void GenerateFlowFile::onTrigger(core::ProcessContext *context, core::ProcessSession *session) {
+  if (_uniqueFlowFile) {
     char *data;
-    data = new char[fileSize];
+    data = new char[_fileSize];
     if (!data)
       return;
-    uint64_t dataSize = fileSize;
+    uint64_t dataSize = _fileSize;
     GenerateFlowFile::WriteCallback callback(data, dataSize);
     char *current = data;
-    if (textData) {
-      for (int i = 0; i < fileSize; i++) {
+    if (_textData) {
+      for (int i = 0; i < _fileSize; i++) {
         int randValue = random();
         data[i] = TEXT_CHARS[randValue % TEXT_LEN];
       }
     } else {
-      for (int i = 0; i < fileSize; i += sizeof(int)) {
+      for (int i = 0; i < _fileSize; i += sizeof(int)) {
         int randValue = random();
         *(reinterpret_cast<int*>(current)) = randValue;
         current += sizeof(int);
       }
     }
-    for (int i = 0; i < batchSize; i++) {
+    for (int i = 0; i < _batchSize; i++) {
       // For each batch
       std::shared_ptr<FlowFileRecord> flowFile = std::static_pointer_cast<FlowFileRecord>(session->create());
       if (!flowFile)
         return;
-      if (fileSize > 0)
+      if (_fileSize > 0)
         session->write(flowFile, &callback);
       session->transfer(flowFile, Success);
     }
@@ -118,16 +115,16 @@ void GenerateFlowFile::onTrigger(core::ProcessContext *context, core::ProcessSes
   } else {
     if (!_data) {
       // We have not created the data yet
-      _data = new char[fileSize];
-      _dataSize = fileSize;
+      _data = new char[_fileSize];
+      _dataSize = _fileSize;
       char *current = _data;
-      if (textData) {
-        for (int i = 0; i < fileSize; i++) {
+      if (_textData) {
+        for (int i = 0; i < _fileSize; i++) {
           int randValue = random();
           _data[i] = TEXT_CHARS[randValue % TEXT_LEN];
         }
       } else {
-        for (int i = 0; i < fileSize; i += sizeof(int)) {
+        for (int i = 0; i < _fileSize; i += sizeof(int)) {
           int randValue = random();
           *(reinterpret_cast<int*>(current)) = randValue;
           current += sizeof(int);
@@ -135,12 +132,12 @@ void GenerateFlowFile::onTrigger(core::ProcessContext *context, core::ProcessSes
       }
     }
     GenerateFlowFile::WriteCallback callback(_data, _dataSize);
-    for (int i = 0; i < batchSize; i++) {
+    for (int i = 0; i < _batchSize; i++) {
       // For each batch
       std::shared_ptr<FlowFileRecord> flowFile = std::static_pointer_cast<FlowFileRecord>(session->create());
       if (!flowFile)
         return;
-      if (fileSize > 0)
+      if (_fileSize > 0)
         session->write(flowFile, &callback);
       session->transfer(flowFile, Success);
     }

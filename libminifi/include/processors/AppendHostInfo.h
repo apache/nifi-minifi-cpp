@@ -60,15 +60,20 @@ class AppendHostInfo : public core::Processor {
 
  public:
   // OnTrigger method, implemented by NiFi AppendHostInfo
-  virtual void onTrigger(core::ProcessContext *context, core::ProcessSession *session);
+  void onTrigger(core::ProcessContext *context, core::ProcessSession *session) override;
   // Initialize, over write by NiFi AppendHostInfo
-  virtual void initialize(void);
+  void initialize(void) override;
+
+  void onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory) override;
 
  protected:
 
  private:
   // Logger
   std::shared_ptr<logging::Logger> logger_;
+  std::string hostAttribute_;
+  std::string ipAttribute_;
+  std::string iface_;
 };
 
 REGISTER_RESOURCE(AppendHostInfo);
