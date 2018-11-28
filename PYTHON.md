@@ -27,8 +27,8 @@ This readme provides a how-to guide on using the Python bindings for MiNiFi C++.
 
 ## Description
 
-Apache NiFi MiNiFi C++ can communicates using python bindings. These bindings connect
-to the C API that exists. In doing so they can utilize the building blocks within the CAPI.
+Apache NiFi MiNiFi C++ can communicate using python bindings. These bindings connect
+to the existing C API. In doing so, they can utilize the building blocks within the CAPI.
 
 The design is predicated upon a MiNiFi instance. There is a getFile example that shows
 the usage of this API. A processor can be created and then a flowfile will be output if one
