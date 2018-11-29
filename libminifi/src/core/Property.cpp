@@ -22,6 +22,7 @@ namespace apache {
 namespace nifi {
 namespace minifi {
 namespace core {
+/*
 
 std::string Property::getName() const {
   return name_;
@@ -105,6 +106,8 @@ std::vector<std::string> Property::getDependentProperties() const {
 std::vector<std::pair<std::string, std::string>> Property::getExclusiveOfProperties() const {
   return exclusive_of_properties_;
 }
+
+*/
 
 } /* namespace core */
 } /* namespace minifi */

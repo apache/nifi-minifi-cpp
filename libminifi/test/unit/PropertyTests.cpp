@@ -20,6 +20,7 @@
 #include "utils/StringUtils.h"
 #include "core/Property.h"
 #include "../TestBase.h"
+#include <cstdint>
 
 TEST_CASE("Test Boolean Conversion", "[testboolConversion]") {
   bool b;
@@ -107,3 +108,39 @@ TEST_CASE("Test Trimmer Left", "[testTrims]") {
   REQUIRE(test.c_str()[1] == ' ');
 }
 
+TEST_CASE("Test int proeprty", "[TestInt]") {
+  org::apache::nifi::minifi::core::IntProperty int_prop;
+
+  REQUIRE(int_prop.setValue("2") == true);
+  REQUIRE(int_prop.setValue("two") == false);
+
+  org::apache::nifi::minifi::core::Property p;
+  p = int_prop;
+
+  REQUIRE(p.setValue("two") == false);
+
+  org::apache::nifi::minifi::core::ChoiceProperty<std::string> choice_prop("prop name", "desc", "B", std::set<std::string>{"A", "B", "C"});
+
+  REQUIRE(choice_prop.setValue("C") == true);
+  REQUIRE(choice_prop.setValue("D") == false);  // Not available
+
+  p = choice_prop;
+
+  REQUIRE(p.setValue("e") == false);
+
+  org::apache::nifi::minifi::core::ChoiceProperty<uint64_t> uint_choice_prop("prop name", "desc", "2", std::set<uint64_t>{1, 2, 4, 8});
+
+  REQUIRE(uint_choice_prop.setValue("8") == true);
+  REQUIRE(uint_choice_prop.setValue("5") == false);  // Not available
+  REQUIRE(uint_choice_prop.setValue("-2") == false);  // Invalid as uint
+
+  p = uint_choice_prop;
+
+  REQUIRE(p.setValue("3") == false);
+
+  org::apache::nifi::minifi::core::RangeProperty<double> d_range_prop("prop", "desc", "1.5", std::make_pair(-1.2, 3.4));
+
+  REQUIRE(d_range_prop.setValue("-2") == false);  // Out or range
+  REQUIRE(d_range_prop.setValue("3.6") == false);  // Out or range
+  REQUIRE(d_range_prop.setValue("1.6") == true);
+}

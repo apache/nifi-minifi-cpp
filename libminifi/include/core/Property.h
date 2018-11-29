@@ -33,6 +33,8 @@
 #include <stdlib.h>
 #include <math.h>
 #include "utils/StringUtils.h"
+#include "PropertyUtil.h"
+#include "PropertyValidator.h"
 
 namespace org {
 namespace apache {
@@ -51,35 +53,62 @@ enum TimeUnit {
 
 class PropertyBuilder;
 
-class Property {
+template <typename Type>
+class BaseProperty {
 
  public:
   /*!
    * Create a new property
    */
-  Property(std::string name, std::string description, std::string value, bool is_required, std::string valid_regex, std::vector<std::string> dependent_properties,
-           std::vector<std::pair<std::string, std::string>> exclusive_of_properties)
-      : name_(std::move(name)),
-        description_(std::move(description)),
-        is_required_(is_required),
-        valid_regex_(std::move(valid_regex)),
-        dependent_properties_(std::move(dependent_properties)),
-        exclusive_of_properties_(std::move(exclusive_of_properties)),
-        is_collection_(false),
-        supports_el_(false) {
-    values_.push_back(std::move(value));
+  BaseProperty(std::string name, std::string description, std::string value, bool is_required, std::string valid_regex, std::vector<std::string> dependent_properties,
+                                          std::vector<std::pair<std::string, std::string>> exclusive_of_properties) {
+    static_assert( assert_false<Type>::value , "This constructor is only available for string Property");
   }
 
-  Property(const std::string name, const std::string description, std::string value)
+  BaseProperty(const std::string name, const std::string description, std::string value, bool is_required = false)
       : name_(name),
         description_(description),
-        is_required_(false),
+        is_required_(is_required),
         is_collection_(false),
-        supports_el_(false) {
+        supports_el_(false),
+        validator_ (getValidator<Type>()){
+    if(!value.empty() && !validator_->validate(value)) {
+      throw std::invalid_argument(value);
+    }
     values_.push_back(std::move(value));
   }
 
-  Property(const std::string name, const std::string description)
+  template<typename InnerType, typename std::enable_if<
+      std::is_same<Type, std::set<InnerType>>::value, Type>::type* = nullptr>
+  BaseProperty(const std::string name, const std::string description, std::string value, std::set<InnerType> valid_values, bool is_required = false)
+      : name_(name),
+        description_(description),
+        is_required_(is_required),
+        is_collection_(false),
+        supports_el_(false),
+        validator_ (getValidator(valid_values)) {
+    if(!value.empty() && !validator_->validate(value)) {
+      throw std::invalid_argument(value);
+    }
+    values_.push_back(std::move(value));
+  }
+
+  template<typename InnerType, typename std::enable_if<
+      std::is_same<Type, std::pair<InnerType, InnerType>>::value, Type>::type* = nullptr>
+  BaseProperty(const std::string name, const std::string description, std::string value, std::pair<InnerType, InnerType> valid_range, bool is_required = false)
+      : name_(name),
+        description_(description),
+        is_required_(is_required),
+        is_collection_(false),
+        supports_el_(false),
+        validator_ (getValidator(valid_range)) {
+    if(!value.empty() && !validator_->validate(value)) {
+      throw std::invalid_argument(value);
+    }
+    values_.push_back(std::move(value));
+  }
+
+  BaseProperty(const std::string name, const std::string description)
       : name_(name),
         description_(description),
         is_required_(false),
@@ -87,7 +116,7 @@ class Property {
         supports_el_(false) {
   }
 
-  Property(Property &&other)
+  BaseProperty(BaseProperty &&other)
       : name_(std::move(other.name_)),
         description_(std::move(other.description_)),
         is_required_(other.is_required_),
@@ -98,10 +127,11 @@ class Property {
         values_(std::move(other.values_)),
         display_name_(std::move(other.display_name_)),
         types_(std::move(other.types_)),
-        supports_el_(other.supports_el_) {
+        supports_el_(other.supports_el_),
+        validator_ (other.validator_) {
   }
 
-  Property(const Property &other)
+  BaseProperty(const BaseProperty &other)
       : name_(other.name_),
         description_(other.description_),
         is_required_(other.is_required_),
@@ -112,40 +142,114 @@ class Property {
         values_(other.values_),
         display_name_(other.display_name_),
         types_(other.types_),
-        supports_el_(other.supports_el_) {
+        supports_el_(other.supports_el_),
+        validator_ (other.validator_) {
   }
 
-  Property()
+  BaseProperty()
       : name_(""),
         description_(""),
         is_required_(false),
         is_collection_(false),
-        supports_el_(false) {
+        supports_el_(false),
+        validator_(getValidator<Type>()){
   }
 
-  virtual ~Property() = default;
+  virtual ~BaseProperty() = default;
 
-  std::string getName() const;
-  std::string getDisplayName() const;
-  std::vector<std::string> getAllowedTypes() const;
-  std::string getDescription() const;
-  std::string getValue() const;
-  bool getRequired() const;
-  bool supportsExpressionLangauge() const;
-  std::string getValidRegex() const;
-  std::vector<std::string> getDependentProperties() const;
-  std::vector<std::pair<std::string, std::string>> getExclusiveOfProperties() const;
-  std::vector<std::string> &getValues();
+  std::string getName() const {
+    return name_;
+  }
+  std::string getDisplayName() const {
+    return display_name_.empty() ? name_ : display_name_;
+  }
+  std::vector<std::string> getAllowedTypes() const {
+    return types_;
+  }
+  std::string getDescription() const {
+    return description_;
+  }
+  std::string getValue() const {
+    if (!values_.empty())
+      return values_.front();
+    else
+      return "";
+  }
 
-  void setValue(std::string value);
-  void setSupportsExpressionLanguage(bool supportEl);
+  bool getRequired() const {
+    return is_required_;
+  }
+
+  bool supportsExpressionLangauge() const {
+    return supports_el_;
+  }
+
+  std::string getValidRegex() const {
+    return valid_regex_;
+  }
+
+  std::vector<std::string> getDependentProperties() const {
+    return dependent_properties_;
+  }
+  std::vector<std::pair<std::string, std::string>> getExclusiveOfProperties() const {
+    return exclusive_of_properties_;
+  }
+
+  const std::vector<std::string> &getValues() const {
+    return values_;
+  }
+
+  bool setValue(std::string value) {
+    if(!validator_->validate(value)) {
+      return false;
+    }
+    if (!is_collection_) {
+      values_.clear();
+      values_.push_back(std::move(value));
+    } else {
+      values_.push_back(std::move(value));
+    }
+    return true;
+  }
+
+  void setSupportsExpressionLanguage(bool supportEl) {
+    supports_el_ = supportEl;
+  }
   /**
    * Add value to the collection of values.
    */
-  void addValue(std::string value);
-  const Property &operator=(const Property &other);
+  bool addValue(std::string value) {
+    if(!validator_->validate(value)) {
+      return false;
+    }
+    values_.push_back(std::move(value));
+    return true;
+  }
+
+  BaseProperty &operator=(const BaseProperty& other) = default;
+
+  template<typename OtherPropertyType, typename std::enable_if<
+      std::is_same<Type, std::string>::value && !std::is_same<Type, OtherPropertyType>::value, Type>::type* = nullptr>
+  const BaseProperty &operator=(const BaseProperty<OtherPropertyType> &other) {
+    name_ = other.name_;
+    display_name_ = other.display_name_;
+    types_ = other.types_;
+    values_ = other.values_;
+    description_ = other.description_;
+    is_collection_ = other.is_collection_;
+    is_required_ = other.is_required_;
+    valid_regex_ = other.valid_regex_;
+    dependent_properties_ = other.dependent_properties_;
+    exclusive_of_properties_ = other.exclusive_of_properties_;
+    supports_el_ = other.supports_el_;
+    validator_ = other.validator_;
+    return *this;
+  }
+
 // Compare
-  bool operator <(const Property & right) const;
+  bool operator <(const BaseProperty & right) const {
+    return name_ < right.name_;
+  }
 
 // Convert TimeUnit to MilliSecond
   template<typename T>
@@ -322,90 +426,22 @@ class Property {
       return false;
   }
 
-// Convert String to Integer
-  template<typename T>
-  static bool StringToInt(std::string input, T &output) {
-    if (input.size() == 0) {
-      return false;
-    }
-
-    const char *cvalue = input.c_str();
-    char *pEnd;
-    auto ival = std::strtoll(cvalue, &pEnd, 0);
-
-    if (pEnd[0] == '\0') {
-      output = ival;
-      return true;
-    }
-
-    while (*pEnd == ' ') {
-      // Skip the space
-      pEnd++;
-    }
-
-    char end0 = toupper(pEnd[0]);
-    if (end0 == 'B') {
-      output = ival;
-      return true;
-    } else if ((end0 == 'K') || (end0 == 'M') || (end0 == 'G') || (end0 == 'T') || (end0 == 'P')) {
-      if (pEnd[1] == '\0') {
-        unsigned long int multiplier = 1000;
-
-        if ((end0 != 'K')) {
-          multiplier *= 1000;
-          if (end0 != 'M') {
-            multiplier *= 1000;
-            if (end0 != 'G') {
-              multiplier *= 1000;
-              if (end0 != 'T') {
-                multiplier *= 1000;
-              }
-            }
-          }
-        }
-        output = ival * multiplier;
-        return true;
-
-      } else if ((pEnd[1] == 'b' || pEnd[1] == 'B') && (pEnd[2] == '\0')) {
-
-        unsigned long int multiplier = 1024;
-
-        if ((end0 != 'K')) {
-          multiplier *= 1024;
-          if (end0 != 'M') {
-            multiplier *= 1024;
-            if (end0 != 'G') {
-              multiplier *= 1024;
-              if (end0 != 'T') {
-                multiplier *= 1024;
-              }
-            }
-          }
-        }
-        output = ival * multiplier;
-        return true;
-      }
-    }
-
-    return false;
-  }
-
   static bool StringToInt(std::string input, int64_t &output) {
-    return StringToInt<int64_t>(input, output);
+    return core::StringToInt<int64_t>(input, output);
   }
 
 // Convert String to Integer
   static bool StringToInt(std::string input, uint64_t &output) {
-    return StringToInt<uint64_t>(input, output);
+    return core::StringToInt<uint64_t>(input, output);
   }
 
   static bool StringToInt(std::string input, int32_t &output) {
-    return StringToInt<int32_t>(input, output);
+    return core::StringToInt<int32_t>(input, output);
   }
 
 // Convert String to Integer
   static bool StringToInt(std::string input, uint32_t &output) {
-    return StringToInt<uint32_t>(input, output);
+    return core::StringToInt<uint32_t>(input, output);
   }
 
  protected:
@@ -423,10 +459,39 @@ class Property {
   // these types should be the canonical name.
   std::vector<std::string> types_;
   bool supports_el_;
+  std::shared_ptr<BaseValidator> validator_;
  private:
 
   friend class PropertyBuilder;
+  friend class BaseProperty<std::string>;
 };
+
+template<>
+inline BaseProperty<std::string>::BaseProperty(std::string name, std::string description, std::string value, bool is_required, std::string valid_regex, std::vector<std::string> dependent_properties,
+             std::vector<std::pair<std::string, std::string>> exclusive_of_properties)
+    : name_(std::move(name)),
+      description_(std::move(description)),
+      is_required_(is_required),
+      valid_regex_(std::move(valid_regex)),
+      dependent_properties_(std::move(dependent_properties)),
+      exclusive_of_properties_(std::move(exclusive_of_properties)),
+      is_collection_(false),
+      supports_el_(false),
+      validator_(getValidator<std::string>(valid_regex)){
+  values_.push_back(std::move(value));
+}
+
+using Property = BaseProperty<std::string>;
+using IntProperty = BaseProperty<int64_t>;
+using UnsignedProperty = BaseProperty<uint64_t>;
+using BoolProperty = BaseProperty<bool>;
+using DoubleProperty = BaseProperty<double>;
+
+template <typename T>
+using ChoiceProperty = BaseProperty<std::set<T>>;
+
+template <typename T>
+using RangeProperty = BaseProperty<std::pair<T, T>>;
 
 class PropertyBuilder : public std::enable_shared_from_this<PropertyBuilder> {
  public:
