@@ -36,8 +36,10 @@ namespace minifi {
 namespace processors {
 
 core::Property HashContent::HashAttribute("Hash Attribute", "Attribute to store checksum to", "Checksum");
-core::Property HashContent::HashAlgorithm("Hash Algorithm", "Name of the algorithm used to generate checksum", "MD5");
+core::Property HashContent::HashAlgorithm("Hash Algorithm", "Name of the algorithm used to generate checksum", "SHA256");
+core::Property HashContent::FailOnEmpty("Fail on empty", "Route to failure relationship in case of empty content", "false");
 core::Relationship HashContent::Success("success", "success operational on the flow record");
+core::Relationship HashContent::Failure("failure", "failure operational on the flow record");
 
 void HashContent::initialize() {
   //! Set the supported properties
@@ -48,6 +50,7 @@ void HashContent::initialize() {
   //! Set the supported relationships
   std::set<core::Relationship> relationships;
   relationships.insert(Success);
+  relationships.insert(Failure);
   setSupportedRelationships(relationships);
 }
 
@@ -55,7 +58,14 @@ void HashContent::onSchedule(core::ProcessContext *context, core::ProcessSession
   std::string value;
 
   attrKey_ = (context->getProperty(HashAttribute.getName(), value)) ? value : "Checksum";
-  algoName_ = (context->getProperty(HashAlgorithm.getName(), value)) ? value : "MD5";
+  algoName_ = (context->getProperty(HashAlgorithm.getName(), value)) ? value : "SHA256";
+
+  if (context->getProperty(HashAlgorithm.getName(), value)) {
+    bool bool_value;
+    failOnEmpty_ = utils::StringUtils::StringToBool(value, bool_value) && bool_value;  // Only true in case of valid true string
+  } else {
+    failOnEmpty_ = false;
+  }
 
   std::transform(algoName_.begin(), algoName_.end(), algoName_.begin(), ::toupper);
 
@@ -68,6 +78,10 @@ void HashContent::onTrigger(core::ProcessContext *, core::ProcessSession *sessio
 
   if (!flowFile) {
     return;
+  }
+
+  if (failOnEmpty_ && flowFile->getSize() == 0) {
+    session->transfer(flowFile, Failure);
   }
 
   ReadCallback cb(flowFile, *this);
