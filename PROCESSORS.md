@@ -148,13 +148,14 @@ default values, and whether a property supports the NiFi Expression Language.
 | - | - | - | - |
 | Hash Attribute | Checksum | | Name of the attribute the processor will use to add the checksum |
 | Hash Algorithm | MD5 | MD5, SHA1, SHA256 | Name of the algorithm used to calculate the checksum |
+| Fail on empty | false | false, true | Route flow files with empty content to failure relationship |
 
 ### Relationships
 
 | Name | Description |
 | - | - |
-| success | All FlowFiles are routed to this relationship. |
-
+| success | By default all flow files are routed to this relationship. |
+| failure | In case "Fail on empty" property is set to true, flow files with empty content are routed to this relationship. |
 
 ## ConvertHeartBeat
 

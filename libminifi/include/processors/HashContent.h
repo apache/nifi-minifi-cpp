@@ -153,15 +153,17 @@ class HashContent : public core::Processor {
   //! Supported Properties
   static core::Property HashAttribute;
   static core::Property HashAlgorithm;
+  static core::Property FailOnEmpty;
   //! Supported Relationships
   static core::Relationship Success;
+  static core::Relationship Failure;
 
-  void onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory) override;
+  void onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory);  // override
 
   //! OnTrigger method, implemented by NiFi HashContent
-  void onTrigger(core::ProcessContext *context, core::ProcessSession *session) override;
+  void onTrigger(core::ProcessContext *context, core::ProcessSession *session);  // override
   //! Initialize, over write by NiFi HashContent
-  void initialize(void) override;
+  void initialize(void);  // override
 
   class ReadCallback : public InputStreamCallback {
    public:
@@ -181,6 +183,7 @@ class HashContent : public core::Processor {
   std::shared_ptr<logging::Logger> logger_;
   std::string algoName_;
   std::string attrKey_;
+  bool failOnEmpty_;
 };
 
 REGISTER_RESOURCE(HashContent);
