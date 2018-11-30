@@ -376,12 +376,7 @@ int transmit_flowfile(flow_file_record *ff, nifi_instance *instance) {
 }
 
 flow * create_new_flow(nifi_instance * instance) {
-  auto minifi_instance_ref = static_cast<minifi::Instance*>(instance->instance_ptr);
-  flow * area = static_cast<flow*>(malloc(1*sizeof(flow)));
-  if(area == nullptr) {
-    return nullptr;
-  }
-  return new(area) flow(minifi_instance_ref->getContentRepository(), minifi_instance_ref->getNoOpRepository(), minifi_instance_ref->getNoOpRepository());
+  return create_flow(instance, "");
 }
 
 flow *create_flow(nifi_instance *instance, const char *first_processor) {
