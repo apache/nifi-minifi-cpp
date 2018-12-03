@@ -190,6 +190,132 @@ TEST_CASE("Test YAML Config Processing", "[YamlConfiguration]") {
 }
 }
 
+TEST_CASE("Test YAML v3 Invalid Type", "[YamlConfiguration3]") {
+  TestController test_controller;
+
+  std::shared_ptr<core::Repository> testProvRepo = core::createRepository("provenancerepository", true);
+  std::shared_ptr<core::Repository> testFlowFileRepo = core::createRepository("flowfilerepository", true);
+  std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::Configure>();
+  std::shared_ptr<minifi::io::StreamFactory> streamFactory = minifi::io::StreamFactory::getInstance(configuration);
+  std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
+  core::YamlConfiguration yamlConfig(testProvRepo, testFlowFileRepo, content_repo, streamFactory, configuration);
+
+  static const std::string TEST_CONFIG_YAML =
+      R"(
+MiNiFi Config Version: 3
+Flow Controller:
+  name: Simple TailFile To RPG
+  comment: ''
+Core Properties:
+  flow controller graceful shutdown period: 10 sec
+  flow service write delay interval: 500 ms
+  administrative yield duration: 30 sec
+  bored yield duration: 10 millis
+  max concurrent threads: 1
+  variable registry properties: ''
+FlowFile Repository:
+  partitions: 256
+  checkpoint interval: 2 mins
+  always sync: false
+  Swap:
+    threshold: 20000
+    in period: 5 sec
+    in threads: 1
+    out period: 5 sec
+    out threads: 4
+Content Repository:
+  content claim max appendable size: 10 MB
+  content claim max flow files: 100
+  always sync: false
+Provenance Repository:
+  provenance rollover time: 1 min
+  implementation: org.apache.nifi.provenance.MiNiFiPersistentProvenanceRepository
+Component Status Repository:
+  buffer size: 1440
+  snapshot frequency: 1 min
+Security Properties:
+  keystore: ''
+  keystore type: ''
+  keystore password: ''
+  key password: ''
+  truststore: ''
+  truststore type: ''
+  truststore password: ''
+  ssl protocol: ''
+  Sensitive Props:
+    key:
+    algorithm: PBEWITHMD5AND256BITAES-CBC-OPENSSL
+    provider: BC
+Processors:
+- id: b0c04f28-0158-1000-0000-000000000000
+  name: TailFile
+  class: org.apache.nifi.processors.standard.TailFile
+  max concurrent tasks: 1
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 1 sec
+  penalization period: 30 sec
+  yield period: 1 sec
+  run duration nanos: 0
+  auto-terminated relationships list: []
+  Properties:
+    File Location: Local
+    File to Tail: ./logs/minifi-app.log
+    Initial Start Position: Beginning of File
+    Rolling Filename Pattern:
+    tail-base-directory:
+    tail-mode: Single file
+    tailfile-lookup-frequency: 10 minutes
+    tailfile-maximum-age: 24 hours
+    tailfile-recursive-lookup: 'false'
+    tailfile-rolling-strategy: Fixed name
+Controller Services: []
+Process Groups: []
+Input Ports: []
+Output Ports: []
+Funnels: []
+Connections:
+- id: b0c0c3cc-0158-1000-0000-000000000000
+  name: TailFile/success/ac0e798c-0158-1000-0588-cda9b944e011
+  source id: b0c04f28-0158-1000-0000-000000000000
+  source relationship names:
+  - success
+  destination id: ac0e798c-0158-1000-0588-cda9b944e011
+  max work queue size: 10000
+  max work queue data size: 1 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: ''
+Remote Process Groups:
+- id: b0c09ff0-0158-1000-0000-000000000000
+  name: ''
+  url: http://localhost:8080/nifi
+  comment: ''
+  timeout: 30 sec
+  yield period: 10 sec
+  transport protocol: WRONG
+  proxy host: ''
+  proxy port: ''
+  proxy user: ''
+  proxy password: ''
+  local network interface: ''
+  Input Ports:
+  - id: aca664f8-0158-1000-a139-92485891d349
+    name: test2
+    comment: ''
+    max concurrent tasks: 1
+    use compression: false
+  - id: ac0e798c-0158-1000-0588-cda9b944e011
+    name: test
+    comment: ''
+    max concurrent tasks: 1
+    use compression: false
+  Output Ports: []
+NiFi Properties Overrides: {}
+      )";
+  std::istringstream configYamlStream(TEST_CONFIG_YAML);
+
+  REQUIRE_THROWS_AS(yamlConfig.getYamlRoot(configYamlStream), minifi::Exception);
+}
+
 TEST_CASE("Test YAML v3 Config Processing", "[YamlConfiguration3]") {
   TestController test_controller;
 

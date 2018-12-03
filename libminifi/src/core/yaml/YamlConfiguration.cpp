@@ -325,6 +325,12 @@ void YamlConfiguration::parseRemoteProcessGroupYaml(YAML::Node *rpgNode, core::P
                 }
               }
             }
+          } else if (transport_protocol == "RAW") {
+            group->setTransportProtocol(transport_protocol);
+          } else {
+            std::stringstream stream;
+            stream << "Invalid transport protocol " << transport_protocol;
+            throw minifi::Exception(ExceptionType::SITE2SITE_EXCEPTION, stream.str().c_str());
           }
         }
 
@@ -672,6 +678,7 @@ void YamlConfiguration::parsePortYaml(YAML::Node *portNode, core::ProcessGroup *
     if (!parent->getHttpProxyHost().empty())
       port->setHTTPProxy(parent->getHTTPProxy());
   }
+  // else defaults to RAW
 
   // handle port properties
   YAML::Node nodeVal = portNode->as<YAML::Node>();

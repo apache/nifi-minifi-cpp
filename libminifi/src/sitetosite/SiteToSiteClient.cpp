@@ -298,7 +298,7 @@ bool SiteToSiteClient::confirm(std::string transactionID) {
       logger_->log_debug("Site2Site transaction %s peer indicate bad checksum", transactionID);
       return false;
     } else {
-      logger_->log_debug("Site2Site transaction %s peer unknown respond code %d", transactionID, code);
+      logger_->log_debug("Site2Site transaction %s peer unknown response code %d", transactionID, code);
       return false;
     }
   } else {
