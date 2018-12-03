@@ -476,6 +476,7 @@ char * get_property(const processor_context *  context, const char * name) {
 int free_flow(flow *flow) {
   if (flow == nullptr)
     return -1;
+  flow->~flow();
   free(flow);
   return 0;
 }
