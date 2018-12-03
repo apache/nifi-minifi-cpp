@@ -120,13 +120,6 @@ void RemoteProcessorGroupPort::initialize() {
   relationships.insert(relation);
   setSupportedRelationships(relationships);
 
-  client_type_ = sitetosite::RAW;
-  std::string http_enabled_str;
-  if (configure_->get(Configure::nifi_remote_input_http, http_enabled_str)) {
-    if (utils::StringUtils::StringToBool(http_enabled_str, http_enabled_)) {
-      client_type_ = sitetosite::HTTP;
-    }
-  }
   logger_->log_trace("Finished initialization");
 }
 
@@ -134,6 +127,15 @@ void RemoteProcessorGroupPort::onSchedule(const std::shared_ptr<core::ProcessCon
   std::string value;
   if (context->getProperty(portUUID.getName(), value) && !value.empty()) {
     protocol_uuid_ = value;
+  }
+
+  std::string http_enabled_str;
+  if (configure_->get(Configure::nifi_remote_input_http, http_enabled_str)) {
+    if (utils::StringUtils::StringToBool(http_enabled_str, http_enabled_)) {
+      if (client_type_ == sitetosite::CLIENT_TYPE::RAW) {
+        logger_->log_debug("Remote Input HTTP Enabled, but raw has been suggested for %s", protocol_uuid_);
+      }
+    }
   }
 
   std::string context_name;

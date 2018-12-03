@@ -20,6 +20,7 @@
 
 #include "core/ProcessorConfig.h"
 #include "yaml-cpp/yaml.h"
+#include "Exception.h"
 #include "core/FlowConfiguration.h"
 #include "sitetosite/SiteToSite.h"
 #include <string>

@@ -70,6 +70,7 @@ Remote Processing Groups:
       url: http://localhost:8099/nifi
       timeout: 30 secs
       yield period: 1 sec
+      transport protocol: HTTP
       Input Ports:
           - id: 471deef6-2a6e-4a7d-912a-81cc17e3a204
             name: From Node A

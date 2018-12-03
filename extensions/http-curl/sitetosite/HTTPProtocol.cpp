@@ -117,6 +117,7 @@ int HttpSiteToSiteClient::readResponse(const std::shared_ptr<Transaction> &trans
         code = CONFIRM_TRANSACTION;
         message = std::string(client->getResponseBody().data(), client->getResponseBody().size());
       } else {
+        logger_->log_debug("Received response code %d", client->getResponseCode());
         code = UNRECOGNIZED_RESPONSE_CODE;
       }
       return 1;
