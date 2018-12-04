@@ -97,7 +97,7 @@ std::string create_testfile_for_getfile(const char* sourcedir, const std::string
 TEST_CASE("Test Creation of instance, one processor", "[createInstanceAndFlow]") {
   auto instance = create_instance_obj();
   REQUIRE(instance != nullptr);
-  flow *test_flow = create_flow(instance, nullptr);
+  flow *test_flow = create_new_flow(instance);
   REQUIRE(test_flow != nullptr);
   processor *test_proc = add_processor(test_flow, "GenerateFlowFile");
   REQUIRE(test_proc != nullptr);
@@ -108,7 +108,7 @@ TEST_CASE("Test Creation of instance, one processor", "[createInstanceAndFlow]")
 TEST_CASE("Invalid processor returns null", "[addInvalidProcessor]") {
   auto instance = create_instance_obj();
   REQUIRE(instance != nullptr);
-  flow *test_flow = create_flow(instance, nullptr);
+  flow *test_flow = create_new_flow(instance);
   processor *test_proc = add_processor(test_flow, "NeverExisted");
   REQUIRE(test_proc == nullptr);
   processor *no_proc = add_processor(test_flow, "");
@@ -120,7 +120,7 @@ TEST_CASE("Invalid processor returns null", "[addInvalidProcessor]") {
 TEST_CASE("Set valid and invalid properties", "[setProcesssorProperties]") {
   auto instance = create_instance_obj();
   REQUIRE(instance != nullptr);
-  flow *test_flow = create_flow(instance, nullptr);
+  flow *test_flow = create_new_flow(instance);
   REQUIRE(test_flow != nullptr);
   processor *test_proc = add_processor(test_flow, "GenerateFlowFile");
   REQUIRE(test_proc != nullptr);
@@ -144,7 +144,7 @@ TEST_CASE("get file and put file", "[getAndPutFile]") {
   const char *putfiledir = testController.createTempDirectory(put_format);
   auto instance = create_instance_obj();
   REQUIRE(instance != nullptr);
-  flow *test_flow = create_flow(instance, nullptr);
+  flow *test_flow = create_new_flow(instance);
   REQUIRE(test_flow != nullptr);
   processor *get_proc = add_processor(test_flow, "GetFile");
   REQUIRE(get_proc != nullptr);
@@ -194,7 +194,7 @@ TEST_CASE("Test manipulation of attributes", "[testAttributes]") {
 
   auto instance = create_instance_obj();
   REQUIRE(instance != nullptr);
-  flow *test_flow = create_flow(instance, nullptr);
+  flow *test_flow = create_new_flow(instance);
   REQUIRE(test_flow != nullptr);
 
   processor *get_proc = add_processor(test_flow, "GetFile");
@@ -267,7 +267,7 @@ TEST_CASE("Test error handling callback", "[errorHandling]") {
 
   auto instance = create_instance_obj();
   REQUIRE(instance != nullptr);
-  flow *test_flow = create_flow(instance, nullptr);
+  flow *test_flow = create_new_flow(instance);
   REQUIRE(test_flow != nullptr);
 
   // Failure strategy cannot be set before a valid callback is added
@@ -364,7 +364,7 @@ TEST_CASE("Test interaction of flow and standlone processors", "[testStandaloneW
 
   auto instance = create_instance_obj();
   REQUIRE(instance != nullptr);
-  flow *test_flow = create_flow(instance, nullptr);
+  flow *test_flow = create_new_flow(instance);
   REQUIRE(test_flow != nullptr);
 
   processor *get_proc = add_processor(test_flow, "GetFile");
@@ -435,7 +435,7 @@ TEST_CASE("Test custom processor", "[TestCutomProcessor]") {
 
   auto instance = create_instance_obj();
   REQUIRE(instance != nullptr);
-  flow *test_flow = create_flow(instance, nullptr);
+  flow *test_flow = create_new_flow(instance);
   REQUIRE(test_flow != nullptr);
 
   processor *get_proc = add_processor(test_flow, "GetFile");

@@ -96,7 +96,6 @@ nifi_instance *create_instance(const char *url, nifi_port *port) {
 }
 
 standalone_processor *create_processor(const char *name) {
-  static int proc_counter = 0;
   auto ptr = ExecutionPlan::createProcessor(name, name);
   if (!ptr) {
     return nullptr;
@@ -107,8 +106,7 @@ standalone_processor *create_processor(const char *name) {
     port.port_id = portnum;
     standalone_instance = create_instance("internal_standalone", &port);
   }
-  std::string flow_name = std::to_string(proc_counter++);
-  auto flow = create_flow(standalone_instance, flow_name.c_str());
+  auto flow = create_new_flow(standalone_instance);
   std::shared_ptr<ExecutionPlan> plan(flow);
   plan->addProcessor(ptr, name);
   ExecutionPlan::addProcessorWithPlan(ptr->getUUIDStr(), plan);
@@ -376,10 +374,6 @@ int transmit_flowfile(flow_file_record *ff, nifi_instance *instance) {
 }
 
 flow * create_new_flow(nifi_instance * instance) {
-  return create_flow(instance, "");
-}
-
-flow *create_flow(nifi_instance *instance, const char *first_processor) {
   if (nullptr == instance || nullptr == instance->instance_ptr) {
     return nullptr;
   }
@@ -388,9 +382,15 @@ flow *create_flow(nifi_instance *instance, const char *first_processor) {
   if(area == nullptr) {
     return nullptr;
   }
-  flow *new_flow = new(area) flow(minifi_instance_ref->getContentRepository(), minifi_instance_ref->getNoOpRepository(), minifi_instance_ref->getNoOpRepository());
 
-  if (first_processor != nullptr && strlen(first_processor) > 0) {
+  flow *new_flow = new(area) flow(minifi_instance_ref->getContentRepository(), minifi_instance_ref->getNoOpRepository(), minifi_instance_ref->getNoOpRepository());
+  return new_flow;
+}
+
+flow *create_flow(nifi_instance *instance, const char *first_processor) {
+  auto new_flow = create_new_flow(instance);
+
+  if(new_flow != nullptr && first_processor != nullptr && strlen(first_processor) > 0) {
     // automatically adds it with success
     new_flow->addProcessor(first_processor, first_processor);
   }
@@ -410,7 +410,7 @@ processor *add_python_processor(flow *flow, void (*ontrigger_callback)(processor
 
 flow * create_getfile(nifi_instance * instance, flow * parent_flow, GetFileConfig * c) {
   static const std::string first_processor = "GetFile";
-  flow *new_flow = parent_flow == nullptr ? create_flow(instance, nullptr) : parent_flow;
+  flow *new_flow = parent_flow == nullptr ? create_new_flow(instance) : parent_flow;
 
   // automatically adds it with success
   auto getFile = new_flow->addProcessor(first_processor, first_processor);
