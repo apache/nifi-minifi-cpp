@@ -704,7 +704,7 @@ void ProcessSession::commit() {
           if (!process_context_->getProcessorNode()->isAutoTerminated(relationship)) {
             // Not autoterminate, we should have the connect
             std::string message = "Connect empty for non auto terminated relationship " + relationship.getName();
-            throw Exception(PROCESS_SESSION_EXCEPTION, message.c_str());
+            throw Exception(PROCESS_SESSION_EXCEPTION, message);
           } else {
             // Autoterminated
             remove(record);
@@ -748,7 +748,7 @@ void ProcessSession::commit() {
           if (!process_context_->getProcessorNode()->isAutoTerminated(relationship)) {
             // Not autoterminate, we should have the connect
             std::string message = "Connect empty for non auto terminated relationship " + relationship.getName();
-            throw Exception(PROCESS_SESSION_EXCEPTION, message.c_str());
+            throw Exception(PROCESS_SESSION_EXCEPTION, message);
           } else {
             logger_->log_debug("added flow file is auto terminated");
             // Auto-terminated

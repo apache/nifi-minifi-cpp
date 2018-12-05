@@ -60,16 +60,17 @@ class Exception : public std::exception {
  public:
   // Constructor
   /*!
-   * Create a new flow record
+   * Create a new exception
    */
-  Exception(ExceptionType type, const char *errorMsg)
+  Exception(ExceptionType type, std::string errorMsg)
       : _type(type),
-        _errorMsg(errorMsg) {
+        _errorMsg(std::move(errorMsg)) {
   }
+
   // Destructor
-  virtual ~Exception() throw () {
+  virtual ~Exception() noexcept {
   }
-  virtual const char * what() const throw () {
+  virtual const char * what() const noexcept {
 
     _whatStr = ExceptionTypeToString(_type);
 
