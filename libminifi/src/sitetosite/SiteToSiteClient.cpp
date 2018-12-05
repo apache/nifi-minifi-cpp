@@ -209,14 +209,10 @@ bool SiteToSiteClient::transferFlowFiles(const std::shared_ptr<core::ProcessCont
     }  // while true
 
     if (!confirm(transactionID)) {
-      std::stringstream ss;
-      ss << "Confirm Failed for " << transactionID;
-      throw Exception(SITE2SITE_EXCEPTION, ss.str().c_str());
+      throw Exception(SITE2SITE_EXCEPTION, "Confirm Failed for " + transactionID);
     }
     if (!complete(transactionID)) {
-      std::stringstream ss;
-      ss << "Complete Failed for " << transactionID;
-      throw Exception(SITE2SITE_EXCEPTION, ss.str().c_str());
+      throw Exception(SITE2SITE_EXCEPTION, "Complete Failed for " + transactionID);
     }
     logger_->log_debug("Site2Site transaction %s successfully send flow record %d, content bytes %llu", transactionID, transaction->total_transfers_, transaction->_bytes);
   } catch (std::exception &exception) {
@@ -727,7 +723,7 @@ bool SiteToSiteClient::receiveFlowFiles(const std::shared_ptr<core::ProcessConte
         if (flowFile->getSize() != packet._size) {
           std::stringstream message;
           message << "Receive size not correct, expected to send " << flowFile->getSize() << " bytes, but actually sent " << packet._size;
-          throw Exception(SITE2SITE_EXCEPTION, message.str().c_str());
+          throw Exception(SITE2SITE_EXCEPTION, message.str());
         } else {
           logger_->log_debug("received %llu with expected %llu", flowFile->getSize(), packet._size);
         }
@@ -749,7 +745,7 @@ bool SiteToSiteClient::receiveFlowFiles(const std::shared_ptr<core::ProcessConte
     if (!complete(transactionID)) {
       std::stringstream transaction_str;
       transaction_str << "Complete Transaction " << transactionID << " Failed";
-      throw Exception(SITE2SITE_EXCEPTION, transaction_str.str().c_str());
+      throw Exception(SITE2SITE_EXCEPTION, transaction_str.str());
     }
     logging::LOG_INFO(logger_) << "Site to Site transaction " << transactionID << " received flow record " << transfers
                                << ", with content size " << bytes << " bytes";

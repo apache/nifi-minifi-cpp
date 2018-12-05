@@ -50,9 +50,8 @@ class PeersEntity {
           ss << "Failed to parse archive lens stack from JSON string with reason: "
              << rapidjson::GetParseError_En(ok.Code())
              << " at offset " << ok.Offset();
-          std::string exception_msg = ss.str();
   
-          throw Exception(ExceptionType::GENERAL_EXCEPTION, exception_msg.c_str());
+          throw Exception(ExceptionType::GENERAL_EXCEPTION, ss.str());
       }
 
       if (root.HasMember("peers") && root["peers"].IsArray() && root["peers"].Size() > 0) {

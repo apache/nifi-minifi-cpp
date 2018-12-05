@@ -289,7 +289,7 @@ void HttpSiteToSiteClient::closeTransaction(const std::string &transactionID) {
   if (client->getResponseCode() == 400) {
     std::stringstream message;
     message << "Received " << client->getResponseCode() << " from " << uri.str();
-    throw Exception(SITE2SITE_EXCEPTION, message.str().c_str());
+    throw Exception(SITE2SITE_EXCEPTION, message.str());
   }
 
   transaction->closed_ = true;
