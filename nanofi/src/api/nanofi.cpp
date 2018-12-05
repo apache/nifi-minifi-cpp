@@ -290,7 +290,7 @@ uint8_t get_attribute(const flow_file_record * ff, attribute * caller_attribute)
   return -1;
 }
 
-int get_attribute_qty(const flow_file_record* ff) {
+int get_attribute_quantity(const flow_file_record *ff) {
   if (ff == nullptr) {
     return 0;
   }

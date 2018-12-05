@@ -45,7 +45,7 @@ static int failure_count = 0;
 
 void failure_counter(flow_file_record * fr) {
   failure_count++;
-  REQUIRE(get_attribute_qty(fr) > 0);
+  REQUIRE(get_attribute_quantity(fr) > 0);
   free_flowfile(fr);
 }
 
@@ -231,7 +231,7 @@ TEST_CASE("Test manipulation of attributes", "[testAttributes]") {
   // Update overwrites values
   update_attribute(record, test_attr.key, (void*) new_testattr_value, strlen(new_testattr_value));  // NOLINT
 
-  int attr_size = get_attribute_qty(record);
+  int attr_size = get_attribute_quantity(record);
   REQUIRE(attr_size > 0);
 
   attribute_set attr_set;
@@ -319,7 +319,7 @@ TEST_CASE("Test standalone processors", "[testStandalone]") {
   flow_file_record* ffr = invoke(getfile_proc);
 
   REQUIRE(ffr != nullptr);
-  REQUIRE(get_attribute_qty(ffr) > 0);
+  REQUIRE(get_attribute_quantity(ffr) > 0);
 
   standalone_processor* extract_test = create_processor("ExtractText");
   REQUIRE(extract_test != nullptr);
@@ -331,7 +331,7 @@ TEST_CASE("Test standalone processors", "[testStandalone]") {
 
   // Verify the transfer of attributes
   REQUIRE(ffr2 != nullptr);
-  REQUIRE(get_attribute_qty(ffr2) > 0);
+  REQUIRE(get_attribute_quantity(ffr2) > 0);
 
   char filename_key[] = "filename";
   attribute attr;

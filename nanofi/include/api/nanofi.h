@@ -42,13 +42,13 @@ extern "C" {
 
 /**
  * Enables logging (disabled by default)
- */
+ **/
 void enable_logging();
 
 /**
  * Sets terminate callback. The callback is executed upon termination (undhandled exception in C++ backend)
  * @param terminate_callback the callback to execute
- */
+ **/
 void set_terminate_callback(void (*terminate_callback)());
 
 /****
@@ -62,13 +62,13 @@ void set_terminate_callback(void (*terminate_callback)());
  * @param url remote URL the instance connects to
  * @param port remote port the instance connects to
  * @return pointer to the new instance
- */
+ **/
 nifi_instance *create_instance(const char *url, nifi_port *port);
 
 /**
  * Initialize remote connection of instance for transfers
  * @param instance
- */
+ **/
 void initialize_instance(nifi_instance * instance);
 
 /**
@@ -76,7 +76,7 @@ void initialize_instance(nifi_instance * instance);
  * @attention Any action on flows that belong to the freed instance are undefined after this is done!
  * It's recommended to free all flows before freeing the instance.
  * @param instance instance to be freed
- */
+ **/
 void free_instance(nifi_instance * instance);
 
 /****
@@ -116,21 +116,19 @@ DEPRECATED flow *create_flow(nifi_instance * instance, const char * first_proces
 /**
  * Add a getfile processor to "parent" flow.
  * Creates new flow in instance in case "parent" is nullptr
- * @deprecated as getfile processor can be added using "add_processor" function,
- * properties can be set using "set_property".
  * @param instance the instance the flow belongs to
  * @param parent the flow to be extended with a new getfile processor
  * @param c configuration of the new processor
  * @return parent in case it wasn't null, otherwise a pointer to a new flow
  */
-DEPRECATED flow *create_getfile(nifi_instance *instance, flow *parent, GetFileConfig *c);
+flow *create_getfile(nifi_instance *instance, flow *parent, GetFileConfig *c);
 
 /**
  * Extend a flow with a new processor
  * @param flow the flow to be extended with the new processor
  * @param name name of the new processor
  * @return pointer to the new processor or nullptr in case it cannot be instantiated (wrong name?)
- */
+ **/
 processor *add_processor(flow * flow, const char * name);
 
 processor *add_python_processor(flow *, void (*ontrigger_callback)(processor_session *session));
@@ -151,8 +149,8 @@ void free_standalone_processor(standalone_processor* processor);
 
 /**
  * Register your callback to received flow files that the flow failed to process
- * The flow file ownership is transferred to the caller!
- * The first callback should be registered before the flow is used. Can be changed later during runtime.
+ * @attention The flow file ownership is transferred to the callback!
+ * @attention The first callback should be registered before the flow is used. Can be changed later during runtime.
  * @param flow flow the callback belongs to
  * @param onerror_callback callback to execute in case of failure
  * @return 0 in case of success, -1 otherwise (flow is already in use)
@@ -260,7 +258,7 @@ flow_file_record *invoke_file(standalone_processor* proc, const char* path);
  * @param size specifies the size of the buffer
  * @return a flow file record or nullptr in case no flowfile was generated
  **/
-flow_file_record *invoke_chunck(standalone_processor* proc, uint8_t* buf, uint64_t size);
+flow_file_record *invoke_chunk(standalone_processor *proc, uint8_t *buf, uint64_t size);
 
 int transfer(processor_session* session, flow *flow, const char *rel);
 
@@ -321,7 +319,7 @@ uint8_t get_attribute(const flow_file_record *ff, attribute *caller_attribute);
  * @param ff flow file
  * @return the number of attributes
  **/
-int get_attribute_qty(const flow_file_record* ff);
+int get_attribute_quantity(const flow_file_record *ff);
 
 
 /**
