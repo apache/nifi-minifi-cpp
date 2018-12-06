@@ -133,7 +133,7 @@ void RemoteProcessorGroupPort::onSchedule(const std::shared_ptr<core::ProcessCon
   if (configure_->get(Configure::nifi_remote_input_http, http_enabled_str)) {
     if (utils::StringUtils::StringToBool(http_enabled_str, http_enabled_)) {
       if (client_type_ == sitetosite::CLIENT_TYPE::RAW) {
-        logger_->log_debug("Remote Input HTTP Enabled, but raw has been suggested for %s", protocol_uuid_);
+        logger_->log_trace("Remote Input HTTP Enabled, but raw has been suggested for %s", protocol_uuid_.to_string());
       }
     }
   }
