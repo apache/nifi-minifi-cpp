@@ -295,7 +295,7 @@ class BinFiles : public core::Processor {
   int maxBinCount_;
 };
 
-REGISTER_RESOURCE(BinFiles);
+REGISTER_RESOURCE(BinFiles, "Bins flow files into buckets based on the number of entries or size of entries");
 
 } /* namespace processors */
 } /* namespace minifi */

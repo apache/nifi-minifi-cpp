@@ -123,7 +123,7 @@ class LogAttribute : public core::Processor {
   std::shared_ptr<logging::Logger> logger_;
 };
 
-REGISTER_RESOURCE(LogAttribute);
+REGISTER_RESOURCE(LogAttribute, "Logs attributes of flow files in the MiNiFi application log.");
 
 } /* namespace processors */
 } /* namespace minifi */

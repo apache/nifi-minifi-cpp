@@ -136,7 +136,7 @@ class LinuxPowerManagerService : public ThreadManagementService {
   std::shared_ptr<logging::Logger> logger_;
 };
 
-REGISTER_RESOURCE(LinuxPowerManagerService);
+REGISTER_RESOURCE(LinuxPowerManagerService, "Linux power management service that enables control of power usage in the agent through Linux power management information");
 
 } /* namespace controllers */
 } /* namespace minifi */

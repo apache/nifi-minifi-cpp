@@ -69,7 +69,7 @@ class AgentPrinter : public RESTProtocol, public HeartBeatReporter {
   std::shared_ptr<logging::Logger> logger_;
 };
 
-REGISTER_RESOURCE(AgentPrinter);
+REGISTER_RESOURCE(AgentPrinter, "Encapsulates printing agent information.");
 
 } /* namesapce c2 */
 } /* namespace minifi */

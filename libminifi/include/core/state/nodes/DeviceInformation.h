@@ -473,7 +473,7 @@ class DeviceInfoNode : public DeviceInformation {
   std::string device_id_;
 };
 
-REGISTER_RESOURCE(DeviceInfoNode);
+REGISTER_RESOURCE(DeviceInfoNode, "Node part of an AST that defines device characteristics to the C2 protocol");
 
 } /* namespace metrics */
 } /* namespace state */

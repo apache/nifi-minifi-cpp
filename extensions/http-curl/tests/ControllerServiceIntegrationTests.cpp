@@ -41,8 +41,8 @@
 #include "unit/MockClasses.h"
 #include "unit/ProvenanceTestHelper.h"
 
-REGISTER_RESOURCE(MockControllerService);
-REGISTER_RESOURCE(MockProcessor);
+REGISTER_RESOURCE(MockControllerService, "");
+REGISTER_RESOURCE(MockProcessor, "");
 
 std::shared_ptr<core::controller::StandardControllerServiceNode> newCsNode(std::shared_ptr<core::controller::ControllerServiceProvider> provider, const std::string id) {
   std::shared_ptr<core::controller::ControllerService> service = std::make_shared<MockControllerService>();

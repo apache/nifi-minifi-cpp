@@ -35,6 +35,7 @@ class PutSQL : public core::Processor {
  public:
   explicit PutSQL(const std::string &name, utils::Identifier uuid = utils::Identifier())
       : Processor(name, uuid),
+        batch_size_(100),
         logger_(logging::LoggerFactory<PutSQL>::getLogger()) {
   }
 
@@ -74,7 +75,9 @@ class PutSQL : public core::Processor {
   std::string sql_;
 };
 
-REGISTER_RESOURCE(PutSQL); // NOLINT
+REGISTER_RESOURCE(PutSQL, "Executes a SQL UPDATE or INSERT command. The content of an incoming FlowFile is expected to be the SQL command to execute. "
+    "The SQL command may use the ? character to bind parameters. In this case, the parameters to use must exist as FlowFile attributes with the naming "
+    "convention sql.args.N.type and sql.args.N.value, where N is a positive integer. The content of the FlowFile is expected to be in UTF-8 format."); // NOLINT
 
 } /* namespace processors */
 } /* namespace minifi */

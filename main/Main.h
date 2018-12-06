@@ -24,8 +24,9 @@
 #else
 #define FILE_SEPARATOR "/"
 #endif
-
+#ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
+#endif
 //! Main thread sleep interval 1 second
 #define SLEEP_INTERVAL 1
 //! Main thread stop wait time

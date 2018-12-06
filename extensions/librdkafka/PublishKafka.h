@@ -62,6 +62,7 @@ public:
       core::Processor(name, uuid), logger_(logging::LoggerFactory<PublishKafka>::getLogger()) {
     conf_ = nullptr;
     rk_ = nullptr;
+    max_seg_size_  = -1;
     topic_conf_ = nullptr;
     rkt_ = nullptr;
   }
@@ -202,7 +203,8 @@ private:
   std::regex attributeNameRegex;
 };
 
-REGISTER_RESOURCE (PublishKafka);
+REGISTER_RESOURCE (PublishKafka, "This Processor puts the contents of a FlowFile to a Topic in Apache Kafka. The content of a FlowFile becomes the contents of a Kafka message. "
+    "This message is optionally assigned a key by using the <Kafka Key> Property.");
 
 } /* namespace processors */
 } /* namespace minifi */
