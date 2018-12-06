@@ -362,7 +362,7 @@ class TestProcessorNoContent : public minifi::core::Processor {
   }
 };
 
-REGISTER_RESOURCE(TestProcessorNoContent);
+REGISTER_RESOURCE(TestProcessorNoContent, "test resource");
 
 TEST_CASE("TestEmptyContent", "[emptyContent]") {
   TestController testController;

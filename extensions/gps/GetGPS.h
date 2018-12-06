@@ -82,6 +82,9 @@ private:
   std::shared_ptr<logging::Logger> logger_;
 };
 
+REGISTER_RESOURCE(GetGPS, "Obtains GPS coordinates from the GPSDHost and port.");
+
+
 } /* namespace processors */
 } /* namespace minifi */
 } /* namespace nifi */

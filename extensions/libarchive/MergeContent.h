@@ -334,7 +334,9 @@ class MergeContent : public processors::BinFiles {
   std::string readContent(std::string path);
 };
 
-REGISTER_RESOURCE(MergeContent);
+REGISTER_RESOURCE(MergeContent, "Merges a Group of FlowFiles together based on a user-defined strategy and packages them into a single FlowFile. "
+    "MergeContent should be configured with only one incoming connection as it won't create grouped Flow Files."
+    "This processor updates the mime.type attribute as appropriate.");
 
 } /* namespace processors */
 } /* namespace minifi */

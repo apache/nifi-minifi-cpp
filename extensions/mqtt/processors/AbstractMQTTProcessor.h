@@ -157,7 +157,6 @@ class AbstractMQTTProcessor : public core::Processor {
   std::string securityPrivateKeyPassWord_;
 };
 
-REGISTER_RESOURCE(AbstractMQTTProcessor);
 
 } /* namespace processors */
 } /* namespace minifi */

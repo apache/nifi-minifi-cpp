@@ -17,7 +17,9 @@
  */
 #ifndef LIBMINIFI_INCLUDE_CORE_CORE_H_
 #define LIBMINIFI_INCLUDE_CORE_CORE_H_
+#ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN 1
+#endif
 #include <cstdlib>
 #include <iostream>
 #include <memory>

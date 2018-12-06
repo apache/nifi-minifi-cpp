@@ -55,7 +55,7 @@ class ExecuteProcess : public core::Processor {
   /*!
    * Create a new processor
    */
-  ExecuteProcess(std::string name,  utils::Identifier uuid = utils::Identifier())
+  ExecuteProcess(std::string name, utils::Identifier uuid = utils::Identifier())
       : Processor(name, uuid),
         logger_(logging::LoggerFactory<ExecuteProcess>::getLogger()) {
     _redirectErrorStream = false;
@@ -113,7 +113,8 @@ class ExecuteProcess : public core::Processor {
   std::string _command;
   std::string _commandArgument;
   std::string _workingDir;
-  int64_t _batchDuration;bool _redirectErrorStream;
+  int64_t _batchDuration;
+  bool _redirectErrorStream;
   // Full command
   std::string _fullCommand;
   // whether the process is running
@@ -122,9 +123,13 @@ class ExecuteProcess : public core::Processor {
   pid_t _pid;
 };
 
-REGISTER_RESOURCE(ExecuteProcess);
+REGISTER_RESOURCE(ExecuteProcess, "Runs an operating system command specified by the user and writes the output of that command to a FlowFile. If the command is expected to be long-running,"
+                  "the Processor can output the partial data on a specified interval. When this option is used, the output is expected to be in textual format,"
+                  "as it typically does not make sense to split binary data on arbitrary time-based intervals.")
+;
 #endif
-} /* namespace processors */
+}
+/* namespace processors */
 } /* namespace minifi */
 } /* namespace nifi */
 } /* namespace apache */

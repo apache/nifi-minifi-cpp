@@ -357,7 +357,8 @@ endif()
 if(BOOTSTRAP)
     add_subdirectory(thirdparty/cxxopts)
     createExtension(BOOTSTRAP "BOOTSTRAP" "Bootstraps documentation and other features" "extensions/bootstrap")
-	execute_process(COMMAND ${CMAKE_BINARY_DIR}/extensions/bootstrap/bstrp --inputc2docs "${CMAKE_SOURCE_DIR}/PROCESSORS.md" --outputc2docs "${CMAKE_SOURCE_DIR}/libminifi/include/agent/agent_docs.h")
+    # we don't currently need this route. A follow on should help re-write processor documentation from what exists in code, so this will remain here 
+	# execute_process(COMMAND ${CMAKE_BINARY_DIR}/extensions/bootstrap/bstrp --inputc2docs "${CMAKE_SOURCE_DIR}/PROCESSORS.md" --outputc2docs "${CMAKE_SOURCE_DIR}/libminifi/include/agent/agent_docs.h")
     return()
 endif()
 

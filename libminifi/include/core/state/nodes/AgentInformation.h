@@ -245,9 +245,9 @@ class ComponentManifest : public DeviceInformation {
           int nameLength = group.class_name_.length() - lastOfIdx;
           processorName = group.class_name_.substr(lastOfIdx, nameLength);
         }
-        auto description = AgentDocs::getDescription(processorName);
+        std::string description;
 
-        if (!description.empty()) {
+        if (AgentDocs::getDescription(processorName, description)) {
           SerializedResponseNode proc_desc;
           proc_desc.name = "typeDescription";
           proc_desc.value = description;
@@ -591,7 +591,7 @@ class AgentInformation : public DeviceInformation, public AgentMonitor, public A
 
 };
 
-REGISTER_RESOURCE(AgentInformation);
+REGISTER_RESOURCE(AgentInformation, "Node part of an AST that defines all agent information, to include the manifest, and bundle information as part of a healthy hearbeat.");
 
 } /* namespace metrics */
 } /* namespace state */

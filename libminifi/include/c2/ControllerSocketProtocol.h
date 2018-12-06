@@ -83,7 +83,7 @@ class ControllerSocketProtocol : public HeartBeatReporter {
   std::shared_ptr<logging::Logger> logger_;
 };
 
-REGISTER_RESOURCE(ControllerSocketProtocol);
+REGISTER_RESOURCE(ControllerSocketProtocol, "Creates a reporter that can handle basic c2 operations for a localized environment through a simple TCP socket.");
 
 } /* namesapce c2 */
 } /* namespace minifi */

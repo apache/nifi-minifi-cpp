@@ -67,7 +67,7 @@ class RESTSender : public RESTProtocol, public C2Protocol {
   std::string ack_uri_;
 };
 
-REGISTER_RESOURCE(RESTSender);
+REGISTER_RESOURCE(RESTSender, "Encapsulates the restful protocol that is built upon C2Protocol.");
 
 } /* namesapce c2 */
 } /* namespace minifi */

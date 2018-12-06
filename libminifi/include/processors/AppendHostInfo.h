@@ -71,7 +71,7 @@ class AppendHostInfo : public core::Processor {
   std::shared_ptr<logging::Logger> logger_;
 };
 
-REGISTER_RESOURCE(AppendHostInfo);
+REGISTER_RESOURCE(AppendHostInfo, "Appends host information such as IP address and hostname as an attribute to incoming flowfiles.");
 
 } /* namespace processors */
 } /* namespace minifi */

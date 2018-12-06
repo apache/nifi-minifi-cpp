@@ -79,7 +79,7 @@ private:
     std::shared_ptr<logging::Logger> logger_;
 };
 
-REGISTER_RESOURCE(ExtractText);
+REGISTER_RESOURCE(ExtractText,"Extracts the content of a FlowFile and places it into an attribute.");
 
 } /* namespace processors */
 } /* namespace minifi */

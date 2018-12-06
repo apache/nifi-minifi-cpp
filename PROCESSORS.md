@@ -33,6 +33,7 @@
 - [GenerateFlowFile](#generateflowfile)
 - [GetFile](#getfile)
 - [GetUSBCamera](#getusbcamera)
+- [GetTCP](#gettcp)
 - [HashContent](#hashcontent)
 - [InvokeHTTP](#invokehttp)
 - [ListenHTTP](#listenhttp)

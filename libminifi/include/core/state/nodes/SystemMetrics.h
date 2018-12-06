@@ -107,7 +107,7 @@ class SystemInformation : public DeviceInformation {
 
 };
 
-REGISTER_RESOURCE(SystemInformation);
+REGISTER_RESOURCE(SystemInformation, "Node part of an AST that defines the System information and metrics subtree");
 } /* namespace metrics */
 } /* namespace state */
 } /* namespace minifi */

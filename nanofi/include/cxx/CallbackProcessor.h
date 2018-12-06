@@ -90,7 +90,7 @@ class CallbackProcessor : public core::Processor {
 
 };
 
-REGISTER_RESOURCE(CallbackProcessor);
+REGISTER_RESOURCE(CallbackProcessor, "");
 
 } /* namespace processors */
 } /* namespace minifi */

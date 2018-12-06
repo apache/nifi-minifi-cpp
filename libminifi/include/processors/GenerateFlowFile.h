@@ -91,7 +91,7 @@ class GenerateFlowFile : public core::Processor {
   uint64_t _dataSize;
 };
 
-REGISTER_RESOURCE(GenerateFlowFile);
+REGISTER_RESOURCE(GenerateFlowFile, "This processor creates FlowFiles with random data or custom content. GenerateFlowFile is useful for load testing, configuration, and simulation.");
 
 } /* namespace processors */
 } /* namespace minifi */

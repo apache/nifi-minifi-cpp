@@ -173,7 +173,9 @@ class InvokeHTTP : public core::Processor {
   static std::shared_ptr<utils::IdGenerator> id_generator_;
 };
 
-REGISTER_RESOURCE(InvokeHTTP)
+REGISTER_RESOURCE(InvokeHTTP,"An HTTP client processor which can interact with a configurable HTTP Endpoint. "
+    "The destination URL and HTTP Method are configurable. FlowFile attributes are converted to HTTP headers and the "
+    "FlowFile contents are included as the body of the request (if the HTTP Method is PUT, POST or PATCH).")
 
 } /* namespace processors */
 } /* namespace minifi */

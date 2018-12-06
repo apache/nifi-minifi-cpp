@@ -136,7 +136,7 @@ class NetworkPrioritizerService : public core::controller::ControllerService, pu
   std::shared_ptr<logging::Logger> logger_;
 };
 
-REGISTER_RESOURCE(NetworkPrioritizerService);
+REGISTER_RESOURCE(NetworkPrioritizerService, "Enables selection of networking interfaces on defined parameters to include ouput and payload size");
 
 } /* namespace controllers */
 } /* namespace minifi */

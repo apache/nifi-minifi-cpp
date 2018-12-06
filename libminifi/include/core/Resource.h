@@ -23,6 +23,7 @@
 #endif
 
 #include "ClassLoader.h"
+#include "agent/agent_docs.h"
 
 namespace org {
 namespace apache {
@@ -37,8 +38,11 @@ template<class T>
 class StaticClassType {
  public:
 
-  StaticClassType(const std::string &name) {
+  StaticClassType(const std::string &name, const std::string &description = "") {
     // Notify when the static member is created
+    if (!description.empty()){
+      minifi::AgentDocs::putDescription(name,description);
+    }
 #ifdef MODULE_NAME
     ClassLoader::getDefaultClassLoader().registerClass(name, std::unique_ptr<ObjectFactory>(new DefautObjectFactory<T>(MAKESTRING(MODULE_NAME))));
 #else
@@ -47,9 +51,9 @@ class StaticClassType {
   }
 };
 
-#define REGISTER_RESOURCE(CLASSNAME) \
+#define REGISTER_RESOURCE(CLASSNAME,DESC) \
         static core::StaticClassType<CLASSNAME> \
-        CLASSNAME##_registrar( #CLASSNAME );
+        CLASSNAME##_registrar( #CLASSNAME, DESC );
 
 #define REGISTER_RESOURCE_AS(CLASSNAME,NAME) \
         static core::StaticClassType<CLASSNAME> \

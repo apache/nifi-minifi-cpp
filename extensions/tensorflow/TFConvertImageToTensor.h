@@ -107,7 +107,7 @@ class TFConvertImageToTensor : public core::Processor {
   moodycamel::ConcurrentQueue<std::shared_ptr<TFContext>> tf_context_q_;
 };
 
-REGISTER_RESOURCE(TFConvertImageToTensor); // NOLINT
+REGISTER_RESOURCE(TFConvertImageToTensor, "Converts the input image file into a tensor protobuf. The image will be resized to the given output tensor dimensions."); // NOLINT
 
 } /* namespace processors */
 } /* namespace minifi */
