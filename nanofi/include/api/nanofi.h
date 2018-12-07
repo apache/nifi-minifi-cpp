@@ -196,12 +196,16 @@ int set_instance_property(nifi_instance *instance, const char * name, const char
 
 /**
  * Get a property. Should be used in custom processor logic callbacks.
- * @attention The returned value transfers ownership, it's the callers responsibility to free it!
+ * Writes the value of the property to the buffer.
+ * Nothing is written to the buffer in case the property is not found (return value != 0)
+ * The result is always null-terminated, at most size-1 characters are written to the buffer.
  * @param context the current processor context
  * @param name name of the property
- * @return null-terminated char* in case of success, nullptr otherwise
+ * @param buffer buffer to write the value of the property
+ * @param size size of the buffer
+ * @return 0 in case of success (property found), -1 otherwise
  **/
-char * get_property(const processor_context * context, const char * name);
+uint8_t get_property(const processor_context * context, const char * name, char * buffer, size_t size);
 
 /**
  * Free a flow

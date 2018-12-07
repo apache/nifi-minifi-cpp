@@ -71,12 +71,11 @@ void custom_processor_logic(processor_session * ps, processor_context * ctx) {
 
   REQUIRE(add_attribute(ffr, "custom attribute", (void*)custom_value, strlen(custom_value)) == 0);
 
-  char * prop_value = get_property(ctx, "Some test propery");
+  char prop_value[20];
 
-  REQUIRE(prop_value != nullptr);
+  REQUIRE(get_property(ctx, "Some test propery", prop_value, 20) == 0);
+
   REQUIRE(strncmp("test value", prop_value, strlen(prop_value)) == 0);
-
-  free(prop_value);
 
   transfer_to_relationship(ffr, ps, SUCCESS_RELATIONSHIP);
 
