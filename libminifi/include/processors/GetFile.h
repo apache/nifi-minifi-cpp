@@ -194,7 +194,7 @@ class GetFile : public core::Processor, public state::response::MetricsNodeSourc
   std::shared_ptr<logging::Logger> logger_;
 };
 
-REGISTER_RESOURCE(GetFile,"Creates FlowFiles from files in a directory. NiFi will ignore files for which it doesn't have read permissions.");
+REGISTER_RESOURCE(GetFile,"Creates FlowFiles from files in a directory. MiNiFi will ignore files for which it doesn't have read permissions.");
 
 } /* namespace processors */
 } /* namespace minifi */
