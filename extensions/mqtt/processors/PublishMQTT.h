@@ -137,7 +137,7 @@ class PublishMQTT : public processors::AbstractMQTTProcessor {
   std::shared_ptr<logging::Logger> logger_;
 };
 
-REGISTER_RESOURCE(PublishMQTT, "This Processor puts the contents of a FlowFile to a MQTT broker for a specified topic. The content of a FlowFile becomes the payload of the MQTT message.");
+REGISTER_RESOURCE(PublishMQTT, "PublishMQTT serializes FlowFile content as an MQTT payload, sending the message to the configured topic and broker.");
 
 } /* namespace processors */
 } /* namespace minifi */
