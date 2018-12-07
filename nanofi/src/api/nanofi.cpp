@@ -461,6 +461,18 @@ int set_standalone_property(standalone_processor *proc, const char *name, const 
   return -1;
 }
 
+uint8_t get_property(const processor_context * context, const char * name, char * buffer, size_t size) {
+  std::string value;
+  if(!context->getDynamicProperty(name, value)) {
+    return -1;
+  }
+  size_t chars_to_copy = std::min(value.length(), size-1);
+
+  strncpy(buffer, value.data(), chars_to_copy);
+  buffer[chars_to_copy] = '\0';
+  return 0;
+}
+
 char * get_property(const processor_context *  context, const char * name) {
   std::string value;
   if(!context->getDynamicProperty(name, value)) {
