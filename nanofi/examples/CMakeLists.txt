@@ -54,7 +54,7 @@ elseif (APPLE)
     set(LINK_END_FLAGS "")
 else ()
     set(LINK_FLAGS "-Wl,--whole-archive")
-    set(LINK_END_FLAGS "-Wl,--no-whole-archive")
+    set(LINK_END_FLAGS "")
 endif ()
 
 add_executable(generate_flow generate_flow.c)
