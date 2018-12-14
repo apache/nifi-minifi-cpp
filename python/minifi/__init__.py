@@ -15,7 +15,7 @@
 # limitations under the License.
 from ctypes import cdll
 import ctypes
-from abc import  abstractmethod
+from abc import abstractmethod
 
 
 
@@ -36,13 +36,22 @@ class CFlowFile(ctypes.Structure):
                  ('attributes', ctypes.c_void_p),
                  ('ffp', ctypes.c_void_p)]
 
+class CAttribute(ctypes.Structure):
+    _fields_ = [('key', ctypes.c_char_p),
+                ('value', ctypes.c_void_p),
+                ('value_size', ctypes.c_size_t)]
+
 class CProcessor(ctypes.Structure):
     _fields_ = [('processor_ptr', ctypes.c_void_p)]
 
 class CProcessSession(ctypes.Structure):
     _fields_ = [('process_session', ctypes.c_void_p)]
 
-CALLBACK = ctypes.CFUNCTYPE(None, ctypes.POINTER(CProcessSession))
+class CProcessContext(ctypes.Structure):
+    _fields_ = [('process_context', ctypes.c_void_p)]
+
+
+CALLBACK = ctypes.CFUNCTYPE(None, ctypes.POINTER(CProcessSession), ctypes.POINTER(CProcessContext))
 
 class Processor(object):
     def __init__(self, cprocessor, minifi):
@@ -54,17 +63,16 @@ class Processor(object):
         self._minifi.set_property( self._proc, name.encode("UTF-8"), value.encode("UTF-8"))
 
 class PyProcessor(object):
-    def __init__(self, instance, minifi, flow):
+    def __init__(self, minifi, flow):
         super(PyProcessor, self).__init__()
-        self._instance = instance
         self._minifi = minifi
         self._flow = flow
 
     def setBase(self, proc):
         self._proc = proc
 
-    def get(self, session):
-        ff = self._minifi.get(self._instance.get_instance(),self._flow, session)
+    def get(self, session, context):
+        ff = self._minifi.get(session, context)
         if ff:
             return FlowFile(self._minifi, ff)
         else:
@@ -102,9 +110,22 @@ class FlowFile(object):
         self._minifi = minifi
         self._ff = ff
 
+    def get_attribute(self, name):
+        attr = CAttribute(name.encode("UTF-8"), 0, 0)
+        if self._minifi.get_attribute(self._ff, attr) != 0:
+            return ""
+        if attr.value_size > 0:
+            return ctypes.cast(attr.value, ctypes.c_char_p).value.decode("ascii")
+        return ""
+
     def add_attribute(self, name, value):
         vallen = len(value)
-        self._minifi.add_attribute(self._ff, name.encode("UTF-8"), value.encode("UTF-8"), vallen)
+        ret = self._minifi.add_attribute(self._ff, name.encode("UTF-8"), value.encode("UTF-8"), vallen)
+        return True if ret == 0 else False
+
+    def update_attribute(self, name, value):
+        vallen = len(value)
+        self._minifi.update_attribute(self._ff, name.encode("UTF-8"), value.encode("UTF-8"), vallen)
 
     def get_instance(self):
         return self._ff
@@ -138,7 +159,7 @@ class MiNiFi(object):
         self._minifi.transmit_flowfile.argtypes = [ctypes.POINTER(CFlowFile) , ctypes.POINTER(NIFI_STRUCT) ]
         self._minifi.transmit_flowfile.restype = ctypes.c_int
         """ get ff """
-        self._minifi.get.argtypes = [ctypes.POINTER(NIFI_STRUCT) , ctypes.POINTER(CFlow), ctypes.POINTER(CProcessSession) ]
+        self._minifi.get.argtypes = [ctypes.POINTER(CProcessSession), ctypes.POINTER(CProcessContext) ]
         self._minifi.get.restype = ctypes.POINTER(CFlowFile)
         """ add python processor """
         self._minifi.add_python_processor.argtypes = [ctypes.POINTER(CFlow) , ctypes.c_void_p ]
@@ -149,6 +170,14 @@ class MiNiFi(object):
         """ add attribute to ff """
         self._minifi.add_attribute.argtypes = [ctypes.POINTER(CFlowFile), ctypes.c_char_p, ctypes.c_char_p, ctypes.c_int ]
         self._minifi.add_attribute.restype = ctypes.c_int
+
+        """ update (overwrite) attribute to ff """
+        self._minifi.update_attribute.argtypes = [ctypes.POINTER(CFlowFile), ctypes.c_char_p, ctypes.c_char_p, ctypes.c_int ]
+        self._minifi.update_attribute.restype = None
+
+        """ get attribute of ff """
+        self._minifi.get_attribute.argtypes = [ctypes.POINTER(CFlowFile), ctypes.POINTER(CAttribute) ]
+        self._minifi.get_attribute.restype = ctypes.c_int
 
         self._minifi.init_api.argtype = ctypes.c_char_p
         self._minifi.init_api.restype = ctypes.c_int
@@ -178,7 +207,7 @@ class MiNiFi(object):
         return Processor(proc,self._minifi)
 
     def create_python_processor(self, module, processor):
-        m =  getattr(module,processor)(self._instance,self._minifi,self._flow)
+        m =  getattr(module, processor)(self._minifi, self._flow)
         proc = self._minifi.add_python_processor(self._flow, m.getTriggerCallback())
         m.setBase(proc)
         return m

@@ -397,14 +397,14 @@ flow *create_flow(nifi_instance *instance, const char *first_processor) {
   return new_flow;
 }
 
-processor *add_python_processor(flow *flow, void (*ontrigger_callback)(processor_session *)) {
-  if (nullptr == flow || nullptr == ontrigger_callback) {
+processor *add_python_processor(flow *flow, processor_logic* logic) {
+  if (nullptr == flow || nullptr == logic) {
     return nullptr;
   }
-  auto lambda = [ontrigger_callback](core::ProcessSession *ps) {
-    ontrigger_callback(static_cast<processor_session*>(ps));  //Meh, sorry for this
+  auto lambda = [logic](core::ProcessSession *ps, core::ProcessContext *cx) {
+    logic(static_cast<processor_session*>(ps), static_cast<processor_context*>(cx));  //Meh, sorry for this
   };
-  auto proc = flow->addSimpleCallback(nullptr, lambda);
+  auto proc = flow->addCallback(nullptr, lambda);
   return static_cast<processor*>(proc.get());
 }
 
@@ -518,7 +518,7 @@ flow_file_record* flowfile_to_record(std::shared_ptr<core::FlowFile> ff, Executi
   return flowfile_to_record(ff, plan->getContentRepo());
 }
 
-flow_file_record* get_flowfile(processor_session* session, processor_context* context) {
+flow_file_record* get(processor_session *session, processor_context *context) {
   auto ff = session->get();
   if(!ff) {
     return nullptr;
@@ -552,14 +552,6 @@ size_t get_flow_files(nifi_instance *instance, flow *flow, flow_file_record **ff
     ff_r[i] = ffr;
   }
   return i;
-}
-
-flow_file_record * get(nifi_instance * instance, flow * flow, processor_session * session) {
-  if (nullptr == instance || nullptr == flow || nullptr == session)
-    return nullptr;
-  auto ff = session->get();
-  flow->setNextFlowFile(ff);
-  return flowfile_to_record(ff, flow);
 }
 
 flow_file_record *invoke(standalone_processor* proc) {
