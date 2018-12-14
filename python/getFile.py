@@ -23,16 +23,20 @@ from _cffi_backend import callback
 
 
 class GetFilePrinterProcessor(PyProcessor):
-    def __init__(self,instance, minifi, flow):
-        PyProcessor.__init__(self,instance,minifi,flow)
+    def __init__(self, minifi, flow):
+        PyProcessor.__init__(self, minifi, flow)
         self._callback = None
 
     def _onTriggerCallback(self):
-        def onTrigger(session):
-            flow_file = self.get(session)
+        def onTrigger(session, context):
+            flow_file = self.get(session, context)
             if flow_file:
-              flow_file.add_attribute("python_test","value")
-              self.transfer(session,flow_file, "success")
+                if flow_file.add_attribute("python_test","value"):
+                    print("Add attribute succeeded")
+                if not flow_file.add_attribute("python_test","value2"):
+                    print("Cannot add the same attribute twice!")
+                print ("original file name: " + flow_file.get_attribute("filename"))
+                self.transfer(session, flow_file, "success")
         return CALLBACK(onTrigger)
 
 

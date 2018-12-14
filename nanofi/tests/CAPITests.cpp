@@ -55,7 +55,7 @@ void big_failure_counter(flow_file_record * fr) {
 }
 
 void custom_processor_logic(processor_session * ps, processor_context * ctx) {
-  flow_file_record * ffr = get_flowfile(ps, ctx);
+  flow_file_record * ffr = get(ps, ctx);
   REQUIRE(ffr != nullptr);
   uint8_t * buffer = (uint8_t*)malloc(ffr->size* sizeof(uint8_t));
   get_content(ffr, buffer, ffr->size);

@@ -131,7 +131,7 @@ flow *create_getfile(nifi_instance *instance, flow *parent, GetFileConfig *c);
  **/
 processor *add_processor(flow * flow, const char * name);
 
-processor *add_python_processor(flow *, void (*ontrigger_callback)(processor_session *session));
+processor *add_python_processor(flow *, processor_logic* logic);
 
 /**
  * Create a standalone instance of the given processor.
@@ -233,8 +233,6 @@ flow_file_record *get_next_flow_file(nifi_instance *, flow *);
  **/
 size_t get_flow_files(nifi_instance * instance, flow * flow, flow_file_record ** flowfiles, size_t size);
 
-flow_file_record *get(nifi_instance *,flow *, processor_session *);
-
 /**
  * Invoke a standalone processor without input data.
  * The processor is expected to generate flow file.
@@ -282,7 +280,7 @@ flow_file_record* create_ff_object_na(const char *file, const size_t len, const 
  * @param context current processor context
  * @return a flow file record or nullptr in case there is none in the session
  **/
-flow_file_record* get_flowfile(processor_session* session, processor_context* context);
+flow_file_record* get(processor_session *session, processor_context *context);
 
 
 /**
@@ -299,7 +297,7 @@ void free_flowfile(flow_file_record* ff);
  * @size size size of the data pointed by "value"
  * @return 0 in case of success, -1 otherwise (already existed)
  **/
-uint8_t add_attribute(flow_file_record*, const char *key, void *value, size_t size);
+uint8_t add_attribute(flow_file_record* ff, const char *key, void *value, size_t size);
 
 /**
  * Updates an attribute (adds if it hasn't existed before)
