@@ -89,5 +89,16 @@ int main(int argc, char **argv) {
   //initialize_instance(instance);
   transfer_file_or_directory(instance,file);
 
+  //Create flowfile without content (just a set of attributes)
+  flow_file_record * record = create_ff_object_nc();
+
+  const char * custom_value = "transmitted value";
+
+  add_attribute(record, "transmitted attribute", (void*)custom_value, strlen(custom_value));
+
+  transmit_flowfile(record, instance);
+
+  free_flowfile(record);
+
   free_instance(instance);
 }

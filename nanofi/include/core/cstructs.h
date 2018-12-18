@@ -128,4 +128,9 @@ typedef enum FS {
 
 typedef void (processor_logic)(processor_session*, processor_context *);
 
+typedef struct file_buffer {
+  uint8_t * buffer;
+  uint64_t file_len;
+} file_buffer;
+
 #endif /* LIBMINIFI_SRC_CAPI_CSTRUCTS_H_ */
