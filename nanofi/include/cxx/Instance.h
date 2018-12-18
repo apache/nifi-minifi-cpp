@@ -122,7 +122,7 @@ class Instance {
     return content_repo_;
   }
 
-  void transfer(const std::shared_ptr<FlowFileRecord> &ff) {
+  void transfer(const std::shared_ptr<FlowFileRecord> &ff, const std::shared_ptr<minifi::io::DataStream> &stream = nullptr) {
     std::shared_ptr<core::controller::ControllerServiceProvider> controller_service_provider = nullptr;
     auto processContext = std::make_shared<core::ProcessContext>(proc_node_, controller_service_provider, no_op_repo_, no_op_repo_, content_repo_);
     auto sessionFactory = std::make_shared<core::ProcessSessionFactory>(processContext);
@@ -132,7 +132,9 @@ class Instance {
     auto session = std::make_shared<core::ReflexiveSession>(processContext);
 
     session->add(ff);
-
+    if(stream) {
+      session->importFrom(*stream.get(), ff);
+    }
     rpg_->onTrigger(processContext, session);
   }
 

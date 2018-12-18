@@ -265,14 +265,38 @@ flow_file_record *invoke_chunk(standalone_processor *proc, uint8_t *buf, uint64_
 int transfer(processor_session* session, flow *flow, const char *rel);
 
 /**
- * Creates a flow file object.
- * Will obtain the size of file
+ * Creates a flow file record based on a file
+ * @param file source file
+ * @param len length of the file name
+ * @return a flow file record or nullptr in case no flowfile was generated
  */
 flow_file_record* create_flowfile(const char *file, const size_t len);
 
+/**
+ * Creates a flow file record based on a file
+ * @param file source file
+ * @param len length of the file name
+ * @param size size of the file
+ * @return a flow file record or nullptr in case no flowfile was generated
+ */
 flow_file_record* create_ff_object(const char *file, const size_t len, const uint64_t size);
 
+/**
+ * Creates a flow file record based on a file, without attributes
+ * @attention attributes cannot be added later!
+ * @param file source file
+ * @param len length of the file name
+ * @param size size of the file
+ * @return a flow file record or nullptr in case no flowfile was generated
+ */
 flow_file_record* create_ff_object_na(const char *file, const size_t len, const uint64_t size);
+
+/**
+ * Creates a flow file record without content. Only attributes can be added.
+ * @attention content cannot be added later!
+ * @return a flow file record or nullptr in case no flowfile was generated
+ */
+flow_file_record* create_ff_object_nc();
 
 /**
  * Get incoming flow file. To be used in processor logic callbacks.
@@ -297,7 +321,7 @@ void free_flowfile(flow_file_record* ff);
  * @size size size of the data pointed by "value"
  * @return 0 in case of success, -1 otherwise (already existed)
  **/
-uint8_t add_attribute(flow_file_record* ff, const char *key, void *value, size_t size);
+int8_t add_attribute(flow_file_record*, const char *key, void *value, size_t size);
 
 /**
  * Updates an attribute (adds if it hasn't existed before)
@@ -314,7 +338,7 @@ void update_attribute(flow_file_record* ff, const char *key, void *value, size_t
  * @param caller_attribute attribute structure to provide name and get value, size
  * @return 0 in case of success, -1 otherwise (no such attribute)
  **/
-uint8_t get_attribute(const flow_file_record *ff, attribute *caller_attribute);
+int8_t get_attribute(const flow_file_record *ff, attribute *caller_attribute);
 
 /**
  * Get the quantity of attributes
@@ -345,7 +369,7 @@ int get_content(const flow_file_record* ff, uint8_t* target, int size);
  * @param name name of the attribute
  * @return 0 on success, -1 otherwise (doesn't exist)
  **/
-uint8_t remove_attribute(flow_file_record*, char *key);
+int8_t remove_attribute(flow_file_record*, const char * key);
 
 /****
  * ##################################################################

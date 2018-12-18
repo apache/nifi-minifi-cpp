@@ -451,3 +451,91 @@ TEST_CASE("Test custom processor", "[TestCutomProcessor]") {
 
   REQUIRE(record != nullptr);
 }
+
+TEST_CASE("C API robustness test", "[TestRobustness]") {
+  free_flow(nullptr);
+  free_standalone_processor(nullptr);
+  free_instance(nullptr);
+
+  REQUIRE(create_processor(nullptr) == nullptr);
+
+  standalone_processor *standalone_proc = create_processor("GetFile");
+  REQUIRE(standalone_proc != nullptr);
+
+  REQUIRE(set_property(nullptr, "prop_name", "prop_value") == -1);
+
+  REQUIRE(set_standalone_property(standalone_proc, nullptr, "prop_value") == -1);
+
+  REQUIRE(set_standalone_property(standalone_proc, "prop_name", nullptr) == -1);
+
+  free_standalone_processor(standalone_proc);
+
+  const char *file_path = "path/to/file";
+
+  flow_file_record *ffr = create_ff_object_na(file_path, strlen(file_path), 0);
+
+  const char *custom_value = "custom value";
+
+  REQUIRE(add_attribute(nullptr, "custom attribute", (void *) custom_value, strlen(custom_value)) == -1);
+
+  REQUIRE(add_attribute(ffr, "custom attribute", (void *) custom_value, strlen(custom_value)) == -1);
+
+  REQUIRE(add_attribute(ffr, nullptr, (void *) custom_value, strlen(custom_value)) == -1);
+
+  REQUIRE(add_attribute(ffr, "custom attribute", nullptr, 0) == -1);
+
+  update_attribute(nullptr, "custom attribute", (void *) custom_value, strlen(custom_value));
+
+  update_attribute(ffr, nullptr, (void *) custom_value, strlen(custom_value));
+
+  attribute attr;
+  attr.key = "filename";
+  attr.value_size = 0;
+  REQUIRE(get_attribute(ffr, &attr) == -1);
+
+  REQUIRE(get_attribute(nullptr, &attr) == -1);
+
+  REQUIRE(get_attribute(ffr, nullptr) == -1);
+
+  REQUIRE(get_attribute_quantity(nullptr) == 0);
+
+  REQUIRE(get_attribute_quantity(ffr) == 0);
+
+  attribute_set attr_set;
+  attr_set.size = 3;
+  attr_set.attributes = (attribute *) malloc(attr_set.size * sizeof(attribute));  // NOLINT
+
+  REQUIRE(get_all_attributes(nullptr, &attr_set) == 0);
+
+  REQUIRE(get_all_attributes(ffr, &attr_set) == 0);
+
+  REQUIRE(get_all_attributes(ffr, nullptr) == 0);
+
+  free(attr_set.attributes);
+
+  REQUIRE(remove_attribute(nullptr, "key") == -1);
+
+  REQUIRE(remove_attribute(ffr, "key") == -1);
+
+  REQUIRE(remove_attribute(ffr, nullptr) == -1);
+
+  auto instance = create_instance_obj();
+
+  REQUIRE(transmit_flowfile(nullptr, instance) == -1);
+
+  REQUIRE(transmit_flowfile(ffr, nullptr) == -1);
+
+  REQUIRE(create_new_flow(nullptr) == nullptr);
+
+  flow *test_flow = create_new_flow(instance);
+
+  REQUIRE(test_flow != nullptr);
+
+  REQUIRE(add_processor(nullptr, "GetFile") == nullptr);
+
+  REQUIRE(add_processor(test_flow, nullptr) == nullptr);
+
+  free_flow(test_flow);
+
+  free_instance(instance);
+}
