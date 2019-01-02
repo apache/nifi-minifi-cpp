@@ -60,7 +60,7 @@ matrix:
         - docker
       script:
         - ./bootstrap.sh -e -t && cd build  && make docker
-   - os: osx
+    - os: osx
       osx_image: xcode8.3
       env:
         - CMAKE_BUILD_OPTIONS="${CMAKE_BUILD_OPTIONS} -DENABLE_LUA_SCRIPTING=1"
