@@ -18,7 +18,7 @@
 
 # First stage: the build environment
 # Edge required for rocksdb
-FROM alpine:3.5 AS builder
+FROM alpine:3.8 AS builder
 MAINTAINER Apache NiFi <dev@nifi.apache.org>
 
 ARG UID
@@ -73,7 +73,7 @@ RUN cd $MINIFI_BASE_DIR \
 
 # Second stage: the runtime image
 # Edge required for rocksdb
-FROM alpine:3.5
+FROM alpine:3.8
 
 ARG UID
 ARG GID
