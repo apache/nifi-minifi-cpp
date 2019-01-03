@@ -46,7 +46,7 @@ TEST_CASE("Test GetFileMultiple", "[getfileCreate3]") {
   LogTestController::getInstance().setDebug<minifi::processors::GetFile>();
   std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
   std::shared_ptr<core::Processor> processor = std::make_shared<org::apache::nifi::minifi::processors::GetFile>("getfileCreate2");
-
+  processor->initialize();
   std::shared_ptr<core::Repository> test_repo = std::make_shared<TestRepository>();
   std::shared_ptr<TestRepository> repo = std::static_pointer_cast<TestRepository>(test_repo);
 
@@ -91,8 +91,8 @@ TEST_CASE("Test GetFileMultiple", "[getfileCreate3]") {
 
     processor->onTrigger(context, session);
 
-    provenance::ProvenanceReporter *reporter = session->getProvenanceReporter();
-    std::set<provenance::ProvenanceEventRecord*> records = reporter->getEvents();
+    auto reporter = session->getProvenanceReporter();
+    auto records = reporter->getEvents();
     record = session->get();
     REQUIRE(record == nullptr);
     REQUIRE(records.size() == 0);
@@ -114,7 +114,7 @@ TEST_CASE("Test GetFileMultiple", "[getfileCreate3]") {
 
     records = reporter->getEvents();
 
-    for (provenance::ProvenanceEventRecord *provEventRecord : records) {
+    for (auto provEventRecord : records) {
       REQUIRE(provEventRecord->getComponentType() == processor->getName());
     }
     session->commit();
@@ -175,8 +175,8 @@ TEST_CASE("Test GetFile Ignore", "[getfileCreate3]") {
 
   processor->onTrigger(context, session);
 
-  provenance::ProvenanceReporter *reporter = session->getProvenanceReporter();
-  std::set<provenance::ProvenanceEventRecord*> records = reporter->getEvents();
+  auto reporter = session->getProvenanceReporter();
+  auto records = reporter->getEvents();
   record = session->get();
   REQUIRE(record == nullptr);
   REQUIRE(records.size() == 0);
@@ -198,7 +198,7 @@ TEST_CASE("Test GetFile Ignore", "[getfileCreate3]") {
 
   records = reporter->getEvents();
 
-  for (provenance::ProvenanceEventRecord *provEventRecord : records) {
+  for (auto provEventRecord : records) {
     REQUIRE(provEventRecord->getComponentType() == processor->getName());
   }
   session->commit();
@@ -222,7 +222,7 @@ TEST_CASE("LogAttributeTest", "[getfileCreate3]") {
 
   plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), dir);
   testController.runSession(plan, false);
-  std::set<provenance::ProvenanceEventRecord*> records = plan->getProvenanceRecords();
+  auto records = plan->getProvenanceRecords();
   std::shared_ptr<core::FlowFile> record = plan->getCurrentFlowFile();
   REQUIRE(record == nullptr);
   REQUIRE(records.size() == 0);
@@ -264,7 +264,7 @@ TEST_CASE("Test Find file", "[getfileCreate3]") {
 
   plan->setProperty(processor, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), dir);
   testController.runSession(plan, false);
-  std::set<provenance::ProvenanceEventRecord*> records = plan->getProvenanceRecords();
+  auto records = plan->getProvenanceRecords();
   std::shared_ptr<core::FlowFile> record = plan->getCurrentFlowFile();
   REQUIRE(record == nullptr);
   REQUIRE(records.size() == 0);
@@ -280,7 +280,7 @@ TEST_CASE("Test Find file", "[getfileCreate3]") {
 
   records = plan->getProvenanceRecords();
   record = plan->getCurrentFlowFile();
-  for (provenance::ProvenanceEventRecord *provEventRecord : records) {
+  for (auto provEventRecord : records) {
     REQUIRE(provEventRecord->getComponentType() == processor->getName());
   }
   std::shared_ptr<core::FlowFile> ffr = plan->getCurrentFlowFile();
@@ -402,7 +402,8 @@ void testRPGBypass(const std::string &host, const std::string &port, const std::
   std::shared_ptr<TestRepository> repo = std::static_pointer_cast<TestRepository>(test_repo);
 
   auto rpg = std::make_shared<minifi::RemoteProcessorGroupPort>(factory, "rpg", "http://localhost:8989/nifi", configuration);
-  rpg->setProperty(minifi::RemoteProcessorGroupPort::hostName, host);
+  rpg->initialize();
+  REQUIRE(rpg->setProperty(minifi::RemoteProcessorGroupPort::hostName, host));
   rpg->setProperty(minifi::RemoteProcessorGroupPort::port, port);
   std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(rpg);
   std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider = nullptr;

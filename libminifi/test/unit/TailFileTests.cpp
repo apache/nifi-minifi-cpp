@@ -67,7 +67,7 @@ TEST_CASE("TailFileWithDelimiter", "[tailfiletest1]") {
   plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::Delimiter.getName(), "\n");
 
   testController.runSession(plan, false);
-  std::set<provenance::ProvenanceEventRecord*> records = plan->getProvenanceRecords();
+  auto records = plan->getProvenanceRecords();
   std::shared_ptr<core::FlowFile> record = plan->getCurrentFlowFile();
   REQUIRE(record == nullptr);
   REQUIRE(records.size() == 2);
@@ -102,7 +102,7 @@ TEST_CASE("TailFileWithOutDelimiter", "[tailfiletest2]") {
 
 
   testController.runSession(plan, false);
-  std::set<provenance::ProvenanceEventRecord*> records = plan->getProvenanceRecords();
+  auto records = plan->getProvenanceRecords();
   std::shared_ptr<core::FlowFile> record = plan->getCurrentFlowFile();
   REQUIRE(record == nullptr);
   REQUIRE(records.size() == 2);

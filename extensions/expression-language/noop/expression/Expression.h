@@ -19,6 +19,7 @@
 #define NIFI_MINIFI_CPP_EXPRESSION_H
 
 #include <core/FlowFile.h>
+#include <core/VariableRegistry.h>
 #include <Value.h>
 
 namespace org {
@@ -29,6 +30,7 @@ namespace expression {
 
 typedef struct {
   std::weak_ptr<core::FlowFile> flow_file;
+  std::shared_ptr<core::VariableRegistry> registry_;
 } Parameters;
 
 /**
@@ -36,7 +38,6 @@ typedef struct {
  */
 class Expression {
  public:
-
   explicit Expression(std::string, std::function<std::string(const Parameters &)>);
 };
 

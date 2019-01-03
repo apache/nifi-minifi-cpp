@@ -52,7 +52,7 @@ endif()
     CMAKE_COMMAND ""
     UPDATE_COMMAND ""
     BUILD_BYPRODUCTS ${BYPRODUCT} 
-    INSTALL_COMMAND cmake -E echo "Skipping install step."
+    INSTALL_COMMAND ${CMAKE_COMMAND}  -E echo "Skipping install step."
     CONFIGURE_COMMAND ""
     PATCH_COMMAND ./autogen.sh && ./configure --disable-examples --disable-tests --disable-documentation
     STEP_TARGETS build

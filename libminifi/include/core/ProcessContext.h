@@ -36,6 +36,7 @@
 #include "ProcessorNode.h"
 #include "core/Repository.h"
 #include "core/FlowFile.h"
+#include "VariableRegistry.h"
 
 namespace org {
 namespace apache {
@@ -44,15 +45,33 @@ namespace minifi {
 namespace core {
 
 // ProcessContext Class
-class ProcessContext : public controller::ControllerServiceLookup {
+class ProcessContext : public controller::ControllerServiceLookup, public core::VariableRegistry, public std::enable_shared_from_this<VariableRegistry> {
  public:
+
   // Constructor
   /*!
    * Create a new process context associated with the processor/controller service/state manager
    */
   ProcessContext(const std::shared_ptr<ProcessorNode> &processor, std::shared_ptr<controller::ControllerServiceProvider> &controller_service_provider, const std::shared_ptr<core::Repository> &repo,
                  const std::shared_ptr<core::Repository> &flow_repo, const std::shared_ptr<core::ContentRepository> &content_repo = std::make_shared<core::repository::FileSystemRepository>())
-      : controller_service_provider_(controller_service_provider),
+      : VariableRegistry(std::make_shared<minifi::Configure>()),
+        controller_service_provider_(controller_service_provider),
+        flow_repo_(flow_repo),
+        content_repo_(content_repo),
+        processor_node_(processor),
+        logger_(logging::LoggerFactory<ProcessContext>::getLogger()) {
+    repo_ = repo;
+  }
+
+  // Constructor
+  /*!
+   * Create a new process context associated with the processor/controller service/state manager
+   */
+  ProcessContext(const std::shared_ptr<ProcessorNode> &processor, std::shared_ptr<controller::ControllerServiceProvider> &controller_service_provider, const std::shared_ptr<core::Repository> &repo,
+                 const std::shared_ptr<core::Repository> &flow_repo, const std::shared_ptr<minifi::Configure> &configuration, const std::shared_ptr<core::ContentRepository> &content_repo =
+                     std::make_shared<core::repository::FileSystemRepository>())
+      : VariableRegistry(configuration),
+        controller_service_provider_(controller_service_provider),
         flow_repo_(flow_repo),
         content_repo_(content_repo),
         processor_node_(processor),

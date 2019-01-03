@@ -245,6 +245,35 @@ class ClassLoader {
   }
 
   /**
+   * Sets the class loader
+   * @param name name of class loader
+   * @param loader loader unique ptr
+   * @return result of insertion
+   */
+  bool setClassLoader(const std::string &name, std::unique_ptr<ClassLoader> loader) {
+    if (nullptr != getClassLoader(name)) {
+      throw std::runtime_error("Cannot have more than one classloader with the same name");
+    }
+    std::lock_guard<std::mutex> lock(internal_mutex_);
+    // return validation that we inserted the class loader
+    return class_loaders_.insert(std::make_pair(name, std::move(loader))).second;
+  }
+
+  /**
+   * Retrieves a class loader
+   * @param name name of class loader
+   * @return class loader ptr if it exists, nullptr if it does not
+   */
+  ClassLoader *getClassLoader(const std::string &name) {
+    std::lock_guard<std::mutex> lock(internal_mutex_);
+    auto cld = class_loaders_.find(name);
+    if (cld != class_loaders_.end()) {
+      cld->second.get();
+    }
+    return nullptr;
+  }
+
+  /**
    * Register the file system resource.
    * This will attempt to load objects within this resource.
    * @return return code: RESOURCE_FAILURE or RESOURCE_SUCCESS
@@ -489,6 +518,10 @@ class ClassLoader {
   std::map<std::string, std::unique_ptr<ObjectFactory>> loaded_factories_;
 
   std::map<std::string, std::string> class_to_group_;
+
+  // other class loaders
+
+  std::map<std::string, std::unique_ptr<ClassLoader>> class_loaders_;
 
   std::mutex internal_mutex_;
 

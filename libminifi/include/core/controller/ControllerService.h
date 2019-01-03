@@ -106,6 +106,10 @@ class ControllerService : public ConfigurableComponent, public Connectable {
     current_state_ = ENABLED;
   }
 
+  virtual ~ControllerService(){
+    notifyStop();
+  }
+
   /**
    * Replaces the configuration object within the controller service.
    */
@@ -121,6 +125,13 @@ class ControllerService : public ConfigurableComponent, public Connectable {
    * Function is called when Controller Services are enabled and being run
    */
   virtual void onEnable() {
+
+  }
+
+  /**
+   * Function is called when Controller Services are disabled
+   */
+  virtual void notifyStop() {
 
   }
 

@@ -58,13 +58,17 @@ namespace core {
 
 std::shared_ptr<utils::IdGenerator> ProcessSession::id_generator_ = utils::IdGenerator::getIdGenerator();
 
+ProcessSession::~ProcessSession() {
+  removeReferences();
+}
+
 std::shared_ptr<core::FlowFile> ProcessSession::create() {
   std::map<std::string, std::string> empty;
 
   auto flow_version = process_context_->getProcessorNode()->getFlowIdentifier();
 
   std::shared_ptr<FlowFileRecord> record = std::make_shared<FlowFileRecord>(process_context_->getFlowFileRepository(), process_context_->getContentRepository(), empty);
-
+  record->setSize(0);
   if (flow_version != nullptr) {
     auto flow_id = flow_version->getFlowId();
     std::string attr = FlowAttributeKey(FLOW_ID);
@@ -87,8 +91,8 @@ void ProcessSession::add(const std::shared_ptr<core::FlowFile> &record) {
 std::shared_ptr<core::FlowFile> ProcessSession::create(const std::shared_ptr<core::FlowFile> &parent) {
   std::map<std::string, std::string> empty;
   std::shared_ptr<FlowFileRecord> record = std::make_shared<FlowFileRecord>(process_context_->getFlowFileRepository(), process_context_->getContentRepository(), empty);
-
   if (record) {
+    record->setSize(0);
     auto flow_version = process_context_->getProcessorNode()->getFlowIdentifier();
     if (flow_version != nullptr) {
       auto flow_id = flow_version->getFlowId();
@@ -119,6 +123,7 @@ std::shared_ptr<core::FlowFile> ProcessSession::create(const std::shared_ptr<cor
 std::shared_ptr<core::FlowFile> ProcessSession::clone(const std::shared_ptr<core::FlowFile> &parent) {
   std::shared_ptr<core::FlowFile> record = this->create(parent);
   if (record) {
+    logger_->log_debug("Cloned parent flow files %s to %s", parent->getUUIDStr(), record->getUUIDStr());
     // Copy Resource Claim
     std::shared_ptr<ResourceClaim> parent_claim = parent->getResourceClaim();
     record->setResourceClaim(parent_claim);
@@ -176,6 +181,7 @@ std::shared_ptr<core::FlowFile> ProcessSession::cloneDuringTransfer(std::shared_
 std::shared_ptr<core::FlowFile> ProcessSession::clone(const std::shared_ptr<core::FlowFile> &parent, int64_t offset, int64_t size) {
   std::shared_ptr<core::FlowFile> record = this->create(parent);
   if (record) {
+    logger_->log_debug("Cloned parent flow files %s to %s, with %u:%u", parent->getUUIDStr(), record->getUUIDStr(), offset, size);
     if (parent->getResourceClaim()) {
       if ((uint64_t) (offset + size) > parent->getSize()) {
         // Set offset and size
@@ -186,7 +192,7 @@ std::shared_ptr<core::FlowFile> ProcessSession::clone(const std::shared_ptr<core
           this->_addedFlowFiles.erase(record->getUUIDStr());
         return nullptr;
       }
-      record->setOffset(parent->getOffset() + parent->getOffset());
+      record->setOffset(parent->getOffset() + offset);
       record->setSize(size);
       // Copy Resource Claim
       std::shared_ptr<ResourceClaim> parent_claim = parent->getResourceClaim();
@@ -729,13 +735,13 @@ void ProcessSession::commit() {
               if (cloneRecord)
                 cloneRecord->setConnection(connection);
               else
-                throw Exception(PROCESS_SESSION_EXCEPTION, "Can not clone the flow for transfer");
+                throw Exception(PROCESS_SESSION_EXCEPTION, "Can not clone the flow for transfer " + record->getUUIDStr());
             }
           }
         }
       } else {
         // Can not find relationship for the flow
-        throw Exception(PROCESS_SESSION_EXCEPTION, "Can not find the transfer relationship for the flow " + record->getUUIDStr());
+        throw Exception(PROCESS_SESSION_EXCEPTION, "Can not find the transfer relationship for the updated flow " + record->getUUIDStr());
       }
     }
 
@@ -774,13 +780,13 @@ void ProcessSession::commit() {
               if (cloneRecord)
                 cloneRecord->setConnection(connection);
               else
-                throw Exception(PROCESS_SESSION_EXCEPTION, "Can not clone the flow for transfer");
+                throw Exception(PROCESS_SESSION_EXCEPTION, "Can not clone the flow for transfer" + record->getUUIDStr());
             }
           }
         }
       } else {
         // Can not find relationship for the flow
-        throw Exception(PROCESS_SESSION_EXCEPTION, "Can not find the transfer relationship for the flow " + record->getUUIDStr());
+        throw Exception(PROCESS_SESSION_EXCEPTION, "Can not find the transfer relationship for the added flow " + record->getUUIDStr());
       }
     }
 
@@ -788,6 +794,7 @@ void ProcessSession::commit() {
     // Complete process the added and update flow files for the session, send the flow file to its queue
     for (const auto &it : _updatedFlowFiles) {
       std::shared_ptr<core::FlowFile> record = it.second;
+      logger_->log_trace("See %s in %s", record->getUUIDStr(), "_updatedFlowFiles");
       if (record->isDeleted()) {
         continue;
       }
@@ -798,6 +805,7 @@ void ProcessSession::commit() {
     }
     for (const auto &it : _addedFlowFiles) {
       std::shared_ptr<core::FlowFile> record = it.second;
+      logger_->log_trace("See %s in %s", record->getUUIDStr(), "_addedFlowFiles");
       if (record->isDeleted()) {
         continue;
       }
@@ -808,6 +816,7 @@ void ProcessSession::commit() {
     // Process the clone flow files
     for (const auto &it : _clonedFlowFiles) {
       std::shared_ptr<core::FlowFile> record = it.second;
+      logger_->log_trace("See %s in %s", record->getUUIDStr(), "_clonedFlowFiles");
       if (record->isDeleted()) {
         continue;
       }
@@ -844,6 +853,7 @@ void ProcessSession::rollback() {
       if ((connection) != nullptr) {
         std::shared_ptr<FlowFileRecord> flowf = std::static_pointer_cast<FlowFileRecord>(record);
         flowf->setSnapShot(false);
+        logger_->log_debug("ProcessSession rollback for %s, record %s, to connection %s", process_context_->getProcessorNode()->getName(), record->getUUIDStr(), connection->getName());
         connection->put(record);
       }
     }

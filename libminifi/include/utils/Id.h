@@ -157,6 +157,9 @@ class NonRepeatingStringGenerator {
   std::string generate() {
     return prefix_ + std::to_string(incrementor_++);
   }
+    uint64_t generateId() {
+      return incrementor_++;
+    }
  private:
   std::atomic<uint64_t> incrementor_;
   std::string prefix_;

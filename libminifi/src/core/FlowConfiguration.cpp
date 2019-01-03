@@ -21,6 +21,7 @@
 #include <vector>
 #include <string>
 #include "core/ClassLoader.h"
+#include "utils/StringUtils.h"
 
 namespace org {
 namespace apache {
@@ -38,6 +39,41 @@ FlowConfiguration::~FlowConfiguration() {
 
 std::shared_ptr<core::Processor> FlowConfiguration::createProcessor(std::string name, utils::Identifier & uuid) {
   auto ptr = core::ClassLoader::getDefaultClassLoader().instantiate(name, uuid);
+  if (ptr == nullptr) {
+    ptr = core::ClassLoader::getDefaultClassLoader().instantiate("ExecuteJavaClass", uuid);
+    if (ptr != nullptr) {
+      std::shared_ptr<core::Processor> processor = std::static_pointer_cast<core::Processor>(ptr);
+      processor->initialize();
+      processor->setProperty("NiFi Processor", name);
+      processor->setStreamFactory(stream_factory_);
+      return processor;
+    }
+  }
+  if (nullptr == ptr) {
+    logger_->log_error("No Processor defined for %s", name);
+    return nullptr;
+  }
+  std::shared_ptr<core::Processor> processor = std::static_pointer_cast<core::Processor>(ptr);
+
+  // initialize the processor
+  processor->initialize();
+
+  processor->setStreamFactory(stream_factory_);
+  return processor;
+}
+
+std::shared_ptr<core::Processor> FlowConfiguration::createProcessor(const std::string &name, const std::string &fullname, utils::Identifier & uuid) {
+  auto ptr = core::ClassLoader::getDefaultClassLoader().instantiate(name, uuid);
+  if (ptr == nullptr) {
+    ptr = core::ClassLoader::getDefaultClassLoader().instantiate("ExecuteJavaClass", uuid);
+    if (ptr != nullptr) {
+      std::shared_ptr<core::Processor> processor = std::static_pointer_cast<core::Processor>(ptr);
+      processor->initialize();
+      processor->setProperty("NiFi Processor", fullname);
+      processor->setStreamFactory(stream_factory_);
+      return processor;
+    }
+  }
   if (nullptr == ptr) {
     logger_->log_error("No Processor defined for %s", name);
     return nullptr;

@@ -460,15 +460,15 @@ class ProvenanceReporter {
     clear();
   }
   // Get events
-  std::set<ProvenanceEventRecord *> getEvents() {
+  std::set<std::shared_ptr<ProvenanceEventRecord>> getEvents() {
     return _events;
   }
   // Add event
-  void add(ProvenanceEventRecord *event) {
+  void add(const std::shared_ptr<ProvenanceEventRecord> &event) {
     _events.insert(event);
   }
   // Remove event
-  void remove(ProvenanceEventRecord *event) {
+  void remove(const std::shared_ptr<ProvenanceEventRecord> &event) {
     if (_events.find(event) != _events.end()) {
       _events.erase(event);
     }
@@ -476,9 +476,9 @@ class ProvenanceReporter {
   //
   // clear
   void clear() {
-    for (auto it : _events) {
-      delete it;
-    }
+    //for (auto it : _events) {
+  //    delete it;
+//    }
     _events.clear();
   }
   // commit
@@ -511,8 +511,8 @@ class ProvenanceReporter {
  protected:
 
   // allocate
-  ProvenanceEventRecord *allocate(ProvenanceEventRecord::ProvenanceEventType eventType, std::shared_ptr<core::FlowFile> flow) {
-    ProvenanceEventRecord *event = new ProvenanceEventRecord(eventType, _componentId, _componentType);
+  std::shared_ptr<ProvenanceEventRecord> allocate(ProvenanceEventRecord::ProvenanceEventType eventType, std::shared_ptr<core::FlowFile> flow) {
+    auto event = std::make_shared<ProvenanceEventRecord>(eventType, _componentId, _componentType);
     if (event)
       event->fromFlowFile(flow);
 
@@ -528,7 +528,7 @@ class ProvenanceReporter {
 
   std::shared_ptr<logging::Logger> logger_;
   // Incoming connection Iterator
-  std::set<ProvenanceEventRecord *> _events;
+  std::set<std::shared_ptr<ProvenanceEventRecord>> _events;
   // provenance repository.
   std::shared_ptr<core::Repository> repo_;
 

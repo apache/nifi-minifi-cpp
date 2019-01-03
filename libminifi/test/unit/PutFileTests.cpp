@@ -71,7 +71,7 @@ TEST_CASE("PutFileTest", "[getfileputpfile]") {
 
   testController.runSession(plan, false);
 
-  std::set<provenance::ProvenanceEventRecord*> records = plan->getProvenanceRecords();
+  auto records = plan->getProvenanceRecords();
   std::shared_ptr<core::FlowFile> record = plan->getCurrentFlowFile();
   REQUIRE(record == nullptr);
   REQUIRE(records.size() == 0);
@@ -136,7 +136,7 @@ TEST_CASE("PutFileTestFileExists", "[getfileputpfile]") {
 
   testController.runSession(plan, false);
 
-  std::set<provenance::ProvenanceEventRecord*> records = plan->getProvenanceRecords();
+  auto records = plan->getProvenanceRecords();
   std::shared_ptr<core::FlowFile> record = plan->getCurrentFlowFile();
   REQUIRE(record == nullptr);
   REQUIRE(records.size() == 0);
@@ -202,7 +202,7 @@ TEST_CASE("PutFileTestFileExistsIgnore", "[getfileputpfile]") {
 
   testController.runSession(plan, false);
 
-  std::set<provenance::ProvenanceEventRecord*> records = plan->getProvenanceRecords();
+  auto records = plan->getProvenanceRecords();
   std::shared_ptr<core::FlowFile> record = plan->getCurrentFlowFile();
   REQUIRE(record == nullptr);
   REQUIRE(records.size() == 0);
@@ -270,7 +270,7 @@ TEST_CASE("PutFileTestFileExistsReplace", "[getfileputpfile]") {
 
   testController.runSession(plan, false);
 
-  std::set<provenance::ProvenanceEventRecord*> records = plan->getProvenanceRecords();
+  auto records = plan->getProvenanceRecords();
   std::shared_ptr<core::FlowFile> record = plan->getCurrentFlowFile();
   REQUIRE(record == nullptr);
   REQUIRE(records.size() == 0);

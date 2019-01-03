@@ -115,7 +115,7 @@ class ExecutionPlan {
 
   bool setFailureStrategy(FailureStrategy start);
 
-  std::set<provenance::ProvenanceEventRecord*> getProvenanceRecords();
+  std::set<std::shared_ptr<provenance::ProvenanceEventRecord>> getProvenanceRecords();
 
   std::shared_ptr<core::FlowFile> getCurrentFlowFile();
 

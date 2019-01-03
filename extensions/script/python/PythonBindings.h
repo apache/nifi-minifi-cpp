@@ -30,6 +30,7 @@
 #include "../ScriptProcessContext.h"
 
 #include "PyProcessSession.h"
+#include "PythonProcessor.h"
 #include "PyBaseStream.h"
 
 PYBIND11_EMBEDDED_MODULE(minifi_native, m) { // NOLINT
@@ -54,6 +55,11 @@ PYBIND11_EMBEDDED_MODULE(minifi_native, m) { // NOLINT
       .def("read", &python::PyProcessSession::read)
       .def("write", &python::PyProcessSession::write)
       .def("transfer", &python::PyProcessSession::transfer);
+
+  py::class_<python::PythonProcessor, std::shared_ptr<python::PythonProcessor>>(m, "Processor")
+        .def("setSupportsDynamicProperties", &python::PythonProcessor::setSupportsDynamicProperties)
+        .def("setDescription", &python::PythonProcessor::setDecription)
+        .def("addProperty", &python::PythonProcessor::addProperty);
 
   py::class_<script::ScriptProcessContext, std::shared_ptr<script::ScriptProcessContext>>(m, "ProcessContext")
       .def("getProperty", &script::ScriptProcessContext::getProperty);

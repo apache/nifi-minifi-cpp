@@ -124,7 +124,7 @@ TEST_CASE("Lua: Test Read File", "[executescriptLuaRead]") { // NOLINT
 
   testController.runSession(plan, false);
 
-  std::set<provenance::ProvenanceEventRecord *> records = plan->getProvenanceRecords();
+  auto records = plan->getProvenanceRecords();
   std::shared_ptr<core::FlowFile> record = plan->getCurrentFlowFile();
   REQUIRE(record == nullptr);
   REQUIRE(records.empty());
@@ -214,7 +214,7 @@ TEST_CASE("Lua: Test Write File", "[executescriptLuaWrite]") { // NOLINT
 
   testController.runSession(plan, false);
 
-  std::set<provenance::ProvenanceEventRecord *> records = plan->getProvenanceRecords();
+  auto records = plan->getProvenanceRecords();
   std::shared_ptr<core::FlowFile> record = plan->getCurrentFlowFile();
   REQUIRE(record == nullptr);
   REQUIRE(records.empty());

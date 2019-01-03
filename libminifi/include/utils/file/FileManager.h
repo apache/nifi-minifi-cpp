@@ -31,6 +31,15 @@
 #define stat _stat
 #endif
 
+#ifndef FILE_SEPARATOR
+	#ifdef WIN32
+	#define FILE_SEPARATOR "\\"
+	#else
+	#define FILE_SEPARATOR "/"
+	#endif
+#endif
+
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -56,18 +65,25 @@ class FileManager {
   }
   std::string unique_file(const std::string &location, bool keep = false) {
 
+	 
     if (!IsNullOrEmpty(location)) {
-      std::string file_name = location + "/" + non_repeating_string_generator_.generate();
+      std::string file_name = location + FILE_SEPARATOR + non_repeating_string_generator_.generate();
       while (!verify_not_exist(file_name)) {
-        file_name = location + "/" + non_repeating_string_generator_.generate();
+        file_name = location + FILE_SEPARATOR + non_repeating_string_generator_.generate();
       }
       if (!keep)
         unique_files_.push_back(file_name);
       return file_name;
     } else {
-      std::string file_name = "/tmp/" + non_repeating_string_generator_.generate();
+	  std::string tmpDir = "/tmp";
+	  #ifdef WIN32
+			TCHAR lpTempPathBuffer[MAX_PATH];
+			GetTempPath(MAX_PATH, lpTempPathBuffer);
+			tmpDir = lpTempPathBuffer;
+	  #endif
+      std::string file_name = tmpDir + FILE_SEPARATOR + non_repeating_string_generator_.generate();
       while (!verify_not_exist(file_name)) {
-        file_name = "/tmp/" + non_repeating_string_generator_.generate();
+        file_name = tmpDir + FILE_SEPARATOR + non_repeating_string_generator_.generate();
       }
       if (!keep)
         unique_files_.push_back(file_name);
@@ -79,9 +95,15 @@ class FileManager {
 #ifdef BOOST_VERSION
     return boost::filesystem::unique_path().native();
 #else
-    std::string file_name =  "/tmp/" + non_repeating_string_generator_.generate();
+	  std::string tmpDir = "/tmp";
+	#ifdef WIN32
+		  TCHAR lpTempPathBuffer[MAX_PATH];
+		  GetTempPath(MAX_PATH, lpTempPathBuffer);
+		  tmpDir = lpTempPathBuffer;
+	#endif
+    std::string file_name = tmpDir + FILE_SEPARATOR + non_repeating_string_generator_.generate();
     while (!verify_not_exist(file_name)) {
-      file_name = "/tmp/" + non_repeating_string_generator_.generate();
+      file_name = tmpDir + FILE_SEPARATOR + non_repeating_string_generator_.generate();
     }
     if (!keep)
       unique_files_.push_back(file_name);

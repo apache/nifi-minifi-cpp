@@ -148,6 +148,11 @@ class LoggerFactory {
     static std::shared_ptr<Logger> logger = LoggerConfiguration::getConfiguration().getLogger(core::getClassName<T>());
     return logger;
   }
+
+  static std::shared_ptr<Logger> getAliasedLogger(const std::string &alias) {
+      std::shared_ptr<Logger> logger = LoggerConfiguration::getConfiguration().getLogger(alias);
+      return logger;
+    }
 };
 
 } /* namespace logging */

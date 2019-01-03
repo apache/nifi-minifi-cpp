@@ -41,12 +41,50 @@ option(USE_SYSTEM_BZIP2 "Instructs the build system to search for and use a bzip
 option(BUILD_ROCKSDB "Instructs the build system to use RocksDB from the third party directory" ON)
 option(FORCE_WINDOWS "Instructs the build system to force Windows builds when WIN32 is specified" OFF)
 
+
 include(CheckIncludeFile)
 include(FeatureSummary)
 include(ExternalProject)
 
+
+
 if (OPENSSL_ROOT_DIR )
 	set(OPENSSL_PASSTHROUGH "-DOPENSSL_ROOT_DIR=${OPENSSL_ROOT_DIR}")
+endif()
+
+if(NOT WIN32)
+	if (ENABLE_JNI)
+	  set(BASE_DIR "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/jemalloc")
+	  
+	  set(DIR "${BASE_DIR}/extensions/jemalloc-src")
+	  set(JE_BYPRODUCT "${DIR}/lib/libjemalloc.a")
+	  ExternalProject_Add(
+	    jemalloc-external
+	    GIT_REPOSITORY "https://github.com/jemalloc/jemalloc.git"
+	    GIT_TAG "61efbda7098de6fe64c362d309824864308c36d4" 
+	    PREFIX "${BASE_DIR}/extensions/jemalloc"
+	    BUILD_IN_SOURCE true
+	    SOURCE_DIR "${DIR}"
+	    BUILD_COMMAND make
+	    CMAKE_COMMAND ""
+	    UPDATE_COMMAND ""
+	    BUILD_BYPRODUCTS ${JE_BYPRODUCT} 
+	    INSTALL_COMMAND ${CMAKE_COMMAND}  -E echo "Skipping install step."
+	    CONFIGURE_COMMAND ""
+	    PATCH_COMMAND ./autogen.sh && ./configure 
+	    STEP_TARGETS build
+	    EXCLUDE_FROM_ALL TRUE
+	  )
+	  
+	  add_library(jemalloc STATIC IMPORTED)
+	  set_target_properties(jemalloc PROPERTIES IMPORTED_LOCATION "${JE_BYPRODUCT}")
+	  add_dependencies(jemalloc jemalloc-external)
+	  set(JEMALLOC_FOUND "YES" CACHE STRING "" FORCE)
+	  set(JEMALLOC_INCLUDE_DIRS "${DIR}/include" CACHE STRING "" FORCE)
+	  set(JEMALLOC_LIBRARIES jemalloc CACHE STRING "" FORCE)
+	  set(JEMALLOC_LIBRARY jemalloc CACHE STRING "" FORCE)
+	  set(JEMALLOC_LIBRARY jemalloc CACHE STRING "" FORCE)
+	endif()
 endif()
 
 set(PASSTHROUGH_CMAKE_ARGS -DANDROID_ABI=${ANDROID_ABI}
@@ -86,9 +124,6 @@ endif()
 # Enable usage of the VERSION specifier
 include(CheckCXXCompilerFlag)
 if (WIN32)
-	if (NOT FORCE_WINDOWS)
-	  message(FATAL_ERROR "Windows builds can only be built with FORCE_WINDOWS")
-	endif()
 	add_definitions(-DWIN32_LEAN_AND_MEAN)
   if ((MSVC_VERSION GREATER "1900") OR (MSVC_VERSION EQUAL "1900"))
     CHECK_CXX_COMPILER_FLAG("/std:c++14" _cpp_latest_flag_supported)
@@ -199,7 +234,7 @@ if(USE_SYSTEM_ZLIB STREQUAL "OFF")
   message("Using bundled zlib")
 
   if (WIN32)
-  IF(CMAKE_BUILD_TYPE MATCHES RELEASE)
+  IF(CMAKE_BUILD_TYPE MATCHES RelWithDebInfo)
   set(BYPRODUCT "thirdparty/zlib-install/lib/zlibstatic.lib")
   else()
   set(BYPRODUCT "thirdparty/zlib-install/lib/zlibstaticd.lib")
@@ -261,7 +296,7 @@ if(NOT DISABLE_CURL AND (NOT USE_SYSTEM_CURL))
   set(CURL_CXX_FLAGS "${CURL_C_FLAGS}")
 
   if (WIN32)
-  IF(CMAKE_BUILD_TYPE MATCHES RELEASE)
+  IF(CMAKE_BUILD_TYPE MATCHES RelWithDebInfo)
 	set(BYPRODUCT "thirdparty/curl-install/lib/libcurl.lib")
   else()
   	set(BYPRODUCT "thirdparty/curl-install/lib/libcurl-d.lib")
@@ -437,6 +472,12 @@ if(ENABLE_ALL OR ENABLE_MQTT)
         createExtension(MQTT-EXTENSIONS "MQTT EXTENSIONS" "This Enables MQTT functionality including PublishMQTT/ConsumeMQTT" "extensions/mqtt" "${TEST_DIR}/mqtt-tests" "TRUE" "thirdparty/paho.mqtt.c")
 endif()
 
+option(ENABLE_JNI "Instructs the build system to enable the JNI extension" OFF)
+if(ENABLE_ALL OR ENABLE_JNI)
+	createExtension(JNI-EXTENSION "JNI EXTENSIONS" "Enables JNI capabilities to support loading Java Classes." "extensions/jni" "${TEST_DIR}/jni-tests")
+endif()
+
+
 option(ENABLE_PCAP "Enables the PCAP extension." OFF)
 if(ENABLE_ALL OR ENABLE_PCAP)
 	createExtension(PCAP-EXTENSION "PCAP EXTENSIONS" "Enables libPCAP Functionality and the PacketCapture processor." "extensions/pcap" "${TEST_DIR}/pcap-tests")
@@ -496,7 +537,7 @@ if (NOT DISABLE_CURL)
   if (ENABLE_PYTHON)
   	if (NOT WIN32)
   		add_subdirectory(python/library)
-  	endif()
+  	endif()	
   endif(ENABLE_PYTHON)
 endif()
 
@@ -569,7 +610,11 @@ install(PROGRAMS bin/minifi.sh
 install(FILES LICENSE README.md NOTICE
         DESTINATION .
         COMPONENT bin)
-
+        
+install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/main/minifi
+        DESTINATION bin
+        COMPONENT bin)
+        
 
 set(CPACK_COMPONENT_INCLUDE_TOPLEVEL_DIRECTORY 1)
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Apache NiFi MiNiFi C++ version ${VERSION}")
@@ -587,9 +632,8 @@ set(CPACK_MQTT_COMPONENT_INSTALL ON)
 set(CPACK_COMPONENTS_ALL bin)
 
 
-### include modules
-
 include(CPack)
+### include modules
 
 if (NOT SKIP_TESTS)
 	include(BuildTests)

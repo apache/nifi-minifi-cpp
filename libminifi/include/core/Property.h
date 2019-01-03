@@ -61,7 +61,8 @@ class Property {
         dependent_properties_(std::move(dependent_properties)),
         exclusive_of_properties_(std::move(exclusive_of_properties)),
         is_collection_(false),
-        supports_el_(false) {
+        supports_el_(false),
+        is_transient_(false) {
     default_value_ = coerceDefaultValue(value);
   }
 
@@ -70,7 +71,8 @@ class Property {
         description_(description),
         is_required_(false),
         is_collection_(false),
-        supports_el_(false) {
+        supports_el_(false),
+        is_transient_(false) {
     default_value_ = coerceDefaultValue(value);
   }
 
@@ -79,7 +81,8 @@ class Property {
         description_(description),
         is_required_(false),
         is_collection_(true),
-        supports_el_(false) {
+        supports_el_(false),
+        is_transient_(false) {
     validator_ = StandardValidators::VALID;
   }
 
@@ -92,12 +95,20 @@ class Property {
         description_(""),
         is_required_(false),
         is_collection_(false),
-        supports_el_(false) {
+        supports_el_(false),
+        is_transient_(false) {
     validator_ = StandardValidators::VALID;
   }
 
   virtual ~Property() = default;
 
+  void setTransient() {
+    is_transient_ = true;
+  }
+
+  bool isTransient() const {
+    return is_transient_;
+  }
   std::string getName() const;
   std::string getDisplayName() const;
   std::vector<std::string> getAllowedTypes() const;
@@ -405,6 +416,7 @@ class Property {
   // these types should be the canonical name.
   std::vector<std::string> types_;
   bool supports_el_;
+  bool is_transient_;
  private:
 
   friend class PropertyBuilder;

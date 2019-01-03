@@ -26,17 +26,20 @@ namespace apache {
 namespace nifi {
 namespace minifi {
 
-struct ClassDescription {
+class ClassDescription {
+ public:
   explicit ClassDescription(std::string name)
       : class_name_(name),
         dynamic_properties_(false),
-        dynamic_relationships_(false) {
+        dynamic_relationships_(false),
+        is_controller_service_(false) {
   }
   explicit ClassDescription(std::string name, std::map<std::string, core::Property> props, bool dyn_prop)
       : class_name_(name),
         class_properties_(props),
         dynamic_properties_(dyn_prop),
-        dynamic_relationships_(false) {
+        dynamic_relationships_(false),
+        is_controller_service_(false) {
 
   }
   explicit ClassDescription(std::string name, std::map<std::string, core::Property> props, std::vector<core::Relationship> class_relationships, bool dyn_prop, bool dyn_rel)
@@ -44,13 +47,16 @@ struct ClassDescription {
         class_properties_(props),
         class_relationships_(class_relationships),
         dynamic_properties_(dyn_prop),
-        dynamic_relationships_(dyn_rel) {
+        dynamic_relationships_(dyn_rel),
+        is_controller_service_(false) {
   }
   std::string class_name_;
   std::map<std::string, core::Property> class_properties_;
   std::vector<core::Relationship> class_relationships_;
   bool dynamic_properties_;
   bool dynamic_relationships_;
+
+  bool is_controller_service_;
 };
 
 struct Components {
@@ -59,15 +65,63 @@ struct Components {
   std::vector<ClassDescription> other_components_;
 };
 
-class BuildDescription {
+struct BundleDetails {
+  std::string artifact;
+  std::string group;
+  std::string version;
+};
+
+class ExternalBuildDescription {
+ private:
+
+  static std::vector<struct BundleDetails> &getExternal() {
+    static std::vector<struct BundleDetails> external_groups;
+    return external_groups;
+  }
+
+  static std::map<std::string, struct Components> &getExternalMappings() {
+    static std::map<std::string, struct Components> external_mappings;
+    return external_mappings;
+  }
+
  public:
 
+  static bool addExternalComponent(struct BundleDetails details, const ClassDescription &description) {
+    bool found = false;
+    for (const auto &d : getExternal()) {
+      if (d.artifact == details.artifact) {
+        found = true;
+        break;
+      }
+    }
+    if (!found) {
+      getExternal().push_back(details);
+    }
+    if (description.is_controller_service_) {
+      getExternalMappings()[details.artifact].controller_services_.push_back(description);
+    } else {
+      getExternalMappings()[details.artifact].processors_.push_back(description);
+    }
+    return true;
+  }
+
+  static struct Components getClassDescriptions(const std::string &group) {
+    return getExternalMappings()[group];
+  }
+
+  static std::vector<struct BundleDetails> getExternalGroups() {
+    return getExternal();
+  }
+};
+
+class BuildDescription {
+ public:
   static struct Components getClassDescriptions(const std::string group = "minifi-system") {
     static std::map<std::string, struct Components> class_mappings;
 #ifndef WIN32
-	if (UNLIKELY(IsNullOrEmpty(class_mappings[group].processors_) && IsNullOrEmpty(class_mappings[group].processors_))) {
+    if (UNLIKELY(IsNullOrEmpty(class_mappings[group].processors_) && IsNullOrEmpty(class_mappings[group].processors_))) {
 #else
-	if (class_mappings[group].processors_.empty()) {
+      if (class_mappings[group].processors_.empty()) {
 #endif
       for (auto clazz : core::ClassLoader::getDefaultClassLoader().getClasses(group)) {
         std::string class_name = clazz;
@@ -82,10 +136,10 @@ class BuildDescription {
         std::shared_ptr<core::ConfigurableComponent> component = std::dynamic_pointer_cast<core::ConfigurableComponent>(obj);
 
         std::string classDescriptionName = clazz;
-        utils::StringUtils::replaceAll(classDescriptionName,"::",".");
+        utils::StringUtils::replaceAll(classDescriptionName, "::", ".");
         ClassDescription description(classDescriptionName);
         if (nullptr != component) {
-          auto processor = std::dynamic_pointer_cast<core::Processor>(obj) ;
+          auto processor = std::dynamic_pointer_cast<core::Processor>(obj);
           bool is_processor = processor != nullptr;
           bool is_controller_service = LIKELY(is_processor == true) ? false : std::dynamic_pointer_cast<core::controller::ControllerService>(obj) != nullptr;
 

@@ -28,6 +28,8 @@
 
 #define DEFAULT_DYNAMIC_PROPERTY_DESC "Dynamic Property"
 
+#define STAR_PROPERTIES "Property"
+
 #include "logging/Logger.h"
 #include "Property.h"
 
@@ -179,6 +181,10 @@ class ConfigurableComponent {
 
  protected:
 
+  void setAcceptAllProperties(){
+    accept_all_properties_ = true;
+  }
+
   /**
    * Returns true if the instance can be edited.
    * @return true/false
@@ -186,6 +192,8 @@ class ConfigurableComponent {
   virtual bool canEdit()= 0;
 
   mutable std::mutex configuration_mutex_;
+
+  bool accept_all_properties_;
 
   // Supported properties
   std::map<std::string, Property> properties_;

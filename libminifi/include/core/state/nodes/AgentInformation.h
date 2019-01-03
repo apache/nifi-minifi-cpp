@@ -80,7 +80,7 @@ class ComponentManifest : public DeviceInformation {
     return CoreComponent::getName();
   }
 
-  std::vector<SerializedResponseNode> serialize() {
+  virtual std::vector<SerializedResponseNode> serialize() {
     std::vector<SerializedResponseNode> serialized;
     SerializedResponseNode resp;
     resp.name = "componentManifest";
@@ -280,7 +280,13 @@ class ComponentManifest : public DeviceInformation {
         }
         std::string description;
 
-        if (AgentDocs::getDescription(processorName, description)) {
+        bool foundDescription = AgentDocs::getDescription(processorName, description);
+
+        if (!foundDescription) {
+          foundDescription = AgentDocs::getDescription(group.class_name_, description);
+        }
+
+        if (foundDescription) {
           SerializedResponseNode proc_desc;
           proc_desc.name = "typeDescription";
           proc_desc.value = description;
@@ -296,6 +302,28 @@ class ComponentManifest : public DeviceInformation {
       response.children.push_back(type);
     }
 
+  }
+};
+
+class ExternalManifest : public ComponentManifest {
+ public:
+  ExternalManifest(std::string name, utils::Identifier & uuid)
+      : ComponentManifest(name, uuid) {
+  }
+
+  ExternalManifest(const std::string &name)
+      : ComponentManifest(name) {
+  }
+
+  virtual std::vector<SerializedResponseNode> serialize() {
+    std::vector<SerializedResponseNode> serialized;
+    SerializedResponseNode resp;
+    resp.name = "componentManifest";
+    struct Components group = ExternalBuildDescription::getClassDescriptions(getName());
+    serializeClassDescription(group.processors_, "processors", resp);
+    serializeClassDescription(group.controller_services_, "controllerServices", resp);
+    serialized.push_back(resp);
+    return serialized;
   }
 };
 
@@ -336,6 +364,33 @@ class Bundles : public DeviceInformation {
       bundle.children.push_back(version);
 
       ComponentManifest compMan(group);
+      // serialize the component information.
+      for (auto component : compMan.serialize()) {
+        bundle.children.push_back(component);
+      }
+      serialized.push_back(bundle);
+    }
+
+    // let's provide our external manifests.
+    for (auto group : ExternalBuildDescription::getExternalGroups()) {
+      SerializedResponseNode bundle;
+      bundle.name = "bundles";
+
+      SerializedResponseNode bgroup;
+      bgroup.name = "group";
+      bgroup.value = group.group;
+      SerializedResponseNode artifact;
+      artifact.name = "artifact";
+      artifact.value = group.artifact;
+      SerializedResponseNode version;
+      version.name = "version";
+      version.value = group.version;
+
+      bundle.children.push_back(bgroup);
+      bundle.children.push_back(artifact);
+      bundle.children.push_back(version);
+
+      ExternalManifest compMan(group.artifact);
       // serialize the component information.
       for (auto component : compMan.serialize()) {
         bundle.children.push_back(component);
@@ -408,28 +463,28 @@ class AgentStatus : public StateMonitorNode {
     serialized.push_back(uptime);
 
     if (nullptr != monitor_) {
-         auto components = monitor_->getAllComponents();
-         SerializedResponseNode componentsNode(false);
-         componentsNode.name = "components";
+      auto components = monitor_->getAllComponents();
+      SerializedResponseNode componentsNode(false);
+      componentsNode.name = "components";
 
-         for (auto component : components) {
-           SerializedResponseNode componentNode(false);
-           componentNode.name = component->getComponentName();
+      for (auto component : components) {
+        SerializedResponseNode componentNode(false);
+        componentNode.name = component->getComponentName();
 
-           SerializedResponseNode uuidNode;
-           uuidNode.name = "uuid";
-           uuidNode.value = component->getComponentUUID();
+        SerializedResponseNode uuidNode;
+        uuidNode.name = "uuid";
+        uuidNode.value = component->getComponentUUID();
 
-           SerializedResponseNode componentStatusNode;
-           componentStatusNode.name = "running";
-           componentStatusNode.value = component->isRunning();
+        SerializedResponseNode componentStatusNode;
+        componentStatusNode.name = "running";
+        componentStatusNode.value = component->isRunning();
 
-           componentNode.children.push_back(componentStatusNode);
-           componentNode.children.push_back(uuidNode);
-           componentsNode.children.push_back(componentNode);
-         }
-         serialized.push_back(componentsNode);
-       }
+        componentNode.children.push_back(componentStatusNode);
+        componentNode.children.push_back(uuidNode);
+        componentsNode.children.push_back(componentNode);
+      }
+      serialized.push_back(componentsNode);
+    }
 
     return serialized;
   }

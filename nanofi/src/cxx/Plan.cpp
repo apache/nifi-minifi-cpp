@@ -189,7 +189,7 @@ bool ExecutionPlan::runNextProcessor(std::function<void(const std::shared_ptr<co
   return hasMore;
 }
 
-std::set<provenance::ProvenanceEventRecord*> ExecutionPlan::getProvenanceRecords() {
+std::set<std::shared_ptr<provenance::ProvenanceEventRecord>> ExecutionPlan::getProvenanceRecords() {
   return process_sessions_.at(location)->getProvenanceReporter()->getEvents();
 }
 

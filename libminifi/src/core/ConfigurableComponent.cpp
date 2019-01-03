@@ -32,11 +32,13 @@ namespace minifi {
 namespace core {
 
 ConfigurableComponent::ConfigurableComponent()
-    : logger_(logging::LoggerFactory<ConfigurableComponent>::getLogger()) {
+    : accept_all_properties_(false),
+      logger_(logging::LoggerFactory<ConfigurableComponent>::getLogger()) {
 }
 
 ConfigurableComponent::ConfigurableComponent(const ConfigurableComponent &&other)
-    : properties_(std::move(other.properties_)),
+    : accept_all_properties_(false),
+      properties_(std::move(other.properties_)),
       dynamic_properties_(std::move(other.dynamic_properties_)),
       logger_(logging::LoggerFactory<ConfigurableComponent>::getLogger()) {
 }
@@ -76,8 +78,16 @@ bool ConfigurableComponent::setProperty(const std::string name, std::string valu
     logger_->log_debug("Component %s property name %s value %s", name, new_property.getName(), value);
     return true;
   } else {
-    logger_->log_debug("Component %s cannot be set to %s", name, value);
-    return false;
+    if (accept_all_properties_) {
+      Property new_property(name, STAR_PROPERTIES, value, false, "", { }, { });
+      new_property.setTransient();
+      new_property.setValue(value);
+      properties_.insert(std::pair<std::string, Property>(name, new_property));
+      return true;
+    } else {
+      logger_->log_debug("Component %s cannot be set to %s", name, value);
+      return false;
+    }
   }
 }
 
@@ -123,31 +133,47 @@ bool ConfigurableComponent::setProperty(Property &prop, std::string value) {
     logger_->log_debug("property name %s value %s and new value is %s", prop.getName(), value, new_property.getValue().to_string());
     return true;
   } else {
-    Property new_property(prop);
-    new_property.setValue(value);
-    properties_.insert(std::pair<std::string, Property>(prop.getName(), new_property));
-    onPropertyModified({}, new_property);
-    return true;
-  }
-}
-
-bool ConfigurableComponent::setProperty(Property &prop, PropertyValue &value) {
-  std::lock_guard<std::mutex> lock(configuration_mutex_);
-    auto it = properties_.find(prop.getName());
-
-    if (it != properties_.end()) {
-      Property &orig_property = it->second;
-      Property new_property = orig_property;
+    if (accept_all_properties_) {
+      Property new_property(prop);
+      new_property.setTransient();
       new_property.setValue(value);
-      properties_[new_property.getName()] = new_property;
-      onPropertyModified(orig_property, new_property);
-      logger_->log_debug("property name %s value %s and new value is %s", prop.getName(), new_property.getName(), new_property.getValue().to_string());
+      properties_.insert(std::pair<std::string, Property>(prop.getName(), new_property));
+      logger_->log_debug("Adding transient property name %s value %s and new value is %s", prop.getName(), value, new_property.getValue().to_string());
       return true;
     } else {
       // Should not attempt to update dynamic properties here since the return code
       // is relied upon by other classes to determine if the property exists.
       return false;
     }
+  }
+}
+
+bool ConfigurableComponent::setProperty(Property &prop, PropertyValue &value) {
+  std::lock_guard<std::mutex> lock(configuration_mutex_);
+  auto it = properties_.find(prop.getName());
+
+  if (it != properties_.end()) {
+    Property &orig_property = it->second;
+    Property new_property = orig_property;
+    new_property.setValue(value);
+    properties_[new_property.getName()] = new_property;
+    onPropertyModified(orig_property, new_property);
+    logger_->log_debug("property name %s value %s and new value is %s", prop.getName(), new_property.getName(), value, new_property.getValue().to_string());
+    return true;
+  } else {
+    if (accept_all_properties_) {
+      Property new_property(prop);
+      new_property.setTransient();
+      new_property.setValue(value);
+      properties_.insert(std::pair<std::string, Property>(prop.getName(), new_property));
+      logger_->log_debug("Adding transient property name %s value %s and new value is %s", prop.getName(), value, new_property.getValue().to_string());
+      return true;
+    } else {
+      // Should not attempt to update dynamic properties here since the return code
+      // is relied upon by other classes to determine if the property exists.
+      return false;
+    }
+  }
 }
 
 /**
@@ -191,11 +217,11 @@ bool ConfigurableComponent::createDynamicProperty(const std::string &name, const
     return false;
   }
 
-  Property new_property(name, DEFAULT_DYNAMIC_PROPERTY_DESC, value, false, "", {}, {});
+  Property new_property(name, DEFAULT_DYNAMIC_PROPERTY_DESC, value, false, "", { }, { });
   new_property.setSupportsExpressionLanguage(true);
   logger_->log_info("Processor %s dynamic property '%s' value '%s'", name.c_str(), new_property.getName().c_str(), value.c_str());
   dynamic_properties_[new_property.getName()] = new_property;
-  onDynamicPropertyModified({}, new_property);
+  onDynamicPropertyModified({ }, new_property);
   return true;
 }
 
@@ -253,11 +279,11 @@ std::map<std::string, Property> ConfigurableComponent::getProperties() const {
   std::map<std::string, Property> result;
 
   for (const auto &pair : properties_) {
-    result.insert({pair.first, pair.second});
+    result.insert({ pair.first, pair.second });
   }
 
   for (const auto &pair : dynamic_properties_) {
-    result.insert({pair.first, pair.second});
+    result.insert({ pair.first, pair.second });
   }
 
   return result;

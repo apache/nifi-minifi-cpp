@@ -109,7 +109,7 @@ void YamlConfiguration::parseProcessorNodeYaml(YAML::Node processorsNode, core::
           lastOfIdx++;  // if a value is found, increment to move beyond the .
           int nameLength = procCfg.javaClass.length() - lastOfIdx;
           std::string processorName = procCfg.javaClass.substr(lastOfIdx, nameLength);
-          processor = this->createProcessor(processorName, uuid);
+          processor = this->createProcessor(processorName, procCfg.javaClass, uuid);
         } else {
           // Allow unqualified class names for core processors
           processor = this->createProcessor(procCfg.javaClass, uuid);
@@ -751,7 +751,7 @@ void YamlConfiguration::parsePropertiesNodeYaml(YAML::Node *propertiesNode, std:
           }
         }
       } else {
-        core::Property myProp;
+        core::Property myProp(propertyName, "", "");
         processor->getProperty(propertyName, myProp);
         PropertyValue defaultValue;
         defaultValue = myProp.getDefaultValue();
@@ -812,6 +812,8 @@ void YamlConfiguration::parsePropertiesNodeYaml(YAML::Node *propertiesNode, std:
               logger_->log_warn("Dynamic property %s with value %s set", propertyName.c_str(), rawValueString.c_str());
             }
           }
+        } else {
+          logger_->log_debug("Property %s with value %s set", propertyName.c_str(), rawValueString.c_str());
         }
       }
     }

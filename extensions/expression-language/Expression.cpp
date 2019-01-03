@@ -58,21 +58,24 @@ Expression make_static(std::string val) {
   return Expression(Value(val));
 }
 
-Expression make_dynamic(const std::function<Value(const Parameters &params,
-                                                  const std::vector<Expression> &sub_exprs)> &val_fn) {
+Expression make_dynamic(const std::function<Value(const Parameters &params, const std::vector<Expression> &sub_exprs)> &val_fn) {
   return Expression(Value(), val_fn);
 }
 
 Expression make_dynamic_attr(const std::string &attribute_id) {
   return make_dynamic([attribute_id](const Parameters &params, const std::vector<Expression> &sub_exprs) -> Value {
+
     std::string result;
     const auto cur_flow_file = params.flow_file.lock();
     if (cur_flow_file && cur_flow_file->getAttribute(attribute_id, result)) {
       return Value(result);
-    } else if (attribute_id.rfind("nifi.", 0) == 0) {
-      const auto config = params.configuration.lock();
-      if (config && config->get(attribute_id, result)) {
+    } else {
+      auto registry = params.registry_.lock();
+      if ( registry && registry->getConfigurationProperty( attribute_id , result) ) {
         return Value(result);
+      }
+      else {
+        return Value();
       }
     }
     return Value();
@@ -355,9 +358,9 @@ Value expr_indexOf(const std::vector<Value> &args) {
   auto pos = args[0].asString().find(args[1].asString());
 
   if (pos == std::string::npos) {
-    return Value(static_cast<int64_t >(-1));
+    return Value(static_cast<int64_t>(-1));
   } else {
-    return Value(static_cast<int64_t >(pos));
+    return Value(static_cast<int64_t>(pos));
   }
 }
 
@@ -373,9 +376,9 @@ Value expr_lastIndexOf(const std::vector<Value> &args) {
   }
 
   if (pos == std::string::npos) {
-    return Value(static_cast<int64_t >(-1));
+    return Value(static_cast<int64_t>(-1));
   } else {
-    return Value(static_cast<int64_t >(pos));
+    return Value(static_cast<int64_t>(pos));
   }
 }
 
@@ -402,868 +405,154 @@ Value expr_unescapeJson(const std::vector<Value> &args) {
 }
 
 Value expr_escapeHtml3(const std::vector<Value> &args) {
-  return Value(utils::StringUtils::replaceMap(
-      args[0].asString(),
-      {
-          {"!", "&excl;"},
-          {"\"", "&quot;"},
-          {"#", "&num;"},
-          {"$", "&dollar;"},
-          {"%", "&percnt;"},
-          {"&", "&amp;"},
-          {"'", "&apos;"},
-          {"(", "&lpar;"},
-          {")", "&rpar;"},
-          {"*", "&ast;"},
-          {"+", "&plus;"},
-          {",", "&comma;"},
-          {"-", "&minus;"},
-          {".", "&period;"},
-          {"/", "&sol;"},
-          {":", "&colon;"},
-          {";", "&semi;"},
-          {"<", "&lt;"},
-          {"=", "&equals;"},
-          {">", "&gt;"},
-          {"?", "&quest;"},
-          {"@", "&commat;"},
-          {"[", "&lsqb;"},
-          {"\\", "&bsol;"},
-          {"]", "&rsqb;"},
-          {"^", "&circ;"},
-          {"_", "&lowbar;"},
-          {"`", "&grave;"},
-          {"{", "&lcub;"},
-          {"|", "&verbar;"},
-          {"}", "&rcub;"},
-          {"~", "&tilde;"},
-          {"¡", "&iexcl;"},
-          {"¢", "&cent;"},
-          {"£", "&pound;"},
-          {"¤", "&curren;"},
-          {"¥", "&yen;"},
-          {"¦", "&brkbar;"},
-          {"§", "&sect;"},
-          {"¨", "&uml;"},
-          {"©", "&copy;"},
-          {"ª", "&ordf;"},
-          {"«", "&laquo;"},
-          {"¬", "&not;"},
-          {"®", "&reg;"},
-          {"¯", "&macr;"},
-          {"°", "&deg;"},
-          {"±", "&plusmn;"},
-          {"²", "&sup2;"},
-          {"³", "&sup3;"},
-          {"´", "&acute;"},
-          {"µ", "&micro;"},
-          {"¶", "&para;"},
-          {"·", "&middot;"},
-          {"¸", "&cedil;"},
-          {"¹", "&sup1;"},
-          {"º", "&ordm;"},
-          {"»", "&raquo;;"},
-          {"¼", "&frac14;"},
-          {"½", "&frac12;"},
-          {"¾", "&frac34;"},
-          {"¿", "&iquest;"},
-          {"À", "&Agrave;"},
-          {"Á", "&Aacute;"},
-          {"Â", "&Acirc;"},
-          {"Ã", "&Atilde;"},
-          {"Ä", "&Auml;"},
-          {"Å", "&Aring;"},
-          {"Æ", "&AElig;"},
-          {"Ç", "&Ccedil;"},
-          {"È", "&Egrave;"},
-          {"É", "&Eacute;"},
-          {"Ê", "&Ecirc;"},
-          {"Ë", "&Euml;"},
-          {"Ì", "&Igrave;"},
-          {"Í", "&Iacute;"},
-          {"Î", "&Icirc;"},
-          {"Ï", "&Iuml;"},
-          {"Ð", "&ETH;"},
-          {"Ñ", "&Ntilde;"},
-          {"Ò", "&Ograve;"},
-          {"Ó", "&Oacute;"},
-          {"Ô", "&Ocirc;"},
-          {"Õ", "&Otilde;"},
-          {"Ö", "&Ouml;"},
-          {"×", "&times;"},
-          {"Ø", "&Oslash;"},
-          {"Ù", "&Ugrave;;"},
-          {"Ú", "&Uacute;"},
-          {"Û", "&Ucirc;"},
-          {"Ü", "&Uuml;"},
-          {"Ý", "&Yacute;"},
-          {"Þ", "&THORN;"},
-          {"ß", "&szlig;"},
-          {"à", "&agrave;"},
-          {"á", "&aacute;"},
-          {"â", "&acirc;"},
-          {"ã", "&atilde;"},
-          {"ä", "&auml;"},
-          {"å", "&aring;"},
-          {"æ", "&aelig;"},
-          {"ç", "&ccedil;"},
-          {"è", "&egrave;"},
-          {"é", "&eacute;"},
-          {"ê", "&ecirc;"},
-          {"ë", "&euml;"},
-          {"ì", "&igrave;"},
-          {"í", "&iacute;"},
-          {"î", "&icirc;"},
-          {"ï", "&iuml;"},
-          {"ð", "&eth;"},
-          {"ñ", "&ntilde;"},
-          {"ò", "&ograve;"},
-          {"ó", "&oacute;"},
-          {"ô", "&ocirc;"},
-          {"õ", "&otilde;"},
-          {"ö", "&ouml;"},
-          {"÷", "&divide;"},
-          {"ø", "&oslash;"},
-          {"ù", "&ugrave;"},
-          {"ú", "&uacute;"},
-          {"û", "&ucirc;"},
-          {"ü", "&uuml;"},
-          {"ý", "&yacute;"},
-          {"þ", "&thorn;"},
-          {"ÿ", "&yuml;"}
-      }));
+  return Value(utils::StringUtils::replaceMap(args[0].asString(), { { "!", "&excl;" }, { "\"", "&quot;" }, { "#", "&num;" }, { "$", "&dollar;" }, { "%", "&percnt;" }, { "&", "&amp;" },
+                                                  { "'", "&apos;" }, { "(", "&lpar;" }, { ")", "&rpar;" }, { "*", "&ast;" }, { "+", "&plus;" }, { ",", "&comma;" }, { "-", "&minus;" }, { ".",
+                                                      "&period;" }, { "/", "&sol;" }, { ":", "&colon;" }, { ";", "&semi;" }, { "<", "&lt;" }, { "=", "&equals;" }, { ">", "&gt;" }, { "?", "&quest;" },
+                                                  { "@", "&commat;" }, { "[", "&lsqb;" }, { "\\", "&bsol;" }, { "]", "&rsqb;" }, { "^", "&circ;" }, { "_", "&lowbar;" }, { "`", "&grave;" }, { "{",
+                                                      "&lcub;" }, { "|", "&verbar;" }, { "}", "&rcub;" }, { "~", "&tilde;" }, { "¡", "&iexcl;" }, { "¢", "&cent;" }, { "£", "&pound;" }, { "¤",
+                                                      "&curren;" }, { "¥", "&yen;" }, { "¦", "&brkbar;" }, { "§", "&sect;" }, { "¨", "&uml;" }, { "©", "&copy;" }, { "ª", "&ordf;" },
+                                                  { "«", "&laquo;" }, { "¬", "&not;" }, { "®", "&reg;" }, { "¯", "&macr;" }, { "°", "&deg;" }, { "±", "&plusmn;" }, { "²", "&sup2;" },
+                                                  { "³", "&sup3;" }, { "´", "&acute;" }, { "µ", "&micro;" }, { "¶", "&para;" }, { "·", "&middot;" }, { "¸", "&cedil;" }, { "¹", "&sup1;" }, { "º",
+                                                      "&ordm;" }, { "»", "&raquo;;" }, { "¼", "&frac14;" }, { "½", "&frac12;" }, { "¾", "&frac34;" }, { "¿", "&iquest;" }, { "À", "&Agrave;" }, { "Á",
+                                                      "&Aacute;" }, { "Â", "&Acirc;" }, { "Ã", "&Atilde;" }, { "Ä", "&Auml;" }, { "Å", "&Aring;" }, { "Æ", "&AElig;" }, { "Ç", "&Ccedil;" }, { "È",
+                                                      "&Egrave;" }, { "É", "&Eacute;" }, { "Ê", "&Ecirc;" }, { "Ë", "&Euml;" }, { "Ì", "&Igrave;" }, { "Í", "&Iacute;" }, { "Î", "&Icirc;" }, { "Ï",
+                                                      "&Iuml;" }, { "Ð", "&ETH;" }, { "Ñ", "&Ntilde;" }, { "Ò", "&Ograve;" }, { "Ó", "&Oacute;" }, { "Ô", "&Ocirc;" }, { "Õ", "&Otilde;" }, { "Ö",
+                                                      "&Ouml;" }, { "×", "&times;" }, { "Ø", "&Oslash;" }, { "Ù", "&Ugrave;;" }, { "Ú", "&Uacute;" }, { "Û", "&Ucirc;" }, { "Ü", "&Uuml;" }, { "Ý",
+                                                      "&Yacute;" }, { "Þ", "&THORN;" }, { "ß", "&szlig;" }, { "à", "&agrave;" }, { "á", "&aacute;" }, { "â", "&acirc;" }, { "ã", "&atilde;" }, { "ä",
+                                                      "&auml;" }, { "å", "&aring;" }, { "æ", "&aelig;" }, { "ç", "&ccedil;" }, { "è", "&egrave;" }, { "é", "&eacute;" }, { "ê", "&ecirc;" }, { "ë",
+                                                      "&euml;" }, { "ì", "&igrave;" }, { "í", "&iacute;" }, { "î", "&icirc;" }, { "ï", "&iuml;" }, { "ð", "&eth;" }, { "ñ", "&ntilde;" }, { "ò",
+                                                      "&ograve;" }, { "ó", "&oacute;" }, { "ô", "&ocirc;" }, { "õ", "&otilde;" }, { "ö", "&ouml;" }, { "÷", "&divide;" }, { "ø", "&oslash;" }, { "ù",
+                                                      "&ugrave;" }, { "ú", "&uacute;" }, { "û", "&ucirc;" }, { "ü", "&uuml;" }, { "ý", "&yacute;" }, { "þ", "&thorn;" }, { "ÿ", "&yuml;" } }));
 }
 
 Value expr_escapeHtml4(const std::vector<Value> &args) {
-  return Value(utils::StringUtils::replaceMap(
-      args[0].asString(),
-      {
-          {"!", "&excl;"},
-          {"\"", "&quot;"},
-          {"#", "&num;"},
-          {"$", "&dollar;"},
-          {"%", "&percnt;"},
-          {"&", "&amp;"},
-          {"'", "&apos;"},
-          {"(", "&lpar;"},
-          {")", "&rpar;"},
-          {"*", "&ast;"},
-          {"+", "&plus;"},
-          {",", "&comma;"},
-          {"-", "&minus;"},
-          {".", "&period;"},
-          {"/", "&sol;"},
-          {":", "&colon;"},
-          {";", "&semi;"},
-          {"<", "&lt;"},
-          {"=", "&equals;"},
-          {">", "&gt;"},
-          {"?", "&quest;"},
-          {"@", "&commat;"},
-          {"[", "&lsqb;"},
-          {"\\", "&bsol;"},
-          {"]", "&rsqb;"},
-          {"^", "&circ;"},
-          {"_", "&lowbar;"},
-          {"`", "&grave;"},
-          {"{", "&lcub;"},
-          {"|", "&verbar;"},
-          {"}", "&rcub;"},
-          {"~", "&tilde;"},
-          {"¡", "&iexcl;"},
-          {"¢", "&cent;"},
-          {"£", "&pound;"},
-          {"¤", "&curren;"},
-          {"¥", "&yen;"},
-          {"¦", "&brkbar;"},
-          {"§", "&sect;"},
-          {"¨", "&uml;"},
-          {"©", "&copy;"},
-          {"ª", "&ordf;"},
-          {"«", "&laquo;"},
-          {"¬", "&not;"},
-          {"®", "&reg;"},
-          {"¯", "&macr;"},
-          {"°", "&deg;"},
-          {"±", "&plusmn;"},
-          {"²", "&sup2;"},
-          {"³", "&sup3;"},
-          {"´", "&acute;"},
-          {"µ", "&micro;"},
-          {"¶", "&para;"},
-          {"·", "&middot;"},
-          {"¸", "&cedil;"},
-          {"¹", "&sup1;"},
-          {"º", "&ordm;"},
-          {"»", "&raquo;;"},
-          {"¼", "&frac14;"},
-          {"½", "&frac12;"},
-          {"¾", "&frac34;"},
-          {"¿", "&iquest;"},
-          {"À", "&Agrave;"},
-          {"Á", "&Aacute;"},
-          {"Â", "&Acirc;"},
-          {"Ã", "&Atilde;"},
-          {"Ä", "&Auml;"},
-          {"Å", "&Aring;"},
-          {"Æ", "&AElig;"},
-          {"Ç", "&Ccedil;"},
-          {"È", "&Egrave;"},
-          {"É", "&Eacute;"},
-          {"Ê", "&Ecirc;"},
-          {"Ë", "&Euml;"},
-          {"Ì", "&Igrave;"},
-          {"Í", "&Iacute;"},
-          {"Î", "&Icirc;"},
-          {"Ï", "&Iuml;"},
-          {"Ð", "&ETH;"},
-          {"Ñ", "&Ntilde;"},
-          {"Ò", "&Ograve;"},
-          {"Ó", "&Oacute;"},
-          {"Ô", "&Ocirc;"},
-          {"Õ", "&Otilde;"},
-          {"Ö", "&Ouml;"},
-          {"×", "&times;"},
-          {"Ø", "&Oslash;"},
-          {"Ù", "&Ugrave;;"},
-          {"Ú", "&Uacute;"},
-          {"Û", "&Ucirc;"},
-          {"Ü", "&Uuml;"},
-          {"Ý", "&Yacute;"},
-          {"Þ", "&THORN;"},
-          {"ß", "&szlig;"},
-          {"à", "&agrave;"},
-          {"á", "&aacute;"},
-          {"â", "&acirc;"},
-          {"ã", "&atilde;"},
-          {"ä", "&auml;"},
-          {"å", "&aring;"},
-          {"æ", "&aelig;"},
-          {"ç", "&ccedil;"},
-          {"è", "&egrave;"},
-          {"é", "&eacute;"},
-          {"ê", "&ecirc;"},
-          {"ë", "&euml;"},
-          {"ì", "&igrave;"},
-          {"í", "&iacute;"},
-          {"î", "&icirc;"},
-          {"ï", "&iuml;"},
-          {"ð", "&eth;"},
-          {"ñ", "&ntilde;"},
-          {"ò", "&ograve;"},
-          {"ó", "&oacute;"},
-          {"ô", "&ocirc;"},
-          {"õ", "&otilde;"},
-          {"ö", "&ouml;"},
-          {"÷", "&divide;"},
-          {"ø", "&oslash;"},
-          {"ù", "&ugrave;"},
-          {"ú", "&uacute;"},
-          {"û", "&ucirc;"},
-          {"ü", "&uuml;"},
-          {"ý", "&yacute;"},
-          {"þ", "&thorn;"},
-          {"ÿ", "&yuml;"},
-          {"\u0192", "&fnof;"},
-          {"\u0391", "&Alpha;"},
-          {"\u0392", "&Beta;"},
-          {"\u0393", "&Gamma;"},
-          {"\u0394", "&Delta;"},
-          {"\u0395", "&Epsilon;"},
-          {"\u0396", "&Zeta;"},
-          {"\u0397", "&Eta;"},
-          {"\u0398", "&Theta;"},
-          {"\u0399", "&Iota;"},
-          {"\u039A", "&Kappa;"},
-          {"\u039B", "&Lambda;"},
-          {"\u039C", "&Mu;"},
-          {"\u039D", "&Nu;"},
-          {"\u039E", "&Xi;"},
-          {"\u039F", "&Omicron;"},
-          {"\u03A0", "&Pi;"},
-          {"\u03A1", "&Rho;"},
-          {"\u03A3", "&Sigma;"},
-          {"\u03A4", "&Tau;"},
-          {"\u03A5", "&Upsilon;"},
-          {"\u03A6", "&Phi;"},
-          {"\u03A7", "&Chi;"},
-          {"\u03A8", "&Psi;"},
-          {"\u03A9", "&Omega;"},
-          {"\u03B1", "&alpha;"},
-          {"\u03B2", "&beta;"},
-          {"\u03B3", "&gamma;"},
-          {"\u03B4", "&delta;"},
-          {"\u03B5", "&epsilon;"},
-          {"\u03B6", "&zeta;"},
-          {"\u03B7", "&eta;"},
-          {"\u03B8", "&theta;"},
-          {"\u03B9", "&iota;"},
-          {"\u03BA", "&kappa;"},
-          {"\u03BB", "&lambda;"},
-          {"\u03BC", "&mu;"},
-          {"\u03BD", "&nu;"},
-          {"\u03BE", "&xi;"},
-          {"\u03BF", "&omicron;"},
-          {"\u03C0", "&pi;"},
-          {"\u03C1", "&rho;"},
-          {"\u03C2", "&sigmaf;"},
-          {"\u03C3", "&sigma;"},
-          {"\u03C4", "&tau;"},
-          {"\u03C5", "&upsilon;"},
-          {"\u03C6", "&phi;"},
-          {"\u03C7", "&chi;"},
-          {"\u03C8", "&psi;"},
-          {"\u03C9", "&omega;"},
-          {"\u03D1", "&thetasym;"},
-          {"\u03D2", "&upsih;"},
-          {"\u03D6", "&piv;"},
-          {"\u2022", "&bull;"},
-          {"\u2026", "&hellip;"},
-          {"\u2032", "&prime;"},
-          {"\u2033", "&Prime;"},
-          {"\u203E", "&oline;"},
-          {"\u2044", "&frasl;"},
-          {"\u2118", "&weierp;"},
-          {"\u2111", "&image;"},
-          {"\u211C", "&real;"},
-          {"\u2122", "&trade;"},
-          {"\u2135", "&alefsym;"},
-          {"\u2190", "&larr;"},
-          {"\u2191", "&uarr;"},
-          {"\u2192", "&rarr;"},
-          {"\u2193", "&darr;"},
-          {"\u2194", "&harr;"},
-          {"\u21B5", "&crarr;"},
-          {"\u21D0", "&lArr;"},
-          {"\u21D1", "&uArr;"},
-          {"\u21D2", "&rArr;"},
-          {"\u21D3", "&dArr;"},
-          {"\u21D4", "&hArr;"},
-          {"\u2200", "&forall;"},
-          {"\u2202", "&part;"},
-          {"\u2203", "&exist;"},
-          {"\u2205", "&empty;"},
-          {"\u2207", "&nabla;"},
-          {"\u2208", "&isin;"},
-          {"\u2209", "&notin;"},
-          {"\u220B", "&ni;"},
-          {"\u220F", "&prod;"},
-          {"\u2211", "&sum;"},
-          {"\u2212", "&minus;"},
-          {"\u2217", "&lowast;"},
-          {"\u221A", "&radic;"},
-          {"\u221D", "&prop;"},
-          {"\u221E", "&infin;"},
-          {"\u2220", "&ang;"},
-          {"\u2227", "&and;"},
-          {"\u2228", "&or;"},
-          {"\u2229", "&cap;"},
-          {"\u222A", "&cup;"},
-          {"\u222B", "&int;"},
-          {"\u2234", "&there4;"},
-          {"\u223C", "&sim;"},
-          {"\u2245", "&cong;"},
-          {"\u2248", "&asymp;"},
-          {"\u2260", "&ne;"},
-          {"\u2261", "&equiv;"},
-          {"\u2264", "&le;"},
-          {"\u2265", "&ge;"},
-          {"\u2282", "&sub;"},
-          {"\u2283", "&sup;"},
-          {"\u2284", "&nsub;"},
-          {"\u2286", "&sube;"},
-          {"\u2287", "&supe;"},
-          {"\u2295", "&oplus;"},
-          {"\u2297", "&otimes;"},
-          {"\u22A5", "&perp;"},
-          {"\u22C5", "&sdot;"},
-          {"\u2308", "&lceil;"},
-          {"\u2309", "&rceil;"},
-          {"\u230A", "&lfloor;"},
-          {"\u230B", "&rfloor;"},
-          {"\u2329", "&lang;"},
-          {"\u232A", "&rang;"},
-          {"\u25CA", "&loz;"},
-          {"\u2660", "&spades;"},
-          {"\u2663", "&clubs;"},
-          {"\u2665", "&hearts;"},
-          {"\u2666", "&diams;"},
-          {"\u0152", "&OElig;"},
-          {"\u0153", "&oelig;"},
-          {"\u0160", "&Scaron;"},
-          {"\u0161", "&scaron;"},
-          {"\u0178", "&Yuml;"},
-          {"\u02C6", "&circ;"},
-          {"\u02DC", "&tilde;"},
-          {"\u2002", "&ensp;"},
-          {"\u2003", "&emsp;"},
-          {"\u2009", "&thinsp;"},
-          {"\u200C", "&zwnj;"},
-          {"\u200D", "&zwj;"},
-          {"\u200E", "&lrm;"},
-          {"\u200F", "&rlm;"},
-          {"\u2013", "&ndash;"},
-          {"\u2014", "&mdash;"},
-          {"\u2018", "&lsquo;"},
-          {"\u2019", "&rsquo;"},
-          {"\u201A", "&sbquo;"},
-          {"\u201C", "&ldquo;"},
-          {"\u201D", "&rdquo;"},
-          {"\u201E", "&bdquo;"},
-          {"\u2020", "&dagger;"},
-          {"\u2021", "&Dagger;"},
-          {"\u2030", "&permil;"},
-          {"\u2039", "&lsaquo;"},
-          {"\u203A", "&rsaquo;"},
-          {"\u20AC", "&euro;"}
-      }));
+  return Value(utils::StringUtils::replaceMap(args[0].asString(), { { "!", "&excl;" }, { "\"", "&quot;" }, { "#", "&num;" }, { "$", "&dollar;" }, { "%", "&percnt;" }, { "&", "&amp;" },
+                                                  { "'", "&apos;" }, { "(", "&lpar;" }, { ")", "&rpar;" }, { "*", "&ast;" }, { "+", "&plus;" }, { ",", "&comma;" }, { "-", "&minus;" }, { ".",
+                                                      "&period;" }, { "/", "&sol;" }, { ":", "&colon;" }, { ";", "&semi;" }, { "<", "&lt;" }, { "=", "&equals;" }, { ">", "&gt;" }, { "?", "&quest;" },
+                                                  { "@", "&commat;" }, { "[", "&lsqb;" }, { "\\", "&bsol;" }, { "]", "&rsqb;" }, { "^", "&circ;" }, { "_", "&lowbar;" }, { "`", "&grave;" }, { "{",
+                                                      "&lcub;" }, { "|", "&verbar;" }, { "}", "&rcub;" }, { "~", "&tilde;" }, { "¡", "&iexcl;" }, { "¢", "&cent;" }, { "£", "&pound;" }, { "¤",
+                                                      "&curren;" }, { "¥", "&yen;" }, { "¦", "&brkbar;" }, { "§", "&sect;" }, { "¨", "&uml;" }, { "©", "&copy;" }, { "ª", "&ordf;" },
+                                                  { "«", "&laquo;" }, { "¬", "&not;" }, { "®", "&reg;" }, { "¯", "&macr;" }, { "°", "&deg;" }, { "±", "&plusmn;" }, { "²", "&sup2;" },
+                                                  { "³", "&sup3;" }, { "´", "&acute;" }, { "µ", "&micro;" }, { "¶", "&para;" }, { "·", "&middot;" }, { "¸", "&cedil;" }, { "¹", "&sup1;" }, { "º",
+                                                      "&ordm;" }, { "»", "&raquo;;" }, { "¼", "&frac14;" }, { "½", "&frac12;" }, { "¾", "&frac34;" }, { "¿", "&iquest;" }, { "À", "&Agrave;" }, { "Á",
+                                                      "&Aacute;" }, { "Â", "&Acirc;" }, { "Ã", "&Atilde;" }, { "Ä", "&Auml;" }, { "Å", "&Aring;" }, { "Æ", "&AElig;" }, { "Ç", "&Ccedil;" }, { "È",
+                                                      "&Egrave;" }, { "É", "&Eacute;" }, { "Ê", "&Ecirc;" }, { "Ë", "&Euml;" }, { "Ì", "&Igrave;" }, { "Í", "&Iacute;" }, { "Î", "&Icirc;" }, { "Ï",
+                                                      "&Iuml;" }, { "Ð", "&ETH;" }, { "Ñ", "&Ntilde;" }, { "Ò", "&Ograve;" }, { "Ó", "&Oacute;" }, { "Ô", "&Ocirc;" }, { "Õ", "&Otilde;" }, { "Ö",
+                                                      "&Ouml;" }, { "×", "&times;" }, { "Ø", "&Oslash;" }, { "Ù", "&Ugrave;;" }, { "Ú", "&Uacute;" }, { "Û", "&Ucirc;" }, { "Ü", "&Uuml;" }, { "Ý",
+                                                      "&Yacute;" }, { "Þ", "&THORN;" }, { "ß", "&szlig;" }, { "à", "&agrave;" }, { "á", "&aacute;" }, { "â", "&acirc;" }, { "ã", "&atilde;" }, { "ä",
+                                                      "&auml;" }, { "å", "&aring;" }, { "æ", "&aelig;" }, { "ç", "&ccedil;" }, { "è", "&egrave;" }, { "é", "&eacute;" }, { "ê", "&ecirc;" }, { "ë",
+                                                      "&euml;" }, { "ì", "&igrave;" }, { "í", "&iacute;" }, { "î", "&icirc;" }, { "ï", "&iuml;" }, { "ð", "&eth;" }, { "ñ", "&ntilde;" }, { "ò",
+                                                      "&ograve;" }, { "ó", "&oacute;" }, { "ô", "&ocirc;" }, { "õ", "&otilde;" }, { "ö", "&ouml;" }, { "÷", "&divide;" }, { "ø", "&oslash;" }, { "ù",
+                                                      "&ugrave;" }, { "ú", "&uacute;" }, { "û", "&ucirc;" }, { "ü", "&uuml;" }, { "ý", "&yacute;" }, { "þ", "&thorn;" }, { "ÿ", "&yuml;" }, { "\u0192",
+                                                      "&fnof;" }, { "\u0391", "&Alpha;" }, { "\u0392", "&Beta;" }, { "\u0393", "&Gamma;" }, { "\u0394", "&Delta;" }, { "\u0395", "&Epsilon;" }, {
+                                                      "\u0396", "&Zeta;" }, { "\u0397", "&Eta;" }, { "\u0398", "&Theta;" }, { "\u0399", "&Iota;" }, { "\u039A", "&Kappa;" }, { "\u039B", "&Lambda;" }, {
+                                                      "\u039C", "&Mu;" }, { "\u039D", "&Nu;" }, { "\u039E", "&Xi;" }, { "\u039F", "&Omicron;" }, { "\u03A0", "&Pi;" }, { "\u03A1", "&Rho;" }, {
+                                                      "\u03A3", "&Sigma;" }, { "\u03A4", "&Tau;" }, { "\u03A5", "&Upsilon;" }, { "\u03A6", "&Phi;" }, { "\u03A7", "&Chi;" }, { "\u03A8", "&Psi;" }, {
+                                                      "\u03A9", "&Omega;" }, { "\u03B1", "&alpha;" }, { "\u03B2", "&beta;" }, { "\u03B3", "&gamma;" }, { "\u03B4", "&delta;" },
+                                                  { "\u03B5", "&epsilon;" }, { "\u03B6", "&zeta;" }, { "\u03B7", "&eta;" }, { "\u03B8", "&theta;" }, { "\u03B9", "&iota;" }, { "\u03BA", "&kappa;" }, {
+                                                      "\u03BB", "&lambda;" }, { "\u03BC", "&mu;" }, { "\u03BD", "&nu;" }, { "\u03BE", "&xi;" }, { "\u03BF", "&omicron;" }, { "\u03C0", "&pi;" }, {
+                                                      "\u03C1", "&rho;" }, { "\u03C2", "&sigmaf;" }, { "\u03C3", "&sigma;" }, { "\u03C4", "&tau;" }, { "\u03C5", "&upsilon;" }, { "\u03C6", "&phi;" }, {
+                                                      "\u03C7", "&chi;" }, { "\u03C8", "&psi;" }, { "\u03C9", "&omega;" }, { "\u03D1", "&thetasym;" }, { "\u03D2", "&upsih;" }, { "\u03D6", "&piv;" }, {
+                                                      "\u2022", "&bull;" }, { "\u2026", "&hellip;" }, { "\u2032", "&prime;" }, { "\u2033", "&Prime;" }, { "\u203E", "&oline;" },
+                                                  { "\u2044", "&frasl;" }, { "\u2118", "&weierp;" }, { "\u2111", "&image;" }, { "\u211C", "&real;" }, { "\u2122", "&trade;" },
+                                                  { "\u2135", "&alefsym;" }, { "\u2190", "&larr;" }, { "\u2191", "&uarr;" }, { "\u2192", "&rarr;" }, { "\u2193", "&darr;" }, { "\u2194", "&harr;" }, {
+                                                      "\u21B5", "&crarr;" }, { "\u21D0", "&lArr;" }, { "\u21D1", "&uArr;" }, { "\u21D2", "&rArr;" }, { "\u21D3", "&dArr;" }, { "\u21D4", "&hArr;" }, {
+                                                      "\u2200", "&forall;" }, { "\u2202", "&part;" }, { "\u2203", "&exist;" }, { "\u2205", "&empty;" }, { "\u2207", "&nabla;" }, { "\u2208", "&isin;" },
+                                                  { "\u2209", "&notin;" }, { "\u220B", "&ni;" }, { "\u220F", "&prod;" }, { "\u2211", "&sum;" }, { "\u2212", "&minus;" }, { "\u2217", "&lowast;" }, {
+                                                      "\u221A", "&radic;" }, { "\u221D", "&prop;" }, { "\u221E", "&infin;" }, { "\u2220", "&ang;" }, { "\u2227", "&and;" }, { "\u2228", "&or;" }, {
+                                                      "\u2229", "&cap;" }, { "\u222A", "&cup;" }, { "\u222B", "&int;" }, { "\u2234", "&there4;" }, { "\u223C", "&sim;" }, { "\u2245", "&cong;" }, {
+                                                      "\u2248", "&asymp;" }, { "\u2260", "&ne;" }, { "\u2261", "&equiv;" }, { "\u2264", "&le;" }, { "\u2265", "&ge;" }, { "\u2282", "&sub;" }, {
+                                                      "\u2283", "&sup;" }, { "\u2284", "&nsub;" }, { "\u2286", "&sube;" }, { "\u2287", "&supe;" }, { "\u2295", "&oplus;" }, { "\u2297", "&otimes;" }, {
+                                                      "\u22A5", "&perp;" }, { "\u22C5", "&sdot;" }, { "\u2308", "&lceil;" }, { "\u2309", "&rceil;" }, { "\u230A", "&lfloor;" },
+                                                  { "\u230B", "&rfloor;" }, { "\u2329", "&lang;" }, { "\u232A", "&rang;" }, { "\u25CA", "&loz;" }, { "\u2660", "&spades;" }, { "\u2663", "&clubs;" }, {
+                                                      "\u2665", "&hearts;" }, { "\u2666", "&diams;" }, { "\u0152", "&OElig;" }, { "\u0153", "&oelig;" }, { "\u0160", "&Scaron;" }, { "\u0161",
+                                                      "&scaron;" }, { "\u0178", "&Yuml;" }, { "\u02C6", "&circ;" }, { "\u02DC", "&tilde;" }, { "\u2002", "&ensp;" }, { "\u2003", "&emsp;" }, { "\u2009",
+                                                      "&thinsp;" }, { "\u200C", "&zwnj;" }, { "\u200D", "&zwj;" }, { "\u200E", "&lrm;" }, { "\u200F", "&rlm;" }, { "\u2013", "&ndash;" }, { "\u2014",
+                                                      "&mdash;" }, { "\u2018", "&lsquo;" }, { "\u2019", "&rsquo;" }, { "\u201A", "&sbquo;" }, { "\u201C", "&ldquo;" }, { "\u201D", "&rdquo;" }, {
+                                                      "\u201E", "&bdquo;" }, { "\u2020", "&dagger;" }, { "\u2021", "&Dagger;" }, { "\u2030", "&permil;" }, { "\u2039", "&lsaquo;" }, { "\u203A",
+                                                      "&rsaquo;" }, { "\u20AC", "&euro;" } }));
 }
 
 Value expr_unescapeHtml3(const std::vector<Value> &args) {
-  return Value(utils::StringUtils::replaceMap(
-      args[0].asString(),
-      {
-          {"&excl;", "!"},
-          {"&quot;", "\""},
-          {"&num;", "#"},
-          {"&dollar;", "$"},
-          {"&percnt;", "%"},
-          {"&amp;", "&"},
-          {"&apos;", "'"},
-          {"&lpar;", "("},
-          {"&rpar;", ")"},
-          {"&ast;", "*"},
-          {"&plus;", "+"},
-          {"&comma;", ","},
-          {"&minus;", "-"},
-          {"&period;", "."},
-          {"&sol;", "/"},
-          {"&colon;", ":"},
-          {"&semi;", ";"},
-          {"&lt;", "<"},
-          {"&equals;", "="},
-          {"&gt;", ">"},
-          {"&quest;", "?"},
-          {"&commat;", "@"},
-          {"&lsqb;", "["},
-          {"&bsol;", "\\"},
-          {"&rsqb;", "]"},
-          {"&circ;", "^"},
-          {"&lowbar;", "_"},
-          {"&grave;", "`"},
-          {"&lcub;", "{"},
-          {"&verbar;", "|"},
-          {"&rcub;", "}"},
-          {"&tilde;", "~"},
-          {"&iexcl;", "¡"},
-          {"&cent;", "¢"},
-          {"&pound;", "£"},
-          {"&curren;", "¤"},
-          {"&yen;", "¥"},
-          {"&brkbar;", "¦"},
-          {"&sect;", "§"},
-          {"&uml;", "¨"},
-          {"&copy;", "©"},
-          {"&ordf;", "ª"},
-          {"&laquo;", "«"},
-          {"&not;", "¬"},
-          {"&reg;", "®"},
-          {"&macr;", "¯"},
-          {"&deg;", "°"},
-          {"&plusmn;", "±"},
-          {"&sup2;", "²"},
-          {"&sup3;", "³"},
-          {"&acute;", "´"},
-          {"&micro;", "µ"},
-          {"&para;", "¶"},
-          {"&middot;", "·"},
-          {"&cedil;", "¸"},
-          {"&sup1;", "¹"},
-          {"&ordm;", "º"},
-          {"&raquo;;", "»"},
-          {"&frac14;", "¼"},
-          {"&frac12;", "½"},
-          {"&frac34;", "¾"},
-          {"&iquest;", "¿"},
-          {"&Agrave;", "À"},
-          {"&Aacute;", "Á"},
-          {"&Acirc;", "Â"},
-          {"&Atilde;", "Ã"},
-          {"&Auml;", "Ä"},
-          {"&Aring;", "Å"},
-          {"&AElig;", "Æ"},
-          {"&Ccedil;", "Ç"},
-          {"&Egrave;", "È"},
-          {"&Eacute;", "É"},
-          {"&Ecirc;", "Ê"},
-          {"&Euml;", "Ë"},
-          {"&Igrave;", "Ì"},
-          {"&Iacute;", "Í"},
-          {"&Icirc;", "Î"},
-          {"&Iuml;", "Ï"},
-          {"&ETH;", "Ð"},
-          {"&Ntilde;", "Ñ"},
-          {"&Ograve;", "Ò"},
-          {"&Oacute;", "Ó"},
-          {"&Ocirc;", "Ô"},
-          {"&Otilde;", "Õ"},
-          {"&Ouml;", "Ö"},
-          {"&times;", "×"},
-          {"&Oslash;", "Ø"},
-          {"&Ugrave;;", "Ù"},
-          {"&Uacute;", "Ú"},
-          {"&Ucirc;", "Û"},
-          {"&Uuml;", "Ü"},
-          {"&Yacute;", "Ý"},
-          {"&THORN;", "Þ"},
-          {"&szlig;", "ß"},
-          {"&agrave;", "à"},
-          {"&aacute;", "á"},
-          {"&acirc;", "â"},
-          {"&atilde;", "ã"},
-          {"&auml;", "ä"},
-          {"&aring;", "å"},
-          {"&aelig;", "æ"},
-          {"&ccedil;", "ç"},
-          {"&egrave;", "è"},
-          {"&eacute;", "é"},
-          {"&ecirc;", "ê"},
-          {"&euml;", "ë"},
-          {"&igrave;", "ì"},
-          {"&iacute;", "í"},
-          {"&icirc;", "î"},
-          {"&iuml;", "ï"},
-          {"&eth;", "ð"},
-          {"&ntilde;", "ñ"},
-          {"&ograve;", "ò"},
-          {"&oacute;", "ó"},
-          {"&ocirc;", "ô"},
-          {"&otilde;", "õ"},
-          {"&ouml;", "ö"},
-          {"&divide;", "÷"},
-          {"&oslash;", "ø"},
-          {"&ugrave;", "ù"},
-          {"&uacute;", "ú"},
-          {"&ucirc;", "û"},
-          {"&uuml;", "ü"},
-          {"&yacute;", "ý"},
-          {"&thorn;", "þ"},
-          {"&yuml;", "ÿ"}
-      }));
+  return Value(utils::StringUtils::replaceMap(args[0].asString(), { { "&excl;", "!" }, { "&quot;", "\"" }, { "&num;", "#" }, { "&dollar;", "$" }, { "&percnt;", "%" }, { "&amp;", "&" },
+                                                  { "&apos;", "'" }, { "&lpar;", "(" }, { "&rpar;", ")" }, { "&ast;", "*" }, { "&plus;", "+" }, { "&comma;", "," }, { "&minus;", "-" }, { "&period;",
+                                                      "." }, { "&sol;", "/" }, { "&colon;", ":" }, { "&semi;", ";" }, { "&lt;", "<" }, { "&equals;", "=" }, { "&gt;", ">" }, { "&quest;", "?" }, {
+                                                      "&commat;", "@" }, { "&lsqb;", "[" }, { "&bsol;", "\\" }, { "&rsqb;", "]" }, { "&circ;", "^" }, { "&lowbar;", "_" }, { "&grave;", "`" }, {
+                                                      "&lcub;", "{" }, { "&verbar;", "|" }, { "&rcub;", "}" }, { "&tilde;", "~" }, { "&iexcl;", "¡" }, { "&cent;", "¢" }, { "&pound;", "£" }, {
+                                                      "&curren;", "¤" }, { "&yen;", "¥" }, { "&brkbar;", "¦" }, { "&sect;", "§" }, { "&uml;", "¨" }, { "&copy;", "©" }, { "&ordf;", "ª" }, { "&laquo;",
+                                                      "«" }, { "&not;", "¬" }, { "&reg;", "®" }, { "&macr;", "¯" }, { "&deg;", "°" }, { "&plusmn;", "±" }, { "&sup2;", "²" }, { "&sup3;", "³" }, {
+                                                      "&acute;", "´" }, { "&micro;", "µ" }, { "&para;", "¶" }, { "&middot;", "·" }, { "&cedil;", "¸" }, { "&sup1;", "¹" }, { "&ordm;", "º" }, {
+                                                      "&raquo;;", "»" }, { "&frac14;", "¼" }, { "&frac12;", "½" }, { "&frac34;", "¾" }, { "&iquest;", "¿" }, { "&Agrave;", "À" }, { "&Aacute;", "Á" }, {
+                                                      "&Acirc;", "Â" }, { "&Atilde;", "Ã" }, { "&Auml;", "Ä" }, { "&Aring;", "Å" }, { "&AElig;", "Æ" }, { "&Ccedil;", "Ç" }, { "&Egrave;", "È" }, {
+                                                      "&Eacute;", "É" }, { "&Ecirc;", "Ê" }, { "&Euml;", "Ë" }, { "&Igrave;", "Ì" }, { "&Iacute;", "Í" }, { "&Icirc;", "Î" }, { "&Iuml;", "Ï" }, {
+                                                      "&ETH;", "Ð" }, { "&Ntilde;", "Ñ" }, { "&Ograve;", "Ò" }, { "&Oacute;", "Ó" }, { "&Ocirc;", "Ô" }, { "&Otilde;", "Õ" }, { "&Ouml;", "Ö" }, {
+                                                      "&times;", "×" }, { "&Oslash;", "Ø" }, { "&Ugrave;;", "Ù" }, { "&Uacute;", "Ú" }, { "&Ucirc;", "Û" }, { "&Uuml;", "Ü" }, { "&Yacute;", "Ý" }, {
+                                                      "&THORN;", "Þ" }, { "&szlig;", "ß" }, { "&agrave;", "à" }, { "&aacute;", "á" }, { "&acirc;", "â" }, { "&atilde;", "ã" }, { "&auml;", "ä" }, {
+                                                      "&aring;", "å" }, { "&aelig;", "æ" }, { "&ccedil;", "ç" }, { "&egrave;", "è" }, { "&eacute;", "é" }, { "&ecirc;", "ê" }, { "&euml;", "ë" }, {
+                                                      "&igrave;", "ì" }, { "&iacute;", "í" }, { "&icirc;", "î" }, { "&iuml;", "ï" }, { "&eth;", "ð" }, { "&ntilde;", "ñ" }, { "&ograve;", "ò" }, {
+                                                      "&oacute;", "ó" }, { "&ocirc;", "ô" }, { "&otilde;", "õ" }, { "&ouml;", "ö" }, { "&divide;", "÷" }, { "&oslash;", "ø" }, { "&ugrave;", "ù" }, {
+                                                      "&uacute;", "ú" }, { "&ucirc;", "û" }, { "&uuml;", "ü" }, { "&yacute;", "ý" }, { "&thorn;", "þ" }, { "&yuml;", "ÿ" } }));
 }
 
 Value expr_unescapeHtml4(const std::vector<Value> &args) {
-  return Value(utils::StringUtils::replaceMap(
-      args[0].asString(),
-      {
-          {"&excl;", "!"},
-          {"&quot;", "\""},
-          {"&num;", "#"},
-          {"&dollar;", "$"},
-          {"&percnt;", "%"},
-          {"&amp;", "&"},
-          {"&apos;", "'"},
-          {"&lpar;", "("},
-          {"&rpar;", ")"},
-          {"&ast;", "*"},
-          {"&plus;", "+"},
-          {"&comma;", ","},
-          {"&minus;", "-"},
-          {"&period;", "."},
-          {"&sol;", "/"},
-          {"&colon;", ":"},
-          {"&semi;", ";"},
-          {"&lt;", "<"},
-          {"&equals;", "="},
-          {"&gt;", ">"},
-          {"&quest;", "?"},
-          {"&commat;", "@"},
-          {"&lsqb;", "["},
-          {"&bsol;", "\\"},
-          {"&rsqb;", "]"},
-          {"&circ;", "^"},
-          {"&lowbar;", "_"},
-          {"&grave;", "`"},
-          {"&lcub;", "{"},
-          {"&verbar;", "|"},
-          {"&rcub;", "}"},
-          {"&tilde;", "~"},
-          {"&iexcl;", "¡"},
-          {"&cent;", "¢"},
-          {"&pound;", "£"},
-          {"&curren;", "¤"},
-          {"&yen;", "¥"},
-          {"&brkbar;", "¦"},
-          {"&sect;", "§"},
-          {"&uml;", "¨"},
-          {"&copy;", "©"},
-          {"&ordf;", "ª"},
-          {"&laquo;", "«"},
-          {"&not;", "¬"},
-          {"&reg;", "®"},
-          {"&macr;", "¯"},
-          {"&deg;", "°"},
-          {"&plusmn;", "±"},
-          {"&sup2;", "²"},
-          {"&sup3;", "³"},
-          {"&acute;", "´"},
-          {"&micro;", "µ"},
-          {"&para;", "¶"},
-          {"&middot;", "·"},
-          {"&cedil;", "¸"},
-          {"&sup1;", "¹"},
-          {"&ordm;", "º"},
-          {"&raquo;;", "»"},
-          {"&frac14;", "¼"},
-          {"&frac12;", "½"},
-          {"&frac34;", "¾"},
-          {"&iquest;", "¿"},
-          {"&Agrave;", "À"},
-          {"&Aacute;", "Á"},
-          {"&Acirc;", "Â"},
-          {"&Atilde;", "Ã"},
-          {"&Auml;", "Ä"},
-          {"&Aring;", "Å"},
-          {"&AElig;", "Æ"},
-          {"&Ccedil;", "Ç"},
-          {"&Egrave;", "È"},
-          {"&Eacute;", "É"},
-          {"&Ecirc;", "Ê"},
-          {"&Euml;", "Ë"},
-          {"&Igrave;", "Ì"},
-          {"&Iacute;", "Í"},
-          {"&Icirc;", "Î"},
-          {"&Iuml;", "Ï"},
-          {"&ETH;", "Ð"},
-          {"&Ntilde;", "Ñ"},
-          {"&Ograve;", "Ò"},
-          {"&Oacute;", "Ó"},
-          {"&Ocirc;", "Ô"},
-          {"&Otilde;", "Õ"},
-          {"&Ouml;", "Ö"},
-          {"&times;", "×"},
-          {"&Oslash;", "Ø"},
-          {"&Ugrave;;", "Ù"},
-          {"&Uacute;", "Ú"},
-          {"&Ucirc;", "Û"},
-          {"&Uuml;", "Ü"},
-          {"&Yacute;", "Ý"},
-          {"&THORN;", "Þ"},
-          {"&szlig;", "ß"},
-          {"&agrave;", "à"},
-          {"&aacute;", "á"},
-          {"&acirc;", "â"},
-          {"&atilde;", "ã"},
-          {"&auml;", "ä"},
-          {"&aring;", "å"},
-          {"&aelig;", "æ"},
-          {"&ccedil;", "ç"},
-          {"&egrave;", "è"},
-          {"&eacute;", "é"},
-          {"&ecirc;", "ê"},
-          {"&euml;", "ë"},
-          {"&igrave;", "ì"},
-          {"&iacute;", "í"},
-          {"&icirc;", "î"},
-          {"&iuml;", "ï"},
-          {"&eth;", "ð"},
-          {"&ntilde;", "ñ"},
-          {"&ograve;", "ò"},
-          {"&oacute;", "ó"},
-          {"&ocirc;", "ô"},
-          {"&otilde;", "õ"},
-          {"&ouml;", "ö"},
-          {"&divide;", "÷"},
-          {"&oslash;", "ø"},
-          {"&ugrave;", "ù"},
-          {"&uacute;", "ú"},
-          {"&ucirc;", "û"},
-          {"&uuml;", "ü"},
-          {"&yacute;", "ý"},
-          {"&thorn;", "þ"},
-          {"&yuml;", "ÿ"},
-          {"&fnof;", "\u0192"},
-          {"&Alpha;", "\u0391"},
-          {"&Beta;", "\u0392"},
-          {"&Gamma;", "\u0393"},
-          {"&Delta;", "\u0394"},
-          {"&Epsilon;", "\u0395"},
-          {"&Zeta;", "\u0396"},
-          {"&Eta;", "\u0397"},
-          {"&Theta;", "\u0398"},
-          {"&Iota;", "\u0399"},
-          {"&Kappa;", "\u039A"},
-          {"&Lambda;", "\u039B"},
-          {"&Mu;", "\u039C"},
-          {"&Nu;", "\u039D"},
-          {"&Xi;", "\u039E"},
-          {"&Omicron;", "\u039F"},
-          {"&Pi;", "\u03A0"},
-          {"&Rho;", "\u03A1"},
-          {"&Sigma;", "\u03A3"},
-          {"&Tau;", "\u03A4"},
-          {"&Upsilon;", "\u03A5"},
-          {"&Phi;", "\u03A6"},
-          {"&Chi;", "\u03A7"},
-          {"&Psi;", "\u03A8"},
-          {"&Omega;", "\u03A9"},
-          {"&alpha;", "\u03B1"},
-          {"&beta;", "\u03B2"},
-          {"&gamma;", "\u03B3"},
-          {"&delta;", "\u03B4"},
-          {"&epsilon;", "\u03B5"},
-          {"&zeta;", "\u03B6"},
-          {"&eta;", "\u03B7"},
-          {"&theta;", "\u03B8"},
-          {"&iota;", "\u03B9"},
-          {"&kappa;", "\u03BA"},
-          {"&lambda;", "\u03BB"},
-          {"&mu;", "\u03BC"},
-          {"&nu;", "\u03BD"},
-          {"&xi;", "\u03BE"},
-          {"&omicron;", "\u03BF"},
-          {"&pi;", "\u03C0"},
-          {"&rho;", "\u03C1"},
-          {"&sigmaf;", "\u03C2"},
-          {"&sigma;", "\u03C3"},
-          {"&tau;", "\u03C4"},
-          {"&upsilon;", "\u03C5"},
-          {"&phi;", "\u03C6"},
-          {"&chi;", "\u03C7"},
-          {"&psi;", "\u03C8"},
-          {"&omega;", "\u03C9"},
-          {"&thetasym;", "\u03D1"},
-          {"&upsih;", "\u03D2"},
-          {"&piv;", "\u03D6"},
-          {"&bull;", "\u2022"},
-          {"&hellip;", "\u2026"},
-          {"&prime;", "\u2032"},
-          {"&Prime;", "\u2033"},
-          {"&oline;", "\u203E"},
-          {"&frasl;", "\u2044"},
-          {"&weierp;", "\u2118"},
-          {"&image;", "\u2111"},
-          {"&real;", "\u211C"},
-          {"&trade;", "\u2122"},
-          {"&alefsym;", "\u2135"},
-          {"&larr;", "\u2190"},
-          {"&uarr;", "\u2191"},
-          {"&rarr;", "\u2192"},
-          {"&darr;", "\u2193"},
-          {"&harr;", "\u2194"},
-          {"&crarr;", "\u21B5"},
-          {"&lArr;", "\u21D0"},
-          {"&uArr;", "\u21D1"},
-          {"&rArr;", "\u21D2"},
-          {"&dArr;", "\u21D3"},
-          {"&hArr;", "\u21D4"},
-          {"&forall;", "\u2200"},
-          {"&part;", "\u2202"},
-          {"&exist;", "\u2203"},
-          {"&empty;", "\u2205"},
-          {"&nabla;", "\u2207"},
-          {"&isin;", "\u2208"},
-          {"&notin;", "\u2209"},
-          {"&ni;", "\u220B"},
-          {"&prod;", "\u220F"},
-          {"&sum;", "\u2211"},
-          {"&minus;", "\u2212"},
-          {"&lowast;", "\u2217"},
-          {"&radic;", "\u221A"},
-          {"&prop;", "\u221D"},
-          {"&infin;", "\u221E"},
-          {"&ang;", "\u2220"},
-          {"&and;", "\u2227"},
-          {"&or;", "\u2228"},
-          {"&cap;", "\u2229"},
-          {"&cup;", "\u222A"},
-          {"&int;", "\u222B"},
-          {"&there4;", "\u2234"},
-          {"&sim;", "\u223C"},
-          {"&cong;", "\u2245"},
-          {"&asymp;", "\u2248"},
-          {"&ne;", "\u2260"},
-          {"&equiv;", "\u2261"},
-          {"&le;", "\u2264"},
-          {"&ge;", "\u2265"},
-          {"&sub;", "\u2282"},
-          {"&sup;", "\u2283"},
-          {"&nsub;", "\u2284"},
-          {"&sube;", "\u2286"},
-          {"&supe;", "\u2287"},
-          {"&oplus;", "\u2295"},
-          {"&otimes;", "\u2297"},
-          {"&perp;", "\u22A5"},
-          {"&sdot;", "\u22C5"},
-          {"&lceil;", "\u2308"},
-          {"&rceil;", "\u2309"},
-          {"&lfloor;", "\u230A"},
-          {"&rfloor;", "\u230B"},
-          {"&lang;", "\u2329"},
-          {"&rang;", "\u232A"},
-          {"&loz;", "\u25CA"},
-          {"&spades;", "\u2660"},
-          {"&clubs;", "\u2663"},
-          {"&hearts;", "\u2665"},
-          {"&diams;", "\u2666"},
-          {"&OElig;", "\u0152"},
-          {"&oelig;", "\u0153"},
-          {"&Scaron;", "\u0160"},
-          {"&scaron;", "\u0161"},
-          {"&Yuml;", "\u0178"},
-          {"&circ;", "\u02C6"},
-          {"&tilde;", "\u02DC"},
-          {"&ensp;", "\u2002"},
-          {"&emsp;", "\u2003"},
-          {"&thinsp;", "\u2009"},
-          {"&zwnj;", "\u200C"},
-          {"&zwj;", "\u200D"},
-          {"&lrm;", "\u200E"},
-          {"&rlm;", "\u200F"},
-          {"&ndash;", "\u2013"},
-          {"&mdash;", "\u2014"},
-          {"&lsquo;", "\u2018"},
-          {"&rsquo;", "\u2019"},
-          {"&sbquo;", "\u201A"},
-          {"&ldquo;", "\u201C"},
-          {"&rdquo;", "\u201D"},
-          {"&bdquo;", "\u201E"},
-          {"&dagger;", "\u2020"},
-          {"&Dagger;", "\u2021"},
-          {"&permil;", "\u2030"},
-          {"&lsaquo;", "\u2039"},
-          {"&rsaquo;", "\u203A"},
-          {"&euro;", "\u20AC"}
-      }));
+  return Value(utils::StringUtils::replaceMap(args[0].asString(), { { "&excl;", "!" }, { "&quot;", "\"" }, { "&num;", "#" }, { "&dollar;", "$" }, { "&percnt;", "%" }, { "&amp;", "&" },
+                                                  { "&apos;", "'" }, { "&lpar;", "(" }, { "&rpar;", ")" }, { "&ast;", "*" }, { "&plus;", "+" }, { "&comma;", "," }, { "&minus;", "-" }, { "&period;",
+                                                      "." }, { "&sol;", "/" }, { "&colon;", ":" }, { "&semi;", ";" }, { "&lt;", "<" }, { "&equals;", "=" }, { "&gt;", ">" }, { "&quest;", "?" }, {
+                                                      "&commat;", "@" }, { "&lsqb;", "[" }, { "&bsol;", "\\" }, { "&rsqb;", "]" }, { "&circ;", "^" }, { "&lowbar;", "_" }, { "&grave;", "`" }, {
+                                                      "&lcub;", "{" }, { "&verbar;", "|" }, { "&rcub;", "}" }, { "&tilde;", "~" }, { "&iexcl;", "¡" }, { "&cent;", "¢" }, { "&pound;", "£" }, {
+                                                      "&curren;", "¤" }, { "&yen;", "¥" }, { "&brkbar;", "¦" }, { "&sect;", "§" }, { "&uml;", "¨" }, { "&copy;", "©" }, { "&ordf;", "ª" }, { "&laquo;",
+                                                      "«" }, { "&not;", "¬" }, { "&reg;", "®" }, { "&macr;", "¯" }, { "&deg;", "°" }, { "&plusmn;", "±" }, { "&sup2;", "²" }, { "&sup3;", "³" }, {
+                                                      "&acute;", "´" }, { "&micro;", "µ" }, { "&para;", "¶" }, { "&middot;", "·" }, { "&cedil;", "¸" }, { "&sup1;", "¹" }, { "&ordm;", "º" }, {
+                                                      "&raquo;;", "»" }, { "&frac14;", "¼" }, { "&frac12;", "½" }, { "&frac34;", "¾" }, { "&iquest;", "¿" }, { "&Agrave;", "À" }, { "&Aacute;", "Á" }, {
+                                                      "&Acirc;", "Â" }, { "&Atilde;", "Ã" }, { "&Auml;", "Ä" }, { "&Aring;", "Å" }, { "&AElig;", "Æ" }, { "&Ccedil;", "Ç" }, { "&Egrave;", "È" }, {
+                                                      "&Eacute;", "É" }, { "&Ecirc;", "Ê" }, { "&Euml;", "Ë" }, { "&Igrave;", "Ì" }, { "&Iacute;", "Í" }, { "&Icirc;", "Î" }, { "&Iuml;", "Ï" }, {
+                                                      "&ETH;", "Ð" }, { "&Ntilde;", "Ñ" }, { "&Ograve;", "Ò" }, { "&Oacute;", "Ó" }, { "&Ocirc;", "Ô" }, { "&Otilde;", "Õ" }, { "&Ouml;", "Ö" }, {
+                                                      "&times;", "×" }, { "&Oslash;", "Ø" }, { "&Ugrave;;", "Ù" }, { "&Uacute;", "Ú" }, { "&Ucirc;", "Û" }, { "&Uuml;", "Ü" }, { "&Yacute;", "Ý" }, {
+                                                      "&THORN;", "Þ" }, { "&szlig;", "ß" }, { "&agrave;", "à" }, { "&aacute;", "á" }, { "&acirc;", "â" }, { "&atilde;", "ã" }, { "&auml;", "ä" }, {
+                                                      "&aring;", "å" }, { "&aelig;", "æ" }, { "&ccedil;", "ç" }, { "&egrave;", "è" }, { "&eacute;", "é" }, { "&ecirc;", "ê" }, { "&euml;", "ë" }, {
+                                                      "&igrave;", "ì" }, { "&iacute;", "í" }, { "&icirc;", "î" }, { "&iuml;", "ï" }, { "&eth;", "ð" }, { "&ntilde;", "ñ" }, { "&ograve;", "ò" }, {
+                                                      "&oacute;", "ó" }, { "&ocirc;", "ô" }, { "&otilde;", "õ" }, { "&ouml;", "ö" }, { "&divide;", "÷" }, { "&oslash;", "ø" }, { "&ugrave;", "ù" }, {
+                                                      "&uacute;", "ú" }, { "&ucirc;", "û" }, { "&uuml;", "ü" }, { "&yacute;", "ý" }, { "&thorn;", "þ" }, { "&yuml;", "ÿ" }, { "&fnof;", "\u0192" }, {
+                                                      "&Alpha;", "\u0391" }, { "&Beta;", "\u0392" }, { "&Gamma;", "\u0393" }, { "&Delta;", "\u0394" }, { "&Epsilon;", "\u0395" },
+                                                  { "&Zeta;", "\u0396" }, { "&Eta;", "\u0397" }, { "&Theta;", "\u0398" }, { "&Iota;", "\u0399" }, { "&Kappa;", "\u039A" }, { "&Lambda;", "\u039B" }, {
+                                                      "&Mu;", "\u039C" }, { "&Nu;", "\u039D" }, { "&Xi;", "\u039E" }, { "&Omicron;", "\u039F" }, { "&Pi;", "\u03A0" }, { "&Rho;", "\u03A1" }, {
+                                                      "&Sigma;", "\u03A3" }, { "&Tau;", "\u03A4" }, { "&Upsilon;", "\u03A5" }, { "&Phi;", "\u03A6" }, { "&Chi;", "\u03A7" }, { "&Psi;", "\u03A8" }, {
+                                                      "&Omega;", "\u03A9" }, { "&alpha;", "\u03B1" }, { "&beta;", "\u03B2" }, { "&gamma;", "\u03B3" }, { "&delta;", "\u03B4" },
+                                                  { "&epsilon;", "\u03B5" }, { "&zeta;", "\u03B6" }, { "&eta;", "\u03B7" }, { "&theta;", "\u03B8" }, { "&iota;", "\u03B9" }, { "&kappa;", "\u03BA" }, {
+                                                      "&lambda;", "\u03BB" }, { "&mu;", "\u03BC" }, { "&nu;", "\u03BD" }, { "&xi;", "\u03BE" }, { "&omicron;", "\u03BF" }, { "&pi;", "\u03C0" }, {
+                                                      "&rho;", "\u03C1" }, { "&sigmaf;", "\u03C2" }, { "&sigma;", "\u03C3" }, { "&tau;", "\u03C4" }, { "&upsilon;", "\u03C5" }, { "&phi;", "\u03C6" }, {
+                                                      "&chi;", "\u03C7" }, { "&psi;", "\u03C8" }, { "&omega;", "\u03C9" }, { "&thetasym;", "\u03D1" }, { "&upsih;", "\u03D2" }, { "&piv;", "\u03D6" }, {
+                                                      "&bull;", "\u2022" }, { "&hellip;", "\u2026" }, { "&prime;", "\u2032" }, { "&Prime;", "\u2033" }, { "&oline;", "\u203E" },
+                                                  { "&frasl;", "\u2044" }, { "&weierp;", "\u2118" }, { "&image;", "\u2111" }, { "&real;", "\u211C" }, { "&trade;", "\u2122" },
+                                                  { "&alefsym;", "\u2135" }, { "&larr;", "\u2190" }, { "&uarr;", "\u2191" }, { "&rarr;", "\u2192" }, { "&darr;", "\u2193" }, { "&harr;", "\u2194" }, {
+                                                      "&crarr;", "\u21B5" }, { "&lArr;", "\u21D0" }, { "&uArr;", "\u21D1" }, { "&rArr;", "\u21D2" }, { "&dArr;", "\u21D3" }, { "&hArr;", "\u21D4" }, {
+                                                      "&forall;", "\u2200" }, { "&part;", "\u2202" }, { "&exist;", "\u2203" }, { "&empty;", "\u2205" }, { "&nabla;", "\u2207" }, { "&isin;", "\u2208" },
+                                                  { "&notin;", "\u2209" }, { "&ni;", "\u220B" }, { "&prod;", "\u220F" }, { "&sum;", "\u2211" }, { "&minus;", "\u2212" }, { "&lowast;", "\u2217" }, {
+                                                      "&radic;", "\u221A" }, { "&prop;", "\u221D" }, { "&infin;", "\u221E" }, { "&ang;", "\u2220" }, { "&and;", "\u2227" }, { "&or;", "\u2228" }, {
+                                                      "&cap;", "\u2229" }, { "&cup;", "\u222A" }, { "&int;", "\u222B" }, { "&there4;", "\u2234" }, { "&sim;", "\u223C" }, { "&cong;", "\u2245" }, {
+                                                      "&asymp;", "\u2248" }, { "&ne;", "\u2260" }, { "&equiv;", "\u2261" }, { "&le;", "\u2264" }, { "&ge;", "\u2265" }, { "&sub;", "\u2282" }, {
+                                                      "&sup;", "\u2283" }, { "&nsub;", "\u2284" }, { "&sube;", "\u2286" }, { "&supe;", "\u2287" }, { "&oplus;", "\u2295" }, { "&otimes;", "\u2297" }, {
+                                                      "&perp;", "\u22A5" }, { "&sdot;", "\u22C5" }, { "&lceil;", "\u2308" }, { "&rceil;", "\u2309" }, { "&lfloor;", "\u230A" },
+                                                  { "&rfloor;", "\u230B" }, { "&lang;", "\u2329" }, { "&rang;", "\u232A" }, { "&loz;", "\u25CA" }, { "&spades;", "\u2660" }, { "&clubs;", "\u2663" }, {
+                                                      "&hearts;", "\u2665" }, { "&diams;", "\u2666" }, { "&OElig;", "\u0152" }, { "&oelig;", "\u0153" }, { "&Scaron;", "\u0160" }, { "&scaron;",
+                                                      "\u0161" }, { "&Yuml;", "\u0178" }, { "&circ;", "\u02C6" }, { "&tilde;", "\u02DC" }, { "&ensp;", "\u2002" }, { "&emsp;", "\u2003" }, { "&thinsp;",
+                                                      "\u2009" }, { "&zwnj;", "\u200C" }, { "&zwj;", "\u200D" }, { "&lrm;", "\u200E" }, { "&rlm;", "\u200F" }, { "&ndash;", "\u2013" }, { "&mdash;",
+                                                      "\u2014" }, { "&lsquo;", "\u2018" }, { "&rsquo;", "\u2019" }, { "&sbquo;", "\u201A" }, { "&ldquo;", "\u201C" }, { "&rdquo;", "\u201D" }, {
+                                                      "&bdquo;", "\u201E" }, { "&dagger;", "\u2020" }, { "&Dagger;", "\u2021" }, { "&permil;", "\u2030" }, { "&lsaquo;", "\u2039" }, { "&rsaquo;",
+                                                      "\u203A" }, { "&euro;", "\u20AC" } }));
 }
 
 Value expr_escapeXml(const std::vector<Value> &args) {
-  return Value(utils::StringUtils::replaceMap(
-      args[0].asString(),
-      {
-          {"\"", "&quot;"},
-          {"'", "&apos;"},
-          {"<", "&lt;"},
-          {">", "&gt;"},
-          {"&", "&amp;"}
-      }));
+  return Value(utils::StringUtils::replaceMap(args[0].asString(), { { "\"", "&quot;" }, { "'", "&apos;" }, { "<", "&lt;" }, { ">", "&gt;" }, { "&", "&amp;" } }));
 }
 
 Value expr_unescapeXml(const std::vector<Value> &args) {
-  return Value(utils::StringUtils::replaceMap(
-      args[0].asString(),
-      {
-          {"&quot;", "\""},
-          {"&apos;", "'"},
-          {"&lt;", "<"},
-          {"&gt;", ">"},
-          {"&amp;", "&"}
-      }));
+  return Value(utils::StringUtils::replaceMap(args[0].asString(), { { "&quot;", "\"" }, { "&apos;", "'" }, { "&lt;", "<" }, { "&gt;", ">" }, { "&amp;", "&" } }));
 }
 
 Value expr_escapeCsv(const std::vector<Value> &args) {
   auto result = args[0].asString();
-  const char quote_req_chars[] = {'"', '\r', '\n', ','};
+  const char quote_req_chars[] = { '"', '\r', '\n', ',' };
   bool quote_required = false;
 
   for (const auto &c : quote_req_chars) {
@@ -1275,7 +564,7 @@ Value expr_escapeCsv(const std::vector<Value> &args) {
 
   if (quote_required) {
     std::string quoted_result = "\"";
-    quoted_result.append(utils::StringUtils::replaceMap(result, {{"\"", "\"\""}}));
+    quoted_result.append(utils::StringUtils::replaceMap(result, { { "\"", "\"\"" } }));
     quoted_result.append("\"");
     return Value(quoted_result);
   }
@@ -1300,7 +589,7 @@ Value expr_format(const std::vector<Value> &args) {
 
 Value expr_toDate(const std::vector<Value> &args) {
   auto arg_0 = args[0].asString();
-  std::istringstream arg_s{arg_0};
+  std::istringstream arg_s { arg_0 };
   date::sys_time<std::chrono::milliseconds> t;
   arg_s >> date::parse(args[1].asString(), t);
   auto zone = date::current_zone();
@@ -1330,7 +619,7 @@ Value expr_unescapeCsv(const std::vector<Value> &args) {
     if (quote_pos != result.length() - 1) {
       quote_required = true;
     } else {
-      const char quote_req_chars[] = {'\r', '\n', ','};
+      const char quote_req_chars[] = { '\r', '\n', ',' };
 
       for (const auto &c : quote_req_chars) {
         if (result.find(c) != std::string::npos) {
@@ -1341,7 +630,7 @@ Value expr_unescapeCsv(const std::vector<Value> &args) {
     }
 
     if (quote_required) {
-      return Value(utils::StringUtils::replaceMap(result.substr(1, result.size() - 2), {{"\"\"", "\""}}));
+      return Value(utils::StringUtils::replaceMap(result.substr(1, result.size() - 2), { { "\"\"", "\"" } }));
     }
   }
 
@@ -1353,9 +642,7 @@ Value expr_urlEncode(const std::vector<Value> &args) {
   auto arg_0 = args[0].asString();
   CURL *curl = curl_easy_init();
   if (curl != nullptr) {
-    char *output = curl_easy_escape(curl,
-                                    arg_0.c_str(),
-                                    static_cast<int>(arg_0.length()));
+    char *output = curl_easy_escape(curl, arg_0.c_str(), static_cast<int>(arg_0.length()));
     if (output != nullptr) {
       auto result = std::string(output);
       curl_free(output);
@@ -1379,10 +666,7 @@ Value expr_urlDecode(const std::vector<Value> &args) {
   CURL *curl = curl_easy_init();
   if (curl != nullptr) {
     int out_len;
-    char *output = curl_easy_unescape(curl,
-                                      arg_0.c_str(),
-                                      static_cast<int>(arg_0.length()),
-                                      &out_len);
+    char *output = curl_easy_unescape(curl, arg_0.c_str(), static_cast<int>(arg_0.length()), &out_len);
     if (output != nullptr) {
       auto result = std::string(output, static_cast<unsigned long>(out_len));
       curl_free(output);
@@ -1492,8 +776,8 @@ Value expr_find(const std::vector<Value> &args) {
 
 Value expr_trim(const std::vector<Value> &args) {
   std::string result = args[0].asString();
-  auto ws_front = std::find_if_not(result.begin(), result.end(), [](int c) { return std::isspace(c); });
-  auto ws_back = std::find_if_not(result.rbegin(), result.rend(), [](int c) { return std::isspace(c); }).base();
+  auto ws_front = std::find_if_not(result.begin(), result.end(), [](int c) {return std::isspace(c);});
+  auto ws_back = std::find_if_not(result.rbegin(), result.rend(), [](int c) {return std::isspace(c);}).base();
   return (ws_back <= ws_front ? Value(std::string()) : Value(std::string(ws_front, ws_back)));
 }
 
@@ -1512,10 +796,7 @@ Value expr_length(const std::vector<Value> &args) {
   return Value(len);
 }
 
-Value expr_binary_op(const std::vector<Value> &args,
-                     long double (*ldop)(long double, long double),
-                     int64_t (*iop)(int64_t, int64_t),
-                     bool long_only = false) {
+Value expr_binary_op(const std::vector<Value> &args, long double (*ldop)(long double, long double), int64_t (*iop)(int64_t, int64_t), bool long_only = false) {
   try {
     if (!long_only && !args[0].isDecimal() && !args[1].isDecimal()) {
       return Value(iop(args[0].asSignedLong(), args[1].asSignedLong()));
@@ -1528,34 +809,23 @@ Value expr_binary_op(const std::vector<Value> &args,
 }
 
 Value expr_plus(const std::vector<Value> &args) {
-  return expr_binary_op(args,
-                        [](long double a, long double b) { return a + b; },
-                        [](int64_t a, int64_t b) { return a + b; });
+  return expr_binary_op(args, [](long double a, long double b) {return a + b;}, [](int64_t a, int64_t b) {return a + b;});
 }
 
 Value expr_minus(const std::vector<Value> &args) {
-  return expr_binary_op(args,
-                        [](long double a, long double b) { return a - b; },
-                        [](int64_t a, int64_t b) { return a - b; });
+  return expr_binary_op(args, [](long double a, long double b) {return a - b;}, [](int64_t a, int64_t b) {return a - b;});
 }
 
 Value expr_multiply(const std::vector<Value> &args) {
-  return expr_binary_op(args,
-                        [](long double a, long double b) { return a * b; },
-                        [](int64_t a, int64_t b) { return a * b; });
+  return expr_binary_op(args, [](long double a, long double b) {return a * b;}, [](int64_t a, int64_t b) {return a * b;});
 }
 
 Value expr_divide(const std::vector<Value> &args) {
-  return expr_binary_op(args,
-                        [](long double a, long double b) { return a / b; },
-                        [](int64_t a, int64_t b) { return a / b; },
-                        true);
+  return expr_binary_op(args, [](long double a, long double b) {return a / b;}, [](int64_t a, int64_t b) {return a / b;}, true);
 }
 
 Value expr_mod(const std::vector<Value> &args) {
-  return expr_binary_op(args,
-                        [](long double a, long double b) { return std::fmod(a, b); },
-                        [](int64_t a, int64_t b) { return a % b; });
+  return expr_binary_op(args, [](long double a, long double b) {return std::fmod(a, b);}, [](int64_t a, int64_t b) {return a % b;});
 }
 
 Value expr_toRadix(const std::vector<Value> &args) {
@@ -1580,8 +850,7 @@ Value expr_toRadix(const std::vector<Value> &args) {
     sign = "-";
   }
 
-  const char chars[] =
-      "0123456789ab"
+  const char chars[] = "0123456789ab"
       "cdefghijklmn"
       "opqrstuvwxyz";
   std::string str_num;
@@ -1616,19 +885,11 @@ Value expr_random(const std::vector<Value> &args) {
 }
 
 template<Value T(const std::vector<Value> &)>
-Expression make_dynamic_function_incomplete(const std::string &function_name,
-                                            const std::vector<Expression> &args,
-                                            std::size_t num_args) {
+Expression make_dynamic_function_incomplete(const std::string &function_name, const std::vector<Expression> &args, std::size_t num_args) {
 
   if (args.size() < num_args) {
     std::stringstream message_ss;
-    message_ss << "Expression language function "
-               << function_name
-               << " called with "
-               << args.size()
-               << " argument(s), but "
-               << num_args
-               << " are required";
+    message_ss << "Expression language function " << function_name << " called with " << args.size() << " argument(s), but " << num_args << " are required";
     throw std::runtime_error(message_ss.str());
   }
 
@@ -1641,7 +902,8 @@ Expression make_dynamic_function_incomplete(const std::string &function_name,
 
     return args[0].compose_multi([=](const std::vector<Value> &args) -> Value {
       return T(args);
-    }, multi_args);
+    },
+                                 multi_args);
   } else {
     return make_dynamic([=](const Parameters &params, const std::vector<Expression> &sub_exprs) -> Value {
       std::vector<Value> evaluated_args;
@@ -1675,12 +937,7 @@ Value expr_isEmpty(const std::vector<Value> &args) {
   std::string arg_0 = args[0].asString();
 
   for (char c : arg_0) {
-    if (c != ' '
-        && c != '\f'
-        && c != '\n'
-        && c != '\r'
-        && c != '\t'
-        && c != '\v') {
+    if (c != ' ' && c != '\f' && c != '\n' && c != '\r' && c != '\t' && c != '\v') {
       return Value(false);
     }
   }
@@ -1757,13 +1014,7 @@ Value expr_ifElse(const std::vector<Value> &args) {
 Expression make_allAttributes(const std::string &function_name, const std::vector<Expression> &args) {
   if (args.size() < 1) {
     std::stringstream message_ss;
-    message_ss << "Expression language function "
-               << function_name
-               << " called with "
-               << args.size()
-               << " argument(s), but "
-               << 1
-               << " are required";
+    message_ss << "Expression language function " << function_name << " called with " << args.size() << " argument(s), but " << 1 << " are required";
     throw std::runtime_error(message_ss.str());
   }
 
@@ -1784,19 +1035,19 @@ Expression make_allAttributes(const std::string &function_name, const std::vecto
 
     for (const auto &arg : args) {
       out_exprs.emplace_back(make_dynamic([=](const Parameters &params,
-                                              const std::vector<Expression> &sub_exprs) -> Value {
-        std::string attr_id;
-        attr_id = arg(params).asString();
-        std::string attr_val;
+                  const std::vector<Expression> &sub_exprs) -> Value {
+                std::string attr_id;
+                attr_id = arg(params).asString();
+                std::string attr_val;
 
-        const auto cur_flow_file = params.flow_file.lock();
+                const auto cur_flow_file = params.flow_file.lock();
 
-        if (cur_flow_file && cur_flow_file->getAttribute(attr_id, attr_val)) {
-          return Value(attr_val);
-        } else {
-          return Value();
-        }
-      }));
+                if (cur_flow_file && cur_flow_file->getAttribute(attr_id, attr_val)) {
+                  return Value(attr_val);
+                } else {
+                  return Value();
+                }
+              }));
     }
 
     return out_exprs;
@@ -1808,13 +1059,7 @@ Expression make_allAttributes(const std::string &function_name, const std::vecto
 Expression make_anyAttribute(const std::string &function_name, const std::vector<Expression> &args) {
   if (args.size() < 1) {
     std::stringstream message_ss;
-    message_ss << "Expression language function "
-               << function_name
-               << " called with "
-               << args.size()
-               << " argument(s), but "
-               << 1
-               << " are required";
+    message_ss << "Expression language function " << function_name << " called with " << args.size() << " argument(s), but " << 1 << " are required";
     throw std::runtime_error(message_ss.str());
   }
 
@@ -1835,19 +1080,19 @@ Expression make_anyAttribute(const std::string &function_name, const std::vector
 
     for (const auto &arg : args) {
       out_exprs.emplace_back(make_dynamic([=](const Parameters &params,
-                                              const std::vector<Expression> &sub_exprs) -> Value {
-        std::string attr_id;
-        attr_id = arg(params).asString();
-        std::string attr_val;
+                  const std::vector<Expression> &sub_exprs) -> Value {
+                std::string attr_id;
+                attr_id = arg(params).asString();
+                std::string attr_val;
 
-        const auto cur_flow_file = params.flow_file.lock();
+                const auto cur_flow_file = params.flow_file.lock();
 
-        if (cur_flow_file && cur_flow_file->getAttribute(attr_id, attr_val)) {
-          return Value(attr_val);
-        } else {
-          return Value();
-        }
-      }));
+                if (cur_flow_file && cur_flow_file->getAttribute(attr_id, attr_val)) {
+                  return Value(attr_val);
+                } else {
+                  return Value();
+                }
+              }));
     }
 
     return out_exprs;
@@ -1861,13 +1106,7 @@ Expression make_anyAttribute(const std::string &function_name, const std::vector
 Expression make_allMatchingAttributes(const std::string &function_name, const std::vector<Expression> &args) {
   if (args.size() < 1) {
     std::stringstream message_ss;
-    message_ss << "Expression language function "
-               << function_name
-               << " called with "
-               << args.size()
-               << " argument(s), but "
-               << 1
-               << " are required";
+    message_ss << "Expression language function " << function_name << " called with " << args.size() << " argument(s), but " << 1 << " are required";
     throw std::runtime_error(message_ss.str());
   }
 
@@ -1898,15 +1137,15 @@ Expression make_allMatchingAttributes(const std::string &function_name, const st
       for (const auto &attr : attrs) {
         if (std::regex_match(attr.first.begin(), attr.first.end(), attr_regex)) {
           out_exprs.emplace_back(make_dynamic([=](const Parameters &params,
-                                                  const std::vector<Expression> &sub_exprs) -> Value {
-            std::string attr_val;
+                      const std::vector<Expression> &sub_exprs) -> Value {
+                    std::string attr_val;
 
-            if (cur_flow_file && cur_flow_file->getAttribute(attr.first, attr_val)) {
-              return Value(attr_val);
-            } else {
-              return Value();
-            }
-          }));
+                    if (cur_flow_file && cur_flow_file->getAttribute(attr.first, attr_val)) {
+                      return Value(attr_val);
+                    } else {
+                      return Value();
+                    }
+                  }));
         }
       }
     }
@@ -1920,13 +1159,7 @@ Expression make_allMatchingAttributes(const std::string &function_name, const st
 Expression make_anyMatchingAttribute(const std::string &function_name, const std::vector<Expression> &args) {
   if (args.size() < 1) {
     std::stringstream message_ss;
-    message_ss << "Expression language function "
-               << function_name
-               << " called with "
-               << args.size()
-               << " argument(s), but "
-               << 1
-               << " are required";
+    message_ss << "Expression language function " << function_name << " called with " << args.size() << " argument(s), but " << 1 << " are required";
     throw std::runtime_error(message_ss.str());
   }
 
@@ -1957,15 +1190,15 @@ Expression make_anyMatchingAttribute(const std::string &function_name, const std
       for (const auto &attr : attrs) {
         if (std::regex_match(attr.first.begin(), attr.first.end(), attr_regex)) {
           out_exprs.emplace_back(make_dynamic([=](const Parameters &params,
-                                                  const std::vector<Expression> &sub_exprs) -> Value {
-            std::string attr_val;
+                      const std::vector<Expression> &sub_exprs) -> Value {
+                    std::string attr_val;
 
-            if (cur_flow_file && cur_flow_file->getAttribute(attr.first, attr_val)) {
-              return Value(attr_val);
-            } else {
-              return Value();
-            }
-          }));
+                    if (cur_flow_file && cur_flow_file->getAttribute(attr.first, attr_val)) {
+                      return Value(attr_val);
+                    } else {
+                      return Value();
+                    }
+                  }));
         }
       }
     }
@@ -1981,13 +1214,7 @@ Expression make_anyMatchingAttribute(const std::string &function_name, const std
 Expression make_allDelineatedValues(const std::string &function_name, const std::vector<Expression> &args) {
   if (args.size() != 2) {
     std::stringstream message_ss;
-    message_ss << "Expression language function "
-               << function_name
-               << " called with "
-               << args.size()
-               << " argument(s), but "
-               << 2
-               << " are required";
+    message_ss << "Expression language function " << function_name << " called with " << args.size() << " argument(s), but " << 2 << " are required";
     throw std::runtime_error(message_ss.str());
   }
 
@@ -2019,13 +1246,7 @@ Expression make_allDelineatedValues(const std::string &function_name, const std:
 Expression make_anyDelineatedValue(const std::string &function_name, const std::vector<Expression> &args) {
   if (args.size() != 2) {
     std::stringstream message_ss;
-    message_ss << "Expression language function "
-               << function_name
-               << " called with "
-               << args.size()
-               << " argument(s), but "
-               << 2
-               << " are required";
+    message_ss << "Expression language function " << function_name << " called with " << args.size() << " argument(s), but " << 2 << " are required";
     throw std::runtime_error(message_ss.str());
   }
 
@@ -2057,26 +1278,18 @@ Expression make_anyDelineatedValue(const std::string &function_name, const std::
 Expression make_count(const std::string &function_name, const std::vector<Expression> &args) {
   if (args.size() != 1) {
     std::stringstream message_ss;
-    message_ss << "Expression language function "
-               << function_name
-               << " called with "
-               << args.size()
-               << " argument(s), but "
-               << 1
-               << " are required";
+    message_ss << "Expression language function " << function_name << " called with " << args.size() << " argument(s), but " << 1 << " are required";
     throw std::runtime_error(message_ss.str());
   }
 
   if (!args[0].is_multi()) {
     std::stringstream message_ss;
-    message_ss << "Expression language function "
-               << function_name
-               << " called against singular expression.";
+    message_ss << "Expression language function " << function_name << " called against singular expression.";
     throw std::runtime_error(message_ss.str());
   }
 
   return args[0].make_aggregate([](const Parameters &params,
-                                   const std::vector<Expression> &sub_exprs) -> Value {
+      const std::vector<Expression> &sub_exprs) -> Value {
     uint64_t count = 0;
     for (const auto &sub_expr : sub_exprs) {
       if (sub_expr(params).asBoolean()) {
@@ -2090,28 +1303,20 @@ Expression make_count(const std::string &function_name, const std::vector<Expres
 Expression make_join(const std::string &function_name, const std::vector<Expression> &args) {
   if (args.size() != 2) {
     std::stringstream message_ss;
-    message_ss << "Expression language function "
-               << function_name
-               << " called with "
-               << args.size()
-               << " argument(s), but "
-               << 2
-               << " are required";
+    message_ss << "Expression language function " << function_name << " called with " << args.size() << " argument(s), but " << 2 << " are required";
     throw std::runtime_error(message_ss.str());
   }
 
   if (!args[0].is_multi()) {
     std::stringstream message_ss;
-    message_ss << "Expression language function "
-               << function_name
-               << " called against singular expression.";
+    message_ss << "Expression language function " << function_name << " called against singular expression.";
     throw std::runtime_error(message_ss.str());
   }
 
   auto delim_expr = args[1];
 
   return args[0].make_aggregate([delim_expr](const Parameters &params,
-                                             const std::vector<Expression> &sub_exprs) -> Value {
+      const std::vector<Expression> &sub_exprs) -> Value {
     std::string delim = delim_expr(params).asString();
     std::stringstream out_ss;
     bool first = true;
@@ -2128,8 +1333,7 @@ Expression make_join(const std::string &function_name, const std::vector<Express
   });
 }
 
-Expression make_dynamic_function(const std::string &function_name,
-                                 const std::vector<Expression> &args) {
+Expression make_dynamic_function(const std::string &function_name, const std::vector<Expression> &args) {
   if (function_name == "hostname") {
     return make_dynamic_function_incomplete<expr_hostname>(function_name, args, 0);
   } else if (function_name == "ip") {
@@ -2291,13 +1495,12 @@ Expression make_dynamic_function(const std::string &function_name,
   }
 }
 
-Expression make_function_composition(const Expression &arg,
-                                     const std::vector<std::pair<std::string, std::vector<Expression>>> &chain) {
+Expression make_function_composition(const Expression &arg, const std::vector<std::pair<std::string, std::vector<Expression>>> &chain) {
 
   auto expr = arg;
 
   for (const auto &chain_part : chain) {
-    std::vector<Expression> complete_args = {expr};
+    std::vector<Expression> complete_args = { expr };
     complete_args.insert(complete_args.end(), chain_part.second.begin(), chain_part.second.end());
     expr = make_dynamic_function(chain_part.first, complete_args);
   }
@@ -2320,10 +1523,10 @@ Expression Expression::operator+(const Expression &other_expr) const {
     auto sub_expr_generator = sub_expr_generator_;
     auto other_sub_expr_generator = other_expr.sub_expr_generator_;
     return make_dynamic([val_fn,
-                            other_val_fn,
-                            sub_expr_generator,
-                            other_sub_expr_generator](const Parameters &params,
-                                                      const std::vector<Expression> &sub_exprs) -> Value {
+    other_val_fn,
+    sub_expr_generator,
+    other_sub_expr_generator](const Parameters &params,
+        const std::vector<Expression> &sub_exprs) -> Value {
       Value result = val_fn(params, sub_expr_generator(params));
       return Value(result.asString().append(other_val_fn(params, other_sub_expr_generator(params)).asString()));
     });
@@ -2332,9 +1535,9 @@ Expression Expression::operator+(const Expression &other_expr) const {
     auto other_val = other_expr.val_;
     auto sub_expr_generator = sub_expr_generator_;
     return make_dynamic([val_fn,
-                            other_val,
-                            sub_expr_generator](const Parameters &params,
-                                                const std::vector<Expression> &sub_exprs) -> Value {
+    other_val,
+    sub_expr_generator](const Parameters &params,
+        const std::vector<Expression> &sub_exprs) -> Value {
       Value result = val_fn(params, sub_expr_generator(params));
       return Value(result.asString().append(other_val.asString()));
     });
@@ -2343,9 +1546,9 @@ Expression Expression::operator+(const Expression &other_expr) const {
     auto other_val_fn = other_expr.val_fn_;
     auto other_sub_expr_generator = other_expr.sub_expr_generator_;
     return make_dynamic([val,
-                            other_val_fn,
-                            other_sub_expr_generator](const Parameters &params,
-                                                      const std::vector<Expression> &sub_exprs) -> Value {
+    other_val_fn,
+    other_sub_expr_generator](const Parameters &params,
+        const std::vector<Expression> &sub_exprs) -> Value {
       Value result(val);
       return Value(result.asString().append(other_val_fn(params, other_sub_expr_generator(params)).asString()));
     });
@@ -2366,27 +1569,26 @@ Value Expression::operator()(const Parameters &params) const {
   }
 }
 
-Expression Expression::compose_multi(const std::function<Value(const std::vector<Value> &)> fn,
-                                     const std::vector<Expression> &args) const {
+Expression Expression::compose_multi(const std::function<Value(const std::vector<Value> &)> fn, const std::vector<Expression> &args) const {
   auto result = make_dynamic(val_fn_);
   auto compose_expr_generator = sub_expr_generator_;
 
   result.sub_expr_generator_ = [=](const Parameters &params) -> std::vector<Expression> {
     auto sub_exprs = compose_expr_generator(params);
-    std::vector<Expression> out_exprs{};
+    std::vector<Expression> out_exprs {};
     for (const auto &sub_expr : sub_exprs) {
       out_exprs.emplace_back(make_dynamic([=](const Parameters &params,
-                                              const std::vector<Expression> &sub_exprs) {
-        std::vector<Value> evaluated_args;
+                  const std::vector<Expression> &sub_exprs) {
+                std::vector<Value> evaluated_args;
 
-        evaluated_args.emplace_back(sub_expr(params));
+                evaluated_args.emplace_back(sub_expr(params));
 
-        for (const auto &arg : args) {
-          evaluated_args.emplace_back(arg(params));
-        }
+                for (const auto &arg : args) {
+                  evaluated_args.emplace_back(arg(params));
+                }
 
-        return fn(evaluated_args);
-      }));
+                return fn(evaluated_args);
+              }));
     }
     return out_exprs;
   };
@@ -2396,12 +1598,11 @@ Expression Expression::compose_multi(const std::function<Value(const std::vector
   return result;
 }
 
-Expression Expression::make_aggregate(std::function<Value(const Parameters &params,
-                                                          const std::vector<Expression> &sub_exprs)> val_fn) const {
+Expression Expression::make_aggregate(std::function<Value(const Parameters &params, const std::vector<Expression> &sub_exprs)> val_fn) const {
   auto sub_expr_generator = sub_expr_generator_;
   return make_dynamic([sub_expr_generator,
-                          val_fn](const Parameters &params,
-                                  const std::vector<Expression> &sub_exprs) -> Value {
+  val_fn](const Parameters &params,
+      const std::vector<Expression> &sub_exprs) -> Value {
     return val_fn(params, sub_expr_generator(params));
   });
 }

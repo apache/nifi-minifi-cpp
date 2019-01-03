@@ -131,6 +131,15 @@ class HTTPClient : public BaseHTTPClient, public core::Connectable {
 
   void setDisableHostVerification() override;
 
+  void setKeepAliveProbe(long probe){
+    keep_alive_probe_ = probe;
+  }
+
+  void setKeepAliveIdle(long idle){
+    keep_alive_idle_= idle;
+  }
+
+
   std::string getURL() const {
     return url_;
   }
@@ -245,6 +254,10 @@ class HTTPClient : public BaseHTTPClient, public core::Connectable {
   CURL *http_session_;
 
   std::string method_;
+
+  long keep_alive_probe_;
+
+  long keep_alive_idle_;
 
   std::shared_ptr<logging::Logger> logger_;
 

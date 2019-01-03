@@ -32,6 +32,7 @@
 #include "Exception.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "FlowFile.h"
+#include "WeakReference.h"
 #include "provenance/Provenance.h"
 
 namespace org {
@@ -41,7 +42,7 @@ namespace minifi {
 namespace core {
 
 // ProcessSession Class
-class ProcessSession {
+class ProcessSession : public ReferenceContainer {
  public:
   // Constructor
   /*!
@@ -52,20 +53,19 @@ class ProcessSession {
         logger_(logging::LoggerFactory<ProcessSession>::getLogger()) {
     logger_->log_trace("ProcessSession created for %s", process_context_->getProcessorNode()->getName());
     auto repo = processContext->getProvenanceRepository();
-    provenance_report_ = new provenance::ProvenanceReporter(repo, process_context_->getProcessorNode()->getName(), process_context_->getProcessorNode()->getName());
+    //provenance_report_ = new provenance::ProvenanceReporter(repo, process_context_->getProcessorNode()->getName(), process_context_->getProcessorNode()->getName());
+    provenance_report_ = std::make_shared<provenance::ProvenanceReporter>(repo, process_context_->getProcessorNode()->getName(), process_context_->getProcessorNode()->getName());
   }
 
 // Destructor
-  virtual ~ProcessSession() {
-    if (provenance_report_)
-      delete provenance_report_;
-  }
+  virtual ~ProcessSession();
+
 // Commit the session
   void commit();
   // Roll Back the session
   void rollback();
   // Get Provenance Report
-  provenance::ProvenanceReporter *getProvenanceReporter() {
+  std::shared_ptr<provenance::ProvenanceReporter> getProvenanceReporter() {
     return provenance_report_;
   }
   //
@@ -156,7 +156,7 @@ class ProcessSession {
   // Logger
   std::shared_ptr<logging::Logger> logger_;
   // Provenance Report
-  provenance::ProvenanceReporter *provenance_report_;
+  std::shared_ptr<provenance::ProvenanceReporter> provenance_report_;
 
   static std::shared_ptr<utils::IdGenerator> id_generator_;
 };

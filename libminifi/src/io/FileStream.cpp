@@ -133,6 +133,9 @@ int FileStream::readData(std::vector<uint8_t> &buf, int buflen) {
 int FileStream::readData(uint8_t *buf, int buflen) {
   if (!IsNullOrEmpty(buf)) {
     std::lock_guard<std::recursive_mutex> lock(file_lock_);
+    if (!file_stream_) {
+      return -1;
+    }
     file_stream_->read(reinterpret_cast<char*>(buf), buflen);
     if ((file_stream_->rdstate() & (file_stream_->eofbit | file_stream_->failbit)) != 0) {
       file_stream_->clear();

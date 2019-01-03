@@ -182,7 +182,7 @@ class Value {
     if (is_unsigned_long_) {
       return unsigned_long_val_;
     } else if (is_string_) {
-      return std::stoul(string_val_);
+      return string_val_.empty() ? 0 : std::stoul(string_val_);
     } else if (is_signed_long_) {
       return signed_long_val_;
     } else if (is_long_double_) {
@@ -198,7 +198,7 @@ class Value {
     } else if (is_unsigned_long_) {
       return unsigned_long_val_;
     } else if (is_string_) {
-      return std::stoul(string_val_);
+      return string_val_.empty() ? 0 : std::stol(string_val_);
     } else if (is_long_double_) {
       return long_double_val_;
     } else {
@@ -214,7 +214,7 @@ class Value {
     } else if (is_long_double_) {
       return long_double_val_;
     } else if (is_string_) {
-      return std::stold(string_val_);
+      return string_val_.empty() ? 0 : std::stold(string_val_);
     } else {
       return 0.0;
     }
