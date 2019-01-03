@@ -22,7 +22,6 @@
 #include <vector>
 #include <queue>
 #include <map>
-#include <unistd.h>
 #include <yaml-cpp/yaml.h>
 #include <iostream>
 #include "io/BaseStream.h"
@@ -66,7 +65,11 @@ int main(int argc, char **argv) {
     // attempt to use cwd as MINIFI_HOME
     if (minifiHome.empty() || !validHome(minifiHome)) {
       char cwd[PATH_MAX];
-      getcwd(cwd, PATH_MAX);
+      #ifdef WIN32
+          _getcwd(cwd,PATH_MAX);
+      #else
+          getcwd(cwd, PATH_MAX);
+      #endif
       minifiHome = cwd;
     }
 

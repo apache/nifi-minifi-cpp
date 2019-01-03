@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?include "cpack_variables.wxi"?>
+
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
+    RequiredVersion="3.6.3303.0">
+
+    <Product Id="$(var.CPACK_WIX_PRODUCT_GUID)"
+        Name="Apache NiFi MiNiFi C++"
+        Language="1033"
+        Version="$(var.CPACK_PACKAGE_VERSION)"
+        Manufacturer="$(var.CPACK_PACKAGE_VENDOR)">
+
+        <Package InstallerVersion="301" Compressed="yes"/>
+
+        <Media Id="1" Cabinet="media1.cab" EmbedCab="yes"/> 
+
+        <WixVariable Id="WixUILicenseRtf" Value="$(var.CPACK_WIX_LICENSE_RTF)"/>
+        <Property Id="WIXUI_INSTALLDIR" Value="INSTALL_ROOT"/> 
+
+        <?ifdef CPACK_WIX_PRODUCT_ICON?>
+        <Property Id="ARPPRODUCTICON">ProductIcon.ico</Property>
+        <Icon Id="ProductIcon.ico" SourceFile="$(var.CPACK_WIX_PRODUCT_ICON)"/>
+        <?endif?>
+
+        <?ifdef CPACK_WIX_UI_BANNER?>
+        <WixVariable Id="WixUIBannerBmp" Value="$(var.CPACK_WIX_UI_BANNER)"/>
+        <?endif?>
+
+		<DirectoryRef Id="TARGETDIR">
+			<Merge Id="VCRedist"  SourceFile="C:\Program Files (x86)\Common Files\Merge Modules\Microsoft_VC140_CRT_x64.msm" 	   DiskId="1" 	   Language="0" />
+		</DirectoryRef>
+
+		<Feature Id="VCRedist"  Title="Visual C++ 14.0 Runtime"  AllowAdvertise="no"    Display="hidden"       Level="1">
+		   <MergeRef Id="VCRedist"/>
+		</Feature>
+
+
+        <?ifdef CPACK_WIX_UI_DIALOG?>
+        <WixVariable Id="WixUIDialogBmp" Value="$(var.CPACK_WIX_UI_DIALOG)"/>
+        <?endif?>
+
+        <FeatureRef Id="ProductFeature"/>
+
+        <UIRef Id="WixUI_Minimal" />
+    </Product>
+</Wix>

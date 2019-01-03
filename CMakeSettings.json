@@ -105,6 +105,10 @@
           "value": "ON"
         },
         {
+          "name": "PORTABLE",
+          "value": "ON"
+        },
+        {
           "name": "OPENSSL_ROOT_DIR",
           "value": "C:\\OpenSSL-Win64"
         },

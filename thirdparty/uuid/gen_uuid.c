@@ -32,12 +32,12 @@
  * %End-Header%
  */
 
-/*
- * Force inclusion of SVID stuff since we need it if we're compiling in
- * gcc-wall wall mode
- * But not deprecated in glibc >= 20, and not needed nowadays.
- */
-/* #define _SVID_SOURCE */
+ /*
+  * Force inclusion of SVID stuff since we need it if we're compiling in
+  * gcc-wall wall mode
+  * But not deprecated in glibc >= 20, and not needed nowadays.
+  */
+  /* #define _SVID_SOURCE */
 
 #include "config.h"
 #if defined(_MSC_VER)
@@ -105,24 +105,24 @@ typedef int mode_t;
 #endif
 
 #ifdef WIN32
-static void gettimeofday (struct st_tm_val *tv, void *dummy)
+static void gettimeofday(struct st_tm_val *tv, void *dummy)
 {
 	FILETIME	ftime;
 	uint64_t	n;
 
-	GetSystemTimeAsFileTime (&ftime);
-	n = (((uint64_t) ftime.dwHighDateTime << 32)
-	     + (uint64_t) ftime.dwLowDateTime);
+	GetSystemTimeAsFileTime(&ftime);
+	n = (((uint64_t)ftime.dwHighDateTime << 32)
+		+ (uint64_t)ftime.dwLowDateTime);
 	if (n) {
 		n /= 10;
-		n -= ((369 * 365 + 89) * (uint64_t) 86400) * 1000000;
+		n -= ((369 * 365 + 89) * (uint64_t)86400) * 1000000;
 	}
 
 	tv->tv_sec = n / 1000000;
 	tv->tv_usec = n % 1000000;
 }
 
-static int getuid (void)
+static int getuid(void)
 {
 	return 1;
 }
@@ -149,12 +149,12 @@ static int get_node_id(unsigned char *node_id)
 	struct sockaddr_dl *sdlp;
 #endif
 
-/*
- * BSD 4.4 defines the size of an ifreq to be
- * max(sizeof(ifreq), sizeof(ifreq.ifr_name)+ifreq.ifr_addr.sa_len
- * However, under earlier systems, sa_len isn't present, so the size is
- * just sizeof(struct ifreq)
- */
+	/*
+	 * BSD 4.4 defines the size of an ifreq to be
+	 * max(sizeof(ifreq), sizeof(ifreq.ifr_name)+ifreq.ifr_addr.sa_len
+	 * However, under earlier systems, sa_len isn't present, so the size is
+	 * just sizeof(struct ifreq)
+	 */
 #ifdef HAVE_SA_LEN
 #define max(x, y) (((x) > (y)) ? (x) : (y))
 #define ifreq_size(i) max(sizeof(struct ifreq),\
@@ -170,29 +170,29 @@ static int get_node_id(unsigned char *node_id)
 	memset(buf, 0, sizeof(buf));
 	ifc.ifc_len = sizeof(buf);
 	ifc.ifc_buf = buf;
-	if (ioctl (sd, SIOCGIFCONF, (char *)&ifc) < 0) {
+	if (ioctl(sd, SIOCGIFCONF, (char *)&ifc) < 0) {
 		close(sd);
 		return -1;
 	}
 	n = ifc.ifc_len;
-	for (i = 0; i < n; i+= ifreq_size(*ifrp) ) {
-		ifrp = (struct ifreq *)((char *) ifc.ifc_buf+i);
+	for (i = 0; i < n; i += ifreq_size(*ifrp)) {
+		ifrp = (struct ifreq *)((char *)ifc.ifc_buf + i);
 		strncpy(ifr.ifr_name, ifrp->ifr_name, IFNAMSIZ);
 #ifdef SIOCGIFHWADDR
 		if (ioctl(sd, SIOCGIFHWADDR, &ifr) < 0)
 			continue;
-		a = (unsigned char *) &ifr.ifr_hwaddr.sa_data;
+		a = (unsigned char *)&ifr.ifr_hwaddr.sa_data;
 #else
 #ifdef SIOCGENADDR
 		if (ioctl(sd, SIOCGENADDR, &ifr) < 0)
 			continue;
-		a = (unsigned char *) ifr.ifr_enaddr;
+		a = (unsigned char *)ifr.ifr_enaddr;
 #else
 #ifdef HAVE_NET_IF_DL_H
 		sdlp = (struct sockaddr_dl *) &ifrp->ifr_addr;
 		if ((sdlp->sdl_family != AF_LINK) || (sdlp->sdl_alen != 6))
 			continue;
-		a = (unsigned char *) &sdlp->sdl_data[sdlp->sdl_nlen];
+		a = (unsigned char *)&sdlp->sdl_data[sdlp->sdl_nlen];
 #else
 		/*
 		 * XXX we don't have a way of getting the hardware
@@ -223,32 +223,32 @@ static unsigned short ul_jrand_seed[3];
 
 static int random_get_fd(void)
 {
-    int i, fd = -1;
-    struct st_tm_val  tv;
+	int i, fd = -1;
+	struct st_tm_val  tv;
 
-    gettimeofday(&tv, 0);
+	gettimeofday(&tv, 0);
 #ifndef WIN32
-    fd = open("/dev/urandom", O_RDONLY);
-    if (fd == -1)
-	fd = open("/dev/random", O_RDONLY | O_NONBLOCK);
-    if (fd >= 0) {
-	i = fcntl(fd, F_GETFD);
-	if (i >= 0)
-	    fcntl(fd, F_SETFD, i | FD_CLOEXEC);
-    }
+	fd = open("/dev/urandom", O_RDONLY);
+	if (fd == -1)
+		fd = open("/dev/random", O_RDONLY | O_NONBLOCK);
+	if (fd >= 0) {
+		i = fcntl(fd, F_GETFD);
+		if (i >= 0)
+			fcntl(fd, F_SETFD, i | FD_CLOEXEC);
+	}
 #endif
-    srand((getpid() << 16) ^ getuid() ^ tv.tv_sec ^ tv.tv_usec);
+	srand((getpid() << 16) ^ getuid() ^ tv.tv_sec ^ tv.tv_usec);
 
 #ifdef DO_JRAND_MIX
-    ul_jrand_seed[0] = getpid() ^ (tv.tv_sec & 0xFFFF);
-    ul_jrand_seed[1] = getppid() ^ (tv.tv_usec & 0xFFFF);
-    ul_jrand_seed[2] = (tv.tv_sec ^ tv.tv_usec) >> 16;
+	ul_jrand_seed[0] = getpid() ^ (tv.tv_sec & 0xFFFF);
+	ul_jrand_seed[1] = getppid() ^ (tv.tv_usec & 0xFFFF);
+	ul_jrand_seed[2] = (tv.tv_sec ^ tv.tv_usec) >> 16;
 #endif
-    /* Crank the random number generator a few times */
-    gettimeofday(&tv, 0);
-    for (i = (tv.tv_sec ^ tv.tv_usec) & 0x1F; i > 0; i--)
-	rand();
-    return fd;
+	/* Crank the random number generator a few times */
+	gettimeofday(&tv, 0);
+	for (i = (tv.tv_sec ^ tv.tv_usec) & 0x1F; i > 0; i--)
+		rand();
+	return fd;
 }
 
 /*
@@ -258,48 +258,48 @@ static int random_get_fd(void)
  */
 static void random_get_bytes(void *buf, size_t nbytes)
 {
-    size_t i, n = nbytes;
-    int fd = random_get_fd();
-    int lose_counter = 0;
-    unsigned char *cp = (unsigned char *) buf;
+	size_t i, n = nbytes;
+	int fd = random_get_fd();
+	int lose_counter = 0;
+	unsigned char *cp = (unsigned char *)buf;
 
-    if (fd >= 0) {
-	while (n > 0) {
-	    ssize_t x = read(fd, cp, n);
-	    if (x <= 0) {
-		if (lose_counter++ > 16)
-		    break;
-		continue;
-	    }
-	    n -= x;
-	    cp += x;
-	    lose_counter = 0;
+	if (fd >= 0) {
+		while (n > 0) {
+			ssize_t x = read(fd, cp, n);
+			if (x <= 0) {
+				if (lose_counter++ > 16)
+					break;
+				continue;
+			}
+			n -= x;
+			cp += x;
+			lose_counter = 0;
+		}
+
+		close(fd);
 	}
 
-	close(fd);
-    }
-
-    /*
-     * We do this all the time, but this is the only source of
-     * randomness if /dev/random/urandom is out to lunch.
-     */
-    for (cp = buf, i = 0; i < nbytes; i++)
-	*cp++ ^= (rand() >> 7) & 0xFF;
+	/*
+	 * We do this all the time, but this is the only source of
+	 * randomness if /dev/random/urandom is out to lunch.
+	 */
+	for (cp = buf, i = 0; i < nbytes; i++)
+		*cp++ ^= (rand() >> 7) & 0xFF;
 
 #ifdef DO_JRAND_MIX
-    {
-	unsigned short tmp_seed[3];
+	{
+		unsigned short tmp_seed[3];
 
-	memcpy(tmp_seed, ul_jrand_seed, sizeof(tmp_seed));
-	ul_jrand_seed[2] = ul_jrand_seed[2] ^ syscall(__NR_gettid);
-	for (cp = buf, i = 0; i < nbytes; i++)
-	    *cp++ ^= (jrand48(tmp_seed) >> 7) & 0xFF;
-	memcpy(ul_jrand_seed, tmp_seed,
-	       sizeof(ul_jrand_seed)-sizeof(unsigned short));
-    }
+		memcpy(tmp_seed, ul_jrand_seed, sizeof(tmp_seed));
+		ul_jrand_seed[2] = ul_jrand_seed[2] ^ syscall(__NR_gettid);
+		for (cp = buf, i = 0; i < nbytes; i++)
+			*cp++ ^= (jrand48(tmp_seed) >> 7) & 0xFF;
+		memcpy(ul_jrand_seed, tmp_seed,
+			sizeof(ul_jrand_seed) - sizeof(unsigned short));
+	}
 #endif
 
-    return;
+	return;
 }
 
 #ifdef WIN32 /* compatibility layer */
@@ -307,24 +307,78 @@ static void random_get_bytes(void *buf, size_t nbytes)
 #define LOCK_UN 2
 static int flock(int fd, int op)
 {
-    HANDLE h = (HANDLE) _get_osfhandle(fd);
-    OVERLAPPED offset;
-    if (h < 0)
+	HANDLE h = (HANDLE)_get_osfhandle(fd);
+	OVERLAPPED offset;
+	if (h < 0)
+		return -1;
+	memset(&offset, 0, sizeof(offset));
+	switch (op) {
+	case LOCK_EX:
+		return (LockFileEx(h, LOCKFILE_EXCLUSIVE_LOCK, 0, 1, 0, &offset)) ? 0 : -1;
+	case LOCK_UN:
+		UnlockFileEx(h, 0, 1, 0, &offset);
+		return 0;
+	}
 	return -1;
-    memset(&offset, 0, sizeof(offset));
-    switch (op) {
-    case LOCK_EX:
-	return (LockFileEx(h, LOCKFILE_EXCLUSIVE_LOCK, 0, 1, 0, &offset)) ? 0 : -1;
-    case LOCK_UN:
-	UnlockFileEx(h, 0, 1, 0, &offset);
-	return 0;
-    }
-    return -1;
 }
 #endif
 
 /* Assume that the gettimeofday() has microsecond granularity */
 #define MAX_ADJUSTMENT 10
+
+static int get_random_fd(void)
+{
+	struct st_tm_val  tv;
+	static int  fd = -2;
+	int    i;
+#ifndef WIN32
+	if (fd == -2) {
+		gettimeofday(&tv, 0);
+		fd = open("/dev/urandom", O_RDONLY);
+		if (fd == -1)
+			fd = open("/dev/random", O_RDONLY | O_NONBLOCK);
+		srand((getpid() << 16) ^ getuid() ^ tv.tv_sec ^ tv.tv_usec);
+	}
+	/* Crank the random number generator a few times */
+	gettimeofday(&tv, 0);
+	for (i = (tv.tv_sec ^ tv.tv_usec) & 0x1F; i > 0; i--)
+		rand();
+#endif
+	return fd;
+}
+
+/*
+ * Generate a series of random bytes.  Use /dev/urandom if possible,
+ * and if not, use srandom/random.
+ */
+static void get_random_bytes(void *buf, int nbytes)
+{
+	int i, n = nbytes, fd = get_random_fd();
+	int lose_counter = 0;
+	unsigned char *cp = (unsigned char *)buf;
+
+	if (fd >= 0) {
+		while (n > 0) {
+			i = read(fd, cp, n);
+			if (i <= 0) {
+				if (lose_counter++ > 16)
+					break;
+				continue;
+			}
+			n -= i;
+			cp += i;
+			lose_counter = 0;
+		}
+	}
+
+	/*
+	 * We do this all the time, but this is the only source of
+	 * randomness if /dev/random/urandom is out to lunch.
+	 */
+	for (cp = buf, i = 0; i < nbytes; i++)
+		*cp++ ^= (rand() >> 7) & 0xFF;
+}
+
 
 /*
  * Get clock from global sequence clock counter.
@@ -332,11 +386,56 @@ static int flock(int fd, int op)
  * Return -1 if the clock counter could not be opened/locked (in this case
  * pseudorandom value is returned in @ret_clock_seq), otherwise return 0.
  */
+ /**/
 static int get_clock(uint32_t *clock_high, uint32_t *clock_low,
-		     uint16_t *ret_clock_seq, int *num)
+  uint16_t *ret_clock_seq, int *num)
+#ifdef WIN32
+{
+	static int      adjustment = 0;
+	static struct st_tm_val    last = { 0, 0 };
+	static uint16_t      clock_seq;
+	struct st_tm_val      tv;
+	uint64_t    clock_reg;
+
+try_again:
+	gettimeofday(&tv, 0);
+	if ((last.tv_sec == 0) && (last.tv_usec == 0)) {
+		get_random_bytes(&clock_seq, sizeof(clock_seq));
+		clock_seq &= 0x3FFF;
+		last = tv;
+		last.tv_sec--;
+	}
+	if ((tv.tv_sec < last.tv_sec) ||
+		((tv.tv_sec == last.tv_sec) &&
+		(tv.tv_usec < last.tv_usec))) {
+		clock_seq = (clock_seq + 1) & 0x3FFF;
+		adjustment = 0;
+		last = tv;
+	}
+	else if ((tv.tv_sec == last.tv_sec) &&
+		(tv.tv_usec == last.tv_usec)) {
+		if (adjustment >= MAX_ADJUSTMENT)
+			goto try_again;
+		adjustment++;
+	}
+	else {
+		adjustment = 0;
+		last = tv;
+	}
+
+	clock_reg = tv.tv_usec * 10 + adjustment;
+	clock_reg += ((uint64_t)tv.tv_sec) * 10000000;
+	clock_reg += (((uint64_t)0x01B21DD2) << 32) + 0x13814000;
+
+	*clock_high = clock_reg >> 32;
+	*clock_low = clock_reg;
+	*ret_clock_seq = clock_seq;
+	return 0;
+}
+#else
 {
 	THREAD_LOCAL int		adjustment = 0;
-	THREAD_LOCAL struct st_tm_val	last = {0, 0};
+	THREAD_LOCAL struct st_tm_val	last = { 0, 0 };
 	THREAD_LOCAL int		state_fd = -2;
 	THREAD_LOCAL FILE		*state_f;
 	THREAD_LOCAL uint16_t		clock_seq;
@@ -348,8 +447,8 @@ static int get_clock(uint32_t *clock_high, uint32_t *clock_low,
 
 	if (state_fd == -2) {
 		save_umask = umask(0);
-		state_fd = open(LIBUUID_CLOCK_FILE, O_RDWR|O_CREAT, 0660);
-		(void) umask(save_umask);
+		state_fd = open(LIBUUID_CLOCK_FILE, O_RDWR | O_CREAT, 0660);
+		(void)umask(save_umask);
 		if (state_fd != -1) {
 			state_f = fdopen(state_fd, "r+");
 			if (!state_f) {
@@ -381,7 +480,7 @@ static int get_clock(uint32_t *clock_high, uint32_t *clock_low,
 		int a;
 
 		if (fscanf(state_f, "clock: %04x tv: %lu %lu adj: %d\n",
-			   &cl, &tv1, &tv2, &a) == 4) {
+			&cl, &tv1, &tv2, &a) == 4) {
 			clock_seq = cl & 0x3FFF;
 			last.tv_sec = tv1;
 			last.tv_usec = tv2;
@@ -399,24 +498,26 @@ static int get_clock(uint32_t *clock_high, uint32_t *clock_low,
 try_again:
 	gettimeofday(&tv, 0);
 	if ((tv.tv_sec < last.tv_sec) ||
-	    ((tv.tv_sec == last.tv_sec) &&
-	     (tv.tv_usec < last.tv_usec))) {
-		clock_seq = (clock_seq+1) & 0x3FFF;
+		((tv.tv_sec == last.tv_sec) &&
+		(tv.tv_usec < last.tv_usec))) {
+		clock_seq = (clock_seq + 1) & 0x3FFF;
 		adjustment = 0;
 		last = tv;
-	} else if ((tv.tv_sec == last.tv_sec) &&
-	    (tv.tv_usec == last.tv_usec)) {
+	}
+	else if ((tv.tv_sec == last.tv_sec) &&
+		(tv.tv_usec == last.tv_usec)) {
 		if (adjustment >= MAX_ADJUSTMENT)
 			goto try_again;
 		adjustment++;
-	} else {
+	}
+	else {
 		adjustment = 0;
 		last = tv;
 	}
 
-	clock_reg = tv.tv_usec*10 + adjustment;
-	clock_reg += ((uint64_t) tv.tv_sec)*10000000;
-	clock_reg += (((uint64_t) 0x01B21DD2) << 32) + 0x13814000;
+	clock_reg = tv.tv_usec * 10 + adjustment;
+	clock_reg += ((uint64_t)tv.tv_sec) * 10000000;
+	clock_reg += (((uint64_t)0x01B21DD2) << 32) + 0x13814000;
 
 	if (num && (*num > 1)) {
 		adjustment += *num - 1;
@@ -429,20 +530,13 @@ try_again:
 	if (state_fd >= 0) {
 		rewind(state_f);
 		len = fprintf(state_f,
-			      "clock: %04x tv: %016lu %08lu adj: %08d\n",
-			      clock_seq, (unsigned long) last.tv_sec, (unsigned long) last.tv_usec, adjustment);
+			"clock: %04x tv: %016lu %08lu adj: %08d\n",
+			clock_seq, (unsigned long)last.tv_sec, (unsigned long)last.tv_usec, adjustment);
 		fflush(state_f);
-#ifdef WIN32
-		if (_chsize(fileno(state_fd), len) < 0) {
-			fprintf(state_f, "                   \n");
-			fflush(state_f);
-		}
-#else
 		if (ftruncate(state_fd, len) < 0) {
 			fprintf(state_f, "                   \n");
 			fflush(state_f);
 		}
-#endif
 		rewind(state_f);
 #ifdef HAVE_FLOCK
 		flock(state_fd, LOCK_UN);
@@ -454,6 +548,7 @@ try_again:
 	*ret_clock_seq = clock_seq;
 	return ret;
 }
+#endif
 
 
 int __uuid_generate_time(UUID_FIELD out, int *num)
@@ -478,7 +573,7 @@ int __uuid_generate_time(UUID_FIELD out, int *num)
 	}
 	ret = get_clock(&clock_mid, &uu.time_low, &uu.clock_seq, num);
 	uu.clock_seq |= 0x8000;
-	uu.time_mid = (uint16_t) clock_mid;
+	uu.time_mid = (uint16_t)clock_mid;
 	uu.time_hi_and_version = ((clock_mid >> 16) & 0x0FFF) | 0x1000;
 	memcpy(uu.node, node_id, 6);
 	uuid_pack(&uu, out);
