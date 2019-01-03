@@ -182,6 +182,13 @@ Finally, it is required to add the `-lrt` compiler flag by using the
   the bootstrap script to help guide installation. Please see the Bootstrapping section
   below.
 
+#### Windows
+  Build and Installation has been tested with Windows 10 using Visual Studio. You can build
+  and create an MSI via the CPACK command. This requires the installation of the WiX
+  toolset (http://wixtoolset.org/). To do this, open up a prompt into your build directory and 
+  type 'cpack' . The CPACK command will automatically generate and provide you a path to the distributable
+  msi file. 
+
 ### To run
 
 #### Libraries
@@ -790,6 +797,8 @@ MiNiFi can then be stopped by issuing:
 MiNiFi can also be installed as a system service using minifi.sh with an optional "service name" (default: minifi)
 
     $ ./bin/minifi.sh install [service name]
+
+*** Currently windows does not support installing a windows service. ***
     
 ### Deploying
 MiNiFi C++ comes with a deployment script. This will build and package minifi. Additionally, a file named build_output will be
@@ -798,6 +807,8 @@ created within the build directory that contains a manifest of build artifacts.
     $ deploy.sh <build identifier> 
 
 The build identifier will be carried with the deployed binary for the configuration you specify. By default all extensions will be built.
+
+On Windows it is suggested that MSI be used for installation. 
     
 ### Extensions
 

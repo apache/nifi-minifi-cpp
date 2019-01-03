@@ -178,7 +178,7 @@ ENDIF (MSVC)
 include(CTest)
 
 OPTION(ENABLE_NETTLE "Enable use of Nettle" ON)
-OPTION(ENABLE_OPENSSL "Enable use of OpenSSL" ON)
+OPTION(ENABLE_OPENSSL "Enable use of OpenSSL" OFF)
 OPTION(ENABLE_LZO "Enable the use of the system LZO library if found" OFF)
 OPTION(ENABLE_LZMA "Enable the use of the system LZMA library if found" ON)
 

@@ -173,59 +173,62 @@ endif()
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 if (OPENSSL_OFF STREQUAL "OFF")
-if(USE_SYSTEM_OPENSSL STREQUAL "OFF")
-	message("Using bundled LibreSSL")
-	set(BUILD_ARGS "")
-	if (WIN32)
-	set(BUILD_ARGS " -GVisual Studio 15 2017")
-	endif(WIN32)
-	ExternalProject_Add(
-	libressl-portable
-	GIT_REPOSITORY "https://github.com/libressl-portable/portable.git"
-	GIT_TAG "190bd346e75575b9436a2e9e14b28618f0234e1b"
-	SOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-src"
-	CMAKE_ARGS ${PASSTHROUGH_CMAKE_ARGS}
-	            "-DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-install"
-				"${BUILD_ARGS}"
-	PATCH_COMMAND ./autogen.sh
-	)
+	if(USE_SYSTEM_OPENSSL STREQUAL "OFF")
+		message("Using bundled LibreSSL")
+		set(BUILD_ARGS "")
+		if (WIN32)
+		set(BUILD_ARGS " -GVisual Studio 15 2017")
+		endif(WIN32)
+		ExternalProject_Add(
+		libressl-portable
+		GIT_REPOSITORY "https://github.com/libressl-portable/portable.git"
+		GIT_TAG "190bd346e75575b9436a2e9e14b28618f0234e1b"
+		SOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-src"
+		CMAKE_ARGS ${PASSTHROUGH_CMAKE_ARGS}
+					"-DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-install"
+					"${BUILD_ARGS}"
+		PATCH_COMMAND ./autogen.sh
+		)
 	
-	list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/ssl")
-	add_library(crypto STATIC IMPORTED)
-	set_target_properties(crypto PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-install/lib/libcrypto.a")
-	add_dependencies(crypto libressl-portable)
-	add_library(ssl STATIC IMPORTED)
-	set_target_properties(ssl PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-install/lib/libssl.a")
-	set_target_properties(ssl PROPERTIES INTERFACE_LINK_LIBRARIES crypto)
-	add_dependencies(ssl libressl-portable)
-	add_library(tls STATIC IMPORTED)
-	set_target_properties(tls PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-install/lib/libtls.a")
-	set_target_properties(tls PROPERTIES INTERFACE_LINK_LIBRARIES crypto)
-	add_dependencies(tls libressl-portable)
+		list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/ssl")
+		add_library(crypto STATIC IMPORTED)
+		set_target_properties(crypto PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-install/lib/libcrypto.a")
+		add_dependencies(crypto libressl-portable)
+		add_library(ssl STATIC IMPORTED)
+		set_target_properties(ssl PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-install/lib/libssl.a")
+		set_target_properties(ssl PROPERTIES INTERFACE_LINK_LIBRARIES crypto)
+		add_dependencies(ssl libressl-portable)
+		add_library(tls STATIC IMPORTED)
+		set_target_properties(tls PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-install/lib/libtls.a")
+		set_target_properties(tls PROPERTIES INTERFACE_LINK_LIBRARIES crypto)
+		add_dependencies(tls libressl-portable)
 	
-	set(OPENSSL_FOUND "YES")
-	set(OPENSSL_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/libressl/include")
-	set(OPENSSL_LIBRARIES tls ssl crypto)
-else()
-	# Set the right openssl root path
-	if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-	set(OPENSSL_ROOT_DIR "/usr/local/opt/openssl/")
-	elseif(NOT WIN32)
-	set(OPENSSL_ROOT_DIR "/usr/lib/x86_64-linux-gnu")
+		set(OPENSSL_FOUND "YES")
+		set(OPENSSL_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/libressl/include")
+		set(OPENSSL_LIBRARIES tls ssl crypto)
 	else()
-		#set(OPENSSL_ROOT_DIR "/usr/lib/x86_64-linux-gnu")
-	endif()
+		# Set the right openssl root path
+		if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+		set(OPENSSL_ROOT_DIR "/usr/local/opt/openssl/")
+		elseif(NOT WIN32)
+		set(OPENSSL_ROOT_DIR "/usr/lib/x86_64-linux-gnu")
+		else()
+			#set(OPENSSL_ROOT_DIR "/usr/lib/x86_64-linux-gnu")
+		endif()
 	
-	# Include OpenSSL
-	find_package (OpenSSL REQUIRED)
+		# Include OpenSSL
+		if (NOT OPENSSL_FORCE_SHARED)
+		set(OPENSSL_USE_STATIC_LIBS TRUE)
+		endif()
+		find_package (OpenSSL REQUIRED)
 
 	   
 	
-	if (OPENSSL_FOUND)
-		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DOPENSSL_SUPPORT")
-		set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DOPENSSL_SUPPORT")
+		if (OPENSSL_FOUND)
+			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DOPENSSL_SUPPORT")
+			set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DOPENSSL_SUPPORT")
+		endif()
 	endif()
-endif()
 if (OPENSSL_FOUND)
   include_directories(${OPENSSL_INCLUDE_DIR})
   MESSAGE("OpenSSL found at ${OPENSSL_LIBRARIES}")
@@ -239,7 +242,7 @@ if(USE_SYSTEM_ZLIB STREQUAL "OFF")
   message("Using bundled zlib")
 
   if (WIN32)
-  IF(CMAKE_BUILD_TYPE MATCHES RelWithDebInfo)
+  if (CMAKE_BUILD_TYPE MATCHES RelWithDebInfo OR CMAKE_BUILD_TYPE MATCHES Release)
   set(BYPRODUCT "thirdparty/zlib-install/lib/zlibstatic.lib")
   else()
   set(BYPRODUCT "thirdparty/zlib-install/lib/zlibstaticd.lib")
@@ -301,10 +304,10 @@ if(NOT DISABLE_CURL AND (NOT USE_SYSTEM_CURL))
   set(CURL_CXX_FLAGS "${CURL_C_FLAGS}")
 
   if (WIN32)
-  IF(CMAKE_BUILD_TYPE MATCHES RelWithDebInfo)
-	set(BYPRODUCT "thirdparty/curl-install/lib/libcurl.lib")
+ if (CMAKE_BUILD_TYPE MATCHES RelWithDebInfo OR CMAKE_BUILD_TYPE MATCHES Release)
+  set(BYPRODUCT "thirdparty/curl-install/lib/libcurl.lib")
   else()
-  	set(BYPRODUCT "thirdparty/curl-install/lib/libcurl-d.lib")
+  set(BYPRODUCT "thirdparty/curl-install/lib/libcurl-d.lib")
   endif()
   else()
   set(BYPRODUCT "thirdparty/curl-install/lib/libcurl.a")
@@ -595,7 +598,7 @@ set(CPACK_ALL_INSTALL_TYPES Full Developer)
 set(CPACK_COMPONENT_LIBRARIES_INSTALL_TYPES Developer Full)
 set(CPACK_COMPONENT_HEADERS_INSTALL_TYPES Developer Full)
 set(CPACK_COMPONENT_APPLICATIONS_INSTALL_TYPES Full)
-
+set(CPACK_WIX_TEMPLATE "${CMAKE_CURRENT_SOURCE_DIR}/msi/WixWin64.wsi")
 else()
 set(CPACK_SOURCE_GENERATOR "TGZ")
 endif(WIN32)
@@ -614,17 +617,26 @@ install(PROGRAMS bin/minifi.sh
 install(FILES LICENSE README.md NOTICE
         DESTINATION .
         COMPONENT bin)
-        
+   
 install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/main/minifi
         DESTINATION bin
         COMPONENT bin)
         
 
+if (WIN32)
+set(CPACK_GENERATOR "WIX")
+else()
+set(CPACK_GENERATOR "TGZ")
+endif()
 set(CPACK_COMPONENT_INCLUDE_TOPLEVEL_DIRECTORY 1)
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Apache NiFi MiNiFi C++ version ${VERSION}")
 set(CPACK_PACKAGE_VENDOR "Apache NiFi")
+# set version information
+set(CPACK_PACKAGE_VERSION_MAJOR ${PROJECT_VERSION_MAJOR})
+set(CPACK_PACKAGE_VERSION_MINOR ${PROJECT_VERSION_MINOR})
+set(CPACK_PACKAGE_VERSION_PATCH ${PROJECT_VERSION_PATCH})
 set(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
-set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
+set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/msi/LICENSE.txt")
 set(CPACK_PACKAGE_FILE_NAME "${ASSEMBLY_BASE_NAME}")
 if(NOT WIN32)
 set(CPACK_GENERATOR "TGZ")
@@ -633,7 +645,7 @@ endif()
 set(CPACK_ARCHIVE_COMPONENT_INSTALL ON)
 set(CPACK_RDKAFKA_COMPONENT_INSTALL ON)
 set(CPACK_MQTT_COMPONENT_INSTALL ON)
-set(CPACK_COMPONENTS_ALL bin)
+set(CPACK_COMPONENTS_ALL bin conf)
 
 
 include(CPack)

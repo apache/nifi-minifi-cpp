@@ -29,6 +29,15 @@
 #include <fstream>
 #include "core/logging/Logger.h"
 
+#ifndef FILE_SEPARATOR
+	#ifdef WIN32
+		#define FILE_SEPARATOR '\\'
+	#else
+		#define FILE_SEPARATOR '/'
+	#endif
+#endif
+
+
 namespace org {
 namespace apache {
 namespace nifi {

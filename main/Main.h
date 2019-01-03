@@ -61,7 +61,7 @@ extern "C" {
 			int   _charbuf;
 			int   _bufsiz;
 			char *_tmpfname;
-		};
+	};
 		// VS2015 has FILE = struct {void* _Placeholder}
 
 		static struct _iobuf_VS2012 bufs[3];
@@ -75,11 +75,13 @@ extern "C" {
 		}
 
 		return (FILE*)&bufs;
-	}
+}
 }
 
 #else
+#ifndef FILE_SEPARATOR
 #define FILE_SEPARATOR "/"
+#endif
 #endif
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
@@ -124,14 +126,14 @@ extern "C" {
  * @return true if home_path represents a valid MINIFI_HOME
  */
 bool validHome(const std::string &home_path) {
-	struct stat stat_result { };
-	std::string sep = FILE_SEPARATOR;
+  struct stat stat_result { };
+  std::string sep;
+  sep += FILE_SEPARATOR;
 #ifdef WIN32
 	sep = "";
 #endif
-	auto properties_file_path = home_path + sep + DEFAULT_NIFI_PROPERTIES_FILE;
-	std::cout << "looking for " << properties_file_path << std::endl;
-	return (stat(properties_file_path.c_str(), &stat_result) == 0);
+  auto properties_file_path = home_path + sep + DEFAULT_NIFI_PROPERTIES_FILE;
+  return (stat(properties_file_path.c_str(), &stat_result) == 0);
 }
 
 
