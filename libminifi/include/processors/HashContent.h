@@ -46,7 +46,7 @@ namespace {
 
   std::string digestToString(const unsigned char * const digest, size_t size) {
     std::stringstream ss;
-    for(int i = 0; i < size; i++)
+    for(size_t i = 0; i < size; i++)
     {
       ss << std::uppercase << std::hex << std::setw(2) << std::setfill('0') << (int)digest[i];
     }
