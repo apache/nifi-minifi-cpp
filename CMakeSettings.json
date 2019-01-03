@@ -36,6 +36,10 @@
           "value": "OFF"
         },
         {
+          "name": "ENABLE_JNI",
+          "value": "ON"
+        },
+        {
           "name": "FORCE_WINDOWS",
           "value": "ON"
         },
@@ -91,7 +95,6 @@
       "installRoot": "${env.USERPROFILE}\\CMakeBuilds\\${workspaceHash}\\install\\${name}",
       "cmakeCommandArgs": "",
       "buildCommandArgs": "-v -j8",
-      "$" { "env.USERPROFILE" },
       "variables": [
         {
           "name": "OPENSSL_OFF",
@@ -116,6 +119,10 @@
         {
           "name": "USE_SYSTEM_CURL",
           "value": "OFF"
+        },
+        {
+          "name": "ENABLE_JNI",
+          "value": "ON"
         },
         {
           "name": "USE_SYSTEM_UUID",

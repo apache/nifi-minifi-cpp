@@ -36,6 +36,10 @@ core::Relationship RouteOnAttribute::Failure("failure", "Failed files are transf
 void RouteOnAttribute::initialize() {
   std::set<core::Property> properties;
   setSupportedProperties(properties);
+  std::set<core::Relationship> relationships;
+  relationships.insert(Unmatched);
+  relationships.insert(Failure);
+  setSupportedRelationships(relationships);
 }
 
 void RouteOnAttribute::onDynamicPropertyModified(const core::Property &orig_property, const core::Property &new_property) {

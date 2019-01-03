@@ -83,6 +83,7 @@ class FlowConfiguration : public CoreComponent {
 
   // Create Processor (Node/Input/Output Port) based on the name
   std::shared_ptr<core::Processor> createProcessor(std::string name, utils::Identifier &uuid);
+  std::shared_ptr<core::Processor> createProcessor(const std::string &name, const std::string &fullname, utils::Identifier &uuid);
   // Create Root Processor Group
 
   std::unique_ptr<core::ProcessGroup> createRootProcessGroup(std::string name, utils::Identifier & uuid, int version);

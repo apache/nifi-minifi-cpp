@@ -21,6 +21,7 @@
 #include "utils/TimeUtil.h"
 #include "ResourceClaim.h"
 #include "Connectable.h"
+#include "WeakReference.h"
 
 namespace org {
 namespace apache {
@@ -28,7 +29,7 @@ namespace nifi {
 namespace minifi {
 namespace core {
 
-class FlowFile : public core::Connectable {
+class FlowFile : public core::Connectable, public ReferenceContainer {
  public:
   FlowFile();
   ~FlowFile();
@@ -224,6 +225,10 @@ class FlowFile : public core::Connectable {
     return (penaltyExpiration_ms_ > 0 ? penaltyExpiration_ms_ > getTimeMillis() : false);
   }
 
+  uint64_t getId() const {
+    return id_;
+  }
+
   /**
    * Yield
    */
@@ -321,6 +326,7 @@ class FlowFile : public core::Connectable {
  private:
   static std::shared_ptr<logging::Logger> logger_;
   static std::shared_ptr<utils::IdGenerator> id_generator_;
+  static std::shared_ptr<utils::NonRepeatingStringGenerator> numeric_id_generator_;
 };
 
 } /* namespace core */

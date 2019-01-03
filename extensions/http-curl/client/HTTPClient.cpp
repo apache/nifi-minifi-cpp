@@ -44,6 +44,8 @@ HTTPClient::HTTPClient(const std::string &url, const std::shared_ptr<minifi::con
       read_callback_(INT_MAX),
       header_response_(-1),
       res(CURLE_OK),
+      keep_alive_probe_(-1),
+      keep_alive_idle_(-1),
       logger_(logging::LoggerFactory<HTTPClient>::getLogger()) {
   HTTPClientInitializer *initializer = HTTPClientInitializer::getInstance();
   initializer->initialize();
@@ -64,6 +66,8 @@ HTTPClient::HTTPClient(std::string name, utils::Identifier uuid)
       read_callback_(INT_MAX),
       header_response_(-1),
       res(CURLE_OK),
+      keep_alive_probe_(-1),
+      keep_alive_idle_(-1),
       logger_(logging::LoggerFactory<HTTPClient>::getLogger()) {
   HTTPClientInitializer *initializer = HTTPClientInitializer::getInstance();
   initializer->initialize();
@@ -84,6 +88,8 @@ HTTPClient::HTTPClient()
       read_callback_(INT_MAX),
       header_response_(-1),
       res(CURLE_OK),
+      keep_alive_probe_(-1),
+      keep_alive_idle_(-1),
       logger_(logging::LoggerFactory<HTTPClient>::getLogger()) {
   HTTPClientInitializer *initializer = HTTPClientInitializer::getInstance();
   initializer->initialize();
@@ -240,9 +246,17 @@ bool HTTPClient::submit() {
   }
   curl_easy_setopt(http_session_, CURLOPT_HEADERFUNCTION, &utils::HTTPHeaderResponse::receive_headers);
   curl_easy_setopt(http_session_, CURLOPT_HEADERDATA, static_cast<void*>(&header_response_));
-#ifdef CURLOPT_TCP_KEEPALIVE
-  curl_easy_setopt(http_session_, CURLOPT_TCP_KEEPALIVE, 0L);
-#endif
+  if (keep_alive_probe_ > 0){
+    logger_->log_debug("Setting keep alive to %d",keep_alive_probe_);
+    curl_easy_setopt(http_session_, CURLOPT_TCP_KEEPALIVE, 1L);
+    curl_easy_setopt(http_session_, CURLOPT_TCP_KEEPINTVL, keep_alive_probe_);
+    curl_easy_setopt(http_session_, CURLOPT_TCP_KEEPIDLE, keep_alive_idle_);
+
+  }
+  else{
+    logger_->log_debug("Not using keep alive");
+    curl_easy_setopt(http_session_, CURLOPT_TCP_KEEPALIVE, 0L);
+  }
   res = curl_easy_perform(http_session_);
   if (callback == nullptr) {
     read_callback_.close();

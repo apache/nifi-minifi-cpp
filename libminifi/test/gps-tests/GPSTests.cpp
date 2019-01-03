@@ -55,7 +55,7 @@ TEST_CASE("GPSD Create", "[gpsdtest1]") {
 
   plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), dir);
   testController.runSession(plan, false);
-  std::set<provenance::ProvenanceEventRecord*> records = plan->getProvenanceRecords();
+  auto records = plan->getProvenanceRecords();
   std::shared_ptr<core::FlowFile> record = plan->getCurrentFlowFile();
   REQUIRE(record == nullptr);
   REQUIRE(records.size() == 0);

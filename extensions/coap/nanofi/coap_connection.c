@@ -17,17 +17,16 @@
  */
 #include "coap_connection.h"
 
-
 CoapPDU *create_connection(uint8_t type, const char * const server, const char * const endpoint, int port, const CoapMessage * const message) {
-  CoapPDU *pdu = (CoapPDU*)malloc(sizeof(CoapPDU));
+  CoapPDU *pdu = (CoapPDU*) malloc(sizeof(CoapPDU));
 
   pdu->ctx = NULL;
   pdu->session = NULL;
 
   coap_uri_t uri;
-  uri.host.s = (uint8_t*)server; // may be a loss in resolution, but hostnames should be char *
+  uri.host.s = (uint8_t*) server;  // may be a loss in resolution, but hostnames should be char *
   uri.host.length = strlen(server);
-  uri.path.s = (uint8_t*)endpoint; // ^ same as above for paths.
+  uri.path.s = (uint8_t*) endpoint;  // ^ same as above for paths.
   uri.path.length = strlen(endpoint);
   uri.port = port;
   uri.scheme = COAP_URI_SCHEME_COAP;
@@ -40,25 +39,23 @@ CoapPDU *create_connection(uint8_t type, const char * const server, const char *
   if (res < 0) {
     return NULL;
   }
-
   pdu->dst_addr.size = res;
   pdu->dst_addr.addr.sin.sin_port = htons(uri.port);
 
   void *addrptr = NULL;
   char port_str[NI_MAXSERV] = "0";
 
-  char node_str[NI_MAXHOST] = "";
   switch (pdu->dst_addr.addr.sa.sa_family) {
     case AF_INET:
       addrptr = &pdu->dst_addr.addr.sin.sin_addr;
-      if (!create_session(&pdu->ctx, &pdu->session, node_str[0] == 0 ? "0.0.0.0" : node_str, port_str, &pdu->dst_addr)) {
+      if (!create_session(&pdu->ctx, &pdu->session, 0x00, port_str, &pdu->dst_addr)) {
         break;
       } else {
         return NULL;
       }
     case AF_INET6:
       addrptr = &pdu->dst_addr.addr.sin6.sin6_addr;
-      if (!create_session(&pdu->ctx, &pdu->session, node_str[0] == 0 ? "::" : node_str, port_str, &pdu->dst_addr)) {
+      if (!create_session(&pdu->ctx, &pdu->session, 0x00, port_str, &pdu->dst_addr)) {
         break;
       } else {
         return NULL;

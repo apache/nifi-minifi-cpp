@@ -31,6 +31,7 @@
 #include "utils/file/DiffUtils.h"
 #include "utils/file/FileUtils.h"
 #include "utils/file/FileManager.h"
+#include "utils/HTTPClient.h"
 namespace org {
 namespace apache {
 namespace nifi {
@@ -605,7 +606,37 @@ void C2Agent::handle_update(const C2ContentResponse &resp) {
       auto urlStr = url->second.to_string();
 
       std::string file_path = urlStr;
-      if (nullptr != protocol_.load() && file_path.find("http") != std::string::npos) {
+      bool containsHttp = file_path.find("http") != std::string::npos;
+      if (!containsHttp) {
+        std::ifstream new_conf(file_path);
+        if (!new_conf.good()) {
+          containsHttp = true;
+        }
+      }
+      if (nullptr != protocol_.load() && containsHttp) {
+        std::stringstream newUrl;
+        if (urlStr.find("http") == std::string::npos) {
+          std::string base;
+          if (configuration_->get(minifi::Configure::nifi_c2_flow_base_url, base)) {
+            newUrl << base;
+            if (!utils::StringUtils::endsWith(base, "/")) {
+              newUrl << "/";
+            }
+            newUrl << urlStr;
+            urlStr = newUrl.str();
+          } else if (configuration_->get("c2.rest.url", base)) {
+            std::string host, protocol;
+            int port = -1;
+            utils::parse_url(&base, &host, &port, &protocol);
+            newUrl << protocol << host;
+            if (port > 0) {
+              newUrl << ":" << port;
+            }
+            newUrl << "/c2/api/" << urlStr;
+            urlStr = newUrl.str();
+          }
+        }
+
         C2Payload &&response = protocol_.load()->consumePayload(urlStr, payload, RECEIVE, false);
 
         auto raw_data = response.getRawData();
@@ -636,7 +667,7 @@ void C2Agent::handle_update(const C2ContentResponse &resp) {
 
           std::stringstream config_file_backup;
           config_file_backup << config_file << ".bak";
-          // we must be able to successfuly copy the file.
+          // we must be able to successfully copy the file.
           bool persist_config = true;
           bool backup_file = false;
           std::string backup_config;

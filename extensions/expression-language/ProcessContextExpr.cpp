@@ -16,7 +16,7 @@
  */
 
 #include <core/ProcessContext.h>
-
+#include <memory>
 namespace org {
 namespace apache {
 namespace nifi {
@@ -24,8 +24,9 @@ namespace minifi {
 namespace core {
 
 bool ProcessContext::getProperty(const Property &property, std::string &value, const std::shared_ptr<FlowFile> &flow_file) {
-  if (!property.supportsExpressionLangauge())
+  if (!property.supportsExpressionLangauge()) {
     return getProperty(property.getName(), value);
+  }
   auto name = property.getName();
   if (expressions_.find(name) == expressions_.end()) {
     std::string expression_str;
@@ -34,17 +35,16 @@ bool ProcessContext::getProperty(const Property &property, std::string &value, c
     expressions_.emplace(name, expression::compile(expression_str));
   }
 
-  minifi::expression::Parameters p(flow_file);
-  p.configuration = content_repo_->getConfig();
-
-  value = expressions_[name]( p ).asString();
+  minifi::expression::Parameters p(shared_from_this(), flow_file);
+  value = expressions_[name](p).asString();
   return true;
 }
 
 bool ProcessContext::getDynamicProperty(const Property &property, std::string &value, const std::shared_ptr<FlowFile> &flow_file) {
 
-  if (!property.supportsExpressionLangauge())
+  if (!property.supportsExpressionLangauge()) {
     return getDynamicProperty(property.getName(), value);
+  }
   auto name = property.getName();
   if (dynamic_property_expressions_.find(name) == dynamic_property_expressions_.end()) {
     std::string expression_str;
@@ -52,11 +52,8 @@ bool ProcessContext::getDynamicProperty(const Property &property, std::string &v
     logger_->log_debug("Compiling expression for %s/%s: %s", getProcessorNode()->getName(), name, expression_str);
     dynamic_property_expressions_.emplace(name, expression::compile(expression_str));
   }
-
-  minifi::expression::Parameters p(flow_file);
-  p.configuration = content_repo_->getConfig();
-
-  value = dynamic_property_expressions_[name]( p ).asString();
+  minifi::expression::Parameters p(shared_from_this(), flow_file);
+  value = dynamic_property_expressions_[name](p).asString();
   return true;
 }
 

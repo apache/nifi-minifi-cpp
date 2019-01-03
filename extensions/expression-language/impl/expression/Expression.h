@@ -34,6 +34,7 @@
 
 #include <Value.h>
 #include <core/FlowFile.h>
+#include <core/VariableRegistry.h>
 
 #include <string>
 #include <memory>
@@ -47,7 +48,12 @@ namespace expression {
 
 struct Parameters {
   std::weak_ptr<core::FlowFile> flow_file;
-  std::weak_ptr<minifi::Configure> configuration;
+  std::weak_ptr<core::VariableRegistry> registry_;
+  Parameters(std::shared_ptr<core::VariableRegistry> reg, std::shared_ptr<core::FlowFile> ff = nullptr)
+      : registry_(reg) {
+    flow_file = ff;
+  }
+
   Parameters(std::shared_ptr<core::FlowFile> ff = nullptr) {
     flow_file = ff;
   }
@@ -68,13 +74,12 @@ class Expression {
     val_fn_ = NOOP_FN;
   }
 
-  explicit Expression(Value val,
-                      std::function<Value(const Parameters &, const std::vector<Expression> &)> val_fn = NOOP_FN)
+  explicit Expression(Value val, std::function<Value(const Parameters &, const std::vector<Expression> &)> val_fn = NOOP_FN)
       : val_fn_(std::move(val_fn)),
         fn_args_(),
         is_multi_(false) {
     val_ = val;
-    sub_expr_generator_ = [](const Parameters &params) -> std::vector<Expression> { return {}; };
+    sub_expr_generator_ = [](const Parameters &params) -> std::vector<Expression> {return {};};
   }
 
   /**
@@ -127,11 +132,9 @@ class Expression {
    * @param args function arguments
    * @return composed multi-expression
    */
-  Expression compose_multi(const std::function<Value(const std::vector<Value> &)> fn,
-                           const std::vector<Expression> &args) const;
+  Expression compose_multi(const std::function<Value(const std::vector<Value> &)> fn, const std::vector<Expression> &args) const;
 
-  Expression make_aggregate(std::function<Value(const Parameters &params,
-                                                const std::vector<Expression> &sub_exprs)> val_fn) const;
+  Expression make_aggregate(std::function<Value(const Parameters &params, const std::vector<Expression> &sub_exprs)> val_fn) const;
 
  protected:
   Value val_;
@@ -163,8 +166,7 @@ Expression make_static(std::string val);
  * @param val_fn
  * @return
  */
-Expression make_dynamic(const std::function<Value(const Parameters &params,
-                                                  const std::vector<Expression> &sub_exprs)> &val_fn);
+Expression make_dynamic(const std::function<Value(const Parameters &params, const std::vector<Expression> &sub_exprs)> &val_fn);
 
 /**
  * Creates a dynamic expression which evaluates the given flow file attribute.
@@ -191,8 +193,7 @@ Expression make_dynamic_function(const std::string &function_name, const std::ve
  * @param chain
  * @return
  */
-Expression make_function_composition(const Expression &arg,
-                                     const std::vector<std::pair<std::string, std::vector<Expression>>> &chain);
+Expression make_function_composition(const Expression &arg, const std::vector<std::pair<std::string, std::vector<Expression>>> &chain);
 
 } /* namespace expression */
 } /* namespace minifi */

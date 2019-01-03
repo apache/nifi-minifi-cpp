@@ -30,7 +30,6 @@ namespace core {
 namespace repository {
 
 bool FileSystemRepository::initialize(const std::shared_ptr<minifi::Configure> &configuration) {
-  configuration_ = configuration;
   std::string value;
   if (configuration->get(Configure::nifi_dbcontent_repository_directory_default, value)) {
     directory_ = value;

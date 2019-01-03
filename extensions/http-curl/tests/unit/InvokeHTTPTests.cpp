@@ -116,8 +116,8 @@ TEST_CASE("HTTPTestsWithNoResourceClaimPOST", "[httptest1]") {
   invokehttp->onSchedule(context2, factory2);
   invokehttp->onTrigger(context2, session2);
 
-  provenance::ProvenanceReporter *reporter = session->getProvenanceReporter();
-  std::set<provenance::ProvenanceEventRecord*> records = reporter->getEvents();
+  auto reporter = session->getProvenanceReporter();
+  auto records = reporter->getEvents();
   record = session->get();
   REQUIRE(record == nullptr);
   REQUIRE(records.size() == 0);
@@ -138,7 +138,7 @@ TEST_CASE("HTTPTestsWithNoResourceClaimPOST", "[httptest1]") {
   session2->commit();
   records = reporter->getEvents();
 
-  for (provenance::ProvenanceEventRecord *provEventRecord : records) {
+  for (auto provEventRecord : records) {
     REQUIRE(provEventRecord->getComponentType() == listenhttp->getName());
   }
   std::shared_ptr<core::FlowFile> ffr = session2->get();
@@ -247,8 +247,8 @@ TEST_CASE("HTTPTestsWithResourceClaimPOST", "[httptest1]") {
   listenhttp->onSchedule(context, factory);
   listenhttp->onTrigger(context, session);
 
-  provenance::ProvenanceReporter *reporter = session->getProvenanceReporter();
-  std::set<provenance::ProvenanceEventRecord*> records = reporter->getEvents();
+  auto reporter = session->getProvenanceReporter();
+  auto records = reporter->getEvents();
   record = session->get();
   REQUIRE(record == nullptr);
   REQUIRE(records.size() == 0);
@@ -269,7 +269,7 @@ TEST_CASE("HTTPTestsWithResourceClaimPOST", "[httptest1]") {
   session2->commit();
   records = reporter->getEvents();
 
-  for (provenance::ProvenanceEventRecord *provEventRecord : records) {
+  for (auto provEventRecord : records) {
     REQUIRE(provEventRecord->getComponentType() == listenhttp->getName());
   }
   std::shared_ptr<core::FlowFile> ffr = session2->get();
@@ -295,7 +295,7 @@ TEST_CASE("HTTPTestsPostNoResourceClaim", "[httptest1]") {
   plan->reset();
   testController.runSession(plan, true);
 
-  std::set<provenance::ProvenanceEventRecord*> records = plan->getProvenanceRecords();
+  auto records = plan->getProvenanceRecords();
   std::shared_ptr<core::FlowFile> record = plan->getCurrentFlowFile();
   REQUIRE(record == nullptr);
   REQUIRE(records.size() == 0);
@@ -306,7 +306,7 @@ TEST_CASE("HTTPTestsPostNoResourceClaim", "[httptest1]") {
   records = plan->getProvenanceRecords();
   record = plan->getCurrentFlowFile();
 
-  for (provenance::ProvenanceEventRecord *provEventRecord : records) {
+  for (auto provEventRecord : records) {
     REQUIRE(provEventRecord->getComponentType() == processor->getName());
   }
   std::shared_ptr<core::FlowFile> ffr = plan->getCurrentFlowFile();

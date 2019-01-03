@@ -62,7 +62,7 @@ class ReadCallback: public org::apache::nifi::minifi::InputStreamCallback {
   int64_t process(std::shared_ptr<org::apache::nifi::minifi::io::BaseStream> stream) {
     int64_t ret = 0;
     ret = stream->read(buffer_, buffer_size_);
-    if (!stream)
+    if (stream)
       read_size_ = stream->getSize();
     else
       read_size_ = buffer_size_;
@@ -133,7 +133,7 @@ TEST_CASE("MergeFileDefragment", "[mergefiletest1]") {
 
     std::shared_ptr<core::Processor> processor = std::make_shared<org::apache::nifi::minifi::processors::MergeContent>("mergecontent");
     std::shared_ptr<core::Processor> logAttributeProcessor = std::make_shared<org::apache::nifi::minifi::processors::LogAttribute>("logattribute");
-
+    processor->initialize();
     utils::Identifier processoruuid;
     REQUIRE(true == processor->getUUID(processoruuid));
     utils::Identifier logAttributeuuid;
@@ -305,7 +305,7 @@ TEST_CASE("MergeFileDefragmentDelimiter", "[mergefiletest2]") {
 
     std::shared_ptr<core::Processor> processor = std::make_shared<org::apache::nifi::minifi::processors::MergeContent>("mergecontent");
     std::shared_ptr<core::Processor> logAttributeProcessor = std::make_shared<org::apache::nifi::minifi::processors::LogAttribute>("logattribute");
-
+    processor->initialize();
     utils::Identifier processoruuid;
     REQUIRE(true == processor->getUUID(processoruuid));
     utils::Identifier logAttributeuuid;
@@ -468,7 +468,7 @@ TEST_CASE("MergeFileDefragmentDropFlow", "[mergefiletest3]") {
 
     std::shared_ptr<core::Processor> processor = std::make_shared<org::apache::nifi::minifi::processors::MergeContent>("mergecontent");
     std::shared_ptr<core::Processor> logAttributeProcessor = std::make_shared<org::apache::nifi::minifi::processors::LogAttribute>("logattribute");
-
+    processor->initialize();
     utils::Identifier processoruuid;
     REQUIRE(true == processor->getUUID(processoruuid));
     utils::Identifier logAttributeuuid;
@@ -633,7 +633,7 @@ TEST_CASE("MergeFileBinPack", "[mergefiletest4]") {
 
     std::shared_ptr<core::Processor> processor = std::make_shared<org::apache::nifi::minifi::processors::MergeContent>("mergecontent");
     std::shared_ptr<core::Processor> logAttributeProcessor = std::make_shared<org::apache::nifi::minifi::processors::LogAttribute>("logattribute");
-
+    processor->initialize();
     utils::Identifier processoruuid;
     REQUIRE(true == processor->getUUID(processoruuid));
     utils::Identifier logAttributeuuid;
@@ -781,7 +781,7 @@ TEST_CASE("MergeFileTar", "[mergefiletest4]") {
 
     std::shared_ptr<core::Processor> processor = std::make_shared<org::apache::nifi::minifi::processors::MergeContent>("mergecontent");
     std::shared_ptr<core::Processor> logAttributeProcessor = std::make_shared<org::apache::nifi::minifi::processors::LogAttribute>("logattribute");
-
+    processor->initialize();
     utils::Identifier processoruuid;
     REQUIRE(true == processor->getUUID(processoruuid));
     utils::Identifier logAttributeuuid;
@@ -938,7 +938,7 @@ TEST_CASE("MergeFileZip", "[mergefiletest5]") {
 
     std::shared_ptr<core::Processor> processor = std::make_shared<org::apache::nifi::minifi::processors::MergeContent>("mergecontent");
     std::shared_ptr<core::Processor> logAttributeProcessor = std::make_shared<org::apache::nifi::minifi::processors::LogAttribute>("logattribute");
-
+    processor->initialize();
     utils::Identifier processoruuid;
     REQUIRE(true == processor->getUUID(processoruuid));
     utils::Identifier logAttributeuuid;

@@ -36,7 +36,12 @@ endif()
 
 include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt) 
 
-file(GLOB SOURCES  "*.cpp")
+set (OTHER_SOURCES "")
+if (NOT DISABLE_PYTHON_SCRIPTING)
+  set (OTHER_SOURCES "pythonloader/PyProcLoader.cpp")
+endif()
+
+file(GLOB SOURCES  "ExecuteScript.cpp" "ScriptFlowFile.cpp" "ScriptProcessContext.cpp" "${OTHER_SOURCES}")
 
 add_library(minifi-script-extensions STATIC ${SOURCES})
 set_property(TARGET minifi-script-extensions PROPERTY POSITION_INDEPENDENT_CODE ON)

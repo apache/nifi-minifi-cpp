@@ -208,7 +208,7 @@ class Processor : public Connectable, public ConfigurableComponent, public std::
   std::shared_ptr<Connection> getNextIncomingConnection();
   // On Trigger
 
-  void onTrigger(const std::shared_ptr<ProcessContext> &context, const std::shared_ptr<ProcessSessionFactory> &sessionFactory);
+  virtual void onTrigger(const std::shared_ptr<ProcessContext> &context, const std::shared_ptr<ProcessSessionFactory> &sessionFactory);
 
   void onTrigger(ProcessContext *context, ProcessSessionFactory *sessionFactory);
 

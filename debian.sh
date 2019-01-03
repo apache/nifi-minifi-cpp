@@ -81,6 +81,8 @@ build_deps(){
 
     fi
   done
+  
+  INSTALLED+=("autoconf")
 
   for option in "${INSTALLED[@]}" ; do
     COMMAND="${COMMAND} $option"

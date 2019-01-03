@@ -44,6 +44,7 @@
 #include "core/ProcessorNode.h"
 #include "core/reporting/SiteToSiteProvenanceReportingTask.h"
 #include "core/state/nodes/FlowInformation.h"
+#include "properties/Configure.h"
 
 class LogTestController {
  public:
@@ -94,7 +95,7 @@ class LogTestController {
     return contains(log_output, ending, timeout);
   }
 
-  bool contains(const std::ostringstream &stream, const std::string &ending, std::chrono::seconds timeout = std::chrono::seconds(3) ) {
+  bool contains(const std::ostringstream &stream, const std::string &ending, std::chrono::seconds timeout = std::chrono::seconds(3)) {
     if (ending.length() == 0) {
       return false;
     }
@@ -105,9 +106,8 @@ class LogTestController {
       std::string str = stream.str();
       found = (str.find(ending) != std::string::npos);
       auto now = std::chrono::system_clock::now();
-      timed_out = std::chrono::duration_cast<std::chrono::milliseconds>(now - start) >
-                  std::chrono::duration_cast<std::chrono::milliseconds>(timeout);
-      if(!found && !timed_out) {
+      timed_out = std::chrono::duration_cast<std::chrono::milliseconds>(now - start) > std::chrono::duration_cast<std::chrono::milliseconds>(timeout);
+      if (!found && !timed_out) {
         std::this_thread::sleep_for(std::chrono::milliseconds(200));
       }
     } while (!found && !timed_out);
@@ -168,7 +168,8 @@ class LogTestController {
 class TestPlan {
  public:
 
-  explicit TestPlan(std::shared_ptr<core::ContentRepository> content_repo, std::shared_ptr<core::Repository> flow_repo, std::shared_ptr<core::Repository> prov_repo, const std::shared_ptr<minifi::state::response::FlowVersion> &flow_version);
+  explicit TestPlan(std::shared_ptr<core::ContentRepository> content_repo, std::shared_ptr<core::Repository> flow_repo, std::shared_ptr<core::Repository> prov_repo,
+                    const std::shared_ptr<minifi::state::response::FlowVersion> &flow_version, const std::shared_ptr<minifi::Configure> &configuration);
 
   std::shared_ptr<core::Processor> addProcessor(const std::shared_ptr<core::Processor> &processor, const std::string &name,
                                                 core::Relationship relationship = core::Relationship("success", "description"), bool linkToPrevious = false);
@@ -182,7 +183,7 @@ class TestPlan {
 
   bool runNextProcessor(std::function<void(const std::shared_ptr<core::ProcessContext>, const std::shared_ptr<core::ProcessSession>)> verify = nullptr);
 
-  std::set<provenance::ProvenanceEventRecord*> getProvenanceRecords();
+  std::set<std::shared_ptr<provenance::ProvenanceEventRecord>> getProvenanceRecords();
 
   std::shared_ptr<core::FlowFile> getCurrentFlowFile();
 
@@ -205,6 +206,8 @@ class TestPlan {
   std::shared_ptr<minifi::Connection> buildFinalConnection(std::shared_ptr<core::Processor> processor, bool setDest = false);
 
   std::shared_ptr<org::apache::nifi::minifi::io::StreamFactory> stream_factory;
+
+  std::shared_ptr<minifi::Configure> configuration_;
 
   std::shared_ptr<core::ContentRepository> content_repo_;
 
@@ -250,7 +253,7 @@ class TestController {
   }
 
   std::shared_ptr<TestPlan> createPlan(std::shared_ptr<minifi::Configure> configuration = nullptr) {
-    if(configuration == nullptr) {
+    if (configuration == nullptr) {
       configuration = std::make_shared<minifi::Configure>();
     }
     std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
@@ -259,7 +262,7 @@ class TestController {
 
     std::shared_ptr<core::Repository> flow_repo = std::make_shared<TestRepository>();
     std::shared_ptr<core::Repository> repo = std::make_shared<TestRepository>();
-    return std::make_shared<TestPlan>(content_repo, flow_repo, repo, flow_version_);
+    return std::make_shared<TestPlan>(content_repo, flow_repo, repo, flow_version_, configuration);
   }
 
   void runSession(std::shared_ptr<TestPlan> &plan, bool runToCompletion = true, std::function<void(const std::shared_ptr<core::ProcessContext>&, const std::shared_ptr<core::ProcessSession>&)> verify =
@@ -297,7 +300,7 @@ class TestController {
    */
   char *createTempDirectory(char *format) {
     char *dir = mkdtemp(format);
-    if (NULL == dir){
+    if (NULL == dir) {
       perror("mkdtemp failed: ");
     }
     directories.push_back(dir);

@@ -273,9 +273,13 @@ add_dependency PYTHON_ENABLED "python"
 
 add_disabled_option COAP_ENABLED ${FALSE} "ENABLE_COAP"
 add_dependency COAP_ENABLED "automake"
+add_dependency COAP_ENABLED "autoconf"
 add_dependency COAP_ENABLED "libtool"
 
+add_disabled_option JNI_ENABLED ${FALSE} "ENABLE_JNI"
+
 TESTS_DISABLED=${FALSE}
+
 add_disabled_option SQLITE_ENABLED ${FALSE} "ENABLE_SQLITE"
 
 # Since the following extensions have limitations on

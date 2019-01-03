@@ -122,9 +122,11 @@ class VerifyCoAPServer : public CoapIntegrationBase {
     std::string port, scheme, path;
 
     parse_http_components(url, port, scheme, path);
-    auto new_port_str = std::to_string(std::stoi(port) + 2);
+    uint16_t newport = std::stoi(port) + 2;
+    auto new_port_str = std::to_string(newport);
 
-    server = std::unique_ptr<minifi::coap::CoapServer>(new minifi::coap::CoapServer("127.0.0.1", std::stoi(port) + 2));
+    server = std::unique_ptr<minifi::coap::CoapServer>(new minifi::coap::CoapServer("127.0.0.1", newport));
+
 
     server->add_endpoint(minifi::coap::METHOD::POST, [](minifi::coap::CoapQuery)->minifi::coap::CoapResponse {
       minifi::coap::CoapResponse response(205,0x00,0);
@@ -149,16 +151,16 @@ class VerifyCoAPServer : public CoapIntegrationBase {
     {
       // should result in valid operation
       minifi::io::BaseStream stream;
-      uint16_t version=0, size=1;
+      uint16_t version = 0, size = 1;
       uint8_t operation = 1;
       stream.write(version);
       stream.write(size);
-      stream.write(&operation,1);
+      stream.write(&operation, 1);
       stream.writeUTF("id");
       stream.writeUTF("operand");
 
-      uint8_t *data = new uint8_t[ stream.getSize() ];
-      memcpy(data,stream.getBuffer(), stream.getSize() );
+      uint8_t *data = new uint8_t[stream.getSize()];
+      memcpy(data, stream.getBuffer(), stream.getSize());
       minifi::coap::CoapResponse response(205, std::unique_ptr<uint8_t>(data), stream.getSize());
       responses.enqueue(std::move(response));
     }
@@ -175,7 +177,6 @@ class VerifyCoAPServer : public CoapIntegrationBase {
       }
 
     });
-
     server->start();
     configuration->set("c2.enable", "true");
     configuration->set("c2.agent.class", "test");

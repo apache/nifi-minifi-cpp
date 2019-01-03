@@ -34,62 +34,70 @@ int create_session(coap_context_t **ctx, coap_session_t **session, const char *n
   int getaddrres;
   struct addrinfo hints;
   coap_proto_t proto = COAP_PROTO_UDP;
-  struct addrinfo *result, *rp;
+  struct addrinfo *result, *interface_itr;
 
   memset(&hints, 0, sizeof(struct addrinfo));
   hints.ai_family = AF_UNSPEC;  // ipv4 or ipv6
   hints.ai_socktype = COAP_PROTO_RELIABLE(proto) ? SOCK_STREAM : SOCK_DGRAM;
   hints.ai_flags = AI_PASSIVE | AI_NUMERICHOST | AI_NUMERICSERV | AI_ALL;
 
-  getaddrres = getaddrinfo(node, port, &hints, &result);
-  if (getaddrres != 0) {
-    return -1;
-  }
+  if (node) {
+    getaddrres = getaddrinfo(node, port, &hints, &result);
+    if (getaddrres != 0) {
+      perror("getaddrinfo");
+      return -1;
+    }
+    int skip = 1, count = 0;
+    for (interface_itr = result; interface_itr != NULL; interface_itr = interface_itr->ai_next) {
+      coap_address_t addr;
 
-  for (rp = result; rp != NULL; rp = rp->ai_next) {
-    coap_address_t addr;
+      if (interface_itr->ai_addrlen <= sizeof(addr.addr)) {
+        coap_address_init(&addr);
+        addr.size = interface_itr->ai_addrlen;
+        memcpy(&addr.addr, interface_itr->ai_addr, interface_itr->ai_addrlen);
 
-    if (rp->ai_addrlen <= sizeof(addr.addr)) {
-      coap_address_init(&addr);
-      addr.size = rp->ai_addrlen;
-      memcpy(&addr.addr, rp->ai_addr, rp->ai_addrlen);
+        *ctx = coap_new_context(0x00);
 
-      *ctx = coap_new_context(0x00);
-
-      *session = coap_new_client_session(*ctx, &addr, dst_addr, proto);
-      if (*ctx && *session) {
-        freeaddrinfo(result);
-        return 0;
+        *session = coap_new_client_session(*ctx, &addr, dst_addr, proto);
+        if (*ctx && *session) {
+          freeaddrinfo(result);
+          return 0;
+        }
       }
     }
+    freeaddrinfo(result);
+    return -2;
+  } else {
+    *ctx = coap_new_context(0x00);
+
+    *session = coap_new_client_session(*ctx, 0x00, dst_addr, proto);
+    return 0;
   }
 
-  freeaddrinfo(result);
-  return -2;
 }
 
 int create_endpoint_context(coap_context_t **ctx, const char *node, const char *port) {
   struct addrinfo hints;
   coap_proto_t proto = COAP_PROTO_UDP;
-  struct addrinfo *result, *rp;
+  struct addrinfo *result, *interface_itr;
 
   memset(&hints, 0, sizeof(struct addrinfo));
   hints.ai_family = AF_UNSPEC;  // ipv4 or ipv6
   hints.ai_socktype = SOCK_DGRAM;
-  hints.ai_flags = AI_PASSIVE | AI_NUMERICHOST ;
-
+  hints.ai_flags = AI_PASSIVE | AI_NUMERICHOST;
   int getaddrres = getaddrinfo(node, port, &hints, &result);
   if (getaddrres != 0) {
+    perror("getaddrinfo");
     return -1;
   }
 
-  for (rp = result; rp != NULL; rp = rp->ai_next) {
+  for (interface_itr = result; interface_itr != NULL; interface_itr = interface_itr->ai_next) {
     coap_address_t addr;
 
-    if (rp->ai_addrlen <= sizeof(addr.addr)) {
+    if (interface_itr->ai_addrlen <= sizeof(addr.addr)) {
       coap_address_init(&addr);
-      addr.size = rp->ai_addrlen;
-      memcpy(&addr.addr, rp->ai_addr, rp->ai_addrlen);
+      addr.size = interface_itr->ai_addrlen;
+      memcpy(&addr.addr, interface_itr->ai_addr, interface_itr->ai_addrlen);
 
       *ctx = coap_new_context(0x00);
 
@@ -163,8 +171,8 @@ void response_handler(struct coap_context_t *ctx, struct coap_session_t *session
 
 }
 
-int resolve_address(const struct coap_str_const_t *server, struct sockaddr *dst) {
-  struct addrinfo *res, *ainfo;
+int resolve_address(const struct coap_str_const_t *server, struct sockaddr *destination) {
+  struct addrinfo *result, *iterative_obj;
   struct addrinfo hints;
   static char addrstr[256];
   int error, len = -1;
@@ -175,30 +183,32 @@ int resolve_address(const struct coap_str_const_t *server, struct sockaddr *dst)
   else
     memcpy(addrstr, "127.0.0.1", 9);
 
-  memset((char * ) &hints, 0, sizeof(hints));
+  memset((char *) &hints, 0, sizeof(hints));
   hints.ai_socktype = SOCK_DGRAM;
   hints.ai_family = AF_UNSPEC;
 
-  error = getaddrinfo(addrstr, NULL, &hints, &res);
+  error = getaddrinfo(addrstr, NULL, &hints, &result);
 
   if (error != 0) {
+    perror("getaddrinfo");
+
     return error;
   }
 
-  for (ainfo = res; ainfo != NULL; ainfo = ainfo->ai_next) {
-    switch (ainfo->ai_family) {
+  for (iterative_obj = result; iterative_obj != NULL; iterative_obj = iterative_obj->ai_next) {
+    switch (iterative_obj->ai_family) {
       case AF_INET6:
       case AF_INET:
-        len = ainfo->ai_addrlen;
-        memcpy(dst, ainfo->ai_addr, len);
-        freeaddrinfo(res);
+        len = iterative_obj->ai_addrlen;
+        memcpy(destination, iterative_obj->ai_addr, len);
+        freeaddrinfo(result);
         return len;
       default:
         ;
     }
   }
 
-  freeaddrinfo(res);
+  freeaddrinfo(result);
   return len;
 }
 

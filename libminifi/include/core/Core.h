@@ -25,6 +25,7 @@
 #include <memory>
 #include <string>
 #include <uuid/uuid.h>
+#include <properties/Configure.h>
 
 #ifdef WIN32
 #pragma comment(lib, "shlwapi.lib")
@@ -205,10 +206,14 @@ class CoreComponent {
     return uuidStr_;
   }
 
+  virtual void configure(const std::shared_ptr<Configure> &configuration) {
+
+  }
+
   void loadComponent() {
   }
 
- protected:
+protected:
   // A global unique identifier
   utils::Identifier uuid_;
   // UUID string
@@ -217,7 +222,7 @@ class CoreComponent {
   // Connectable's name
   std::string name_;
 
- private:
+private:
   static std::shared_ptr<utils::IdGenerator> id_generator_;
 };
 

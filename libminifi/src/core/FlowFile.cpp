@@ -30,12 +30,12 @@ namespace minifi {
 namespace core {
 
 std::shared_ptr<utils::IdGenerator> FlowFile::id_generator_ = utils::IdGenerator::getIdGenerator();
+std::shared_ptr<utils::NonRepeatingStringGenerator> FlowFile::numeric_id_generator_ = std::make_shared<utils::NonRepeatingStringGenerator>();
 std::shared_ptr<logging::Logger> FlowFile::logger_ = logging::LoggerFactory<FlowFile>::getLogger();
 
 FlowFile::FlowFile()
     : Connectable("FlowFile"),
       size_(0),
-      id_(0),
       stored(false),
       offset_(0),
       last_queue_date_(0),
@@ -45,6 +45,7 @@ FlowFile::FlowFile()
       marked_delete_(false),
       connection_(nullptr),
       original_connection_() {
+  id_ = numeric_id_generator_->generateId();
   entry_date_ = getTimeMillis();
   event_time_ = entry_date_;
   lineage_start_date_ = entry_date_;
@@ -89,6 +90,9 @@ bool FlowFile::isDeleted() {
  */
 void FlowFile::setDeleted(const bool deleted) {
   marked_delete_ = deleted;
+  if (marked_delete_) {
+    removeReferences();
+  }
 }
 
 std::shared_ptr<ResourceClaim> FlowFile::getResourceClaim() {
@@ -106,16 +110,11 @@ std::shared_ptr<ResourceClaim> FlowFile::getStashClaim(const std::string &key) {
   return stashedContent_[key];
 }
 
-void FlowFile::setStashClaim(
-    const std::string &key,
-    const std::shared_ptr<ResourceClaim> &claim) {
-
+void FlowFile::setStashClaim(const std::string &key, const std::shared_ptr<ResourceClaim> &claim) {
   if (hasStashClaim(key)) {
-    logger_->log_warn(
-        "Stashing content of record %s to existing key %s; "
-        "existing content will be overwritten",
-        getUUIDStr().c_str(),
-        key.c_str());
+    logger_->log_warn("Stashing content of record %s to existing key %s; "
+                      "existing content will be overwritten",
+                      getUUIDStr().c_str(), key.c_str());
     releaseClaim(getStashClaim(key));
   }
 

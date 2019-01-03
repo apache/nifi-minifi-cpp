@@ -125,8 +125,8 @@ TEST_CASE("GetTCPWithoutEOM", "[GetTCP1]") {
   logAttribute->onSchedule(context2, factory2);
   logAttribute->onTrigger(context2, session2);
 
-  provenance::ProvenanceReporter *reporter = session->getProvenanceReporter();
-  std::set<provenance::ProvenanceEventRecord*> records = reporter->getEvents();
+  auto reporter = session->getProvenanceReporter();
+  auto records = reporter->getEvents();
   record = session->get();
   REQUIRE(record == nullptr);
   REQUIRE(records.size() == 0);
@@ -241,8 +241,8 @@ TEST_CASE("GetTCPWithOEM", "[GetTCP2]") {
   logAttribute->onSchedule(context2, factory2);
   logAttribute->onTrigger(context2, session2);
 
-  provenance::ProvenanceReporter *reporter = session->getProvenanceReporter();
-  std::set<provenance::ProvenanceEventRecord*> records = reporter->getEvents();
+  auto reporter = session->getProvenanceReporter();
+  auto records = reporter->getEvents();
   record = session->get();
   REQUIRE(record == nullptr);
   REQUIRE(records.size() == 0);
@@ -366,8 +366,8 @@ TEST_CASE("GetTCPWithOnlyOEM", "[GetTCP3]") {
   logAttribute->onSchedule(context2, factory2);
   logAttribute->onTrigger(context2, session2);
 
-  provenance::ProvenanceReporter *reporter = session->getProvenanceReporter();
-  std::set<provenance::ProvenanceEventRecord*> records = reporter->getEvents();
+  auto reporter = session->getProvenanceReporter();
+  auto records = reporter->getEvents();
   record = session->get();
   REQUIRE(record == nullptr);
   REQUIRE(records.size() == 0);
@@ -413,7 +413,7 @@ TEST_CASE("GetTCPEmptyNoConnect", "[GetTCP3]") {
   plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetTCP::EndOfMessageByte.getName(), "10");
 
   testController.runSession(plan, false);
-  std::set<provenance::ProvenanceEventRecord*> records = plan->getProvenanceRecords();
+  auto records = plan->getProvenanceRecords();
   std::shared_ptr<core::FlowFile> record = plan->getCurrentFlowFile();
   REQUIRE(record == nullptr);
   REQUIRE(records.size() == 0);

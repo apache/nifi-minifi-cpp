@@ -24,7 +24,7 @@ IF(POLICY CMP0048)
 ENDIF(POLICY CMP0048)
 
 include_directories(../libminifi/include ../thirdparty/spdlog-20170710/include ../thirdparty/concurrentqueue ../thirdparty/yaml-cpp-yaml-cpp-20171024/include ../thirdparty/rapidjson-1.1.0/include ../thirdparty/)
-
+include_directories(${JEMALLOC_INCLUDE_DIRS})
 
 if(WIN32)
 	add_definitions(-DWIN32_LEAN_AND_MEAN)
@@ -93,7 +93,7 @@ else()
 	#set_target_properties(minifiexe PROPERTIES LINK_FLAGS "${LINK_FLAGS} /WHOLEARCHIVE:minifi")
 endif ()
 
-target_link_libraries(minifiexe yaml-cpp ${UUID_LIBRARIES} ) #
+target_link_libraries(minifiexe yaml-cpp ${UUID_LIBRARIES} ${JEMALLOC_LIBRARIES}) #
 
 if (WIN32)
 	include_directories("../thirdparty/Simple-Windows-Posix-Semaphore")
@@ -129,15 +129,12 @@ else ()
 endif ()
 
 if(WIN32)
-	set_target_properties(minifiexe PROPERTIES LINK_FLAGS "${WIN32_ARCHIVES}")
+	set_target_properties(minifiexe PROPERTIES LINK_FLAGS "${LINK_FLAGS} ${WIN32_ARCHIVES}")
 endif()
 set_target_properties(minifiexe
         PROPERTIES OUTPUT_NAME minifi)
 
-install(TARGETS minifiexe
-        RUNTIME
-        DESTINATION bin
-        COMPONENT bin)
+               
 
 if (NOT WIN32)
 add_custom_command(TARGET minifiexe POST_BUILD

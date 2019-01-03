@@ -72,7 +72,7 @@ void PythonScriptEngine::initialize() {
   }
 
   initialized_ = true;
-  guard_.reset(new py::scoped_interpreter());
+  guard_.reset(new py::scoped_interpreter(false));
   gil_release_.reset(new py::gil_scoped_release());
 }
 

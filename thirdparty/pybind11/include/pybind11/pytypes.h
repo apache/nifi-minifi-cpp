@@ -292,7 +292,7 @@ public:
     /// Constructs a new exception from the current Python error indicator, if any.  The current
     /// Python error indicator will be cleared.
     error_already_set() : std::runtime_error(detail::error_string()) {
-        PyErr_Fetch(&type.ptr(), &value.ptr(), &trace.ptr());
+        //PyErr_Fetch(&type.ptr(), &value.ptr(), &trace.ptr());
     }
 
     error_already_set(const error_already_set &) = default;

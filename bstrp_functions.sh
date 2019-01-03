@@ -263,6 +263,7 @@ show_supported_features() {
   echo "****************************************"
   echo "1. Disable Tests ...............$(print_feature_status TESTS_DISABLED)"
   echo "2. Enable all extensions"
+  echo "3. Enable JNI Support ..........$(print_feature_status JNI_ENABLED)"
   echo "P. Continue with these options"
   if [ "$GUIDED_INSTALL" = "${TRUE}" ]; then
     echo "R. Return to Main Menu"
@@ -274,7 +275,7 @@ show_supported_features() {
 
 read_feature_options(){
   local choice
-  read -p "Enter choice [ A - P or 1-2 ] " choice
+  read -p "Enter choice [ A - P or 1-3 ] " choice
   choice=$(echo ${choice} | tr '[:upper:]' '[:lower:]')
   case $choice in
     a) ToggleFeature ROCKSDB_ENABLED ;;
@@ -294,13 +295,14 @@ read_feature_options(){
     o) ToggleFeature COAP_ENABLED ;;
     1) ToggleFeature TESTS_DISABLED ;;
     2) EnableAllFeatures ;;
+    3) ToggleFeature JNI_ENABLED;;
     p) FEATURES_SELECTED="true" ;;
     r) if [ "$GUIDED_INSTALL" = "${TRUE}" ]; then
         MENU="main"
       fi
       ;;
     q) exit 0;;
-    *) echo -e "${RED}Please enter an option A-P or 1-2...${NO_COLOR}" && sleep 2
+    *) echo -e "${RED}Please enter an option A-P or 1-3...${NO_COLOR}" && sleep 2
   esac
 }
 

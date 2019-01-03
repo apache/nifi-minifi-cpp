@@ -21,10 +21,11 @@
 #include <mutex>
 #include <pybind11/embed.h>
 #include <core/ProcessSession.h>
+#include <core/Processor.h>
 
 #include "../ScriptEngine.h"
 #include "../ScriptProcessContext.h"
-
+#include "PythonProcessor.h"
 #include "PyProcessSession.h"
 
 namespace org {
@@ -39,7 +40,7 @@ class PythonScriptEngine : public script::ScriptEngine {
  public:
   PythonScriptEngine();
   virtual ~PythonScriptEngine() {
-    py::gil_scoped_acquire gil{};
+    py::gil_scoped_acquire gil { };
     (*bindings_).dec_ref();
     (*bindings_).release();
   }
@@ -68,16 +69,29 @@ class PythonScriptEngine : public script::ScriptEngine {
    *
    * @return
    */
-  template<typename... Args>
+  template<typename ... Args>
   void call(const std::string &fn_name, Args &&...args) {
-    py::gil_scoped_acquire gil{};
+    py::gil_scoped_acquire gil { };
+    if ((*bindings_).contains(fn_name.c_str()))
+      (*bindings_)[fn_name.c_str()](convert(args)...);
+  }
+
+  /**
+   * Calls the given function, forwarding arbitrary provided parameters.
+   *
+   * @return
+   */
+  template<typename ... Args>
+  void callRequiredFunction(const std::string &fn_name, Args &&...args) {
+    py::gil_scoped_acquire gil { };
+    if (!(*bindings_).contains(fn_name.c_str()))
+      throw std::runtime_error("Required Function" + fn_name + " is not found within Python bindings");
     (*bindings_)[fn_name.c_str()](convert(args)...);
   }
 
   class TriggerSession {
    public:
-    TriggerSession(std::shared_ptr<script::ScriptProcessContext> script_context,
-                   std::shared_ptr<PyProcessSession> py_session)
+    TriggerSession(std::shared_ptr<script::ScriptProcessContext> script_context, std::shared_ptr<python::PyProcessSession> py_session)
         : script_context_(std::move(script_context)),
           py_session_(std::move(py_session)) {
     }
@@ -89,11 +103,71 @@ class PythonScriptEngine : public script::ScriptEngine {
 
    private:
     std::shared_ptr<script::ScriptProcessContext> script_context_;
-    std::shared_ptr<PyProcessSession> py_session_;
+    std::shared_ptr<python::PyProcessSession> py_session_;
   };
 
-  void onTrigger(const std::shared_ptr<core::ProcessContext> &context,
-                 const std::shared_ptr<core::ProcessSession> &session) {
+  class TriggerProcessor {
+   public:
+    TriggerProcessor(std::shared_ptr<script::ScriptProcessContext> script_context, std::shared_ptr<python::PyProcessSession> py_session)
+        : script_context_(std::move(script_context)),
+          py_session_(std::move(py_session)) {
+    }
+
+    ~TriggerProcessor() {
+      script_context_->releaseProcessContext();
+      py_session_->releaseCoreResources();
+    }
+
+   private:
+    std::shared_ptr<script::ScriptProcessContext> script_context_;
+    std::shared_ptr<python::PyProcessSession> py_session_;
+  };
+
+  class TriggerSchedule {
+   public:
+    TriggerSchedule(std::shared_ptr<script::ScriptProcessContext> script_context)
+        : script_context_(script_context) {
+    }
+
+    ~TriggerSchedule() {
+      script_context_->releaseProcessContext();
+    }
+
+   private:
+    std::shared_ptr<script::ScriptProcessContext> script_context_;
+  };
+
+  class TriggerInit {
+   public:
+    TriggerInit() {
+    }
+
+    ~TriggerInit() {
+    }
+
+   private:
+    std::shared_ptr<script::ScriptProcessContext> script_context_;
+  };
+
+  void onInitialize(const std::shared_ptr<core::Processor> &proc) {
+    TriggerInit trigger_session;
+    auto newproc = convertProcessor(proc);
+    call("onInitialize", newproc);
+  }
+
+  void describe(const std::shared_ptr<core::Processor> &proc) {
+    TriggerInit trigger_session;
+    auto newproc = convertProcessor(proc);
+    callRequiredFunction("describe", newproc);
+  }
+
+  void onSchedule(const std::shared_ptr<core::ProcessContext> &context) {
+    auto script_context = convertContext(context);
+    TriggerSchedule trigger_session(script_context);
+    call("onSchedule", script_context);
+  }
+
+  void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
     auto script_context = convertContext(context);
     auto py_session = convertSession(session);
     TriggerSession trigger_session(script_context, py_session);
@@ -108,22 +182,26 @@ class PythonScriptEngine : public script::ScriptEngine {
    */
   template<typename T>
   void bind(const std::string &name, const T &value) {
-    py::gil_scoped_acquire gil{};
+    py::gil_scoped_acquire gil { };
     (*bindings_)[name.c_str()] = convert(value);
   }
 
   template<typename T>
   py::object convert(const T &value) {
-    py::gil_scoped_acquire gil{};
+    py::gil_scoped_acquire gil { };
     return py::cast(value);
   }
 
-  std::shared_ptr<PyProcessSession> convertSession(const std::shared_ptr<core::ProcessSession> &session) {
-    return std::make_shared<PyProcessSession>(session);
+  std::shared_ptr<python::PyProcessSession> convertSession(const std::shared_ptr<core::ProcessSession> &session) {
+    return std::make_shared<python::PyProcessSession>(session);
   }
 
   std::shared_ptr<script::ScriptProcessContext> convertContext(const std::shared_ptr<core::ProcessContext> &context) {
     return std::make_shared<script::ScriptProcessContext>(context);
+  }
+
+  std::shared_ptr<python::PythonProcessor> convertProcessor(const std::shared_ptr<core::Processor> &proc) {
+    return std::make_shared<python::PythonProcessor>(proc);
   }
 
  private:

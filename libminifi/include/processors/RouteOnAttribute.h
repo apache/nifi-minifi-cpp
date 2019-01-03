@@ -36,7 +36,7 @@ namespace processors {
 class RouteOnAttribute : public core::Processor {
  public:
 
-  RouteOnAttribute(std::string name,  utils::Identifier uuid = utils::Identifier())
+  RouteOnAttribute(std::string name, utils::Identifier uuid = utils::Identifier())
       : core::Processor(name, uuid),
         logger_(logging::LoggerFactory<RouteOnAttribute>::getLogger()) {
   }
@@ -54,17 +54,15 @@ class RouteOnAttribute : public core::Processor {
 
   virtual bool supportsDynamicProperties() {
     return true;
-  };
-
+  }
+  ;
 
   virtual bool supportsDynamicRelationships() {
     return true;
   }
 
-  virtual void onDynamicPropertyModified(const core::Property &orig_property,
-                                         const core::Property &new_property);
-  virtual void onTrigger(core::ProcessContext *context,
-                         core::ProcessSession *session);
+  virtual void onDynamicPropertyModified(const core::Property &orig_property, const core::Property &new_property);
+  virtual void onTrigger(core::ProcessContext *context, core::ProcessSession *session);
   virtual void initialize(void);
 
  private:

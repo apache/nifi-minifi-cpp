@@ -19,8 +19,9 @@
 #include "./TestBase.h"
 
 TestPlan::TestPlan(std::shared_ptr<core::ContentRepository> content_repo, std::shared_ptr<core::Repository> flow_repo, std::shared_ptr<core::Repository> prov_repo,
-                   const std::shared_ptr<minifi::state::response::FlowVersion> &flow_version)
-    : content_repo_(content_repo),
+                   const std::shared_ptr<minifi::state::response::FlowVersion> &flow_version, const std::shared_ptr<minifi::Configure> &configuration)
+    : configuration_(configuration),
+      content_repo_(content_repo),
       flow_repo_(flow_repo),
       prov_repo_(prov_repo),
       finalized(false),
@@ -84,7 +85,7 @@ std::shared_ptr<core::Processor> TestPlan::addProcessor(const std::shared_ptr<co
 
   processor_nodes_.push_back(node);
 
-  std::shared_ptr<core::ProcessContext> context = std::make_shared<core::ProcessContext>(node, controller_services_provider_, prov_repo_, flow_repo_, content_repo_);
+  std::shared_ptr<core::ProcessContext> context = std::make_shared<core::ProcessContext>(node, controller_services_provider_, prov_repo_, flow_repo_, configuration_, content_repo_);
   processor_contexts_.push_back(context);
 
   processor_queue_.push_back(processor);
@@ -178,7 +179,7 @@ bool TestPlan::runNextProcessor(std::function<void(const std::shared_ptr<core::P
   return location + 1 < processor_queue_.size();
 }
 
-std::set<provenance::ProvenanceEventRecord*> TestPlan::getProvenanceRecords() {
+std::set<std::shared_ptr<provenance::ProvenanceEventRecord>> TestPlan::getProvenanceRecords() {
   return process_sessions_.at(location)->getProvenanceReporter()->getEvents();
 }
 
