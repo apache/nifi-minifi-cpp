@@ -32,7 +32,7 @@ else()
 include_directories(../libminifi/opsys/posix)
 endif()
 
-file(GLOB NANOFI_SOURCES  "src/api/*.cpp" "src/cxx/*.cpp" )
+file(GLOB NANOFI_SOURCES  "src/api/*.cpp" "src/core/*.cpp" "src/cxx/*.cpp")
 
 file(GLOB NANOFI_EXAMPLES_SOURCES  "examples/*.c" )
 
