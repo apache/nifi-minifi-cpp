@@ -33,7 +33,7 @@
 TEST_CASE("TestSocket", "[TestSocket1]") {
   org::apache::nifi::minifi::io::Socket socket(std::make_shared<org::apache::nifi::minifi::io::SocketContext>(std::make_shared<minifi::Configure>()), "localhost", 8183);
   REQUIRE(-1 == socket.initialize());
-  REQUIRE("localhost" == socket.getHostname());
+  REQUIRE(socket.getHostname().rfind("localhost", 0) == 0);
   socket.closeStream();
 }
 
@@ -82,7 +82,7 @@ TEST_CASE("TestGetHostName", "[TestSocket4]") {
   REQUIRE(org::apache::nifi::minifi::io::Socket::getMyHostName().length() > 0);
 }
 
-TEST_CASE("TestWriteEndian64", "[TestSocket4]") {
+TEST_CASE("TestWriteEndian64", "[TestSocket5]") {
   std::vector<uint8_t> buffer;
   buffer.push_back('a');
   std::shared_ptr<org::apache::nifi::minifi::io::SocketContext> socket_context = std::make_shared<org::apache::nifi::minifi::io::SocketContext>(std::make_shared<minifi::Configure>());
@@ -108,7 +108,7 @@ TEST_CASE("TestWriteEndian64", "[TestSocket4]") {
   client.closeStream();
 }
 
-TEST_CASE("TestWriteEndian32", "[TestSocket5]") {
+TEST_CASE("TestWriteEndian32", "[TestSocket6]") {
   std::vector<uint8_t> buffer;
   buffer.push_back('a');
 
@@ -143,7 +143,7 @@ TEST_CASE("TestWriteEndian32", "[TestSocket5]") {
   client.closeStream();
 }
 
-TEST_CASE("TestSocketWriteTestAfterClose", "[TestSocket6]") {
+TEST_CASE("TestSocketWriteTestAfterClose", "[TestSocket7]") {
   std::vector<uint8_t> buffer;
   buffer.push_back('a');
 
@@ -194,7 +194,7 @@ bool createSocket() {
  * This test will create 20 threads that attempt to create contexts
  * to ensure we no longer see the segfaults.
  */
-TEST_CASE("TestTLSContextCreation", "[TestSocket6]") {
+TEST_CASE("TestTLSContextCreation", "[TestSocket8]") {
   utils::ThreadPool<bool> pool(20, true);
 
   std::vector<std::future<bool>> futures;
@@ -217,7 +217,7 @@ TEST_CASE("TestTLSContextCreation", "[TestSocket6]") {
  * MINIFI-329 was created in regards to an option existing but not
  * being properly evaluated.
  */
-TEST_CASE("TestTLSContextCreation2", "[TestSocket7]") {
+TEST_CASE("TestTLSContextCreation2", "[TestSocket9]") {
   std::shared_ptr<minifi::Configure> configure = std::make_shared<minifi::Configure>();
   configure->set("nifi.remote.input.secure", "false");
   auto factory = minifi::io::StreamFactory::getInstance(configure);
@@ -231,7 +231,7 @@ TEST_CASE("TestTLSContextCreation2", "[TestSocket7]") {
  * MINIFI-329 was created in regards to an option existing but not
  * being properly evaluated.
  */
-TEST_CASE("TestTLSContextCreationNullptr", "[TestSocket7]") {
+TEST_CASE("TestTLSContextCreationNullptr", "[TestSocket10]") {
   std::shared_ptr<minifi::Configure> configure = std::make_shared<minifi::Configure>();
   configure->set("nifi.remote.input.secure", "false");
   auto factory = minifi::io::StreamFactory::getInstance(configure);
