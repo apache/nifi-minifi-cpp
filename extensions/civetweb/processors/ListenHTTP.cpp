@@ -276,6 +276,10 @@ void ListenHTTP::Handler::set_header_attributes(const mg_request_info *req_info,
 
 bool ListenHTTP::Handler::handlePost(CivetServer *server, struct mg_connection *conn) {
   auto req_info = mg_get_request_info(conn);
+  if (!req_info) {
+      logger_->log_error("ListenHTTP handling POST resulted in a null request");
+      return false;
+  }
   logger_->log_debug("ListenHTTP handling POST request of length %ll", req_info->content_length);
 
   if (!auth_request(conn, req_info)) {
@@ -335,6 +339,10 @@ bool ListenHTTP::Handler::auth_request(mg_connection *conn, const mg_request_inf
 
 bool ListenHTTP::Handler::handleGet(CivetServer *server, struct mg_connection *conn) {
   auto req_info = mg_get_request_info(conn);
+  if (!req_info) {
+      logger_->log_error("ListenHTTP handling GET resulted in a null request");
+      return false;
+  }
   logger_->log_debug("ListenHTTP handling GET request of URI %s", req_info->request_uri);
 
   if (!auth_request(conn, req_info)) {
