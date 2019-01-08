@@ -21,6 +21,10 @@
 
 #include "uuid/uuid.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define CUUID_TIME_IMPL 0
 #define CUUID_RANDOM_IMPL 1
 #define CUUID_DEFAULT_IMPL 2
@@ -30,5 +34,9 @@ typedef struct CIDGenerator {
 } CIDGenerator;
 
 void generate_uuid(const CIDGenerator * generator, char * out);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif //NIFI_MINIFI_CPP_CUUID_H

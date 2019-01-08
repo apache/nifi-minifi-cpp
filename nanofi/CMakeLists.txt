@@ -25,6 +25,7 @@ ENDIF(POLICY CMP0048)
 
 include_directories(include)
 include_directories(../libminifi/include ../thirdparty/spdlog-20170710/include)
+include_directories(../thirdparty/ut)
 
 if(WIN32)
 include_directories(../libminifi/opsys/win)
@@ -32,7 +33,7 @@ else()
 include_directories(../libminifi/opsys/posix)
 endif()
 
-file(GLOB NANOFI_SOURCES  "src/api/*.cpp" "src/core/*.cpp" "src/cxx/*.cpp")
+file(GLOB NANOFI_SOURCES  "src/api/*.cpp" "src/core/*.c*" "src/cxx/*.cpp" "src/sitetosite/*.c*")
 
 file(GLOB NANOFI_EXAMPLES_SOURCES  "examples/*.c" )
 

@@ -71,6 +71,10 @@ add_executable(transmit_flow transmit_flow.c)
 
 target_link_libraries(transmit_flow nanofi ${CMAKE_THREAD_LIBS_INIT}  ${LINK_FLAGS} minifi-http-curl ${LINK_END_FLAGS})
 
+add_executable(transmit_payload transmit_payload.c)
+
+target_link_libraries(transmit_payload nanofi ${CMAKE_THREAD_LIBS_INIT}  ${LINK_FLAGS} minifi-http-curl ${LINK_END_FLAGS})
+
 add_executable(monitor_directory monitor_directory.c)
 
 target_link_libraries(monitor_directory nanofi ${CMAKE_THREAD_LIBS_INIT}  ${LINK_FLAGS} minifi-http-curl ${LINK_END_FLAGS})

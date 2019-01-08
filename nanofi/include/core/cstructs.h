@@ -133,4 +133,6 @@ typedef struct file_buffer {
   uint64_t file_len;
 } file_buffer;
 
+typedef struct cstream cstream;
+
 #endif /* LIBMINIFI_SRC_CAPI_CSTRUCTS_H_ */

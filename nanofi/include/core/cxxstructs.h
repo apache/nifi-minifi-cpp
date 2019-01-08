@@ -21,6 +21,7 @@
 
 #include "cstructs.h"
 #include "cxx/Plan.h"
+#include "io/DataStream.h"
 
 struct flow : public ExecutionPlan {
   using ExecutionPlan::ExecutionPlan;
@@ -40,6 +41,10 @@ struct processor_session : public core::ProcessSession {
 
 struct processor_context : public core::ProcessContext {
   using core::ProcessContext::ProcessContext;
+};
+
+struct cstream {
+  org::apache::nifi::minifi::io::BaseStream * impl;
 };
 
 #endif //NIFI_MINIFI_CPP_CXXSTRUCTS_H
