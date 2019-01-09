@@ -29,7 +29,7 @@ StandardValidators::StandardValidators() {
   INTEGER_VALIDATOR = std::make_shared<IntegerValidator>("INTEGER_VALIDATOR");
   LONG_VALIDATOR = std::make_shared<LongValidator>("LONG_VALIDATOR");
   UNSIGNED_LONG_VALIDATOR = std::make_shared<UnsignedLongValidator>("LONG_VALIDATOR");
-  SIZE_VALIDATOR = std::make_shared<DataSizeValidator>("DATA_SIZE_VALIDATOR");
+  DATA_SIZE_VALIDATOR = std::make_shared<DataSizeValidator>("DATA_SIZE_VALIDATOR");
   TIME_PERIOD_VALIDATOR = std::make_shared<TimePeriodValidator>("TIME_PERIOD_VALIDATOR");
   BOOLEAN_VALIDATOR = std::make_shared<BooleanValidator>("BOOLEAN_VALIDATOR");
 }

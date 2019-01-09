@@ -240,7 +240,7 @@ class UInt64Value : public Value {
   }
 
   virtual bool getValue(int64_t &ref) {
-    if (value < (std::numeric_limits<int64_t>::max)()) {
+    if (value <= (std::numeric_limits<int64_t>::max)()) {
       ref = value;
       return true;
     }
@@ -291,7 +291,7 @@ class Int64Value : public Value {
       ref = value;
       return true;
     }
-    return true;
+    return false;
   }
 
   virtual bool getValue(bool &ref) {

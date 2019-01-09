@@ -302,11 +302,11 @@ class StandardValidators {
   static const std::shared_ptr<PropertyValidator> &getValidator(const std::shared_ptr<minifi::state::response::Value> &input) {
     static StandardValidators init;
     if (std::dynamic_pointer_cast<core::DataSizeValue>(input) != nullptr) {
-      return init.SIZE_VALIDATOR;
+      return init.DATA_SIZE_VALIDATOR;
     } else if (std::dynamic_pointer_cast<core::TimePeriodValue>(input) != nullptr) {
       return init.TIME_PERIOD_VALIDATOR;
     } else if (std::dynamic_pointer_cast<core::DataSizeValue>(input) != nullptr) {
-      return init.SIZE_VALIDATOR;
+      return init.DATA_SIZE_VALIDATOR;
     } else if (std::dynamic_pointer_cast<minifi::state::response::BoolValue>(input) != nullptr) {
       return init.BOOLEAN_VALIDATOR;
     } else if (std::dynamic_pointer_cast<minifi::state::response::IntValue>(input) != nullptr) {
@@ -331,7 +331,7 @@ class StandardValidators {
   std::shared_ptr<PropertyValidator> LONG_VALIDATOR;
   std::shared_ptr<PropertyValidator> UNSIGNED_LONG_VALIDATOR;
   std::shared_ptr<PropertyValidator> BOOLEAN_VALIDATOR;
-  std::shared_ptr<PropertyValidator> SIZE_VALIDATOR;
+  std::shared_ptr<PropertyValidator> DATA_SIZE_VALIDATOR;
   std::shared_ptr<PropertyValidator> TIME_PERIOD_VALIDATOR;
 
   StandardValidators();
