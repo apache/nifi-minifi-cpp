@@ -221,12 +221,8 @@ class SiteToSiteClient : public core::Connectable {
   // deleteTransaction
   virtual void deleteTransaction(std::string transactionID);
 
-  virtual void tearDown();
-
-  // write Request Type
-  virtual int writeRequestType(RequestType type);
-  // read Request Type
-  virtual int readRequestType(RequestType &type);
+  virtual void tearDown() = 0;
+  
   // read Respond
   virtual int readResponse(const std::shared_ptr<Transaction> &transaction, RespondCode &code, std::string &message);
   // write respond

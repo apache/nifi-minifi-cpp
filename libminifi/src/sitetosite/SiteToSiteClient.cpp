@@ -25,31 +25,6 @@ namespace nifi {
 namespace minifi {
 namespace sitetosite {
 
-int SiteToSiteClient::writeRequestType(RequestType type) {
-  if (type >= MAX_REQUEST_TYPE)
-    return -1;
-
-  return peer_->writeUTF(SiteToSiteRequest::RequestTypeStr[type]);
-}
-
-int SiteToSiteClient::readRequestType(RequestType &type) {
-  std::string requestTypeStr;
-
-  int ret = peer_->readUTF(requestTypeStr);
-
-  if (ret <= 0)
-    return ret;
-
-  for (int i = NEGOTIATE_FLOWFILE_CODEC; i <= SHUTDOWN; i++) {
-    if (SiteToSiteRequest::RequestTypeStr[i] == requestTypeStr) {
-      type = (RequestType) i;
-      return ret;
-    }
-  }
-
-  return -1;
-}
-
 int SiteToSiteClient::readResponse(const std::shared_ptr<Transaction> &transaction, RespondCode &code, std::string &message) {
   uint8_t firstByte;
 
@@ -131,18 +106,6 @@ int SiteToSiteClient::writeResponse(const std::shared_ptr<Transaction> &transact
   } else {
     return 3;
   }
-}
-
-void SiteToSiteClient::tearDown() {
-  if (peer_state_ >= ESTABLISHED) {
-    logger_->log_debug("Site2Site Protocol tearDown");
-    // need to write shutdown request
-    writeRequestType(SHUTDOWN);
-  }
-
-  known_transactions_.clear();
-  peer_->Close();
-  peer_state_ = IDLE;
 }
 
 bool SiteToSiteClient::transferFlowFiles(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {

@@ -112,9 +112,6 @@ class RawSiteToSiteClient : public sitetosite::SiteToSiteClient {
 
   }
 
-  void setPeer(std::unique_ptr<SiteToSitePeer> peer) {
-    peer_ = std::move(peer);
-  }
   /**
    * Provides a reference to the time out
    * @returns timeout
@@ -146,18 +143,14 @@ class RawSiteToSiteClient : public sitetosite::SiteToSiteClient {
   virtual int writeRequestType(RequestType type);
   // read Request Type
   virtual int readRequestType(RequestType &type);
+
   // read Respond
   virtual int readRespond(const std::shared_ptr<Transaction> &transaction, RespondCode &code, std::string &message);
   // write respond
   virtual int writeRespond(const std::shared_ptr<Transaction> &transaction, RespondCode code, std::string message);
   // getRespondCodeContext
   virtual RespondCodeContext *getRespondCodeContext(RespondCode code) {
-    for (unsigned int i = 0; i < sizeof(SiteToSiteRequest::respondCodeContext) / sizeof(RespondCodeContext); i++) {
-      if (SiteToSiteRequest::respondCodeContext[i].code == code) {
-        return &SiteToSiteRequest::respondCodeContext[i];
-      }
-    }
-    return NULL;
+    return SiteToSiteClient::getRespondCodeContext(code);
   }
 
   // Creation of a new transaction, return the transaction ID if success,

@@ -395,97 +395,37 @@ bool RawSiteToSiteClient::getPeerList(std::vector<PeerStatus> &peers) {
   }
 }
 
-int RawSiteToSiteClient::writeRequestType(RequestType type) {
-  if (type >= MAX_REQUEST_TYPE)
-    return -1;
+  int RawSiteToSiteClient::writeRequestType(RequestType type) {
+    if (type >= MAX_REQUEST_TYPE)
+      return -1;
 
-  return peer_->writeUTF(SiteToSiteRequest::RequestTypeStr[type]);
-}
-
-int RawSiteToSiteClient::readRequestType(RequestType &type) {
-  std::string requestTypeStr;
-
-  int ret = peer_->readUTF(requestTypeStr);
-
-  if (ret <= 0)
-    return ret;
-
-  for (int i = NEGOTIATE_FLOWFILE_CODEC; i <= SHUTDOWN; i++) {
-    if (SiteToSiteRequest::RequestTypeStr[i] == requestTypeStr) {
-      type = (RequestType) i;
-      return ret;
-    }
+    return peer_->writeUTF(SiteToSiteRequest::RequestTypeStr[type]);
   }
 
-  return -1;
-}
+  int RawSiteToSiteClient::readRequestType(RequestType &type) {
+    std::string requestTypeStr;
+
+    int ret = peer_->readUTF(requestTypeStr);
+
+    if (ret <= 0)
+      return ret;
+
+    for (int i = NEGOTIATE_FLOWFILE_CODEC; i <= SHUTDOWN; i++) {
+      if (SiteToSiteRequest::RequestTypeStr[i] == requestTypeStr) {
+        type = (RequestType) i;
+        return ret;
+      }
+    }
+
+    return -1;
+  }
 
 int RawSiteToSiteClient::readRespond(const std::shared_ptr<Transaction> &transaction, RespondCode &code, std::string &message) {
-  uint8_t firstByte;
-
-  int ret = peer_->read(firstByte);
-
-  if (ret <= 0 || firstByte != CODE_SEQUENCE_VALUE_1)
-    return -1;
-
-  uint8_t secondByte;
-
-  ret = peer_->read(secondByte);
-
-  if (ret <= 0 || secondByte != CODE_SEQUENCE_VALUE_2)
-    return -1;
-
-  uint8_t thirdByte;
-
-  ret = peer_->read(thirdByte);
-
-  if (ret <= 0)
-    return ret;
-
-  code = (RespondCode) thirdByte;
-
-  RespondCodeContext *resCode = getRespondCodeContext(code);
-
-  if (resCode == NULL) {
-    // Not a valid respond code
-    return -1;
-  }
-  if (resCode->hasDescription) {
-    ret = peer_->readUTF(message);
-    if (ret <= 0)
-      return -1;
-  }
-  return 3 + message.size();
+  return readResponse(transaction, code, message);
 }
 
 int RawSiteToSiteClient::writeRespond(const std::shared_ptr<Transaction> &transaction, RespondCode code, std::string message) {
-  RespondCodeContext *resCode = getRespondCodeContext(code);
-
-  if (resCode == NULL) {
-    // Not a valid respond code
-    return -1;
-  }
-
-  uint8_t codeSeq[3];
-  codeSeq[0] = CODE_SEQUENCE_VALUE_1;
-  codeSeq[1] = CODE_SEQUENCE_VALUE_2;
-  codeSeq[2] = (uint8_t) code;
-
-  int ret = peer_->write(codeSeq, 3);
-
-  if (ret != 3)
-    return -1;
-
-  if (resCode->hasDescription) {
-    ret = peer_->writeUTF(message);
-    if (ret > 0) {
-      return (3 + ret);
-    } else {
-      return ret;
-    }
-  } else {
-    return 3;
-  }
+  return writeResponse(transaction, code, message);
 }
 
 bool RawSiteToSiteClient::negotiateCodec() {
