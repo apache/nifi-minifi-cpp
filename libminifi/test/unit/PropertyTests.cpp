@@ -107,3 +107,28 @@ TEST_CASE("Test Trimmer Left", "[testTrims]") {
   REQUIRE(test.c_str()[1] == ' ');
 }
 
+TEST_CASE("Test int conversion", "[testStringToInt]") {
+  using org::apache::nifi::minifi::core::Property;
+
+  uint64_t uint64_var = 0;
+  REQUIRE(Property::StringToInt("-2", uint64_var) == false);  // Negative shouldn't be converted to uint
+
+  uint32_t uint32_var = 0;
+  REQUIRE(Property::StringToInt("3  GB", uint32_var) == true);  // Test skipping of spaces, too
+  uint32_t expected_value = 3u * 1024 * 1024 * 1024;
+  REQUIRE(uint32_var == expected_value);
+
+  int32_t int32_var = 0;
+  REQUIRE(Property::StringToInt("3GB", int32_var) == false);  // Doesn't fit
+
+  REQUIRE(Property::StringToInt("-1 G", int32_var) == true);
+  REQUIRE(int32_var == -1 * 1000 * 1000 * 1000);
+
+  REQUIRE(Property::StringToInt("-1G", uint32_var) == false);  // Negative to uint
+
+  uint64_t huge_number = uint64_t(std::numeric_limits<int64_t>::max()) +1;
+
+  REQUIRE(Property::StringToInt(std::to_string(huge_number), uint64_var) == true);
+  REQUIRE(uint64_var == huge_number);
+}
+

@@ -141,6 +141,47 @@ class TimePeriodValue : public TransformableValue, public state::response::UInt6
  * format <numeric> <byte size>.
  */
 class DataSizeValue : public TransformableValue, public state::response::UInt64Value {
+private:
+
+  //Signed
+  template<typename T, typename std::enable_if<std::is_signed<T>::value, T>::type* = nullptr>
+  static bool AssignIfFits(int64_t base, uint64_t mult, T& output) {
+    int64_t val = base * mult;
+    if(val >= (std::numeric_limits<T>::min)() && val <= (std::numeric_limits<T>::max)()) {
+      output = val;
+      return true;
+    }
+    return false;
+  }
+
+  //Unsigned
+  template<typename T, typename std::enable_if<!std::is_signed<T>::value, T>::type* = nullptr>
+  static bool AssignIfFits(uint64_t base, uint64_t mult, T& output) {
+    uint64_t val = base * mult;
+    if(val <= (std::numeric_limits<T>::max)()) {
+      output = val;
+      return true;
+    }
+    return false;
+  }
+
+  //Signed
+  template<typename T, typename std::enable_if<std::is_signed<T>::value, T>::type* = nullptr>
+  static bool StringToNum(const char* str_begin, char **str_end, T& output) {
+    int64_t val = std::strtoll(str_begin, str_end, 0);
+    return AssignIfFits<T>(val, 1, output);
+  }
+
+  //Unsigned
+  template<typename T, typename std::enable_if<!std::is_signed<T>::value, T>::type* = nullptr>
+  static bool StringToNum(const char* str_begin, char **str_end, T& output) {
+    if((str_begin[0] == '\0') || (str_begin[0] == '-')) {
+      return false;
+    }
+    uint64_t val = std::strtoull(str_begin, str_end, 0);
+    return AssignIfFits<T>(val, 1, output);
+  }
+
  public:
   static const std::type_index type_id;
 
@@ -163,7 +204,11 @@ class DataSizeValue : public TransformableValue, public state::response::UInt64V
 
     const char *cvalue = input.c_str();
     char *pEnd;
-    auto ival = std::strtoll(cvalue, &pEnd, 0);
+
+    T ival = 0;
+    if(!StringToNum(cvalue, &pEnd, ival)) {
+      return false;
+    }
 
     if (pEnd[0] == '\0') {
       output = ival;
@@ -195,8 +240,7 @@ class DataSizeValue : public TransformableValue, public state::response::UInt64V
             }
           }
         }
-        output = ival * multiplier;
-        return true;
+        return AssignIfFits<T>(ival, multiplier, output);
 
       } else if ((pEnd[1] == 'b' || pEnd[1] == 'B') && (pEnd[2] == '\0')) {
 
@@ -214,8 +258,7 @@ class DataSizeValue : public TransformableValue, public state::response::UInt64V
             }
           }
         }
-        output = ival * multiplier;
-        return true;
+        return AssignIfFits<T>(ival, multiplier, output);
       }
     }
 
