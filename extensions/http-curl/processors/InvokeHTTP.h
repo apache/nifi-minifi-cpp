@@ -79,7 +79,7 @@ class InvokeHTTP : public core::Processor {
   static core::Property SSLContext;
   static core::Property ProxyHost;
   static core::Property ProxyPort;
-  static core::Property ProxyUser;
+  static core::Property ProxyUsername;
   static core::Property ProxyPassword;
   static core::Property ContentType;
   static core::Property SendBody;

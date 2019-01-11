@@ -80,7 +80,8 @@ core::Property InvokeHTTP::SSLContext(
         ->asType<minifi::controllers::SSLContextService>()->build());
 core::Property InvokeHTTP::ProxyHost("Proxy Host", "The fully qualified hostname or IP address of the proxy server", "");
 core::Property InvokeHTTP::ProxyPort("Proxy Port", "The port of the proxy server", "");
-core::Property InvokeHTTP::ProxyUser("invokehttp-proxy-user", "Username to set when authenticating against proxy", "");
+core::Property InvokeHTTP::ProxyUsername(
+    core::PropertyBuilder::createProperty("invokehttp-proxy-username", "Proxy Username")->withDescription("Username to set when authenticating against proxy")->isRequired(false)->build());
 core::Property InvokeHTTP::ProxyPassword(
     core::PropertyBuilder::createProperty("invokehttp-proxy-password", "Proxy Password")->withDescription("Password to set when authenticating against proxy")->isRequired(false)->build());
 core::Property InvokeHTTP::ContentType("Content-type", "The Content-Type to specify for when content is being transmitted through a PUT, "
@@ -139,7 +140,7 @@ void InvokeHTTP::initialize() {
   properties.insert(SSLContext);
   properties.insert(ProxyHost);
   properties.insert(ProxyPort);
-  properties.insert(ProxyUser);
+  properties.insert(ProxyUsername);
   properties.insert(UseChunkedEncoding);
   properties.insert(ProxyPassword);
   properties.insert(ContentType);
