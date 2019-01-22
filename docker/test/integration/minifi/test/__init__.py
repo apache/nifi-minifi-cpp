@@ -137,7 +137,7 @@ class DockerTestCluster(SingleNodeDockerCluster):
                 logging.info(container.status)
                 logging.info('Could not cat app logs for container \'%s\' because it is not running',
                              container.name)
-            stats = container.stats(decode=True, stream=False)
+            stats = container.stats(decode=True, stream=True)
             logging.info('Container stats:\n%s', repr(stats))
 
     def check_output(self, timeout=5):
