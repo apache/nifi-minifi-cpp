@@ -24,6 +24,9 @@ include_directories(../../thirdparty/paho.mqtt.c/src)
 
 file(GLOB SOURCES "*.cpp" "protocol/*.cpp" "processors/*.cpp" "controllerservice/*.cpp")
 
+
+set(PAHO_BUILD_STATIC "ON" CACHE STRING "" FORCE)
+
 add_library(minifi-mqtt-extensions STATIC ${SOURCES})
 set_property(TARGET minifi-mqtt-extensions PROPERTY POSITION_INDEPENDENT_CODE ON)
 if(THREADS_HAVE_PTHREAD_ARG)
@@ -34,15 +37,16 @@ if(CMAKE_THREAD_LIBS_INIT)
 endif()
 
 
+
 # Include UUID
 target_link_libraries(minifi-mqtt-extensions ${CMAKE_DL_LIBS} )
 if (MQTT_FOUND AND NOT BUILD_MQTT)
 	target_link_libraries(minifi-mqtt-extensions ${MQTT_LIBRARIES} )
 else()
-	target_link_libraries(minifi-mqtt-extensions paho-mqtt3a )
-	target_link_libraries(minifi-mqtt-extensions paho-mqtt3c )
-	target_link_libraries(minifi-mqtt-extensions paho-mqtt3as )
-	target_link_libraries(minifi-mqtt-extensions paho-mqtt3cs )
+	target_link_libraries(minifi-mqtt-extensions paho-mqtt3a-static )
+	target_link_libraries(minifi-mqtt-extensions paho-mqtt3c-static )
+	target_link_libraries(minifi-mqtt-extensions paho-mqtt3as-static )
+	target_link_libraries(minifi-mqtt-extensions paho-mqtt3cs-static )
 endif()
 find_package(ZLIB REQUIRED)
 include_directories(${ZLIB_INCLUDE_DIRS})
