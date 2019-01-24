@@ -16,35 +16,6 @@
  * limitations under the License.
  */
 
-#ifndef NIFI_MINIFI_CPP_CXXSTRUCTS_H
-#define NIFI_MINIFI_CPP_CXXSTRUCTS_H
+#include "core/log.h"
 
-#include "cstructs.h"
-#include "cxx/Plan.h"
-#include "io/DataStream.h"
-
-struct flow : public ExecutionPlan {
-  using ExecutionPlan::ExecutionPlan;
-};
-
-struct standalone_processor : public core::Processor {
-  using core::Processor::Processor;
-};
-
-struct processor : public core::Processor {
-  using core::Processor::Processor;
-};
-
-struct processor_session : public core::ProcessSession {
-  using core::ProcessSession::ProcessSession;
-};
-
-struct processor_context : public core::ProcessContext {
-  using core::ProcessContext::ProcessContext;
-};
-
-struct cstream {
-  org::apache::nifi::minifi::io::BaseStream * impl;
-};
-
-#endif //NIFI_MINIFI_CPP_CXXSTRUCTS_H
+volatile int global_log_level = 0;

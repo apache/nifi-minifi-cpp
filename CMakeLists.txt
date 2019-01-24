@@ -286,6 +286,7 @@ else()
 	include_directories("thirdparty/uuid/include/posix")
 endif()
 add_subdirectory("thirdparty/uuid")
+include_directories(thirdparty/ut)
 set(UUID_FOUND "YES" CACHE STRING "" FORCE)
 set(UUID_LIBRARIES "uuid" CACHE STRING "" FORCE)
 
