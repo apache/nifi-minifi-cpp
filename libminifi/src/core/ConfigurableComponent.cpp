@@ -144,15 +144,9 @@ bool ConfigurableComponent::setProperty(Property &prop, PropertyValue &value) {
       logger_->log_debug("property name %s value %s and new value is %s", prop.getName(), new_property.getName(), value, new_property.getValue().to_string());
       return true;
     } else {
-      if (supportsDynamicProperties()) {
-        Property new_property(prop);
-        new_property.setValue(value);
-        properties_.insert(std::pair<std::string, Property>(prop.getName(), new_property));
-        onPropertyModified({}, new_property);
-        return true;
-      } else {
-        return false;
-      }
+      // Should not attempt to update dynamic properties here since the return code
+      // is relied upon by other classes to determine if the property exists.
+      return false;
     }
 }
 

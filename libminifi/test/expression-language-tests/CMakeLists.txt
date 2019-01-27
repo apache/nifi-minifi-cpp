@@ -37,4 +37,27 @@ FOREACH(testfile ${EXPRESSION_LANGUAGE_TESTS})
 	add_test(NAME "${testfilename}" COMMAND "${testfilename}" WORKING_DIRECTORY ${TEST_DIR})
 ENDFOREACH()
 
+
+### integration tests
+
+file(GLOB INT_EXPRESSION_LANGUAGE_TESTS  "integration/*.cpp")
+
+SET(INT_EXTENSIONS_TEST_COUNT 0)
+
+FOREACH(testfile ${INT_EXPRESSION_LANGUAGE_TESTS})
+	get_filename_component(testfilename "${testfile}" NAME_WE)
+	add_executable("${testfilename}" "${testfile}")
+	target_include_directories(${testfilename} BEFORE PRIVATE "${CMAKE_SOURCE_DIR}/extensions/expression-language")
+	createTests("${testfilename}")
+	if (APPLE)
+		target_link_libraries ("${testfilename}" -Wl,-all_load minifi-expression-language-extensions )
+	else ()
+		target_link_libraries ("${testfilename}" -Wl,--whole-archive minifi-expression-language-extensions -Wl,--no-whole-archive)
+	endif()
+	MATH(EXPR EXTENSIONS_TEST_COUNT "${INT_EXTENSIONS_TEST_COUNT}+1")
+ENDFOREACH()
+
+
+add_test(NAME UpdateAttributeIntegrationTest COMMAND UpdateAttributeIntegrationTest "${TEST_RESOURCES}/TestUpdateAttribute.yml"  "${TEST_RESOURCES}/")
+
 message("-- Finished building ${EXTENSIONS_TEST_COUNT} expression language related test file(s)...")
