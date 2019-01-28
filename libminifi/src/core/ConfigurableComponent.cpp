@@ -141,7 +141,7 @@ bool ConfigurableComponent::setProperty(Property &prop, PropertyValue &value) {
       new_property.setValue(value);
       properties_[new_property.getName()] = new_property;
       onPropertyModified(orig_property, new_property);
-      logger_->log_debug("property name %s value %s and new value is %s", prop.getName(), new_property.getName(), value, new_property.getValue().to_string());
+      logger_->log_debug("property name %s value %s and new value is %s", prop.getName(), new_property.getName(), new_property.getValue().to_string());
       return true;
     } else {
       // Should not attempt to update dynamic properties here since the return code
