@@ -402,7 +402,7 @@ build_cmake_command(){
     CMAKE_BUILD_COMMAND="${CMAKE_BUILD_COMMAND} -DSKIP_TESTS=true "
   else
     # user may have disabled tests previously, so let's force them to be re-enabled
-    CMAKE_BUILD_COMMAND="${CMAKE_BUILD_COMMAND} -DSKIP_TESTS=.. "
+    CMAKE_BUILD_COMMAND="${CMAKE_BUILD_COMMAND} -DSKIP_TESTS= "
   fi
 
 
