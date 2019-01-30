@@ -34,7 +34,7 @@ verify_gcc_enable(){
     fi
   elif [ "$feature" = "KAFKA_ENABLED" ]; then
     if (( COMPILER_MAJOR >= 4 )); then
-      if (( COMPILER_MAJOR > 4 || COMPILER_MINOR >= 9 )); then
+      if (( COMPILER_MAJOR > 4 || COMPILER_MINOR >= 8 )); then
         echo "true"
       else
         echo "false"
@@ -44,7 +44,7 @@ verify_gcc_enable(){
     fi
    elif [ "$feature" = "PCAP_ENABLED" ]; then
     if (( COMPILER_MAJOR >= 4 )); then
-      if (( COMPILER_MAJOR > 4 || COMPILER_MINOR >= 9 )); then
+      if (( COMPILER_MAJOR > 4 || COMPILER_MINOR >= 8 )); then
         echo "true"
       else
         echo "false"

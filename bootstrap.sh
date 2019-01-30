@@ -39,6 +39,7 @@ CMAKE_OPTIONS_ENABLED=()
 CMAKE_OPTIONS_DISABLED=()
 CMAKE_MIN_VERSION=()
 DEPLOY_LIMITS=()
+USER_DISABLE_TESTS="${FALSE}"
 
 DEPENDENCIES=()
 
@@ -50,6 +51,9 @@ while :; do
   case $1 in
     -n|--noprompt)
       NO_PROMPT="true"
+      ;;
+    -s|--skiptests)
+      USER_DISABLE_TESTS="${TRUE}"
       ;;
     -e|--enableall)
       NO_PROMPT="true"
@@ -264,6 +268,8 @@ add_disabled_option KAFKA_ENABLED ${FALSE} "ENABLE_LIBRDKAFKA" "3.4.0"
 
 add_disabled_option MQTT_ENABLED ${FALSE} "ENABLE_MQTT"
 
+TESTS_DISABLED=${FALSE}
+add_disabled_option SQLITE_ENABLED ${FALSE} "ENABLE_SQLITE"
 
 # Since the following extensions have limitations on
 
@@ -282,6 +288,11 @@ BUILD_DIR_D=${BUILD_DIR}
 OVERRIDE_BUILD_IDENTIFIER=${BUILD_IDENTIFIER}
 
 load_state
+
+if [ "$USER_DISABLE_TESTS" == "${TRUE}" ]; then
+   ToggleFeature TESTS_DISABLED
+fi
+
 
 if [ "${OVERRIDE_BUILD_IDENTIFIER}" != "${BUILD_IDENTIFIER}" ]; then
   BUILD_IDENTIFIER=${OVERRIDE_BUILD_IDENTIFIER}
@@ -386,6 +397,14 @@ build_cmake_command(){
   if [ "${DEBUG_SYMBOLS}" = "${TRUE}" ]; then
     CMAKE_BUILD_COMMAND="${CMAKE_BUILD_COMMAND} -DCMAKE_BUILD_TYPE=RelWithDebInfo"
   fi
+
+  if [ "${TESTS_DISABLED}" = "${TRUE}" ]; then
+    CMAKE_BUILD_COMMAND="${CMAKE_BUILD_COMMAND} -DSKIP_TESTS=true "
+  else
+    # user may have disabled tests previously, so let's force them to be re-enabled
+    CMAKE_BUILD_COMMAND="${CMAKE_BUILD_COMMAND} -DSKIP_TESTS=.. "
+  fi
+
 
   if [ "${PORTABLE_BUILD}" = "${TRUE}" ]; then
     CMAKE_BUILD_COMMAND="${CMAKE_BUILD_COMMAND} -DPORTABLE=ON "

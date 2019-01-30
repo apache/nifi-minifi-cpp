@@ -119,7 +119,7 @@ void PutSQL::onTrigger(const std::shared_ptr<core::ProcessContext> &context,
         session->read(flow_file, &cb);
       } else {
         // SQL is defined as a property, so get the property dynamically w/ EL support
-        context->getProperty(SQLStatement.getName(), *sql, flow_file);
+        context->getProperty(SQLStatement, *sql, flow_file);
       }
 
       auto stmt = db->prepare(*sql);
