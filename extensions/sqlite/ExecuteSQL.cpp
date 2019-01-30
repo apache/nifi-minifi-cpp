@@ -99,7 +99,7 @@ void ExecuteSQL::onTrigger(const std::shared_ptr<core::ProcessContext> &context,
         session->read(flow_file, &cb);
       } else {
         // SQL is defined as a property, so get the property dynamically w/ EL support
-        context->getProperty(SQLStatement.getName(), *dynamic_sql, flow_file);
+        context->getProperty(SQLStatement, *dynamic_sql, flow_file);
       }
     }
 

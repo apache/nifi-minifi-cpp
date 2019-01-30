@@ -92,6 +92,7 @@ save_state(){
   echo "VERSION=1" > ${script_directory}/bt_state
   echo_state_variable BUILD_IDENTIFIER
   echo_state_variable BUILD_DIR
+  echo_state_variable TESTS_DISABLED
   for option in "${OPTIONS[@]}" ; do
     echo_state_variable $option
   done
@@ -254,7 +255,13 @@ show_supported_features() {
   echo "J. TensorFlow Support ..........$(print_feature_status TENSORFLOW_ENABLED)"
   echo "K. Bustache Support ............$(print_feature_status BUSTACHE_ENABLED)"
   echo "L. MQTT Support ................$(print_feature_status MQTT_ENABLED)"
-  echo "M. Enable all extensions"
+  echo "M. SQLite Support ..............$(print_feature_status SQLITE_ENABLED)"
+  echo "N. Bustache Support ............$(print_feature_status BUSTACHE_ENABLED)"
+  echo "****************************************"
+  echo "            Build Options."
+  echo "****************************************"
+  echo "1. Disable Tests ...............$(print_feature_status TESTS_DISABLED)"
+  echo "2. Enable all extensions"
   echo "P. Continue with these options"
   if [ "$GUIDED_INSTALL" = "${TRUE}" ]; then
     echo "R. Return to Main Menu"
@@ -281,7 +288,10 @@ read_feature_options(){
     j) ToggleFeature TENSORFLOW_ENABLED ;;
     k) ToggleFeature BUSTACHE_ENABLED ;;
     l) ToggleFeature MQTT_ENABLED ;;
-    m) EnableAllFeatures ;;
+    m) ToggleFeature SQLLITE_ENABLED ;;
+    n) ToggleFeature BUSTACHE_ENABLED ;;
+    1) ToggleFeature TESTS_DISABLED ;;
+    2) EnableAllFeatures ;;
     p) FEATURES_SELECTED="true" ;;
     r) if [ "$GUIDED_INSTALL" = "${TRUE}" ]; then
         MENU="main"
