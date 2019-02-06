@@ -256,7 +256,6 @@ show_supported_features() {
   echo "K. Bustache Support ............$(print_feature_status BUSTACHE_ENABLED)"
   echo "L. MQTT Support ................$(print_feature_status MQTT_ENABLED)"
   echo "M. SQLite Support ..............$(print_feature_status SQLITE_ENABLED)"
-  echo "N. Bustache Support ............$(print_feature_status BUSTACHE_ENABLED)"
   echo "****************************************"
   echo "            Build Options."
   echo "****************************************"
@@ -289,7 +288,6 @@ read_feature_options(){
     k) ToggleFeature BUSTACHE_ENABLED ;;
     l) ToggleFeature MQTT_ENABLED ;;
     m) ToggleFeature SQLLITE_ENABLED ;;
-    n) ToggleFeature BUSTACHE_ENABLED ;;
     1) ToggleFeature TESTS_DISABLED ;;
     2) EnableAllFeatures ;;
     p) FEATURES_SELECTED="true" ;;
