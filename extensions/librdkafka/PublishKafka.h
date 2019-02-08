@@ -175,6 +175,11 @@ public:
   };
 
 public:
+
+    virtual bool supportsDynamicProperties() {
+      return true;
+    };
+
   /**
    * Function that's executed when the processor is scheduled.
    * @param context process context.
