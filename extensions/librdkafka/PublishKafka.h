@@ -96,6 +96,9 @@ public:
   static core::Property SecurityCert;
   static core::Property SecurityPrivateKey;
   static core::Property SecurityPrivateKeyPassWord;
+  static core::Property KerberosServiceName;
+  static core::Property KerberosPrincipal;
+  static core::Property KerberosKeytabPath;
 
   // Supported Relationships
   static core::Relationship Failure;
@@ -187,6 +190,8 @@ public:
    * ProcessSession objects.
    */
   void onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory);
+  virtual void onDynamicPropertyModified(const core::Property &orig_property,
+                                           const core::Property &new_property);
   // OnTrigger method, implemented by NiFi PublishKafka
   virtual void onTrigger(core::ProcessContext *context, core::ProcessSession *session) {
   }
