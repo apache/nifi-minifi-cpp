@@ -53,6 +53,11 @@ core::Property PublishKafka::SecurityCA("Security CA", "File or directory path t
 core::Property PublishKafka::SecurityCert("Security Cert", "Path to client's public key (PEM) used for authentication", "");
 core::Property PublishKafka::SecurityPrivateKey("Security Private Key", "Path to client's private key (PEM) used for authentication", "");
 core::Property PublishKafka::SecurityPrivateKeyPassWord("Security Pass Phrase", "Private key passphrase", "");
+core::Property PublishKafka::KerberosServiceName("Kerberos Service Name", "Kerberos Service Name", "");
+core::Property PublishKafka::KerberosPrincipal("Kerberos Principal", "Keberos Principal", "");
+core::Property PublishKafka::KerberosKeytabPath("Kerberos Keytab Path", "The path to the location on the local filesystem where the kerberos keytab is located. Read permission on the file is required.", "");
+core::Property PublishKafka::MessageKeyField("Message Key Field", "The name of a field in the Input Records that should be used as the Key for the Kafka message.\n"
+                                                                  "Supports Expression Language: true (will be evaluated using flow file attributes)", "");
 core::Relationship PublishKafka::Success("success", "Any FlowFile that is successfully sent to Kafka will be routed to this Relationship");
 core::Relationship PublishKafka::Failure("failure", "Any FlowFile that cannot be sent to Kafka will be routed to this Relationship");
 
@@ -77,6 +82,10 @@ void PublishKafka::initialize() {
   properties.insert(SecurityCert);
   properties.insert(SecurityPrivateKey);
   properties.insert(SecurityPrivateKeyPassWord);
+  properties.insert(KerberosServiceName);
+  properties.insert(KerberosPrincipal);
+  properties.insert(KerberosKeytabPath);
+  properties.insert(MessageKeyField);
   setSupportedProperties(properties);
   // Set the supported relationships
   std::set<core::Relationship> relationships;
@@ -95,6 +104,29 @@ void PublishKafka::onSchedule(core::ProcessContext *context, core::ProcessSessio
   conf_ = rd_kafka_conf_new();
   topic_conf_ = rd_kafka_topic_conf_new();
 
+
+  // Kerberos configuration
+  if (context->getProperty(KerberosServiceName.getName(), value) && !value.empty()) {
+    result = rd_kafka_conf_set(conf_, "sasl.kerberos.service.name", value.c_str(), errstr, sizeof(errstr));
+    logger_->log_debug("PublishKafka: sasl.kerberos.service.name [%s]", value);
+    if (result != RD_KAFKA_CONF_OK)
+      logger_->log_error("PublishKafka: configure error result [%s]", errstr);
+  }
+  value = "";
+  if (context->getProperty(KerberosPrincipal.getName(), value) && !value.empty()) {
+    result = rd_kafka_conf_set(conf_, "sasl.kerberos.principal", value.c_str(), errstr, sizeof(errstr));
+    logger_->log_debug("PublishKafka: sasl.kerberos.principal [%s]", value);
+    if (result != RD_KAFKA_CONF_OK)
+      logger_->log_error("PublishKafka: configure error result [%s]", errstr);
+  }
+  value = "";
+  if (context->getProperty(KerberosKeytabPath.getName(), value) && !value.empty()) {
+    result = rd_kafka_conf_set(conf_, "sasl.kerberos.keytab", value.c_str(), errstr, sizeof(errstr));
+    logger_->log_debug("PublishKafka: sasl.kerberos.keytab [%s]", value);
+    if (result != RD_KAFKA_CONF_OK)
+      logger_->log_error("PublishKafka: configure error result [%s]", errstr);
+  }
+  value = "";
   if (context->getProperty(SeedBrokers.getName(), value) && !value.empty()) {
     result = rd_kafka_conf_set(conf_, "bootstrap.servers", value.c_str(), errstr, sizeof(errstr));
     logger_->log_debug("PublishKafka: bootstrap.servers [%s]", value);
@@ -234,11 +266,25 @@ void PublishKafka::onSchedule(core::ProcessContext *context, core::ProcessSessio
     return;
   }
 
+    // Add all of the dynamic properties as librdkafka configurations
+    const auto &dynamic_prop_keys = context->getDynamicPropertyKeys();
+    logger_->log_info("PublishKafka registering %d librdkafka dynamic properties", dynamic_prop_keys.size());
+
+    for (const auto &key : dynamic_prop_keys) {
+        value = "";
+        if (context->getDynamicProperty(key, value) && !value.empty()) {
+            logger_->log_debug("PublishKafka: DynamicProperty: [%s] -> [%s]", key, value);
+            rd_kafka_conf_set(conf_, key.c_str(), value.c_str(), errstr, sizeof(errstr));
+        } else {
+            logger_->log_warn("PublishKafka Dynamic Property '%s' is empty and therefore will not be configured", key);
+        }
+    }
+
   rk_= rd_kafka_new(RD_KAFKA_PRODUCER, conf_,
             errstr, sizeof(errstr));
 
   if (!rk_) {
-    logger_->log_error("Failed to create kafak producer %s", errstr);
+    logger_->log_error("Failed to create Kafka producer %s", errstr);
     return;
   }
 
@@ -263,11 +309,13 @@ void PublishKafka::onTrigger(const std::shared_ptr<core::ProcessContext> &contex
     return;
   }
 
-  std::string kafkaKey = flowFile->getUUIDStr();;
-  std::string value;
-
-  if (flowFile->getAttribute(KAFKA_KEY_ATTRIBUTE, value))
-    kafkaKey = value;
+  std::string kafkaKey;
+  kafkaKey = "";
+  if (context->getDynamicProperty(MessageKeyField, kafkaKey, flowFile) && !kafkaKey.empty()) {
+    logger_->log_debug("PublishKafka: Message Key Field [%s]", kafkaKey);
+  } else {
+    kafkaKey = flowFile->getUUIDStr();
+  }
 
   PublishKafka::ReadCallback callback(max_seg_size_, kafkaKey, rkt_, rk_, flowFile, attributeNameRegex);
   session->read(flowFile, &callback);
