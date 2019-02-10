@@ -263,6 +263,20 @@ void PublishKafka::onSchedule(core::ProcessContext *context, core::ProcessSessio
     return;
   }
 
+    // Add all of the dynamic properties as librdkafka configurations
+    const auto &dynamic_prop_keys = context->getDynamicPropertyKeys();
+    logger_->log_info("PublishKafka registering %d librdkafka dynamic properties", dynamic_prop_keys.size());
+
+    for (const auto &key : dynamic_prop_keys) {
+        value = "";
+        if (context->getProperty(key, value) && !value.empty()) {
+            logger_->log_debug("PublishKafka: DynamicProperty -> [%s]", value);
+            rd_kafka_conf_set(conf_, key, value.c_str(), errstr, sizeof(errstr));
+        } else {
+            logger_->log_warn("PublishKafka Dynamic Property '%s' is empty and therefore will not be configured", key);
+        }
+    }
+
   rk_= rd_kafka_new(RD_KAFKA_PRODUCER, conf_,
             errstr, sizeof(errstr));
 
@@ -279,14 +293,6 @@ void PublishKafka::onSchedule(core::ProcessContext *context, core::ProcessSessio
   }
 
 }
-
-    void PublishKafka::onDynamicPropertyModified(const core::Property &orig_property, const core::Property &new_property) {
-
-//        result = rd_kafka_conf_set(conf_, new_property.getName(), value.c_str(), errstr, sizeof(errstr));
-//        logger_->log_debug("PublishKafka: [%s] [%s]", new_property.getName(), value);
-//        if (result != RD_KAFKA_CONF_OK)
-//            logger_->log_error("PublishKafka: configure error result [%s]", errstr);
-    }
 
 void PublishKafka::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
   std::shared_ptr<core::FlowFile> flowFile = session->get();
