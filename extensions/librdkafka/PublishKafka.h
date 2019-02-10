@@ -190,8 +190,7 @@ public:
    * ProcessSession objects.
    */
   void onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory);
-  virtual void onDynamicPropertyModified(const core::Property &orig_property,
-                                           const core::Property &new_property);
+
   // OnTrigger method, implemented by NiFi PublishKafka
   virtual void onTrigger(core::ProcessContext *context, core::ProcessSession *session) {
   }
