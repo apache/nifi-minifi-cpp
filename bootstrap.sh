@@ -268,6 +268,9 @@ add_disabled_option KAFKA_ENABLED ${FALSE} "ENABLE_LIBRDKAFKA" "3.4.0"
 
 add_disabled_option MQTT_ENABLED ${FALSE} "ENABLE_MQTT"
 
+add_disabled_option PYTHON_ENABLED ${FALSE} "ENABLE_PYTHON"
+add_dependency PYTHON_ENABLED "python"
+
 TESTS_DISABLED=${FALSE}
 add_disabled_option SQLITE_ENABLED ${FALSE} "ENABLE_SQLITE"
 
