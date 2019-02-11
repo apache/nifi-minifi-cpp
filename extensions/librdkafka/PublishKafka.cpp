@@ -269,7 +269,7 @@ void PublishKafka::onSchedule(core::ProcessContext *context, core::ProcessSessio
 
     for (const auto &key : dynamic_prop_keys) {
         value = "";
-        if (context->getProperty(key, value) && !value.empty()) {
+        if (context->getDynamicProperty(key, value) && !value.empty()) {
             logger_->log_debug("PublishKafka: DynamicProperty -> [%s]", value);
             rd_kafka_conf_set(conf_, key.c_str(), value.c_str(), errstr, sizeof(errstr));
         } else {
