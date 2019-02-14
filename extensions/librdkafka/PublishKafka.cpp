@@ -85,6 +85,7 @@ void PublishKafka::initialize() {
   properties.insert(KerberosServiceName);
   properties.insert(KerberosPrincipal);
   properties.insert(KerberosKeytabPath);
+  properties.insert(MessageKeyField);
   setSupportedProperties(properties);
   // Set the supported relationships
   std::set<core::Relationship> relationships;
