@@ -113,7 +113,7 @@ TEST_CASE("Test usage of ExtractText", "[extracttextTest]") {
     plan->runNextProcessor();  // ExtractText
     plan->runNextProcessor();  // LogAttribute
 
-    REQUIRE(LogTestController::getInstance().contains(log_check) == false);
+    REQUIRE(LogTestController::getInstance().contains(log_check, std::chrono::seconds(0)) == false);
 
     ss2.str("");
     ss2 << "key:" << TEST_ATTR << " value:" << "Test";

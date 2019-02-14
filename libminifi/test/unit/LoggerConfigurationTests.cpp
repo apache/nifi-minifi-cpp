@@ -80,18 +80,18 @@ TEST_CASE("TestLoggerConfiguration::initialize_namespaces", "[test initialize_na
 
   logger = TestLoggerConfiguration::get_logger(root_namespace, stdout_only_warn_class, formatter);
   logger->info(test_log_statement);
-  REQUIRE(false == logTestController.contains(stdout, test_log_statement));
+  REQUIRE(false == logTestController.contains(stdout, test_log_statement, std::chrono::seconds(0)));
   logger->warn(test_log_statement);
   REQUIRE(true == logTestController.contains(stdout, test_log_statement));
-  REQUIRE(false == logTestController.contains(stderr, test_log_statement));
+  REQUIRE(false == logTestController.contains(stderr, test_log_statement, std::chrono::seconds(0)));
   logTestController.resetStream(stdout);
   logTestController.resetStream(stderr);
 
   logger = TestLoggerConfiguration::get_logger(root_namespace, stderr_only_error_class, formatter);
   logger->warn(test_log_statement);
-  REQUIRE(false == logTestController.contains(stderr, test_log_statement));
+  REQUIRE(false == logTestController.contains(stderr, test_log_statement, std::chrono::seconds(0)));
   logger->error(test_log_statement);
-  REQUIRE(false == logTestController.contains(stdout, test_log_statement));
+  REQUIRE(false == logTestController.contains(stdout, test_log_statement, std::chrono::seconds(0)));
   REQUIRE(true == logTestController.contains(stderr, test_log_statement));
   logTestController.resetStream(stdout);
   logTestController.resetStream(stderr);

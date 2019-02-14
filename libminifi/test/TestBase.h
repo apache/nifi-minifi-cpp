@@ -90,14 +90,30 @@ class LogTestController {
     setLevel(name, level);
   }
 
-  bool contains(const std::string &ending) {
-    return contains(log_output, ending);
+  bool contains(const std::string &ending, std::chrono::seconds timeout = std::chrono::seconds(3)) {
+    return contains(log_output, ending, timeout);
   }
 
-  bool contains(const std::ostringstream &stream, const std::string &ending) {
-    std::string str = stream.str();
-    logger_->log_info("Looking for %s in log output.", ending);
-    return (ending.length() > 0 && str.find(ending) != std::string::npos);
+  bool contains(const std::ostringstream &stream, const std::string &ending, std::chrono::seconds timeout = std::chrono::seconds(3) ) {
+    if (ending.length() == 0) {
+      return false;
+    }
+    auto start = std::chrono::system_clock::now();
+    bool found = false;
+    bool timed_out = false;
+    do {
+      std::string str = stream.str();
+      found = (str.find(ending) != std::string::npos);
+      auto now = std::chrono::system_clock::now();
+      timed_out = std::chrono::duration_cast<std::chrono::milliseconds>(now - start) >
+                  std::chrono::duration_cast<std::chrono::milliseconds>(timeout);
+      if(!found && !timed_out) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(200));
+      }
+    } while (!found && !timed_out);
+
+    logger_->log_info("%s %s in log output.", found ? "Successfully found" : "Failed to find", ending);
+    return found;
   }
 
   void reset() {

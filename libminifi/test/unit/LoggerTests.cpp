@@ -69,7 +69,7 @@ TEST_CASE("Test log Levels change", "[ttl5]") {
   LogTestController::getInstance().setOff<logging::Logger>();
   logger->log_error("hello %s", "world");
 
-  REQUIRE(false == LogTestController::getInstance().contains("[org::apache::nifi::minifi::core::logging::Logger] [error] hello world"));
+  REQUIRE(false == LogTestController::getInstance().contains("[org::apache::nifi::minifi::core::logging::Logger] [error] hello world", std::chrono::seconds(0)));
   LogTestController::getInstance().reset();
 }
 
