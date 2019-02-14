@@ -40,8 +40,9 @@ class TailFile : public core::Processor {
   /*!
    * Create a new processor
    */
-  explicit TailFile(std::string name,  utils::Identifier uuid = utils::Identifier())
+  explicit TailFile(std::string name, utils::Identifier uuid = utils::Identifier())
       : core::Processor(name, uuid),
+        _currentTailFilePosition(0),
         logger_(logging::LoggerFactory<TailFile>::getLogger()) {
     _stateRecovered = false;
   }
@@ -84,7 +85,7 @@ class TailFile : public core::Processor {
   // State related to the tailed file
   std::string _currentTailFileName;
   // Delimiter for the data incoming from the tailed file.
-  std::string _delimiter;
+  std::string delimiter_;
   // determine if state is recovered;
   bool _stateRecovered;
   uint64_t _currentTailFilePosition;
@@ -102,11 +103,11 @@ class TailFile : public core::Processor {
 };
 
 REGISTER_RESOURCE(TailFile, "\"Tails\" a file, or a list of files, ingesting data from the file as it is written to the file. The file is expected to be textual."
-    " Data is ingested only when a new line is encountered (carriage return or new-line character or combination). If the file to tail is periodically \"rolled over\","
-    " as is generally the case with log files, an optional Rolling Filename Pattern can be used to retrieve data from files that have rolled over, even if the rollover"
-    " occurred while NiFi was not running (provided that the data still exists upon restart of NiFi). It is generally advisable to set the Run Schedule to a few seconds,"
-    " rather than running with the default value of 0 secs, as this Processor will consume a lot of resources if scheduled very aggressively. At this time, this Processor"
-    " does not support ingesting files that have been compressed when 'rolled over'.");
+                  " Data is ingested only when a new line is encountered (carriage return or new-line character or combination). If the file to tail is periodically \"rolled over\","
+                  " as is generally the case with log files, an optional Rolling Filename Pattern can be used to retrieve data from files that have rolled over, even if the rollover"
+                  " occurred while NiFi was not running (provided that the data still exists upon restart of NiFi). It is generally advisable to set the Run Schedule to a few seconds,"
+                  " rather than running with the default value of 0 secs, as this Processor will consume a lot of resources if scheduled very aggressively. At this time, this Processor"
+                  " does not support ingesting files that have been compressed when 'rolled over'.");
 
 // Matched File Item for Roll over check
 typedef struct {

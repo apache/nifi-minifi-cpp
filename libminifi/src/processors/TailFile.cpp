@@ -86,7 +86,7 @@ void TailFile::onSchedule(core::ProcessContext *context, core::ProcessSessionFac
   std::string value;
 
   if (context->getProperty(Delimiter.getName(), value)) {
-    _delimiter = value;
+    delimiter_ = value;
   }
 }
 
@@ -277,6 +277,7 @@ void TailFile::onTrigger(core::ProcessContext *context, core::ProcessSession *se
   std::string fullPath = fileLocation + "/" + _currentTailFileName;
   struct stat statbuf;
 
+  logger_->log_debug("Tailing file %s", fullPath);
   if (stat(fullPath.c_str(), &statbuf) == 0) {
     if ((uint64_t) statbuf.st_size <= this->_currentTailFilePosition) {
       // there are no new input for the current tail file
@@ -287,14 +288,36 @@ void TailFile::onTrigger(core::ProcessContext *context, core::ProcessSession *se
     std::string baseName = _currentTailFileName.substr(0, found);
     std::string extension = _currentTailFileName.substr(found + 1);
 
-    if (!this->_delimiter.empty()) {
-      char delim = this->_delimiter.c_str()[0];
+    if (!delimiter_.empty()) {
+      char delim = delimiter_.c_str()[0];
+      if (delim == '\\') {
+        if (delimiter_.size() > 1) {
+          switch (delimiter_.c_str()[1]) {
+            case 'r':
+              delim = '\r';
+              break;
+            case 't':
+              delim = '\t';
+              break;
+            case 'n':
+              delim = '\n';
+              break;
+            case '\\':
+              delim = '\\';
+              break;
+            default:
+              // previous behavior
+              break;
+          }
+        }
+      }
+      logger_->log_debug("Looking for delimiter 0x%X", delim);
       std::vector<std::shared_ptr<FlowFileRecord>> flowFiles;
       session->import(fullPath, flowFiles, true, this->_currentTailFilePosition, delim);
-      logger_->log_info("%ll flowfiles were received from TailFile input", flowFiles.size());
+      logger_->log_info("%u flowfiles were received from TailFile input", flowFiles.size());
 
       for (auto ffr : flowFiles) {
-        logger_->log_info("TailFile %s for %llu bytes", _currentTailFileName, ffr->getSize());
+        logger_->log_info("TailFile %s for %u bytes", _currentTailFileName, ffr->getSize());
         std::string logName = baseName + "." + std::to_string(_currentTailFilePosition) + "-" + std::to_string(_currentTailFilePosition + ffr->getSize()) + "." + extension;
         ffr->updateKeyedAttribute(PATH, fileLocation);
         ffr->addKeyedAttribute(ABSOLUTE_PATH, fullPath);

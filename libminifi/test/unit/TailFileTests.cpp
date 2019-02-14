@@ -70,7 +70,7 @@ TEST_CASE("TailFileWithDelimiter", "[tailfiletest1]") {
   std::set<provenance::ProvenanceEventRecord*> records = plan->getProvenanceRecords();
   std::shared_ptr<core::FlowFile> record = plan->getCurrentFlowFile();
   REQUIRE(record == nullptr);
-  REQUIRE(records.size() == 4);
+  REQUIRE(records.size() == 2);
 
   LogTestController::getInstance().reset();
 

@@ -545,12 +545,17 @@ void ProcessSession::import(std::string source, std::vector<std::shared_ptr<Flow
           throw Exception(FILE_OPERATION_EXCEPTION, "File Import Error");
         }
       }
-      while (input.good()) {
+      while (input.good() && !input.eof()) {
         bool invalidWrite = false;
-        flowFile = std::static_pointer_cast<FlowFileRecord>(create());
-        claim = std::make_shared<ResourceClaim>(process_context_->getContentRepository());
         uint64_t startTime = getTimeMillis();
         input.getline(charBuffer.data(), size, inputDelimiter);
+
+        if (input.eof() || input.fail()) {
+          logger_->log_trace("Finished reading input %s", source);
+          break;
+        }
+        flowFile = std::static_pointer_cast<FlowFileRecord>(create());
+        claim = std::make_shared<ResourceClaim>(process_context_->getContentRepository());
 
         size_t bufsize = strlen(charBuffer.data());
         std::shared_ptr<io::BaseStream> stream = process_context_->getContentRepository()->write(claim);
@@ -560,7 +565,7 @@ void ProcessSession::import(std::string source, std::vector<std::shared_ptr<Flow
           return;
         }
 
-        if (input) {
+        if (input.good()) {
           if (stream->write(reinterpret_cast<uint8_t*>(charBuffer.data()), bufsize) < 0) {
             invalidWrite = true;
             break;
@@ -582,7 +587,7 @@ void ProcessSession::import(std::string source, std::vector<std::shared_ptr<Flow
           }
           flowFile->setResourceClaim(claim);
           claim->increaseFlowFileRecordOwnedCount();
-          logger_->log_debug("Import offset %llu length %llu into content %s for FlowFile UUID %s", flowFile->getOffset(), flowFile->getSize(), flowFile->getResourceClaim()->getContentFullPath(),
+          logger_->log_debug("Import offset %u length %u into content %s for FlowFile UUID %s", flowFile->getOffset(), flowFile->getSize(), flowFile->getResourceClaim()->getContentFullPath(),
                              flowFile->getUUIDStr());
           stream->closeStream();
           std::string details = process_context_->getProcessorNode()->getName() + " modify flow record content " + flowFile->getUUIDStr();
@@ -596,6 +601,7 @@ void ProcessSession::import(std::string source, std::vector<std::shared_ptr<Flow
         }
       }
       input.close();
+      logger_->log_trace("Closed input %s, keeping source ? %i", source, keepSource);
       if (!keepSource)
         std::remove(source.c_str());
     } else {
@@ -729,7 +735,7 @@ void ProcessSession::commit() {
         }
       } else {
         // Can not find relationship for the flow
-        throw Exception(PROCESS_SESSION_EXCEPTION, "Can not find the transfer relationship for the flow");
+        throw Exception(PROCESS_SESSION_EXCEPTION, "Can not find the transfer relationship for the flow " + record->getUUIDStr());
       }
     }
 
@@ -774,7 +780,7 @@ void ProcessSession::commit() {
         }
       } else {
         // Can not find relationship for the flow
-        throw Exception(PROCESS_SESSION_EXCEPTION, "Can not find the transfer relationship for the flow");
+        throw Exception(PROCESS_SESSION_EXCEPTION, "Can not find the transfer relationship for the flow " + record->getUUIDStr());
       }
     }
 
