@@ -36,6 +36,7 @@
 class TestHarness : public IntegrationBase {
  public:
   TestHarness() {
+    log_entry_found = false;
   }
 
   void testSetup() {
@@ -47,10 +48,16 @@ class TestHarness : public IntegrationBase {
   }
 
   void runAssertions() {
-    assert(LogTestController::getInstance().contains("key:route_check_attr value:good"));
+    assert(log_entry_found);
+  }
+
+  void waitToVerifyProcessor() {
+    // This test takes a while to complete -> wait at most 10 secs
+    log_entry_found = LogTestController::getInstance().contains("key:route_check_attr value:good", std::chrono::seconds(10));
   }
 
  protected:
+  bool log_entry_found;
 };
 
 int main(int argc, char **argv) {
