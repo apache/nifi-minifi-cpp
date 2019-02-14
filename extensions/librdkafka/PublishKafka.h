@@ -99,6 +99,7 @@ public:
   static core::Property KerberosServiceName;
   static core::Property KerberosPrincipal;
   static core::Property KerberosKeytabPath;
+  static core::Property MessageKeyField;
 
   // Supported Relationships
   static core::Relationship Failure;

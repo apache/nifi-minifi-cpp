@@ -56,6 +56,8 @@ core::Property PublishKafka::SecurityPrivateKeyPassWord("Security Pass Phrase", 
 core::Property PublishKafka::KerberosServiceName("Kerberos Service Name", "Kerberos Service Name", "");
 core::Property PublishKafka::KerberosPrincipal("Kerberos Principal", "Keberos Principal", "");
 core::Property PublishKafka::KerberosKeytabPath("Kerberos Keytab Path", "The path to the location on the local filesystem where the kerberos keytab is located. Read permission on the file is required.", "");
+core::Property PublishKafka::MessageKeyField("Message Key Field", "The name of a field in the Input Records that should be used as the Key for the Kafka message.\n"
+                                                                  "Supports Expression Language: true (will be evaluated using flow file attributes)", "");
 core::Relationship PublishKafka::Success("success", "Any FlowFile that is successfully sent to Kafka will be routed to this Relationship");
 core::Relationship PublishKafka::Failure("failure", "Any FlowFile that cannot be sent to Kafka will be routed to this Relationship");
 
@@ -306,11 +308,13 @@ void PublishKafka::onTrigger(const std::shared_ptr<core::ProcessContext> &contex
     return;
   }
 
-  std::string kafkaKey = flowFile->getUUIDStr();;
-  std::string value;
-
-  if (flowFile->getAttribute(KAFKA_KEY_ATTRIBUTE, value))
-    kafkaKey = value;
+  std::string kafkaKey;
+  kafkaKey = "";
+  if (context->getDynamicProperty(MessageKeyField, kafkaKey, flowFile) && !kafkaKey.empty()) {
+    logger_->log_debug("PublishKafka: Message Key Field [%s]", kafkaKey);
+  } else {
+    kafkaKey = flowFile->getUUIDStr();
+  }
 
   PublishKafka::ReadCallback callback(max_seg_size_, kafkaKey, rkt_, rk_, flowFile, attributeNameRegex);
   session->read(flowFile, &callback);
