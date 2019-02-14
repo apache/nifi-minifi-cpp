@@ -42,13 +42,17 @@ class ProcessorController : public StateController {
 
   virtual ~ProcessorController();
 
-  virtual std::string getComponentName() const{
+  virtual std::string getComponentName() const {
     return processor_->getName();
   }
 
-  virtual std::string getComponentUUID() const{
-      return processor_->getUUIDStr();
-    }
+  virtual std::string getComponentUUID() const {
+    return processor_->getUUIDStr();
+  }
+
+  std::shared_ptr<core::Processor> getProcessor() {
+    return processor_;
+  }
   /**
    * Start the client
    */

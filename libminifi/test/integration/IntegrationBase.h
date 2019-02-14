@@ -62,6 +62,10 @@ class IntegrationBase {
 
   }
 
+  virtual void updateProperties(std::shared_ptr<minifi::FlowController> fc) {
+
+  }
+
   void configureSecurity();
   std::shared_ptr<minifi::Configure> configuration;
   uint64_t wait_time_;
@@ -116,8 +120,8 @@ void IntegrationBase::run(std::string test_file_location) {
 
   std::shared_ptr<minifi::FlowController> controller = std::make_shared<minifi::FlowController>(test_repo, test_flow_repo, configuration, std::move(yaml_ptr), content_repo, DEFAULT_ROOT_GROUP_NAME,
                                                                                                 true);
-
   controller->load();
+  updateProperties(controller);
   controller->start();
   waitToVerifyProcessor();
 
