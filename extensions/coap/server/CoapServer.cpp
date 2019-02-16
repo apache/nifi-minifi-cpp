@@ -26,7 +26,7 @@ namespace minifi {
 namespace coap {
 
 
-std::map<coap_resource_t*, std::function<CoAPResponse(CoAPQuery)>> CoapServer::functions_;
+std::map<coap_resource_t*, std::function<CoapResponse(CoapQuery)>> CoapServer::functions_;
 CoapServer::~CoapServer() {
   running_ = false;
   future.get();

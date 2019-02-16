@@ -86,7 +86,7 @@ CoapPDU *create_connection(uint8_t type, const char * const server, const char *
   pdu->session->max_retransmit = 1;
   pdu->optlist = NULL;
 
-  // add the URI option to the options lsit
+  // add the URI option to the options list
   coap_insert_optlist(&pdu->optlist, coap_new_optlist(COAP_OPTION_URI_PATH, uri.path.length, uri.path.s));
 
   // next, create the PDU.

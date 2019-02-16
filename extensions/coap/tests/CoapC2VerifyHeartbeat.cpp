@@ -126,8 +126,8 @@ class VerifyCoAPServer : public CoapIntegrationBase {
 
     server = std::unique_ptr<minifi::coap::CoapServer>(new minifi::coap::CoapServer("127.0.0.1", std::stoi(port) + 2));
 
-    server->add_endpoint(minifi::coap::METHOD::POST, [](minifi::coap::CoAPQuery)->minifi::coap::CoAPResponse {
-      minifi::coap::CoAPResponse response(205,0x00,0);
+    server->add_endpoint(minifi::coap::METHOD::POST, [](minifi::coap::CoapQuery)->minifi::coap::CoapResponse {
+      minifi::coap::CoapResponse response(205,0x00,0);
       return response;
 
     });
@@ -135,14 +135,14 @@ class VerifyCoAPServer : public CoapIntegrationBase {
     {
       // valid response version 3, 0 ops
       uint8_t *data = new uint8_t[5] { 0x00, 0x03, 0x00, 0x01, 0x00 };
-      minifi::coap::CoAPResponse response(205, std::unique_ptr<uint8_t>(data), 5);
+      minifi::coap::CoapResponse response(205, std::unique_ptr<uint8_t>(data), 5);
       responses.enqueue(std::move(response));
     }
 
     {
       // valid response
       uint8_t *data = new uint8_t[5] { 0x00, 0x03, 0x00, 0x00, 0x00 };
-      minifi::coap::CoAPResponse response(205, std::unique_ptr<uint8_t>(data), 5);
+      minifi::coap::CoapResponse response(205, std::unique_ptr<uint8_t>(data), 5);
       responses.enqueue(std::move(response));
     }
 
@@ -159,18 +159,18 @@ class VerifyCoAPServer : public CoapIntegrationBase {
 
       uint8_t *data = new uint8_t[ stream.getSize() ];
       memcpy(data,stream.getBuffer(), stream.getSize() );
-      minifi::coap::CoAPResponse response(205, std::unique_ptr<uint8_t>(data), stream.getSize());
+      minifi::coap::CoapResponse response(205, std::unique_ptr<uint8_t>(data), stream.getSize());
       responses.enqueue(std::move(response));
     }
 
-    server->add_endpoint("heartbeat", minifi::coap::METHOD::POST, [&](minifi::coap::CoAPQuery)-> minifi::coap::CoAPResponse {
+    server->add_endpoint("heartbeat", minifi::coap::METHOD::POST, [&](minifi::coap::CoapQuery)-> minifi::coap::CoapResponse {
       if (responses.size_approx() > 0) {
-        minifi::coap::CoAPResponse resp(500,0,0);;
+        minifi::coap::CoapResponse resp(500,0,0);;
         responses.try_dequeue(resp);
         return resp;
       }
       else {
-        minifi::coap::CoAPResponse response(500,0,0);
+        minifi::coap::CoapResponse response(500,0,0);
         return response;
       }
 
@@ -188,7 +188,7 @@ class VerifyCoAPServer : public CoapIntegrationBase {
   }
 
  protected:
-  moodycamel::ConcurrentQueue<minifi::coap::CoAPResponse> responses;
+  moodycamel::ConcurrentQueue<minifi::coap::CoapResponse> responses;
   std::unique_ptr<minifi::coap::CoapServer> server;
   bool isSecure;
   char *dir;

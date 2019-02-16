@@ -272,6 +272,8 @@ add_disabled_option PYTHON_ENABLED ${FALSE} "ENABLE_PYTHON"
 add_dependency PYTHON_ENABLED "python"
 
 add_disabled_option COAP_ENABLED ${FALSE} "ENABLE_COAP"
+add_dependency COAP_ENABLED "automake"
+add_dependency COAP_ENABLED "libtool"
 
 TESTS_DISABLED=${FALSE}
 add_disabled_option SQLITE_ENABLED ${FALSE} "ENABLE_SQLITE"

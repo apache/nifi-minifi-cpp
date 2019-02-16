@@ -69,6 +69,8 @@ build_deps(){
             INSTALLED+=("libpython3-dev")
           elif [ "$FOUND_VALUE" = "lua" ]; then
             INSTALLED+=("liblua5.1-0-dev")
+          elif [ "$FOUND_VALUE" = "automake" ]; then
+            INSTALLED+=("automake")
           elif [ "$FOUND_VALUE" = "gpsd" ]; then
             INSTALLED+=("libgps-dev")
           elif [ "$FOUND_VALUE" = "libarchive" ]; then
