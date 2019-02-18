@@ -25,6 +25,7 @@
 #include <ExtractText.h>
 #include <GetFile.h>
 #include <PutFile.h>
+#include <UpdateAttribute.h>
 #include <LogAttribute.h>
 
 namespace expression = org::apache::nifi::minifi::expression;
@@ -176,8 +177,13 @@ TEST_CASE("GetFile PutFile dynamic attribute", "[expressionLanguageTestGetFilePu
   LogTestController::getInstance().setTrace<processors::GetFile>();
   LogTestController::getInstance().setTrace<processors::PutFile>();
   LogTestController::getInstance().setTrace<processors::LogAttribute>();
+  LogTestController::getInstance().setTrace<processors::UpdateAttribute>();
 
-  auto plan = testController.createPlan();
+  auto conf = std::make_shared<minifi::Configure>();
+
+  conf->set("nifi.my.own.property", "custom_value");
+
+  auto plan = testController.createPlan(conf);
   auto repo = std::make_shared<TestRepository>();
 
   std::string in_dir("/tmp/gt.XXXXXX");
@@ -203,6 +209,12 @@ TEST_CASE("GetFile PutFile dynamic attribute", "[expressionLanguageTestGetFilePu
       get_file,
       processors::GetFile::KeepSourceFile.getName(),
       "false");
+  auto update = plan->addProcessor(
+      "UpdateAttribute",
+      "UpdateAttribute",
+      core::Relationship("success", "description"),
+      true);
+  update->setDynamicProperty("prop_attr", "${'nifi.my.own.property'}_added");
   plan->addProcessor(
       "LogAttribute",
       "LogAttribute",
@@ -246,6 +258,7 @@ TEST_CASE("GetFile PutFile dynamic attribute", "[expressionLanguageTestGetFilePu
   }
 
   plan->runNextProcessor();  // GetFile
+  plan->runNextProcessor();  // Update
   plan->runNextProcessor();  // Log
   plan->runNextProcessor();  // ExtractText
   plan->runNextProcessor();  // Log
@@ -258,6 +271,8 @@ TEST_CASE("GetFile PutFile dynamic attribute", "[expressionLanguageTestGetFilePu
     output_str << out_file_stream.rdbuf();
     REQUIRE("extracted_attr" == output_str.str());
   }
+
+  REQUIRE(LogTestController::getInstance().contains("key:prop_attr value:custom_value_added"));
 }
 
 TEST_CASE("Substring 2 arg", "[expressionLanguageSubstring2]") {  // NOLINT

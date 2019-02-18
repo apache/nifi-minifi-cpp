@@ -249,8 +249,10 @@ class TestController {
     flow_version_ = std::make_shared<minifi::state::response::FlowVersion>("test", "test", "test");
   }
 
-  std::shared_ptr<TestPlan> createPlan() {
-    std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::Configure>();
+  std::shared_ptr<TestPlan> createPlan(std::shared_ptr<minifi::Configure> configuration = nullptr) {
+    if(configuration == nullptr) {
+      configuration = std::make_shared<minifi::Configure>();
+    }
     std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
 
     content_repo->initialize(configuration);

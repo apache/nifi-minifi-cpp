@@ -69,9 +69,13 @@ Expression make_dynamic_attr(const std::string &attribute_id) {
     const auto cur_flow_file = params.flow_file.lock();
     if (cur_flow_file && cur_flow_file->getAttribute(attribute_id, result)) {
       return Value(result);
-    } else {
-      return Value();
+    } else if (attribute_id.rfind("nifi.", 0) == 0) {
+      const auto config = params.configuration.lock();
+      if (config && config->get(attribute_id, result)) {
+        return Value(result);
+      }
     }
+    return Value();
   });
 }
 
