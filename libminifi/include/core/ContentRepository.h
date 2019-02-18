@@ -108,6 +108,10 @@ class ContentRepository : public StreamManager<minifi::ResourceClaim> {
     }
   }
 
+  virtual std::weak_ptr<Configure> getConfig(){
+    return configuration_;
+  }
+
  protected:
 
   std::string directory_;
@@ -116,6 +120,7 @@ class ContentRepository : public StreamManager<minifi::ResourceClaim> {
 
   std::map<std::string, uint32_t> count_map_;
 
+  std::weak_ptr<Configure> configuration_;
 };
 
 } /* namespace core */

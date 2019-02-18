@@ -34,7 +34,10 @@ bool ProcessContext::getProperty(const Property &property, std::string &value, c
     expressions_.emplace(name, expression::compile(expression_str));
   }
 
-  value = expressions_[name]( { flow_file }).asString();
+  minifi::expression::Parameters p(flow_file);
+  p.configuration = content_repo_->getConfig();
+
+  value = expressions_[name]( p ).asString();
   return true;
 }
 
@@ -50,7 +53,10 @@ bool ProcessContext::getDynamicProperty(const Property &property, std::string &v
     dynamic_property_expressions_.emplace(name, expression::compile(expression_str));
   }
 
-  value = dynamic_property_expressions_[name]( { flow_file }).asString();
+  minifi::expression::Parameters p(flow_file);
+  p.configuration = content_repo_->getConfig();
+
+  value = dynamic_property_expressions_[name]( p ).asString();
   return true;
 }
 
