@@ -35,6 +35,7 @@ namespace repository {
 const char *VolatileContentRepository::minimal_locking = "minimal.locking";
 
 bool VolatileContentRepository::initialize(const std::shared_ptr<Configure> &configure) {
+  configuration_ = configure;
   VolatileRepository::initialize(configure);
   resource_claim_comparator_ = [](std::shared_ptr<minifi::ResourceClaim> lhsPtr, std::shared_ptr<minifi::ResourceClaim> rhsPtr) {
     if (lhsPtr == nullptr || rhsPtr == nullptr) {

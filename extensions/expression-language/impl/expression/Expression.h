@@ -45,9 +45,14 @@ namespace nifi {
 namespace minifi {
 namespace expression {
 
-typedef struct {
+struct Parameters {
   std::weak_ptr<core::FlowFile> flow_file;
-} Parameters;
+  std::weak_ptr<minifi::Configure> configuration;
+  Parameters(std::shared_ptr<core::FlowFile> ff = nullptr) {
+    flow_file = ff;
+  }
+
+};
 
 class Expression;
 
