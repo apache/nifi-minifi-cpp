@@ -27,6 +27,7 @@
 #include "core/cstream.h"
 
 #include "api/nanofi.h"
+#include "core/log.h"
 
 static const char *HandShakePropertyStr[MAX_HANDSHAKE_PROPERTY] = {
 /**
@@ -200,7 +201,7 @@ int handShake(struct CRawSiteToSiteClient * client) {
 
   switch (code) {
     case PROPERTIES_OK:
-      //client->logger_->log_debug("Site2Site HandShake Completed");
+      logc(debug, "%s", "Site2Site HandShake Completed");
       client->peer_state_ = HANDSHAKED;
       return 0;
     case PORT_NOT_IN_VALID_STATE:
@@ -214,12 +215,12 @@ int handShake(struct CRawSiteToSiteClient * client) {
       break;
     // Unknown error
     default:
-      //client->logger_->log_error("HandShake Failed because of unknown respond code %d", code);
+      logc(err, "HandShake Failed because of unknown respond code %d", code);
       return -1;
   }
 
   // All known error cases handled here
-  //client->logger_->log_error("Site2Site HandShake Failed because destination port, %s, is %s", client->port_id_str_, error);
+  logc(err, "Site2Site HandShake Failed because destination port, %s, is %s", client->port_id_str_, error);
   return -2;
 }
 
@@ -286,7 +287,7 @@ int bootstrap(struct CRawSiteToSiteClient * client) {
   tearDown(client);
 
   if (establish(client) ==0 && handShake(client) == 0 && negotiateCodec(client) == 0) {
-    //client->logger_->log_debug("Site to Site ready for data transaction");
+    logc(debug, "%s", "Site to Site ready for data transaction");
     return 0;
   } else {
     tearDown(client);
@@ -338,19 +339,21 @@ CTransaction* createTransaction(struct CRawSiteToSiteClient * client, TransferDi
     switch (code) {
       case MORE_DATA:
         dataAvailable = 1;
-        //client->logger_->log_trace("Site2Site peer indicates that data is available");
+        logc(trace, "%s", "Site2Site peer indicates that data is available");
+        break;
       case NO_MORE_DATA:
         dataAvailable = 0;
-        //client->logger_->log_trace("Site2Site peer indicates that no data is available");
+        logc(trace, "%s", "Site2Site peer indicates that no data is available");
+        break;
       default:
-        //client->logger_->log_warn("Site2Site got unexpected response %d when asking for data", code);
+        logc(warn, "Site2Site got unexpected response %d when asking for data", code);
         return NULL;
     }
     transaction = (CTransaction*)malloc(1* sizeof(CTransaction));
     InitTransaction(transaction, direction, client->peer_->stream_);
     addTransaction(client, transaction);
     setDataAvailable(transaction, dataAvailable);
-    //client->logger_->log_trace("Site2Site create transaction %s", getUUIDStr(transaction));
+    logc(trace, "Site2Site create transaction %s", getUUIDStr(transaction));
     return transaction;
   } else {
     ret = writeRequestType(client, SEND_FLOWFILES);
@@ -361,7 +364,7 @@ CTransaction* createTransaction(struct CRawSiteToSiteClient * client, TransferDi
       transaction = (CTransaction*)malloc(1* sizeof(CTransaction));
       InitTransaction(transaction, direction, client->peer_->stream_);
       addTransaction(client, transaction);
-      //client->logger_->log_trace("Site2Site create transaction %s", getUUIDStr(transaction));
+      logc(trace, "Site2Site create transaction %s", getUUIDStr(transaction));
       return transaction;
     }
   }
@@ -405,7 +408,7 @@ int transmitPayload(struct CRawSiteToSiteClient * client, const char * payload, 
     tearDown(client);
     return resp;
   }
-  //logging::LOG_INFO(logger_) << "Site2Site transaction " << transactionID << " sent bytes length" << payload.length();
+  logc(info, "Site2Site transaction %s sent bytes length %lu", transactionID, strlen(payload));
 
 
   int ret = confirm(client, transactionID);
@@ -447,7 +450,7 @@ int complete(struct CRawSiteToSiteClient * client, const char * transactionID) {
       transaction->_state = TRANSACTION_COMPLETED;
       return 0;
     } else {
-      //client->logger_->log_debug("Site2Site transaction %s send finished", transactionID);
+      logc(debug, "Site2Site transaction %s send finished", transactionID);
       if(writeResponse(client, TRANSACTION_FINISHED, "Finished") <= 0) {
         return -1;
       } else {
@@ -476,11 +479,11 @@ int complete(struct CRawSiteToSiteClient * client, const char * transactionID) {
     }
 
     if (code == TRANSACTION_FINISHED) {
-      //client->logger_->log_info("Site2Site transaction %s peer finished transaction", transactionID);
+      logc(debug, "Site2Site transaction %s peer finished transaction", transactionID);
       transaction->_state = TRANSACTION_COMPLETED;
       return 0;
     } else {
-      //client->logger_->log_warn("Site2Site transaction %s peer unknown respond code %d", transactionID, code);
+      logc(warn, "Site2Site transaction %s peer unknown respond code %d", transactionID, code);
       return -1;
     }
   }
@@ -525,7 +528,7 @@ int confirm(struct CRawSiteToSiteClient * client, const char * transactionID) {
     char crc[40];
     sprintf(crc, "%lld", crcValue);
 
-    //client->logger_->log_debug("Site2Site Send confirm with CRC %d to transaction %s", crcValue, transactionID);
+    logc(debug, "Site2Site Send confirm with CRC %lld to transaction %s", crcValue, transactionID);
     if (writeResponse(client, CONFIRM_TRANSACTION, crc) <= 0) {
       return -1;
     }
@@ -549,18 +552,18 @@ int confirm(struct CRawSiteToSiteClient * client, const char * transactionID) {
     }
 
     if (code == CONFIRM_TRANSACTION) {
-      //client->logger_->log_debug("Site2Site transaction %s peer confirm transaction", transactionID);
+      logc(debug, "Site2Site transaction %s peer confirm transaction", transactionID);
       transaction->_state = TRANSACTION_CONFIRMED;
       return 0;
     } else if (code == BAD_CHECKSUM) {
-      //client->logger_->log_debug("Site2Site transaction %s peer indicate bad checksum", transactionID);
+      logc(debug, "Site2Site transaction %s peer indicate bad checksum", transactionID);
       return -1;
     } else {
-      //client->logger_->log_debug("Site2Site transaction %s peer unknown response code %d", transactionID, code);
+      logc(debug, "Site2Site transaction %s peer unknown response code %d", transactionID, code);
       return -1;
     }
   } else {
-    //client->logger_->log_debug("Site2Site Send FINISH TRANSACTION for transaction %s", transactionID);
+    logc(debug, "Site2Site Send FINISH TRANSACTION for transaction %s", transactionID);
     if (writeResponse(client, FINISH_TRANSACTION, "FINISH_TRANSACTION") <= 0) {
       return -1;
     }
@@ -585,8 +588,7 @@ int confirm(struct CRawSiteToSiteClient * client, const char * transactionID) {
 
     // we've sent a FINISH_TRANSACTION. Now we'll wait for the peer to send a 'Confirm Transaction' response
     if (code == CONFIRM_TRANSACTION) {
-      /*client->logger_->log_debug("Site2Site transaction %s peer confirm transaction with CRC %s", transactionID,
-                                 message);*/
+      logc(debug, "Site2Site transaction %s peer confirm transaction with CRC %s", transactionID, client->description_buffer);
 
       if (client->_currentVersion > 3) {
         int64_t crcValue = getCRC(transaction);
@@ -595,14 +597,14 @@ int confirm(struct CRawSiteToSiteClient * client, const char * transactionID) {
         sprintf(crc, "%lld", crcValue);
 
         if (strcmp(client->description_buffer, crc) == 0) {
-          //client->logger_->log_debug("Site2Site transaction %s CRC matched", transactionID);
+          logc(debug, "Site2Site transaction %s CRC matched", transactionID);
           if(writeResponse(client, CONFIRM_TRANSACTION, "CONFIRM_TRANSACTION") <= 0) {
             return -1;
           }
           transaction->_state = TRANSACTION_CONFIRMED;
           return 0;
         } else {
-          //client->logger_->log_debug("Site2Site transaction %s CRC not matched %s", transactionID, crc);
+          logc(warn, "Site2Site transaction %s CRC not matched %s", transactionID, crc);
           writeResponse(client, BAD_CHECKSUM, "BAD_CHECKSUM");
           return -1;
         }
@@ -613,7 +615,7 @@ int confirm(struct CRawSiteToSiteClient * client, const char * transactionID) {
       transaction->_state = TRANSACTION_CONFIRMED;
       return 0;
     } else {
-      //client->logger_->log_debug("Site2Site transaction %s peer unknown respond code %d", transactionID, code);
+      logc(debug, "Site2Site transaction %s peer unknown respond code %d", transactionID, code);
       return -1;
     }
   }
@@ -635,12 +637,12 @@ int confirm(struct CRawSiteToSiteClient * client, const char * transactionID) {
     }
 
     if (getState(transaction) != TRANSACTION_STARTED && getState(transaction) != DATA_EXCHANGED) {
-      //logger_->log_warn("Site2Site transaction %s is not at started or exchanged state", transactionID);
+      logc(warn, "Site2Site transaction %s is not at started or exchanged state", transactionID);
       return -1;
     }
 
     if (getDirection(transaction) != SEND) {
-      //logger_->log_warn("Site2Site transaction %s direction is wrong", transactionID);
+      logc(warn, "Site2Site transaction %s direction is wrong", transactionID);
       return -1;
     }
 
@@ -693,7 +695,7 @@ int confirm(struct CRawSiteToSiteClient * client, const char * transactionID) {
         }
         ret = write_uint64t(transaction, len);
         if (ret != 8) {
-          //logger_->log_debug("ret != 8");
+          logc(debug, "ret != 8");
           return -1;
         }
         writeData(transaction, content_buf, len);
@@ -709,7 +711,7 @@ int confirm(struct CRawSiteToSiteClient * client, const char * transactionID) {
 
       ret = writeData(transaction, (uint8_t *)(packet->payload_), len);
       if (ret != (int64_t)len) {
-        //logger_->log_debug("ret != len");
+        logc(debug, "ret != len");
         return -1;
       }
     }
@@ -719,8 +721,8 @@ int confirm(struct CRawSiteToSiteClient * client, const char * transactionID) {
     transaction->_state = DATA_EXCHANGED;
     transaction->_bytes += len;
 
-    /*logging::LOG_INFO(logger_) << "Site to Site transaction " << transactionID << " sent flow " << transaction->total_transfers_
-                               << "flow records, with total size " << transaction->_bytes; */
+    logc(info, "Site to Site transaction %s sent flow %d flow records, with total size %llu", transactionID,
+        transaction->total_transfers_, transaction->_bytes);
 
     return 0;
   }
@@ -752,7 +754,7 @@ int readResponse(struct CRawSiteToSiteClient* client, RespondCode *code) {
   RespondCodeContext *resCode = getRespondCodeContext(*code);
 
   if (resCode == NULL) {
-    // Not a valid respond code
+    logc(err, "Received invalid response code: %u", thirdByte);
     return -1;
   }
   return 3;
@@ -869,6 +871,7 @@ int initiateResourceNegotiation(struct CRawSiteToSiteClient* client) {
 
   switch (statusCode) {
     case RESOURCE_OK:
+      logc(info, "Resource negotiation completed successfully. Using version: %u", client->_currentVersion);
       return 0;
     case DIFFERENT_RESOURCE_VERSION:
       ret = read_uint32_t(&serverVersion, client->peer_->stream_);
@@ -884,10 +887,13 @@ int initiateResourceNegotiation(struct CRawSiteToSiteClient* client) {
           return initiateResourceNegotiation(client);
         }
       }
+      logc(err, "Server version %u not supported", serverVersion);
       return -2;
     case NEGOTIATED_ABORT:
+      logc(err, "%s", "Server aborted negotiation");
       return -2;
     default:
+      logc(err, "Received invalid status code: %u", statusCode);
       return -1;
   }
 }
@@ -923,9 +929,9 @@ int initiateCodecResourceNegotiation(struct CRawSiteToSiteClient* client) {
   uint32_t serverVersion;
   switch (statusCode) {
     case RESOURCE_OK:
+      logc(info, "Resource codec negotiation completed successfully. Using version: %u", client->_currentCodecVersion);
       return 0;
     case DIFFERENT_RESOURCE_VERSION:
-      //ret = client->peer_->read(serverVersion);
       ret = read_uint32_t(&serverVersion, client->peer_->stream_);
       if (ret <= 0) {
         return -1;
@@ -940,11 +946,14 @@ int initiateCodecResourceNegotiation(struct CRawSiteToSiteClient* client) {
           return initiateCodecResourceNegotiation(client);
         }
       }
+      logc(err, "Server codec version %u not supported", serverVersion);
       return -1;
     case NEGOTIATED_ABORT:
+      logc(err, "%s", "Server aborted codec negotiation");
       return -2;
     default:
-      return -2;
+      logc(err, "Received invalid status code: %u", statusCode);
+      return -1;
   }
 }
 
@@ -963,7 +972,6 @@ int negotiateCodec(struct CRawSiteToSiteClient* client) {
   }
 
   client->peer_state_ = READY;
-
   return 0;
 }
 

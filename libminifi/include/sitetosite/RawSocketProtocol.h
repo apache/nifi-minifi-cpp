@@ -178,9 +178,6 @@ class RawSiteToSiteClient : public sitetosite::SiteToSiteClient {
   virtual bool handShake();
 
  private:
-  /*
-  // Mutex for protection
-  std::mutex mutex_; */
   // Logger
   std::shared_ptr<logging::Logger> logger_;
   // Batch Count

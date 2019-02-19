@@ -52,11 +52,6 @@ struct SiteToSiteCPeer {
   uint16_t port_;
 
   enum Bool owns_socket_;
-
-  //io::NetworkInterface local_network_interface_;
-
-  // Logger
-  //std::shared_ptr<logging::Logger> logger_;
 };
 
 static const char * getURL(const struct SiteToSiteCPeer * peer) {
@@ -85,7 +80,7 @@ static void setHostName(struct SiteToSiteCPeer * peer, const char * hostname) {
   peer->host_[host_len] = '\0';
   peer->url_[host_len + 7] = ':';
   if(peer->port_ != 0) {
-    sprintf(peer->url_ + host_len + 8, "%d", peer->port_);
+    snprintf(peer->url_ + host_len + 8, 5, "%d", peer->port_);
   }
   return;
 }
@@ -94,10 +89,10 @@ static void setPort(struct SiteToSiteCPeer * peer, uint16_t port) {
   peer->port_ = port;
   if(peer->url_ != NULL) {
     int i;
-    for(i = 8; i < strlen(peer->url_); ++i) { //8 to begin searching for ':' after the "nifi://" suffix
+    for(i = strlen(peer->url_) -1; i >= 0; --i) { // look for the last ':' in the string
       if(peer->url_[i] == ':'){
         memset(peer->url_ + i + 1, 0, 6); // zero the port area  - the new port can be shorter
-        sprintf(peer->url_ + i + 1, "%d", peer->port_);
+        snprintf(peer->url_ + i + 1, 5, "%d", peer->port_);
       }
     }
   }

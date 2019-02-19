@@ -21,6 +21,7 @@
 #include <string.h>
 
 #include "api/nanofi.h"
+#include "core/log.h"
 #include "sitetosite/CPeer.h"
 #include "sitetosite/CRawSocketProtocol.h"
 
@@ -30,6 +31,8 @@ int main(int argc, char **argv) {
     printf("Error: must run ./transmit_payload <host> <port> <nifi port>\n");
     exit(1);
   }
+
+  set_log_level(info);
 
   char *host = argv[1];
   char *port_str = argv[2];

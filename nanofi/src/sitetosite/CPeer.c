@@ -20,10 +20,12 @@
 #include <stdio.h>
 #include <string.h>
 #include "sitetosite/CPeer.h"
+#include "core/log.h"
 
 
 int openPeer(struct SiteToSiteCPeer * peer) {
   if (peer->host_ == NULL || strlen(peer->host_) == 0) {
+    logc(err, "%s", "no valid host is specified");
     return -1;
   }
 
@@ -31,6 +33,7 @@ int openPeer(struct SiteToSiteCPeer * peer) {
   if(peer->stream_ == NULL && peer->owns_socket_ == True) {
     peer->stream_ = create_socket(peer->host_, peer->port_);
     if(peer->stream_ == NULL) {
+      logc(err, "%s", "failed to open socket");
       return -1;
     }
   }
@@ -49,15 +52,18 @@ int openPeer(struct SiteToSiteCPeer * peer) {
   } */
 
   if(open_stream(peer->stream_) != 0) {
+    logc(err, "%s", "failed to open stream");
     return -1;
   }
 
   uint16_t data_size = sizeof MAGIC_BYTES;
 
   if(write_buffer((uint8_t*)MAGIC_BYTES, data_size, peer->stream_) != data_size) {
+    logc(err, "%s", "failed to write buffer");
     return -1;
   }
 
+  logc(info, "%s", "successfully openned peer");
   return 0;
 }
 
