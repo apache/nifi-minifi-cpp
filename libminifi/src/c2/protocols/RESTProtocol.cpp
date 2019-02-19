@@ -43,7 +43,6 @@ const C2Payload RESTProtocol::parseJsonResponse(const C2Payload &payload, const 
   try {
     rapidjson::ParseResult ok = root.Parse(response.data(), response.size());
     if (ok) {
-
       std::string requested_operation = getOperation(payload);
 
       std::string identifier;
@@ -140,8 +139,6 @@ const C2Payload RESTProtocol::parseJsonResponse(const C2Payload &payload, const 
       return new_payload;
       // }
     }
-  } catch (const std::exception &e) {
-
   } catch (...) {
   }
   return C2Payload(payload.getOperation(), state::UpdateState::READ_COMPLETE, true);
