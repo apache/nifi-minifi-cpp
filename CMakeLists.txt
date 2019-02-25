@@ -29,6 +29,7 @@ option(USE_SYSTEM_OPENSSL "Instructs the build system to search for and use an S
 option(OPENSSL_OFF "Disables OpenSSL" OFF)
 option(ENABLE_OPS "Enable Operations/zlib Tools" ON)
 option(USE_SYSTEM_UUID "Instructs the build system to search for and use an UUID library available in the host system" OFF)
+option(ENABLE_JNI "Instructs the build system to enable the JNI extension" OFF)
 option(USE_SYSTEM_CURL "Instructs the build system to search for and use a cURL library available in the host system" ON)
 option(BUILD_SHARED_LIBS "Build yaml cpp shared lib" OFF)
 if (WIN32)
@@ -84,6 +85,10 @@ if(NOT WIN32)
 	  set(JEMALLOC_LIBRARIES jemalloc CACHE STRING "" FORCE)
 	  set(JEMALLOC_LIBRARY jemalloc CACHE STRING "" FORCE)
 	  set(JEMALLOC_LIBRARY jemalloc CACHE STRING "" FORCE)
+
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DENABLE_JNI")
+	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DENABLE_JNI")
+
 	endif()
 endif()
 
@@ -472,7 +477,6 @@ if(ENABLE_ALL OR ENABLE_MQTT)
         createExtension(MQTT-EXTENSIONS "MQTT EXTENSIONS" "This Enables MQTT functionality including PublishMQTT/ConsumeMQTT" "extensions/mqtt" "${TEST_DIR}/mqtt-tests" "TRUE" "thirdparty/paho.mqtt.c")
 endif()
 
-option(ENABLE_JNI "Instructs the build system to enable the JNI extension" OFF)
 if(ENABLE_ALL OR ENABLE_JNI)
 	createExtension(JNI-EXTENSION "JNI EXTENSIONS" "Enables JNI capabilities to support loading Java Classes." "extensions/jni" "${TEST_DIR}/jni-tests")
 endif()

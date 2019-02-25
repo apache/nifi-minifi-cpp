@@ -17,9 +17,6 @@
 #ifndef LIBMINIFI_INCLUDE_UTILS_FILEUTILS_H_
 #define LIBMINIFI_INCLUDE_UTILS_FILEUTILS_H_
 
-
-
-
 #include <sstream>
 #include <fstream>
 #ifdef BOOST_VERSION
@@ -52,6 +49,9 @@
 #include <string> // string
 #include <algorithm> // replace
 #endif
+
+#include "core/logging/LoggerConfiguration.h"
+#include "utils/StringUtils.h"
 
 namespace org {
 namespace apache {
@@ -92,49 +92,44 @@ class FileUtils {
     }
     return 0;
 #elif defined(WIN32)
-	  WIN32_FIND_DATA FindFileData;
-	  HANDLE hFind;
-	  DWORD Attributes;
-	  std::string str;
+    WIN32_FIND_DATA FindFileData;
+    HANDLE hFind;
+    DWORD Attributes;
+    std::string str;
 
-	  
-		std::stringstream pathstr;
-		pathstr << path << "\\.*";
-		str = pathstr.str();
+    std::stringstream pathstr;
+    pathstr << path << "\\.*";
+    str = pathstr.str();
 
-	  
-	  //List files
-	  hFind = FindFirstFile(str.c_str(), &FindFileData);
-	  if (hFind != INVALID_HANDLE_VALUE)
-	  {
-		  do {
-			  if (strcmp(FindFileData.cFileName, ".") != 0 && strcmp(FindFileData.cFileName, "..") != 0)
-			  {
-				  //Str append Example
+    //List files
+    hFind = FindFirstFile(str.c_str(), &FindFileData);
+    if (hFind != INVALID_HANDLE_VALUE)
+    {
+      do {
+        if (strcmp(FindFileData.cFileName, ".") != 0 && strcmp(FindFileData.cFileName, "..") != 0)
+        {
+          std::stringstream strs;
+          strs << path << "\\" << FindFileData.cFileName;
+          str = strs.str();
 
-				  std::stringstream strs;
-				  strs << path << "\\" << FindFileData.cFileName;
-				  str = strs.str();
+          Attributes = GetFileAttributes(str.c_str());
+          if (Attributes & FILE_ATTRIBUTE_DIRECTORY)
+          {
+            //is directory
+            delete_dir(str, delete_files_recursively);
+          }
+          else
+          {
+            remove(str.c_str());
+            //not directory
+          }
+        }
+      }while (FindNextFile(hFind, &FindFileData));
+      FindClose(hFind);
 
-				  //_tprintf (TEXT("File Found: %s\n"),str);
-				  Attributes = GetFileAttributes(str.c_str());
-				  if (Attributes & FILE_ATTRIBUTE_DIRECTORY)
-				  {
-					  //is directory
-					  delete_dir(str, delete_files_recursively);
-				  }
-				  else
-				  {
-					  remove(str.c_str());
-					  //not directory
-				  }
-			  }
-		  } while (FindNextFile(hFind, &FindFileData));
-		  FindClose(hFind);
-
-		  RemoveDirectory(path.c_str());
-	  }
-	  return 0;
+      RemoveDirectory(path.c_str());
+    }
+    return 0;
 #else
     DIR *current_directory = opendir(path.c_str());
     int r = -1;
@@ -202,11 +197,11 @@ class FileUtils {
 #ifdef WIN32
       _mkdir(path.c_str());
 #else
-	mkdir(path.c_str(), 0700);
+      mkdir(path.c_str(), 0700);
 #endif
-	return 0;
+      return 0;
     }
-	return -1;
+    return -1;
 #endif
   }
 
@@ -217,6 +212,87 @@ class FileUtils {
     std::ofstream dest(dest_path, std::ios::binary);
     dest << src.rdbuf();
     return 0;
+  }
+
+  static void addFilesMatchingExtension(const std::shared_ptr<logging::Logger> &logger, const std::string &originalPath, const std::string &extension, std::vector<std::string> &accruedFiles) {
+#ifndef WIN32
+
+    struct stat s;
+    if (stat(originalPath.c_str(), &s) == 0) {
+      if (s.st_mode & S_IFDIR) {
+        DIR *d;
+        d = opendir(originalPath.c_str());
+        if (!d) {
+          return;
+        }
+        // only perform a listing while we are not empty
+        logger->log_debug("Performing file listing on %s", originalPath);
+
+        struct dirent *entry;
+        entry = readdir(d);
+        while (entry != nullptr) {
+          std::string d_name = entry->d_name;
+          std::string path = originalPath + "/" + d_name;
+          struct stat statbuf { };
+          if (stat(path.c_str(), &statbuf) != 0) {
+            logger->log_warn("Failed to stat %s", path);
+            return;
+          }
+          if (S_ISDIR(statbuf.st_mode)) {
+            // if this is a directory
+            if (d_name != ".." && d_name != ".") {
+              addFilesMatchingExtension(logger, path, extension, accruedFiles);
+            }
+          } else {
+            if (utils::StringUtils::endsWith(path, extension)) {
+              logger->log_info("Adding %s to paths", path);
+              accruedFiles.push_back(path);
+            }
+          }
+          entry = readdir(d);
+        }
+        closedir(d);
+      } else if (s.st_mode & S_IFREG) {
+        if (utils::StringUtils::endsWith(originalPath, extension)) {
+          logger->log_info("Adding %s to paths", originalPath);
+          accruedFiles.push_back(originalPath);
+        }
+      } else {
+        logger->log_error("Could not stat", originalPath);
+      }
+
+    } else {
+      logger->log_error("Could not access %s", originalPath);
+    }
+#else
+    HANDLE hFind;
+    WIN32_FIND_DATA FindFileData;
+
+    std::string pathToSearch = originalPath + "\\*.nar";
+    if ((hFind = FindFirstFileA(pathToSearch.c_str(), &FindFileData)) != INVALID_HANDLE_VALUE) {
+      do {
+        struct stat statbuf {};
+
+        std::string path = originalPath + "\\" + FindFileData.cFileName;
+        logger->log_info("Adding %s to paths", path);
+        if (stat(path.c_str(), &statbuf) != 0) {
+          logger->log_warn("Failed to stat %s", path);
+          break;
+        }
+        logger->log_info("Adding %s to paths", path);
+        if (S_ISDIR(statbuf.st_mode)) {
+          addFilesMatchingExtension(logger, path, extension, accruedFiles);
+        }
+        else {
+          if (utils::StringUtils::endsWith(path, extension)) {
+            logger->log_info("Adding %s to paths", path);
+            accruedFiles.push_back(path);
+          }
+        }
+      }while (FindNextFileA(hFind, &FindFileData));
+      FindClose(hFind);
+    }
+#endif
   }
 
 };

@@ -24,6 +24,7 @@
 #include <memory>
 #include "jvm/JVMLoader.h"
 #include "jvm/JavaControllerService.h"
+#include "utils/file/FileUtils.h"
 #include "core/Core.h"
 #include "core/logging/LoggerConfiguration.h"
 
@@ -55,7 +56,7 @@ class JVMCreator : public minifi::core::CoreComponent {
     }
 
     for (const auto &path : pathOrFiles) {
-      addPath(classpaths_, path);
+      minifi::utils::file::FileUtils::addFilesMatchingExtension(logger_, path, ".jar", classpaths_);
     }
 
   }
@@ -75,9 +76,7 @@ class JVMCreator : public minifi::core::CoreComponent {
       }
 
       initializeJVM();
-
     }
-
     std::string nar_dir, nar_dep, nar_docs;
     if (loader_ && configuration->get("nifi.nar.directory", nar_dir) && configuration->get("nifi.nar.deploy.directory", nar_dep) && configuration->get("nifi.nar.docs.directory", nar_docs)) {
       std::shared_ptr<jni::controllers::JavaControllerService> servicer = std::make_shared<jni::controllers::JavaControllerService>("BaseService");
@@ -88,7 +87,6 @@ class JVMCreator : public minifi::core::CoreComponent {
       servicer->onEnable();
       loader_->setBaseServicer(servicer);
     }
-
   }
 
   void initializeJVM() {
@@ -102,8 +100,6 @@ class JVMCreator : public minifi::core::CoreComponent {
   std::vector<std::string> jvm_options_;
 
   std::vector<std::string> classpaths_;
-
-  void addPath(std::vector<std::string> &jarFiles, const std::string &originalPath);
 
   std::shared_ptr<logging::Logger> logger_;
 };

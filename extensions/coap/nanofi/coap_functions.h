@@ -116,7 +116,7 @@ void response_handler(struct coap_context_t *ctx, struct coap_session_t *session
  * @param dst destination pointer
  * @return 0 if sucess -1 otherwise
  */
-int resolve_address(const struct coap_str_const_t *server, struct sockaddr *dst);
+int resolve_address(const struct coap_str_const_t *server, struct sockaddr *destination);
 
 #ifdef __cplusplus
 }

@@ -79,7 +79,7 @@ void ExecuteJavaControllerService::onEnable() {
   java_servicer_ = std::static_pointer_cast<controllers::JavaControllerService>(serv_cs);
 
   if (!getProperty(NiFiControllerService.getName(), class_name_)) {
-    throw std::runtime_error("NiFi Processor must be defined");
+    throw std::runtime_error("NiFi Controller Service must be defined");
   }
 
   clazzInstance = java_servicer_->newInstance(class_name_);

@@ -476,9 +476,6 @@ class ProvenanceReporter {
   //
   // clear
   void clear() {
-    //for (auto it : _events) {
-  //    delete it;
-//    }
     _events.clear();
   }
   // commit

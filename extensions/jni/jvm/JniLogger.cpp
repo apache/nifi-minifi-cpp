@@ -33,6 +33,7 @@
 #include "core/Processor.h"
 #include "JniFlowFile.h"
 #include "../JavaException.h"
+#include "core/logging/Logger.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -40,23 +41,23 @@ extern "C" {
 
 jboolean Java_org_apache_nifi_processor_JniLogger_isWarnEnabled(JNIEnv *env, jobject obj) {
   minifi::jni::JniLogger *logger_ref = minifi::jni::JVMLoader::getPtr<minifi::jni::JniLogger>(env, obj);
-  return true;
+  return logger_ref->logger_reference_->should_log(core::logging::LOG_LEVEL::warn);
 }
 jboolean Java_org_apache_nifi_processor_JniLogger_isTraceEnabled(JNIEnv *env, jobject obj) {
   minifi::jni::JniLogger *logger_ref = minifi::jni::JVMLoader::getPtr<minifi::jni::JniLogger>(env, obj);
-  return true;
+  return logger_ref->logger_reference_->should_log(core::logging::LOG_LEVEL::trace);
 }
 jboolean Java_org_apache_nifi_processor_JniLogger_isInfoEnabled(JNIEnv *env, jobject obj) {
   minifi::jni::JniLogger *logger_ref = minifi::jni::JVMLoader::getPtr<minifi::jni::JniLogger>(env, obj);
-  return true;
+  return logger_ref->logger_reference_->should_log(core::logging::LOG_LEVEL::info);
 }
 jboolean Java_org_apache_nifi_processor_JniLogger_isErrorEnabled(JNIEnv *env, jobject obj) {
   minifi::jni::JniLogger *logger_ref = minifi::jni::JVMLoader::getPtr<minifi::jni::JniLogger>(env, obj);
-  return true;
+  return logger_ref->logger_reference_->should_log(core::logging::LOG_LEVEL::err);
 }
 jboolean Java_org_apache_nifi_processor_JniLogger_isDebugEnabled(JNIEnv *env, jobject obj) {
   minifi::jni::JniLogger *logger_ref = minifi::jni::JVMLoader::getPtr<minifi::jni::JniLogger>(env, obj);
-  return true;
+  return logger_ref->logger_reference_->should_log(core::logging::LOG_LEVEL::debug);
 }
 
 void Java_org_apache_nifi_processor_JniLogger_warn(JNIEnv *env, jobject obj, jstring msg) {

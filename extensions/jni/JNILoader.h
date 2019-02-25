@@ -46,10 +46,12 @@ class JNIFactory : public core::ObjectFactory {
    * @return class name for the processor.
    */
   virtual std::vector<std::string> getClassNames() {
-    std::vector<std::string> class_names;
-    class_names.push_back("ExecuteJavaClass");
-    class_names.push_back("JavaControllerService");
-    class_names.push_back("JVMCreator");
+    static std::vector<std::string> class_names;
+    if (class_names.empty()) {
+      class_names.push_back("ExecuteJavaClass");
+      class_names.push_back("JavaControllerService");
+      class_names.push_back("JVMCreator");
+    }
     return class_names;
   }
 

@@ -28,6 +28,7 @@
 #include "PyProcCreator.h"
 #include "agent/agent_version.h"
 #include "agent/build_description.h"
+#include "utils/file/FileUtils.h"
 
 namespace org {
 namespace apache {
@@ -56,7 +57,7 @@ class PythonCreator : public minifi::core::CoreComponent {
     }
 
     for (const auto &path : pathOrFiles) {
-      addPath(classpaths_, path);
+      utils::file::FileUtils::addFilesMatchingExtension(logger_, path, ".py", classpaths_);
     }
 
   }
@@ -125,8 +126,6 @@ class PythonCreator : public minifi::core::CoreComponent {
   }
 
   std::vector<std::string> classpaths_;
-
-  void addPath(std::vector<std::string> &jarFiles, const std::string &originalPath);
 
   std::shared_ptr<logging::Logger> logger_;
 };

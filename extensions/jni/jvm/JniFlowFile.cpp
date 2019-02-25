@@ -32,89 +32,75 @@
 #include "JVMLoader.h"
 #include "../JavaException.h"
 #include "JniReferenceObjects.h"
+#include "JavaDefs.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 jlong Java_org_apache_nifi_processor_JniFlowFile_getId(JNIEnv *env, jobject obj) {
 
-  minifi::jni::JniFlowFile *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniFlowFile>(env,obj);
+  minifi::jni::JniFlowFile *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniFlowFile>(env, obj);
 
   auto ff = ptr->get();
-  if (ff == nullptr) {
-    minifi::jni::ThrowJava(env, "Calling function on null flow file");
-  }
+  THROW_IF_NULL(ff, env, NO_FF_OBJECT);
   jlong id = ff->getId();
   return id;
 
 }
 jlong Java_org_apache_nifi_processor_JniFlowFile_getEntryDate(JNIEnv *env, jobject obj) {
-  minifi::jni::JniFlowFile *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniFlowFile>(env,obj);
+  minifi::jni::JniFlowFile *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniFlowFile>(env, obj);
 
   auto ff = ptr->get();
-  if (ff == nullptr) {
-    minifi::jni::ThrowJava(env, "Calling function on null flow file");
-  }
+  THROW_IF_NULL(ff, env, NO_FF_OBJECT);
   jlong entryDate = ff->getEntryDate();
   return entryDate;
 }
 jlong Java_org_apache_nifi_processor_JniFlowFile_getLineageStartDate(JNIEnv *env, jobject obj) {
-  minifi::jni::JniFlowFile *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniFlowFile>(env,obj);
+  minifi::jni::JniFlowFile *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniFlowFile>(env, obj);
 
   auto ff = ptr->get();
-  if (ff == nullptr) {
-    minifi::jni::ThrowJava(env, "Calling function on null flow file");
-  }
+  THROW_IF_NULL(ff, env, NO_FF_OBJECT);
   jlong val = ff->getlineageStartDate();
   return val;
 }
 jlong Java_org_apache_nifi_processor_JniFlowFile_getLineageStartIndex(JNIEnv *env, jobject obj) {
-  minifi::jni::JniFlowFile *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniFlowFile>(env,obj);
+  minifi::jni::JniFlowFile *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniFlowFile>(env, obj);
 
   auto ff = ptr->get();
-  if (ff == nullptr) {
-    minifi::jni::ThrowJava(env, "Calling function on null flow file");
-  }
+  THROW_IF_NULL(ff, env, NO_FF_OBJECT);
   jlong val = ff->getlineageStartDate();
   return val;
 }
 jlong Java_org_apache_nifi_processor_JniFlowFile_getLastQueueDatePrim(JNIEnv *env, jobject obj) {
-  minifi::jni::JniFlowFile *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniFlowFile>(env,obj);
+  minifi::jni::JniFlowFile *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniFlowFile>(env, obj);
 
   auto ff = ptr->get();
-  if (ff == nullptr) {
-    minifi::jni::ThrowJava(env, "Calling function on null flow file");
-  }
+  THROW_IF_NULL(ff, env, NO_FF_OBJECT);
   jlong val = 0;
   return val;
 }
 jlong Java_org_apache_nifi_processor_JniFlowFile_getQueueDateIndex(JNIEnv *env, jobject obj) {
-  minifi::jni::JniFlowFile *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniFlowFile>(env,obj);
+  minifi::jni::JniFlowFile *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniFlowFile>(env, obj);
 
   auto ff = ptr->get();
-  if (ff == nullptr) {
-    minifi::jni::ThrowJava(env, "Calling function on null flow file");
-  }
+  THROW_IF_NULL(ff, env, NO_FF_OBJECT);
   jlong val = 0;
   return val;
 }
 jboolean Java_org_apache_nifi_processor_JniFlowFile_isPenalized(JNIEnv *env, jobject obj) {
-  minifi::jni::JniFlowFile *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniFlowFile>(env,obj);
+  minifi::jni::JniFlowFile *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniFlowFile>(env, obj);
 
   auto ff = ptr->get();
-  if (ff == nullptr) {
-    minifi::jni::ThrowJava(env, "Calling function on null flow file");
-  }
+  THROW_IF_NULL(ff, env, NO_FF_OBJECT);
   jboolean val = ff->isPenalized();
   return val;
 }
 jstring Java_org_apache_nifi_processor_JniFlowFile_getAttribute(JNIEnv *env, jobject obj, jstring key) {
-  minifi::jni::JniFlowFile *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniFlowFile>(env,obj);
+  minifi::jni::JniFlowFile *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniFlowFile>(env, obj);
 
   auto ff = ptr->get();
-  if (ff == nullptr) {
-    minifi::jni::ThrowJava(env, "Calling function on null flow file");
-  }
+  THROW_IF_NULL(ff, env, NO_FF_OBJECT);
   const char *kstr = env->GetStringUTFChars(key, 0);
   std::string value;
   std::string keystr = kstr;
@@ -123,32 +109,28 @@ jstring Java_org_apache_nifi_processor_JniFlowFile_getAttribute(JNIEnv *env, job
   return env->NewStringUTF(value.c_str());
 }
 jlong Java_org_apache_nifi_processor_JniFlowFile_getSize(JNIEnv *env, jobject obj) {
-  minifi::jni::JniFlowFile *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniFlowFile>(env,obj);
+  minifi::jni::JniFlowFile *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniFlowFile>(env, obj);
   auto ff = ptr->get();
-  if (ff == nullptr) {
-    minifi::jni::ThrowJava(env, "Calling function on null flow file");
-  }
+  THROW_IF_NULL(ff, env, NO_FF_OBJECT);
   jlong val = ff->getSize();
   return val;
 }
 jstring Java_org_apache_nifi_processor_JniFlowFile_getUUIDStr(JNIEnv *env, jobject obj) {
-  minifi::jni::JniFlowFile *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniFlowFile>(env,obj);
+  minifi::jni::JniFlowFile *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniFlowFile>(env, obj);
 
   auto ff = ptr->get();
-  if (ff == nullptr) {
-    minifi::jni::ThrowJava(env, "Calling function on null flow file");
-  }
+  THROW_IF_NULL(ff, env, NO_FF_OBJECT);
   return env->NewStringUTF(ff->getUUIDStr().c_str());
 }
 
 jobject Java_org_apache_nifi_processor_JniFlowFile_getAttributes(JNIEnv *env, jobject obj) {
 
-  minifi::jni::JniFlowFile *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniFlowFile>(env,obj);
+  minifi::jni::JniFlowFile *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniFlowFile>(env, obj);
 
   auto ff = ptr->get();
   jclass mapClass = env->FindClass("java/util/HashMap");
-  if (mapClass == NULL) {
-    return NULL;
+  if (mapClass == nullptr) {
+    return nullptr;
   }
 
   jsize map_len = ff->getAttributes().size();

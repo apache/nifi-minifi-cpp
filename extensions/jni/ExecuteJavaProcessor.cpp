@@ -100,8 +100,6 @@ void ExecuteJavaProcessor::onSchedule(const std::shared_ptr<core::ProcessContext
 
   jni_logger_ref_.logger_reference_ = nifi_logger_;
 
-  std::string dir_name_;
-
   jni_logger_class_ = java_servicer_->loadClass("org/apache/nifi/processor/JniLogger");
 
   spn = java_servicer_->loadClass("org/apache/nifi/processor/JniProcessContext");

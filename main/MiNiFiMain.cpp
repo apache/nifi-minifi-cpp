@@ -29,7 +29,9 @@
 #include <Windows.h>
 #pragma comment(lib, "Ws2_32.lib")
 #pragma comment(lib, "legacy_stdio_definitions.lib")
-#pragma comment(lib, "jvm.lib")
+#ifdef ENABLE_JNI
+	#pragma comment(lib, "jvm.lib")
+#endif
 #include <direct.h>
 
 #endif

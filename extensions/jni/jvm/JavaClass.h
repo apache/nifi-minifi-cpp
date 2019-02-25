@@ -59,18 +59,17 @@ class JavaClass {
   explicit JavaClass(const std::string &name, jclass classref, JNIEnv* jenv)
       : name_(name) {
     class_ref_ = classref;
-//    class_ref_ = (jclass) jenv->NewGlobalRef(classref);
     cnstrctr = jenv->GetMethodID(class_ref_, "<init>", "()V");
   }
 
   ~JavaClass() {
   }
 
-  std::string getName() {
+  std::string getName() const {
     return name_;
   }
 
-  jclass getReference() {
+  jclass getReference() const {
     return class_ref_;
   }
 
@@ -111,21 +110,12 @@ class JavaClass {
   }
 
   void registerMethods(JNIEnv *env, JavaSignatures &signatures) {
-    JNINativeMethod *methods = signatures.getSignatures();
+    auto methods = signatures.getSignatures();
     env->RegisterNatives(class_ref_, methods, signatures.getSize());
     ThrowIf(env);
 
   }
-  /*
-   template<typename ... Args>
-   void callVoidMethod(jobject obj, const std::string &methodName, const std::string &type, Args ... args) {
 
-   jmethodID method = getClassMethod(methodName, type);
-   ThrowIf(jenv_);
-   jenv_->CallVoidMethod(obj, method, std::forward<Args>(args)...);
-   ThrowIf(jenv_);
-   }
-   */
   template<typename ... Args>
   void callVoidMethod(JNIEnv* env, jobject obj, const std::string &methodName, const std::string &type, Args ... args) {
     jmethodID method = getClassMethod(env, methodName, type);

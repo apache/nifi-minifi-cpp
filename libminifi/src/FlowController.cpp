@@ -132,21 +132,21 @@ FlowController::FlowController(std::shared_ptr<core::Repository> provenance_repo
         adjustedFilename = configuration_filename_;
       }
     }
-    initializeJNI();
+    initializeExternalComponents();
     initializePaths(adjustedFilename);
   }
 }
 
-void FlowController::initializeJNI() {
+void FlowController::initializeExternalComponents() {
   auto jvmCreator = core::ClassLoader::getDefaultClassLoader().instantiate("JVMCreator", "JVMCreator");
   if (nullptr != jvmCreator) {
-    logger_->log_debug("Can create jni");
+    logger_->log_debug("JVMCreator loaded...");
     jvmCreator->configure(configuration_);
   }
 
   auto pythoncreator = core::ClassLoader::getDefaultClassLoader().instantiate("PythonCreator", "PythonCreator");
   if (nullptr != pythoncreator) {
-    logger_->log_debug("Can create python processors");
+    logger_->log_debug("PythonCreator loaded...");
     pythoncreator->configure(configuration_);
   }
 }

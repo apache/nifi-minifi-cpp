@@ -56,7 +56,7 @@ class JniFlowFile : public core::WeakReference {
 
   virtual void remove() override;
 
-  std::shared_ptr<core::FlowFile> get() {
+  std::shared_ptr<core::FlowFile> get() const {
     return ref_;
   }
 
@@ -64,12 +64,12 @@ class JniFlowFile : public core::WeakReference {
     return ff_object;
   }
 
-  bool operator==(const JniFlowFile &other) {
+  bool operator==(const JniFlowFile &other) const {
     // compare the pointers
     return ref_ == other.ref_;
   }
 
-  bool empty() {
+  bool empty() const {
     return removed;
   }
 
@@ -268,7 +268,7 @@ class JniSession : public core::WeakReference {
     input_streams_.push_back(in);
   }
 
-  std::shared_ptr<JavaServicer> getServicer() {
+  std::shared_ptr<JavaServicer> getServicer() const {
     return servicer_;
   }
 
@@ -279,7 +279,7 @@ class JniSession : public core::WeakReference {
     }
     return global_ff_objects_.empty();
   }
-  bool empty() {
+  bool empty() const {
     std::lock_guard<std::mutex> guard(session_mutex_);
     for (auto ff : global_ff_objects_) {
       if (!ff->empty())
@@ -290,7 +290,7 @@ class JniSession : public core::WeakReference {
 
  protected:
   bool removed_;
-  std::mutex session_mutex_;
+  mutable std::mutex session_mutex_;
   jobject session_instance_;
   std::shared_ptr<core::ProcessSession> session_;
   std::shared_ptr<JavaServicer> servicer_;
@@ -329,15 +329,15 @@ class JniSessionFactory : public core::WeakReference {
     }
   }
 
-  jobject getJavaReference() {
+  jobject getJavaReference() const {
     return java_object_;
   }
 
-  std::shared_ptr<JavaServicer> &getServicer() {
+  std::shared_ptr<JavaServicer> getServicer() const {
     return servicer_;
   }
 
-  std::shared_ptr<core::ProcessSessionFactory> &getFactory() {
+  std::shared_ptr<core::ProcessSessionFactory> getFactory() const {
     return factory_;
   }
 

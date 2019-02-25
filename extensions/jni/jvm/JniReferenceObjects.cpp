@@ -25,7 +25,6 @@ namespace minifi {
 namespace jni {
 
 void JniFlowFile::remove() {
-
   std::lock_guard<std::mutex> guard(session_mutex_);
   if (ff_object) {
     servicer_->attach()->DeleteGlobalRef(ff_object);

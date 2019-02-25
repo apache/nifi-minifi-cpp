@@ -98,7 +98,7 @@ void JavaControllerService::onEnable() {
   }
 
   for (const auto &path : pathOrFiles) {
-    addPath(classpaths_, path);
+    utils::file::FileUtils::addFilesMatchingExtension(logger_, path, ".jar", classpaths_);
   }
 
   loader = JVMLoader::getInstance();
@@ -107,87 +107,6 @@ void JavaControllerService::onEnable() {
 
   nar_loader_ = std::unique_ptr<NarClassLoader>(new NarClassLoader(shared_from_this(), narClassLoaderClazz, nardir, narscratch, nardocs));
 
-}
-
-void JavaControllerService::addPath(std::vector<std::string> &jarFiles, const std::string &originalPath) {
-#ifndef WIN32
-
-  struct stat s;
-  if (stat(originalPath.c_str(), &s) == 0) {
-    if (s.st_mode & S_IFDIR) {
-      DIR *d;
-      d = opendir(originalPath.c_str());
-      if (!d) {
-        return;
-      }
-      // only perform a listing while we are not empty
-      logger_->log_debug("Performing file listing on %s", originalPath);
-
-      struct dirent *entry;
-      entry = readdir(d);
-      while (entry != nullptr) {
-        std::string d_name = entry->d_name;
-        std::string path = originalPath + "/" + d_name;
-        struct stat statbuf { };
-        if (stat(path.c_str(), &statbuf) != 0) {
-          logger_->log_warn("Failed to stat %s", path);
-          return;
-        }
-        if (S_ISDIR(statbuf.st_mode)) {
-          // if this is a directory
-          if (strcmp(d_name.c_str(), "..") != 0 && strcmp(d_name.c_str(), ".") != 0) {
-            addPath(jarFiles, path);
-          }
-        } else {
-          if (utils::StringUtils::endsWith(path, ".jar")) {
-            logger_->log_info("Adding %s to paths", path);
-            jarFiles.push_back(path);
-          }
-        }
-        entry = readdir(d);
-      }
-      closedir(d);
-    } else if (s.st_mode & S_IFREG) {
-      if (utils::StringUtils::endsWith(originalPath, ".jar")) {
-        logger_->log_info("Adding %s to paths", originalPath);
-        jarFiles.push_back(originalPath);
-      }
-    } else {
-      logger_->log_error("Could not stat", originalPath);
-    }
-
-  } else {
-    logger_->log_error("Could not access %s", originalPath);
-  }
-#else
-  HANDLE hFind;
-  WIN32_FIND_DATA FindFileData;
-
-  std::string pathToSearch = originalPath + "\\*.nar";
-  if ((hFind = FindFirstFileA(pathToSearch.c_str(), &FindFileData)) != INVALID_HANDLE_VALUE) {
-    do {
-      struct stat statbuf {};
-
-      std::string path = originalPath + "\\" + FindFileData.cFileName;
-      logger_->log_info("Adding %s to paths", path);
-      if (stat(path.c_str(), &statbuf) != 0) {
-        logger_->log_warn("Failed to stat %s", path);
-        break;
-      }
-      logger_->log_info("Adding %s to paths", path);
-      if (S_ISDIR(statbuf.st_mode)) {
-        addPath(jarFiles, path);
-      }
-      else {
-        if (utils::StringUtils::endsWith(path, ".jar")) {
-          logger_->log_info("Adding %s to paths", path);
-          jarFiles.push_back(path);
-        }
-      }
-    }while (FindNextFileA(hFind, &FindFileData));
-    FindClose(hFind);
-  }
-#endif
 }
 
 } /* namespace controllers */

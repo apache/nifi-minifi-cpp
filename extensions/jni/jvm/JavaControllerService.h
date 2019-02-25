@@ -138,7 +138,7 @@ class JavaControllerService : public core::controller::ControllerService, public
 
  protected:
 
-  void addPath(std::vector<std::string> &jarFiles, const std::string &dir);
+ // void addPath(std::vector<std::string> &jarFiles, const std::string &dir);
 
  private:
 

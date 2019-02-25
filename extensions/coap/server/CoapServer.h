@@ -112,7 +112,6 @@ class CoapServer : public core::Connectable {
         port_(port) {
     coap_startup();
     auto port_str = std::to_string(port_);
-    //coap_set_log_level(coap_log_t::LOG_DEBUG);
     server_ = create_server(hostname_.c_str(), port_str.c_str());
   }
 
@@ -135,7 +134,7 @@ class CoapServer : public core::Connectable {
   }
 
   void add_endpoint(const std::string &path, METHOD method, std::function<CoapResponse(CoapQuery)> functor) {
-    unsigned char mthd = 0;
+    unsigned char mthd = COAP_REQUEST_POST;
     switch (method) {
       case GET:
         mthd = COAP_REQUEST_GET;
@@ -161,7 +160,7 @@ class CoapServer : public core::Connectable {
   }
 
   void add_endpoint(METHOD method, std::function<CoapResponse(CoapQuery)> functor) {
-    unsigned char mthd = 0;
+    unsigned char mthd = COAP_REQUEST_POST;
     switch (method) {
       case GET:
         mthd = COAP_REQUEST_GET;

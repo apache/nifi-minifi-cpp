@@ -66,12 +66,12 @@ jobject Java_org_apache_nifi_processor_JniProcessSession_create(JNIEnv *env, job
 }
 
 jobject Java_org_apache_nifi_processor_JniProcessSession_readFlowFile(JNIEnv *env, jobject obj, jobject ff) {
-  if (obj == nullptr || ff == nullptr) {
-    minifi::jni::ThrowJava(env, "No flowfile to read");
+  if (obj == nullptr) {
     return nullptr;
   }
+  THROW_IF_NULL(ff, env, NO_FF_OBJECT);
   minifi::jni::JniSession *session = minifi::jni::JVMLoader::getPtr<minifi::jni::JniSession>(env, obj);
-  minifi::jni::JniFlowFile *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniFlowFile>(env,ff);
+  minifi::jni::JniFlowFile *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniFlowFile>(env, ff);
   if (ptr->get()) {
 
     auto jincls = minifi::jni::JVMLoader::getInstance()->load_class("org/apache/nifi/processor/JniInputStream", env);
@@ -100,7 +100,7 @@ jobject Java_org_apache_nifi_processor_JniProcessSession_readFlowFile(JNIEnv *en
 jint Java_org_apache_nifi_processor_JniInputStream_read(JNIEnv *env, jobject obj) {
   minifi::jni::JniInputStream *jin = minifi::jni::JVMLoader::getPtr<minifi::jni::JniInputStream>(env, obj);
   if (obj == nullptr) {
-    minifi::jni::ThrowJava(env, "No InputStream to read");
+    // this technically can't happen per JNI specs
     return -1;
   }
   char value = 0;
@@ -113,20 +113,21 @@ jint Java_org_apache_nifi_processor_JniInputStream_read(JNIEnv *env, jobject obj
 jint Java_org_apache_nifi_processor_JniInputStream_readWithOffset(JNIEnv *env, jobject obj, jbyteArray arr, jint offset, jint length) {
   minifi::jni::JniInputStream *jin = minifi::jni::JVMLoader::getPtr<minifi::jni::JniInputStream>(env, obj);
   if (obj == nullptr) {
-    minifi::jni::ThrowJava(env, "No InputStream to read");
+    // this technically can't happen per JNI specs
     return -1;
   }
   return jin->read(env, arr, (int) offset, (int) length);
 }
 
 jboolean Java_org_apache_nifi_processor_JniProcessSession_write(JNIEnv *env, jobject obj, jobject ff, jbyteArray byteArray) {
-  if (obj == nullptr || ff == nullptr || byteArray == nullptr) {
-    minifi::jni::ThrowJava(env, "No flowfile to write");
+  if (obj == nullptr) {
     return false;
   }
 
+  THROW_IF((ff == nullptr || byteArray == nullptr), env, "No flowfile to write");
+
   minifi::jni::JniSession *session = minifi::jni::JVMLoader::getPtr<minifi::jni::JniSession>(env, obj);
-  minifi::jni::JniFlowFile *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniFlowFile>(env,ff);
+  minifi::jni::JniFlowFile *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniFlowFile>(env, ff);
 
   if (ptr->get()) {
     jbyte* buffer = env->GetByteArrayElements(byteArray, 0);
@@ -136,7 +137,6 @@ jboolean Java_org_apache_nifi_processor_JniProcessSession_write(JNIEnv *env, job
     session->getSession()->write(ptr->get(), &outStream);
 
     env->ReleaseByteArrayElements(byteArray, buffer, 0);
-    // finished
 
     return true;
   }
@@ -146,12 +146,12 @@ jboolean Java_org_apache_nifi_processor_JniProcessSession_write(JNIEnv *env, job
 }
 
 jobject Java_org_apache_nifi_processor_JniProcessSession_clone(JNIEnv *env, jobject obj, jobject prevff) {
-  if (obj == nullptr || prevff == nullptr) {
-    minifi::jni::ThrowJava(env, "No flowfile to clone");
+  if (obj == nullptr) {
     return nullptr;
   }
+  THROW_IF_NULL(prevff, env, NO_FF_OBJECT);
   minifi::jni::JniSession *session = minifi::jni::JVMLoader::getPtr<minifi::jni::JniSession>(env, obj);
-  minifi::jni::JniFlowFile *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniFlowFile>(env,prevff);
+  minifi::jni::JniFlowFile *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniFlowFile>(env, prevff);
 
   if (ptr->get()) {
     auto ff = minifi::jni::JVMLoader::getInstance()->load_class("org/apache/nifi/processor/JniFlowFile", env);
@@ -159,8 +159,6 @@ jobject Java_org_apache_nifi_processor_JniProcessSession_clone(JNIEnv *env, jobj
     auto ff_instance = ff.newInstance(env);
 
     minifi::jni::ThrowIf(env);
-
-    //session->global_ff_objects_.push_back(ff_instance);
 
     auto flow_file = session->getSession()->clone(ptr->get());
 
@@ -217,12 +215,14 @@ jobject Java_org_apache_nifi_processor_JniProcessSession_get(JNIEnv *env, jobjec
 }
 
 jobject Java_org_apache_nifi_processor_JniProcessSession_putAttribute(JNIEnv *env, jobject obj, jobject ff, jstring key, jstring value) {
-  if (obj == nullptr || ff == nullptr) {
-    minifi::jni::ThrowJava(env, "No flowfile");
+  if (obj == nullptr) {
+    // does not mean an error should be thrown, rather we will let
+    // Java do its thing as this is a condition of GC most likely
     return nullptr;
   }
+  THROW_IF_NULL(ff, env, NO_FF_OBJECT);
   minifi::jni::JniSession *session = minifi::jni::JVMLoader::getPtr<minifi::jni::JniSession>(env, obj);
-  minifi::jni::JniFlowFile *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniFlowFile>(env,ff);
+  minifi::jni::JniFlowFile *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniFlowFile>(env, ff);
 
   if (ff == nullptr || key == nullptr || value == nullptr) {
     return nullptr;
@@ -241,17 +241,16 @@ jobject Java_org_apache_nifi_processor_JniProcessSession_putAttribute(JNIEnv *en
 }
 
 void Java_org_apache_nifi_processor_JniProcessSession_transfer(JNIEnv *env, jobject obj, jobject ff, jstring relationship) {
-  if (obj == nullptr || ff == nullptr) {
-    minifi::jni::ThrowJava(env, "No flowfile");
+  if (obj == nullptr) {
     return;
   }
+  THROW_IF_NULL(ff, env, NO_FF_OBJECT);
   minifi::jni::JniSession *session = minifi::jni::JVMLoader::getPtr<minifi::jni::JniSession>(env, obj);
-  minifi::jni::JniFlowFile *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniFlowFile>(env,ff);
+  minifi::jni::JniFlowFile *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniFlowFile>(env, ff);
   const char *relstr = env->GetStringUTFChars(relationship, 0);
   std::string relString = relstr;
   core::Relationship success(relString, "description");
   session->getSession()->transfer(ptr->get(), success);
-  //delete ptr;
   env->ReleaseStringUTFChars(relationship, relstr);
 }
 
@@ -271,12 +270,14 @@ jstring Java_org_apache_nifi_processor_JniProcessSession_getPropertyValue(JNIEnv
 }
 
 jobject Java_org_apache_nifi_processor_JniProcessSession_createWithParent(JNIEnv *env, jobject obj, jobject parent) {
-  if (obj == nullptr || parent == nullptr) {
-    minifi::jni::ThrowJava(env, "No flowfile to clone");
+  if (obj == nullptr) {
+    // does not mean an error should be thrown, rather we will let
+    // Java do its thing as this is a condition of GC most likely
     return nullptr;
   }
+  THROW_IF_NULL(parent, env, NO_FF_OBJECT);
   minifi::jni::JniSession *session = minifi::jni::JVMLoader::getPtr<minifi::jni::JniSession>(env, obj);
-  minifi::jni::JniFlowFile *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniFlowFile>(env,parent);
+  minifi::jni::JniFlowFile *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniFlowFile>(env, parent);
 
   if (ptr->get()) {
     auto ff = minifi::jni::JVMLoader::getInstance()->load_class("org/apache/nifi/processor/JniFlowFile", env);
@@ -304,7 +305,9 @@ jobject Java_org_apache_nifi_processor_JniProcessSession_createWithParent(JNIEnv
 
 void Java_org_apache_nifi_processor_JniProcessSession_commit(JNIEnv *env, jobject obj) {
   if (obj == nullptr) {
-    minifi::jni::ThrowJava(env, "No flowfile to clone");
+    // does not mean an error should be thrown, rather we will let
+    // Java do its thing as this is a condition of GC most likely
+    return;
   }
   minifi::jni::JniSession *session = minifi::jni::JVMLoader::getPtr<minifi::jni::JniSession>(env, obj);
   try {
@@ -320,7 +323,9 @@ void Java_org_apache_nifi_processor_JniProcessSession_commit(JNIEnv *env, jobjec
 
 void Java_org_apache_nifi_processor_JniProcessSession_rollback(JNIEnv *env, jobject obj) {
   if (obj == nullptr) {
-    minifi::jni::ThrowJava(env, "No flowfile to clone");
+    // does not mean an error should be thrown, rather we will let
+    // Java do its thing as this is a condition of GC most likely
+    return;
   }
   minifi::jni::JniSession *session = minifi::jni::JVMLoader::getPtr<minifi::jni::JniSession>(env, obj);
   session->getSession()->rollback();
@@ -328,7 +333,9 @@ void Java_org_apache_nifi_processor_JniProcessSession_rollback(JNIEnv *env, jobj
 
 jobject Java_org_apache_nifi_processor_JniProcessSessionFactory_createSession(JNIEnv *env, jobject obj) {
   if (obj == nullptr) {
-    minifi::jni::ThrowJava(env, "No flowfile to clone");
+    // does not mean an error should be thrown, rather we will let
+    // Java do its thing as this is a condition of GC most likely
+    return nullptr;
   }
   minifi::jni::JniSessionFactory *sessionFactory = minifi::jni::JVMLoader::getPtr<minifi::jni::JniSessionFactory>(env, obj);
   auto session_class = minifi::jni::JVMLoader::getInstance()->load_class("org/apache/nifi/processor/JniProcessSession", env);
@@ -356,13 +363,14 @@ jobject Java_org_apache_nifi_processor_JniProcessSessionFactory_createSession(JN
 }
 
 void Java_org_apache_nifi_processor_JniProcessSession_remove(JNIEnv *env, jobject obj, jobject ff) {
-  if (obj == nullptr || ff == nullptr) {
-    minifi::jni::ThrowJava(env, "No flowfile to write");
+  if (obj == nullptr) {
+    // does not mean an error should be thrown, rather we will let
+    // Java do its thing as this is a condition of GC most likely
     return;
   }
-
+  THROW_IF_NULL(ff, env, NO_FF_OBJECT);
   minifi::jni::JniSession *session = minifi::jni::JVMLoader::getPtr<minifi::jni::JniSession>(env, obj);
-  minifi::jni::JniFlowFile *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniFlowFile>(env,ff);
+  minifi::jni::JniFlowFile *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniFlowFile>(env, ff);
 
   if (ptr->get()) {
     session->getSession()->remove(ptr->get());
@@ -371,13 +379,14 @@ void Java_org_apache_nifi_processor_JniProcessSession_remove(JNIEnv *env, jobjec
 }
 
 jobject Java_org_apache_nifi_processor_JniProcessSession_penalize(JNIEnv *env, jobject obj, jobject ff) {
-  if (obj == nullptr || ff == nullptr) {
-    minifi::jni::ThrowJava(env, "No flowfile to write");
+  if (obj == nullptr) {
+    // does not mean an error should be thrown, rather we will let
+    // Java do its thing as this is a condition of GC most likely
     return ff;
   }
-
+  THROW_IF_NULL(ff, env, NO_FF_OBJECT);
   minifi::jni::JniSession *session = minifi::jni::JVMLoader::getPtr<minifi::jni::JniSession>(env, obj);
-  minifi::jni::JniFlowFile *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniFlowFile>(env,ff);
+  minifi::jni::JniFlowFile *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniFlowFile>(env, ff);
 
   if (ptr->get()) {
     session->getSession()->penalize(ptr->get());
@@ -386,16 +395,16 @@ jobject Java_org_apache_nifi_processor_JniProcessSession_penalize(JNIEnv *env, j
 }
 
 jobject Java_org_apache_nifi_processor_JniProcessSession_removeAttribute(JNIEnv *env, jobject obj, jobject ff, jstring attr) {
-  if (obj == nullptr || ff == nullptr) {
-    minifi::jni::ThrowJava(env, "No flowfile to write");
+  if (obj == nullptr) {
+    // does not mean an error should be thrown, rather we will let
+    // Java do its thing as this is a condition of GC most likely
     return ff;
   }
-
+  THROW_IF_NULL(ff, env, NO_FF_OBJECT);
   minifi::jni::JniSession *session = minifi::jni::JVMLoader::getPtr<minifi::jni::JniSession>(env, obj);
-  minifi::jni::JniFlowFile *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniFlowFile>(env,ff);
+  minifi::jni::JniFlowFile *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniFlowFile>(env, ff);
 
   if (ptr->get()) {
-
     const char *attrStr = env->GetStringUTFChars(attr, 0);
     std::string attribute = attrStr;
     ptr->get()->removeAttribute(attribute);
@@ -405,12 +414,14 @@ jobject Java_org_apache_nifi_processor_JniProcessSession_removeAttribute(JNIEnv 
 }
 
 jobject Java_org_apache_nifi_processor_JniProcessSession_clonePortion(JNIEnv *env, jobject obj, jobject prevff, jlong offset, jlong size) {
-  if (obj == nullptr || prevff == nullptr) {
-    minifi::jni::ThrowJava(env, "No flowfile to clone");
+  if (obj == nullptr) {
+    // does not mean an error should be thrown, rather we will let
+    // Java do its thing as this is a condition of GC most likely
     return prevff;
   }
+  THROW_IF_NULL(prevff, env, NO_FF_OBJECT);
   minifi::jni::JniSession *session = minifi::jni::JVMLoader::getPtr<minifi::jni::JniSession>(env, obj);
-  minifi::jni::JniFlowFile *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniFlowFile>(env,prevff);
+  minifi::jni::JniFlowFile *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniFlowFile>(env, prevff);
 
   if (ptr->get()) {
     auto ff = minifi::jni::JVMLoader::getInstance()->load_class("org/apache/nifi/processor/JniFlowFile", env);
@@ -437,13 +448,14 @@ jobject Java_org_apache_nifi_processor_JniProcessSession_clonePortion(JNIEnv *en
 }
 
 jboolean Java_org_apache_nifi_processor_JniProcessSession_append(JNIEnv *env, jobject obj, jobject ff, jbyteArray byteArray) {
-  if (obj == nullptr || ff == nullptr || byteArray == nullptr) {
-    minifi::jni::ThrowJava(env, "No flowfile to write");
+  if (obj == nullptr) {
+    // does not mean an error should be thrown, rather we will let
+    // Java do its thing as this is a condition of GC most likely
     return false;
   }
-
+  THROW_IF((ff == nullptr || byteArray == nullptr), env, NO_FF_OBJECT);
   minifi::jni::JniSession *session = minifi::jni::JVMLoader::getPtr<minifi::jni::JniSession>(env, obj);
-  minifi::jni::JniFlowFile *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniFlowFile>(env,ff);
+  minifi::jni::JniFlowFile *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniFlowFile>(env, ff);
 
   if (ptr->get()) {
     jbyte* buffer = env->GetByteArrayElements(byteArray, 0);
@@ -453,7 +465,6 @@ jboolean Java_org_apache_nifi_processor_JniProcessSession_append(JNIEnv *env, jo
     session->getSession()->append(ptr->get(), &outStream);
 
     env->ReleaseByteArrayElements(byteArray, buffer, 0);
-    // finished
 
     return true;
   }

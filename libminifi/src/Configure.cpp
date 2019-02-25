@@ -59,6 +59,7 @@ const char *Configure::nifi_rest_api_password = "nifi.rest.api.password";
 const char *Configure::nifi_c2_file_watch = "nifi.c2.file.watch";
 const char *Configure::nifi_c2_flow_id = "nifi.c2.flow.id";
 const char *Configure::nifi_c2_flow_url = "nifi.c2.flow.url";
+const char *Configure::nifi_c2_flow_base_url = "nifi.c2.flow.base.url";
 
 } /* namespace minifi */
 } /* namespace nifi */

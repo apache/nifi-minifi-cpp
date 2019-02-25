@@ -33,7 +33,7 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-// LogAttribute Class1
+// LogAttribute Class
 class LogAttribute : public core::Processor {
  public:
   // Constructor

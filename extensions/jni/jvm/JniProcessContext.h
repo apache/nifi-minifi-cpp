@@ -33,17 +33,13 @@ namespace nifi {
 namespace minifi {
 namespace jni {
 
-class JniProcessContext {
- public:
+struct JniProcessContext {
   JniProcessContext()
       : nifi_processor_(nullptr),
         processor_(nullptr),
         context_(nullptr) {
   }
 
-  jclass getClass() {
-    return clazz_;
-  }
   jclass clazz_;
   jobject nifi_processor_;
   std::shared_ptr<core::Processor> processor_;

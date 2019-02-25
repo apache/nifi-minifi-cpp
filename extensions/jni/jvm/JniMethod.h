@@ -50,7 +50,7 @@ class JavaMethodSignature {
    * Returns the method name.
    * Const cast here to clean up the caller's interface ( and java would force the loss of const )
    */
-  const char *getName() const{
+  const char *getName() const {
     return name_.c_str();
   }
 
@@ -92,20 +92,20 @@ class JavaSignatures {
     methods_.emplace_back(std::move(signature));
   }
 
-  bool empty() {
+  bool empty() const {
     return methods_.empty() && size_ == 0;
   }
 
-  JNINativeMethod *getSignatures() {
+  const JNINativeMethod *getSignatures() const {
     std::lock_guard<std::mutex> lock(mutex_);
     if (method_ptr_ == nullptr || size_ != methods_.size()) {
-      method_ptr_ = std::unique_ptr<JNINativeMethod>(new JNINativeMethod[methods_.size()]);
+      method_ptr_ = std::unique_ptr<JNINativeMethod[]>(new JNINativeMethod[methods_.size()]);
       size_ = methods_.size();
       int i = 0;
       for (auto &mthd : methods_) {
-        method_ptr_.get()[i].fnPtr = const_cast<void*>(mthd.getPointer());
-        method_ptr_.get()[i].name = const_cast<char*>(mthd.getName());
-        method_ptr_.get()[i].signature = const_cast<char*>(mthd.getParameters());
+        method_ptr_[i].fnPtr = const_cast<void*>(mthd.getPointer());
+        method_ptr_[i].name = const_cast<char*>(mthd.getName());
+        method_ptr_[i].signature = const_cast<char*>(mthd.getParameters());
         i++;
       }
     }
@@ -117,7 +117,7 @@ class JavaSignatures {
   }
  private:
   mutable std::mutex mutex_;
-  mutable std::unique_ptr<JNINativeMethod> method_ptr_;
+  mutable std::unique_ptr<JNINativeMethod[]> method_ptr_;
   mutable size_t size_;
   std::vector<JavaMethodSignature> methods_;
 };

@@ -44,6 +44,7 @@ jstring Java_org_apache_nifi_processor_JniProcessContext_getPropertyValue(JNIEnv
   std::string keystr = kstr;
   if (!context->context_->getProperty(keystr, value)) {
     if (!context->context_->getDynamicProperty(keystr, value)) {
+      env->ReleaseStringUTFChars(propertyName, kstr);
       return nullptr;
     }
   }

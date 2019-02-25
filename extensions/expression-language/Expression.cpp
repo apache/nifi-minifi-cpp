@@ -74,9 +74,6 @@ Expression make_dynamic_attr(const std::string &attribute_id) {
       if ( registry && registry->getConfigurationProperty( attribute_id , result) ) {
         return Value(result);
       }
-      else {
-        return Value();
-      }
     }
     return Value();
   });

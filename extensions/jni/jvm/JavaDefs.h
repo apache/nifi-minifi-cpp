@@ -16,34 +16,12 @@
  * limitations under the License.
  */
 
-#include "JVMCreator.h"
+#ifndef EXTENSIONS_JNI_JVM_JAVADEFS_H_
+#define EXTENSIONS_JNI_JVM_JAVADEFS_H_
 
-#ifndef WIN32
+#define EXCEPTION_CLASS "java/lang/Exception"
 
-#include <sys/types.h>
-#include <dirent.h>
-#endif
+#define NO_FF_OBJECT "Calling function on null flow file"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace jni {
 
-#ifndef S_ISDIR
-#define S_ISDIR(mode)  (((mode) & S_IFMT) == S_IFDIR)
-#endif
-#ifndef R_OK
-#define R_OK    4       /* Test for read permission.  */
-#define W_OK    2       /* Test for write permission.  */
-#define F_OK    0       /* Test for existence.  */
-#endif
-JVMCreator::~JVMCreator() {
-
-}
-
-} /* namespace jni */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+#endif /* EXTENSIONS_JNI_JVM_JAVADEFS_H_ */

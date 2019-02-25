@@ -53,6 +53,7 @@ class ClassRegistrar {
 
   bool registerClasses(JNIEnv *env, std::shared_ptr<controllers::JavaControllerService> servicer, const std::string &className, JavaSignatures &signatures) {
     std::lock_guard<std::mutex> lock(mutex_);
+    // load class before insertion.
     if (registered_classes_.find(className) == std::end(registered_classes_)) {
       auto cls = servicer->loadClass(className);
       cls.registerMethods(env, signatures);
@@ -63,7 +64,6 @@ class ClassRegistrar {
   }
  private:
   ClassRegistrar() {
-
   }
 
   std::mutex mutex_;
@@ -99,7 +99,6 @@ class ExecuteJavaProcessor : public core::Processor {
   static core::Relationship Success;
 
   virtual void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
-
   virtual void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
   virtual void initialize() override;
   virtual void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
@@ -244,11 +243,9 @@ class ExecuteJavaProcessor : public core::Processor {
   }
 
   JniSessionFactory *setFactory(const std::shared_ptr<core::ProcessSessionFactory> &ptr, jobject obj) {
-
+    std::lock_guard<std::mutex> lock(local_mutex_);
     JniSessionFactory *factory = new JniSessionFactory(ptr, java_servicer_, obj);
-
     session_factories_.push_back(factory);
-
     return factory;
 
   }
@@ -258,8 +255,6 @@ class ExecuteJavaProcessor : public core::Processor {
   JavaClass jni_logger_class_;
 
   jobject logger_instance_;
-
-  //JniSessionFactory jniSessionFactory;
 
   std::mutex local_mutex_;
 

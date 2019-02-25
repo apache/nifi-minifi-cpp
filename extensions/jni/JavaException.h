@@ -26,6 +26,7 @@
 #include <string.h>
 #include "core/expect.h"
 #include <jni.h>
+#include "jvm/JavaDefs.h"
 
 namespace org {
 namespace apache {
@@ -89,14 +90,14 @@ static inline void ThrowIf(JNIEnv *env) {
   if (UNLIKELY(throwable != nullptr)) {  // we have faith maybe it won't happen!
     env->ExceptionClear();
     auto message = getMessage(env, throwable);
-    env->ThrowNew(env->FindClass("java/lang/Exception"), message.c_str());
+    env->ThrowNew(env->FindClass(EXCEPTION_CLASS), message.c_str());
     throw JavaException(message);
   }
 }
 
 static inline void ThrowJava(JNIEnv *env, const char *message) {
   env->ExceptionClear();
-  env->ThrowNew(env->FindClass("java/lang/Exception"), message);
+  env->ThrowNew(env->FindClass(EXCEPTION_CLASS), message);
 }
 
 } /* namespace jni */
@@ -104,4 +105,13 @@ static inline void ThrowJava(JNIEnv *env, const char *message) {
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
+
+/**
+ * MACROS can make code look worse and more difficult to develop -- but this is a simple
+ * if that has no contrary result path.
+ */
+#define THROW_IF_NULL(expr, env, message) if (UNLIKELY(expr == nullptr)) minifi::jni::ThrowJava(env,message)
+
+#define THROW_IF(expr, env, message) if (UNLIKELY(expr)) minifi::jni::ThrowJava(env,message)
+
 #endif

@@ -143,6 +143,11 @@ class JVMLoader {
 
     JNIEnv *env = lenv;
 
+    // when we do the lookup here we will be using a boostrap CL so we'll need
+    // to ensure class names are not in their canonical form. Since we want to
+    // support both we will do the transition from . to / and later on from
+    // / to . to normalize. Forcing all classes that enter this method
+    // to be a certain way isn't very defensible.
     std::string name = clazz_name;
     name = utils::StringUtils::replaceAll(name, ".", "/");
 
@@ -243,7 +248,6 @@ class JVMLoader {
    * in which the native pointer is stored in nativePtr.
    */
   static jfieldID getPtrField(const std::string &className, JNIEnv *env, jobject obj) {
-
     static std::string fn = "nativePtr", args = "J", lookup = "nativePtrJ";
     auto field = getClassMapping().getField(className, lookup);
     if (field != nullptr) {

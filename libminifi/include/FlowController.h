@@ -339,7 +339,7 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
   // function to load the flow file repo.
   void loadFlowRepo();
 
-  void initializeJNI();
+  void initializeExternalComponents();
 
   /**
    * Initializes flow controller paths.
