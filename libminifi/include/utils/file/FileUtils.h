@@ -32,6 +32,7 @@
 #pragma comment(lib, "Ws2_32.lib")
 #else
 #include <sys/stat.h>
+#include <sys/types.h>
 #include <dirent.h>
 #endif
 #endif
@@ -52,6 +53,11 @@
 
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/StringUtils.h"
+
+#ifndef S_ISDIR
+#define S_ISDIR(mode)  (((mode) & S_IFMT) == S_IFDIR)
+#endif
+
 
 namespace org {
 namespace apache {
@@ -268,7 +274,7 @@ class FileUtils {
     HANDLE hFind;
     WIN32_FIND_DATA FindFileData;
 
-    std::string pathToSearch = originalPath + "\\*.nar";
+    std::string pathToSearch = originalPath + "\\*" + extension;
     if ((hFind = FindFirstFileA(pathToSearch.c_str(), &FindFileData)) != INVALID_HANDLE_VALUE) {
       do {
         struct stat statbuf {};
