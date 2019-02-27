@@ -258,11 +258,11 @@ int16_t ControllerSocketProtocol::heartbeat(const C2Payload &payload) {
   if (server_socket_ == nullptr)
     return 0;
   const std::vector<C2ContentResponse> &content = payload.getContent();
-  for (const auto pc : payload.getNestedPayloads()) {
-    if (pc.getLabel() == "metrics") {
-      for (const auto metrics_payload : pc.getNestedPayloads()) {
-        if (metrics_payload.getLabel() == "QueueMetrics") {
-          for (const auto queue_metrics : metrics_payload.getNestedPayloads()) {
+  for (const auto &pc : payload.getNestedPayloads()) {
+    if (pc.getLabel() == "flowInfo" || pc.getLabel() == "metrics") {
+      for (const auto &metrics_payload : pc.getNestedPayloads()) {
+        if (metrics_payload.getLabel() == "QueueMetrics" || metrics_payload.getLabel() == "queues") {
+          for (const auto &queue_metrics : metrics_payload.getNestedPayloads()) {
             auto metric_content = queue_metrics.getContent();
             for (const auto &payload_content : queue_metrics.getContent()) {
               uint64_t size = 0;
