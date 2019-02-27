@@ -12,6 +12,7 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
+
 # Apache NiFi -  MiNiFi - C++ [![Linux/Mac Build Status](https://travis-ci.org/apache/nifi-minifi-cpp.svg?branch=master)](https://travis-ci.org/apache/nifi-minifi-cpp) [![Windows Build Status](https://ci.appveyor.com/api/projects/status/njagiyqmopexidsv/branch/master?svg=true)](https://ci.appveyor.com/project/ApacheSoftwareFoundation/nifi-minifi-cpp) 
 
 MiNiFi is a child project effort of Apache NiFi.  This repository is for a native implementation in C++.
@@ -51,37 +52,33 @@ A subset of the Apache NiFi [Expression Language](EXPRESSIONS.md) is supported.
 
 ### Processors
 
-MiNiFi - C++ supports the following processors:
+MiNiFi - C++ supports the following C++ processors:
 
-* [AppendHostInfo](PROCESSORS.md#appendhostinfo)
-* [ApplyTemplate](PROCESSORS.md#applytemplate)
-* [CompressContent](PROCESSORS.md#compresscontent)
-* [ConsumeMQTT](PROCESSORS.md#consumeMQTT)
-* [ExecuteProcess](PROCESSORS.md#executeprocess)
-* [ExecuteScript](PROCESSORS.md#executescript)
-* [ExecuteSQL](PROCESSORS.md#executesql)
-* [ExtractText](PROCESSORS.md#extracttext)
-* [FocusArchiveEntry](PROCESSORS.md#focusarchiveentry)
-* [GenerateFlowFile](PROCESSORS.md#generateflowfile)
-* [GetFile](PROCESSORS.md#getfile)
-* [GetUSBCamera](PROCESSORS.md#getusbcamera)
-* [InvokeHTTP](PROCESSORS.md#invokehttp)
-* [ListenHTTP](PROCESSORS.md#listenhttp)
-* [ListenSyslog](PROCESSORS.md#listensyslog)
-* [LogAttribute](PROCESSORS.md#logattribute)
-* [ManipulateArchive](PROCESSORS.md#manipulatearchive)
-* [MergeContent](PROCESSORS.md#mergecontent)
-* [PublishKafka](PROCESSORS.md#publishkafka)
-* [PublishMQTT](PROCESSORS.md#publishMQTT)
-* [PutFile](PROCESSORS.md#putfile)
-* [PutSQL](PROCESSORS.md#putsql)
-* [RouteOnAttribute](PROCESSORS.md#routeonattribute)
-* [TailFile](PROCESSORS.md#tailfile)
-* [TFApplyGraph](PROCESSORS.md#tfapplygraph)
-* [TFConvertImageToTensor](PROCESSORS.md#tfconvertimagetotensor)
-* [TFExtractTopLabels](PROCESSORS.md#tfextracttoplabels)
-* [UnfocusArchiveEntry](PROCESSORS.md#unfocusarchiveentry)
-* [UpdateAttribute](PROCESSORS.md#updateattribute)
+The following table lists the base set of processors.  
+
+| Extension Set        | Processors           |
+| ------------- |:-------------|
+| **Base**    | [AppendHostInfo](PROCESSORS.md#appendhostinfo)<br/>[ExecuteProcess](PROCESSORS.md#executeprocess)<br/>[ExtractText](PROCESSORS.md#extracttext)<br/> [GenerateFlowFile](PROCESSORS.md#generateflowfile)<br/>[GetFile](PROCESSORS.md#getfile)<br/>[GetTCP](PROCESSORS.md#gettcp)<br/>[HashContent](PROCESSORS.md#hashcontent)<br/>[LogAttribute](PROCESSORS.md#logattribute)<br/>[ListenSyslog](PROCESSORS.md#listensyslog)<br/>[PutFile](PROCESSORS.md#putfile)<br/>[RouteOnAttribute](PROCESSORS.md#routeonattribute)<br/>[TailFile](PROCESSORS.md#tailfile)<br/>[UpdateAttribute](PROCESSORS.md#updateattribute)<br/>[ListenHTTP](PROCESSORS.md#listenhttp) 
+
+The next table outlines CMAKE flags that correspond with MiNiFi extensions. Extensions that are enabled by default ( such as CURL ), can be disabled with the respective CMAKE flag on the command line. 
+
+Through JNI extensions you can run NiFi processors using NARs. The JNI extension set allows you to run these Java processors. MiNiFi C++ will favor C++ implementations over Java implements. In the case where a processor is implemented in either language, the one in C++ will be selected; however, will remain transparent to the consumer. 
+
+
+| Extension Set        | Processors           | CMAKE Flag  |
+| ------------- |:-------------| :-----|
+| Archive Extensions    | [ApplyTemplate](PROCESSORS.md#applytemplate)<br/>[CompressContent](PROCESSORS.md#compresscontent)<br/>[ManipulateArchive](PROCESSORS.md#manipulatearchive)<br/>[MergeContent](PROCESSORS.md#mergecontent)<br/>[FocusArchiveEntry](PROCESSORS.md#focusarchiveentry)<br/>[UnfocusArchiveEntry](PROCESSORS.md#unfocusarchiveentry)      |   -DBUILD_LIBARCHIVE=ON |
+| CURL | [InvokeHTTP](PROCESSORS.md#invokehttp)      |    -DDISABLE_CURL=ON  |
+| GPS | GetGPS      |    -DENABLE_GPS=ON  |
+| Kafka | [PublishKafka](PROCESSORS.md#publishkafka)      |    -DENABLE_LIBRDKAFKA=ON  |
+| JNI | **NiFi Processors**     |    -DENABLE_JNI=ON  |
+| MQTT | [ConsumeMQTT](PROCESSORS.md#consumeMQTT)<br/>[PublishMQTT](PROCESSORS.md#publishMQTT)     |    -DENABLE_MQTT=ON  |
+| PCAP | [CapturePacket](PROCESSORS.md#capturepacket)      |    -DENABLE_PCAP=ON  |
+| Scripting | [ExecuteScript](PROCESSORS.md#executescript)<br/>**Custom Python Processors**     |    -DDISABLE_SCRIPTING=ON  |
+| SQLLite | [ExecuteSQL](PROCESSORS.md#executesql)<br/>[PutSQL](PROCESSORS.md#putsql)      |    -DENABLE_SQLITE=ON  |
+| Tensorflow | [TFApplyGraph](PROCESSORS.md#tfapplygraph)<br/>[TFConvertImageToTensor](PROCESSORS.md#tfconvertimagetotensor)<br/>[TFExtractTopLabels](PROCESSORS.md#tfextracttoplabels)<br/>      |    -DENABLE_TENSORFLOW=ON  |
+| USB Camera | [GetUSBCamera](PROCESSORS.md#getusbcamera)     |    -DENABLE_USB_CAMERA=ON  |
+
 
 ## Caveats
 * 0.5.0 represents a GA-release. We follow semver so you can expect API and ABI compatibility within minor releases. See [semver's website](https://semver.org/) for more information
