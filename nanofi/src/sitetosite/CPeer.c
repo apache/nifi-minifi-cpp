@@ -1,6 +1,4 @@
 /**
- * @file Site2SitePeer.cpp
- * Site2SitePeer class implementation
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -24,15 +22,15 @@
 
 
 int openPeer(struct SiteToSiteCPeer * peer) {
-  if (peer->host_ == NULL || strlen(peer->host_) == 0) {
+  if (peer->_host == NULL || strlen(peer->_host) == 0) {
     logc(err, "%s", "no valid host is specified");
     return -1;
   }
 
   //In case there was no socket injected, let's create it
-  if(peer->stream_ == NULL && peer->owns_socket_ == True) {
-    peer->stream_ = create_socket(peer->host_, peer->port_);
-    if(peer->stream_ == NULL) {
+  if(peer->_stream == NULL && peer->_owns_resource == True) {
+    peer->_stream = create_socket(peer->_host, peer->_port);
+    if(peer->_stream == NULL) {
       logc(err, "%s", "failed to open socket");
       return -1;
     }
@@ -44,21 +42,16 @@ int openPeer(struct SiteToSiteCPeer * peer) {
    * previously by the socket preference.
    */
 
-  /*if (!peer->local_network_interface_.getInterface().empty()) {
-    auto socket = static_cast<io::Socket*>(stream_.get());
-    if (nullptr != socket) {
-      socket->setInterface(io::NetworkInterface(peer->local_network_interface_.getInterface(), nullptr));
-    }
-  } */
+  // TODO: support provided interface
 
-  if(open_stream(peer->stream_) != 0) {
+  if(open_stream(peer->_stream) != 0) {
     logc(err, "%s", "failed to open stream");
     return -1;
   }
 
   uint16_t data_size = sizeof MAGIC_BYTES;
 
-  if(write_buffer((uint8_t*)MAGIC_BYTES, data_size, peer->stream_) != data_size) {
+  if(write_buffer((uint8_t*)MAGIC_BYTES, data_size, peer->_stream) != data_size) {
     logc(err, "%s", "failed to write buffer");
     return -1;
   }
@@ -68,5 +61,5 @@ int openPeer(struct SiteToSiteCPeer * peer) {
 }
 
 void closePeer(struct SiteToSiteCPeer * peer) {
-  close_stream(peer->stream_);
+  close_stream(peer->_stream);
 }

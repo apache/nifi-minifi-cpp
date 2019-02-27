@@ -1,7 +1,4 @@
 /**
- * @file RawSiteToSiteClient.h
- * RawSiteToSiteClient class declaration
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -101,27 +98,30 @@ static RespondCodeContext *getRespondCodeContext(RespondCode code) {
 // RawSiteToSiteClient Class
 struct CRawSiteToSiteClient {
   // Batch Count
-  uint64_t _batchCount;
+  uint64_t _batch_count;
   // Batch Size
-  uint64_t _batchSize;
+  uint64_t _batch_size;
   // Batch Duration in msec
-  uint64_t _batchDuration;
+  uint64_t _batch_duration;
   // Timeout in msec
-  uint64_t _timeOut;
+  uint64_t _timeout;
 
   // commsIdentifier
   char _commsIdentifier[37];
 
   // Peer State
-  PeerState peer_state_;
+  PeerState _peer_state;
 
   // portIDStr
-  char port_id_str_[37];
+  char _port_id_str[37];
 
-  char description_buffer[DESCRIPTION_BUFFER_SIZE]; //should be big enough
+  char _description_buffer[DESCRIPTION_BUFFER_SIZE]; //should be big enough
 
   // Peer Connection
-  struct SiteToSiteCPeer* peer_;
+  struct SiteToSiteCPeer* _peer;
+
+  // Indicatates if _peer is owned by the client
+  enum Bool _owns_resource;
 
 
   CTransaction * _known_transactions;
@@ -141,42 +141,43 @@ struct CRawSiteToSiteClient {
 };
 
 static const char * getPortId(const struct CRawSiteToSiteClient * client) {
-  return client->port_id_str_;
+  return client->_port_id_str;
 }
 
 static void setPortId(struct CRawSiteToSiteClient * client, const char * id) {
-  strncpy(client->port_id_str_, id, 37);
-  client->port_id_str_[36] = '\0';
+  strncpy(client->_port_id_str, id, 37);
+  client->_port_id_str[36] = '\0';
   int i;
   for(i = 0; i < 37; i++){
-    client->port_id_str_[i] = tolower(client->port_id_str_[i]);
+    client->_port_id_str[i] = tolower(client->_port_id_str[i]);
   }
 }
 
 static void setBatchSize(struct CRawSiteToSiteClient *client, uint64_t size) {
-  client->_batchSize = size;
+  client->_batch_size = size;
 }
 
 static void setBatchCount(struct CRawSiteToSiteClient *client, uint64_t count) {
-  client->_batchCount = count;
+  client->_batch_count = count;
 }
 
 static void setBatchDuration(struct CRawSiteToSiteClient *client, uint64_t duration) {
-  client->_batchDuration = duration;
+  client->_batch_duration = duration;
 }
 
 static uint64_t getTimeOut(const struct CRawSiteToSiteClient *client) {
-  return client->_timeOut;
+  return client->_timeout;
 }
 
 static void initRawClient(struct CRawSiteToSiteClient *client, struct SiteToSiteCPeer * peer) {
-  client->peer_ = peer;
-  client->peer_state_ = IDLE;
-  client->_batchSize = 0;
-  client->_batchCount = 0;
-  client->_batchDuration = 0;
+  client->_owns_resource = False;
+  client->_peer = peer;
+  client->_peer_state = IDLE;
+  client->_batch_size = 0;
+  client->_batch_count = 0;
+  client->_batch_duration = 0;
   client->_batchSendNanos = 5000000000;  // 5 seconds
-  client->_timeOut = 30000;  // 30 seconds
+  client->_timeout = 30000;  // 30 seconds
   client->_supportedVersion[0] = 5;
   client->_supportedVersion[1] = 4;
   client->_supportedVersion[2] = 3;
@@ -188,7 +189,24 @@ static void initRawClient(struct CRawSiteToSiteClient *client, struct SiteToSite
   client->_currentCodecVersion = client->_supportedCodecVersion[0];
   client->_currentCodecVersionIndex = 0;
   client->_known_transactions = NULL;
-  memset(client->description_buffer, 0, DESCRIPTION_BUFFER_SIZE);
+  memset(client->_description_buffer, 0, DESCRIPTION_BUFFER_SIZE);
+}
+
+static struct CRawSiteToSiteClient* createClient(const char * host, uint16_t port, const char * nifi_port) {
+  struct SiteToSiteCPeer * peer = (struct SiteToSiteCPeer *)malloc(sizeof(struct SiteToSiteCPeer));
+  initPeer(peer, NULL, host, port, "");
+  struct CRawSiteToSiteClient* client = (struct CRawSiteToSiteClient*)malloc(sizeof(struct CRawSiteToSiteClient));
+  initRawClient(client, peer);
+  client->_owns_resource = True;
+  setPortId(client, nifi_port);
+  return client;
+}
+
+static void destroyClient(struct CRawSiteToSiteClient * client){
+  tearDown(client);
+  if(client->_owns_resource == True) {
+    freePeer(client->_peer);
+  }
 }
 
 #ifdef __cplusplus

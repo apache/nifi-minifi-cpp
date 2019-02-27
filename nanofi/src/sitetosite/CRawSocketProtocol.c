@@ -1,6 +1,4 @@
 /**
- * Site2SiteProtocol class implementation
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -72,18 +70,18 @@ typedef struct {
 } PropertyValue;
 
 int handShake(struct CRawSiteToSiteClient * client) {
-  if (client->peer_state_ != ESTABLISHED) {
+  if (client->_peer_state != ESTABLISHED) {
     //client->logger_->log_error("Site2Site peer state is not established while handshake");
     return -1;
   }
-  //client->logger_->log_debug("Site2Site Protocol Perform hand shake with destination port %s", client->port_id_str_);
+  //client->logger_->log_debug("Site2Site Protocol Perform hand shake with destination port %s", client->_port_id_str);
 
   CIDGenerator gen;
   gen.implementation_ = CUUID_DEFAULT_IMPL;
   generate_uuid(&gen, client->_commsIdentifier);
   client->_commsIdentifier[36]='\0';
 
-  int ret = writeUTF(client->_commsIdentifier, strlen(client->_commsIdentifier), False, client->peer_->stream_);
+  int ret = writeUTF(client->_commsIdentifier, strlen(client->_commsIdentifier), False, client->_peer->_stream);
 
   if (ret <= 0) {
     return -1;
@@ -102,45 +100,45 @@ int handShake(struct CRawSiteToSiteClient * client) {
   current = (PropertyValue *)malloc(sizeof(PropertyValue));
 
   current->name = HandShakePropertyStr[PORT_IDENTIFIER];
-  strncpy(current->value, client->port_id_str_, strlen(client->port_id_str_) +1);
+  strncpy(current->value, client->_port_id_str, strlen(client->_port_id_str) +1);
 
   HASH_ADD_KEYPTR(hh, properties, current->name, strlen(current->name), current);
 
   current = (PropertyValue *)malloc(sizeof(PropertyValue));
 
   current->name = HandShakePropertyStr[REQUEST_EXPIRATION_MILLIS];
-  sprintf(current->value, "%llu", client->_timeOut);
+  sprintf(current->value, "%llu", client->_timeout);
 
   HASH_ADD_KEYPTR(hh, properties, current->name, strlen(current->name), current);
 
   prop_size = 3;
 
   if (client->_currentVersion >= 5) {
-    if (client->_batchCount > 0) {
+    if (client->_batch_count > 0) {
       current = (PropertyValue *)malloc(sizeof(PropertyValue));
 
       current->name = HandShakePropertyStr[BATCH_COUNT];
-      sprintf(current->value, "%llu", client->_batchCount);
+      sprintf(current->value, "%llu", client->_batch_count);
 
       HASH_ADD_KEYPTR(hh, properties, current->name, strlen(current->name), current);
 
       prop_size++;
     }
-    if (client->_batchSize > 0) {
+    if (client->_batch_size > 0) {
       current = (PropertyValue *)malloc(sizeof(PropertyValue));
 
       current->name = HandShakePropertyStr[BATCH_SIZE];
-      sprintf(current->value, "%llu", client->_batchSize);
+      sprintf(current->value, "%llu", client->_batch_size);
 
       HASH_ADD_KEYPTR(hh, properties, current->name, strlen(current->name), current);
 
       prop_size++;
     }
-    if (client->_batchDuration > 0) {
+    if (client->_batch_duration > 0) {
       current = (PropertyValue *)malloc(sizeof(PropertyValue));
 
       current->name = HandShakePropertyStr[BATCH_DURATION];
-      sprintf(current->value, "%llu", client->_batchDuration);
+      sprintf(current->value, "%llu", client->_batch_duration);
 
       HASH_ADD_KEYPTR(hh, properties, current->name, strlen(current->name), current);
 
@@ -148,31 +146,40 @@ int handShake(struct CRawSiteToSiteClient * client) {
     }
   }
 
+  int ret_val = 0;
+
   if (client->_currentVersion >= 3) {
 
-    //ret = client->peer_->writeUTF(client->peer_->getURL());
-    const char * urlstr = getURL(client->peer_);
-    ret = writeUTF(urlstr, strlen(urlstr), False, client->peer_->stream_);
+    //ret = client->_peer->writeUTF(client->_peer->getURL());
+    const char * urlstr = getURL(client->_peer);
+    ret = writeUTF(urlstr, strlen(urlstr), False, client->_peer->_stream);
     if (ret <= 0) {
-      return -1;
+      ret_val = -1;
     }
   }
 
-  ret = write_uint32_t(prop_size, client->peer_->stream_);
+  if(ret_val == 0) {
+    ret = write_uint32_t(prop_size, client->_peer->_stream);
+  }
   if (ret <= 0) {
-    return -1;
+    ret_val = -1;
   }
 
   HASH_ITER(hh, properties, current, tmp) {
-    if(writeUTF(current->name, strlen(current->name), False, client->peer_->stream_) <= 0) {
-      return -1;
+    if(ret_val == 0 && writeUTF(current->name, strlen(current->name), False, client->_peer->_stream) <= 0) {
+      ret_val = -1;
     }
-    if(writeUTF(current->value, strlen(current->value), False, client->peer_->stream_) <= 0) {
-      return -1;
+    if(ret_val == 0 && writeUTF(current->value, strlen(current->value), False, client->_peer->_stream) <= 0) {
+      ret_val = -1;
     }
-    //client->logger_->log_debug("Site2Site Protocol Send handshake properties %s %s", current->name, current->value);
+    logc(debug, "Site2Site Protocol Send handshake properties %s %s", current->name, current->value);
     HASH_DEL(properties, current);
     free(current);
+  }
+
+  if(ret_val < 0) {
+    logc(err, "%s", "Failed to transfer handshake properties");
+    return -1;
   }
 
   RespondCode code;
@@ -185,14 +192,19 @@ int handShake(struct CRawSiteToSiteClient * client) {
 
   RespondCodeContext *resCode = getRespondCodeContext(code);
 
+  if(resCode == NULL) {
+    logc(err, "Received invalid respond code: %d", code);
+    return -1;
+  }
+
   if (resCode->hasDescription) {
     uint32_t utflen;
-    ret = readUTFLen(&utflen, client->peer_->stream_);
+    ret = readUTFLen(&utflen, client->_peer->_stream);
     if (ret <= 0)
       return -1;
 
-    memset(client->description_buffer, 0, utflen+1);
-    ret = readUTF(client->description_buffer, utflen, client->peer_->stream_);
+    memset(client->_description_buffer, 0, utflen+1);
+    ret = readUTF(client->_description_buffer, utflen, client->_peer->_stream);
     if (ret <= 0)
       return -1;
   }
@@ -202,7 +214,7 @@ int handShake(struct CRawSiteToSiteClient * client) {
   switch (code) {
     case PROPERTIES_OK:
       logc(debug, "%s", "Site2Site HandShake Completed");
-      client->peer_state_ = HANDSHAKED;
+      client->_peer_state = HANDSHAKED;
       return 0;
     case PORT_NOT_IN_VALID_STATE:
       error = "in invalid state";
@@ -220,7 +232,7 @@ int handShake(struct CRawSiteToSiteClient * client) {
   }
 
   // All known error cases handled here
-  logc(err, "Site2Site HandShake Failed because destination port, %s, is %s", client->port_id_str_, error);
+  logc(err, "Site2Site HandShake Failed because destination port, %s, is %s", client->_port_id_str, error);
   return -2;
 }
 
@@ -235,7 +247,7 @@ int handShake(struct CRawSiteToSiteClient * client) {
     }
 
     uint32_t number;
-    status = peer_->read(number);
+    status = _peer->read(number);
 
     if (status <= 0) {
       tearDown(this);
@@ -244,25 +256,25 @@ int handShake(struct CRawSiteToSiteClient * client) {
 
     for (uint32_t i = 0; i < number; i++) {
       std::string host;
-      status = peer_->readUTF(host);
+      status = _peer->readUTF(host);
       if (status <= 0) {
         tearDown(this);
         return false;
       }
       uint32_t port;
-      status = peer_->read(port);
+      status = _peer->read(port);
       if (status <= 0) {
         tearDown(this);
         return false;
       }
       uint8_t secure;
-      status = peer_->read(secure);
+      status = _peer->read(secure);
       if (status <= 0) {
         tearDown(this);
         return false;
       }
       uint32_t count;
-      status = peer_->read(count);
+      status = _peer->read(count);
       if (status <= 0) {
         tearDown(this);
         return false;
@@ -281,7 +293,7 @@ int handShake(struct CRawSiteToSiteClient * client) {
 }*/
 
 int bootstrap(struct CRawSiteToSiteClient * client) {
-  if (client->peer_state_ == READY)
+  if (client->_peer_state == READY)
     return 0;
 
   tearDown(client);
@@ -300,11 +312,11 @@ CTransaction* createTransaction(struct CRawSiteToSiteClient * client, TransferDi
   int dataAvailable = 0;
   CTransaction* transaction = NULL;
 
-  if (client->peer_state_ != READY) {
+  if (client->_peer_state != READY) {
     bootstrap(client);
   }
 
-  if (client->peer_state_ != READY) {
+  if (client->_peer_state != READY) {
     return transaction;
   }
 
@@ -325,13 +337,18 @@ CTransaction* createTransaction(struct CRawSiteToSiteClient * client, TransferDi
 
     RespondCodeContext *resCode = getRespondCodeContext(code);
 
+    if(resCode == NULL) {
+      logc(err, "Received invalid respond code: %d", code);
+      return NULL;
+    }
+
     if (resCode->hasDescription) {
       uint32_t utflen;
-      ret = readUTFLen(&utflen, client->peer_->stream_);
+      ret = readUTFLen(&utflen, client->_peer->_stream);
       if (ret <= 0)
         return transaction;
-      memset(client->description_buffer, 0, utflen+1);
-      ret = readUTF(client->description_buffer, utflen, client->peer_->stream_);
+      memset(client->_description_buffer, 0, utflen+1);
+      ret = readUTF(client->_description_buffer, utflen, client->_peer->_stream);
       if (ret <= 0)
         return transaction;
     }
@@ -350,7 +367,7 @@ CTransaction* createTransaction(struct CRawSiteToSiteClient * client, TransferDi
         return NULL;
     }
     transaction = (CTransaction*)malloc(1* sizeof(CTransaction));
-    InitTransaction(transaction, direction, client->peer_->stream_);
+    InitTransaction(transaction, direction, client->_peer->_stream);
     addTransaction(client, transaction);
     setDataAvailable(transaction, dataAvailable);
     logc(trace, "Site2Site create transaction %s", getUUIDStr(transaction));
@@ -362,7 +379,7 @@ CTransaction* createTransaction(struct CRawSiteToSiteClient * client, TransferDi
       return NULL;
     } else {
       transaction = (CTransaction*)malloc(1* sizeof(CTransaction));
-      InitTransaction(transaction, direction, client->peer_->stream_);
+      InitTransaction(transaction, direction, client->_peer->_stream);
       addTransaction(client, transaction);
       logc(trace, "Site2Site create transaction %s", getUUIDStr(transaction));
       return transaction;
@@ -377,13 +394,13 @@ int transmitPayload(struct CRawSiteToSiteClient * client, const char * payload, 
     return -1;
   }
 
-  if (client->peer_state_ != READY) {
+  if (client->_peer_state != READY) {
     if (bootstrap(client) != 0) {
       return -1;
     }
   }
 
-  if (client->peer_state_ != READY) {
+  if (client->_peer_state != READY) {
     tearDown(client);
   }
 
@@ -428,11 +445,11 @@ int transmitPayload(struct CRawSiteToSiteClient * client, const char * payload, 
 
 // Complete the transaction
 int complete(struct CRawSiteToSiteClient * client, const char * transactionID) {
-  if (client->peer_state_ != READY) {
+  if (client->_peer_state != READY) {
     bootstrap(client);
   }
 
-  if (client->peer_state_ != READY) {
+  if (client->_peer_state != READY) {
     return -1;
   }
 
@@ -467,13 +484,18 @@ int complete(struct CRawSiteToSiteClient * client, const char * transactionID) {
 
     RespondCodeContext *resCode = getRespondCodeContext(code);
 
+    if(resCode == NULL) {
+      logc(err, "Received invalid respond code: %d", code);
+      return -1;
+    }
+
     if (resCode->hasDescription) {
       uint32_t utflen;
-      int ret = readUTFLen(&utflen, client->peer_->stream_);
+      int ret = readUTFLen(&utflen, client->_peer->_stream);
       if (ret <= 0)
         return -1;
-      memset(client->description_buffer, 0, utflen+1);
-      ret = readUTF(client->description_buffer, utflen, client->peer_->stream_);
+      memset(client->_description_buffer, 0, utflen+1);
+      ret = readUTF(client->_description_buffer, utflen, client->_peer->_stream);
       if (ret <= 0)
         return -1;
     }
@@ -491,11 +513,11 @@ int complete(struct CRawSiteToSiteClient * client, const char * transactionID) {
 
 int confirm(struct CRawSiteToSiteClient * client, const char * transactionID) {
 
-  if (client->peer_state_ != READY) {
+  if (client->_peer_state != READY) {
     bootstrap(client);
   }
 
-  if (client->peer_state_ != READY) {
+  if (client->_peer_state != READY) {
     return -1;
   }
 
@@ -540,13 +562,18 @@ int confirm(struct CRawSiteToSiteClient * client, const char * transactionID) {
 
     RespondCodeContext *resCode = getRespondCodeContext(code);
 
+    if(resCode == NULL) {
+      logc(err, "Received invalid respond code: %d", code);
+      return -1;
+    }
+
     if (resCode->hasDescription) {
       uint32_t utflen;
-      int ret = readUTFLen(&utflen, client->peer_->stream_);
+      int ret = readUTFLen(&utflen, client->_peer->_stream);
       if (ret <= 0)
         return -1;
-      memset(client->description_buffer, 0, utflen+1);
-      ret = readUTF(client->description_buffer, utflen, client->peer_->stream_);
+      memset(client->_description_buffer, 0, utflen+1);
+      ret = readUTF(client->_description_buffer, utflen, client->_peer->_stream);
       if (ret <= 0)
         return -1;
     }
@@ -575,20 +602,25 @@ int confirm(struct CRawSiteToSiteClient * client, const char * transactionID) {
 
     RespondCodeContext *resCode = getRespondCodeContext(code);
 
+    if(resCode == NULL) {
+      logc(err, "Received invalid respond code: %d", code);
+      return -1;
+    }
+
     if (resCode->hasDescription) {
       uint32_t utflen;
-      int ret = readUTFLen(&utflen, client->peer_->stream_);
+      int ret = readUTFLen(&utflen, client->_peer->_stream);
       if (ret <= 0)
         return -1;
-      memset(client->description_buffer, 0, utflen+1);
-      ret = readUTF(client->description_buffer, utflen, client->peer_->stream_);
+      memset(client->_description_buffer, 0, utflen+1);
+      ret = readUTF(client->_description_buffer, utflen, client->_peer->_stream);
       if (ret <= 0)
         return -1;
     }
 
     // we've sent a FINISH_TRANSACTION. Now we'll wait for the peer to send a 'Confirm Transaction' response
     if (code == CONFIRM_TRANSACTION) {
-      logc(debug, "Site2Site transaction %s peer confirm transaction with CRC %s", transactionID, client->description_buffer);
+      logc(debug, "Site2Site transaction %s peer confirm transaction with CRC %s", transactionID, client->_description_buffer);
 
       if (client->_currentVersion > 3) {
         int64_t crcValue = getCRC(transaction);
@@ -596,7 +628,7 @@ int confirm(struct CRawSiteToSiteClient * client, const char * transactionID) {
         memset(crc, 0, 40);
         sprintf(crc, "%lld", crcValue);
 
-        if (strcmp(client->description_buffer, crc) == 0) {
+        if (strcmp(client->_description_buffer, crc) == 0) {
           logc(debug, "Site2Site transaction %s CRC matched", transactionID);
           if(writeResponse(client, CONFIRM_TRANSACTION, "CONFIRM_TRANSACTION") <= 0) {
             return -1;
@@ -623,11 +655,11 @@ int confirm(struct CRawSiteToSiteClient * client, const char * transactionID) {
 
   int16_t sendPacket(struct CRawSiteToSiteClient * client, const char * transactionID, CDataPacket *packet, flow_file_record * ff) {
 
-    if (client->peer_state_ != READY) {
+    if (client->_peer_state != READY) {
       bootstrap(client);
     }
 
-    if (client->peer_state_ != READY) {
+    if (client->_peer_state != READY) {
       return -1;
     }
     CTransaction* transaction = findTransaction(client, transactionID);
@@ -730,21 +762,21 @@ int confirm(struct CRawSiteToSiteClient * client, const char * transactionID) {
 int readResponse(struct CRawSiteToSiteClient* client, RespondCode *code) {
   uint8_t firstByte;
 
-  int ret = read_uint8_t(&firstByte, client->peer_->stream_);
+  int ret = read_uint8_t(&firstByte, client->_peer->_stream);
 
   if (ret <= 0 || firstByte != CODE_SEQUENCE_VALUE_1)
     return -1;
 
   uint8_t secondByte;
 
-  ret = read_uint8_t(&secondByte, client->peer_->stream_);
+  ret = read_uint8_t(&secondByte, client->_peer->_stream);
 
   if (ret <= 0 || secondByte != CODE_SEQUENCE_VALUE_2)
     return -1;
 
   uint8_t thirdByte;
 
-  ret = read_uint8_t(&thirdByte, client->peer_->stream_);
+  ret = read_uint8_t(&thirdByte, client->_peer->_stream);
 
   if (ret <= 0)
     return ret;
@@ -765,6 +797,7 @@ int writeResponse(struct CRawSiteToSiteClient* client, RespondCode code, const c
   RespondCodeContext *resCode = getRespondCodeContext(code);
 
   if (resCode == NULL) {
+    logc(err, "Received invalid respond code: %d", code);
     // Not a valid respond code
     return -1;
   }
@@ -774,13 +807,13 @@ int writeResponse(struct CRawSiteToSiteClient* client, RespondCode code, const c
   codeSeq[1] = CODE_SEQUENCE_VALUE_2;
   codeSeq[2] = (uint8_t) code;
 
-  int ret = write_buffer(codeSeq, 3, client->peer_->stream_);
+  int ret = write_buffer(codeSeq, 3, client->_peer->_stream);
 
   if (ret != 3)
     return -1;
 
   if (resCode->hasDescription) {
-    ret = writeUTF(message, strlen(message), False, client->peer_->stream_);
+    ret = writeUTF(message, strlen(message), False, client->_peer->_stream);
     if (ret > 0) {
       return (3 + ret);
     } else {
@@ -797,7 +830,7 @@ int writeRequestType(struct CRawSiteToSiteClient* client, RequestType type) {
 
   const char * typestr = RequestTypeStr[type];
 
-  return writeUTF(typestr, strlen(typestr), False, client->peer_->stream_);
+  return writeUTF(typestr, strlen(typestr), False, client->_peer->_stream);
 }
 
 int readRequestType(struct CRawSiteToSiteClient* client, RequestType *type) {
@@ -805,13 +838,13 @@ int readRequestType(struct CRawSiteToSiteClient* client, RequestType *type) {
 
   uint32_t utflen;
 
-  int ret = readUTFLen(&utflen, client->peer_->stream_);
+  int ret = readUTFLen(&utflen, client->_peer->_stream);
 
   if (ret <= 0)
     return ret;
 
   memset(requestTypeStr, 0, 128);
-  ret = readUTF(requestTypeStr, utflen, client->peer_->stream_);
+  ret = readUTF(requestTypeStr, utflen, client->_peer->_stream);
 
   if (ret <= 0)
     return ret;
@@ -830,29 +863,29 @@ int readRequestType(struct CRawSiteToSiteClient* client, RequestType *type) {
 }
 
 void tearDown(struct CRawSiteToSiteClient* client) {
-  if (client->peer_state_ >= ESTABLISHED) {
+  if (client->_peer_state >= ESTABLISHED) {
     // need to write shutdown request
     writeRequestType(client, SHUTDOWN);
   }
 
   clearTransactions(client);
-  closePeer(client->peer_);
-  client->peer_state_ = IDLE;
+  closePeer(client->_peer);
+  client->_peer_state = IDLE;
 }
 
 int initiateResourceNegotiation(struct CRawSiteToSiteClient* client) {
   // Negotiate the version
-  if (client->peer_state_ != IDLE) {
+  if (client->_peer_state != IDLE) {
     return -1;
   }
 
-  int ret = writeUTF(getResourceName(client), strlen(getResourceName(client)), False, client->peer_->stream_);
+  int ret = writeUTF(getResourceName(client), strlen(getResourceName(client)), False, client->_peer->_stream);
 
   if (ret <= 0) {
     return -1;
   }
 
-  ret = write_uint32_t(client->_currentVersion, client->peer_->stream_);
+  ret = write_uint32_t(client->_currentVersion, client->_peer->_stream);
 
   if (ret <= 0) {
     return -1;
@@ -860,7 +893,7 @@ int initiateResourceNegotiation(struct CRawSiteToSiteClient* client) {
 
   uint8_t statusCode;
 
-  ret = read_uint8_t(&statusCode, client->peer_->stream_);
+  ret = read_uint8_t(&statusCode, client->_peer->_stream);
 
 
   if (ret <= 0) {
@@ -874,7 +907,7 @@ int initiateResourceNegotiation(struct CRawSiteToSiteClient* client) {
       logc(info, "Resource negotiation completed successfully. Using version: %u", client->_currentVersion);
       return 0;
     case DIFFERENT_RESOURCE_VERSION:
-      ret = read_uint32_t(&serverVersion, client->peer_->stream_);
+      ret = read_uint32_t(&serverVersion, client->_peer->_stream);
       if (ret <= 0) {
         return -1;
       }
@@ -900,19 +933,19 @@ int initiateResourceNegotiation(struct CRawSiteToSiteClient* client) {
 
 int initiateCodecResourceNegotiation(struct CRawSiteToSiteClient* client) {
   // Negotiate the version
-  if (client->peer_state_ != HANDSHAKED) {
+  if (client->_peer_state != HANDSHAKED) {
     return -1;
   }
 
   const char * coderresource = getCodecResourceName(client);
 
-  int ret = writeUTF(coderresource, strlen(coderresource), False, client->peer_->stream_);
+  int ret = writeUTF(coderresource, strlen(coderresource), False, client->_peer->_stream);
 
   if (ret <= 0) {
     return -1;
   }
 
-  ret = write_uint32_t(client->_currentCodecVersion, client->peer_->stream_);
+  ret = write_uint32_t(client->_currentCodecVersion, client->_peer->_stream);
 
 
   if (ret <= 0) {
@@ -920,7 +953,7 @@ int initiateCodecResourceNegotiation(struct CRawSiteToSiteClient* client) {
   }
 
   uint8_t statusCode;
-  ret = read_uint8_t(&statusCode, client->peer_->stream_);
+  ret = read_uint8_t(&statusCode, client->_peer->_stream);
 
   if (ret <= 0) {
     return -1;
@@ -932,7 +965,7 @@ int initiateCodecResourceNegotiation(struct CRawSiteToSiteClient* client) {
       logc(info, "Resource codec negotiation completed successfully. Using version: %u", client->_currentCodecVersion);
       return 0;
     case DIFFERENT_RESOURCE_VERSION:
-      ret = read_uint32_t(&serverVersion, client->peer_->stream_);
+      ret = read_uint32_t(&serverVersion, client->_peer->_stream);
       if (ret <= 0) {
         return -1;
       }
@@ -958,7 +991,7 @@ int initiateCodecResourceNegotiation(struct CRawSiteToSiteClient* client) {
 }
 
 int negotiateCodec(struct CRawSiteToSiteClient* client) {
-  if (client->peer_state_ != HANDSHAKED) {
+  if (client->_peer_state != HANDSHAKED) {
     return -1;
   }
   int status = writeRequestType(client, NEGOTIATE_FLOWFILE_CODEC);
@@ -971,16 +1004,16 @@ int negotiateCodec(struct CRawSiteToSiteClient* client) {
     return -2;
   }
 
-  client->peer_state_ = READY;
+  client->_peer_state = READY;
   return 0;
 }
 
 int establish(struct CRawSiteToSiteClient* client) {
-  if (client->peer_state_ != IDLE) {
+  if (client->_peer_state != IDLE) {
     return -1;
   }
 
-  if(openPeer(client->peer_) != 0) {
+  if(openPeer(client->_peer) != 0) {
     return -1;
   }
 
@@ -989,7 +1022,7 @@ int establish(struct CRawSiteToSiteClient* client) {
     return -1;
   }
 
-  client->peer_state_ = ESTABLISHED;
+  client->_peer_state = ESTABLISHED;
 
   return 0;
 }

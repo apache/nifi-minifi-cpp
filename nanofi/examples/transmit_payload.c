@@ -40,15 +40,7 @@ int main(int argc, char **argv) {
 
   uint16_t port_num = atoi(port_str);
 
-  struct SiteToSiteCPeer peer;
-
-  initPeer(&peer, NULL, host, port_num, "");
-
-  struct CRawSiteToSiteClient protocol;
-
-  initRawClient(&protocol, &peer);
-
-  setPortId(&protocol, nifi_port_str);
+  struct CRawSiteToSiteClient * client = createClient(host, port_num, nifi_port_str);
 
   const char * payload = "Test MiNiFi payload";
 
@@ -63,15 +55,13 @@ int main(int argc, char **argv) {
   as.size = 1;
   as.attributes = &attribute1;
 
-  if(transmitPayload(&protocol, payload, &as) == 0){
+  if(transmitPayload(client, payload, &as) == 0){
     printf("Packet successfully sent\n");
   } else {
     printf("Failed to send packet\n");
   }
 
-  tearDown(&protocol);
-
-  freePeer(&peer);
+  destroyClient(client);
 
   return 0;
 }

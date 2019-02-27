@@ -42,73 +42,74 @@ void closePeer(struct SiteToSiteCPeer * peer);
 // Site2SitePeer Class
 struct SiteToSiteCPeer {
 
-  cstream * stream_;
+  cstream * _stream;
 
   // URL
-  char * url_;
+  char * _url;
 
-  char * host_;
+  char * _host;
 
-  uint16_t port_;
+  uint16_t _port;
 
-  enum Bool owns_socket_;
+  enum Bool _owns_resource;
 };
 
 static const char * getURL(const struct SiteToSiteCPeer * peer) {
-  return peer->url_;
+  return peer->_url;
 }
 
 static void setHostName(struct SiteToSiteCPeer * peer, const char * hostname) {
-  if(peer->host_) {
-    free(peer->host_);
+  if(peer->_host) {
+    free(peer->_host);
   }
-  if(peer->url_) {
-    free(peer->url_);
+  if(peer->_url) {
+    free(peer->_url);
   }
   if(hostname == NULL || strlen(hostname) == 0) {
-    peer->host_ = NULL;
-    peer->url_ = NULL;
+    peer->_host = NULL;
+    peer->_url = NULL;
     return;
   }
   size_t host_len = strlen(hostname);
-  peer->host_ = (char*)malloc(host_len + 1); // +1 for trailing zero
-  peer->url_ = (char*)malloc(host_len + 14); // +1 for trailing zero, 1 for ':', at most 5 for port, 7 for "nifi://" suffix
-  memset(peer->url_, 0, host_len + 14); // make sure to have zero padding no matter the length of the port
-  strncpy(peer->host_, hostname, host_len);
-  strncpy(peer->url_, "nifi://", 7);
-  strncpy(peer->url_ + 7, hostname, host_len);
-  peer->host_[host_len] = '\0';
-  peer->url_[host_len + 7] = ':';
-  if(peer->port_ != 0) {
-    snprintf(peer->url_ + host_len + 8, 5, "%d", peer->port_);
+  peer->_host = (char*)malloc(host_len + 1); // +1 for trailing zero
+  peer->_url = (char*)malloc(host_len + 14); // +1 for trailing zero, 1 for ':', at most 5 for port, 7 for "nifi://" suffix
+  memset(peer->_url, 0, host_len + 14); // make sure to have zero padding no matter the length of the port
+  strncpy(peer->_host, hostname, host_len);
+  strncpy(peer->_url, "nifi://", 7);
+  strncpy(peer->_url + 7, hostname, host_len);
+  peer->_host[host_len] = '\0';
+  peer->_url[host_len + 7] = ':';
+  if(peer->_port != 0) {
+    snprintf(peer->_url + host_len + 8, 5, "%d", peer->_port);
   }
   return;
 }
 
 static void setPort(struct SiteToSiteCPeer * peer, uint16_t port) {
-  peer->port_ = port;
-  if(peer->url_ != NULL) {
+  peer->_port = port;
+  if(peer->_url != NULL) {
     int i;
-    for(i = strlen(peer->url_) -1; i >= 0; --i) { // look for the last ':' in the string
-      if(peer->url_[i] == ':'){
-        memset(peer->url_ + i + 1, 0, 6); // zero the port area  - the new port can be shorter
-        snprintf(peer->url_ + i + 1, 5, "%d", peer->port_);
+    for(i = strlen(peer->_url) -1; i >= 0; --i) { // look for the last ':' in the string
+      if(peer->_url[i] == ':'){
+        memset(peer->_url + i + 1, 0, 6); // zero the port area  - the new port can be shorter
+        snprintf(peer->_url + i + 1, 6, "%d", peer->_port);
+        break;
       }
     }
   }
 }
 
 static void initPeer(struct SiteToSiteCPeer * peer, cstream * injected_socket, const char * host, uint16_t port, const char * ifc) {
-  peer->stream_ = injected_socket;
+  peer->_stream = injected_socket;
   //peer->local_network_interface_= std::move(io::NetworkInterface(ifc, nullptr));
-  peer->host_ = NULL;
-  peer->url_ = NULL;
-  peer->port_ = 0;
+  peer->_host = NULL;
+  peer->_url = NULL;
+  peer->_port = 0;
   setHostName(peer, host);
   setPort(peer, port);
 
-  if(peer->stream_ == NULL) {
-    peer->owns_socket_ = True;
+  if(peer->_stream == NULL) {
+    peer->_owns_resource = True;
   }
 }
 
@@ -116,9 +117,9 @@ static void freePeer(struct SiteToSiteCPeer * peer) {
   closePeer(peer);
   setHostName(peer, NULL);
 
-  if(peer->owns_socket_ == True && peer->stream_ != NULL) {
-    free_socket(peer->stream_);
-    peer->stream_ = NULL;
+  if(peer->_owns_resource == True && peer->_stream != NULL) {
+    free_socket(peer->_stream);
+    peer->_stream = NULL;
   }
 }
 
