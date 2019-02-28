@@ -86,7 +86,7 @@ class ExternalBuildDescription {
 
  public:
 
-  static bool addExternalComponent(struct BundleDetails details, const ClassDescription &description) {
+  static void addExternalComponent(struct BundleDetails details, const ClassDescription &description) {
     bool found = false;
     for (const auto &d : getExternal()) {
       if (d.artifact == details.artifact) {
@@ -102,7 +102,6 @@ class ExternalBuildDescription {
     } else {
       getExternalMappings()[details.artifact].processors_.push_back(description);
     }
-    return true;
   }
 
   static struct Components getClassDescriptions(const std::string &group) {
