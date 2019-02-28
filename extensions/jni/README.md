@@ -42,8 +42,6 @@ To enable JNI capabilities, the following options need to be provided in minifi.
 	nifi.nar.directory=<nar directory>
 	# directory where nars will be deployed
 	nifi.nar.deploy.directory=<deploy directory>
-	#nar documentation directory
-	nifi.nar.docs.directory=<docs directory>
 	
 Optionally, you can specify JVM options in a comma separated list
 	
