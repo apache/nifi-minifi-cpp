@@ -32,21 +32,18 @@ as "org.apache.nifi.minifi.processors.AttributePrinter"
 
 Methods that are enabled within the processor are  describe, onSchedule, onInitialize, and onTrigger. 
 
-Describe is passed the a processor and is a required function. You must set the description like so:
+Describe is passed the processor and is a required function. You must set the description like so:
 
 ```python
 	def describe(processor):
 	  processor.setDescription("Adds an attribute to your flow files")
 ```
    
-   
-   void addProperty(const std::string &name, const std::string &description, const std::string &defaultvalue, bool required, bool el) {
-   
 onInitialize is also passed the processor reference and can be where you set properties. The first argument is the property display name,
 followed by the description, and default value. The last two arguments are booleans describing if the property is required or requires EL.
 
 ```python
-	def onIitialize(processor):
+	def onInitialize(processor):
 	  processor.setSupportsDynamicProperties()
 	  processor.addProperty("property name","description","default value", True, False)
 ```

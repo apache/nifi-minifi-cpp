@@ -101,12 +101,10 @@ class JavaSignatures {
     if (method_ptr_ == nullptr || size_ != methods_.size()) {
       method_ptr_ = std::unique_ptr<JNINativeMethod[]>(new JNINativeMethod[methods_.size()]);
       size_ = methods_.size();
-      int i = 0;
-      for (auto &mthd : methods_) {
-        method_ptr_[i].fnPtr = const_cast<void*>(mthd.getPointer());
-        method_ptr_[i].name = const_cast<char*>(mthd.getName());
-        method_ptr_[i].signature = const_cast<char*>(mthd.getParameters());
-        i++;
+      for(int i=0; i < methods_.size(); i++) {
+        method_ptr_[i].fnPtr = const_cast<void*>(methods_[i].getPointer());
+        method_ptr_[i].name = const_cast<char*>(methods_[i].getName());
+        method_ptr_[i].signature = const_cast<char*>(methods_[i].getParameters());
       }
     }
     return method_ptr_.get();

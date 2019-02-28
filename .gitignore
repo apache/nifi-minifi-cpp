@@ -21,7 +21,9 @@
 
 # Ignore JetBrains project files
 .idea
+# Ignore intellij project files
 
+.iml
 # Ignore JetBrains cLion project files.
 .project
 

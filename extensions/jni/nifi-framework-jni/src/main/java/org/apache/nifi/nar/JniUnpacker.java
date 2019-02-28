@@ -62,7 +62,7 @@ public class JniUnpacker {
         return Optional.of( narMaps.get(narId) );
     }
 
-    public static ExtensionMapping unpackNars(final File narFilesDir, final File unpackDirectory, final File docsWorkingDir, List<File> paths ) throws IOException {
+    public static void unpackNars(final File narFilesDir, final File unpackDirectory, List<File> paths ) throws IOException {
         final List<Path> narLibraryDirs = new ArrayList<>();
         final Map<File, BundleCoordinate> unpackedNars = new HashMap<>();
 
@@ -136,48 +136,8 @@ public class JniUnpacker {
                         + "(" + (int) TimeUnit.SECONDS.convert(duration, TimeUnit.NANOSECONDS) + " seconds).");
             }
 
-            // attempt to delete any docs files that exist so that any components that have been removed
-            // will no longer have entries in the docs folder
-            final File[] docsFiles = docsWorkingDir.listFiles();
-            if (docsFiles != null) {
-                for (final File file : docsFiles) {
-                    FileUtils.deleteFile(file, true);
-                }
-            }
-
-            final ExtensionMapping extensionMapping = new ExtensionMapping();
-            mapExtensions(unpackedNars, docsWorkingDir, extensionMapping);
-
-            return extensionMapping;
         } catch (IOException e) {
             logger.warn("Unable to load NAR library bundles due to " + e + " Will proceed without loading any further Nar bundles");
-            if (logger.isDebugEnabled()) {
-                logger.warn("", e);
-            }
-        }
-
-        return null;
-    }
-
-    private static void mapExtensions(final Map<File, BundleCoordinate> unpackedNars, final File docsDirectory, final ExtensionMapping mapping) throws IOException {
-        for (final Map.Entry<File, BundleCoordinate> entry : unpackedNars.entrySet()) {
-            final File unpackedNar = entry.getKey();
-            final BundleCoordinate bundleCoordinate = entry.getValue();
-
-            final File bundledDependencies = new File(unpackedNar, "NAR-INF/bundled-dependencies");
-
-            unpackBundleDocs(docsDirectory, mapping, bundleCoordinate, bundledDependencies);
-        }
-    }
-
-    private static void unpackBundleDocs(final File docsDirectory, final ExtensionMapping mapping, final BundleCoordinate bundleCoordinate, final File bundledDirectory) throws IOException {
-        final File[] directoryContents = bundledDirectory.listFiles();
-        if (directoryContents != null) {
-            for (final File file : directoryContents) {
-                if (file.getName().toLowerCase().endsWith(".jar")) {
-                    unpackDocumentation(bundleCoordinate, file, docsDirectory, mapping);
-                }
-            }
         }
     }
 
@@ -252,97 +212,6 @@ public class JniUnpacker {
         }
     }
 
-    private static void unpackDocumentation(final BundleCoordinate coordinate, final File jar, final File docsDirectory, final ExtensionMapping extensionMapping) throws IOException {
-        final ExtensionMapping jarExtensionMapping = determineDocumentedNiFiComponents(coordinate, jar);
-
-        // skip if there are not components to document
-        if (jarExtensionMapping.isEmpty()) {
-            return;
-        }
-
-        // merge the extension mapping found in this jar
-        extensionMapping.merge(jarExtensionMapping);
-
-        // look for all documentation related to each component
-        try (final JarFile jarFile = new JarFile(jar)) {
-            for (final String componentName : jarExtensionMapping.getAllExtensionNames().keySet()) {
-                final String entryName = "docs/" + componentName;
-
-                // go through each entry in this jar
-                for (final Enumeration<JarEntry> jarEnumeration = jarFile.entries(); jarEnumeration.hasMoreElements();) {
-                    final JarEntry jarEntry = jarEnumeration.nextElement();
-
-                    // if this entry is documentation for this component
-                    if (jarEntry.getName().startsWith(entryName)) {
-                        final String name = StringUtils.substringAfter(jarEntry.getName(), "docs/");
-                        final String path = coordinate.getGroup() + "/" + coordinate.getId() + "/" + coordinate.getVersion() + "/" + name;
-
-                        // if this is a directory create it
-                        if (jarEntry.isDirectory()) {
-                            final File componentDocsDirectory = new File(docsDirectory, path);
-
-                            // ensure the documentation directory can be created
-                            if (!componentDocsDirectory.exists() && !componentDocsDirectory.mkdirs()) {
-                                logger.warn("Unable to create docs directory " + componentDocsDirectory.getAbsolutePath());
-                                break;
-                            }
-                        } else {
-                            // if this is a file, write to it
-                            final File componentDoc = new File(docsDirectory, path);
-                            makeFile(jarFile.getInputStream(jarEntry), componentDoc);
-                        }
-                    }
-                }
-
-            }
-        }
-    }
-
-    /*
-     * Returns true if this jar file contains a NiFi component
-     */
-    private static ExtensionMapping determineDocumentedNiFiComponents(final BundleCoordinate coordinate, final File jar) throws IOException {
-        final ExtensionMapping mapping = new ExtensionMapping();
-
-        try (final JarFile jarFile = new JarFile(jar)) {
-            final JarEntry processorEntry = jarFile.getJarEntry("META-INF/services/org.apache.nifi.processor.Processor");
-            final JarEntry reportingTaskEntry = jarFile.getJarEntry("META-INF/services/org.apache.nifi.reporting.ReportingTask");
-            final JarEntry controllerServiceEntry = jarFile.getJarEntry("META-INF/services/org.apache.nifi.controller.ControllerService");
-
-            if (processorEntry==null && reportingTaskEntry==null && controllerServiceEntry==null) {
-                return mapping;
-            }
-
-            mapping.addAllProcessors(coordinate, determineDocumentedNiFiComponents(jarFile, processorEntry));
-            mapping.addAllReportingTasks(coordinate, determineDocumentedNiFiComponents(jarFile, reportingTaskEntry));
-            mapping.addAllControllerServices(coordinate, determineDocumentedNiFiComponents(jarFile, controllerServiceEntry));
-            return mapping;
-        }
-    }
-
-    private static List<String> determineDocumentedNiFiComponents(final JarFile jarFile, final JarEntry jarEntry) throws IOException {
-        final List<String> componentNames = new ArrayList<>();
-
-        if (jarEntry == null) {
-            return componentNames;
-        }
-
-        try (final InputStream entryInputStream = jarFile.getInputStream(jarEntry);
-             final BufferedReader reader = new BufferedReader(new InputStreamReader(entryInputStream))) {
-
-            String line;
-            while ((line = reader.readLine()) != null) {
-                final String trimmedLine = line.trim();
-                if (!trimmedLine.isEmpty() && !trimmedLine.startsWith("#")) {
-                    final int indexOfPound = trimmedLine.indexOf("#");
-                    final String effectiveLine = (indexOfPound > 0) ? trimmedLine.substring(0, indexOfPound) : trimmedLine;
-                    componentNames.add(effectiveLine);
-                }
-            }
-        }
-
-        return componentNames;
-    }
 
     /**
      * Creates the specified file, whose contents will come from the

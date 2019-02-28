@@ -128,7 +128,8 @@ public class JniClassLoader  {
         this.parent = parent;
         List<File> paths = new ArrayList<>();
         File narDeploy = new File(narWriteBase);
-        ExtensionMapping mapping = JniUnpacker.unpackNars(new File(narDirectory),narDeploy,new File(docsDir), paths);
+
+        JniUnpacker.unpackNars(new File(narDirectory),narDeploy,paths);
 
         List<File> directories = Arrays.asList(narDeploy.listFiles(File::isDirectory));
 

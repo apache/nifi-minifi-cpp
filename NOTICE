@@ -9,3 +9,17 @@ Copyright 2015 The Apache Software Foundation
 The derived work is adapted from
   celix/cmake/FindUUID.cmake
 and can be found in cmake/FindUUID.cmake
+
+This includes derived works from the Apache NiFi (ALv2 Licensed ) project (https://github.com/apache/nifi):
+Copyright 2019 The Apache Software Foundation
+The derived and original works are listed below:
+    JniUnpacker.java is based on NarUnpacker.java.
+    JniClassLoader is based, predominately, on NarClassdLoader with major variations.
+    JniComponentLogger extends ComponentLog
+    JniFlowFile extends and is based on FlowFile
+    JniInitializationContext extends and is based on ProcessorInitializationContext
+    JniProcessContext extends and is based on ProcessContext and ControllerServiceLookup
+    JniProcessSession extends and is based on ProcessSession
+    JniProcessSessionFactory extends and is based on ProcessSessionFactory
+    JniProvenanceReporter extends and is based on ProvenanceReporter
+
