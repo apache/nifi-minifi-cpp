@@ -22,11 +22,6 @@ guide. It is located [here](https://github.com/google/styleguide/blob/gh-pages/e
 New contributions are expected to follow the Google style guide when it is reasonable.
 Additionally, all new files must include a copy of the Apache License Header.
 
-## Table of Contents
-
-- [Issues and Pull Requests](#issues-and-pull-requests)
-- [Extensions](#extensions)
-
 
 ## Issues and Pull Requests
 
