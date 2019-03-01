@@ -606,6 +606,10 @@ set(CPACK_SOURCE_IGNORE_FILES "/docs/generated/;${CMAKE_SOURCE_DIR}/build/;~$;${
 install(FILES conf/minifi.properties conf/minifi-log.properties conf/minifi-uid.properties conf/config.yml
         DESTINATION conf
         COMPONENT bin)
+        
+install(DIRECTORY extensions/pythonprocessors/
+        DESTINATION minifi-python
+        COMPONENT bin)
 
 install(PROGRAMS bin/minifi.sh
         DESTINATION bin
