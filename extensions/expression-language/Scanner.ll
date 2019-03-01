@@ -33,7 +33,7 @@
 %option 8bit
 %option c++
 
-id         [a-zA-Z][a-zA-Z_0-9]*
+id         [a-zA-Z][a-zA-Z_0-9.]*
 num        [-]?[0-9]+[.]?[0-9]*([eE][+-]?[0-9]+)?
 whitespace [ \r\t]+
 
