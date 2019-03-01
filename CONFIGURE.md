@@ -104,17 +104,13 @@ for TCP and secure HTTPS communications.
             name: fromnifi
             max concurrent tasks: 1
             Properties:
-                Port: 10443
                 SSL Context Service: SSLServiceName
-                Host Name: 127.0.0.1
       Output Ports:
           - id: ac82e521-015c-1000-2b21-41279516e19a
             name: tominifi
             max concurrent tasks: 2
             Properties:
-                Port: 10443
-		        SSL Context Service: SSLServiceName
-		        Host Name: 127.0.0.1
+		SSL Context Service: SSLServiceName
 	Controller Services:
     - name: SSLServiceName
       id: 2438e3c8-015a-1000-79ca-83af40ec1974
@@ -322,84 +318,3 @@ The MQTTController Service can be configured for MQTT connectivity and provide t
          Max Throughput: 1,024,1024
          Max Payload: 1,024,1024
          
-### Running
-After completing a [build](#building), the application can be run by issuing the following from :
-
-    $ ./bin/minifi.sh start
-
-By default, this will make use of a config.yml located in the conf directory.  This configuration file location can be altered by adjusting the property `nifi.flow.configuration.file` in minifi.properties located in the conf directory.
-
-### Stopping  
-
-MiNiFi can then be stopped by issuing:
-
-    $ ./bin/minifi.sh stop
-
-### Installing as a service
-
-MiNiFi can also be installed as a system service using minifi.sh with an optional "service name" (default: minifi)
-
-    $ ./bin/minifi.sh install [service name]
-    
-### Deploying
-MiNiFi C++ comes with a deployment script. This will build and package minifi. Additionally, a file named build_output will be
-created within the build directory that contains a manifest of build artifacts.
-
-    $ deploy.sh <build identifier> 
-
-The build identifier will be carried with the deployed binary for the configuration you specify. By default all extensions will be built.
-    
-### Extensions
-
-Please see [Extensions.md](Extensions.md) on how to build and run conditionally built dependencies and extensions.
-
-## Operations
-See our [operations documentation for additional inforomation on how to manage instances](OPS.md)
-
-## Issue Tracking
-See https://issues.apache.org/jira/projects/MINIFICPP/issues for the issue tracker.
-
-## Documentation
-See https://nifi.apache.org/minifi for the latest documentation.
-
-## Contributing
-
-We welcome all contributions to Apache MiNiFi. To make development easier, we've included
-the linter for the Google Style guide. Google provides an Eclipse formatter for their style
-guide. It is located [here](https://github.com/google/styleguide/blob/gh-pages/eclipse-cpp-google-style.xml).
-New contributions are expected to follow the Google style guide when it is reasonable.
-Additionally, all new files must include a copy of the Apache License Header.
-
-MiNiFi C++ contains a dynamic loading mechanism that loads arbitrary objects. To maintain
-consistency of development amongst the NiFi ecosystem, it is called a class loader. If you
-are contributing a custom Processor or Controller Service, the mechanism to register your class
-into the default class loader is a pragma definition named:
-
-    REGISTER_RESOURCE(CLASSNAME);
-
-To use this include REGISTER_RESOURCE(YourClassName); in your header file. The default class
-loader will make instnaces of YourClassName available for inclusion.  
-
-Once you have completed your changes, including source code and tests, you can verify that
-you follow the Google style guide by running the following command:
-     $ make linter.
-This will provide output for all source files.
-
-## License
-Except as otherwise noted this software is licensed under the
-[Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.html)
-
-For additional information regarding the source of included projects and
-the corresponding licenses, you may visit the following [website](https://cwiki.apache.org/confluence/display/MINIFI/Licensing+Information)
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-  http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
