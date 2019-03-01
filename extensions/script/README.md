@@ -59,3 +59,13 @@ To enable python Processor capabilities, the following options need to be provid
 	#directory where processors exist
 	nifi.python.processor.dir=XXXX
 	
+	
+## Processors
+The python directory (extensions/pythonprocessors) contains implementations that will be available for flows if the required dependencies
+exist.
+   
+## Sentiment Analysis
+
+The SentimentAnalysis processor will perform a Vder Sentiment Analysis. This requires that you install nltk and VaderSentiment
+		pip install nltk
+		pip install VaderSentiment

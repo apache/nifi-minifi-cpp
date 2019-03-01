@@ -289,14 +289,12 @@ int main(int argc, char **argv) {
 	 */
 	if (sem_wait(running) == -1)
 		perror("sem_wait");
-	std::cout << "leaving" << std::endl;
+
 	if (sem_close(running) == -1)
 		perror("sem_close");
 
 	if (sem_unlink("/MiNiFiMain") == -1)
 		perror("sem_unlink");
-
-	std::cout << "leaving" << std::endl;
 
 	/**
 	 * Trigger unload -- wait stop_wait_time

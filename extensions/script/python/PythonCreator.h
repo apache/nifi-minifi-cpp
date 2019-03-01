@@ -85,25 +85,30 @@ class PythonCreator : public minifi::core::CoreComponent {
         utils::Identifier uuid;
         auto processor = std::dynamic_pointer_cast<core::Processor>(core::ClassLoader::getDefaultClassLoader().instantiate(scriptName, uuid));
         if (processor) {
-          processor->initialize();
-          auto proc = std::dynamic_pointer_cast<python::processors::ExecutePythonProcessor>(processor);
-          minifi::BundleDetails details;
-          details.artifact = getFileName(path);
-          details.version = minifi::AgentBuild::VERSION;
-          details.group = "python";
-          minifi::ClassDescription description("org.apache.nifi.minifi.processors." + scriptName);
-          description.dynamic_properties_ = proc->getPythonSupportDynamicProperties();
-          auto properties = proc->getPythonProperties();
+          try {
+            processor->initialize();
+            auto proc = std::dynamic_pointer_cast<python::processors::ExecutePythonProcessor>(processor);
+            minifi::BundleDetails details;
+            details.artifact = getFileName(path);
+            details.version = minifi::AgentBuild::VERSION;
+            details.group = "python";
+            minifi::ClassDescription description("org.apache.nifi.minifi.processors." + scriptName);
+            description.dynamic_properties_ = proc->getPythonSupportDynamicProperties();
+            auto properties = proc->getPythonProperties();
 
-          minifi::AgentDocs::putDescription(scriptName, proc->getDescription());
-          for (const auto &prop : properties) {
-            description.class_properties_.insert(std::make_pair(prop.getName(), prop));
+            minifi::AgentDocs::putDescription(scriptName, proc->getDescription());
+            for (const auto &prop : properties) {
+              description.class_properties_.insert(std::make_pair(prop.getName(), prop));
+            }
+
+            for (const auto &rel : proc->getSupportedRelationships()) {
+              description.class_relationships_.push_back(rel);
+            }
+            minifi::ExternalBuildDescription::addExternalComponent(details, description);
+          } catch (const std::exception &e) {
+            logger_->log_warn("Cannot load %s because of %s", scriptName, e.what());
           }
 
-          for (const auto &rel : proc->getSupportedRelationships()) {
-            description.class_relationships_.push_back(rel);
-          }
-          minifi::ExternalBuildDescription::addExternalComponent(details, description);
         }
 
       }
@@ -128,7 +133,8 @@ class PythonCreator : public minifi::core::CoreComponent {
   std::vector<std::string> classpaths_;
 
   std::shared_ptr<logging::Logger> logger_;
-};
+}
+;
 
 } /* namespace python */
 } /* namespace minifi */

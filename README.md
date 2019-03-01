@@ -80,6 +80,7 @@ Through JNI extensions you can run NiFi processors using NARs. The JNI extension
 | Tensorflow | [TFApplyGraph](PROCESSORS.md#tfapplygraph)<br/>[TFConvertImageToTensor](PROCESSORS.md#tfconvertimagetotensor)<br/>[TFExtractTopLabels](PROCESSORS.md#tfextracttoplabels)<br/>      |    -DENABLE_TENSORFLOW=ON  |
 | USB Camera | [GetUSBCamera](PROCESSORS.md#getusbcamera)     |    -DENABLE_USB_CAMERA=ON  |
 
+ Please see our [Python guide](extensions/script/README.md) on how to write Python processors and use them within MiNiFi C++. 
 
 ## Caveats
 * 0.5.0 represents a GA-release. We follow semver so you can expect API and ABI compatibility within minor releases. See [semver's website](https://semver.org/) for more information

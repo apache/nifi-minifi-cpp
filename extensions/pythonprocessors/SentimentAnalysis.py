@@ -13,14 +13,31 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import codecs
+from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
+
 def describe(processor):
-    processor.setDescription("Adds an attribute to your flow files")
+    processor.setDescription("Provides a sentiment analysis of the content within the flow file")
 
 def onInitialize(processor):
   processor.setSupportsDynamicProperties()
 
+class VaderSentiment(object):
+  def __init__(self):
+    self.content = None
+
+  def process(self, input_stream):
+    self.content = codecs.getreader('utf-8')(input_stream).read()
+    return len(self.content)
+
 def onTrigger(context, session):
   flow_file = session.get()
   if flow_file is not None:
-    flow_file.addAttribute("Python attribute","attributevalue")
+    sentiment = VaderSentiment()
+    session.read(flow_file,sentiment)
+    analyzer = SentimentIntensityAnalyzer()
+    vs = analyzer.polarity_scores(sentiment.content)
+    flow_file.addAttribute("positive",str(vs['pos']))
+    flow_file.addAttribute("negative",str(vs['neg']))
+    flow_file.addAttribute("neutral",str(vs['neu']))
     session.transfer(flow_file, REL_SUCCESS)
