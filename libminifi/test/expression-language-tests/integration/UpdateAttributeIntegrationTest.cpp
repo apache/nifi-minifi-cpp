@@ -54,6 +54,12 @@ class TestHarness : public IntegrationBase {
   void waitToVerifyProcessor() {
     // This test takes a while to complete -> wait at most 10 secs
     log_entry_found = LogTestController::getInstance().contains("key:route_check_attr value:good", std::chrono::seconds(10));
+    log_entry_found = LogTestController::getInstance().contains("key:variable_attribute value:replacement_value", std::chrono::seconds(10));
+  }
+
+  void queryRootProcessGroup(std::shared_ptr<core::ProcessGroup> pg) {
+    // inject the variable into the context.
+    configuration->set("nifi.variable.test", "replacement_value");
   }
 
  protected:

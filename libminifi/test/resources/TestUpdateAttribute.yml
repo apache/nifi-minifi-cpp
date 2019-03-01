@@ -67,6 +67,7 @@ Processors:
       auto-terminated relationships list: failure
       Properties:
         route_check_attr: good
+        variable_attribute: ${nifi.variable.test}
     - name: la
       id: 2438e3c8-015a-1000-79ca-83af40ec1995
       class: org.apache.nifi.processors.standard.LogAttribute
