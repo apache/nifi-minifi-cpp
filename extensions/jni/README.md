@@ -28,7 +28,8 @@ This readme defines the configuration parameters to use JNI functionality within
 JNI provides the ability to access NiFi processors within MiNiFi C++. By exploding NARs, and coupling the framework
 JNI jar that exist within the JNI extension, we can replicate the behavior of NiFi processors.
 
-The subdirectory nifi-framework-jni contains the corresponding JNI library that is needed. Place that into the API directory
+The subdirectory nifi-framework-jni contains the corresponding JNI library that is needed. Place that into the API directory if you are not running
+make package. 
 
 ## Configuration
 
