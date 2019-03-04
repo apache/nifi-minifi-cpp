@@ -27,6 +27,7 @@
 #include "core/expect.h"
 #include <jni.h>
 #include "jvm/JavaDefs.h"
+#include "JNIUtil.h"
 
 namespace org {
 namespace apache {
@@ -70,10 +71,8 @@ static std::string getMessage(JNIEnv *env, jthrowable throwable) {
   }
   jstring message = (jstring) env->CallObjectMethod(throwable, getMessage);
   if (message) {
-    const char *mstr = env->GetStringUTFChars(message, NULL);
     // do whatever with mstr
-    std::string excp = mstr;
-    env->ReleaseStringUTFChars(message, mstr);
+    std::string excp = JniStringToUTF(env, message);
     env->DeleteLocalRef(message);
     env->DeleteLocalRef(clazz);
     return excp;

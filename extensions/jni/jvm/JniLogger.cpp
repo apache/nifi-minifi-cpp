@@ -34,6 +34,7 @@
 #include "JniFlowFile.h"
 #include "../JavaException.h"
 #include "core/logging/Logger.h"
+#include "../JNIUtil.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -64,42 +65,32 @@ void Java_org_apache_nifi_processor_JniLogger_warn(JNIEnv *env, jobject obj, jst
   minifi::jni::JniLogger *logger_ref = minifi::jni::JVMLoader::getPtr<minifi::jni::JniLogger>(env, obj);
   if (!logger_ref)
     return;
-  const char *msgStr = env->GetStringUTFChars(msg, 0);
-  logger_ref->logger_reference_->log_warn(msgStr);
-  env->ReleaseStringUTFChars(msg, msgStr);
+  logger_ref->logger_reference_->log_warn(JniStringToUTF(env, msg).c_str());
 }
 
 void Java_org_apache_nifi_processor_JniLogger_error(JNIEnv *env, jobject obj, jstring msg) {
   minifi::jni::JniLogger *logger_ref = minifi::jni::JVMLoader::getPtr<minifi::jni::JniLogger>(env, obj);
   if (!logger_ref)
     return;
-  const char *msgStr = env->GetStringUTFChars(msg, 0);
-  logger_ref->logger_reference_->log_error(msgStr);
-  env->ReleaseStringUTFChars(msg, msgStr);
+  logger_ref->logger_reference_->log_error(JniStringToUTF(env, msg).c_str());
 }
 void Java_org_apache_nifi_processor_JniLogger_info(JNIEnv *env, jobject obj, jstring msg) {
   minifi::jni::JniLogger *logger_ref = minifi::jni::JVMLoader::getPtr<minifi::jni::JniLogger>(env, obj);
   if (!logger_ref)
     return;
-  const char *msgStr = env->GetStringUTFChars(msg, 0);
-  logger_ref->logger_reference_->log_info(msgStr);
-  env->ReleaseStringUTFChars(msg, msgStr);
+  logger_ref->logger_reference_->log_info(JniStringToUTF(env, msg).c_str());
 }
 void Java_org_apache_nifi_processor_JniLogger_debug(JNIEnv *env, jobject obj, jstring msg) {
   minifi::jni::JniLogger *logger_ref = minifi::jni::JVMLoader::getPtr<minifi::jni::JniLogger>(env, obj);
   if (!logger_ref)
     return;
-  const char *msgStr = env->GetStringUTFChars(msg, 0);
-  logger_ref->logger_reference_->log_debug(msgStr);
-  env->ReleaseStringUTFChars(msg, msgStr);
+  logger_ref->logger_reference_->log_debug(JniStringToUTF(env, msg).c_str());
 }
 void Java_org_apache_nifi_processor_JniLogger_trace(JNIEnv *env, jobject obj, jstring msg) {
   minifi::jni::JniLogger *logger_ref = minifi::jni::JVMLoader::getPtr<minifi::jni::JniLogger>(env, obj);
   if (!logger_ref)
     return;
-  const char *msgStr = env->GetStringUTFChars(msg, 0);
-  logger_ref->logger_reference_->log_trace(msgStr);
-  env->ReleaseStringUTFChars(msg, msgStr);
+  logger_ref->logger_reference_->log_trace(JniStringToUTF(env, msg).c_str());
 }
 
 #ifdef __cplusplus

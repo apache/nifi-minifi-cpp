@@ -101,11 +101,8 @@ jstring Java_org_apache_nifi_processor_JniFlowFile_getAttribute(JNIEnv *env, job
 
   auto ff = ptr->get();
   THROW_IF_NULL(ff, env, NO_FF_OBJECT);
-  const char *kstr = env->GetStringUTFChars(key, 0);
   std::string value;
-  std::string keystr = kstr;
-  ff->getAttribute(keystr, value);
-  env->ReleaseStringUTFChars(key, kstr);
+  ff->getAttribute(JniStringToUTF(env, key), value);
   return env->NewStringUTF(value.c_str());
 }
 jlong Java_org_apache_nifi_processor_JniFlowFile_getSize(JNIEnv *env, jobject obj) {
