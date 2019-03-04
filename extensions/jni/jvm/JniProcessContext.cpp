@@ -40,16 +40,13 @@ jstring Java_org_apache_nifi_processor_JniProcessContext_getPropertyValue(JNIEnv
   if (context == nullptr || context->context_ == nullptr) {
     return nullptr;
   }
-  const char *kstr = env->GetStringUTFChars(propertyName, 0);
-  std::string keystr = kstr;
+  std::string keystr = JniStringToUTF(env, propertyName);
   if (!context->context_->getProperty(keystr, value)) {
     if (!context->context_->getDynamicProperty(keystr, value)) {
-      env->ReleaseStringUTFChars(propertyName, kstr);
       return nullptr;
     }
   }
 
-  env->ReleaseStringUTFChars(propertyName, kstr);
   return env->NewStringUTF(value.c_str());
 }
 

@@ -96,10 +96,7 @@ class NarClassLoader {
       ThrowIf(env);
 
       if (obj) {
-        const char *str = env->GetStringUTFChars(obj, 0);
-
-        methodName = str;
-        env->ReleaseStringUTFChars(obj, str);
+        methodName = JniStringToUTF(env, obj);
       }
     }
     {
@@ -117,9 +114,7 @@ class NarClassLoader {
       ThrowIf(env);
 
       if (obj) {
-        const char *str = env->GetStringUTFChars(obj, 0);
-        signature = str;
-        env->ReleaseStringUTFChars(obj, str);
+        signature = JniStringToUTF(env, obj);
       }
     }
 
@@ -376,11 +371,7 @@ class NarClassLoader {
     ThrowIf(env);
     if (id == nullptr)
       return "";
-    auto id_chars = env->GetStringUTFChars(id, 0);
-
-    std::string artifact = id_chars;
-    env->ReleaseStringUTFChars(id, id_chars);
-    return artifact;
+    return JniStringToUTF(env, id);
   }
 
   std::string getArtifact(jclass bundle_coordinate, JNIEnv *env, jobject coord) {

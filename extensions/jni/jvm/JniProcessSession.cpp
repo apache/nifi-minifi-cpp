@@ -221,21 +221,14 @@ jobject Java_org_apache_nifi_processor_JniProcessSession_putAttribute(JNIEnv *en
     return nullptr;
   }
   THROW_IF_NULL(ff, env, NO_FF_OBJECT);
-  minifi::jni::JniSession *session = minifi::jni::JVMLoader::getPtr<minifi::jni::JniSession>(env, obj);
   minifi::jni::JniFlowFile *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniFlowFile>(env, ff);
 
   if (ff == nullptr || key == nullptr || value == nullptr) {
     return nullptr;
   }
 
-  const char *kstr = env->GetStringUTFChars(key, 0);
-  const char *vstr = env->GetStringUTFChars(value, 0);
-  std::string valuestr = vstr;
-  std::string keystr = kstr;
+  ptr->get()->addAttribute(JniStringToUTF(env, key), JniStringToUTF(env, value));
 
-  ptr->get()->addAttribute(keystr, valuestr);
-  env->ReleaseStringUTFChars(key, kstr);
-  env->ReleaseStringUTFChars(value, vstr);
   return ff;
 
 }
@@ -247,11 +240,8 @@ void Java_org_apache_nifi_processor_JniProcessSession_transfer(JNIEnv *env, jobj
   THROW_IF_NULL(ff, env, NO_FF_OBJECT);
   minifi::jni::JniSession *session = minifi::jni::JVMLoader::getPtr<minifi::jni::JniSession>(env, obj);
   minifi::jni::JniFlowFile *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniFlowFile>(env, ff);
-  const char *relstr = env->GetStringUTFChars(relationship, 0);
-  std::string relString = relstr;
-  core::Relationship success(relString, "description");
-  session->getSession()->transfer(ptr->get(), success);
-  env->ReleaseStringUTFChars(relationship, relstr);
+  core::Relationship rel(JniStringToUTF(env, relationship), "description");
+  session->getSession()->transfer(ptr->get(), rel);
 }
 
 jstring Java_org_apache_nifi_processor_JniProcessSession_getPropertyValue(JNIEnv *env, jobject obj, jstring propertyName) {
@@ -260,12 +250,10 @@ jstring Java_org_apache_nifi_processor_JniProcessSession_getPropertyValue(JNIEnv
     return env->NewStringUTF(value.c_str());
   }
   core::ProcessContext *context = minifi::jni::JVMLoader::getPtr<core::ProcessContext>(env, obj);
-  const char *kstr = env->GetStringUTFChars(propertyName, 0);
-  std::string keystr = kstr;
+  std::string keystr = JniStringToUTF(env, propertyName);
   if (!context->getProperty(keystr, value)) {
     context->getDynamicProperty(keystr, value);
-  }
-  env->ReleaseStringUTFChars(propertyName, kstr);
+  };
   return env->NewStringUTF(value.c_str());
 }
 
@@ -401,14 +389,10 @@ jobject Java_org_apache_nifi_processor_JniProcessSession_removeAttribute(JNIEnv 
     return ff;
   }
   THROW_IF_NULL(ff, env, NO_FF_OBJECT);
-  minifi::jni::JniSession *session = minifi::jni::JVMLoader::getPtr<minifi::jni::JniSession>(env, obj);
   minifi::jni::JniFlowFile *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniFlowFile>(env, ff);
 
   if (ptr->get()) {
-    const char *attrStr = env->GetStringUTFChars(attr, 0);
-    std::string attribute = attrStr;
-    ptr->get()->removeAttribute(attribute);
-    env->ReleaseStringUTFChars(attr, attrStr);
+    ptr->get()->removeAttribute(JniStringToUTF(env, attr));
   }
   return ff;
 }
