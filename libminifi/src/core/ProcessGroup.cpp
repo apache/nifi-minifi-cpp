@@ -136,24 +136,29 @@ void ProcessGroup::removeProcessGroup(ProcessGroup *child) {
   }
 }
 
-void ProcessGroup::startProcessing(TimerDrivenSchedulingAgent *timeScheduler, EventDrivenSchedulingAgent *eventScheduler) {
+void ProcessGroup::startProcessing(const std::shared_ptr<TimerDrivenSchedulingAgent> timeScheduler, const std::shared_ptr<EventDrivenSchedulingAgent> &eventScheduler,
+                                   const std::shared_ptr<CronDrivenSchedulingAgent> &cronScheduler) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
 
   try {
     // Start all the processor node, input and output ports
-    for (auto processor : processors_) {
+    for (const auto &processor : processors_) {
       logger_->log_debug("Starting %s", processor->getName());
-
-      if (!processor->isRunning() && processor->getScheduledState() != DISABLED) {
-        if (processor->getSchedulingStrategy() == TIMER_DRIVEN)
+      switch (processor->getSchedulingStrategy()) {
+        case TIMER_DRIVEN:
           timeScheduler->schedule(processor);
-        else if (processor->getSchedulingStrategy() == EVENT_DRIVEN)
+          break;
+        case EVENT_DRIVEN:
           eventScheduler->schedule(processor);
+          break;
+        case CRON_DRIVEN:
+          cronScheduler->schedule(processor);
+          break;
       }
     }
     // Start processing the group
     for (auto processGroup : child_process_groups_) {
-      processGroup->startProcessing(timeScheduler, eventScheduler);
+      processGroup->startProcessing(timeScheduler, eventScheduler, cronScheduler);
     }
   } catch (std::exception &exception) {
     logger_->log_debug("Caught Exception %s", exception.what());
@@ -164,22 +169,30 @@ void ProcessGroup::startProcessing(TimerDrivenSchedulingAgent *timeScheduler, Ev
   }
 }
 
-void ProcessGroup::stopProcessing(TimerDrivenSchedulingAgent *timeScheduler, EventDrivenSchedulingAgent *eventScheduler) {
+void ProcessGroup::stopProcessing(const std::shared_ptr<TimerDrivenSchedulingAgent> timeScheduler, const std::shared_ptr<EventDrivenSchedulingAgent> &eventScheduler,
+                                  const std::shared_ptr<CronDrivenSchedulingAgent> &cronScheduler) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
 
   try {
     // Stop all the processor node, input and output ports
-    for (std::set<std::shared_ptr<Processor> >::iterator it = processors_.begin(); it != processors_.end(); ++it) {
-      std::shared_ptr<Processor> processor(*it);
-      if (processor->getSchedulingStrategy() == TIMER_DRIVEN)
-        timeScheduler->unschedule(processor);
-      else if (processor->getSchedulingStrategy() == EVENT_DRIVEN)
-        eventScheduler->unschedule(processor);
+    for (const auto &processor : processors_) {
+      logger_->log_debug("Stopping %s", processor->getName());
+      switch (processor->getSchedulingStrategy()) {
+        case TIMER_DRIVEN:
+          timeScheduler->unschedule(processor);
+          break;
+        case EVENT_DRIVEN:
+          eventScheduler->unschedule(processor);
+          break;
+        case CRON_DRIVEN:
+          cronScheduler->unschedule(processor);
+          break;
+      }
     }
 
     for (std::set<ProcessGroup *>::iterator it = child_process_groups_.begin(); it != child_process_groups_.end(); ++it) {
       ProcessGroup *processGroup(*it);
-      processGroup->stopProcessing(timeScheduler, eventScheduler);
+      processGroup->stopProcessing(timeScheduler, eventScheduler, cronScheduler);
     }
   } catch (std::exception &exception) {
     logger_->log_debug("Caught Exception %s", exception.what());

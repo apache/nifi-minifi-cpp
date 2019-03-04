@@ -86,6 +86,7 @@ FlowController::FlowController(std::shared_ptr<core::Repository> provenance_repo
       controller_service_map_(std::make_shared<core::controller::ControllerServiceMap>()),
       timer_scheduler_(nullptr),
       event_scheduler_(nullptr),
+      cron_scheduler_(nullptr),
       controller_service_provider_(nullptr),
       flow_configuration_(std::move(flow_configuration)),
       configuration_(configure),
@@ -239,12 +240,13 @@ int16_t FlowController::stop(bool force, uint64_t timeToWait) {
     // immediately indicate that we are not running
     logger_->log_info("Stop Flow Controller");
     if (this->root_)
-      this->root_->stopProcessing(this->timer_scheduler_.get(), this->event_scheduler_.get());
+      this->root_->stopProcessing(timer_scheduler_, event_scheduler_, cron_scheduler_);
     this->flow_file_repo_->stop();
     this->provenance_repo_->stop();
     // stop after we've attempted to stop the processors.
     this->timer_scheduler_->stop();
     this->event_scheduler_->stop();
+    this->cron_scheduler_->stop();
     running_ = false;
   }
   return 0;
@@ -322,6 +324,12 @@ void FlowController::load(const std::shared_ptr<core::ProcessGroup> &root, bool 
           configuration_);
     }
 
+    if (nullptr == cron_scheduler_ || reload) {
+      cron_scheduler_ = std::make_shared<CronDrivenSchedulingAgent>(
+          std::static_pointer_cast<core::controller::ControllerServiceProvider>(std::dynamic_pointer_cast<FlowController>(shared_from_this())), provenance_repo_, flow_file_repo_, content_repo_,
+          configuration_);
+    }
+
     std::static_pointer_cast<core::controller::StandardControllerServiceProvider>(controller_service_provider_)->setRootGroup(root_);
     std::static_pointer_cast<core::controller::StandardControllerServiceProvider>(controller_service_provider_)->setSchedulingAgent(
         std::static_pointer_cast<minifi::SchedulingAgent>(event_scheduler_));
@@ -378,10 +386,11 @@ int16_t FlowController::start() {
       controller_service_provider_->enableAllControllerServices();
       this->timer_scheduler_->start();
       this->event_scheduler_->start();
+      this->cron_scheduler_->start();
 
       if (this->root_ != nullptr) {
         start_time_ = std::chrono::steady_clock::now();
-        this->root_->startProcessing(this->timer_scheduler_.get(), this->event_scheduler_.get());
+        this->root_->startProcessing(timer_scheduler_, event_scheduler_, cron_scheduler_);
       }
       initializeC2();
       running_ = true;
@@ -936,6 +945,9 @@ std::vector<std::shared_ptr<state::StateController>> FlowController::getAllCompo
         case core::SchedulingStrategy::EVENT_DRIVEN:
           vec.push_back(std::make_shared<state::ProcessorController>(processor, event_scheduler_));
           break;
+        case core::SchedulingStrategy::CRON_DRIVEN:
+          vec.push_back(std::make_shared<state::ProcessorController>(processor, cron_scheduler_));
+          break;
         default:
           break;
       }
@@ -959,6 +971,9 @@ std::vector<std::shared_ptr<state::StateController>> FlowController::getComponen
         case core::SchedulingStrategy::EVENT_DRIVEN:
           vec.push_back(std::make_shared<state::ProcessorController>(processor, event_scheduler_));
           break;
+        case core::SchedulingStrategy::CRON_DRIVEN:
+          vec.push_back(std::make_shared<state::ProcessorController>(processor, cron_scheduler_));
+          break;
         default:
           break;
       }
@@ -980,6 +995,8 @@ std::vector<BackTrace> FlowController::getTraces() {
   traces.insert(traces.end(), std::make_move_iterator(timer_driven.begin()), std::make_move_iterator(timer_driven.end()));
   auto event_driven = event_scheduler_->getTraces();
   traces.insert(traces.end(), std::make_move_iterator(event_driven.begin()), std::make_move_iterator(event_driven.end()));
+  auto cron_driven = cron_scheduler_->getTraces();
+  traces.insert(traces.end(), std::make_move_iterator(cron_driven.begin()), std::make_move_iterator(cron_driven.end()));
   // repositories
   auto prov_repo_trace = provenance_repo_->getTraces();
   traces.emplace_back(std::move(prov_repo_trace));

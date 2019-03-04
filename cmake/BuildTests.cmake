@@ -37,6 +37,7 @@ endif()
 
 function(appendIncludes testName)
     target_include_directories(${testName} BEFORE PRIVATE "${CMAKE_SOURCE_DIR}/thirdparty/catch")
+    target_include_directories(${testName} BEFORE PRIVATE "${CMAKE_SOURCE_DIR}/thirdparty/cron")
     target_include_directories(${testName} BEFORE PRIVATE "${CMAKE_SOURCE_DIR}/thirdparty/spdlog-20170710/include")
     target_include_directories(${testName} BEFORE PRIVATE "${CMAKE_SOURCE_DIR}/thirdparty/yaml-cpp-yaml-cpp-0.5.3/include")
     target_include_directories(${testName} BEFORE PRIVATE "${CMAKE_SOURCE_DIR}/include")
@@ -99,6 +100,7 @@ SET(TEST_BASE_LIB test_base)
 add_library(${TEST_BASE_LIB} STATIC "${TEST_DIR}/TestBase.cpp")
 target_include_directories(${TEST_BASE_LIB} BEFORE PRIVATE "${CMAKE_SOURCE_DIR}/thirdparty/catch")
 target_include_directories(${TEST_BASE_LIB} BEFORE PRIVATE "${CMAKE_SOURCE_DIR}/libminifi/include/")
+target_include_directories(${TEST_BASE_LIB} BEFORE PRIVATE "${CMAKE_SOURCE_DIR}/thirdparty/cron")
 target_include_directories(${TEST_BASE_LIB} BEFORE PRIVATE "${CMAKE_SOURCE_DIR}/thirdparty/spdlog-20170710/include")
 target_include_directories(${TEST_BASE_LIB} BEFORE PRIVATE "${CIVET_THIRDPARTY_ROOT}/include")
 if(WIN32)
@@ -160,4 +162,6 @@ add_test(NAME TestExecuteProcess COMMAND TestExecuteProcess )
 add_test(NAME SecureSocketGetTCPTest COMMAND SecureSocketGetTCPTest "${TEST_RESOURCES}/TestGetTCPSecure.yml"  "${TEST_RESOURCES}/")
 
 add_test(NAME TailFileTest COMMAND TailFileTest "${TEST_RESOURCES}/TestTailFile.yml"  "${TEST_RESOURCES}/")
+
+add_test(NAME TailFileCronTest COMMAND TailFileCronTest "${TEST_RESOURCES}/TestTailFileCron.yml"  "${TEST_RESOURCES}/")
 

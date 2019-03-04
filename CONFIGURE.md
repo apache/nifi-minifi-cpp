@@ -66,6 +66,11 @@ Additionally, users can utilize the MiNiFi Toolkit Converter (version 0.0.1 - sc
                 max concurrent tasks: 1
                 Properties:
 
+### Scheduling strategies
+Currently Apache NiFi MiNiFi C++ supports TIMER_DRIVEN, EVENT_DRIVEN, and CRON_DRIVEN. TIMER_DRIVEN uses periods to execute your processor(s) at given intervals.
+The EVENT_DRIVEN strategy awaits for data be available or some other notification mechanism to trigger execution. CRON_DRIVEN executes at the desired intervals
+based on the CRON periods. Apache NiFi MiNiFi C++ supports standard CRON expressions without intervals ( */5 * * * * ). 
+
 ### SiteToSite Security Configuration
 
     in minifi.properties

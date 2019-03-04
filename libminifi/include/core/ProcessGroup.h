@@ -31,6 +31,7 @@
 #include "Exception.h"
 #include "TimerDrivenSchedulingAgent.h"
 #include "EventDrivenSchedulingAgent.h"
+#include "CronDrivenSchedulingAgent.h"
 #include "core/logging/Logger.h"
 #include "controller/ControllerServiceNode.h"
 #include "controller/ControllerServiceMap.h"
@@ -160,9 +161,9 @@ class ProcessGroup {
     return config_version_;
   }
   // Start Processing
-  void startProcessing(TimerDrivenSchedulingAgent *timeScheduler, EventDrivenSchedulingAgent *eventScheduler);
+  void startProcessing(const std::shared_ptr<TimerDrivenSchedulingAgent> timeScheduler, const std::shared_ptr<EventDrivenSchedulingAgent> &eventScheduler, const std::shared_ptr<CronDrivenSchedulingAgent> &cronScheduler);
   // Stop Processing
-  void stopProcessing(TimerDrivenSchedulingAgent *timeScheduler, EventDrivenSchedulingAgent *eventScheduler);
+  void stopProcessing(const std::shared_ptr<TimerDrivenSchedulingAgent> timeScheduler, const std::shared_ptr<EventDrivenSchedulingAgent> &eventScheduler, const std::shared_ptr<CronDrivenSchedulingAgent> &cronScheduler);
   // Whether it is root process group
   bool isRootProcessGroup();
   // set parent process group
