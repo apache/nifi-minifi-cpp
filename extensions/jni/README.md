@@ -31,6 +31,8 @@ JNI jar that exist within the JNI extension, we can replicate the behavior of Ni
 The subdirectory nifi-framework-jni contains the corresponding JNI library that is needed. Place that into the API directory if you are not running
 make package. 
 
+The `make package` process will build all necessary JARS and NARS if maven is available on the classpath. 
+
 ## Configuration
 
 To enable JNI capabilities, the following options need to be provided in minifi.properties
