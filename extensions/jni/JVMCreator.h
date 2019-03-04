@@ -78,7 +78,7 @@ class JVMCreator : public minifi::core::CoreComponent {
       initializeJVM();
     }
     std::string nar_dir, nar_dep, nar_docs;
-    if (loader_ && configuration->get("nifi.nar.directory", nar_dir) && configuration->get("nifi.nar.deploy.directory", nar_dep) && configuration->get("nifi.nar.docs.directory", nar_docs)) {
+    if (loader_ && configuration->get("nifi.nar.directory", nar_dir) && configuration->get("nifi.nar.deploy.directory", nar_dep)) {
       std::shared_ptr<jni::controllers::JavaControllerService> servicer = std::make_shared<jni::controllers::JavaControllerService>("BaseService");
       servicer->initialize();
       servicer->setProperty(jni::controllers::JavaControllerService::NarDirectory, nar_dir);
