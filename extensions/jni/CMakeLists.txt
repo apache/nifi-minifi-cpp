@@ -35,9 +35,34 @@ set_property(TARGET minifi-jni PROPERTY POSITION_INDEPENDENT_CODE ON)
 set(JNI_FRAMEWORK_JAR_SOURCE "${CMAKE_SOURCE_DIR}/extensions/jni/nifi-framework-jni")
 set(JNI_FRAMEWORK_JAR_BIN "${CMAKE_CURRENT_BINARY_DIR}/" )
 
+file(COPY ${JNI_FRAMEWORK_JAR_SOURCE} DESTINATION ${JNI_FRAMEWORK_JAR_BIN})
+
+set(JNI_ASSEMBLY_JAR_SOURCE "${CMAKE_SOURCE_DIR}/extensions/jni/nifi-minifi-jni-assembly")
+set(JNI_ASSEMBLY_JAR_BIN "${CMAKE_CURRENT_BINARY_DIR}/" )
+
 include_directories(${PCAPPLUSPLUS_HEADER_DIR})
 
 file(COPY ${JNI_FRAMEWORK_JAR_SOURCE} DESTINATION ${JNI_FRAMEWORK_JAR_BIN})
+file(COPY ${JNI_ASSEMBLY_JAR_SOURCE} DESTINATION ${JNI_ASSEMBLY_JAR_BIN})
+
+message("Building NiFi assembly for packaging ....")
+execute_process(COMMAND "mvn" "package" "-Denforcer.skip=true"
+	WORKING_DIRECTORY "${JNI_ASSEMBLY_JAR_BIN}/nifi-minifi-jni-assembly"
+	RESULT_VARIABLE mvn_result
+  	OUTPUT_VARIABLE mvn_output)
+
+if("${mvn_result}" STREQUAL "0")
+	message("${mvn_output}")
+	        
+	install(DIRECTORY "${JNI_ASSEMBLY_JAR_BIN}/nifi-minifi-jni-assembly/target/nifi-minifi-jni-minifi-jni/nifi-minifi-jni-1.9.0/minifi-jni"
+        DESTINATION .
+        COMPONENT bin)
+	
+else()
+	message("Maven failed ${mvn_output}")
+endif()
+
+message("Building NiFi JNI Jar for packaging ....")
 
 execute_process(COMMAND "mvn" "package"
 	WORKING_DIRECTORY "${JNI_FRAMEWORK_JAR_BIN}/nifi-framework-jni"
@@ -45,8 +70,8 @@ execute_process(COMMAND "mvn" "package"
   	OUTPUT_VARIABLE mvn_output)
 
 if("${mvn_result}" STREQUAL "0")
-
-	SET (JNI-FRAMEWORK-JAR "${JNI_FRAMEWORK_JAR_BIN}/nifi-framework-jni/target/nifi-framework-jni-1.10.0-SNAPSHOT.jar")
+	message("${mvn_output}")
+	SET (JNI-FRAMEWORK-JAR "${JNI_FRAMEWORK_JAR_BIN}/nifi-framework-jni/target/nifi-framework-jni-1.9.0.jar")
 	message("Produced ${JNI-FRAMEWORK-JAR}")
 	message("${mvn_output}")
 	install(FILES ${JNI-FRAMEWORK-JAR}
@@ -55,6 +80,9 @@ if("${mvn_result}" STREQUAL "0")
 else()
 	message("Maven could not be invoked to build the framework jar")
 endif()
+
+
+
 
 
 if (APPLE)
