@@ -47,9 +47,9 @@ option(ENABLE_OPS "Enable Operations/zlib Tools" ON)
 option(USE_SYSTEM_UUID "Instructs the build system to search for and use a UUID library available in the host system" OFF)
 
 option(ENABLE_JNI "Instructs the build system to enable the JNI extension" OFF)
-
+option(ENABLE_OPENCV "Instructs the build system to enable the OpenCV extension" OFF)
+option(ENABLE_AWS "Instructs the build system to enable the AWS extension" OFF)
 cmake_dependent_option(USE_SYSTEM_CURL "Instructs the build system to search for and use a cURL library available in the host system" ON "NOT STATIC_BUILD" OFF)
-
 option(BUILD_SHARED_LIBS "Build yaml cpp shared lib" OFF)
 
 cmake_dependent_option(USE_SYSTEM_ZLIB "Instructs the build system to search for and use a zlib library available in the host system" ON "NOT STATIC_BUILD" OFF)
@@ -551,6 +551,12 @@ endif()
 option(ENABLE_TENSORFLOW "Disables the TensorFlow extensions." OFF)
 if (ENABLE_TENSORFLOW)
     createExtension(TENSORFLOW-EXTENSIONS "TENSORFLOW EXTENSIONS" "This enables TensorFlow support" "extensions/tensorflow" "${TEST_DIR}/tensorflow-tests")
+endif()
+
+## OpenCV Extesions
+option(ENABLE_OPENCV "Disables the OpenCV extensions." OFF)
+if (ENABLE_OPENCV)
+	createExtension(OPENCV-EXTENSIONS "OPENCV EXTENSIONS" "This enabled OpenCV support" "extensions/opencv" "${TEST_DIR}/opencv-tests")
 endif()
 
 ## AWS Extentions
