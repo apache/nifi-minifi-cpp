@@ -260,6 +260,7 @@ show_supported_features() {
   echo "N. Python Support ..............$(print_feature_status PYTHON_ENABLED)"
   echo "O. COAP Support ................$(print_feature_status COAP_ENABLED)"
   echo "V. AWS Support .................$(print_feature_status AWS_ENABLED)"
+  echo "T. OpenCV Support ..............$(print_feature_status OPENCV_ENABLED)"
   echo "****************************************"
   echo "            Build Options."
   echo "****************************************"
@@ -278,7 +279,7 @@ show_supported_features() {
 
 read_feature_options(){
   local choice
-  read -p "Enter choice [ A - P or 1-3 ] " choice
+  read -p "Enter choice [ A - T or 1-3 ] " choice
   choice=$(echo ${choice} | tr '[:upper:]' '[:lower:]')
   case $choice in
     a) ToggleFeature ROCKSDB_ENABLED ;;
@@ -302,6 +303,7 @@ read_feature_options(){
    	   fi
    	   ;;
     o) ToggleFeature COAP_ENABLED ;;
+    t) ToggleFeature OPENCV_ENABLED ;;
     1) ToggleFeature TESTS_DISABLED ;;
     2) EnableAllFeatures ;;
     3) ToggleFeature JNI_ENABLED;;
