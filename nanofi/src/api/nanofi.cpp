@@ -371,9 +371,18 @@ int8_t remove_attribute(flow_file_record *ff, const char *key) {
 int get_content(const flow_file_record* ff, uint8_t* target, int size) {
   NULL_CHECK(0, ff, target);
   auto content_repo = static_cast<std::shared_ptr<minifi::core::ContentRepository>*>(ff->crp);
-  std::shared_ptr<minifi::ResourceClaim> claim = std::make_shared<minifi::ResourceClaim>(ff->contentLocation, *content_repo);
-  auto stream = (*content_repo)->read(claim);
-  return stream->read(target, size);
+  if(ff->crp && (*content_repo)) {
+    std::shared_ptr<minifi::ResourceClaim> claim = std::make_shared<minifi::ResourceClaim>(ff->contentLocation,
+                                                                                           *content_repo);
+    auto stream = (*content_repo)->read(claim);
+    return stream->read(target, size);
+  } else {
+    file_buffer fb = file_to_buffer(ff->contentLocation);
+    size_t copy_size = size < fb.file_len ? size : fb.file_len;
+    memcpy(target, fb.buffer, copy_size*sizeof(uint8_t));
+    free(fb.buffer);
+    return copy_size;
+  }
 }
 
 /**
@@ -414,6 +423,7 @@ int transmit_flowfile(flow_file_record *ff, nifi_instance *instance) {
       file_buffer fb = file_to_buffer(ff->contentLocation);
       stream = std::make_shared<minifi::io::DataStream>();
       stream->writeData(fb.buffer, fb.file_len);
+      free(fb.buffer);
     }
   } else {
     //The flowfile has no content - create an empty stream to create empty content
@@ -606,13 +616,21 @@ flow_file_record *invoke_ff(standalone_processor* proc, const flow_file_record *
   plan->reset();
 
   if (input_ff) {
-    auto ff_data = std::make_shared<flowfile_input_params>();
     auto content_repo = static_cast<std::shared_ptr<minifi::core::ContentRepository> *>(input_ff->crp);
-    std::shared_ptr<minifi::ResourceClaim> claim = std::make_shared<minifi::ResourceClaim>(input_ff->contentLocation,
-                                                                                           *content_repo);
-    ff_data->content_stream = (*content_repo)->read(claim);
-    ff_data->attributes = *static_cast<std::map<std::string, std::string> *>(input_ff->attributes);
+    auto ff_data = std::make_shared<flowfile_input_params>();
 
+    if(input_ff->crp && (*content_repo)) {
+      std::shared_ptr<minifi::ResourceClaim> claim = std::make_shared<minifi::ResourceClaim>(input_ff->contentLocation,
+                                                                                             *content_repo);
+      ff_data->content_stream = (*content_repo)->read(claim);
+    } else {
+      ff_data->content_stream = std::make_shared<minifi::io::DataStream>();
+      file_buffer fb = file_to_buffer(input_ff->contentLocation);
+      ff_data->content_stream->writeData(fb.buffer, fb.file_len);
+      free(fb.buffer);
+    }
+
+    ff_data->attributes = *static_cast<std::map<std::string, std::string> *>(input_ff->attributes);
     plan->runNextProcessor(nullptr, ff_data);
   }
   while (plan->runNextProcessor()) {

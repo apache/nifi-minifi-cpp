@@ -67,6 +67,10 @@ target_link_libraries(generate_flow nanofi ${CMAKE_THREAD_LIBS_INIT} ${LINK_FLAG
 
 target_link_libraries(terminate_handler nanofi ${CMAKE_THREAD_LIBS_INIT} )
 
+add_executable(hash_file hash_file.c)
+
+target_link_libraries(hash_file nanofi ${CMAKE_THREAD_LIBS_INIT} )
+
 add_executable(transmit_flow transmit_flow.c)
 
 target_link_libraries(transmit_flow nanofi ${CMAKE_THREAD_LIBS_INIT}  ${LINK_FLAGS} minifi-http-curl ${LINK_END_FLAGS})
