@@ -125,7 +125,7 @@ TEST_CASE("CompressFileGZip", "[compressfiletest1]") {
     content_repo->initialize(std::make_shared<org::apache::nifi::minifi::Configure>());
     // connection from compress processor to log attribute
     std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(repo, content_repo, "logattributeconnection");
-    connection->setRelationship(core::Relationship("success", "compress successful output"));
+    connection->addRelationship(core::Relationship("success", "compress successful output"));
     connection->setSource(processor);
     connection->setDestination(logAttributeProcessor);
     connection->setSourceUUID(processoruuid);
@@ -226,7 +226,7 @@ TEST_CASE("DecompressFileGZip", "[compressfiletest2]") {
     content_repo->initialize(std::make_shared<org::apache::nifi::minifi::Configure>());
     // connection from compress processor to log attribute
     std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(repo, content_repo, "logattributeconnection");
-    connection->setRelationship(core::Relationship("success", "compress successful output"));
+    connection->addRelationship(core::Relationship("success", "compress successful output"));
     connection->setSource(processor);
     connection->setDestination(logAttributeProcessor);
     connection->setSourceUUID(processoruuid);
@@ -329,7 +329,7 @@ TEST_CASE("CompressFileBZip", "[compressfiletest3]") {
     content_repo->initialize(std::make_shared<org::apache::nifi::minifi::Configure>());
     // connection from compress processor to log attribute
     std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(repo, content_repo, "logattributeconnection");
-    connection->setRelationship(core::Relationship("success", "compress successful output"));
+    connection->addRelationship(core::Relationship("success", "compress successful output"));
     connection->setSource(processor);
     connection->setDestination(logAttributeProcessor);
     connection->setSourceUUID(processoruuid);
@@ -430,7 +430,7 @@ TEST_CASE("DecompressFileBZip", "[compressfiletest4]") {
     content_repo->initialize(std::make_shared<org::apache::nifi::minifi::Configure>());
     // connection from compress processor to log attribute
     std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(repo, content_repo, "logattributeconnection");
-    connection->setRelationship(core::Relationship("success", "compress successful output"));
+    connection->addRelationship(core::Relationship("success", "compress successful output"));
     connection->setSource(processor);
     connection->setDestination(logAttributeProcessor);
     connection->setSourceUUID(processoruuid);
@@ -533,7 +533,7 @@ TEST_CASE("CompressFileLZMA", "[compressfiletest5]") {
     content_repo->initialize(std::make_shared<org::apache::nifi::minifi::Configure>());
     // connection from compress processor to log attribute
     std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(repo, content_repo, "logattributeconnection");
-    connection->setRelationship(core::Relationship("success", "compress successful output"));
+    connection->addRelationship(core::Relationship("success", "compress successful output"));
     connection->setSource(processor);
     connection->setDestination(logAttributeProcessor);
     connection->setSourceUUID(processoruuid);
@@ -640,7 +640,7 @@ TEST_CASE("DecompressFileLZMA", "[compressfiletest6]") {
     content_repo->initialize(std::make_shared<org::apache::nifi::minifi::Configure>());
     // connection from compress processor to log attribute
     std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(repo, content_repo, "logattributeconnection");
-    connection->setRelationship(core::Relationship("success", "compress successful output"));
+    connection->addRelationship(core::Relationship("success", "compress successful output"));
     connection->setSource(processor);
     connection->setDestination(logAttributeProcessor);
     connection->setSourceUUID(processoruuid);
@@ -750,7 +750,7 @@ TEST_CASE("CompressFileXYLZMA", "[compressfiletest7]") {
     content_repo->initialize(std::make_shared<org::apache::nifi::minifi::Configure>());
     // connection from compress processor to log attribute
     std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(repo, content_repo, "logattributeconnection");
-    connection->setRelationship(core::Relationship("success", "compress successful output"));
+    connection->addRelationship(core::Relationship("success", "compress successful output"));
     connection->setSource(processor);
     connection->setDestination(logAttributeProcessor);
     connection->setSourceUUID(processoruuid);
@@ -857,7 +857,7 @@ TEST_CASE("DecompressFileXYLZMA", "[compressfiletest8]") {
     content_repo->initialize(std::make_shared<org::apache::nifi::minifi::Configure>());
     // connection from compress processor to log attribute
     std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(repo, content_repo, "logattributeconnection");
-    connection->setRelationship(core::Relationship("success", "compress successful output"));
+    connection->addRelationship(core::Relationship("success", "compress successful output"));
     connection->setSource(processor);
     connection->setDestination(logAttributeProcessor);
     connection->setSourceUUID(processoruuid);

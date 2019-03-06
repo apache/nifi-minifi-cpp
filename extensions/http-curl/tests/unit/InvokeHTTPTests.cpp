@@ -65,17 +65,17 @@ TEST_CASE("HTTPTestsWithNoResourceClaimPOST", "[httptest1]") {
   REQUIRE(true == invokehttp->getUUID(invokehttp_uuid));
 
   std::shared_ptr<minifi::Connection> gcConnection = std::make_shared<minifi::Connection>(repo, content_repo, "getfileCreate2Connection");
-  gcConnection->setRelationship(core::Relationship("success", "description"));
+  gcConnection->addRelationship(core::Relationship("success", "description"));
 
   std::shared_ptr<minifi::Connection> laConnection = std::make_shared<minifi::Connection>(repo, content_repo, "logattribute");
-  laConnection->setRelationship(core::Relationship("success", "description"));
+  laConnection->addRelationship(core::Relationship("success", "description"));
 
   std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(repo, content_repo, "getfileCreate2Connection");
-  connection->setRelationship(core::Relationship("success", "description"));
+  connection->addRelationship(core::Relationship("success", "description"));
 
   std::shared_ptr<minifi::Connection> connection2 = std::make_shared<minifi::Connection>(repo, content_repo, "listenhttp");
 
-  connection2->setRelationship(core::Relationship("No Retry", "description"));
+  connection2->addRelationship(core::Relationship("No Retry", "description"));
 
   // link the connections so that we can test results at the end for this
   connection->setSource(listenhttp);
@@ -184,17 +184,17 @@ TEST_CASE("HTTPTestsWithResourceClaimPOST", "[httptest1]") {
   std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
 
   std::shared_ptr<minifi::Connection> gcConnection = std::make_shared<minifi::Connection>(repo, content_repo, "getfileCreate2Connection");
-  gcConnection->setRelationship(core::Relationship("success", "description"));
+  gcConnection->addRelationship(core::Relationship("success", "description"));
 
   std::shared_ptr<minifi::Connection> laConnection = std::make_shared<minifi::Connection>(repo, content_repo, "logattribute");
-  laConnection->setRelationship(core::Relationship("success", "description"));
+  laConnection->addRelationship(core::Relationship("success", "description"));
 
   std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(repo, content_repo, "getfileCreate2Connection");
-  connection->setRelationship(core::Relationship("success", "description"));
+  connection->addRelationship(core::Relationship("success", "description"));
 
   std::shared_ptr<minifi::Connection> connection2 = std::make_shared<minifi::Connection>(repo, content_repo, "listenhttp");
 
-  connection2->setRelationship(core::Relationship("No Retry", "description"));
+  connection2->addRelationship(core::Relationship("No Retry", "description"));
 
   // link the connections so that we can test results at the end for this
   connection->setSource(listenhttp);

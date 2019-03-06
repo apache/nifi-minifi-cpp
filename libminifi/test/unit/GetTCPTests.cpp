@@ -77,10 +77,10 @@ TEST_CASE("GetTCPWithoutEOM", "[GetTCP1]") {
   REQUIRE(processoruuid.to_string() != logattribute_uuid.to_string());
 
   std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(repo, content_repo, "gettcpexampleConnection");
-  connection->setRelationship(core::Relationship("success", "description"));
+  connection->addRelationship(core::Relationship("success", "description"));
 
   std::shared_ptr<minifi::Connection> connection2 = std::make_shared<minifi::Connection>(repo, content_repo, "logattribute");
-  connection2->setRelationship(core::Relationship("success", "description"));
+  connection2->addRelationship(core::Relationship("success", "description"));
 
   // link the connections so that we can test results at the end for this
   connection->setSource(processor);
@@ -190,10 +190,10 @@ TEST_CASE("GetTCPWithOEM", "[GetTCP2]") {
   REQUIRE(true == logAttribute->getUUID(logattribute_uuid));
 
   std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(repo, content_repo, "gettcpexampleConnection");
-  connection->setRelationship(core::Relationship("partial", "description"));
+  connection->addRelationship(core::Relationship("partial", "description"));
 
   std::shared_ptr<minifi::Connection> connection2 = std::make_shared<minifi::Connection>(repo, content_repo, "logattribute");
-  connection2->setRelationship(core::Relationship("partial", "description"));
+  connection2->addRelationship(core::Relationship("partial", "description"));
 
   // link the connections so that we can test results at the end for this
   connection->setSource(processor);
@@ -315,10 +315,10 @@ TEST_CASE("GetTCPWithOnlyOEM", "[GetTCP3]") {
   REQUIRE(true == logAttribute->getUUID(logattribute_uuid));
 
   std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(repo, content_repo, "gettcpexampleConnection");
-  connection->setRelationship(core::Relationship("success", "description"));
+  connection->addRelationship(core::Relationship("success", "description"));
 
   std::shared_ptr<minifi::Connection> connection2 = std::make_shared<minifi::Connection>(repo, content_repo, "logattribute");
-  connection2->setRelationship(core::Relationship("success", "description"));
+  connection2->addRelationship(core::Relationship("success", "description"));
 
   // link the connections so that we can test results at the end for this
   connection->setSource(processor);
