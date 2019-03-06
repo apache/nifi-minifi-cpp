@@ -35,21 +35,35 @@ Methods that are enabled within the processor are  describe, onSchedule, onIniti
 Describe is passed the processor and is a required function. You must set the description like so:
 
 ```python
-	def describe(processor):
-	  processor.setDescription("Adds an attribute to your flow files")
+def describe(processor):
+  processor.setDescription("Adds an attribute to your flow files")
 ```
    
 onInitialize is also passed the processor reference and can be where you set properties. The first argument is the property display name,
 followed by the description, and default value. The last two arguments are booleans describing if the property is required or requires EL.
 
 ```python
-	def onInitialize(processor):
-	  processor.setSupportsDynamicProperties()
-	  processor.addProperty("property name","description","default value", True, False)
+def onInitialize(processor):
+  processor.setSupportsDynamicProperties()
+  processor.addProperty("property name","description","default value", True, False)
 ```
 
 The onSchedule function is passed the context and session factory. This should be where your processor loads and reads properties via
 the getProperty function. onTrigger is executed and passed the processor context and session. You may keep state within your processor.
+
+Much like C++ processors, callbacks may be defined for reading/writing streams of data through the session. Those callback classes will
+have a process function that accepts the input stream. You may use codecs getReader to read that data as in the example, below, from
+VaderSentiment
+
+```python
+class VaderSentiment(object):
+  def __init__(self):
+    self.content = None
+
+  def process(self, input_stream):
+    self.content = codecs.getreader('utf-8')(input_stream).read()
+    return len(self.content)
+```
 
 ## Configuration
 
@@ -66,6 +80,6 @@ exist.
    
 ## Sentiment Analysis
 
-The SentimentAnalysis processor will perform a Vder Sentiment Analysis. This requires that you install nltk and VaderSentiment
+The SentimentAnalysis processor will perform a Vader Sentiment Analysis. This requires that you install nltk and VaderSentiment
 		pip install nltk
 		pip install VaderSentiment

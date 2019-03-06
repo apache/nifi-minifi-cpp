@@ -202,23 +202,32 @@ bool FlowController::applyConfiguration(const std::string &source, const std::st
   stop(true);
   waitUnload(30000);
   controller_map_->clear();
+  auto prevRoot = std::move(this->root_);
   this->root_ = std::move(newRoot);
   initialized_ = false;
-  load(this->root_, true);
-  flow_update_ = true;
-  bool started = start() == 0;
+  bool started = false;
+  try {
+    load(this->root_, true);
+    flow_update_ = true;
+    started = start() == 0;
 
-  updating_ = false;
+    updating_ = false;
 
-  if (started) {
-    auto flowVersion = flow_configuration_->getFlowVersion();
-    if (flowVersion) {
-      logger_->log_debug("Setting flow id to %s", flowVersion->getFlowId());
-      configuration_->set(Configure::nifi_c2_flow_id, flowVersion->getFlowId());
-      configuration_->set(Configure::nifi_c2_flow_url, flowVersion->getFlowIdentifier()->getRegistryUrl());
-    } else {
-      logger_->log_debug("Invalid flow version, not setting");
+    if (started) {
+      auto flowVersion = flow_configuration_->getFlowVersion();
+      if (flowVersion) {
+        logger_->log_debug("Setting flow id to %s", flowVersion->getFlowId());
+        configuration_->set(Configure::nifi_c2_flow_id, flowVersion->getFlowId());
+        configuration_->set(Configure::nifi_c2_flow_url, flowVersion->getFlowIdentifier()->getRegistryUrl());
+      } else {
+        logger_->log_debug("Invalid flow version, not setting");
+      }
     }
+  } catch (...) {
+    this->root_ = std::move(prevRoot);
+    load(this->root_, true);
+    flow_update_ = true;
+    updating_ = false;
   }
 
   return started;
