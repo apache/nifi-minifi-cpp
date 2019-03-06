@@ -63,6 +63,10 @@ class PythonCreator : public minifi::core::CoreComponent {
   }
 
   virtual void configure(const std::shared_ptr<Configure> &configuration) override {
+
+    python::PythonScriptEngine::initialize();
+
+    auto engine = std::make_shared<python::PythonScriptEngine>();
     std::string pathListings;
 
     // assuming we have the options set and can access the PythonCreator

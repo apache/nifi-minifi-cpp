@@ -22,6 +22,8 @@
 #include <memory>
 #include <set>
 #include <utility>
+#include <exception>
+#include <stdexcept>
 
 #include "ExecutePythonProcessor.h"
 
@@ -60,36 +62,32 @@ void ExecutePythonProcessor::initialize() {
   relationships.insert(Failure);
   setSupportedRelationships(std::move(relationships));
 
-  python::PythonScriptEngine::initialize();
-
   if (!prop.empty()) {
     setProperty(ScriptFile, prop);
     std::shared_ptr<script::ScriptEngine> engine;
     python_logger_ = logging::LoggerFactory<ExecutePythonProcessor>::getAliasedLogger(getName());
-    // Use an existing engine, if one is available
-    if (script_engine_q_.try_dequeue(engine)) {
-      logger_->log_debug("Using available %s script engine instance", script_engine_);
-    } else {
-      logger_->log_info("Creating new %s script instance", script_engine_);
-      logger_->log_info("Approximately %d %s script instances created for this processor", script_engine_q_.size_approx(), script_engine_);
 
-      engine = createEngine<python::PythonScriptEngine>();
+    engine = createEngine<python::PythonScriptEngine>();
 
-      if (engine == nullptr) {
-        throw std::runtime_error("No script engine available");
-      }
-      engine->evalFile(prop);
+    if (engine == nullptr) {
+      throw std::runtime_error("No script engine available");
     }
+
     try {
+      engine->evalFile(prop);
       auto me = shared_from_this();
       triggerDescribe(engine, me);
       triggerInitialize(engine, me);
       valid_init_ = true;
     } catch (std::exception &exception) {
       logger_->log_error("Caught Exception %s", exception.what());
+      engine = nullptr;
+      std::rethrow_exception(std::current_exception());
       valid_init_ = false;
     } catch (...) {
       logger_->log_error("Caught Exception");
+      engine = nullptr;
+      std::rethrow_exception(std::current_exception());
       valid_init_ = false;
     }
 
@@ -132,8 +130,6 @@ void ExecutePythonProcessor::onSchedule(const std::shared_ptr<core::ProcessConte
       }
     }
 
-//    triggerInitialize(engine);
-
     triggerSchedule(engine, context);
 
     // Make engine available for use again
@@ -145,10 +141,8 @@ void ExecutePythonProcessor::onSchedule(const std::shared_ptr<core::ProcessConte
     }
   } catch (std::exception &exception) {
     logger_->log_error("Caught Exception %s", exception.what());
-    //this->yield();
   } catch (...) {
     logger_->log_error("Caught Exception");
-    //this->yield();
   }
 }
 

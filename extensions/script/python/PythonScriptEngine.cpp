@@ -27,53 +27,40 @@ namespace nifi {
 namespace minifi {
 namespace python {
 
-std::unique_ptr<py::scoped_interpreter> PythonScriptEngine::guard_;
-std::unique_ptr<py::gil_scoped_release> PythonScriptEngine::gil_release_;
-std::mutex PythonScriptEngine::init_mutex_;
-bool PythonScriptEngine::initialized_;
+Interpreter *getInterpreter() {
+  static Interpreter interpreter;
+  return &interpreter;
+}
 
 PythonScriptEngine::PythonScriptEngine() {
-  {
-    std::lock_guard<std::mutex> lock(init_mutex_);
-
-    if (!initialized_) {
-      throw std::runtime_error("Python is not yet initialized");
-    }
-  }
-
-  {
-    py::gil_scoped_acquire gil{};
-    py::module::import("minifi_native");
-    bindings_.reset(new py::dict());
-    (*bindings_) = py::globals().attr("copy")();
-  }
+  auto intepreter = getInterpreter();
+  py::gil_scoped_acquire gil { };
+  py::module::import("minifi_native");
+  bindings_.reset(new py::dict());
+  (*bindings_) = py::globals().attr("copy")();
 }
 
 void PythonScriptEngine::eval(const std::string &script) {
-  py::gil_scoped_acquire gil{};
+  py::gil_scoped_acquire gil { };
 
   if (script[0] == '\n') {
     py::eval<py::eval_statements>(py::module::import("textwrap").attr("dedent")(script), *bindings_, *bindings_);
   } else {
-     py::eval<py::eval_statements>(script, *bindings_, *bindings_);
+    py::eval<py::eval_statements>(script, *bindings_, *bindings_);
   }
 }
 
 void PythonScriptEngine::evalFile(const std::string &file_name) {
-  py::gil_scoped_acquire gil{};
-  py::eval_file(file_name, *bindings_, *bindings_);
+  py::gil_scoped_acquire gil { };
+  try {
+    py::eval_file(file_name, *bindings_, *bindings_);
+  } catch (const std::exception &e) {
+    throw minifi::script::ScriptException(e.what());
+  }
 }
 
 void PythonScriptEngine::initialize() {
-  std::lock_guard<std::mutex> lock(init_mutex_);
-
-  if (initialized_) {
-    return;
-  }
-
-  initialized_ = true;
-  guard_.reset(new py::scoped_interpreter(false));
-  gil_release_.reset(new py::gil_scoped_release());
+  auto intepreter = getInterpreter();
 }
 
 } /* namespace python */

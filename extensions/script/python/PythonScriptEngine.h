@@ -27,6 +27,7 @@
 #include "../ScriptProcessContext.h"
 #include "PythonProcessor.h"
 #include "PyProcessSession.h"
+#include "../ScriptException.h"
 
 namespace org {
 namespace apache {
@@ -35,6 +36,23 @@ namespace minifi {
 namespace python {
 
 namespace py = pybind11;
+
+struct Interpreter {
+
+  Interpreter()
+      : guard_(false) {
+  }
+
+  ~Interpreter() {
+  }
+
+  Interpreter(const Interpreter &other) = delete;
+
+  py::scoped_interpreter guard_;
+  py::gil_scoped_release gil_release_;
+};
+
+static Interpreter *getInterpreter();
 
 class PythonScriptEngine : public script::ScriptEngine {
  public:
@@ -72,8 +90,12 @@ class PythonScriptEngine : public script::ScriptEngine {
   template<typename ... Args>
   void call(const std::string &fn_name, Args &&...args) {
     py::gil_scoped_acquire gil { };
-    if ((*bindings_).contains(fn_name.c_str()))
-      (*bindings_)[fn_name.c_str()](convert(args)...);
+    try {
+      if ((*bindings_).contains(fn_name.c_str()))
+        (*bindings_)[fn_name.c_str()](convert(args)...);
+    } catch (const std::exception &e) {
+      throw minifi::script::ScriptException(e.what());
+    }
   }
 
   /**
@@ -205,11 +227,6 @@ class PythonScriptEngine : public script::ScriptEngine {
   }
 
  private:
-  static std::unique_ptr<py::scoped_interpreter> guard_;
-  static std::unique_ptr<py::gil_scoped_release> gil_release_;
-
-  static std::mutex init_mutex_;
-  static bool initialized_;
   std::unique_ptr<py::dict> bindings_;
 };
 
