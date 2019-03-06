@@ -50,7 +50,7 @@ class Connection : public core::Connectable, public std::enable_shared_from_this
   explicit Connection(const std::shared_ptr<core::Repository> &flow_repository, const std::shared_ptr<core::ContentRepository> &content_repo, std::string name);
   explicit Connection(const std::shared_ptr<core::Repository> &flow_repository, const std::shared_ptr<core::ContentRepository> &content_repo, std::string name, utils::Identifier & uuid);
   explicit Connection(const std::shared_ptr<core::Repository> &flow_repository, const std::shared_ptr<core::ContentRepository> &content_repo, std::string name, utils::Identifier & uuid,
-                        utils::Identifier & srcUUID);
+                      utils::Identifier & srcUUID);
   explicit Connection(const std::shared_ptr<core::Repository> &flow_repository, const std::shared_ptr<core::ContentRepository> &content_repo, std::string name, utils::Identifier & uuid,
                       utils::Identifier & srcUUID, utils::Identifier & destUUID);
   // Destructor
@@ -90,13 +90,22 @@ class Connection : public core::Connectable, public std::enable_shared_from_this
   std::shared_ptr<core::Connectable> getDestination() {
     return dest_connectable_;
   }
-  // Set Connection relationship
+
+  /**
+   * Deprecated function
+   * Please use addRelationship.
+   */
   void setRelationship(core::Relationship relationship) {
-    relationship_ = relationship;
+    relationships_.insert(relationship);
+  }
+
+  // Set Connection relationship
+  void addRelationship(core::Relationship relationship) {
+    relationships_.insert(relationship);
   }
   // ! Get Connection relationship
-  core::Relationship getRelationship() {
-    return relationship_;
+  const std::set<core::Relationship> &getRelationships() const {
+    return relationships_;
   }
   // Set Max Queue Size
   void setMaxQueueSize(uint64_t size) {
@@ -166,7 +175,7 @@ class Connection : public core::Connectable, public std::enable_shared_from_this
   // Destination Processor UUID
   utils::Identifier dest_uuid_;
   // Relationship for this connection
-  core::Relationship relationship_;
+  std::set<core::Relationship> relationships_;
   // Source Processor (ProcessNode/Port)
   std::shared_ptr<core::Connectable> source_connectable_;
   // Destination Processor (ProcessNode/Port)

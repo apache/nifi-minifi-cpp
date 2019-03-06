@@ -63,7 +63,7 @@ std::shared_ptr<core::Processor> TestPlan::addProcessor(const std::shared_ptr<co
     connection_name << last->getUUIDStr() << "-to-" << processor->getUUIDStr();
     logger_->log_info("Creating %s connection for proc %d", connection_name.str(), processor_queue_.size() + 1);
     std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(flow_repo_, content_repo_, connection_name.str());
-    connection->setRelationship(relationship);
+    connection->addRelationship(relationship);
 
     // link the connections so that we can test results at the end for this
     connection->setSource(last);
@@ -192,7 +192,7 @@ std::shared_ptr<minifi::Connection> TestPlan::buildFinalConnection(std::shared_p
   std::shared_ptr<core::Processor> last = processor;
   connection_name << last->getUUIDStr() << "-to-" << processor->getUUIDStr();
   std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(flow_repo_, content_repo_, connection_name.str());
-  connection->setRelationship(termination_);
+  connection->addRelationship(termination_);
 
   // link the connections so that we can test results at the end for this
   connection->setSource(last);

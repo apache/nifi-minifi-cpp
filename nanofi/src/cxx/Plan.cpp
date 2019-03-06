@@ -283,7 +283,7 @@ std::shared_ptr<minifi::Connection> ExecutionPlan::connectProcessors(std::shared
   std::stringstream connection_name;
   connection_name << src_proc->getUUIDStr() << "-to-" << dst_proc->getUUIDStr();
   std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(flow_repo_, content_repo_, connection_name.str());
-  connection->setRelationship(relationship);
+  connection->addRelationship(relationship);
 
   // link the connections so that we can test results at the end for this
   connection->setSource(src_proc);

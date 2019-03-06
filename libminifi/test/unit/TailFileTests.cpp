@@ -142,7 +142,7 @@ TEST_CASE("TailFileWithDelimiter", "[tailfiletest1]") {
     std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
     content_repo->initialize(std::make_shared<org::apache::nifi::minifi::Configure>());
     std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(repo, content_repo, "logattributeconnection");
-    connection->setRelationship(core::Relationship("success", "TailFile successful output"));
+    connection->addRelationship(core::Relationship("success", "TailFile successful output"));
 
     // link the connections so that we can test results at the end for this
     connection->setDestination(connection);
@@ -211,7 +211,7 @@ TEST_CASE("TailFileWithoutDelimiter", "[tailfiletest2]") {
     std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
     content_repo->initialize(std::make_shared<org::apache::nifi::minifi::Configure>());
     std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(repo, content_repo, "logattributeconnection");
-    connection->setRelationship(core::Relationship("success", "TailFile successful output"));
+    connection->addRelationship(core::Relationship("success", "TailFile successful output"));
 
     // link the connections so that we can test results at the end for this
     connection->setDestination(connection);

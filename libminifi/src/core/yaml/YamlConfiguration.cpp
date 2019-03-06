@@ -534,20 +534,24 @@ void YamlConfiguration::parseConnectionYaml(YAML::Node *connectionsNode, core::P
           core::Relationship relationship(rawRelationship, "");
           logger_->log_debug("parseConnection: relationship => [%s]", rawRelationship);
           if (connection) {
-            connection->setRelationship(relationship);
+            connection->addRelationship(relationship);
           }
         } else if (connectionNode.as<YAML::Node>()["source relationship names"]) {
           auto relList = connectionNode["source relationship names"];
-
-          if (relList.size() != 1) {
-            throw std::invalid_argument("Only one element is supported for 'source relationship names'");
-          }
-
-          auto rawRelationship = relList[0].as<std::string>();
-          core::Relationship relationship(rawRelationship, "");
-          logger_->log_debug("parseConnection: relationship => [%s]", rawRelationship);
           if (connection) {
-            connection->setRelationship(relationship);
+            if (relList.IsSequence()) {
+              for (const auto &rel : relList) {
+                auto rawRelationship = rel.as<std::string>();
+                core::Relationship relationship(rawRelationship, "");
+                logger_->log_debug("parseConnection: relationship => [%s]", rawRelationship);
+                connection->addRelationship(relationship);
+              }
+            } else {
+              auto rawRelationship = relList.as<std::string>();
+              core::Relationship relationship(rawRelationship, "");
+              logger_->log_debug("parseConnection: relationship => [%s]", rawRelationship);
+              connection->addRelationship(relationship);
+            }
           }
         }
 

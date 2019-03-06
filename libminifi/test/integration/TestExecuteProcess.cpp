@@ -59,7 +59,7 @@ int main(int argc, char **argv) {
   utils::Identifier processoruuid;
   assert(true == processor->getUUID(processoruuid));
   std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(test_repo, content_repo, "executeProcessConnection");
-  connection->setRelationship(core::Relationship("success", "description"));
+  connection->addRelationship(core::Relationship("success", "description"));
 
   // link the connections so that we can test results at the end for this
   connection->setSource(processor);

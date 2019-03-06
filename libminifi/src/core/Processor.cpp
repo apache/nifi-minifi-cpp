@@ -126,31 +126,33 @@ bool Processor::addConnection(std::shared_ptr<Connectable> conn) {
   }
   std::string source_uuid = srcUUID.to_string();
   if (my_uuid == source_uuid) {
-    std::string relationship = connection->getRelationship().getName();
-    // Connection is source from the current processor
-    auto &&it = out_going_connections_.find(relationship);
-    if (it != out_going_connections_.end()) {
-      // We already has connection for this relationship
-      std::set<std::shared_ptr<Connectable>> existedConnection = it->second;
-      if (existedConnection.find(connection) == existedConnection.end()) {
-        // We do not have the same connection for this relationship yet
-        existedConnection.insert(connection);
+    const auto &rels = connection->getRelationships();
+    for (auto i = rels.begin(); i != rels.end(); i++) {
+      const auto relationship = (*i).getName();
+      // Connection is source from the current processor
+      auto &&it = out_going_connections_.find(relationship);
+      if (it != out_going_connections_.end()) {
+        // We already has connection for this relationship
+        std::set<std::shared_ptr<Connectable>> existedConnection = it->second;
+        if (existedConnection.find(connection) == existedConnection.end()) {
+          // We do not have the same connection for this relationship yet
+          existedConnection.insert(connection);
+          connection->setSource(shared_from_this());
+          out_going_connections_[relationship] = existedConnection;
+          logger_->log_debug("Add connection %s into Processor %s outgoing connection for relationship %s", connection->getName(), name_, relationship);
+          ret = true;
+        }
+      } else {
+        // We do not have any outgoing connection for this relationship yet
+        std::set<std::shared_ptr<Connectable>> newConnection;
+        newConnection.insert(connection);
         connection->setSource(shared_from_this());
-        out_going_connections_[relationship] = existedConnection;
+        out_going_connections_[relationship] = newConnection;
         logger_->log_debug("Add connection %s into Processor %s outgoing connection for relationship %s", connection->getName(), name_, relationship);
         ret = true;
       }
-    } else {
-      // We do not have any outgoing connection for this relationship yet
-      std::set<std::shared_ptr<Connectable>> newConnection;
-      newConnection.insert(connection);
-      connection->setSource(shared_from_this());
-      out_going_connections_[relationship] = newConnection;
-      logger_->log_debug("Add connection %s into Processor %s outgoing connection for relationship %s", connection->getName(), name_, relationship);
-      ret = true;
     }
   }
-
   return ret;
 }
 
@@ -181,16 +183,17 @@ void Processor::removeConnection(std::shared_ptr<Connectable> conn) {
   }
 
   if (uuid_ == srcUUID) {
-    std::string relationship = connection->getRelationship().getName();
-    // Connection is source from the current processor
-    auto &&it = out_going_connections_.find(relationship);
-    if (it == out_going_connections_.end()) {
-      return;
-    } else {
-      if (out_going_connections_[relationship].find(connection) != out_going_connections_[relationship].end()) {
-        out_going_connections_[relationship].erase(connection);
-        connection->setSource(NULL);
-        logger_->log_debug("Remove connection %s into Processor %s outgoing connection for relationship %s", connection->getName(), name_, relationship);
+    const auto &rels = connection->getRelationships();
+    for (auto i = rels.begin(); i != rels.end(); i++) {
+      const auto relationship = (*i).getName();
+      // Connection is source from the current processor
+      auto &&it = out_going_connections_.find(relationship);
+      if (it != out_going_connections_.end()) {
+        if (out_going_connections_[relationship].find(connection) != out_going_connections_[relationship].end()) {
+          out_going_connections_[relationship].erase(connection);
+          connection->setSource(NULL);
+          logger_->log_debug("Remove connection %s into Processor %s outgoing connection for relationship %s", connection->getName(), name_, relationship);
+        }
       }
     }
   }

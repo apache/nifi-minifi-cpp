@@ -58,7 +58,7 @@ TEST_CASE("Test GetFileMultiple", "[getfileCreate3]") {
 
   std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(test_repo, content_repo, "getfileCreate2Connection");
 
-  connection->setRelationship(core::Relationship("success", "description"));
+  connection->addRelationship(core::Relationship("success", "description"));
 
   // link the connections so that we can test results at the end for this
   connection->setSource(processor);
@@ -142,7 +142,7 @@ TEST_CASE("Test GetFile Ignore", "[getfileCreate3]") {
 
   std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(test_repo, content_repo, "getfileCreate2Connection");
 
-  connection->setRelationship(core::Relationship("success", "description"));
+  connection->addRelationship(core::Relationship("success", "description"));
 
   // link the connections so that we can test results at the end for this
   connection->setSource(processor);

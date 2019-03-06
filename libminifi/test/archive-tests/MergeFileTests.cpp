@@ -143,7 +143,7 @@ TEST_CASE("MergeFileDefragment", "[mergefiletest1]") {
     content_repo->initialize(std::make_shared<org::apache::nifi::minifi::Configure>());
     // connection from merge processor to log attribute
     std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(repo, content_repo, "logattributeconnection");
-    connection->setRelationship(core::Relationship("merged", "Merge successful output"));
+    connection->addRelationship(core::Relationship("merged", "Merge successful output"));
     connection->setSource(processor);
     connection->setDestination(logAttributeProcessor);
     connection->setSourceUUID(processoruuid);
@@ -315,7 +315,7 @@ TEST_CASE("MergeFileDefragmentDelimiter", "[mergefiletest2]") {
     content_repo->initialize(std::make_shared<org::apache::nifi::minifi::Configure>());
     // connection from merge processor to log attribute
     std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(repo, content_repo, "logattributeconnection");
-    connection->setRelationship(core::Relationship("merged", "Merge successful output"));
+    connection->addRelationship(core::Relationship("merged", "Merge successful output"));
     connection->setSource(processor);
     connection->setDestination(logAttributeProcessor);
     connection->setSourceUUID(processoruuid);
@@ -478,7 +478,7 @@ TEST_CASE("MergeFileDefragmentDropFlow", "[mergefiletest3]") {
     content_repo->initialize(std::make_shared<org::apache::nifi::minifi::Configure>());
     // connection from merge processor to log attribute
     std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(repo, content_repo, "logattributeconnection");
-    connection->setRelationship(core::Relationship("merged", "Merge successful output"));
+    connection->addRelationship(core::Relationship("merged", "Merge successful output"));
     connection->setSource(processor);
     connection->setDestination(logAttributeProcessor);
     connection->setSourceUUID(processoruuid);
@@ -643,7 +643,7 @@ TEST_CASE("MergeFileBinPack", "[mergefiletest4]") {
     content_repo->initialize(std::make_shared<org::apache::nifi::minifi::Configure>());
     // connection from merge processor to log attribute
     std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(repo, content_repo, "logattributeconnection");
-    connection->setRelationship(core::Relationship("merged", "Merge successful output"));
+    connection->addRelationship(core::Relationship("merged", "Merge successful output"));
     connection->setSource(processor);
     connection->setDestination(logAttributeProcessor);
     connection->setSourceUUID(processoruuid);
@@ -791,7 +791,7 @@ TEST_CASE("MergeFileTar", "[mergefiletest4]") {
     content_repo->initialize(std::make_shared<org::apache::nifi::minifi::Configure>());
     // connection from merge processor to log attribute
     std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(repo, content_repo, "logattributeconnection");
-    connection->setRelationship(core::Relationship("merged", "Merge successful output"));
+    connection->addRelationship(core::Relationship("merged", "Merge successful output"));
     connection->setSource(processor);
     connection->setDestination(logAttributeProcessor);
     connection->setSourceUUID(processoruuid);
@@ -948,7 +948,7 @@ TEST_CASE("MergeFileZip", "[mergefiletest5]") {
     content_repo->initialize(std::make_shared<org::apache::nifi::minifi::Configure>());
     // connection from merge processor to log attribute
     std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(repo, content_repo, "logattributeconnection");
-    connection->setRelationship(core::Relationship("merged", "Merge successful output"));
+    connection->addRelationship(core::Relationship("merged", "Merge successful output"));
     connection->setSource(processor);
     connection->setDestination(logAttributeProcessor);
     connection->setSourceUUID(processoruuid);
