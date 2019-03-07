@@ -462,7 +462,7 @@ void YamlConfiguration::parseControllerServices(YAML::Node *controllerServicesNo
             type = controllerServiceNode["type"].as<std::string>();
             logger_->log_debug("Using type %s for controller service node", type);
           }
-
+          std::string fullType = type;
           auto lastOfIdx = type.find_last_of(".");
           if (lastOfIdx != std::string::npos) {
             lastOfIdx++;  // if a value is found, increment to move beyond the .
@@ -475,7 +475,7 @@ void YamlConfiguration::parseControllerServices(YAML::Node *controllerServicesNo
 
           utils::Identifier uuid;
           uuid = id;
-          auto controller_service_node = createControllerService(type, name, uuid);
+          auto controller_service_node = createControllerService(type, fullType, name, uuid);
           if (nullptr != controller_service_node) {
             logger_->log_debug("Created Controller Service with UUID %s and name %s", id, name);
             controller_service_node->initialize();

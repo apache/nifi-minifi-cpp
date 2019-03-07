@@ -31,10 +31,11 @@
 #include "concurrentqueue.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "jvm/JavaControllerService.h"
-#include "jvm/JniProcessContext.h"
+#include "jvm/JniConfigurationContext.h"
+#include "jvm/JniInitializationContext.h"
 #include "utils/Id.h"
 #include "jvm/NarClassLoader.h"
-
+#include "ClassRegistrar.h"
 namespace org {
 namespace apache {
 namespace nifi {
@@ -52,7 +53,7 @@ namespace controllers {
  * controller service within the execute java process.
  *
  */
-class ExecuteJavaControllerService : public core::controller::ControllerService {
+class ExecuteJavaControllerService : public ConfigurationContext, public std::enable_shared_from_this<ConfigurationContext> {
  public:
 
   // Constructor
@@ -60,21 +61,22 @@ class ExecuteJavaControllerService : public core::controller::ControllerService 
    * Create a new processor
    */
   explicit ExecuteJavaControllerService(std::string name, utils::Identifier uuid = utils::Identifier())
-      : core::controller::ControllerService(name, uuid),
+      : ConfigurationContext(name, uuid),
         clazzInstance(nullptr),
+        contextInstance(nullptr),
         logger_(logging::LoggerFactory<ExecuteJavaControllerService>::getLogger()) {
   }
 
   explicit ExecuteJavaControllerService(const std::string &name, const std::string &id)
-      : core::controller::ControllerService(name, id),
+      : ConfigurationContext(name, id),
         clazzInstance(nullptr),
+        contextInstance(nullptr),
         logger_(logging::LoggerFactory<ExecuteJavaControllerService>::getLogger()) {
   }
   // Destructor
   virtual ~ExecuteJavaControllerService();
   // Processor Name
   static const char *ProcessorName;
-  static core::Property JVMControllerService;
   static core::Property NiFiControllerService;
   // Supported Relationships
 
@@ -102,15 +104,52 @@ class ExecuteJavaControllerService : public core::controller::ControllerService 
     // attempt to schedule here
 
     try {
-      current_cs_class.callVoidMethod(env, clazzInstance, onEnabledName.first.c_str(), onEnabledName.second);
+      if (!onEnabledName.first.empty())
+        current_cs_class.callVoidMethod(env, clazzInstance, onEnabledName.first.c_str(), onEnabledName.second);
     } catch (std::runtime_error &re) {
       // this is avoidable.
     }
+
+    if (clazzInstance)
+      env->DeleteGlobalRef(clazzInstance);
+    if (contextInstance)
+      env->DeleteGlobalRef(contextInstance);
+  }
+
+  virtual jobject getClassInstance() override {
+    return clazzInstance;
+  }
+
+  static JavaSignatures &getJniConfigurationContext() {
+    static JavaSignatures methodSignatures;
+    if (methodSignatures.empty()) {
+      methodSignatures.addSignature( { "getName", "()Ljava/lang/String;", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniConfigurationContext_getName) });
+      methodSignatures.addSignature( { "getComponent", "()Lorg/apache/nifi/components/AbstractConfigurableComponent;",
+          reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniConfigurationContext_getComponent) });
+      methodSignatures.addSignature( { "getPropertyNames", "()Ljava/util/List;", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniConfigurationContext_getPropertyNames) });
+      methodSignatures.addSignature(
+          { "getPropertyValue", "(Ljava/lang/String;)Ljava/lang/String;", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniConfigurationContext_getPropertyValue) });
+    }
+    return methodSignatures;
+  }
+
+  static JavaSignatures &getJniInitializationContextSignatures() {
+    static JavaSignatures methodSignatures;
+    if (methodSignatures.empty()) {
+      methodSignatures.addSignature( { "getControllerServiceLookup", "()Lorg/apache/nifi/controller/ControllerServiceLookup;",
+          reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniInitializationContext_getControllerServiceLookup) });
+      methodSignatures.addSignature( { "getIdentifier", "()Ljava/lang/String;", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniInitializationContext_getIdentifier) });
+    }
+    return methodSignatures;
   }
 
  protected:
 
  private:
+
+  minifi::jni::JniConfigurationContext config_context_;
+
+  jobject contextInstance;
 
   JavaClass current_cs_class;
 

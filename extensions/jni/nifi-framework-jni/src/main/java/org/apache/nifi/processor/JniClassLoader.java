@@ -3,6 +3,8 @@ package org.apache.nifi.processor;
 import org.apache.nifi.annotation.behavior.DynamicProperty;
 import org.apache.nifi.annotation.behavior.DynamicRelationship;
 import org.apache.nifi.annotation.documentation.CapabilityDescription;
+import org.apache.nifi.annotation.lifecycle.OnDisabled;
+import org.apache.nifi.annotation.lifecycle.OnEnabled;
 import org.apache.nifi.annotation.lifecycle.OnScheduled;
 import org.apache.nifi.bundle.Bundle;
 import org.apache.nifi.bundle.BundleDetails;
@@ -343,16 +345,9 @@ public class JniClassLoader  {
                         if (cs != null) {
                             List<PropertyDescriptor> descriptors = cs.getPropertyDescriptors();
                             final String description = getDescription(cs.getClass());
-                            final DynamicProperty dynProperty = getDynamicPropertyAnnotation(cs.getClass());
-                            final DynamicRelationship dynRelationShip = getDynamicRelationshipAnnotation(cs.getClass());
                             classes.put(cs.getClass().getCanonicalName(),cs.getClass());
                             JniComponent.JniComponentBuilder builder = JniComponent.JniComponentBuilder.create(cs.getClass().getCanonicalName()).addProperties(descriptors).addDescription(description).setIsControllerService();
-                            if (dynProperty != null) {
-                                builder.setDynamicProperties();
-                            }
-                            if (dynRelationShip != null) {
-                                builder.setDynamicRelationships();
-                            }
+                            builder.setDynamicProperties();
                             components.add(builder.build());
                         }
 
@@ -489,6 +484,12 @@ public class JniClassLoader  {
             } else {
                 List<Method> methods = getAnnotatedMethods(clazz, OnScheduled.class);
                 methods.stream().forEach(mthd -> onScheduledMethod.put(new AbstractMap.SimpleImmutableEntry<>(className, "OnScheduled"), mthd));
+
+                methods = getAnnotatedMethods(clazz, OnEnabled.class);
+                methods.stream().forEach(mthd -> onScheduledMethod.put(new AbstractMap.SimpleImmutableEntry<>(className, "OnEnabled"), mthd));
+
+                methods = getAnnotatedMethods(clazz, OnDisabled.class);
+                methods.stream().forEach(mthd -> onScheduledMethod.put(new AbstractMap.SimpleImmutableEntry<>(className, "OnDisabled"), mthd));
             }
 
             return clazz.newInstance();

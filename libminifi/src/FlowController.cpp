@@ -740,8 +740,8 @@ void FlowController::loadC2ResponseConfiguration() {
  * @param id service identifier
  * @param firstTimeAdded first time this CS was added
  */
-std::shared_ptr<core::controller::ControllerServiceNode> FlowController::createControllerService(const std::string &type, const std::string &id, bool firstTimeAdded) {
-  return controller_service_provider_->createControllerService(type, id, firstTimeAdded);
+std::shared_ptr<core::controller::ControllerServiceNode> FlowController::createControllerService(const std::string &type, const std::string &fullType, const std::string &id, bool firstTimeAdded) {
+  return controller_service_provider_->createControllerService(type, fullType, id, firstTimeAdded);
 }
 
 /**

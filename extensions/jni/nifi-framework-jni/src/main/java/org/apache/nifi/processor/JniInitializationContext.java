@@ -1,13 +1,14 @@
 package org.apache.nifi.processor;
 
+import org.apache.nifi.components.state.StateManager;
+import org.apache.nifi.controller.ControllerServiceInitializationContext;
 import org.apache.nifi.controller.ControllerServiceLookup;
 import org.apache.nifi.controller.NodeTypeProvider;
 import org.apache.nifi.logging.ComponentLog;
 
 import java.io.File;
 
-public class JniInitializationContext implements ProcessorInitializationContext {
-
+public class JniInitializationContext implements ProcessorInitializationContext, ControllerServiceInitializationContext {
 
     private long nativePtr;
 
@@ -15,9 +16,7 @@ public class JniInitializationContext implements ProcessorInitializationContext 
 
 
     @Override
-    public String getIdentifier() {
-        return null;
-    }
+    public native String getIdentifier();
 
 
     /**
@@ -35,9 +34,12 @@ public class JniInitializationContext implements ProcessorInitializationContext 
     }
 
     @Override
-    public ControllerServiceLookup getControllerServiceLookup() {
+    public StateManager getStateManager() {
         return null;
     }
+
+    @Override
+    public native ControllerServiceLookup getControllerServiceLookup();
 
     @Override
     public NodeTypeProvider getNodeTypeProvider() {

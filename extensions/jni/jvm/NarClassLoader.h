@@ -134,7 +134,11 @@ class NarClassLoader {
 
     auto clazz_name = env->NewStringUTF(requested_name.c_str());
 
-    jobject obj = env->NewGlobalRef(env->CallObjectMethod(class_loader_, mthd, clazz_name));
+    auto newref = env->CallObjectMethod(class_loader_, mthd, clazz_name);
+
+    ThrowIf(env);
+
+    jobject obj = env->NewGlobalRef(newref);
 
     ThrowIf(env);
 

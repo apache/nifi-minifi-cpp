@@ -70,6 +70,10 @@ static std::string getMessage(JNIEnv *env, jthrowable throwable) {
     return "";
   }
   jstring message = (jstring) env->CallObjectMethod(throwable, getMessage);
+  if (env->ExceptionOccurred()) {
+    env->ExceptionClear();
+    return JVM_ERROR_MSG;
+  }
   if (message) {
     // do whatever with mstr
     std::string excp = JniStringToUTF(env, message);

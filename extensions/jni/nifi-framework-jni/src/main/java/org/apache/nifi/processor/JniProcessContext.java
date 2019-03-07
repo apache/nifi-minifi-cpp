@@ -5,53 +5,51 @@ import org.apache.nifi.components.AbstractConfigurableComponent;
 import org.apache.nifi.components.PropertyDescriptor;
 import org.apache.nifi.components.PropertyValue;
 import org.apache.nifi.components.state.StateManager;
+import org.apache.nifi.controller.ConfigurationContext;
 import org.apache.nifi.controller.ControllerService;
 import org.apache.nifi.controller.ControllerServiceLookup;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-public class JniProcessContext implements ProcessContext, ControllerServiceLookup {
+public class JniProcessContext implements ProcessContext, ControllerServiceLookup{
 
     private long nativePtr;
 
     @Override
     public ControllerService getControllerService(String serviceIdentifier) {
-        return null;
+        return getControllerServiceLookup().getControllerService(serviceIdentifier);
     }
 
     @Override
     public boolean isControllerServiceEnabled(String serviceIdentifier) {
-        return false;
+        return getControllerServiceLookup().isControllerServiceEnabled(serviceIdentifier);
     }
 
     @Override
     public boolean isControllerServiceEnabling(String serviceIdentifier) {
-        return false;
+        return getControllerServiceLookup().isControllerServiceEnabling(serviceIdentifier);
     }
 
     @Override
     public boolean isControllerServiceEnabled(ControllerService service) {
-        return false;
+        return getControllerServiceLookup().isControllerServiceEnabled(service);
     }
 
     @Override
     public Set<String> getControllerServiceIdentifiers(Class<? extends ControllerService> serviceType) throws IllegalArgumentException {
-        return null;
+        return getControllerServiceLookup().getControllerServiceIdentifiers(serviceType);
     }
 
     @Override
     public String getControllerServiceName(String serviceIdentifier) {
-        return null;
+        return getControllerServiceLookup().getControllerServiceName(serviceIdentifier);
     }
 
     @Override
     public PropertyValue getProperty(String propertyName) {
         String value = getPropertyValue(propertyName);
-        System.out.println("for " + propertyName + " got " + value);
         return new StandardPropertyValue(value,this);
     }
 
@@ -82,20 +80,20 @@ public class JniProcessContext implements ProcessContext, ControllerServiceLooku
     @Override
     public Map<PropertyDescriptor, String> getProperties() {
         List<String> propertyNames = getPropertyNames();
-        Processor processor = getProcessor();
-        if (processor instanceof AbstractConfigurableComponent) {
-            AbstractConfigurableComponent process = AbstractConfigurableComponent.class.cast(getProcessor());
+        AbstractConfigurableComponent process = getComponent();
+
+
             if (process != null) {
                 return propertyNames.stream().collect(Collectors.toMap(process::getPropertyDescriptor, this::getPropertyValue));
             }
-        }
+
 
         return null;
     }
 
     private native List<String> getPropertyNames();
 
-    private native Processor getProcessor();
+    private native AbstractConfigurableComponent getComponent();
 
     @Override
     public String encrypt(String unencrypted) {
@@ -108,13 +106,11 @@ public class JniProcessContext implements ProcessContext, ControllerServiceLooku
     }
 
     @Override
-    public ControllerServiceLookup getControllerServiceLookup() {
-        return null;
-    }
+    public native ControllerServiceLookup getControllerServiceLookup();
 
     @Override
     public Set<Relationship> getAvailableRelationships() {
-        return null;
+        return new HashSet<>();
     }
 
     @Override
@@ -134,7 +130,7 @@ public class JniProcessContext implements ProcessContext, ControllerServiceLooku
 
     @Override
     public boolean isExpressionLanguagePresent(PropertyDescriptor property) {
-        return false;
+        return property.isExpressionLanguageSupported();
     }
 
     @Override
@@ -143,9 +139,7 @@ public class JniProcessContext implements ProcessContext, ControllerServiceLooku
     }
 
     @Override
-    public String getName() {
-        return null;
-    }
+    public native String getName();
 
     @Override
     public PropertyValue getProperty(PropertyDescriptor descriptor) {

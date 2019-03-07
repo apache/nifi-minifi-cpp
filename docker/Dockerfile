@@ -33,6 +33,11 @@ RUN apk --update --no-cache upgrade && apk --update --no-cache add gcc \
 	bison \
 	flex \
 	flex-dev \
+	maven \
+	openjdk8-jre-base \
+	openjdk8 \
+	autoconf \
+	libtool \
 	wget \
 	gdb \
 	musl-dev \
@@ -55,6 +60,8 @@ ENV MINIFI_BASE_DIR /opt/minifi
 # Setup minificpp user
 RUN addgroup -g $GID $USER && adduser -u $UID -D -G $USER -g "" $USER
 RUN mkdir -p $MINIFI_BASE_DIR 
+ENV JAVA_HOME /usr/lib/jvm/default-jvm
+ENV PATH $PATH:/usr/lib/jvm/default-jvm/bin
 
 ADD $MINIFI_SOURCE_CODE $MINIFI_BASE_DIR
 RUN chown -R $USER:$USER $MINIFI_BASE_DIR
@@ -67,7 +74,7 @@ ENV MINIFI_HOME $MINIFI_BASE_DIR/nifi-minifi-cpp-$MINIFI_VERSION
 RUN cd $MINIFI_BASE_DIR \
 	&& mkdir build \
 	&& cd build \
-	&& cmake -DOPENSSL_FORCE_SHARED=true -DSKIP_TESTS=true .. \
+	&& cmake -DOPENSSL_FORCE_SHARED=true -DDISABLE_JEMALLOC=ON -DSKIP_TESTS=true -DENABLE_JNI=ON .. \
 	&& make -j8 package \
 	&& tar -xzvf $MINIFI_BASE_DIR/build/nifi-minifi-cpp-$MINIFI_VERSION-bin.tar.gz -C $MINIFI_BASE_DIR
 
@@ -88,6 +95,8 @@ RUN apk --update --no-cache upgrade && apk add --update --no-cache \
 	curl \
 	unzip \
 	gpsd \
+	openjdk8-jre-base \
+	openjdk8 \
 	libressl \
 	python \
 	zlib
@@ -96,7 +105,8 @@ RUN apk --update --no-cache upgrade && apk add --update --no-cache \
 ENV USER minificpp
 ENV MINIFI_BASE_DIR /opt/minifi
 ENV MINIFI_HOME $MINIFI_BASE_DIR/nifi-minifi-cpp-$MINIFI_VERSION
-
+ENV JAVA_HOME /usr/lib/jvm/default-jvm
+ENV PATH $PATH:/usr/lib/jvm/default-jvm/bin
 RUN addgroup -g $GID $USER && adduser -u $UID -D -G $USER -g "" $USER
 RUN mkdir -p $MINIFI_BASE_DIR 
 

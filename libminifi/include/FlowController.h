@@ -206,7 +206,7 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
    * @param id service identifier
    * @param firstTimeAdded first time this CS was added
    */
-  virtual std::shared_ptr<core::controller::ControllerServiceNode> createControllerService(const std::string &type, const std::string &id, bool firstTimeAdded);
+  virtual std::shared_ptr<core::controller::ControllerServiceNode> createControllerService(const std::string &type, const std::string &fullType, const std::string &id, bool firstTimeAdded);
 
   /**
    * controller service provider

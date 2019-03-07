@@ -415,13 +415,31 @@ class LogAttribute(Processor):
     def __init__(self, ):
         super(LogAttribute, self).__init__('LogAttribute',
                                            auto_terminate=['success'])
+        
+        
+class DebugFlow(Processor):
+    def __init__(self, ):
+        super(DebugFlow, self).__init__('DebugFlow')
 
+class HashAttribute(Processor):
+    def __init__(self, attributename):
+        super(HashAttribute, self).__init__('HashAttribute',
+                                           properties={'Hash Value Attribute Key': attributename},
+                                           auto_terminate=['failure'])
+
+class AttributesToJSON(Processor):
+    def __init__(self, destination, attributes):
+        super(AttributesToJSON, self).__init__('AttributesToJSON',
+                                      properties={'Destination': destination, 'Attributes List': attributes},
+                                      schedule={'scheduling period': '0 sec'},
+                                      auto_terminate=['failure'])
+        
 
 class GetFile(Processor):
     def __init__(self, input_dir):
         super(GetFile, self).__init__('GetFile',
-                                      properties={'Input Directory': input_dir},
-                                      schedule={'scheduling period': '0 sec'},
+                                      properties={'Input Directory': input_dir, 'Keep Source File': 'true'},
+                                      schedule={'scheduling period': '2 sec'},
                                       auto_terminate=['success'])
 
 class GenerateFlowFile(Processor):

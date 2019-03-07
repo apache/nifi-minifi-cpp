@@ -100,6 +100,7 @@ class JVMLoader {
   JNIEnv *attach(const std::string &name = "") {
     JNIEnv* jenv;
     jint ret = jvm_->GetEnv((void**) &jenv, JNI_VERSION_1_8);
+
     if (ret == JNI_EDETACHED) {
       ret = jvm_->AttachCurrentThread((void**) &jenv, NULL);
       if (ret != JNI_OK || jenv == NULL) {
@@ -108,6 +109,10 @@ class JVMLoader {
     }
 
     return jenv;
+  }
+
+  void detach(){
+    jvm_->DetachCurrentThread();
   }
 
   /**
@@ -439,7 +444,9 @@ class JVMLoader {
     jclass c = env->FindClass(name);
     jclass c_global = (jclass) env->NewGlobalRef(c);
     if (!c) {
-      throw std::runtime_error("Could not find ");
+	    std::stringstream ss;
+	    ss << "Could not find " << name;
+      throw std::runtime_error(ss.str());
     }
     return c_global;
   }
@@ -468,7 +475,9 @@ class JVMLoader {
     jclass classClass = env_->GetObjectClass(randomClass);
     auto classLoaderClass = find_class_global(env_, "java/lang/ClassLoader");
     auto getClassLoaderMethod = env_->GetMethodID(classClass, "getClassLoader", "()Ljava/lang/ClassLoader;");
-    gClassLoader = env_->NewGlobalRef(env_->CallObjectMethod(randomClass, getClassLoaderMethod));
+    auto refclazz = env_->CallObjectMethod(randomClass, getClassLoaderMethod);
+    minifi::jni::ThrowIf(env_);
+    gClassLoader = env_->NewGlobalRef(refclazz);
     gFindClassMethod = env_->GetMethodID(classLoaderClass, "findClass", "(Ljava/lang/String;)Ljava/lang/Class;");
     minifi::jni::ThrowIf(env_);
     initialized_ = true;

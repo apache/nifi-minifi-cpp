@@ -105,6 +105,11 @@ class JavaControllerService : public core::controller::ControllerService, public
   virtual JNIEnv *attach() override {
     return loader->attach();
   }
+  virtual void detach() override {
+      loader->detach();
+    }
+
+
 
   virtual jobject getClassLoader() override {
     return loader->getClassLoader();

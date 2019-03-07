@@ -16,11 +16,10 @@
  * limitations under the License.
  */
 
-#ifndef EXTENSIONS_JNI_JVM_JAVASERVICER_H_
-#define EXTENSIONS_JNI_JVM_JAVASERVICER_H_
+#ifndef EXTENSIONS_JNI_JVM_JNICONFIGURATIONCONTEXT_H_
+#define EXTENSIONS_JNI_JVM_JNICONFIGURATIONCONTEXT_H_
 
-#include <jni.h>
-#include "JavaClass.h"
+#include "core/controller/ControllerService.h"
 
 namespace org {
 namespace apache {
@@ -28,20 +27,30 @@ namespace nifi {
 namespace minifi {
 namespace jni {
 
-/**
- * Purpose: Java servicer provides a shared construct to be used by classes
- * within the JNI extension to attach the JNI environment, get the class loader
- * and load a class.
- */
-class JavaServicer {
+class ConfigurationContext : public core::controller::ControllerService {
  public:
-  virtual ~JavaServicer() {
+
+  // Constructor
+  /*!
+   * Create a new processor
+   */
+  explicit ConfigurationContext(std::string name, utils::Identifier uuid = utils::Identifier())
+      : core::controller::ControllerService(name, uuid) {
+  }
+
+  explicit ConfigurationContext(const std::string &name, const std::string &id)
+      : core::controller::ControllerService(name, id) {
+  }
+
+  virtual ~ConfigurationContext() {
 
   }
-  virtual JNIEnv *attach() = 0;
-  virtual void detach()  = 0;
-  virtual jobject getClassLoader() = 0;
-  virtual JavaClass loadClass(const std::string &class_name_) = 0;
+  virtual jobject getClassInstance() = 0;
+};
+
+struct JniConfigurationContext {
+
+  std::shared_ptr<ConfigurationContext> service_reference_;
 };
 
 } /* namespace jni */
@@ -50,4 +59,4 @@ class JavaServicer {
 } /* namespace apache */
 } /* namespace org */
 
-#endif /* EXTENSIONS_JNI_JVM_JAVASERVICER_H_ */
+#endif /* EXTENSIONS_JNI_JVM_JNICONFIGURATIONCONTEXT_H_ */
