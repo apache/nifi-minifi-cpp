@@ -23,5 +23,7 @@
 
 #define NO_FF_OBJECT "Calling function on null flow file"
 
+#define JVM_ERROR_MSG "Error calling toString on callable. JVM error likely"
+
 
 #endif /* EXTENSIONS_JNI_JVM_JAVADEFS_H_ */

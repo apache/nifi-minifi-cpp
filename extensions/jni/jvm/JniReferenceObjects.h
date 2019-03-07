@@ -365,6 +365,8 @@ class JniSessionFactory : public core::WeakReference {
 
 };
 
+
+
 } /* namespace jni */
 } /* namespace minifi */
 } /* namespace nifi */

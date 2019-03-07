@@ -15,8 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef EXTENSIONS_JNIPROCESSCONTEXT_H
-#define EXTENSIONS_JNIPROCESSCONTEXT_H
+#ifndef EXTENSIONS_JNIINITIALIZATIONCONTEXT_H
+#define EXTENSIONS_JNIINITIALIZATIONCONTEXT_H
 
 #include <string>
 #include <vector>
@@ -34,19 +34,15 @@ namespace nifi {
 namespace minifi {
 namespace jni {
 
-struct JniProcessContext {
-  JniProcessContext()
-      : nifi_processor_(nullptr),
-        cslookup_(nullptr),
-        processor_(nullptr),
-        context_(nullptr) {
+struct JniInitializationContext {
+  JniInitializationContext()
+      : lookup_(nullptr),
+        lookup_ref_(nullptr) {
   }
 
-  jclass clazz_;
-  jobject nifi_processor_;
-  jobject cslookup_;
-  std::shared_ptr<core::Processor> processor_;
-  std::shared_ptr<core::ProcessContext> context_;
+  std::string identifier_;
+  JniControllerServiceLookup *lookup_;
+  jobject lookup_ref_;
 };
 
 } /* namespace jni */
@@ -59,21 +55,23 @@ struct JniProcessContext {
 extern "C" {
 #endif
 
-JNIEXPORT jstring JNICALL Java_org_apache_nifi_processor_JniProcessContext_getPropertyValue(JNIEnv *env, jobject obj, jstring propertyName);
+JNIEXPORT jstring JNICALL Java_org_apache_nifi_processor_JniInitializationContext_getIdentifier(JNIEnv *env, jobject obj);
 
-JNIEXPORT jobject JNICALL Java_org_apache_nifi_processor_JniProcessContext_getPropertyNames(JNIEnv *env, jobject obj);
+JNIEXPORT jobject JNICALL Java_org_apache_nifi_processor_JniInitializationContext_getControllerServiceLookup(JNIEnv *env, jobject obj);
 
-JNIEXPORT jobject JNICALL Java_org_apache_nifi_processor_JniProcessContext_getComponent(JNIEnv *env, jobject obj);
+// configuration context
+JNIEXPORT jobject JNICALL Java_org_apache_nifi_processor_JniConfigurationContext_getPropertyNames(JNIEnv *env, jobject obj);
 
-JNIEXPORT jstring JNICALL Java_org_apache_nifi_processor_JniProcessContext_getName(JNIEnv *env, jobject obj);
+JNIEXPORT jobject JNICALL Java_org_apache_nifi_processor_JniConfigurationContext_getComponent(JNIEnv *env, jobject obj);
 
-JNIEXPORT jobject JNICALL Java_org_apache_nifi_processor_JniProcessContext_getControllerServiceLookup(JNIEnv *env, jobject obj);
+JNIEXPORT jstring JNICALL Java_org_apache_nifi_processor_JniConfigurationContext_getName(JNIEnv *env, jobject obj);
 
-//getname
-//getControllerservicelookup
+JNIEXPORT jstring JNICALL Java_org_apache_nifi_processor_JniConfigurationContext_getPropertyValue(JNIEnv *env, jobject obj, jstring property);
+
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* EXTENSIONS_JNIPROCESSCONTEXT_H */
+
+#endif /* EXTENSIONS_JNIINITIALIZATIONCONTEXT_H */

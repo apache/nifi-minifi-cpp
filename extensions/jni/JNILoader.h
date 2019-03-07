@@ -20,6 +20,7 @@
 
 #include "core/ClassLoader.h"
 #include "ExecuteJavaProcessor.h"
+#include "ExecuteJavaControllerService.h"
 #include "JVMCreator.h"
 #include "jvm/JavaControllerService.h"
 #include "utils/StringUtils.h"
@@ -60,6 +61,8 @@ class JNIFactory : public core::ObjectFactory {
       return std::unique_ptr<ObjectFactory>(new core::DefautObjectFactory<minifi::jni::processors::ExecuteJavaProcessor>());
     } else if (utils::StringUtils::equalsIgnoreCase(class_name, "JavaControllerService")) {
       return std::unique_ptr<ObjectFactory>(new core::DefautObjectFactory<minifi::jni::controllers::JavaControllerService>());
+    } else if (utils::StringUtils::equalsIgnoreCase(class_name, "ExecuteJavaControllerService")) {
+      return std::unique_ptr<ObjectFactory>(new core::DefautObjectFactory<minifi::jni::controllers::ExecuteJavaControllerService>());
     } else if (utils::StringUtils::equalsIgnoreCase(class_name, "JVMCreator")) {
       return std::unique_ptr<ObjectFactory>(new core::DefautObjectFactory<minifi::jni::JVMCreator>());
     }

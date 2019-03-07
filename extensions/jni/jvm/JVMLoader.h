@@ -468,7 +468,9 @@ class JVMLoader {
     jclass classClass = env_->GetObjectClass(randomClass);
     auto classLoaderClass = find_class_global(env_, "java/lang/ClassLoader");
     auto getClassLoaderMethod = env_->GetMethodID(classClass, "getClassLoader", "()Ljava/lang/ClassLoader;");
-    gClassLoader = env_->NewGlobalRef(env_->CallObjectMethod(randomClass, getClassLoaderMethod));
+    auto refclazz = env_->CallObjectMethod(randomClass, getClassLoaderMethod);
+    minifi::jni::ThrowIf(env_);
+    gClassLoader = env_->NewGlobalRef(refclazz);
     gFindClassMethod = env_->GetMethodID(classLoaderClass, "findClass", "(Ljava/lang/String;)Ljava/lang/Class;");
     minifi::jni::ThrowIf(env_);
     initialized_ = true;

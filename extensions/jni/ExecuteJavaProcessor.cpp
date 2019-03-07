@@ -106,14 +106,28 @@ void ExecuteJavaProcessor::onSchedule(const std::shared_ptr<core::ProcessContext
   auto env = java_servicer_->attach();
   java_servicer_->putNativeFunctionMapping<minifi::jni::JniProcessContext>(env, spn);
 
+  ClassRegistrar::getRegistrar().registerClasses(env, java_servicer_, "org/apache/nifi/processor/JniInitializationContext", getJniInitializationContextSignatures());
+
   init = java_servicer_->loadClass("org/apache/nifi/processor/JniInitializationContext");
+
+  ClassRegistrar::getRegistrar().registerClasses(env, java_servicer_, "org/apache/nifi/processor/JniControllerServiceLookup", getJniControllerServiceLookupSignatures());
 
   if (context_instance_ != nullptr) {
     java_servicer_->attach()->DeleteGlobalRef(context_instance_);
+  } else {
+    init_context_.identifier_ = getUUIDStr();
+    init_context_.lookup_ = &csl_;
+    csl_.cs_lookup_reference_ = context;
+
+    init_context_.lookup_ref_ = java_servicer_->newInstance("org.apache.nifi.processor.JniControllerServiceLookup");
+
+    java_servicer_->setReference<minifi::jni::JniControllerServiceLookup>(env, init_context_.lookup_ref_, &csl_);
   }
   context_instance_ = spn.newInstance(env);
 
   auto initializer = init.newInstance(env);
+
+  java_servicer_->setReference<minifi::jni::JniInitializationContext>(env, initializer, &init_context_);
 
   ClassRegistrar::getRegistrar().registerClasses(env, java_servicer_, "org/apache/nifi/processor/JniLogger", getLoggerSignatures());
 
@@ -128,6 +142,7 @@ void ExecuteJavaProcessor::onSchedule(const std::shared_ptr<core::ProcessContext
   auto onScheduledName = java_servicer_->getAnnotation(class_name_, "OnScheduled");
   current_processor_class = java_servicer_->getObjectClass(class_name_, clazzInstance);
   // attempt to schedule here
+
   ClassRegistrar::getRegistrar().registerClasses(env, java_servicer_, "org/apache/nifi/processor/JniProcessContext", getProcessContextSignatures());
 
   init.callVoidMethod(env, initializer, "setLogger", "(Lorg/apache/nifi/processor/JniLogger;)V", logger_instance_);
@@ -138,6 +153,7 @@ void ExecuteJavaProcessor::onSchedule(const std::shared_ptr<core::ProcessContext
   jpc.context_ = context;
   jpc.clazz_ = spn.getReference();
   jpc.processor_ = shared_from_this();
+  jpc.cslookup_ = init_context_.lookup_ref_;
 
   java_servicer_->setReference<minifi::jni::JniProcessContext>(env, context_instance_, &jpc);
 
@@ -200,8 +216,12 @@ void ExecuteJavaProcessor::onTrigger(const std::shared_ptr<core::ProcessContext>
     current_processor_class.callVoidMethod(env, clazzInstance, "onTrigger", "(Lorg/apache/nifi/processor/ProcessContext;Lorg/apache/nifi/processor/ProcessSessionFactory;)V", context_instance_,
                                            java_process_session_factory);
   } catch (const JavaException &je) {
-    logger_->log_error(" Java occurred during onTrigger, reason: %s", je.what());
+    // clear the java exception so we don't continually wrap it
+    env->ExceptionClear();
+    logger_->log_error(" Java Exception occurred during onTrigger, reason: %s", je.what());
   } catch (const std::exception &e) {
+    // clear the java exception so we don't continually wrap it
+    env->ExceptionClear();
     logger_->log_error(" Exception occurred during onTrigger, reason: %s", e.what());
   }
 }

@@ -79,12 +79,19 @@ class StandardControllerServiceProvider : public ControllerServiceProvider, publ
     agent_ = agent;
   }
 
-  std::shared_ptr<ControllerServiceNode> createControllerService(const std::string &type, const std::string &id, bool firstTimeAdded) {
+  std::shared_ptr<ControllerServiceNode> createControllerService(const std::string &type, const std::string &fullType, const std::string &id, bool firstTimeAdded) {
 
     std::shared_ptr<ControllerService> new_controller_service = extension_loader_.instantiate<ControllerService>(type, id);
 
     if (nullptr == new_controller_service) {
-      return nullptr;
+
+      new_controller_service = extension_loader_.instantiate<ControllerService>("ExecuteJavaControllerService", id);
+      if (new_controller_service != nullptr) {
+        new_controller_service->initialize();
+        new_controller_service->setProperty("NiFi Controller Service", fullType);
+      } else {
+        return nullptr;
+      }
     }
 
     std::shared_ptr<ControllerServiceNode> new_service_node = std::make_shared<StandardControllerServiceNode>(new_controller_service,
