@@ -439,7 +439,9 @@ class JVMLoader {
     jclass c = env->FindClass(name);
     jclass c_global = (jclass) env->NewGlobalRef(c);
     if (!c) {
-      throw std::runtime_error("Could not find ");
+	    std::stringstream ss;
+	    ss << "Could not find " << name;
+      throw std::runtime_error(ss.str());
     }
     return c_global;
   }

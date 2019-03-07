@@ -55,6 +55,7 @@ endif()
 
 if(NOT WIN32)
 	if (ENABLE_JNI)
+	if (NOT DISABLE_JEMALLOC)
 	  set(BASE_DIR "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/jemalloc")
 	  
 	  set(DIR "${BASE_DIR}/extensions/jemalloc-src")
@@ -86,6 +87,7 @@ if(NOT WIN32)
 	  set(JEMALLOC_LIBRARY jemalloc CACHE STRING "" FORCE)
 	  set(JEMALLOC_LIBRARY jemalloc CACHE STRING "" FORCE)
 
+	endif()
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DENABLE_JNI")
 	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DENABLE_JNI")
 

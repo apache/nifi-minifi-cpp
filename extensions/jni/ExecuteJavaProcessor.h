@@ -174,7 +174,7 @@ class ExecuteJavaProcessor : public core::Processor {
     if (methodSignatures.empty()) {
       methodSignatures.addSignature( { "getControllerServiceLookup", "()Lorg/apache/nifi/controller/ControllerServiceLookup;",
           reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniInitializationContext_getControllerServiceLookup) });
-      methodSignatures.addSignature( { "getIdentifier", "()L/java/lang/String;", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniInitializationContext_getIdentifier) });
+      methodSignatures.addSignature( { "getIdentifier", "()Ljava/lang/String;", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniInitializationContext_getIdentifier) });
     }
     return methodSignatures;
   }
@@ -226,7 +226,7 @@ class ExecuteJavaProcessor : public core::Processor {
     // delete the reference to the jni process session
 
     if (logger_instance_) {
-      localEnv->DeleteLocalRef(logger_instance_);
+      localEnv->DeleteGlobalRef(logger_instance_);
       logger_instance_ = nullptr;
     }
 
