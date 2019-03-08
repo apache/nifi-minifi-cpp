@@ -34,8 +34,8 @@ RUN apk --update --no-cache upgrade && apk --update --no-cache add gcc \
 	flex \
 	flex-dev \
 	maven \
-    openjdk8-jre-base \
-    openjdk8 \
+	openjdk8-jre-base \
+	openjdk8 \
 	autoconf \
 	libtool \
 	wget \
@@ -95,8 +95,8 @@ RUN apk --update --no-cache upgrade && apk add --update --no-cache \
 	curl \
 	unzip \
 	gpsd \
-    openjdk8-jre-base \
-    openjdk8 \
+	openjdk8-jre-base \
+	openjdk8 \
 	libressl \
 	python \
 	zlib

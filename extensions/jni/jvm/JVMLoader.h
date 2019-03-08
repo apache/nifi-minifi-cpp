@@ -100,6 +100,7 @@ class JVMLoader {
   JNIEnv *attach(const std::string &name = "") {
     JNIEnv* jenv;
     jint ret = jvm_->GetEnv((void**) &jenv, JNI_VERSION_1_8);
+
     if (ret == JNI_EDETACHED) {
       ret = jvm_->AttachCurrentThread((void**) &jenv, NULL);
       if (ret != JNI_OK || jenv == NULL) {
@@ -108,6 +109,10 @@ class JVMLoader {
     }
 
     return jenv;
+  }
+
+  void detach(){
+    jvm_->DetachCurrentThread();
   }
 
   /**

@@ -39,6 +39,7 @@ class JavaServicer {
 
   }
   virtual JNIEnv *attach() = 0;
+  virtual void detach()  = 0;
   virtual jobject getClassLoader() = 0;
   virtual JavaClass loadClass(const std::string &class_name_) = 0;
 };
