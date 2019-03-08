@@ -165,7 +165,6 @@ void C2Agent::configure(const std::shared_ptr<Configure> &configure, bool reconf
       } else {
         logger_->log_info("Class is CoapProtocol");
       }
-
     }
     C2Protocol *old_protocol = protocol_.exchange(dynamic_cast<C2Protocol*>(protocol));
 
