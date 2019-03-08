@@ -46,7 +46,7 @@ core::Property LinuxPowerManagerService::TriggerThreshold(
 
 core::Property LinuxPowerManagerService::WaitPeriod(
     core::PropertyBuilder::createProperty("Wait Period")->withDescription("Decay between checking threshold and determining if a reduction is needed")->isRequired(true)
-        ->withDefaultValue<core::TimePeriodValue>("100 msec")->build());
+        ->withDefaultValue<core::TimePeriodValue>("100 ms")->build());
 
 core::Property LinuxPowerManagerService::LowBatteryThreshold(
     core::PropertyBuilder::createProperty("Low Battery Threshold")->withDescription("Battery threshold before which we will aggressively reduce. Should be a number from 1-100")->isRequired(true)
