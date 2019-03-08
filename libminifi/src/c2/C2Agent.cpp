@@ -151,19 +151,19 @@ void C2Agent::configure(const std::shared_ptr<Configure> &configure, bool reconf
 
   if (!reconfigure) {
     if (!configure->get("nifi.c2.agent.protocol.class", "c2.agent.protocol.class", clazz)) {
-      clazz = "RESTSender";
+      clazz = "CoapProtocol";
     }
     logger_->log_info("Class is %s", clazz);
     auto protocol = core::ClassLoader::getDefaultClassLoader().instantiateRaw(clazz, clazz);
 
     if (protocol == nullptr) {
       logger_->log_info("Class %s not found", clazz);
-      protocol = core::ClassLoader::getDefaultClassLoader().instantiateRaw("RESTSender", "RESTSender");
+      protocol = core::ClassLoader::getDefaultClassLoader().instantiateRaw("CoapProtocol", "RESTSender");
 
       if (!protocol) {
         return;
       }
-      logger_->log_info("Class is RESTSender");
+      logger_->log_info("Class is CoapProtocol");
     }
     C2Protocol *old_protocol = protocol_.exchange(dynamic_cast<C2Protocol*>(protocol));
 
