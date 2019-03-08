@@ -79,7 +79,6 @@ class VerifyC2Server : public CoapIntegrationBase {
   }
 
   void runAssertions() {
-    assert(LogTestController::getInstance().contains("C2Agent] [info] Class is null") == true);
     assert(LogTestController::getInstance().contains("C2Agent] [debug] Could not instantiate null") == true);
     assert(LogTestController::getInstance().contains("Class is RESTSender") == true);
   }
@@ -98,7 +97,7 @@ class VerifyC2Server : public CoapIntegrationBase {
     parse_http_components(url, port, scheme, path);
     configuration->set("c2.enable", "true");
     configuration->set("c2.agent.class", "test");
-    configuration->set("c2.agent.protocol.class", "null");
+    configuration->set("c2.agent.protocol.class", "RESTSender");
     configuration->set("c2.rest.url", "");
     configuration->set("c2.rest.url.ack", "");
     configuration->set("c2.agent.heartbeat.reporter.classes", "null");
