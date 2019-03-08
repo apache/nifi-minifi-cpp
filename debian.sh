@@ -65,6 +65,8 @@ build_deps(){
             INSTALLED+=("bison")
           elif [ "$FOUND_VALUE" = "flex" ]; then
             INSTALLED+=("flex")
+	  elif [ "$FOUND_VALUE" = "libtool" ]; then
+            INSTALLED+=("libtool")
           elif [ "$FOUND_VALUE" = "python" ]; then
             INSTALLED+=("libpython3-dev")
           elif [ "$FOUND_VALUE" = "lua" ]; then

@@ -106,6 +106,7 @@ build_deps(){
             INSTALLED+=("libtool")
           elif [ "$FOUND_VALUE" = "automake" ]; then
             INSTALLED+=("automake")
+            INSTALLED+=("autoconf")
           elif [ "$FOUND_VALUE" = "gpsd" ]; then
             INSTALLED+=("gpsd")
           elif [ "$FOUND_VALUE" = "libarchive" ]; then

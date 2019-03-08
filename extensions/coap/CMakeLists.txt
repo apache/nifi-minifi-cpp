@@ -35,11 +35,7 @@ endif()
 
   set(BASE_DIR "${CMAKE_CURRENT_BINARY_DIR}/extensions/coap")
   # determine version of GNUTLSs
-  if (APPLE)
   set(BYPRODUCT "${BASE_DIR}/extensions/coap/thirdparty/libcoap-src/.libs/libcoap-2.a")
-  else()
-  set(BYPRODUCT "${BASE_DIR}/extensions/coap/thirdparty/libcoap-src/.libs/libcoap-2.a")
-  endif()
   set(DIR "${BASE_DIR}/extensions/coap/thirdparty/libcoap-src")
   ExternalProject_Add(
     coap-external
@@ -51,15 +47,14 @@ endif()
     BUILD_COMMAND make
     CMAKE_COMMAND ""
     UPDATE_COMMAND ""
-    BUILD_BYPRODUCTS ${BYPRODUCT} 
     INSTALL_COMMAND ${CMAKE_COMMAND}  -E echo "Skipping install step."
     CONFIGURE_COMMAND ""
-    PATCH_COMMAND ./autogen.sh && ./configure --disable-examples --disable-tests --disable-documentation
+    PATCH_COMMAND ./autogen.sh && ./configure --disable-examples --disable-dtls --disable-tests --disable-documentation
     STEP_TARGETS build
     EXCLUDE_FROM_ALL TRUE
   )
   add_definitions("-DWITH_POSIX=1")
-
+  
   add_library(coaplib STATIC IMPORTED)
   set_target_properties(coaplib PROPERTIES IMPORTED_LOCATION "${BYPRODUCT}")
   add_dependencies(coaplib coap-external)
