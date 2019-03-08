@@ -68,9 +68,12 @@ build_deps(){
             INSTALLED+=("python3-devel")
           elif [ "$FOUND_VALUE" = "lua" ]; then
             INSTALLED+=("lua-devel")
-          elif [ "$FOUND_VALUE" = "automake" ]; then
+	  elif [ "$FOUND_VALUE" = "libtool" ]; then
+            INSTALLED+=("libtool")
+          elif [ "$FOUND_VALUE" = "autoconf" ]; then
             INSTALLED+=("autoconf")
-            INSTALLED+=("automake")
+          elif [ "$FOUND_VALUE" = "automake" ]; then
+	    INSTALLED+=("automake")
           elif [ "$FOUND_VALUE" = "gpsd" ]; then
             INSTALLED+=("gpsd-devel")
           elif [ "$FOUND_VALUE" = "libarchive" ]; then
@@ -81,8 +84,6 @@ build_deps(){
 
     fi
   done
-
-  INSTALLED+=("autoconf")
 
   for option in "${INSTALLED[@]}" ; do
     COMMAND="${COMMAND} $option"

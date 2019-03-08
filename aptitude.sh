@@ -59,6 +59,12 @@ build_deps(){
             INSTALLED+=("bison")
           elif [ "$FOUND_VALUE" = "flex" ]; then
             INSTALLED+=("flex")
+          elif [ "$FOUND_VALUE" = "automake" ]; then
+            INSTALLED+=("automake")
+          elif [ "$FOUND_VALUE" = "autoconf" ]; then
+            INSTALLED+=("autoconf")
+          elif [ "$FOUND_VALUE" = "libtool" ]; then
+            INSTALLED+=("libtool")
           elif [ "$FOUND_VALUE" = "python" ]; then
             INSTALLED+=("libpython3-dev")
           elif [ "$FOUND_VALUE" = "lua" ]; then
