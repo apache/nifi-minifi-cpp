@@ -115,12 +115,13 @@ class VerifyC2Server : public CoapIntegrationBase {
 
     std::string port, scheme, path;
     parse_http_components(url, port, scheme, path);
-    configuration->set("c2.enable", "true");
-    configuration->set("c2.agent.class", "test");
-    configuration->set("c2.agent.heartbeat.reporter.classes", "RESTReceiver");
-    configuration->set("c2.rest.listener.port", port);
-    configuration->set("c2.agent.heartbeat.period", "10");
-    configuration->set("c2.rest.listener.heartbeat.rooturi", path);
+    configuration->set("nifi.c2.enable", "true");
+    configuration->set("nifi.c2.agent.class", "test");
+    configuration->set("nifi.c2.agent.heartbeat.reporter.classes", "RESTReceiver");
+    configuration->set("nifi.c2.agent.protocol.class", "RESTSender");
+    configuration->set("nifi.c2.rest.listener.port", port);
+    configuration->set("nifi.c2.agent.heartbeat.period", "10");
+    configuration->set("nifi.c2.rest.listener.heartbeat.rooturi", path);
   }
 
  protected:

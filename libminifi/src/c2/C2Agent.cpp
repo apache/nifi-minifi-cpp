@@ -158,12 +158,14 @@ void C2Agent::configure(const std::shared_ptr<Configure> &configure, bool reconf
 
     if (protocol == nullptr) {
       logger_->log_info("Class %s not found", clazz);
-      protocol = core::ClassLoader::getDefaultClassLoader().instantiateRaw("CoapProtocol", "RESTSender");
-
+      protocol = core::ClassLoader::getDefaultClassLoader().instantiateRaw("CoapProtocol", "CoapProtocol");
       if (!protocol) {
+        logger_->log_info("Attempted to load CoapProtocol. To enable C2, please specify an active protocol for this agent.");
         return;
+      } else {
+        logger_->log_info("Class is CoapProtocol");
       }
-      logger_->log_info("Class is CoapProtocol");
+
     }
     C2Protocol *old_protocol = protocol_.exchange(dynamic_cast<C2Protocol*>(protocol));
 

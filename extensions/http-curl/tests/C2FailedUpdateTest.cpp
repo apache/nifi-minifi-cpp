@@ -142,10 +142,11 @@ int main(int argc, char **argv) {
 
   std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::Configure>();
 
-  configuration->set("c2.enable", "true");
-  configuration->set("c2.agent.class", "test");
-  configuration->set("c2.rest.url", "http://localhost:7071/update");
-  configuration->set("c2.agent.heartbeat.period", "1000");
+  configuration->set("nifi.c2.agent.protocol.class", "RESTSender");
+  configuration->set("nifi.c2.enable", "true");
+  configuration->set("nifi.c2.agent.class", "test");
+  configuration->set("nifi.c2.rest.url", "http://localhost:7071/update");
+  configuration->set("nifi.c2.agent.heartbeat.period", "1000");
   mkdir("content_repository", S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 
   std::shared_ptr<core::Repository> test_repo = std::make_shared<TestRepository>();

@@ -162,11 +162,12 @@ class VerifyC2Heartbeat : public CoapIntegrationBase {
     std::string url = "";
     inv->getProperty(minifi::processors::InvokeHTTP::URL.getName(), url);
 
-    configuration->set("c2.enable", "true");
-    configuration->set("c2.agent.class", "test");
-    configuration->set("c2.rest.url", "http://localhost:8888/api/heartbeat");
-    configuration->set("c2.agent.heartbeat.period", "1000");
-    configuration->set("c2.rest.url.ack", "http://localhost:8888/api/heartbeat");
+    configuration->set("nifi.c2.agent.protocol.class", "RESTSender");
+    configuration->set("nifi.c2.enable", "true");
+    configuration->set("nifi.c2.agent.class", "test");
+    configuration->set("nifi.c2.rest.url", "http://localhost:8888/api/heartbeat");
+    configuration->set("nifi.c2.agent.heartbeat.period", "1000");
+    configuration->set("nifi.c2.rest.url.ack", "http://localhost:8888/api/heartbeat");
     configuration->set("nifi.c2.root.classes", "DeviceInfoNode,AgentInformation,FlowInformation");
   }
 
