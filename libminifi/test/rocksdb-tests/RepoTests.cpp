@@ -27,7 +27,16 @@
 #include "core/Core.h"
 #include "FlowFileRepository.h"
 #include "core/repository/AtomicRepoEntries.h"
+#include "core/RepositoryFactory.h"
 #include "properties/Configure.h"
+
+TEST_CASE("Test Repo Names", "[TestFFR1]") {
+  auto repoA = minifi::core::createRepository("FlowFileRepository", false, "flowfile");
+  REQUIRE("flowfile" == repoA->getName());
+
+  auto repoB = minifi::core::createRepository("ProvenanceRepository", false, "provenance");
+  REQUIRE("provenance" == repoB->getName());
+}
 
 TEST_CASE("Test Repo Empty Value Attribute", "[TestFFR1]") {
   LogTestController::getInstance().setDebug<core::ContentRepository>();

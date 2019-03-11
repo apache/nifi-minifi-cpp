@@ -42,6 +42,7 @@ std::shared_ptr<core::Repository> createRepository(const std::string configurati
 
     auto ptr = core::ClassLoader::getDefaultClassLoader().instantiate<core::Repository>(class_name_lc, class_name_lc);
     if (nullptr != ptr) {
+      ptr->setName(repo_name);
       return_obj = ptr;
     }
 
