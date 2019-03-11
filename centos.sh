@@ -129,6 +129,7 @@ build_deps(){
           elif [ "$FOUND_VALUE" = "openssl" ]; then
             INSTALLED+=("openssl")
             INSTALLED+=("openssl-devel")
+            INSTALLED+=("openssl-static")
           elif [ "$FOUND_VALUE" = "libusb" ]; then
             install_libusb
           elif [ "$FOUND_VALUE" = "libpng" ]; then
