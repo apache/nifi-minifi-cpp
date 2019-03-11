@@ -67,7 +67,7 @@ install_bison() {
 }
 
 bootstrap_cmake(){
-  sudo yum -y install wget
+  sudo yum -y install wget patch
   wget https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
   sudo yum -y install epel-release-latest-7.noarch.rpm
   sudo yum -y install cmake3

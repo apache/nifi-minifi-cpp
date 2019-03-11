@@ -43,14 +43,9 @@ target_link_libraries(minifi-mqtt-extensions ${CMAKE_DL_LIBS} )
 if (MQTT_FOUND AND NOT BUILD_MQTT)
 	target_link_libraries(minifi-mqtt-extensions ${MQTT_LIBRARIES} )
 else()
-	target_link_libraries(minifi-mqtt-extensions paho-mqtt3a-static )
-	target_link_libraries(minifi-mqtt-extensions paho-mqtt3c-static )
-	target_link_libraries(minifi-mqtt-extensions paho-mqtt3as-static )
 	target_link_libraries(minifi-mqtt-extensions paho-mqtt3cs-static )
 endif()
-find_package(ZLIB REQUIRED)
-include_directories(${ZLIB_INCLUDE_DIRS})
-target_link_libraries (minifi-mqtt-extensions ${ZLIB_LIBRARIES})
+
 if (WIN32)
     set_target_properties(minifi-mqtt-extensions PROPERTIES
         LINK_FLAGS "/WHOLEARCHIVE"

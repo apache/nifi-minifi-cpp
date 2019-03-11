@@ -36,19 +36,11 @@ endif()
 
 
 # Include UUID
-find_package(UUID REQUIRED)
-target_link_libraries(minifi-archive-extensions ${LIBMINIFI} ${UUID_LIBRARIES})
-find_package(OpenSSL REQUIRED)
-include_directories(${OPENSSL_INCLUDE_DIR})
-target_link_libraries(minifi-archive-extensions ${CMAKE_DL_LIBS} )
-if (LibArchive_FOUND AND NOT BUILD_LIBARCHIVE)
-	target_link_libraries(minifi-archive-extensions ${LibArchive_LIBRARIES} )
-else()
-	target_link_libraries(minifi-archive-extensions archive_static )
-endif()
-find_package(ZLIB REQUIRED)
-include_directories(${ZLIB_INCLUDE_DIRS})
-target_link_libraries (minifi-archive-extensions ${ZLIB_LIBRARIES})
+target_link_libraries(minifi-archive-extensions ${LIBMINIFI})
+target_link_libraries(minifi-archive-extensions archive_static )
+#find_package(ZLIB REQUIRED)
+#include_directories(${ZLIB_INCLUDE_DIRS})
+#target_link_libraries (minifi-archive-extensions ${ZLIB_LIBRARIES})
 if (WIN32)
     set_target_properties(minifi-archive-extensions PROPERTIES
         LINK_FLAGS "/WHOLEARCHIVE"

@@ -74,7 +74,7 @@ if(WIN32)
 	set_target_properties(nanofi PROPERTIES LINK_FLAGS "${WIN32_ARCHIVES}")
 endif()
 
-if (ENABLE_PYTHON)
+if (ENABLE_PYTHON AND NOT STATIC_BUILD)
 
 add_library(nanofi-shared SHARED ${NANOFI_SOURCES})
 
@@ -94,7 +94,7 @@ endif()
 
 set_property(TARGET nanofi-shared PROPERTY POSITION_INDEPENDENT_CODE ON)
 
-endif(ENABLE_PYTHON)
+endif(ENABLE_PYTHON AND NOT STATIC_BUILD)
 
 if (NOT DISABLE_CURL)
 add_subdirectory(examples)

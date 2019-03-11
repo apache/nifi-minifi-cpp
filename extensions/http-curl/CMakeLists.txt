@@ -25,7 +25,7 @@ include_directories(protocols client processors sitetosite)
 file(GLOB SOURCES  "*.cpp" "protocols/*.cpp" "client/*.cpp" "processors/*.cpp" "sitetosite/*.cpp")
 
 if (USE_CURL_NSS)
-    message("okay use nss")
+    message("Using NSS")
 	add_definitions(-DUSE_CURL_NSS)
 endif()
 
@@ -46,7 +46,7 @@ if (CURL_FOUND)
 	set_target_properties(minifi-http-curl PROPERTIES LINK_FLAGS "${LINK_FLAGS} /WHOLEARCHIVE:${CURL_LIBRARY}")
 
 	else()
-		target_link_libraries(minifi-http-curl ${CURL_LIBRARIES})
+			target_link_libraries(minifi-http-curl ${CURL_LIBRARIES})
 	endif()
 endif ()
 
@@ -73,7 +73,6 @@ message("${OPENSSL_LIBRARIES}")
 		if (WIN32)
 		if (OPENSSL_LIB MATCHES "\\.lib$" OR OPENSSL_LIB MATCHES "\\.dll$" )
 				message( FATAL "Including ${OPENSSL_LIB}")
-		target_link_libraries (minifi-http-curl ${OPENSSL_LIB})	
 		set_target_properties(minifi-http-curl PROPERTIES LINK_FLAGS "${LINK_FLAGS} /WHOLEARCHIVE:${OPENSSL_LIB}")
 		endif()
 	endif()
@@ -85,10 +84,11 @@ elseif (APPLE)
         LINK_FLAGS "-Wl,-all_load"
     )
 else ()
-	target_link_libraries(minifi-http-curl ${OPENSSL_LIBRARIES})
-    set_target_properties(minifi-http-curl PROPERTIES
-        LINK_FLAGS "-Wl,--whole-archive"
-    )
+	message("${OPENSSL_LIBRARIES}")
+	foreach(OPENSSL_LIB ${OPENSSL_LIBRARIES})
+		#target_link_libraries (minifi-http-curl ${OPENSSL_LIB} )	
+		target_link_libraries (minifi-http-curl ${OPENSSL_LIB})
+	endforeach()
 endif ()
 
 SET (HTTP-CURL minifi-http-curl PARENT_SCOPE)

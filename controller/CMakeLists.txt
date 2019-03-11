@@ -64,7 +64,10 @@ include_directories(${OPENSSL_INCLUDE_DIR})
 endif(OPENSSL_FOUND)
 
 # Link against minifi, yaml-cpp, civetweb-cpp, uuid, openssl, jsoncpp and rocksdb
-target_link_libraries(minificontroller core-minifi)
+target_link_libraries(minificontroller minifi ${DL})
+
+
+add_dependencies(minificontroller minifi)
 
 if (APPLE)
 	target_link_libraries (minificontroller -Wl,-all_load minifi)
@@ -84,11 +87,13 @@ if (APPLE)
 	get_property(extensions GLOBAL PROPERTY EXTENSION-OPTIONS)
 	foreach(EXTENSION ${extensions})
 		message("Linking against ${EXTENSION}")
+		add_dependencies(minificontroller ${EXTENSION})
 		target_link_libraries (minificontroller -Wl,-all_load ${EXTENSION})
 	endforeach()    
 else ()
 	get_property(extensions GLOBAL PROPERTY EXTENSION-OPTIONS)
 	foreach(EXTENSION ${extensions})
+	add_dependencies(minificontroller ${EXTENSION})
 	  target_link_libraries (minificontroller -Wl,--whole-archive ${EXTENSION} -Wl,--no-whole-archive)
 	endforeach()
 endif ()

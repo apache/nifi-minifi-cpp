@@ -27,9 +27,9 @@ FOREACH(testfile ${CIVETWEB_INTEGRATION_TESTS})
   target_include_directories(${testfilename} PRIVATE BEFORE "${CMAKE_SOURCE_DIR}/thirdparty/civetweb-1.10/include")
 
   if (APPLE)
-    target_link_libraries (${testfilename} -Wl,-all_load minifi-civet-extensions minifi-http-curl)
+    target_link_libraries (${testfilename} -Wl,-all_load ${ZLIB_LIBRARIES} ${OPENSSL_LIBRARIES} minifi-civet-extensions minifi-http-curl)
   else ()
-    target_link_libraries (${testfilename} -Wl,--whole-archive minifi-civet-extensions minifi-http-curl -Wl,--no-whole-archive)
+    target_link_libraries (${testfilename} -Wl,--whole-archive ${ZLIB_LIBRARIES} ${OPENSSL_LIBRARIES} minifi-civet-extensions minifi-http-curl -Wl,--no-whole-archive)
   endif ()
 
   createTests("${testfilename}")

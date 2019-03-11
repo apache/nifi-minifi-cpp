@@ -76,15 +76,8 @@ else ()
 	target_link_libraries (minifi-pcap ${PCAPPLUSPLUS_LIB_DIR}/libPcap++.a ${PCAPPLUSPLUS_LIB_DIR}/libPacket++.a ${PCAPPLUSPLUS_LIB_DIR}/libCommon++.a ${PCAP_LIBRARIES})
 endif ()
 
-# Include UUID
-find_package(UUID REQUIRED)
-target_link_libraries(minifi-pcap ${LIBMINIFI} ${UUID_LIBRARIES})
-find_package(OpenSSL REQUIRED)
-include_directories(${OPENSSL_INCLUDE_DIR})
+target_link_libraries(minifi-pcap ${LIBMINIFI} )
 target_link_libraries(minifi-pcap ${CMAKE_DL_LIBS} )
-find_package(ZLIB REQUIRED)
-include_directories(${ZLIB_INCLUDE_DIRS})
-target_link_libraries (minifi-pcap ${ZLIB_LIBRARIES})
 
 SET (PCAP-EXTENSION minifi-pcap PARENT_SCOPE)
 register_extension(minifi-pcap)

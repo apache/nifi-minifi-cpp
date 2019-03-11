@@ -256,6 +256,10 @@ void GetTCP::onTrigger(const std::shared_ptr<core::ProcessContext> &context, con
         std::unique_ptr<io::Socket> socket =
             ssl_service_ != nullptr ?
                 stream_factory_->createSecureSocket(hostAndPort.at(0), std::stoi(hostAndPort.at(1)), ssl_service_) : stream_factory_->createSocket(hostAndPort.at(0), std::stoi(hostAndPort.at(1)));
+        if (!socket) {
+          logger_->log_error("Could not create socket during initialization for %s", endpoint);
+          continue;
+        }
         socket->setNonBlocking();
         if (socket->initialize() != -1) {
           logger_->log_debug("Enqueueing socket into ring buffer %s:%s", hostAndPort.at(0), hostAndPort.at(1));

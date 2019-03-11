@@ -282,6 +282,9 @@ TESTS_DISABLED=${FALSE}
 
 add_disabled_option SQLITE_ENABLED ${FALSE} "ENABLE_SQLITE"
 
+USE_SHARED_LIBS=${TRUE} 
+
+
 # Since the following extensions have limitations on
 
 add_disabled_option BUSTACHE_ENABLED ${FALSE} "ENABLE_BUSTACHE" "2.6" ${TRUE}
@@ -415,6 +418,13 @@ build_cmake_command(){
     # user may have disabled tests previously, so let's force them to be re-enabled
     CMAKE_BUILD_COMMAND="${CMAKE_BUILD_COMMAND} -DSKIP_TESTS= "
   fi
+  
+  if [ "${USE_SHARED_LIBS}" = "${TRUE}" ]; then
+    CMAKE_BUILD_COMMAND="${CMAKE_BUILD_COMMAND} -DUSE_SHARED_LIBS=ON "
+  else
+    CMAKE_BUILD_COMMAND="${CMAKE_BUILD_COMMAND} -DUSE_SHARED_LIBS= "
+  fi
+  
 
 
   if [ "${PORTABLE_BUILD}" = "${TRUE}" ]; then

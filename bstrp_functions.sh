@@ -93,6 +93,7 @@ save_state(){
   echo_state_variable BUILD_IDENTIFIER
   echo_state_variable BUILD_DIR
   echo_state_variable TESTS_DISABLED
+  echo_state_variable USE_SHARED_LIBS
   for option in "${OPTIONS[@]}" ; do
     echo_state_variable $option
   done
@@ -264,6 +265,7 @@ show_supported_features() {
   echo "1. Disable Tests ...............$(print_feature_status TESTS_DISABLED)"
   echo "2. Enable all extensions"
   echo "3. Enable JNI Support ..........$(print_feature_status JNI_ENABLED)"
+  echo "4. Use Shared Dependency Links .$(print_feature_status USE_SHARED_LIBS)"
   echo "P. Continue with these options"
   if [ "$GUIDED_INSTALL" = "${TRUE}" ]; then
     echo "R. Return to Main Menu"
@@ -290,19 +292,30 @@ read_feature_options(){
     j) ToggleFeature TENSORFLOW_ENABLED ;;
     k) ToggleFeature BUSTACHE_ENABLED ;;
     l) ToggleFeature MQTT_ENABLED ;;
-    m) ToggleFeature SQLLITE_ENABLED ;;
-    n) ToggleFeature PYTHON_ENABLED ;;
+    m) ToggleFeature SQLITE_ENABLED ;;
+    n) if [ "$USE_SHARED_LIBS" = "${TRUE}" ]; then
+         ToggleFeature PYTHON_ENABLED
+       else
+         echo -e "${RED}Please ensure static linking is enabled for Python Support...${NO_COLOR}" && sleep 2
+   	   fi
+   	   ;;
     o) ToggleFeature COAP_ENABLED ;;
     1) ToggleFeature TESTS_DISABLED ;;
     2) EnableAllFeatures ;;
     3) ToggleFeature JNI_ENABLED;;
+    4) if [ "$PYTHON_ENABLED" = "${FALSE}" ]; then
+         ToggleFeature USE_SHARED_LIBS
+       else
+         echo -e "${RED}Python support must be disabled before changing this value...${NO_COLOR}" && sleep 2
+   	   fi
+       ;;
     p) FEATURES_SELECTED="true" ;;
     r) if [ "$GUIDED_INSTALL" = "${TRUE}" ]; then
         MENU="main"
       fi
       ;;
     q) exit 0;;
-    *) echo -e "${RED}Please enter an option A-P or 1-3...${NO_COLOR}" && sleep 2
+    *) echo -e "${RED}Please enter an option A-P or 1-4...${NO_COLOR}" && sleep 2
   esac
 }
 

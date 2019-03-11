@@ -60,6 +60,11 @@ matrix:
         - docker
       script:
         - ./bootstrap.sh -e -t && cd build  && make docker
+    - os: linux
+      dist: trusty
+      sudo: required
+      script:
+        - ./bootstrap.sh -e -t && cd build  && cmake -DUSE_SHARED_LIBS= .. && make -j2 VERBOSE=1 && sudo make test ARGS="-j2 --output-on-failure"
     - os: osx
       osx_image: xcode8.3
       env:

@@ -172,6 +172,8 @@ $ sudo make install
 Finally, it is required to add the `-lrt` compiler flag by using the
 `-DCMAKE_CXX_FLAGS=-lrt` flag when invoking cmake.
 
+On all distributions please use -DUSE_SHARED_LIBS=OFF to statically link zlib, libcurl, and OpenSSL.
+
 #### SLES
   SLES 11 requires manual installation of the SDK using the following link:
     https://www.novell.com/support/kb/doc.php?id=7015337

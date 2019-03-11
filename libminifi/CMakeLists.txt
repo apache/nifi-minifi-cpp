@@ -152,7 +152,7 @@ endif()
 
 SET (LIBMINIFI core-minifi PARENT_SCOPE)
 
-if (ENABLE_PYTHON)
+if (ENABLE_PYTHON AND NOT STATIC_BUILD)
 #### shared
 
 add_library(core-minifi-shared SHARED ${SOURCES})
@@ -191,4 +191,4 @@ endif()
 set_property(TARGET core-minifi-shared PROPERTY POSITION_INDEPENDENT_CODE ON)
 set_property(TARGET minifi-shared PROPERTY POSITION_INDEPENDENT_CODE ON)
 #endif()
-endif(ENABLE_PYTHON)
+endif(ENABLE_PYTHON AND NOT STATIC_BUILD)

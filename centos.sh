@@ -70,7 +70,7 @@ install_bison() {
 
 install_libusb() {
   if [ "$OS_MAJOR" = "6" ]; then
-    sudo yum -y install libtool libudev-devel
+    sudo yum -y install libtool libudev-devel patch
   #	git clone --branch v1.0.18 https://github.com/libusb/libusb.git
     git clone https://github.com/libusb/libusb.git
     pushd libusb
@@ -110,7 +110,7 @@ bootstrap_cmake(){
 build_deps(){
 # Install epel-release so that cmake3 will be available for installation
 
-  COMMAND="sudo yum -y install gcc gcc-c++ libuuid libuuid-devel"
+  COMMAND="sudo yum -y install gcc gcc-c++ libuuid libuuid-devel libtool patch"
   INSTALLED=()
   for option in "${OPTIONS[@]}" ; do
     option_value="${!option}"
