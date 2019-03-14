@@ -36,7 +36,7 @@ build_deps(){
   wget https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
   sudo yum -y install epel-release-latest-7.noarch.rpm
 
-  COMMAND="sudo yum -y install gcc gcc-c++ libuuid libuuid-devel"
+  COMMAND="sudo yum -y install gcc gcc-c++ libuuid libuuid-devel patch"
   INSTALLED=()
   INSTALLED+=("bzip2-devel")
   for option in "${OPTIONS[@]}" ; do

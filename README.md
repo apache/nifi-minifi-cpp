@@ -24,6 +24,7 @@ MiNiFi is a child project effort of Apache NiFi.  This repository is for a nativ
 - [Getting Started](#getting-started)
   - [System Requirements](#system-requirements)
   - [Bootstrapping](#bootstrapping)
+  - [Building For Other Distros](#building-for-other-distros)
   - [Cleaning](#cleaning)
   - [Configuring](#configuring)
   - [Running](#running)
@@ -457,6 +458,20 @@ Built target docker
 ~/Development/code/apache/nifi-minifi-cpp/build
 $ make docker-verify
 ```
+
+### Building For Other Distros
+If you have docker installed on your machine you can build for CentOS 7, Fedoera 29, Ubuntu 16, Ubuntu 18, and Debian 9 via our make docker commands. The following table
+provides the command to build your distro and the output file in your build directoiry. Since the versions are limited ( except for Ubuntu ) we output the archive based on the distros name.  
+
+
+| Distro         | command           | Output File  |
+| ------------- |:-------------| :-----|
+| CentOS 7  | make centos | nifi-minifi-cpp-centos-$VERSION-bin.tar.gz
+| Debian 9  | make debian | nifi-minifi-cpp-debian-$VERSION-bin.tar.gz
+| Fedora 29  | make fedora | nifi-minifi-cpp-fedora-$VERSION-bin.tar.gz
+| Ubuntu 16  | make u16 | nifi-minifi-cpp-xenial-$VERSION-bin.tar.gz
+| Ubuntu 16  | make u18 | nifi-minifi-cpp-bionic-$VERSION-bin.tar.gz
+
 
 ### Cleaning
 Remove the build directory created above.

@@ -20,6 +20,35 @@ add_custom_target(
     docker
     COMMAND ${CMAKE_SOURCE_DIR}/docker/DockerBuild.sh 1000 1000 ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH} minificppsource ${CMAKE_SOURCE_DIR}
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/docker/)
+    
+
+add_custom_target(
+    centos
+    COMMAND ${CMAKE_SOURCE_DIR}/docker/ContainerBuild.sh 1000 1000 ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH} minificppsource ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR} centos
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/docker/centos/)
+    
+add_custom_target(
+    debian
+    COMMAND ${CMAKE_SOURCE_DIR}/docker/ContainerBuild.sh 1000 1000 ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH} minificppsource ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR} debian
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/docker/debian/)
+    
+add_custom_target(
+    fedora
+    COMMAND ${CMAKE_SOURCE_DIR}/docker/ContainerBuild.sh 1000 1000 ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH} minificppsource ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR} fedora
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/docker/fedora/)          
+
+
+add_custom_target(
+    u18
+    COMMAND ${CMAKE_SOURCE_DIR}/docker/ContainerBuild.sh 1000 1000 ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH} minificppsource ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR} bionic
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/docker/bionic/)         
+    
+    
+add_custom_target(
+    u16
+    COMMAND ${CMAKE_SOURCE_DIR}/docker/ContainerBuild.sh 1000 1000 ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH} minificppsource ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR} xenial
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/docker/xenial/)     
+    
 
 add_custom_target(
     docker-verify
