@@ -59,7 +59,7 @@ matrix:
       services:
         - docker
       script:
-        - ./bootstrap.sh -e -t && cd build  && make docker
+        - ./bootstrap.sh -e -t && cd build  && make docker > /dev/null
     - os: linux
       dist: trusty
       sudo: required
