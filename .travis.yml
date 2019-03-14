@@ -27,6 +27,33 @@ env:
 matrix:
     include:
     - os: linux
+      dist: xenial
+      sudo: required
+      addons:
+        apt:
+          sources:
+          - ubuntu-toolchain-r-test
+          packages:
+          - gcc-4.8
+          - g++-4.8
+          - bison
+          - flex
+          - libboost-all-dev
+          - uuid-dev
+          - doxygen
+          - openssl
+          - libcurl4-openssl-dev
+          - ccache
+          - libpython3.5-dev
+          - liblua5.1-0-dev
+          - libusb-1.0-0-dev
+          - libpng12-dev
+          - libpcap-dev
+      before_install:
+        # Establish updated toolchain as default
+        - sudo unlink /usr/bin/gcc && sudo ln -s /usr/bin/gcc-4.8 /usr/bin/gcc
+        - sudo unlink /usr/bin/g++ && sudo ln -s /usr/bin/g++-4.8 /usr/bin/g++
+    - os: linux
       dist: trusty
       sudo: required
       addons:
@@ -44,7 +71,7 @@ matrix:
           - openssl
           - libcurl4-openssl-dev
           - ccache
-          - libpython3.4-dev
+          - libpython3.5-dev
           - liblua5.1-0-dev
           - libusb-1.0-0-dev
           - libpng12-dev
@@ -58,6 +85,16 @@ matrix:
       sudo: required
       script:
         - ./bootstrap.sh -e -t && cd build  && cmake -DUSE_SHARED_LIBS= .. && make -j2 VERBOSE=1 && sudo make test ARGS="-j2 --output-on-failure"
+    - os: linux
+      dist: xenial
+      sudo: required
+      script:
+        - ./bootstrap.sh -e -t && cd build  && cmake -DUSE_SHARED_LIBS= .. && make -j2 VERBOSE=1 && sudo make test ARGS="-j2 --output-on-failure"
+    - os: linux
+      dist: xenial
+      sudo: required
+      script:
+        - ./bootstrap.sh -e -t && cd build  && cmake -DUSE_SHARED_LIBS=ON .. && make -j2 VERBOSE=1 && sudo make test ARGS="-j2 --output-on-failure"
     - os: osx
       osx_image: xcode8.3
       env:
