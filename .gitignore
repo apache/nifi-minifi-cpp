@@ -57,6 +57,11 @@ thirdparty/apache-rat/apache-rat*
 
 # Ignore source files that have been placed in the docker directory during build
 docker/minificppsource
+docker/xenial/minificppsource
+docker/bionic/minificppsource
+docker/debian/minificppsource
+docker/centos/minificppsource
+docker/fedora/minificppsource
 .vs/**
 *.swp
 .cache
