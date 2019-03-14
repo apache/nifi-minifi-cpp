@@ -182,7 +182,7 @@ endif()
 # Provide custom modules for the project
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
-if (OPENSSL_OFF STREQUAL "OFF")
+if (NOT OPENSSL_OFF)
 	if(USE_SYSTEM_OPENSSL)
 		
 		# Set the right openssl root path
@@ -247,7 +247,7 @@ else ()
   message( FATAL_ERROR "OpenSSL was not found. Please install OpenSSL" )
 endif (OPENSSL_FOUND)
 else()
-	list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/ssl")
+	list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/winssl")
 endif()
 if(WIN32 OR NOT USE_SYSTEM_ZLIB)
   message("Using bundled zlib")
