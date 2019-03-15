@@ -59,7 +59,7 @@ include_directories(${OPENSSL_INCLUDE_DIR})
 target_link_libraries(minifi-script-extensions ${CMAKE_DL_LIBS})
 
 if (NOT DISABLE_PYTHON_SCRIPTING)
-    find_package(PythonLibs REQUIRED)
+    find_package(PythonLibs 3.5 REQUIRED)
 
     include_directories(${PYTHON_INCLUDE_DIR})
     include_directories(../../thirdparty/pybind11/include)

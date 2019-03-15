@@ -66,7 +66,7 @@ build_deps(){
           elif [ "$FOUND_VALUE" = "libtool" ]; then
             INSTALLED+=("libtool")
           elif [ "$FOUND_VALUE" = "python" ]; then
-            INSTALLED+=("libpython3-dev")
+            INSTALLED+=("libpython3.5-dev")
           elif [ "$FOUND_VALUE" = "lua" ]; then
             INSTALLED+=("liblua5.1-0-dev")
           elif [ "$FOUND_VALUE" = "gpsd" ]; then
