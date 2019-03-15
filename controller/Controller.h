@@ -291,7 +291,6 @@ void printManifest(const std::shared_ptr<minifi::Configure> &configuration) {
   log_properties->set("logger.org::apache::nifi::minifi", "OFF,stdout");
   logging::LoggerConfiguration::getConfiguration().initialize(log_properties);
 
-  configuration->set(minifi::Configure::nifi_flow_configuration_file, "../conf/config.yml");
   configuration->get(minifi::Configure::nifi_provenance_repository_class_name, prov_repo_class);
   // Create repos for flow record and provenance
   std::shared_ptr<core::Repository> prov_repo = core::createRepository(prov_repo_class, true, "provenance");
