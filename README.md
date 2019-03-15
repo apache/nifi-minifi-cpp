@@ -460,8 +460,8 @@ $ make docker-verify
 ```
 
 ### Building For Other Distros
-If you have docker installed on your machine you can build for CentOS 7, Fedoera 29, Ubuntu 16, Ubuntu 18, and Debian 9 via our make docker commands. The following table
-provides the command to build your distro and the output file in your build directoiry. Since the versions are limited ( except for Ubuntu ) we output the archive based on the distros name.  
+If you have docker installed on your machine you can build for CentOS 7, Fedora 29, Ubuntu 16, Ubuntu 18, and Debian 9 via our make docker commands. The following table
+provides the command to build your distro and the output file in your build directory. Since the versions are limited ( except for Ubuntu ) we output the archive based on the distro's name.
 
 
 | Distro         | command           | Output File  |

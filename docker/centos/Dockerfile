@@ -18,7 +18,7 @@
 
 # First stage: the build environment
 # Edge required for rocksdb
-FROM centos:latest AS builder
+FROM centos:7 AS builder
 MAINTAINER Apache NiFi <dev@nifi.apache.org>
 
 ARG UID
