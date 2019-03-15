@@ -49,6 +49,7 @@ build_deps(){
         VALUE=${cmake_opt#*:}
         if [ "$KEY" = "$option" ]; then
           FOUND_VALUE="$VALUE"
+          echo $FOUND_VALUE
           if [ "$FOUND_VALUE" = "libcurl" ]; then
             INSTALLED+=("libcurl-devel")
           elif [ "$FOUND_VALUE" = "libpcap" ]; then
@@ -64,6 +65,7 @@ build_deps(){
             INSTALLED+=("bison")
           elif [ "$FOUND_VALUE" = "flex" ]; then
             INSTALLED+=("flex")
+	    echo "add flex"
           elif [ "$FOUND_VALUE" = "python" ]; then
             INSTALLED+=("python3-devel")
           elif [ "$FOUND_VALUE" = "lua" ]; then
@@ -88,7 +90,7 @@ build_deps(){
   for option in "${INSTALLED[@]}" ; do
     COMMAND="${COMMAND} $option"
   done
-
+echo "Installing ${COMMAND}"
   ${COMMAND}
 
 }

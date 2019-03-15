@@ -34,7 +34,7 @@ ENV MINIFI_BASE_DIR /opt/minifi
 RUN mkdir -p $MINIFI_BASE_DIR 
 USER $USER
 
-RUN yum -y install java-1.8.0-openjdk java-1.8.0-openjdk-devel make patch sudo git which maven
+RUN yum -y install java-1.8.0-openjdk java-1.8.0-openjdk-devel flex bison make patch sudo git which maven
 
 
 ADD $MINIFI_SOURCE_CODE $MINIFI_BASE_DIR
@@ -49,7 +49,7 @@ RUN mkdir -p $MINIFI_BASE_DIR
 
 # Perform the build
 RUN cd $MINIFI_BASE_DIR \
-	&& ./bootstrap.sh -e -t \
+	&& ./bootstrap.sh -e \
 	&& rm -rf build \ 
 	&& mkdir build \
 	&& cd build \
