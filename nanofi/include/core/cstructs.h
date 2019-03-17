@@ -89,8 +89,7 @@ typedef struct processor_context processor_context;
 
 typedef struct {
   const char *key;
-  void *value;
-  size_t value_size;
+  const char *value;
 } attribute;
 
 typedef struct {

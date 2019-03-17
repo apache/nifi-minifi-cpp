@@ -703,9 +703,9 @@ int confirm(struct CRawSiteToSiteClient * client, const char * transactionID) {
         return -1;
       }
 
-      const char *value = (const char *) packet->_attributes->attributes[i].value;
+      const char *value = packet->_attributes->attributes[i].value;
 
-      ret = write_UTF_len(transaction, value, packet->_attributes->attributes[i].value_size, True);
+      ret = write_UTF(transaction, value, True);
       if (ret <= 0) {
         return -1;
       }

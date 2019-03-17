@@ -321,7 +321,16 @@ void free_flowfile(flow_file_record* ff);
  * @size size size of the data pointed by "value"
  * @return 0 in case of success, -1 otherwise (already existed)
  **/
-int8_t add_attribute(flow_file_record*, const char *key, void *value, size_t size);
+int8_t add_attribute(flow_file_record*, const char *key, const char *value, size_t size);
+
+/**
+ * Adds an attribute, fails in case there is already an attribute with the given key.
+ * @param ff flow file
+ * @param key name of attribute
+ * @param value location of value - expected to be null-terminated string
+ * @return 0 in case of success, -1 otherwise (already existed)
+ **/
+int8_t add_attribute_str(flow_file_record*, const char *key, const char *value);
 
 /**
  * Updates an attribute (adds if it hasn't existed before)
@@ -330,7 +339,15 @@ int8_t add_attribute(flow_file_record*, const char *key, void *value, size_t siz
  * @param value location of value
  * @size size size of the data pointed by "value"
  **/
-void update_attribute(flow_file_record* ff, const char *key, void *value, size_t size);
+void update_attribute(flow_file_record* ff, const char *key, const char *value, size_t size);
+
+/**
+ * Updates an attribute (adds if it hasn't existed before)
+ * @param ff flow file
+ * @param key name of attribute
+ * @param value location of value - expected to be null-terminated string
+ **/
+void update_attribute_str(flow_file_record* ff, const char *key, const char *value);
 
 /**
  * Get the value of an attribute. Value and value size are written to parameter "caller_attribute"

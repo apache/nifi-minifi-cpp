@@ -289,12 +289,17 @@ void free_flowfile(flow_file_record *ff) {
  * @param size size of value
  * @return 0 or -1 based on whether the attributed existed previously (-1) or not (0)
  */
-int8_t add_attribute(flow_file_record *ff, const char *key, void *value, size_t size) {
+int8_t add_attribute(flow_file_record *ff, const char *key, const char *value, size_t size) {
   NULL_CHECK(-1, ff, key, value);
   NULL_CHECK(-1, ff->attributes);
   auto attribute_map = static_cast<string_map*>(ff->attributes);
-  const auto& ret = attribute_map->insert(std::pair<std::string, std::string>(key, std::string(static_cast<char*>(value), size)));
+  const auto& ret = attribute_map->insert(std::pair<std::string, std::string>(key, std::string(value, size)));
   return ret.second ? 0 : -1;
+}
+
+int8_t add_attribute_str(flow_file_record *ff, const char *key, const char *value) {
+  NULL_CHECK(-1, ff, key, value);
+  return add_attribute(ff, key, value, strlen(value));
 }
 
 /**
@@ -304,11 +309,16 @@ int8_t add_attribute(flow_file_record *ff, const char *key, void *value, size_t 
  * @param value value to add
  * @param size size of value
  */
-void update_attribute(flow_file_record *ff, const char *key, void *value, size_t size) {
+void update_attribute(flow_file_record *ff, const char *key, const char *value, size_t size) {
   NULL_CHECK(, ff, key);
   NULL_CHECK(, ff->attributes);
   auto attribute_map = static_cast<string_map*>(ff->attributes);
-  (*attribute_map)[key] = std::string(static_cast<char*>(value), size);
+  (*attribute_map)[key] = std::string(value, size);
+}
+
+void update_attribute_str(flow_file_record* ff, const char *key, const char *value) {
+  NULL_CHECK(, ff, key, value);
+  update_attribute(ff, key, value, strlen(value));
 }
 
 /*
@@ -324,10 +334,10 @@ int8_t get_attribute(const flow_file_record * ff, attribute * caller_attribute) 
   auto attribute_map = static_cast<string_map*>(ff->attributes);
   auto find = attribute_map->find(caller_attribute->key);
   if (find != attribute_map->end()) {
-    caller_attribute->value = static_cast<void*>(const_cast<char*>(find->second.data()));
-    caller_attribute->value_size = find->second.size();
+    caller_attribute->value = find->second.c_str();
     return 0;
   }
+  caller_attribute->value = NULL;
   return -1;
 }
 
@@ -348,8 +358,7 @@ int get_all_attributes(const flow_file_record* ff, attribute_set *target) {
       break;
     }
     target->attributes[i].key = kv.first.data();
-    target->attributes[i].value = static_cast<void*>(const_cast<char*>(kv.second.data()));
-    target->attributes[i].value_size = kv.second.size();
+    target->attributes[i].value = kv.second.data();
     ++i;
   }
   return i;

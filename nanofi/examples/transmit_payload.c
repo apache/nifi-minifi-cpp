@@ -47,9 +47,7 @@ int main(int argc, char **argv) {
   attribute attribute1;
 
   attribute1.key = "some_key";
-  const char * attr_value = "some value";
-  attribute1.value = (void *)attr_value;
-  attribute1.value_size = strlen(attr_value);
+  attribute1.value = "some value";
 
   attribute_set as;
   as.size = 1;

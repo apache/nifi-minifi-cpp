@@ -63,19 +63,18 @@ void custom_processor_logic(processor_session * ps, processor_context * ctx) {
 
   attribute attr;
   attr.key = "filename";
-  attr.value_size = 0;
   REQUIRE(get_attribute(ffr, &attr) == 0);
-  REQUIRE(attr.value_size > 0);
+  REQUIRE(attr.value != NULL);
 
   const char * custom_value = "custom value";
 
-  REQUIRE(add_attribute(ffr, "custom attribute", (void*)custom_value, strlen(custom_value)) == 0);
+  REQUIRE(add_attribute_str(ffr, "custom attribute", custom_value) == 0);
 
   char prop_value[20];
 
   REQUIRE(get_property(ctx, "Some test propery", prop_value, 20) == 0);
 
-  REQUIRE(strncmp("test value", prop_value, strlen(prop_value)) == 0);
+  REQUIRE(strcmp("test value", prop_value) == 0);
 
   transfer_to_relationship(ffr, ps, SUCCESS_RELATIONSHIP);
 
@@ -215,20 +214,17 @@ TEST_CASE("Test manipulation of attributes", "[testAttributes]") {
   test_attr.key = "TestAttr";
   REQUIRE(get_attribute(record, &test_attr) == 0);
 
-  REQUIRE(test_attr.value_size != 0);
   REQUIRE(test_attr.value != nullptr);
 
-  std::string attr_value(static_cast<char*>(test_attr.value), test_attr.value_size);
-
-  REQUIRE(attr_value == test_file_content);
+  REQUIRE(test_attr.value == test_file_content);
 
   const char * new_testattr_value = "S0me t3st t3xt";
 
   // Attribute already exist, should fail
-  REQUIRE(add_attribute(record, test_attr.key, (void*) new_testattr_value, strlen(new_testattr_value)) != 0);  // NOLINT
+  REQUIRE(add_attribute_str(record, test_attr.key, new_testattr_value) != 0);  // NOLINT
 
   // Update overwrites values
-  update_attribute(record, test_attr.key, (void*) new_testattr_value, strlen(new_testattr_value));  // NOLINT
+  update_attribute_str(record, test_attr.key, new_testattr_value);  // NOLINT
 
   int attr_size = get_attribute_quantity(record);
   REQUIRE(attr_size > 0);
@@ -244,10 +240,10 @@ TEST_CASE("Test manipulation of attributes", "[testAttributes]") {
   for (int i = 0; i < attr_set.size; ++i) {
     if (strcmp(attr_set.attributes[i].key, test_attr.key) == 0) {
       test_attr_found = true;
-      REQUIRE(std::string(static_cast<char*>(attr_set.attributes[i].value), attr_set.attributes[i].value_size) == new_testattr_value);
+      REQUIRE(strcmp(attr_set.attributes[i].value, new_testattr_value) == 0);
     } else if (strcmp(attr_set.attributes[i].key, "UpdatedAttribute") == 0) {
       updated_attr_found = true;
-      REQUIRE(std::string(static_cast<char*>(attr_set.attributes[i].value), attr_set.attributes[i].value_size) == "UpdatedValue");
+      REQUIRE(strcmp(attr_set.attributes[i].value, "UpdatedValue") == 0);
     }
   }
   REQUIRE(updated_attr_found == true);
@@ -335,17 +331,16 @@ TEST_CASE("Test standalone processors", "[testStandalone]") {
   char filename_key[] = "filename";
   attribute attr;
   attr.key = filename_key;
-  attr.value_size = 0;
 
   REQUIRE(get_attribute(ffr2, &attr) == 0);
-  REQUIRE(attr.value_size > 0);
+  REQUIRE(attr.value != NULL);
 
   // Verify extracttext behavior
   char test_attr[] = "TestAttr";
   attr.key = test_attr;
-  attr.value_size = 0;
+
   REQUIRE(get_attribute(ffr2, &attr) == 0);
-  REQUIRE(std::string(static_cast<char*>(attr.value), attr.value_size) == test_file_content);
+  REQUIRE(attr.value == test_file_content);
 
   free_flowfile(ffr2);
   free_standalone_processor(getfile_proc);
@@ -414,9 +409,8 @@ TEST_CASE("Test standalone processors with file input", "[testStandaloneWithFile
   attribute attr;
   char test_attr[] = "TestAttr";
   attr.key = test_attr;
-  attr.value_size = 0;
   REQUIRE(get_attribute(ffr, &attr) == 0);
-  REQUIRE(std::string(static_cast<char*>(attr.value), attr.value_size) == test_file_content);
+  REQUIRE(attr.value== test_file_content);
 
   free_flowfile(ffr);
   free_standalone_processor(extract_test);
@@ -476,21 +470,20 @@ TEST_CASE("C API robustness test", "[TestRobustness]") {
 
   const char *custom_value = "custom value";
 
-  REQUIRE(add_attribute(nullptr, "custom attribute", (void *) custom_value, strlen(custom_value)) == -1);
+  REQUIRE(add_attribute(nullptr, "custom attribute", custom_value, strlen(custom_value)) == -1);
 
-  REQUIRE(add_attribute(ffr, "custom attribute", (void *) custom_value, strlen(custom_value)) == -1);
+  REQUIRE(add_attribute(ffr, "custom attribute", custom_value, strlen(custom_value)) == -1);
 
-  REQUIRE(add_attribute(ffr, nullptr, (void *) custom_value, strlen(custom_value)) == -1);
+  REQUIRE(add_attribute(ffr, nullptr, custom_value, strlen(custom_value)) == -1);
 
   REQUIRE(add_attribute(ffr, "custom attribute", nullptr, 0) == -1);
 
-  update_attribute(nullptr, "custom attribute", (void *) custom_value, strlen(custom_value));
+  update_attribute(nullptr, "custom attribute", custom_value, strlen(custom_value));
 
-  update_attribute(ffr, nullptr, (void *) custom_value, strlen(custom_value));
+  update_attribute(ffr, nullptr, custom_value, strlen(custom_value));
 
   attribute attr;
   attr.key = "filename";
-  attr.value_size = 0;
   REQUIRE(get_attribute(ffr, &attr) == -1);
 
   REQUIRE(get_attribute(nullptr, &attr) == -1);
