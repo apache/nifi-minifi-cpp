@@ -47,6 +47,8 @@ RUN apk --update --no-cache upgrade && apk --update --no-cache add gcc \
 	curl-dev \
 	cmake \
 	git \
+	nss \
+	nss-dev \
 	unzip \
 	gpsd-dev \
 	libressl-dev \
@@ -97,8 +99,10 @@ RUN apk --update --no-cache upgrade && apk add --update --no-cache \
 	gpsd \
 	openjdk8-jre-base \
 	openjdk8 \
+	nss \
+	nss-dev \
 	libressl \
-	python \
+	python3 \
 	zlib
 
 # Start MiNiFi CPP in the foreground
