@@ -52,7 +52,7 @@ RUN apk --update --no-cache upgrade && apk --update --no-cache add gcc \
 	libressl-dev \
 	zlib-dev \
 	bzip2-dev \
-	python-dev
+	python3-dev
 
 ENV USER minificpp
 ENV MINIFI_BASE_DIR /opt/minifi
