@@ -470,7 +470,7 @@ provides the command to build your distro and the output file in your build dire
 | Debian 9  | make debian | nifi-minifi-cpp-debian-$VERSION-bin.tar.gz
 | Fedora 29  | make fedora | nifi-minifi-cpp-fedora-$VERSION-bin.tar.gz
 | Ubuntu 16  | make u16 | nifi-minifi-cpp-xenial-$VERSION-bin.tar.gz
-| Ubuntu 16  | make u18 | nifi-minifi-cpp-bionic-$VERSION-bin.tar.gz
+| Ubuntu 18  | make u18 | nifi-minifi-cpp-bionic-$VERSION-bin.tar.gz
 
 
 ### Cleaning
