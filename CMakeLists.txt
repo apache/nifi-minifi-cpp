@@ -675,9 +675,20 @@ install(FILES LICENSE README.md NOTICE
         DESTINATION .
         COMPONENT bin)
    
+if(WIN32)
+#preference is to use the exe type so that we have a solution that works well for cross compilation
+#but that leaves the onus up to the developer, so until we can automate some of that build let's enforce
+#the exe here temporarily
+#TODO: Remove this and automate this step.
+install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/main/minifi.exe
+        DESTINATION bin
+        COMPONENT bin)
+else()
 install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/main/minifi
         DESTINATION bin
         COMPONENT bin)
+        
+endif()
         
 
 if (WIN32)
