@@ -80,6 +80,16 @@ class FileUtils {
    * @param path current path to delete
    * @param delete_files_recursively deletes recursively
    */
+
+  static char get_separator()
+  {
+#ifdef WIN32
+    return '\\';
+#else
+    return '/';
+#endif
+  }
+
   static int64_t delete_dir(const std::string &path, bool delete_files_recursively = true) {
 #ifdef BOOST_VERSION
     try {
@@ -301,6 +311,81 @@ class FileUtils {
 #endif
   }
 
+  /*
+   * Provides a platform-independent function to list a directory
+   * Callback is called for every file found: first argument is the path of the directory, second is the filename
+   * Return value of the callback is used to continue (true) or stop (false) listing
+   */
+  static void list_dir(const std::string& dir, std::function<bool (const std::string&, const std::string&)> callback,
+                       const std::shared_ptr<logging::Logger> &logger, bool recursive = true) {
+
+    logger->log_debug("Performing file listing against %s", dir);
+#ifndef WIN32
+    DIR *d = opendir(dir.c_str());
+    if (!d) {
+      logger->log_warn("Failed to open directory: %s", dir.c_str());
+      return;
+    }
+
+    struct dirent *entry;
+    while ((entry = readdir(d)) != NULL) {
+
+      std::string d_name = entry->d_name;
+      std::string path = dir + get_separator() + d_name;
+
+      struct stat statbuf;
+      if (stat(path.c_str(), &statbuf) != 0) {
+        logger->log_warn("Failed to stat %s", path);
+        continue;
+      }
+
+      if (S_ISDIR(statbuf.st_mode)) {
+        // if this is a directory
+        if (recursive && strcmp(d_name.c_str(), "..") != 0 && strcmp(d_name.c_str(), ".") != 0) {
+          list_dir(path, callback, logger, recursive);
+        }
+      } else {
+        if (!callback(dir, d_name)) {
+          break;
+        }
+      }
+    }
+    closedir(d);
+#else
+    HANDLE hFind;
+    WIN32_FIND_DATA FindFileData;
+
+    std::string pathToSearch = dir + "\\*.*";
+    hFind = FindFirstFileA(pathToSearch.c_str(), &FindFileData);
+
+    if(hFind == INVALID_HANDLE_VALUE) {
+      logger->log_warn("Failed to open directory: %s", dir.c_str());
+      return;
+    }
+
+    do {
+      struct stat statbuf {};
+      if (strcmp(FindFileData.cFileName, ".") != 0 && strcmp(FindFileData.cFileName, "..") != 0) {
+        std::string path = dir + get_separator() + FindFileData.cFileName;
+        if (stat(path.c_str(), &statbuf) != 0) {
+          logger->log_warn("Failed to stat %s", path);
+          continue;
+        }
+        if (S_ISDIR(statbuf.st_mode)) {
+          if (recursive) {
+            list_dir(path, callback, logger, recursive);
+          }
+        }
+        else {
+          if (!callback(dir, FindFileData.cFileName)) {
+            break;
+          }
+        }
+      }
+    } while (FindNextFileA(hFind, &FindFileData));
+    FindClose(hFind);
+#endif
+  }
 };
 
 } /* namespace file */
