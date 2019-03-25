@@ -14,7 +14,7 @@
 -->
 # Apache MiNiFi Extensions Guide
 
-To enable all extensions for your platform, you may use -DENABLE_ALL=TRUE OR select option m in the bootstrap.sh guided build process defined in the [ReadMe](https://github.com/apache/nifi-minifi-cpp/#bootstrapping)
+To enable all extensions for your platform, you may use -DENABLE_ALL=TRUE OR select the option for "Enabling all Extensions" in the bootstrap script. [ReadMe](https://github.com/apache/nifi-minifi-cpp/#bootstrapping)
 
 # Extensions by example
 
@@ -110,42 +110,14 @@ void *createHttpCurlFactory(void);
 }
 ```
 
-#Using your object factory function
+## Using your object factory function
 To use your C function, you must define the sequence "Class Loader Functions" in your YAML file under FlowController. This will indicate to the code that the factory function is to be called and we will create the mappings defined, above.
 
 Note that for the case of HTTP-CURL we have made it so that if libcURL exists and it is not disabled, the createHttpCurlFactory function is automatically loaded. To do this use the function FlowConfiguration::add_static_func -- this will add your function to the list of registered resources and will do so in a thread safe way. If you take this approach you cannot disable your library with an argument within the YAML file.
 
 
-#Enabling Modules
+## Common extension practices
 
-#Enabling PacketCapture
+Extensions should minimize dependencies that are dynamically linked. This means that you should statically link to dependencies when possible. You should verify that your resulting binary doesn't have system dependencies via ldd (in Linux) or dumpbbin /dependents on Microsoft Windows. 
 
-Packet Capture can be enabled to support capturing pcap files from all network interfaces on the machine. To do enable this, you must type the following when building MiNiFi C++
-```
-	cmake -DENABLE_PCAP=TRUE ..
-```
-
-The cmake process will include a notification that the third party dependency, PcapPlusPlus has created its platform specific modules. 
-
-You will see a message such as this when building. This configuration script will contain the name of your platforma and be an indication that 
-the configuration was successful:
-
-		****************************************
-		PcapPlusPlus Linux configuration script 
-		****************************************
-
-When the PCAP extension is built, you will be able to use the PacketCapture Processor, which has two major options: 'Batch Size' and 'Batch Directory'
-
-Batch Size will limit the number of packets taht are combined within a given PCAP. Batch Directory will allow the user to specify the scratch directory for network data to be written to. 
-
-Note that if Batch Directory is not specified, /tmp/ will be used.
-
-*Running PcapTests requires root privileges on Linux.
-
-#Expressions
-
-To evaluate dynamic expressions using the [NiFi Expression Language](https://nifi.apache.org/docs/nifi-docs/html/expression-language-guide.html),
-use the `bool getProperty(const std::string &name, std::string &value, const std::shared_ptr<FlowFile> &flow_file);`
-method within processor extensions. The expression defined in the property will be compiled if it hasn't already been, and
-the expression will be evaluated against the provided flow file (may be `nullptr`). The result of the evaluation is
-stored into the `&value` parameter.
+It is advised that you place your extension in bootstrap.sh to allow users a visual menu for enabling or disabling your extension. It should not be enabled by default unless discussed with the community at large. If there is reliance on specialized hardware you should perform as many compile time tests as possible to ensure your extension cannot be enabled. 
