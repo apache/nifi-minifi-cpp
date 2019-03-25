@@ -31,8 +31,10 @@
 #ifndef DISABLE_CURL
 #include <curl/curl.h>
 #endif
+#ifndef WIN32
 #include <netdb.h>
 #include <arpa/inet.h>
+#endif
 #include "base64.h"
 #include "Driver.h"
 

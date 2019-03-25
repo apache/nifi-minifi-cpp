@@ -16,6 +16,54 @@
 # specific language governing permissions and limitations
 # under the License.
 #
+if(WIN32)
+
+set(BASE_DIR "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/winflexbison")
+
+ ExternalProject_Add(
+	    winflexbison
+	    GIT_REPOSITORY "https://github.com/lexxmark/winflexbison.git"
+	    GIT_TAG "a72f3d6b5102b65f064a5054ba634d3d62e94f41" 
+	    PREFIX "${BASE_DIR}"
+	    BUILD_IN_SOURCE true
+	    SOURCE_DIR "${DIR}"
+	    BUILD_BYPRODUCTS ${JE_BYPRODUCT} 
+	    INSTALL_COMMAND ${CMAKE_COMMAND}  -E echo "Skipping install step."
+	    STEP_TARGETS build
+	  )
+
+	  execute_process(
+		COMMAND ${CMAKE_COMMAND} --build . 
+		WORKING_DIRECTORY ${BASE_DIR}/src/winflexbison
+	)
+
+	set(BISON_EXECUTABLE "${BASE_DIR}/src/winflexbison/bin/Debug/win_bison.exe" CACHE PATH "bison executable")
+	
+	set(FLEX_EXECUTABLE "${BASE_DIR}/src/winflexbison/bin/Debug/win_flex.exe" CACHE PATH "flex executable")
+	
+	include_directories(${BASE_DIR}/src/winflexbison/flex/src/)
+
+	list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/winflexbison")
+
+	find_package(BISON REQUIRED)
+	find_package(FLEX REQUIRED)
+
+	bison_target(
+        el-parser
+        ${CMAKE_CURRENT_SOURCE_DIR}/Parser.yy
+        ${CMAKE_CURRENT_SOURCE_DIR}/Parser.cpp
+	)
+
+	flex_target(
+			el-scanner
+			${CMAKE_CURRENT_SOURCE_DIR}/Scanner.ll
+			${CMAKE_CURRENT_SOURCE_DIR}/Scanner.cpp
+	)
+
+	add_flex_bison_dependency(el-scanner el-parser)
+
+else()
+
 
 find_package(BISON REQUIRED)
 find_package(FLEX REQUIRED)
@@ -33,7 +81,7 @@ flex_target(
 )
 
 add_flex_bison_dependency(el-scanner el-parser)
-
+endif()
 include_directories(../../libminifi/include  ../../libminifi/include/core  ../../thirdparty/spdlog-20170710/include ../../thirdparty/concurrentqueue ../../thirdparty/yaml-cpp-yaml-cpp-0.5.3/include ${CIVET_THIRDPARTY_ROOT}/include ../../thirdparty/)
 include_directories(common)
 include_directories(impl)
