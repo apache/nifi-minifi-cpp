@@ -16,6 +16,68 @@
 # specific language governing permissions and limitations
 # under the License.
 #
+if(WIN32)
+
+	include(FetchContent)
+
+	set(BASE_DIR "${CMAKE_CURRENT_BINARY_DIR}")
+
+	FetchContent_Declare(
+			winflexbison
+			GIT_REPOSITORY "https://github.com/lexxmark/winflexbison.git"
+			GIT_TAG "a72f3d6b5102b65f064a5054ba634d3d62e94f41" 
+		  )
+	FetchContent_GetProperties("winflexbison")
+
+	if(NOT winflexbison_POPULATED)
+	  FetchContent_Populate("winflexbison")
+	  execute_process(
+			COMMAND ${CMAKE_COMMAND} .
+			WORKING_DIRECTORY ${winflexbison_SOURCE_DIR}
+			RESULT_VARIABLE result
+			OUTPUT_VARIABLE bisonbuild 
+			ERROR_VARIABLE bisonbuildE
+		)
+
+	  execute_process(
+			COMMAND ${CMAKE_COMMAND} --build . --config RelWithDebInfo  
+			WORKING_DIRECTORY ${winflexbison_SOURCE_DIR}
+			RESULT_VARIABLE result
+			OUTPUT_VARIABLE bisonbuild 
+			ERROR_VARIABLE bisonbuildE
+		)
+
+	  file(COPY ${winflexbison_SOURCE_DIR}/bison/Data DESTINATION ${winflexbison_SOURCE_DIR}/bison/RelWithDebInfo/)
+
+	endif()
+ 
+	set(BISON_EXECUTABLE "${winflexbison_SOURCE_DIR}/bison/RelWithDebInfo/win_bison.exe" CACHE PATH "bison executable")
+	
+	set(FLEX_EXECUTABLE "${winflexbison_SOURCE_DIR}/flex/RelWithDebInfo/win_flex.exe" CACHE PATH "flex executable")
+	
+	include_directories(${winflexbison_SOURCE_DIR}/flex/src/)
+
+	list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/winflexbison")
+
+	find_package(BISON REQUIRED)
+	find_package(FLEX REQUIRED)
+
+	bison_target(
+        el-parser
+        ${CMAKE_CURRENT_SOURCE_DIR}/Parser.yy
+        ${CMAKE_CURRENT_SOURCE_DIR}/Parser.cpp
+	)
+
+	flex_target(
+			el-scanner
+			${CMAKE_CURRENT_SOURCE_DIR}/Scanner.ll
+			${CMAKE_CURRENT_SOURCE_DIR}/Scanner.cpp
+	)
+
+	add_flex_bison_dependency(el-scanner el-parser)
+
+else()
+
 
 find_package(BISON REQUIRED)
 find_package(FLEX REQUIRED)
@@ -33,7 +95,7 @@ flex_target(
 )
 
 add_flex_bison_dependency(el-scanner el-parser)
-
+endif()
 include_directories(../../libminifi/include  ../../libminifi/include/core  ../../thirdparty/spdlog-20170710/include ../../thirdparty/concurrentqueue ../../thirdparty/yaml-cpp-yaml-cpp-0.5.3/include ${CIVET_THIRDPARTY_ROOT}/include ../../thirdparty/)
 include_directories(common)
 include_directories(impl)
@@ -56,10 +118,11 @@ target_link_libraries(minifi-expression-language-extensions ${LIBMINIFI} tz)
 
 target_link_libraries(minifi-expression-language-extensions ${LIBMINIFI} ${UUID_LIBRARIES})
 if (NOT DISABLE_CURL)
-
-find_package(CURL REQUIRED)
-include_directories(${CURL_INCLUDE_DIRS})
-target_link_libraries(minifi-expression-language-extensions ${CURL_LIBRARIES})
+	if (NOT CURL_FOUND)
+		find_package(CURL REQUIRED)
+	endif(NOT CURL_FOUND)
+	include_directories(${CURL_INCLUDE_DIRS})
+	target_link_libraries(minifi-expression-language-extensions ${CURL_LIBRARIES})
 endif()
 find_package(OpenSSL REQUIRED)
 include_directories(${OPENSSL_INCLUDE_DIR})

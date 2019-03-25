@@ -76,10 +76,6 @@
           "value": "TRUE"
         },
         {
-          "name": "DISABLE_EXPRESSION_LANGUAGE",
-          "value": "TRUE"
-        },
-        {
           "name": "SKIP_TESTS",
           "value": "TRUE"
         }
@@ -170,10 +166,6 @@
         },
         {
           "name": "EXCLUDE_BOOST",
-          "value": "TRUE"
-        },
-        {
-          "name": "DISABLE_EXPRESSION_LANGUAGE",
           "value": "TRUE"
         },
         {

@@ -56,6 +56,7 @@ cmake_dependent_option(USE_SYSTEM_ZLIB "Instructs the build system to search for
 option(USE_SYSTEM_BZIP2 "Instructs the build system to search for and use a bzip2 library available in the host system" ON)
 option(BUILD_ROCKSDB "Instructs the build system to use RocksDB from the third party directory" ON)
 option(FORCE_WINDOWS "Instructs the build system to force Windows builds when WIN32 is specified" OFF)
+option(DISABLE_CURL "Disables libCurl Properties." OFF)
 
 if (OPENSSL_ROOT_DIR )
 	set(OPENSSL_PASSTHROUGH "-DOPENSSL_ROOT_DIR=${OPENSSL_ROOT_DIR}")
@@ -465,7 +466,6 @@ if (WIN32 OR NOT USE_SYSTEM_ZLIB)
 endif(WIN32 OR NOT USE_SYSTEM_ZLIB)
 
 #### EXTENSIONS
-option(DISABLE_CURL "Disables libCurl Properties." OFF)
 if ((DISABLE_CURL STREQUAL "OFF" OR NOT DISABLE_CURL) AND NOT DISABLE_CIVET)
 	createExtension(HTTP-CURL "HTTP CURL" "This enables RESTProtocol, InvokeHTTP, and the HTTPClient for Site to Site" "extensions/http-curl" "extensions/http-curl/tests/")
 	if(NOT USE_SYSTEM_CURL)

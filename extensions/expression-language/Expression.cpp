@@ -31,8 +31,20 @@
 #ifndef DISABLE_CURL
 #include <curl/curl.h>
 #endif
+
+
+#ifdef WIN32
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#include <Windows.h>
+#include <WS2tcpip.h>
+#pragma comment(lib, "Ws2_32.lib")
+#else
 #include <netdb.h>
 #include <arpa/inet.h>
+#endif
+
 #include "base64.h"
 #include "Driver.h"
 
