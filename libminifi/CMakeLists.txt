@@ -72,7 +72,7 @@ endif()
 endif()
 
 if (WIN32)
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Wall")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W3")
 else()
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-reorder")
 endif()
