@@ -206,7 +206,7 @@ if (NOT OPENSSL_OFF)
 		ExternalProject_Add(
 		libressl-portable
 		GIT_REPOSITORY "https://github.com/libressl-portable/portable.git"
-		GIT_TAG "4b6c7bfd02dec26021882f1599dbcbccdd4d2889"
+		GIT_TAG "v2.8.3"
 		SOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-src"
 		CMAKE_ARGS ${PASSTHROUGH_CMAKE_ARGS}
 					"-DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-install"
