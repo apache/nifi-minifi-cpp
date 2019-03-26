@@ -18,30 +18,44 @@
 #
 if(WIN32)
 
-set(BASE_DIR "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/winflexbison")
+	include(FetchContent)
 
- ExternalProject_Add(
-	    winflexbison
-	    GIT_REPOSITORY "https://github.com/lexxmark/winflexbison.git"
-	    GIT_TAG "a72f3d6b5102b65f064a5054ba634d3d62e94f41" 
-	    PREFIX "${BASE_DIR}"
-	    BUILD_IN_SOURCE true
-	    SOURCE_DIR "${DIR}"
-	    BUILD_BYPRODUCTS ${JE_BYPRODUCT} 
-	    INSTALL_COMMAND ${CMAKE_COMMAND}  -E echo "Skipping install step."
-	    STEP_TARGETS build
-	  )
+	set(BASE_DIR "${CMAKE_CURRENT_BINARY_DIR}")
+
+	FetchContent_Declare(
+			winflexbison
+			GIT_REPOSITORY "https://github.com/lexxmark/winflexbison.git"
+			GIT_TAG "a72f3d6b5102b65f064a5054ba634d3d62e94f41" 
+		  )
+	FetchContent_GetProperties("winflexbison")
+
+	if(NOT winflexbison_POPULATED)
+	  FetchContent_Populate("winflexbison")
+	  execute_process(
+			COMMAND ${CMAKE_COMMAND} .
+			WORKING_DIRECTORY ${winflexbison_SOURCE_DIR}
+			RESULT_VARIABLE result
+			OUTPUT_VARIABLE bisonbuild 
+			ERROR_VARIABLE bisonbuildE
+		)
 
 	  execute_process(
-		COMMAND ${CMAKE_COMMAND} --build . 
-		WORKING_DIRECTORY ${BASE_DIR}/src/winflexbison
-	)
+			COMMAND ${CMAKE_COMMAND} --build . --config RelWithDebInfo  
+			WORKING_DIRECTORY ${winflexbison_SOURCE_DIR}
+			RESULT_VARIABLE result
+			OUTPUT_VARIABLE bisonbuild 
+			ERROR_VARIABLE bisonbuildE
+		)
 
-	set(BISON_EXECUTABLE "${BASE_DIR}/src/winflexbison/bin/Debug/win_bison.exe" CACHE PATH "bison executable")
+	  file(COPY ${winflexbison_SOURCE_DIR}/bison/Data DESTINATION ${winflexbison_SOURCE_DIR}/bison/RelWithDebInfo/)
+
+	endif()
+ 
+	set(BISON_EXECUTABLE "${winflexbison_SOURCE_DIR}/bison/RelWithDebInfo/win_bison.exe" CACHE PATH "bison executable")
 	
-	set(FLEX_EXECUTABLE "${BASE_DIR}/src/winflexbison/bin/Debug/win_flex.exe" CACHE PATH "flex executable")
+	set(FLEX_EXECUTABLE "${winflexbison_SOURCE_DIR}/flex/RelWithDebInfo/win_flex.exe" CACHE PATH "flex executable")
 	
-	include_directories(${BASE_DIR}/src/winflexbison/flex/src/)
+	include_directories(${winflexbison_SOURCE_DIR}/flex/src/)
 
 	list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/winflexbison")
 
