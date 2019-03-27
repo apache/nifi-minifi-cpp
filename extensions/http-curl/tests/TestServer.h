@@ -22,6 +22,7 @@
 #include <iostream>
 #include "civetweb.h"
 #include "CivetServer.h"
+#include "civetweb.h"
 
 
 /* Server context handle */
@@ -33,15 +34,26 @@ void init_webserver() {
 
 
 CivetServer * start_webserver(std::string &port, std::string &rooturi, CivetHandler *handler, struct mg_callbacks *callbacks, std::string &cert, std::string &ca_cert) {
-  const char *options[] = { "listening_ports", port.c_str(), "error_log_file",
+  const char *options[] = { "document_root", ".", "listening_ports", port.c_str(), "error_log_file",
       "error.log", "ssl_certificate", ca_cert.c_str(), "ssl_protocol_version", "0", "ssl_cipher_list",
-      "ALL", "ssl_verify_peer", "no", 0 };
-
+      "ALL", "request_timeout_ms", "10000", "enable_auth_domain_check", "no", "ssl_verify_peer", "no", 0 };
+// ECDH+AESGCM+AES256:!aNULL:!MD5:!DSS
   std::vector<std::string> cpp_options;
   for (size_t i = 0; i < (sizeof(options) / sizeof(options[0]) - 1); i++) {
     cpp_options.push_back(options[i]);
   }
-  CivetServer *server = new CivetServer(cpp_options);
+
+  if (!mg_check_feature(2)) {
+      fprintf(stderr,
+              "Error: Embedded example built with SSL support, "
+              "but civetweb library build without.\n");
+      return 0;
+    }
+
+
+  //mg_init_library(MG_FEATURES_SSL);
+
+  CivetServer *server = new CivetServer(cpp_options, (CivetCallbacks*)callbacks);
 
   server->addHandler(rooturi, handler);
 

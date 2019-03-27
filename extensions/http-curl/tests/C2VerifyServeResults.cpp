@@ -135,13 +135,12 @@ int main(int argc, char **argv) {
   std::string key_dir, test_file_location, url;
   if (argc > 1) {
     test_file_location = argv[1];
-    key_dir = argv[2];
+    if (argc > 2) {
+      key_dir = argv[2];
+    }
   }
 
-  bool isSecure = false;
-  if (url.find("https") != std::string::npos) {
-    isSecure = true;
-  }
+  bool isSecure = !key_dir.empty();
 
   VerifyC2Server harness(isSecure);
 

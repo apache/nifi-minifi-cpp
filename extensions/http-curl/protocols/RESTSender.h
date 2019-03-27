@@ -62,6 +62,14 @@ class RESTSender : public RESTProtocol, public C2Protocol {
 
   virtual const C2Payload sendPayload(const std::string url, const Direction direction, const C2Payload &payload, const std::string outputConfig);
 
+  /**
+   * Initializes the SSLContextService onto the HTTP client if one is needed
+   * @param client HTTP client
+   * @param type type of HTTP request
+   * @param url HTTP url
+   */
+  void setSecurityContext(utils::HTTPClient &client,const std::string &type, const std::string &url);
+
   std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service_;
 
   std::string rest_uri_;

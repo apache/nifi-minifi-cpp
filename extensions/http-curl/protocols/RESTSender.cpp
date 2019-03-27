@@ -82,6 +82,13 @@ void RESTSender::update(const std::shared_ptr<Configure> &configure) {
   configure->get("nifi.c2.rest.url.ack", "c2.rest.url.ack", url);
 }
 
+void RESTSender::setSecurityContext(utils::HTTPClient &client, const std::string &type, const std::string &url) {
+  // only use the SSL Context if we have a secure URL.
+  auto generatedService = std::make_shared<minifi::controllers::SSLContextService>("Service", configuration_);
+  generatedService->onEnable();
+  client.initialize(type, url, generatedService);
+}
+
 const C2Payload RESTSender::sendPayload(const std::string url, const Direction direction, const C2Payload &payload, const std::string outputConfig) {
   if (url.empty()) {
     return C2Payload(payload.getOperation(), state::UpdateState::READ_ERROR, true);
@@ -99,11 +106,17 @@ const C2Payload RESTSender::sendPayload(const std::string url, const Direction d
     callback->ptr = input.get();
     callback->pos = 0;
     client.set_request_method("POST");
+    if (!ssl_context_service_ && url.find("https://") == 0) {
+      setSecurityContext(client, "POST", url);
+    }
     client.setUploadCallback(callback.get());
     client.setPostSize(outputConfig.size());
   } else {
-    // we do not need to set the uplaod callback
+    // we do not need to set the upload callback
     // since we are not uploading anything on a get
+    if (!ssl_context_service_ && url.find("https://") == 0) {
+      setSecurityContext(client, "GET", url);
+    }
     client.set_request_method("GET");
   }
 

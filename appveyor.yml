@@ -1,10 +1,8 @@
-image: Visual Studio 2015
+image: Visual Studio 2017
 
 environment:
   MSVC_DEFAULT_OPTIONS: ON
   APPVEYOR_SAVE_CACHE_ON_ERROR: true
-  GENERATOR: Ninja
-  MAKE_PROGRAM: ninja
   
 cache: 
 - build\curl-install\ -> appveyor.yml
@@ -22,6 +20,6 @@ build_script:
    - cd C:\projects\nifi-minifi-cpp
    - mkdir build & exit 0
    - cd build
-   - cmake -g"Ninja" -DWIN32=WIN32 -DOPENSSL_OFF=ON -DUSE_SYSTEM_ZLIB=OFF -DFORCE_WINDOWS=ON -DUSE_SYSTEM_UUID=OFF -DDISABLE_ROCKSDB=ON -DDISABLE_CURL=ON -DDISABLE_LIBARCHIVE=ON -DDISABLE_SCRIPTING=ON -DEXCLUDE_BOOST=ON -DENABLE_WEL=TRUE -DSKIP_TESTS=ON .. 
+   - cmake -G "Visual Studio 15 2017" -DCMAKE_BUILD_TYPE_INIT=Release -DCMAKE_BUILD_TYPE=Release -DWIN32=WIN32  -DOPENSSL_OFF=OFF  -DUSE_SHARED_LIBS=OFF -DDISABLE_CONTROLLER=ON  -DBUILD_ROCKSDB=ON -DFORCE_WINDOWS=ON -DUSE_SYSTEM_UUID=OFF -DDISABLE_LIBARCHIVE=ON -DDISABLE_SCRIPTING=ON -DEXCLUDE_BOOST=ON -DENABLE_WEL=TRUE -DSKIP_TESTS=ON -DFAIL_ON_WARNINGS=OFF .. 
    - set msbuild_platform=x64 
-   - msbuild nifi-minifi-cpp.sln
+   -  msbuild /m nifi-minifi-cpp.sln /property:Configuration=Release
