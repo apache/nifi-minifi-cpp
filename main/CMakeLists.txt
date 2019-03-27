@@ -118,8 +118,6 @@ if (WIN32)
   	target_link_libraries(minifiexe semaphore)
 endif()
 
-
-
 if (APPLE)
 	get_property(extensions GLOBAL PROPERTY EXTENSION-OPTIONS)
 	foreach(EXTENSION ${extensions})

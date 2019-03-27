@@ -29,22 +29,9 @@ set(PAHO_BUILD_STATIC "ON" CACHE STRING "" FORCE)
 
 add_library(minifi-mqtt-extensions STATIC ${SOURCES})
 set_property(TARGET minifi-mqtt-extensions PROPERTY POSITION_INDEPENDENT_CODE ON)
-if(THREADS_HAVE_PTHREAD_ARG)
-  target_compile_options(PUBLIC minifi-mqtt-extensions "-pthread")
-endif()
-if(CMAKE_THREAD_LIBS_INIT)
-  target_link_libraries(minifi-mqtt-extensions "${CMAKE_THREAD_LIBS_INIT}")
-endif()
 
-
-
-# Include UUID
 target_link_libraries(minifi-mqtt-extensions ${CMAKE_DL_LIBS} )
-if (MQTT_FOUND AND NOT BUILD_MQTT)
-	target_link_libraries(minifi-mqtt-extensions ${MQTT_LIBRARIES} )
-else()
-	target_link_libraries(minifi-mqtt-extensions paho-mqtt3cs-static )
-endif()
+target_link_libraries(minifi-mqtt-extensions paho-mqtt3cs-static )
 
 if (WIN32)
     set_target_properties(minifi-mqtt-extensions PROPERTIES

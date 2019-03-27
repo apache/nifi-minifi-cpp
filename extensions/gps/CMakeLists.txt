@@ -27,23 +27,13 @@ file(GLOB SOURCES  "*.cpp")
 
 add_library(minifi-gps STATIC ${SOURCES})
 set_property(TARGET minifi-gps PROPERTY POSITION_INDEPENDENT_CODE ON)
-if(THREADS_HAVE_PTHREAD_ARG)
-  target_compile_options(PUBLIC minifi-gps "-pthread")
-endif()
-if(CMAKE_THREAD_LIBS_INIT)
-  target_link_libraries(minifi-gps "${CMAKE_THREAD_LIBS_INIT}")
-endif()
 
 
 # Include UUID
-find_package(UUID REQUIRED)
-target_link_libraries(minifi-gps ${LIBMINIFI} ${UUID_LIBRARIES} ${LIBGPS_LIBRARIES})
-find_package(OpenSSL REQUIRED)
-include_directories(${OPENSSL_INCLUDE_DIR})
+target_link_libraries(minifi-gps ${LIBMINIFI} )
+target_link_libraries(minifi-gps ${LIBGPS_LIBRARIES})
+
 target_link_libraries(minifi-gps ${CMAKE_DL_LIBS} )
-find_package(ZLIB REQUIRED)
-include_directories(${ZLIB_INCLUDE_DIRS})
-target_link_libraries (minifi-gps ${ZLIB_LIBRARIES})
 if (WIN32)
     set_target_properties(minifi-gps PROPERTIES
         LINK_FLAGS "/WHOLEARCHIVE"

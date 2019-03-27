@@ -37,6 +37,12 @@ find_library(LIBGPS_LIBRARY
     DOC "LIBGPS library"
 )
 
+find_library(LIBGPS_STATIC_LIBRARY 
+    NAMES libgps.a
+    PATHS /usr/local/lib /usr/lib/x86_64-linux-gnu /usr/lib/arm-linux-gnueabihf
+    DOC "LIBGPS Static library"
+)
+
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(LIBGPS DEFAULT_MSG LIBGPS_INCLUDE_DIR LIBGPS_LIBRARY)
 
@@ -46,4 +52,4 @@ if (LIBGPS_FOUND)
     set(LIBGPS_DEFINITIONS )
 endif()
 
-mark_as_advanced(LIBGPS_ROOT_DIR LIBGPS_INCLUDE_DIR LIBGPS_LIBRARY)
+mark_as_advanced(LIBGPS_ROOT_DIR LIBGPS_INCLUDE_DIR LIBGPS_LIBRARY LIBGPS_STATIC_LIBRARY)

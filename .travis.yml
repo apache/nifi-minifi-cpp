@@ -91,6 +91,41 @@ matrix:
       script:
         - ./bootstrap.sh -e -t && cd build  && cmake -DUSE_SHARED_LIBS= .. && make -j2 VERBOSE=1 && sudo make test ARGS="-j2 --output-on-failure"
     - os: linux
+      dist: trusty
+      sudo: required
+      services:
+        - docker
+      script:
+        - mkdir build && && cd build && cmake .. && make centos
+    - os: linux
+      dist: trusty
+      sudo: required
+      services:
+        - docker
+      script:
+        - mkdir build && && cd build && cmake .. && make debian
+    - os: linux
+      dist: trusty
+      sudo: required
+      services:
+        - docker
+      script:
+        - mkdir build && && cd build && cmake .. && make centos
+    - os: linux
+      dist: trusty
+      sudo: required
+      services:
+        - docker
+      script:
+        - mkdir build && && cd build && cmake .. && make fedora
+    - os: linux
+      dist: trusty
+      sudo: required
+      services:
+        - docker
+      script:
+        - mkdir build && && cd build && cmake .. && make u18
+    - os: linux
       dist: xenial
       sudo: required
       script:
