@@ -118,8 +118,9 @@ target_link_libraries(minifi-expression-language-extensions ${LIBMINIFI} tz)
 
 target_link_libraries(minifi-expression-language-extensions ${LIBMINIFI} ${UUID_LIBRARIES})
 if (NOT DISABLE_CURL)
-
-find_package(CURL REQUIRED)
+if (NOT CURL_FOUND)
+	find_package(CURL REQUIRED)
+endif(NOT CURL_FOUND)
 include_directories(${CURL_INCLUDE_DIRS})
 target_link_libraries(minifi-expression-language-extensions ${CURL_LIBRARIES})
 endif()
