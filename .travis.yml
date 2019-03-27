@@ -81,23 +81,19 @@ matrix:
         - sudo unlink /usr/bin/gcc && sudo ln -s /usr/bin/gcc-4.8 /usr/bin/gcc
         - sudo unlink /usr/bin/g++ && sudo ln -s /usr/bin/g++-4.8 /usr/bin/g++
     - os: linux
+      name: trusty static build with tests
       dist: trusty
       sudo: required
       script:
         - ./bootstrap.sh -e -t && cd build  && cmake -DUSE_SHARED_LIBS= .. && make -j2 VERBOSE=1 && sudo make test ARGS="-j2 --output-on-failure"
     - os: linux
+      name: xenial shared build with tests
       dist: xenial
       sudo: required
       script:
         - ./bootstrap.sh -e -t && cd build  && cmake -DUSE_SHARED_LIBS= .. && make -j2 VERBOSE=1 && sudo make test ARGS="-j2 --output-on-failure"
-    - os: linux
-      dist: trusty
-      sudo: required
-      services:
-        - docker
-      script:
-        - mkdir build && && cd build && cmake .. && make centos
-    - os: linux
+   - os: linux
+      name: debian static package build
       dist: trusty
       sudo: required
       services:
@@ -105,6 +101,7 @@ matrix:
       script:
         - mkdir build && && cd build && cmake .. && make debian
     - os: linux
+      name: centos static package biuld
       dist: trusty
       sudo: required
       services:
@@ -112,6 +109,7 @@ matrix:
       script:
         - mkdir build && && cd build && cmake .. && make centos
     - os: linux
+      name: fedora static package build
       dist: trusty
       sudo: required
       services:
@@ -119,6 +117,7 @@ matrix:
       script:
         - mkdir build && && cd build && cmake .. && make fedora
     - os: linux
+      name: bionic static package build
       dist: trusty
       sudo: required
       services:
