@@ -112,7 +112,7 @@ target_link_libraries(core-minifi ${CMAKE_DL_LIBS} ${UUID_LIBRARIES} yaml-cpp)
 
 #target_link_libraries(core-minifi  PRIVATE bsdiff )
 
-find_package(ZLIB REQUIRED)
+
 include_directories(${ZLIB_INCLUDE_DIRS})
 
 target_link_libraries(core-minifi minifi-expression-language-extensions)
@@ -162,7 +162,6 @@ else()
 	target_link_libraries(core-minifi-shared ${CMAKE_DL_LIBS} uuid-shared yaml-cpp)
 endif()
 
-find_package(ZLIB REQUIRED)
 include_directories(${ZLIB_INCLUDE_DIRS})
 
 target_link_libraries(core-minifi-shared minifi-expression-language-extensions)
