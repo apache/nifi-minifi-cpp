@@ -162,7 +162,7 @@ class VerifyC2Heartbeat : public CoapIntegrationBase {
     std::string url = "";
     inv->getProperty(minifi::processors::InvokeHTTP::URL.getName(), url);
 
-    std::string c2_url = std::string("http") + (isSecure ? "s" : "") + "://localhost:" + getWebPort() + "/api/heartbeat" ;
+    std::string c2_url = std::string("http") + (isSecure ? "s" : "") + "://localhost:" + getWebPort() + "/api/heartbeat";
 
     configuration->set("nifi.c2.agent.protocol.class", "RESTSender");
     configuration->set("nifi.c2.enable", "true");
@@ -185,7 +185,10 @@ int main(int argc, char **argv) {
   url = "http://localhost:0/api/heartbeat";
   if (argc > 1) {
     test_file_location = argv[1];
-    key_dir = argv[2];
+    if (argc > 2) {
+      url = "https://localhost:0/api/heartbeat";
+      key_dir = argv[2];
+    }
   }
 
   bool isSecure = false;

@@ -170,7 +170,7 @@ if (WIN32)
 endif()
 
 # Provide custom modules for the project
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
 if (NOT OPENSSL_OFF)
 	if(USE_SYSTEM_OPENSSL)
@@ -185,7 +185,7 @@ if (NOT OPENSSL_OFF)
 	else()
 		include(LibreSSL)
 		use_libre_ssl(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
-		list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/ssl")
+		list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/ssl")
 	endif()	
 	
 	find_package (OpenSSL REQUIRED)
@@ -200,7 +200,7 @@ if (NOT OPENSSL_OFF)
 	endif (OPENSSL_FOUND)
 	
 else()
-	list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/winssl")
+	list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/winssl")
 endif()
 
 if (OPENSSL_ROOT_DIR )
@@ -244,7 +244,7 @@ SET(TEST_DIR ${CMAKE_SOURCE_DIR}/libminifi/test)
 
 include(Extensions)
 
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/uuid/dummy")
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/uuid/dummy")
 if (WIN32)
 	include_directories("thirdparty/uuid/include/win32/")
 else()
@@ -312,7 +312,7 @@ endif()
                 -DHAVE_POLL_FINE_EXITCODE=0
                 -DHAVE_FSETXATTR_5=0
                 -DHAVE_FSETXATTR_5__TRYRUN_OUTPUT=""
-               "-DCMAKE_MODULE_PATH=${CMAKE_CURRENT_SOURCE_DIR}/cmake/ssl"
+               "-DCMAKE_MODULE_PATH=${CMAKE_SOURCE_DIR}/cmake/ssl"
                "-DCMAKE_C_FLAGS=${CURL_C_FLAGS}"
                "-DCMAKE_CXX_FLAGS=${CURL_CXX_FLAGS}"
 	${PC}
@@ -328,7 +328,7 @@ endif()
   set(CURL_BYPRODUCT_DIR "${BYPRODUCT}" CACHE STRING "" FORCE)
 
 
-  list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/curl/dummy")
+  list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/curl/dummy")
   add_library(curl STATIC IMPORTED)
   set_target_properties(curl PROPERTIES IMPORTED_LOCATION "${CURL_BIN_DIR}${BYPRODUCT}")
 
@@ -357,7 +357,10 @@ include(ExternalProject)
 
 set(CIVETWEB_ENABLE_SSL_DYNAMIC_LOADING OFF CACHE BOOL "Disable dynamic SSL library loading")
 set(CIVETWEB_ENABLE_CXX ON CACHE BOOL "Enable civet C++ library")
-set(CIVETWEB_ENABLE_SSL OFF CACHE BOOL "DISABLE SSL")
+set(CIVETWEB_SSL_SSL_LIB "${OPENSSL_SSL_LIBRARY}" CACHE STRING "Enable civet C++ library")
+set(CIVETWEB_SSL_CRYPTO_LIB "${OPENSSL_CRYPTO_LIBRARY}" CACHE STRING "Enable civet C++ library")
+set(CIVETWEB_ENABLE_CXX ON CACHE BOOL "Enable civet C++ library")
+set(CIVETWEB_ENABLE_SSL ON CACHE BOOL "DISABLE SSL")
 
 SET(WITH_TOOLS OFF CACHE BOOL "Do not build RocksDB tools")
 if ( NOT APPLE)
@@ -542,9 +545,9 @@ if ((ENABLE_ALL OR ENABLE_SFTP) AND NOT DISABLE_CURL)
     if(WIN32 OR NOT USE_SYSTEM_LIBSSH2)
         include(LibSSH2)
         use_bundled_libssh2(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
-        list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/libssh2/dummy")
+        list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/libssh2/dummy")
     else()
-        list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/libssh2/sys")
+        list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/libssh2/sys")
         find_package (LibSSH2 REQUIRED)
     endif()
 

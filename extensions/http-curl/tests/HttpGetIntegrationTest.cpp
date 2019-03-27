@@ -55,13 +55,16 @@ int log_message(const struct mg_connection *conn, const char *message) {
 }
 
 int ssl_enable(void *ssl_context, void *user_data) {
+  puts("Enable ssl");
   struct ssl_ctx_st *ctx = (struct ssl_ctx_st *) ssl_context;
   return 0;
 }
 
 class HttpResponder : public CivetHandler {
+ private:
  public:
   bool handleGet(CivetServer *server, struct mg_connection *conn) {
+    puts("handle get");
     static const std::string site2site_rest_resp = "hi this is a get test";
     mg_printf(conn, "HTTP/1.1 200 OK\r\nContent-Type: "
               "text/plain\r\nContent-Length: %lu\r\nConnection: close\r\n\r\n",
@@ -133,9 +136,9 @@ int main(int argc, char **argv) {
       cert = key_dir + "nifi-cert.pem";
       memset(&callback, 0, sizeof(callback));
       callback.init_ssl = ssl_enable;
-      port +="s";
+      std::string https_port = port + "s";
       callback.log_message = log_message;
-      server = start_webserver(port, path, &h_ex, &callback, cert, cert);
+      server = start_webserver(https_port, path, &h_ex, &callback, cert, cert);
     } else {
       server = start_webserver(port, path, &h_ex);
     }

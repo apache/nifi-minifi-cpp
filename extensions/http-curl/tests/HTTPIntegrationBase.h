@@ -49,8 +49,8 @@ class CoapIntegrationBase : public IntegrationBase {
 
   std::string getWebPort() {
     std::string ret_val = port;
-    if(ret_val.back() == 's') {
-      ret_val = ret_val.substr(0, ret_val.size()-1);
+    if (ret_val.back() == 's') {
+      ret_val = ret_val.substr(0, ret_val.size() - 1);
     }
     return ret_val;
   }
@@ -67,7 +67,7 @@ void CoapIntegrationBase::setUrl(std::string url, CivetHandler *handler) {
 
   parse_http_components(url, port, scheme, path);
   struct mg_callbacks callback;
-  if (url.find("localhost") != std::string::npos) {
+  if (url.find("localhost") != std::string::npos || url.find(minifi::io::Socket::getMyHostName()) != std::string::npos) {
     if (server != nullptr) {
       server->addHandler(path, handler);
       return;
@@ -84,14 +84,13 @@ void CoapIntegrationBase::setUrl(std::string url, CivetHandler *handler) {
       server = start_webserver(port, path, handler);
     }
   }
-  if(port == "0" || port == "0s") {
+  if (port == "0" || port == "0s") {
     bool secure = (port == "0s");
     port = std::to_string(server->getListeningPorts()[0]);
-    if(secure) {
+    if (secure) {
       port += "s";
     }
   }
-
 }
 
 #endif /* LIBMINIFI_TEST_INTEGRATION_HTTPINTEGRATIONBASE_H_ */
