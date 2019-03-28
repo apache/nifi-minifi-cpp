@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+#include <stdio.h>
 #include <uuid/uuid.h>
 #include <fstream>
 #include <map>
@@ -37,13 +38,13 @@
 #include "LogAttribute.h"
 
 
-static const char *NEWLINE_FILE = ""
+static std::string NEWLINE_FILE = "" // NOLINT
     "one,two,three\n"
     "four,five,six, seven";
 static const char *TMP_FILE = "/tmp/minifi-tmpfile.txt";
 static const char *STATE_FILE = "/tmp/minifi-state-file.txt";
 
-TEST_CASE("TailFileWithDelimiter", "[tailfiletest1]") {
+TEST_CASE("TailFileWithDelimiter", "[tailfiletest2]") {
   // Create and write to the test file
       std::ofstream tmpfile;
       tmpfile.open(TMP_FILE);
@@ -76,8 +77,8 @@ TEST_CASE("TailFileWithDelimiter", "[tailfiletest1]") {
   LogTestController::getInstance().reset();
 
   // Delete the test and state file.
-    std::remove(TMP_FILE);
-    std::remove(STATE_FILE);
+  remove(TMP_FILE);
+  remove(STATE_FILE);
 }
 
 TEST_CASE("TailFileWithOutDelimiter", "[tailfiletest2]") {
@@ -113,9 +114,175 @@ TEST_CASE("TailFileWithOutDelimiter", "[tailfiletest2]") {
   LogTestController::getInstance().reset();
 
   // Delete the test and state file.
-    std::remove(TMP_FILE);
-    std::remove(STATE_FILE);
+  remove(TMP_FILE);
+  remove(STATE_FILE);
 }
+
+TEST_CASE("TailFileWithRealDelimiterAndRotate", "[tailfiletest2]") {
+  TestController testController;
+
+  const char DELIM = ',';
+  size_t expected_pieces = std::count(NEWLINE_FILE.begin(), NEWLINE_FILE.end(), DELIM);  // The last piece is left as considered unfinished
+
+
+  LogTestController::getInstance().setTrace<TestPlan>();
+  LogTestController::getInstance().setTrace<processors::TailFile>();
+  LogTestController::getInstance().setTrace<processors::LogAttribute>();
+  LogTestController::getInstance().setTrace<core::ProcessSession>();
+
+  auto plan = testController.createPlan();
+
+  char format[] = "/tmp/gt.XXXXXX";
+  char *dir = testController.createTempDirectory(format);
+
+  // Define test input file
+  std::string in_file(dir);
+  in_file.append("/testfifo.txt");
+
+  std::string state_file(dir);
+  state_file.append("tailfile.state");
+
+  std::ofstream in_file_stream(in_file);
+  in_file_stream << NEWLINE_FILE;
+  in_file_stream.flush();
+
+  // Build MiNiFi processing graph
+  auto tail_file = plan->addProcessor(
+      "TailFile",
+      "Tail");
+  plan->setProperty(
+      tail_file,
+      processors::TailFile::Delimiter.getName(), std::string(1, DELIM));
+  plan->setProperty(
+      tail_file,
+      processors::TailFile::FileName.getName(), in_file);
+  plan->setProperty(
+      tail_file,
+      processors::TailFile::StateFile.getName(), state_file);
+  auto log_attr = plan->addProcessor(
+      "LogAttribute",
+      "Log",
+      core::Relationship("success", "description"),
+      true);
+  plan->setProperty(
+      log_attr,
+      processors::LogAttribute::FlowFilesToLog.getName(), "0");
+  // Log as many FFs as it can to make sure exactly the expected amount is produced
+
+
+  plan->runNextProcessor();  // Tail
+  plan->runNextProcessor();  // Log
+
+  REQUIRE(LogTestController::getInstance().contains(std::string("Logged ") + std::to_string(expected_pieces) + " flow files"));
+
+  in_file_stream << DELIM;
+  in_file_stream.close();
+
+
+  std::string rotated_file = (in_file + ".1");
+
+  REQUIRE(rename(in_file.c_str(), rotated_file.c_str() ) == 0);
+
+  std::this_thread::sleep_for(std::chrono::milliseconds(1000));  // make sure the new file gets newer modification time
+
+  std::ofstream new_in_file_stream(in_file);
+  new_in_file_stream << "five" << DELIM << "six" << DELIM;
+  new_in_file_stream.close();
+
+  plan->reset();
+  plan->runNextProcessor();  // Tail
+  plan->runNextProcessor();  // Log
+
+  // Find the last flow file in the rotated file
+  REQUIRE(LogTestController::getInstance().contains("Logged 1 flow files"));
+
+  plan->reset();
+  plan->runNextProcessor();  // Tail
+  plan->runNextProcessor();  // Log
+
+  // Two new files in the new flow file
+  REQUIRE(LogTestController::getInstance().contains("Logged 2 flow files"));
+}
+
+TEST_CASE("TailFileWithMultileRolledOverFiles", "[tailfiletest2]") {
+  TestController testController;
+
+  const char DELIM = ':';
+
+  LogTestController::getInstance().setTrace<TestPlan>();
+  LogTestController::getInstance().setTrace<processors::TailFile>();
+  LogTestController::getInstance().setTrace<processors::LogAttribute>();
+  LogTestController::getInstance().setTrace<core::ProcessSession>();
+
+  auto plan = testController.createPlan();
+
+  char format[] = "/tmp/gt.XXXXXX";
+  char *dir = testController.createTempDirectory(format);
+
+  std::string state_file(dir);
+  state_file.append("tailfile.state");
+
+  // Define test input file
+  std::string in_file(dir);
+  in_file.append("/fruits.txt");
+
+  for (int i = 2; 0 <= i; --i) {
+    if (i < 2) {
+      std::this_thread::sleep_for(
+          std::chrono::milliseconds(1000));  // make sure the new file gets newer modification time
+    }
+    std::ofstream in_file_stream(in_file + (i > 0 ? std::to_string(i) : ""));
+    for (int j = 0; j <= i; j++) {
+      in_file_stream << "Apple" << DELIM;
+    }
+    in_file_stream.close();
+  }
+
+  // Build MiNiFi processing graph
+  auto tail_file = plan->addProcessor(
+      "TailFile",
+      "Tail");
+  plan->setProperty(
+      tail_file,
+      processors::TailFile::Delimiter.getName(), std::string(1, DELIM));
+  plan->setProperty(
+      tail_file,
+      processors::TailFile::FileName.getName(), in_file);
+  plan->setProperty(
+      tail_file,
+      processors::TailFile::StateFile.getName(), state_file);
+  auto log_attr = plan->addProcessor(
+      "LogAttribute",
+      "Log",
+      core::Relationship("success", "description"),
+      true);
+  plan->setProperty(
+      log_attr,
+      processors::LogAttribute::FlowFilesToLog.getName(), "0");
+  // Log as many FFs as it can to make sure exactly the expected amount is produced
+
+
+  // Each iteration should go through one file and log all flowfiles
+  for (int i = 2; 0 <= i; --i) {
+    plan->reset();
+    plan->runNextProcessor();  // Tail
+    plan->runNextProcessor();  // Log
+
+    REQUIRE(LogTestController::getInstance().contains(std::string("Logged ") + std::to_string(i + 1) + " flow files"));
+  }
+
+  // Rrite some more data to the source file
+  std::ofstream in_file_stream(in_file);
+  in_file_stream << "Pear" << DELIM << "Cherry" << DELIM;
+
+  plan->reset();
+  plan->runNextProcessor();  // Tail
+  plan->runNextProcessor();  // Log
+
+  REQUIRE(LogTestController::getInstance().contains(std::string("Logged 2 flow files")));
+}
+
+
 /*
 TEST_CASE("TailFileWithDelimiter", "[tailfiletest1]") {
   try {
