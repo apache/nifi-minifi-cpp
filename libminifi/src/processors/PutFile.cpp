@@ -138,49 +138,21 @@ void PutFile::onTrigger(core::ProcessContext *context, core::ProcessSession *ses
     if (S_ISDIR(statResult.st_mode)) {
       // it's a directory, count the files
       int64_t ct = 0;
-#ifndef WIN32
-      DIR *myDir = opendir(directory.c_str());
-      if (!myDir) {
-        logger_->log_warn("Could not open %s", directory);
+
+      //Callback, called for each file entry in the listed directory
+      //Return value is used to break (false) or continue (true) listing
+      auto lambda = [&ct, this](const std::string&, const std::string&) -> bool {
+        return ++ct < max_dest_files_;
+      };
+
+      utils::file::FileUtils::list_dir(directory, lambda, logger_, false);
+
+      if (ct >= max_dest_files_) {
+        logger_->log_warn("Routing to failure because the output directory %s has at least %u files, which exceeds the "
+                          "configured max number of files", directory, max_dest_files_);
         session->transfer(flowFile, Failure);
         return;
       }
-      struct dirent* entry = nullptr;
-
-      while ((entry = readdir(myDir)) != nullptr) {
-        if ((strcmp(entry->d_name, ".") != 0) && (strcmp(entry->d_name, "..") != 0)) {
-          ct++;
-          if (ct >= max_dest_files_) {
-            logger_->log_warn("Routing to failure because the output directory %s has at least %u files, which exceeds the "
-                              "configured max number of files",
-                              directory, max_dest_files_);
-            session->transfer(flowFile, Failure);
-            closedir(myDir);
-            return;
-          }
-        }
-      }
-      closedir(myDir);
-#else
-      HANDLE hFind;
-      WIN32_FIND_DATA FindFileData;
-
-      if ((hFind = FindFirstFile(directory.c_str(), &FindFileData)) != INVALID_HANDLE_VALUE) {
-        do {
-          if ((strcmp(FindFileData.cFileName, ".") != 0) && (strcmp(FindFileData.cFileName, "..") != 0)) {
-            ct++;
-            if (ct >= max_dest_files_) {
-              logger_->log_warn("Routing to failure because the output directory %s has at least %u files, which exceeds the "
-                  "configured max number of files", directory, max_dest_files_);
-              session->transfer(flowFile, Failure);
-              FindClose(hFind);
-              return;
-            }
-          }
-        }while (FindNextFile(hFind, &FindFileData));
-        FindClose(hFind);
-      }
-#endif
     }
   }
 
