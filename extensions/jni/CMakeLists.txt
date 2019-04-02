@@ -46,7 +46,7 @@ file(COPY ${JNI_FRAMEWORK_JAR_SOURCE} DESTINATION ${JNI_FRAMEWORK_JAR_BIN})
 file(COPY ${JNI_ASSEMBLY_JAR_SOURCE} DESTINATION ${JNI_ASSEMBLY_JAR_BIN})
 
 message("Building NiFi assembly for packaging ....")
-execute_process(COMMAND "mvn" "package" "-Denforcer.skip=true"
+execute_process(COMMAND "mvn" "-q" "package" "-Denforcer.skip=true"
 	WORKING_DIRECTORY "${JNI_ASSEMBLY_JAR_BIN}/nifi-minifi-jni-assembly"
 	RESULT_VARIABLE mvn_result
   	OUTPUT_VARIABLE mvn_output)
@@ -64,7 +64,7 @@ endif()
 
 message("Building NiFi JNI Jar for packaging ....")
 
-execute_process(COMMAND "mvn" "package"
+execute_process(COMMAND "mvn" "-q" "package"
 	WORKING_DIRECTORY "${JNI_FRAMEWORK_JAR_BIN}/nifi-framework-jni"
 	RESULT_VARIABLE mvn_result
   	OUTPUT_VARIABLE mvn_output)
