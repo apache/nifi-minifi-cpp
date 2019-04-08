@@ -50,15 +50,26 @@ public:
     //! Supported Properties
     static core::Property Attribute;
     static core::Property SizeLimit;
+
+    static core::Property RegexMode;
+    static core::Property IgnoreCaptureGroupZero;
+    static core::Property InsensitiveMatch;
+    static core::Property MaxCaptureGroupLen;
+    static core::Property EnableRepeatingCaptureGroup;
+
     //! Supported Relationships
     static core::Relationship Success;
     //! Default maximum bytes to read into an attribute
     static constexpr int DEFAULT_SIZE_LIMIT = 2 * 1024 * 1024;
 
     //! OnTrigger method, implemented by NiFi ExtractText
-    void onTrigger(core::ProcessContext *context, core::ProcessSession *session) override;
+    void onTrigger(core::ProcessContext *context, core::ProcessSession *session);
     //! Initialize, over write by NiFi ExtractText
-    void initialize(void) override;
+    void initialize(void);
+
+    virtual bool supportsDynamicProperties() {
+      return true;
+    };
 
     class ReadCallback : public InputStreamCallback {
     public:

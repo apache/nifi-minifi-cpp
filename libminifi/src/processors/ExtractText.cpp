@@ -21,6 +21,7 @@
 #include <string>
 #include <memory>
 #include <set>
+#include <regex>
 
 #include <iostream>
 #include <sstream>
@@ -37,13 +38,44 @@ namespace minifi {
 namespace processors {
 
 #define MAX_BUFFER_SIZE 4096
+#define MAX_CAPTURE_GROUP_SIZE 1024
 
 core::Property ExtractText::Attribute(core::PropertyBuilder::createProperty("Attribute")->withDescription("Attribute to set from content")->build());
 
 // despite there being a size value, ExtractText was initially built with a numeric for this property
 core::Property ExtractText::SizeLimit(
-    core::PropertyBuilder::createProperty("Size Limit")->withDescription("Maximum number of bytes to read into the attribute. 0 for no limit. Default is 2MB.")->withDefaultValue<uint32_t>(
-        DEFAULT_SIZE_LIMIT)->build());
+    core::PropertyBuilder::createProperty("Size Limit")
+    ->withDescription("Maximum number of bytes to read into the attribute. 0 for no limit. Default is 2MB.")
+    ->withDefaultValue<uint32_t>(DEFAULT_SIZE_LIMIT)->build());
+
+core::Property ExtractText::RegexMode(
+    core::PropertyBuilder::createProperty("Regex Mode")
+    ->withDescription("Set this to extract parts of flowfile content using regular experssions in dynamic properties")
+    ->withDefaultValue<bool>(false)->build());
+
+core::Property ExtractText::IgnoreCaptureGroupZero(
+    core::PropertyBuilder::createProperty("Include Capture Group 0")
+    ->withDescription("Indicates that Capture Group 0 should be included as an attribute. "
+                      "Capture Group 0 represents the entirety of the regular expression match, is typically not used, and could have considerable length.")
+    ->withDefaultValue<bool>(true)->build());
+
+core::Property ExtractText::InsensitiveMatch(
+    core::PropertyBuilder::createProperty("Enable Case-insensitive Matching")
+    ->withDescription("Indicates that two characters match even if they are in a different case. ")
+    ->withDefaultValue<bool>(false)->build());
+
+core::Property ExtractText::MaxCaptureGroupLen(
+    core::PropertyBuilder::createProperty("Maximum Capture Group Length")
+    ->withDescription("Specifies the maximum number of characters a given capture group value can have. "
+                      "Any characters beyond the max will be truncated.")
+    ->withDefaultValue<int>(MAX_CAPTURE_GROUP_SIZE)->build());
+
+
+core::Property ExtractText::EnableRepeatingCaptureGroup(
+    core::PropertyBuilder::createProperty("Enable repeating capture group")
+    ->withDescription("f set to true, every string matching the capture groups will be extracted. "
+                      "Otherwise, if the Regular Expression matches more than once, only the first match will be extracted.")
+    ->withDefaultValue<bool>(false)->build());
 
 core::Relationship ExtractText::Success("success", "success operational on the flow record");
 
@@ -52,6 +84,11 @@ void ExtractText::initialize() {
   std::set<core::Property> properties;
   properties.insert(Attribute);
   properties.insert(SizeLimit);
+  properties.insert(RegexMode);
+  properties.insert(IgnoreCaptureGroupZero);
+  properties.insert(MaxCaptureGroupLen);
+  properties.insert(EnableRepeatingCaptureGroup);
+  properties.insert(InsensitiveMatch);
   setSupportedProperties(properties);
   //! Set the supported relationships
   std::set<core::Relationship> relationships;
@@ -74,11 +111,13 @@ void ExtractText::onTrigger(core::ProcessContext *context, core::ProcessSession 
 int64_t ExtractText::ReadCallback::process(std::shared_ptr<io::BaseStream> stream) {
   int64_t ret = 0;
   uint64_t read_size = 0;
+  bool regex_mode = RegexMode.getDefaultValue();
   uint64_t size_limit = flowFile_->getSize();
 
   std::string attrKey, sizeLimitStr;
   ctx_->getProperty(Attribute.getName(), attrKey);
   ctx_->getProperty(SizeLimit.getName(), sizeLimitStr);
+  ctx_->getProperty(RegexMode.getName(), regex_mode);
 
   if (sizeLimitStr == "")
     size_limit = DEFAULT_SIZE_LIMIT;
@@ -104,7 +143,64 @@ int64_t ExtractText::ReadCallback::process(std::shared_ptr<io::BaseStream> strea
     }
   }
 
-  flowFile_->setAttribute(attrKey, contentStream.str());
+  if(regex_mode) {
+    std::regex_constants::syntax_option_type regex_mode = std::regex_constants::ECMAScript;
+
+    bool insensitive = InsensitiveMatch.getDefaultValue();
+    if(ctx_->getProperty(InsensitiveMatch.getName(), insensitive) && insensitive) {
+      regex_mode |= std::regex_constants::icase;
+    }
+
+    bool ignoregroupzero = IgnoreCaptureGroupZero.getDefaultValue();
+    ctx_->getProperty(IgnoreCaptureGroupZero.getName(), ignoregroupzero);
+
+    bool repeatingcapture = EnableRepeatingCaptureGroup.getDefaultValue();
+    ctx_->getProperty(EnableRepeatingCaptureGroup.getName(), repeatingcapture);
+
+    int maxCaptureSize = MaxCaptureGroupLen.getDefaultValue();
+    ctx_->getProperty(MaxCaptureGroupLen.getName(), maxCaptureSize);
+
+    std::string contentStr = contentStream.str();
+
+    std::map<std::string, std::string> regexAttributes;
+
+    for (const auto& k : ctx_->getDynamicPropertyKeys()){
+      std::string value;
+      ctx_->getDynamicProperty(k, value);
+
+      std::regex rgx(value, regex_mode);
+
+      std::smatch matches;
+
+      std::string workStr = contentStr;
+
+      int matchcount = 0;
+
+      while(std::regex_search(workStr, matches, rgx)) {
+        size_t i = ignoregroupzero ? 1 : 0;
+
+        for (; i < matches.size(); ++i, ++matchcount) {
+          std::string value = matches[i].str();
+          if(value.length() > maxCaptureSize) {
+            value = value.substr(0, maxCaptureSize);
+          }
+          if(matchcount == 0) {
+            regexAttributes[k] = value;
+          }
+          regexAttributes[k + '.' + std::to_string(matchcount)] = value;
+        }
+        if(!repeatingcapture) {
+          break;
+        }
+        workStr = matches.suffix();
+      }
+    }
+    for(const auto& kv : regexAttributes) {
+      flowFile_->setAttribute(kv.first, kv.second);
+    }
+  } else {
+    flowFile_->setAttribute(attrKey, contentStream.str());
+  }
   return read_size;
 }
 
