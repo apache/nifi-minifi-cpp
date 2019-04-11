@@ -43,6 +43,7 @@
 #include "core/controller/ControllerServiceProvider.h"
 #include "TimerDrivenSchedulingAgent.h"
 #include "EventDrivenSchedulingAgent.h"
+#include "CronDrivenSchedulingAgent.h"
 #include "FlowControlProtocol.h"
 #include "core/Property.h"
 #include "core/state/nodes/MetricsBase.h"
@@ -385,6 +386,8 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
   std::shared_ptr<TimerDrivenSchedulingAgent> timer_scheduler_;
   // Flow Event Scheduler
   std::shared_ptr<EventDrivenSchedulingAgent> event_scheduler_;
+  // Cron Schedule
+  std::shared_ptr<CronDrivenSchedulingAgent> cron_scheduler_;
   // Controller Service
   // Config
   // Site to Site Server Listener

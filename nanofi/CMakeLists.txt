@@ -24,7 +24,7 @@ IF(POLICY CMP0048)
 ENDIF(POLICY CMP0048)
 
 include_directories(include)
-include_directories(../libminifi/include ../thirdparty/spdlog-20170710/include)
+include_directories(../libminifi/include ../thirdparty/cron ../thirdparty/spdlog-20170710/include)
 include_directories(../thirdparty/ut)
 
 if(WIN32)

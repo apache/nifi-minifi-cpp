@@ -109,6 +109,25 @@ class Processor : public Connectable, public ConfigurableComponent, public std::
   uint64_t getSchedulingPeriodNano(void) {
     return scheduling_period_nano_;
   }
+
+
+  /**
+   * Sets the cron period
+   * @param period cron period.
+   */
+  void setCronPeriod(const std::string &period) {
+    cron_period_ = period;
+  }
+
+  /**
+   * Returns the cron period
+   * @return cron period
+   */
+  const std::string getCronPeriod() const {
+    return cron_period_;
+  }
+
+
   // Set Processor Run Duration in Nano Second
   void setRunDurationNano(uint64_t period) {
     run_duration_nano_ = period;
@@ -270,6 +289,8 @@ class Processor : public Connectable, public ConfigurableComponent, public std::
   std::atomic<uint8_t> active_tasks_;
   // Trigger the Processor even if the incoming connection is empty
   std::atomic<bool> _triggerWhenEmpty;
+
+  std::string cron_period_;
 
  private:
 
