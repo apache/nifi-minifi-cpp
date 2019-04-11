@@ -148,6 +148,7 @@ TEST_CASE("Test usage of ExtractText in regex mode", "[extracttextRegexTest]") {
     plan->setProperty(maprocessor, org::apache::nifi::minifi::processors::ExtractText::IgnoreCaptureGroupZero.getName(), "true");
     plan->setProperty(maprocessor, org::apache::nifi::minifi::processors::ExtractText::EnableRepeatingCaptureGroup.getName(), "true");
     plan->setProperty(maprocessor, "RegexAttr", "Speed limit ([0-9]+)", true);
+    plan->setProperty(maprocessor, "InvalidRegex", "[Invalid)A(F)", true);
 
     std::shared_ptr<core::Processor> laprocessor = plan->addProcessor("LogAttribute", "outputLogAttribute",
                                                                       core::Relationship("success", "description"),
@@ -177,6 +178,10 @@ TEST_CASE("Test usage of ExtractText in regex mode", "[extracttextRegexTest]") {
         std::string log_check = ss.str();
         REQUIRE(LogTestController::getInstance().contains(log_check));
     }
+
+    std::string error_str = "error encountered when trying to construct regular expression from property (key: InvalidRegex)";
+
+    REQUIRE(LogTestController::getInstance().contains(error_str));
 
     LogTestController::getInstance().reset();
 }

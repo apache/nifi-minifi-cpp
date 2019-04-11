@@ -103,7 +103,7 @@ void ExtractText::onTrigger(core::ProcessContext *context, core::ProcessSession 
     return;
   }
 
-  ReadCallback cb(flowFile, context);
+  ReadCallback cb(flowFile, context, logger_);
   session->read(flowFile, &cb);
   session->transfer(flowFile, Success);
 }
@@ -168,7 +168,15 @@ int64_t ExtractText::ReadCallback::process(std::shared_ptr<io::BaseStream> strea
       std::string value;
       ctx_->getDynamicProperty(k, value);
 
-      std::regex rgx(value, regex_mode);
+      std::regex rgx;
+
+      try {
+        rgx = std::regex(value, regex_mode);
+      } catch(const std::regex_error& e) {
+        logger_->log_error("%s error encountered when trying to construct regular expression from property (key: %s) value: %s",
+            e.what(), k, value);
+        continue;
+      }
 
       std::smatch matches;
 
@@ -204,9 +212,10 @@ int64_t ExtractText::ReadCallback::process(std::shared_ptr<io::BaseStream> strea
   return read_size;
 }
 
-ExtractText::ReadCallback::ReadCallback(std::shared_ptr<core::FlowFile> flowFile, core::ProcessContext *ctx)
+ExtractText::ReadCallback::ReadCallback(std::shared_ptr<core::FlowFile> flowFile, core::ProcessContext *ctx,  std::shared_ptr<logging::Logger> lgr)
     : flowFile_(flowFile),
-      ctx_(ctx) {
+      ctx_(ctx),
+      logger_(lgr){
   buffer_.reserve(std::min<uint64_t>(flowFile->getSize(), MAX_BUFFER_SIZE));
 }
 
