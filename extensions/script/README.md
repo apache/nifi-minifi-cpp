@@ -67,7 +67,11 @@ class VaderSentiment(object):
 
 ## Configuration
 
-To enable python Processor capabilities, the following options need to be provided in minifi.properties
+To enable python Processor capabilities, the following options need to be provided in minifi.properties. The directory specified
+can contain processors. Note that the processor name will be the reference in your flow. Directories are treated like package names.
+Therefore if the nifi.python.processor.dir is /tmp/ and you have a subdirectory named packagedir with the file name file.py, it will
+produce a processor with the name org.apache.nifi.minifi.processors.packagedir.file. Note that each subdirectory will append a package 
+to the reference class name. 
 
     in minifi.properties
 	#directory where processors exist

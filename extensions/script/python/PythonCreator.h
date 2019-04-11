@@ -29,6 +29,7 @@
 #include "agent/agent_version.h"
 #include "agent/build_description.h"
 #include "utils/file/FileUtils.h"
+#include "utils/StringUtils.h"
 
 namespace org {
 namespace apache {
@@ -79,13 +80,22 @@ class PythonCreator : public minifi::core::CoreComponent {
 
       for (const auto &path : classpaths_) {
         const auto &scriptname = getScriptName(path);
-        PyProcCreator::getPythonCreator()->addClassName(scriptname, path);
+        const auto &package = getPackage(pathListings, path);
+        if (!package.empty()) {
+          std::string script_with_package = "org.apache.nifi.minifi.processors." + package + "." + scriptname;
+          PyProcCreator::getPythonCreator()->addClassName(script_with_package, path);
+        } else {
+          // maintain backwards compatibility with the standard package.
+          PyProcCreator::getPythonCreator()->addClassName(scriptname, path);
+        }
       }
 
       core::ClassLoader::getDefaultClassLoader().registerResource("", "createPyProcFactory");
 
       for (const auto &path : classpaths_) {
+
         const auto &scriptName = getScriptName(path);
+
         utils::Identifier uuid;
         auto processor = std::dynamic_pointer_cast<core::Processor>(core::ClassLoader::getDefaultClassLoader().instantiate(scriptName, uuid));
         if (processor) {
@@ -93,10 +103,16 @@ class PythonCreator : public minifi::core::CoreComponent {
             processor->initialize();
             auto proc = std::dynamic_pointer_cast<python::processors::ExecutePythonProcessor>(processor);
             minifi::BundleDetails details;
+            const auto &package = getPackage(pathListings, path);
+            std::string script_with_package = "org.apache.nifi.minifi.processors.";
+            if (!package.empty()) {
+              script_with_package += package + ".";
+            }
+            script_with_package += scriptName;
             details.artifact = getFileName(path);
             details.version = minifi::AgentBuild::VERSION;
             details.group = "python";
-            minifi::ClassDescription description("org.apache.nifi.minifi.processors." + scriptName);
+            minifi::ClassDescription description(script_with_package);
             description.dynamic_properties_ = proc->getPythonSupportDynamicProperties();
             auto properties = proc->getPythonProperties();
 
@@ -122,6 +138,27 @@ class PythonCreator : public minifi::core::CoreComponent {
   }
 
  private:
+  std::string getPackage(const std::string &basePath, const std::string pythonscript) {
+    const auto script_directory = getPath(pythonscript);
+    const auto loc = script_directory.find_first_of(basePath);
+    if (loc != 0 || script_directory.size() <= basePath.size()) {
+      return "";
+    }
+    const auto python_dir = script_directory.substr(basePath.length() + 1);
+    auto python_package = python_dir.substr(0, python_dir.find_last_of("/\\"));
+    utils::StringUtils::replaceAll(python_package, "/", ".");
+    utils::StringUtils::replaceAll(python_package, "\\", ".");
+    if (python_package.length() > 1 && python_package.at(0) == '.') {
+      python_package = python_package.substr(1);
+    }
+    std::transform(python_package.begin(), python_package.end(), python_package.begin(), ::tolower);
+    return python_package;
+  }
+
+  std::string getPath(const std::string &pythonscript) {
+    std::string path = pythonscript.substr(0, pythonscript.find_last_of("/\\"));
+    return path;
+  }
 
   std::string getFileName(const std::string &pythonscript) {
     std::string path = pythonscript.substr(pythonscript.find_last_of("/\\") + 1);
