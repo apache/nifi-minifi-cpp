@@ -151,6 +151,7 @@ class PythonCreator : public minifi::core::CoreComponent {
     if (python_package.length() > 1 && python_package.at(0) == '.') {
       python_package = python_package.substr(1);
     }
+    std::transform(python_package.begin(), python_package.end(), python_package.begin(), ::tolower);
     return python_package;
   }
 
