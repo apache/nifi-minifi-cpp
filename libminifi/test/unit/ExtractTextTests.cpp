@@ -172,7 +172,7 @@ TEST_CASE("Test usage of ExtractText in regex mode", "[extracttextRegexTest]") {
 
     std::list<std::string> suffixes = {"", ".0", ".1"};
 
-    for(const auto& suffix : suffixes) {
+    for (const auto& suffix : suffixes) {
         ss.str("");
         ss << "key:" << "RegexAttr" << suffix << " value:" << ((suffix == ".1") ? "80" : "130");
         std::string log_check = ss.str();

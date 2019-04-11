@@ -31,6 +31,12 @@
 #include "core/ProcessSession.h"
 #include "core/FlowFile.h"
 
+#if !defined(_WIN32)
+#if __cplusplus <= 201103L
+#include <regex.h>
+#endif
+#endif
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -111,7 +117,7 @@ void ExtractText::onTrigger(core::ProcessContext *context, core::ProcessSession 
 int64_t ExtractText::ReadCallback::process(std::shared_ptr<io::BaseStream> stream) {
   int64_t ret = 0;
   uint64_t read_size = 0;
-  bool regex_mode = RegexMode.getDefaultValue();
+  bool regex_mode;
   uint64_t size_limit = flowFile_->getSize();
 
   std::string attrKey, sizeLimitStr;
@@ -143,30 +149,36 @@ int64_t ExtractText::ReadCallback::process(std::shared_ptr<io::BaseStream> strea
     }
   }
 
-  if(regex_mode) {
+  if (regex_mode) {
     std::regex_constants::syntax_option_type regex_mode = std::regex_constants::ECMAScript;
 
-    bool insensitive = InsensitiveMatch.getDefaultValue();
-    if(ctx_->getProperty(InsensitiveMatch.getName(), insensitive) && insensitive) {
+    bool insensitive;
+    if (ctx_->getProperty(InsensitiveMatch.getName(), insensitive) && insensitive) {
       regex_mode |= std::regex_constants::icase;
     }
 
-    bool ignoregroupzero = IgnoreCaptureGroupZero.getDefaultValue();
+    bool ignoregroupzero;
     ctx_->getProperty(IgnoreCaptureGroupZero.getName(), ignoregroupzero);
 
-    bool repeatingcapture = EnableRepeatingCaptureGroup.getDefaultValue();
+    bool repeatingcapture;
     ctx_->getProperty(EnableRepeatingCaptureGroup.getName(), repeatingcapture);
 
-    int maxCaptureSize = MaxCaptureGroupLen.getDefaultValue();
+    int maxCaptureSize;
     ctx_->getProperty(MaxCaptureGroupLen.getName(), maxCaptureSize);
 
     std::string contentStr = contentStream.str();
 
     std::map<std::string, std::string> regexAttributes;
 
-    for (const auto& k : ctx_->getDynamicPropertyKeys()){
+    for (const auto& k : ctx_->getDynamicPropertyKeys()) {
       std::string value;
       ctx_->getDynamicProperty(k, value);
+
+      std::string workStr = contentStr;
+
+      int matchcount = 0;
+
+#if (__cplusplus > 201103L) || defined(_WIN32)
 
       std::regex rgx;
 
@@ -180,30 +192,73 @@ int64_t ExtractText::ReadCallback::process(std::shared_ptr<io::BaseStream> strea
 
       std::smatch matches;
 
-      std::string workStr = contentStr;
-
-      int matchcount = 0;
-
-      while(std::regex_search(workStr, matches, rgx)) {
+      while (std::regex_search(workStr, matches, rgx)) {
         size_t i = ignoregroupzero ? 1 : 0;
 
         for (; i < matches.size(); ++i, ++matchcount) {
-          std::string value = matches[i].str();
-          if(value.length() > maxCaptureSize) {
-            value = value.substr(0, maxCaptureSize);
+          std::string attributeValue = matches[i].str();
+          if (attributeValue.length() > maxCaptureSize) {
+            attributeValue = attributeValue.substr(0, maxCaptureSize);
           }
-          if(matchcount == 0) {
-            regexAttributes[k] = value;
+          if (matchcount == 0) {
+            regexAttributes[k] = attributeValue;
           }
-          regexAttributes[k + '.' + std::to_string(matchcount)] = value;
+          regexAttributes[k + '.' + std::to_string(matchcount)] = attributeValue;
         }
-        if(!repeatingcapture) {
+        if (!repeatingcapture) {
           break;
         }
         workStr = matches.suffix();
       }
+#else
+
+      size_t maxGroups = std::count(value.begin(), value.end(), '(') + 1;
+
+      regex_t regexCompiled;
+      std::vector<regmatch_t> groups;
+      groups.reserve(maxGroups);
+
+      if (regcomp(&regexCompiled, value.c_str(), REG_EXTENDED | (insensitive ? REG_ICASE : 0))) {
+        logger_->log_error("error encountered when trying to construct regular expression from property (key: %s) value: %s",
+                            k, value);
+        continue;
+      }
+
+      while (regexec(&regexCompiled, workStr.c_str(), groups.capacity(), groups.data(), 0) == 0) {
+        size_t g = 0;
+        size_t match_len = 0;
+        for (g = 0; g < maxGroups; g++) {
+          if (groups[g].rm_so == -1) {
+            break;  // No more groups
+          }
+
+          if (g == 0) {
+            match_len = groups[g].rm_eo;
+            if (ignoregroupzero) {
+              continue;
+            }
+          }
+
+          std::string attributeValue(workStr.begin() + groups[g].rm_so, workStr.begin() + groups[g].rm_eo);
+          if (attributeValue.length() > maxCaptureSize) {
+            attributeValue = attributeValue.substr(0, maxCaptureSize);
+          }
+
+          if (matchcount == 0) {
+            regexAttributes[k] = attributeValue;
+          }
+          regexAttributes[k + '.' + std::to_string(matchcount)] = attributeValue;
+          matchcount++;
+        }
+        if (!repeatingcapture || (match_len >= workStr.length())) {
+          break;
+        }
+        workStr = workStr.substr(match_len + 1);
+      }
+#endif
     }
-    for(const auto& kv : regexAttributes) {
+
+    for (const auto& kv : regexAttributes) {
       flowFile_->setAttribute(kv.first, kv.second);
     }
   } else {
@@ -215,7 +270,7 @@ int64_t ExtractText::ReadCallback::process(std::shared_ptr<io::BaseStream> strea
 ExtractText::ReadCallback::ReadCallback(std::shared_ptr<core::FlowFile> flowFile, core::ProcessContext *ctx,  std::shared_ptr<logging::Logger> lgr)
     : flowFile_(flowFile),
       ctx_(ctx),
-      logger_(lgr){
+      logger_(lgr) {
   buffer_.reserve(std::min<uint64_t>(flowFile->getSize(), MAX_BUFFER_SIZE));
 }
 
