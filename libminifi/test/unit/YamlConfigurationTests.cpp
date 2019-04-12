@@ -162,6 +162,7 @@ TEST_CASE("Test YAML Config Processing", "[YamlConfiguration]") {
     REQUIRE(!it.second->getUUIDStr().empty());
     REQUIRE(it.second->getDestination());
     REQUIRE(it.second->getSource());
+    REQUIRE(60000 == it.second->getFlowExpirationDuration());
   }
 }
 
@@ -463,6 +464,7 @@ NiFi Properties Overrides: {}
     REQUIRE(!it.second->getUUIDStr().empty());
     REQUIRE(it.second->getDestination());
     REQUIRE(it.second->getSource());
+    REQUIRE(0 == it.second->getFlowExpirationDuration());
   }
 }
 
