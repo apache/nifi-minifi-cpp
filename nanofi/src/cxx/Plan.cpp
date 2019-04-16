@@ -25,7 +25,7 @@
 
 std::shared_ptr<utils::IdGenerator> ExecutionPlan::id_generator_ = utils::IdGenerator::getIdGenerator();
 std::unordered_map<std::string, std::shared_ptr<ExecutionPlan>> ExecutionPlan::proc_plan_map_ = {};
-std::map<std::string, processor_logic*> ExecutionPlan::custom_processors = {};
+std::map<std::string, custom_processor_args> ExecutionPlan::custom_processors = {};
 
 ExecutionPlan::ExecutionPlan(std::shared_ptr<core::ContentRepository> content_repo, std::shared_ptr<core::Repository> flow_repo, std::shared_ptr<core::Repository> prov_repo)
     : content_repo_(content_repo),
@@ -52,12 +52,15 @@ std::shared_ptr<core::Processor> ExecutionPlan::addSimpleCallback(void *obj, std
   return addCallback(obj, simple_func_wrapper);
 }
 
-std::shared_ptr<core::Processor> ExecutionPlan::addCallback(void *obj, std::function<void(core::ProcessSession*, core::ProcessContext *)> fp) {
+std::shared_ptr<core::Processor> ExecutionPlan::addCallback(void *obj,
+    std::function<void(core::ProcessSession*, core::ProcessContext *)> ontrigger_callback,
+    std::function<void(core::ProcessContext *)> onschedule_callback) {
+
   if (finalized) {
     return nullptr;
   }
 
-  auto proc = createCallback(obj, fp);
+  auto proc = createCallback(obj, ontrigger_callback, onschedule_callback);
 
   if (!proc)
     return nullptr;
@@ -249,11 +252,21 @@ std::shared_ptr<core::Processor> ExecutionPlan::createProcessor(const std::strin
   auto custom_proc = custom_processors.find(processor_name);
 
   if(custom_proc != custom_processors.end()) {
-    auto c_func = custom_proc->second;
-    auto wrapper_func = [c_func](core::ProcessSession * session, core::ProcessContext * context) {
-      return c_func(reinterpret_cast<processor_session*>(session), reinterpret_cast<processor_context*>(context));
+    auto ontrigger_c_func = custom_proc->second.ontr_cb;
+    auto onschedule_c_func = custom_proc->second.onsc_cb;
+    auto ontrigger_wrapper_func = [ontrigger_c_func](core::ProcessSession * session, core::ProcessContext * context) {
+      if(ontrigger_c_func) {
+        ontrigger_c_func(reinterpret_cast<processor_session *>(session),
+                         reinterpret_cast<processor_context *>(context));
+      }
     };
-    return createCallback(nullptr, wrapper_func);
+    auto onschedule_wrapper_func = [onschedule_c_func](core::ProcessContext * context) {
+      if (onschedule_c_func) {
+        onschedule_c_func(reinterpret_cast<processor_context*>(context));
+      }
+    };
+
+    return createCallback(nullptr, ontrigger_wrapper_func, onschedule_wrapper_func);
   }
 
 
@@ -267,13 +280,16 @@ std::shared_ptr<core::Processor> ExecutionPlan::createProcessor(const std::strin
   return processor;
 }
 
-std::shared_ptr<core::Processor> ExecutionPlan::createCallback(void *obj, std::function<void(core::ProcessSession*, core::ProcessContext *)> fp) {
+std::shared_ptr<core::Processor> ExecutionPlan::createCallback(void *obj,
+    std::function<void(core::ProcessSession*, core::ProcessContext *)> ontrigger_callback,
+    std::function<void(core::ProcessContext *)> onschedule_callback) {
+
   auto ptr = createProcessor(CallbackProcessorName, CallbackProcessorName);
   if (!ptr)
     return nullptr;
 
   std::shared_ptr<processors::CallbackProcessor> processor = std::static_pointer_cast<processors::CallbackProcessor>(ptr);
-  processor->setCallback(obj, fp);
+  processor->setCallback(obj, ontrigger_callback, onschedule_callback);
 
   return ptr;
 }
@@ -323,15 +339,15 @@ bool ExecutionPlan::setFailureStrategy(FailureStrategy start) {
   return true;
 }
 
-bool ExecutionPlan::addCustomProcessor(const char * name, processor_logic* logic) {
-  if(CallbackProcessorName == name) {
+bool ExecutionPlan::addCustomProcessor(custom_processor_args in) {
+  if(CallbackProcessorName == in.name) {
     return false;  // This name cannot be registered
   }
 
-  if (custom_processors.count(name) > 0 ) {
+  if (custom_processors.count(in.name) > 0 ) {
     return false;  // Already exists
   }
-  custom_processors[name] = logic;
+  custom_processors[in.name] = in;
   return true;
 }
 

@@ -96,7 +96,9 @@ class ExecutionPlan {
 
   std::shared_ptr<core::Processor> addSimpleCallback(void *, std::function<void(core::ProcessSession*)>);
 
-  std::shared_ptr<core::Processor> addCallback(void *obj, std::function<void(core::ProcessSession*, core::ProcessContext *)> fp);
+  std::shared_ptr<core::Processor> addCallback(void *obj,
+      std::function<void(core::ProcessSession*, core::ProcessContext *)> ontrigger_callback,
+      std::function<void(core::ProcessContext *)> onschedule_callback = {});
 
   std::shared_ptr<core::Processor> addProcessor(const std::shared_ptr<core::Processor> &processor, const std::string &name,
                                                 core::Relationship relationship = core::Relationship("success", "description"),
@@ -147,7 +149,9 @@ class ExecutionPlan {
 
   static std::shared_ptr<core::Processor> createProcessor(const std::string &processor_name, const std::string &name);
 
-  static std::shared_ptr<core::Processor> createCallback(void *obj, std::function<void(core::ProcessSession*, core::ProcessContext *)> fp);
+  static std::shared_ptr<core::Processor> createCallback(void *obj,
+      std::function<void(core::ProcessSession*, core::ProcessContext *)> ontrigger_callback,
+      std::function<void(core::ProcessContext *)> onschedule_callback = {});
 
   static std::shared_ptr<ExecutionPlan> getPlan(const std::string& uuid) {
     auto it = proc_plan_map_.find(uuid);
@@ -166,7 +170,7 @@ class ExecutionPlan {
     return proc_plan_map_.size();
   }
 
-  static bool addCustomProcessor(const char * name, processor_logic* logic);
+  static bool addCustomProcessor(custom_processor_args);
 
   static int deleteCustomProcessor(const char * name);
 
@@ -234,7 +238,7 @@ class ExecutionPlan {
   std::shared_ptr<logging::Logger> logger_;
   std::shared_ptr<FailureHandler> failure_handler_;
   static std::unordered_map<std::string, std::shared_ptr<ExecutionPlan>> proc_plan_map_;
-  static std::map<std::string, processor_logic*> custom_processors;
+  static std::map<std::string, custom_processor_args> custom_processors;
 };
 
 #endif /* LIBMINIFI_CAPI_PLAN_H_ */

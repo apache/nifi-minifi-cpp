@@ -686,8 +686,8 @@ int transfer(processor_session* session, flow *flow, const char *rel) {
   return 0;
 }
 
-int add_custom_processor(const char * name, processor_logic* logic) {
-  return ExecutionPlan::addCustomProcessor(name, logic) ? 0 : -1;
+int var_add_custom_processor(custom_processor_args in) {
+  return ExecutionPlan::addCustomProcessor(in) ? 0 : -1;
 }
 
 int delete_custom_processor(const char * name) {
