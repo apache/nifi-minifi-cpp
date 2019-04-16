@@ -43,6 +43,8 @@ static nifi_instance *create_instance_obj(const char *name = "random_instance") 
 
 static int failure_count = 0;
 
+static int custom_onschedule_count = 0;
+
 void failure_counter(flow_file_record * fr) {
   failure_count++;
   REQUIRE(get_attribute_quantity(fr) > 0);
@@ -54,7 +56,11 @@ void big_failure_counter(flow_file_record * fr) {
   free_flowfile(fr);
 }
 
-void custom_processor_logic(processor_session * ps, processor_context * ctx) {
+void custom_onschedule_logic(processor_context* ctx) {
+  custom_onschedule_count++;
+}
+
+void custom_ontrigger_logic(processor_session *ps, processor_context *ctx) {
   flow_file_record * ffr = get(ps, ctx);
   REQUIRE(ffr != nullptr);
   uint8_t * buffer = (uint8_t*)malloc(ffr->size* sizeof(uint8_t));
@@ -430,7 +436,7 @@ TEST_CASE("Test custom processor", "[TestCutomProcessor]") {
 
   create_testfile_for_getfile(sourcedir);
 
-  add_custom_processor("myproc", custom_processor_logic);
+  add_custom_processor("myproc", custom_ontrigger_logic, custom_onschedule_logic);
 
   auto instance = create_instance_obj();
   REQUIRE(instance != nullptr);
@@ -448,6 +454,8 @@ TEST_CASE("Test custom processor", "[TestCutomProcessor]") {
   REQUIRE(set_property(my_proc, "Some test propery", "test value") == 0);
 
   flow_file_record *record = get_next_flow_file(instance, test_flow);
+
+  REQUIRE(custom_onschedule_count > 0);
 
   REQUIRE(record != nullptr);
 }

@@ -126,7 +126,10 @@ typedef enum FS {
   ROLLBACK
 } FailureStrategy;
 
-typedef void (processor_logic)(processor_session*, processor_context *);
+typedef void (ontrigger_callback)(processor_session*, processor_context *);
+typedef void (onschedule_callback)(processor_context *);
+
+typedef ontrigger_callback processor_logic;
 
 typedef struct file_buffer {
   uint8_t * buffer;

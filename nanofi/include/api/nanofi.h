@@ -379,13 +379,31 @@ int8_t remove_attribute(flow_file_record*, const char * key);
 
 int transmit_flowfile(flow_file_record *, nifi_instance *);
 
+
+/****
+ * ##################################################################
+ *  API functions for user-defined processor
+ * ##################################################################
+ */
+
+typedef struct {
+  const char * name;
+  ontrigger_callback * ontr_cb;
+  onschedule_callback * onsc_cb;
+} custom_processor_args;
+
+
 /**
  * Adds a custom processor for later instantiation
  * @param name name of the processor
- * @param logic the callback to be invoked when the processor is triggered
+ * @param in the name and the callbacks used for the processor
+ * @attention it's recommended to use this function via the variadic arg macro: the caller doesn't need to create the
+ * parameter struct and callback arguments can be optional.
  * @return 0 on success, -1 otherwise (name already in use for eg.)
  **/
-int add_custom_processor(const char * name, processor_logic* logic);
+int var_add_custom_processor(custom_processor_args in);
+
+#define add_custom_processor(...) var_add_custom_processor((custom_processor_args){__VA_ARGS__});
 
 /**
  * Removes a custom processor
