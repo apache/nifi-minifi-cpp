@@ -262,7 +262,7 @@ flow_file_record *invoke_file(standalone_processor* proc, const char* path);
  **/
 flow_file_record *invoke_chunk(standalone_processor *proc, uint8_t *buf, uint64_t size);
 
-int transfer(processor_session* session, flow *flow, const char *rel);
+DEPRECATED int transfer(processor_session* session, flow *flow, const char *rel);
 
 /**
  * Creates a flow file record based on a file
