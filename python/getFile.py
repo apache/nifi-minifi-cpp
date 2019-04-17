@@ -36,7 +36,9 @@ class GetFilePrinterProcessor(PyProcessor):
                 if not flow_file.add_attribute("python_test","value2"):
                     print("Cannot add the same attribute twice!")
                 print ("original file name: " + flow_file.get_attribute("filename"))
-                self.transfer(session, flow_file, "success")
+                target_relationship = "success"
+                if not self.transfer(session, flow_file, target_relationship):
+                    print("transfer to relationship " + target_relationship + " failed")
         return CALLBACK(onTrigger)
 
 
@@ -67,7 +69,7 @@ processor.set_property("Keep Source File", "true")
 
 current_module = sys.modules[__name__]
 
-processor = minifi.create_python_processor(current_module,"GetFilePrinterProcessor")
+processor = minifi.create_python_processor(current_module, "GetFilePrinterProcessor")
 
 ff = minifi.get_next_flowfile()
 if ff:

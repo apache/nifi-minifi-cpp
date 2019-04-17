@@ -60,7 +60,7 @@ class Processor(object):
         self._minifi = minifi
 
     def set_property(self, name, value):
-        self._minifi.set_property( self._proc, name.encode("UTF-8"), value.encode("UTF-8"))
+        return self._minifi.set_property( self._proc, name.encode("UTF-8"), value.encode("UTF-8")) == 0
 
 class PyProcessor(object):
     def __init__(self, minifi, flow):
@@ -79,7 +79,7 @@ class PyProcessor(object):
             return None
 
     def transfer(self, session, ff, rel):
-        self._minifi.transfer(session, self._flow, rel.encode("UTF-8"))
+        return self._minifi.transfer_to_relationship(ff.get_instance(), session, rel.encode("UTF-8")) == 0
 
     @abstractmethod
     def _onTriggerCallback(self):
@@ -120,8 +120,7 @@ class FlowFile(object):
 
     def add_attribute(self, name, value):
         vallen = len(value)
-        ret = self._minifi.add_attribute(self._ff, name.encode("UTF-8"), value.encode("UTF-8"), vallen)
-        return True if ret == 0 else False
+        return self._minifi.add_attribute(self._ff, name.encode("UTF-8"), value.encode("UTF-8"), vallen) == 0
 
     def update_attribute(self, name, value):
         vallen = len(value)
@@ -167,6 +166,9 @@ class MiNiFi(object):
         """ transfer ff """
         self._minifi.transfer.argtypes = [ctypes.POINTER(CProcessSession), ctypes.POINTER(CFlow) , ctypes.c_char_p ]
         self._minifi.transfer.restype = ctypes.c_int
+        """ transfer ff to relationship """
+        self._minifi.transfer_to_relationship.argtypes = [ctypes.POINTER(CFlowFile), ctypes.POINTER(CProcessSession), ctypes.c_char_p ]
+        self._minifi.transfer_to_relationship.restype = ctypes.c_int
         """ add attribute to ff """
         self._minifi.add_attribute.argtypes = [ctypes.POINTER(CFlowFile), ctypes.c_char_p, ctypes.c_char_p, ctypes.c_int ]
         self._minifi.add_attribute.restype = ctypes.c_int
