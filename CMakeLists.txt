@@ -472,6 +472,9 @@ if (WIN32 OR NOT USE_SYSTEM_ZLIB)
 	add_dependencies(minifi zlib-external)
 endif(WIN32 OR NOT USE_SYSTEM_ZLIB)
 
+createExtension(STANDARD-PROCESSORS "STANDARD PROCESSORS" "Provides standard processors" "extensions/standard-processors" "extensions/standard-processors/tests/")
+
+
 #### EXTENSIONS
 if ((DISABLE_CURL STREQUAL "OFF" OR NOT DISABLE_CURL) AND NOT DISABLE_CIVET)
 	createExtension(HTTP-CURL "HTTP CURL" "This enables RESTProtocol, InvokeHTTP, and the HTTPClient for Site to Site" "extensions/http-curl" "extensions/http-curl/tests/")

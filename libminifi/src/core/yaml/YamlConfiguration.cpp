@@ -661,7 +661,7 @@ void YamlConfiguration::parseConnectionYaml(YAML::Node *connectionsNode, core::P
           std::string expiration = connectionNode["flowfile expiration"].as<std::string>();
           TimeUnit unit;
           if (core::Property::StringToTime(expiration, expirationDuration, unit) && core::Property::ConvertTimeUnitToMS(expirationDuration, unit, expirationDuration)) {
-            logger_->log_debug("parseConnection: flowfile expiration => [%s]", expirationDuration);
+            logger_->log_debug("parseConnection: flowfile expiration => [%d]", expirationDuration);
             connection->setFlowExpirationDuration(expirationDuration);
           }
         }
