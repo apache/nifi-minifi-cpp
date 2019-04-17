@@ -29,7 +29,6 @@
 #include "cxx/Plan.h"
 #include "cxx/CallbackProcessor.h"
 #include "ResourceClaim.h"
-#include "processors/GetFile.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/StringUtils.h"
 #include "io/DataStream.h"
@@ -480,9 +479,9 @@ flow * create_getfile(nifi_instance * instance, flow * parent_flow, GetFileConfi
   // automatically adds it with success
   auto getFile = new_flow->addProcessor(first_processor, first_processor);
 
-  new_flow->setProperty(getFile, processors::GetFile::Directory.getName(), c->directory);
-  new_flow->setProperty(getFile, processors::GetFile::KeepSourceFile.getName(), c->keep_source ? "true" : "false");
-  new_flow->setProperty(getFile, processors::GetFile::Recurse.getName(), c->recurse ? "true" : "false");
+  new_flow->setProperty(getFile, "Input Directory", c->directory);
+  new_flow->setProperty(getFile, "Keep Source File ", c->keep_source ? "true" : "false");
+  new_flow->setProperty(getFile, "Recurse Subdirectories", c->recurse ? "true" : "false");
 
   return new_flow;
 }

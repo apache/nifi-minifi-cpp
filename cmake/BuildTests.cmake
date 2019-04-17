@@ -135,9 +135,25 @@ FOREACH(testfile ${NANOFI_UNIT_TESTS})
     get_filename_component(testfilename "${testfile}" NAME_WE)
     add_executable("${testfilename}" "${NANOFI_TEST_DIR}/${testfile}")
     target_include_directories(${testfilename} BEFORE PRIVATE "${CMAKE_SOURCE_DIR}/nanofi/include")
+    target_include_directories(${testfilename} BEFORE PRIVATE "${CMAKE_SOURCE_DIR}/extensions/standard-processors/")
+    target_include_directories(${testfilename} BEFORE PRIVATE "${CMAKE_SOURCE_DIR}/extensions/standard-processors/processors/")
     target_include_directories(${testfilename} BEFORE PRIVATE "${CMAKE_SOURCE_DIR}/libminifi/test")
     appendIncludes("${testfilename}")
     target_link_libraries(${testfilename} ${CMAKE_THREAD_LIBS_INIT} ${CATCH_MAIN_LIB} nanofi)
+    
+    if (APPLE)
+    	# minifi-standard-processors
+	target_link_libraries (${testfilename} -Wl,-all_load minifi-standard-processors nanofi)
+    elseif(NOT WIN32)
+	target_link_libraries (${testfilename} -Wl,--whole-archive minifi-standard-processors -Wl,--no-whole-archive)
+    else()
+	set(WIN32_ARCHIVES "${WIN32_ARCHIVES} /WHOLEARCHIVE:minifi-standard-processors")
+    endif ()
+	
+    if(WIN32)
+	set_target_properties($Ptestfilename{ PROPERTIES LINK_FLAGS "${WIN32_ARCHIVES}")
+    endif()
+    
     MATH(EXPR UNIT_TEST_COUNT "${UNIT_TEST_COUNT}+1")
     add_test(NAME "${testfilename}" COMMAND "${testfilename}" WORKING_DIRECTORY ${TEST_DIR})
 ENDFOREACH()
@@ -156,12 +172,4 @@ get_property(extensions GLOBAL PROPERTY EXTENSION-TESTS)
 foreach(EXTENSION ${extensions})
 	add_subdirectory(${EXTENSION})
 endforeach()
-
-add_test(NAME TestExecuteProcess COMMAND TestExecuteProcess )
-
-add_test(NAME SecureSocketGetTCPTest COMMAND SecureSocketGetTCPTest "${TEST_RESOURCES}/TestGetTCPSecure.yml"  "${TEST_RESOURCES}/")
-
-add_test(NAME TailFileTest COMMAND TailFileTest "${TEST_RESOURCES}/TestTailFile.yml"  "${TEST_RESOURCES}/")
-
-add_test(NAME TailFileCronTest COMMAND TailFileCronTest "${TEST_RESOURCES}/TestTailFileCron.yml"  "${TEST_RESOURCES}/")
 

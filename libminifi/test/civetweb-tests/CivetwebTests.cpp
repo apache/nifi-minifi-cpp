@@ -22,9 +22,9 @@
 #include <memory>
 #include <set>
 #include <iostream>
-#include <GenerateFlowFile.h>
-#include <UpdateAttribute.h>
-#include <LogAttribute.h>
+#include <processors/GenerateFlowFile.h>
+#include <processors/UpdateAttribute.h>
+#include <processors/LogAttribute.h>
 #include <processors/ListenHTTP.h>
 
 #include "../TestBase.h"
