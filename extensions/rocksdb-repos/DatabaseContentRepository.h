@@ -86,7 +86,7 @@ class DatabaseContentRepository : public core::ContentRepository, public core::C
 
   virtual void stop();
 
-  virtual std::shared_ptr<io::BaseStream> write(const std::shared_ptr<minifi::ResourceClaim> &claim);
+  virtual std::shared_ptr<io::BaseStream> write(const std::shared_ptr<minifi::ResourceClaim> &claim, bool append = false);
 
   virtual std::shared_ptr<io::BaseStream> read(const std::shared_ptr<minifi::ResourceClaim> &claim);
 

@@ -77,7 +77,7 @@ class VolatileContentRepository : public core::ContentRepository, public virtual
    * @param claim resource claim
    * @return BaseStream shared pointer that represents the stream the consumer will write to.
    */
-  virtual std::shared_ptr<io::BaseStream> write(const std::shared_ptr<minifi::ResourceClaim> &claim);
+  virtual std::shared_ptr<io::BaseStream> write(const std::shared_ptr<minifi::ResourceClaim> &claim, bool append);
 
   /**
    * Creates readable stream.

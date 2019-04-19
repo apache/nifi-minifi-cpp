@@ -48,7 +48,7 @@ class StreamManager {
    * @param streamId stream identifier
    * @return stream pointer.
    */
-  virtual std::shared_ptr<io::BaseStream> write(const std::shared_ptr<T> &streamId) = 0;
+  virtual std::shared_ptr<io::BaseStream> write(const std::shared_ptr<T> &streamId, bool append = false) = 0;
 
   /**
    * Create a read stream using the streamId as a reference.

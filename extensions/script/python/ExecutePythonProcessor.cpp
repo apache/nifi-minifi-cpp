@@ -55,13 +55,12 @@ void ExecutePythonProcessor::initialize() {
   properties.insert(ScriptFile);
   properties.insert(ModuleDirectory);
   setSupportedProperties(properties);
-  setSupportedProperties(std::move(properties));
 
   std::set<core::Relationship> relationships;
   relationships.insert(Success);
   relationships.insert(Failure);
   setSupportedRelationships(std::move(relationships));
-
+  setAcceptAllProperties();
   if (!prop.empty()) {
     setProperty(ScriptFile, prop);
     std::shared_ptr<script::ScriptEngine> engine;

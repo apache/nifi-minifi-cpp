@@ -87,7 +87,7 @@ void VolatileContentRepository::start() {
   logger_->log_info("%s Repository Monitor Thread Start", getName());
 }
 
-std::shared_ptr<io::BaseStream> VolatileContentRepository::write(const std::shared_ptr<minifi::ResourceClaim> &claim) {
+std::shared_ptr<io::BaseStream> VolatileContentRepository::write(const std::shared_ptr<minifi::ResourceClaim> &claim, bool append) {
   logger_->log_info("enter write for %s", claim->getContentFullPath());
   {
     std::lock_guard<std::mutex> lock(map_mutex_);

@@ -1,6 +1,5 @@
 package org.apache.nifi.processor;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.nifi.controller.queue.QueueSize;
 import org.apache.nifi.flowfile.FlowFile;
@@ -15,7 +14,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.regex.Pattern;
-import java.util.stream.IntStream;
 
 public class JniProcessSession implements ProcessSession {
 
@@ -41,7 +39,6 @@ public class JniProcessSession implements ProcessSession {
 
     @Override
     public void adjustCounter(String name, long delta, boolean immediate) {
-
     }
 
     @Override
@@ -173,20 +170,39 @@ public class JniProcessSession implements ProcessSession {
         }
     }
 
+    /**
+     * I don't like surrounding this with a Buffered Input Stream, but it seems that certain features expect this
+     * Case in point, CSV Reader:
+     *   createRecordReader(final Map<String, String> variables, final InputStream in, final ComponentLog logger)
+     *
+     * In this method we've erased the concrete type and are assuming the InputStream is a BufferedInputStream.
+     * While we can fix this, there is no guarantee that others don't abide by this. As a result we'll use
+     * BufferedInputStream here until we can safely move away.
+     */
     @Override
     public void read(FlowFile source, InputStreamCallback reader) throws FlowFileAccessException {
         try {
-            final JniInputStream input = readFlowFile(source);
+            final BufferedInputStream input = new BufferedInputStream( readFlowFile(source) );
             if (input != null)
                 reader.process(input);
         } catch (IOException e) {
+            e.printStackTrace();
             throw new FlowFileAccessException("Could not read from native source", e);
         }
     }
 
     @Override
     public InputStream read(FlowFile flowFile) {
-        return readFlowFile(flowFile);
+        /**
+         * I don't like surrounding this with a Buffered Input Stream, but it seems that certain features expect this
+         * Case in point, CSV Reader:
+         *   createRecordReader(final Map<String, String> variables, final InputStream in, final ComponentLog logger)
+         *
+         * In this method we've erased the concrete type and are assuming the InputStream is a BufferedInputStream.
+         * While we can fix this, there is no guarantee that others don't abide by this. As a result we'll use
+         * BufferedInputStream here until we can safely move away.
+         */
+        return new BufferedInputStream(readFlowFile(flowFile));
     }
 
     @Override
@@ -230,7 +246,7 @@ public class JniProcessSession implements ProcessSession {
             ByteArrayOutputStream bin = new ByteArrayOutputStream();
             @Override
             public void write(int b) throws IOException {
-                synchronized (bin) {
+                synchronized (this) {
                     bin.write(b);
                     // better suited to writing pages of memory
                     if (bin.size() > 4096) {
@@ -241,7 +257,16 @@ public class JniProcessSession implements ProcessSession {
 
             @Override
             public void flush() throws IOException {
-                synchronized (bin) {
+                synchronized (this) {
+                    // flush as an append.
+                    flushByterArray();
+                }
+            }
+
+
+            @Override
+            public void close() throws IOException {
+                synchronized (this) {
                     // flush as an append.
                     flushByterArray();
                 }
@@ -251,6 +276,7 @@ public class JniProcessSession implements ProcessSession {
                 append(source,bin.toByteArray());
                 bin = new ByteArrayOutputStream();
             }
+
         };
     }
 
@@ -283,12 +309,30 @@ public class JniProcessSession implements ProcessSession {
         return source;
     }
 
+    /**
+     * IOUtils was slow due to non-buffering. Underlying streams may buffer but this alleviates
+     * pressure with a small footprint.
+     * @param in input stream
+     * @param out output stream
+     * @throws IOException
+     */
+    private static void copyData(InputStream in, OutputStream out) throws IOException {
+        byte[] buffer = new byte[1 * 1024];
+        int len;
+        while ((len = in.read(buffer)) > 0) {
+            out.write(buffer, 0, len);
+        }
+    }
+
+
     @Override
     public FlowFile importFrom(Path source, boolean keepSourceFile, FlowFile destination){
         try {
-            IOUtils.copy(Files.newInputStream(source),write(destination));
-            if (!keepSourceFile){
-                Files.delete(source);
+            try(OutputStream out = write(destination)) {
+                copyData(Files.newInputStream(source), out);
+                if (!keepSourceFile) {
+                    Files.delete(source);
+                }
             }
         } catch (IOException e) {
             return null;
@@ -299,7 +343,9 @@ public class JniProcessSession implements ProcessSession {
     @Override
     public FlowFile importFrom(InputStream source, FlowFile destination){
         try {
-            IOUtils.copy(source,write(destination));
+            try(OutputStream out = write(destination)) {
+                copyData(source, out);
+            }
         } catch (IOException e) {
             return null;
         }

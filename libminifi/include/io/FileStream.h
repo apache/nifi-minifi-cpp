@@ -50,8 +50,10 @@ class FileStream : public io::BaseStream {
   /**
    * File Stream constructor that accepts an fstream shared pointer.
    * It must already be initialized for read and write.
+   * @param path path to file
+   * @param append identifies if this is an append or overwriting the file
    */
-  explicit FileStream(const std::string &path);
+  explicit FileStream(const std::string &path, bool append = false);
 
   virtual ~FileStream() {
     closeStream();

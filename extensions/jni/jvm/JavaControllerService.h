@@ -133,6 +133,15 @@ class JavaControllerService : public core::controller::ControllerService, public
   std::pair<std::string, std::string> getAnnotation(const std::string &requested_name, const std::string &method_name) {
     return nar_loader_->getAnnotation(requested_name, method_name);
   }
+
+  /**
+     * Retrieves a matching annotation
+     * @param requested class name,
+     * @param method_name method name to obtain
+     */
+    std::map<std::string, std::string> getAnnotations(const std::string &requested_name, const std::string &annotation_name) {
+      return nar_loader_->getAnnotations(requested_name, annotation_name);
+    }
   /**
    * creates a new instance
    * @param requested_name reqeusted class name

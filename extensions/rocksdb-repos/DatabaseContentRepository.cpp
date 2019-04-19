@@ -61,11 +61,12 @@ void DatabaseContentRepository::stop() {
   }
 }
 
-std::shared_ptr<io::BaseStream> DatabaseContentRepository::write(const std::shared_ptr<minifi::ResourceClaim> &claim) {
+std::shared_ptr<io::BaseStream> DatabaseContentRepository::write(const std::shared_ptr<minifi::ResourceClaim> &claim, bool append) {
   // the traditional approach with these has been to return -1 from the stream; however, since we have the ability here
   // we can simply return a nullptr, which is also valid from the API when this stream is not valid.
   if (nullptr == claim || !is_valid_ || !db_)
     return nullptr;
+  // append is already supported in all modes
   return std::make_shared<io::RocksDbStream>(claim->getContentFullPath(), db_, true);
 }
 

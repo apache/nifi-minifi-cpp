@@ -49,7 +49,8 @@ public class JniClassLoader  {
 
     private static ConcurrentHashMap<String,Class<?>> classes = new ConcurrentHashMap<>();
 
-    private ConcurrentHashMap<Map.Entry<String,String>,Method> onScheduledMethod = new ConcurrentHashMap<>();
+    // avoiding external dependencies ( such as with Guava );
+    private ConcurrentHashMap<Map.Entry<String,String>,List<Method>> annotatedMethods = new ConcurrentHashMap<>();
 
     private ConcurrentHashMap<String,JniComponent> componentMap = new ConcurrentHashMap<>();
 
@@ -400,47 +401,90 @@ public class JniClassLoader  {
                     methods.add(method);
                 }
             }
-            if (methods.isEmpty())
-                klass = klass.getSuperclass();
-            else
-                break;
+            klass = klass.getSuperclass();
+
         }
         return methods;
     }
 
 
     public String getMethod(final String className, final String annotation){
-        Method mthd = onScheduledMethod.get(new AbstractMap.SimpleImmutableEntry<>(className,annotation));
+        Collection<String> methods = getMethods(className,annotation);
+        if (!methods.isEmpty()){
+            return methods.iterator().next();
+        }
+        return null;
+    }
 
-        if (mthd == null)
+    public List<String> getMethods(final String className, final String annotation){
+        List<Method> mthds = annotatedMethods.get(new AbstractMap.SimpleImmutableEntry<>(className,annotation));
+        List<String> methods = new ArrayList<>();
+        if (mthds != null)
         {
-            return null;
+            for(Method mthd : mthds){
+                methods.add(mthd.getName());
+            }
         }
 
-        return mthd.getName();
+        return methods;
     }
 
     public String getSignature(final String className, final String annotation){
-        Method mthd = onScheduledMethod.get(new AbstractMap.SimpleImmutableEntry<>(className,annotation));
-        if (mthd == null)
+        Map<String,String> signatureMap = getSignatures(className,annotation);
+        if (!signatureMap.isEmpty()){
+            return signatureMap.entrySet().iterator().next().getValue();
+        }
+        return null;
+    }
+
+    public String getMethodSignature(final String className, String method, final String annotation){
+        Collection<Method> mthds = annotatedMethods.get(new AbstractMap.SimpleImmutableEntry<>(className,annotation));
+        if (mthds != null)
         {
-            return null;
-        }
-        String ret = "", argTypes="";
-        if (mthd.getReturnType().equals(Void.TYPE)){
-            ret = "V";
-        }
-        else{
-            ret = classToType(mthd.getReturnType());
-        }
-        argTypes = "(";
-        for(Class<?> type : mthd.getParameterTypes()){
-            argTypes += classToType(type);
-        }
+            for(Method mthd : mthds) {
+                if (mthd.getName().equals(method)) {
+                    String ret = "", argTypes = "";
+                    if (mthd.getReturnType().equals(Void.TYPE)) {
+                        ret = "V";
+                    } else {
+                        ret = classToType(mthd.getReturnType());
+                    }
+                    argTypes = "(";
+                    for (Class<?> type : mthd.getParameterTypes()) {
+                        argTypes += classToType(type);
+                    }
 
-        argTypes += ")";
+                    argTypes += ")";
+                    return argTypes + ret;
+                }
+            }
+        }
+        return null;
+    }
 
-        return argTypes + ret;
+    public Map<String,String> getSignatures(final String className, final String annotation){
+        Collection<Method> mthds = annotatedMethods.get(new AbstractMap.SimpleImmutableEntry<>(className,annotation));
+        Map<String,String> signatureMap = new HashMap<>();
+        if (mthds != null)
+        {
+            for(Method mthd : mthds) {
+                String ret = "", argTypes = "";
+                if (mthd.getReturnType().equals(Void.TYPE)) {
+                    ret = "V";
+                } else {
+                    ret = classToType(mthd.getReturnType());
+                }
+                argTypes = "(";
+                for (Class<?> type : mthd.getParameterTypes()) {
+                    argTypes += classToType(type);
+                }
+
+                argTypes += ")";
+                signatureMap.put(mthd.getName(),argTypes + ret);
+            }
+        }
+        return signatureMap;
+
     }
 
     private static String classToType(Class<?> type){
@@ -482,14 +526,40 @@ public class JniClassLoader  {
                 logger.warn("Could not find {}", className);
                 return null;
             } else {
-                List<Method> methods = getAnnotatedMethods(clazz, OnScheduled.class);
-                methods.stream().forEach(mthd -> onScheduledMethod.put(new AbstractMap.SimpleImmutableEntry<>(className, "OnScheduled"), mthd));
+                synchronized (annotatedMethods) {
+                    List<Method> methods = getAnnotatedMethods(clazz, OnScheduled.class);
+                    methods.stream().forEach(mthd -> {
+                        final Map.Entry<String, String> ent = new AbstractMap.SimpleImmutableEntry<>(className, "OnScheduled");
+                        List<Method> methodList = annotatedMethods.get(ent);
+                        if (methodList == null) {
+                            methodList = new ArrayList<>();
+                            annotatedMethods.put(ent, methodList);
+                        }
+                        methodList.add(mthd);
+                    });
 
-                methods = getAnnotatedMethods(clazz, OnEnabled.class);
-                methods.stream().forEach(mthd -> onScheduledMethod.put(new AbstractMap.SimpleImmutableEntry<>(className, "OnEnabled"), mthd));
+                    methods = getAnnotatedMethods(clazz, OnEnabled.class);
+                    methods.stream().forEach(mthd -> {
+                        final Map.Entry<String, String> ent = new AbstractMap.SimpleImmutableEntry<>(className, "OnEnabled");
+                        List<Method> methodList = annotatedMethods.get(ent);
+                        if (methodList == null) {
+                            methodList = new ArrayList<>();
+                            annotatedMethods.put(ent, methodList);
+                        }
+                        methodList.add(mthd);
+                    });
 
-                methods = getAnnotatedMethods(clazz, OnDisabled.class);
-                methods.stream().forEach(mthd -> onScheduledMethod.put(new AbstractMap.SimpleImmutableEntry<>(className, "OnDisabled"), mthd));
+                    methods = getAnnotatedMethods(clazz, OnDisabled.class);
+                    methods.stream().forEach(mthd -> {
+                        final Map.Entry<String, String> ent = new AbstractMap.SimpleImmutableEntry<>(className, "OnDisabled");
+                        List<Method> methodList = annotatedMethods.get(ent);
+                        if (methodList == null) {
+                            methodList = new ArrayList<>();
+                            annotatedMethods.put(ent, methodList);
+                        }
+                        methodList.add(mthd);
+                    });
+                }
             }
 
             return clazz.newInstance();

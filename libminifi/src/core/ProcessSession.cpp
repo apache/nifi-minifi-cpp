@@ -298,7 +298,6 @@ void ProcessSession::write(const std::shared_ptr<core::FlowFile> &flow, OutputSt
 
 void ProcessSession::append(const std::shared_ptr<core::FlowFile> &flow, OutputStreamCallback *callback) {
   std::shared_ptr<ResourceClaim> claim = nullptr;
-
   if (flow->getResourceClaim() == nullptr) {
     // No existed claim for append, we need to create new claim
     return write(flow, callback);
@@ -308,20 +307,23 @@ void ProcessSession::append(const std::shared_ptr<core::FlowFile> &flow, OutputS
 
   try {
     uint64_t startTime = getTimeMillis();
-    std::shared_ptr<io::BaseStream> stream = process_context_->getContentRepository()->write(claim);
+    std::shared_ptr<io::BaseStream> stream = process_context_->getContentRepository()->write(claim, true);
     if (nullptr == stream) {
       rollback();
       return;
     }
     // Call the callback to write the content
+
     size_t oldPos = stream->getSize();
-    stream->seek(oldPos + 1);
+    // this prevents an issue if we write, above, with zero length.
+    if (oldPos > 0)
+      stream->seek(oldPos + 1);
     if (callback->process(stream) < 0) {
       rollback();
       return;
     }
     uint64_t appendSize = stream->getSize() - oldPos;
-    flow->setSize(flow->getSize() + appendSize);
+    flow->setSize(stream->getSize());
 
     std::stringstream details;
     details << process_context_->getProcessorNode()->getName() << " modify flow record content " << flow->getUUIDStr();
@@ -342,6 +344,10 @@ void ProcessSession::read(const std::shared_ptr<core::FlowFile> &flow, InputStre
 
     if (flow->getResourceClaim() == nullptr) {
       // No existed claim for read, we throw exception
+      logger_->log_debug("For %s, no resource claim but size is %d", flow->getUUIDStr(), flow->getSize());
+      if (flow->getSize() == 0) {
+        return;
+      }
       throw Exception(FILE_OPERATION_EXCEPTION, "No Content Claim existed for read");
     }
 

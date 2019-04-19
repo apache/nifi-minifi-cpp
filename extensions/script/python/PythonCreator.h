@@ -93,11 +93,17 @@ class PythonCreator : public minifi::core::CoreComponent {
       core::ClassLoader::getDefaultClassLoader().registerResource("", "createPyProcFactory");
 
       for (const auto &path : classpaths_) {
-
         const auto &scriptName = getScriptName(path);
 
         utils::Identifier uuid;
-        auto processor = std::dynamic_pointer_cast<core::Processor>(core::ClassLoader::getDefaultClassLoader().instantiate(scriptName, uuid));
+
+        std::string loadName = scriptName;
+        const auto &package = getPackage(pathListings, path);
+
+        if (!package.empty())
+          loadName = "org.apache.nifi.minifi.processors." + package + "." + scriptName;
+
+        auto processor = std::dynamic_pointer_cast<core::Processor>(core::ClassLoader::getDefaultClassLoader().instantiate(loadName, uuid));
         if (processor) {
           try {
             processor->initialize();
@@ -112,6 +118,7 @@ class PythonCreator : public minifi::core::CoreComponent {
             details.artifact = getFileName(path);
             details.version = minifi::AgentBuild::VERSION;
             details.group = "python";
+
             minifi::ClassDescription description(script_with_package);
             description.dynamic_properties_ = proc->getPythonSupportDynamicProperties();
             auto properties = proc->getPythonProperties();
