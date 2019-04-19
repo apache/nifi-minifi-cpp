@@ -123,7 +123,7 @@ default values, and whether a property supports the NiFi Expression Language.
 | Base Directory | /tmp/ | | A base directory where pcap files are stored temporarily |
 | Batch Size | 50 |  | Number of captured packets written into a PCAP file |
 | Capture Bluetooth | false |  | Captures bluetooth interfaces if true  |
-| Network Controller | .* |  | Regular expression of the network controller(s) to which packet capture will be attached|
+| Network Controller | .\* |  | Regular expression of the network controller(s) to which packet capture will be attached|
 
 ### Relationships
 
@@ -632,13 +632,14 @@ default values, and whether a property supports the NiFi Expression Language.
 
 | Name | Default Value | Allowable Values | Description |
 | - | - | - | - |
-| **Base Path** | contentListener | | Base path for incoming connections |
+| Base Path | contentListener | | Base path for incoming connections |
 | **Listening Port** | | | The Port to listen on for incoming connections |
 | SSL Certificate | | | File containing PEM-formatted file including TLS/SSL certificate and key |
 | SSL Certificate Authority | | | File containing trusted PEM-formatted certificates |
 | SSL Verify Peer | no | yes, no | Whether or not to verify the client's certificate  |
 | SSL Minimum Version | SSL2 | SSL2, SSL3, TLS1.0, TLS1.1, TLS1.2 | Minimum TLS/SSL version allowed |
 | HTTP Headers to receive as Attributes (Regex) | | | Specifies the Regular Expression that determines the names of HTTP Headers that should be passed along as FlowFile attributes |
+| Authorized DN Pattern | .\* | | Specifies the Regular Expression that determines the names of HTTP Headers that should be passed along as FlowFile attributes |
 
 ### Relationships
 
@@ -702,10 +703,10 @@ default values, and whether a property supports the NiFi Expression Language.
 
 | Name | Default Value | Allowable Values | Description |
 | - | - | - | - |
-| **Directory** | | | The directory to which files should be written. You may use expression language such as `/aa/bb/${path}`<br>**Supports Expression Language: true** |
-| **Conflict Resolution Strategy** | fail | replace, ignore, fail | Indicates what should happen when a file with the same name already exists in the output directory |
+| Directory | . | | The directory to which files should be written. You may use expression language such as `/aa/bb/${path}`<br>**Supports Expression Language: true** |
+| Conflict Resolution Strategy | fail | replace, ignore, fail | Indicates what should happen when a file with the same name already exists in the output directory |
 | **Create Missing Directories** | true | true, false | If true, then missing destination directories will be created. If false, flowfiles are penalized and sent to failure. |
-| **Maximum File Count** | | | Specifies the maximum number of files that can exist in the output directory |
+| Maximum File Count | | | Specifies the maximum number of files that can exist in the output directory |
 
 ### Relationships
 
