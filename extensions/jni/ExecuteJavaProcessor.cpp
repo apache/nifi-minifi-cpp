@@ -139,7 +139,7 @@ void ExecuteJavaProcessor::onSchedule(const std::shared_ptr<core::ProcessContext
   // create provided class
 
   clazzInstance = java_servicer_->newInstance(class_name_);
-  auto onScheduledName = java_servicer_->getAnnotation(class_name_, "OnScheduled");
+  auto onScheduledNames = java_servicer_->getAnnotations(class_name_, "OnScheduled");
   current_processor_class = java_servicer_->getObjectClass(class_name_, clazzInstance);
   // attempt to schedule here
 
@@ -158,7 +158,10 @@ void ExecuteJavaProcessor::onSchedule(const std::shared_ptr<core::ProcessContext
   java_servicer_->setReference<minifi::jni::JniProcessContext>(env, context_instance_, &jpc);
 
   try {
-    current_processor_class.callVoidMethod(env, clazzInstance, onScheduledName.first.c_str(), onScheduledName.second, context_instance_);
+
+    for (const auto &onScheduledName : onScheduledNames) {
+      current_processor_class.callVoidMethod(env, clazzInstance, onScheduledName.first.c_str(), onScheduledName.second, context_instance_);
+    }
   } catch (std::runtime_error &re) {
     // this can be ignored.
   }

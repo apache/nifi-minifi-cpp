@@ -186,7 +186,16 @@ public class JniProcessSession implements ProcessSession {
 
     @Override
     public InputStream read(FlowFile flowFile) {
-        return readFlowFile(flowFile);
+        /**
+         * I don't like surrounding this with a Buffered Input Stream, but it seems that certain features expect this
+         * Case in point, CSV Reader:
+         *   createRecordReader(final Map<String, String> variables, final InputStream in, final ComponentLog logger)
+         *
+         * In this method we've erased the concrete type and are assuming the InputStream is a BufferedInputStream.
+         * While we can fix this, there is no guarantee that others don't abide by this. As a result we'll use
+         * BufferedInputStream here until we can safely move away.
+         */
+        return new BufferedInputStream(readFlowFile(flowFile));
     }
 
     @Override

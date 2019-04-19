@@ -120,6 +120,58 @@ class NarClassLoader {
 
     return std::make_pair(methodName, signature);
   }
+
+  std::map<std::string, std::string> getAnnotations(const std::string &requested_name, const std::string &method_name) {
+    auto env = java_servicer_->attach();
+    std::vector<std::string> method_names;
+    std::map<std::string, std::string> methods_with_signatures;
+    {
+      jmethodID mthd = env->GetMethodID(class_ref_.getReference(), "getMethods", "(Ljava/lang/String;Ljava/lang/String;)Ljava/util/List;");
+      if (mthd == nullptr) {
+        ThrowIf(env);
+      }
+
+      auto clazz_name = env->NewStringUTF(requested_name.c_str());
+      auto annotation_name = env->NewStringUTF(method_name.c_str());
+
+      jobject jList = env->CallObjectMethod(class_loader_, mthd, clazz_name, annotation_name);
+      ThrowIf(env);
+      jclass cList = env->FindClass("java/util/List");
+      jmethodID mSize = env->GetMethodID(cList, "size", "()I");
+      jmethodID mGet = env->GetMethodID(cList, "get", "(I)Ljava/lang/Object;");
+
+      // get the size of the list
+      jint size = env->CallIntMethod(jList, mSize);
+      ThrowIf(env);
+      // walk through and fill the vector
+      for (jint i = 0; i < size; i++) {
+        jstring strObj = (jstring) env->CallObjectMethod(jList, mGet, i);
+        ThrowIf(env);
+        method_names.push_back(JniStringToUTF(env, strObj));
+      }
+    }
+    for (const auto &method_name_str : method_names) {
+      jmethodID mthd = env->GetMethodID(class_ref_.getReference(), "getMethodSignature", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;");
+      if (mthd == nullptr) {
+        ThrowIf(env);
+      }
+
+      auto clazz_name = env->NewStringUTF(requested_name.c_str());
+      auto jstring_method_name = env->NewStringUTF(method_name_str.c_str());
+      auto annotation_name = env->NewStringUTF(method_name.c_str());
+
+      jstring obj = (jstring) env->CallObjectMethod(class_loader_, mthd, clazz_name, jstring_method_name, annotation_name);
+
+      ThrowIf(env);
+
+      if (obj) {
+        auto signature = JniStringToUTF(env, obj);
+        methods_with_signatures[method_name_str] = signature;
+      }
+    }
+
+    return methods_with_signatures;
+  }
   /**
    * Call empty constructor
    */
