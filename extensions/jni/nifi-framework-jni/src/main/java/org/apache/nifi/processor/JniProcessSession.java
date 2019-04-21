@@ -41,7 +41,6 @@ public class JniProcessSession implements ProcessSession {
 
     @Override
     public void adjustCounter(String name, long delta, boolean immediate) {
-
     }
 
     @Override
@@ -173,13 +172,23 @@ public class JniProcessSession implements ProcessSession {
         }
     }
 
+    /**
+     * I don't like surrounding this with a Buffered Input Stream, but it seems that certain features expect this
+     * Case in point, CSV Reader:
+     *   createRecordReader(final Map<String, String> variables, final InputStream in, final ComponentLog logger)
+     *
+     * In this method we've erased the concrete type and are assuming the InputStream is a BufferedInputStream.
+     * While we can fix this, there is no guarantee that others don't abide by this. As a result we'll use
+     * BufferedInputStream here until we can safely move away.
+     */
     @Override
     public void read(FlowFile source, InputStreamCallback reader) throws FlowFileAccessException {
         try {
-            final JniInputStream input = readFlowFile(source);
+            final BufferedInputStream input = new BufferedInputStream( readFlowFile(source) );
             if (input != null)
                 reader.process(input);
         } catch (IOException e) {
+            e.printStackTrace();
             throw new FlowFileAccessException("Could not read from native source", e);
         }
     }
@@ -239,7 +248,7 @@ public class JniProcessSession implements ProcessSession {
             ByteArrayOutputStream bin = new ByteArrayOutputStream();
             @Override
             public void write(int b) throws IOException {
-                synchronized (bin) {
+                synchronized (this) {f
                     bin.write(b);
                     // better suited to writing pages of memory
                     if (bin.size() > 4096) {
@@ -250,7 +259,16 @@ public class JniProcessSession implements ProcessSession {
 
             @Override
             public void flush() throws IOException {
-                synchronized (bin) {
+                synchronized (this) {
+                    // flush as an append.
+                    flushByterArray();
+                }
+            }
+
+
+            @Override
+            public void close() throws IOException {
+                synchronized (this) {
                     // flush as an append.
                     flushByterArray();
                 }
@@ -260,6 +278,7 @@ public class JniProcessSession implements ProcessSession {
                 append(source,bin.toByteArray());
                 bin = new ByteArrayOutputStream();
             }
+
         };
     }
 

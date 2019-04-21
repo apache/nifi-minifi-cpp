@@ -445,8 +445,10 @@ jboolean Java_org_apache_nifi_processor_JniProcessSession_append(JNIEnv *env, jo
     jbyte* buffer = env->GetByteArrayElements(byteArray, 0);
     jsize length = env->GetArrayLength(byteArray);
 
-    minifi::jni::JniByteOutStream outStream(buffer, (size_t) length);
-    session->getSession()->append(ptr->get(), &outStream);
+    if (length > 0) {
+      minifi::jni::JniByteOutStream outStream(buffer, (size_t) length);
+      session->getSession()->append(ptr->get(), &outStream);
+    }
 
     env->ReleaseByteArrayElements(byteArray, buffer, 0);
 

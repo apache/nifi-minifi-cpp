@@ -28,12 +28,15 @@ namespace nifi {
 namespace minifi {
 namespace io {
 
-FileStream::FileStream(const std::string &path)
+FileStream::FileStream(const std::string &path, bool append)
     : logger_(logging::LoggerFactory<FileStream>::getLogger()),
       path_(path),
       offset_(0) {
   file_stream_ = std::unique_ptr<std::fstream>(new std::fstream());
-  file_stream_->open(path.c_str(), std::fstream::out | std::fstream::binary);
+  if (append)
+    file_stream_->open(path.c_str(), std::fstream::in | std::fstream::out | std::fstream::app | std::fstream::binary);
+  else
+    file_stream_->open(path.c_str(), std::fstream::out | std::fstream::binary);
   file_stream_->seekg(0, file_stream_->end);
   file_stream_->seekp(0, file_stream_->end);
   int len = file_stream_->tellg();
