@@ -70,6 +70,7 @@ Through JNI extensions you can run NiFi processors using NARs. The JNI extension
 | Extension Set        | Processors           | CMAKE Flag  |
 | ------------- |:-------------| :-----|
 | Archive Extensions    | [ApplyTemplate](PROCESSORS.md#applytemplate)<br/>[CompressContent](PROCESSORS.md#compresscontent)<br/>[ManipulateArchive](PROCESSORS.md#manipulatearchive)<br/>[MergeContent](PROCESSORS.md#mergecontent)<br/>[FocusArchiveEntry](PROCESSORS.md#focusarchiveentry)<br/>[UnfocusArchiveEntry](PROCESSORS.md#unfocusarchiveentry)      |   -DBUILD_LIBARCHIVE=ON |
+| AWS | [AWSCredentialsService](CONTROLLERS.md#awsCredentialsService) | -DENABLE_AWS=ON  |
 | CURL | [InvokeHTTP](PROCESSORS.md#invokehttp)      |    -DDISABLE_CURL=ON  |
 | GPS | GetGPS      |    -DENABLE_GPS=ON  |
 | Kafka | [PublishKafka](PROCESSORS.md#publishkafka)      |    -DENABLE_LIBRDKAFKA=ON  |
