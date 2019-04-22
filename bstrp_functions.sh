@@ -259,6 +259,7 @@ show_supported_features() {
   echo "M. SQLite Support ..............$(print_feature_status SQLITE_ENABLED)"
   echo "N. Python Support ..............$(print_feature_status PYTHON_ENABLED)"
   echo "O. COAP Support ................$(print_feature_status COAP_ENABLED)"
+  echo "V. AWS Support .................$(print_feature_status AWS_ENABLED)"
   echo "****************************************"
   echo "            Build Options."
   echo "****************************************"
@@ -293,6 +294,7 @@ read_feature_options(){
     k) ToggleFeature BUSTACHE_ENABLED ;;
     l) ToggleFeature MQTT_ENABLED ;;
     m) ToggleFeature SQLITE_ENABLED ;;
+    v) ToggleFeature AWS_ENABLED ;;
     n) if [ "$USE_SHARED_LIBS" = "${TRUE}" ]; then
          ToggleFeature PYTHON_ENABLED
        else
