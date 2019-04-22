@@ -344,6 +344,10 @@ void ProcessSession::read(const std::shared_ptr<core::FlowFile> &flow, InputStre
 
     if (flow->getResourceClaim() == nullptr) {
       // No existed claim for read, we throw exception
+      logger_->log_debug("For %s, no resource claim but size is %d",flow->getUUIDStr(),flow->getSize());
+      if (flow->getSize() == 0){
+        return;
+      }
       throw Exception(FILE_OPERATION_EXCEPTION, "No Content Claim existed for read");
     }
 

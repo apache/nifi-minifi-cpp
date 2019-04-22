@@ -401,7 +401,6 @@ public class JniClassLoader  {
                     methods.add(method);
                 }
             }
-            //if (methods.isEmpty())
             klass = klass.getSuperclass();
 
         }

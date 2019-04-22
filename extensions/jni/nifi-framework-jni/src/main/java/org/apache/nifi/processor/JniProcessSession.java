@@ -1,6 +1,5 @@
 package org.apache.nifi.processor;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.nifi.controller.queue.QueueSize;
 import org.apache.nifi.flowfile.FlowFile;
@@ -15,7 +14,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.regex.Pattern;
-import java.util.stream.IntStream;
 
 public class JniProcessSession implements ProcessSession {
 
@@ -248,7 +246,7 @@ public class JniProcessSession implements ProcessSession {
             ByteArrayOutputStream bin = new ByteArrayOutputStream();
             @Override
             public void write(int b) throws IOException {
-                synchronized (this) {f
+                synchronized (this) {
                     bin.write(b);
                     // better suited to writing pages of memory
                     if (bin.size() > 4096) {
@@ -311,10 +309,26 @@ public class JniProcessSession implements ProcessSession {
         return source;
     }
 
+    /**
+     * IOUtils was slow due to non-buffering. Underlying streams may buffer but this alleviates
+     * pressure with a small footprint.
+     * @param in input stream
+     * @param out output stream
+     * @throws IOException
+     */
+    private static void copyData(InputStream in, OutputStream out) throws IOException {
+        byte[] buffer = new byte[1 * 1024];
+        int len;
+        while ((len = in.read(buffer)) > 0) {
+            out.write(buffer, 0, len);
+        }
+    }
+
+
     @Override
     public FlowFile importFrom(Path source, boolean keepSourceFile, FlowFile destination){
         try {
-            IOUtils.copy(Files.newInputStream(source),write(destination));
+            copyData(Files.newInputStream(source),write(destination));
             if (!keepSourceFile){
                 Files.delete(source);
             }
@@ -327,7 +341,7 @@ public class JniProcessSession implements ProcessSession {
     @Override
     public FlowFile importFrom(InputStream source, FlowFile destination){
         try {
-            IOUtils.copy(source,write(destination));
+            copyData(source,write(destination));
         } catch (IOException e) {
             return null;
         }
