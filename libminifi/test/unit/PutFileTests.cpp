@@ -317,3 +317,67 @@ TEST_CASE("Test generation of temporary write path", "[putfileTmpWritePath]") {
   REQUIRE(processor->tmpWritePath("a/b/c", "").substr(1, strlen("a/b/.c")) == "a/b/.c");
 }
 
+TEST_CASE("PutFileMaxFileCountTest", "[getfileputpfilemaxcount]") {
+  TestController testController;
+
+  LogTestController::getInstance().setDebug<minifi::processors::GetFile>();
+  LogTestController::getInstance().setDebug<TestPlan>();
+  LogTestController::getInstance().setDebug<minifi::processors::PutFile>();
+  LogTestController::getInstance().setDebug<minifi::processors::LogAttribute>();
+
+  std::shared_ptr<TestPlan> plan = testController.createPlan();
+
+  std::shared_ptr<core::Processor> getfile = plan->addProcessor("GetFile", "getfileCreate");
+
+  std::shared_ptr<core::Processor> putfile = plan->addProcessor("PutFile", "putfile", core::Relationship("success", "description"), true);
+
+  plan->addProcessor("LogAttribute", "logattribute", { core::Relationship("success", "d"), core::Relationship("failure", "d") }, true);
+
+  char format[] = "/tmp/gt.XXXXXX";
+  const char *dir = testController.createTempDirectory(format);
+  char format2[] = "/tmp/ft.XXXXXX";
+  const char *putfiledir = testController.createTempDirectory(format2);
+  plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), dir);
+  plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::BatchSize.getName(), "1");
+  plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), putfiledir);
+  plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::MaxDestFiles.getName(), "1");
+
+
+
+  for (int i = 0; i < 2; ++i) {
+    std::stringstream ss;
+    ss << dir << "/" << "tstFile" << i << ".ext";
+    std::fstream file;
+    file.open(ss.str(), std::ios::out);
+    file << "tempFile";
+    file.close();
+  }
+
+  plan->reset();
+
+  testController.runSession(plan);
+
+  plan->reset();
+
+  testController.runSession(plan);
+
+
+  REQUIRE(LogTestController::getInstance().contains("key:absolute.path value:" + std::string(dir) + "/tstFile0.ext"));
+  REQUIRE(LogTestController::getInstance().contains("Size:8 Offset:0"));
+  REQUIRE(LogTestController::getInstance().contains("key:path value:" + std::string(dir)));
+
+  // Only 1 of the 2 files should make it to the target dir
+  // Non-determistic, so let's just count them
+  int files_in_dir = 0;
+  auto lambda = [&files_in_dir](const std::string&, const std::string&) -> bool {
+    return ++files_in_dir < 2;
+  };
+
+  utils::file::FileUtils::list_dir(putfiledir, lambda, testController.getLogger(), false);
+
+  REQUIRE(files_in_dir == 1);
+
+  REQUIRE(LogTestController::getInstance().contains("which exceeds the configured max number of files"));
+
+  LogTestController::getInstance().reset();
+}

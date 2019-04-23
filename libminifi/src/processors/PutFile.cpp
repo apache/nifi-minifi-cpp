@@ -139,8 +139,8 @@ void PutFile::onTrigger(core::ProcessContext *context, core::ProcessSession *ses
       // it's a directory, count the files
       int64_t ct = 0;
 
-      //Callback, called for each file entry in the listed directory
-      //Return value is used to break (false) or continue (true) listing
+      // Callback, called for each file entry in the listed directory
+      // Return value is used to break (false) or continue (true) listing
       auto lambda = [&ct, this](const std::string&, const std::string&) -> bool {
         return ++ct < max_dest_files_;
       };

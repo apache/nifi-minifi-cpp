@@ -32,7 +32,7 @@ TestPlan::TestPlan(std::shared_ptr<core::ContentRepository> content_repo, std::s
   stream_factory = org::apache::nifi::minifi::io::StreamFactory::getInstance(std::make_shared<minifi::Configure>());
 }
 
-std::shared_ptr<core::Processor> TestPlan::addProcessor(const std::shared_ptr<core::Processor> &processor, const std::string &name, core::Relationship relationship, bool linkToPrevious) {
+std::shared_ptr<core::Processor> TestPlan::addProcessor(const std::shared_ptr<core::Processor> &processor, const std::string &name, const std::initializer_list<core::Relationship>& relationships, bool linkToPrevious) {
   if (finalized) {
     return nullptr;
   }
@@ -50,20 +50,23 @@ std::shared_ptr<core::Processor> TestPlan::addProcessor(const std::shared_ptr<co
   processor_mapping_[processor->getUUIDStr()] = processor;
 
   if (!linkToPrevious) {
-    termination_ = relationship;
+    termination_ = *(relationships.begin());
   } else {
     std::shared_ptr<core::Processor> last = processor_queue_.back();
 
     if (last == nullptr) {
       last = processor;
-      termination_ = relationship;
+      termination_ = *(relationships.begin());
     }
 
     std::stringstream connection_name;
     connection_name << last->getUUIDStr() << "-to-" << processor->getUUIDStr();
     logger_->log_info("Creating %s connection for proc %d", connection_name.str(), processor_queue_.size() + 1);
     std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(flow_repo_, content_repo_, connection_name.str());
-    connection->addRelationship(relationship);
+
+    for(const auto& relationship: relationships) {
+      connection->addRelationship(relationship);
+    }
 
     // link the connections so that we can test results at the end for this
     connection->setSource(last);
@@ -93,7 +96,7 @@ std::shared_ptr<core::Processor> TestPlan::addProcessor(const std::shared_ptr<co
   return processor;
 }
 
-std::shared_ptr<core::Processor> TestPlan::addProcessor(const std::string &processor_name, const std::string &name, core::Relationship relationship, bool linkToPrevious) {
+std::shared_ptr<core::Processor> TestPlan::addProcessor(const std::string &processor_name, const std::string &name, const std::initializer_list<core::Relationship>& relationships, bool linkToPrevious) {
   if (finalized) {
     return nullptr;
   }
@@ -113,7 +116,7 @@ std::shared_ptr<core::Processor> TestPlan::addProcessor(const std::string &proce
 
   processor->setName(name);
 
-  return addProcessor(processor, name, relationship, linkToPrevious);
+  return addProcessor(processor, name, relationships, linkToPrevious);
 }
 
 bool TestPlan::setProperty(const std::shared_ptr<core::Processor> proc, const std::string &prop, const std::string &value, bool dynamic) {

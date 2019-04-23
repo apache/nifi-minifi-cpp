@@ -172,9 +172,19 @@ class TestPlan {
                     const std::shared_ptr<minifi::state::response::FlowVersion> &flow_version, const std::shared_ptr<minifi::Configure> &configuration);
 
   std::shared_ptr<core::Processor> addProcessor(const std::shared_ptr<core::Processor> &processor, const std::string &name,
-                                                core::Relationship relationship = core::Relationship("success", "description"), bool linkToPrevious = false);
+                                                core::Relationship relationship = core::Relationship("success", "description"), bool linkToPrevious = false) {
+    return addProcessor(processor, name, {relationship}, linkToPrevious);
+  }
 
   std::shared_ptr<core::Processor> addProcessor(const std::string &processor_name, const std::string &name, core::Relationship relationship = core::Relationship("success", "description"),
+                                                bool linkToPrevious = false) {
+    return addProcessor(processor_name, name, {relationship}, linkToPrevious);
+  }
+
+  std::shared_ptr<core::Processor> addProcessor(const std::shared_ptr<core::Processor> &processor, const std::string &name,
+                                                const std::initializer_list<core::Relationship>& relationships, bool linkToPrevious = false);
+
+  std::shared_ptr<core::Processor> addProcessor(const std::string &processor_name, const std::string &name, const std::initializer_list<core::Relationship>& relationships,
                                                 bool linkToPrevious = false);
 
   bool setProperty(const std::shared_ptr<core::Processor> proc, const std::string &prop, const std::string &value, bool dynamic = false);
@@ -271,6 +281,10 @@ class TestController {
     while (plan->runNextProcessor(verify) && runToCompletion) {
 
     }
+  }
+
+  const std::shared_ptr<logging::Logger>& getLogger() const {
+    return log.logger_;
   }
 
   ~TestController() {
