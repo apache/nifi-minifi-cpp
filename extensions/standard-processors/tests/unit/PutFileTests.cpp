@@ -369,11 +369,16 @@ TEST_CASE("PutFileMaxFileCountTest", "[getfileputpfilemaxcount]") {
   // Only 1 of the 2 files should make it to the target dir
   // Non-determistic, so let's just count them
   int files_in_dir = 0;
-  auto lambda = [&files_in_dir](const std::string&, const std::string&) -> bool {
-    return ++files_in_dir < 2;
-  };
 
-  utils::file::FileUtils::list_dir(putfiledir, lambda, testController.getLogger(), false);
+  for (int i = 0; i < 2; ++i) {
+    std::stringstream ss;
+    ss << putfiledir << "/" << "tstFile" << i << ".ext";
+    std::ifstream file(ss.str());
+    if (file.is_open() && file.good()) {
+      files_in_dir++;
+      file.close();
+    }
+  }
 
   REQUIRE(files_in_dir == 1);
 
