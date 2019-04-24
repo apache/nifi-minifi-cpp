@@ -50,12 +50,9 @@ install_bison() {
     fi
   fi
   if [ "$BISON_INSTALLED" = "false" ]; then
-    ## ensure that the toolchain is installed
-    INSTALL_BASE="sudo zypper in -y gcc gcc-c++"
-    ${INSTALL_BASE}
-    wget https://ftp.gnu.org/gnu/bison/bison-3.0.4.tar.xz
-    tar xvf bison-3.0.4.tar.xz
-    pushd bison-3.0.4
+    wget https://ftp.gnu.org/gnu/bison/bison-3.0.5.tar.xz
+    tar xvf bison-3.0.5.tar.xz
+    pushd bison-3.0.5
     ./configure
     make
     sudo make install
