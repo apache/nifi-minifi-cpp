@@ -38,11 +38,16 @@ THE SOFTWARE.
 #include <unordered_set>
 #include <vector>
 
+#ifdef __cpp_lib_optional
+#include <optional>
+#define CXXOPTS_HAS_OPTIONAL
+#endif
+
 namespace cxxopts
 {
   static constexpr struct {
     uint8_t major, minor, patch;
-  } version = {2, 1, 0};
+  } version = {2, 1, 2};
 }
 
 //when we ask cxxopts to use Unicode, help strings are processed using ICU,
@@ -197,7 +202,7 @@ namespace cxxopts
   T
   toLocalString(T&& t)
   {
-    return t;
+    return std::forward<T>(t);
   }
 
   inline
@@ -697,6 +702,17 @@ namespace cxxopts
       value.push_back(v);
     }
 
+#ifdef CXXOPTS_HAS_OPTIONAL
+    template <typename T>
+    void
+    parse_value(const std::string& text, std::optional<T>& value)
+    {
+      T result;
+      parse_value(text, result);
+      value = std::move(result);
+    }
+#endif
+
     template <typename T>
     struct type_is_container
     {
@@ -855,13 +871,13 @@ namespace cxxopts
 
       standard_value()
       {
-        set_implicit();
+        set_default_and_implicit();
       }
 
       standard_value(bool* b)
       : abstract_value(b)
       {
-        set_implicit();
+        set_default_and_implicit();
       }
 
       std::shared_ptr<Value>
@@ -873,8 +889,10 @@ namespace cxxopts
       private:
 
       void
-      set_implicit()
+      set_default_and_implicit()
       {
+        m_default = true;
+        m_default_value = "false";
         m_implicit = true;
         m_implicit_value = "true";
       }
@@ -1001,7 +1019,6 @@ namespace cxxopts
     {
       ensure_value(details);
       m_value->parse();
-      m_count++;
     }
 
     size_t
@@ -1355,7 +1372,7 @@ namespace cxxopts
     {
       auto desc = o.desc;
 
-      if (o.has_default)
+      if (o.has_default && (!o.is_boolean || o.default_value != "false"))
       {
         desc += toLocalString(" (default: " + o.default_value + ")");
       }

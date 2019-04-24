@@ -1,5 +1,10 @@
 [![Build Status](https://travis-ci.org/jarro2783/cxxopts.svg?branch=master)](https://travis-ci.org/jarro2783/cxxopts)
 
+# Release versions
+
+Note that `master` is generally a work in progress, and you probably want to use a
+tagged release version.
+
 # Quick start
 
 This is a lightweight C++ option parser library, supporting the standard GNU
@@ -51,6 +56,17 @@ exception will be thrown.
 
 Note that the result of `options.parse` should only be used as long as the
 `options` object that created it is in scope.
+
+## Exceptions
+
+Exceptional situations throw C++ exceptions. There are two types of
+exceptions: errors defining the options, and errors when parsing a list of
+arguments. All exceptions derive from `cxxopts::OptionException`. Errors
+defining options derive from `cxxopts::OptionSpecException` and errors
+parsing arguments derive from `cxxopts::OptionParseException`.
+
+All exceptions define a `what()` function to get a printable string
+explaining the error.
 
 ## Help groups
 
@@ -116,4 +132,3 @@ expressions. For example GCC >= 4.9 or clang with libc++.
 # TODO list
 
 * Allow unrecognised options.
-* Various help strings.

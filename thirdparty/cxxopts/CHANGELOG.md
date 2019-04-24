@@ -3,6 +3,19 @@
 This is the changelog for `cxxopts`, a C++11 library for parsing command line
 options. The project adheres to semantic versioning.
 
+## 2.1.2
+
+### Bug Fixes
+
+* Use `std::forward` instead of returning a copy in `toLocalString`.
+
+## 2.1.1
+
+### Bug Fixes
+
+* Revert the change adding `const` type for `argv`, because most users expect
+  to pass a non-const `argv` from `main`.
+
 ## 2.1
 
 ### Changed
@@ -12,12 +25,22 @@ options. The project adheres to semantic versioning.
   when a positional argument could follow an option with an implicit value.
   For example, `--foo value`, where `foo` has an implicit value, will be
   parsed as `--foo=implicit` and a positional argument `value`.
-* Fixed an ambiguous overload in the `parse_positional` function when an
-  `initializer_list` was directly passed.
+* Boolean values are no longer special, but are just an option with a default
+  and implicit value.
+
+### Added
+
+* Added support for `std::optional` as a storage type.
+* Allow the help string to be customised.
+* Use `const` for the type in the `argv` parameter, since the contents of the
+  arguments is never modified.
 
 ### Bug Fixes
 
 * Building against GCC 4.9 was broken due to overly strict shadow warnings.
+* Fixed an ambiguous overload in the `parse_positional` function when an
+  `initializer_list` was directly passed.
+* Fixed precedence in the Boolean value regex.
 
 ## 2.0
 
