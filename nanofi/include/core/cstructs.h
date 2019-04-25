@@ -22,6 +22,11 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#ifdef _WIN32
+#define NOMINMAX
+#include <winsock2.h>
+#endif
+
 #ifdef _MSC_VER
 #define DEPRECATED __declspec(deprecated)
 #elif defined(__GNUC__) | defined(__clang__)
@@ -136,6 +141,12 @@ typedef struct file_buffer {
   uint64_t file_len;
 } file_buffer;
 
-typedef struct cstream cstream;
+#ifndef _WIN32
+typedef int SOCKET;
+#endif
+
+typedef struct cstream {
+  SOCKET socket_;
+} cstream;
 
 #endif /* LIBMINIFI_SRC_CAPI_CSTRUCTS_H_ */

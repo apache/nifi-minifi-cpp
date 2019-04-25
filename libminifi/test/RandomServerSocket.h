@@ -16,31 +16,26 @@
  * limitations under the License.
  */
 
-#ifndef NIFI_MINIFI_CPP_CXXSTRUCTS_H
-#define NIFI_MINIFI_CPP_CXXSTRUCTS_H
+#ifndef NIFI_MINIFI_CPP_RANDOMSERVERSOCKET_H
+#define NIFI_MINIFI_CPP_RANDOMSERVERSOCKET_H
 
-#include "cstructs.h"
-#include "cxx/Plan.h"
-#include "io/DataStream.h"
+#include "io/ServerSocket.h"
 
-struct flow : public ExecutionPlan {
-  using ExecutionPlan::ExecutionPlan;
+namespace org {
+namespace apache {
+namespace nifi {
+namespace minifi {
+namespace io {
+
+class RandomServerSocket : public ServerSocket {
+ public:
+  RandomServerSocket(const std::string& host = "localhost", uint16_t offset = 30000, uint16_t range = 10000, uint16_t retries = 100);
 };
 
-struct standalone_processor : public core::Processor {
-  using core::Processor::Processor;
-};
+} /* namespace io */
+} /* namespace minifi */
+} /* namespace nifi */
+} /* namespace apache */
+} /* namespace org */
 
-struct processor : public core::Processor {
-  using core::Processor::Processor;
-};
-
-struct processor_session : public core::ProcessSession {
-  using core::ProcessSession::ProcessSession;
-};
-
-struct processor_context : public core::ProcessContext {
-  using core::ProcessContext::ProcessContext;
-};
-
-#endif //NIFI_MINIFI_CPP_CXXSTRUCTS_H
+#endif //NIFI_MINIFI_CPP_RANDOMSERVERSOCKET_H

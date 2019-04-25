@@ -108,7 +108,9 @@ class Socket : public BaseStream {
    * Return the port for this socket
    * @returns port
    */
-  uint16_t getPort();
+  uint16_t getPort() const {
+    return port_;
+  }
 
   // data stream extensions
   /**
@@ -276,6 +278,12 @@ class Socket : public BaseStream {
 
 
   bool nonBlocking_;
+
+ protected:
+  void setPort(uint16_t port) {
+    port_ = port;
+  }
+
  private:
   std::shared_ptr<logging::Logger> logger_;
   static std::string init_hostname() {
