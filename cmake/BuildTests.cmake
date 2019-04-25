@@ -97,7 +97,7 @@ SET(SPD_LIB spd_lib)
 add_library(${SPD_LIB} STATIC ${SPD_SOURCES})
 
 SET(TEST_BASE_LIB test_base)
-add_library(${TEST_BASE_LIB} STATIC "${TEST_DIR}/TestBase.cpp")
+add_library(${TEST_BASE_LIB} STATIC "${TEST_DIR}/TestBase.cpp" "${TEST_DIR}/RandomServerSocket.cpp")
 target_include_directories(${TEST_BASE_LIB} BEFORE PRIVATE "${CMAKE_SOURCE_DIR}/thirdparty/catch")
 target_include_directories(${TEST_BASE_LIB} BEFORE PRIVATE "${CMAKE_SOURCE_DIR}/libminifi/include/")
 target_include_directories(${TEST_BASE_LIB} BEFORE PRIVATE "${CMAKE_SOURCE_DIR}/thirdparty/cron")
@@ -139,7 +139,7 @@ FOREACH(testfile ${NANOFI_UNIT_TESTS})
     target_include_directories(${testfilename} BEFORE PRIVATE "${CMAKE_SOURCE_DIR}/extensions/standard-processors/processors/")
     target_include_directories(${testfilename} BEFORE PRIVATE "${CMAKE_SOURCE_DIR}/libminifi/test")
     appendIncludes("${testfilename}")
-    target_link_libraries(${testfilename} ${CMAKE_THREAD_LIBS_INIT} ${CATCH_MAIN_LIB} nanofi)
+    target_link_libraries(${testfilename} ${CMAKE_THREAD_LIBS_INIT} ${CATCH_MAIN_LIB} ${TEST_BASE_LIB}  nanofi)
     
     if (APPLE)
     	# minifi-standard-processors
