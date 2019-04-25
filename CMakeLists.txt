@@ -21,7 +21,7 @@ cmake_minimum_required(VERSION 3.0)
 project(nifi-minifi-cpp)
 set(PROJECT_NAME "nifi-minifi-cpp")
 set(PROJECT_VERSION_MAJOR 0)
-set(PROJECT_VERSION_MINOR 6)
+set(PROJECT_VERSION_MINOR 7)
 set(PROJECT_VERSION_PATCH 0)
 
 include(CMakeDependentOption)
