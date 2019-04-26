@@ -328,9 +328,11 @@ public class JniProcessSession implements ProcessSession {
     @Override
     public FlowFile importFrom(Path source, boolean keepSourceFile, FlowFile destination){
         try {
-            copyData(Files.newInputStream(source),write(destination));
-            if (!keepSourceFile){
-                Files.delete(source);
+            try(OutputStream out = write(destination)) {
+                copyData(Files.newInputStream(source), out);
+                if (!keepSourceFile) {
+                    Files.delete(source);
+                }
             }
         } catch (IOException e) {
             return null;
@@ -341,7 +343,9 @@ public class JniProcessSession implements ProcessSession {
     @Override
     public FlowFile importFrom(InputStream source, FlowFile destination){
         try {
-            copyData(source,write(destination));
+            try(OutputStream out = write(destination)) {
+                copyData(source, out);
+            }
         } catch (IOException e) {
             return null;
         }
