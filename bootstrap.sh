@@ -277,6 +277,7 @@ add_dependency COAP_ENABLED "autoconf"
 add_dependency COAP_ENABLED "libtool"
 
 add_disabled_option JNI_ENABLED ${FALSE} "ENABLE_JNI"
+add_dependency JNI_ENABLED "jnibuild"
 
 TESTS_DISABLED=${FALSE}
 

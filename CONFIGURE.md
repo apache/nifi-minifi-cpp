@@ -322,4 +322,6 @@ The MQTTController Service can be configured for MQTT connectivity and provide t
          Network Controllers: en2,en3
          Max Throughput: 1,024,1024
          Max Payload: 1,024,1024
-         
+
+### JNI Functionality
+Please see the [JNI Configuration Guide](JNI.md).
