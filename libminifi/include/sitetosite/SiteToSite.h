@@ -281,7 +281,7 @@ class Transaction {
     return _direction;
   }
   // getCRC
-  long getCRC() {
+  uint64_t getCRC() const {
     return crcStream.getCRC();
   }
   // updateCRC

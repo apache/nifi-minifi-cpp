@@ -237,7 +237,7 @@ bool SiteToSiteClient::confirm(std::string transactionID) {
     // be listening. As a result, it will re-send the data. By doing this two-phase commit, we narrow the
     // Critical Section involved in this transaction so that rather than the Critical Section being the
     // time window involved in the entire transaction, it is reduced to a simple round-trip conversation.
-    int64_t crcValue = transaction->getCRC();
+    const auto crcValue = transaction->getCRC();
     std::string crc = std::to_string(crcValue);
     logger_->log_debug("Site2Site Send confirm with CRC %d to transaction %s", transaction->getCRC(), transactionID);
     ret = writeResponse(transaction, CONFIRM_TRANSACTION, crc);
@@ -273,7 +273,7 @@ bool SiteToSiteClient::confirm(std::string transactionID) {
     if (code == CONFIRM_TRANSACTION) {
       logger_->log_debug("Site2Site transaction %s peer confirm transaction with CRC %s", transactionID, message);
       if (this->_currentVersion > 3) {
-        int64_t crcValue = transaction->getCRC();
+        const auto crcValue = transaction->getCRC();
         std::string crc = std::to_string(crcValue);
         if (message == crc) {
           logger_->log_debug("Site2Site transaction %s CRC matched", transactionID);

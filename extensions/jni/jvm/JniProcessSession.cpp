@@ -227,7 +227,14 @@ jobject Java_org_apache_nifi_processor_JniProcessSession_putAttribute(JNIEnv *en
     return nullptr;
   }
 
-  ptr->get()->addAttribute(JniStringToUTF(env, key), JniStringToUTF(env, value));
+  auto resKey = JniStringToUTF(env, key);
+  auto resValue = JniStringToUTF(env, value);
+
+  if (!ptr->get()->addAttribute(resKey, resValue)) {
+    if (resKey != "uuid") { // don't update the keyed attribute uuid
+      ptr->get()->updateAttribute(resKey, resValue);
+    }
+  }
 
   return ff;
 

@@ -138,7 +138,7 @@ class CRCStream : public BaseStream {
 
   void updateCRC(uint8_t *buffer, uint32_t length);
 
-  uint64_t getCRC() {
+  uint64_t getCRC() const {
     return crc_;
   }
 
