@@ -55,7 +55,7 @@ static void decodeQuantum(unsigned char *dest, const char *src)
  * Given a base64 string at src, decode it and return an allocated memory in
  * the *outptr. Returns the length of the decoded data.
  */
-size_t Curl_base64_decode(const char *src, unsigned char **outptr)
+static size_t Curl_base64_decode(const char *src, unsigned char **outptr)
 {
   int length = 0;
   int equalsTerm = 0;
@@ -117,7 +117,7 @@ size_t Curl_base64_decode(const char *src, unsigned char **outptr)
  * went wrong, -1 is returned.
  *
  */
-size_t Curl_base64_encode(const char *inp, size_t insize, char **outptr)
+static size_t Curl_base64_encode(const char *inp, size_t insize, char **outptr)
 {
   unsigned char ibuf[3];
   unsigned char obuf[4];

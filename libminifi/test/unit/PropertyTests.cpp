@@ -107,3 +107,69 @@ TEST_CASE("Test Trimmer Left", "[testTrims]") {
   REQUIRE(test.c_str()[1] == ' ');
 }
 
+TEST_CASE("Test Permissions Conversion", "[testPermissions]") {
+  uint32_t permissions = 0U;
+
+  REQUIRE(true == org::apache::nifi::minifi::core::Property::StringToPermissions("0777", permissions));
+  REQUIRE(0777 == permissions);
+
+  REQUIRE(true == org::apache::nifi::minifi::core::Property::StringToPermissions("0000", permissions));
+  REQUIRE(0000 == permissions);
+
+  REQUIRE(true == org::apache::nifi::minifi::core::Property::StringToPermissions("0644", permissions));
+  REQUIRE(0644 == permissions);
+
+  REQUIRE(false == org::apache::nifi::minifi::core::Property::StringToPermissions("0999", permissions));
+
+  REQUIRE(false == org::apache::nifi::minifi::core::Property::StringToPermissions("999", permissions));
+
+  REQUIRE(false == org::apache::nifi::minifi::core::Property::StringToPermissions("0644a", permissions));
+
+  REQUIRE(false == org::apache::nifi::minifi::core::Property::StringToPermissions("07777", permissions));
+
+  REQUIRE(true == org::apache::nifi::minifi::core::Property::StringToPermissions("rwxrwxrwx", permissions));
+  REQUIRE(0777 == permissions);
+
+  REQUIRE(true == org::apache::nifi::minifi::core::Property::StringToPermissions("---------", permissions));
+  REQUIRE(0000 == permissions);
+
+  REQUIRE(true == org::apache::nifi::minifi::core::Property::StringToPermissions("rwxrw-r--", permissions));
+  REQUIRE(0764 == permissions);
+
+  REQUIRE(true == org::apache::nifi::minifi::core::Property::StringToPermissions("r--r--r--", permissions));
+  REQUIRE(0444 == permissions);
+
+  REQUIRE(false == org::apache::nifi::minifi::core::Property::StringToPermissions("wxrwxrwxr", permissions));
+
+  REQUIRE(false == org::apache::nifi::minifi::core::Property::StringToPermissions("foobarfoo", permissions));
+
+  REQUIRE(false == org::apache::nifi::minifi::core::Property::StringToPermissions("foobar", permissions));
+}
+
+TEST_CASE("Test DateTime Conversion", "[testDateTime]") {
+  int64_t timestamp = 0LL;
+
+  REQUIRE(true == org::apache::nifi::minifi::core::Property::StringToDateTime("1970-01-01T00:00:00Z", timestamp));
+  REQUIRE(0LL == timestamp);
+
+  REQUIRE(true == org::apache::nifi::minifi::core::Property::StringToDateTime("2000-06-17T12:34:21Z", timestamp));
+  REQUIRE(961245261LL == timestamp);
+
+  REQUIRE(true == org::apache::nifi::minifi::core::Property::StringToDateTime("2038-01-19T03:14:07Z", timestamp));
+  REQUIRE(2147483647LL == timestamp);
+
+  REQUIRE(true == org::apache::nifi::minifi::core::Property::StringToDateTime("2065-01-24T05:20:00Z", timestamp));
+  REQUIRE(3000000000LL == timestamp);
+
+  REQUIRE(false == org::apache::nifi::minifi::core::Property::StringToDateTime("1970-01-01A00:00:00Z", timestamp));
+
+  REQUIRE(false == org::apache::nifi::minifi::core::Property::StringToDateTime("1970-01-01T00:00:00", timestamp));
+
+  REQUIRE(false == org::apache::nifi::minifi::core::Property::StringToDateTime("1970-01-01T00:00:00Zfoo", timestamp));
+
+  REQUIRE(false == org::apache::nifi::minifi::core::Property::StringToDateTime("1969-01-01T00:00:00Z", timestamp));
+
+  REQUIRE(false == org::apache::nifi::minifi::core::Property::StringToDateTime("1970-13-01T00:00:00Z", timestamp));
+
+  REQUIRE(false == org::apache::nifi::minifi::core::Property::StringToDateTime("foobar", timestamp));
+}

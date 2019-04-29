@@ -37,6 +37,7 @@
 
 #include "PropertyValue.h"
 #include "utils/StringUtils.h"
+#include "utils/TimeUtil.h"
 
 namespace org {
 namespace apache {
@@ -304,7 +305,7 @@ class Property {
   }
 
 // Convert String
-  static bool StringToTime(std::string input, int64_t &output, TimeUnit &timeunit) {
+  static bool StringToTime(const std::string& input, int64_t &output, TimeUnit &timeunit) {
     if (input.size() == 0) {
       return false;
     }
@@ -355,6 +356,55 @@ class Property {
       return true;
     } else
       return false;
+  }
+
+  static bool StringToDateTime(const std::string& input, int64_t& output) {
+    int64_t temp = pareDateTimeStr(input);
+    if (temp == -1) {
+      return false;
+    }
+    output = temp;
+    return true;
+  }
+
+  static bool StringToPermissions(const std::string& input, uint32_t& output) {
+    uint32_t temp = 0U;
+    if (input.size() == 9U) {
+      /* Probably rwxrwxrwx formatted */
+      for (size_t i = 0; i < 3; i++) {
+        if (input[i * 3] == 'r') {
+          temp |= 04 << ((2 - i) * 3);
+        } else if (input[i * 3] != '-') {
+          return false;
+        }
+        if (input[i * 3 + 1] == 'w') {
+          temp |= 02 << ((2 - i) * 3);
+        } else if (input[i * 3 + 1] != '-') {
+          return false;
+        }
+        if (input[i * 3 + 2] == 'x') {
+          temp |= 01 << ((2 - i) * 3);
+        } else if (input[i * 3 + 2] != '-') {
+          return false;
+        }
+      }
+    } else {
+      /* Probably octal */
+      try {
+        size_t pos = 0U;
+        temp = std::stoul(input, &pos, 8);
+        if (pos != input.size()) {
+          return false;
+        }
+        if ((temp & ~static_cast<uint32_t>(0777)) != 0U) {
+          return false;
+        }
+      } catch (...) {
+        return false;
+      }
+    }
+    output = temp;
+    return true;
   }
 
   // Convert String to Integer

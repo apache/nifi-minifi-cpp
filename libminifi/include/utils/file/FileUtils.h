@@ -34,6 +34,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <dirent.h>
+#include <errno.h>
 #endif
 #endif
 #include <cstdio>
@@ -49,6 +50,9 @@
 #include <tchar.h> // _tcscpy,_tcscat,_tcscmp
 #include <string> // string
 #include <algorithm> // replace
+#endif
+#ifdef __APPLE__
+#include <mach-o/dyld.h>
 #endif
 
 #include "core/logging/LoggerConfiguration.h"
@@ -196,6 +200,29 @@ class FileUtils {
     return 0;
   }
 
+#ifndef WIN32
+  static bool get_permissions(const std::string &path, uint32_t &permissions) {
+    struct stat result;
+    if (stat(path.c_str(), &result) == 0) {
+      permissions = result.st_mode & (S_IRWXU | S_IRWXG | S_IRWXO);
+      return true;
+    }
+    return false;
+  }
+#endif
+
+#ifndef WIN32
+  static bool get_uid_gid(const std::string &path, uint64_t &uid, uint64_t &gid) {
+    struct stat result;
+    if (stat(path.c_str(), &result) == 0) {
+      uid = result.st_uid;
+      gid = result.st_gid;
+      return true;
+    }
+    return false;
+  }
+#endif
+
   static int create_dir(const std::string &path, bool create = true) {
 #ifdef BOOST_VERSION
     boost::filesystem::path dir(path);
@@ -213,7 +240,9 @@ class FileUtils {
 #ifdef WIN32
       _mkdir(path.c_str());
 #else
-      mkdir(path.c_str(), 0700);
+      if (mkdir(path.c_str(), 0700) != 0 && errno != EEXIST) {
+        return -1;
+      }
 #endif
       return 0;
     }
@@ -385,6 +414,141 @@ class FileUtils {
     } while (FindNextFileA(hFind, &FindFileData));
     FindClose(hFind);
 #endif
+  }
+
+  static std::string concat_path(const std::string& root, const std::string& child) {
+    if (root.empty()) {
+      return child;
+    }
+    std::stringstream new_path;
+    if (root.back() == get_separator()) {
+      new_path << root << child;
+    } else {
+      new_path << root << get_separator() << child;
+    }
+    return new_path.str();
+  }
+
+  static std::string get_parent_path(const std::string& path) {
+    if (path.empty()) {
+      /* Empty path has no parent */
+      return "";
+    }
+    bool absolute = false;
+    size_t root_pos = 0U;
+#ifdef WIN32
+    if (path[0] == '\\') {
+      absolute = true;
+      if (path.size() < 2U) {
+        return "";
+      }
+      if (path[1] == '\\') {
+        if (path.size() >= 4U &&
+           (path[2] == '?' || path[2] == '.') &&
+            path[3] == '\\') {
+          /* Probably an UNC path */
+          root_pos = 4U;
+        } else {
+          /* Probably a \\server\-type path */
+          root_pos = 2U;
+        }
+        root_pos = path.find_first_of("\\", root_pos);
+        if (root_pos == std::string::npos) {
+          return "";
+        }
+      }
+    } else if (path.size() >= 3U &&
+               toupper(path[0]) >= 'A' &&
+               toupper(path[0]) <= 'Z' &&
+               path[1] == ':' &&
+               path[2] == '\\') {
+      absolute = true;
+      root_pos = 2U;
+    }
+#else
+    if (path[0] == '/') {
+      absolute = true;
+      root_pos = 0U;
+    }
+#endif
+    /* Ignore trailing separators */
+    size_t last_pos = path.size() - 1;
+    while (last_pos > root_pos && path[last_pos] == get_separator()) {
+      last_pos--;
+    }
+    if (absolute && last_pos == root_pos) {
+      /* This means we are only a root */
+      return "";
+    }
+    /* Find parent */
+    size_t last_separator = path.find_last_of(get_separator(), last_pos);
+    if (last_separator == std::string::npos || last_separator < root_pos) {
+      return "";
+    }
+    return path.substr(0, last_separator + 1);
+  }
+
+  /*
+   * Returns the absolute path of the current executable
+   */
+  static std::string get_executable_path() {
+#if defined(__linux__)
+    std::vector<char> buf(1024U);
+    while (true) {
+      ssize_t ret = readlink("/proc/self/exe", buf.data(), buf.size());
+      if (ret == -1) {
+        return "";
+      }
+      if (ret == buf.size()) {
+        /* It may have been truncated */
+        buf.resize(buf.size() * 2);
+        continue;
+      }
+      return std::string(buf.data(), ret);
+    }
+#elif defined(__APPLE__)
+    std::vector<char> buf(PATH_MAX);
+    uint32_t buf_size = buf.size();
+    while (_NSGetExecutablePath(buf.data(), &buf_size) != 0) {
+      buf.resize(buf_size);
+    }
+    std::vector<char> resolved_name(PATH_MAX);
+    if (realpath(buf.data(), resolved_name.data()) == nullptr) {
+      return "";
+    }
+    return std::string(resolved_name.data());
+#elif defined(WIN32)
+    HMODULE hModule = GetModuleHandleA(nullptr);
+    if (hModule == nullptr) {
+      return "";
+    }
+    std::vector<char> buf(1024U);
+    while (true) {
+      size_t ret = GetModuleFileNameA(hModule, buf.data(), buf.size());
+      if (ret == 0U) {
+        return "";
+      }
+      if (ret == buf.size() && GetLastError() == ERROR_INSUFFICIENT_BUFFER) {
+        /* It has been truncated */
+        buf.resize(buf.size() * 2);
+        continue;
+      }
+      return std::string(buf.data());
+    }
+#else
+    return "";
+#endif
+  }
+
+  /*
+   * Returns the absolute path to the directory containing the current executable
+   */
+  static std::string get_executable_dir() {
+    auto executable_path = get_executable_path();
+    if (executable_path.empty()) {
+      return "";
+    }
+    return get_parent_path(executable_path);
   }
 };
 

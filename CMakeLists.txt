@@ -53,15 +53,13 @@ option(BUILD_SHARED_LIBS "Build yaml cpp shared lib" OFF)
 
 cmake_dependent_option(USE_SYSTEM_ZLIB "Instructs the build system to search for and use a zlib library available in the host system" ON "NOT STATIC_BUILD" OFF)
 
+cmake_dependent_option(USE_SYSTEM_LIBSSH2 "Instructs the build system to search for and use a libssh2 library available in the host system" OFF "NOT STATIC_BUILD" OFF)
+
 option(USE_SYSTEM_BZIP2 "Instructs the build system to search for and use a bzip2 library available in the host system" ON)
 option(BUILD_ROCKSDB "Instructs the build system to use RocksDB from the third party directory" ON)
 option(FORCE_WINDOWS "Instructs the build system to force Windows builds when WIN32 is specified" OFF)
 option(DISABLE_CURL "Disables libCurl Properties." OFF)
 
-
-if (OPENSSL_ROOT_DIR )
-	set(OPENSSL_PASSTHROUGH "-DOPENSSL_ROOT_DIR=${OPENSSL_ROOT_DIR}")
-endif()
 
 if(NOT WIN32)
 	if (ENABLE_JNI)
@@ -103,25 +101,6 @@ if(NOT WIN32)
 
 	endif()
 endif()
-
-set(PASSTHROUGH_CMAKE_ARGS -DANDROID_ABI=${ANDROID_ABI}
-                           -DANDROID_PLATFORM=${ANDROID_PLATFORM}
-                           -DANDROID_STL=${ANDROID_STL}
-                           -DCMAKE_LIBRARY_OUTPUT_DIRECTORY=${CMAKE_LIBRARY_OUTPUT_DIRECTORY}
-                           -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-                           -DANDROID_NDK=${ANDROID_NDK}
-                           -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}
-                           -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}
-                           -DCMAKE_MAKE_PROGRAM=${CMAKE_MAKE_PROGRAM}
-                           -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
-                           -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
-                           -DCMAKE_FIND_ROOT_PATH=${CMAKE_FIND_ROOT_PATH}
-                           -DCMAKE_FIND_ROOT_PATH_MODE_PROGRAM=${CMAKE_FIND_ROOT_PATH_MODE_PROGRAM}
-                           -DCMAKE_FIND_ROOT_PATH_MODE_LIBRARY=${CMAKE_FIND_ROOT_PATH_MODE_LIBRARY}
-                           -DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=${CMAKE_FIND_ROOT_PATH_MODE_INCLUDE}
-                           -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
-						   ${OPENSSL_PASSTHROUGH}
-                           -G${CMAKE_GENERATOR})
 
 # Use ccache if present
 find_program(CCACHE_FOUND ccache)
@@ -186,7 +165,6 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 if (NOT OPENSSL_OFF)
 	if(USE_SYSTEM_OPENSSL)
-
 		# Set the right openssl root path
 		if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 		set(OPENSSL_ROOT_DIR "/usr/local/opt/openssl/")
@@ -216,6 +194,30 @@ endif (OPENSSL_FOUND)
 else()
 	list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/winssl")
 endif()
+
+if (OPENSSL_ROOT_DIR )
+    set(OPENSSL_PASSTHROUGH "-DOPENSSL_ROOT_DIR=${OPENSSL_ROOT_DIR}")
+endif()
+
+set(PASSTHROUGH_CMAKE_ARGS -DANDROID_ABI=${ANDROID_ABI}
+        -DANDROID_PLATFORM=${ANDROID_PLATFORM}
+        -DANDROID_STL=${ANDROID_STL}
+        -DCMAKE_LIBRARY_OUTPUT_DIRECTORY=${CMAKE_LIBRARY_OUTPUT_DIRECTORY}
+        -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+        -DANDROID_NDK=${ANDROID_NDK}
+        -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}
+        -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}
+        -DCMAKE_MAKE_PROGRAM=${CMAKE_MAKE_PROGRAM}
+        -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+        -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+        -DCMAKE_FIND_ROOT_PATH=${CMAKE_FIND_ROOT_PATH}
+        -DCMAKE_FIND_ROOT_PATH_MODE_PROGRAM=${CMAKE_FIND_ROOT_PATH_MODE_PROGRAM}
+        -DCMAKE_FIND_ROOT_PATH_MODE_LIBRARY=${CMAKE_FIND_ROOT_PATH_MODE_LIBRARY}
+        -DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=${CMAKE_FIND_ROOT_PATH_MODE_INCLUDE}
+        -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
+        ${OPENSSL_PASSTHROUGH}
+        -G${CMAKE_GENERATOR})
+
 if(WIN32 OR NOT USE_SYSTEM_ZLIB)
   message("Using bundled zlib")
 
@@ -329,6 +331,7 @@ endif()
                 -DLIBRESSL_BIN_DIR=${LIBRESSL_BIN_DIR}
                 -DLIBRESSL_SRC_DIR=${LIBRESSL_SRC_DIR}
                 -DCURL_DISABLE_CRYPTO_AUTH=ON
+                -DCMAKE_USE_LIBSSH2=OFF
                 -DHAVE_GLIBC_STRERROR_R=1
                 -DHAVE_GLIBC_STRERROR_R__TRYRUN_OUTPUT=""
                 -DHAVE_POSIX_STRERROR_R=0
@@ -425,12 +428,14 @@ if(BOOTSTRAP)
     return()
 endif()
 
+message("-------- BOOTSTRAP BEGIN --------")
 execute_process(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}"
                         -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
                         -DCMAKE_MAKE_PROGRAM=${CMAKE_MAKE_PROGRAM}
                         -DBOOTSTRAP=ON
                         ${CMAKE_SOURCE_DIR}
                WORKING_DIRECTORY "${workdir}")
+message("-------- BOOTSTRAP END --------")
                
 add_subdirectory(libminifi)
 
@@ -567,6 +572,34 @@ endif()
 option(ENABLE_BUSTACHE "Enables Bustache (ApplyTemplate) support." OFF)
 if (ENABLE_BUSTACHE)
     createExtension(BUSTACHE-EXTENSIONS "BUSTACHE EXTENSIONS" "This enables bustache functionality including ApplyTemplate." "extensions/bustache" "${TEST_DIR}/bustache-tests" "TRUE" "thirdparty/bustache")
+endif()
+
+## SFTP extensions
+option(ENABLE_SFTP "Enables SFTP support." OFF)
+if ((ENABLE_ALL OR ENABLE_SFTP) AND NOT DISABLE_CURL)
+    if(WIN32 OR NOT USE_SYSTEM_LIBSSH2)
+        include(LibSSH2)
+        use_bundled_libssh2(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
+        list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/libssh2/dummy")
+    else()
+        list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/libssh2/sys")
+        find_package (LibSSH2 REQUIRED)
+    endif()
+
+    createExtension(SFTP "SFTP EXTENSIONS" "This enables SFTP support" "extensions/sftp" "extensions/sftp/tests")
+
+    if(NOT USE_SYSTEM_LIBSSH2)
+        message("minifi-sftp will depend on libssh2-external")
+        add_dependencies(minifi-sftp libssh2-external)
+    endif()
+    if(NOT USE_SYSTEM_CURL)
+        message("minifi-sftp will depend on curl-external")
+        add_dependencies(minifi-sftp curl-external)
+    endif()
+    if(NOT USE_SYSTEM_ZLIB)
+        message("minifi-sftp will depend on zlib-external")
+        add_dependencies(minifi-sftp zlib-external)
+    endif()
 endif()
 
 ## NOW WE CAN ADD LIBRARIES AND EXTENSIONS TO MAIN
