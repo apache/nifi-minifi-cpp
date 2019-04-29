@@ -45,7 +45,7 @@
 #include <arpa/inet.h>
 #endif
 
-#include "base64.h"
+#include "utils/base64.h"
 #include "Driver.h"
 
 #ifdef EXPRESSION_LANGUAGE_USE_DATE

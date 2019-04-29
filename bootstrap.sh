@@ -285,6 +285,11 @@ add_disabled_option OPENCV_ENABLED ${FALSE} "ENABLE_OPENCV"
 
 add_disabled_option OPENCV_ENABLED ${FALSE} "ENABLE_OPENCV"
 
+add_disabled_option SFTP_ENABLED ${FALSE} "ENABLE_SFTP"
+add_dependency SFTP_ENABLED "libssh2"
+add_dependency SFTP_ENABLED "libcurl"
+add_dependency SFTP_ENABLED "openssl"
+
 TESTS_DISABLED=${FALSE}
 
 add_disabled_option SQLITE_ENABLED ${FALSE} "ENABLE_SQLITE"

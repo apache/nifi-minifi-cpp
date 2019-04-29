@@ -18,6 +18,7 @@
 #define __TIME_UTIL_H__
 
 #include <time.h>
+#include <cstdio>
 #include <string.h>
 #include <iomanip>
 #include <sstream>
@@ -38,9 +39,7 @@ inline uint64_t getTimeMillis() {
  * @returns nanoseconds since epoch
  */
 inline uint64_t getTimeNano() {
-
   return std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-
 }
 
 /**
@@ -61,6 +60,66 @@ inline std::string getTimeStr(uint64_t msec, bool enforce_locale = false) {
 
   ret += date;
   return ret;
+}
+
+/**
+ * Parse a datetime in yyyy-MM-dd'T'HH:mm:ssZ format
+ * @param str the datetime string
+ * @returns Unix timestamp
+ */
+inline int64_t pareDateTimeStr(const std::string &str) {
+  /**
+   * There is no strptime on Windows. As long as we have to parse a single date format this is not so bad,
+   * but if multiple formats will have to be supported in the future, it might be worth it to include
+   * an strptime implementation from some BSD on Windows.
+   */
+  uint32_t year;
+  uint8_t month;
+  uint8_t day;
+  uint8_t hours;
+  uint8_t minutes;
+  uint8_t seconds;
+  int read = 0;
+  if (sscanf(str.c_str(), "%4u-%2hhu-%2hhuT%2hhu:%2hhu:%2hhuZ%n", &year, &month, &day, &hours, &minutes, &seconds, &read) != 6) {
+    return -1;
+  }
+  if (read != str.size()) {
+    return -1;
+  }
+
+  if (year < 1970U ||
+      month > 12U ||
+      day > 31U ||
+      hours > 23U ||
+      minutes > 59U ||
+      seconds > 60U) {
+    return -1;
+  }
+
+  struct tm timeinfo{};
+  timeinfo.tm_year = year - 1900;
+  timeinfo.tm_mon = month - 1;
+  timeinfo.tm_mday = day;
+  timeinfo.tm_hour = hours;
+  timeinfo.tm_min = minutes;
+  timeinfo.tm_sec = seconds;
+
+  /* Get local timezone offset */
+  time_t utc = time(nullptr);
+  struct tm now_tm = *gmtime(&utc);
+  now_tm.tm_isdst = 0;
+  time_t local = mktime(&now_tm);
+  if (local == -1) {
+    return -1;
+  }
+  int64_t timezone_offset = utc - local;
+
+  /* Convert parsed date */
+  time_t time = mktime(&timeinfo);
+  if (time == -1) {
+    return -1;
+  }
+  return time + timezone_offset;
 }
 
 #endif
