@@ -18,10 +18,13 @@
 function(use_libre_ssl)
 	message("Using bundled LibreSSL from release")
 	
+	set(BYPRODUCT_PREFIX "lib" CACHE STRING "" FORCE)
 	set(BYPRODUCT_SUFFIX ".a" CACHE STRING "" FORCE)
 	
 	set(BUILD_ARGS "")
 	if (WIN32)
+		set(BYPRODUCT_SUFFIX ".lib" CACHE STRING "" FORCE)
+		set(BYPRODUCT_PREFIX "" CACHE STRING "" FORCE)
 	set(BUILD_ARGS " -GVisual Studio 15 2017")
 	endif(WIN32)
 	ExternalProject_Add(
@@ -37,16 +40,16 @@ function(use_libre_ssl)
 
 	list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/ssl")
 	add_library(crypto STATIC IMPORTED)
-	set_target_properties(crypto PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-install/lib/libcrypto${BYPRODUCT_SUFFIX}")
+	set_target_properties(crypto PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-install/lib/${BYPRODUCT_PREFIX}crypto${BYPRODUCT_SUFFIX}")
 	add_dependencies(crypto libressl-portable)
 					
 	add_library(ssl STATIC IMPORTED)
-	set_target_properties(ssl PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-install/lib/libssl${BYPRODUCT_SUFFIX}")
+	set_target_properties(ssl PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-install/lib/${BYPRODUCT_PREFIX}ssl${BYPRODUCT_SUFFIX}")
 	set_target_properties(ssl PROPERTIES INTERFACE_LINK_LIBRARIES crypto)
 	add_dependencies(ssl libressl-portable)
 	
 	add_library(tls STATIC IMPORTED)
-	set_target_properties(tls PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-install/lib/libtls${BYPRODUCT_SUFFIX}")
+	set_target_properties(tls PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-install/lib/${BYPRODUCT_PREFIX}tls${BYPRODUCT_SUFFIX}")
 	set_target_properties(tls PROPERTIES INTERFACE_LINK_LIBRARIES crypto)
 	add_dependencies(tls libressl-portable)
 	
@@ -55,6 +58,6 @@ function(use_libre_ssl)
 
 	set(OPENSSL_FOUND "YES" CACHE STRING "" FORCE)
 	set(OPENSSL_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/libressl/include" CACHE STRING "" FORCE)
-	set(OPENSSL_LIBRARIES "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-install/lib/libtls${BYPRODUCT_SUFFIX}" "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-install/lib/libssl${BYPRODUCT_SUFFIX}" "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-install/lib/libcrypto${BYPRODUCT_SUFFIX}" CACHE STRING "" FORCE)
+	set(OPENSSL_LIBRARIES "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-install/lib/${BYPRODUCT_PREFIX}tls${BYPRODUCT_SUFFIX}" "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-install/lib/${BYPRODUCT_PREFIX}ssl${BYPRODUCT_SUFFIX}" "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-install/lib/${BYPRODUCT_PREFIX}crypto${BYPRODUCT_SUFFIX}" CACHE STRING "" FORCE)
 	
 endfunction(use_libre_ssl) 
