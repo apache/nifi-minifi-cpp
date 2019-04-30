@@ -15,4 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-# Dummy cURL find for when we use bundled version
+set(CURL_FOUND "YES" CACHE STRING "" FORCE)
+set(CURL_INCLUDE_DIR "${CURL_SRC_DIR}/include" CACHE STRING "" FORCE)
+set(CURL_LIBRARY "${CURL_BIN_DIR}${CURL_BYPRODUCT_DIR}" CACHE STRING "" FORCE)
+set(CURL_LIBRARIES "${CURL_BIN_DIR}${CURL_BYPRODUCT_DIR}" CACHE STRING "" FORCE)

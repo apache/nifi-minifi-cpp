@@ -40,6 +40,7 @@ option(ENABLE_PYTHON "Instructs the build system to enable building shared objec
 cmake_dependent_option(STATIC_BUILD "Attempts to statically link as many dependencies as possible." ON "NOT ENABLE_PYTHON; NOT USE_SHARED_LIBS" OFF)  
 
 cmake_dependent_option(USE_SYSTEM_OPENSSL "Instructs the build system to search for and use an SSL library available in the host system" ON "NOT STATIC_BUILD" OFF)
+option(LIBC_STATIC "Instructs the build system to statically link libstdc++ and glibc into minifiexe. Experiemental" OFF)
 
 option(OPENSSL_OFF "Disables OpenSSL" OFF)
 option(ENABLE_OPS "Enable Operations/zlib Tools" ON)
@@ -200,45 +201,10 @@ if (NOT OPENSSL_OFF)
 		find_package (OpenSSL REQUIRED)
 	
 	else()
-		message("Using bundled LibreSSL")
-		set(BUILD_ARGS "")
-		if (WIN32)
-		set(BUILD_ARGS " -GVisual Studio 15 2017")
-		endif(WIN32)
-		ExternalProject_Add(
-		libressl-portable
-		GIT_REPOSITORY "https://github.com/libressl-portable/portable.git"
-		GIT_TAG "v2.8.3"
-		SOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-src"
-		CMAKE_ARGS ${PASSTHROUGH_CMAKE_ARGS}
-					"-DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-install"
-					"-DLIBRESSL_APPS=OFF"
-					"-DLIBRESSL_TESTS=OFF"
-					"${BUILD_ARGS}"
-		PATCH_COMMAND ./autogen.sh
-		)
-	
+		include(LibreSSL)
+		use_libre_ssl(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
 		list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/ssl")
-		add_library(crypto STATIC IMPORTED)
-		set_target_properties(crypto PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-install/lib/libcrypto.a")
-		add_dependencies(crypto libressl-portable)
-						
-		add_library(ssl STATIC IMPORTED)
-		set_target_properties(ssl PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-install/lib/libssl.a")
-		set_target_properties(ssl PROPERTIES INTERFACE_LINK_LIBRARIES crypto)
-		add_dependencies(ssl libressl-portable)
-		
-		add_library(tls STATIC IMPORTED)
-		set_target_properties(tls PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-install/lib/libtls.a")
-		set_target_properties(tls PROPERTIES INTERFACE_LINK_LIBRARIES crypto)
-		add_dependencies(tls libressl-portable)
-		
-		set(LIBRESSL_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/libressl/" CACHE STRING "" FORCE)
-		set(LIBRESSL_BIN_DIR "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-install/" CACHE STRING "" FORCE)
-	
-		set(OPENSSL_FOUND "YES" CACHE STRING "" FORCE)
-		set(OPENSSL_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/libressl/include" CACHE STRING "" FORCE)
-		set(OPENSSL_LIBRARIES "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-install/lib/libtls.a" "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-install/lib/libssl.a" "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-install/lib/libcrypto.a" CACHE STRING "" FORCE)
+		find_package (OpenSSL REQUIRED)
 	endif()
 if (OPENSSL_FOUND)
   include_directories(${OPENSSL_INCLUDE_DIR})
@@ -337,12 +303,12 @@ endif()
 
   if (WIN32)
  if (CMAKE_BUILD_TYPE MATCHES RelWithDebInfo OR CMAKE_BUILD_TYPE MATCHES Release)
-  set(BYPRODUCT "thirdparty/curl-install/lib/libcurl.lib")
+  set(BYPRODUCT "lib/libcurl.lib")
   else()
-  set(BYPRODUCT "thirdparty/curl-install/lib/libcurl-d.lib")
+  set(BYPRODUCT "lib/libcurl-d.lib")
   endif()
   else()
-  set(BYPRODUCT "thirdparty/curl-install/lib${LIBSUFFIX}/libcurl.a")
+  set(BYPRODUCT "lib${LIBSUFFIX}/libcurl.a")
   endif()
 
   if (WIN32)
@@ -375,16 +341,21 @@ endif()
                "-DCMAKE_C_FLAGS=${CURL_C_FLAGS}"
                "-DCMAKE_CXX_FLAGS=${CURL_CXX_FLAGS}"
 	${PC}
-    BUILD_BYPRODUCTS "thirdparty/${BYPRODUCT}"
+    BUILD_BYPRODUCTS "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/curl-install/${BYPRODUCT}"
   )
 
   if(NOT USE_SYSTEM_OPENSSL OR USE_SYSTEM_OPENSSL STREQUAL "OFF")
     add_dependencies(curl-external libressl-portable)
   endif()
 
+  set(CURL_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/curl/" CACHE STRING "" FORCE)
+  set(CURL_BIN_DIR "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/curl-install/" CACHE STRING "" FORCE)
+  set(CURL_BYPRODUCT_DIR "${BYPRODUCT}" CACHE STRING "" FORCE)
+	
+
   list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/curl/dummy")
   add_library(curl STATIC IMPORTED)
-  set_target_properties(curl PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/${BYPRODUCT}")
+  set_target_properties(curl PROPERTIES IMPORTED_LOCATION "${CURL_BIN_DIR}${BYPRODUCT}")
   
   
   if (OPENSSL_FOUND) 
@@ -395,7 +366,7 @@ endif()
   add_dependencies(curl curl-external)
   set(CURL_FOUND "YES")
   set(CURL_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/curl/include")
-  set(CURL_LIBRARY "${CMAKE_CURRENT_BINARY_DIR}/${BYPRODUCT}" CACHE STRING "" FORCE)
+  set(CURL_LIBRARY "${CURL_BIN_DIR}${BYPRODUCT}" CACHE STRING "" FORCE)
   set(CURL_LIBRARIES ${CURL_LIBRARY} CACHE STRING "" FORCE)
  else()
   message("Using System cURL")

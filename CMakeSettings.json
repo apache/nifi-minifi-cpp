@@ -98,15 +98,11 @@
         },
         {
           "name": "USE_SYSTEM_OPENSSL",
-          "value": "ON"
+          "value": "OFF"
         },
         {
           "name": "PORTABLE",
           "value": "ON"
-        },
-        {
-          "name": "OPENSSL_ROOT_DIR",
-          "value": "C:\\OpenSSL-Win64"
         },
         {
           "name": "USE_SYSTEM_ZLIB",
