@@ -40,6 +40,7 @@ option(ENABLE_PYTHON "Instructs the build system to enable building shared objec
 cmake_dependent_option(STATIC_BUILD "Attempts to statically link as many dependencies as possible." ON "NOT ENABLE_PYTHON; NOT USE_SHARED_LIBS" OFF)  
 
 cmake_dependent_option(USE_SYSTEM_OPENSSL "Instructs the build system to search for and use an SSL library available in the host system" ON "NOT STATIC_BUILD" OFF)
+option(LIBC_STATIC "Instructs the build system to statically link libstdc++ and glibc into minifiexe. Experiemental" OFF)
 
 option(OPENSSL_OFF "Disables OpenSSL" OFF)
 option(ENABLE_OPS "Enable Operations/zlib Tools" ON)
@@ -200,45 +201,8 @@ if (NOT OPENSSL_OFF)
 		find_package (OpenSSL REQUIRED)
 	
 	else()
-		message("Using bundled LibreSSL")
-		set(BUILD_ARGS "")
-		if (WIN32)
-		set(BUILD_ARGS " -GVisual Studio 15 2017")
-		endif(WIN32)
-		ExternalProject_Add(
-		libressl-portable
-		GIT_REPOSITORY "https://github.com/libressl-portable/portable.git"
-		GIT_TAG "v2.8.3"
-		SOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-src"
-		CMAKE_ARGS ${PASSTHROUGH_CMAKE_ARGS}
-					"-DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-install"
-					"-DLIBRESSL_APPS=OFF"
-					"-DLIBRESSL_TESTS=OFF"
-					"${BUILD_ARGS}"
-		PATCH_COMMAND ./autogen.sh
-		)
-	
-		list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/ssl")
-		add_library(crypto STATIC IMPORTED)
-		set_target_properties(crypto PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-install/lib/libcrypto.a")
-		add_dependencies(crypto libressl-portable)
-						
-		add_library(ssl STATIC IMPORTED)
-		set_target_properties(ssl PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-install/lib/libssl.a")
-		set_target_properties(ssl PROPERTIES INTERFACE_LINK_LIBRARIES crypto)
-		add_dependencies(ssl libressl-portable)
-		
-		add_library(tls STATIC IMPORTED)
-		set_target_properties(tls PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-install/lib/libtls.a")
-		set_target_properties(tls PROPERTIES INTERFACE_LINK_LIBRARIES crypto)
-		add_dependencies(tls libressl-portable)
-		
-		set(LIBRESSL_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/libressl/" CACHE STRING "" FORCE)
-		set(LIBRESSL_BIN_DIR "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-install/" CACHE STRING "" FORCE)
-	
-		set(OPENSSL_FOUND "YES" CACHE STRING "" FORCE)
-		set(OPENSSL_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/libressl/include" CACHE STRING "" FORCE)
-		set(OPENSSL_LIBRARIES "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-install/lib/libtls.a" "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-install/lib/libssl.a" "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-install/lib/libcrypto.a" CACHE STRING "" FORCE)
+		include(LibreSSL)
+		use_libre_ssl()
 	endif()
 if (OPENSSL_FOUND)
   include_directories(${OPENSSL_INCLUDE_DIR})
