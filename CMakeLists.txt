@@ -202,7 +202,9 @@ if (NOT OPENSSL_OFF)
 	
 	else()
 		include(LibreSSL)
-		use_libre_ssl()
+		use_libre_ssl(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
+		list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/ssl")
+		find_package (OpenSSL REQUIRED)
 	endif()
 if (OPENSSL_FOUND)
   include_directories(${OPENSSL_INCLUDE_DIR})
@@ -301,12 +303,12 @@ endif()
 
   if (WIN32)
  if (CMAKE_BUILD_TYPE MATCHES RelWithDebInfo OR CMAKE_BUILD_TYPE MATCHES Release)
-  set(BYPRODUCT "thirdparty/curl-install/lib/libcurl.lib")
+  set(BYPRODUCT "lib/libcurl.lib")
   else()
-  set(BYPRODUCT "thirdparty/curl-install/lib/libcurl-d.lib")
+  set(BYPRODUCT "lib/libcurl-d.lib")
   endif()
   else()
-  set(BYPRODUCT "thirdparty/curl-install/lib${LIBSUFFIX}/libcurl.a")
+  set(BYPRODUCT "lib${LIBSUFFIX}/libcurl.a")
   endif()
 
   if (WIN32)
@@ -339,16 +341,21 @@ endif()
                "-DCMAKE_C_FLAGS=${CURL_C_FLAGS}"
                "-DCMAKE_CXX_FLAGS=${CURL_CXX_FLAGS}"
 	${PC}
-    BUILD_BYPRODUCTS "thirdparty/${BYPRODUCT}"
+    BUILD_BYPRODUCTS "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/curl-install/${BYPRODUCT}"
   )
 
   if(NOT USE_SYSTEM_OPENSSL OR USE_SYSTEM_OPENSSL STREQUAL "OFF")
     add_dependencies(curl-external libressl-portable)
   endif()
 
+  set(CURL_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/curl/" CACHE STRING "" FORCE)
+  set(CURL_BIN_DIR "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/curl-install/" CACHE STRING "" FORCE)
+  set(CURL_BYPRODUCT_DIR "${BYPRODUCT}" CACHE STRING "" FORCE)
+	
+
   list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/curl/dummy")
   add_library(curl STATIC IMPORTED)
-  set_target_properties(curl PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/${BYPRODUCT}")
+  set_target_properties(curl PROPERTIES IMPORTED_LOCATION "${CURL_BIN_DIR}${BYPRODUCT}")
   
   
   if (OPENSSL_FOUND) 
@@ -359,7 +366,7 @@ endif()
   add_dependencies(curl curl-external)
   set(CURL_FOUND "YES")
   set(CURL_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/curl/include")
-  set(CURL_LIBRARY "${CMAKE_CURRENT_BINARY_DIR}/${BYPRODUCT}" CACHE STRING "" FORCE)
+  set(CURL_LIBRARY "${CURL_BIN_DIR}${BYPRODUCT}" CACHE STRING "" FORCE)
   set(CURL_LIBRARIES ${CURL_LIBRARY} CACHE STRING "" FORCE)
  else()
   message("Using System cURL")

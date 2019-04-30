@@ -122,10 +122,8 @@ set_target_properties(core-minifi PROPERTIES LINK_FLAGS "/WHOLEARCHIVE")
 
 
 # Include OpenSSL
-
 if (OPENSSL_FOUND)
 	include_directories(${OPENSSL_INCLUDE_DIR})
-	#target_link_libraries (core-minifi ${OPENSSL_LIBRARIES})
 	if (WIN32)
 		foreach(OPENSSL_LIB ${OPENSSL_LIBRARIES})
 			if (OPENSSL_LIB MATCHES "\\.lib$" OR OPENSSL_LIB MATCHES "\\.dll$" )
