@@ -218,7 +218,7 @@ bool ConsumeWindowsEventLog::subscribe(const std::shared_ptr<core::ProcessContex
 
         return 0UL;
       },
-		  EvtSubscribeToFutureEvents | EvtSubscribeStrict);
+      EvtSubscribeToFutureEvents | EvtSubscribeStrict);
 
   if (!subscriptionHandle_) {
     logger_->log_error("Unable to subscribe with provided parameters, received the following error code: %d", GetLastError());
