@@ -79,7 +79,6 @@ protected:
   void unsubscribe();
   int processQueue(const std::shared_ptr<core::ProcessSession> &session);
 
-  // !!! Need to put it common Windows util class.
   void LogWindowsError();
 private:
   // Logger
@@ -89,9 +88,9 @@ private:
   std::string computerName_;
   int64_t inactiveDurationToReconnect_{};
   EVT_HANDLE subscriptionHandle_{};
-  uint32_t maxBufferSize_{};
-  std::shared_ptr<core::ProcessSession> session_;
+  uint64_t maxBufferSize_{};
   DWORD lastActivityTimestamp_{};
+  std::shared_ptr<core::ProcessSessionFactory> sessionFactory_;
 };
 
 REGISTER_RESOURCE(ConsumeWindowsEventLog, "Windows Event Log Subscribe Callback to receive FlowFiles from Events on Windows.");

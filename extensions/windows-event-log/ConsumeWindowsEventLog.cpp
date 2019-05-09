@@ -42,10 +42,7 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-static const size_t MAX_RECORD_BUFFER_SIZE = 0x10000; // 64k
 const std::string ConsumeWindowsEventLog::ProcessorName("ConsumeWindowsEventLog");
-
-static const int DEFAULT_MAX_BUFFER = 1024 * 1024;
 
 core::Property ConsumeWindowsEventLog::Channel(
   core::PropertyBuilder::createProperty("Channel")->
@@ -66,7 +63,7 @@ core::Property ConsumeWindowsEventLog::Query(
 core::Property ConsumeWindowsEventLog::MaxBufferSize(
   core::PropertyBuilder::createProperty("Max Buffer Size")->
   isRequired(true)->
-  withDefaultValue(std::to_string(1024 * 1024))->
+  withDefaultValue<core::DataSizeValue>("1 MB")->
   withDescription(
     "The individual Event Log XMLs are rendered to a buffer."
     " This specifies the maximum size in bytes that the buffer will be allowed to grow to. (Limiting the maximum size of an individual Event XML.)")->
@@ -75,7 +72,7 @@ core::Property ConsumeWindowsEventLog::MaxBufferSize(
 core::Property ConsumeWindowsEventLog::InactiveDurationToReconnect(
   core::PropertyBuilder::createProperty("Inactive Duration To Reconnect")->
   isRequired(true)->
-  withDefaultValue("10 mins")->
+  withDefaultValue<core::TimePeriodValue>("10 min")->
   withDescription(
     "If no new event logs are processed for the specified time period, "
     " this processor will try reconnecting to recover from a state where any further messages cannot be consumed."
@@ -89,12 +86,9 @@ ConsumeWindowsEventLog::ConsumeWindowsEventLog(const std::string& name, utils::I
   : core::Processor(name, uuid), logger_(logging::LoggerFactory<ConsumeWindowsEventLog>::getLogger()) {
   char buff[MAX_COMPUTERNAME_LENGTH + 1];
   DWORD size = sizeof(buff);
-  if (GetComputerName(buff, &size))
-  {
+  if (GetComputerName(buff, &size)) {
     computerName_ = buff;
-  }
-  else
-  {
+  } else {
     LogWindowsError();
   }
 }
@@ -111,13 +105,13 @@ void ConsumeWindowsEventLog::onSchedule(const std::shared_ptr<core::ProcessConte
   if (subscriptionHandle_) {
     logger_->log_error("Processor already subscribed to Event Log, expected cleanup to unsubscribe.");
   } else {
+    sessionFactory_ = sessionFactory;
+
     subscribe(context);
   }
 }
 
 void ConsumeWindowsEventLog::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
-  session_ = session;
-
   if (!subscriptionHandle_) {
     if (!subscribe(context)) {
       context->yield();
@@ -140,7 +134,6 @@ void ConsumeWindowsEventLog::onTrigger(const std::shared_ptr<core::ProcessContex
   }
 }
 
-
 bool ConsumeWindowsEventLog::subscribe(const std::shared_ptr<core::ProcessContext> &context)
 {
   std::string channel;
@@ -149,11 +142,8 @@ bool ConsumeWindowsEventLog::subscribe(const std::shared_ptr<core::ProcessContex
   std::string query;
   context->getProperty(Query.getName(), query);
 
-  // Get 'maxBufferSize_'.
-  std::string value;
-  if (context->getProperty(MaxBufferSize.getName(), value) && !value.empty() && core::Property::StringToInt(value, maxBufferSize_)) {
-    logger_->log_debug("ConsumeWindowsEventLog: maxBufferSize_ %d", maxBufferSize_);
-  }
+  context->getProperty(MaxBufferSize.getName(), maxBufferSize_);
+  logger_->log_debug("ConsumeWindowsEventLog: maxBufferSize_ %lld", maxBufferSize_);
 
   provenanceUri_ = "winlog://" + computerName_ + "/" + channel + "?" + query;
 
@@ -180,24 +170,20 @@ bool ConsumeWindowsEventLog::subscribe(const std::shared_ptr<core::ProcessContex
 
         auto& logger = pConsumeWindowsEventLog->logger_;
 
-        if (action == EvtSubscribeActionError)
-        {
+        if (action == EvtSubscribeActionError) {
           if (ERROR_EVT_QUERY_RESULT_STALE == (DWORD)hEvent) {
             logger->log_error("Received missing event notification. Consider triggering processor more frequently or increasing queue size.");
-          }
-          else {
+          } else {
             logger->log_error("Received the following Win32 error: %x", hEvent);
           }
-        }
-        else if (action == EvtSubscribeActionDeliver) {
+        } else if (action == EvtSubscribeActionDeliver) {
           DWORD size = 0;
           DWORD used = 0;
           DWORD propertyCount = 0;
 
           if (!EvtRender(NULL, hEvent, EvtRenderEventXml, size, 0, &used, &propertyCount)) {
             if (ERROR_INSUFFICIENT_BUFFER == GetLastError()) {
-              if (used > pConsumeWindowsEventLog->maxBufferSize_)
-              {
+              if (used > pConsumeWindowsEventLog->maxBufferSize_) {
                 logger->log_error("Dropping event %x because it couldn't be rendered within %ll bytes.", hEvent, pConsumeWindowsEventLog->maxBufferSize_);
                 return 0UL;
               }
@@ -208,8 +194,7 @@ bool ConsumeWindowsEventLog::subscribe(const std::shared_ptr<core::ProcessContex
                 std::string xml = std::wstring_convert<std::codecvt_utf8<wchar_t>>().to_bytes(reinterpret_cast<wchar_t*>(&buf[0]));
 
                 pConsumeWindowsEventLog->renderedXMLs_.enqueue(std::move(xml));
-              }
-              else {
+              } else {
                 logger->log_error("EvtRender returned the following error code: %d.", GetLastError());
               }
             }
@@ -232,13 +217,11 @@ bool ConsumeWindowsEventLog::subscribe(const std::shared_ptr<core::ProcessContex
 
 void ConsumeWindowsEventLog::unsubscribe()
 {
-  if (subscriptionHandle_)
-  {
+  if (subscriptionHandle_) {
     EvtClose(subscriptionHandle_);
     subscriptionHandle_ = 0;
   }
 }
-
 
 int ConsumeWindowsEventLog::processQueue(const std::shared_ptr<core::ProcessSession> &session)
 {
@@ -247,13 +230,15 @@ int ConsumeWindowsEventLog::processQueue(const std::shared_ptr<core::ProcessSess
       : str_(str) {
       status_ = 0;
     }
-    std::string str_;
+
     int64_t process(std::shared_ptr<io::BaseStream> stream) {
       auto len = stream->writeData((uint8_t*)&str_[0], str_.size());
       if (len < 0)
         status_ = -1;
       return len;
     }
+
+    std::string str_;
     int status_;
   };
 
@@ -280,10 +265,11 @@ void ConsumeWindowsEventLog::notifyStop()
   unsubscribe();
 
   if (renderedXMLs_.size_approx() != 0) {
-    if (session_) {
+    auto session = sessionFactory_->createSession();
+    if (session) {
       logger_->log_info("Finishing processing leftover events");
 
-      processQueue(session_);
+      processQueue(session);
     } else {
       logger_->log_error(
         "Stopping the processor but there is no ProcessSessionFactory stored and there are messages in the internal queue. "
@@ -292,8 +278,6 @@ void ConsumeWindowsEventLog::notifyStop()
         "the processor is triggered to run.");
     }
   }
-
-  session_ = nullptr;
 }
 
 void ConsumeWindowsEventLog::LogWindowsError()
@@ -310,7 +294,7 @@ void ConsumeWindowsEventLog::LogWindowsError()
     (LPTSTR)&lpMsg,
     0, NULL);
 
-  logger_->log_debug("Error %d: %s\n", (int)error_id, (char *)lpMsg);
+  logger_->log_error("Error %d: %s\n", (int)error_id, (char *)lpMsg);
 
   LocalFree(lpMsg);
 }
