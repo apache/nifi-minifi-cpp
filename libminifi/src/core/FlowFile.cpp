@@ -43,7 +43,6 @@ FlowFile::FlowFile()
       event_time_(0),
       claim_(nullptr),
       marked_delete_(false),
-      connection_(nullptr),
       original_connection_() {
   id_ = numeric_id_generator_->generateId();
   entry_date_ = getTimeMillis();
@@ -203,15 +202,15 @@ void FlowFile::setLineageStartDate(const uint64_t date) {
  * Sets the original connection with a shared pointer.
  * @param connection shared connection.
  */
-void FlowFile::setOriginalConnection(std::shared_ptr<core::Connectable> &connection) {
-  original_connection_ = connection;
+void FlowFile::setOriginalConnection(std::weak_ptr<core::Connectable> connection) {
+  original_connection_ = std::move(connection);
 }
 
 /**
  * Sets the connection with a shared pointer.
  * @param connection shared connection.
  */
-void FlowFile::setConnection(std::shared_ptr<core::Connectable> &connection) {
+void FlowFile::setConnection(std::weak_ptr<core::Connectable> &connection) {
   connection_ = connection;
 }
 
@@ -219,15 +218,15 @@ void FlowFile::setConnection(std::shared_ptr<core::Connectable> &connection) {
  * Sets the connection with a shared pointer.
  * @param connection shared connection.
  */
-void FlowFile::setConnection(std::shared_ptr<core::Connectable> &&connection) {
-  connection_ = connection;
+void FlowFile::setConnection(std::weak_ptr<core::Connectable> &&connection) {
+  connection_ = std::move(connection);
 }
 
 /**
  * Returns the connection referenced by this record.
  * @return shared connection pointer.
  */
-std::shared_ptr<core::Connectable> FlowFile::getConnection() {
+std::weak_ptr<core::Connectable> FlowFile::getConnection() {
   return connection_;
 }
 
@@ -235,7 +234,7 @@ std::shared_ptr<core::Connectable> FlowFile::getConnection() {
  * Returns the original connection referenced by this record.
  * @return shared original connection pointer.
  */
-std::shared_ptr<core::Connectable> FlowFile::getOriginalConnection() {
+std::weak_ptr<core::Connectable> FlowFile::getOriginalConnection() {
   return original_connection_;
 }
 

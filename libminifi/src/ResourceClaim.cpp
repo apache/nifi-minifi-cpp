@@ -24,6 +24,7 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <exception>
 #include "core/StreamManager.h"
 #include "utils/Id.h"
 #include "core/logging/LoggerConfiguration.h"
@@ -41,11 +42,15 @@ void setDefaultDirectory(std::string path) {
   default_directory_path = path;
 }
 
-ResourceClaim::ResourceClaim(std::shared_ptr<core::StreamManager<ResourceClaim>> claim_manager)
+ResourceClaim::ResourceClaim(std::weak_ptr<core::StreamManager<ResourceClaim>> claim_manager)
     : claim_manager_(claim_manager),
       deleted_(false),
       logger_(logging::LoggerFactory<ResourceClaim>::getLogger()) {
-  auto contentDirectory = claim_manager_->getStoragePath();
+  auto claim_manager_shared = claim_manager_.lock();
+  if (claim_manager_shared == nullptr) {
+      throw std::runtime_error("claim_manager is nullptr");
+  }
+  auto contentDirectory = claim_manager_shared->getStoragePath();
   if (contentDirectory.empty())
     contentDirectory = default_directory_path;
 
@@ -54,7 +59,7 @@ ResourceClaim::ResourceClaim(std::shared_ptr<core::StreamManager<ResourceClaim>>
   logger_->log_debug("Resource Claim created %s", _contentFullPath);
 }
 
-ResourceClaim::ResourceClaim(const std::string path, std::shared_ptr<core::StreamManager<ResourceClaim>> claim_manager, bool deleted)
+ResourceClaim::ResourceClaim(const std::string path, std::weak_ptr<core::StreamManager<ResourceClaim>> claim_manager, bool deleted)
     : claim_manager_(claim_manager),
       deleted_(deleted) {
   _contentFullPath = path;

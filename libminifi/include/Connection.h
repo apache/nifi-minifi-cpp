@@ -75,19 +75,19 @@ class Connection : public core::Connectable, public std::enable_shared_from_this
   }
 
   // Set Connection Source Processor
-  void setSource(std::shared_ptr<core::Connectable> source) {
+  void setSource(std::weak_ptr<core::Connectable> source) {
     source_connectable_ = source;
   }
   // ! Get Connection Source Processor
-  std::shared_ptr<core::Connectable> getSource() {
+  std::weak_ptr<core::Connectable> getSource() {
     return source_connectable_;
   }
   // Set Connection Destination Processor
-  void setDestination(std::shared_ptr<core::Connectable> dest) {
+  void setDestination(std::weak_ptr<core::Connectable> dest) {
     dest_connectable_ = dest;
   }
   // ! Get Connection Destination Processor
-  std::shared_ptr<core::Connectable> getDestination() {
+  std::weak_ptr<core::Connectable> getDestination() {
     return dest_connectable_;
   }
 
@@ -177,9 +177,9 @@ class Connection : public core::Connectable, public std::enable_shared_from_this
   // Relationship for this connection
   std::set<core::Relationship> relationships_;
   // Source Processor (ProcessNode/Port)
-  std::shared_ptr<core::Connectable> source_connectable_;
+  std::weak_ptr<core::Connectable> source_connectable_;
   // Destination Processor (ProcessNode/Port)
-  std::shared_ptr<core::Connectable> dest_connectable_;
+  std::weak_ptr<core::Connectable> dest_connectable_;
   // Max queue size to apply back pressure
   std::atomic<uint64_t> max_queue_size_;
   // Max queue data size to apply back pressure

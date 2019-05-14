@@ -176,7 +176,7 @@ void Processor::removeConnection(std::shared_ptr<Connectable> conn) {
     // Connection is destination to the current processor
     if (_incomingConnections.find(connection) != _incomingConnections.end()) {
       _incomingConnections.erase(connection);
-      connection->setDestination(NULL);
+      connection->setDestination({});
       logger_->log_debug("Remove connection %s into Processor %s incoming connection", connection->getName(), name_);
       incoming_connections_Iter = this->_incomingConnections.begin();
     }
@@ -191,7 +191,7 @@ void Processor::removeConnection(std::shared_ptr<Connectable> conn) {
       if (it != out_going_connections_.end()) {
         if (out_going_connections_[relationship].find(connection) != out_going_connections_[relationship].end()) {
           out_going_connections_[relationship].erase(connection);
-          connection->setSource(NULL);
+          connection->setSource({});
           logger_->log_debug("Remove connection %s into Processor %s outgoing connection for relationship %s", connection->getName(), name_, relationship);
         }
       }

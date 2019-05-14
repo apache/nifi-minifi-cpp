@@ -160,8 +160,8 @@ TEST_CASE("Test YAML Config Processing", "[YamlConfiguration]") {
   for (auto it : connectionMap) {
     REQUIRE(it.second);
     REQUIRE(!it.second->getUUIDStr().empty());
-    REQUIRE(it.second->getDestination());
-    REQUIRE(it.second->getSource());
+    REQUIRE(it.second->getDestination().lock());
+    REQUIRE(it.second->getSource().lock());
     REQUIRE(60000 == it.second->getFlowExpirationDuration());
   }
 }
@@ -462,8 +462,8 @@ NiFi Properties Overrides: {}
   for (auto it : connectionMap) {
     REQUIRE(it.second);
     REQUIRE(!it.second->getUUIDStr().empty());
-    REQUIRE(it.second->getDestination());
-    REQUIRE(it.second->getSource());
+    REQUIRE(it.second->getDestination().lock());
+    REQUIRE(it.second->getSource().lock());
     REQUIRE(0 == it.second->getFlowExpirationDuration());
   }
 }

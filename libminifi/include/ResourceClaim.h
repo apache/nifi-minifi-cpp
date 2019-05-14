@@ -54,26 +54,35 @@ class ResourceClaim : public std::enable_shared_from_this<ResourceClaim> {
   /*!
    * Create a new resource claim
    */
-  //explicit ResourceClaim(std::shared_ptr<core::StreamManager<ResourceClaim>> claim_manager, const std::string contentDirectory);
+  //explicit ResourceClaim(std::weak_ptr<core::StreamManager<ResourceClaim>> claim_manager, const std::string contentDirectory);
 
-  explicit ResourceClaim(std::shared_ptr<core::StreamManager<ResourceClaim>> claim_manager);
+  explicit ResourceClaim(std::weak_ptr<core::StreamManager<ResourceClaim>> claim_manager);
 
-  explicit ResourceClaim(const std::string path, std::shared_ptr<core::StreamManager<ResourceClaim>> claim_manager, bool deleted = false);
+  explicit ResourceClaim(const std::string path, std::weak_ptr<core::StreamManager<ResourceClaim>> claim_manager, bool deleted = false);
   // Destructor
   ~ResourceClaim() {
   }
   // increaseFlowFileRecordOwnedCount
   void increaseFlowFileRecordOwnedCount() {
-    claim_manager_->incrementStreamCount(shared_from_this());
+    auto claim_manager_shared = claim_manager_.lock();
+    if (claim_manager_shared) {
+      claim_manager_shared->incrementStreamCount(shared_from_this());
+    }
   }
   // decreaseFlowFileRecordOwenedCount
   void decreaseFlowFileRecordOwnedCount() {
-    claim_manager_->decrementStreamCount(shared_from_this());
-
+    auto claim_manager_shared = claim_manager_.lock();
+    if (claim_manager_shared) {
+      claim_manager_shared->decrementStreamCount(shared_from_this());
+    }
   }
   // getFlowFileRecordOwenedCount
   uint64_t getFlowFileRecordOwnedCount() {
-    return claim_manager_->getStreamCount(shared_from_this());
+    auto claim_manager_shared = claim_manager_.lock();
+    if (claim_manager_shared) {
+        return claim_manager_shared->getStreamCount(shared_from_this());
+    }
+    return 0U;
   }
   // Get the content full path
   std::string getContentFullPath() {
@@ -92,10 +101,11 @@ class ResourceClaim : public std::enable_shared_from_this<ResourceClaim> {
   }
 
   bool exists() {
-    if (claim_manager_ == nullptr) {
+    auto claim_manager_shared = claim_manager_.lock();
+    if (claim_manager_shared == nullptr) {
       return false;
     }
-    return claim_manager_->exists(shared_from_this());
+    return claim_manager_shared->exists(shared_from_this());
   }
 
   friend std::ostream& operator<<(std::ostream& stream, const ResourceClaim& claim) {
@@ -112,7 +122,7 @@ class ResourceClaim : public std::enable_shared_from_this<ResourceClaim> {
   // Full path to the content
   std::string _contentFullPath;
 
-  std::shared_ptr<core::StreamManager<ResourceClaim>> claim_manager_;
+  std::weak_ptr<core::StreamManager<ResourceClaim>> claim_manager_;
 
  private:
 

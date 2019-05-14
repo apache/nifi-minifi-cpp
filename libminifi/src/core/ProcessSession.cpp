@@ -805,7 +805,7 @@ void ProcessSession::commit() {
         continue;
       }
 
-      connection = std::static_pointer_cast<Connection>(record->getConnection());
+      connection = std::static_pointer_cast<Connection>(record->getConnection().lock());
       if ((connection) != nullptr)
         connection->put(record);
     }
@@ -815,7 +815,7 @@ void ProcessSession::commit() {
       if (record->isDeleted()) {
         continue;
       }
-      connection = std::static_pointer_cast<Connection>(record->getConnection());
+      connection = std::static_pointer_cast<Connection>(record->getConnection().lock());
       if ((connection) != nullptr)
         connection->put(record);
     }
@@ -826,7 +826,7 @@ void ProcessSession::commit() {
       if (record->isDeleted()) {
         continue;
       }
-      connection = std::static_pointer_cast<Connection>(record->getConnection());
+      connection = std::static_pointer_cast<Connection>(record->getConnection().lock());
       if ((connection) != nullptr)
         connection->put(record);
     }
@@ -855,7 +855,7 @@ void ProcessSession::rollback() {
     // Requeue the snapshot of the flowfile back
     for (const auto &it : _originalFlowFiles) {
       std::shared_ptr<core::FlowFile> record = it.second;
-      connection = std::static_pointer_cast<Connection>(record->getOriginalConnection());
+      connection = std::static_pointer_cast<Connection>(record->getOriginalConnection().lock());
       if ((connection) != nullptr) {
         std::shared_ptr<FlowFileRecord> flowf = std::static_pointer_cast<FlowFileRecord>(record);
         flowf->setSnapShot(false);
