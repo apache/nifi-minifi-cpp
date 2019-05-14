@@ -251,6 +251,118 @@ TEST_CASE("LogAttributeTest", "[getfileCreate3]") {
   LogTestController::getInstance().reset();
 }
 
+TEST_CASE("LogAttributeTestSingle", "[TestLogAttribute]") {
+  TestController testController;
+  LogTestController::getInstance().setTrace<minifi::processors::LogAttribute>();
+  LogTestController::getInstance().setDebug<minifi::processors::GetFile>();
+
+  std::shared_ptr<TestPlan> plan = testController.createPlan();
+  std::shared_ptr<core::Processor> getfile = plan->addProcessor("GetFile", "getfileCreate2");
+
+  auto loggattr = plan->addProcessor("LogAttribute", "logattribute", core::Relationship("success", "description"), true);
+
+  char format[] = "/tmp/gt.XXXXXX";
+  char *dir = testController.createTempDirectory(format);
+
+  plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), dir);
+  plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::BatchSize.getName(), "1");
+  plan->setProperty(loggattr, org::apache::nifi::minifi::processors::LogAttribute::FlowFilesToLog.getName(), "3");
+  testController.runSession(plan, false);
+  auto records = plan->getProvenanceRecords();
+  std::shared_ptr<core::FlowFile> record = plan->getCurrentFlowFile();
+  REQUIRE(record == nullptr);
+  REQUIRE(records.size() == 0);
+
+  std::vector<std::string> files;
+
+  for (int i = 0; i < 3; i++) {
+    std::fstream file;
+    std::stringstream ss;
+    ss << dir << "/" << "tstFile" << i << ".ext";
+    file.open(ss.str(), std::ios::out);
+    file << "tempFile";
+    file.close();
+
+
+    files.push_back(ss.str());
+  }
+
+  plan->reset();
+  testController.runSession(plan, false);
+
+  for (const auto &created_file : files) {
+    unlink(created_file.c_str());
+  }
+
+  records = plan->getProvenanceRecords();
+  record = plan->getCurrentFlowFile();
+  testController.runSession(plan, false);
+
+  records = plan->getProvenanceRecords();
+  record = plan->getCurrentFlowFile();
+
+  REQUIRE(true == LogTestController::getInstance().contains("Size:8 Offset:0"));
+  REQUIRE(true == LogTestController::getInstance().contains("key:path value:" + std::string(dir)));
+  REQUIRE(true == LogTestController::getInstance().contains("Logged 1 flow files"));
+  LogTestController::getInstance().reset();
+}
+
+TEST_CASE("LogAttributeTestMultiple", "[TestLogAttribute]") {
+  TestController testController;
+  LogTestController::getInstance().setTrace<minifi::processors::LogAttribute>();
+  LogTestController::getInstance().setDebug<minifi::processors::GetFile>();
+
+  std::shared_ptr<TestPlan> plan = testController.createPlan();
+  std::shared_ptr<core::Processor> getfile = plan->addProcessor("GetFile", "getfileCreate2");
+
+  auto loggattr = plan->addProcessor("LogAttribute", "logattribute", core::Relationship("success", "description"), true);
+
+  char format[] = "/tmp/gt.XXXXXX";
+  char *dir = testController.createTempDirectory(format);
+
+  plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), dir);
+  plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::BatchSize.getName(), "3");
+  plan->setProperty(loggattr, org::apache::nifi::minifi::processors::LogAttribute::FlowFilesToLog.getName(), "3");
+  testController.runSession(plan, false);
+  auto records = plan->getProvenanceRecords();
+  std::shared_ptr<core::FlowFile> record = plan->getCurrentFlowFile();
+  REQUIRE(record == nullptr);
+  REQUIRE(records.size() == 0);
+
+  std::vector<std::string> files;
+
+  for (int i = 0; i < 3; i++) {
+    std::fstream file;
+    std::stringstream ss;
+    ss << dir << "/" << "tstFile" << i << ".ext";
+    file.open(ss.str(), std::ios::out);
+    file << "tempFile";
+    file.close();
+
+
+    files.push_back(ss.str());
+  }
+
+  plan->reset();
+  testController.runSession(plan, false);
+
+  for (const auto &created_file : files) {
+    unlink(created_file.c_str());
+  }
+
+  records = plan->getProvenanceRecords();
+  record = plan->getCurrentFlowFile();
+  testController.runSession(plan, false);
+
+  records = plan->getProvenanceRecords();
+  record = plan->getCurrentFlowFile();
+
+  REQUIRE(true == LogTestController::getInstance().contains("Size:8 Offset:0"));
+  REQUIRE(true == LogTestController::getInstance().contains("key:path value:" + std::string(dir)));
+  REQUIRE(true == LogTestController::getInstance().contains("Logged 3 flow files"));
+  LogTestController::getInstance().reset();
+}
+
 TEST_CASE("Test Find file", "[getfileCreate3]") {
   TestController testController;
   LogTestController::getInstance().setDebug<minifi::provenance::ProvenanceReporter>();
