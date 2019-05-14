@@ -40,8 +40,9 @@ class LogAttribute : public core::Processor {
   /*!
    * Create a new processor
    */
-  LogAttribute(std::string name,  utils::Identifier uuid = utils::Identifier())
+  LogAttribute(std::string name, utils::Identifier uuid = utils::Identifier())
       : Processor(name, uuid),
+        flowfiles_to_log_(1),
         logger_(logging::LoggerFactory<LogAttribute>::getLogger()) {
   }
   // Destructor
@@ -55,6 +56,7 @@ class LogAttribute : public core::Processor {
   static core::Property AttributesToIgnore;
   static core::Property LogPayload;
   static core::Property LogPrefix;
+  static core::Property FlowFilesToLog;
   // Supported Relationships
   static core::Relationship Success;
   enum LogAttrLevel {
@@ -111,14 +113,16 @@ class LogAttribute : public core::Processor {
   };
 
  public:
+  virtual void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &factory) override;
   // OnTrigger method, implemented by NiFi LogAttribute
-  virtual void onTrigger(core::ProcessContext *context, core::ProcessSession *session);
+  virtual void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
   // Initialize, over write by NiFi LogAttribute
-  virtual void initialize(void);
+  virtual void initialize(void) override;
 
  protected:
 
  private:
+  uint64_t flowfiles_to_log_;
   // Logger
   std::shared_ptr<logging::Logger> logger_;
 };

@@ -251,6 +251,97 @@ TEST_CASE("LogAttributeTest", "[getfileCreate3]") {
   LogTestController::getInstance().reset();
 }
 
+TEST_CASE("LogAttributeTestInvalid", "[TestLogAttribute]") {
+  TestController testController;
+  LogTestController::getInstance().setTrace<minifi::processors::LogAttribute>();
+  LogTestController::getInstance().setDebug<minifi::processors::GetFile>();
+
+  std::shared_ptr<TestPlan> plan = testController.createPlan();
+  std::shared_ptr<core::Processor> getfile = plan->addProcessor("GetFile", "getfileCreate2");
+
+  auto loggattr = plan->addProcessor("LogAttribute", "logattribute", core::Relationship("success", "description"), true);
+
+  char format[] = "/tmp/gt.XXXXXX";
+  char *dir = testController.createTempDirectory(format);
+
+  plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), dir);
+  plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::BatchSize.getName(), "1");
+  REQUIRE_THROWS_AS( plan->setProperty(loggattr, org::apache::nifi::minifi::processors::LogAttribute::FlowFilesToLog.getName(), "-1"),std::out_of_range);
+  LogTestController::getInstance().reset();
+}
+
+void testMultiplesLogAttribute(int fileCount, int flowsToLog, std::string verifyStringFlowsLogged = ""){
+  TestController testController;
+    LogTestController::getInstance().setTrace<minifi::processors::LogAttribute>();
+    LogTestController::getInstance().setDebug<minifi::processors::GetFile>();
+
+    std::shared_ptr<TestPlan> plan = testController.createPlan();
+    std::shared_ptr<core::Processor> getfile = plan->addProcessor("GetFile", "getfileCreate2");
+
+    auto loggattr = plan->addProcessor("LogAttribute", "logattribute", core::Relationship("success", "description"), true);
+
+    char format[] = "/tmp/gt.XXXXXX";
+    char *dir = testController.createTempDirectory(format);
+
+    auto flowsToLogStr = std::to_string(flowsToLog);
+    if ( verifyStringFlowsLogged.empty() )
+      verifyStringFlowsLogged = std::to_string(flowsToLog);
+    plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), dir);
+    plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::BatchSize.getName(), std::to_string(fileCount));
+    plan->setProperty(loggattr, org::apache::nifi::minifi::processors::LogAttribute::FlowFilesToLog.getName(), flowsToLogStr);
+    testController.runSession(plan, false);
+    auto records = plan->getProvenanceRecords();
+    std::shared_ptr<core::FlowFile> record = plan->getCurrentFlowFile();
+    REQUIRE(record == nullptr);
+    REQUIRE(records.size() == 0);
+
+    std::vector<std::string> files;
+
+    for (int i = 0; i < fileCount; i++) {
+      std::fstream file;
+      std::stringstream ss;
+      ss << dir << "/" << "tstFile" << i << ".ext";
+      file.open(ss.str(), std::ios::out);
+      file << "tempFile";
+      file.close();
+
+
+      files.push_back(ss.str());
+    }
+
+    plan->reset();
+    testController.runSession(plan, false);
+
+    for (const auto &created_file : files) {
+      unlink(created_file.c_str());
+    }
+
+    records = plan->getProvenanceRecords();
+    record = plan->getCurrentFlowFile();
+    testController.runSession(plan, false);
+
+    records = plan->getProvenanceRecords();
+    record = plan->getCurrentFlowFile();
+
+    REQUIRE(true == LogTestController::getInstance().contains("Size:8 Offset:0"));
+    REQUIRE(true == LogTestController::getInstance().contains("key:path value:" + std::string(dir)));
+    REQUIRE(true == LogTestController::getInstance().contains("Logged " +  verifyStringFlowsLogged + " flow files"));
+    LogTestController::getInstance().reset();
+}
+
+TEST_CASE("LogAttributeTestSingle", "[TestLogAttribute]") {
+  testMultiplesLogAttribute(1,3,"1");
+}
+
+
+TEST_CASE("LogAttributeTestMultiple", "[TestLogAttribute]") {
+  testMultiplesLogAttribute(5,3);
+}
+
+TEST_CASE("LogAttributeTestAll", "[TestLogAttribute]") {
+  testMultiplesLogAttribute(5,0,"5");
+}
+
 TEST_CASE("Test Find file", "[getfileCreate3]") {
   TestController testController;
   LogTestController::getInstance().setDebug<minifi::provenance::ProvenanceReporter>();

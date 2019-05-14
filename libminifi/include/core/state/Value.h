@@ -98,6 +98,10 @@ class Value {
   }
 
   virtual bool getValue(uint64_t &ref) {
+    const auto negative = string_value.find_first_of('-') != std::string::npos;
+     if (negative){
+       return false;
+     }
     ref = std::stoull(string_value);
     return true;
   }
@@ -227,6 +231,15 @@ class UInt64Value : public Value {
   explicit UInt64Value(const std::string &strvalue)
       : Value(strvalue),
         value(std::stoull(strvalue)) {
+    /**
+     * This is a fundamental change in that we would be changing where this error occurs.
+     * We should be prudent about breaking backwards compatibility, but since Uint64Value
+     * is only created with a validator and type, we **should** be okay.
+     */
+    const auto negative = strvalue.find_first_of('-') != std::string::npos;
+     if (negative){
+       throw std::out_of_range("negative value detected");
+     }
     setTypeId<uint64_t>();
   }
 

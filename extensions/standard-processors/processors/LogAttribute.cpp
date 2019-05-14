@@ -39,11 +39,16 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-core::Property LogAttribute::LogLevel(core::PropertyBuilder::createProperty("Log Level")->withDescription("The Log Level to use when logging the Attributes")->withAllowableValues<std::string>({
+core::Property LogAttribute::LogLevel(core::PropertyBuilder::createProperty("Log Level")->withDescription("The Log Level to use when logging the Attributes")->withAllowableValues<std::string>( {
     "info", "trace", "error", "warn", "debug" })->build());
 
 core::Property LogAttribute::AttributesToLog(
     core::PropertyBuilder::createProperty("Attributes to Log")->withDescription("A comma-separated list of Attributes to Log. If not specified, all attributes will be logged.")->build());
+
+core::Property LogAttribute::FlowFilesToLog(
+    core::PropertyBuilder::createProperty("FlowFiles To Log")->withDescription(
+        "Number of flow files to log. If set to zero all flow files will be logged. Please note that this may block other threads from running if not used judiciously.")->withDefaultValue<uint64_t>(1)
+        ->build());
 
 core::Property LogAttribute::AttributesToIgnore(
     core::PropertyBuilder::createProperty("Attributes to Ignore")->withDescription("A comma-separated list of Attributes to ignore. If not specified, no attributes will be ignored.")->build());
@@ -63,6 +68,7 @@ void LogAttribute::initialize() {
   properties.insert(AttributesToLog);
   properties.insert(AttributesToIgnore);
   properties.insert(LogPayload);
+  properties.insert(FlowFilesToLog);
   properties.insert(LogPrefix);
   setSupportedProperties(properties);
   // Set the supported relationships
@@ -71,91 +77,100 @@ void LogAttribute::initialize() {
   setSupportedRelationships(relationships);
 }
 
-void LogAttribute::onTrigger(core::ProcessContext *context, core::ProcessSession *session) {
-  logger_->log_trace("enter log attribute");
+void LogAttribute::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &factory) {
+  core::Property flowsToLog = FlowFilesToLog;
+
+  if (getProperty(FlowFilesToLog.getName(), flowsToLog)) {
+    // we are going this route since to avoid breaking backwards compatibility the get property function doesn't perform validation ( That's done
+    // in configuration. In future releases we can add that exception handling there.
+    if (!flowsToLog.getValue().validate("Validating FlowFilesToLog").valid())
+      throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Invalid value for flowfiles to log: " + flowsToLog.getValue().to_string());
+    flowfiles_to_log_ = flowsToLog.getValue();
+  }
+}
+// OnTrigger method, implemented by NiFi LogAttribute
+void LogAttribute::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
+  logger_->log_trace("enter log attribute, attempting to retrieve %u flow files", flowfiles_to_log_);
   std::string dashLine = "--------------------------------------------------";
   LogAttrLevel level = LogAttrLevelInfo;
   bool logPayload = false;
   std::ostringstream message;
 
-  std::shared_ptr<core::FlowFile> flow = session->get();
+  uint64_t i = 0;
+  const auto max = flowfiles_to_log_ == 0 ? UINT64_MAX : flowfiles_to_log_;
+  for (; i < max; ++i) {
+    std::shared_ptr<core::FlowFile> flow = session->get();
 
-  if (!flow) {
-    return;
-  }
+    if (!flow) {
+      break;
+    }
 
-  std::string value;
-  if (context->getProperty(LogLevel.getName(), value)) {
-    logLevelStringToEnum(value, level);
-  }
-  if (context->getProperty(LogPrefix.getName(), value)) {
-    dashLine = "-----" + value + "-----";
-  }
+    std::string value;
+    if (context->getProperty(LogLevel.getName(), value)) {
+      logLevelStringToEnum(value, level);
+    }
+    if (context->getProperty(LogPrefix.getName(), value)) {
+      dashLine = "-----" + value + "-----";
+    }
 
-  context->getProperty(LogPayload.getName(), logPayload);
+    context->getProperty(LogPayload.getName(), logPayload);
 
-  message << "Logging for flow file " << "\n";
-  message << dashLine;
-  message << "\nStandard FlowFile Attributes";
-  message << "\n" << "UUID:" << flow->getUUIDStr();
-  message << "\n" << "EntryDate:" << getTimeStr(flow->getEntryDate());
-  message << "\n" << "lineageStartDate:" << getTimeStr(flow->getlineageStartDate());
-  message << "\n" << "Size:" << flow->getSize() << " Offset:" << flow->getOffset();
-  message << "\nFlowFile Attributes Map Content";
-  std::map<std::string, std::string> attrs = flow->getAttributes();
-  std::map<std::string, std::string>::iterator it;
-  for (it = attrs.begin(); it != attrs.end(); it++) {
-    message << "\n" << "key:" << it->first << " value:" << it->second;
-  }
-  message << "\nFlowFile Resource Claim Content";
-  std::shared_ptr<ResourceClaim> claim = flow->getResourceClaim();
-  if (claim) {
-    message << "\n" << "Content Claim:" << claim->getContentFullPath();
-  }
-  if (logPayload && flow->getSize() <= 1024 * 1024) {
-    message << "\n" << "Payload:" << "\n";
-    ReadCallback callback(flow->getSize());
-    session->read(flow, &callback);
-    for (unsigned int i = 0, j = 0; i < callback.read_size_; i++) {
-      message << std::hex << callback.buffer_[i];
-      j++;
-      if (j == 80) {
-        message << '\n';
-        j = 0;
+    message << "Logging for flow file " << "\n";
+    message << dashLine;
+    message << "\nStandard FlowFile Attributes";
+    message << "\n" << "UUID:" << flow->getUUIDStr();
+    message << "\n" << "EntryDate:" << getTimeStr(flow->getEntryDate());
+    message << "\n" << "lineageStartDate:" << getTimeStr(flow->getlineageStartDate());
+    message << "\n" << "Size:" << flow->getSize() << " Offset:" << flow->getOffset();
+    message << "\nFlowFile Attributes Map Content";
+    std::map<std::string, std::string> attrs = flow->getAttributes();
+    std::map<std::string, std::string>::iterator it;
+    for (it = attrs.begin(); it != attrs.end(); it++) {
+      message << "\n" << "key:" << it->first << " value:" << it->second;
+    }
+    message << "\nFlowFile Resource Claim Content";
+    std::shared_ptr<ResourceClaim> claim = flow->getResourceClaim();
+    if (claim) {
+      message << "\n" << "Content Claim:" << claim->getContentFullPath();
+    }
+    if (logPayload && flow->getSize() <= 1024 * 1024) {
+      message << "\n" << "Payload:" << "\n";
+      ReadCallback callback(flow->getSize());
+      session->read(flow, &callback);
+      for (unsigned int i = 0, j = 0; i < callback.read_size_; i++) {
+        message << std::hex << callback.buffer_[i];
+        j++;
+        if (j == 80) {
+          message << '\n';
+          j = 0;
+        }
       }
     }
+    message << "\n" << dashLine << std::ends;
+    std::string output = message.str();
+
+    switch (level) {
+      case LogAttrLevelInfo:
+        logger_->log_info("%s", output);
+        break;
+      case LogAttrLevelDebug:
+        logger_->log_debug("%s", output);
+        break;
+      case LogAttrLevelError:
+        logger_->log_error("%s", output);
+        break;
+      case LogAttrLevelTrace:
+        logger_->log_trace("%s", output);
+        break;
+      case LogAttrLevelWarn:
+        logger_->log_warn("%s", output);
+        break;
+      default:
+        break;
+    }
+    session->transfer(flow, Success);
   }
-  message << "\n" << dashLine << std::ends;
-  std::string output = message.str();
-
-  switch (level) {
-    case LogAttrLevelInfo:
-      logger_->log_info("%s", output);
-      break;
-    case LogAttrLevelDebug:
-      logger_->log_debug("%s", output);
-      break;
-    case LogAttrLevelError:
-      logger_->log_error("%s", output);
-      break;
-    case LogAttrLevelTrace:
-      logger_->log_trace("%s", output);
-      break;
-    case LogAttrLevelWarn:
-      logger_->log_warn("%s", output);
-      break;
-    default:
-      break;
-  }
-
-  // Test Import
-  /*
-   std::shared_ptr<FlowFileRecord> importRecord = session->create();
-   session->import(claim->getContentFullPath(), importRecord);
-   session->transfer(importRecord, Success); */
-
-  // Transfer to the relationship
-  session->transfer(flow, Success);
+  logger_->log_debug("Logged %d flow files", i);
 }
 
 } /* namespace processors */

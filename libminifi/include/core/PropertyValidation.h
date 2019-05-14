@@ -22,6 +22,7 @@
 #include "core/state/Value.h"
 #include "TypedValues.h"
 #include "utils/StringUtils.h"
+#include <limits>
 #include <memory>
 
 namespace org {
@@ -229,6 +230,10 @@ class UnsignedLongValidator : public PropertyValidator {
 
   ValidationResult validate(const std::string &subject, const std::string &input) const {
     try {
+      auto negative = input.find_first_of('-') != std::string::npos;
+      if (negative){
+        throw std::out_of_range("non negative expected");
+      }
       std::stoull(input);
       return ValidationResult::Builder::createBuilder().withSubject(subject).withInput(input).isValid(true).build();
     } catch (...) {
