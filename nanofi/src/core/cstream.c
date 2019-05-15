@@ -51,6 +51,9 @@ int write_buffer(const uint8_t *value, int len, cstream * stream) {
     ret = send(stream->socket_, value + bytes, len - bytes, 0);
     // check for errors
     if (ret <= 0) {
+      if (ret < 0 && errno == EINTR) {
+        continue;
+      }
       logc(err, "Could not send to %d, error: %s", stream->socket_, strerror(errno));
       close_stream(stream);
       return ret;
@@ -175,42 +178,54 @@ cstream * create_socket(const char * host, uint16_t portnum) {
 #ifdef _WIN32
   WSADATA wsa;
   if (WSAStartup(MAKEWORD(2,2),&wsa) != 0)
-	{
-		logc(err, "%s", "WSAStartup failed");
-		return NULL;
-	}
+  {
+    logc(err, "%s", "WSAStartup failed");
+    return NULL;
+  }
 #endif
 
+  struct addrinfo *result, *rp;
+  struct addrinfo hints;
+  memset(&hints, 0, sizeof(struct addrinfo));
+  hints.ai_family = AF_UNSPEC;    /* Allow IPv4 or IPv6 */
+  hints.ai_socktype = SOCK_STREAM; /* Datagram socket */
+  hints.ai_flags = 0;
+  hints.ai_protocol = 0;          /* Any protocol */
+
+  char portstr[6];
+  snprintf(portstr, 6, "%d", portnum);
+
+  if (getaddrinfo(host, portstr, &hints, &result) != 0) {
+    logc(err, "%s%s", "Failed to resolve hostname: ", host);
+    return NULL;
+  }
+
   SOCKET sock;
-  struct sockaddr_in server_addr;
 
-  //Create socket
-  sock = socket(AF_INET , SOCK_STREAM , 0);
-  if (sock == -1)
-  {
-    logc(err, "%s", "Failed to create socket");
-    return NULL;
+  for (rp = result; rp != NULL; rp = rp->ai_next) {
+    sock = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
+    if (sock == -1) {
+      continue;
+    }
+
+    if (connect(sock, rp->ai_addr, rp->ai_addrlen) != -1) {
+      break;
+    }
+
+    close(sock);
   }
 
-  struct hostent *server = gethostbyname(host);
-  if(server == NULL) {
-    logc(err, "%s", "Failed to resolve hostname");
-    return NULL;
-  }
+  freeaddrinfo(result);
 
-  memcpy(&server_addr.sin_addr.s_addr, server->h_addr,  server->h_length);
-  server_addr.sin_family = AF_INET;
-  server_addr.sin_port = htons( portnum );
-
-  if (connect(sock, (struct sockaddr *)&server_addr, sizeof(server_addr)) == 0) {
-    cstream * stream = (cstream*)malloc(sizeof(cstream));
-    stream->socket_ = sock;
-    logc(debug, "%s", "Socket successfully connected");
-    return stream;
-  } else {
+  if (rp == NULL) {
     logc(err, "Failed to connect to %s:%u", host, portnum);
     return NULL;
   }
+
+  cstream *stream = (cstream *) malloc(sizeof(cstream));
+  stream->socket_ = sock;
+  logc(debug, "%s", "Socket successfully connected");
+  return stream;
 }
 
 void free_socket(cstream * stream) {

@@ -47,7 +47,7 @@ const char * PAYLOAD_CRC = "2006463717"; // Depends on both payload and attribut
 std::string CODEC_NAME = "StandardFlowFileCodec";
 
 struct S2SReceivedData {
-  bool request_type_ok;
+  bool request_type_ok = false;
   std::string magic_string;
   uint32_t attr_num = 0;
   std::map<std::string, std::string> attributes;
