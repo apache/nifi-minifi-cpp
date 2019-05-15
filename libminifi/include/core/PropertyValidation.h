@@ -275,6 +275,17 @@ class PortValidator : public LongValidator {
   }
 };
 
+//Use only for specifying listen ports, where 0 means a randomly chosen one!
+class ListenPortValidator : public LongValidator {
+public:
+  ListenPortValidator(const std::string &name)
+    : LongValidator(name, 0, 65535) {
+  }
+  virtual ~ListenPortValidator() {
+
+  }
+};
+
 class TimePeriodValidator : public PropertyValidator {
  public:
   TimePeriodValidator(const std::string &name)
@@ -327,6 +338,11 @@ class StandardValidators {
 
   static const std::shared_ptr<PropertyValidator> PORT_VALIDATOR(){
     static std::shared_ptr<PropertyValidator> validator = std::make_shared<PortValidator>("PORT_VALIDATOR");
+    return validator;
+  }
+
+  static const std::shared_ptr<PropertyValidator> LISTEN_PORT_VALIDATOR(){
+    static std::shared_ptr<PropertyValidator> validator = std::make_shared<ListenPortValidator>("LISTEN_PORT_VALIDATOR");
     return validator;
   }
 
