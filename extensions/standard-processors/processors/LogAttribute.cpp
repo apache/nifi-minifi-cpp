@@ -45,7 +45,10 @@ core::Property LogAttribute::LogLevel(core::PropertyBuilder::createProperty("Log
 core::Property LogAttribute::AttributesToLog(
     core::PropertyBuilder::createProperty("Attributes to Log")->withDescription("A comma-separated list of Attributes to Log. If not specified, all attributes will be logged.")->build());
 
-core::Property LogAttribute::FlowFilesToLog(core::PropertyBuilder::createProperty("FlowFiles To Log")->withDescription("Number of flow files to log")->withDefaultValue<int>(1)->build());
+core::Property LogAttribute::FlowFilesToLog(
+    core::PropertyBuilder::createProperty("FlowFiles To Log")->withDescription(
+        "Number of flow files to log. If set to zero all flow files will be logged. Please note that this may block other threads from running if not used judiciously.")->withDefaultValue<uint64_t>(1)
+        ->build());
 
 core::Property LogAttribute::AttributesToIgnore(
     core::PropertyBuilder::createProperty("Attributes to Ignore")->withDescription("A comma-separated list of Attributes to ignore. If not specified, no attributes will be ignored.")->build());
@@ -75,21 +78,27 @@ void LogAttribute::initialize() {
 }
 
 void LogAttribute::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &factory) {
-  context->getProperty(FlowFilesToLog.getName(), flowfiles_to_log_);
-  if (flowfiles_to_log_ <= 0) {
-    flowfiles_to_log_ = 1;
+  core::Property flowsToLog = FlowFilesToLog;
+
+  if (getProperty(FlowFilesToLog.getName(), flowsToLog)) {
+    // we are going this route since to avoid breaking backwards compatibility the get property function doesn't perform validation ( That's done
+    // in configuration. In future releases we can add that exception handling there.
+    if (!flowsToLog.getValue().validate("Validating FlowFilesToLog").valid())
+      throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Invalid value for flowfiles to log: " + flowsToLog.getValue().to_string());
+    flowfiles_to_log_ = flowsToLog.getValue();
   }
 }
 // OnTrigger method, implemented by NiFi LogAttribute
 void LogAttribute::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
-  logger_->log_trace("enter log attribute, attempting to retrieve %d flow files", flowfiles_to_log_);
+  logger_->log_trace("enter log attribute, attempting to retrieve %u flow files", flowfiles_to_log_);
   std::string dashLine = "--------------------------------------------------";
   LogAttrLevel level = LogAttrLevelInfo;
   bool logPayload = false;
   std::ostringstream message;
 
-  int i = 0;
-  for (; i < flowfiles_to_log_; ++i) {
+  uint64_t i = 0;
+  const auto max = flowfiles_to_log_ == 0 ? UINT64_MAX : flowfiles_to_log_;
+  for (; i < max; ++i) {
     std::shared_ptr<core::FlowFile> flow = session->get();
 
     if (!flow) {

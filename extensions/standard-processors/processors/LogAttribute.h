@@ -117,12 +117,12 @@ class LogAttribute : public core::Processor {
   // OnTrigger method, implemented by NiFi LogAttribute
   virtual void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
   // Initialize, over write by NiFi LogAttribute
-  virtual void initialize(void);
+  virtual void initialize(void) override;
 
  protected:
 
  private:
-  int flowfiles_to_log_;
+  uint64_t flowfiles_to_log_;
   // Logger
   std::shared_ptr<logging::Logger> logger_;
 };
