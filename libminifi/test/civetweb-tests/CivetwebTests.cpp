@@ -93,10 +93,7 @@ TEST_CASE("Test GET Body", "[ListenHTTPGETBody]") {  // NOLINT
       "ListenHTTP",
       core::Relationship("success", "description"),
       true);
-  plan->setProperty(
-      listen,
-      "Listening Port",
-      "8888");
+  plan->setProperty(listen, "Listening Port", "0");
   listen->setAutoTerminatedRelationships({{"success", ""}});
 
   plan->runNextProcessor();  // Get
@@ -104,8 +101,12 @@ TEST_CASE("Test GET Body", "[ListenHTTPGETBody]") {  // NOLINT
   plan->runNextProcessor();  // Log
   plan->runNextProcessor();  // Listen
 
-  sleep(1);
-  utils::HTTPClient client("http://localhost:8888/contentListener/test");
+  auto raw_ptr = dynamic_cast<org::apache::nifi::minifi::processors::ListenHTTP*>(listen.get());
+  std::string protocol = std::string("http") + (raw_ptr->isSecure() ? "s" : "");
+  std::string portstr = raw_ptr->getPort();
+  REQUIRE(LogTestController::getInstance().contains("Listening on port " + portstr));
+
+  utils::HTTPClient client(protocol + "://localhost:" + portstr + "/contentListener/test");
   REQUIRE(client.submit());
   const auto &body_chars = client.getResponseBody();
   std::string response_body(body_chars.data(), body_chars.size());
