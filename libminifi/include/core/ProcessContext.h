@@ -26,6 +26,7 @@
 #include <atomic>
 #include <algorithm>
 #include <memory>
+#include <utility>
 #include <expression/Expression.h>
 #include "Property.h"
 #include "core/ContentRepository.h"
@@ -211,8 +212,8 @@ class ProcessContext : public controller::ControllerServiceLookup, public core::
   // Processor
   std::shared_ptr<ProcessorNode> processor_node_;
 
-  std::map<std::string, org::apache::nifi::minifi::expression::Expression> expressions_;
-  std::map<std::string, org::apache::nifi::minifi::expression::Expression> dynamic_property_expressions_;
+  std::map<std::string, expression::Expression> expressions_;
+  std::map<std::string, std::pair<std::string /*expression_str*/, expression::Expression /*compiled_expression*/>> dynamic_property_expressions_;
 
   // Logger
   std::shared_ptr<logging::Logger> logger_;

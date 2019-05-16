@@ -46,14 +46,18 @@ bool ProcessContext::getDynamicProperty(const Property &property, std::string &v
     return getDynamicProperty(property.getName(), value);
   }
   auto name = property.getName();
-  if (dynamic_property_expressions_.find(name) == dynamic_property_expressions_.end()) {
-    std::string expression_str;
-    getDynamicProperty(name, expression_str);
-    logger_->log_debug("Compiling expression for %s/%s: %s", getProcessorNode()->getName(), name, expression_str);
-    dynamic_property_expressions_.emplace(name, expression::compile(expression_str));
+  std::string expression_str;
+  getDynamicProperty(name, expression_str);
+  auto it = dynamic_property_expressions_.find(name);
+  if (it == dynamic_property_expressions_.end()) {
+    it = dynamic_property_expressions_.emplace(name, std::pair<std::string, expression::Expression>()).first;
+  }
+  if (it->second.first != expression_str) {
+    logger_->log_debug("Compiling expression for %s/%s (dynamic): %s", getProcessorNode()->getName(), name, expression_str);
+    it->second = std::make_pair(expression_str, expression::compile(expression_str));
   }
   minifi::expression::Parameters p(shared_from_this(), flow_file);
-  value = dynamic_property_expressions_[name](p).asString();
+  value = it->second.second(p).asString();
   return true;
 }
 

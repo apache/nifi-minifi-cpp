@@ -23,6 +23,7 @@
 
 #include "../TestBase.h"
 #include <ExtractText.h>
+#include <GenerateFlowFile.h>
 #include <GetFile.h>
 #include <PutFile.h>
 #include <UpdateAttribute.h>
@@ -273,6 +274,59 @@ TEST_CASE("GetFile PutFile dynamic attribute", "[expressionLanguageTestGetFilePu
   }
 
   REQUIRE(LogTestController::getInstance().contains("key:prop_attr value:custom_value_added"));
+}
+
+TEST_CASE("Dynamic expression language attribute changes", "[expressionLanguageTestDynamicExpressionLanguageAttributeChanges]") {  // NOLINT
+  TestController testController;
+
+  LogTestController::getInstance().setTrace<TestPlan>();
+  LogTestController::getInstance().setTrace<processors::GenerateFlowFile>();
+  LogTestController::getInstance().setTrace<processors::LogAttribute>();
+  LogTestController::getInstance().setTrace<processors::UpdateAttribute>();
+
+  auto plan = testController.createPlan();
+
+  // Build MiNiFi processing graph
+  auto generate_flow_file = plan->addProcessor(
+      "GenerateFlowFile",
+      "GenerateFlowFile");
+  auto update1 = plan->addProcessor(
+      "UpdateAttribute",
+      "UpdateAttribute1",
+      core::Relationship("success", "description"),
+      true);
+  update1->setDynamicProperty("original_prop", "first");
+  auto update2 = plan->addProcessor(
+      "UpdateAttribute",
+      "UpdateAttribute2",
+      core::Relationship("success", "description"),
+      true);
+  update2->setDynamicProperty("derived_prop", "derived_from_${'original_prop'}");
+  plan->addProcessor(
+      "LogAttribute",
+      "LogAttribute",
+      core::Relationship("success", "description"),
+      true);
+
+  testController.runSession(plan, true);
+  REQUIRE(LogTestController::getInstance().contains("key:derived_prop value:derived_from_first"));
+  plan->reset();
+
+  update1->setDynamicProperty("original_prop", "second");
+  testController.runSession(plan, true);
+  REQUIRE(LogTestController::getInstance().contains("key:derived_prop value:derived_from_second"));
+  plan->reset();
+
+  update2->setDynamicProperty("derived_prop", "updated_derived_from_${'original_prop'}");
+  update1->setDynamicProperty("original_prop", "first");
+  testController.runSession(plan, true);
+  REQUIRE(LogTestController::getInstance().contains("key:derived_prop value:updated_derived_from_first"));
+  plan->reset();
+
+  update1->setDynamicProperty("original_prop", "second");
+  testController.runSession(plan, true);
+  REQUIRE(LogTestController::getInstance().contains("key:derived_prop value:updated_derived_from_second"));
+  plan->reset();
 }
 
 TEST_CASE("Substring 2 arg", "[expressionLanguageSubstring2]") {  // NOLINT
