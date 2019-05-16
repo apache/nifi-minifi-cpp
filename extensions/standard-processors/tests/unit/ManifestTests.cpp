@@ -22,7 +22,6 @@
 #include "core/state/nodes/AgentInformation.h"
 #include "TestBase.h"
 #include "io/ClientSocket.h"
-#include "core/Processor.h"
 #include "core/ClassLoader.h"
 
 TEST_CASE("Test Required", "[required]") {

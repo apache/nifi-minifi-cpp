@@ -64,3 +64,16 @@ function(createExtension extensionGuard extensionName description dirName)
 		endif()
     endif()
 endfunction()
+
+
+macro(register_extension_linter target-name)
+if (NOT WIN32)
+    get_property(extensions GLOBAL PROPERTY EXTENSION-LINTERS)
+    set_property(GLOBAL APPEND PROPERTY EXTENSION-LINTERS "${target-name}")
+    add_custom_target(${target-name}
+    COMMAND ${CMAKE_SOURCE_DIR}/thirdparty/google-styleguide/run_linter.sh
+            ${CMAKE_SOURCE_DIR}/libminifi/include/
+            ${CMAKE_CURRENT_LIST_DIR}/ --
+            ${CMAKE_CURRENT_LIST_DIR}/)
+endif(NOT WIN32)
+endmacro()

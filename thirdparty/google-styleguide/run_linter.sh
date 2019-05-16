@@ -1,3 +1,4 @@
+#!/bin/bash
 #
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
@@ -14,12 +15,29 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# ./run_linter <includedir> <srcdir>
-#!/bin/bash
-if [ "$(uname)" == "Darwin" ]; then
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+# ./run_linter <includedir1> <includedir2> ... <includedirN> -- <srcdir1> <srcdir2> ... <srcdirN>
+
+if [[ "$(uname)" == "Darwin" ]]; then
+    SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 else
-SCRIPT=$(readlink -f $0)
-SCRIPT_DIR=`dirname $SCRIPT`
+    SCRIPT=$(readlink -f $0)
+    SCRIPT_DIR=`dirname $SCRIPT`
 fi
-python ${SCRIPT_DIR}/cpplint.py --linelength=200 --extensions=cpp --recursive ${1}/*
+
+while (( $# )) ; do
+    [ x"$1" == x"--" ] && break
+    INCLUDE_DIRS="$INCLUDE_DIRS $1"
+    shift
+done
+
+while (( $# )) ; do
+    SOURCE_DIRS="$SOURCE_DIRS $1"
+    shift
+done
+
+[ x"$INCLUDE_DIRS" == x"" ] && echo "WARNING: No include directories specified."
+[ x"$SOURCE_DIRS" == x"" ] && echo "ERROR: No source directories specified." && exit 1
+
+HEADERS=`find $INCLUDE_DIRS -name '*.h' | sort | uniq | tr '\n' ','`
+SOURCES=`find $SOURCE_DIRS -name  '*.cpp' | sort | uniq | tr '\n' ' '`
+python2 ${SCRIPT_DIR}/cpplint.py --linelength=200 --headers=${HEADERS} ${SOURCES}

@@ -22,6 +22,7 @@
 #include <memory>
 #include <utility>
 #include <string>
+#include <iostream>
 #include <set>
 #include "FlowController.h"
 #include "TestBase.h"
@@ -34,7 +35,7 @@
 #include "core/ProcessorNode.h"
 #include "TailFile.h"
 #include "LogAttribute.h"
-#include <iostream>
+
 
 static const char *NEWLINE_FILE = ""
     "one,two,three\n"
