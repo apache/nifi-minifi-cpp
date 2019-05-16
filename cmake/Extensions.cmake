@@ -64,3 +64,9 @@ function(createExtension extensionGuard extensionName description dirName)
 		endif()
     endif()
 endfunction()
+
+
+macro(register_extension_linter target-name)
+    get_property(extensions GLOBAL PROPERTY EXTENSION-LINTERS)
+    set_property(GLOBAL APPEND PROPERTY EXTENSION-LINTERS "${target-name}")
+endmacro()

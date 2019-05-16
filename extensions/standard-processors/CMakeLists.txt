@@ -35,3 +35,12 @@ endif()
 
 SET (STANDARD-PROCESSORS minifi-standard-processors PARENT_SCOPE)
 register_extension(minifi-standard-processors)
+
+
+add_custom_target(minifi-standard-processors-linter
+    COMMAND ${CMAKE_SOURCE_DIR}/thirdparty/google-styleguide/run_linter.sh
+            ${CMAKE_SOURCE_DIR}/libminifi/include/
+            ${CMAKE_CURRENT_LIST_DIR}/include --
+            ${CMAKE_CURRENT_LIST_DIR}/)
+
+register_extension_linter(minifi-standard-processors-linter)

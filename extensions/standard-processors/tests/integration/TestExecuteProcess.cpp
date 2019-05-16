@@ -16,14 +16,15 @@
  * limitations under the License.
  */
 
+
+#include <type_traits> //NOLINT
+#include <sys/stat.h> //NOLINT
+#include <uuid/uuid.h> //NOLINT
+#include <chrono> //NOLINT
+#include <thread> //NOLINT
 #undef NDEBUG
 #include <cassert>
-#include <chrono>
 #include <string>
-#include <thread>
-#include <type_traits>
-#include <sys/stat.h>
-#include <uuid/uuid.h>
 #include <utility>
 #include <memory>
 #include <vector>
