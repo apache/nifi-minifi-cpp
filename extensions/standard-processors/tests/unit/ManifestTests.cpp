@@ -17,8 +17,9 @@
  */
 
 #include <memory>
-
+#include <algorithm>
 #include "core/Processor.h"
+#include "core/state/nodes/DeviceInformation.h"
 #include "core/state/nodes/AgentInformation.h"
 #include "TestBase.h"
 #include "io/ClientSocket.h"
@@ -69,7 +70,7 @@ TEST_CASE("Test Valid Regex", "[validRegex]") {
 }
 
 TEST_CASE("Test Relationships", "[rel1]") {
-  minifi::state::response::ComponentManifest manifest("minifi-system");
+  minifi::state::response::ComponentManifest manifest("minifi-standard-processors");
   auto serialized = manifest.serialize();
   REQUIRE(serialized.size() > 0);
   const auto &resp = serialized[0];
@@ -96,7 +97,7 @@ TEST_CASE("Test Relationships", "[rel1]") {
 }
 
 TEST_CASE("Test Dependent", "[dependent]") {
-  minifi::state::response::ComponentManifest manifest("minifi-system");
+  minifi::state::response::ComponentManifest manifest("minifi-standard-processors");
   auto serialized = manifest.serialize();
   REQUIRE(serialized.size() > 0);
   const auto &resp = serialized[0];
@@ -149,4 +150,25 @@ TEST_CASE("Test Scheduling Defaults", "[schedDef]") {
       FAIL("UNKNOWN NODE");
     }
   }
+}
+
+TEST_CASE("Test operatingSystem Defaults", "[opsys]") {
+  minifi::state::response::DeviceInfoNode manifest("minifi-system");
+  auto serialized = manifest.serialize();
+  REQUIRE(serialized.size() > 0);
+  minifi::state::response::SerializedResponseNode proc_0;
+  for (const auto &node : serialized) {
+    if ("systemInfo" == node.name) {
+      for (const auto &sinfo : node.children) {
+        if ("operatingSystem" == sinfo.name) {
+          proc_0 = sinfo;
+          break;
+        }
+      }
+    }
+  }
+  REQUIRE(!proc_0.value.empty());
+  std::set<std::string> expected( { "Linux", "Windows 32", "Windows 64", "Mac OSX", "Unix" });
+  REQUIRE(expected.find(proc_0.value.to_string())!=std::end(expected));
+
 }

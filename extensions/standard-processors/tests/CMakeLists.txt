@@ -39,9 +39,11 @@ FOREACH(testfile ${PROCESSOR_UNIT_TESTS})
 	else ()
   		target_link_libraries ("${testfilename}" -Wl,--whole-archive ${ZLIB_LIBRARY} ${OPENSSL_LIBRARIES} minifi-standard-processors minifi-civet-extensions -Wl,--no-whole-archive)
   	endif()
+  	add_test(NAME "${testfilename}" COMMAND "${testfilename}" WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
   MATH(EXPR PROCESSOR_INT_TEST_COUNT "${PROCESSOR_INT_TEST_COUNT}+1")
 ENDFOREACH()
 
+message("-- Finished building ${PROCESSOR_INT_TEST_COUNT} processor unit test file(s)...")
 
 
 SET(INT_TEST_COUNT 0)
