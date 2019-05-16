@@ -708,6 +708,7 @@ include(BuildDocs)
 
 include(DockerConfig)
 
+if(NOT WIN32)
 # Create a custom build target that will run the linter.
 get_property(extensions GLOBAL PROPERTY EXTENSION-LINTERS)
 add_custom_target(linter
@@ -718,7 +719,7 @@ add_custom_target(linter
             ${CMAKE_SOURCE_DIR}/libminifi/include/ --
             ${CMAKE_SOURCE_DIR}/libminifi/test/
     DEPENDS ${extensions})
-        
+endif(NOT WIN32)
 
 # Custom target to download and run Apache Release Audit Tool (RAT)
 add_custom_target(
