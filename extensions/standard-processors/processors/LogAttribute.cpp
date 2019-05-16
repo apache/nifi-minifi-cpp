@@ -39,8 +39,8 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-core::Property LogAttribute::LogLevel(core::PropertyBuilder::createProperty("Log Level")->withDescription("The Log Level to use when logging the Attributes")->withAllowableValues<std::string>( {
-    "info", "trace", "error", "warn", "debug" })->build());
+core::Property LogAttribute::LogLevel(core::PropertyBuilder::createProperty("Log Level")->withDescription("The Log Level to use when logging the Attributes")->withAllowableValues<std::string>(
+    {"info", "trace", "error", "warn", "debug" })->build());
 
 core::Property LogAttribute::AttributesToLog(
     core::PropertyBuilder::createProperty("Attributes to Log")->withDescription("A comma-separated list of Attributes to Log. If not specified, all attributes will be logged.")->build());
