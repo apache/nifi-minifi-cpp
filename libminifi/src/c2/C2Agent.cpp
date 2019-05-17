@@ -694,6 +694,7 @@ void C2Agent::handle_update(const C2ContentResponse &resp) {
       } else {
         logger_->log_debug("update failed.");
         C2Payload response(Operation::ACKNOWLEDGE, state::UpdateState::SET_ERROR, resp.ident, false, true);
+        response.setRawData("Error while applying flow. Likely missing processors");
         enqueue_c2_response(std::move(response));
       }
       // send

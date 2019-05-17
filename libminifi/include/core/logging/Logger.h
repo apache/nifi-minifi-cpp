@@ -271,7 +271,8 @@ class Logger : public BaseLogger {
     if (!delegate_->should_log(level)) {
       return;
     }
-    delegate_->log(level, format_string(format, conditional_conversion(args)...));
+    const auto str = format_string(format, conditional_conversion(args)...);
+    delegate_->log(level, str);
   }
 
   Logger(Logger const&);

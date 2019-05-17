@@ -57,8 +57,31 @@ class ConfigHandler : public CivetHandler {
   ConfigHandler() {
     calls_ = 0;
   }
-  bool handlePost(CivetServer *server, struct mg_connection *conn) {
+  virtual bool handlePost(CivetServer *server, struct mg_connection *conn) override {
     calls_++;
+    const struct mg_request_info *req_info = mg_get_request_info(conn);
+    long long remainlen;
+    long long readlen = 0;
+    long long contentlen = req_info->content_length;
+    char buf[1024];
+
+    std::string data;
+    while (readlen < contentlen) {
+      remainlen = contentlen - readlen;
+      if (remainlen > sizeof(buf)) {
+        remainlen = sizeof(buf);
+      }
+      remainlen = mg_read(conn, buf, (size_t) remainlen);
+      if (remainlen <= 0) {
+        break;
+      }
+      readlen += remainlen;
+      data += std::string(buf, remainlen);
+    }
+    if (data.find("operationState") != std::string::npos) {
+      assert(data.find("state\": \"NOT_APPLIED") != std::string::npos);
+    }
+
     if (responses.size() > 0) {
       std::string top_str = responses.back();
       responses.pop_back();
@@ -73,7 +96,7 @@ class ConfigHandler : public CivetHandler {
     return true;
   }
 
-  bool handleGet(CivetServer *server, struct mg_connection *conn) {
+  virtual bool handleGet(CivetServer *server, struct mg_connection *conn) override {
     std::ifstream myfile(test_file_location_.c_str());
 
     if (myfile.is_open()) {
@@ -146,6 +169,7 @@ int main(int argc, char **argv) {
   configuration->set("nifi.c2.enable", "true");
   configuration->set("nifi.c2.agent.class", "test");
   configuration->set("nifi.c2.rest.url", "http://localhost:7071/update");
+  configuration->set("nifi.c2.rest.url.ack", "http://localhost:7071/update");
   configuration->set("nifi.c2.agent.heartbeat.period", "1000");
   mkdir("content_repository", S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 
@@ -161,7 +185,7 @@ int main(int argc, char **argv) {
   std::shared_ptr<TestRepository> repo = std::static_pointer_cast<TestRepository>(test_repo);
 
   std::shared_ptr<minifi::FlowController> controller = std::make_shared<minifi::FlowController>(test_repo, test_flow_repo, configuration, std::move(yaml_ptr), content_repo, DEFAULT_ROOT_GROUP_NAME,
-  true);
+                                                                                                true);
 
   core::YamlConfiguration yaml_config(test_repo, test_repo, content_repo, stream_factory, configuration, test_file_location);
 
