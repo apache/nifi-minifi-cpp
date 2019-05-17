@@ -127,7 +127,7 @@ C2Agent::C2Agent(const std::shared_ptr<core::controller::ControllerServiceProvid
 }
 
 void C2Agent::checkTriggers() {
-  logger_->log_info("Checking %d triggers", triggers_.size());
+  logger_->log_debug("Checking %d triggers", triggers_.size());
   for (const auto &trigger : triggers_) {
     if (trigger->triggered()) {
       /**
