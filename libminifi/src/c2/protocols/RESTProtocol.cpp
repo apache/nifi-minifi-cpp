@@ -256,8 +256,31 @@ std::string RESTProtocol::serializeJsonRootPayload(const C2Payload& payload) {
 
   std::string operationid = payload.getIdentifier();
   if (operationid.length() > 0) {
-    json_payload.AddMember("operationid", getStringValue(operationid, alloc), alloc);
     json_payload.AddMember("operationId", getStringValue(operationid, alloc), alloc);
+    std::string operationStateStr = "FULLY_APPLIED";
+    switch (payload.getStatus().getState()) {
+      case state::UpdateState::FULLY_APPLIED:
+        operationStateStr = "FULLY_APPLIED";
+        break;
+      case state::UpdateState::PARTIALLY_APPLIED:
+        operationStateStr = "PARTIALLY_APPLIED";
+        break;
+      case state::UpdateState::READ_ERROR:
+        operationStateStr = "OPERATION_NOT_UNDERSTOOD";
+        break;
+      case state::UpdateState::SET_ERROR:
+      default:
+        operationStateStr = "NOT_APPLIED";
+    }
+
+    rapidjson::Value opstate(rapidjson::kObjectType);
+
+    opstate.AddMember("state", getStringValue(operationStateStr, alloc), alloc);
+    const auto details = payload.getRawData();
+
+    opstate.AddMember("details", getStringValue(std::string(details.data(), details.size()), alloc), alloc);
+
+    json_payload.AddMember("operationState", opstate, alloc);
     json_payload.AddMember("identifier", getStringValue(operationid, alloc), alloc);
   }
 

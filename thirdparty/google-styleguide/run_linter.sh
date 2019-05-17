@@ -40,4 +40,4 @@ done
 
 HEADERS=`find $INCLUDE_DIRS -name '*.h' | sort | uniq | tr '\n' ','`
 SOURCES=`find $SOURCE_DIRS -name  '*.cpp' | sort | uniq | tr '\n' ' '`
-python2 ${SCRIPT_DIR}/cpplint.py --linelength=200 --headers=${HEADERS} ${SOURCES}
+python ${SCRIPT_DIR}/cpplint.py --linelength=200 --headers=${HEADERS} ${SOURCES}
