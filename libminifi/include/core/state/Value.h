@@ -69,6 +69,8 @@ class Value {
     return type_id;
   }
 
+  static const std::type_index UINT16_TYPE;
+  static const std::type_index INT16_TYPE;
   static const std::type_index UINT64_TYPE;
   static const std::type_index INT64_TYPE;
   static const std::type_index INT_TYPE;
@@ -88,6 +90,20 @@ class Value {
   }
 
   virtual bool getValue(int &ref) {
+    ref = std::stol(string_value);
+    return true;
+  }
+
+  virtual bool getValue(int16_t &ref) {
+    ref = std::stol(string_value);
+    return true;
+  }
+
+  virtual bool getValue(uint16_t &ref) {
+    const auto negative = string_value.find_first_of('-') != std::string::npos;
+    if (negative) {
+      return false;
+    }
     ref = std::stol(string_value);
     return true;
   }

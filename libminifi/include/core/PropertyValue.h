@@ -101,6 +101,22 @@ class PropertyValue : public state::response::ValueNode {
     throw std::runtime_error("Invalid conversion to int64_t");
   }
 
+  operator uint16_t() const {
+    uint16_t res;
+    if (value_->convertValue(res)) {
+      return res;
+    }
+      throw std::runtime_error("Invalid conversion to uint16_t for" + value_->getStringValue());
+  };
+
+  operator int16_t() const {
+    int16_t res;
+    if (value_->convertValue(res)) {
+      return res;
+    }
+    throw std::runtime_error("Invalid conversion to int16_t for" + value_->getStringValue());
+  };
+
   operator int() const {
     int res;
     if (value_->convertValue(res)) {
@@ -157,6 +173,7 @@ class PropertyValue : public state::response::ValueNode {
 
   template<typename T>
   auto operator=(const T ref) -> typename std::enable_if<std::is_same<T, int >::value ||
+  std::is_same<T, uint16_t >::value ||
   std::is_same<T, uint32_t >::value ||
   std::is_same<T, uint64_t >::value ||
   std::is_same<T, int64_t >::value ||

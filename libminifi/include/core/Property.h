@@ -381,6 +381,14 @@ class Property {
     return StringToInt<uint32_t>(input, output);
   }
 
+  static bool StringToInt(std::string input, int16_t &output) {
+    return StringToInt<int16_t>(input, output);
+  }
+
+  static bool StringToInt(std::string input, uint16_t &output) {
+    return StringToInt<uint16_t>(input, output);
+  }
+
  protected:
 
   /**

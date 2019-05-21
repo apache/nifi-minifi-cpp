@@ -119,9 +119,9 @@ void CaptureRTSPFrame::onSchedule(core::ProcessContext *context, core::ProcessSe
   rtspURI.append(rtsp_password_);
   rtspURI.append("@");
   rtspURI.append(rtsp_host_);
-  if (rtsp_port > 0 && rtsp_port <= 65535) {
+  if (rtsp_port_ > 0 && rtsp_port_ <= 65535) {
     rtspURI.append(":");
-    rtspURI.append(std::to_string(rtsp_port));
+    rtspURI.append(std::to_string(rtsp_port_));
   }
 
   if (!rtsp_uri_.empty()) {
