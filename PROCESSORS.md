@@ -20,6 +20,7 @@
 - [AppendHostInfo](#appendhostinfo)
 - [ApplyTemplate](#applytemplate)
 - [CapturePacket](#capturepacket)
+- [CaptureRTSPFrame](#captureRTSPFrame)
 - [CompressContent](#compresscontent)
 - [ConsumeMQTT](#consumemqtt)
 - [ConvertHeartBeat](#convertheartbeat)
@@ -130,6 +131,40 @@ default values, and whether a property supports the NiFi Expression Language.
 | Name | Description |
 | - | - |
 | success | All FlowFiles are routed to this relationship. |
+
+
+## CaptureRTSPFrame
+
+### Description
+
+CaptureRTSPFrame captures an individual frame from a RTSP stream at the processors scheduled
+intervals. Each frame that is captured is encoded to the desired image format 
+and placed in the content payload for the newly created flowfile that 
+it creates. This functionality is desirable when not looking to capture the
+raw video stream from an IP camera but rather individual frames so that
+more complex operations can be performed on that frame such as object detection.
+
+### Properties
+
+In the list below, the names of required properties appear in bold. Any other
+properties (not in bold) are considered optional. The table also indicates any
+default values, and whether a property supports the NiFi Expression Language.
+
+| Name | Default Value | Allowable Values | Description |
+| - | - | - | - |
+| RTSP Username | | | The username for connecting to the RTSP stream |
+| RTSP Password | | | Password used to connect to the RTSP stream |
+| RTSP Hostname | | | Hostname of the RTSP stream we are trying to connect to |
+| RTSP URI | | | URI that should be appended to the RTSP stream hostname |
+| RTSP Port | | | Port that should be connected to receive RTSP Frames |
+| Image Encoding | .jpeg | .bmp, .jpeg, .png, .tiff | The encoding that should be applied the the frame images captured from the RTSP stream |
+
+### Relationships
+
+| Name | Description |
+| - | - |
+| success | Successful capture of RTSP frame |
+| failure | Failures to capture RTSP frame |
 
 
 ## HashContent

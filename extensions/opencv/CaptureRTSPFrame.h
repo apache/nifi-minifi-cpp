@@ -54,9 +54,6 @@ class CaptureRTSPFrame : public core::Processor {
 
   void initialize() override;
   void onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory) override;
-  void onTrigger(core::ProcessContext *context, core::ProcessSession *session) override {
-    logger_->log_error("onTrigger invocation with raw pointers is not implemented");
-  }
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context,
                  const std::shared_ptr<core::ProcessSession> &session) override;
 
@@ -87,45 +84,11 @@ class CaptureRTSPFrame : public core::Processor {
   std::string rtsp_username_;
   std::string rtsp_password_;
   std::string rtsp_host_;
-  std::string rtsp_port_;
+  uint16_t rtsp_port_;
   std::string rtsp_uri_;
   cv::VideoCapture video_capture_;
   std::string image_encoding_;
   std::string video_backend_driver_;
-
-//  std::function<int()> f_ex;
-//
-//  std::atomic<bool> running_;
-//
-//  std::unique_ptr<DataHandler> handler_;
-//
-//  std::vector<std::string> endpoints;
-//
-//  std::map<std::string, std::future<int>*> live_clients_;
-//
-//  utils::ThreadPool<int> client_thread_pool_;
-//
-//  moodycamel::ConcurrentQueue<std::unique_ptr<io::Socket>> socket_ring_buffer_;
-//
-//  bool stay_connected_;
-//
-//  uint16_t concurrent_handlers_;
-//
-//  int8_t endOfMessageByte;
-//
-//  uint64_t reconnect_interval_;
-//
-//  uint64_t receive_buffer_size_;
-//
-//  uint16_t connection_attempt_limit_;
-//
-//  std::shared_ptr<GetTCPMetrics> metrics_;
-//
-//  // Mutex for ensuring clients are running
-//
-//  std::mutex mutex_;
-//
-//  std::shared_ptr<minifi::controllers::SSLContextService> ssl_service_;
 
 };
 

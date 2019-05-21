@@ -27,30 +27,42 @@ static core::Property rtspUsername;
 static core::Property rtspPassword;
 static core::Property rtspHostname;
 static core::Property rtspURI;
+static core::Property rtspPort;
 static core::Property captureFrameRate;
 static core::Property imageEncoding;
 
-core::Property CaptureRTSPFrame::RTSPUsername(  // NOLINT
-    "RTSP Username",
-    "The username for connecting to the RTSP stream", "");
-core::Property CaptureRTSPFrame::RTSPPassword(  // NOLINT
-    "RTSP Password",
-    "Password used to connect to the RTSP stream", "");
-core::Property CaptureRTSPFrame::RTSPHostname(  // NOLINT
-    "RTSP Hostname",
-    "Hostname of the RTSP stream we are trying to connect to", "");
-core::Property CaptureRTSPFrame::RTSPURI(  // NOLINT
-    "RTSP URI",
-    "URI that should be appended to the RTSP stream hostname", "");
-core::Property CaptureRTSPFrame::RTSPPort(  // NOLINT
-    "RTSP Port",
-    "Port that should be connected to to receive RTSP Frames",
-    "");
-core::Property CaptureRTSPFrame::ImageEncoding( // NOLINT
-    "Image Encoding",
-    "The encoding that should be applied the the frame images captured from the RTSP stream",
-    ".jpg"
-    );
+core::Property CaptureRTSPFrame::RTSPUsername(
+    core::PropertyBuilder::createProperty("RTSP Username")
+        ->withDescription("The username for connecting to the RTSP stream")
+        ->isRequired(false)->build());
+
+core::Property CaptureRTSPFrame::RTSPPassword(
+    core::PropertyBuilder::createProperty("RTSP Password")
+        ->withDescription("Password used to connect to the RTSP stream")
+        ->isRequired(false)->build());
+
+core::Property CaptureRTSPFrame::RTSPHostname(
+    core::PropertyBuilder::createProperty("RTSP Hostname")
+        ->withDescription("Hostname of the RTSP stream we are trying to connect to")
+        ->isRequired(true)->build());
+
+core::Property CaptureRTSPFrame::RTSPURI(
+    core::PropertyBuilder::createProperty("RTSP URI")
+        ->withDescription("URI that should be appended to the RTSP stream hostname")
+        ->isRequired(true)->build());
+
+core::Property CaptureRTSPFrame::RTSPPort(
+    core::PropertyBuilder::createProperty("RTSP Port")
+        ->withDescription("Port that should be connected to receive RTSP Frames")
+        ->isRequired(true)
+        ->withDefaultValue<uint16_t>(554)->build());
+
+core::Property CaptureRTSPFrame::ImageEncoding(
+    core::PropertyBuilder::createProperty("Image Encoding")
+        ->withDescription("The encoding that should be applied the the frame images captured from the RTSP stream")
+        ->isRequired(true)
+        ->withAllowableValues<std::string>({".bmp", ".jpg", ".png", ".tiff"})
+        ->withDefaultValue(".jpg")->build());
 
 core::Relationship CaptureRTSPFrame::Success(  // NOLINT
     "success",
@@ -78,6 +90,7 @@ void CaptureRTSPFrame::initialize() {
 void CaptureRTSPFrame::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory) {
 
   std::string value;
+  uint16_t portVal;
 
   if (context->getProperty(RTSPUsername.getName(), value)) {
     rtsp_username_ = value;
@@ -88,8 +101,8 @@ void CaptureRTSPFrame::onSchedule(core::ProcessContext *context, core::ProcessSe
   if (context->getProperty(RTSPHostname.getName(), value)) {
     rtsp_host_ = value;
   }
-  if (context->getProperty(RTSPPort.getName(), value)) {
-    rtsp_port_ = value;
+  if (context->getProperty(RTSPPort.getName(), portVal)) {
+    rtsp_port_ = portVal;
   }
   if (context->getProperty(RTSPURI.getName(), value)) {
     rtsp_uri_ = value;
@@ -106,9 +119,9 @@ void CaptureRTSPFrame::onSchedule(core::ProcessContext *context, core::ProcessSe
   rtspURI.append(rtsp_password_);
   rtspURI.append("@");
   rtspURI.append(rtsp_host_);
-  if (!rtsp_port_.empty()) {
+  if (rtsp_port > 0 && rtsp_port <= 65535) {
     rtspURI.append(":");
-    rtspURI.append(rtsp_port_);
+    rtspURI.append(std::to_string(rtsp_port));
   }
 
   if (!rtsp_uri_.empty()) {

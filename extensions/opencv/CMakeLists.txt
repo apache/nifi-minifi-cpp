@@ -21,9 +21,6 @@ include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 
 file(GLOB SOURCES  "*.cpp")
 
-set(BASE_DIR "${CMAKE_CURRENT_BINARY_DIR}/opencv")
-set(BYPRODUCT "${CMAKE_CURRENT_BINARY_DIR}/opencv-install/")
-
 set(BASE_DIR "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/opencv")
 set(BYPRODUCT "${BASE_DIR}/install")
 
@@ -38,6 +35,7 @@ build_git_project(opencv-external "${BASE_DIR}" "https://github.com/opencv/openc
         -DBUILD_opencv_apps=OFF
         -DBUILD_PERF_TESTS=OFF
         -DBUILD_TESTS=OFF
+        -DBUILD_JAVA=OFF
         -DBUILD_opencv_calib3d=ON
         -DBUILD_opencv_core=ON
         -DBUILD_opencv_dnn=ON
@@ -63,3 +61,4 @@ include_directories(${OpenCV_INCLUDE_DIRS})
 
 SET (OPENCV-EXTENSION minifi-opencv PARENT_SCOPE)
 register_extension(minifi-opencv)
+register_extension_linter(minifi-opencv-linter)
