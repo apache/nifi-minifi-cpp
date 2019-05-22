@@ -34,7 +34,7 @@ it is meant to provide testing and minimal operational capabilities by example.
 
 ## Managing MiNiFi
 
-The MiNiFi controller is an executable in the bin directory that can be used to control the MiNiFi C++ agent while it runs -- utilizing the [Command and Control Protocol](https://cwiki.apache.org/confluence/display/MINIFI/C2+Design+Proposal). Currently the controller will let you stop subcomponents within a running instance, clear queues, get the status of queues, and update the flow for a warm re-deploy. 
+The MiNiFi controller is an executable in the bin directory that can be used to control the MiNiFi C++ agent while it runs -- utilizing the [Command and Control Protocol](https://cwiki.apache.org/confluence/display/MINIFI/C2+Design). Currently the controller will let you stop subcomponents within a running instance, clear queues, get the status of queues, and update the flow for a warm re-deploy. 
 
 The minificontroller can track a single MiNiFi C++ agent through the use of three options. Port is required.
 The hostname is not and will default to localhost. Additionally, controller.socket.local.any.interface allows
