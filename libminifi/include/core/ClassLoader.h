@@ -21,6 +21,7 @@
 #include <mutex>
 #include <vector>
 #include <map>
+#include <memory>
 #include "utils/StringUtils.h"
 #ifndef WIN32
 #include <dlfcn.h>
@@ -52,6 +53,27 @@ namespace core {
 #define RTLD_GLOBAL (1 << 1)
 #define RTLD_LOCAL  (1 << 2)
 #endif
+
+/**
+ * Class used to provide a global initialization and deinitialization function for an ObjectFactory.
+ * Calls to instances of all ObjectFactoryInitializers are done under a unique lock.
+ */
+class ObjectFactoryInitializer {
+ public:
+  virtual ~ObjectFactoryInitializer() {
+  }
+
+  /**
+   * This function is be called before the ObjectFactory is used.
+   * @return whether the initialization was successful. If false, deinitialize will NOT be called.
+   */
+  virtual bool initialize() = 0;
+
+  /**
+   * This function will be called after the ObjectFactory is not needed anymore.
+   */
+  virtual void deinitialize() = 0;
+};
 
 /**
  * Factory that is used as an interface for
@@ -100,6 +122,13 @@ class ObjectFactory {
    * Create a shared pointer to a new processor.
    */
   virtual CoreComponent* createRaw(const std::string &name, utils::Identifier & uuid) {
+    return nullptr;
+  }
+
+  /**
+   * Returns an initializer for the factory.
+   */
+  virtual std::unique_ptr<ObjectFactoryInitializer> getInitializer() {
     return nullptr;
   }
 
@@ -238,6 +267,9 @@ class ClassLoader {
   ClassLoader();
 
   ~ClassLoader() {
+    for (auto& initializer : initializers_) {
+      initializer->deinitialize();
+    }
     loaded_factories_.clear();
     for (auto ptr : dl_handles_) {
       dlclose(ptr);
@@ -287,6 +319,12 @@ class ClassLoader {
     std::lock_guard<std::mutex> lock(internal_mutex_);
     if (loaded_factories_.find(name) != loaded_factories_.end()) {
       return;
+    }
+
+    auto initializer = factory->getInitializer();
+    if (initializer != nullptr) {
+      initializer->initialize();
+      initializers_.emplace_back(std::move(initializer));
     }
 
     auto canonical_name = factory->getClassName();
@@ -526,6 +564,8 @@ class ClassLoader {
   std::mutex internal_mutex_;
 
   std::vector<void *> dl_handles_;
+
+  std::vector<std::unique_ptr<ObjectFactoryInitializer>> initializers_;
 };
 
 template<class T>
