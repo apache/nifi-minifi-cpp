@@ -298,9 +298,10 @@ The MQTTController Service can be configured for MQTT connectivity and provide t
   In the configuration below there are two classes defined under "NetworkPrioritizerService", one class "NetworkPrioritizerService2" defines en0, and en1.
   If en0 is down at any point, then en1 will be given priority before resorting to en2 and en3 of  "NetworkPrioritizerService3". If the throughput for 
   "NetworkPrioritizerService2" exceeds the defined throughput or the max payload of 1024, then "NetworkPrioritizerService3" will be used. If Max Payload and 
-  Max Throughput are not defined, then they will not be limiting factors. As of release, 0.5.0, Max Payload will only be used for processors that custom 
-  implement that feature. RPGs will not support max payloads until 0.6.0. Additionally, since connection queues aren't prioritized, you must have a live connection
-  for your data to send it. Since connection queues can't be re-prioritized, this can create a starvation problem. The configuration is required to account for this.
+  Max Throughput are not defined, then they will not be limiting factors. 
+  
+  Since connection queues can't be re-prioritized, this can create a starvation problem if no connection is available. 
+  The configuration is required to account for this.
     
    Controller Services:
    - name: NetworkPrioritizerService
