@@ -29,7 +29,7 @@ set(BYPRODUCT "${CMAKE_CURRENT_BINARY_DIR}/aws-sdk-install/")
 ExternalProject_Add(
         awssdk-external
         GIT_REPOSITORY "https://github.com/aws/aws-sdk-cpp.git"
-        GIT_TAG "09b65deba03cfbef9a1e5d5986aa4de71bc03cd8"
+        GIT_TAG "66666d9437429c28927576cb5c898e490f8c8cf9"
         EXCLUDE_FROM_ALL TRUE
         INSTALL_DIR ${BYPRODUCT}
         CMAKE_ARGS -DBUILD_ONLY=s3
