@@ -25,6 +25,15 @@ file(GLOB SOURCES "*.cpp" "s3/*.cpp" "controllerservices/*.cpp")
 set(BASE_DIR "${CMAKE_CURRENT_BINARY_DIR}/aws-sdk-cpp")
 set(BYPRODUCT "${CMAKE_CURRENT_BINARY_DIR}/aws-sdk-install/")
 
+
+if(STATIC_BUILD)
+    set(MINIFI_AWS_BUILD_SHARED_LIBS "OFF")
+    set(MINIFI_AWS_UNITY_BUILD "ON")
+else()
+    set(MINIFI_AWS_BUILD_SHARED_LIBS "ON")
+    set(MINIFI_AWS_UNITY_BUILD "OFF")
+endif()
+
 # AWS SDK 1.7.89
 ExternalProject_Add(
         awssdk-external
@@ -33,10 +42,11 @@ ExternalProject_Add(
         EXCLUDE_FROM_ALL TRUE
         INSTALL_DIR ${BYPRODUCT}
         CMAKE_ARGS -DBUILD_ONLY=s3
-                    -DENABLE_TESTING=OFF
-                    -DBUILD_SHARED_LIBS=ON
-                    -DCMAKE_BUILD_TYPE=RelWithDebInfo
-                    -DCMAKE_INSTALL_PREFIX=${BYPRODUCT}
+        -DENABLE_TESTING=OFF
+        -DBUILD_SHARED_LIBS=${MINIFI_AWS_BUILD_SHARED_LIBS}
+        -DENABLE_UNITY_BUILD=${MINIFI_AWS_UNITY_BUILD}
+        -DCMAKE_BUILD_TYPE=RelWithDebInfo
+        -DCMAKE_INSTALL_PREFIX=${BYPRODUCT}
 )
 
 add_library(awssdklib STATIC IMPORTED)
@@ -50,17 +60,28 @@ set(AWSSDK_LIBRARY awssdklib CACHE STRING "" FORCE)
 include_directories(${AWSSDK_INCLUDE_DIRS})
 add_library(minifi-aws STATIC ${SOURCES})
 
+if(STATIC_BUILD)
+    set(SUFFIX "a")
+else()
+    if(APPLE)
+        set(SUFFIX "dylib")
+    else()
+        set(SUFFIX "so")
+    endif()
+endif()
+
+
 if (APPLE)
-    target_link_libraries (minifi-aws ${BYPRODUCT}lib/libaws-c-event-stream.dylib)
-    target_link_libraries (minifi-aws ${BYPRODUCT}lib/libaws-c-common.dylib)
-    target_link_libraries (minifi-aws ${BYPRODUCT}lib/libaws-cpp-sdk-core.dylib)
-    target_link_libraries (minifi-aws ${BYPRODUCT}lib/libaws-cpp-sdk-s3.dylib)
-else ()
-    target_link_libraries (minifi-aws ${BYPRODUCT}lib/libaws-c-event-stream.so)
-    target_link_libraries (minifi-aws ${BYPRODUCT}lib/libaws-c-common.so)
-    target_link_libraries (minifi-aws ${BYPRODUCT}lib/libaws-cpp-sdk-core.so)
-    target_link_libraries (minifi-aws ${BYPRODUCT}lib/libaws-cpp-sdk-s3.so)
-endif ()
+    if(STATIC_BUILD)
+        target_link_libraries(minifi-aws "-framework CoreFoundation")
+    endif()
+endif()
+
+target_link_libraries(minifi-aws ${BYPRODUCT}lib/libaws-c-common.${SUFFIX})
+target_link_libraries(minifi-aws ${BYPRODUCT}lib/libaws-checksums.${SUFFIX})
+target_link_libraries(minifi-aws ${BYPRODUCT}lib/libaws-c-event-stream.${SUFFIX})
+target_link_libraries(minifi-aws ${BYPRODUCT}lib/libaws-cpp-sdk-core.${SUFFIX})
+target_link_libraries(minifi-aws ${BYPRODUCT}lib/libaws-cpp-sdk-s3.${SUFFIX})
 
 add_dependencies(minifi-aws awssdk-external)
 SET (AWS-EXTENSION minifi-aws PARENT_SCOPE)
