@@ -83,7 +83,6 @@ SFTPClient::SFTPClient(const std::string &hostname, uint16_t port, const std::st
       ssh_session_(nullptr),
       sftp_session_(nullptr),
       connected_(false) {
-  SFTPClientInitializer::getInstance()->initialize();
   easy_ = curl_easy_init();
   if (easy_ == nullptr) {
     throw std::runtime_error("Cannot create curl easy handle");

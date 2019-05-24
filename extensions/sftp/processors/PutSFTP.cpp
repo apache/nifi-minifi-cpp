@@ -230,7 +230,6 @@ PutSFTP::PutSFTP(std::string name, utils::Identifier uuid /*= utils::Identifier(
     use_keepalive_on_timeout_(false),
     use_compression_(false),
     running_(true) {
-  utils::SFTPClientInitializer::getInstance()->initialize();
 }
 
 PutSFTP::~PutSFTP() {

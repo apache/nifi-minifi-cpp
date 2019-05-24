@@ -40,30 +40,6 @@ namespace nifi {
 namespace minifi {
 namespace utils {
 
-/**
- * Initializes and cleans up curl and libssh2 once.
- * Cleanup will only occur at the end of our execution since we are relying on a static variable.
- */
-class SFTPClientInitializer {
- public:
-  static SFTPClientInitializer *getInstance() {
-    static SFTPClientInitializer initializer;
-    return &initializer;
-  }
-  void initialize() {
-
-  }
- private:
-  SFTPClientInitializer() {
-    libssh2_init(0);
-    curl_global_init(CURL_GLOBAL_DEFAULT);
-  }
-  ~SFTPClientInitializer() {
-    curl_global_cleanup();
-    libssh2_exit();
-  }
-};
-
 class SFTPClient {
  public:
 
