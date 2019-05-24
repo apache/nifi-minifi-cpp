@@ -280,7 +280,7 @@ show_supported_features() {
 
 read_feature_options(){
   local choice
-  read -p "Enter choice [ A - T or 1-4 ] " choice
+  read -p "Enter choice [ A - V or 1-4 ] " choice
   choice=$(echo ${choice} | tr '[:upper:]' '[:lower:]')
   case $choice in
     a) ToggleFeature ROCKSDB_ENABLED ;;
@@ -321,7 +321,7 @@ read_feature_options(){
       fi
       ;;
     q) exit 0;;
-    *) echo -e "${RED}Please enter an option A-T or 1-4...${NO_COLOR}" && sleep 2
+    *) echo -e "${RED}Please enter an option A-V or 1-4...${NO_COLOR}" && sleep 2
   esac
 }
 
