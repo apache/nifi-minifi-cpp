@@ -29,16 +29,17 @@
 #include "io/ServerSocket.h"
 #include "io/tls/TLSSocket.h"
 #include "utils/ThreadPool.h"
+using Sockets = org::apache::nifi::minifi::io::Socket;
 
 TEST_CASE("TestSocket", "[TestSocket1]") {
-  org::apache::nifi::minifi::io::Socket socket(std::make_shared<org::apache::nifi::minifi::io::SocketContext>(std::make_shared<minifi::Configure>()), "localhost", 8183);
+  org::apache::nifi::minifi::io::Socket socket(std::make_shared<org::apache::nifi::minifi::io::SocketContext>(std::make_shared<minifi::Configure>()), Sockets::getMyHostName(), 8183);
   REQUIRE(-1 == socket.initialize());
-  REQUIRE(socket.getHostname().rfind("localhost", 0) == 0);
+  REQUIRE(socket.getHostname().rfind(Sockets::getMyHostName(), 0) == 0);
   socket.closeStream();
 }
 
 TEST_CASE("TestSocketWriteTest1", "[TestSocket2]") {
-  org::apache::nifi::minifi::io::Socket socket(std::make_shared<org::apache::nifi::minifi::io::SocketContext>(std::make_shared<minifi::Configure>()), "localhost", 8183);
+  org::apache::nifi::minifi::io::Socket socket(std::make_shared<org::apache::nifi::minifi::io::SocketContext>(std::make_shared<minifi::Configure>()), Sockets::getMyHostName(), 8183);
   REQUIRE(-1 == socket.initialize());
 
   socket.writeData(0, 0);
@@ -55,12 +56,11 @@ TEST_CASE("TestSocketWriteTest2", "[TestSocket3]") {
   std::vector<uint8_t> buffer;
   buffer.push_back('a');
   std::shared_ptr<org::apache::nifi::minifi::io::SocketContext> socket_context = std::make_shared<org::apache::nifi::minifi::io::SocketContext>(std::make_shared<minifi::Configure>());
-
-  org::apache::nifi::minifi::io::ServerSocket server(socket_context, "localhost", 9183, 1);
+  org::apache::nifi::minifi::io::ServerSocket server(socket_context, Sockets::getMyHostName(), 9183, 1);
 
   REQUIRE(-1 != server.initialize());
 
-  org::apache::nifi::minifi::io::Socket client(socket_context, "localhost", 9183);
+  org::apache::nifi::minifi::io::Socket client(socket_context, Sockets::getMyHostName(), 9183);
 
   REQUIRE(-1 != client.initialize());
 
@@ -79,7 +79,7 @@ TEST_CASE("TestSocketWriteTest2", "[TestSocket3]") {
 }
 
 TEST_CASE("TestGetHostName", "[TestSocket4]") {
-  REQUIRE(org::apache::nifi::minifi::io::Socket::getMyHostName().length() > 0);
+  REQUIRE(Sockets::getMyHostName().length() > 0);
 }
 
 TEST_CASE("TestWriteEndian64", "[TestSocket5]") {
@@ -87,11 +87,11 @@ TEST_CASE("TestWriteEndian64", "[TestSocket5]") {
   buffer.push_back('a');
   std::shared_ptr<org::apache::nifi::minifi::io::SocketContext> socket_context = std::make_shared<org::apache::nifi::minifi::io::SocketContext>(std::make_shared<minifi::Configure>());
 
-  org::apache::nifi::minifi::io::ServerSocket server(socket_context, "localhost", 9183, 1);
+  org::apache::nifi::minifi::io::ServerSocket server(socket_context, Sockets::getMyHostName(), 9183, 1);
 
   REQUIRE(-1 != server.initialize());
 
-  org::apache::nifi::minifi::io::Socket client(socket_context, "localhost", 9183);
+  org::apache::nifi::minifi::io::Socket client(socket_context, Sockets::getMyHostName(), 9183);
 
   REQUIRE(-1 != client.initialize());
 
@@ -114,10 +114,10 @@ TEST_CASE("TestWriteEndian32", "[TestSocket6]") {
 
   std::shared_ptr<org::apache::nifi::minifi::io::SocketContext> socket_context = std::make_shared<org::apache::nifi::minifi::io::SocketContext>(std::make_shared<minifi::Configure>());
 
-  org::apache::nifi::minifi::io::ServerSocket server(socket_context, "localhost", 9183, 1);
+  org::apache::nifi::minifi::io::ServerSocket server(socket_context, Sockets::getMyHostName(), 9183, 1);
   REQUIRE(-1 != server.initialize());
 
-  org::apache::nifi::minifi::io::Socket client(socket_context, "localhost", 9183);
+  org::apache::nifi::minifi::io::Socket client(socket_context, Sockets::getMyHostName(), 9183);
 
   REQUIRE(-1 != client.initialize());
   {
@@ -149,11 +149,11 @@ TEST_CASE("TestSocketWriteTestAfterClose", "[TestSocket7]") {
 
   std::shared_ptr<org::apache::nifi::minifi::io::SocketContext> socket_context = std::make_shared<org::apache::nifi::minifi::io::SocketContext>(std::make_shared<minifi::Configure>());
 
-  org::apache::nifi::minifi::io::ServerSocket server(socket_context, "localhost", 9183, 1);
+  org::apache::nifi::minifi::io::ServerSocket server(socket_context, Sockets::getMyHostName(), 9183, 1);
 
   REQUIRE(-1 != server.initialize());
 
-  org::apache::nifi::minifi::io::Socket client(socket_context, "localhost", 9183);
+  org::apache::nifi::minifi::io::Socket client(socket_context, Sockets::getMyHostName(), 9183);
 
   REQUIRE(-1 != client.initialize());
 
@@ -221,7 +221,7 @@ TEST_CASE("TestTLSContextCreation2", "[TestSocket9]") {
   std::shared_ptr<minifi::Configure> configure = std::make_shared<minifi::Configure>();
   configure->set("nifi.remote.input.secure", "false");
   auto factory = minifi::io::StreamFactory::getInstance(configure);
-  std::string host = "localhost";
+  std::string host = Sockets::getMyHostName();
   minifi::io::Socket *socket = factory->createSocket(host, 10001).release();
   minifi::io::TLSSocket *tls = dynamic_cast<minifi::io::TLSSocket*>(socket);
   REQUIRE(tls == nullptr);
@@ -235,9 +235,8 @@ TEST_CASE("TestTLSContextCreationNullptr", "[TestSocket10]") {
   std::shared_ptr<minifi::Configure> configure = std::make_shared<minifi::Configure>();
   configure->set("nifi.remote.input.secure", "false");
   auto factory = minifi::io::StreamFactory::getInstance(configure);
-  std::string host = "localhost";
+  std::string host = Sockets::getMyHostName();
   minifi::io::Socket *socket = factory->createSecureSocket(host, 10001, nullptr).release();
   minifi::io::TLSSocket *tls = dynamic_cast<minifi::io::TLSSocket*>(socket);
   REQUIRE(tls == nullptr);
 }
-

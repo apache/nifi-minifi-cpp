@@ -20,6 +20,8 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <sstream>
+#include <iostream>
 
 #include "../TestBase.h"
 #include "core/logging/LoggerConfiguration.h"
@@ -48,7 +50,7 @@ class TestLoggerConfiguration : public logging::LoggerConfiguration {
     return logging::LoggerConfiguration::get_logger(LogTestController::getInstance().logger_, root_namespace, name, formatter);
   }
 };
-
+#ifndef WIN32
 TEST_CASE("TestLoggerConfiguration::initialize_namespaces", "[test initialize_namespaces]") {
   TestController test_controller;
   LogTestController &logTestController = LogTestController::getInstance();
@@ -96,3 +98,4 @@ TEST_CASE("TestLoggerConfiguration::initialize_namespaces", "[test initialize_na
   logTestController.resetStream(stdout);
   logTestController.resetStream(stderr);
 }
+#endif

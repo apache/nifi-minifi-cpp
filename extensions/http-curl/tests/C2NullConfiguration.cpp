@@ -108,7 +108,7 @@ class VerifyC2Server : public CoapIntegrationBase {
 
  protected:
   bool isSecure;
-  char *dir;
+  std::string dir;
   std::stringstream ss;
   TestController testController;
 };

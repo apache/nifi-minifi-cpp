@@ -233,6 +233,7 @@ int16_t Socket::initialize() {
   gethostbyname_r(host, &he, buf, sizeof(buf), &h, &hh_errno);
 #endif
   if (h == nullptr) {
+    logger_->log_error("hostname not defined for %s", requested_hostname_);
     return -1;
   }
   memcpy(reinterpret_cast<char*>(&addr), h->h_addr_list[0], h->h_length);

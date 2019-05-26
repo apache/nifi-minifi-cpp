@@ -39,8 +39,6 @@
 TEST_CASE("GetTCPWithoutEOM", "[GetTCP1]") {
   utils::Identifier ident = utils::Identifier();
 
-  std::cout << (ident == nullptr) << std::endl;
-  std::cout << ident.to_string() << std::endl;
   TestController testController;
   std::vector<uint8_t> buffer;
   for (auto c : "Hello World\nHello Warld\nGoodByte Cruel world") {
@@ -51,7 +49,7 @@ TEST_CASE("GetTCPWithoutEOM", "[GetTCP1]") {
   content_repo->initialize(std::make_shared<minifi::Configure>());
 
   std::shared_ptr<org::apache::nifi::minifi::io::StreamFactory> stream_factory = minifi::io::StreamFactory::getInstance(std::make_shared<minifi::Configure>());
-  org::apache::nifi::minifi::io::RandomServerSocket server("localhost");
+  org::apache::nifi::minifi::io::RandomServerSocket server(org::apache::nifi::minifi::io::Socket::getMyHostName());
 
   LogTestController::getInstance().setDebug<minifi::processors::LogAttribute>();
   LogTestController::getInstance().setDebug<minifi::processors::GetTCP>();
@@ -101,7 +99,7 @@ TEST_CASE("GetTCPWithoutEOM", "[GetTCP1]") {
     std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider = nullptr;
     std::shared_ptr<core::ProcessContext> context = std::make_shared<core::ProcessContext>(node, controller_services_provider, repo, repo, content_repo);
     std::shared_ptr<core::ProcessContext> context2 = std::make_shared<core::ProcessContext>(node2, controller_services_provider, repo, repo, content_repo);
-  context->setProperty(org::apache::nifi::minifi::processors::GetTCP::EndpointList, "localhost:" + std::to_string(server.getPort()));
+  context->setProperty(org::apache::nifi::minifi::processors::GetTCP::EndpointList, org::apache::nifi::minifi::io::Socket::getMyHostName() + ":" + std::to_string(server.getPort()));
   context->setProperty(org::apache::nifi::minifi::processors::GetTCP::ReconnectInterval, "100 msec");
   auto session = std::make_shared<core::ProcessSession>(context);
     auto session2 = std::make_shared<core::ProcessSession>(context2);
@@ -161,7 +159,7 @@ TEST_CASE("GetTCPWithOEM", "[GetTCP2]") {
 
   TestController testController;
 
-  org::apache::nifi::minifi::io::RandomServerSocket server("localhost");
+  org::apache::nifi::minifi::io::RandomServerSocket server(org::apache::nifi::minifi::io::Socket::getMyHostName());
 
   LogTestController::getInstance().setDebug<minifi::processors::LogAttribute>();
   LogTestController::getInstance().setTrace<core::repository::VolatileContentRepository >();
@@ -211,7 +209,7 @@ TEST_CASE("GetTCPWithOEM", "[GetTCP2]") {
     std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider = nullptr;
     std::shared_ptr<core::ProcessContext> context = std::make_shared<core::ProcessContext>(node, controller_services_provider, repo, repo, content_repo);
     std::shared_ptr<core::ProcessContext> context2 = std::make_shared<core::ProcessContext>(node2, controller_services_provider, repo, repo, content_repo);
-  context->setProperty(org::apache::nifi::minifi::processors::GetTCP::EndpointList, "localhost:" + std::to_string(server.getPort()));
+  context->setProperty(org::apache::nifi::minifi::processors::GetTCP::EndpointList, org::apache::nifi::minifi::io::Socket::getMyHostName() + ":" + std::to_string(server.getPort()));
   context->setProperty(org::apache::nifi::minifi::processors::GetTCP::ReconnectInterval, "100 msec");
   // we're using new lines above
   context->setProperty(org::apache::nifi::minifi::processors::GetTCP::EndOfMessageByte, "10");
@@ -285,7 +283,7 @@ TEST_CASE("GetTCPWithOnlyOEM", "[GetTCP3]") {
 
   LogTestController::getInstance().setDebug<minifi::io::Socket>();
 
-  org::apache::nifi::minifi::io::RandomServerSocket server("localhost");
+  org::apache::nifi::minifi::io::RandomServerSocket server(org::apache::nifi::minifi::io::Socket::getMyHostName());
 
   LogTestController::getInstance().setDebug<minifi::processors::LogAttribute>();
 
@@ -333,7 +331,7 @@ TEST_CASE("GetTCPWithOnlyOEM", "[GetTCP3]") {
     std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider = nullptr;
     std::shared_ptr<core::ProcessContext> context = std::make_shared<core::ProcessContext>(node, controller_services_provider, repo, repo, content_repo);
     std::shared_ptr<core::ProcessContext> context2 = std::make_shared<core::ProcessContext>(node2, controller_services_provider, repo, repo, content_repo);
-  context->setProperty(org::apache::nifi::minifi::processors::GetTCP::EndpointList, "localhost:" + std::to_string(server.getPort()));
+  context->setProperty(org::apache::nifi::minifi::processors::GetTCP::EndpointList, org::apache::nifi::minifi::io::Socket::getMyHostName() + ":" + std::to_string(server.getPort()));
   context->setProperty(org::apache::nifi::minifi::processors::GetTCP::ReconnectInterval, "100 msec");
   // we're using new lines above
   context->setProperty(org::apache::nifi::minifi::processors::GetTCP::EndOfMessageByte, "10");
@@ -399,7 +397,7 @@ TEST_CASE("GetTCPEmptyNoConnect", "[GetTCP3]") {
 
   plan->addProcessor("LogAttribute", "logattribute", core::Relationship("success", "description"), true);
 
-  plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetTCP::EndpointList.getName(), "localhost:9182");
+  plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetTCP::EndpointList.getName(), org::apache::nifi::minifi::io::Socket::getMyHostName() + ":9182");
   plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetTCP::ReconnectInterval.getName(), "100 msec");
   // we're using new lines above
   plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetTCP::EndOfMessageByte.getName(), "10");
@@ -410,7 +408,7 @@ TEST_CASE("GetTCPEmptyNoConnect", "[GetTCP3]") {
   REQUIRE(record == nullptr);
   REQUIRE(records.size() == 0);
 
-  REQUIRE(true == LogTestController::getInstance().contains("Could not create socket during initialization for localhost:9182"));
+  REQUIRE(true == LogTestController::getInstance().contains("Could not create socket during initialization for " + org::apache::nifi::minifi::io::Socket::getMyHostName()  + ":9182"));
   LogTestController::getInstance().reset();
 }
 

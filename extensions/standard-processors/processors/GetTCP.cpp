@@ -245,24 +245,36 @@ void GetTCP::onTrigger(const std::shared_ptr<core::ProcessContext> &context, con
   std::lock_guard<std::mutex> lock(mutex_);
   // check if the futures are valid. If they've terminated remove it from the map.
 
-  for (auto &endpoint : endpoints) {
+  for (auto &initEndpoint : endpoints) {
+    std::vector<std::string> hostAndPort = utils::StringUtils::split(initEndpoint, ":");
+    auto realizedHost = hostAndPort.at(0);
+#ifdef WIN32
+    if ("localhost" == realizedHost) {
+      realizedHost = org::apache::nifi::minifi::io::Socket::getMyHostName();
+    }
+#endif
+    if (hostAndPort.size() != 2) {
+      continue;
+    }
+
+    auto portStr = hostAndPort.at(1);
+    auto endpoint = realizedHost + ":" + portStr;
+
     auto endPointFuture = live_clients_.find(endpoint);
     // does not exist
     if (endPointFuture == live_clients_.end()) {
       logger_->log_info("creating endpoint for %s", endpoint);
-      std::vector<std::string> hostAndPort = utils::StringUtils::split(endpoint, ":");
       if (hostAndPort.size() == 2) {
-        logger_->log_debug("Opening another socket to %s:%s is secure %d", hostAndPort.at(0), hostAndPort.at(1), (ssl_service_ != nullptr));
+        logger_->log_debug("Opening another socket to %s:%s is secure %d", realizedHost, portStr, (ssl_service_ != nullptr));
         std::unique_ptr<io::Socket> socket =
-            ssl_service_ != nullptr ?
-                stream_factory_->createSecureSocket(hostAndPort.at(0), std::stoi(hostAndPort.at(1)), ssl_service_) : stream_factory_->createSocket(hostAndPort.at(0), std::stoi(hostAndPort.at(1)));
+            ssl_service_ != nullptr ? stream_factory_->createSecureSocket(realizedHost, std::stoi(portStr), ssl_service_) : stream_factory_->createSocket(realizedHost, std::stoi(portStr));
         if (!socket) {
           logger_->log_error("Could not create socket during initialization for %s", endpoint);
           continue;
         }
         socket->setNonBlocking();
         if (socket->initialize() != -1) {
-          logger_->log_debug("Enqueueing socket into ring buffer %s:%s", hostAndPort.at(0), hostAndPort.at(1));
+          logger_->log_debug("Enqueueing socket into ring buffer %s:%s", realizedHost, portStr);
           socket_ring_buffer_.enqueue(std::move(socket));
         } else {
           logger_->log_error("Could not create socket during initialization for %s", endpoint);

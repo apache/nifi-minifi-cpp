@@ -73,9 +73,9 @@ TEST_CASE("Test usage of ApplyTemplate", "[ApplyTemplateTest]") {
     char dir2[] = "/tmp/gt.XXXXXX";  // Template source
     char dir3[] = "/tmp/gt.XXXXXX";  // PutFile destionation
 
-    REQUIRE(testController.createTempDirectory(dir1) != nullptr);
-    REQUIRE(testController.createTempDirectory(dir2) != nullptr);
-    REQUIRE(testController.createTempDirectory(dir3) != nullptr);
+    REQUIRE(!testController.createTempDirectory(dir1).empty());
+    REQUIRE(!testController.createTempDirectory(dir2).empty());
+    REQUIRE(!testController.createTempDirectory(dir3).empty());
 
     std::shared_ptr<core::Processor> getfile = plan->addProcessor("GetFile", "getFile");
     plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), dir1);

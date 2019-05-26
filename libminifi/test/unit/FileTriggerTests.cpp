@@ -50,7 +50,7 @@ TEST_CASE("test valid  file no update", "[t3]") {
   TestController testController;
 
   char format[] = "/tmp/gt.XXXXXX";
-  char *dir = testController.createTempDirectory(format);
+  auto dir = testController.createTempDirectory(format);
 
   std::fstream file;
   std::stringstream ss;
@@ -73,7 +73,7 @@ TEST_CASE("test valid file update", "[t4]") {
   TestController testController;
 
   char format[] = "/tmp/gt.XXXXXX";
-  char *dir = testController.createTempDirectory(format);
+  auto dir = testController.createTempDirectory(format);
 
   std::fstream file;
   std::stringstream ss;

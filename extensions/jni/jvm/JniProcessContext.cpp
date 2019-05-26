@@ -30,7 +30,7 @@
 #include "properties/Configure.h"
 #include "JVMLoader.h"
 
-jstring Java_org_apache_nifi_processor_JniProcessContext_getPropertyValue(JNIEnv *env, jobject obj, jstring propertyName) {
+JNIEXPORT jstring JNICALL  Java_org_apache_nifi_processor_JniProcessContext_getPropertyValue(JNIEnv *env, jobject obj, jstring propertyName) {
   if (obj == nullptr || propertyName == nullptr) {
     return nullptr;
   }
@@ -50,7 +50,7 @@ jstring Java_org_apache_nifi_processor_JniProcessContext_getPropertyValue(JNIEnv
   return env->NewStringUTF(value.c_str());
 }
 
-jobject Java_org_apache_nifi_processor_JniProcessContext_getPropertyNames(JNIEnv *env, jobject obj) {
+JNIEXPORT jobject JNICALL Java_org_apache_nifi_processor_JniProcessContext_getPropertyNames(JNIEnv *env, jobject obj) {
   minifi::jni::JniProcessContext *context = minifi::jni::JVMLoader::getPtr<minifi::jni::JniProcessContext>(env, obj);
   auto cppProcessor = context->processor_;
   auto keys = cppProcessor->getProperties();
@@ -69,19 +69,19 @@ jobject Java_org_apache_nifi_processor_JniProcessContext_getPropertyNames(JNIEnv
   return result;
 }
 
-jobject Java_org_apache_nifi_processor_JniProcessContext_getComponent(JNIEnv *env, jobject obj) {
+JNIEXPORT jobject JNICALL  Java_org_apache_nifi_processor_JniProcessContext_getComponent(JNIEnv *env, jobject obj) {
   minifi::jni::JniProcessContext *context = minifi::jni::JVMLoader::getPtr<minifi::jni::JniProcessContext>(env, obj);
   minifi::jni::ThrowIf(env);
   return context->nifi_processor_;
 }
 
-jstring Java_org_apache_nifi_processor_JniProcessContext_getName(JNIEnv *env, jobject obj) {
+JNIEXPORT jstring JNICALL Java_org_apache_nifi_processor_JniProcessContext_getName(JNIEnv *env, jobject obj) {
   minifi::jni::JniProcessContext *context = minifi::jni::JVMLoader::getPtr<minifi::jni::JniProcessContext>(env, obj);
   minifi::jni::ThrowIf(env);
   return env->NewStringUTF(context->context_->getProcessorNode()->getName().c_str());
 }
 
-jobject Java_org_apache_nifi_processor_JniProcessContext_getControllerServiceLookup(JNIEnv *env, jobject obj) {
+JNIEXPORT jobject JNICALL Java_org_apache_nifi_processor_JniProcessContext_getControllerServiceLookup(JNIEnv *env, jobject obj) {
   minifi::jni::JniProcessContext *context = minifi::jni::JVMLoader::getPtr<minifi::jni::JniProcessContext>(env, obj);
   minifi::jni::ThrowIf(env);
   return context->cslookup_;

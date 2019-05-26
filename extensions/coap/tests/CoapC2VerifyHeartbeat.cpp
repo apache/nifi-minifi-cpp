@@ -192,7 +192,7 @@ class VerifyCoAPServer : public CoapIntegrationBase {
   moodycamel::ConcurrentQueue<minifi::coap::CoapResponse> responses;
   std::unique_ptr<minifi::coap::CoapServer> server;
   bool isSecure;
-  char *dir;
+  std::string dir;
   std::stringstream ss;
   TestController testController;
 };

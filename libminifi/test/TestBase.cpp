@@ -32,7 +32,8 @@ TestPlan::TestPlan(std::shared_ptr<core::ContentRepository> content_repo, std::s
   stream_factory = org::apache::nifi::minifi::io::StreamFactory::getInstance(std::make_shared<minifi::Configure>());
 }
 
-std::shared_ptr<core::Processor> TestPlan::addProcessor(const std::shared_ptr<core::Processor> &processor, const std::string &name, const std::initializer_list<core::Relationship>& relationships, bool linkToPrevious) {
+std::shared_ptr<core::Processor> TestPlan::addProcessor(const std::shared_ptr<core::Processor> &processor, const std::string &name, const std::initializer_list<core::Relationship>& relationships,
+                                                        bool linkToPrevious) {
   if (finalized) {
     return nullptr;
   }
@@ -64,7 +65,7 @@ std::shared_ptr<core::Processor> TestPlan::addProcessor(const std::shared_ptr<co
     logger_->log_info("Creating %s connection for proc %d", connection_name.str(), processor_queue_.size() + 1);
     std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(flow_repo_, content_repo_, connection_name.str());
 
-    for(const auto& relationship: relationships) {
+    for (const auto& relationship : relationships) {
       connection->addRelationship(relationship);
     }
 
@@ -88,7 +89,14 @@ std::shared_ptr<core::Processor> TestPlan::addProcessor(const std::shared_ptr<co
 
   processor_nodes_.push_back(node);
 
-  std::shared_ptr<core::ProcessContext> context = std::make_shared<core::ProcessContext>(node, controller_services_provider_, prov_repo_, flow_repo_, configuration_, content_repo_);
+  // std::shared_ptr<core::ProcessContext> context = std::make_shared<core::ProcessContext>(node, controller_services_provider_, prov_repo_, flow_repo_, configuration_, content_repo_);
+
+  auto contextBuilder = core::ClassLoader::getDefaultClassLoader().instantiate<core::ProcessContextBuilder>("ProcessContextBuilder");
+
+  contextBuilder = contextBuilder->withContentRepository(content_repo_)->withFlowFileRepository(flow_repo_)->withProvider(controller_services_provider_)->withProvenanceRepository(prov_repo_)->withConfiguration(configuration_);
+
+  auto context = contextBuilder->build(node);
+
   processor_contexts_.push_back(context);
 
   processor_queue_.push_back(processor);
@@ -96,7 +104,8 @@ std::shared_ptr<core::Processor> TestPlan::addProcessor(const std::shared_ptr<co
   return processor;
 }
 
-std::shared_ptr<core::Processor> TestPlan::addProcessor(const std::string &processor_name, utils::Identifier& uuid, const std::string &name, const std::initializer_list<core::Relationship>& relationships, bool linkToPrevious) {
+std::shared_ptr<core::Processor> TestPlan::addProcessor(const std::string &processor_name, utils::Identifier& uuid, const std::string &name,
+                                                        const std::initializer_list<core::Relationship>& relationships, bool linkToPrevious) {
   if (finalized) {
     return nullptr;
   }
@@ -113,7 +122,8 @@ std::shared_ptr<core::Processor> TestPlan::addProcessor(const std::string &proce
   return addProcessor(processor, name, relationships, linkToPrevious);
 }
 
-std::shared_ptr<core::Processor> TestPlan::addProcessor(const std::string &processor_name, const std::string &name, const std::initializer_list<core::Relationship>& relationships, bool linkToPrevious) {
+std::shared_ptr<core::Processor> TestPlan::addProcessor(const std::string &processor_name, const std::string &name, const std::initializer_list<core::Relationship>& relationships,
+                                                        bool linkToPrevious) {
   if (finalized) {
     return nullptr;
   }
@@ -122,8 +132,6 @@ std::shared_ptr<core::Processor> TestPlan::addProcessor(const std::string &proce
   utils::Identifier uuid;
 
   utils::IdGenerator::getIdGenerator()->generate(uuid);
-
-  std::cout << "generated " << uuid.to_string() << std::endl;
 
   return addProcessor(processor_name, uuid, name, relationships, linkToPrevious);
 }

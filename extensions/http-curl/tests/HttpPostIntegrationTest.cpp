@@ -92,7 +92,7 @@ class HttpTestHarness : public CoapIntegrationBase {
   }
 
  protected:
-  char *dir;
+  std::string dir;
   std::stringstream ss;
   TestController testController;
 };

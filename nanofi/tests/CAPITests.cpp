@@ -145,8 +145,8 @@ TEST_CASE("get file and put file", "[getAndPutFile]") {
 
   char src_format[] = "/tmp/gt.XXXXXX";
   char put_format[] = "/tmp/pt.XXXXXX";
-  const char *sourcedir = testController.createTempDirectory(src_format);
-  const char *putfiledir = testController.createTempDirectory(put_format);
+  auto sourcedir = testController.createTempDirectory(src_format);
+  auto putfiledir = testController.createTempDirectory(put_format);
   auto instance = create_instance_obj();
   REQUIRE(instance != nullptr);
   flow *test_flow = create_new_flow(instance);
@@ -155,10 +155,10 @@ TEST_CASE("get file and put file", "[getAndPutFile]") {
   REQUIRE(get_proc != nullptr);
   processor *put_proc = add_processor(test_flow, "PutFile");
   REQUIRE(put_proc != nullptr);
-  REQUIRE(set_property(get_proc, "Input Directory", sourcedir) == 0);
-  REQUIRE(set_property(put_proc, "Directory", putfiledir) == 0);
+  REQUIRE(set_property(get_proc, "Input Directory", sourcedir.c_str()) == 0);
+  REQUIRE(set_property(put_proc, "Directory", putfiledir.c_str()) == 0);
 
-  create_testfile_for_getfile(sourcedir);
+  create_testfile_for_getfile(sourcedir.c_str());
 
   flow_file_record *record = get_next_flow_file(instance, test_flow);
   REQUIRE(record != nullptr);
@@ -193,9 +193,9 @@ TEST_CASE("Test manipulation of attributes", "[testAttributes]") {
   TestController testController;
 
   char src_format[] = "/tmp/gt.XXXXXX";
-  const char *sourcedir = testController.createTempDirectory(src_format);
+  auto sourcedir = testController.createTempDirectory(src_format);
 
-  create_testfile_for_getfile(sourcedir);
+  create_testfile_for_getfile(sourcedir.c_str());
 
   auto instance = create_instance_obj();
   REQUIRE(instance != nullptr);
@@ -204,7 +204,7 @@ TEST_CASE("Test manipulation of attributes", "[testAttributes]") {
 
   processor *get_proc = add_processor(test_flow, "GetFile");
   REQUIRE(get_proc != nullptr);
-  REQUIRE(set_property(get_proc, "Input Directory", sourcedir) == 0);
+  REQUIRE(set_property(get_proc, "Input Directory", sourcedir.c_str()) == 0);
   processor *extract_test = add_processor(test_flow, "ExtractText");
   REQUIRE(extract_test != nullptr);
   REQUIRE(set_property(extract_test, "Attribute", "TestAttr") == 0);
@@ -268,7 +268,7 @@ TEST_CASE("Test manipulation of attributes", "[testAttributes]") {
 TEST_CASE("Test error handling callback", "[errorHandling]") {
   TestController testController;
   char src_format[] = "/tmp/gt.XXXXXX";
-  const char *sourcedir = testController.createTempDirectory(src_format);
+  auto sourcedir = testController.createTempDirectory(src_format);
 
   auto instance = create_instance_obj();
   REQUIRE(instance != nullptr);
@@ -283,11 +283,11 @@ TEST_CASE("Test error handling callback", "[errorHandling]") {
   REQUIRE(get_proc != nullptr);
   processor *put_proc = add_processor(test_flow, "PutFile");
   REQUIRE(put_proc != nullptr);
-  REQUIRE(set_property(get_proc, "Input Directory", sourcedir) == 0);
+  REQUIRE(set_property(get_proc, "Input Directory", sourcedir.c_str()) == 0);
   REQUIRE(set_property(put_proc, "Directory", "/tmp/never_existed") == 0);
   REQUIRE(set_property(put_proc, "Create Missing Directories", "false") == 0);
 
-  create_testfile_for_getfile(sourcedir);
+  create_testfile_for_getfile(sourcedir.c_str());
 
 
   REQUIRE(get_next_flow_file(instance, test_flow) == nullptr);
@@ -299,7 +299,7 @@ TEST_CASE("Test error handling callback", "[errorHandling]") {
   REQUIRE(set_failure_strategy(test_flow, FailureStrategy::ROLLBACK) == 0);
 
   // Create new testfile to trigger failure again
-  create_testfile_for_getfile(sourcedir, test_file_name + "2");
+  create_testfile_for_getfile(sourcedir.c_str(), test_file_name + "2");
 
   REQUIRE(get_next_flow_file(instance, test_flow) == nullptr);
   REQUIRE(failure_count > 100);
@@ -314,12 +314,12 @@ TEST_CASE("Test standalone processors", "[testStandalone]") {
   TestController testController;
 
   char src_format[] = "/tmp/gt.XXXXXX";
-  const char *sourcedir = testController.createTempDirectory(src_format);
+  auto sourcedir = testController.createTempDirectory(src_format);
 
-  create_testfile_for_getfile(sourcedir);
+  create_testfile_for_getfile(sourcedir.c_str());
 
   standalone_processor* getfile_proc = create_processor("GetFile");
-  REQUIRE(set_standalone_property(getfile_proc, "Input Directory", sourcedir) == 0);
+  REQUIRE(set_standalone_property(getfile_proc, "Input Directory", sourcedir.c_str()) == 0);
 
   flow_file_record* ffr = invoke(getfile_proc);
 
@@ -362,10 +362,10 @@ TEST_CASE("Test interaction of flow and standlone processors", "[testStandaloneW
 
   char src_format[] = "/tmp/gt.XXXXXX";
   char put_format[] = "/tmp/pt.XXXXXX";
-  const char *sourcedir = testController.createTempDirectory(src_format);
-  const char *putfiledir = testController.createTempDirectory(put_format);
+  auto sourcedir = testController.createTempDirectory(src_format);
+  auto putfiledir = testController.createTempDirectory(put_format);
 
-  create_testfile_for_getfile(sourcedir);
+  create_testfile_for_getfile(sourcedir.c_str());
 
   auto instance = create_instance_obj();
   REQUIRE(instance != nullptr);
@@ -374,13 +374,13 @@ TEST_CASE("Test interaction of flow and standlone processors", "[testStandaloneW
 
   processor *get_proc = add_processor(test_flow, "GetFile");
   REQUIRE(get_proc != nullptr);
-  REQUIRE(set_property(get_proc, "Input Directory", sourcedir) == 0);
+  REQUIRE(set_property(get_proc, "Input Directory", sourcedir.c_str()) == 0);
 
   flow_file_record *record = get_next_flow_file(instance, test_flow);
   REQUIRE(record != nullptr);
 
   standalone_processor* putfile_proc = create_processor("PutFile");
-  REQUIRE(set_standalone_property(putfile_proc, "Directory", putfiledir) == 0);
+  REQUIRE(set_standalone_property(putfile_proc, "Directory", putfiledir.c_str()) == 0);
 
   flow_file_record* put_record = invoke_ff(putfile_proc, record);
   REQUIRE(put_record != nullptr);
@@ -406,8 +406,8 @@ TEST_CASE("Test standalone processors with file input", "[testStandaloneWithFile
 
   enable_logging();
   char src_format[] = "/tmp/gt.XXXXXX";
-  const char *sourcedir = testController.createTempDirectory(src_format);
-  std::string path = create_testfile_for_getfile(sourcedir);
+  auto sourcedir = testController.createTempDirectory(src_format);
+  std::string path = create_testfile_for_getfile(sourcedir.c_str());
 
   standalone_processor* extract_test = create_processor("ExtractText");
   REQUIRE(extract_test != nullptr);
@@ -432,9 +432,9 @@ TEST_CASE("Test custom processor", "[TestCutomProcessor]") {
   TestController testController;
 
   char src_format[] = "/tmp/gt.XXXXXX";
-  const char *sourcedir = testController.createTempDirectory(src_format);
+  auto sourcedir = testController.createTempDirectory(src_format);
 
-  create_testfile_for_getfile(sourcedir);
+  create_testfile_for_getfile(sourcedir.c_str());
 
   add_custom_processor("myproc", custom_ontrigger_logic, custom_onschedule_logic);
 
@@ -446,7 +446,7 @@ TEST_CASE("Test custom processor", "[TestCutomProcessor]") {
   processor *get_proc = add_processor(test_flow, "GetFile");
   REQUIRE(get_proc != nullptr);
 
-  REQUIRE(set_property(get_proc, "Input Directory", sourcedir) == 0);
+  REQUIRE(set_property(get_proc, "Input Directory", sourcedir.c_str()) == 0);
 
   processor *my_proc = add_processor(test_flow, "myproc");
   REQUIRE(my_proc != nullptr);

@@ -472,7 +472,11 @@ build_cmake_command(){
   if [ $? == 0 ]; then
     echo "Using libcurl-openssl..."
   else
-    CMAKE_BUILD_COMMAND="${CMAKE_BUILD_COMMAND} -DUSE_CURL_NSS=true .."
+  	if [ "${USE_SHARED_LIBS}" = "${TRUE}" ]; then
+	    CMAKE_BUILD_COMMAND="${CMAKE_BUILD_COMMAND} -DUSE_CURL_NSS=true .."
+	else
+		echo "Using LibreSSL..."
+	fi
   fi
 
   CMAKE_BUILD_COMMAND="${CMAKE_BUILD_COMMAND} .."

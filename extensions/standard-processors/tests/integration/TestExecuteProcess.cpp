@@ -45,6 +45,7 @@
 #include "TestBase.h"
 
 int main(int argc, char **argv) {
+#ifndef WIN32
   TestController testController;
   std::shared_ptr<core::Processor> processor = std::make_shared<org::apache::nifi::minifi::processors::ExecuteProcess>("executeProcess");
   processor->setMaxConcurrentTasks(1);
@@ -107,4 +108,5 @@ int main(int argc, char **argv) {
   });
 
   std::shared_ptr<org::apache::nifi::minifi::processors::ExecuteProcess> execp = std::static_pointer_cast<org::apache::nifi::minifi::processors::ExecuteProcess>(processor);
+#endif
 }

@@ -86,3 +86,4 @@ endif ()
 
 SET (COAP-EXTENSION minifi-coap PARENT_SCOPE)
 register_extension(minifi-coap)
+

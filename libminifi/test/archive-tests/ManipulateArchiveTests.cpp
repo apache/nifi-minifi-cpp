@@ -63,7 +63,7 @@ bool run_archive_test(OrderedTestArchive input_archive, OrderedTestArchive outpu
     char dir1[] = "/tmp/gt.XXXXXX";
     char dir2[] = "/tmp/gt.XXXXXX";
 
-    REQUIRE(testController.createTempDirectory(dir1) != nullptr);
+    REQUIRE(!testController.createTempDirectory(dir1).empty());
     std::shared_ptr<core::Processor> getfile = plan->addProcessor("GetFile", "getfileCreate2");
     plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), dir1);
     plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::KeepSourceFile.getName(), "true");
@@ -74,7 +74,7 @@ bool run_archive_test(OrderedTestArchive input_archive, OrderedTestArchive outpu
       plan->setProperty(maprocessor, kv.first, kv.second);
     }
 
-    REQUIRE(testController.createTempDirectory(dir2) != nullptr);
+    REQUIRE(!testController.createTempDirectory(dir2).empty());
     std::shared_ptr<core::Processor> putfile2 = plan->addProcessor("PutFile", "PutFile2", core::Relationship("success", "description"), true);
     plan->setProperty(putfile2, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), dir2);
     plan->setProperty(putfile2, org::apache::nifi::minifi::processors::PutFile::ConflictResolution.getName(),

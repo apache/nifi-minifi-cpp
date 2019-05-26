@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include <core/ProcessContext.h>
+#include "ProcessContextExpr.h"
 #include <memory>
 namespace org {
 namespace apache {
@@ -23,14 +23,14 @@ namespace nifi {
 namespace minifi {
 namespace core {
 
-bool ProcessContext::getProperty(const Property &property, std::string &value, const std::shared_ptr<FlowFile> &flow_file) {
+bool ProcessContextExpr::getProperty(const Property &property, std::string &value, const std::shared_ptr<FlowFile> &flow_file) {
   if (!property.supportsExpressionLangauge()) {
-    return getProperty(property.getName(), value);
+    return ProcessContext::getProperty(property.getName(), value);
   }
   auto name = property.getName();
   if (expressions_.find(name) == expressions_.end()) {
     std::string expression_str;
-    getProperty(name, expression_str);
+    ProcessContext::getProperty(name, expression_str);
     logger_->log_debug("Compiling expression for %s/%s: %s", getProcessorNode()->getName(), name, expression_str);
     expressions_.emplace(name, expression::compile(expression_str));
   }
@@ -40,15 +40,15 @@ bool ProcessContext::getProperty(const Property &property, std::string &value, c
   return true;
 }
 
-bool ProcessContext::getDynamicProperty(const Property &property, std::string &value, const std::shared_ptr<FlowFile> &flow_file) {
+bool ProcessContextExpr::getDynamicProperty(const Property &property, std::string &value, const std::shared_ptr<FlowFile> &flow_file) {
 
   if (!property.supportsExpressionLangauge()) {
-    return getDynamicProperty(property.getName(), value);
+    return ProcessContext::getDynamicProperty(property.getName(), value);
   }
   auto name = property.getName();
   if (dynamic_property_expressions_.find(name) == dynamic_property_expressions_.end()) {
     std::string expression_str;
-    getDynamicProperty(name, expression_str);
+    ProcessContext::getDynamicProperty(name, expression_str);
     logger_->log_debug("Compiling expression for %s/%s: %s", getProcessorNode()->getName(), name, expression_str);
     dynamic_property_expressions_.emplace(name, expression::compile(expression_str));
   }

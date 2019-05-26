@@ -85,7 +85,7 @@ bool Properties::parseConfigureFileLine(char *buf, std::string &prop_key, std::s
     ++line;
 
   char first = line[0];
-  if ((first == '\0') || (first == '#') || (first == '\r') || (first == '\n') || (first == '=')) {
+  if ((first == '\0') || (first == '#') || (first == '[')  || (first == '\r') || (first == '\n') || (first == '=')) {
     return true;
   }
 
@@ -198,11 +198,13 @@ bool Properties::persistProperties() {
 
     char first = line[0];
 
-    if ((first == '\0') || (first == '#') || (first == '\r') || (first == '\n') || (first == '=')) {
+    if ((first == '\0') || (first == '#') || (first == '[') || (first == '\r') || (first == '\n') || (first == '=')) {
       // persist comments and newlines
       output_file << line << std::endl;
       continue;
     }
+
+
 
     char *equal = strchr(line, '=');
     if (equal == NULL) {

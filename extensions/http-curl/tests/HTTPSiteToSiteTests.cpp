@@ -68,7 +68,7 @@ class SiteToSiteTestHarness : public CoapIntegrationBase {
     LogTestController::getInstance().setDebug<core::ConfigurableComponent>();
 
     std::fstream file;
-    ss << dir << "/" << "tstFile.ext";
+    ss << dir << utils::file::FileUtils::get_separator() << "tstFile.ext";
     file.open(ss.str(), std::ios::out);
     file << "tempFile";
     file.close();
@@ -83,7 +83,6 @@ class SiteToSiteTestHarness : public CoapIntegrationBase {
   }
 
   void cleanup() {
-    unlink(ss.str().c_str());
   }
 
   void runAssertions() {
@@ -91,7 +90,7 @@ class SiteToSiteTestHarness : public CoapIntegrationBase {
 
  protected:
   bool isSecure;
-  char *dir;
+  std::string dir;
   std::stringstream ss;
   TestController testController;
 };
@@ -228,6 +227,13 @@ int main(int argc, char **argv) {
     isSecure = true;
   }
 
+#ifdef WIN32
+  if (url.find("localhost") != std::string::npos) {
+	  std::string port, scheme, path;
+	  parse_http_components(url, port, scheme, path);
+	  url = scheme + "://" + org::apache::nifi::minifi::io::Socket::getMyHostName() + ":" + port +  path;
+  }
+#endif
   {
     struct test_profile profile;
     run_variance(test_file_location, isSecure, url, profile);

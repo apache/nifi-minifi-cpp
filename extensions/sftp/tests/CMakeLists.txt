@@ -23,7 +23,7 @@ find_package(Java)
 find_package(Maven)
 message(STATUS "MAVEN: ${MAVEN_EXECUTABLE}")
 
-if (NOT SKIP_TESTS AND Java_FOUND AND Maven_FOUND)
+if (NOT SKIP_TESTS AND Java_FOUND AND Maven_FOUND AND NOT DISABLE_EXPRESSION_LANGUAGE)
 	file(GLOB SFTP_INTEGRATION_TESTS "*.cpp")
 	SET(SFTP-EXTENSIONS_TEST_COUNT 0)
 	FOREACH(testfile ${SFTP_INTEGRATION_TESTS})
@@ -42,10 +42,12 @@ if (NOT SKIP_TESTS AND Java_FOUND AND Maven_FOUND)
 		target_include_directories(${testfilename} BEFORE PRIVATE ./include)
 		target_include_directories(${testfilename} BEFORE PRIVATE ./tools)
 
+		# need to add reference to minifi to get EL support for these tests.
+		# these tests aren't valid without EL
 		if (APPLE)
-			target_link_libraries (${testfilename} -Wl,-all_load ${LIBSSH2_LIBRARY} ${ZLIB_LIBRARY} ${OPENSSL_LIBRARIES} minifi-sftp minifi-standard-processors sftp-test-tools)
+			target_link_libraries (${testfilename} -Wl,-all_load ${LIBSSH2_LIBRARY} ${ZLIB_LIBRARY} ${OPENSSL_LIBRARIES}  minifi-expression-language-extensions inifi-sftp minifi-standard-processors sftp-test-tools)
 		else ()
-			target_link_libraries (${testfilename} -Wl,--whole-archive ${LIBSSH2_LIBRARY} ${ZLIB_LIBRARY} ${OPENSSL_LIBRARIES} minifi-sftp minifi-standard-processors sftp-test-tools -Wl,--no-whole-archive)
+			target_link_libraries (${testfilename} -Wl,--whole-archive ${LIBSSH2_LIBRARY} ${ZLIB_LIBRARY} ${OPENSSL_LIBRARIES}  minifi-expression-language-extensions minifi-sftp minifi-standard-processors sftp-test-tools -Wl,--no-whole-archive)
 		endif ()
 
 		createTests("${testfilename}")

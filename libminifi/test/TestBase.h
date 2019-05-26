@@ -18,11 +18,11 @@
 
 #ifndef LIBMINIFI_TEST_TESTBASE_H_
 #define LIBMINIFI_TEST_TESTBASE_H_
-#include <dirent.h>
 #include <cstdio>
 #include <cstdlib>
 #include <sstream>
 #include "ResourceClaim.h"
+#include "utils/file/FileUtils.h"
 #include "catch.hpp"
 #include <vector>
 #include <set>
@@ -40,6 +40,7 @@
 #include "core/FlowFile.h"
 #include "core/Processor.h"
 #include "core/ProcessContext.h"
+#include "core/ProcessContextBuilder.h"
 #include "core/ProcessSession.h"
 #include "core/ProcessorNode.h"
 #include "core/reporting/SiteToSiteProvenanceReportingTask.h"
@@ -160,7 +161,12 @@ class LogTestController {
 
   void setLevel(const std::string name, spdlog::level::level_enum level) {
     logger_->log_info("Setting log level for %s to %s", name, spdlog::level::to_str(level));
-    spdlog::get(name)->set_level(level);
+    std::string adjusted_name = name;
+    const std::string clazz = "class ";
+    auto haz_clazz = name.find(clazz);
+    if (haz_clazz == 0)
+      adjusted_name = name.substr(clazz.length(), name.length() - clazz.length());
+    spdlog::get(adjusted_name)->set_level(level);
   }
   std::vector<std::string> modified_loggers;
 };
@@ -173,16 +179,16 @@ class TestPlan {
 
   std::shared_ptr<core::Processor> addProcessor(const std::shared_ptr<core::Processor> &processor, const std::string &name,
                                                 core::Relationship relationship = core::Relationship("success", "description"), bool linkToPrevious = false) {
-    return addProcessor(processor, name, {relationship}, linkToPrevious);
+    return addProcessor(processor, name, { relationship }, linkToPrevious);
   }
 
   std::shared_ptr<core::Processor> addProcessor(const std::string &processor_name, const std::string &name, core::Relationship relationship = core::Relationship("success", "description"),
                                                 bool linkToPrevious = false) {
-    return addProcessor(processor_name, name, {relationship}, linkToPrevious);
+    return addProcessor(processor_name, name, { relationship }, linkToPrevious);
   }
 
-  std::shared_ptr<core::Processor> addProcessor(const std::shared_ptr<core::Processor> &processor, const std::string &name,
-                                                const std::initializer_list<core::Relationship>& relationships, bool linkToPrevious = false);
+  std::shared_ptr<core::Processor> addProcessor(const std::shared_ptr<core::Processor> &processor, const std::string &name, const std::initializer_list<core::Relationship>& relationships,
+                                                bool linkToPrevious = false);
 
   std::shared_ptr<core::Processor> addProcessor(const std::string &processor_name, const std::string &name, const std::initializer_list<core::Relationship>& relationships,
                                                 bool linkToPrevious = false);
@@ -294,37 +300,16 @@ class TestController {
 
   ~TestController() {
     for (auto dir : directories) {
-      DIR *created_dir;
-      struct dirent *dir_entry;
-      created_dir = opendir(dir.c_str());
-      if (created_dir != NULL) {
-        while ((dir_entry = readdir(created_dir)) != NULL) {
-          if (dir_entry->d_name[0] != '.') {
-
-            std::string file(dir);
-            file += "/";
-            file += dir_entry->d_name;
-            unlink(file.c_str());
-          }
-        }
-        closedir(created_dir);
-      }
-
-      rmdir(dir.c_str());
+      utils::file::FileUtils::delete_dir(dir, true);
     }
   }
 
   /**
    * format will be changed by mkdtemp, so don't rely on a shared variable.
    */
-  char *createTempDirectory(char *format) {
-    char *dir = mkdtemp(format);
-    if (NULL == dir) {
-      perror("mkdtemp failed: ");
-    }
+  std::string createTempDirectory(char *format) {
+    auto dir = utils::file::FileUtils::create_temp_directory(format);
     directories.push_back(dir);
-    // TODO: return const char or don't return char* at all and use the format passed in as mkdtemp
-    // but I'm inclined to keep as-is for the time being.
     return dir;
   }
 

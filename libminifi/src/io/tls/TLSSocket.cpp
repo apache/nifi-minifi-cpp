@@ -210,7 +210,11 @@ int16_t TLSSocket::initialize(bool blocking) {
       logger_->log_error("SSL socket connect failed to %s %d", requested_hostname_, port_);
       SSL_free(ssl_);
       ssl_ = NULL;
+#ifdef WIN32
+      closesocket(socket_file_descriptor_);
+#else
       close(socket_file_descriptor_);
+#endif
       return -1;
     } else {
       connected_ = true;
@@ -230,7 +234,11 @@ void TLSSocket::close_ssl(int fd) {
     if (nullptr != fd_ssl) {
       SSL_free(fd_ssl);
       ssl_map_[fd] = nullptr;
+#ifdef WIN32
+      closesocket(fd);
+#else
       close(fd);
+#endif
     }
   }
 }
@@ -297,7 +305,11 @@ int16_t TLSSocket::select_descriptor(const uint16_t msec) {
               logger_->log_error("SSL socket connect failed to %s %d", requested_hostname_, port_);
               SSL_free(ssl_);
               ssl_ = NULL;
+#ifdef WIN32
+              closesocket(socket_file_descriptor_);
+#else
               close(socket_file_descriptor_);
+#endif
               return -1;
             } else {
               connected_ = true;
@@ -366,7 +378,9 @@ int TLSSocket::readData(uint8_t *buf, int buflen, bool retrieve_all_bytes) {
 }
 
 int TLSSocket::readData(std::vector<uint8_t> &buf, int buflen) {
-  if (buf.capacity() < buflen) {
+  if (buflen < 0)
+    return -1;
+  if (buf.capacity() < static_cast<size_t>(buflen)) {
     buf.reserve(buflen);
   }
   int total_read = 0;
@@ -443,7 +457,11 @@ int TLSSocket::readData(uint8_t *buf, int buflen) {
   while (buflen) {
     int16_t fd = select_descriptor(1000);
     if (fd <= 0) {
+#ifdef WIN32
+      closesocket(socket_file_descriptor_);
+#else
       close(socket_file_descriptor_);
+#endif
       return -1;
     }
 

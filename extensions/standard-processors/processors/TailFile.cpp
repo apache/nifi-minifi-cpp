@@ -213,7 +213,7 @@ void TailFile::parseStateFileLine(char *buf) {
     if (tail_states_.size() != 1) {
       throw minifi::Exception(ExceptionType::PROCESSOR_EXCEPTION, "Incompatible state file types");
     }
-    const auto position = std::stoi(value);
+    const auto position = std::stoull(value);
     logger_->log_debug("Received position %d", position);
     tail_states_.begin()->second.currentTailFilePosition_ = position;
   }
@@ -230,7 +230,7 @@ void TailFile::parseStateFileLine(char *buf) {
 
   if (key.find(POSITION_STR) == 0) {
     const auto file = key.substr(strlen(POSITION_STR));
-    tail_states_[file].currentTailFilePosition_ = std::stoi(value);
+    tail_states_[file].currentTailFilePosition_ = std::stoull(value);
   }
 
   return;
@@ -305,8 +305,8 @@ void TailFile::checkRollOver(TailState &file, const std::string &base_file_name)
       if ((fileFullName.find(pattern) != std::string::npos) && stat(fileFullName.c_str(), &sb) == 0) {
         uint64_t candidateModTime = ((uint64_t) (sb.st_mtime) * 1000);
         if (candidateModTime >= file.currentTailFileModificationTime_) {
-          logger_->log_trace("File %s ( short name %s ), disk mod time %llu, struct mod timer %llu , size on disk %llu, position %llu",
-              filename, file.current_file_name_, candidateModTime, file.currentTailFileModificationTime_, sb.st_size, file.currentTailFilePosition_);
+          logging::LOG_TRACE(logger_) << "File " << filename << " (short name " << file.current_file_name_ <<
+          ") disk mod time " << candidateModTime << ", struct mod time " << file.currentTailFileModificationTime_ << ", size on disk " << sb.st_size << ", position " << file.currentTailFilePosition_;
           if (filename == file.current_file_name_ && candidateModTime == file.currentTailFileModificationTime_ &&
               sb.st_size == file.currentTailFilePosition_) {
             return true;  // Skip the current file as a candidate in case it wasn't updated
@@ -363,6 +363,7 @@ void TailFile::onTrigger(const std::shared_ptr<core::ProcessContext> &context, c
   for (auto &state : tail_states_) {
     auto fileLocation = state.second.path_;
 
+    logger_->log_debug("Tailing file %s from %llu", fileLocation, state.second.currentTailFilePosition_);
     checkRollOver(state.second, state.first);
     std::string fullPath = fileLocation + utils::file::FileUtils::get_separator() + state.second.current_file_name_;
     struct stat statbuf;

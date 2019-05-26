@@ -30,8 +30,9 @@
 #include <iostream>
 #include <sstream>
 #include "processors/LogAttribute.h"
-#include "../../integration/IntegrationBase.h"
-#include "../../TestBase.h"
+#include "integration/IntegrationBase.h"
+#include "ProcessContextExpr.h"
+#include "TestBase.h"
 
 class TestHarness : public IntegrationBase {
  public:
@@ -40,7 +41,9 @@ class TestHarness : public IntegrationBase {
   }
 
   void testSetup() {
-    LogTestController::getInstance().setInfo<minifi::FlowController>();
+    LogTestController::getInstance().setTrace<minifi::FlowController>();
+	LogTestController::getInstance().setTrace<core::ProcessSession>();
+	LogTestController::getInstance().setTrace<core::ProcessContextExpr>();
     LogTestController::getInstance().setInfo<processors::LogAttribute>();
   }
 

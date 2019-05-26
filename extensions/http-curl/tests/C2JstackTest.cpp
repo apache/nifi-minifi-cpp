@@ -126,7 +126,6 @@ int main(int argc, char **argv) {
 
   configuration->set("c2.rest.url", c2_rest_url);
   configuration->set("c2.agent.heartbeat.period", "1000");
-  mkdir("content_repository", S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 
   std::shared_ptr<core::Repository> test_repo = std::make_shared<TestRepository>();
   std::shared_ptr<core::Repository> test_flow_repo = std::make_shared<TestFlowRepository>();
@@ -162,7 +161,6 @@ int main(int argc, char **argv) {
   assert(logs.find("SchedulingAgent") != std::string::npos);
   #endif
   LogTestController::getInstance().reset();
-  rmdir("./content_repository");
   assert(h_ex.calls_ <= (milliseconds / 1000) + 1);
 
   return 0;

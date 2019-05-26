@@ -29,6 +29,12 @@
 
 using org::apache::nifi::minifi::utils::StringUtils;
 
+#ifdef WIN32
+void setenv(std::string var, std::string value, int val) {
+  _putenv_s(var.c_str(), value.c_str());
+}
+#endif
+
 TEST_CASE("TestStringUtils::split", "[test split no delimiter]") {
   std::vector<std::string> expected = { "hello" };
   REQUIRE(expected == StringUtils::split("hello", ","));
@@ -51,6 +57,7 @@ TEST_CASE("TestStringUtils::split4", "[test split classname]") {
 
 TEST_CASE("TestStringUtils::testEnv1", "[test split classname]") {
   std::string test_string = "hello world ${blahblahnamenamenotexist}";
+
 
   setenv("blahblahnamenamenotexist", "computer", 0);
 

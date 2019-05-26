@@ -51,7 +51,7 @@ TEST_CASE("Test GetFileMultiple", "[getfileCreate3]") {
   std::shared_ptr<TestRepository> repo = std::static_pointer_cast<TestRepository>(test_repo);
 
   char format[] = "/tmp/gt.XXXXXX";
-  char *dir = testController.createTempDirectory(format);
+  auto dir = testController.createTempDirectory(format);
 
   utils::Identifier processoruuid;
   REQUIRE(true == processor->getUUID(processoruuid));
@@ -68,7 +68,7 @@ TEST_CASE("Test GetFileMultiple", "[getfileCreate3]") {
   connection->setDestinationUUID(processoruuid);
 
   processor->addConnection(connection);
-  REQUIRE(dir != NULL);
+  REQUIRE(!dir.empty());
 
   std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(processor);
   std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider = nullptr;
@@ -99,7 +99,7 @@ TEST_CASE("Test GetFileMultiple", "[getfileCreate3]") {
 
     std::fstream file;
     std::stringstream ss;
-    ss << dir << "/" << "tstFile.ext";
+    ss << dir << utils::file::FileUtils::get_separator() << "tstFile.ext";
     file.open(ss.str(), std::ios::out);
     file << "tempFile";
     file.close();
@@ -135,7 +135,7 @@ TEST_CASE("Test GetFile Ignore", "[getfileCreate3]") {
   std::shared_ptr<TestRepository> repo = std::static_pointer_cast<TestRepository>(test_repo);
 
   char format[] = "/tmp/gt.XXXXXX";
-  char *dir = testController.createTempDirectory(format);
+  auto dir = testController.createTempDirectory(format);
 
   utils::Identifier processoruuid;
   REQUIRE(true == processor->getUUID(processoruuid));
@@ -152,7 +152,7 @@ TEST_CASE("Test GetFile Ignore", "[getfileCreate3]") {
   connection->setDestinationUUID(processoruuid);
 
   processor->addConnection(connection);
-  REQUIRE(dir != NULL);
+  REQUIRE(!dir.empty());
 
   std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(processor);
   std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider = nullptr;
@@ -183,7 +183,7 @@ TEST_CASE("Test GetFile Ignore", "[getfileCreate3]") {
 
   std::fstream file;
   std::stringstream ss;
-  ss << dir << "/" << ".filewithoutanext";
+  ss << dir << utils::file::FileUtils::get_separator() << ".filewithoutanext";
   file.open(ss.str(), std::ios::out);
   file << "tempFile";
   file.close();
@@ -218,7 +218,7 @@ TEST_CASE("LogAttributeTest", "[getfileCreate3]") {
   plan->addProcessor("LogAttribute", "logattribute", core::Relationship("success", "description"), true);
 
   char format[] = "/tmp/gt.XXXXXX";
-  char *dir = testController.createTempDirectory(format);
+  auto dir = testController.createTempDirectory(format);
 
   plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), dir);
   testController.runSession(plan, false);
@@ -229,7 +229,7 @@ TEST_CASE("LogAttributeTest", "[getfileCreate3]") {
 
   std::fstream file;
   std::stringstream ss;
-  ss << dir << "/" << "tstFile.ext";
+  ss << dir << utils::file::FileUtils::get_separator() << "tstFile.ext";
   file.open(ss.str(), std::ios::out);
   file << "tempFile";
   file.close();
@@ -262,7 +262,7 @@ TEST_CASE("LogAttributeTestInvalid", "[TestLogAttribute]") {
   auto loggattr = plan->addProcessor("LogAttribute", "logattribute", core::Relationship("success", "description"), true);
 
   char format[] = "/tmp/gt.XXXXXX";
-  char *dir = testController.createTempDirectory(format);
+  auto dir = testController.createTempDirectory(format);
 
   plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), dir);
   plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::BatchSize.getName(), "1");
@@ -281,7 +281,7 @@ void testMultiplesLogAttribute(int fileCount, int flowsToLog, std::string verify
   auto loggattr = plan->addProcessor("LogAttribute", "logattribute", core::Relationship("success", "description"), true);
 
   char format[] = "/tmp/gt.XXXXXX";
-  char *dir = testController.createTempDirectory(format);
+  auto dir = testController.createTempDirectory(format);
 
   auto flowsToLogStr = std::to_string(flowsToLog);
   if (verifyStringFlowsLogged.empty())
@@ -300,7 +300,7 @@ void testMultiplesLogAttribute(int fileCount, int flowsToLog, std::string verify
   for (int i = 0; i < fileCount; i++) {
     std::fstream file;
     std::stringstream ss;
-    ss << dir << "/" << "tstFile" << i << ".ext";
+    ss << dir << utils::file::FileUtils::get_separator() << "tstFile" << i << ".ext";
     file.open(ss.str(), std::ios::out);
     file << "tempFile";
     file.close();
@@ -349,7 +349,7 @@ TEST_CASE("Test Find file", "[getfileCreate3]") {
       minifi::io::StreamFactory::getInstance(std::make_shared<org::apache::nifi::minifi::Configure>()), std::make_shared<org::apache::nifi::minifi::Configure>());
   plan->addProcessor(processorReport, "reporter", core::Relationship("success", "description"), false);
   char format[] = "/tmp/gt.XXXXXX";
-  char *dir = testController.createTempDirectory(format);
+  auto dir = testController.createTempDirectory(format);
 
   plan->setProperty(processor, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), dir);
   testController.runSession(plan, false);
@@ -360,7 +360,7 @@ TEST_CASE("Test Find file", "[getfileCreate3]") {
 
   std::fstream file;
   std::stringstream ss;
-  ss << dir << "/" << "tstFile.ext";
+  ss << dir << utils::file::FileUtils::get_separator() << "tstFile.ext";
   file.open(ss.str(), std::ios::out);
   file << "tempFile";
   file.close();

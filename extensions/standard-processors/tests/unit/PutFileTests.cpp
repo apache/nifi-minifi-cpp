@@ -63,9 +63,9 @@ TEST_CASE("PutFileTest", "[getfileputpfile]") {
   plan->addProcessor("LogAttribute", "logattribute", core::Relationship("success", "description"), true);
 
   char format[] = "/tmp/gt.XXXXXX";
-  char *dir = testController.createTempDirectory(format);
+  auto dir = testController.createTempDirectory(format);
   char format2[] = "/tmp/ft.XXXXXX";
-  char *putfiledir = testController.createTempDirectory(format2);
+  auto putfiledir = testController.createTempDirectory(format2);
   plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), dir);
   plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), putfiledir);
 
@@ -78,7 +78,7 @@ TEST_CASE("PutFileTest", "[getfileputpfile]") {
 
   std::fstream file;
   std::stringstream ss;
-  ss << dir << "/" << "tstFile.ext";
+  ss << dir << utils::file::FileUtils::get_separator() << "tstFile.ext";
   file.open(ss.str(), std::ios::out);
   file << "tempFile";
   file.close();
@@ -100,7 +100,7 @@ TEST_CASE("PutFileTest", "[getfileputpfile]") {
   // verify that the fle was moved
   REQUIRE(false == std::ifstream(ss.str()).good());
   std::stringstream movedFile;
-  movedFile << putfiledir << "/" << "tstFile.ext";
+  movedFile << putfiledir << utils::file::FileUtils::get_separator() << "tstFile.ext";
   REQUIRE(true == std::ifstream(movedFile.str()).good());
 
   file.open(movedFile.str(), std::ios::in);
@@ -128,9 +128,9 @@ TEST_CASE("PutFileTestFileExists", "[getfileputpfile]") {
   plan->addProcessor("LogAttribute", "logattribute", core::Relationship("failure", "description"), true);
 
   char format[] = "/tmp/gt.XXXXXX";
-  char *dir = testController.createTempDirectory(format);
+  auto dir = testController.createTempDirectory(format);
   char format2[] = "/tmp/ft.XXXXXX";
-  char *putfiledir = testController.createTempDirectory(format2);
+  auto putfiledir = testController.createTempDirectory(format2);
   plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), dir);
   plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), putfiledir);
 
@@ -143,13 +143,13 @@ TEST_CASE("PutFileTestFileExists", "[getfileputpfile]") {
 
   std::fstream file;
   std::stringstream ss;
-  ss << dir << "/" << "tstFile.ext";
+  ss << dir << utils::file::FileUtils::get_separator() << "tstFile.ext";
   file.open(ss.str(), std::ios::out);
   file << "tempFile";
   file.close();
 //
   std::stringstream movedFile;
-  movedFile << putfiledir << "/" << "tstFile.ext";
+  movedFile << putfiledir << utils::file::FileUtils::get_separator() << "tstFile.ext";
   file.open(movedFile.str(), std::ios::out);
   file << "tempFile";
   file.close();
@@ -193,9 +193,9 @@ TEST_CASE("PutFileTestFileExistsIgnore", "[getfileputpfile]") {
   plan->addProcessor("LogAttribute", "logattribute", core::Relationship("success", "description"), true);
 
   char format[] = "/tmp/gt.XXXXXX";
-  char *dir = testController.createTempDirectory(format);
+  auto dir = testController.createTempDirectory(format);
   char format2[] = "/tmp/ft.XXXXXX";
-  char *putfiledir = testController.createTempDirectory(format2);
+  auto putfiledir = testController.createTempDirectory(format2);
   plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), dir);
   plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), putfiledir);
   plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::ConflictResolution.getName(), "ignore");
@@ -209,13 +209,13 @@ TEST_CASE("PutFileTestFileExistsIgnore", "[getfileputpfile]") {
 
   std::fstream file;
   std::stringstream ss;
-  ss << dir << "/" << "tstFile.ext";
+  ss << dir << utils::file::FileUtils::get_separator() << "tstFile.ext";
   file.open(ss.str(), std::ios::out);
   file << "tempFile";
   file.close();
 //
   std::stringstream movedFile;
-  movedFile << putfiledir << "/" << "tstFile.ext";
+  movedFile << putfiledir << utils::file::FileUtils::get_separator() << "tstFile.ext";
   file.open(movedFile.str(), std::ios::out);
   file << "tempFile";
   file.close();
@@ -236,7 +236,7 @@ TEST_CASE("PutFileTestFileExistsIgnore", "[getfileputpfile]") {
 
   REQUIRE(true == LogTestController::getInstance().contains("key:absolute.path value:" + ss.str()));
   REQUIRE(true == LogTestController::getInstance().contains("Size:8 Offset:0"));
-  REQUIRE(true == LogTestController::getInstance().contains("key:path value:" + std::string(dir)));
+  REQUIRE(true == LogTestController::getInstance().contains("key:path value:" + dir));
   // verify that the fle was moved
   REQUIRE(false == std::ifstream(ss.str()).good());
   REQUIRE(true == std::ifstream(movedFile.str()).good());
@@ -258,12 +258,12 @@ TEST_CASE("PutFileTestFileExistsReplace", "[getfileputpfile]") {
 
   std::shared_ptr<core::Processor> putfile = plan->addProcessor("PutFile", "putfile", core::Relationship("success", "description"), true);
 
-  plan->addProcessor("LogAttribute", "logattribute", core::Relationship("success", "description"), true);
+  plan->addProcessor("LogAttribute", "logattribute", { core::Relationship("success", "d"), core::Relationship("failure", "d") }, true);
 
   char format[] = "/tmp/gt.XXXXXX";
-  char *dir = testController.createTempDirectory(format);
+  auto dir = testController.createTempDirectory(format);
   char format2[] = "/tmp/ft.XXXXXX";
-  char *putfiledir = testController.createTempDirectory(format2);
+  auto putfiledir = testController.createTempDirectory(format2);
   plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), dir);
   plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), putfiledir);
   plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::ConflictResolution.getName(), "replace");
@@ -277,13 +277,13 @@ TEST_CASE("PutFileTestFileExistsReplace", "[getfileputpfile]") {
 
   std::fstream file;
   std::stringstream ss;
-  ss << dir << "/" << "tstFile.ext";
+  ss << dir << utils::file::FileUtils::get_separator() << "tstFile.ext";
   file.open(ss.str(), std::ios::out);
   file << "tempFile";
   file.close();
 //
   std::stringstream movedFile;
-  movedFile << putfiledir << "/" << "tstFile.ext";
+  movedFile << putfiledir << utils::file::FileUtils::get_separator() << "tstFile.ext";
   file.open(movedFile.str(), std::ios::out);
   file << "tempFile";
   file.close();
@@ -308,13 +308,19 @@ TEST_CASE("PutFileTestFileExistsReplace", "[getfileputpfile]") {
   // verify that the fle was moved
   REQUIRE(false == std::ifstream(ss.str()).good());
   REQUIRE(true == std::ifstream(movedFile.str()).good());
+#ifndef WIN32
   REQUIRE(filemodtime != fileutils::FileUtils::last_write_time(movedFile.str()));
+#endif
   LogTestController::getInstance().reset();
 }
 
 TEST_CASE("Test generation of temporary write path", "[putfileTmpWritePath]") {
   auto processor = std::make_shared<org::apache::nifi::minifi::processors::PutFile>("processorname");
-  REQUIRE(processor->tmpWritePath("a/b/c", "").substr(1, strlen("a/b/.c")) == "a/b/.c");
+  std::stringstream prefix;
+  prefix << "a" << utils::file::FileUtils::get_separator() << "b" << utils::file::FileUtils::get_separator();
+  std::string path = prefix.str() + "c";
+  std::string expected_path = prefix.str() + ".c";
+  REQUIRE(processor->tmpWritePath(path, "").substr(1, expected_path.length()) == expected_path);
 }
 
 TEST_CASE("PutFileMaxFileCountTest", "[getfileputpfilemaxcount]") {
@@ -334,9 +340,9 @@ TEST_CASE("PutFileMaxFileCountTest", "[getfileputpfilemaxcount]") {
   plan->addProcessor("LogAttribute", "logattribute", { core::Relationship("success", "d"), core::Relationship("failure", "d") }, true);
 
   char format[] = "/tmp/gt.XXXXXX";
-  const char *dir = testController.createTempDirectory(format);
+  const auto dir = testController.createTempDirectory(format);
   char format2[] = "/tmp/ft.XXXXXX";
-  const char *putfiledir = testController.createTempDirectory(format2);
+  auto putfiledir = testController.createTempDirectory(format2);
   plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), dir);
   plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::BatchSize.getName(), "1");
   plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), putfiledir);
@@ -346,7 +352,7 @@ TEST_CASE("PutFileMaxFileCountTest", "[getfileputpfilemaxcount]") {
 
   for (int i = 0; i < 2; ++i) {
     std::stringstream ss;
-    ss << dir << "/" << "tstFile" << i << ".ext";
+    ss << dir << utils::file::FileUtils::get_separator() << "tstFile" << i << ".ext";
     std::fstream file;
     file.open(ss.str(), std::ios::out);
     file << "tempFile";
@@ -362,7 +368,7 @@ TEST_CASE("PutFileMaxFileCountTest", "[getfileputpfilemaxcount]") {
   testController.runSession(plan);
 
 
-  REQUIRE(LogTestController::getInstance().contains("key:absolute.path value:" + std::string(dir) + "/tstFile0.ext"));
+  REQUIRE(LogTestController::getInstance().contains("key:absolute.path value:" + std::string(dir) + utils::file::FileUtils::get_separator() + "tstFile0.ext"));
   REQUIRE(LogTestController::getInstance().contains("Size:8 Offset:0"));
   REQUIRE(LogTestController::getInstance().contains("key:path value:" + std::string(dir)));
 
@@ -372,7 +378,7 @@ TEST_CASE("PutFileMaxFileCountTest", "[getfileputpfilemaxcount]") {
 
   for (int i = 0; i < 2; ++i) {
     std::stringstream ss;
-    ss << putfiledir << "/" << "tstFile" << i << ".ext";
+    ss << putfiledir << utils::file::FileUtils::get_separator() << "tstFile" << i << ".ext";
     std::ifstream file(ss.str());
     if (file.is_open() && file.good()) {
       files_in_dir++;

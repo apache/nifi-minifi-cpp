@@ -22,12 +22,14 @@
 #include <set>
 #include <fstream>
 
-
 #include "TestBase.h"
 #include "LogAttribute.h"
 #include "GetFile.h"
 
-TEST_CASE("GetFile: FIFO", "[getFileFifo]") { // NOLINT
+/**
+ * This is an invalidly named test as we can't guarantee order, nor shall we.
+ */
+TEST_CASE("GetFile: MaxSize", "[getFileFifo]") {  // NOLINT
   TestController testController;
 
   LogTestController::getInstance().setTrace<TestPlan>();
@@ -38,46 +40,41 @@ TEST_CASE("GetFile: FIFO", "[getFileFifo]") { // NOLINT
   auto repo = std::make_shared<TestRepository>();
 
   // Define directory for input
-  std::string in_dir("/tmp/gt.XXXXXX");
-  REQUIRE(testController.createTempDirectory(&in_dir[0]) != nullptr);
+  char in_dir[] = "/tmp/gt.XXXXXX";
+  auto temp_path = testController.createTempDirectory(in_dir);
+  REQUIRE(!temp_path.empty());
 
   // Define test input file
-  std::string in_file(in_dir);
-  in_file.append("/testfifo");
+  std::string in_file = temp_path + utils::file::FileUtils::get_separator() + "testfifo";
 
   // Build MiNiFi processing graph
-  auto get_file = plan->addProcessor(
-      "GetFile",
-      "Get");
-  plan->setProperty(
-      get_file,
-      processors::GetFile::Directory.getName(), in_dir);
-  plan->setProperty(
-      get_file,
-      processors::GetFile::KeepSourceFile.getName(),
-      "true");
-  plan->addProcessor(
-      "LogAttribute",
-      "Log",
-      core::Relationship("success", "description"),
-      true);
+  auto get_file = plan->addProcessor("GetFile", "Get");
+  plan->setProperty(get_file, processors::GetFile::Directory.getName(), temp_path);
+  plan->setProperty(get_file, processors::GetFile::KeepSourceFile.getName(), "true");
+  plan->setProperty(get_file, processors::GetFile::MaxSize.getName(), "50 B");
+  plan->addProcessor("LogAttribute", "Log", core::Relationship("success", "description"), true);
 
-  // Write test input
-  REQUIRE(0 == mkfifo(in_file.c_str(), 0777));
+  // Write test input.
+  std::ofstream in_file_stream(in_file);
+  in_file_stream << "The quick brown fox jumps over the lazy dog" << std::endl;
+  in_file_stream.close();
 
-  // Run test flow
-  std::thread write_thread([&] {
-    std::ofstream in_file_stream(in_file);
-    in_file_stream << "The quick brown fox jumps over the lazy dog" << std::endl;
-  });
+  std::this_thread::sleep_for(std::chrono::seconds(2));
+
+  in_file_stream.open(in_file + "2");
+  in_file_stream << "The quick brown fox jumps over the lazy dog who is 2 legit to quit" << std::endl;
+  in_file_stream.close();
 
   plan->runNextProcessor();  // Get
   plan->runNextProcessor();  // Log
 
-  write_thread.join();
-
-  // Check log output
+  // Check log output on windows std::endl; will produce \r\n can write manually but might as well just
+  // account for the size difference here
   REQUIRE(LogTestController::getInstance().contains("key:flow.id"));
+#ifdef WIN32
+  REQUIRE(LogTestController::getInstance().contains("Size:45 Offset:0"));
+#else
   REQUIRE(LogTestController::getInstance().contains("Size:44 Offset:0"));
+#endif
 }
 

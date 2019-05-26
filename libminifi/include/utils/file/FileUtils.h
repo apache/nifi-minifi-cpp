@@ -25,7 +25,9 @@
 #include <cstring>
 #include <cstdlib>
 #ifdef WIN32
-#define WIN32_LEAN_AND_MEAN
+#ifndef WIN32_LEAN_AND_MEAN
+	#define WIN32_LEAN_AND_MEAN
+#endif
 #include <WinSock2.h>
 #include <WS2tcpip.h>
 #include <Windows.h>
@@ -45,6 +47,8 @@
 #include <fcntl.h>
 #ifdef WIN32
 #include <direct.h>
+#include "utils/Id.h"
+#include "properties/Properties.h"
 #include <windows.h> // winapi
 #include <sys/stat.h> // stat
 #include <tchar.h> // _tcscpy,_tcscat,_tcscmp
@@ -99,6 +103,34 @@ class FileUtils {
 #endif
   }
 
+  static std::string create_temp_directory(char *format) {
+#ifdef WIN32
+	  std::string tempDirectory;
+	  char tempBuffer[MAX_PATH];
+	  auto ret = GetTempPath(MAX_PATH, tempBuffer); 
+	  if (ret <= MAX_PATH && ret != 0)
+	  {
+		  static std::shared_ptr<minifi::utils::IdGenerator> generator;
+		  if (!generator) {
+			  generator = minifi::utils::IdGenerator::getIdGenerator();
+			  generator->initialize(std::make_shared<minifi::Properties>());
+		  }
+		  tempDirectory = tempBuffer;
+		  minifi::utils::Identifier id;
+		  generator->generate(id);
+		  tempDirectory += id.to_string();
+		  create_dir(tempDirectory);
+	  }
+	  return tempDirectory;
+#else
+	  auto dir = mkdtemp(format);
+	  if (nullptr == dir) {
+		  return "";
+	  }
+	  else return dir;
+#endif
+  }
+
   static int64_t delete_dir(const std::string &path, bool delete_files_recursively = true) {
 #ifdef BOOST_VERSION
     try {
@@ -122,10 +154,10 @@ class FileUtils {
     DWORD Attributes;
     std::string str;
 
+	
     std::stringstream pathstr;
-    pathstr << path << "\\.*";
+    pathstr << path << "\\*";
     str = pathstr.str();
-
     //List files
     hFind = FindFirstFile(str.c_str(), &FindFileData);
     if (hFind != INVALID_HANDLE_VALUE)

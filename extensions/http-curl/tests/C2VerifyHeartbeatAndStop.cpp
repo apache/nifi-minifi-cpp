@@ -63,7 +63,7 @@ class Responder : public CivetHandler {
     std::string response;
     int blockSize = 1024 * sizeof(char), readBytes;
 
-    char buffer[blockSize];
+    char buffer[1024];
     while ((readBytes = mg_read(conn, buffer, blockSize)) > 0) {
       response.append(buffer, 0, (readBytes / sizeof(char)));
     }
@@ -175,7 +175,7 @@ class VerifyC2Heartbeat : public CoapIntegrationBase {
 
  protected:
   bool isSecure;
-  char *dir;
+  std::string dir;
   std::stringstream ss;
   TestController testController;
 };

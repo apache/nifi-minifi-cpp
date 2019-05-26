@@ -26,13 +26,14 @@
 #define NOMINMAX
 #include <winsock2.h>
 #endif
-
+#ifndef DEPRECATED
 #ifdef _MSC_VER
-#define DEPRECATED __declspec(deprecated)
+#define DEPRECATED(v,ev) __declspec(deprecated)
 #elif defined(__GNUC__) | defined(__clang__)
-#define DEPRECATED __attribute__((__deprecated__))
+#define DEPRECATED(v,ev) __attribute__((__deprecated__))
 #else
-#define DEPRECATED
+#define DEPRECATED(v,ev)
+#endif
 #endif
 
 /**

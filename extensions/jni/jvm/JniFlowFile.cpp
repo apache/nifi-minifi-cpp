@@ -38,7 +38,7 @@
 extern "C" {
 #endif
 
-jlong Java_org_apache_nifi_processor_JniFlowFile_getId(JNIEnv *env, jobject obj) {
+JNIEXPORT jlong JNICALL Java_org_apache_nifi_processor_JniFlowFile_getId(JNIEnv *env, jobject obj) {
 
   minifi::jni::JniFlowFile *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniFlowFile>(env, obj);
 
@@ -48,7 +48,7 @@ jlong Java_org_apache_nifi_processor_JniFlowFile_getId(JNIEnv *env, jobject obj)
   return id;
 
 }
-jlong Java_org_apache_nifi_processor_JniFlowFile_getEntryDate(JNIEnv *env, jobject obj) {
+JNIEXPORT jlong JNICALL Java_org_apache_nifi_processor_JniFlowFile_getEntryDate(JNIEnv *env, jobject obj) {
   minifi::jni::JniFlowFile *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniFlowFile>(env, obj);
 
   auto ff = ptr->get();
@@ -56,7 +56,7 @@ jlong Java_org_apache_nifi_processor_JniFlowFile_getEntryDate(JNIEnv *env, jobje
   jlong entryDate = ff->getEntryDate();
   return entryDate;
 }
-jlong Java_org_apache_nifi_processor_JniFlowFile_getLineageStartDate(JNIEnv *env, jobject obj) {
+JNIEXPORT jlong JNICALL Java_org_apache_nifi_processor_JniFlowFile_getLineageStartDate(JNIEnv *env, jobject obj) {
   minifi::jni::JniFlowFile *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniFlowFile>(env, obj);
 
   auto ff = ptr->get();
@@ -64,7 +64,7 @@ jlong Java_org_apache_nifi_processor_JniFlowFile_getLineageStartDate(JNIEnv *env
   jlong val = ff->getlineageStartDate();
   return val;
 }
-jlong Java_org_apache_nifi_processor_JniFlowFile_getLineageStartIndex(JNIEnv *env, jobject obj) {
+JNIEXPORT jlong JNICALL Java_org_apache_nifi_processor_JniFlowFile_getLineageStartIndex(JNIEnv *env, jobject obj) {
   minifi::jni::JniFlowFile *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniFlowFile>(env, obj);
 
   auto ff = ptr->get();
@@ -72,7 +72,7 @@ jlong Java_org_apache_nifi_processor_JniFlowFile_getLineageStartIndex(JNIEnv *en
   jlong val = ff->getlineageStartDate();
   return val;
 }
-jlong Java_org_apache_nifi_processor_JniFlowFile_getLastQueueDatePrim(JNIEnv *env, jobject obj) {
+JNIEXPORT jlong JNICALL Java_org_apache_nifi_processor_JniFlowFile_getLastQueueDatePrim(JNIEnv *env, jobject obj) {
   minifi::jni::JniFlowFile *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniFlowFile>(env, obj);
 
   auto ff = ptr->get();
@@ -80,7 +80,7 @@ jlong Java_org_apache_nifi_processor_JniFlowFile_getLastQueueDatePrim(JNIEnv *en
   jlong val = 0;
   return val;
 }
-jlong Java_org_apache_nifi_processor_JniFlowFile_getQueueDateIndex(JNIEnv *env, jobject obj) {
+JNIEXPORT jlong JNICALL Java_org_apache_nifi_processor_JniFlowFile_getQueueDateIndex(JNIEnv *env, jobject obj) {
   minifi::jni::JniFlowFile *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniFlowFile>(env, obj);
 
   auto ff = ptr->get();
@@ -88,7 +88,7 @@ jlong Java_org_apache_nifi_processor_JniFlowFile_getQueueDateIndex(JNIEnv *env, 
   jlong val = 0;
   return val;
 }
-jboolean Java_org_apache_nifi_processor_JniFlowFile_isPenalized(JNIEnv *env, jobject obj) {
+JNIEXPORT jboolean JNICALL Java_org_apache_nifi_processor_JniFlowFile_isPenalized(JNIEnv *env, jobject obj) {
   minifi::jni::JniFlowFile *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniFlowFile>(env, obj);
 
   auto ff = ptr->get();
@@ -96,7 +96,7 @@ jboolean Java_org_apache_nifi_processor_JniFlowFile_isPenalized(JNIEnv *env, job
   jboolean val = ff->isPenalized();
   return val;
 }
-jstring Java_org_apache_nifi_processor_JniFlowFile_getAttribute(JNIEnv *env, jobject obj, jstring key) {
+JNIEXPORT jstring JNICALL Java_org_apache_nifi_processor_JniFlowFile_getAttribute(JNIEnv *env, jobject obj, jstring key) {
   minifi::jni::JniFlowFile *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniFlowFile>(env, obj);
 
   auto ff = ptr->get();
@@ -105,14 +105,14 @@ jstring Java_org_apache_nifi_processor_JniFlowFile_getAttribute(JNIEnv *env, job
   ff->getAttribute(JniStringToUTF(env, key), value);
   return env->NewStringUTF(value.c_str());
 }
-jlong Java_org_apache_nifi_processor_JniFlowFile_getSize(JNIEnv *env, jobject obj) {
+JNIEXPORT jlong JNICALL  Java_org_apache_nifi_processor_JniFlowFile_getSize(JNIEnv *env, jobject obj) {
   minifi::jni::JniFlowFile *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniFlowFile>(env, obj);
   auto ff = ptr->get();
   THROW_IF_NULL(ff, env, NO_FF_OBJECT);
   jlong val = ff->getSize();
   return val;
 }
-jstring Java_org_apache_nifi_processor_JniFlowFile_getUUIDStr(JNIEnv *env, jobject obj) {
+JNIEXPORT jstring JNICALL  Java_org_apache_nifi_processor_JniFlowFile_getUUIDStr(JNIEnv *env, jobject obj) {
   minifi::jni::JniFlowFile *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniFlowFile>(env, obj);
 
   auto ff = ptr->get();
@@ -120,7 +120,7 @@ jstring Java_org_apache_nifi_processor_JniFlowFile_getUUIDStr(JNIEnv *env, jobje
   return env->NewStringUTF(ff->getUUIDStr().c_str());
 }
 
-jobject Java_org_apache_nifi_processor_JniFlowFile_getAttributes(JNIEnv *env, jobject obj) {
+JNIEXPORT jobject JNICALL Java_org_apache_nifi_processor_JniFlowFile_getAttributes(JNIEnv *env, jobject obj) {
 
   minifi::jni::JniFlowFile *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniFlowFile>(env, obj);
 

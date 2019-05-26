@@ -20,6 +20,7 @@
 
 #include <mutex>
 #include <vector>
+#include <string>
 #include <map>
 #include <memory>
 #include "utils/StringUtils.h"
@@ -102,6 +103,7 @@ class ObjectFactory {
    */
   virtual std::shared_ptr<CoreComponent> create(const std::string &name) {
     return nullptr;
+
   }
 
   /**
@@ -156,7 +158,6 @@ class ObjectFactory {
   std::string group_;
 
 };
-
 /**
  * Factory that is used as an interface for
  * creating processors from shared objects.
@@ -379,6 +380,15 @@ class ClassLoader {
   /**
    * Instantiate object based on class_name
    * @param class_name class to create
+   * @param make_shared_ptr creates a shared ptr of the given type name
+   * @return nullptr, object created from class_name definition, or make_shared of T
+   */
+  template<class T>
+  std::shared_ptr<T> instantiate(const std::string &class_name, bool make_shared_ptr = true);
+
+  /**
+   * Instantiate object based on class_name
+   * @param class_name class to create
    * @param uuid uuid of object
    * @return nullptr or object created from class_name definition.
    */
@@ -567,6 +577,15 @@ class ClassLoader {
 
   std::vector<std::unique_ptr<ObjectFactoryInitializer>> initializers_;
 };
+
+template<class T>
+std::shared_ptr<T> ClassLoader::instantiate(const std::string &class_name, bool make_shared_ptr) {
+  const auto ret = instantiate<T>(class_name, class_name);
+  if (nullptr == ret && make_shared_ptr) {
+    return std::make_shared<T>(class_name);
+  }
+  return ret;
+}
 
 template<class T>
 std::shared_ptr<T> ClassLoader::instantiate(const std::string &class_name, const std::string &name) {

@@ -82,6 +82,7 @@ TEST_CASE("Test Relationships", "[rel1]") {
       proc_0 = node;
     }
   }
+#ifndef WIN32
   REQUIRE(proc_0.children.size() > 0);
   const auto &relationships = proc_0.children[1];
   REQUIRE("supportedRelationships" == relationships.name);
@@ -93,6 +94,7 @@ TEST_CASE("Test Relationships", "[rel1]") {
 
   REQUIRE("success" == relationships.children[1].children[0].value.to_string());
   REQUIRE("description" == relationships.children[1].children[1].name);
+#endif
 }
 
 TEST_CASE("Test Dependent", "[dependent]") {
@@ -109,6 +111,7 @@ TEST_CASE("Test Dependent", "[dependent]") {
       proc_0 = node;
     }
   }
+#ifndef WIN32
   REQUIRE(proc_0.children.size() > 0);
   const auto &prop_descriptors = proc_0.children[0];
   REQUIRE(prop_descriptors.children.size() > 0);
@@ -119,6 +122,7 @@ TEST_CASE("Test Dependent", "[dependent]") {
   REQUIRE("defaultValue" == prop_0.children[5].name);
   const auto &prop_0_dependent_0 = prop_descriptors.children[2];
   REQUIRE("Directory" == prop_0_dependent_0.name);
+#endif
 }
 
 TEST_CASE("Test Scheduling Defaults", "[schedDef]") {
@@ -167,6 +171,6 @@ TEST_CASE("Test operatingSystem Defaults", "[opsys]") {
     }
   }
   REQUIRE(!proc_0.value.empty());
-  std::set<std::string> expected({"Linux", "Windows 32", "Windows 64", "Mac OSX", "Unix"});
+  std::set<std::string> expected({"Linux", "Windows", "Mac OSX", "Unix"});
   REQUIRE(expected.find(proc_0.value.to_string()) != std::end(expected));
 }

@@ -33,7 +33,6 @@ extern "C" {
 #endif
 
 JNIEXPORT void JNICALL Java_org_apache_nifi_processor_JniFlowFile_initialise(JNIEnv *env, jobject obj);
-
 JNIEXPORT jlong JNICALL Java_org_apache_nifi_processor_JniFlowFile_getId(JNIEnv *env, jobject obj);
 JNIEXPORT jlong JNICALL Java_org_apache_nifi_processor_JniFlowFile_getEntryDate(JNIEnv *env, jobject obj);
 JNIEXPORT jlong JNICALL Java_org_apache_nifi_processor_JniFlowFile_getLineageStartDate(JNIEnv *env, jobject obj);

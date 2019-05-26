@@ -68,11 +68,11 @@ TEST_CASE("Python: Test Read File", "[executescriptPythonRead]") { // NOLINT
   )");
 
   char getFileDirFmt[] = "/tmp/ft.XXXXXX";
-  char *getFileDir = testController.createTempDirectory(getFileDirFmt);
+  auto getFileDir = testController.createTempDirectory(getFileDirFmt);
   plan->setProperty(getFile, processors::GetFile::Directory.getName(), getFileDir);
 
   char putFileDirFmt[] = "/tmp/ft.XXXXXX";
-  char *putFileDir = testController.createTempDirectory(putFileDirFmt);
+  auto putFileDir = testController.createTempDirectory(putFileDirFmt);
   plan->setProperty(putFile, processors::PutFile::Directory.getName(), putFileDir);
 
   testController.runSession(plan, false);
@@ -152,11 +152,11 @@ TEST_CASE("Python: Test Write File", "[executescriptPythonWrite]") { // NOLINT
   )");
 
   char getFileDirFmt[] = "/tmp/ft.XXXXXX";
-  char *getFileDir = testController.createTempDirectory(getFileDirFmt);
+  auto getFileDir = testController.createTempDirectory(getFileDirFmt);
   plan->setProperty(getFile, processors::GetFile::Directory.getName(), getFileDir);
 
   char putFileDirFmt[] = "/tmp/ft.XXXXXX";
-  char *putFileDir = testController.createTempDirectory(putFileDirFmt);
+  auto putFileDir = testController.createTempDirectory(putFileDirFmt);
   plan->setProperty(putFile, processors::PutFile::Directory.getName(), putFileDir);
 
   testController.runSession(plan, false);
@@ -261,7 +261,7 @@ TEST_CASE("Python: Test Update Attribute", "[executescriptPythonUpdateAttribute]
   )");
 
   char getFileDirFmt[] = "/tmp/ft.XXXXXX";
-  char *getFileDir = testController.createTempDirectory(getFileDirFmt);
+  auto getFileDir = testController.createTempDirectory(getFileDirFmt);
   plan->setProperty(getFile, processors::GetFile::Directory.getName(), getFileDir);
 
   std::fstream file;
@@ -307,7 +307,7 @@ TEST_CASE("Python: Test Get Context Property", "[executescriptPythonGetContextPr
   )");
 
   char getFileDirFmt[] = "/tmp/ft.XXXXXX";
-  char *getFileDir = testController.createTempDirectory(getFileDirFmt);
+  auto getFileDir = testController.createTempDirectory(getFileDirFmt);
   plan->setProperty(getFile, processors::GetFile::Directory.getName(), getFileDir);
 
   std::fstream file;

@@ -154,8 +154,10 @@ class DataSizeValue : public TransformableValue, public state::response::UInt64V
       : state::response::UInt64Value(value) {
   }
 
-  // Convert String to Integer
-  template<typename T>
+  
+// Convert String to Integer
+  template<typename T, typename std::enable_if<
+	  std::is_integral<T>::value>::type* = nullptr>
   static bool StringToInt(const std::string &input, T &output) {
     if (input.size() == 0) {
       return false;

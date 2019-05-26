@@ -26,8 +26,8 @@
 #include <atomic>
 #include <algorithm>
 #include <memory>
-#include <expression/Expression.h>
 #include "Property.h"
+#include "core/Core.h"
 #include "core/ContentRepository.h"
 #include "core/repository/FileSystemRepository.h"
 #include "core/controller/ControllerServiceProvider.h"
@@ -91,11 +91,15 @@ class ProcessContext : public controller::ControllerServiceLookup, public core::
     return getPropertyImp<typename std::common_type<T>::type>(name, value);
   }
 
-  bool getProperty(const Property &property, std::string &value, const std::shared_ptr<FlowFile> &flow_file);
+  virtual bool getProperty(const Property &property, std::string &value, const std::shared_ptr<FlowFile> &flow_file) {
+    return getProperty(property.getName(), value);
+  }
   bool getDynamicProperty(const std::string &name, std::string &value) const {
     return processor_node_->getDynamicProperty(name, value);
   }
-  bool getDynamicProperty(const Property &property, std::string &value, const std::shared_ptr<FlowFile> &flow_file);
+  virtual bool getDynamicProperty(const Property &property, std::string &value, const std::shared_ptr<FlowFile> &flow_file) {
+    return getDynamicProperty(property.getName(), value);
+  }
   std::vector<std::string> getDynamicPropertyKeys() const {
     return processor_node_->getDynamicPropertyKeys();
   }
@@ -210,9 +214,6 @@ class ProcessContext : public controller::ControllerServiceLookup, public core::
   std::shared_ptr<core::ContentRepository> content_repo_;
   // Processor
   std::shared_ptr<ProcessorNode> processor_node_;
-
-  std::map<std::string, org::apache::nifi::minifi::expression::Expression> expressions_;
-  std::map<std::string, org::apache::nifi::minifi::expression::Expression> dynamic_property_expressions_;
 
   // Logger
   std::shared_ptr<logging::Logger> logger_;

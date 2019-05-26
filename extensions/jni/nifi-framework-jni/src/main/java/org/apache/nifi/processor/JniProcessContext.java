@@ -8,6 +8,7 @@ import org.apache.nifi.components.state.StateManager;
 import org.apache.nifi.controller.ConfigurationContext;
 import org.apache.nifi.controller.ControllerService;
 import org.apache.nifi.controller.ControllerServiceLookup;
+import org.apache.nifi.documentation.init.NopStateManager;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -74,7 +75,7 @@ public class JniProcessContext implements ProcessContext, ControllerServiceLooku
 
     @Override
     public String getAnnotationData() {
-        return null;
+        return "";
     }
 
     @Override
@@ -88,7 +89,7 @@ public class JniProcessContext implements ProcessContext, ControllerServiceLooku
             }
 
 
-        return null;
+        return new HashMap<>();
     }
 
     private native List<String> getPropertyNames();
@@ -135,7 +136,7 @@ public class JniProcessContext implements ProcessContext, ControllerServiceLooku
 
     @Override
     public StateManager getStateManager() {
-        return null;
+        return new JniStateManager();
     }
 
     @Override

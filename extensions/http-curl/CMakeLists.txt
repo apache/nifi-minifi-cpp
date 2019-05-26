@@ -41,7 +41,7 @@ endif()
 if (CURL_FOUND)
   include_directories(${CURL_INCLUDE_DIRS})
   if (WIN32)
-	message("Including ${CURL_LIBRARY}")
+	message("Including ${CURL_LIBRARY} into minifi-http-curl")
 	target_link_libraries (minifi-http-curl ${CURL_LIBRARY})	
 	set_target_properties(minifi-http-curl PROPERTIES LINK_FLAGS "${LINK_FLAGS} /WHOLEARCHIVE:${CURL_LIBRARY}")
 
@@ -49,10 +49,6 @@ if (CURL_FOUND)
 			target_link_libraries(minifi-http-curl ${CURL_LIBRARIES})
 	endif()
 endif ()
-
-# Include UUID
-find_package(UUID REQUIRED)
-#set(LINK_FLAGS ${LINK_FLAGS} "-Wl,-whole-archive")
 
 # Include OpenSSL
 set(OPENSSL_USE_STATIC_LIBS TRUE)
@@ -86,7 +82,6 @@ elseif (APPLE)
 else ()
 	message("${OPENSSL_LIBRARIES}")
 	foreach(OPENSSL_LIB ${OPENSSL_LIBRARIES})
-		#target_link_libraries (minifi-http-curl ${OPENSSL_LIB} )	
 		target_link_libraries (minifi-http-curl ${OPENSSL_LIB})
 	endforeach()
 endif ()

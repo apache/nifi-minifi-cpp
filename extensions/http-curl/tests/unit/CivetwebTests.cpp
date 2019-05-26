@@ -18,6 +18,7 @@
 
 #include <uuid/uuid.h>
 #include <fstream>
+#include <chrono>
 #include <map>
 #include <memory>
 #include <set>
@@ -27,11 +28,11 @@
 #include <processors/LogAttribute.h>
 #include <processors/ListenHTTP.h>
 
-#include "../TestBase.h"
+#include "TestBase.h"
 
 #include "processors/GetFile.h"
 #include "processors/PutFile.h"
-#include "../../../extensions/http-curl/client/HTTPClient.h"
+#include "client/HTTPClient.h"
 
 TEST_CASE("Test Creation of ListenHTTP", "[ListenHTTPreate]") {  // NOLINT
   TestController testController;
@@ -55,7 +56,7 @@ TEST_CASE("Test GET Body", "[ListenHTTPGETBody]") {  // NOLINT
 
   // Define directory for test input
   std::string test_in_dir("/tmp/gt.XXXXXX");
-  REQUIRE(testController.createTempDirectory(&test_in_dir[0]) != nullptr);
+  REQUIRE(!testController.createTempDirectory(&test_in_dir[0]).empty());
 
   // Define test input file
   std::string test_input_file(test_in_dir);

@@ -47,11 +47,10 @@ class TailFileTestHarness : public IntegrationBase {
   TailFileTestHarness() {
     char format[] = "/tmp/ssth.XXXXXX";
     dir = testController.createTempDirectory(format);
-
-    statefile = dir;
-    statefile += "/statefile";
+    statefile = dir + utils::file::FileUtils::get_separator();
+    statefile += "statefile";
     std::fstream file;
-    ss << dir << "/" << "tstFile.ext";
+    ss << dir << utils::file::FileUtils::get_separator() << "tstFile.ext";
     file.open(ss.str(), std::ios::out);
     file << "Lin\\e1\nli\\nen\nli\\ne3\nli\\ne4\nli\\ne5\n";
     file.close();
@@ -61,7 +60,6 @@ class TailFileTestHarness : public IntegrationBase {
     LogTestController::getInstance().setInfo<minifi::processors::LogAttribute>();
     LogTestController::getInstance().setTrace<minifi::processors::TailFile>();
     LogTestController::getInstance().setInfo<minifi::FlowController>();
-    LogTestController::getInstance().setTrace<core::ProcessSession>();
     LogTestController::getInstance().setDebug<core::ConfigurableComponent>();
   }
 
@@ -88,7 +86,7 @@ class TailFileTestHarness : public IntegrationBase {
   }
 
   std::string statefile;
-  char *dir;
+  std::string dir;
   std::stringstream ss;
   TestController testController;
 };

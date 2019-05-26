@@ -124,7 +124,7 @@ void PutFile::onTrigger(core::ProcessContext *context, core::ProcessSession *ses
 
   // Determine dest full file paths
   std::stringstream destFileSs;
-  destFileSs << directory << "/" << filename;
+  destFileSs << directory << utils::file::FileUtils::get_separator() << filename;
   std::string destFile = destFileSs.str();
 
   logger_->log_debug("PutFile writing file %s into directory %s", filename, directory);
@@ -175,12 +175,12 @@ std::string PutFile::tmpWritePath(const std::string &filename, const std::string
   id_generator_->generate(tmpFileUuid);
   std::stringstream tmpFileSs;
   tmpFileSs << directory;
-  auto lastSeparatorPos = filename.find_last_of("/");
+  auto lastSeparatorPos = filename.find_last_of(utils::file::FileUtils::get_separator());
 
   if (lastSeparatorPos == std::string::npos) {
-    tmpFileSs << "/." << filename;
+    tmpFileSs << utils::file::FileUtils::get_separator() << "." << filename;
   } else {
-    tmpFileSs << "/" << filename.substr(0, lastSeparatorPos) << "/." << filename.substr(lastSeparatorPos + 1);
+    tmpFileSs << utils::file::FileUtils::get_separator() << filename.substr(0, lastSeparatorPos) << utils::file::FileUtils::get_separator() << "." << filename.substr(lastSeparatorPos + 1);
   }
 
   tmpFileSs << "." << tmpFileUuid.to_string();
@@ -197,7 +197,7 @@ bool PutFile::putFile(core::ProcessSession *session, std::shared_ptr<FlowFileRec
 
     logger_->log_debug("Destination directory does not exist; will attempt to create: ", destDir);
     size_t i = 0;
-    auto pos = destFile.find('/');
+    auto pos = destFile.find(utils::file::FileUtils::get_separator());
 
     while (pos != std::string::npos) {
       auto dir_path_component = destFile.substr(i, pos - i);
@@ -207,14 +207,14 @@ bool PutFile::putFile(core::ProcessSession *session, std::shared_ptr<FlowFileRec
       if (!dir_path_component.empty()) {
         logger_->log_debug("Attempting to create directory if it does not already exist: %s", dir_path);
         utils::file::FileUtils::create_dir(dir_path);
-        dir_path_stream << '/';
+        dir_path_stream << utils::file::FileUtils::get_separator();
       } else if (pos == 0) {
         // Support absolute paths
-        dir_path_stream << '/';
+        dir_path_stream << utils::file::FileUtils::get_separator();
       }
 
       i = pos + 1;
-      pos = destFile.find('/', pos + 1);
+      pos = destFile.find(utils::file::FileUtils::get_separator(), pos + 1);
     }
   }
 
