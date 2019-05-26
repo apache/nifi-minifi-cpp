@@ -53,7 +53,7 @@ TEST_CASE("Lua: Test Log", "[executescriptLuaLog]") { // NOLINT
   )");
 
   char getFileDirFmt[] = "/tmp/ft.XXXXXX";
-  char *getFileDir = testController.createTempDirectory(getFileDirFmt);
+  auto getFileDir = testController.createTempDirectory(getFileDirFmt);
   plan->setProperty(getFile, processors::GetFile::Directory.getName(), getFileDir);
 
   std::fstream file;
@@ -115,7 +115,7 @@ TEST_CASE("Lua: Test Read File", "[executescriptLuaRead]") { // NOLINT
   )");
 
   char getFileDirFmt[] = "/tmp/ft.XXXXXX";
-  char *getFileDir = testController.createTempDirectory(getFileDirFmt);
+  auto getFileDir = testController.createTempDirectory(getFileDirFmt);
   plan->setProperty(getFile, processors::GetFile::Directory.getName(), getFileDir);
 
   char putFileDirFmt[] = "/tmp/ft.XXXXXX";
@@ -205,7 +205,7 @@ TEST_CASE("Lua: Test Write File", "[executescriptLuaWrite]") { // NOLINT
   )");
 
   char getFileDirFmt[] = "/tmp/ft.XXXXXX";
-  char *getFileDir = testController.createTempDirectory(getFileDirFmt);
+  auto getFileDir = testController.createTempDirectory(getFileDirFmt);
   plan->setProperty(getFile, processors::GetFile::Directory.getName(), getFileDir);
 
   char putFileDirFmt[] = "/tmp/ft.XXXXXX";
@@ -287,7 +287,7 @@ TEST_CASE("Lua: Test Update Attribute", "[executescriptLuaUpdateAttribute]") { /
   )");
 
   char getFileDirFmt[] = "/tmp/ft.XXXXXX";
-  char *getFileDir = testController.createTempDirectory(getFileDirFmt);
+  auto getFileDir = testController.createTempDirectory(getFileDirFmt);
   plan->setProperty(getFile, processors::GetFile::Directory.getName(), getFileDir);
 
   std::fstream file;

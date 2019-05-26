@@ -89,7 +89,6 @@ int main(int argc, char **argv) {
   }
   std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::Configure>();
   configuration->set(minifi::Configure::nifi_default_directory, key_dir);
-  mkdir("content_repository", S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 
   std::shared_ptr<core::Repository> test_repo = std::make_shared<TestRepository>();
   std::shared_ptr<core::Repository> test_flow_repo = std::make_shared<TestFlowRepository>();
@@ -160,7 +159,6 @@ int main(int argc, char **argv) {
   assert(logs.find("key:flow.id") != std::string::npos);
 
   LogTestController::getInstance().reset();
-  rmdir("./content_repository");
   stop_webserver(server);
   return 0;
 }

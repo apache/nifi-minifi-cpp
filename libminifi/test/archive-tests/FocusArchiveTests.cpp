@@ -79,7 +79,7 @@ TEST_CASE("FocusArchive", "[testFocusArchive]") {
     char dir2[] = "/tmp/gt.XXXXXX";
     char dir3[] = "/tmp/gt.XXXXXX";
 
-    REQUIRE(testController.createTempDirectory(dir1) != nullptr);
+    REQUIRE(!testController.createTempDirectory(dir1).empty());
     std::shared_ptr<core::Processor> getfile = plan->addProcessor("GetFile", "getfileCreate2");
     plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), dir1);
     plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::KeepSourceFile.getName(), "true");
@@ -87,7 +87,7 @@ TEST_CASE("FocusArchive", "[testFocusArchive]") {
     std::shared_ptr<core::Processor> fprocessor = plan->addProcessor("FocusArchiveEntry", "focusarchiveCreate", core::Relationship("success", "description"), true);
     plan->setProperty(fprocessor, org::apache::nifi::minifi::processors::FocusArchiveEntry::Path.getName(), FOCUSED_FILE);
 
-    REQUIRE(testController.createTempDirectory(dir2) != nullptr);
+    REQUIRE(!testController.createTempDirectory(dir2).empty());
     std::shared_ptr<core::Processor> putfile1 = plan->addProcessor("PutFile", "PutFile1", core::Relationship("success", "description"), true);
     plan->setProperty(putfile1, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), dir2);
     plan->setProperty(putfile1, org::apache::nifi::minifi::processors::PutFile::ConflictResolution.getName(),
@@ -95,7 +95,7 @@ TEST_CASE("FocusArchive", "[testFocusArchive]") {
 
     std::shared_ptr<core::Processor> ufprocessor = plan->addProcessor("UnfocusArchiveEntry", "unfocusarchiveCreate", core::Relationship("success", "description"), true);
 
-    REQUIRE(testController.createTempDirectory(dir3) != nullptr);
+    REQUIRE(!testController.createTempDirectory(dir3).empty());
     std::shared_ptr<core::Processor> putfile2 = plan->addProcessor("PutFile", "PutFile2", core::Relationship("success", "description"), true);
     plan->setProperty(putfile2, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), dir3);
     plan->setProperty(putfile2, org::apache::nifi::minifi::processors::PutFile::ConflictResolution.getName(),

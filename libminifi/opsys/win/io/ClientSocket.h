@@ -128,7 +128,7 @@ public:
 	 * Return the port for this socket
 	 * @returns port
 	 */
-	uint16_t getPort();
+	uint16_t getPort() const;
 
 	// data stream extensions
 	/**
@@ -233,6 +233,11 @@ public:
 	}
 
 protected:
+
+	void setPort(uint16_t port) {
+		port_ = port;
+	}
+
 
 	/**
 	 * Constructor that accepts host name, port and listeners. With this

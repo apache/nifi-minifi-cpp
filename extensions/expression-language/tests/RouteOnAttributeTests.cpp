@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 #include <memory>
-#include "../TestBase.h"
+#include "TestBase.h"
 #include <RouteOnAttribute.h>
 #include "processors/LogAttribute.h"
 #include "processors/UpdateAttribute.h"

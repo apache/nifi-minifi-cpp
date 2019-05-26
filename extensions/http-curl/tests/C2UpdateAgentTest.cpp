@@ -152,7 +152,6 @@ int main(int argc, char **argv) {
   configuration->set("nifi.c2.agent.update.allow","true");
   configuration->set("nifi.c2.rest.url", c2_rest_url);
   configuration->set("nifi.c2.agent.heartbeat.period", "1000");
-  mkdir("content_repository", S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 
   std::shared_ptr<core::Repository> test_repo = std::make_shared<TestRepository>();
   std::shared_ptr<core::Repository> test_flow_repo = std::make_shared<TestFlowRepository>();
@@ -188,7 +187,6 @@ int main(int argc, char **argv) {
   assert(logs.find("removing file") != std::string::npos);
   assert(logs.find("May not have command processor") != std::string::npos);
   LogTestController::getInstance().reset();
-  rmdir("./content_repository");
   assert(h_ex.calls_ <= (milliseconds / 1000) + 1);
 
   return 0;

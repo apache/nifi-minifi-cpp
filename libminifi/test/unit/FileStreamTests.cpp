@@ -25,7 +25,7 @@
 TEST_CASE("TestFileOverWrite", "[TestFiles]") {
   TestController testController;
   char format[] = "/tmp/gt.XXXXXX";
-  char *dir = testController.createTempDirectory(format);
+  auto dir = testController.createTempDirectory(format);
 
   std::fstream file;
   std::stringstream ss;
@@ -63,7 +63,7 @@ TEST_CASE("TestFileOverWrite", "[TestFiles]") {
 TEST_CASE("TestFileBadArgumentNoChange", "[TestLoader]") {
   TestController testController;
   char format[] = "/tmp/gt.XXXXXX";
-  char *dir = testController.createTempDirectory(format);
+  auto dir = testController.createTempDirectory(format);
 
   std::fstream file;
   std::stringstream ss;
@@ -101,7 +101,7 @@ TEST_CASE("TestFileBadArgumentNoChange", "[TestLoader]") {
 TEST_CASE("TestFileBadArgumentNoChange2", "[TestLoader]") {
   TestController testController;
   char format[] = "/tmp/gt.XXXXXX";
-  char *dir = testController.createTempDirectory(format);
+  auto dir = testController.createTempDirectory(format);
 
   std::fstream file;
   std::stringstream ss;
@@ -139,7 +139,7 @@ TEST_CASE("TestFileBadArgumentNoChange2", "[TestLoader]") {
 TEST_CASE("TestFileBadArgumentNoChange3", "[TestLoader]") {
   TestController testController;
   char format[] = "/tmp/gt.XXXXXX";
-  char *dir = testController.createTempDirectory(format);
+  auto dir = testController.createTempDirectory(format);
 
   std::fstream file;
   std::stringstream ss;
@@ -177,7 +177,7 @@ TEST_CASE("TestFileBadArgumentNoChange3", "[TestLoader]") {
 TEST_CASE("TestFileBeyondEnd3", "[TestLoader]") {
   TestController testController;
   char format[] = "/tmp/gt.XXXXXX";
-  char *dir = testController.createTempDirectory(format);
+  auto dir = testController.createTempDirectory(format);
 
   std::fstream file;
   std::stringstream ss;
@@ -211,7 +211,7 @@ TEST_CASE("TestFileBeyondEnd3", "[TestLoader]") {
 TEST_CASE("TestFileExceedSize", "[TestLoader]") {
   TestController testController;
   char format[] = "/tmp/gt.XXXXXX";
-  char *dir = testController.createTempDirectory(format);
+  auto dir = testController.createTempDirectory(format);
 
   std::fstream file;
   std::stringstream ss;

@@ -18,11 +18,11 @@
 
 #ifndef LIBMINIFI_TEST_TESTBASE_H_
 #define LIBMINIFI_TEST_TESTBASE_H_
-#include <dirent.h>
 #include <cstdio>
 #include <cstdlib>
 #include <sstream>
 #include "ResourceClaim.h"
+#include "utils/file/FileUtils.h"
 #include "catch.hpp"
 #include <vector>
 #include <set>
@@ -40,6 +40,7 @@
 #include "core/FlowFile.h"
 #include "core/Processor.h"
 #include "core/ProcessContext.h"
+#include "core/ProcessContextBuilder.h"
 #include "core/ProcessSession.h"
 #include "core/ProcessorNode.h"
 #include "core/reporting/SiteToSiteProvenanceReportingTask.h"
@@ -293,38 +294,17 @@ class TestController {
   }
 
   ~TestController() {
-    for (auto dir : directories) {
-      DIR *created_dir;
-      struct dirent *dir_entry;
-      created_dir = opendir(dir.c_str());
-      if (created_dir != NULL) {
-        while ((dir_entry = readdir(created_dir)) != NULL) {
-          if (dir_entry->d_name[0] != '.') {
-
-            std::string file(dir);
-            file += "/";
-            file += dir_entry->d_name;
-            unlink(file.c_str());
-          }
-        }
-        closedir(created_dir);
-      }
-
-      rmdir(dir.c_str());
-    }
+	  for (auto dir : directories) {
+		  utils::file::FileUtils::delete_dir(dir, true);
+	  }
   }
 
   /**
    * format will be changed by mkdtemp, so don't rely on a shared variable.
    */
-  char *createTempDirectory(char *format) {
-    char *dir = mkdtemp(format);
-    if (NULL == dir) {
-      perror("mkdtemp failed: ");
-    }
-    directories.push_back(dir);
-    // TODO: return const char or don't return char* at all and use the format passed in as mkdtemp
-    // but I'm inclined to keep as-is for the time being.
+  std::string createTempDirectory(char *format) {
+	auto dir = utils::file::FileUtils::create_temp_directory(format);
+	directories.push_back(dir);
     return dir;
   }
 

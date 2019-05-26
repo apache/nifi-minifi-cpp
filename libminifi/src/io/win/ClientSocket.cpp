@@ -436,6 +436,15 @@ inline std::vector<uint8_t> Socket::readBuffer(const T& t) {
   return buf;
 }
 
+/**
+   * Return the port for this socket
+   * @returns port
+   */
+uint16_t Socket::getPort() const {
+	return port_;
+}
+
+
 int Socket::write(uint64_t base_value, bool is_little_endian) {
   return Serializable::write(base_value, this, is_little_endian);
 }

@@ -88,7 +88,7 @@ class TailFileTestHarness : public IntegrationBase {
   }
 
   std::string statefile;
-  char *dir;
+  std::string dir;
   std::stringstream ss;
   TestController testController;
 };

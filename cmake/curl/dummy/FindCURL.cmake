@@ -14,7 +14,6 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-
 set(CURL_FOUND "YES" CACHE STRING "" FORCE)
 set(CURL_INCLUDE_DIR "${CURL_SRC_DIR}/include" CACHE STRING "" FORCE)
 set(CURL_LIBRARY "${CURL_BIN_DIR}${CURL_BYPRODUCT_DIR}" CACHE STRING "" FORCE)

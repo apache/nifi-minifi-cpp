@@ -30,8 +30,8 @@
 #include <iostream>
 #include <sstream>
 #include "processors/LogAttribute.h"
-#include "../../integration/IntegrationBase.h"
-#include "../../TestBase.h"
+#include "integration/IntegrationBase.h"
+#include "TestBase.h"
 
 class TestHarness : public IntegrationBase {
  public:

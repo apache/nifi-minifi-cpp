@@ -17,7 +17,11 @@
  */
 #ifndef LIBMINIFI_TEST_TESTSERVER_H_
 #define LIBMINIFI_TEST_TESTSERVER_H_
+#if defined(_WIN32) || __cplusplus > 201103L
+#include <regex>
+#else
 #include <regex.h>
+#endif
 #include <string>
 #include <iostream>
 #include "civetweb.h"
@@ -77,9 +81,38 @@ CivetServer * start_webserver(std::string &port, std::string &rooturi, CivetHand
 }
 
 bool parse_http_components(const std::string &url, std::string &port, std::string &scheme, std::string &path) {
-  regex_t regex;
 
   const char *regexstr = "^(http|https)://(localhost:)([0-9]+)?(/.*)$";
+
+#if (__cplusplus > 201103L) || defined(_WIN32)
+
+  std::regex rgx;
+  std::regex_constants::syntax_option_type regex_mode = std::regex_constants::icase;
+	
+  rgx = std::regex(regexstr, regex_mode);
+ 
+  std::smatch matches;
+  std::string scratch = url;
+  while (std::regex_search(scratch, matches, rgx)) {
+	  for (int i = 1; i < matches.size(); i++) {
+		  auto str = matches[i].str();
+		  switch (i) {
+		  case 1:
+			  scheme = str;
+			  break;
+		  case 3:
+			  port = str;
+			  break;
+		  case 4:
+			  path = str;
+			  break;
+		  default:
+			  break;
+		  }
+	  }
+  }
+#else
+  regex_t regex;
 
   int ret = regcomp(&regex, regexstr, REG_EXTENDED);
   if (ret) {
@@ -113,7 +146,7 @@ bool parse_http_components(const std::string &url, std::string &port, std::strin
     return false;
 
   regfree(&regex);
-
+#endif
   return true;
 
 }

@@ -20,13 +20,21 @@
 
 #include <memory>
 #include <string>
-
-#include "../TestBase.h"
+#ifndef DISABLE_CURL
+#pragma comment(lib, "libcurl.lib")
+#pragma comment(lib, "Ws2_32.lib")
+#pragma comment(lib, "legacy_stdio_definitions.lib")
+#pragma comment(lib, "crypt32.lib")
+#include <curl/curl.h>
+#endif
+#include "impl/expression/Expression.h"
 #include <ExtractText.h>
 #include <GetFile.h>
 #include <PutFile.h>
 #include <UpdateAttribute.h>
+#include "core/FlowFile.h"
 #include <LogAttribute.h>
+#include "TestBase.h"
 
 namespace expression = org::apache::nifi::minifi::expression;
 
@@ -187,13 +195,13 @@ TEST_CASE("GetFile PutFile dynamic attribute", "[expressionLanguageTestGetFilePu
   auto repo = std::make_shared<TestRepository>();
 
   std::string in_dir("/tmp/gt.XXXXXX");
-  REQUIRE(testController.createTempDirectory(&in_dir[0]) != nullptr);
+  REQUIRE(!testController.createTempDirectory(&in_dir[0]).empty());
 
   std::string in_file(in_dir);
   in_file.append("/file");
 
   std::string out_dir("/tmp/gt.XXXXXX");
-  REQUIRE(testController.createTempDirectory(&out_dir[0]) != nullptr);
+  REQUIRE(!testController.createTempDirectory(&out_dir[0]).empty());
 
   std::string out_file(out_dir);
   out_file.append("/extracted_attr/file");
@@ -1209,6 +1217,8 @@ TEST_CASE("Encode Decode CSV", "[expressionEncodeDecodeCSV]") {  // NOLINT
   REQUIRE("Zero > One < \"two!\" & 'true'" == expr({flow_file_a}).asString());
 }
 
+
+#ifndef WIN32
 #ifndef DISABLE_CURL
 TEST_CASE("Encode URL", "[expressionEncodeURL]") {  // NOLINT
   auto expr = expression::compile("${message:urlEncode()}");
@@ -1257,6 +1267,7 @@ TEST_CASE("Encode Decode URL", "[expressionEncodeDecodeURLExcept]") {  // NOLINT
   flow_file_a->addAttribute("message", "some value with spaces");
   REQUIRE_THROWS(expr({flow_file_a}).asString());
 }
+#endif
 #endif
 
 #ifdef EXPRESSION_LANGUAGE_USE_DATE

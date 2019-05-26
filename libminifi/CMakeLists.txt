@@ -116,10 +116,7 @@ target_link_libraries(core-minifi ${CMAKE_DL_LIBS} ${UUID_LIBRARIES} yaml-cpp)
 
 include_directories(${ZLIB_INCLUDE_DIRS})
 
-target_link_libraries(core-minifi minifi-expression-language-extensions)
 target_link_libraries (core-minifi ${ZLIB_LIBRARIES})
-set_target_properties(core-minifi PROPERTIES LINK_FLAGS "/WHOLEARCHIVE")
-
 
 
 # Include OpenSSL
@@ -163,12 +160,7 @@ endif()
 
 include_directories(${ZLIB_INCLUDE_DIRS})
 
-target_link_libraries(core-minifi-shared minifi-expression-language-extensions)
 target_link_libraries (core-minifi-shared ${ZLIB_LIBRARIES})
-if (WIN32)
-set_target_properties(core-minifi-shared PROPERTIES LINK_FLAGS "/WHOLEARCHIVE")
-endif()
-
 
 # Include OpenSSL
 

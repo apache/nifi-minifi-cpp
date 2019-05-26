@@ -93,7 +93,7 @@ class HttpTestHarness : public IntegrationBase {
   }
 
  protected:
-  char *dir;
+  std::string dir;
   std::stringstream ss;
   TestController testController;
 };

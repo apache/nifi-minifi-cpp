@@ -25,7 +25,9 @@
 #include <cstring>
 #include <cstdlib>
 #ifdef WIN32
-#define WIN32_LEAN_AND_MEAN
+#ifndef WIN32_LEAN_AND_MEAN
+	#define WIN32_LEAN_AND_MEAN
+#endif
 #include <WinSock2.h>
 #include <WS2tcpip.h>
 #include <Windows.h>
@@ -96,6 +98,25 @@ class FileUtils {
     }
 #else
     return '/';
+#endif
+  }
+
+  static std::string create_temp_directory(char *format) {
+#ifdef WIN32
+	  std::string tempDirectory;
+	  char tempBuffer[MAX_PATH];
+	  auto ret = GetTempPath(MAX_PATH, tempBuffer); 
+	  if (ret <= MAX_PATH && ret != 0)
+	  {
+		  tempDirectory = tempBuffer;
+	  }
+	  return tempDirectory;
+#else
+	  auto dir = mkdtemp(format);
+	  if (nullptr == dir) {
+		  return "";
+	  }
+	  else return dir;
 #endif
   }
 

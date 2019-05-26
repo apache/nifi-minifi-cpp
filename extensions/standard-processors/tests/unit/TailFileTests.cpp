@@ -65,7 +65,7 @@ TEST_CASE("TailFileWithDelimiter", "[tailfiletest2]") {
   plan->addProcessor("LogAttribute", "logattribute", core::Relationship("success", "description"), true);
 
   char format[] = "/tmp/gt.XXXXXX";
-  char *dir = testController.createTempDirectory(format);
+  auto dir = testController.createTempDirectory(format).c_str();
 
   plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::FileName.getName(), TMP_FILE);
   plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::StateFile.getName(), STATE_FILE);
@@ -340,18 +340,7 @@ TEST_CASE("TailFileWithOutDelimiter", "[tailfiletest2]") {
   plan->addProcessor("LogAttribute", "logattribute", core::Relationship("success", "description"), true);
 
   char format[] = "/tmp/gt.XXXXXX";
-  char *dir = testController.createTempDirectory(format);
-  std::stringstream temp_file_ss;
-  temp_file_ss << dir << utils::file::FileUtils::get_separator() << "minifi-tmpfile.txt";
-  auto temp_file = temp_file_ss.str();
-  std::ofstream tmpfile;
-  tmpfile.open(temp_file);
-  tmpfile << NEWLINE_FILE;
-  tmpfile.close();
-
-  SECTION("Single") {
-  plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::FileName.getName(), temp_file);
-}
+  auto dir = testController.createTempDirectory(format).c_str();
 
   SECTION("Multiple") {
   plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::FileName.getName(), "minifi-.*\\.txt");
@@ -553,7 +542,7 @@ TEST_CASE("TailFileWithRealDelimiterAndRotate", "[tailfiletest2]") {
   auto plan = testController.createPlan();
 
   char format[] = "/tmp/gt.XXXXXX";
-  char *dir = testController.createTempDirectory(format);
+  auto dir = testController.createTempDirectory(format).c_str();
 
   // Define test input file
   std::string in_file(dir);
@@ -631,7 +620,7 @@ TEST_CASE("TailFileWithMultileRolledOverFiles", "[tailfiletest2]") {
   auto plan = testController.createPlan();
 
   char format[] = "/tmp/gt.XXXXXX";
-  char *dir = testController.createTempDirectory(format);
+  auto dir = testController.createTempDirectory(format).c_str();
 
   std::string state_file(dir);
   state_file.append("tailfile.state");

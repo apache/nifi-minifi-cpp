@@ -28,7 +28,7 @@
 TEST_CASE("Write Claim", "[TestDBCR1]") {
   TestController testController;
   char format[] = "/tmp/testRepo.XXXXXX";
-  char *dir = testController.createTempDirectory(format);
+auto dir = testController.createTempDirectory(format);
   auto content_repo = std::make_shared<core::repository::DatabaseContentRepository>();
 
   auto configuration = std::make_shared<org::apache::nifi::minifi::Configure>();
@@ -69,7 +69,7 @@ TEST_CASE("Write Claim", "[TestDBCR1]") {
 TEST_CASE("Delete Claim", "[TestDBCR2]") {
   TestController testController;
   char format[] = "/tmp/testRepo.XXXXXX";
-  char *dir = testController.createTempDirectory(format);
+auto dir = testController.createTempDirectory(format);
   auto content_repo = std::make_shared<core::repository::DatabaseContentRepository>();
 
   auto configuration = std::make_shared<org::apache::nifi::minifi::Configure>();
@@ -108,7 +108,7 @@ TEST_CASE("Delete Claim", "[TestDBCR2]") {
 TEST_CASE("Test Empty Claim", "[TestDBCR3]") {
   TestController testController;
   char format[] = "/tmp/testRepo.XXXXXX";
-  char *dir = testController.createTempDirectory(format);
+auto dir = testController.createTempDirectory(format);
   auto content_repo = std::make_shared<core::repository::DatabaseContentRepository>();
 
   auto configuration = std::make_shared<org::apache::nifi::minifi::Configure>();
@@ -144,7 +144,7 @@ TEST_CASE("Test Empty Claim", "[TestDBCR3]") {
 TEST_CASE("Test Null Claim", "[TestDBCR4]") {
   TestController testController;
   char format[] = "/tmp/testRepo.XXXXXX";
-  char *dir = testController.createTempDirectory(format);
+auto dir = testController.createTempDirectory(format);
   auto content_repo = std::make_shared<core::repository::DatabaseContentRepository>();
 
   auto configuration = std::make_shared<org::apache::nifi::minifi::Configure>();
@@ -165,7 +165,7 @@ TEST_CASE("Test Null Claim", "[TestDBCR4]") {
 TEST_CASE("Delete Null Claim", "[TestDBCR5]") {
   TestController testController;
   char format[] = "/tmp/testRepo.XXXXXX";
-  char *dir = testController.createTempDirectory(format);
+auto dir = testController.createTempDirectory(format);
   auto content_repo = std::make_shared<core::repository::DatabaseContentRepository>();
 
   auto configuration = std::make_shared<org::apache::nifi::minifi::Configure>();
@@ -205,7 +205,7 @@ TEST_CASE("Delete Null Claim", "[TestDBCR5]") {
 TEST_CASE("Delete NonExistent Claim", "[TestDBCR5]") {
   TestController testController;
   char format[] = "/tmp/testRepo.XXXXXX";
-  char *dir = testController.createTempDirectory(format);
+auto dir = testController.createTempDirectory(format);
   auto content_repo = std::make_shared<core::repository::DatabaseContentRepository>();
 
   auto configuration = std::make_shared<org::apache::nifi::minifi::Configure>();
@@ -247,7 +247,7 @@ TEST_CASE("Delete NonExistent Claim", "[TestDBCR5]") {
 TEST_CASE("Delete Remove Count Claim", "[TestDBCR6]") {
   TestController testController;
   char format[] = "/tmp/testRepo.XXXXXX";
-  char *dir = testController.createTempDirectory(format);
+auto dir = testController.createTempDirectory(format);
   auto content_repo = std::make_shared<core::repository::DatabaseContentRepository>();
 
   auto configuration = std::make_shared<org::apache::nifi::minifi::Configure>();

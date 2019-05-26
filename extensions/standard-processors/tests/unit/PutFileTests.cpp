@@ -63,9 +63,9 @@ TEST_CASE("PutFileTest", "[getfileputpfile]") {
   plan->addProcessor("LogAttribute", "logattribute", core::Relationship("success", "description"), true);
 
   char format[] = "/tmp/gt.XXXXXX";
-  char *dir = testController.createTempDirectory(format);
+  auto dir = testController.createTempDirectory(format).c_str();
   char format2[] = "/tmp/ft.XXXXXX";
-  char *putfiledir = testController.createTempDirectory(format2);
+  auto putfiledir = testController.createTempDirectory(format2).c_str();
   plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), dir);
   plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), putfiledir);
 
@@ -128,9 +128,9 @@ TEST_CASE("PutFileTestFileExists", "[getfileputpfile]") {
   plan->addProcessor("LogAttribute", "logattribute", core::Relationship("failure", "description"), true);
 
   char format[] = "/tmp/gt.XXXXXX";
-  char *dir = testController.createTempDirectory(format);
+  auto dir = testController.createTempDirectory(format).c_str();
   char format2[] = "/tmp/ft.XXXXXX";
-  char *putfiledir = testController.createTempDirectory(format2);
+  auto putfiledir = testController.createTempDirectory(format2).c_str();
   plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), dir);
   plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), putfiledir);
 
@@ -193,9 +193,9 @@ TEST_CASE("PutFileTestFileExistsIgnore", "[getfileputpfile]") {
   plan->addProcessor("LogAttribute", "logattribute", core::Relationship("success", "description"), true);
 
   char format[] = "/tmp/gt.XXXXXX";
-  char *dir = testController.createTempDirectory(format);
+  auto dir = testController.createTempDirectory(format).c_str();
   char format2[] = "/tmp/ft.XXXXXX";
-  char *putfiledir = testController.createTempDirectory(format2);
+  auto putfiledir = testController.createTempDirectory(format2).c_str();
   plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), dir);
   plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), putfiledir);
   plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::ConflictResolution.getName(), "ignore");
@@ -261,9 +261,9 @@ TEST_CASE("PutFileTestFileExistsReplace", "[getfileputpfile]") {
   plan->addProcessor("LogAttribute", "logattribute", core::Relationship("success", "description"), true);
 
   char format[] = "/tmp/gt.XXXXXX";
-  char *dir = testController.createTempDirectory(format);
+  auto dir = testController.createTempDirectory(format).c_str();
   char format2[] = "/tmp/ft.XXXXXX";
-  char *putfiledir = testController.createTempDirectory(format2);
+  auto putfiledir = testController.createTempDirectory(format2).c_str();
   plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), dir);
   plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), putfiledir);
   plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::ConflictResolution.getName(), "replace");
@@ -334,9 +334,9 @@ TEST_CASE("PutFileMaxFileCountTest", "[getfileputpfilemaxcount]") {
   plan->addProcessor("LogAttribute", "logattribute", { core::Relationship("success", "d"), core::Relationship("failure", "d") }, true);
 
   char format[] = "/tmp/gt.XXXXXX";
-  const char *dir = testController.createTempDirectory(format);
+  const auto dir = testController.createTempDirectory(format).c_str();
   char format2[] = "/tmp/ft.XXXXXX";
-  const char *putfiledir = testController.createTempDirectory(format2);
+  auto putfiledir = testController.createTempDirectory(format2).c_str();
   plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), dir);
   plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::BatchSize.getName(), "1");
   plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), putfiledir);

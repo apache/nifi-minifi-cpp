@@ -145,8 +145,8 @@ TEST_CASE("get file and put file", "[getAndPutFile]") {
 
   char src_format[] = "/tmp/gt.XXXXXX";
   char put_format[] = "/tmp/pt.XXXXXX";
-  const char *sourcedir = testController.createTempDirectory(src_format);
-  const char *putfiledir = testController.createTempDirectory(put_format);
+  auto sourcedir = testController.createTempDirectory(src_format).c_str();
+  const char *putfiledir = testController.createTempDirectory(put_format).c_str();
   auto instance = create_instance_obj();
   REQUIRE(instance != nullptr);
   flow *test_flow = create_new_flow(instance);
@@ -193,7 +193,7 @@ TEST_CASE("Test manipulation of attributes", "[testAttributes]") {
   TestController testController;
 
   char src_format[] = "/tmp/gt.XXXXXX";
-  const char *sourcedir = testController.createTempDirectory(src_format);
+  auto sourcedir = testController.createTempDirectory(src_format).c_str();
 
   create_testfile_for_getfile(sourcedir);
 
@@ -268,7 +268,7 @@ TEST_CASE("Test manipulation of attributes", "[testAttributes]") {
 TEST_CASE("Test error handling callback", "[errorHandling]") {
   TestController testController;
   char src_format[] = "/tmp/gt.XXXXXX";
-  const char *sourcedir = testController.createTempDirectory(src_format);
+  auto sourcedir = testController.createTempDirectory(src_format).c_str();
 
   auto instance = create_instance_obj();
   REQUIRE(instance != nullptr);
@@ -314,7 +314,7 @@ TEST_CASE("Test standalone processors", "[testStandalone]") {
   TestController testController;
 
   char src_format[] = "/tmp/gt.XXXXXX";
-  const char *sourcedir = testController.createTempDirectory(src_format);
+  auto sourcedir = testController.createTempDirectory(src_format).c_str();
 
   create_testfile_for_getfile(sourcedir);
 
@@ -362,8 +362,8 @@ TEST_CASE("Test interaction of flow and standlone processors", "[testStandaloneW
 
   char src_format[] = "/tmp/gt.XXXXXX";
   char put_format[] = "/tmp/pt.XXXXXX";
-  const char *sourcedir = testController.createTempDirectory(src_format);
-  const char *putfiledir = testController.createTempDirectory(put_format);
+  auto sourcedir = testController.createTempDirectory(src_format).c_str();
+  auto putfiledir = testController.createTempDirectory(put_format).c_str();
 
   create_testfile_for_getfile(sourcedir);
 
@@ -406,7 +406,7 @@ TEST_CASE("Test standalone processors with file input", "[testStandaloneWithFile
 
   enable_logging();
   char src_format[] = "/tmp/gt.XXXXXX";
-  const char *sourcedir = testController.createTempDirectory(src_format);
+  auto sourcedir = testController.createTempDirectory(src_format).c_str();
   std::string path = create_testfile_for_getfile(sourcedir);
 
   standalone_processor* extract_test = create_processor("ExtractText");
@@ -432,7 +432,7 @@ TEST_CASE("Test custom processor", "[TestCutomProcessor]") {
   TestController testController;
 
   char src_format[] = "/tmp/gt.XXXXXX";
-  const char *sourcedir = testController.createTempDirectory(src_format);
+  auto sourcedir = testController.createTempDirectory(src_format).c_str();
 
   create_testfile_for_getfile(sourcedir);
 

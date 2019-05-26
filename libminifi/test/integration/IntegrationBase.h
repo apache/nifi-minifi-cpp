@@ -76,11 +76,9 @@ class IntegrationBase {
 IntegrationBase::IntegrationBase(uint64_t waitTime)
     : configuration(std::make_shared<minifi::Configure>()),
       wait_time_(waitTime) {
-  mkdir("content_repository", S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 }
 
 IntegrationBase::~IntegrationBase() {
-  rmdir("./content_repository");
 }
 
 void IntegrationBase::configureSecurity() {

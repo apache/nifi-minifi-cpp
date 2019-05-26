@@ -67,7 +67,7 @@ TEST_CASE("Test usage of ExtractText", "[extracttextTest]") {
 
     char dir[] = "/tmp/gt.XXXXXX";
 
-    REQUIRE(testController.createTempDirectory(dir) != nullptr);
+    REQUIRE(!testController.createTempDirectory(dir).empty());
     std::shared_ptr<core::Processor> getfile = plan->addProcessor("GetFile", "getfileCreate2");
     plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), dir);
     plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::KeepSourceFile.getName(), "true");
@@ -136,7 +136,7 @@ TEST_CASE("Test usage of ExtractText in regex mode", "[extracttextRegexTest]") {
 
     char dir[] = "/tmp/gt.XXXXXX";
 
-    REQUIRE(testController.createTempDirectory(dir) != nullptr);
+    REQUIRE(!testController.createTempDirectory(dir).empty());
     std::shared_ptr<core::Processor> getfile = plan->addProcessor("GetFile", "getfileCreate2");
     plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), dir);
     plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::KeepSourceFile.getName(), "true");
