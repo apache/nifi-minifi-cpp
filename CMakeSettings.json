@@ -2,6 +2,99 @@
   // See https://go.microsoft.com//fwlink//?linkid=834763 for more information about this file.
   "configurations": [
     {
+      "name": "x64-RelWithDebInfo-WithJNI",
+      "generator": "Ninja",
+      "configurationType": "RelWithDebInfo",
+      "inheritEnvironments": [ "msvc_x64_x64" ],
+      "buildRoot": "${env.USERPROFILE}\\CMakeBuilds\\${workspaceHash}\\build\\${name}",
+      "installRoot": "${env.USERPROFILE}\\CMakeBuilds\\${workspaceHash}\\install\\${name}",
+      "cmakeCommandArgs": "",
+      "buildCommandArgs": "-v -j8",
+      "variables": [
+        {
+          "name": "OPENSSL_OFF",
+          "value": "OFF"
+        },
+        {
+          "name": "USE_SYSTEM_OPENSSL",
+          "value": "ON"
+        },
+        {
+          "name": "PORTABLE",
+          "value": "ON"
+        },
+        {
+          "name": "OPENSSL_ROOT_DIR",
+          "value": "C:\\OpenSSL-Win64"
+        },
+        {
+          "name": "USE_SYSTEM_ZLIB",
+          "value": "OFF"
+        },
+        {
+          "name": "DISABLE_CONTROLLER",
+          "value": "TRUE"
+        },
+        {
+          "name": "USE_SYSTEM_CURL",
+          "value": "OFF"
+        },
+        {
+          "name": "ENABLE_JNI",
+          "value": "ON"
+        },
+        {
+          "name": "USE_SYSTEM_UUID",
+          "value": "OFF"
+        },
+        {
+          "name": "FORCE_WINDOWS",
+          "value": "ON"
+        },
+        {
+          "name": "DISABLE_ROCKSDB",
+          "value": "FALSE"
+        },
+        {
+          "name": "ENABLE_WEL",
+          "value": "TRUE"
+        },
+        {
+          "name": "ENABLE_LIBRDKAFKA",
+          "value": "OFF"
+        },
+        {
+          "name": "DISABLE_CURL",
+          "value": "OFF"
+        },
+        {
+          "name": "FORCE_WINDOWS",
+          "value": "ON"
+        },
+        {
+          "name": "ENABLE_COAP",
+          "value": "OFF"
+        },
+        {
+          "name": "DISABLE_LIBARCHIVE",
+          "value": "TRUE"
+        },
+        {
+          "name": "DISABLE_SCRIPTING",
+          "value": "TRUE"
+        },
+        {
+          "name": "EXCLUDE_BOOST",
+          "value": "TRUE"
+        },
+        {
+          "name": "SKIP_TESTS",
+          "value": "TRUE"
+        }
+      ],
+      "ctestCommandArgs": ""
+    },
+    {
       "name": "x64-RelWithDebInfo",
       "generator": "Ninja",
       "configurationType": "RelWithDebInfo",
@@ -26,6 +119,91 @@
         {
           "name": "OPENSSL_ROOT_DIR",
           "value": "C:\\OpenSSL-Win64"
+        },
+        {
+          "name": "USE_SYSTEM_ZLIB",
+          "value": "OFF"
+        },
+        {
+          "name": "DISABLE_CONTROLLER",
+          "value": "TRUE"
+        },
+        {
+          "name": "USE_SYSTEM_CURL",
+          "value": "OFF"
+        },
+        {
+          "name": "USE_SYSTEM_UUID",
+          "value": "OFF"
+        },
+        {
+          "name": "FORCE_WINDOWS",
+          "value": "ON"
+        },
+        {
+          "name": "DISABLE_ROCKSDB",
+          "value": "FALSE"
+        },
+        {
+          "name": "ENABLE_WEL",
+          "value": "TRUE"
+        },
+        {
+          "name": "ENABLE_LIBRDKAFKA",
+          "value": "OFF"
+        },
+        {
+          "name": "DISABLE_CURL",
+          "value": "OFF"
+        },
+        {
+          "name": "FORCE_WINDOWS",
+          "value": "ON"
+        },
+        {
+          "name": "ENABLE_COAP",
+          "value": "OFF"
+        },
+        {
+          "name": "DISABLE_LIBARCHIVE",
+          "value": "TRUE"
+        },
+        {
+          "name": "DISABLE_SCRIPTING",
+          "value": "TRUE"
+        },
+        {
+          "name": "EXCLUDE_BOOST",
+          "value": "TRUE"
+        },
+        {
+          "name": "SKIP_TESTS",
+          "value": "TRUE"
+        }
+      ],
+      "ctestCommandArgs": ""
+    },
+    {
+      "name": "x64-Release-WithJNI",
+      "generator": "Ninja",
+      "configurationType": "Release",
+      "inheritEnvironments": [ "msvc_x64_x64" ],
+      "buildRoot": "${env.USERPROFILE}\\CMakeBuilds\\${workspaceHash}\\build\\${name}",
+      "installRoot": "${env.USERPROFILE}\\CMakeBuilds\\${workspaceHash}\\install\\${name}",
+      "cmakeCommandArgs": "",
+      "buildCommandArgs": "-v -j8",
+      "variables": [
+        {
+          "name": "OPENSSL_OFF",
+          "value": "OFF"
+        },
+        {
+          "name": "USE_SYSTEM_OPENSSL",
+          "value": "OFF"
+        },
+        {
+          "name": "PORTABLE",
+          "value": "ON"
         },
         {
           "name": "USE_SYSTEM_ZLIB",
@@ -127,10 +305,6 @@
         {
           "name": "USE_SYSTEM_CURL",
           "value": "OFF"
-        },
-        {
-          "name": "ENABLE_JNI",
-          "value": "ON"
         },
         {
           "name": "USE_SYSTEM_UUID",
