@@ -94,7 +94,6 @@ void LogAttribute::onTrigger(const std::shared_ptr<core::ProcessContext> &contex
   std::string dashLine = "--------------------------------------------------";
   LogAttrLevel level = LogAttrLevelInfo;
   bool logPayload = false;
-  std::ostringstream message;
 
   uint64_t i = 0;
   const auto max = flowfiles_to_log_ == 0 ? UINT64_MAX : flowfiles_to_log_;
@@ -115,6 +114,7 @@ void LogAttribute::onTrigger(const std::shared_ptr<core::ProcessContext> &contex
 
     context->getProperty(LogPayload.getName(), logPayload);
 
+    std::ostringstream message;
     message << "Logging for flow file " << "\n";
     message << dashLine;
     message << "\nStandard FlowFile Attributes";
@@ -146,7 +146,7 @@ void LogAttribute::onTrigger(const std::shared_ptr<core::ProcessContext> &contex
         }
       }
     }
-    message << "\n" << dashLine << std::ends;
+    message << "\n" << dashLine;
     std::string output = message.str();
 
     switch (level) {
