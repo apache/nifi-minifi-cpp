@@ -342,7 +342,7 @@ class StandardValidators {
   }
 
   static const std::shared_ptr<PropertyValidator> LISTEN_PORT_VALIDATOR(){
-    static std::shared_ptr<PropertyValidator> validator = std::make_shared<ListenPortValidator>("LISTEN_PORT_VALIDATOR");
+    static std::shared_ptr<PropertyValidator> validator = std::make_shared<ListenPortValidator>("PORT_VALIDATOR");
     return validator;
   }
 
