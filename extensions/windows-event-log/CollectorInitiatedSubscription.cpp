@@ -34,6 +34,7 @@
 #include "io/DataStream.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
+#include "utils/ScopeGuard.h"
 
 #pragma comment(lib, "wevtapi.lib")
 #pragma comment(lib, "Wecapi.lib")
@@ -44,17 +45,8 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-struct OnScopeExit
-{
-  std::function<void(void)> functor_;
-public:
-  OnScopeExit(const decltype(functor_)& functor) : functor_(functor) {}
-  ~OnScopeExit() { functor_(); }
-};
-
-#define SCOPE_EXIT_CONCAT(x, y) x##y
-#define SCOPE_EXIT_UNIQUE_NAME(name, counter) SCOPE_EXIT_CONCAT(name, counter)
-#define ON_SCOPE_EXIT(f) OnScopeExit SCOPE_EXIT_UNIQUE_NAME(onScopeExit, __COUNTER__)([&]{f;})
+#define LOG_SUBSCRIPTION_ERROR(error) logError(__LINE__, error)
+#define LOG_SUBSCRIPTION_WINDOWS_ERROR(info) logWindowsError(__LINE__, info)
 
 static std::set<core::Property> s_supportedProperties;
 
@@ -121,14 +113,14 @@ static SupportedProperty s_maxDeliveryItems(
 static SupportedProperty s_deliveryMaxLatencyTime(
   core::PropertyBuilder::createProperty("Delivery MaxLatency Time")->
   isRequired(true)->
-  withDefaultValue<core::DataSizeValue>("10 min")->
+  withDefaultValue<core::TimePeriodValue>("10 min")->
   withDescription("How long, in milliseconds, the event source should wait before sending events.")->
   build());
 
 static SupportedProperty s_heartbeatInterval(
   core::PropertyBuilder::createProperty("Heartbeat Interval")->
   isRequired(true)->
-  withDefaultValue<core::DataSizeValue>("10 min")->
+  withDefaultValue<core::TimePeriodValue>("10 min")->
   withDescription(
     "Time interval, in milliseconds, which is observed between the sent heartbeat messages."
     " The event collector uses this property to determine the interval between queries to the event source.")->
@@ -181,7 +173,7 @@ CollectorInitiatedSubscription::CollectorInitiatedSubscription(const std::string
   if (GetComputerName(buff, &size)) {
     computerName_ = buff;
   } else {
-    logWindowsError(__LINE__, "GetComputerName");
+    LOG_SUBSCRIPTION_WINDOWS_ERROR("GetComputerName");
   }
 }
 
@@ -221,7 +213,7 @@ void CollectorInitiatedSubscription::onTrigger(const std::shared_ptr<core::Proce
 
   const auto flowFileCount = processQueue(session);
 
-  const auto now = GetTickCount();
+  const auto now = GetTickCount64();
 
   if (flowFileCount > 0) {
     lastActivityTimestamp_ = now;
@@ -241,10 +233,10 @@ void CollectorInitiatedSubscription::logInvalidSubscriptionPropertyType(int line
 bool CollectorInitiatedSubscription::checkSubscriptionRuntimeStatus() {
   EC_HANDLE hSubscription = EcOpenSubscription(subscriptionName_.c_str(), EC_READ_ACCESS, EC_OPEN_EXISTING);
   if (!hSubscription) {
-    logWindowsError(__LINE__, "EcOpenSubscription");
+    LOG_SUBSCRIPTION_WINDOWS_ERROR("EcOpenSubscription");
     return false;
   }
-  ON_SCOPE_EXIT(EcClose(hSubscription));
+  utils::ScopeGuard guard_hSubscription([hSubscription]() { EcClose(hSubscription); });
 
   PEC_VARIANT vProperty = NULL;
   std::vector<BYTE> buffer;
@@ -259,17 +251,17 @@ bool CollectorInitiatedSubscription::checkSubscriptionRuntimeStatus() {
   }
 
   if (vProperty->Type == EcVarTypeNull) {
-    logError(__LINE__, "!hArray");
+    LOG_SUBSCRIPTION_ERROR("!hArray");
     return false;
   }
 
   EC_OBJECT_ARRAY_PROPERTY_HANDLE hArray = vProperty->PropertyHandleVal;
-  ON_SCOPE_EXIT(EcClose(hArray));
+  utils::ScopeGuard guard_hArray([hArray]() { EcClose(hArray); });
 
   // Get the EventSources array size (number of elements).
   DWORD dwEventSourceCount{};
   if (!EcGetObjectArraySize(hArray, &dwEventSourceCount)) {
-    logWindowsError(__LINE__, "EcGetObjectArraySize");
+    LOG_SUBSCRIPTION_WINDOWS_ERROR("EcGetObjectArraySize");
     return false;
   }
 
@@ -282,12 +274,12 @@ bool CollectorInitiatedSubscription::checkSubscriptionRuntimeStatus() {
       if (ERROR_INSUFFICIENT_BUFFER == GetLastError()) {
         buffer.resize(dwBufferSizeUsed);
         if (!EcGetObjectArrayProperty(hArray, propID, arrayIndex, flags, (DWORD)buffer.size(), (PEC_VARIANT)&buffer[0], &dwBufferSizeUsed)) {
-          logWindowsError(__LINE__, "EcGetObjectArrayProperty");
+          LOG_SUBSCRIPTION_WINDOWS_ERROR("EcGetObjectArrayProperty");
           return false;
         }
       }
       else {
-        logWindowsError(__LINE__, "EcGetObjectArrayProperty");
+        LOG_SUBSCRIPTION_WINDOWS_ERROR("EcGetObjectArrayProperty");
         return false;
       }
     }
@@ -318,10 +310,10 @@ bool CollectorInitiatedSubscription::checkSubscriptionRuntimeStatus() {
               (DWORD)buffer.size(),
               (PEC_VARIANT)&buffer[0],
               &dwBufferSize)) {
-          logWindowsError(__LINE__, "EcGetSubscriptionRunTimeStatus");
+          LOG_SUBSCRIPTION_WINDOWS_ERROR("EcGetSubscriptionRunTimeStatus");
         }
       } else {
-        logWindowsError(__LINE__, "EcGetSubscriptionRunTimeStatus");
+        LOG_SUBSCRIPTION_WINDOWS_ERROR("EcGetSubscriptionRunTimeStatus");
       }
     }
 
@@ -427,11 +419,11 @@ bool CollectorInitiatedSubscription::getSubscriptionProperty(EC_HANDLE hSubscrip
     if (ERROR_INSUFFICIENT_BUFFER == GetLastError()) {
       buffer.resize(dwBufferSize);
       if (!EcGetSubscriptionProperty(hSubscription, propID, flags, (DWORD)buffer.size(), (PEC_VARIANT)&buffer[0], &dwBufferSize)) {
-        logWindowsError(__LINE__, "EcGetSubscriptionProperty");
+        LOG_SUBSCRIPTION_WINDOWS_ERROR("EcGetSubscriptionProperty");
         return false;
       }
     } else {
-      logWindowsError(__LINE__, "EcGetSubscriptionProperty");
+      LOG_SUBSCRIPTION_WINDOWS_ERROR("EcGetSubscriptionProperty");
       return false;
     }
   }
@@ -493,7 +485,7 @@ bool CollectorInitiatedSubscription::createSubscription(const std::shared_ptr<co
   if (hSubscription) {
     EcClose(hSubscription);
     if (!EcDeleteSubscription(subscriptionName_.c_str(), 0)) {
-      logWindowsError(__LINE__, "EcDeleteSubscription");
+      LOG_SUBSCRIPTION_WINDOWS_ERROR("EcDeleteSubscription");
       return false;
     }
   }
@@ -501,10 +493,10 @@ bool CollectorInitiatedSubscription::createSubscription(const std::shared_ptr<co
   // Create subscription.
   hSubscription = EcOpenSubscription(subscriptionName_.c_str(), EC_READ_ACCESS | EC_WRITE_ACCESS, EC_CREATE_NEW);
   if (!hSubscription) {
-    logWindowsError(__LINE__, "EcOpenSubscription");
+    LOG_SUBSCRIPTION_WINDOWS_ERROR("EcOpenSubscription");
     return false;
   }
-  ON_SCOPE_EXIT(EcClose(hSubscription));
+  utils::ScopeGuard guard_hSubscription([hSubscription]() { EcClose(hSubscription); });
 
   struct SubscriptionProperty
   {
@@ -551,7 +543,7 @@ bool CollectorInitiatedSubscription::createSubscription(const std::shared_ptr<co
   };
   for (auto prop : vProp) {
     if (!EcSetSubscriptionProperty(hSubscription, prop.propId_, 0, &prop.prop_)) {
-      logWindowsError(__LINE__, "EcSetSubscriptionProperty id: " + std::to_string(prop.propId_));
+      LOG_SUBSCRIPTION_WINDOWS_ERROR("EcSetSubscriptionProperty id: " + std::to_string(prop.propId_));
       return false;
     }
   }
@@ -569,34 +561,34 @@ bool CollectorInitiatedSubscription::createSubscription(const std::shared_ptr<co
   }
 
   if (vProperty->Type == EcVarTypeNull) {
-    logError(__LINE__, "!hArray");
+    LOG_SUBSCRIPTION_ERROR("!hArray");
     return false;
   }
 
   EC_OBJECT_ARRAY_PROPERTY_HANDLE hArray = vProperty->PropertyHandleVal;
-  ON_SCOPE_EXIT(EcClose(hArray));
+  utils::ScopeGuard guard_hArray([hArray]() { EcClose(hArray); });
 
   DWORD dwEventSourceCount{};
   if (!EcGetObjectArraySize(hArray, &dwEventSourceCount)) {
-    logWindowsError(__LINE__, "EcGetObjectArraySize");
+    LOG_SUBSCRIPTION_WINDOWS_ERROR("EcGetObjectArraySize");
     return false;
   }
 
   // Add a new EventSource to the EventSources array object.
   if (!EcInsertObjectArrayElement(hArray, dwEventSourceCount)) {
-    logWindowsError(__LINE__, "EcInsertObjectArrayElement");
+    LOG_SUBSCRIPTION_WINDOWS_ERROR("EcInsertObjectArrayElement");
     return false;
   }
 
   for (auto& prop: std::vector<SubscriptionProperty>{{EcSubscriptionEventSourceAddress, sourceAddress}, {EcSubscriptionEventSourceEnabled, true}}) {
     if (!EcSetObjectArrayProperty(hArray, prop.propId_, dwEventSourceCount, 0, &prop.prop_)) {
-      logWindowsError(__LINE__, "EcSetObjectArrayProperty id: " + std::to_string(prop.propId_));
+      LOG_SUBSCRIPTION_WINDOWS_ERROR("EcSetObjectArrayProperty id: " + std::to_string(prop.propId_));
       return false;
     }
   }
 
   if (!EcSaveSubscription(hSubscription, NULL)) {
-    logWindowsError(__LINE__, "EcSaveSubscription");
+    LOG_SUBSCRIPTION_WINDOWS_ERROR("EcSaveSubscription");
     return false;
   }
 
@@ -725,7 +717,7 @@ int CollectorInitiatedSubscription::processQueue(const std::shared_ptr<core::Pro
 
 void CollectorInitiatedSubscription::notifyStop() {
   if (!EcDeleteSubscription(subscriptionName_.c_str(), 0)) {
-    logWindowsError(__LINE__, "EcDeleteSubscription");
+    LOG_SUBSCRIPTION_WINDOWS_ERROR("EcDeleteSubscription");
   }
 
   unsubscribe();

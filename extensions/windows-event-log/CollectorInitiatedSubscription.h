@@ -85,7 +85,7 @@ private:
   int64_t inactiveDurationToReconnect_{};
   EVT_HANDLE subscriptionHandle_{};
   uint64_t maxBufferSize_{};
-  DWORD lastActivityTimestamp_{};
+  uint64_t lastActivityTimestamp_{};
   std::shared_ptr<core::ProcessSessionFactory> sessionFactory_;
   std::wstring subscriptionName_;
   std::wstring channel_;
