@@ -294,9 +294,9 @@ void CollectorInitiatedSubscription::onTrigger(const std::shared_ptr<core::Proce
   if (flowFileCount > 0) {
     lastActivityTimestamp_ = now;
   }
-  else if (inactiveDurationToReconnect_ > 0) {
-    if ((now - lastActivityTimestamp_) > inactiveDurationToReconnect_) {
-      logger_->log_info("Exceeds configured 'inactive duration to reconnect' %lld ms. Unsubscribe to reconnect..", inactiveDurationToReconnect_);
+  else if (s_inactiveDurationToReconnect.value() > 0) {
+    if ((now - lastActivityTimestamp_) > s_inactiveDurationToReconnect.value()) {
+      logger_->log_info("Exceeds configured 'inactive duration to reconnect' %lld ms. Unsubscribe to reconnect..", s_inactiveDurationToReconnect.value());
       unsubscribe();
     }
   }
@@ -634,16 +634,6 @@ bool CollectorInitiatedSubscription::subscribe(const std::shared_ptr<core::Proce
   logger_->log_debug("CollectorInitiatedSubscription: maxBufferSize_ %lld", s_maxBufferSize.value());
 
   provenanceUri_ = "winlog://" + computerName_ + "/" + to_string(s_channel.value()) + "?" + to_string(s_query.value());
-
-  std::string strInactiveDurationToReconnect;
-  context->getProperty(s_inactiveDurationToReconnect.getName(), strInactiveDurationToReconnect);
-
-  // Get 'inactiveDurationToReconnect_'.
-  core::TimeUnit unit;
-  if (core::Property::StringToTime(strInactiveDurationToReconnect, inactiveDurationToReconnect_, unit) &&
-    core::Property::ConvertTimeUnitToMS(inactiveDurationToReconnect_, unit, inactiveDurationToReconnect_)) {
-    logger_->log_info("inactiveDurationToReconnect: [%lld] ms", inactiveDurationToReconnect_);
-  }
 
   subscriptionHandle_ = EvtSubscribe(
       NULL,

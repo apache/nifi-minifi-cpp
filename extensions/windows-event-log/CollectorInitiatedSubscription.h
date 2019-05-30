@@ -82,7 +82,6 @@ private:
   moodycamel::ConcurrentQueue<std::string> renderedXMLs_;
   std::string provenanceUri_;
   std::string computerName_;
-  int64_t inactiveDurationToReconnect_{};
   EVT_HANDLE subscriptionHandle_{};
   uint64_t lastActivityTimestamp_{};
   std::shared_ptr<core::ProcessSessionFactory> sessionFactory_;
