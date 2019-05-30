@@ -83,7 +83,8 @@ inline int64_t pareDateTimeStr(const std::string &str) {
   if (sscanf(str.c_str(), "%4u-%2hhu-%2hhuT%2hhu:%2hhu:%2hhuZ%n", &year, &month, &day, &hours, &minutes, &seconds, &read) != 6) {
     return -1;
   }
-  if (read != str.size()) {
+  // while it is unlikely that read will be < 0, the conditional adds little cost for a little defensiveness.
+  if (read < 0 || static_cast<size_t>(read) != str.size()) {
     return -1;
   }
 
