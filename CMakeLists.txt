@@ -110,6 +110,14 @@ if(CCACHE_FOUND)
     message("-- Found ccache: ${CCACHE_FOUND}")
 endif(CCACHE_FOUND)
 
+if (UNIX AND NOT APPLE)
+  execute_process(COMMAND ${CMAKE_C_COMPILER} -fuse-ld=gold -Wl,--version ERROR_QUIET OUTPUT_VARIABLE ld_version)
+  if ("${ld_version}" MATCHES "GNU gold")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fuse-ld=gold -Wl,--disable-new-dtags")
+    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -fuse-ld=gold -Wl,--disable-new-dtags")
+  endif()
+endif()
+
 # check for exec info before we enable the backtrace features.
 CHECK_INCLUDE_FILE("execinfo.h" HAS_EXECINFO)
 if (ENABLE_OPS AND HAS_EXECINFO AND NOT WIN32)
