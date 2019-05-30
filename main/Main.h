@@ -18,10 +18,9 @@
 #ifndef MAIN_MAIN_H_
 #define MAIN_MAIN_H_
 
+#include "utils/file/FileUtils.h"
 
 #ifdef WIN32
-#define FILE_SEPARATOR "\\"
-
 
 extern "C" {
 	FILE* __cdecl _imp____iob_func()
@@ -78,10 +77,6 @@ extern "C" {
 }
 }
 
-#else
-#ifndef FILE_SEPARATOR
-#define FILE_SEPARATOR "/"
-#endif
 #endif
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
@@ -128,7 +123,7 @@ extern "C" {
 bool validHome(const std::string &home_path) {
   struct stat stat_result { };
   std::string sep;
-  sep += FILE_SEPARATOR;
+  sep += utils::file::FileUtils::get_separator();
 #ifdef WIN32
 	sep = "";
 #endif

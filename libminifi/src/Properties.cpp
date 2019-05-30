@@ -22,13 +22,6 @@
 #include "core/Core.h"
 #include "core/logging/LoggerConfiguration.h"
 
-#ifndef FILE_SEPARATOR_C
-#ifdef WIN32
-#define FILE_SEPARATOR_C '\\'
-#else
-#define FILE_SEPARATOR_C '/'
-#endif
-#endif
 
 namespace org {
 namespace apache {
@@ -125,8 +118,8 @@ void Properties::loadConfigureFile(const char *fileName) {
   std::string adjustedFilename;
   if (fileName) {
     // perform a naive determination if this is a relative path
-    if (fileName[0] != FILE_SEPARATOR_C) {
-      adjustedFilename = adjustedFilename + getHome() + FILE_SEPARATOR_C + fileName;
+    if (fileName[0] != utils::file::FileUtils::get_separator()) {
+      adjustedFilename = adjustedFilename + getHome() + utils::file::FileUtils::get_separator() + fileName;
     } else {
       if (adjustedFilename.empty()) {
         adjustedFilename = getHome();
