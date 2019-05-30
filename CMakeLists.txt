@@ -182,24 +182,23 @@ if (NOT OPENSSL_OFF)
 		else()
 			#set(OPENSSL_ROOT_DIR "/usr/lib/x86_64-linux-gnu")
 		endif()
-	
-		# Include OpenSSL
-		find_package (OpenSSL REQUIRED)
-	
 	else()
 		include(LibreSSL)
 		use_libre_ssl(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
 		list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/ssl")
-		find_package (OpenSSL REQUIRED)
-	endif()
-if (OPENSSL_FOUND)
-  include_directories(${OPENSSL_INCLUDE_DIR})
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DOPENSSL_SUPPORT")
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DOPENSSL_SUPPORT")
-  MESSAGE("OpenSSL found at ${OPENSSL_LIBRARIES}")
-else ()
-  message( FATAL_ERROR "OpenSSL was not found. Please install OpenSSL" )
-endif (OPENSSL_FOUND)
+	endif()	
+	
+	find_package (OpenSSL REQUIRED)
+
+	if (OPENSSL_FOUND)
+	  include_directories(${OPENSSL_INCLUDE_DIR})
+	  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DOPENSSL_SUPPORT")
+	  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DOPENSSL_SUPPORT")
+	  MESSAGE("OpenSSL found at ${OPENSSL_LIBRARIES}")
+	else ()
+	  message( FATAL_ERROR "OpenSSL was not found. Please install OpenSSL" )
+	endif (OPENSSL_FOUND)
+	
 else()
 	list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/winssl")
 endif()
@@ -227,50 +226,15 @@ set(PASSTHROUGH_CMAKE_ARGS -DANDROID_ABI=${ANDROID_ABI}
         ${OPENSSL_PASSTHROUGH}
         -G${CMAKE_GENERATOR})
 
+include(Compression)
+
 if(WIN32 OR NOT USE_SYSTEM_ZLIB)
-  message("Using bundled zlib")
-
-  if (WIN32)
-  if (CMAKE_BUILD_TYPE MATCHES RelWithDebInfo OR CMAKE_BUILD_TYPE MATCHES Release)
-  set(BYPRODUCT "thirdparty/zlib-install/lib/zlibstatic.lib")
-  else()
-  set(BYPRODUCT "thirdparty/zlib-install/lib/zlibstaticd.lib")
-  endif()
-  else()
-  set(BYPRODUCT "thirdparty/zlib-install/lib/libz.a")
-  endif()
-  ExternalProject_Add(
-    zlib-external
-    GIT_REPOSITORY "https://github.com/madler/zlib.git"
-    GIT_TAG "cacf7f1d4e3d44d871b605da3b647f07d718623f"  # Version 1.2.11
-    SOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/zlib-src"
-    CMAKE_ARGS ${PASSTHROUGH_CMAKE_ARGS}
-               "-DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/thirdparty/zlib-install"
-    BUILD_BYPRODUCTS ${BYPRODUCT}
-  )
-
-
-  add_library(z STATIC IMPORTED)
-  set_target_properties(z PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/${BYPRODUCT}")
-
-  set(ZLIB_BYPRODUCT "${CMAKE_CURRENT_BINARY_DIR}/${BYPRODUCT}" CACHE STRING "" FORCE)
-  set(ZLIB_BYPRODUCT_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/zlib/include" CACHE STRING "" FORCE)
-  set(ZLIB_BIN_DIR "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-install/" CACHE STRING "" FORCE)
-
-  add_dependencies(z zlib-external)
-  set(ZLIB_FOUND "YES" CACHE STRING "" FORCE)
-  set(ZLIB_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/zlib/include" CACHE STRING "" FORCE)
-  set(ZLIB_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/zlib/include" CACHE STRING "" FORCE)
-
-  set(ZLIB_LIBRARY "${CMAKE_CURRENT_BINARY_DIR}/${BYPRODUCT}" CACHE STRING "" FORCE)
-  set(ZLIB_LIBRARIES "${ZLIB_LIBRARY}" CACHE STRING "" FORCE)
-  set(ZLIB_LIBRARY_RELEASE "${CMAKE_CURRENT_BINARY_DIR}/${BYPRODUCT}" CACHE STRING "" FORCE)
-  set(ZLIB_LIBRARY_DEBUG "${CMAKE_CURRENT_BINARY_DIR}/${BYPRODUCT}" CACHE STRING "" FORCE)
-
-  list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/zlib/dummy")
-else()
-  find_package (ZLIB REQUIRED)
+	use_bundled_zlib(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
+	find_package (OpenSSL REQUIRED)
+	list(APPEND CMAKE_MODULE_PATH "${SOURCE_DIR}/cmake/zlib/dummy")
 endif()
+
+find_package (ZLIB REQUIRED)
 
 if (ZLIB_FOUND)
   include_directories(${ZLIB_INCLUDE_DIRS})
@@ -430,21 +394,10 @@ else()
 endif()
 
 if(BOOTSTRAP)
-    add_subdirectory(thirdparty/cxxopts)
-    createExtension(BOOTSTRAP "BOOTSTRAP" "Bootstraps documentation and other features" "extensions/bootstrap")
-    # we don't currently need this route. A follow on should help re-write processor documentation from what exists in code, so this will remain here 
-	# execute_process(COMMAND ${CMAKE_BINARY_DIR}/extensions/bootstrap/bstrp --inputc2docs "${CMAKE_SOURCE_DIR}/PROCESSORS.md" --outputc2docs "${CMAKE_SOURCE_DIR}/libminifi/include/agent/agent_docs.h")
-    return()
+	# display an error message for those using the bootstrap
+    message(FATAL_ERROR "Bootstrapping is no longer needed within the agent")
 endif()
 
-message("-------- BOOTSTRAP BEGIN --------")
-execute_process(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}"
-                        -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-                        -DCMAKE_MAKE_PROGRAM=${CMAKE_MAKE_PROGRAM}
-                        -DBOOTSTRAP=ON
-                        ${CMAKE_SOURCE_DIR}
-               WORKING_DIRECTORY "${workdir}")
-message("-------- BOOTSTRAP END --------")
                
 add_subdirectory(libminifi)
 
