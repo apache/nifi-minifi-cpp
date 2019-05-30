@@ -40,11 +40,11 @@ CMAKE_OPTIONS_DISABLED=()
 CMAKE_MIN_VERSION=()
 DEPLOY_LIMITS=()
 USER_DISABLE_TESTS="${FALSE}"
-
+USE_NINJA="false"
 DEPENDENCIES=()
 
 . "${script_directory}/bstrp_functions.sh"
-
+SKIP_CMAKE=${FALSE}
 MENU="features"
 GUIDED_INSTALL=${FALSE}
 while :; do
@@ -54,6 +54,9 @@ while :; do
       ;;
     -s|--skiptests)
       USER_DISABLE_TESTS="${TRUE}"
+      ;;
+    -g|--useninja)
+      USE_NINJA="${TRUE}"
       ;;
     -e|--enableall)
       NO_PROMPT="true"
@@ -75,6 +78,7 @@ while :; do
     -t|--travis)
       NO_PROMPT="true"
       FEATURES_SELECTED="true"
+      SKIP_CMAKE="${TRUE}"
       ;;
     -p|--package)
       CORES=$(grep -c ^processor /proc/cpuinfo 2>/dev/null || sysctl -n hw.ncpu)
@@ -385,6 +389,11 @@ CMAKE_REVISION=`echo $CMAKE_VERSION | cut -d. -f3`
 
 CMAKE_BUILD_COMMAND="${CMAKE_COMMAND} "
 
+if [ "${USE_NINJA}" = "${TRUE}" ]; then 
+	 echo "use ninja"
+   CMAKE_BUILD_COMMAND="${CMAKE_BUILD_COMMAND} -GNinja "
+fi
+
 build_cmake_command(){
 
   for option in "${OPTIONS[@]}" ; do
@@ -482,7 +491,11 @@ build_cmake_command(){
 build_cmake_command
 
 ### run the cmake command
-${CMAKE_BUILD_COMMAND}
+if [ "${SKIP_CMAKE}" = "${TRUE}" ]; then
+	echo "Not running ${CMAKE_BUILD_COMMAND} "
+else
+	${CMAKE_BUILD_COMMAND}
+fi
 
 if [ "$BUILD" = "true" ]; then
   make -j${CORES}
