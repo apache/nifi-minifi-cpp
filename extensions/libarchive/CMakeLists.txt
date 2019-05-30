@@ -38,9 +38,6 @@ endif()
 # Include UUID
 target_link_libraries(minifi-archive-extensions ${LIBMINIFI})
 target_link_libraries(minifi-archive-extensions archive_static )
-#find_package(ZLIB REQUIRED)
-#include_directories(${ZLIB_INCLUDE_DIRS})
-#target_link_libraries (minifi-archive-extensions ${ZLIB_LIBRARIES})
 if (WIN32)
     set_target_properties(minifi-archive-extensions PROPERTIES
         LINK_FLAGS "/WHOLEARCHIVE"

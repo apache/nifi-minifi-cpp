@@ -93,9 +93,6 @@ if (ENABLE_LUA_SCRIPTING)
     target_link_libraries(minifi-script-extensions minifi-lua-extensions)
 endif()
 
-find_package(ZLIB REQUIRED)
-include_directories(${ZLIB_INCLUDE_DIRS})
-target_link_libraries (minifi-script-extensions ${ZLIB_LIBRARIES})
 if (WIN32)
     set_target_properties(minifi-script-extensions PROPERTIES
         LINK_FLAGS "/WHOLEARCHIVE"
