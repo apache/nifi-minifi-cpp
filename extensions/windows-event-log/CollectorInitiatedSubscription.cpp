@@ -48,76 +48,152 @@ namespace processors {
 #define LOG_SUBSCRIPTION_ERROR(error) logError(__LINE__, error)
 #define LOG_SUBSCRIPTION_WINDOWS_ERROR(info) logWindowsError(__LINE__, info)
 
-static std::set<core::Property> s_supportedProperties;
+struct ISupportedProperty {
+  void virtual Init(const std::shared_ptr<core::ProcessContext>& context) = 0;
+};
 
-struct SupportedProperty: public core::Property
-{
-  template <typename ...Args>
-  SupportedProperty(const Args& ...args): core::Property(args...) {
-    s_supportedProperties.insert(*this);
+class SuportedProperties {
+  std::vector<ISupportedProperty*> vISupportedProperty_;
+  std::set<core::Property> sSupportedProperties_;
+
+public:
+  template <typename T>
+  void add(T& t)
+  {
+    vISupportedProperty_.emplace_back(&t);
+    sSupportedProperties_.insert(t);
+  }
+
+  void init(const std::shared_ptr<core::ProcessContext>& context) {
+    for (auto pProp : vISupportedProperty_) {
+      pProp->Init(context);
+    }
+  }
+
+  operator std::set<core::Property>() const
+  {
+    return sSupportedProperties_;
   }
 };
+
+static SuportedProperties s_supportedProperties;
+
+template <typename T>
+class SupportedProperty: public ISupportedProperty, public core::Property {
+  T t_;
+
+public:
+  template <typename ...Args>
+  SupportedProperty(const Args& ...args) : core::Property(args...) {
+    s_supportedProperties.add(*this);
+  }
+
+  void Init(const std::shared_ptr<core::ProcessContext>& context) override;
+
+  T value() {
+    return t_;
+  }
+};
+
+void SupportedProperty<std::wstring>::Init(const std::shared_ptr<core::ProcessContext>& context) {
+  std::string val;
+  context->getProperty(getName(), val);
+
+  t_ = std::wstring(val.begin(), val.end());
+};
+
+void SupportedProperty<uint64_t>::Init(const std::shared_ptr<core::ProcessContext>& context) {
+  context->getProperty(getName(), t_);
+};
+
+struct TimeProperty {
+  int64_t time_{};
+
+  operator int64_t() {
+    return time_;
+  }
+};
+
+void SupportedProperty<TimeProperty>::Init(const std::shared_ptr<core::ProcessContext>& context) {
+  std::string strTime;
+  context->getProperty(getName(), strTime);
+
+  int64_t time{};
+  core::TimeUnit unit;
+  core::Property::StringToTime(strTime, time, unit);
+  core::Property::ConvertTimeUnitToMS(time, unit, time);
+
+  t_.time_ = time;
+};
+
+static auto to_string(const std::wstring& str) {
+  return std::string(str.begin(), str.end());
+}
+
+static auto to_wstring(const std::string& str) {
+  return std::wstring(str.begin(), str.end());
+}
 
 const std::string ProcessorName("CollectorInitiatedSubscription");
 
 //! Supported Properties
-static SupportedProperty s_subscriptionName(
+static SupportedProperty<std::wstring> s_subscriptionName(
   core::PropertyBuilder::createProperty("Subscription Name")->
   isRequired(true)->
   withDescription("The name of the subscription. The value provided for this parameter should be unique within the computer's scope.")->
   supportsExpressionLanguage(true)->
   build());
 
-static SupportedProperty s_subscriptionDescription(
+static SupportedProperty<std::wstring> s_subscriptionDescription(
   core::PropertyBuilder::createProperty("Subscription Description")->
   isRequired(true)->
   withDescription("A description of the subscription.")->
   supportsExpressionLanguage(true)->
   build());
 
-static SupportedProperty s_sourceAddress(
+static SupportedProperty<std::wstring> s_sourceAddress(
   core::PropertyBuilder::createProperty("Source Address")->
   isRequired(true)->
   withDescription("The IP address or fully qualified domain name (FQDN) of the local or remote computer (event source) from which the events are collected.")->
   supportsExpressionLanguage(true)->
   build());
 
-static SupportedProperty s_sourceUserName(
+static SupportedProperty<std::wstring> s_sourceUserName(
   core::PropertyBuilder::createProperty("Source User Name")->
   isRequired(true)->
   withDescription("The user name, which is used by the remote computer (event source) to authenticate the user.")->
   supportsExpressionLanguage(true)->
   build());
 
-static SupportedProperty s_sourcePassword(
+static SupportedProperty<std::wstring> s_sourcePassword(
   core::PropertyBuilder::createProperty("Source Password")->
   isRequired(true)->
   withDescription("The password, which is used by the remote computer (event source) to authenticate the user.")->
   supportsExpressionLanguage(true)->
   build());
 
-static SupportedProperty s_sourceChannels(
+static SupportedProperty<std::wstring> s_sourceChannels(
   core::PropertyBuilder::createProperty("Source Channels")->
   isRequired(true)->
   withDescription("The Windows Event Log Channels (on domain computer(s)) from which events are transferred.")->
   supportsExpressionLanguage(true)->
   build());
 
-static SupportedProperty s_maxDeliveryItems(
+static SupportedProperty<uint64_t> s_maxDeliveryItems(
   core::PropertyBuilder::createProperty("Max Delivery Items")->
   isRequired(true)->
   withDefaultValue<core::DataSizeValue>("1000")->
   withDescription("Determines the maximum number of items that will forwarded from an event source for each request.")->
   build());
 
-static SupportedProperty s_deliveryMaxLatencyTime(
+static SupportedProperty<TimeProperty> s_deliveryMaxLatencyTime(
   core::PropertyBuilder::createProperty("Delivery MaxLatency Time")->
   isRequired(true)->
   withDefaultValue<core::TimePeriodValue>("10 min")->
   withDescription("How long, in milliseconds, the event source should wait before sending events.")->
   build());
 
-static SupportedProperty s_heartbeatInterval(
+static SupportedProperty<TimeProperty> s_heartbeatInterval(
   core::PropertyBuilder::createProperty("Heartbeat Interval")->
   isRequired(true)->
   withDefaultValue<core::TimePeriodValue>("10 min")->
@@ -126,7 +202,7 @@ static SupportedProperty s_heartbeatInterval(
     " The event collector uses this property to determine the interval between queries to the event source.")->
   build());
 
-static SupportedProperty s_channel(
+static SupportedProperty<std::wstring> s_channel(
   core::PropertyBuilder::createProperty("Channel")->
   isRequired(true)->
   withDefaultValue("ForwardedEvents")->
@@ -134,7 +210,7 @@ static SupportedProperty s_channel(
   supportsExpressionLanguage(true)->
   build());
 
-static SupportedProperty s_query(
+static SupportedProperty<std::wstring> s_query(
   core::PropertyBuilder::createProperty("Query")->
   isRequired(true)->
   withDefaultValue("*")->
@@ -142,7 +218,7 @@ static SupportedProperty s_query(
   supportsExpressionLanguage(true)->
   build());
 
-static SupportedProperty s_maxBufferSize(
+static SupportedProperty<uint64_t> s_maxBufferSize(
   core::PropertyBuilder::createProperty("Max Buffer Size")->
   isRequired(true)->
   withDefaultValue<core::DataSizeValue>("1 MB")->
@@ -151,7 +227,7 @@ static SupportedProperty s_maxBufferSize(
     " This specifies the maximum size in bytes that the buffer will be allowed to grow to. (Limiting the maximum size of an individual Event XML.)")->
   build());
 
-static SupportedProperty s_inactiveDurationToReconnect(
+static SupportedProperty<TimeProperty> s_inactiveDurationToReconnect(
   core::PropertyBuilder::createProperty("Inactive Duration To Reconnect")->
   isRequired(true)->
   withDefaultValue<core::TimePeriodValue>("10 min")->
@@ -231,7 +307,7 @@ void CollectorInitiatedSubscription::logInvalidSubscriptionPropertyType(int line
 }
 
 bool CollectorInitiatedSubscription::checkSubscriptionRuntimeStatus() {
-  EC_HANDLE hSubscription = EcOpenSubscription(subscriptionName_.c_str(), EC_READ_ACCESS, EC_OPEN_EXISTING);
+  EC_HANDLE hSubscription = EcOpenSubscription(s_subscriptionName.value().c_str(), EC_READ_ACCESS, EC_OPEN_EXISTING);
   if (!hSubscription) {
     LOG_SUBSCRIPTION_WINDOWS_ERROR("EcOpenSubscription");
     return false;
@@ -294,7 +370,7 @@ bool CollectorInitiatedSubscription::checkSubscriptionRuntimeStatus() {
     buffer.resize(sizeof(EC_VARIANT));
     DWORD dwBufferSize{};
     if (!EcGetSubscriptionRunTimeStatus(
-          subscriptionName_.c_str(), 
+          s_subscriptionName.value().c_str(), 
           statusInfoID, 
           eventSource.c_str(),
           flags,
@@ -303,7 +379,7 @@ bool CollectorInitiatedSubscription::checkSubscriptionRuntimeStatus() {
           &dwBufferSize)) {
       if (ERROR_INSUFFICIENT_BUFFER == GetLastError()) {
         buffer.resize(dwBufferSize);
-        if (!EcGetSubscriptionRunTimeStatus(subscriptionName_.c_str(),
+        if (!EcGetSubscriptionRunTimeStatus(s_subscriptionName.value().c_str(),
               statusInfoID,
               eventSource.c_str(),
               flags,
@@ -384,7 +460,7 @@ bool CollectorInitiatedSubscription::checkSubscriptionRuntimeStatus() {
     auto lastError = vProperty->UInt32Val;
 
     if (lastError == 0 && (runtimeStatus == EcRuntimeStatusActiveStatusActive || runtimeStatus == EcRuntimeStatusActiveStatusTrying)) {
-      logger_->log_info("Subscription '%ws': status '%ws', no error.", subscriptionName_.c_str(), strRuntimeStatus.c_str());
+      logger_->log_info("Subscription '%ws': status '%ws', no error.", s_subscriptionName.value().c_str(), strRuntimeStatus.c_str());
       return true;
     }
 
@@ -434,64 +510,22 @@ bool CollectorInitiatedSubscription::getSubscriptionProperty(EC_HANDLE hSubscrip
 }
 
 bool CollectorInitiatedSubscription::createSubscription(const std::shared_ptr<core::ProcessContext>& context) {
-  auto getStringProperty = [&context](const core::Property& prop) {
-    std::string val;
-    context->getProperty(prop.getName(), val);
 
-    return std::wstring(val.begin(), val.end());
-  };
+  s_supportedProperties.init(context);
 
-  auto getIntProperty = [&context](const core::Property& prop) {
-    uint64_t val;
-    context->getProperty(prop.getName(), val);
-
-    return val;
-  };
-
-  auto getTimeProperty = [&context](const core::Property& prop) {
-    std::string strTime;
-    context->getProperty(prop.getName(), strTime);
-
-    int64_t time{};
-    core::TimeUnit unit;
-    core::Property::StringToTime(strTime, time, unit);
-    core::Property::ConvertTimeUnitToMS(time, unit, time);
-
-    return time;
-  };
-
-  subscriptionName_ = getStringProperty(s_subscriptionName);
-
-  auto subscriptionDescription = getStringProperty(s_subscriptionDescription);
-
-  auto sourceAddress = getStringProperty(s_sourceAddress);
-
-  auto sourceUserName = getStringProperty(s_sourceUserName);
-
-  auto sourcePassword = getStringProperty(s_sourcePassword);
-
-  auto sourceChannels = L"<QueryList><Query Path=\"" + getStringProperty(s_sourceChannels) + L"\"><Select>*</Select></Query></QueryList>";
-
-  auto maxDeliveryItems = getIntProperty(s_maxDeliveryItems);
-
-  channel_ = getStringProperty(s_channel);
-
-  auto deliveryMaxLatencyTime = getTimeProperty(s_deliveryMaxLatencyTime);
-
-  auto heartbeatInterval = getTimeProperty(s_heartbeatInterval);
 
   // If subcription already exists, delete it.
-  EC_HANDLE hSubscription = EcOpenSubscription(subscriptionName_.c_str(), EC_READ_ACCESS, EC_OPEN_EXISTING);
+  EC_HANDLE hSubscription = EcOpenSubscription(s_subscriptionName.value().c_str(), EC_READ_ACCESS, EC_OPEN_EXISTING);
   if (hSubscription) {
     EcClose(hSubscription);
-    if (!EcDeleteSubscription(subscriptionName_.c_str(), 0)) {
+    if (!EcDeleteSubscription(s_subscriptionName.value().c_str(), 0)) {
       LOG_SUBSCRIPTION_WINDOWS_ERROR("EcDeleteSubscription");
       return false;
     }
   }
 
   // Create subscription.
-  hSubscription = EcOpenSubscription(subscriptionName_.c_str(), EC_READ_ACCESS | EC_WRITE_ACCESS, EC_CREATE_NEW);
+  hSubscription = EcOpenSubscription(s_subscriptionName.value().c_str(), EC_READ_ACCESS | EC_WRITE_ACCESS, EC_CREATE_NEW);
   if (!hSubscription) {
     LOG_SUBSCRIPTION_WINDOWS_ERROR("EcOpenSubscription");
     return false;
@@ -526,20 +560,20 @@ bool CollectorInitiatedSubscription::createSubscription(const std::shared_ptr<co
   };
 
   std::vector<SubscriptionProperty> vProp = {
-    {EcSubscriptionDescription, subscriptionDescription},
+    {EcSubscriptionDescription, s_subscriptionDescription.value()},
     {EcSubscriptionURI, std::wstring(L"http://schemas.microsoft.com/wbem/wsman/1/windows/EventLog")},
-    {EcSubscriptionQuery, sourceChannels},
-    {EcSubscriptionLogFile, channel_},
+    {EcSubscriptionQuery, L"<QueryList><Query Path=\"" + s_sourceChannels.value() + L"\"><Select>*</Select></Query></QueryList>"},
+    {EcSubscriptionLogFile, s_channel.value()},
     {EcSubscriptionConfigurationMode, (uint32_t)EcConfigurationModeCustom},
     {EcSubscriptionDeliveryMode, (uint32_t)EcDeliveryModePull},
-    {EcSubscriptionDeliveryMaxItems, (uint32_t)maxDeliveryItems},
-    {EcSubscriptionDeliveryMaxLatencyTime, (uint32_t)deliveryMaxLatencyTime},
-    {EcSubscriptionHeartbeatInterval, (uint32_t)heartbeatInterval},
+    {EcSubscriptionDeliveryMaxItems, (uint32_t)s_maxDeliveryItems.value()},
+    {EcSubscriptionDeliveryMaxLatencyTime, (uint32_t)s_deliveryMaxLatencyTime.value()},
+    {EcSubscriptionHeartbeatInterval, (uint32_t)s_heartbeatInterval.value()},
     {EcSubscriptionContentFormat, (uint32_t)EcContentFormatRenderedText},
     {EcSubscriptionCredentialsType, (uint32_t)EcSubscriptionCredDefault},
     {EcSubscriptionEnabled, true},
-    {EcSubscriptionCommonUserName, sourceUserName},
-    {EcSubscriptionCommonPassword, sourcePassword}
+    {EcSubscriptionCommonUserName, s_sourceUserName.value()},
+    {EcSubscriptionCommonPassword, s_sourcePassword.value()}
   };
   for (auto prop : vProp) {
     if (!EcSetSubscriptionProperty(hSubscription, prop.propId_, 0, &prop.prop_)) {
@@ -580,7 +614,7 @@ bool CollectorInitiatedSubscription::createSubscription(const std::shared_ptr<co
     return false;
   }
 
-  for (auto& prop: std::vector<SubscriptionProperty>{{EcSubscriptionEventSourceAddress, sourceAddress}, {EcSubscriptionEventSourceEnabled, true}}) {
+  for (auto& prop: std::vector<SubscriptionProperty>{{EcSubscriptionEventSourceAddress, s_sourceAddress.value()}, {EcSubscriptionEventSourceEnabled, true}}) {
     if (!EcSetObjectArrayProperty(hArray, prop.propId_, dwEventSourceCount, 0, &prop.prop_)) {
       LOG_SUBSCRIPTION_WINDOWS_ERROR("EcSetObjectArrayProperty id: " + std::to_string(prop.propId_));
       return false;
@@ -597,13 +631,9 @@ bool CollectorInitiatedSubscription::createSubscription(const std::shared_ptr<co
 
 bool CollectorInitiatedSubscription::subscribe(const std::shared_ptr<core::ProcessContext> &context)
 {
-  std::string query;
-  context->getProperty(s_query.getName(), query);
+  logger_->log_debug("CollectorInitiatedSubscription: maxBufferSize_ %lld", s_maxBufferSize.value());
 
-  context->getProperty(s_maxBufferSize.getName(), maxBufferSize_);
-  logger_->log_debug("CollectorInitiatedSubscription: maxBufferSize_ %lld", maxBufferSize_);
-
-  provenanceUri_ = "winlog://" + computerName_ + "/" + std::string(channel_.begin(), channel_.end()) + "?" + query;
+  provenanceUri_ = "winlog://" + computerName_ + "/" + to_string(s_channel.value()) + "?" + to_string(s_query.value());
 
   std::string strInactiveDurationToReconnect;
   context->getProperty(s_inactiveDurationToReconnect.getName(), strInactiveDurationToReconnect);
@@ -618,8 +648,8 @@ bool CollectorInitiatedSubscription::subscribe(const std::shared_ptr<core::Proce
   subscriptionHandle_ = EvtSubscribe(
       NULL,
       NULL,
-      channel_.c_str(),
-      std::wstring(query.begin(), query.end()).c_str(),
+      s_channel.value().c_str(),
+      s_query.value().c_str(),
       NULL,
       this,
       [](EVT_SUBSCRIBE_NOTIFY_ACTION action, PVOID pContext, EVT_HANDLE hEvent) {
@@ -640,8 +670,8 @@ bool CollectorInitiatedSubscription::subscribe(const std::shared_ptr<core::Proce
 
           if (!EvtRender(NULL, hEvent, EvtRenderEventXml, size, 0, &used, &propertyCount)) {
             if (ERROR_INSUFFICIENT_BUFFER == GetLastError()) {
-              if (used > pCollectorInitiatedSubscription->maxBufferSize_) {
-                logger->log_error("Dropping event %x because it couldn't be rendered within %ll bytes.", hEvent, pCollectorInitiatedSubscription->maxBufferSize_);
+              if (used > s_maxBufferSize.value()) {
+                logger->log_error("Dropping event %x because it couldn't be rendered within %ll bytes.", hEvent, s_maxBufferSize.value());
                 return 0UL;
               }
 
@@ -716,7 +746,7 @@ int CollectorInitiatedSubscription::processQueue(const std::shared_ptr<core::Pro
 }
 
 void CollectorInitiatedSubscription::notifyStop() {
-  if (!EcDeleteSubscription(subscriptionName_.c_str(), 0)) {
+  if (!EcDeleteSubscription(s_subscriptionName.value().c_str(), 0)) {
     LOG_SUBSCRIPTION_WINDOWS_ERROR("EcDeleteSubscription");
   }
 

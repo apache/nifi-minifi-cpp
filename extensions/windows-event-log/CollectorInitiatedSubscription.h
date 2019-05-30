@@ -84,11 +84,8 @@ private:
   std::string computerName_;
   int64_t inactiveDurationToReconnect_{};
   EVT_HANDLE subscriptionHandle_{};
-  uint64_t maxBufferSize_{};
   uint64_t lastActivityTimestamp_{};
   std::shared_ptr<core::ProcessSessionFactory> sessionFactory_;
-  std::wstring subscriptionName_;
-  std::wstring channel_;
 };
 
 REGISTER_RESOURCE(CollectorInitiatedSubscription, "Windows Event Log Subscribe Callback to receive FlowFiles from Events on Windows.");
