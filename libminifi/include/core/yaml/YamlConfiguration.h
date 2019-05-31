@@ -55,12 +55,8 @@ namespace core {
 class YamlConfiguration : public FlowConfiguration {
 
  public:
-  explicit YamlConfiguration(std::shared_ptr<core::Repository> repo,
-                             std::shared_ptr<core::Repository> flow_file_repo,
-                             std::shared_ptr<core::ContentRepository> content_repo,
-                             std::shared_ptr<io::StreamFactory> stream_factory,
-                             std::shared_ptr<Configure> configuration,
-                             const std::string path = DEFAULT_FLOW_YAML_FILE_NAME)
+  explicit YamlConfiguration(std::shared_ptr<core::Repository> repo, std::shared_ptr<core::Repository> flow_file_repo, std::shared_ptr<core::ContentRepository> content_repo,
+                             std::shared_ptr<io::StreamFactory> stream_factory, std::shared_ptr<Configure> configuration, const std::string path = DEFAULT_FLOW_YAML_FILE_NAME)
       : FlowConfiguration(repo, flow_file_repo, content_repo, stream_factory, configuration, path),
         logger_(logging::LoggerFactory<YamlConfiguration>::getLogger()) {
     stream_factory_ = stream_factory;
@@ -100,8 +96,14 @@ class YamlConfiguration : public FlowConfiguration {
    *                           configuration tree
    */
   std::unique_ptr<core::ProcessGroup> getYamlRoot(std::istream &yamlConfigStream) {
-    YAML::Node rootYamlNode = YAML::Load(yamlConfigStream);
-    return getYamlRoot(&rootYamlNode);
+    try {
+      YAML::Node rootYamlNode = YAML::Load(yamlConfigStream);
+      return getYamlRoot(&rootYamlNode);
+    } catch (const YAML::ParserException &pe) {
+      logger_->log_error(pe.what());
+      std::rethrow_exception(std::current_exception());
+    }
+    return nullptr;
   }
 
   /**
@@ -116,8 +118,14 @@ class YamlConfiguration : public FlowConfiguration {
    *                           configuration tree
    */
   std::unique_ptr<core::ProcessGroup> getRootFromPayload(const std::string &yamlConfigPayload) {
-    YAML::Node rootYamlNode = YAML::Load(yamlConfigPayload);
-    return getYamlRoot(&rootYamlNode);
+    try {
+      YAML::Node rootYamlNode = YAML::Load(yamlConfigPayload);
+      return getYamlRoot(&rootYamlNode);
+    } catch (const YAML::ParserException &pe) {
+      logger_->log_error(pe.what());
+      std::rethrow_exception(std::current_exception());
+    }
+    return nullptr;
   }
 
   /**
@@ -128,9 +136,7 @@ class YamlConfiguration : public FlowConfiguration {
    * @param component_name
    * @param yaml_section
    */
-  void validateComponentProperties(const std::shared_ptr<ConfigurableComponent> &component,
-                                   const std::string &component_name,
-                                   const std::string &yaml_section) const;
+  void validateComponentProperties(const std::shared_ptr<ConfigurableComponent> &component, const std::string &component_name, const std::string &yaml_section) const;
 
  protected:
 
@@ -262,10 +268,7 @@ class YamlConfiguration : public FlowConfiguration {
    * @param propertiesNode the YAML::Node containing the properties
    * @param processor      the Processor to which to add the resulting properties
    */
-  void parsePropertiesNodeYaml(YAML::Node *propertiesNode,
-                               std::shared_ptr<core::ConfigurableComponent> processor,
-                               const std::string &component_name,
-                               const std::string &yaml_section);
+  void parsePropertiesNodeYaml(YAML::Node *propertiesNode, std::shared_ptr<core::ConfigurableComponent> processor, const std::string &component_name, const std::string &yaml_section);
 
   /**
    * A helper function for parsing or generating optional id fields.
@@ -303,10 +306,7 @@ class YamlConfiguration : public FlowConfiguration {
    * @throws std::invalid_argument if the required field 'fieldName' is
    *                               not present in 'yamlNode'
    */
-  void checkRequiredField(YAML::Node *yamlNode,
-                          const std::string &fieldName,
-                          const std::string &yamlSection = "",
-                          const std::string &errorMessage = "");
+  void checkRequiredField(YAML::Node *yamlNode, const std::string &fieldName, const std::string &yamlSection = "", const std::string &errorMessage = "");
 
   /**
    * This is a helper function for getting an optional value, if it exists.
@@ -322,11 +322,7 @@ class YamlConfiguration : public FlowConfiguration {
    *                       the optional field is missing. If not provided,
    *                       a default info message will be generated.
    */
-  YAML::Node getOptionalField(YAML::Node *yamlNode,
-                              const std::string &fieldName,
-                              const YAML::Node &defaultValue,
-                              const std::string &yamlSection = "",
-                              const std::string &infoMessage = "");
+  YAML::Node getOptionalField(YAML::Node *yamlNode, const std::string &fieldName, const YAML::Node &defaultValue, const std::string &yamlSection = "", const std::string &infoMessage = "");
 
  protected:
   std::shared_ptr<io::StreamFactory> stream_factory_;
@@ -341,9 +337,7 @@ class YamlConfiguration : public FlowConfiguration {
    * @param yaml_section
    * @param reason
    */
-  void raiseComponentError(const std::string &component_name,
-                           const std::string &yaml_section,
-                           const std::string &reason) const;
+  void raiseComponentError(const std::string &component_name, const std::string &yaml_section, const std::string &reason) const;
 };
 
 } /* namespace core */

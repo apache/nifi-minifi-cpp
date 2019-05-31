@@ -60,8 +60,6 @@ class InvokeHTTP : public core::Processor {
         penalize_no_retry_(false),
         disable_peer_verification_(false),
         logger_(logging::LoggerFactory<InvokeHTTP>::getLogger()) {
-    static utils::HTTPClientInitializer *initializer = utils::HTTPClientInitializer::getInstance();
-    initializer->initialize();
   }
   // Destructor
   virtual ~InvokeHTTP();

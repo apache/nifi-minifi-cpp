@@ -19,7 +19,7 @@
 #include <map>
 #include <memory>
 #include "core/repository/VolatileContentRepository.h"
-#include <core/RepositoryFactory.h>
+#include "core/RepositoryFactory.h"
 #include "core/yaml/YamlConfiguration.h"
 #include "TestBase.h"
 

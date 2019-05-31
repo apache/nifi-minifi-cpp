@@ -28,6 +28,8 @@ StandardValidators::StandardValidators() {
   INVALID = std::make_shared<AlwaysValid>(false, "INVALID");
   INTEGER_VALIDATOR = std::make_shared<IntegerValidator>("INTEGER_VALIDATOR");
   LONG_VALIDATOR = std::make_shared<LongValidator>("LONG_VALIDATOR");
+  // name is used by java nifi validators, so we should keep this LONG and not change to reflect
+  // its internal use
   UNSIGNED_LONG_VALIDATOR = std::make_shared<UnsignedLongValidator>("LONG_VALIDATOR");
   DATA_SIZE_VALIDATOR = std::make_shared<DataSizeValidator>("DATA_SIZE_VALIDATOR");
   TIME_PERIOD_VALIDATOR = std::make_shared<TimePeriodValidator>("TIME_PERIOD_VALIDATOR");

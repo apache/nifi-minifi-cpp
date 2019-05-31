@@ -22,6 +22,7 @@
 #include "core/state/Value.h"
 #include "TypedValues.h"
 #include "utils/StringUtils.h"
+#include <limits>
 #include <memory>
 
 namespace org {
@@ -229,6 +230,10 @@ class UnsignedLongValidator : public PropertyValidator {
 
   ValidationResult validate(const std::string &subject, const std::string &input) const {
     try {
+      auto negative = input.find_first_of('-') != std::string::npos;
+      if (negative){
+        throw std::out_of_range("non negative expected");
+      }
       std::stoull(input);
       return ValidationResult::Builder::createBuilder().withSubject(subject).withInput(input).isValid(true).build();
     } catch (...) {
@@ -266,6 +271,17 @@ class PortValidator : public LongValidator {
       : LongValidator(name, 1, 65535) {
   }
   virtual ~PortValidator() {
+
+  }
+};
+
+//Use only for specifying listen ports, where 0 means a randomly chosen one!
+class ListenPortValidator : public LongValidator {
+public:
+  ListenPortValidator(const std::string &name)
+    : LongValidator(name, 0, 65535) {
+  }
+  virtual ~ListenPortValidator() {
 
   }
 };
@@ -322,6 +338,11 @@ class StandardValidators {
 
   static const std::shared_ptr<PropertyValidator> PORT_VALIDATOR(){
     static std::shared_ptr<PropertyValidator> validator = std::make_shared<PortValidator>("PORT_VALIDATOR");
+    return validator;
+  }
+
+  static const std::shared_ptr<PropertyValidator> LISTEN_PORT_VALIDATOR(){
+    static std::shared_ptr<PropertyValidator> validator = std::make_shared<ListenPortValidator>("PORT_VALIDATOR");
     return validator;
   }
 

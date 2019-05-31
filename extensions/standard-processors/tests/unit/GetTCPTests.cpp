@@ -24,6 +24,7 @@
 #include <fstream>
 #include "unit/ProvenanceTestHelper.h"
 #include "TestBase.h"
+#include "RandomServerSocket.h"
 #include "Scheduling.h"
 #include "LogAttribute.h"
 #include "GetTCP.h"
@@ -49,11 +50,8 @@ TEST_CASE("GetTCPWithoutEOM", "[GetTCP1]") {
 
   content_repo->initialize(std::make_shared<minifi::Configure>());
 
-  std::shared_ptr<org::apache::nifi::minifi::io::SocketContext> socket_context = std::make_shared<org::apache::nifi::minifi::io::SocketContext>(std::make_shared<minifi::Configure>());
   std::shared_ptr<org::apache::nifi::minifi::io::StreamFactory> stream_factory = minifi::io::StreamFactory::getInstance(std::make_shared<minifi::Configure>());
-  org::apache::nifi::minifi::io::ServerSocket server(socket_context, "localhost", 9184, 1);
-
-  REQUIRE(-1 != server.initialize());
+  org::apache::nifi::minifi::io::RandomServerSocket server("localhost");
 
   LogTestController::getInstance().setDebug<minifi::processors::LogAttribute>();
   LogTestController::getInstance().setDebug<minifi::processors::GetTCP>();
@@ -103,7 +101,7 @@ TEST_CASE("GetTCPWithoutEOM", "[GetTCP1]") {
     std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider = nullptr;
     std::shared_ptr<core::ProcessContext> context = std::make_shared<core::ProcessContext>(node, controller_services_provider, repo, repo, content_repo);
     std::shared_ptr<core::ProcessContext> context2 = std::make_shared<core::ProcessContext>(node2, controller_services_provider, repo, repo, content_repo);
-  context->setProperty(org::apache::nifi::minifi::processors::GetTCP::EndpointList, "localhost:9184");
+  context->setProperty(org::apache::nifi::minifi::processors::GetTCP::EndpointList, "localhost:" + std::to_string(server.getPort()));
   context->setProperty(org::apache::nifi::minifi::processors::GetTCP::ReconnectInterval, "100 msec");
   auto session = std::make_shared<core::ProcessSession>(context);
     auto session2 = std::make_shared<core::ProcessSession>(context2);
@@ -159,14 +157,11 @@ TEST_CASE("GetTCPWithOEM", "[GetTCP2]") {
 
   content_repo->initialize(std::make_shared<minifi::Configure>());
 
-  std::shared_ptr<org::apache::nifi::minifi::io::SocketContext> socket_context = std::make_shared<org::apache::nifi::minifi::io::SocketContext>(std::make_shared<minifi::Configure>());
   std::shared_ptr<org::apache::nifi::minifi::io::StreamFactory> stream_factory = minifi::io::StreamFactory::getInstance(std::make_shared<minifi::Configure>());
 
   TestController testController;
 
-  org::apache::nifi::minifi::io::ServerSocket server(socket_context, "localhost", 9182, 1);
-
-  REQUIRE(-1 != server.initialize());
+  org::apache::nifi::minifi::io::RandomServerSocket server("localhost");
 
   LogTestController::getInstance().setDebug<minifi::processors::LogAttribute>();
   LogTestController::getInstance().setTrace<core::repository::VolatileContentRepository >();
@@ -216,7 +211,7 @@ TEST_CASE("GetTCPWithOEM", "[GetTCP2]") {
     std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider = nullptr;
     std::shared_ptr<core::ProcessContext> context = std::make_shared<core::ProcessContext>(node, controller_services_provider, repo, repo, content_repo);
     std::shared_ptr<core::ProcessContext> context2 = std::make_shared<core::ProcessContext>(node2, controller_services_provider, repo, repo, content_repo);
-  context->setProperty(org::apache::nifi::minifi::processors::GetTCP::EndpointList, "localhost:9182");
+  context->setProperty(org::apache::nifi::minifi::processors::GetTCP::EndpointList, "localhost:" + std::to_string(server.getPort()));
   context->setProperty(org::apache::nifi::minifi::processors::GetTCP::ReconnectInterval, "100 msec");
   // we're using new lines above
   context->setProperty(org::apache::nifi::minifi::processors::GetTCP::EndOfMessageByte, "10");
@@ -284,16 +279,13 @@ TEST_CASE("GetTCPWithOnlyOEM", "[GetTCP3]") {
 
   content_repo->initialize(std::make_shared<minifi::Configure>());
 
-  std::shared_ptr<org::apache::nifi::minifi::io::SocketContext> socket_context = std::make_shared<org::apache::nifi::minifi::io::SocketContext>(std::make_shared<minifi::Configure>());
   std::shared_ptr<org::apache::nifi::minifi::io::StreamFactory> stream_factory = minifi::io::StreamFactory::getInstance(std::make_shared<minifi::Configure>());
 
   TestController testController;
 
   LogTestController::getInstance().setDebug<minifi::io::Socket>();
 
-  org::apache::nifi::minifi::io::ServerSocket server(socket_context, "localhost", 9182, 1);
-
-  REQUIRE(-1 != server.initialize());
+  org::apache::nifi::minifi::io::RandomServerSocket server("localhost");
 
   LogTestController::getInstance().setDebug<minifi::processors::LogAttribute>();
 
@@ -341,7 +333,7 @@ TEST_CASE("GetTCPWithOnlyOEM", "[GetTCP3]") {
     std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider = nullptr;
     std::shared_ptr<core::ProcessContext> context = std::make_shared<core::ProcessContext>(node, controller_services_provider, repo, repo, content_repo);
     std::shared_ptr<core::ProcessContext> context2 = std::make_shared<core::ProcessContext>(node2, controller_services_provider, repo, repo, content_repo);
-  context->setProperty(org::apache::nifi::minifi::processors::GetTCP::EndpointList, "localhost:9182");
+  context->setProperty(org::apache::nifi::minifi::processors::GetTCP::EndpointList, "localhost:" + std::to_string(server.getPort()));
   context->setProperty(org::apache::nifi::minifi::processors::GetTCP::ReconnectInterval, "100 msec");
   // we're using new lines above
   context->setProperty(org::apache::nifi::minifi::processors::GetTCP::EndOfMessageByte, "10");

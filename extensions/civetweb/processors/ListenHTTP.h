@@ -70,6 +70,8 @@ class ListenHTTP : public core::Processor {
   void onTrigger(core::ProcessContext *context, core::ProcessSession *session);
   void initialize();
   void onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory);
+  std::string getPort() const;
+  bool isSecure() const;
 
   struct response_body {
     std::string uri;
@@ -167,6 +169,7 @@ class ListenHTTP : public core::Processor {
 
   std::unique_ptr<CivetServer> server_;
   std::unique_ptr<Handler> handler_;
+  std::string listeningPort;
 };
 
 REGISTER_RESOURCE(ListenHTTP, "Starts an HTTP Server and listens on a given base path to transform incoming requests into FlowFiles. The default URI of the Service will be "

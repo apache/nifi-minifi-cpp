@@ -153,6 +153,8 @@ build_deps(){
                     elif [ "$FOUND_VALUE" = "libarchive" ]; then
                         INSTALLED+=("xz-devel")
                         INSTALLED+=("bzip2-devel")
+                    elif [ "$FOUND_VALUE" = "libssh2" ]; then
+                        INSTALLED+=("libssh2-devel")
                     fi
                 fi
             done

@@ -42,7 +42,7 @@ namespace nifi {
 namespace minifi {
 namespace io {
 
-Socket::Socket(const std::shared_ptr<SocketContext> &context, const std::string &hostname, const uint16_t port, const uint16_t listeners = -1)
+Socket::Socket(const std::shared_ptr<SocketContext>& /*context*/, const std::string &hostname, const uint16_t port, const uint16_t listeners = -1)
     : requested_hostname_(hostname),
       port_(port),
       addr_info_(0),
@@ -59,7 +59,7 @@ Socket::Socket(const std::shared_ptr<SocketContext> &context, const std::string 
   FD_ZERO(&read_fds_);
 }
 
-Socket::Socket(const std::shared_ptr<SocketContext> &context, const std::string &hostname, const uint16_t port)
+Socket::Socket(const std::shared_ptr<SocketContext>& context, const std::string &hostname, const uint16_t port)
     : Socket(context, hostname, port, 0) {
 }
 

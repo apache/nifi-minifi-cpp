@@ -64,3 +64,47 @@ function(createExtension extensionGuard extensionName description dirName)
 		endif()
     endif()
 endfunction()
+
+
+macro(register_extension_linter target-name)
+if (NOT WIN32)
+    get_property(extensions GLOBAL PROPERTY EXTENSION-LINTERS)
+    set_property(GLOBAL APPEND PROPERTY EXTENSION-LINTERS "${target-name}")
+    add_custom_target(${target-name}
+    COMMAND ${CMAKE_SOURCE_DIR}/thirdparty/google-styleguide/run_linter.sh
+            ${CMAKE_SOURCE_DIR}/libminifi/include/
+            ${CMAKE_CURRENT_LIST_DIR}/ --
+            ${CMAKE_CURRENT_LIST_DIR}/)
+endif(NOT WIN32)
+endmacro()
+
+# ARGN WILL be the
+function (build_git_project target prefix repourl repotag)
+
+	set(exec_dir ${CMAKE_BINARY_DIR}/force_${target})
+
+	file(MAKE_DIRECTORY ${exec_dir} ${exec_dir}/build)
+
+	set(CMAKE_LIST_CONTENT "
+        include(ExternalProject)
+        ExternalProject_add(${target}
+            PREFIX ${prefix}/${target}
+            GIT_REPOSITORY ${repourl}
+        	GIT_TAG ${repotag}
+            CMAKE_ARGS ${ARGN}
+            INSTALL_COMMAND \"\"
+            )
+         add_custom_target(exec_${target})
+        add_dependencies(exec_${target} ${target})
+    ")
+
+	file(WRITE ${exec_dir}/CMakeLists.txt "${CMAKE_LIST_CONTENT}")
+
+	execute_process(COMMAND ${CMAKE_COMMAND} ..
+			WORKING_DIRECTORY ${exec_dir}/build
+			)
+	execute_process(COMMAND ${CMAKE_COMMAND} --build .
+			WORKING_DIRECTORY ${exec_dir}/build
+			)
+
+endfunction()

@@ -49,6 +49,7 @@ matrix:
           - libusb-1.0-0-dev
           - libpng12-dev
           - libpcap-dev
+          - libssh2-1-dev
       before_install:
         # Establish updated toolchain as default
         - sudo unlink /usr/bin/gcc && sudo ln -s /usr/bin/gcc-4.8 /usr/bin/gcc
@@ -76,6 +77,7 @@ matrix:
           - libusb-1.0-0-dev
           - libpng12-dev
           - libpcap-dev
+          - libssh2-1-dev
       before_install:
         # Establish updated toolchain as default
         - sudo unlink /usr/bin/gcc && sudo ln -s /usr/bin/gcc-4.8 /usr/bin/gcc
@@ -150,6 +152,7 @@ matrix:
         - package='libpng'; [[ $(brew ls --versions ${package}) ]] && { brew outdated ${package} || brew upgrade ${package}; } || brew install ${package}
         - package='libpcap'; [[ $(brew ls --versions ${package}) ]] && { brew outdated ${package} || brew upgrade ${package}; } || brew install ${package}
         - package='xz'; [[ $(brew ls --versions ${package}) ]] && { brew outdated ${package} || brew upgrade ${package}; } || brew install ${package}
+        - package='libssh2'; [[ $(brew ls --versions ${package}) ]] && { brew outdated ${package} || brew upgrade ${package}; } || brew install ${package}
     - os: osx
       osx_image: xcode10
       env:
@@ -171,6 +174,7 @@ matrix:
         - package='libpng'; [[ $(brew ls --versions ${package}) ]] && { brew outdated ${package} || brew upgrade ${package}; } || brew install ${package}
         - package='libpcap'; [[ $(brew ls --versions ${package}) ]] && { brew outdated ${package} || brew upgrade ${package}; } || brew install ${package}
         - package='xz'; [[ $(brew ls --versions ${package}) ]] && { brew outdated ${package} || brew upgrade ${package}; } || brew install ${package}
+        - package='libssh2'; [[ $(brew ls --versions ${package}) ]] && { brew outdated ${package} || brew upgrade ${package}; } || brew install ${package}
 
 script:
   - ./bootstrap.sh -e -t && cd build  && make -j2 VERBOSE=1 && sudo make test ARGS="-j2 --output-on-failure" && make linter && make apache-rat

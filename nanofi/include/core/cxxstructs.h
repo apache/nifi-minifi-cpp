@@ -43,8 +43,4 @@ struct processor_context : public core::ProcessContext {
   using core::ProcessContext::ProcessContext;
 };
 
-struct cstream {
-  org::apache::nifi::minifi::io::BaseStream * impl;
-};
-
 #endif //NIFI_MINIFI_CPP_CXXSTRUCTS_H

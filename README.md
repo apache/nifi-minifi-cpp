@@ -70,11 +70,13 @@ Through JNI extensions you can run NiFi processors using NARs. The JNI extension
 | Extension Set        | Processors           | CMAKE Flag  |
 | ------------- |:-------------| :-----|
 | Archive Extensions    | [ApplyTemplate](PROCESSORS.md#applytemplate)<br/>[CompressContent](PROCESSORS.md#compresscontent)<br/>[ManipulateArchive](PROCESSORS.md#manipulatearchive)<br/>[MergeContent](PROCESSORS.md#mergecontent)<br/>[FocusArchiveEntry](PROCESSORS.md#focusarchiveentry)<br/>[UnfocusArchiveEntry](PROCESSORS.md#unfocusarchiveentry)      |   -DBUILD_LIBARCHIVE=ON |
+| AWS | [AWSCredentialsService](CONTROLLERS.md#awsCredentialsService) | -DENABLE_AWS=ON  |
 | CURL | [InvokeHTTP](PROCESSORS.md#invokehttp)      |    -DDISABLE_CURL=ON  |
 | GPS | GetGPS      |    -DENABLE_GPS=ON  |
 | Kafka | [PublishKafka](PROCESSORS.md#publishkafka)      |    -DENABLE_LIBRDKAFKA=ON  |
 | JNI | **NiFi Processors**     |    -DENABLE_JNI=ON  |
 | MQTT | [ConsumeMQTT](PROCESSORS.md#consumeMQTT)<br/>[PublishMQTT](PROCESSORS.md#publishMQTT)     |    -DENABLE_MQTT=ON  |
+| OpenCV | [CaptureRTSPFrame](PROCESSORS.md#captureRTSPFrame)     |    -DENABLE_OPENCV=ON  |
 | PCAP | [CapturePacket](PROCESSORS.md#capturepacket)      |    -DENABLE_PCAP=ON  |
 | Scripting | [ExecuteScript](PROCESSORS.md#executescript)<br/>**Custom Python Processors**     |    -DDISABLE_SCRIPTING=ON  |
 | SQLLite | [ExecuteSQL](PROCESSORS.md#executesql)<br/>[PutSQL](PROCESSORS.md#putsql)      |    -DENABLE_SQLITE=ON  |

@@ -264,6 +264,8 @@ add_dependency USB_ENABLED "libpng"
 add_disabled_option GPS_ENABLED ${FALSE} "ENABLE_GPS"
 add_dependency GPS_ENABLED "gpsd"
 
+add_disabled_option AWS_ENABLED ${TRUE} "ENABLE_AWS"
+
 add_disabled_option KAFKA_ENABLED ${FALSE} "ENABLE_LIBRDKAFKA" "3.4.0"
 
 add_disabled_option MQTT_ENABLED ${FALSE} "ENABLE_MQTT"
@@ -278,6 +280,15 @@ add_dependency COAP_ENABLED "libtool"
 
 add_disabled_option JNI_ENABLED ${FALSE} "ENABLE_JNI"
 add_dependency JNI_ENABLED "jnibuild"
+
+add_disabled_option OPENCV_ENABLED ${FALSE} "ENABLE_OPENCV"
+
+add_disabled_option OPENCV_ENABLED ${FALSE} "ENABLE_OPENCV"
+
+add_disabled_option SFTP_ENABLED ${FALSE} "ENABLE_SFTP"
+add_dependency SFTP_ENABLED "libssh2"
+add_dependency SFTP_ENABLED "libcurl"
+add_dependency SFTP_ENABLED "openssl"
 
 TESTS_DISABLED=${FALSE}
 

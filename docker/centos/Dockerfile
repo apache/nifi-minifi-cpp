@@ -26,6 +26,7 @@ ARG GID
 ARG MINIFI_VERSION
 ARG MINIFI_SOURCE_CODE
 ARG DUMP_LOCATION
+ARG ENABLE_JNI
 
 # Install the system dependencies needed for a build
 
@@ -51,7 +52,7 @@ RUN cd $MINIFI_BASE_DIR \
 	&& rm -rf build \ 
 	&& mkdir build \
 	&& cd build \
-	&& cmake3 -DUSE_SHARED_LIBS= -DENABLE_LIBRDKAFKA=ON -DPORTABLE=ON -DENABLE_COAP=ON -DCMAKE_BUILD_TYPE=Release -DSKIP_TESTS=true -DENABLE_JNI=ON .. \
+	&& cmake3 -DUSE_SHARED_LIBS=  -DENABLE_MQTT=ON -DENABLE_LIBRDKAFKA=ON -DPORTABLE=ON -DENABLE_COAP=ON -DCMAKE_BUILD_TYPE=Release -DSKIP_TESTS=true -DENABLE_JNI=$ENABLE_JNI .. \
 	&& make -j8 package 
 
 #COPY $MINIFI_BASE_DIR/build/nifi-minifi-cpp-$MINIFI_VERSION-bin.tar.gz $DUMP_LOCATION/nifi-minifi-cpp-centos7-$MINIFI_VERSION-bin.tar.gz

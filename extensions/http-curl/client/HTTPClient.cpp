@@ -47,8 +47,6 @@ HTTPClient::HTTPClient(const std::string &url, const std::shared_ptr<minifi::con
       keep_alive_probe_(-1),
       keep_alive_idle_(-1),
       logger_(logging::LoggerFactory<HTTPClient>::getLogger()) {
-  HTTPClientInitializer *initializer = HTTPClientInitializer::getInstance();
-  initializer->initialize();
   http_session_ = curl_easy_init();
 }
 
@@ -69,8 +67,6 @@ HTTPClient::HTTPClient(std::string name, utils::Identifier uuid)
       keep_alive_probe_(-1),
       keep_alive_idle_(-1),
       logger_(logging::LoggerFactory<HTTPClient>::getLogger()) {
-  HTTPClientInitializer *initializer = HTTPClientInitializer::getInstance();
-  initializer->initialize();
   http_session_ = curl_easy_init();
 }
 
@@ -91,8 +87,6 @@ HTTPClient::HTTPClient()
       keep_alive_probe_(-1),
       keep_alive_idle_(-1),
       logger_(logging::LoggerFactory<HTTPClient>::getLogger()) {
-  HTTPClientInitializer *initializer = HTTPClientInitializer::getInstance();
-  initializer->initialize();
   http_session_ = curl_easy_init();
 }
 

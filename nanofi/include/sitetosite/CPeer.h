@@ -99,25 +99,20 @@ static void setPort(struct SiteToSiteCPeer * peer, uint16_t port) {
   }
 }
 
-static void initPeer(struct SiteToSiteCPeer * peer, cstream * injected_socket, const char * host, uint16_t port, const char * ifc) {
-  peer->_stream = injected_socket;
-  //peer->local_network_interface_= std::move(io::NetworkInterface(ifc, nullptr));
+static void initPeer(struct SiteToSiteCPeer * peer, const char * host, uint16_t port, const char * ifc) {
+  peer->_stream = NULL;
   peer->_host = NULL;
   peer->_url = NULL;
   peer->_port = 0;
   setHostName(peer, host);
   setPort(peer, port);
-
-  if(peer->_stream == NULL) {
-    peer->_owns_resource = True;
-  }
 }
 
 static void freePeer(struct SiteToSiteCPeer * peer) {
   closePeer(peer);
   setHostName(peer, NULL);
 
-  if(peer->_owns_resource == True && peer->_stream != NULL) {
+  if(peer->_stream != NULL) {
     free_socket(peer->_stream);
     peer->_stream = NULL;
   }

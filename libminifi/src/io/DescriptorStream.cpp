@@ -84,11 +84,10 @@ int DescriptorStream::readData(uint8_t *buf, int buflen) {
   if (!IsNullOrEmpty(buf)) {
     auto size_read = ::read(fd_, buf, buflen);
 
-    if (size_read != buflen) {
+    if (size_read < 0) {
       return -1;
-    } else {
-      return buflen;
     }
+    return  size_read;
 
   } else {
     return -1;

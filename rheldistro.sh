@@ -121,6 +121,8 @@ build_deps(){
             INSTALLED+=("gpsd-devel")
           elif [ "$FOUND_VALUE" = "libarchive" ]; then
             INSTALLED+=("xz-devel")
+          elif [ "$FOUND_VALUE" = "libssh2" ]; then
+            INSTALLED+=("libssh2-devel")
           fi
         fi
       done

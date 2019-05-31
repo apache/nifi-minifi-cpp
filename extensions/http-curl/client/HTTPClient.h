@@ -46,27 +46,6 @@ namespace minifi {
 namespace utils {
 
 /**
- * Purpose and Justification: Initializes and cleans up curl once. Cleanup will only occur at the end of our execution since we are relying on a static variable.
- */
-class HTTPClientInitializer {
- public:
-  static HTTPClientInitializer *getInstance() {
-    static HTTPClientInitializer initializer;
-    return &initializer;
-  }
-  void initialize() {
-
-  }
- private:
-  ~HTTPClientInitializer() {
-    curl_global_cleanup();
-  }
-  HTTPClientInitializer() {
-    curl_global_init(CURL_GLOBAL_DEFAULT);
-  }
-};
-
-/**
  * Purpose and Justification: Pull the basics for an HTTPClient into a self contained class. Simply provide
  * the URL and an SSLContextService ( can be null).
  *

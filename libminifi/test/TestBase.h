@@ -256,6 +256,7 @@ class TestController {
 
   TestController()
       : log(LogTestController::getInstance()) {
+    core::FlowConfiguration::initialize_static_functions();
     minifi::setDefaultDirectory("./");
     log.reset();
     utils::IdGenerator::getIdGenerator()->initialize(std::make_shared<minifi::Properties>());

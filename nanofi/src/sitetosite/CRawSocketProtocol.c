@@ -187,6 +187,7 @@ int handShake(struct CRawSiteToSiteClient * client) {
   ret = readResponse(client, &code);
 
   if (ret <= 0) {
+    logc(err, "failed to receive response code from server");
     return -1;
   }
 
@@ -722,7 +723,8 @@ int confirm(struct CRawSiteToSiteClient * client, const char * transactionID) {
 
       if(content_size > 0 && ff->crp != NULL) {
         content_buf = (uint8_t*)malloc(content_size*sizeof(uint8_t));
-        if(get_content(ff, content_buf, content_size) <= 0) {
+        len = get_content(ff, content_buf, content_size);
+        if(len <= 0) {
           return -2;
         }
         ret = write_uint64t(transaction, len);
@@ -733,7 +735,7 @@ int confirm(struct CRawSiteToSiteClient * client, const char * transactionID) {
         writeData(transaction, content_buf, len);
       }
 
-    } else if (strlen(packet->payload_) > 0) {
+    } else if (packet->payload_ != NULL && strlen(packet->payload_) > 0) {
       len = strlen(packet->payload_);
 
       ret = write_uint64t(transaction, len);

@@ -17,14 +17,14 @@
  */
 
 #include <sys/stat.h>
+#include <chrono>
+#include <thread>
 #undef NDEBUG
 #include <cassert>
 #include <utility>
-#include <chrono>
 #include <fstream>
 #include <memory>
 #include <string>
-#include <thread>
 #include <type_traits>
 #include <vector>
 #include <iostream>
