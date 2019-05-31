@@ -488,7 +488,7 @@ bool CollectorInitiatedSubscription::createSubscription(const std::shared_ptr<co
     EC_VARIANT prop_;
   };
 
-  std::vector<SubscriptionProperty> vProp = {
+  std::vector<SubscriptionProperty> listProperty = {
     {EcSubscriptionDescription, subscriptionDescription_.value()},
     {EcSubscriptionURI, std::wstring(L"http://schemas.microsoft.com/wbem/wsman/1/windows/EventLog")},
     {EcSubscriptionQuery, L"<QueryList><Query Path=\"" + sourceChannels_.value() + L"\"><Select>*</Select></Query></QueryList>"},
@@ -504,7 +504,7 @@ bool CollectorInitiatedSubscription::createSubscription(const std::shared_ptr<co
     {EcSubscriptionCommonUserName, sourceUserName_.value()},
     {EcSubscriptionCommonPassword, sourcePassword_.value()}
   };
-  for (auto prop : vProp) {
+  for (auto& prop: listProperty) {
     if (!EcSetSubscriptionProperty(hSubscription, prop.propId_, 0, &prop.prop_)) {
       LOG_SUBSCRIPTION_WINDOWS_ERROR("EcSetSubscriptionProperty id: " + std::to_string(prop.propId_));
       return false;
