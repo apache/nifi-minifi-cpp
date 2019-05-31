@@ -25,6 +25,8 @@
 #include "concurrentqueue.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
+#include "SupportedProperty.h"
+
 #include <winevt.h>
 #include <EvColl.h>
 
@@ -85,6 +87,20 @@ private:
   EVT_HANDLE subscriptionHandle_{};
   uint64_t lastActivityTimestamp_{};
   std::shared_ptr<core::ProcessSessionFactory> sessionFactory_;
+  SupportedProperties supportedProperties_;
+  SupportedProperty<std::wstring> subscriptionName_;
+  SupportedProperty<std::wstring> subscriptionDescription_;
+  SupportedProperty<std::wstring> sourceAddress_;
+  SupportedProperty<std::wstring> sourceUserName_;
+  SupportedProperty<std::wstring> sourcePassword_;
+  SupportedProperty<std::wstring> sourceChannels_;
+  SupportedProperty<uint64_t> maxDeliveryItems_;
+  SupportedProperty<uint64_t> deliveryMaxLatencyTime_;
+  SupportedProperty<uint64_t> heartbeatInterval_;
+  SupportedProperty<std::wstring> channel_;
+  SupportedProperty<std::wstring> query_;
+  SupportedProperty<uint64_t> maxBufferSize_;
+  SupportedProperty<uint64_t> inactiveDurationToReconnect_;
 };
 
 REGISTER_RESOURCE(CollectorInitiatedSubscription, "Windows Event Log Subscribe Callback to receive FlowFiles from Events on Windows.");
