@@ -616,7 +616,7 @@ bool CollectorInitiatedSubscription::subscribe(const std::shared_ptr<core::Proce
     return false;
   }
 
-  lastActivityTimestamp_ = GetTickCount();
+  lastActivityTimestamp_ = GetTickCount64();
 
   return true;
 }
@@ -636,10 +636,7 @@ int CollectorInitiatedSubscription::processQueue(const std::shared_ptr<core::Pro
     }
 
     int64_t process(std::shared_ptr<io::BaseStream> stream) {
-      auto len = stream->writeData((uint8_t*)&str_[0], str_.size());
-      if (len < 0)
-        status_ = -1;
-      return len;
+      return stream->writeData((uint8_t*)&str_[0], str_.size());
     }
 
     std::string str_;
