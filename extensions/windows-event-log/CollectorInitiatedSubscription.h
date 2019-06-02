@@ -63,10 +63,10 @@ public:
   */
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
   //! OnTrigger method, implemented by NiFi CollectorInitiatedSubscription
-  virtual void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
+  void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
   //! Initialize, overwrite by NiFi CollectorInitiatedSubscription
-  virtual void initialize(void) override;
-  virtual void notifyStop() override;
+  void initialize(void) override;
+  void notifyStop() override;
 
 protected:
   bool createSubscription(const std::shared_ptr<core::ProcessContext> &context);
