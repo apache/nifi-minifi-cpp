@@ -23,6 +23,7 @@
 #include "../TestBase.h"
 #include "core/Core.h"
 #include "utils/file/FileUtils.h"
+#include "utils/file/PathUtils.h"
 
 using org::apache::nifi::minifi::utils::file::FileUtils;
 
@@ -79,6 +80,44 @@ TEST_CASE("TestFileUtils::get_child_path", "[TestGetChildPath]") {
   REQUIRE("" == FileUtils::get_child_path("/"));
   REQUIRE("" == FileUtils::get_child_path("//"));
 #endif
+}
+
+TEST_CASE("TestFilePath", "[TestGetFileNameAndPath]") {
+  SECTION("VALID FILE AND PATH") {
+  std::stringstream path;
+  path << "a" << FileUtils::get_separator() << "b" << FileUtils::get_separator() << "c";
+  std::stringstream file;
+  file << path.str() << FileUtils::get_separator() << "file";
+  std::string filename, filepath;
+  REQUIRE(true == utils::file::PathUtils::getFileNameAndPath(file.str(), filepath, filename) );
+  REQUIRE(path.str() == filepath);
+  REQUIRE("file" == filename);
+}
+SECTION("NO FILE VALID PATH") {
+  std::stringstream path;
+  path << "a" << FileUtils::get_separator() << "b" << FileUtils::get_separator() << "c" << FileUtils::get_separator();
+  std::string filename, filepath;
+  REQUIRE(false == utils::file::PathUtils::getFileNameAndPath(path.str(), filepath, filename) );
+  REQUIRE(filepath.empty());
+  REQUIRE(filename.empty());
+}
+SECTION("FILE NO PATH") {
+  std::string path = "/file";
+  std::string filename, filepath;
+  std::string expectedPath;
+  expectedPath += FileUtils::get_separator();
+  REQUIRE(true == utils::file::PathUtils::getFileNameAndPath(path, filepath, filename) );
+  REQUIRE(expectedPath == filepath);
+  REQUIRE("file" == filename);
+}
+SECTION("NO FILE NO PATH") {
+  std::string path = "file";
+  std::string filename, filepath;
+  std::string expectedPath = "" + FileUtils::get_separator();
+  REQUIRE(false == utils::file::PathUtils::getFileNameAndPath(path, filepath, filename) );
+  REQUIRE(filepath.empty());
+  REQUIRE(filename.empty());
+}
 }
 
 TEST_CASE("TestFileUtils::get_executable_path", "[TestGetExecutablePath]") {

@@ -23,10 +23,10 @@
 #include "FlowFileRecord.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
+
 #include "core/Core.h"
 #include "core/Resource.h"
 #include "core/logging/LoggerConfiguration.h"
-
 namespace org {
 namespace apache {
 namespace nifi {
@@ -34,6 +34,23 @@ namespace minifi {
 namespace processors {
 
 // TailFile Class
+
+
+typedef struct {
+  std::string path_;
+  std::string current_file_name_;
+  uint64_t currentTailFilePosition_;
+  uint64_t currentTailFileModificationTime_;
+} TailState;
+
+// Matched File Item for Roll over check
+typedef struct {
+  std::string fileName;
+  uint64_t modifiedTime;
+} TailMatchedFileItem;
+
+
+
 class TailFile : public core::Processor {
  public:
   // Constructor
@@ -42,10 +59,8 @@ class TailFile : public core::Processor {
    */
   explicit TailFile(std::string name, utils::Identifier uuid = utils::Identifier())
       : core::Processor(name, uuid),
-        _currentTailFilePosition(0),
-        _currentTailFileModificationTime(0),
         logger_(logging::LoggerFactory<TailFile>::getLogger()) {
-    _stateRecovered = false;
+    state_recovered_ = false;
   }
   // Destructor
   virtual ~TailFile() {
@@ -57,40 +72,44 @@ class TailFile : public core::Processor {
   static core::Property FileName;
   static core::Property StateFile;
   static core::Property Delimiter;
+  static core::Property TailMode;
+  static core::Property BaseDirectory;
   // Supported Relationships
   static core::Relationship Success;
 
  public:
+
+  bool acceptFile(const std::string &filter, const std::string &file);
   /**
    * Function that's executed when the processor is scheduled.
    * @param context process context.
    * @param sessionFactory process session factory that is used when creating
    * ProcessSession objects.
    */
-  void onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory);
+  void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
   // OnTrigger method, implemented by NiFi TailFile
-  virtual void onTrigger(core::ProcessContext *context, core::ProcessSession *session);
+  void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession>  &session) override;
   // Initialize, over write by NiFi TailFile
-  virtual void initialize(void);
+  void initialize(void) override;
   // recoverState
-  void recoverState();
+  bool recoverState();
   // storeState
   void storeState();
 
- protected:
-
  private:
+
+  static const char *CURRENT_STR;
+  static const char *POSITION_STR;
   std::mutex tail_file_mutex_;
   // File to save state
-  std::string _stateFile;
-  // State related to the tailed file
-  std::string _currentTailFileName;
+  std::string state_file_;
   // Delimiter for the data incoming from the tailed file.
   std::string delimiter_;
   // determine if state is recovered;
-  bool _stateRecovered;
-  uint64_t _currentTailFilePosition;
-  uint64_t _currentTailFileModificationTime;
+  bool state_recovered_;
+
+  std::map<std::string, TailState> tail_states_;
+
   static const int BUFFER_SIZE = 512;
 
   // Utils functions for parse state file
@@ -100,7 +119,7 @@ class TailFile : public core::Processor {
   /**
    * Check roll over for the provided file.
    */
-  void checkRollOver(const std::string &, const std::string&);
+  void checkRollOver(TailState &file, const std::string &base_file_name);
   std::shared_ptr<logging::Logger> logger_;
 };
 
@@ -110,12 +129,6 @@ REGISTER_RESOURCE(TailFile, "\"Tails\" a file, or a list of files, ingesting dat
                   " occurred while NiFi was not running (provided that the data still exists upon restart of NiFi). It is generally advisable to set the Run Schedule to a few seconds,"
                   " rather than running with the default value of 0 secs, as this Processor will consume a lot of resources if scheduled very aggressively. At this time, this Processor"
                   " does not support ingesting files that have been compressed when 'rolled over'.");
-
-// Matched File Item for Roll over check
-typedef struct {
-  std::string fileName;
-  uint64_t modifiedTime;
-} TailMatchedFileItem;
 
 } /* namespace processors */
 } /* namespace minifi */
