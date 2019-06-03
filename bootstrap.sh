@@ -294,8 +294,10 @@ TESTS_DISABLED=${FALSE}
 
 add_disabled_option SQLITE_ENABLED ${FALSE} "ENABLE_SQLITE"
 
-USE_SHARED_LIBS=${TRUE} 
+USE_SHARED_LIBS=${TRUE}
 
+## name, default, values
+add_multi_option BUILD_PROFILE "RelWithDebInfo" "RelWithDebInfo" "Debug" "MinSizeRel" "Release"
 
 # Since the following extensions have limitations on
 
@@ -452,6 +454,8 @@ build_cmake_command(){
   fi
 
   CMAKE_BUILD_COMMAND="${CMAKE_BUILD_COMMAND} -DBUILD_IDENTIFIER=${BUILD_IDENTIFIER}"
+  
+    CMAKE_BUILD_COMMAND="${CMAKE_BUILD_COMMAND} -DCMAKE_BUILD_TYPE=${BUILD_PROFILE}"
 
   add_os_flags
 

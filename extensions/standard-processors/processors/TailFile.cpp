@@ -36,6 +36,7 @@
 #include <sstream>
 #include <string>
 #include <iostream>
+#include "utils/file/FileUtils.h"
 #include "utils/TimeUtil.h"
 #include "utils/StringUtils.h"
 #include "TailFile.h"
@@ -164,90 +165,57 @@ void TailFile::storeState() {
 static bool sortTailMatchedFileItem(TailMatchedFileItem i, TailMatchedFileItem j) {
   return (i.modifiedTime < j.modifiedTime);
 }
-void TailFile::checkRollOver(const std::string &fileLocation, const std::string &fileName) {
+void TailFile::checkRollOver(const std::string &fileLocation, const std::string &baseFileName) {
   struct stat statbuf;
   std::vector<TailMatchedFileItem> matchedFiles;
   std::string fullPath = fileLocation + "/" + _currentTailFileName;
 
   if (stat(fullPath.c_str(), &statbuf) == 0) {
-    if (statbuf.st_size > this->_currentTailFilePosition)
-      // there are new input for the current tail file
-      return;
-
-    uint64_t modifiedTimeCurrentTailFile = ((uint64_t) (statbuf.st_mtime) * 1000);
-    std::string pattern = fileName;
-    std::size_t found = fileName.find_last_of(".");
+    logger_->log_trace("Searching for files rolled over");
+    std::string pattern = baseFileName;
+    std::size_t found = baseFileName.find_last_of(".");
     if (found != std::string::npos)
-      pattern = fileName.substr(0, found);
-#ifndef WIN32
-    DIR *d;
-    d = opendir(fileLocation.c_str());
-    if (!d)
-      return;
-    while (1) {
-      struct dirent *entry;
-      entry = readdir(d);
-      if (!entry)
-        break;
-      std::string d_name = entry->d_name;
-      if (!(entry->d_type & DT_DIR)) {
-        std::string fileName = d_name;
-        std::string fileFullName = fileLocation + "/" + d_name;
-        if (fileFullName.find(pattern) != std::string::npos && stat(fileFullName.c_str(), &statbuf) == 0) {
-          if (((uint64_t) (statbuf.st_mtime) * 1000) >= modifiedTimeCurrentTailFile) {
-            TailMatchedFileItem item;
-            item.fileName = fileName;
-            item.modifiedTime = ((uint64_t) (statbuf.st_mtime) * 1000);
-            matchedFiles.push_back(item);
+      pattern = baseFileName.substr(0, found);
+
+    // Callback, called for each file entry in the listed directory
+    // Return value is used to break (false) or continue (true) listing
+    auto lambda = [&](const std::string& path, const std::string& filename) -> bool {
+      struct stat sb;
+      std::string fileFullName = path + utils::file::FileUtils::get_separator() + filename;
+      if ((fileFullName.find(pattern) != std::string::npos) && stat(fileFullName.c_str(), &sb) == 0) {
+        uint64_t candidateModTime = ((uint64_t) (sb.st_mtime) * 1000);
+        if (candidateModTime >= _currentTailFileModificationTime) {
+          if (filename == _currentTailFileName && candidateModTime == _currentTailFileModificationTime &&
+          sb.st_size == _currentTailFilePosition) {
+            return true;  // Skip the current file as a candidate in case it wasn't updated
           }
+          TailMatchedFileItem item;
+          item.fileName = filename;
+          item.modifiedTime = ((uint64_t) (sb.st_mtime) * 1000);
+          matchedFiles.push_back(item);
         }
       }
+      return true;
+    };
+
+    utils::file::FileUtils::list_dir(fileLocation, lambda, logger_, false);
+
+    if (matchedFiles.size() < 1) {
+      logger_->log_debug("No newer files found in directory!");
+      return;
     }
-    closedir(d);
-#else
-
-    HANDLE hFind;
-    WIN32_FIND_DATA FindFileData;
-
-    if ((hFind = FindFirstFile(fileLocation.c_str(), &FindFileData)) != INVALID_HANDLE_VALUE) {
-      do {
-        struct stat statbuf {};
-        if (stat(FindFileData.cFileName, &statbuf) != 0) {
-          logger_->log_warn("Failed to stat %s", FindFileData.cFileName);
-          break;
-        }
-
-        std::string fileFullName = fileLocation + "/" + FindFileData.cFileName;
-
-        if (fileFullName.find(pattern) != std::string::npos && stat(fileFullName.c_str(), &statbuf) == 0) {
-          if (((uint64_t)(statbuf.st_mtime) * 1000) >= modifiedTimeCurrentTailFile) {
-            TailMatchedFileItem item;
-            item.fileName = fileName;
-            item.modifiedTime = ((uint64_t)(statbuf.st_mtime) * 1000);
-            matchedFiles.push_back(item);
-          }
-        }
-      }while (FindNextFile(hFind, &FindFileData));
-      FindClose(hFind);
-    }
-#endif
 
     // Sort the list based on modified time
     std::sort(matchedFiles.begin(), matchedFiles.end(), sortTailMatchedFileItem);
-    for (std::vector<TailMatchedFileItem>::iterator it = matchedFiles.begin(); it != matchedFiles.end(); ++it) {
-      TailMatchedFileItem item = *it;
-      if (item.fileName == _currentTailFileName) {
-        ++it;
-        if (it != matchedFiles.end()) {
-          TailMatchedFileItem nextItem = *it;
-          logger_->log_info("TailFile File Roll Over from %s to %s", _currentTailFileName, nextItem.fileName);
-          _currentTailFileName = nextItem.fileName;
-          _currentTailFilePosition = 0;
-          storeState();
-        }
-        break;
-      }
+    TailMatchedFileItem item = matchedFiles[0];
+    logger_->log_info("TailFile File Roll Over from %s to %s", _currentTailFileName, item.fileName);
+
+    // Going ahead in the file rolled over
+    if (_currentTailFileName != baseFileName) {
+      _currentTailFilePosition = 0;
     }
+    _currentTailFileName = item.fileName;
+    storeState();
   } else {
     return;
   }
@@ -259,7 +227,7 @@ void TailFile::onTrigger(core::ProcessContext *context, core::ProcessSession *se
   std::string fileLocation = "";
   std::string fileName = "";
   if (context->getProperty(FileName.getName(), value)) {
-    std::size_t found = value.find_last_of("/\\");
+    std::size_t found = value.find_last_of(utils::file::FileUtils::get_separator());
     fileLocation = value.substr(0, found);
     fileName = value.substr(found + 1);
   }
@@ -280,7 +248,8 @@ void TailFile::onTrigger(core::ProcessContext *context, core::ProcessSession *se
   logger_->log_debug("Tailing file %s", fullPath);
   if (stat(fullPath.c_str(), &statbuf) == 0) {
     if ((uint64_t) statbuf.st_size <= this->_currentTailFilePosition) {
-      // there are no new input for the current tail file
+      logger_->log_trace("Current pos: %llu", this->_currentTailFilePosition);
+      logger_->log_trace("%s", "there are no new input for the current tail file");
       context->yield();
       return;
     }
@@ -329,19 +298,20 @@ void TailFile::onTrigger(core::ProcessContext *context, core::ProcessSession *se
 
     } else {
       std::shared_ptr<FlowFileRecord> flowFile = std::static_pointer_cast<FlowFileRecord>(session->create());
-      if (!flowFile)
-        return;
-      flowFile->updateKeyedAttribute(PATH, fileLocation);
-      flowFile->addKeyedAttribute(ABSOLUTE_PATH, fullPath);
-      session->import(fullPath, flowFile, true, this->_currentTailFilePosition);
-      session->transfer(flowFile, Success);
-      logger_->log_info("TailFile %s for %llu bytes", _currentTailFileName, flowFile->getSize());
-      std::string logName = baseName + "." + std::to_string(_currentTailFilePosition) + "-" + std::to_string(_currentTailFilePosition + flowFile->getSize()) + "." + extension;
-      flowFile->updateKeyedAttribute(FILENAME, logName);
-      this->_currentTailFilePosition += flowFile->getSize();
-      storeState();
+      if (flowFile) {
+        flowFile->updateKeyedAttribute(PATH, fileLocation);
+        flowFile->addKeyedAttribute(ABSOLUTE_PATH, fullPath);
+        session->import(fullPath, flowFile, true, this->_currentTailFilePosition);
+        session->transfer(flowFile, Success);
+        logger_->log_info("TailFile %s for %llu bytes", _currentTailFileName, flowFile->getSize());
+        std::string logName = baseName + "." + std::to_string(_currentTailFilePosition) + "-" +
+                              std::to_string(_currentTailFilePosition + flowFile->getSize()) + "." + extension;
+        flowFile->updateKeyedAttribute(FILENAME, logName);
+        this->_currentTailFilePosition += flowFile->getSize();
+        storeState();
+      }
     }
-
+    _currentTailFileModificationTime = ((uint64_t) (statbuf.st_mtime) * 1000);
   } else {
     logger_->log_warn("Unable to stat file %s", fullPath);
   }

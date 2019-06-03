@@ -49,6 +49,67 @@ add_disabled_option(){
   fi
 }
 
+add_multi_option(){
+  eval "$1=$2"
+  ARRAY=()
+  eval "export $1_OPTIONS=()"
+  for i in "${@:3}"; do
+    ARRAY+=($i)
+  done
+  for i in ${!ARRAY[@]}; do
+    eval "$1_OPTIONS[$i]=${ARRAY[$i]}"
+	done
+}
+
+print_multi_option_status(){
+  feature="$1"
+  feature_status=${!1}
+  declare -a VAR_OPTS=()
+  
+  declare VAR_OPTS=$1_OPTIONS[@]
+  VAR_OPTS=$1_OPTIONS[@]
+
+  for option in "${!VAR_OPTS}" ; do
+    if [ "${option}" = "$feature_status" ]; then
+    	printf "${RED}"
+    fi
+    printf "${option}"
+    printf "${NO_COLOR} "
+  done
+}
+
+ToggleMultiOption(){
+  feature="$1"
+  feature_status=${!1}
+  declare -a VAR_OPTS=()
+  
+  declare VAR_OPTS=$1_OPTIONS[@]
+  #echo -e "${RED}${feature_status}${NO_COLOR} (${VAR_OPTS_VAL})"
+  VAR_OPTS=$1_OPTIONS[@]
+  invariant=""
+  first=""
+  # the alternative is to loop through an array but since we're an indirected
+  # copy, we'll treat this as a manual circular buffer
+  for option in "${!VAR_OPTS}" ; do
+  if [ -z "${first}"  ]; then
+  	first=${option}
+  fi
+   if [ "${invariant}" = "next" ]; then
+    	eval "$1=${option}"
+    	invariant=""
+    	break
+    fi
+    if [ "${option}" = "$feature_status" ]; then
+    	invariant="next"
+    fi
+  done
+  if [ "${invariant}" = "next" ]; then
+  	eval "$1=${first}"
+  fi
+}
+
+
+
 add_dependency(){
   DEPENDENCIES+=("$1:$2")
 }
@@ -93,6 +154,7 @@ save_state(){
   echo_state_variable BUILD_IDENTIFIER
   echo_state_variable BUILD_DIR
   echo_state_variable TESTS_DISABLED
+  echo_state_variable BUILD_PROFILE
   echo_state_variable USE_SHARED_LIBS
   for option in "${OPTIONS[@]}" ; do
     echo_state_variable $option
@@ -186,6 +248,7 @@ print_feature_status(){
 }
 
 
+
 show_main_menu() {
   clear
   echo "****************************************"
@@ -269,6 +332,7 @@ show_supported_features() {
   echo "2. Enable all extensions"
   echo "3. Enable JNI Support ..........$(print_feature_status JNI_ENABLED)"
   echo "4. Use Shared Dependency Links .$(print_feature_status USE_SHARED_LIBS)"
+  echo "5. Build Profile ...............$(print_multi_option_status BUILD_PROFILE)"
   echo "P. Continue with these options"
   if [ "$GUIDED_INSTALL" = "${TRUE}" ]; then
     echo "R. Return to Main Menu"
@@ -315,6 +379,7 @@ read_feature_options(){
          echo -e "${RED}Python support must be disabled before changing this value...${NO_COLOR}" && sleep 2
    	   fi
        ;;
+    5) ToggleMultiOption BUILD_PROFILE;;
     p) FEATURES_SELECTED="true" ;;
     r) if [ "$GUIDED_INSTALL" = "${TRUE}" ]; then
         MENU="main"

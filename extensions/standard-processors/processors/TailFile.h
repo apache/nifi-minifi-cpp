@@ -43,6 +43,7 @@ class TailFile : public core::Processor {
   explicit TailFile(std::string name, utils::Identifier uuid = utils::Identifier())
       : core::Processor(name, uuid),
         _currentTailFilePosition(0),
+        _currentTailFileModificationTime(0),
         logger_(logging::LoggerFactory<TailFile>::getLogger()) {
     _stateRecovered = false;
   }
@@ -89,6 +90,7 @@ class TailFile : public core::Processor {
   // determine if state is recovered;
   bool _stateRecovered;
   uint64_t _currentTailFilePosition;
+  uint64_t _currentTailFileModificationTime;
   static const int BUFFER_SIZE = 512;
 
   // Utils functions for parse state file
