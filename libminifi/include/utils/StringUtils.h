@@ -36,7 +36,11 @@ enum TimeUnit {
   MILLISECOND,
   NANOSECOND
 };
-
+#if (__cplusplus >= 201103L && (!defined(__GLIBCXX__) || (__cplusplus >= 201402L) ||  (defined(_GLIBCXX_RELEASE) && _GLIBCXX_RELEASE > 4)))
+#define HAVE_REGEX_CPP 1
+#else
+#define HAVE_REGEX_CPP 0
+#endif
 namespace org {
 namespace apache {
 namespace nifi {
