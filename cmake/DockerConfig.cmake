@@ -52,4 +52,4 @@ add_custom_target(
 
 add_custom_target(
     docker-verify
-    COMMAND ${CMAKE_SOURCE_DIR}/docker/DockerVerify.sh)
+    COMMAND ${CMAKE_SOURCE_DIR}/docker/DockerVerify.sh ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH})

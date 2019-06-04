@@ -21,8 +21,7 @@ def test_hash_invoke():
     """
     Verify sending using InvokeHTTP to a receiver using ListenHTTP.
     """
-
-    invoke_flow = (GetFile('/tmp/input') >> HashAttribute('hash') 
+    invoke_flow = (GetFile('/tmp/input') >> Processor(name='HashContent',clazz='HashContent',properties={'Hash Attribute': 'hash'},auto_terminate=['failure']) 
                    >> InvokeHTTP('http://minifi-listen:8080/contentListener', method='POST'))
 
     listen_flow = ListenHTTP(8080)  >> LogAttribute() >>  PutFile('/tmp/output')
