@@ -19,6 +19,8 @@ set -e
 
 docker_dir="$( cd ${0%/*} && pwd )"
 
+export MINIFI_VERSION=$1
+
 # Create virutal environment for testing
 if [[ ! -d ./test-env-py3 ]]; then
   echo "Creating virtual environment in ./test-env-py3" 1>&2
@@ -49,7 +51,6 @@ pip install --upgrade \
 export JAVA_HOME="/usr/lib/jvm/default-jvm"
 export PATH="$PATH:/usr/lib/jvm/default-jvm/bin"
 
-export MINIFI_VERSION=0.6.0
 export PYTHONPATH="${PYTHONPATH}:${docker_dir}/test/integration"
 
 exec pytest -s -v "${docker_dir}"/test/integration
