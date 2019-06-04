@@ -157,18 +157,15 @@ bool RawSiteToSiteClient::initiateResourceNegotiation() {
           return initiateResourceNegotiation();
         }
       }
-      ret = -1;
+      logger_->log_error("Site2Site Negotiate protocol failed to find a common version with server");
       return false;
     case NEGOTIATED_ABORT:
-      logger_->log_warn("Site2Site Negotiate protocol response ABORT");
-      ret = -1;
+      logger_->log_error("Site2Site Negotiate protocol response ABORT");
       return false;
     default:
-      logger_->log_warn("Negotiate protocol response unknown code %d", statusCode);
-      return true;
+      logger_->log_error("Negotiate protocol response unknown code %d", statusCode);
+      return false;
   }
-
-  return true;
 }
 
 bool RawSiteToSiteClient::initiateCodecResourceNegotiation() {
@@ -220,18 +217,15 @@ bool RawSiteToSiteClient::initiateCodecResourceNegotiation() {
           return initiateCodecResourceNegotiation();
         }
       }
-      ret = -1;
+      logger_->log_error("Site2Site Negotiate codec failed to find a common version with server");
       return false;
     case NEGOTIATED_ABORT:
       logger_->log_error("Site2Site Codec Negotiate response ABORT");
-      ret = -1;
       return false;
     default:
       logger_->log_error("Negotiate Codec response unknown code %d", statusCode);
-      return true;
+      return false;
   }
-
-  return true;
 }
 
 bool RawSiteToSiteClient::handShake() {
