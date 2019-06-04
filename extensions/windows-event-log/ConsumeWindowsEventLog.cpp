@@ -29,6 +29,7 @@
 #include <iostream>
 #include <memory>
 #include <codecvt>
+#include <regex>
 
 #include "io/DataStream.h"
 #include "core/ProcessContext.h"
@@ -41,6 +42,10 @@ namespace apache {
 namespace nifi {
 namespace minifi {
 namespace processors {
+
+static std::string to_string(const wchar_t* pChar) {
+  return std::wstring_convert<std::codecvt_utf8<wchar_t>>().to_bytes(pChar);
+}
 
 const std::string ConsumeWindowsEventLog::ProcessorName("ConsumeWindowsEventLog");
 
@@ -57,6 +62,14 @@ core::Property ConsumeWindowsEventLog::Query(
   isRequired(true)->
   withDefaultValue("*")->
   withDescription("XPath Query to filter events. (See https://msdn.microsoft.com/en-us/library/windows/desktop/dd996910(v=vs.85).aspx for examples.)")->
+  supportsExpressionLanguage(true)->
+  build());
+
+core::Property ConsumeWindowsEventLog::RenderFormatXML(
+  core::PropertyBuilder::createProperty("Render Format XML?")->
+  isRequired(true)->
+  withDefaultValue<bool>(true)->
+  withDescription("Render format XML or Text.)")->
   supportsExpressionLanguage(true)->
   build());
 
@@ -84,6 +97,9 @@ core::Relationship ConsumeWindowsEventLog::Success("success", "Relationship for 
 
 ConsumeWindowsEventLog::ConsumeWindowsEventLog(const std::string& name, utils::Identifier uuid)
   : core::Processor(name, uuid), logger_(logging::LoggerFactory<ConsumeWindowsEventLog>::getLogger()) {
+  // Initializes COM for current thread, it is needed to MSXML parser.
+  CoInitializeEx(0, COINIT_APARTMENTTHREADED);
+
   char buff[MAX_COMPUTERNAME_LENGTH + 1];
   DWORD size = sizeof(buff);
   if (GetComputerName(buff, &size)) {
@@ -93,9 +109,16 @@ ConsumeWindowsEventLog::ConsumeWindowsEventLog(const std::string& name, utils::I
   }
 }
 
+ConsumeWindowsEventLog::~ConsumeWindowsEventLog() {
+  if (xmlDoc_) {
+    xmlDoc_.Release();
+  }
+  CoUninitialize();
+}
+
 void ConsumeWindowsEventLog::initialize() {
   //! Set the supported properties
-  setSupportedProperties({Channel, Query, MaxBufferSize, InactiveDurationToReconnect});
+  setSupportedProperties({Channel, Query, RenderFormatXML, MaxBufferSize, InactiveDurationToReconnect});
 
   //! Set the supported relationships
   setSupportedRelationships({Success});
@@ -121,7 +144,7 @@ void ConsumeWindowsEventLog::onTrigger(const std::shared_ptr<core::ProcessContex
 
   const auto flowFileCount = processQueue(session);
 
-  const auto now = GetTickCount();
+  const auto now = GetTickCount64();
 
   if (flowFileCount > 0) {
     lastActivityTimestamp_ = now;
@@ -134,13 +157,79 @@ void ConsumeWindowsEventLog::onTrigger(const std::shared_ptr<core::ProcessContex
   }
 }
 
-bool ConsumeWindowsEventLog::subscribe(const std::shared_ptr<core::ProcessContext> &context)
-{
+void ConsumeWindowsEventLog::createTextOutput(const MSXML2::IXMLDOMElementPtr pRoot, std::wstringstream& stream, std::vector<std::wstring>& ancestors) {
+  const auto pNodeChildren = pRoot->childNodes;
+
+  auto writeAncestors = [](const std::vector<std::wstring>& ancestors, std::wstringstream& stream) {
+    for (size_t j = 0; j < ancestors.size() - 1; j++) {
+      stream << ancestors[j] + L'/';
+    }
+    stream << ancestors.back();
+  };
+
+  if (0 == pNodeChildren->length) {
+    writeAncestors(ancestors, stream);
+
+    stream << std::endl;
+  } else {
+    for (long i = 0; i < pNodeChildren->length; i++) {
+      std::wstringstream curStream;
+
+      const auto pNode = pNodeChildren->item[i];
+
+      const auto nodeType = pNode->GetnodeType();
+
+      if (DOMNodeType::NODE_TEXT == nodeType) {
+        const auto nodeValue = pNode->text;
+        if (nodeValue.length()) {
+          writeAncestors(ancestors, stream);
+
+          std::wstring strNodeValue = static_cast<LPCWSTR>(nodeValue);
+
+          // Remove '\n', '\r' - just substitute all whitespaces with ' '. 
+          strNodeValue = std::regex_replace(strNodeValue, std::wregex(L"\\s+"), L" ");
+
+          curStream << L" = " << strNodeValue;
+        }
+
+        stream << curStream.str() << std::endl;
+      } else if (DOMNodeType::NODE_ELEMENT == nodeType) {
+        curStream << pNode->nodeName;
+
+        const auto pAttributes = pNode->attributes;
+        for (long iAttr = 0; iAttr < pAttributes->length; iAttr++) {
+          const auto pAttribute = pAttributes->item[iAttr];
+
+          curStream << L" " << pAttribute->nodeName << L'(' << static_cast<_bstr_t>(pAttribute->nodeValue) << L')';
+        }
+
+        ancestors.emplace_back(curStream.str());
+        createTextOutput(pNode, stream, ancestors);
+        ancestors.pop_back();
+      }
+    }
+  }
+}
+
+bool ConsumeWindowsEventLog::subscribe(const std::shared_ptr<core::ProcessContext> &context) {
   std::string channel;
   context->getProperty(Channel.getName(), channel);
 
   std::string query;
   context->getProperty(Query.getName(), query);
+
+  context->getProperty(RenderFormatXML.getName(), renderXML_);
+  if (!renderXML_) {
+    HRESULT hr = xmlDoc_.CreateInstance(__uuidof(MSXML2::DOMDocument60));
+    if (FAILED(hr)) {
+      logger_->log_error("!xmlDoc_.CreateInstance %x", hr);
+      return false;
+    }
+
+    xmlDoc_->async = VARIANT_FALSE;
+    xmlDoc_->validateOnParse = VARIANT_FALSE;
+    xmlDoc_->resolveExternals = VARIANT_FALSE;
+  }
 
   context->getProperty(MaxBufferSize.getName(), maxBufferSize_);
   logger_->log_debug("ConsumeWindowsEventLog: maxBufferSize_ %lld", maxBufferSize_);
@@ -189,11 +278,24 @@ bool ConsumeWindowsEventLog::subscribe(const std::shared_ptr<core::ProcessContex
               }
 
               size = used;
-              std::vector<char> buf(size);
+              std::vector<wchar_t> buf(size/2 + 1);
               if (EvtRender(NULL, hEvent, EvtRenderEventXml, size, &buf[0], &used, &propertyCount)) {
-                std::string xml = std::wstring_convert<std::codecvt_utf8<wchar_t>>().to_bytes(reinterpret_cast<wchar_t*>(&buf[0]));
+                const auto xml = to_string(&buf[0]);
 
-                pConsumeWindowsEventLog->renderedXMLs_.enqueue(std::move(xml));
+                if (pConsumeWindowsEventLog->renderXML_) {
+                  pConsumeWindowsEventLog->listRenderedData_.enqueue(std::move(xml));
+                } else {
+                  if (VARIANT_FALSE == pConsumeWindowsEventLog->xmlDoc_->loadXML(_bstr_t(xml.c_str()))) {
+                    logger->log_error("'loadXML' failed");
+                    return 0UL;
+                  }
+
+                  std::wstringstream stream;
+                  std::vector<std::wstring> ancestors;
+                  pConsumeWindowsEventLog->createTextOutput(pConsumeWindowsEventLog->xmlDoc_->documentElement, stream, ancestors);
+
+                  pConsumeWindowsEventLog->listRenderedData_.enqueue(to_string(stream.str().c_str()));
+                }
               } else {
                 logger->log_error("EvtRender returned the following error code: %d.", GetLastError());
               }
@@ -210,7 +312,7 @@ bool ConsumeWindowsEventLog::subscribe(const std::shared_ptr<core::ProcessContex
     return false;
   }
 
-  lastActivityTimestamp_ = GetTickCount();
+  lastActivityTimestamp_ = GetTickCount64();
 
   return true;
 }
@@ -228,24 +330,19 @@ int ConsumeWindowsEventLog::processQueue(const std::shared_ptr<core::ProcessSess
   struct WriteCallback: public OutputStreamCallback {
     WriteCallback(const std::string& str)
       : str_(str) {
-      status_ = 0;
     }
 
     int64_t process(std::shared_ptr<io::BaseStream> stream) {
-      auto len = stream->writeData((uint8_t*)&str_[0], str_.size());
-      if (len < 0)
-        status_ = -1;
-      return len;
+      return stream->writeData((uint8_t*)&str_[0], str_.size());
     }
 
     std::string str_;
-    int status_;
   };
 
   int flowFileCount = 0;
 
   std::string xml;
-  while (renderedXMLs_.try_dequeue(xml)) {
+  while (listRenderedData_.try_dequeue(xml)) {
     auto flowFile = session->create();
 
     session->write(flowFile, &WriteCallback(xml));
@@ -264,7 +361,7 @@ void ConsumeWindowsEventLog::notifyStop()
 {
   unsubscribe();
 
-  if (renderedXMLs_.size_approx() != 0) {
+  if (listRenderedData_.size_approx() != 0) {
     auto session = sessionFactory_->createSession();
     if (session) {
       logger_->log_info("Finishing processing leftover events");

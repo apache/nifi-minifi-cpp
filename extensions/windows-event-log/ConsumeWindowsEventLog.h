@@ -26,6 +26,9 @@
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
 #include <winevt.h>
+#include <sstream>
+
+#import <msxml6.dll>
 
 namespace org {
 namespace apache {
@@ -44,9 +47,7 @@ public:
   ConsumeWindowsEventLog(const std::string& name, utils::Identifier uuid = utils::Identifier());
 
   //! Destructor
-  virtual ~ConsumeWindowsEventLog()
-  {
-  }
+  virtual ~ConsumeWindowsEventLog();
 
   //! Processor Name
   static const std::string ProcessorName;
@@ -54,6 +55,7 @@ public:
   //! Supported Properties
   static core::Property Channel;
   static core::Property Query;
+  static core::Property RenderFormatXML;
   static core::Property MaxBufferSize;
   static core::Property InactiveDurationToReconnect;
 
@@ -79,11 +81,13 @@ protected:
   void unsubscribe();
   int processQueue(const std::shared_ptr<core::ProcessSession> &session);
 
+  void createTextOutput(const MSXML2::IXMLDOMElementPtr pRoot, std::wstringstream& stream, std::vector<std::wstring>& ancestors);
+
   void LogWindowsError();
 private:
   // Logger
   std::shared_ptr<logging::Logger> logger_;
-  moodycamel::ConcurrentQueue<std::string> renderedXMLs_;
+  moodycamel::ConcurrentQueue<std::string> listRenderedData_;
   std::string provenanceUri_;
   std::string computerName_;
   int64_t inactiveDurationToReconnect_{};
@@ -91,6 +95,8 @@ private:
   uint64_t maxBufferSize_{};
   DWORD lastActivityTimestamp_{};
   std::shared_ptr<core::ProcessSessionFactory> sessionFactory_;
+  bool renderXML_{};
+  MSXML2::IXMLDOMDocumentPtr xmlDoc_;
 };
 
 REGISTER_RESOURCE(ConsumeWindowsEventLog, "Windows Event Log Subscribe Callback to receive FlowFiles from Events on Windows.");
