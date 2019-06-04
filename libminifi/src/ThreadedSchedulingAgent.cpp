@@ -63,7 +63,7 @@ void ThreadedSchedulingAgent::schedule(std::shared_ptr<core::Processor> processo
   }
 
   if (thread_pool_.isRunning(processor->getUUIDStr())) {
-    logger_->log_warn("Can not schedule threads for processor %s because there are existing threads running");
+    logger_->log_warn("Can not schedule threads for processor %s because there are existing threads running", processor->getName());
     return;
   }
 
