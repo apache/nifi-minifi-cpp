@@ -160,11 +160,17 @@ void ConsumeWindowsEventLog::onTrigger(const std::shared_ptr<core::ProcessContex
 void ConsumeWindowsEventLog::createTextOutput(std::wstringstream& stream, MSXML2::IXMLDOMElementPtr pRoot, std::vector<std::wstring>& ancestors) {
   const auto pNodeChildren = pRoot->childNodes;
 
-  if (0 == pNodeChildren->length) {
-    for (size_t i = 0; i < ancestors.size() - 1; i++) {
-      stream << ancestors[i] + L'/';
+  auto writeAncestors = [](std::wstringstream& stream, std::vector<std::wstring>& ancestors) {
+    for (size_t j = 0; j < ancestors.size() - 1; j++) {
+      stream << ancestors[j] + L'/';
     }
-    stream << ancestors[ancestors.size() - 1] << std::endl;
+    stream << ancestors[ancestors.size() - 1];
+  };
+
+  if (0 == pNodeChildren->length) {
+    writeAncestors(stream, ancestors);
+
+    stream << std::endl;
   }
   else {
     for (long i = 0; i < pNodeChildren->length; i++) {
@@ -177,10 +183,7 @@ void ConsumeWindowsEventLog::createTextOutput(std::wstringstream& stream, MSXML2
       if (DOMNodeType::NODE_TEXT == nodeType) {
         const auto nodeValue = pNode->text;
         if (nodeValue.length()) {
-          for (size_t j = 0; j < ancestors.size() - 1; j++) {
-            stream << ancestors[j] + L'/';
-          }
-          stream << ancestors[ancestors.size() - 1];
+          writeAncestors(stream, ancestors);
 
           std::wstring strNodeValue = static_cast<LPCWSTR>(nodeValue);
 
@@ -191,8 +194,7 @@ void ConsumeWindowsEventLog::createTextOutput(std::wstringstream& stream, MSXML2
         }
 
         stream << curStream.str() << std::endl;
-      }
-      else if (DOMNodeType::NODE_ELEMENT == nodeType) {
+      } else if (DOMNodeType::NODE_ELEMENT == nodeType) {
         curStream << pNode->nodeName;
 
         const auto pAttributes = pNode->attributes;
