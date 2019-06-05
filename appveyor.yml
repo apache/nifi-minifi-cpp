@@ -20,8 +20,4 @@ clone_folder: C:\projects\nifi-minifi-cpp
   
 build_script:
    - cd C:\projects\nifi-minifi-cpp
-   - mkdir build & exit 0
-   - cd build
-   - cmake -g"Ninja" -DWIN32=WIN32 -DOPENSSL_OFF=ON -DUSE_SYSTEM_ZLIB=OFF -DFORCE_WINDOWS=ON -DUSE_SYSTEM_UUID=OFF -DDISABLE_ROCKSDB=ON -DDISABLE_CURL=ON -DDISABLE_LIBARCHIVE=ON -DDISABLE_SCRIPTING=ON -DEXCLUDE_BOOST=ON -DENABLE_WEL=TRUE -DSKIP_TESTS=ON .. 
-   - set msbuild_platform=x64 
-   - msbuild nifi-minifi-cpp.sln
+   - win_build_vs.bat build
