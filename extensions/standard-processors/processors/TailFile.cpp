@@ -37,6 +37,7 @@
 #include <string>
 #include <iostream>
 #include "utils/file/FileUtils.h"
+#include "utils/file/PathUtils.h"
 #include "utils/TimeUtil.h"
 #include "utils/StringUtils.h"
 #ifdef HAVE_REGEX_CPP
@@ -75,8 +76,11 @@ core::Property TailFile::Delimiter("Input Delimiter", "Specifies the character t
                                    "");
 
 core::Property TailFile::TailMode(
-    core::PropertyBuilder::createProperty("tail-mode", "Tailing Mode")->isRequired(true)->withAllowableValue<std::string>("Single file")->withAllowableValue("Multiple file")->withDefaultValue(
-        "Single file")->build());
+    core::PropertyBuilder::createProperty("tail-mode", "Tailing Mode")->withDescription(
+        "Specifies the tail file mode. In 'Single file' mode only a single file will be watched. "
+        "In 'Multiple file' mode a regex may be used. Note that in multiple file mode we will still continue to watch for rollover on the initial set of watched files. "
+        "The Regex used to locate multiple files will be run during the schedule phrase. Note that if rotated files are matched by the regex, those files will be tailed.")->isRequired(true)
+        ->withAllowableValue<std::string>("Single file")->withAllowableValue("Multiple file")->withDefaultValue("Single file")->build());
 
 core::Property TailFile::BaseDirectory(core::PropertyBuilder::createProperty("tail-base-directory", "Base Directory")->isRequired(false)->build());
 
@@ -124,8 +128,6 @@ void TailFile::onSchedule(const std::shared_ptr<core::ProcessContext> &context, 
     }
 
     auto fileRegexSelect = [&](const std::string& path, const std::string& filename) -> bool {
-      struct stat sb;
-      std::string fileFullName = path + utils::file::FileUtils::get_separator() + filename;
       if (acceptFile(file, filename)) {
         tail_states_.insert(std::make_pair(filename, TailState {path, filename, 0, 0}));
       }
@@ -135,10 +137,12 @@ void TailFile::onSchedule(const std::shared_ptr<core::ProcessContext> &context, 
     utils::file::FileUtils::list_dir(base_dir, fileRegexSelect, logger_, false);
 
   } else {
-    std::size_t found = file.find_last_of(utils::file::FileUtils::get_separator());
-    auto fileLocation = file.substr(0, found);
-    auto fileName = file.substr(found + 1);
-    tail_states_.insert(std::make_pair(fileName, TailState { fileLocation, fileName, 0, 0 }));
+    std::string fileLocation, fileName;
+    if (utils::file::PathUtils::getFileNameAndPath(file, fileLocation, fileName)) {
+      tail_states_.insert(std::make_pair(fileName, TailState { fileLocation, fileName, 0, 0 }));
+    } else {
+      throw minifi::Exception(ExceptionType::PROCESSOR_EXCEPTION, "File to tail must be a fully qualified file");
+    }
   }
 }
 
@@ -202,10 +206,12 @@ void TailFile::parseStateFileLine(char *buf) {
   value = trimRight(value);
 
   if (key == "FILENAME") {
-    std::size_t found = value.find_last_of(utils::file::FileUtils::get_separator());
-    auto fileLocation = value.substr(0, found);
-    auto fileName = value.substr(found + 1);
-    tail_states_.insert(std::make_pair(value, TailState { fileLocation, fileName, 0, 0 }));
+    std::string fileLocation, fileName;
+    if (utils::file::PathUtils::getFileNameAndPath(value, fileLocation, fileName)) {
+      tail_states_.insert(std::make_pair(value, TailState { fileLocation, fileName, 0, 0 }));
+    } else {
+      throw minifi::Exception(ExceptionType::PROCESSOR_EXCEPTION, "State file contains an invalid file name");
+    }
   }
   if (key == "POSITION") {
     // for backwards compatibility
@@ -216,13 +222,13 @@ void TailFile::parseStateFileLine(char *buf) {
   }
   if (key.find(CURRENT_STR) == 0) {
     const auto file = key.substr(strlen(CURRENT_STR) + 1);
-
-    std::size_t found = value.find_last_of(utils::file::FileUtils::get_separator());
-    auto fileLocation = value.substr(0, found);
-    auto fileName = value.substr(found + 1);
-
-    tail_states_[file].path_ = fileLocation;
-    tail_states_[file].current_file_name_ = fileName;
+    std::string fileLocation, fileName;
+    if (utils::file::PathUtils::getFileNameAndPath(value, fileLocation, fileName)) {
+      tail_states_[file].path_ = fileLocation;
+      tail_states_[file].current_file_name_ = fileName;
+    } else {
+      throw minifi::Exception(ExceptionType::PROCESSOR_EXCEPTION, "State file contains an invalid file name");
+    }
   }
 
   if (key.find("POSITION.") == 0) {
