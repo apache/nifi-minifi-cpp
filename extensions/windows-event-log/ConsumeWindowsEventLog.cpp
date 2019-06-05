@@ -293,9 +293,9 @@ bool ConsumeWindowsEventLog::subscribe(const std::shared_ptr<core::ProcessContex
                   std::vector<std::wstring> ancestors;
                   pConsumeWindowsEventLog->createTextOutput(pConsumeWindowsEventLog->xmlDoc_->documentElement, stream, ancestors);
 
-                  pConsumeWindowsEventLog->renderedXMLs_.enqueue(to_string(stream.str().c_str()));
+                  pConsumeWindowsEventLog->listRenderedData_.enqueue(to_string(stream.str().c_str()));
                 } else {
-                  pConsumeWindowsEventLog->renderedXMLs_.enqueue(std::move(xml));
+                  pConsumeWindowsEventLog->listRenderedData_.enqueue(std::move(xml));
                 }
               } else {
                 logger->log_error("EvtRender returned the following error code: %d.", GetLastError());
@@ -343,7 +343,7 @@ int ConsumeWindowsEventLog::processQueue(const std::shared_ptr<core::ProcessSess
   int flowFileCount = 0;
 
   std::string xml;
-  while (renderedXMLs_.try_dequeue(xml)) {
+  while (listRenderedData_.try_dequeue(xml)) {
     auto flowFile = session->create();
 
     session->write(flowFile, &WriteCallback(xml));
@@ -362,7 +362,7 @@ void ConsumeWindowsEventLog::notifyStop()
 {
   unsubscribe();
 
-  if (renderedXMLs_.size_approx() != 0) {
+  if (listRenderedData_.size_approx() != 0) {
     auto session = sessionFactory_->createSession();
     if (session) {
       logger_->log_info("Finishing processing leftover events");

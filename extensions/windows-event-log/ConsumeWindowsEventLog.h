@@ -87,7 +87,7 @@ protected:
 private:
   // Logger
   std::shared_ptr<logging::Logger> logger_;
-  moodycamel::ConcurrentQueue<std::string> renderedXMLs_;
+  moodycamel::ConcurrentQueue<std::string> listRenderedData_;
   std::string provenanceUri_;
   std::string computerName_;
   int64_t inactiveDurationToReconnect_{};
