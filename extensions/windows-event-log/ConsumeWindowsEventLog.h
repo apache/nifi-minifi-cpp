@@ -81,7 +81,7 @@ protected:
   void unsubscribe();
   int processQueue(const std::shared_ptr<core::ProcessSession> &session);
 
-  void createTextOutput(std::wstringstream& strStream, MSXML2::IXMLDOMElementPtr pRoot, std::vector<std::wstring>& listTag);
+  void createTextOutput(const MSXML2::IXMLDOMElementPtr pRoot, std::wstringstream& stream, std::vector<std::wstring>& ancestors);
 
   void LogWindowsError();
 private:

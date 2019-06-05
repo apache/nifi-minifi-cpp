@@ -157,18 +157,18 @@ void ConsumeWindowsEventLog::onTrigger(const std::shared_ptr<core::ProcessContex
   }
 }
 
-void ConsumeWindowsEventLog::createTextOutput(std::wstringstream& stream, MSXML2::IXMLDOMElementPtr pRoot, std::vector<std::wstring>& ancestors) {
+void ConsumeWindowsEventLog::createTextOutput(const MSXML2::IXMLDOMElementPtr pRoot, std::wstringstream& stream, std::vector<std::wstring>& ancestors) {
   const auto pNodeChildren = pRoot->childNodes;
 
-  auto writeAncestors = [](std::wstringstream& stream, std::vector<std::wstring>& ancestors) {
+  auto writeAncestors = [](const std::vector<std::wstring>& ancestors, std::wstringstream& stream) {
     for (size_t j = 0; j < ancestors.size() - 1; j++) {
       stream << ancestors[j] + L'/';
     }
-    stream << ancestors[ancestors.size() - 1];
+    stream << ancestors.back();
   };
 
   if (0 == pNodeChildren->length) {
-    writeAncestors(stream, ancestors);
+    writeAncestors(ancestors, stream);
 
     stream << std::endl;
   }
@@ -183,7 +183,7 @@ void ConsumeWindowsEventLog::createTextOutput(std::wstringstream& stream, MSXML2
       if (DOMNodeType::NODE_TEXT == nodeType) {
         const auto nodeValue = pNode->text;
         if (nodeValue.length()) {
-          writeAncestors(stream, ancestors);
+          writeAncestors(ancestors, stream);
 
           std::wstring strNodeValue = static_cast<LPCWSTR>(nodeValue);
 
@@ -205,8 +205,8 @@ void ConsumeWindowsEventLog::createTextOutput(std::wstringstream& stream, MSXML2
         }
 
         ancestors.emplace_back(curStream.str());
-        createTextOutput(stream, pNode, ancestors);
-        ancestors.resize(ancestors.size() - 1);
+        createTextOutput(pNode, stream, ancestors);
+        ancestors.pop_back();
       }
     }
   }
@@ -290,8 +290,8 @@ bool ConsumeWindowsEventLog::subscribe(const std::shared_ptr<core::ProcessContex
                   }
 
                   std::wstringstream stream;
-                  std::vector<std::wstring> listAncestor;
-                  pConsumeWindowsEventLog->createTextOutput(stream, pConsumeWindowsEventLog->xmlDoc_->documentElement, listAncestor);
+                  std::vector<std::wstring> ancestors;
+                  pConsumeWindowsEventLog->createTextOutput(pConsumeWindowsEventLog->xmlDoc_->documentElement, stream, ancestors);
 
                   pConsumeWindowsEventLog->renderedXMLs_.enqueue(to_string(stream.str().c_str()));
                 } else {
