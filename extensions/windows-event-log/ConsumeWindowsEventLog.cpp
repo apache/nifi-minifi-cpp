@@ -279,7 +279,7 @@ bool ConsumeWindowsEventLog::subscribe(const std::shared_ptr<core::ProcessContex
               }
 
               size = used;
-              std::vector<wchar_t> buf(size/2);
+              std::vector<wchar_t> buf(size/2 + 1);
               if (EvtRender(NULL, hEvent, EvtRenderEventXml, size, &buf[0], &used, &propertyCount)) {
                 const auto xml = to_string(&buf[0]);
 
