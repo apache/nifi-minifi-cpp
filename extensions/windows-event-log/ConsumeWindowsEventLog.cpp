@@ -171,8 +171,7 @@ void ConsumeWindowsEventLog::createTextOutput(const MSXML2::IXMLDOMElementPtr pR
     writeAncestors(ancestors, stream);
 
     stream << std::endl;
-  }
-  else {
+  } else {
     for (long i = 0; i < pNodeChildren->length; i++) {
       std::wstringstream curStream;
 
@@ -220,7 +219,7 @@ bool ConsumeWindowsEventLog::subscribe(const std::shared_ptr<core::ProcessContex
   context->getProperty(Query.getName(), query);
 
   context->getProperty(RenderFormatXML.getName(), renderXML_);
-  if (renderXML_) {
+  if (!renderXML_) {
     HRESULT hr = xmlDoc_.CreateInstance(__uuidof(MSXML2::DOMDocument60));
     if (FAILED(hr)) {
       logger_->log_error("!xmlDoc_.CreateInstance %x", hr);
@@ -284,6 +283,8 @@ bool ConsumeWindowsEventLog::subscribe(const std::shared_ptr<core::ProcessContex
                 const auto xml = to_string(&buf[0]);
 
                 if (pConsumeWindowsEventLog->renderXML_) {
+                  pConsumeWindowsEventLog->listRenderedData_.enqueue(std::move(xml));
+                } else {
                   if (VARIANT_FALSE == pConsumeWindowsEventLog->xmlDoc_->loadXML(_bstr_t(xml.c_str()))) {
                     logger->log_error("'loadXML' failed");
                     return 0UL;
@@ -294,8 +295,6 @@ bool ConsumeWindowsEventLog::subscribe(const std::shared_ptr<core::ProcessContex
                   pConsumeWindowsEventLog->createTextOutput(pConsumeWindowsEventLog->xmlDoc_->documentElement, stream, ancestors);
 
                   pConsumeWindowsEventLog->listRenderedData_.enqueue(to_string(stream.str().c_str()));
-                } else {
-                  pConsumeWindowsEventLog->listRenderedData_.enqueue(std::move(xml));
                 }
               } else {
                 logger->log_error("EvtRender returned the following error code: %d.", GetLastError());
