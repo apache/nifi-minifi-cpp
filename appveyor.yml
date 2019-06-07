@@ -1,11 +1,9 @@
-image: Visual Studio 2015
+image: Visual Studio 2017
 
 environment:
   MSVC_DEFAULT_OPTIONS: ON
   APPVEYOR_SAVE_CACHE_ON_ERROR: true
-  GENERATOR: Ninja
-  MAKE_PROGRAM: ninja
-  
+
 cache: 
 - build\curl-install\ -> appveyor.yml
 - build\libressl-install\ -> appveyor.yml
