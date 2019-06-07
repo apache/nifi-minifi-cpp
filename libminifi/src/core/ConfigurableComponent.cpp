@@ -70,7 +70,7 @@ bool ConfigurableComponent::setProperty(const std::string name, std::string valu
   auto &&it = properties_.find(name);
 
   if (it != properties_.end()) {
-    Property &orig_property = it->second;
+    Property orig_property = it->second;
     Property new_property = orig_property;
     new_property.setValue(value);
     properties_[new_property.getName()] = new_property;
@@ -102,7 +102,7 @@ bool ConfigurableComponent::updateProperty(const std::string &name, const std::s
   auto &&it = properties_.find(name);
 
   if (it != properties_.end()) {
-    Property &orig_property = it->second;
+    Property orig_property = it->second;
     Property new_property = orig_property;
     new_property.addValue(value);
     properties_[new_property.getName()] = new_property;
@@ -125,7 +125,7 @@ bool ConfigurableComponent::setProperty(Property &prop, std::string value) {
   auto it = properties_.find(prop.getName());
 
   if (it != properties_.end()) {
-    Property &orig_property = it->second;
+    Property orig_property = it->second;
     Property new_property = orig_property;
     new_property.setValue(value);
     properties_[new_property.getName()] = new_property;
@@ -153,7 +153,7 @@ bool ConfigurableComponent::setProperty(Property &prop, PropertyValue &value) {
   auto it = properties_.find(prop.getName());
 
   if (it != properties_.end()) {
-    Property &orig_property = it->second;
+    Property orig_property = it->second;
     Property new_property = orig_property;
     new_property.setValue(value);
     properties_[new_property.getName()] = new_property;
@@ -230,7 +230,7 @@ bool ConfigurableComponent::setDynamicProperty(const std::string name, std::stri
   auto &&it = dynamic_properties_.find(name);
 
   if (it != dynamic_properties_.end()) {
-    Property &orig_property = it->second;
+    Property orig_property = it->second;
     Property new_property = orig_property;
     new_property.setValue(value);
     new_property.setSupportsExpressionLanguage(true);
@@ -248,7 +248,7 @@ bool ConfigurableComponent::updateDynamicProperty(const std::string &name, const
   auto &&it = dynamic_properties_.find(name);
 
   if (it != dynamic_properties_.end()) {
-    Property &orig_property = it->second;
+    Property orig_property = it->second;
     Property new_property = orig_property;
     new_property.addValue(value);
     new_property.setSupportsExpressionLanguage(true);

@@ -22,6 +22,7 @@ The derived and original works are listed below:
     JniProcessSession extends and is based on ProcessSession
     JniProcessSessionFactory extends and is based on ProcessSessionFactory
     JniProvenanceReporter extends and is based on ProvenanceReporter
+    SFTPTestServer extends and is based on SSHTestServer
 
 This includes derived works from the cURL (MIT/X-style licensed) project (https://github.com/curl/curl):
 Copyright (c) 1996 - 2019, Daniel Stenberg, <daniel@haxx.se>, and many contributors, see the THANKS file.

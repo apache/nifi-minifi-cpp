@@ -1,6 +1,4 @@
 /**
- * PutSFTP class declaration
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -16,15 +14,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __PUT_SFTP_H__
-#define __PUT_SFTP_H__
+#ifndef __FETCH_SFTP_H__
+#define __FETCH_SFTP_H__
 
 #include <memory>
 #include <string>
-#include <list>
-#include <map>
-#include <mutex>
-#include <thread>
 
 #include "SFTPProcessorBase.h"
 #include "utils/ByteArrayCallback.h"
@@ -34,7 +28,6 @@
 #include "core/Core.h"
 #include "core/Property.h"
 #include "core/Resource.h"
-#include "controllers/SSLContextService.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/Id.h"
 #include "../client/SFTPClient.h"
@@ -45,24 +38,21 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
- class PutSFTP : public SFTPProcessorBase {
+class FetchSFTP : public SFTPProcessorBase {
  public:
 
-  static constexpr char const *CONFLICT_RESOLUTION_REPLACE = "REPLACE";
-  static constexpr char const *CONFLICT_RESOLUTION_IGNORE = "IGNORE";
-  static constexpr char const *CONFLICT_RESOLUTION_RENAME = "RENAME";
-  static constexpr char const *CONFLICT_RESOLUTION_REJECT = "REJECT";
-  static constexpr char const *CONFLICT_RESOLUTION_FAIL = "FAIL";
-  static constexpr char const *CONFLICT_RESOLUTION_NONE = "NONE";
+  static constexpr char const *COMPLETION_STRATEGY_NONE = "None";
+  static constexpr char const *COMPLETION_STRATEGY_MOVE_FILE = "Move File";
+  static constexpr char const *COMPLETION_STRATEGY_DELETE_FILE = "Delete File";
 
-  static constexpr char const* ProcessorName = "PutSFTP";
+  static constexpr char const* ProcessorName = "FetchSFTP";
 
 
   /*!
    * Create a new processor
    */
-  PutSFTP(std::string name, utils::Identifier uuid = utils::Identifier());
-  virtual ~PutSFTP();
+  FetchSFTP(std::string name, utils::Identifier uuid = utils::Identifier());
+  virtual ~FetchSFTP();
 
   // Supported Properties
   static core::Property Hostname;
@@ -71,23 +61,16 @@ namespace processors {
   static core::Property Password;
   static core::Property PrivateKeyPath;
   static core::Property PrivateKeyPassphrase;
-  static core::Property RemotePath;
+  static core::Property RemoteFile;
+  static core::Property CompletionStrategy;
+  static core::Property MoveDestinationDirectory;
   static core::Property CreateDirectory;
   static core::Property DisableDirectoryListing;
-  static core::Property BatchSize;
   static core::Property ConnectionTimeout;
   static core::Property DataTimeout;
-  static core::Property ConflictResolution;
-  static core::Property RejectZeroByte;
-  static core::Property DotRename;
-  static core::Property TempFilename;
+  static core::Property SendKeepaliveOnTimeout;
   static core::Property HostKeyFile;
-  static core::Property LastModifiedTime;
-  static core::Property Permissions;
-  static core::Property RemoteOwner;
-  static core::Property RemoteGroup;
   static core::Property StrictHostKeyChecking;
-  static core::Property UseKeepaliveOnTimeout;
   static core::Property UseCompression;
   static core::Property ProxyType;
   static core::Property ProxyHost;
@@ -97,46 +80,41 @@ namespace processors {
 
   // Supported Relationships
   static core::Relationship Success;
-  static core::Relationship Reject;
-  static core::Relationship Failure;
+  static core::Relationship CommsFailure;
+  static core::Relationship NotFound;
+  static core::Relationship PermissionDenied;
 
-  virtual bool supportsDynamicProperties() override {
-    return true;
-  }
+  // Writes Attributes
+  static constexpr char const* ATTRIBUTE_SFTP_REMOTE_HOST = "sftp.remote.host";
+  static constexpr char const* ATTRIBUTE_SFTP_REMOTE_PORT= "sftp.remote.port";
+  static constexpr char const* ATTRIBUTE_SFTP_REMOTE_FILENAME = "sftp.remote.filename";
 
   virtual void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
   virtual void initialize() override;
   virtual void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
   virtual void notifyStop() override;
 
-  class ReadCallback : public InputStreamCallback {
+  class WriteCallback : public OutputStreamCallback {
    public:
-    ReadCallback(const std::string& target_path,
-        utils::SFTPClient& client,
-        const std::string& conflict_resolution);
-    ~ReadCallback();
+    WriteCallback(const std::string& remote_file,
+                 utils::SFTPClient& client);
+    ~WriteCallback();
     virtual int64_t process(std::shared_ptr<io::BaseStream> stream) override;
 
    private:
     std::shared_ptr<logging::Logger> logger_;
-    bool write_succeeded_;
-    const std::string target_path_;
+    const std::string remote_file_;
     utils::SFTPClient& client_;
-    const std::string conflict_resolution_;
   };
 
  private:
 
+  std::string completion_strategy_;
   bool create_directory_;
-  uint64_t batch_size_;
-  std::string conflict_resolution_;
-  bool reject_zero_byte_;
-  bool dot_rename_;
-
-  bool processOne(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session);
+  bool disable_directory_listing_;
 };
 
-REGISTER_RESOURCE(PutSFTP, "Sends FlowFiles to an SFTP Server")
+REGISTER_RESOURCE(FetchSFTP, "Fetches the content of a file from a remote SFTP server and overwrites the contents of an incoming FlowFile with the content of the remote file.")
 
 } /* namespace processors */
 } /* namespace minifi */

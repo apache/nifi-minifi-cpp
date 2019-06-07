@@ -40,6 +40,36 @@ namespace nifi {
 namespace minifi {
 namespace utils {
 
+enum class SFTPError : uint8_t {
+  SFTP_ERROR_OK = 0,
+  SFTP_ERROR_PERMISSION_DENIED,
+  SFTP_ERROR_FILE_NOT_EXISTS,
+  SFTP_ERROR_FILE_ALREADY_EXISTS,
+  SFTP_ERROR_COMMUNICATIONS_FAILURE,
+  SFTP_ERROR_IO_ERROR,
+  SFTP_ERROR_UNEXPECTED
+};
+
+class LastSFTPError {
+ public:
+  LastSFTPError();
+
+  LastSFTPError(const LastSFTPError&) = delete;
+  LastSFTPError(LastSFTPError&&) = delete;
+  LastSFTPError& operator=(const LastSFTPError&) = delete;
+  LastSFTPError& operator=(LastSFTPError&&) = delete;
+
+  LastSFTPError& operator=(unsigned long libssh2_sftp_error);
+  LastSFTPError& operator=(const SFTPError& sftp_error);
+  operator unsigned long() const;
+  operator SFTPError() const;
+
+ private:
+  bool sftp_error_set_;
+  unsigned long libssh2_sftp_error_;
+  SFTPError sftp_error_;
+};
+
 class SFTPClient {
  public:
 
@@ -77,6 +107,13 @@ class SFTPClient {
 
   bool sendKeepAliveIfNeeded(int &seconds_to_next);
 
+  /**
+   * If any function below this returns false, this function provides the last SFTP-related error.
+   * If a function did not fail because of an SFTP-related error, this function will return SFTP_ERROR_OK.
+   * If this function is called after a function returns true, the return value is UNDEFINED.
+   */
+  SFTPError getLastError();
+
   bool getFile(const std::string& path, io::BaseStream& output, int64_t expected_size = -1);
 
   bool putFile(const std::string& path, io::BaseStream& input, bool overwrite, int64_t expected_size = -1);
@@ -92,7 +129,7 @@ class SFTPClient {
   bool listDirectory(const std::string& path, bool follow_symlinks,
       std::vector<std::tuple<std::string /* filename */, std::string /* longentry */, LIBSSH2_SFTP_ATTRIBUTES /* attrs */>>& children_result);
 
-  bool stat(const std::string& path, bool follow_symlinks, LIBSSH2_SFTP_ATTRIBUTES& result, bool& file_not_exists);
+  bool stat(const std::string& path, bool follow_symlinks, LIBSSH2_SFTP_ATTRIBUTES& result);
 
   static const uint32_t SFTP_ATTRIBUTE_PERMISSIONS = 0x00000001;
   static const uint32_t SFTP_ATTRIBUTE_UID         = 0x00000002;
@@ -148,6 +185,7 @@ class SFTPClient {
 
   bool connected_;
 
+  LastSFTPError last_error_;
 };
 
 } /* namespace utils */
