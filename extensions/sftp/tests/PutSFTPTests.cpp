@@ -34,6 +34,9 @@
 #include <functional>
 #include <iterator>
 #include <random>
+#ifndef WIN32
+#include <unistd.h>
+#endif
 
 #include "TestBase.h"
 #include "utils/StringUtils.h"
@@ -523,7 +526,10 @@ TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP set permissions", "[PutSFTP]") {
 
 #ifndef WIN32
 TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP set uid and gid", "[PutSFTP]") {
-  std::cerr << "!!!! This test ONLY works as root, because it needs to chown !!!!" << std::endl;
+  if (getuid() != 0) {
+    std::cerr << "!!!! This test ONLY works as root, because it needs to chown. Exiting. !!!!" << std::endl;
+    return;
+  }
   plan->setProperty(put, "Remote Owner", "1234");
   plan->setProperty(put, "Remote Group", "4567");
 

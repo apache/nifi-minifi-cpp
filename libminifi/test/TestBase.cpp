@@ -96,6 +96,23 @@ std::shared_ptr<core::Processor> TestPlan::addProcessor(const std::shared_ptr<co
   return processor;
 }
 
+std::shared_ptr<core::Processor> TestPlan::addProcessor(const std::string &processor_name, utils::Identifier& uuid, const std::string &name, const std::initializer_list<core::Relationship>& relationships, bool linkToPrevious) {
+  if (finalized) {
+    return nullptr;
+  }
+  std::lock_guard<std::recursive_mutex> guard(mutex);
+
+  auto ptr = core::ClassLoader::getDefaultClassLoader().instantiate(processor_name, uuid);
+  if (nullptr == ptr) {
+    throw std::exception();
+  }
+  std::shared_ptr<core::Processor> processor = std::static_pointer_cast<core::Processor>(ptr);
+
+  processor->setName(name);
+
+  return addProcessor(processor, name, relationships, linkToPrevious);
+}
+
 std::shared_ptr<core::Processor> TestPlan::addProcessor(const std::string &processor_name, const std::string &name, const std::initializer_list<core::Relationship>& relationships, bool linkToPrevious) {
   if (finalized) {
     return nullptr;
@@ -108,15 +125,7 @@ std::shared_ptr<core::Processor> TestPlan::addProcessor(const std::string &proce
 
   std::cout << "generated " << uuid.to_string() << std::endl;
 
-  auto ptr = core::ClassLoader::getDefaultClassLoader().instantiate(processor_name, uuid);
-  if (nullptr == ptr) {
-    throw std::exception();
-  }
-  std::shared_ptr<core::Processor> processor = std::static_pointer_cast<core::Processor>(ptr);
-
-  processor->setName(name);
-
-  return addProcessor(processor, name, relationships, linkToPrevious);
+  return addProcessor(processor_name, uuid, name, relationships, linkToPrevious);
 }
 
 bool TestPlan::setProperty(const std::shared_ptr<core::Processor> proc, const std::string &prop, const std::string &value, bool dynamic) {
@@ -169,6 +178,7 @@ bool TestPlan::runNextProcessor(std::function<void(const std::shared_ptr<core::P
   }
   std::shared_ptr<core::ProcessSession> current_session = std::make_shared<core::ProcessSession>(context);
   process_sessions_.push_back(current_session);
+  current_flowfile_ = nullptr;
   processor->incrementActiveTasks();
   processor->setScheduledState(core::ScheduledState::RUNNING);
   if (verify != nullptr) {
@@ -178,7 +188,30 @@ bool TestPlan::runNextProcessor(std::function<void(const std::shared_ptr<core::P
     processor->onTrigger(context, current_session);
   }
   current_session->commit();
-  current_flowfile_ = current_session->get();
+  return location + 1 < processor_queue_.size();
+}
+
+bool TestPlan::runCurrentProcessor(std::function<void(const std::shared_ptr<core::ProcessContext>, const std::shared_ptr<core::ProcessSession>)> verify) {
+  if (!finalized) {
+    finalize();
+  }
+  logger_->log_info("Rerunning current processor %d, processor_queue_.size %d, processor_contexts_.size %d", location, processor_queue_.size(), processor_contexts_.size());
+  std::lock_guard<std::recursive_mutex> guard(mutex);
+
+  std::shared_ptr<core::Processor> processor = processor_queue_.at(location);
+  std::shared_ptr<core::ProcessContext> context = processor_contexts_.at(location);
+  std::shared_ptr<core::ProcessSession> current_session = std::make_shared<core::ProcessSession>(context);
+  process_sessions_.push_back(current_session);
+  current_flowfile_ = nullptr;
+  processor->incrementActiveTasks();
+  processor->setScheduledState(core::ScheduledState::RUNNING);
+  if (verify != nullptr) {
+    verify(context, current_session);
+  } else {
+    logger_->log_info("Running %s", processor->getName());
+    processor->onTrigger(context, current_session);
+  }
+  current_session->commit();
   return location + 1 < processor_queue_.size();
 }
 
@@ -187,6 +220,9 @@ std::set<std::shared_ptr<provenance::ProvenanceEventRecord>> TestPlan::getProven
 }
 
 std::shared_ptr<core::FlowFile> TestPlan::getCurrentFlowFile() {
+  if (current_flowfile_ == nullptr) {
+    current_flowfile_ = process_sessions_.at(location)->get();
+  }
   return current_flowfile_;
 }
 

@@ -359,7 +359,7 @@ class Property {
   }
 
   static bool StringToDateTime(const std::string& input, int64_t& output) {
-    int64_t temp = pareDateTimeStr(input);
+    int64_t temp = parseDateTimeStr(input);
     if (temp == -1) {
       return false;
     }

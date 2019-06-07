@@ -59,6 +59,28 @@ TEST_CASE("TestFileUtils::get_parent_path", "[TestGetParentPath]") {
 #endif
 }
 
+TEST_CASE("TestFileUtils::get_child_path", "[TestGetChildPath]") {
+#ifdef WIN32
+  REQUIRE("bar" == FileUtils::get_child_path("foo\\bar"));
+  REQUIRE("bar\\" == FileUtils::get_child_path("foo\\bar\\"));
+  REQUIRE("bar" == FileUtils::get_child_path("C:\\foo\\bar"));
+  REQUIRE("bar\\" == FileUtils::get_child_path("C:\\foo\\bar\\"));
+  REQUIRE("foo" == FileUtils::get_child_path("C:\\foo"));
+  REQUIRE("foo\\" == FileUtils::get_child_path("C:\\foo\\"));
+  REQUIRE("" == FileUtils::get_child_path("C:\\"));
+  REQUIRE("" == FileUtils::get_child_path("C:\\\\"));
+#else
+  REQUIRE("bar" == FileUtils::get_child_path("foo/bar"));
+  REQUIRE("bar/" == FileUtils::get_child_path("foo/bar/"));
+  REQUIRE("bar" == FileUtils::get_child_path("/foo/bar"));
+  REQUIRE("bar/" == FileUtils::get_child_path("/foo/bar/"));
+  REQUIRE("foo" == FileUtils::get_child_path("/foo"));
+  REQUIRE("foo/" == FileUtils::get_child_path("/foo/"));
+  REQUIRE("" == FileUtils::get_child_path("/"));
+  REQUIRE("" == FileUtils::get_child_path("//"));
+#endif
+}
+
 TEST_CASE("TestFileUtils::get_executable_path", "[TestGetExecutablePath]") {
   std::string executable_path = FileUtils::get_executable_path();
   std::cerr << "Executable path: " << executable_path << std::endl;

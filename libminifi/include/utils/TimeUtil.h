@@ -23,6 +23,8 @@
 #include <iomanip>
 #include <sstream>
 #include <chrono>
+#include <array>
+#include <limits>
 
 #define TIME_FORMAT "%Y-%m-%d %H:%M:%S"
 
@@ -67,7 +69,7 @@ inline std::string getTimeStr(uint64_t msec, bool enforce_locale = false) {
  * @param str the datetime string
  * @returns Unix timestamp
  */
-inline int64_t pareDateTimeStr(const std::string &str) {
+inline int64_t parseDateTimeStr(const std::string &str) {
   /**
    * There is no strptime on Windows. As long as we have to parse a single date format this is not so bad,
    * but if multiple formats will have to be supported in the future, it might be worth it to include
@@ -121,6 +123,24 @@ inline int64_t pareDateTimeStr(const std::string &str) {
     return -1;
   }
   return time + timezone_offset;
+}
+
+inline bool getDateTimeStr(int64_t unix_timestamp, std::string& date_time_str) {
+  if (unix_timestamp > (std::numeric_limits<time_t>::max)() || unix_timestamp < (std::numeric_limits<time_t>::lowest)()) {
+    return false;
+  }
+  time_t time = static_cast<time_t>(unix_timestamp);
+  struct tm* gmt = gmtime(&time);
+  if (gmt == nullptr) {
+    return false;
+  }
+  std::array<char, 64U> buf;
+  if (strftime(buf.data(), buf.size(), "%Y-%m-%dT%H:%M:%SZ", gmt) == 0U) {
+    return false;
+  }
+
+  date_time_str = buf.data();
+  return true;
 }
 
 #endif

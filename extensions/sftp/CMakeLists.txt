@@ -70,6 +70,9 @@ find_package(ZLIB REQUIRED)
 include_directories(${ZLIB_INCLUDE_DIRS})
 target_link_libraries(minifi-sftp ${ZLIB_LIBRARIES})
 
+# Include RapidJSON
+include_directories(thirdparty/rapidjson-1.1.0/include)
+
 if (WIN32)
 message("${OPENSSL_LIBRARIES}")
 	set (WIN32_ARCHIVES "")

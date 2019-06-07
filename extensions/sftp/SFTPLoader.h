@@ -18,8 +18,10 @@
 #ifndef EXTENSION_SFTPLOADER_H
 #define EXTENSION_SFTPLOADER_H
 
-#include "processors/PutSFTP.h"
 #include "core/ClassLoader.h"
+#include "processors/PutSFTP.h"
+#include "processors/FetchSFTP.h"
+#include "processors/ListSFTP.h"
 
 class SFTPFactoryInitializer : public core::ObjectFactoryInitializer {
  public:
@@ -57,6 +59,10 @@ class SFTPFactory : public core::ObjectFactory {
   virtual std::unique_ptr<ObjectFactory> assign(const std::string &class_name) {
     if (utils::StringUtils::equalsIgnoreCase(class_name, "PutSFTP")) {
       return std::unique_ptr<ObjectFactory>(new core::DefautObjectFactory<minifi::processors::PutSFTP>());
+    } else if (utils::StringUtils::equalsIgnoreCase(class_name, "FetchSFTP")) {
+      return std::unique_ptr<ObjectFactory>(new core::DefautObjectFactory<minifi::processors::FetchSFTP>());
+    } else if (utils::StringUtils::equalsIgnoreCase(class_name, "ListSFTP")) {
+      return std::unique_ptr<ObjectFactory>(new core::DefautObjectFactory<minifi::processors::ListSFTP>());
     } else {
       return nullptr;
     }
