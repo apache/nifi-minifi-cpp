@@ -60,6 +60,7 @@ option(BUILD_ROCKSDB "Instructs the build system to use RocksDB from the third p
 option(FORCE_WINDOWS "Instructs the build system to force Windows builds when WIN32 is specified" OFF)
 option(DISABLE_CURL "Disables libCurl Properties." OFF)
 
+option(USE_GOLD_LINKER "Use Gold Linker" OFF)
 
 if(NOT WIN32)
 	if (ENABLE_JNI)
@@ -110,7 +111,7 @@ if(CCACHE_FOUND)
     message("-- Found ccache: ${CCACHE_FOUND}")
 endif(CCACHE_FOUND)
 
-if (UNIX AND NOT APPLE)
+if (UNIX AND USE_GOLD_LINKER AND NOT APPLE )
   execute_process(COMMAND ${CMAKE_C_COMPILER} -fuse-ld=gold -Wl,--version ERROR_QUIET OUTPUT_VARIABLE ld_version)
   if ("${ld_version}" MATCHES "GNU gold")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fuse-ld=gold -Wl,--disable-new-dtags")

@@ -43,7 +43,6 @@ matrix:
           - uuid-dev
           - doxygen
           - openssl
-          - ninja-build
           - libcurl4-openssl-dev
           - ccache
           - libpython3-dev
@@ -57,7 +56,7 @@ matrix:
         - sudo unlink /usr/bin/gcc && sudo ln -s /usr/bin/gcc-4.8 /usr/bin/gcc
         - sudo unlink /usr/bin/g++ && sudo ln -s /usr/bin/g++-4.8 /usr/bin/g++
       script:
-        - ./bootstrap.sh -e -t && cd build  && cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_RULE_MESSAGES=OFF .. && cmake --build . --parallel 3 && sudo make test ARGS="-j4 --output-on-failure" && make linter
+        - ./bootstrap.sh -e -t && cd build  && cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_RULE_MESSAGES=OFF .. && cmake --build . --parallel 4 && sudo make test ARGS="-j4 --output-on-failure" && make linter
     - os: linux
       dist: trusty
       sudo: required
@@ -71,7 +70,6 @@ matrix:
           - bison
           - flex
           - libboost-all-dev
-          - ninja-build
           - uuid-dev
           - doxygen
           - openssl
@@ -88,13 +86,13 @@ matrix:
         - sudo unlink /usr/bin/gcc && sudo ln -s /usr/bin/gcc-4.8 /usr/bin/gcc
         - sudo unlink /usr/bin/g++ && sudo ln -s /usr/bin/g++-4.8 /usr/bin/g++
       script:
-        - ./bootstrap.sh -e -t && cd build  && cmake -DUSE_SHARED_LIBS= .. && make -j4 VERBOSE=1  && sudo make test ARGS="-j2 --output-on-failure"
+        - ./bootstrap.sh -e -t && cd build  && cmake -DUSE_SHARED_LIBS= -DCMAKE_BUILD_TYPE=Release -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_RULE_MESSAGES=OFF .. && cmake --build . --parallel 4  && sudo make test ARGS="-j2 --output-on-failure"
     - os: linux
       name: trusty static build with tests
       dist: trusty
       sudo: required
       script:
-        - ./bootstrap.sh -e -t && cd build  && cmake -DUSE_SHARED_LIBS= .. && make -j4 VERBOSE=1  && sudo make test ARGS="-j2 --output-on-failure"
+        - ./bootstrap.sh -e -t && cd build  && cmake -DUSE_SHARED_LIBS= -DCMAKE_BUILD_TYPE=Release -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_RULE_MESSAGES=OFF .. && cmake --build . --parallel 4 && sudo make test ARGS="-j2 --output-on-failure"
     - os: linux
       name: xenial shared build with tests
       dist: xenial
