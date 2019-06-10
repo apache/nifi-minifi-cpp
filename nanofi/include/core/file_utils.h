@@ -19,6 +19,7 @@
 #ifndef NANOFI_INCLUDE_CORE_FILE_UTILS_H_
 #define NANOFI_INCLUDE_CORE_FILE_UTILS_H_
 
+#include "utlist.h"
 #include "flowfiles.h"
 
 #ifdef __cplusplus
@@ -26,14 +27,49 @@ extern "C" {
 #endif
 
 /**
- * Tails a delimited file starting from an offset up to the end of file
- * @param file the path to the file to tail
- * @param delim the delimiter character
- * @param curr_offset the offset in the file to tail from.
- * For eg. To tail from beginning of the file curr_offset = 0
- * @return a list of tokens
+ * Recursively deletes a directory tree
+ * @param path, the path to the directory
  */
-token_list tail_file(const char * file, char delim, int curr_offset);
+void remove_directory(const char * path);
+
+/**
+ * Determine if the provided directory/file path is a directory
+ * @path the absolute path to the file/directory
+ * @return 1 if path is directory else 0
+ */
+int is_directory(const char * path);
+
+/*
+ * Get the platform-specific path separator.
+ * @param force_posix returns the posix path separator ('/'), even when not on posix. Useful when dealing with remote posix paths.
+ * @return the path separator character
+ */
+const char * get_separator(int force_posix);
+
+/**
+ * Joins parent path with child path
+ * @param parent the parent path
+ * @param child the child path
+ * @return concatenated path
+ * @attention this function allocates memory for the returned concatenated path
+ * and it is left for the caller to free the memory
+ */
+char * concat_path(const char * parent, const char * child);
+
+/**
+ * Make a directory tree specified by path
+ * @param path the path to the directory
+ * @return 1 if successful else 0
+ */
+int make_dir(const char * path);
+
+/**
+ * Return the current working directory
+ * @return the current working directory
+ * @attention this function allocates memory on heap
+ * it is left to the caller to free it
+ */
+char * get_current_working_directory();
 
 #ifdef __cplusplus
 }

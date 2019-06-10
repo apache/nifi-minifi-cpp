@@ -16,20 +16,20 @@
  * limitations under the License.
  */
 
+#ifndef _WIN32
 #include "catch.hpp"
 
 #include <vector>
 #include <string>
-#include <fstream>
 #include <numeric>
 #include <algorithm>
-#include <assert.h>
 #include <unistd.h>
 #include <string.h>
 #include <sys/stat.h>
 #include "core/string_utils.h"
 #include "core/file_utils.h"
 
+#include "CTestsBase.h"
 
 void test_lists_equal(token_list * tknlist, const std::vector<std::string>& sv) {
     REQUIRE(tknlist != NULL);
@@ -174,131 +174,101 @@ TEST_CASE("Test string tokenizer for string starting and ending with delimited c
  * ##################################################################
  */
 
-class FileManager {
-public:
-    FileManager(const std::string& filePath) {
-        assert(!filePath.empty() && "filePath provided cannot be empty!");
-        filePath_ = filePath;
-        outputStream_.open(filePath_, std::ios::binary);
-    }
+TEST_CASE("Simple log aggregator test", "[testLogAggregator]") {
 
-    ~FileManager() {
-        std::ifstream ifs(filePath_);
-        if (ifs.good()) {
-            remove(filePath_.c_str());
-        }
-    }
-
-    void Write(const std::string& str) {
-        outputStream_ << str;
-    }
-
-    std::string WriteNChars(uint64_t n, char c) {
-        std::string s(n, c);
-        outputStream_ << s;
-        return s;
-    }
-
-    std::string getFilePath() const {
-        return filePath_;
-    }
-
-    void CloseStream() {
-        outputStream_.flush();
-        outputStream_.close();
-    }
-
-    uint64_t GetFileSize() {
-        CloseStream();
-        struct stat buff;
-        if (stat(filePath_.c_str(), &buff) == 0) {
-            return buff.st_size;
-        }
-        return 0;
-    }
-
-private:
-    std::string filePath_;
-    std::ofstream outputStream_;
-};
-
-TEST_CASE("Simple tail file test", "[testTailFile]") {
-
+    const char * content = "hello world";
     FileManager fm("test.txt");
-    fm.Write("hello world");
+    fm.Write(content);
     fm.CloseStream();
 
-    const char * file = fm.getFilePath().c_str();
-    struct token_list tkn_list = tail_file(file, ';', 0);
-    REQUIRE(tkn_list.size == 0);
-    REQUIRE(tkn_list.head == NULL);
-    REQUIRE(tkn_list.total_bytes == 0);
+    TailFileTestResourceManager mgr("LogAggregator", on_trigger_logaggregator);
+    struct processor_params * pp = invoke_processor(mgr, fm.getFilePath().c_str());
+
+    REQUIRE(pp != NULL);
+    REQUIRE(pp->curr_offset == 0);
+    REQUIRE(flow_files_size(pp->ff_list) == 0);
 }
 
-TEST_CASE("Empty file tail test", "[testEmptyFileTail]") {
+TEST_CASE("Empty file log aggregator test", "[testEmptyFileLogAggregator]") {
     FileManager fm("test.txt");
     fm.CloseStream();
 
-    const char * file = fm.getFilePath().c_str();
-    struct token_list tkn_list = tail_file(file, ';', 0);
-    REQUIRE(tkn_list.size == 0);
-    REQUIRE(tkn_list.head == NULL);
-    REQUIRE(tkn_list.total_bytes == 0);
+    TailFileTestResourceManager mgr("LogAggregator", on_trigger_logaggregator);
+    struct processor_params * pp = invoke_processor(mgr, fm.getFilePath().c_str());
+
+    REQUIRE(pp != NULL);
+    REQUIRE(flow_files_size(pp->ff_list) == 0);
+    REQUIRE(pp->ff_list == NULL);
+    REQUIRE(pp->curr_offset == 0);
 }
 
-TEST_CASE("File containing only delimiters tail test", "[testDelimiterOnlyFileTail]") {
+TEST_CASE("File containing only delimiters test", "[testDelimiterOnlyLogAggregator]") {
     FileManager fm("test.txt");
-    fm.Write("----");
+    fm.Write(";;;;");
     fm.CloseStream();
 
-    const char * file = fm.getFilePath().c_str();
-    struct token_list tkn_list = tail_file(file, '-', 0);
-    REQUIRE(tkn_list.size == 0);
-    REQUIRE(tkn_list.head == NULL);
-    REQUIRE(tkn_list.total_bytes == 4);
+    TailFileTestResourceManager mgr("LogAggregator", on_trigger_logaggregator);
+    struct processor_params * pp = invoke_processor(mgr, fm.getFilePath().c_str());
+
+    REQUIRE(pp != NULL);
+    REQUIRE(flow_files_size(pp->ff_list) == 0);
+    REQUIRE(pp->ff_list == NULL);
+    REQUIRE(pp->curr_offset == 4);
 }
 
-TEST_CASE("File tail test string starting with delimiter", "[testDelimiterOnlyFileTail]") {
+TEST_CASE("File containing string starting with delimiter", "[testDelimiterStartingStrings]") {
     FileManager fm("test.txt");
-    fm.Write("----hello");
+    fm.Write(";;;;hello");
     fm.CloseStream();
 
-    const char * file = fm.getFilePath().c_str();
-    struct token_list tkn_list = tail_file(file, '-', 0);
-    REQUIRE(tkn_list.size == 0);
-    REQUIRE(tkn_list.head == NULL);
-    REQUIRE(tkn_list.total_bytes == 4);
+    TailFileTestResourceManager mgr("LogAggregator", on_trigger_logaggregator);
+    auto pp = invoke_processor(mgr, fm.getFilePath().c_str());
+
+    REQUIRE(flow_files_size(pp->ff_list) == 0);
+    REQUIRE(pp->ff_list == NULL);
+    REQUIRE(pp->curr_offset == 4);
 }
 
-TEST_CASE("Test tail file with less than 4096 delimited chars", "[testTailFileDelimitedString]") {
+TEST_CASE("Test tail file with less than 4096 delimited chars", "[testLogAggregateFileLessThan4KB]") {
+    const std::string token1("token1");
+    const std::string token2("token2");
+    const std::string token3("token3");
+    std::vector<std::string> tokens = {token1, token2, token3};
 
-    const std::string delimitedString = "token1--token2--token3";
+    const std::string delimitedString = join_strings(tokens, ";;");
     FileManager fm("test.txt");
     fm.Write(delimitedString);
     const std::string filePath = fm.getFilePath();
     fm.CloseStream();
 
-    struct token_list tokens = tail_file(filePath.c_str(), '-', 0);
-    test_lists_equal(&tokens, std::vector<std::string>{"token1", "token2"});
+    TailFileTestResourceManager mgr("LogAggregator", on_trigger_logaggregator);
+    auto pp = invoke_processor(mgr, filePath.c_str());
+
+    REQUIRE(pp->curr_offset == (token1.size() + token2.size() + (2 * std::string("--").size())));
+    REQUIRE(pp->ff_list != NULL);
+    REQUIRE(flow_files_size(pp->ff_list) == 2);
 }
 
 // Although there is no delimiter within the string that is at least 4096 bytes long,
 // tail_file still creates a flow file for the first 4096 bytes.
-TEST_CASE("Test tail file having 4096 bytes without delimiter", "[testTailFile4096Chars]") {
+TEST_CASE("Test tail file having 4096 bytes without delimiter", "[testLogAggregateFile4096Chars]") {
 
     FileManager fm("test.txt");
     const std::string s = std::move(fm.WriteNChars(4096, 'a'));
     const std::string filePath = fm.getFilePath();
     fm.CloseStream();
 
-    struct token_list tokens = tail_file(filePath.c_str(), '-', 0);
-    test_lists_equal(&tokens, std::vector<std::string>{std::move(s)});
+    TailFileTestResourceManager mgr("LogAggregator", on_trigger_logaggregator);
+    auto pp = invoke_processor(mgr, filePath.c_str());
+    REQUIRE(pp->curr_offset == 4096);
+    REQUIRE(pp->ff_list != NULL);
+    REQUIRE(flow_files_size(pp->ff_list) == 1);
 }
 
 // Although there is no delimiter within the string that is equal to 4096 bytes or longer
 // tail_file creates a flow file for each subsequent 4096 byte chunk. It leaves the last chunk
 // if it is smaller than 4096 bytes and not delimited
-TEST_CASE("Test tail file having more than 4096 bytes without delimiter", "[testTailFileMoreThan4096Chars]") {
+TEST_CASE("Test tail file having more than 4096 bytes without delimiter", "[testLogAggregarteFileMoreThan4096Chars]") {
 
     FileManager fm("test.txt");
     const std::string s1 = std::move(fm.WriteNChars(4096, 'a'));
@@ -307,63 +277,89 @@ TEST_CASE("Test tail file having more than 4096 bytes without delimiter", "[test
     fm.Write(s3);
     fm.CloseStream();
 
+    TailFileTestResourceManager mgr("LogAggregator", on_trigger_logaggregator);
     const uint64_t totalStringsSize = s1.size() + s2.size() + s3.size();
     const std::string filePath = fm.getFilePath();
     const uint64_t bytesWrittenToStream = fm.GetFileSize();
     REQUIRE(bytesWrittenToStream == totalStringsSize);
 
-    struct token_list tokens = tail_file(filePath.c_str(), '-', 0);
-    test_lists_equal(&tokens, std::vector<std::string>{std::move(s1), std::move(s2)});
+    auto pp = invoke_processor(mgr, filePath.c_str());
+    REQUIRE(flow_files_size(pp->ff_list) == 2);
+    flow_file_list * el = NULL;
+    LL_FOREACH(pp->ff_list, el) {
+        REQUIRE(el->ff_record->size == 4096);
+    }
+    REQUIRE(pp->curr_offset == (s1.size() + s2.size()));
 }
 
-TEST_CASE("Test tail file having more than 4096 bytes with delimiter", "[testTailFileWithDelimitedString]") {
+TEST_CASE("Test tail file having more than 4096 bytes with delimiter", "[testLogAggregateWithDelimitedString]") {
 
     FileManager fm("test.txt");
     const std::string s1 = std::move(fm.WriteNChars(4096, 'a'));
-    const std::string d1 = std::move(fm.WriteNChars(2, '-'));
+    const std::string d1 = std::move(fm.WriteNChars(2, ';'));
     const std::string s2 = std::move(fm.WriteNChars(4096, 'b'));
     fm.CloseStream();
 
+    TailFileTestResourceManager mgr("LogAggregator", on_trigger_logaggregator);
     const uint64_t totalStringsSize = s1.size() + s2.size() + d1.size();
     const std::string filePath = fm.getFilePath();
     const uint64_t bytesWrittenToStream = fm.GetFileSize();
     REQUIRE(bytesWrittenToStream == totalStringsSize);
 
-    struct token_list tokens = tail_file(filePath.c_str(), '-', 0);
-    test_lists_equal(&tokens, std::vector<std::string>{std::move(s1), std::move(s2)});
+    auto pp = invoke_processor(mgr, filePath.c_str());
+    REQUIRE(flow_files_size(pp->ff_list) == 2);
+    REQUIRE(pp->curr_offset == totalStringsSize);
+    flow_file_list * el = NULL;
+    LL_FOREACH(pp->ff_list, el) {
+        REQUIRE(el->ff_record->size == 4096);
+    }
 }
 
-TEST_CASE("Test tail file having more than 4096 bytes with delimiter and second chunk less than 4096", "[testTailFileWithDelimitedString]") {
+TEST_CASE("Test tail file having more than 4096 bytes with delimiter and second chunk less than 4096", "[testLogAggregateDelimited]") {
 
     FileManager fm("test.txt");
     const std::string s1 = std::move(fm.WriteNChars(4096, 'a'));
-    const std::string d1 = std::move(fm.WriteNChars(2, '-'));
+    const std::string d1 = std::move(fm.WriteNChars(2, ';'));
     const std::string s2 = std::move(fm.WriteNChars(4000, 'b'));
     fm.CloseStream();
 
+    TailFileTestResourceManager mgr("LogAggregator", on_trigger_logaggregator);
     const uint64_t totalStringsSize = s1.size() + s2.size() + d1.size();
     const std::string filePath = fm.getFilePath();
     const uint64_t bytesWrittenToStream = fm.GetFileSize();
     REQUIRE(bytesWrittenToStream == totalStringsSize);
 
-    struct token_list tokens = tail_file(filePath.c_str(), '-', 0);
-    test_lists_equal(&tokens, std::vector<std::string>{std::move(s1)});
+    auto pp = invoke_processor(mgr, filePath.c_str());
+    REQUIRE(pp->curr_offset == (s1.size() + d1.size()));
+    REQUIRE(flow_files_size(pp->ff_list) == 1);
+
+    flow_file_list * el = NULL;
+    LL_FOREACH(pp->ff_list, el) {
+        REQUIRE(el->ff_record->size == 4096);
+    }
 }
 
-TEST_CASE("Test tail file having more than 4096 bytes with delimiter and second chunk more than 4096", "[testTailFileWithDelimitedString]") {
+TEST_CASE("Test tail file having more than 4096 bytes with delimiter and second chunk more than 4096", "[testLogAggregateDelimited]") {
 
     FileManager fm("test.txt");
     const std::string s1 = std::move(fm.WriteNChars(4096, 'a'));
-    const std::string d1 = std::move(fm.WriteNChars(2, '-'));
+    const std::string d1 = std::move(fm.WriteNChars(2, ';'));
     const std::string s2 = std::move(fm.WriteNChars(4098, 'b'));
     fm.CloseStream();
 
+    TailFileTestResourceManager mgr("LogAggregator", on_trigger_logaggregator);
     const uint64_t totalStringsSize = s1.size() + s2.size() + d1.size();
     const std::string filePath = fm.getFilePath();
     const uint64_t bytesWrittenToStream = fm.GetFileSize();
     REQUIRE(bytesWrittenToStream == totalStringsSize);
 
-    const std::string s3 = std::string(s2.data(), s2.data()+4096);
-    struct token_list tokens = tail_file(filePath.c_str(), '-', 0);
-    test_lists_equal(&tokens, std::vector<std::string>{std::move(s1), std::move(s3)});
+    auto pp = invoke_processor(mgr, filePath.c_str());
+    REQUIRE(pp->curr_offset == 8194);
+    REQUIRE(flow_files_size(pp->ff_list) == 2);
+
+    flow_file_list * el = NULL;
+    LL_FOREACH(pp->ff_list, el) {
+        REQUIRE(el->ff_record->size == 4096);
+    }
 }
+#endif
