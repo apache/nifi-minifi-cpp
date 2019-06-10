@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #ifndef _WIN32
 #ifndef NANOFI_TESTS_CTESTSBASE_H_
 #define NANOFI_TESTS_CTESTSBASE_H_
@@ -59,6 +60,10 @@ public:
 
     std::string getFilePath() const {
         return filePath_;
+    }
+
+    void OpenStream() {
+        outputStream_.open(filePath_, std::ios::binary|std::ios::app);
     }
 
     void CloseStream() {

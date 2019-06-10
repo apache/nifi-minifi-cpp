@@ -37,4 +37,8 @@ add_executable(tailfile_chunk tailfile_chunk.c)
 
 target_link_libraries(tailfile_chunk nanofi ${CMAKE_THREAD_LIBS_INIT}  ${LINK_FLAGS} minifi-http-curl ${LINK_END_FLAGS})
 
+add_executable(tailfile_delimited tailfile_delimited.c)
+
+target_link_libraries(tailfile_delimited nanofi ${CMAKE_THREAD_LIBS_INIT}  ${LINK_FLAGS} minifi-http-curl ${LINK_END_FLAGS})
+
 endif()

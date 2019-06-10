@@ -57,7 +57,6 @@ TEST_CASE("Test tailfile chunk size 4096, file size 8KB", "[tailfileChunk8KBFile
     REQUIRE(ff_list->ff_record != NULL);
     REQUIRE(flow_files_size(ff_list) == 2);
 
-
     //Test that the current offset in the file is 8192 bytes
     REQUIRE(curr_offset == 8192);
 }

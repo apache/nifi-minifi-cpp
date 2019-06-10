@@ -31,6 +31,7 @@ extern standalone_processor * proc;
 extern flow_file_list * ff_list;
 extern uint64_t curr_offset;
 extern volatile sig_atomic_t stopped;
+extern int flow_file_exists;
 
 /**
  * Tails a delimited file starting from an offset up to the end of file
@@ -44,6 +45,7 @@ extern volatile sig_atomic_t stopped;
 flow_file_info log_aggregate(const char * file_path, char delim, uint64_t curr_offset);
 void on_trigger_tailfilechunk(processor_session * ps, processor_context * ctx);
 void on_trigger_logaggregator(processor_session * ps, processor_context * ctx);
+void on_trigger_tailfiledelimited(processor_session * ps, processor_context * ctx);
 void signal_handler(int signum);
 void set_offset(uint64_t offset);
 uint64_t get_offset();

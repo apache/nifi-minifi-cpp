@@ -4,6 +4,7 @@
 #include "core/cstructs.h"
 #include "core/file_utils.h"
 #include "core/flowfiles.h"
+
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -18,6 +19,8 @@ standalone_processor * proc = NULL;
 flow_file_list * ff_list = NULL;
 uint64_t curr_offset = 0;
 volatile sig_atomic_t stopped = 0;
+int flow_file_exists = 0;
+flow_file_record * ffr_delim = NULL;
 
 void signal_handler(int signum) {
     if (signum == SIGINT || signum == SIGTERM) {
@@ -123,23 +126,30 @@ flow_file_info log_aggregate(const char * file_path, char delim, uint64_t curr_o
     return ff_info;
 }
 
-void on_trigger_logaggregator(processor_session * ps, processor_context * ctx) {
+struct properties {
+    char * file_path;
+    char delimiter;
+};
+
+struct properties get_properties(processor_context * ctx) {
+    struct properties props;
+    memset(&props, 0, sizeof(props));
 
     char file_path[4096];
     char delimiter[3];
 
     if (get_property(ctx, "file_path", file_path, sizeof(file_path)) != 0) {
-        return;
+        return props;
     }
 
     if (get_property(ctx, "delimiter", delimiter, sizeof(delimiter)) != 0) {
         printf("No delimiter found\n");
-        return;
+        return props;
     }
 
     if (strlen(delimiter) == 0) {
         printf("Delimiter not specified or it is empty\n");
-        return;
+        return props;
     }
     char delim = delimiter[0];
 
@@ -164,7 +174,98 @@ void on_trigger_logaggregator(processor_session * ps, processor_context * ctx) {
         }
     }
 
-    flow_file_info ff_info = log_aggregate(file_path, delim, get_offset());
+    int len = strlen(file_path);
+    props.file_path = (char *)malloc((len + 1) * sizeof(char));
+    strncpy(props.file_path, file_path, len);
+    props.file_path[len] = '\0';
+    props.delimiter = delim;
+    return props;
+}
+
+void on_trigger_logaggregator(processor_session * ps, processor_context * ctx) {
+
+    struct properties props = get_properties(ctx);
+
+    if (!props.file_path) return;
+
+    char delim = props.delimiter;
+
+    flow_file_info ff_info = log_aggregate(props.file_path, delim, get_offset());
     set_offset(get_offset() + ff_info.total_bytes);
     ff_list = ff_info.ff_list;
+    free(props.file_path);
+}
+
+void write_flow_file(flow_file_record * ffr, const char * buff, int count) {
+    FILE * ffp = fopen(ffr->contentLocation, "ab");
+    if (!ffp) return;
+    if (fwrite(buff, 1, count, ffp) < count) {
+        fclose(ffp);
+        free_flowfile(ffr);
+        flow_file_exists = 0;
+        return;
+    }
+    fflush(ffp);
+    fclose(ffp);
+}
+
+void on_trigger_tailfiledelimited(processor_session * ps, processor_context * ctx) {
+    struct properties props = get_properties(ctx);
+
+    if (!props.file_path) return;
+
+    char delim = props.delimiter;
+    FILE * fp = fopen(props.file_path, "rb");
+
+    if (!fp) {
+        printf("Unable to open file. {file: %s, reason: %s}\n", props.file_path, strerror(errno));
+        return;
+    }
+
+    char buff[MAX_BYTES_READ + 1];
+    size_t bytes_read = 0;
+    fseek(fp, curr_offset, SEEK_SET);
+
+    while ((bytes_read = fread(buff, 1, MAX_BYTES_READ, fp)) > 0) {
+        buff[bytes_read] = '\0';
+        const char * begin = buff;
+        const char * end = NULL;
+
+        while ((end = strchr(begin, delim))) {
+            uint64_t len = end - begin;
+            if (len > 0) {
+                if (flow_file_exists && ffr_delim) {
+                    write_flow_file(ffr_delim, begin, len);
+                    add_flow_file_record(&ff_list, ffr_delim);
+                    flow_file_exists = 0;
+                }
+                else {
+                    ffr_delim = generate_flow_file(instance, proc);
+                    write_flow_file(ffr_delim, begin, len);
+                    add_flow_file_record(&ff_list, ffr_delim);
+                    flow_file_exists = 0;
+                }
+                curr_offset += (len+1);
+            }
+            else {
+                if (flow_file_exists && ffr_delim) {
+                    add_flow_file_record(&ff_list, ffr_delim);
+                    flow_file_exists = 0;
+                }
+                curr_offset++;
+            }
+            begin = (end + 1);
+        }
+
+        if (!end && begin && *begin != '\0' && bytes_read == MAX_BYTES_READ) {
+            if (!flow_file_exists) {
+                ffr_delim = generate_flow_file(instance, proc);
+                flow_file_exists = 1;
+            }
+            int count = strlen(begin);
+            write_flow_file(ffr_delim, begin, count);
+            curr_offset += count;
+        }
+    }
+    fclose(fp);
 }

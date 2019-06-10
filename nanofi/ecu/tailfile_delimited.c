@@ -15,26 +15,21 @@
  * limitations under the License.
 */
 
-#include "api/nanofi.h"
 #include "api/ecu.h"
-#include "core/string_utils.h"
-#include "core/cstructs.h"
-#include "core/file_utils.h"
 #include "core/flowfiles.h"
-
 #include <unistd.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
 #include <errno.h>
 #include <limits.h>
 #include <signal.h>
 #include <sys/stat.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
 
 int main(int argc, char** argv) {
 
     if (argc < 6) {
-        printf("Error: must run ./log_aggregator <file> <interval> <delimiter> <nifi instance url> <remote port>\n");
+        printf("Error: must run ./tailfile_delimited <file> <interval> <delimiter> <nifi instance url> <remote port>\n");
         exit(1);
     }
 
@@ -50,6 +45,7 @@ int main(int argc, char** argv) {
     }
 
     struct stat stats;
+    errno = 0;
     int ret = stat(file, &stats);
 
     if (ret == -1) {
@@ -65,7 +61,7 @@ int main(int argc, char** argv) {
     errno = 0;
     unsigned long intrvl = strtol(interval, NULL, 10);
 
-    if (errno == ERANGE || intrvl == LONG_MAX || intrvl == LONG_MIN) {
+    if (errno != 0) {
         printf("Invalid interval value specified\n");
         return 0;
     }
@@ -82,25 +78,25 @@ int main(int argc, char** argv) {
 
     instance = create_instance(instance_str, &port);
 
-    const char * processor_name = "TailFile";
+    const char * processor_name = "TailFileDelimited";
 
-    add_custom_processor(processor_name, on_trigger_logaggregator);
+    add_custom_processor(processor_name, on_trigger_tailfiledelimited);
 
     proc = create_processor(processor_name);
 
     set_standalone_property(proc, "file_path", file);
     set_standalone_property(proc, "delimiter", delimiter);
 
-    set_offset(0);
+    curr_offset = 0;
     while (!stopped) {
         flow_file_record * new_ff = invoke(proc);
-        transmit_flow_files(instance, ff_list);
-        free_flow_file_list(ff_list);
+        transmit_flow_files(instance, &ff_list);
+        free_flow_file_list(&ff_list);
         free_flowfile(new_ff);
         sleep(intrvl);
     }
 
-    printf("tail file processor stopped\n");
+    printf("processor stopped\n");
     free_standalone_processor(proc);
     free_instance(instance);
 
