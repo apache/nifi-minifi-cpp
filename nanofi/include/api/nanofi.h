@@ -40,6 +40,17 @@ extern "C" {
 #define SUCCESS_RELATIONSHIP "success"
 #define FAILURE_RELATIONSHIP "failure"
 
+#define NULL_CHECK(ret_val, ...)                        \
+  do {                                                  \
+    const void *_p[] = { __VA_ARGS__ };                 \
+    int _i;                                             \
+    for (_i = 0; _i < sizeof(_p)/sizeof(*_p); _i++) {   \
+      if (_p[_i] == NULL) {                             \
+        return ret_val;                                 \
+      }                                                 \
+    }                                                   \
+  } while(0)
+
 /**
  * Enables logging (disabled by default)
  **/
@@ -297,6 +308,14 @@ flow_file_record* create_ff_object_na(const char *file, const size_t len, const 
  * @return a flow file record or nullptr in case no flowfile was generated
  */
 flow_file_record* create_ff_object_nc();
+
+/**
+ * Adds content to the flow file record.
+ * @param instance the nifi instance
+ * @param proc the standalone processor
+ * @return a flow file record
+ */
+flow_file_record* generate_flow_file(nifi_instance * instance, standalone_processor * proc);
 
 /**
  * Get incoming flow file. To be used in processor logic callbacks.

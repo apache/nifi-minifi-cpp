@@ -149,4 +149,15 @@ typedef struct cstream {
   SOCKET socket_;
 } cstream;
 
+/****
+ * ##################################################################
+ *  STRING OPERATIONS
+ * ##################################################################
+ */
+
+typedef struct tokens {
+    char ** str_list;
+    uint64_t num_strings;
+    uint64_t total_bytes;
+} tokens;
 #endif /* LIBMINIFI_SRC_CAPI_CSTRUCTS_H_ */
