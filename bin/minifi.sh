@@ -89,6 +89,12 @@ active_pid() {
   fi
 }
 
+endnow() {
+   echo "Killing MiNiFi..."
+   kill -9 ${saved_pid} > /dev/null 2>&1
+   
+}
+
 install() {
     detectOS
 
@@ -250,10 +256,23 @@ case "\$1" in
 		fi
         ;;
     restart)
-        echo Restarting MiNiFi service
-        \${bin_dir}/minifi.sh stop
-        \${bin_dir}/minifi.sh start
-        ;;
+      echo "Restarting the MiNiFi service. Hit CTRL+C at any time to forcibly terminate MiNiFi"
+      ${bin_dir}/minifi.sh stop
+      ticks=1
+      printf "Waiting for process to terminate."
+      trap endnow INT
+      if [ "${saved_pid}" -gt 0 ]; then
+        while [ $(active_pid ${saved_pid}) -eq 0 ]; do
+                sleep 1
+                ticks=$((ticks+1))
+                numticks=$(($ticks % 5))
+                if [ "${numticks}"  -eq 0 ]; then
+                        printf "."
+                fi
+        done
+      fi
+      ${bin_dir}/minifi.sh start
+	;;
     *)
         echo "Usage: service minifi {start|stop|restart|status}"
         ;;
@@ -362,8 +381,21 @@ case "$1" in
 		fi
         ;;
     restart)
-      echo Restarting MiNiFi service
+      echo "Restarting MiNiFi. Hit CTRL+C at any time to forcibly terminate MiNiFi"
       ${bin_dir}/minifi.sh stop
+      ticks=1
+      printf "Waiting for process to terminate."
+      trap endnow INT
+      if [ "${saved_pid}" -gt 0 ]; then
+      	while [ $(active_pid ${saved_pid}) -eq 0 ]; do
+  		sleep 1
+		ticks=$((ticks+1))
+		numticks=$(($ticks % 5))
+		if [ "${numticks}"  -eq 0 ]; then
+			printf "."
+		fi
+        done
+      fi
       ${bin_dir}/minifi.sh start
       ;;
     install)
