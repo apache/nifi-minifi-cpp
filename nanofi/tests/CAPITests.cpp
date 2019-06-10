@@ -318,7 +318,7 @@ TEST_CASE("Test standalone processors", "[testStandalone]") {
 
   create_testfile_for_getfile(sourcedir.c_str());
 
-  standalone_processor* getfile_proc = create_processor("GetFile");
+  standalone_processor* getfile_proc = create_processor("GetFile", NULL);
   REQUIRE(set_standalone_property(getfile_proc, "Input Directory", sourcedir.c_str()) == 0);
 
   flow_file_record* ffr = invoke(getfile_proc);
@@ -326,7 +326,7 @@ TEST_CASE("Test standalone processors", "[testStandalone]") {
   REQUIRE(ffr != nullptr);
   REQUIRE(get_attribute_quantity(ffr) > 0);
 
-  standalone_processor* extract_test = create_processor("ExtractText");
+  standalone_processor* extract_test = create_processor("ExtractText", NULL);
   REQUIRE(extract_test != nullptr);
   REQUIRE(set_standalone_property(extract_test, "Attribute", "TestAttr") == 0);
 
@@ -379,7 +379,7 @@ TEST_CASE("Test interaction of flow and standlone processors", "[testStandaloneW
   flow_file_record *record = get_next_flow_file(instance, test_flow);
   REQUIRE(record != nullptr);
 
-  standalone_processor* putfile_proc = create_processor("PutFile");
+  standalone_processor* putfile_proc = create_processor("PutFile", NULL);
   REQUIRE(set_standalone_property(putfile_proc, "Directory", putfiledir.c_str()) == 0);
 
   flow_file_record* put_record = invoke_ff(putfile_proc, record);
@@ -409,7 +409,7 @@ TEST_CASE("Test standalone processors with file input", "[testStandaloneWithFile
   auto sourcedir = testController.createTempDirectory(src_format);
   std::string path = create_testfile_for_getfile(sourcedir.c_str());
 
-  standalone_processor* extract_test = create_processor("ExtractText");
+  standalone_processor* extract_test = create_processor("ExtractText", NULL);
   REQUIRE(extract_test != nullptr);
   REQUIRE(set_standalone_property(extract_test, "Attribute", "TestAttr") == 0);
 
@@ -465,9 +465,9 @@ TEST_CASE("C API robustness test", "[TestRobustness]") {
   free_standalone_processor(nullptr);
   free_instance(nullptr);
 
-  REQUIRE(create_processor(nullptr) == nullptr);
+  REQUIRE(create_processor(nullptr, nullptr) == nullptr);
 
-  standalone_processor *standalone_proc = create_processor("GetFile");
+  standalone_processor *standalone_proc = create_processor("GetFile", NULL);
   REQUIRE(standalone_proc != nullptr);
 
   REQUIRE(set_property(nullptr, "prop_name", "prop_value") == -1);

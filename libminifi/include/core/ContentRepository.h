@@ -46,7 +46,7 @@ class ContentRepository : public StreamManager<minifi::ResourceClaim> {
    */
   virtual bool initialize(const std::shared_ptr<Configure> &configure) = 0;
 
-  virtual std::string getStoragePath() {
+  virtual std::string getStoragePath() const {
     return directory_;
   }
 

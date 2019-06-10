@@ -33,9 +33,11 @@ else()
 include_directories(../libminifi/opsys/posix)
 endif()
 
-file(GLOB NANOFI_SOURCES  "src/api/*.cpp" "src/core/*.c*" "src/cxx/*.cpp" "src/sitetosite/*.c*")
+file(GLOB NANOFI_SOURCES "src/api/*.c*" "src/core/*.c*" "src/cxx/*.cpp" "src/sitetosite/*.c*")
 
-file(GLOB NANOFI_EXAMPLES_SOURCES  "examples/*.c" )
+if(WIN32)
+list(REMOVE_ITEM NANOFI_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/api/ecu.c ${CMAKE_CURRENT_SOURCE_DIR}/src/core/file_utils.c ${CMAKE_CURRENT_SOURCE_DIR}/src/core/flowfiles.c)
+endif()
 
 file(GLOB NANOFI_ECU_SOURCES "ecu/*.c")
 

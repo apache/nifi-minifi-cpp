@@ -59,7 +59,9 @@ class ProcessContext : public controller::ControllerServiceLookup, public core::
         flow_repo_(flow_repo),
         content_repo_(content_repo),
         processor_node_(processor),
-        logger_(logging::LoggerFactory<ProcessContext>::getLogger()) {
+        logger_(logging::LoggerFactory<ProcessContext>::getLogger()),
+        configure_(std::make_shared<minifi::Configure>()),
+        initialized_(false) {
     repo_ = repo;
   }
 
@@ -75,7 +77,8 @@ class ProcessContext : public controller::ControllerServiceLookup, public core::
         flow_repo_(flow_repo),
         content_repo_(content_repo),
         processor_node_(processor),
-        logger_(logging::LoggerFactory<ProcessContext>::getLogger()) {
+        logger_(logging::LoggerFactory<ProcessContext>::getLogger()),
+        initialized_(false) {
     repo_ = repo;
   }
   // Destructor
@@ -197,6 +200,15 @@ class ProcessContext : public controller::ControllerServiceLookup, public core::
     return controller_service_provider_->getControllerServiceName(identifier);
   }
 
+  void initializeContentRepository(const std::string& home) {
+      configure_->setHome(home);
+      content_repo_->initialize(configure_);
+      initialized_ = true;
+  }
+
+  bool isInitialized() const {
+      return initialized_;
+  }
  private:
 
   template<typename T>
@@ -217,7 +229,9 @@ class ProcessContext : public controller::ControllerServiceLookup, public core::
 
   // Logger
   std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<Configure> configure_;
 
+  bool initialized_;
 };
 
 } /* namespace core */

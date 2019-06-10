@@ -282,7 +282,15 @@ class FileUtils {
   }
 #endif
 
-  static int create_dir(const std::string &path, bool create = true) {
+  static int is_directory(const char * path) {
+      struct stat dir_stat;
+      if (stat(path, &dir_stat) < 0) {
+          return 0;
+      }
+      return S_ISDIR(dir_stat.st_mode);
+  }
+
+  static int create_dir(const std::string& path, bool recursive = true) {
 #ifdef BOOST_VERSION
     boost::filesystem::path dir(path);
     if(boost::filesystem::create_directory(dir))
@@ -301,12 +309,41 @@ class FileUtils {
       return 0;
     }
 #else
-    struct stat dir_stat;
-    if (stat(path.c_str(), &dir_stat)) {
-      if (mkdir(path.c_str(), 0700) != 0 && errno != EEXIST) {
+    if (!recursive) {
+        if (mkdir(path.c_str(), 0700) != 0 && errno != EEXIST) {
+            return -1;
+        }
+        return 0;
+    }
+
+    int ret = mkdir(path.c_str(), 0700);
+    if (ret == 0) {
+        return 0;
+    }
+
+    switch (errno) {
+    case ENOENT: {
+        size_t found = path.find_last_of(get_separator(0));
+
+        if (found == std::string::npos) {
+            return -1;
+        }
+
+        const std::string dir = path.substr(0, found);
+        int res = create_dir(dir);
+        if (res < 0) {
+            return -1;
+        }
+        return mkdir(path.c_str(), 0700);
+    }
+    case EEXIST: {
+        if (is_directory(path.c_str())) {
+            return 0;
+        }
         return -1;
-      }
-      return 0;
+    }
+    default:
+        return -1;
     }
 #endif
     return -1;

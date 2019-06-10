@@ -19,10 +19,33 @@
 #ifndef NANOFI_INCLUDE_CORE_FLOWFILES_H_
 #define NANOFI_INCLUDE_CORE_FLOWFILES_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "cstructs.h"
+#include "api/ecu.h"
+#include "sitetosite/CPeer.h"
+#include "sitetosite/CRawSocketProtocol.h"
 
-void add_flow_file_record(flow_file_list * ff_list, flow_file_record * record);
+flow_file_list * add_flow_file_record(flow_file_list ** ff_list, flow_file_record * record);
 
-void free_flow_file_list(flow_file_list * ff_list);
+void free_flow_file_list(flow_file_list ** ff_list);
+
+void add_attributes(flow_file_record * ffr, const char * file_path, uint64_t curr_offset);
+
+void update_attributes(flow_file_record * ffr, const char * file_path, uint64_t curr_offset);
+
+void transmit_flow_files(nifi_instance * instance, flow_file_list * ff_list, int complete);
+
+void transmit_payload(struct CRawSiteToSiteClient * client, struct flow_file_list * ff_list, int complete);
+
+uint64_t flow_files_size(flow_file_list * ff_list);
+
+void read_payload_and_transmit(struct flow_file_list * ffl, struct CRawSiteToSiteClient * client);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* NANOFI_INCLUDE_CORE_FLOWFILES_H_ */

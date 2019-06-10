@@ -150,7 +150,7 @@ processor *add_python_processor(flow *, processor_logic* logic);
  * @param name the name of the processor to instanciate
  * @return pointer to the new processor or nullptr in case it cannot be instantiated (wrong name?)
  **/
-standalone_processor *create_processor(const char * name);
+standalone_processor *create_processor(const char * name, nifi_instance * instance);
 
 /**
  * Free a standalone processor
@@ -318,6 +318,13 @@ flow_file_record* create_ff_object_nc();
 flow_file_record* generate_flow_file(nifi_instance * instance, standalone_processor * proc);
 
 /**
+ * Adds content to the flow file record.
+ * @param ctx the processor context
+ * @return a flow file record
+ */
+flow_file_record * generate_flow(processor_context * ctx);
+
+/**
  * Get incoming flow file. To be used in processor logic callbacks.
  * @param session current processor session
  * @param context current processor context
@@ -440,6 +447,35 @@ int delete_custom_processor(const char * name);
  * @return 0 on success, -1 otherwise (didn't exist)
  **/
 int transfer_to_relationship(flow_file_record * ffr, processor_session * ps, const char * relationship);
+
+/**
+ * Write content to a flow file and return a pointer to flow file record
+ * @param buff, the buffer to read content from
+ * @param count the number of bytes to read
+ * @param ctx the processor context
+ */
+flow_file_record * write_to_flow(const char * buff, size_t count, processor_context * ctx);
+
+/**
+ * Initialize content repository
+ * @param ctx the processor context
+ */
+void initialize_content_repo(processor_context * ctx, const char * uuid);
+
+/**
+ * Clear content repository contents
+ */
+void clear_content_repo(const nifi_instance * instance);
+
+/**
+ * Get the processor uuid from processor context
+ */
+void get_proc_uuid_from_context(const processor_context * ctx, char * uuid_target);
+
+/**
+ * Get the processor uuid from processor
+ */
+void get_proc_uuid_from_processor(standalone_processor * proc, char * uuid_target);
 
 /****
  * ##################################################################

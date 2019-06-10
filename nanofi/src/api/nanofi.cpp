@@ -113,7 +113,7 @@ nifi_instance *create_instance(const char *url, nifi_port *port) {
    * This API will gradually move away from C++, hence malloc is used for nifi_instance
    * Since minifi::Instance is currently being used, then we need to use new in that case.
    */
-  instance->instance_ptr = new minifi::Instance(url, port->port_id);
+  instance->instance_ptr = new minifi::Instance(url, port->port_id, "filesystemrepository");
 
   NULL_CHECK(nullptr, instance->instance_ptr);
 
@@ -124,23 +124,51 @@ nifi_instance *create_instance(const char *url, nifi_port *port) {
   return instance;
 }
 
-standalone_processor *create_processor(const char *name) {
+standalone_processor * create_processor(const char *name, nifi_instance * instance) {
   NULL_CHECK(nullptr, name);
   auto ptr = ExecutionPlan::createProcessor(name, name);
   if (!ptr) {
     return nullptr;
   }
-  if (standalone_instance == nullptr) {
+  if (instance == NULL) {
     nifi_port port;
     char portnum[] = "98765";
     port.port_id = portnum;
-    standalone_instance = create_instance("internal_standalone", &port);
+    instance = create_instance("internal_standalone", &port);
   }
-  auto flow = create_new_flow(standalone_instance);
+  auto flow = create_new_flow(instance);
   std::shared_ptr<ExecutionPlan> plan(flow);
   plan->addProcessor(ptr, name);
   ExecutionPlan::addProcessorWithPlan(ptr->getUUIDStr(), plan);
   return static_cast<standalone_processor*>(ptr.get());
+}
+
+void initialize_content_repo(processor_context * ctx, const char * uuid) {
+    if (ctx->isInitialized()) {
+        return;
+    }
+    char * cwd = get_current_working_directory();
+    if (cwd) {
+        const char * sep = get_separator(0);
+        const std::string repo_path = std::string(cwd) + sep + "contentrepository" + sep + uuid;
+        ctx->initializeContentRepository(repo_path);
+        free(cwd);
+    }
+}
+
+void clear_content_repo(const nifi_instance * instance) {
+    const auto content_repo = static_cast<minifi::Instance*>(instance->instance_ptr)->getContentRepository();
+    const auto storage_path = content_repo->getStoragePath();
+    remove_directory(storage_path.c_str());
+}
+
+void get_proc_uuid_from_processor(standalone_processor * proc, char * uuid_target) {
+    strcpy(uuid_target, proc->getUUIDStr().c_str());
+}
+
+void get_proc_uuid_from_context(const processor_context * ctx, char * uuid_target) {
+    standalone_processor * proc = static_cast<standalone_processor*>(ctx->getProcessorNode()->getProcessor().get());
+    get_proc_uuid_from_processor(proc, uuid_target);
 }
 
 void free_standalone_processor(standalone_processor* proc) {
@@ -245,28 +273,58 @@ flow_file_record* create_ff_object_nc() {
   return new_ff;
 }
 
-flow_file_record * generate_flow_file(nifi_instance * instance, standalone_processor * proc) {
-    if (!instance || !proc) {
-        return nullptr;
-    }
+flow_file_record * generate_flow(processor_context * ctx) {
     flow_file_record * ffr = create_ff_object_nc();
 
-    auto minifi_instance_ref = static_cast<minifi::Instance*>(instance->instance_ptr);
-    auto content_repo = minifi_instance_ref->getContentRepository();
+    if (ffr->crp) {
+    	delete static_cast<std::shared_ptr<minifi::core::ContentRepository>*>(ffr->crp);
+    }
+    ffr->crp = static_cast<void*>(new std::shared_ptr<minifi::core::ContentRepository>(ctx->getContentRepository()));
 
-    ffr->crp = static_cast<void*>(new std::shared_ptr<minifi::core::ContentRepository>(content_repo));
-    auto plan = ExecutionPlan::getPlan(proc->getUUIDStr());
+    auto plan = ExecutionPlan::getPlan(ctx->getProcessorNode()->getProcessor()->getUUIDStr());
+
     if (!plan) {
         return nullptr;
     }
-    ffr->ffp = static_cast<void*>(new std::shared_ptr<core::FlowFile>(plan->getCurrentFlowFile()));
-    ffr->keepContent = 1;
+    ffr->ffp = NULL;
+    ffr->keepContent = 0;
     auto ff_content_repo_ptr = (static_cast<std::shared_ptr<minifi::core::ContentRepository>*>(ffr->crp));
     auto claim = std::make_shared<minifi::ResourceClaim>(*ff_content_repo_ptr);
-    const char * full_path = claim->getContentFullPath().c_str();
-    int len = strlen(full_path);
-    ffr->contentLocation = (char *) malloc(sizeof(char) * (len + 1));
-    snprintf(ffr->contentLocation, len + 1, "%s", full_path);
+
+    size_t len = strlen(claim->getContentFullPath().c_str());
+    ffr->contentLocation = (char *) malloc((len + 1) * sizeof(char));
+    snprintf(ffr->contentLocation, len+1, "%s", claim->getContentFullPath().c_str());
+    return ffr;
+}
+
+flow_file_record * write_to_flow(const char * buff, size_t count, processor_context * ctx) {
+    if (!ctx) {
+        return NULL;
+    }
+
+    flow_file_record * ffr = generate_flow(ctx);
+
+    if (ffr == NULL) {
+        printf("Could not generate flow file\n");
+        return NULL;
+    }
+
+    FILE * ffp = fopen(ffr->contentLocation, "wb");
+    if (!ffp) {
+        printf("Cannot open flow file at path %s to write content to.\n", ffr->contentLocation);
+        free_flowfile(ffr);
+        return NULL;
+    }
+
+    int ret = fwrite(buff, 1, count, ffp);
+    if (ret < count) {
+        fclose(ffp);
+        free_flowfile(ffr);
+        return NULL;
+    }
+    fseek(ffp, 0, SEEK_END);
+    ffr->size = ftell(ffp);
+    fclose(ffp);
     return ffr;
 }
 

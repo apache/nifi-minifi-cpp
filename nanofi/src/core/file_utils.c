@@ -20,44 +20,122 @@
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
+#include <sys/stat.h>
+#include <dirent.h>
+#include <unistd.h>
+#include <limits.h>
 
-#include "api/nanofi.h"
 #include "core/string_utils.h"
 #include "core/file_utils.h"
 
-token_list tail_file(const char * file_path, char delim, int curr_offset) {
-    token_list tkn_list;
-    memset(&tkn_list, 0, sizeof(struct token_list));
+#ifdef _MSC_VER
+#ifndef PATH_MAX
+#define PATH_MAX 260
+#endif
+#endif
 
-    if (!file_path) {
-        return tkn_list;
+int is_directory(const char * path) {
+    struct stat dir_stat;
+    if (stat(path, &dir_stat) < 0) {
+        return 0;
+    }
+    return S_ISDIR(dir_stat.st_mode);
+}
+
+const char * get_separator(int force_posix)
+{
+#ifdef WIN32
+    if (!force_posix) {
+        return "\\";
+    }
+#endif
+    return "/";
+}
+
+char * concat_path(const char * parent, const char * child) {
+    char * path = (char *)malloc((strlen(parent) + strlen(child) + 2) * sizeof(char));
+    strcpy(path, parent);
+    const char * sep = get_separator(0);
+    strcat(path, sep);
+    strcat(path, child);
+    return path;
+}
+
+void remove_directory(const char * dir_path) {
+
+    if (!is_directory(dir_path)) {
+        if (unlink(dir_path) == -1) {
+            printf("Could not remove file %s\n", dir_path);
+        }
+        return;
     }
 
-    char buff[MAX_BYTES_READ + 1];
-    memset(buff, 0, MAX_BYTES_READ+1);
+    uint64_t path_len = strlen(dir_path);
+    struct dirent * dir;
+    DIR * d = opendir(dir_path);
+
+    while ((dir = readdir(d)) != NULL) {
+        char * entry_name = dir->d_name;
+        if (!strcmp(entry_name, ".") || !strcmp(entry_name, "..")) {
+            continue;
+        }
+        char * path = concat_path(dir_path, entry_name);
+        remove_directory(path);
+        free(path);
+    }
+
+    rmdir(dir_path);
+    closedir(d);
+}
+
+int make_dir(const char * path) {
+    if (!path) return -1;
+
     errno = 0;
-    FILE * fp = fopen(file_path, "rb");
-    if (!fp) {
-        printf("Cannot open file: {file: %s, reason: %s}\n", file_path, strerror(errno));
-        return tkn_list;
+    int ret = mkdir(path, S_IRUSR|S_IWUSR|S_IXUSR|S_IRGRP|S_IXGRP|S_IROTH|S_IXOTH);
+    if (ret == 0) {
+        return 0;
     }
-    fseek(fp, curr_offset, SEEK_SET);
 
-    int bytes_read = 0;
-    int i = 0;
-    while ((bytes_read = fread(buff, 1, MAX_BYTES_READ, fp)) > 0) {
-        buff[bytes_read] = '\0';
-        struct token_list tokens = tokenize_string_tailfile(buff, delim);
-        if (tokens.size > 0) {
-            attach_lists(&tkn_list, &tokens);
+    switch (errno) {
+    case ENOENT: {
+        char * found = strrchr(path, '/');
+        if (!found) {
+            return -1;
         }
-        tkn_list.total_bytes += tokens.total_bytes;
-        if (tokens.total_bytes > 0) {
-            curr_offset += tokens.total_bytes;
-            fseek(fp, curr_offset, SEEK_SET);
+        int len = found - path;
+        char * dir = calloc(len + 1, sizeof(char));
+        strncpy(dir, path, len);
+        dir[len] = '\0';
+        int res = make_dir(dir);
+        free(dir);
+        if (res < 0) {
+            return -1;
         }
-        memset(buff, 0, MAX_BYTES_READ);
+        return mkdir(path, S_IRUSR|S_IWUSR|S_IXUSR|S_IRGRP|S_IXGRP|S_IROTH|S_IXOTH);
     }
-    fclose(fp);
-    return tkn_list;
+    case EEXIST: {
+        if (is_directory(path)) {
+            return 0;
+        }
+        return -1;
+    }
+    default:
+        return -1;
+    }
+}
+
+char * get_current_working_directory() {
+    char * cwd = (char *)malloc(PATH_MAX * sizeof(char));
+    memset(cwd, 0, PATH_MAX);
+    #ifdef WIN32
+    if (_getcwd(cwd, PATH_MAX) != NULL)
+        return cwd;
+    #else
+    if (getcwd(cwd, PATH_MAX) != NULL) {
+        return cwd;
+    }
+    #endif
+    free(cwd);
+    return NULL;
 }

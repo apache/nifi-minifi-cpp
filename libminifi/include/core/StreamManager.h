@@ -41,7 +41,7 @@ class StreamManager {
 
   }
 
-  virtual std::string getStoragePath() = 0;
+  virtual std::string getStoragePath() const = 0;
 
   /**
    * Create a write stream using the streamId as a reference.
