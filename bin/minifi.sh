@@ -252,7 +252,12 @@ case "\$1" in
     restart)
         echo Restarting MiNiFi service
         \${bin_dir}/minifi.sh stop
-        \${bin_dir}/minifi.sh start
+	if [ "${saved_pid}" -gt 0 ]; then
+	        while [ $(active_pid ${saved_pid}) -eq 0 ]; do
+       			sleep 1
+        	done
+	fi        
+	\${bin_dir}/minifi.sh start
         ;;
     *)
         echo "Usage: service minifi {start|stop|restart|status}"
@@ -364,6 +369,11 @@ case "$1" in
     restart)
       echo Restarting MiNiFi service
       ${bin_dir}/minifi.sh stop
+      if [ "${saved_pid}" -gt 0 ]; then
+      	while [ $(active_pid ${saved_pid}) -eq 0 ]; do
+  		sleep 1
+        done
+      fi
       ${bin_dir}/minifi.sh start
       ;;
     install)
