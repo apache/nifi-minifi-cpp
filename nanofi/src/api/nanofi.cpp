@@ -34,17 +34,6 @@
 #include "io/DataStream.h"
 #include "core/cxxstructs.h"
 
-#define NULL_CHECK(ret_val, ...)                        \
-  do {                                                  \
-    const void *_p[] = { __VA_ARGS__ };                 \
-    int _i;                                             \
-    for (_i = 0; _i < sizeof(_p)/sizeof(*_p); _i++) {   \
-      if (_p[_i] == NULL) {                             \
-        return ret_val;                                 \
-      }                                                 \
-    }                                                   \
-  } while(0)
-
 using string_map = std::map<std::string, std::string>;
 
 class API_INITIALIZER {
@@ -255,6 +244,32 @@ flow_file_record* create_ff_object_nc() {
   new_ff->attributes = new string_map();
   return new_ff;
 }
+
+flow_file_record * generate_flow_file(nifi_instance * instance, standalone_processor * proc) {
+    if (!instance || !proc) {
+        return nullptr;
+    }
+    flow_file_record * ffr = create_ff_object_nc();
+
+    auto minifi_instance_ref = static_cast<minifi::Instance*>(instance->instance_ptr);
+    auto content_repo = minifi_instance_ref->getContentRepository();
+
+    ffr->crp = static_cast<void*>(new std::shared_ptr<minifi::core::ContentRepository>(content_repo));
+    auto plan = ExecutionPlan::getPlan(proc->getUUIDStr());
+    if (!plan) {
+        return nullptr;
+    }
+    ffr->ffp = static_cast<void*>(new std::shared_ptr<core::FlowFile>(plan->getCurrentFlowFile()));
+    ffr->keepContent = 1;
+    auto ff_content_repo_ptr = (static_cast<std::shared_ptr<minifi::core::ContentRepository>*>(ffr->crp));
+    auto claim = std::make_shared<minifi::ResourceClaim>(*ff_content_repo_ptr);
+    const char * full_path = claim->getContentFullPath().c_str();
+    int len = strlen(full_path);
+    ffr->contentLocation = (char *) malloc(sizeof(char) * (len + 1));
+    snprintf(ffr->contentLocation, len + 1, "%s", full_path);
+    return ffr;
+}
+
 /**
  * Reclaims memory associated with a flow file object
  * @param ff flow file record.

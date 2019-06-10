@@ -149,4 +149,41 @@ typedef struct cstream {
   SOCKET socket_;
 } cstream;
 
+/****
+ * ##################################################################
+ *  STRING OPERATIONS
+ * ##################################################################
+ */
+
+typedef struct token_node {
+    char * data;
+    struct token_node * next;
+} token_node;
+
+typedef struct token_list {
+    struct token_node * head;
+    struct token_node * tail;
+    uint64_t size;
+    uint64_t total_bytes;
+    int has_non_delimited_token;
+} token_list;
+
+/****
+ * ##################################################################
+ *  FLOWFILE OPERATIONS
+ * ##################################################################
+ */
+
+typedef struct flow_file_list_node {
+    flow_file_record * ff_record;
+    struct flow_file_list_node * next;
+} flow_file_list_node;
+
+typedef struct flow_file_list {
+    flow_file_list_node * head;
+    flow_file_list_node * tail;
+    int len;
+    int offset;
+} flow_file_list;
+
 #endif /* LIBMINIFI_SRC_CAPI_CSTRUCTS_H_ */
