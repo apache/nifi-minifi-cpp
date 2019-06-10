@@ -26,25 +26,66 @@
 extern "C" {
 #endif
 
-typedef enum TOKENIZER_MODE {
-    TAILFILE_MODE = 0, /* Do not include a non delimiting string */
-    DEFAULT_MODE /* include a non delimiting string */
-} tokenizer_mode_t;
+#define MAX_BYTES_READ 4096
 
 /**
  * Tokenizes a delimited string and returns a list of tokens
  * @param str the string to be tokenized
  * @param delim the delimiting character
- * @param tokenizer_mode_t the enumeration value specified to include/exclude a non delimiting string in the result
- * @return a list of strings wrapped inside tokens struct
+ * @return a list of tokens
  */
-tokens tokenize_string(const char * str, char delim, tokenizer_mode_t);
+token_list tokenize_string(const char * str, char delim);
 
 /**
- * Free the dynamically allocated tokens
- * @param tks the tokens to be freed
+ * Tokenizes a delimited string and returns a list of tokens but excludes
+ * the last token if it is not delimited by the delimiter. This function
+ * is used by tailfile processor
+ * @param str the cstring to tokenize
+ * @param delim the delimiter to tokenize by
+ * @return a list of tokens
  */
-void free_tokens(tokens * tks);
+token_list tokenize_string_tailfile(const char * str, char delim);
+
+/**
+ * Adds a token to the token list
+ * @param tks the token list to add the token to
+ * @param begin the beginning of the token
+ * @param len the length of the token
+ */
+void add_token_to_list(token_list * tks, const char * begin, uint64_t len);
+
+/**
+ * Deallocate one token node
+ * @param node the node in the list to be deallocated
+ */
+void free_token_node(token_node * node);
+
+/**
+ * Deallocate the dynamically allocated token list
+ * @param tks the token list to be freed
+ */
+void free_all_tokens(token_list * tks);
+
+/**
+ * Remove the tail node from the list
+ * @param tks the linked list of token nodes
+ */
+void remove_last_node(token_list * tks);
+
+/**
+ * Validate a linked list
+ * @param tks_list the list to be validated
+ * @return 1 if the list if valid else 0
+ */
+int validate_list(token_list * tk_list);
+
+/**
+ * Append one list to other (Chaining)
+ * @param to, the destination list to append to
+ * @param from, the source list
+ * @attention, if the to list is empty, to and from will be same after appending
+ */
+void attach_lists(token_list * to, token_list * from);
 
 #ifdef __cplusplus
 }

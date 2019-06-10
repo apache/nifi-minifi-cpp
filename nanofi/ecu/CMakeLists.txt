@@ -46,45 +46,18 @@ endif()
 
 endif()
 
-if (WIN32)
-    set(LINK_FLAGS "/WHOLEARCHIVE")
-    set(LINK_END_FLAGS "")
-elseif (APPLE)
+if (APPLE)
     set(LINK_FLAGS "-Wl,-all_load")
     set(LINK_END_FLAGS "")
-else ()
+elseif (UNIX)
     set(LINK_FLAGS "-Wl,--whole-archive")
     set(LINK_END_FLAGS "")
 endif ()
 
 if (NOT WIN32)
 
-add_executable(generate_flow generate_flow.c)
+add_executable(tail_file tail_file.c)
 
-add_executable(terminate_handler terminate_handler.c)
-
-target_link_libraries(generate_flow nanofi ${CMAKE_THREAD_LIBS_INIT} ${LINK_FLAGS} minifi-http-curl ${LINK_END_FLAGS})
-
-target_link_libraries(terminate_handler nanofi ${CMAKE_THREAD_LIBS_INIT} )
-
-#add_executable(hash_file hash_file.c)
-
-#arget_link_libraries(hash_file nanofi ${CMAKE_THREAD_LIBS_INIT} )
-
-add_executable(transmit_flow transmit_flow.c)
-
-target_link_libraries(transmit_flow nanofi ${CMAKE_THREAD_LIBS_INIT}  ${LINK_FLAGS} minifi-http-curl ${LINK_END_FLAGS})
-
-add_executable(transmit_payload transmit_payload.c)
-
-target_link_libraries(transmit_payload nanofi ${CMAKE_THREAD_LIBS_INIT}  ${LINK_FLAGS} minifi-http-curl ${LINK_END_FLAGS})
-
-add_executable(monitor_directory monitor_directory.c)
-
-target_link_libraries(monitor_directory nanofi ${CMAKE_THREAD_LIBS_INIT}  ${LINK_FLAGS} minifi-http-curl ${LINK_END_FLAGS})
-
-#add_executable(tail_file tail_file.c)
-
-#target_link_libraries(tail_file nanofi ${CMAKE_THREAD_LIBS_INIT}  ${LINK_FLAGS} minifi-http-curl ${LINK_END_FLAGS})
+target_link_libraries(tail_file nanofi ${CMAKE_THREAD_LIBS_INIT}  ${LINK_FLAGS} minifi-http-curl ${LINK_END_FLAGS})
 
 endif()

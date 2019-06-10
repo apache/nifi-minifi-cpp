@@ -37,6 +37,8 @@ file(GLOB NANOFI_SOURCES  "src/api/*.cpp" "src/core/*.c*" "src/cxx/*.cpp" "src/s
 
 file(GLOB NANOFI_EXAMPLES_SOURCES  "examples/*.c" )
 
+file(GLOB NANOFI_ECU_SOURCES "ecu/*.c")
+
 include(CheckCXXCompilerFlag)
 if (WIN32)
   if ((MSVC_VERSION GREATER "1900") OR (MSVC_VERSION EQUAL "1900"))
@@ -103,4 +105,5 @@ endif(ENABLE_PYTHON AND NOT STATIC_BUILD)
 
 if (NOT DISABLE_CURL)
 add_subdirectory(examples)
+add_subdirectory(ecu)
 endif()
