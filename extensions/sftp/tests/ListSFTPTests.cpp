@@ -875,3 +875,29 @@ TEST_CASE_METHOD(ListSFTPTestsFixture, "ListSFTP Tracking Entities changed confi
   REQUIRE(LogTestController::getInstance().contains("key:filename value:file1.ext"));
   REQUIRE(LogTestController::getInstance().contains("key:filename value:file2.ext"));
 }
+
+TEST_CASE_METHOD(ListSFTPTestsFixture, "ListSFTP Tracking Entities Initial Listing Target Tracking Time Window entity outside window", "[ListSFTP][tracking-entities]") {
+  plan->setProperty(list_sftp, "Listing Strategy", "Tracking Entities");
+  plan->setProperty(list_sftp, "Entity Tracking Initial Listing Target", processors::ListSFTP::ENTITY_TRACKING_INITIAL_LISTING_TARGET_TRACKING_TIME_WINDOW);
+  plan->setProperty(list_sftp, "Entity Tracking Time Window", "10 minutes");
+
+  createFileWithModificationTimeDiff("nifi_test/file1.ext", "Test content 1", -20*60 /* 20 minutes ago */);
+
+  testController.runSession(plan, true);
+
+  REQUIRE(LogTestController::getInstance().contains("Skipping \"nifi_test/file1.ext\" because it has an older timestamp than the minimum timestamp to list"));
+  REQUIRE(false == LogTestController::getInstance().contains("from ListSFTP to relationship success"));
+}
+
+TEST_CASE_METHOD(ListSFTPTestsFixture, "ListSFTP Tracking Entities Initial Listing Target Tracking Time Window entity inside window", "[ListSFTP][tracking-entities]") {
+  plan->setProperty(list_sftp, "Listing Strategy", "Tracking Entities");
+  plan->setProperty(list_sftp, "Entity Tracking Initial Listing Target", processors::ListSFTP::ENTITY_TRACKING_INITIAL_LISTING_TARGET_TRACKING_TIME_WINDOW);
+  plan->setProperty(list_sftp, "Entity Tracking Time Window", "10 minutes");
+
+  createFileWithModificationTimeDiff("nifi_test/file1.ext", "Test content 1");
+
+  testController.runSession(plan, true);
+
+  REQUIRE(LogTestController::getInstance().contains("from ListSFTP to relationship success"));
+  REQUIRE(LogTestController::getInstance().contains("key:filename value:file1.ext"));
+}

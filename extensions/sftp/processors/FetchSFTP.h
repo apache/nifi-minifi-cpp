@@ -55,28 +55,12 @@ class FetchSFTP : public SFTPProcessorBase {
   virtual ~FetchSFTP();
 
   // Supported Properties
-  static core::Property Hostname;
-  static core::Property Port;
-  static core::Property Username;
-  static core::Property Password;
-  static core::Property PrivateKeyPath;
-  static core::Property PrivateKeyPassphrase;
   static core::Property RemoteFile;
   static core::Property CompletionStrategy;
   static core::Property MoveDestinationDirectory;
   static core::Property CreateDirectory;
   static core::Property DisableDirectoryListing;
-  static core::Property ConnectionTimeout;
-  static core::Property DataTimeout;
-  static core::Property SendKeepaliveOnTimeout;
-  static core::Property HostKeyFile;
-  static core::Property StrictHostKeyChecking;
   static core::Property UseCompression;
-  static core::Property ProxyType;
-  static core::Property ProxyHost;
-  static core::Property ProxyPort;
-  static core::Property HttpProxyUsername;
-  static core::Property HttpProxyPassword;
 
   // Supported Relationships
   static core::Relationship Success;
@@ -92,7 +76,6 @@ class FetchSFTP : public SFTPProcessorBase {
   virtual void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
   virtual void initialize() override;
   virtual void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
-  virtual void notifyStop() override;
 
   class WriteCallback : public OutputStreamCallback {
    public:

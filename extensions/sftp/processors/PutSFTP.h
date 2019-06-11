@@ -65,35 +65,19 @@ namespace processors {
   virtual ~PutSFTP();
 
   // Supported Properties
-  static core::Property Hostname;
-  static core::Property Port;
-  static core::Property Username;
-  static core::Property Password;
-  static core::Property PrivateKeyPath;
-  static core::Property PrivateKeyPassphrase;
   static core::Property RemotePath;
   static core::Property CreateDirectory;
   static core::Property DisableDirectoryListing;
   static core::Property BatchSize;
-  static core::Property ConnectionTimeout;
-  static core::Property DataTimeout;
   static core::Property ConflictResolution;
   static core::Property RejectZeroByte;
   static core::Property DotRename;
   static core::Property TempFilename;
-  static core::Property HostKeyFile;
   static core::Property LastModifiedTime;
   static core::Property Permissions;
   static core::Property RemoteOwner;
   static core::Property RemoteGroup;
-  static core::Property StrictHostKeyChecking;
-  static core::Property UseKeepaliveOnTimeout;
   static core::Property UseCompression;
-  static core::Property ProxyType;
-  static core::Property ProxyHost;
-  static core::Property ProxyPort;
-  static core::Property HttpProxyUsername;
-  static core::Property HttpProxyPassword;
 
   // Supported Relationships
   static core::Relationship Success;
@@ -107,7 +91,6 @@ namespace processors {
   virtual void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
   virtual void initialize() override;
   virtual void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
-  virtual void notifyStop() override;
 
   class ReadCallback : public InputStreamCallback {
    public:

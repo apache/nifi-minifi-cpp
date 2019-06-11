@@ -71,29 +71,13 @@ class ListSFTP : public SFTPProcessorBase {
 
   // Supported Properties
   static core::Property ListingStrategy;
-  static core::Property Hostname;
-  static core::Property Port;
-  static core::Property Username;
-  static core::Property Password;
-  static core::Property PrivateKeyPath;
-  static core::Property PrivateKeyPassphrase;
   static core::Property RemotePath;
   static core::Property SearchRecursively;
   static core::Property FollowSymlink;
   static core::Property FileFilterRegex;
   static core::Property PathFilterRegex;
   static core::Property IgnoreDottedFiles;
-  static core::Property StrictHostKeyChecking;
-  static core::Property HostKeyFile;
-  static core::Property ConnectionTimeout;
-  static core::Property DataTimeout;
-  static core::Property SendKeepaliveOnTimeout;
   static core::Property TargetSystemTimestampPrecision;
-  static core::Property ProxyType;
-  static core::Property ProxyHost;
-  static core::Property ProxyPort;
-  static core::Property HttpProxyUsername;
-  static core::Property HttpProxyPassword;
   static core::Property EntityTrackingTimeWindow;
   static core::Property EntityTrackingInitialListingTarget;
   static core::Property MinimumFileAge;
@@ -120,7 +104,6 @@ class ListSFTP : public SFTPProcessorBase {
   virtual void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
   virtual void initialize() override;
   virtual void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
-  virtual void notifyStop() override;
 
  private:
 

@@ -82,6 +82,11 @@ class FileUtils {
 
   FileUtils() = delete;
 
+  /*
+   * Get the platform-specific path separator.
+   * @param force_posix returns the posix path separator ('/'), even when not on posix. Useful when dealing with remote posix paths.
+   * @return the path separator character
+   */
   static char get_separator(bool force_posix = false)
   {
 #ifdef WIN32

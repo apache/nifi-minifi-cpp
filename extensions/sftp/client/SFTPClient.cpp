@@ -473,7 +473,7 @@ bool SFTPClient::sendKeepAliveIfNeeded(int &seconds_to_next) {
   return true;
 }
 
-SFTPError SFTPClient::getLastError() {
+SFTPError SFTPClient::getLastError() const {
   return last_error_;
 }
 

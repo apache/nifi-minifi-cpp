@@ -42,6 +42,7 @@
 #include "ResourceClaim.h"
 #include "utils/StringUtils.h"
 #include "utils/ScopeGuard.h"
+#include "utils/file/FileUtils.h"
 
 namespace org {
 namespace apache {
@@ -49,24 +50,6 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-core::Property PutSFTP::Hostname(
-    core::PropertyBuilder::createProperty("Hostname")->withDescription("The fully qualified hostname or IP address of the remote system")
-        ->isRequired(true)->supportsExpressionLanguage(true)->build());
-core::Property PutSFTP::Port(
-    core::PropertyBuilder::createProperty("Port")->withDescription("The port that the remote system is listening on for file transfers")
-        ->isRequired(true)->supportsExpressionLanguage(true)->build());
-core::Property PutSFTP::Username(
-    core::PropertyBuilder::createProperty("Username")->withDescription("Username")
-        ->isRequired(true)->supportsExpressionLanguage(true)->build());
-core::Property PutSFTP::Password(
-    core::PropertyBuilder::createProperty("Password")->withDescription("Password for the user account")
-        ->isRequired(false)->supportsExpressionLanguage(true)->build());
-core::Property PutSFTP::PrivateKeyPath(
-    core::PropertyBuilder::createProperty("Private Key Path")->withDescription("The fully qualified path to the Private Key file")
-        ->isRequired(false)->supportsExpressionLanguage(true)->build());
-core::Property PutSFTP::PrivateKeyPassphrase(
-    core::PropertyBuilder::createProperty("Private Key Passphrase")->withDescription("Password for the private key")
-        ->isRequired(false)->supportsExpressionLanguage(true)->build());
 core::Property PutSFTP::RemotePath(
     core::PropertyBuilder::createProperty("Remote Path")->withDescription("The path on the remote system from which to pull or push files")
         ->isRequired(false)->supportsExpressionLanguage(true)->build());
@@ -84,12 +67,6 @@ core::Property PutSFTP::DisableDirectoryListing(
 core::Property PutSFTP::BatchSize(
     core::PropertyBuilder::createProperty("Batch Size")->withDescription("The maximum number of FlowFiles to send in a single connection")
         ->isRequired(true)->withDefaultValue<uint64_t>(500)->build());
-core::Property PutSFTP::ConnectionTimeout(
-    core::PropertyBuilder::createProperty("Connection Timeout")->withDescription("Amount of time to wait before timing out while creating a connection")
-        ->isRequired(true)->withDefaultValue<core::TimePeriodValue>("30 sec")->build());
-core::Property PutSFTP::DataTimeout(
-    core::PropertyBuilder::createProperty("Data Timeout")->withDescription("When transferring a file between the local and remote system, this value specifies how long is allowed to elapse without any data being transferred between systems")
-        ->isRequired(true)->withDefaultValue<core::TimePeriodValue>("30 sec")->build());
 core::Property PutSFTP::ConflictResolution(
     core::PropertyBuilder::createProperty("Conflict Resolution")->withDescription("Determines how to handle the problem of filename collisions")
         ->isRequired(true)
@@ -111,9 +88,6 @@ core::Property PutSFTP::TempFilename(
     core::PropertyBuilder::createProperty("Temporary Filename")->withDescription("If set, the filename of the sent file will be equal to the value specified during the transfer and after successful completion will be renamed to the original filename. "
                                                                                  "If this value is set, the Dot Rename property is ignored.")
         ->isRequired(false)->supportsExpressionLanguage(true)->build());
-core::Property PutSFTP::HostKeyFile(
-    core::PropertyBuilder::createProperty("Host Key File")->withDescription("If supplied, the given file will be used as the Host Key; otherwise, no use host key file will be used")
-        ->isRequired(false)->build());
 core::Property PutSFTP::LastModifiedTime(
     core::PropertyBuilder::createProperty("Last Modified Time")->withDescription("The lastModifiedTime to assign to the file after transferring it. "
                                                                                   "If not set, the lastModifiedTime will not be changed. "
@@ -138,35 +112,9 @@ core::Property PutSFTP::RemoteGroup(
                                                                            "If not set, the group will not be set. You may also use expression language such as ${file.group}. "
                                                                            "If the value is invalid, the processor will not be invalid but will fail to change the group of the file.")
         ->isRequired(false)->supportsExpressionLanguage(true)->build());
-core::Property PutSFTP::StrictHostKeyChecking(
-    core::PropertyBuilder::createProperty("Strict Host Key Checking")->withDescription("Indicates whether or not strict enforcement of hosts keys should be applied")
-        ->isRequired(true)->withDefaultValue<bool>(false)->build());
-core::Property PutSFTP::UseKeepaliveOnTimeout(
-    core::PropertyBuilder::createProperty("Send Keep Alive On Timeout")->withDescription("Indicates whether or not to send a single Keep Alive message when SSH socket times out")
-        ->isRequired(true)->withDefaultValue<bool>(true)->build());
 core::Property PutSFTP::UseCompression(
     core::PropertyBuilder::createProperty("Use Compression")->withDescription("Indicates whether or not ZLIB compression should be used when transferring files")
         ->isRequired(true)->withDefaultValue<bool>(false)->build());
-core::Property PutSFTP::ProxyType(
-    core::PropertyBuilder::createProperty("Proxy Type")->withDescription("Specifies the Proxy Configuration Controller Service to proxy network requests. If set, it supersedes proxy settings configured per component. "
-                                                                         "Supported proxies: HTTP + AuthN, SOCKS + AuthN")
-        ->isRequired(false)
-        ->withAllowableValues<std::string>({PROXY_TYPE_DIRECT,
-                                            PROXY_TYPE_HTTP,
-                                            PROXY_TYPE_SOCKS})
-        ->withDefaultValue(PROXY_TYPE_DIRECT)->build());
-core::Property PutSFTP::ProxyHost(
-    core::PropertyBuilder::createProperty("Proxy Host")->withDescription("The fully qualified hostname or IP address of the proxy server")
-        ->isRequired(false)->supportsExpressionLanguage(true)->build());
-core::Property PutSFTP::ProxyPort(
-    core::PropertyBuilder::createProperty("Proxy Port")->withDescription("The port of the proxy server")
-        ->isRequired(false)->supportsExpressionLanguage(true)->build());
-core::Property PutSFTP::HttpProxyUsername(
-    core::PropertyBuilder::createProperty("Http Proxy Username")->withDescription("Http Proxy Username")
-        ->isRequired(false)->supportsExpressionLanguage(true)->build());
-core::Property PutSFTP::HttpProxyPassword(
-    core::PropertyBuilder::createProperty("Http Proxy Password")->withDescription("Http Proxy Password")
-        ->isRequired(false)->supportsExpressionLanguage(true)->build());
 
 core::Relationship PutSFTP::Success("success", "FlowFiles that are successfully sent will be routed to success");
 core::Relationship PutSFTP::Reject("reject", "FlowFiles that were rejected by the destination system");
@@ -177,35 +125,20 @@ void PutSFTP::initialize() {
 
   // Set the supported properties
   std::set<core::Property> properties;
-  properties.insert(Hostname);
-  properties.insert(Port);
-  properties.insert(Username);
-  properties.insert(Password);
-  properties.insert(PrivateKeyPath);
-  properties.insert(PrivateKeyPassphrase);
+  addSupportedCommonProperties(properties);
   properties.insert(RemotePath);
   properties.insert(CreateDirectory);
   properties.insert(DisableDirectoryListing);
   properties.insert(BatchSize);
-  properties.insert(ConnectionTimeout);
-  properties.insert(DataTimeout);
   properties.insert(ConflictResolution);
   properties.insert(RejectZeroByte);
   properties.insert(DotRename);
   properties.insert(TempFilename);
-  properties.insert(HostKeyFile);
   properties.insert(LastModifiedTime);
   properties.insert(Permissions);
   properties.insert(RemoteOwner);
   properties.insert(RemoteGroup);
-  properties.insert(StrictHostKeyChecking);
-  properties.insert(UseKeepaliveOnTimeout);
   properties.insert(UseCompression);
-  properties.insert(ProxyType);
-  properties.insert(ProxyHost);
-  properties.insert(ProxyPort);
-  properties.insert(HttpProxyUsername);
-  properties.insert(HttpProxyPassword);
   setSupportedProperties(properties);
   
   // Set the supported relationships
@@ -229,6 +162,8 @@ PutSFTP::~PutSFTP() {
 }
 
 void PutSFTP::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
+  parseCommonPropertiesOnSchedule(context);
+
   std::string value;
   if (!context->getProperty(CreateDirectory.getName(), value)) {
     logger_->log_error("Create Directory attribute is missing or invalid");
@@ -240,22 +175,6 @@ void PutSFTP::onSchedule(const std::shared_ptr<core::ProcessContext> &context, c
   } else {
     core::Property::StringToInt(value, batch_size_);
   }
-  if (!context->getProperty(ConnectionTimeout.getName(), value)) {
-    logger_->log_error("Connection Timeout attribute is missing or invalid");
-  } else {
-    core::TimeUnit unit;
-    if (!core::Property::StringToTime(value, connection_timeout_, unit) || !core::Property::ConvertTimeUnitToMS(connection_timeout_, unit, connection_timeout_)) {
-      logger_->log_error("Connection Timeout attribute is invalid");
-    }
-  }
-  if (!context->getProperty(DataTimeout.getName(), value)) {
-    logger_->log_error("Data Timeout attribute is missing or invalid");
-  } else {
-    core::TimeUnit unit;
-    if (!core::Property::StringToTime(value, data_timeout_, unit) || !core::Property::ConvertTimeUnitToMS(data_timeout_, unit, data_timeout_)) {
-      logger_->log_error("Data Timeout attribute is invalid");
-    }
-  }
   context->getProperty(ConflictResolution.getName(), conflict_resolution_);
   if (context->getProperty(RejectZeroByte.getName(), value)) {
     utils::StringUtils::StringToBool(value, reject_zero_byte_);
@@ -263,30 +182,13 @@ void PutSFTP::onSchedule(const std::shared_ptr<core::ProcessContext> &context, c
   if (context->getProperty(DotRename.getName(), value)) {
     utils::StringUtils::StringToBool(value, dot_rename_);
   }
-  context->getProperty(HostKeyFile.getName(), host_key_file_);
-  if (!context->getProperty(StrictHostKeyChecking.getName(), value)) {
-    logger_->log_error("Strict Host Key Checking attribute is missing or invalid");
-  } else {
-    utils::StringUtils::StringToBool(value, strict_host_checking_);
-  }
-  if (!context->getProperty(UseKeepaliveOnTimeout.getName(), value)) {
-    logger_->log_error("Send Keep Alive On Timeout attribute is missing or invalid");
-  } else {
-    utils::StringUtils::StringToBool(value, use_keepalive_on_timeout_);
-  }
   if (!context->getProperty(UseCompression.getName(), value)) {
     logger_->log_error("Use Compression attribute is missing or invalid");
   } else {
     utils::StringUtils::StringToBool(value, use_compression_);
   }
-  context->getProperty(ProxyType.getName(), proxy_type_);
 
   startKeepaliveThreadIfNeeded();
-}
-
-void PutSFTP::notifyStop() {
-  logger_->log_debug("Got notifyStop, stopping keepalive thread and clearing connections");
-  cleanupConnectionCache();
 }
 
 PutSFTP::ReadCallback::ReadCallback(const std::string& target_path,
@@ -318,14 +220,15 @@ bool PutSFTP::processOne(const std::shared_ptr<core::ProcessContext> &context, c
     return false;
   }
 
-  /* Parse possibly FlowFile-dependent properties */
+  /* Parse common properties */
+  SFTPProcessorBase::CommonProperties common_properties;
+  if (!parseCommonPropertiesOnTrigger(context, flow_file, common_properties)) {
+    context->yield();
+    return false;
+  }
+
+  /* Parse processor-specific properties */
   std::string filename;
-  std::string hostname;
-  uint16_t port = 0U;
-  std::string username;
-  std::string password;
-  std::string private_key_path;
-  std::string private_key_passphrase;
   std::string remote_path;
   bool disable_directory_listing = false;
   std::string temp_file_name;
@@ -337,50 +240,11 @@ bool PutSFTP::processOne(const std::shared_ptr<core::ProcessContext> &context, c
   uint64_t remote_owner = 0U;
   bool remote_group_set = false;
   uint64_t remote_group = 0U;
-  std::string proxy_host;
-  uint16_t proxy_port = 0U;
-  std::string proxy_username;
-  std::string proxy_password;
 
   flow_file->getKeyedAttribute(FILENAME, filename);
 
   std::string value;
-  if (!context->getProperty(Hostname, hostname, flow_file)) {
-    logger_->log_error("Hostname attribute is missing");
-    context->yield();
-    return false;
-  }
-  if (!context->getProperty(Port, value, flow_file)) {
-    logger_->log_error("Port attribute is missing or invalid");
-    context->yield();
-    return false;
-  } else {
-    int port_tmp;
-    if (!core::Property::StringToInt(value, port_tmp) ||
-        port_tmp < std::numeric_limits<uint16_t>::min() ||
-        port_tmp > std::numeric_limits<uint16_t>::max()) {
-      logger_->log_error("Port attribute \"%s\" is invalid", value);
-      context->yield();
-      return false;
-    } else {
-      port = static_cast<uint16_t>(port_tmp);
-    }
-  }
-  if (!context->getProperty(Username, username, flow_file)) {
-    logger_->log_error("Username attribute is missing");
-    context->yield();
-    return false;
-  }
-  context->getProperty(Password, password, flow_file);
-  context->getProperty(PrivateKeyPath, private_key_path, flow_file);
-  context->getProperty(PrivateKeyPassphrase, private_key_passphrase, flow_file);
-  context->getProperty(Password, password, flow_file);
   context->getProperty(RemotePath, remote_path, flow_file);
-  if (context->getDynamicProperty(DisableDirectoryListing.getName(), value)) {
-    utils::StringUtils::StringToBool(value, disable_directory_listing);
-  } else if (context->getProperty(DisableDirectoryListing.getName(), value)) {
-    utils::StringUtils::StringToBool(value, disable_directory_listing);
-  }
   /* Remove trailing slashes */
   while (remote_path.size() > 1U && remote_path.back() == '/') {
     remote_path.resize(remote_path.size() - 1);
@@ -388,6 +252,11 @@ bool PutSFTP::processOne(const std::shared_ptr<core::ProcessContext> &context, c
   /* Empty path means current directory, so we change it to '.' */
   if (remote_path.empty()) {
     remote_path = ".";
+  }
+  if (context->getDynamicProperty(DisableDirectoryListing.getName(), value)) {
+    utils::StringUtils::StringToBool(value, disable_directory_listing);
+  } else if (context->getProperty(DisableDirectoryListing.getName(), value)) {
+    utils::StringUtils::StringToBool(value, disable_directory_listing);
   }
   context->getProperty(TempFilename, temp_file_name, flow_file);
   if (context->getProperty(LastModifiedTime, value, flow_file)) {
@@ -410,21 +279,6 @@ bool PutSFTP::processOne(const std::shared_ptr<core::ProcessContext> &context, c
       remote_group_set = true;
     }
   }
-  context->getProperty(ProxyHost, proxy_host, flow_file);
-  if (context->getProperty(ProxyPort, value, flow_file) && !value.empty()) {
-    int port_tmp;
-    if (!core::Property::StringToInt(value, port_tmp) ||
-        port_tmp < std::numeric_limits<uint16_t>::min() ||
-        port_tmp > std::numeric_limits<uint16_t>::max()) {
-      logger_->log_error("Proxy Port attribute \"%s\" is invalid", value);
-      context->yield();
-      return false;
-    } else {
-      proxy_port = static_cast<uint16_t>(port_tmp);
-    }
-  }
-  context->getProperty(HttpProxyUsername, proxy_username, flow_file);
-  context->getProperty(HttpProxyPassword, proxy_password, flow_file);
 
   /* Reject zero-byte files if needed */
   if (reject_zero_byte_ && flow_file->getSize() == 0U) {
@@ -434,12 +288,18 @@ bool PutSFTP::processOne(const std::shared_ptr<core::ProcessContext> &context, c
   }
 
   /* Get SFTPClient from cache or create it */
-  const SFTPProcessorBase::ConnectionCacheKey connection_cache_key = {hostname, port, username, proxy_type_, proxy_host, proxy_port, proxy_username};
+  const SFTPProcessorBase::ConnectionCacheKey connection_cache_key = {common_properties.hostname,
+                                                                      common_properties.port,
+                                                                      common_properties.username,
+                                                                      proxy_type_,
+                                                                      common_properties.proxy_host,
+                                                                      common_properties.proxy_port,
+                                                                      common_properties.proxy_username};
   auto client = getOrCreateConnection(connection_cache_key,
-                                      password,
-                                      private_key_path,
-                                      private_key_passphrase,
-                                      proxy_password);
+                                      common_properties.password,
+                                      common_properties.private_key_path,
+                                      common_properties.private_key_passphrase,
+                                      common_properties.proxy_password);
   if (client == nullptr) {
     context->yield();
     return false;
@@ -456,9 +316,7 @@ bool PutSFTP::processOne(const std::shared_ptr<core::ProcessContext> &context, c
   /* Try to detect conflicts if needed */
   std::string resolved_filename = filename;
   if (conflict_resolution_ != CONFLICT_RESOLUTION_NONE) {
-    std::stringstream target_path_ss;
-    target_path_ss << remote_path << "/" << filename;
-    auto target_path = target_path_ss.str();
+    std::string target_path = utils::file::FileUtils::concat_path(remote_path, filename, true /*force_posix*/);
     LIBSSH2_SFTP_ATTRIBUTES attrs;
     if (!client->stat(target_path, true /*follow_symlinks*/, attrs)) {
       if (client->getLastError() != utils::SFTPError::SFTP_ERROR_FILE_NOT_EXISTS) {
@@ -496,7 +354,7 @@ bool PutSFTP::processOne(const std::shared_ptr<core::ProcessContext> &context, c
           std::stringstream possible_resolved_filename_ss;
           possible_resolved_filename_ss << i << "." << filename;
           possible_resolved_filename = possible_resolved_filename_ss.str();
-          auto possible_resolved_path = remote_path + "/" + possible_resolved_filename;
+          std::string possible_resolved_path = utils::file::FileUtils::concat_path(remote_path, possible_resolved_filename, true /*force_posix*/);
           if (!client->stat(possible_resolved_path, true /*follow_symlinks*/, attrs)) {
             if (client->getLastError() == utils::SFTPError::SFTP_ERROR_FILE_NOT_EXISTS) {
               unique_name_generated = true;
@@ -557,9 +415,7 @@ bool PutSFTP::processOne(const std::shared_ptr<core::ProcessContext> &context, c
     target_path_ss << resolved_filename;
   }
   auto target_path = target_path_ss.str();
-  std::stringstream final_target_path_ss;
-  final_target_path_ss << remote_path << "/" << resolved_filename;
-  auto final_target_path = final_target_path_ss.str();
+  std::string final_target_path = utils::file::FileUtils::concat_path(remote_path, resolved_filename, true /*force_posix*/);
   logger_->log_debug("The target path is %s, final target path is %s", target_path.c_str(), final_target_path.c_str());
 
   ReadCallback read_callback(target_path.c_str(), *client, conflict_resolution_);

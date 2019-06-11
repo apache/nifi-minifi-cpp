@@ -63,24 +63,6 @@ core::Property ListSFTP::ListingStrategy(
         ->withAllowableValues<std::string>({LISTING_STRATEGY_TRACKING_TIMESTAMPS,
                                             LISTING_STRATEGY_TRACKING_ENTITIES})
         ->withDefaultValue(LISTING_STRATEGY_TRACKING_TIMESTAMPS)->build());
-core::Property ListSFTP::Hostname(
-    core::PropertyBuilder::createProperty("Hostname")->withDescription("The fully qualified hostname or IP address of the remote system")
-        ->isRequired(true)->supportsExpressionLanguage(true)->build());
-core::Property ListSFTP::Port(
-    core::PropertyBuilder::createProperty("Port")->withDescription("The port that the remote system is listening on for file transfers")
-        ->isRequired(true)->supportsExpressionLanguage(true)->build());
-core::Property ListSFTP::Username(
-    core::PropertyBuilder::createProperty("Username")->withDescription("Username")
-        ->isRequired(true)->supportsExpressionLanguage(true)->build());
-core::Property ListSFTP::Password(
-    core::PropertyBuilder::createProperty("Password")->withDescription("Password for the user account")
-        ->isRequired(false)->supportsExpressionLanguage(true)->build());
-core::Property ListSFTP::PrivateKeyPath(
-    core::PropertyBuilder::createProperty("Private Key Path")->withDescription("The fully qualified path to the Private Key file")
-        ->isRequired(false)->supportsExpressionLanguage(true)->build());
-core::Property ListSFTP::PrivateKeyPassphrase(
-    core::PropertyBuilder::createProperty("Private Key Passphrase")->withDescription("Password for the private key")
-        ->isRequired(false)->supportsExpressionLanguage(true)->build());
 core::Property ListSFTP::RemotePath(
     core::PropertyBuilder::createProperty("Remote Path")->withDescription("The fully qualified filename on the remote system")
         ->isRequired(false)->supportsExpressionLanguage(true)->build());
@@ -102,21 +84,6 @@ core::Property ListSFTP::PathFilterRegex(
 core::Property ListSFTP::IgnoreDottedFiles(
     core::PropertyBuilder::createProperty("Ignore Dotted Files")->withDescription("If true, files whose names begin with a dot (\".\") will be ignored")
         ->isRequired(true)->withDefaultValue<bool>(true)->build());
-core::Property ListSFTP::StrictHostKeyChecking(
-    core::PropertyBuilder::createProperty("Strict Host Key Checking")->withDescription("Indicates whether or not strict enforcement of hosts keys should be applied")
-        ->isRequired(true)->withDefaultValue<bool>(false)->build());
-core::Property ListSFTP::HostKeyFile(
-    core::PropertyBuilder::createProperty("Host Key File")->withDescription("If supplied, the given file will be used as the Host Key; otherwise, no use host key file will be used")
-        ->isRequired(false)->build());
-core::Property ListSFTP::ConnectionTimeout(
-    core::PropertyBuilder::createProperty("Connection Timeout")->withDescription("Amount of time to wait before timing out while creating a connection")
-        ->isRequired(true)->withDefaultValue<core::TimePeriodValue>("30 sec")->build());
-core::Property ListSFTP::DataTimeout(
-    core::PropertyBuilder::createProperty("Data Timeout")->withDescription("When transferring a file between the local and remote system, this value specifies how long is allowed to elapse without any data being transferred between systems")
-        ->isRequired(true)->withDefaultValue<core::TimePeriodValue>("30 sec")->build());
-core::Property ListSFTP::SendKeepaliveOnTimeout(
-    core::PropertyBuilder::createProperty("Send Keep Alive On Timeout")->withDescription("Indicates whether or not to send a single Keep Alive message when SSH socket times out")
-        ->isRequired(true)->withDefaultValue<bool>(true)->build());
 core::Property ListSFTP::TargetSystemTimestampPrecision(
     core::PropertyBuilder::createProperty("Target System Timestamp Precision")->withDescription("Specify timestamp precision at the target system. "
                                                                                                 "Since this processor uses timestamp of entities to decide which should be listed, "
@@ -127,26 +94,6 @@ core::Property ListSFTP::TargetSystemTimestampPrecision(
                                             TARGET_SYSTEM_TIMESTAMP_PRECISION_SECONDS,
                                             TARGET_SYSTEM_TIMESTAMP_PRECISION_MINUTES})
         ->withDefaultValue(TARGET_SYSTEM_TIMESTAMP_PRECISION_AUTO_DETECT)->build());
-core::Property ListSFTP::ProxyType(
-    core::PropertyBuilder::createProperty("Proxy Type")->withDescription("Specifies the Proxy Configuration Controller Service to proxy network requests. If set, it supersedes proxy settings configured per component. "
-                                                                         "Supported proxies: HTTP + AuthN, SOCKS + AuthN")
-        ->isRequired(false)
-        ->withAllowableValues<std::string>({PROXY_TYPE_DIRECT,
-                                            PROXY_TYPE_HTTP,
-                                            PROXY_TYPE_SOCKS})
-        ->withDefaultValue(PROXY_TYPE_DIRECT)->build());
-core::Property ListSFTP::ProxyHost(
-    core::PropertyBuilder::createProperty("Proxy Host")->withDescription("The fully qualified hostname or IP address of the proxy server")
-        ->isRequired(false)->supportsExpressionLanguage(true)->build());
-core::Property ListSFTP::ProxyPort(
-    core::PropertyBuilder::createProperty("Proxy Port")->withDescription("The port of the proxy server")
-        ->isRequired(false)->supportsExpressionLanguage(true)->build());
-core::Property ListSFTP::HttpProxyUsername(
-    core::PropertyBuilder::createProperty("Http Proxy Username")->withDescription("Http Proxy Username")
-        ->isRequired(false)->supportsExpressionLanguage(true)->build());
-core::Property ListSFTP::HttpProxyPassword(
-    core::PropertyBuilder::createProperty("Http Proxy Password")->withDescription("Http Proxy Password")
-        ->isRequired(false)->supportsExpressionLanguage(true)->build());
 core::Property ListSFTP::EntityTrackingTimeWindow(
     core::PropertyBuilder::createProperty("Entity Tracking Time Window")->withDescription("Specify how long this processor should track already-listed entities. "
                                                                                           "'Tracking Entities' strategy can pick any entity whose timestamp is inside the specified time window. "
@@ -194,30 +141,16 @@ void ListSFTP::initialize() {
 
   // Set the supported properties
   std::set<core::Property> properties;
+  addSupportedCommonProperties(properties);
   properties.insert(ListingStrategy);
-  properties.insert(Hostname);
-  properties.insert(Port);
-  properties.insert(Username);
-  properties.insert(Password);
-  properties.insert(PrivateKeyPath);
-  properties.insert(PrivateKeyPassphrase);
   properties.insert(RemotePath);
   properties.insert(SearchRecursively);
   properties.insert(FollowSymlink);
   properties.insert(FileFilterRegex);
   properties.insert(PathFilterRegex);
   properties.insert(IgnoreDottedFiles);
-  properties.insert(StrictHostKeyChecking);
-  properties.insert(HostKeyFile);
-  properties.insert(ConnectionTimeout);
-  properties.insert(DataTimeout);
-  properties.insert(SendKeepaliveOnTimeout);
   properties.insert(TargetSystemTimestampPrecision);
-  properties.insert(ProxyType);
-  properties.insert(ProxyHost);
-  properties.insert(ProxyPort);
-  properties.insert(HttpProxyUsername);
-  properties.insert(HttpProxyPassword);
+  properties.insert(EntityTrackingTimeWindow);
   properties.insert(EntityTrackingInitialListingTarget);
   properties.insert(MinimumFileAge);
   properties.insert(MaximumFileAge);
@@ -262,6 +195,8 @@ ListSFTP::~ListSFTP() {
 }
 
 void ListSFTP::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
+  parseCommonPropertiesOnSchedule(context);
+
   std::string value;
   context->getProperty(ListingStrategy.getName(), listing_strategy_);
   if (!last_listing_strategy_.empty() && last_listing_strategy_ != listing_strategy_) {
@@ -331,35 +266,7 @@ void ListSFTP::onSchedule(const std::shared_ptr<core::ProcessContext> &context, 
   } else {
     utils::StringUtils::StringToBool(value, ignore_dotted_files_);
   }
-  if (!context->getProperty(StrictHostKeyChecking.getName(), value)) {
-    logger_->log_error("Strict Host Key Checking attribute is missing or invalid");
-  } else {
-    utils::StringUtils::StringToBool(value, strict_host_checking_);
-  }
-  context->getProperty(HostKeyFile.getName(), host_key_file_);
-  if (!context->getProperty(ConnectionTimeout.getName(), value)) {
-    logger_->log_error("Connection Timeout attribute is missing or invalid");
-  } else {
-    core::TimeUnit unit;
-    if (!core::Property::StringToTime(value, connection_timeout_, unit) || !core::Property::ConvertTimeUnitToMS(connection_timeout_, unit, connection_timeout_)) {
-      logger_->log_error("Connection Timeout attribute is invalid");
-    }
-  }
-  if (!context->getProperty(DataTimeout.getName(), value)) {
-    logger_->log_error("Data Timeout attribute is missing or invalid");
-  } else {
-    core::TimeUnit unit;
-    if (!core::Property::StringToTime(value, data_timeout_, unit) || !core::Property::ConvertTimeUnitToMS(data_timeout_, unit, data_timeout_)) {
-      logger_->log_error("Data Timeout attribute is invalid");
-    }
-  }
-  if (!context->getProperty(SendKeepaliveOnTimeout.getName(), value)) {
-    logger_->log_error("Send Keep Alive On Timeout attribute is missing or invalid");
-  } else {
-    utils::StringUtils::StringToBool(value, use_keepalive_on_timeout_);
-  }
   context->getProperty(TargetSystemTimestampPrecision.getName(), target_system_timestamp_precision_);
-  context->getProperty(ProxyType.getName(), proxy_type_);
   context->getProperty(EntityTrackingInitialListingTarget.getName(), entity_tracking_initial_listing_target_);
   if (!context->getProperty(MinimumFileAge.getName(), value)) {
     logger_->log_error("Minimum File Age attribute is missing or invalid");
@@ -426,11 +333,6 @@ void ListSFTP::onSchedule(const std::shared_ptr<core::ProcessContext> &context, 
   startKeepaliveThreadIfNeeded();
 }
 
-void ListSFTP::notifyStop() {
-  logger_->log_debug("Got notifyStop, stopping keepalive thread and clearing connections");
-  cleanupConnectionCache();
-}
-
 void ListSFTP::invalidateCache() {
   logger_->log_warn("Important properties have been reconfigured, invalidating in-memory cache");
 
@@ -457,9 +359,7 @@ ListSFTP::Child::Child(const std::string& parent_path_, std::tuple<std::string /
 }
 
 std::string ListSFTP::Child::getPath() const {
-  std::stringstream ss;
-  ss << parent_path << "/" << filename;
-  return ss.str();
+  return utils::file::FileUtils::concat_path(parent_path, filename, true /*force_posix*/);
 }
 
 bool ListSFTP::filter(const std::string& parent_path, const std::tuple<std::string /* filename */, std::string /* longentry */, LIBSSH2_SFTP_ATTRIBUTES /* attrs */>& sftp_child) {
@@ -569,9 +469,7 @@ bool ListSFTP::filterDirectory(const std::string& parent_path, const std::string
 
   /* Path Filter Regex */
   if (path_filter_regex_set_) {
-    std::stringstream ss;
-    ss << parent_path << "/" << filename;
-    auto dir_path = ss.str();
+    std::string dir_path = utils::file::FileUtils::concat_path(parent_path, filename, true /*force_posix*/);
     bool match = false;
 #ifndef WIN32
     int ret = regexec(&compiled_path_filter_regex_, dir_path.c_str(), static_cast<size_t>(0), nullptr, 0);
@@ -668,7 +566,6 @@ bool ListSFTP::persistTrackingTimestampsCache(const std::string& hostname, const
     file << "id." << i << "=" << identifier << "\n";
     ++i;
   }
-  file.close();
   return true;
 }
 
@@ -784,7 +681,7 @@ void ListSFTP::listByTrackingTimestamps(
   uint64_t latest_listed_entry_timestamp_this_cycle = 0U;
   size_t flow_files_created = 0U;
   if (ordered_files.size() > 0) {
-    latest_listed_entry_timestamp_this_cycle = std::prev(ordered_files.end())->first;
+    latest_listed_entry_timestamp_this_cycle = ordered_files.crbegin()->first;
 
     std::string remote_system_timestamp_precision;
     if (target_system_timestamp_precision_ == TARGET_SYSTEM_TIMESTAMP_PRECISION_AUTO_DETECT) {
@@ -879,7 +776,7 @@ void ListSFTP::listByTrackingTimestamps(
   if (latest_listed_entry_timestamp_this_cycle != 0U) {
     bool processed_new_files = flow_files_created > 0U;
     if (processed_new_files) {
-      auto last_files_it = std::prev(ordered_files.end());
+      auto last_files_it = ordered_files.crbegin();
       if (last_files_it->first != last_processed_latest_entry_timestamp_) {
         latest_identifiers_processed_.clear();
       }
@@ -1078,7 +975,7 @@ void ListSFTP::listByTrackingEntities(
     }
   }
 
-  if (files.size() == 0U) {
+  if (files.empty()) {
     logger_->log_debug("No entities to list within the tracking time window");
     context->yield();
     return;
@@ -1153,83 +1050,23 @@ void ListSFTP::listByTrackingEntities(
 }
 
 void ListSFTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
-  /* Parse EL-supporting properties */
-  std::string hostname;
-  uint16_t port = 0U;
-  std::string username;
-  std::string password;
-  std::string private_key_path;
-  std::string private_key_passphrase;
+  /* Parse common properties */
+  SFTPProcessorBase::CommonProperties common_properties;
+  if (!parseCommonPropertiesOnTrigger(context, nullptr /*flow_file*/, common_properties)) {
+    context->yield();
+    return;
+  }
+
+  /* Parse processor-specific properties */
   std::string remote_path;
-  std::string proxy_host;
-  uint16_t proxy_port = 0U;
-  std::string proxy_username;
-  std::string proxy_password;
   uint64_t entity_tracking_time_window = 0U;
 
   std::string value;
-  if (!context->getProperty(Hostname.getName(), hostname)) {
-    logger_->log_error("Hostname attribute is missing");
-    context->yield();
-    return;
-  }
-  if (!last_hostname_.empty() && last_hostname_ != hostname) {
-    invalidateCache();
-  }
-  last_hostname_ = hostname;
-  if (!context->getProperty(Port.getName(), value)) {
-    logger_->log_error("Port attribute is missing or invalid");
-    context->yield();
-    return;
-  } else {
-    int port_tmp;
-    if (!core::Property::StringToInt(value, port_tmp) ||
-        port_tmp < std::numeric_limits<uint16_t>::min() ||
-        port_tmp > std::numeric_limits<uint16_t>::max()) {
-      logger_->log_error("Port attribute \"%s\" is invalid", value);
-      context->yield();
-      return;
-    } else {
-      port = static_cast<uint16_t>(port_tmp);
-    }
-  }
-  if (!context->getProperty(Username.getName(), username)) {
-    logger_->log_error("Username attribute is missing");
-    context->yield();
-    return;
-  }
-  if (!last_username_.empty() && last_username_ != username) {
-    invalidateCache();
-  }
-  last_username_ = username;
-  context->getProperty(Password.getName(), password);
-  context->getProperty(PrivateKeyPath.getName(), private_key_path);
-  context->getProperty(PrivateKeyPassphrase.getName(), private_key_passphrase);
-  context->getProperty(Password.getName(), password);
   context->getProperty(RemotePath.getName(), remote_path);
   /* Remove trailing slashes */
   while (remote_path.size() > 1U && remote_path.back() == '/') {
     remote_path.resize(remote_path.size() - 1);
   }
-  if (!last_remote_path_.empty() && last_remote_path_ != remote_path) {
-    invalidateCache();
-  }
-  last_remote_path_ = remote_path;
-  context->getProperty(ProxyHost.getName(), proxy_host);
-  if (context->getProperty(ProxyPort.getName(), value) && !value.empty()) {
-    int port_tmp;
-    if (!core::Property::StringToInt(value, port_tmp) ||
-        port_tmp < std::numeric_limits<uint16_t>::min() ||
-        port_tmp > std::numeric_limits<uint16_t>::max()) {
-      logger_->log_error("Proxy Port attribute \"%s\" is invalid", value);
-      context->yield();
-      return;
-    } else {
-      proxy_port = static_cast<uint16_t>(port_tmp);
-    }
-  }
-  context->getProperty(HttpProxyUsername.getName(), proxy_username);
-  context->getProperty(HttpProxyPassword.getName(), proxy_password);
   if (context->getProperty(EntityTrackingTimeWindow.getName(), value)) {
     core::TimeUnit unit;
     if (!core::Property::StringToTime(value, entity_tracking_time_window, unit) ||
@@ -1243,13 +1080,29 @@ void ListSFTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context, c
     entity_tracking_time_window = 3 * 3600 * 1000;
   }
 
+  /* Check whether we need to invalidate the cache based on the new properties */
+  if ((!last_hostname_.empty() && last_hostname_ != common_properties.hostname) ||
+      (!last_username_.empty() && last_username_ != common_properties.username) ||
+      (!last_remote_path_.empty() && last_remote_path_ != remote_path)) {
+    invalidateCache();
+  }
+  last_hostname_ = common_properties.hostname;
+  last_username_ = common_properties.username;
+  last_remote_path_ = remote_path;
+
   /* Get SFTPClient from cache or create it */
-  const SFTPProcessorBase::ConnectionCacheKey connection_cache_key = {hostname, port, username, proxy_type_, proxy_host, proxy_port, proxy_username};
+  const SFTPProcessorBase::ConnectionCacheKey connection_cache_key = {common_properties.hostname,
+                                                                      common_properties.port,
+                                                                      common_properties.username,
+                                                                      proxy_type_,
+                                                                      common_properties.proxy_host,
+                                                                      common_properties.proxy_port,
+                                                                      common_properties.proxy_username};
   auto client = getOrCreateConnection(connection_cache_key,
-                                      password,
-                                      private_key_path,
-                                      private_key_passphrase,
-                                      proxy_password);
+                                      common_properties.password,
+                                      common_properties.private_key_path,
+                                      common_properties.private_key_passphrase,
+                                      common_properties.proxy_password);
   if (client == nullptr) {
     context->yield();
     return;
@@ -1301,9 +1154,9 @@ void ListSFTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context, c
 
   /* Process the files with the appropriate tracking strategy */
   if (listing_strategy_ == LISTING_STRATEGY_TRACKING_TIMESTAMPS) {
-    listByTrackingTimestamps(context, session, hostname, port, username, remote_path, std::move(files));
+    listByTrackingTimestamps(context, session, common_properties.hostname, common_properties.port, common_properties.username, remote_path, std::move(files));
   } else if (listing_strategy_ == LISTING_STRATEGY_TRACKING_ENTITIES) {
-    listByTrackingEntities(context, session, hostname, port, username, remote_path, entity_tracking_time_window, std::move(files));
+    listByTrackingEntities(context, session, common_properties.hostname, common_properties.port, common_properties.username, remote_path, entity_tracking_time_window, std::move(files));
   } else {
     logger_->log_error("Unknown Listing Strategy: \"%s\"", listing_strategy_.c_str());
     context->yield();

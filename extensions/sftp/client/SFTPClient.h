@@ -112,7 +112,7 @@ class SFTPClient {
    * If a function did not fail because of an SFTP-related error, this function will return SFTP_ERROR_OK.
    * If this function is called after a function returns true, the return value is UNDEFINED.
    */
-  SFTPError getLastError();
+  SFTPError getLastError() const;
 
   bool getFile(const std::string& path, io::BaseStream& output, int64_t expected_size = -1);
 

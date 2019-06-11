@@ -49,9 +49,30 @@ class SFTPProcessorBase : public core::Processor {
   SFTPProcessorBase(std::string name, utils::Identifier uuid);
   virtual ~SFTPProcessorBase();
 
+  // Supported Properties
+  static core::Property Hostname;
+  static core::Property Port;
+  static core::Property Username;
+  static core::Property Password;
+  static core::Property PrivateKeyPath;
+  static core::Property PrivateKeyPassphrase;
+  static core::Property StrictHostKeyChecking;
+  static core::Property HostKeyFile;
+  static core::Property ConnectionTimeout;
+  static core::Property DataTimeout;
+  static core::Property SendKeepaliveOnTimeout;
+  static core::Property TargetSystemTimestampPrecision;
+  static core::Property ProxyType;
+  static core::Property ProxyHost;
+  static core::Property ProxyPort;
+  static core::Property HttpProxyUsername;
+  static core::Property HttpProxyPassword;
+
   static constexpr char const *PROXY_TYPE_DIRECT = "DIRECT";
   static constexpr char const *PROXY_TYPE_HTTP = "HTTP";
   static constexpr char const *PROXY_TYPE_SOCKS = "SOCKS";
+
+  virtual void notifyStop() override;
 
  protected:
   std::shared_ptr<logging::Logger> logger_;
@@ -63,6 +84,25 @@ class SFTPProcessorBase : public core::Processor {
   bool use_keepalive_on_timeout_;
   bool use_compression_;
   std::string proxy_type_;
+
+  void addSupportedCommonProperties(std::set<core::Property>& supported_properties);
+  void parseCommonPropertiesOnSchedule(const std::shared_ptr<core::ProcessContext>& context);
+  struct CommonProperties {
+    std::string hostname;
+    uint16_t port;
+    std::string username;
+    std::string password;
+    std::string private_key_path;
+    std::string private_key_passphrase;
+    std::string remote_path;
+    std::string proxy_host;
+    uint16_t proxy_port;
+    std::string proxy_username;
+    std::string proxy_password;
+
+    CommonProperties();
+  };
+  bool parseCommonPropertiesOnTrigger(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<FlowFileRecord>& flow_file, CommonProperties& common_properties);
 
   static constexpr size_t CONNECTION_CACHE_MAX_SIZE = 8U;
   struct ConnectionCacheKey {
