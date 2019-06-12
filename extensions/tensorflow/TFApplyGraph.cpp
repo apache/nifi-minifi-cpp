@@ -16,8 +16,9 @@
  */
 
 #include "TFApplyGraph.h"
-
-#include "tensorflow/cc/ops/standard_ops.h"
+#include <core/ProcessContext.h>
+#include <core/ProcessSession.h>
+#include <tensorflow/cc/ops/standard_ops.h>
 
 namespace org {
 namespace apache {
@@ -25,12 +26,19 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-core::Property TFApplyGraph::InputNode(  // NOLINT
-    "Input Node",
-    "The node of the TensorFlow graph to feed tensor inputs to", "");
-core::Property TFApplyGraph::OutputNode(  // NOLINT
-    "Output Node",
-    "The node of the TensorFlow graph to read tensor outputs from", "");
+core::Property TFApplyGraph::InputNode(
+    core::PropertyBuilder::createProperty("Input Node")
+        ->withDescription(
+            "The node of the TensorFlow graph to feed tensor inputs to")
+        ->withDefaultValue("")
+        ->build());
+
+core::Property TFApplyGraph::OutputNode(
+    core::PropertyBuilder::createProperty("Output Node")
+        ->withDescription(
+            "The node of the TensorFlow graph to read tensor outputs from")
+        ->withDefaultValue("")
+        ->build());
 
 core::Relationship TFApplyGraph::Success(  // NOLINT
     "success",

@@ -16,8 +16,9 @@
  */
 
 #include "TFConvertImageToTensor.h"
-
-#include "tensorflow/cc/ops/standard_ops.h"
+#include <core/ProcessContext.h>
+#include <core/ProcessSession.h>
+#include <tensorflow/cc/ops/standard_ops.h>
 
 namespace org {
 namespace apache {
@@ -25,36 +26,71 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-core::Property TFConvertImageToTensor::ImageFormat(  // NOLINT
-    "Input Format",
-    "The format of the input image (PNG or RAW). RAW is RGB24.", "");
-core::Property TFConvertImageToTensor::InputWidth(  // NOLINT
-    "Input Width",
-    "The width, in pixels, of the input image.", "");
-core::Property TFConvertImageToTensor::InputHeight(  // NOLINT
-    "Input Height",
-    "The height, in pixels, of the input image.", "");
-core::Property TFConvertImageToTensor::OutputWidth(  // NOLINT
-    "Output Width",
-    "The width, in pixels, of the output image.", "");
-core::Property TFConvertImageToTensor::OutputHeight(  // NOLINT
-    "Output Height",
-    "The height, in pixels, of the output image.", "");
-core::Property TFConvertImageToTensor::NumChannels(  // NOLINT
-    "Channels",
-    "The number of channels (e.g. 3 for RGB, 4 for RGBA) in the input image", "3");
-core::Property TFConvertImageToTensor::CropOffsetX(  // NOLINT
-    "Crop Offset X",
-    "The X (horizontal) offset, in pixels, to crop the input image (relative to top-left corner).", "");
-core::Property TFConvertImageToTensor::CropOffsetY(  // NOLINT
-    "Crop Offset Y",
-    "The Y (vertical) offset, in pixels, to crop the input image (relative to top-left corner).", "");
-core::Property TFConvertImageToTensor::CropSizeX(  // NOLINT
-    "Crop Size X",
-    "The X (horizontal) size, in pixels, to crop the input image.", "");
-core::Property TFConvertImageToTensor::CropSizeY(  // NOLINT
-    "Crop Size Y",
-    "The Y (vertical) size, in pixels, to crop the input image.", "");
+core::Property TFConvertImageToTensor::ImageFormat(
+    core::PropertyBuilder::createProperty("Input Format")
+        ->withDescription(
+            "The format of the input image (PNG or RAW). RAW is RGB24.")
+        ->withDefaultValue("")
+        ->build());
+
+core::Property TFConvertImageToTensor::InputWidth(
+    core::PropertyBuilder::createProperty("Input Width")
+        ->withDescription("The width, in pixels, of the input image.")
+        ->withDefaultValue("")
+        ->build());
+
+core::Property TFConvertImageToTensor::InputHeight(
+    core::PropertyBuilder::createProperty("Input Height")
+        ->withDescription("The height, in pixels, of the input image.")
+        ->withDefaultValue("")
+        ->build());
+
+core::Property TFConvertImageToTensor::OutputWidth(
+    core::PropertyBuilder::createProperty("Output Width")
+        ->withDescription("The width, in pixels, of the output image.")
+        ->withDefaultValue("")
+        ->build());
+
+core::Property TFConvertImageToTensor::OutputHeight(
+    core::PropertyBuilder::createProperty("Output Height")
+        ->withDescription("The height, in pixels, of the output image.")
+        ->withDefaultValue("")
+        ->build());
+
+core::Property TFConvertImageToTensor::NumChannels(
+    core::PropertyBuilder::createProperty("Channels")
+        ->withDescription("The number of channels (e.g. 3 for RGB, 4 for RGBA) "
+                          "in the input image")
+        ->withDefaultValue("3")
+        ->build());
+
+core::Property TFConvertImageToTensor::CropOffsetX(
+    core::PropertyBuilder::createProperty("Crop Offset X")
+        ->withDescription("The X (horizontal) offset, in pixels, to crop the "
+                          "input image (relative to top-left corner).")
+        ->withDefaultValue("")
+        ->build());
+
+core::Property TFConvertImageToTensor::CropOffsetY(
+    core::PropertyBuilder::createProperty("Crop Offset Y")
+        ->withDescription("The Y (vertical) offset, in pixels, to crop the "
+                          "input image (relative to top-left corner).")
+        ->withDefaultValue("")
+        ->build());
+
+core::Property TFConvertImageToTensor::CropSizeX(
+    core::PropertyBuilder::createProperty("Crop Size X")
+        ->withDescription(
+            "The X (horizontal) size, in pixels, to crop the input image.")
+        ->withDefaultValue("")
+        ->build());
+
+core::Property TFConvertImageToTensor::CropSizeY(
+    core::PropertyBuilder::createProperty("Crop Size Y")
+        ->withDescription(
+            "The Y (vertical) size, in pixels, to crop the input image.")
+        ->withDefaultValue("")
+        ->build());
 
 core::Relationship TFConvertImageToTensor::Success(  // NOLINT
     "success",
