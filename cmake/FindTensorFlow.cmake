@@ -29,6 +29,7 @@ find_path(TENSORFLOW_INCLUDE_DIR
           third_party
           HINTS
           ${TENSORFLOW_PATH}
+          /usr/include/tensorflow
           /usr/local/include/google/tensorflow
           /usr/local/include/tensorflow
           /usr/include/google/tensorflow)
