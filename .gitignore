@@ -56,6 +56,7 @@ libminifi/test/**/*.a
 libminifi/include/agent/agent_version.h
 docs/generated
 thirdparty/apache-rat/apache-rat*
+/compile_commands.json
 
 # Ignore source files that have been placed in the docker directory during build
 docker/minificppsource
