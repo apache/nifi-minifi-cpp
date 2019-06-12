@@ -17,14 +17,14 @@
 # under the License.
 #
 
+include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
+
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(TensorFlow REQUIRED)
 
 message("-- Found TensorFlow: ${TENSORFLOW_INCLUDE_DIRS}")
-
-include_directories(../../libminifi/include  ../../libminifi/include/core  ../../thirdparty/spdlog-20170710/include ../../thirdparty/concurrentqueue ../../thirdparty/yaml-cpp-yaml-cpp-0.5.3/include ${CIVET_THIRDPARTY_ROOT}/include ../../thirdparty/) 
 
 include_directories(${TENSORFLOW_INCLUDE_DIRS})
 
@@ -39,30 +39,7 @@ if(CMAKE_THREAD_LIBS_INIT)
   target_link_libraries(minifi-tensorflow-extensions "${CMAKE_THREAD_LIBS_INIT}")
 endif()
 
-find_package(UUID REQUIRED)
-target_link_libraries(minifi-tensorflow-extensions ${LIBMINIFI} ${UUID_LIBRARIES})
-find_package(OpenSSL REQUIRED)
-include_directories(${OPENSSL_INCLUDE_DIR})
-target_link_libraries(minifi-tensorflow-extensions ${CMAKE_DL_LIBS})
 target_link_libraries(minifi-tensorflow-extensions ${TENSORFLOW_LIBRARIES})
-find_package(ZLIB REQUIRED)
-include_directories(${ZLIB_INCLUDE_DIRS})
-target_link_libraries (minifi-tensorflow-extensions ${ZLIB_LIBRARIES})
-
-if (WIN32)
-    set_target_properties(minifi-tensorflow-extensions PROPERTIES
-        LINK_FLAGS "/WHOLEARCHIVE"
-    )
-elseif (APPLE)
-    set_target_properties(minifi-tensorflow-extensions PROPERTIES
-        LINK_FLAGS "-Wl,-all_load"
-    )
-else ()
-    set_target_properties(minifi-tensorflow-extensions PROPERTIES
-        LINK_FLAGS "-Wl,--whole-archive"
-    )
-endif ()
-
 
 SET (TENSORFLOW-EXTENSIONS minifi-tensorflow-extensions PARENT_SCOPE)
 
