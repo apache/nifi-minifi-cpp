@@ -284,7 +284,7 @@ TEST_CASE_METHOD(FetchSFTPTestsFixture, "FetchSFTP fetch connection error", "[Fe
   sftp_server.reset();
   testController.runSession(plan, true);
 
-  REQUIRE(LogTestController::getInstance().contains("Failed to open remote file \"nifi_test/tstFile.ext\" due to an underlying SSH error: Timeout waiting for status message"));
+  REQUIRE(LogTestController::getInstance().contains("Failed to open remote file \"nifi_test/tstFile.ext\" due to an underlying SSH error"));
   REQUIRE(LogTestController::getInstance().contains("from FetchSFTP to relationship comms.failure"));
 }
 

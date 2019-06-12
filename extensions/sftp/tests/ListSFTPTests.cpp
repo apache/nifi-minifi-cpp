@@ -228,13 +228,17 @@ TEST_CASE_METHOD(ListSFTPTestsFixture, "ListSFTP list one file writes attributes
   REQUIRE(true == getDateTimeStr(mtime, mtime_str));
   uint64_t uid, gid;
   REQUIRE(true == utils::file::FileUtils::get_uid_gid(file, uid, gid));
+  uint32_t permissions;
+  REQUIRE(true == utils::file::FileUtils::get_permissions(file, permissions));
+  std::stringstream permissions_ss;
+  permissions_ss << std::setfill('0') << std::setw(4) << std::oct << permissions;
 
   REQUIRE(LogTestController::getInstance().contains("key:sftp.remote.host value:localhost"));
   REQUIRE(LogTestController::getInstance().contains("key:sftp.remote.port value:" + std::to_string(sftp_server->getPort())));
   REQUIRE(LogTestController::getInstance().contains("key:sftp.listing.user value:nifiuser"));
   REQUIRE(LogTestController::getInstance().contains("key:file.owner value:" + std::to_string(uid)));
   REQUIRE(LogTestController::getInstance().contains("key:file.group value:" + std::to_string(gid)));
-  REQUIRE(LogTestController::getInstance().contains("key:file.permissions value:0644"));
+  REQUIRE(LogTestController::getInstance().contains("key:file.permissions value:" + permissions_ss.str()));
   REQUIRE(LogTestController::getInstance().contains("key:file.size value:14"));
   REQUIRE(LogTestController::getInstance().contains("key:file.lastModifiedTime value:" + mtime_str));
   REQUIRE(LogTestController::getInstance().contains("key:filename value:tstFile.ext"));

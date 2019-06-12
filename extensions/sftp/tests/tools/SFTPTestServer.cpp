@@ -78,16 +78,11 @@ bool SFTPTestServer::start() {
   /* fork */
   pid_t pid = fork();
   if (pid == 0) {
-    /* Set the child process's pgid to its pid, so we will be able to kill the entire process group */
-    if (setpgid(0, 0) != 0) {
-      std::cerr << "Failed to set PGID, errno: " << strerror(errno) << std::endl;
-      exit(-1);
-    }
     /* execv */
     std::vector<char*> args(4U);
     args[0] = strdup("/bin/sh");
     args[1] = strdup("-c");
-    args[2] = strdup(("java -Djava.security.egd=file:/dev/./urandom -jar " + jar_path_ + " -w " + working_directory_ + " -k " + host_key_file_ + " &> " + server_log_file_path).c_str());
+    args[2] = strdup(("exec java -Djava.security.egd=file:/dev/./urandom -jar " + jar_path_ + " -w " + working_directory_ + " -k " + host_key_file_ + " >" + server_log_file_path + " 2>&1").c_str());
     args[3] = nullptr;
     execv("/bin/sh", args.data());
     std::cerr << "Failed to start server, errno: " << strerror(errno) << std::endl;
@@ -127,7 +122,7 @@ bool SFTPTestServer::stop() {
   throw std::runtime_error("Not implemented");
 #else
   if (server_pid_ != -1) {
-    if (::kill(-server_pid_, SIGTERM) != 0) {
+    if (::kill(server_pid_, SIGTERM) != 0) {
       logger_->log_error("Failed to kill child process, error: %s", strerror(errno));
       return false;
     }
