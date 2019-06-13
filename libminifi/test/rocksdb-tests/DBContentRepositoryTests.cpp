@@ -15,15 +15,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "../TestBase.h"
 #include <memory>
 #include <string>
+#include "../TestBase.h"
 #include "../unit/ProvenanceTestHelper.h"
-#include "provenance/Provenance.h"
+#include "DatabaseContentRepository.h"
 #include "FlowFileRecord.h"
 #include "core/Core.h"
-#include "DatabaseContentRepository.h"
 #include "properties/Configure.h"
+#include "provenance/Provenance.h"
 
 TEST_CASE("Write Claim", "[TestDBCR1]") {
   TestController testController;
@@ -34,7 +34,6 @@ TEST_CASE("Write Claim", "[TestDBCR1]") {
   auto configuration = std::make_shared<org::apache::nifi::minifi::Configure>();
   configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, dir);
   REQUIRE(true == content_repo->initialize(configuration));
-
 
   auto claim = std::make_shared<minifi::ResourceClaim>(content_repo);
   auto stream = content_repo->write(claim);
@@ -75,7 +74,6 @@ TEST_CASE("Delete Claim", "[TestDBCR2]") {
   auto configuration = std::make_shared<org::apache::nifi::minifi::Configure>();
   configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, dir);
   REQUIRE(true == content_repo->initialize(configuration));
-
 
   auto claim = std::make_shared<minifi::ResourceClaim>(content_repo);
   auto stream = content_repo->write(claim);
@@ -150,7 +148,6 @@ TEST_CASE("Test Null Claim", "[TestDBCR4]") {
   auto configuration = std::make_shared<org::apache::nifi::minifi::Configure>();
   configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, dir);
   REQUIRE(true == content_repo->initialize(configuration));
-
 
   auto claim = std::make_shared<minifi::ResourceClaim>(content_repo);
   auto stream = content_repo->write(nullptr);

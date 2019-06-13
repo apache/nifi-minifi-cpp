@@ -18,7 +18,6 @@
 #include "rocksdb/utilities/write_batch_with_index.h"
 #include "rocksdb/write_buffer_manager.h"
 #include "table/scoped_arena_iterator.h"
-#include "util/logging.h"
 #include "util/string_util.h"
 #include "util/testharness.h"
 
@@ -52,7 +51,8 @@ static std::string PrintContents(WriteBatch* b) {
       iter = mem->NewIterator(ReadOptions(), &arena);
       arena_iter_guard.set(iter);
     } else {
-      iter = mem->NewRangeTombstoneIterator(ReadOptions());
+      iter = mem->NewRangeTombstoneIterator(ReadOptions(),
+                                            kMaxSequenceNumber /* read_seq */);
       iter_guard.reset(iter);
     }
     if (iter == nullptr) {
@@ -236,8 +236,8 @@ TEST_F(WriteBatchTest, SingleDeletion) {
 namespace {
   struct TestHandler : public WriteBatch::Handler {
     std::string seen;
-    virtual Status PutCF(uint32_t column_family_id, const Slice& key,
-                         const Slice& value) override {
+    Status PutCF(uint32_t column_family_id, const Slice& key,
+                 const Slice& value) override {
       if (column_family_id == 0) {
         seen += "Put(" + key.ToString() + ", " + value.ToString() + ")";
       } else {
@@ -246,8 +246,7 @@ namespace {
       }
       return Status::OK();
     }
-    virtual Status DeleteCF(uint32_t column_family_id,
-                            const Slice& key) override {
+    Status DeleteCF(uint32_t column_family_id, const Slice& key) override {
       if (column_family_id == 0) {
         seen += "Delete(" + key.ToString() + ")";
       } else {
@@ -256,8 +255,8 @@ namespace {
       }
       return Status::OK();
     }
-    virtual Status SingleDeleteCF(uint32_t column_family_id,
-                                  const Slice& key) override {
+    Status SingleDeleteCF(uint32_t column_family_id,
+                          const Slice& key) override {
       if (column_family_id == 0) {
         seen += "SingleDelete(" + key.ToString() + ")";
       } else {
@@ -266,9 +265,8 @@ namespace {
       }
       return Status::OK();
     }
-    virtual Status DeleteRangeCF(uint32_t column_family_id,
-                                 const Slice& begin_key,
-                                 const Slice& end_key) override {
+    Status DeleteRangeCF(uint32_t column_family_id, const Slice& begin_key,
+                         const Slice& end_key) override {
       if (column_family_id == 0) {
         seen += "DeleteRange(" + begin_key.ToString() + ", " +
                 end_key.ToString() + ")";
@@ -278,8 +276,8 @@ namespace {
       }
       return Status::OK();
     }
-    virtual Status MergeCF(uint32_t column_family_id, const Slice& key,
-                           const Slice& value) override {
+    Status MergeCF(uint32_t column_family_id, const Slice& key,
+                   const Slice& value) override {
       if (column_family_id == 0) {
         seen += "Merge(" + key.ToString() + ", " + value.ToString() + ")";
       } else {
@@ -288,22 +286,27 @@ namespace {
       }
       return Status::OK();
     }
-    virtual void LogData(const Slice& blob) override {
+    void LogData(const Slice& blob) override {
       seen += "LogData(" + blob.ToString() + ")";
     }
-    virtual Status MarkBeginPrepare() override {
-      seen += "MarkBeginPrepare()";
+    Status MarkBeginPrepare(bool unprepare) override {
+      seen +=
+          "MarkBeginPrepare(" + std::string(unprepare ? "true" : "false") + ")";
       return Status::OK();
     }
-    virtual Status MarkEndPrepare(const Slice& xid) override {
+    Status MarkEndPrepare(const Slice& xid) override {
       seen += "MarkEndPrepare(" + xid.ToString() + ")";
       return Status::OK();
     }
-    virtual Status MarkCommit(const Slice& xid) override {
+    Status MarkNoop(bool empty_batch) override {
+      seen += "MarkNoop(" + std::string(empty_batch ? "true" : "false") + ")";
+      return Status::OK();
+    }
+    Status MarkCommit(const Slice& xid) override {
       seen += "MarkCommit(" + xid.ToString() + ")";
       return Status::OK();
     }
-    virtual Status MarkRollback(const Slice& xid) override {
+    Status MarkRollback(const Slice& xid) override {
       seen += "MarkRollback(" + xid.ToString() + ")";
       return Status::OK();
     }
@@ -400,7 +403,7 @@ TEST_F(WriteBatchTest, PrepareCommit) {
   TestHandler handler;
   batch.Iterate(&handler);
   ASSERT_EQ(
-      "MarkBeginPrepare()"
+      "MarkBeginPrepare(false)"
       "Put(k1, v1)"
       "Put(k2, v2)"
       "MarkEndPrepare(xid1)"
@@ -415,7 +418,7 @@ TEST_F(WriteBatchTest, PrepareCommit) {
 TEST_F(WriteBatchTest, DISABLED_ManyUpdates) {
   // Insert key and value of 3GB and push total batch size to 12GB.
   static const size_t kKeyValueSize = 4u;
-  static const uint32_t kNumUpdates = 3 << 30;
+  static const uint32_t kNumUpdates = uint32_t(3 << 30);
   std::string raw(kKeyValueSize, 'A');
   WriteBatch batch(kNumUpdates * (4 + kKeyValueSize * 2) + 1024u);
   char c = 'A';
@@ -434,8 +437,8 @@ TEST_F(WriteBatchTest, DISABLED_ManyUpdates) {
   struct NoopHandler : public WriteBatch::Handler {
     uint32_t num_seen = 0;
     char expected_char = 'A';
-    virtual Status PutCF(uint32_t column_family_id, const Slice& key,
-                         const Slice& value) override {
+    Status PutCF(uint32_t /*column_family_id*/, const Slice& key,
+                 const Slice& value) override {
       EXPECT_EQ(kKeyValueSize, key.size());
       EXPECT_EQ(kKeyValueSize, value.size());
       EXPECT_EQ(expected_char, key[0]);
@@ -449,23 +452,23 @@ TEST_F(WriteBatchTest, DISABLED_ManyUpdates) {
       ++num_seen;
       return Status::OK();
     }
-    virtual Status DeleteCF(uint32_t column_family_id,
-                            const Slice& key) override {
+    Status DeleteCF(uint32_t /*column_family_id*/,
+                    const Slice& /*key*/) override {
       ADD_FAILURE();
       return Status::OK();
     }
-    virtual Status SingleDeleteCF(uint32_t column_family_id,
-                                  const Slice& key) override {
+    Status SingleDeleteCF(uint32_t /*column_family_id*/,
+                          const Slice& /*key*/) override {
       ADD_FAILURE();
       return Status::OK();
     }
-    virtual Status MergeCF(uint32_t column_family_id, const Slice& key,
-                           const Slice& value) override {
+    Status MergeCF(uint32_t /*column_family_id*/, const Slice& /*key*/,
+                   const Slice& /*value*/) override {
       ADD_FAILURE();
       return Status::OK();
     }
-    virtual void LogData(const Slice& blob) override { ADD_FAILURE(); }
-    virtual bool Continue() override { return num_seen < kNumUpdates; }
+    void LogData(const Slice& /*blob*/) override { ADD_FAILURE(); }
+    bool Continue() override { return num_seen < kNumUpdates; }
   } handler;
 
   batch.Iterate(&handler);
@@ -489,8 +492,8 @@ TEST_F(WriteBatchTest, DISABLED_LargeKeyValue) {
 
   struct NoopHandler : public WriteBatch::Handler {
     int num_seen = 0;
-    virtual Status PutCF(uint32_t column_family_id, const Slice& key,
-                         const Slice& value) override {
+    Status PutCF(uint32_t /*column_family_id*/, const Slice& key,
+                 const Slice& value) override {
       EXPECT_EQ(kKeyValueSize, key.size());
       EXPECT_EQ(kKeyValueSize, value.size());
       EXPECT_EQ('A' + num_seen, key[0]);
@@ -500,23 +503,23 @@ TEST_F(WriteBatchTest, DISABLED_LargeKeyValue) {
       ++num_seen;
       return Status::OK();
     }
-    virtual Status DeleteCF(uint32_t column_family_id,
-                            const Slice& key) override {
+    Status DeleteCF(uint32_t /*column_family_id*/,
+                    const Slice& /*key*/) override {
       ADD_FAILURE();
       return Status::OK();
     }
-    virtual Status SingleDeleteCF(uint32_t column_family_id,
-                                  const Slice& key) override {
+    Status SingleDeleteCF(uint32_t /*column_family_id*/,
+                          const Slice& /*key*/) override {
       ADD_FAILURE();
       return Status::OK();
     }
-    virtual Status MergeCF(uint32_t column_family_id, const Slice& key,
-                           const Slice& value) override {
+    Status MergeCF(uint32_t /*column_family_id*/, const Slice& /*key*/,
+                   const Slice& /*value*/) override {
       ADD_FAILURE();
       return Status::OK();
     }
-    virtual void LogData(const Slice& blob) override { ADD_FAILURE(); }
-    virtual bool Continue() override { return num_seen < 2; }
+    void LogData(const Slice& /*blob*/) override { ADD_FAILURE(); }
+    bool Continue() override { return num_seen < 2; }
   } handler;
 
   batch.Iterate(&handler);
@@ -528,31 +531,30 @@ TEST_F(WriteBatchTest, Continue) {
 
   struct Handler : public TestHandler {
     int num_seen = 0;
-    virtual Status PutCF(uint32_t column_family_id, const Slice& key,
-                         const Slice& value) override {
+    Status PutCF(uint32_t column_family_id, const Slice& key,
+                 const Slice& value) override {
       ++num_seen;
       return TestHandler::PutCF(column_family_id, key, value);
     }
-    virtual Status DeleteCF(uint32_t column_family_id,
-                            const Slice& key) override {
+    Status DeleteCF(uint32_t column_family_id, const Slice& key) override {
       ++num_seen;
       return TestHandler::DeleteCF(column_family_id, key);
     }
-    virtual Status SingleDeleteCF(uint32_t column_family_id,
-                                  const Slice& key) override {
+    Status SingleDeleteCF(uint32_t column_family_id,
+                          const Slice& key) override {
       ++num_seen;
       return TestHandler::SingleDeleteCF(column_family_id, key);
     }
-    virtual Status MergeCF(uint32_t column_family_id, const Slice& key,
-                           const Slice& value) override {
+    Status MergeCF(uint32_t column_family_id, const Slice& key,
+                   const Slice& value) override {
       ++num_seen;
       return TestHandler::MergeCF(column_family_id, key, value);
     }
-    virtual void LogData(const Slice& blob) override {
+    void LogData(const Slice& blob) override {
       ++num_seen;
       TestHandler::LogData(blob);
     }
-    virtual bool Continue() override { return num_seen < 5; }
+    bool Continue() override { return num_seen < 5; }
   } handler;
 
   batch.Put(Slice("k1"), Slice("v1"));

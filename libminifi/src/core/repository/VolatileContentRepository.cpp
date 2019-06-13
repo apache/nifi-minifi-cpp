@@ -17,13 +17,14 @@
  */
 
 #include "core/repository/VolatileContentRepository.h"
-#include "core/expect.h"
 #include <cstdio>
-#include <string>
 #include <memory>
+#include <string>
 #include <thread>
-#include "utils/StringUtils.h"
+#include "core/expect.h"
+#include "io/AtomicEntryMemoryMap.h"
 #include "io/FileStream.h"
+#include "utils/StringUtils.h"
 
 namespace org {
 namespace apache {
@@ -40,10 +41,11 @@ bool VolatileContentRepository::initialize(const std::shared_ptr<Configure> &con
     if (lhsPtr == nullptr || rhsPtr == nullptr) {
       return false;
     }
-    return lhsPtr->getContentFullPath() == rhsPtr->getContentFullPath();};
-  resource_claim_check_ = [](std::shared_ptr<minifi::ResourceClaim> claim) {
-    return claim->getFlowFileRecordOwnedCount() <= 0;};
-  claim_reclaimer_ = [&](std::shared_ptr<minifi::ResourceClaim> claim) {if (claim->getFlowFileRecordOwnedCount() <= 0) {
+    return lhsPtr->getContentFullPath() == rhsPtr->getContentFullPath();
+  };
+  resource_claim_check_ = [](std::shared_ptr<minifi::ResourceClaim> claim) { return claim->getFlowFileRecordOwnedCount() <= 0; };
+  claim_reclaimer_ = [&](std::shared_ptr<minifi::ResourceClaim> claim) {
+    if (claim->getFlowFileRecordOwnedCount() <= 0) {
       remove(claim);
     }
   };
@@ -69,26 +71,22 @@ bool VolatileContentRepository::initialize(const std::shared_ptr<Configure> &con
   return true;
 }
 
-void VolatileContentRepository::stop() {
-  running_ = false;
-}
+void VolatileContentRepository::stop() { running_ = false; }
 
-void VolatileContentRepository::run() {
-}
+void VolatileContentRepository::run() {}
 
 void VolatileContentRepository::start() {
-  if (this->purge_period_ <= 0)
-    return;
-  if (running_)
-    return;
+  if (this->purge_period_ <= 0) return;
+  if (running_) return;
   thread_ = std::thread(&VolatileContentRepository::run, shared_from_parent<VolatileContentRepository>());
   thread_.detach();
   running_ = true;
   logger_->log_info("%s Repository Monitor Thread Start", getName());
 }
 
-std::shared_ptr<io::BaseStream> VolatileContentRepository::write(const std::shared_ptr<minifi::ResourceClaim> &claim, bool append) {
-  logger_->log_info("enter write for %s", claim->getContentFullPath());
+template <class T, template<typename> class U, typename... V>
+std::shared_ptr<T> VolatileContentRepository::mutate(const std::shared_ptr<minifi::ResourceClaim> &claim, V... v) {
+  logger_->log_info("enter mutate for %s", claim->getContentFullPath());
   {
     std::lock_guard<std::mutex> lock(map_mutex_);
     auto claim_check = master_list_.find(claim->getContentFullPath());
@@ -98,7 +96,7 @@ std::shared_ptr<io::BaseStream> VolatileContentRepository::write(const std::shar
       if (ent == nullptr) {
         return nullptr;
       }
-      return std::make_shared<io::AtomicEntryStream<std::shared_ptr<minifi::ResourceClaim>>>(claim, ent);
+      return std::make_shared<U<std::shared_ptr<ResourceClaim>>>(claim, ent, v...);
     }
   }
 
@@ -109,7 +107,7 @@ std::shared_ptr<io::BaseStream> VolatileContentRepository::write(const std::shar
         std::lock_guard<std::mutex> lock(map_mutex_);
         master_list_[claim->getContentFullPath()] = ent;
         logger_->log_info("Minimize locking, return stream for %s", claim->getContentFullPath());
-        return std::make_shared<io::AtomicEntryStream<std::shared_ptr<minifi::ResourceClaim>>>(claim, ent);
+        return std::make_shared<U<std::shared_ptr<ResourceClaim>>>(claim, ent, v...);
       }
       size++;
     }
@@ -117,17 +115,29 @@ std::shared_ptr<io::BaseStream> VolatileContentRepository::write(const std::shar
     std::lock_guard<std::mutex> lock(map_mutex_);
     auto claim_check = master_list_.find(claim->getContentFullPath());
     if (claim_check != master_list_.end()) {
-      return std::make_shared<io::AtomicEntryStream<std::shared_ptr<minifi::ResourceClaim>>>(claim, claim_check->second);
+      return std::make_shared<U<std::shared_ptr<ResourceClaim>>>(claim, claim_check->second, v...);
     } else {
       AtomicEntry<std::shared_ptr<minifi::ResourceClaim>> *ent = new AtomicEntry<std::shared_ptr<minifi::ResourceClaim>>(&current_size_, &max_size_);
       if (ent->testAndSetKey(claim, nullptr, nullptr, resource_claim_comparator_)) {
         master_list_[claim->getContentFullPath()] = ent;
-        return std::make_shared<io::AtomicEntryStream<std::shared_ptr<minifi::ResourceClaim>>>(claim, ent);
+        return std::make_shared<U<std::shared_ptr<ResourceClaim>>>(claim, ent, v...);
       }
     }
   }
-  logger_->log_info("Cannot write %s %d, returning nullptr to roll back session. Repo is either full or locked", claim->getContentFullPath(), size);
+  logger_->log_info(
+      "Cannot mutate %s %d, returning nullptr to roll back "
+      "session. Repo is either full or locked",
+      claim->getContentFullPath(), size);
   return nullptr;
+}
+
+std::shared_ptr<io::BaseStream> VolatileContentRepository::write(const std::shared_ptr<minifi::ResourceClaim> &claim, bool append) {
+  return mutate<io::BaseStream, io::AtomicEntryStream>(claim);
+}
+
+std::shared_ptr<io::BaseMemoryMap> VolatileContentRepository::mmap(const std::shared_ptr<minifi::ResourceClaim> &claim, size_t mapSize,
+                                                                   bool readOnly) {
+  return mutate<io::BaseMemoryMap, io::AtomicEntryMemoryMap, size_t>(claim, mapSize);
 }
 
 bool VolatileContentRepository::exists(const std::shared_ptr<minifi::ResourceClaim> &claim) {

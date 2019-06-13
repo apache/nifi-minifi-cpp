@@ -277,15 +277,13 @@ Status GetPlainTableOptionsFromMap(
 // BlockBasedTableOptions as part of the string for block-based table factory:
 //   "write_buffer_size=1024;block_based_table_factory={block_size=4k};"
 //   "max_write_buffer_num=2"
-Status GetColumnFamilyOptionsFromString(
-    const ColumnFamilyOptions& base_options,
-    const std::string& opts_str,
-    ColumnFamilyOptions* new_options);
+Status GetColumnFamilyOptionsFromString(const ColumnFamilyOptions& base_options,
+                                        const std::string& opts_str,
+                                        ColumnFamilyOptions* new_options);
 
-Status GetDBOptionsFromString(
-    const DBOptions& base_options,
-    const std::string& opts_str,
-    DBOptions* new_options);
+Status GetDBOptionsFromString(const DBOptions& base_options,
+                              const std::string& opts_str,
+                              DBOptions* new_options);
 
 Status GetStringFromDBOptions(std::string* opts_str,
                               const DBOptions& db_options,
@@ -301,14 +299,12 @@ Status GetStringFromCompressionType(std::string* compression_str,
 std::vector<CompressionType> GetSupportedCompressions();
 
 Status GetBlockBasedTableOptionsFromString(
-    const BlockBasedTableOptions& table_options,
-    const std::string& opts_str,
+    const BlockBasedTableOptions& table_options, const std::string& opts_str,
     BlockBasedTableOptions* new_table_options);
 
-Status GetPlainTableOptionsFromString(
-    const PlainTableOptions& table_options,
-    const std::string& opts_str,
-    PlainTableOptions* new_table_options);
+Status GetPlainTableOptionsFromString(const PlainTableOptions& table_options,
+                                      const std::string& opts_str,
+                                      PlainTableOptions* new_table_options);
 
 Status GetMemTableRepFactoryFromString(
     const std::string& opts_str,
@@ -325,10 +321,19 @@ void CancelAllBackgroundWork(DB* db, bool wait = false);
 
 // Delete files which are entirely in the given range
 // Could leave some keys in the range which are in files which are not
-// entirely in the range.
+// entirely in the range. Also leaves L0 files regardless of whether they're
+// in the range.
 // Snapshots before the delete might not see the data in the given range.
 Status DeleteFilesInRange(DB* db, ColumnFamilyHandle* column_family,
-                          const Slice* begin, const Slice* end);
+                          const Slice* begin, const Slice* end,
+                          bool include_end = true);
+
+// Delete files in multiple ranges at once
+// Delete files in a lot of ranges one at a time can be slow, use this API for
+// better performance in that case.
+Status DeleteFilesInRanges(DB* db, ColumnFamilyHandle* column_family,
+                           const RangePtr* ranges, size_t n,
+                           bool include_end = true);
 
 // Verify the checksum of file
 Status VerifySstFileChecksum(const Options& options,

@@ -18,15 +18,15 @@
 #ifndef LIBMINIFI_INCLUDE_CORE_REPOSITORY_ATOMICREPOENTRIES_H_
 #define LIBMINIFI_INCLUDE_CORE_REPOSITORY_ATOMICREPOENTRIES_H_
 
-#include  <cstddef>
-#include <cstring>
-#include <iostream>
-#include <chrono>
-#include <functional>
 #include <atomic>
-#include <vector>
-#include <map>
+#include <chrono>
+#include <cstddef>
+#include <cstring>
+#include <functional>
+#include <iostream>
 #include <iterator>
+#include <map>
+#include <vector>
 
 namespace org {
 namespace apache {
@@ -41,12 +41,10 @@ namespace repository {
  * Justification: Since AtomicEntry is a static entry that does not move or change, the underlying
  * RepoValue can be changed to support atomic operations.
  */
-template<typename T>
+template <typename T>
 class RepoValue {
  public:
-
-  explicit RepoValue() {
-  }
+  explicit RepoValue() {}
 
   /**
    * Constructor that populates the item allowing for a custom key comparator.
@@ -55,9 +53,7 @@ class RepoValue {
    * @param size size buffer
    * @param comparator custom comparator.
    */
-  explicit RepoValue(T key, const uint8_t *ptr, size_t size, std::function<bool(T, T)> comparator = nullptr)
-      : key_(key),
-        comparator_(comparator) {
+  explicit RepoValue(T key, const uint8_t *ptr, size_t size, std::function<bool(T, T)> comparator = nullptr) : key_(key), comparator_(comparator) {
     if (nullptr == ptr) {
       size = 0;
     }
@@ -70,124 +66,97 @@ class RepoValue {
   /**
    * RepoValue that moves the other object into this.
    */
-  explicit RepoValue(RepoValue<T> &&other)
-noexcept      : key_(std::move(other.key_)),
-      buffer_(std::move(other.buffer_)),
-      comparator_(std::move(other.comparator_)) {
-      }
+  explicit RepoValue(RepoValue<T> &&other) noexcept
+      : key_(std::move(other.key_)), buffer_(std::move(other.buffer_)), comparator_(std::move(other.comparator_)) {}
 
-      ~RepoValue()
-      {
-      }
+  ~RepoValue() {}
 
-      T &getKey() {
-        return key_;
-      }
+  T &getKey() { return key_; }
 
-      /**
-       * Sets the key, relacing the custom comparator if needed.
-       */
-      void setKey(const T key, std::function<bool(T,T)> comparator = nullptr) {
-        key_ = key;
-        comparator_ = comparator;
-      }
+  /**
+   * Sets the key, relacing the custom comparator if needed.
+   */
+  void setKey(const T key, std::function<bool(T, T)> comparator = nullptr) {
+    key_ = key;
+    comparator_ = comparator;
+  }
 
-      /**
-       * Determines if the key is the same using the custom comparator
-       * @param other object to compare against
-       * @return result of the comparison
-       */
-      inline bool isEqual(RepoValue<T> *other)
-      {
-        return comparator_ == nullptr ? key_ == other->key_ : comparator_(key_,other->key_);
-      }
+  /**
+   * Determines if the key is the same using the custom comparator
+   * @param other object to compare against
+   * @return result of the comparison
+   */
+  inline bool isEqual(RepoValue<T> *other) { return comparator_ == nullptr ? key_ == other->key_ : comparator_(key_, other->key_); }
 
-      /**
-       * Determines if the key is the same using the custom comparator
-       * @param other object to compare against
-       * @return result of the comparison
-       */
-      inline bool isKey(T other)
-      {
-        return comparator_ == nullptr ? key_ == other : comparator_(key_,other);
-      }
+  /**
+   * Determines if the key is the same using the custom comparator
+   * @param other object to compare against
+   * @return result of the comparison
+   */
+  inline bool isKey(T other) { return comparator_ == nullptr ? key_ == other : comparator_(key_, other); }
 
-      /**
-       * Clears the buffer.
-       */
-      void clearBuffer() {
-        buffer_.resize(0);
-        buffer_.clear();
-      }
+  /**
+   * Clears the buffer.
+   */
+  void clearBuffer() {
+    buffer_.resize(0);
+    buffer_.clear();
+  }
 
-      /**
-       * Return the size of the memory within the key
-       * buffer, the size of timestamp, and the general
-       * system word size
-       */
-      uint64_t size() {
-        return buffer_.size();
-      }
+  /**
+   * Return the size of the memory within the key
+   * buffer, the size of timestamp, and the general
+   * system word size
+   */
+  uint64_t size() { return buffer_.size(); }
 
-      size_t getBufferSize() {
-        return buffer_.size();
-      }
+  size_t getBufferSize() { return buffer_.size(); }
 
-      const uint8_t *getBuffer()
-      {
-        return buffer_.data();
-      }
+  uint8_t *getBuffer() { return &buffer_[0]; }
 
-      /**
-       * Places the contents of buffer into str
-       * @param strnig into which we are placing the memory contained in buffer.
-       */
-      void emplace(std::string &str) {
-        str.insert(0, reinterpret_cast<const char*>(buffer_.data()), buffer_.size());
-      }
+  /**
+   * Places the contents of buffer into str
+   * @param strnig into which we are placing the memory contained in buffer.
+   */
+  void emplace(std::string &str) { str.insert(0, reinterpret_cast<const char *>(buffer_.data()), buffer_.size()); }
 
-      /**
-       * Appends ptr to the end of buffer.
-       * @param ptr pointer containing data to add to buffer_
-       */
-      void append(uint8_t *ptr, size_t size)
-      {
-        buffer_.insert(buffer_.end(), ptr, ptr + size);
-      }
+  /**
+   * Appends ptr to the end of buffer.
+   * @param ptr pointer containing data to add to buffer_
+   */
+  void append(uint8_t *ptr, size_t size) { buffer_.insert(buffer_.end(), ptr, ptr + size); }
 
-      RepoValue<T> &operator=(RepoValue<T> &&other) noexcept {
-        key_ = std::move(other.key_);
-        buffer_ = std::move(other.buffer_);
-        return *this;
-      }
+  /**
+   * Resizes buffer to the specified size.
+   */
+  void resize(size_t size) { buffer_.resize(size); }
 
-    private:
-      T key_;
-      std::function<bool(T,T)> comparator_;
-      std::vector<uint8_t> buffer_;
-    };
+  RepoValue<T> &operator=(RepoValue<T> &&other) noexcept {
+    key_ = std::move(other.key_);
+    buffer_ = std::move(other.buffer_);
+    return *this;
+  }
 
-    /**
-     * Purpose: Atomic Entry allows us to create a statically
-     * sized ring buffer, with the ability to create
-     *
-     **/
-template<typename T>
+ private:
+  T key_;
+  std::function<bool(T, T)> comparator_;
+  std::vector<uint8_t> buffer_;
+};
+
+/**
+ * Purpose: Atomic Entry allows us to create a statically
+ * sized ring buffer, with the ability to create
+ *
+ **/
+template <typename T>
 class AtomicEntry {
-
  public:
   /**
    * Constructor that accepts a max size and an atomic counter for the total
    * size allowd by this and other atomic entries.
    */
   explicit AtomicEntry(std::atomic<size_t> *total_size, size_t *max_size)
-      : accumulated_repo_size_(total_size),
-        max_repo_size_(max_size),
-        write_pending_(false),
-        has_value_(false),
-        ref_count_(0),
-        free_required(false) {
-  }
+      : accumulated_repo_size_(total_size), max_repo_size_(max_size), write_pending_(false), has_value_(false), ref_count_(0), free_required(false) {}
 
   /**
    * Sets the repo value, moving the old value into old_value.
@@ -214,8 +183,7 @@ class AtomicEntry {
 
   AtomicEntry<T> *takeOwnership() {
     bool lock = false;
-    if (!write_pending_.compare_exchange_weak(lock, true))
-      return nullptr;
+    if (!write_pending_.compare_exchange_weak(lock, true)) return nullptr;
 
     ref_count_++;
 
@@ -229,11 +197,11 @@ class AtomicEntry {
    * with said object.
    * A custom comparator can be provided to augment the key being added into value_
    */
-  bool testAndSetKey(const T str, std::function<bool(T)> releaseTest = nullptr, std::function<void(T)> reclaimer = nullptr, std::function<bool(T, T)> comparator = nullptr) {
+  bool testAndSetKey(const T str, std::function<bool(T)> releaseTest = nullptr, std::function<void(T)> reclaimer = nullptr,
+                     std::function<bool(T, T)> comparator = nullptr) {
     bool lock = false;
 
-    if (!write_pending_.compare_exchange_weak(lock, true))
-      return false;
+    if (!write_pending_.compare_exchange_weak(lock, true)) return false;
 
     if (has_value_) {
       // we either don't have a release test or we cannot release this
@@ -252,7 +220,6 @@ class AtomicEntry {
         try_unlock();
         return false;
       }
-
     }
     ref_count_ = 1;
     value_.setKey(str, comparator);
@@ -365,7 +332,6 @@ class AtomicEntry {
       if (accumulated_repo_size_ != nullptr) {
         *accumulated_repo_size_ -= bufferSize;
       }
-
     }
     try_unlock();
     return ref;
@@ -377,7 +343,6 @@ class AtomicEntry {
     size = value_.getBufferSize();
     try_unlock();
     return size;
-
   }
 
   /**
@@ -440,7 +405,6 @@ class AtomicEntry {
   }
 
  private:
-
   /**
    * Spin lock to unlock the current atomic entry.
    */

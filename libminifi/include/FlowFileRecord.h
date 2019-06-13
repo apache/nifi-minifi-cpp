@@ -99,6 +99,11 @@ class OutputStreamCallback {
   virtual int64_t process(std::shared_ptr<io::BaseStream> stream) = 0;
 
 };
+class MemoryMapCallback {
+public:
+  virtual ~MemoryMapCallback() {}
+  virtual bool process(std::shared_ptr<io::BaseMemoryMap> map) = 0;
+};
 
 class FlowFileRecord : public core::FlowFile, public io::Serializable {
  public:

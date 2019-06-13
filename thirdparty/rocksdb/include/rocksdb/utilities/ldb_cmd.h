@@ -96,6 +96,12 @@ class LDBCommand {
     ldb_options_ = ldb_options;
   }
 
+  const std::map<std::string, std::string>& TEST_GetOptionMap() {
+    return option_map_;
+  }
+
+  const std::vector<std::string>& TEST_GetFlags() { return flags_; }
+
   virtual bool NoDBOpen() { return false; }
 
   virtual ~LDBCommand() { CloseDB(); }
@@ -210,6 +216,15 @@ class LDBCommand {
   bool ParseStringOption(const std::map<std::string, std::string>& options,
                          const std::string& option, std::string* value);
 
+  /**
+   * Returns the value of the specified option as a boolean.
+   * default_val is used if the option is not found in options.
+   * Throws an exception if the value of the option is not
+   * "true" or "false" (case insensitive).
+   */
+  bool ParseBooleanOption(const std::map<std::string, std::string>& options,
+                          const std::string& option, bool default_val);
+
   Options options_;
   std::vector<ColumnFamilyDescriptor> column_families_;
   LDBOptions ldb_options_;
@@ -228,15 +243,6 @@ class LDBCommand {
    */
   bool IsValueHex(const std::map<std::string, std::string>& options,
                   const std::vector<std::string>& flags);
-
-  /**
-   * Returns the value of the specified option as a boolean.
-   * default_val is used if the option is not found in options.
-   * Throws an exception if the value of the option is not
-   * "true" or "false" (case insensitive).
-   */
-  bool ParseBooleanOption(const std::map<std::string, std::string>& options,
-                          const std::string& option, bool default_val);
 
   /**
    * Converts val to a boolean.

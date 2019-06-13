@@ -41,7 +41,7 @@ public interface RocksIteratorInterface {
   void seekToLast();
 
   /**
-   * <p>Position at the first entry in the source whose key is that or
+   * <p>Position at the first entry in the source whose key is at or
    * past target.</p>
    *
    * <p>The iterator is valid after this call if the source contains
@@ -51,6 +51,18 @@ public interface RocksIteratorInterface {
    *               key prefix to seek for.
    */
   void seek(byte[] target);
+
+  /**
+   * <p>Position at the first entry in the source whose key is that or
+   * before target.</p>
+   *
+   * <p>The iterator is valid after this call if the source contains
+   * a key that comes at or before target.</p>
+   *
+   * @param target byte array describing a key or a
+   *               key prefix to seek for.
+   */
+  void seekForPrev(byte[] target);
 
   /**
    * <p>Moves to the next entry in the source.  After this call, Valid() is

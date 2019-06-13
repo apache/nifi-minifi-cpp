@@ -18,11 +18,14 @@
 #include "rocksdb/cache.h"
 #include "rocksdb/convenience.h"
 #include "rocksdb/rate_limiter.h"
+#include "rocksdb/stats_history.h"
 #include "util/random.h"
 #include "util/sync_point.h"
 #include "util/testutil.h"
 
 namespace rocksdb {
+
+const int kMicrosInSec = 1000000;
 
 class DBOptionsTest : public DBTestBase {
  public:
@@ -115,6 +118,150 @@ TEST_F(DBOptionsTest, GetLatestCFOptions) {
             GetMutableCFOptionsMap(dbfull()->GetOptions(handles_[0])));
   ASSERT_EQ(options_foo,
             GetMutableCFOptionsMap(dbfull()->GetOptions(handles_[1])));
+}
+
+TEST_F(DBOptionsTest, SetBytesPerSync) {
+  const size_t kValueSize = 1024 * 1024;  // 1MB
+  Options options;
+  options.create_if_missing = true;
+  options.bytes_per_sync = 1024 * 1024;
+  options.use_direct_reads = false;
+  options.write_buffer_size = 400 * kValueSize;
+  options.disable_auto_compactions = true;
+  options.compression = kNoCompression;
+  options.env = env_;
+  Reopen(options);
+  int counter = 0;
+  int low_bytes_per_sync = 0;
+  int i = 0;
+  const std::string kValue(kValueSize, 'v');
+  ASSERT_EQ(options.bytes_per_sync, dbfull()->GetDBOptions().bytes_per_sync);
+  rocksdb::SyncPoint::GetInstance()->SetCallBack(
+      "WritableFileWriter::RangeSync:0", [&](void* /*arg*/) {
+        counter++;
+      });
+
+  WriteOptions write_opts;
+  // should sync approximately 40MB/1MB ~= 40 times.
+  for (i = 0; i < 40; i++) {
+    Put(Key(i), kValue, write_opts);
+  }
+  rocksdb::SyncPoint::GetInstance()->EnableProcessing();
+  ASSERT_OK(dbfull()->CompactRange(CompactRangeOptions(), nullptr, nullptr));
+  rocksdb::SyncPoint::GetInstance()->DisableProcessing();
+  low_bytes_per_sync = counter;
+  ASSERT_GT(low_bytes_per_sync, 35);
+  ASSERT_LT(low_bytes_per_sync, 45);
+
+  counter = 0;
+  // 8388608 = 8 * 1024 * 1024
+  ASSERT_OK(dbfull()->SetDBOptions({{"bytes_per_sync", "8388608"}}));
+  ASSERT_EQ(8388608, dbfull()->GetDBOptions().bytes_per_sync);
+  // should sync approximately 40MB*2/8MB ~= 10 times.
+  // data will be 40*2MB because of previous Puts too.
+  for (i = 0; i < 40; i++) {
+    Put(Key(i), kValue, write_opts);
+  }
+  rocksdb::SyncPoint::GetInstance()->EnableProcessing();
+  ASSERT_OK(dbfull()->CompactRange(CompactRangeOptions(), nullptr, nullptr));
+  ASSERT_GT(counter, 5);
+  ASSERT_LT(counter, 15);
+
+  // Redundant assert. But leaving it here just to get the point across that
+  // low_bytes_per_sync > counter.
+  ASSERT_GT(low_bytes_per_sync, counter);
+}
+
+TEST_F(DBOptionsTest, SetWalBytesPerSync) {
+  const size_t kValueSize = 1024 * 1024 * 3;
+  Options options;
+  options.create_if_missing = true;
+  options.wal_bytes_per_sync = 512;
+  options.write_buffer_size = 100 * kValueSize;
+  options.disable_auto_compactions = true;
+  options.compression = kNoCompression;
+  options.env = env_;
+  Reopen(options);
+  ASSERT_EQ(512, dbfull()->GetDBOptions().wal_bytes_per_sync);
+  int counter = 0;
+  int low_bytes_per_sync = 0;
+  rocksdb::SyncPoint::GetInstance()->SetCallBack(
+      "WritableFileWriter::RangeSync:0", [&](void* /*arg*/) {
+        counter++;
+      });
+  rocksdb::SyncPoint::GetInstance()->EnableProcessing();
+  const std::string kValue(kValueSize, 'v');
+  int i = 0;
+  for (; i < 10; i++) {
+    Put(Key(i), kValue);
+  }
+  // Do not flush. If we flush here, SwitchWAL will reuse old WAL file since its
+  // empty and will not get the new wal_bytes_per_sync value.
+  low_bytes_per_sync = counter;
+  //5242880 = 1024 * 1024 * 5
+  ASSERT_OK(dbfull()->SetDBOptions({{"wal_bytes_per_sync", "5242880"}}));
+  ASSERT_EQ(5242880, dbfull()->GetDBOptions().wal_bytes_per_sync);
+  counter = 0;
+  i = 0;
+  for (; i < 10; i++) {
+    Put(Key(i), kValue);
+  }
+  ASSERT_GT(counter, 0);
+  ASSERT_GT(low_bytes_per_sync, 0);
+  ASSERT_GT(low_bytes_per_sync, counter);
+}
+
+TEST_F(DBOptionsTest, WritableFileMaxBufferSize) {
+  Options options;
+  options.create_if_missing = true;
+  options.writable_file_max_buffer_size = 1024 * 1024;
+  options.level0_file_num_compaction_trigger = 3;
+  options.max_manifest_file_size = 1;
+  options.env = env_;
+  int buffer_size = 1024 * 1024;
+  Reopen(options);
+  ASSERT_EQ(buffer_size,
+            dbfull()->GetDBOptions().writable_file_max_buffer_size);
+
+  std::atomic<int> match_cnt(0);
+  std::atomic<int> unmatch_cnt(0);
+  rocksdb::SyncPoint::GetInstance()->SetCallBack(
+      "WritableFileWriter::WritableFileWriter:0", [&](void* arg) {
+        int value = static_cast<int>(reinterpret_cast<uintptr_t>(arg));
+        if (value == buffer_size) {
+          match_cnt++;
+        } else {
+          unmatch_cnt++;
+        }
+      });
+  rocksdb::SyncPoint::GetInstance()->EnableProcessing();
+  int i = 0;
+  for (; i < 3; i++) {
+    ASSERT_OK(Put("foo", ToString(i)));
+    ASSERT_OK(Put("bar", ToString(i)));
+    Flush();
+  }
+  dbfull()->TEST_WaitForCompact();
+  ASSERT_EQ(unmatch_cnt, 0);
+  ASSERT_GE(match_cnt, 11);
+
+  ASSERT_OK(
+      dbfull()->SetDBOptions({{"writable_file_max_buffer_size", "524288"}}));
+  buffer_size = 512 * 1024;
+  match_cnt = 0;
+  unmatch_cnt = 0;  // SetDBOptions() will create a WriteableFileWriter
+
+  ASSERT_EQ(buffer_size,
+            dbfull()->GetDBOptions().writable_file_max_buffer_size);
+  i = 0;
+  for (; i < 3; i++) {
+    ASSERT_OK(Put("foo", ToString(i)));
+    ASSERT_OK(Put("bar", ToString(i)));
+    Flush();
+  }
+  dbfull()->TEST_WaitForCompact();
+  ASSERT_EQ(unmatch_cnt, 0);
+  ASSERT_GE(match_cnt, 11);
 }
 
 TEST_F(DBOptionsTest, SetOptionsAndReopen) {
@@ -364,10 +511,290 @@ TEST_F(DBOptionsTest, SetStatsDumpPeriodSec) {
 
   for (int i = 0; i < 20; i++) {
     int num = rand() % 5000 + 1;
-    ASSERT_OK(dbfull()->SetDBOptions(
-        {{"stats_dump_period_sec", std::to_string(num)}}));
+    ASSERT_OK(
+        dbfull()->SetDBOptions({{"stats_dump_period_sec", ToString(num)}}));
     ASSERT_EQ(num, dbfull()->GetDBOptions().stats_dump_period_sec);
   }
+  Close();
+}
+
+TEST_F(DBOptionsTest, RunStatsDumpPeriodSec) {
+  Options options;
+  options.create_if_missing = true;
+  options.stats_dump_period_sec = 5;
+  std::unique_ptr<rocksdb::MockTimeEnv> mock_env;
+  mock_env.reset(new rocksdb::MockTimeEnv(env_));
+  mock_env->set_current_time(0); // in seconds
+  options.env = mock_env.get();
+  int counter = 0;
+  rocksdb::SyncPoint::GetInstance()->DisableProcessing();
+  rocksdb::SyncPoint::GetInstance()->ClearAllCallBacks();
+#if defined(OS_MACOSX) && !defined(NDEBUG)
+  rocksdb::SyncPoint::GetInstance()->SetCallBack(
+      "InstrumentedCondVar::TimedWaitInternal", [&](void* arg) {
+        uint64_t time_us = *reinterpret_cast<uint64_t*>(arg);
+        if (time_us < mock_env->RealNowMicros()) {
+          *reinterpret_cast<uint64_t*>(arg) = mock_env->RealNowMicros() + 1000;
+        }
+      });
+#endif  // OS_MACOSX && !NDEBUG
+  rocksdb::SyncPoint::GetInstance()->SetCallBack(
+      "DBImpl::DumpStats:1", [&](void* /*arg*/) {
+        counter++;
+      });
+  rocksdb::SyncPoint::GetInstance()->EnableProcessing();
+  Reopen(options);
+  ASSERT_EQ(5, dbfull()->GetDBOptions().stats_dump_period_sec);
+  dbfull()->TEST_WaitForDumpStatsRun([&] { mock_env->set_current_time(5); });
+  ASSERT_GE(counter, 1);
+
+  // Test cacel job through SetOptions
+  ASSERT_OK(dbfull()->SetDBOptions({{"stats_dump_period_sec", "0"}}));
+  int old_val = counter;
+  for (int i = 6; i < 20; ++i) {
+    dbfull()->TEST_WaitForDumpStatsRun([&] { mock_env->set_current_time(i); });
+  }
+  ASSERT_EQ(counter, old_val);
+  Close();
+}
+
+// Test persistent stats background thread scheduling and cancelling
+TEST_F(DBOptionsTest, StatsPersistScheduling) {
+  Options options;
+  options.create_if_missing = true;
+  options.stats_persist_period_sec = 5;
+  std::unique_ptr<rocksdb::MockTimeEnv> mock_env;
+  mock_env.reset(new rocksdb::MockTimeEnv(env_));
+  mock_env->set_current_time(0);  // in seconds
+  options.env = mock_env.get();
+  rocksdb::SyncPoint::GetInstance()->DisableProcessing();
+  rocksdb::SyncPoint::GetInstance()->ClearAllCallBacks();
+#if defined(OS_MACOSX) && !defined(NDEBUG)
+  rocksdb::SyncPoint::GetInstance()->SetCallBack(
+      "InstrumentedCondVar::TimedWaitInternal", [&](void* arg) {
+        uint64_t time_us = *reinterpret_cast<uint64_t*>(arg);
+        if (time_us < mock_env->RealNowMicros()) {
+          *reinterpret_cast<uint64_t*>(arg) = mock_env->RealNowMicros() + 1000;
+        }
+      });
+#endif  // OS_MACOSX && !NDEBUG
+  int counter = 0;
+  rocksdb::SyncPoint::GetInstance()->SetCallBack(
+      "DBImpl::PersistStats:Entry", [&](void* /*arg*/) { counter++; });
+  rocksdb::SyncPoint::GetInstance()->EnableProcessing();
+  Reopen(options);
+  ASSERT_EQ(5, dbfull()->GetDBOptions().stats_persist_period_sec);
+  dbfull()->TEST_WaitForPersistStatsRun([&] { mock_env->set_current_time(5); });
+  ASSERT_GE(counter, 1);
+
+  // Test cacel job through SetOptions
+  ASSERT_TRUE(dbfull()->TEST_IsPersistentStatsEnabled());
+  ASSERT_OK(dbfull()->SetDBOptions({{"stats_persist_period_sec", "0"}}));
+  ASSERT_FALSE(dbfull()->TEST_IsPersistentStatsEnabled());
+  Close();
+}
+
+// Test enabling persistent stats for the first time
+TEST_F(DBOptionsTest, PersistentStatsFreshInstall) {
+  Options options;
+  options.create_if_missing = true;
+  options.stats_persist_period_sec = 0;
+  std::unique_ptr<rocksdb::MockTimeEnv> mock_env;
+  mock_env.reset(new rocksdb::MockTimeEnv(env_));
+  mock_env->set_current_time(0);  // in seconds
+  options.env = mock_env.get();
+  rocksdb::SyncPoint::GetInstance()->DisableProcessing();
+  rocksdb::SyncPoint::GetInstance()->ClearAllCallBacks();
+#if defined(OS_MACOSX) && !defined(NDEBUG)
+  rocksdb::SyncPoint::GetInstance()->SetCallBack(
+      "InstrumentedCondVar::TimedWaitInternal", [&](void* arg) {
+        uint64_t time_us = *reinterpret_cast<uint64_t*>(arg);
+        if (time_us < mock_env->RealNowMicros()) {
+          *reinterpret_cast<uint64_t*>(arg) = mock_env->RealNowMicros() + 1000;
+        }
+      });
+#endif  // OS_MACOSX && !NDEBUG
+  int counter = 0;
+  rocksdb::SyncPoint::GetInstance()->SetCallBack(
+      "DBImpl::PersistStats:Entry", [&](void* /*arg*/) { counter++; });
+  rocksdb::SyncPoint::GetInstance()->EnableProcessing();
+  Reopen(options);
+  ASSERT_OK(dbfull()->SetDBOptions({{"stats_persist_period_sec", "5"}}));
+  ASSERT_EQ(5, dbfull()->GetDBOptions().stats_persist_period_sec);
+  dbfull()->TEST_WaitForPersistStatsRun([&] { mock_env->set_current_time(5); });
+  ASSERT_GE(counter, 1);
+  Close();
+}
+
+TEST_F(DBOptionsTest, SetOptionsStatsPersistPeriodSec) {
+  Options options;
+  options.create_if_missing = true;
+  options.stats_persist_period_sec = 5;
+  options.env = env_;
+  Reopen(options);
+  ASSERT_EQ(5, dbfull()->GetDBOptions().stats_persist_period_sec);
+
+  ASSERT_OK(dbfull()->SetDBOptions({{"stats_persist_period_sec", "12345"}}));
+  ASSERT_EQ(12345, dbfull()->GetDBOptions().stats_persist_period_sec);
+  ASSERT_NOK(dbfull()->SetDBOptions({{"stats_persist_period_sec", "abcde"}}));
+  ASSERT_EQ(12345, dbfull()->GetDBOptions().stats_persist_period_sec);
+}
+
+TEST_F(DBOptionsTest, GetStatsHistory) {
+  Options options;
+  options.create_if_missing = true;
+  options.stats_persist_period_sec = 5;
+  options.statistics = rocksdb::CreateDBStatistics();
+  std::unique_ptr<rocksdb::MockTimeEnv> mock_env;
+  mock_env.reset(new rocksdb::MockTimeEnv(env_));
+  mock_env->set_current_time(0);  // in seconds
+  options.env = mock_env.get();
+#if defined(OS_MACOSX) && !defined(NDEBUG)
+  rocksdb::SyncPoint::GetInstance()->DisableProcessing();
+  rocksdb::SyncPoint::GetInstance()->ClearAllCallBacks();
+  rocksdb::SyncPoint::GetInstance()->SetCallBack(
+      "InstrumentedCondVar::TimedWaitInternal", [&](void* arg) {
+        uint64_t time_us = *reinterpret_cast<uint64_t*>(arg);
+        if (time_us < mock_env->RealNowMicros()) {
+          *reinterpret_cast<uint64_t*>(arg) = mock_env->RealNowMicros() + 1000;
+        }
+      });
+  rocksdb::SyncPoint::GetInstance()->EnableProcessing();
+#endif  // OS_MACOSX && !NDEBUG
+
+  CreateColumnFamilies({"pikachu"}, options);
+  ASSERT_OK(Put("foo", "bar"));
+  ReopenWithColumnFamilies({"default", "pikachu"}, options);
+
+  int mock_time = 1;
+  // Wait for stats persist to finish
+  dbfull()->TEST_WaitForPersistStatsRun([&] { mock_env->set_current_time(5); });
+  std::unique_ptr<StatsHistoryIterator> stats_iter;
+  db_->GetStatsHistory(0, 6 * kMicrosInSec, &stats_iter);
+  ASSERT_TRUE(stats_iter != nullptr);
+  // disabled stats snapshots
+  ASSERT_OK(dbfull()->SetDBOptions({{"stats_persist_period_sec", "0"}}));
+  size_t stats_count = 0;
+  for (; stats_iter->Valid(); stats_iter->Next()) {
+    auto stats_map = stats_iter->GetStatsMap();
+    stats_count += stats_map.size();
+  }
+  ASSERT_GT(stats_count, 0);
+  // Wait a bit and verify no more stats are found
+  for (mock_time = 6; mock_time < 20; ++mock_time) {
+    dbfull()->TEST_WaitForPersistStatsRun(
+        [&] { mock_env->set_current_time(mock_time); });
+  }
+  db_->GetStatsHistory(0, 20 * kMicrosInSec, &stats_iter);
+  ASSERT_TRUE(stats_iter != nullptr);
+  size_t stats_count_new = 0;
+  for (; stats_iter->Valid(); stats_iter->Next()) {
+    stats_count_new += stats_iter->GetStatsMap().size();
+  }
+  ASSERT_EQ(stats_count_new, stats_count);
+  Close();
+}
+
+TEST_F(DBOptionsTest, InMemoryStatsHistoryPurging) {
+  Options options;
+  options.create_if_missing = true;
+  options.statistics = rocksdb::CreateDBStatistics();
+  options.stats_persist_period_sec = 1;
+  std::unique_ptr<rocksdb::MockTimeEnv> mock_env;
+  mock_env.reset(new rocksdb::MockTimeEnv(env_));
+  mock_env->set_current_time(0);  // in seconds
+  options.env = mock_env.get();
+#if defined(OS_MACOSX) && !defined(NDEBUG)
+  rocksdb::SyncPoint::GetInstance()->DisableProcessing();
+  rocksdb::SyncPoint::GetInstance()->ClearAllCallBacks();
+  rocksdb::SyncPoint::GetInstance()->SetCallBack(
+      "InstrumentedCondVar::TimedWaitInternal", [&](void* arg) {
+        uint64_t time_us = *reinterpret_cast<uint64_t*>(arg);
+        if (time_us < mock_env->RealNowMicros()) {
+          *reinterpret_cast<uint64_t*>(arg) = mock_env->RealNowMicros() + 1000;
+        }
+      });
+  rocksdb::SyncPoint::GetInstance()->EnableProcessing();
+#endif  // OS_MACOSX && !NDEBUG
+
+  CreateColumnFamilies({"pikachu"}, options);
+  ASSERT_OK(Put("foo", "bar"));
+  ReopenWithColumnFamilies({"default", "pikachu"}, options);
+  // some random operation to populate statistics
+  ASSERT_OK(Delete("foo"));
+  ASSERT_OK(Put("sol", "sol"));
+  ASSERT_OK(Put("epic", "epic"));
+  ASSERT_OK(Put("ltd", "ltd"));
+  ASSERT_EQ("sol", Get("sol"));
+  ASSERT_EQ("epic", Get("epic"));
+  ASSERT_EQ("ltd", Get("ltd"));
+  Iterator* iterator = db_->NewIterator(ReadOptions());
+  for (iterator->SeekToFirst(); iterator->Valid(); iterator->Next()) {
+    ASSERT_TRUE(iterator->key() == iterator->value());
+  }
+  delete iterator;
+  ASSERT_OK(Flush());
+  ASSERT_OK(Delete("sol"));
+  db_->CompactRange(CompactRangeOptions(), nullptr, nullptr);
+  int mock_time = 1;
+  // Wait for stats persist to finish
+  for (; mock_time < 5; ++mock_time) {
+    dbfull()->TEST_WaitForPersistStatsRun(
+        [&] { mock_env->set_current_time(mock_time); });
+  }
+
+  // second round of ops
+  ASSERT_OK(Put("saigon", "saigon"));
+  ASSERT_OK(Put("noodle talk", "noodle talk"));
+  ASSERT_OK(Put("ping bistro", "ping bistro"));
+  iterator = db_->NewIterator(ReadOptions());
+  for (iterator->SeekToFirst(); iterator->Valid(); iterator->Next()) {
+    ASSERT_TRUE(iterator->key() == iterator->value());
+  }
+  delete iterator;
+  ASSERT_OK(Flush());
+  db_->CompactRange(CompactRangeOptions(), nullptr, nullptr);
+  for (; mock_time < 10; ++mock_time) {
+    dbfull()->TEST_WaitForPersistStatsRun(
+        [&] { mock_env->set_current_time(mock_time); });
+  }
+  std::unique_ptr<StatsHistoryIterator> stats_iter;
+  db_->GetStatsHistory(0, 10 * kMicrosInSec, &stats_iter);
+  ASSERT_TRUE(stats_iter != nullptr);
+  size_t stats_count = 0;
+  int slice_count = 0;
+  for (; stats_iter->Valid(); stats_iter->Next()) {
+    slice_count++;
+    auto stats_map = stats_iter->GetStatsMap();
+    stats_count += stats_map.size();
+  }
+  size_t stats_history_size = dbfull()->TEST_EstiamteStatsHistorySize();
+  ASSERT_GE(slice_count, 9);
+  ASSERT_GE(stats_history_size, 12000);
+  // capping memory cost at 12000 bytes since one slice is around 10000~12000
+  ASSERT_OK(dbfull()->SetDBOptions({{"stats_history_buffer_size", "12000"}}));
+  ASSERT_EQ(12000, dbfull()->GetDBOptions().stats_history_buffer_size);
+  // Wait for stats persist to finish
+  for (; mock_time < 20; ++mock_time) {
+    dbfull()->TEST_WaitForPersistStatsRun(
+        [&] { mock_env->set_current_time(mock_time); });
+  }
+  db_->GetStatsHistory(0, 20 * kMicrosInSec, &stats_iter);
+  ASSERT_TRUE(stats_iter != nullptr);
+  size_t stats_count_reopen = 0;
+  slice_count = 0;
+  for (; stats_iter->Valid(); stats_iter->Next()) {
+    slice_count++;
+    auto stats_map = stats_iter->GetStatsMap();
+    stats_count_reopen += stats_map.size();
+  }
+  size_t stats_history_size_reopen = dbfull()->TEST_EstiamteStatsHistorySize();
+  // only one slice can fit under the new stats_history_buffer_size
+  ASSERT_LT(slice_count, 2);
+  ASSERT_TRUE(stats_history_size_reopen < 12000 &&
+              stats_history_size_reopen > 0);
+  ASSERT_TRUE(stats_count_reopen < stats_count && stats_count_reopen > 0);
+  Close();
 }
 
 static void assert_candidate_files_empty(DBImpl* dbfull, const bool empty) {
@@ -375,8 +802,13 @@ static void assert_candidate_files_empty(DBImpl* dbfull, const bool empty) {
   JobContext job_context(0);
   dbfull->FindObsoleteFiles(&job_context, false);
   ASSERT_EQ(empty, job_context.full_scan_candidate_files.empty());
-  job_context.Clean();
   dbfull->TEST_UnlockMutex();
+  if (job_context.HaveSomethingToDelete()) {
+    // fulfill the contract of FindObsoleteFiles by calling PurgeObsoleteFiles
+    // afterwards; otherwise the test may hang on shutdown
+    dbfull->PurgeObsoleteFiles(job_context);
+  }
+  job_context.Clean();
 }
 
 TEST_F(DBOptionsTest, DeleteObsoleteFilesPeriodChange) {
@@ -441,6 +873,140 @@ TEST_F(DBOptionsTest, SanitizeDelayedWriteRate) {
   ASSERT_EQ(31 * 1024 * 1024, dbfull()->GetDBOptions().delayed_write_rate);
 }
 
+TEST_F(DBOptionsTest, SetFIFOCompactionOptions) {
+  Options options;
+  options.compaction_style = kCompactionStyleFIFO;
+  options.write_buffer_size = 10 << 10;  // 10KB
+  options.arena_block_size = 4096;
+  options.compression = kNoCompression;
+  options.create_if_missing = true;
+  options.compaction_options_fifo.allow_compaction = false;
+  env_->time_elapse_only_sleep_ = false;
+  options.env = env_;
+
+  // Test dynamically changing ttl.
+  env_->addon_time_.store(0);
+  options.ttl = 1 * 60 * 60;  // 1 hour
+  ASSERT_OK(TryReopen(options));
+
+  Random rnd(301);
+  for (int i = 0; i < 10; i++) {
+    // Generate and flush a file about 10KB.
+    for (int j = 0; j < 10; j++) {
+      ASSERT_OK(Put(ToString(i * 20 + j), RandomString(&rnd, 980)));
+    }
+    Flush();
+  }
+  ASSERT_OK(dbfull()->TEST_WaitForCompact());
+  ASSERT_EQ(NumTableFilesAtLevel(0), 10);
+
+  // Add 61 seconds to the time.
+  env_->addon_time_.fetch_add(61);
+
+  // No files should be compacted as ttl is set to 1 hour.
+  ASSERT_EQ(dbfull()->GetOptions().ttl, 3600);
+  dbfull()->CompactRange(CompactRangeOptions(), nullptr, nullptr);
+  ASSERT_EQ(NumTableFilesAtLevel(0), 10);
+
+  // Set ttl to 1 minute. So all files should get deleted.
+  ASSERT_OK(dbfull()->SetOptions({{"ttl", "60"}}));
+  ASSERT_EQ(dbfull()->GetOptions().ttl, 60);
+  dbfull()->CompactRange(CompactRangeOptions(), nullptr, nullptr);
+  ASSERT_OK(dbfull()->TEST_WaitForCompact());
+  ASSERT_EQ(NumTableFilesAtLevel(0), 0);
+
+  // Test dynamically changing compaction_options_fifo.max_table_files_size
+  env_->addon_time_.store(0);
+  options.compaction_options_fifo.max_table_files_size = 500 << 10;  // 00KB
+  options.ttl = 0;
+  DestroyAndReopen(options);
+
+  for (int i = 0; i < 10; i++) {
+    // Generate and flush a file about 10KB.
+    for (int j = 0; j < 10; j++) {
+      ASSERT_OK(Put(ToString(i * 20 + j), RandomString(&rnd, 980)));
+    }
+    Flush();
+  }
+  ASSERT_OK(dbfull()->TEST_WaitForCompact());
+  ASSERT_EQ(NumTableFilesAtLevel(0), 10);
+
+  // No files should be compacted as max_table_files_size is set to 500 KB.
+  ASSERT_EQ(dbfull()->GetOptions().compaction_options_fifo.max_table_files_size,
+            500 << 10);
+  dbfull()->CompactRange(CompactRangeOptions(), nullptr, nullptr);
+  ASSERT_EQ(NumTableFilesAtLevel(0), 10);
+
+  // Set max_table_files_size to 12 KB. So only 1 file should remain now.
+  ASSERT_OK(dbfull()->SetOptions(
+      {{"compaction_options_fifo", "{max_table_files_size=12288;}"}}));
+  ASSERT_EQ(dbfull()->GetOptions().compaction_options_fifo.max_table_files_size,
+            12 << 10);
+  dbfull()->CompactRange(CompactRangeOptions(), nullptr, nullptr);
+  ASSERT_OK(dbfull()->TEST_WaitForCompact());
+  ASSERT_EQ(NumTableFilesAtLevel(0), 1);
+
+  // Test dynamically changing compaction_options_fifo.allow_compaction
+  options.compaction_options_fifo.max_table_files_size = 500 << 10;  // 500KB
+  options.ttl = 0;
+  options.compaction_options_fifo.allow_compaction = false;
+  options.level0_file_num_compaction_trigger = 6;
+  DestroyAndReopen(options);
+
+  for (int i = 0; i < 10; i++) {
+    // Generate and flush a file about 10KB.
+    for (int j = 0; j < 10; j++) {
+      ASSERT_OK(Put(ToString(i * 20 + j), RandomString(&rnd, 980)));
+    }
+    Flush();
+  }
+  ASSERT_OK(dbfull()->TEST_WaitForCompact());
+  ASSERT_EQ(NumTableFilesAtLevel(0), 10);
+
+  // No files should be compacted as max_table_files_size is set to 500 KB and
+  // allow_compaction is false
+  ASSERT_EQ(dbfull()->GetOptions().compaction_options_fifo.allow_compaction,
+            false);
+  dbfull()->CompactRange(CompactRangeOptions(), nullptr, nullptr);
+  ASSERT_EQ(NumTableFilesAtLevel(0), 10);
+
+  // Set allow_compaction to true. So number of files should be between 1 and 5.
+  ASSERT_OK(dbfull()->SetOptions(
+      {{"compaction_options_fifo", "{allow_compaction=true;}"}}));
+  ASSERT_EQ(dbfull()->GetOptions().compaction_options_fifo.allow_compaction,
+            true);
+  dbfull()->CompactRange(CompactRangeOptions(), nullptr, nullptr);
+  ASSERT_OK(dbfull()->TEST_WaitForCompact());
+  ASSERT_GE(NumTableFilesAtLevel(0), 1);
+  ASSERT_LE(NumTableFilesAtLevel(0), 5);
+}
+
+TEST_F(DBOptionsTest, CompactionReadaheadSizeChange) {
+  SpecialEnv env(env_);
+  Options options;
+  options.env = &env;
+
+  options.compaction_readahead_size = 0;
+  options.new_table_reader_for_compaction_inputs = true;
+  options.level0_file_num_compaction_trigger = 2;
+  const std::string kValue(1024, 'v');
+  Reopen(options);
+
+  ASSERT_EQ(0, dbfull()->GetDBOptions().compaction_readahead_size);
+  ASSERT_OK(dbfull()->SetDBOptions({{"compaction_readahead_size", "256"}}));
+  ASSERT_EQ(256, dbfull()->GetDBOptions().compaction_readahead_size);
+  for (int i = 0; i < 1024; i++) {
+    Put(Key(i), kValue);
+  }
+  Flush();
+  for (int i = 0; i < 1024 * 2; i++) {
+    Put(Key(i), kValue);
+  }
+  Flush();
+  dbfull()->TEST_WaitForCompact();
+  ASSERT_EQ(256, env_->compaction_readahead_size_);
+  Close();
+}
 #endif  // ROCKSDB_LITE
 
 }  // namespace rocksdb

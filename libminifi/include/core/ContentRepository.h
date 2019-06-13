@@ -18,12 +18,14 @@
 #ifndef LIBMINIFI_INCLUDE_CORE_CONTENTREPOSITORY_H_
 #define LIBMINIFI_INCLUDE_CORE_CONTENTREPOSITORY_H_
 
-#include "properties/Configure.h"
+#include "MemoryMapManager.h"
 #include "ResourceClaim.h"
-#include "io/DataStream.h"
-#include "io/BaseStream.h"
 #include "StreamManager.h"
 #include "core/Connectable.h"
+#include "io/BaseMemoryMap.h"
+#include "io/BaseStream.h"
+#include "io/DataStream.h"
+#include "properties/Configure.h"
 
 namespace org {
 namespace apache {
@@ -34,21 +36,16 @@ namespace core {
 /**
  * Content repository definition that extends StreamManager.
  */
-class ContentRepository : public StreamManager<minifi::ResourceClaim> {
+class ContentRepository : public StreamManager<minifi::ResourceClaim>, public MemoryMapManager<minifi::ResourceClaim> {
  public:
-
-  virtual ~ContentRepository() {
-
-  }
+  virtual ~ContentRepository() {}
 
   /**
    * initialize this content repository using the provided configuration.
    */
   virtual bool initialize(const std::shared_ptr<Configure> &configure) = 0;
 
-  virtual std::string getStoragePath() {
-    return directory_;
-  }
+  virtual std::string getStoragePath() { return directory_; }
 
   /**
    * Stops this repository.
@@ -109,7 +106,6 @@ class ContentRepository : public StreamManager<minifi::ResourceClaim> {
   }
 
  protected:
-
   std::string directory_;
 
   std::mutex count_map_mutex_;

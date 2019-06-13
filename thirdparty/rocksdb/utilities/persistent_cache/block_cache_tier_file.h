@@ -103,13 +103,15 @@ class BlockCacheFile : public LRUElement<BlockCacheFile> {
   virtual ~BlockCacheFile() {}
 
   // append key/value to file and return LBA locator to user
-  virtual bool Append(const Slice& key, const Slice& val, LBA* const lba) {
+  virtual bool Append(const Slice& /*key*/, const Slice& /*val*/,
+                      LBA* const /*lba*/) {
     assert(!"not implemented");
     return false;
   }
 
   // read from the record locator (LBA) and return key, value and status
-  virtual bool Read(const LBA& lba, Slice* key, Slice* block, char* scratch) {
+  virtual bool Read(const LBA& /*lba*/, Slice* /*key*/, Slice* /*block*/,
+                    char* /*scratch*/) {
     assert(!"not implemented");
     return false;
   }
@@ -147,7 +149,7 @@ class RandomAccessCacheFile : public BlockCacheFile {
  public:
   explicit RandomAccessCacheFile(Env* const env, const std::string& dir,
                                  const uint32_t cache_id,
-                                 const shared_ptr<Logger>& log)
+                                 const std::shared_ptr<Logger>& log)
       : BlockCacheFile(env, dir, cache_id), log_(log) {}
 
   virtual ~RandomAccessCacheFile() {}
@@ -263,11 +265,11 @@ class ThreadedWriter : public Writer {
     IO& operator=(const IO&) = default;
     size_t Size() const { return sizeof(IO); }
 
-    WritableFile* file_ = nullptr;           // File to write to
-    CacheWriteBuffer* const buf_ = nullptr;  // buffer to write
-    uint64_t file_off_ = 0;                  // file offset
-    bool signal_ = false;                    // signal to exit thread loop
-    std::function<void()> callback_;         // Callback on completion
+    WritableFile* file_ = nullptr;     // File to write to
+    CacheWriteBuffer* buf_ = nullptr;  // buffer to write
+    uint64_t file_off_ = 0;            // file offset
+    bool signal_ = false;              // signal to exit thread loop
+    std::function<void()> callback_;   // Callback on completion
   };
 
   explicit ThreadedWriter(PersistentCacheTier* const cache, const size_t qdepth,

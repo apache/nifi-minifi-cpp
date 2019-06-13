@@ -45,7 +45,7 @@ class DeleteFileTest : public testing::Test {
     options_.max_bytes_for_level_base = 1024*1024*1000;
     options_.WAL_ttl_seconds = 300; // Used to test log files
     options_.WAL_size_limit_MB = 1024; // Used to test log files
-    dbname_ = test::TmpDir() + "/deletefile_test";
+    dbname_ = test::PerThreadDBPath("deletefile_test");
     options_.wal_dir = dbname_ + "/wal_files";
 
     // clean up all the files that might have been there before
@@ -71,7 +71,9 @@ class DeleteFileTest : public testing::Test {
     }
     db_ = nullptr;
     options_.create_if_missing = create;
-    return DB::Open(options_, dbname_, &db_);
+    Status s = DB::Open(options_, dbname_, &db_);
+    assert(db_);
+    return s;
   }
 
   void CloseDB() {
@@ -159,7 +161,7 @@ class DeleteFileTest : public testing::Test {
   }
 
   // An empty job to guard all jobs are processed
-  static void GuardFinish(void* arg) {
+  static void GuardFinish(void* /*arg*/) {
     TEST_SYNC_POINT("DeleteFileTest::GuardFinish");
   }
 };
@@ -228,7 +230,7 @@ TEST_F(DeleteFileTest, PurgeObsoleteFilesTest) {
 
   // this time, we keep an iterator alive
   ReopenDB(true);
-  Iterator *itr = 0;
+  Iterator *itr = nullptr;
   CreateTwoLevels();
   itr = db_->NewIterator(ReadOptions());
   db_->CompactRange(compact_options, &first_slice, &last_slice);
@@ -241,7 +243,7 @@ TEST_F(DeleteFileTest, PurgeObsoleteFilesTest) {
   CloseDB();
 }
 
-TEST_F(DeleteFileTest, BackgroundPurgeTest) {
+TEST_F(DeleteFileTest, BackgroundPurgeIteratorTest) {
   std::string first("0"), last("999999");
   CompactRangeOptions compact_options;
   compact_options.change_level = true;
@@ -249,7 +251,7 @@ TEST_F(DeleteFileTest, BackgroundPurgeTest) {
   Slice first_slice(first), last_slice(last);
 
   // We keep an iterator alive
-  Iterator* itr = 0;
+  Iterator* itr = nullptr;
   CreateTwoLevels();
   ReadOptions options;
   options.background_purge_on_iterator_cleanup = true;
@@ -279,6 +281,53 @@ TEST_F(DeleteFileTest, BackgroundPurgeTest) {
   CloseDB();
 }
 
+TEST_F(DeleteFileTest, BackgroundPurgeCFDropTest) {
+  auto do_test = [&](bool bg_purge) {
+    ColumnFamilyOptions co;
+    WriteOptions wo;
+    FlushOptions fo;
+    ColumnFamilyHandle* cfh = nullptr;
+
+    ASSERT_OK(db_->CreateColumnFamily(co, "dropme", &cfh));
+
+    ASSERT_OK(db_->Put(wo, cfh, "pika", "chu"));
+    ASSERT_OK(db_->Flush(fo, cfh));
+    // Expect 1 sst file.
+    CheckFileTypeCounts(dbname_, 0, 1, 1);
+
+    ASSERT_OK(db_->DropColumnFamily(cfh));
+    // Still 1 file, it won't be deleted while ColumnFamilyHandle is alive.
+    CheckFileTypeCounts(dbname_, 0, 1, 1);
+
+    delete cfh;
+    test::SleepingBackgroundTask sleeping_task_after;
+    env_->Schedule(&test::SleepingBackgroundTask::DoSleepTask,
+                   &sleeping_task_after, Env::Priority::HIGH);
+    // If background purge is enabled, the file should still be there.
+    CheckFileTypeCounts(dbname_, 0, bg_purge ? 1 : 0, 1);
+
+    // Execute background purges.
+    sleeping_task_after.WakeUp();
+    sleeping_task_after.WaitUntilDone();
+    // The file should have been deleted.
+    CheckFileTypeCounts(dbname_, 0, 0, 1);
+  };
+
+  {
+    SCOPED_TRACE("avoid_unnecessary_blocking_io = false");
+    do_test(false);
+  }
+
+  options_.avoid_unnecessary_blocking_io = true;
+  ASSERT_OK(ReopenDB(false));
+  {
+    SCOPED_TRACE("avoid_unnecessary_blocking_io = true");
+    do_test(true);
+  }
+
+  CloseDB();
+}
+
 // This test is to reproduce a bug that read invalid ReadOption in iterator
 // cleanup function
 TEST_F(DeleteFileTest, BackgroundPurgeCopyOptions) {
@@ -289,7 +338,7 @@ TEST_F(DeleteFileTest, BackgroundPurgeCopyOptions) {
   Slice first_slice(first), last_slice(last);
 
   // We keep an iterator alive
-  Iterator* itr = 0;
+  Iterator* itr = nullptr;
   CreateTwoLevels();
   ReadOptions* options = new ReadOptions();
   options->background_purge_on_iterator_cleanup = true;
@@ -500,7 +549,7 @@ int main(int argc, char** argv) {
 #else
 #include <stdio.h>
 
-int main(int argc, char** argv) {
+int main(int /*argc*/, char** /*argv*/) {
   fprintf(stderr,
           "SKIPPED as DBImpl::DeleteFile is not supported in ROCKSDB_LITE\n");
   return 0;

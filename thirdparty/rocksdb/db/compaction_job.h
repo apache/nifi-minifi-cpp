@@ -29,6 +29,7 @@
 #include "db/version_edit.h"
 #include "db/write_controller.h"
 #include "db/write_thread.h"
+#include "options/cf_options.h"
 #include "options/db_options.h"
 #include "port/port.h"
 #include "rocksdb/compaction_filter.h"
@@ -45,28 +46,33 @@
 
 namespace rocksdb {
 
+class Arena;
+class ErrorHandler;
 class MemTable;
+class SnapshotChecker;
 class TableCache;
 class Version;
 class VersionEdit;
 class VersionSet;
-class Arena;
 
 class CompactionJob {
  public:
   CompactionJob(int job_id, Compaction* compaction,
                 const ImmutableDBOptions& db_options,
-                const EnvOptions& env_options, VersionSet* versions,
-                const std::atomic<bool>* shutting_down, LogBuffer* log_buffer,
-                Directory* db_directory, Directory* output_directory,
-                Statistics* stats, InstrumentedMutex* db_mutex,
-                Status* db_bg_error,
+                const EnvOptions env_options, VersionSet* versions,
+                const std::atomic<bool>* shutting_down,
+                const SequenceNumber preserve_deletes_seqnum,
+                LogBuffer* log_buffer, Directory* db_directory,
+                Directory* output_directory, Statistics* stats,
+                InstrumentedMutex* db_mutex, ErrorHandler* db_error_handler,
                 std::vector<SequenceNumber> existing_snapshots,
                 SequenceNumber earliest_write_conflict_snapshot,
+                const SnapshotChecker* snapshot_checker,
                 std::shared_ptr<Cache> table_cache, EventLogger* event_logger,
                 bool paranoid_file_checks, bool measure_io_stats,
                 const std::string& dbname,
-                CompactionJobStats* compaction_job_stats);
+                CompactionJobStats* compaction_job_stats,
+                Env::Priority thread_pri);
 
   ~CompactionJob();
 
@@ -98,7 +104,7 @@ class CompactionJob {
 
   Status FinishCompactionOutputFile(
       const Status& input_status, SubcompactionState* sub_compact,
-      RangeDelAggregator* range_del_agg,
+      CompactionRangeDelAggregator* range_del_agg,
       CompactionIterationStats* range_del_out_stats,
       const Slice* next_table_min_key = nullptr);
   Status InstallCompactionResults(const MutableCFOptions& mutable_cf_options);
@@ -127,17 +133,20 @@ class CompactionJob {
   // DBImpl state
   const std::string& dbname_;
   const ImmutableDBOptions& db_options_;
-  const EnvOptions& env_options_;
+  const EnvOptions env_options_;
 
   Env* env_;
+  // env_option optimized for compaction table reads
+  EnvOptions env_optiosn_for_read_;
   VersionSet* versions_;
   const std::atomic<bool>* shutting_down_;
+  const SequenceNumber preserve_deletes_seqnum_;
   LogBuffer* log_buffer_;
   Directory* db_directory_;
   Directory* output_directory_;
   Statistics* stats_;
   InstrumentedMutex* db_mutex_;
-  Status* db_bg_error_;
+  ErrorHandler* db_error_handler_;
   // If there were two snapshots with seq numbers s1 and
   // s2 and s1 < s2, and if we find two instances of a key k1 then lies
   // entirely within s1 and s2, then the earlier version of k1 can be safely
@@ -148,6 +157,8 @@ class CompactionJob {
   // checking by a transaction.  For any user-key newer than this snapshot, we
   // should make sure not to remove evidence that a write occurred.
   SequenceNumber earliest_write_conflict_snapshot_;
+
+  const SnapshotChecker* const snapshot_checker_;
 
   std::shared_ptr<Cache> table_cache_;
 
@@ -160,6 +171,8 @@ class CompactionJob {
   std::vector<Slice> boundaries_;
   // Stores the approx size of keys covered in the range of each subcompaction
   std::vector<uint64_t> sizes_;
+  Env::WriteLifeTimeHint write_hint_;
+  Env::Priority thread_pri_;
 };
 
 }  // namespace rocksdb

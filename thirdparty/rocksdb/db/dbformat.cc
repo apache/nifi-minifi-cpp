@@ -36,6 +36,36 @@ uint64_t PackSequenceAndType(uint64_t seq, ValueType t) {
   return (seq << 8) | t;
 }
 
+EntryType GetEntryType(ValueType value_type) {
+  switch (value_type) {
+    case kTypeValue:
+      return kEntryPut;
+    case kTypeDeletion:
+      return kEntryDelete;
+    case kTypeSingleDeletion:
+      return kEntrySingleDelete;
+    case kTypeMerge:
+      return kEntryMerge;
+    case kTypeRangeDeletion:
+      return kEntryRangeDeletion;
+    case kTypeBlobIndex:
+      return kEntryBlobIndex;
+    default:
+      return kEntryOther;
+  }
+}
+
+bool ParseFullKey(const Slice& internal_key, FullKey* fkey) {
+  ParsedInternalKey ikey;
+  if (!ParseInternalKey(internal_key, &ikey)) {
+    return false;
+  }
+  fkey->user_key = ikey.user_key;
+  fkey->sequence = ikey.sequence;
+  fkey->type = GetEntryType(ikey.type);
+  return true;
+}
+
 void UnPackSequenceAndType(uint64_t packed, uint64_t* seq, ValueType* t) {
   *seq = packed >> 8;
   *t = static_cast<ValueType>(packed & 0xff);
@@ -76,28 +106,7 @@ std::string InternalKey::DebugString(bool hex) const {
   return result;
 }
 
-const char* InternalKeyComparator::Name() const {
-  return name_.c_str();
-}
-
-int InternalKeyComparator::Compare(const Slice& akey, const Slice& bkey) const {
-  // Order by:
-  //    increasing user key (according to user-supplied comparator)
-  //    decreasing sequence number
-  //    decreasing type (though sequence# should be enough to disambiguate)
-  int r = user_comparator_->Compare(ExtractUserKey(akey), ExtractUserKey(bkey));
-  PERF_COUNTER_ADD(user_key_comparison_count, 1);
-  if (r == 0) {
-    const uint64_t anum = DecodeFixed64(akey.data() + akey.size() - 8);
-    const uint64_t bnum = DecodeFixed64(bkey.data() + bkey.size() - 8);
-    if (anum > bnum) {
-      r = -1;
-    } else if (anum < bnum) {
-      r = +1;
-    }
-  }
-  return r;
-}
+const char* InternalKeyComparator::Name() const { return name_.c_str(); }
 
 int InternalKeyComparator::Compare(const ParsedInternalKey& a,
                                    const ParsedInternalKey& b) const {
@@ -105,8 +114,7 @@ int InternalKeyComparator::Compare(const ParsedInternalKey& a,
   //    increasing user key (according to user-supplied comparator)
   //    decreasing sequence number
   //    decreasing type (though sequence# should be enough to disambiguate)
-  int r = user_comparator_->Compare(a.user_key, b.user_key);
-  PERF_COUNTER_ADD(user_key_comparison_count, 1);
+  int r = user_comparator_.Compare(a.user_key, b.user_key);
   if (r == 0) {
     if (a.sequence > b.sequence) {
       r = -1;
@@ -121,19 +129,19 @@ int InternalKeyComparator::Compare(const ParsedInternalKey& a,
   return r;
 }
 
-void InternalKeyComparator::FindShortestSeparator(
-      std::string* start,
-      const Slice& limit) const {
+void InternalKeyComparator::FindShortestSeparator(std::string* start,
+                                                  const Slice& limit) const {
   // Attempt to shorten the user portion of the key
   Slice user_start = ExtractUserKey(*start);
   Slice user_limit = ExtractUserKey(limit);
   std::string tmp(user_start.data(), user_start.size());
-  user_comparator_->FindShortestSeparator(&tmp, user_limit);
+  user_comparator_.FindShortestSeparator(&tmp, user_limit);
   if (tmp.size() <= user_start.size() &&
-      user_comparator_->Compare(user_start, tmp) < 0) {
+      user_comparator_.Compare(user_start, tmp) < 0) {
     // User key has become shorter physically, but larger logically.
     // Tack on the earliest possible number to the shortened user key.
-    PutFixed64(&tmp, PackSequenceAndType(kMaxSequenceNumber,kValueTypeForSeek));
+    PutFixed64(&tmp,
+               PackSequenceAndType(kMaxSequenceNumber, kValueTypeForSeek));
     assert(this->Compare(*start, tmp) < 0);
     assert(this->Compare(tmp, limit) < 0);
     start->swap(tmp);
@@ -143,12 +151,13 @@ void InternalKeyComparator::FindShortestSeparator(
 void InternalKeyComparator::FindShortSuccessor(std::string* key) const {
   Slice user_key = ExtractUserKey(*key);
   std::string tmp(user_key.data(), user_key.size());
-  user_comparator_->FindShortSuccessor(&tmp);
+  user_comparator_.FindShortSuccessor(&tmp);
   if (tmp.size() <= user_key.size() &&
-      user_comparator_->Compare(user_key, tmp) < 0) {
+      user_comparator_.Compare(user_key, tmp) < 0) {
     // User key has become shorter physically, but larger logically.
     // Tack on the earliest possible number to the shortened user key.
-    PutFixed64(&tmp, PackSequenceAndType(kMaxSequenceNumber,kValueTypeForSeek));
+    PutFixed64(&tmp,
+               PackSequenceAndType(kMaxSequenceNumber, kValueTypeForSeek));
     assert(this->Compare(*key, tmp) < 0);
     key->swap(tmp);
   }
@@ -174,4 +183,13 @@ LookupKey::LookupKey(const Slice& _user_key, SequenceNumber s) {
   end_ = dst;
 }
 
+void IterKey::EnlargeBuffer(size_t key_size) {
+  // If size is smaller than buffer size, continue using current buffer,
+  // or the static allocated one, as default
+  assert(key_size > buf_size_);
+  // Need to enlarge the buffer.
+  ResetBuffer();
+  buf_ = new char[key_size];
+  buf_size_ = key_size;
+}
 }  // namespace rocksdb

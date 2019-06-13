@@ -15,10 +15,10 @@
 #endif
 
 #include <inttypes.h>
-#include <string>
-#include <map>
-#include <vector>
 #include <functional>
+#include <map>
+#include <string>
+#include <vector>
 
 #include "rocksdb/utilities/stackable_db.h"
 
@@ -109,8 +109,14 @@ struct BackupableDBOptions {
   uint64_t callback_trigger_interval_size;
 
   // When Open() is called, it will open at most this many of the latest
-  // non-corrupted backups. If 0, it will open all available backups.
-  // Default: 0
+  // non-corrupted backups.
+  //
+  // Note setting this to a non-default value prevents old files from being
+  // deleted in the shared directory, as we can't do proper ref-counting. If
+  // using this option, make sure to occasionally disable it (by resetting to
+  // INT_MAX) and run GarbageCollect to clean accumulated stale files.
+  //
+  // Default: INT_MAX
   int max_valid_backups_to_open;
 
   void Dump(Logger* logger) const;
@@ -122,7 +128,7 @@ struct BackupableDBOptions {
       bool _backup_log_files = true, uint64_t _backup_rate_limit = 0,
       uint64_t _restore_rate_limit = 0, int _max_background_operations = 1,
       uint64_t _callback_trigger_interval_size = 4 * 1024 * 1024,
-      int _max_valid_backups_to_open = 0)
+      int _max_valid_backups_to_open = INT_MAX)
       : backup_dir(_backup_dir),
         backup_env(_backup_env),
         share_table_files(_share_table_files),
@@ -251,12 +257,13 @@ class BackupEngine {
 
   // BackupableDBOptions have to be the same as the ones used in previous
   // BackupEngines for the same backup directory.
-  static Status Open(Env* db_env,
-                     const BackupableDBOptions& options,
+  static Status Open(Env* db_env, const BackupableDBOptions& options,
                      BackupEngine** backup_engine_ptr);
 
   // same as CreateNewBackup, but stores extra application metadata
   // Flush will always trigger if 2PC is enabled.
+  // If write-ahead logs are disabled, set flush_before_backup=true to
+  // avoid losing unflushed key/value pairs from the memtable.
   virtual Status CreateNewBackupWithMetadata(
       DB* db, const std::string& app_metadata, bool flush_before_backup = false,
       std::function<void()> progress_callback = []() {}) = 0;
@@ -264,6 +271,8 @@ class BackupEngine {
   // Captures the state of the database in the latest backup
   // NOT a thread safe call
   // Flush will always trigger if 2PC is enabled.
+  // If write-ahead logs are disabled, set flush_before_backup=true to
+  // avoid losing unflushed key/value pairs from the memtable.
   virtual Status CreateNewBackup(DB* db, bool flush_before_backup = false,
                                  std::function<void()> progress_callback =
                                      []() {}) {

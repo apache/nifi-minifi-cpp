@@ -32,22 +32,27 @@ class FixedPrefixTransform : public SliceTransform {
         // the class implementation itself.
         name_("rocksdb.FixedPrefix." + ToString(prefix_len_)) {}
 
-  virtual const char* Name() const override { return name_.c_str(); }
+  const char* Name() const override { return name_.c_str(); }
 
-  virtual Slice Transform(const Slice& src) const override {
+  Slice Transform(const Slice& src) const override {
     assert(InDomain(src));
     return Slice(src.data(), prefix_len_);
   }
 
-  virtual bool InDomain(const Slice& src) const override {
+  bool InDomain(const Slice& src) const override {
     return (src.size() >= prefix_len_);
   }
 
-  virtual bool InRange(const Slice& dst) const override {
+  bool InRange(const Slice& dst) const override {
     return (dst.size() == prefix_len_);
   }
 
-  virtual bool SameResultWhenAppended(const Slice& prefix) const override {
+  bool FullLengthEnabled(size_t* len) const override {
+    *len = prefix_len_;
+    return true;
+  }
+
+  bool SameResultWhenAppended(const Slice& prefix) const override {
     return InDomain(prefix);
   }
 };
@@ -67,20 +72,25 @@ class CappedPrefixTransform : public SliceTransform {
         // the class implementation itself.
         name_("rocksdb.CappedPrefix." + ToString(cap_len_)) {}
 
-  virtual const char* Name() const override { return name_.c_str(); }
+  const char* Name() const override { return name_.c_str(); }
 
-  virtual Slice Transform(const Slice& src) const override {
+  Slice Transform(const Slice& src) const override {
     assert(InDomain(src));
     return Slice(src.data(), std::min(cap_len_, src.size()));
   }
 
-  virtual bool InDomain(const Slice& src) const override { return true; }
+  bool InDomain(const Slice& /*src*/) const override { return true; }
 
-  virtual bool InRange(const Slice& dst) const override {
+  bool InRange(const Slice& dst) const override {
     return (dst.size() <= cap_len_);
   }
 
-  virtual bool SameResultWhenAppended(const Slice& prefix) const override {
+  bool FullLengthEnabled(size_t* len) const override {
+    *len = cap_len_;
+    return true;
+  }
+
+  bool SameResultWhenAppended(const Slice& prefix) const override {
     return prefix.size() >= cap_len_;
   }
 };
@@ -89,15 +99,15 @@ class NoopTransform : public SliceTransform {
  public:
   explicit NoopTransform() { }
 
-  virtual const char* Name() const override { return "rocksdb.Noop"; }
+  const char* Name() const override { return "rocksdb.Noop"; }
 
-  virtual Slice Transform(const Slice& src) const override { return src; }
+  Slice Transform(const Slice& src) const override { return src; }
 
-  virtual bool InDomain(const Slice& src) const override { return true; }
+  bool InDomain(const Slice& /*src*/) const override { return true; }
 
-  virtual bool InRange(const Slice& dst) const override { return true; }
+  bool InRange(const Slice& /*dst*/) const override { return true; }
 
-  virtual bool SameResultWhenAppended(const Slice& prefix) const override {
+  bool SameResultWhenAppended(const Slice& /*prefix*/) const override {
     return false;
   }
 };
@@ -182,7 +192,7 @@ bool Slice::DecodeHex(std::string* result) const {
     if (h2 < 0) {
       return false;
     }
-    result->push_back((h1 << 4) | h2);
+    result->push_back(static_cast<char>((h1 << 4) | h2));
   }
   return true;
 }

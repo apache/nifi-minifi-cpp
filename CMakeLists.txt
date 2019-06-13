@@ -30,6 +30,7 @@ include(FeatureSummary)
 include(ExternalProject)
 
 option(SKIP_TESTS "Skips building all tests." OFF)
+option(ENABLE_BENCHMARKING "Enables building of benchmark suites." OFF)
 
 option(PORTABLE "Instructs the compiler to remove architecture specific optimizations" ON)
 
@@ -376,6 +377,7 @@ add_subdirectory(thirdparty/yaml-cpp-yaml-cpp-20171024)
 include_directories(thirdparty/concurrentqueue)
 include_directories(thirdparty/yaml-cpp-yaml-cpp-20171024/include)
 include_directories(thirdparty/rapidjson-1.1.0/include)
+include_directories(thirdparty/mio/include)
 
 ## Expression language extensions
 option(DISABLE_EXPRESSION_LANGUAGE "Disables the scripting extensions." OFF)
@@ -409,6 +411,7 @@ if (WIN32 OR NOT USE_SYSTEM_ZLIB)
 	add_dependencies(minifi zlib-external)
 endif(WIN32 OR NOT USE_SYSTEM_ZLIB)
 
+
 createExtension(STANDARD-PROCESSORS "STANDARD PROCESSORS" "Provides standard processors" "extensions/standard-processors" "extensions/standard-processors/tests/")
 
 
@@ -428,6 +431,7 @@ endif()
 
 ## Add the rocks DB extension
 if (NOT ROCKSDB_FOUND OR BUILD_ROCKSDB)
+	set(USE_RTTI "TRUE")
 	set(BUILD_RD "TRUE")
 endif()
 
@@ -706,6 +710,49 @@ include(CPack)
 
 if (NOT SKIP_TESTS)
 	include(BuildTests)
+
+    # BENCHMARKING depends on test support code
+    if (ENABLE_BENCHMARKING)
+        set(BENCHMARK_LIB_DIR "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/google-benchmark-install/lib64")
+        set(BENCHMARK_BYPRODUCT "${BENCHMARK_LIB_DIR}/libbenchmark.a")
+        set(BENCHMARK_MAIN_BYPRODUCT "${BENCHMARK_LIB_DIR}/libbenchmark.a")
+        #  GIT_REPOSITORY "https://github.com/google/benchmark.git"
+        #GIT_TAG "090faecb454fbd6e6e17a75ef8146acb037118d4"  # Version 1.5.0
+        ExternalProject_Add(
+                google-benchmark-external
+                SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/benchmark-1.5.0"
+                CMAKE_ARGS ${PASSTHROUGH_CMAKE_ARGS}
+                "-DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/thirdparty/google-benchmark-install"
+                "-DBENCHMARK_ENABLE_TESTING=OFF"
+                BUILD_BYPRODUCTS ${BENCHMARK_BYPRODUCT} ${BENCHMARK_MAIN_BYPRODUCT}
+        )
+        add_library(benchmark STATIC IMPORTED)
+        set_target_properties(benchmark PROPERTIES IMPORTED_LOCATION ${BENCHMARK_BYPRODUCT})
+        add_dependencies(benchmark google-benchmark-external)
+        add_library(benchmark_main STATIC IMPORTED)
+        set_target_properties(benchmark_main PROPERTIES IMPORTED_LOCATION ${BENCHMARK_MAIN_BYPRODUCT})
+        add_dependencies(benchmark_main google-benchmark-external)
+        file(GLOB LIBMINIFI_BENCHMARKS  "libminifi/benchmark/*.cpp")
+        set(ALL_BENCHMARKS "${LIBMINIFI_BENCHMARKS}")
+
+        set(BENCHMARK_COUNT 0)
+        foreach(benchmarkfile ${ALL_BENCHMARKS})
+            get_filename_component(benchmarkfilename "${benchmarkfile}" NAME_WE)
+            add_executable("${benchmarkfilename}" "${benchmarkfile}")
+            target_link_libraries("${benchmarkfilename}" benchmark benchmark_main "${CMAKE_THREAD_LIBS_INIT}")
+            target_link_libraries ("${benchmarkfilename}" -Wl,--whole-archive core-minifi minifi -Wl,--no-whole-archive)
+            appendIncludes("${benchmarkfilename}")
+	    if (DISABLE_ROCKSDB STREQUAL "OFF" OR NOT DISABLE_ROCKSDB)
+	      target_include_directories("${benchmarkfilename}" BEFORE PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/rocksdb/include")
+	      target_include_directories("${benchmarkfilename}" BEFORE PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/extensions/rocksdb-repos")
+	      target_link_libraries ("${benchmarkfilename}" -Wl,--whole-archive minifi-rocksdb-repos -Wl,--no-whole-archive)
+	      add_definitions(-DENABLE_ROCKSDB_BENCHMARKS=1)
+	    endif()
+            target_include_directories("${benchmarkfilename}" BEFORE PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/benchmark-1.5.0/include")
+            math(EXPR BENCHMARK_COUNT "${BENCHMARK_COUNT}+1")
+        endforeach()
+        message("-- Finished building ${BENCHMARK_COUNT} benchmark file(s)...")
+    endif()
 endif()
 
 include(BuildDocs)

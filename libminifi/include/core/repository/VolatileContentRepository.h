@@ -18,14 +18,15 @@
 #ifndef LIBMINIFI_INCLUDE_CORE_REPOSITORY_VolatileContentRepository_H_
 #define LIBMINIFI_INCLUDE_CORE_REPOSITORY_VolatileContentRepository_H_
 
-#include "core/Core.h"
-#include "AtomicRepoEntries.h"
-#include "io/AtomicEntryStream.h"
 #include "../ContentRepository.h"
-#include "core/repository/VolatileRepository.h"
-#include "properties/Configure.h"
+#include "AtomicRepoEntries.h"
 #include "core/Connectable.h"
+#include "core/Core.h"
 #include "core/logging/LoggerConfiguration.h"
+#include "core/repository/VolatileRepository.h"
+#include "io/AtomicEntryStream.h"
+#include "io/AtomicEntryMemoryMap.h"
+#include "properties/Configure.h"
 namespace org {
 namespace apache {
 namespace nifi {
@@ -34,12 +35,13 @@ namespace core {
 namespace repository {
 
 /**
- * Purpose: Stages content into a volatile area of memory. Note that   when the maximum number
- * of entries is consumed we will rollback a session to wait for others to be freed.
+ * Purpose: Stages content into a volatile area of memory. Note that   when the
+ * maximum number of entries is consumed we will rollback a session to wait for
+ * others to be freed.
  */
-class VolatileContentRepository : public core::ContentRepository, public virtual core::repository::VolatileRepository<std::shared_ptr<minifi::ResourceClaim>> {
+class VolatileContentRepository : public core::ContentRepository,
+                                  public virtual core::repository::VolatileRepository<std::shared_ptr<minifi::ResourceClaim>> {
  public:
-
   static const char *minimal_locking;
 
   explicit VolatileContentRepository(std::string name = getClassName<VolatileContentRepository>())
@@ -58,7 +60,6 @@ class VolatileContentRepository : public core::ContentRepository, public virtual
       }
       master_list_.clear();
     }
-
   }
 
   /**
@@ -73,16 +74,31 @@ class VolatileContentRepository : public core::ContentRepository, public virtual
   virtual void stop();
 
   /**
+   * Generic operation which mutates the state of an object in the repo.
+   */
+  template <class T, template<typename> class U, typename... V>
+  std::shared_ptr<T> mutate(const std::shared_ptr<minifi::ResourceClaim> &claim, V... v);
+
+  /**
    * Creates writable stream.
    * @param claim resource claim
-   * @return BaseStream shared pointer that represents the stream the consumer will write to.
+   * @return BaseStream shared pointer that represents the stream the consumer
+   * will write to.
    */
   virtual std::shared_ptr<io::BaseStream> write(const std::shared_ptr<minifi::ResourceClaim> &claim, bool append);
 
   /**
+   * Create a passthrough memory map to the memory.
+   * @param map_obj the object to map
+   * @return BaseMemoryMap shared pointer mapped directly to the memory
+   */
+  virtual std::shared_ptr<io::BaseMemoryMap> mmap(const std::shared_ptr<minifi::ResourceClaim> &claim, size_t mapSize, bool readOnly);
+
+  /**
    * Creates readable stream.
    * @param claim resource claim
-   * @return BaseStream shared pointer that represents the stream from which the consumer will read..
+   * @return BaseStream shared pointer that represents the stream from which the
+   * consumer will read..
    */
   virtual std::shared_ptr<io::BaseStream> read(const std::shared_ptr<minifi::ResourceClaim> &claim);
 
@@ -90,31 +106,29 @@ class VolatileContentRepository : public core::ContentRepository, public virtual
 
   /**
    * Closes the claim.
-   * @return whether or not the claim is associated with content stored in volatile memory.
+   * @return whether or not the claim is associated with content stored in
+   * volatile memory.
    */
-  virtual bool close(const std::shared_ptr<minifi::ResourceClaim> &claim) {
-    return remove(claim);
-  }
+  virtual bool close(const std::shared_ptr<minifi::ResourceClaim> &claim) { return remove(claim); }
 
   /**
    * Closes the claim.
-   * @return whether or not the claim is associated with content stored in volatile memory.
+   * @return whether or not the claim is associated with content stored in
+   * volatile memory.
    */
   virtual bool remove(const std::shared_ptr<minifi::ResourceClaim> &claim);
 
  protected:
-
   virtual void start();
 
   virtual void run();
 
-  template<typename T2>
+  template <typename T2>
   std::shared_ptr<T2> shared_from_parent() {
     return std::dynamic_pointer_cast<T2>(shared_from_this());
   }
 
  private:
-
   bool minimize_locking_;
 
   // function pointers that are associated with the claims.
@@ -122,11 +136,13 @@ class VolatileContentRepository : public core::ContentRepository, public virtual
   std::function<bool(std::shared_ptr<minifi::ResourceClaim>)> resource_claim_check_;
   std::function<void(std::shared_ptr<minifi::ResourceClaim>)> claim_reclaimer_;
 
-  // mutex and master list that represent a cache of Atomic entries. this exists so that we don't have to walk the atomic entry list.
-  // The idea is to reduce the computational complexity while keeping access as maximally lock free as we can.
+  // mutex and master list that represent a cache of Atomic entries. this exists
+  // so that we don't have to walk the atomic entry list. The idea is to reduce
+  // the computational complexity while keeping access as maximally lock free as
+  // we can.
   std::mutex map_mutex_;
 
-  std::map<std::string, AtomicEntry<std::shared_ptr<minifi::ResourceClaim>>*> master_list_;
+  std::map<std::string, AtomicEntry<std::shared_ptr<minifi::ResourceClaim>> *> master_list_;
 
   // logger
   std::shared_ptr<logging::Logger> logger_;

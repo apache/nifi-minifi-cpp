@@ -18,13 +18,13 @@
 #ifndef LIBMINIFI_INCLUDE_CORE_REPOSITORY_DatabaseContentRepository_H_
 #define LIBMINIFI_INCLUDE_CORE_REPOSITORY_DatabaseContentRepository_H_
 
-#include "rocksdb/db.h"
-#include "rocksdb/merge_operator.h"
-#include "core/Core.h"
 #include "core/Connectable.h"
 #include "core/ContentRepository.h"
-#include "properties/Configure.h"
+#include "core/Core.h"
 #include "core/logging/LoggerConfiguration.h"
+#include "properties/Configure.h"
+#include "rocksdb/db.h"
+#include "rocksdb/merge_operator.h"
 namespace org {
 namespace apache {
 namespace nifi {
@@ -35,15 +35,15 @@ namespace repository {
 class StringAppender : public rocksdb::AssociativeMergeOperator {
  public:
   // Constructor: specify delimiter
-  explicit StringAppender() {
+  explicit StringAppender() {}
 
-  }
-
-  virtual bool Merge(const rocksdb::Slice& key, const rocksdb::Slice* existing_value, const rocksdb::Slice& value, std::string* new_value, rocksdb::Logger* logger) const {
+  virtual bool Merge(const rocksdb::Slice &key, const rocksdb::Slice *existing_value, const rocksdb::Slice &value, std::string *new_value,
+                     rocksdb::Logger *logger) const {
     // Clear the *new_value for writing.
     if (nullptr == new_value) {
       return false;
     }
+
     new_value->clear();
 
     if (!existing_value) {
@@ -58,29 +58,20 @@ class StringAppender : public rocksdb::AssociativeMergeOperator {
     return true;
   }
 
-  virtual const char* Name() const {
-    return "StringAppender";
-  }
+  virtual const char *Name() const { return "StringAppender"; }
 
  private:
-
 };
 
 /**
- * DatabaseContentRepository is a content repository that stores data onto the local file system.
+ * DatabaseContentRepository is a content repository that stores data onto the
+ * local file system.
  */
 class DatabaseContentRepository : public core::ContentRepository, public core::Connectable {
  public:
-
   DatabaseContentRepository(std::string name = getClassName<DatabaseContentRepository>(), utils::Identifier uuid = utils::Identifier())
-      : core::Connectable(name, uuid),
-        is_valid_(false),
-        db_(nullptr),
-        logger_(logging::LoggerFactory<DatabaseContentRepository>::getLogger()) {
-  }
-  virtual ~DatabaseContentRepository() {
-    stop();
-  }
+      : core::Connectable(name, uuid), is_valid_(false), db_(nullptr), logger_(logging::LoggerFactory<DatabaseContentRepository>::getLogger()) {}
+  virtual ~DatabaseContentRepository() { stop(); }
 
   virtual bool initialize(const std::shared_ptr<minifi::Configure> &configuration);
 
@@ -88,38 +79,32 @@ class DatabaseContentRepository : public core::ContentRepository, public core::C
 
   virtual std::shared_ptr<io::BaseStream> write(const std::shared_ptr<minifi::ResourceClaim> &claim, bool append = false);
 
+  virtual std::shared_ptr<io::BaseMemoryMap> mmap(const std::shared_ptr<minifi::ResourceClaim> &claim, size_t mapSize, bool readOnly);
+
   virtual std::shared_ptr<io::BaseStream> read(const std::shared_ptr<minifi::ResourceClaim> &claim);
 
-  virtual bool close(const std::shared_ptr<minifi::ResourceClaim> &claim) {
-    return remove(claim);
-  }
+  virtual bool close(const std::shared_ptr<minifi::ResourceClaim> &claim) { return remove(claim); }
 
   virtual bool remove(const std::shared_ptr<minifi::ResourceClaim> &claim);
 
   virtual bool exists(const std::shared_ptr<minifi::ResourceClaim> &streamId);
 
-  virtual void yield() {
-
-  }
+  virtual void yield() {}
 
   /**
    * Determines if we are connected and operating
    */
-  virtual bool isRunning() {
-    return true;
-  }
+  virtual bool isRunning() { return true; }
 
   /**
    * Determines if work is available by this connectable
    * @return boolean if work is available.
    */
-  virtual bool isWorkAvailable() {
-    return true;
-  }
+  virtual bool isWorkAvailable() { return true; }
 
  private:
   bool is_valid_;
-  rocksdb::DB* db_;
+  rocksdb::DB *db_;
   std::shared_ptr<logging::Logger> logger_;
 };
 

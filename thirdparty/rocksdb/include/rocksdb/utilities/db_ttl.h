@@ -9,8 +9,8 @@
 #include <string>
 #include <vector>
 
-#include "rocksdb/utilities/stackable_db.h"
 #include "rocksdb/db.h"
+#include "rocksdb/utilities/stackable_db.h"
 
 namespace rocksdb {
 
@@ -59,6 +59,10 @@ class DBWithTTL : public StackableDB {
                      std::vector<ColumnFamilyHandle*>* handles,
                      DBWithTTL** dbptr, std::vector<int32_t> ttls,
                      bool read_only = false);
+
+  virtual void SetTtl(int32_t ttl) = 0;
+
+  virtual void SetTtl(ColumnFamilyHandle* h, int32_t ttl) = 0;
 
  protected:
   explicit DBWithTTL(DB* db) : StackableDB(db) {}

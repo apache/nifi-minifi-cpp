@@ -7,6 +7,12 @@
 
 #include "utilities/transactions/transaction_base.h"
 
+#ifndef __STDC_FORMAT_MACROS
+#define __STDC_FORMAT_MACROS
+#endif
+
+#include <inttypes.h>
+
 #include "db/db_impl.h"
 #include "db/column_family.h"
 #include "rocksdb/comparator.h"
@@ -55,6 +61,7 @@ void TransactionBaseImpl::Reinitialize(DB* db,
                                        const WriteOptions& write_options) {
   Clear();
   ClearSnapshot();
+  id_ = 0;
   db_ = db;
   name_.clear();
   log_number_ = 0;
@@ -96,7 +103,8 @@ void TransactionBaseImpl::SetSnapshotIfNeeded() {
 
 Status TransactionBaseImpl::TryLock(ColumnFamilyHandle* column_family,
                                     const SliceParts& key, bool read_only,
-                                    bool exclusive, bool untracked) {
+                                    bool exclusive, const bool do_validate,
+                                    const bool assume_tracked) {
   size_t key_size = 0;
   for (int i = 0; i < key.num_parts; ++i) {
     key_size += key.parts[i].size();
@@ -109,7 +117,8 @@ Status TransactionBaseImpl::TryLock(ColumnFamilyHandle* column_family,
     str.append(key.parts[i].data(), key.parts[i].size());
   }
 
-  return TryLock(column_family, str, read_only, exclusive, untracked);
+  return TryLock(column_family, str, read_only, exclusive, do_validate,
+                 assume_tracked);
 }
 
 void TransactionBaseImpl::SetSavePoint() {
@@ -178,6 +187,19 @@ Status TransactionBaseImpl::RollbackToSavePoint() {
   }
 }
 
+Status TransactionBaseImpl::PopSavePoint() {
+  if (save_points_ == nullptr ||
+      save_points_->empty()) {
+    // No SavePoint yet.
+    assert(write_batch_.PopSavePoint().IsNotFound());
+    return Status::NotFound();
+  }
+
+  assert(!save_points_->empty());
+  save_points_->pop();
+  return write_batch_.PopSavePoint();
+}
+
 Status TransactionBaseImpl::Get(const ReadOptions& read_options,
                                 ColumnFamilyHandle* column_family,
                                 const Slice& key, std::string* value) {
@@ -201,8 +223,15 @@ Status TransactionBaseImpl::Get(const ReadOptions& read_options,
 Status TransactionBaseImpl::GetForUpdate(const ReadOptions& read_options,
                                          ColumnFamilyHandle* column_family,
                                          const Slice& key, std::string* value,
-                                         bool exclusive) {
-  Status s = TryLock(column_family, key, true /* read_only */, exclusive);
+                                         bool exclusive,
+                                         const bool do_validate) {
+  if (!do_validate && read_options.snapshot != nullptr) {
+    return Status::InvalidArgument(
+        "If do_validate is false then GetForUpdate with snapshot is not "
+        "defined.");
+  }
+  Status s =
+      TryLock(column_family, key, true /* read_only */, exclusive, do_validate);
 
   if (s.ok() && value != nullptr) {
     assert(value != nullptr);
@@ -220,8 +249,15 @@ Status TransactionBaseImpl::GetForUpdate(const ReadOptions& read_options,
                                          ColumnFamilyHandle* column_family,
                                          const Slice& key,
                                          PinnableSlice* pinnable_val,
-                                         bool exclusive) {
-  Status s = TryLock(column_family, key, true /* read_only */, exclusive);
+                                         bool exclusive,
+                                         const bool do_validate) {
+  if (!do_validate && read_options.snapshot != nullptr) {
+    return Status::InvalidArgument(
+        "If do_validate is false then GetForUpdate with snapshot is not "
+        "defined.");
+  }
+  Status s =
+      TryLock(column_family, key, true /* read_only */, exclusive, do_validate);
 
   if (s.ok() && pinnable_val != nullptr) {
     s = Get(read_options, column_family, key, pinnable_val);
@@ -289,9 +325,11 @@ Iterator* TransactionBaseImpl::GetIterator(const ReadOptions& read_options,
 }
 
 Status TransactionBaseImpl::Put(ColumnFamilyHandle* column_family,
-                                const Slice& key, const Slice& value) {
-  Status s =
-      TryLock(column_family, key, false /* read_only */, true /* exclusive */);
+                                const Slice& key, const Slice& value,
+                                const bool assume_tracked) {
+  const bool do_validate = !assume_tracked;
+  Status s = TryLock(column_family, key, false /* read_only */,
+                     true /* exclusive */, do_validate, assume_tracked);
 
   if (s.ok()) {
     s = GetBatchForWrite()->Put(column_family, key, value);
@@ -304,10 +342,11 @@ Status TransactionBaseImpl::Put(ColumnFamilyHandle* column_family,
 }
 
 Status TransactionBaseImpl::Put(ColumnFamilyHandle* column_family,
-                                const SliceParts& key,
-                                const SliceParts& value) {
-  Status s =
-      TryLock(column_family, key, false /* read_only */, true /* exclusive */);
+                                const SliceParts& key, const SliceParts& value,
+                                const bool assume_tracked) {
+  const bool do_validate = !assume_tracked;
+  Status s = TryLock(column_family, key, false /* read_only */,
+                     true /* exclusive */, do_validate, assume_tracked);
 
   if (s.ok()) {
     s = GetBatchForWrite()->Put(column_family, key, value);
@@ -320,9 +359,11 @@ Status TransactionBaseImpl::Put(ColumnFamilyHandle* column_family,
 }
 
 Status TransactionBaseImpl::Merge(ColumnFamilyHandle* column_family,
-                                  const Slice& key, const Slice& value) {
-  Status s =
-      TryLock(column_family, key, false /* read_only */, true /* exclusive */);
+                                  const Slice& key, const Slice& value,
+                                  const bool assume_tracked) {
+  const bool do_validate = !assume_tracked;
+  Status s = TryLock(column_family, key, false /* read_only */,
+                     true /* exclusive */, do_validate, assume_tracked);
 
   if (s.ok()) {
     s = GetBatchForWrite()->Merge(column_family, key, value);
@@ -335,9 +376,11 @@ Status TransactionBaseImpl::Merge(ColumnFamilyHandle* column_family,
 }
 
 Status TransactionBaseImpl::Delete(ColumnFamilyHandle* column_family,
-                                   const Slice& key) {
-  Status s =
-      TryLock(column_family, key, false /* read_only */, true /* exclusive */);
+                                   const Slice& key,
+                                   const bool assume_tracked) {
+  const bool do_validate = !assume_tracked;
+  Status s = TryLock(column_family, key, false /* read_only */,
+                     true /* exclusive */, do_validate, assume_tracked);
 
   if (s.ok()) {
     s = GetBatchForWrite()->Delete(column_family, key);
@@ -350,9 +393,11 @@ Status TransactionBaseImpl::Delete(ColumnFamilyHandle* column_family,
 }
 
 Status TransactionBaseImpl::Delete(ColumnFamilyHandle* column_family,
-                                   const SliceParts& key) {
-  Status s =
-      TryLock(column_family, key, false /* read_only */, true /* exclusive */);
+                                   const SliceParts& key,
+                                   const bool assume_tracked) {
+  const bool do_validate = !assume_tracked;
+  Status s = TryLock(column_family, key, false /* read_only */,
+                     true /* exclusive */, do_validate, assume_tracked);
 
   if (s.ok()) {
     s = GetBatchForWrite()->Delete(column_family, key);
@@ -365,9 +410,11 @@ Status TransactionBaseImpl::Delete(ColumnFamilyHandle* column_family,
 }
 
 Status TransactionBaseImpl::SingleDelete(ColumnFamilyHandle* column_family,
-                                         const Slice& key) {
-  Status s =
-      TryLock(column_family, key, false /* read_only */, true /* exclusive */);
+                                         const Slice& key,
+                                         const bool assume_tracked) {
+  const bool do_validate = !assume_tracked;
+  Status s = TryLock(column_family, key, false /* read_only */,
+                     true /* exclusive */, do_validate, assume_tracked);
 
   if (s.ok()) {
     s = GetBatchForWrite()->SingleDelete(column_family, key);
@@ -380,9 +427,11 @@ Status TransactionBaseImpl::SingleDelete(ColumnFamilyHandle* column_family,
 }
 
 Status TransactionBaseImpl::SingleDelete(ColumnFamilyHandle* column_family,
-                                         const SliceParts& key) {
-  Status s =
-      TryLock(column_family, key, false /* read_only */, true /* exclusive */);
+                                         const SliceParts& key,
+                                         const bool assume_tracked) {
+  const bool do_validate = !assume_tracked;
+  Status s = TryLock(column_family, key, false /* read_only */,
+                     true /* exclusive */, do_validate, assume_tracked);
 
   if (s.ok()) {
     s = GetBatchForWrite()->SingleDelete(column_family, key);
@@ -397,7 +446,7 @@ Status TransactionBaseImpl::SingleDelete(ColumnFamilyHandle* column_family,
 Status TransactionBaseImpl::PutUntracked(ColumnFamilyHandle* column_family,
                                          const Slice& key, const Slice& value) {
   Status s = TryLock(column_family, key, false /* read_only */,
-                     true /* exclusive */, true /* untracked */);
+                     true /* exclusive */, false /* do_validate */);
 
   if (s.ok()) {
     s = GetBatchForWrite()->Put(column_family, key, value);
@@ -413,7 +462,7 @@ Status TransactionBaseImpl::PutUntracked(ColumnFamilyHandle* column_family,
                                          const SliceParts& key,
                                          const SliceParts& value) {
   Status s = TryLock(column_family, key, false /* read_only */,
-                     true /* exclusive */, true /* untracked */);
+                     true /* exclusive */, false /* do_validate */);
 
   if (s.ok()) {
     s = GetBatchForWrite()->Put(column_family, key, value);
@@ -429,7 +478,7 @@ Status TransactionBaseImpl::MergeUntracked(ColumnFamilyHandle* column_family,
                                            const Slice& key,
                                            const Slice& value) {
   Status s = TryLock(column_family, key, false /* read_only */,
-                     true /* exclusive */, true /* untracked */);
+                     true /* exclusive */, false /* do_validate */);
 
   if (s.ok()) {
     s = GetBatchForWrite()->Merge(column_family, key, value);
@@ -444,7 +493,7 @@ Status TransactionBaseImpl::MergeUntracked(ColumnFamilyHandle* column_family,
 Status TransactionBaseImpl::DeleteUntracked(ColumnFamilyHandle* column_family,
                                             const Slice& key) {
   Status s = TryLock(column_family, key, false /* read_only */,
-                     true /* exclusive */, true /* untracked */);
+                     true /* exclusive */, false /* do_validate */);
 
   if (s.ok()) {
     s = GetBatchForWrite()->Delete(column_family, key);
@@ -459,10 +508,25 @@ Status TransactionBaseImpl::DeleteUntracked(ColumnFamilyHandle* column_family,
 Status TransactionBaseImpl::DeleteUntracked(ColumnFamilyHandle* column_family,
                                             const SliceParts& key) {
   Status s = TryLock(column_family, key, false /* read_only */,
-                     true /* exclusive */, true /* untracked */);
+                     true /* exclusive */, false /* do_validate */);
 
   if (s.ok()) {
     s = GetBatchForWrite()->Delete(column_family, key);
+    if (s.ok()) {
+      num_deletes_++;
+    }
+  }
+
+  return s;
+}
+
+Status TransactionBaseImpl::SingleDeleteUntracked(
+    ColumnFamilyHandle* column_family, const Slice& key) {
+  Status s = TryLock(column_family, key, false /* read_only */,
+                     true /* exclusive */, false /* do_validate */);
+
+  if (s.ok()) {
+    s = GetBatchForWrite()->SingleDelete(column_family, key);
     if (s.ok()) {
       num_deletes_++;
     }
@@ -515,6 +579,8 @@ void TransactionBaseImpl::TrackKey(uint32_t cfh_id, const std::string& key,
 }
 
 // Add a key to the given TransactionKeyMap
+// seq for pessimistic transactions is the sequence number from which we know
+// there has not been a concurrent update to the key.
 void TransactionBaseImpl::TrackKey(TransactionKeyMap* key_map, uint32_t cfh_id,
                                    const std::string& key, SequenceNumber seq,
                                    bool read_only, bool exclusive) {
@@ -527,6 +593,10 @@ void TransactionBaseImpl::TrackKey(TransactionKeyMap* key_map, uint32_t cfh_id,
     // Now tracking this key with an earlier sequence number
     iter->second.seq = seq;
   }
+  // else we do not update the seq. The smaller the tracked seq, the stronger it
+  // the guarantee since it implies from the seq onward there has not been a
+  // concurrent update to the key. So we update the seq if it implies stronger
+  // guarantees, i.e., if it is smaller than the existing trakced seq.
 
   if (read_only) {
     iter->second.num_reads++;
@@ -591,6 +661,9 @@ WriteBatchBase* TransactionBaseImpl::GetBatchForWrite() {
 
 void TransactionBaseImpl::ReleaseSnapshot(const Snapshot* snapshot, DB* db) {
   if (snapshot != nullptr) {
+    ROCKS_LOG_DETAILS(dbimpl_->immutable_db_options().info_log,
+                      "ReleaseSnapshot %" PRIu64 " Set",
+                      snapshot->GetSequenceNumber());
     db->ReleaseSnapshot(snapshot);
   }
 }
@@ -601,7 +674,7 @@ void TransactionBaseImpl::UndoGetForUpdate(ColumnFamilyHandle* column_family,
   auto& cf_tracked_keys = tracked_keys_[column_family_id];
   std::string key_str = key.ToString();
   bool can_decrement = false;
-  bool can_unlock __attribute__((unused)) = false;
+  bool can_unlock __attribute__((__unused__)) = false;
 
   if (save_points_ != nullptr && !save_points_->empty()) {
     // Check if this key was fetched ForUpdate in this SavePoint
@@ -677,7 +750,7 @@ Status TransactionBaseImpl::RebuildFromWriteBatch(WriteBatch* src_batch) {
     // this is used for reconstructing prepared transactions upon
     // recovery. there should not be any meta markers in the batches
     // we are processing.
-    Status MarkBeginPrepare() override { return Status::InvalidArgument(); }
+    Status MarkBeginPrepare(bool) override { return Status::InvalidArgument(); }
 
     Status MarkEndPrepare(const Slice&) override {
       return Status::InvalidArgument();

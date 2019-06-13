@@ -9,14 +9,17 @@
 
 #pragma once
 
+#include "db/dbformat.h"
 #include "rocksdb/types.h"
 
 namespace rocksdb {
 
 class Comparator;
-class InternalIterator;
 class Env;
 class Arena;
+template <class TValue>
+class InternalIteratorBase;
+using InternalIterator = InternalIteratorBase<Slice>;
 
 // Return an iterator that provided the union of the data in
 // children[0,n-1].  Takes ownership of the child iterators and
@@ -26,10 +29,9 @@ class Arena;
 // key is present in K child iterators, it will be yielded K times.
 //
 // REQUIRES: n >= 0
-extern InternalIterator* NewMergingIterator(const Comparator* comparator,
-                                            InternalIterator** children, int n,
-                                            Arena* arena = nullptr,
-                                            bool prefix_seek_mode = false);
+extern InternalIterator* NewMergingIterator(
+    const InternalKeyComparator* comparator, InternalIterator** children, int n,
+    Arena* arena = nullptr, bool prefix_seek_mode = false);
 
 class MergingIterator;
 
@@ -38,9 +40,9 @@ class MergeIteratorBuilder {
  public:
   // comparator: the comparator used in merging comparator
   // arena: where the merging iterator needs to be allocated from.
-  explicit MergeIteratorBuilder(const Comparator* comparator, Arena* arena,
-                                bool prefix_seek_mode = false);
-  ~MergeIteratorBuilder() {}
+  explicit MergeIteratorBuilder(const InternalKeyComparator* comparator,
+                                Arena* arena, bool prefix_seek_mode = false);
+  ~MergeIteratorBuilder();
 
   // Add iter to the merging iterator.
   void AddIterator(InternalIterator* iter);

@@ -9,16 +9,38 @@
 
 #include "util/testharness.h"
 #include <string>
+#include <thread>
 
 namespace rocksdb {
 namespace test {
 
+::testing::AssertionResult AssertStatus(const char* s_expr, const Status& s) {
+  if (s.ok()) {
+    return ::testing::AssertionSuccess();
+  } else {
+    return ::testing::AssertionFailure() << s_expr << std::endl
+                                         << s.ToString();
+  }
+}
 
 std::string TmpDir(Env* env) {
   std::string dir;
   Status s = env->GetTestDirectory(&dir);
   EXPECT_TRUE(s.ok()) << s.ToString();
   return dir;
+}
+
+std::string PerThreadDBPath(std::string dir, std::string name) {
+  size_t tid = std::hash<std::thread::id>()(std::this_thread::get_id());
+  return dir + "/" + name + "_" + std::to_string(tid);
+}
+
+std::string PerThreadDBPath(std::string name) {
+  return PerThreadDBPath(test::TmpDir(), name);
+}
+
+std::string PerThreadDBPath(Env* env, std::string name) {
+  return PerThreadDBPath(test::TmpDir(env), name);
 }
 
 int RandomSeed() {

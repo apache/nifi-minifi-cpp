@@ -38,20 +38,16 @@ class TableReader;
 class InternalKeyComparator;
 class PlainTableKeyDecoder;
 class GetContext;
-class InternalIterator;
 
-using std::unique_ptr;
-using std::unordered_map;
-using std::vector;
 extern const uint32_t kPlainTableVariableLength;
 
 struct PlainTableReaderFileInfo {
   bool is_mmap_mode;
   Slice file_data;
   uint32_t data_end_offset;
-  unique_ptr<RandomAccessFileReader> file;
+  std::unique_ptr<RandomAccessFileReader> file;
 
-  PlainTableReaderFileInfo(unique_ptr<RandomAccessFileReader>&& _file,
+  PlainTableReaderFileInfo(std::unique_ptr<RandomAccessFileReader>&& _file,
                            const EnvOptions& storage_options,
                            uint32_t _data_size_offset)
       : is_mmap_mode(storage_options.use_mmap_reads),
@@ -72,19 +68,23 @@ class PlainTableReader: public TableReader {
   static Status Open(const ImmutableCFOptions& ioptions,
                      const EnvOptions& env_options,
                      const InternalKeyComparator& internal_comparator,
-                     unique_ptr<RandomAccessFileReader>&& file,
-                     uint64_t file_size, unique_ptr<TableReader>* table,
+                     std::unique_ptr<RandomAccessFileReader>&& file,
+                     uint64_t file_size, std::unique_ptr<TableReader>* table,
                      const int bloom_bits_per_key, double hash_table_ratio,
                      size_t index_sparseness, size_t huge_page_tlb_size,
-                     bool full_scan_mode);
+                     bool full_scan_mode, const bool immortal_table = false,
+                     const SliceTransform* prefix_extractor = nullptr);
 
   InternalIterator* NewIterator(const ReadOptions&,
+                                const SliceTransform* prefix_extractor,
                                 Arena* arena = nullptr,
-                                bool skip_filters = false) override;
+                                bool skip_filters = false,
+                                bool for_compaction = false) override;
 
   void Prepare(const Slice& target) override;
 
-  Status Get(const ReadOptions&, const Slice& key, GetContext* get_context,
+  Status Get(const ReadOptions& readOptions, const Slice& key,
+             GetContext* get_context, const SliceTransform* prefix_extractor,
              bool skip_filters = false) override;
 
   uint64_t ApproximateOffsetOf(const Slice& key) override;
@@ -101,11 +101,12 @@ class PlainTableReader: public TableReader {
   }
 
   PlainTableReader(const ImmutableCFOptions& ioptions,
-                   unique_ptr<RandomAccessFileReader>&& file,
+                   std::unique_ptr<RandomAccessFileReader>&& file,
                    const EnvOptions& env_options,
                    const InternalKeyComparator& internal_comparator,
                    EncodingType encoding_type, uint64_t file_size,
-                   const TableProperties* table_properties);
+                   const TableProperties* table_properties,
+                   const SliceTransform* prefix_extractor);
   virtual ~PlainTableReader();
 
  protected:
@@ -149,10 +150,11 @@ class PlainTableReader: public TableReader {
   DynamicBloom bloom_;
   PlainTableReaderFileInfo file_info_;
   Arena arena_;
-  std::unique_ptr<char[]> index_block_alloc_;
-  std::unique_ptr<char[]> bloom_block_alloc_;
+  CacheAllocationPtr index_block_alloc_;
+  CacheAllocationPtr bloom_block_alloc_;
 
   const ImmutableCFOptions& ioptions_;
+  std::unique_ptr<Cleanable> dummy_cleanable_;
   uint64_t file_size_;
   std::shared_ptr<const TableProperties> table_properties_;
 
@@ -197,14 +199,14 @@ class PlainTableReader: public TableReader {
   // If bloom_ is not null, all the keys' full-key hash will be added to the
   // bloom filter.
   Status PopulateIndexRecordList(PlainTableIndexBuilder* index_builder,
-                                 vector<uint32_t>* prefix_hashes);
+                                 std::vector<uint32_t>* prefix_hashes);
 
   // Internal helper function to allocate memory for bloom filter and fill it
   void AllocateAndFillBloom(int bloom_bits_per_key, int num_prefixes,
                             size_t huge_page_tlb_size,
-                            vector<uint32_t>* prefix_hashes);
+                            std::vector<uint32_t>* prefix_hashes);
 
-  void FillBloom(vector<uint32_t>* prefix_hashes);
+  void FillBloom(std::vector<uint32_t>* prefix_hashes);
 
   // Read the key and value at `offset` to parameters for keys, the and
   // `seekable`.

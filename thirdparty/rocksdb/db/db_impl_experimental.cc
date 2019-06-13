@@ -30,10 +30,10 @@ Status DBImpl::SuggestCompactRange(ColumnFamilyHandle* column_family,
   auto cfd = cfh->cfd();
   InternalKey start_key, end_key;
   if (begin != nullptr) {
-    start_key.SetMaxPossibleForUserKey(*begin);
+    start_key.SetMinPossibleForUserKey(*begin);
   }
   if (end != nullptr) {
-    end_key.SetMinPossibleForUserKey(*end);
+    end_key.SetMaxPossibleForUserKey(*end);
   }
   {
     InstrumentedMutexLock l(&mutex_);
@@ -131,15 +131,16 @@ Status DBImpl::PromoteL0(ColumnFamilyHandle* column_family, int target_level) {
       edit.DeleteFile(0, f->fd.GetNumber());
       edit.AddFile(target_level, f->fd.GetNumber(), f->fd.GetPathId(),
                    f->fd.GetFileSize(), f->smallest, f->largest,
-                   f->smallest_seqno, f->largest_seqno,
+                   f->fd.smallest_seqno, f->fd.largest_seqno,
                    f->marked_for_compaction);
     }
 
     status = versions_->LogAndApply(cfd, *cfd->GetLatestMutableCFOptions(),
                                     &edit, &mutex_, directories_.GetDbDir());
     if (status.ok()) {
-      InstallSuperVersionAndScheduleWorkWrapper(
-          cfd, &job_context, *cfd->GetLatestMutableCFOptions());
+      InstallSuperVersionAndScheduleWork(cfd,
+                                         &job_context.superversion_contexts[0],
+                                         *cfd->GetLatestMutableCFOptions());
     }
   }  // lock released here
   LogFlush(immutable_db_options_.info_log);
