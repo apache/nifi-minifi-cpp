@@ -273,7 +273,7 @@ bool SiteToSiteClient::confirm(std::string transactionID) {
     if (code == CONFIRM_TRANSACTION) {
       logger_->log_debug("Site2Site transaction %s peer confirm transaction with CRC %s", transactionID, message);
       if (this->_currentVersion > 3) {
-        int64_t crcValue = transaction->getCRC();
+        uint64_t crcValue = transaction->getCRC();
         std::string crc = std::to_string(crcValue);
         if (message == crc) {
           logger_->log_debug("Site2Site transaction %s CRC matched", transactionID);
