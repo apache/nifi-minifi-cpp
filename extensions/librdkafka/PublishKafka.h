@@ -172,7 +172,7 @@ class KafkaConnection {
     return nullptr;
   }
 
-  KafkaConnectionKey const *getKey() const {
+  KafkaConnectionKey const * const getKey() const {
     return &key_;
   }
 

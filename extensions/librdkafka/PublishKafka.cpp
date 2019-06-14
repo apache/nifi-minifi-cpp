@@ -42,21 +42,25 @@ core::Property PublishKafka::SeedBrokers(
 core::Property PublishKafka::Topic(core::PropertyBuilder::createProperty("Topic Name")->withDescription("The Kafka Topic of interest")->isRequired(true)->supportsExpressionLanguage(true)->build());
 
 core::Property PublishKafka::DeliveryGuarantee(
-    core::PropertyBuilder::createProperty("Delivery Guarantee")->withDescription("TSpecifies the requirement for guaranteeing that a message is sent to Kafka")->isRequired(false)
+    core::PropertyBuilder::createProperty("Delivery Guarantee")->withDescription("Specifies the requirement for guaranteeing that a message is sent to Kafka")->isRequired(false)
         ->supportsExpressionLanguage(true)->withDefaultValue("DELIVERY_ONE_NODE")->build());
 
 core::Property PublishKafka::MaxMessageSize(core::PropertyBuilder::createProperty("Max Request Size")->withDescription("Maximum Kafka protocol request message size")->isRequired(false)->build());
 
 core::Property PublishKafka::RequestTimeOut(
-    core::PropertyBuilder::createProperty("Request Timeout")->withDescription("The ack timeout of the producer request in milliseconds")->isRequired(false)->supportsExpressionLanguage(true)->build());
+    core::PropertyBuilder::createProperty("Request Timeout")->withDescription("The ack timeout of the producer request in milliseconds")->isRequired(false)->withDefaultValue<core::TimePeriodValue>(
+        "10 sec")->supportsExpressionLanguage(true)->build());
 
 core::Property PublishKafka::ClientName(
     core::PropertyBuilder::createProperty("Client Name")->withDescription("Client Name to use when communicating with Kafka")->isRequired(true)->supportsExpressionLanguage(true)->build());
 
 /**
- * These needn's have EL support.
+ * These don't appear to need EL support
  */
-core::Property PublishKafka::BatchSize("Batch Size", "Maximum number of messages batched in one MessageSet", "");
+
+core::Property PublishKafka::BatchSize(
+    core::PropertyBuilder::createProperty("Batch Size")->withDescription("Maximum number of messages batched in one MessageSet")->isRequired(false)->withDefaultValue<uint32_t>(10)->build());
+
 core::Property PublishKafka::AttributeNameRegex("Attributes to Send as Headers", "Any attribute whose name matches the regex will be added to the Kafka messages as a Header", "");
 core::Property PublishKafka::QueueBufferMaxTime("Queue Buffering Max Time", "Delay to wait for messages in the producer queue to accumulate before constructing message batches", "");
 core::Property PublishKafka::QueueBufferMaxSize("Queue Max Buffer Size", "Maximum total message size sum allowed on the producer queue", "");
@@ -112,7 +116,6 @@ void PublishKafka::initialize() {
 }
 
 void PublishKafka::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
-
 }
 
 bool PublishKafka::configureNewConnection(const std::shared_ptr<KafkaConnection> &conn, const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::FlowFile> &ff) {
@@ -123,8 +126,6 @@ bool PublishKafka::configureNewConnection(const std::shared_ptr<KafkaConnection>
   rd_kafka_conf_res_t result;
 
   auto conf_ = rd_kafka_conf_new();
-
-  //auto topic_conf_ = rd_kafka_topic_conf_new();
 
   auto key = conn->getKey();
 
@@ -317,7 +318,6 @@ void PublishKafka::onTrigger(const std::shared_ptr<core::ProcessContext> &contex
     conn = connection_pool_.getOrCreateConnection(key);
 
     if (!conn->initialized()) {
-
       logger_->log_trace("Connection not initialized to %s, %s, %s", client_id, brokers, topic);
       // get the ownership so we can configure this connection
       KafkaLease lease = conn->obtainOwnership();
@@ -332,7 +332,6 @@ void PublishKafka::onTrigger(const std::shared_ptr<core::ProcessContext> &contex
     }
 
     if (!conn->hasTopic(topic)) {
-
       auto topic_conf_ = rd_kafka_topic_conf_new();
       auto topic_reference = rd_kafka_topic_new(conn->getConnection(), topic.c_str(), topic_conf_);
       rd_kafka_conf_res_t result;
@@ -363,11 +362,6 @@ void PublishKafka::onTrigger(const std::shared_ptr<core::ProcessContext> &contex
 
       conn->putTopic(topic, kafkaTopicref);
     }
-    /*rd_kafka_conf_set(conf_, "client.id", client_id.c_str(), errstr, sizeof(errstr));
-     logger_->log_debug("PublishKafka: client.id [%s]", value);
-     if (result != RD_KAFKA_CONF_OK)
-     logger_->log_error("PublishKafka: configure error result [%s]", errstr);
-     */
   } else {
     logger_->log_error("Do not have required properties");
     session->transfer(flowFile, Failure);

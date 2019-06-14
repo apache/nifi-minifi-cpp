@@ -531,7 +531,7 @@ endif()
 ## Create LibRdKafka Extension
 option(ENABLE_LIBRDKAFKA "Enables the librdkafka extension." OFF)
 if (ENABLE_ALL OR ENABLE_LIBRDKAFKA)
-	createExtension(RDKAFKA-EXTENSIONS "RDKAFKA EXTENSIONS" "This Enables librdkafka functionality including PublishKafka" "extensions/librdkafka" "${TEST_DIR}/kafka-tests" "TRUE" "thirdparty/librdkafka-0.11.4")
+	createExtension(RDKAFKA-EXTENSIONS "RDKAFKA EXTENSIONS" "This Enables librdkafka functionality including PublishKafka" "extensions/librdkafka" "${TEST_DIR}/kafka-tests")
 endif()
 
 ## Scripting extensions
