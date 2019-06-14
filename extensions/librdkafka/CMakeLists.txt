@@ -43,7 +43,7 @@ list(APPEND CMAKE_MODULE_PATH_PASSTHROUGH_LIST "${CMAKE_SOURCE_DIR}/cmake/zlib/d
 ExternalProject_Add(
     kafka-external
     GIT_REPOSITORY "https://github.com/edenhill/librdkafka.git"
-    GIT_TAG "v1.0.0" 
+    GIT_TAG "v1.0.1" 
     PREFIX "${BASE_DIR}"
     CMAKE_ARGS ${PASSTHROUGH_CMAKE_ARGS}
                "-DCMAKE_INSTALL_PREFIX=${BASE_DIR}/install"
