@@ -47,6 +47,26 @@ namespace nifi {
 namespace minifi {
 namespace utils {
 
+namespace {
+  template<class Char>
+  struct string_traits;
+  template<>
+  struct string_traits<char>{
+    template<class T>
+    static std::string convert_to_string(T&& t){
+      return std::to_string(std::forward<T>(t));
+    }
+  };
+
+  template<>
+  struct string_traits<wchar_t>{
+    template<class T>
+    static std::wstring convert_to_string(T&& t){
+      return std::to_wstring(std::forward<T>(t));
+    }
+  };
+}
+
 /**
  * Stateless String utility class.
  *
@@ -261,6 +281,71 @@ class StringUtils {
 
     return result_string;
   }
+
+  /**
+ * Concatenates strings stored in an arbitrary container using the provided separator.
+ * @tparam TChar char type of the string (char or wchar_t)
+ * @tparam U arbitrary container which has string or wstring value type
+ * @param separator that is inserted between each elements. Type should match the type of strings in container.
+ * @param container that contains the strings to be concatenated
+ * @return the result string
+ */
+  template<class TChar, class U, typename std::enable_if<std::is_same<typename U::value_type, std::basic_string<TChar>>::value>::type* = nullptr>
+  static std::basic_string<TChar> join(const std::basic_string<TChar>& separator, const U& container) {
+    typedef typename U::const_iterator ITtype;
+    ITtype it = container.cbegin();
+    std::basic_stringstream<TChar> sstream;
+    while(it != container.cend()) {
+      sstream << (*it);
+      ++it;
+      if(it != container.cend()) {
+        sstream << separator;
+      }
+    }
+    return sstream.str();
+  };
+
+  /**
+   * Just a wrapper for the above function to be able to create separator from const char* or const wchar_t*
+   */
+  template<class TChar, class U, typename std::enable_if<std::is_same<typename U::value_type, std::basic_string<TChar>>::value>::type* = nullptr>
+  static std::basic_string<TChar> join(const TChar* separator, const U& container) {
+    return join(std::basic_string<TChar>(separator), container);
+  };
+
+
+  /**
+   * Concatenates string representation of integrals stored in an arbitrary container using the provided separator.
+   * @tparam TChar char type of the string (char or wchar_t)
+   * @tparam U arbitrary container which has any integral value type
+   * @param separator that is inserted between each elements. Type of this determines the result type. (wstring separator -> wstring)
+   * @param container that contains the integrals to be concatenated
+   * @return the result string
+   */
+  template<class TChar, class U, typename std::enable_if<std::is_integral<typename U::value_type>::value>::type* = nullptr,
+      typename std::enable_if<!std::is_same<U, std::basic_string<TChar>>::value>::type* = nullptr>
+  static std::basic_string<TChar> join(const std::basic_string<TChar>& separator, const U& container) {
+    typedef typename U::const_iterator ITtype;
+    ITtype it = container.cbegin();
+    std::basic_stringstream<TChar> sstream;
+    while(it != container.cend()) {
+      sstream << string_traits<TChar>::convert_to_string(*it);
+      ++it;
+      if(it != container.cend()) {
+        sstream << separator;
+      }
+    }
+    return sstream.str();
+  }
+
+  /**
+   * Just a wrapper for the above function to be able to create separator from const char* or const wchar_t*
+   */
+  template<class TChar, class U, typename std::enable_if<std::is_integral<typename U::value_type>::value>::type* = nullptr,
+      typename std::enable_if<!std::is_same<U, std::basic_string<TChar>>::value>::type* = nullptr>
+  static std::basic_string<TChar> join(const TChar* separator, const U& container) {
+    return join(std::basic_string<TChar>(separator), container);
+  };
 
 };
 

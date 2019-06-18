@@ -17,6 +17,7 @@
  */
 
 #include <string>
+#include <list>
 #include <vector>
 #include <cstdlib>
 #include "../TestBase.h"
@@ -92,4 +93,22 @@ TEST_CASE("TestStringUtils::testEnv5", "[test split classname]") {
   std::string expected = "hello world ";
 
   REQUIRE(expected == StringUtils::replaceEnvironmentVariables(test_string));
+}
+
+TEST_CASE("TestStringUtils::testJoin", "[test string join]") {
+  std::set<std::string> strings = {"3", "2", "1"};
+  REQUIRE(StringUtils::join(",", strings) == "1,2,3");
+
+  std::wstring sep = L"é";
+  std::vector<std::wstring> wstrings = {L"1", L"2"};
+  REQUIRE(StringUtils::join(sep, wstrings) == L"1é2");
+
+  std::list<uint64_t> ulist = {1, 2};
+  REQUIRE(StringUtils::join(sep, ulist) == L"1é2");
+
+  REQUIRE(StringUtils::join(">", ulist) == "1>2");
+
+  REQUIRE(StringUtils::join("", ulist) == "12");
+
+  REQUIRE(StringUtils::join("this separator wont appear", std::vector<std::string>()) == "");
 }
