@@ -68,7 +68,13 @@ std::unique_ptr<sitetosite::SiteToSiteClient> RemoteProcessorGroupPort::getNextP
       if (bypass_rest_api_) {
         if (nifi_instances_.size() > 0) {
           auto rpg = nifi_instances_.front();
-          sitetosite::SiteToSiteClientConfiguration config(stream_factory_, std::make_shared<sitetosite::Peer>(protocol_uuid_, rpg.host_, rpg.port_, ssl_service != nullptr), this->getInterface(),
+          auto host = rpg.host_;
+#ifdef WIN32
+          if ("localhost" == host) {
+            host = org::apache::nifi::minifi::io::Socket::getMyHostName();
+          }
+#endif
+          sitetosite::SiteToSiteClientConfiguration config(stream_factory_, std::make_shared<sitetosite::Peer>(protocol_uuid_, host, rpg.port_, ssl_service != nullptr), this->getInterface(),
                                                            client_type_);
           config.setHTTPProxy(this->proxy_);
           nextProtocol = sitetosite::createClient(config);
@@ -261,6 +267,11 @@ std::pair<std::string, int> RemoteProcessorGroupPort::refreshRemoteSite2SiteInfo
 
   for (auto nifi : nifi_instances_) {
     std::string host = nifi.host_;
+#ifdef WIN32
+    if ("localhost" == host) {
+      host = org::apache::nifi::minifi::io::Socket::getMyHostName();
+    }
+#endif
     std::string protocol = nifi.protocol_;
     int port = nifi.port_;
     std::stringstream fullUrl;
@@ -278,12 +289,12 @@ std::pair<std::string, int> RemoteProcessorGroupPort::refreshRemoteSite2SiteInfo
     std::unique_ptr<utils::BaseHTTPClient> client = nullptr;
     if (!rest_user_name_.empty()) {
       std::stringstream loginUrl;
-      fullUrl << protocol << host;
+      loginUrl << protocol << host;
       // don't append port if it is 0 ( undefined )
       if (port > 0) {
-        fullUrl << ":" << std::to_string(port);
+        loginUrl << ":" << std::to_string(port);
       }
-      fullUrl << "/nifi-api/access/token";
+      loginUrl << "/nifi-api/access/token";
 
       auto client_ptr = core::ClassLoader::getDefaultClassLoader().instantiateRaw("HTTPClient", "HTTPClient");
       if (nullptr == client_ptr) {

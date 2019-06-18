@@ -20,6 +20,10 @@ TITLE Apache NiFi MiNiFi C++ Windows Build Helper
 set builddir=%1
 set builddir=%builddir:"=%
 set skiptests=OFF
+set cmake_build_type=RelwithDebInfo
+set build_type=Release
+set build_kafka=off
+set cpack=OFF
 
 set arg_counter=0
 for %%x in (%*) do (
@@ -27,6 +31,15 @@ for %%x in (%*) do (
    echo %%~x
    if [%%~x] EQU [/T] ( 
 	set skiptests=ON
+    )
+	if [%%~x] EQU [/P] ( 
+	set cpack=ON
+    )
+	if [%%~x] EQU [/K] ( 
+	set build_kafka=ON
+    )
+    if [%%~x] EQU [/R] ( 
+	set cmake_build_type=Release
     )
 )
 
@@ -36,5 +49,11 @@ mkdir %builddir%
 cd %builddir%\
 
 rem -DENABLE_COAP=ON
-cmake -G "Visual Studio 15 2017" -DCMAKE_BUILD_TYPE_INIT=Release -DCMAKE_BUILD_TYPE=Release -DWIN32=WIN32 -DOPENSSL_OFF=OFF  -DUSE_SHARED_LIBS=OFF -DDISABLE_CONTROLLER=ON  -DBUILD_ROCKSDB=ON -DFORCE_WINDOWS=ON -DUSE_SYSTEM_UUID=OFF -DDISABLE_LIBARCHIVE=ON -DDISABLE_SCRIPTING=ON -DEXCLUDE_BOOST=ON -DENABLE_WEL=TRUE -DSKIP_TESTS=ON -DFAIL_ON_WARNINGS=OFF -DSKIP_TESTS=%skiptests% .. && msbuild /m nifi-minifi-cpp.sln /property:Configuration=Release && copy main\release\minifi.exe main\  && cpack && ctest -C Release
+cmake -G "Visual Studio 15 2017" -DCMAKE_BUILD_TYPE_INIT=%cmake_build_type% -DCMAKE_BUILD_TYPE=%cmake_build_type% -DWIN32=WIN32 -DENABLE_LIBRDKAFKA=%build_kafka% -DOPENSSL_OFF=OFF  -DUSE_SHARED_LIBS=OFF -DDISABLE_CONTROLLER=ON  -DBUILD_ROCKSDB=ON -DFORCE_WINDOWS=ON -DUSE_SYSTEM_UUID=OFF -DDISABLE_LIBARCHIVE=ON -DDISABLE_SCRIPTING=ON -DEXCLUDE_BOOST=ON -DENABLE_WEL=TRUE -DSKIP_TESTS=ON -DFAIL_ON_WARNINGS=OFF -DSKIP_TESTS=%skiptests% .. && msbuild /m nifi-minifi-cpp.sln /property:Configuration=%build_type% && copy main\release\minifi.exe main\
+if [cpack] EQU [ON] ( 
+	cpack
+    )
+if [skiptests] NEQ [OFF] ( 
+	ctest -C %build_type%
+	)
 cd ..

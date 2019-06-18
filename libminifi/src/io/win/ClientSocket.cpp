@@ -244,7 +244,7 @@ int16_t Socket::initialize() {
   int errcode = getaddrinfo(requested_hostname_.c_str(), 0, &hints, &addr_info_);
 
   if (errcode != 0) {
-    logger_->log_error("Saw error during getaddrinfo, error: %s", strerror(errno));
+    logger_->log_error("Saw error during getaddrinfo, error: %lu", WSAGetLastError());
     return -1;
   }
 
@@ -406,6 +406,9 @@ int Socket::writeData(uint8_t *value, int size) {
   int ret = 0, bytes = 0;
 
   int fd = select_descriptor(1000);
+  if (fd < 0) {
+    return -1;
+  }
   while (bytes < size) {
 #ifdef WIN32
     const char *vts = (const char*)value;
@@ -437,13 +440,12 @@ inline std::vector<uint8_t> Socket::readBuffer(const T& t) {
 }
 
 /**
-   * Return the port for this socket
-   * @returns port
-   */
+ * Return the port for this socket
+ * @returns port
+ */
 uint16_t Socket::getPort() const {
-	return port_;
+  return port_;
 }
-
 
 int Socket::write(uint64_t base_value, bool is_little_endian) {
   return Serializable::write(base_value, this, is_little_endian);

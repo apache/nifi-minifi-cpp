@@ -95,7 +95,12 @@ void LoggerConfiguration::initialize(const std::shared_ptr<LoggerProperties> &lo
 
 std::shared_ptr<Logger> LoggerConfiguration::getLogger(const std::string &name) {
   std::lock_guard<std::mutex> lock(mutex);
-  std::shared_ptr<LoggerImpl> result = std::make_shared<LoggerImpl>(name, controller_, get_logger(logger_, root_namespace_, name, formatter_));
+  std::string adjusted_name = name;
+  const std::string clazz = "class ";
+  auto haz_clazz = name.find(clazz);
+  if (haz_clazz == 0)
+    adjusted_name = name.substr(clazz.length(), name.length() - clazz.length());
+  std::shared_ptr<LoggerImpl> result = std::make_shared<LoggerImpl>(adjusted_name, controller_, get_logger(logger_, root_namespace_, adjusted_name, formatter_));
   loggers.push_back(result);
   return result;
 }

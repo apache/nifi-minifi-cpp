@@ -95,7 +95,13 @@ static inline std::string getClassName() {
   std::free(b);
   return name;
 #else
-  return typeid(T).name();
+	std::string adjusted_name = typeid(T).name();
+	// can probably skip class  manually for slightly higher performance
+	const std::string clazz = "class ";
+	auto haz_clazz = adjusted_name.find(clazz);
+	if (haz_clazz == 0)
+		adjusted_name = adjusted_name.substr(clazz.length(), adjusted_name.length() - clazz.length());
+	return adjusted_name;
 #endif
 }
 

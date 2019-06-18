@@ -95,8 +95,8 @@ class TestUpdateSink : public minifi::state::StateMonitor {
   }
 
   virtual std::string getComponentUUID() const {
-      return "uuid";
-    }
+    return "uuid";
+  }
   /**
    * Start the client
    */
@@ -175,7 +175,11 @@ class TestUpdateSink : public minifi::state::StateMonitor {
   std::shared_ptr<StateController> controller;
   std::atomic<uint32_t> update_calls;
 };
-
+#ifdef WIN32
+TEST_CASE("TestWindows", "[test1]") {
+  std::cout << "Controller Tests are not supported on windows";
+}
+#else
 TEST_CASE("TestGet", "[test1]") {
   auto controller = std::make_shared<TestStateController>();
   std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::Configure>();
@@ -273,3 +277,4 @@ TEST_CASE("TestUpdate", "[test1]") {
   REQUIRE(1 == ptr->update_calls);
   REQUIRE(0 == ptr->clear_calls);
 }
+#endif

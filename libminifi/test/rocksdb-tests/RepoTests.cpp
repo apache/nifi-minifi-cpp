@@ -205,7 +205,7 @@ TEST_CASE("Test Validate Checkpoint ", "[TestFFR5]") {
 
   std::fstream file;
   std::stringstream ss;
-  ss << dir << "/" << "tstFile.ext";
+  ss << dir  << "tstFile.ext";
   file.open(ss.str(), std::ios::out);
   file << "tempFile";
   file.close();
@@ -243,7 +243,6 @@ TEST_CASE("Test Validate Checkpoint ", "[TestFFR5]") {
   }
 
   std::ifstream fileopen(ss.str());
-
   REQUIRE(true == fileopen.fail());
 
   utils::file::FileUtils::delete_dir(FLOWFILE_CHECKPOINT_DIRECTORY, true);

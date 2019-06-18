@@ -53,16 +53,14 @@ namespace minifi {
 namespace processors {
 
 core::Property GetFile::BatchSize(
-    core::PropertyBuilder::createProperty("Batch Size")->withDescription("The maximum number of files to pull in each iteration")->withDefaultValue<uint32_t>(10)
-        ->build());
+    core::PropertyBuilder::createProperty("Batch Size")->withDescription("The maximum number of files to pull in each iteration")->withDefaultValue<uint32_t>(10)->build());
 
 core::Property GetFile::Directory(
     core::PropertyBuilder::createProperty("Input Directory")->withDescription("The input directory from which to pull files")->isRequired(true)->supportsExpressionLanguage(true)->withDefaultValue(".")
         ->build());
 
 core::Property GetFile::IgnoreHiddenFile(
-    core::PropertyBuilder::createProperty("Ignore Hidden Files")->withDescription("Indicates whether or not hidden files should be ignored")->withDefaultValue<bool>(true)
-        ->build());
+    core::PropertyBuilder::createProperty("Ignore Hidden Files")->withDescription("Indicates whether or not hidden files should be ignored")->withDefaultValue<bool>(true)->build());
 
 core::Property GetFile::KeepSourceFile(
     core::PropertyBuilder::createProperty("Keep Source File")->withDescription("If true, the file is not deleted after it has been copied to the Content Repository")->withDefaultValue<bool>(false)
@@ -70,33 +68,29 @@ core::Property GetFile::KeepSourceFile(
 
 core::Property GetFile::MaxAge(
     core::PropertyBuilder::createProperty("Maximum File Age")->withDescription("The maximum age that a file must be in order to be pulled;"
-                               " any file older than this amount of time (according to last modification date) will be ignored")->withDefaultValue<core::TimePeriodValue>("0 sec")
-        ->build());
+                                                                               " any file older than this amount of time (according to last modification date) will be ignored")
+        ->withDefaultValue<core::TimePeriodValue>("0 sec")->build());
 
 core::Property GetFile::MinAge(
     core::PropertyBuilder::createProperty("Minimum File Age")->withDescription("The minimum age that a file must be in order to be pulled;"
-                               " any file younger than this amount of time (according to last modification date) will be ignored")->withDefaultValue<core::TimePeriodValue>("0 sec")
-        ->build());
+                                                                               " any file younger than this amount of time (according to last modification date) will be ignored")
+        ->withDefaultValue<core::TimePeriodValue>("0 sec")->build());
 
 core::Property GetFile::MaxSize(
-    core::PropertyBuilder::createProperty("Minimum File Size")->withDescription("The maximum size that a file can be in order to be pulled")->withDefaultValue<core::DataSizeValue>("0 B")
-        ->build());
+    core::PropertyBuilder::createProperty("Maximum File Size")->withDescription("The maximum size that a file can be in order to be pulled")->withDefaultValue<core::DataSizeValue>("0 B")->build());
 
 core::Property GetFile::MinSize(
-    core::PropertyBuilder::createProperty("Minimum File Size")->withDescription("The minimum size that a file can be in order to be pulled")->withDefaultValue<core::DataSizeValue>("0 B")
-        ->build());
+    core::PropertyBuilder::createProperty("Minimum File Size")->withDescription("The minimum size that a file can be in order to be pulled")->withDefaultValue<core::DataSizeValue>("0 B")->build());
 
 core::Property GetFile::PollInterval(
     core::PropertyBuilder::createProperty("Polling Interval")->withDescription("Indicates how long to wait before performing a directory listing")->withDefaultValue<core::TimePeriodValue>("0 sec")
         ->build());
 
 core::Property GetFile::Recurse(
-    core::PropertyBuilder::createProperty("Recurse Subdirectories")->withDescription("Indicates whether or not to pull files from subdirectories")->withDefaultValue<bool>(true)
-        ->build());
+    core::PropertyBuilder::createProperty("Recurse Subdirectories")->withDescription("Indicates whether or not to pull files from subdirectories")->withDefaultValue<bool>(true)->build());
 
 core::Property GetFile::FileFilter(
-    core::PropertyBuilder::createProperty("File Filter")->withDescription("Only files whose names match the given regular expression will be picked up")->withDefaultValue("[^\\.].*")
-        ->build());
+    core::PropertyBuilder::createProperty("File Filter")->withDescription("Only files whose names match the given regular expression will be picked up")->withDefaultValue("[^\\.].*")->build());
 
 core::Relationship GetFile::Success("success", "All files are routed to success");
 
@@ -164,11 +158,13 @@ void GetFile::onTrigger(core::ProcessContext *context, core::ProcessSession *ses
     if (request_.pollInterval == 0 || (getTimeMillis() - last_listing_time_) > request_.pollInterval) {
       std::string directory;
       const std::shared_ptr<core::FlowFile> flow_file;
-      if (!context->getProperty(Directory, directory, flow_file)) {
+      if (context->getProperty(Directory, directory, flow_file)) {
         logger_->log_warn("Resolved missing Input Directory property value");
+        performListing(directory, request_);
+        last_listing_time_.store(getTimeMillis());
+      } else {
+        return;
       }
-      performListing(directory, request_);
-      last_listing_time_.store(getTimeMillis());
     }
   }
   logger_->log_debug("Is listing empty %i", isListingEmpty());
@@ -267,7 +263,7 @@ bool GetFile::acceptFile(std::string fullName, std::string name, const GetFileRe
 }
 
 void GetFile::performListing(std::string dir, const GetFileRequest &request) {
-  auto callback = [this, request](const std::string& dir, const std::string& filename) -> bool{
+  auto callback = [this, request](const std::string& dir, const std::string& filename) -> bool {
     std::string fullpath = dir + utils::file::FileUtils::get_separator() + filename;
     if (acceptFile(fullpath, filename, request)) {
       putListing(fullpath);

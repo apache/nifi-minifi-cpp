@@ -65,7 +65,7 @@ class SecureSocketTest : public IntegrationBase {
     LogTestController::getInstance().setTrace<minifi::io::TLSSocket>();
     LogTestController::getInstance().setTrace<processors::GetTCP>();
     std::fstream file;
-    ss << dir << "/" << "tstFile.ext";
+    ss << dir << utils::file::FileUtils::get_separator() << "tstFile.ext";
     file.open(ss.str(), std::ios::out);
     file << "tempFile";
     file.close();
@@ -73,7 +73,6 @@ class SecureSocketTest : public IntegrationBase {
 
   void cleanup() {
     LogTestController::getInstance().reset();
-    unlink(ss.str().c_str());
   }
 
   void runAssertions() {
@@ -104,7 +103,7 @@ class SecureSocketTest : public IntegrationBase {
     assert(1 == endpoints.size());
     auto hostAndPort = utils::StringUtils::split(endpoint, ":");
     std::shared_ptr<org::apache::nifi::minifi::io::TLSContext> socket_context = std::make_shared<org::apache::nifi::minifi::io::TLSContext>(configuration);
-    server_socket = std::make_shared<org::apache::nifi::minifi::io::TLSServerSocket>(socket_context, hostAndPort.at(0), std::stoi(hostAndPort.at(1)), 3);
+    server_socket = std::make_shared<org::apache::nifi::minifi::io::TLSServerSocket>(socket_context, org::apache::nifi::minifi::io::Socket::getMyHostName(), 8776, 3);
     server_socket->initialize();
 
     isRunning_ = true;
@@ -112,6 +111,7 @@ class SecureSocketTest : public IntegrationBase {
       return isRunning_;
     };
     handler = [this](std::vector<uint8_t> *b, int *size) {
+      std::cout << "oh write!" << std::endl;
       b->reserve(20);
       memset(b->data(), 0x00, 20);
       memcpy(b->data(), "hello world", 11);
@@ -160,6 +160,10 @@ class SecureSocketTest : public IntegrationBase {
     cleanup();
   }
 
+  virtual void waitToVerifyProcessor() {
+    std::this_thread::sleep_for(std::chrono::seconds(3));
+  }
+
  protected:
   std::function<bool()> check;
   std::function<int(std::vector<uint8_t>*b, int *size)> handler;
@@ -179,6 +183,9 @@ int main(int argc, char **argv) {
   if (argc > 1) {
     test_file_location = argv[1];
     key_dir = argv[2];
+  } else {
+    test_file_location = "C:/Users/marc/source/repos/nifi-minifi-cpp/libminifi/test/resources/TestGetTCPSecure.yml";
+    key_dir = "C:/Users/marc/source/repos/nifi-minifi-cpp/libminifi/test/resources/";
   }
 
 #ifndef WIN32

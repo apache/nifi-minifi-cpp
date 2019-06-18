@@ -108,7 +108,7 @@ else ()
 		target_link_libraries (minifi-jni  ${JAVA_JVM_LIBRARY})
 		target_link_libraries (minifi-jni  ${Java_LIBRARIES})
 	else()
-		target_link_libraries (minifi-jni -Wl,--whole-archive ${JAVA_JVM_LIBRARY} -Wl,--no-whole-archive)
+		target_link_libraries (minifi-jni  ${JAVA_JVM_LIBRARY})
 	endif()
 endif ()
 

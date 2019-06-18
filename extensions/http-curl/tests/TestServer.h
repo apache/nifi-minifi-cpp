@@ -80,12 +80,19 @@ CivetServer * start_webserver(std::string &port, std::string &rooturi, CivetHand
 
 }
 
+/**
+This funciton, unfortunately, assumes that we're parsing http components of a local host. On windows this is problematic
+so we convert localhost to our local hostname. 
+  */
 bool parse_http_components(const std::string &url, std::string &port, std::string &scheme, std::string &path) {
 
-  const char *regexstr = "^(http|https)://(localhost:)([0-9]+)?(/.*)$";
-
 #if (__cplusplus > 201103L) || defined(_WIN32)
-
+#ifdef WIN32
+	auto hostname = (url.find(org::apache::nifi::minifi::io::Socket::getMyHostName()) != std::string::npos ? org::apache::nifi::minifi::io::Socket::getMyHostName() : "localhost");
+	std::string regexstr = "^(http|https)://(" + hostname + ":)([0-9]+)?(/.*)$";
+#else
+	std::string regexstr = "^(http|https)://(localhost:)([0-9]+)?(/.*)$";
+#endif
   std::regex rgx;
   std::regex_constants::syntax_option_type regex_mode = std::regex_constants::icase;
 	
@@ -93,7 +100,7 @@ bool parse_http_components(const std::string &url, std::string &port, std::strin
  
   std::smatch matches;
   std::string scratch = url;
-  while (std::regex_search(scratch, matches, rgx)) {
+  if (std::regex_search(scratch, matches, rgx)) {
 	  for (int i = 1; i < matches.size(); i++) {
 		  auto str = matches[i].str();
 		  switch (i) {
@@ -112,6 +119,7 @@ bool parse_http_components(const std::string &url, std::string &port, std::strin
 	  }
   }
 #else
+	const char *regexstr = "^(http|https)://(localhost:)([0-9]+)?(/.*)$";
   regex_t regex;
 
   int ret = regcomp(&regex, regexstr, REG_EXTENDED);

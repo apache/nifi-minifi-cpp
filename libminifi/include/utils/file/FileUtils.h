@@ -47,6 +47,8 @@
 #include <fcntl.h>
 #ifdef WIN32
 #include <direct.h>
+#include "utils/Id.h"
+#include "properties/Properties.h"
 #include <windows.h> // winapi
 #include <sys/stat.h> // stat
 #include <tchar.h> // _tcscpy,_tcscat,_tcscmp
@@ -108,7 +110,16 @@ class FileUtils {
 	  auto ret = GetTempPath(MAX_PATH, tempBuffer); 
 	  if (ret <= MAX_PATH && ret != 0)
 	  {
+		  static std::shared_ptr<minifi::utils::IdGenerator> generator;
+		  if (!generator) {
+			  generator = minifi::utils::IdGenerator::getIdGenerator();
+			  generator->initialize(std::make_shared<minifi::Properties>());
+		  }
 		  tempDirectory = tempBuffer;
+		  minifi::utils::Identifier id;
+		  generator->generate(id);
+		  tempDirectory += id.to_string();
+		  create_dir(tempDirectory);
 	  }
 	  return tempDirectory;
 #else

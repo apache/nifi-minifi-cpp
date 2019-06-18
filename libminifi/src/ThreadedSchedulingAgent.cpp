@@ -73,7 +73,8 @@ void ThreadedSchedulingAgent::schedule(std::shared_ptr<core::Processor> processo
 
   auto contextBuilder = core::ClassLoader::getDefaultClassLoader().instantiate<core::ProcessContextBuilder>("ProcessContextBuilder");
 
-  contextBuilder = contextBuilder->withContentRepository(content_repo_)->withFlowFileRepository(flow_repo_)->withProvider(controller_service_provider_)->withProvenanceRepository(repo_)->withConfiguration(configure_);
+  contextBuilder = contextBuilder->withContentRepository(content_repo_)->withFlowFileRepository(flow_repo_)->withProvider(controller_service_provider_)->withProvenanceRepository(repo_)
+      ->withConfiguration(configure_);
 
   auto processContext = contextBuilder->build(processor_node);
 

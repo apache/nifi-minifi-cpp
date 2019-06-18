@@ -70,19 +70,6 @@ include_directories(${COAP_INCLUDE_DIRS})
 target_link_libraries (nanofi-coap-c ${COAP_LIBRARIES})
 target_link_libraries (nanofi-coap-c ${HTTP-CURL})
 target_link_libraries (minifi-coap nanofi-coap-c ${COAP_LIBRARIES})
-if (WIN32)
-    set_target_properties(minifi-coap PROPERTIES
-        LINK_FLAGS "/WHOLEARCHIVE"
-    )
-elseif (APPLE)
-    set_target_properties(minifi-coap PROPERTIES
-        LINK_FLAGS "-Wl,-all_load"
-    )
-else ()
-    set_target_properties(minifi-coap PROPERTIES
-        LINK_FLAGS "-Wl,--whole-archive"
-    )
-endif ()
 
 SET (COAP-EXTENSION minifi-coap PARENT_SCOPE)
 register_extension(minifi-coap)

@@ -69,10 +69,9 @@ std::shared_ptr<Transaction> HttpSiteToSiteClient::createTransaction(std::string
     if (utils::StringUtils::equalsIgnoreCase(intent_name, "transaction-url")) {
       auto url = client->getHeaderValue("Location");
 
-      if (IsNullOrEmpty(&url)) {
+      if (IsNullOrEmpty(url)) {
         logger_->log_debug("Location is empty");
       } else {
-
         org::apache::nifi::minifi::io::CRCStream<SiteToSitePeer> crcstream(peer_.get());
         auto transaction = std::make_shared<HttpTransaction>(direction, crcstream);
         transaction->initialize(this, url);

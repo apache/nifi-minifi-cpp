@@ -133,21 +133,11 @@ find_package(ZLIB REQUIRED)
 include_directories(${ZLIB_INCLUDE_DIRS})
 target_link_libraries (minifi-expression-language-extensions ${ZLIB_LIBRARIES})
 
-if (WIN32)
-if (NOT DISABLE_CURL)
+if (WIN32 AND NOT DISABLE_CURL)
     set_target_properties(minifi-expression-language-extensions PROPERTIES
         LINK_FLAGS "${LINK_FLAGS} /WHOLEARCHIVE:${CURL_LIBRARIES}"
     )
-endif(NOT DISABLE_CURL)
-elseif (APPLE)
-    set_target_properties(minifi-expression-language-extensions PROPERTIES
-        LINK_FLAGS "-Wl,-all_load"
-    )
-else ()
-    set_target_properties(minifi-expression-language-extensions PROPERTIES
-        LINK_FLAGS "-Wl,--whole-archive"
-    )
-endif ()
+endif()
 
 SET (EXPRESSION-LANGUAGE-EXTENSIONS minifi-expression-language-extensions PARENT_SCOPE)
 

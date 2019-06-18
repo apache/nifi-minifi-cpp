@@ -283,7 +283,7 @@ endif(DISABLE_CURL)
 if(NOT DISABLE_CURL AND (NOT USE_SYSTEM_CURL))
   message("Using bundled cURL")
   
-  set(CURL_C_FLAGS "-I${CMAKE_C_FLAGS}")
+  set(CURL_C_FLAGS "${CMAKE_C_FLAGS}")
   set(CURL_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 
 
@@ -321,7 +321,7 @@ endif()
                 "-DLIBRESSL_SRC_DIR=${LIBRESSL_SRC_DIR}"
                 -DCURL_DISABLE_CRYPTO_AUTH=ON
                 -DCMAKE_USE_LIBSSH2=OFF
-				"-DCMAKE_DEBUG_POSTFIX="
+                "-DCMAKE_DEBUG_POSTFIX="
                 -DHAVE_GLIBC_STRERROR_R=1
                 -DHAVE_GLIBC_STRERROR_R__TRYRUN_OUTPUT=""
                 -DHAVE_POSIX_STRERROR_R=0
@@ -331,7 +331,7 @@ endif()
                 -DHAVE_FSETXATTR_5__TRYRUN_OUTPUT=""
                "-DCMAKE_MODULE_PATH=${CMAKE_SOURCE_DIR}/cmake/ssl"
                "-DCMAKE_C_FLAGS=${CURL_C_FLAGS}"
-			   "-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}"
+               "-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}"
                "-DCMAKE_CXX_FLAGS=${CURL_CXX_FLAGS}"
 	${PC}
     BUILD_BYPRODUCTS "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/curl-install/${BYPRODUCT}"

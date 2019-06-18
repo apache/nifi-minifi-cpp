@@ -82,7 +82,12 @@ class PropertyValue : public state::response::ValueNode {
   }
 
   ValidationResult validate(const std::string &subject) const {
-    return validator_->validate(subject, getValue());
+	  if (validator_) {
+		  return validator_->validate(subject, getValue());
+	  }
+	  else {
+		  return ValidationResult::Builder::createBuilder().isValid(true).build();
+	  }
   }
 
   operator uint64_t() const {

@@ -78,7 +78,13 @@ class PeerResponder : public CivetHandler {
   }
 
   bool handleGet(CivetServer *server, struct mg_connection *conn) {
-    std::string site2site_rest_resp = "{\"peers\" : [{ \"hostname\": \"localhost\", \"port\": 8099,  \"secure\": false, \"flowFileCount\" : 0 }] }";
+	
+#ifdef WIN32
+	  std::string hostname = org::apache::nifi::minifi::io::Socket::getMyHostName();
+#else
+	  std::string hostname = "localhost";
+#endif
+    std::string site2site_rest_resp = "{\"peers\" : [{ \"hostname\": \"" + hostname + "\", \"port\": 8099,  \"secure\": false, \"flowFileCount\" : 0 }] }";
     std::stringstream headers;
     headers << "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: " << site2site_rest_resp.length() << "\r\nConnection: close\r\n\r\n";
     mg_printf(conn, "%s", headers.str().c_str());

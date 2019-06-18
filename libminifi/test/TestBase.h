@@ -161,7 +161,12 @@ class LogTestController {
 
   void setLevel(const std::string name, spdlog::level::level_enum level) {
     logger_->log_info("Setting log level for %s to %s", name, spdlog::level::to_str(level));
-    spdlog::get(name)->set_level(level);
+	std::string adjusted_name = name;
+	const std::string clazz = "class ";
+	auto haz_clazz = name.find(clazz);
+	if (haz_clazz == 0)
+		adjusted_name = name.substr(clazz.length(), name.length() - clazz.length());
+    spdlog::get(adjusted_name)->set_level(level);
   }
   std::vector<std::string> modified_loggers;
 };

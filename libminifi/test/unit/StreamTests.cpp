@@ -31,7 +31,7 @@ TEST_CASE("TestReadData", "[testread]") {
   uint64_t b = 8;
   base->write(b);
   uint64_t c = 0;
-  base->readData(reinterpret_cast<uint8_t*>(&c), 8);
+  REQUIRE(8 == base->readData(reinterpret_cast<uint8_t*>(&c), 8));
   if (minifi::io::EndiannessCheck::IS_LITTLE)
     REQUIRE(c == 576460752303423488);
   else
@@ -61,7 +61,7 @@ TEST_CASE("TestRead1", "[testread]") {
   uint8_t b = 8;
   base->write(&b, 1);
   uint8_t c = 0;
-  base->read(c);
+  REQUIRE(1 == base->read(c));
   REQUIRE(c == 8);
 }
 

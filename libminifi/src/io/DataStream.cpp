@@ -97,12 +97,8 @@ int DataStream::readData(std::vector<uint8_t> &buf, int buflen) {
   if (static_cast<int>(buf.capacity()) < buflen)
     buf.resize(buflen+1);
 
-#ifdef WIN32
   // back inserter works differently on win32 versions
-  buf.insert(buf.begin(), &buffer[readBuffer], &buffer[(readBuffer + buflen-1)]);
-#else
   buf.insert(buf.begin(), &buffer[readBuffer], &buffer[(readBuffer + buflen)]);
-#endif
 
   readBuffer += buflen;
   return buflen;
@@ -113,12 +109,7 @@ int DataStream::readData(uint8_t *buf, int buflen) {
     // if read exceed
     return -1;
   }
-#ifdef WIN32
-  // back inserter works differently on win32 versions
-  std::copy(&buffer[readBuffer], &buffer[(readBuffer + buflen-1)], buf);
-#else
   std::copy(&buffer[readBuffer], &buffer[(readBuffer + buflen)], buf);
-#endif
   readBuffer += buflen;
   return buflen;
 }

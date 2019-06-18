@@ -314,6 +314,9 @@ private:
 			#ifdef WIN32
 			static WSADATA s_wsaData;
 			int iWinSockInitResult = WSAStartup(MAKEWORD(2, 2), &s_wsaData);
+			if (0 != iWinSockInitResult) {
+				throw std::exception("Cannot start client");
+			}
 			#endif
 		}
 		~SocketInitializer() {
@@ -331,6 +334,7 @@ private:
 
 
   static std::string init_hostname() {
+	initialize_socket();
     char hostname[1024];
     gethostname(hostname, 1024);
     Socket mySock(nullptr, hostname, 0);

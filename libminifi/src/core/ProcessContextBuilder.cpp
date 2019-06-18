@@ -56,7 +56,6 @@ std::shared_ptr<ProcessContextBuilder> ProcessContextBuilder::withProvider(const
 std::shared_ptr<ProcessContextBuilder> ProcessContextBuilder::withProvenanceRepository(const std::shared_ptr<core::Repository> &repo) {
   prov_repo_ = repo;
   return this->shared_from_this();
-
 }
 
 std::shared_ptr<ProcessContextBuilder> ProcessContextBuilder::withFlowFileRepository(const std::shared_ptr<core::Repository> &repo) {
