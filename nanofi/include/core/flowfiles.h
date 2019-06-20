@@ -19,10 +19,24 @@
 #ifndef NANOFI_INCLUDE_CORE_FLOWFILES_H_
 #define NANOFI_INCLUDE_CORE_FLOWFILES_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "cstructs.h"
 
-void add_flow_file_record(flow_file_list * ff_list, flow_file_record * record);
+void add_flow_file_record(flow_file_list ** ff_list, flow_file_record * record);
 
-void free_flow_file_list(flow_file_list * ff_list);
+void free_flow_file_list(flow_file_list ** ff_list);
+
+flow_file_record * write_to_flow_file(char * buff, nifi_instance * instance, standalone_processor * proc);
+
+void transmit_flow_files(nifi_instance * instance, flow_file_list * ff_list);
+
+uint64_t flow_files_size(flow_file_list * ff_list);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* NANOFI_INCLUDE_CORE_FLOWFILES_H_ */

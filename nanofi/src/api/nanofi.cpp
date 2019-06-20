@@ -263,10 +263,9 @@ flow_file_record * generate_flow_file(nifi_instance * instance, standalone_proce
     ffr->keepContent = 1;
     auto ff_content_repo_ptr = (static_cast<std::shared_ptr<minifi::core::ContentRepository>*>(ffr->crp));
     auto claim = std::make_shared<minifi::ResourceClaim>(*ff_content_repo_ptr);
-    const char * full_path = claim->getContentFullPath().c_str();
-    int len = strlen(full_path);
-    ffr->contentLocation = (char *) malloc(sizeof(char) * (len + 1));
-    snprintf(ffr->contentLocation, len + 1, "%s", full_path);
+    int len = strlen(claim->getContentFullPath().c_str());
+    ffr->contentLocation = (char *) malloc((len + 1) * sizeof(char));
+    snprintf(ffr->contentLocation, len+1, "%s", claim->getContentFullPath().c_str());
     return ffr;
 }
 

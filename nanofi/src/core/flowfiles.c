@@ -16,38 +16,83 @@
  * limitations under the License.
  */
 
+#include "api/nanofi.h"
 #include "core/flowfiles.h"
+
+#include "utlist.h"
 #include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
 
-void add_flow_file_record(flow_file_list * ff_list, flow_file_record * record) {
-    if (!ff_list || !record) return;
+void add_flow_file_record(flow_file_list ** ff_list, flow_file_record * record) {
+    if (!record) return;
 
-    struct flow_file_list_node * new_node = (struct flow_file_list_node *)malloc(sizeof(struct flow_file_list_node));
+    struct flow_file_list * new_node = (struct flow_file_list *)malloc(sizeof(struct flow_file_list));
     new_node->ff_record = record;
-    new_node->next = NULL;
-
-    if (!ff_list->head || !ff_list->tail) {
-        ff_list->head = ff_list->tail = new_node;
-        ff_list->len = 1;
-        return;
-    }
-
-    ff_list->tail->next = new_node;
-    ff_list->tail = new_node;
-    ff_list->len++;
+    LL_APPEND(*ff_list, new_node);
 }
 
-void free_flow_file_list(flow_file_list * ff_list) {
-    if (!ff_list || !ff_list->head) {
+void free_flow_file_list(flow_file_list ** ff_list) {
+    if (!*ff_list) return;
+    flow_file_list * el = NULL;
+    LL_FOREACH(*ff_list, el) {
+        if (el) {
+            free_flowfile(el->ff_record);
+        }
+    }
+}
+
+flow_file_record * write_to_flow_file(char * buff, nifi_instance * instance, standalone_processor * proc) {
+    if (!buff || !instance || !proc) {
+        return NULL;
+    }
+
+    flow_file_record * ffr = generate_flow_file(instance, proc);
+    if (ffr == NULL) {
+        printf("Could not generate flow file\n");
+        return NULL;
+    }
+
+    FILE * ffp = fopen(ffr->contentLocation, "wb");
+    if (!ffp) {
+        printf("Cannot open flow file at path %s to write content to.\n", ffr->contentLocation);
+        free_flowfile(ffr);
+        return NULL;
+    }
+
+    int count = strlen(buff);
+    int ret = fwrite(buff, 1, count, ffp);
+    if (ret < count) {
+        fclose(ffp);
+        free_flowfile(ffr);
+        return NULL;
+    }
+    fseek(ffp, 0, SEEK_END);
+    ffr->size = ftell(ffp);
+    fclose(ffp);
+    return ffr;
+}
+
+void transmit_flow_files(nifi_instance * instance, flow_file_list * ff_list) {
+    if (!instance || !ff_list) {
         return;
     }
 
-    flow_file_list_node * head = ff_list->head;
-    while (head) {
-        free_flowfile(head->ff_record);
-        flow_file_list_node * tmp = head;
-        head = head->next;
-        free(tmp);
+    flow_file_list * el = NULL;
+    LL_FOREACH(ff_list, el) {
+        if (el) {
+            transmit_flowfile(el->ff_record, instance);
+        }
     }
-    memset(ff_list, 0, sizeof(struct flow_file_list));
+}
+
+uint64_t flow_files_size(flow_file_list * ff_list) {
+    if (!ff_list) {
+        return 0;
+    }
+
+    uint64_t counter = 0;
+    flow_file_list * el = NULL;
+    LL_COUNT(ff_list, el, counter);
+    return counter;
 }

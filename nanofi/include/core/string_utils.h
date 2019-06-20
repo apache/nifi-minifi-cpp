@@ -26,31 +26,12 @@
 extern "C" {
 #endif
 
-<<<<<<< HEAD
-typedef enum TOKENIZER_MODE {
-    TAILFILE_MODE = 0, /* Do not include a non delimiting string */
-    DEFAULT_MODE /* include a non delimiting string */
-} tokenizer_mode_t;
-=======
 #define MAX_BYTES_READ 4096
->>>>>>> 8acf139... MINIFICPP-621 Add initial tailfile nanofi example
 
 /**
  * Tokenizes a delimited string and returns a list of tokens
  * @param str the string to be tokenized
  * @param delim the delimiting character
-<<<<<<< HEAD
- * @param tokenizer_mode_t the enumeration value specified to include/exclude a non delimiting string in the result
- * @return a list of strings wrapped inside tokens struct
- */
-tokens tokenize_string(const char * str, char delim, tokenizer_mode_t);
-
-/**
- * Free the dynamically allocated tokens
- * @param tks the tokens to be freed
- */
-void free_tokens(tokens * tks);
-=======
  * @return a list of tokens
  */
 token_list tokenize_string(const char * str, char delim);
@@ -105,7 +86,6 @@ int validate_list(token_list * tk_list);
  * @attention, if the to list is empty, to and from will be same after appending
  */
 void attach_lists(token_list * to, token_list * from);
->>>>>>> 8acf139... MINIFICPP-621 Add initial tailfile nanofi example
 
 #ifdef __cplusplus
 }

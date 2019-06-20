@@ -174,16 +174,14 @@ typedef struct token_list {
  * ##################################################################
  */
 
-typedef struct flow_file_list_node {
-    flow_file_record * ff_record;
-    struct flow_file_list_node * next;
-} flow_file_list_node;
-
 typedef struct flow_file_list {
-    flow_file_list_node * head;
-    flow_file_list_node * tail;
-    int len;
-    int offset;
+    flow_file_record * ff_record;
+    struct flow_file_list * next;
 } flow_file_list;
+
+typedef struct flow_file_info {
+    struct flow_file_list * ff_list;
+    int total_bytes;
+} flow_file_info;
 
 #endif /* LIBMINIFI_SRC_CAPI_CSTRUCTS_H_ */
