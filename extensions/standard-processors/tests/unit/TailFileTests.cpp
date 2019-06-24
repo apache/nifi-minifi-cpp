@@ -29,6 +29,7 @@
 #include "TestBase.h"
 #include "core/Core.h"
 #include "core/FlowFile.h"
+#include "utils/file/FileUtils.h"
 #include "unit/ProvenanceTestHelper.h"
 #include "core/Processor.h"
 #include "core/ProcessContext.h"
@@ -82,10 +83,6 @@ TEST_CASE("TailFileWithDelimiter", "[tailfiletest2]") {
 
 TEST_CASE("TailFileWithOutDelimiter", "[tailfiletest2]") {
   // Create and write to the test file
-  std::ofstream tmpfile;
-  tmpfile.open(TMP_FILE);
-  tmpfile << NEWLINE_FILE;
-  tmpfile.close();
 
   TestController testController;
   LogTestController::getInstance().setDebug<minifi::processors::LogAttribute>();
@@ -97,15 +94,22 @@ TEST_CASE("TailFileWithOutDelimiter", "[tailfiletest2]") {
 
   char format[] = "/tmp/gt.XXXXXX";
   char *dir = testController.createTempDirectory(format);
+  std::stringstream temp_file_ss;
+  temp_file_ss << dir << utils::file::FileUtils::get_separator() << "minifi-tmpfile.txt";
+  auto temp_file = temp_file_ss.str();
+  std::ofstream tmpfile;
+  tmpfile.open(temp_file);
+  tmpfile << NEWLINE_FILE;
+  tmpfile.close();
 
   SECTION("Single") {
-  plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::FileName.getName(), TMP_FILE);
+  plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::FileName.getName(), temp_file);
 }
 
   SECTION("Multiple") {
   plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::FileName.getName(), "minifi-.*\\.txt");
   plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::TailMode.getName(), "Multiple file");
-  plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::BaseDirectory.getName(), "/tmp/");
+  plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::BaseDirectory.getName(), dir);
 }
   plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::StateFile.getName(), STATE_FILE);
 
@@ -120,7 +124,6 @@ TEST_CASE("TailFileWithOutDelimiter", "[tailfiletest2]") {
   LogTestController::getInstance().reset();
 
   // Delete the test and state file.
-  remove(TMP_FILE);
   remove(STATE_FILE);
 }
 
