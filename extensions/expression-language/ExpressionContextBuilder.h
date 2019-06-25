@@ -29,7 +29,11 @@ namespace core {
 namespace expressions {
 
 /**
-
+ *   Purpose: Creates a context builder that can be used by the class loader to inject EL functionality
+ *
+ *   Justification: Linking became problematic across platforms since EL was used as a carrier of what was
+ *   effectively core functionality. To eliminate this awkward linking and help with disabling EL entirely
+ *   on some platforms, this builder was placed into the class loader.
  */
 class ExpressionContextBuilder : public core::ProcessContextBuilder {
  public:

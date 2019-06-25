@@ -32,7 +32,7 @@
 #undef EXPRESSION_LANGUAGE_USE_DATE
 #endif
 
-#include "../../common/Value.h"
+#include "common/Value.h"
 #include <FlowFile.h>
 #include <VariableRegistry.h>
 

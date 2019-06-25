@@ -378,7 +378,9 @@ int TLSSocket::readData(uint8_t *buf, int buflen, bool retrieve_all_bytes) {
 }
 
 int TLSSocket::readData(std::vector<uint8_t> &buf, int buflen) {
-  if (buf.capacity() < buflen) {
+  if (buflen < 0)
+    return -1;
+  if (buf.capacity() < static_cast<size_t>(buflen)) {
     buf.reserve(buflen);
   }
   int total_read = 0;

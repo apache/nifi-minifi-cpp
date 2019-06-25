@@ -56,7 +56,6 @@ class ExpressionObjectFactory : public core::ObjectFactory {
 
   virtual std::unique_ptr<ObjectFactory> assign(const std::string &class_name) override {
     if (utils::StringUtils::equalsIgnoreCase(class_name, "ProcessContextBuilder")) {
-      std::cout << "oh boi" << std::endl;
       return std::unique_ptr<ObjectFactory>(new core::DefautObjectFactory<core::expressions::ExpressionContextBuilder>());
     } else {
       return nullptr;

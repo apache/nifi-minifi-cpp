@@ -26,12 +26,10 @@ namespace expressions {
 
 ExpressionContextBuilder::ExpressionContextBuilder(const std::string &name, minifi::utils::Identifier &uuid)
     : core::ProcessContextBuilder(name, uuid) {
-	std::cout << "ProcessContextExpr" << std::endl;
 }
 
 ExpressionContextBuilder::ExpressionContextBuilder(const std::string &name)
     : core::ProcessContextBuilder(name) {
-	std::cout << "ProcessContextExpr" << std::endl;
 }
 
 ExpressionContextBuilder::~ExpressionContextBuilder() {
