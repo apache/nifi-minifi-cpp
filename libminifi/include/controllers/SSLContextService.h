@@ -23,6 +23,7 @@
 #ifdef OPENSSL_SUPPORT
 #include <openssl/err.h>
 #include <openssl/ssl.h>
+#include "io/tls/TLSUtils.h"
 #endif
 #include <iostream>
 #include <memory>
@@ -153,7 +154,7 @@ class SSLContextService : public core::controller::ControllerService {
       }
       if (!IsNullOrEmpty(passphrase_)) {
         SSL_CTX_set_default_passwd_cb_userdata(ctx, &passphrase_);
-        SSL_CTX_set_default_passwd_cb(ctx, pemPassWordCb);
+        SSL_CTX_set_default_passwd_cb(ctx, minifi::io::tls::pemPassWordCb);
       }
     }
 
@@ -185,19 +186,6 @@ class SSLContextService : public core::controller::ControllerService {
   virtual void onEnable();
 
  protected:
-
-  static int pemPassWordCb(char *buf, int size, int rwflag, void *userdata) {
-
-    std::string *pass = (std::string*) userdata;
-    if (pass->length() > 0) {
-
-      memset(buf, 0x00, size);
-      memcpy(buf, pass->c_str(), pass->length() - 1);
-
-      return pass->length() - 1;
-    }
-    return 0;
-  }
 
   virtual void initializeTLS();
 

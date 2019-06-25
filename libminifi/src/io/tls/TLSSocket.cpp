@@ -22,6 +22,7 @@
 #include <string>
 #include <vector>
 #include "io/tls/TLSSocket.h"
+#include "io/tls/TLSUtils.h"
 #include "properties/Configure.h"
 #include "utils/StringUtils.h"
 #include "core/Property.h"
@@ -98,21 +99,20 @@ int16_t TLSContext::initialize(bool server_method) {
     }
     if (ssl_service_ != nullptr) {
       // if the private key has passphase
-      SSL_CTX_set_default_passwd_cb(ctx, pemPassWordCb);
-      SSL_CTX_set_default_passwd_cb_userdata(ctx, static_cast<void*>(const_cast<char*>(passphrase.c_str())));
+      SSL_CTX_set_default_passwd_cb(ctx, io::tls::pemPassWordCb);
+      SSL_CTX_set_default_passwd_cb_userdata(ctx, &passphrase);
     } else {
       if (configure_->get(Configure::nifi_security_client_pass_phrase, passphrase)) {
         std::ifstream file(passphrase.c_str(), std::ifstream::in);
-        if (!file.good()) {
-          return error_value;
+        if (file.good()) {
+          // if we have been given a file copy that, otherwise treat the passphrase as a password
+          std::string password;
+          password.assign((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+          file.close();
+          passphrase = password;
         }
-
-        std::string password;
-        password.assign((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-        file.close();
-        passphrase = password;
-        SSL_CTX_set_default_passwd_cb(ctx, pemPassWordCb);
-        SSL_CTX_set_default_passwd_cb_userdata(ctx, static_cast<void*>(const_cast<char*>(passphrase.c_str())));
+        SSL_CTX_set_default_passwd_cb(ctx, io::tls::pemPassWordCb);
+        SSL_CTX_set_default_passwd_cb_userdata(ctx, &passphrase);
       }
     }
 

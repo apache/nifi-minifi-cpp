@@ -69,7 +69,7 @@ std::unique_ptr<SSLContext> SSLContextService::createSSLContext() {
     }
     if (!IsNullOrEmpty(passphrase_)) {
       SSL_CTX_set_default_passwd_cb_userdata(ctx, &passphrase_);
-      SSL_CTX_set_default_passwd_cb(ctx, pemPassWordCb);
+      SSL_CTX_set_default_passwd_cb(ctx, io::tls::pemPassWordCb);
     }
   }
 
