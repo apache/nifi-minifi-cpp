@@ -27,9 +27,6 @@
 #include "io/validation.h"
 #include "utils/Id.h"
 #include "utils/StringUtils.h"
-#ifdef WIN32
-#define stat _stat
-#endif
 
 #ifndef FILE_SEPARATOR
 	#ifdef WIN32
@@ -115,8 +112,13 @@ class FileManager {
  protected:
 
   inline bool verify_not_exist(const std::string& name) {
+#ifdef WIN32
+    struct _stat buffer;
+    return _stat(name.c_str(), &buffer) != 0;
+#else
     struct stat buffer;
-    return (stat(name.c_str(), &buffer) != 0);
+    return stat(name.c_str(), &buffer) != 0;
+#endif
   }
 
   utils::NonRepeatingStringGenerator non_repeating_string_generator_;

@@ -23,13 +23,9 @@
 #include <boost/filesystem.hpp>
 #else
 #include <cstdlib>
-#include <sys/stat.h>
 #endif
 #include <cstdio>
 #include <fcntl.h>
-#ifdef WIN32
-#define stat _stat
-#endif
 
 #ifdef BDIFF
 
