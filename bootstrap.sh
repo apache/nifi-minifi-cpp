@@ -62,6 +62,7 @@ while :; do
       NO_PROMPT="true"
       FEATURES_SELECTED="true"
       EnableAllFeatures
+      ALL_FEATURES_ENABLED=${TRUE}
       ;;
     -c|--clear)
       rm ${script_directory}/bt_state > /dev/null 2>&1
@@ -319,7 +320,11 @@ fi
 BUILD_DIR_D=${BUILD_DIR}
 OVERRIDE_BUILD_IDENTIFIER=${BUILD_IDENTIFIER}
 
-load_state
+if [ "$ALL_FEATURES_ENABLED" == "${FALSE}" ]; then
+	load_state
+else
+	EnableAllFeatures
+fi
 
 if [ "$USER_DISABLE_TESTS" == "${TRUE}" ]; then
    ToggleFeature TESTS_DISABLED
