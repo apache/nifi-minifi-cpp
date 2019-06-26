@@ -31,12 +31,14 @@ FEATURES_SELECTED="false"
 AUTO_REMOVE_EXTENSIONS="true"
 export NO_PROMPT="false"
 ALL_FEATURES_ENABLED=${FALSE}
+
 BUILD_DIR="build"
 
 DEPLOY="false"
 OPTIONS=()
 CMAKE_OPTIONS_ENABLED=()
 CMAKE_OPTIONS_DISABLED=()
+CMAKE_COMMAND_OPTIONS=()
 CMAKE_MIN_VERSION=()
 DEPLOY_LIMITS=()
 USER_DISABLE_TESTS="${FALSE}"
@@ -47,8 +49,11 @@ DEPENDENCIES=()
 SKIP_CMAKE=${FALSE}
 MENU="features"
 GUIDED_INSTALL=${FALSE}
-while :; do
-  case $1 in
+#while :; do
+while [[ $# -gt 0 ]]
+key="$1"
+do
+  case $key in
     -n|--noprompt)
       NO_PROMPT="true"
       ;;
@@ -79,7 +84,6 @@ while :; do
     -t|--travis)
       NO_PROMPT="true"
       FEATURES_SELECTED="true"
-      SKIP_CMAKE="${TRUE}"
       ;;
     -p|--package)
       CORES=$(grep -c ^processor /proc/cpuinfo 2>/dev/null || sysctl -n hw.ncpu)
@@ -99,7 +103,13 @@ while :; do
     "--build_identifier="* )
       BUILD_IDENTIFIER="${1#*=}"
       ;;
-    *) break
+    *)
+      if [[ "$key" =~ ^-D.+ ]]; then
+        CMAKE_COMMAND_OPTIONS+=("$key")
+      else
+        break
+      fi
+      ;;
   esac
   shift
 done
@@ -321,13 +331,13 @@ BUILD_DIR_D=${BUILD_DIR}
 OVERRIDE_BUILD_IDENTIFIER=${BUILD_IDENTIFIER}
 
 if [ "$ALL_FEATURES_ENABLED" == "${FALSE}" ]; then
-	load_state
+  load_state
 else
-	EnableAllFeatures
+  EnableAllFeatures
 fi
 
 if [ "$USER_DISABLE_TESTS" == "${TRUE}" ]; then
-   ToggleFeature TESTS_DISABLED
+  ToggleFeature TESTS_DISABLED
 fi
 
 
@@ -394,9 +404,9 @@ CMAKE_REVISION=`echo $CMAKE_VERSION | cut -d. -f3`
 
 CMAKE_BUILD_COMMAND="${CMAKE_COMMAND} "
 
-if [ "${USE_NINJA}" = "${TRUE}" ]; then 
-	 echo "use ninja"
-   CMAKE_BUILD_COMMAND="${CMAKE_BUILD_COMMAND} -GNinja "
+if [ "${USE_NINJA}" = "${TRUE}" ]; then
+  echo "use ninja"
+  CMAKE_BUILD_COMMAND="${CMAKE_BUILD_COMMAND} -GNinja "
 fi
 
 build_cmake_command(){
@@ -446,13 +456,13 @@ build_cmake_command(){
     # user may have disabled tests previously, so let's force them to be re-enabled
     CMAKE_BUILD_COMMAND="${CMAKE_BUILD_COMMAND} -DSKIP_TESTS= "
   fi
-  
+
   if [ "${USE_SHARED_LIBS}" = "${TRUE}" ]; then
     CMAKE_BUILD_COMMAND="${CMAKE_BUILD_COMMAND} -DUSE_SHARED_LIBS=ON "
   else
     CMAKE_BUILD_COMMAND="${CMAKE_BUILD_COMMAND} -DUSE_SHARED_LIBS= "
   fi
-  
+
 
 
   if [ "${PORTABLE_BUILD}" = "${TRUE}" ]; then
@@ -468,10 +478,15 @@ build_cmake_command(){
   fi
 
   CMAKE_BUILD_COMMAND="${CMAKE_BUILD_COMMAND} -DBUILD_IDENTIFIER=${BUILD_IDENTIFIER}"
-  
-    CMAKE_BUILD_COMMAND="${CMAKE_BUILD_COMMAND} -DCMAKE_BUILD_TYPE=${BUILD_PROFILE}"
+
+  CMAKE_BUILD_COMMAND="${CMAKE_BUILD_COMMAND} -DCMAKE_BUILD_TYPE=${BUILD_PROFILE}"
 
   add_os_flags
+
+  for opt in "${CMAKE_COMMAND_OPTIONS[@]}"
+  do :
+    CMAKE_BUILD_COMMAND="${CMAKE_BUILD_COMMAND} ${opt}"
+  done
 
   curl -V | grep OpenSSL &> /dev/null
   if [ $? == 0 ]; then
@@ -479,6 +494,7 @@ build_cmake_command(){
   else
     CMAKE_BUILD_COMMAND="${CMAKE_BUILD_COMMAND} -DUSE_CURL_NSS=true .."
   fi
+
 
   CMAKE_BUILD_COMMAND="${CMAKE_BUILD_COMMAND} .."
 
@@ -497,9 +513,9 @@ build_cmake_command
 
 ### run the cmake command
 if [ "${SKIP_CMAKE}" = "${TRUE}" ]; then
-	echo "Not running ${CMAKE_BUILD_COMMAND} "
+  echo "Not running ${CMAKE_BUILD_COMMAND} "
 else
-	${CMAKE_BUILD_COMMAND}
+  ${CMAKE_BUILD_COMMAND}
 fi
 
 if [ "$BUILD" = "true" ]; then
