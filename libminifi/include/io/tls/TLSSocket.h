@@ -88,18 +88,6 @@ class TLSContext : public SocketContext {
 
  private:
 
-  static int pemPassWordCb(char *buf, int size, int rwflag, void *userdata) {
-
-    std::string *pass = (std::string*) userdata;
-    if (pass->length() > 0) {
-
-      memset(buf, 0x00, size);
-      memcpy(buf, pass->c_str(), pass->length() - 1);
-
-      return pass->length() - 1;
-    }
-    return 0;
-  }
 
   std::shared_ptr<logging::Logger> logger_;
   std::shared_ptr<Configure> configure_;

@@ -98,8 +98,13 @@ class SecureSocketTest : public IntegrationBase {
     path = key_dir + "nifi-cert.pem";
     configuration->set("nifi.security.client.ca.certificate", path);
     configuration->set("nifi.c2.enable", "false");
+    std::string endpoint;
+    inv->getProperty(minifi::processors::GetTCP::EndpointList.getName(), endpoint);
+    auto endpoints = utils::StringUtils::split(endpoint, ",");
+    assert(1 == endpoints.size());
+    auto hostAndPort = utils::StringUtils::split(endpoint, ":");
     std::shared_ptr<org::apache::nifi::minifi::io::TLSContext> socket_context = std::make_shared<org::apache::nifi::minifi::io::TLSContext>(configuration);
-    server_socket = std::make_shared<org::apache::nifi::minifi::io::TLSServerSocket>(socket_context, "localhost", 8776, 3);
+    server_socket = std::make_shared<org::apache::nifi::minifi::io::TLSServerSocket>(socket_context, hostAndPort.at(0), std::stoi(hostAndPort.at(1)), 3);
     server_socket->initialize();
 
     isRunning_ = true;
@@ -156,8 +161,8 @@ class SecureSocketTest : public IntegrationBase {
   }
 
   virtual void waitToVerifyProcessor() {
-      std::this_thread::sleep_for(std::chrono::seconds(3));
-    }
+    std::this_thread::sleep_for(std::chrono::seconds(3));
+  }
 
  protected:
   std::function<bool()> check;
@@ -170,11 +175,11 @@ class SecureSocketTest : public IntegrationBase {
   std::shared_ptr<org::apache::nifi::minifi::io::TLSServerSocket> server_socket;
 };
 
-static void sigpipe_handle(int x) {}
+static void sigpipe_handle(int x) {
+}
 
 int main(int argc, char **argv) {
-  std::string key_dir, test_file_location, url;
-  url = "http://localhost:8888/api/heartbeat";
+  std::string key_dir, test_file_location;
   if (argc > 1) {
     test_file_location = argv[1];
     key_dir = argv[2];
