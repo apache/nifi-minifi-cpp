@@ -34,7 +34,6 @@
 #include "spdlog/sinks/stdout_sinks.h"
 #include "spdlog/sinks/null_sink.h"
 #ifdef WIN32
-#define stat _stat
 #include <direct.h>
 #define _WINSOCKAPI_
 #include <windows.h>
@@ -125,13 +124,14 @@ std::shared_ptr<internal::LoggerNamespace> LoggerConfiguration::initialize_names
       if (!directory.empty()) {
         // Create the log directory if needed
         directory += "/logs";
-        struct stat logDirStat;
 #ifdef WIN32
-        if (stat(directory.c_str(), &logDirStat) != 0) {
+        struct _stat logDirStat;
+        if (_stat(directory.c_str(), &logDirStat) != 0) {
           if (_mkdir(directory.c_str()) == -1) {
             exit(1);
           }
 #else
+        struct stat logDirStat;
         if (stat(directory.c_str(), &logDirStat) != 0 || !S_ISDIR(logDirStat.st_mode)) {
           if (mkdir(directory.c_str(), 0777) == -1) {
             exit(1);

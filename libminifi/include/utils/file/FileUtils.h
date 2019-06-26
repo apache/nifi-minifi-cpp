@@ -44,7 +44,6 @@
 #endif
 #include <fcntl.h>
 #ifdef WIN32
-#define stat _stat
 #include <direct.h>
 #include <windows.h> // winapi
 #include <sys/stat.h> // stat
@@ -198,10 +197,17 @@ class FileUtils {
 #ifdef BOOST_VERSION
     return boost::filesystem::last_write_time(movedFile.str());
 #else
+#ifdef WIN32
+    struct _stat result;
+    if (_stat(path.c_str(), &result) == 0) {
+      return result.st_mtime;
+    }
+#else
     struct stat result;
     if (stat(path.c_str(), &result) == 0) {
       return result.st_mtime;
     }
+#endif
 #endif
     return 0;
   }
@@ -255,17 +261,21 @@ class FileUtils {
       return -1;
     }
 #else
+#ifdef WIN32
+    struct _stat dir_stat;
+    if (_stat(path.c_str(), &dir_stat)) {
+      _mkdir(path.c_str());
+      return 0;
+    }
+#else
     struct stat dir_stat;
     if (stat(path.c_str(), &dir_stat)) {
-#ifdef WIN32
-      _mkdir(path.c_str());
-#else
       if (mkdir(path.c_str(), 0700) != 0 && errno != EEXIST) {
         return -1;
       }
-#endif
       return 0;
     }
+#endif
     return -1;
 #endif
   }
@@ -336,11 +346,11 @@ class FileUtils {
     std::string pathToSearch = originalPath + "\\*" + extension;
     if ((hFind = FindFirstFileA(pathToSearch.c_str(), &FindFileData)) != INVALID_HANDLE_VALUE) {
       do {
-        struct stat statbuf {};
+        struct _stat statbuf {};
 
         std::string path = originalPath + "\\" + FindFileData.cFileName;
         logger->log_info("Adding %s to paths", path);
-        if (stat(path.c_str(), &statbuf) != 0) {
+        if (_stat(path.c_str(), &statbuf) != 0) {
           logger->log_warn("Failed to stat %s", path);
           break;
         }
@@ -413,10 +423,10 @@ class FileUtils {
     }
 
     do {
-      struct stat statbuf {};
+      struct _stat statbuf {};
       if (strcmp(FindFileData.cFileName, ".") != 0 && strcmp(FindFileData.cFileName, "..") != 0) {
         std::string path = dir + get_separator() + FindFileData.cFileName;
-        if (stat(path.c_str(), &statbuf) != 0) {
+        if (_stat(path.c_str(), &statbuf) != 0) {
           logger->log_warn("Failed to stat %s", path);
           continue;
         }

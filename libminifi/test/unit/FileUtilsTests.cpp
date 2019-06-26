@@ -113,7 +113,6 @@ SECTION("FILE NO PATH") {
 SECTION("NO FILE NO PATH") {
   std::string path = "file";
   std::string filename, filepath;
-  std::string expectedPath = "" + FileUtils::get_separator();
   REQUIRE(false == utils::file::PathUtils::getFileNameAndPath(path, filepath, filename) );
   REQUIRE(filepath.empty());
   REQUIRE(filename.empty());
