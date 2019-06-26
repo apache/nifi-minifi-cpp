@@ -160,10 +160,6 @@ class SecureSocketTest : public IntegrationBase {
     cleanup();
   }
 
-  virtual void waitToVerifyProcessor() {
-    std::this_thread::sleep_for(std::chrono::seconds(3));
-  }
-
  protected:
   std::function<bool()> check;
   std::function<int(std::vector<uint8_t>*b, int *size)> handler;

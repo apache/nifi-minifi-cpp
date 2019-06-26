@@ -105,8 +105,7 @@ class StringUtils {
    * @param s incoming string
    * @returns modified string
    */
-  static inline std::string trimLeft(const std::string &in_string) {
-    auto s = in_string;
+  static inline std::string trimLeft(std::string s) {
     s.erase(s.begin(), std::find_if(s.begin(), s.end(), std::not1(std::pointer_to_unary_function<int, int>(isspace))));
     return s;
   }
@@ -117,8 +116,7 @@ class StringUtils {
    * @returns modified string
    */
 
-  static inline std::string trimRight(const std::string &in_string) {
-    auto s = in_string;
+  static inline std::string trimRight(std::string s) {
     s.erase(std::find_if(s.rbegin(), s.rend(), std::not1(std::pointer_to_unary_function<int, int>(isspace))).base(), s.end());
     return s;
   }
