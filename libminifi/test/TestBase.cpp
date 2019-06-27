@@ -149,11 +149,13 @@ bool TestPlan::setProperty(const std::shared_ptr<core::Processor> proc, const st
   }
 }
 
-void TestPlan::reset() {
+void TestPlan::reset(bool reschedule) {
   std::lock_guard<std::recursive_mutex> guard(mutex);
   process_sessions_.clear();
   factories_.clear();
   location = -1;
+  if (reschedule)
+    configured_processors_.clear();
   for (auto proc : processor_queue_) {
     while (proc->getActiveTasks() > 0) {
       proc->decrementActiveTask();

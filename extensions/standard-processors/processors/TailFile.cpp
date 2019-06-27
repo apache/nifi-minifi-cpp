@@ -107,6 +107,10 @@ void TailFile::initialize() {
 void TailFile::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
   std::lock_guard<std::mutex> tail_lock(tail_file_mutex_);
 
+  // can perform these in notifyStop, but this has the same outcome
+  tail_states_.clear();
+  state_recovered_ = false;
+
   std::string value;
 
   if (context->getProperty(Delimiter.getName(), value)) {
@@ -176,6 +180,8 @@ std::string TailFile::trimRight(const std::string& s) {
 void TailFile::parseStateFileLine(char *buf) {
   char *line = buf;
 
+  logger_->log_trace("Received line %s", buf);
+
   while ((line[0] == ' ') || (line[0] == '\t'))
     ++line;
 
@@ -208,9 +214,10 @@ void TailFile::parseStateFileLine(char *buf) {
   if (key == "FILENAME") {
     std::string fileLocation, fileName;
     if (utils::file::PathUtils::getFileNameAndPath(value, fileLocation, fileName)) {
-      tail_states_.insert(std::make_pair(value, TailState { fileLocation, fileName, 0, 0 }));
+      logger_->log_debug("Received path %s, file %s", fileLocation, fileName);
+      tail_states_.insert(std::make_pair(fileName, TailState { fileLocation, fileName, 0, 0 }));
     } else {
-      throw minifi::Exception(ExceptionType::PROCESSOR_EXCEPTION, "State file contains an invalid file name");
+      tail_states_.insert(std::make_pair(value, TailState { fileLocation, value, 0, 0 }));
     }
   }
   if (key == "POSITION") {
@@ -218,10 +225,12 @@ void TailFile::parseStateFileLine(char *buf) {
     if (tail_states_.size() != 1) {
       throw minifi::Exception(ExceptionType::PROCESSOR_EXCEPTION, "Incompatible state file types");
     }
-    tail_states_.begin()->second.currentTailFilePosition_ = std::stoi(value);
+    const auto position = std::stoi(value);
+    logger_->log_debug("Received position %d", position);
+    tail_states_.begin()->second.currentTailFilePosition_ = position;
   }
   if (key.find(CURRENT_STR) == 0) {
-    const auto file = key.substr(strlen(CURRENT_STR) + 1);
+    const auto file = key.substr(strlen(CURRENT_STR));
     std::string fileLocation, fileName;
     if (utils::file::PathUtils::getFileNameAndPath(value, fileLocation, fileName)) {
       tail_states_[file].path_ = fileLocation;
@@ -231,8 +240,8 @@ void TailFile::parseStateFileLine(char *buf) {
     }
   }
 
-  if (key.find("POSITION.") == 0) {
-    const auto file = key.substr(strlen(POSITION_STR) + 1);
+  if (key.find(POSITION_STR) == 0) {
+    const auto file = key.substr(strlen(POSITION_STR));
     tail_states_[file].currentTailFilePosition_ = std::stoi(value);
   }
 
@@ -250,6 +259,24 @@ bool TailFile::recoverState() {
   for (file.getline(buf, BUFFER_SIZE); file.good(); file.getline(buf, BUFFER_SIZE)) {
     parseStateFileLine(buf);
   }
+
+  /**
+   * recover times and validate that we have paths
+   */
+
+  for (auto &state : tail_states_) {
+    std::string fileLocation, fileName;
+    if (!utils::file::PathUtils::getFileNameAndPath(state.second.current_file_name_, fileLocation, fileName) && state.second.path_.empty()) {
+      throw minifi::Exception(ExceptionType::PROCESSOR_EXCEPTION, "State file does not contain a full path and file name");
+    }
+    struct stat sb;
+    const auto fileFullName = state.second.path_ + utils::file::FileUtils::get_separator() + state.second.current_file_name_;
+    if (stat(fileFullName.c_str(), &sb) == 0) {
+      state.second.currentTailFileModificationTime_ = ((uint64_t) (sb.st_mtime) * 1000);
+    }
+  }
+
+  logger_->log_debug("load state file succeeded for %s", state_file_);
   return true;
 }
 
@@ -290,6 +317,8 @@ void TailFile::checkRollOver(TailState &file, const std::string &base_file_name)
       if ((fileFullName.find(pattern) != std::string::npos) && stat(fileFullName.c_str(), &sb) == 0) {
         uint64_t candidateModTime = ((uint64_t) (sb.st_mtime) * 1000);
         if (candidateModTime >= file.currentTailFileModificationTime_) {
+          logger_->log_trace("File %s ( short name %s ), disk mod time %llu, struct mod timer %llu , size on disk %llu, position %llu",
+              filename, file.current_file_name_, candidateModTime, file.currentTailFileModificationTime_, sb.st_size, file.currentTailFilePosition_);
           if (filename == file.current_file_name_ && candidateModTime == file.currentTailFileModificationTime_ &&
               sb.st_size == file.currentTailFilePosition_) {
             return true;  // Skip the current file as a candidate in case it wasn't updated
@@ -316,6 +345,7 @@ void TailFile::checkRollOver(TailState &file, const std::string &base_file_name)
 
     // Going ahead in the file rolled over
     if (file.current_file_name_ != base_file_name) {
+      logger_->log_debug("Resetting posotion since %s != %s", base_file_name, file.current_file_name_);
       file.currentTailFilePosition_ = 0;
     }
 
@@ -349,7 +379,7 @@ void TailFile::onTrigger(const std::shared_ptr<core::ProcessContext> &context, c
     std::string fullPath = fileLocation + utils::file::FileUtils::get_separator() + state.second.current_file_name_;
     struct stat statbuf;
 
-    logger_->log_debug("Tailing file %s", fullPath);
+    logger_->log_debug("Tailing file %s from %llu", fullPath, state.second.currentTailFilePosition_);
     if (stat(fullPath.c_str(), &statbuf) == 0) {
       if ((uint64_t) statbuf.st_size <= state.second.currentTailFilePosition_) {
         logger_->log_trace("Current pos: %llu", state.second.currentTailFilePosition_);

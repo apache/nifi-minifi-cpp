@@ -58,7 +58,7 @@ TEST_CASE("TailFileWithDelimiter", "[tailfiletest2]") {
 
   std::shared_ptr<TestPlan> plan = testController.createPlan();
   std::shared_ptr<core::Processor> tailfile = plan->addProcessor("TailFile", "tailfileProc");
-
+  auto id = tailfile->getUUIDStr();
   plan->addProcessor("LogAttribute", "logattribute", core::Relationship("success", "description"), true);
 
   char format[] = "/tmp/gt.XXXXXX";
@@ -78,7 +78,245 @@ TEST_CASE("TailFileWithDelimiter", "[tailfiletest2]") {
 
   // Delete the test and state file.
   remove(TMP_FILE);
-  remove(STATE_FILE);
+  remove(std::string(std::string(STATE_FILE) + "." + id).c_str());
+}
+
+TEST_CASE("TestNewContent", "[tailFileWithDelimiterState]") {
+  // Create and write to the test file
+  std::ofstream tmpfile;
+  tmpfile.open(TMP_FILE);
+  tmpfile << NEWLINE_FILE;
+  tmpfile.close();
+
+  TestController testController;
+  LogTestController::getInstance().setTrace<minifi::processors::TailFile>();
+  LogTestController::getInstance().setDebug<core::ProcessSession>();
+  LogTestController::getInstance().setTrace<TestPlan>();
+  LogTestController::getInstance().setDebug<minifi::processors::LogAttribute>();
+
+  std::shared_ptr<TestPlan> plan = testController.createPlan();
+  std::shared_ptr<core::Processor> tailfile = plan->addProcessor("TailFile", "tailfileProc");
+  auto id = tailfile->getUUIDStr();
+
+  plan->addProcessor("LogAttribute", "logattribute", core::Relationship("success", "description"), true);
+
+  char format[] = "/tmp/gt.XXXXXX";
+  char *dir = testController.createTempDirectory(format);
+
+  plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::FileName.getName(), TMP_FILE);
+  plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::StateFile.getName(), STATE_FILE);
+  plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::Delimiter.getName(), "\n");
+
+  testController.runSession(plan, true);
+
+  REQUIRE(LogTestController::getInstance().contains("minifi-tmpfile.0-13.txt"));
+
+  plan->reset(true);  // start a new but with state file
+
+  std::ofstream appendStream;
+  appendStream.open(TMP_FILE, std::ios_base::app);
+  appendStream << std::endl;
+  testController.runSession(plan, true);
+
+  REQUIRE(LogTestController::getInstance().contains("position 14"));
+
+  REQUIRE(LogTestController::getInstance().contains("minifi-tmpfile.14-34.txt"));
+
+  LogTestController::getInstance().reset();
+
+  // Delete the test and state file.
+  remove(TMP_FILE);
+  remove(std::string(std::string(STATE_FILE) + "." + id).c_str());
+}
+
+TEST_CASE("TestDeleteState", "[tailFileWithDelimiterState]") {
+  // Create and write to the test file
+  std::ofstream tmpfile;
+  tmpfile.open(TMP_FILE);
+  tmpfile << NEWLINE_FILE;
+  tmpfile.close();
+
+  TestController testController;
+  LogTestController::getInstance().setTrace<minifi::processors::TailFile>();
+  LogTestController::getInstance().setDebug<core::ProcessSession>();
+  LogTestController::getInstance().setTrace<TestPlan>();
+  LogTestController::getInstance().setDebug<minifi::processors::LogAttribute>();
+
+  std::shared_ptr<TestPlan> plan = testController.createPlan();
+  std::shared_ptr<core::Processor> tailfile = plan->addProcessor("TailFile", "tailfileProc");
+  auto id = tailfile->getUUIDStr();
+
+  plan->addProcessor("LogAttribute", "logattribute", core::Relationship("success", "description"), true);
+
+  char format[] = "/tmp/gt.XXXXXX";
+  char *dir = testController.createTempDirectory(format);
+
+  plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::FileName.getName(), TMP_FILE);
+  plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::StateFile.getName(), STATE_FILE);
+  plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::Delimiter.getName(), "\n");
+
+  testController.runSession(plan, true);
+
+  REQUIRE(LogTestController::getInstance().contains("minifi-tmpfile.0-13.txt"));
+
+  plan->reset(true);  // start a new but with state file
+
+  remove(std::string(std::string(STATE_FILE) + "." + id).c_str());
+
+  testController.runSession(plan, true);
+
+  REQUIRE(LogTestController::getInstance().contains("position 0"));
+
+  // if we lose state we restart
+  REQUIRE(LogTestController::getInstance().contains("minifi-tmpfile.0-13.txt"));
+
+  // Delete the test and state file.
+  remove(TMP_FILE);
+}
+
+TEST_CASE("TestChangeState", "[tailFileWithDelimiterState]") {
+  // Create and write to the test file
+  std::ofstream tmpfile;
+  tmpfile.open(TMP_FILE);
+  tmpfile << NEWLINE_FILE << std::endl;
+  tmpfile.close();
+
+  TestController testController;
+  LogTestController::getInstance().setTrace<minifi::processors::TailFile>();
+  LogTestController::getInstance().setDebug<core::ProcessSession>();
+  LogTestController::getInstance().setTrace<TestPlan>();
+  LogTestController::getInstance().setDebug<minifi::processors::LogAttribute>();
+
+  std::shared_ptr<TestPlan> plan = testController.createPlan();
+  std::shared_ptr<core::Processor> tailfile = plan->addProcessor("TailFile", "tailfileProc");
+  auto id = tailfile->getUUIDStr();
+
+  plan->addProcessor("LogAttribute", "logattribute", core::Relationship("success", "description"), true);
+
+  char format[] = "/tmp/gt.XXXXXX";
+  char *dir = testController.createTempDirectory(format);
+
+  plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::FileName.getName(), TMP_FILE);
+  plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::StateFile.getName(), STATE_FILE);
+  plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::Delimiter.getName(), "\n");
+
+  testController.runSession(plan, true);
+
+  REQUIRE(LogTestController::getInstance().contains("minifi-tmpfile.0-13.txt"));
+
+  // should stay the same
+  for (int i = 0; i < 5; i++) {
+    plan->reset(true);  // start a new but with state file
+
+    auto statefile = std::string(STATE_FILE) + "." + id;
+
+    remove(statefile.c_str());
+
+    std::ofstream newstatefile;
+    newstatefile.open(statefile);
+    newstatefile << "FILENAME=" << TMP_FILE << std::endl;
+    newstatefile << "POSITION=14" << std::endl;
+    newstatefile.close();
+
+    testController.runSession(plan, true);
+
+    REQUIRE(LogTestController::getInstance().contains("position 14"));
+
+    // if we lose state we restart
+    REQUIRE(LogTestController::getInstance().contains("minifi-tmpfile.14-34.txt"));
+  }
+  for (int i = 14; i < 34; i++) {
+    plan->reset(true);  // start a new but with state file
+
+    auto statefile = std::string(STATE_FILE) + "." + id;
+
+    remove(statefile.c_str());
+
+    std::ofstream newstatefile;
+    newstatefile.open(statefile);
+    newstatefile << "FILENAME=" << TMP_FILE << std::endl;
+    newstatefile << "POSITION=" << i << std::endl;
+    newstatefile.close();
+    testController.runSession(plan, true);
+    REQUIRE(LogTestController::getInstance().contains("position " + std::to_string(i)));
+  }
+
+  plan->runCurrentProcessor();
+  for (int i = 14; i < 34; i++) {
+    REQUIRE(LogTestController::getInstance().contains("minifi-tmpfile." + std::to_string(i) + "-34.txt"));
+  }
+  // Delete the test and state file.
+  remove(TMP_FILE);
+
+  remove(std::string(std::string(STATE_FILE) + "." + id).c_str());
+}
+
+TEST_CASE("TestInvalidState", "[tailFileWithDelimiterState]") {
+  // Create and write to the test file
+  std::ofstream tmpfile;
+  tmpfile.open(TMP_FILE);
+  tmpfile << NEWLINE_FILE;
+  tmpfile.close();
+
+  TestController testController;
+  LogTestController::getInstance().setTrace<minifi::processors::TailFile>();
+  LogTestController::getInstance().setDebug<core::ProcessSession>();
+  LogTestController::getInstance().setTrace<TestPlan>();
+  LogTestController::getInstance().setDebug<minifi::processors::LogAttribute>();
+
+  std::shared_ptr<TestPlan> plan = testController.createPlan();
+  std::shared_ptr<core::Processor> tailfile = plan->addProcessor("TailFile", "tailfileProc");
+  auto id = tailfile->getUUIDStr();
+
+  plan->addProcessor("LogAttribute", "logattribute", core::Relationship("success", "description"), true);
+
+  char format[] = "/tmp/gt.XXXXXX";
+  char *dir = testController.createTempDirectory(format);
+
+  plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::FileName.getName(), TMP_FILE);
+  plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::StateFile.getName(), STATE_FILE);
+  plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::Delimiter.getName(), "\n");
+
+  testController.runSession(plan, true);
+
+  REQUIRE(LogTestController::getInstance().contains("minifi-tmpfile.0-13.txt"));
+
+  plan->reset(true);  // start a new but with state file
+
+  auto statefile = std::string(STATE_FILE) + "." + id;
+
+  remove(statefile.c_str());
+
+  SECTION("No Filename") {
+  std::ofstream newstatefile;
+  newstatefile.open(statefile);
+  newstatefile << "POSITION=14" << std::endl;
+  newstatefile.close();
+  REQUIRE_THROWS(testController.runSession(plan, true));
+}
+
+  SECTION("Invalid current filename") {
+  std::ofstream newstatefile;
+  newstatefile.open(statefile);
+  newstatefile << "FILENAME=minifi-tmpfile.txt" << std::endl;
+  newstatefile << "CURRENT.minifi-tempfile.txt=minifi-tmpfile.txt" << std::endl;
+  newstatefile << "POSITION=14" << std::endl;
+  newstatefile.close();
+  REQUIRE_THROWS(testController.runSession(plan, true));
+}
+  SECTION("No current filename and partial path") {
+  std::ofstream newstatefile;
+  newstatefile.open(statefile);
+  newstatefile << "FILENAME=minifi-tmpfile.txt" << std::endl;
+  newstatefile << "POSITION=14" << std::endl;
+  newstatefile.close();
+  REQUIRE_THROWS(testController.runSession(plan, true));
+}
+
+// Delete the test and state file.
+  remove(TMP_FILE);
+
+  remove(std::string(std::string(STATE_FILE) + "." + id).c_str());
 }
 
 TEST_CASE("TailFileWithOutDelimiter", "[tailfiletest2]") {
@@ -89,6 +327,7 @@ TEST_CASE("TailFileWithOutDelimiter", "[tailfiletest2]") {
 
   std::shared_ptr<TestPlan> plan = testController.createPlan();
   std::shared_ptr<core::Processor> tailfile = plan->addProcessor("TailFile", "tailfileProc");
+  auto id = tailfile->getUUIDStr();
 
   plan->addProcessor("LogAttribute", "logattribute", core::Relationship("success", "description"), true);
 
@@ -124,7 +363,7 @@ TEST_CASE("TailFileWithOutDelimiter", "[tailfiletest2]") {
   LogTestController::getInstance().reset();
 
   // Delete the test and state file.
-  remove(STATE_FILE);
+  remove(std::string(std::string(STATE_FILE) + "." + id).c_str());
 }
 
 TEST_CASE("TailWithInvalid", "[tailfiletest2]") {
@@ -133,6 +372,7 @@ TEST_CASE("TailWithInvalid", "[tailfiletest2]") {
 
   std::shared_ptr<TestPlan> plan = testController.createPlan();
   std::shared_ptr<core::Processor> tailfile = plan->addProcessor("TailFile", "tailfileProc");
+  auto id = tailfile->getUUIDStr();
 
   plan->addProcessor("LogAttribute", "logattribute", core::Relationship("success", "description"), true);
 
@@ -293,141 +533,3 @@ TEST_CASE("TailFileWithMultileRolledOverFiles", "[tailfiletest2]") {
   REQUIRE(LogTestController::getInstance().contains(std::string("Logged 2 flow files")));
 }
 
-/*
- TEST_CASE("TailFileWithDelimiter", "[tailfiletest1]") {
- try {
- // Create and write to the test file
- std::ofstream tmpfile;
- tmpfile.open(TMP_FILE);
- tmpfile << NEWLINE_FILE;
- tmpfile.close();
-
- TestController testController;
- LogTestController::getInstance().setDebug<org::apache::nifi::minifi::processors::TailFile>();
- LogTestController::getInstance().setDebug<core::ProcessSession>();
- LogTestController::getInstance().setDebug<core::repository::VolatileContentRepository>();
-
- std::shared_ptr<TestRepository> repo = std::make_shared<TestRepository>();
-
- std::shared_ptr<core::Processor> processor = std::make_shared<org::apache::nifi::minifi::processors::TailFile>("tailfile");
- std::shared_ptr<core::Processor> logAttributeProcessor = std::make_shared<org::apache::nifi::minifi::processors::LogAttribute>("logattribute");
-
- utils::Identifier processoruuid;
- REQUIRE(true == processor->getUUID(processoruuid));
- utils::Identifier logAttributeuuid;
- REQUIRE(true == logAttributeProcessor->getUUID(logAttributeuuid));
-
- std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
- content_repo->initialize(std::make_shared<org::apache::nifi::minifi::Configure>());
- std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(repo, content_repo, "logattributeconnection");
- connection->addRelationship(core::Relationship("success", "TailFile successful output"));
-
- // link the connections so that we can test results at the end for this
- connection->setDestination(connection);
-
- connection->setSourceUUID(processoruuid);
-
- processor->addConnection(connection);
-
- std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(processor);
-
- std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider = nullptr;
- core::ProcessContext context(node, controller_services_provider, repo, repo, content_repo);
- context.setProperty(org::apache::nifi::minifi::processors::TailFile::Delimiter, "\n");
- context.setProperty(org::apache::nifi::minifi::processors::TailFile::FileName, TMP_FILE);
- context.setProperty(org::apache::nifi::minifi::processors::TailFile::StateFile, STATE_FILE);
-
- core::ProcessSession session(&context);
-
- REQUIRE(processor->getName() == "tailfile");
-
- core::ProcessSessionFactory factory(&context);
-
- std::shared_ptr<core::FlowFile> record;
- processor->setScheduledState(core::ScheduledState::RUNNING);
- processor->onSchedule(&context, &factory);
- processor->onTrigger(&context, &session);
-
- provenance::ProvenanceReporter *reporter = session.getProvenanceReporter();
- std::set<provenance::ProvenanceEventRecord*> provRecords = reporter->getEvents();
- record = session.get();
- REQUIRE(record == nullptr);
- std::shared_ptr<core::FlowFile> ff = session.get();
- REQUIRE(provRecords.size() == 4);   // 2 creates and 2 modifies for flowfiles
-
- LogTestController::getInstance().reset();
- } catch (...) {
- }
-
- // Delete the test and state file.
- std::remove(TMP_FILE);
- std::remove(STATE_FILE);
- }
-
-
- TEST_CASE("TailFileWithoutDelimiter", "[tailfiletest2]") {
- try {
- // Create and write to the test file
- std::ofstream tmpfile;
- tmpfile.open(TMP_FILE);
- tmpfile << NEWLINE_FILE;
- tmpfile.close();
-
- TestController testController;
- LogTestController::getInstance().setInfo<org::apache::nifi::minifi::processors::TailFile>();
-
- std::shared_ptr<TestRepository> repo = std::make_shared<TestRepository>();
-
- std::shared_ptr<core::Processor> processor = std::make_shared<org::apache::nifi::minifi::processors::TailFile>("tailfile");
- std::shared_ptr<core::Processor> logAttributeProcessor = std::make_shared<org::apache::nifi::minifi::processors::LogAttribute>("logattribute");
-
- utils::Identifier processoruuid;
- REQUIRE(true == processor->getUUID(processoruuid));
- utils::Identifier logAttributeuuid;
- REQUIRE(true == logAttributeProcessor->getUUID(logAttributeuuid));
-
- std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
- content_repo->initialize(std::make_shared<org::apache::nifi::minifi::Configure>());
- std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(repo, content_repo, "logattributeconnection");
- connection->addRelationship(core::Relationship("success", "TailFile successful output"));
-
- // link the connections so that we can test results at the end for this
- connection->setDestination(connection);
- connection->setSourceUUID(processoruuid);
-
- processor->addConnection(connection);
-
- std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(processor);
-
- std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider = nullptr;
- core::ProcessContext context(node, controller_services_provider, repo, repo, content_repo);
- context.setProperty(org::apache::nifi::minifi::processors::TailFile::FileName, TMP_FILE);
- context.setProperty(org::apache::nifi::minifi::processors::TailFile::StateFile, STATE_FILE);
-
- core::ProcessSession session(&context);
-
- REQUIRE(processor->getName() == "tailfile");
-
- core::ProcessSessionFactory factory(&context);
-
- std::shared_ptr<core::FlowFile> record;
- processor->setScheduledState(core::ScheduledState::RUNNING);
- processor->onSchedule(&context, &factory);
- processor->onTrigger(&context, &session);
-
- provenance::ProvenanceReporter *reporter = session.getProvenanceReporter();
- std::set<provenance::ProvenanceEventRecord*> provRecords = reporter->getEvents();
- record = session.get();
- REQUIRE(record == nullptr);
- std::shared_ptr<core::FlowFile> ff = session.get();
- REQUIRE(provRecords.size() == 2);
-
- LogTestController::getInstance().reset();
- } catch (...) {
- }
-
- // Delete the test and state file.
- std::remove(TMP_FILE);
- std::remove(STATE_FILE);
- }
- */
