@@ -270,7 +270,7 @@ add_dependency GPS_ENABLED "gpsd"
 
 add_disabled_option AWS_ENABLED ${TRUE} "ENABLE_AWS"
 
-add_disabled_option KAFKA_ENABLED ${FALSE} "ENABLE_LIBRDKAFKA" "3.4.0"
+add_disabled_option KAFKA_ENABLED ${FALSE} "ENABLE_LIBRDKAFKA"
 
 add_disabled_option MQTT_ENABLED ${FALSE} "ENABLE_MQTT"
 
