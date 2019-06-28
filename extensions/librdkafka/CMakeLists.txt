@@ -55,6 +55,7 @@ ExternalProject_Add(
                "-DENABLE_LZ4_EXT=OFF"
                "-DCMAKE_MODULE_PATH=${CMAKE_MODULE_PATH_PASSTHROUGH_LIST}"
                "-DCMAKE_C_FLAGS=${CURL_C_FLAGS}"
+               "-DCMAKE_INSTALL_LIBDIR=lib"
                "-DCMAKE_CXX_FLAGS=${CURL_CXX_FLAGS}"
     EXCLUDE_FROM_ALL TRUE
   )
@@ -66,20 +67,6 @@ add_dependencies(minifi-rdkafka-extensions kafka-external)
 include_directories(${ZLIB_INCLUDE_DIRS})
 include_directories(${KAFKA_INCLUDE})
 target_link_libraries (minifi-rdkafka-extensions ${BYPRODUCT})
-if (WIN32)
-    set_target_properties(minifi-rdkafka-extensions PROPERTIES
-        LINK_FLAGS "/WHOLERDKAFKA"
-    )
-elseif (APPLE)
-    set_target_properties(minifi-rdkafka-extensions PROPERTIES
-        LINK_FLAGS "-Wl,-all_load"
-    )
-else ()
-    set_target_properties(minifi-rdkafka-extensions PROPERTIES
-        LINK_FLAGS "-Wl,--whole-rdkafka"
-    )
-endif ()
-
 
 SET (RDKAFKA-EXTENSIONS minifi-rdkafka-extensions PARENT_SCOPE)
 
