@@ -25,6 +25,9 @@
 #include <string>
 #include <iostream>
 #include <set>
+#include <algorithm>
+#include <random>
+#include <cstdlib>
 #include "FlowController.h"
 #include "TestBase.h"
 #include "core/Core.h"
@@ -70,9 +73,12 @@ TEST_CASE("TailFileWithDelimiter", "[tailfiletest2]") {
 
   testController.runSession(plan, false);
   auto records = plan->getProvenanceRecords();
-  std::shared_ptr<core::FlowFile> record = plan->getCurrentFlowFile();
-  REQUIRE(record == nullptr);
   REQUIRE(records.size() == 2);
+
+  testController.runSession(plan, false);
+
+  REQUIRE(LogTestController::getInstance().contains("Logged 1 flow files"));
+  REQUIRE(LogTestController::getInstance().contains("Size:" + std::to_string(NEWLINE_FILE.find_first_of('\n')) + " Offset:0"));
 
   LogTestController::getInstance().reset();
 
@@ -323,6 +329,8 @@ TEST_CASE("TailFileWithOutDelimiter", "[tailfiletest2]") {
   // Create and write to the test file
 
   TestController testController;
+  LogTestController::getInstance().setTrace<minifi::processors::TailFile>();
+  LogTestController::getInstance().setDebug<core::ProcessSession>();
   LogTestController::getInstance().setDebug<minifi::processors::LogAttribute>();
 
   std::shared_ptr<TestPlan> plan = testController.createPlan();
@@ -354,11 +362,127 @@ TEST_CASE("TailFileWithOutDelimiter", "[tailfiletest2]") {
 
   testController.runSession(plan, false);
   auto records = plan->getProvenanceRecords();
-  std::shared_ptr<core::FlowFile> record = plan->getCurrentFlowFile();
-  REQUIRE(record == nullptr);
   REQUIRE(records.size() == 2);
 
   testController.runSession(plan, false);
+
+  REQUIRE(LogTestController::getInstance().contains("Logged 1 flow files"));
+  REQUIRE(LogTestController::getInstance().contains("Size:" + std::to_string(NEWLINE_FILE.size()) + " Offset:0"));
+
+  LogTestController::getInstance().reset();
+
+  // Delete the test and state file.
+  remove(TMP_FILE);
+  remove(STATE_FILE);
+}
+
+TEST_CASE("TailFileLongWithDelimiter", "[tailfiletest2]") {
+  std::string line1("foo");
+  std::string line2(8050, 0);
+  std::mt19937 gen(std::random_device { }());
+  std::generate_n(line2.begin(), line2.size(), [&]() -> char {
+    return 32 + gen() % (127 - 32);
+  });
+  std::string line3("bar");
+  std::string line4("buzz");
+
+  // Create and write to the test file
+  std::ofstream tmpfile;
+  tmpfile.open(TMP_FILE);
+  tmpfile << line1 << "\n" << line2 << "\n" << line3 << "\n" << line4;
+  tmpfile.close();
+
+  TestController testController;
+  LogTestController::getInstance().setTrace<TestPlan>();
+  LogTestController::getInstance().setTrace<processors::TailFile>();
+  LogTestController::getInstance().setTrace<processors::LogAttribute>();
+  LogTestController::getInstance().setTrace<core::ProcessSession>();
+
+  std::shared_ptr<TestPlan> plan = testController.createPlan();
+  std::shared_ptr<core::Processor> tailfile = plan->addProcessor("TailFile", "tailfileProc");
+
+  char format[] = "/tmp/gt.XXXXXX";
+  char *dir = testController.createTempDirectory(format);
+
+  plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::FileName.getName(), TMP_FILE);
+  plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::StateFile.getName(), STATE_FILE);
+  plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::Delimiter.getName(), "\n");
+
+  std::shared_ptr<core::Processor> log_attr = plan->addProcessor("LogAttribute", "Log", core::Relationship("success", "description"), true);
+  plan->setProperty(log_attr, processors::LogAttribute::FlowFilesToLog.getName(), "0");
+  plan->setProperty(log_attr, processors::LogAttribute::LogPayload.getName(), "true");
+
+  testController.runSession(plan, true);
+
+  REQUIRE(LogTestController::getInstance().contains("Logged 3 flow files"));
+  REQUIRE(LogTestController::getInstance().contains(utils::StringUtils::to_hex(line1)));
+  auto line2_hex = utils::StringUtils::to_hex(line2);
+  std::stringstream line2_hex_lines;
+  for (size_t i = 0; i < line2_hex.size(); i += 80) {
+    line2_hex_lines << line2_hex.substr(i, 80) << '\n';
+  }
+  REQUIRE(LogTestController::getInstance().contains(line2_hex_lines.str()));
+  REQUIRE(LogTestController::getInstance().contains(utils::StringUtils::to_hex(line3)));
+  REQUIRE(false == LogTestController::getInstance().contains(utils::StringUtils::to_hex(line4), std::chrono::seconds(0)));
+
+
+  LogTestController::getInstance().reset();
+
+  // Delete the test and state file.
+  remove(TMP_FILE);
+  remove(STATE_FILE);
+}
+
+TEST_CASE("TailFileWithDelimiterMultipleDelimiters", "[tailfiletest2]") {
+  // Test having two delimiters on the buffer boundary
+  std::string line1(4097, '\n');
+  std::mt19937 gen(std::random_device { }());
+  std::generate_n(line1.begin(), 4095, [&]() -> char {
+  return 32 + gen() % (127 - 32);
+  });
+  std::string line2("foo");
+  std::string line3("bar");
+  std::string line4("buzz");
+
+  // Create and write to the test file
+  std::ofstream tmpfile;
+  tmpfile.open(TMP_FILE);
+  tmpfile << line1 << "\n" << line2 << "\n" << line3 << "\n" << line4;
+  tmpfile.close();
+
+  TestController testController;
+  LogTestController::getInstance().setTrace<TestPlan>();
+  LogTestController::getInstance().setTrace<processors::TailFile>();
+  LogTestController::getInstance().setTrace<processors::LogAttribute>();
+  LogTestController::getInstance().setTrace<core::ProcessSession>();
+
+  std::shared_ptr<TestPlan> plan = testController.createPlan();
+  std::shared_ptr<core::Processor> tailfile = plan->addProcessor("TailFile", "tailfileProc");
+  auto id = tailfile->getUUIDStr();
+
+  char format[] = "/tmp/gt.XXXXXX";
+  char *dir = testController.createTempDirectory(format);
+
+  plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::FileName.getName(), TMP_FILE);
+  plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::StateFile.getName(), STATE_FILE);
+  plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::Delimiter.getName(), "\n");
+
+  std::shared_ptr<core::Processor> log_attr = plan->addProcessor("LogAttribute", "Log", core::Relationship("success", "description"), true);
+  plan->setProperty(log_attr, processors::LogAttribute::FlowFilesToLog.getName(), "0");
+  plan->setProperty(log_attr, processors::LogAttribute::LogPayload.getName(), "true");
+
+  testController.runSession(plan, true);
+
+  REQUIRE(LogTestController::getInstance().contains("Logged 5 flow files"));
+  auto line1_hex = utils::StringUtils::to_hex(line1.substr(0, 4095));
+  std::stringstream line1_hex_lines;
+  for (size_t i = 0; i < line1_hex.size(); i += 80) {
+    line1_hex_lines << line1_hex.substr(i, 80) << '\n';
+  }
+  REQUIRE(LogTestController::getInstance().contains(line1_hex_lines.str()));
+  REQUIRE(LogTestController::getInstance().contains(utils::StringUtils::to_hex(line2)));
+  REQUIRE(LogTestController::getInstance().contains(utils::StringUtils::to_hex(line3)));
+  REQUIRE(false == LogTestController::getInstance().contains(utils::StringUtils::to_hex(line4), std::chrono::seconds(0)));
 
   LogTestController::getInstance().reset();
 

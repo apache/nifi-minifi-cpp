@@ -73,7 +73,7 @@ class TailFileTestHarness : public IntegrationBase {
   virtual void runAssertions() {
     assert(LogTestController::getInstance().contains("5 flowfiles were received from TailFile input") == true);
     assert(LogTestController::getInstance().contains("Looking for delimiter 0xA") == true);
-    assert(LogTestController::getInstance().contains("li\\ne5") == true);
+    assert(LogTestController::getInstance().contains(utils::StringUtils::to_hex("li\\ne5")) == true);
   }
 
  protected:

@@ -384,8 +384,7 @@ void ProcessSession::read(const std::shared_ptr<core::FlowFile> &flow, InputStre
 void ProcessSession::importFrom(io::DataStream &stream, const std::shared_ptr<core::FlowFile> &flow) {
   std::shared_ptr<ResourceClaim> claim = std::make_shared<ResourceClaim>(process_context_->getContentRepository());
   size_t max_read = getpagesize();
-  std::vector<uint8_t> charBuffer;
-  charBuffer.resize(max_read);
+  std::vector<uint8_t> charBuffer(max_read);
 
   try {
     auto startTime = getTimeMillis();
@@ -450,12 +449,10 @@ void ProcessSession::importFrom(io::DataStream &stream, const std::shared_ptr<co
 
 void ProcessSession::import(std::string source, const std::shared_ptr<core::FlowFile> &flow, bool keepSource, uint64_t offset) {
   std::shared_ptr<ResourceClaim> claim = std::make_shared<ResourceClaim>(process_context_->getContentRepository());
-  int size = getpagesize();
-  std::vector<uint8_t> charBuffer;
-  charBuffer.resize(size);
+  size_t size = getpagesize();
+  std::vector<uint8_t> charBuffer(size);
 
   try {
-    //  std::ofstream fs;
     auto startTime = getTimeMillis();
     std::ifstream input;
     input.open(source.c_str(), std::fstream::in | std::fstream::binary);
@@ -537,63 +534,82 @@ void ProcessSession::import(std::string source, const std::shared_ptr<core::Flow
   }
 }
 
-void ProcessSession::import(std::string source, std::vector<std::shared_ptr<FlowFileRecord>> &flows, bool keepSource, uint64_t offset, char inputDelimiter) {
+void ProcessSession::import(const std::string& source, std::vector<std::shared_ptr<FlowFileRecord>> &flows, uint64_t offset, char inputDelimiter) {
   std::shared_ptr<ResourceClaim> claim;
+  std::shared_ptr<io::BaseStream> stream;
   std::shared_ptr<FlowFileRecord> flowFile;
-  int size = getpagesize();
-  std::vector<char> charBuffer;
-  charBuffer.resize(size);
 
+  std::vector<uint8_t> buffer(getpagesize());
   try {
-    // Open the input file and seek to the appropriate location.
-    std::ifstream input;
-    logger_->log_debug("Opening %s", source);
-    input.open(source.c_str(), std::fstream::in | std::fstream::binary);
-    if (input.is_open() && input.good()) {
-      if (offset != 0) {
+    try {
+      std::ifstream input;
+      logger_->log_debug("Opening %s", source);
+      input.open(source.c_str(), std::fstream::in | std::fstream::binary);
+      if (!input.is_open() || !input.good()) {
+        input.close();
+        throw Exception(FILE_OPERATION_EXCEPTION, "File Import Error");
+      }
+      if (offset != 0U) {
         input.seekg(offset, input.beg);
         if (!input.good()) {
-          logger_->log_error("Seeking to %d failed for file %s (does file/filesystem support seeking?)", offset, source);
+          logger_->log_error("Seeking to %lu failed for file %s (does file/filesystem support seeking?)", offset, source);
           throw Exception(FILE_OPERATION_EXCEPTION, "File Import Error");
         }
       }
-      while (input.good() && !input.eof()) {
-        bool invalidWrite = false;
-        uint64_t startTime = getTimeMillis();
-        input.getline(charBuffer.data(), size, inputDelimiter);
-
-        if (input.eof() || input.fail()) {
+      uint64_t startTime = 0U;
+      while (input.good()) {
+        input.read(reinterpret_cast<char*>(buffer.data()), buffer.size());
+        std::streamsize read = input.gcount();
+        if (read < 0) {
+          throw Exception(FILE_OPERATION_EXCEPTION, "std::ifstream::gcount returned negative value");
+        }
+        if (read == 0) {
           logger_->log_trace("Finished reading input %s", source);
           break;
         }
-        flowFile = std::static_pointer_cast<FlowFileRecord>(create());
-        claim = std::make_shared<ResourceClaim>(process_context_->getContentRepository());
+        uint8_t* begin = buffer.data();
+        uint8_t* end = begin + read;
+        while (true) {
+          uint8_t* delimiterPos = std::find(begin, end, static_cast<uint8_t>(inputDelimiter));
+          int len = delimiterPos - begin;
 
-        size_t bufsize = strlen(charBuffer.data());
-        std::shared_ptr<io::BaseStream> stream = process_context_->getContentRepository()->write(claim);
-        if (nullptr == stream) {
-          logger_->log_debug("Stream is null");
-          rollback();
-          return;
-        }
-
-        if (input.good()) {
-          if (stream->write(reinterpret_cast<uint8_t*>(charBuffer.data()), bufsize) < 0) {
-            invalidWrite = true;
+          /*
+           * We do not want to process the rest of the buffer after the last delimiter if
+           *  - we have reached EOF in the file (we would discard it anyway)
+           *  - there is nothing to process (the last character in the buffer is a delimiter)
+           */
+          if (delimiterPos == end && (input.eof() || len == 0)) {
             break;
           }
-        } else {
-          if (stream->write(reinterpret_cast<uint8_t*>(charBuffer.data()), input.gcount()) < 0) {
-            invalidWrite = true;
+
+          /* Create claim and stream if needed and append data */
+          if (claim == nullptr) {
+            startTime = getTimeMillis();
+            claim = std::make_shared<ResourceClaim>(process_context_->getContentRepository());
+          }
+          if (stream == nullptr) {
+            stream = process_context_->getContentRepository()->write(claim);
+          }
+          if (stream == nullptr) {
+            logger_->log_error("Stream is null");
+            rollback();
+            return;
+          }
+          if (stream->write(begin, len) != len) {
+            logger_->log_error("Error while writing");
+            stream->closeStream();
+            throw Exception(FILE_OPERATION_EXCEPTION, "File Export Error creating Flowfile");
+          }
+
+          /* Create a FlowFile if we reached a delimiter */
+          if (delimiterPos == end) {
             break;
           }
-        }
-
-        if (!invalidWrite) {
+          flowFile = std::static_pointer_cast<FlowFileRecord>(create());
           flowFile->setSize(stream->getSize());
           flowFile->setOffset(0);
           if (flowFile->getResourceClaim() != nullptr) {
-            // Remove the old claim
+            /* Remove the old claim */
             flowFile->getResourceClaim()->decreaseFlowFileRecordOwnedCount();
             flowFile->clearResourceClaim();
           }
@@ -606,34 +622,37 @@ void ProcessSession::import(std::string source, std::vector<std::shared_ptr<Flow
           uint64_t endTime = getTimeMillis();
           provenance_report_->modifyContent(flowFile, details, endTime - startTime);
           flows.push_back(flowFile);
-        } else {
-          logger_->log_debug("Error while writing");
-          stream->closeStream();
-          throw Exception(FILE_OPERATION_EXCEPTION, "File Export Error creating Flowfile");
+
+          /* Reset these to start processing the next FlowFile with a clean slate */
+          flowFile.reset();
+          stream.reset();
+          claim.reset();
+
+          /* Skip delimiter */
+          begin = delimiterPos + 1;
         }
       }
-      input.close();
-      logger_->log_trace("Closed input %s, keeping source ? %i", source, keepSource);
-      if (!keepSource)
-        std::remove(source.c_str());
-    } else {
-      input.close();
-      throw Exception(FILE_OPERATION_EXCEPTION, "File Import Error");
+    } catch (std::exception &exception) {
+      logger_->log_debug("Caught Exception %s", exception.what());
+      throw;
+    } catch (...) {
+      logger_->log_debug("Caught Exception during process session write");
+      throw;
     }
-  } catch (std::exception &exception) {
-    if (flowFile && flowFile->getResourceClaim() == claim) {
-      flowFile->getResourceClaim()->decreaseFlowFileRecordOwnedCount();
-      flowFile->clearResourceClaim();
-    }
-    logger_->log_debug("Caught Exception %s", exception.what());
-    throw;
   } catch (...) {
-    if (flowFile && flowFile->getResourceClaim() == claim) {
+    if (flowFile != nullptr && claim != nullptr && flowFile->getResourceClaim() == claim) {
       flowFile->getResourceClaim()->decreaseFlowFileRecordOwnedCount();
       flowFile->clearResourceClaim();
     }
-    logger_->log_debug("Caught Exception during process session write");
     throw;
+  }
+}
+
+void ProcessSession::import(std::string source, std::vector<std::shared_ptr<FlowFileRecord>> &flows, bool keepSource, uint64_t offset, char inputDelimiter) {
+  import(source, flows, offset, inputDelimiter);
+  logger_->log_trace("Closed input %s, keeping source ? %i", source, keepSource);
+  if (!keepSource) {
+    std::remove(source.c_str());
   }
 }
 
