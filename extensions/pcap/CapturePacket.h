@@ -109,7 +109,7 @@ class CapturePacket : public core::Processor {
   // Processor Name
   static const char *ProcessorName;
   static core::Property BatchSize;
-  static core::Property NetworkController;
+  static core::Property NetworkControllers;
   static core::Property BaseDir;
   static core::Property CaptureBluetooth;
   // Supported Relationships

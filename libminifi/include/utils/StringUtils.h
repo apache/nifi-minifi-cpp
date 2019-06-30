@@ -82,12 +82,7 @@ class StringUtils {
    * @param input input string
    * @param output output string.
    */
-  static bool StringToBool(std::string input, bool &output) {
-
-    std::transform(input.begin(), input.end(), input.begin(), ::tolower);
-    std::istringstream(input) >> std::boolalpha >> output;
-    return output;
-  }
+  static bool StringToBool(std::string input, bool &output);
 
   // Trim String utils
 
@@ -96,9 +91,7 @@ class StringUtils {
    * @param s incoming string
    * @returns modified string
    */
-  static std::string trim(std::string s) {
-    return trimRight(trimLeft(s));
-  }
+  static std::string trim(std::string s);
 
   /**
    * Trims left most part of a string
@@ -132,25 +125,7 @@ class StringUtils {
     }
   }
 
-  static std::vector<std::string> split(const std::string &str, const std::string &delimiter) {
-    std::vector<std::string> result;
-    auto curr = str.begin();
-    auto end = str.end();
-    auto is_func = [delimiter](int s) {
-      return delimiter.at(0) == s;
-    };
-    while (curr != end) {
-      curr = std::find_if_not(curr, end, is_func);
-      if (curr == end) {
-        break;
-      }
-      auto next = std::find_if(curr, end, is_func);
-      result.push_back(std::string(curr, next));
-      curr = next;
-    }
-
-    return result;
-  }
+  static std::vector<std::string> split(const std::string &str, const std::string &delimiter);
 
   /**
    * Converts a string to a float
@@ -158,82 +133,11 @@ class StringUtils {
    * @param output output float
    * @param cp failure policy
    */
-  static bool StringToFloat(std::string input, float &output, FailurePolicy cp = RETURN) {
-    try {
-      output = std::stof(input);
-    } catch (const std::invalid_argument &ie) {
-      switch (cp) {
-        case RETURN:
-        case NOTHING:
-          return false;
-        case EXIT:
-          exit(1);
-        case EXCEPT:
-          throw ie;
-      }
-    } catch (const std::out_of_range &ofr) {
-      switch (cp) {
-        case RETURN:
-        case NOTHING:
-          return false;
-        case EXIT:
-          exit(1);
-        case EXCEPT:
-          throw ofr;
+  static bool StringToFloat(std::string input, float &output, FailurePolicy cp = RETURN);
 
-      }
-    }
+  static std::string replaceEnvironmentVariables(std::string& original_string);
 
-    return true;
-
-  }
-
-  static std::string replaceEnvironmentVariables(std::string& original_string) {
-    int32_t beg_seq = 0;
-    int32_t end_seq = 0;
-    std::string source_string = original_string;
-    do {
-      beg_seq = source_string.find("${", beg_seq);
-      if (beg_seq > 0 && source_string.at(beg_seq - 1) == '\\') {
-        beg_seq += 2;
-        continue;
-      }
-      if (beg_seq < 0)
-        break;
-      end_seq = source_string.find("}", beg_seq + 2);
-      if (end_seq < 0)
-        break;
-      if (end_seq - (beg_seq + 2) < 0) {
-        beg_seq += 2;
-        continue;
-      }
-      const std::string env_field = source_string.substr(beg_seq + 2, end_seq - (beg_seq + 2));
-      const std::string env_field_wrapped = source_string.substr(beg_seq, end_seq + 1);
-      if (env_field.empty()) {
-        continue;
-      }
-      const auto strVal = std::getenv(env_field.c_str());
-      std::string env_value;
-      if (strVal != nullptr)
-        env_value = strVal;
-      source_string = replaceAll(source_string, env_field_wrapped, env_value);
-      beg_seq = 0;  // restart
-    } while (beg_seq >= 0);
-
-    source_string = replaceAll(source_string, "\\$", "$");
-
-    return source_string;
-  }
-
-  static std::string& replaceAll(std::string& source_string, const std::string &from_string, const std::string &to_string) {
-    std::size_t loc = 0;
-    std::size_t lastFound;
-    while ((lastFound = source_string.find(from_string, loc)) != std::string::npos) {
-      source_string.replace(lastFound, from_string.size(), to_string);
-      loc = lastFound + to_string.size();
-    }
-    return source_string;
-  }
+  static std::string& replaceAll(std::string& source_string, const std::string &from_string, const std::string &to_string);
 
   inline static bool endsWithIgnoreCase(const std::string &value, const std::string & endString) {
     if (endString.size() > value.size())
@@ -257,39 +161,15 @@ class StringUtils {
     }
     return newString;
   }
-
-  static std::string replaceMap(std::string source_string, const std::map<std::string, std::string> &replace_map) {
-    auto result_string = source_string;
-
-    std::vector<std::pair<size_t, std::pair<size_t, std::string>>> replacements;
-    for (const auto &replace_pair : replace_map) {
-      size_t replace_pos = 0;
-      while ((replace_pos = source_string.find(replace_pair.first, replace_pos)) != std::string::npos) {
-        replacements.emplace_back(std::make_pair(replace_pos, std::make_pair(replace_pair.first.length(), replace_pair.second)));
-        replace_pos += replace_pair.first.length();
-      }
-    }
-
-    std::sort(replacements.begin(), replacements.end(), [](const std::pair<size_t, std::pair<size_t, std::string>> a,
-        const std::pair<size_t, std::pair<size_t, std::string>> &b) {
-      return a.first > b.first;
-    });
-
-    for (const auto &replacement : replacements) {
-      result_string = source_string.replace(replacement.first, replacement.second.first, replacement.second.second);
-    }
-
-    return result_string;
-  }
-
+  
   /**
- * Concatenates strings stored in an arbitrary container using the provided separator.
- * @tparam TChar char type of the string (char or wchar_t)
- * @tparam U arbitrary container which has string or wstring value type
- * @param separator that is inserted between each elements. Type should match the type of strings in container.
- * @param container that contains the strings to be concatenated
- * @return the result string
- */
+   * Concatenates strings stored in an arbitrary container using the provided separator.
+   * @tparam TChar char type of the string (char or wchar_t)
+   * @tparam U arbitrary container which has string or wstring value type
+   * @param separator that is inserted between each elements. Type should match the type of strings in container.
+   * @param container that contains the strings to be concatenated
+   * @return the result string
+   */
   template<class TChar, class U, typename std::enable_if<std::is_same<typename U::value_type, std::basic_string<TChar>>::value>::type* = nullptr>
   static std::basic_string<TChar> join(const std::basic_string<TChar>& separator, const U& container) {
     typedef typename U::const_iterator ITtype;
@@ -346,6 +226,139 @@ class StringUtils {
   static std::basic_string<TChar> join(const TChar* separator, const U& container) {
     return join(std::basic_string<TChar>(separator), container);
   };
+
+  /**
+   * Hexdecodes the hexencoded string in data, ignoring every character that is not [0-9a-fA-F]
+   * @param data the output buffer where the hexdecoded bytes will be written. Must be at least length / 2 bytes long.
+   * @param data_length pointer to the length of data the data buffer. It will be filled with the length of the decoded bytes.
+   * @param hex the hexencoded string
+   * @param hex_length the length of hex
+   * @return true on success
+   */
+  inline static bool from_hex(uint8_t* data, size_t* data_length, const char* hex, size_t hex_length) {
+    if (*data_length < hex_length / 2) {
+      return false;
+    }
+    uint8_t n1;
+    bool found_first_nibble = false;
+    *data_length = 0;
+    for (size_t i = 0; i < hex_length; i++) {
+      const uint8_t byte = static_cast<uint8_t>(hex[i]);
+      if (byte > 127) {
+        continue;
+      }
+      uint8_t n = hex_lut[byte];
+      if (n != SKIP) {
+        if (found_first_nibble) {
+          data[(*data_length)++] = n1 << 4 | n;
+          found_first_nibble = false;
+        } else {
+          n1 = n;
+          found_first_nibble = true;
+        }
+      }
+    }
+    if (found_first_nibble) {
+      return false;
+    }
+    return true;
+  }
+
+  /**
+   * Hexdecodes a string
+   * @param hex the hexencoded string
+   * @param hex_length the length of hex
+   * @return the vector containing the hexdecoded bytes
+   */
+  inline static std::vector<uint8_t> from_hex(const char* hex, size_t hex_length) {
+    std::vector<uint8_t> decoded(hex_length / 2);
+    size_t data_length = decoded.size();
+    if (!from_hex(decoded.data(), &data_length, hex, hex_length)) {
+      throw std::runtime_error("Hexencoded string is malformatted");
+    }
+    decoded.resize(data_length);
+    return decoded;
+  }
+
+  /**
+   * Hexdecodes a string
+   * @param hex the hexencoded string
+   * @return the hexdecoded string
+   */
+  inline static std::string from_hex(const std::string& hex) {
+    auto data = from_hex(hex.data(), hex.length());
+    return std::string(reinterpret_cast<char*>(data.data()), data.size());
+  }
+
+  /**
+   * Hexencodes bytes and writes the result to hex
+   * @param hex the output buffer where the hexencoded string will be written. Must be at least length * 2 bytes long.
+   * @param data the bytes to be hexencoded
+   * @param length the length of data. Must not be larger than std::numeric_limits<size_t>::max()
+   * @param uppercase whether the hexencoded string should be upper case
+   */
+  inline static void to_hex(char* hex, const uint8_t* data, size_t length, bool uppercase) {
+    for (size_t i = 0; i < length; i++) {
+      hex[i * 2] = nibble_to_hex(data[i] >> 4, uppercase);
+      hex[i * 2 + 1] = nibble_to_hex(data[i] & 0xf, uppercase);
+    }
+  }
+
+  /**
+   * Creates a hexencoded string from data
+   * @param data the bytes to be hexencoded
+   * @param length the length of the data
+   * @param uppercase whether the hexencoded string should be upper case
+   * @return the hexencoded string
+   */
+  inline static std::string to_hex(const uint8_t* data, size_t length, bool uppercase = false) {
+    if (length > (std::numeric_limits<size_t>::max)() / 2) {
+      throw std::length_error("Data is too large to be hexencoded");
+    }
+    std::vector<char> buf(length * 2);
+    to_hex(buf.data(), data, length, uppercase);
+    return std::string(buf.data(), buf.size());
+  }
+
+  /**
+   * Hexencodes a string
+   * @param str the string to be hexencoded
+   * @param uppercase whether the hexencoded string should be upper case
+   * @return the hexencoded string
+   */
+  inline static std::string to_hex(const std::string& str, bool uppercase = false) {
+    return to_hex(reinterpret_cast<const uint8_t*>(str.data()), str.length(), uppercase);
+  }
+
+  static std::string replaceMap(std::string source_string, const std::map<std::string, std::string> &replace_map);
+
+ private:
+  inline static char nibble_to_hex(uint8_t nibble, bool uppercase) {
+    if (nibble < 10) {
+      return '0' + nibble;
+    } else {
+      return (uppercase ? 'A' : 'a') + nibble - 10;
+    }
+  }
+
+  static constexpr uint8_t SKIP = 255;
+  static constexpr uint8_t hex_lut[128] =
+      {SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP,
+       SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP,
+       SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP,
+       SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP,
+       SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP,
+       SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP,
+       0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
+       0x08, 0x09, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP,
+       SKIP, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, SKIP,
+       SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP,
+       SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP,
+       SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP,
+       SKIP, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, SKIP,
+       SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP,
+       SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP,
+       SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP};
 
 };
 

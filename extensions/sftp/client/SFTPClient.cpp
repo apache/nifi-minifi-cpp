@@ -381,14 +381,15 @@ bool SFTPClient::connect() {
     if (fingerprint == nullptr) {
       logger_->log_warn("Cannot get remote server fingerprint");
     } else {
-      std::stringstream fingerprint_hex;
+      auto fingerprint_hex = utils::StringUtils::to_hex(reinterpret_cast<const uint8_t*>(fingerprint), 20);
+      std::stringstream fingerprint_hex_colon;
       for (size_t i = 0; i < 20; i++) {
-        fingerprint_hex << std::setfill('0') << std::setw(2) << std::hex << static_cast<int>(static_cast<uint8_t>(fingerprint[i]));
+        fingerprint_hex_colon << fingerprint_hex.substr(i * 2, 2);
         if (i != 19) {
-          fingerprint_hex << ":";
+          fingerprint_hex_colon << ":";
         }
       }
-      logger_->log_debug("SHA1 host key fingerprint for %s is %s", hostname_.c_str(), fingerprint_hex.str().c_str());
+      logger_->log_debug("SHA1 host key fingerprint for %s is %s", hostname_.c_str(), fingerprint_hex_colon.str().c_str());
     }
   }
 

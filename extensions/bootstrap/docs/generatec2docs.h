@@ -24,15 +24,6 @@
 #include <iomanip>
 #include "utils/StringUtils.h"
 
-std::string toHex(const std::string& s) {
-  std::ostringstream ret;
-
-  for (std::string::size_type i = 0; i < s.length(); ++i)
-    ret << std::hex << std::setfill('0') << std::setw(2) << (int) s[i];
-
-  return ret.str();
-}
-
 int generateC2Docs(const std::string &inputfile, const std::string &output) {
   std::ifstream inf(inputfile);
   std::string input((std::istreambuf_iterator<char>(inf)), std::istreambuf_iterator<char>());
@@ -81,7 +72,7 @@ int generateC2Docs(const std::string &inputfile, const std::string &output) {
     auto description = input.substr(0, nextBlock);
 
     auto desc = org::apache::nifi::minifi::utils::StringUtils::trim(description);
-    outputFile << "     extensions.insert(std::make_pair(\"" << processor << "\",utils::StringUtils::hex_ascii(\"" << toHex(desc) << "\")));\n";
+    outputFile << "     extensions.insert(std::make_pair(\"" << processor << "\",utils::StringUtils::from_hex(\"" << org::apache::nifi::minifi::utils::StringUtils::to_hex(desc) << "\")));\n";
   }
 
   outputFile << "}\n    return extensions[feature]; \n"
