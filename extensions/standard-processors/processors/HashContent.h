@@ -38,20 +38,12 @@
 #include "core/ProcessSession.h"
 #include "core/Resource.h"
 #include "io/BaseStream.h"
+#include "utils/StringUtils.h"
 
 using HashReturnType = std::pair<std::string, int64_t>;
 
 namespace {
 #define HASH_BUFFER_SIZE 16384
-
-  std::string digestToString(const unsigned char * const digest, size_t size) {
-    std::stringstream ss;
-    for(size_t i = 0; i < size; i++)
-    {
-      ss << std::uppercase << std::hex << std::setw(2) << std::setfill('0') << (int)digest[i];
-    }
-    return ss.str();
-  }
 
   HashReturnType MD5Hash(const std::shared_ptr<org::apache::nifi::minifi::io::BaseStream>& stream) {
     HashReturnType ret_val;
@@ -72,7 +64,7 @@ namespace {
     if (ret_val.second > 0) {
       unsigned char digest[MD5_DIGEST_LENGTH];
       MD5_Final(digest, &context);
-      ret_val.first = digestToString(digest, MD5_DIGEST_LENGTH);
+      ret_val.first = utils::StringUtils::to_hex(digest, MD5_DIGEST_LENGTH, true /*uppercase*/);
     }
     return ret_val;
   }
@@ -96,7 +88,7 @@ namespace {
     if (ret_val.second > 0) {
       unsigned char digest[SHA_DIGEST_LENGTH];
       SHA1_Final(digest, &context);
-      ret_val.first = digestToString(digest, SHA_DIGEST_LENGTH);
+      ret_val.first = utils::StringUtils::to_hex(digest, SHA_DIGEST_LENGTH, true /*uppercase*/);
     }
     return ret_val;
   }
@@ -120,7 +112,7 @@ namespace {
     if (ret_val.second > 0) {
       unsigned char digest[SHA256_DIGEST_LENGTH];
       SHA256_Final(digest, &context);
-      ret_val.first = digestToString(digest, SHA256_DIGEST_LENGTH);
+      ret_val.first = utils::StringUtils::to_hex(digest, SHA256_DIGEST_LENGTH, true /*uppercase*/);
     }
     return ret_val;
   }
