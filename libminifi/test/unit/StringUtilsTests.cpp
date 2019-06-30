@@ -20,6 +20,9 @@
 #include <list>
 #include <vector>
 #include <cstdlib>
+#include <random>
+#include <algorithm>
+#include <cstdint>
 #include "../TestBase.h"
 #include "core/Core.h"
 #include "utils/StringUtils.h"
@@ -111,4 +114,62 @@ TEST_CASE("TestStringUtils::testJoin", "[test string join]") {
   REQUIRE(StringUtils::join("", ulist) == "12");
 
   REQUIRE(StringUtils::join("this separator wont appear", std::vector<std::string>()) == "");
+}
+
+TEST_CASE("TestStringUtils::testHexEncode", "[test hex encode]") {
+  REQUIRE("" == StringUtils::to_hex(""));
+  REQUIRE("6f" == StringUtils::to_hex("o"));
+  REQUIRE("666f6f626172" == StringUtils::to_hex("foobar"));
+  REQUIRE("000102030405060708090a0b0c0d0e0f" == StringUtils::to_hex({0x00, 0x01, 0x02, 0x03,
+                                                                     0x04, 0x05, 0x06, 0x07,
+                                                                     0x08, 0x09, 0x0a, 0x0b,
+                                                                     0x0c, 0x0d, 0x0e, 0x0f}));
+  REQUIRE("6F" == StringUtils::to_hex("o", true /*uppercase*/));
+  REQUIRE("666F6F626172" == StringUtils::to_hex("foobar", true /*uppercase*/));
+  REQUIRE("000102030405060708090A0B0C0D0E0F" == StringUtils::to_hex({0x00, 0x01, 0x02, 0x03,
+                                                                     0x04, 0x05, 0x06, 0x07,
+                                                                     0x08, 0x09, 0x0a, 0x0b,
+                                                                     0x0c, 0x0d, 0x0e, 0x0f}, true /*uppercase*/));
+}
+
+TEST_CASE("TestStringUtils::testHexDecode", "[test hex decode]") {
+  REQUIRE("" == StringUtils::from_hex(""));
+  REQUIRE("o" == StringUtils::from_hex("6f"));
+  REQUIRE("o" == StringUtils::from_hex("6F"));
+  REQUIRE("foobar" == StringUtils::from_hex("666f6f626172"));
+  REQUIRE("foobar" == StringUtils::from_hex("666F6F626172"));
+  REQUIRE("foobar" == StringUtils::from_hex("66:6F:6F:62:61:72"));
+  REQUIRE("foobar" == StringUtils::from_hex("66 6F 6F 62 61 72"));
+  REQUIRE(std::string({0x00, 0x01, 0x02, 0x03,
+                       0x04, 0x05, 0x06, 0x07,
+                       0x08, 0x09, 0x0a, 0x0b,
+                       0x0c, 0x0d, 0x0e, 0x0f}) == StringUtils::from_hex("000102030405060708090a0b0c0d0e0f"));
+  REQUIRE(std::string({0x00, 0x01, 0x02, 0x03,
+                       0x04, 0x05, 0x06, 0x07,
+                       0x08, 0x09, 0x0a, 0x0b,
+                       0x0c, 0x0d, 0x0e, 0x0f}) == StringUtils::from_hex("000102030405060708090A0B0C0D0E0F"));
+  try {
+    StringUtils::from_hex("666f6f62617");
+    abort();
+  } catch (std::exception& e) {
+    REQUIRE(std::string("Hexencoded string is malformatted") == e.what());
+  }
+  try {
+    StringUtils::from_hex("666f6f6261 7");
+    abort();
+  } catch (std::exception& e) {
+    REQUIRE(std::string("Hexencoded string is malformatted") == e.what());
+  }
+}
+
+TEST_CASE("TestStringUtils::testHexEncodeDecode", "[test hex encode decode]") {
+  std::mt19937 gen(std::random_device { }());
+  const bool uppercase = gen() % 2;
+  const size_t length = gen() % 1024;
+  std::vector<uint8_t> data(length);
+  std::generate_n(data.begin(), data.size(), [&]() -> uint8_t {
+    return gen() % 256;
+  });
+  auto hex = utils::StringUtils::to_hex(data.data(), data.size(), uppercase);
+  REQUIRE(data == utils::StringUtils::from_hex(hex.data(), hex.size()));
 }

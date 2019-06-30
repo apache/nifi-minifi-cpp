@@ -40,6 +40,7 @@
 #include "../unit/ProvenanceTestHelper.h"
 #include "io/StreamFactory.h"
 #include "core/ConfigurableComponent.h"
+#include "core/state/ProcessorController.h"
 #include "../integration/IntegrationBase.h"
 #include "CapturePacket.h"
 
@@ -71,20 +72,20 @@ class PcapTestHarness : public IntegrationBase {
     assert(LogTestController::getInstance().contains("Accepting ") == true && LogTestController::getInstance().contains("because it matches .*") );
   }
 
-  void queryRootProcessGroup(std::shared_ptr<core::ProcessGroup> pg) {
-    std::shared_ptr<core::Processor> proc = pg->findProcessor("pcap");
-    assert(proc != nullptr);
-
-    auto inv = std::dynamic_pointer_cast<minifi::processors::CapturePacket>(proc);
-    assert(inv != nullptr);
-
-    configuration->set(minifi::processors::CapturePacket::BaseDir.getName(), dir);
-    configuration->set(minifi::processors::CapturePacket::NetworkController.getName(), ".*");
-    configuration->set("nifi.c2.enable", "false");
+  void updateProperties(std::shared_ptr<minifi::FlowController> fc) {
+    auto components = fc->getComponents("pcap");
+    for (const auto& component : components) {
+      auto proccontroller = std::dynamic_pointer_cast<minifi::state::ProcessorController>(component);
+      if (proccontroller) {
+        auto processor = proccontroller->getProcessor();
+        processor->setProperty(minifi::processors::CapturePacket::BaseDir.getName(), dir);
+        processor->setProperty(minifi::processors::CapturePacket::NetworkControllers.getName(), ".*");
+      }
+    }
   }
 
  protected:
-  char *dir;
+  std::string dir;
   TestController testController;
 };
 
