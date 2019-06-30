@@ -135,35 +135,34 @@ void LogAttribute::onTrigger(const std::shared_ptr<core::ProcessContext> &contex
     }
     if (logPayload && flow->getSize() <= 1024 * 1024) {
       message << "\n" << "Payload:" << "\n";
-      ReadCallback callback(flow->getSize());
+      ReadCallback callback(logger_, flow->getSize());
       session->read(flow, &callback);
-      for (unsigned int i = 0, j = 0; i < callback.read_size_; i++) {
-        message << std::hex << callback.buffer_[i];
-        j++;
-        if (j == 80) {
-          message << '\n';
-          j = 0;
-        }
+
+      auto payload_hex = utils::StringUtils::to_hex(callback.buffer_.data(), callback.buffer_.size());
+      for (size_t i = 0; i < payload_hex.size(); i += 80) {
+        message << payload_hex.substr(i, 80) << '\n';
       }
+    } else {
+      message << "\n";
     }
-    message << "\n" << dashLine;
+    message << dashLine;
     std::string output = message.str();
 
     switch (level) {
       case LogAttrLevelInfo:
-        logger_->log_info("%s", output);
+        logging::LOG_INFO(logger_) << output;
         break;
       case LogAttrLevelDebug:
-        logger_->log_debug("%s", output);
+        logging::LOG_DEBUG(logger_) << output;
         break;
       case LogAttrLevelError:
-        logger_->log_error("%s", output);
+        logging::LOG_ERROR(logger_) << output;
         break;
       case LogAttrLevelTrace:
-        logger_->log_trace("%s", output);
+        logging::LOG_TRACE(logger_) << output;
         break;
       case LogAttrLevelWarn:
-        logger_->log_warn("%s", output);
+        logging::LOG_WARN(logger_) << output;
         break;
       default:
         break;
