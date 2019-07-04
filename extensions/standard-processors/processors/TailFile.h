@@ -64,7 +64,6 @@ class TailFile : public core::Processor {
   }
   // Destructor
   virtual ~TailFile() {
-    storeState();
   }
   // Processor Name
   static constexpr char const* ProcessorName = "TailFile";
@@ -92,9 +91,9 @@ class TailFile : public core::Processor {
   // Initialize, over write by NiFi TailFile
   void initialize(void) override;
   // recoverState
-  bool recoverState();
+  bool recoverState(const std::shared_ptr<core::ProcessContext>& context);
   // storeState
-  void storeState();
+  bool storeState(const std::shared_ptr<core::ProcessContext>& context);
 
  private:
 
@@ -105,6 +104,8 @@ class TailFile : public core::Processor {
   std::string state_file_;
   // Delimiter for the data incoming from the tailed file.
   std::string delimiter_;
+  // StateManager
+  std::shared_ptr<core::CoreComponentStateManager> state_manager_;
   // determine if state is recovered;
   bool state_recovered_;
 
@@ -119,7 +120,7 @@ class TailFile : public core::Processor {
   /**
    * Check roll over for the provided file.
    */
-  void checkRollOver(TailState &file, const std::string &base_file_name);
+  void checkRollOver(const std::shared_ptr<core::ProcessContext>& context, TailState &file, const std::string &base_file_name);
   std::shared_ptr<logging::Logger> logger_;
 };
 

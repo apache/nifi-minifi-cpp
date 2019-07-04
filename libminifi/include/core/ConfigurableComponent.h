@@ -98,11 +98,13 @@ class ConfigurableComponent {
    * @return result of set operation.
    */
   bool setSupportedProperties(std::set<Property> properties);
+
   /**
-   * Sets supported properties for the ConfigurableComponent
-   * @param supported properties
-   * @return result of set operation.
+   * Updates the supported properties for the ConfigurableComponent
+   * @param new supported properties
+   * @return result of update operation.
    */
+  bool updateSupportedProperties(std::set<Property> properties);
 
   /**
    * Gets whether or not this processor supports dynamic properties.

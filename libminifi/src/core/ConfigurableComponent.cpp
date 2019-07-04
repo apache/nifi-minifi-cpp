@@ -195,6 +195,19 @@ bool ConfigurableComponent::setSupportedProperties(std::set<Property> properties
   return true;
 }
 
+bool ConfigurableComponent::updateSupportedProperties(std::set<Property> properties) {
+  if (!canEdit()) {
+    return false;
+  }
+
+  std::lock_guard<std::mutex> lock(configuration_mutex_);
+
+  for (auto item : properties) {
+    properties_[item.getName()] = item;
+  }
+  return true;
+}
+
 bool ConfigurableComponent::getDynamicProperty(const std::string name, std::string &value) const {
   std::lock_guard<std::mutex> lock(configuration_mutex_);
 

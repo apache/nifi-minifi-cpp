@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-#include <stdio.h>
+#include <cstdio>
 #include <fstream>
 #include <map>
 #include <memory>
@@ -32,6 +32,7 @@
 #include "core/Core.h"
 #include "core/FlowFile.h"
 #include "utils/file/FileUtils.h"
+#include "utils/file/PathUtils.h"
 #include "unit/ProvenanceTestHelper.h"
 #include "core/Processor.h"
 #include "core/ProcessContext.h"
@@ -45,6 +46,7 @@ static std::string NEWLINE_FILE = ""  // NOLINT
         "four,five,six, seven";
 static const char *TMP_FILE = "minifi-tmpfile.txt";
 static const char *STATE_FILE = "minifi-state-file.txt";
+
 TEST_CASE("TailFileWithDelimiter", "[tailfiletest2]") {
   // Create and write to the test file
 
@@ -72,7 +74,6 @@ TEST_CASE("TailFileWithDelimiter", "[tailfiletest2]") {
   state_file << dir << utils::file::FileUtils::get_separator() << STATE_FILE;
 
   plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::FileName.getName(), temp_file.str());
-  plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::StateFile.getName(), state_file.str());
   plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::Delimiter.getName(), "\n");
 
   testController.runSession(plan, false);
@@ -85,10 +86,6 @@ TEST_CASE("TailFileWithDelimiter", "[tailfiletest2]") {
   REQUIRE(LogTestController::getInstance().contains("Size:" + std::to_string(NEWLINE_FILE.find_first_of('\n')) + " Offset:0"));
 
   LogTestController::getInstance().reset();
-
-  // Delete the test and state file.
-
-  remove(std::string(std::string(STATE_FILE) + "." + id).c_str());
 }
 
 TEST_CASE("TestNewContent", "[tailFileWithDelimiterState]") {
@@ -116,11 +113,7 @@ TEST_CASE("TestNewContent", "[tailFileWithDelimiterState]") {
   tmpfile << NEWLINE_FILE;
   tmpfile.close();
 
-  std::stringstream state_file;
-  state_file << dir << utils::file::FileUtils::get_separator() << STATE_FILE;
-
   plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::FileName.getName(), temp_file.str());
-  plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::StateFile.getName(), state_file.str());
   plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::Delimiter.getName(), "\n");
 
   testController.runSession(plan, true);
@@ -134,14 +127,9 @@ TEST_CASE("TestNewContent", "[tailFileWithDelimiterState]") {
   appendStream << std::endl;
   testController.runSession(plan, true);
 
-  REQUIRE(LogTestController::getInstance().contains("position 14"));
   REQUIRE(LogTestController::getInstance().contains("minifi-tmpfile.14-34.txt"));
 
   LogTestController::getInstance().reset();
-
-  // Delete the test and state file.
-
-  remove(std::string(std::string(STATE_FILE) + "." + id).c_str());
 }
 
 TEST_CASE("TestDeleteState", "[tailFileWithDelimiterState]") {
@@ -170,27 +158,22 @@ TEST_CASE("TestDeleteState", "[tailFileWithDelimiterState]") {
   tmpfile << NEWLINE_FILE;
   tmpfile.close();
 
-  std::stringstream state_file;
-  state_file << dir << utils::file::FileUtils::get_separator() << STATE_FILE;
-
   plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::FileName.getName(), temp_file.str());
-  plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::StateFile.getName(), state_file.str());
   plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::Delimiter.getName(), "\n");
+
   testController.runSession(plan, true);
 
   REQUIRE(LogTestController::getInstance().contains("minifi-tmpfile.0-13.txt"));
 
   plan->reset(true);  // start a new but with state file
-  remove(std::string(state_file.str() + "." + id).c_str());
+  LogTestController::getInstance().resetStream(LogTestController::getInstance().log_output);
+
+  plan->getStateManagerProvider()->getCoreComponentStateManager(*tailfile)->clear();
 
   testController.runSession(plan, true);
 
-  REQUIRE(LogTestController::getInstance().contains("position 0"));
-
   // if we lose state we restart
   REQUIRE(LogTestController::getInstance().contains("minifi-tmpfile.0-13.txt"));
-
-  // Delete the test and state file.
 }
 
 TEST_CASE("TestChangeState", "[tailFileWithDelimiterState]") {
@@ -222,35 +205,24 @@ TEST_CASE("TestChangeState", "[tailFileWithDelimiterState]") {
   appendStream.write("\n", 1);
   appendStream.close();
 
-  std::stringstream state_file;
-  state_file << dir << utils::file::FileUtils::get_separator() << STATE_FILE;
-
   plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::FileName.getName(), temp_file.str());
-  plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::StateFile.getName(), state_file.str());
   plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::Delimiter.getName(), "\n");
 
   testController.runSession(plan, true);
-
   REQUIRE(LogTestController::getInstance().contains("minifi-tmpfile.0-13.txt"));
 
+  std::string filePath, fileName;
+  REQUIRE(utils::file::PathUtils::getFileNameAndPath(temp_file.str(), filePath, fileName));
 
   // should stay the same
   for (int i = 0; i < 5; i++) {
     plan->reset(true);  // start a new but with state file
 
-    auto statefile = state_file.str() + "." + id;
-
-    remove(statefile.c_str());
-
-    std::ofstream newstatefile;
-    newstatefile.open(statefile);
-    newstatefile << "FILENAME=" << temp_file.str() << std::endl;
-    newstatefile << "POSITION=14" << std::endl;
-    newstatefile.close();
+    plan->getStateManagerProvider()->getCoreComponentStateManager(*tailfile)->set({{"file.0.name", fileName},
+                                                                                   {"file.0.position", "14"},
+                                                                                   {"file.0.current", temp_file.str()}});
 
     testController.runSession(plan, true);
-
-    REQUIRE(LogTestController::getInstance().contains("position 14"));
 
     // if we lose state we restart
     REQUIRE(LogTestController::getInstance().contains("minifi-tmpfile.14-34.txt"));
@@ -258,29 +230,21 @@ TEST_CASE("TestChangeState", "[tailFileWithDelimiterState]") {
   for (int i = 14; i < 34; i++) {
     plan->reset(true);  // start a new but with state file
 
-    auto statefile = state_file.str() + "." + id;
+    plan->getStateManagerProvider()->getCoreComponentStateManager(*tailfile)->set({{"file.0.name", fileName},
+                                                                                   {"file.0.position", std::to_string(i)},
+                                                                                   {"file.0.current", temp_file.str()}});
 
-    remove(statefile.c_str());
-
-    std::ofstream newstatefile;
-    newstatefile.open(statefile);
-    newstatefile << "FILENAME=" << temp_file.str() << std::endl;
-    newstatefile << "POSITION=" << i << std::endl;
-    newstatefile.close();
     testController.runSession(plan, true);
-    REQUIRE(LogTestController::getInstance().contains("position " + std::to_string(i)));
   }
 
   plan->runCurrentProcessor();
   for (int i = 14; i < 34; i++) {
     REQUIRE(LogTestController::getInstance().contains("minifi-tmpfile." + std::to_string(i) + "-34.txt"));
   }
-  // Delete the test and state file.
-
-  remove(std::string(state_file.str() + "." + id).c_str());
 }
 
-TEST_CASE("TestInvalidState", "[tailFileWithDelimiterState]") {
+
+TEST_CASE("TestStateMigration", "[tailFileStateMigration]") {
   // Create and write to the test file
   TestController testController;
   LogTestController::getInstance().setTrace<minifi::processors::TailFile>();
@@ -288,78 +252,109 @@ TEST_CASE("TestInvalidState", "[tailFileWithDelimiterState]") {
   LogTestController::getInstance().setTrace<TestPlan>();
   LogTestController::getInstance().setDebug<minifi::processors::LogAttribute>();
 
-  std::shared_ptr<TestPlan> plan = testController.createPlan();
-  std::shared_ptr<core::Processor> tailfile = plan->addProcessor("TailFile", "tailfileProc");
+  auto plan = testController.createPlan();
+  auto tailfile = plan->addProcessor("TailFile", "tailfileProc");
   auto id = tailfile->getUUIDStr();
 
-  plan->addProcessor("LogAttribute", "logattribute", core::Relationship("success", "description"), true);
+  auto logattribute = plan->addProcessor("LogAttribute", "logattribute", core::Relationship("success", "description"), true);
+  plan->setProperty(logattribute, org::apache::nifi::minifi::processors::LogAttribute::FlowFilesToLog.getName(), "0");
 
   char format[] = "/tmp/gt.XXXXXX";
   auto dir = testController.createTempDirectory(format);
-  std::stringstream temp_file;
-  temp_file << dir << utils::file::FileUtils::get_separator() << TMP_FILE;
 
-  std::ofstream tmpfile;
-  tmpfile.open(temp_file.str());
-  tmpfile << NEWLINE_FILE;
-  tmpfile.close();
+  auto createTempFile = [&](const std::string& file_name) -> std::string /*file_path*/ {
+    std::stringstream temp_file;
+    temp_file << dir << utils::file::FileUtils::get_separator() << file_name;
 
-  std::ofstream appendStream;
-  appendStream.open(temp_file.str(), std::ios_base::app);
-  appendStream.write("\n", 1);
-  appendStream.close();
+    std::ofstream tmpfile;
+    tmpfile.open(temp_file.str(), std::ios::out | std::ios::binary);
+    tmpfile << NEWLINE_FILE << "\n";
+    tmpfile.close();
+
+    return temp_file.str();
+  };
 
   std::stringstream state_file;
   state_file << dir << utils::file::FileUtils::get_separator() << STATE_FILE;
 
-  plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::FileName.getName(), temp_file.str());
-  plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::StateFile.getName(), state_file.str());
-  plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::Delimiter.getName(), "\n");
-
-  testController.runSession(plan, true);
-
-#ifdef WIN32
-  REQUIRE(LogTestController::getInstance().contains("minifi-tmpfile.0-14.txt"));
-#else
-  REQUIRE(LogTestController::getInstance().contains("minifi-tmpfile.0-13.txt"));
-#endif
-
-  plan->reset(true);  // start a new but with state file
-
   auto statefile = state_file.str() + "." + id;
 
-  remove(statefile.c_str());
+  SECTION("single") {
+    const std::string temp_file = createTempFile(TMP_FILE);
 
-  SECTION("No Filename") {
-  std::ofstream newstatefile;
-  newstatefile.open(statefile);
-  newstatefile << "POSITION=14" << std::endl;
-  newstatefile.close();
-  REQUIRE_THROWS(testController.runSession(plan, true));
+    plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::FileName.getName(), temp_file);
+    plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::StateFile.getName(), state_file.str());
+    plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::Delimiter.getName(), "\n");
+
+    std::ofstream newstatefile;
+    newstatefile.open(statefile);
+    SECTION("legacy") {
+      newstatefile << "FILENAME=" << temp_file << std::endl;
+      newstatefile << "POSITION=14" << std::endl;
+    }
+    SECTION("newer single") {
+      newstatefile << "FILENAME=" << TMP_FILE << std::endl;
+      newstatefile << "POSITION." << TMP_FILE << "=14" << std::endl;
+      newstatefile << "CURRENT." << TMP_FILE << "=" << temp_file << std::endl;
+    }
+    newstatefile.close();
+
+    testController.runSession(plan, true);
+    REQUIRE(LogTestController::getInstance().contains("minifi-tmpfile.14-34.txt"));
+
+    std::unordered_map<std::string, std::string> state;
+    REQUIRE(plan->getStateManagerProvider()->getCoreComponentStateManager(*tailfile)->get(state));
+
+    std::string filePath, fileName;
+    REQUIRE(utils::file::PathUtils::getFileNameAndPath(temp_file, filePath, fileName));
+    std::unordered_map<std::string, std::string> expected_state{{"file.0.name", fileName},
+                                                                {"file.0.position", "35"},
+                                                                {"file.0.current", temp_file}};
+    REQUIRE(expected_state == state);
   }
 
-  SECTION("Invalid current filename") {
-  std::ofstream newstatefile;
-  newstatefile.open(statefile);
-  newstatefile << "FILENAME=minifi-tmpfile.txt" << std::endl;
-  newstatefile << "CURRENT.minifi-tempfile.txt=minifi-tmpfile.txt" << std::endl;
-  newstatefile << "POSITION=14" << std::endl;
-  newstatefile.close();
-  REQUIRE_THROWS(testController.runSession(plan, true));
-  }
-  SECTION("No current filename and partial path") {
-  std::ofstream newstatefile;
-  newstatefile.open(statefile);
-  newstatefile << "FILENAME=minifi-tmpfile.txt" << std::endl;
-  newstatefile << "POSITION=14" << std::endl;
-  newstatefile.close();
-  REQUIRE_THROWS(testController.runSession(plan, true));
-  }
+  SECTION("multiple") {
+    const std::string file_name_1 = "bar.txt";
+    const std::string file_name_2 = "foo.txt";
+    const std::string temp_file_1 = createTempFile(file_name_1);
+    const std::string temp_file_2 = createTempFile(file_name_2);
 
-// Delete the test and state file.
+    plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::TailMode.getName(), "Multiple file");
+    plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::BaseDirectory.getName(), dir);
+    plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::FileName.getName(), ".*");
+    plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::StateFile.getName(), state_file.str());
+    plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::Delimiter.getName(), "\n");
 
-  remove(std::string(std::string(STATE_FILE) + "." + id).c_str());
+    std::ofstream newstatefile;
+    newstatefile.open(statefile);
+    newstatefile << "FILENAME=" << file_name_1 << std::endl;
+    newstatefile << "POSITION." << file_name_1 << "=14" << std::endl;
+    newstatefile << "CURRENT." << file_name_1 << "=" << temp_file_1 << std::endl;
+    newstatefile << "FILENAME=" << file_name_2 << std::endl;
+    newstatefile << "POSITION." << file_name_2 << "=15" << std::endl;
+    newstatefile << "CURRENT." << file_name_2 << "=" << temp_file_2 << std::endl;
+    newstatefile.close();
+
+    testController.runSession(plan, true);
+    REQUIRE(LogTestController::getInstance().contains(file_name_1.substr(0, file_name_1.rfind('.')) + ".14-34.txt"));
+    REQUIRE(LogTestController::getInstance().contains(file_name_2.substr(0, file_name_2.rfind('.')) + ".15-34.txt"));
+
+    std::unordered_map<std::string, std::string> state;
+    REQUIRE(plan->getStateManagerProvider()->getCoreComponentStateManager(*tailfile)->get(state));
+
+    std::string filePath1, filePath2, fileName1, fileName2;
+    REQUIRE(utils::file::PathUtils::getFileNameAndPath(temp_file_1, filePath1, fileName1));
+    REQUIRE(utils::file::PathUtils::getFileNameAndPath(temp_file_2, filePath2, fileName2));
+    std::unordered_map<std::string, std::string> expected_state{{"file.0.name", fileName1},
+                                                                {"file.0.position", "35"},
+                                                                {"file.0.current", temp_file_1},
+                                                                {"file.1.name", fileName2},
+                                                                {"file.1.position", "35"},
+                                                                {"file.1.current", temp_file_2}};
+    REQUIRE(expected_state == state);
+  }
 }
+
 
 TEST_CASE("TailFileWithOutDelimiter", "[tailfiletest2]") {
   // Create and write to the test file
@@ -385,11 +380,15 @@ TEST_CASE("TailFileWithOutDelimiter", "[tailfiletest2]") {
   tmpfile << NEWLINE_FILE;
   tmpfile.close();
 
-  std::stringstream state_file;
-  state_file << dir << utils::file::FileUtils::get_separator() << STATE_FILE;
+  SECTION("Single") {
+    plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::FileName.getName(), temp_file.str());
+  }
 
-  plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::FileName.getName(), temp_file.str());
-  plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::StateFile.getName(), state_file.str());
+  SECTION("Multiple") {
+    plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::FileName.getName(), "minifi-.*\\.txt");
+    plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::TailMode.getName(), "Multiple file");
+    plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::BaseDirectory.getName(), dir);
+  }
 
   testController.runSession(plan, false);
   auto records = plan->getProvenanceRecords();
@@ -432,11 +431,7 @@ TEST_CASE("TailFileLongWithDelimiter", "[tailfiletest2]") {
   tmpfile << line1 << "\n" << line2 << "\n" << line3 << "\n" << line4;
   tmpfile.close();
 
-  std::stringstream state_file;
-  state_file << dir << utils::file::FileUtils::get_separator() << STATE_FILE;
-
   plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::FileName.getName(), temp_file.str());
-  plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::StateFile.getName(), state_file.str());
   plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::Delimiter.getName(), "\n");
 
   std::shared_ptr<core::Processor> log_attr = plan->addProcessor("LogAttribute", "Log", core::Relationship("success", "description"), true);
@@ -486,7 +481,7 @@ TEST_CASE("TailFileWithDelimiterMultipleDelimiters", "[tailfiletest2]") {
   std::string line1(4097, '\n');
   std::mt19937 gen(std::random_device { }());
   std::generate_n(line1.begin(), 4095, [&]() -> char {
-    return 32 + gen() % (127 - 32);
+  return 32 + gen() % (127 - 32);
   });
   std::string line2("foo");
   std::string line3("bar");
@@ -514,11 +509,7 @@ TEST_CASE("TailFileWithDelimiterMultipleDelimiters", "[tailfiletest2]") {
   tmpfile << line1 << "\n" << line2 << "\n" << line3 << "\n" << line4;
   tmpfile.close();
 
-  std::stringstream state_file;
-  state_file << dir << utils::file::FileUtils::get_separator() << STATE_FILE;
-
   plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::FileName.getName(), temp_file.str());
-  plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::StateFile.getName(), state_file.str());
   plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::Delimiter.getName(), "\n");
 
   std::shared_ptr<core::Processor> log_attr = plan->addProcessor("LogAttribute", "Log", core::Relationship("success", "description"), true);
@@ -556,14 +547,13 @@ TEST_CASE("TailWithInvalid", "[tailfiletest2]") {
   auto dir = testController.createTempDirectory(format);
 
   SECTION("No File and No base") {
-  plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::TailMode.getName(), "Multiple file");
+    plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::TailMode.getName(), "Multiple file");
   }
 
   SECTION("No base") {
-  plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::FileName.getName(), "minifi-.*\\.txt");
-  plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::TailMode.getName(), "Multiple file");
+    plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::FileName.getName(), "minifi-.*\\.txt");
+    plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::TailMode.getName(), "Multiple file");
   }
-  plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::StateFile.getName(), STATE_FILE);
 
   REQUIRE_THROWS(plan->runNextProcessor());
 }
@@ -592,9 +582,6 @@ TEST_CASE("TailFileWithRealDelimiterAndRotate", "[tailfiletest2]") {
 #endif
   in_file.append("testfifo.txt");
 
-  std::string state_file(dir);
-  state_file.append("tailfile.state");
-
   std::ofstream in_file_stream(in_file);
   in_file_stream << NEWLINE_FILE;
   in_file_stream.flush();
@@ -604,16 +591,16 @@ TEST_CASE("TailFileWithRealDelimiterAndRotate", "[tailfiletest2]") {
   plan->setProperty(tail_file, processors::TailFile::Delimiter.getName(), std::string(1, DELIM));
 
   SECTION("single") {
-  plan->setProperty(
-      tail_file,
-      processors::TailFile::FileName.getName(), in_file);
+    plan->setProperty(
+        tail_file,
+        processors::TailFile::FileName.getName(), in_file);
   }
   SECTION("Multiple") {
-  plan->setProperty(tail_file, org::apache::nifi::minifi::processors::TailFile::FileName.getName(), "test.*");
-  plan->setProperty(tail_file, org::apache::nifi::minifi::processors::TailFile::TailMode.getName(), "Multiple file");
-  plan->setProperty(tail_file, org::apache::nifi::minifi::processors::TailFile::BaseDirectory.getName(), dir);
+    plan->setProperty(tail_file, org::apache::nifi::minifi::processors::TailFile::FileName.getName(), "test.*");
+    plan->setProperty(tail_file, org::apache::nifi::minifi::processors::TailFile::TailMode.getName(), "Multiple file");
+    plan->setProperty(tail_file, org::apache::nifi::minifi::processors::TailFile::BaseDirectory.getName(), dir);
   }
-  plan->setProperty(tail_file, processors::TailFile::StateFile.getName(), state_file);
+
   auto log_attr = plan->addProcessor("LogAttribute", "Log", core::Relationship("success", "description"), true);
   plan->setProperty(log_attr, processors::LogAttribute::FlowFilesToLog.getName(), "0");
   plan->setProperty(log_attr, processors::LogAttribute::LogPayload.getName(), "true");
@@ -621,7 +608,7 @@ TEST_CASE("TailFileWithRealDelimiterAndRotate", "[tailfiletest2]") {
 
   plan->runNextProcessor();  // Tail
   plan->runNextProcessor();  // Log
-  std::cout << " find " << expected_pieces << std::endl;
+
   REQUIRE(LogTestController::getInstance().contains(std::string("Logged ") + std::to_string(expected_pieces) + " flow files"));
 
   in_file_stream << DELIM;
@@ -665,9 +652,6 @@ TEST_CASE("TailFileWithMultileRolledOverFiles", "[tailfiletest2]") {
   char format[] = "/tmp/gt.XXXXXX";
   auto dir = testController.createTempDirectory(format);
 
-  std::string state_file(dir);
-  state_file.append("tailfile.state");
-
   // Define test input file
   std::string in_file(dir);
   in_file.append("fruits.txt");
@@ -687,7 +671,6 @@ TEST_CASE("TailFileWithMultileRolledOverFiles", "[tailfiletest2]") {
   auto tail_file = plan->addProcessor("TailFile", "Tail");
   plan->setProperty(tail_file, processors::TailFile::Delimiter.getName(), std::string(1, DELIM));
   plan->setProperty(tail_file, processors::TailFile::FileName.getName(), in_file);
-  plan->setProperty(tail_file, processors::TailFile::StateFile.getName(), state_file);
   auto log_attr = plan->addProcessor("LogAttribute", "Log", core::Relationship("success", "description"), true);
   plan->setProperty(log_attr, processors::LogAttribute::FlowFilesToLog.getName(), "0");
   // Log as many FFs as it can to make sure exactly the expected amount is produced
@@ -711,3 +694,4 @@ TEST_CASE("TailFileWithMultileRolledOverFiles", "[tailfiletest2]") {
 
   REQUIRE(LogTestController::getInstance().contains(std::string("Logged 2 flow files")));
 }
+

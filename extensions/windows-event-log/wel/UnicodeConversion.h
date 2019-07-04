@@ -34,6 +34,11 @@ namespace org {
             ATL::CW2A aString(pChar, CP_UTF8);
             return std::string(aString);
           }
+
+          inline std::wstring to_wstring(const char* pChar) {
+            ATL::CA2W wString(pChar, CP_UTF8);
+            return std::wstring(wString);
+          }
         } /* namespace wel */
       } /* namespace minifi */
     } /* namespace nifi */

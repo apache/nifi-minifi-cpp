@@ -219,6 +219,11 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
   virtual std::future<utils::TaskRescheduleInfo> disableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode);
 
   /**
+   * Removes all controller services.
+   */
+  virtual void clearControllerServices();
+
+  /**
    * Gets all controller services.
    */
   virtual std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> getAllControllerServices();
@@ -284,6 +289,11 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
    * Enables all controller services for the provider.
    */
   virtual void enableAllControllerServices();
+
+  /**
+   * Disables all controller services for the provider.
+   */
+  virtual void disableAllControllerServices();
 
   /**
    * Retrieves metrics node

@@ -46,9 +46,9 @@ class ExecuteSQL: public SQLProcessor<ExecuteSQL>, public OutputFormat {
   //! Processor Name
   static const std::string ProcessorName;
 
-  void processOnSchedule(const core::ProcessContext& context);
+  void processOnSchedule(core::ProcessContext& context);
   void processOnTrigger(core::ProcessSession& session);
-  
+
   void initialize() override;
 
   static const core::Property s_sqlSelectQuery;

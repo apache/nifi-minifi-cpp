@@ -100,6 +100,11 @@ class Configure : public Properties {
   static const char *nifi_c2_flow_base_url;
   static const char *nifi_c2_full_heartbeat;
 
+  // state management options
+  static const char *nifi_state_management_provider_local;
+  static const char *nifi_state_management_provider_local_always_persist;
+  static const char *nifi_state_management_provider_local_auto_persistence_interval;
+
  private:
   std::string agent_identifier_;
   std::string agent_class_;

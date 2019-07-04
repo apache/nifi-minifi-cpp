@@ -705,6 +705,9 @@ if (NOT SKIP_TESTS)
 	include(BuildTests)
 endif()
 
+## Add KeyValueStorageService tests
+registerTest("${TEST_DIR}/keyvalue-tests")
+
 include(BuildDocs)
 
 include(DockerConfig)

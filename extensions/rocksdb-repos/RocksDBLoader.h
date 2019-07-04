@@ -22,6 +22,7 @@
 #include "FlowFileRepository.h"
 #include "ProvenanceRepository.h"
 #include "RocksDbStream.h"
+#include "controllers/RocksDbPersistableKeyValueStoreService.h"
 #include "core/ClassLoader.h"
 
 class RocksDBFactory : public core::ObjectFactory {
@@ -50,9 +51,11 @@ class RocksDBFactory : public core::ObjectFactory {
     class_names.push_back("DatabaseContentRepository");
     class_names.push_back("FlowFileRepository");
     class_names.push_back("ProvenanceRepository");
+    class_names.push_back("RocksDbPersistableKeyValueStoreService");
     class_names.push_back("databasecontentrepository");
     class_names.push_back("flowfilerepository");
     class_names.push_back("provenancerepository");
+    class_names.push_back("rocksdbpersistablekeyvaluestoreservice");
     return class_names;
   }
 
@@ -65,6 +68,8 @@ class RocksDBFactory : public core::ObjectFactory {
       return std::unique_ptr<ObjectFactory>(new core::DefautObjectFactory<core::repository::FlowFileRepository>());
     } else if (name == "provenancerepository") {
       return std::unique_ptr<ObjectFactory>(new core::DefautObjectFactory<minifi::provenance::ProvenanceRepository>());
+    } else if (name == "rocksdbpersistablekeyvaluestoreservice") {
+      return std::unique_ptr<ObjectFactory>(new core::DefautObjectFactory<minifi::controllers::RocksDbPersistableKeyValueStoreService>());
     } else {
       return nullptr;
     }

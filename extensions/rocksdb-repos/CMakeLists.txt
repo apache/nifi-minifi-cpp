@@ -19,7 +19,7 @@
 
 include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt) 
 
-file(GLOB SOURCES  "*.cpp")
+file(GLOB SOURCES  "*.cpp" "controllers/*.cpp")
 
 add_library(minifi-rocksdb-repos STATIC ${SOURCES})
 set_property(TARGET minifi-rocksdb-repos PROPERTY POSITION_INDEPENDENT_CODE ON)

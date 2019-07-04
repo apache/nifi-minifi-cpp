@@ -63,6 +63,9 @@ const char *Configure::nifi_c2_flow_id = "nifi.c2.flow.id";
 const char *Configure::nifi_c2_flow_url = "nifi.c2.flow.url";
 const char *Configure::nifi_c2_flow_base_url = "nifi.c2.flow.base.url";
 const char *Configure::nifi_c2_full_heartbeat = "nifi.c2.full.heartbeat";
+const char *Configure::nifi_state_management_provider_local = "nifi.state.management.provider.local";
+const char *Configure::nifi_state_management_provider_local_always_persist = "nifi.state.management.provider.local.always.persist";
+const char *Configure::nifi_state_management_provider_local_auto_persistence_interval = "nifi.state.management.provider.local.auto.persistence.interval";
 
 } /* namespace minifi */
 } /* namespace nifi */

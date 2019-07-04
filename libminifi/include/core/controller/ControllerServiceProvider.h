@@ -113,6 +113,11 @@ class ControllerServiceProvider : public CoreComponent, public ConfigurableCompo
   virtual std::future<utils::TaskRescheduleInfo> disableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) = 0;
 
   /**
+   * Removes all controller services.
+   */
+  virtual void clearControllerServices() = 0;
+
+  /**
    * Gets a list of all controller services.
    */
   virtual std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> getAllControllerServices() {
@@ -214,6 +219,8 @@ class ControllerServiceProvider : public CoreComponent, public ConfigurableCompo
   }
 
   virtual void enableAllControllerServices() = 0;
+
+  virtual void disableAllControllerServices() = 0;
 
   virtual bool supportsDynamicProperties() {
     return false;
