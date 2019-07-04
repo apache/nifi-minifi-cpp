@@ -16,16 +16,21 @@
 # specific language governing permissions and limitations
 # under the License.
 #
+Flow Controller:
+    name: MiNiFi Flow
 
-include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt) 
+Processors: []
 
-file(GLOB SOURCES  "*.cpp" "controllers/*.cpp")
+Connections: []
 
-add_library(minifi-rocksdb-repos STATIC ${SOURCES})
-set_property(TARGET minifi-rocksdb-repos PROPERTY POSITION_INDEPENDENT_CODE ON)
+Controller Services:
+    - name: testcontroller
+      id: 2438e3c8-015a-1000-79ca-83af40ec1994
+      class: UnorderedMapPersistableKeyValueStoreService
+      Properties:
+        Auto Persistence Interval:
+            - value: 0 sec
+        File:
+            - value: state.txt
 
-target_link_libraries(minifi-rocksdb-repos ${LIBMINIFI} Threads::Threads)
-target_link_libraries(minifi-rocksdb-repos RocksDB::RocksDB)
-
-SET (ROCKSDB-REPOS minifi-rocksdb-repos PARENT_SCOPE)
-register_extension(minifi-rocksdb-repos)
+Remote Processing Groups: []

@@ -20,7 +20,7 @@
 
 include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 
-file(GLOB SOURCES  "processors/*.cpp" )
+file(GLOB SOURCES  "processors/*.cpp" "controllers/*.cpp" )
 
 add_library(minifi-standard-processors STATIC ${SOURCES})
 set_property(TARGET minifi-standard-processors PROPERTY POSITION_INDEPENDENT_CODE ON)

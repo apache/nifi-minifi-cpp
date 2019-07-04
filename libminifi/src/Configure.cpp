@@ -63,6 +63,7 @@ const char *Configure::nifi_c2_flow_id = "nifi.c2.flow.id";
 const char *Configure::nifi_c2_flow_url = "nifi.c2.flow.url";
 const char *Configure::nifi_c2_flow_base_url = "nifi.c2.flow.base.url";
 const char *Configure::nifi_c2_full_heartbeat = "nifi.c2.full.heartbeat";
+const char *Configure::nifi_state_management_provider_local = "nifi.state.management.provider.local";
 
 } /* namespace minifi */
 } /* namespace nifi */

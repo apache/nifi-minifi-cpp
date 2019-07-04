@@ -141,6 +141,10 @@ class StandardControllerServiceProvider : public ControllerServiceProvider, publ
     }
   }
 
+  void clearControllerServices() {
+    controller_map_->clear();
+  }
+
   void verifyCanStopReferencingComponents(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) {
   }
 

@@ -35,6 +35,7 @@
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/Id.h"
 #include "utils/RegexUtils.h"
+#include "controllers/keyvalue/PersistableKeyValueStoreService.h"
 #include "../client/SFTPClient.h"
 
 namespace org {
@@ -81,7 +82,6 @@ class ListSFTP : public SFTPProcessorBase {
   static core::Property MaximumFileAge;
   static core::Property MinimumFileSize;
   static core::Property MaximumFileSize;
-  static core::Property StateFile;
 
   // Supported Relationships
   static core::Relationship Success;
@@ -139,15 +139,12 @@ class ListSFTP : public SFTPProcessorBase {
 
   bool already_loaded_from_cache_;
 
-  std::string tracking_timestamps_state_filename_;
   std::chrono::time_point<std::chrono::steady_clock> last_run_time_;
   uint64_t last_listed_latest_entry_timestamp_;
   uint64_t last_processed_latest_entry_timestamp_;
   std::set<std::string> latest_identifiers_processed_;
 
   bool initial_listing_complete_;
-  std::string tracking_entities_state_filename_;
-  std::string tracking_entities_state_json_filename_;
   struct ListedEntity {
     uint64_t timestamp;
     uint64_t size;
@@ -170,11 +167,11 @@ class ListSFTP : public SFTPProcessorBase {
       const std::string& username,
       const Child& child);
 
-  bool persistTrackingTimestampsCache(const std::string& hostname, const std::string& username, const std::string& remote_path);
-  bool updateFromTrackingTimestampsCache(const std::string& hostname, const std::string& username, const std::string& remote_path);
+  bool persistTrackingTimestampsCache(const std::shared_ptr<core::ProcessContext>& context, const std::string& hostname, const std::string& username, const std::string& remote_path);
+  bool updateFromTrackingTimestampsCache(const std::shared_ptr<core::ProcessContext>& context, const std::string& hostname, const std::string& username, const std::string& remote_path);
 
-  bool persistTrackingEntitiesCache(const std::string& hostname, const std::string& username, const std::string& remote_path);
-  bool updateFromTrackingEntitiesCache(const std::string& hostname, const std::string& username, const std::string& remote_path);
+  bool persistTrackingEntitiesCache(const std::shared_ptr<core::ProcessContext>& context, const std::string& hostname, const std::string& username, const std::string& remote_path);
+  bool updateFromTrackingEntitiesCache(const std::shared_ptr<core::ProcessContext>& context, const std::string& hostname, const std::string& username, const std::string& remote_path);
 
   void listByTrackingTimestamps(
       const std::shared_ptr<core::ProcessContext>& context,

@@ -793,6 +793,13 @@ std::future<utils::TaskRescheduleInfo> FlowController::disableControllerService(
 }
 
 /**
+ * Removes all controller services.
+ */
+void FlowController::clearControllerServices() {
+  controller_service_provider_->clearControllerServices();
+}
+
+/**
  * Gets all controller services.
  */
 std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> FlowController::getAllControllerServices() {

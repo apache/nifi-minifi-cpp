@@ -125,10 +125,6 @@ core::Property ListSFTP::MinimumFileSize(
 core::Property ListSFTP::MaximumFileSize(
     core::PropertyBuilder::createProperty("Maximum File Size")->withDescription("The maximum size that a file must be in order to be pulled")
         ->isRequired(false)->build());
-core::Property ListSFTP::StateFile(
-    core::PropertyBuilder::createProperty("State File")->withDescription("Specifies the file that should be used for storing state about"
-                                                                         " what data has been ingested so that upon restart MiNiFi can resume from where it left off")
-        ->isRequired(true)->withDefaultValue("ListSFTP")->build());
 
 core::Relationship ListSFTP::Success("success", "All FlowFiles that are received are routed to success");
 
@@ -170,7 +166,6 @@ void ListSFTP::initialize() {
   properties.insert(MaximumFileAge);
   properties.insert(MinimumFileSize);
   properties.insert(MaximumFileSize);
-  properties.insert(StateFile);
   setSupportedProperties(properties);
 
   // Set the supported relationships
@@ -269,45 +264,6 @@ void ListSFTP::onSchedule(const std::shared_ptr<core::ProcessContext> &context, 
     if (!core::DataSizeValue::StringToInt(value, maximum_file_size_)) {
       logger_->log_error("Maximum File Size attribute is invalid");
     }
-  }
-  context->getProperty(StateFile.getName(), value);
-  if (listing_strategy_ == LISTING_STRATEGY_TRACKING_TIMESTAMPS) {
-    std::stringstream ss;
-    ss << value << "." << getUUIDStr() << ".TrackingTimestamps";
-    auto new_tracking_timestamps_state_filename = ss.str();
-    if (new_tracking_timestamps_state_filename != tracking_timestamps_state_filename_) {
-      if (!tracking_timestamps_state_filename_.empty()) {
-        if (unlink(tracking_timestamps_state_filename_.c_str()) != 0) {
-          logger_->log_error("Unable to delete old Tracking Timestamps state file \"%s\"",
-                             tracking_timestamps_state_filename_.c_str());
-        }
-      }
-    }
-    tracking_timestamps_state_filename_ = new_tracking_timestamps_state_filename;
-  } else if (listing_strategy_ == LISTING_STRATEGY_TRACKING_ENTITIES) {
-    std::stringstream ss;
-    ss << value << "." << getUUIDStr() << ".TrackingEntities";
-    auto new_tracking_entities_state_filename = ss.str();
-    ss << ".json";
-    auto new_tracking_entities_state_json_filename = ss.str();
-    if (new_tracking_entities_state_filename != tracking_entities_state_filename_) {
-      if (!tracking_entities_state_filename_.empty()) {
-        if (unlink(tracking_entities_state_filename_.c_str()) != 0) {
-          logger_->log_error("Unable to delete old Tracking Entities state file \"%s\"",
-                             tracking_entities_state_filename_.c_str());
-        }
-      }
-      if (!tracking_entities_state_json_filename_.empty()) {
-        if (unlink(tracking_entities_state_json_filename_.c_str()) != 0) {
-          logger_->log_error("Unable to delete old Tracking Entities json state file \"%s\"",
-                             tracking_entities_state_json_filename_.c_str());
-        }
-      }
-    }
-    tracking_entities_state_filename_ = new_tracking_entities_state_filename;
-    tracking_entities_state_json_filename_ = new_tracking_entities_state_json_filename;
-  } else {
-    logger_->log_error("Unknown Listing Strategy: \"%s\"", listing_strategy_.c_str());
   }
 
   startKeepaliveThreadIfNeeded();
@@ -520,85 +476,87 @@ ListSFTP::ListedEntity::ListedEntity(uint64_t timestamp_, uint64_t size_)
     , size(size_) {
 }
 
-bool ListSFTP::persistTrackingTimestampsCache(const std::string& hostname, const std::string& username, const std::string& remote_path) {
-  std::ofstream file(tracking_timestamps_state_filename_);
-  if (!file.is_open()) {
-    logger_->log_error("Failed to store state to Tracking Timestamps state file \"%s\"", tracking_timestamps_state_filename_.c_str());
+bool ListSFTP::persistTrackingTimestampsCache(const std::shared_ptr<core::ProcessContext>& context, const std::string& hostname, const std::string& username, const std::string& remote_path) {
+  auto state_manager = context->getStateManager();
+  if (state_manager == nullptr) {
     return false;
   }
-  file << "hostname=" << hostname << "\n";
-  file << "username=" << username << "\n";
-  file << "remote_path=" << remote_path << "\n";
-  file << "listing.timestamp=" << last_listed_latest_entry_timestamp_ << "\n";
-  file << "processed.timestamp=" << last_processed_latest_entry_timestamp_ << "\n";
+  std::unordered_map<std::string, std::string> state;
+  state["listing_strategy"] = LISTING_STRATEGY_TRACKING_TIMESTAMPS;
+  state["hostname"] = hostname;
+  state["username"] = username;
+  state["remote_path"] = remote_path;
+  state["listing.timestamp"] = std::to_string(last_listed_latest_entry_timestamp_);
+  state["processed.timestamp"] = std::to_string(last_processed_latest_entry_timestamp_);
   size_t i = 0;
   for (const auto& identifier : latest_identifiers_processed_) {
-    file << "id." << i << "=" << identifier << "\n";
+    state["id." + std::to_string(i)] = identifier;
     ++i;
+  }
+  state_manager->set(state);
+  if (!state_manager->persist()) {
+    return false;
   }
   return true;
 }
 
-bool ListSFTP::updateFromTrackingTimestampsCache(const std::string& hostname, const std::string& username, const std::string& remote_path) {
-  std::ifstream file(tracking_timestamps_state_filename_);
-  if (!file.is_open()) {
-    logger_->log_error("Failed to open Tracking Timestamps state file \"%s\"", tracking_timestamps_state_filename_.c_str());
-    return false;
-  }
+bool ListSFTP::updateFromTrackingTimestampsCache(const std::shared_ptr<core::ProcessContext>& context, const std::string& hostname, const std::string& username, const std::string& remote_path) {
+  std::string state_listing_strategy;
   std::string state_hostname;
   std::string state_username;
   std::string state_remote_path;
   uint64_t state_listing_timestamp;
   uint64_t state_processed_timestamp;
   std::set<std::string> state_ids;
-
-  std::string line;
-  while (std::getline(file, line)) {
-    size_t separator_pos = line.find('=');
-    if (separator_pos == std::string::npos) {
-      logger_->log_warn("None key-value line found in Tracking Timestamps state file \"%s\": \"%s\"", tracking_timestamps_state_filename_.c_str(), line.c_str());
-    }
-    std::string key = line.substr(0, separator_pos);
-    std::string value = line.substr(separator_pos + 1);
-    if (key == "hostname") {
-      state_hostname = std::move(value);
-    } else if (key == "username") {
-      state_username = std::move(value);
-    } else if (key == "remote_path") {
-      state_remote_path = std::move(value);
-    } else if (key == "listing.timestamp") {
-      try {
-        state_listing_timestamp = stoull(value);
-      } catch (...) {
-        logger_->log_error("listing.timestamp is not an uint64 in Tracking Timestamps state file \"%s\"", tracking_timestamps_state_filename_.c_str());
-        return false;
-      }
-    } else if (key == "processed.timestamp") {
-      try {
-        state_processed_timestamp = stoull(value);
-      } catch (...) {
-        logger_->log_error("processed.timestamp is not an uint64 in Tracking Timestamps state file \"%s\"", tracking_timestamps_state_filename_.c_str());
-        return false;
-      }
-    } else if (key.compare(0, strlen("id."), "id.") == 0) {
-      state_ids.emplace(std::move(value));
-    } else {
-      logger_->log_warn("Unknown key found in Tracking Timestamps state file \"%s\": \"%s\"", tracking_timestamps_state_filename_.c_str(), key.c_str());
-    }
+  auto state_manager = context->getStateManager();
+  if (state_manager == nullptr) {
+    logger_->log_error("Failed to get StateManager");
+    return false;
   }
-  file.close();
 
-  if (state_hostname != hostname ||
+  std::unordered_map<std::string, std::string> state_map;
+  if (!state_manager->get(state_map)) {
+    logger_->log_debug("Failed to get state from StateManager");
+    return false;
+  }
+  try {
+    state_listing_strategy = state_map.at("listing_strategy");
+    state_hostname = state_map.at("hostname");
+    state_username = state_map.at("username");
+    state_remote_path = state_map.at("remote_path");
+    try {
+      state_listing_timestamp = stoull(state_map.at("listing.timestamp"));
+    } catch (...) {
+      return false;
+    }
+    try {
+      state_processed_timestamp = stoull(state_map.at("processed.timestamp"));
+    } catch (...) {
+      return false;
+    }
+    for (const auto &kv : state_map) {
+      if (kv.first.compare(0, strlen("id."), "id.") == 0) {
+        state_ids.emplace(kv.second);
+      }
+    }
+  } catch (...) {
+    return false;
+  }
+
+  if (state_listing_strategy != listing_strategy_ ||
+      state_hostname != hostname ||
       state_username != username ||
       state_remote_path != remote_path) {
-    logger_->log_error("Tracking Timestamps state file \"%s\" was created with different settings than the current ones, ignoring. "
-                       "Hostname: \"%s\" vs. \"%s\", "
-                       "Username: \"%s\" vs. \"%s\", "
-                       "Remote Path: \"%s\" vs. \"%s\"",
-                       tracking_timestamps_state_filename_.c_str(),
-                       state_hostname, hostname,
-                       state_username, username,
-                       state_remote_path, remote_path);
+    logger_->log_error(
+        "Processor state was persisted with different settings than the current ones, ignoring. "
+        "Listing Strategy: \"%s\" vs. \"%s\", "
+        "Hostname: \"%s\" vs. \"%s\", "
+        "Username: \"%s\" vs. \"%s\", "
+        "Remote Path: \"%s\" vs. \"%s\"",
+        state_listing_strategy, listing_strategy_,
+        state_hostname, hostname,
+        state_username, username,
+        state_remote_path, remote_path);
     return false;
   }
 
@@ -620,11 +578,11 @@ void ListSFTP::listByTrackingTimestamps(
   uint64_t min_timestamp_to_list = last_listed_latest_entry_timestamp_;
 
   /* Load state from cache file if needed */
-  if (!already_loaded_from_cache_ && !tracking_timestamps_state_filename_.empty()) {
-    if (updateFromTrackingTimestampsCache(hostname, username, remote_path)) {
-      logger_->log_debug("Successfully loaded Tracking Timestamps state file \"%s\"", tracking_timestamps_state_filename_.c_str());
+  if (!already_loaded_from_cache_) {
+    if (updateFromTrackingTimestampsCache(context, hostname, username, remote_path)) {
+      logger_->log_debug("Successfully loaded state");
     } else {
-      logger_->log_debug("Failed to load Tracking Timestamps state file \"%s\"", tracking_timestamps_state_filename_.c_str());
+      logger_->log_debug("Failed to load state");
     }
     already_loaded_from_cache_ = true;
   }
@@ -762,9 +720,7 @@ void ListSFTP::listByTrackingTimestamps(
 
     if (latest_listed_entry_timestamp_this_cycle != last_listed_latest_entry_timestamp_ || processed_new_files) {
       last_listed_latest_entry_timestamp_ = latest_listed_entry_timestamp_this_cycle;
-      if (!tracking_timestamps_state_filename_.empty()) {
-        persistTrackingTimestampsCache(hostname, username, remote_path);
-      }
+      persistTrackingTimestampsCache(context, hostname, username, remote_path);
     }
   } else {
     logger_->log_debug("There are no files to list. Yielding.");
@@ -773,139 +729,95 @@ void ListSFTP::listByTrackingTimestamps(
   }
 }
 
-bool ListSFTP::persistTrackingEntitiesCache(const std::string& hostname, const std::string& username, const std::string& remote_path) {
-  std::ofstream file(tracking_entities_state_filename_);
-  if (!file.is_open()) {
-    logger_->log_error("Failed to store Tracking Entities state to state file \"%s\"", tracking_entities_state_filename_.c_str());
+bool ListSFTP::persistTrackingEntitiesCache(const std::shared_ptr<core::ProcessContext>& context, const std::string& hostname, const std::string& username, const std::string& remote_path) {
+  auto state_manager = context->getStateManager();
+  if (state_manager == nullptr) {
     return false;
   }
-  file << "hostname=" << hostname << "\n";
-  file << "username=" << username << "\n";
-  file << "remote_path=" << remote_path << "\n";
-  file << "json_state_file=" << tracking_entities_state_json_filename_ << "\n";
-  file.close();
-
-  std::ofstream json_file(tracking_entities_state_json_filename_);
-  if (!json_file.is_open()) {
-    logger_->log_error("Failed to store Tracking Entities state to state json file \"%s\"", tracking_entities_state_json_filename_.c_str());
+  std::unordered_map<std::string, std::string> state;
+  state["listing_strategy"] = listing_strategy_;
+  state["hostname"] = hostname;
+  state["username"] = username;
+  state["remote_path"] = remote_path;
+  size_t i = 0;
+  for (const auto &already_listed_entity : already_listed_entities_) {
+    state["entity." + std::to_string(i) + ".name"] = already_listed_entity.first;
+    state["entity." + std::to_string(i) + ".timestamp"] = std::to_string(already_listed_entity.second.timestamp);
+    state["entity." + std::to_string(i) + ".size"] = std::to_string(already_listed_entity.second.size);
+    ++i;
+  }
+  state_manager->set(state);
+  if (!state_manager->persist()) {
     return false;
   }
-
-  rapidjson::Document entities(rapidjson::kObjectType);
-  rapidjson::Document::AllocatorType& alloc = entities.GetAllocator();
-  for (const auto& already_listed_entity : already_listed_entities_) {
-    rapidjson::Value entity(rapidjson::kObjectType);
-    entity.AddMember("timestamp", already_listed_entity.second.timestamp, alloc);
-    entity.AddMember("size", already_listed_entity.second.size, alloc);
-    entities.AddMember(rapidjson::Value(already_listed_entity.first.c_str(), alloc), std::move(entity), alloc);
-  }
-
-  rapidjson::OStreamWrapper osw(json_file);
-  rapidjson::Writer<rapidjson::OStreamWrapper> writer(osw);
-  entities.Accept(writer);
-
   return true;
 }
 
-bool ListSFTP::updateFromTrackingEntitiesCache(const std::string& hostname, const std::string& username, const std::string& remote_path) {
-  std::ifstream file(tracking_entities_state_filename_);
-  if (!file.is_open()) {
-    logger_->log_error("Failed to open Tracking Entities state file \"%s\"", tracking_entities_state_filename_.c_str());
+bool ListSFTP::updateFromTrackingEntitiesCache(const std::shared_ptr<core::ProcessContext>& context, const std::string& hostname, const std::string& username, const std::string& remote_path) {
+  auto state_manager = context->getStateManager();
+  if (state_manager == nullptr) {
+    logger_->log_error("Failed to get StateManager");
     return false;
   }
+  std::string state_listing_strategy;
   std::string state_hostname;
   std::string state_username;
   std::string state_remote_path;
-  std::string state_json_state_file;
+  std::unordered_map<std::string, ListedEntity> new_already_listed_entities;
 
-  std::string line;
-  while (std::getline(file, line)) {
-    size_t separator_pos = line.find('=');
-    if (separator_pos == std::string::npos) {
-      logger_->log_warn("None key-value line found in Tracking Entities state file \"%s\": \"%s\"", tracking_entities_state_filename_.c_str(), line.c_str());
-      continue;
-    }
-    std::string key = line.substr(0, separator_pos);
-    std::string value = line.substr(separator_pos + 1);
-    if (key == "hostname") {
-      state_hostname = std::move(value);
-    } else if (key == "username") {
-      state_username = std::move(value);
-    } else if (key == "remote_path") {
-      state_remote_path = std::move(value);
-    } else if (key == "json_state_file") {
-      state_json_state_file = std::move(value);
-    } else {
-      logger_->log_warn("Unknown key found in Tracking Entities state file \"%s\": \"%s\"", tracking_entities_state_filename_.c_str(), key.c_str());
-    }
-  }
-  file.close();
-
-  if (state_hostname != hostname ||
-      state_username != username ||
-      state_remote_path != remote_path) {
-    logger_->log_error("Tracking Entities state file \"%s\" was created with different settings than the current ones, ignoring. "
-                       "Hostname: \"%s\" vs. \"%s\", "
-                       "Username: \"%s\" vs. \"%s\", "
-                       "Remote Path: \"%s\" vs. \"%s\"",
-                       tracking_entities_state_filename_.c_str(),
-                       state_hostname, hostname,
-                       state_username, username,
-                       state_remote_path, remote_path);
+  std::unordered_map<std::string, std::string> state_map;
+  if (!state_manager->get(state_map)) {
+    logger_->log_error("Failed to get state from StateManager");
     return false;
   }
-
-  if (state_json_state_file.empty()) {
-    logger_->log_error("Could not found json state file path in Tracking Entities state file \"%s\"", tracking_entities_state_filename_.c_str());
-    return false;
-  }
-
-  std::ifstream json_file(state_json_state_file);
-  if (!json_file.is_open()) {
-    logger_->log_error("Failed to open entities Tracking Entities state json file \"%s\"", state_json_state_file.c_str());
-    return false;
-  }
-
   try {
-    rapidjson::IStreamWrapper isw(json_file);
-    rapidjson::Document d;
-    rapidjson::ParseResult res = d.ParseStream(isw);
-    if (!res) {
-      logger_->log_error("Failed to parse Tracking Entities state json file \"%s\"", state_json_state_file.c_str());
-      return false;
-    }
-    if (!d.IsObject()) {
-      logger_->log_error("Tracking Entities state json file \"%s\" root is not an object", state_json_state_file.c_str());
-      return false;
-    }
+    state_listing_strategy = state_map.at("listing_strategy");
+    state_hostname = state_map.at("hostname");
+    state_username = state_map.at("username");
+    state_remote_path = state_map.at("remote_path");
 
     std::unordered_map<std::string, ListedEntity> new_already_listed_entities;
-    for (const auto &already_listed_entity : d.GetObject()) {
-      auto it = already_listed_entity.value.FindMember("timestamp");
-      if (it == already_listed_entity.value.MemberEnd() || !it->value.IsUint64()) {
-        logger_->log_error("Tracking Entities state json file \"%s\" timestamp missing or malformatted for entity \"%s\"",
-            state_json_state_file.c_str(),
-            already_listed_entity.name.GetString());
+    size_t i = 0;
+    while (true) {
+      std::string name;
+      try {
+        name = state_map.at("entity." + std::to_string(i) + ".name");
+      } catch (...) {
+        break;
+      }
+      try {
+        uint64_t timestamp = std::stoull(state_map.at("entity." + std::to_string(i) + ".timestamp"));
+        uint64_t size = std::stoull(state_map.at("entity." + std::to_string(i) + ".size"));
+        new_already_listed_entities.emplace(std::piecewise_construct,
+                                            std::forward_as_tuple(name),
+                                            std::forward_as_tuple(timestamp, size));
+      } catch (...) {
         continue;
       }
-      uint64_t timestamp = it->value.GetUint64();
-      it = already_listed_entity.value.FindMember("size");
-      if (it == already_listed_entity.value.MemberEnd() || !it->value.IsUint64()) {
-        logger_->log_error("Tracking Entities state json file \"%s\" size missing or malformatted for entity \"%s\"",
-                           state_json_state_file.c_str(),
-                           already_listed_entity.name.GetString());
-        continue;
-      }
-      uint64_t size = it->value.GetUint64();
-      new_already_listed_entities.emplace(std::piecewise_construct,
-                                          std::forward_as_tuple(already_listed_entity.name.GetString()),
-                                          std::forward_as_tuple(timestamp, size));
+      ++i;
     }
-    already_listed_entities_ = std::move(new_already_listed_entities);
-  } catch (std::exception& e) {
-    logger_->log_error("Exception while parsing Tracking Entities state json file \"%s\": %s", state_json_state_file.c_str(), e.what());
+  } catch (...) {
     return false;
   }
+
+  if (state_listing_strategy != listing_strategy_ ||
+      state_hostname != hostname ||
+      state_username != username ||
+      state_remote_path != remote_path) {
+    logger_->log_error(
+        "Processor state was persisted with different settings than the current ones, ignoring. "
+        "Listing Strategy: \"%s\" vs. \"%s\", "
+        "Hostname: \"%s\" vs. \"%s\", "
+        "Username: \"%s\" vs. \"%s\", "
+        "Remote Path: \"%s\" vs. \"%s\"",
+        state_listing_strategy, listing_strategy_,
+        state_hostname, hostname,
+        state_username, username,
+        state_remote_path, remote_path);
+    return false;
+  }
+
+  already_listed_entities_ = std::move(new_already_listed_entities);
 
   return true;
 }
@@ -920,12 +832,12 @@ void ListSFTP::listByTrackingEntities(
     uint64_t entity_tracking_time_window,
     std::vector<Child>&& files) {
   /* Load state from cache file if needed */
-  if (!already_loaded_from_cache_ && !tracking_entities_state_filename_.empty()) {
-    if (updateFromTrackingEntitiesCache(hostname, username, remote_path)) {
-      logger_->log_debug("Successfully loaded Tracking Entities state file \"%s\"", tracking_entities_state_filename_.c_str());
+  if (!already_loaded_from_cache_) {
+    if (updateFromTrackingEntitiesCache(context, hostname, username, remote_path)) {
+      logger_->log_debug("Successfully loaded state");
       initial_listing_complete_ = true;
     } else {
-      logger_->log_debug("Failed to load Tracking Entities state file \"%s\"", tracking_entities_state_filename_.c_str());
+      logger_->log_debug("Failed to load state");
     }
     already_loaded_from_cache_ = true;
   }
@@ -1014,9 +926,7 @@ void ListSFTP::listByTrackingEntities(
 
   initial_listing_complete_ = true;
 
-  if (!tracking_entities_state_filename_.empty()) {
-    persistTrackingEntitiesCache(hostname, username, remote_path);
-  }
+  persistTrackingEntitiesCache(context, hostname, username, remote_path);
 }
 
 void ListSFTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {

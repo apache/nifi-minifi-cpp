@@ -46,6 +46,7 @@ if (NOT SKIP_TESTS AND Java_FOUND AND Maven_FOUND AND NOT DISABLE_EXPRESSION_LAN
 		target_wholearchive_library(${testfilename} minifi-sftp)
 		target_wholearchive_library(${testfilename} minifi-expression-language-extensions)
 		target_wholearchive_library(${testfilename} minifi-standard-processors)
+		target_wholearchive_library(${testfilename} minifi-rocksdb-repos)
 
 		MATH(EXPR SFTP-EXTENSIONS_TEST_COUNT "${SFTP-EXTENSIONS_TEST_COUNT}+1")
 		add_test(NAME "${testfilename}" COMMAND "${testfilename}" WORKING_DIRECTORY ${TEST_DIR})

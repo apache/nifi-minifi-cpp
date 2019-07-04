@@ -89,7 +89,13 @@ class ListSFTPTestsFixture {
   }
 
   void createPlan(utils::Identifier* list_sftp_uuid = nullptr) {
-    plan = testController.createPlan();
+    const std::string state_dir = plan == nullptr ? "" : plan->getStateDir();
+
+    log_attribute.reset();
+    list_sftp.reset();
+    plan.reset();
+
+    plan = testController.createPlan(nullptr /*config*/, state_dir.empty() ? nullptr : state_dir.c_str());
     if (list_sftp_uuid == nullptr) {
       list_sftp = plan->addProcessor(
           "ListSFTP",
@@ -124,7 +130,6 @@ class ListSFTPTestsFixture {
     plan->setProperty(list_sftp, "Minimum File Size", "0 B");
     plan->setProperty(list_sftp, "Target System Timestamp Precision", "Seconds");
     plan->setProperty(list_sftp, "Remote Path", "nifi_test/");
-    plan->setProperty(list_sftp, "State File", std::string(src_dir) + "/state");
 
     // Configure LogAttribute processor
     plan->setProperty(log_attribute, "FlowFiles To Log", "0");
@@ -559,7 +564,7 @@ TEST_CASE_METHOD(ListSFTPTestsFixture, "ListSFTP Tracking Timestamps restore sta
 
   testController.runSession(plan, true);
 
-  REQUIRE(LogTestController::getInstance().contains("Successfully loaded Tracking Timestamps state file"));
+  REQUIRE(LogTestController::getInstance().contains("Successfully loaded state"));
   REQUIRE(LogTestController::getInstance().contains("from ListSFTP to relationship success"));
   REQUIRE(LogTestController::getInstance().contains("key:filename value:file2.ext"));
 }
@@ -585,7 +590,8 @@ TEST_CASE_METHOD(ListSFTPTestsFixture, "ListSFTP Tracking Timestamps restore sta
 
   testController.runSession(plan, true);
 
-  REQUIRE(LogTestController::getInstance().contains("was created with different settings than the current ones, ignoring. "
+  REQUIRE(LogTestController::getInstance().contains("Processor state was persisted with different settings than the current ones, ignoring. "
+                                                    "Listing Strategy: \"Tracking Timestamps\" vs. \"Tracking Timestamps\", "
                                                     "Hostname: \"localhost\" vs. \"localhost\", "
                                                     "Username: \"nifiuser\" vs. \"nifiuser\", "
                                                     "Remote Path: \"nifi_test\" vs. \"/nifi_test\""));
@@ -612,10 +618,11 @@ TEST_CASE_METHOD(ListSFTPTestsFixture, "ListSFTP Tracking Timestamps changed con
 
   testController.runSession(plan, true);
 
-  REQUIRE(LogTestController::getInstance().contains("was created with different settings than the current ones, ignoring. "
-  "Hostname: \"localhost\" vs. \"localhost\", "
-  "Username: \"nifiuser\" vs. \"nifiuser\", "
-  "Remote Path: \"nifi_test\" vs. \"/nifi_test\""));
+  REQUIRE(LogTestController::getInstance().contains("Processor state was persisted with different settings than the current ones, ignoring. "
+                                                    "Listing Strategy: \"Tracking Timestamps\" vs. \"Tracking Timestamps\", "
+                                                    "Hostname: \"localhost\" vs. \"localhost\", "
+                                                    "Username: \"nifiuser\" vs. \"nifiuser\", "
+                                                    "Remote Path: \"nifi_test\" vs. \"/nifi_test\""));
   REQUIRE(LogTestController::getInstance().contains("from ListSFTP to relationship success"));
   REQUIRE(LogTestController::getInstance().contains("key:filename value:file1.ext"));
   REQUIRE(LogTestController::getInstance().contains("key:filename value:file2.ext"));
@@ -818,7 +825,7 @@ TEST_CASE_METHOD(ListSFTPTestsFixture, "ListSFTP Tracking Entities restore state
 
   testController.runSession(plan, true);
 
-  REQUIRE(LogTestController::getInstance().contains("Successfully loaded Tracking Entities state file"));
+  REQUIRE(LogTestController::getInstance().contains("Successfully loaded state"));
   REQUIRE(LogTestController::getInstance().contains("from ListSFTP to relationship success"));
   REQUIRE(LogTestController::getInstance().contains("key:filename value:file2.ext"));
 }
@@ -844,10 +851,11 @@ TEST_CASE_METHOD(ListSFTPTestsFixture, "ListSFTP Tracking Entities restore state
 
   testController.runSession(plan, true);
 
-  REQUIRE(LogTestController::getInstance().contains("was created with different settings than the current ones, ignoring. "
-  "Hostname: \"localhost\" vs. \"localhost\", "
-  "Username: \"nifiuser\" vs. \"nifiuser\", "
-  "Remote Path: \"nifi_test\" vs. \"/nifi_test\""));
+  REQUIRE(LogTestController::getInstance().contains("Processor state was persisted with different settings than the current ones, ignoring. "
+                                                    "Listing Strategy: \"Tracking Entities\" vs. \"Tracking Entities\", "
+                                                    "Hostname: \"localhost\" vs. \"localhost\", "
+                                                    "Username: \"nifiuser\" vs. \"nifiuser\", "
+                                                    "Remote Path: \"nifi_test\" vs. \"/nifi_test\""));
   REQUIRE(LogTestController::getInstance().contains("from ListSFTP to relationship success"));
   REQUIRE(LogTestController::getInstance().contains("key:filename value:file1.ext"));
   REQUIRE(LogTestController::getInstance().contains("key:filename value:file2.ext"));
@@ -871,10 +879,11 @@ TEST_CASE_METHOD(ListSFTPTestsFixture, "ListSFTP Tracking Entities changed confi
 
   testController.runSession(plan, true);
 
-  REQUIRE(LogTestController::getInstance().contains("was created with different settings than the current ones, ignoring. "
-  "Hostname: \"localhost\" vs. \"localhost\", "
-  "Username: \"nifiuser\" vs. \"nifiuser\", "
-  "Remote Path: \"nifi_test\" vs. \"/nifi_test\""));
+  REQUIRE(LogTestController::getInstance().contains("Processor state was persisted with different settings than the current ones, ignoring. "
+                                                    "Listing Strategy: \"Tracking Entities\" vs. \"Tracking Entities\", "
+                                                    "Hostname: \"localhost\" vs. \"localhost\", "
+                                                    "Username: \"nifiuser\" vs. \"nifiuser\", "
+                                                    "Remote Path: \"nifi_test\" vs. \"/nifi_test\""));
   REQUIRE(LogTestController::getInstance().contains("from ListSFTP to relationship success"));
   REQUIRE(LogTestController::getInstance().contains("key:filename value:file1.ext"));
   REQUIRE(LogTestController::getInstance().contains("key:filename value:file2.ext"));

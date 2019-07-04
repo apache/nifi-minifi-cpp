@@ -36,6 +36,10 @@ static_initializers &get_static_functions() {
 }
 
 FlowConfiguration::~FlowConfiguration() {
+  if (service_provider_ != nullptr) {
+    /* This is needed to counteract the StandardControllerServiceProvider <-> StandardControllerServiceNode shared_ptr cycle */
+    service_provider_->clearControllerServices();
+  }
 }
 
 std::shared_ptr<core::Processor> FlowConfiguration::createProcessor(std::string name, utils::Identifier & uuid) {

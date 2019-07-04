@@ -89,6 +89,7 @@ class IntegrationBase {
   uint64_t wait_time_;
   std::string port, scheme, path;
   std::string key_dir;
+  std::string state_dir;
 };
 
 IntegrationBase::IntegrationBase(uint64_t waitTime)
@@ -121,6 +122,16 @@ void IntegrationBase::run(std::string test_file_location) {
       new core::YamlConfiguration(test_repo, test_repo, content_repo, stream_factory, configuration, test_file_location));
 
   core::YamlConfiguration yaml_config(test_repo, test_repo, content_repo, stream_factory, configuration, test_file_location);
+
+  auto controller_service_provider = yaml_ptr->getControllerServiceProvider();
+  std::string state_dir_name_template = "/tmp/integrationstate.XXXXXX";
+  std::vector<char> state_dir_buf(state_dir_name_template.c_str(),
+                                  state_dir_name_template.c_str() + state_dir_name_template.size() + 1);
+  if (mkdtemp(state_dir_buf.data()) == nullptr) {
+    throw std::runtime_error("Failed to create temporary directory for state");
+  }
+  state_dir = state_dir_buf.data();
+  core::ProcessContext::getOrCreateDefaultStateManagerProvider(controller_service_provider, state_dir.c_str());
 
   std::unique_ptr<core::ProcessGroup> ptr = yaml_config.getRoot(test_file_location);
   std::shared_ptr<core::ProcessGroup> pg = std::shared_ptr<core::ProcessGroup>(ptr.get());

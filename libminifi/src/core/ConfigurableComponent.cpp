@@ -176,6 +176,8 @@ bool ConfigurableComponent::setProperty(Property &prop, PropertyValue &value) {
   }
 }
 
+#include <signal.h>
+
 /**
  * Sets supported properties for the ConfigurableComponent
  * @param supported properties
@@ -189,6 +191,19 @@ bool ConfigurableComponent::setSupportedProperties(std::set<Property> properties
   std::lock_guard<std::mutex> lock(configuration_mutex_);
 
   properties_.clear();
+  for (auto item : properties) {
+    properties_[item.getName()] = item;
+  }
+  return true;
+}
+
+bool ConfigurableComponent::updateSupportedProperties(std::set<Property> properties) {
+  if (!canEdit()) {
+    return false;
+  }
+
+  std::lock_guard<std::mutex> lock(configuration_mutex_);
+
   for (auto item : properties) {
     properties_[item.getName()] = item;
   }
