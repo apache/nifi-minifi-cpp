@@ -37,6 +37,7 @@
 #include "utils/StringUtils.h"
 #include "utils/file/FileUtils.h"
 #include "utils/TimeUtil.h"
+#include "utils/RegexUtils.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/TypedValues.h"
@@ -251,21 +252,12 @@ bool GetFile::acceptFile(std::string fullName, std::string name, const GetFileRe
 
     if (request.keepSourceFile == false && access(fullName.c_str(), W_OK) != 0)
       return false;
-#ifndef WIN32
-    regex_t regex;
-    int ret = regcomp(&regex, request.fileFilter.c_str(), 0);
-    if (ret)
-      return false;
-    ret = regexec(&regex, name.c_str(), (size_t) 0, NULL, 0);
-    regfree(&regex);
-    if (ret)
-      return false;
-#else
-    std::regex regex(request.fileFilter);
-    if (!std::regex_match(name, regex)) {
+
+    utils::Regex rgx(request.fileFilter);
+    if (!rgx.match(name)) {
       return false;
     }
-#endif
+
     metrics_->input_bytes_ += statbuf.st_size;
     metrics_->accepted_files_++;
     return true;
