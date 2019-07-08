@@ -40,6 +40,7 @@
 #include "utils/file/PathUtils.h"
 #include "utils/TimeUtil.h"
 #include "utils/StringUtils.h"
+#include "utils/RegexUtils.h"
 #ifdef HAVE_REGEX_CPP
 #include <regex>
 #else
@@ -152,22 +153,8 @@ void TailFile::onSchedule(const std::shared_ptr<core::ProcessContext> &context, 
 }
 
 bool TailFile::acceptFile(const std::string &fileFilter, const std::string &file) {
-#ifndef HAVE_REGEX_CPP
-  regex_t regex;
-  int ret = regcomp(&regex, fileFilter.c_str(), 0);
-  if (ret)
-  return false;
-  ret = regexec(&regex, file.c_str(), (size_t) 0, NULL, 0);
-  regfree(&regex);
-  if (ret)
-  return false;
-#else
-  std::regex regex(fileFilter);
-  if (!std::regex_match(file, regex)) {
-    return false;
-  }
-  return true;
-#endif
+  utils::Regex rgx(fileFilter);
+  return rgx.match(file);
 }
 
 std::string TailFile::trimLeft(const std::string& s) {

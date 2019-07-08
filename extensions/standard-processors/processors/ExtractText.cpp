@@ -31,11 +31,7 @@
 #include "core/ProcessSession.h"
 #include "core/FlowFile.h"
 
-#if !defined(_WIN32)
-#if __cplusplus <= 201103L
-#include <regex.h>
-#endif
-#endif
+#include "utils/RegexUtils.h"
 
 namespace org {
 namespace apache {
@@ -150,11 +146,11 @@ int64_t ExtractText::ReadCallback::process(std::shared_ptr<io::BaseStream> strea
   }
 
   if (regex_mode) {
-    std::regex_constants::syntax_option_type regex_mode = std::regex_constants::ECMAScript;
+    std::vector<utils::Regex::Mode> rgx_mode;
 
     bool insensitive;
     if (ctx_->getProperty(InsensitiveMatch.getName(), insensitive) && insensitive) {
-      regex_mode |= std::regex_constants::icase;
+      rgx_mode.push_back(utils::Regex::Mode::ICASE);
     }
 
     bool ignoregroupzero;
@@ -178,84 +174,32 @@ int64_t ExtractText::ReadCallback::process(std::shared_ptr<io::BaseStream> strea
 
       int matchcount = 0;
 
-#if (__cplusplus > 201103L) || defined(_WIN32)
-
-      std::regex rgx;
-
       try {
-        rgx = std::regex(value, regex_mode);
-      } catch(const std::regex_error& e) {
-        logger_->log_error("%s error encountered when trying to construct regular expression from property (key: %s) value: %s",
-            e.what(), k, value);
-        continue;
-      }
+        utils::Regex rgx(value, rgx_mode);
+        while (rgx.match(workStr)) {
+          const std::vector<std::string> &matches = rgx.getResult();
+          size_t i = ignoregroupzero ? 1 : 0;
 
-      std::smatch matches;
-
-      while (std::regex_search(workStr, matches, rgx)) {
-        size_t i = ignoregroupzero ? 1 : 0;
-
-        for (; i < matches.size(); ++i, ++matchcount) {
-          std::string attributeValue = matches[i].str();
-          if (attributeValue.length() > maxCaptureSize) {
-            attributeValue = attributeValue.substr(0, maxCaptureSize);
-          }
-          if (matchcount == 0) {
-            regexAttributes[k] = attributeValue;
-          }
-          regexAttributes[k + '.' + std::to_string(matchcount)] = attributeValue;
-        }
-        if (!repeatingcapture) {
-          break;
-        }
-        workStr = matches.suffix();
-      }
-#else
-
-      size_t maxGroups = std::count(value.begin(), value.end(), '(') + 1;
-
-      regex_t regexCompiled;
-      std::vector<regmatch_t> groups;
-      groups.reserve(maxGroups);
-
-      if (regcomp(&regexCompiled, value.c_str(), REG_EXTENDED | (insensitive ? REG_ICASE : 0))) {
-        logger_->log_error("error encountered when trying to construct regular expression from property (key: %s) value: %s",
-                            k, value);
-        continue;
-      }
-
-      while (regexec(&regexCompiled, workStr.c_str(), groups.capacity(), groups.data(), 0) == 0) {
-        size_t g = 0;
-        size_t match_len = 0;
-        for (g = 0; g < maxGroups; g++) {
-          if (groups[g].rm_so == -1) {
-            break;  // No more groups
-          }
-
-          if (g == 0) {
-            match_len = groups[g].rm_eo;
-            if (ignoregroupzero) {
-              continue;
+          for (; i < matches.size(); ++i, ++matchcount) {
+            std::string attributeValue = matches[i];
+            if (attributeValue.length() > maxCaptureSize) {
+              attributeValue = attributeValue.substr(0, maxCaptureSize);
             }
+            if (matchcount == 0) {
+              regexAttributes[k] = attributeValue;
+            }
+            regexAttributes[k + '.' + std::to_string(matchcount)] = attributeValue;
           }
-
-          std::string attributeValue(workStr.begin() + groups[g].rm_so, workStr.begin() + groups[g].rm_eo);
-          if (attributeValue.length() > maxCaptureSize) {
-            attributeValue = attributeValue.substr(0, maxCaptureSize);
+          if (!repeatingcapture) {
+            break;
           }
-
-          if (matchcount == 0) {
-            regexAttributes[k] = attributeValue;
-          }
-          regexAttributes[k + '.' + std::to_string(matchcount)] = attributeValue;
-          matchcount++;
+          workStr = rgx.getSuffix();
         }
-        if (!repeatingcapture || (match_len >= workStr.length())) {
-          break;
-        }
-        workStr = workStr.substr(match_len + 1);
+      } catch (const Exception &e) {
+        logger_->log_error("%s error encountered when trying to construct regular expression from property (key: %s) value: %s",
+                           e.what(), k, value);
+        continue;
       }
-#endif
     }
 
     for (const auto& kv : regexAttributes) {

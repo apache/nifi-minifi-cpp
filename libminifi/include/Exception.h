@@ -40,12 +40,13 @@ enum ExceptionType {
   PROCESS_SCHEDULE_EXCEPTION,
   SITE2SITE_EXCEPTION,
   GENERAL_EXCEPTION,
+  REGEX_EXCEPTION,
   MAX_EXCEPTION
 };
 
 // Exception String 
 static const char *ExceptionStr[MAX_EXCEPTION] = { "File Operation", "Flow File Operation", "Processor Operation", "Process Session Operation", "Process Schedule Operation", "Site2Site Protocol",
-    "General Operation" };
+    "General Operation", "Regex Operation" };
 
 // Exception Type to String 
 inline const char *ExceptionTypeToString(ExceptionType type) {
