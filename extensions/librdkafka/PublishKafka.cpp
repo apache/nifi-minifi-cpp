@@ -272,7 +272,7 @@ bool PublishKafka::configureNewConnection(const std::shared_ptr<KafkaConnection>
     }
   }
 
-// Add all of the dynamic properties as librdkafka configurations
+  // Add all of the dynamic properties as librdkafka configurations
   const auto &dynamic_prop_keys = context->getDynamicPropertyKeys();
   logger_->log_info("PublishKafka registering %d librdkafka dynamic properties", dynamic_prop_keys.size());
 
@@ -285,6 +285,9 @@ bool PublishKafka::configureNewConnection(const std::shared_ptr<KafkaConnection>
       logger_->log_warn("PublishKafka Dynamic Property '%s' is empty and therefore will not be configured", key);
     }
   }
+
+  // Set the logger callback
+  rd_kafka_conf_set_log_cb(conf_, KafkaConnection::logCallback);
 
   auto producer = rd_kafka_new(RD_KAFKA_PRODUCER, conf_, errstr, sizeof(errstr));
 
