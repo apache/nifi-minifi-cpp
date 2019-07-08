@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 #include "HTTPClient.h"
+#include "Exception.h"
 #include <memory>
 #include <climits>
 #include <map>
@@ -23,6 +24,7 @@
 #include <string>
 #include <algorithm>
 #include "utils/StringUtils.h"
+#include "utils/RegexUtils.h"
 
 namespace org {
 namespace apache {
@@ -335,21 +337,12 @@ void HTTPClient::set_request_method(const std::string method) {
 bool HTTPClient::matches(const std::string &value, const std::string &sregex) {
   if (sregex == ".*")
     return true;
-
-#ifdef WIN32
-  std::regex rgx(sregex);
-  return std::regex_match(value, rgx);
-#else
-  regex_t regex;
-  int ret = regcomp(&regex, sregex.c_str(), 0);
-  if (ret)
+  try {
+    utils::Regex rgx(sregex);
+    return rgx.match(value);
+  } catch (const Exception &e) {
     return false;
-  ret = regexec(&regex, value.c_str(), (size_t) 0, NULL, 0);
-  regfree(&regex);
-  if (ret)
-    return false;
-#endif
-  return true;
+  }
 }
 
 void HTTPClient::configure_secure_connection(CURL *http_session) {

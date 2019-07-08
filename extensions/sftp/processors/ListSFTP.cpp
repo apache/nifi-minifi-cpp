@@ -36,6 +36,7 @@
 #include "utils/ByteArrayCallback.h"
 #include "utils/TimeUtil.h"
 #include "utils/StringUtils.h"
+#include "utils/RegexUtils.h"
 #include "utils/ScopeGuard.h"
 #include "utils/file/FileUtils.h"
 #include "core/FlowFile.h"
@@ -184,14 +185,6 @@ ListSFTP::ListSFTP(std::string name, utils::Identifier uuid /*= utils::Identifie
 }
 
 ListSFTP::~ListSFTP() {
-#ifndef WIN32
-  if (file_filter_regex_set_) {
-    regfree(&compiled_file_filter_regex_);
-  }
-  if (path_filter_regex_set_) {
-    regfree(&compiled_path_filter_regex_);
-  }
-#endif
 }
 
 void ListSFTP::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
@@ -214,50 +207,24 @@ void ListSFTP::onSchedule(const std::shared_ptr<core::ProcessContext> &context, 
     utils::StringUtils::StringToBool(value, follow_symlink_);
   }
   if (context->getProperty(FileFilterRegex.getName(), file_filter_regex_)) {
-#ifndef WIN32
-    if (file_filter_regex_set_) {
-      regfree(&compiled_file_filter_regex_);
-    }
-    int ret = regcomp(&compiled_file_filter_regex_, file_filter_regex_.c_str(), 0);
-    if (ret != 0) {
-      logger_->log_error("Failed to compile File Filter Regex \"%s\"", file_filter_regex_.c_str());
-      file_filter_regex_set_ = false;
-    } else {
-      file_filter_regex_set_ = true;
-    }
-#else
     try {
-      compiled_file_filter_regex_ = std::regex(file_filter_regex_);
+      compiled_file_filter_regex_ = utils::Regex(file_filter_regex_);
       file_filter_regex_set_ = true;
-    } catch (std::regex_error&) {
+    } catch (const Exception &e) {
       logger_->log_error("Failed to compile File Filter Regex \"%s\"", file_filter_regex_.c_str());
       file_filter_regex_set_ = false;
     }
-#endif
   } else {
     file_filter_regex_set_ = false;
   }
   if (context->getProperty(PathFilterRegex.getName(), path_filter_regex_)) {
-#ifndef WIN32
-    if (path_filter_regex_set_) {
-      regfree(&compiled_path_filter_regex_);
-    }
-    int ret = regcomp(&compiled_path_filter_regex_, path_filter_regex_.c_str(), 0);
-    if (ret != 0) {
-      logger_->log_error("Failed to compile Path Filter Regex \"%s\"", path_filter_regex_.c_str());
-      file_filter_regex_set_ = false;
-    } else {
-      path_filter_regex_set_ = true;
-    }
-#else
     try {
-      compiled_path_filter_regex_ = std::regex(path_filter_regex_);
+      compiled_path_filter_regex_ = utils::Regex(path_filter_regex_);
       path_filter_regex_set_ = true;
-    } catch (std::regex_error&) {
+    } catch (const Exception &e) {
       logger_->log_error("Failed to compile Path Filter Regex \"%s\"", path_filter_regex_.c_str());
       path_filter_regex_set_ = false;
     }
-#endif
   } else {
     path_filter_regex_set_ = false;
   }
@@ -444,12 +411,7 @@ bool ListSFTP::filterFile(const std::string& parent_path, const std::string& fil
   /* File Filter Regex */
   if (file_filter_regex_set_) {
     bool match = false;
-#ifndef WIN32
-    int ret = regexec(&compiled_file_filter_regex_, filename.c_str(), static_cast<size_t>(0), nullptr, 0);
-    match = ret == 0;
-#else
-    match = std::regex_match(filename, compiled_file_filter_regex_);
-#endif
+    match = compiled_file_filter_regex_.match(filename);
     if (!match) {
       logger_->log_debug("Ignoring \"%s/%s\" because it did not match the File Filter Regex \"%s\"",
                          parent_path.c_str(),
@@ -471,12 +433,7 @@ bool ListSFTP::filterDirectory(const std::string& parent_path, const std::string
   if (path_filter_regex_set_) {
     std::string dir_path = utils::file::FileUtils::concat_path(parent_path, filename, true /*force_posix*/);
     bool match = false;
-#ifndef WIN32
-    int ret = regexec(&compiled_path_filter_regex_, dir_path.c_str(), static_cast<size_t>(0), nullptr, 0);
-    match = ret == 0;
-#else
-    match = std::regex_match(dir_path, compiled_path_filter_regex_);
-#endif
+    match = compiled_path_filter_regex_.match(dir_path);
     if (!match) {
       logger_->log_debug("Not recursing into \"%s\" because it did not match the Path Filter Regex \"%s\"",
                          dir_path.c_str(),

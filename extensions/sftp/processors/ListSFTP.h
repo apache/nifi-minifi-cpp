@@ -22,11 +22,6 @@
 #include <map>
 #include <chrono>
 #include <cstdint>
-#ifndef WIN32
-#include <regex.h>
-#else
-#include <regex>
-#endif
 
 #include "SFTPProcessorBase.h"
 #include "utils/ByteArrayCallback.h"
@@ -38,6 +33,7 @@
 #include "core/Resource.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/Id.h"
+#include "utils/RegexUtils.h"
 #include "../client/SFTPClient.h"
 
 namespace org {
@@ -114,13 +110,8 @@ class ListSFTP : public SFTPProcessorBase {
   std::string path_filter_regex_;
   bool file_filter_regex_set_;
   bool path_filter_regex_set_;
-#ifndef WIN32
-  regex_t compiled_file_filter_regex_;
-  regex_t compiled_path_filter_regex_;
-#else
-  std::regex compiled_file_filter_regex_;
-  std::regex compiled_path_filter_regex_;
-#endif
+  utils::Regex compiled_file_filter_regex_;
+  utils::Regex compiled_path_filter_regex_;
   bool ignore_dotted_files_;
   std::string target_system_timestamp_precision_;
   std::string entity_tracking_initial_listing_target_;
