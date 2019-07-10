@@ -102,13 +102,16 @@ int main(int argc, char **argv) {
   LogTestController::getInstance().setDebug<minifi::c2::RESTSender>();
   LogTestController::getInstance().setDebug<minifi::c2::C2Agent>();
 
-  const char *options[] = { "document_root", ".", "listening_ports", "7070", 0 };
+  const char *options[] = { "document_root", ".", "listening_ports", "0", 0 };
   std::vector<std::string> cpp_options;
   for (int i = 0; i < (sizeof(options) / sizeof(options[0]) - 1); i++) {
     cpp_options.push_back(options[i]);
   }
 
   CivetServer server(cpp_options);
+
+  std::string port_str = std::to_string(server.getListeningPorts()[0]);
+
   ConfigHandler h_ex;
   server.addHandler("/update", h_ex);
   std::string key_dir, test_file_location;
@@ -126,6 +129,8 @@ int main(int argc, char **argv) {
 
   std::ifstream myfile(test_file_location.c_str());
 
+  std::string c2_rest_url = "http://localhost:" + port_str + "/update";
+
   if (myfile.is_open()) {
     std::stringstream buffer;
     buffer << myfile.rdbuf();
@@ -134,7 +139,7 @@ int main(int argc, char **argv) {
     std::string response = "{\"operation\" : \"heartbeat\",\"requested_operations\": [  {"
         "\"operation\" : \"update\", "
         "\"operationid\" : \"8675309\", "
-        "\"name\": \"configuration\", \"content\": { \"location\": \"http://localhost:7070/update\"}}]}";
+        "\"name\": \"configuration\", \"content\": { \"location\": \"" + c2_rest_url + "\"}}]}";
     responses.push_back(response);
   }
 
@@ -143,7 +148,7 @@ int main(int argc, char **argv) {
   configuration->set("nifi.c2.agent.protocol.class", "RESTSender");
   configuration->set("nifi.c2.enable", "true");
   configuration->set("nifi.c2.agent.class", "test");
-  configuration->set("nifi.c2.rest.url", "http://localhost:7070/update");
+  configuration->set("nifi.c2.rest.url", c2_rest_url);
   configuration->set("nifi.c2.agent.heartbeat.period", "1000");
   mkdir("content_repository", S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 

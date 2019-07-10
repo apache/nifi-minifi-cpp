@@ -47,6 +47,14 @@ class CoapIntegrationBase : public IntegrationBase {
     stop_webserver(server);
   }
 
+  std::string getWebPort() {
+    std::string ret_val = port;
+    if(ret_val.back() == 's') {
+      ret_val = ret_val.substr(0, ret_val.size()-1);
+    }
+    return ret_val;
+  }
+
  protected:
   CivetServer *server;
 };
@@ -76,6 +84,14 @@ void CoapIntegrationBase::setUrl(std::string url, CivetHandler *handler) {
       server = start_webserver(port, path, handler);
     }
   }
+  if(port == "0" || port == "0s") {
+    bool secure = (port == "0s");
+    port = std::to_string(server->getListeningPorts()[0]);
+    if(secure) {
+      port += "s";
+    }
+  }
+
 }
 
 #endif /* LIBMINIFI_TEST_INTEGRATION_HTTPINTEGRATIONBASE_H_ */
