@@ -28,14 +28,16 @@ execute_process(COMMAND curl -s https://www.apache.org/dyn/closer.lua/?asjson=1
 
 # Make use of parent thirdparty by adjusting relative to the source of this CMake file
 set(PARENT_THIRDPARTY_DIR "${CMAKE_SOURCE_DIR}/../thirdparty")
-set(RAT_BASENAME "apache-rat-0.12")
+set(RAT_BASENAME "apache-rat-0.13")
 set(RAT_DIR "${PARENT_THIRDPARTY_DIR}/apache-rat")
 set(RAT_BINARY "${RAT_DIR}/${RAT_BASENAME}-bin/${RAT_BASENAME}.jar")
 
 file(DOWNLOAD
         "${MIRROR_URL}creadur/${RAT_BASENAME}/${RAT_BASENAME}-bin.tar.gz"
         "${RAT_DIR}/${RAT_BASENAME}-bin.tar.gz"
-        EXPECTED_HASH SHA512=460d53fa3e1546d960bd03ebd97c930a39306cffd98c9ebc09bf22f9e50a9723578b98c4e7dc71dd6f19dfb6dae00811cb11a4eabce70c21502a6cef2d9fd2fa )
+        EXPECTED_HASH SHA512=2C1E12EACE7B80A9B6373C2F5080FBF63D3FA8D9248F3A17BD05DE961CD3CA3C4549817B8B7320A84F0C323194EDAD0ABDB86BDFEC3976227A228E2143E14A54 )
+
+
 
 execute_process(
         COMMAND tar xf "${RAT_DIR}/${RAT_BASENAME}-bin.tar.gz" -C "${RAT_DIR}"
