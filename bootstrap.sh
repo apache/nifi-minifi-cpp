@@ -290,22 +290,24 @@ add_disabled_option OPENCV_ENABLED ${FALSE} "ENABLE_OPENCV"
 add_disabled_option SFTP_ENABLED ${FALSE} "ENABLE_SFTP"
 add_dependency SFTP_ENABLED "libssh2"
 
-TESTS_DISABLED=${FALSE}
-
 add_disabled_option SQLITE_ENABLED ${FALSE} "ENABLE_SQLITE"
 
-USE_SHARED_LIBS=${TRUE}
-
-## name, default, values
-add_multi_option BUILD_PROFILE "RelWithDebInfo" "RelWithDebInfo" "Debug" "MinSizeRel" "Release"
-
 # Since the following extensions have limitations on
-
 add_disabled_option BUSTACHE_ENABLED ${FALSE} "ENABLE_BUSTACHE" "2.6" ${TRUE}
 add_dependency BUSTACHE_ENABLED "boost"
+
 ## currently need to limit on certain platforms
 add_disabled_option TENSORFLOW_ENABLED ${FALSE} "ENABLE_TENSORFLOW" "2.6" ${TRUE}
 add_dependency TENSORFLOW_ENABLED "tensorflow"
+
+add_disabled_option OPC_ENABLED ${FALSE} "ENABLE_OPC"
+add_dependency OPC_ENABLED "mbedtls"
+
+USE_SHARED_LIBS=${TRUE}
+TESTS_DISABLED=${FALSE}
+
+## name, default, values
+add_multi_option BUILD_PROFILE "RelWithDebInfo" "RelWithDebInfo" "Debug" "MinSizeRel" "Release"
 
 if [ "$GUIDED_INSTALL" == "${TRUE}" ]; then
   EnableAllFeatures

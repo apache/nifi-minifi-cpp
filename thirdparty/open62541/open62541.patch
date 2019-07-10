@@ -1,0 +1,42 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index d426e1da..5f1a4044 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -7,7 +7,7 @@ endif()
+ 
+ string(TOLOWER "${CMAKE_BUILD_TYPE}" BUILD_TYPE_LOWER_CASE)
+ 
+-set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/tools/cmake")
++list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/tools/cmake")
+ find_package(PythonInterp REQUIRED)
+ find_package(Git)
+ include(AssignSourceGroup)
+@@ -416,17 +416,17 @@ if(NOT UA_COMPILE_AS_CXX AND (CMAKE_COMPILER_IS_GNUCC OR "x${CMAKE_C_COMPILER_ID
+ 
+         # IPO requires too much memory for unit tests
+         # GCC docu recommends to compile all files with the same options, therefore ignore it completely
+-        if(NOT UA_BUILD_UNIT_TESTS)
+-            # needed to check if IPO is supported (check needs cmake > 3.9)
+-            if("${CMAKE_VERSION}" VERSION_GREATER 3.9)
+-                cmake_policy(SET CMP0069 NEW) # needed as long as required cmake < 3.9
+-                include(CheckIPOSupported)
+-                check_ipo_supported(RESULT CC_HAS_IPO) # Inter Procedural Optimization / Link Time Optimization (should be same as -flto)
+-                if(CC_HAS_IPO)
+-                    set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ON)
+-                endif()
+-            endif()
+-        endif()
++        #if(NOT UA_BUILD_UNIT_TESTS)
++        #    # needed to check if IPO is supported (check needs cmake > 3.9)
++        #    if("${CMAKE_VERSION}" VERSION_GREATER 3.9)
++        #        cmake_policy(SET CMP0069 NEW) # needed as long as required cmake < 3.9
++        #        include(CheckIPOSupported)
++        #        check_ipo_supported(RESULT CC_HAS_IPO) # Inter Procedural Optimization / Link Time Optimization (should be same as -flto)
++        #        if(CC_HAS_IPO)
++        #            set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ON)
++        #        endif()
++        #    endif()
++        #endif()
+     endif()
+ 
+     if(UA_ENABLE_AMALGAMATION)

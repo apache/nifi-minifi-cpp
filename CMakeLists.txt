@@ -40,6 +40,7 @@ option(ENABLE_OPS "Enable Operations/zlib Tools" ON)
 option(USE_SYSTEM_UUID "Instructs the build system to search for and use a UUID library available in the host system" OFF)
 option(ENABLE_JNI "Instructs the build system to enable the JNI extension" OFF)
 option(ENABLE_OPENCV "Instructs the build system to enable the OpenCV extension" OFF)
+option(ENABLE_OPC "Instructs the build system to enable the OPC extension" OFF)
 option(BUILD_SHARED_LIBS "Build yaml cpp shared lib" OFF)
 
 cmake_dependent_option(USE_SYSTEM_ZLIB "Instructs the build system to search for and use a zlib library available in the host system" ON "NOT STATIC_BUILD" OFF)
@@ -558,6 +559,17 @@ endif()
 option(ENABLE_BUSTACHE "Enables Bustache (ApplyTemplate) support." OFF)
 if (ENABLE_BUSTACHE)
     createExtension(BUSTACHE-EXTENSIONS "BUSTACHE EXTENSIONS" "This enables bustache functionality including ApplyTemplate." "extensions/bustache" "${TEST_DIR}/bustache-tests" "TRUE" "thirdparty/bustache")
+endif()
+
+## OPC Extentions
+if (ENABLE_OPC)
+	include(BundledMbedTLS)
+	use_bundled_mbedtls(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
+
+	include(BundledOpen62541)
+	use_bundled_open62541(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
+
+	createExtension(OPC-EXTENSIONS "OPC EXTENSIONS" "This enables OPC-UA support" "extensions/opc" )
 endif()
 
 ## SFTP extensions
