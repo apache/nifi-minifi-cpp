@@ -174,6 +174,11 @@ class Property {
   void addAllowedValue(const PropertyValue &value) {
     allowed_values_.push_back(value);
   }
+
+  void clearAllowedValues() {
+    allowed_values_.clear();
+  }
+
   /**
    * Add value to the collection of values.
    */

@@ -92,7 +92,7 @@ build_deps(){
             install_bison
           elif [ "$FOUND_VALUE" = "flex" ]; then
             INSTALLED+=("flex")
-	  elif [ "$FOUND_VALUE" = "automake" ]; then
+          elif [ "$FOUND_VALUE" = "automake" ]; then
             INSTALLED+=("automake")
           elif [ "$FOUND_VALUE" = "autoconf" ]; then
             INSTALLED+=("autoconf")
