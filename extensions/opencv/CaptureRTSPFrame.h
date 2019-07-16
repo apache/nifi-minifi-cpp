@@ -89,6 +89,7 @@ class CaptureRTSPFrame : public core::Processor {
   std::string rtsp_host_;
   std::string rtsp_port_;
   std::string rtsp_uri_;
+  std::string rtsp_url_;
   cv::VideoCapture video_capture_;
   std::string image_encoding_;
   std::string video_backend_driver_;
