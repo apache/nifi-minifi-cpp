@@ -116,17 +116,35 @@ void CaptureRTSPFrame::onSchedule(core::ProcessContext *context, core::ProcessSe
     rtspURI.append(rtsp_uri_);
   }
 
-  cv::VideoCapture capture(rtspURI.c_str());
-  video_capture_ = capture;
-  video_backend_driver_ = video_capture_.getBackendName();
+  rtsp_url_ = rtspURI;
+
 }
 
 void CaptureRTSPFrame::onTrigger(const std::shared_ptr<core::ProcessContext> &context,
                                  const std::shared_ptr<core::ProcessSession> &session) {
+
+  std::unique_lock<std::mutex> lock(mutex_, std::try_to_lock);
+  if (!lock.owns_lock()) {
+    logger_->log_info("Cannot process due to an unfinished onTrigger");
+    context->yield();
+    return;
+  }
+
+  try {
+    video_capture_.open(rtsp_url_);
+    video_backend_driver_ = video_capture_.getBackendName();
+  } catch (const cv::Exception &e) {
+    logger_->log_error("Unable to open RTSP stream: %s", e.what());
+    context->yield();
+    return;
+  } catch (...) {
+    logger_->log_error("Unable to open RTSP stream: unhandled exception");
+    context->yield();
+    return;
+  }
+
   auto flow_file = session->create();
-
   cv::Mat frame;
-
   // retrieve a frame of your source
   if (video_capture_.read(frame)) {
     if (!frame.empty()) {
@@ -145,6 +163,7 @@ void CaptureRTSPFrame::onTrigger(const std::shared_ptr<core::ProcessContext> &co
 
       session->write(flow_file, &write_cb);
       session->transfer(flow_file, Success);
+      logger_->log_info("A frame is captured");
     } else {
       logger_->log_error("Empty Mat frame received from capture");
       session->transfer(flow_file, Failure);
@@ -154,13 +173,9 @@ void CaptureRTSPFrame::onTrigger(const std::shared_ptr<core::ProcessContext> &co
     session->transfer(flow_file, Failure);
   }
 
-  frame.release();
-
 }
 
 void CaptureRTSPFrame::notifyStop() {
-  // Release the Capture reference and free up resources.
-  video_capture_.release();
 }
 
 } /* namespace processors */
