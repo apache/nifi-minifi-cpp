@@ -67,21 +67,20 @@ void CoapIntegrationBase::setUrl(std::string url, CivetHandler *handler) {
 
   parse_http_components(url, port, scheme, path);
   struct mg_callbacks callback;
-    if (server != nullptr) {
-      server->addHandler(path, handler);
-      return;
-    }
-    if (scheme == "https" && !key_dir.empty()) {
-      std::string cert = "";
-      cert = key_dir + "nifi-cert.pem";
-      memset(&callback, 0, sizeof(callback));
-      callback.init_ssl = ssl_enable;
-      port += "s";
-      callback.log_message = log_message;
-      server = start_webserver(port, path, handler, &callback, cert, cert);
-    } else {
-      server = start_webserver(port, path, handler);
-    }
+  if (server != nullptr) {
+    server->addHandler(path, handler);
+    return;
+  }
+  if (scheme == "https" && !key_dir.empty()) {
+    std::string cert = "";
+    cert = key_dir + "nifi-cert.pem";
+    memset(&callback, 0, sizeof(callback));
+    callback.init_ssl = ssl_enable;
+    port += "s";
+    callback.log_message = log_message;
+    server = start_webserver(port, path, handler, &callback, cert, cert);
+  } else {
+    server = start_webserver(port, path, handler);
   }
   if (port == "0" || port == "0s") {
     bool secure = (port == "0s");

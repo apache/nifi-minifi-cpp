@@ -103,7 +103,11 @@ class SecureSocketTest : public IntegrationBase {
     assert(1 == endpoints.size());
     auto hostAndPort = utils::StringUtils::split(endpoint, ":");
     std::shared_ptr<org::apache::nifi::minifi::io::TLSContext> socket_context = std::make_shared<org::apache::nifi::minifi::io::TLSContext>(configuration);
-    server_socket = std::make_shared<org::apache::nifi::minifi::io::TLSServerSocket>(socket_context, org::apache::nifi::minifi::io::Socket::getMyHostName(), 8776, 3);
+    std::string host = hostAndPort.at(0);
+    if (host == "localhost"){
+      host = org::apache::nifi::minifi::io::Socket::getMyHostName();
+    }
+    server_socket = std::make_shared<org::apache::nifi::minifi::io::TLSServerSocket>(socket_context, host, std::stoi(hostAndPort.at(1)), 3);
     server_socket->initialize();
 
     isRunning_ = true;
@@ -183,9 +187,6 @@ int main(int argc, char **argv) {
   if (argc > 1) {
     test_file_location = argv[1];
     key_dir = argv[2];
-  } else {
-    test_file_location = "C:/Users/marc/source/repos/nifi-minifi-cpp/libminifi/test/resources/TestGetTCPSecure.yml";
-    key_dir = "C:/Users/marc/source/repos/nifi-minifi-cpp/libminifi/test/resources/";
   }
 
 #ifndef WIN32

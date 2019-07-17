@@ -161,11 +161,11 @@ class LogTestController {
 
   void setLevel(const std::string name, spdlog::level::level_enum level) {
     logger_->log_info("Setting log level for %s to %s", name, spdlog::level::to_str(level));
-	std::string adjusted_name = name;
-	const std::string clazz = "class ";
-	auto haz_clazz = name.find(clazz);
-	if (haz_clazz == 0)
-		adjusted_name = name.substr(clazz.length(), name.length() - clazz.length());
+    std::string adjusted_name = name;
+    const std::string clazz = "class ";
+    auto haz_clazz = name.find(clazz);
+    if (haz_clazz == 0)
+      adjusted_name = name.substr(clazz.length(), name.length() - clazz.length());
     spdlog::get(adjusted_name)->set_level(level);
   }
   std::vector<std::string> modified_loggers;
@@ -179,16 +179,16 @@ class TestPlan {
 
   std::shared_ptr<core::Processor> addProcessor(const std::shared_ptr<core::Processor> &processor, const std::string &name,
                                                 core::Relationship relationship = core::Relationship("success", "description"), bool linkToPrevious = false) {
-    return addProcessor(processor, name, {relationship}, linkToPrevious);
+    return addProcessor(processor, name, { relationship }, linkToPrevious);
   }
 
   std::shared_ptr<core::Processor> addProcessor(const std::string &processor_name, const std::string &name, core::Relationship relationship = core::Relationship("success", "description"),
                                                 bool linkToPrevious = false) {
-    return addProcessor(processor_name, name, {relationship}, linkToPrevious);
+    return addProcessor(processor_name, name, { relationship }, linkToPrevious);
   }
 
-  std::shared_ptr<core::Processor> addProcessor(const std::shared_ptr<core::Processor> &processor, const std::string &name,
-                                                const std::initializer_list<core::Relationship>& relationships, bool linkToPrevious = false);
+  std::shared_ptr<core::Processor> addProcessor(const std::shared_ptr<core::Processor> &processor, const std::string &name, const std::initializer_list<core::Relationship>& relationships,
+                                                bool linkToPrevious = false);
 
   std::shared_ptr<core::Processor> addProcessor(const std::string &processor_name, const std::string &name, const std::initializer_list<core::Relationship>& relationships,
                                                 bool linkToPrevious = false);
@@ -299,17 +299,17 @@ class TestController {
   }
 
   ~TestController() {
-	  for (auto dir : directories) {
-		  utils::file::FileUtils::delete_dir(dir, true);
-	  }
+    for (auto dir : directories) {
+      utils::file::FileUtils::delete_dir(dir, true);
+    }
   }
 
   /**
    * format will be changed by mkdtemp, so don't rely on a shared variable.
    */
   std::string createTempDirectory(char *format) {
-	auto dir = utils::file::FileUtils::create_temp_directory(format);
-	directories.push_back(dir);
+    auto dir = utils::file::FileUtils::create_temp_directory(format);
+    directories.push_back(dir);
     return dir;
   }
 
