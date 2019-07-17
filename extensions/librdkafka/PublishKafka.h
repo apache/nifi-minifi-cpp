@@ -338,6 +338,7 @@ class PublishKafka : public core::Processor {
   static core::Property KerberosPrincipal;
   static core::Property KerberosKeytabPath;
   static core::Property MessageKeyField;
+  static core::Property DebugContexts;
 
   // Supported Relationships
   static core::Relationship Failure;
