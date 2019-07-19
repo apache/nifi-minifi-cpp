@@ -73,11 +73,6 @@ void CaptureRTSPFrame::initialize() {
   relationships.insert(Success);
   relationships.insert(Failure);
   setSupportedRelationships(std::move(relationships));
-  // By default in OpenCV, ffmpeg capture is hardcoded to use TCP and this is a workaround
-  // also if UDP timeout, ffmpeg will retry with TCP
-  // Note:
-  // 1. OpenCV community are trying to find a better approach than setenv.
-  setenv("OPENCV_FFMPEG_CAPTURE_OPTIONS", "rtsp_transport;udp", 1);
 }
 
 void CaptureRTSPFrame::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory) {
@@ -127,21 +122,28 @@ void CaptureRTSPFrame::onSchedule(core::ProcessContext *context, core::ProcessSe
 
 void CaptureRTSPFrame::onTrigger(const std::shared_ptr<core::ProcessContext> &context,
                                  const std::shared_ptr<core::ProcessSession> &session) {
-  auto flow_file = session->create();
+
+  std::unique_lock<std::mutex> lock(mutex_, std::try_to_lock);
+  if (!lock.owns_lock()) {
+    logger_->log_info("Cannot process due to an unfinished onTrigger");
+    context->yield();
+    return;
+  }
 
   try {
     video_capture_.open(rtsp_url_);
     video_backend_driver_ = video_capture_.getBackendName();
   } catch (const cv::Exception &e) {
     logger_->log_error("Unable to open RTSP stream: %s", e.what());
-    session->transfer(flow_file, Failure);
+    context->yield();
     return;
   } catch (...) {
     logger_->log_error("Unable to open RTSP stream: unhandled exception");
-    session->transfer(flow_file, Failure);
+    context->yield();
     return;
   }
 
+  auto flow_file = session->create();
   cv::Mat frame;
   // retrieve a frame of your source
   if (video_capture_.read(frame)) {
@@ -171,13 +173,9 @@ void CaptureRTSPFrame::onTrigger(const std::shared_ptr<core::ProcessContext> &co
     session->transfer(flow_file, Failure);
   }
 
-  frame.release();
 }
 
 void CaptureRTSPFrame::notifyStop() {
-  // Release the Capture reference and free up resources.
-  video_capture_.release();
-  unsetenv("OPENCV_FFMPEG_CAPTURE_OPTIONS");
 }
 
 } /* namespace processors */

@@ -84,6 +84,7 @@ class CaptureRTSPFrame : public core::Processor {
 
  private:
   std::shared_ptr<logging::Logger> logger_;
+  std::mutex mutex_;
   std::string rtsp_username_;
   std::string rtsp_password_;
   std::string rtsp_host_;

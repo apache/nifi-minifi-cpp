@@ -45,12 +45,14 @@ TEST_CASE("CaptureRTSPFrame::ValidCapture", "[opencvtest1]") {
 
     std::shared_ptr<TestPlan> plan = testController.createPlan();
     std::shared_ptr<core::Processor> captureRTSP = plan->addProcessor("CaptureRTSPFrame", "CaptureRTSPFrame");
-
+    // the RTSP url below comes from a public RTSP stream (hopefully still alive by the time you read this)
+    // alternatively, we can set our own server using vlc.
+    // vlc -vvv --loop <input video> --sout '#rtp{port=1234,sdp=rtsp://127.0.0.1:port/test}' --sout-keep
+    // then the uri will be rtsp://127.0.0.1:port/test
     plan->setProperty(captureRTSP, minifi::processors::CaptureRTSPFrame::RTSPHostname.getName(), "170.93.143.139");
     plan->setProperty(captureRTSP, minifi::processors::CaptureRTSPFrame::RTSPURI.getName(), "rtplive/470011e600ef003a004ee33696235daa");
     plan->setProperty(captureRTSP, minifi::processors::CaptureRTSPFrame::RTSPPort.getName(), "");
     plan->setProperty(captureRTSP, minifi::processors::CaptureRTSPFrame::ImageEncoding.getName(), ".jpg");
-
 
     testController.runSession(plan, true);
     std::shared_ptr<core::FlowFile> record = plan->getCurrentFlowFile();
@@ -80,5 +82,4 @@ TEST_CASE("CaptureRTSPFrame::InvalidURI", "[opencvtest2]") {
 
   testController.runSession(plan, true);
   REQUIRE(LogTestController::getInstance().contains("Unable to open RTSP stream"));
-  REQUIRE(LogTestController::getInstance().contains("from CaptureRTSPFrame to relationship failure"));
 }
