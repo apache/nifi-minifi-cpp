@@ -149,7 +149,7 @@ TEST_CASE("Test Delete Content ", "[TestFFR4]") {
 
   std::fstream file;
   std::stringstream ss;
-  ss << dir << "/" << "tstFile.ext";
+  ss << dir << utils::file::FileUtils::get_separator() << "tstFile.ext";
   file.open(ss.str(), std::ios::out);
   file << "tempFile";
   file.close();
@@ -180,7 +180,7 @@ TEST_CASE("Test Delete Content ", "[TestFFR4]") {
 
   repository->stop();
 
-  std::ifstream fileopen(ss.str());
+  std::ifstream fileopen(ss.str(), std::ios::in);
   REQUIRE(false == fileopen.good());
 
   utils::file::FileUtils::delete_dir(FLOWFILE_CHECKPOINT_DIRECTORY, true);
@@ -205,7 +205,7 @@ TEST_CASE("Test Validate Checkpoint ", "[TestFFR5]") {
 
   std::fstream file;
   std::stringstream ss;
-  ss << dir  << "tstFile.ext";
+  ss << dir << utils::file::FileUtils::get_separator() << "tstFile.ext";
   file.open(ss.str(), std::ios::out);
   file << "tempFile";
   file.close();
@@ -242,7 +242,7 @@ TEST_CASE("Test Validate Checkpoint ", "[TestFFR5]") {
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
   }
 
-  std::ifstream fileopen(ss.str());
+  std::ifstream fileopen(ss.str(), std::ios::in);
   REQUIRE(true == fileopen.fail());
 
   utils::file::FileUtils::delete_dir(FLOWFILE_CHECKPOINT_DIRECTORY, true);

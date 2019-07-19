@@ -83,7 +83,11 @@ TEST_CASE("TailFileWithDelimiter", "[tailfiletest2]") {
   testController.runSession(plan, false);
 
   REQUIRE(LogTestController::getInstance().contains("Logged 1 flow files"));
+#ifdef WIN32
+  REQUIRE(LogTestController::getInstance().contains("Size:" + std::to_string(NEWLINE_FILE.find_first_of('\n')+1) + " Offset:0"));
+#else
   REQUIRE(LogTestController::getInstance().contains("Size:" + std::to_string(NEWLINE_FILE.find_first_of('\n')) + " Offset:0"));
+#endif
 
   LogTestController::getInstance().reset();
 
@@ -172,19 +176,22 @@ TEST_CASE("TestDeleteState", "[tailFileWithDelimiterState]") {
   tmpfile << NEWLINE_FILE;
   tmpfile.close();
 
+
   std::stringstream state_file;
   state_file << dir << utils::file::FileUtils::get_separator() << STATE_FILE;
 
   plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::FileName.getName(), temp_file.str());
   plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::StateFile.getName(), state_file.str());
   plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::Delimiter.getName(), "\n");
-
   testController.runSession(plan, true);
 
+#ifdef WIN32
+  REQUIRE(LogTestController::getInstance().contains("minifi-tmpfile.0-14.txt"));
+#else
   REQUIRE(LogTestController::getInstance().contains("minifi-tmpfile.0-13.txt"));
+#endif
 
   plan->reset(true);  // start a new but with state file
-
   remove(std::string(state_file.str() + "." + id).c_str());
 
   testController.runSession(plan, true);
@@ -192,7 +199,11 @@ TEST_CASE("TestDeleteState", "[tailFileWithDelimiterState]") {
   REQUIRE(LogTestController::getInstance().contains("position 0"));
 
   // if we lose state we restart
+#ifdef WIN32
+  REQUIRE(LogTestController::getInstance().contains("minifi-tmpfile.0-14.txt"));
+#else
   REQUIRE(LogTestController::getInstance().contains("minifi-tmpfile.0-13.txt"));
+#endif
 
   // Delete the test and state file.
 
@@ -235,8 +246,11 @@ TEST_CASE("TestChangeState", "[tailFileWithDelimiterState]") {
   plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::Delimiter.getName(), "\n");
 
   testController.runSession(plan, true);
-
+#ifdef WIN32
+  REQUIRE(LogTestController::getInstance().contains("minifi-tmpfile.0-14.txt"));
+#else
   REQUIRE(LogTestController::getInstance().contains("minifi-tmpfile.0-13.txt"));
+#endif
 
   // should stay the same
   for (int i = 0; i < 5; i++) {
@@ -322,7 +336,11 @@ TEST_CASE("TestInvalidState", "[tailFileWithDelimiterState]") {
 
   testController.runSession(plan, true);
 
+#ifdef WIN32
+  REQUIRE(LogTestController::getInstance().contains("minifi-tmpfile.0-14.txt"));
+#else
   REQUIRE(LogTestController::getInstance().contains("minifi-tmpfile.0-13.txt"));
+#endif
 
   plan->reset(true);  // start a new but with state file
 
@@ -593,6 +611,8 @@ TEST_CASE("TailFileWithRealDelimiterAndRotate", "[tailfiletest2]") {
   std::string in_file(dir);
 #ifndef WIN32
   in_file.append("/");
+#else
+  in_file.append("\\");
 #endif
   in_file.append("testfifo.txt");
 
@@ -625,7 +645,7 @@ TEST_CASE("TailFileWithRealDelimiterAndRotate", "[tailfiletest2]") {
 
   plan->runNextProcessor();  // Tail
   plan->runNextProcessor();  // Log
-
+  std::cout << " find " << expected_pieces << std::endl;
   REQUIRE(LogTestController::getInstance().contains(std::string("Logged ") + std::to_string(expected_pieces) + " flow files"));
 
   in_file_stream << DELIM;

@@ -154,10 +154,10 @@ class FileUtils {
     DWORD Attributes;
     std::string str;
 
+	
     std::stringstream pathstr;
-    pathstr << path << "\\.*";
+    pathstr << path << "\\*";
     str = pathstr.str();
-
     //List files
     hFind = FindFirstFile(str.c_str(), &FindFileData);
     if (hFind != INVALID_HANDLE_VALUE)

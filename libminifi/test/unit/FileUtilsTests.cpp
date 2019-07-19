@@ -102,11 +102,12 @@ SECTION("NO FILE VALID PATH") {
   REQUIRE(filename.empty());
 }
 SECTION("FILE NO PATH") {
-  std::string path = "/file";
+  std::stringstream path;
+  path << FileUtils::get_separator() << "file";
   std::string filename, filepath;
   std::string expectedPath;
   expectedPath += FileUtils::get_separator();
-  REQUIRE(true == utils::file::PathUtils::getFileNameAndPath(path, filepath, filename) );
+  REQUIRE(true == utils::file::PathUtils::getFileNameAndPath(path.str(), filepath, filename) );
   REQUIRE(expectedPath == filepath);
   REQUIRE("file" == filename);
 }

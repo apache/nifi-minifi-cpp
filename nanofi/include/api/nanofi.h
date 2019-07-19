@@ -122,7 +122,7 @@ flow *create_new_flow(nifi_instance * instance);
  * @attention in case first processor is empty or doesn't name any existing processor, an empty flow is returned.
  * @return a pointer to the created flow
  **/
-DEPRECATED flow *create_flow(nifi_instance * instance, const char * first_processor);
+DEPRECATED(0.6.0,2.0) flow *create_flow(nifi_instance * instance, const char * first_processor);
 
 /**
  * Add a getfile processor to "parent" flow.
@@ -273,7 +273,7 @@ flow_file_record *invoke_file(standalone_processor* proc, const char* path);
  **/
 flow_file_record *invoke_chunk(standalone_processor *proc, uint8_t *buf, uint64_t size);
 
-DEPRECATED int transfer(processor_session* session, flow *flow, const char *rel);
+DEPRECATED(0.6.0, 2.0) int transfer(processor_session* session, flow *flow, const char *rel);
 
 /**
  * Creates a flow file record based on a file
