@@ -134,7 +134,7 @@ void TailFile::onSchedule(const std::shared_ptr<core::ProcessContext> &context, 
     }
 
     auto fileRegexSelect = [&](const std::string& path, const std::string& filename) -> bool {
-		std::cout << "Checking " << path << " " << filename << std::endl;
+      std::cout << "Checking " << path << " " << filename << std::endl;
       if (acceptFile(file, filename)) {
         tail_states_.insert(std::make_pair(filename, TailState {path, filename, 0, 0}));
       }
@@ -306,7 +306,8 @@ void TailFile::checkRollOver(TailState &file, const std::string &base_file_name)
       if ((fileFullName.find(pattern) != std::string::npos) && stat(fileFullName.c_str(), &sb) == 0) {
         uint64_t candidateModTime = ((uint64_t) (sb.st_mtime) * 1000);
         if (candidateModTime >= file.currentTailFileModificationTime_) {
-			logging::LOG_TRACE(logger_) << "File " << filename << " (short name " << file.current_file_name_ << ") disk mod time " << candidateModTime << ", struct mod time " << file.currentTailFileModificationTime_ << ", size on disk " << sb.st_size << ", position " << file.currentTailFilePosition_;
+          logging::LOG_TRACE(logger_) << "File " << filename << " (short name " << file.current_file_name_ <<
+          ") disk mod time " << candidateModTime << ", struct mod time " << file.currentTailFileModificationTime_ << ", size on disk " << sb.st_size << ", position " << file.currentTailFilePosition_;
           if (filename == file.current_file_name_ && candidateModTime == file.currentTailFileModificationTime_ &&
               sb.st_size == file.currentTailFilePosition_) {
             return true;  // Skip the current file as a candidate in case it wasn't updated
@@ -363,7 +364,7 @@ void TailFile::onTrigger(const std::shared_ptr<core::ProcessContext> &context, c
   for (auto &state : tail_states_) {
     auto fileLocation = state.second.path_;
 
-	logger_->log_debug("Tailing file %s from %llu", fileLocation, state.second.currentTailFilePosition_);
+    logger_->log_debug("Tailing file %s from %llu", fileLocation, state.second.currentTailFilePosition_);
     checkRollOver(state.second, state.first);
     std::string fullPath = fileLocation + utils::file::FileUtils::get_separator() + state.second.current_file_name_;
     struct stat statbuf;

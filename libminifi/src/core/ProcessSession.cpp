@@ -570,7 +570,7 @@ void ProcessSession::import(const std::string& source, std::vector<std::shared_p
         uint8_t* begin = buffer.data();
         uint8_t* end = begin + read;
         while (true) {
-		  startTime = getTimeMillis();
+          startTime = getTimeMillis();
           uint8_t* delimiterPos = std::find(begin, end, static_cast<uint8_t>(inputDelimiter));
           int len = delimiterPos - begin;
 
@@ -585,7 +585,7 @@ void ProcessSession::import(const std::string& source, std::vector<std::shared_p
 
           /* Create claim and stream if needed and append data */
           claim = std::make_shared<ResourceClaim>(process_context_->getContentRepository());
-		  stream = process_context_->getContentRepository()->write(claim);
+          stream = process_context_->getContentRepository()->write(claim);
           if (stream == nullptr) {
             logger_->log_error("Stream is null");
             rollback();
@@ -611,7 +611,8 @@ void ProcessSession::import(const std::string& source, std::vector<std::shared_p
           }
           flowFile->setResourceClaim(claim);
           claim->increaseFlowFileRecordOwnedCount();
-		  logging::LOG_DEBUG(logger_) << "Import offset" << flowFile->getOffset() << " length " << flowFile->getSize() << " content " << flowFile->getResourceClaim()->getContentFullPath() << ", FlowFile UUID " << flowFile->getUUIDStr();
+          logging::LOG_DEBUG(logger_) << "Import offset" << flowFile->getOffset() << " length " << flowFile->getSize() << " content " << flowFile->getResourceClaim()->getContentFullPath()
+                                      << ", FlowFile UUID " << flowFile->getUUIDStr();
           stream->closeStream();
           std::string details = process_context_->getProcessorNode()->getName() + " modify flow record content " + flowFile->getUUIDStr();
           uint64_t endTime = getTimeMillis();

@@ -104,7 +104,7 @@ class SecureSocketTest : public IntegrationBase {
     auto hostAndPort = utils::StringUtils::split(endpoint, ":");
     std::shared_ptr<org::apache::nifi::minifi::io::TLSContext> socket_context = std::make_shared<org::apache::nifi::minifi::io::TLSContext>(configuration);
     std::string host = hostAndPort.at(0);
-    if (host == "localhost"){
+    if (host == "localhost") {
       host = org::apache::nifi::minifi::io::Socket::getMyHostName();
     }
     server_socket = std::make_shared<org::apache::nifi::minifi::io::TLSServerSocket>(socket_context, host, std::stoi(hostAndPort.at(1)), 3);
