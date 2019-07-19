@@ -20,7 +20,7 @@ TITLE Apache NiFi MiNiFi C++ Windows Build Helper
 set builddir=%1
 set builddir=%builddir:"=%
 set skiptests=OFF
-set cmake_build_type=RelwithDebInfo
+set cmake_build_type=Release
 set build_type=Release
 set build_kafka=off
 set cpack=OFF
@@ -38,8 +38,8 @@ for %%x in (%*) do (
 	if [%%~x] EQU [/K] ( 
 	set build_kafka=ON
     )
-    if [%%~x] EQU [/R] ( 
-	set cmake_build_type=Release
+    if [%%~x] EQU [/D] ( 
+	set cmake_build_type=RelwithDebInfo
     )
 )
 
