@@ -573,6 +573,15 @@ class FileUtils {
     return child_path;
   }
 
+  static bool is_hidden(const std::string& path){
+#ifdef WIN32
+    DWORD attributes = GetFileAttributesA(path.c_str());
+    return ((attributes != INVALID_FILE_ATTRIBUTES)  && ((attributes & FILE_ATTRIBUTE_HIDDEN) != 0));
+#else
+    return std::get<1>(split_path(path)).rfind(".", 0) == 0;
+#endif
+  }
+
   /*
    * Returns the absolute path of the current executable
    */

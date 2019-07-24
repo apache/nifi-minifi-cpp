@@ -240,7 +240,7 @@ bool GetFile::acceptFile(std::string fullName, std::string name, const GetFileRe
     if (request.maxAge > 0 && fileAge > request.maxAge)
       return false;
 
-    if (request.ignoreHiddenFile && name.c_str()[0] == '.')
+    if (request.ignoreHiddenFile && utils::file::FileUtils::is_hidden(fullName))
       return false;
 
     if (access(fullName.c_str(), R_OK) != 0)
