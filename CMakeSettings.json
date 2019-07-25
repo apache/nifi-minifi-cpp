@@ -41,7 +41,7 @@
         },
         {
           "name": "ENABLE_JNI",
-          "value": "ON"
+          "value": "OFF"
         },
         {
           "name": "USE_SYSTEM_UUID",
@@ -105,6 +105,10 @@
       "buildCommandArgs": "-v -j8",
       "variables": [
         {
+          "name": "ENABLE_LIBMODBUS",
+          "value": "ON"
+        },
+        {
           "name": "OPENSSL_OFF",
           "value": "OFF"
         },
@@ -130,7 +134,7 @@
         },
         {
           "name": "ENABLE_JNI",
-          "value": "ON"
+          "value": "OFF"
         },
         {
           "name": "USE_SYSTEM_UUID",

@@ -458,6 +458,11 @@ if (ENABLE_ALL OR ENABLE_COAP STREQUAL "ON")
 	endif()
 endif()
 
+option(ENABLE_LIBMODBUS "Enables the Libmodbus extension." OFF)
+if (ENABLE_ALL OR ENABLE_LIBMODBUS STREQUAL "ON")
+	createExtension(LIBMODBUS-EXTENSION "LIBMODBUS EXTENSIONS" "Enables Libmodbus Functionality." "extensions/libmodbus")
+endif()
+
 if (WIN32)
 option(ENABLE_WEL "Enables the suite of Windows Event Log extensions." OFF)
 if (ENABLE_ALL OR ENABLE_WEL)
