@@ -22,8 +22,10 @@
 #include "core/state/Value.h"
 #include "TypedValues.h"
 #include "utils/StringUtils.h"
+#include "utils/RegexUtils.h"
 #include <limits>
 #include <memory>
+#include <set>
 
 namespace org {
 namespace apache {
@@ -88,11 +90,10 @@ class PropertyValidator {
   PropertyValidator(const std::string &name)
       : name_(name) {
   }
-  virtual ~PropertyValidator() {
 
-  }
+  virtual ~PropertyValidator() {}
 
-  std::string getName() const {
+  virtual std::string getName() const {
     return name_;
   }
 
@@ -124,8 +125,7 @@ class AlwaysValid : public PropertyValidator {
         PropertyValidator(name) {
 
   }
-  virtual ~AlwaysValid() {
-  }
+
   ValidationResult validate(const std::string &subject, const std::shared_ptr<minifi::state::response::Value> &input) const {
     return ValidationResult::Builder::createBuilder().withSubject(subject).withInput(input->getStringValue()).isValid(always_valid_).build();
   }
@@ -140,9 +140,6 @@ class BooleanValidator : public PropertyValidator {
  public:
   BooleanValidator(const std::string &name)
       : PropertyValidator(name) {
-  }
-  virtual ~BooleanValidator() {
-
   }
 
   ValidationResult validate(const std::string &subject, const std::shared_ptr<minifi::state::response::Value> &input) const {
@@ -161,8 +158,6 @@ class IntegerValidator : public PropertyValidator {
  public:
   IntegerValidator(const std::string &name)
       : PropertyValidator(name) {
-  }
-  virtual ~IntegerValidator() {
   }
 
   ValidationResult validate(const std::string &subject, const std::shared_ptr<minifi::state::response::Value> &input) const {
@@ -187,9 +182,7 @@ class LongValidator : public PropertyValidator {
         min_(min),
         max_(max) {
   }
-  virtual ~LongValidator() {
 
-  }
   ValidationResult validate(const std::string &subject, const std::shared_ptr<minifi::state::response::Value> &input) const {
     auto in64 = std::dynamic_pointer_cast<minifi::state::response::Int64Value>(input);
     if (in64) {
@@ -221,9 +214,7 @@ class UnsignedLongValidator : public PropertyValidator {
   explicit UnsignedLongValidator(const std::string &name)
       : PropertyValidator(name) {
   }
-  virtual ~UnsignedLongValidator() {
 
-  }
   ValidationResult validate(const std::string &subject, const std::shared_ptr<minifi::state::response::Value> &input) const {
     return PropertyValidator::_validate_internal<minifi::state::response::UInt64Value>(subject, input);
   }
@@ -249,9 +240,7 @@ class DataSizeValidator : public PropertyValidator {
   DataSizeValidator(const std::string &name)
       : PropertyValidator(name) {
   }
-  virtual ~DataSizeValidator() {
 
-  }
   ValidationResult validate(const std::string &subject, const std::shared_ptr<minifi::state::response::Value> &input) const {
     return PropertyValidator::_validate_internal<core::DataSizeValue>(subject, input);
   }
@@ -270,9 +259,6 @@ class PortValidator : public LongValidator {
   PortValidator(const std::string &name)
       : LongValidator(name, 1, 65535) {
   }
-  virtual ~PortValidator() {
-
-  }
 };
 
 //Use only for specifying listen ports, where 0 means a randomly chosen one!
@@ -281,18 +267,12 @@ public:
   ListenPortValidator(const std::string &name)
     : LongValidator(name, 0, 65535) {
   }
-  virtual ~ListenPortValidator() {
-
-  }
 };
 
 class TimePeriodValidator : public PropertyValidator {
  public:
   TimePeriodValidator(const std::string &name)
       : PropertyValidator(name) {
-  }
-  virtual ~TimePeriodValidator() {
-
   }
   ValidationResult validate(const std::string &subject, const std::shared_ptr<minifi::state::response::Value> &input) const {
     return PropertyValidator::_validate_internal<core::TimePeriodValue>(subject, input);
@@ -306,6 +286,66 @@ class TimePeriodValidator : public PropertyValidator {
     else
       return ValidationResult::Builder::createBuilder().withSubject(subject).withInput(input).isValid(false).build();
   }
+};
+
+class RegexValidator : public PropertyValidator {
+ public:
+  explicit RegexValidator(const std::string& pattern)
+  : PropertyValidator("REGULAR_EXPRESSION_VALIDATOR"){
+    regex_ = utils::Regex(pattern);
+  }
+  ValidationResult validate(const std::string &subject, const std::shared_ptr<minifi::state::response::Value> &input) const {
+    return validate(subject, input->getStringValue());
+  }
+
+  ValidationResult validate(const std::string &subject, const std::string &input) const {
+    bool result = regex_.match(input);
+    return ValidationResult::Builder::createBuilder().withSubject(subject).withInput(input).isValid(result).build();
+  }
+ private:
+  mutable utils::Regex regex_;
+};
+
+template <typename T, typename std::enable_if<std::is_base_of<PropertyValidator, T>::value>::type* = nullptr>
+class ListValidator : public PropertyValidator{
+ public:
+  explicit ListValidator(T val)
+  : PropertyValidator("LIST_VALIDATOR"),
+    inner_validator_(std::move(val)){
+  }
+  ValidationResult validate(const std::string &subject, const std::shared_ptr<minifi::state::response::Value> &input) const {
+    return validate(subject, input->getStringValue());
+  }
+
+  ValidationResult validate(const std::string &subject, const std::string &input) const {
+    const auto& tokens = utils::StringUtils::split(input, ",");
+    for(const auto& token: tokens) {
+      if(!inner_validator_.validate(subject, token).valid()){
+        return ValidationResult::Builder::createBuilder().withSubject(subject).withInput(input).isValid(false).build();
+      }
+    }
+    return ValidationResult::Builder::createBuilder().withSubject(subject).withInput(input).isValid(true).build();
+  }
+
+ private:
+  T inner_validator_;
+};
+
+class MultiChoiceValidator : PropertyValidator {
+ public:
+  explicit MultiChoiceValidator (const std::set<std::string>& choices)
+  : PropertyValidator("LIST_VALIDATOR"),
+    val_(RegexValidator("(" + utils::StringUtils::join("|", choices) + ")")) {
+  }
+  ValidationResult validate(const std::string &subject, const std::shared_ptr<minifi::state::response::Value> &input) const {
+    return validate(subject, input->getStringValue());
+  }
+
+  ValidationResult validate(const std::string &subject, const std::string &input) const {
+    return val_.validate(subject, input);
+  }
+ private:
+  ListValidator<RegexValidator> val_;
 };
 
 // STATIC DEFINITIONS

@@ -19,6 +19,7 @@
 #include <string>
 #include "utils/StringUtils.h"
 #include "core/Property.h"
+#include "core/PropertyValidation.h"
 #include "../TestBase.h"
 
 TEST_CASE("Test Boolean Conversion", "[testboolConversion]") {
@@ -172,4 +173,25 @@ TEST_CASE("Test DateTime Conversion", "[testDateTime]") {
   REQUIRE(false == org::apache::nifi::minifi::core::Property::StringToDateTime("1970-13-01T00:00:00Z", timestamp));
 
   REQUIRE(false == org::apache::nifi::minifi::core::Property::StringToDateTime("foobar", timestamp));
+}
+
+TEST_CASE("Regex validator tests", "[TestRegexValidator]") {
+  core::RegexValidator rv("dog");
+  REQUIRE(rv.validate("", "mad dog").valid());
+  REQUIRE(rv.validate("", "dogfooded test").valid());
+  REQUIRE_FALSE(rv.validate("", "d_o_g").valid());
+  REQUIRE_THROWS(core::RegexValidator("(unclosed]"));
+}
+
+TEST_CASE("List validator tests", "[TestListValidator]") {
+  core::ListValidator<core::IntegerValidator> listintvalidator(core::IntegerValidator("IV"));
+  REQUIRE(listintvalidator.validate("", "1,42,8").valid());
+  REQUIRE_FALSE(listintvalidator.validate("","4,three").valid());
+  REQUIRE_FALSE(listintvalidator.validate("", "cats, dogs").valid());
+}
+
+TEST_CASE("Multichoice validator tests", "[TestMultichoiceValidator]") {
+  core::MultiChoiceValidator mv({"cat", "dog", "pig"});
+  REQUIRE(mv.validate("", "pig,cat").valid());
+  REQUIRE_FALSE(mv.validate("", "rat,dog").valid());
 }
