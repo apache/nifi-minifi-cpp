@@ -41,7 +41,7 @@
         },
         {
           "name": "ENABLE_JNI",
-          "value": "OFF"
+          "value": "ON"
         },
         {
           "name": "USE_SYSTEM_UUID",
@@ -134,7 +134,7 @@
         },
         {
           "name": "ENABLE_JNI",
-          "value": "OFF"
+          "value": "ON"
         },
         {
           "name": "USE_SYSTEM_UUID",
