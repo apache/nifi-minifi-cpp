@@ -500,25 +500,21 @@ std::shared_ptr<Transaction> RawSiteToSiteClient::createTransaction(std::string 
       case MORE_DATA:
         dataAvailable = true;
         logger_->log_trace("Site2Site peer indicates that data is available");
-        transaction = std::make_shared<Transaction>(direction, crcstream);
-        known_transactions_[transaction->getUUIDStr()] = transaction;
-        transactionID = transaction->getUUIDStr();
-        transaction->setDataAvailable(dataAvailable);
-        logger_->log_trace("Site2Site create transaction %s", transaction->getUUIDStr());
-        return transaction;
+        break;
       case NO_MORE_DATA:
         dataAvailable = false;
         logger_->log_trace("Site2Site peer indicates that no data is available");
-        transaction = std::make_shared<Transaction>(direction, crcstream);
-        known_transactions_[transaction->getUUIDStr()] = transaction;
-        transactionID = transaction->getUUIDStr();
-        transaction->setDataAvailable(dataAvailable);
-        logger_->log_trace("Site2Site create transaction %s", transaction->getUUIDStr());
-        return transaction;
+        break;
       default:
         logger_->log_warn("Site2Site got unexpected response %d when asking for data", code);
         return NULL;
     }
+    transaction = std::make_shared<Transaction>(direction, crcstream);
+    known_transactions_[transaction->getUUIDStr()] = transaction;
+    transactionID = transaction->getUUIDStr();
+    transaction->setDataAvailable(dataAvailable);
+    logger_->log_trace("Site2Site created transaction %s", transaction->getUUIDStr());
+    return transaction;
   } else {
     ret = writeRequestType(SEND_FLOWFILES);
 

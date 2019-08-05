@@ -664,6 +664,12 @@ bool SiteToSiteClient::receiveFlowFiles(const std::shared_ptr<core::ProcessConte
     throw Exception(SITE2SITE_EXCEPTION, "Can not create transaction");
   }
 
+  if (!transaction->isDataAvailable()) {
+    context->yield();
+    tearDown();
+    return true;
+  }
+
   try {
     while (true) {
       std::map<std::string, std::string> empty;
