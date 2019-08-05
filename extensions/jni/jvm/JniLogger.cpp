@@ -40,53 +40,53 @@
 extern "C" {
 #endif
 
-jboolean Java_org_apache_nifi_processor_JniLogger_isWarnEnabled(JNIEnv *env, jobject obj) {
+JNIEXPORT jboolean JNICALL Java_org_apache_nifi_processor_JniLogger_isWarnEnabled(JNIEnv *env, jobject obj) {
   minifi::jni::JniLogger *logger_ref = minifi::jni::JVMLoader::getPtr<minifi::jni::JniLogger>(env, obj);
   return logger_ref->logger_reference_->should_log(core::logging::LOG_LEVEL::warn);
 }
-jboolean Java_org_apache_nifi_processor_JniLogger_isTraceEnabled(JNIEnv *env, jobject obj) {
+JNIEXPORT jboolean JNICALL  Java_org_apache_nifi_processor_JniLogger_isTraceEnabled(JNIEnv *env, jobject obj) {
   minifi::jni::JniLogger *logger_ref = minifi::jni::JVMLoader::getPtr<minifi::jni::JniLogger>(env, obj);
   return logger_ref->logger_reference_->should_log(core::logging::LOG_LEVEL::trace);
 }
-jboolean Java_org_apache_nifi_processor_JniLogger_isInfoEnabled(JNIEnv *env, jobject obj) {
+JNIEXPORT jboolean JNICALL  Java_org_apache_nifi_processor_JniLogger_isInfoEnabled(JNIEnv *env, jobject obj) {
   minifi::jni::JniLogger *logger_ref = minifi::jni::JVMLoader::getPtr<minifi::jni::JniLogger>(env, obj);
   return logger_ref->logger_reference_->should_log(core::logging::LOG_LEVEL::info);
 }
-jboolean Java_org_apache_nifi_processor_JniLogger_isErrorEnabled(JNIEnv *env, jobject obj) {
+JNIEXPORT jboolean JNICALL  Java_org_apache_nifi_processor_JniLogger_isErrorEnabled(JNIEnv *env, jobject obj) {
   minifi::jni::JniLogger *logger_ref = minifi::jni::JVMLoader::getPtr<minifi::jni::JniLogger>(env, obj);
   return logger_ref->logger_reference_->should_log(core::logging::LOG_LEVEL::err);
 }
-jboolean Java_org_apache_nifi_processor_JniLogger_isDebugEnabled(JNIEnv *env, jobject obj) {
+JNIEXPORT jboolean JNICALL  Java_org_apache_nifi_processor_JniLogger_isDebugEnabled(JNIEnv *env, jobject obj) {
   minifi::jni::JniLogger *logger_ref = minifi::jni::JVMLoader::getPtr<minifi::jni::JniLogger>(env, obj);
   return logger_ref->logger_reference_->should_log(core::logging::LOG_LEVEL::debug);
 }
 
-void Java_org_apache_nifi_processor_JniLogger_warn(JNIEnv *env, jobject obj, jstring msg) {
+JNIEXPORT void JNICALL Java_org_apache_nifi_processor_JniLogger_warn(JNIEnv *env, jobject obj, jstring msg) {
   minifi::jni::JniLogger *logger_ref = minifi::jni::JVMLoader::getPtr<minifi::jni::JniLogger>(env, obj);
   if (!logger_ref)
     return;
   logger_ref->logger_reference_->log_warn(JniStringToUTF(env, msg).c_str());
 }
 
-void Java_org_apache_nifi_processor_JniLogger_error(JNIEnv *env, jobject obj, jstring msg) {
+JNIEXPORT void JNICALL  Java_org_apache_nifi_processor_JniLogger_error(JNIEnv *env, jobject obj, jstring msg) {
   minifi::jni::JniLogger *logger_ref = minifi::jni::JVMLoader::getPtr<minifi::jni::JniLogger>(env, obj);
   if (!logger_ref)
     return;
   logger_ref->logger_reference_->log_error(JniStringToUTF(env, msg).c_str());
 }
-void Java_org_apache_nifi_processor_JniLogger_info(JNIEnv *env, jobject obj, jstring msg) {
+JNIEXPORT void JNICALL  Java_org_apache_nifi_processor_JniLogger_info(JNIEnv *env, jobject obj, jstring msg) {
   minifi::jni::JniLogger *logger_ref = minifi::jni::JVMLoader::getPtr<minifi::jni::JniLogger>(env, obj);
   if (!logger_ref)
     return;
   logger_ref->logger_reference_->log_info(JniStringToUTF(env, msg).c_str());
 }
-void Java_org_apache_nifi_processor_JniLogger_debug(JNIEnv *env, jobject obj, jstring msg) {
+JNIEXPORT void JNICALL  Java_org_apache_nifi_processor_JniLogger_debug(JNIEnv *env, jobject obj, jstring msg) {
   minifi::jni::JniLogger *logger_ref = minifi::jni::JVMLoader::getPtr<minifi::jni::JniLogger>(env, obj);
   if (!logger_ref)
     return;
   logger_ref->logger_reference_->log_debug(JniStringToUTF(env, msg).c_str());
 }
-void Java_org_apache_nifi_processor_JniLogger_trace(JNIEnv *env, jobject obj, jstring msg) {
+JNIEXPORT void JNICALL  Java_org_apache_nifi_processor_JniLogger_trace(JNIEnv *env, jobject obj, jstring msg) {
   minifi::jni::JniLogger *logger_ref = minifi::jni::JVMLoader::getPtr<minifi::jni::JniLogger>(env, obj);
   if (!logger_ref)
     return;

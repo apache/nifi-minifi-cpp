@@ -1,0 +1,6 @@
+<CPackWiXPatch>
+	<CPackWiXFragment Id="CM_C_bin">
+		<ComponentRef Id="minifiService"/>
+    <ComponentRef Id="CM_ADD_TO_PATH"/>
+  </CPackWiXFragment>
+</CPackWiXPatch>

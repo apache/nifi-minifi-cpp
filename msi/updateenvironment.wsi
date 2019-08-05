@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
+    RequiredVersion="3.6.3303.0">
+  <!--
+    <Product Id="$(var.CPACK_WIX_PRODUCT_GUID)"
+        Name="Apache NiFi MiNiFi C++"
+        Language="1033"
+        UpgradeCode="87658309-9038-fec8-8633-f54ffaaa4921"
+        Version="$(var.CPACK_PACKAGE_VERSION)"
+        Manufacturer="$(var.CPACK_PACKAGE_VENDOR)">
+
+
+      <Package InstallerVersion="301" Compressed="yes"/>
+
+        <Media Id="1" Cabinet="media1.cab" EmbedCab="yes"/> 
+
+        <WixVariable Id="WixUILicenseRtf" Value="$(var.CPACK_WIX_LICENSE_RTF)"/>
+        <Property Id="WIXUI_INSTALLDIR" Value="INSTALL_ROOT"/> 
+
+        <?ifdef CPACK_WIX_PRODUCT_ICON?>
+        <Property Id="ARPPRODUCTICON">ProductIcon.ico</Property>
+        <Icon Id="ProductIcon.ico" SourceFile="$(var.CPACK_WIX_PRODUCT_ICON)"/>
+        <?endif?>
+
+        <?ifdef CPACK_WIX_UI_BANNER?>
+        <WixVariable Id="WixUIBannerBmp" Value="$(var.CPACK_WIX_UI_BANNER)"/>
+        <?endif?>
+
+     
+		<DirectoryRef Id="TARGETDIR">
+			<Merge Id="VCRedist"  SourceFile="C:\Program Files (x86)\Common Files\Merge Modules\Microsoft_VC140_CRT_x86.msm" 	   DiskId="1" 	   Language="0" />
+		</DirectoryRef>
+
+		
+
+        <?ifdef CPACK_WIX_UI_DIALOG?>
+        <WixVariable Id="WixUIDialogBmp" Value="$(var.CPACK_WIX_UI_DIALOG)"/>
+        <?endif?>
+
+      <Feature Id="ProductFeature" Title="Apache NiFi MiNiFi C++">
+        <ComponentRef Id="minifiService" />
+      </Feature>
+
+        <UIRef Id="WixUI_InstallDir" />
+        -->
+<!--
+
+      <DirectoryRef Id="INSTALLDIR">
+          <Component Id="ServiceInstaller" Guid="87658309-0339-425c-8633-f54ffaaa4921">
+            <File Id="MiNiFiExe"
+                     KeyPath="yes"
+                     Source="main\minifi.exe"/>
+            <ServiceInstall Id="MiNiFiExeService"
+                            Type="ownProcess"
+                            Vital="yes"
+                            Name="Apache NiFi MiNiFi Service"
+                            DisplayName="Apache NiFi MiNiFi"
+                            Description="Apache NiFi MiNifi Service"
+                            ErrorControl="ignore"
+                            Account="NT AUTHORITY\LocalService"
+                            Start="auto"
+                            Interactive="no" />
+
+            <ServiceControl Id="ServiceControl_Start"
+                  Name="Apache NiFi MiNiFi Service"
+                  Start="install"
+                  Wait="no" />
+            <ServiceControl Id="ServiceControl_Stop"
+                            Name="Apache NiFi MiNiFi Service"
+                            Stop="both"
+                            Remove="uninstall"
+                            Wait="yes" />
+          </Component>
+       
+        </DirectoryRef>
+
+      <Feature Id="ServiceInstallerService"  Title="Apache NiFi MiNiFi C++ Service"  AllowAdvertise="yes" Level="1">
+        <ComponentRef Id="ServiceInstaller" />
+      </Feature>
+
+    </Product>
+    -->
+
+  <Fragment>
+    
+    <!-- i#1761: ideally we'd have a dialog where the user picks
+             whether to do this and whether system or user, but for
+             now we always do it for user (the zip file can be used
+             instead of installer if this is undesirable).
+        -->
+    <ComponentGroup Id="CG_ADD_TO_PATH" Directory="INSTALL_ROOT">
+      <Component Id="CM_ADD_TO_PATH" Guid="208034b8-7cc5-4718-9b99-ac50201c3f90"
+             KeyPath="yes">
+        <Environment Id="ENV_PATH" Name="MINIFI_HOME" Value="[INSTALL_ROOT]minifi-agent-0.7.0\"
+            Permanent="no" Part="last" Action="set" System="no" />
+      </Component>
+    </ComponentGroup>
+  </Fragment>
+  
+  
+</Wix>

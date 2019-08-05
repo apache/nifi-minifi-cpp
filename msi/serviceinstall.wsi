@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
+    RequiredVersion="3.6.3303.0">
+  
+
+  <Fragment>
+    <DirectoryRef Id="ProgramFilesFolder">
+        <Directory Id="RootMiNiFiDir" Name="ApacheNiFiMiNiFi">
+          <Directory Id="RootInstallDir" Name="nifi-minifi-cpp">
+            <Directory Id="AgentInstallDir" Name="minifi-agent-0.7.0">
+          <Directory Id="INSTALLDIR" Name="bin">
+            
+            <Component Id="minifiService" Guid="87658309-0339-425c-8633-f54ffaaa4921">
+              <File Id="MiNiFiExe"
+                       Name="minifi.exe"
+                       KeyPath="yes"
+                       Source="main\minifi.exe"/>
+              <ServiceInstall Id="MiNiFiExeService"
+                              Type="ownProcess"
+                              Vital="yes"
+                              Name="Apache NiFi MiNiFi"
+                              DisplayName="Apache NiFi MiNiFi"
+                              Description="Apache NiFi MiNifi Service"
+                              ErrorControl="ignore"
+                              Start="auto"
+                              Interactive="no" />
+
+              <ServiceControl Id="ServiceControl_Start"
+                    Name="Apache NiFi MiNiFi"
+                    Start="install"
+                    Wait="no" />
+              <ServiceControl Id="ServiceControl_Stop"
+                              Name="Apache NiFi MiNiFi"
+                              Stop="both"
+                              Remove="uninstall"
+                              Wait="yes" />
+            </Component>
+          </Directory>
+            </Directory>
+          </Directory>
+        </Directory>
+    </DirectoryRef>
+  </Fragment>
+  
+  
+</Wix>

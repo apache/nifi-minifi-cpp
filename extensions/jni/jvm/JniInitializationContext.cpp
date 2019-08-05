@@ -31,12 +31,12 @@
 #include "properties/Configure.h"
 #include "JVMLoader.h"
 
-jstring Java_org_apache_nifi_processor_JniInitializationContext_getIdentifier(JNIEnv *env, jobject obj) {
+JNIEXPORT jstring JNICALL Java_org_apache_nifi_processor_JniInitializationContext_getIdentifier(JNIEnv *env, jobject obj) {
   minifi::jni::JniInitializationContext *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniInitializationContext>(env, obj);
   return env->NewStringUTF(ptr->identifier_.c_str());
 }
 
-jobject Java_org_apache_nifi_processor_JniInitializationContext_getControllerServiceLookup(JNIEnv *env, jobject obj) {
+JNIEXPORT jobject JNICALL  Java_org_apache_nifi_processor_JniInitializationContext_getControllerServiceLookup(JNIEnv *env, jobject obj) {
   minifi::jni::JniInitializationContext *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniInitializationContext>(env, obj);
   if (ptr->lookup_ref_ == nullptr) {
     auto csl = minifi::jni::JVMLoader::getInstance()->load_class("org/apache/nifi/processor/JniControllerServiceLookup", env);
@@ -49,7 +49,7 @@ jobject Java_org_apache_nifi_processor_JniInitializationContext_getControllerSer
 
 
 
-jstring Java_org_apache_nifi_processor_JniConfigurationContext_getPropertyValue(JNIEnv *env, jobject obj, jstring propertyName) {
+JNIEXPORT jstring JNICALL  Java_org_apache_nifi_processor_JniConfigurationContext_getPropertyValue(JNIEnv *env, jobject obj, jstring propertyName) {
   if (obj == nullptr || propertyName == nullptr) {
     return nullptr;
   }
@@ -69,7 +69,7 @@ jstring Java_org_apache_nifi_processor_JniConfigurationContext_getPropertyValue(
   return env->NewStringUTF(value.c_str());
 }
 
-jobject Java_org_apache_nifi_processor_JniConfigurationContext_getPropertyNames(JNIEnv *env, jobject obj) {
+JNIEXPORT jobject JNICALL  Java_org_apache_nifi_processor_JniConfigurationContext_getPropertyNames(JNIEnv *env, jobject obj) {
   minifi::jni::JniConfigurationContext *context = minifi::jni::JVMLoader::getPtr<minifi::jni::JniConfigurationContext>(env, obj);
   auto cppProcessor = context->service_reference_;
   auto keys = cppProcessor->getProperties();
@@ -88,13 +88,13 @@ jobject Java_org_apache_nifi_processor_JniConfigurationContext_getPropertyNames(
   return result;
 }
 
-jobject Java_org_apache_nifi_processor_JniConfigurationContext_getComponent(JNIEnv *env, jobject obj) {
+JNIEXPORT jobject JNICALL  Java_org_apache_nifi_processor_JniConfigurationContext_getComponent(JNIEnv *env, jobject obj) {
   minifi::jni::JniConfigurationContext *context = minifi::jni::JVMLoader::getPtr<minifi::jni::JniConfigurationContext>(env, obj);
   minifi::jni::ThrowIf(env);
   return context->service_reference_->getClassInstance();
 }
 
-jstring Java_org_apache_nifi_processor_JniConfigurationContext_getName(JNIEnv *env, jobject obj) {
+JNIEXPORT jstring JNICALL  Java_org_apache_nifi_processor_JniConfigurationContext_getName(JNIEnv *env, jobject obj) {
   minifi::jni::JniConfigurationContext *context = minifi::jni::JVMLoader::getPtr<minifi::jni::JniConfigurationContext>(env, obj);
   minifi::jni::ThrowIf(env);
   return env->NewStringUTF(context->service_reference_->getName().c_str());

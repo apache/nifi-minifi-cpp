@@ -34,6 +34,7 @@
 #include "io/DataStream.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
+#include "utils/OsUtils.h"
 
 #pragma comment(lib, "wevtapi.lib")
 
@@ -93,10 +94,25 @@ core::Property ConsumeWindowsEventLog::InactiveDurationToReconnect(
     " Setting no duration, e.g. '0 ms' disables auto-reconnection.")->
   build());
 
+core::Property ConsumeWindowsEventLog::IdentifierMatcher(
+	core::PropertyBuilder::createProperty("Identifier Match Regex")->
+	isRequired(false)->
+	withDefaultValue(".*Sid")->
+	withDescription("Regular Expression to match Subject Identifier Fields. These will be placed into the attributes of the FlowFile")->
+	build());
+
+
+core::Property ConsumeWindowsEventLog::IdentifierFunction(
+	core::PropertyBuilder::createProperty("Apply Identifier Function")->
+	isRequired(false)->
+	withDefaultValue<bool>(true)->
+	withDescription("If true it will resolve SIDs matched in the 'Identifier Match Regex' to the DOMAIN\\USERNAME associated with that ID")->
+	build());
+
 core::Relationship ConsumeWindowsEventLog::Success("success", "Relationship for successfully consumed events.");
 
 ConsumeWindowsEventLog::ConsumeWindowsEventLog(const std::string& name, utils::Identifier uuid)
-  : core::Processor(name, uuid), logger_(logging::LoggerFactory<ConsumeWindowsEventLog>::getLogger()) {
+  : core::Processor(name, uuid), logger_(logging::LoggerFactory<ConsumeWindowsEventLog>::getLogger()), apply_identifier_function_(false) {
   // Initializes COM for current thread, it is needed to MSXML parser.
   CoInitializeEx(0, COINIT_APARTMENTTHREADED);
 
@@ -118,13 +134,15 @@ ConsumeWindowsEventLog::~ConsumeWindowsEventLog() {
 
 void ConsumeWindowsEventLog::initialize() {
   //! Set the supported properties
-  setSupportedProperties({Channel, Query, RenderFormatXML, MaxBufferSize, InactiveDurationToReconnect});
+  setSupportedProperties({Channel, Query, RenderFormatXML, MaxBufferSize, InactiveDurationToReconnect, IdentifierMatcher, IdentifierFunction });
 
   //! Set the supported relationships
   setSupportedRelationships({Success});
 }
 
 void ConsumeWindowsEventLog::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
+	context->getProperty(IdentifierMatcher.getName(), regex_);
+	context->getProperty(IdentifierFunction.getName(), apply_identifier_function_);
   if (subscriptionHandle_) {
     logger_->log_error("Processor already subscribed to Event Log, expected cleanup to unsubscribe.");
   } else {
@@ -155,6 +173,50 @@ void ConsumeWindowsEventLog::onTrigger(const std::shared_ptr<core::ProcessContex
       unsubscribe();
     }
   }
+}
+
+void ConsumeWindowsEventLog::matchRegex(const MSXML2::IXMLDOMElementPtr pRoot, std::map<std::string, std::string> &fieldsAndValues, std::wregex match) {
+	const auto pNodeChildren = pRoot->childNodes;
+	using convert_type = std::codecvt_utf8<wchar_t>;
+	std::wstring_convert<convert_type, wchar_t> converter;
+	for (long i = 0; i < pNodeChildren->length; i++) {
+		const auto pNode = pNodeChildren->item[i];
+		const auto nodeType = pNode->GetnodeType();
+		if (DOMNodeType::NODE_ELEMENT == nodeType) {
+			auto nodeName = pNode->nodeName;
+
+			std::wstring wstringNodeName(nodeName, SysStringLen(nodeName));
+			bool matched = false;
+			if (std::regex_match(wstringNodeName, match)) {
+				matched = true;
+			}
+			else {
+				const auto pAttributes = pNode->attributes;
+				for (long iAttr = 0; iAttr < pAttributes->length; iAttr++) {
+					const auto pAttribute = pAttributes->item[iAttr];
+					if (pAttribute->nodeName == static_cast<_bstr_t>("Name")) {
+						auto  attributeNodeName = static_cast<_bstr_t>(pAttribute->nodeValue);
+						std::wstring wAttributeNodeName(attributeNodeName, SysStringLen(attributeNodeName));
+						if (std::regex_match(wAttributeNodeName, match)) {
+							wstringNodeName = attributeNodeName;
+							matched = true;
+						}
+					}
+				}
+
+			}
+			if (matched) {
+				auto value = static_cast<_bstr_t>(pNode->Gettext());
+				std::wstring wstringValue(value, SysStringLen(value));
+				auto matched_field_name = converter.to_bytes(wstringNodeName);
+				auto matched_field_value = converter.to_bytes(wstringValue);
+				
+				fieldsAndValues[matched_field_name] = apply_identifier_function_ ? utils::OsUtils::userIdToUsername(matched_field_value) : matched_field_value;
+			}
+			matchRegex(pNode, fieldsAndValues, match);
+		}
+	}
+	
 }
 
 void ConsumeWindowsEventLog::createTextOutput(const MSXML2::IXMLDOMElementPtr pRoot, std::wstringstream& stream, std::vector<std::wstring>& ancestors) {
@@ -219,17 +281,21 @@ bool ConsumeWindowsEventLog::subscribe(const std::shared_ptr<core::ProcessContex
   context->getProperty(Query.getName(), query);
 
   context->getProperty(RenderFormatXML.getName(), renderXML_);
-  if (!renderXML_) {
-    HRESULT hr = xmlDoc_.CreateInstance(__uuidof(MSXML2::DOMDocument60));
-    if (FAILED(hr)) {
+
+  if (xmlDoc_) {
+	  xmlDoc_.Release();
+  }
+
+  HRESULT hr = xmlDoc_.CreateInstance(__uuidof(MSXML2::DOMDocument60));
+  if (FAILED(hr)) {
       logger_->log_error("!xmlDoc_.CreateInstance %x", hr);
       return false;
-    }
-
-    xmlDoc_->async = VARIANT_FALSE;
-    xmlDoc_->validateOnParse = VARIANT_FALSE;
-    xmlDoc_->resolveExternals = VARIANT_FALSE;
   }
+
+  xmlDoc_->async = VARIANT_FALSE;
+  xmlDoc_->validateOnParse = VARIANT_FALSE;
+  xmlDoc_->resolveExternals = VARIANT_FALSE;
+  
 
   context->getProperty(MaxBufferSize.getName(), maxBufferSize_);
   logger_->log_debug("ConsumeWindowsEventLog: maxBufferSize_ %lld", maxBufferSize_);
@@ -282,20 +348,28 @@ bool ConsumeWindowsEventLog::subscribe(const std::shared_ptr<core::ProcessContex
               if (EvtRender(NULL, hEvent, EvtRenderEventXml, size, &buf[0], &used, &propertyCount)) {
                 const auto xml = to_string(&buf[0]);
 
+				EventRender renderedData;
+				if (VARIANT_FALSE == pConsumeWindowsEventLog->xmlDoc_->loadXML(_bstr_t(xml.c_str()))) {
+					logger->log_error("'loadXML' failed");
+					return 0UL;
+				}
+				if (!pConsumeWindowsEventLog->regex_.empty()) {
+					std::wstring wstring_regex_;
+					wstring_regex_.assign(pConsumeWindowsEventLog->regex_.begin(), pConsumeWindowsEventLog->regex_.end());
+					std::wregex  regex(wstring_regex_);
+					pConsumeWindowsEventLog->matchRegex(pConsumeWindowsEventLog->xmlDoc_->documentElement, renderedData.matched_fields_, regex);
+				}
+
                 if (pConsumeWindowsEventLog->renderXML_) {
-                  pConsumeWindowsEventLog->listRenderedData_.enqueue(std::move(xml));
+					renderedData.text_ = std::move(xml);
                 } else {
-                  if (VARIANT_FALSE == pConsumeWindowsEventLog->xmlDoc_->loadXML(_bstr_t(xml.c_str()))) {
-                    logger->log_error("'loadXML' failed");
-                    return 0UL;
-                  }
 
                   std::wstringstream stream;
                   std::vector<std::wstring> ancestors;
                   pConsumeWindowsEventLog->createTextOutput(pConsumeWindowsEventLog->xmlDoc_->documentElement, stream, ancestors);
-
-                  pConsumeWindowsEventLog->listRenderedData_.enqueue(to_string(stream.str().c_str()));
+				  renderedData.text_ = std::move(to_string(stream.str().c_str()));
                 }
+				pConsumeWindowsEventLog->listRenderedData_.enqueue(std::move(renderedData));
               } else {
                 logger->log_error("EvtRender returned the following error code: %d.", GetLastError());
               }
@@ -340,12 +414,17 @@ int ConsumeWindowsEventLog::processQueue(const std::shared_ptr<core::ProcessSess
   };
 
   int flowFileCount = 0;
-
-  std::string xml;
-  while (listRenderedData_.try_dequeue(xml)) {
+ 
+  EventRender evt;
+  while (listRenderedData_.try_dequeue(evt)) {
     auto flowFile = session->create();
 
-    session->write(flowFile, &WriteCallback(xml));
+    session->write(flowFile, &WriteCallback(evt.text_));
+	for (const auto &fieldMapping : evt.matched_fields_) {
+		if (!fieldMapping.second.empty()) {
+			session->putAttribute(flowFile, fieldMapping.first, fieldMapping.second);
+		}
+	}
     session->putAttribute(flowFile, FlowAttributeKey(MIME_TYPE), "application/xml");
     session->getProvenanceReporter()->receive(flowFile, provenanceUri_, getUUIDStr(), "Consume windows event logs", 0);
     session->transfer(flowFile, Success);

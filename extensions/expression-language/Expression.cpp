@@ -26,6 +26,7 @@
 #include "rapidjson/document.h"
 
 #include <utils/StringUtils.h>
+#include <utils/OsUtils.h>
 #include <expression/Expression.h>
 #include <regex>
 #ifndef DISABLE_CURL
@@ -39,10 +40,12 @@
 #endif
 #include <Windows.h>
 #include <WS2tcpip.h>
+#include <sddl.h>
 #pragma comment(lib, "Ws2_32.lib")
 #else
 #include <netdb.h>
 #include <arpa/inet.h>
+#include <sys/types.h>
 #endif
 
 #include "utils/base64.h"
@@ -89,6 +92,18 @@ Expression make_dynamic_attr(const std::string &attribute_id) {
     }
     return Value();
   });
+}
+
+Value resolve_user_id(const std::vector<Value> &args) {
+	std::string name;
+	if (args.size() == 1) {
+		name = args[0].asString();
+		if (!name.empty()) {
+			name = minifi::utils::OsUtils::userIdToUsername(name);
+		}
+	}
+
+	return Value(name);
 }
 
 Value expr_hostname(const std::vector<Value> &args) {
@@ -1345,6 +1360,8 @@ Expression make_join(const std::string &function_name, const std::vector<Express
 Expression make_dynamic_function(const std::string &function_name, const std::vector<Expression> &args) {
   if (function_name == "hostname") {
     return make_dynamic_function_incomplete<expr_hostname>(function_name, args, 0);
+  } else if (function_name == "resolve_user_id") {
+    return make_dynamic_function_incomplete<resolve_user_id>(function_name, args, 0);
   } else if (function_name == "ip") {
     return make_dynamic_function_incomplete<expr_ip>(function_name, args, 0);
   } else if (function_name == "UUID") {

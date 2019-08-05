@@ -29,14 +29,25 @@ add_library(nanofi-coap-c STATIC ${CSOURCES})
 add_library(minifi-coap STATIC ${SOURCES})
 set_property(TARGET minifi-coap PROPERTY POSITION_INDEPENDENT_CODE ON)
 
+set(BASE_DIR "${CMAKE_CURRENT_BINARY_DIR}/extensions/coap")
+  # determine version of GNUTLSs
+set(BYPRODUCT "${BASE_DIR}/extensions/coap/thirdparty/libcoap-src/.libs/libcoap-2.a")
+set(DIR "${BASE_DIR}/extensions/coap/thirdparty/libcoap-src")
+
+if (WIN32)
+set(COAP_BUILD_COMMAND "msbuild /m \"${DIR}/win32/libcoap.sln\" /property:Configuration=Release")
+message("Looking for ${COAP_BUILD_COMMAND}")
+else()
+set(COAP_BUILD_COMMAND "${CMAKE_COMMAND} --build ")
+set(COAP_PATCH_COMMAND "./autogen.sh && ./configure --disable-examples --disable-dtls --disable-tests --disable-documentation")
+endif()
+
+
 if(CMAKE_THREAD_LIBS_INIT)
   target_link_libraries(minifi-coap "${CMAKE_THREAD_LIBS_INIT}")
 endif()
 
-  set(BASE_DIR "${CMAKE_CURRENT_BINARY_DIR}/extensions/coap")
-  # determine version of GNUTLSs
-  set(BYPRODUCT "${BASE_DIR}/extensions/coap/thirdparty/libcoap-src/.libs/libcoap-2.a")
-  set(DIR "${BASE_DIR}/extensions/coap/thirdparty/libcoap-src")
+  
   ExternalProject_Add(
     coap-external
     GIT_REPOSITORY "https://github.com/obgm/libcoap.git"
@@ -44,12 +55,12 @@ endif()
     PREFIX "${BASE_DIR}/extensions/coap/thirdparty/libcoap"
     BUILD_IN_SOURCE true
     SOURCE_DIR "${DIR}"
-    BUILD_COMMAND make
+    BUILD_COMMAND ${COAP_BUILD_COMMAND}
     CMAKE_COMMAND ""
     UPDATE_COMMAND ""
     INSTALL_COMMAND ${CMAKE_COMMAND}  -E echo "Skipping install step."
     CONFIGURE_COMMAND ""
-    PATCH_COMMAND ./autogen.sh && ./configure --disable-examples --disable-dtls --disable-tests --disable-documentation
+    PATCH_COMMAND ${COAP_PATCH_COMMAND}
     STEP_TARGETS build
     EXCLUDE_FROM_ALL TRUE
   )

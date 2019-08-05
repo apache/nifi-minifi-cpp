@@ -52,6 +52,7 @@
 #include "core/FlowConfiguration.h"
 #include "core/ConfigurationFactory.h"
 #include "core/RepositoryFactory.h"
+#include "utils/file/PathUtils.h"
 #include "FlowController.h"
 #include "Main.h"
 
@@ -177,10 +178,23 @@ int main(int argc, char **argv) {
 			char cwd[PATH_MAX];
 #ifdef WIN32
 			_getcwd(cwd, PATH_MAX);
+			auto handle = GetModuleHandle(0);
+			GetModuleFileNameA(NULL, cwd, sizeof(cwd));
+			std::string fullPath = cwd;
+			std::string minifiFileName, minifiPath;
+			minifi::utils::file::PathUtils::getFileNameAndPath(fullPath, minifiPath, minifiFileName);
+			if (utils::StringUtils::endsWith(minifiPath, "bin")) {
+				minifiHome = minifiPath.substr(0, minifiPath.size()-3);
+			}
+			else {
+				minifiHome = minifiPath;
+			}
+		
 #else
 			getcwd(cwd, PATH_MAX);
-#endif
 			minifiHome = cwd;
+#endif
+			
 		}
 
 

@@ -39,7 +39,7 @@
 extern "C" {
 #endif
 
-jobject Java_org_apache_nifi_processor_JniProcessSession_create(JNIEnv *env, jobject obj) {
+JNIEXPORT jobject JNICALL Java_org_apache_nifi_processor_JniProcessSession_create(JNIEnv *env, jobject obj) {
   if (obj == nullptr) {
     return nullptr;
   }
@@ -65,7 +65,7 @@ jobject Java_org_apache_nifi_processor_JniProcessSession_create(JNIEnv *env, job
 
 }
 
-jobject Java_org_apache_nifi_processor_JniProcessSession_readFlowFile(JNIEnv *env, jobject obj, jobject ff) {
+JNIEXPORT jobject JNICALL Java_org_apache_nifi_processor_JniProcessSession_readFlowFile(JNIEnv *env, jobject obj, jobject ff) {
   if (obj == nullptr) {
     return nullptr;
   }
@@ -97,7 +97,7 @@ jobject Java_org_apache_nifi_processor_JniProcessSession_readFlowFile(JNIEnv *en
 
 }
 
-jint Java_org_apache_nifi_processor_JniInputStream_read(JNIEnv *env, jobject obj) {
+JNIEXPORT jint JNICALL Java_org_apache_nifi_processor_JniInputStream_read(JNIEnv *env, jobject obj) {
   minifi::jni::JniInputStream *jin = minifi::jni::JVMLoader::getPtr<minifi::jni::JniInputStream>(env, obj);
   if (obj == nullptr) {
     // this technically can't happen per JNI specs
@@ -110,7 +110,7 @@ jint Java_org_apache_nifi_processor_JniInputStream_read(JNIEnv *env, jobject obj
     return -1;
 }
 
-jint Java_org_apache_nifi_processor_JniInputStream_readWithOffset(JNIEnv *env, jobject obj, jbyteArray arr, jint offset, jint length) {
+JNIEXPORT jint JNICALL  Java_org_apache_nifi_processor_JniInputStream_readWithOffset(JNIEnv *env, jobject obj, jbyteArray arr, jint offset, jint length) {
   minifi::jni::JniInputStream *jin = minifi::jni::JVMLoader::getPtr<minifi::jni::JniInputStream>(env, obj);
   if (obj == nullptr) {
     // this technically can't happen per JNI specs
@@ -119,7 +119,7 @@ jint Java_org_apache_nifi_processor_JniInputStream_readWithOffset(JNIEnv *env, j
   return jin->read(env, arr, (int) offset, (int) length);
 }
 
-jboolean Java_org_apache_nifi_processor_JniProcessSession_write(JNIEnv *env, jobject obj, jobject ff, jbyteArray byteArray) {
+JNIEXPORT jboolean JNICALL Java_org_apache_nifi_processor_JniProcessSession_write(JNIEnv *env, jobject obj, jobject ff, jbyteArray byteArray) {
   if (obj == nullptr) {
     return false;
   }
@@ -145,7 +145,7 @@ jboolean Java_org_apache_nifi_processor_JniProcessSession_write(JNIEnv *env, job
 
 }
 
-jobject Java_org_apache_nifi_processor_JniProcessSession_clone(JNIEnv *env, jobject obj, jobject prevff) {
+JNIEXPORT jobject JNICALL Java_org_apache_nifi_processor_JniProcessSession_clone(JNIEnv *env, jobject obj, jobject prevff) {
   if (obj == nullptr) {
     return nullptr;
   }
@@ -177,7 +177,7 @@ jobject Java_org_apache_nifi_processor_JniProcessSession_clone(JNIEnv *env, jobj
 
 }
 
-jobject Java_org_apache_nifi_processor_JniProcessSession_get(JNIEnv *env, jobject obj) {
+JNIEXPORT jobject JNICALL Java_org_apache_nifi_processor_JniProcessSession_get(JNIEnv *env, jobject obj) {
   if (obj == nullptr)
     return nullptr;
 
@@ -214,7 +214,7 @@ jobject Java_org_apache_nifi_processor_JniProcessSession_get(JNIEnv *env, jobjec
   return ff_instance;
 }
 
-jobject Java_org_apache_nifi_processor_JniProcessSession_putAttribute(JNIEnv *env, jobject obj, jobject ff, jstring key, jstring value) {
+JNIEXPORT jobject JNICALL Java_org_apache_nifi_processor_JniProcessSession_putAttribute(JNIEnv *env, jobject obj, jobject ff, jstring key, jstring value) {
   if (obj == nullptr) {
     // does not mean an error should be thrown, rather we will let
     // Java do its thing as this is a condition of GC most likely
@@ -240,7 +240,7 @@ jobject Java_org_apache_nifi_processor_JniProcessSession_putAttribute(JNIEnv *en
 
 }
 
-void Java_org_apache_nifi_processor_JniProcessSession_transfer(JNIEnv *env, jobject obj, jobject ff, jstring relationship) {
+JNIEXPORT void JNICALL Java_org_apache_nifi_processor_JniProcessSession_transfer(JNIEnv *env, jobject obj, jobject ff, jstring relationship) {
   if (obj == nullptr) {
     return;
   }
@@ -264,7 +264,7 @@ jstring Java_org_apache_nifi_processor_JniProcessSession_getPropertyValue(JNIEnv
   return env->NewStringUTF(value.c_str());
 }
 
-jobject Java_org_apache_nifi_processor_JniProcessSession_createWithParent(JNIEnv *env, jobject obj, jobject parent) {
+JNIEXPORT jobject JNICALL Java_org_apache_nifi_processor_JniProcessSession_createWithParent(JNIEnv *env, jobject obj, jobject parent) {
   if (obj == nullptr) {
     // does not mean an error should be thrown, rather we will let
     // Java do its thing as this is a condition of GC most likely
@@ -298,7 +298,7 @@ jobject Java_org_apache_nifi_processor_JniProcessSession_createWithParent(JNIEnv
 
 }
 
-void Java_org_apache_nifi_processor_JniProcessSession_commit(JNIEnv *env, jobject obj) {
+JNIEXPORT void JNICALL Java_org_apache_nifi_processor_JniProcessSession_commit(JNIEnv *env, jobject obj) {
   if (obj == nullptr) {
     // does not mean an error should be thrown, rather we will let
     // Java do its thing as this is a condition of GC most likely
@@ -316,7 +316,7 @@ void Java_org_apache_nifi_processor_JniProcessSession_commit(JNIEnv *env, jobjec
   }
 }
 
-void Java_org_apache_nifi_processor_JniProcessSession_rollback(JNIEnv *env, jobject obj) {
+JNIEXPORT void JNICALL Java_org_apache_nifi_processor_JniProcessSession_rollback(JNIEnv *env, jobject obj) {
   if (obj == nullptr) {
     // does not mean an error should be thrown, rather we will let
     // Java do its thing as this is a condition of GC most likely
@@ -326,38 +326,40 @@ void Java_org_apache_nifi_processor_JniProcessSession_rollback(JNIEnv *env, jobj
   session->getSession()->rollback();
 }
 
-jobject Java_org_apache_nifi_processor_JniProcessSessionFactory_createSession(JNIEnv *env, jobject obj) {
+JNIEXPORT jobject JNICALL Java_org_apache_nifi_processor_JniProcessSessionFactory_createSession(JNIEnv *env, jobject obj) {
   if (obj == nullptr) {
     // does not mean an error should be thrown, rather we will let
     // Java do its thing as this is a condition of GC most likely
     return nullptr;
   }
+  std::cout << "335" << std::endl;
   minifi::jni::JniSessionFactory *sessionFactory = minifi::jni::JVMLoader::getPtr<minifi::jni::JniSessionFactory>(env, obj);
   auto session_class = minifi::jni::JVMLoader::getInstance()->load_class("org/apache/nifi/processor/JniProcessSession", env);
 
   auto session_instance = session_class.newInstance(env);
-
+  std::cout << "340" << std::endl;
   minifi::jni::ThrowIf(env);
 
   // create a session
   auto procSession = sessionFactory->getFactory()->createSession();
 
+  std::cout << "346" << std::endl;
   std::shared_ptr<minifi::jni::JniSession> session = std::make_shared<minifi::jni::JniSession>(procSession, session_instance, sessionFactory->getServicer());
 
   // add a reference so the minifi C++ session factory knows to remove these eventually.
   procSession->addReference(session);
-
+  std::cout << "351" << std::endl;
   auto rawSession = sessionFactory->addSession(session);
 
   // set the reference in session_instance using the raw pointer.
   minifi::jni::JVMLoader::getInstance()->setReference(session_instance, env, rawSession);
 
   // catalog the session
-
+  std::cout << "358" << std::endl;
   return session_instance;
 }
 
-void Java_org_apache_nifi_processor_JniProcessSession_remove(JNIEnv *env, jobject obj, jobject ff) {
+JNIEXPORT void JNICALL Java_org_apache_nifi_processor_JniProcessSession_remove(JNIEnv *env, jobject obj, jobject ff) {
   if (obj == nullptr) {
     // does not mean an error should be thrown, rather we will let
     // Java do its thing as this is a condition of GC most likely
@@ -373,7 +375,7 @@ void Java_org_apache_nifi_processor_JniProcessSession_remove(JNIEnv *env, jobjec
 
 }
 
-jobject Java_org_apache_nifi_processor_JniProcessSession_penalize(JNIEnv *env, jobject obj, jobject ff) {
+JNIEXPORT jobject JNICALL  Java_org_apache_nifi_processor_JniProcessSession_penalize(JNIEnv *env, jobject obj, jobject ff) {
   if (obj == nullptr) {
     // does not mean an error should be thrown, rather we will let
     // Java do its thing as this is a condition of GC most likely
@@ -389,7 +391,7 @@ jobject Java_org_apache_nifi_processor_JniProcessSession_penalize(JNIEnv *env, j
   return ff;
 }
 
-jobject Java_org_apache_nifi_processor_JniProcessSession_removeAttribute(JNIEnv *env, jobject obj, jobject ff, jstring attr) {
+JNIEXPORT jobject JNICALL  Java_org_apache_nifi_processor_JniProcessSession_removeAttribute(JNIEnv *env, jobject obj, jobject ff, jstring attr) {
   if (obj == nullptr) {
     // does not mean an error should be thrown, rather we will let
     // Java do its thing as this is a condition of GC most likely
@@ -404,7 +406,7 @@ jobject Java_org_apache_nifi_processor_JniProcessSession_removeAttribute(JNIEnv 
   return ff;
 }
 
-jobject Java_org_apache_nifi_processor_JniProcessSession_clonePortion(JNIEnv *env, jobject obj, jobject prevff, jlong offset, jlong size) {
+JNIEXPORT jobject JNICALL  Java_org_apache_nifi_processor_JniProcessSession_clonePortion(JNIEnv *env, jobject obj, jobject prevff, jlong offset, jlong size) {
   if (obj == nullptr) {
     // does not mean an error should be thrown, rather we will let
     // Java do its thing as this is a condition of GC most likely
@@ -438,7 +440,7 @@ jobject Java_org_apache_nifi_processor_JniProcessSession_clonePortion(JNIEnv *en
 
 }
 
-jboolean Java_org_apache_nifi_processor_JniProcessSession_append(JNIEnv *env, jobject obj, jobject ff, jbyteArray byteArray) {
+JNIEXPORT jboolean JNICALL Java_org_apache_nifi_processor_JniProcessSession_append(JNIEnv *env, jobject obj, jobject ff, jbyteArray byteArray) {
   if (obj == nullptr) {
     // does not mean an error should be thrown, rather we will let
     // Java do its thing as this is a condition of GC most likely

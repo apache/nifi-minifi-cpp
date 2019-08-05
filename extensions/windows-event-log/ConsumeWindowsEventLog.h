@@ -27,6 +27,7 @@
 #include "core/ProcessSession.h"
 #include <winevt.h>
 #include <sstream>
+#include <regex>
 
 #import <msxml6.dll>
 
@@ -35,6 +36,12 @@ namespace apache {
 namespace nifi {
 namespace minifi {
 namespace processors {
+
+struct EventRender {
+	std::map<std::string, std::string> matched_fields_;
+	std::string text_;
+};
+
 
 //! ConsumeWindowsEventLog Class
 class ConsumeWindowsEventLog : public core::Processor
@@ -58,6 +65,8 @@ public:
   static core::Property RenderFormatXML;
   static core::Property MaxBufferSize;
   static core::Property InactiveDurationToReconnect;
+  static core::Property IdentifierMatcher;
+  static core::Property IdentifierFunction;
 
   //! Supported Relationships
   static core::Relationship Success;
@@ -80,6 +89,7 @@ protected:
   bool subscribe(const std::shared_ptr<core::ProcessContext> &context);
   void unsubscribe();
   int processQueue(const std::shared_ptr<core::ProcessSession> &session);
+  void matchRegex(const MSXML2::IXMLDOMElementPtr pRoot, std::map<std::string,std::string> &fieldsAndValues, std::wregex match);
 
   void createTextOutput(const MSXML2::IXMLDOMElementPtr pRoot, std::wstringstream& stream, std::vector<std::wstring>& ancestors);
 
@@ -87,7 +97,9 @@ protected:
 private:
   // Logger
   std::shared_ptr<logging::Logger> logger_;
-  moodycamel::ConcurrentQueue<std::string> listRenderedData_;
+  std::string regex_;
+  bool apply_identifier_function_;
+  moodycamel::ConcurrentQueue<EventRender> listRenderedData_;
   std::string provenanceUri_;
   std::string computerName_;
   int64_t inactiveDurationToReconnect_{};

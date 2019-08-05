@@ -42,7 +42,7 @@
 extern "C" {
 #endif
 
-jobject Java_org_apache_nifi_processor_JniControllerServiceLookup_getControllerService(JNIEnv *env, jobject obj, jstring cs) {
+JNIEXPORT jobject JNICALL  Java_org_apache_nifi_processor_JniControllerServiceLookup_getControllerService(JNIEnv *env, jobject obj, jstring cs) {
   minifi::jni::JniControllerServiceLookup *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniControllerServiceLookup>(env, obj);
   auto str = JniStringToUTF(env, cs);
   auto controller_service = ptr->cs_lookup_reference_->getControllerService(str);
@@ -55,19 +55,19 @@ jobject Java_org_apache_nifi_processor_JniControllerServiceLookup_getControllerS
   return nullptr;
 }
 
-jboolean Java_org_apache_nifi_processor_JniControllerServiceLookup_isControllerServiceEnabled(JNIEnv *env, jobject obj, jstring cs) {
+JNIEXPORT jboolean JNICALL  Java_org_apache_nifi_processor_JniControllerServiceLookup_isControllerServiceEnabled(JNIEnv *env, jobject obj, jstring cs) {
   minifi::jni::JniControllerServiceLookup *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniControllerServiceLookup>(env, obj);
   auto str = JniStringToUTF(env, cs);
   return ptr->cs_lookup_reference_->isControllerServiceEnabled(str);
 }
 
-jboolean Java_org_apache_nifi_processor_JniControllerServiceLookup_isControllerServiceEnabling(JNIEnv *env, jobject obj, jstring cs) {
+JNIEXPORT jboolean JNICALL Java_org_apache_nifi_processor_JniControllerServiceLookup_isControllerServiceEnabling(JNIEnv *env, jobject obj, jstring cs) {
   minifi::jni::JniControllerServiceLookup *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniControllerServiceLookup>(env, obj);
   auto str = JniStringToUTF(env, cs);
   return ptr->cs_lookup_reference_->isControllerServiceEnabling(str);
 }
 
-jstring Java_org_apache_nifi_processor_JniControllerServiceLookup_getControllerServiceName(JNIEnv *env, jobject obj, jstring cs) {
+JNIEXPORT jstring JNICALL Java_org_apache_nifi_processor_JniControllerServiceLookup_getControllerServiceName(JNIEnv *env, jobject obj, jstring cs) {
   minifi::jni::JniControllerServiceLookup *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniControllerServiceLookup>(env, obj);
   auto str = JniStringToUTF(env, cs);
   return env->NewStringUTF(ptr->cs_lookup_reference_->getControllerServiceName(str).c_str());
