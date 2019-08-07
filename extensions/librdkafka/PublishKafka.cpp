@@ -79,7 +79,8 @@ core::Property PublishKafka::KerberosKeytabPath("Kerberos Keytab Path",
 core::Property PublishKafka::MessageKeyField("Message Key Field", "The name of a field in the Input Records that should be used as the Key for the Kafka message.\n"
                                              "Supports Expression Language: true (will be evaluated using flow file attributes)",
                                              "");
-core::Property PublishKafka::DebugContexts("Debug contexts", "A comma-separated list of debug contexts to enable. Including: generic, broker, topic, metadata, feature, queue, msg, protocol, cgrp, security, fetch, interceptor, plugin, consumer, admin, eos, all", "");
+core::Property PublishKafka::DebugContexts("Debug contexts", "A comma-separated list of debug contexts to enable."
+                                           "Including: generic, broker, topic, metadata, feature, queue, msg, protocol, cgrp, security, fetch, interceptor, plugin, consumer, admin, eos, all", "");
 core::Relationship PublishKafka::Success("success", "Any FlowFile that is successfully sent to Kafka will be routed to this Relationship");
 core::Relationship PublishKafka::Failure("failure", "Any FlowFile that cannot be sent to Kafka will be routed to this Relationship");
 
@@ -140,7 +141,7 @@ bool PublishKafka::configureNewConnection(const std::shared_ptr<KafkaConnection>
 
   if (!key->brokers_.empty()) {
     result = rd_kafka_conf_set(conf_, "bootstrap.servers", key->brokers_.c_str(), errstr, sizeof(errstr));
-    logger_->log_debug("PublishKafka: bootstrap.servers [%s]", key->brokers_.c_str());
+    logger_->log_debug("PublishKafka: bootstrap.servers [%s]", key->brokers_);
     if (result != RD_KAFKA_CONF_OK)
       logger_->log_error("PublishKafka: configure error result [%s]", errstr);
   } else {
@@ -150,7 +151,7 @@ bool PublishKafka::configureNewConnection(const std::shared_ptr<KafkaConnection>
 
   if (!key->client_id_.empty()) {
     rd_kafka_conf_set(conf_, "client.id", key->client_id_.c_str(), errstr, sizeof(errstr));
-    logger_->log_debug("PublishKafka: client.id [%s]", key->client_id_.c_str());
+    logger_->log_debug("PublishKafka: client.id [%s]", key->client_id_);
     if (result != RD_KAFKA_CONF_OK)
       logger_->log_error("PublishKafka: configure error result [%s]", errstr);
   } else {
@@ -213,7 +214,7 @@ bool PublishKafka::configureNewConnection(const std::shared_ptr<KafkaConnection>
   max_seg_size_ = ULLONG_MAX;
   if (context->getProperty(MaxFlowSegSize.getName(), value) && !value.empty() && core::Property::StringToInt(value, valInt)) {
     max_seg_size_ = valInt;
-    logger_->log_debug("PublishKafka: max flow segment size [%d]", max_seg_size_);
+    logger_->log_debug("PublishKafka: max flow segment size [%llu]", max_seg_size_);
   }
   value = "";
   if (context->getProperty(QueueBufferMaxTime.getName(), value) && !value.empty()) {
@@ -319,27 +320,29 @@ void PublishKafka::onTrigger(const std::shared_ptr<core::ProcessContext> &contex
 
   std::string client_id, brokers, topic;
 
-  std::shared_ptr<KafkaConnection> conn = nullptr;
+  std::unique_ptr<KafkaLease> lease;
+  std::shared_ptr<KafkaConnection> conn;
 // get the client ID, brokers, and topic from either the flowfile, the configuration, or the properties
   if (context->getProperty(ClientName, client_id, flowFile) && context->getProperty(SeedBrokers, brokers, flowFile) && context->getProperty(Topic, topic, flowFile)) {
     KafkaConnectionKey key;
     key.brokers_ = brokers;
     key.client_id_ = client_id;
 
-    conn = connection_pool_.getOrCreateConnection(key);
+    lease = connection_pool_.getOrCreateConnection(key);
+    if (lease == nullptr) {
+      logger_->log_info("This connection is used by another thread.");
+      context->yield();
+      return;
+    }
+    conn = lease->getConn();
 
     if (!conn->initialized()) {
       logger_->log_trace("Connection not initialized to %s, %s, %s", client_id, brokers, topic);
-      // get the ownership so we can configure this connection
-      KafkaLease lease = conn->obtainOwnership();
-
       if (!configureNewConnection(conn, context, flowFile)) {
         logger_->log_error("Could not configure Kafka Connection");
         session->transfer(flowFile, Failure);
         return;
       }
-
-      // lease will go away
     }
 
     if (!conn->hasTopic(topic)) {
