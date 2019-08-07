@@ -208,8 +208,7 @@ void CheckRunAsService() {
                   if (!SetServiceStatus(s_statusHandle, &s_serviceStatus)) {
                     LOG_LASTERROR("!SetServiceStatus SERVICE_STOPPED");
                   }
-                }
-                else {
+                } else {
                   LOG_LASTERROR("!TerminateProcess");
                 }
               }
