@@ -27,6 +27,7 @@
 #include <WinSock2.h>
 #include <WS2tcpip.h>
 #include <Windows.h>
+#include <Strsafe.h>
 #pragma comment(lib, "Ws2_32.lib")
 #pragma comment(lib, "legacy_stdio_definitions.lib")
 #ifdef ENABLE_JNI
@@ -87,8 +88,317 @@ void sigHandler(int signal) {
 	}
 }
 
+#ifdef WIN32
+
+//#define DEBUG_SERVICE
+
+#ifdef DEBUG_SERVICE
+  #define LOG_INFO(...)       OutputDebug(__VA_ARGS__)
+  #define LOG_ERROR(...)      OutputDebug(__VA_ARGS__)
+  #define LOG_LASTERROR(str)  OutputDebug(str " lastError %x", GetLastError())
+#else
+  #define LOG_INFO(...)       Log()->log_info(__VA_ARGS__)
+  #define LOG_ERROR(...)      Log()->log_error(__VA_ARGS__)
+  #define LOG_LASTERROR(str)  Log()->log_error(str " lastError %x", GetLastError())
+#endif
+
+#undef DEBUG_SERVICE
+
+static char* SERVICE_TERMINATION_EVENT_NAME = "MiNiFiServiceTermination";
+
+void CheckRunAsService() {
+  static const int MAX_RETRIES_START_EXE = 3;
+  static const int WAIT_TIME_EXE_TERMINATION = 3000;
+  static const int WAIT_TIME_BEFORE_EXE_RESTART = 3000;
+
+  static SERVICE_STATUS s_serviceStatus;
+  static SERVICE_STATUS_HANDLE s_statusHandle;
+  static DWORD s_processId;
+  static bool s_stopService;
+  static HANDLE s_hProcess;
+
+  static auto OutputDebugArgs = [](const char* format, va_list args)
+  {
+    char buf[256];
+    sprintf_s(buf, _countof(buf), "%s: %s", SERVICE_NAME, format);
+
+    char out[1024];
+    StringCbVPrintfA(out, sizeof(out), buf, args);
+
+    OutputDebugStringA(out);
+  };
+
+  static auto OutputDebug = [](const char* format, ...) {
+    va_list args;
+    va_start(args, format);
+
+    OutputDebugArgs(format, args);
+
+    va_end(args);
+  };
+
+  static auto Log = []() {
+    static std::shared_ptr<logging::Logger> s_logger = logging::LoggerConfiguration::getConfiguration().getLogger("service");
+    return s_logger;
+  };
+
+  SERVICE_TABLE_ENTRY serviceTable[] =
+  {
+    {
+      SERVICE_NAME,
+      [](DWORD argc, LPTSTR *argv)
+      {
+        LOG_INFO("ServiceCtrlDispatcher");
+
+        s_statusHandle = RegisterServiceCtrlHandler(
+          SERVICE_NAME,
+          [](DWORD ctrlCode) {
+            LOG_INFO("ServiceCtrlHandler ctrlCode %d", ctrlCode);
+
+            if (SERVICE_CONTROL_STOP == ctrlCode) {
+              LOG_INFO("ServiceCtrlHandler ctrlCode = SERVICE_CONTROL_STOP");
+
+              s_stopService = true;
+
+              // Set service status SERVICE_STOP_PENDING.
+              s_serviceStatus.dwControlsAccepted = 0;
+              s_serviceStatus.dwCurrentState = SERVICE_STOP_PENDING;
+              s_serviceStatus.dwWin32ExitCode = 0;
+
+              if (!SetServiceStatus(s_statusHandle, &s_serviceStatus)) {
+                LOG_LASTERROR("!SetServiceStatus SERVICE_STOP_PENDING");
+              }
+
+              bool exeTerminated = false;
+              auto hEvent = CreateEvent(0, FALSE, FALSE, SERVICE_TERMINATION_EVENT_NAME); 
+              if (hEvent) {
+                if (GetLastError() == ERROR_ALREADY_EXISTS) {
+                  SetEvent(hEvent);
+
+                  LOG_INFO("Wait for exe termination");
+                  auto res = WaitForSingleObject(s_hProcess, WAIT_TIME_EXE_TERMINATION);
+                  switch (res) {
+                  case WAIT_OBJECT_0:
+                    LOG_INFO("Exe terminated");
+                    exeTerminated = true;
+                    break;
+
+                  case WAIT_TIMEOUT:
+                    LOG_ERROR("WaitForSingleObject timeout %d", WAIT_TIME_EXE_TERMINATION);
+                    break;
+
+                  default:
+                    LOG_ERROR("!WaitForSingleObject return %d", res);
+                  }
+                } else {
+                  LOG_ERROR("Termination event doesn't exist");
+                }
+                CloseHandle(hEvent);
+              } else {
+                LOG_LASTERROR("!CreateEvent");
+              }
+
+              if (!exeTerminated) {
+                LOG_INFO("TerminateProcess");
+                if (TerminateProcess(s_hProcess, 0)) {
+                  s_serviceStatus.dwControlsAccepted = 0;
+                  s_serviceStatus.dwCurrentState = SERVICE_STOPPED;
+                  s_serviceStatus.dwWin32ExitCode = 0;
+
+                  if (!SetServiceStatus(s_statusHandle, &s_serviceStatus)) {
+                    LOG_LASTERROR("!SetServiceStatus SERVICE_STOPPED");
+                  }
+                }
+                else {
+                  LOG_LASTERROR("!TerminateProcess");
+                }
+              }
+            }
+          }
+        );
+
+        if (!s_statusHandle) {
+          LOG_LASTERROR("!RegisterServiceCtrlHandler");
+          return;
+        }
+
+        // Set service status SERVICE_START_PENDING.
+        ZeroMemory(&s_serviceStatus, sizeof(s_serviceStatus));
+        s_serviceStatus.dwServiceType = SERVICE_WIN32_OWN_PROCESS;
+        s_serviceStatus.dwControlsAccepted = 0;
+        s_serviceStatus.dwCurrentState = SERVICE_START_PENDING;
+        s_serviceStatus.dwWin32ExitCode = 0;
+        s_serviceStatus.dwServiceSpecificExitCode = 0;
+
+        if (!SetServiceStatus(s_statusHandle, &s_serviceStatus)) {
+          LOG_LASTERROR("!SetServiceStatus SERVICE_START_PENDING");
+          return;
+        }
+
+        // Set service status SERVICE_RUNNING.
+        s_serviceStatus.dwControlsAccepted = SERVICE_ACCEPT_STOP;
+        s_serviceStatus.dwCurrentState = SERVICE_RUNNING;
+        s_serviceStatus.dwWin32ExitCode = 0;
+
+        if (!SetServiceStatus(s_statusHandle, &s_serviceStatus)) {
+          LOG_LASTERROR("!SetServiceStatus SERVICE_RUNNING");
+
+          // Set service status SERVICE_START_PENDING.
+          s_serviceStatus.dwControlsAccepted = 0;
+          s_serviceStatus.dwCurrentState = SERVICE_STOPPED;
+          s_serviceStatus.dwWin32ExitCode = GetLastError();
+
+          if (!SetServiceStatus(s_statusHandle, &s_serviceStatus)) {
+            LOG_LASTERROR("!SetServiceStatus SERVICE_STOPPED");
+          }
+
+          return;
+        }
+
+        char filePath[MAX_PATH];
+        if (!GetModuleFileName(0, filePath, _countof(filePath))) {
+          LOG_LASTERROR("!GetModuleFileName");
+          return;
+        }
+
+        LOG_INFO("Start exe path %s", filePath);
+        int retries = 1;
+        do {
+          STARTUPINFO startupInfo{};
+          startupInfo.cb = sizeof(startupInfo);
+
+          PROCESS_INFORMATION processInformation{};
+
+          if (!CreateProcess(filePath, 0, 0, 0, 0, FALSE, 0, 0, &startupInfo, &processInformation)) {
+            LOG_LASTERROR("!CreateProcess");
+            return;
+          }
+
+          s_processId = processInformation.dwProcessId;
+          s_hProcess = processInformation.hProcess;
+
+          LOG_INFO("%s started", filePath);
+
+          auto res = WaitForSingleObject(processInformation.hProcess, INFINITE);
+          CloseHandle(processInformation.hProcess);
+          CloseHandle(processInformation.hThread);
+
+          if (s_stopService)
+            break;
+
+          if (WAIT_FAILED == res) {
+            LOG_LASTERROR("!WaitForSingleObject");
+            return;
+          }
+
+          if (WAIT_OBJECT_0 != res) {
+            LOG_ERROR("!WaitForSingleObject return %d", res);
+            return;
+          }
+
+          retries++;
+
+          LOG_INFO("Retry start exe %d", retries);
+
+          Sleep(WAIT_TIME_BEFORE_EXE_RESTART);
+        } while (retries <= MAX_RETRIES_START_EXE);
+
+        s_serviceStatus.dwControlsAccepted = 0;
+        s_serviceStatus.dwCurrentState = SERVICE_STOPPED;
+        s_serviceStatus.dwWin32ExitCode = 0;
+
+        if (!SetServiceStatus(s_statusHandle, &s_serviceStatus)) {
+          LOG_LASTERROR("!SetServiceStatus SERVICE_STOPPED");
+        }
+      } 
+    },
+    {0, 0}
+  };
+
+  if (!StartServiceCtrlDispatcher(serviceTable)) {
+    if (ERROR_FAILED_SERVICE_CONTROLLER_CONNECT == GetLastError()) {
+      // Run this exe as console.
+      return;
+    }
+
+    LOG_ERROR("!StartServiceCtrlDispatcher error %x", GetLastError());
+
+    ExitProcess(1);
+  }
+
+  LOG_INFO("Service exit");
+
+  ExitProcess(0);
+}
+
+bool CreateServiceTerminationThread(std::shared_ptr<logging::Logger> logger) {
+  HANDLE hEvent = CreateEvent(0, FALSE, FALSE, SERVICE_TERMINATION_EVENT_NAME);
+  if (!hEvent) {
+    logger->log_error("!CreateEvent lastError %x", GetLastError());
+    return false;
+  }
+
+  struct ThreadInfo {
+    ThreadInfo(std::shared_ptr<logging::Logger> logger, HANDLE hEvent)
+      : logger_(logger), hEvent_(hEvent)
+    {}
+
+    std::shared_ptr<logging::Logger> logger_;
+    HANDLE hEvent_;
+  };
+
+  ThreadInfo* pThreadInfo = new ThreadInfo(logger, hEvent);
+
+  HANDLE hThread = (HANDLE)_beginthreadex(
+    0, 0,
+    [](void* pPar) {
+      auto pThreadInfo = static_cast<ThreadInfo*>(pPar);
+      auto logger = pThreadInfo->logger_;
+      auto hEvent = pThreadInfo->hEvent_;
+      delete pThreadInfo;
+
+      auto res = WaitForSingleObject(hEvent, INFINITE);
+      if (WAIT_FAILED == res) {
+        logger->log_error("!WaitForSingleObject");
+        return 0U;
+      }
+
+      if (WAIT_OBJECT_0 != res) {
+        logger->log_error("!WaitForSingleObject return %d", res);
+        return 0U;
+      }
+
+      sem_post(running);
+
+      return 0U;
+    },
+    pThreadInfo,
+    0, 0);
+  if (!hThread) {
+    logger->log_error("!_beginthreadex lastError %x", GetLastError());
+
+    delete pThreadInfo;
+
+    return false;
+  }
+
+  return true;
+}
+ 
+#endif
+
 int main(int argc, char **argv) {
+#ifdef WIN32
+  CheckRunAsService();
+#endif
+
 	std::shared_ptr<logging::Logger> logger = logging::LoggerConfiguration::getConfiguration().getLogger("main");
+
+#ifdef WIN32
+  if (!CreateServiceTerminationThread(logger)) {
+    return -1;
+  }
+#endif
 
 	uint16_t stop_wait_time = STOP_WAIT_TIME_MS;
 
