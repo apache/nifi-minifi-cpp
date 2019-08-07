@@ -149,6 +149,10 @@ endif()
 
 endif()
 
+if (WIN32)
+	add_definitions(-DSERVICE_NAME="MiNiFi")
+endif()
+
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
 
 if (NOT PORTABLE)

@@ -27,6 +27,7 @@
 #include <WinSock2.h>
 #include <WS2tcpip.h>
 #include <Windows.h>
+#include "MiNiFiWindowsService.h"
 #pragma comment(lib, "Ws2_32.lib")
 #pragma comment(lib, "legacy_stdio_definitions.lib")
 #ifdef ENABLE_JNI
@@ -53,6 +54,7 @@
 #include "core/RepositoryFactory.h"
 #include "FlowController.h"
 #include "Main.h"
+
  // Variables that allow us to avoid a timed wait.
 sem_t *running;
 //! Flow Controller
@@ -79,7 +81,12 @@ BOOL WINAPI consoleSignalHandler(DWORD signal) {
 
 	return TRUE;
 }
+
+void SignalExitProcess() {
+  sem_post(running);
+}
 #endif
+
 void sigHandler(int signal) {
 	if (signal == SIGINT || signal == SIGTERM) {
 		// avoid stopping the controller here.
@@ -88,7 +95,17 @@ void sigHandler(int signal) {
 }
 
 int main(int argc, char **argv) {
+#ifdef WIN32
+  CheckRunAsService();
+#endif
+
 	std::shared_ptr<logging::Logger> logger = logging::LoggerConfiguration::getConfiguration().getLogger("main");
+
+#ifdef WIN32
+  if (!CreateServiceTerminationThread(logger)) {
+    return -1;
+  }
+#endif
 
 	uint16_t stop_wait_time = STOP_WAIT_TIME_MS;
 
