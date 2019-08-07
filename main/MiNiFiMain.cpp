@@ -319,7 +319,7 @@ void CheckRunAsService() {
       return;
     }
 
-    LOG_ERROR("!StartServiceCtrlDispatcher error %x", GetLastError());
+    LOG_LASTERROR("!StartServiceCtrlDispatcher");
 
     ExitProcess(1);
   }
