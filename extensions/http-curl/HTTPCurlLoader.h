@@ -91,7 +91,7 @@ class HttpCurlObjectFactory : public core::ObjectFactory {
     }
   }
 
-  virtual std::unique_ptr<core::ObjectFactoryInitializer> getInitializer() {
+  virtual std::unique_ptr<core::ObjectFactoryInitializer> getInitializer() override{
     return std::unique_ptr<core::ObjectFactoryInitializer>(new HttpCurlObjectFactoryInitializer());
   }
 
