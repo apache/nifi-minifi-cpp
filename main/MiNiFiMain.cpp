@@ -113,7 +113,6 @@ void CheckRunAsService() {
 
   static SERVICE_STATUS s_serviceStatus;
   static SERVICE_STATUS_HANDLE s_statusHandle;
-  static DWORD s_processId;
   static bool s_stopService;
   static HANDLE s_hProcess;
 
@@ -273,7 +272,6 @@ void CheckRunAsService() {
             return;
           }
 
-          s_processId = processInformation.dwProcessId;
           s_hProcess = processInformation.hProcess;
 
           LOG_INFO("%s started", filePath);
