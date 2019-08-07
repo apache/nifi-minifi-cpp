@@ -28,6 +28,7 @@
 #include <WS2tcpip.h>
 #include <Windows.h>
 #include <Strsafe.h>
+#include <tuple>
 #pragma comment(lib, "Ws2_32.lib")
 #pragma comment(lib, "legacy_stdio_definitions.lib")
 #ifdef ENABLE_JNI
@@ -108,7 +109,7 @@ static char* SERVICE_TERMINATION_EVENT_NAME = "MiNiFiServiceTermination";
 
 void CheckRunAsService() {
   static const int MAX_RETRIES_START_EXE = 3;
-  static const int WAIT_TIME_EXE_TERMINATION = 3000;
+  static const int WAIT_TIME_EXE_TERMINATION = 5000;
   static const int WAIT_TIME_BEFORE_EXE_RESTART = 3000;
 
   static SERVICE_STATUS s_serviceStatus;
@@ -335,23 +336,15 @@ bool CreateServiceTerminationThread(std::shared_ptr<logging::Logger> logger) {
     return false;
   }
 
-  struct ThreadInfo {
-    ThreadInfo(std::shared_ptr<logging::Logger> logger, HANDLE hEvent)
-      : logger_(logger), hEvent_(hEvent)
-    {}
-
-    std::shared_ptr<logging::Logger> logger_;
-    HANDLE hEvent_;
-  };
-
-  ThreadInfo* pThreadInfo = new ThreadInfo(logger, hEvent);
+  using ThreadInfo = std::tuple<std::shared_ptr<logging::Logger>, HANDLE>;
+  auto pThreadInfo = new ThreadInfo(logger, hEvent);
 
   HANDLE hThread = (HANDLE)_beginthreadex(
     0, 0,
     [](void* pPar) {
       auto pThreadInfo = static_cast<ThreadInfo*>(pPar);
-      auto logger = pThreadInfo->logger_;
-      auto hEvent = pThreadInfo->hEvent_;
+      auto logger = std::get<0>(*pThreadInfo);
+      auto hEvent = std::get<1>(*pThreadInfo);
       delete pThreadInfo;
 
       auto res = WaitForSingleObject(hEvent, INFINITE);
