@@ -22,14 +22,6 @@
 #include "core/Core.h"
 #include "core/logging/LoggerConfiguration.h"
 
-#ifndef FILE_SEPARATOR_C
-#ifdef WIN32
-#define FILE_SEPARATOR_C '\\'
-#else
-#define FILE_SEPARATOR_C '/'
-#endif
-#endif
-
 namespace org {
 namespace apache {
 namespace nifi {
@@ -37,8 +29,9 @@ namespace minifi {
 
 #define TRACE_BUFFER_SIZE 512
 
-Properties::Properties()
-    : logger_(logging::LoggerFactory<Properties>::getLogger()) {
+Properties::Properties(const std::string& name)
+    : logger_(logging::LoggerFactory<Properties>::getLogger()),
+    name_(name) {
 }
 
 // Get the config value
@@ -122,26 +115,27 @@ bool Properties::parseConfigureFileLine(char *buf, std::string &prop_key, std::s
 
 // Load Configure File
 void Properties::loadConfigureFile(const char *fileName) {
-  std::string adjustedFilename;
-  if (fileName) {
-    // perform a naive determination if this is a relative path
-    if (fileName[0] != FILE_SEPARATOR_C) {
-      adjustedFilename = adjustedFilename + getHome() + FILE_SEPARATOR_C + fileName;
-    } else {
-      if (adjustedFilename.empty()) {
-        adjustedFilename = getHome();
-      }
-      adjustedFilename += fileName;
-    }
+  if (NULL == fileName) {
+    logger_->log_error("Configuration file path for %s is a nullptr!", getName().c_str());
+    return;
   }
-  char *path = NULL;
+
+  std::string adjustedFilename = getHome();
+  // perform a naive determination if this is a relative path
+  if (fileName[0] != utils::file::FileUtils::get_separator()) {
+    adjustedFilename += utils::file::FileUtils::get_separator();
+  }
+
+  adjustedFilename += fileName;
+
+  const char *path = NULL;
 #ifndef WIN32
   char full_path[PATH_MAX];
   path = realpath(adjustedFilename.c_str(), full_path);
 #else
-  path = const_cast<char*>(adjustedFilename.c_str());
+  path = adjustedFilename.c_str();
 #endif
-  logger_->log_info("Using configuration file located at %s, from %s", path, fileName);
+  logger_->log_info("Using configuration file to load configuration for %s from %s (located at %s)", getName().c_str(), fileName, path);
 
   properties_file_ = path;
 
@@ -165,7 +159,7 @@ void Properties::loadConfigureFile(const char *fileName) {
 bool Properties::validateConfigurationFile(const std::string &configFile) {
   std::ifstream file(configFile, std::ifstream::in);
   if (!file.good()) {
-    logger_->log_error("load configure file failed %s", configFile);
+    logger_->log_error("Failed to load configuration file %s to configure %s", configFile, getName().c_str());
     return false;
   }
 
@@ -173,6 +167,7 @@ bool Properties::validateConfigurationFile(const std::string &configFile) {
   for (file.getline(buf, TRACE_BUFFER_SIZE); file.good(); file.getline(buf, TRACE_BUFFER_SIZE)) {
     std::string key, value;
     if (!parseConfigureFileLine(buf, key, value)) {
+      logger_->log_error("While loading configuration for %s found invalid line: %s", getName().c_str(), buf);
       return false;
     }
   }

@@ -57,6 +57,7 @@ struct LoggerNamespace {
 
 class LoggerProperties : public Properties {
  public:
+  LoggerProperties() : Properties("Logger properties") {}
   /**
    * Gets all keys that start with the given prefix and do not have a "." after the prefix and "." separator.
    *

@@ -30,6 +30,7 @@ namespace minifi {
 
 class Configure : public Properties {
  public:
+  Configure() : Properties("MiNiFi configuration") {}
 
   void setAgentIdentifier(const std::string &identifier) {
     std::lock_guard<std::mutex> lock(mutex_);
