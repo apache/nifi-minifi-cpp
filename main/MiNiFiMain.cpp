@@ -105,37 +105,32 @@ void sigHandler(int signal) {
 
 #undef DEBUG_SERVICE
 
-static char* SERVICE_TERMINATION_EVENT_NAME = "MiNiFiServiceTermination";
+static char* SERVICE_TERMINATION_EVENT_NAME = "Global\\MiNiFiServiceTermination";
 
-void CheckRunAsService() {
-  static const int MAX_RETRIES_START_EXE = 3;
+static void OutputDebug(const char* format, ...) {
+  va_list args;
+  va_start(args, format);
+
+  char buf[256];
+  sprintf_s(buf, _countof(buf), "%s: %s", SERVICE_NAME, format);
+
+  char out[1024];
+  StringCbVPrintfA(out, sizeof(out), buf, args);
+
+  OutputDebugStringA(out);
+
+  va_end(args);
+};
+
+static void CheckRunAsService() {
   static const int WAIT_TIME_EXE_TERMINATION = 5000;
-  static const int WAIT_TIME_BEFORE_EXE_RESTART = 3000;
+  static const int WAIT_TIME_EXE_RESTART = 60000;
 
   static SERVICE_STATUS s_serviceStatus;
   static SERVICE_STATUS_HANDLE s_statusHandle;
   static bool s_stopService;
   static HANDLE s_hProcess;
 
-  static auto OutputDebugArgs = [](const char* format, va_list args)
-  {
-    char buf[256];
-    sprintf_s(buf, _countof(buf), "%s: %s", SERVICE_NAME, format);
-
-    char out[1024];
-    StringCbVPrintfA(out, sizeof(out), buf, args);
-
-    OutputDebugStringA(out);
-  };
-
-  static auto OutputDebug = [](const char* format, ...) {
-    va_list args;
-    va_start(args, format);
-
-    OutputDebugArgs(format, args);
-
-    va_end(args);
-  };
 
   static auto Log = []() {
     static std::shared_ptr<logging::Logger> s_logger = logging::LoggerConfiguration::getConfiguration().getLogger("service");
@@ -260,9 +255,9 @@ void CheckRunAsService() {
           return;
         }
 
-        LOG_INFO("Start exe path %s", filePath);
-        int retries = 1;
         do {
+          LOG_INFO("Start exe path %s", filePath);
+
           STARTUPINFO startupInfo{};
           startupInfo.cb = sizeof(startupInfo);
 
@@ -281,25 +276,22 @@ void CheckRunAsService() {
           CloseHandle(processInformation.hProcess);
           CloseHandle(processInformation.hThread);
 
-          if (s_stopService)
+          if (s_stopService) {
+            LOG_INFO("Service was stopped, exe won't be restarted");
             break;
+          }
 
           if (WAIT_FAILED == res) {
             LOG_LASTERROR("!WaitForSingleObject");
-            return;
           }
 
           if (WAIT_OBJECT_0 != res) {
             LOG_ERROR("!WaitForSingleObject return %d", res);
-            return;
           }
 
-          retries++;
-
-          LOG_INFO("Retry start exe %d", retries);
-
-          Sleep(WAIT_TIME_BEFORE_EXE_RESTART);
-        } while (retries <= MAX_RETRIES_START_EXE);
+          LOG_INFO("Sleep %d sec before restarting exe", WAIT_TIME_EXE_RESTART/1000);
+          Sleep(WAIT_TIME_EXE_RESTART);
+        } while (true);
 
         s_serviceStatus.dwControlsAccepted = 0;
         s_serviceStatus.dwCurrentState = SERVICE_STOPPED;
@@ -329,7 +321,7 @@ void CheckRunAsService() {
   ExitProcess(0);
 }
 
-bool CreateServiceTerminationThread(std::shared_ptr<logging::Logger> logger) {
+static bool CreateServiceTerminationThread(std::shared_ptr<logging::Logger> logger) {
   HANDLE hEvent = CreateEvent(0, FALSE, FALSE, SERVICE_TERMINATION_EVENT_NAME);
   if (!hEvent) {
     logger->log_error("!CreateEvent lastError %x", GetLastError());
