@@ -191,7 +191,7 @@ int main(int argc, char **argv) {
 	log_properties->loadConfigureFile(DEFAULT_LOG_PROPERTIES_FILE);
 	logging::LoggerConfiguration::getConfiguration().initialize(log_properties);
 
-	std::shared_ptr<minifi::Properties> uid_properties = std::make_shared<minifi::Properties>();
+	std::shared_ptr<minifi::Properties> uid_properties = std::make_shared<minifi::Properties>("UID properties");
 	uid_properties->setHome(minifiHome);
 	uid_properties->loadConfigureFile(DEFAULT_UID_PROPERTIES_FILE);
 	utils::IdGenerator::getIdGenerator()->initialize(uid_properties);

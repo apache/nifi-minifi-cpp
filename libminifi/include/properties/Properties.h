@@ -45,10 +45,14 @@ namespace minifi {
 
 class Properties {
  public:
-  Properties();
+  Properties(const std::string& name = "");
 
   virtual ~Properties() {
 
+  }
+
+  virtual const std::string& getName() {
+    return name_;
   }
 
   // Clear the load config
@@ -110,7 +114,7 @@ class Properties {
   }
 
   // Get the determined MINIFI_HOME
-  std::string getHome() {
+  std::string getHome() const {
     return minifi_home_;
   }
   // Parse Command Line
@@ -137,6 +141,8 @@ class Properties {
   std::shared_ptr<minifi::core::logging::Logger> logger_;
   // Home location for this executable
   std::string minifi_home_;
+
+  std::string name_;
 };
 
 } /* namespace minifi */
