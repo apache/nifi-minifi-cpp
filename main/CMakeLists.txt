@@ -55,7 +55,8 @@ endif()
 
 endif()
 
-add_executable(minifiexe MiNiFiMain.cpp)
+add_executable(minifiexe MiNiFiMain.cpp MiNiFiWindowsService.cpp)
+
 if (NOT USE_SHARED_LIBS)
 	if (LIBC_STATIC)
 		set_target_properties(minifiexe PROPERTIES LINK_SEARCH_START_STATIC 1)
