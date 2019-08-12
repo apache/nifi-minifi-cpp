@@ -98,7 +98,7 @@ private:
   std::shared_ptr<core::ProcessSessionFactory> sessionFactory_;
   bool renderXML_{};
   MSXML2::IXMLDOMDocumentPtr xmlDoc_;
-  std::atomic<bool> processorStopped_ = false;
+  std::atomic<bool> stopNotified_ = false;
 };
 
 REGISTER_RESOURCE(ConsumeWindowsEventLog, "Windows Event Log Subscribe Callback to receive FlowFiles from Events on Windows.");

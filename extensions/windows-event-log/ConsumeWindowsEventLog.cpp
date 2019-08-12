@@ -212,6 +212,8 @@ void ConsumeWindowsEventLog::createTextOutput(const MSXML2::IXMLDOMElementPtr pR
 }
 
 bool ConsumeWindowsEventLog::subscribe(const std::shared_ptr<core::ProcessContext> &context) {
+  stopNotified_ = false;
+
   std::string channel;
   context->getProperty(Channel.getName(), channel);
 
@@ -258,7 +260,7 @@ bool ConsumeWindowsEventLog::subscribe(const std::shared_ptr<core::ProcessContex
       {
         auto pConsumeWindowsEventLog = static_cast<ConsumeWindowsEventLog*>(pContext);
 
-        if (pConsumeWindowsEventLog->processorStopped_) {
+        if (pConsumeWindowsEventLog->stopNotified_) {
           return 0UL;
         }
 
@@ -364,7 +366,7 @@ int ConsumeWindowsEventLog::processQueue(const std::shared_ptr<core::ProcessSess
 
 void ConsumeWindowsEventLog::notifyStop()
 {
-  processorStopped_ = true;
+  stopNotified_ = true;
 
   unsubscribe();
 
