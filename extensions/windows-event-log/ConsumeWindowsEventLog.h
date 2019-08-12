@@ -27,6 +27,7 @@
 #include "core/ProcessSession.h"
 #include <winevt.h>
 #include <sstream>
+#include <atomic>
 
 #import <msxml6.dll>
 
@@ -97,6 +98,7 @@ private:
   std::shared_ptr<core::ProcessSessionFactory> sessionFactory_;
   bool renderXML_{};
   MSXML2::IXMLDOMDocumentPtr xmlDoc_;
+  std::atomic<bool> processorStopped_ = false;
 };
 
 REGISTER_RESOURCE(ConsumeWindowsEventLog, "Windows Event Log Subscribe Callback to receive FlowFiles from Events on Windows.");

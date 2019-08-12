@@ -220,6 +220,7 @@ bool ConsumeWindowsEventLog::subscribe(const std::shared_ptr<core::ProcessContex
 
   context->getProperty(RenderFormatXML.getName(), renderXML_);
   if (!renderXML_) {
+    xmlDoc_.Release();
     HRESULT hr = xmlDoc_.CreateInstance(__uuidof(MSXML2::DOMDocument60));
     if (FAILED(hr)) {
       logger_->log_error("!xmlDoc_.CreateInstance %x", hr);
@@ -256,6 +257,10 @@ bool ConsumeWindowsEventLog::subscribe(const std::shared_ptr<core::ProcessContex
       [](EVT_SUBSCRIBE_NOTIFY_ACTION action, PVOID pContext, EVT_HANDLE hEvent)
       {
         auto pConsumeWindowsEventLog = static_cast<ConsumeWindowsEventLog*>(pContext);
+
+        if (pConsumeWindowsEventLog->processorStopped_) {
+          return 0UL;
+        }
 
         auto& logger = pConsumeWindowsEventLog->logger_;
 
@@ -359,6 +364,8 @@ int ConsumeWindowsEventLog::processQueue(const std::shared_ptr<core::ProcessSess
 
 void ConsumeWindowsEventLog::notifyStop()
 {
+  processorStopped_ = true;
+
   unsubscribe();
 
   if (listRenderedData_.size_approx() != 0) {
