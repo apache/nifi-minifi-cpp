@@ -117,6 +117,8 @@ ConsumeWindowsEventLog::~ConsumeWindowsEventLog() {
 }
 
 void ConsumeWindowsEventLog::initialize() {
+  stopNotified_ = false;
+
   //! Set the supported properties
   setSupportedProperties({Channel, Query, RenderFormatXML, MaxBufferSize, InactiveDurationToReconnect});
 
@@ -212,8 +214,6 @@ void ConsumeWindowsEventLog::createTextOutput(const MSXML2::IXMLDOMElementPtr pR
 }
 
 bool ConsumeWindowsEventLog::subscribe(const std::shared_ptr<core::ProcessContext> &context) {
-  stopNotified_ = false;
-
   std::string channel;
   context->getProperty(Channel.getName(), channel);
 
