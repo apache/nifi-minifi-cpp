@@ -43,6 +43,8 @@ class LogAttribute : public core::Processor {
   LogAttribute(std::string name, utils::Identifier uuid = utils::Identifier())
       : Processor(name, uuid),
         flowfiles_to_log_(1),
+        hexencode_(false),
+        max_line_length_(80U),
         logger_(logging::LoggerFactory<LogAttribute>::getLogger()) {
   }
   // Destructor
@@ -55,6 +57,8 @@ class LogAttribute : public core::Processor {
   static core::Property AttributesToLog;
   static core::Property AttributesToIgnore;
   static core::Property LogPayload;
+  static core::Property HexencodePayload;
+  static core::Property MaxPayloadLineLength;
   static core::Property LogPrefix;
   static core::Property FlowFilesToLog;
   // Supported Relationships
@@ -119,6 +123,8 @@ class LogAttribute : public core::Processor {
 
  private:
   uint64_t flowfiles_to_log_;
+  bool hexencode_;
+  uint32_t max_line_length_;
   // Logger
   std::shared_ptr<logging::Logger> logger_;
 };

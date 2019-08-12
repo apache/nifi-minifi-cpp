@@ -411,17 +411,39 @@ TEST_CASE("TailFileLongWithDelimiter", "[tailfiletest2]") {
   std::shared_ptr<core::Processor> log_attr = plan->addProcessor("LogAttribute", "Log", core::Relationship("success", "description"), true);
   plan->setProperty(log_attr, processors::LogAttribute::FlowFilesToLog.getName(), "0");
   plan->setProperty(log_attr, processors::LogAttribute::LogPayload.getName(), "true");
+  plan->setProperty(log_attr, processors::LogAttribute::HexencodePayload.getName(), "true");
+
+  uint32_t line_length = 0U;
+  SECTION("with line length 80") {
+    line_length = 80U;
+  }
+  SECTION("with line length 200") {
+    line_length = 200U;
+    plan->setProperty(log_attr, processors::LogAttribute::MaxPayloadLineLength.getName(), "200");
+  }
+  SECTION("with line length 0") {
+    line_length = 0U;
+    plan->setProperty(log_attr, processors::LogAttribute::MaxPayloadLineLength.getName(), "0");
+  }
+  SECTION("with line length 16") {
+    line_length = 16U;
+    plan->setProperty(log_attr, processors::LogAttribute::MaxPayloadLineLength.getName(), "16");
+  }
 
   testController.runSession(plan, true);
 
   REQUIRE(LogTestController::getInstance().contains("Logged 3 flow files"));
   REQUIRE(LogTestController::getInstance().contains(utils::StringUtils::to_hex(line1)));
   auto line2_hex = utils::StringUtils::to_hex(line2);
-  std::stringstream line2_hex_lines;
-  for (size_t i = 0; i < line2_hex.size(); i += 80) {
-    line2_hex_lines << line2_hex.substr(i, 80) << '\n';
+  if (line_length == 0U) {
+    REQUIRE(LogTestController::getInstance().contains(line2_hex));
+  } else {
+    std::stringstream line2_hex_lines;
+    for (size_t i = 0; i < line2_hex.size(); i += line_length) {
+      line2_hex_lines << line2_hex.substr(i, line_length) << '\n';
+    }
+    REQUIRE(LogTestController::getInstance().contains(line2_hex_lines.str()));
   }
-  REQUIRE(LogTestController::getInstance().contains(line2_hex_lines.str()));
   REQUIRE(LogTestController::getInstance().contains(utils::StringUtils::to_hex(line3)));
   REQUIRE(false == LogTestController::getInstance().contains(utils::StringUtils::to_hex(line4), std::chrono::seconds(0)));
 
@@ -470,6 +492,7 @@ TEST_CASE("TailFileWithDelimiterMultipleDelimiters", "[tailfiletest2]") {
   std::shared_ptr<core::Processor> log_attr = plan->addProcessor("LogAttribute", "Log", core::Relationship("success", "description"), true);
   plan->setProperty(log_attr, processors::LogAttribute::FlowFilesToLog.getName(), "0");
   plan->setProperty(log_attr, processors::LogAttribute::LogPayload.getName(), "true");
+  plan->setProperty(log_attr, processors::LogAttribute::HexencodePayload.getName(), "true");
 
   testController.runSession(plan, true);
 
