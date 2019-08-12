@@ -56,6 +56,10 @@ core::Property LogAttribute::AttributesToIgnore(
 core::Property LogAttribute::LogPayload(core::PropertyBuilder::createProperty("Log Payload")->withDescription("If true, the FlowFile's payload will be logged, in addition to its attributes."
                                                                                                               "otherwise, just the Attributes will be logged")->withDefaultValue<bool>(false)->build());
 
+core::Property LogAttribute::HexencodePayload(core::PropertyBuilder::createProperty("Hexencode Payload")->withDescription("If true, the FlowFile's payload will be logged in a hexencoded format")->withDefaultValue<bool>(false)->build());
+
+core::Property LogAttribute::MaxPayloadLineLength(core::PropertyBuilder::createProperty("Maximum Payload Line Length")->withDescription("The logged payload will be broken into lines this long. 0 means no newlines will be added.")->withDefaultValue<uint32_t>(80U)->build());
+
 core::Property LogAttribute::LogPrefix(
     core::PropertyBuilder::createProperty("Log Prefix")->withDescription("Log prefix appended to the log lines. It helps to distinguish the output of multiple LogAttribute processors.")->build());
 
@@ -68,6 +72,8 @@ void LogAttribute::initialize() {
   properties.insert(AttributesToLog);
   properties.insert(AttributesToIgnore);
   properties.insert(LogPayload);
+  properties.insert(HexencodePayload);
+  properties.insert(MaxPayloadLineLength);
   properties.insert(FlowFilesToLog);
   properties.insert(LogPrefix);
   setSupportedProperties(properties);
@@ -86,6 +92,14 @@ void LogAttribute::onSchedule(const std::shared_ptr<core::ProcessContext> &conte
     if (!flowsToLog.getValue().validate("Validating FlowFilesToLog").valid())
       throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Invalid value for flowfiles to log: " + flowsToLog.getValue().to_string());
     flowfiles_to_log_ = flowsToLog.getValue();
+  }
+
+  std::string value;
+  if (context->getProperty(HexencodePayload.getName(), value)) {
+    utils::StringUtils::StringToBool(value, hexencode_);
+  }
+  if (context->getProperty(MaxPayloadLineLength.getName(), value)) {
+    core::Property::StringToInt(value, max_line_length_);
   }
 }
 // OnTrigger method, implemented by NiFi LogAttribute
@@ -138,9 +152,19 @@ void LogAttribute::onTrigger(const std::shared_ptr<core::ProcessContext> &contex
       ReadCallback callback(logger_, flow->getSize());
       session->read(flow, &callback);
 
-      auto payload_hex = utils::StringUtils::to_hex(callback.buffer_.data(), callback.buffer_.size());
-      for (size_t i = 0; i < payload_hex.size(); i += 80) {
-        message << payload_hex.substr(i, 80) << '\n';
+      std::string printable_payload;
+      if (hexencode_) {
+        printable_payload = utils::StringUtils::to_hex(callback.buffer_.data(), callback.buffer_.size());
+      } else {
+        printable_payload = std::string(reinterpret_cast<char*>(callback.buffer_.data()), callback.buffer_.size());
+      }
+
+      if (max_line_length_ == 0U) {
+        message << printable_payload << "\n";
+      } else {
+        for (size_t i = 0; i < printable_payload.size(); i += max_line_length_) {
+          message << printable_payload.substr(i, max_line_length_) << '\n';
+        }
       }
     } else {
       message << "\n";
