@@ -665,6 +665,7 @@ bool SiteToSiteClient::receiveFlowFiles(const std::shared_ptr<core::ProcessConte
   }
 
   if (!transaction->isDataAvailable()) {
+    deleteTransaction(transactionID);
     context->yield();
     tearDown();
     return true;

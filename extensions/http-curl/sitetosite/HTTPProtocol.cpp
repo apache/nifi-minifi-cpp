@@ -54,7 +54,7 @@ std::shared_ptr<Transaction> HttpSiteToSiteClient::createTransaction(std::string
   std::stringstream uri;
   uri << getBaseURI() << "data-transfer/" << dir_str << "/" << getPortId() << "/transactions";
   auto client = create_http_client(uri.str(), "POST");
-  client->appendHeader(PROTOCOL_VERSION_HEADER, "1");
+  client->appendHeader(PROTOCOL_VERSION_HEADER, SUPPORTED_HTTTP_S2S_VERSION);
   client->setConnectionTimeout(5);
   client->setContentType("application/json");
   client->appendHeader("Accept: application/json");
@@ -63,7 +63,16 @@ std::shared_ptr<Transaction> HttpSiteToSiteClient::createTransaction(std::string
   client->submit();
   if (peer_->getStream() != nullptr)
     logger_->log_debug("Closing %s", ((io::HttpStream*) peer_->getStream())->getClientRef()->getURL());
-  if (client->getResponseCode() == 201) {
+  uint64_t client_response = client->getResponseCode();
+  if (direction == RECEIVE && client_response == 204) {
+    // Received 204 - remote port has no flowfiles to send
+    logger_->log_debug("Remote port has no flowfiles to send - empty transaction is created");
+    org::apache::nifi::minifi::io::CRCStream<SiteToSitePeer> crcstream(peer_.get());
+    auto transaction = std::make_shared<Transaction>(direction, crcstream);  // This is NOT a http transaction to avoid http requests at cancel!
+    known_transactions_[transaction->getUUIDStr()] = transaction;
+    return transaction;
+  }
+  if (client_response == 201) {
     // parse the headers
     auto intent_name = client->getHeaderValue("x-location-uri-intent");
     if (utils::StringUtils::equalsIgnoreCase(intent_name, "transaction-url")) {
@@ -85,10 +94,10 @@ std::shared_ptr<Transaction> HttpSiteToSiteClient::createTransaction(std::string
         } else {
           client = openConnectionForReceive(transaction);
           transaction->setDataAvailable(true);
-          // a 201 tells us that data is available. A 200 would mean that nothing is available.
+          // a 201 tells us that data is available. A 204 would mean that nothing is available.
         }
 
-        client->appendHeader(PROTOCOL_VERSION_HEADER, "1");
+        client->appendHeader(PROTOCOL_VERSION_HEADER, SUPPORTED_HTTTP_S2S_VERSION);
         peer_->setStream(std::unique_ptr<io::DataStream>(new io::HttpStream(client)));
         transactionID = transaction->getUUIDStr();
         logger_->log_debug("Created transaction id -%s-", transactionID);
@@ -188,7 +197,7 @@ bool HttpSiteToSiteClient::getPeerList(std::vector<PeerStatus> &peers) {
 
   auto client = create_http_client(uri.str(), "GET");
 
-  client->appendHeader(PROTOCOL_VERSION_HEADER, "1");
+  client->appendHeader(PROTOCOL_VERSION_HEADER, SUPPORTED_HTTTP_S2S_VERSION);
 
   client->submit();
 
@@ -280,7 +289,7 @@ void HttpSiteToSiteClient::closeTransaction(const std::string &transactionID) {
 
   auto client = create_http_client(uri.str(), "DELETE");
 
-  client->appendHeader(PROTOCOL_VERSION_HEADER, "1");
+  client->appendHeader(PROTOCOL_VERSION_HEADER, SUPPORTED_HTTTP_S2S_VERSION);
 
   client->setConnectionTimeout(5);
 
