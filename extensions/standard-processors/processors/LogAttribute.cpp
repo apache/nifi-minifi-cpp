@@ -56,9 +56,13 @@ core::Property LogAttribute::AttributesToIgnore(
 core::Property LogAttribute::LogPayload(core::PropertyBuilder::createProperty("Log Payload")->withDescription("If true, the FlowFile's payload will be logged, in addition to its attributes."
                                                                                                               "otherwise, just the Attributes will be logged")->withDefaultValue<bool>(false)->build());
 
-core::Property LogAttribute::HexencodePayload(core::PropertyBuilder::createProperty("Hexencode Payload")->withDescription("If true, the FlowFile's payload will be logged in a hexencoded format")->withDefaultValue<bool>(false)->build());
+core::Property LogAttribute::HexencodePayload(
+    core::PropertyBuilder::createProperty("Hexencode Payload")->withDescription(
+        "If true, the FlowFile's payload will be logged in a hexencoded format")->withDefaultValue<bool>(false)->build());
 
-core::Property LogAttribute::MaxPayloadLineLength(core::PropertyBuilder::createProperty("Maximum Payload Line Length")->withDescription("The logged payload will be broken into lines this long. 0 means no newlines will be added.")->withDefaultValue<uint32_t>(80U)->build());
+core::Property LogAttribute::MaxPayloadLineLength(
+    core::PropertyBuilder::createProperty("Maximum Payload Line Length")->withDescription(
+        "The logged payload will be broken into lines this long. 0 means no newlines will be added.")->withDefaultValue<uint32_t>(80U)->build());
 
 core::Property LogAttribute::LogPrefix(
     core::PropertyBuilder::createProperty("Log Prefix")->withDescription("Log prefix appended to the log lines. It helps to distinguish the output of multiple LogAttribute processors.")->build());
