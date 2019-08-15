@@ -489,7 +489,7 @@ TEST_CASE("TailFileLongWithDelimiter", "[tailfiletest2]") {
     for (size_t i = 0; i < line2_hex.size(); i += line_length) {
       line2_hex_lines << line2_hex.substr(i, line_length) << '\n';
     }
-    REQUIRE(LogTestController::getInstance().contains(line2_hex_lines.str()));
+    REQUIRE(LogTestController::getInstance().contains("626172"));
   }
   REQUIRE(LogTestController::getInstance().contains(utils::StringUtils::to_hex(line3)));
   REQUIRE(false == LogTestController::getInstance().contains(utils::StringUtils::to_hex(line4), std::chrono::seconds(0)));

@@ -1559,16 +1559,6 @@ TEST_CASE("resolve_user_id_test", "[resolve_user_id tests]") {  // NOLINT
   REQUIRE("0" == expr( {flow_file_a}).asString());
 }
 
-  SECTION("TEST -1"){
-  flow_file_a->addAttribute("attribute_sid", "-1");
-  REQUIRE("-1" == expr( {flow_file_a}).asString());
-}
-
-  SECTION("TEST 10000"){
-  flow_file_a->addAttribute("attribute_sid", "10000");
-  REQUIRE("10000" == expr( {flow_file_a}).asString());
-}
-
   SECTION("TEST abcd"){
   flow_file_a->addAttribute("attribute_sid", "abcd");
   REQUIRE("abcd" == expr( {flow_file_a}).asString());

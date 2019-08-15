@@ -142,8 +142,6 @@ std::string OsUtils::userIdToUsername(const std::string &uid) {
       struct passwd pass;
       struct passwd *result;
       char localbuf[1024];
-      std::cout << "ret is " << (int)ret << std::endl;
-      // getpwuid is not thread safe, but getpwuid_r is
       if (!getpwuid_r(ret, &pass, localbuf, sizeof localbuf, &result)) {
         name = pass.pw_name;
       }
