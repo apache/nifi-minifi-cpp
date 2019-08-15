@@ -1,0 +1,81 @@
+diff -rupN orig/CMakeLists.txt patched/CMakeLists.txt
+--- orig/CMakeLists.txt	2019-09-17 11:38:38.000000000 +0200
++++ patched/CMakeLists.txt	2020-04-16 23:43:22.000000000 +0200
+@@ -24,7 +24,7 @@ if(COMMAND cmake_policy)
+ endif(COMMAND cmake_policy)
+ 	      
+ # where to look first for cmake modules, before ${CMAKE_ROOT}/Modules/ is checked
+-SET(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/modules ${CMAKE_MODULE_PATH})
++LIST(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/modules)
+ 
+ INCLUDE( ${CMAKE_SOURCE_DIR}/VERSION.cmake )
+ SET(VERSION "${OPENWSMAN_MAJOR}.${OPENWSMAN_MINOR}.${OPENWSMAN_PATCH}")
+@@ -168,8 +168,14 @@ ENDIF( USE_PAM )
+ 
+ INCLUDE(FindOpenSSL)
+ IF(OPENSSL_FOUND)
++  MESSAGE("OpenSSL found")
++  MESSAGE("OPENSSL_INCLUDE_DIR: ${OPENSSL_INCLUDE_DIR}")
++  MESSAGE("OPENSSL_LIBRARIES: ${OPENSSL_LIBRARIES}")
+   SET(HAVE_SSL 1)
+   SET(USE_OPENSSL 1)
++  INCLUDE_DIRECTORIES(${OPENSSL_INCLUDE_DIR})
++ELSE(OPENSSL_FOUND)
++  SET(HAVE_SSL 0)
+ ENDIF(OPENSSL_FOUND)
+ 
+ IF( BUILD_RUBY )
+@@ -256,6 +262,9 @@ IF(UNIX)
+   IF ( NOT CURL_FOUND)
+    MESSAGE( FATAL_ERROR " curl not found" )
+   ELSE ( NOT CURL_FOUND)
++    MESSAGE("cURL found")
++    MESSAGE("CURL_INCLUDE_DIR: ${CURL_INCLUDE_DIR}")
++    MESSAGE("CURL_LIBRARIES: ${CURL_LIBRARIES}")
+     INCLUDE_DIRECTORIES(${CURL_INCLUDE_DIR})
+     IF(CURL_VERSION_STRING)
+       STRING(COMPARE LESS ${CURL_VERSION_STRING} "7.12.0" result)
+@@ -272,6 +281,9 @@ INCLUDE(FindLibXml2)
+ IF ( NOT LIBXML2_FOUND)
+   MESSAGE( FATAL_ERROR " libxml2 not found" )
+ ELSE ( NOT LIBXML2_FOUND)
++  MESSAGE("Libxml2 found")
++  MESSAGE("LIBXML2_INCLUDE_DIR: ${LIBXML2_INCLUDE_DIR}")
++  MESSAGE("LIBXML2_LIBRARIES: ${LIBXML2_LIBRARIES}")
+   INCLUDE_DIRECTORIES(${LIBXML2_INCLUDE_DIR})
+ ENDIF( NOT LIBXML2_FOUND)
+ 
+diff -rupN orig/src/lib/wsman-soap.c patched/src/lib/wsman-soap.c
+--- orig/src/lib/wsman-soap.c	2019-09-17 11:38:38.000000000 +0200
++++ patched/src/lib/wsman-soap.c	2020-04-16 23:21:49.000000000 +0200
+@@ -991,10 +991,12 @@ unsigned long get_total_enum_context(WsC
+  * preset, hence marking them as weak symbols and testing to see
+  * if they are resolved before using them.
+  */
++#if 0
+ #pragma weak wsmand_options_get_max_threads
+ extern int wsmand_options_get_max_threads(void);
+ #pragma weak wsmand_options_get_max_connections_per_thread
+ extern int wsmand_options_get_max_connections_per_thread(void);
++#endif
+ 
+ /**
+  * Enumeration Stub for processing enumeration requests
+@@ -1030,9 +1032,17 @@ wsenum_enumerate_stub(SoapOpH op,
+         int max_threads = 0;
+         int max_connections_per_thread = 0;
+         int(* fptr)(void);
++#if 0
+         if((fptr = wsmand_options_get_max_threads) != 0){
++#else
++        if(0){
++#endif
+                 max_threads = (* fptr)();
++#if 0
+                 if((fptr = wsmand_options_get_max_connections_per_thread) != 0){
++#else
++                if(0){
++#endif
+                         max_connections_per_thread = (* fptr)();
+                 }
+                 else{

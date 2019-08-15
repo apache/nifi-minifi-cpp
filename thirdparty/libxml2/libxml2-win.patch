@@ -1,0 +1,126 @@
+diff -rupN orig/CMakeLists.txt patched/CMakeLists.txt
+--- orig/CMakeLists.txt	1970-01-01 01:00:00.000000000 +0100
++++ patched/CMakeLists.txt	2020-04-17 14:16:13.000000000 +0200
+@@ -0,0 +1,65 @@
++cmake_minimum_required(VERSION 3.7)
++
++project(libxml2)
++
++set(SOURCES buf.c
++            c14n.c
++            catalog.c
++            chvalid.c
++            debugXML.c
++            dict.c
++            DOCBparser.c
++            encoding.c
++            entities.c
++            error.c
++            globals.c
++            hash.c
++            HTMLparser.c
++            HTMLtree.c
++            legacy.c
++            list.c
++            nanoftp.c
++            nanohttp.c
++            parser.c
++            parserInternals.c
++            pattern.c
++            relaxng.c
++            SAX.c
++            SAX2.c
++            schematron.c
++            threads.c
++            tree.c
++            uri.c
++            valid.c
++            xinclude.c
++            xlink.c
++            xmlcatalog.c
++            xmlIO.c
++            xmlmemory.c
++            xmlmodule.c
++            xmlreader.c
++            xmlregexp.c
++            xmlsave.c
++            xmlschemas.c
++            xmlschemastypes.c
++            xmlstring.c
++            xmlunicode.c
++            xmlwriter.c
++            xpath.c
++            xpointer.c)
++
++add_library(xml2 STATIC ${SOURCES})
++
++set_property(TARGET xml2 PROPERTY POSITION_INDEPENDENT_CODE ON)
++
++target_include_directories(xml2
++                            PRIVATE
++                              include
++                              win32/VC10)
++
++install(TARGETS xml2
++    ARCHIVE DESTINATION lib
++)
++
++install(DIRECTORY include/libxml DESTINATION include/libxml2
++          FILES_MATCHING PATTERN "*.h")
+diff -rupN orig/include/libxml/xmlversion.h patched/include/libxml/xmlversion.h
+--- orig/include/libxml/xmlversion.h	2019-10-30 20:14:29.000000000 +0100
++++ patched/include/libxml/xmlversion.h	2020-04-17 14:52:58.000000000 +0200
+@@ -50,7 +50,7 @@ XMLPUBFUN void XMLCALL xmlCheckVersion(i
+  *
+  * extra version information, used to show a CVS compilation
+  */
+-#define LIBXML_VERSION_EXTRA "-GITv2.9.10-rc1-2-ga5bb6aaa2"
++#define LIBXML_VERSION_EXTRA ""
+ 
+ /**
+  * LIBXML_TEST_VERSION:
+@@ -171,7 +171,7 @@ XMLPUBFUN void XMLCALL xmlCheckVersion(i
+  *
+  * Whether the FTP support is configured in
+  */
+-#if 1
++#if 0
+ #define LIBXML_FTP_ENABLED
+ #endif
+ 
+@@ -180,7 +180,7 @@ XMLPUBFUN void XMLCALL xmlCheckVersion(i
+  *
+  * Whether the HTTP support is configured in
+  */
+-#if 1
++#if 0
+ #define LIBXML_HTTP_ENABLED
+ #endif
+ 
+@@ -270,7 +270,7 @@ XMLPUBFUN void XMLCALL xmlCheckVersion(i
+  *
+  * Whether iconv support is available
+  */
+-#if 1
++#if 0
+ #define LIBXML_ICONV_ENABLED
+ #endif
+ 
+@@ -395,7 +395,7 @@ XMLPUBFUN void XMLCALL xmlCheckVersion(i
+  *
+  * Whether the Zlib support is compiled in
+  */
+-#if 1
++#if 0
+ #define LIBXML_ZLIB_ENABLED
+ #endif
+ 
+@@ -404,7 +404,7 @@ XMLPUBFUN void XMLCALL xmlCheckVersion(i
+  *
+  * Whether the Lzma support is compiled in
+  */
+-#if 1
++#if 0
+ #define LIBXML_LZMA_ENABLED
+ #endif
+ 

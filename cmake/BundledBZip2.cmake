@@ -39,7 +39,7 @@ function(use_bundled_bzip2 SOURCE_DIR BINARY_DIR)
     # Build project
     ExternalProject_Add(
             bzip2-external
-            URL https://sourceware.org/pub/bzip2/bzip2-1.0.8.tar.gz
+            URL https://sourceware.org/pub/bzip2/bzip2-1.0.8.tar.gz http://deb.debian.org/debian/pool/main/b/bzip2/bzip2_1.0.8.orig.tar.gz
             URL_HASH "SHA256=ab5a03176ee106d3f0fa90e381da478ddae405918153cca248e682cd0c4a2269"
             SOURCE_DIR "${BINARY_DIR}/thirdparty/bzip2-src"
             LIST_SEPARATOR % # This is needed for passing semicolon-separated lists

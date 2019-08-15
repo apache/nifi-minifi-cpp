@@ -794,8 +794,7 @@ bool ListSFTP::updateFromTrackingEntitiesCache(const std::shared_ptr<core::Proce
     return false;
   }
 
-  size_t i = 0;
-  while (true) {
+  for (size_t i = 0U;; i++) {
     std::string name;
     try {
       name = state_map.at("entity." + std::to_string(i) + ".name");
@@ -812,7 +811,6 @@ bool ListSFTP::updateFromTrackingEntitiesCache(const std::shared_ptr<core::Proce
       logger_->log_error("State for entity \"%s\" is missing or invalid, skipping", name);
       continue;
     }
-    ++i;
   }
 
   if (state_listing_strategy != listing_strategy_ ||
