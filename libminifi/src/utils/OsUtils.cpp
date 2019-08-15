@@ -122,19 +122,16 @@ std::string OsUtils::userIdToUsername(const std::string &uid) {
             std::string domain = std::string(windowsDomain);
             name = domain + "\\";
             name += std::string(windowsAccount);
-          }
-          else {
+          } else {
             name = std::string(windowsAccount);
           }
-
         }
-
         GlobalFree(windowsAccount);
         if (dwwindowsDomainSize > 0)
         GlobalFree(windowsDomain);
       }
     }
-#else 
+#else
     auto ptr = name.c_str();
     char *end = nullptr;  // it will be unused
     uid_t ret = std::strtol(ptr, &end, 10);
@@ -145,7 +142,6 @@ std::string OsUtils::userIdToUsername(const std::string &uid) {
       if (!getpwuid_r(ret, &pass, localbuf, sizeof localbuf, &result)) {
         name = pass.pw_name;
       }
-
     }
 #endif
   }
