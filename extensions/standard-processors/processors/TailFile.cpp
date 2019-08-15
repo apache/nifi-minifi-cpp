@@ -246,8 +246,7 @@ bool TailFile::recoverState(const std::shared_ptr<core::ProcessContext>& context
   std::unordered_map<std::string, std::string> state_map;
   if (state_manager_->get(state_map)) {
     std::map<std::string, TailState> new_tail_states;
-    size_t i = 0;
-    while (true) {
+    for (size_t i = 0U;; i++) {
       std::string name;
       try {
         name = state_map.at("file." + std::to_string(i) + ".name");
@@ -268,7 +267,6 @@ bool TailFile::recoverState(const std::shared_ptr<core::ProcessContext>& context
       } catch (...) {
         continue;
       }
-      ++i;
     }
     state_load_success = true;
     tail_states_ = std::move(new_tail_states);
