@@ -223,13 +223,11 @@ bool Properties::persistProperties() {
       continue;
     }
 
-    std::string value = equal;
-    value = org::apache::nifi::minifi::utils::StringUtils::replaceEnvironmentVariables(value);
     key = org::apache::nifi::minifi::utils::StringUtils::trimRight(key);
-    value = org::apache::nifi::minifi::utils::StringUtils::trimRight(value);
+    std::string value = org::apache::nifi::minifi::utils::StringUtils::trimRight(equal);
     auto hasIt = properties_copy.find(key);
     if (hasIt != properties_copy.end() && !value.empty()) {
-      output_file << key << "=" << hasIt->second << std::endl;
+      output_file << key << "=" << value << std::endl;
     }
     properties_copy.erase(key);
   }
