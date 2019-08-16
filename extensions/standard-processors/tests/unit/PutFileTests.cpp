@@ -343,7 +343,6 @@ TEST_CASE("PutFileMaxFileCountTest", "[getfileputpfilemaxcount]") {
   const auto dir = testController.createTempDirectory(format);
   char format2[] = "/tmp/ft.XXXXXX";
   auto putfiledir = testController.createTempDirectory(format2);
-  std::cout << "of mice and men " << dir << " " << putfiledir << std::endl;
   plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), dir);
   plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::BatchSize.getName(), "1");
   plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), putfiledir);

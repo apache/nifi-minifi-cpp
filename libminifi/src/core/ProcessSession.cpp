@@ -566,6 +566,8 @@ void ProcessSession::import(const std::string& source, std::vector<std::shared_p
         if (read == 0) {
           logger_->log_trace("Finished reading input %s", source);
           break;
+        } else {
+          logging::LOG_TRACE(logger_) << "Read input of " << read;
         }
         uint8_t* begin = buffer.data();
         uint8_t* end = begin + read;
@@ -574,6 +576,7 @@ void ProcessSession::import(const std::string& source, std::vector<std::shared_p
           uint8_t* delimiterPos = std::find(begin, end, static_cast<uint8_t>(inputDelimiter));
           int len = delimiterPos - begin;
 
+          logging::LOG_TRACE(logger_) << "Read input of " << read << " length is " << len << " is at end?" << (delimiterPos == end);
           /*
            * We do not want to process the rest of the buffer after the last delimiter if
            *  - we have reached EOF in the file (we would discard it anyway)
@@ -584,8 +587,13 @@ void ProcessSession::import(const std::string& source, std::vector<std::shared_p
           }
 
           /* Create claim and stream if needed and append data */
-          claim = std::make_shared<ResourceClaim>(process_context_->getContentRepository());
-          stream = process_context_->getContentRepository()->write(claim);
+          if (claim == nullptr) {
+            startTime = getTimeMillis();
+            claim = std::make_shared<ResourceClaim>(process_context_->getContentRepository());
+          }
+          if (stream == nullptr) {
+            stream = process_context_->getContentRepository()->write(claim);
+          }
           if (stream == nullptr) {
             logger_->log_error("Stream is null");
             rollback();
@@ -611,7 +619,7 @@ void ProcessSession::import(const std::string& source, std::vector<std::shared_p
           }
           flowFile->setResourceClaim(claim);
           claim->increaseFlowFileRecordOwnedCount();
-          logging::LOG_DEBUG(logger_) << "Import offset" << flowFile->getOffset() << " length " << flowFile->getSize() << " content " << flowFile->getResourceClaim()->getContentFullPath()
+          logging::LOG_DEBUG(logger_) << "Import offset " << flowFile->getOffset() << " length " << flowFile->getSize() << " content " << flowFile->getResourceClaim()->getContentFullPath()
                                       << ", FlowFile UUID " << flowFile->getUUIDStr();
           stream->closeStream();
           std::string details = process_context_->getProcessorNode()->getName() + " modify flow record content " + flowFile->getUUIDStr();

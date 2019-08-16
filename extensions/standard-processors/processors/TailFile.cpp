@@ -134,7 +134,6 @@ void TailFile::onSchedule(const std::shared_ptr<core::ProcessContext> &context, 
     }
 
     auto fileRegexSelect = [&](const std::string& path, const std::string& filename) -> bool {
-      std::cout << "Checking " << path << " " << filename << std::endl;
       if (acceptFile(file, filename)) {
         tail_states_.insert(std::make_pair(filename, TailState {path, filename, 0, 0}));
       }

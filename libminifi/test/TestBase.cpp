@@ -133,8 +133,6 @@ std::shared_ptr<core::Processor> TestPlan::addProcessor(const std::string &proce
 
   utils::IdGenerator::getIdGenerator()->generate(uuid);
 
-  std::cout << "generated " << uuid.to_string() << std::endl;
-
   return addProcessor(processor_name, uuid, name, relationships, linkToPrevious);
 }
 

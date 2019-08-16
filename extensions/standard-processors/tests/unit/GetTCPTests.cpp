@@ -39,8 +39,6 @@
 TEST_CASE("GetTCPWithoutEOM", "[GetTCP1]") {
   utils::Identifier ident = utils::Identifier();
 
-  std::cout << (ident == nullptr) << std::endl;
-  std::cout << ident.to_string() << std::endl;
   TestController testController;
   std::vector<uint8_t> buffer;
   for (auto c : "Hello World\nHello Warld\nGoodByte Cruel world") {

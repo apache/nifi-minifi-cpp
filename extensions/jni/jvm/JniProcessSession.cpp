@@ -332,30 +332,25 @@ JNIEXPORT jobject JNICALL Java_org_apache_nifi_processor_JniProcessSessionFactor
     // Java do its thing as this is a condition of GC most likely
     return nullptr;
   }
-  std::cout << "335" << std::endl;
   minifi::jni::JniSessionFactory *sessionFactory = minifi::jni::JVMLoader::getPtr<minifi::jni::JniSessionFactory>(env, obj);
   auto session_class = minifi::jni::JVMLoader::getInstance()->load_class("org/apache/nifi/processor/JniProcessSession", env);
 
   auto session_instance = session_class.newInstance(env);
-  std::cout << "340" << std::endl;
   minifi::jni::ThrowIf(env);
 
   // create a session
   auto procSession = sessionFactory->getFactory()->createSession();
 
-  std::cout << "346" << std::endl;
   std::shared_ptr<minifi::jni::JniSession> session = std::make_shared<minifi::jni::JniSession>(procSession, session_instance, sessionFactory->getServicer());
 
   // add a reference so the minifi C++ session factory knows to remove these eventually.
   procSession->addReference(session);
-  std::cout << "351" << std::endl;
   auto rawSession = sessionFactory->addSession(session);
 
   // set the reference in session_instance using the raw pointer.
   minifi::jni::JVMLoader::getInstance()->setReference(session_instance, env, rawSession);
 
   // catalog the session
-  std::cout << "358" << std::endl;
   return session_instance;
 }
 
