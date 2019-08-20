@@ -60,6 +60,6 @@ DOCKER_COMMAND="docker build --build-arg UID=$UID_ARG \
 echo "Docker Command: '$DOCKER_COMMAND'"
 ${DOCKER_COMMAND}
 
-docker run --rm --entrypoint cat apacheminificpp:${DISTRO_NAME}-$MINIFI_VERSION /opt/minifi/build/nifi-minifi-cpp-$MINIFI_VERSION-bin.tar.gz > ${DUMP_LOCATION}/nifi-minifi-cpp-${DISTRO_NAME}-$MINIFI_VERSION-bin.tar.gz
+docker run --rm --entrypoint cat apacheminificpp:${DISTRO_NAME}-$MINIFI_VERSION /opt/minifi/build/minifi-agent-$MINIFI_VERSION-bin.tar.gz > ${DUMP_LOCATION}/nifi-minifi-cpp-${DISTRO_NAME}-$MINIFI_VERSION-bin.tar.gz
 
 rm -rf $CMAKE_SOURCE_DIR/docker/${DISTRO_NAME}/minificppsource/
