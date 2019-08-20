@@ -78,7 +78,7 @@ RUN cd ${MINIFI_BASE_DIR} \
 	&& cd build \
 	&& cmake -DOPENSSL_FORCE_SHARED=true -DDISABLE_JEMALLOC=ON -DSTATIC_BUILD= -DSKIP_TESTS=true -DENABLE_JNI=ON .. \
 	&& make -j8 package \
-	&& tar -xzvf ${MINIFI_BASE_DIR}/build/minifi-agent-${MINIFI_VERSION}-bin.tar.gz -C ${MINIFI_BASE_DIR}
+	&& tar -xzvf ${MINIFI_BASE_DIR}/build/nifi-minifi-cpp-${MINIFI_VERSION}-bin.tar.gz -C ${MINIFI_BASE_DIR}
 
 # Second stage: the runtime image
 # Edge required for rocksdb
@@ -108,7 +108,7 @@ RUN apk --update --no-cache upgrade && apk add --update --no-cache \
 ENV USER minificpp
 ENV MINIFI_BASE_DIR /opt/minifi
 ENV MINIFI_HOME ${MINIFI_BASE_DIR}/minifi-current
-ENV MINIFI_VERSIONED_HOME ${MINIFI_BASE_DIR}/minifi-agent-${MINIFI_VERSION}
+ENV MINIFI_VERSIONED_HOME ${MINIFI_BASE_DIR}/nifi-minifi-cpp-${MINIFI_VERSION}
 
 ENV JAVA_HOME /usr/lib/jvm/default-jvm
 ENV PATH ${PATH}:/usr/lib/jvm/default-jvm/bin

@@ -28,13 +28,13 @@
 #include <string>
 #include <iostream>
 #include <memory>
-#include <codecvt>
 #include <regex>
+#include "wel/MetadataWalker.h"
+#include "wel/XMLString.h"
 
 #include "io/DataStream.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
-#include "utils/OsUtils.h"
 
 #pragma comment(lib, "wevtapi.lib")
 
@@ -63,14 +63,6 @@ core::Property ConsumeWindowsEventLog::Query(
   isRequired(true)->
   withDefaultValue("*")->
   withDescription("XPath Query to filter events. (See https://msdn.microsoft.com/en-us/library/windows/desktop/dd996910(v=vs.85).aspx for examples.)")->
-  supportsExpressionLanguage(true)->
-  build());
-
-core::Property ConsumeWindowsEventLog::RenderFormatXML(
-  core::PropertyBuilder::createProperty("Render Format XML?")->
-  isRequired(true)->
-  withDefaultValue<bool>(true)->
-  withDescription("Render format XML or Text.)")->
   supportsExpressionLanguage(true)->
   build());
 
@@ -109,12 +101,17 @@ core::Property ConsumeWindowsEventLog::IdentifierFunction(
 	withDescription("If true it will resolve SIDs matched in the 'Identifier Match Regex' to the DOMAIN\\USERNAME associated with that ID")->
 	build());
 
+core::Property ConsumeWindowsEventLog::ResolveAsAttributes(
+	core::PropertyBuilder::createProperty("Resolve Metadata in Attributes")->
+	isRequired(false)->
+	withDefaultValue<bool>(true)->
+	withDescription("If true, any metadata that is resolved ( such as IDs or keyword metadata ) will be placed into attributes, otherwise it will be replaced in the XML or text output")->
+	build());
+
 core::Relationship ConsumeWindowsEventLog::Success("success", "Relationship for successfully consumed events.");
 
 ConsumeWindowsEventLog::ConsumeWindowsEventLog(const std::string& name, utils::Identifier uuid)
   : core::Processor(name, uuid), logger_(logging::LoggerFactory<ConsumeWindowsEventLog>::getLogger()), apply_identifier_function_(false) {
-  // Initializes COM for current thread, it is needed to MSXML parser.
-  CoInitializeEx(0, COINIT_APARTMENTTHREADED);
 
   char buff[MAX_COMPUTERNAME_LENGTH + 1];
   DWORD size = sizeof(buff);
@@ -126,15 +123,11 @@ ConsumeWindowsEventLog::ConsumeWindowsEventLog(const std::string& name, utils::I
 }
 
 ConsumeWindowsEventLog::~ConsumeWindowsEventLog() {
-  if (xmlDoc_) {
-    xmlDoc_.Release();
-  }
-  CoUninitialize();
 }
 
 void ConsumeWindowsEventLog::initialize() {
   //! Set the supported properties
-  setSupportedProperties({Channel, Query, RenderFormatXML, MaxBufferSize, InactiveDurationToReconnect, IdentifierMatcher, IdentifierFunction });
+  setSupportedProperties({Channel, Query, MaxBufferSize, InactiveDurationToReconnect, IdentifierMatcher, IdentifierFunction, ResolveAsAttributes });
 
   //! Set the supported relationships
   setSupportedRelationships({Success});
@@ -142,6 +135,7 @@ void ConsumeWindowsEventLog::initialize() {
 
 void ConsumeWindowsEventLog::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
 	context->getProperty(IdentifierMatcher.getName(), regex_);
+	context->getProperty(ResolveAsAttributes.getName(), resolve_as_attributes_);
 	context->getProperty(IdentifierFunction.getName(), apply_identifier_function_);
   if (subscriptionHandle_) {
     logger_->log_error("Processor already subscribed to Event Log, expected cleanup to unsubscribe.");
@@ -175,103 +169,20 @@ void ConsumeWindowsEventLog::onTrigger(const std::shared_ptr<core::ProcessContex
   }
 }
 
-void ConsumeWindowsEventLog::matchRegex(const MSXML2::IXMLDOMElementPtr pRoot, std::map<std::string, std::string> &fieldsAndValues, std::wregex match) {
-	const auto pNodeChildren = pRoot->childNodes;
-	using convert_type = std::codecvt_utf8<wchar_t>;
-	std::wstring_convert<convert_type, wchar_t> converter;
-	for (long i = 0; i < pNodeChildren->length; i++) {
-		const auto pNode = pNodeChildren->item[i];
-		const auto nodeType = pNode->GetnodeType();
-		if (DOMNodeType::NODE_ELEMENT == nodeType) {
-			auto nodeName = pNode->nodeName;
-
-			std::wstring wstringNodeName(nodeName, SysStringLen(nodeName));
-			bool matched = false;
-			if (std::regex_match(wstringNodeName, match)) {
-				matched = true;
-			}
-			else {
-				const auto pAttributes = pNode->attributes;
-				for (long iAttr = 0; iAttr < pAttributes->length; iAttr++) {
-					const auto pAttribute = pAttributes->item[iAttr];
-					if (pAttribute->nodeName == static_cast<_bstr_t>("Name")) {
-						auto  attributeNodeName = static_cast<_bstr_t>(pAttribute->nodeValue);
-						std::wstring wAttributeNodeName(attributeNodeName, SysStringLen(attributeNodeName));
-						if (std::regex_match(wAttributeNodeName, match)) {
-							wstringNodeName = attributeNodeName;
-							matched = true;
-						}
-					}
-				}
-
-			}
-			if (matched) {
-				auto value = static_cast<_bstr_t>(pNode->Gettext());
-				std::wstring wstringValue(value, SysStringLen(value));
-				auto matched_field_name = converter.to_bytes(wstringNodeName);
-				auto matched_field_value = converter.to_bytes(wstringValue);
-				
-				fieldsAndValues[matched_field_name] = apply_identifier_function_ ? utils::OsUtils::userIdToUsername(matched_field_value) : matched_field_value;
-			}
-			matchRegex(pNode, fieldsAndValues, match);
-		}
+EVT_HANDLE ConsumeWindowsEventLog::getProvider(const std::string & name) {
+	std::lock_guard<std::mutex> lock(cache_mutex_);
+	auto provider = providers_.find(name);
+	if (provider != std::end(providers_)) {
+		return provider->second;
 	}
-	
-}
 
-void ConsumeWindowsEventLog::createTextOutput(const MSXML2::IXMLDOMElementPtr pRoot, std::wstringstream& stream, std::vector<std::wstring>& ancestors) {
-  const auto pNodeChildren = pRoot->childNodes;
+	std::wstring temp_wstring = std::wstring(name.begin(), name.end());
+	LPCWSTR widechar = temp_wstring.c_str();
 
-  auto writeAncestors = [](const std::vector<std::wstring>& ancestors, std::wstringstream& stream) {
-    for (size_t j = 0; j < ancestors.size() - 1; j++) {
-      stream << ancestors[j] + L'/';
-    }
-    stream << ancestors.back();
-  };
+	providers_[name] = EvtOpenPublisherMetadata(NULL, widechar, NULL, 0, 0);
 
-  if (0 == pNodeChildren->length) {
-    writeAncestors(ancestors, stream);
-
-    stream << std::endl;
-  } else {
-    for (long i = 0; i < pNodeChildren->length; i++) {
-      std::wstringstream curStream;
-
-      const auto pNode = pNodeChildren->item[i];
-
-      const auto nodeType = pNode->GetnodeType();
-
-      if (DOMNodeType::NODE_TEXT == nodeType) {
-        const auto nodeValue = pNode->text;
-        if (nodeValue.length()) {
-          writeAncestors(ancestors, stream);
-
-          std::wstring strNodeValue = static_cast<LPCWSTR>(nodeValue);
-
-          // Remove '\n', '\r' - just substitute all whitespaces with ' '. 
-          strNodeValue = std::regex_replace(strNodeValue, std::wregex(L"\\s+"), L" ");
-
-          curStream << L" = " << strNodeValue;
-        }
-
-        stream << curStream.str() << std::endl;
-      } else if (DOMNodeType::NODE_ELEMENT == nodeType) {
-        curStream << pNode->nodeName;
-
-        const auto pAttributes = pNode->attributes;
-        for (long iAttr = 0; iAttr < pAttributes->length; iAttr++) {
-          const auto pAttribute = pAttributes->item[iAttr];
-
-          curStream << L" " << pAttribute->nodeName << L'(' << static_cast<_bstr_t>(pAttribute->nodeValue) << L')';
-        }
-
-        ancestors.emplace_back(curStream.str());
-        createTextOutput(pNode, stream, ancestors);
-        ancestors.pop_back();
-      }
-    }
-  }
-}
+	return providers_[name];
+} 
 
 bool ConsumeWindowsEventLog::subscribe(const std::shared_ptr<core::ProcessContext> &context) {
   std::string channel;
@@ -279,23 +190,6 @@ bool ConsumeWindowsEventLog::subscribe(const std::shared_ptr<core::ProcessContex
 
   std::string query;
   context->getProperty(Query.getName(), query);
-
-  context->getProperty(RenderFormatXML.getName(), renderXML_);
-
-  if (xmlDoc_) {
-	  xmlDoc_.Release();
-  }
-
-  HRESULT hr = xmlDoc_.CreateInstance(__uuidof(MSXML2::DOMDocument60));
-  if (FAILED(hr)) {
-      logger_->log_error("!xmlDoc_.CreateInstance %x", hr);
-      return false;
-  }
-
-  xmlDoc_->async = VARIANT_FALSE;
-  xmlDoc_->validateOnParse = VARIANT_FALSE;
-  xmlDoc_->resolveExternals = VARIANT_FALSE;
-  
 
   context->getProperty(MaxBufferSize.getName(), maxBufferSize_);
   logger_->log_debug("ConsumeWindowsEventLog: maxBufferSize_ %lld", maxBufferSize_);
@@ -346,29 +240,36 @@ bool ConsumeWindowsEventLog::subscribe(const std::shared_ptr<core::ProcessContex
               size = used;
               std::vector<wchar_t> buf(size/2 + 1);
               if (EvtRender(NULL, hEvent, EvtRenderEventXml, size, &buf[0], &used, &propertyCount)) {
-                const auto xml = to_string(&buf[0]);
+                std::string xml = to_string(&buf[0]);
 
 				EventRender renderedData;
-				if (VARIANT_FALSE == pConsumeWindowsEventLog->xmlDoc_->loadXML(_bstr_t(xml.c_str()))) {
+
+				pugi::xml_document doc;
+				pugi::xml_parse_result result = doc.load_string(xml.c_str());
+
+
+
+				if (!result) {
 					logger->log_error("'loadXML' failed");
 					return 0UL;
 				}
-				if (!pConsumeWindowsEventLog->regex_.empty()) {
-					std::wstring wstring_regex_;
-					wstring_regex_.assign(pConsumeWindowsEventLog->regex_.begin(), pConsumeWindowsEventLog->regex_.end());
-					std::wregex  regex(wstring_regex_);
-					pConsumeWindowsEventLog->matchRegex(pConsumeWindowsEventLog->xmlDoc_->documentElement, renderedData.matched_fields_, regex);
+				
+				std::string providerName = doc.child("System").child("Provider").attribute("Name").value();
+
+				// resolve the event metadata
+				wel::MetadataWalker walker(pConsumeWindowsEventLog->getProvider(providerName), hEvent, !pConsumeWindowsEventLog->resolve_as_attributes_, pConsumeWindowsEventLog->apply_identifier_function_, pConsumeWindowsEventLog->regex_);
+				doc.traverse(walker);
+
+				if (pConsumeWindowsEventLog->resolve_as_attributes_) {
+					renderedData.matched_fields_ = walker.getFieldValues();
 				}
 
-                if (pConsumeWindowsEventLog->renderXML_) {
-					renderedData.text_ = std::move(xml);
-                } else {
+				wel::XmlString writer;
+				doc.print(writer,"", pugi::format_raw); // no indentation or formatting
+				xml = writer.xml_;
+				
+				renderedData.text_ = std::move(xml);
 
-                  std::wstringstream stream;
-                  std::vector<std::wstring> ancestors;
-                  pConsumeWindowsEventLog->createTextOutput(pConsumeWindowsEventLog->xmlDoc_->documentElement, stream, ancestors);
-				  renderedData.text_ = std::move(to_string(stream.str().c_str()));
-                }
 				pConsumeWindowsEventLog->listRenderedData_.enqueue(std::move(renderedData));
               } else {
                 logger->log_error("EvtRender returned the following error code: %d.", GetLastError());

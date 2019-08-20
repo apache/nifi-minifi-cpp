@@ -1,0 +1,19 @@
+
+ <Event xmlns="http://schemas.microsoft.com/win/2004/08/events/event">
+ <System>
+  <Provider Name="Microsoft-Windows-Security-Auditing" Guid="{54849625-5478-4994-a5ba-3e3b0328c30d}" /> 
+  <EventID>4672</EventID> 
+  <Version>0</Version> 
+  <Level>0</Level> 
+  <Task>12548</Task> 
+  <Opcode>0</Opcode> 
+  <Keywords>0x8020000000000000</Keywords> 
+  <TimeCreated SystemTime="2019-08-27T14:37:56.104234800Z" /> 
+  <EventRecordID>2575952</EventRecordID> 
+  <Correlation ActivityID="{47aa1c15-3cc3-0006-e859-7fa1025cd501}" /> 
+  <Execution ProcessID="840" ThreadID="11544" /> 
+  <Channel>Security</Channel> 
+  <Computer>TestComputer</Computer> 
+  <Security /> 
+  </System>
+  </Event>

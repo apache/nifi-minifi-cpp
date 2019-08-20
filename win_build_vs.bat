@@ -17,8 +17,9 @@ rem limitations under the License.
 
 TITLE Apache NiFi MiNiFi C++ Windows Build Helper
 
+if [%1]==[] goto usage
+
 set builddir=%1
-set builddir=%builddir:"=%
 set skiptests=OFF
 set cmake_build_type=Release
 set build_type=Release
@@ -44,9 +45,9 @@ for %%x in (%*) do (
 	if [%%~x] EQU [/J] ( 
 	set build_JNI=ON
     )
-	if [%%~x] EQU [/C] ( 
-	set build_co=ON
-    )
+	rem if [%%~x] EQU [/C] ( 
+	rem set build_coap=ON
+    rem )
 	if [%%~x] EQU [/64] ( 
 	set generator="Visual Studio 15 2017 Win64"
     )
@@ -62,11 +63,17 @@ cd %builddir%\
 
 
 
-cmake -G %generator% -DCMAKE_BUILD_TYPE_INIT=%cmake_build_type% -DCMAKE_BUILD_TYPE=%cmake_build_type% -DWIN32=WIN32 -DENABLE_LIBRDKAFKA=%build_kafka% -DENABLE_JNI=%build_jni% -DOPENSSL_OFF=OFF -DENABLE_COAP=%build_coap% -DUSE_SHARED_LIBS=OFF -DDISABLE_CONTROLLER=ON  -DBUILD_ROCKSDB=ON -DFORCE_WINDOWS=ON -DUSE_SYSTEM_UUID=OFF -DDISABLE_LIBARCHIVE=ON -DDISABLE_SCRIPTING=ON -DEXCLUDE_BOOST=ON -DENABLE_WEL=TRUE -DSKIP_TESTS=ON -DFAIL_ON_WARNINGS=OFF -DSKIP_TESTS=%skiptests% .. && msbuild /m nifi-minifi-cpp.sln /property:Configuration=%build_type% && copy main\release\minifi.exe main\
+cmake -G %generator% -DCMAKE_BUILD_TYPE_INIT=%cmake_build_type% -DCMAKE_BUILD_TYPE=%cmake_build_type% -DWIN32=WIN32 -DENABLE_LIBRDKAFKA=%build_kafka% -DENABLE_JNI=%build_jni% -DOPENSSL_OFF=OFF -DENABLE_COAP=%build_coap% -DUSE_SHARED_LIBS=OFF -DDISABLE_CONTROLLER=ON  -DBUILD_ROCKSDB=ON -DFORCE_WINDOWS=ON -DUSE_SYSTEM_UUID=OFF -DDISABLE_LIBARCHIVE=ON -DDISABLE_SCRIPTING=ON -DEXCLUDE_BOOST=ON -DENABLE_WEL=TRUE -DFAIL_ON_WARNINGS=OFF -DSKIP_TESTS=%skiptests% .. && msbuild /m nifi-minifi-cpp.sln /property:Configuration=%build_type% && copy main\release\minifi.exe main\
 if [cpack] EQU [ON] ( 
 	cpack
     )
 if [skiptests] NEQ [OFF] ( 
 	ctest -C %build_type%
+	IF %ERRORLEVEL% NEQ 0 EXIT %ERRORLEVEL%
 	)
 cd ..
+goto :eof
+
+:usage
+@echo "Usage: %0 <build_dir> options"
+exit /B 1

@@ -303,6 +303,7 @@ endif()
                "-DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/thirdparty/curl-install"
                 -DBUILD_CURL_EXE=OFF
                 -DBUILD_TESTING=OFF
+                -DCMAKE_USE_OPENSSL=ON
                 -DBUILD_SHARED_LIBS=OFF
                 -DHTTP_ONLY=ON
                 -DCMAKE_USE_OPENSSL=ON
@@ -643,14 +644,22 @@ file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/conf/" DESTINATION "${CMAKE_CURRENT_BINAR
 file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
 file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/README.md" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
 file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/NOTICE" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
-set(CPACK_WIX_TEMPLATE "${CMAKE_CURRENT_SOURCE_DIR}/msi/WixWin.wsi")
+
+if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+    set(CPACK_WIX_EXTRA_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/msi/x64.wsi")
+elseif(CMAKE_SIZEOF_VOID_P EQUAL 4)
+set(CPACK_WIX_EXTRA_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/msi/x86.wsi")
+endif()
+    set(CPACK_WIX_TEMPLATE "${CMAKE_CURRENT_SOURCE_DIR}/msi/WixWin.wsi")
+
 else()
 set(CPACK_SOURCE_GENERATOR "TGZ")
 endif(WIN32)
 set(CPACK_SOURCE_PACKAGE_FILE_NAME "${ASSEMBLY_BASE_NAME}-source")
 set(CPACK_SOURCE_IGNORE_FILES "/docs/generated/;${CMAKE_SOURCE_DIR}/build/;~$;${CPACK_SOURCE_IGNORE_FILES};${CMAKE_SOURCE_DIR}/.git/;${CMAKE_SOURCE_DIR}/.idea/;${CMAKE_SOURCE_DIR}/cmake-build-debug/;${CMAKE_SOURCE_DIR}/extensions/expression-language/Scanner.h;${CMAKE_SOURCE_DIR}/extensions/expression-language/Scanner.cpp;${CMAKE_SOURCE_DIR}/extensions/expression-language/Parser.cpp;${CMAKE_SOURCE_DIR}/extensions/expression-language/Parser.hpp;${CMAKE_SOURCE_DIR}/extensions/expression-language/scanner.hh;${CMAKE_SOURCE_DIR}/extensions/expression-language/position.hh;${CMAKE_SOURCE_DIR}/extensions/expression-language/location.hh;${CMAKE_SOURCE_DIR}/extensions/expression-language/stack.hh")
 
-# Generate binary assembly
+# Generate binary assembly. Exclude conf for windows since we'll be doing the work in the WiX template
+if (NOT WIN32)
 install(FILES conf/minifi.properties conf/minifi-log.properties conf/minifi-uid.properties conf/config.yml
         DESTINATION conf
         COMPONENT bin)
@@ -659,7 +668,7 @@ install(DIRECTORY extensions/pythonprocessors/
         DESTINATION minifi-python
         COMPONENT bin)
 
-if (NOT WIN32)
+
 install(PROGRAMS bin/minifi.sh
         DESTINATION bin
         COMPONENT bin)
@@ -680,16 +689,14 @@ if(WIN32)
 else()
 install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/main/minifi
         DESTINATION bin
-        COMPONENT bin)
-        
+        COMPONENT bin)   
 endif() 
         
-
+			
 if (WIN32)
 set(CPACK_GENERATOR "WIX")
-
-set(CPACK_WIX_UPGRADE_GUID, "FE29F801-3486-4E9E-AFF9-838C1A5C8D59")
-set(CPACK_WIX_PRODUCT_ICON,"${CMAKE_CURRENT_SOURCE_DIR}/msi/minifi-logo-ico.ico")
+set(CPACK_WIX_UPGRADE_GUID "FE29F801-3486-4E9E-AFF9-838C1A5C8D59")
+set(CPACK_WIX_PRODUCT_ICON "${CMAKE_CURRENT_SOURCE_DIR}/msi/minifi-logo-ico.ico")
 else()
 set(CPACK_GENERATOR "TGZ")
 endif()
@@ -706,13 +713,14 @@ if(NOT WIN32)
 set(CPACK_PACKAGE_FILE_NAME "${ASSEMBLY_BASE_NAME}")
 set(CPACK_GENERATOR "TGZ")
 set(CPACK_BINARY_TGZ, "ON")
+else()
+set(CPACK_PACKAGE_FILE_NAME "${CMAKE_PROJECT_NAME}")
 endif()
-set(CPACK_PACKAGE_FILE_NAME "minifi-agent-${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}")
-set(CPACK_PACKAGE_INSTALL_DIRECTORY "ApacheNiFiMiNiFi/${CMAKE_PROJECT_NAME}")
+set(CPACK_PACKAGE_INSTALL_DIRECTORY "ApacheNiFiMiNiFi")
 set(CPACK_ARCHIVE_COMPONENT_INSTALL ON)
 set(CPACK_RDKAFKA_COMPONENT_INSTALL ON)
 set(CPACK_MQTT_COMPONENT_INSTALL ON)
-set(CPACK_COMPONENTS_ALL bin conf)
+set(CPACK_COMPONENTS_ALL bin conf minifijni)
 
 
 include(CPack)
