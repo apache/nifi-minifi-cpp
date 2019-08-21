@@ -60,25 +60,25 @@ ENV USER minificpp
 ENV MINIFI_BASE_DIR /opt/minifi
 
 # Setup minificpp user
-RUN addgroup -g $GID $USER && adduser -u $UID -D -G $USER -g "" $USER
-RUN mkdir -p $MINIFI_BASE_DIR 
+RUN addgroup -g ${GID} ${USER} && adduser -u ${UID} -D -G ${USER} -g "" ${USER}
+RUN mkdir -p ${MINIFI_BASE_DIR}
 ENV JAVA_HOME /usr/lib/jvm/default-jvm
-ENV PATH $PATH:/usr/lib/jvm/default-jvm/bin
+ENV PATH ${PATH}:/usr/lib/jvm/default-jvm/bin
 
-ADD $MINIFI_SOURCE_CODE $MINIFI_BASE_DIR
-RUN chown -R $USER:$USER $MINIFI_BASE_DIR
+ADD ${MINIFI_SOURCE_CODE} ${MINIFI_BASE_DIR}
+RUN chown -R ${USER}:${USER} ${MINIFI_BASE_DIR}
 
-USER $USER
+USER ${USER}
 
-ENV MINIFI_HOME $MINIFI_BASE_DIR/nifi-minifi-cpp-$MINIFI_VERSION
+ENV MINIFI_HOME $MINIFI_BASE_DIR/nifi-minifi-cpp-${MINIFI_VERSION}
 
 # Perform the build
-RUN cd $MINIFI_BASE_DIR \
+RUN cd ${MINIFI_BASE_DIR} \
 	&& mkdir build \
 	&& cd build \
 	&& cmake -DOPENSSL_FORCE_SHARED=true -DDISABLE_JEMALLOC=ON -DSTATIC_BUILD= -DSKIP_TESTS=true -DENABLE_JNI=ON .. \
 	&& make -j8 package \
-	&& tar -xzvf $MINIFI_BASE_DIR/build/nifi-minifi-cpp-$MINIFI_VERSION-bin.tar.gz -C $MINIFI_BASE_DIR
+	&& tar -xzvf ${MINIFI_BASE_DIR}/build/minifi-agent-${MINIFI_VERSION}-bin.tar.gz -C ${MINIFI_BASE_DIR}
 
 # Second stage: the runtime image
 # Edge required for rocksdb
@@ -105,20 +105,25 @@ RUN apk --update --no-cache upgrade && apk add --update --no-cache \
 	python3 \
 	zlib
 
-# Start MiNiFi CPP in the foreground
 ENV USER minificpp
 ENV MINIFI_BASE_DIR /opt/minifi
-ENV MINIFI_HOME $MINIFI_BASE_DIR/nifi-minifi-cpp-$MINIFI_VERSION
+ENV MINIFI_HOME ${MINIFI_BASE_DIR}/minifi-current
+ENV MINIFI_VERSIONED_HOME ${MINIFI_BASE_DIR}/minifi-agent-${MINIFI_VERSION}
+
 ENV JAVA_HOME /usr/lib/jvm/default-jvm
-ENV PATH $PATH:/usr/lib/jvm/default-jvm/bin
-RUN addgroup -g $GID $USER && adduser -u $UID -D -G $USER -g "" $USER
-RUN mkdir -p $MINIFI_BASE_DIR 
+ENV PATH ${PATH}:/usr/lib/jvm/default-jvm/bin
+
+RUN addgroup -g ${GID} ${USER} && adduser -u ${UID} -D -G ${USER} -g "" ${USER}
+RUN mkdir -p ${MINIFI_BASE_DIR} \
+    && ln -s ${MINIFI_VERSIONED_HOME} ${MINIFI_HOME}
 
 # Copy built minifi distribution from builder
-COPY --from=builder ${MINIFI_HOME} ${MINIFI_HOME}
+COPY --from=builder ${MINIFI_VERSIONED_HOME} ${MINIFI_HOME}
 RUN chown -R ${USER}:${USER} /opt/minifi
 
-USER $USER
+USER ${USER}
 
 WORKDIR ${MINIFI_HOME}
+
+# Start MiNiFi CPP in the foreground
 CMD ./bin/minifi.sh run
