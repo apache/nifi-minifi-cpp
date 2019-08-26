@@ -45,7 +45,7 @@ if (NOT SKIP_TESTS AND Java_FOUND AND Maven_FOUND AND NOT DISABLE_EXPRESSION_LAN
 		# need to add reference to minifi to get EL support for these tests.
 		# these tests aren't valid without EL
 		if (APPLE)
-			target_link_libraries (${testfilename} -Wl,-all_load ${LIBSSH2_LIBRARY} ${ZLIB_LIBRARY} ${OPENSSL_LIBRARIES}  minifi-expression-language-extensions inifi-sftp minifi-standard-processors sftp-test-tools)
+			target_link_libraries (${testfilename} -Wl,-all_load ${LIBSSH2_LIBRARY} ${ZLIB_LIBRARY} ${OPENSSL_LIBRARIES}  minifi-expression-language-extensions minifi-sftp minifi-standard-processors sftp-test-tools)
 		else ()
 			target_link_libraries (${testfilename} -Wl,--whole-archive ${LIBSSH2_LIBRARY} ${ZLIB_LIBRARY} ${OPENSSL_LIBRARIES}  minifi-expression-language-extensions minifi-sftp minifi-standard-processors sftp-test-tools -Wl,--no-whole-archive)
 		endif ()
