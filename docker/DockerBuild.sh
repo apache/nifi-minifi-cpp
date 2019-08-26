@@ -34,6 +34,9 @@ echo "MiNiFi Package: $MINIFI_SOURCE_CODE"
 mkdir -p $CMAKE_SOURCE_DIR/docker/minificppsource
 rsync -avr \
       --exclude '/*build*' \
+      --exclude '/*_repository*' \
+      --exclude '/logs' \
+      --exclude '/cmake' \
       --exclude '/docker' \
       --exclude '.git' \
       --exclude '/extensions/expression-language/Parser.cpp' \

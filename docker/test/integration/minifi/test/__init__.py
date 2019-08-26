@@ -118,27 +118,28 @@ class DockerTestCluster(SingleNodeDockerCluster):
 
         for container in self.containers:
             container = self.client.containers.get(container.id)
-            logging.info('Container logs for container \'%s\':\n%s', container.name, container.logs())
+            logging.info('Container logs for container \'%s\':\n%s', container.name, container.logs().decode("utf-8"))
             if b'Segmentation fault' in container.logs():
+                logging.warn('Container segfaulted: %s', container.name)
                 self.segfault=True
             if container.status == 'running':
-                minifi_app_logs = container.exec_run('/bin/sh -c \'test -f ' + self.minifi_root + '/logs/minifi-app.log '
-                                                                                                '&& cat ' +
-                                                     self.minifi_root + '/logs/minifi-app.log\'')
-                if len(minifi_app_logs) > 0:
-                    logging.info('MiNiFi app logs for container \'%s\':\n%s', container.name, minifi_app_logs)
+                apps = [("MiNiFi", self.minifi_root + '/logs/minifi-app.log'), ("NiFi", self.nifi_root + '/logs/nifi-app.log')]
+                for app in apps:
+                    app_log_status, app_log = container.exec_run('/bin/sh -c \'cat ' + app[1] + '\'')
+                    if app_log_status == 0:
+                        logging.info('%s app logs for container \'%s\':\n', app[0], container.name)
+                        for line in app_log.decode("utf-8").splitlines():
+                            logging.info(line)
+                        break
+                else:
+                    logging.warning("The container is running, but none of %s logs were found", " or ".join([x[0] for x in apps]))
 
-                nifi_app_logs = container.exec_run('/bin/sh -c \'test -f ' + self.nifi_root + '/logs/nifi-app.log '
-                                                                                            '&& cat ' +
-                                                   self.nifi_root + '/logs/nifi-app.log\'')
-                if len(nifi_app_logs) > 0:
-                    logging.info('NiFi app logs for container \'%s\':\n%s', container.name, nifi_app_logs)
             else:
                 logging.info(container.status)
                 logging.info('Could not cat app logs for container \'%s\' because it is not running',
                              container.name)
-            stats = container.stats(decode=True, stream=True)
-            logging.info('Container stats:\n%s', repr(stats))
+            stats = container.stats(stream=False)
+            logging.info('Container stats:\n%s', stats)
 
     def check_output(self, timeout=5):
         """
