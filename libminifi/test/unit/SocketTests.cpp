@@ -25,9 +25,7 @@
 #include <utility>
 #include "../TestBase.h"
 #include "io/StreamFactory.h"
-#include "io/ClientSocket.h"
-#include "io/ServerSocket.h"
-#include "io/tls/TLSSocket.h"
+#include "io/Sockets.h"
 #include "utils/ThreadPool.h"
 using Sockets = org::apache::nifi::minifi::io::Socket;
 
@@ -173,6 +171,7 @@ TEST_CASE("TestSocketWriteTestAfterClose", "[TestSocket7]") {
   server.closeStream();
 }
 
+#ifdef OPENSSL_ENABLED
 std::atomic<uint8_t> counter;
 std::mt19937_64 seed { std::random_device { }() };
 bool createSocket() {
@@ -240,3 +239,4 @@ TEST_CASE("TestTLSContextCreationNullptr", "[TestSocket10]") {
   minifi::io::TLSSocket *tls = dynamic_cast<minifi::io::TLSSocket*>(socket);
   REQUIRE(tls == nullptr);
 }
+#endif

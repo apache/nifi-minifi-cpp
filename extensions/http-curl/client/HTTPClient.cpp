@@ -120,8 +120,23 @@ void HTTPClient::forceClose() {
 
 }
 
-void HTTPClient::setVerbose() {
+int HTTPClient::debug_callback(CURL *handle, curl_infotype type, char *data, size_t size, void *userptr) {
+  std::shared_ptr<logging::Logger>* logger = static_cast<std::shared_ptr<logging::Logger>*>(userptr);
+  if (logger == nullptr) {
+    return 0;
+  }
+  if (type == CURLINFO_TEXT) {
+    logging::LOG_DEBUG((*logger)) << "CURL(" << reinterpret_cast<void*>(handle) << "): " << std::string(data, size);
+  }
+  return 0;
+}
+
+void HTTPClient::setVerbose(bool use_stderr /*= false*/) {
   curl_easy_setopt(http_session_, CURLOPT_VERBOSE, 1L);
+  if (!use_stderr) {
+    curl_easy_setopt(http_session_, CURLOPT_DEBUGDATA, &logger_);
+    curl_easy_setopt(http_session_, CURLOPT_DEBUGFUNCTION, &debug_callback);
+  }
 }
 
 void HTTPClient::initialize(const std::string &method, const std::string url, const std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service) {
@@ -146,6 +161,44 @@ void HTTPClient::setDisablePeerVerification() {
 void HTTPClient::setDisableHostVerification() {
   logger_->log_debug("Disabling host verification");
   curl_easy_setopt(http_session_, CURLOPT_SSL_VERIFYHOST, 0L);
+}
+
+bool HTTPClient::setSpecificSSLVersion(SSLVersion specific_version) {
+#if CURL_AT_LEAST_VERSION(7, 54, 0)
+  CURLcode ret = CURLE_UNKNOWN_OPTION;
+  switch (specific_version) {
+    case SSLVersion::TLSv1_0:
+      ret = curl_easy_setopt(http_session_, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1_0 | CURL_SSLVERSION_MAX_TLSv1_0);
+      break;
+    case SSLVersion::TLSv1_1:
+      ret = curl_easy_setopt(http_session_, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1_1 | CURL_SSLVERSION_MAX_TLSv1_1);
+      break;
+    case SSLVersion::TLSv1_2:
+      ret = curl_easy_setopt(http_session_, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1_2 | CURL_SSLVERSION_MAX_TLSv1_2);
+      break;
+  }
+
+  return ret == CURLE_OK;
+#else
+  return false;
+#endif
+}
+
+bool HTTPClient::setMinimumSSLVersion(SSLVersion minimum_version) {
+  CURLcode ret = CURLE_UNKNOWN_OPTION;
+  switch (minimum_version) {
+    case SSLVersion::TLSv1_0:
+      ret = curl_easy_setopt(http_session_, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1_0);
+      break;
+    case SSLVersion::TLSv1_1:
+      ret = curl_easy_setopt(http_session_, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1_1);
+      break;
+    case SSLVersion::TLSv1_2:
+      ret = curl_easy_setopt(http_session_, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1_2);
+      break;
+  }
+
+  return ret == CURLE_OK;
 }
 
 void HTTPClient::setConnectionTimeout(int64_t timeout) {
@@ -194,9 +247,9 @@ std::string HTTPClient::escape(std::string string_to_escape) {
   return curl_easy_escape(http_session_, string_to_escape.c_str(), string_to_escape.length());
 }
 
-void HTTPClient::setPostFields(std::string input) {
+void HTTPClient::setPostFields(const std::string& input) {
   curl_easy_setopt(http_session_, CURLOPT_POSTFIELDSIZE, input.length());
-  curl_easy_setopt(http_session_, CURLOPT_POSTFIELDS, input.c_str());
+  curl_easy_setopt(http_session_, CURLOPT_COPYPOSTFIELDS, input.c_str());
 }
 
 void HTTPClient::setPostSize(size_t size) {
@@ -265,36 +318,6 @@ bool HTTPClient::submit() {
   }
 
   logger_->log_debug("Finished with %s", url_);
-  std::string key = "";
-  for (auto header_line : header_response_.header_tokens_) {
-    unsigned int i = 0;
-    for (i = 0; i < header_line.length(); i++) {
-      if (header_line.at(i) == ':') {
-        break;
-      }
-    }
-    if (i >= header_line.length()) {
-      if (key.empty())
-        header_response_.append("HEADER", header_line);
-      else
-        header_response_.append(key, header_line);
-    } else {
-      key = header_line.substr(0, i);
-      int length = header_line.length() - (i + 2);
-      if (length <= 0) {
-        continue;
-      }
-      std::string value = header_line.substr(i + 2, length);
-      int end_find = value.size() - 1;
-      for (; end_find > 0; end_find--) {
-        if (value.at(end_find) > 32) {
-          break;
-        }
-      }
-      value = value.substr(0, end_find + 1);
-      header_response_.append(key, value);
-    }
-  }
   return true;
 }
 
@@ -327,7 +350,9 @@ void HTTPClient::set_request_method(const std::string method) {
   if (my_method == "POST") {
     curl_easy_setopt(http_session_, CURLOPT_POST, 1L);
   } else if (my_method == "PUT") {
-    curl_easy_setopt(http_session_, CURLOPT_PUT, 0L);
+    curl_easy_setopt(http_session_, CURLOPT_UPLOAD, 1L);
+  } else if (my_method == "HEAD") {
+    curl_easy_setopt(http_session_, CURLOPT_NOBODY, 1L);
   } else if (my_method == "GET") {
   } else {
     curl_easy_setopt(http_session_, CURLOPT_CUSTOMREQUEST, my_method.c_str());
@@ -346,29 +371,36 @@ bool HTTPClient::matches(const std::string &value, const std::string &sregex) {
 }
 
 void HTTPClient::configure_secure_connection(CURL *http_session) {
-#ifdef USE_CURL_NSS
-  setVerbose();
-  logger_->log_debug("Using NSS and certificate file %s", ssl_context_service_->getCertificateFile());
-  logger_->log_debug("Using NSS and CA certificate file %s", ssl_context_service_->getCACertificate());
-  curl_easy_setopt(http_session, CURLOPT_CAINFO, 0);
-  if (utils::StringUtils::endsWithIgnoreCase(ssl_context_service_->getCertificateFile(),"p12")) {
-    curl_easy_setopt(http_session, CURLOPT_SSLCERTTYPE, "P12");
+  logger_->log_debug("Using certificate file \"%s\"", ssl_context_service_->getCertificateFile());
+  logger_->log_debug("Using private key file \"%s\"", ssl_context_service_->getPrivateKeyFile());
+  logger_->log_debug("Using CA certificate file \"%s\"", ssl_context_service_->getCACertificate());
+#if 0 // Reenable this path once we change from the direct manipulation of the SSL context to using the cURL API
+  if (!ssl_context_service_->getCertificateFile().empty()) {
+    if (utils::StringUtils::endsWithIgnoreCase(ssl_context_service_->getCertificateFile(),"p12")) {
+      curl_easy_setopt(http_session, CURLOPT_SSLCERTTYPE, "P12");
+    }
+    else {
+      curl_easy_setopt(http_session, CURLOPT_SSLCERTTYPE, "PEM");
+    }
+    curl_easy_setopt(http_session, CURLOPT_SSLCERT, ssl_context_service_->getCertificateFile().c_str());
   }
-  else {
-    curl_easy_setopt(http_session, CURLOPT_SSLCERTTYPE, "PEM");
+  if (!ssl_context_service_->getPrivateKeyFile().empty()) {
+    if (utils::StringUtils::endsWithIgnoreCase(ssl_context_service_->getPrivateKeyFile(),"p12")) {
+      curl_easy_setopt(http_session, CURLOPT_SSLKEYTYPE, "P12");
+    }
+    else {
+      curl_easy_setopt(http_session, CURLOPT_SSLKEYTYPE, "PEM");
+    }
+    curl_easy_setopt(http_session, CURLOPT_SSLKEY, ssl_context_service_->getPrivateKeyFile().c_str());
+    curl_easy_setopt(http_session, CURLOPT_KEYPASSWD, ssl_context_service_->getPassphrase().c_str());
   }
-  curl_easy_setopt(http_session, CURLOPT_SSLCERT, ssl_context_service_->getCertificateFile().c_str());
-  if (utils::StringUtils::endsWithIgnoreCase(ssl_context_service_->getPrivateKeyFile(),"p12")) {
-    curl_easy_setopt(http_session, CURLOPT_SSLKEYTYPE, "P12");
+  if (!ssl_context_service_->getCACertificate().empty()) {
+    curl_easy_setopt(http_session, CURLOPT_CAINFO, ssl_context_service_->getCACertificate().c_str());
+  } else {
+    curl_easy_setopt(http_session, CURLOPT_CAINFO, nullptr);
   }
-  else {
-    curl_easy_setopt(http_session, CURLOPT_SSLKEYTYPE, "PEM");
-  }
-  curl_easy_setopt(http_session, CURLOPT_SSLKEY, ssl_context_service_->getPrivateKeyFile().c_str());
-  curl_easy_setopt(http_session, CURLOPT_KEYPASSWD, ssl_context_service_->getPassphrase().c_str());
-  curl_easy_setopt(http_session, CURLOPT_CAINFO, ssl_context_service_->getCACertificate().c_str());
+  curl_easy_setopt(http_session, CURLOPT_CAPATH, nullptr);
 #else
-  logger_->log_debug("Using OpenSSL and certificate file %s", ssl_context_service_->getCertificateFile());
   curl_easy_setopt(http_session, CURLOPT_SSL_CTX_FUNCTION, &configure_ssl_context);
   curl_easy_setopt(http_session, CURLOPT_SSL_CTX_DATA, static_cast<void*>(ssl_context_service_.get()));
   curl_easy_setopt(http_session, CURLOPT_CAINFO, 0);
@@ -377,7 +409,7 @@ void HTTPClient::configure_secure_connection(CURL *http_session) {
 }
 
 bool HTTPClient::isSecure(const std::string &url) {
-  if (url.find("https") != std::string::npos) {
+  if (url.find("https") == 0U) {
     logger_->log_debug("%s is a secure url", url);
     return true;
   }

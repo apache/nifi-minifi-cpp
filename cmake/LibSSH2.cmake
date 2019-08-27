@@ -38,13 +38,11 @@ function(use_bundled_libssh2 SOURCE_DIR BINARY_DIR)
             -DBUILD_TESTING=OFF
             -DBUILD_EXAMPLES=OFF)
 
-    if(NOT USE_SYSTEM_OPENSSL OR USE_SYSTEM_OPENSSL STREQUAL "OFF")
-        list(APPEND CMAKE_MODULE_PATH_PASSTHROUGH_LIST ${CMAKE_CURRENT_SOURCE_DIR}/cmake/ssl)
-        list(APPEND LIBSSH2_CMAKE_ARGS "-DLIBRESSL_BIN_DIR=${LIBRESSL_BIN_DIR}"
-                "-DLIBRESSL_SRC_DIR=${LIBRESSL_SRC_DIR}"
-                "-DBYPRODUCT_PREFIX=${BYPRODUCT_PREFIX}"
-                "-DBYPRODUCT_SUFFIX=${BYPRODUCT_SUFFIX}")
-    endif()
+    list(APPEND CMAKE_MODULE_PATH_PASSTHROUGH_LIST ${CMAKE_CURRENT_SOURCE_DIR}/cmake/ssl)
+    list(APPEND LIBSSH2_CMAKE_ARGS "-DLIBRESSL_BIN_DIR=${LIBRESSL_BIN_DIR}"
+            "-DLIBRESSL_SRC_DIR=${LIBRESSL_SRC_DIR}"
+            "-DBYPRODUCT_PREFIX=${BYPRODUCT_PREFIX}"
+            "-DBYPRODUCT_SUFFIX=${BYPRODUCT_SUFFIX}")
     if(NOT USE_SYSTEM_ZLIB OR USE_SYSTEM_ZLIB STREQUAL "OFF")
         list(APPEND CMAKE_MODULE_PATH_PASSTHROUGH_LIST ${CMAKE_CURRENT_SOURCE_DIR}/cmake/zlib/dummy)
         list(APPEND LIBSSH2_CMAKE_ARGS "-DZLIB_BYPRODUCT_INCLUDE=${ZLIB_BYPRODUCT_INCLUDE}"
@@ -65,9 +63,7 @@ function(use_bundled_libssh2 SOURCE_DIR BINARY_DIR)
             BUILD_BYPRODUCTS "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libssh2-install/${BYPRODUCT}"
     )
 
-    if(NOT USE_SYSTEM_OPENSSL OR USE_SYSTEM_OPENSSL STREQUAL "OFF")
-        add_dependencies(libssh2-external libressl-portable)
-    endif()
+    add_dependencies(libssh2-external libressl-portable)
     if(NOT USE_SYSTEM_ZLIB OR USE_SYSTEM_ZLIB STREQUAL "OFF")
         add_dependencies(libssh2-external z)
     endif()

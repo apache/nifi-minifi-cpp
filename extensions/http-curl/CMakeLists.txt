@@ -24,11 +24,6 @@ include_directories(protocols client processors sitetosite)
 
 file(GLOB SOURCES  "*.cpp" "protocols/*.cpp" "client/*.cpp" "processors/*.cpp" "sitetosite/*.cpp")
 
-if (USE_CURL_NSS)
-    message("Using NSS")
-	add_definitions(-DUSE_CURL_NSS)
-endif()
-
 add_library(minifi-http-curl STATIC ${SOURCES})
 set_property(TARGET minifi-http-curl PROPERTY POSITION_INDEPENDENT_CODE ON)
 if(THREADS_HAVE_PTHREAD_ARG)

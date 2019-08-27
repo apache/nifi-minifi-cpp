@@ -138,7 +138,7 @@ and rebuild.
 #### Libraries / Development Headers
 * libboost and boost-devel
   * 1.48.0 or greater
-* libcurl-openssl (If not available or desired, NSS will be used by applying -DUSE_CURL_NSS)
+* libcurl-openssl (If not available or desired, NSS will be used)
 * librocksdb4.1 and librocksdb-dev
 * libuuid and uuid-dev
 * openssl
@@ -200,7 +200,7 @@ On all distributions please use -DUSE_SHARED_LIBS=OFF to statically link zlib, l
 #### Libraries
 * libuuid
 * librocksdb *** IF NOT INSTALLED, WILL BE BUILT FROM THIRD PARTY DIRECTORY ***
-* libcurl-openssl (If not available or desired, NSS will be used by applying -DUSE_CURL_NSS)
+* libcurl-openssl (If not available or desired, NSS will be used)
 * libssl and libcrypto from openssl 
 * libarchive
 * librdkafka

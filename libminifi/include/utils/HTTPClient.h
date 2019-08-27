@@ -17,8 +17,11 @@
  */
 #ifndef LIBMINIFI_INCLUDE_UTILS_BaseHTTPClient_H_
 #define LIBMINIFI_INCLUDE_UTILS_BaseHTTPClient_H_
+
 #include "ByteArrayCallback.h"
 #include "controllers/SSLContextService.h"
+#include "core/Deprecated.h"
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -66,37 +69,89 @@ struct HTTPReadCallback {
   }
 };
 
+enum class SSLVersion : uint8_t {
+  TLSv1_0,
+  TLSv1_1,
+  TLSv1_2,
+};
+
 struct HTTPHeaderResponse {
  public:
-
   HTTPHeaderResponse(int max)
-      : max_tokens_(max) {
+   : max_tokens_(max)
+   , parsed(false) {
   }
 
-  void append(const std::string &header) {
+  /* Deprecated, headers are stored internally and can be accessed by getHeaderLines or getHeaderMap */
+  DEPRECATED(/*deprecated in*/ 0.7.0, /*will remove in */ 2.0) void append(const std::string &header) {
     if (max_tokens_ == -1 || (int32_t)header_tokens_.size() <= max_tokens_) {
       header_tokens_.push_back(header);
     }
   }
 
-  void append(const std::string &key, const std::string &value) {
+  /* Deprecated, headers are stored internally and can be accessed by getHeaderLines or getHeaderMap */
+  DEPRECATED(/*deprecated in*/ 0.7.0, /*will remove in */ 2.0) void append(const std::string &key, const std::string &value) {
     header_mapping_[key].append(value);
   }
 
   int32_t max_tokens_;
   std::vector<std::string> header_tokens_;
   std::map<std::string, std::string> header_mapping_;
+  bool parsed;
 
   static size_t receive_headers(void *buffer, size_t size, size_t nmemb, void *userp) {
-    HTTPHeaderResponse *pHeaders = (HTTPHeaderResponse *) (userp);
-    int result = 0;
-    if (pHeaders != NULL) {
-      std::string s = "";
-      s.append((char*) buffer, size * nmemb);
-      pHeaders->append(s);
-      result = size * nmemb;
+    HTTPHeaderResponse *pHeaders = static_cast<HTTPHeaderResponse*>(userp);
+    if (pHeaders == nullptr) {
+      return 0U;
     }
-    return result;
+    pHeaders->header_tokens_.emplace_back(static_cast<char*>(buffer), size * nmemb);
+    return size * nmemb;
+  }
+
+  const std::vector<std::string>& getHeaderLines() const {
+    return header_tokens_;
+  }
+
+  const std::map<std::string, std::string>& getHeaderMap() {
+    if (!parsed) {
+      std::string last_key;
+      bool got_status_line = false;
+      for (const auto& header_line : header_tokens_) {
+        if (header_line.empty()) {
+          /* This should not happen */
+          continue;
+        }
+        if (!got_status_line) {
+          if (header_line.compare(0, 4, "HTTP") == 0) {
+            /* We got a status line now */
+            got_status_line = true;
+            header_mapping_.clear();
+          }
+          /* This is probably a chunked encoding trailer */
+          continue;
+        }
+        if (header_line == "\r\n") {
+          /* This is the end of the header */
+          got_status_line = false;
+          continue;
+        }
+        size_t separator_pos = header_line.find(':');
+        if (separator_pos == std::string::npos) {
+          if (!last_key.empty() && (header_line[0] == ' ' || header_line[0] == '\t')) {
+            /* This is a "folded header", which is deprecated (https://www.ietf.org/rfc/rfc7230.txt) but here we are */
+            header_mapping_[last_key].append(" " + utils::StringUtils::trim(header_line));
+          }
+          continue;
+        }
+        auto key = header_line.substr(0, separator_pos);
+        /* This will remove leading and trailing LWS and the ending CRLF from the value */
+        auto value = utils::StringUtils::trim(header_line.substr(separator_pos + 1));
+        header_mapping_[key] = value;
+        last_key = key;
+      }
+      parsed = true;
+    }
+    return header_mapping_;
   }
 };
 
@@ -210,7 +265,7 @@ public:
   virtual ~BaseHTTPClient() {
   }
 
-  virtual void setVerbose() {
+  virtual void setVerbose(bool use_stderr = false) {
   }
 
   virtual void initialize(const std::string &method, const std::string url = "", const std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service = nullptr) {
@@ -232,7 +287,7 @@ public:
     return "";
   }
 
-  virtual void setPostFields(std::string input) {
+  virtual void setPostFields(const std::string& input) {
   }
 
   virtual bool submit() {
@@ -268,6 +323,14 @@ public:
   }
 
   virtual void setDisableHostVerification() {
+  }
+
+  virtual bool setSpecificSSLVersion(SSLVersion specific_version) {
+    return false;
+  }
+
+  virtual bool setMinimumSSLVersion(SSLVersion minimum_version) {
+    return false;
   }
 
   virtual const std::vector<std::string> &getHeaders() {
