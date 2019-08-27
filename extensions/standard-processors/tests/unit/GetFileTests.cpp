@@ -26,6 +26,10 @@
 #include "LogAttribute.h"
 #include "GetFile.h"
 
+#ifdef WIN32
+#include <fileapi.h>
+#endif
+
 /**
  * This is an invalidly named test as we can't guarantee order, nor shall we.
  */
@@ -47,12 +51,19 @@ TEST_CASE("GetFile: MaxSize", "[getFileFifo]") {  // NOLINT
   // Define test input file
   std::string in_file = temp_path + utils::file::FileUtils::get_separator() + "testfifo";
 
+  // Define test input file
+  std::string hidden_in_file(in_dir);
+  hidden_in_file.append("/.testfifo");  // hidden
+
   // Build MiNiFi processing graph
+
   auto get_file = plan->addProcessor("GetFile", "Get");
   plan->setProperty(get_file, processors::GetFile::Directory.getName(), temp_path);
   plan->setProperty(get_file, processors::GetFile::KeepSourceFile.getName(), "true");
   plan->setProperty(get_file, processors::GetFile::MaxSize.getName(), "50 B");
-  plan->addProcessor("LogAttribute", "Log", core::Relationship("success", "description"), true);
+  plan->setProperty(get_file, processors::GetFile::IgnoreHiddenFile.getName(), "true");
+  auto log_attr = plan->addProcessor("LogAttribute", "Log", core::Relationship("success", "description"), true);
+  plan->setProperty(log_attr, processors::LogAttribute::FlowFilesToLog.getName(), "0");
 
   // Write test input.
   std::ofstream in_file_stream(in_file);
@@ -65,9 +76,16 @@ TEST_CASE("GetFile: MaxSize", "[getFileFifo]") {  // NOLINT
   in_file_stream << "The quick brown fox jumps over the lazy dog who is 2 legit to quit" << std::endl;
   in_file_stream.close();
 
+  std::ofstream hidden_in_file_stream(hidden_in_file);
+  hidden_in_file_stream << "But noone has ever seen it" << std::endl;
+  hidden_in_file_stream.close();
+#ifdef WIN32
+  REQUIRE(SetFileAttributesA(hidden_in_file.c_str(), FILE_ATTRIBUTE_HIDDEN));
+#endif
   plan->runNextProcessor();  // Get
   plan->runNextProcessor();  // Log
 
+  REQUIRE(LogTestController::getInstance().contains("Logged 1 flow files"));  // The hidden and the too big files should be ignored
   // Check log output on windows std::endl; will produce \r\n can write manually but might as well just
   // account for the size difference here
   REQUIRE(LogTestController::getInstance().contains("key:flow.id"));
