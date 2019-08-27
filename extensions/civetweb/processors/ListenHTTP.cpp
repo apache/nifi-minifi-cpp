@@ -200,7 +200,7 @@ void ListenHTTP::onSchedule(core::ProcessContext *context, core::ProcessSessionF
     }
   }
 
-  server_.reset(new CivetServer(options));
+  server_.reset(new CivetServer(options, &callbacks_, &logger_));
   handler_.reset(new Handler(basePath, context, sessionFactory, std::move(authDNPattern), std::move(headersAsAttributesPattern)));
   server_->addHandler(basePath, handler_.get());
 
@@ -209,7 +209,11 @@ void ListenHTTP::onSchedule(core::ProcessContext *context, core::ProcessSessionF
     if (vec.size() != 1) {
       logger_->log_error("Random port is set, but there is no listening port! Server most probably failed to start!");
     } else {
+      bool is_secure = isSecure();
       listeningPort = std::to_string(vec[0]);
+      if (is_secure) {
+        listeningPort += "s";
+      }
       logger_->log_info("Listening on port %s", listeningPort);
     }
   }
@@ -390,7 +394,25 @@ bool ListenHTTP::Handler::handleGet(CivetServer *server, struct mg_connection *c
   return true;
 }
 
-void ListenHTTP::Handler::write_body(mg_connection *conn, const mg_request_info *req_info) {
+bool ListenHTTP::Handler::handleHead(CivetServer *server, struct mg_connection *conn) {
+  auto req_info = mg_get_request_info(conn);
+  if (!req_info) {
+    logger_->log_error("ListenHTTP handling HEAD resulted in a null request");
+    return false;
+  }
+  logger_->log_debug("ListenHTTP handling HEAD request of URI %s", req_info->request_uri);
+
+  if (!auth_request(conn, req_info)) {
+    return true;
+  }
+
+  mg_printf(conn, "HTTP/1.1 200 OK\r\n");
+  write_body(conn, req_info, false /*include_payload*/);
+
+  return true;
+}
+
+void ListenHTTP::Handler::write_body(mg_connection *conn, const mg_request_info *req_info, bool include_payload /*=true*/) {
   const auto &request_uri_str = std::string(req_info->request_uri);
 
   if (request_uri_str.size() > base_uri_.size() + 1) {
@@ -414,8 +436,9 @@ void ListenHTTP::Handler::write_body(mg_connection *conn, const mg_request_info 
       mg_printf(conn, "Content-length: ");
       mg_printf(conn, "%s", std::to_string(response.body.size()).c_str());
       mg_printf(conn, "\r\n\r\n");
-      mg_printf(conn, "%s", response.body.c_str());
-
+      if (include_payload) {
+        mg_printf(conn, "%s", response.body.c_str());
+      }
     } else {
       logger_->log_debug("No response body available for URI: %s", req_info->request_uri);
       mg_printf(conn, "Content-length: 0\r\n\r\n");

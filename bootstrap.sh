@@ -243,8 +243,6 @@ add_cmake_option BUILD_ROCKSDB ${TRUE}
 add_enabled_option ROCKSDB_ENABLED ${TRUE} "DISABLE_ROCKSDB"
 ## need libcurl installed
 add_enabled_option HTTP_CURL_ENABLED ${TRUE} "DISABLE_CURL"
-add_dependency HTTP_CURL_ENABLED "libcurl"
-add_dependency HTTP_CURL_ENABLED "openssl"
 
 # third party directory
 add_enabled_option LIBARCHIVE_ENABLED ${TRUE} "DISABLE_LIBARCHIVE"
@@ -291,8 +289,6 @@ add_disabled_option OPENCV_ENABLED ${FALSE} "ENABLE_OPENCV"
 
 add_disabled_option SFTP_ENABLED ${FALSE} "ENABLE_SFTP"
 add_dependency SFTP_ENABLED "libssh2"
-add_dependency SFTP_ENABLED "libcurl"
-add_dependency SFTP_ENABLED "openssl"
 
 TESTS_DISABLED=${FALSE}
 
@@ -467,17 +463,6 @@ build_cmake_command(){
     CMAKE_BUILD_COMMAND="${CMAKE_BUILD_COMMAND} -DCMAKE_BUILD_TYPE=${BUILD_PROFILE}"
 
   add_os_flags
-
-  curl -V | grep OpenSSL &> /dev/null
-  if [ $? == 0 ]; then
-    echo "Using libcurl-openssl..."
-  else
-  	if [ "${USE_SHARED_LIBS}" = "${TRUE}" ]; then
-	    CMAKE_BUILD_COMMAND="${CMAKE_BUILD_COMMAND} -DUSE_CURL_NSS=true .."
-	else
-		echo "Using LibreSSL..."
-	fi
-  fi
 
   CMAKE_BUILD_COMMAND="${CMAKE_BUILD_COMMAND} .."
 

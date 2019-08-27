@@ -64,7 +64,9 @@ class HTTPClient : public BaseHTTPClient, public core::Connectable {
 
   ~HTTPClient();
 
-  virtual void setVerbose() override;
+  static int debug_callback(CURL *handle, curl_infotype type, char *data, size_t size, void *userptr);
+
+  virtual void setVerbose(bool use_stderr = false) override;
 
   void forceClose();
 
@@ -84,7 +86,7 @@ class HTTPClient : public BaseHTTPClient, public core::Connectable {
 
   virtual std::string escape(std::string string_to_escape) override;
 
-  virtual void setPostFields(std::string input) override;
+  virtual void setPostFields(const std::string& input) override;
 
   void setHeaders(struct curl_slist *list);
 
@@ -110,6 +112,10 @@ class HTTPClient : public BaseHTTPClient, public core::Connectable {
 
   void setDisableHostVerification() override;
 
+  bool setSpecificSSLVersion(SSLVersion specific_version) override;
+
+  bool setMinimumSSLVersion(SSLVersion minimum_version) override;
+
   void setKeepAliveProbe(long probe){
     keep_alive_probe_ = probe;
   }
@@ -124,14 +130,13 @@ class HTTPClient : public BaseHTTPClient, public core::Connectable {
   }
 
   const std::vector<std::string> &getHeaders() override {
-    return header_response_.header_tokens_;
-
+    return header_response_.getHeaderLines();
   }
 
   void setInterface(const std::string &);
 
   virtual const std::map<std::string, std::string> &getParsedHeaders() override {
-    return header_response_.header_mapping_;
+    return header_response_.getHeaderMap();
   }
 
   /**
@@ -143,7 +148,7 @@ class HTTPClient : public BaseHTTPClient, public core::Connectable {
    */
   const std::string getHeaderValue(const std::string &key) {
     std::string ret;
-    for (const auto &kv : header_response_.header_mapping_) {
+    for (const auto &kv : header_response_.getHeaderMap()) {
       if (utils::StringUtils::equalsIgnoreCase(key, kv.first)) {
         ret = kv.second;
         break;

@@ -47,9 +47,87 @@ void SSLContextService::initialize() {
   initialized_ = true;
 }
 
+bool SSLContextService::configure_ssl_context(SSL_CTX *ctx) {
+  if (!IsNullOrEmpty(certificate)) {
+    if (isFileTypeP12(certificate)) {
+      BIO* fp = BIO_new(BIO_s_file());
+      if (fp == nullptr) {
+        logging::LOG_ERROR(logger_) << "Failed create new file BIO, " << getLatestOpenSSLErrorString();
+        return false;
+      }
+      if (BIO_read_filename(fp, certificate.c_str()) <= 0) {
+        logging::LOG_ERROR(logger_) << "Failed to read certificate file " << certificate << ", " << getLatestOpenSSLErrorString();
+        BIO_free(fp);
+        return false;
+      }
+      PKCS12* p12 = d2i_PKCS12_bio(fp, nullptr);
+      BIO_free(fp);
+      if (p12 == nullptr) {
+        logging::LOG_ERROR(logger_) << "Failed to DER decode certificate file " << certificate << ", " << getLatestOpenSSLErrorString();
+        return false;
+      }
+      EVP_PKEY* pkey = nullptr;
+      X509* cert = nullptr;
+      if (!PKCS12_parse(p12, passphrase_.c_str(), &pkey, &cert, nullptr /*ca*/)) {
+        logging::LOG_ERROR(logger_) << "Failed to parse certificate file " << certificate << " as PKCS#12, " << getLatestOpenSSLErrorString();
+        PKCS12_free(p12);
+        return false;
+      }
+      PKCS12_free(p12);
+      if (SSL_CTX_use_certificate(ctx, cert) != 1) {
+        logging::LOG_ERROR(logger_) << "Failed to set certificate from  " << certificate << ", " << getLatestOpenSSLErrorString();
+        EVP_PKEY_free(pkey);
+        X509_free(cert);
+        return false;
+      }
+      if (SSL_CTX_use_PrivateKey(ctx, pkey) != 1) {
+        logging::LOG_ERROR(logger_) << "Failed to set private key from  " << certificate << ", " << getLatestOpenSSLErrorString();
+        EVP_PKEY_free(pkey);
+        X509_free(cert);
+        return false;
+      }
+      EVP_PKEY_free(pkey);
+      X509_free(cert);
+    } else {
+      if (SSL_CTX_use_certificate_file(ctx, certificate.c_str(), SSL_FILETYPE_PEM) <= 0) {
+        logging::LOG_ERROR(logger_) << "Could not create load certificate " << certificate << ", " << getLatestOpenSSLErrorString();
+        return false;
+      }
+
+      if (!IsNullOrEmpty(passphrase_)) {
+        SSL_CTX_set_default_passwd_cb_userdata(ctx, &passphrase_);
+        SSL_CTX_set_default_passwd_cb(ctx, minifi::io::tls::pemPassWordCb);
+      }
+
+      if (!IsNullOrEmpty(private_key_)) {
+        int retp = SSL_CTX_use_PrivateKey_file(ctx, private_key_.c_str(), SSL_FILETYPE_PEM);
+        if (retp != 1) {
+          logging::LOG_ERROR(logger_) << "Could not create load private key, " << retp << " on " << private_key_ << ", " << getLatestOpenSSLErrorString();
+          return false;
+        }
+      }
+    }
+
+    if (!SSL_CTX_check_private_key(ctx)) {
+      logging::LOG_ERROR(logger_) << "Private key does not match the public certificate, " << getLatestOpenSSLErrorString();
+      return false;
+    }
+  }
+
+  SSL_CTX_set_verify(ctx, SSL_VERIFY_PEER, nullptr);
+  int retp = SSL_CTX_load_verify_locations(ctx, ca_certificate_.c_str(), 0);
+
+  if (retp == 0) {
+    logging::LOG_ERROR(logger_) << "Can not load CA certificate, Exiting, " << getLatestOpenSSLErrorString();
+    return false;
+  }
+
+  return true;
+}
+
 /**
  * If OpenSSL is not installed we may still continue operations. Nullptr will
- * be returned and it will be up to the caller to determien if this failure is
+ * be returned and it will be up to the caller to determine if this failure is
  * recoverable.
  */
 std::unique_ptr<SSLContext> SSLContextService::createSSLContext() {
@@ -62,34 +140,15 @@ std::unique_ptr<SSLContext> SSLContextService::createSSLContext() {
   method = TLSv1_2_client_method();
   SSL_CTX *ctx = SSL_CTX_new(method);
 
-  if (!IsNullOrEmpty(certificate)) {
-    if (SSL_CTX_use_certificate_file(ctx, certificate.c_str(), SSL_FILETYPE_PEM) <= 0) {
-      logger_->log_error("Could not create load certificate, error : %s", std::strerror(errno));
-      return nullptr;
-    }
-    if (!IsNullOrEmpty(passphrase_)) {
-      SSL_CTX_set_default_passwd_cb_userdata(ctx, &passphrase_);
-      SSL_CTX_set_default_passwd_cb(ctx, io::tls::pemPassWordCb);
-    }
+  if (ctx == nullptr) {
+    return nullptr;
   }
 
-  if (!IsNullOrEmpty(private_key_)) {
-    int retp = SSL_CTX_use_PrivateKey_file(ctx, private_key_.c_str(), SSL_FILETYPE_PEM);
-    if (retp != 1) {
-      logger_->log_error("Could not create load private key,%i on %s error : %s", retp, private_key_, std::strerror(errno));
-      return nullptr;
-    }
-
-    if (!SSL_CTX_check_private_key(ctx)) {
-      logger_->log_error("Private key does not match the public certificate, error : %s", std::strerror(errno));
-      return nullptr;
-    }
+  if (!configure_ssl_context(ctx)) {
+    SSL_CTX_free(ctx);
+    return nullptr;
   }
 
-  int retp = SSL_CTX_load_verify_locations(ctx, ca_certificate_.c_str(), 0);
-  if (retp == 0) {
-    logger_->log_error("Can not load CA certificate %s, Exiting, error : %s", ca_certificate_, std::strerror(errno));
-  }
   return std::unique_ptr<SSLContext>(new SSLContext(ctx));
 #else
   return nullptr;

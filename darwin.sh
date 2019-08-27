@@ -79,12 +79,8 @@ build_deps(){
                 VALUE=${cmake_opt#*:}
                 if [ "$KEY" = "$option" ]; then
                     FOUND_VALUE="$VALUE"
-                    if [ "$FOUND_VALUE" = "libcurl" ]; then
-                        brew install curl-openssl
-                    elif [ "$FOUND_VALUE" = "libpcap" ]; then
+                    if [ "$FOUND_VALUE" = "libpcap" ]; then
                         INSTALLED+=("libpcap")
-                    elif [ "$FOUND_VALUE" = "openssl" ]; then
-                        INSTALLED+=("openssl")
                     elif [ "$FOUND_VALUE" = "libusb" ]; then
                         INSTALLED+=("libusb")
                     elif [ "$FOUND_VALUE" = "libpng" ]; then
@@ -126,10 +122,4 @@ build_deps(){
 
     echo "Ensuring you have all dependencies installed..."
     ${COMMAND} > /dev/null 2>&1
-
-    for option in "${INSTALLED[@]}" ; do
-        if [ "$option" = "curl" ]; then
-            brew link curl --force > /dev/null 2>&1
-        fi
-    done
 }

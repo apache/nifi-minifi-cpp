@@ -24,11 +24,6 @@ include_directories(client processors)
 
 file(GLOB SOURCES  "*.cpp" "client/*.cpp" "processors/*.cpp")
 
-if (USE_CURL_NSS)
-    message("Using NSS")
-	add_definitions(-DUSE_CURL_NSS)
-endif()
-
 add_library(minifi-sftp STATIC ${SOURCES})
 set_property(TARGET minifi-sftp PROPERTY POSITION_INDEPENDENT_CODE ON)
 if(THREADS_HAVE_PTHREAD_ARG)

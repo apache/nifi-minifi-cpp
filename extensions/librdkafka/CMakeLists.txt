@@ -59,9 +59,7 @@ ExternalProject_Add(
                "-DCMAKE_CXX_FLAGS=${CURL_CXX_FLAGS}"
     EXCLUDE_FROM_ALL TRUE
   )
-if ( NOT USE_SYSTEM_OPENSSL )
-	add_dependencies(kafka-external libressl-portable)
-endif()
+add_dependencies(kafka-external libressl-portable)
 set(KAFKA_INCLUDE "${BASE_DIR}/install/include/librdkafka/")
 set(KAFKA_LIBRARY "${BYPRODUCT}")
 add_dependencies(minifi-rdkafka-extensions kafka-external)

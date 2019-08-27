@@ -50,6 +50,8 @@ class ListenHTTP : public core::Processor {
   ListenHTTP(std::string name, utils::Identifier uuid = utils::Identifier())
       : Processor(name, uuid),
         logger_(logging::LoggerFactory<ListenHTTP>::getLogger()) {
+    callbacks_.log_message = &log_message;
+    callbacks_.log_access = &log_access;
   }
   // Destructor
   virtual ~ListenHTTP();
@@ -89,6 +91,7 @@ class ListenHTTP : public core::Processor {
             std::string &&headersAsAttributesPattern);
     bool handlePost(CivetServer *server, struct mg_connection *conn);
     bool handleGet(CivetServer *server, struct mg_connection *conn);
+    bool handleHead(CivetServer *server, struct mg_connection *conn);
 
     /**
      * Sets a static response body string to be used for a given URI, with a number of seconds it will be kept in memory.
@@ -114,7 +117,7 @@ class ListenHTTP : public core::Processor {
     void send_error_response(struct mg_connection *conn);
     bool auth_request(mg_connection *conn, const mg_request_info *req_info) const;
     void set_header_attributes(const mg_request_info *req_info, const std::shared_ptr<FlowFileRecord> &flow_file) const;
-    void write_body(mg_connection *conn, const mg_request_info *req_info);
+    void write_body(mg_connection *conn, const mg_request_info *req_info, bool include_payload = true);
 
     std::string base_uri_;
     std::regex auth_dn_regex_;
@@ -163,10 +166,47 @@ class ListenHTTP : public core::Processor {
     const struct mg_request_info *req_info_;
   };
 
+  static int log_message(const struct mg_connection *conn, const char *message) {
+    try {
+      struct mg_context* ctx = mg_get_context(conn);
+      /* CivetServer stores 'this' as the userdata when calling mg_start */
+      CivetServer* server = static_cast<CivetServer*>(mg_get_user_data(ctx));
+      if (server == nullptr) {
+        return 0;
+      }
+      std::shared_ptr<logging::Logger>* logger = static_cast<std::shared_ptr<logging::Logger>*>(const_cast<void*>(server->getUserContext()));
+      if (logger == nullptr) {
+        return 0;
+      }
+      logging::LOG_ERROR((*logger)) << "CivetWeb error: " << message;
+    } catch (...) {
+    }
+    return 0;
+  }
+
+  static int log_access(const struct mg_connection *conn, const char *message) {
+    try {
+      struct mg_context* ctx = mg_get_context(conn);
+      /* CivetServer stores 'this' as the userdata when calling mg_start */
+      CivetServer* server = static_cast<CivetServer*>(mg_get_user_data(ctx));
+      if (server == nullptr) {
+        return 0;
+      }
+      std::shared_ptr<logging::Logger>* logger = static_cast<std::shared_ptr<logging::Logger>*>(const_cast<void*>(server->getUserContext()));
+      if (logger == nullptr) {
+        return 0;
+      }
+      logging::LOG_DEBUG((*logger)) << "CivetWeb access: " << message;
+    } catch (...) {
+    }
+    return 0;
+  }
+
  private:
   // Logger
   std::shared_ptr<logging::Logger> logger_;
 
+  CivetCallbacks callbacks_;
   std::unique_ptr<CivetServer> server_;
   std::unique_ptr<Handler> handler_;
   std::string listeningPort;

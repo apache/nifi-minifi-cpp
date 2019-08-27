@@ -16,10 +16,6 @@
           "value": "OFF"
         },
         {
-          "name": "USE_SYSTEM_OPENSSL",
-          "value": "OFF"
-        },
-        {
           "name": "PORTABLE",
           "value": "ON"
         },
@@ -30,10 +26,6 @@
         {
           "name": "DISABLE_CONTROLLER",
           "value": "TRUE"
-        },
-        {
-          "name": "USE_SYSTEM_CURL",
-          "value": "OFF"
         },
         {
           "name": "USE_SYSTEM_UUID",

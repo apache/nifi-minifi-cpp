@@ -23,6 +23,8 @@
 #ifdef OPENSSL_SUPPORT
 #include <openssl/err.h>
 #include <openssl/ssl.h>
+#include <openssl/bio.h>
+#include <openssl/pkcs12.h>
 #include "io/tls/TLSUtils.h"
 #endif
 #include <iostream>
@@ -146,41 +148,7 @@ class SSLContextService : public core::controller::ControllerService {
   }
 
 #ifdef OPENSSL_SUPPORT
-  bool configure_ssl_context(SSL_CTX *ctx) {
-    if (!IsNullOrEmpty(certificate)) {
-      if (SSL_CTX_use_certificate_file(ctx, certificate.c_str(), SSL_FILETYPE_PEM) <= 0) {
-        logger_->log_error("Could not create load certificate, error : %s", std::strerror(errno));
-        return false;
-      }
-      if (!IsNullOrEmpty(passphrase_)) {
-        SSL_CTX_set_default_passwd_cb_userdata(ctx, &passphrase_);
-        SSL_CTX_set_default_passwd_cb(ctx, minifi::io::tls::pemPassWordCb);
-      }
-    }
-
-    if (!IsNullOrEmpty(private_key_)) {
-      int retp = SSL_CTX_use_PrivateKey_file(ctx, private_key_.c_str(), SSL_FILETYPE_PEM);
-      if (retp != 1) {
-        logger_->log_error("Could not create load private key,%i on %s error : %s", retp, private_key_, std::strerror(errno));
-        return false;
-      }
-
-      if (!SSL_CTX_check_private_key(ctx)) {
-        logger_->log_error("Private key does not match the public certificate, error : %s", std::strerror(errno));
-        return false;
-      }
-    }
-
-    SSL_CTX_set_verify(ctx, SSL_VERIFY_PEER, nullptr);
-    int retp = SSL_CTX_load_verify_locations(ctx, ca_certificate_.c_str(), 0);
-
-    if (retp == 0) {
-      logger_->log_error("Can not load CA certificate, Exiting, error : %s", std::strerror(errno));
-      return false;
-    }
-
-    return true;
-  }
+  bool configure_ssl_context(SSL_CTX *ctx);
 #endif
 
   virtual void onEnable();
@@ -197,6 +165,20 @@ class SSLContextService : public core::controller::ControllerService {
   std::string passphrase_;
   std::string passphrase_file_;
   std::string ca_certificate_;
+
+  static std::string getLatestOpenSSLErrorString() {
+    unsigned long err = ERR_peek_last_error();
+    if (err == 0U) {
+      return "";
+    }
+    char buf[4096];
+    ERR_error_string_n(err, buf, sizeof(buf));
+    return buf;
+  }
+
+  static bool isFileTypeP12(const std::string& filename) {
+    return utils::StringUtils::endsWithIgnoreCase(filename, "p12");
+  }
 
  private:
   std::shared_ptr<logging::Logger> logger_;
