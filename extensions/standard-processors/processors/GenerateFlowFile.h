@@ -40,14 +40,13 @@ class GenerateFlowFile : public core::Processor {
    */
   GenerateFlowFile(std::string name, utils::Identifier uuid = utils::Identifier())
       : Processor(name, uuid), logger_(logging::LoggerFactory<GenerateFlowFile>::getLogger()) {
-    _data = NULL;
-    _dataSize = 0;
+    batchSize_ = 1;
+    uniqueFlowFile_ = true;
+    fileSize_ = 1024;
+    textData_ = false;
   }
   // Destructor
-  virtual ~GenerateFlowFile() {
-    if (_data)
-      delete[] _data;
-  }
+  virtual ~GenerateFlowFile() = default;
   // Processor Name
   static constexpr char const* ProcessorName = "GenerateFlowFile";
   // Supported Properties
@@ -55,40 +54,42 @@ class GenerateFlowFile : public core::Processor {
   static core::Property BatchSize;
   static core::Property DataFormat;
   static core::Property UniqueFlowFiles;
-  static const char *DATA_FORMAT_BINARY;
   static const char *DATA_FORMAT_TEXT;
   // Supported Relationships
   static core::Relationship Success;
   // Nest Callback Class for write stream
   class WriteCallback : public OutputStreamCallback {
    public:
-    WriteCallback(char *data, uint64_t size)
-        : _data(data),
-          _dataSize(size) {
+    WriteCallback(std::vector<char> && data) : data_(std::move(data)) {
     }
-    char *_data;
-    uint64_t _dataSize;
+    WriteCallback(const std::vector<char>& data) : data_(data) {
+    }
+    std::vector<char> data_;
     int64_t process(std::shared_ptr<io::BaseStream> stream) {
       int64_t ret = 0;
-      if (_data && _dataSize > 0)
-        ret = stream->write(reinterpret_cast<uint8_t*>(_data), _dataSize);
+      if(data_.size() > 0)
+        ret = stream->write(reinterpret_cast<uint8_t*>(&data_[0]), data_.size());
       return ret;
     }
   };
 
  public:
+  void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
   // OnTrigger method, implemented by NiFi GenerateFlowFile
-  virtual void onTrigger(core::ProcessContext *context, core::ProcessSession *session);
+  virtual void onTrigger(core::ProcessContext *context, core::ProcessSession *session) override;
   // Initialize, over write by NiFi GenerateFlowFile
-  virtual void initialize(void);
+  virtual void initialize(void) override;
 
  protected:
+  std::vector<char> data_;
+
+  uint64_t batchSize_;
+  bool uniqueFlowFile_;
+  uint64_t fileSize_;
+  bool textData_;
 
  private:
-  // Generated data
-  char * _data;
-  // Size of the generated data
-  uint64_t _dataSize;
+
   // logger instance
   std::shared_ptr<logging::Logger> logger_;
 };
