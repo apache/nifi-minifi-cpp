@@ -37,7 +37,7 @@
 class ListenHTTPTestsFixture {
  public:
   ListenHTTPTestsFixture()
-   : tmp_dir(strdup("/tmp/gt.XXXXXX")) {
+   : tmp_dir_format(strdup("/tmp/gt.XXXXXX")) {
     LogTestController::getInstance().setDebug<TestPlan>();
     LogTestController::getInstance().setDebug<minifi::FlowController>();
     LogTestController::getInstance().setDebug<minifi::SchedulingAgent>();
@@ -51,14 +51,14 @@ class ListenHTTPTestsFixture {
     LogTestController::getInstance().setDebug<minifi::controllers::SSLContextService>();
 
     // Create temporary directories
-    testController.createTempDirectory(tmp_dir);
-    REQUIRE(tmp_dir != nullptr);
+    tmp_dir = testController.createTempDirectory(tmp_dir_format);
+    REQUIRE(!tmp_dir.empty());
 
     // Define test input file
     std::string test_input_file = utils::file::FileUtils::concat_path(tmp_dir, "test");
     {
       std::ofstream os(test_input_file);
-      os << "Hello response body" << std::endl;
+      os << "Hello response body";
     }
 
     // Build MiNiFi processing graph
@@ -93,7 +93,7 @@ class ListenHTTPTestsFixture {
   }
 
   virtual ~ListenHTTPTestsFixture() {
-    free(tmp_dir);
+    free(tmp_dir_format);
     LogTestController::getInstance().reset();
   }
 
@@ -147,7 +147,7 @@ class ListenHTTPTestsFixture {
             content_type = "application/octet-stream";
           }
           REQUIRE(content_type == utils::StringUtils::trim(client->getParsedHeaders().at("Content-type")));
-          REQUIRE("20" == utils::StringUtils::trim(client->getParsedHeaders().at("Content-length")));
+          REQUIRE("19" == utils::StringUtils::trim(client->getParsedHeaders().at("Content-length")));
         } else {
           REQUIRE("0" == utils::StringUtils::trim(client->getParsedHeaders().at("Content-length")));
         }
@@ -155,7 +155,7 @@ class ListenHTTPTestsFixture {
           const auto &body_chars = client->getResponseBody();
           std::string response_body(body_chars.data(), body_chars.size());
           if (endpoint == "test") {
-            REQUIRE("Hello response body\n" == response_body);
+            REQUIRE("Hello response body" == response_body);
           } else {
             REQUIRE("" == response_body);
           }
@@ -170,7 +170,8 @@ class ListenHTTPTestsFixture {
   }
 
  protected:
-  char* tmp_dir;
+  char* tmp_dir_format;
+  std::string tmp_dir;
   TestController testController;
   std::shared_ptr<TestPlan> plan;
   std::shared_ptr<core::Processor> get_file;

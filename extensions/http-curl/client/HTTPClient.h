@@ -19,7 +19,16 @@
 #define __HTTP_UTILS_H__
 
 #include "utils/HTTPClient.h"
+#ifdef WIN32
+#pragma comment(lib, "wldap32.lib" )
+#pragma comment(lib, "crypt32.lib" )
+#pragma comment(lib, "Ws2_32.lib")
+
+#define CURL_STATICLIB
 #include <curl/curl.h>
+#else
+#include <curl/curl.h>
+#endif
 #include <vector>
 #include <iostream>
 #include <string>

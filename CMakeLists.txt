@@ -305,6 +305,7 @@ endif()
                 -DBUILD_TESTING=OFF
                 -DBUILD_SHARED_LIBS=OFF
                 -DHTTP_ONLY=ON
+                -DCMAKE_USE_OPENSSL=ON
                 "-DLIBRESSL_BIN_DIR=${LIBRESSL_BIN_DIR}"
                 "-DLIBRESSL_SRC_DIR=${LIBRESSL_SRC_DIR}"
                 -DCURL_DISABLE_CRYPTO_AUTH=ON
