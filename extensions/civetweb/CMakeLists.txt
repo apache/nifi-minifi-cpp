@@ -33,6 +33,7 @@ set(BUILD_CIVET_TESTING OFF)
 add_subdirectory(${CIVET_THIRDPARTY_ROOT}
                  ${CIVET_BINARY_ROOT}
                  EXCLUDE_FROM_ALL)
+add_dependencies(c-library libressl-portable)
 
 file(GLOB SOURCES  "processors/*.cpp")
 

@@ -301,6 +301,7 @@ endif()
     SOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/curl-src"
     CMAKE_ARGS ${PASSTHROUGH_CMAKE_ARGS}
                "-DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/thirdparty/curl-install"
+                -DCMAKE_POSITION_INDEPENDENT_CODE=ON
                 -DBUILD_CURL_EXE=OFF
                 -DBUILD_TESTING=OFF
                 -DBUILD_SHARED_LIBS=OFF
@@ -424,6 +425,7 @@ endif()
 option(DISABLE_CIVET "Disables CivetWeb components." OFF)
 if (NOT DISABLE_CIVET)
 	createExtension(CIVETWEB CIVETWEB "This enables ListenHTTP" "extensions/civetweb" "extensions/civetweb/tests")
+	add_dependencies(minifi-civet-extensions libressl-portable)
 endif()
 
 ## Add the rocks DB extension
