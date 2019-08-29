@@ -318,7 +318,7 @@ Licensed to the Apache Software Foundation (ASF) under one or more
               </Component>
             </Directory>
 
-            <Directory Id="INSTALLDIR" Name="bin">
+            <Directory Id="INSTALLBINDIR" Name="bin">
               <Component Id="minifiService" Guid="87658309-0339-425c-8633-f54ffaaa4921">
                 <File Id="MiNiFiExe"
                          Name="minifi.exe"
