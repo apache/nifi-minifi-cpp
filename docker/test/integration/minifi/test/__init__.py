@@ -55,7 +55,7 @@ class DockerTestCluster(SingleNodeDockerCluster):
 
         # Point output validator to ephemeral output dir
         self.output_validator = output_validator
-        if isinstance(output_validator, SingleFileOutputValidator):
+        if isinstance(output_validator, FileOutputValidator):
             output_validator.set_output_dir(self.tmp_test_output_dir)
 
         # Start observing output dir
@@ -196,9 +196,15 @@ class OutputValidator(object):
         """
         Return True if output is valid; False otherwise.
         """
+        raise NotImplementedError("validate function needs to be implemented for validators")
 
 
-class SingleFileOutputValidator(OutputValidator):
+
+class FileOutputValidator(OutputValidator):
+    def set_output_dir(self, output_dir):
+        self.output_dir = output_dir
+
+class SingleFileOutputValidator(FileOutputValidator):
     """
     Validates the content of a single file in the given directory.
     """
@@ -207,9 +213,6 @@ class SingleFileOutputValidator(OutputValidator):
         self.valid = False
         self.expected_content = expected_content
 
-    def set_output_dir(self, output_dir):
-        self.output_dir = output_dir
-
     def validate(self):
 
         if self.valid:
@@ -217,7 +220,7 @@ class SingleFileOutputValidator(OutputValidator):
 
         listing = listdir(self.output_dir)
 
-        if len(listing) > 0:
+        if listing:
             out_file_name = listing[0]
 
             with open(join(self.output_dir, out_file_name), 'r') as out_file:
@@ -225,9 +228,43 @@ class SingleFileOutputValidator(OutputValidator):
 
                 if contents == self.expected_content:
                     self.valid = True
-                    return True
 
-        return False
+        return self.valid
+
+class EmptyFilesOutPutValidator(FileOutputValidator):
+    """
+    Validates if all the files in the target directory are empty and at least one exists
+    """
+    def __init__(self):
+        self.valid = False
+
+    def validate(self):
+
+        if self.valid:
+            return True
+
+        listing = listdir(self.output_dir)
+        if listing:
+            self.valid = all(os.path.getsize(os.path.join(self.output_dir,x)) == 0 for x in listing)
+
+        return self.valid
+
+class NoFileOutPutValidator(FileOutputValidator):
+    """
+    Validates if no flowfiles were transferred
+    """
+    def __init__(self):
+        self.valid = False
+
+    def validate(self):
+
+        if self.valid:
+            return True
+
+        self.valid = not bool(listdir(self.output_dir))
+
+        return self.valid
+
 
 class SegfaultValidator(OutputValidator):
     """
