@@ -186,8 +186,7 @@ void ListenHTTP::onSchedule(core::ProcessContext *context, core::ProcessSessionF
       options.emplace_back("ssl_protocol_version");
       options.emplace_back(std::to_string(4));
     } else {
-      logger_->log_error("Invalid SSL Minimum Version specified!");
-      return;
+      throw minifi::Exception(ExceptionType::PROCESSOR_EXCEPTION, "Invalid SSL Minimum Version specified!");
     }
   }
 
