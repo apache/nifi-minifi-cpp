@@ -19,6 +19,7 @@
 
 #include <sstream>
 #include <fstream>
+#include <vector>
 #ifdef BOOST_VERSION
 #include <boost/filesystem.hpp>
 #else
@@ -400,6 +401,20 @@ class FileUtils {
       FindClose(hFind);
     }
 #endif
+  }
+
+  static std::vector<std::pair<std::string, std::string>> list_dir_all(const std::string& dir, const std::shared_ptr<logging::Logger> &logger,
+                                                                       bool recursive = true)  {
+
+    std::vector<std::pair<std::string, std::string>> fileList;
+    auto lambda = [&fileList] (const std::string &path, const std::string &filename) {
+      fileList.push_back(make_pair(path, filename));
+      return true;
+    };
+
+    list_dir(dir, lambda, logger, recursive);
+
+    return fileList;
   }
 
   /*
