@@ -255,6 +255,10 @@ void HttpSiteToSiteClient::closeTransaction(const std::string &transactionID) {
   bool data_received = transaction->getDirection() == RECEIVE && (current_code == CONFIRM_TRANSACTION || current_code == TRANSACTION_FINISHED);
 
   int code = UNRECOGNIZED_RESPONSE_CODE;
+  // In case transaction was used to actually transmit data (conditions are a bit different for send and receive to detect this),
+  // it has to be confirmed before closing.
+  // In case no data was transmitted, there is nothing to confirm, so the transaction can be cancelled without confirming it.
+  // Confirm means matching CRC checksum of data at both sides.
   if (transaction->getState() == TRANSACTION_CONFIRMED || data_received) {
     code = CONFIRM_TRANSACTION;
   } else if (transaction->current_transfers_ == 0 && !transaction->isDataAvailable()) {
@@ -289,7 +293,7 @@ void HttpSiteToSiteClient::closeTransaction(const std::string &transactionID) {
   if (client->getResponseCode() == 400) {
     std::string error(client->getResponseBody().data(), client->getResponseBody().size());
 
-    logger_->log_warn("400 received: %s", error);
+    logging::LOG_WARN(logger_) << "400 received: " << error;
     std::stringstream message;
     message << "Received " << client->getResponseCode() << " from " << uri.str();
     throw Exception(SITE2SITE_EXCEPTION, message.str());

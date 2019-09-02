@@ -128,7 +128,7 @@ class SingleNodeDockerCluster(Cluster):
                 {
                     'name': 'config.yml',
                     'size': conf_file_len,
-                   'file_obj': conf_file_buffer
+                    'file_obj': conf_file_buffer
                 }
             ]
 

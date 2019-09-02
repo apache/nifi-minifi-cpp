@@ -506,8 +506,11 @@ int16_t SiteToSiteClient::send(std::string transactionID, DataPacket *packet, co
     }
     packet->_size += len;
   } else if (flowFile && !flowfile_has_content) {
-    uint64_t len = 0;
     ret = transaction->getStream().write(len);  // Indicate zero length
+    if (ret != 8) {
+      logger_->log_debug("ret != 8");
+      return -1;
+    }
   }
 
   transaction->current_transfers_++;
