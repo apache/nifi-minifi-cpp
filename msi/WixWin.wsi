@@ -1,4 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one or more
+ contributor license agreements. See the NOTICE file distributed with
+ this work for additional information regarding copyright ownership.
+ The ASF licenses this file to You under the Apache License, Version 2.0
+ (the "License"); you may not use this file except in compliance with
+ the License. You may obtain a copy of the License at
+
+ http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+-->
 <?include "cpack_variables.wxi"?>
 
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
@@ -7,7 +23,7 @@
   <Product Id="$(var.CPACK_WIX_PRODUCT_GUID)"
       Name="Apache NiFi MiNiFi"
       Language="1033"
-      UpgradeCode="87658309-9038-fec8-8633-f54ffaaa4921"
+      UpgradeCode="$(var.CPACK_WIX_UPGRADE_GUID)"
       Version="$(var.CPACK_PACKAGE_VERSION)"
       Manufacturer="$(var.CPACK_PACKAGE_VENDOR)">
 
@@ -32,30 +48,22 @@
       <Custom Action="UpdateConfig" After="InstallFiles">NOT Installed</Custom>
     </InstallExecuteSequence> -->
 
-    <DirectoryRef Id="TARGETDIR">
-     <!-- <?if $(var.Platform) = x64 ?>
-      <Merge Id="VCRedist"  SourceFile="C:\Program Files (x86)\Common Files\Merge Modules\Microsoft_VC140_CRT_x64.msm" 	   DiskId="1" 	   Language="0" />
-      <?else ?>-->
-      <Merge Id="VCRedist"  SourceFile="C:\Program Files (x86)\Common Files\Merge Modules\Microsoft_VC140_CRT_x86.msm" 	   DiskId="1" 	   Language="0" />
-       <!-- <?endif ?>-->
-    </DirectoryRef>
 
     <Feature Id="VCRedist" Title="Visual C++ 14.0 Runtime" AllowAdvertise="yes"  Level="1">
       <MergeRef Id="VCRedist"/>
     </Feature>
+<!--
+    <Feature Id="VCRedist64" Title="Visual C++ 14.0 Runtime" AllowAdvertise="yes"  Level="1">
+      <MergeRef Id="VCRedist64"/>
+      <Condition Level="1"><![CDATA[(var.CPACK_SYSTEM_NAME="win64")]]></Condition>
+    </Feature>-->
 
     <Feature Id="InstallService" Title="Apache NiFi MiNiFi C++ Service" AllowAdvertise="no" Display="hidden" Level="1">
       <ComponentRef Id="minifiService"/>
-    </Feature>
-
-    <Feature Id="Install" Title="Apache NiFi MiNiFi C++ Runtimes" AllowAdvertise="no" Display="hidden" Level="1">
-      <ComponentRef Id="LICENSE"/>
-      <ComponentRef Id="README"/>
-      <ComponentRef Id="NOTICE"/>
+      <ComponentRef Id="minifiServiceNotLocal"/>
     </Feature>
 
     <Feature Id="InstallConf" Title="Apache NiFi MiNiFi C++ Configuration" AllowAdvertise="yes"  Level="1">
-     <!-- <ComponentRef Id="MINIFIPROP"/> -->
       <ComponentRef Id="LOGPROP"/>
       <ComponentRef Id="UIDPROP"/>
       <ComponentRef Id="CONFIGFILE"/>
@@ -63,72 +71,68 @@
       <ComponentRef Id="UpdateConfigNotExist"/>
     </Feature>
 
+    <FeatureRef Id="ProductFeature"/>
+
 
     <?ifdef CPACK_WIX_UI_DIALOG?>
     <WixVariable Id="WixUIDialogBmp" Value="$(var.CPACK_WIX_UI_DIALOG)"/>
     <?endif?>
- <UI Id="WixUI_HK">
-         <TextStyle Id="WixUI_Font_Normal" FaceName="Tahoma" Size="8" />
-         <TextStyle Id="WixUI_Font_Bigger" FaceName="Tahoma" Size="12" />
-         <TextStyle Id="WixUI_Font_Title" FaceName="Tahoma" Size="9" Bold="yes" />
+    <UI Id="WixUI_HK">
+      <TextStyle Id="WixUI_Font_Normal" FaceName="Tahoma" Size="8" />
+      <TextStyle Id="WixUI_Font_Bigger" FaceName="Tahoma" Size="12" />
+      <TextStyle Id="WixUI_Font_Title" FaceName="Tahoma" Size="9" Bold="yes" />
 
-         <Property Id="DefaultUIFont" Value="WixUI_Font_Normal" />
-         <Property Id="WixUI_Mode" Value="InstallDir" />
+      <Property Id="DefaultUIFont" Value="WixUI_Font_Normal" />
+      <Property Id="WixUI_Mode" Value="InstallDir" />
 
-         <DialogRef Id="BrowseDlg" />
-         <DialogRef Id="DiskCostDlg" />
-         <DialogRef Id="ErrorDlg" />
-         <DialogRef Id="FatalError" />
-         <DialogRef Id="FilesInUse" />
-         <DialogRef Id="MsiRMFilesInUse" />
-         <DialogRef Id="PrepareDlg" />
-         <DialogRef Id="ProgressDlg" />
-         <DialogRef Id="ResumeDlg" />
-         <DialogRef Id="ResumeDlg" />
-         <DialogRef Id="UserExit" />
-         
-         <!--   Make sure to include custom dialogs in the installer database via a DialogRef command, 
-               especially if they are not included explicitly in the publish chain below -->
-         <DialogRef Id="ApacheLicenseDlg"/>
-         <DialogRef Id="PropertiesDialog" />
+      <DialogRef Id="BrowseDlg" />
+      <DialogRef Id="DiskCostDlg" />
+      <DialogRef Id="ErrorDlg" />
+      <DialogRef Id="FatalError" />
+      <DialogRef Id="FilesInUse" />
+      <DialogRef Id="MsiRMFilesInUse" />
+      <DialogRef Id="PrepareDlg" />
+      <DialogRef Id="ProgressDlg" />
+      <DialogRef Id="ResumeDlg" />
+      <DialogRef Id="ResumeDlg" />
+      <DialogRef Id="UserExit" />
 
-         <Publish Dialog="BrowseDlg" Control="OK" Event="DoAction" Value="WixUIValidatePath" Order="3">1</Publish>
-         <Publish Dialog="BrowseDlg" Control="OK" Event="SpawnDialog" Value="InvalidDirDlg" Order="4"><![CDATA[WIXUI_INSTALLDIR_VALID<>"1"]]></Publish>
+      <DialogRef Id="ApacheLicenseDlg"/>
+      <DialogRef Id="PropertiesDialog" />
+      <DialogRef Id="UserDialog" />
 
-         <Publish Dialog="ExitDialog" Control="Finish" Event="EndDialog" Value="Return" Order="999">1</Publish>
+      <Publish Dialog="BrowseDlg" Control="OK" Event="DoAction" Value="WixUIValidatePath" Order="3">1</Publish>
+      <Publish Dialog="BrowseDlg" Control="OK" Event="SpawnDialog" Value="InvalidDirDlg" Order="4"><![CDATA[WIXUI_INSTALLDIR_VALID<>"1"]]></Publish>
 
-         <Publish Dialog="WelcomeDlg" Control="Next" Event="NewDialog" Value="ApacheLicenseDlg">NOT Installed</Publish>
-         <Publish Dialog="WelcomeDlg" Control="Next" Event="NewDialog" Value="VerifyReadyDlg">Installed AND PATCH</Publish>
+      <Publish Dialog="ExitDialog" Control="Finish" Event="EndDialog" Value="Return" Order="999">1</Publish>
 
-         <Publish Dialog="ApacheLicenseDlg" Control="Back" Event="NewDialog" Value="WelcomeDlg">1</Publish>
-         <Publish Dialog="ApacheLicenseDlg" Control="Next" Event="NewDialog" Value="PropertiesDialog">LicenseAccepted = "1"</Publish>
-<!--
-         <Publish Dialog="InstallDirDlg" Control="Back" Event="NewDialog" Value="ApacheLicenseDlg">1</Publish>
-         <Publish Dialog="InstallDirDlg" Control="Next" Event="SetTargetPath" Value="[WIXUI_INSTALLDIR]" Order="1">1</Publish>
-         <Publish Dialog="InstallDirDlg" Control="Next" Event="DoAction" Value="WixUIValidatePath" Order="2">NOT WIXUI_DONTVALIDATEPATH</Publish>
-         <Publish Dialog="InstallDirDlg" Control="Next" Event="SpawnDialog" Value="InvalidDirDlg" Order="3"><![CDATA[NOT WIXUI_DONTVALIDATEPATH AND WIXUI_INSTALLDIR_VALID<>"1"]]></Publish>
-         <Publish Dialog="InstallDirDlg" Control="Next" Event="NewDialog" Value="PropertiesDialog" Order="4">WIXUI_DONTVALIDATEPATH OR WIXUI_INSTALLDIR_VALID="1"</Publish>
-         <Publish Dialog="InstallDirDlg" Control="ChangeFolder" Property="_BrowseProperty" Value="[WIXUI_INSTALLDIR]" Order="1">1</Publish>
-         <Publish Dialog="InstallDirDlg" Control="ChangeFolder" Event="SpawnDialog" Value="BrowseDlg" Order="2">1</Publish>
--->
-         <Publish Dialog="PropertiesDialog" Control="Back" Event="NewDialog" Value="ApacheLicenseDlg">1</Publish>
-         <Publish Dialog="PropertiesDialog" Control="Next" Event="NewDialog" Value="VerifyReadyDlg">1</Publish>
+      <Publish Dialog="WelcomeDlg" Control="Next" Event="NewDialog" Value="ApacheLicenseDlg">NOT Installed</Publish>
+      <Publish Dialog="WelcomeDlg" Control="Next" Event="NewDialog" Value="VerifyReadyDlg">Installed AND PATCH</Publish>
 
-         <Publish Dialog="VerifyReadyDlg" Control="Back" Event="NewDialog" Value="PropertiesDialog" Order="1">NOT Installed</Publish>
-         <Publish Dialog="VerifyReadyDlg" Control="Back" Event="NewDialog" Value="MaintenanceTypeDlg" Order="2">Installed</Publish>
+      <Publish Dialog="ApacheLicenseDlg" Control="Back" Event="NewDialog" Value="WelcomeDlg">1</Publish>
+      <Publish Dialog="ApacheLicenseDlg" Control="Next" Event="NewDialog" Value="UserDialog">LicenseAccepted = "1"</Publish>
 
-         <Publish Dialog="MaintenanceWelcomeDlg" Control="Next" Event="NewDialog" Value="MaintenanceTypeDlg">1</Publish>
+      <Publish Dialog="UserDialog" Control="Back" Event="NewDialog" Value="ApacheLicenseDlg">1</Publish>
+      <Publish Dialog="UserDialog" Control="Next" Event="NewDialog" Value="PropertiesDialog">1</Publish>
 
-         <Publish Dialog="MaintenanceTypeDlg" Control="RepairButton" Event="NewDialog" Value="VerifyReadyDlg">1</Publish>
-         <Publish Dialog="MaintenanceTypeDlg" Control="RemoveButton" Event="NewDialog" Value="VerifyReadyDlg">1</Publish>
-         <Publish Dialog="MaintenanceTypeDlg" Control="Back" Event="NewDialog" Value="MaintenanceWelcomeDlg">1</Publish>
-      </UI>
+      <Publish Dialog="PropertiesDialog" Control="Back" Event="NewDialog" Value="UserDialog">1</Publish>
+      <Publish Dialog="PropertiesDialog" Control="Next" Event="NewDialog" Value="VerifyReadyDlg">1</Publish>
 
-      <UIRef Id="WixUI_Common" />
+      <Publish Dialog="VerifyReadyDlg" Control="Back" Event="NewDialog" Value="PropertiesDialog" Order="1">NOT Installed</Publish>
+      <Publish Dialog="VerifyReadyDlg" Control="Back" Event="NewDialog" Value="MaintenanceTypeDlg" Order="2">Installed</Publish>
+
+      <Publish Dialog="MaintenanceWelcomeDlg" Control="Next" Event="NewDialog" Value="MaintenanceTypeDlg">1</Publish>
+
+      <Publish Dialog="MaintenanceTypeDlg" Control="RepairButton" Event="NewDialog" Value="VerifyReadyDlg">1</Publish>
+      <Publish Dialog="MaintenanceTypeDlg" Control="RemoveButton" Event="NewDialog" Value="VerifyReadyDlg">1</Publish>
+      <Publish Dialog="MaintenanceTypeDlg" Control="Back" Event="NewDialog" Value="MaintenanceWelcomeDlg">1</Publish>
+    </UI>
+
+    <UIRef Id="WixUI_Common" />
     <UI>
       <!-- Define the installer UI -->
-      
-      
+
+
 
       <Dialog Id="ApacheLicenseDlg" Width="370" Height="270" Title="Please review our license">
         <Control Id="LicenseAcceptedCheckBox" Type="CheckBox" X="20" Y="207" Width="330" Height="18" CheckBoxValue="1" Property="LicenseAccepted" Text="Click here to accept this license" />
@@ -141,9 +145,9 @@
         <Control Id="Cancel" Type="PushButton" X="304" Y="243" Width="56" Height="17" Cancel="yes" Text="Cancel">
           <Publish Event="SpawnDialog" Value="CancelDlg">1</Publish>
         </Control>
-         <Control Id="BannerBitmap" Type="Bitmap" X="0" Y="0" Width="370" Height="44" TabSkip="no" Text="!(loc.InstallDirDlgBannerBitmap)" /> 
+        <Control Id="BannerBitmap" Type="Bitmap" X="0" Y="0" Width="370" Height="44" TabSkip="no" Text="!(loc.InstallDirDlgBannerBitmap)" />
         <Control Id="LicenseText" Type="ScrollableText" X="20" Y="60" Width="330" Height="140" Sunken="yes" TabSkip="no">
-       
+
           <Text SourceFile="$(var.CPACK_WIX_LICENSE_RTF)" />
         </Control>
         <Control Id="Print" Type="PushButton" X="112" Y="243" Width="56" Height="17" Text="Print">
@@ -155,6 +159,28 @@
         <Control Id="Title" Type="Text" X="15" Y="6" Width="200" Height="15" Transparent="yes" NoPrefix="yes" Text="Apache NiFi MiNiFi License" />
       </Dialog>
 
+      <Dialog Id="UserDialog" Width="370" Height="270" Title="Service Account Information">
+        <Control Id="Next" Type="PushButton" X="236" Y="243" Width="56" Height="17" Default="yes" Text="Next" />
+        <Control Id="Back" Type="PushButton" X="180" Y="243" Width="56" Height="17" Text="Back" />
+        <Control Id="Cancel" Type="PushButton" X="304" Y="243" Width="56" Height="17" Cancel="yes" Text="Cancel">
+          <Publish Event="SpawnDialog" Value="CancelDlg">1</Publish>
+        </Control>
+
+        <Control Id="Description" Type="Text" X="25" Y="23" Width="280" Height="15" Transparent="yes" NoPrefix="yes" Text="Please enter your service account information.  " />
+        <Control Id="Title" Type="Text" X="15" Y="6" Width="200" Height="15" Transparent="yes" NoPrefix="yes" Text="Apache NiFi MiNiFi Properties" />
+        <Control Id="BannerBitmap" Type="Bitmap" X="0" Y="0" Width="370" Height="44" TabSkip="no" Text="!(loc.InstallDirDlgBannerBitmap)" />
+        <Control Id="BannerLine" Type="Line" X="0" Y="44" Width="370" Height="0" />
+        <Control Id="BottomLine" Type="Line" X="0" Y="234" Width="370" Height="0" />
+
+        <Control Id="AccountLabel" Type="Text" X="20" Y="60" Width="290" Height="20" NoPrefix="yes" Text="Account" />
+        <Control Id="Account" Type="Edit" X="20" Y="80" Width="320" Height="18" Property="SERVICEACCOUNT" Indirect="no" />
+
+        <Control Id="AccountPasswordLabel" Type="Text" X="20" Y="100" Width="290" Height="20" NoPrefix="yes" Text="AccountPassword" />
+        <Control Id="AccountPassword" Type="Edit" X="20" Y="120" Width="320" Height="18" Password="yes" Property="SERVICEACCOUNTPASSWORD" Indirect="no" />
+
+      </Dialog>
+
+
       <Dialog Id="PropertiesDialog" Width="370" Height="320" Title="Agent Properties">
         <Control Id="Next" Type="PushButton" X="236" Y="290" Width="56" Height="17" Default="yes" Text="Next" />
         <Control Id="Back" Type="PushButton" X="180" Y="290" Width="56" Height="17" Text="Back" />
@@ -164,7 +190,7 @@
 
         <Control Id="Description" Type="Text" X="25" Y="23" Width="280" Height="15" Transparent="yes" NoPrefix="yes" Text="Please enter values for properties you wish to use.  " />
         <Control Id="Title" Type="Text" X="15" Y="6" Width="200" Height="15" Transparent="yes" NoPrefix="yes" Text="Apache NiFi MiNiFi Properties" />
-        <Control Id="BannerBitmap" Type="Bitmap" X="0" Y="0" Width="370" Height="44" TabSkip="no" Text="!(loc.InstallDirDlgBannerBitmap)" /> 
+        <Control Id="BannerBitmap" Type="Bitmap" X="0" Y="0" Width="370" Height="44" TabSkip="no" Text="!(loc.InstallDirDlgBannerBitmap)" />
         <Control Id="BannerLine" Type="Line" X="0" Y="44" Width="370" Height="0" />
         <Control Id="BottomLine" Type="Line" X="0" Y="283" Width="370" Height="0" />
 
@@ -175,17 +201,18 @@
                          Text="Enable interactive Command and Control." Default="no" />
 
         <Control Id="AgentClassLabel" Type="Text" X="20" Y="80" Width="290" Height="20" NoPrefix="yes" Text="Agent Class" />
-        <Control Id="AgentClass" Type="Edit" X="20" Y="100" Width="320" Height="18" Property="AGENT_CLASS" Indirect="no" ><Condition Action="disable"><![CDATA[ENABLEC2<>1]]></Condition>
-          <Condition Action="enable">ENABLEC2="1"</Condition>
-        </Control>
-
-          <Control Id="AgentIdentifierLabel" Type="Text" X="20" Y="120" Width="60" Height="20" NoPrefix="yes" Text="Agent Identifier" />
-        <Control Id="AgentIdentifier" Type="Edit" X="20" Y="140" Width="320" Height="18" Property="AGENT_IDENTIFIER" Indirect="no"  >
+        <Control Id="AgentClass" Type="Edit" X="20" Y="100" Width="320" Height="18" Property="AGENT_CLASS" Indirect="no" >
           <Condition Action="disable"><![CDATA[ENABLEC2<>1]]></Condition>
           <Condition Action="enable">ENABLEC2="1"</Condition>
         </Control>
 
-        <Control Id="ServertHeartbeatIdentifierLabel" Type="Text" X="20" Y="160" Width="60" Height="20" NoPrefix="yes" Text="Server Heartbeat URL" />
+        <Control Id="AgentIdentifierLabel" Type="Text" X="20" Y="120" Width="60" Height="20" NoPrefix="yes" Text="Agent Identifier" />
+        <Control Id="AgentIdentifier" Type="Edit" X="20" Y="140" Width="320" Height="18" Property="AGENT_IDENTIFIER"  Indirect="no"  >
+          <Condition Action="disable"><![CDATA[ENABLEC2<>1]]></Condition>
+          <Condition Action="enable">ENABLEC2="1"</Condition>
+        </Control>
+
+        <Control Id="ServertHeartbeatIdentifierLabel" Type="Text" X="20" Y="160" Width="80" Height="20" NoPrefix="yes" Text="Server Heartbeat URL" />
         <Control Id="ServerHeartbeatIdentifier" Type="Edit" X="20" Y="180" Width="320" Height="18" Property="SERVER_HEARTBEAT" Indirect="no"  >
           <Condition Action="disable"><![CDATA[ENABLEC2<>1]]></Condition>
           <Condition Action="enable">ENABLEC2="1"</Condition>
@@ -197,18 +224,37 @@
           <Condition Action="enable">ENABLEC2="1"</Condition>
         </Control>
 
+        <Control Id="AgentHeartbeatLabel" Type="Text" X="20" Y="240" Width="80" Height="20" NoPrefix="yes" Text="Agent Heartbeat" />
+        <Control Id="AgentHeartbeat" Type="ComboBox" X="20" Y="260" Width="300" Height="17" Property="AGENT_HEARTBEAT" Sorted="yes" >
+          <ComboBox Property="AGENT_HEARTBEAT">
+            <ListItem Value="250 msec" />
+            <ListItem Value="1 sec" />
+            <ListItem Value="10 sec" />
+            <ListItem Value="30 sec" />
+            <ListItem Value="1 min" />
+            <ListItem Value="5 min" />
+            <ListItem Value="10 min" />
+            <ListItem Value="30 min" />
+            <ListItem Value="60 min" />
+          </ComboBox>
+          <Condition Action="disable"><![CDATA[ENABLEC2<>1]]></Condition>
+          <Condition Action="enable">ENABLEC2="1"</Condition>
+        </Control>
+        <!-- 
+        comment when available
         <Control Id="AgentProtocolLabel" Type="Text" X="20" Y="240" Width="60" Height="20" NoPrefix="yes" Text="Agent Protocol" />
         <Control Id="AgentProtocolComboBreaker" Type="ComboBox" X="20" Y="260" Width="300" Height="17" Property="AGENT_PROTOCOL" >
-          
-          
-          <ComboBox Property="AGENT_PROTOCOL">
+
+
+        
+         <ComboBox Property="AGENT_PROTOCOL">
             <ListItem Value="RESTSender" />
             <ListItem Value="COAPProtocol" />
           </ComboBox>
           <Condition Action="disable"><![CDATA[ENABLEC2<>1]]></Condition>
           <Condition Action="enable">ENABLEC2="1"</Condition>
         </Control>
-
+-->
       </Dialog>
 
 
@@ -219,27 +265,27 @@
     </UI>
 
     <Property Id="AGENT_CLASS"  Value="Your Agent Class" />
-    <Property Id="AGENT_IDENTIFIER"  Value="Your Agent Identifier" />
+    <Property Id="AGENT_IDENTIFIER"  />
     <Property Id="AGENT_PROTOCOL"  Value="RESTSender" />
+    <Property Id="AGENT_HEARTBEAT"  Value="250 msec" />
     <Property Id="SERVER_HEARTBEAT"  Value="http://localhost:8181/heartbeat" />
-    <Property Id="SERVER_ACK"  Value="http://localhost:8181/ack" />
+    <Property Id="SERVER_ACK"  Value="http://localhost:8181/acknowledge" />
     <Property Id="ENABLEC2" />
+
+    <Property Id="SERVICEACCOUNT" Value="LocalSystem" />
+    <Property Id="SERVICEACCOUNTPASSWORD" />
+
+    <SetProperty Id="AGENT_IDENTIFIER" After="AppSearch" Value="[ComputerName]" Sequence="first" />
+    
     <SetProperty Id="ENABLEC2" After="AppSearch" Value="0" Sequence="first" >
       <![CDATA[ENABLEC2 = 0]]>
     </SetProperty>
   </Product>
 
   <Fragment>
-    <DirectoryRef Id="ProgramFilesFolder">
-      <Directory Id="RootMiNiFiDir" Name="ApacheNiFiMiNiFi">
+    <DirectoryRef Id="INSTALL_ROOT">
         <Directory Id="RootInstallDir" Name="nifi-minifi-cpp">
-          <Directory Id="AgentInstallDir" Name="minifi-agent-0.7.0">
             <Directory Id="CONFIGDIR" Name="conf">
-              <!--
-              <Component Id="MINIFIPROP" Guid="87658309-0339-425c-8633-f54ffaaa4941">
-                <File Id="MINIFI" Source="conf/minifi.properties" KeyPath="yes"/>
-              </Component>-->
-
               <Component Id="LOGPROP" Guid="87658309-0339-425c-8633-f54ffaaa4942">
                 <File Id="LOG" Source="conf/minifi-log.properties" KeyPath="yes"/>
               </Component>
@@ -260,6 +306,7 @@
                 <IniFile Id="ConfigFileI" Action="addLine" Name="minifi.properties" Directory="CONFIGDIR" Section="c2props" Key="nifi.c2.agent.identifier" Value="[AGENT_IDENTIFIER]" />
                 <IniFile Id="ConfigFileE" Action="addLine" Name="minifi.properties" Directory="CONFIGDIR" Section="c2props" Key="nifi.c2.enable" Value="true" />
                 <IniFile Id="ConfigFileP" Action="addLine" Name="minifi.properties" Directory="CONFIGDIR" Section="c2props" Key="nifi.c2.agent.protocol.class" Value="[AGENT_PROTOCOL]" />
+                <IniFile Id="ConfigFileT" Action="addLine" Name="minifi.properties" Directory="CONFIGDIR" Section="c2props" Key="nifi.c2.agent.heartbeat.period" Value="[AGENT_HEARTBEAT]" />
                 <IniFile Id="ConfigFileH" Action="addLine" Name="minifi.properties" Directory="CONFIGDIR" Section="c2props" Key="c2.rest.url" Value="[SERVER_HEARTBEAT]" />
                 <IniFile Id="ConfigFileAck" Action="addLine" Name="minifi.properties" Directory="CONFIGDIR" Section="c2props" Key="c2.rest.url.ack" Value="[SERVER_ACK]" />
                 <Condition><![CDATA[ENABLEC2="1"]]></Condition>
@@ -270,19 +317,8 @@
                 <Condition><![CDATA[ENABLEC2<>"1"]]></Condition>
               </Component>
             </Directory>
-            <Component Id="NOTICE" Guid="87658309-0339-425c-8633-f54ffaaa4931">
-              <File Id="NOTICE" Source="NOTICE" KeyPath="yes"/>
-            </Component>
 
-            <Component Id="LICENSE" Guid="87658309-0339-425c-8633-f54ffaaa4932">
-              <File Id="LICENSE" Source="LICENSE" KeyPath="yes"/>
-            </Component>
-
-            <Component Id="README" Guid="87658309-0339-425c-8633-f54ffaaa4933">
-              <File Id="README" Source="README.MD" KeyPath="yes"/>
-            </Component>
-
-            <Directory Id="INSTALLDIR" Name="bin">
+            <Directory Id="INSTALLBINDIR" Name="bin">
               <Component Id="minifiService" Guid="87658309-0339-425c-8633-f54ffaaa4921">
                 <File Id="MiNiFiExe"
                          Name="minifi.exe"
@@ -293,38 +329,61 @@
                                 Vital="yes"
                                 Name="Apache NiFi MiNiFi"
                                 DisplayName="Apache NiFi MiNiFi"
-                                Description="Apache NiFi MiNifi Service"
+                                Description="Apache NiFi MiNiFi Service"
                                 ErrorControl="ignore"
                                 Start="auto"
                                 Interactive="no" />
-
+                <!--
                 <ServiceControl Id="ServiceControl_Start"
                       Name="Apache NiFi MiNiFi"
                       Start="install"
-                      Wait="no" />
+                      Wait="no" />-->
                 <ServiceControl Id="ServiceControl_Stop"
                                 Name="Apache NiFi MiNiFi"
                                 Stop="both"
                                 Remove="uninstall"
                                 Wait="yes" />
+                <Condition><![CDATA[SERVICEACCOUNT="LocalSystem"]]></Condition>
+              </Component>
+              <Component Id="minifiServiceNotLocal" Guid="87658309-0339-425c-8633-f54ffaaa4922">
+                <File Id="MiNiFiExeWithPassword"
+                         Name="minifi.exe"
+                         KeyPath="yes"
+                         Source="main\minifi.exe"/>
+                <ServiceInstall Id="MiNiFiExeServiceWithPassword"
+                                Type="ownProcess"
+                                Vital="yes"
+                                Name="Apache NiFi MiNiFi"
+                                DisplayName="Apache NiFi MiNiFi"
+                                Description="Apache NiFi MiNiFi Service"
+                                ErrorControl="ignore"
+                                Account="[SERVICEACCOUNT]"
+                                Password="[SERVICEACCOUNTPASSWORD]"
+                                Start="auto"
+                                Interactive="no" />
+                <!--
+                <ServiceControl Id="ServiceControl_Start"
+                      Name="Apache NiFi MiNiFi"
+                      Start="install"
+                      Wait="no" />-->
+                <ServiceControl Id="ServiceControl_Stop_WithPassword"
+                                Name="Apache NiFi MiNiFi"
+                                Stop="both"
+                                Remove="uninstall"
+                                Wait="yes" />
+                <Condition><![CDATA[SERVICEACCOUNT<>"LocalSystem"]]></Condition>
               </Component>
             </Directory>
           </Directory>
-        </Directory>
-      </Directory>
     </DirectoryRef>
   </Fragment>
-  <Fragment>
 
-    <!-- i#1761: ideally we'd have a dialog where the user picks
-             whether to do this and whether system or user, but for
-             now we always do it for user (the zip file can be used
-             instead of installer if this is undesirable).
-        -->
+
+  <Fragment>
     <ComponentGroup Id="CG_ADD_TO_PATH" Directory="INSTALL_ROOT">
       <Component Id="CM_ADD_TO_PATH" Guid="208034b8-7cc5-4718-9b99-ac50201c3f90"
              KeyPath="yes">
-        <Environment Id="ENV_PATH" Name="MINIFI_HOME" Value="[INSTALL_ROOT]minifi-agent-0.7.0\"
+        <Environment Id="ENV_PATH" Name="MINIFI_HOME" Value="[INSTALL_ROOT]minifi-agent\"
             Permanent="no" Part="last" Action="set" System="no" />
       </Component>
     </ComponentGroup>

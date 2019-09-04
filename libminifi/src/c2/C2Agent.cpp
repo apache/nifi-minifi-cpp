@@ -178,8 +178,16 @@ void C2Agent::configure(const std::shared_ptr<Configure> &configure, bool reconf
   }
 
   if (configure->get("nifi.c2.agent.heartbeat.period", "c2.agent.heartbeat.period", heartbeat_period)) {
+    core::TimeUnit unit;
+
     try {
-      heart_beat_period_ = std::stoi(heartbeat_period);
+      int64_t schedulingPeriod = 0;
+      if (core::Property::StringToTime(heartbeat_period, schedulingPeriod, unit) && core::Property::ConvertTimeUnitToMS(schedulingPeriod, unit, schedulingPeriod)) {
+        heart_beat_period_ = schedulingPeriod;
+        logger_->log_debug("Using %u ms as the heartbeat period", heart_beat_period_);
+      } else {
+        heart_beat_period_ = std::stoi(heartbeat_period);
+      }
     } catch (const std::invalid_argument &ie) {
       heart_beat_period_ = 3000;
     }

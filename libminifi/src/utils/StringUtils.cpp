@@ -17,6 +17,10 @@
 
 #include "utils/StringUtils.h"
 
+#ifdef WIN32
+#include <Windows.h>
+#endif
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -105,7 +109,15 @@ std::string StringUtils::replaceEnvironmentVariables(std::string& original_strin
     if (env_field.empty()) {
       continue;
     }
+#ifdef WIN32
+    DWORD buffSize = 65535;
+    std::vector<char> buffer;
+    buffer.resize(buffSize);
+    char *strVal = buffer.data();
+    GetEnvironmentVariableA(env_field.c_str(), strVal, buffSize);
+#else
     const auto strVal = std::getenv(env_field.c_str());
+#endif
     std::string env_value;
     if (strVal != nullptr)
       env_value = strVal;
@@ -141,7 +153,7 @@ std::string StringUtils::replaceMap(std::string source_string, const std::map<st
   }
 
   std::sort(replacements.begin(), replacements.end(), [](const std::pair<size_t, std::pair<size_t, std::string>> a,
-                                                         const std::pair<size_t, std::pair<size_t, std::string>> &b) {
+      const std::pair<size_t, std::pair<size_t, std::string>> &b) {
     return a.first > b.first;
   });
 

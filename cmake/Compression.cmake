@@ -17,15 +17,16 @@
 
 function(use_bundled_zlib SOURCE_DIR BINARY_DIR)
  message("Using bundled zlib")
-  if (WIN32)
-  if (CMAKE_BUILD_TYPE MATCHES RelWithDebInfo OR CMAKE_BUILD_TYPE MATCHES Release)
-  set(BYPRODUCT "thirdparty/zlib-install/lib/zlibstatic.lib")
-  else()
-  set(BYPRODUCT "thirdparty/zlib-install/lib/zlibstaticd.lib")
-  endif()
-  else()
-  set(BYPRODUCT "thirdparty/zlib-install/lib/libz.a")
-  endif()
+if (WIN32)
+ string(TOLOWER "${CMAKE_BUILD_TYPE}" build_type)
+ if (build_type MATCHES relwithdebinfo OR build_type MATCHES release)
+ set(BYPRODUCT "thirdparty/zlib-install/lib/zlibstatic.lib")
+ else()
+ set(BYPRODUCT "thirdparty/zlib-install/lib/zlibstaticd.lib")
+ endif()
+ else()
+ set(BYPRODUCT "thirdparty/zlib-install/lib/libz.a")
+ endif()
   ExternalProject_Add(
     zlib-external
     GIT_REPOSITORY "https://github.com/madler/zlib.git"
