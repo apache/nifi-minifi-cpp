@@ -211,7 +211,7 @@ class SingleNodeDockerCluster(Cluster):
 
             with tarfile.open(mode='w', fileobj=docker_context_buffer) as docker_context:
                 dockerfile_info = tarfile.TarInfo('Dockerfile')
-                dockerfile_info.size = len(conf_dockerfile_buffer.getvalue())
+                dockerfile_info.size = conf_dockerfile_buffer.getbuffer().nbytes
                 docker_context.addfile(dockerfile_info,
                                        fileobj=conf_dockerfile_buffer)
 
@@ -286,6 +286,8 @@ class Connectable(object):
         self.connections = {}
         self.out_proc = self
 
+        self.drop_empty_flowfiles = False
+
     def connect(self, connections):
         for rel in connections:
 
@@ -329,6 +331,15 @@ class Connectable(object):
             connected.out_proc = other
 
         return connected
+
+    def __invert__(self):
+        """
+        Invert operation to set empty file filtering on incoming connections
+        GetFile('/input') >> ~LogAttribute()
+        """
+        self.drop_empty_flowfiles = True
+
+        return self
 
 
 class Processor(Connectable):
@@ -549,7 +560,7 @@ def minifi_flow_yaml(connectable, root=None, visited=None):
                 'id': str(group.uuid),
                 'url': group.url,
                 'timeout': '30 sec',
-                'yield period': '10 sec',
+                'yield period': '3 sec',
                 'Input Ports': []
             }
 
@@ -597,7 +608,8 @@ def minifi_flow_yaml(connectable, root=None, visited=None):
                     'name': str(uuid.uuid4()),
                     'source id': str(connectable.uuid),
                     'source relationship name': conn_name,
-                    'destination id': str(proc.uuid)
+                    'destination id': str(proc.uuid),
+                    'drop empty': ("true" if proc.drop_empty_flowfiles else "false")
                 })
                 if proc not in visited:
                     minifi_flow_yaml(proc, res, visited)

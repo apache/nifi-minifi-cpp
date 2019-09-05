@@ -177,7 +177,7 @@ bool SiteToSiteClient::transferFlowFiles(const std::shared_ptr<core::ProcessCont
     if (!complete(transactionID)) {
       throw Exception(SITE2SITE_EXCEPTION, "Complete Failed for " + transactionID);
     }
-    logger_->log_debug("Site2Site transaction %s successfully send flow record %d, content bytes %llu", transactionID, transaction->total_transfers_, transaction->_bytes);
+    logger_->log_debug("Site2Site transaction %s successfully sent flow record %d, content bytes %llu", transactionID, transaction->total_transfers_, transaction->_bytes);
   } catch (std::exception &exception) {
     if (transaction)
       deleteTransaction(transactionID);
@@ -215,21 +215,24 @@ bool SiteToSiteClient::confirm(std::string transactionID) {
 
   if (it == known_transactions_.end()) {
     return false;
-  } else {
-    transaction = it->second;
   }
+  transaction = it->second;
 
-  if (transaction->getState() == TRANSACTION_STARTED && !transaction->isDataAvailable() && transaction->getDirection() == RECEIVE) {
+
+  if (transaction->getState() == TRANSACTION_STARTED && !transaction->isDataAvailable() &&
+      transaction->getDirection() == RECEIVE) {
     transaction->_state = TRANSACTION_CONFIRMED;
     return true;
   }
 
-  if (transaction->getState() != DATA_EXCHANGED)
+  if (transaction->getState() != DATA_EXCHANGED) {
     return false;
+  }
 
   if (transaction->getDirection() == RECEIVE) {
-    if (transaction->isDataAvailable())
+    if (transaction->isDataAvailable()) {
       return false;
+    }
     // we received a FINISH_TRANSACTION indicator. Send back a CONFIRM_TRANSACTION message
     // to peer so that we can verify that the connection is still open. This is a two-phase commit,
     // which helps to prevent the chances of data duplication. Without doing this, we may commit the
@@ -239,7 +242,7 @@ bool SiteToSiteClient::confirm(std::string transactionID) {
     // time window involved in the entire transaction, it is reduced to a simple round-trip conversation.
     uint64_t crcValue = transaction->getCRC();
     std::string crc = std::to_string(crcValue);
-    logger_->log_debug("Site2Site Send confirm with CRC %d to transaction %s", transaction->getCRC(), transactionID);
+    logger_->log_debug("Site2Site Receive confirm with CRC %llu to transaction %s", crcValue, transactionID);
     ret = writeResponse(transaction, CONFIRM_TRANSACTION, crc);
     if (ret <= 0)
       return false;
@@ -263,8 +266,9 @@ bool SiteToSiteClient::confirm(std::string transactionID) {
   } else {
     logger_->log_debug("Site2Site Send FINISH TRANSACTION for transaction %s", transactionID);
     ret = writeResponse(transaction, FINISH_TRANSACTION, "FINISH_TRANSACTION");
-    if (ret <= 0)
+    if (ret <= 0) {
       return false;
+    }
     RespondCode code;
     std::string message;
     readResponse(transaction, code, message);
@@ -372,7 +376,7 @@ bool SiteToSiteClient::complete(std::string transactionID) {
       transaction->_state = TRANSACTION_COMPLETED;
       return true;
     } else {
-      logger_->log_debug("Site2Site transaction %s send finished", transactionID);
+      logger_->log_debug("Site2Site transaction %s receive finished", transactionID);
       ret = this->writeResponse(transaction, TRANSACTION_FINISHED, "Finished");
       if (ret <= 0) {
         return false;
@@ -404,13 +408,7 @@ bool SiteToSiteClient::complete(std::string transactionID) {
 
 int16_t SiteToSiteClient::send(std::string transactionID, DataPacket *packet, const std::shared_ptr<FlowFileRecord> &flowFile, const std::shared_ptr<core::ProcessSession> &session) {
   int ret;
-  std::shared_ptr<Transaction> transaction = NULL;
 
-  if (flowFile && (flowFile->getResourceClaim() == nullptr || !flowFile->getResourceClaim()->exists())) {
-    auto path = flowFile->getResourceClaim() != nullptr ? flowFile->getResourceClaim()->getContentFullPath() : "nullclaim";
-    logger_->log_debug("Claim %s does not exist for FlowFile %s", path, flowFile->getUUIDStr());
-    return -2;
-  }
   if (peer_state_ != READY) {
     bootstrap();
   }
@@ -418,13 +416,13 @@ int16_t SiteToSiteClient::send(std::string transactionID, DataPacket *packet, co
   if (peer_state_ != READY) {
     return -1;
   }
+
   std::map<std::string, std::shared_ptr<Transaction> >::iterator it = this->known_transactions_.find(transactionID);
 
   if (it == known_transactions_.end()) {
     return -1;
-  } else {
-    transaction = it->second;
   }
+  std::shared_ptr<Transaction> transaction = it->second;
 
   if (transaction->getState() != TRANSACTION_STARTED && transaction->getState() != DATA_EXCHANGED) {
     logger_->log_warn("Site2Site transaction %s is not at started or exchanged state", transactionID);
@@ -463,12 +461,20 @@ int16_t SiteToSiteClient::send(std::string transactionID, DataPacket *packet, co
     logger_->log_debug("Site2Site transaction %s send attribute key %s value %s", transactionID, itAttribute->first, itAttribute->second);
   }
 
+  bool flowfile_has_content = (flowFile != nullptr);
+
+  if (flowFile && (flowFile->getResourceClaim() == nullptr || !flowFile->getResourceClaim()->exists())) {
+    auto path = flowFile->getResourceClaim() != nullptr ? flowFile->getResourceClaim()->getContentFullPath() : "nullclaim";
+    logger_->log_debug("Claim %s does not exist for FlowFile %s", path, flowFile->getUUIDStr());
+    flowfile_has_content = false;
+  }
+
   uint64_t len = 0;
-  if (flowFile) {
+  if (flowFile && flowfile_has_content) {
     len = flowFile->getSize();
     ret = transaction->getStream().write(len);
     if (ret != 8) {
-      logger_->log_debug("ret != 8");
+      logger_->log_debug("Failed to write content size!");
       return -1;
     }
     if (flowFile->getSize() > 0) {
@@ -495,10 +501,16 @@ int16_t SiteToSiteClient::send(std::string transactionID, DataPacket *packet, co
 
     ret = transaction->getStream().writeData(reinterpret_cast<uint8_t *>(const_cast<char*>(packet->payload_.c_str())), len);
     if (ret != (int64_t)len) {
-      logger_->log_debug("ret != len");
+      logger_->log_debug("Failed to write payload size!");
       return -1;
     }
     packet->_size += len;
+  } else if (flowFile && !flowfile_has_content) {
+    ret = transaction->getStream().write(len);  // Indicate zero length
+    if (ret != 8) {
+      logger_->log_debug("Failed to write content size (0)!");
+      return -1;
+    }
   }
 
   transaction->current_transfers_++;
@@ -528,9 +540,9 @@ bool SiteToSiteClient::receive(std::string transactionID, DataPacket *packet, bo
 
   if (it == known_transactions_.end()) {
     return false;
-  } else {
-    transaction = it->second;
   }
+
+  transaction = it->second;
 
   if (transaction->getState() != TRANSACTION_STARTED && transaction->getState() != DATA_EXCHANGED) {
     logger_->log_warn("Site2Site transaction %s is not at started or exchanged state", transactionID);
@@ -608,11 +620,11 @@ bool SiteToSiteClient::receive(std::string transactionID, DataPacket *packet, bo
   }
 
   packet->_size = len;
-  if (len > 0) {
+  if (len > 0 || numAttributes > 0) {
     transaction->current_transfers_++;
     transaction->total_transfers_++;
   } else {
-    logger_->log_debug("Site2Site transaction %s receives attribute ?", transactionID);
+    logger_->log_warn("Site2Site transaction %s empty flow file without attribute", transactionID);
     transaction->_dataAvailable = false;
     eof = true;
     return true;
@@ -661,7 +673,7 @@ bool SiteToSiteClient::receiveFlowFiles(const std::shared_ptr<core::ProcessConte
       bool eof = false;
 
       if (!receive(transactionID, &packet, eof)) {
-        throw Exception(SITE2SITE_EXCEPTION, "Receive Failed");
+        throw Exception(SITE2SITE_EXCEPTION, "Receive Failed " + transactionID);
       }
       if (eof) {
         // transaction done
@@ -712,7 +724,6 @@ bool SiteToSiteClient::receiveFlowFiles(const std::shared_ptr<core::ProcessConte
     }
     logging::LOG_INFO(logger_) << "Site to Site transaction " << transactionID << " received flow record " << transfers
                                << ", with content size " << bytes << " bytes";
-
     // we yield the receive if we did not get anything
     if (transfers == 0)
       context->yield();
@@ -733,7 +744,6 @@ bool SiteToSiteClient::receiveFlowFiles(const std::shared_ptr<core::ProcessConte
   }
 
   deleteTransaction(transactionID);
-
   return true;
 }
 } /* namespace sitetosite */

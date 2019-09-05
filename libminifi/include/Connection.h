@@ -131,6 +131,15 @@ class Connection : public core::Connectable, public std::enable_shared_from_this
   uint64_t getFlowExpirationDuration() {
     return expired_duration_;
   }
+
+  void setDropEmptyFlowFiles(bool drop) {
+    drop_empty_ = drop;
+  }
+
+  bool getDropEmptyFlowFiles() const {
+    return drop_empty_;
+  }
+
   // Check whether the queue is empty
   bool isEmpty();
   // Check whether the queue is full to apply back pressure
@@ -192,6 +201,7 @@ class Connection : public core::Connectable, public std::enable_shared_from_this
   std::shared_ptr<core::ContentRepository> content_repo_;
 
  private:
+  bool drop_empty_;
   // Mutex for protection
   std::mutex mutex_;
   // Queued data size
