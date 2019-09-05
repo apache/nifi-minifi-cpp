@@ -36,7 +36,6 @@ RUN mkdir -p $MINIFI_BASE_DIR
 USER $USER
 
 RUN yum -y install java-1.8.0-openjdk java-1.8.0-openjdk-devel gcc g++ sudo git which maven make
-RUN yum -y install openssl openssl-devel openssl-static
 
 
 ADD $MINIFI_SOURCE_CODE $MINIFI_BASE_DIR
