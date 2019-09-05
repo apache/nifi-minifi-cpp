@@ -35,14 +35,19 @@
 #include "io/DataStream.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
+#include "utils/Deleters.h"
+
 
 #pragma comment(lib, "wevtapi.lib")
+#pragma comment(lib, "ole32.lib")
 
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
 namespace processors {
+
+
 
 static std::string to_string(const wchar_t* pChar) {
   return std::wstring_convert<std::codecvt_utf8<wchar_t>>().to_bytes(pChar);
@@ -184,6 +189,46 @@ EVT_HANDLE ConsumeWindowsEventLog::getProvider(const std::string & name) {
 	return providers_[name];
 } 
 
+std::string ConsumeWindowsEventLog::GetEventMessage(EVT_HANDLE metadataProvider, EVT_HANDLE eventHandle)
+{
+	std::string returnValue;
+	std::unique_ptr<WCHAR,utils::FreeDeleter> pBuffer;
+	DWORD dwBufferSize = 0;
+	DWORD dwBufferUsed = 0;
+	DWORD status = 0;
+
+	EvtFormatMessage(metadataProvider, eventHandle, 0, 0, NULL, EvtFormatMessageEvent, dwBufferSize, pBuffer.get(), &dwBufferUsed);
+	
+	//  we need to get the size of the buffer
+	status = GetLastError();
+	if (ERROR_INSUFFICIENT_BUFFER == status) {
+		dwBufferSize = dwBufferUsed;
+
+		/* All C++ examples use malloc and even HeapAlloc in some cases. To avoid any problems ( with EvtFormatMessage calling
+		   free for example ) we will continue to use malloc and use a custom deleter with unique_ptr.
+		'*/
+		pBuffer = std::unique_ptr<WCHAR, utils::FreeDeleter>(static_cast<LPWSTR>(malloc(dwBufferSize * sizeof(WCHAR))));
+
+
+		if (pBuffer) {
+			EvtFormatMessage(metadataProvider, eventHandle, 0, 0, NULL, EvtFormatMessageEvent, dwBufferSize, pBuffer.get(), &dwBufferUsed);
+		} else {
+			return returnValue;
+		}
+	}
+	else if (ERROR_EVT_MESSAGE_NOT_FOUND == status || ERROR_EVT_MESSAGE_ID_NOT_FOUND == status) {
+		return returnValue;
+	}
+	else {
+		return returnValue;
+	}
+
+	// convert wstring to std::string
+	std::wstring message(pBuffer.get());
+	returnValue = std::string(message.begin(), message.end());
+	return returnValue;
+}
+
 bool ConsumeWindowsEventLog::subscribe(const std::shared_ptr<core::ProcessContext> &context) {
   std::string channel;
   context->getProperty(Channel.getName(), channel);
@@ -213,33 +258,33 @@ bool ConsumeWindowsEventLog::subscribe(const std::shared_ptr<core::ProcessContex
       std::wstring(query.begin(), query.end()).c_str(),
       NULL,
       this,
-      [](EVT_SUBSCRIBE_NOTIFY_ACTION action, PVOID pContext, EVT_HANDLE hEvent)
+      [](EVT_SUBSCRIBE_NOTIFY_ACTION action, PVOID pContext, EVT_HANDLE eventHandle)
       {
+	  
         auto pConsumeWindowsEventLog = static_cast<ConsumeWindowsEventLog*>(pContext);
 
         auto& logger = pConsumeWindowsEventLog->logger_;
 
         if (action == EvtSubscribeActionError) {
-          if (ERROR_EVT_QUERY_RESULT_STALE == (DWORD)hEvent) {
+          if (ERROR_EVT_QUERY_RESULT_STALE == (DWORD)eventHandle) {
             logger->log_error("Received missing event notification. Consider triggering processor more frequently or increasing queue size.");
           } else {
-            logger->log_error("Received the following Win32 error: %x", hEvent);
+            logger->log_error("Received the following Win32 error: %x", eventHandle);
           }
         } else if (action == EvtSubscribeActionDeliver) {
           DWORD size = 0;
           DWORD used = 0;
           DWORD propertyCount = 0;
-
-          if (!EvtRender(NULL, hEvent, EvtRenderEventXml, size, 0, &used, &propertyCount)) {
+          if (!EvtRender(NULL, eventHandle, EvtRenderEventXml, size, 0, &used, &propertyCount)) {
             if (ERROR_INSUFFICIENT_BUFFER == GetLastError()) {
               if (used > pConsumeWindowsEventLog->maxBufferSize_) {
-                logger->log_error("Dropping event %x because it couldn't be rendered within %ll bytes.", hEvent, pConsumeWindowsEventLog->maxBufferSize_);
+                logger->log_error("Dropping event %x because it couldn't be rendered within %ll bytes.", eventHandle, pConsumeWindowsEventLog->maxBufferSize_);
                 return 0UL;
               }
 
               size = used;
               std::vector<wchar_t> buf(size/2 + 1);
-              if (EvtRender(NULL, hEvent, EvtRenderEventXml, size, &buf[0], &used, &propertyCount)) {
+              if (EvtRender(NULL, eventHandle, EvtRenderEventXml, size, &buf[0], &used, &propertyCount)) {
                 std::string xml = to_string(&buf[0]);
 
 				EventRender renderedData;
@@ -247,17 +292,22 @@ bool ConsumeWindowsEventLog::subscribe(const std::shared_ptr<core::ProcessContex
 				pugi::xml_document doc;
 				pugi::xml_parse_result result = doc.load_string(xml.c_str());
 
-
-
 				if (!result) {
-					logger->log_error("'loadXML' failed");
+					logger->log_error("Invalid XML produced");
 					return 0UL;
 				}
 				
-				std::string providerName = doc.child("System").child("Provider").attribute("Name").value();
+				std::string providerName = doc.child("Event").child("System").child("Provider").attribute("Name").value();
+				
+				auto message = pConsumeWindowsEventLog->GetEventMessage(pConsumeWindowsEventLog->getProvider(providerName), eventHandle);
+
+				if (!message.empty())
+				{
+					renderedData.rendered_text_ = message;
+				}
 
 				// resolve the event metadata
-				wel::MetadataWalker walker(pConsumeWindowsEventLog->getProvider(providerName), hEvent, !pConsumeWindowsEventLog->resolve_as_attributes_, pConsumeWindowsEventLog->apply_identifier_function_, pConsumeWindowsEventLog->regex_);
+				wel::MetadataWalker walker(pConsumeWindowsEventLog->getProvider(providerName), eventHandle, !pConsumeWindowsEventLog->resolve_as_attributes_, pConsumeWindowsEventLog->apply_identifier_function_, pConsumeWindowsEventLog->regex_);
 				doc.traverse(walker);
 
 				if (pConsumeWindowsEventLog->resolve_as_attributes_) {
@@ -330,6 +380,14 @@ int ConsumeWindowsEventLog::processQueue(const std::shared_ptr<core::ProcessSess
     session->getProvenanceReporter()->receive(flowFile, provenanceUri_, getUUIDStr(), "Consume windows event logs", 0);
     session->transfer(flowFile, Success);
     session->commit();
+
+	flowFile = session->create();
+
+	session->write(flowFile, &WriteCallback(evt.rendered_text_));
+	session->putAttribute(flowFile, FlowAttributeKey(MIME_TYPE), "text/plain");
+	session->getProvenanceReporter()->receive(flowFile, provenanceUri_, getUUIDStr(), "Consume windows event logs", 0);
+	session->transfer(flowFile, Success);
+	session->commit();
 
     flowFileCount++;
   }

@@ -31,6 +31,7 @@
 #include <regex>
 #include <codecvt>
 #include "utils/OsUtils.h"
+#include <Objbase.h>
 
 
 //#import <msxml6.dll>
@@ -44,9 +45,8 @@ namespace processors {
 struct EventRender {
 	std::map<std::string, std::string> matched_fields_;
 	std::string text_;
+	std::string rendered_text_;
 };
-
-
 
 //! ConsumeWindowsEventLog Class
 class ConsumeWindowsEventLog : public core::Processor
@@ -100,6 +100,8 @@ protected:
 
   void LogWindowsError();
 private:
+
+  std::string GetEventMessage(EVT_HANDLE hMetadata, EVT_HANDLE hEvent);
   // Logger
   std::shared_ptr<logging::Logger> logger_;
   std::string regex_;
