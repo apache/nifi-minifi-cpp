@@ -474,7 +474,7 @@ int16_t SiteToSiteClient::send(std::string transactionID, DataPacket *packet, co
     len = flowFile->getSize();
     ret = transaction->getStream().write(len);
     if (ret != 8) {
-      logger_->log_debug("ret != 8");
+      logger_->log_debug("Failed to write content size!");
       return -1;
     }
     if (flowFile->getSize() > 0) {
@@ -501,14 +501,14 @@ int16_t SiteToSiteClient::send(std::string transactionID, DataPacket *packet, co
 
     ret = transaction->getStream().writeData(reinterpret_cast<uint8_t *>(const_cast<char*>(packet->payload_.c_str())), len);
     if (ret != (int64_t)len) {
-      logger_->log_debug("ret != len");
+      logger_->log_debug("Failed to write payload size!");
       return -1;
     }
     packet->_size += len;
   } else if (flowFile && !flowfile_has_content) {
     ret = transaction->getStream().write(len);  // Indicate zero length
     if (ret != 8) {
-      logger_->log_debug("ret != 8");
+      logger_->log_debug("Failed to write content size (0)!");
       return -1;
     }
   }
