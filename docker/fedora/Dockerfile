@@ -36,7 +36,7 @@ RUN mkdir -p $MINIFI_BASE_DIR
 USER $USER
 
 RUN yum -y install java-1.8.0-openjdk java-1.8.0-openjdk-devel flex bison make patch sudo git which maven libtool autoconf automake
-
+RUN yum -y install openssl-devel
 
 ADD $MINIFI_SOURCE_CODE $MINIFI_BASE_DIR
 
