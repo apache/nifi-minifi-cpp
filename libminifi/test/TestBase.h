@@ -46,12 +46,29 @@
 #include "core/reporting/SiteToSiteProvenanceReportingTask.h"
 #include "core/state/nodes/FlowInformation.h"
 #include "properties/Configure.h"
+#include "utils/ClassUtils.h"
 
 class LogTestController {
  public:
+  ~LogTestController() {
+  }
   static LogTestController& getInstance() {
     static LogTestController instance;
     return instance;
+  }
+
+  static std::shared_ptr<LogTestController> getInstance(const std::shared_ptr<logging::LoggerProperties> &logger_properties) {
+    static std::map<std::shared_ptr<logging::LoggerProperties>, std::shared_ptr<LogTestController>> map;
+    auto fnd = map.find(logger_properties);
+    if (fnd != std::end(map)) {
+      return fnd->second;
+    } else {
+      // in practice I'd use a derivation here or another paradigm entirely but for the purposes of this test code
+      // having extra overhead is negligible. this is the most readable and least impactful way
+      auto instance = std::shared_ptr<LogTestController>(new LogTestController(logger_properties));
+      map.insert(std::make_pair(logger_properties, instance));
+      return map.find(logger_properties)->second;
+    }
   }
 
   template<typename T>
@@ -84,12 +101,36 @@ class LogTestController {
     setLevel<T>(spdlog::level::off);
   }
 
+  /**
+   * Most tests use the main logging framework. this addition allows us to have and control variants for the purposes
+   * of changeable test formats
+   */
+  template<typename T>
+  std::shared_ptr<logging::Logger> getLogger() {
+    std::string name = core::getClassName<T>();
+    return config ? config->getLogger(name) : logging::LoggerConfiguration::getConfiguration().getLogger(name);
+  }
+
   template<typename T>
   void setLevel(spdlog::level::level_enum level) {
     logging::LoggerFactory<T>::getLogger();
     std::string name = core::getClassName<T>();
-    modified_loggers.push_back(name);
+    if (config)
+      config->getLogger(name);
+    else
+      logging::LoggerConfiguration::getConfiguration().getLogger(name);
+    modified_loggers.insert(name);
     setLevel(name, level);
+    // also support shortened classnames
+    if (config && config->shortenClassNames()) {
+      std::string adjusted = name;
+      utils::ClassUtils::shortenClassName(name, adjusted);
+      if (name != adjusted) {
+        modified_loggers.insert(name);
+        setLevel(name, level);
+      }
+    }
+
   }
 
   bool contains(const std::string &ending, std::chrono::seconds timeout = std::chrono::seconds(3)) {
@@ -121,7 +162,9 @@ class LogTestController {
     for (auto const & name : modified_loggers) {
       setLevel(name, spdlog::level::err);
     }
-    modified_loggers = std::vector<std::string>();
+    modified_loggers.clear();
+    if (config)
+      config = std::move(logging::LoggerConfiguration::newInstance());
     resetStream(log_output);
   }
 
@@ -133,7 +176,7 @@ class LogTestController {
   std::ostringstream log_output;
 
   std::shared_ptr<logging::Logger> logger_;
- private:
+ protected:
   class TestBootstrapLogger : public logging::Logger {
    public:
     TestBootstrapLogger(std::shared_ptr<spdlog::logger> logger)
@@ -141,22 +184,39 @@ class LogTestController {
     }
     ;
   };
-  LogTestController() {
-    std::shared_ptr<logging::LoggerProperties> logger_properties = std::make_shared<logging::LoggerProperties>();
-    logger_properties->set("logger.root", "ERROR,ostream");
-    logger_properties->set("logger." + core::getClassName<LogTestController>(), "INFO");
-    logger_properties->set("logger." + core::getClassName<logging::LoggerConfiguration>(), "DEBUG");
+  LogTestController()
+      : LogTestController(nullptr) {
+  }
+
+  explicit LogTestController(const std::shared_ptr<logging::LoggerProperties> &loggerProps) {
+    my_properties_ = loggerProps;
+    bool initMain = false;
+    if (nullptr == my_properties_) {
+      my_properties_ = std::make_shared<logging::LoggerProperties>();
+      initMain = true;
+    }
+    my_properties_->set("logger.root", "ERROR,ostream");
+    my_properties_->set("logger." + core::getClassName<LogTestController>(), "INFO");
+    my_properties_->set("logger." + core::getClassName<logging::LoggerConfiguration>(), "DEBUG");
     std::shared_ptr<spdlog::sinks::dist_sink_mt> dist_sink = std::make_shared<spdlog::sinks::dist_sink_mt>();
     dist_sink->add_sink(std::make_shared<spdlog::sinks::ostream_sink_mt>(log_output, true));
     dist_sink->add_sink(spdlog::sinks::stderr_sink_mt::instance());
-    logger_properties->add_sink("ostream", dist_sink);
-    logging::LoggerConfiguration::getConfiguration().initialize(logger_properties);
-    logger_ = logging::LoggerFactory<LogTestController>::getLogger();
+    my_properties_->add_sink("ostream", dist_sink);
+    if (initMain) {
+      logging::LoggerConfiguration::getConfiguration().initialize(my_properties_);
+      logger_ = logging::LoggerConfiguration::getConfiguration().getLogger(core::getClassName<LogTestController>());
+    } else {
+      config = std::move(logging::LoggerConfiguration::newInstance());
+      // create for test purposes. most tests use the main logging factory, but this exists to test the logging
+      // framework itself.
+      config->initialize(my_properties_);
+      logger_ = config->getLogger(core::getClassName<LogTestController>());
+    }
+
   }
   LogTestController(LogTestController const&);
   LogTestController& operator=(LogTestController const&);
-  ~LogTestController() {
-  }
+
   ;
 
   void setLevel(const std::string name, spdlog::level::level_enum level) {
@@ -166,9 +226,14 @@ class LogTestController {
     auto haz_clazz = name.find(clazz);
     if (haz_clazz == 0)
       adjusted_name = name.substr(clazz.length(), name.length() - clazz.length());
+    if (config && config->shortenClassNames()) {
+      utils::ClassUtils::shortenClassName(adjusted_name, adjusted_name);
+    }
     spdlog::get(adjusted_name)->set_level(level);
   }
-  std::vector<std::string> modified_loggers;
+  std::shared_ptr<logging::LoggerProperties> my_properties_;
+  std::unique_ptr<logging::LoggerConfiguration> config;
+  std::set<std::string> modified_loggers;
 };
 
 class TestPlan {
