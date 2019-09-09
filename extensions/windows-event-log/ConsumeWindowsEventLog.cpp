@@ -296,7 +296,7 @@ bool ConsumeWindowsEventLog::subscribe(const std::shared_ptr<core::ProcessContex
 					logger->log_error("Invalid XML produced");
 					return 0UL;
 				}
-				
+				// this is a well known path. 
 				std::string providerName = doc.child("Event").child("System").child("Provider").attribute("Name").value();
 				
 				auto message = pConsumeWindowsEventLog->GetEventMessage(pConsumeWindowsEventLog->getProvider(providerName), eventHandle);
