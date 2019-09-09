@@ -57,7 +57,9 @@ struct LoggerNamespace {
 
 class LoggerProperties : public Properties {
  public:
-  LoggerProperties() : Properties("Logger properties") {}
+  LoggerProperties()
+      : Properties("Logger properties") {
+  }
   /**
    * Gets all keys that start with the given prefix and do not have a "." after the prefix and "." separator.
    *
@@ -92,13 +94,21 @@ class LoggerConfiguration {
     return logger_configuration;
   }
 
-  void disableLogging(){
+  static std::unique_ptr<LoggerConfiguration> newInstance() {
+    return std::unique_ptr<LoggerConfiguration>(new LoggerConfiguration());
+  }
+
+  void disableLogging() {
     controller_->setEnabled(false);
   }
 
-  void enableLogging(){
-      controller_->setEnabled(true);
-    }
+  void enableLogging() {
+    controller_->setEnabled(true);
+  }
+
+  bool shortenClassNames() const {
+    return shorten_names_;
+  }
   /**
    * (Re)initializes the logging configuation with the given logger properties.
    */
@@ -118,10 +128,11 @@ class LoggerConfiguration {
 
   class LoggerImpl : public Logger {
    public:
-    LoggerImpl(std::string name, std::shared_ptr<LoggerControl> controller, std::shared_ptr<spdlog::logger> delegate)
-        : Logger(delegate,controller),
+    explicit LoggerImpl(const std::string &name, const std::shared_ptr<LoggerControl> &controller, const std::shared_ptr<spdlog::logger> &delegate)
+        : Logger(delegate, controller),
           name(name) {
     }
+
     void set_delegate(std::shared_ptr<spdlog::logger> delegate) {
       std::lock_guard<std::mutex> lock(mutex_);
       delegate_ = delegate;
@@ -137,6 +148,8 @@ class LoggerConfiguration {
   std::mutex mutex;
   std::shared_ptr<LoggerImpl> logger_ = nullptr;
   std::shared_ptr<LoggerControl> controller_;
+  bool shorten_names_;
+
 };
 
 template<typename T>
@@ -151,9 +164,9 @@ class LoggerFactory {
   }
 
   static std::shared_ptr<Logger> getAliasedLogger(const std::string &alias) {
-      std::shared_ptr<Logger> logger = LoggerConfiguration::getConfiguration().getLogger(alias);
-      return logger;
-    }
+    std::shared_ptr<Logger> logger = LoggerConfiguration::getConfiguration().getLogger(alias);
+    return logger;
+  }
 };
 
 } /* namespace logging */
