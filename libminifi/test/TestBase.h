@@ -124,8 +124,7 @@ class LogTestController {
     // also support shortened classnames
     if (config && config->shortenClassNames()) {
       std::string adjusted = name;
-      utils::ClassUtils::shortenClassName(name, adjusted);
-      if (name != adjusted) {
+      if (utils::ClassUtils::shortenClassName(name, adjusted)) {
         modified_loggers.insert(name);
         setLevel(name, level);
       }

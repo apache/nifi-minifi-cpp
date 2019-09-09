@@ -26,13 +26,19 @@ namespace nifi {
 namespace minifi {
 namespace utils {
 
-void ClassUtils::shortenClassName(const std::string &class_name, std::string &out) {
+bool ClassUtils::shortenClassName(const std::string &class_name, std::string &out) {
   std::string class_delim = "::";
   auto class_split = utils::StringUtils::split(class_name, class_delim);
   // support . and ::
-  if (class_split.size() <= 1 && class_name.find(".") != std::string::npos) {
-    class_delim = ".";
-    class_split = utils::StringUtils::split(class_name, class_delim);
+  if (class_split.size() <= 1) {
+    if (class_name.find(".") != std::string::npos) {
+      class_delim = ".";
+      class_split = utils::StringUtils::split(class_name, class_delim);
+    } else {
+      // if no update can be performed, return false to let the developer know
+      // this. Out will have no updates
+      return false;
+    }
   }
   for (auto &elem : class_split) {
     if (&elem != &class_split.back() && elem.size() > 1) {
@@ -41,6 +47,7 @@ void ClassUtils::shortenClassName(const std::string &class_name, std::string &ou
   }
 
   out = utils::StringUtils::join(class_delim, class_split);
+  return true;
 }
 
 } /* namespace utils */

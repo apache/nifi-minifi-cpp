@@ -27,11 +27,12 @@ namespace utils {
 namespace ClassUtils {
 
 /**
- * Shortens class names via the canonical representation
+ * Shortens class names via the canonical representation ( package with name )
  * @param class_name input class name
  * @param out output class name that is shortened.
+ * @return true if out has been updated, false otherwise
  */
-extern void shortenClassName(const std::string &class_name, std::string &out);
+bool shortenClassName(const std::string &class_name, std::string &out);
 
 } /* namespace ClassUtils */
 } /* namespace utils */

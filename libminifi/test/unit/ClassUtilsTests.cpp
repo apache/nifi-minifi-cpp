@@ -26,30 +26,36 @@ TEST_CASE("Test ShortNames", "[testcrc1]") {
   SECTION("EMPTY") {
   className = "";
   adjusted = "";
-  utils::ClassUtils::shortenClassName(className, adjusted);
+  REQUIRE(!utils::ClassUtils::shortenClassName(className, adjusted));
   REQUIRE(adjusted.empty());
   }
 
   SECTION("SINGLE") {
   className = "Class";
-  adjusted = "Class";
-  utils::ClassUtils::shortenClassName(className, adjusted);
-  REQUIRE(className == adjusted);
+  adjusted = "";
+  // class name not shortened
+  REQUIRE(!utils::ClassUtils::shortenClassName(className, adjusted));
+  REQUIRE(adjusted.empty());
+  className = "org::Test";
+  adjusted = "";
+  REQUIRE(utils::ClassUtils::shortenClassName(className, adjusted));
+  REQUIRE("o::Test" == adjusted);
   }
+
+
 
   SECTION("MULTIPLE") {
   className = "org::apache::Test";
   adjusted = "";
-  utils::ClassUtils::shortenClassName(className, adjusted);
+  REQUIRE(utils::ClassUtils::shortenClassName(className, adjusted));
   REQUIRE("o::a::Test" == adjusted);
   className = "org.apache.Test";
   adjusted = "";
-  utils::ClassUtils::shortenClassName(className, adjusted);
+  REQUIRE(utils::ClassUtils::shortenClassName(className, adjusted));
   REQUIRE("o.a.Test" == adjusted);
   className = adjusted;
   adjusted = "";
-  utils::ClassUtils::shortenClassName(className, adjusted);
+  REQUIRE(utils::ClassUtils::shortenClassName(className, adjusted));
   REQUIRE("o.a.Test" == adjusted);
   }
 }
-
