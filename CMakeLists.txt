@@ -468,6 +468,13 @@ if (ENABLE_ALL OR ENABLE_WEL)
 endif()
 endif(WIN32)
 
+if (WIN32)
+option(ENABLE_EXECUTESQL "Enables the ExecuteSQL." OFF)
+if (ENABLE_ALL OR ENABLE_EXECUTESQL)
+	createExtension(EXECUTESQL-EXTENSIONS "EXECUTESQL EXTENSIONS" "Enables ExecuteSQL extensions." "extensions/executesql")
+endif()
+endif(WIN32)
+
 ## Create MQTT Extension
 option(ENABLE_MQTT "Enables the mqtt extension." OFF)
 if(ENABLE_ALL OR ENABLE_MQTT)
