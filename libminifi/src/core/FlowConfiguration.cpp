@@ -71,7 +71,7 @@ std::unique_ptr<core::ProcessGroup> FlowConfiguration::updateFromPayload(const s
   auto payload = getRootFromPayload(yamlConfigPayload);
   if (!source.empty() && payload != nullptr) {
     std::string host, protocol, path, query, url = source;
-    int port;
+    int port = -1;
     utils::parse_url(&url, &host, &port, &protocol, &path, &query);
 
     std::string flow_id, bucket_id;
