@@ -22,7 +22,6 @@ extern "C" {
 #endif
 
 #include <coap2/coap.h>
-#include <netdb.h>
 #include "coap_message.h"
 #include "coap_functions.h"
 

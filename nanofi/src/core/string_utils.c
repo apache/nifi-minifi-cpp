@@ -21,6 +21,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <errno.h>
 
 int validate_list(struct token_list * tk_list) {
     if (tk_list && tk_list->head && tk_list->tail && tk_list->size > 0) {
@@ -161,4 +162,69 @@ token_list tokenize_string_tailfile(const char * str, char delim) {
     }
     tks.has_non_delimited_token = 0;
     return tks;
+}
+
+void copynstr(unsigned char * source, size_t len, char * dest) {
+    if (!source || !len || !dest) return;
+    strncpy(dest, source, len);
+    dest[len] = '\0';
+}
+
+void copystr(const char * source, char ** dest) {
+    if (!source || !dest) return;
+    size_t len = strlen(source);
+    if (!(*dest)) {
+        *dest =  (char *)malloc(len + 1);
+        memset(*dest, 0, len + 1);
+    }
+    strcpy(*dest, source);
+}
+
+int str_to_uint(const char * input_str, uint64_t * out) {
+    if (!input_str) {
+        return -1;
+    }
+    errno = 0;
+    *out = (uint64_t)(strtoul(input_str, NULL, 10));
+    if (errno != 0) {
+        return -1;
+    }
+    return 0;
+}
+
+const char * uint_to_str(uint64_t value) {
+    char value_str[21];
+    snprintf(value_str, sizeof(value_str), "%llu", value);
+    char * copy = NULL;
+    copystr(value_str, &copy);
+    return copy;
+}
+
+char ** parse_tokens(const char * str, size_t len, size_t num_tokens, const char * sep) {
+    char * arg = (char *)malloc(len + 1);
+    strcpy(arg, str);
+    char * save_ptr;
+#ifdef WIN32
+    char * tok = strtok_s(arg, sep, &save_ptr);
+#else
+    char * tok = strtok_r(arg, sep, &save_ptr);
+#endif
+    char ** tokens = (char **)malloc(sizeof(char *) * num_tokens);
+    memset(tokens, 0, sizeof(char *) * num_tokens);
+    int i = 0;
+    while (tok) {
+        if (i > num_tokens) break;
+        size_t s = strlen(tok);
+        char * token = (char *)malloc(sizeof(char) * (s + 1));
+        memset(token, 0, (s + 1));
+        strcpy(token, tok);
+        tokens[i++] = token;
+#ifdef WIN32
+        tok = strtok_s(NULL, sep, &save_ptr);
+#else
+        tok = strtok_r(NULL, sep, &save_ptr);
+#endif
+    }
+    free(arg);
+    return tokens;
 }

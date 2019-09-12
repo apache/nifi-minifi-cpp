@@ -17,6 +17,7 @@
 # under the License.
 #
 
+if (NOT WIN32)
 file(GLOB CURL_UNIT_TESTS  "unit/*.cpp")
 file(GLOB CURL_INTEGRATION_TESTS "*.cpp")
 
@@ -54,4 +55,6 @@ message("-- Finished building ${CURL_INT_TEST_COUNT} CoAP integration test file(
 add_test(NAME CoapC2VerifyHeartbeat COMMAND CoapC2VerifyHeartbeat "${TEST_RESOURCES}/CoapC2VerifyServe.yml" "${TEST_RESOURCES}/" "http://localhost:9888/geturl")
 else()
 message("-- CoAP tests rely on minifi-http-curl, so they will not be built...")
+endif()
+
 endif()

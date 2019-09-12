@@ -23,11 +23,11 @@ include_directories(protocols nanofi controllerservice server)
 include_directories(../http-curl/)
 
 file(GLOB CSOURCES "nanofi/*.c")
-file(GLOB SOURCES "*.cpp" "protocols/*.cpp" "processors/*.cpp" "controllerservice/*.cpp" "server/*.cpp" )
+file(GLOB SOURCES "*.cpp" "protocols/*.cpp" "controllerservice/*.cpp" "server/*.cpp" )
 
-add_library(nanofi-coap-c STATIC ${CSOURCES})
+
 add_library(minifi-coap STATIC ${SOURCES})
-set_property(TARGET minifi-coap PROPERTY POSITION_INDEPENDENT_CODE ON)
+add_library(nanofi-coap-c STATIC ${CSOURCES})
 
 if(CMAKE_THREAD_LIBS_INIT)
   target_link_libraries(minifi-coap "${CMAKE_THREAD_LIBS_INIT}")
@@ -37,6 +37,6 @@ target_link_libraries(nanofi-coap-c COAP::libcoap)
 target_link_libraries(minifi-coap ${LIBMINIFI})
 target_link_libraries(minifi-coap nanofi-coap-c COAP::libcoap minifi-http-curl)
 
+
 SET (COAP-EXTENSION minifi-coap PARENT_SCOPE)
 register_extension(minifi-coap)
-

@@ -2,7 +2,6 @@
 #include "api/nanofi.h"
 #include "core/string_utils.h"
 #include "core/cstructs.h"
-#include "core/file_utils.h"
 #include "core/flowfiles.h"
 
 #include <unistd.h>
@@ -34,6 +33,14 @@ void signal_handler(int signum) {
     if (signum == SIGINT || signum == SIGTERM) {
         stopped = 1;
     }
+}
+
+void setup_signal_action() {
+    struct sigaction action;
+    memset(&action, 0, sizeof(sigaction));
+    action.sa_handler = signal_handler;
+    sigaction(SIGTERM, &action, NULL);
+    sigaction(SIGINT, &action, NULL);
 }
 
 void init_common_input(tailfile_input_params * input_params, char ** args) {
@@ -98,15 +105,7 @@ int validate_input_params(tailfile_input_params * params, uint64_t * intrvl, uin
     return 0;
 }
 
-void setup_signal_action() {
-    struct sigaction action;
-    memset(&action, 0, sizeof(sigaction));
-    action.sa_handler = signal_handler;
-    sigaction(SIGTERM, &action, NULL);
-    sigaction(SIGINT, &action, NULL);
-}
-
-nifi_proc_params setup_nifi_processor(tailfile_input_params * input_params, const char * processor_name, void(*callback)(processor_session *, processor_context *)) {
+nifi_proc_params setup_nifi_processor(tailfile_input_params * input_params, const char * processor_name, on_trigger_callback callback) {
     nifi_proc_params params;
     nifi_port port;
     port.port_id = input_params->nifi_port_uuid;

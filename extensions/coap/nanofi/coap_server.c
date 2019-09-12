@@ -25,6 +25,7 @@ CoapServerContext * const create_server(const char * const server_hostname, cons
   memset(server, 0x00, sizeof(CoapServerContext));
   if (create_endpoint_context(&server->ctx, server_hostname, port)) {
     free_server(server);
+    return NULL;
   }
 
   return server;
@@ -41,10 +42,14 @@ CoapEndpoint * const create_endpoint(CoapServerContext * const server, const cha
   }
   endpoint->resource = coap_resource_init(path, flags);
   coap_add_attr(endpoint->resource, coap_make_str_const("title"), coap_make_str_const("\"Created CoapEndpoint\""), 0);
+  coap_add_resource(server->ctx, endpoint->resource);
+
   if ( add_endpoint(endpoint, method, handler) ){
+    coap_delete_str_const(path);
+    free_endpoint(endpoint);
     return 0x00;
   }
-  coap_add_resource(server->ctx, endpoint->resource);
+
   if (path) {
     coap_delete_str_const(path);
   }

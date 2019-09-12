@@ -205,6 +205,7 @@ static void destroyClient(struct CRawSiteToSiteClient * client){
   tearDown(client);
   if(client->_owns_resource == True) {
     freePeer(client->_peer);
+    free(client->_peer);
   }
 }
 

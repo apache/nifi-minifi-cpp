@@ -71,6 +71,13 @@ int make_dir(const char * path);
  */
 char * get_current_working_directory();
 
+/**
+ * Return a key value pair properties from file
+ * @param file_path the path to the properties file
+ * @return properties key value pair
+ */
+properties_t * read_configuration_file(const char * file_path);
+
 #ifdef __cplusplus
 }
 #endif

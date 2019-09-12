@@ -116,6 +116,7 @@ int8_t free_pdu(CoapPDU * pdu) {
   }
   coap_delete_optlist(pdu->optlist);
   coap_session_release(pdu->session);
+  free_app_data(pdu->ctx);
   coap_free_context(pdu->ctx);
   free(pdu);
   return 0;

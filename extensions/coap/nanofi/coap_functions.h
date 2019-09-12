@@ -22,6 +22,12 @@
 extern "C" {
 #endif
 
+#ifndef _WIN32
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <netdb.h>
+#endif
 
 typedef unsigned char method_t;
 
@@ -29,13 +35,8 @@ typedef unsigned char method_t;
 #include "coap2/uri.h"
 #include "coap2/address.h"
 #include <stdio.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
 #include <string.h>
-#include <netdb.h>
 #include "coap_message.h"
-
 
 typedef struct {
   void (*data_received)(void *receiver_context, struct coap_context_t *ctx, CoapMessage *const);
@@ -117,6 +118,8 @@ void response_handler(struct coap_context_t *ctx, struct coap_session_t *session
  * @return 0 if sucess -1 otherwise
  */
 int resolve_address(const struct coap_str_const_t *server, struct sockaddr *destination);
+
+void free_app_data(struct coap_context_t * ctx);
 
 #ifdef __cplusplus
 }

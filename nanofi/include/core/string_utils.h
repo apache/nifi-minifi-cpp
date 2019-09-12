@@ -87,6 +87,39 @@ int validate_list(token_list * tk_list);
  */
 void attach_lists(token_list * to, token_list * from);
 
+/**
+ * Allocates heap memory and returns copied source string
+ * @param source, the string to copy from
+ * @return a heap allocated string
+ */
+void copystr(const char * source, char ** dest);
+
+void copynstr(unsigned char * source, size_t len, char * dest);
+
+/**
+ * Convert string to unsigned int
+ * @param input_str, the input string
+ * @param out, converted value output
+ * @return -1 if unsuccessful else 0
+ */
+int str_to_uint(const char * input_str, uint64_t * out);
+
+/**
+ * Convert uint to string
+ * @param value, the unsigned int value to convert
+ * @return the string representation
+ */
+const char * uint_to_str(uint64_t value);
+
+/**
+ * Tokenize string against a set of separators
+ * @param str the string to be tokenized
+ * @param len, the length of the string
+ * @param num_tokens, the number of tokens to be parsed
+ * @param sep, the tokens separator set
+ */
+char ** parse_tokens(const char * str, size_t len, size_t num_tokens, const char * sep);
+
 #ifdef __cplusplus
 }
 #endif

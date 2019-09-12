@@ -31,6 +31,10 @@ namespace nifi {
 namespace minifi {
 namespace coap {
 
+#ifdef WIN32
+#undef DELETE
+#endif
+
 enum METHOD {
   GET,
   POST,

@@ -28,6 +28,10 @@
 extern "C" {
 #endif
 
+extern volatile sig_atomic_t stopped;
+
+typedef void(*on_trigger_callback)(processor_session * ps, processor_context * ctx);
+
 typedef struct proc_properties {
     char * file_path;
     char delimiter;
@@ -43,7 +47,6 @@ typedef struct processor_params {
 } processor_params;
 
 extern processor_params * procparams;
-extern volatile sig_atomic_t stopped;
 
 typedef struct tailfile_input_params {
     char * file;
@@ -84,8 +87,9 @@ tailfile_input_params init_logaggregate_input(char ** args);
 tailfile_input_params init_tailfile_chunk_input(char ** args);
 
 int validate_input_params(tailfile_input_params * params, uint64_t * intrvl, uint64_t * port_num);
+
 void setup_signal_action();
-nifi_proc_params setup_nifi_processor(tailfile_input_params * input_params, const char * processor_name, void(*callback)(processor_session *, processor_context *));
+nifi_proc_params setup_nifi_processor(tailfile_input_params * input_params, const char * processor_name, on_trigger_callback callback);
 void free_proc_params(const char * uuid);
 
 #ifdef __cplusplus

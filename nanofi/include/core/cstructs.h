@@ -21,6 +21,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include "uthash.h"
 
 #ifdef _WIN32
 #define NOMINMAX
@@ -186,4 +187,16 @@ typedef struct flow_file_info {
     uint64_t total_bytes;
 } flow_file_info;
 
+typedef struct properties {
+    char * key;
+    char * value;
+    UT_hash_handle hh;
+} properties_t;
+
+typedef struct message {
+    char * buff;
+    uint64_t len;
+    attribute_set as;
+    struct message * next;
+} message_t;
 #endif /* LIBMINIFI_SRC_CAPI_CSTRUCTS_H_ */
