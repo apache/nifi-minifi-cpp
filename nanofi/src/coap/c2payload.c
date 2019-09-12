@@ -107,7 +107,7 @@ value_t value_nstring(const unsigned char * value, size_t len) {
     memset(&val, 0, sizeof(value_t));
     val.v_str = (char *)malloc(len + 1);
     memset(val.v_str, 0, len + 1);
-    copynstr(value, len, val.v_str);
+    memcpy(val.v_str, value, len);
     val.val_type = STRING_TYPE;
     return val;
 }
@@ -164,6 +164,10 @@ int is_value_map(value_t val) {
 
 int is_value_list(value_t val) {
     return val.val_type == LIST_TYPE;
+}
+
+int is_value_prop(value_t val) {
+    return val.val_type == PROP_TYPE;
 }
 
 c2_payload_map_t * allocate_c2_payload() {
@@ -514,7 +518,7 @@ int extract_agent_info(const c2_payload_map_t * c2_payload, agentinfo * ag_info)
     if (!is_value_uint(uptime_val)) {
         return -1;
     }
-    copynstr(id_val.v_str, strlen(id_val.v_str), ag_info->ident);
+    copynstrd(id_val.v_str, strlen(id_val.v_str), ag_info->ident, sizeof(ag_info->ident));
     copystr(agclass_val.v_str, &ag_info->agent_class);
     ag_info->uptime = uptime_val.v_uint64;
     return 0;
@@ -531,8 +535,8 @@ int extract_net_info(const c2_payload_map_t * c2_payload, networkinfo * net_info
         return -1;
     }
     copystr(id_val.v_str, &net_info->device_id);
-    copynstr(host_val.v_str, strlen(host_val.v_str), net_info->host_name);
-    copynstr(ip_val.v_str, strlen(ip_val.v_str), net_info->ip_address);
+    copynstrd(host_val.v_str, strlen(host_val.v_str), net_info->host_name, sizeof(net_info->host_name));
+    copynstrd(ip_val.v_str, strlen(ip_val.v_str), net_info->ip_address, sizeof(net_info->ip_address));
     return 0;
 }
 
@@ -607,35 +611,28 @@ c2_server_response_t * extract_c2_server_response(const c2_payload_map_t * c2_pa
             return NULL;
         }
         value_t id_val = c2_payload_map_get(IDENTIFIER, el->value.v_map);
-        if (!is_value_string(id_val)) {
+        value_t operation_val = c2_payload_map_get(OPERATION, el->value.v_map);
+        value_t operand_val = c2_payload_map_get(OPERAND, el->value.v_map);
+        value_t props_val = c2_payload_map_get(PROPERTIES, el->value.v_map);
+
+        if (!is_value_string(id_val)
+            || !is_value_uint(operation_val)
+            || !is_value_string(operand_val)
+            || !is_value_prop(props_val)) {
+            free_c2_server_responses(responses);
             return NULL;
         }
+
         c2_server_response_t * response = (c2_server_response_t *)malloc(sizeof(c2_server_response_t));
         memset(response, 0, sizeof(c2_server_response_t));
-
-        copystr(id_val.v_str, &response->ident);
-        value_t operation_val = c2_payload_map_get(OPERATION, el->value.v_map);
-
-        if (!is_value_uint(operation_val)) {
-            free_c2_server_responses(responses);
-            free_c2_server_responses(response);
-            return NULL;
-        }
         response->operation = get_operation(operation_val.v_uint8);
-        value_t operand_val = c2_payload_map_get(OPERAND, el->value.v_map);
-        if (!is_value_string(operand_val)) {
+        if (response->operation == INVALID) {
             free_c2_server_responses(responses);
             free_c2_server_responses(response);
             return NULL;
         }
+        copystr(id_val.v_str, &response->ident);
         copystr(operand_val.v_str, &response->operand);
-
-        value_t props_val = c2_payload_map_get(PROPERTIES, el->value.v_map);
-        if (props_val.val_type != PROP_TYPE) {
-            free_c2_server_responses(responses);
-            free_c2_server_responses(response);
-            return NULL;
-        }
         response->args = clone_properties(props_val.v_props);
         LL_APPEND(responses, response);
     }

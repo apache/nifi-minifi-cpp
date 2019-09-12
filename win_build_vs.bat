@@ -46,18 +46,11 @@ for %%x in (%*) do (
 	if [%%~x] EQU [/J] ( 
 	set build_JNI=ON
     )
-<<<<<<< HEAD
 	rem if [%%~x] EQU [/C] ( 
 	rem set build_coap=ON
     rem )
 	if [%%~x] EQU [/64] (
 	set build_platform=x64
-=======
-	if [%%~x] EQU [/C] ( 
-	set build_coap=ON
-    )
-	if [%%~x] EQU [/64] ( 
->>>>>>> 1e7cacd... MINIFICPP-1007 NaNoFi ecu integration with c2 over coap including windows support
 	set generator="Visual Studio 15 2017 Win64"
     )
     if [%%~x] EQU [/D] ( 

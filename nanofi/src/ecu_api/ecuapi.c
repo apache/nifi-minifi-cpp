@@ -672,4 +672,3 @@ void destroy_io_context(io_context_t * io) {
     release_lock(&io->ctx_lock);
     free(io);
 }
-

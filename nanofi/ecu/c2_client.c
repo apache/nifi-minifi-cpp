@@ -181,7 +181,6 @@ int main(int argc, char ** argv) {
     serialize_payload(c2_payload, &payload, &length);
     free_c2_payload(c2_payload);
     free_c2_server_responses(resp);
-
 #ifdef WIN32
     WSADATA wsadata;
     int err = WSAStartup(MAKEWORD(2, 2), &wsadata);

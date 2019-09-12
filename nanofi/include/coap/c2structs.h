@@ -140,6 +140,7 @@ typedef struct encoded_data {
 } encoded_data;
 
 typedef enum c2operation {
+    INVALID = -1,
     ACKNOWLEDGE,
     HEARTBEAT,
     CLEAR,

@@ -61,7 +61,7 @@ int main(int argc, char ** argv) {
     ecu_context_t * ecu = create_ecu(io, "tailfile_s2s", ip, op);
     if (!ecu) {
         free_input(ip);
-        free_output(ip);
+        free_output(op);
         destroy_io_context(io);
         logc(err, "%s", "ecu creation failed");
         return 1;

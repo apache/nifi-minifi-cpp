@@ -164,21 +164,40 @@ token_list tokenize_string_tailfile(const char * str, char delim) {
     return tks;
 }
 
-void copynstr(unsigned char * source, size_t len, char * dest) {
-    if (!source || !len || !dest) return;
-    strncpy(dest, source, len);
-    dest[len] = '\0';
-}
-
 void copystr(const char * source, char ** dest) {
     if (!source || !dest) return;
     size_t len = strlen(source);
-    if (!(*dest)) {
-        *dest =  (char *)malloc(len + 1);
-        memset(*dest, 0, len + 1);
-    }
-    strcpy(*dest, source);
+    char * tmp = (char *)malloc(len + 1);
+    memset(tmp, 0, len + 1);
+    memcpy(tmp, source, len);
+    *dest = tmp;
 }
+
+void copynstr(const char * source, size_t len, char ** dest) {
+    if (!source || !len || !dest) return;
+    size_t source_len = strlen(source);
+    char * tmp;
+    if (source_len <= len) {
+        copystr(source, &tmp);
+    } else {
+        tmp = (char *)malloc(len + 1);
+        memcpy(tmp, source, len);
+        tmp[len] = '\0';
+    }
+    *dest = tmp;
+}
+
+void copynstrd(const char * source, size_t src_len, unsigned char * dest, size_t dest_len) {
+    if (!source || !src_len || !dest || !dest_len) return;
+    size_t min_len = MIN(src_len, dest_len);
+    if (src_len == min_len && src_len != dest_len) {
+        memcpy(dest, source, min_len);
+    } else {
+       memcpy(dest, source, min_len - 1);
+    }
+    dest[min_len] = '\0';
+}
+
 
 int str_to_uint(const char * input_str, uint64_t * out) {
     if (!input_str) {

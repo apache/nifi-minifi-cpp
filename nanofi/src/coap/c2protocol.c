@@ -264,12 +264,12 @@ properties_t * extract_properties(const struct cbor_pair * kvps, size_t sz) {
         size_t key_len = cbor_string_length(kvps[i].key);
         char * key = (char *)malloc(key_len + 1);
         memset(key, 0, key_len + 1);
-        copynstr(key_item, key_len, key);
+        memcpy(key, key_item, key_len);
 
         unsigned char * val_item = cbor_string_handle(kvps[i].value);
         size_t val_len = cbor_string_length(kvps[i].value);
         char * val = (char *)malloc(val_len + 1);
-        copynstr(val_item, val_len, val);
+        memcpy(val, val_item, val_len);
         properties_t * prop = (properties_t *)malloc(sizeof(properties_t));
         prop->key = key;
         prop->value = val;
@@ -363,35 +363,6 @@ c2_payload_map_t * deserialize_payload(const unsigned char * payload, size_t len
     return ret;
 }
 
-uint16_t endian_check_uint16(uint16_t value, int is_little_endian) {
-    unsigned char buf[2];
-    memcpy(buf, &value, 2);
-    if (is_little_endian) {
-        return (buf[0] << 8) | buf[1];
-    }
-    return buf[0] | (buf[1] << 8);
-}
-
-uint32_t endian_check_uint32(uint32_t value, int is_little_endian) {
-    unsigned char buf[4];
-    memcpy(buf, &value, 4);
-    if (is_little_endian) {
-        return (buf[0] << 24) | (buf[1] << 16) | (buf[2] << 8) | buf[3];
-    }
-    return buf[0] | buf[1] << 8 | buf[2] << 16 | buf[3] << 24;
-}
-
-uint64_t endian_check_uint64(uint64_t value, int is_little_endian) {
-    unsigned char buf[8];
-    memcpy(buf, &value, 8);
-    if (is_little_endian) {
-        return ((uint64_t) buf[0] << 56) | ((uint64_t) (buf[1] & 255) << 48) | ((uint64_t) (buf[2] & 255) << 40) | ((uint64_t) (buf[3] & 255) << 32) | ((uint64_t) (buf[4] & 255) << 24)
-                | ((uint64_t) (buf[5] & 255) << 16) | ((uint64_t) (buf[6] & 255) << 8) | ((uint64_t) (buf[7] & 255) << 0);
-    }
-    return ((uint64_t) buf[0] << 0) | ((uint64_t) (buf[1] & 255) << 8) | ((uint64_t) (buf[2] & 255) << 16) | ((uint64_t) (buf[3] & 255) << 24) | ((uint64_t) (buf[4] & 255) << 32)
-           | ((uint64_t) (buf[5] & 255) << 40) | ((uint64_t) (buf[6] & 255) << 48) | ((uint64_t) (buf[7] & 255) << 56);
-}
-
 c2operation get_operation(uint8_t type) {
     switch (type) {
         case 0:
@@ -411,7 +382,7 @@ c2operation get_operation(uint8_t type) {
         case 7:
             return STOP;
     }
-    return ACKNOWLEDGE;
+    return INVALID;
 }
 
 c2_server_response_t * decode_c2_server_response(const struct coap_message * msg, int is_little_endian) {

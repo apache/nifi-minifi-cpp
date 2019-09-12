@@ -207,7 +207,7 @@ void handle_heartbeat_post_request(coap_context_t * ctx, struct coap_resource_t 
         free_session_app_data(session);
         return;
     }
-    const char * uuid = heartbeat->agent_info.ident;
+    char * uuid = heartbeat->agent_info.ident;
     printf("heartbeat received from client %s\n", uuid);
 
     //To simulate agent registration
@@ -225,6 +225,7 @@ void handle_heartbeat_post_request(coap_context_t * ctx, struct coap_resource_t 
 
     //Look up any stored c2 operations and send
     //them to the agent in response to this heartbeat
+
     c2_server_responses_t * el = NULL;
     HASH_FIND_STR(responses, uuid, el);
     if (!el)  {
