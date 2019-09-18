@@ -99,6 +99,8 @@ class SingleNodeDockerCluster(Cluster):
             self.deploy_nifi_flow(flow, name, vols)
         elif engine == 'minifi-cpp':
             self.deploy_minifi_cpp_flow(flow, name, vols)
+        elif engine == 'kafka-broker':
+            self.deploy_kafka_broker(name)
         else:
             raise Exception('invalid flow engine: \'%s\'' % engine)
 
@@ -200,6 +202,36 @@ class SingleNodeDockerCluster(Cluster):
 
         self.containers.append(container)
 
+    def deploy_kafka_broker(self, name):
+        dockerfile = dedent("""FROM {base_image}
+                USER root
+                CMD $KAFKA_HOME/bin/kafka-console-consumer.sh --bootstrap-server host.docker.internal:9092 --topic test > heaven_signal.txt
+                """.format(base_image='spotify/kafka:latest'))
+
+        logging.info('Creating and running docker container for kafka broker...')
+
+        #docker run -p 2181:2181 -p 9092:9092 --env ADVERTISED_HOST=private IP --env ADVERTISED_PORT=9092 spotify/kafka
+        #
+
+        # TODO: write get IP function.
+        zookeeper = self.client.containers.run(
+                    self.client.images.pull("spotify/kafka:latest"),
+                    detach=True,
+                    ports={'2181/tcp': 2181, '9092/tcp': 9092},
+                    environment=["ADVERTISED_HOST=172.30.64.32", "ADVERTISED_PORT=9092"]
+                    )
+
+        configured_image = self.build_image(dockerfile, [])
+        container = self.client.containers.run(
+                    configured_image[0],
+                    detach=True,
+                    name=name
+                    #network=...
+                    )
+
+        self.containers.append(container)
+        self.containers.append(zookeeper)
+
     def build_image(self, dockerfile, context_files):
         conf_dockerfile_buffer = BytesIO()
         docker_context_buffer = BytesIO()
@@ -227,6 +259,7 @@ class SingleNodeDockerCluster(Cluster):
                                                         custom_context=True,
                                                         rm=True,
                                                         forcerm=True)
+            logging.info('Created image with id: %s', configured_image[0].id)
             self.images.append(configured_image)
 
         finally:
@@ -465,6 +498,15 @@ class PutFile(Processor):
             return 'Directory'
         else:
             return key
+
+class PublishKafka(Processor):
+    def __init__(self):
+        # TODO: parameterize broker, client
+        super(PublishKafka, self).__init__('PublishKafka',
+                                           properties={'Client Name': 'nghiaxlee', 'Known Brokers': '172.30.64.32:9092', 'Topic Name': 'test',
+                                                       'Batch Size': '10', 'Compress Codec': 'none', 'Delivery Guarantee': 'DELIVERY_ONE_NODE',
+                                                       'Request Timeout': '10 sec'},
+                                           auto_terminate=['success'])
 
 
 class InputPort(Connectable):

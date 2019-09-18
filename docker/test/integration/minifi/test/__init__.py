@@ -16,6 +16,8 @@
 import logging
 import shutil
 import uuid
+import tarfile
+from io import BytesIO
 from threading import Event
 
 import os
@@ -66,6 +68,9 @@ class DockerTestCluster(SingleNodeDockerCluster):
         self.observer.start()
 
         super(DockerTestCluster, self).__init__()
+
+        if isinstance(output_validator, KafkaValidator):
+            output_validator.set_containers(self.containers)
 
     def deploy_flow(self,
                     flow,
@@ -229,6 +234,50 @@ class SingleFileOutputValidator(FileOutputValidator):
                 if contents == self.expected_content:
                     self.valid = True
 
+        return self.valid
+
+class KafkaValidator(OutputValidator):
+    """
+    Validates PublishKafka
+    """
+
+    def __init__(self, expected_content):
+        self.valid = False
+        self.expected_content = expected_content
+        self.containers = None
+
+    def set_containers(self, containers):
+        self.containers = containers
+
+    def validate(self):
+
+        if self.valid:
+            return True
+        if self.containers is None:
+            return self.valid
+
+        kafka_container = None
+        for container in self.containers:
+            if 'kafka-broker' == container.name:
+                kafka_container = container
+                break
+
+        if kafka_container is None:
+            logging.info('Not found kafka container.')
+            return False
+
+        output, stat = kafka_container.get_archive('/heaven_signal.txt')
+        file_obj = BytesIO()
+        for i in output:
+            file_obj.write(i)
+        file_obj.seek(0)
+        tar = tarfile.open(mode='r', fileobj=file_obj)
+        contents = tar.extractfile('heaven_signal.txt').read()
+        logging.info("expected %s -- content %s", self.expected_content, contents)
+        contents = contents.decode("utf-8")
+        if self.expected_content in contents:
+            self.valid = True
+        logging.info("expected %s -- content %s", self.expected_content, contents)
         return self.valid
 
 class EmptyFilesOutPutValidator(FileOutputValidator):
