@@ -17,18 +17,41 @@ bool MetadataWalker::for_each(pugi::xml_node &node) {
 
 			if (std::regex_match(attr.name(), regex_)) {
 				std::function<std::string(const std::string &)> idUpdate = [&](const std::string &input) -> std::string {
-					return resolve_ ? utils::OsUtils::userIdToUsername(input) : input;
+					if (resolve_) {
+						auto resolved = utils::OsUtils::userIdToUsername(input);
+						replaced_identifiers_[input] = resolved;
+						return resolved;
+					}
+					else {
+						replaced_identifiers_[input] = input;
+					}
 				};
 				updateText(node, attr.name(), std::move(idUpdate));
 
 			}
 			if (std::regex_match(attr.value(), regex_)) {
 				std::function<std::string(const std::string &)> idUpdate = [&](const std::string &input) -> std::string {
-					return resolve_ ? utils::OsUtils::userIdToUsername(input) : input;
+					if (resolve_) {
+						auto resolved = utils::OsUtils::userIdToUsername(input);
+						replaced_identifiers_[input] = resolved;
+						return resolved;
+					}
+					else {
+						replaced_identifiers_[input] = input;
+					}
 				};
 				updateText(node, attr.value(), std::move(idUpdate));
 			}
 		}
+	}
+	else if (node_name == "TimeCreated") {
+		metadata_["TimeCreated"] = node.attribute("SystemTime").value();
+	}
+	else if (node_name == "Provider") {
+		metadata_["Provider"] = node.attribute("Name").value();
+	}
+	else if (node_name == "EventID") {
+		metadata_["EventID"] = node.text().get();
 	}
 	else {
 		static std::map<std::string, EVT_FORMAT_MESSAGE_FLAGS> formatFlagMap = { {"Channel", EvtFormatMessageChannel}, {"Keywords", EvtFormatMessageKeyword}, {"Level", EvtFormatMessageLevel}, {"Opcode", EvtFormatMessageOpcode} };
@@ -53,8 +76,32 @@ bool MetadataWalker::for_each(pugi::xml_node &node) {
 	return true;
 }
 
+std::string MetadataWalker::getMetadata(METADATA metadata) const {
+		switch (metadata) {
+			case SOURCE:
+				return getString(metadata_,"Provider");
+			case TIME_CREATED:
+				return getString(metadata_,"TimeCreated");
+			case EVENTID:
+				return getString(metadata_,"EventID");
+			case TASK_CATEGORY:
+				return getString(metadata_,"Opcode");
+			case LEVEL:
+				return getString(metadata_,"Level");
+			case KEYWORDS:
+				return getString(metadata_,"Keywords");
+			case COMPUTER:
+				return getComputerName();
+		};
+		return "N/A";
+}
+
 std::map<std::string, std::string> MetadataWalker::getFieldValues() const {
   return fields_values_;
+}
+
+std::map<std::string, std::string> MetadataWalker::getIdentifiers() const {
+	return replaced_identifiers_;
 }
 
 
@@ -84,6 +131,7 @@ void MetadataWalker::updateText(pugi::xml_node &node, const std::string &field_n
   auto new_field_value = fn(previous_value);
   if (new_field_value != previous_value) {
 
+	metadata_[field_name] = new_field_value;
     if (update_xml_) {
       node.text().set(new_field_value.c_str());
     } else {

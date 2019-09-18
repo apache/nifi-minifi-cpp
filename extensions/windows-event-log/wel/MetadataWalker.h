@@ -38,6 +38,18 @@ namespace nifi {
 namespace minifi {
 namespace wel {
 
+
+enum METADATA {
+SOURCE,
+TIME_CREATED,
+EVENTID,
+TASK_CATEGORY,
+LEVEL,
+KEYWORDS,
+USER,
+COMPUTER
+};
+
 /**
  * Defines a tree walker for the XML input
  *
@@ -63,8 +75,35 @@ class MetadataWalker : public pugi::xml_tree_walker {
 	
 	std::map<std::string, std::string> getFieldValues() const;
 
+	std::map<std::string, std::string> getIdentifiers() const;
+
+	std::string getMetadata(METADATA metadata) const;
+
+	static std::string getComputerName() {
+		static std::string computer_name;
+		if (computer_name.empty()) {
+			char buff[MAX_COMPUTERNAME_LENGTH + 1];
+			DWORD size = sizeof(buff);
+			if (GetComputerName(buff, &size)) {
+				computer_name = buff;
+			}
+			else {
+				computer_name = "N/A";
+			}
+		}
+		return computer_name;
+	}
+
  private:
 
+
+	 static std::string getString(const std::map<std::string, std::string> &map, const std::string &field) {
+		 auto srch = map.find(field);
+		 if (srch != std::end(map)) {
+			 return srch->second;
+		 }
+		 return "N/A";
+	}
 	static std::string to_string(const wchar_t* pChar);
 
   /**
@@ -83,7 +122,9 @@ class MetadataWalker : public pugi::xml_tree_walker {
   std::string regex_str_;
   bool update_xml_;
   bool resolve_;
+  std::map<std::string, std::string> metadata_;
   std::map<std::string, std::string> fields_values_;
+  std::map<std::string, std::string> replaced_identifiers_;
 
 };
 

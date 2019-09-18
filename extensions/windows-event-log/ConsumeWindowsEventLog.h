@@ -21,6 +21,7 @@
 #pragma once
 
 #include "core/Core.h"
+#include "wel/WindowsEventLog.h"
 #include "FlowFileRecord.h"
 #include "concurrentqueue.h"
 #include "core/Processor.h"
@@ -90,19 +91,20 @@ public:
   //! Initialize, overwrite by NiFi ConsumeWindowsEventLog
   virtual void initialize(void) override;
   virtual void notifyStop() override;
+  
 
 protected:
   bool subscribe(const std::shared_ptr<core::ProcessContext> &context);
   void unsubscribe();
   int processQueue(const std::shared_ptr<core::ProcessSession> &session);
   
-  EVT_HANDLE getProvider(const std::string & name);
+  wel::WindowsEventLogHandler getEventLogHandler(const std::string & name);
 
   void LogWindowsError();
 private:
 
-  std::string GetEventMessage(EVT_HANDLE hMetadata, EVT_HANDLE hEvent);
   // Logger
+  std::string channel_;
   std::shared_ptr<logging::Logger> logger_;
   std::string regex_;
   bool resolve_as_attributes_;
@@ -116,7 +118,7 @@ private:
   DWORD lastActivityTimestamp_{};
   std::shared_ptr<core::ProcessSessionFactory> sessionFactory_;
   std::mutex cache_mutex_;
-  std::map<std::string, EVT_HANDLE > providers_;
+  std::map<std::string, wel::WindowsEventLogHandler > providers_;
 };
 
 REGISTER_RESOURCE(ConsumeWindowsEventLog, "Windows Event Log Subscribe Callback to receive FlowFiles from Events on Windows.");

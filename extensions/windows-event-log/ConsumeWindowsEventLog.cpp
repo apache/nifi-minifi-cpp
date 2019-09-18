@@ -35,7 +35,6 @@
 #include "io/DataStream.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
-#include "utils/Deleters.h"
 
 
 #pragma comment(lib, "wevtapi.lib")
@@ -113,6 +112,7 @@ core::Property ConsumeWindowsEventLog::ResolveAsAttributes(
 	withDescription("If true, any metadata that is resolved ( such as IDs or keyword metadata ) will be placed into attributes, otherwise it will be replaced in the XML or text output")->
 	build());
 
+
 core::Relationship ConsumeWindowsEventLog::Success("success", "Relationship for successfully consumed events.");
 
 ConsumeWindowsEventLog::ConsumeWindowsEventLog(const std::string& name, utils::Identifier uuid)
@@ -142,6 +142,7 @@ void ConsumeWindowsEventLog::onSchedule(const std::shared_ptr<core::ProcessConte
 	context->getProperty(IdentifierMatcher.getName(), regex_);
 	context->getProperty(ResolveAsAttributes.getName(), resolve_as_attributes_);
 	context->getProperty(IdentifierFunction.getName(), apply_identifier_function_);
+	
   if (subscriptionHandle_) {
     logger_->log_error("Processor already subscribed to Event Log, expected cleanup to unsubscribe.");
   } else {
@@ -149,6 +150,7 @@ void ConsumeWindowsEventLog::onSchedule(const std::shared_ptr<core::ProcessConte
 
     subscribe(context);
   }
+
 }
 
 void ConsumeWindowsEventLog::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
@@ -174,7 +176,7 @@ void ConsumeWindowsEventLog::onTrigger(const std::shared_ptr<core::ProcessContex
   }
 }
 
-EVT_HANDLE ConsumeWindowsEventLog::getProvider(const std::string & name) {
+wel::WindowsEventLogHandler ConsumeWindowsEventLog::getEventLogHandler(const std::string & name) {
 	std::lock_guard<std::mutex> lock(cache_mutex_);
 	auto provider = providers_.find(name);
 	if (provider != std::end(providers_)) {
@@ -184,54 +186,14 @@ EVT_HANDLE ConsumeWindowsEventLog::getProvider(const std::string & name) {
 	std::wstring temp_wstring = std::wstring(name.begin(), name.end());
 	LPCWSTR widechar = temp_wstring.c_str();
 
-	providers_[name] = EvtOpenPublisherMetadata(NULL, widechar, NULL, 0, 0);
+	providers_[name] = wel::WindowsEventLogHandler(EvtOpenPublisherMetadata(NULL, widechar, NULL, 0, 0));
 
 	return providers_[name];
 } 
 
-std::string ConsumeWindowsEventLog::GetEventMessage(EVT_HANDLE metadataProvider, EVT_HANDLE eventHandle)
-{
-	std::string returnValue;
-	std::unique_ptr<WCHAR,utils::FreeDeleter> pBuffer;
-	DWORD dwBufferSize = 0;
-	DWORD dwBufferUsed = 0;
-	DWORD status = 0;
-
-	EvtFormatMessage(metadataProvider, eventHandle, 0, 0, NULL, EvtFormatMessageEvent, dwBufferSize, pBuffer.get(), &dwBufferUsed);
-	
-	//  we need to get the size of the buffer
-	status = GetLastError();
-	if (ERROR_INSUFFICIENT_BUFFER == status) {
-		dwBufferSize = dwBufferUsed;
-
-		/* All C++ examples use malloc and even HeapAlloc in some cases. To avoid any problems ( with EvtFormatMessage calling
-		   free for example ) we will continue to use malloc and use a custom deleter with unique_ptr.
-		'*/
-		pBuffer = std::unique_ptr<WCHAR, utils::FreeDeleter>(static_cast<LPWSTR>(malloc(dwBufferSize * sizeof(WCHAR))));
-
-
-		if (pBuffer) {
-			EvtFormatMessage(metadataProvider, eventHandle, 0, 0, NULL, EvtFormatMessageEvent, dwBufferSize, pBuffer.get(), &dwBufferUsed);
-		} else {
-			return returnValue;
-		}
-	}
-	else if (ERROR_EVT_MESSAGE_NOT_FOUND == status || ERROR_EVT_MESSAGE_ID_NOT_FOUND == status) {
-		return returnValue;
-	}
-	else {
-		return returnValue;
-	}
-
-	// convert wstring to std::string
-	std::wstring message(pBuffer.get());
-	returnValue = std::string(message.begin(), message.end());
-	return returnValue;
-}
 
 bool ConsumeWindowsEventLog::subscribe(const std::shared_ptr<core::ProcessContext> &context) {
-  std::string channel;
-  context->getProperty(Channel.getName(), channel);
+  context->getProperty(Channel.getName(), channel_);
 
   std::string query;
   context->getProperty(Query.getName(), query);
@@ -239,7 +201,7 @@ bool ConsumeWindowsEventLog::subscribe(const std::shared_ptr<core::ProcessContex
   context->getProperty(MaxBufferSize.getName(), maxBufferSize_);
   logger_->log_debug("ConsumeWindowsEventLog: maxBufferSize_ %lld", maxBufferSize_);
 
-  provenanceUri_ = "winlog://" + computerName_ + "/" + channel + "?" + query;
+  provenanceUri_ = "winlog://" + computerName_ + "/" + channel_ + "?" + query;
 
   std::string strInactiveDurationToReconnect;
   context->getProperty(InactiveDurationToReconnect.getName(), strInactiveDurationToReconnect);
@@ -254,7 +216,7 @@ bool ConsumeWindowsEventLog::subscribe(const std::shared_ptr<core::ProcessContex
   subscriptionHandle_ = EvtSubscribe(
       NULL,
       NULL,
-      std::wstring(channel.begin(), channel.end()).c_str(),
+      std::wstring(channel_.begin(), channel_.end()).c_str(),
       std::wstring(query.begin(), query.end()).c_str(),
       NULL,
       this,
@@ -299,16 +261,25 @@ bool ConsumeWindowsEventLog::subscribe(const std::shared_ptr<core::ProcessContex
 				// this is a well known path. 
 				std::string providerName = doc.child("Event").child("System").child("Provider").attribute("Name").value();
 				
-				auto message = pConsumeWindowsEventLog->GetEventMessage(pConsumeWindowsEventLog->getProvider(providerName), eventHandle);
+				auto handler = pConsumeWindowsEventLog->getEventLogHandler(providerName);
+				auto message = handler.getEventMessage(eventHandle);
 
-				if (!message.empty())
-				{
-					renderedData.rendered_text_ = message;
-				}
+				
 
 				// resolve the event metadata
-				wel::MetadataWalker walker(pConsumeWindowsEventLog->getProvider(providerName), eventHandle, !pConsumeWindowsEventLog->resolve_as_attributes_, pConsumeWindowsEventLog->apply_identifier_function_, pConsumeWindowsEventLog->regex_);
+				wel::MetadataWalker walker(pConsumeWindowsEventLog->getEventLogHandler(providerName).getMetadata(), eventHandle, !pConsumeWindowsEventLog->resolve_as_attributes_, pConsumeWindowsEventLog->apply_identifier_function_, pConsumeWindowsEventLog->regex_);
 				doc.traverse(walker);
+
+
+				if (!message.empty())
+				{	
+					for (const auto &mapEntry : walker.getIdentifiers()) {
+						// replace the identifiers with their translated strings.
+						utils::StringUtils::replaceAll(message, mapEntry.first, mapEntry.second);
+					}
+					renderedData.rendered_text_ = handler.getEventHeader(pConsumeWindowsEventLog->channel_,walker);
+					renderedData.rendered_text_ += message;
+				}
 
 				if (pConsumeWindowsEventLog->resolve_as_attributes_) {
 					renderedData.matched_fields_ = walker.getFieldValues();
@@ -379,7 +350,6 @@ int ConsumeWindowsEventLog::processQueue(const std::shared_ptr<core::ProcessSess
     session->putAttribute(flowFile, FlowAttributeKey(MIME_TYPE), "application/xml");
     session->getProvenanceReporter()->receive(flowFile, provenanceUri_, getUUIDStr(), "Consume windows event logs", 0);
     session->transfer(flowFile, Success);
-    session->commit();
 
 	flowFile = session->create();
 
