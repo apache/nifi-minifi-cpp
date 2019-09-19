@@ -29,6 +29,7 @@ bool MetadataWalker::for_each(pugi::xml_node &node) {
 				updateText(node, attr.name(), std::move(idUpdate));
 
 			}
+
 			if (std::regex_match(attr.value(), regex_)) {
 				std::function<std::string(const std::string &)> idUpdate = [&](const std::string &input) -> std::string {
 					if (resolve_) {
@@ -43,9 +44,26 @@ bool MetadataWalker::for_each(pugi::xml_node &node) {
 				updateText(node, attr.value(), std::move(idUpdate));
 			}
 		}
+
+		if (resolve_) {
+			std::string nodeText = node.text().get();
+			std::vector<std::string> ids = getIdentifiers(nodeText);
+			for (const auto &id : ids) {
+				auto  resolved = utils::OsUtils::userIdToUsername(id);
+				std::string replacement = "%{" + id + "}";
+				replaced_identifiers_[id] = resolved;
+				replaced_identifiers_[replacement] = resolved;
+				nodeText = utils::StringUtils::replaceAll(nodeText, replacement, resolved);
+			}
+			node.text().set(nodeText.c_str());
+		}
+
 	}
 	else if (node_name == "TimeCreated") {
 		metadata_["TimeCreated"] = node.attribute("SystemTime").value();
+	}
+	else if (node_name == "EventRecordID") {
+		metadata_["EventRecordID"] = node.text().get();
 	}
 	else if (node_name == "Provider") {
 		metadata_["Provider"] = node.attribute("Name").value();
@@ -76,14 +94,36 @@ bool MetadataWalker::for_each(pugi::xml_node &node) {
 	return true;
 }
 
+std::vector<std::string> MetadataWalker::getIdentifiers(const std::string &text) const {
+	auto pos = text.find("%{");
+	std::vector<std::string> found_strings;
+	while (pos != std::string::npos)
+	{
+		auto next_pos = text.find("}", pos);
+		if (next_pos != std::string::npos) {
+			auto potential_identifier = text.substr(pos + 2, next_pos - (pos + 2));
+			std::smatch match;
+			if (potential_identifier.find("S-") != std::string::npos){
+				found_strings.push_back(potential_identifier);
+			}
+		}
+		pos = text.find("%{", pos + 2);
+	}
+	return found_strings;
+}
+
 std::string MetadataWalker::getMetadata(METADATA metadata) const {
 		switch (metadata) {
+			case LOG_NAME:
+				return log_name_;
 			case SOURCE:
 				return getString(metadata_,"Provider");
 			case TIME_CREATED:
 				return getString(metadata_,"TimeCreated");
 			case EVENTID:
 				return getString(metadata_,"EventID");
+			case EVENT_RECORDID:
+				return getString(metadata_, "EventRecordID");
 			case TASK_CATEGORY:
 				return getString(metadata_,"Opcode");
 			case LEVEL:
@@ -105,8 +145,9 @@ std::map<std::string, std::string> MetadataWalker::getIdentifiers() const {
 }
 
 
+
 std::string MetadataWalker::updateXmlMetadata(const std::string &xml, EVT_HANDLE metadata_ptr, EVT_HANDLE event_ptr, bool update_xml, bool resolve, const std::string &regex) {
-	MetadataWalker walker(metadata_ptr, event_ptr, update_xml, resolve, regex);
+	MetadataWalker walker(metadata_ptr,"", event_ptr, update_xml, resolve, regex);
 
 	pugi::xml_document doc;
 	pugi::xml_parse_result result = doc.load_string(xml.c_str());

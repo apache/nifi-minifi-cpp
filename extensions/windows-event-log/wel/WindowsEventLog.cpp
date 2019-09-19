@@ -17,12 +17,15 @@
  */
 #include "WindowsEventLog.h"
 #include "utils/Deleters.h"
+#include <algorithm>
 
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
 namespace wel {
+
+
 
 std::string WindowsEventLogHandler::getEventMessage(EVT_HANDLE eventHandle) const
 {
@@ -67,19 +70,32 @@ std::string WindowsEventLogHandler::getEventMessage(EVT_HANDLE eventHandle) cons
 
 }
 
-std::string WindowsEventLogHandler::getEventHeader(const std::string &logName,MetadataWalker &walker) const {
-	std::stringstream eventHeader;
+void WindowsEventLogHeader::setDelimiter(const std::string &delim) {
+	delimiter_ = delim;
+}
 
-	eventHeader << "Log Name:      " << utils::StringUtils::trim(logName) << std::endl;
-	eventHeader << "Source:        " << utils::StringUtils::trim(walker.getMetadata(METADATA::SOURCE)) << std::endl;
-	eventHeader << "Date:          " << utils::StringUtils::trim(walker.getMetadata(METADATA::TIME_CREATED)) << std::endl;
-	eventHeader << "Event ID:      " << utils::StringUtils::trim(walker.getMetadata(METADATA::EVENTID)) << std::endl;
-	eventHeader << "Task Category: " << utils::StringUtils::trim(walker.getMetadata(METADATA::TASK_CATEGORY)) << std::endl;
-	eventHeader << "Level:         " << utils::StringUtils::trim(walker.getMetadata(METADATA::LEVEL)) << std::endl;
-	eventHeader << "Keywords:      " << utils::StringUtils::trim(walker.getMetadata(METADATA::KEYWORDS)) << std::endl;
-	eventHeader << "User:          " << utils::StringUtils::trim(walker.getMetadata(METADATA::USER)) << std::endl;
-	eventHeader << "Computer:      " << utils::StringUtils::trim(walker.getMetadata(METADATA::COMPUTER)) << std::endl;
-	eventHeader << "Description: " << std::endl;
+std::string WindowsEventLogHeader::createDefaultDelimiter(size_t max, size_t length) const {
+	if (max > length) {
+		return ":" + std::string(max - length, ' ');
+	}
+	else {
+		return ": ";
+	}
+}
+
+std::string WindowsEventLogHeader::getEventHeader(const WindowsEventLogMetadata * const metadata) const{
+	std::stringstream eventHeader;
+	size_t max = 1;
+	for (const auto &option : header_names_) {
+		max = (std::max(max, option.second.size()));
+	}
+	++max; // increment by one to get space.
+	for (const auto &option : header_names_) {
+		auto name = option.second;
+		if (!name.empty()) {
+			eventHeader << name << (delimiter_.empty() ? createDefaultDelimiter(max, name.size()) : delimiter_) << utils::StringUtils::trim(metadata->getMetadata(option.first)) << std::endl;
+		}
+	}
 
 	return eventHeader.str();
 }

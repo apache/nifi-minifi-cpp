@@ -20,6 +20,7 @@
 
 #pragma once
 
+#include "WindowsEventLog.h"
 #include "core/Core.h"
 #include "FlowFileRecord.h"
 #include "concurrentqueue.h"
@@ -39,25 +40,15 @@ namespace minifi {
 namespace wel {
 
 
-enum METADATA {
-SOURCE,
-TIME_CREATED,
-EVENTID,
-TASK_CATEGORY,
-LEVEL,
-KEYWORDS,
-USER,
-COMPUTER
-};
 
 /**
  * Defines a tree walker for the XML input
  *
  */
-class MetadataWalker : public pugi::xml_tree_walker {
+class MetadataWalker : public pugi::xml_tree_walker, public WindowsEventLogMetadata {
  public:
-  MetadataWalker(EVT_HANDLE metadata_ptr, EVT_HANDLE event_ptr, bool update_xml, bool resolve, const std::string &regex = "")
-      : metadata_ptr_(metadata_ptr),
+  MetadataWalker(EVT_HANDLE metadata_ptr, const std::string &log_name, EVT_HANDLE event_ptr, bool update_xml, bool resolve, const std::string &regex = "")
+      : WindowsEventLogMetadata(metadata_ptr, log_name),
         event_ptr_(event_ptr),
         regex_(regex),
         regex_str_(regex),
@@ -73,28 +64,16 @@ class MetadataWalker : public pugi::xml_tree_walker {
 
 	static std::string updateXmlMetadata(const std::string &xml, EVT_HANDLE metadata_ptr, EVT_HANDLE event_ptr, bool update_xml, bool resolve, const std::string &regex = "");
 	
-	std::map<std::string, std::string> getFieldValues() const;
+	virtual std::map<std::string, std::string> getFieldValues() const override;
 
-	std::map<std::string, std::string> getIdentifiers() const;
+	virtual std::map<std::string, std::string> getIdentifiers() const override;
 
-	std::string getMetadata(METADATA metadata) const;
+	virtual std::string getMetadata(METADATA metadata) const override;
 
-	static std::string getComputerName() {
-		static std::string computer_name;
-		if (computer_name.empty()) {
-			char buff[MAX_COMPUTERNAME_LENGTH + 1];
-			DWORD size = sizeof(buff);
-			if (GetComputerName(buff, &size)) {
-				computer_name = buff;
-			}
-			else {
-				computer_name = "N/A";
-			}
-		}
-		return computer_name;
-	}
 
  private:
+
+	 std::vector<std::string> getIdentifiers(const std::string &text) const ;
 
 
 	 static std::string getString(const std::map<std::string, std::string> &map, const std::string &field) {
@@ -115,8 +94,6 @@ class MetadataWalker : public pugi::xml_tree_walker {
    * Gets event data.
    */
   std::string getEventData(EVT_FORMAT_MESSAGE_FLAGS flags);
-
-  EVT_HANDLE metadata_ptr_;
   EVT_HANDLE event_ptr_;
   std::regex regex_;
   std::string regex_str_;

@@ -74,6 +74,8 @@ public:
   static core::Property IdentifierMatcher;
   static core::Property IdentifierFunction;
   static core::Property ResolveAsAttributes;
+  static core::Property EventHeaderDelimiter;
+  static core::Property EventHeader;
 
   //! Supported Relationships
   static core::Relationship Success;
@@ -100,10 +102,14 @@ protected:
   
   wel::WindowsEventLogHandler getEventLogHandler(const std::string & name);
 
+  bool insertHeaderName(wel::METADATA_NAMES &header, const std::string &key, const std::string &value);
+
   void LogWindowsError();
 private:
 
   // Logger
+  wel::METADATA_NAMES header_names_;
+  std::string header_delimiter_;
   std::string channel_;
   std::shared_ptr<logging::Logger> logger_;
   std::string regex_;
