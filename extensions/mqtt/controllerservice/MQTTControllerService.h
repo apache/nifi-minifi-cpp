@@ -31,15 +31,15 @@
 #include "concurrentqueue.h"
 #include "MQTTClient.h"
 
-#define MQTT_QOS_0 "0"
-#define MQTT_QOS_1 "1"
-#define MQTT_QOS_2 "2"
-
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
 namespace controllers {
+
+static constexpr const char* const MQTT_QOS_0 = "0";
+static constexpr const char* const MQTT_QOS_1 = "1";
+static constexpr const char* const MQTT_QOS_2 = "2";
 
 class Message {
  public:

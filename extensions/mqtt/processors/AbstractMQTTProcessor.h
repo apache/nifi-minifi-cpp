@@ -28,18 +28,18 @@
 #include "core/logging/LoggerConfiguration.h"
 #include "MQTTClient.h"
 
-#define MQTT_QOS_0 "0"
-#define MQTT_QOS_1 "1"
-#define MQTT_QOS_2 "2"
-
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
 namespace processors {
 
-#define MQTT_SECURITY_PROTOCOL_PLAINTEXT "plaintext"
-#define MQTT_SECURITY_PROTOCOL_SSL "ssl"
+static constexpr const char* const MQTT_QOS_0 = "0";
+static constexpr const char* const MQTT_QOS_1 = "1";
+static constexpr const char* const MQTT_QOS_2 = "2";
+
+static constexpr const char* const MQTT_SECURITY_PROTOCOL_PLAINTEXT = "plaintext";
+static constexpr const char* const MQTT_SECURITY_PROTOCOL_SSL = "ssl";
 
 // AbstractMQTTProcessor Class
 class AbstractMQTTProcessor : public core::Processor {
@@ -87,10 +87,6 @@ class AbstractMQTTProcessor : public core::Processor {
   static core::Property SecurityPrivateKey;
   static core::Property SecurityPrivateKeyPassWord;
 
-  // Supported Relationships
-  static core::Relationship Failure;
-  static core::Relationship Success;
-
  public:
   /**
    * Function that's executed when the processor is scheduled.
@@ -98,15 +94,8 @@ class AbstractMQTTProcessor : public core::Processor {
    * @param sessionFactory process session factory that is used when creating
    * ProcessSession objects.
    */
-  virtual void onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory);
-  // OnTrigger method, implemented by NiFi AbstractMQTTProcessor
-  virtual void onTrigger(core::ProcessContext *context, core::ProcessSession *session) {
-  }
-  // OnTrigger method, implemented by NiFi AbstractMQTTProcessor
-  virtual void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
-  }
-  // Initialize, over write by NiFi AbstractMQTTProcessor
-  virtual void initialize(void);
+  virtual void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &factory) override;
+
   // MQTT async callbacks
   static void msgDelivered(void *context, MQTTClient_deliveryToken dt) {
     AbstractMQTTProcessor *processor = (AbstractMQTTProcessor *) context;
@@ -134,6 +123,8 @@ class AbstractMQTTProcessor : public core::Processor {
   }
 
  protected:
+  static const std::set<core::Property> getSupportedProperties();
+
   MQTTClient client_;
   MQTTClient_deliveryToken delivered_token_;
   std::string uri_;
