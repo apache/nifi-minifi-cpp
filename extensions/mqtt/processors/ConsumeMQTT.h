@@ -68,6 +68,9 @@ class ConsumeMQTT : public processors::AbstractMQTTProcessor {
   // Supported Properties
   static core::Property MaxFlowSegSize;
   static core::Property QueueBufferMaxMessage;
+
+  static core::Relationship Success;
+
   // Nest Callback Class for write stream
   class WriteCallback : public OutputStreamCallback {
    public:
@@ -92,12 +95,12 @@ class ConsumeMQTT : public processors::AbstractMQTTProcessor {
    * @param sessionFactory process session factory that is used when creating
    * ProcessSession objects.
    */
-  void onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory);
+  void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &factory) override;
   // OnTrigger method, implemented by NiFi ConsumeMQTT
-  virtual void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session);
+  void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
   // Initialize, over write by NiFi ConsumeMQTT
-  virtual void initialize(void);
-  virtual bool enqueueReceiveMQTTMsg(MQTTClient_message *message);
+  void initialize(void) override;
+  bool enqueueReceiveMQTTMsg(MQTTClient_message *message) override;
 
  protected:
   void getReceivedMQTTMsg(std::deque<MQTTClient_message *> &msg_queue) {

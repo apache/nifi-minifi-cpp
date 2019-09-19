@@ -38,30 +38,21 @@ namespace processors {
 core::Property ConsumeMQTT::MaxFlowSegSize("Max Flow Segment Size", "Maximum flow content payload segment size for the MQTT record", "");
 core::Property ConsumeMQTT::QueueBufferMaxMessage("Queue Max Message", "Maximum number of messages allowed on the received MQTT queue", "");
 
+core::Relationship ConsumeMQTT::Success("success", "FlowFiles that are sent successfully to the destination are transferred to this relationship");
+
 void ConsumeMQTT::initialize() {
   // Set the supported properties
-  std::set<core::Property> properties;
-  properties.insert(BrokerURL);
-  properties.insert(CleanSession);
-  properties.insert(ClientID);
-  properties.insert(UserName);
-  properties.insert(PassWord);
-  properties.insert(KeepLiveInterval);
-  properties.insert(ConnectionTimeOut);
-  properties.insert(QOS);
-  properties.insert(Topic);
+  std::set<core::Property> properties(AbstractMQTTProcessor::getSupportedProperties());
   properties.insert(MaxFlowSegSize);
   properties.insert(QueueBufferMaxMessage);
   setSupportedProperties(properties);
   // Set the supported relationships
-  std::set<core::Relationship> relationships;
-  relationships.insert(Success);
-  setSupportedRelationships(relationships);
+  setSupportedRelationships({Success});
 }
 
 bool ConsumeMQTT::enqueueReceiveMQTTMsg(MQTTClient_message *message) {
   if (queue_.size_approx() >= maxQueueSize_) {
-    logger_->log_debug("MQTT queue full");
+    logger_->log_warn("MQTT queue full");
     return false;
   } else {
     if (message->payloadlen > maxSegSize_)
@@ -72,8 +63,8 @@ bool ConsumeMQTT::enqueueReceiveMQTTMsg(MQTTClient_message *message) {
   }
 }
 
-void ConsumeMQTT::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory) {
-  AbstractMQTTProcessor::onSchedule(context, sessionFactory);
+void ConsumeMQTT::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &factory) {
+  AbstractMQTTProcessor::onSchedule(context, factory);
   std::string value;
   int64_t valInt;
   value = "";
@@ -90,7 +81,10 @@ void ConsumeMQTT::onSchedule(core::ProcessContext *context, core::ProcessSession
 
 void ConsumeMQTT::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
   // reconnect if necessary
-  reconnect();
+  if(!reconnect()) {
+    yield();
+  }
+
   std::deque<MQTTClient_message *> msg_queue;
   getReceivedMQTTMsg(msg_queue);
   while (!msg_queue.empty()) {
