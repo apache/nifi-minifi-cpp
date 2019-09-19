@@ -38,13 +38,17 @@ endif()
   endif()
 
 list(APPEND CMAKE_MODULE_PATH_PASSTHROUGH_LIST "${CMAKE_SOURCE_DIR}/cmake/ssl")
-list(APPEND CMAKE_MODULE_PATH_PASSTHROUGH_LIST "${CMAKE_SOURCE_DIR}/cmake/zlib/dummy")
-    
+if(WIN32 OR NOT USE_SYSTEM_ZLIB)
+    list(APPEND CMAKE_MODULE_PATH_PASSTHROUGH_LIST "${CMAKE_SOURCE_DIR}/cmake/zlib/dummy")
+endif()
+string(REPLACE ";" "%" CMAKE_MODULE_PATH_PASSTHROUGH "${CMAKE_MODULE_PATH_PASSTHROUGH_LIST}")
+
 ExternalProject_Add(
     kafka-external
     GIT_REPOSITORY "https://github.com/edenhill/librdkafka.git"
     GIT_TAG "v1.0.1" 
     PREFIX "${BASE_DIR}"
+    LIST_SEPARATOR % # This is needed for passing semicolon-separated lists
     CMAKE_ARGS ${PASSTHROUGH_CMAKE_ARGS}
                "-DCMAKE_INSTALL_PREFIX=${BASE_DIR}/install"
                "-DWITH_SASL=OFF"
@@ -54,25 +58,33 @@ ExternalProject_Add(
                "-DRDKAFKA_BUILD_TESTS=OFF"
                "-DENABLE_LZ4_EXT=OFF"
                "-DWITH_ZSTD=OFF"
-               "-DCMAKE_MODULE_PATH=${CMAKE_MODULE_PATH_PASSTHROUGH_LIST}"
+               "-DCMAKE_MODULE_PATH=${CMAKE_MODULE_PATH_PASSTHROUGH}"
                "-DCMAKE_C_FLAGS=${CURL_C_FLAGS}"
                "-DCMAKE_INSTALL_LIBDIR=lib"
                "-DCMAKE_CXX_FLAGS=${CURL_CXX_FLAGS}"
+               "-DLIBRESSL_BIN_DIR=${LIBRESSL_BIN_DIR}"
+               "-DLIBRESSL_SRC_DIR=${LIBRESSL_SRC_DIR}"
+               "-DBYPRODUCT_PREFIX=${BYPRODUCT_PREFIX}"
+               "-DBYPRODUCT_SUFFIX=${BYPRODUCT_SUFFIX}"
+               "-DZLIB_BYPRODUCT_INCLUDE=${ZLIB_BYPRODUCT_INCLUDE}"
+               "-DZLIB_BYPRODUCT=${ZLIB_BYPRODUCT}"
+               "-DZLIB_LIBRARY=${ZLIB_LIBRARY}"
+               "-DZLIB_LIBRARIES=${ZLIB_LIBRARIES}"
+               "-DLIBRDKAFKA_STATICLIB=1"
     EXCLUDE_FROM_ALL TRUE
   )
 add_dependencies(kafka-external libressl-portable)
+if(WIN32 OR NOT USE_SYSTEM_ZLIB)
+    add_dependencies(kafka-external zlib-external)
+endif()
 set(KAFKA_INCLUDE "${BASE_DIR}/install/include/librdkafka/")
 set(KAFKA_LIBRARY "${BYPRODUCT}")
+add_definitions("-DLIBRDKAFKA_STATICLIB=1")
 add_dependencies(minifi-rdkafka-extensions kafka-external)
 include_directories(${ZLIB_INCLUDE_DIRS})
 include_directories(${KAFKA_INCLUDE})
-if (WIN32)
-	target_link_libraries (minifi-rdkafka-extensions -WHOLEARCHIVE:${KAFKA_LIBRARY} ${KAFKA_LIBRARY})
-elseif (APPLE)
-	target_link_libraries (minifi-rdkafka-extensions -Wl,-force_load ${KAFKA_LIBRARY})
-else ()
-	target_link_libraries (minifi-rdkafka-extensions -Wl,--whole-archive ${KAFKA_LIBRARY} -Wl,--no-whole-archive)
-endif ()
+
+target_link_libraries(minifi-rdkafka-extensions ${KAFKA_LIBRARY} ${OPENSSL_LIBRARIES} ${ZLIB_LIBRARIES})
 
 SET (RDKAFKA-EXTENSIONS minifi-rdkafka-extensions PARENT_SCOPE)
 
