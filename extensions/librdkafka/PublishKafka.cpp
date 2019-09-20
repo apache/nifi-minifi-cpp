@@ -345,6 +345,21 @@ void PublishKafka::onTrigger(const std::shared_ptr<core::ProcessContext> &contex
       }
     }
 
+    // Check if brokers are down, if yes then yield.
+    const struct rd_kafka_metadata *metadata;
+    /* Fetch metadata */
+    // TODO: What is the time complexity of this??
+    rd_kafka_resp_err_t err = rd_kafka_metadata(conn->getConnection(), 0, nullptr,
+                            &metadata, 500);
+    if (err != RD_KAFKA_RESP_ERR_NO_ERROR) {
+      logger_->log_error("Failed to acquire metadata: %s\n", rd_kafka_err2str(err));
+      session->transfer(flowFile, Failure);
+      return;
+    } else {
+      logger_->log_debug("There are %d brokers", metadata->broker_cnt);
+      rd_kafka_metadata_destroy(metadata);
+    }
+
     if (!conn->hasTopic(topic)) {
       auto topic_conf_ = rd_kafka_topic_conf_new();
       auto topic_reference = rd_kafka_topic_new(conn->getConnection(), topic.c_str(), topic_conf_);
