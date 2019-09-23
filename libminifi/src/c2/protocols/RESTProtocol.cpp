@@ -311,19 +311,52 @@ bool RESTProtocol::containsPayload(const C2Payload &o) {
   return false;
 }
 
+rapidjson::Value RESTProtocol::serializeConnectionQueues(const C2Payload &payload, std::string &label, rapidjson::Document::AllocatorType &alloc) {
+  rapidjson::Value json_payload(payload.isContainer() ? rapidjson::kArrayType : rapidjson::kObjectType);
+
+  C2Payload adjusted(payload.getOperation(), payload.getIdentifier(), false, payload.isRaw());
+
+  auto name = payload.getLabel();
+  std::string uuid;
+  C2ContentResponse updatedContent(payload.getOperation());
+  for (const C2ContentResponse &content : payload.getContent()) {
+    for (const auto& op_arg : content.operation_arguments) {
+      if (op_arg.first == "uuid") {
+        uuid = op_arg.second.to_string();
+      }
+      updatedContent.operation_arguments.insert(op_arg);
+    }
+  }
+  updatedContent.name = uuid;
+  adjusted.setLabel(uuid);
+  adjusted.setIdentifier(uuid);
+  state::response::ValueNode nd;
+  // name should be what was previously the TLN ( top level node )
+  nd = name;
+  updatedContent.operation_arguments.insert(std::make_pair("name", nd));
+  // the rvalue reference is an unfortunate side effect of the underlying API decision.
+  adjusted.addContent(std::move(updatedContent), true);
+  mergePayloadContent(json_payload, adjusted, alloc);
+  label = uuid;
+  return json_payload;
+}
+
 rapidjson::Value RESTProtocol::serializeJsonPayload(const C2Payload &payload, rapidjson::Document::AllocatorType &alloc) {
-// get the name from the content
+  // get the name from the content
   rapidjson::Value json_payload(payload.isContainer() ? rapidjson::kArrayType : rapidjson::kObjectType);
 
   std::vector<ValueObject> children;
 
+  bool isQueue = payload.getLabel() == "queues";
+
   for (const auto &nested_payload : payload.getNestedPayloads()) {
-    rapidjson::Value* child_payload = new rapidjson::Value(serializeJsonPayload(nested_payload, alloc));
+    std::string label = nested_payload.getLabel();
+    rapidjson::Value* child_payload = new rapidjson::Value(isQueue ? serializeConnectionQueues(nested_payload, label, alloc) : serializeJsonPayload(nested_payload, alloc));
 
     if (nested_payload.isCollapsible()) {
       bool combine = false;
       for (auto &subordinate : children) {
-        if (subordinate.name == nested_payload.getLabel()) {
+        if (subordinate.name == label) {
           subordinate.values.push_back(child_payload);
           combine = true;
           break;
@@ -331,13 +364,13 @@ rapidjson::Value RESTProtocol::serializeJsonPayload(const C2Payload &payload, ra
       }
       if (!combine) {
         ValueObject obj;
-        obj.name = nested_payload.getLabel();
+        obj.name = label;
         obj.values.push_back(child_payload);
         children.push_back(obj);
       }
     } else {
       ValueObject obj;
-      obj.name = nested_payload.getLabel();
+      obj.name = label;
       obj.values.push_back(child_payload);
       children.push_back(obj);
     }
