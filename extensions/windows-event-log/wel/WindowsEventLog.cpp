@@ -89,7 +89,7 @@ void WindowsEventLogMetadata::renderMetadata() {
 				break;
 			case WINEVENT_LEVEL_INFO:
 			case WINEVENT_LEVEL_VERBOSE:
-				event_type_ = "Informational";
+				event_type_ = "Information";
 				break;
 		};
 
@@ -99,9 +99,9 @@ void WindowsEventLogMetadata::renderMetadata() {
 	}
 
 	if (keyword.UInt64Val & WINEVENT_KEYWORD_AUDIT_SUCCESS) {
-		event_type_ = "Audit Success";
+		event_type_ = "Success Audit";
 	} else if (keyword.UInt64Val & EVENTLOG_AUDIT_FAILURE) {
-		event_type_ = "Audit Failure";
+		event_type_ = "Failure Audit";
 	}
 
 	

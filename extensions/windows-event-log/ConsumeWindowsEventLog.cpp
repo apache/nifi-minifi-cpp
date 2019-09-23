@@ -331,7 +331,7 @@ bool ConsumeWindowsEventLog::subscribe(const std::shared_ptr<core::ProcessContex
 					log_header.setDelimiter(pConsumeWindowsEventLog->header_delimiter_);
 					// render the header.
 					renderedData.rendered_text_ = log_header.getEventHeader(&walker);
-					renderedData.rendered_text_ += "Message:\n";
+					renderedData.rendered_text_ += "Message" + pConsumeWindowsEventLog->header_delimiter_ + " ";
 					renderedData.rendered_text_ += message;
 				}
 
