@@ -44,7 +44,9 @@ namespace wel {
 		SOURCE,
 		TIME_CREATED,
 		EVENTID,
+		OPCODE,
 		EVENT_RECORDID,
+		EVENT_TYPE,
 		TASK_CATEGORY,
 		LEVEL,
 		KEYWORDS,
@@ -56,7 +58,7 @@ namespace wel {
 
 // this is a continuous enum so we can rely on the array
 
-typedef std::map<METADATA, std::string> METADATA_NAMES;
+typedef std::vector<std::pair<METADATA, std::string>> METADATA_NAMES;
 
 class WindowsEventLogHandler
 {
@@ -78,7 +80,8 @@ private:
 
 class WindowsEventLogMetadata {
 public:
-	WindowsEventLogMetadata(EVT_HANDLE metadataProvider, const std::string &log_name) : metadata_ptr_(metadataProvider), log_name_(log_name) {
+	WindowsEventLogMetadata(EVT_HANDLE metadataProvider, EVT_HANDLE event_ptr, const std::string &log_name) : metadata_ptr_(metadataProvider), event_timestamp_(0), event_ptr_(event_ptr), log_name_(log_name) {
+		renderMetadata();
 	}
 
 	virtual std::map<std::string, std::string> getFieldValues() const = 0;
@@ -88,6 +91,8 @@ public:
 	virtual std::string getMetadata(METADATA metadata) const = 0;
 
 	
+	void renderMetadata();
+
 
 	static std::string getMetadataString(METADATA val) {
 		static std::map< METADATA, std::string> map = {
@@ -95,7 +100,9 @@ public:
 		{SOURCE,"SOURCE"},
 		{TIME_CREATED,"TIME_CREATED" },
 		{EVENTID,"EVENTID"},
+		{OPCODE,"OPCODE"},
 		{EVENT_RECORDID,"EVENT_RECORDID"},
+		{EVENT_TYPE,"EVENT_TYPE"},
 		{TASK_CATEGORY, "TASK_CATEGORY"},
 		{LEVEL,"LEVEL"},
 		{KEYWORDS,"KEYWORDS"},
@@ -113,8 +120,10 @@ public:
 			{"SOURCE",SOURCE},
 			{"TIME_CREATED",TIME_CREATED },
 			{"EVENTID",EVENTID},
+			{"OPCODE",OPCODE},
 			{"EVENT_RECORDID",EVENT_RECORDID},
 			{"TASK_CATEGORY", TASK_CATEGORY},
+			{"EVENT_TYPE",EVENT_TYPE},
 			{"LEVEL",LEVEL},
 			{"KEYWORDS",KEYWORDS},
 			{"USER",USER},
@@ -133,9 +142,9 @@ public:
 	static std::string getComputerName() {
 		static std::string computer_name;
 		if (computer_name.empty()) {
-			char buff[MAX_COMPUTERNAME_LENGTH + 1];
+			char buff[10248];
 			DWORD size = sizeof(buff);
-			if (GetComputerName(buff, &size)) {
+			if (GetComputerNameExA(ComputerNameDnsFullyQualified, buff, &size)) {
 				computer_name = buff;
 			}
 			else {
@@ -147,6 +156,10 @@ public:
 
 protected:
 	std::string log_name_;
+	uint64_t event_timestamp_;
+	std::string event_type_;
+	std::string event_timestamp_str_;
+	EVT_HANDLE event_ptr_;
 	EVT_HANDLE metadata_ptr_;
 };
 

@@ -1,5 +1,7 @@
+#include <windows.h>
 #include "MetadataWalker.h"
 #include "XMLString.h"
+#include <strsafe.h>
 
 namespace org {
 namespace apache {
@@ -72,7 +74,7 @@ bool MetadataWalker::for_each(pugi::xml_node &node) {
 		metadata_["EventID"] = node.text().get();
 	}
 	else {
-		static std::map<std::string, EVT_FORMAT_MESSAGE_FLAGS> formatFlagMap = { {"Channel", EvtFormatMessageChannel}, {"Keywords", EvtFormatMessageKeyword}, {"Level", EvtFormatMessageLevel}, {"Opcode", EvtFormatMessageOpcode} };
+		static std::map<std::string, EVT_FORMAT_MESSAGE_FLAGS> formatFlagMap = { {"Channel", EvtFormatMessageChannel}, {"Keywords", EvtFormatMessageKeyword}, {"Level", EvtFormatMessageLevel}, {"Opcode", EvtFormatMessageOpcode}, {"Task",EvtFormatMessageTask} };
 		auto it = formatFlagMap.find(node_name);
 		if (it != formatFlagMap.end()) {
 			std::function<std::string(const std::string &)> updateFunc = [&](const std::string &input) -> std::string {
@@ -119,17 +121,21 @@ std::string MetadataWalker::getMetadata(METADATA metadata) const {
 			case SOURCE:
 				return getString(metadata_,"Provider");
 			case TIME_CREATED:
-				return getString(metadata_,"TimeCreated");
+				return event_timestamp_str_;
 			case EVENTID:
 				return getString(metadata_,"EventID");
 			case EVENT_RECORDID:
 				return getString(metadata_, "EventRecordID");
+			case OPCODE:
+				return getString(metadata_, "Opcode");
 			case TASK_CATEGORY:
-				return getString(metadata_,"Opcode");
+				return getString(metadata_,"Task");
 			case LEVEL:
 				return getString(metadata_,"Level");
 			case KEYWORDS:
 				return getString(metadata_,"Keywords");
+			case EVENT_TYPE:
+				return event_type_;
 			case COMPUTER:
 				return getComputerName();
 		};

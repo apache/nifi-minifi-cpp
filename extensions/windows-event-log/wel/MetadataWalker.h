@@ -48,8 +48,7 @@ namespace wel {
 class MetadataWalker : public pugi::xml_tree_walker, public WindowsEventLogMetadata {
  public:
   MetadataWalker(EVT_HANDLE metadata_ptr, const std::string &log_name, EVT_HANDLE event_ptr, bool update_xml, bool resolve, const std::string &regex = "")
-      : WindowsEventLogMetadata(metadata_ptr, log_name),
-        event_ptr_(event_ptr),
+      : WindowsEventLogMetadata(metadata_ptr, event_ptr, log_name),
         regex_(regex),
         regex_str_(regex),
         update_xml_(update_xml),
@@ -84,8 +83,7 @@ class MetadataWalker : public pugi::xml_tree_walker, public WindowsEventLogMetad
 		 return "N/A";
 	}
 	static std::string to_string(const wchar_t* pChar);
-
-  /**
+   /**
    * Updates text within the XML representation
    */
   void updateText(pugi::xml_node &node, const std::string &field_name, std::function<std::string(const std::string &)> &&fn);
@@ -94,7 +92,7 @@ class MetadataWalker : public pugi::xml_tree_walker, public WindowsEventLogMetad
    * Gets event data.
    */
   std::string getEventData(EVT_FORMAT_MESSAGE_FLAGS flags);
-  EVT_HANDLE event_ptr_;
+  
   std::regex regex_;
   std::string regex_str_;
   bool update_xml_;

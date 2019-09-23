@@ -123,8 +123,8 @@ core::Property ConsumeWindowsEventLog::EventHeaderDelimiter(
 core::Property ConsumeWindowsEventLog::EventHeader(
 	core::PropertyBuilder::createProperty("Event Header")->
 	isRequired(false)->
-	withDefaultValue("LOG_NAME=Log Name, SOURCE = Source, TIME_CREATED = Date,EVENT_RECORDID=Record ID,EVENTID = Event ID,TASK_CATEGORY = Task Category,LEVEL = Level,KEYWORDS = Keywords,USER = User,COMPUTER = Computer")->
-	withDescription("Comma seperated list of key/value pairs with the following keys LOG_NAME, SOURCE, TIME_CREATED,EVENT_RECORDID,EVENTID,TASK_CATEGORY,LEVEL,KEYWORDS,USER,and COMPUTER. Eliminating fields will remove them from the header.")->
+	withDefaultValue("LOG_NAME=Log Name, SOURCE = Source, TIME_CREATED = Date,EVENT_RECORDID=Record ID,EVENTID = Event ID,TASK_CATEGORY = Task Category,LEVEL = Level,KEYWORDS = Keywords,USER = User,COMPUTER = Computer, EVENT_TYPE = EventType")->
+	withDescription("Comma seperated list of key/value pairs with the following keys LOG_NAME, SOURCE, TIME_CREATED,EVENT_RECORDID,EVENTID,TASK_CATEGORY,LEVEL,KEYWORDS,USER,COMPUTER, and EVENT_TYPE. Eliminating fields will remove them from the header.")->
 	build());
 
 core::Relationship ConsumeWindowsEventLog::Success("success", "Relationship for successfully consumed events.");
@@ -157,7 +157,7 @@ bool ConsumeWindowsEventLog::insertHeaderName(wel::METADATA_NAMES &header, const
 	wel::METADATA name = wel::WindowsEventLogMetadata::getMetadataFromString(key);
 		
 	if (name != wel::METADATA::UNKNOWN) {
-		header.insert(std::make_pair(name, value));
+		header.emplace_back(std::make_pair(name, value));
 		return true;
 	}
 	else {
@@ -181,6 +181,12 @@ void ConsumeWindowsEventLog::onSchedule(const std::shared_ptr<core::ProcessConte
 			auto key = utils::StringUtils::trim(splitKeyAndValue.at(0));
 			auto value = utils::StringUtils::trim(splitKeyAndValue.at(1));
 			if (!insertHeaderName(header_names_, key, value)) {
+				logger_->log_debug("%s is an invalid key for the header map", key);
+			}
+		}
+		else if (splitKeyAndValue.size() == 1) {
+			auto key = utils::StringUtils::trim(splitKeyAndValue.at(0));
+			if (!insertHeaderName(header_names_, key, "")) {
 				logger_->log_debug("%s is an invalid key for the header map", key);
 			}
 		}
@@ -325,6 +331,7 @@ bool ConsumeWindowsEventLog::subscribe(const std::shared_ptr<core::ProcessContex
 					log_header.setDelimiter(pConsumeWindowsEventLog->header_delimiter_);
 					// render the header.
 					renderedData.rendered_text_ = log_header.getEventHeader(&walker);
+					renderedData.rendered_text_ += "Message:\n";
 					renderedData.rendered_text_ += message;
 				}
 
