@@ -135,7 +135,7 @@ std::string MetadataWalker::getMetadata(METADATA metadata) const {
 			case KEYWORDS:
 				return getString(metadata_,"Keywords");
 			case EVENT_TYPE:
-				return event_type_;
+				return std::to_string(event_type_index_);
 			case COMPUTER:
 				return getComputerName();
 		};

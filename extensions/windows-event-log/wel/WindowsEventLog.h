@@ -158,6 +158,7 @@ protected:
 	std::string log_name_;
 	uint64_t event_timestamp_;
 	std::string event_type_;
+	short event_type_index_;
 	std::string event_timestamp_str_;
 	EVT_HANDLE event_ptr_;
 	EVT_HANDLE metadata_ptr_;

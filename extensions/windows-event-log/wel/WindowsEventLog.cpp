@@ -83,14 +83,19 @@ void WindowsEventLogMetadata::renderMetadata() {
 			case WINEVENT_LEVEL_CRITICAL:
 			case WINEVENT_LEVEL_ERROR:
 				event_type_ = "Error";
+				event_type_index_ = 1;
 				break;
 			case WINEVENT_LEVEL_WARNING:
 				event_type_ = "Warning";
+				event_type_index_ = 2;
 				break;
 			case WINEVENT_LEVEL_INFO:
 			case WINEVENT_LEVEL_VERBOSE:
 				event_type_ = "Information";
+				event_type_index_ = 4;
 				break;
+			default:
+				event_type_index_ = 0;
 		};
 
 	}
@@ -100,8 +105,10 @@ void WindowsEventLogMetadata::renderMetadata() {
 
 	if (keyword.UInt64Val & WINEVENT_KEYWORD_AUDIT_SUCCESS) {
 		event_type_ = "Success Audit";
+		event_type_index_ = 8;
 	} else if (keyword.UInt64Val & EVENTLOG_AUDIT_FAILURE) {
 		event_type_ = "Failure Audit";
+		event_type_index_ = 16;
 	}
 
 	
