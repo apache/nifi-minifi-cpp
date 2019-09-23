@@ -18,10 +18,7 @@
 #ifndef LIBMINIFI_INCLUDE_C2_PROTOCOLS_RESTPROTOCOL_H_
 #define LIBMINIFI_INCLUDE_C2_PROTOCOLS_RESTPROTOCOL_H_
 
-
-
 #include <stdexcept>
-
 
 #ifdef RAPIDJSON_ASSERT
 #undef RAPIDJSON_ASSERT
@@ -58,7 +55,7 @@ namespace c2 {
  *
  */
 
-struct ValueObject{
+struct ValueObject {
   std::string name;
   std::vector<rapidjson::Value*> values;
 };
@@ -79,6 +76,12 @@ class RESTProtocol {
   virtual rapidjson::Value getStringValue(const std::string& value, rapidjson::Document::AllocatorType& alloc);
 
   virtual rapidjson::Value serializeJsonPayload(const C2Payload &payload, rapidjson::Document::AllocatorType &alloc);
+
+  /**
+   * connection queues should have the uuid as the object name; however since we have an internal AST and don't want to
+   * impact backwards copmatibility ( where the object root is the name ), then we should serialize the queues differently.
+   */
+  virtual rapidjson::Value serializeConnectionQueues(const C2Payload &payload, std::string &label, rapidjson::Document::AllocatorType &alloc);
 
   virtual std::string serializeJsonRootPayload(const C2Payload& payload);
 
