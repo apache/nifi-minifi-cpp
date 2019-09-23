@@ -507,7 +507,6 @@ TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTPS with client cert with non-matchi
 TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTPS minimum SSL version", "[https]") {
   plan->setProperty(listen_http, "SSL Certificate", utils::file::FileUtils::concat_path(utils::file::FileUtils::get_executable_dir(), "resources/server.pem"));
   plan->setProperty(listen_http, "SSL Certificate Authority", utils::file::FileUtils::concat_path(utils::file::FileUtils::get_executable_dir(), "resources/goodCA.crt"));
-  plan->setProperty(listen_http, "SSL Minimum Version", "TLS1.1");
 
   SECTION("GET") {
     method = "GET";
@@ -530,7 +529,7 @@ TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTPS minimum SSL version", "[https]")
   if (method == "POST") {
     client->setPostFields(payload);
   }
-  REQUIRE(client->setSpecificSSLVersion(utils::SSLVersion::TLSv1_0));
+  REQUIRE(client->setSpecificSSLVersion(utils::SSLVersion::TLSv1_1));
 
   test_connect(false /*should_succeed*/);
 }

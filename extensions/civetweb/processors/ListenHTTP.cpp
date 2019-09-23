@@ -53,10 +53,10 @@ core::Property ListenHTTP::SSLVerifyPeer(
 
 core::Property ListenHTTP::SSLMinimumVersion(
     core::PropertyBuilder::createProperty("SSL Minimum Version")
-        -> withDescription("Minimum TLS/SSL version allowed (SSL2, SSL3, TLS1.0, TLS1.1, TLS1.2)")
+        -> withDescription("Minimum TLS/SSL version allowed (TLS1.2)")
         ->isRequired(false)
-        ->withAllowableValues<std::string>({"SSL2", "SSL3", "TLS1.0", "TLS1.1", "TLS1.2"})
-        ->withDefaultValue("SSL2")->build());
+        ->withAllowableValues<std::string>({"TLS1.2"})
+        ->withDefaultValue("TLS1.2")->build());
 
 core::Property ListenHTTP::HeadersAsAttributesRegex("HTTP Headers to receive as Attributes (Regex)", "Specifies the Regular Expression that determines the names of HTTP Headers that"
                                                     " should be passed along as FlowFile attributes",
@@ -182,21 +182,11 @@ void ListenHTTP::onSchedule(core::ProcessContext *context, core::ProcessSessionF
       options.emplace_back("yes");
     }
 
-    if (sslMinVer == "SSL2") {
-      options.emplace_back("ssl_protocol_version");
-      options.emplace_back(std::to_string(0));
-    } else if (sslMinVer == "SSL3") {
-      options.emplace_back("ssl_protocol_version");
-      options.emplace_back(std::to_string(1));
-    } else if (sslMinVer == "TLS1.0") {
-      options.emplace_back("ssl_protocol_version");
-      options.emplace_back(std::to_string(2));
-    } else if (sslMinVer == "TLS1.1") {
-      options.emplace_back("ssl_protocol_version");
-      options.emplace_back(std::to_string(3));
-    } else {
+    if (sslMinVer == "TLS1.2") {
       options.emplace_back("ssl_protocol_version");
       options.emplace_back(std::to_string(4));
+    } else {
+      throw minifi::Exception(ExceptionType::PROCESSOR_EXCEPTION, "Invalid SSL Minimum Version specified!");
     }
   }
 

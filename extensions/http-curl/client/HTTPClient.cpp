@@ -184,6 +184,7 @@ bool HTTPClient::setSpecificSSLVersion(SSLVersion specific_version) {
 #endif
 }
 
+/* If not set, the default will be TLS 1.0, see https://curl.haxx.se/libcurl/c/CURLOPT_SSLVERSION.html */
 bool HTTPClient::setMinimumSSLVersion(SSLVersion minimum_version) {
   CURLcode ret = CURLE_UNKNOWN_OPTION;
   switch (minimum_version) {

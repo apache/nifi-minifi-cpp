@@ -374,8 +374,7 @@ enum TimeUnit {
   NANOSECOND
 };
 
-} /* namespace core */
-
+} /* namespace utils */
 } /* namespace minifi */
 } /* namespace nifi */
 } /* namespace apache */

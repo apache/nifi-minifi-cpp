@@ -49,6 +49,7 @@ Connection::Connection(const std::shared_ptr<core::Repository> &flow_repository,
   max_data_queue_size_ = 0;
   expired_duration_ = 0;
   queued_data_size_ = 0;
+  drop_empty_ = false;
 
   logger_->log_debug("Connection %s created", name_);
 }
@@ -64,6 +65,7 @@ Connection::Connection(const std::shared_ptr<core::Repository> &flow_repository,
   max_data_queue_size_ = 0;
   expired_duration_ = 0;
   queued_data_size_ = 0;
+  drop_empty_ = false;
 
   logger_->log_debug("Connection %s created", name_);
 }
@@ -83,6 +85,7 @@ Connection::Connection(const std::shared_ptr<core::Repository> &flow_repository,
   max_data_queue_size_ = 0;
   expired_duration_ = 0;
   queued_data_size_ = 0;
+  drop_empty_ = false;
 
   logger_->log_debug("Connection %s created", name_);
 }
@@ -103,6 +106,7 @@ Connection::Connection(const std::shared_ptr<core::Repository> &flow_repository,
   max_data_queue_size_ = 0;
   expired_duration_ = 0;
   queued_data_size_ = 0;
+  drop_empty_ = false;
 
   logger_->log_debug("Connection %s created", name_);
 }
@@ -130,6 +134,10 @@ bool Connection::isFull() {
 }
 
 void Connection::put(std::shared_ptr<core::FlowFile> flow) {
+  if (drop_empty_ && flow->getSize() == 0) {
+    logger_->log_info("Dropping empty flow file: %s", flow->getUUIDStr());
+    return;;
+  }
   {
     std::lock_guard<std::mutex> lock(mutex_);
 

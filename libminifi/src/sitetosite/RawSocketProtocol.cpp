@@ -569,15 +569,15 @@ bool RawSiteToSiteClient::transmitPayload(const std::shared_ptr<core::ProcessCon
 
     int16_t resp = send(transactionID, &packet, nullptr, session);
     if (resp == -1) {
-      throw Exception(SITE2SITE_EXCEPTION, "Send Failed");
+      throw Exception(SITE2SITE_EXCEPTION, "Send Failed in transaction " + transactionID);
     }
     logging::LOG_INFO(logger_) << "Site2Site transaction " << transactionID << " sent bytes length" << payload.length();
 
     if (!confirm(transactionID)) {
-      throw Exception(SITE2SITE_EXCEPTION, "Confirm Failed");
+      throw Exception(SITE2SITE_EXCEPTION, "Confirm Failed in transaction " + transactionID);
     }
     if (!complete(transactionID)) {
-      throw Exception(SITE2SITE_EXCEPTION, "Complete Failed");
+      throw Exception(SITE2SITE_EXCEPTION, "Complete Failed in transaction " + transactionID);
     }
     logging::LOG_INFO(logger_) << "Site2Site transaction " << transactionID << " successfully send flow record " << transaction->current_transfers_ << " content bytes " << transaction->_bytes;
   } catch (std::exception &exception) {

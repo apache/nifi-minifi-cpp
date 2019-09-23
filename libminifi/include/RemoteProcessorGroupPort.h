@@ -146,7 +146,7 @@ class RemoteProcessorGroupPort : public core::Processor {
     for (auto url : urls) {
       logger_->log_trace("Parsing %s", url);
       std::string host, protocol;
-      int port;
+      int port = -1;
       url = utils::StringUtils::trim(url);
       utils::parse_url(&url, &host, &port, &protocol);
       logger_->log_trace("Parsed -%s- %s %s, %d", url, protocol, host, port);

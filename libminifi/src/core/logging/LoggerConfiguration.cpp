@@ -29,6 +29,7 @@
 
 #include "core/Core.h"
 #include "utils/StringUtils.h"
+#include "utils/ClassUtils.h"
 
 #include "spdlog/spdlog.h"
 #include "spdlog/sinks/stdout_sinks.h"
@@ -63,6 +64,7 @@ std::vector<std::string> LoggerProperties::get_keys_of_type(const std::string &t
 LoggerConfiguration::LoggerConfiguration()
     : root_namespace_(create_default_root()),
       loggers(std::vector<std::shared_ptr<LoggerImpl>>()),
+      shorten_names_(false),
       formatter_(std::make_shared<spdlog::pattern_formatter>(spdlog_default_pattern)) {
   controller_ = std::make_shared<LoggerControl>();
   logger_ = std::shared_ptr<LoggerImpl>(
@@ -77,6 +79,15 @@ void LoggerConfiguration::initialize(const std::shared_ptr<LoggerProperties> &lo
   if (!logger_properties->get("spdlog.pattern", spdlog_pattern)) {
     spdlog_pattern = spdlog_default_pattern;
   }
+
+  /**
+   * There is no need to shorten names per spdlog sink as this is a per log instance.
+   */
+  std::string shorten_names_str;
+  if (logger_properties->get("spdlog.shorten_names", shorten_names_str)) {
+    utils::StringUtils::StringToBool(shorten_names_str, shorten_names_);
+  }
+
   formatter_ = std::make_shared<spdlog::pattern_formatter>(spdlog_pattern);
   std::map<std::string, std::shared_ptr<spdlog::logger>> spdloggers;
   for (auto const & logger_impl : loggers) {
@@ -100,6 +111,10 @@ std::shared_ptr<Logger> LoggerConfiguration::getLogger(const std::string &name) 
   auto haz_clazz = name.find(clazz);
   if (haz_clazz == 0)
     adjusted_name = name.substr(clazz.length(), name.length() - clazz.length());
+  if (shorten_names_) {
+    utils::ClassUtils::shortenClassName(adjusted_name, adjusted_name);
+  }
+
   std::shared_ptr<LoggerImpl> result = std::make_shared<LoggerImpl>(adjusted_name, controller_, get_logger(logger_, root_namespace_, adjusted_name, formatter_));
   loggers.push_back(result);
   return result;

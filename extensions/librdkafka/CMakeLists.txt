@@ -53,6 +53,7 @@ ExternalProject_Add(
                "-DRDKAFKA_BUILD_EXAMPLES=OFF"
                "-DRDKAFKA_BUILD_TESTS=OFF"
                "-DENABLE_LZ4_EXT=OFF"
+               "-DWITH_ZSTD=OFF"
                "-DCMAKE_MODULE_PATH=${CMAKE_MODULE_PATH_PASSTHROUGH_LIST}"
                "-DCMAKE_C_FLAGS=${CURL_C_FLAGS}"
                "-DCMAKE_INSTALL_LIBDIR=lib"

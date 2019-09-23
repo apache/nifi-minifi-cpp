@@ -21,7 +21,7 @@
 #include <vector>
 #include <ctime>
 #include "../TestBase.h"
-
+#include "core/logging/LoggerConfiguration.h"
 
 TEST_CASE("Test log Levels", "[ttl1]") {
   LogTestController::getInstance().setTrace<logging::Logger>();
@@ -73,5 +73,37 @@ TEST_CASE("Test log Levels change", "[ttl5]") {
   LogTestController::getInstance().reset();
 }
 
-TEST_CASE("Test Demangle template", "[ttl6]") {
+namespace single {
+class TestClass {
+};
+}
+
+class TestClass2 {
+};
+
+TEST_CASE("Test ShortenNames", "[ttl6]") {
+  std::shared_ptr<logging::LoggerProperties> props = std::make_shared<logging::LoggerProperties>();
+
+  props->set("spdlog.shorten_names", "true");
+
+  std::shared_ptr<logging::Logger> logger = LogTestController::getInstance(props)->getLogger<logging::Logger>();
+  logger->log_error("hello %s", "world");
+
+  REQUIRE(true == LogTestController::getInstance(props)->contains("[o::a::n::m::c::l::Logger] [error] hello world"));
+
+  logger = LogTestController::getInstance(props)->getLogger<single::TestClass>();
+  logger->log_error("hello %s", "world");
+
+  REQUIRE(true == LogTestController::getInstance(props)->contains("[s::TestClass] [error] hello world"));
+
+  logger = LogTestController::getInstance(props)->getLogger<TestClass2>();
+  logger->log_error("hello %s", "world");
+
+  REQUIRE(true == LogTestController::getInstance(props)->contains("[TestClass2] [error] hello world"));
+
+  LogTestController::getInstance(props)->reset();
+  LogTestController::getInstance().reset();
+
+  LogTestController::getInstance(props)->reset();
+  LogTestController::getInstance().reset();
 }
