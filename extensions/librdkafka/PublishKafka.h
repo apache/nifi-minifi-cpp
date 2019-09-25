@@ -35,6 +35,7 @@
 #include <map>
 #include <set>
 #include <mutex>
+#include <cstdint>
 #include <condition_variable>
 
 namespace org {
@@ -108,14 +109,18 @@ class PublishKafka : public core::Processor {
   static core::Relationship Success;
 
   // Message
-   struct MessageResult {
-    bool completed;
-    bool is_error;
+  enum class MessageStatus : uint8_t {
+    UNCOMPLETE,
+    ERROR,
+    SUCCESS
+  };
+
+  struct MessageResult {
+    MessageStatus status;
     rd_kafka_resp_err_t err_code;
 
     MessageResult()
-        : completed(false)
-        , is_error(false) {
+        : status(MessageStatus::UNCOMPLETE) {
     }
   };
   struct FlowFileResult {
@@ -149,7 +154,7 @@ class PublishKafka : public core::Processor {
             return true;
           }
           return std::all_of(flow_file.messages.begin(), flow_file.messages.end(), [](const MessageResult& message) {
-            return message.completed;
+            return message.status != MessageStatus::UNCOMPLETE;
           });
         });
       });
@@ -255,9 +260,8 @@ class PublishKafka : public core::Processor {
                 [messages_copy, flow_file_index_copy, segment_num](rd_kafka_t* /*rk*/, const rd_kafka_message_t* rkmessage) {
                   messages_copy->modifyResult(flow_file_index_copy, [segment_num, rkmessage](FlowFileResult& flow_file) {
                     auto& message = flow_file.messages.at(segment_num);
-                    message.completed = true;
                     message.err_code = rkmessage->err;
-                    message.is_error = message.err_code != 0;
+                    message.status = message.err_code == 0 ? MessageStatus::SUCCESS : MessageStatus::ERROR;
                   });
                 }));
           if (hdrs) {
@@ -275,8 +279,7 @@ class PublishKafka : public core::Processor {
           if (err) {
             messages_->modifyResult(flow_file_index_, [segment_num, err](FlowFileResult& flow_file) {
               auto& message = flow_file.messages.at(segment_num);
-              message.completed = true;
-              message.is_error = true;
+              message.status = MessageStatus::ERROR;
               message.err_code = err;
             });
             status_ = -1;

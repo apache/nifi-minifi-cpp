@@ -37,34 +37,40 @@ namespace minifi {
 namespace processors {
 
 core::Property PublishKafka::SeedBrokers(
-    core::PropertyBuilder::createProperty("Known Brokers")->withDescription("A comma-separated list of known Kafka Brokers in the format <host>:<port>")->isRequired(true)->supportsExpressionLanguage(
-        true)->build());
+    core::PropertyBuilder::createProperty("Known Brokers")->withDescription("A comma-separated list of known Kafka Brokers in the format <host>:<port>")
+        ->isRequired(true)->supportsExpressionLanguage(true)->build());
 
-core::Property PublishKafka::Topic(core::PropertyBuilder::createProperty("Topic Name")->withDescription("The Kafka Topic of interest")->isRequired(true)->supportsExpressionLanguage(true)->build());
+core::Property PublishKafka::Topic(
+    core::PropertyBuilder::createProperty("Topic Name")->withDescription("The Kafka Topic of interest")
+        ->isRequired(true)->supportsExpressionLanguage(true)->build());
 
 core::Property PublishKafka::DeliveryGuarantee(
-    core::PropertyBuilder::createProperty("Delivery Guarantee")->withDescription("Specifies the requirement for guaranteeing that a message is sent to Kafka")->isRequired(false)
-        ->supportsExpressionLanguage(true)->withDefaultValue(DELIVERY_ONE_NODE)->build());
+    core::PropertyBuilder::createProperty("Delivery Guarantee")->withDescription("Specifies the requirement for guaranteeing that a message is sent to Kafka")
+        ->isRequired(false)->supportsExpressionLanguage(true)->withDefaultValue(DELIVERY_ONE_NODE)->build());
 
-core::Property PublishKafka::MaxMessageSize(core::PropertyBuilder::createProperty("Max Request Size")->withDescription("Maximum Kafka protocol request message size")->isRequired(false)->build());
+core::Property PublishKafka::MaxMessageSize(
+    core::PropertyBuilder::createProperty("Max Request Size")->withDescription("Maximum Kafka protocol request message size")
+        ->isRequired(false)->build());
 
 core::Property PublishKafka::RequestTimeOut(
-    core::PropertyBuilder::createProperty("Request Timeout")->withDescription("The ack timeout of the producer request")->isRequired(false)->withDefaultValue<core::TimePeriodValue>(
-        "10 sec")->supportsExpressionLanguage(true)->build());
+    core::PropertyBuilder::createProperty("Request Timeout")->withDescription("The ack timeout of the producer request")
+        ->isRequired(false)->withDefaultValue<core::TimePeriodValue>("10 sec")->supportsExpressionLanguage(true)->build());
 
 core::Property PublishKafka::MessageTimeOut(
-    core::PropertyBuilder::createProperty("Message Timeout")->withDescription("The total time sending a message could take")->isRequired(false)->withDefaultValue<core::TimePeriodValue>(
-        "30 sec")->supportsExpressionLanguage(true)->build());
+    core::PropertyBuilder::createProperty("Message Timeout")->withDescription("The total time sending a message could take")
+        ->isRequired(false)->withDefaultValue<core::TimePeriodValue>("30 sec")->supportsExpressionLanguage(true)->build());
 
 core::Property PublishKafka::ClientName(
-    core::PropertyBuilder::createProperty("Client Name")->withDescription("Client Name to use when communicating with Kafka")->isRequired(true)->supportsExpressionLanguage(true)->build());
+    core::PropertyBuilder::createProperty("Client Name")->withDescription("Client Name to use when communicating with Kafka")
+        ->isRequired(true)->supportsExpressionLanguage(true)->build());
 
 /**
  * These don't appear to need EL support
  */
 
 core::Property PublishKafka::BatchSize(
-    core::PropertyBuilder::createProperty("Batch Size")->withDescription("Maximum number of messages batched in one MessageSet")->isRequired(false)->withDefaultValue<uint32_t>(10)->build());
+    core::PropertyBuilder::createProperty("Batch Size")->withDescription("Maximum number of messages batched in one MessageSet")
+        ->isRequired(false)->withDefaultValue<uint32_t>(10)->build());
 core::Property PublishKafka::TargetBatchPayloadSize(
     core::PropertyBuilder::createProperty("Target Batch Payload Size")->withDescription("The target total payload size for a batch. 0 B means unlimited (Batch Size is still applied).")
         ->isRequired(false)->withDefaultValue<core::DataSizeValue>("512 KB")->build());
@@ -553,6 +559,7 @@ void PublishKafka::onTrigger(const std::shared_ptr<core::ProcessContext> &contex
     }
   }
   if (flowFiles.empty()) {
+    context->yield();
     return;
   }
   logger_->log_debug("Processing %lu flow files with a total size of %llu B", flowFiles.size(), actual_bytes);
@@ -641,15 +648,25 @@ void PublishKafka::onTrigger(const std::shared_ptr<core::ProcessContext> &contex
       success = true;
       for (size_t segment_num = 0; segment_num < flow_file.messages.size(); segment_num++) {
         const auto& message = flow_file.messages[segment_num];
-        if (!message.completed) {
-          success = false;
-          logger_->log_error("Waiting for delivery confirmation was interrupted for flow file %s segment %zu", flowFiles[index]->getUUIDStr(), segment_num);
-        } else if (message.is_error) {
-          success = false;
-          logger_->log_error("Failed to deliver flow file %s segment %zu, error: %s", flowFiles[index]->getUUIDStr(), segment_num,
-                             rd_kafka_err2str(message.err_code));
-        } else {
-          logger_->log_debug("Successfully delivered flow file %s segment %zu", flowFiles[index]->getUUIDStr(), segment_num);
+        switch (message.status) {
+          case MessageStatus::UNCOMPLETE:
+            success = false;
+            logger_->log_error("Waiting for delivery confirmation was interrupted for flow file %s segment %zu",
+                flowFiles[index]->getUUIDStr(),
+                segment_num);
+          break;
+          case MessageStatus::ERROR:
+            success = false;
+            logger_->log_error("Failed to deliver flow file %s segment %zu, error: %s",
+                flowFiles[index]->getUUIDStr(),
+                segment_num,
+                rd_kafka_err2str(message.err_code));
+          break;
+          case MessageStatus::SUCCESS:
+            logger_->log_debug("Successfully delivered flow file %s segment %zu",
+                flowFiles[index]->getUUIDStr(),
+                segment_num);
+          break;
         }
       }
     }
