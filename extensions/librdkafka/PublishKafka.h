@@ -110,9 +110,9 @@ class PublishKafka : public core::Processor {
 
   // Message
   enum class MessageStatus : uint8_t {
-    UNCOMPLETE,
-    ERROR,
-    SUCCESS
+    MESSAGESTATUS_UNCOMPLETE,
+    MESSAGESTATUS_ERROR,
+    MESSAGESTATUS_SUCCESS
   };
 
   struct MessageResult {
@@ -120,7 +120,7 @@ class PublishKafka : public core::Processor {
     rd_kafka_resp_err_t err_code;
 
     MessageResult()
-        : status(MessageStatus::UNCOMPLETE) {
+        : status(MessageStatus::MESSAGESTATUS_UNCOMPLETE) {
     }
   };
   struct FlowFileResult {
@@ -154,7 +154,7 @@ class PublishKafka : public core::Processor {
             return true;
           }
           return std::all_of(flow_file.messages.begin(), flow_file.messages.end(), [](const MessageResult& message) {
-            return message.status != MessageStatus::UNCOMPLETE;
+            return message.status != MessageStatus::MESSAGESTATUS_UNCOMPLETE;
           });
         });
       });
@@ -261,7 +261,7 @@ class PublishKafka : public core::Processor {
                   messages_copy->modifyResult(flow_file_index_copy, [segment_num, rkmessage](FlowFileResult& flow_file) {
                     auto& message = flow_file.messages.at(segment_num);
                     message.err_code = rkmessage->err;
-                    message.status = message.err_code == 0 ? MessageStatus::SUCCESS : MessageStatus::ERROR;
+                    message.status = message.err_code == 0 ? MessageStatus::MESSAGESTATUS_SUCCESS : MessageStatus::MESSAGESTATUS_ERROR;
                   });
                 }));
           if (hdrs) {
@@ -279,7 +279,7 @@ class PublishKafka : public core::Processor {
           if (err) {
             messages_->modifyResult(flow_file_index_, [segment_num, err](FlowFileResult& flow_file) {
               auto& message = flow_file.messages.at(segment_num);
-              message.status = MessageStatus::ERROR;
+              message.status = MessageStatus::MESSAGESTATUS_ERROR;
               message.err_code = err;
             });
             status_ = -1;

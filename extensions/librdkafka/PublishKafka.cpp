@@ -649,20 +649,20 @@ void PublishKafka::onTrigger(const std::shared_ptr<core::ProcessContext> &contex
       for (size_t segment_num = 0; segment_num < flow_file.messages.size(); segment_num++) {
         const auto& message = flow_file.messages[segment_num];
         switch (message.status) {
-          case MessageStatus::UNCOMPLETE:
+          case MessageStatus::MESSAGESTATUS_UNCOMPLETE:
             success = false;
             logger_->log_error("Waiting for delivery confirmation was interrupted for flow file %s segment %zu",
                 flowFiles[index]->getUUIDStr(),
                 segment_num);
           break;
-          case MessageStatus::ERROR:
+          case MessageStatus::MESSAGESTATUS_ERROR:
             success = false;
             logger_->log_error("Failed to deliver flow file %s segment %zu, error: %s",
                 flowFiles[index]->getUUIDStr(),
                 segment_num,
                 rd_kafka_err2str(message.err_code));
           break;
-          case MessageStatus::SUCCESS:
+          case MessageStatus::MESSAGESTATUS_SUCCESS:
             logger_->log_debug("Successfully delivered flow file %s segment %zu",
                 flowFiles[index]->getUUIDStr(),
                 segment_num);
