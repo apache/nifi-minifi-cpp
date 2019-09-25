@@ -94,3 +94,33 @@ TEST_CASE("TestUnknownSid", "[InvalidSet]") {
 
 
 }
+
+
+
+TEST_CASE("TestMultipleSids", "[Resolutions]") {
+	std::ifstream unresolvedfile("resources/multiplesids.xml");
+	std::string xml((std::istreambuf_iterator<char>(unresolvedfile)),
+		std::istreambuf_iterator<char>());
+
+	std::string programmaticallyResolved;
+
+	pugi::xml_document doc;
+	xml = MetadataWalker::updateXmlMetadata(xml, 0x00, 0x00, false, true);
+	pugi::xml_parse_result result = doc.load_string(xml.c_str());
+
+	for (const auto &node : doc.child("Event").child("EventData").children())
+	{
+		auto name = node.attribute("Name").as_string();
+		if (utils::StringUtils::equalsIgnoreCase("GroupMembership",name)) {
+			programmaticallyResolved = node.text().get();
+			break;
+		}
+	}
+
+	std::string expected = "Nobody Everyone Null Authority";
+
+	// we are only testing mulitiple sid resolutions, not the resolution of other items. 
+	REQUIRE(expected == programmaticallyResolved);
+
+
+}
