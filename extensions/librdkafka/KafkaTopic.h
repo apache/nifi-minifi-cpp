@@ -28,9 +28,8 @@ namespace processors {
 
 class KafkaTopic {
  public:
-  KafkaTopic(rd_kafka_topic_t *topic_reference, rd_kafka_topic_conf_t *topic_conf)
-      : topic_conf_(topic_conf),
-        topic_reference_(topic_reference) {
+  KafkaTopic(rd_kafka_topic_t *topic_reference)
+      : topic_reference_(topic_reference) {
 
   }
 
@@ -38,21 +37,12 @@ class KafkaTopic {
     if (topic_reference_) {
       rd_kafka_topic_destroy(topic_reference_);
     }
-    if (topic_conf_) {
-      rd_kafka_topic_conf_destroy(topic_conf_);
-    }
   }
-
-  rd_kafka_topic_conf_t *getTopicConf() const {
-    return topic_conf_;
-  }
-
   rd_kafka_topic_t *getTopic() const {
     return topic_reference_;
   }
 
  private:
-  rd_kafka_topic_conf_t *topic_conf_;
   rd_kafka_topic_t *topic_reference_;
 };
 
