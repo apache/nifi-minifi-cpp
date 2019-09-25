@@ -405,7 +405,7 @@ bool PublishKafka::createNewTopic(const std::shared_ptr<KafkaConnection> &conn, 
 
   value = "";
   if (context->getProperty(DeliveryGuarantee.getName(), value) && !value.empty()) {
-    rd_kafka_topic_conf_set(topic_conf_, "request.required.acks", value.c_str(), errstr.data(), errstr.size());
+    result = rd_kafka_topic_conf_set(topic_conf_, "request.required.acks", value.c_str(), errstr.data(), errstr.size());
     logger_->log_debug("PublishKafka: request.required.acks [%s]", value);
     if (result != RD_KAFKA_CONF_OK) {
       logger_->log_error("PublishKafka: configure request.required.acks error result [%s]", errstr);
@@ -418,7 +418,7 @@ bool PublishKafka::createNewTopic(const std::shared_ptr<KafkaConnection> &conn, 
     if (core::Property::StringToTime(value, valInt, unit) &&
         core::Property::ConvertTimeUnitToMS(valInt, unit, valInt)) {
       valueConf = std::to_string(valInt);
-      rd_kafka_topic_conf_set(topic_conf_, "request.timeout.ms", valueConf.c_str(), errstr.data(), errstr.size());
+      result = rd_kafka_topic_conf_set(topic_conf_, "request.timeout.ms", valueConf.c_str(), errstr.data(), errstr.size());
       logger_->log_debug("PublishKafka: request.timeout.ms [%s]", valueConf);
       if (result != RD_KAFKA_CONF_OK) {
         logger_->log_error("PublishKafka: configure request.timeout.ms error result [%s]", errstr);
@@ -432,7 +432,7 @@ bool PublishKafka::createNewTopic(const std::shared_ptr<KafkaConnection> &conn, 
     if (core::Property::StringToTime(value, valInt, unit) &&
         core::Property::ConvertTimeUnitToMS(valInt, unit, valInt)) {
       valueConf = std::to_string(valInt);
-      rd_kafka_topic_conf_set(topic_conf_, "message.timeout.ms", valueConf.c_str(), errstr.data(), errstr.size());
+      result = rd_kafka_topic_conf_set(topic_conf_, "message.timeout.ms", valueConf.c_str(), errstr.data(), errstr.size());
       logger_->log_debug("PublishKafka: message.timeout.ms [%s]", valueConf);
       if (result != RD_KAFKA_CONF_OK) {
         logger_->log_error("PublishKafka: configure message.timeout.ms error result [%s]", errstr);
