@@ -241,6 +241,7 @@ class PublishKafka : public core::Processor {
         int readRet = stream->read(&buffer[0], max_seg_size_);
         if (readRet < 0) {
           status_ = -1;
+          error_ = "Failed to read from stream";
           return read_size_;
         }
         if (readRet > 0) {
@@ -272,14 +273,14 @@ class PublishKafka : public core::Processor {
                                     RD_KAFKA_V_KEY(key_.c_str(), key_.size()), RD_KAFKA_V_OPAQUE(callback.release()), RD_KAFKA_V_END);
           }
           if (err) {
-            rd_kafka_resp_err_t resp_err = rd_kafka_last_error();
-            messages_->modifyResult(flow_file_index_, [segment_num, resp_err](FlowFileResult& flow_file) {
+            messages_->modifyResult(flow_file_index_, [segment_num, err](FlowFileResult& flow_file) {
               auto& message = flow_file.messages.at(segment_num);
               message.completed = true;
               message.is_error = true;
-              message.err_code = resp_err;
+              message.err_code = err;
             });
             status_ = -1;
+            error_ = rd_kafka_err2str(err);
             return read_size_;
           }
           read_size_ += readRet;
@@ -301,6 +302,7 @@ class PublishKafka : public core::Processor {
     std::shared_ptr<Messages> messages_;
     size_t flow_file_index_;
     int status_;
+    std::string error_;
     int read_size_;
     utils::Regex& attributeNameRegex_;
   };

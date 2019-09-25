@@ -615,7 +615,7 @@ void PublishKafka::onTrigger(const std::shared_ptr<core::ProcessContext> &contex
                                         attributeNameRegex, messages, flow_file_index);
     session->read(flowFile, &callback);
     if (callback.status_ < 0) {
-      logger_->log_error("Failed to send flow to kafka topic %s", topic);
+      logger_->log_error("Failed to send flow to kafka topic %s, error: %s", topic, callback.error_);
       messages->modifyResult(flow_file_index, [](FlowFileResult& flow_file_result) {
         flow_file_result.flow_file_error = true;
       });
