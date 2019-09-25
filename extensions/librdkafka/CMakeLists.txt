@@ -43,16 +43,19 @@ if(WIN32 OR NOT USE_SYSTEM_ZLIB)
 endif()
 string(REPLACE ";" "%" CMAKE_MODULE_PATH_PASSTHROUGH "${CMAKE_MODULE_PATH_PASSTHROUGH_LIST}")
 
+find_package(Patch REQUIRED)
+
 ExternalProject_Add(
     kafka-external
-    GIT_REPOSITORY "https://github.com/edenhill/librdkafka.git"
-    GIT_TAG "v1.0.1" 
+    URL "https://github.com/edenhill/librdkafka/archive/v1.0.1.tar.gz"
+    URL_HASH "SHA256=b2a2defa77c0ef8c508739022a197886e0644bd7bf6179de1b68bdffb02b3550"
+    PATCH_COMMAND "${Patch_EXECUTABLE}" -p1 -i "${CMAKE_SOURCE_DIR}/thirdparty/librdkafka/librdkafka-libressl.patch"
     PREFIX "${BASE_DIR}"
     LIST_SEPARATOR % # This is needed for passing semicolon-separated lists
     CMAKE_ARGS ${PASSTHROUGH_CMAKE_ARGS}
                "-DCMAKE_INSTALL_PREFIX=${BASE_DIR}/install"
                "-DWITH_SASL=OFF"
-               "-DOPENSSL_VERSION=1.0.2"
+               "-DWITH_SSL=ON"
                "-DRDKAFKA_BUILD_STATIC=ON"
                "-DRDKAFKA_BUILD_EXAMPLES=OFF"
                "-DRDKAFKA_BUILD_TESTS=OFF"

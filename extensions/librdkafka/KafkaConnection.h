@@ -18,6 +18,7 @@
 #ifndef NIFI_MINIFI_CPP_KAFKACONNECTION_H
 #define NIFI_MINIFI_CPP_KAFKACONNECTION_H
 
+#include <atomic>
 #include <mutex>
 #include <string>
 #include "core/logging/LoggerConfiguration.h"
@@ -46,9 +47,7 @@ class KafkaConnection {
 
   explicit KafkaConnection(const KafkaConnectionKey &key);
 
-  ~KafkaConnection() {
-    remove();
-  }
+  ~KafkaConnection();
 
   void remove();
 
@@ -56,9 +55,7 @@ class KafkaConnection {
 
   bool initialized() const;
 
-  void setConnection(rd_kafka_t *producer, rd_kafka_conf_t *conf);
-
-  rd_kafka_conf_t *getConf() const;
+  void setConnection(rd_kafka_t *producer);
 
   rd_kafka_t *getConnection() const;
 
@@ -90,8 +87,10 @@ class KafkaConnection {
 
   std::map<std::string, std::shared_ptr<KafkaTopic>> topics_;
 
-  rd_kafka_conf_t *conf_;
   rd_kafka_t *kafka_connection_;
+
+  std::atomic<bool> poll_;
+  std::thread thread_kafka_poll_;
 
   static void modifyLoggers(const std::function<void(std::unordered_map<const rd_kafka_t*, std::weak_ptr<logging::Logger>>&)>& func) {
     static std::mutex loggers_mutex;
@@ -99,6 +98,24 @@ class KafkaConnection {
 
     std::lock_guard<std::mutex> lock(loggers_mutex);
     func(loggers);
+  }
+
+  void stopPoll() {
+    poll_ = false;
+    logger_->log_debug("Stop polling");
+    if (thread_kafka_poll_.joinable()) {
+      thread_kafka_poll_.join();
+    }
+  }
+
+  void startPoll() {
+    poll_ = true;
+    logger_->log_debug("Start polling");
+    thread_kafka_poll_ = std::thread([this]{
+        while (this->poll_) {
+          rd_kafka_poll(this->kafka_connection_, 1000);
+        }
+    });
   }
 };
 

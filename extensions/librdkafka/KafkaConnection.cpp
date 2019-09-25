@@ -25,11 +25,15 @@ namespace processors {
 
 KafkaConnection::KafkaConnection(const KafkaConnectionKey &key)
     : logger_(logging::LoggerFactory<KafkaConnection>::getLogger()),
-      conf_(nullptr),
-      kafka_connection_(nullptr) {
+      kafka_connection_(nullptr),
+      poll_(false) {
   lease_ = false;
   initialized_ = false;
   key_ = key;
+}
+
+KafkaConnection::~KafkaConnection() {
+  remove();
 }
 
 void KafkaConnection::remove() {
@@ -38,6 +42,7 @@ void KafkaConnection::remove() {
 }
 
 void KafkaConnection::removeConnection() {
+  stopPoll();
   if (kafka_connection_) {
     rd_kafka_flush(kafka_connection_, 10 * 1000); /* wait for max 10 seconds */
     rd_kafka_destroy(kafka_connection_);
@@ -46,10 +51,6 @@ void KafkaConnection::removeConnection() {
     });
     kafka_connection_ = nullptr;
   }
-  if (conf_) {
-    rd_kafka_conf_destroy(conf_);
-    conf_ = nullptr;
-  }
   initialized_ = false;
 }
 
@@ -57,18 +58,14 @@ bool KafkaConnection::initialized() const {
   return initialized_;
 }
 
-void KafkaConnection::setConnection(rd_kafka_t *producer, rd_kafka_conf_t *conf) {
+void KafkaConnection::setConnection(rd_kafka_t *producer) {
   removeConnection();
   kafka_connection_ = producer;
-  conf_ = conf;
   initialized_ = true;
   modifyLoggers([&](std::unordered_map<const rd_kafka_t*, std::weak_ptr<logging::Logger>>& loggers) {
     loggers[producer] = logger_;
   });
-}
-
-rd_kafka_conf_t *KafkaConnection::getConf() const {
-  return conf_;
+  startPoll();
 }
 
 rd_kafka_t *KafkaConnection::getConnection() const {

@@ -1,0 +1,148 @@
+diff --git a/src/rdkafka_transport.c b/src/rdkafka_transport.c
+index 9c7fc36c..de083109 100644
+--- a/src/rdkafka_transport.c
++++ b/src/rdkafka_transport.c
+@@ -3,24 +3,24 @@
+  *
+  * Copyright (c) 2015, Magnus Edenhill
+  * All rights reserved.
+- * 
++ *
+  * Redistribution and use in source and binary forms, with or without
+- * modification, are permitted provided that the following conditions are met: 
+- * 
++ * modification, are permitted provided that the following conditions are met:
++ *
+  * 1. Redistributions of source code must retain the above copyright notice,
+- *    this list of conditions and the following disclaimer. 
++ *    this list of conditions and the following disclaimer.
+  * 2. Redistributions in binary form must reproduce the above copyright notice,
+  *    this list of conditions and the following disclaimer in the documentation
+- *    and/or other materials provided with the distribution. 
+- * 
++ *    and/or other materials provided with the distribution.
++ *
+  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
+- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE 
+- * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE 
+- * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR 
+- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF 
+- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS 
+- * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
++ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
++ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
++ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
++ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
++ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
++ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
++ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+  * POSSIBILITY OF SUCH DAMAGE.
+@@ -433,7 +433,7 @@ static char *rd_kafka_ssl_error (rd_kafka_t *rk, rd_kafka_broker_t *rkb,
+ 		else
+ 			rd_kafka_log(rk, LOG_ERR, "SSL", "%s", errstr);
+ 	}
+-	
++
+ 	ERR_error_string_n(l, buf, sizeof(buf));
+ 
+ 	rd_snprintf(errstr, errstr_size, "%s:%d: %s: %s",
+@@ -443,7 +443,7 @@ static char *rd_kafka_ssl_error (rd_kafka_t *rk, rd_kafka_broker_t *rkb,
+ 
+     if (cnt == 0)
+     	    rd_snprintf(errstr, errstr_size, "No error");
+-    
++
+     return errstr;
+ }
+ 
+@@ -507,7 +507,7 @@ void rd_kafka_transport_ssl_term (void) {
+ void rd_kafka_transport_ssl_init (void) {
+ #if OPENSSL_VERSION_NUMBER < 0x10100000L
+ 	int i;
+-	
++
+ 	if (!CRYPTO_get_locking_callback()) {
+ 		rd_kafka_ssl_locks_cnt = CRYPTO_num_locks();
+ 		rd_kafka_ssl_locks = rd_malloc(rd_kafka_ssl_locks_cnt *
+@@ -736,11 +736,11 @@ static int rd_kafka_transport_ssl_connect (rd_kafka_broker_t *rkb,
+ 		return 0;
+ 	}
+ 
+-		
++
+ 	if (rd_kafka_transport_ssl_io_update(rktrans, r,
+ 					     errstr, errstr_size) == -1)
+ 		return -1;
+-	
++
+ 	return 0;
+ 
+  fail:
+@@ -863,17 +863,6 @@ int rd_kafka_transport_ssl_ctx_init (rd_kafka_t *rk,
+ 	int r;
+ 	SSL_CTX *ctx;
+ 
+-#if OPENSSL_VERSION_NUMBER >= 0x10100000
+-        rd_kafka_dbg(rk, SECURITY, "OPENSSL", "Using OpenSSL version %s "
+-                     "(0x%lx, librdkafka built with 0x%lx)",
+-                     OpenSSL_version(OPENSSL_VERSION),
+-                     OpenSSL_version_num(),
+-                     OPENSSL_VERSION_NUMBER);
+-#else
+-        rd_kafka_dbg(rk, SECURITY, "OPENSSL", "librdkafka built with OpenSSL "
+-                     "version 0x%lx", OPENSSL_VERSION_NUMBER);
+-#endif
+-
+         if (errstr_size > 0)
+                 errstr[0] = '\0';
+ 
+@@ -945,7 +934,7 @@ int rd_kafka_transport_ssl_ctx_init (rd_kafka_t *rk,
+ 			     "Loading CA certificate(s) from %s %s",
+ 			     is_dir ? "directory":"file",
+ 			     rk->rk_conf.ssl.ca_location);
+-		
++
+ 		r = SSL_CTX_load_verify_locations(ctx,
+ 						  !is_dir ?
+ 						  rk->rk_conf.ssl.
+@@ -1034,8 +1023,8 @@ int rd_kafka_transport_ssl_ctx_init (rd_kafka_t *rk,
+ 
+ 		if (!(fp = fopen(rk->rk_conf.ssl.keystore_location, "rb"))) {
+ 			rd_snprintf(errstr, errstr_size,
+-				    "Failed to open ssl.keystore.location: %s: %s", 
+-				    rk->rk_conf.ssl.keystore_location, 
++				    "Failed to open ssl.keystore.location: %s: %s",
++				    rk->rk_conf.ssl.keystore_location,
+ 				    rd_strerror(errno));
+ 			goto fail;
+ 		}
+@@ -1495,7 +1484,7 @@ static void rd_kafka_transport_io_event (rd_kafka_transport_t *rktrans,
+ /**
+  * Poll and serve IOs
+  *
+- * Locality: broker thread 
++ * Locality: broker thread
+  */
+ void rd_kafka_transport_io_serve (rd_kafka_transport_t *rktrans,
+                                   int timeout_ms) {
+@@ -1545,7 +1534,7 @@ rd_kafka_transport_t *rd_kafka_transport_connect (rd_kafka_broker_t *rkb,
+ 
+ #ifdef SO_NOSIGPIPE
+ 	/* Disable SIGPIPE signalling for this socket on OSX */
+-	if (setsockopt(s, SOL_SOCKET, SO_NOSIGPIPE, &on, sizeof(on)) == -1) 
++	if (setsockopt(s, SOL_SOCKET, SO_NOSIGPIPE, &on, sizeof(on)) == -1)
+ 		rd_rkb_dbg(rkb, BROKER, "SOCKET",
+ 			   "Failed to set SO_NOSIGPIPE: %s",
+ 			   socket_strerror(socket_errno));
+@@ -1709,7 +1698,7 @@ void rd_kafka_transport_term (void) {
+ #endif
+ }
+ #endif
+- 
++
+ void rd_kafka_transport_init(void) {
+ #ifdef _MSC_VER
+ 	WSADATA d;
