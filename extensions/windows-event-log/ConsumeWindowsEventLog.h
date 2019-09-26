@@ -21,6 +21,7 @@
 #pragma once
 
 #include "core/Core.h"
+#include "wel/WindowsEventLog.h"
 #include "FlowFileRecord.h"
 #include "concurrentqueue.h"
 #include "core/Processor.h"
@@ -31,6 +32,7 @@
 #include <regex>
 #include <codecvt>
 #include "utils/OsUtils.h"
+#include <Objbase.h>
 
 
 //#import <msxml6.dll>
@@ -44,9 +46,8 @@ namespace processors {
 struct EventRender {
 	std::map<std::string, std::string> matched_fields_;
 	std::string text_;
+	std::string rendered_text_;
 };
-
-
 
 //! ConsumeWindowsEventLog Class
 class ConsumeWindowsEventLog : public core::Processor
@@ -73,6 +74,8 @@ public:
   static core::Property IdentifierMatcher;
   static core::Property IdentifierFunction;
   static core::Property ResolveAsAttributes;
+  static core::Property EventHeaderDelimiter;
+  static core::Property EventHeader;
 
   //! Supported Relationships
   static core::Relationship Success;
@@ -90,17 +93,24 @@ public:
   //! Initialize, overwrite by NiFi ConsumeWindowsEventLog
   virtual void initialize(void) override;
   virtual void notifyStop() override;
+  
 
 protected:
   bool subscribe(const std::shared_ptr<core::ProcessContext> &context);
   void unsubscribe();
   int processQueue(const std::shared_ptr<core::ProcessSession> &session);
   
-  EVT_HANDLE getProvider(const std::string & name);
+  wel::WindowsEventLogHandler getEventLogHandler(const std::string & name);
+
+  bool insertHeaderName(wel::METADATA_NAMES &header, const std::string &key, const std::string &value);
 
   void LogWindowsError();
 private:
+
   // Logger
+  wel::METADATA_NAMES header_names_;
+  std::string header_delimiter_;
+  std::string channel_;
   std::shared_ptr<logging::Logger> logger_;
   std::string regex_;
   bool resolve_as_attributes_;
@@ -114,7 +124,7 @@ private:
   DWORD lastActivityTimestamp_{};
   std::shared_ptr<core::ProcessSessionFactory> sessionFactory_;
   std::mutex cache_mutex_;
-  std::map<std::string, EVT_HANDLE > providers_;
+  std::map<std::string, wel::WindowsEventLogHandler > providers_;
 };
 
 REGISTER_RESOURCE(ConsumeWindowsEventLog, "Windows Event Log Subscribe Callback to receive FlowFiles from Events on Windows.");

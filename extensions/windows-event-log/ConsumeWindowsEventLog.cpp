@@ -36,13 +36,17 @@
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 
+
 #pragma comment(lib, "wevtapi.lib")
+#pragma comment(lib, "ole32.lib")
 
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
 namespace processors {
+
+
 
 static std::string to_string(const wchar_t* pChar) {
   return std::wstring_convert<std::codecvt_utf8<wchar_t>>().to_bytes(pChar);
@@ -108,6 +112,21 @@ core::Property ConsumeWindowsEventLog::ResolveAsAttributes(
 	withDescription("If true, any metadata that is resolved ( such as IDs or keyword metadata ) will be placed into attributes, otherwise it will be replaced in the XML or text output")->
 	build());
 
+
+core::Property ConsumeWindowsEventLog::EventHeaderDelimiter(
+	core::PropertyBuilder::createProperty("Event Header Delimiter")->
+	isRequired(false)->
+	withDescription("If set, the chosen delimiter will be used in the Event output header. Otherwise, a colon followed by spaces will be used.")->
+	build());
+
+
+core::Property ConsumeWindowsEventLog::EventHeader(
+	core::PropertyBuilder::createProperty("Event Header")->
+	isRequired(false)->
+	withDefaultValue("LOG_NAME=Log Name, SOURCE = Source, TIME_CREATED = Date,EVENT_RECORDID=Record ID,EVENTID = Event ID,TASK_CATEGORY = Task Category,LEVEL = Level,KEYWORDS = Keywords,USER = User,COMPUTER = Computer, EVENT_TYPE = EventType")->
+	withDescription("Comma seperated list of key/value pairs with the following keys LOG_NAME, SOURCE, TIME_CREATED,EVENT_RECORDID,EVENTID,TASK_CATEGORY,LEVEL,KEYWORDS,USER,COMPUTER, and EVENT_TYPE. Eliminating fields will remove them from the header.")->
+	build());
+
 core::Relationship ConsumeWindowsEventLog::Success("success", "Relationship for successfully consumed events.");
 
 ConsumeWindowsEventLog::ConsumeWindowsEventLog(const std::string& name, utils::Identifier uuid)
@@ -127,16 +146,53 @@ ConsumeWindowsEventLog::~ConsumeWindowsEventLog() {
 
 void ConsumeWindowsEventLog::initialize() {
   //! Set the supported properties
-  setSupportedProperties({Channel, Query, MaxBufferSize, InactiveDurationToReconnect, IdentifierMatcher, IdentifierFunction, ResolveAsAttributes });
+  setSupportedProperties({Channel, Query, MaxBufferSize, InactiveDurationToReconnect, IdentifierMatcher, IdentifierFunction, ResolveAsAttributes, EventHeaderDelimiter, EventHeader });
 
   //! Set the supported relationships
   setSupportedRelationships({Success});
+}
+
+bool ConsumeWindowsEventLog::insertHeaderName(wel::METADATA_NAMES &header, const std::string &key, const std::string & value) {
+	
+	wel::METADATA name = wel::WindowsEventLogMetadata::getMetadataFromString(key);
+		
+	if (name != wel::METADATA::UNKNOWN) {
+		header.emplace_back(std::make_pair(name, value));
+		return true;
+	}
+	else {
+		return false;
+	}
 }
 
 void ConsumeWindowsEventLog::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
 	context->getProperty(IdentifierMatcher.getName(), regex_);
 	context->getProperty(ResolveAsAttributes.getName(), resolve_as_attributes_);
 	context->getProperty(IdentifierFunction.getName(), apply_identifier_function_);
+	context->getProperty(EventHeaderDelimiter.getName(), header_delimiter_);
+
+	std::string header;
+	context->getProperty(EventHeader.getName(), header);
+	
+	auto keyValueSplit = utils::StringUtils::split(header, ",");
+	for (const auto &kv : keyValueSplit) {
+		auto splitKeyAndValue = utils::StringUtils::split(kv, "=");
+		if (splitKeyAndValue.size() == 2) {
+			auto key = utils::StringUtils::trim(splitKeyAndValue.at(0));
+			auto value = utils::StringUtils::trim(splitKeyAndValue.at(1));
+			if (!insertHeaderName(header_names_, key, value)) {
+				logger_->log_debug("%s is an invalid key for the header map", key);
+			}
+		}
+		else if (splitKeyAndValue.size() == 1) {
+			auto key = utils::StringUtils::trim(splitKeyAndValue.at(0));
+			if (!insertHeaderName(header_names_, key, "")) {
+				logger_->log_debug("%s is an invalid key for the header map", key);
+			}
+		}
+
+	}
+	
   if (subscriptionHandle_) {
     logger_->log_error("Processor already subscribed to Event Log, expected cleanup to unsubscribe.");
   } else {
@@ -144,6 +200,7 @@ void ConsumeWindowsEventLog::onSchedule(const std::shared_ptr<core::ProcessConte
 
     subscribe(context);
   }
+
 }
 
 void ConsumeWindowsEventLog::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
@@ -169,7 +226,7 @@ void ConsumeWindowsEventLog::onTrigger(const std::shared_ptr<core::ProcessContex
   }
 }
 
-EVT_HANDLE ConsumeWindowsEventLog::getProvider(const std::string & name) {
+wel::WindowsEventLogHandler ConsumeWindowsEventLog::getEventLogHandler(const std::string & name) {
 	std::lock_guard<std::mutex> lock(cache_mutex_);
 	auto provider = providers_.find(name);
 	if (provider != std::end(providers_)) {
@@ -179,14 +236,14 @@ EVT_HANDLE ConsumeWindowsEventLog::getProvider(const std::string & name) {
 	std::wstring temp_wstring = std::wstring(name.begin(), name.end());
 	LPCWSTR widechar = temp_wstring.c_str();
 
-	providers_[name] = EvtOpenPublisherMetadata(NULL, widechar, NULL, 0, 0);
+	providers_[name] = wel::WindowsEventLogHandler(EvtOpenPublisherMetadata(NULL, widechar, NULL, 0, 0));
 
 	return providers_[name];
 } 
 
+
 bool ConsumeWindowsEventLog::subscribe(const std::shared_ptr<core::ProcessContext> &context) {
-  std::string channel;
-  context->getProperty(Channel.getName(), channel);
+  context->getProperty(Channel.getName(), channel_);
 
   std::string query;
   context->getProperty(Query.getName(), query);
@@ -194,7 +251,7 @@ bool ConsumeWindowsEventLog::subscribe(const std::shared_ptr<core::ProcessContex
   context->getProperty(MaxBufferSize.getName(), maxBufferSize_);
   logger_->log_debug("ConsumeWindowsEventLog: maxBufferSize_ %lld", maxBufferSize_);
 
-  provenanceUri_ = "winlog://" + computerName_ + "/" + channel + "?" + query;
+  provenanceUri_ = "winlog://" + computerName_ + "/" + channel_ + "?" + query;
 
   std::string strInactiveDurationToReconnect;
   context->getProperty(InactiveDurationToReconnect.getName(), strInactiveDurationToReconnect);
@@ -209,37 +266,37 @@ bool ConsumeWindowsEventLog::subscribe(const std::shared_ptr<core::ProcessContex
   subscriptionHandle_ = EvtSubscribe(
       NULL,
       NULL,
-      std::wstring(channel.begin(), channel.end()).c_str(),
+      std::wstring(channel_.begin(), channel_.end()).c_str(),
       std::wstring(query.begin(), query.end()).c_str(),
       NULL,
       this,
-      [](EVT_SUBSCRIBE_NOTIFY_ACTION action, PVOID pContext, EVT_HANDLE hEvent)
+      [](EVT_SUBSCRIBE_NOTIFY_ACTION action, PVOID pContext, EVT_HANDLE eventHandle)
       {
+	  
         auto pConsumeWindowsEventLog = static_cast<ConsumeWindowsEventLog*>(pContext);
 
         auto& logger = pConsumeWindowsEventLog->logger_;
 
         if (action == EvtSubscribeActionError) {
-          if (ERROR_EVT_QUERY_RESULT_STALE == (DWORD)hEvent) {
+          if (ERROR_EVT_QUERY_RESULT_STALE == (DWORD)eventHandle) {
             logger->log_error("Received missing event notification. Consider triggering processor more frequently or increasing queue size.");
           } else {
-            logger->log_error("Received the following Win32 error: %x", hEvent);
+            logger->log_error("Received the following Win32 error: %x", eventHandle);
           }
         } else if (action == EvtSubscribeActionDeliver) {
           DWORD size = 0;
           DWORD used = 0;
           DWORD propertyCount = 0;
-
-          if (!EvtRender(NULL, hEvent, EvtRenderEventXml, size, 0, &used, &propertyCount)) {
+          if (!EvtRender(NULL, eventHandle, EvtRenderEventXml, size, 0, &used, &propertyCount)) {
             if (ERROR_INSUFFICIENT_BUFFER == GetLastError()) {
               if (used > pConsumeWindowsEventLog->maxBufferSize_) {
-                logger->log_error("Dropping event %x because it couldn't be rendered within %ll bytes.", hEvent, pConsumeWindowsEventLog->maxBufferSize_);
+                logger->log_error("Dropping event %x because it couldn't be rendered within %ll bytes.", eventHandle, pConsumeWindowsEventLog->maxBufferSize_);
                 return 0UL;
               }
 
               size = used;
               std::vector<wchar_t> buf(size/2 + 1);
-              if (EvtRender(NULL, hEvent, EvtRenderEventXml, size, &buf[0], &used, &propertyCount)) {
+              if (EvtRender(NULL, eventHandle, EvtRenderEventXml, size, &buf[0], &used, &propertyCount)) {
                 std::string xml = to_string(&buf[0]);
 
 				EventRender renderedData;
@@ -247,18 +304,36 @@ bool ConsumeWindowsEventLog::subscribe(const std::shared_ptr<core::ProcessContex
 				pugi::xml_document doc;
 				pugi::xml_parse_result result = doc.load_string(xml.c_str());
 
-
-
 				if (!result) {
-					logger->log_error("'loadXML' failed");
+					logger->log_error("Invalid XML produced");
 					return 0UL;
 				}
+				// this is a well known path. 
+				std::string providerName = doc.child("Event").child("System").child("Provider").attribute("Name").value();
 				
-				std::string providerName = doc.child("System").child("Provider").attribute("Name").value();
+				auto handler = pConsumeWindowsEventLog->getEventLogHandler(providerName);
+				auto message = handler.getEventMessage(eventHandle);
+
+				
 
 				// resolve the event metadata
-				wel::MetadataWalker walker(pConsumeWindowsEventLog->getProvider(providerName), hEvent, !pConsumeWindowsEventLog->resolve_as_attributes_, pConsumeWindowsEventLog->apply_identifier_function_, pConsumeWindowsEventLog->regex_);
+				wel::MetadataWalker walker(pConsumeWindowsEventLog->getEventLogHandler(providerName).getMetadata(), pConsumeWindowsEventLog->channel_, eventHandle, !pConsumeWindowsEventLog->resolve_as_attributes_, pConsumeWindowsEventLog->apply_identifier_function_, pConsumeWindowsEventLog->regex_);
 				doc.traverse(walker);
+
+				if (!message.empty())
+				{	
+					for (const auto &mapEntry : walker.getIdentifiers()) {
+						// replace the identifiers with their translated strings.
+						utils::StringUtils::replaceAll(message, mapEntry.first, mapEntry.second);
+					}
+					wel::WindowsEventLogHeader log_header(pConsumeWindowsEventLog->header_names_);
+					// set the delimiter
+					log_header.setDelimiter(pConsumeWindowsEventLog->header_delimiter_);
+					// render the header.
+					renderedData.rendered_text_ = log_header.getEventHeader(&walker);
+					renderedData.rendered_text_ += "Message" + pConsumeWindowsEventLog->header_delimiter_ + " ";
+					renderedData.rendered_text_ += message;
+				}
 
 				if (pConsumeWindowsEventLog->resolve_as_attributes_) {
 					renderedData.matched_fields_ = walker.getFieldValues();
@@ -329,7 +404,14 @@ int ConsumeWindowsEventLog::processQueue(const std::shared_ptr<core::ProcessSess
     session->putAttribute(flowFile, FlowAttributeKey(MIME_TYPE), "application/xml");
     session->getProvenanceReporter()->receive(flowFile, provenanceUri_, getUUIDStr(), "Consume windows event logs", 0);
     session->transfer(flowFile, Success);
-    session->commit();
+
+	flowFile = session->create();
+
+	session->write(flowFile, &WriteCallback(evt.rendered_text_));
+	session->putAttribute(flowFile, FlowAttributeKey(MIME_TYPE), "text/plain");
+	session->getProvenanceReporter()->receive(flowFile, provenanceUri_, getUUIDStr(), "Consume windows event logs", 0);
+	session->transfer(flowFile, Success);
+	session->commit();
 
     flowFileCount++;
   }
