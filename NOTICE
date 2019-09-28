@@ -34,3 +34,4 @@ This includes derived works from the CMake (BSD 3-Clause licensed) project (http
 Copyright 2000-2019 Kitware, Inc. and Contributors
 The derived work is adapted from
   Modules/FindPatch.cmake
+and can be found in cmake/FindPatch.cmake
