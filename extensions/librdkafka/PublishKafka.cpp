@@ -45,7 +45,10 @@ core::Property PublishKafka::Topic(
         ->isRequired(true)->supportsExpressionLanguage(true)->build());
 
 core::Property PublishKafka::DeliveryGuarantee(
-    core::PropertyBuilder::createProperty("Delivery Guarantee")->withDescription("Specifies the requirement for guaranteeing that a message is sent to Kafka")
+    core::PropertyBuilder::createProperty("Delivery Guarantee")->withDescription("Specifies the requirement for guaranteeing that a message is sent to Kafka. "
+                                                                                 "Valid values are 0 (do not wait for acks), "
+                                                                                 "-1 or all (block until message is committed by all in sync replicas) "
+                                                                                 "or any concrete number of nodes.")
         ->isRequired(false)->supportsExpressionLanguage(true)->withDefaultValue(DELIVERY_ONE_NODE)->build());
 
 core::Property PublishKafka::MaxMessageSize(
@@ -411,6 +414,21 @@ bool PublishKafka::createNewTopic(const std::shared_ptr<KafkaConnection> &conn, 
 
   value = "";
   if (context->getProperty(DeliveryGuarantee.getName(), value) && !value.empty()) {
+    /*
+     * Because of a previous error in this processor, the default value of this property was "DELIVERY_ONE_NODE".
+     * As this is not a valid value for "request.required.acks", the following rd_kafka_topic_conf_set call failed,
+     * but because of an another error, this failure was silently ignored, meaning that the the default value for
+     * "request.required.acks" did not change, and thus remained "-1". This means that having "DELIVERY_ONE_NODE" as
+     * the value of this property actually caused the processor to wait for delivery ACKs from ALL nodes, instead
+     * of just one. In order not to break configurations generated with earlier versions and keep the same behaviour
+     * as they had, we have to map "DELIVERY_ONE_NODE" to "-1" here.
+     */
+    if (value == "DELIVERY_ONE_NODE") {
+      value = "-1";
+      logger_->log_warn("Using DELIVERY_ONE_NODE as the Delivery Guarantee property is deprecated and is translated to -1 "
+                        "(block until message is committed by all in sync replicas) for backwards compatibility. "
+                        "If you want to wait for one acknowledgment use '1' as the property.");
+    }
     result = rd_kafka_topic_conf_set(topic_conf_, "request.required.acks", value.c_str(), errstr.data(), errstr.size());
     logger_->log_debug("PublishKafka: request.required.acks [%s]", value);
     if (result != RD_KAFKA_CONF_OK) {
