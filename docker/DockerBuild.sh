@@ -31,12 +31,13 @@ echo "CMake Source Directory: $CMAKE_SOURCE_DIR"
 echo "MiNiFi Package: $MINIFI_SOURCE_CODE"
 
 # Copy the MiNiFi source tree to the Docker working directory before building
+rm -rf $CMAKE_SOURCE_DIR/docker/minificppsource
 mkdir -p $CMAKE_SOURCE_DIR/docker/minificppsource
 rsync -avr \
       --exclude '/*build*' \
       --exclude '/*_repository*' \
       --exclude '/logs' \
-      --exclude '/cmake' \
+      --exclude '/cmake-build-*' \
       --exclude '/docker' \
       --exclude '.git' \
       --exclude '/extensions/expression-language/Parser.cpp' \
@@ -57,3 +58,5 @@ DOCKER_COMMAND="docker build --build-arg UID=$UID_ARG \
                              apacheminificpp:$MINIFI_VERSION ."
 echo "Docker Command: '$DOCKER_COMMAND'"
 ${DOCKER_COMMAND}
+
+rm -rf $CMAKE_SOURCE_DIR/docker/minificppsource
