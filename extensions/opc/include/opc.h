@@ -33,30 +33,30 @@ namespace nifi {
 namespace minifi {
 namespace opc {
 
-void disconnect(UA_Client *client);
+void disconnect(UA_Client *client, std::shared_ptr<core::logging::Logger> logger);
 
-using ClientPtr = std::unique_ptr<UA_Client, decltype(&opc::disconnect)>;
+using ClientPtr = std::unique_ptr<UA_Client, std::function<void(UA_Client *client)>>;
 
 enum class OPCNodeIDType{ Path, Int, String };
 
 enum class OPCNodeDataType{ Int64, UInt64, Int32, UInt32, Boolean, Float, Double, String };
 
-struct nodeData {
+struct NodeData {
   std::vector<uint8_t> data;
   uint16_t dataTypeID;
   std::map<std::string, std::string> attributes;
 
-  virtual ~nodeData(){
+  virtual ~NodeData(){
     if(var_) {
       UA_Variant_delete(var_);
     }
   }
 
-  nodeData (const nodeData&) = delete;
-  nodeData& operator= (const nodeData &) = delete;
-  nodeData& operator= (nodeData &&) = delete;
+  NodeData (const NodeData&) = delete;
+  NodeData& operator= (const NodeData &) = delete;
+  NodeData& operator= (NodeData &&) = delete;
 
-  nodeData(nodeData&& rhs) : data(rhs.data), attributes(rhs.attributes)
+  NodeData(NodeData&& rhs) : data(rhs.data), attributes(rhs.attributes)
   {
     dataTypeID = rhs.dataTypeID;
     this->var_ = rhs.var_;
@@ -66,7 +66,7 @@ struct nodeData {
 private:
   UA_Variant* var_;
 
-  nodeData(UA_Variant * var = nullptr) {
+  NodeData(UA_Variant * var = nullptr) {
     var_ = var;
   }
   void addVariant(UA_Variant * var) {
@@ -76,8 +76,8 @@ private:
     var_ = var;
   }
 
-  friend nodeData getNodeData(opc::ClientPtr&, const UA_ReferenceDescription*, const std::string&);
-  friend std::string nodeValue2String(const nodeData&);
+  friend NodeData getNodeData(opc::ClientPtr&, const UA_ReferenceDescription*, const std::string&);
+  friend std::string nodeValue2String(const NodeData&);
 };
 
 static std::map<std::string, OPCNodeDataType>  StringToOPCDataTypeMap = {{"Int64", OPCNodeDataType::Int64}, {"UInt64", OPCNodeDataType::UInt64 }, {"Int32", OPCNodeDataType::Int32},
@@ -86,9 +86,9 @@ static std::map<std::string, OPCNodeDataType>  StringToOPCDataTypeMap = {{"Int64
 
 int32_t OPCNodeDataTypeToTypeID(OPCNodeDataType dt);
 
-void setCertificates(ClientPtr& clientPtr, const std::vector<char>& certBuffer, const std::vector<char>& keyBuffer);
+UA_StatusCode setCertificates(ClientPtr& clientPtr, const std::vector<char>& certBuffer, const std::vector<char>& keyBuffer);
 
-ClientPtr connect(const std::string& url, const std::shared_ptr<core::logging::Logger>& logger,
+ClientPtr connect(const std::string& url, std::shared_ptr<core::logging::Logger> logger,
     const std::string& username = "", const std::string& password = "");
 
 bool isConnected(const ClientPtr &ptr);
@@ -101,9 +101,9 @@ void traverse(ClientPtr& clientPtr, UA_NodeId nodeId, std::function<nodeFoundCal
 
 bool exists(ClientPtr& clientPtr, UA_NodeId nodeId);
 
-nodeData getNodeData(opc::ClientPtr& clientPtr, const UA_ReferenceDescription *ref, const std::string& basePath = "");
+NodeData getNodeData(opc::ClientPtr& clientPtr, const UA_ReferenceDescription *ref, const std::string& basePath = "");
 
-std::string nodeValue2String(const nodeData& nd);
+std::string nodeValue2String(const NodeData& nd);
 
 std::string OPCDateTime2String(UA_DateTime raw_date);
 

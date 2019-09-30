@@ -65,8 +65,6 @@ namespace processors {
 
 
   void FetchOPCProcessor::initialize() {
-    //BaseOPCProcessor::initialize();
-
     // Set the supported properties
     std::set<core::Property> fetchOPCProperties = {OPCServerEndPoint, NodeID, NodeIDType, NameSpaceIndex};
     std::set<core::Property> baseOPCProperties = BaseOPCProcessor::getSupportedProperties();
@@ -143,7 +141,12 @@ namespace processors {
 
     if(!opc::isConnected(connection_)) {
       if(!certBuffer_.empty()) {
-        opc::setCertificates(connection_, certBuffer_, keyBuffer_);
+        auto sc = opc::setCertificates(connection_, certBuffer_, keyBuffer_);
+        if(sc != UA_STATUSCODE_GOOD) {
+          logger_->log_error("Failed to set certificates: %s!", UA_StatusCode_name(sc));
+          yield();
+          return;
+        };
       }
       connection_ = opc::connect(endPointURL_, logger_, username_, password_);
     }
@@ -194,7 +197,7 @@ namespace processors {
     if(ref->nodeClass == UA_NODECLASS_VARIABLE)
     {
       try {
-        opc::nodeData nodedata = opc::getNodeData(clientPtr, ref);
+        opc::NodeData nodedata = opc::getNodeData(clientPtr, ref);
         OPCData2FlowFile(nodedata, context, session);
         variablesFound_++;
       } catch (const std::exception& exception) {
@@ -205,7 +208,7 @@ namespace processors {
     return true;
   }
 
-  void FetchOPCProcessor::OPCData2FlowFile(const opc::nodeData& opcnode, const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
+  void FetchOPCProcessor::OPCData2FlowFile(const opc::NodeData& opcnode, const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
     std::shared_ptr<FlowFileRecord> flowFile = std::static_pointer_cast<FlowFileRecord>(session->create());
     if (flowFile == nullptr) {
       logger_->log_error("Failed to create flowfile!");
@@ -215,7 +218,6 @@ namespace processors {
       flowFile->setAttribute(attr.first, attr.second);
     }
     if(opcnode.data.size() > 0) {
-      //if (extractValue_) {
       try {
         std::string value = opc::nodeValue2String(opcnode);
         FetchOPCProcessor::WriteCallback callback(value);

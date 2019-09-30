@@ -1,5 +1,5 @@
 /**
- * FetchOPC class declaration
+ * OPCBase class declaration
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -46,7 +46,7 @@ class BaseOPCProcessor : public core::Processor {
   BaseOPCProcessor(std::shared_ptr<logging::Logger> logger, std::string name, utils::Identifier uuid = utils::Identifier())
   : Processor(name, uuid),
     logger_(logger),
-    connection_(nullptr, &opc::disconnect) {
+    connection_(nullptr, std::bind(opc::disconnect, std::placeholders::_1, logger)) {
   }
 
   virtual void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &factory) override;

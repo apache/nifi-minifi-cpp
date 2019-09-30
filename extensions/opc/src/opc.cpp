@@ -19,6 +19,7 @@
 #include "opc.h"
 
 //MiNiFi includes
+#include "utils/ScopeGuard.h"
 #include "utils/StringUtils.h"
 #include "logging/Logger.h"
 #include "Exception.h"
@@ -29,6 +30,7 @@
 #include <memory>
 #include <vector>
 #include <string>
+#include <functional>
 
 namespace org {
 namespace apache {
@@ -40,49 +42,53 @@ namespace opc {
  * The following functions are only used internally in OPC lib, not to be exported
  */
 
-void add_value_to_variant(UA_Variant *variant, std::string& value) {
-  UA_String ua_value = UA_STRING(&value[0]);
-  UA_Variant_setScalarCopy(variant, &ua_value, &UA_TYPES[UA_TYPES_STRING]);
-}
+namespace {
 
-void add_value_to_variant(UA_Variant *variant, const char* value) {
-  std::string strvalue(value);
-  add_value_to_variant(variant, strvalue);
-}
+  void add_value_to_variant(UA_Variant *variant, std::string &value) {
+    UA_String ua_value = UA_STRING(&value[0]);
+    UA_Variant_setScalarCopy(variant, &ua_value, &UA_TYPES[UA_TYPES_STRING]);
+  }
 
-void add_value_to_variant(UA_Variant *variant, int64_t value) {
-  UA_Int64 ua_value = value;
-  UA_Variant_setScalarCopy(variant, &ua_value, &UA_TYPES[UA_TYPES_INT64]);
-}
+  void add_value_to_variant(UA_Variant *variant, const char *value) {
+    std::string strvalue(value);
+    add_value_to_variant(variant, strvalue);
+  }
 
-void add_value_to_variant(UA_Variant *variant, uint64_t value) {
-  UA_UInt64 ua_value = value;
-  UA_Variant_setScalarCopy(variant, &ua_value, &UA_TYPES[UA_TYPES_UINT64]);
-}
+  void add_value_to_variant(UA_Variant *variant, int64_t value) {
+    UA_Int64 ua_value = value;
+    UA_Variant_setScalarCopy(variant, &ua_value, &UA_TYPES[UA_TYPES_INT64]);
+  }
 
-void add_value_to_variant(UA_Variant *variant, int32_t value) {
-  UA_Int32 ua_value = value;
-  UA_Variant_setScalarCopy(variant, &ua_value, &UA_TYPES[UA_TYPES_INT32]);
-}
+  void add_value_to_variant(UA_Variant *variant, uint64_t value) {
+    UA_UInt64 ua_value = value;
+    UA_Variant_setScalarCopy(variant, &ua_value, &UA_TYPES[UA_TYPES_UINT64]);
+  }
 
-void add_value_to_variant(UA_Variant *variant, uint32_t value) {
-  UA_UInt32 ua_value = value;
-  UA_Variant_setScalarCopy(variant, &ua_value, &UA_TYPES[UA_TYPES_UINT32]);
-}
+  void add_value_to_variant(UA_Variant *variant, int32_t value) {
+    UA_Int32 ua_value = value;
+    UA_Variant_setScalarCopy(variant, &ua_value, &UA_TYPES[UA_TYPES_INT32]);
+  }
 
-void add_value_to_variant(UA_Variant *variant, bool value) {
-  UA_Boolean ua_value = value;
-  UA_Variant_setScalarCopy(variant, &ua_value, &UA_TYPES[UA_TYPES_BOOLEAN]);
-}
+  void add_value_to_variant(UA_Variant *variant, uint32_t value) {
+    UA_UInt32 ua_value = value;
+    UA_Variant_setScalarCopy(variant, &ua_value, &UA_TYPES[UA_TYPES_UINT32]);
+  }
 
-void add_value_to_variant(UA_Variant *variant, float value) {
-  UA_Float ua_value = value;
-  UA_Variant_setScalarCopy(variant, &ua_value, &UA_TYPES[UA_TYPES_FLOAT]);
-}
+  void add_value_to_variant(UA_Variant *variant, bool value) {
+    UA_Boolean ua_value = value;
+    UA_Variant_setScalarCopy(variant, &ua_value, &UA_TYPES[UA_TYPES_BOOLEAN]);
+  }
 
-void add_value_to_variant(UA_Variant *variant, double value) {
-  UA_Double ua_value = value;
-  UA_Variant_setScalarCopy(variant, &ua_value, &UA_TYPES[UA_TYPES_DOUBLE]);
+  void add_value_to_variant(UA_Variant *variant, float value) {
+    UA_Float ua_value = value;
+    UA_Variant_setScalarCopy(variant, &ua_value, &UA_TYPES[UA_TYPES_FLOAT]);
+  }
+
+  void add_value_to_variant(UA_Variant *variant, double value) {
+    UA_Double ua_value = value;
+    UA_Variant_setScalarCopy(variant, &ua_value, &UA_TYPES[UA_TYPES_DOUBLE]);
+  }
+
 }
 
 /*
@@ -117,13 +123,15 @@ UA_StatusCode add_node(ClientPtr& clientPtr, const UA_NodeId parentNodeId, const
   add_value_to_variant(&attr.value, value);
   char local[6] = "en-US";
   attr.displayName = UA_LOCALIZEDTEXT(local, const_cast<char*>(browseName.c_str()));
-  return UA_Client_addVariableNode(clientPtr.get(),
+  UA_StatusCode sc = UA_Client_addVariableNode(clientPtr.get(),
       targetNodeId,
       parentNodeId,
       UA_NODEID_NUMERIC(0, OPCNodeDataTypeToTypeID(dt)),
       UA_QUALIFIEDNAME(1, const_cast<char*>(browseName.c_str())),
       UA_NODEID_NULL,
       attr, receivedNodeId);
+  UA_Variant_delete(&attr.value);
+  return sc;
 }
 
 template UA_StatusCode add_node<int64_t>(ClientPtr& clientPtr, const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, std::string browseName, int64_t value, OPCNodeDataType dt, UA_NodeId *receivedNodeId);
@@ -160,48 +168,54 @@ int32_t OPCNodeDataTypeToTypeID(OPCNodeDataType dt) {
   }
 }
 
-void disconnect(UA_Client *client) {
+void disconnect(UA_Client *client, std::shared_ptr<core::logging::Logger> logger) {
   if(client == nullptr) {
     return;
   }
   if(UA_Client_getState(client) != UA_CLIENTSTATE_DISCONNECTED) {
-    UA_Client_disconnect(client);
+    auto sc = UA_Client_disconnect(client);
+    if(sc != UA_STATUSCODE_GOOD) {
+      logger->log_warn("Failed to disconnect OPC client: %s", UA_StatusCode_name(sc));
+    }
   }
   UA_Client_delete(client);
 }
 
-void setCertificates(ClientPtr& clientPtr, const std::vector<char>& certBuffer, const std::vector<char>& keyBuffer) {
+UA_StatusCode setCertificates(ClientPtr& clientPtr, const std::vector<char>& certBuffer, const std::vector<char>& keyBuffer) {
   UA_ClientConfig *cc = UA_Client_getConfig(clientPtr.get());
   cc->securityMode = UA_MESSAGESECURITYMODE_SIGNANDENCRYPT;
 
   UA_ByteString certByteString = UA_BYTESTRING_ALLOC(certBuffer.data());
   UA_ByteString keyByteString = UA_BYTESTRING_ALLOC(keyBuffer.data());
 
-  UA_ClientConfig_setDefaultEncryption(cc, certByteString, keyByteString,
+  UA_StatusCode sc = UA_ClientConfig_setDefaultEncryption(cc, certByteString, keyByteString,
                                        nullptr, 0,
                                        nullptr, 0);
 
   UA_ByteString_delete(&certByteString);
   UA_ByteString_delete(&keyByteString);
+  return sc;
 }
 
-ClientPtr connect(const std::string& url, const std::shared_ptr<core::logging::Logger>& logger, const std::string& username, const std::string& password) {
+ClientPtr connect(const std::string& url, std::shared_ptr<core::logging::Logger> logger, const std::string& username, const std::string& password) {
   UA_Client *client = UA_Client_new();
   UA_ClientConfig_setDefault(UA_Client_getConfig(client));
   UA_StatusCode retval;
   if(username.empty()) {
     retval = UA_Client_connect(client, url.c_str());
   } else {
-    retval = UA_Client_connect_username(client, "opc.tcp://localhost:53530/OPCUA/SimulationServer",
-        username.c_str(), password.c_str());
+    retval = UA_Client_connect_username(client, url.c_str(), username.c_str(), password.c_str());
   }
+
+  auto disconnect_func = std::bind(disconnect, std::placeholders::_1, logger);
+
   if (retval != UA_STATUSCODE_GOOD) {
     logger->log_error("Failed to connect to %s (%s)", url.c_str(), UA_StatusCode_name(retval));
     UA_Client_delete(client);
-    return ClientPtr(nullptr, &disconnect);
+    return ClientPtr(nullptr, disconnect_func);
   }
   logger->log_info("Successfully connected to %s", url.c_str());
-  return ClientPtr(client, &disconnect);
+  return ClientPtr(client, disconnect_func);
 }
 
 bool isConnected(const ClientPtr &ptr) {
@@ -226,6 +240,10 @@ void traverse(ClientPtr& clientPtr, UA_NodeId nodeId, std::function<nodeFoundCal
 
   UA_BrowseResponse bResp = UA_Client_Service_browse(client, bReq);
 
+  utils::ScopeGuard guard([&bResp]() {
+    UA_BrowseResponse_deleteMembers(&bResp);
+  });
+
   UA_BrowseRequest_deleteMembers(&bReq);
 
   for(size_t i = 0; i < bResp.resultsSize; ++i) {
@@ -237,13 +255,10 @@ void traverse(ClientPtr& clientPtr, UA_NodeId nodeId, std::function<nodeFoundCal
           traverse(clientPtr, ref->nodeId.nodeId, cb, basePath + browsename);
         }
       } else {
-        UA_BrowseResponse_deleteMembers(&bResp);
         return;
       }
     }
   }
-
-  UA_BrowseResponse_deleteMembers(&bResp);
 };
 
 bool exists(ClientPtr& clientPtr, UA_NodeId nodeId) {
@@ -288,6 +303,10 @@ UA_StatusCode translateBrowsePathsToNodeIdsRequest(ClientPtr& clientPtr, const s
 
   UA_TranslateBrowsePathsToNodeIdsResponse response = UA_Client_Service_translateBrowsePathsToNodeIds(client, request);
 
+  utils::ScopeGuard guard([&browsePath]() {
+    UA_BrowsePath_deleteMembers(&browsePath);
+  });
+
   if(response.resultsSize < 1) {
     logger->log_warn("No node id in response for %s", path.c_str());
     return UA_STATUSCODE_BADNODATAAVAILABLE;
@@ -306,7 +325,6 @@ UA_StatusCode translateBrowsePathsToNodeIdsRequest(ClientPtr& clientPtr, const s
     }
   }
 
-  UA_BrowsePath_deleteMembers(&browsePath);
   UA_TranslateBrowsePathsToNodeIdsResponse_deleteMembers(&response);
 
   if(foundData) {
@@ -318,10 +336,10 @@ UA_StatusCode translateBrowsePathsToNodeIdsRequest(ClientPtr& clientPtr, const s
   }
 }
 
-nodeData getNodeData(opc::ClientPtr& clientPtr, const UA_ReferenceDescription *ref, const std::string& basePath) {
+NodeData getNodeData(opc::ClientPtr& clientPtr, const UA_ReferenceDescription *ref, const std::string& basePath) {
   if(ref->nodeClass == UA_NODECLASS_VARIABLE)
   {
-    opc::nodeData nodedata;
+    opc::NodeData nodedata;
     std::string browsename(reinterpret_cast<const char*>(ref->browseName.name.data), ref->browseName.name.length);
 
     if(ref->nodeId.nodeId.identifierType == UA_NODEIDTYPE_STRING) {
@@ -350,17 +368,18 @@ nodeData getNodeData(opc::ClientPtr& clientPtr, const UA_ReferenceDescription *r
       if(var->type->memSize) {
         nodedata.attributes["Datasize"] = std::to_string(var->type->memSize);
         nodedata.data = std::vector<uint8_t>(var->type->memSize);
-        memcpy(&nodedata.data[0], var->data, var->type->memSize);
+        memcpy(nodedata.data.data(), var->data, var->type->memSize);
       }
       return nodedata;
     }
+    UA_Variant_delete(var);
     throw Exception(OPC_EXCEPTION, "Failed to read value of node: " + browsename);
   } else {
     throw Exception(OPC_EXCEPTION, "Only variable nodes are supported!");
   }
 }
 
-std::string nodeValue2String(const nodeData& nd) {
+std::string nodeValue2String(const NodeData& nd) {
   std::string ret_val;
   switch (nd.dataTypeID) {
     case UA_TYPES_STRING:
@@ -449,7 +468,7 @@ std::string OPCDateTime2String(UA_DateTime raw_date) {
   UA_DateTimeStruct dts = UA_DateTime_toStruct(raw_date);
   std::array<char, 100> charBuf;
 
-  snprintf(&charBuf[0], charBuf.size(), "%u-%u-%u %u:%u:%u.%03u", dts.day, dts.month, dts.year, dts.hour, dts.min, dts.sec, dts.milliSec);
+  snprintf(charBuf.data(), charBuf.size(), "%02hu-%02hu-%02hu %02hu:%02hu:%02hu.%03hu", dts.day, dts.month, dts.year, dts.hour, dts.min, dts.sec, dts.milliSec);
 
   return std::string(charBuf.data(), charBuf.size());
 }

@@ -71,7 +71,7 @@ protected:
   bool nodeFoundCallBack(opc::ClientPtr& clientPtr, const UA_ReferenceDescription *ref, const std::string& path,
                          const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session);
 
-  void OPCData2FlowFile(const opc::nodeData& opcnode, const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session);
+  void OPCData2FlowFile(const opc::NodeData& opcnode, const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session);
 
   class WriteCallback : public OutputStreamCallback {
     std::string data_;

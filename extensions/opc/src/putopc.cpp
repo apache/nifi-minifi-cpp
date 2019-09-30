@@ -1,5 +1,5 @@
 /**
- * FetchOPC class definition
+ * PutOPC class definition
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -94,15 +94,12 @@ namespace processors {
   core::Relationship PutOPCProcessor::Failure("failure", "Failed to put OPC-UA node");
 
   void PutOPCProcessor::initialize() {
-    BaseOPCProcessor::initialize();
-
     PutOPCProcessor::ValueType.clearAllowedValues();
     core::PropertyValue pv;
     for(const auto& kv : opc::StringToOPCDataTypeMap) {
       pv = kv.first;
       PutOPCProcessor::ValueType.addAllowedValue(pv);
     }
-    //setSupportedProperties();
     std::set<core::Property> putOPCProperties = {ParentNodeID, ParentNodeIDType, ParentNameSpaceIndex, ValueType, TargetNodeIDType, TargetNodeID, TargetNodeNameSpaceIndex, TargetNodeBrowseName};
     std::set<core::Property> baseOPCProperties = BaseOPCProcessor::getSupportedProperties();
     putOPCProperties.insert(baseOPCProperties.begin(), baseOPCProperties.end());
@@ -180,8 +177,13 @@ namespace processors {
     }
 
     if (!opc::isConnected(connection_)) {
-      if (!certBuffer_.empty()) {
-        opc::setCertificates(connection_, certBuffer_, keyBuffer_);
+      if(!certBuffer_.empty()) {
+        auto sc = opc::setCertificates(connection_, certBuffer_, keyBuffer_);
+        if(sc != UA_STATUSCODE_GOOD) {
+          logger_->log_error("Failed to set certificates: %s!", UA_StatusCode_name(sc));
+          yield();
+          return;
+        };
       }
       connection_ = opc::connect(endPointURL_, logger_, username_, password_);
     }
