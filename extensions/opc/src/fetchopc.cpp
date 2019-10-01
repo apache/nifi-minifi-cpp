@@ -219,10 +219,8 @@ namespace processors {
     }
     if(opcnode.data.size() > 0) {
       try {
-        std::string value = opc::nodeValue2String(opcnode);
-        FetchOPCProcessor::WriteCallback callback(value);
+        FetchOPCProcessor::WriteCallback callback(opc::nodeValue2String(opcnode));
         session->write(flowFile, &callback);
-        flowFile->setAttribute("OPC Data", value);
       } catch (const std::exception& e) {
         std::string browsename;
         flowFile->getAttribute("Browsename", browsename);

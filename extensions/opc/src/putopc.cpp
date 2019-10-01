@@ -346,7 +346,6 @@ namespace processors {
             break;
           }
           case opc::OPCNodeDataType::String: {
-            float value = std::stof(contentstr);
             sc = opc::update_node(connection_, targetnode, contentstr);
             break;
           }
@@ -424,7 +423,6 @@ namespace processors {
             break;
           }
           case opc::OPCNodeDataType::String: {
-            float value = std::stof(contentstr);
             sc = opc::add_node(connection_, parentNodeID_, targetnode, browsename, contentstr, nodeDataType_, &resultnode);
             break;
           }

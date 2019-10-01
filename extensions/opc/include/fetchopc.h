@@ -76,8 +76,8 @@ protected:
   class WriteCallback : public OutputStreamCallback {
     std::string data_;
    public:
-    WriteCallback(const std::string& data)
-        : data_(data) {
+    WriteCallback(std::string&& data)
+      : data_(data) {
     }
     int64_t process(std::shared_ptr<io::BaseStream> stream) {
       return stream->write(reinterpret_cast<uint8_t*>(const_cast<char*>(data_.c_str())), data_.size());

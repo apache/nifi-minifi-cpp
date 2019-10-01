@@ -50,7 +50,6 @@ class PutOPCProcessor : public BaseOPCProcessor {
  public:
   static constexpr char const* ProcessorName = "PutOPC";
   // Supported Properties
-  //static core::Property OPCServerEndPoint;
   static core::Property ParentNodeIDType;
   static core::Property ParentNodeID;
   static core::Property ParentNameSpaceIndex;
@@ -60,11 +59,6 @@ class PutOPCProcessor : public BaseOPCProcessor {
   static core::Property TargetNodeID;
   static core::Property TargetNodeBrowseName;
   static core::Property TargetNodeNameSpaceIndex;
-
-  /*static core::Property Username;
-  static core::Property Password;
-  static core::Property CertificatePath;
-  static core::Property KeyPath; */
 
   // Supported Relationships
   static core::Relationship Success;
@@ -93,30 +87,13 @@ class PutOPCProcessor : public BaseOPCProcessor {
     std::shared_ptr<logging::Logger> logger_;
   };
 
-
-  // Logger
-  //std::shared_ptr<logging::Logger> logger_;
   std::mutex onTriggerMutex_;
 
-  //std::string endPointURL_;
   std::string nodeID_;
   int32_t nameSpaceIdx_;
   opc::OPCNodeIDType idType_;
   UA_NodeId parentNodeID_;
 
-  /*opc::ClientPtr connection_;
-
-
-
-  std::string username_;
-  std::string password_;
-  std::string certpath_;
-  std::string keypath_;
-
-  std::vector<char> certBuffer_;
-  std::vector<char> keyBuffer_;
-
-  bool configOK_; */
   bool parentExists_;
 
   opc::OPCNodeDataType nodeDataType_;
