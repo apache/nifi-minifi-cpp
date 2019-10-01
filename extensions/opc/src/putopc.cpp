@@ -184,7 +184,7 @@ namespace processors {
     if (!parentExists_) {
       if (idType_ == opc::OPCNodeIDType::Path) {
         std::vector<UA_NodeId> translatedNodeIDs;
-        if (opc::translateBrowsePathsToNodeIdsRequest(connection_, nodeID_, translatedNodeIDs, logger_) !=
+        if (connection_->translateBrowsePathsToNodeIdsRequest(nodeID_, translatedNodeIDs, logger_) !=
             UA_STATUSCODE_GOOD) {
           logger_->log_error("Failed to translate %s to node id, no flow files will be put", nodeID_.c_str());
           yield();
@@ -206,7 +206,7 @@ namespace processors {
           parentNodeID_.identifierType = UA_NODEIDTYPE_STRING;
           parentNodeID_.identifier.string = UA_STRING_ALLOC(nodeID_.c_str());
         }
-        if (!opc::exists(connection_, parentNodeID_)) {
+        if (!connection_->exists(parentNodeID_)) {
           logger_->log_error("Parent node doesn't exist, no flow files will be put");
           yield();
           return;
@@ -279,7 +279,7 @@ namespace processors {
         session->transfer(flowFile, Failure);
         return;
       }
-      targetNodeExists = opc::exists(connection_, targetnode);
+      targetNodeExists = connection_->exists(targetnode);
     }
 
     ReadCallback cb(logger_);
@@ -296,28 +296,28 @@ namespace processors {
         switch (nodeDataType_) {
           case opc::OPCNodeDataType::Int64: {
             int64_t value = std::stoll(contentstr);
-            sc = opc::update_node(connection_, targetnode, value);
+            sc = connection_->update_node(targetnode, value);
             break;
           }
           case opc::OPCNodeDataType::UInt64: {
             uint64_t value = std::stoull(contentstr);
-            sc = opc::update_node(connection_, targetnode, value);
+            sc = connection_->update_node(targetnode, value);
             break;
           }
           case opc::OPCNodeDataType::Int32: {
             int32_t value = std::stoi(contentstr);
-            sc = opc::update_node(connection_, targetnode, value);
+            sc = connection_->update_node(targetnode, value);
             break;
           }
           case opc::OPCNodeDataType::UInt32: {
             uint32_t value = std::stoul(contentstr);
-            sc = opc::update_node(connection_, targetnode, value);
+            sc = connection_->update_node(targetnode, value);
             break;
           }
           case opc::OPCNodeDataType::Boolean: {
             bool value;
             if (utils::StringUtils::StringToBool(contentstr, value)) {
-              sc = opc::update_node(connection_, targetnode, value);
+              sc = connection_->update_node(targetnode, value);
             } else {
               throw Exception(OPC_EXCEPTION, "Content cannot be converted to bool");
             }
@@ -325,16 +325,16 @@ namespace processors {
           }
           case opc::OPCNodeDataType::Float: {
             float value = std::stof(contentstr);
-            sc = opc::update_node(connection_, targetnode, value);
+            sc = connection_->update_node(targetnode, value);
             break;
           }
           case opc::OPCNodeDataType::Double: {
             double value = std::stod(contentstr);
-            sc = opc::update_node(connection_, targetnode, value);
+            sc = connection_->update_node(targetnode, value);
             break;
           }
           case opc::OPCNodeDataType::String: {
-            sc = opc::update_node(connection_, targetnode, contentstr);
+            sc = connection_->update_node(targetnode, contentstr);
             break;
           }
           default:
@@ -373,28 +373,28 @@ namespace processors {
         switch (nodeDataType_) {
           case opc::OPCNodeDataType::Int64: {
             int64_t value = std::stoll(contentstr);
-            sc = opc::add_node(connection_, parentNodeID_, targetnode, browsename, value, nodeDataType_, &resultnode);
+            sc = connection_->add_node(parentNodeID_, targetnode, browsename, value, nodeDataType_, &resultnode);
             break;
           }
           case opc::OPCNodeDataType::UInt64: {
             uint64_t value = std::stoull(contentstr);
-            sc = opc::add_node(connection_, parentNodeID_, targetnode, browsename, value, nodeDataType_, &resultnode);
+            sc = connection_->add_node(parentNodeID_, targetnode, browsename, value, nodeDataType_, &resultnode);
             break;
           }
           case opc::OPCNodeDataType::Int32: {
             int32_t value = std::stoi(contentstr);
-            sc = opc::add_node(connection_, parentNodeID_, targetnode, browsename, value, nodeDataType_, &resultnode);
+            sc = connection_->add_node(parentNodeID_, targetnode, browsename, value, nodeDataType_, &resultnode);
             break;
           }
           case opc::OPCNodeDataType::UInt32: {
             uint32_t value = std::stoul(contentstr);
-            sc = opc::add_node(connection_, parentNodeID_, targetnode, browsename, value, nodeDataType_, &resultnode);
+            sc = connection_->add_node(parentNodeID_, targetnode, browsename, value, nodeDataType_, &resultnode);
             break;
           }
           case opc::OPCNodeDataType::Boolean: {
             bool value;
             if (utils::StringUtils::StringToBool(contentstr, value)) {
-              sc = opc::add_node(connection_, parentNodeID_, targetnode, browsename, value, nodeDataType_, &resultnode);
+              sc = connection_->add_node(parentNodeID_, targetnode, browsename, value, nodeDataType_, &resultnode);
             } else {
               throw Exception(OPC_EXCEPTION, "Content cannot be converted to bool");
             }
@@ -402,16 +402,16 @@ namespace processors {
           }
           case opc::OPCNodeDataType::Float: {
             float value = std::stof(contentstr);
-            sc = opc::add_node(connection_, parentNodeID_, targetnode, browsename, value, nodeDataType_, &resultnode);
+            sc = connection_->add_node(parentNodeID_, targetnode, browsename, value, nodeDataType_, &resultnode);
             break;
           }
           case opc::OPCNodeDataType::Double: {
             double value = std::stod(contentstr);
-            sc = opc::add_node(connection_, parentNodeID_, targetnode, browsename, value, nodeDataType_, &resultnode);
+            sc = connection_->add_node(parentNodeID_, targetnode, browsename, value, nodeDataType_, &resultnode);
             break;
           }
           case opc::OPCNodeDataType::String: {
-            sc = opc::add_node(connection_, parentNodeID_, targetnode, browsename, contentstr, nodeDataType_, &resultnode);
+            sc = connection_->add_node(parentNodeID_, targetnode, browsename, contentstr, nodeDataType_, &resultnode);
             break;
           }
           default:

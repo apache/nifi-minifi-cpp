@@ -163,10 +163,10 @@ namespace processors {
         myID.identifierType = UA_NODEIDTYPE_STRING;
         myID.identifier.string = UA_STRING_ALLOC(nodeID_.c_str());
       }
-      opc::traverse(connection_, myID, f, "", maxDepth_);
+      connection_->traverse(myID, f, "", maxDepth_);
     } else {
       if(translatedNodeIDs_.empty()) {
-        auto sc = opc::translateBrowsePathsToNodeIdsRequest(connection_, nodeID_, translatedNodeIDs_, logger_);
+        auto sc = connection_->translateBrowsePathsToNodeIdsRequest(nodeID_, translatedNodeIDs_, logger_);
         if(sc != UA_STATUSCODE_GOOD) {
           logger_->log_error("Failed to translate %s to node id, no flow files will be generated (%s)", nodeID_.c_str(), UA_StatusCode_name(sc));
           yield();
@@ -174,7 +174,7 @@ namespace processors {
         }
       }
       for(auto& nodeID: translatedNodeIDs_) {
-        opc::traverse(connection_, nodeID, f, nodeID_, maxDepth_);
+        connection_->traverse(nodeID, f, nodeID_, maxDepth_);
       }
     }
     if(nodesFound_ == 0) {
@@ -187,13 +187,13 @@ namespace processors {
 
   }
 
-  bool FetchOPCProcessor::nodeFoundCallBack(opc::ClientPtr& clientPtr, const UA_ReferenceDescription *ref, const std::string& path,
+  bool FetchOPCProcessor::nodeFoundCallBack(opc::Client& client, const UA_ReferenceDescription *ref, const std::string& path,
       const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
     nodesFound_++;
     if(ref->nodeClass == UA_NODECLASS_VARIABLE)
     {
       try {
-        opc::NodeData nodedata = opc::getNodeData(clientPtr, ref);
+        opc::NodeData nodedata = connection_->getNodeData(ref);
         OPCData2FlowFile(nodedata, context, session);
         variablesFound_++;
       } catch (const std::exception& exception) {

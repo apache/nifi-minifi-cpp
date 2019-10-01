@@ -67,7 +67,6 @@ class PutOPCProcessor : public BaseOPCProcessor {
   PutOPCProcessor(std::string name, utils::Identifier uuid = utils::Identifier())
   : BaseOPCProcessor(name, uuid) {
     logger_ = logging::LoggerFactory<PutOPCProcessor>::getLogger();
-    connection_ = opc::ClientPtr(nullptr, std::bind(opc::disconnect, std::placeholders::_1, logger_));
   }
 
   virtual void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &factory) override;
