@@ -89,6 +89,24 @@ namespace {
     UA_Variant_setScalarCopy(variant, &ua_value, &UA_TYPES[UA_TYPES_DOUBLE]);
   }
 
+  core::logging::LOG_LEVEL MapOPCLogLevel(UA_LogLevel ualvl) {
+    switch (ualvl) {
+      case UA_LOGLEVEL_TRACE:
+        return core::logging::trace;
+      case UA_LOGLEVEL_DEBUG:
+        return core::logging::debug;
+      case UA_LOGLEVEL_INFO:
+        return core::logging::info;
+      case UA_LOGLEVEL_WARNING:
+        return core::logging::warn;
+      case UA_LOGLEVEL_ERROR:
+        return core::logging::err;
+      case UA_LOGLEVEL_FATAL:
+        return core::logging::critical;
+      default:
+        return core::logging::critical;
+    }
+  }
 }
 
 /*
@@ -200,6 +218,12 @@ UA_StatusCode setCertificates(ClientPtr& clientPtr, const std::vector<char>& cer
 ClientPtr connect(const std::string& url, std::shared_ptr<core::logging::Logger> logger, const std::string& username, const std::string& password) {
   UA_Client *client = UA_Client_new();
   UA_ClientConfig_setDefault(UA_Client_getConfig(client));
+
+  const UA_Logger MinifiUALogger = {logFunc, logger.get(), logClear};
+
+  UA_ClientConfig *configPtr = UA_Client_getConfig(client);
+  configPtr->logger = MinifiUALogger;
+
   UA_StatusCode retval;
   if(username.empty()) {
     retval = UA_Client_connect(client, url.c_str());
@@ -226,7 +250,35 @@ bool isConnected(const ClientPtr &ptr) {
   return UA_Client_getState(client) != UA_CLIENTSTATE_DISCONNECTED;
 }
 
-void traverse(ClientPtr& clientPtr, UA_NodeId nodeId, std::function<nodeFoundCallBackFunc> cb, const std::string& basePath) {
+UA_ReferenceDescription * getNodeReference(ClientPtr& clientPtr, UA_NodeId nodeId) {
+  UA_ReferenceDescription *ref = UA_ReferenceDescription_new();
+  UA_ReferenceDescription_init(ref);
+  UA_NodeId_copy(&nodeId, &ref->nodeId.nodeId);
+  auto sc = UA_Client_readNodeClassAttribute(clientPtr.get(), nodeId, &ref->nodeClass);
+  if (sc == UA_STATUSCODE_GOOD) {
+    sc = UA_Client_readBrowseNameAttribute(clientPtr.get(), nodeId, &ref->browseName);
+  }
+  if (sc == UA_STATUSCODE_GOOD) {
+    UA_Client_readDisplayNameAttribute(clientPtr.get(), nodeId, &ref->displayName);
+  }
+  return ref;
+}
+
+void traverse(ClientPtr& clientPtr, UA_NodeId nodeId, std::function<nodeFoundCallBackFunc> cb, const std::string& basePath, uint32_t maxDepth, bool fetchRoot) {
+  if (fetchRoot) {
+    UA_ReferenceDescription *rootRef = getNodeReference(clientPtr, nodeId);
+    if (rootRef->nodeClass == UA_NODECLASS_VARIABLE && rootRef->browseName.name.length > 0) {
+      cb(clientPtr, rootRef, basePath);
+    }
+    UA_ReferenceDescription_delete(rootRef);
+  }
+
+  if(maxDepth != 0) {
+    maxDepth--;
+    if(maxDepth == 0) {
+      return;
+    }
+  }
 
   UA_Client *client = clientPtr.get();
   UA_BrowseRequest bReq;
@@ -252,7 +304,7 @@ void traverse(ClientPtr& clientPtr, UA_NodeId nodeId, std::function<nodeFoundCal
       if (cb(clientPtr, ref, basePath)) {
         if (ref->nodeClass == UA_NODECLASS_VARIABLE || ref->nodeClass == UA_NODECLASS_OBJECT) {
           std::string browsename((char *) ref->browseName.name.data, ref->browseName.name.length);
-          traverse(clientPtr, ref->nodeId.nodeId, cb, basePath + browsename);
+          traverse(clientPtr, ref->nodeId.nodeId, cb, basePath + browsename, maxDepth, false);
         }
       } else {
         return;
@@ -468,9 +520,16 @@ std::string OPCDateTime2String(UA_DateTime raw_date) {
   UA_DateTimeStruct dts = UA_DateTime_toStruct(raw_date);
   std::array<char, 100> charBuf;
 
-  snprintf(charBuf.data(), charBuf.size(), "%02hu-%02hu-%02hu %02hu:%02hu:%02hu.%03hu", dts.day, dts.month, dts.year, dts.hour, dts.min, dts.sec, dts.milliSec);
+  snprintf(charBuf.data(), charBuf.size(), "%02hu-%02hu-%04hu %02hu:%02hu:%02hu.%03hu", dts.day, dts.month, dts.year, dts.hour, dts.min, dts.sec, dts.milliSec);
 
   return std::string(charBuf.data(), charBuf.size());
+}
+
+void logFunc(void *context, UA_LogLevel level, UA_LogCategory category, const char *msg, va_list args) {
+  char buffer[1024];
+  vsnprintf(buffer, 1024, msg, args);
+  auto loggerPtr = reinterpret_cast<core::logging::BaseLogger*>(context);
+  loggerPtr->log_string(MapOPCLogLevel(level), buffer);
 }
 
 } /* namespace opc */

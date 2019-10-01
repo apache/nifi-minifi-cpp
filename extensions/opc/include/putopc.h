@@ -65,14 +65,16 @@ class PutOPCProcessor : public BaseOPCProcessor {
   static core::Relationship Failure;
 
   PutOPCProcessor(std::string name, utils::Identifier uuid = utils::Identifier())
-  : BaseOPCProcessor(logging::LoggerFactory<PutOPCProcessor>::getLogger(), name, uuid) {}
+  : BaseOPCProcessor(name, uuid) {
+    logger_ = logging::LoggerFactory<PutOPCProcessor>::getLogger();
+    connection_ = opc::ClientPtr(nullptr, std::bind(opc::disconnect, std::placeholders::_1, logger_));
+  }
 
   virtual void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &factory) override;
 
   virtual void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
 
   virtual void initialize(void) override;
-
 
  private:
 

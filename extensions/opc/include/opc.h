@@ -97,11 +97,13 @@ using nodeFoundCallBackFunc = bool(ClientPtr& clientPtr, const UA_ReferenceDescr
 
 UA_StatusCode translateBrowsePathsToNodeIdsRequest(ClientPtr& clientPtr, const std::string& path, std::vector<UA_NodeId>& foundNodeIDs, const std::shared_ptr<core::logging::Logger>& logger);
 
-void traverse(ClientPtr& clientPtr, UA_NodeId nodeId, std::function<nodeFoundCallBackFunc> cb, const std::string& basePath = "");
+void traverse(ClientPtr& clientPtr, UA_NodeId nodeId, std::function<nodeFoundCallBackFunc> cb, const std::string& basePath = "", uint32_t maxDepth = 0, bool fetchRoot = true);
 
 bool exists(ClientPtr& clientPtr, UA_NodeId nodeId);
 
 NodeData getNodeData(opc::ClientPtr& clientPtr, const UA_ReferenceDescription *ref, const std::string& basePath = "");
+
+UA_ReferenceDescription * getNodeReference(ClientPtr& clientPtr, UA_NodeId nodeId);
 
 std::string nodeValue2String(const NodeData& nd);
 
@@ -112,6 +114,10 @@ UA_StatusCode update_node(ClientPtr& clientPtr, const UA_NodeId nodeId, T value)
 
 template <typename T>
 UA_StatusCode add_node(ClientPtr& clientPtr, const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, std::string browseName, T value, OPCNodeDataType dt, UA_NodeId *receivedNodeId);
+
+void logFunc(void *context, UA_LogLevel level, UA_LogCategory category, const char *msg, va_list args);
+
+static void logClear(void *context) {};
 
 } /* namespace opc */
 } /* namespace minifi */

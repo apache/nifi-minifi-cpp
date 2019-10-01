@@ -176,19 +176,7 @@ namespace processors {
       return;
     }
 
-    if (!opc::isConnected(connection_)) {
-      if(!certBuffer_.empty()) {
-        auto sc = opc::setCertificates(connection_, certBuffer_, keyBuffer_);
-        if(sc != UA_STATUSCODE_GOOD) {
-          logger_->log_error("Failed to set certificates: %s!", UA_StatusCode_name(sc));
-          yield();
-          return;
-        };
-      }
-      connection_ = opc::connect(endPointURL_, logger_, username_, password_);
-    }
-    if (!opc::isConnected(connection_)) {
-      logger_->log_error("Failed to connect to %s, yielding", endPointURL_.c_str());
+    if (!reconnect()) {
       yield();
       return;
     }

@@ -60,13 +60,18 @@ namespace processors {
       ->withDescription("The index of the namespace. Used only if node ID type is not path.")
       ->withDefaultValue<int32_t>(0)->build());
 
+  core::Property FetchOPCProcessor::MaxDepth(
+      core::PropertyBuilder::createProperty("Max depth")
+      ->withDescription("Specifiec the max depth of browsing. 0 means unlimited.")
+      ->withDefaultValue<uint64_t>(0)->build());
+
   core::Relationship FetchOPCProcessor::Success("success", "Successfully retrieved OPC-UA nodes");
   core::Relationship FetchOPCProcessor::Failure("failure", "Retrieved OPC-UA nodes where value cannot be extracted (only if enabled)");
 
 
   void FetchOPCProcessor::initialize() {
     // Set the supported properties
-    std::set<core::Property> fetchOPCProperties = {OPCServerEndPoint, NodeID, NodeIDType, NameSpaceIndex};
+    std::set<core::Property> fetchOPCProperties = {OPCServerEndPoint, NodeID, NodeIDType, NameSpaceIndex, MaxDepth};
     std::set<core::Property> baseOPCProperties = BaseOPCProcessor::getSupportedProperties();
     fetchOPCProperties.insert(baseOPCProperties.begin(), baseOPCProperties.end());
     setSupportedProperties(fetchOPCProperties);
@@ -91,6 +96,9 @@ namespace processors {
     std::string value;
     context->getProperty(NodeID.getName(), nodeID_);
     context->getProperty(NodeIDType.getName(), value);
+
+    maxDepth_ = 0;
+    context->getProperty(MaxDepth.getName(), maxDepth_);
 
     if (value == "String") {
       idType_ = opc::OPCNodeIDType::String;
@@ -136,25 +144,13 @@ namespace processors {
       return;
     }
 
+    if (!reconnect()) {
+      yield();
+      return;;
+    }
+
     nodesFound_ = 0;
     variablesFound_ = 0;
-
-    if(!opc::isConnected(connection_)) {
-      if(!certBuffer_.empty()) {
-        auto sc = opc::setCertificates(connection_, certBuffer_, keyBuffer_);
-        if(sc != UA_STATUSCODE_GOOD) {
-          logger_->log_error("Failed to set certificates: %s!", UA_StatusCode_name(sc));
-          yield();
-          return;
-        };
-      }
-      connection_ = opc::connect(endPointURL_, logger_, username_, password_);
-    }
-    if(!opc::isConnected(connection_)) {
-      logger_->log_error("Failed to connect to %s, yielding", endPointURL_.c_str());
-      yield();
-      return;
-    }
 
     std::function<opc::nodeFoundCallBackFunc> f = std::bind(&FetchOPCProcessor::nodeFoundCallBack, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, context, session);
     if(idType_ != opc::OPCNodeIDType::Path) {
@@ -167,7 +163,7 @@ namespace processors {
         myID.identifierType = UA_NODEIDTYPE_STRING;
         myID.identifier.string = UA_STRING_ALLOC(nodeID_.c_str());
       }
-      opc::traverse(connection_, myID, f);
+      opc::traverse(connection_, myID, f, "", maxDepth_);
     } else {
       if(translatedNodeIDs_.empty()) {
         auto sc = opc::translateBrowsePathsToNodeIdsRequest(connection_, nodeID_, translatedNodeIDs_, logger_);
@@ -178,11 +174,11 @@ namespace processors {
         }
       }
       for(auto& nodeID: translatedNodeIDs_) {
-        opc::traverse(connection_, nodeID, f, nodeID_);
+        opc::traverse(connection_, nodeID, f, nodeID_, maxDepth_);
       }
     }
     if(nodesFound_ == 0) {
-      logger_->log_warn("Connected to OPC server, the specified node was not found. Configuration might be incorrect! Yielding...");
+      logger_->log_warn("Connected to OPC server, but no variable nodes were not found. Configuration might be incorrect! Yielding...");
       yield();
     } else if (variablesFound_ == 0) {
       logger_->log_warn("Found no variables when traversing the specified node. No flowfiles are generated. Yielding...");

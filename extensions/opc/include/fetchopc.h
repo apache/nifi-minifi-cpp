@@ -52,13 +52,16 @@ public:
   static core::Property NodeIDType;
   static core::Property NodeID;
   static core::Property NameSpaceIndex;
+  static core::Property MaxDepth;
 
   // Supported Relationships
   static core::Relationship Success;
   static core::Relationship Failure;
 
   FetchOPCProcessor(std::string name, utils::Identifier uuid = utils::Identifier())
-  : BaseOPCProcessor(logging::LoggerFactory<FetchOPCProcessor>::getLogger(), name, uuid) {
+  : BaseOPCProcessor(name, uuid) {
+    logger_ = logging::LoggerFactory<FetchOPCProcessor>::getLogger();
+    connection_ = opc::ClientPtr(nullptr, std::bind(opc::disconnect, std::placeholders::_1, logger_));
   }
 
   virtual void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &factory) override;
@@ -88,6 +91,7 @@ protected:
   opc::OPCNodeIDType idType_;
   uint32_t nodesFound_;
   uint32_t variablesFound_;
+  uint64_t maxDepth_;
 
 private:
   std::mutex onTriggerMutex_;

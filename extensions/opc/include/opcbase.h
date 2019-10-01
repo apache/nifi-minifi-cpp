@@ -43,15 +43,15 @@ class BaseOPCProcessor : public core::Processor {
   static core::Property CertificatePath;
   static core::Property KeyPath;
 
-  BaseOPCProcessor(std::shared_ptr<logging::Logger> logger, std::string name, utils::Identifier uuid = utils::Identifier())
-  : Processor(name, uuid),
-    logger_(logger),
-    connection_(nullptr, std::bind(opc::disconnect, std::placeholders::_1, logger)) {
+  BaseOPCProcessor(std::string name, utils::Identifier uuid = utils::Identifier())
+  : Processor(name, uuid) {
   }
 
   virtual void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &factory) override;
 
  protected:
+  virtual bool reconnect();
+
   std::shared_ptr<logging::Logger> logger_;
 
   opc::ClientPtr connection_;

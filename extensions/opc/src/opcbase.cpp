@@ -73,7 +73,7 @@ namespace processors {
     }
 
     if (context->getProperty(CertificatePath.getName(), certpath_) !=
-        context->getProperty(Password.getName(), keypath_)) {
+        context->getProperty(KeyPath.getName(), keypath_)) {
       logger_->log_error("Both or neither of certificate and key paths should be provided!");
       return;
     }
@@ -105,6 +105,27 @@ namespace processors {
 
     configOK_ = true;
   }
+
+  bool BaseOPCProcessor::reconnect() {
+    if (opc::isConnected(connection_)) {
+      return true;
+    }
+    if (!certBuffer_.empty()) {
+      auto sc = opc::setCertificates(connection_, certBuffer_, keyBuffer_);
+      if (sc != UA_STATUSCODE_GOOD) {
+        logger_->log_error("Failed to set certificates: %s!", UA_StatusCode_name(sc));
+        return false;
+      };
+    }
+
+    connection_ = opc::connect(endPointURL_, logger_, username_, password_);
+
+    if (!opc::isConnected(connection_)) {
+      logger_->log_error("Failed to connect to %s", endPointURL_.c_str());
+      return false;
+    }
+    return true;
+  };
 
 } /* namespace processors */
 } /* namespace minifi */
