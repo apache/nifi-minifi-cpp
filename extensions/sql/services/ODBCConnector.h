@@ -1,0 +1,105 @@
+/**
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+#ifndef LIBMINIFI_INCLUDE_CONTROLLERS_ODBCService_H_
+#define LIBMINIFI_INCLUDE_CONTROLLERS_ODBCService_H_
+
+#include "core/logging/LoggerConfiguration.h"
+#include "core/controller/ControllerService.h"
+
+#include <soci.h>
+#include <odbc/soci-odbc.h>
+#include "DatabaseService.h"
+#include "data/DatabaseConnectors.h"
+#include <memory>
+#include <unordered_map>
+
+namespace org {
+namespace apache {
+namespace nifi {
+namespace minifi {
+namespace sql {
+namespace controllers {
+
+class ODBCConnection : public sql::Connection {
+ public:
+  explicit ODBCConnection(const std::string &connectionString)
+      : connection_string_(connectionString) {
+  }
+  virtual ~ODBCConnection() {
+  }
+  virtual std::unique_ptr<sql::Statement> prepareStatement(const std::string &query) const {
+	// can't do the lookup since we've statically linked the back-end
+    static const soci::backend_factory &backEnd = *soci::factory_odbc();
+    soci::connection_parameters parameters(backEnd, connection_string_);
+    parameters.set_option(soci::odbc_option_driver_complete, "0" /* SQL_DRIVER_NOPROMPT */);
+    std::unique_ptr<soci::session> sql = std::unique_ptr<soci::session>(new soci::session(parameters));
+    return std::unique_ptr<sql::Statement>(new Statement(std::move(sql), query));
+  }
+ private:
+  std::string connection_string_;
+};
+/**
+ * Purpose and Justification: Controller services function as a layerable way to provide
+ * services to internal services. While a controller service is generally configured from the flow,
+ * we want to follow the open closed principle and provide Database services
+ */
+class ODBCService : public DatabaseService {
+ public:
+
+  /**
+   * Constructors for the controller service.
+   */
+  explicit ODBCService(const std::string &name, const std::string &id)
+      : DatabaseService(name, id),
+        logger_(logging::LoggerFactory<ODBCService>::getLogger()) {
+    initialize();
+  }
+
+  explicit ODBCService(const std::string &name, utils::Identifier uuid = utils::Identifier())
+      : DatabaseService(name, uuid),
+        logger_(logging::LoggerFactory<ODBCService>::getLogger()) {
+    initialize();
+  }
+
+  explicit ODBCService(const std::string &name, const std::shared_ptr<Configure> &configuration)
+      : DatabaseService(name),
+        logger_(logging::LoggerFactory<ODBCService>::getLogger()) {
+    setConfiguration(configuration);
+    initialize();
+  }
+
+  virtual void initialize() override;
+
+  virtual std::unique_ptr<sql::Connection> getConnection() const override;
+
+ protected:
+
+ private:
+
+  std::shared_ptr<logging::Logger> logger_;
+
+};
+
+} /* namespace controllers */
+} /* namespace sql */
+} /* namespace minifi */
+} /* namespace nifi */
+} /* namespace apache */
+} /* namespace org */
+
+#endif /* LIBMINIFI_INCLUDE_CONTROLLERS_ODBCService_H_ */
