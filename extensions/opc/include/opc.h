@@ -61,11 +61,15 @@ class Client {
   UA_StatusCode add_node(const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, std::string browseName, T value, OPCNodeDataType dt, UA_NodeId *receivedNodeId);
 
  private:
-  Client (std::shared_ptr<core::logging::Logger> logger, const std::vector<char>& certBuffer, const std::vector<char>& keyBuffer, const std::vector<std::vector<char>>& trustBuffers);
+  Client (std::shared_ptr<core::logging::Logger> logger, const std::string& applicationURI,
+      const std::vector<char>& certBuffer, const std::vector<char>& keyBuffer,
+      const std::vector<std::vector<char>>& trustBuffers);
+
   UA_Client *client_;
   std::shared_ptr<core::logging::Logger> logger_;
 
   friend std::unique_ptr<Client> createClient(std::shared_ptr<core::logging::Logger> logger,
+                                              const std::string& applicationURI,
                                               const std::vector<char>& certBuffer,
                                               const std::vector<char>& keyBuffer,
                                               const std::vector<std::vector<char>>& trustBuffers);
@@ -118,7 +122,9 @@ static std::map<std::string, OPCNodeDataType>  StringToOPCDataTypeMap = {{"Int64
 
 int32_t OPCNodeDataTypeToTypeID(OPCNodeDataType dt);
 
-ClientPtr createClient(std::shared_ptr<core::logging::Logger> logger, const std::vector<char>& certBuffer, const std::vector<char>& keyBuffer, const std::vector<std::vector<char>>& trustBuffers);
+ClientPtr createClient(std::shared_ptr<core::logging::Logger> logger, const std::string& applicationURI,
+                       const std::vector<char>& certBuffer, const std::vector<char>& keyBuffer,
+                       const std::vector<std::vector<char>>& trustBuffers);
 
 std::string nodeValue2String(const NodeData& nd);
 

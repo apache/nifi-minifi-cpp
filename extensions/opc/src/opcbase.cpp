@@ -39,6 +39,12 @@ namespace processors {
       ->withDescription("Specifies the address, port and relative path of an OPC endpoint")
       ->isRequired(true)->build());
 
+  core::Property BaseOPCProcessor::ApplicationURI(
+      core::PropertyBuilder::createProperty("Application URI")
+          ->withDescription("Application URI of the client in the format 'urn:unconfigured:application'. "
+                            "Mandatory, if using Secure Channel and must match the URI included in the certificate's Subject Alternative Names.")->build());
+
+
   core::Property BaseOPCProcessor::Username(
       core::PropertyBuilder::createProperty("Username")
           ->withDescription("Username to log in with.")->build());
@@ -49,19 +55,20 @@ namespace processors {
 
   core::Property BaseOPCProcessor::CertificatePath(
       core::PropertyBuilder::createProperty("Certificate path")
-          ->withDescription("Path to the cert file")->build());
+          ->withDescription("Path to the DER-encoded cert file")->build());
 
   core::Property BaseOPCProcessor::KeyPath(
       core::PropertyBuilder::createProperty("Key path")
-          ->withDescription("Path to the key file")->build());
+          ->withDescription("Path to the DER-encoded key file")->build());
 
   core::Property BaseOPCProcessor::TrustedPath(
-      core::PropertyBuilder::createProperty("Trusted certificate path")
-          ->withDescription("Path to the trusted certificate or trutested certificates directory")->build());
+      core::PropertyBuilder::createProperty("Trusted server certificate path")
+          ->withDescription("Path to the DER-encoded trusted server certificate")->build());
 
   void BaseOPCProcessor::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &factory) {
     logger_->log_trace("BaseOPCProcessor::onSchedule");
 
+    applicationURI_.clear();
     certBuffer_.clear();
     keyBuffer_.clear();
     password_.clear();
@@ -71,9 +78,10 @@ namespace processors {
     configOK_ = false;
 
     context->getProperty(OPCServerEndPoint.getName(), endPointURL_);
+    context->getProperty(ApplicationURI.getName(), applicationURI_);
 
     if (context->getProperty(Username.getName(), username_) != context->getProperty(Password.getName(), password_)) {
-      logger_->log_error("Both or neither of username and password should be provided!");
+      logger_->log_error("Both or neither of Username and Password should be provided!");
       return;
     }
 
@@ -81,16 +89,21 @@ namespace processors {
     auto keyPathRes = context->getProperty(KeyPath.getName(), keypath_);
     auto trustedPathRes = context->getProperty(TrustedPath.getName(), trustpath_);
     if (certificatePathRes != keyPathRes || keyPathRes != trustedPathRes) {
-      logger_->log_error("All or none of certificate, key and trusted paths should be provided!");
+      logger_->log_error("All or none of Certificate path, Key path and Trusted server certificate path should be provided!");
       return;
     }
 
-    if (!password_.empty() && (certpath_.empty() || keypath_.empty() || trustpath_.empty())) {
-      logger_->log_error("Certificate, key and trusted paths must be provided in case password is provided!");
+    if (!password_.empty() && (certpath_.empty() || keypath_.empty() || trustpath_.empty() || applicationURI_.empty())) {
+      logger_->log_error("Certificate path, Key path, Trusted server certificate path and Application URI must be provided in case Password is provided!");
       return;
     }
 
     if (!certpath_.empty()) {
+      if (applicationURI_.empty()) {
+        logger_->log_error("Application URI must be provided if Certificate path is provided!");
+        return;
+      }
+
       std::ifstream input_cert(certpath_, std::ios::binary);
       if (input_cert.good()) {
         certBuffer_ = std::vector<char>(std::istreambuf_iterator<char>(input_cert), {});
@@ -116,12 +129,9 @@ namespace processors {
       }
 
       if (trustBuffers_[0].empty()) {
-        logger_->log_error("Failed to load trusted certs from path: %s", trustpath_);
+        logger_->log_error("Failed to load trusted server certs from path: %s", trustpath_);
         return;
       }
-      certBuffer_.emplace_back('\0');
-      keyBuffer_.emplace_back('\0');
-      trustBuffers_[0].emplace_back('\0');
     }
 
     configOK_ = true;
@@ -129,7 +139,7 @@ namespace processors {
 
   bool BaseOPCProcessor::reconnect() {
     if (connection_ == nullptr) {
-      connection_ = opc::createClient(logger_, certBuffer_, keyBuffer_, trustBuffers_);
+      connection_ = opc::createClient(logger_, applicationURI_, certBuffer_, keyBuffer_, trustBuffers_);
     }
 
     if (connection_->isConnected()) {

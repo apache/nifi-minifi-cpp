@@ -113,7 +113,10 @@ namespace {
  * End of internal functions
  */
 
-Client::Client(std::shared_ptr<core::logging::Logger> logger, const std::vector<char>& certBuffer, const std::vector<char>& keyBuffer, const std::vector<std::vector<char>>& trustBuffers) {
+Client::Client(std::shared_ptr<core::logging::Logger> logger, const std::string& applicationURI,
+               const std::vector<char>& certBuffer, const std::vector<char>& keyBuffer,
+               const std::vector<std::vector<char>>& trustBuffers) {
+
   client_ = UA_Client_new();
   if (certBuffer.empty()) {
     UA_ClientConfig_setDefault(UA_Client_getConfig(client_));
@@ -160,6 +163,11 @@ Client::Client(std::shared_ptr<core::logging::Logger> logger, const std::vector<
 
   UA_ClientConfig *configPtr = UA_Client_getConfig(client_);
   configPtr->logger = MinifiUALogger;
+
+  if(applicationURI.length() > 0) {
+    UA_String_clear(&configPtr->clientDescription.applicationUri);
+    configPtr->clientDescription.applicationUri = UA_STRING_ALLOC(applicationURI.c_str());
+  }
 
   logger_ = logger;
 }
@@ -396,9 +404,11 @@ UA_StatusCode Client::update_node(const UA_NodeId nodeId, T value) {
   return sc;
 };
 
-ClientPtr createClient(std::shared_ptr<core::logging::Logger> logger, const std::vector<char>& certBuffer, const std::vector<char>& keyBuffer, const std::vector<std::vector<char>>& trustBuffers) {
+ClientPtr createClient(std::shared_ptr<core::logging::Logger> logger, const std::string& applicationURI,
+                       const std::vector<char>& certBuffer, const std::vector<char>& keyBuffer,
+                       const std::vector<std::vector<char>>& trustBuffers) {
   try {
-    return ClientPtr(new Client(logger, certBuffer, keyBuffer, trustBuffers));
+    return ClientPtr(new Client(logger, applicationURI, certBuffer, keyBuffer, trustBuffers));
   } catch (const std::exception& exception) {
     logger->log_error("Failed to create client: %s", exception.what());
   }

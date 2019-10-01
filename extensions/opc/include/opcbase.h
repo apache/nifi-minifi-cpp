@@ -38,6 +38,7 @@ class BaseOPCProcessor : public core::Processor {
  public:
   static core::Property OPCServerEndPoint;
 
+  static core::Property ApplicationURI;
   static core::Property Username;
   static core::Property Password;
   static core::Property CertificatePath;
@@ -60,6 +61,7 @@ class BaseOPCProcessor : public core::Processor {
 
   std::string endPointURL_;
 
+  std::string applicationURI_;
   std::string username_;
   std::string password_;
   std::string certpath_;
@@ -72,7 +74,7 @@ class BaseOPCProcessor : public core::Processor {
 
   bool configOK_;
 
-  virtual std::set<core::Property> getSupportedProperties() const {return {OPCServerEndPoint, Username, Password, CertificatePath, KeyPath, TrustedPath};}
+  virtual std::set<core::Property> getSupportedProperties() const {return {OPCServerEndPoint, ApplicationURI, Username, Password, CertificatePath, KeyPath, TrustedPath};}
 };
 
 } /* namespace processors */
