@@ -59,7 +59,7 @@ public:
   static core::Relationship Failure;
 
   FetchOPCProcessor(std::string name, utils::Identifier uuid = utils::Identifier())
-  : BaseOPCProcessor(name, uuid) {
+  : BaseOPCProcessor(name, uuid), nameSpaceIdx_(0), nodesFound_(0), variablesFound_(0), maxDepth_(0) {
     logger_ = logging::LoggerFactory<FetchOPCProcessor>::getLogger();
   }
 

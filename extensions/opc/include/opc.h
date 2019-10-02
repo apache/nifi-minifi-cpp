@@ -58,7 +58,7 @@ class Client {
   ~Client();
   NodeData getNodeData(const UA_ReferenceDescription *ref, const std::string& basePath = "");
   UA_ReferenceDescription * getNodeReference(UA_NodeId nodeId);
-  void traverse(UA_NodeId nodeId, std::function<nodeFoundCallBackFunc> cb, const std::string& basePath = "", uint32_t maxDepth = 0, bool fetchRoot = true);
+  void traverse(UA_NodeId nodeId, std::function<nodeFoundCallBackFunc> cb, const std::string& basePath = "", uint64_t maxDepth = 0, bool fetchRoot = true);
   bool exists(UA_NodeId nodeId);
   UA_StatusCode translateBrowsePathsToNodeIdsRequest(const std::string& path, std::vector<UA_NodeId>& foundNodeIDs, const std::shared_ptr<core::logging::Logger>& logger);
 
@@ -68,6 +68,10 @@ class Client {
   template<typename T>
   UA_StatusCode add_node(const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, std::string browseName, T value, OPCNodeDataType dt, UA_NodeId *receivedNodeId);
 
+  static std::unique_ptr<Client> createClient(std::shared_ptr<core::logging::Logger> logger, const std::string& applicationURI,
+                                              const std::vector<char>& certBuffer, const std::vector<char>& keyBuffer,
+                                              const std::vector<std::vector<char>>& trustBuffers);
+
  private:
   Client (std::shared_ptr<core::logging::Logger> logger, const std::string& applicationURI,
       const std::vector<char>& certBuffer, const std::vector<char>& keyBuffer,
@@ -75,12 +79,6 @@ class Client {
 
   UA_Client *client_;
   std::shared_ptr<core::logging::Logger> logger_;
-
-  friend std::unique_ptr<Client> createClient(std::shared_ptr<core::logging::Logger> logger,
-                                              const std::string& applicationURI,
-                                              const std::vector<char>& certBuffer,
-                                              const std::vector<char>& keyBuffer,
-                                              const std::vector<std::vector<char>>& trustBuffers);
 };
 
 using ClientPtr = std::unique_ptr<Client>;
@@ -129,10 +127,6 @@ static std::map<std::string, OPCNodeDataType>  StringToOPCDataTypeMap = {{"Int64
                                                                          {"Double", OPCNodeDataType::Double}, {"String", OPCNodeDataType::String}};
 
 int32_t OPCNodeDataTypeToTypeID(OPCNodeDataType dt);
-
-ClientPtr createClient(std::shared_ptr<core::logging::Logger> logger, const std::string& applicationURI,
-                       const std::vector<char>& certBuffer, const std::vector<char>& keyBuffer,
-                       const std::vector<std::vector<char>>& trustBuffers);
 
 std::string nodeValue2String(const NodeData& nd);
 

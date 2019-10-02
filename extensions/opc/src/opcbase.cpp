@@ -139,7 +139,7 @@ namespace processors {
 
   bool BaseOPCProcessor::reconnect() {
     if (connection_ == nullptr) {
-      connection_ = opc::createClient(logger_, applicationURI_, certBuffer_, keyBuffer_, trustBuffers_);
+      connection_ = opc::Client::createClient(logger_, applicationURI_, certBuffer_, keyBuffer_, trustBuffers_);
     }
 
     if (connection_->isConnected()) {

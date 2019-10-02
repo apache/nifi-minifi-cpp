@@ -146,7 +146,7 @@ namespace processors {
 
     if (!reconnect()) {
       yield();
-      return;;
+      return;
     }
 
     nodesFound_ = 0;

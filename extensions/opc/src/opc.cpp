@@ -257,7 +257,7 @@ UA_ReferenceDescription * Client::getNodeReference(UA_NodeId nodeId) {
   return ref;
 }
 
-void Client::traverse(UA_NodeId nodeId, std::function<nodeFoundCallBackFunc> cb, const std::string& basePath, uint32_t maxDepth, bool fetchRoot) {
+void Client::traverse(UA_NodeId nodeId, std::function<nodeFoundCallBackFunc> cb, const std::string& basePath, uint64_t maxDepth, bool fetchRoot) {
   if (fetchRoot) {
     UA_ReferenceDescription *rootRef = getNodeReference(nodeId);
     if ((rootRef->nodeClass == UA_NODECLASS_VARIABLE || rootRef->nodeClass == UA_NODECLASS_OBJECT) && rootRef->browseName.name.length > 0) {
@@ -391,7 +391,7 @@ UA_StatusCode Client::add_node(const UA_NodeId parentNodeId, const UA_NodeId tar
                                                UA_QUALIFIEDNAME(1, const_cast<char*>(browseName.c_str())),
                                                UA_NODEID_NULL,
                                                attr, receivedNodeId);
-  UA_Variant_delete(&attr.value);
+  UA_Variant_clear(&attr.value);
   return sc;
 }
 
@@ -404,9 +404,9 @@ UA_StatusCode Client::update_node(const UA_NodeId nodeId, T value) {
   return sc;
 };
 
-ClientPtr createClient(std::shared_ptr<core::logging::Logger> logger, const std::string& applicationURI,
-                       const std::vector<char>& certBuffer, const std::vector<char>& keyBuffer,
-                       const std::vector<std::vector<char>>& trustBuffers) {
+std::unique_ptr<Client> Client::createClient(std::shared_ptr<core::logging::Logger> logger, const std::string& applicationURI,
+                                             const std::vector<char>& certBuffer, const std::vector<char>& keyBuffer,
+                                             const std::vector<std::vector<char>>& trustBuffers) {
   try {
     return ClientPtr(new Client(logger, applicationURI, certBuffer, keyBuffer, trustBuffers));
   } catch (const std::exception& exception) {

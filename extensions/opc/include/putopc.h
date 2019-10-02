@@ -65,7 +65,7 @@ class PutOPCProcessor : public BaseOPCProcessor {
   static core::Relationship Failure;
 
   PutOPCProcessor(std::string name, utils::Identifier uuid = utils::Identifier())
-  : BaseOPCProcessor(name, uuid) {
+  : BaseOPCProcessor(name, uuid), nameSpaceIdx_(0), parentExists_(false) {
     logger_ = logging::LoggerFactory<PutOPCProcessor>::getLogger();
   }
 

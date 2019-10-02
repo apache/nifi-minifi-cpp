@@ -47,7 +47,6 @@ class BaseOPCProcessor : public core::Processor {
 
   BaseOPCProcessor(std::string name, utils::Identifier uuid = utils::Identifier())
   : Processor(name, uuid) {
-    connection_ = nullptr;
   }
 
   virtual void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &factory) override;
