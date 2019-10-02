@@ -39,21 +39,21 @@ namespace minifi {
 namespace wel {
 
 
-	enum METADATA {
-		LOG_NAME,
-		SOURCE,
-		TIME_CREATED,
-		EVENTID,
-		OPCODE,
-		EVENT_RECORDID,
-		EVENT_TYPE,
-		TASK_CATEGORY,
-		LEVEL,
-		KEYWORDS,
-		USER,
-		COMPUTER,
-		UNKNOWN
-	};
+  enum METADATA {
+    LOG_NAME,
+    SOURCE,
+    TIME_CREATED,
+    EVENTID,
+    OPCODE,
+    EVENT_RECORDID,
+    EVENT_TYPE,
+    TASK_CATEGORY,
+    LEVEL,
+    KEYWORDS,
+    USER,
+    COMPUTER,
+    UNKNOWN
+  };
 
 
 // this is a continuous enum so we can rely on the array
@@ -63,126 +63,123 @@ typedef std::vector<std::pair<METADATA, std::string>> METADATA_NAMES;
 class WindowsEventLogHandler
 {
 public:
-	WindowsEventLogHandler() : metadata_provider_(nullptr){
-	}
-	
-	explicit WindowsEventLogHandler(EVT_HANDLE metadataProvider) : metadata_provider_(metadataProvider) {
-	}
-	
-	std::string getEventMessage(EVT_HANDLE eventHandle) const;
+  WindowsEventLogHandler() : metadata_provider_(nullptr){
+  }
+
+  explicit WindowsEventLogHandler(EVT_HANDLE metadataProvider) : metadata_provider_(metadataProvider) {
+  }
+
+  std::string getEventMessage(EVT_HANDLE eventHandle) const;
 
 
-	EVT_HANDLE getMetadata() const;
+  EVT_HANDLE getMetadata() const;
 
 private:
-	EVT_HANDLE metadata_provider_;
+  EVT_HANDLE metadata_provider_;
 };
 
 class WindowsEventLogMetadata {
 public:
-	WindowsEventLogMetadata(EVT_HANDLE metadataProvider, EVT_HANDLE event_ptr, const std::string &log_name) : metadata_ptr_(metadataProvider), event_timestamp_(0), event_ptr_(event_ptr), log_name_(log_name) {
-		renderMetadata();
-	}
+  WindowsEventLogMetadata(EVT_HANDLE metadataProvider, EVT_HANDLE event_ptr, const std::string &log_name) : metadata_ptr_(metadataProvider), event_timestamp_(0), event_ptr_(event_ptr), log_name_(log_name) {
+  renderMetadata();
+  }
 
-	virtual std::map<std::string, std::string> getFieldValues() const = 0;
+  virtual std::map<std::string, std::string> getFieldValues() const = 0;
 
-	virtual std::map<std::string, std::string> getIdentifiers() const = 0;
+  virtual std::map<std::string, std::string> getIdentifiers() const = 0;
 
-	virtual std::string getMetadata(METADATA metadata) const = 0;
+  virtual std::string getMetadata(METADATA metadata) const = 0;
 
-	
-	void renderMetadata();
-
-
-	static std::string getMetadataString(METADATA val) {
-		static std::map< METADATA, std::string> map = {
-			{LOG_NAME,	"LOG_NAME" },
-		{SOURCE,"SOURCE"},
-		{TIME_CREATED,"TIME_CREATED" },
-		{EVENTID,"EVENTID"},
-		{OPCODE,"OPCODE"},
-		{EVENT_RECORDID,"EVENT_RECORDID"},
-		{EVENT_TYPE,"EVENT_TYPE"},
-		{TASK_CATEGORY, "TASK_CATEGORY"},
-		{LEVEL,"LEVEL"},
-		{KEYWORDS,"KEYWORDS"},
-		{USER,"USER"},
-		{COMPUTER,"COMPUTER"}
-		};
-
-		return map[val];
-	}
+  void renderMetadata();
 
 
-	static METADATA getMetadataFromString(const std::string &val) {
-		static std::map< std::string, METADATA> map = {
-			{"LOG_NAME",LOG_NAME},
-			{"SOURCE",SOURCE},
-			{"TIME_CREATED",TIME_CREATED },
-			{"EVENTID",EVENTID},
-			{"OPCODE",OPCODE},
-			{"EVENT_RECORDID",EVENT_RECORDID},
-			{"TASK_CATEGORY", TASK_CATEGORY},
-			{"EVENT_TYPE",EVENT_TYPE},
-			{"LEVEL",LEVEL},
-			{"KEYWORDS",KEYWORDS},
-			{"USER",USER},
-			{"COMPUTER",COMPUTER}
-		};
+  static std::string getMetadataString(METADATA val) {
+    static std::map< METADATA, std::string> map = {
+      {LOG_NAME,	"LOG_NAME" },
+    {SOURCE,"SOURCE"},
+    {TIME_CREATED,"TIME_CREATED" },
+    {EVENTID,"EVENTID"},
+    {OPCODE,"OPCODE"},
+    {EVENT_RECORDID,"EVENT_RECORDID"},
+    {EVENT_TYPE,"EVENT_TYPE"},
+    {TASK_CATEGORY, "TASK_CATEGORY"},
+    {LEVEL,"LEVEL"},
+    {KEYWORDS,"KEYWORDS"},
+    {USER,"USER"},
+    {COMPUTER,"COMPUTER"}
+    };
 
-		auto enumVal = map.find(val);
-		if (enumVal != std::end(map)) {
-			return enumVal->second;
-		}
-		else {
-			return METADATA::UNKNOWN;
-		}
-	}
+    return map[val];
+  }
 
-	static std::string getComputerName() {
-		static std::string computer_name;
-		if (computer_name.empty()) {
-			char buff[10248];
-			DWORD size = sizeof(buff);
-			if (GetComputerNameExA(ComputerNameDnsFullyQualified, buff, &size)) {
-				computer_name = buff;
-			}
-			else {
-				computer_name = "N/A";
-			}
-		}
-		return computer_name;
-	}
+
+  static METADATA getMetadataFromString(const std::string &val) {
+    static std::map< std::string, METADATA> map = {
+      {"LOG_NAME",LOG_NAME},
+      {"SOURCE",SOURCE},
+      {"TIME_CREATED",TIME_CREATED },
+      {"EVENTID",EVENTID},
+      {"OPCODE",OPCODE},
+      {"EVENT_RECORDID",EVENT_RECORDID},
+      {"TASK_CATEGORY", TASK_CATEGORY},
+      {"EVENT_TYPE",EVENT_TYPE},
+      {"LEVEL",LEVEL},
+      {"KEYWORDS",KEYWORDS},
+      {"USER",USER},
+      {"COMPUTER",COMPUTER}
+  };
+
+    auto enumVal = map.find(val);
+    if (enumVal != std::end(map)) {
+      return enumVal->second;
+    }
+    else {
+      return METADATA::UNKNOWN;
+    }
+  }
+
+  static std::string getComputerName() {
+    static std::string computer_name;
+    if (computer_name.empty()) {
+      char buff[10248];
+      DWORD size = sizeof(buff);
+      if (GetComputerNameExA(ComputerNameDnsFullyQualified, buff, &size)) {
+        computer_name = buff;
+      }
+      else {
+        computer_name = "N/A";
+      }
+    }
+    return computer_name;
+  }
 
 protected:
-	std::string log_name_;
-	uint64_t event_timestamp_;
-	std::string event_type_;
-	short event_type_index_;
-	std::string event_timestamp_str_;
-	EVT_HANDLE event_ptr_;
-	EVT_HANDLE metadata_ptr_;
+  std::string log_name_;
+  uint64_t event_timestamp_;
+  std::string event_type_;
+  short event_type_index_;
+  std::string event_timestamp_str_;
+  EVT_HANDLE event_ptr_;
+  EVT_HANDLE metadata_ptr_;
 };
 
 
 class WindowsEventLogHeader {
 public:
-	explicit WindowsEventLogHeader(METADATA_NAMES header_names) : header_names_(header_names){
+  explicit WindowsEventLogHeader(METADATA_NAMES header_names) : header_names_(header_names){
 
-	}
+  }
 
-	void setDelimiter(const std::string &delim);
+  void setDelimiter(const std::string &delim);
 
-	std::string getEventHeader(const WindowsEventLogMetadata * const metadata) const;
-
-	
+  std::string getEventHeader(const WindowsEventLogMetadata * const metadata) const;
 
 private:
 
-	inline std::string createDefaultDelimiter(size_t max, size_t length) const;
+  inline std::string createDefaultDelimiter(size_t max, size_t length) const;
 
-	std::string delimiter_;
-	METADATA_NAMES header_names_;
+  std::string delimiter_;
+  METADATA_NAMES header_names_;
 };
 
 } /* namespace wel */

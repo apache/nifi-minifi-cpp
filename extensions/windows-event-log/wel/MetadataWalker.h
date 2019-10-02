@@ -59,30 +59,30 @@ class MetadataWalker : public pugi::xml_tree_walker, public WindowsEventLogMetad
    * Overloaded function to visit a node
    * @param node Node that we are visiting.
    */
-	virtual bool for_each(pugi::xml_node &node) override;
+  virtual bool for_each(pugi::xml_node &node) override;
 
-	static std::string updateXmlMetadata(const std::string &xml, EVT_HANDLE metadata_ptr, EVT_HANDLE event_ptr, bool update_xml, bool resolve, const std::string &regex = "");
+  static std::string updateXmlMetadata(const std::string &xml, EVT_HANDLE metadata_ptr, EVT_HANDLE event_ptr, bool update_xml, bool resolve, const std::string &regex = "");
 	
-	virtual std::map<std::string, std::string> getFieldValues() const override;
+  virtual std::map<std::string, std::string> getFieldValues() const override;
 
-	virtual std::map<std::string, std::string> getIdentifiers() const override;
+  virtual std::map<std::string, std::string> getIdentifiers() const override;
 
-	virtual std::string getMetadata(METADATA metadata) const override;
+  virtual std::string getMetadata(METADATA metadata) const override;
 
 
  private:
 
-	 std::vector<std::string> getIdentifiers(const std::string &text) const ;
+   std::vector<std::string> getIdentifiers(const std::string &text) const ;
 
 
-	 static std::string getString(const std::map<std::string, std::string> &map, const std::string &field) {
-		 auto srch = map.find(field);
-		 if (srch != std::end(map)) {
-			 return srch->second;
-		 }
-		 return "N/A";
-	}
-	static std::string to_string(const wchar_t* pChar);
+    static std::string getString(const std::map<std::string, std::string> &map, const std::string &field) {
+      auto srch = map.find(field);
+      if (srch != std::end(map)) {
+        return srch->second;
+      }
+      return "N/A";
+  }
+  static std::string to_string(const wchar_t* pChar);
    /**
    * Updates text within the XML representation
    */

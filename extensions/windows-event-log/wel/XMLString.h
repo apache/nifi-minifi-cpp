@@ -41,16 +41,16 @@ namespace nifi {
 namespace minifi {
 namespace wel {
 
-	class XmlString : public pugi::xml_writer
-	{
-	public:
-		std::string xml_;
+  class XmlString : public pugi::xml_writer
+  {
+  public:
+    std::string xml_;
 
-		virtual void write(const void* data, size_t size)
-		{
-			xml_.append(static_cast<const char*>(data), size);
-		}
-	};
+    virtual void write(const void* data, size_t size)
+    {
+      xml_.append(static_cast<const char*>(data), size);
+    }
+  };
 
 } /* namespace wel */
 } /* namespace minifi */
