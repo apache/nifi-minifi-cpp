@@ -181,13 +181,13 @@ void ConsumeWindowsEventLog::onSchedule(const std::shared_ptr<core::ProcessConte
 			auto key = utils::StringUtils::trim(splitKeyAndValue.at(0));
 			auto value = utils::StringUtils::trim(splitKeyAndValue.at(1));
 			if (!insertHeaderName(header_names_, key, value)) {
-				logger_->log_debug("%s is an invalid key for the header map", key);
+				logger_->log_error("%s is an invalid key for the header map", key);
 			}
 		}
 		else if (splitKeyAndValue.size() == 1) {
 			auto key = utils::StringUtils::trim(splitKeyAndValue.at(0));
 			if (!insertHeaderName(header_names_, key, "")) {
-				logger_->log_debug("%s is an invalid key for the header map", key);
+				logger_->log_error("%s is an invalid key for the header map", key);
 			}
 		}
 

@@ -16,34 +16,23 @@ bool MetadataWalker::for_each(pugi::xml_node &node) {
 		
 		for (pugi::xml_attribute attr : node.attributes())
 		{
+      static const auto idUpdate = [&](const std::string &input) {
+        if (resolve_) {
+          const auto resolved = utils::OsUtils::userIdToUsername(input);
+          replaced_identifiers_[input] = resolved;
+          return resolved;
+        }
 
-			if (std::regex_match(attr.name(), regex_)) {
-				std::function<std::string(const std::string &)> idUpdate = [&](const std::string &input) -> std::string {
-					if (resolve_) {
-						auto resolved = utils::OsUtils::userIdToUsername(input);
-						replaced_identifiers_[input] = resolved;
-						return resolved;
-					}
-					else {
-						replaced_identifiers_[input] = input;
-					}
-				};
-				updateText(node, attr.name(), std::move(idUpdate));
+        replaced_identifiers_[input] = input;
+        return input;
+      };
 
+      if (std::regex_match(attr.name(), regex_)) {
+        updateText(node, attr.name(), idUpdate);
 			}
 
 			if (std::regex_match(attr.value(), regex_)) {
-				std::function<std::string(const std::string &)> idUpdate = [&](const std::string &input) -> std::string {
-					if (resolve_) {
-						auto resolved = utils::OsUtils::userIdToUsername(input);
-						replaced_identifiers_[input] = resolved;
-						return resolved;
-					}
-					else {
-						replaced_identifiers_[input] = input;
-					}
-				};
-				updateText(node, attr.value(), std::move(idUpdate));
+				updateText(node, attr.value(), idUpdate);
 			}
 		}
 
@@ -177,8 +166,7 @@ void MetadataWalker::updateText(pugi::xml_node &node, const std::string &field_n
   std::string previous_value = node.text().get();
   auto new_field_value = fn(previous_value);
   if (new_field_value != previous_value) {
-
-	metadata_[field_name] = new_field_value;
+	  metadata_[field_name] = new_field_value;
     if (update_xml_) {
       node.text().set(new_field_value.c_str());
     } else {

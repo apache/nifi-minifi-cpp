@@ -134,27 +134,21 @@ std::string WindowsEventLogHandler::getEventMessage(EVT_HANDLE eventHandle) cons
 			free for example ) we will continue to use malloc and use a custom deleter with unique_ptr.
 		'*/
 		pBuffer = std::unique_ptr<WCHAR, utils::FreeDeleter>((LPWSTR)malloc(dwBufferSize * sizeof(WCHAR)));
+    if (!pBuffer) {
+      return returnValue;
+    }
 
+		EvtFormatMessage(metadata_provider_, eventHandle, 0, 0, NULL, EvtFormatMessageEvent, dwBufferSize, pBuffer.get(), &dwBufferUsed);
+	}
 
-		if (pBuffer) {
-			EvtFormatMessage(metadata_provider_, eventHandle, 0, 0, NULL, EvtFormatMessageEvent, dwBufferSize, pBuffer.get(), &dwBufferUsed);
-		}
-		else {
-			return returnValue;
-		}
-	}
-	else if (ERROR_EVT_MESSAGE_NOT_FOUND == status || ERROR_EVT_MESSAGE_ID_NOT_FOUND == status) {
-		return returnValue;
-	}
-	else {
+	if (ERROR_EVT_MESSAGE_NOT_FOUND == status || ERROR_EVT_MESSAGE_ID_NOT_FOUND == status) {
 		return returnValue;
 	}
 
-	// convert wstring to std::string
-	std::wstring message(pBuffer.get());
-	returnValue = std::string(message.begin(), message.end());
-	return returnValue;
+  // convert wstring to std::string
+  std::wstring message(pBuffer.get());
 
+  return std::string(message.begin(), message.end());
 }
 
 void WindowsEventLogHeader::setDelimiter(const std::string &delim) {
