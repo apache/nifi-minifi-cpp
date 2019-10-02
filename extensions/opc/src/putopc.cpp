@@ -319,7 +319,7 @@ namespace processors {
             if (utils::StringUtils::StringToBool(contentstr, value)) {
               sc = connection_->update_node(targetnode, value);
             } else {
-              throw Exception(OPC_EXCEPTION, "Content cannot be converted to bool");
+              throw opc::OPCException(GENERAL_EXCEPTION, "Content cannot be converted to bool");
             }
             break;
           }
@@ -338,7 +338,7 @@ namespace processors {
             break;
           }
           default:
-            throw Exception(OPC_EXCEPTION, "This should never happen!");
+            throw opc::OPCException(GENERAL_EXCEPTION, "This should never happen!");
         }
         if (sc != UA_STATUSCODE_GOOD) {
           logger_->log_error("Failed to update node: %s", UA_StatusCode_name(sc));
@@ -396,7 +396,7 @@ namespace processors {
             if (utils::StringUtils::StringToBool(contentstr, value)) {
               sc = connection_->add_node(parentNodeID_, targetnode, browsename, value, nodeDataType_, &resultnode);
             } else {
-              throw Exception(OPC_EXCEPTION, "Content cannot be converted to bool");
+              throw opc::OPCException(GENERAL_EXCEPTION, "Content cannot be converted to bool");
             }
             break;
           }
@@ -415,7 +415,7 @@ namespace processors {
             break;
           }
           default:
-            throw Exception(OPC_EXCEPTION, "This should never happen!");
+            throw opc::OPCException(GENERAL_EXCEPTION, "This should never happen!");
         }
         if (sc != UA_STATUSCODE_GOOD) {
           logger_->log_error("Failed to create node: %s", UA_StatusCode_name(sc));

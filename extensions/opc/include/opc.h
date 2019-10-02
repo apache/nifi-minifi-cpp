@@ -23,6 +23,7 @@
 #include "open62541/client_highlevel.h"
 #include "open62541/client_config_default.h"
 #include "logging/Logger.h"
+#include "Exception.h"
 
 #include <string>
 #include <functional>
@@ -32,6 +33,13 @@ namespace apache {
 namespace nifi {
 namespace minifi {
 namespace opc {
+
+class OPCException : public minifi::Exception {
+ public:
+  OPCException(ExceptionType type, std::string &&errorMsg)
+  : Exception(type, errorMsg) {
+  }
+};
 
 enum class OPCNodeIDType{ Path, Int, String };
 

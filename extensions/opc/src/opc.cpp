@@ -155,7 +155,7 @@ Client::Client(std::shared_ptr<core::logging::Logger> logger, const std::string&
     if (sc != UA_STATUSCODE_GOOD) {
       logger->log_error("Configuring the client for encryption failed: %s", UA_StatusCode_name(sc));
       UA_Client_delete(client_);
-      throw Exception(OPC_EXCEPTION, std::string("Failed to created client with the provided encryption settings: ") + UA_StatusCode_name(sc));
+      throw OPCException(GENERAL_EXCEPTION, std::string("Failed to created client with the provided encryption settings: ") + UA_StatusCode_name(sc));
     }
   }
 
@@ -237,9 +237,9 @@ NodeData Client::getNodeData(const UA_ReferenceDescription *ref, const std::stri
       return nodedata;
     }
     UA_Variant_delete(var);
-    throw Exception(OPC_EXCEPTION, "Failed to read value of node: " + browsename);
+    throw OPCException(GENERAL_EXCEPTION, "Failed to read value of node: " + browsename);
   } else {
-    throw Exception(OPC_EXCEPTION, "Only variable nodes are supported!");
+    throw OPCException(GENERAL_EXCEPTION, "Only variable nodes are supported!");
   }
 }
 
@@ -455,7 +455,7 @@ int32_t OPCNodeDataTypeToTypeID(OPCNodeDataType dt) {
     case OPCNodeDataType::String:
       return UA_NS0ID_STRING;
     default:
-      throw Exception(OPC_EXCEPTION, "Data type is not supported");
+      throw OPCException(GENERAL_EXCEPTION, "Data type is not supported");
   }
 }
 
@@ -520,7 +520,7 @@ std::string nodeValue2String(const NodeData& nd) {
         memcpy(&f, nd.data.data(), sizeof(float));
         ret_val = std::to_string(f);
       } else {
-        throw Exception(OPC_EXCEPTION, "Float is non-standard on this system, OPC data cannot be extracted!");
+        throw OPCException(GENERAL_EXCEPTION, "Float is non-standard on this system, OPC data cannot be extracted!");
       }
       break;
     case UA_TYPES_DOUBLE:
@@ -529,7 +529,7 @@ std::string nodeValue2String(const NodeData& nd) {
         memcpy(&d, nd.data.data(), sizeof(double));
         ret_val = std::to_string(d);
       } else {
-        throw Exception(OPC_EXCEPTION, "Double is non-standard on this system, OPC data cannot be extracted!");
+        throw OPCException(GENERAL_EXCEPTION, "Double is non-standard on this system, OPC data cannot be extracted!");
       }
       break;
     case UA_TYPES_DATETIME: {
@@ -539,7 +539,7 @@ std::string nodeValue2String(const NodeData& nd) {
       break;
     }
     default:
-      throw Exception(OPC_EXCEPTION, "Data type is not supported ");
+      throw OPCException(GENERAL_EXCEPTION, "Data type is not supported ");
   }
   return ret_val;
 }
