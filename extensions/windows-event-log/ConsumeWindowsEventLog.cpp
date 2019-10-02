@@ -91,41 +91,41 @@ core::Property ConsumeWindowsEventLog::InactiveDurationToReconnect(
   build());
 
 core::Property ConsumeWindowsEventLog::IdentifierMatcher(
-	core::PropertyBuilder::createProperty("Identifier Match Regex")->
-	isRequired(false)->
-	withDefaultValue(".*Sid")->
-	withDescription("Regular Expression to match Subject Identifier Fields. These will be placed into the attributes of the FlowFile")->
-	build());
+  core::PropertyBuilder::createProperty("Identifier Match Regex")->
+  isRequired(false)->
+  withDefaultValue(".*Sid")->
+  withDescription("Regular Expression to match Subject Identifier Fields. These will be placed into the attributes of the FlowFile")->
+  build());
 
 
 core::Property ConsumeWindowsEventLog::IdentifierFunction(
-	core::PropertyBuilder::createProperty("Apply Identifier Function")->
-	isRequired(false)->
-	withDefaultValue<bool>(true)->
-	withDescription("If true it will resolve SIDs matched in the 'Identifier Match Regex' to the DOMAIN\\USERNAME associated with that ID")->
-	build());
+  core::PropertyBuilder::createProperty("Apply Identifier Function")->
+  isRequired(false)->
+  withDefaultValue<bool>(true)->
+  withDescription("If true it will resolve SIDs matched in the 'Identifier Match Regex' to the DOMAIN\\USERNAME associated with that ID")->
+  build());
 
 core::Property ConsumeWindowsEventLog::ResolveAsAttributes(
-	core::PropertyBuilder::createProperty("Resolve Metadata in Attributes")->
-	isRequired(false)->
-	withDefaultValue<bool>(true)->
-	withDescription("If true, any metadata that is resolved ( such as IDs or keyword metadata ) will be placed into attributes, otherwise it will be replaced in the XML or text output")->
-	build());
+  core::PropertyBuilder::createProperty("Resolve Metadata in Attributes")->
+  isRequired(false)->
+  withDefaultValue<bool>(true)->
+  withDescription("If true, any metadata that is resolved ( such as IDs or keyword metadata ) will be placed into attributes, otherwise it will be replaced in the XML or text output")->
+  build());
 
 
 core::Property ConsumeWindowsEventLog::EventHeaderDelimiter(
-	core::PropertyBuilder::createProperty("Event Header Delimiter")->
-	isRequired(false)->
-	withDescription("If set, the chosen delimiter will be used in the Event output header. Otherwise, a colon followed by spaces will be used.")->
-	build());
+  core::PropertyBuilder::createProperty("Event Header Delimiter")->
+  isRequired(false)->
+  withDescription("If set, the chosen delimiter will be used in the Event output header. Otherwise, a colon followed by spaces will be used.")->
+  build());
 
 
 core::Property ConsumeWindowsEventLog::EventHeader(
-	core::PropertyBuilder::createProperty("Event Header")->
-	isRequired(false)->
-	withDefaultValue("LOG_NAME=Log Name, SOURCE = Source, TIME_CREATED = Date,EVENT_RECORDID=Record ID,EVENTID = Event ID,TASK_CATEGORY = Task Category,LEVEL = Level,KEYWORDS = Keywords,USER = User,COMPUTER = Computer, EVENT_TYPE = EventType")->
-	withDescription("Comma seperated list of key/value pairs with the following keys LOG_NAME, SOURCE, TIME_CREATED,EVENT_RECORDID,EVENTID,TASK_CATEGORY,LEVEL,KEYWORDS,USER,COMPUTER, and EVENT_TYPE. Eliminating fields will remove them from the header.")->
-	build());
+  core::PropertyBuilder::createProperty("Event Header")->
+  isRequired(false)->
+  withDefaultValue("LOG_NAME=Log Name, SOURCE = Source, TIME_CREATED = Date,EVENT_RECORDID=Record ID,EVENTID = Event ID,TASK_CATEGORY = Task Category,LEVEL = Level,KEYWORDS = Keywords,USER = User,COMPUTER = Computer, EVENT_TYPE = EventType")->
+  withDescription("Comma seperated list of key/value pairs with the following keys LOG_NAME, SOURCE, TIME_CREATED,EVENT_RECORDID,EVENTID,TASK_CATEGORY,LEVEL,KEYWORDS,USER,COMPUTER, and EVENT_TYPE. Eliminating fields will remove them from the header.")->
+  build());
 
 core::Relationship ConsumeWindowsEventLog::Success("success", "Relationship for successfully consumed events.");
 
@@ -153,46 +153,45 @@ void ConsumeWindowsEventLog::initialize() {
 }
 
 bool ConsumeWindowsEventLog::insertHeaderName(wel::METADATA_NAMES &header, const std::string &key, const std::string & value) {
-	
-	wel::METADATA name = wel::WindowsEventLogMetadata::getMetadataFromString(key);
-		
-	if (name != wel::METADATA::UNKNOWN) {
-		header.emplace_back(std::make_pair(name, value));
-		return true;
-	}
-	else {
-		return false;
-	}
+
+  wel::METADATA name = wel::WindowsEventLogMetadata::getMetadataFromString(key);
+
+  if (name != wel::METADATA::UNKNOWN) {
+    header.emplace_back(std::make_pair(name, value));
+    return true;
+  }
+  else {
+  return false;
+  }
 }
 
 void ConsumeWindowsEventLog::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
-	context->getProperty(IdentifierMatcher.getName(), regex_);
-	context->getProperty(ResolveAsAttributes.getName(), resolve_as_attributes_);
-	context->getProperty(IdentifierFunction.getName(), apply_identifier_function_);
-	context->getProperty(EventHeaderDelimiter.getName(), header_delimiter_);
+  context->getProperty(IdentifierMatcher.getName(), regex_);
+  context->getProperty(ResolveAsAttributes.getName(), resolve_as_attributes_);
+  context->getProperty(IdentifierFunction.getName(), apply_identifier_function_);
+  context->getProperty(EventHeaderDelimiter.getName(), header_delimiter_);
 
-	std::string header;
-	context->getProperty(EventHeader.getName(), header);
-	
-	auto keyValueSplit = utils::StringUtils::split(header, ",");
-	for (const auto &kv : keyValueSplit) {
-		auto splitKeyAndValue = utils::StringUtils::split(kv, "=");
-		if (splitKeyAndValue.size() == 2) {
-			auto key = utils::StringUtils::trim(splitKeyAndValue.at(0));
-			auto value = utils::StringUtils::trim(splitKeyAndValue.at(1));
-			if (!insertHeaderName(header_names_, key, value)) {
-				logger_->log_debug("%s is an invalid key for the header map", key);
-			}
-		}
-		else if (splitKeyAndValue.size() == 1) {
-			auto key = utils::StringUtils::trim(splitKeyAndValue.at(0));
-			if (!insertHeaderName(header_names_, key, "")) {
-				logger_->log_debug("%s is an invalid key for the header map", key);
-			}
-		}
+  std::string header;
+  context->getProperty(EventHeader.getName(), header);
 
-	}
-	
+  auto keyValueSplit = utils::StringUtils::split(header, ",");
+  for (const auto &kv : keyValueSplit) {
+    auto splitKeyAndValue = utils::StringUtils::split(kv, "=");
+    if (splitKeyAndValue.size() == 2) {
+      auto key = utils::StringUtils::trim(splitKeyAndValue.at(0));
+      auto value = utils::StringUtils::trim(splitKeyAndValue.at(1));
+      if (!insertHeaderName(header_names_, key, value)) {
+        logger_->log_error("%s is an invalid key for the header map", key);
+      }
+    }
+    else if (splitKeyAndValue.size() == 1) {
+     auto key = utils::StringUtils::trim(splitKeyAndValue.at(0));
+     if (!insertHeaderName(header_names_, key, "")) {
+       logger_->log_error("%s is an invalid key for the header map", key);
+     }
+    }
+  }
+
   if (subscriptionHandle_) {
     logger_->log_error("Processor already subscribed to Event Log, expected cleanup to unsubscribe.");
   } else {
@@ -227,18 +226,18 @@ void ConsumeWindowsEventLog::onTrigger(const std::shared_ptr<core::ProcessContex
 }
 
 wel::WindowsEventLogHandler ConsumeWindowsEventLog::getEventLogHandler(const std::string & name) {
-	std::lock_guard<std::mutex> lock(cache_mutex_);
-	auto provider = providers_.find(name);
-	if (provider != std::end(providers_)) {
-		return provider->second;
-	}
+  std::lock_guard<std::mutex> lock(cache_mutex_);
+  auto provider = providers_.find(name);
+  if (provider != std::end(providers_)) {
+    return provider->second;
+  }
 
-	std::wstring temp_wstring = std::wstring(name.begin(), name.end());
-	LPCWSTR widechar = temp_wstring.c_str();
+  std::wstring temp_wstring = std::wstring(name.begin(), name.end());
+  LPCWSTR widechar = temp_wstring.c_str();
 
-	providers_[name] = wel::WindowsEventLogHandler(EvtOpenPublisherMetadata(NULL, widechar, NULL, 0, 0));
+  providers_[name] = wel::WindowsEventLogHandler(EvtOpenPublisherMetadata(NULL, widechar, NULL, 0, 0));
 
-	return providers_[name];
+  return providers_[name];
 } 
 
 
@@ -272,7 +271,7 @@ bool ConsumeWindowsEventLog::subscribe(const std::shared_ptr<core::ProcessContex
       this,
       [](EVT_SUBSCRIBE_NOTIFY_ACTION action, PVOID pContext, EVT_HANDLE eventHandle)
       {
-	  
+  
         auto pConsumeWindowsEventLog = static_cast<ConsumeWindowsEventLog*>(pContext);
 
         auto& logger = pConsumeWindowsEventLog->logger_;
@@ -299,53 +298,51 @@ bool ConsumeWindowsEventLog::subscribe(const std::shared_ptr<core::ProcessContex
               if (EvtRender(NULL, eventHandle, EvtRenderEventXml, size, &buf[0], &used, &propertyCount)) {
                 std::string xml = to_string(&buf[0]);
 
-				EventRender renderedData;
+                EventRender renderedData;
 
-				pugi::xml_document doc;
-				pugi::xml_parse_result result = doc.load_string(xml.c_str());
+                pugi::xml_document doc;
+                pugi::xml_parse_result result = doc.load_string(xml.c_str());
 
-				if (!result) {
-					logger->log_error("Invalid XML produced");
-					return 0UL;
-				}
-				// this is a well known path. 
-				std::string providerName = doc.child("Event").child("System").child("Provider").attribute("Name").value();
-				
-				auto handler = pConsumeWindowsEventLog->getEventLogHandler(providerName);
-				auto message = handler.getEventMessage(eventHandle);
+                if (!result) {
+                  logger->log_error("Invalid XML produced");
+                  return 0UL;
+                }
+                // this is a well known path. 
+                std::string providerName = doc.child("Event").child("System").child("Provider").attribute("Name").value();
 
-				
+                auto handler = pConsumeWindowsEventLog->getEventLogHandler(providerName);
+                auto message = handler.getEventMessage(eventHandle);
 
-				// resolve the event metadata
-				wel::MetadataWalker walker(pConsumeWindowsEventLog->getEventLogHandler(providerName).getMetadata(), pConsumeWindowsEventLog->channel_, eventHandle, !pConsumeWindowsEventLog->resolve_as_attributes_, pConsumeWindowsEventLog->apply_identifier_function_, pConsumeWindowsEventLog->regex_);
-				doc.traverse(walker);
+                // resolve the event metadata
+                wel::MetadataWalker walker(pConsumeWindowsEventLog->getEventLogHandler(providerName).getMetadata(), pConsumeWindowsEventLog->channel_, eventHandle, !pConsumeWindowsEventLog->resolve_as_attributes_, pConsumeWindowsEventLog->apply_identifier_function_, pConsumeWindowsEventLog->regex_);
+                doc.traverse(walker);
 
-				if (!message.empty())
-				{	
-					for (const auto &mapEntry : walker.getIdentifiers()) {
-						// replace the identifiers with their translated strings.
-						utils::StringUtils::replaceAll(message, mapEntry.first, mapEntry.second);
-					}
-					wel::WindowsEventLogHeader log_header(pConsumeWindowsEventLog->header_names_);
-					// set the delimiter
-					log_header.setDelimiter(pConsumeWindowsEventLog->header_delimiter_);
-					// render the header.
-					renderedData.rendered_text_ = log_header.getEventHeader(&walker);
-					renderedData.rendered_text_ += "Message" + pConsumeWindowsEventLog->header_delimiter_ + " ";
-					renderedData.rendered_text_ += message;
-				}
+                if (!message.empty())
+                {	
+                  for (const auto &mapEntry : walker.getIdentifiers()) {
+                    // replace the identifiers with their translated strings.
+                    utils::StringUtils::replaceAll(message, mapEntry.first, mapEntry.second);
+                  }
+                  wel::WindowsEventLogHeader log_header(pConsumeWindowsEventLog->header_names_);
+                  // set the delimiter
+                  log_header.setDelimiter(pConsumeWindowsEventLog->header_delimiter_);
+                  // render the header.
+                  renderedData.rendered_text_ = log_header.getEventHeader(&walker);
+                  renderedData.rendered_text_ += "Message" + pConsumeWindowsEventLog->header_delimiter_ + " ";
+                  renderedData.rendered_text_ += message;
+                }
 
-				if (pConsumeWindowsEventLog->resolve_as_attributes_) {
-					renderedData.matched_fields_ = walker.getFieldValues();
-				}
+                if (pConsumeWindowsEventLog->resolve_as_attributes_) {
+                  renderedData.matched_fields_ = walker.getFieldValues();
+                }
 
-				wel::XmlString writer;
-				doc.print(writer,"", pugi::format_raw); // no indentation or formatting
-				xml = writer.xml_;
-				
-				renderedData.text_ = std::move(xml);
+                wel::XmlString writer;
+                doc.print(writer,"", pugi::format_raw); // no indentation or formatting
+                xml = writer.xml_;
 
-				pConsumeWindowsEventLog->listRenderedData_.enqueue(std::move(renderedData));
+                renderedData.text_ = std::move(xml);
+
+                pConsumeWindowsEventLog->listRenderedData_.enqueue(std::move(renderedData));
               } else {
                 logger->log_error("EvtRender returned the following error code: %d.", GetLastError());
               }
@@ -396,22 +393,22 @@ int ConsumeWindowsEventLog::processQueue(const std::shared_ptr<core::ProcessSess
     auto flowFile = session->create();
 
     session->write(flowFile, &WriteCallback(evt.text_));
-	for (const auto &fieldMapping : evt.matched_fields_) {
-		if (!fieldMapping.second.empty()) {
-			session->putAttribute(flowFile, fieldMapping.first, fieldMapping.second);
-		}
-	}
+    for (const auto &fieldMapping : evt.matched_fields_) {
+      if (!fieldMapping.second.empty()) {
+        session->putAttribute(flowFile, fieldMapping.first, fieldMapping.second);
+      }
+    }
     session->putAttribute(flowFile, FlowAttributeKey(MIME_TYPE), "application/xml");
     session->getProvenanceReporter()->receive(flowFile, provenanceUri_, getUUIDStr(), "Consume windows event logs", 0);
     session->transfer(flowFile, Success);
 
-	flowFile = session->create();
+    flowFile = session->create();
 
-	session->write(flowFile, &WriteCallback(evt.rendered_text_));
-	session->putAttribute(flowFile, FlowAttributeKey(MIME_TYPE), "text/plain");
-	session->getProvenanceReporter()->receive(flowFile, provenanceUri_, getUUIDStr(), "Consume windows event logs", 0);
-	session->transfer(flowFile, Success);
-	session->commit();
+    session->write(flowFile, &WriteCallback(evt.rendered_text_));
+    session->putAttribute(flowFile, FlowAttributeKey(MIME_TYPE), "text/plain");
+    session->getProvenanceReporter()->receive(flowFile, provenanceUri_, getUUIDStr(), "Consume windows event logs", 0);
+    session->transfer(flowFile, Success);
+    session->commit();
 
     flowFileCount++;
   }
