@@ -44,26 +44,25 @@ class SQLFactory : public core::ObjectFactory {
    * @return class name for the processor.
    */
   virtual std::vector<std::string> getClassNames() override{
-	  std::vector<std::string> class_names = {"ExecuteSQL","ODBCService"};
+    std::vector<std::string> class_names = {"ExecuteSQL","ODBCService"};
     return class_names;
   }
 
   virtual std::unique_ptr<ObjectFactory> assign(const std::string &class_name) override {
-	  if (utils::StringUtils::equalsIgnoreCase(class_name, "ExecuteSQL")) {
-		  return std::unique_ptr<ObjectFactory>(new core::DefautObjectFactory<minifi::processors::ExecuteSQL>());
-	  } else if (utils::StringUtils::equalsIgnoreCase(class_name, "ODBCService")) {
-		  return std::unique_ptr<ObjectFactory>(new core::DefautObjectFactory<minifi::sql::controllers::ODBCService>());
+    if (utils::StringUtils::equalsIgnoreCase(class_name, "ExecuteSQL")) {
+      return std::unique_ptr<ObjectFactory>(new core::DefautObjectFactory<minifi::processors::ExecuteSQL>());
+    } else if (utils::StringUtils::equalsIgnoreCase(class_name, "ODBCService")) {
+      return std::unique_ptr<ObjectFactory>(new core::DefautObjectFactory<minifi::sql::controllers::ODBCService>());
     } else {
       return nullptr;
     }
   }
-
 
   static bool added;
 
 };
 
 extern "C" {
-DLL_EXPORT void *createSQLFactory(void);
+  DLL_EXPORT void *createSQLFactory(void);
 }
 #endif /* EXTENSION_SQLLOADER_H */
