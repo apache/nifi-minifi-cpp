@@ -131,57 +131,6 @@ void ExecuteSQL::onTrigger(const std::shared_ptr<core::ProcessContext> &context,
 		context->yield();
 	}
   }
-  /*
-   ODBCDatabase db;
-
-   if (!db.DriverConnect(dbConnectionStr_)) {
-   logger_->log_error("!db.DriverConnect. Connection string '%s'", dbConnectionStr_.c_str());
-   return;
-   }
-
-   ODBCRecordset recordset(&db);
-   if (!recordset.Open(sqlSelectQuery_)) {
-   logger_->log_error("!recordset.Open. SQL select query '%s'", sqlSelectQuery_.c_str());
-   return;
-   }
-
-   auto numCols = recordset.GetNumCols();
-
-   std::vector<ColInfo> listColInfo;
-   listColInfo.resize(numCols);
-
-   for (int col = 0; col < numCols; col++) {
-   if (!recordset.GetColInfo(col, listColInfo[col])) {
-   logger_->log_error("!recordset.GetColInfo.");
-   return;
-   }
-   }
-
-   int rowCount = 0;
-   while (!recordset.IsEof()) {
-   auto result_ff = session->create();
-
-   rowCount++;
-
-   for (int col = 0; col < numCols; col++) {
-   std::string value;
-   if (!recordset.GetColValue(col, value)) {
-   logger_->log_error("!recordset.GetColInfo.");
-   return;
-   }
-
-   result_ff->addAttribute((char*)listColInfo[col].colName, value);
-   }
-
-   if (!recordset.MoveNext()) {
-   logger_->log_error("!recordset.MoveNext.");
-   }
-   }
-
-   recordset.Close();
-
-   db.Close();
-   */
 }
 
 void ExecuteSQL::notifyStop() {
