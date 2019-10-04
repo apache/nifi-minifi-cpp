@@ -35,7 +35,7 @@ namespace sql {
 class Statement {
  public:
 
-  explicit Statement(std::unique_ptr<soci::session> sql, const std::string &query)
+  explicit Statement(std::unique_ptr<soci::session>& sql, const std::string &query)
       : sql_(std::move(sql)),
         query_(query) {
   }

@@ -31,7 +31,7 @@ namespace sql {
 
 class SQLWriter {
  public:
-  explicit SQLWriter(soci::rowset<soci::row> &rowset);
+  explicit SQLWriter(const soci::rowset<soci::row> &rowset);
   virtual ~SQLWriter();
 
   virtual size_t serialize(size_t max = 0) {
@@ -50,7 +50,7 @@ class SQLWriter {
     return count;
   }
 
-  virtual bool addRow(soci::row &set) = 0;
+  virtual bool addRow(const soci::row &set) = 0;
 
   virtual void write() = 0;
 
