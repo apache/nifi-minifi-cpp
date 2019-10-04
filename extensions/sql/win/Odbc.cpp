@@ -9,9 +9,9 @@ inline bool IsSuccess(SQLRETURN ret) {
 
 // ODBCDatabase class
 void ODBCDatabase::SQLAlloc() {
-	SQLAllocHandle(SQL_HANDLE_ENV, SQL_NULL_HANDLE, &hEnv_);
-	SQLSetEnvAttr(hEnv_, SQL_ATTR_ODBC_VERSION, (void*)SQL_OV_ODBC3, 0); 
-	SQLAllocHandle(SQL_HANDLE_DBC, hEnv_, &hDbc_); 
+  SQLAllocHandle(SQL_HANDLE_ENV, SQL_NULL_HANDLE, &hEnv_);
+  SQLSetEnvAttr(hEnv_, SQL_ATTR_ODBC_VERSION, (void*)SQL_OV_ODBC3, 0); 
+  SQLAllocHandle(SQL_HANDLE_DBC, hEnv_, &hDbc_); 
 }
 
 void ODBCDatabase::SQLFree() {
@@ -23,17 +23,17 @@ void ODBCDatabase::SQLFree() {
   if (hEnv_) {
     SQLFreeHandle(SQL_HANDLE_ENV, hEnv_);
   }
-	hEnv_ = 0;
+  hEnv_ = 0;
 }
 
 void ODBCDatabase::Close() {
-	isConnected_ = false;
+  isConnected_ = false;
   
   if (hDbc_) {
     SQLDisconnect(hDbc_);
   }
 
-	SQLFree();
+  SQLFree();
 }
 
 void ODBCDatabase::SetConnectionTimeout(LONG seconds) {
@@ -47,32 +47,32 @@ void ODBCDatabase::SetConnectionTimeout(LONG seconds) {
 bool ODBCDatabase::DriverConnect(const std::string& connStr) {
   SQLSMALLINT connStrOut{};
   auto ret = SQLDriverConnect(hDbc_, 0,  (SQLCHAR*)connStr.c_str(),  SQL_NTS,  0, 0,  &connStrOut,  0);
-	
-	return isConnected_ = IsSuccess(ret);
+
+  return isConnected_ = IsSuccess(ret);
 }
 
 LONG ODBCDatabase::GetConnectionTimeout() {
   LONG seconds{};
-	SQLGetConnectAttr(hDbc_, SQL_ATTR_CONNECTION_TIMEOUT, &seconds, 0, 0);
+  SQLGetConnectAttr(hDbc_, SQL_ATTR_CONNECTION_TIMEOUT, &seconds, 0, 0);
 
-	return seconds;
+  return seconds;
 }
 
 bool ODBCDatabase::Execute(CHAR *sqlStr) {
   SQLHSTMT hStmt{};
-	SQLAllocHandle(SQL_HANDLE_STMT, hDbc_, &hStmt);
+  SQLAllocHandle(SQL_HANDLE_STMT, hDbc_, &hStmt);
   auto ret = SQLExecDirect(hStmt, (SQLCHAR*)sqlStr, SQL_NTS);
   if (!IsSuccess(ret)) {
     rowCount_ = 0;
     return false;
   }
-	
+
   SQLINTEGER rowCount{};
   SQLRowCount(hStmt, &rowCount);
-	
-	rowCount_ = rowCount;
 
-	return true;
+  rowCount_ = rowCount;
+
+  return true;
 }
 
 
@@ -89,21 +89,18 @@ ODBCRecordset::~ODBCRecordset() {
 
 
 void ODBCRecordset::AllocStmt() {
-	SQLAllocHandle(SQL_HANDLE_STMT, hDbc_, &hStmt_);
+  SQLAllocHandle(SQL_HANDLE_STMT, hDbc_, &hStmt_);
 }
 
 bool ODBCRecordset::Open(const std::string& sqlStr) {
   auto ret = SQLExecDirect(hStmt_, (SQLCHAR*)sqlStr.c_str(), SQL_NTS);
-	if (!IsSuccess(ret))	{
-		return false;
-	}
-	
-  ret = SQLFetch(hStmt_);
-  if (!IsSuccess(ret)) {
+  if (!IsSuccess(ret))	{
     return false;
   }
 
-  return true;
+  ret = SQLFetch(hStmt_);
+
+  return IsSuccess(ret);
 }
 
 bool ODBCRecordset::GetColValue(int col, std::string& data) {
@@ -130,18 +127,18 @@ bool ODBCRecordset::GetColValue(int col, std::string& data) {
 
 bool ODBCRecordset::MoveNext() {
   auto ret = SQLFetchScroll(hStmt_, SQL_FETCH_NEXT, 0);
-	
-	isEOF_ = ret == SQL_NO_DATA;
 
-	return IsSuccess(ret);
+  isEOF_ = ret == SQL_NO_DATA;
+
+  return IsSuccess(ret);
 }
 
 SQLUINTEGER ODBCRecordset::GetColLength(int col) {
   SQLUINTEGER colSize{};
-	
-	SQLDescribeCol(hStmt_, col + 1, 0, 0, 0, 0, &colSize, 0, 0);
 
-	return colSize;
+  SQLDescribeCol(hStmt_, col + 1, 0, 0, 0, 0, &colSize, 0, 0);
+
+  return colSize;
 }
 
 bool ODBCRecordset::GetColInfo(int col, ColInfo& colInfo) {
@@ -168,9 +165,9 @@ bool ODBCRecordset::GetColDisplaySize(int col, SQLLEN& displaySize) {
 
 int ODBCRecordset::GetNumCols() {
   SQLSMALLINT numCol{};
-	SQLNumResultCols(hStmt_, &numCol);
+  SQLNumResultCols(hStmt_, &numCol);
 
-	return numCol;
+  return numCol;
 }
 
 void ODBCRecordset::Close() {
@@ -178,5 +175,5 @@ void ODBCRecordset::Close() {
     SQLFreeHandle(SQL_HANDLE_STMT, hStmt_);
   }
 
-	hStmt_ = 0;
+  hStmt_ = 0;
 }

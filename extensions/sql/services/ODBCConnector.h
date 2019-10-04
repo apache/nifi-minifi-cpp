@@ -48,7 +48,7 @@ class ODBCConnection : public sql::Connection {
     soci::connection_parameters parameters(backEnd, connection_string_);
     parameters.set_option(soci::odbc_option_driver_complete, "0" /* SQL_DRIVER_NOPROMPT */);
     std::unique_ptr<soci::session> sql = std::unique_ptr<soci::session>(new soci::session(parameters));
-    return std::unique_ptr<sql::Statement>(new Statement(std::move(sql), query));
+    return std::unique_ptr<sql::Statement>(new Statement(sql, query));
   }
  private:
   std::string connection_string_;

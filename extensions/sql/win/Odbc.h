@@ -16,13 +16,13 @@ struct ColInfo {
 
 class ODBCDatabase {
 public:
-	ODBCDatabase() {
-		SQLAlloc();
-	};
+  ODBCDatabase() {
+    SQLAlloc();
+  };
 
-	~ODBCDatabase() {
-		Close();
-	};
+  ~ODBCDatabase() {
+    Close();
+  };
 
   operator SQLHDBC() { return hDbc_; }
 
@@ -62,23 +62,23 @@ public:
 
   ~ODBCRecordset();
 
-	bool Open(const std::string& sqlStr);
+  bool Open(const std::string& sqlStr);
 
   SQLUINTEGER GetColLength(int col);
 
   bool GetColInfo(int col, ColInfo& colInfo);
 
-	int GetNumCols();
+  int GetNumCols();
 
   bool GetColValue(int col, std::string& data);
 
   bool GetColDisplaySize(int col, SQLLEN& displaySize);
 
-	bool MoveNext();
+  bool MoveNext();
 
-	bool IsEof() { return isEOF_; };
-	
-	void Close();
+  bool IsEof() { return isEOF_; };
+
+  void Close();
 
 private:
   void AllocStmt();

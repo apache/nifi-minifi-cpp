@@ -87,11 +87,18 @@ void ExecuteSQL::onSchedule(const std::shared_ptr<core::ProcessContext> &context
 
   database_service_ = std::dynamic_pointer_cast<sql::controllers::DatabaseService>(context->getControllerService(db_controller_service_));
   if (database_service_ == nullptr) {
-    throw minifi::Exception(PROCESS_SCHEDULE_EXCEPTION, "DB Controller Service must be defined");
+    logger_->log_error("'DB Controller Service' must be defined");
+  } else {
+    on_schedule_ok = true;
   }
 }
 
 void ExecuteSQL::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
+  if (!on_schedule_ok) {
+    logger_->log_error("'DB Controller Service' must be defined, 'onTrigger' is not processed.");
+    return;
+  }
+
   if (database_service_) {
     std::unique_ptr<sql::Connection> connection = database_service_->getConnection();
     if (connection) {

@@ -20,20 +20,21 @@
 #include "rapidjson/writer.h"
 #include "rapidjson/stringbuffer.h"
 #include "rapidjson/prettywriter.h"
+#include "Exception.h"
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
 namespace sql {
 
-JSONSQLWriter::JSONSQLWriter(soci::rowset<soci::row> &rowset, std::ostream *out)
+JSONSQLWriter::JSONSQLWriter(const soci::rowset<soci::row> &rowset, std::ostream *out)
     : SQLWriter(rowset), json_payload(rapidjson::kArrayType), output_stream(out){
 }
 
 JSONSQLWriter::~JSONSQLWriter() {
 }
 
-bool JSONSQLWriter::addRow(soci::row &row) {
+bool JSONSQLWriter::addRow(const soci::row &row) {
   rapidjson::Document::AllocatorType &alloc = json_payload.GetAllocator();
   rapidjson::Value rowobj(rapidjson::kObjectType);
   for (std::size_t i = 0; i != row.size(); ++i) {
@@ -43,34 +44,36 @@ bool JSONSQLWriter::addRow(soci::row &row) {
     name.SetString(props.get_name().c_str(), props.get_name().length(), alloc);
 
     rapidjson::Value valueVal;
-    switch (props.get_data_type()) {
+    switch (const auto dataType = props.get_data_type()) {
       case soci::data_type::dt_string: {
         std::string str = std::string(row.get<std::string>(i));
         valueVal.SetString(str.c_str(), str.length(), alloc);
       }
-        break;
+      break;
       case soci::data_type::dt_double:
         valueVal.SetDouble(row.get<double>(i));
-        break;
+      break;
       case soci::data_type::dt_integer:
         valueVal.SetInt(row.get<int>(i));
-        break;
+      break;
       case soci::data_type::dt_long_long: {
         int64_t i64val = row.get<long long>(i);
         valueVal.SetInt64(i64val);
       }
-        break;
+      break;
       case soci::data_type::dt_unsigned_long_long: {
         uint64_t u64val = row.get<unsigned long long>(i);
         valueVal.SetUint64(u64val);
       }
-        break;
+      break;
       case soci::data_type::dt_date: {
         std::tm when = row.get<std::tm>(i);
         std::string str = std::string(asctime(&when));
         valueVal.SetString(str.c_str(), str.length(), alloc);
       }
-        break;
+      break;
+      default:
+        throw minifi::Exception(PROCESSOR_EXCEPTION, "ExecuteSQL. Unsupported data type " + std::to_string(dataType));
     }
 
     rowobj.AddMember(name, valueVal, alloc);

@@ -30,12 +30,12 @@ namespace sql {
 
 class JSONSQLWriter : public SQLWriter {
  public:
-  explicit JSONSQLWriter(soci::rowset<soci::row> &rowset, std::ostream *out);
+  explicit JSONSQLWriter(const soci::rowset<soci::row> &rowset, std::ostream *out);
   virtual ~JSONSQLWriter();
 
-  virtual bool addRow(soci::row &set) override;
+  bool addRow(const soci::row &set) override;
 
-  virtual void write() override;
+  void write() override;
 
  private:
 
