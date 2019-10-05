@@ -49,7 +49,6 @@ class ExecuteSQL : public core::Processor {
   //! Processor Name
   static const std::string ProcessorName;
 
- public:
   /**
    * Function that's executed when the processor is scheduled.
    * @param context process context.
@@ -57,9 +56,8 @@ class ExecuteSQL : public core::Processor {
    * ProcessSession objects.
    */
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
-  //! OnTrigger method, implemented by NiFi ConsumeWindowsEventLog
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
-  //! Initialize, overwrite by NiFi ConsumeWindowsEventLog
+  
   void initialize(void) override;
   void notifyStop() override;
 

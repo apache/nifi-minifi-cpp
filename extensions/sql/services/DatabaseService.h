@@ -86,23 +86,11 @@ class DatabaseService : public core::controller::ControllerService {
 
   virtual void onEnable() override;
 
-  /**
-   * Sends the payload to the endpoint, returning the response as we await. Will retry transmission
-   * @param type type of payload to endpoint interaction ( GET, POST, PUT, DELETE ).
-   * @param end endpoint is the connecting endpoint on the server
-   * @param payload is the data to be sent
-   * @param size size of the payload to be sent
-   * @return CoAPMessage that contains the response code and data, if any.
-   */
-
   virtual std::unique_ptr<sql::Connection> getConnection() const = 0;
 
  protected:
 
   void initializeProperties();
-
-  // connector mutex to controll access to the mapping, above.
-  std::mutex connector_mutex_;
 
   // initialization mutex.
   std::recursive_mutex initialization_mutex_;

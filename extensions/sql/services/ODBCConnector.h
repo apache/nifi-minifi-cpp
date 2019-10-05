@@ -24,6 +24,7 @@
 #include <soci.h>
 #include <odbc/soci-odbc.h>
 #include "DatabaseService.h"
+#include "core/Resource.h"
 #include "data/DatabaseConnectors.h"
 #include <memory>
 #include <unordered_map>
@@ -87,13 +88,13 @@ class ODBCService : public DatabaseService {
 
   virtual std::unique_ptr<sql::Connection> getConnection() const override;
 
- protected:
-
  private:
 
   std::shared_ptr<logging::Logger> logger_;
-
 };
+
+REGISTER_RESOURCE(ODBCService, "Controller service that provides ODBC database connection");
+
 
 } /* namespace controllers */
 } /* namespace sql */
