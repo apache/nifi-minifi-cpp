@@ -69,6 +69,10 @@ bool JSONSQLWriter::addRow(const soci::row &row) {
       case soci::data_type::dt_date: {
         std::tm when = row.get<std::tm>(i);
         std::string str = std::string(asctime(&when));
+        // asctime adds '\n' in the end.
+        if (str[str.size() - 1] == '\n') {
+          str.resize(str.size() - 1);
+        }
         valueVal.SetString(str.c_str(), str.length(), alloc);
       }
       break;
