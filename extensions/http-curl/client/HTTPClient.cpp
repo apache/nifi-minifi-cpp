@@ -402,10 +402,12 @@ void HTTPClient::configure_secure_connection(CURL *http_session) {
   }
   curl_easy_setopt(http_session, CURLOPT_CAPATH, nullptr);
 #else
+#ifdef OPENSSL_SUPPORT
   curl_easy_setopt(http_session, CURLOPT_SSL_CTX_FUNCTION, &configure_ssl_context);
   curl_easy_setopt(http_session, CURLOPT_SSL_CTX_DATA, static_cast<void*>(ssl_context_service_.get()));
   curl_easy_setopt(http_session, CURLOPT_CAINFO, 0);
   curl_easy_setopt(http_session, CURLOPT_CAPATH, 0);
+#endif
 #endif
 }
 

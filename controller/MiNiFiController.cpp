@@ -22,7 +22,6 @@
 #include <vector>
 #include <queue>
 #include <map>
-#include <yaml-cpp/yaml.h>
 #include <iostream>
 #include "io/BaseStream.h"
 

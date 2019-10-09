@@ -24,8 +24,7 @@ IF(POLICY CMP0048)
 ENDIF(POLICY CMP0048)
 
 include_directories(include)
-include_directories(../libminifi/include ../thirdparty/cron ../thirdparty/spdlog-20170710/include)
-include_directories(../thirdparty/ut)
+include_directories(../libminifi/include)
 
 if(WIN32)
 include_directories(../libminifi/opsys/win)
@@ -65,41 +64,22 @@ endif()
 
 add_library(nanofi STATIC ${NANOFI_SOURCES})
 
-if (APPLE)
-	target_link_libraries (nanofi -Wl,-all_load core-minifi minifi minifi-standard-processors)
-elseif(NOT WIN32)
-	target_link_libraries (nanofi -Wl,--whole-archive core-minifi minifi minifi-standard-processors -Wl,--no-whole-archive)
-else()
-    set(WIN32_ARCHIVES "${WIN32_ARCHIVES} /WHOLEARCHIVE:core-minifi")
-	set(WIN32_ARCHIVES "${WIN32_ARCHIVES} /WHOLEARCHIVE:minifi")
-	set(WIN32_ARCHIVES "${WIN32_ARCHIVES} /WHOLEARCHIVE:minifi-standard-processors")
-endif ()
+target_link_libraries(nanofi spdlog ut)
+target_wholearchive_library(nanofi core-minifi)
+target_wholearchive_library(nanofi minifi)
+target_wholearchive_library(nanofi minifi-standard-processors)
 
-add_dependencies(nanofi minifi-standard-processors)
-
-if(WIN32)
-	set_target_properties(nanofi PROPERTIES LINK_FLAGS "${WIN32_ARCHIVES}")
-endif()
 
 if (ENABLE_PYTHON AND NOT STATIC_BUILD)
 
 add_library(nanofi-shared SHARED ${NANOFI_SOURCES})
 
-if (APPLE)
-	target_link_libraries (nanofi-shared -Wl,-all_load core-minifi-shared minifi-shared minifi-standard-processors)
-elseif(NOT WIN32)
-	target_link_libraries (nanofi-shared -Wl,--whole-archive core-minifi-shared minifi-shared  minifi-standard-processors -Wl,--no-whole-archive)
-else()
-    set(WIN32_ARCHIVES "${WIN32_ARCHIVES} /WHOLEARCHIVE:core-minifi-shared")
-	set(WIN32_ARCHIVES "${WIN32_ARCHIVES} /WHOLEARCHIVE:minifi-shared")
-	set(WIN32_ARCHIVES "${WIN32_ARCHIVES} /WHOLEARCHIVE:minifi-standard-processors")
-endif ()
+target_link_libraries(nanofi-shared spdlog ut)
+target_wholearchive_library(nanofi-shared core-minifi-shared)
+target_wholearchive_library(nanofi-shared minifi-shared)
+target_wholearchive_library(nanofi-shared minifi-standard-processors)
 
 add_dependencies(nanofi-shared minifi-standard-processors)
-
-if(WIN32)
-	set_target_properties(nanofi-shared PROPERTIES LINK_FLAGS "${WIN32_ARCHIVES}")
-endif()
 
 set_property(TARGET nanofi-shared PROPERTY POSITION_INDEPENDENT_CODE ON)
 

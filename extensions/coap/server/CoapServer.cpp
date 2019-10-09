@@ -16,7 +16,6 @@
  * limitations under the License.
  */
 #include "CoapServer.h"
-#include <coap2/utlist.h>
 #include <coap2/coap.h>
 
 namespace org {

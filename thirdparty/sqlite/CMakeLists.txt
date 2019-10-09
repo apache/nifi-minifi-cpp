@@ -17,6 +17,4 @@
 # under the License.
 #
 
-project(sqlite VERSION 3.22.0 LANGUAGES CXX)
-
 add_library(sqlite sqlite3.c)

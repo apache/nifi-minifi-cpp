@@ -20,7 +20,7 @@
 cmake_minimum_required(VERSION 2.6)
 
 
-include_directories(../../libminifi/include  ../../libminifi/include/core/yaml  ../../libminifi/include/core  ../../thirdparty/cron  ../../thirdparty/spdlog-20170710/include ../../thirdparty/concurrentqueue ../../thirdparty/yaml-cpp-yaml-cpp-0.5.3/include ${CIVET_THIRDPARTY_ROOT}/include ../../thirdparty/)
+include_directories(../../libminifi/include ../../libminifi/include/core)
 
 if(WIN32)
 	include_directories(../../libminifi/opsys/win)

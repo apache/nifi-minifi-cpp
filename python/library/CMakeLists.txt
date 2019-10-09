@@ -23,7 +23,7 @@ IF(POLICY CMP0048)
   CMAKE_POLICY(SET CMP0048 OLD)
 ENDIF(POLICY CMP0048)
 
-include_directories(../../nanofi/include/ ../../libminifi/include  ../../libminifi/include/c2  ../../libminifi/include/c2/protocols/  ../../libminifi/include/core/state ./libminifi/include/core/statemanagement/metrics  ../../libminifi/include/core/yaml  ../../libminifi/include/core  ../../thirdparty/spdlog-20170710/include ../../thirdparty/concurrentqueue ../../thirdparty/yaml-cpp-yaml-cpp-20171024/include ../../thirdparty/civetweb-1.9.1/include ../../thirdparty/)
+include_directories(../../nanofi/include/ ../../libminifi/include  ../../libminifi/include/c2  ../../libminifi/include/c2/protocols/  ../../libminifi/include/core/state ./libminifi/include/core/statemanagement/metrics  ../../libminifi/include/core/yaml  ../../libminifi/include/core ../../thirdparty/)
 if(WIN32)
 	include_directories(../../libminifi/opsys/win)
 else()
@@ -38,13 +38,4 @@ else()
 	target_link_libraries(python-lib nanofi-shared core-minifi-shared minifi-shared)
 endif(APPLE)
 
-if (WIN32)
-target_link_libraries(python-lib ${CURL_LIBRARY}  minifi-http-curl)
-    set_target_properties(python-lib PROPERTIES
-        LINK_FLAGS "/WHOLEARCHIVE:minifi-http-curl"
-    )
-elseif (APPLE)
-	target_link_libraries(python-lib ${CURL_LIBRARY}  -Wl,-all_load minifi-http-curl)
-else ()
-	target_link_libraries(python-lib -Wl,--whole-archive minifi-http-curl -Wl,--no-whole-archive ${CURL_LIBRARY} )
-endif ()
+target_wholearchive_library(python-lib minifi-http-curl)

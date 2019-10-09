@@ -166,6 +166,7 @@ class SSLContextService : public core::controller::ControllerService {
   std::string passphrase_file_;
   std::string ca_certificate_;
 
+#ifdef OPENSSL_SUPPORT
   static std::string getLatestOpenSSLErrorString() {
     unsigned long err = ERR_peek_last_error();
     if (err == 0U) {
@@ -175,6 +176,7 @@ class SSLContextService : public core::controller::ControllerService {
     ERR_error_string_n(err, buf, sizeof(buf));
     return buf;
   }
+#endif
 
   static bool isFileTypeP12(const std::string& filename) {
     return utils::StringUtils::endsWithIgnoreCase(filename, "p12");

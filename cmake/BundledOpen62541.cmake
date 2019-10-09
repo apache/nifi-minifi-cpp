@@ -16,9 +16,6 @@
 # under the License.
 
 function(use_bundled_open62541 SOURCE_DIR BINARY_DIR)
-    # Find patch executable
-    find_package(Patch REQUIRED)
-
     # Define patch step
     set(PC "${Patch_EXECUTABLE}" -p1 -i "${SOURCE_DIR}/thirdparty/open62541/open62541.patch")
 
@@ -41,13 +38,9 @@ function(use_bundled_open62541 SOURCE_DIR BINARY_DIR)
     set(OPEN62541_CMAKE_ARGS ${PASSTHROUGH_CMAKE_ARGS}
             "-DCMAKE_INSTALL_PREFIX=${OPEN62541_BYPRODUCT_DIR}"
             -DOPEN62541_VERSION=v1.0
-            -DUA_ENABLE_ENCRYPTION=ON
-            "-DCMAKE_MODULE_PATH=${CMAKE_SOURCE_DIR}/cmake/mbedtls/dummy"
-            "-DEXPORTED_MBEDTLS_INCLUDE_DIRS=${EXPORTED_MBEDTLS_INCLUDE_DIRS}"
-            "-DEXPORTED_MBEDTLS_LIBRARIES=${EXPORTED_MBEDTLS_LIBRARIES}"
-            "-DEXPORTED_MBEDTLS_LIBRARY=${EXPORTED_MBEDTLS_LIBRARY}"
-            "-DEXPORTED_MBEDX509_LIBRARY=${EXPORTED_MBEDX509_LIBRARY}"
-            "-DEXPORTED_MBEDCRYPTO_LIBRARY=${EXPORTED_MBEDCRYPTO_LIBRARY}")
+            -DUA_ENABLE_ENCRYPTION=ON)
+
+    append_third_party_passthrough_args(OPEN62541_CMAKE_ARGS "${OPEN62541_CMAKE_ARGS}")
 
     # Build project
     ExternalProject_Add(

@@ -32,21 +32,7 @@ if(CMAKE_THREAD_LIBS_INIT)
   target_link_libraries(minifi-sensors "${CMAKE_THREAD_LIBS_INIT}")
 endif()
 
-target_link_libraries(minifi-sensors ${LIBMINIFI} )
-
-if (WIN32)
-    set_target_properties(minifi-sensors PROPERTIES
-        LINK_FLAGS "/WHOLEARCHIVE"
-    )
-elseif (APPLE)
-    set_target_properties(minifi-sensors PROPERTIES
-        LINK_FLAGS "-Wl,-all_load"
-    )
-else ()
-    set_target_properties(minifi-sensors PROPERTIES
-        LINK_FLAGS "-Wl,--whole-archive"
-    )
-endif ()
+target_link_libraries(minifi-sensors ${LIBMINIFI})
 
 add_dependencies(minifi-sensors RTIMULib)
 target_link_libraries(minifi-sensors RTIMULib)

@@ -31,7 +31,7 @@ if(CMAKE_THREAD_LIBS_INIT)
   target_link_libraries(minifi-standard-processors "${CMAKE_THREAD_LIBS_INIT}")
 endif()
 
-target_link_libraries(minifi-standard-processors core-minifi)
+target_link_libraries(minifi-standard-processors ${LIBMINIFI})
 
 SET (STANDARD-PROCESSORS minifi-standard-processors PARENT_SCOPE)
 register_extension(minifi-standard-processors)
