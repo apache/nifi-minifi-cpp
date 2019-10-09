@@ -387,7 +387,7 @@ int ConsumeWindowsEventLog::processQueue(const std::shared_ptr<core::ProcessSess
   };
 
   int flowFileCount = 0;
- 
+
   EventRender evt;
   while (listRenderedData_.try_dequeue(evt)) {
     auto flowFile = session->create();
@@ -408,7 +408,6 @@ int ConsumeWindowsEventLog::processQueue(const std::shared_ptr<core::ProcessSess
     session->putAttribute(flowFile, FlowAttributeKey(MIME_TYPE), "text/plain");
     session->getProvenanceReporter()->receive(flowFile, provenanceUri_, getUUIDStr(), "Consume windows event logs", 0);
     session->transfer(flowFile, Success);
-    session->commit();
 
     flowFileCount++;
   }
