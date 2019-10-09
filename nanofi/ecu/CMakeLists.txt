@@ -19,26 +19,17 @@
 
 cmake_minimum_required(VERSION 2.6)
 
-if (APPLE)
-    set(LINK_FLAGS "-Wl,-all_load")
-    set(LINK_END_FLAGS "")
-elseif (UNIX)
-    set(LINK_FLAGS "-Wl,--whole-archive")
-    set(LINK_END_FLAGS "")
-endif ()
 
 if (NOT WIN32)
-
 add_executable(log_aggregator log_aggregator.c)
-
-target_link_libraries(log_aggregator nanofi ${CMAKE_THREAD_LIBS_INIT}  ${LINK_FLAGS} minifi-http-curl ${LINK_END_FLAGS})
+target_link_libraries(log_aggregator nanofi ${CMAKE_THREAD_LIBS_INIT})
+target_wholearchive_library(log_aggregator minifi-http-curl)
 
 add_executable(tailfile_chunk tailfile_chunk.c)
-
-target_link_libraries(tailfile_chunk nanofi ${CMAKE_THREAD_LIBS_INIT}  ${LINK_FLAGS} minifi-http-curl ${LINK_END_FLAGS})
+target_link_libraries(tailfile_chunk nanofi ${CMAKE_THREAD_LIBS_INIT})
+target_wholearchive_library(tailfile_chunk minifi-http-curl)
 
 add_executable(tailfile_delimited tailfile_delimited.c)
-
-target_link_libraries(tailfile_delimited nanofi ${CMAKE_THREAD_LIBS_INIT}  ${LINK_FLAGS} minifi-http-curl ${LINK_END_FLAGS})
-
+target_link_libraries(tailfile_delimited nanofi ${CMAKE_THREAD_LIBS_INIT})
+target_wholearchive_library(tailfile_delimited minifi-http-curl)
 endif()

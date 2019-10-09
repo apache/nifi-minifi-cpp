@@ -21,17 +21,12 @@ include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 
 file(GLOB SOURCES  "*.cpp")
 
-set(BASE_DIR "${CMAKE_CURRENT_BINARY_DIR}/opencv")
-set(BYPRODUCT "${CMAKE_CURRENT_BINARY_DIR}/opencv-install/")
-
 set(BASE_DIR "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/opencv")
 set(BYPRODUCT "${BASE_DIR}/install")
 
-# OpenCV 4.1.0
-build_git_project(opencv-external "${BASE_DIR}" "https://github.com/opencv/opencv.git" "371bba8f54560b374fbcd47e7e02f015ac4969ad"
-        -DCMAKE_BUILD_TYPE=Release
-        -DBUILD_JAVA=OFF
-        -DBUILD_FAT_JAVA_LIB=OFF
+# OpenCV
+build_git_project(opencv-external "${BASE_DIR}" "https://github.com/opencv/opencv.git" "4.1.0"
+        ${PASSTHROUGH_CMAKE_ARGS}
         -DCMAKE_INSTALL_PREFIX=${BYPRODUCT}
         -DBUILD_SHARED_LIBS=OFF
         -DBUILD_EXAMPLES=OFF
@@ -55,20 +50,28 @@ build_git_project(opencv-external "${BASE_DIR}" "https://github.com/opencv/openc
         -DBUILD_opencv_stitching=ON
         -DBUILD_opencv_video=ON
         -DBUILD_opencv_videoio=ON
-        -DWITH_1394=OFF
+	-DBUILD_JAVA=OFF
+        -DBUILD_FAT_JAVA_LIB=OFF
+        -DBUILD_ZLIB=OFF
+	-DWITH_1394=OFF
         -DWITH_FFMPEG=OFF
         -DWITH_GSTREAMER=OFF
         -DWITH_GTK=OFF
         -DWITH_IPP=OFF
         -DWITH_JASPER=OFF
         -DWITH_OPENEXR=OFF
-        -DWITH_ITT=OFF)
+        -DWITH_ITT=OFF
+        -DWITH_OPENEXR=OFF
+        -DWITH_WEBP=OFF
+        -DWITH_TIFF=OFF)
 
 add_library(minifi-opencv STATIC ${SOURCES})
 
+target_link_libraries(minifi-opencv ${LIBMINIFI})
+
 set(OpenCV_DIR ${BASE_DIR})
-find_package( OpenCV REQUIRED PATHS "${BASE_DIR}/opencv-external/src/opencv-external-build/")
-target_link_libraries( minifi-opencv ${OpenCV_LIBS} )
+find_package(OpenCV REQUIRED PATHS "${BASE_DIR}/opencv-external/src/opencv-external-build/")
+target_link_libraries(minifi-opencv ${OpenCV_LIBS})
 include_directories(${OpenCV_INCLUDE_DIRS})
 
 SET (OPENCV-EXTENSION minifi-opencv PARENT_SCOPE)

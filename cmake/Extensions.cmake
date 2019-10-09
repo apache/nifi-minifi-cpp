@@ -91,7 +91,7 @@ function (build_git_project target prefix repourl repotag)
             PREFIX ${prefix}/${target}
             GIT_REPOSITORY ${repourl}
         	GIT_TAG ${repotag}
-            CMAKE_ARGS ${ARGN}
+            CMAKE_ARGS \"${ARGN}\"
             INSTALL_COMMAND \"\"
             )
          add_custom_target(exec_${target})
@@ -100,11 +100,27 @@ function (build_git_project target prefix repourl repotag)
 
 	file(WRITE ${exec_dir}/CMakeLists.txt "${CMAKE_LIST_CONTENT}")
 
+	# Try to determine the number of CPUs and do a parallel build based on that
+	include(ProcessorCount OPTIONAL RESULT_VARIABLE PROCESSCOUNT_RESULT)
+	if(NOT PROCESSCOUNT_RESULT EQUAL NOTFOUND)
+		ProcessorCount(NUM_CPU)
+		math(EXPR PARALLELISM "${NUM_CPU} / 2")
+	endif()
+	if(NOT PARALLELISM OR PARALLELISM LESS 1)
+		set(PARALLELISM 1)
+	endif()
+
+	message("Building ${target} with a parallelism of ${PARALLELISM}")
 	execute_process(COMMAND ${CMAKE_COMMAND} ..
 			WORKING_DIRECTORY ${exec_dir}/build
 			)
-	execute_process(COMMAND ${CMAKE_COMMAND} --build .
-			WORKING_DIRECTORY ${exec_dir}/build
-			)
-
+	if(${CMAKE_VERSION} VERSION_EQUAL "3.12.0" OR ${CMAKE_VERSION} VERSION_GREATER "3.12.0")
+		execute_process(COMMAND ${CMAKE_COMMAND} --build . --parallel ${PARALLELISM}
+				WORKING_DIRECTORY ${exec_dir}/build
+				)
+	else()
+		execute_process(COMMAND ${CMAKE_COMMAND} --build .
+				WORKING_DIRECTORY ${exec_dir}/build
+				)
+	endif()
 endfunction()

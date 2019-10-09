@@ -21,25 +21,15 @@ include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 
 include_directories(${CMAKE_SOURCE_DIR}/libminifi/include
                     ${CMAKE_SOURCE_DIR}/libminifi/include/core
-                    ${CMAKE_SOURCE_DIR}/thirdparty/spdlog-20170710/include
-                    ${CMAKE_SOURCE_DIR}/thirdparty/concurrentqueue
-                    ${CMAKE_SOURCE_DIR}/thirdparty/yaml-cpp-yaml-cpp-0.5.3/include
-                    ${CIVET_THIRDPARTY_ROOT}/include
-                    ${CMAKE_SOURCE_DIR}/thirdparty/jsoncpp/include
                     ${CMAKE_SOURCE_DIR}/thirdparty/
                     ./include)
-
-set(BUILD_CIVET_TESTING OFF)
-add_subdirectory(${CIVET_THIRDPARTY_ROOT}
-                 ${CIVET_BINARY_ROOT}
-                 EXCLUDE_FROM_ALL)
-add_dependencies(c-library libressl-portable)
 
 file(GLOB SOURCES  "processors/*.cpp")
 
 add_library(minifi-civet-extensions STATIC ${SOURCES})
 set_property(TARGET minifi-civet-extensions PROPERTY POSITION_INDEPENDENT_CODE ON)
-target_link_libraries(minifi-civet-extensions c-library civetweb-cpp)
+target_link_libraries(minifi-civet-extensions ${LIBMINIFI})
+target_link_libraries(minifi-civet-extensions CIVETWEB::c-library CIVETWEB::civetweb-cpp)
 
 if(THREADS_HAVE_PTHREAD_ARG)
   target_compile_options(PUBLIC minifi-civet-extensions "-pthread")
@@ -47,21 +37,6 @@ endif()
 if(CMAKE_THREAD_LIBS_INIT)
   target_link_libraries(minifi-civet-extensions "${CMAKE_THREAD_LIBS_INIT}")
 endif()
-
-
-if (WIN32)
-    set_target_properties(minifi-civet-extensions PROPERTIES
-        LINK_FLAGS "/WHOLEARCHIVE"
-    )
-elseif (APPLE)
-    set_target_properties(minifi-civet-extensions PROPERTIES
-        LINK_FLAGS "-Wl,-all_load"
-    )
-else ()
-    set_target_properties(minifi-civet-extensions PROPERTIES
-        LINK_FLAGS "-Wl,--whole-archive"
-    )
-endif ()
 
 
 SET (civet-EXTENSIONS minifi-civet-extensions PARENT_SCOPE)

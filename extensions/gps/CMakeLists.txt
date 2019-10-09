@@ -33,21 +33,6 @@ set_property(TARGET minifi-gps PROPERTY POSITION_INDEPENDENT_CODE ON)
 target_link_libraries(minifi-gps ${LIBMINIFI} )
 target_link_libraries(minifi-gps ${LIBGPS_LIBRARIES})
 
-target_link_libraries(minifi-gps ${CMAKE_DL_LIBS} )
-if (WIN32)
-    set_target_properties(minifi-gps PROPERTIES
-        LINK_FLAGS "/WHOLEARCHIVE"
-    )
-elseif (APPLE)
-    set_target_properties(minifi-gps PROPERTIES
-        LINK_FLAGS "-Wl,-all_load"
-    )
-else ()
-    set_target_properties(minifi-gps PROPERTIES
-        LINK_FLAGS "-Wl,--whole-archive"
-    )
-endif ()
-
 
 SET (GPS-EXTENSION minifi-gps PARENT_SCOPE)
 

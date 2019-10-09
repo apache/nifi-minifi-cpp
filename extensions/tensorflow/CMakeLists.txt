@@ -39,6 +39,7 @@ if(CMAKE_THREAD_LIBS_INIT)
   target_link_libraries(minifi-tensorflow-extensions "${CMAKE_THREAD_LIBS_INIT}")
 endif()
 
+target_link_libraries(minifi-tensorflow-extensions ${LIBMINIFI})
 target_link_libraries(minifi-tensorflow-extensions ${TENSORFLOW_LIBRARIES})
 
 SET (TENSORFLOW-EXTENSIONS minifi-tensorflow-extensions PARENT_SCOPE)

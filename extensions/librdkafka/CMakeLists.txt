@@ -30,64 +30,8 @@ if(CMAKE_THREAD_LIBS_INIT)
   target_link_libraries(minifi-rdkafka-extensions "${CMAKE_THREAD_LIBS_INIT}")
 endif()
 
-  set(BASE_DIR "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/kafka")
-  if (WIN32)
-  	set(BYPRODUCT "${BASE_DIR}/install/lib/rdkafka.lib")
-  else()
-  	set(BYPRODUCT "${BASE_DIR}/install/lib/librdkafka.a")
-  endif()
-
-list(APPEND CMAKE_MODULE_PATH_PASSTHROUGH_LIST "${CMAKE_SOURCE_DIR}/cmake/ssl")
-if(WIN32 OR NOT USE_SYSTEM_ZLIB)
-    list(APPEND CMAKE_MODULE_PATH_PASSTHROUGH_LIST "${CMAKE_SOURCE_DIR}/cmake/zlib/dummy")
-endif()
-string(REPLACE ";" "%" CMAKE_MODULE_PATH_PASSTHROUGH "${CMAKE_MODULE_PATH_PASSTHROUGH_LIST}")
-
-find_package(Patch REQUIRED)
-
-ExternalProject_Add(
-    kafka-external
-    URL "https://github.com/edenhill/librdkafka/archive/v1.0.1.tar.gz"
-    URL_HASH "SHA256=b2a2defa77c0ef8c508739022a197886e0644bd7bf6179de1b68bdffb02b3550"
-    PATCH_COMMAND "${Patch_EXECUTABLE}" -p1 -i "${CMAKE_SOURCE_DIR}/thirdparty/librdkafka/librdkafka-libressl.patch"
-    PREFIX "${BASE_DIR}"
-    LIST_SEPARATOR % # This is needed for passing semicolon-separated lists
-    CMAKE_ARGS ${PASSTHROUGH_CMAKE_ARGS}
-               "-DCMAKE_INSTALL_PREFIX=${BASE_DIR}/install"
-               "-DWITH_SASL=OFF"
-               "-DWITH_SSL=ON"
-               "-DRDKAFKA_BUILD_STATIC=ON"
-               "-DRDKAFKA_BUILD_EXAMPLES=OFF"
-               "-DRDKAFKA_BUILD_TESTS=OFF"
-               "-DENABLE_LZ4_EXT=OFF"
-               "-DWITH_ZSTD=OFF"
-               "-DCMAKE_MODULE_PATH=${CMAKE_MODULE_PATH_PASSTHROUGH}"
-               "-DCMAKE_C_FLAGS=${CURL_C_FLAGS}"
-               "-DCMAKE_INSTALL_LIBDIR=lib"
-               "-DCMAKE_CXX_FLAGS=${CURL_CXX_FLAGS}"
-               "-DLIBRESSL_BIN_DIR=${LIBRESSL_BIN_DIR}"
-               "-DLIBRESSL_SRC_DIR=${LIBRESSL_SRC_DIR}"
-               "-DBYPRODUCT_PREFIX=${BYPRODUCT_PREFIX}"
-               "-DBYPRODUCT_SUFFIX=${BYPRODUCT_SUFFIX}"
-               "-DZLIB_BYPRODUCT_INCLUDE=${ZLIB_BYPRODUCT_INCLUDE}"
-               "-DZLIB_BYPRODUCT=${ZLIB_BYPRODUCT}"
-               "-DZLIB_LIBRARY=${ZLIB_LIBRARY}"
-               "-DZLIB_LIBRARIES=${ZLIB_LIBRARIES}"
-               "-DLIBRDKAFKA_STATICLIB=1"
-    EXCLUDE_FROM_ALL TRUE
-  )
-add_dependencies(kafka-external libressl-portable)
-if(WIN32 OR NOT USE_SYSTEM_ZLIB)
-    add_dependencies(kafka-external zlib-external)
-endif()
-set(KAFKA_INCLUDE "${BASE_DIR}/install/include/librdkafka/")
-set(KAFKA_LIBRARY "${BYPRODUCT}")
-add_definitions("-DLIBRDKAFKA_STATICLIB=1")
-add_dependencies(minifi-rdkafka-extensions kafka-external)
-include_directories(${ZLIB_INCLUDE_DIRS})
-include_directories(${KAFKA_INCLUDE})
-
-target_link_libraries(minifi-rdkafka-extensions ${KAFKA_LIBRARY} ${OPENSSL_LIBRARIES} ${ZLIB_LIBRARIES})
+target_link_libraries(minifi-rdkafka-extensions ${LIBMINIFI})
+target_link_libraries(minifi-rdkafka-extensions librdkafka)
 
 SET (RDKAFKA-EXTENSIONS minifi-rdkafka-extensions PARENT_SCOPE)
 

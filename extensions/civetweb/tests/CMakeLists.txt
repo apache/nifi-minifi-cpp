@@ -28,29 +28,23 @@ if(NOT DISABLE_CURL)
         target_include_directories(${testfilename} PRIVATE BEFORE "${CMAKE_SOURCE_DIR}/extensions/standard-processors")
         target_include_directories(${testfilename} PRIVATE BEFORE "${CMAKE_SOURCE_DIR}/extensions/http-curl")
         target_include_directories(${testfilename} PRIVATE BEFORE "${CMAKE_SOURCE_DIR}/thirdparty/civetweb-1.10/include")
-        target_include_directories(${testfilename} PRIVATE BEFORE ${CURL_INCLUDE_DIRS})
 
-        if (APPLE)
-            target_link_libraries (${testfilename} -Wl,-all_load ${ZLIB_LIBRARIES} ${OPENSSL_LIBRARIES} minifi-civet-extensions minifi-http-curl minifi-standard-processors)
-        elseif (WIN32)
-            target_link_libraries (${testfilename} ${ZLIB_LIBRARY} ${OPENSSL_LIBRARIES} minifi-civet-extensions minifi-http-curl minifi-standard-processors)
-            set_target_properties (${testfilename} PROPERTIES LINK_FLAGS "${LINK_FLAGS} /WHOLEARCHIVE:minifi-civet-extensions /WHOLEARCHIVE:minifi-http-curl /WHOLEARCHIVE:minifi-standard-processors")
-        else ()
-            target_link_libraries (${testfilename} -Wl,--whole-archive ${ZLIB_LIBRARIES} ${OPENSSL_LIBRARIES} minifi-civet-extensions minifi-http-curl minifi-standard-processors -Wl,--no-whole-archive)
-        endif ()
+        target_wholearchive_library(${testfilename} minifi-civet-extensions)
+        target_wholearchive_library(${testfilename} minifi-http-curl)
+        target_wholearchive_library(${testfilename} minifi-standard-processors)
 
         createTests("${testfilename}")
         target_link_libraries(${testfilename} ${CATCH_MAIN_LIB})
         MATH(EXPR CIVETWEB-EXTENSIONS_TEST_COUNT "${CIVETWEB-EXTENSIONS_TEST_COUNT}+1")
         add_test(NAME "${testfilename}" COMMAND "${testfilename}" WORKING_DIRECTORY ${TEST_DIR})
         # Copy test resources
-                add_custom_command(
-                        TARGET "${testfilename}"
-                        POST_BUILD
-                        COMMAND ${CMAKE_COMMAND} -E copy_directory
-                                "${CMAKE_SOURCE_DIR}/extensions/civetweb/tests/resources"
-                                "$<TARGET_FILE_DIR:${testfilename}>/resources"
-                        )
+        add_custom_command(
+            TARGET "${testfilename}"
+            POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_directory
+                    "${CMAKE_SOURCE_DIR}/extensions/civetweb/tests/resources"
+                    "$<TARGET_FILE_DIR:${testfilename}>/resources"
+            )
     ENDFOREACH()
     message("-- Finished building ${CIVETWEB-EXTENSIONS_TEST_COUNT} civetweb related test file(s)...")
 endif()

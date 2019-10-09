@@ -62,22 +62,14 @@ endif()
 
 add_dependencies(minifi-pcap pcappp)
 
-if (WIN32)
-	target_link_libraries (minifi-pcap ${PCAP_LIBRARIES} ${PCAPPLUSPLUS_LIB_DIR}/libPcap++.a ${PCAPPLUSPLUS_LIB_DIR}/libPacket++.a ${PCAPPLUSPLUS_LIB_DIR}/libCommon++.a )
-    set_target_properties(minifi-pcap PROPERTIES
-        LINK_FLAGS "/WHOLEARCHIVE"
-    )
-elseif (APPLE)
-	target_link_libraries (minifi-pcap -Wl,-all_load ${PCAP_LIBRARIES} ${PCAPPLUSPLUS_LIB_DIR}/libPcap++.a ${PCAPPLUSPLUS_LIB_DIR}/libPacket++.a ${PCAPPLUSPLUS_LIB_DIR}/libCommon++.a )
+target_link_libraries (minifi-pcap ${PCAP_LIBRARIES} ${PCAPPLUSPLUS_LIB_DIR}/libPcap++.a ${PCAPPLUSPLUS_LIB_DIR}/libPacket++.a ${PCAPPLUSPLUS_LIB_DIR}/libCommon++.a)
+if (APPLE)
 	target_link_libraries(minifi-pcap "-framework CoreFoundation")
 	target_link_libraries(minifi-pcap "-framework SystemConfiguration")
-	set_target_properties(minifi-pcap PROPERTIES LINK_FLAGS "-Wl,-F/Library/Frameworks -Wl,-all_load")
-else ()
-	target_link_libraries (minifi-pcap ${PCAPPLUSPLUS_LIB_DIR}/libPcap++.a ${PCAPPLUSPLUS_LIB_DIR}/libPacket++.a ${PCAPPLUSPLUS_LIB_DIR}/libCommon++.a ${PCAP_LIBRARIES})
+	set_target_properties(minifi-pcap PROPERTIES LINK_FLAGS "-Wl,-F/Library/Frameworks")
 endif ()
 
-target_link_libraries(minifi-pcap ${LIBMINIFI} )
-target_link_libraries(minifi-pcap ${CMAKE_DL_LIBS} )
+target_link_libraries(minifi-pcap ${LIBMINIFI})
 
 SET (PCAP-EXTENSION minifi-pcap PARENT_SCOPE)
 register_extension(minifi-pcap)

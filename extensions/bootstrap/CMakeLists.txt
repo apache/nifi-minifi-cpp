@@ -19,7 +19,7 @@
 
 cmake_minimum_required(VERSION 2.6)
 
-include_directories(../../libminifi/include ../thirdparty/cxxopts/include)
+include_directories(../../libminifi/include)
 
 set(BOOTSTRAP_SOURCES  bootstrap.cpp)
 add_executable(bstrp ${BOOTSTRAP_SOURCES})

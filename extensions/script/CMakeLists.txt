@@ -53,9 +53,6 @@ if(CMAKE_THREAD_LIBS_INIT)
 endif()
 
 target_link_libraries(minifi-script-extensions ${LIBMINIFI})
-find_package(OpenSSL REQUIRED)
-include_directories(${OPENSSL_INCLUDE_DIR})
-target_link_libraries(minifi-script-extensions ${CMAKE_DL_LIBS})
 
 if (NOT DISABLE_PYTHON_SCRIPTING)
     find_package(PythonLibs 3.5)
@@ -72,7 +69,8 @@ if (NOT DISABLE_PYTHON_SCRIPTING)
     file(GLOB PY_SOURCES  "python/*.cpp")
     add_library(minifi-python-extensions STATIC ${PY_SOURCES})
 
-    target_link_libraries(minifi-python-extensions ${LIBMINIFI} ${PYTHON_LIBRARIES})
+    target_link_libraries(minifi-python-extensions ${LIBMINIFI})
+    target_link_libraries(minifi-python-extensions ${PYTHON_LIBRARIES})
     target_link_libraries(minifi-script-extensions minifi-python-extensions)
 endif()
 
@@ -80,7 +78,6 @@ if (ENABLE_LUA_SCRIPTING)
     find_package(Lua REQUIRED)
 
     include_directories(${LUA_INCLUDE_DIR})
-    include_directories(../../thirdparty/sol2-2.20.0)
 
     include_directories(lua)
     add_definitions(-DLUA_SUPPORT)
@@ -88,23 +85,10 @@ if (ENABLE_LUA_SCRIPTING)
     file(GLOB LUA_SOURCES  "lua/*.cpp")
     add_library(minifi-lua-extensions STATIC ${LUA_SOURCES})
 
-    target_link_libraries(minifi-lua-extensions ${LUA_LIBRARIES})
+    target_link_libraries(minifi-lua-extensions ${LIBMINIFI})
+    target_link_libraries(minifi-lua-extensions ${LUA_LIBRARIES} sol)
     target_link_libraries(minifi-script-extensions minifi-lua-extensions)
 endif()
-
-if (WIN32)
-    set_target_properties(minifi-script-extensions PROPERTIES
-        LINK_FLAGS "/WHOLEARCHIVE"
-    )
-elseif (APPLE)
-    set_target_properties(minifi-script-extensions PROPERTIES
-        LINK_FLAGS "-Wl,-all_load"
-    )
-else ()
-    set_target_properties(minifi-script-extensions PROPERTIES
-        LINK_FLAGS "-Wl,--whole-archive"
-    )
-endif ()
 
 SET (SCRIPTING-EXTENSIONS minifi-script-extensions PARENT_SCOPE)
 

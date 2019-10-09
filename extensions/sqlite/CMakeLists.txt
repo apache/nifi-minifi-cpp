@@ -19,8 +19,6 @@
 
 include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt) 
 
-include_directories("${CMAKE_SOURCE_DIR}/thirdparty/sqlite")
-
 file(GLOB SOURCES "*.cpp")
 
 add_library(minifi-sqlite-extensions STATIC ${SOURCES})
@@ -32,22 +30,8 @@ if(CMAKE_THREAD_LIBS_INIT)
   target_link_libraries(minifi-sqlite-extensions "${CMAKE_THREAD_LIBS_INIT}")
 endif()
 
-target_link_libraries(minifi-sqlite-extensions ${CMAKE_DL_LIBS})
-target_link_libraries(minifi-sqlite-extensions sqlite)
-
-if (WIN32)
-    set_target_properties(minifi-sqlite-extensions PROPERTIES
-        LINK_FLAGS "/WHOLEARCHIVE"
-    )
-elseif (APPLE)
-    set_target_properties(minifi-sqlite-extensions PROPERTIES
-        LINK_FLAGS "-Wl,-all_load"
-    )
-else ()
-    set_target_properties(minifi-sqlite-extensions PROPERTIES
-        LINK_FLAGS "-Wl,--whole-archive"
-    )
-endif ()
+target_link_libraries(minifi-sqlite-extensions ${LIBMINIFI})
+target_link_libraries(minifi-sqlite-extensions SQLite::SQLite3)
 
 
 SET (SQLITE-EXTENSIONS minifi-sqlite-extensions PARENT_SCOPE)

@@ -18,34 +18,17 @@
 #
 
 include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt) 
-include_directories(./controllerservice ./processors ./protocol ../../libminifi/include  ../../libminifi/include/core  ../../thirdparty/spdlog-20170710/include ../../thirdparty/concurrentqueue ../../thirdparty/)
-
-include_directories(../../thirdparty/paho.mqtt.c/src)
+include_directories(./controllerservice ./processors ./protocol ../../libminifi/include  ../../libminifi/include/core)
 
 file(GLOB SOURCES "*.cpp" "protocol/*.cpp" "processors/*.cpp" "controllerservice/*.cpp")
-
 
 set(PAHO_BUILD_STATIC "ON" CACHE STRING "" FORCE)
 
 add_library(minifi-mqtt-extensions STATIC ${SOURCES})
 set_property(TARGET minifi-mqtt-extensions PROPERTY POSITION_INDEPENDENT_CODE ON)
 
-target_link_libraries(minifi-mqtt-extensions ${CMAKE_DL_LIBS} )
-target_link_libraries(minifi-mqtt-extensions paho-mqtt3cs-static )
-
-if (WIN32)
-    set_target_properties(minifi-mqtt-extensions PROPERTIES
-        LINK_FLAGS "/WHOLEARCHIVE"
-    )
-elseif (APPLE)
-    set_target_properties(minifi-mqtt-extensions PROPERTIES
-        LINK_FLAGS "-Wl,-all_load"
-    )
-else ()
-    set_target_properties(minifi-mqtt-extensions PROPERTIES
-        LINK_FLAGS "-Wl,--whole-archive"
-    )
-endif ()
+target_link_libraries(minifi-mqtt-extensions ${LIBMINIFI})
+target_link_libraries(minifi-mqtt-extensions paho.mqtt.c)
 
 
 SET (MQTT-EXTENSIONS minifi-mqtt-extensions PARENT_SCOPE)

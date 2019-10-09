@@ -21,8 +21,7 @@ The derived and original works are listed below:
 This includes derived works from the cURL (MIT/X-style licensed) project (https://github.com/curl/curl):
 Copyright (c) 1996 - 2019, Daniel Stenberg, <daniel@haxx.se>, and many contributors, see the THANKS file.
 The derived work is adapted from
-  CMake/FindLibSSH2.cmake
-and can be found in cmake/libssh2/sys/FindLibSSH2.cmake
+  CMake/FindLibSSH2.cmake and can be found in cmake/libssh2/sys/FindLibSSH2.cmake
 
 This includes derived works from the CMake (BSD 3-Clause licensed) project (https://github.com/Kitware/CMake):
 Copyright 2000-2019 Kitware, Inc. and Contributors

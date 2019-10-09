@@ -27,11 +27,8 @@ FOREACH(testfile ${SQLITE_INTEGRATION_TESTS})
   target_include_directories(${testfilename} PRIVATE BEFORE "${CMAKE_SOURCE_DIR}/extensions/sqlite")
   target_include_directories(${testfilename} PRIVATE BEFORE "${CMAKE_SOURCE_DIR}/thirdparty/sqlite")
 
-  if (APPLE)
-    target_link_libraries (${testfilename} -Wl,-all_load minifi-sqlite-extensions minifi-standard-processors)
-  else ()
-    target_link_libraries (${testfilename} -Wl,--whole-archive minifi-sqlite-extensions minifi-standard-processors -Wl,--no-whole-archive)
-  endif ()
+  target_wholearchive_library(${testfilename} minifi-sqlite-extensions)
+  target_wholearchive_library(${testfilename} minifi-standard-processors)
 
   createTests("${testfilename}")
   target_link_libraries(${testfilename} ${CATCH_MAIN_LIB})

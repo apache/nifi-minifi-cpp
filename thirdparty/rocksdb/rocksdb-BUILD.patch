@@ -1,0 +1,458 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 45bb105a2..a77bdb8bb 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -348,10 +348,8 @@ endif()
+ 
+ include_directories(${PROJECT_SOURCE_DIR})
+ include_directories(${PROJECT_SOURCE_DIR}/include)
+-include_directories(SYSTEM ${PROJECT_SOURCE_DIR}/third-party/gtest-1.7.0/fused-src)
+ find_package(Threads REQUIRED)
+ 
+-add_subdirectory(third-party/gtest-1.7.0/fused-src/gtest)
+ 
+ # Main library source code
+ 
+@@ -502,10 +500,8 @@ set(SOURCES
+         util/status_message.cc
+         util/string_util.cc
+         util/sync_point.cc
+-        util/testutil.cc
+         util/thread_local.cc
+         util/threadpool_imp.cc
+-        util/transaction_test_util.cc
+         util/xxhash.cc
+         utilities/backupable/backupable_db.cc
+         utilities/blob_db/blob_db.cc
+@@ -574,12 +570,12 @@ if(WIN32)
+     port/win/win_logger.cc
+     port/win/win_thread.cc
+     port/win/xpress_win.cc)
+-	
++
+ if(WITH_JEMALLOC)
+   list(APPEND SOURCES
+     port/win/win_jemalloc.cc)
+ endif()
+-	
++
+ else()
+   list(APPEND SOURCES
+     port/port_posix.cc
+@@ -588,24 +584,28 @@ else()
+ endif()
+ 
+ set(ROCKSDB_STATIC_LIB rocksdb${ARTIFACT_SUFFIX})
+-set(ROCKSDB_SHARED_LIB rocksdb-shared${ARTIFACT_SUFFIX})
++# commented out to avoid building the shared lib
++#set(ROCKSDB_SHARED_LIB rocksdb-shared${ARTIFACT_SUFFIX})
+ set(ROCKSDB_IMPORT_LIB ${ROCKSDB_SHARED_LIB})
+ if(WIN32)
+-  set(SYSTEM_LIBS ${SYSTEM_LIBS} Shlwapi.lib Rpcrt4.lib)
++  #set(SYSTEM_LIBS ${SYSTEM_LIBS} shlwapi.lib Rpcrt4.lib)
++  set(SYSTEM_LIBS ${SYSTEM_LIBS}  Rpcrt4.lib)
+   set(LIBS ${ROCKSDB_STATIC_LIB} ${THIRDPARTY_LIBS} ${SYSTEM_LIBS})
+ else()
+   set(SYSTEM_LIBS ${CMAKE_THREAD_LIBS_INIT})
+-  set(LIBS ${ROCKSDB_SHARED_LIB} ${THIRDPARTY_LIBS} ${SYSTEM_LIBS})
+-
+-  add_library(${ROCKSDB_SHARED_LIB} SHARED ${SOURCES})
+-  target_link_libraries(${ROCKSDB_SHARED_LIB}
+-    ${THIRDPARTY_LIBS} ${SYSTEM_LIBS})
+-  set_target_properties(${ROCKSDB_SHARED_LIB} PROPERTIES
+-                        LINKER_LANGUAGE CXX
+-                        VERSION ${ROCKSDB_VERSION}
+-                        SOVERSION ${ROCKSDB_VERSION_MAJOR}
+-                        CXX_STANDARD 11
+-                        OUTPUT_NAME "rocksdb")
++  set(LIBS ${ROCKSDB_STATIC_LIB} ${THIRDPARTY_LIBS} ${SYSTEM_LIBS})
++# commented out to avoid building the shared lib
++# as there is no reason
++#add_library(${ROCKSDB_SHARED_LIB} SHARED ${SOURCES})
++
++# target_link_libraries(${ROCKSDB_SHARED_LIB}
++#    ${THIRDPARTY_LIBS} ${SYSTEM_LIBS})
++#  set_target_properties(${ROCKSDB_SHARED_LIB} PROPERTIES
++#                        LINKER_LANGUAGE CXX
++#                        VERSION ${ROCKSDB_VERSION}
++#                        SOVERSION ${ROCKSDB_VERSION_MAJOR}
++#                        CXX_STANDARD 11
++#                        OUTPUT_NAME "rocksdb")
+ endif()
+ 
+ option(WITH_LIBRADOS "Build with librados" OFF)
+@@ -620,16 +620,15 @@ target_link_libraries(${ROCKSDB_STATIC_LIB}
+   ${THIRDPARTY_LIBS} ${SYSTEM_LIBS})
+ 
+ if(WIN32)
+-  add_library(${ROCKSDB_IMPORT_LIB} SHARED ${SOURCES})
+-  target_link_libraries(${ROCKSDB_IMPORT_LIB}
+-    ${THIRDPARTY_LIBS} ${SYSTEM_LIBS})
+-  set_target_properties(${ROCKSDB_IMPORT_LIB} PROPERTIES
+-    COMPILE_DEFINITIONS "ROCKSDB_DLL;ROCKSDB_LIBRARY_EXPORTS")
++#  add_library(${ROCKSDB_IMPORT_LIB} SHARED ${SOURCES})
++  #target_link_libraries(${ROCKSDB_IMPORT_LIB}  ${SYSTEM_LIBS})
++  #set_target_properties(${ROCKSDB_IMPORT_LIB} PROPERTIES
++   # COMPILE_DEFINITIONS "ROCKSDB_DLL;ROCKSDB_LIBRARY_EXPORTS")
+   if(MSVC)
+     set_target_properties(${ROCKSDB_STATIC_LIB} PROPERTIES
+       COMPILE_FLAGS "/Fd${CMAKE_CFG_INTDIR}/${ROCKSDB_STATIC_LIB}.pdb")
+-    set_target_properties(${ROCKSDB_IMPORT_LIB} PROPERTIES
+-      COMPILE_FLAGS "/Fd${CMAKE_CFG_INTDIR}/${ROCKSDB_IMPORT_LIB}.pdb")
++    #set_target_properties(${ROCKSDB_IMPORT_LIB} PROPERTIES
++      #COMPILE_FLAGS "/Fd${CMAKE_CFG_INTDIR}/${ROCKSDB_IMPORT_LIB}.pdb")
+   endif()
+ endif()
+ 
+@@ -663,11 +662,11 @@ if(NOT WIN32 OR ROCKSDB_INSTALL_ON_WINDOWS)
+     INSTALL_DESTINATION ${package_config_destination}
+   )
+ 
+-  write_basic_package_version_file(
+-    RocksDBConfigVersion.cmake
+-    VERSION ${ROCKSDB_VERSION}
+-    COMPATIBILITY SameMajorVersion
+-  )
++#  write_basic_package_version_file(
++#    RocksDBConfigVersion.cmake
++#    VERSION ${ROCKSDB_VERSION}
++#    COMPATIBILITY SameMajorVersion
++#  )
+ 
+   install(DIRECTORY include/rocksdb COMPONENT devel DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
+ 
+@@ -695,13 +694,13 @@ if(NOT WIN32 OR ROCKSDB_INSTALL_ON_WINDOWS)
+     NAMESPACE RocksDB::
+   )
+ 
+-  install(
+-    FILES
+-    ${CMAKE_CURRENT_BINARY_DIR}/RocksDBConfig.cmake
+-    ${CMAKE_CURRENT_BINARY_DIR}/RocksDBConfigVersion.cmake
+-    COMPONENT devel
+-    DESTINATION ${package_config_destination}
+-  )
++#  install(
++#    FILES
++#    ${CMAKE_CURRENT_BINARY_DIR}/RocksDBConfig.cmake
++#    ${CMAKE_CURRENT_BINARY_DIR}/RocksDBConfigVersion.cmake
++#    COMPONENT devel
++#    DESTINATION ${package_config_destination}
++#  )
+ endif()
+ 
+ option(WITH_TESTS "build with tests" ON)
+@@ -806,7 +805,6 @@ if(WITH_TESTS)
+         util/file_reader_writer_test.cc
+         util/filelock_test.cc
+         util/hash_test.cc
+-        util/heap_test.cc
+         util/rate_limiter_test.cc
+         util/slice_transform_test.cc
+         util/timer_queue_test.cc
+@@ -845,20 +843,6 @@ if(WITH_TESTS)
+     list(APPEND TESTS utilities/env_librados_test.cc)
+   endif()
+ 
+-  set(BENCHMARKS
+-    cache/cache_bench.cc
+-    memtable/memtablerep_bench.cc
+-    tools/db_bench.cc
+-    table/table_reader_bench.cc
+-    utilities/column_aware_encoding_exp.cc
+-    utilities/persistent_cache/hash_table_bench.cc)
+-  add_library(testharness OBJECT util/testharness.cc)
+-  foreach(sourcefile ${BENCHMARKS})
+-    get_filename_component(exename ${sourcefile} NAME_WE)
+-    add_executable(${exename}${ARTIFACT_SUFFIX} ${sourcefile}
+-      $<TARGET_OBJECTS:testharness>)
+-    target_link_libraries(${exename}${ARTIFACT_SUFFIX} gtest ${LIBS})
+-  endforeach(sourcefile ${BENCHMARKS})
+ 
+   # For test util library that is build only in DEBUG mode
+   # and linked to tests. Add test only code that is not #ifdefed for Release here.
+@@ -884,23 +868,25 @@ if(WITH_TESTS)
+         )
+ 
+   # Tests are excluded from Release builds
+-  set(TEST_EXES ${TESTS})
+-
+-  foreach(sourcefile ${TEST_EXES})
+-      get_filename_component(exename ${sourcefile} NAME_WE)
+-      add_executable(${exename}${ARTIFACT_SUFFIX} ${sourcefile}
+-        $<TARGET_OBJECTS:testharness>)
+-      set_target_properties(${exename}${ARTIFACT_SUFFIX}
+-        PROPERTIES EXCLUDE_FROM_DEFAULT_BUILD_RELEASE 1
+-        EXCLUDE_FROM_DEFAULT_BUILD_MINRELEASE 1
+-        EXCLUDE_FROM_DEFAULT_BUILD_RELWITHDEBINFO 1
+-        )
+-      target_link_libraries(${exename}${ARTIFACT_SUFFIX} testutillib${ARTIFACT_SUFFIX} gtest ${LIBS})
+-      if(NOT "${exename}" MATCHES "db_sanity_test")
+-        add_test(NAME ${exename} COMMAND ${exename}${ARTIFACT_SUFFIX})
+-        add_dependencies(check ${exename}${ARTIFACT_SUFFIX})
+-      endif()
+-  endforeach(sourcefile ${TEST_EXES})
++  #set(TEST_EXES ${TESTS})
++
++  # while tests are not built, we want to ensure that any reference to gtest is removed in case the user
++  # builds rocksdb manually from our third party directory
++  #foreach(sourcefile ${TEST_EXES})
++  #    get_filename_component(exename ${sourcefile} NAME_WE)
++  #    add_executable(${exename}${ARTIFACT_SUFFIX} ${sourcefile}
++  #      $<TARGET_OBJECTS:testharness>)
++  #    set_target_properties(${exename}${ARTIFACT_SUFFIX}
++  #      PROPERTIES EXCLUDE_FROM_DEFAULT_BUILD_RELEASE 1
++  #      EXCLUDE_FROM_DEFAULT_BUILD_MINRELEASE 1
++  #      EXCLUDE_FROM_DEFAULT_BUILD_RELWITHDEBINFO 1
++  #      )
++  #    target_link_libraries(${exename}${ARTIFACT_SUFFIX} testutillib${ARTIFACT_SUFFIX} gtest ${LIBS})
++  #    if(NOT "${exename}" MATCHES "db_sanity_test")
++  #      add_test(NAME ${exename} COMMAND ${exename}${ARTIFACT_SUFFIX})
++  #      add_dependencies(check ${exename}${ARTIFACT_SUFFIX})
++  #    endif()
++  #endforeach(sourcefile ${TEST_EXES})
+ 
+   # C executables must link to a shared object
+   set(C_TESTS db/c_test.c)
+@@ -920,8 +906,3 @@ if(WITH_TESTS)
+       add_dependencies(check ${exename}${ARTIFACT_SUFFIX})
+   endforeach(sourcefile ${C_TEST_EXES})
+ endif()
+-
+-option(WITH_TOOLS "build with tools" ON)
+-if(WITH_TOOLS)
+-  add_subdirectory(tools)
+-endif()
+diff --git a/cmake/modules/FindJeMalloc.cmake b/cmake/modules/FindJeMalloc.cmake
+deleted file mode 100644
+index 7911f77c4..000000000
+--- a/cmake/modules/FindJeMalloc.cmake
++++ /dev/null
+@@ -1,21 +0,0 @@
+-# - Find JeMalloc library
+-# Find the native JeMalloc includes and library
+-#
+-# JEMALLOC_INCLUDE_DIR - where to find jemalloc.h, etc.
+-# JEMALLOC_LIBRARIES - List of libraries when using jemalloc.
+-# JEMALLOC_FOUND - True if jemalloc found.
+-
+-find_path(JEMALLOC_INCLUDE_DIR
+-  NAMES jemalloc/jemalloc.h
+-  HINTS ${JEMALLOC_ROOT_DIR}/include)
+-
+-find_library(JEMALLOC_LIBRARIES
+-  NAMES jemalloc
+-  HINTS ${JEMALLOC_ROOT_DIR}/lib)
+-
+-include(FindPackageHandleStandardArgs)
+-find_package_handle_standard_args(jemalloc DEFAULT_MSG JEMALLOC_LIBRARIES JEMALLOC_INCLUDE_DIR)
+-
+-mark_as_advanced(
+-  JEMALLOC_LIBRARIES
+-  JEMALLOC_INCLUDE_DIR)
+diff --git a/cmake/modules/Findbzip2.cmake b/cmake/modules/Findbzip2.cmake
+deleted file mode 100644
+index 87abbe941..000000000
+--- a/cmake/modules/Findbzip2.cmake
++++ /dev/null
+@@ -1,21 +0,0 @@
+-# - Find Bzip2
+-# Find the bzip2 compression library and includes
+-#
+-# BZIP2_INCLUDE_DIR - where to find bzlib.h, etc.
+-# BZIP2_LIBRARIES - List of libraries when using bzip2.
+-# BZIP2_FOUND - True if bzip2 found.
+-
+-find_path(BZIP2_INCLUDE_DIR
+-  NAMES bzlib.h
+-  HINTS ${BZIP2_ROOT_DIR}/include)
+-
+-find_library(BZIP2_LIBRARIES
+-  NAMES bz2
+-  HINTS ${BZIP2_ROOT_DIR}/lib)
+-
+-include(FindPackageHandleStandardArgs)
+-find_package_handle_standard_args(bzip2 DEFAULT_MSG BZIP2_LIBRARIES BZIP2_INCLUDE_DIR)
+-
+-mark_as_advanced(
+-  BZIP2_LIBRARIES
+-  BZIP2_INCLUDE_DIR)
+diff --git a/cmake/modules/Findlz4.cmake b/cmake/modules/Findlz4.cmake
+deleted file mode 100644
+index c34acef5e..000000000
+--- a/cmake/modules/Findlz4.cmake
++++ /dev/null
+@@ -1,21 +0,0 @@
+-# - Find Lz4
+-# Find the lz4 compression library and includes
+-#
+-# LZ4_INCLUDE_DIR - where to find lz4.h, etc.
+-# LZ4_LIBRARIES - List of libraries when using lz4.
+-# LZ4_FOUND - True if lz4 found.
+-
+-find_path(LZ4_INCLUDE_DIR
+-  NAMES lz4.h
+-  HINTS ${LZ4_ROOT_DIR}/include)
+-
+-find_library(LZ4_LIBRARIES
+-  NAMES lz4
+-  HINTS ${LZ4_ROOT_DIR}/lib)
+-
+-include(FindPackageHandleStandardArgs)
+-find_package_handle_standard_args(lz4 DEFAULT_MSG LZ4_LIBRARIES LZ4_INCLUDE_DIR)
+-
+-mark_as_advanced(
+-  LZ4_LIBRARIES
+-  LZ4_INCLUDE_DIR)
+diff --git a/cmake/modules/Findsnappy.cmake b/cmake/modules/Findsnappy.cmake
+deleted file mode 100644
+index 6ed5fda3d..000000000
+--- a/cmake/modules/Findsnappy.cmake
++++ /dev/null
+@@ -1,21 +0,0 @@
+-# - Find Snappy
+-# Find the snappy compression library and includes
+-#
+-# SNAPPY_INCLUDE_DIR - where to find snappy.h, etc.
+-# SNAPPY_LIBRARIES - List of libraries when using snappy.
+-# SNAPPY_FOUND - True if snappy found.
+-
+-find_path(SNAPPY_INCLUDE_DIR
+-  NAMES snappy.h
+-  HINTS ${SNAPPY_ROOT_DIR}/include)
+-
+-find_library(SNAPPY_LIBRARIES
+-  NAMES snappy
+-  HINTS ${SNAPPY_ROOT_DIR}/lib)
+-
+-include(FindPackageHandleStandardArgs)
+-find_package_handle_standard_args(snappy DEFAULT_MSG SNAPPY_LIBRARIES SNAPPY_INCLUDE_DIR)
+-
+-mark_as_advanced(
+-  SNAPPY_LIBRARIES
+-  SNAPPY_INCLUDE_DIR)
+diff --git a/cmake/modules/Findzlib.cmake b/cmake/modules/Findzlib.cmake
+deleted file mode 100644
+index fb5aee9b5..000000000
+--- a/cmake/modules/Findzlib.cmake
++++ /dev/null
+@@ -1,21 +0,0 @@
+-# - Find zlib
+-# Find the zlib compression library and includes
+-#
+-# ZLIB_INCLUDE_DIR - where to find zlib.h, etc.
+-# ZLIB_LIBRARIES - List of libraries when using zlib.
+-# ZLIB_FOUND - True if zlib found.
+-
+-find_path(ZLIB_INCLUDE_DIR
+-  NAMES zlib.h
+-  HINTS ${ZLIB_ROOT_DIR}/include)
+-
+-find_library(ZLIB_LIBRARIES
+-  NAMES z
+-  HINTS ${ZLIB_ROOT_DIR}/lib)
+-
+-include(FindPackageHandleStandardArgs)
+-find_package_handle_standard_args(zlib DEFAULT_MSG ZLIB_LIBRARIES ZLIB_INCLUDE_DIR)
+-
+-mark_as_advanced(
+-  ZLIB_LIBRARIES
+-  ZLIB_INCLUDE_DIR)
+diff --git a/cmake/modules/Findzstd.cmake b/cmake/modules/Findzstd.cmake
+deleted file mode 100644
+index a2964aa9f..000000000
+--- a/cmake/modules/Findzstd.cmake
++++ /dev/null
+@@ -1,21 +0,0 @@
+-# - Find zstd
+-# Find the zstd compression library and includes
+-#
+-# ZSTD_INCLUDE_DIR - where to find zstd.h, etc.
+-# ZSTD_LIBRARIES - List of libraries when using zstd.
+-# ZSTD_FOUND - True if zstd found.
+-
+-find_path(ZSTD_INCLUDE_DIR
+-  NAMES zstd.h
+-  HINTS ${ZSTD_ROOT_DIR}/include)
+-
+-find_library(ZSTD_LIBRARIES
+-  NAMES zstd
+-  HINTS ${ZSTD_ROOT_DIR}/lib)
+-
+-include(FindPackageHandleStandardArgs)
+-find_package_handle_standard_args(zstd DEFAULT_MSG ZSTD_LIBRARIES ZSTD_INCLUDE_DIR)
+-
+-mark_as_advanced(
+-  ZSTD_LIBRARIES
+-  ZSTD_INCLUDE_DIR)
+diff --git a/util/testharness.cc b/util/testharness.cc
+index 7ec353762..4626ea085 100644
+--- a/util/testharness.cc
++++ b/util/testharness.cc
+@@ -13,14 +13,6 @@
+ namespace rocksdb {
+ namespace test {
+ 
+-::testing::AssertionResult AssertStatus(const char* s_expr, const Status& s) {
+-  if (s.ok()) {
+-    return ::testing::AssertionSuccess();
+-  } else {
+-    return ::testing::AssertionFailure() << s_expr << std::endl
+-                                         << s.ToString();
+-  }
+-}
+ 
+ std::string TmpDir(Env* env) {
+   std::string dir;
+diff --git a/util/testharness.h b/util/testharness.h
+index 8da568123..44ee76eb9 100644
+--- a/util/testharness.h
++++ b/util/testharness.h
+@@ -9,12 +9,6 @@
+ 
+ #pragma once
+ 
+-#ifdef OS_AIX
+-#include "gtest/gtest.h"
+-#else
+-#include <gtest/gtest.h>
+-#endif
+-
+ #include <string>
+ #include "rocksdb/env.h"
+ 
+@@ -29,12 +23,5 @@ std::string TmpDir(Env* env = Env::Default());
+ // runs may be able to vary the seed.
+ int RandomSeed();
+ 
+-::testing::AssertionResult AssertStatus(const char* s_expr, const Status& s);
+-
+-#define ASSERT_OK(s) ASSERT_PRED_FORMAT1(rocksdb::test::AssertStatus, s)
+-#define ASSERT_NOK(s) ASSERT_FALSE((s).ok())
+-#define EXPECT_OK(s) EXPECT_PRED_FORMAT1(rocksdb::test::AssertStatus, s)
+-#define EXPECT_NOK(s) EXPECT_FALSE((s).ok())
+-
+ }  // namespace test
+ }  // namespace rocksdb
+diff --git a/utilities/cassandra/format.h b/utilities/cassandra/format.h
+index d8f51df14..fad6df4c4 100644
+--- a/utilities/cassandra/format.h
++++ b/utilities/cassandra/format.h
+@@ -177,17 +177,6 @@ private:
+   Columns columns_;
+   int64_t last_modified_time_;
+ 
+-  FRIEND_TEST(RowValueTest, PurgeTtlShouldRemvoeAllColumnsExpired);
+-  FRIEND_TEST(RowValueTest, ExpireTtlShouldConvertExpiredColumnsToTombstones);
+-  FRIEND_TEST(RowValueMergeTest, Merge);
+-  FRIEND_TEST(RowValueMergeTest, MergeWithRowTombstone);
+-  FRIEND_TEST(CassandraFunctionalTest, SimpleMergeTest);
+-  FRIEND_TEST(
+-    CassandraFunctionalTest, CompactionShouldConvertExpiredColumnsToTombstone);
+-  FRIEND_TEST(
+-    CassandraFunctionalTest, CompactionShouldPurgeExpiredColumnsIfPurgeTtlIsOn);
+-  FRIEND_TEST(
+-    CassandraFunctionalTest, CompactionShouldRemoveRowWhenAllColumnExpiredIfPurgeTtlIsOn);
+ };
+ 
+ } // namepsace cassandrda

@@ -1,0 +1,61 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 2c08bd28..ccb4fd7f 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -101,7 +101,7 @@ message(STATUS "Lua CGI support - ${CIVETWEB_ENABLE_LUA}")
+ # Enable installing CivetWeb executables
+ option(CIVETWEB_INSTALL_EXECUTABLE "Enable installing CivetWeb executable" ON)
+ mark_as_advanced(FORCE CIVETWEB_INSTALL_EXECUTABLE) # Advanced users can disable
+-message(STATUS "Executable installation - ${CIVETWEB_INSTALL_EXECUTABLE}") 
++message(STATUS "Executable installation - ${CIVETWEB_INSTALL_EXECUTABLE}")
+ 
+ # Allow builds to complete with warnings (do not set -Werror)
+ # CivetWeb Linux support is stable:
+@@ -294,8 +294,8 @@ if (MINGW)
+ endif()
+ if (NOT CIVETWEB_ALLOW_WARNINGS)
+   add_c_compiler_flag(-Werror)
++  add_c_compiler_flag(/WX)
+ endif()
+-add_c_compiler_flag(/WX)
+ add_c_compiler_flag(-pedantic-errors)
+ add_c_compiler_flag(-fvisibility=hidden)
+ add_c_compiler_flag(-fstack-protector-strong RELEASE)
+diff --git a/src/civetweb.c b/src/civetweb.c
+index c0ccbaa2..c692d1c8 100644
+--- a/src/civetweb.c
++++ b/src/civetweb.c
+@@ -14202,7 +14202,7 @@ ssl_get_protocol(int version_id)
+  * https://www.openssl.org/docs/man1.1.0/ssl/SSL_set_info_callback.html
+  * https://linux.die.net/man/3/ssl_set_info_callback */
+ static void
+-ssl_info_callback(SSL *ssl, int what, int ret)
++ssl_info_callback(const SSL *ssl, int what, int ret)
+ {
+ 	(void)ret;
+ 
+@@ -16237,10 +16237,13 @@ worker_thread_run(struct worker_thread_args *thread_args)
+ 					mg_free(conn->request_info.client_cert);
+ 					conn->request_info.client_cert = 0;
+ 				}
+-			}
++			} else {
++        /* make sure the connection is cleaned up on SSL failure */
++        close_connection(conn);
++      }
+ #endif
+-		} else {
+-			/* process HTTP connection */
++    } else {
++      /* process HTTP connection */
+ 			process_new_connection(conn);
+ 		}
+ 
+@@ -17249,7 +17252,6 @@ mg_get_system_info_impl(char *buffer, int buflen)
+ #pragma GCC diagnostic push
+ /* Disable bogus compiler warning -Wdate-time */
+ #pragma GCC diagnostic ignored "-Wall"
+-#pragma GCC diagnostic ignored "-Werror"
+ #endif
+ 		mg_snprintf(NULL,
+ 		            NULL,

@@ -96,7 +96,7 @@ flex_target(
 
 add_flex_bison_dependency(el-scanner el-parser)
 endif()
-include_directories(./ ../../libminifi/include  ../../libminifi/include/core ../../thirdparty/cron ../../thirdparty/spdlog-20170710/include ../../thirdparty/concurrentqueue ../../thirdparty/yaml-cpp-yaml-cpp-0.5.3/include ${CIVET_THIRDPARTY_ROOT}/include ../../thirdparty/)
+include_directories(./ ../../libminifi/include  ../../libminifi/include/core ../../thirdparty/)
 include_directories(common)
 include_directories(impl)
 include_directories(../../thirdparty/date/include)
@@ -117,27 +117,8 @@ file(GLOB SOURCES  "*.cpp")
 add_library(minifi-expression-language-extensions STATIC ${SOURCES} ${BISON_el-parser_OUTPUTS} ${FLEX_el-scanner_OUTPUTS})
 set_property(TARGET minifi-expression-language-extensions PROPERTY POSITION_INDEPENDENT_CODE ON)
 
-target_link_libraries(minifi-expression-language-extensions minifi tz)
-
-if (NOT DISABLE_CURL)
-	if (NOT CURL_FOUND)
-		find_package(CURL REQUIRED)
-	endif(NOT CURL_FOUND)
-	include_directories(${CURL_INCLUDE_DIRS})
-	target_link_libraries(minifi-expression-language-extensions ${CURL_LIBRARIES})
-endif()
-find_package(OpenSSL REQUIRED)
-include_directories(${OPENSSL_INCLUDE_DIR})
-target_link_libraries(minifi-expression-language-extensions ${CMAKE_DL_LIBS})
-find_package(ZLIB REQUIRED)
-include_directories(${ZLIB_INCLUDE_DIRS})
-target_link_libraries (minifi-expression-language-extensions ${ZLIB_LIBRARIES})
-
-if (WIN32 AND NOT DISABLE_CURL)
-    set_target_properties(minifi-expression-language-extensions PROPERTIES
-        LINK_FLAGS "${LINK_FLAGS} /WHOLEARCHIVE:${CURL_LIBRARIES}"
-    )
-endif()
+target_link_libraries(minifi-expression-language-extensions ${LIBMINIFI})
+target_link_libraries(minifi-expression-language-extensions tz RapidJSON CURL::libcurl)
 
 SET (EXPRESSION-LANGUAGE-EXTENSIONS minifi-expression-language-extensions PARENT_SCOPE)
 
