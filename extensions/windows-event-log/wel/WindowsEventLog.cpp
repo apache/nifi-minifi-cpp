@@ -121,6 +121,9 @@ std::string WindowsEventLogHandler::getEventMessage(EVT_HANDLE eventHandle) cons
   DWORD status = 0;
 
   EvtFormatMessage(metadata_provider_, eventHandle, 0, 0, NULL, EvtFormatMessageEvent, dwBufferSize, pBuffer.get(), &dwBufferUsed);
+  if (dwBufferUsed == 0) {
+    return returnValue;
+  }
 
   //  we need to get the size of the buffer
   status = GetLastError();
