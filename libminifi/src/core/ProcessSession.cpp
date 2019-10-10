@@ -819,6 +819,8 @@ void ProcessSession::commit() {
       }
     }
 
+    std::map<std::shared_ptr<Connection>, std::vector<std::shared_ptr<FlowFile>>> connectionQueues;
+
     std::shared_ptr<Connection> connection = nullptr;
     // Complete process the added and update flow files for the session, send the flow file to its queue
     for (const auto &it : _updatedFlowFiles) {
@@ -829,8 +831,10 @@ void ProcessSession::commit() {
       }
 
       connection = std::static_pointer_cast<Connection>(record->getConnection());
-      if ((connection) != nullptr)
-        connection->put(record);
+      if ((connection) != nullptr) {
+        //connection->put(record);
+        connectionQueues[connection].push_back(record);
+      }
     }
     for (const auto &it : _addedFlowFiles) {
       std::shared_ptr<core::FlowFile> record = it.second;
@@ -839,8 +843,10 @@ void ProcessSession::commit() {
         continue;
       }
       connection = std::static_pointer_cast<Connection>(record->getConnection());
-      if ((connection) != nullptr)
-        connection->put(record);
+      if ((connection) != nullptr) {
+        //connection->put(record);
+        connectionQueues[connection].push_back(record);
+      }
     }
     // Process the clone flow files
     for (const auto &it : _clonedFlowFiles) {
@@ -850,8 +856,14 @@ void ProcessSession::commit() {
         continue;
       }
       connection = std::static_pointer_cast<Connection>(record->getConnection());
-      if ((connection) != nullptr)
-        connection->put(record);
+      if ((connection) != nullptr) {
+        //connection->put(record);
+        connectionQueues[connection].push_back(record);
+      }
+    }
+
+    for (auto& cq: connectionQueues) {
+      cq.first->multiPut(cq.second);
     }
 
     // All done

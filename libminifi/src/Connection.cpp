@@ -28,6 +28,7 @@
 #include <chrono>
 #include <thread>
 #include <iostream>
+#include <list>
 #include "core/FlowFile.h"
 #include "Connection.h"
 #include "core/Processor.h"
@@ -136,7 +137,7 @@ bool Connection::isFull() {
 void Connection::put(std::shared_ptr<core::FlowFile> flow) {
   if (drop_empty_ && flow->getSize() == 0) {
     logger_->log_info("Dropping empty flow file: %s", flow->getUUIDStr());
-    return;;
+    return;
   }
   {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -160,6 +161,55 @@ void Connection::put(std::shared_ptr<core::FlowFile> flow) {
   if (dest_connectable_) {
     logger_->log_debug("Notifying %s that %s was inserted", dest_connectable_->getName(), flow->getUUIDStr());
     dest_connectable_->notifyWork();
+  }
+}
+
+void Connection::multiPut(std::vector<std::shared_ptr<core::FlowFile>>& flows) {
+  std::vector<std::tuple<std::string, const uint8_t *, size_t>> flowData;
+  std::list<io::DataStream> streams;
+
+  {
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    for (auto &ff: flows) {
+      if (drop_empty_ && ff->getSize() == 0) {
+        logger_->log_info("Dropping empty flow file: %s", ff->getUUIDStr());
+        continue;
+      }
+
+      queue_.push(ff);
+      queued_data_size_ += ff->getSize();
+
+      logger_->log_debug("Enqueue flow file UUID %s to connection %s", ff->getUUIDStr(), name_);
+
+      if (!ff->isStored()) {
+        // Save to the flowfile repo
+        FlowFileRecord event(flow_repository_, content_repo_, ff, this->uuidStr_);
+
+        streams.emplace_back();
+        event.Serialize(streams.back());
+
+        flowData.emplace_back(event.getUUIDStr(), const_cast<uint8_t *>(streams.back().getBuffer()),
+                              streams.back().getSize());
+      }
+    }
+  }
+
+  if (!flow_repository_->MultiPut(flowData)) {
+    return;
+  }
+
+  for (auto& ff: flows) {
+    if (drop_empty_ && ff->getSize() == 0) {
+      continue;
+    }
+
+    ff->setStoredToRepository(true);
+
+    if (dest_connectable_) {
+      logger_->log_debug("Notifying %s that flowfiles were inserted", dest_connectable_->getName());
+      dest_connectable_->notifyWork();
+    }
   }
 }
 
