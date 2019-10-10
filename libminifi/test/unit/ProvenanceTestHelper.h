@@ -76,6 +76,15 @@ class TestRepository : public core::Repository {
     return true;
   }
 
+  bool MultiPut(const std::vector<std::tuple<std::string, const uint8_t *, size_t>> data) {
+    for (const auto& item: data) {
+      if (!Put(std::get<0>(item), std::get<1>(item), std::get<2>(item))) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   virtual bool Serialize(const std::string &key, const uint8_t *buffer, const size_t bufferSize) {
     return Put(key, buffer, bufferSize);
   }
