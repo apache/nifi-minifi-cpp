@@ -347,6 +347,11 @@ class ProvenanceEventRecord : public core::SerializableComponent {
       _contentFullPath = flow->getResourceClaim()->getContentFullPath();
     }
   }
+  using SerializableComponent::Serialize;
+
+  // Serialize the event to a stream
+  bool Serialize(org::apache::nifi::minifi::io::DataStream& outStream);
+
   // Serialize and Persistent to the repository
   bool Serialize(const std::shared_ptr<core::SerializableComponent> &repo);
   // DeSerialize
@@ -508,6 +513,10 @@ class ProvenanceReporter {
 
   // allocate
   std::shared_ptr<ProvenanceEventRecord> allocate(ProvenanceEventRecord::ProvenanceEventType eventType, std::shared_ptr<core::FlowFile> flow) {
+    if(repo_->isNoop()) {
+      return nullptr;
+    }
+
     auto event = std::make_shared<ProvenanceEventRecord>(eventType, _componentId, _componentType);
     if (event)
       event->fromFlowFile(flow);

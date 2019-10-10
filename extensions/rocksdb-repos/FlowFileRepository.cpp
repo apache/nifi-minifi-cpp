@@ -17,10 +17,12 @@
  */
 #include "FlowFileRepository.h"
 #include "rocksdb/write_batch.h"
+#include "rocksdb/slice.h"
 #include <memory>
 #include <string>
 #include <utility>
 #include <vector>
+#include <list>
 #include "FlowFileRecord.h"
 
 namespace org {
@@ -32,25 +34,41 @@ namespace repository {
 
 void FlowFileRepository::flush() {
   rocksdb::WriteBatch batch;
-  std::string key;
-  std::string value;
+  uint64_t decrement_total = 0;
   rocksdb::ReadOptions options;
 
   std::vector<std::shared_ptr<FlowFileRecord>> purgeList;
 
-  uint64_t decrement_total = 0;
+  std::vector<rocksdb::Slice> keys;
+  std::list<std::string> keystrings;
+  std::vector<std::string> values;
+
   while (keys_to_delete.size_approx() > 0) {
+    std::string key;
     if (keys_to_delete.try_dequeue(key)) {
-      db_->Get(options, key, &value);
-      decrement_total += value.size();
-      std::shared_ptr<FlowFileRecord> eventRead = std::make_shared<FlowFileRecord>(shared_from_this(), content_repo_);
-      if (eventRead->DeSerialize(reinterpret_cast<const uint8_t *>(value.data()), value.size())) {
-        purgeList.push_back(eventRead);
-      }
-      logger_->log_debug("Issuing batch delete, including %s, Content path %s", eventRead->getUUIDStr(), eventRead->getContentFullPath());
-      batch.Delete(key);
+      keystrings.push_back(std::move(key));  // rocksdb::Slice doesn't copy the string, only grabs ptrs. Hacky, but have to ensure the required lifetime of the strings.
+      keys.push_back(keystrings.back());
     }
   }
+
+  auto multistatus = db_->MultiGet(options, keys, &values);
+
+  for(size_t i=0; i<keys.size() && i<values.size() && i<multistatus.size(); ++i) {
+    if(!multistatus[i].ok()) {
+      logger_->log_error("Failed to read key from rocksdb: %s! DB is most probably in an inconsistent state!", keys[i].data());
+      continue;
+    }
+
+    decrement_total += values[i].size();
+    std::shared_ptr<FlowFileRecord> eventRead = std::make_shared<FlowFileRecord>(shared_from_this(), content_repo_);
+    if (eventRead->DeSerialize(reinterpret_cast<const uint8_t *>(values[i].data()), values[i].size())) {
+      purgeList.push_back(eventRead);
+    }
+    logger_->log_debug("Issuing batch delete, including %s, Content path %s", eventRead->getUUIDStr(), eventRead->getContentFullPath());
+    batch.Delete(keys[i]);
+  }
+
+
   if (db_->Write(rocksdb::WriteOptions(), &batch).ok()) {
     logger_->log_trace("Decrementing %u from a repo size of %u", decrement_total, repo_size_.load());
     if (decrement_total > repo_size_.load()) {
