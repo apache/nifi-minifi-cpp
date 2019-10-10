@@ -80,26 +80,26 @@ class ProvenanceRepository : public core::Repository, public std::enable_shared_
     if (config->get(Configure::nifi_provenance_repository_directory_default, value)) {
       directory_ = value;
     }
-    logger_->log_debug("NiFi Provenance Repository Directory %s", directory_);
+    logger_->log_debug("MiNiFi Provenance Repository Directory %s", directory_);
     if (config->get(Configure::nifi_provenance_repository_max_storage_size, value)) {
       core::Property::StringToInt(value, max_partition_bytes_);
     }
-    logger_->log_debug("NiFi Provenance Max Partition Bytes %d", max_partition_bytes_);
+    logger_->log_debug("MiNiFi Provenance Max Partition Bytes %d", max_partition_bytes_);
     if (config->get(Configure::nifi_provenance_repository_max_storage_time, value)) {
       core::TimeUnit unit;
       if (core::Property::StringToTime(value, max_partition_millis_, unit) && core::Property::ConvertTimeUnitToMS(max_partition_millis_, unit, max_partition_millis_)) {
       }
     }
-    logger_->log_debug("NiFi Provenance Max Storage Time: [%d] ms", max_partition_millis_);
+    logger_->log_debug("MiNiFi Provenance Max Storage Time: [%d] ms", max_partition_millis_);
     rocksdb::Options options;
     options.create_if_missing = true;
     options.use_direct_io_for_flush_and_compaction = true;
     options.use_direct_reads = true;
     rocksdb::Status status = rocksdb::DB::Open(options, directory_, &db_);
     if (status.ok()) {
-      logger_->log_debug("NiFi Provenance Repository database open %s success", directory_);
+      logger_->log_debug("MiNiFi Provenance Repository database open %s success", directory_);
     } else {
-      logger_->log_error("NiFi Provenance Repository database open %s fail", directory_);
+      logger_->log_error("MiNiFi Provenance Repository database open %s failed: %s", directory_, status.ToString());
       return false;
     }
 
@@ -120,6 +120,25 @@ class ProvenanceRepository : public core::Repository, public std::enable_shared_
     else
       return false;
   }
+
+  virtual bool MultiPut(const std::vector<std::tuple<std::string, const uint8_t *, size_t>> data) {
+    if (repo_full_) {
+      return false;
+    }
+
+    rocksdb::WriteBatch batch;
+    rocksdb::Status status;
+    for(const auto& item: data) {
+      rocksdb::Slice value((const char *) std::get<1>(item), std::get<2>(item));
+      status = batch.Put(std::get<0>(item), value);
+      if (!status.ok()) {
+        return false;
+      }
+    }
+    status = db_->Write(rocksdb::WriteOptions(), &batch);
+    return status.ok();
+  }
+
   // Delete
   virtual bool Delete(std::string key) {
     keys_to_delete.enqueue(key);

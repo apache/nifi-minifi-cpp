@@ -215,9 +215,7 @@ bool FlowFileRecord::DeSerialize(std::string key) {
   return ret;
 }
 
-bool FlowFileRecord::Serialize() {
-  io::DataStream outStream;
-
+bool FlowFileRecord::Serialize(io::DataStream &outStream) {
   int ret;
 
   ret = write(this->event_time_, &outStream);
@@ -251,7 +249,7 @@ bool FlowFileRecord::Serialize() {
     return false;
   }
 
-  for (auto itAttribute : attributes_) {
+  for (auto& itAttribute : attributes_) {
     ret = writeUTF(itAttribute.first, &outStream, true);
     if (ret <= 0) {
       return false;
@@ -274,6 +272,16 @@ bool FlowFileRecord::Serialize() {
 
   ret = write(this->offset_, &outStream);
   if (ret != 8) {
+    return false;
+  }
+
+  return true;
+}
+
+bool FlowFileRecord::Serialize() {
+  io::DataStream outStream;
+
+  if(!Serialize(outStream)) {
     return false;
   }
 

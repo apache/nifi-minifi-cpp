@@ -21,6 +21,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <list>
 #include "core/Repository.h"
 #include "io/DataStream.h"
 #include "io/Serializable.h"
@@ -84,9 +85,7 @@ bool ProvenanceEventRecord::DeSerialize(const std::shared_ptr<core::Serializable
   return ret;
 }
 
-bool ProvenanceEventRecord::Serialize(const std::shared_ptr<core::SerializableComponent> &repo) {
-  org::apache::nifi::minifi::io::DataStream outStream;
-
+bool ProvenanceEventRecord::Serialize(org::apache::nifi::minifi::io::DataStream& outStream) {
   int ret;
 
   ret = writeUTF(this->uuidStr_, &outStream);
@@ -147,7 +146,7 @@ bool ProvenanceEventRecord::Serialize(const std::shared_ptr<core::SerializableCo
     return false;
   }
 
-  for (auto itAttribute : _attributes) {
+  for (const auto& itAttribute : _attributes) {
     ret = writeUTF(itAttribute.first, &outStream, true);
     if (ret <= 0) {
       return false;
@@ -185,7 +184,7 @@ bool ProvenanceEventRecord::Serialize(const std::shared_ptr<core::SerializableCo
     if (ret != 4) {
       return false;
     }
-    for (auto parentUUID : _parentUuids) {
+    for (const auto& parentUUID : _parentUuids) {
       ret = writeUTF(parentUUID, &outStream);
       if (ret <= 0) {
         return false;
@@ -196,7 +195,7 @@ bool ProvenanceEventRecord::Serialize(const std::shared_ptr<core::SerializableCo
     if (ret != 4) {
       return false;
     }
-    for (auto childUUID : _childrenUuids) {
+    for (const auto& childUUID : _childrenUuids) {
       ret = writeUTF(childUUID, &outStream);
       if (ret <= 0) {
         return false;
@@ -217,6 +216,13 @@ bool ProvenanceEventRecord::Serialize(const std::shared_ptr<core::SerializableCo
       return false;
     }
   }
+}
+
+bool ProvenanceEventRecord::Serialize(const std::shared_ptr<core::SerializableComponent> &repo) {
+  org::apache::nifi::minifi::io::DataStream outStream;
+
+  Serialize(outStream);
+
   // Persist to the DB
   if (!repo->Serialize(uuidStr_, const_cast<uint8_t*>(outStream.getBuffer()), outStream.getSize())) {
     logger_->log_error("NiFi Provenance Store event %s size %llu fail", uuidStr_, outStream.getSize());
@@ -373,13 +379,22 @@ bool ProvenanceEventRecord::DeSerialize(const uint8_t *buffer, const size_t buff
 }
 
 void ProvenanceReporter::commit() {
-  for (auto event : _events) {
-    if (!repo_->isFull()) {
-      event->Serialize(repo_);
-    } else {
-      logger_->log_debug("Provenance Repository is full");
-    }
+  if(repo_->isFull()) {
+    logger_->log_debug("Provenance Repository is full");
+    return;
   }
+
+  std::vector<std::tuple<std::string, const uint8_t *, size_t>> flowData;
+  std::list<io::DataStream> streams;
+
+  for (auto& event : _events) {
+    streams.emplace_back();
+    event->Serialize(streams.back());
+
+    flowData.emplace_back(event->getUUIDStr(), const_cast<uint8_t *>(streams.back().getBuffer()),
+                          streams.back().getSize());
+  }
+  repo_->MultiPut(flowData);
 }
 
 void ProvenanceReporter::create(std::shared_ptr<core::FlowFile> flow, std::string detail) {
