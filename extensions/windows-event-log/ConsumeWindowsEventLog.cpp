@@ -32,6 +32,7 @@
 #include "wel/MetadataWalker.h"
 #include "wel/XMLString.h"
 
+#include "utils/ScopeGuard.h"
 #include "io/DataStream.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
@@ -396,6 +397,13 @@ int ConsumeWindowsEventLog::processQueue(const std::shared_ptr<core::ProcessSess
 
   int flowFileCount = 0;
 
+  auto before_time = std::chrono::high_resolution_clock::now();
+  utils::ScopeGuard timeGuard([&](){
+    logger_->log_info("processQueue processed %d Events in %llu ms",
+      flowFileCount,
+      std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - before_time).count());
+  });
+
   EventRender evt;
   while (listRenderedData_.try_dequeue(evt)) {
     auto flowFile = session->create();
@@ -420,7 +428,10 @@ int ConsumeWindowsEventLog::processQueue(const std::shared_ptr<core::ProcessSess
     flowFileCount++;
 
     if (batch_commit_size_ != 0 && (flowFileCount % batch_commit_size_ == 0)) {
+      auto before_commit = std::chrono::high_resolution_clock::now();
       session->commit();
+	  logger_->log_info("processQueue commit took %llu ms",
+        std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - before_commit).count());
     }
   }
 
