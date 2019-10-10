@@ -90,6 +90,11 @@ class Repository : public virtual core::SerializableComponent, public core::Trac
   virtual bool Put(std::string key, const uint8_t *buf, size_t bufLen) {
     return true;
   }
+
+  virtual bool MultiPut(const std::vector<std::tuple<std::string, const uint8_t *, size_t>> data) {
+    return true;
+  }
+
   // Delete
   virtual bool Delete(std::string key) {
     return true;

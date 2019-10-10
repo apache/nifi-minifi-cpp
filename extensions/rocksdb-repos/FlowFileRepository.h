@@ -122,6 +122,21 @@ class FlowFileRepository : public core::Repository, public std::enable_shared_fr
     else
       return false;
   }
+
+  virtual bool MultiPut(const std::vector<std::tuple<std::string, const uint8_t *, size_t>> data) {
+    rocksdb::WriteBatch batch;
+    rocksdb::Status status;
+    for(const auto& item: data) {
+      rocksdb::Slice value((const char *) std::get<1>(item), std::get<2>(item));
+      status = batch.Put(std::get<0>(item), value);
+      if (!status.ok()) {
+        return false;
+      }
+    }
+    status = db_->Write(rocksdb::WriteOptions(), &batch);
+    return status.ok();
+  }
+
   /**
    * 
    * Deletes the key
