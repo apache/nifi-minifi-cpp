@@ -76,6 +76,7 @@ public:
   static core::Property ResolveAsAttributes;
   static core::Property EventHeaderDelimiter;
   static core::Property EventHeader;
+  static core::Property BatchCommitSize;
 
   //! Supported Relationships
   static core::Relationship Success;
@@ -125,6 +126,7 @@ private:
   std::shared_ptr<core::ProcessSessionFactory> sessionFactory_;
   std::mutex cache_mutex_;
   std::map<std::string, wel::WindowsEventLogHandler > providers_;
+  int batch_commit_size_;
 };
 
 REGISTER_RESOURCE(ConsumeWindowsEventLog, "Windows Event Log Subscribe Callback to receive FlowFiles from Events on Windows.");

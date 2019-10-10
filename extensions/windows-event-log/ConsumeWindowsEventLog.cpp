@@ -127,10 +127,17 @@ core::Property ConsumeWindowsEventLog::EventHeader(
   withDescription("Comma seperated list of key/value pairs with the following keys LOG_NAME, SOURCE, TIME_CREATED,EVENT_RECORDID,EVENTID,TASK_CATEGORY,LEVEL,KEYWORDS,USER,COMPUTER, and EVENT_TYPE. Eliminating fields will remove them from the header.")->
   build());
 
+core::Property ConsumeWindowsEventLog::BatchCommitSize(
+  core::PropertyBuilder::createProperty("Batch Commit Size")->
+  isRequired(false)->
+  withDefaultValue<int>(1000)->
+  withDescription("Maximum number of Events to consume and create to Flow Files from before committing.")->
+  build());
+
 core::Relationship ConsumeWindowsEventLog::Success("success", "Relationship for successfully consumed events.");
 
 ConsumeWindowsEventLog::ConsumeWindowsEventLog(const std::string& name, utils::Identifier uuid)
-  : core::Processor(name, uuid), logger_(logging::LoggerFactory<ConsumeWindowsEventLog>::getLogger()), apply_identifier_function_(false) {
+  : core::Processor(name, uuid), logger_(logging::LoggerFactory<ConsumeWindowsEventLog>::getLogger()), apply_identifier_function_(false), batch_commit_size_(0) {
 
   char buff[MAX_COMPUTERNAME_LENGTH + 1];
   DWORD size = sizeof(buff);
@@ -146,7 +153,7 @@ ConsumeWindowsEventLog::~ConsumeWindowsEventLog() {
 
 void ConsumeWindowsEventLog::initialize() {
   //! Set the supported properties
-  setSupportedProperties({Channel, Query, MaxBufferSize, InactiveDurationToReconnect, IdentifierMatcher, IdentifierFunction, ResolveAsAttributes, EventHeaderDelimiter, EventHeader });
+  setSupportedProperties({Channel, Query, MaxBufferSize, InactiveDurationToReconnect, IdentifierMatcher, IdentifierFunction, ResolveAsAttributes, EventHeaderDelimiter, EventHeader, BatchCommitSize});
 
   //! Set the supported relationships
   setSupportedRelationships({Success});
@@ -170,6 +177,7 @@ void ConsumeWindowsEventLog::onSchedule(const std::shared_ptr<core::ProcessConte
   context->getProperty(ResolveAsAttributes.getName(), resolve_as_attributes_);
   context->getProperty(IdentifierFunction.getName(), apply_identifier_function_);
   context->getProperty(EventHeaderDelimiter.getName(), header_delimiter_);
+  context->getProperty(BatchCommitSize.getName(), batch_commit_size_);
 
   std::string header;
   context->getProperty(EventHeader.getName(), header);
@@ -410,6 +418,10 @@ int ConsumeWindowsEventLog::processQueue(const std::shared_ptr<core::ProcessSess
     session->transfer(flowFile, Success);
 
     flowFileCount++;
+
+    if (batch_commit_size_ != 0 && (flowFileCount % batch_commit_size_ == 0)) {
+      session->commit();
+    }
   }
 
   return flowFileCount;
