@@ -115,12 +115,20 @@ void WindowsEventLogMetadata::renderMetadata() {
 std::string WindowsEventLogHandler::getEventMessage(EVT_HANDLE eventHandle) const
 {
   std::string returnValue;
+
+  if (!metadata_provider_) {
+    return returnValue;
+  }
+
   std::unique_ptr<WCHAR, utils::FreeDeleter> pBuffer;
   DWORD dwBufferSize = 0;
   DWORD dwBufferUsed = 0;
   DWORD status = 0;
 
   EvtFormatMessage(metadata_provider_, eventHandle, 0, 0, NULL, EvtFormatMessageEvent, dwBufferSize, pBuffer.get(), &dwBufferUsed);
+  if (dwBufferUsed == 0) {
+    return returnValue;
+  }
 
   //  we need to get the size of the buffer
   status = GetLastError();
