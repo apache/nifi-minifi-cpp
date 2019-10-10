@@ -115,11 +115,6 @@ void WindowsEventLogMetadata::renderMetadata() {
 std::string WindowsEventLogHandler::getEventMessage(EVT_HANDLE eventHandle) const
 {
   std::string returnValue;
-
-  if (!metadata_provider_) {
-    return returnValue;
-  }
-
   std::unique_ptr<WCHAR, utils::FreeDeleter> pBuffer;
   DWORD dwBufferSize = 0;
   DWORD dwBufferUsed = 0;
