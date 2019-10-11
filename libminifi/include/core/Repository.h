@@ -80,6 +80,10 @@ class Repository : public virtual core::SerializableComponent, public core::Trac
     stop();
   }
 
+  virtual bool isNoop() {
+    return true;
+  }
+
   virtual void flush();
 
   // initialize
