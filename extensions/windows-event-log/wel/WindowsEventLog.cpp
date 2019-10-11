@@ -17,6 +17,7 @@
  */
 #include <winmeta.h>
 #include "WindowsEventLog.h"
+#include "UnicodeConversion.h"
 #include "utils/Deleters.h"
 #include "utils/ScopeGuard.h"
 #include <algorithm>
@@ -153,9 +154,7 @@ std::string WindowsEventLogHandler::getEventMessage(EVT_HANDLE eventHandle) cons
   }
 
   // convert wstring to std::string
-  std::wstring message(pBuffer.get());
-
-  return std::string(message.begin(), message.end());
+  return to_string(pBuffer.get());
 }
 
 void WindowsEventLogHeader::setDelimiter(const std::string &delim) {

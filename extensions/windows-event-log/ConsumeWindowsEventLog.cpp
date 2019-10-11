@@ -29,8 +29,10 @@
 #include <iostream>
 #include <memory>
 #include <regex>
+
 #include "wel/MetadataWalker.h"
 #include "wel/XMLString.h"
+#include "wel/UnicodeConversion.h"
 
 #include "utils/ScopeGuard.h"
 #include "io/DataStream.h"
@@ -46,12 +48,6 @@ namespace apache {
 namespace nifi {
 namespace minifi {
 namespace processors {
-
-
-
-static std::string to_string(const wchar_t* pChar) {
-  return std::wstring_convert<std::codecvt_utf8<wchar_t>>().to_bytes(pChar);
-}
 
 const std::string ConsumeWindowsEventLog::ProcessorName("ConsumeWindowsEventLog");
 
@@ -305,7 +301,7 @@ bool ConsumeWindowsEventLog::subscribe(const std::shared_ptr<core::ProcessContex
               size = used;
               std::vector<wchar_t> buf(size/2 + 1);
               if (EvtRender(NULL, eventHandle, EvtRenderEventXml, size, &buf[0], &used, &propertyCount)) {
-                std::string xml = to_string(&buf[0]);
+                std::string xml = wel::to_string(&buf[0]);
 
                 EventRender renderedData;
 
