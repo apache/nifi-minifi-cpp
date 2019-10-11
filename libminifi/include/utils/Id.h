@@ -31,6 +31,9 @@
 #define UUID_RANDOM_IMPL 1
 #define UUID_DEFAULT_IMPL 2
 #define MINIFI_UID_IMPL 3
+#ifdef WIN32
+#define UUID_WINDOWS_IMPL 4
+#endif
 
 namespace org {
 namespace apache {

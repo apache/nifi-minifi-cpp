@@ -29,11 +29,35 @@
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/StringUtils.h"
 
+#ifdef WIN32
+#include "Rpc.h"
+#include "Winsock2.h"
+#pragma comment(lib, "Rpcrt4.lib")
+#pragma comment(lib, "Ws2_32.lib")
+#endif
+
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
 namespace utils {
+
+#ifdef WIN32
+namespace {
+  void generate_guid(UUID_FIELD out) {
+    UUID uuid;
+    UuidCreateSequential(&uuid);
+
+    uint32_t Data1BE = htonl(uuid.Data1);
+    memcpy(out, &Data1BE, 4);
+    uint16_t Data2BE = htons(uuid.Data2);
+    memcpy(out + 4, &Data2BE, 2);
+    uint16_t Data3BE = htons(uuid.Data3);
+    memcpy(out + 6, &Data3BE, 2);
+    memcpy(out + 8, uuid.Data4, 8);
+  }
+}
+#endif
 
 Identifier::Identifier(UUID_FIELD u)
     : IdentifierBase(u) {
@@ -207,7 +231,14 @@ void IdGenerator::initialize(const std::shared_ptr<Properties> & properties) {
       incrementor_ = 0;
     } else if ("time" == implementation_str) {
       logging::LOG_DEBUG(logger_) << "Using uuid_generate_time implementation for uids.";
-    } else {
+    }
+#ifdef WIN32
+	else if ("windows" == implementation_str) {
+	  logging::LOG_DEBUG(logger_) << "Using Windows native UuidCreateSequential implementation for uids.";
+	  implementation_ = UUID_WINDOWS_IMPL;
+	}
+#endif
+	else {
       logging::LOG_DEBUG(logger_) << "Invalid value for uid.implementation (" << implementation_str << "). Using uuid_generate_time implementation for uids.";
     }
   } else {
@@ -238,6 +269,11 @@ void IdGenerator::generate(Identifier &ident) {
       }
     }
       break;
+#ifdef WIN32
+    case UUID_WINDOWS_IMPL:
+      generate_guid(output);
+      break;
+#endif
     default:
       uuid_generate_time(output);
       break;
