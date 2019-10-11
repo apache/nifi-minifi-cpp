@@ -279,6 +279,10 @@ bool FlowFileRecord::Serialize(io::DataStream &outStream) {
 }
 
 bool FlowFileRecord::Serialize() {
+  if(flow_repository_->isNoop()) {
+    return true;
+  }
+
   io::DataStream outStream;
 
   if(!Serialize(outStream)) {
