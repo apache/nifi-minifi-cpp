@@ -64,6 +64,10 @@ class ProvenanceRepository : public core::Repository, public std::enable_shared_
 
   virtual void flush();
 
+  virtual bool isNoop() {
+    return false;
+  }
+
   void start() {
     if (this->purge_period_ <= 0)
       return;

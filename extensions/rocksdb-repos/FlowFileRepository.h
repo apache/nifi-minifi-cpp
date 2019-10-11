@@ -75,6 +75,10 @@ class FlowFileRepository : public core::Repository, public std::enable_shared_fr
       delete db_;
   }
 
+  virtual bool isNoop() {
+    return false;
+  }
+
   virtual void flush();
 
   // initialize

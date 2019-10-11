@@ -219,6 +219,8 @@ bool ProvenanceEventRecord::Serialize(org::apache::nifi::minifi::io::DataStream&
 }
 
 bool ProvenanceEventRecord::Serialize(const std::shared_ptr<core::SerializableComponent> &repo) {
+
+
   org::apache::nifi::minifi::io::DataStream outStream;
 
   Serialize(outStream);
@@ -379,6 +381,10 @@ bool ProvenanceEventRecord::DeSerialize(const uint8_t *buffer, const size_t buff
 }
 
 void ProvenanceReporter::commit() {
+  if(repo_->isNoop()) {
+    return;
+  }
+
   if(repo_->isFull()) {
     logger_->log_debug("Provenance Repository is full");
     return;

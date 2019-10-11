@@ -71,6 +71,10 @@ class TestRepository : public core::Repository {
 
   }
 
+  virtual bool isNoop() {
+    return false;
+  }
+
   bool Put(std::string key, const uint8_t *buf, size_t bufLen) {
     repositoryResults.insert(std::pair<std::string, std::string>(key, std::string((const char*) buf, bufLen)));
     return true;
