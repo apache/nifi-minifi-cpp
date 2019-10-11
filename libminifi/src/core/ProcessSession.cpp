@@ -832,7 +832,6 @@ void ProcessSession::commit() {
 
       connection = std::static_pointer_cast<Connection>(record->getConnection());
       if ((connection) != nullptr) {
-        //connection->put(record);
         connectionQueues[connection].push_back(record);
       }
     }
@@ -844,7 +843,6 @@ void ProcessSession::commit() {
       }
       connection = std::static_pointer_cast<Connection>(record->getConnection());
       if ((connection) != nullptr) {
-        //connection->put(record);
         connectionQueues[connection].push_back(record);
       }
     }
@@ -857,7 +855,6 @@ void ProcessSession::commit() {
       }
       connection = std::static_pointer_cast<Connection>(record->getConnection());
       if ((connection) != nullptr) {
-        //connection->put(record);
         connectionQueues[connection].push_back(record);
       }
     }
@@ -885,6 +882,8 @@ void ProcessSession::commit() {
 }
 
 void ProcessSession::rollback() {
+  std::map<std::shared_ptr<Connection>, std::vector<std::shared_ptr<FlowFile>>> connectionQueues;
+
   try {
     std::shared_ptr<Connection> connection = nullptr;
     // Requeue the snapshot of the flowfile back
@@ -895,9 +894,14 @@ void ProcessSession::rollback() {
         std::shared_ptr<FlowFileRecord> flowf = std::static_pointer_cast<FlowFileRecord>(record);
         flowf->setSnapShot(false);
         logger_->log_debug("ProcessSession rollback for %s, record %s, to connection %s", process_context_->getProcessorNode()->getName(), record->getUUIDStr(), connection->getName());
-        connection->put(record);
+        connectionQueues[connection].push_back(record);
       }
     }
+
+    for (auto& cq: connectionQueues) {
+      cq.first->multiPut(cq.second);
+    }
+
     _originalFlowFiles.clear();
 
     _clonedFlowFiles.clear();
