@@ -14,7 +14,7 @@ bool MetadataWalker::for_each(pugi::xml_node &node) {
   const std::string node_name = node.name();
   if (node_name == "Data") {
     for (pugi::xml_attribute attr : node.attributes())  {
-      static const auto idUpdate = [&](const std::string &input) {
+      const auto idUpdate = [&](const std::string &input) {
         if (resolve_) {
           const auto resolved = utils::OsUtils::userIdToUsername(input);
           replaced_identifiers_[input] = resolved;
