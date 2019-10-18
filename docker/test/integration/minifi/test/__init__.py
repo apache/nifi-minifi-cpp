@@ -325,9 +325,12 @@ class EmptyFilesOutPutValidator(FileOutputValidator):
         if self.valid:
             return True
 
-        listing = listdir(self.output_dir)
+        full_dir = self.output_dir + dir
+        logging.info("Output folder: %s", full_dir)
+
+        listing = listdir(full_dir)
         if listing:
-            self.valid = all(os.path.getsize(os.path.join(self.output_dir,x)) == 0 for x in listing)
+            self.valid = all(os.path.getsize(os.path.join(full_dir,x)) == 0 for x in listing)
 
         return self.valid
 
@@ -343,7 +346,12 @@ class NoFileOutPutValidator(FileOutputValidator):
         if self.valid:
             return True
 
-        self.valid = not bool(listdir(self.output_dir))
+        full_dir = self.output_dir + dir
+        logging.info("Output folder: %s", full_dir)
+
+        listing = listdir(full_dir)
+
+        self.valid = not bool(listing)
 
         return self.valid
 
