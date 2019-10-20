@@ -89,7 +89,7 @@ bool SSLContextService::configure_ssl_context(SSL_CTX *ctx) {
       EVP_PKEY_free(pkey);
       X509_free(cert);
     } else {
-      if (SSL_CTX_use_certificate_file(ctx, certificate.c_str(), SSL_FILETYPE_PEM) <= 0) {
+      if (SSL_CTX_use_certificate_chain_file(ctx, certificate.c_str()) <= 0) {
         logging::LOG_ERROR(logger_) << "Could not create load certificate " << certificate << ", " << getLatestOpenSSLErrorString();
         return false;
       }

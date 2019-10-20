@@ -92,7 +92,7 @@ int16_t TLSContext::initialize(bool server_method) {
       }
     }
     // load certificates and private key in PEM format
-    if (SSL_CTX_use_certificate_file(ctx, certificate.c_str(), SSL_FILETYPE_PEM) <= 0) {
+    if (SSL_CTX_use_certificate_chain_file(ctx, certificate.c_str()) <= 0) {
       logger_->log_error("Could not load certificate %s, for %X and %X error : %s", certificate, this, ctx, std::strerror(errno));
       error_value = TLS_ERROR_CERT_MISSING;
       return error_value;
