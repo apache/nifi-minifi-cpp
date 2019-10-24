@@ -34,7 +34,7 @@ TEST_CASE("TestRegexUtils::single_match", "[regex1]") {
     auto ret = r1.getResult();
     std::vector<std::string> ans = {"Speed limit 130", "130"};
     REQUIRE(ans == ret);
-    REQUIRE("| Speed limit 80" == r1.getSuffix());
+    REQUIRE(" | Speed limit 80" == r1.getSuffix());
 }
 
 TEST_CASE("TestRegexUtils::invalid_construction", "[regex2]") {
