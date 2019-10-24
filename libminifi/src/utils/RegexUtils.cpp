@@ -146,7 +146,7 @@ bool Regex::match(const std::string &pattern) {
     if ((size_t) matches_[0].rm_eo >= pattern.size()) {
       suffix_ = "";
     } else {
-      suffix_ = pattern.substr(matches_[0].rm_eo + 1);
+      suffix_ = pattern.substr(matches_[0].rm_eo);
     }
     return true;
   }
