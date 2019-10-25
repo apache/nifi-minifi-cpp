@@ -40,11 +40,44 @@
 #include "TailFile.h"
 #include "LogAttribute.h"
 
-static std::string NEWLINE_FILE = ""  // NOLINT
-        "one,two,three\n"
-        "four,five,six, seven";
-static const char *TMP_FILE = "minifi-tmpfile.txt";
-static const char *STATE_FILE = "minifi-state-file.txt";
+#ifdef WIN32
+int CR_LEN = 1;
+#else
+int CR_LEN = 0;
+#endif
+
+static const std::string FIRST_LINE = "one,two,three";  // NOLINT
+static const std::string SECOND_LINE = "four,five,six, seven";  // NOLINT
+static const std::string NEWLINE_FILE = FIRST_LINE + "\n" + SECOND_LINE;  // NOLINT
+
+static const char* FILE_EXTENSION = "txt";
+static const char* TMP_FILE = "minifi-tmpfile";
+static const char* STATE_FILE = "minifi-state-file";
+
+std::string fileName(std::string base_name, int start_offset = -1, int end_offset = -1) {
+  if (start_offset < 0 || end_offset < 0)
+    return base_name + "." + FILE_EXTENSION;
+  else
+    return base_name + "." + std::to_string(start_offset) + "-" + std::to_string(end_offset) + "." + FILE_EXTENSION;
+}
+
+void wrapLines(std::stringstream &lines, const std::string original, uint32_t line_length) {
+  size_t i = 0;
+  size_t total_len = original.length();
+  while (true) {
+    lines << original.substr(i, line_length);
+    i += line_length;
+    if (i >= total_len) {
+#ifdef WIN32
+      lines << "0d\n";  // This seems to be a TailFile bug on WIN32. It always leaves a \r at the end of each line.
+#endif
+      break;
+    } else {
+      lines << '\n';
+    }
+  }
+}
+
 TEST_CASE("TailFileWithDelimiter", "[tailfiletest2]") {
   // Create and write to the test file
 
@@ -61,7 +94,7 @@ TEST_CASE("TailFileWithDelimiter", "[tailfiletest2]") {
   auto dir = testController.createTempDirectory(format);
 
   std::stringstream temp_file;
-  temp_file << dir << utils::file::FileUtils::get_separator() << TMP_FILE;
+  temp_file << dir << utils::file::FileUtils::get_separator() << fileName(TMP_FILE);
 
   std::ofstream tmpfile;
   tmpfile.open(temp_file.str());
@@ -69,7 +102,7 @@ TEST_CASE("TailFileWithDelimiter", "[tailfiletest2]") {
   tmpfile.close();
 
   std::stringstream state_file;
-  state_file << dir << utils::file::FileUtils::get_separator() << STATE_FILE;
+  state_file << dir << utils::file::FileUtils::get_separator() << fileName(STATE_FILE);
 
   plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::FileName.getName(), temp_file.str());
   plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::StateFile.getName(), state_file.str());
@@ -82,17 +115,13 @@ TEST_CASE("TailFileWithDelimiter", "[tailfiletest2]") {
   testController.runSession(plan, false);
 
   REQUIRE(LogTestController::getInstance().contains("Logged 1 flow files"));
-#ifdef WIN32
-  REQUIRE(LogTestController::getInstance().contains("Size:" + std::to_string(NEWLINE_FILE.find_first_of('\n')+1) + " Offset:0"));
-#else
-  REQUIRE(LogTestController::getInstance().contains("Size:" + std::to_string(NEWLINE_FILE.find_first_of('\n')) + " Offset:0"));
-#endif
+  REQUIRE(LogTestController::getInstance().contains("Size:" + std::to_string(FIRST_LINE.length() + CR_LEN) + " Offset:0"));
 
   LogTestController::getInstance().reset();
 
   // Delete the test and state file.
 
-  remove(std::string(std::string(STATE_FILE) + "." + id).c_str());
+  remove((fileName(STATE_FILE) + "." + id).c_str());
 }
 
 TEST_CASE("TestNewContent", "[tailFileWithDelimiterState]") {
@@ -113,7 +142,7 @@ TEST_CASE("TestNewContent", "[tailFileWithDelimiterState]") {
   auto dir = testController.createTempDirectory(format);
 
   std::stringstream temp_file;
-  temp_file << dir << utils::file::FileUtils::get_separator() << TMP_FILE;
+  temp_file << dir << utils::file::FileUtils::get_separator() << fileName(TMP_FILE);
 
   std::ofstream tmpfile;
   tmpfile.open(temp_file.str());
@@ -121,7 +150,7 @@ TEST_CASE("TestNewContent", "[tailFileWithDelimiterState]") {
   tmpfile.close();
 
   std::stringstream state_file;
-  state_file << dir << utils::file::FileUtils::get_separator() << STATE_FILE;
+  state_file << dir << utils::file::FileUtils::get_separator() << fileName(STATE_FILE);
 
   plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::FileName.getName(), temp_file.str());
   plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::StateFile.getName(), state_file.str());
@@ -129,7 +158,9 @@ TEST_CASE("TestNewContent", "[tailFileWithDelimiterState]") {
 
   testController.runSession(plan, true);
 
-  REQUIRE(LogTestController::getInstance().contains("minifi-tmpfile.0-13.txt"));
+  auto start_offset = 0;
+  auto end_offset = FIRST_LINE.length() + CR_LEN;
+  REQUIRE(LogTestController::getInstance().contains(fileName(TMP_FILE, start_offset, end_offset)));
 
   plan->reset(true);  // start a new but with state file
 
@@ -138,15 +169,17 @@ TEST_CASE("TestNewContent", "[tailFileWithDelimiterState]") {
   appendStream << std::endl;
   testController.runSession(plan, true);
 
-  REQUIRE(LogTestController::getInstance().contains("position 14"));
+  start_offset = end_offset + 1;
+  REQUIRE(LogTestController::getInstance().contains("position " + std::to_string(start_offset)));
 
-  REQUIRE(LogTestController::getInstance().contains("minifi-tmpfile.14-34.txt"));
+  end_offset = start_offset + SECOND_LINE.length() + CR_LEN;
+  REQUIRE(LogTestController::getInstance().contains(fileName(TMP_FILE, start_offset, end_offset)));
 
   LogTestController::getInstance().reset();
 
   // Delete the test and state file.
 
-  remove(std::string(std::string(STATE_FILE) + "." + id).c_str());
+  remove((fileName(STATE_FILE) + "." + id).c_str());
 }
 
 TEST_CASE("TestDeleteState", "[tailFileWithDelimiterState]") {
@@ -168,7 +201,7 @@ TEST_CASE("TestDeleteState", "[tailFileWithDelimiterState]") {
   auto dir = testController.createTempDirectory(format);
 
   std::stringstream temp_file;
-  temp_file << dir << utils::file::FileUtils::get_separator() << TMP_FILE;
+  temp_file << dir << utils::file::FileUtils::get_separator() << fileName(TMP_FILE);
 
   std::ofstream tmpfile;
   tmpfile.open(temp_file.str());
@@ -176,18 +209,16 @@ TEST_CASE("TestDeleteState", "[tailFileWithDelimiterState]") {
   tmpfile.close();
 
   std::stringstream state_file;
-  state_file << dir << utils::file::FileUtils::get_separator() << STATE_FILE;
+  state_file << dir << utils::file::FileUtils::get_separator() << fileName(STATE_FILE);
 
   plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::FileName.getName(), temp_file.str());
   plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::StateFile.getName(), state_file.str());
   plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::Delimiter.getName(), "\n");
   testController.runSession(plan, true);
 
-#ifdef WIN32
-  REQUIRE(LogTestController::getInstance().contains("minifi-tmpfile.0-14.txt"));
-#else
-  REQUIRE(LogTestController::getInstance().contains("minifi-tmpfile.0-13.txt"));
-#endif
+  auto end_offset = FIRST_LINE.length() + CR_LEN;
+
+  REQUIRE(LogTestController::getInstance().contains(fileName(TMP_FILE, 0, end_offset)));
 
   plan->reset(true);  // start a new but with state file
   remove(std::string(state_file.str() + "." + id).c_str());
@@ -197,11 +228,7 @@ TEST_CASE("TestDeleteState", "[tailFileWithDelimiterState]") {
   REQUIRE(LogTestController::getInstance().contains("position 0"));
 
   // if we lose state we restart
-#ifdef WIN32
-  REQUIRE(LogTestController::getInstance().contains("minifi-tmpfile.0-14.txt"));
-#else
-  REQUIRE(LogTestController::getInstance().contains("minifi-tmpfile.0-13.txt"));
-#endif
+  REQUIRE(LogTestController::getInstance().contains(fileName(TMP_FILE, 0, end_offset)));
 
   // Delete the test and state file.
 }
@@ -223,7 +250,7 @@ TEST_CASE("TestChangeState", "[tailFileWithDelimiterState]") {
   char format[] = "/tmp/gt.XXXXXX";
   auto dir = testController.createTempDirectory(format);
   std::stringstream temp_file;
-  temp_file << dir << utils::file::FileUtils::get_separator() << TMP_FILE;
+  temp_file << dir << utils::file::FileUtils::get_separator() << fileName(TMP_FILE);
 
   std::ofstream tmpfile;
   tmpfile.open(temp_file.str());
@@ -236,18 +263,21 @@ TEST_CASE("TestChangeState", "[tailFileWithDelimiterState]") {
   appendStream.close();
 
   std::stringstream state_file;
-  state_file << dir << utils::file::FileUtils::get_separator() << STATE_FILE;
+  state_file << dir << utils::file::FileUtils::get_separator() << fileName(STATE_FILE);
 
   plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::FileName.getName(), temp_file.str());
   plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::StateFile.getName(), state_file.str());
   plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::Delimiter.getName(), "\n");
 
   testController.runSession(plan, true);
-#ifdef WIN32
-  REQUIRE(LogTestController::getInstance().contains("minifi-tmpfile.0-14.txt"));
-#else
-  REQUIRE(LogTestController::getInstance().contains("minifi-tmpfile.0-13.txt"));
-#endif
+
+  auto start_offset = 0;
+  auto end_offset = FIRST_LINE.length() + CR_LEN;
+
+  REQUIRE(LogTestController::getInstance().contains(fileName(TMP_FILE, start_offset, end_offset)));
+
+  start_offset = end_offset + 1;
+  end_offset = start_offset + SECOND_LINE.length() + CR_LEN;
 
   // should stay the same
   for (int i = 0; i < 5; i++) {
@@ -260,17 +290,17 @@ TEST_CASE("TestChangeState", "[tailFileWithDelimiterState]") {
     std::ofstream newstatefile;
     newstatefile.open(statefile);
     newstatefile << "FILENAME=" << temp_file.str() << std::endl;
-    newstatefile << "POSITION=14" << std::endl;
+    newstatefile << "POSITION=" << start_offset << std::endl;
     newstatefile.close();
 
     testController.runSession(plan, true);
 
-    REQUIRE(LogTestController::getInstance().contains("position 14"));
+    REQUIRE(LogTestController::getInstance().contains("position " + std::to_string(start_offset)));
 
     // if we lose state we restart
-    REQUIRE(LogTestController::getInstance().contains("minifi-tmpfile.14-34.txt"));
+    REQUIRE(LogTestController::getInstance().contains(fileName(TMP_FILE, start_offset, end_offset)));
   }
-  for (int i = 14; i < 34; i++) {
+  for (int i = start_offset; i < end_offset; i++) {
     plan->reset(true);  // start a new but with state file
 
     auto statefile = state_file.str() + "." + id;
@@ -287,8 +317,8 @@ TEST_CASE("TestChangeState", "[tailFileWithDelimiterState]") {
   }
 
   plan->runCurrentProcessor();
-  for (int i = 14; i < 34; i++) {
-    REQUIRE(LogTestController::getInstance().contains("minifi-tmpfile." + std::to_string(i) + "-34.txt"));
+  for (int i = start_offset; i < end_offset; i++) {
+    REQUIRE(LogTestController::getInstance().contains(fileName(TMP_FILE, i, end_offset)));
   }
   // Delete the test and state file.
 
@@ -312,7 +342,7 @@ TEST_CASE("TestInvalidState", "[tailFileWithDelimiterState]") {
   char format[] = "/tmp/gt.XXXXXX";
   auto dir = testController.createTempDirectory(format);
   std::stringstream temp_file;
-  temp_file << dir << utils::file::FileUtils::get_separator() << TMP_FILE;
+  temp_file << dir << utils::file::FileUtils::get_separator() << fileName(TMP_FILE);
 
   std::ofstream tmpfile;
   tmpfile.open(temp_file.str());
@@ -325,7 +355,7 @@ TEST_CASE("TestInvalidState", "[tailFileWithDelimiterState]") {
   appendStream.close();
 
   std::stringstream state_file;
-  state_file << dir << utils::file::FileUtils::get_separator() << STATE_FILE;
+  state_file << dir << utils::file::FileUtils::get_separator() << fileName(STATE_FILE);
 
   plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::FileName.getName(), temp_file.str());
   plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::StateFile.getName(), state_file.str());
@@ -333,11 +363,9 @@ TEST_CASE("TestInvalidState", "[tailFileWithDelimiterState]") {
 
   testController.runSession(plan, true);
 
-#ifdef WIN32
-  REQUIRE(LogTestController::getInstance().contains("minifi-tmpfile.0-14.txt"));
-#else
-  REQUIRE(LogTestController::getInstance().contains("minifi-tmpfile.0-13.txt"));
-#endif
+  auto end_offset = FIRST_LINE.length() + CR_LEN;
+
+  REQUIRE(LogTestController::getInstance().contains(fileName(TMP_FILE, 0, end_offset)));
 
   plan->reset(true);  // start a new but with state file
 
@@ -348,7 +376,7 @@ TEST_CASE("TestInvalidState", "[tailFileWithDelimiterState]") {
   SECTION("No Filename") {
   std::ofstream newstatefile;
   newstatefile.open(statefile);
-  newstatefile << "POSITION=14" << std::endl;
+  newstatefile << "POSITION=" << std::to_string(end_offset) << std::endl;
   newstatefile.close();
   REQUIRE_THROWS(testController.runSession(plan, true));
   }
@@ -356,24 +384,24 @@ TEST_CASE("TestInvalidState", "[tailFileWithDelimiterState]") {
   SECTION("Invalid current filename") {
   std::ofstream newstatefile;
   newstatefile.open(statefile);
-  newstatefile << "FILENAME=minifi-tmpfile.txt" << std::endl;
-  newstatefile << "CURRENT.minifi-tempfile.txt=minifi-tmpfile.txt" << std::endl;
-  newstatefile << "POSITION=14" << std::endl;
+  newstatefile << "FILENAME=" << fileName(TMP_FILE) << std::endl;
+  newstatefile << "CURRENT.minifi-tempfile.txt=" << fileName(TMP_FILE) << std::endl;
+  newstatefile << "POSITION=" << std::to_string(end_offset) << std::endl;
   newstatefile.close();
   REQUIRE_THROWS(testController.runSession(plan, true));
   }
   SECTION("No current filename and partial path") {
   std::ofstream newstatefile;
   newstatefile.open(statefile);
-  newstatefile << "FILENAME=minifi-tmpfile.txt" << std::endl;
-  newstatefile << "POSITION=14" << std::endl;
+  newstatefile << "FILENAME=" << fileName(TMP_FILE) << std::endl;
+  newstatefile << "POSITION=" << std::to_string(end_offset) << std::endl;
   newstatefile.close();
   REQUIRE_THROWS(testController.runSession(plan, true));
   }
 
 // Delete the test and state file.
 
-  remove(std::string(std::string(STATE_FILE) + "." + id).c_str());
+  remove((fileName(STATE_FILE) + "." + id).c_str());
 }
 
 TEST_CASE("TailFileWithOutDelimiter", "[tailfiletest2]") {
@@ -394,14 +422,14 @@ TEST_CASE("TailFileWithOutDelimiter", "[tailfiletest2]") {
   auto dir = testController.createTempDirectory(format);
 
   std::stringstream temp_file;
-  temp_file << dir << utils::file::FileUtils::get_separator() << TMP_FILE;
+  temp_file << dir << utils::file::FileUtils::get_separator() << fileName(TMP_FILE);
   std::ofstream tmpfile;
   tmpfile.open(temp_file.str());
   tmpfile << NEWLINE_FILE;
   tmpfile.close();
 
   std::stringstream state_file;
-  state_file << dir << utils::file::FileUtils::get_separator() << STATE_FILE;
+  state_file << dir << utils::file::FileUtils::get_separator() << fileName(STATE_FILE);
 
   plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::FileName.getName(), temp_file.str());
   plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::StateFile.getName(), state_file.str());
@@ -413,7 +441,7 @@ TEST_CASE("TailFileWithOutDelimiter", "[tailfiletest2]") {
   testController.runSession(plan, false);
 
   REQUIRE(LogTestController::getInstance().contains("Logged 1 flow files"));
-  REQUIRE(LogTestController::getInstance().contains("Size:" + std::to_string(NEWLINE_FILE.size()) + " Offset:0"));
+  REQUIRE(LogTestController::getInstance().contains("Size:" + std::to_string(NEWLINE_FILE.length() + CR_LEN) + " Offset:0"));
 
   LogTestController::getInstance().reset();
 }
@@ -441,14 +469,14 @@ TEST_CASE("TailFileLongWithDelimiter", "[tailfiletest2]") {
   auto dir = testController.createTempDirectory(format);
 
   std::stringstream temp_file;
-  temp_file << dir << utils::file::FileUtils::get_separator() << TMP_FILE;
+  temp_file << dir << utils::file::FileUtils::get_separator() << fileName(TMP_FILE);
   std::ofstream tmpfile;
   tmpfile.open(temp_file.str());
   tmpfile << line1 << "\n" << line2 << "\n" << line3 << "\n" << line4;
   tmpfile.close();
 
   std::stringstream state_file;
-  state_file << dir << utils::file::FileUtils::get_separator() << STATE_FILE;
+  state_file << dir << utils::file::FileUtils::get_separator() << fileName(STATE_FILE);
 
   plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::FileName.getName(), temp_file.str());
   plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::StateFile.getName(), state_file.str());
@@ -485,9 +513,7 @@ TEST_CASE("TailFileLongWithDelimiter", "[tailfiletest2]") {
     REQUIRE(LogTestController::getInstance().contains(line2_hex));
   } else {
     std::stringstream line2_hex_lines;
-    for (size_t i = 0; i < line2_hex.size(); i += line_length) {
-      line2_hex_lines << line2_hex.substr(i, line_length) << '\n';
-    }
+    wrapLines(line2_hex_lines, line2_hex, line_length);
     REQUIRE(LogTestController::getInstance().contains(line2_hex_lines.str()));
   }
   REQUIRE(LogTestController::getInstance().contains(utils::StringUtils::to_hex(line3)));
@@ -523,14 +549,14 @@ TEST_CASE("TailFileWithDelimiterMultipleDelimiters", "[tailfiletest2]") {
   auto dir = testController.createTempDirectory(format);
 
   std::stringstream temp_file;
-  temp_file << dir << utils::file::FileUtils::get_separator() << TMP_FILE;
+  temp_file << dir << utils::file::FileUtils::get_separator() << fileName(TMP_FILE);
   std::ofstream tmpfile;
   tmpfile.open(temp_file.str());
   tmpfile << line1 << "\n" << line2 << "\n" << line3 << "\n" << line4;
   tmpfile.close();
 
   std::stringstream state_file;
-  state_file << dir << utils::file::FileUtils::get_separator() << STATE_FILE;
+  state_file << dir << utils::file::FileUtils::get_separator() << fileName(STATE_FILE);
 
   plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::FileName.getName(), temp_file.str());
   plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::StateFile.getName(), state_file.str());
@@ -546,9 +572,7 @@ TEST_CASE("TailFileWithDelimiterMultipleDelimiters", "[tailfiletest2]") {
   REQUIRE(LogTestController::getInstance().contains("Logged 5 flow files"));
   auto line1_hex = utils::StringUtils::to_hex(line1.substr(0, 4095));
   std::stringstream line1_hex_lines;
-  for (size_t i = 0; i < line1_hex.size(); i += 80) {
-    line1_hex_lines << line1_hex.substr(i, 80) << '\n';
-  }
+  wrapLines(line1_hex_lines, line1_hex, 80);
   REQUIRE(LogTestController::getInstance().contains(line1_hex_lines.str()));
   REQUIRE(LogTestController::getInstance().contains(utils::StringUtils::to_hex(line2)));
   REQUIRE(LogTestController::getInstance().contains(utils::StringUtils::to_hex(line3)));
@@ -578,7 +602,7 @@ TEST_CASE("TailWithInvalid", "[tailfiletest2]") {
   plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::FileName.getName(), "minifi-.*\\.txt");
   plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::TailMode.getName(), "Multiple file");
   }
-  plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::StateFile.getName(), STATE_FILE);
+  plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::StateFile.getName(), fileName(STATE_FILE));
 
   REQUIRE_THROWS(plan->runNextProcessor());
 }
@@ -599,16 +623,8 @@ TEST_CASE("TailFileWithRealDelimiterAndRotate", "[tailfiletest2]") {
   auto dir = testController.createTempDirectory(format);
 
   // Define test input file
-  std::string in_file(dir);
-#ifndef WIN32
-  in_file.append("/");
-#else
-  in_file.append("\\");
-#endif
-  in_file.append("testfifo.txt");
-
-  std::string state_file(dir);
-  state_file.append("tailfile.state");
+  std::string in_file(dir + utils::file::FileUtils::get_separator() + "testfifo.txt");
+  std::string state_file(dir + utils::file::FileUtils::get_separator() + "tailfile.state");
 
   std::ofstream in_file_stream(in_file);
   in_file_stream << NEWLINE_FILE;
@@ -680,12 +696,8 @@ TEST_CASE("TailFileWithMultileRolledOverFiles", "[tailfiletest2]") {
   char format[] = "/tmp/gt.XXXXXX";
   auto dir = testController.createTempDirectory(format);
 
-  std::string state_file(dir);
-  state_file.append("tailfile.state");
-
-  // Define test input file
-  std::string in_file(dir);
-  in_file.append("fruits.txt");
+  std::string in_file(dir + utils::file::FileUtils::get_separator() + "fruits.txt");
+  std::string state_file(dir + utils::file::FileUtils::get_separator() + "tailfile.state");
 
   for (int i = 2; 0 <= i; --i) {
     if (i < 2) {
