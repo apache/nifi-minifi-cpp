@@ -30,6 +30,8 @@ set(BYPRODUCT "${BASE_DIR}/install")
 # OpenCV 4.1.0
 build_git_project(opencv-external "${BASE_DIR}" "https://github.com/opencv/opencv.git" "371bba8f54560b374fbcd47e7e02f015ac4969ad"
         -DCMAKE_BUILD_TYPE=Release
+        -DBUILD_JAVA=OFF
+        -DBUILD_FAT_JAVA_LIB=OFF
         -DCMAKE_INSTALL_PREFIX=${BYPRODUCT}
         -DBUILD_SHARED_LIBS=OFF
         -DBUILD_EXAMPLES=OFF
