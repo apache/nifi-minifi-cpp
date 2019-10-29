@@ -22,7 +22,7 @@
 #include <memory>
 #include <string>
 #include <list>
-#include <map>
+#include <unordered_map>
 #include <mutex>
 #include <thread>
 
@@ -53,6 +53,7 @@ public:
   static core::Property NodeID;
   static core::Property NameSpaceIndex;
   static core::Property MaxDepth;
+  static core::Property Lazy;
 
   // Supported Relationships
   static core::Relationship Success;
@@ -91,10 +92,12 @@ protected:
   uint32_t nodesFound_;
   uint32_t variablesFound_;
   uint64_t maxDepth_;
+  bool lazy_mode_;
 
 private:
   std::mutex onTriggerMutex_;
   std::vector<UA_NodeId> translatedNodeIDs_;  // Only used when user provides path, path->nodeid translation is only done once
+  std::unordered_map<std::string, std::string> node_timestamp_; // Key = Full path, Value = Timestamp
 
 };
 

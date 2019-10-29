@@ -224,6 +224,25 @@ NodeData Client::getNodeData(const UA_ReferenceDescription *ref, const std::stri
     nodedata.dataTypeID = UA_TYPES_COUNT;
     UA_Variant* var = UA_Variant_new();
     if(UA_Client_readValueAttribute(client_, ref->nodeId.nodeId, var) == UA_STATUSCODE_GOOD && var->type != NULL && var->data != NULL) {
+      // Because the timestamps are eliminated in readValueAttribute for simplification
+      // We need to call the inner function UA_Client_Service_read.
+      UA_ReadValueId item;
+      UA_ReadValueId_init(&item);
+      item.nodeId = ref->nodeId.nodeId;
+      item.attributeId = UA_ATTRIBUTEID_VALUE;
+      UA_ReadRequest request;
+      UA_ReadRequest_init(&request);
+      request.nodesToRead = &item;
+      request.nodesToReadSize = 1;
+      // Differ from ua_client_highlevel.c src
+      request.timestampsToReturn = UA_TIMESTAMPSTORETURN_BOTH;
+      UA_ReadResponse response = UA_Client_Service_read(client_, request);
+      UA_DataValue *dv = response.results;
+      auto server_timestamp = OPCDateTime2String(dv->serverTimestamp);
+      auto source_timestamp = OPCDateTime2String(dv->sourceTimestamp);
+      nodedata.attributes["Sourcetimestamp"] = source_timestamp;
+      UA_ReadResponse_deleteMembers(&response);
+
       nodedata.dataTypeID = var->type->typeIndex;
       nodedata.addVariant(var);
       if(var->type->typeName) {
@@ -548,9 +567,9 @@ std::string OPCDateTime2String(UA_DateTime raw_date) {
   UA_DateTimeStruct dts = UA_DateTime_toStruct(raw_date);
   std::array<char, 100> charBuf;
 
-  snprintf(charBuf.data(), charBuf.size(), "%02hu-%02hu-%04hu %02hu:%02hu:%02hu.%03hu", dts.day, dts.month, dts.year, dts.hour, dts.min, dts.sec, dts.milliSec);
+  int sz = snprintf(charBuf.data(), charBuf.size(), "%02hu-%02hu-%04hu %02hu:%02hu:%02hu.%03hu", dts.day, dts.month, dts.year, dts.hour, dts.min, dts.sec, dts.milliSec);
 
-  return std::string(charBuf.data(), charBuf.size());
+  return std::string(charBuf.data(), sz);
 }
 
 void logFunc(void *context, UA_LogLevel level, UA_LogCategory category, const char *msg, va_list args) {
