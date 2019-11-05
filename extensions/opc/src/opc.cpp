@@ -220,7 +220,6 @@ NodeData Client::getNodeData(const UA_ReferenceDescription *ref, const std::stri
       nodedata.attributes["NodeID type"] = "numeric";
     }
     nodedata.attributes["Browsename"] = browsename;
-    // TODO: Base path is always ""
     nodedata.attributes["Full path"] = basePath + "/" + browsename;
     nodedata.dataTypeID = UA_TYPES_COUNT;
     UA_Variant* var = UA_Variant_new();
@@ -236,7 +235,6 @@ NodeData Client::getNodeData(const UA_ReferenceDescription *ref, const std::stri
       request.nodesToRead = &item;
       request.nodesToReadSize = 1;
       // Differ from ua_client_highlevel.c src
-      // This will make Source Timestamp unavailable.
       request.timestampsToReturn = UA_TIMESTAMPSTORETURN_BOTH;
       UA_ReadResponse response = UA_Client_Service_read(client_, request);
       UA_DataValue *dv = response.results;

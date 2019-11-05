@@ -22,7 +22,7 @@
 #include <memory>
 #include <string>
 #include <list>
-#include <map>
+#include <unordered_map>
 #include <mutex>
 #include <thread>
 
@@ -97,7 +97,7 @@ protected:
 private:
   std::mutex onTriggerMutex_;
   std::vector<UA_NodeId> translatedNodeIDs_;  // Only used when user provides path, path->nodeid translation is only done once
-  std::map<std::string, std::string> node_timestamp_; // Key = Full path, Value = Timestamp
+  std::unordered_map<std::string, std::string> node_timestamp_; // Key = Full path, Value = Timestamp
 
 };
 

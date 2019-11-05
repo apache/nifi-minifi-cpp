@@ -67,7 +67,8 @@ namespace processors {
 
   core::Property FetchOPCProcessor::Lazy(
       core::PropertyBuilder::createProperty("Lazy mode")
-      ->withDescription("Specifiec the max depth of browsing. 0 means unlimited.")
+      ->withDescription("Only creates flowfiles from nodes with new timestamp from the server.")
+      ->withDefaultValue<std::string>("Off")
       ->isRequired(true)
       ->withAllowableValues<std::string>({"On", "Off"})
       ->build());
@@ -203,7 +204,7 @@ namespace processors {
     if(ref->nodeClass == UA_NODECLASS_VARIABLE)
     {
       try {
-        opc::NodeData nodedata = connection_->getNodeData(ref);
+        opc::NodeData nodedata = connection_->getNodeData(ref, path);
         bool write = true;
         if (lazy_mode_) {
           write = false;
@@ -212,7 +213,7 @@ namespace processors {
           std::string new_timestamp = nodedata.attributes["Sourcetimestamp"];
           if (cur_timestamp != new_timestamp) {
             node_timestamp_[nodeid] = new_timestamp;
-            logger_->log_warn("Node %s has new source timestamp %s", nodeid, new_timestamp);
+            logger_->log_debug("Node %s has new source timestamp %s", nodeid, new_timestamp);
             write = true;
           }
         }
