@@ -69,11 +69,7 @@ if(CMAKE_THREAD_LIBS_INIT)
   target_link_libraries(minifiexe "${CMAKE_THREAD_LIBS_INIT}")
 endif()
 
-# Include UUID
-
 set (WIN32_ARCHIVES "")
-
-
 
 # Link against minifi, yaml-cpp, civetweb-cpp, uuid, openssl, and rocksdb
 #target_link_libraries(minifiexe core-minifi)
@@ -113,7 +109,7 @@ else()
 	#set_target_properties(minifiexe PROPERTIES LINK_FLAGS "${LINK_FLAGS} /WHOLEARCHIVE:minifi")
 endif ()
 
-target_link_libraries(minifiexe yaml-cpp ${UUID_LIBRARIES} ${JEMALLOC_LIBRARIES}) #
+target_link_libraries(minifiexe yaml-cpp ${JEMALLOC_LIBRARIES}) #
 
 if (WIN32)
 	include_directories("../thirdparty/Simple-Windows-Posix-Semaphore")

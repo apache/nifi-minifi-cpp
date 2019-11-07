@@ -18,7 +18,6 @@
  * limitations under the License.
  */
 #include "ResourceClaim.h"
-#include <uuid/uuid.h>
 #include <map>
 #include <queue>
 #include <string>

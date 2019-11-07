@@ -18,7 +18,6 @@
 #ifndef __PROVENANCE_H__
 #define __PROVENANCE_H__
 
-#include <uuid/uuid.h>
 #include <atomic>
 #include <cstdint>
 #include <cstring>

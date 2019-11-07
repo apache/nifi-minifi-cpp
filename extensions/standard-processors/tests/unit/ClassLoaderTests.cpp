@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <uuid/uuid.h>
 #include "TestBase.h"
 #include "io/ClientSocket.h"
 #include "core/Processor.h"

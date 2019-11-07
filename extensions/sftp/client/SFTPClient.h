@@ -24,7 +24,6 @@
 #include <vector>
 #include <iostream>
 #include <string>
-#include <uuid/uuid.h>
 #include <vector>
 
 #include "utils/HTTPClient.h"

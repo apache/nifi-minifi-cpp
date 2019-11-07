@@ -19,7 +19,6 @@
 
 #include <type_traits> //NOLINT
 #include <sys/stat.h> //NOLINT
-#include <uuid/uuid.h> //NOLINT
 #include <chrono> //NOLINT
 #include <thread> //NOLINT
 #undef NDEBUG

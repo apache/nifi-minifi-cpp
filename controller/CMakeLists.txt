@@ -54,11 +54,8 @@ if(CMAKE_THREAD_LIBS_INIT)
   target_link_libraries(minificontroller "${CMAKE_THREAD_LIBS_INIT}")
 endif()
 
-# Include UUID
-find_package(UUID REQUIRED)
-
 # Include OpenSSL
-find_package(OpenSSL )
+find_package(OpenSSL)
 if (OPENSSL_FOUND)
 include_directories(${OPENSSL_INCLUDE_DIR})
 endif(OPENSSL_FOUND)
@@ -80,7 +77,7 @@ if (WIN32)
   	target_link_libraries(minificontroller semaphore)
 endif()
 
-target_link_libraries(minificontroller yaml-cpp c-library civetweb-cpp ${JSON_CPP_LIB} ${UUID_LIBRARIES} cxxopts)
+target_link_libraries(minificontroller yaml-cpp c-library civetweb-cpp ${JSON_CPP_LIB} cxxopts)
 
 
 if (APPLE)

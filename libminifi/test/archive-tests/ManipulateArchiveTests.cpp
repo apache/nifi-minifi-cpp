@@ -16,7 +16,6 @@
  * limitations under the License.
  */
 
-#include <uuid/uuid.h>
 #include <iostream>
 #include <map>
 #include <set>

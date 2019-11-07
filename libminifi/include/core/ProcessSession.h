@@ -18,7 +18,6 @@
 #ifndef __PROCESS_SESSION_H__
 #define __PROCESS_SESSION_H__
 
-#include <uuid/uuid.h>
 #include <vector>
 #include <queue>
 #include <map>

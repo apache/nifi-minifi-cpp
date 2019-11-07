@@ -20,7 +20,6 @@
 
 #include "RemoteProcessorGroupPort.h"
 
-#include <uuid/uuid.h>
 #include <algorithm>
 #include <cstdint>
 #include <memory>

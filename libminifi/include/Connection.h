@@ -20,7 +20,6 @@
 #ifndef __CONNECTION_H__
 #define __CONNECTION_H__
 
-#include <uuid/uuid.h>
 #include <vector>
 #include <queue>
 #include <map>

@@ -20,7 +20,6 @@
 
 #include "PutFile.h"
 #include <sys/stat.h>
-#include <uuid/uuid.h>
 #include <cstdint>
 #include <cstdio>
 #include <iostream>
