@@ -20,7 +20,6 @@
 #ifndef __SCHEDULING_AGENT_H__
 #define __SCHEDULING_AGENT_H__
 
-#include <uuid/uuid.h>
 #include <vector>
 #include <map>
 #include <mutex>

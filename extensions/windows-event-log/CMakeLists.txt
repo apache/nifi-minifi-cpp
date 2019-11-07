@@ -47,9 +47,7 @@ set(BYPRODUCT "${PUGI_BYPRODUCT_DIR}/lib/pugixml.lib")
 
 include_directories("${PUGI_BYPRODUCT_DIR}/include")
 add_dependencies(minifi-wel pugixml-external)
-# Include UUID
-find_package(UUID REQUIRED)
-target_link_libraries(minifi-wel ${LIBMINIFI} ${BYPRODUCT} ${UUID_LIBRARIES})
+target_link_libraries(minifi-wel ${LIBMINIFI} ${BYPRODUCT})
 
 target_link_libraries(minifi-wel ${CMAKE_DL_LIBS} )
 find_package(ZLIB REQUIRED)

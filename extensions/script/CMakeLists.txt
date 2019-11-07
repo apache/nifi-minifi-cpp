@@ -52,8 +52,7 @@ if(CMAKE_THREAD_LIBS_INIT)
   target_link_libraries(minifi-script-extensions "${CMAKE_THREAD_LIBS_INIT}")
 endif()
 
-find_package(UUID REQUIRED)
-target_link_libraries(minifi-script-extensions ${LIBMINIFI} ${UUID_LIBRARIES})
+target_link_libraries(minifi-script-extensions ${LIBMINIFI})
 find_package(OpenSSL REQUIRED)
 include_directories(${OPENSSL_INCLUDE_DIR})
 target_link_libraries(minifi-script-extensions ${CMAKE_DL_LIBS})
@@ -73,7 +72,7 @@ if (NOT DISABLE_PYTHON_SCRIPTING)
     file(GLOB PY_SOURCES  "python/*.cpp")
     add_library(minifi-python-extensions STATIC ${PY_SOURCES})
 
-    target_link_libraries(minifi-python-extensions ${PYTHON_LIBRARIES})
+    target_link_libraries(minifi-python-extensions ${LIBMINIFI} ${PYTHON_LIBRARIES})
     target_link_libraries(minifi-script-extensions minifi-python-extensions)
 endif()
 

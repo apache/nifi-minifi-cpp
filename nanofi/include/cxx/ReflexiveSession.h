@@ -18,7 +18,6 @@
 #ifndef __REFLEXIVE_SESSION_H__
 #define __REFLEXIVE_SESSION_H__
 
-#include <uuid/uuid.h>
 #include <vector>
 #include <queue>
 #include <map>

@@ -44,9 +44,7 @@ if (CURL_FOUND)
 	endif()
 endif ()
 
-# Include UUID
-find_package(UUID REQUIRED)
-target_link_libraries(minifi-sftp ${LIBMINIFI} ${UUID_LIBRARIES})
+target_link_libraries(minifi-sftp ${LIBMINIFI})
 
 # Include OpenSSL
 set(OPENSSL_USE_STATIC_LIBS TRUE)

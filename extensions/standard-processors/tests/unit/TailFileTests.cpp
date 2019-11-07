@@ -17,7 +17,6 @@
  */
 
 #include <stdio.h>
-#include <uuid/uuid.h>
 #include <fstream>
 #include <map>
 #include <memory>

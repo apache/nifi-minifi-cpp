@@ -18,7 +18,6 @@
 #ifndef __PROCESS_CONTEXT_H__
 #define __PROCESS_CONTEXT_H__
 
-#include <uuid/uuid.h>
 #include <vector>
 #include <queue>
 #include <map>

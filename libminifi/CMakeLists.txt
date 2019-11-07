@@ -33,10 +33,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 if (WIN32)
 	add_definitions(-DWIN32_LEAN_AND_MEAN)
-	include_directories("thirdparty/uuid/include/win32/")
-else()
-	include_directories("thirdparty/uuid/include/posix")
 endif()
+
 IF (IOS)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fobjc-abi-version=2 -fobjc-arc -std=gnu++11 -stdlib=libc++ -isysroot ${CMAKE_OSX_SYSROOT} -DIOS")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fobjc-abi-version=2 -fobjc-arc -isysroot ${CMAKE_OSX_SYSROOT} -DIOS")
@@ -109,7 +107,7 @@ file(GLOB SPD_SOURCES "../thirdparty/spdlog-20170710/include/spdlog/*")
 # header only library
 add_library(spdlog STATIC ${SPD_SOURCES})
 add_library(core-minifi STATIC ${SOURCES})
-target_link_libraries(core-minifi ${CMAKE_DL_LIBS} ${UUID_LIBRARIES} yaml-cpp)
+target_link_libraries(core-minifi ${CMAKE_DL_LIBS} yaml-cpp)
 
 #target_link_libraries(core-minifi  PRIVATE bsdiff )
 
@@ -117,6 +115,10 @@ target_link_libraries(core-minifi ${CMAKE_DL_LIBS} ${UUID_LIBRARIES} yaml-cpp)
 include_directories(${ZLIB_INCLUDE_DIRS})
 
 target_link_libraries (core-minifi ${ZLIB_LIBRARIES})
+
+if(NOT WIN32)
+	target_link_libraries (core-minifi OSSP::libuuid++)
+endif()
 
 
 # Include OpenSSL
@@ -155,12 +157,16 @@ add_library(core-minifi-shared SHARED ${SOURCES})
 if (APPLE)
 	target_link_libraries(core-minifi-shared ${CMAKE_DL_LIBS} yaml-cpp)
 else()
-	target_link_libraries(core-minifi-shared ${CMAKE_DL_LIBS} uuid-shared yaml-cpp)
+	target_link_libraries(core-minifi-shared ${CMAKE_DL_LIBS} yaml-cpp)
 endif()
 
 include_directories(${ZLIB_INCLUDE_DIRS})
 
 target_link_libraries (core-minifi-shared ${ZLIB_LIBRARIES})
+
+if(NOT WIN32)
+	target_link_libraries (core-minifi-shared OSSP::libuuid++)
+endif()
 
 # Include OpenSSL
 

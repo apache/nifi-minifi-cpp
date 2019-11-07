@@ -33,7 +33,6 @@
 #include "sitetosite/CRawSocketProtocol.h"
 #include "sitetosite/CSiteToSite.h"
 #include "sitetosite/RawSocketProtocol.h"
-#include "uuid/uuid.h"
 #include "core/cstructs.h"
 #include "RandomServerSocket.h"
 #include "core/log.h"

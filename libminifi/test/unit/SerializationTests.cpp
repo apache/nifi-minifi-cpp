@@ -16,7 +16,6 @@
  * limitations under the License.
  */
 #include "io/BaseStream.h"
-#include <uuid/uuid.h>
 #include "SiteToSiteHelper.h"
 #include <algorithm>
 #include <string>

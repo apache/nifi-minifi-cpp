@@ -16,7 +16,6 @@
  * limitations under the License.
  */
 #include "core/Connectable.h"
-#include <uuid/uuid.h>
 #include <utility>
 #include <memory>
 #include <string>

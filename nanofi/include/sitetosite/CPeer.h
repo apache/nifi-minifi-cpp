@@ -22,7 +22,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-#include <uuid/uuid.h>
 #include "core/cstream.h"
 
 #ifdef __cplusplus

@@ -19,7 +19,6 @@
 #include "ExecuteJavaControllerService.h"
 
 #include <regex>
-#include <uuid/uuid.h>
 #include <memory>
 #include <algorithm>
 #include <cctype>

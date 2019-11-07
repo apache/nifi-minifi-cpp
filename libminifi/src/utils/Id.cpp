@@ -16,24 +16,63 @@
  * limitations under the License.
  */
 
+// This needs to be included first to let uuid.h sort out the system header collisions
+#ifndef WIN32
+#include "uuid++.hh"
+#endif
+
 #include "utils/Id.h"
+
 #define __STDC_FORMAT_MACROS 1
 #include <inttypes.h>
-#include <uuid/uuid.h>
-
 #include <algorithm>
 #include <chrono>
 #include <cmath>
+#include <cstdio>
 #include <memory>
 #include <string>
+#include <limits>
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/StringUtils.h"
+
+#ifdef WIN32
+#include "Rpc.h"
+#include "Winsock2.h"
+#pragma comment(lib, "Rpcrt4.lib")
+#pragma comment(lib, "Ws2_32.lib")
+#endif
 
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
 namespace utils {
+
+#ifdef WIN32
+namespace {
+  void windows_uuid_to_uuid_field(UUID* uuid, UUID_FIELD out) {
+    uint32_t Data1BE = htonl(uuid->Data1);
+    memcpy(out, &Data1BE, 4);
+    uint16_t Data2BE = htons(uuid->Data2);
+    memcpy(out + 4, &Data2BE, 2);
+    uint16_t Data3BE = htons(uuid->Data3);
+    memcpy(out + 6, &Data3BE, 2);
+    memcpy(out + 8, uuid->Data4, 8);
+  }
+
+  void windows_uuid_generate_time(UUID_FIELD out) {
+    UUID uuid;
+    UuidCreateSequential(&uuid);
+    windows_uuid_to_uuid_field(&uuid, out);
+  }
+
+  void windows_uuid_generate_random(UUID_FIELD out) {
+    UUID uuid;
+    UuidCreate(&uuid);
+    windows_uuid_to_uuid_field(&uuid, out);
+  }
+}
+#endif
 
 Identifier::Identifier(UUID_FIELD u)
     : IdentifierBase(u) {
@@ -85,8 +124,13 @@ Identifier &Identifier::operator=(UUID_FIELD o) {
 }
 
 Identifier &Identifier::operator=(std::string id) {
-  uuid_parse(id.c_str(), id_);
-  converted_ = id;
+  sscanf(id.c_str(), "%02hhx%02hhx%02hhx%02hhx-%02hhx%02hhx-%02hhx%02hhx-%02hhx%02hhx-%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx",
+         &id_[0], &id_[1], &id_[2], &id_[3],
+         &id_[4], &id_[5],
+         &id_[6], &id_[7],
+         &id_[8], &id_[9],
+         &id_[10], &id_[11], &id_[12], &id_[13], &id_[14], &id_[15]);
+  build_string();
   return *this;
 }
 
@@ -115,8 +159,13 @@ const unsigned char * const Identifier::toArray() const {
 }
 
 void Identifier::build_string() {
-  char uuidStr[37] = { 0 };
-  uuid_unparse_lower(id_, uuidStr);
+  char uuidStr[37];
+  snprintf(uuidStr, sizeof(uuidStr), "%02hhx%02hhx%02hhx%02hhx-%02hhx%02hhx-%02hhx%02hhx-%02hhx%02hhx-%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx",
+      id_[0], id_[1], id_[2], id_[3],
+      id_[4], id_[5],
+      id_[6], id_[7],
+      id_[8], id_[9],
+      id_[10], id_[11], id_[12], id_[13], id_[14], id_[15]);
   converted_ = uuidStr;
 }
 
@@ -131,6 +180,12 @@ IdGenerator::IdGenerator()
     : implementation_(UUID_TIME_IMPL),
       logger_(logging::LoggerFactory<IdGenerator>::getLogger()),
       incrementor_(0) {
+#ifndef WIN32
+  uuid_impl_ = std::unique_ptr<uuid>(new uuid());
+#endif
+}
+
+IdGenerator::~IdGenerator() {
 }
 
 uint64_t IdGenerator::getDeviceSegmentFromString(const std::string& str, int numBits) const {
@@ -157,7 +212,15 @@ uint64_t IdGenerator::getRandomDeviceSegment(int numBits) const {
   uint64_t deviceSegment = 0;
   UUID_FIELD random_uuid;
   for (int word = 0; word < 2; word++) {
-    uuid_generate_random(random_uuid);
+#ifdef WIN32
+    windows_uuid_generate_random(random_uuid);
+#else
+    uuid temp_uuid;
+    temp_uuid.make(UUID_MAKE_V4);
+    void* uuid_bin = temp_uuid.binary();
+    memcpy(random_uuid, uuid_bin, 16);
+    free(uuid_bin);
+#endif
     for (int i = 0; i < 4; i++) {
       deviceSegment += random_uuid[i];
       deviceSegment <<= 8;
@@ -174,7 +237,7 @@ void IdGenerator::initialize(const std::shared_ptr<Properties> & properties) {
   implementation_ = UUID_TIME_IMPL;
   if (properties->get("uid.implementation", implementation_str)) {
     std::transform(implementation_str.begin(), implementation_str.end(), implementation_str.begin(), ::tolower);
-    if ("random" == implementation_str) {
+    if ("random" == implementation_str || "windows_random" == implementation_str) {
       logging::LOG_DEBUG(logger_) << "Using uuid_generate_random for uids.";
       implementation_ = UUID_RANDOM_IMPL;
     } else if ("uuid_default" == implementation_str) {
@@ -201,11 +264,11 @@ void IdGenerator::initialize(const std::shared_ptr<Properties> & properties) {
         logging::LOG_DEBUG(logger_) << "Using minifi uid prefix: " << std::hex << prefix;
       }
       for (int i = 0; i < 8; i++) {
-        unsigned char prefix_element = (prefix >> ((7 - i) * 8)) & UNSIGNED_CHAR_MAX;
+        unsigned char prefix_element = (prefix >> ((7 - i) * 8)) & std::numeric_limits<unsigned char>::max();
         deterministic_prefix_[i] = prefix_element;
       }
       incrementor_ = 0;
-    } else if ("time" == implementation_str) {
+    } else if ("time" == implementation_str || "windows" == implementation_str) {
       logging::LOG_DEBUG(logger_) << "Using uuid_generate_time implementation for uids.";
     } else {
       logging::LOG_DEBUG(logger_) << "Invalid value for uid.implementation (" << implementation_str << "). Using uuid_generate_time implementation for uids.";
@@ -214,6 +277,23 @@ void IdGenerator::initialize(const std::shared_ptr<Properties> & properties) {
     logging::LOG_DEBUG(logger_) << "Using uuid_generate_time implementation for uids.";
   }
 }
+
+#ifndef WIN32
+bool IdGenerator::generateWithUuidImpl(unsigned int mode, UUID_FIELD output) {
+  void* uuid = nullptr;
+  try {
+    std::lock_guard<std::mutex> lock(uuid_mutex_);
+    uuid_impl_->make(mode);
+    uuid = uuid_impl_->binary();
+  } catch (...){
+    return false;
+  }
+
+  memcpy(output, uuid, 16);
+  free(uuid);
+  return true;
+}
+#endif
 
 Identifier IdGenerator::generate() {
   Identifier ident;
@@ -225,21 +305,28 @@ void IdGenerator::generate(Identifier &ident) {
   UUID_FIELD output;
   switch (implementation_) {
     case UUID_RANDOM_IMPL:
-      uuid_generate_random(output);
-      break;
     case UUID_DEFAULT_IMPL:
-      uuid_generate(output);
+#ifdef WIN32
+      windows_uuid_generate_random(output);
+#else
+      generateWithUuidImpl(UUID_MAKE_V4, output);
+#endif
       break;
     case MINIFI_UID_IMPL: {
       std::memcpy(output, deterministic_prefix_, sizeof(deterministic_prefix_));
       uint64_t incrementor_value = incrementor_++;
       for (int i = 8; i < 16; i++) {
-        output[i] = (incrementor_value >> ((15 - i) * 8)) & UNSIGNED_CHAR_MAX;
+        output[i] = (incrementor_value >> ((15 - i) * 8)) & std::numeric_limits<unsigned char>::max();
       }
     }
-      break;
+    break;
+    case UUID_TIME_IMPL:
     default:
-      uuid_generate_time(output);
+#ifdef WIN32
+      windows_uuid_generate_time(output);
+#else
+      generateWithUuidImpl(UUID_MAKE_V1, output);
+#endif
       break;
   }
   ident = output;

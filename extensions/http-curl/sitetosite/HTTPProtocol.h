@@ -26,7 +26,6 @@
 #include <set>
 #include <thread>
 #include <algorithm>
-#include <uuid/uuid.h>
 #include "HTTPTransaction.h"
 #include "sitetosite/SiteToSite.h"
 #include "sitetosite/SiteToSiteClient.h"
