@@ -35,6 +35,14 @@ class uuid;
 #define UUID_DEFAULT_IMPL 2
 #define MINIFI_UID_IMPL 3
 
+#define UUID_RANDOM_STR "random"
+#define UUID_WINDOWS_RANDOM_STR "windows_random"
+#define UUID_DEFAULT_STR "uuid_default"
+#define MINIFI_UID_STR "minifi_uid"
+#define UUID_TIME_STR "time"
+#define UUID_WINDOWS_STR "windows"
+
+
 namespace org {
 namespace apache {
 namespace nifi {

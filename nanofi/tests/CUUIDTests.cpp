@@ -91,7 +91,7 @@ TEST_CASE("Collision test", "[testCUUID]") {
   std::vector<std::string> uuids(16 * 1024U);
   std::vector<std::thread> threads;
   for (size_t i = 0U; i < 16U; i++) {
-    threads.emplace_back([&, i](){
+    threads.emplace_back([&gen, &uuids, i](){
       char buffer[37];
       for (size_t j = 0U; j < 1024U; j++) {
         generate_uuid(&gen, buffer);

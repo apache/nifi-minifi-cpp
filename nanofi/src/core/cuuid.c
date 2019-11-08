@@ -58,12 +58,14 @@
     pthread_mutex_lock(&mutex);
     if (uuid_impl == NULL) {
       if (uuid_create(&uuid_impl) != UUID_RC_OK) {
+        pthread_mutex_unlock(&mutex);
         return -1;
       }
     }
     uuid_make(uuid_impl, mode);
     size_t len = UUID_LEN_STR+1;
     if (uuid_export(uuid_impl, UUID_FMT_STR, &out, &len) != UUID_RC_OK) {
+      pthread_mutex_unlock(&mutex);
       return -1;
     }
     pthread_mutex_unlock(&mutex);

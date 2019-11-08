@@ -50,7 +50,7 @@ namespace utils {
 
 #ifdef WIN32
 namespace {
-  void windows_uuid_to_uuid_field(UUID* uuid, UUID_FIELD out) {
+  void windowsUuidToUuidField(UUID* uuid, UUID_FIELD out) {
     uint32_t Data1BE = htonl(uuid->Data1);
     memcpy(out, &Data1BE, 4);
     uint16_t Data2BE = htons(uuid->Data2);
@@ -60,16 +60,16 @@ namespace {
     memcpy(out + 8, uuid->Data4, 8);
   }
 
-  void windows_uuid_generate_time(UUID_FIELD out) {
+  void windowsUuidGenerateTime(UUID_FIELD out) {
     UUID uuid;
     UuidCreateSequential(&uuid);
-    windows_uuid_to_uuid_field(&uuid, out);
+    windowsUuidToUuidField(&uuid, out);
   }
 
-  void windows_uuid_generate_random(UUID_FIELD out) {
+  void windowsUuidGenerateRandom(UUID_FIELD out) {
     UUID uuid;
     UuidCreate(&uuid);
-    windows_uuid_to_uuid_field(&uuid, out);
+    windowsUuidToUuidField(&uuid, out);
   }
 }
 #endif
@@ -213,7 +213,7 @@ uint64_t IdGenerator::getRandomDeviceSegment(int numBits) const {
   UUID_FIELD random_uuid;
   for (int word = 0; word < 2; word++) {
 #ifdef WIN32
-    windows_uuid_generate_random(random_uuid);
+    windowsUuidGenerateRandom(random_uuid);
 #else
     uuid temp_uuid;
     temp_uuid.make(UUID_MAKE_V4);
@@ -237,13 +237,13 @@ void IdGenerator::initialize(const std::shared_ptr<Properties> & properties) {
   implementation_ = UUID_TIME_IMPL;
   if (properties->get("uid.implementation", implementation_str)) {
     std::transform(implementation_str.begin(), implementation_str.end(), implementation_str.begin(), ::tolower);
-    if ("random" == implementation_str || "windows_random" == implementation_str) {
+    if (UUID_RANDOM_STR == implementation_str || UUID_WINDOWS_RANDOM_STR == implementation_str) {
       logging::LOG_DEBUG(logger_) << "Using uuid_generate_random for uids.";
       implementation_ = UUID_RANDOM_IMPL;
-    } else if ("uuid_default" == implementation_str) {
+    } else if (UUID_DEFAULT_STR == implementation_str) {
       logging::LOG_DEBUG(logger_) << "Using uuid_generate for uids.";
       implementation_ = UUID_DEFAULT_IMPL;
-    } else if ("minifi_uid" == implementation_str) {
+    } else if (MINIFI_UID_STR == implementation_str) {
       logging::LOG_DEBUG(logger_) << "Using minifi uid implementation for uids";
       implementation_ = MINIFI_UID_IMPL;
 
@@ -268,7 +268,7 @@ void IdGenerator::initialize(const std::shared_ptr<Properties> & properties) {
         deterministic_prefix_[i] = prefix_element;
       }
       incrementor_ = 0;
-    } else if ("time" == implementation_str || "windows" == implementation_str) {
+    } else if (UUID_TIME_STR == implementation_str || UUID_WINDOWS_STR == implementation_str) {
       logging::LOG_DEBUG(logger_) << "Using uuid_generate_time implementation for uids.";
     } else {
       logging::LOG_DEBUG(logger_) << "Invalid value for uid.implementation (" << implementation_str << "). Using uuid_generate_time implementation for uids.";
@@ -285,7 +285,8 @@ bool IdGenerator::generateWithUuidImpl(unsigned int mode, UUID_FIELD output) {
     std::lock_guard<std::mutex> lock(uuid_mutex_);
     uuid_impl_->make(mode);
     uuid = uuid_impl_->binary();
-  } catch (...){
+  } catch (uuid_error_t& uuid_error){
+    logger_->log_error("Failed to generate UUID, error: %s", uuid_error.string());
     return false;
   }
 
@@ -307,7 +308,7 @@ void IdGenerator::generate(Identifier &ident) {
     case UUID_RANDOM_IMPL:
     case UUID_DEFAULT_IMPL:
 #ifdef WIN32
-      windows_uuid_generate_random(output);
+      windowsUuidGenerateRandom(output);
 #else
       generateWithUuidImpl(UUID_MAKE_V4, output);
 #endif
@@ -323,7 +324,7 @@ void IdGenerator::generate(Identifier &ident) {
     case UUID_TIME_IMPL:
     default:
 #ifdef WIN32
-      windows_uuid_generate_time(output);
+      windowsUuidGenerateTime(output);
 #else
       generateWithUuidImpl(UUID_MAKE_V1, output);
 #endif
