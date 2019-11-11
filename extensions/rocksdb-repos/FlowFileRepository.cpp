@@ -22,6 +22,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <list>
 #include "FlowFileRecord.h"
 
 namespace org {
@@ -39,12 +40,14 @@ void FlowFileRepository::flush() {
   std::vector<std::shared_ptr<FlowFileRecord>> purgeList;
 
   std::vector<rocksdb::Slice> keys;
+  std::list<std::string> keystrings;
   std::vector<std::string> values;
 
   while (keys_to_delete.size_approx() > 0) {
     std::string key;
     if (keys_to_delete.try_dequeue(key)) {
-      keys.push_back(std::move(key));
+      keystrings.push_back(std::move(key));  // rocksdb::Slice doesn't copy the string, only grabs ptrs. Hacky, but have to ensure the required lifetime of the strings.
+      keys.push_back(keystrings.back());
     }
   }
 
