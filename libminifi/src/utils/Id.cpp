@@ -71,7 +71,7 @@ namespace {
     UuidCreate(&uuid);
     windowsUuidToUuidField(&uuid, out);
   }
-}
+}  // namespace
 #endif
 
 Identifier::Identifier(UUID_FIELD u)
@@ -285,7 +285,7 @@ bool IdGenerator::generateWithUuidImpl(unsigned int mode, UUID_FIELD output) {
     std::lock_guard<std::mutex> lock(uuid_mutex_);
     uuid_impl_->make(mode);
     uuid = uuid_impl_->binary();
-  } catch (uuid_error_t& uuid_error){
+  } catch (uuid_error_t& uuid_error) {
     logger_->log_error("Failed to generate UUID, error: %s", uuid_error.string());
     return false;
   }
