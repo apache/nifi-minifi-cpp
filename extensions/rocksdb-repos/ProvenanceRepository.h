@@ -125,16 +125,16 @@ class ProvenanceRepository : public core::Repository, public std::enable_shared_
       return false;
   }
 
-  virtual bool MultiPut(const std::vector<std::tuple<std::string, const uint8_t *, size_t>> data) {
+  virtual bool MultiPut(const std::vector<std::pair<std::string, std::unique_ptr<minifi::io::DataStream>>>& data) {
     if (repo_full_) {
       return false;
     }
 
     rocksdb::WriteBatch batch;
     rocksdb::Status status;
-    for(const auto& item: data) {
-      rocksdb::Slice value((const char *) std::get<1>(item), std::get<2>(item));
-      status = batch.Put(std::get<0>(item), value);
+    for (const auto &item: data) {
+      rocksdb::Slice value((const char *) item.second->getBuffer(), item.second->getSize());
+      status = batch.Put(item.first, value);
       if (!status.ok()) {
         return false;
       }

@@ -80,9 +80,9 @@ class TestRepository : public core::Repository {
     return true;
   }
 
-  bool MultiPut(const std::vector<std::tuple<std::string, const uint8_t *, size_t>> data) {
+  bool MultiPut(const std::vector<std::pair<std::string, std::unique_ptr<minifi::io::DataStream>>>& data) {
     for (const auto& item: data) {
-      if (!Put(std::get<0>(item), std::get<1>(item), std::get<2>(item))) {
+      if (!Put(item.first, item.second->getBuffer(), item.second->getSize())) {
         return false;
       }
     }

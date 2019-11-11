@@ -165,13 +165,12 @@ void Connection::put(std::shared_ptr<core::FlowFile> flow) {
 }
 
 void Connection::multiPut(std::vector<std::shared_ptr<core::FlowFile>>& flows) {
-  std::vector<std::tuple<std::string, const uint8_t *, size_t>> flowData;
-  std::list<io::DataStream> streams;
+  std::vector<std::pair<std::string, std::unique_ptr<io::DataStream>>> flowData;
 
   {
     std::lock_guard<std::mutex> lock(mutex_);
 
-    for (auto &ff: flows) {
+    for (auto &ff : flows) {
       if (drop_empty_ && ff->getSize() == 0) {
         logger_->log_info("Dropping empty flow file: %s", ff->getUUIDStr());
         continue;
@@ -186,11 +185,10 @@ void Connection::multiPut(std::vector<std::shared_ptr<core::FlowFile>>& flows) {
         // Save to the flowfile repo
         FlowFileRecord event(flow_repository_, content_repo_, ff, this->uuidStr_);
 
-        streams.emplace_back();
-        event.Serialize(streams.back());
+        std::unique_ptr<io::DataStream> stramptr(new io::DataStream());
+        event.Serialize(*stramptr.get());
 
-        flowData.emplace_back(event.getUUIDStr(), const_cast<uint8_t *>(streams.back().getBuffer()),
-                              streams.back().getSize());
+        flowData.emplace_back(event.getUUIDStr(), std::move(stramptr));
       }
     }
   }
@@ -199,7 +197,7 @@ void Connection::multiPut(std::vector<std::shared_ptr<core::FlowFile>>& flows) {
     return;
   }
 
-  for (auto& ff: flows) {
+  for (auto& ff : flows) {
     if (drop_empty_ && ff->getSize() == 0) {
       continue;
     }

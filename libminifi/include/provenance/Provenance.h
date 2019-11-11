@@ -348,6 +348,8 @@ class ProvenanceEventRecord : public core::SerializableComponent {
       _contentFullPath = flow->getResourceClaim()->getContentFullPath();
     }
   }
+  using SerializableComponent::Serialize;
+
   // Serialize the event to a stream
   bool Serialize(org::apache::nifi::minifi::io::DataStream& outStream);
 

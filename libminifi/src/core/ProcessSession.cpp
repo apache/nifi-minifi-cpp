@@ -859,7 +859,7 @@ void ProcessSession::commit() {
       }
     }
 
-    for (auto& cq: connectionQueues) {
+    for (auto& cq : connectionQueues) {
       cq.first->multiPut(cq.second);
     }
 
@@ -898,7 +898,7 @@ void ProcessSession::rollback() {
       }
     }
 
-    for (auto& cq: connectionQueues) {
+    for (auto& cq : connectionQueues) {
       cq.first->multiPut(cq.second);
     }
 

@@ -44,13 +44,18 @@ void FlowFileRepository::flush() {
   while (keys_to_delete.size_approx() > 0) {
     std::string key;
     if (keys_to_delete.try_dequeue(key)) {
-      keys.push_back(key);
+      keys.push_back(std::move(key));
     }
   }
 
-  db_->MultiGet(options, keys, &values);
+  auto multistatus = db_->MultiGet(options, keys, &values);
 
-  for(size_t i=0; i<keys.size() && i<values.size(); ++i) {
+  for(size_t i=0; i<keys.size() && i<values.size() && i<multistatus.size(); ++i) {
+    if(!multistatus[i].ok()) {
+      logger_->log_error("Failed to read key from rocksdb: %s! DB is most probably in an inconsistent state!", keys[i].data());
+      continue;
+    }
+
     decrement_total += values[i].size();
     std::shared_ptr<FlowFileRecord> eventRead = std::make_shared<FlowFileRecord>(shared_from_this(), content_repo_);
     if (eventRead->DeSerialize(reinterpret_cast<const uint8_t *>(values[i].data()), values[i].size())) {
