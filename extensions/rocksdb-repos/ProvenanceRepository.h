@@ -117,12 +117,7 @@ class ProvenanceRepository : public core::Repository, public std::enable_shared_
 
     // persist to the DB
     rocksdb::Slice value((const char *) buf, bufLen);
-    rocksdb::Status status;
-    status = db_->Put(rocksdb::WriteOptions(), key, value);
-    if (status.ok())
-      return true;
-    else
-      return false;
+    return db_->Put(rocksdb::WriteOptions(), key, value).ok();
   }
 
   virtual bool MultiPut(const std::vector<std::pair<std::string, std::unique_ptr<minifi::io::DataStream>>>& data) {
@@ -131,16 +126,13 @@ class ProvenanceRepository : public core::Repository, public std::enable_shared_
     }
 
     rocksdb::WriteBatch batch;
-    rocksdb::Status status;
     for (const auto &item: data) {
       rocksdb::Slice value((const char *) item.second->getBuffer(), item.second->getSize());
-      status = batch.Put(item.first, value);
-      if (!status.ok()) {
+      if (!batch.Put(item.first, value).ok()) {
         return false;
       }
     }
-    status = db_->Write(rocksdb::WriteOptions(), &batch);
-    return status.ok();
+    return db_->Write(rocksdb::WriteOptions(), &batch).ok();
   }
 
   // Delete
@@ -150,12 +142,7 @@ class ProvenanceRepository : public core::Repository, public std::enable_shared_
   }
   // Get
   virtual bool Get(const std::string &key, std::string &value) {
-    rocksdb::Status status;
-    status = db_->Get(rocksdb::ReadOptions(), key, &value);
-    if (status.ok())
-      return true;
-    else
-      return false;
+    return db_->Get(rocksdb::ReadOptions(), key, &value).ok();
   }
 
   // Remove event
@@ -200,12 +187,9 @@ class ProvenanceRepository : public core::Repository, public std::enable_shared_
     }
     delete it;
 
-    if (max_size > 0) {
-      return true;
-    } else {
-      return false;
-    }
+    return max_size > 0;
   }
+
   //! get record
   void getProvenanceRecord(std::vector<std::shared_ptr<ProvenanceEventRecord>> &records, int maxSize) {
     rocksdb::Iterator* it = db_->NewIterator(rocksdb::ReadOptions());
@@ -235,12 +219,9 @@ class ProvenanceRepository : public core::Repository, public std::enable_shared_
         break;
     }
     delete it;
-    if (max_size > 0) {
-      return true;
-    } else {
-      return false;
-    }
+    return max_size > 0;
   }
+
   //! purge record
   void purgeProvenanceRecord(std::vector<std::shared_ptr<ProvenanceEventRecord>> &records) {
     for (auto record : records) {
