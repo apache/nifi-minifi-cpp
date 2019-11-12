@@ -22,11 +22,41 @@
 #include <string>
 #include "EndianCheck.h"
 #include "DataStream.h"
+#ifdef WIN32
+#include "Winsock2.h"
+#else
+#include <arpa/inet.h>
+#endif
+
+namespace {
+  template<typename Integral, typename std::enable_if<
+      std::is_integral<Integral>::value && (sizeof(Integral) == 2),Integral>::type* = nullptr>
+  Integral byteSwap(Integral i) {
+    return htons(i);
+  }
+  template<typename Integral, typename std::enable_if<
+      std::is_integral<Integral>::value &&(sizeof(Integral) == 4),Integral>::type* = nullptr>
+  Integral byteSwap(Integral i) {
+    return htonl(i);
+  }
+  template<typename Integral, typename std::enable_if<
+      std::is_integral<Integral>::value && (sizeof(Integral) == 8),Integral>::type* = nullptr>
+  Integral byteSwap(Integral i) {
+#ifdef htonll
+    return htonll(i);
+#else
+    #define htonll_r(x) ((((uint64_t)htonl(x)) << 32) + htonl((x) >> 32))
+    return htonll_r(i);
+#endif
+  }
+}
+
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
 namespace io {
+
 /**
  * Serializable instances provide base functionality to
  * write certain objects/primitives to a data stream.
@@ -35,24 +65,6 @@ namespace io {
 class Serializable {
 
  public:
-
-  /**
-   * Inline function to write T to stream
-   **/
-  template<typename T>
-  inline int writeData(const T &t, DataStream *stream);
-
-  /**
-   * Inline function to write T to to_vec
-   **/
-  template<typename T>
-  inline int writeData(const T &t, uint8_t *to_vec);
-
-  /**
-   * Inline function to write T to to_vec
-   **/
-  template<typename T>
-  inline int writeData(const T &t, std::vector<uint8_t> &to_vec);
 
   /**
    * write byte to stream
@@ -67,40 +79,13 @@ class Serializable {
   int write(char value, DataStream *stream);
 
   /**
-   * write 4 bytes to stream
-   * @param base_value non encoded value
-   * @param stream output stream
-   * @param is_little_endian endianness determination
-   * @return resulting write size
-   **/
-  int write(uint32_t base_value, DataStream *stream, bool is_little_endian = EndiannessCheck::IS_LITTLE);
-
-  /**
-   * write 2 bytes to stream
-   * @param base_value non encoded value
-   * @param stream output stream
-   * @param is_little_endian endianness determination
-   * @return resulting write size
-   **/
-  int write(uint16_t base_value, DataStream *stream, bool is_little_endian = EndiannessCheck::IS_LITTLE);
-
-  /**
    * write valueto stream
    * @param value non encoded value
    * @param len length of value
    * @param strema output stream
    * @return resulting write size
    **/
-  int write(uint8_t *value, int len, DataStream *stream);
-
-  /**
-   * write 8 bytes to stream
-   * @param base_value non encoded value
-   * @param stream output stream
-   * @param is_little_endian endianness determination
-   * @return resulting write size
-   **/
-  int write(uint64_t base_value, DataStream *stream, bool is_little_endian = EndiannessCheck::IS_LITTLE);
+  int write(const uint8_t * const value, int len, DataStream *stream);
 
   /**
    * write bool to stream
@@ -117,20 +102,30 @@ class Serializable {
   int writeUTF(std::string str, DataStream *stream, bool widen = false);
 
   /**
+  * writes 2-8 bytes to stream
+  * @param base_value non encoded value
+  * @param stream output stream
+  * @param is_little_endian endianness determination
+  * @return resulting write size
+  **/
+  template<typename Integral, typename std::enable_if<
+      (sizeof(Integral) > 1) &&
+      std::is_integral<Integral>::value &&
+      !std::is_signed<Integral>::value
+      ,Integral>::type* = nullptr>
+  int write(Integral const & base_value, DataStream *stream, bool is_little_endian = EndiannessCheck::IS_LITTLE) {
+    const Integral value = is_little_endian ? byteSwap(base_value) : base_value;
+
+    return stream->writeData(reinterpret_cast<uint8_t *>(const_cast<Integral*>(&value)), sizeof(Integral));
+  }
+
+  /**
    * reads a byte from the stream
    * @param value reference in which will set the result
    * @param stream stream from which we will read
    * @return resulting read size
    **/
   int read(uint8_t &value, DataStream *stream);
-
-  /**
-   * reads two bytes from the stream
-   * @param value reference in which will set the result
-   * @param stream stream from which we will read
-   * @return resulting read size
-   **/
-  int read(uint16_t &base_value, DataStream *stream, bool is_little_endian = EndiannessCheck::IS_LITTLE);
 
   /**
    * reads a byte from the stream
@@ -150,22 +145,6 @@ class Serializable {
   int read(uint8_t *value, int len, DataStream *stream);
 
   /**
-   * reads four bytes from the stream
-   * @param value reference in which will set the result
-   * @param stream stream from which we will read
-   * @return resulting read size
-   **/
-  int read(uint32_t &value, DataStream *stream, bool is_little_endian = EndiannessCheck::IS_LITTLE);
-
-  /**
-   * reads eight byte from the stream
-   * @param value reference in which will set the result
-   * @param stream stream from which we will read
-   * @return resulting read size
-   **/
-  int read(uint64_t &value, DataStream *stream, bool is_little_endian = EndiannessCheck::IS_LITTLE);
-
-  /**
    * read UTF from stream
    * @param str reference string
    * @param stream stream from which we will read
@@ -173,8 +152,22 @@ class Serializable {
    **/
   int readUTF(std::string &str, DataStream *stream, bool widen = false);
 
- protected:
+  /**
+  * reads 2-8 bytes from the stream
+  * @param value reference in which will set the result
+  * @param stream stream from which we will read
+  * @return resulting read size
+  **/
+  template<typename Integral, typename std::enable_if<
+      (sizeof(Integral) > 1) &&
+      std::is_integral<Integral>::value &&
+      !std::is_signed<Integral>::value
+      ,Integral>::type* = nullptr>
+  int read(Integral &value, DataStream *stream, bool is_little_endian = EndiannessCheck::IS_LITTLE) {
+    return stream->read(value, is_little_endian);
+  }
 
+ protected:
 };
 
 } /* namespace io */

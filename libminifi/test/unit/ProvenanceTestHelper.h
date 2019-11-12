@@ -71,8 +71,21 @@ class TestRepository : public core::Repository {
 
   }
 
+  virtual bool isNoop() {
+    return false;
+  }
+
   bool Put(std::string key, const uint8_t *buf, size_t bufLen) {
     repositoryResults.insert(std::pair<std::string, std::string>(key, std::string((const char*) buf, bufLen)));
+    return true;
+  }
+
+  bool MultiPut(const std::vector<std::pair<std::string, std::unique_ptr<minifi::io::DataStream>>>& data) {
+    for (const auto& item: data) {
+      if (!Put(item.first, item.second->getBuffer(), item.second->getSize())) {
+        return false;
+      }
+    }
     return true;
   }
 

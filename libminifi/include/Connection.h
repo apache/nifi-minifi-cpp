@@ -158,8 +158,12 @@ class Connection : public core::Connectable, public std::enable_shared_from_this
       put(ff);
     }
   }
+
   // Put the flow file into queue
   void put(std::shared_ptr<core::FlowFile> flow);
+
+  // Put multiple flowfiles into the queue
+  void multiPut(std::vector<std::shared_ptr<core::FlowFile>>& flows);
   // Poll the flow file from queue, the expired flow file record also being returned
   std::shared_ptr<core::FlowFile> poll(std::set<std::shared_ptr<core::FlowFile>> &expiredFlowRecords);
   // Drain the flow records

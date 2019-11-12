@@ -79,6 +79,10 @@ class Repository : public virtual core::SerializableComponent, public core::Trac
     stop();
   }
 
+  virtual bool isNoop() {
+    return true;
+  }
+
   virtual void flush();
 
   // initialize
@@ -89,6 +93,11 @@ class Repository : public virtual core::SerializableComponent, public core::Trac
   virtual bool Put(std::string key, const uint8_t *buf, size_t bufLen) {
     return true;
   }
+
+  virtual bool MultiPut(const std::vector<std::pair<std::string, std::unique_ptr<io::DataStream>>>& data) {
+    return true;
+  }
+
   // Delete
   virtual bool Delete(std::string key) {
     return true;

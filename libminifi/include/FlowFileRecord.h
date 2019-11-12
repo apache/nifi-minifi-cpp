@@ -131,6 +131,8 @@ class FlowFileRecord : public core::FlowFile, public io::Serializable {
   // getAttribute key is enum
   bool getKeyedAttribute(FlowAttribute key, std::string &value);
 
+  bool Serialize(io::DataStream &outStream);
+
   //! Serialize and Persistent to the repository
   bool Serialize();
   //! DeSerialize
