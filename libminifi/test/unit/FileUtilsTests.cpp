@@ -133,3 +133,16 @@ TEST_CASE("TestFileUtils::get_executable_dir", "[TestGetExecutableDir]") {
   std::cerr << "Executable dir: " << executable_dir << std::endl;
   REQUIRE(FileUtils::get_parent_path(executable_path) == executable_dir);
 }
+
+TEST_CASE("TestFileUtils::create_dir", "[TestCreateDir]") {
+  TestController testController;
+
+  char format[] = "/tmp/gt.XXXXXX";
+  auto dir = testController.createTempDirectory(format);
+
+  std::string test_dir_path = std::string(dir) + FileUtils::get_separator() + "random_dir";
+
+  REQUIRE(FileUtils::create_dir(test_dir_path) == 0);  // Dir has to be created successfully
+  REQUIRE(FileUtils::create_dir(test_dir_path) == 0);  // Dir already exists, success should be returned
+  REQUIRE(FileUtils::delete_dir(test_dir_path) == 0);  // Delete should be successful as welll
+}
