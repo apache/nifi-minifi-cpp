@@ -25,6 +25,7 @@
 #else
 #include <cstring>
 #include <cstdlib>
+#include <errno.h>
 #ifdef WIN32
 #ifndef WIN32_LEAN_AND_MEAN
 	#define WIN32_LEAN_AND_MEAN
@@ -38,7 +39,6 @@
 #include <sys/types.h>
 #include <utime.h>
 #include <dirent.h>
-#include <errno.h>
 #endif
 #endif
 #include <cstdio>
@@ -82,6 +82,14 @@ namespace file {
  *
  */
 class FileUtils {
+ private:
+  static inline int platform_create_dir(const std::string &path) {
+#ifdef WIN32
+    return _mkdir(path.c_str());
+#else
+    return mkdir(path.c_str(), 0700);
+#endif
+  }
  public:
 
   FileUtils() = delete;
@@ -302,28 +310,19 @@ class FileUtils {
       return -1;
     }
 #else
-#ifdef WIN32
-    struct _stat dir_stat;
-    if (_stat(path.c_str(), &dir_stat)) {
-      _mkdir(path.c_str());
-      return 0;
-    }
-#else
     if (!recursive) {
-        if (mkdir(path.c_str(), 0700) != 0 && errno != EEXIST) {
+        if (platform_create_dir(path) != 0 && errno != EEXIST) {
             return -1;
         }
         return 0;
     }
-
-    int ret = mkdir(path.c_str(), 0700);
-    if (ret == 0) {
+    if (platform_create_dir(path) == 0) {
         return 0;
     }
 
     switch (errno) {
     case ENOENT: {
-        size_t found = path.find_last_of(get_separator(0));
+        size_t found = path.find_last_of(get_separator());
 
         if (found == std::string::npos) {
             return -1;
@@ -334,7 +333,7 @@ class FileUtils {
         if (res < 0) {
             return -1;
         }
-        return mkdir(path.c_str(), 0700);
+        return platform_create_dir(path);
     }
     case EEXIST: {
         if (is_directory(path.c_str())) {
@@ -345,7 +344,6 @@ class FileUtils {
     default:
         return -1;
     }
-#endif
     return -1;
 #endif
   }
