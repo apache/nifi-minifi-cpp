@@ -34,6 +34,7 @@
 #include "wel/XMLString.h"
 #include "wel/UnicodeConversion.h"
 
+#include "utils/ScopeGuard.h"
 #include "io/DataStream.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
@@ -131,10 +132,17 @@ core::Property ConsumeWindowsEventLog::OutputFormat(
   withDescription("Set the output format type. In case \'Both\' is selected the processor generates two flow files for every event captured")->
   build());
 
+core::Property ConsumeWindowsEventLog::BatchCommitSize(
+  core::PropertyBuilder::createProperty("Batch Commit Size")->
+  isRequired(false)->
+  withDefaultValue<int>(1000)->
+  withDescription("Maximum number of Events to consume and create to Flow Files from before committing.")->
+  build());
+
 core::Relationship ConsumeWindowsEventLog::Success("success", "Relationship for successfully consumed events.");
 
 ConsumeWindowsEventLog::ConsumeWindowsEventLog(const std::string& name, utils::Identifier uuid)
-  : core::Processor(name, uuid), logger_(logging::LoggerFactory<ConsumeWindowsEventLog>::getLogger()), apply_identifier_function_(false) {
+  : core::Processor(name, uuid), logger_(logging::LoggerFactory<ConsumeWindowsEventLog>::getLogger()), apply_identifier_function_(false), batch_commit_size_(0) {
 
   char buff[MAX_COMPUTERNAME_LENGTH + 1];
   DWORD size = sizeof(buff);
@@ -153,7 +161,7 @@ ConsumeWindowsEventLog::~ConsumeWindowsEventLog() {
 
 void ConsumeWindowsEventLog::initialize() {
   //! Set the supported properties
-  setSupportedProperties({Channel, Query, MaxBufferSize, InactiveDurationToReconnect, IdentifierMatcher, IdentifierFunction, ResolveAsAttributes, EventHeaderDelimiter, EventHeader, OutputFormat});
+  setSupportedProperties({Channel, Query, MaxBufferSize, InactiveDurationToReconnect, IdentifierMatcher, IdentifierFunction, ResolveAsAttributes, EventHeaderDelimiter, EventHeader, OutputFormat, BatchCommitSize});
 
   //! Set the supported relationships
   setSupportedRelationships({Success});
@@ -175,6 +183,7 @@ void ConsumeWindowsEventLog::onSchedule(const std::shared_ptr<core::ProcessConte
   context->getProperty(ResolveAsAttributes.getName(), resolve_as_attributes_);
   context->getProperty(IdentifierFunction.getName(), apply_identifier_function_);
   context->getProperty(EventHeaderDelimiter.getName(), header_delimiter_);
+  context->getProperty(BatchCommitSize.getName(), batch_commit_size_);
 
   std::string header;
   context->getProperty(EventHeader.getName(), header);
@@ -407,6 +416,13 @@ int ConsumeWindowsEventLog::processQueue(const std::shared_ptr<core::ProcessSess
 
   int flowFileCount = 0;
 
+  auto before_time = std::chrono::high_resolution_clock::now();
+  utils::ScopeGuard timeGuard([&](){
+    logger_->log_debug("processQueue processed %d Events in %llu ms",
+                      flowFileCount,
+                      std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - before_time).count());
+  });
+
   EventRender evt;
   while (listRenderedData_.try_dequeue(evt)) {
     if (writeXML_) {
@@ -435,6 +451,13 @@ int ConsumeWindowsEventLog::processQueue(const std::shared_ptr<core::ProcessSess
     }
 
     flowFileCount++;
+
+    if (batch_commit_size_ != 0 && (flowFileCount % batch_commit_size_ == 0)) {
+      auto before_commit = std::chrono::high_resolution_clock::now();
+      session->commit();
+      logger_->log_debug("processQueue commit took %llu ms",
+                        std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - before_commit).count());
+    }
   }
 
   return flowFileCount;
