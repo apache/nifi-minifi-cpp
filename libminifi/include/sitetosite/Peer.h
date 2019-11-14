@@ -21,7 +21,6 @@
 #include <stdio.h>
 #include <string>
 #include <errno.h>
-#include <uuid/uuid.h>
 #include <string>
 #include <mutex>
 #include <atomic>

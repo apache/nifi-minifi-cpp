@@ -23,7 +23,6 @@
 #include <regex.h>
 #endif
 #include <curl/easy.h>
-#include <uuid/uuid.h>
 #include <memory>
 #include <algorithm>
 #include <cctype>

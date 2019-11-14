@@ -33,7 +33,6 @@
 #include <iostream>
 #include <string>
 #include <curl/easy.h>
-#include <uuid/uuid.h>
 #ifdef WIN32
 #include <regex>
 #else

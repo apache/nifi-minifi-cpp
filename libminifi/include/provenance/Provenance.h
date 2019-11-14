@@ -18,7 +18,6 @@
 #ifndef __PROVENANCE_H__
 #define __PROVENANCE_H__
 
-#include <uuid/uuid.h>
 #include <atomic>
 #include <cstdint>
 #include <cstring>
@@ -348,6 +347,8 @@ class ProvenanceEventRecord : public core::SerializableComponent {
       _contentFullPath = flow->getResourceClaim()->getContentFullPath();
     }
   }
+  using SerializableComponent::Serialize;
+
   // Serialize the event to a stream
   bool Serialize(org::apache::nifi::minifi::io::DataStream& outStream);
 

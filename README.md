@@ -530,6 +530,14 @@ On Windows it is suggested that MSI be used for installation.
 
 Please see [Extensions.md](Extensions.md) on how to build and run conditionally built dependencies and extensions.
 
+### Recommended Antivirus Exclusions
+
+Antivirus software can take a long time to scan directories and the files within them. Additionally, if the antivirus software locks files or directories during a scan, those resources are unavailable to MiNiFi processes, causing latency or unavailability of these resources in a MiNiFi instance. To prevent these performance and reliability issues from occurring, it is highly recommended to configure your antivirus software to skip scans on the following MiNiFi C++ directories:
+
+- content_repository
+- flowfile_repository
+- provenance_repository
+
 ## Operations
 See our [operations documentation for additional inforomation on how to manage instances](OPS.md)
 

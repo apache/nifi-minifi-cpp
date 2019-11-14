@@ -26,17 +26,16 @@
 #include <atlconv.h>
 
 namespace org {
-	namespace apache {
-		namespace nifi {
-			namespace minifi {
-				namespace wel {
-					inline std::string to_string(const wchar_t* pChar) {
-						// return std::wstring_convert<std::codecvt_utf8<wchar_t>>().to_bytes(pChar);
-						ATL::CW2A aString(pChar, CP_UTF8);
-						return std::string(aString);
-					}
-				} /* namespace wel */
-			} /* namespace minifi */
-		} /* namespace nifi */
-	} /* namespace apache */
+  namespace apache {
+    namespace nifi {
+      namespace minifi {
+        namespace wel {
+          inline std::string to_string(const wchar_t* pChar) {
+            ATL::CW2A aString(pChar, CP_UTF8);
+            return std::string(aString);
+          }
+        } /* namespace wel */
+      } /* namespace minifi */
+    } /* namespace nifi */
+  } /* namespace apache */
 } /* namespace org */

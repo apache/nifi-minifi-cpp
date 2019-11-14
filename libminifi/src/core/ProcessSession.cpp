@@ -29,7 +29,6 @@
 #include <chrono>
 #include <thread>
 #include <iostream>
-#include <uuid/uuid.h>
 /* This implementation is only for native Windows systems.  */
 #if (defined _WIN32 || defined __WIN32__) && !defined __CYGWIN__
 #define _WINSOCKAPI_
@@ -859,7 +858,7 @@ void ProcessSession::commit() {
       }
     }
 
-    for (auto& cq: connectionQueues) {
+    for (auto& cq : connectionQueues) {
       cq.first->multiPut(cq.second);
     }
 
@@ -898,7 +897,7 @@ void ProcessSession::rollback() {
       }
     }
 
-    for (auto& cq: connectionQueues) {
+    for (auto& cq : connectionQueues) {
       cq.first->multiPut(cq.second);
     }
 

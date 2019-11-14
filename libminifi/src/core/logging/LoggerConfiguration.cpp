@@ -30,6 +30,7 @@
 #include "core/Core.h"
 #include "utils/StringUtils.h"
 #include "utils/ClassUtils.h"
+#include "utils/file/FileUtils.h"
 
 #include "spdlog/spdlog.h"
 #include "spdlog/sinks/stdout_sinks.h"
@@ -135,31 +136,22 @@ std::shared_ptr<internal::LoggerNamespace> LoggerConfiguration::initialize_names
     if ("nullappender" == appender_type || "null appender" == appender_type || "null" == appender_type) {
       sink_map[appender_name] = std::make_shared<spdlog::sinks::null_sink_st>();
     } else if ("rollingappender" == appender_type || "rolling appender" == appender_type || "rolling" == appender_type) {
-      std::string file_name = "";
+      std::string file_name;
       if (!logger_properties->get(appender_key + ".file_name", file_name)) {
         file_name = "minifi-app.log";
       }
-      std::string directory = "";
-      directory = logger_properties->getHome();
-      if (!directory.empty()) {
-        // Create the log directory if needed
-        directory += "/logs";
-#ifdef WIN32
-        struct _stat logDirStat;
-        if (_stat(directory.c_str(), &logDirStat) != 0) {
-          if (_mkdir(directory.c_str()) == -1) {
-            exit(1);
-          }
-#else
-        struct stat logDirStat;
-        if (stat(directory.c_str(), &logDirStat) != 0 || !S_ISDIR(logDirStat.st_mode)) {
-          if (mkdir(directory.c_str(), 0777) == -1) {
-            exit(1);
-          }
-#endif
-        }
-        file_name = directory + "/" + file_name;
+      std::string directory;
+      if (!logger_properties->get(appender_key + ".directory", directory)) {
+        // The below part assumes logger_properties->getHome() is existing
+        // Cause minifiHome must be set at MiNiFiMain.cpp?
+        directory = logger_properties->getHome() + utils::file::FileUtils::get_separator() + "logs";
       }
+
+      if (utils::file::FileUtils::create_dir(directory) == -1) {
+        std::cerr << directory << " cannot be created\n";
+        exit(1);
+      }
+      file_name = directory + utils::file::FileUtils::get_separator() + file_name;
 
       int max_files = 3;
       std::string max_files_str = "";

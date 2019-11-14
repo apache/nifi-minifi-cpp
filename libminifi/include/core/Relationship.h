@@ -21,7 +21,6 @@
 #define __RELATIONSHIP_H__
 
 #include <string>
-#include <uuid/uuid.h>
 #include <vector>
 #include <queue>
 #include <map>

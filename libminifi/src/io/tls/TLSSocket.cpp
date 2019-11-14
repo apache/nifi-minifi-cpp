@@ -80,40 +80,35 @@ int16_t TLSContext::initialize(bool server_method) {
     std::string caCertificate;
 
     if (ssl_service_ != nullptr) {
-      certificate = ssl_service_->getCertificateFile();
-      privatekey = ssl_service_->getPrivateKeyFile();
-      caCertificate = ssl_service_->getCACertificate();
-      passphrase = ssl_service_->getPassphrase();
-    } else {
-      if (!(configure_->get(Configure::nifi_security_client_certificate, certificate) && configure_->get(Configure::nifi_security_client_private_key, privatekey))) {
+      if (!ssl_service_->configure_ssl_context(ctx)) {
+        error_value = TLS_ERROR_CERT_ERROR;
+        return error_value;
+      }
+      return 0;
+    }
+
+    if (!(configure_->get(Configure::nifi_security_client_certificate, certificate) && configure_->get(Configure::nifi_security_client_private_key, privatekey))) {
         logger_->log_error("Certificate and Private Key PEM file not configured, error: %s.", std::strerror(errno));
         error_value = TLS_ERROR_PEM_MISSING;
         return error_value;
-      }
     }
     // load certificates and private key in PEM format
-    if (SSL_CTX_use_certificate_file(ctx, certificate.c_str(), SSL_FILETYPE_PEM) <= 0) {
+    if (SSL_CTX_use_certificate_chain_file(ctx, certificate.c_str()) <= 0) {
       logger_->log_error("Could not load certificate %s, for %X and %X error : %s", certificate, this, ctx, std::strerror(errno));
       error_value = TLS_ERROR_CERT_MISSING;
       return error_value;
     }
-    if (ssl_service_ != nullptr) {
-      // if the private key has passphase
+    if (configure_->get(Configure::nifi_security_client_pass_phrase, passphrase)) {
+      std::ifstream file(passphrase.c_str(), std::ifstream::in);
+      if (file.good()) {
+        // if we have been given a file copy that, otherwise treat the passphrase as a password
+        std::string password;
+        password.assign((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+        file.close();
+        passphrase = password;
+      }
       SSL_CTX_set_default_passwd_cb(ctx, io::tls::pemPassWordCb);
       SSL_CTX_set_default_passwd_cb_userdata(ctx, &passphrase);
-    } else {
-      if (configure_->get(Configure::nifi_security_client_pass_phrase, passphrase)) {
-        std::ifstream file(passphrase.c_str(), std::ifstream::in);
-        if (file.good()) {
-          // if we have been given a file copy that, otherwise treat the passphrase as a password
-          std::string password;
-          password.assign((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-          file.close();
-          passphrase = password;
-        }
-        SSL_CTX_set_default_passwd_cb(ctx, io::tls::pemPassWordCb);
-        SSL_CTX_set_default_passwd_cb_userdata(ctx, &passphrase);
-      }
     }
 
     int retp = SSL_CTX_use_PrivateKey_file(ctx, privatekey.c_str(), SSL_FILETYPE_PEM);

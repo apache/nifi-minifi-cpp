@@ -16,6 +16,8 @@
 import logging
 import shutil
 import uuid
+import tarfile
+from io import BytesIO
 from threading import Event
 
 import os
@@ -67,6 +69,9 @@ class DockerTestCluster(SingleNodeDockerCluster):
 
         super(DockerTestCluster, self).__init__()
 
+        if isinstance(output_validator, KafkaValidator):
+            output_validator.set_containers(self.containers)
+
     def deploy_flow(self,
                     flow,
                     name=None,
@@ -88,6 +93,26 @@ class DockerTestCluster(SingleNodeDockerCluster):
                                                    vols=vols,
                                                    name=name,
                                                    engine=engine)
+
+    def start_flow(self, name):
+        container = self.containers[name]
+        container.reload()
+        logging.info("Status before start: %s", container.status)
+        if container.status == 'exited':
+            logging.info("Start container: %s", name)
+            container.start()
+            return True
+        return False
+
+    def stop_flow(self, name):
+        container = self.containers[name]
+        container.reload()
+        logging.info("Status before stop: %s", container.status)
+        if container.status == 'running':
+            logging.info("Stop container: %s", name)
+            container.stop(timeout=0)
+            return True
+        return False
 
     def put_test_data(self, contents):
         """
@@ -116,7 +141,7 @@ class DockerTestCluster(SingleNodeDockerCluster):
 
     def log_nifi_output(self):
 
-        for container in self.containers:
+        for container in self.containers.values():
             container = self.client.containers.get(container.id)
             logging.info('Container logs for container \'%s\':\n%s', container.name, container.logs().decode("utf-8"))
             if b'Segmentation fault' in container.logs():
@@ -141,14 +166,20 @@ class DockerTestCluster(SingleNodeDockerCluster):
             stats = container.stats(stream=False)
             logging.info('Container stats:\n%s', stats)
 
-    def check_output(self, timeout=5):
+    def check_output(self, timeout=5, **kwargs):
         """
         Wait for flow output, validate it, and log minifi output.
         """
         self.wait_for_output(timeout)
         self.log_nifi_output()
-
-        return self.output_validator.validate() and not self.segfault
+        if self.segfault:
+            return false
+        if isinstance(self.output_validator, FileOutputValidator):
+            return self.output_validator.validate(dir=kwargs.get('dir', ''))
+        return self.output_validator.validate()
+    def rm_out_child(self, dir):
+        logging.info('Removing %s from output folder', self.tmp_test_output_dir + dir)
+        shutil.rmtree(self.tmp_test_output_dir + dir)
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         """
@@ -204,6 +235,9 @@ class FileOutputValidator(OutputValidator):
     def set_output_dir(self, output_dir):
         self.output_dir = output_dir
 
+    def validate(self, dir=''):
+        pass
+
 class SingleFileOutputValidator(FileOutputValidator):
     """
     Validates the content of a single file in the given directory.
@@ -213,22 +247,70 @@ class SingleFileOutputValidator(FileOutputValidator):
         self.valid = False
         self.expected_content = expected_content
 
+    def validate(self, dir=''):
+
+        self.valid = False
+
+        full_dir = self.output_dir + dir
+        logging.info("Output folder: %s", full_dir)
+
+        listing = listdir(full_dir)
+
+        if listing:
+            for l in listing:
+                logging.info("name:: %s", l)
+            out_file_name = listing[0]
+
+            with open(join(full_dir, out_file_name), 'r') as out_file:
+                contents = out_file.read()
+                logging.info("dir %s -- name %s", full_dir, out_file_name)
+                logging.info("expected %s -- content %s", self.expected_content, contents)
+
+                if self.expected_content in contents:
+                    self.valid = True
+
+        return self.valid
+
+class KafkaValidator(OutputValidator):
+    """
+    Validates PublishKafka
+    """
+
+    def __init__(self, expected_content):
+        self.valid = False
+        self.expected_content = expected_content
+        self.containers = None
+
+    def set_containers(self, containers):
+        self.containers = containers
+
     def validate(self):
 
         if self.valid:
             return True
+        if self.containers is None:
+            return self.valid
 
-        listing = listdir(self.output_dir)
+        if 'kafka-consumer' not in self.containers:
+            logging.info('Not found kafka container.')
+            return False
+        else:
+            kafka_container = self.containers['kafka-consumer']
 
-        if listing:
-            out_file_name = listing[0]
+        output, stat = kafka_container.get_archive('/heaven_signal.txt')
+        file_obj = BytesIO()
+        for i in output:
+            file_obj.write(i)
+        file_obj.seek(0)
+        tar = tarfile.open(mode='r', fileobj=file_obj)
+        contents = tar.extractfile('heaven_signal.txt').read()
+        logging.info("expected %s -- content %s", self.expected_content, contents)
 
-            with open(join(self.output_dir, out_file_name), 'r') as out_file:
-                contents = out_file.read()
+        contents = contents.decode("utf-8")
+        if self.expected_content in contents:
+            self.valid = True
 
-                if contents == self.expected_content:
-                    self.valid = True
-
+        logging.info("expected %s -- content %s", self.expected_content, contents)
         return self.valid
 
 class EmptyFilesOutPutValidator(FileOutputValidator):
@@ -238,14 +320,17 @@ class EmptyFilesOutPutValidator(FileOutputValidator):
     def __init__(self):
         self.valid = False
 
-    def validate(self):
+    def validate(self, dir=''):
 
         if self.valid:
             return True
 
-        listing = listdir(self.output_dir)
+        full_dir = self.output_dir + dir
+        logging.info("Output folder: %s", full_dir)
+
+        listing = listdir(full_dir)
         if listing:
-            self.valid = all(os.path.getsize(os.path.join(self.output_dir,x)) == 0 for x in listing)
+            self.valid = all(os.path.getsize(os.path.join(full_dir,x)) == 0 for x in listing)
 
         return self.valid
 
@@ -256,12 +341,17 @@ class NoFileOutPutValidator(FileOutputValidator):
     def __init__(self):
         self.valid = False
 
-    def validate(self):
+    def validate(self, dir=''):
 
         if self.valid:
             return True
 
-        self.valid = not bool(listdir(self.output_dir))
+        full_dir = self.output_dir + dir
+        logging.info("Output folder: %s", full_dir)
+
+        listing = listdir(full_dir)
+
+        self.valid = not bool(listing)
 
         return self.valid
 

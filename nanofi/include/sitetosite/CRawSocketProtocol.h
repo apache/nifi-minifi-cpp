@@ -21,7 +21,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include <uuid/uuid.h>
 
 #include "api/nanofi.h"
 #include "CSiteToSite.h"

@@ -284,6 +284,10 @@ class TestPlan {
     return content_repo_;
   }
 
+  std::shared_ptr<logging::Logger> getLogger() const {
+    return logger_;
+  }
+
  protected:
 
   void finalize();

@@ -1,0 +1,84 @@
+diff -rupN orig/uuid.c patched/uuid.c
+--- orig/uuid.c	2008-03-07 11:49:59.000000000 +0100
++++ patched/uuid.c	2019-11-05 17:51:43.000000000 +0100
+@@ -135,7 +135,7 @@ uuid_rc_t uuid_create(uuid_t **uuid)
+     /* resolve MAC address for insertion into node field of UUIDs */
+     if (!mac_address((unsigned char *)(obj->mac), sizeof(obj->mac))) {
+         memset(obj->mac, 0, sizeof(obj->mac));
+-        obj->mac[0] = BM_OCTET(1,0,0,0,0,0,0,0);
++        obj->mac[0] = IEEE_MAC_MCBIT;
+     }
+ 
+     /* initialize time attributes */
+@@ -967,7 +967,7 @@ static uuid_rc_t uuid_make_v1(uuid_t *uu
+      *  GENERATE NODE
+      */
+ 
+-    if ((mode & UUID_MAKE_MC) || (uuid->mac[0] & BM_OCTET(1,0,0,0,0,0,0,0))) {
++    if ((mode & UUID_MAKE_MC) || (uuid->mac[0] & IEEE_MAC_MCBIT)) {
+         /* generate random IEEE 802 local multicast MAC address */
+         if (prng_data(uuid->prng, (void *)&(uuid->obj.node), sizeof(uuid->obj.node)) != PRNG_RC_OK)
+             return UUID_RC_INT;
+@@ -1214,4 +1214,3 @@ unsigned long uuid_version(void)
+ {
+     return (unsigned long)(_UUID_VERSION);
+ }
+-
+diff -rupN orig/uuid_mac.c patched/uuid_mac.c
+--- orig/uuid_mac.c	2008-03-07 11:49:59.000000000 +0100
++++ patched/uuid_mac.c	2019-11-07 14:09:09.000000000 +0100
+@@ -122,26 +122,40 @@ int mac_address(unsigned char *data_ptr,
+     }
+ #endif
+ 
+-#if defined(HAVE_NET_IF_H) && defined(SIOCGIFHWADDR)
++#if defined(HAVE_NET_IF_H) && defined(SIOCGIFCONF) && defined(SIOCGIFHWADDR)
+     /* use SIOCGIFHWADDR ioctl(2) on Linux class platforms */
+     {
+-        struct ifreq ifr;
++        struct ifreq ifrs[16];
++        struct ifconf ifc;
+         struct sockaddr *sa;
+         int s;
+-        int i;
++        int i, j;
++        int empty;
+ 
+         if ((s = socket(PF_INET, SOCK_DGRAM, 0)) < 0)
+             return FALSE;
+-        sprintf(ifr.ifr_name, "eth0");
+-        if (ioctl(s, SIOCGIFHWADDR, &ifr) < 0) {
++        ifc.ifc_len = sizeof(ifrs);
++        ifc.ifc_req = ifrs;
++        if (ioctl(s, SIOCGIFCONF, &ifc) < 0) {
+             close(s);
+             return FALSE;
+         }
+-        sa = (struct sockaddr *)&ifr.ifr_addr;
+-        for (i = 0; i < MAC_LEN; i++)
+-            data_ptr[i] = (unsigned char)(sa->sa_data[i] & 0xff);
++        for (i = 0; i < ifc.ifc_len / sizeof(ifrs[0]); i++) {
++            if (ioctl(s, SIOCGIFHWADDR, &ifrs[i]) < 0)
++                continue;
++            sa = (struct sockaddr *)&(ifrs[i].ifr_hwaddr);
++            empty = TRUE;
++            for (j = 0; j < MAC_LEN; j++) {
++                empty &= (sa->sa_data[j] & 0xff) == 0x00;
++                data_ptr[j] = (unsigned char)(sa->sa_data[j] & 0xff);
++            }
++            if (empty)
++                continue;
++            close(s);
++            return TRUE;
++        }
+         close(s);
+-        return TRUE;
++        return FALSE;
+     }
+ #endif
+ 
+@@ -180,4 +194,3 @@ int mac_address(unsigned char *data_ptr,
+ 
+     return FALSE;
+ }
+-

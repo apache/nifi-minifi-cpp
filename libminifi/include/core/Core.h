@@ -24,7 +24,6 @@
 #include <iostream>
 #include <memory>
 #include <string>
-#include <uuid/uuid.h>
 #include <properties/Configure.h>
 
 #ifdef WIN32

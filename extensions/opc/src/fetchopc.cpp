@@ -65,13 +65,21 @@ namespace processors {
       ->withDescription("Specifiec the max depth of browsing. 0 means unlimited.")
       ->withDefaultValue<uint64_t>(0)->build());
 
+  core::Property FetchOPCProcessor::Lazy(
+      core::PropertyBuilder::createProperty("Lazy mode")
+      ->withDescription("Only creates flowfiles from nodes with new timestamp from the server.")
+      ->withDefaultValue<std::string>("Off")
+      ->isRequired(true)
+      ->withAllowableValues<std::string>({"On", "Off"})
+      ->build());
+
   core::Relationship FetchOPCProcessor::Success("success", "Successfully retrieved OPC-UA nodes");
   core::Relationship FetchOPCProcessor::Failure("failure", "Retrieved OPC-UA nodes where value cannot be extracted (only if enabled)");
 
 
   void FetchOPCProcessor::initialize() {
     // Set the supported properties
-    std::set<core::Property> fetchOPCProperties = {OPCServerEndPoint, NodeID, NodeIDType, NameSpaceIndex, MaxDepth};
+    std::set<core::Property> fetchOPCProperties = {OPCServerEndPoint, NodeID, NodeIDType, NameSpaceIndex, MaxDepth, Lazy};
     std::set<core::Property> baseOPCProperties = BaseOPCProcessor::getSupportedProperties();
     fetchOPCProperties.insert(baseOPCProperties.begin(), baseOPCProperties.end());
     setSupportedProperties(fetchOPCProperties);
@@ -126,6 +134,9 @@ namespace processors {
       }
     }
 
+    context->getProperty(Lazy.getName(), value);
+    lazy_mode_ = value == "On" ? true : false;
+
     configOK_ = true;
   }
 
@@ -178,7 +189,7 @@ namespace processors {
       }
     }
     if(nodesFound_ == 0) {
-      logger_->log_warn("Connected to OPC server, but no variable nodes were not found. Configuration might be incorrect! Yielding...");
+      logger_->log_warn("Connected to OPC server, but no variable nodes were found. Configuration might be incorrect! Yielding...");
       yield();
     } else if (variablesFound_ == 0) {
       logger_->log_warn("Found no variables when traversing the specified node. No flowfiles are generated. Yielding...");
@@ -193,12 +204,26 @@ namespace processors {
     if(ref->nodeClass == UA_NODECLASS_VARIABLE)
     {
       try {
-        opc::NodeData nodedata = connection_->getNodeData(ref);
-        OPCData2FlowFile(nodedata, context, session);
-        variablesFound_++;
+        opc::NodeData nodedata = connection_->getNodeData(ref, path);
+        bool write = true;
+        if (lazy_mode_) {
+          write = false;
+          std::string nodeid = nodedata.attributes["Full path"];
+          std::string cur_timestamp = node_timestamp_[nodeid];
+          std::string new_timestamp = nodedata.attributes["Sourcetimestamp"];
+          if (cur_timestamp != new_timestamp) {
+            node_timestamp_[nodeid] = new_timestamp;
+            logger_->log_debug("Node %s has new source timestamp %s", nodeid, new_timestamp);
+            write = true;
+          }
+        }
+        if (write) {
+          OPCData2FlowFile(nodedata, context, session);
+          variablesFound_++;
+        }
       } catch (const std::exception& exception) {
         std::string browsename((char*)ref->browseName.name.data, ref->browseName.name.length);
-        logger_->log_warn("Caught Exception while trying to get data from node &s: %s", path + "/" + browsename,  exception.what());
+        logger_->log_warn("Caught Exception while trying to get data from node %s: %s", path + "/" + browsename,  exception.what());
       }
     }
     return true;

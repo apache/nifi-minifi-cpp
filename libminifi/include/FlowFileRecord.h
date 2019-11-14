@@ -20,7 +20,6 @@
 #ifndef __FLOW_FILE_RECORD_H__
 #define __FLOW_FILE_RECORD_H__
 
-#include <uuid/uuid.h>
 #include <vector>
 #include <queue>
 #include <map>

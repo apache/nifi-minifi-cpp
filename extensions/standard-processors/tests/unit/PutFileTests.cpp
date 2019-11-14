@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <uuid/uuid.h>
 #include <sys/stat.h>
 #include <utility>
 #include <memory>
@@ -391,4 +390,38 @@ TEST_CASE("PutFileMaxFileCountTest", "[getfileputpfilemaxcount]") {
   REQUIRE(LogTestController::getInstance().contains("which exceeds the configured max number of files"));
 
   LogTestController::getInstance().reset();
+}
+
+TEST_CASE("PutFileEmptyTest", "[EmptyFilePutTest]") {
+  TestController testController;
+
+  LogTestController::getInstance().setDebug<minifi::processors::GetFile>();
+  LogTestController::getInstance().setDebug<TestPlan>();
+  LogTestController::getInstance().setDebug<minifi::processors::PutFile>();
+
+  std::shared_ptr<TestPlan> plan = testController.createPlan();
+
+  std::shared_ptr<core::Processor> getfile = plan->addProcessor("GetFile", "getfileCreate2");
+
+  std::shared_ptr<core::Processor> putfile = plan->addProcessor("PutFile", "putfile", core::Relationship("success", "description"), true);
+
+  char format[] = "/tmp/gt.XXXXXX";
+  auto dir = testController.createTempDirectory(format);
+  char format2[] = "/tmp/ft.XXXXXX";
+  auto putfiledir = testController.createTempDirectory(format2);
+
+  plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), dir);
+  plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), putfiledir);
+
+  std::ofstream of(std::string(dir) + utils::file::FileUtils::get_separator() + "tstFile.ext");
+  of.close();
+
+  plan->runNextProcessor();  // Get
+  plan->runNextProcessor();  // Put
+
+  std::ifstream is(std::string(putfiledir) + utils::file::FileUtils::get_separator() + "tstFile.ext", std::ifstream::binary);
+
+  REQUIRE(is.is_open());
+  is.seekg(0, is.end);
+  REQUIRE(is.tellg() == 0);
 }

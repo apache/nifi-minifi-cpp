@@ -18,7 +18,6 @@
 #ifndef __PROCESSOR_H__
 #define __PROCESSOR_H__
 
-#include <uuid/uuid.h>
 #include <vector>
 #include <queue>
 #include <map>

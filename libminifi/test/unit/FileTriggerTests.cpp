@@ -17,7 +17,6 @@
  */
 #include <chrono>
 #include <thread>
-#include <uuid/uuid.h>
 #include <memory>
 
 #include "c2/triggers/FileUpdateTrigger.h"

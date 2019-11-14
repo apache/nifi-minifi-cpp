@@ -28,6 +28,8 @@
 #include "core/Property.h"
 #include "io/validation.h"
 #include "properties/Configure.h"
+#include "utils/ScopeGuard.h"
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -55,41 +57,48 @@ bool SSLContextService::configure_ssl_context(SSL_CTX *ctx) {
         logging::LOG_ERROR(logger_) << "Failed create new file BIO, " << getLatestOpenSSLErrorString();
         return false;
       }
+      utils::ScopeGuard fp_guard([fp]() { BIO_free(fp); });
       if (BIO_read_filename(fp, certificate.c_str()) <= 0) {
         logging::LOG_ERROR(logger_) << "Failed to read certificate file " << certificate << ", " << getLatestOpenSSLErrorString();
-        BIO_free(fp);
         return false;
       }
       PKCS12* p12 = d2i_PKCS12_bio(fp, nullptr);
-      BIO_free(fp);
       if (p12 == nullptr) {
         logging::LOG_ERROR(logger_) << "Failed to DER decode certificate file " << certificate << ", " << getLatestOpenSSLErrorString();
         return false;
       }
+      utils::ScopeGuard p12_guard([p12]() { PKCS12_free(p12); });
       EVP_PKEY* pkey = nullptr;
       X509* cert = nullptr;
-      if (!PKCS12_parse(p12, passphrase_.c_str(), &pkey, &cert, nullptr /*ca*/)) {
+      STACK_OF(X509)* ca = nullptr;
+      if (!PKCS12_parse(p12, passphrase_.c_str(), &pkey, &cert, &ca)) {
         logging::LOG_ERROR(logger_) << "Failed to parse certificate file " << certificate << " as PKCS#12, " << getLatestOpenSSLErrorString();
-        PKCS12_free(p12);
         return false;
       }
-      PKCS12_free(p12);
-      if (SSL_CTX_use_certificate(ctx, cert) != 1) {
-        logging::LOG_ERROR(logger_) << "Failed to set certificate from  " << certificate << ", " << getLatestOpenSSLErrorString();
+      utils::ScopeGuard certs_guard([pkey, cert, ca]() {
         EVP_PKEY_free(pkey);
         X509_free(cert);
+        sk_X509_pop_free(ca, X509_free);
+      });
+      if (SSL_CTX_use_certificate(ctx, cert) != 1) {
+        logging::LOG_ERROR(logger_) << "Failed to set certificate from  " << certificate << ", " << getLatestOpenSSLErrorString();
         return false;
+      }
+      while (ca != nullptr && sk_X509_num(ca) > 0) {
+        X509 *cacert = sk_X509_pop(ca);
+        utils::ScopeGuard cacert_guard([cacert]() { X509_free(cacert); });
+        if (SSL_CTX_add_extra_chain_cert(ctx, cacert) != 1) {
+          logging::LOG_ERROR(logger_) << "Failed to set additional certificate from  " << certificate << ", " << getLatestOpenSSLErrorString();
+          return false;
+        }
+        cacert_guard.disable();
       }
       if (SSL_CTX_use_PrivateKey(ctx, pkey) != 1) {
         logging::LOG_ERROR(logger_) << "Failed to set private key from  " << certificate << ", " << getLatestOpenSSLErrorString();
-        EVP_PKEY_free(pkey);
-        X509_free(cert);
         return false;
       }
-      EVP_PKEY_free(pkey);
-      X509_free(cert);
     } else {
-      if (SSL_CTX_use_certificate_file(ctx, certificate.c_str(), SSL_FILETYPE_PEM) <= 0) {
+      if (SSL_CTX_use_certificate_chain_file(ctx, certificate.c_str()) <= 0) {
         logging::LOG_ERROR(logger_) << "Could not create load certificate " << certificate << ", " << getLatestOpenSSLErrorString();
         return false;
       }
@@ -192,38 +201,46 @@ void SSLContextService::onEnable() {
 
   logger_->log_trace("onEnable()");
 
-  if (getProperty(property.getName(), certificate) && getProperty(privKey.getName(), private_key_)) {
+  bool has_certificate_property = getProperty(property.getName(), certificate);
+  if (has_certificate_property) {
     std::ifstream cert_file(certificate);
-    std::ifstream priv_file(private_key_);
     if (!cert_file.good()) {
-      logger_->log_info("%s not good", certificate);
+      logger_->log_warn("Cannot open certificate file %s", certificate);
       std::string test_cert = default_dir + certificate;
       std::ifstream cert_file_test(test_cert);
       if (cert_file_test.good()) {
         certificate = test_cert;
-        logger_->log_debug("%s now good", certificate);
+        logger_->log_info("Using certificate file %s", certificate);
       } else {
-        logger_->log_warn("%s still not good", test_cert);
+        logger_->log_error("Cannot open certificate file %s", test_cert);
         valid_ = false;
       }
       cert_file_test.close();
     }
-
-    if (!priv_file.good()) {
-      std::string test_priv = default_dir + private_key_;
-      std::ifstream private_file_test(test_priv);
-      if (private_file_test.good()) {
-        private_key_ = test_priv;
-      } else {
-        valid_ = false;
-      }
-      private_file_test.close();
-    }
     cert_file.close();
-    priv_file.close();
-
   } else {
     logger_->log_debug("Certificate empty");
+  }
+  if (has_certificate_property && !isFileTypeP12(certificate)) {
+    if (getProperty(privKey.getName(), private_key_)) {
+      std::ifstream priv_file(private_key_);
+      if (!priv_file.good()) {
+        logger_->log_warn("Cannot open private key file %s", private_key_);
+        std::string test_priv = default_dir + private_key_;
+        std::ifstream private_file_test(test_priv);
+        if (private_file_test.good()) {
+          private_key_ = test_priv;
+          logger_->log_info("Using private key file %s", private_key_);
+        } else {
+          logger_->log_error("Cannot open private key file %s", test_priv);
+          valid_ = false;
+        }
+        private_file_test.close();
+      }
+      priv_file.close();
+    } else {
+      logger_->log_debug("Private key empty");
+    }
   }
   if (!getProperty(passphrase_prop.getName(), passphrase_)) {
     logger_->log_debug("No pass phrase for %s", certificate);

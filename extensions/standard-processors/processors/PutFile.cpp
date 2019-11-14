@@ -20,7 +20,6 @@
 
 #include "PutFile.h"
 #include <sys/stat.h>
-#include <uuid/uuid.h>
 #include <cstdint>
 #include <cstdio>
 #include <iostream>
@@ -218,11 +217,24 @@ bool PutFile::putFile(core::ProcessSession *session, std::shared_ptr<FlowFileRec
     }
   }
 
-  ReadCallback cb(tmpFile, destFile);
-  session->read(flowFile, &cb);
+  bool success = false;
 
-  logger_->log_debug("Committing %s", destFile);
-  if (cb.commit()) {
+  if (flowFile->getSize() > 0) {
+    ReadCallback cb(tmpFile, destFile);
+    session->read(flowFile, &cb);
+    logger_->log_debug("Committing %s", destFile);
+    success = cb.commit();
+  } else {
+    std::ofstream outfile(destFile);
+    if (!outfile.good()) {
+      logger_->log_error("Failed to create empty file: %s", destFile);
+    } else {
+      success = true;
+    }
+    outfile.close();
+  }
+
+  if (success) {
     session->transfer(flowFile, Success);
     return true;
   } else {

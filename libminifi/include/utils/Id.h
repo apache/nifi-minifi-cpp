@@ -21,12 +21,15 @@
 #include <atomic>
 #include <memory>
 #include <string>
-#include "uuid/uuid.h"
+#include <thread>
+
+#ifndef WIN32
+class uuid;
+#endif
 
 #include "core/logging/Logger.h"
 #include "properties/Properties.h"
 
-#define UNSIGNED_CHAR_MAX 255
 #define UUID_TIME_IMPL 0
 #define UUID_RANDOM_IMPL 1
 #define UUID_DEFAULT_IMPL 2
@@ -34,6 +37,14 @@
 #ifdef WIN32
 #define UUID_WINDOWS_IMPL 4
 #endif
+
+#define UUID_RANDOM_STR "random"
+#define UUID_WINDOWS_RANDOM_STR "windows_random"
+#define UUID_DEFAULT_STR "uuid_default"
+#define MINIFI_UID_STR "minifi_uid"
+#define UUID_TIME_STR "time"
+#define UUID_WINDOWS_STR "windows"
+
 
 namespace org {
 namespace apache {
@@ -98,6 +109,8 @@ class IdentifierBase {
   T id_;
 };
 
+typedef uint8_t UUID_FIELD[16];
+
 class Identifier : public IdentifierBase<UUID_FIELD, std::string> {
  public:
   Identifier(UUID_FIELD u);
@@ -139,6 +152,8 @@ class IdGenerator {
   Identifier generate();
   void initialize(const std::shared_ptr<Properties> & properties);
 
+  ~IdGenerator();
+
   static std::shared_ptr<IdGenerator> getIdGenerator() {
     static std::shared_ptr<IdGenerator> generator = std::shared_ptr<IdGenerator>(new IdGenerator());
     return generator;
@@ -150,8 +165,15 @@ class IdGenerator {
   IdGenerator();
   int implementation_;
   std::shared_ptr<minifi::core::logging::Logger> logger_;
+
   unsigned char deterministic_prefix_[8];
   std::atomic<uint64_t> incrementor_;
+
+#ifndef WIN32
+  std::mutex uuid_mutex_;
+  std::unique_ptr<uuid> uuid_impl_;
+  bool generateWithUuidImpl(unsigned int mode, UUID_FIELD output);
+#endif
 };
 
 class NonRepeatingStringGenerator {

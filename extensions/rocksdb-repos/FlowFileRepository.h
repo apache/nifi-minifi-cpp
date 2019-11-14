@@ -108,9 +108,8 @@ class FlowFileRepository : public core::Repository, public std::enable_shared_fr
       logger_->log_debug("NiFi FlowFile Repository database open %s success", directory_);
     } else {
       logger_->log_error("NiFi FlowFile Repository database open %s fail", directory_);
-      return false;
     }
-    return true;
+    return status.ok();
   }
 
   virtual void run();
@@ -118,28 +117,21 @@ class FlowFileRepository : public core::Repository, public std::enable_shared_fr
   virtual bool Put(std::string key, const uint8_t *buf, size_t bufLen) {
     // persistent to the DB
     rocksdb::Slice value((const char *) buf, bufLen);
-    rocksdb::Status status;
     repo_size_ += bufLen;
-    status = db_->Put(rocksdb::WriteOptions(), key, value);
-    if (status.ok())
-      return true;
-    else
-      return false;
+    return db_->Put(rocksdb::WriteOptions(), key, value).ok();
   }
 
-  virtual bool MultiPut(const std::vector<std::tuple<std::string, const uint8_t *, size_t>> data) {
+  virtual bool MultiPut(const std::vector<std::pair<std::string, std::unique_ptr<minifi::io::DataStream>>>& data) {
     rocksdb::WriteBatch batch;
-    rocksdb::Status status;
-    for(const auto& item: data) {
-      rocksdb::Slice value((const char *) std::get<1>(item), std::get<2>(item));
-      status = batch.Put(std::get<0>(item), value);
-      if (!status.ok()) {
+    for (const auto &item: data) {
+      rocksdb::Slice value((const char *) item.second->getBuffer(), item.second->getSize());
+      if (!batch.Put(item.first, value).ok()) {
         return false;
       }
     }
-    status = db_->Write(rocksdb::WriteOptions(), &batch);
-    return status.ok();
+    return db_->Write(rocksdb::WriteOptions(), &batch).ok();
   }
+
 
   /**
    * 
@@ -157,12 +149,7 @@ class FlowFileRepository : public core::Repository, public std::enable_shared_fr
   virtual bool Get(const std::string &key, std::string &value) {
     if (db_ == nullptr)
       return false;
-    rocksdb::Status status;
-    status = db_->Get(rocksdb::ReadOptions(), key, &value);
-    if (status.ok())
-      return true;
-    else
-      return false;
+    return db_->Get(rocksdb::ReadOptions(), key, &value).ok();
   }
 
   virtual void loadComponent(const std::shared_ptr<core::ContentRepository> &content_repo);

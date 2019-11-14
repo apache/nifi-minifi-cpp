@@ -28,10 +28,7 @@
 #include <string>
 #include <set>
 #include <random>
-#ifdef WIN32
-#define srandom srand
-#define random rand
-#endif
+
 #include "utils/StringUtils.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
@@ -43,7 +40,6 @@ namespace apache {
 namespace nifi {
 namespace minifi {
 namespace processors {
-const char *GenerateFlowFile::DATA_FORMAT_BINARY = "Binary";
 const char *GenerateFlowFile::DATA_FORMAT_TEXT = "Text";
 core::Property GenerateFlowFile::FileSize(
     core::PropertyBuilder::createProperty("File Size")->withDescription("The size of the file that will be used")->isRequired(false)->withDefaultValue<core::DataSizeValue>("1 kB")->build());
@@ -60,8 +56,8 @@ core::Property GenerateFlowFile::UniqueFlowFiles(
         ->isRequired(false)->withDefaultValue<bool>(true)->build());
 
 core::Relationship GenerateFlowFile::Success("success", "success operational on the flow record");
-const unsigned int TEXT_LEN = 90;
-static const char TEXT_CHARS[TEXT_LEN + 1] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$%^&*()-_=+/?.,';:\"?<>\n\t ";
+
+static const char * TEXT_CHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$%^&*()-_=+/?.,';:\"?<>\n\t ";
 
 void GenerateFlowFile::initialize() {
   // Set the supported properties
@@ -77,88 +73,67 @@ void GenerateFlowFile::initialize() {
   setSupportedRelationships(relationships);
 }
 
-void GenerateFlowFile::onTrigger(core::ProcessContext *context, core::ProcessSession *session) {
-  uint64_t batchSize = 1;
-  bool uniqueFlowFile = true;
-  uint64_t fileSize = 1024;
-  bool textData = false;
-
-  std::string value;
-  if (context->getProperty(FileSize.getName(), fileSize)) {
-    logger_->log_trace("File size is configured to be %d", fileSize);
-  }
-
-  if (context->getProperty(BatchSize.getName(), batchSize)) {
-    logger_->log_trace("Batch size is configured to be %d", batchSize);
-  }
-  if (context->getProperty(DataFormat.getName(), value)) {
-    textData = (value == GenerateFlowFile::DATA_FORMAT_TEXT);
-  }
-  if (context->getProperty(UniqueFlowFiles.getName(), uniqueFlowFile)) {
-    logger_->log_trace("Unique Flow files is configured to be %i", uniqueFlowFile);
-  }
-
-  if (uniqueFlowFile) {
-    char *data;
-    data = new char[fileSize];
-    if (!data)
-      return;
-    uint64_t dataSize = fileSize;
-    GenerateFlowFile::WriteCallback callback(data, dataSize);
-    char *current = data;
-    if (textData) {
-      for (uint64_t i = 0; i < fileSize; i++) {
-        int randValue = random();
-        data[i] = TEXT_CHARS[randValue % TEXT_LEN];
-      }
-    } else {
-      for (uint64_t i = 0; i < fileSize; i += sizeof(int)) {
-        int randValue = random();
-        *(reinterpret_cast<int*>(current)) = randValue;
-        current += sizeof(int);
-      }
-    }
-    for (uint64_t i = 0; i < batchSize; i++) {
-      // For each batch
-      std::shared_ptr<FlowFileRecord> flowFile = std::static_pointer_cast<FlowFileRecord>(session->create());
-      if (!flowFile)
-        return;
-      if (fileSize > 0)
-        session->write(flowFile, &callback);
-      session->transfer(flowFile, Success);
-    }
-    delete[] data;
+void generateData(std::vector<char>& data, bool textData = false) {
+  std::random_device rd;
+  std::mt19937 eng(rd());
+  if (textData) {
+    std::uniform_int_distribution<> distr(0, strlen(TEXT_CHARS) - 1);
+    auto rand = std::bind(distr, eng);
+    std::generate_n(data.begin(), data.size(), rand);
+    std::for_each(data.begin(), data.end(), [](char & c) { c = TEXT_CHARS[c];});
   } else {
-    if (!_data) {
-      // We have not created the data yet
-      _data = new char[fileSize];
-      _dataSize = fileSize;
-      char *current = _data;
-      if (textData) {
-        for (uint64_t i = 0; i < fileSize; i++) {
-          int randValue = random();
-          _data[i] = TEXT_CHARS[randValue % TEXT_LEN];
-        }
-      } else {
-        for (uint64_t i = 0; i < fileSize; i += sizeof(int)) {
-          int randValue = random();
-          *(reinterpret_cast<int*>(current)) = randValue;
-          current += sizeof(int);
-        }
-      }
-    }
-    GenerateFlowFile::WriteCallback callback(_data, _dataSize);
-    for (uint64_t i = 0; i < batchSize; i++) {
-      // For each batch
-      std::shared_ptr<FlowFileRecord> flowFile = std::static_pointer_cast<FlowFileRecord>(session->create());
-      if (!flowFile)
-        return;
-      if (fileSize > 0)
-        session->write(flowFile, &callback);
-      session->transfer(flowFile, Success);
-    }
+    std::uniform_int_distribution<> distr(std::numeric_limits<char>::min(), std::numeric_limits<char>::max());
+    auto rand = std::bind(distr, eng);
+    std::generate_n(data.begin(), data.size(), rand);
   }
 }
+
+void GenerateFlowFile::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
+  if (context->getProperty(FileSize.getName(), fileSize_)) {
+    logger_->log_trace("File size is configured to be %d", fileSize_);
+  }
+
+  if (context->getProperty(BatchSize.getName(), batchSize_)) {
+    logger_->log_trace("Batch size is configured to be %d", batchSize_);
+  }
+
+  std::string value;
+  if (context->getProperty(DataFormat.getName(), value)) {
+    textData_ = (value == GenerateFlowFile::DATA_FORMAT_TEXT);
+  }
+  if (context->getProperty(UniqueFlowFiles.getName(), uniqueFlowFile_)) {
+    logger_->log_trace("Unique Flow files is configured to be %i", uniqueFlowFile_);
+  }
+
+  if (!uniqueFlowFile_) {
+    data_.resize(fileSize_);
+    generateData(data_, textData_);
+  }
+}
+
+void GenerateFlowFile::onTrigger(core::ProcessContext *context, core::ProcessSession *session) {
+  for (uint64_t i = 0; i < batchSize_; i++) {
+    // For each batch
+    std::shared_ptr<FlowFileRecord> flowFile = std::static_pointer_cast<FlowFileRecord>(session->create());
+    if (!flowFile) {
+      logger_->log_error("Failed to create flowfile!");
+      return;
+    }
+    if (fileSize_ > 0) {
+      if (uniqueFlowFile_) {
+        std::vector<char> data(fileSize_);
+        generateData(data, textData_);
+        GenerateFlowFile::WriteCallback callback(std::move(data));
+        session->write(flowFile, &callback);
+      } else {
+        GenerateFlowFile::WriteCallback callback(data_);
+        session->write(flowFile, &callback);
+      }
+    }
+    session->transfer(flowFile, Success);
+  }
+}
+
 } /* namespace processors */
 } /* namespace minifi */
 } /* namespace nifi */

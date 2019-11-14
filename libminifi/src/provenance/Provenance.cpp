@@ -216,11 +216,11 @@ bool ProvenanceEventRecord::Serialize(org::apache::nifi::minifi::io::DataStream&
       return false;
     }
   }
+
+  return true;
 }
 
 bool ProvenanceEventRecord::Serialize(const std::shared_ptr<core::SerializableComponent> &repo) {
-
-
   org::apache::nifi::minifi::io::DataStream outStream;
 
   Serialize(outStream);
@@ -381,24 +381,22 @@ bool ProvenanceEventRecord::DeSerialize(const uint8_t *buffer, const size_t buff
 }
 
 void ProvenanceReporter::commit() {
-  if(repo_->isNoop()) {
+  if (repo_->isNoop()) {
     return;
   }
 
-  if(repo_->isFull()) {
+  if (repo_->isFull()) {
     logger_->log_debug("Provenance Repository is full");
     return;
   }
 
-  std::vector<std::tuple<std::string, const uint8_t *, size_t>> flowData;
-  std::list<io::DataStream> streams;
+  std::vector<std::pair<std::string, std::unique_ptr<io::DataStream>>> flowData;
 
   for (auto& event : _events) {
-    streams.emplace_back();
-    event->Serialize(streams.back());
+    std::unique_ptr<io::DataStream> stramptr(new io::DataStream());
+    event->Serialize(*stramptr.get());
 
-    flowData.emplace_back(event->getUUIDStr(), const_cast<uint8_t *>(streams.back().getBuffer()),
-                          streams.back().getSize());
+    flowData.emplace_back(event->getUUIDStr(), std::move(stramptr));
   }
   repo_->MultiPut(flowData);
 }

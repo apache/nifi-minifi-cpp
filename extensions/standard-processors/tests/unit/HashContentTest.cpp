@@ -18,7 +18,6 @@
 
 #ifdef OPENSSL_SUPPORT
 
-#include <uuid/uuid.h>
 #include <fstream>
 #include <map>
 #include <memory>

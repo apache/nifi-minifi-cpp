@@ -18,7 +18,6 @@
 
 #include "CaptureRTSPFrame.h"
 
-#include <uuid/uuid.h>
 #include <map>
 #include <memory>
 #include <fstream>
