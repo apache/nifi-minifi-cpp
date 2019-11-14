@@ -135,14 +135,14 @@ core::Property ConsumeWindowsEventLog::OutputFormat(
 core::Property ConsumeWindowsEventLog::BatchCommitSize(
   core::PropertyBuilder::createProperty("Batch Commit Size")->
   isRequired(false)->
-  withDefaultValue<int>(1000)->
+  withDefaultValue<uint32_t>(1000U)->
   withDescription("Maximum number of Events to consume and create to Flow Files from before committing.")->
   build());
 
 core::Relationship ConsumeWindowsEventLog::Success("success", "Relationship for successfully consumed events.");
 
 ConsumeWindowsEventLog::ConsumeWindowsEventLog(const std::string& name, utils::Identifier uuid)
-  : core::Processor(name, uuid), logger_(logging::LoggerFactory<ConsumeWindowsEventLog>::getLogger()), apply_identifier_function_(false), batch_commit_size_(0) {
+  : core::Processor(name, uuid), logger_(logging::LoggerFactory<ConsumeWindowsEventLog>::getLogger()), apply_identifier_function_(false), batch_commit_size_(0U) {
 
   char buff[MAX_COMPUTERNAME_LENGTH + 1];
   DWORD size = sizeof(buff);
@@ -452,7 +452,7 @@ int ConsumeWindowsEventLog::processQueue(const std::shared_ptr<core::ProcessSess
 
     flowFileCount++;
 
-    if (batch_commit_size_ != 0 && (flowFileCount % batch_commit_size_ == 0)) {
+    if (batch_commit_size_ != 0U && (flowFileCount % batch_commit_size_ == 0)) {
       auto before_commit = std::chrono::high_resolution_clock::now();
       session->commit();
       logger_->log_debug("processQueue commit took %llu ms",

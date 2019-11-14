@@ -133,7 +133,7 @@ private:
   std::mutex cache_mutex_;
   std::map<std::string, wel::WindowsEventLogHandler > providers_;
 
-  int batch_commit_size_;
+  uint32_t batch_commit_size_;
 
   bool writeXML_;
   bool writePlainText_;
