@@ -135,7 +135,7 @@ core::Property ConsumeWindowsEventLog::OutputFormat(
 core::Property ConsumeWindowsEventLog::BatchCommitSize(
   core::PropertyBuilder::createProperty("Batch Commit Size")->
   isRequired(false)->
-  withDefaultValue<uint32_t>(1000U)->
+  withDefaultValue<uint64_t>(1000U)->
   withDescription("Maximum number of Events to consume and create to Flow Files from before committing.")->
   build());
 
