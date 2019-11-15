@@ -868,6 +868,8 @@ void ProcessSession::commit() {
     _clonedFlowFiles.clear();
     _deletedFlowFiles.clear();
     _originalFlowFiles.clear();
+
+    _transferRelationship.clear();
     // persistent the provenance report
     this->provenance_report_->commit();
     logger_->log_trace("ProcessSession committed for %s", process_context_->getProcessorNode()->getName());
