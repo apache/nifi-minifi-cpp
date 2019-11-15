@@ -19,6 +19,7 @@
 #include "WindowsEventLog.h"
 #include "UnicodeConversion.h"
 #include "utils/Deleters.h"
+#include "utils/ScopeGuard.h"
 #include <algorithm>
 
 namespace org {
@@ -36,6 +37,12 @@ void WindowsEventLogMetadata::renderMetadata() {
   std::unique_ptr< EVT_VARIANT, utils::FreeDeleter> rendered_values;
 
   auto context = EvtCreateRenderContext(0, NULL, EvtRenderContextSystem);
+  if (context == NULL) {
+    return;
+  }
+  utils::ScopeGuard contextGuard([&context](){
+    EvtClose(context);
+  });
   if (!EvtRender(context, event_ptr_, EvtRenderEventValues, dwBufferSize, nullptr, &dwBufferUsed, &dwPropertyCount))
   {
     if (ERROR_INSUFFICIENT_BUFFER == (status = GetLastError()))
