@@ -59,6 +59,12 @@ ProcessGroup::ProcessGroup(ProcessGroupType type, std::string name, utils::Ident
   }
 
   yield_period_msec_ = 0;
+
+  if (parent_process_group_ != 0) {
+    onschedule_retry_msec_ = parent_process_group_->getOnScheduleRetryPeriod();
+  } else {
+    onschedule_retry_msec_ = ONSCHEDULE_RETRY_INTERVAL;
+  }
   transmitting_ = false;
   transport_protocol_ = "RAW";
 
@@ -74,6 +80,7 @@ ProcessGroup::ProcessGroup(ProcessGroupType type, std::string name)
   id_generator_->generate(uuid_);
 
   yield_period_msec_ = 0;
+  onschedule_retry_msec_ = ONSCHEDULE_RETRY_INTERVAL;
   transmitting_ = false;
   transport_protocol_ = "RAW";
 
@@ -81,6 +88,10 @@ ProcessGroup::ProcessGroup(ProcessGroupType type, std::string name)
 }
 
 ProcessGroup::~ProcessGroup() {
+  if (onScheduleTimer_) {
+    onScheduleTimer_->stop();
+  }
+
   for (auto &&connection : connections_) {
     connection->drain();
   }
@@ -136,13 +147,14 @@ void ProcessGroup::removeProcessGroup(ProcessGroup *child) {
   }
 }
 
-void ProcessGroup::startProcessing(const std::shared_ptr<TimerDrivenSchedulingAgent> timeScheduler, const std::shared_ptr<EventDrivenSchedulingAgent> &eventScheduler,
-                                   const std::shared_ptr<CronDrivenSchedulingAgent> &cronScheduler) {
-  std::lock_guard<std::recursive_mutex> lock(mutex_);
+void ProcessGroup::startProcessingProcessors(const std::shared_ptr<TimerDrivenSchedulingAgent> timeScheduler,
+    const std::shared_ptr<EventDrivenSchedulingAgent> &eventScheduler, const std::shared_ptr<CronDrivenSchedulingAgent> &cronScheduler) {
+  std::unique_lock<std::recursive_mutex> lock(mutex_);
 
-  try {
-    // Start all the processor node, input and output ports
-    for (const auto &processor : processors_) {
+  std::set<std::shared_ptr<Processor> > failed_processors;
+
+  for (const auto &processor : failed_processors_) {
+    try {
       logger_->log_debug("Starting %s", processor->getName());
       switch (processor->getSchedulingStrategy()) {
         case TIMER_DRIVEN:
@@ -156,6 +168,47 @@ void ProcessGroup::startProcessing(const std::shared_ptr<TimerDrivenSchedulingAg
           break;
       }
     }
+    catch (const std::exception &e) {
+      logger_->log_error("Failed to start processor %s (%s): %s", processor->getUUIDStr(), processor->getName(), e.what());
+      failed_processors.insert(processor);
+    }
+    catch (...) {
+      logger_->log_error("Failed to start processor %s (%s)", processor->getUUIDStr(), processor->getName());
+      failed_processors.insert(processor);
+    }
+  }
+  failed_processors_ = std::move(failed_processors);
+
+  for (auto& processor : failed_processors_) {
+    try {
+      processor->onUnSchedule();
+    } catch (...) {
+      logger_->log_error("Exception occured during unscheduling processor: %s (%s)", processor->getUUIDStr(), processor->getName());
+    }
+  }
+
+  if (!onScheduleTimer_ && !failed_processors_.empty() && onschedule_retry_msec_ > 0) {
+    logger_->log_info("Retrying failed processors in %lld msec", onschedule_retry_msec_.load());
+    auto func = [this, eventScheduler, cronScheduler, timeScheduler]() {
+      this->startProcessingProcessors(timeScheduler, eventScheduler, cronScheduler);
+    };
+    onScheduleTimer_.reset(new utils::CallBackTimer(std::chrono::milliseconds(onschedule_retry_msec_), func));
+    onScheduleTimer_->start();
+  } else if (failed_processors_.empty() && onScheduleTimer_) {
+    onScheduleTimer_->stop();
+  }
+}
+
+void ProcessGroup::startProcessing(const std::shared_ptr<TimerDrivenSchedulingAgent> timeScheduler, const std::shared_ptr<EventDrivenSchedulingAgent> &eventScheduler,
+                                   const std::shared_ptr<CronDrivenSchedulingAgent> &cronScheduler) {
+  std::lock_guard<std::recursive_mutex> lock(mutex_);
+
+  try {
+    failed_processors_ = processors_;  // All processors are marked as failed.
+
+    // Start all the processor node, input and output ports
+    startProcessingProcessors(timeScheduler, eventScheduler, cronScheduler);
+
     // Start processing the group
     for (auto processGroup : child_process_groups_) {
       processGroup->startProcessing(timeScheduler, eventScheduler, cronScheduler);
@@ -172,6 +225,12 @@ void ProcessGroup::startProcessing(const std::shared_ptr<TimerDrivenSchedulingAg
 void ProcessGroup::stopProcessing(const std::shared_ptr<TimerDrivenSchedulingAgent> timeScheduler, const std::shared_ptr<EventDrivenSchedulingAgent> &eventScheduler,
                                   const std::shared_ptr<CronDrivenSchedulingAgent> &cronScheduler) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
+
+  if (onScheduleTimer_) {
+    onScheduleTimer_->stop();
+  }
+
+  onScheduleTimer_.reset();
 
   try {
     // Stop all the processor node, input and output ports

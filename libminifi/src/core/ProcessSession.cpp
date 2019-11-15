@@ -909,12 +909,12 @@ void ProcessSession::rollback() {
     _addedFlowFiles.clear();
     _updatedFlowFiles.clear();
     _deletedFlowFiles.clear();
-    logger_->log_debug("ProcessSession rollback for %s", process_context_->getProcessorNode()->getName());
+    logger_->log_warn("ProcessSession rollback for %s executed", process_context_->getProcessorNode()->getName());
   } catch (std::exception &exception) {
-    logger_->log_debug("Caught Exception %s", exception.what());
+    logger_->log_warn("Caught Exception during process session rollback: %s", exception.what());
     throw;
   } catch (...) {
-    logger_->log_debug("Caught Exception during process session roll back");
+    logger_->log_warn("Caught Exception during process session rollback");
     throw;
   }
 }

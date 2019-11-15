@@ -25,17 +25,40 @@
 #include "io/ClientSocket.h"
 #include "core/ClassLoader.h"
 
+// Include some processor headers to make sure they are part of the manifest
+#include "HashContent.h"
+#include "GetFile.h"
+#include "TailFile.h"
+
 TEST_CASE("Test Required", "[required]") {
   minifi::state::response::ComponentManifest manifest("minifi-system");
   auto serialized = manifest.serialize();
   REQUIRE(serialized.size() > 0);
   const auto &resp = serialized[0];
   REQUIRE(resp.children.size() > 0);
-  const auto &processors = resp.children[0];
+  size_t processorIndex = resp.children.size();
+  for (size_t i = 0; i < resp.children.size(); ++i) {
+    if (resp.children[i].name == "processors") {
+      processorIndex = i;
+      break;
+    }
+  }
+  REQUIRE(processorIndex < resp.children.size());
+
+  const auto &processors = resp.children[processorIndex];
   REQUIRE(processors.children.size() > 0);
-  const auto &proc_0 = processors.children[0];
-  REQUIRE(proc_0.children.size() > 0);
-  const auto &prop_descriptors = proc_0.children[0];
+  size_t getFileIndex = processors.children.size();
+  for (size_t i = 0; i < processors.children.size();  ++i) {
+    if (processors.children[i].name == "org.apache.nifi.minifi.processors.GetFile") {
+      getFileIndex = i;
+      break;
+    }
+  }
+
+  REQUIRE(getFileIndex < processors.children.size());
+  const auto &getFileProc = processors.children[getFileIndex];
+  REQUIRE(getFileProc.children.size() > 0);
+  const auto &prop_descriptors = getFileProc.children[0];
   REQUIRE(prop_descriptors.children.size() > 0);
   const auto &prop_0 = prop_descriptors.children[0];
   REQUIRE(prop_0.children.size() >= 3);

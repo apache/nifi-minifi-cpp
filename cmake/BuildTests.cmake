@@ -99,7 +99,7 @@ SET(SPD_LIB spd_lib)
 add_library(${SPD_LIB} STATIC ${SPD_SOURCES})
 
 SET(TEST_BASE_LIB test_base)
-add_library(${TEST_BASE_LIB} STATIC "${TEST_DIR}/TestBase.cpp" "${TEST_DIR}/RandomServerSocket.cpp")
+add_library(${TEST_BASE_LIB} STATIC "${TEST_DIR}/TestBase.cpp" "${TEST_DIR}/RandomServerSocket.cpp" "${TEST_DIR}/KamikazeProcessor.cpp")
 target_include_directories(${TEST_BASE_LIB} BEFORE PRIVATE "${CMAKE_SOURCE_DIR}/thirdparty/catch")
 target_include_directories(${TEST_BASE_LIB} BEFORE PRIVATE "${CMAKE_SOURCE_DIR}/libminifi/include/")
 target_include_directories(${TEST_BASE_LIB} BEFORE PRIVATE "${CMAKE_SOURCE_DIR}/thirdparty/cron")
@@ -170,6 +170,9 @@ FOREACH(testfile ${INTEGRATION_TESTS})
   createTests("${testfilename}")
   MATH(EXPR INT_TEST_COUNT "${INT_TEST_COUNT}+1")
 ENDFOREACH()
+
+add_test(NAME OnScheduleErrorHandlingTests COMMAND OnScheduleErrorHandlingTests "${TEST_RESOURCES}/TestOnScheduleRetry.yml"  "${TEST_RESOURCES}/")
+
 message("-- Finished building ${INT_TEST_COUNT} integration test file(s)...")
 
 get_property(extensions GLOBAL PROPERTY EXTENSION-TESTS)
