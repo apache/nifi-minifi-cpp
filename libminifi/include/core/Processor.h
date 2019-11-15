@@ -253,6 +253,11 @@ class Processor : public Connectable, public ConfigurableComponent, public std::
   virtual void onSchedule(ProcessContext *context, ProcessSessionFactory *sessionFactory) {
   }
 
+  // Hook executed when onSchedule fails (throws). Configuration should be reset in this
+  virtual void onUnSchedule() {
+    notifyStop();
+  }
+
   // Check all incoming connections for work
   bool isWorkAvailable();
 

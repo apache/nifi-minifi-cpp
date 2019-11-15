@@ -36,6 +36,7 @@
 #include "controller/ControllerServiceMap.h"
 #include "utils/Id.h"
 #include "utils/HTTPClient.h"
+#include "utils/CallBackTimer.h"
 
 namespace org {
 namespace apache {
@@ -49,6 +50,8 @@ enum ProcessGroupType {
   REMOTE_PROCESS_GROUP,
   MAX_PROCESS_GROUP_TYPE
 };
+
+#define ONSCHEDULE_RETRY_INTERVAL 30000  // millisecs
 
 // ProcessGroup Class
 class ProcessGroup {
@@ -143,6 +146,15 @@ class ProcessGroup {
   uint64_t getYieldPeriodMsec(void) {
     return (yield_period_msec_);
   }
+
+  void setOnScheduleRetryPeriod(int64_t period) {
+    onschedule_retry_msec_ = period;
+  }
+
+  int64_t getOnScheduleRetryPeriod() {
+    return onschedule_retry_msec_;
+  }
+
   // Set UUID
   void setUUID(utils::Identifier &uuid) {
     uuid_ = uuid;
@@ -215,6 +227,8 @@ class ProcessGroup {
   void getConnections(std::map<std::string, std::shared_ptr<Connectable>> &connectionMap);
 
  protected:
+  void startProcessingProcessors(const std::shared_ptr<TimerDrivenSchedulingAgent> timeScheduler, const std::shared_ptr<EventDrivenSchedulingAgent> &eventScheduler, const std::shared_ptr<CronDrivenSchedulingAgent> &cronScheduler);
+
   // A global unique identifier
   utils::Identifier uuid_;
   // Processor Group Name
@@ -225,6 +239,7 @@ class ProcessGroup {
   ProcessGroupType type_;
   // Processors (ProcessNode) inside this process group which include Input/Output Port, Remote Process Group input/Output port
   std::set<std::shared_ptr<Processor> > processors_;
+  std::set<std::shared_ptr<Processor> > failed_processors_;
   std::set<ProcessGroup *> child_process_groups_;
   // Connections between the processor inside the group;
   std::set<std::shared_ptr<Connection> > connections_;
@@ -233,6 +248,8 @@ class ProcessGroup {
   // Yield Period in Milliseconds
   std::atomic<uint64_t> yield_period_msec_;
   std::atomic<uint64_t> timeOut_;
+  std::atomic<int64_t> onschedule_retry_msec_;
+
   // URL
   std::string url_;
   // local network interface
@@ -258,6 +275,7 @@ class ProcessGroup {
   ProcessGroup(const ProcessGroup &parent);
   ProcessGroup &operator=(const ProcessGroup &parent);
   static std::shared_ptr<utils::IdGenerator> id_generator_;
+  std::unique_ptr<utils::CallBackTimer> onScheduleTimer_;
 };
 } /* namespace core */
 } /* namespace minifi */

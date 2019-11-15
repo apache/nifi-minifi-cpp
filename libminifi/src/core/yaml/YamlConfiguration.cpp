@@ -61,6 +61,21 @@ core::ProcessGroup *YamlConfiguration::parseRootProcessGroupYaml(YAML::Node root
 
   this->name_ = flowName;
 
+  if (rootFlowNode["onschedule retry interval"]) {
+    int64_t onScheduleRetryPeriodValue = -1;
+    std::string onScheduleRetryPeriod = rootFlowNode["onschedule retry interval"].as<std::string>();
+    logger_->log_debug("parseRootProcessGroup: onschedule retry period => [%s]", onScheduleRetryPeriod);
+
+    core::TimeUnit unit;
+
+    if (core::Property::StringToTime(onScheduleRetryPeriod, onScheduleRetryPeriodValue, unit)
+        && core::Property::ConvertTimeUnitToMS(onScheduleRetryPeriodValue, unit, onScheduleRetryPeriodValue)
+        && group) {
+      logger_->log_debug("parseRootProcessGroup: onschedule retry => [%ll] ms", onScheduleRetryPeriodValue);
+      group->setOnScheduleRetryPeriod(onScheduleRetryPeriodValue);
+    }
+  }
+
   return group.release();
 }
 
