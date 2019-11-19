@@ -33,9 +33,7 @@
 #include <codecvt>
 #include "utils/OsUtils.h"
 #include <Objbase.h>
-
-
-//#import <msxml6.dll>
+#include <mutex>
 
 namespace org {
 namespace apache {
@@ -47,7 +45,10 @@ struct EventRender {
 	std::map<std::string, std::string> matched_fields_;
 	std::string text_;
 	std::string rendered_text_;
+  std::wstring bookmarkXml_;
 };
+
+class Bookmark;
 
 //! ConsumeWindowsEventLog Class
 class ConsumeWindowsEventLog : public core::Processor
@@ -78,6 +79,7 @@ public:
   static core::Property EventHeader;
   static core::Property OutputFormat;
   static core::Property BatchCommitSize;
+  static core::Property BookmarkRootDirectory;
 
   //! Supported Relationships
   static core::Relationship Success;
@@ -101,12 +103,11 @@ protected:
   bool subscribe(const std::shared_ptr<core::ProcessContext> &context);
   void unsubscribe();
   int processQueue(const std::shared_ptr<core::ProcessSession> &session);
-  
   wel::WindowsEventLogHandler getEventLogHandler(const std::string & name);
-
   bool insertHeaderName(wel::METADATA_NAMES &header, const std::string &key, const std::string &value);
-
   void LogWindowsError();
+  void processEvent(EVT_HANDLE eventHandle);
+  bool processEventsAfterBookmark(EVT_HANDLE hEventResults, const std::wstring& channel, const std::wstring& query);
 
   static constexpr const char * const XML = "XML";
   static constexpr const char * const Both = "Both";
@@ -118,6 +119,7 @@ private:
   wel::METADATA_NAMES header_names_;
   std::string header_delimiter_;
   std::string channel_;
+  std::string query_;
   std::shared_ptr<logging::Logger> logger_;
   std::string regex_;
   bool resolve_as_attributes_;
@@ -132,11 +134,12 @@ private:
   std::shared_ptr<core::ProcessSessionFactory> sessionFactory_;
   std::mutex cache_mutex_;
   std::map<std::string, wel::WindowsEventLogHandler > providers_;
-
   uint64_t batch_commit_size_;
 
   bool writeXML_;
   bool writePlainText_;
+  std::unique_ptr<Bookmark> pBookmark_;
+  std::mutex onTriggerMutex_;
 };
 
 REGISTER_RESOURCE(ConsumeWindowsEventLog, "Windows Event Log Subscribe Callback to receive FlowFiles from Events on Windows.");
