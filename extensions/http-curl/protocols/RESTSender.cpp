@@ -93,15 +93,23 @@ const C2Payload RESTSender::sendPayload(const std::string url, const Direction d
   if (url.empty()) {
     return C2Payload(payload.getOperation(), state::UpdateState::READ_ERROR, true);
   }
+
+  // Callback for transmit. Declared in order to destruct in proper order - take care!
+  std::unique_ptr<utils::ByteInputCallBack> input = nullptr;
+  std::unique_ptr<utils::HTTPUploadCallback> callback = nullptr;
+
+  // Callback for transfer. Declared in order to destruct in proper order - take care!
+  std::unique_ptr<utils::FileOutputCallback> file_callback = nullptr;
+  utils::HTTPReadCallback read;
+
+  // Client declared last to make sure calbacks are still available when client is destructed
   utils::HTTPClient client(url, ssl_context_service_);
   client.setKeepAliveProbe(2);
   client.setKeepAliveIdle(2);
   client.setConnectionTimeout(2);
-  std::unique_ptr<utils::ByteInputCallBack> input = nullptr;
-  std::unique_ptr<utils::HTTPUploadCallback> callback = nullptr;
   if (direction == Direction::TRANSMIT) {
     input = std::unique_ptr<utils::ByteInputCallBack>(new utils::ByteInputCallBack());
-    callback = std::unique_ptr<utils::HTTPUploadCallback>(new utils::HTTPUploadCallback);
+    callback = std::unique_ptr<utils::HTTPUploadCallback>(new utils::HTTPUploadCallback());
     input->write(outputConfig);
     callback->ptr = input.get();
     callback->pos = 0;
@@ -120,8 +128,6 @@ const C2Payload RESTSender::sendPayload(const std::string url, const Direction d
     client.set_request_method("GET");
   }
 
-  std::unique_ptr<utils::FileOutputCallback> file_callback = nullptr;
-  utils::HTTPReadCallback read;
   if (payload.getOperation() == TRANSFER) {
     utils::file::FileManager file_man;
     auto file = file_man.unique_file(true);
