@@ -1,6 +1,6 @@
 /**
- * @file ExecuteSQL.h
- * ExecuteSQL class declaration
+ * @file PutSQL.h
+ * PutSQL class declaration
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -34,17 +34,17 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-//! ExecuteSQL Class
-class ExecuteSQL : public core::Processor {
+//! PutSQL Class
+class PutSQL : public core::Processor {
  public:
   //! Constructor
   /*!
    * Create a new processor
    */
-  explicit ExecuteSQL(const std::string& name, utils::Identifier uuid = utils::Identifier());
+  explicit PutSQL(const std::string& name, utils::Identifier uuid = utils::Identifier());
 
   //! Destructor
-  virtual ~ExecuteSQL();
+  virtual ~PutSQL();
 
   //! Processor Name
   static const std::string ProcessorName;
@@ -66,32 +66,13 @@ class ExecuteSQL : public core::Processor {
  private:
   std::shared_ptr<sql::controllers::DatabaseService> database_service_;
   // Logger
-  int max_rows_;
   std::shared_ptr<logging::Logger> logger_;
   std::string db_controller_service_;
-  std::string sqlSelectQuery_;
+  std::vector<std::string> sqlStatements_;
   bool onScheduleOK_{false};
-
-
-  class WriteCallback : public OutputStreamCallback {
-  public:
-    WriteCallback(const char *data, uint64_t size)
-      : _data(const_cast<char*>(data)),
-      _dataSize(size) {
-    }
-    char *_data;
-    uint64_t _dataSize;
-    int64_t process(std::shared_ptr<io::BaseStream> stream) {
-      int64_t ret = 0;
-      if (_data && _dataSize > 0)
-        ret = stream->write(reinterpret_cast<uint8_t*>(_data), _dataSize);
-      return ret;
-    }
-  };
-
 };
 
-REGISTER_RESOURCE(ExecuteSQL, "ExecuteSQL to execute SELECT statement via ODBC.");
+REGISTER_RESOURCE(PutSQL, "PutSQL to execute SQL command via ODBC.");
 
 } /* namespace processors */
 } /* namespace minifi */

@@ -43,14 +43,26 @@ class ODBCConnection : public sql::Connection {
   }
   virtual ~ODBCConnection() {
   }
-  virtual std::unique_ptr<sql::Statement> prepareStatement(const std::string &query) const {
-	// can't do the lookup since we've statically linked the back-end
-    static const soci::backend_factory &backEnd = *soci::factory_odbc();
-    soci::connection_parameters parameters(backEnd, connection_string_);
-    parameters.set_option(soci::odbc_option_driver_complete, "0" /* SQL_DRIVER_NOPROMPT */);
-    std::unique_ptr<soci::session> sql = std::unique_ptr<soci::session>(new soci::session(parameters));
-    return std::unique_ptr<sql::Statement>(new Statement(sql, query));
+
+
+  std::unique_ptr<sql::Statement> prepareStatement(const std::string &query) const override {
+    return std::make_unique<sql::Statement>(std::make_unique<soci::session>(getSessionParameters()), query);
   }
+
+  std::unique_ptr<Session> getSession() const override {
+    return std::make_unique<sql::Session>(std::make_unique<soci::session>(getSessionParameters()));
+  }
+
+ private:
+   const soci::connection_parameters getSessionParameters() const {
+     static const soci::backend_factory &backEnd = *soci::factory_odbc();
+
+     soci::connection_parameters parameters(backEnd, connection_string_);
+     parameters.set_option(soci::odbc_option_driver_complete, "0" /* SQL_DRIVER_NOPROMPT */);
+
+     return parameters;
+   }
+
  private:
   std::string connection_string_;
 };
