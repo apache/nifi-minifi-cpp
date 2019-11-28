@@ -18,6 +18,7 @@
 
 #ifndef EXTENSIONS_COAP_SERVER_COAPSERVER_H_
 #define EXTENSIONS_COAP_SERVER_COAPSERVER_H_
+
 #include "core/Connectable.h"
 #include "coap_server.h"
 #include "coap_message.h"
@@ -25,17 +26,18 @@
 #include <functional>
 #include <thread>
 #include <future>
+
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
 namespace coap {
 
-enum METHOD {
-  GET,
-  POST,
-  PUT,
-  DELETE
+enum class Method {
+  Get,
+  Post,
+  Put,
+  Delete
 };
 
 /**
@@ -133,19 +135,19 @@ class CoapServer : public core::Connectable {
     });
   }
 
-  void add_endpoint(const std::string &path, METHOD method, std::function<CoapResponse(CoapQuery)> functor) {
+  void add_endpoint(const std::string &path, Method method, std::function<CoapResponse(CoapQuery)> functor) {
     unsigned char mthd = COAP_REQUEST_POST;
     switch (method) {
-      case GET:
+      case Method::Get:
         mthd = COAP_REQUEST_GET;
         break;
-      case POST:
+      case Method::Post:
         mthd = COAP_REQUEST_POST;
         break;
-      case PUT:
+      case Method::Put:
         mthd = COAP_REQUEST_PUT;
         break;
-      case DELETE:
+      case Method::Delete:
         mthd = COAP_REQUEST_DELETE;
         break;
     }
@@ -159,19 +161,19 @@ class CoapServer : public core::Connectable {
     }
   }
 
-  void add_endpoint(METHOD method, std::function<CoapResponse(CoapQuery)> functor) {
+  void add_endpoint(Method method, std::function<CoapResponse(CoapQuery)> functor) {
     unsigned char mthd = COAP_REQUEST_POST;
     switch (method) {
-      case GET:
+      case Method::Get:
         mthd = COAP_REQUEST_GET;
         break;
-      case POST:
+      case Method::Post:
         mthd = COAP_REQUEST_POST;
         break;
-      case PUT:
+      case Method::Put:
         mthd = COAP_REQUEST_PUT;
         break;
-      case DELETE:
+      case Method::Delete:
         mthd = COAP_REQUEST_DELETE;
         break;
     }

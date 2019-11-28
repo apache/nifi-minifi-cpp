@@ -1,0 +1,93 @@
+diff -rupN orig/CMakeLists.txt patched/CMakeLists.txt
+--- orig/CMakeLists.txt	1970-01-01 01:00:00.000000000 +0100
++++ patched/CMakeLists.txt	2019-11-21 17:42:30.000000000 +0100
+@@ -0,0 +1,77 @@
++cmake_minimum_required(VERSION 3.10)
++
++project(libcoap)
++
++set(SOURCES src/address.c
++            src/async.c
++            src/block.c
++            src/coap_debug.c
++            src/coap_event.c
++            src/coap_hashkey.c
++            src/coap_gnutls.c
++            src/coap_io.c
++            src/coap_notls.c
++            src/coap_openssl.c
++            src/coap_session.c
++            src/coap_time.c
++            src/coap_tinydtls.c
++            src/encode.c
++            src/mem.c
++            src/net.c
++            src/option.c
++            src/pdu.c
++            src/resource.c
++            src/str.c
++            src/subscribe.c
++            src/uri.c)
++if(WIN32)
++  configure_file(include/coap2/coap.h.windows include/coap2/coap.h COPYONLY)
++  configure_file(coap_config.h.windows coap_config.h COPYONLY)
++elseif(APPLE)
++  configure_file(include/coap2/coap.h.macos include/coap2/coap.h COPYONLY)
++  configure_file(coap_config.h.macos coap_config.h COPYONLY)
++endif()
++
++set(PUBLIC_HEADERS include/coap2/address.h
++                   include/coap2/async.h
++                   include/coap2/bits.h
++                   include/coap2/block.h
++                   ${CMAKE_BINARY_DIR}/include/coap2/coap.h
++                   include/coap2/coap_debug.h
++                   include/coap2/coap_dtls.h
++                   include/coap2/coap_event.h
++                   include/coap2/coap_forward_decls.h
++                   include/coap2/coap_hashkey.h
++                   include/coap2/coap_io.h
++                   include/coap2/coap_mutex.h
++                   include/coap2/coap_session.h
++                   include/coap2/coap_time.h
++                   include/coap2/encode.h
++                   include/coap2/libcoap.h
++                   include/coap2/mem.h
++                   include/coap2/net.h
++                   include/coap2/option.h
++                   include/coap2/pdu.h
++                   include/coap2/prng.h
++                   include/coap2/resource.h
++                   include/coap2/str.h
++                   include/coap2/subscribe.h
++                   include/coap2/uri.h
++                   include/coap2/uthash.h)
++
++add_library(coap STATIC ${SOURCES})
++
++set_property(TARGET coap PROPERTY POSITION_INDEPENDENT_CODE ON)
++
++target_include_directories(coap
++                            PRIVATE
++                              ${CMAKE_BINARY_DIR}
++                            PUBLIC
++                              include/coap2
++                              ${CMAKE_BINARY_DIR}/include/coap2/)
++
++install(TARGETS coap
++    ARCHIVE DESTINATION lib
++)
++
++install(FILES ${PUBLIC_HEADERS} DESTINATION include/coap2)
+diff -rupN orig/coap_config.h.windows patched/coap_config.h.windows
+--- orig/coap_config.h.windows	2019-11-21 17:42:00.000000000 +0100
++++ patched/coap_config.h.windows	2019-11-22 09:11:43.000000000 +0100
+@@ -67,7 +67,7 @@
+ #define snprintf _snprintf
+ #endif
+ 
+-#define HAVE_OPENSSL 1
++/* #define HAVE_OPENSSL 1 */
+ 
+ /* Define to the address where bug reports for this package should be sent. */
+ #define PACKAGE_BUGREPORT "libcoap-developers@lists.sourceforge.net"

@@ -28,12 +28,18 @@ typedef unsigned char method_t;
 #include "coap2/coap.h"
 #include "coap2/uri.h"
 #include "coap2/address.h"
+
 #include <stdio.h>
+#include <string.h>
+#ifdef WIN32
+#include <winsock2.h>
+#else
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include <string.h>
 #include <netdb.h>
+#endif
+
 #include "coap_message.h"
 
 

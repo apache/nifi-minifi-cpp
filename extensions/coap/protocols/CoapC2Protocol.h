@@ -35,9 +35,6 @@
 #include "coap2/uri.h"
 #include "coap2/address.h"
 #include <stdio.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
 #include <string.h>
 #include "protocols/RESTSender.h"
 
