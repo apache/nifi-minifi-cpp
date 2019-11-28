@@ -39,7 +39,7 @@ class OnScheduleErrorHandlingTests : public IntegrationBase {
           occurances++;
         }
       }
-    } while (pos != std::string::npos && pos < logs.length());
+    } while (pos != std::string::npos);
 
     assert(occurances > 1);  // Verify retry of onSchedule and onUnSchedule calls
 
