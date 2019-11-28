@@ -62,7 +62,7 @@ static core::Property MaxRowsPerFlowFile(
 	core::PropertyBuilder::createProperty("Max Rows Per Flow File")->isRequired(true)->withDefaultValue<int>(0)->withDescription(
 		"The maximum number of result rows that will be included intoi a flow file. If zero then all will be placed into the flow file")->supportsExpressionLanguage(true)->build());
 
-core::Relationship ExecuteSQL::Success("success", "Relationship for successfully consumed events.");
+core::Relationship ExecuteSQL::Success("success", "Successfully created FlowFile from SQL query result set.");
 
 ExecuteSQL::ExecuteSQL(const std::string& name, utils::Identifier uuid)
     : core::Processor(name, uuid), max_rows_(0),
@@ -89,12 +89,12 @@ void ExecuteSQL::onSchedule(const std::shared_ptr<core::ProcessContext> &context
   if (database_service_ == nullptr) {
     logger_->log_error("'DB Controller Service' must be defined");
   } else {
-    on_schedule_ok = true;
+    onScheduleOK_ = true;
   }
 }
 
 void ExecuteSQL::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
-  if (!on_schedule_ok) {
+  if (!onScheduleOK_) {
     logger_->log_error("'DB Controller Service' must be defined, 'onTrigger' is not processed.");
     return;
   }
@@ -102,33 +102,36 @@ void ExecuteSQL::onTrigger(const std::shared_ptr<core::ProcessContext> &context,
   if (database_service_) {
     std::unique_ptr<sql::Connection> connection = database_service_->getConnection();
     if (connection) {
-      auto statement = connection->prepareStatement(sqlSelectQuery_);
+      try {
+        auto statement = connection->prepareStatement(sqlSelectQuery_);
 
-      auto rowset = statement->execute();
+        auto rowset = statement->execute();
 
-      int count = 0;
-      size_t row_count = 0;
-      std::stringstream outputStream;
-      sql::JSONSQLWriter writer(rowset, &outputStream);
-      // serialize the rows
-      do {
-        row_count = writer.serialize(max_rows_ == 0 ? std::numeric_limits<size_t>::max() : max_rows_);
-        count++;
-        if (row_count == 0)
-          break;
-        writer.write();
-        auto output = outputStream.str();
-        if (!output.empty()) {
-          WriteCallback writer(output.data(), output.size());
-          auto newflow = session->create();
-          newflow->addAttribute("executesql.resultset.index", std::to_string(row_count));
-          session->write(newflow, &writer);
-          session->transfer(newflow, Success);
-        }
-        outputStream.str("");
-        outputStream.clear();
-      } while (row_count > 0);
-    std::cout << "count: " << count << std::endl;
+        int count = 0;
+        size_t row_count = 0;
+        std::stringstream outputStream;
+        sql::JSONSQLWriter writer(rowset, &outputStream);
+        // serialize the rows
+        do {
+          row_count = writer.serialize(max_rows_ == 0 ? std::numeric_limits<size_t>::max() : max_rows_);
+          count++;
+          if (row_count == 0)
+            break;
+          writer.write();
+          auto output = outputStream.str();
+          if (!output.empty()) {
+            WriteCallback writer(output.data(), output.size());
+            auto newflow = session->create();
+            newflow->addAttribute("executesql.resultset.index", std::to_string(row_count));
+            session->write(newflow, &writer);
+            session->transfer(newflow, Success);
+          }
+          outputStream.str("");
+          outputStream.clear();
+        } while (row_count > 0);
+      } catch (std::exception& e) {
+        logger_->log_error(e.what());
+      }
     }
     else {
       context->yield();

@@ -21,6 +21,7 @@
 
 #include <memory>
 #include <soci.h>
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -42,7 +43,8 @@ class Statement {
 
   virtual ~Statement() {
   }
-  virtual soci::rowset<soci::row> execute(){
+
+  soci::rowset<soci::row> execute(){
     return sql_->prepare << query_;
   }
 
@@ -52,11 +54,42 @@ class Statement {
   std::unique_ptr<soci::session> sql_;
 };
 
+class Session {
+ public:
+
+  explicit Session(std::unique_ptr<soci::session>& sql)
+    : sql_(std::move(sql)) {
+  }
+
+  virtual ~Session() {
+  }
+
+  void begin() {
+    sql_->begin();
+  }
+
+  void commit() {
+    sql_->commit();
+  }
+
+  void rollback() {
+    sql_->rollback();
+  }
+
+  void execute(const std::string &statement) {
+    *sql_ << statement;
+  }
+
+protected:
+  std::unique_ptr<soci::session> sql_;
+};
+
 class Connection {
  public:
   virtual ~Connection() {
   }
   virtual std::unique_ptr<Statement> prepareStatement(const std::string &query) const = 0;
+  virtual std::unique_ptr<Session> getSession() const = 0;
 };
 
 } /* namespace sql */
