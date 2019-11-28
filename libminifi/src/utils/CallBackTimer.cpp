@@ -29,39 +29,56 @@ CallBackTimer::CallBackTimer(std::chrono::milliseconds interval) : execute_(fals
 }
 
 CallBackTimer::~CallBackTimer() {
-  std::lock_guard<std::recursive_mutex> guard(mtx_);
+  std::unique_lock<std::mutex> lk(mtx_);
   if (execute_ || thd_.joinable()) {
-    stop();
+    stop_inner(lk);
   }
 }
 
 void CallBackTimer::stop() {
-  std::lock_guard<std::recursive_mutex> guard(mtx_);
-  execute_ = false;
-  if (thd_.joinable()) {
-    thd_.join();
-  }
+  std::unique_lock<std::mutex> lk(mtx_);
+  stop_inner(lk);
 }
 
-void CallBackTimer::start(std::function<void(void)> func) {
-  std::lock_guard<std::recursive_mutex> guard(mtx_);
+void CallBackTimer::start(const std::function<void(void)>& func) {
+  std::unique_lock<std::mutex> lk(mtx_);
   if (execute_) {
-    stop();
+    stop_inner(lk);
+    lk.lock();
   }
 
   execute_ = true;
   thd_ = std::thread([this, func]() {
-                       std::this_thread::sleep_for(interval_);
+                       std::unique_lock<std::mutex> lk(mtx_);
                        while (execute_) {
+                         if (cv_.wait_for(lk, interval_, [this]{return !execute_;})) {
+                           break;
+                         }
                          func();
-                         std::this_thread::sleep_for(interval_);
                        }
                      });
 }
 
 bool CallBackTimer::is_running() const {
-  std::lock_guard<std::recursive_mutex> guard(mtx_);
+  std::lock_guard<std::mutex> guard(mtx_);
   return execute_ && thd_.joinable();
+}
+
+
+void CallBackTimer::stop_inner(std::unique_lock<std::mutex>& lk) {  // Private to make sure it's only called when the mutex is acquired
+  if (!lk.owns_lock()) {
+    throw std::invalid_argument("CallBackTimer::stop_inner was called without owning the provided lock!");
+  }
+
+  execute_ = false;
+  cv_.notify_all();
+
+  lk.unlock();
+
+  if (thd_.joinable()) {
+    thd_.join();
+  }
+
 }
 
 } /* namespace utils */
