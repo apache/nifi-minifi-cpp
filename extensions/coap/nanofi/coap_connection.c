@@ -17,6 +17,12 @@
  */
 #include "coap_connection.h"
 
+#ifdef WIN32
+#include <winsock2.h>
+#else
+#include <netdb.h>
+#endif
+
 CoapPDU *create_connection(uint8_t type, const char * const server, const char * const endpoint, int port, const CoapMessage * const message) {
   CoapPDU *pdu = (CoapPDU*) malloc(sizeof(CoapPDU));
 

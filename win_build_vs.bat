@@ -57,9 +57,9 @@ for %%x in (%*) do (
 	if [%%~x] EQU [/M] ( 
 	set installer_merge_modules=ON
     )
-	rem if [%%~x] EQU [/C] ( 
-	rem set build_coap=ON
-    rem )
+	if [%%~x] EQU [/C] ( 
+	set build_coap=ON
+    )
 	if [%%~x] EQU [/64] (
 	set build_platform=x64
 	set generator="Visual Studio 15 2017 Win64"

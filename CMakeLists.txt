@@ -318,7 +318,7 @@ endif()
 
 option(ENABLE_COAP "Enables the CoAP extension." OFF)
 if (ENABLE_ALL OR ENABLE_COAP STREQUAL "ON")
-	include(BundledLibCOAP)
+	include(BundledLibCoAP)
 	use_bundled_libcoap(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
 	createExtension(COAP-EXTENSION "COAP EXTENSIONS" "Enables LibCOAP Functionality." "extensions/coap" "extensions/coap/tests/")
 	if( NOT DISABLE_CURL)

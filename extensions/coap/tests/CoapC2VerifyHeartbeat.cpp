@@ -128,7 +128,7 @@ class VerifyCoAPServer : public CoapIntegrationBase {
     server = std::unique_ptr<minifi::coap::CoapServer>(new minifi::coap::CoapServer("127.0.0.1", newport));
 
 
-    server->add_endpoint(minifi::coap::METHOD::POST, [](minifi::coap::CoapQuery)->minifi::coap::CoapResponse {
+    server->add_endpoint(minifi::coap::Method::Post, [](minifi::coap::CoapQuery)->minifi::coap::CoapResponse {
       minifi::coap::CoapResponse response(205,0x00,0);
       return response;
 
@@ -165,7 +165,7 @@ class VerifyCoAPServer : public CoapIntegrationBase {
       responses.enqueue(std::move(response));
     }
 
-    server->add_endpoint("heartbeat", minifi::coap::METHOD::POST, [&](minifi::coap::CoapQuery)-> minifi::coap::CoapResponse {
+    server->add_endpoint("heartbeat", minifi::coap::Method::Post, [&](minifi::coap::CoapQuery)-> minifi::coap::CoapResponse {
       if (responses.size_approx() > 0) {
         minifi::coap::CoapResponse resp(500,0,0);;
         responses.try_dequeue(resp);

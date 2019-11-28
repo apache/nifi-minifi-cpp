@@ -28,6 +28,13 @@
 #include "utils/StringUtils.h"
 #include "protocols/CoapC2Protocol.h"
 
+class COAPObjectFactoryInitializer : public core::ObjectFactoryInitializer {
+ public:
+  bool initialize() override;
+
+  void deinitialize() override;
+};
+
 /**
  * Object factory class loader for this extension.
  * Can add extensions to the default class loader through REGISTER_RESOURCE,
@@ -43,25 +50,25 @@ class COAPObjectFactory : public core::ObjectFactory {
    * Gets the name of the object.
    * @return class name of processor
    */
-  virtual std::string getName() override{
+  std::string getName() override {
     return "COAPObjectFactory";
   }
 
-  virtual std::string getClassName() override{
+  std::string getClassName() override {
     return "COAPObjectFactory";
   }
   /**
    * Gets the class name for the object
    * @return class name for the processor.
    */
-  virtual std::vector<std::string> getClassNames() override{
+  std::vector<std::string> getClassNames() override {
     std::vector<std::string> class_names;
     class_names.push_back("CoapProtocol");
     class_names.push_back("CoapConnectorService");
     return class_names;
   }
 
-  virtual std::unique_ptr<ObjectFactory> assign(const std::string &class_name) override{
+  std::unique_ptr<ObjectFactory> assign(const std::string &class_name) override {
     if (utils::StringUtils::equalsIgnoreCase(class_name, "CoapProtocol")) {
       return std::unique_ptr<ObjectFactory>(new core::DefautObjectFactory<minifi::coap::c2::CoapProtocol>());
     } else if (utils::StringUtils::equalsIgnoreCase(class_name, "CoapConnectorService")) {
@@ -69,6 +76,10 @@ class COAPObjectFactory : public core::ObjectFactory {
     } else {
       return nullptr;
     }
+  }
+
+  std::unique_ptr<core::ObjectFactoryInitializer> getInitializer() override {
+    return std::unique_ptr<core::ObjectFactoryInitializer>(new COAPObjectFactoryInitializer());
   }
 
   static bool added;
