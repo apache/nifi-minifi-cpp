@@ -25,43 +25,43 @@ namespace nifi {
 namespace minifi {
 namespace utils {
 
-CallBackTimer::CallBackTimer(int interval) : execute_(false), interval_(interval) {
-  if (interval_ <= 0) {
-    throw std::invalid_argument("Interval cannot be negative!");
-  }
+CallBackTimer::CallBackTimer(std::chrono::milliseconds interval) : execute_(false), interval_(interval) {
 }
 
 CallBackTimer::~CallBackTimer() {
-  if (execute_.load(std::memory_order_acquire) || thd_.joinable()) {
+  std::lock_guard<std::recursive_mutex> guard(mtx_);
+  if (execute_ || thd_.joinable()) {
     stop();
   }
 }
 
 void CallBackTimer::stop() {
-  execute_.store(false, std::memory_order_release);
+  std::lock_guard<std::recursive_mutex> guard(mtx_);
+  execute_ = false;
   if (thd_.joinable()) {
     thd_.join();
   }
 }
 
 void CallBackTimer::start(std::function<void(void)> func) {
-  if (execute_.load(std::memory_order_acquire)) {
+  std::lock_guard<std::recursive_mutex> guard(mtx_);
+  if (execute_) {
     stop();
   }
 
-  execute_.store(true, std::memory_order_release);
+  execute_ = true;
   thd_ = std::thread([this, func]() {
-                       auto time = std::chrono::milliseconds(interval_);
-                       std::this_thread::sleep_for(time);
-                       while (execute_.load(std::memory_order_acquire)) {
+                       std::this_thread::sleep_for(interval_);
+                       while (execute_) {
                          func();
-                         std::this_thread::sleep_for(time);
+                         std::this_thread::sleep_for(interval_);
                        }
                      });
 }
 
 bool CallBackTimer::is_running() const {
-  return execute_.load(std::memory_order_acquire) && thd_.joinable();
+  std::lock_guard<std::recursive_mutex> guard(mtx_);
+  return execute_ && thd_.joinable();
 }
 
 } /* namespace utils */

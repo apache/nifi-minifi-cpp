@@ -71,7 +71,7 @@ core::ProcessGroup *YamlConfiguration::parseRootProcessGroupYaml(YAML::Node root
     if (core::Property::StringToTime(onScheduleRetryPeriod, onScheduleRetryPeriodValue, unit)
         && core::Property::ConvertTimeUnitToMS(onScheduleRetryPeriodValue, unit, onScheduleRetryPeriodValue)
         && group) {
-      logger_->log_debug("parseRootProcessGroup: onschedule retry => [%ll] ms", onScheduleRetryPeriodValue);
+      logger_->log_debug("parseRootProcessGroup: onschedule retry => [%lld] ms", onScheduleRetryPeriodValue);
       group->setOnScheduleRetryPeriod(onScheduleRetryPeriodValue);
     }
   }

@@ -18,7 +18,7 @@
 #ifndef NIFI_MINIFI_CPP_CALLBACKTIMER_H
 #define NIFI_MINIFI_CPP_CALLBACKTIMER_H
 
-#include <atomic>
+#include <mutex>
 #include <thread>
 #include <chrono>
 #include <functional>
@@ -32,7 +32,7 @@ namespace utils {
 class CallBackTimer
 {
  public:
-  CallBackTimer(int interval);  // millisecs!
+  CallBackTimer(std::chrono::milliseconds interval);
 
   ~CallBackTimer();
 
@@ -43,9 +43,10 @@ class CallBackTimer
   bool is_running() const;
 
 private:
-  std::atomic<bool> execute_;
+  bool execute_;
   std::thread thd_;
-  const int interval_;
+  mutable std::recursive_mutex mtx_;
+  const std::chrono::milliseconds interval_;
 };
 
 } /* namespace utils */

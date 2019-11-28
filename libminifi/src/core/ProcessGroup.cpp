@@ -189,7 +189,7 @@ void ProcessGroup::startProcessingProcessors(const std::shared_ptr<TimerDrivenSc
 
   if (!onScheduleTimer_ && !failed_processors_.empty() && onschedule_retry_msec_ > 0) {
     logger_->log_info("Retrying failed processors in %lld msec", onschedule_retry_msec_.load());
-    onScheduleTimer_.reset(new utils::CallBackTimer(onschedule_retry_msec_));
+    onScheduleTimer_.reset(new utils::CallBackTimer(std::chrono::milliseconds(onschedule_retry_msec_)));
     auto func = [this, eventScheduler, cronScheduler, timeScheduler]() {
       this->startProcessingProcessors(timeScheduler, eventScheduler, cronScheduler);
     };
