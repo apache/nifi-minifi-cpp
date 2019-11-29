@@ -51,24 +51,31 @@ void CallBackTimer::stop() {
 void CallBackTimer::start() {
   std::lock_guard<std::mutex> guard(mtx_);
   {
+    std::lock_guard<std::mutex> cv_guard(cv_mtx_);
+
     if (execute_) {
       return;
     }
+  }
+
+  if (thd_.joinable()) {
+    thd_.join();
+  }
+
+  {
     std::lock_guard<std::mutex> cv_guard(cv_mtx_);
     execute_ = true;
-
-    if (thd_.joinable()) {
-      thd_.join();
-    }
   }
+
   thd_ = std::thread([this]() {
                        std::unique_lock<std::mutex> lk(cv_mtx_);
                        while (execute_) {
                          if (cv_.wait_for(lk, interval_, [this]{return !execute_;})) {
                            break;
                          }
-                         cv_mtx_.unlock();  // This has to be released, so callbacks checking or stopping the timer won't deadlock
+                         lk.unlock();
                          this->func_();
+                         lk.lock();
                        }
                      });
 }

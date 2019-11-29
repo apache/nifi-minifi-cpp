@@ -194,8 +194,7 @@ void ProcessGroup::startProcessingProcessors(const std::shared_ptr<TimerDrivenSc
     };
     onScheduleTimer_.reset(new utils::CallBackTimer(std::chrono::milliseconds(onschedule_retry_msec_), func));
     onScheduleTimer_->start();
-  } else if (failed_processors_.empty() && onScheduleTimer_ && onScheduleTimer_->is_running()) {
-    lock.unlock();
+  } else if (failed_processors_.empty() && onScheduleTimer_) {
     onScheduleTimer_->stop();
   }
 }
@@ -225,11 +224,11 @@ void ProcessGroup::startProcessing(const std::shared_ptr<TimerDrivenSchedulingAg
 
 void ProcessGroup::stopProcessing(const std::shared_ptr<TimerDrivenSchedulingAgent> timeScheduler, const std::shared_ptr<EventDrivenSchedulingAgent> &eventScheduler,
                                   const std::shared_ptr<CronDrivenSchedulingAgent> &cronScheduler) {
-  if (onScheduleTimer_ && onScheduleTimer_->is_running()) {
+  std::lock_guard<std::recursive_mutex> lock(mutex_);
+
+  if (onScheduleTimer_) {
     onScheduleTimer_->stop();
   }
-
-  std::lock_guard<std::recursive_mutex> lock(mutex_);
 
   onScheduleTimer_.reset();
 
