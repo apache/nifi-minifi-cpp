@@ -30,12 +30,15 @@ class OnScheduleErrorHandlingTests : public IntegrationBase {
   virtual void runAssertions() {
     std::string logs = LogTestController::getInstance().log_output.str();
     size_t pos = 0;
+    size_t last_pos = 0;
     unsigned int occurances = 0;
     do {
       pos = logs.find(minifi::processors::KamikazeProcessor::OnScheduleExceptionStr, pos);
       if (pos != std::string::npos) {
+        last_pos = pos;
         pos = logs.find(minifi::processors::KamikazeProcessor::OnUnScheduleLogStr, pos);
         if (pos != std::string::npos) {
+          last_pos = pos;
           occurances++;
         }
       }
@@ -43,14 +46,30 @@ class OnScheduleErrorHandlingTests : public IntegrationBase {
 
     assert(occurances > 1);  // Verify retry of onSchedule and onUnSchedule calls
 
-    // Make sure onTrigger was never called
+    // Make sure onSchedule succeeded after property was set
+    assert(logs.find(minifi::processors::KamikazeProcessor::OnScheduleLogStr, last_pos) != std::string::npos);
+
+    // Make sure onTrigger was called after onshedule succeeded
+    pos = logs.find(minifi::processors::KamikazeProcessor::OnTriggerExceptionStr);
+    assert(pos != std::string::npos && pos > last_pos);
+
+    pos = logs.find("[warning] ProcessSession rollback for kamikaze executed");  // Check rollback
+    assert(pos != std::string::npos && pos > last_pos);
+
     assert(logs.find(minifi::processors::KamikazeProcessor::OnTriggerLogStr) == std::string::npos);
-    assert(logs.find(minifi::processors::KamikazeProcessor::OnTriggerExceptionStr) == std::string::npos);
   }
 
   virtual void testSetup() {
     LogTestController::getInstance().setDebug<core::ProcessGroup>();
+    LogTestController::getInstance().setDebug<core::Processor>();
+    LogTestController::getInstance().setDebug<core::ProcessSession>();
     LogTestController::getInstance().setDebug<minifi::processors::KamikazeProcessor>();
+  }
+
+  virtual void waitToVerifyProcessor() {
+    std::this_thread::sleep_for(std::chrono::seconds(3));
+    flowController_->updatePropertyValue("kamikaze", minifi::processors::KamikazeProcessor::ThrowInOnSchedule.getName(), "false");
+    std::this_thread::sleep_for(std::chrono::seconds(3));
   }
 
   virtual void cleanup() {}

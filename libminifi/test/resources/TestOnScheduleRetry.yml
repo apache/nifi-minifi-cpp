@@ -33,7 +33,7 @@ Processors:
       auto-terminated relationships list:
       Properties:
         Throw in onSchedule: true
-        Throw in onTrigger: false
+        Throw in onTrigger: true
 
 Connections:
 Remote Processing Groups:

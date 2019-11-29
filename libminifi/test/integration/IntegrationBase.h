@@ -68,6 +68,7 @@ class IntegrationBase {
 
   void configureSecurity();
   std::shared_ptr<minifi::Configure> configuration;
+  std::shared_ptr<minifi::FlowController> flowController_;
   uint64_t wait_time_;
   std::string port, scheme, path;
   std::string key_dir;
@@ -116,15 +117,15 @@ void IntegrationBase::run(std::string test_file_location) {
 
   std::shared_ptr<TestRepository> repo = std::static_pointer_cast<TestRepository>(test_repo);
 
-  std::shared_ptr<minifi::FlowController> controller = std::make_shared<minifi::FlowController>(test_repo, test_flow_repo, configuration, std::move(yaml_ptr), content_repo, DEFAULT_ROOT_GROUP_NAME,
+  flowController_ = std::make_shared<minifi::FlowController>(test_repo, test_flow_repo, configuration, std::move(yaml_ptr), content_repo, DEFAULT_ROOT_GROUP_NAME,
                                                                                                 true);
-  controller->load();
-  updateProperties(controller);
-  controller->start();
+  flowController_->load();
+  updateProperties(flowController_);
+  flowController_->start();
   waitToVerifyProcessor();
 
   shutdownBeforeFlowController();
-  controller->unload();
+  flowController_->unload();
   runAssertions();
 
   cleanup();
