@@ -25,36 +25,50 @@ namespace nifi {
 namespace minifi {
 namespace utils {
 
-CallBackTimer::CallBackTimer(std::chrono::milliseconds interval) : execute_(false), interval_(interval) {
+CallBackTimer::CallBackTimer(std::chrono::milliseconds interval, const std::function<void(void)>& func) : execute_(false), func_(func), interval_(interval) {
 }
 
 CallBackTimer::~CallBackTimer() {
-  std::unique_lock<std::mutex> lk(mtx_);
-  if (execute_ || thd_.joinable()) {
-    stop_inner(lk);
+  stop();
+  std::lock_guard<std::mutex> guard(mtx_);
+  if (thd_.joinable()) {
+    thd_.join();
   }
 }
 
 void CallBackTimer::stop() {
-  std::unique_lock<std::mutex> lk(mtx_);
-  stop_inner(lk);
+  std::lock_guard<std::mutex> guard(mtx_);
+  {
+    std::lock_guard<std::mutex> cv_guard(cv_mtx_);
+    if (!execute_) {
+      return;
+    }
+    execute_ = false;
+    cv_.notify_all();
+  }
 }
 
-void CallBackTimer::start(const std::function<void(void)>& func) {
-  std::unique_lock<std::mutex> lk(mtx_);
-  if (execute_) {
-    stop_inner(lk);
-    lk.lock();
-  }
+void CallBackTimer::start() {
+  std::lock_guard<std::mutex> guard(mtx_);
+  {
+    if (execute_) {
+      return;
+    }
+    std::lock_guard<std::mutex> cv_guard(cv_mtx_);
+    execute_ = true;
 
-  execute_ = true;
-  thd_ = std::thread([this, func]() {
-                       std::unique_lock<std::mutex> lk(mtx_);
+    if (thd_.joinable()) {
+      thd_.join();
+    }
+  }
+  thd_ = std::thread([this]() {
+                       std::unique_lock<std::mutex> lk(cv_mtx_);
                        while (execute_) {
                          if (cv_.wait_for(lk, interval_, [this]{return !execute_;})) {
                            break;
                          }
-                         func();
+                         cv_mtx_.unlock();  // This has to be released, so callbacks checking or stopping the timer won't deadlock
+                         this->func_();
                        }
                      });
 }
@@ -62,23 +76,6 @@ void CallBackTimer::start(const std::function<void(void)>& func) {
 bool CallBackTimer::is_running() const {
   std::lock_guard<std::mutex> guard(mtx_);
   return execute_ && thd_.joinable();
-}
-
-
-void CallBackTimer::stop_inner(std::unique_lock<std::mutex>& lk) {  // Private to make sure it's only called when the mutex is acquired
-  if (!lk.owns_lock()) {
-    throw std::invalid_argument("CallBackTimer::stop_inner was called without owning the provided lock!");
-  }
-
-  execute_ = false;
-  cv_.notify_all();
-
-  lk.unlock();
-
-  if (thd_.joinable()) {
-    thd_.join();
-  }
-
 }
 
 } /* namespace utils */

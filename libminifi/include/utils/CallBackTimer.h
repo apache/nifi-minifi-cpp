@@ -33,22 +33,22 @@ namespace utils {
 class CallBackTimer
 {
  public:
-  CallBackTimer(std::chrono::milliseconds interval);
+  CallBackTimer(std::chrono::milliseconds interval, const std::function<void(void)>& func);
 
   ~CallBackTimer();
 
   void stop();
 
-  void start(const std::function<void(void)>& func);
+  void start();
 
   bool is_running() const;
 
 private:
-  void stop_inner(std::unique_lock<std::mutex>& lk);
-
   bool execute_;
+  std::function<void(void)> func_;
   std::thread thd_;
   mutable std::mutex mtx_;
+  mutable std::mutex cv_mtx_;
   std::condition_variable cv_;
 
   const std::chrono::milliseconds interval_;

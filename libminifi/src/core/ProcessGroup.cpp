@@ -149,7 +149,7 @@ void ProcessGroup::removeProcessGroup(ProcessGroup *child) {
 
 void ProcessGroup::startProcessingProcessors(const std::shared_ptr<TimerDrivenSchedulingAgent> timeScheduler,
     const std::shared_ptr<EventDrivenSchedulingAgent> &eventScheduler, const std::shared_ptr<CronDrivenSchedulingAgent> &cronScheduler) {
-  std::lock_guard<std::recursive_mutex> lock(mutex_);
+  std::unique_lock<std::recursive_mutex> lock(mutex_);
 
   std::set<std::shared_ptr<Processor> > failed_processors;
 
@@ -189,17 +189,16 @@ void ProcessGroup::startProcessingProcessors(const std::shared_ptr<TimerDrivenSc
 
   if (!onScheduleTimer_ && !failed_processors_.empty() && onschedule_retry_msec_ > 0) {
     logger_->log_info("Retrying failed processors in %lld msec", onschedule_retry_msec_.load());
-    onScheduleTimer_.reset(new utils::CallBackTimer(std::chrono::milliseconds(onschedule_retry_msec_)));
     auto func = [this, eventScheduler, cronScheduler, timeScheduler]() {
       this->startProcessingProcessors(timeScheduler, eventScheduler, cronScheduler);
     };
-    onScheduleTimer_->start(func);
-  } else if (failed_processors_.empty() && onScheduleTimer_) {
+    onScheduleTimer_.reset(new utils::CallBackTimer(std::chrono::milliseconds(onschedule_retry_msec_), func));
+    onScheduleTimer_->start();
+  } else if (failed_processors_.empty() && onScheduleTimer_ && onScheduleTimer_->is_running()) {
+    lock.unlock();
     onScheduleTimer_->stop();
-    onScheduleTimer_.reset();
   }
 }
-
 
 void ProcessGroup::startProcessing(const std::shared_ptr<TimerDrivenSchedulingAgent> timeScheduler, const std::shared_ptr<EventDrivenSchedulingAgent> &eventScheduler,
                                    const std::shared_ptr<CronDrivenSchedulingAgent> &cronScheduler) {
@@ -226,8 +225,7 @@ void ProcessGroup::startProcessing(const std::shared_ptr<TimerDrivenSchedulingAg
 
 void ProcessGroup::stopProcessing(const std::shared_ptr<TimerDrivenSchedulingAgent> timeScheduler, const std::shared_ptr<EventDrivenSchedulingAgent> &eventScheduler,
                                   const std::shared_ptr<CronDrivenSchedulingAgent> &cronScheduler) {
-
-  if (onScheduleTimer_) {
+  if (onScheduleTimer_ && onScheduleTimer_->is_running()) {
     onScheduleTimer_->stop();
   }
 
