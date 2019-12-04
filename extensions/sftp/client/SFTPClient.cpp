@@ -26,7 +26,6 @@
 #include "utils/StringUtils.h"
 #include "utils/ScopeGuard.h"
 #include "utils/StringUtils.h"
-#include "utils/base64.h"
 
 namespace org {
 namespace apache {
@@ -358,11 +357,9 @@ bool SFTPClient::connect() {
         logger_->log_warn("Host %s not found in the host key file", hostname_.c_str());
         break;
       case LIBSSH2_KNOWNHOST_CHECK_MISMATCH: {
-        char* b64_out = nullptr;
-        auto b64_len = Curl_base64_encode(hostkey, hostkey_len, &b64_out);
+        auto hostkey_b64 = utils::StringUtils::to_base64(reinterpret_cast<const uint8_t*>(hostkey), hostkey_len);
         logger_->log_warn("Host key mismatch for %s, expected: %s, actual: %s", hostname_.c_str(),
-                          known_host == nullptr ? "" : known_host->key,
-                          b64_out == nullptr ? "" : std::string(b64_out, b64_len).c_str());
+                          known_host == nullptr ? "" : known_host->key, hostkey_b64.c_str());
         break;
       }
       case LIBSSH2_KNOWNHOST_CHECK_MATCH:

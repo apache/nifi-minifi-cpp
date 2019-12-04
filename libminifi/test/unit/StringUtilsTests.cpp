@@ -127,16 +127,16 @@ TEST_CASE("TestStringUtils::testHexEncode", "[test hex encode]") {
   REQUIRE("" == StringUtils::to_hex(""));
   REQUIRE("6f" == StringUtils::to_hex("o"));
   REQUIRE("666f6f626172" == StringUtils::to_hex("foobar"));
-  REQUIRE("000102030405060708090a0b0c0d0e0f" == StringUtils::to_hex({0x00, 0x01, 0x02, 0x03,
-                                                                     0x04, 0x05, 0x06, 0x07,
-                                                                     0x08, 0x09, 0x0a, 0x0b,
-                                                                     0x0c, 0x0d, 0x0e, 0x0f}));
+  REQUIRE("000102030405060708090a0b0c0d0e0f" == StringUtils::to_hex(std::vector<uint8_t>{0x00, 0x01, 0x02, 0x03,
+                                                                                         0x04, 0x05, 0x06, 0x07,
+                                                                                         0x08, 0x09, 0x0a, 0x0b,
+                                                                                         0x0c, 0x0d, 0x0e, 0x0f}));
   REQUIRE("6F" == StringUtils::to_hex("o", true /*uppercase*/));
   REQUIRE("666F6F626172" == StringUtils::to_hex("foobar", true /*uppercase*/));
-  REQUIRE("000102030405060708090A0B0C0D0E0F" == StringUtils::to_hex({0x00, 0x01, 0x02, 0x03,
-                                                                     0x04, 0x05, 0x06, 0x07,
-                                                                     0x08, 0x09, 0x0a, 0x0b,
-                                                                     0x0c, 0x0d, 0x0e, 0x0f}, true /*uppercase*/));
+  REQUIRE("000102030405060708090A0B0C0D0E0F" == StringUtils::to_hex(std::vector<uint8_t>{0x00, 0x01, 0x02, 0x03,
+                                                                                         0x04, 0x05, 0x06, 0x07,
+                                                                                         0x08, 0x09, 0x0a, 0x0b,
+                                                                                         0x0c, 0x0d, 0x0e, 0x0f}, true /*uppercase*/));
 }
 
 TEST_CASE("TestStringUtils::testHexDecode", "[test hex decode]") {
@@ -155,28 +155,133 @@ TEST_CASE("TestStringUtils::testHexDecode", "[test hex decode]") {
                        0x04, 0x05, 0x06, 0x07,
                        0x08, 0x09, 0x0a, 0x0b,
                        0x0c, 0x0d, 0x0e, 0x0f}) == StringUtils::from_hex("000102030405060708090A0B0C0D0E0F"));
-  try {
-    StringUtils::from_hex("666f6f62617");
-    abort();
-  } catch (std::exception& e) {
-    REQUIRE(std::string("Hexencoded string is malformatted") == e.what());
-  }
-  try {
-    StringUtils::from_hex("666f6f6261 7");
-    abort();
-  } catch (std::exception& e) {
-    REQUIRE(std::string("Hexencoded string is malformatted") == e.what());
-  }
+
+  REQUIRE_THROWS_WITH(StringUtils::from_hex("666f6f62617"), "Hexencoded string is malformatted");
+  REQUIRE_THROWS_WITH(StringUtils::from_hex("666f6f6261 7"), "Hexencoded string is malformatted");
 }
 
 TEST_CASE("TestStringUtils::testHexEncodeDecode", "[test hex encode decode]") {
   std::mt19937 gen(std::random_device { }());
-  const bool uppercase = gen() % 2;
-  const size_t length = gen() % 1024;
-  std::vector<uint8_t> data(length);
-  std::generate_n(data.begin(), data.size(), [&]() -> uint8_t {
-    return gen() % 256;
-  });
-  auto hex = utils::StringUtils::to_hex(data.data(), data.size(), uppercase);
-  REQUIRE(data == utils::StringUtils::from_hex(hex.data(), hex.size()));
+  for (size_t i = 0U; i < 1024U; i++) {
+    const bool uppercase = gen() % 2;
+    const size_t length = gen() % 1024;
+    std::vector<uint8_t> data(length);
+    std::generate_n(data.begin(), data.size(), [&]() -> uint8_t {
+      return gen() % 256;
+    });
+    auto hex = utils::StringUtils::to_hex(data.data(), data.size(), uppercase);
+    REQUIRE(data == utils::StringUtils::from_hex(hex.data(), hex.size()));
+  }
+}
+
+TEST_CASE("TestStringUtils::testBase64Encode", "[test base64 encode]") {
+  REQUIRE("" == StringUtils::to_base64(""));
+
+  REQUIRE("bw==" == StringUtils::to_base64("o"));
+  REQUIRE("b28=" == StringUtils::to_base64("oo"));
+  REQUIRE("b29v" == StringUtils::to_base64("ooo"));
+  REQUIRE("b29vbw==" == StringUtils::to_base64("oooo"));
+  REQUIRE("b29vb28=" == StringUtils::to_base64("ooooo"));
+  REQUIRE("b29vb29v" == StringUtils::to_base64("oooooo"));
+
+  REQUIRE("bw" == StringUtils::to_base64("o", false /*url*/, false /*padded*/));
+  REQUIRE("b28" == StringUtils::to_base64("oo", false /*url*/, false /*padded*/));
+  REQUIRE("b29v" == StringUtils::to_base64("ooo", false /*url*/, false /*padded*/));
+  REQUIRE("b29vbw" == StringUtils::to_base64("oooo", false /*url*/, false /*padded*/));
+  REQUIRE("b29vb28" == StringUtils::to_base64("ooooo", false /*url*/, false /*padded*/));
+  REQUIRE("b29vb29v" == StringUtils::to_base64("oooooo", false /*url*/, false /*padded*/));
+
+  REQUIRE("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/" ==
+    StringUtils::to_base64(std::vector<uint8_t>{0x00, 0x10, 0x83, 0x10,
+                                                0x51, 0x87, 0x20, 0x92,
+                                                0x8b, 0x30, 0xd3, 0x8f,
+                                                0x41, 0x14, 0x93, 0x51,
+                                                0x55, 0x97, 0x61, 0x96,
+                                                0x9b, 0x71, 0xd7, 0x9f,
+                                                0x82, 0x18, 0xa3, 0x92,
+                                                0x59, 0xa7, 0xa2, 0x9a,
+                                                0xab, 0xb2, 0xdb, 0xaf,
+                                                0xc3, 0x1c, 0xb3, 0xd3,
+                                                0x5d, 0xb7, 0xe3, 0x9e,
+                                                0xbb, 0xf3, 0xdf, 0xbf}));
+  REQUIRE("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_" ==
+    StringUtils::to_base64(std::vector<uint8_t>{0x00, 0x10, 0x83, 0x10,
+                                                0x51, 0x87, 0x20, 0x92,
+                                                0x8b, 0x30, 0xd3, 0x8f,
+                                                0x41, 0x14, 0x93, 0x51,
+                                                0x55, 0x97, 0x61, 0x96,
+                                                0x9b, 0x71, 0xd7, 0x9f,
+                                                0x82, 0x18, 0xa3, 0x92,
+                                                0x59, 0xa7, 0xa2, 0x9a,
+                                                0xab, 0xb2, 0xdb, 0xaf,
+                                                0xc3, 0x1c, 0xb3, 0xd3,
+                                                0x5d, 0xb7, 0xe3, 0x9e,
+                                                0xbb, 0xf3, 0xdf, 0xbf}, true /*url*/));
+}
+
+TEST_CASE("TestStringUtils::testBase64Decode", "[test base64 decode]") {
+  REQUIRE("" == StringUtils::from_base64(""));
+  REQUIRE("o" == StringUtils::from_base64("bw=="));
+  REQUIRE("oo" == StringUtils::from_base64("b28="));
+  REQUIRE("ooo" == StringUtils::from_base64("b29v"));
+  REQUIRE("oooo" == StringUtils::from_base64("b29vbw=="));
+  REQUIRE("ooooo" == StringUtils::from_base64("b29vb28="));
+  REQUIRE("oooooo" == StringUtils::from_base64("b29vb29v"));
+  REQUIRE("\xfb\xff\xbf" == StringUtils::from_base64("-_-_"));
+  REQUIRE("\xfb\xff\xbf" == StringUtils::from_base64("+/+/"));
+  REQUIRE(std::string({   0,   16, -125,   16,
+                         81, -121,   32, -110,
+                       -117,   48,  -45, -113,
+                         65,   20, -109,   81,
+                         85, -105,   97, -106,
+                       -101,  113,  -41,  -97,
+                       -126,   24,  -93, -110,
+                         89,  -89,  -94, -102,
+                        -85,  -78,  -37,  -81,
+                        -61,   28,  -77,  -45,
+                         93,  -73,  -29,  -98,
+                        -69,  -13,  -33,  -65}) == StringUtils::from_base64("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"));
+  REQUIRE(std::string({   0,   16, -125,   16,
+                         81, -121,   32, -110,
+                       -117,   48,  -45, -113,
+                         65,   20, -109,   81,
+                         85, -105,   97, -106,
+                       -101,  113,  -41,  -97,
+                       -126,   24,  -93, -110,
+                         89,  -89,  -94, -102,
+                        -85,  -78,  -37,  -81,
+                        -61,   28,  -77,  -45,
+                         93,  -73,  -29,  -98,
+                        -69,  -13,  -33,  -65}) == StringUtils::from_base64("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"));
+
+  REQUIRE("foobarbuzz" == StringUtils::from_base64("Zm9vYmFyYnV6eg=="));
+  REQUIRE("foobarbuzz"== StringUtils::from_base64("\r\nZm9vYmFyYnV6eg=="));
+  REQUIRE("foobarbuzz" == StringUtils::from_base64("Zm9\r\nvYmFyYnV6eg=="));
+  REQUIRE("foobarbuzz" == StringUtils::from_base64("Zm\r9vYmFy\n\n\n\n\n\n\n\nYnV6eg=="));
+  REQUIRE("foobarbuzz" == StringUtils::from_base64("\nZ\nm\n9\nv\nY\nm\nF\ny\nY\nn\nV\n6\ne\ng\n=\n=\n"));
+
+  REQUIRE_THROWS_WITH(StringUtils::from_base64("a"), "Base64 encoded string is malformatted");
+  REQUIRE_THROWS_WITH(StringUtils::from_base64("aaaaa"), "Base64 encoded string is malformatted");
+  REQUIRE_THROWS_WITH(StringUtils::from_base64("aa="), "Base64 encoded string is malformatted");
+  REQUIRE_THROWS_WITH(StringUtils::from_base64("aaaaaa="), "Base64 encoded string is malformatted");
+  REQUIRE_THROWS_WITH(StringUtils::from_base64("aa==?"), "Base64 encoded string is malformatted");
+  REQUIRE_THROWS_WITH(StringUtils::from_base64("aa==a"), "Base64 encoded string is malformatted");
+  REQUIRE_THROWS_WITH(StringUtils::from_base64("aa==="), "Base64 encoded string is malformatted");
+  REQUIRE_THROWS_WITH(StringUtils::from_base64("?"), "Base64 encoded string is malformatted");
+  REQUIRE_THROWS_WITH(StringUtils::from_base64("aaaa?"), "Base64 encoded string is malformatted");
+}
+
+TEST_CASE("TestStringUtils::testBase64EncodeDecode", "[test base64 encode decode]") {
+  std::mt19937 gen(std::random_device { }());
+  for (size_t i = 0U; i < 1024U; i++) {
+    const bool url = gen() % 2;
+    const bool padded = gen() % 2;
+    const size_t length = gen() % 1024;
+    std::vector<uint8_t> data(length);
+    std::generate_n(data.begin(), data.size(), [&]() -> uint8_t {
+      return gen() % 256;
+    });
+    auto base64 = utils::StringUtils::to_base64(data.data(), data.size(), url, padded);
+    REQUIRE(data == utils::StringUtils::from_base64(base64.data(), base64.size()));
+  }
 }
