@@ -16,8 +16,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __INVOKE_HTTP_H__
-#define __INVOKE_HTTP_H__
+#ifndef EXTENSIONS_CAPTUREPACKET_H
+#define EXTENSIONS_CAPTUREPACKET_H
 
 #include <memory>
 #include <regex>
@@ -175,4 +175,4 @@ REGISTER_RESOURCE(CapturePacket, "CapturePacket captures and writes one or more 
 } /* namespace apache */
 } /* namespace org */
 
-#endif
+#endif /* EXTENSIONS_CAPTUREPACKET_H */
