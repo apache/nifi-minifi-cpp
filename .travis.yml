@@ -137,7 +137,7 @@ matrix:
       script:
         - ./bootstrap.sh -e -t && cd build  && cmake -DUSE_SHARED_LIBS=ON .. &&  cmake --build . --parallel 4  && sudo make test ARGS="-j4 --output-on-failure"
     - os: osx
-      osx_image: xcode9.2
+      osx_image: xcode10.3
       env:
         - CMAKE_BUILD_OPTIONS="${CMAKE_BUILD_OPTIONS} -DENABLE_LUA_SCRIPTING=1"
       # https://docs.travis-ci.com/user/osx-ci-environment/#Homebrew
@@ -161,7 +161,7 @@ matrix:
       script:
         - ./bootstrap.sh -e -t && cd build  && cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_RULE_MESSAGES=OFF .. && cmake --build . --parallel 4 && sudo make test ARGS="-j4 --output-on-failure" && make linter
     - os: osx
-      osx_image: xcode10
+      osx_image: xcode11.2
       env:
         - CMAKE_BUILD_OPTIONS="${CMAKE_BUILD_OPTIONS} -DENABLE_LUA_SCRIPTING=1"
       # https://docs.travis-ci.com/user/osx-ci-environment/#Homebrew
