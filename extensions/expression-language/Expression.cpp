@@ -48,7 +48,7 @@
 #include <sys/types.h>
 #endif
 
-#include "utils/base64.h"
+#include "utils/StringUtils.h"
 #include "Driver.h"
 
 #ifdef EXPRESSION_LANGUAGE_USE_DATE
@@ -709,30 +709,11 @@ Value expr_urlDecode(const std::vector<Value> &args) {
 }
 
 Value expr_base64Encode(const std::vector<Value> &args) {
-  auto arg_0 = args[0].asString();
-  char *b64_out = nullptr;
-  auto b64_len = Curl_base64_encode(arg_0.c_str(), arg_0.length(), &b64_out);
-  if (b64_out) {
-    std::string result(b64_out, b64_len);
-    free(b64_out);
-    return Value(result);
-  } else {
-    throw std::runtime_error("Failed to encode base64");
-  }
+  return Value(utils::StringUtils::to_base64(args[0].asString()));
 }
 
 Value expr_base64Decode(const std::vector<Value> &args) {
-  auto arg_0 = args[0].asString();
-  unsigned char *decode_out = nullptr;
-  // size_t Curl_base64_decode(const char *src, unsigned char **outptr)
-  auto out_len = Curl_base64_decode(arg_0.c_str(), &decode_out);
-  if (decode_out) {
-    std::string result(reinterpret_cast<char *>(decode_out), out_len);
-    free(decode_out);
-    return Value(result);
-  } else {
-    throw std::runtime_error("Failed to encode base64");
-  }
+  return Value(utils::StringUtils::from_base64(args[0].asString()));
 }
 
 #ifdef EXPRESSION_LANGUAGE_USE_REGEX

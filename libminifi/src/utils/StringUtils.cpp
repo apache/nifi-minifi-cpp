@@ -166,6 +166,9 @@ std::string StringUtils::replaceMap(std::string source_string, const std::map<st
 
 constexpr uint8_t StringUtils::SKIP;
 constexpr uint8_t StringUtils::hex_lut[128];
+constexpr const char StringUtils::base64_enc_lut[];
+constexpr const char StringUtils::base64_url_enc_lut[];
+constexpr uint8_t StringUtils::base64_dec_lut[128];
 
 } /* namespace utils */
 } /* namespace minifi */
