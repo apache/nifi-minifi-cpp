@@ -236,34 +236,7 @@ class StringUtils {
    * @param hex_length the length of hex
    * @return true on success
    */
-  inline static bool from_hex(uint8_t* data, size_t* data_length, const char* hex, size_t hex_length) {
-    if (*data_length < hex_length / 2) {
-      return false;
-    }
-    uint8_t n1;
-    bool found_first_nibble = false;
-    *data_length = 0;
-    for (size_t i = 0; i < hex_length; i++) {
-      const uint8_t byte = static_cast<uint8_t>(hex[i]);
-      if (byte > 127) {
-        continue;
-      }
-      uint8_t n = hex_lut[byte];
-      if (n != SKIP) {
-        if (found_first_nibble) {
-          data[(*data_length)++] = n1 << 4 | n;
-          found_first_nibble = false;
-        } else {
-          n1 = n;
-          found_first_nibble = true;
-        }
-      }
-    }
-    if (found_first_nibble) {
-      return false;
-    }
-    return true;
-  }
+  static bool from_hex(uint8_t* data, size_t* data_length, const char* hex, size_t hex_length);
 
   /**
    * Hexdecodes a string
@@ -271,15 +244,7 @@ class StringUtils {
    * @param hex_length the length of hex
    * @return the vector containing the hexdecoded bytes
    */
-  inline static std::vector<uint8_t> from_hex(const char* hex, size_t hex_length) {
-    std::vector<uint8_t> decoded(hex_length / 2);
-    size_t data_length = decoded.size();
-    if (!from_hex(decoded.data(), &data_length, hex, hex_length)) {
-      throw std::runtime_error("Hexencoded string is malformatted");
-    }
-    decoded.resize(data_length);
-    return decoded;
-  }
+  static std::vector<uint8_t> from_hex(const char* hex, size_t hex_length);
 
   /**
    * Hexdecodes a string
@@ -299,16 +264,7 @@ class StringUtils {
    * @param uppercase whether the hexencoded string should be upper case
    * @return the size of hexencoded bytes
    */
-  inline static size_t to_hex(char* hex, const uint8_t* data, size_t length, bool uppercase) {
-    if (length > (std::numeric_limits<size_t>::max)() / 2) {
-      throw std::length_error("Data is too large to be hexencoded");
-    }
-    for (size_t i = 0; i < length; i++) {
-      hex[i * 2] = nibble_to_hex(data[i] >> 4, uppercase);
-      hex[i * 2 + 1] = nibble_to_hex(data[i] & 0xf, uppercase);
-    }
-    return length * 2;
-  }
+  static size_t to_hex(char* hex, const uint8_t* data, size_t length, bool uppercase);
 
   /**
    * Creates a hexencoded string from data
@@ -317,14 +273,7 @@ class StringUtils {
    * @param uppercase whether the hexencoded string should be upper case
    * @return the hexencoded string
    */
-  inline static std::string to_hex(const uint8_t* data, size_t length, bool uppercase = false) {
-    if (length > ((std::numeric_limits<size_t>::max)() / 2 - 1)) {
-      throw std::length_error("Data is too large to be hexencoded");
-    }
-    std::vector<char> buf(length * 2);
-    const size_t hex_length = to_hex(buf.data(), data, length, uppercase);
-    return std::string(buf.data(), hex_length);
-  }
+  static std::string to_hex(const uint8_t* data, size_t length, bool uppercase = false);
 
   /**
    * Hexencodes a string
@@ -354,72 +303,7 @@ class StringUtils {
    * @param base64_length the length of base64
    * @return true on success
    */
-  inline static bool from_base64(uint8_t* data, size_t* data_length, const char* base64, size_t base64_length) {
-    if (*data_length < (base64_length / 4 + 1) * 3) {
-      return false;
-    }
-
-    uint8_t digits[4];
-    size_t digit_counter = 0U;
-    size_t decoded_size = 0U;
-    size_t padding_counter = 0U;
-    size_t i;
-    for (i = 0U; i < base64_length; i++) {
-      const uint8_t byte = static_cast<uint8_t>(base64[i]);
-      if (byte > 127) {
-        return false;
-      }
-
-      const uint8_t decoded = base64_dec_lut[byte];
-      switch (decoded) {
-        case SKIP:
-          continue;
-        case ILGL:
-          return false;
-        case PDNG:
-          padding_counter++;
-          continue;
-        default:
-          if (padding_counter > 0U) {
-            return false;
-          }
-          digits[digit_counter++] = decoded;
-          if (digit_counter == 4U) {
-            base64_digits_to_bytes(digits, data + decoded_size);
-            decoded_size += 3U;
-            digit_counter = 0U;
-          }
-      }
-    }
-
-    if (padding_counter > 0U && padding_counter != 4U - digit_counter) {
-      return false;
-    }
-
-    switch (digit_counter) {
-      case 0:
-        break;
-      case 1:
-        return false;
-      case 2:
-        digits[2] = 0x00;
-      case 3: {
-        digits[3] = 0x00;
-
-        uint8_t bytes_temp[3];
-        base64_digits_to_bytes(digits, bytes_temp);
-        const size_t num_bytes = digit_counter == 2 ? 1 : 2;
-        memcpy(data + decoded_size, bytes_temp, num_bytes);
-        decoded_size += num_bytes;
-        break;
-      }
-      default:
-        return false;
-    }
-
-    *data_length = decoded_size;
-    return true;
-  }
+  static bool from_base64(uint8_t* data, size_t* data_length, const char* base64, size_t base64_length);
 
   /**
    * Base64 decodes a string
@@ -427,15 +311,7 @@ class StringUtils {
    * @param base64_length the length of base64
    * @return the vector containing the decoded bytes
    */
-  inline static std::vector<uint8_t> from_base64(const char* base64, size_t base64_length) {
-    std::vector<uint8_t> decoded((base64_length / 4 + 1) * 3);
-    size_t data_length = decoded.size();
-    if (!from_base64(decoded.data(), &data_length, base64, base64_length)) {
-      throw std::runtime_error("Base64 encoded string is malformatted");
-    }
-    decoded.resize(data_length);
-    return decoded;
-  }
+  static std::vector<uint8_t> from_base64(const char* base64, size_t base64_length);
 
   /**
    * Base64 decodes a string
@@ -456,37 +332,7 @@ class StringUtils {
    * @param padded if true, padding is added to the Base64 encoded string
    * @return the size of Base64 encoded bytes
    */
-  inline static size_t to_base64(char* base64, const uint8_t* data, size_t length, bool url, bool padded) {
-    if (length > (std::numeric_limits<size_t>::max)() * 3 / 4 - 3) {
-      throw std::length_error("Data is too large to be base64 encoded");
-    }
-
-    const char* enc_lut = url ? base64_url_enc_lut : base64_enc_lut;
-    size_t base64_length = 0U;
-    uint8_t bytes[3];
-    for (size_t i = 0U; i < length; i += 3U) {
-      const bool b1_present = i + 1 < length;
-      const bool b2_present = i + 2 < length;
-      bytes[0] = data[i];
-      bytes[1] = b1_present ? data[i + 1] : 0x00;
-      bytes[2] = b2_present ? data[i + 2] : 0x00;
-
-      base64[base64_length++] = enc_lut[(bytes[0] & 0xfc) >> 2];
-      base64[base64_length++] = enc_lut[(bytes[0] & 0x03) << 4 | (bytes[1] & 0xf0) >> 4];
-      if (b1_present) {
-        base64[base64_length++] = enc_lut[(bytes[1] & 0x0f) << 2 | (bytes[2] & 0xc0) >> 6];
-      } else if (padded) {
-        base64[base64_length++] = '=';
-      }
-      if (b2_present) {
-        base64[base64_length++] = enc_lut[bytes[2] & 0x3f];
-      } else if (padded) {
-        base64[base64_length++] = '=';
-      }
-    }
-
-    return base64_length;
-  }
+  static size_t to_base64(char* base64, const uint8_t* data, size_t length, bool url, bool padded);
 
   /**
    * Creates a Base64 encoded string from data
@@ -496,11 +342,7 @@ class StringUtils {
    * @param padded if true, padding is added to the Base64 encoded string
    * @return the Base64 encoded string
    */
-  inline static std::string to_base64(const uint8_t* data, size_t length, bool url = false, bool padded = true) {
-    std::vector<char> buf((length / 3 + 1) * 4);
-    size_t base64_length = to_base64(buf.data(), data, length, url, padded);
-    return std::string(buf.data(), base64_length);
-  }
+  static std::string to_base64(const uint8_t* data, size_t length, bool url = false, bool padded = true);
 
   /**
    * Base64 encodes a string
@@ -520,7 +362,7 @@ class StringUtils {
    * @param padded if true, padding is added to the Base64 encoded string
    * @return the Base64 encoded string
    */
-  static std::string to_base64(const std::vector<uint8_t>& str, bool url = false, bool padded = true) {
+  inline static std::string to_base64(const std::vector<uint8_t>& str, bool url = false, bool padded = true) {
     return to_base64(str.data(), str.size(), url, padded);
   }
 
