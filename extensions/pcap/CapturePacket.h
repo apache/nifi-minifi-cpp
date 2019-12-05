@@ -175,4 +175,4 @@ REGISTER_RESOURCE(CapturePacket, "CapturePacket captures and writes one or more 
 } /* namespace apache */
 } /* namespace org */
 
-#endif
+#endif /* EXTENSIONS_CAPTUREPACKET_H */
