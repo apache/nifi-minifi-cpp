@@ -99,43 +99,48 @@ void ExecuteSQL::onTrigger(const std::shared_ptr<core::ProcessContext> &context,
     return;
   }
 
-  if (database_service_) {
-    std::unique_ptr<sql::Connection> connection = database_service_->getConnection();
-    if (connection) {
-      try {
-        auto statement = connection->prepareStatement(sqlSelectQuery_);
+  std::unique_lock<std::mutex> lock(onTriggerMutex_, std::try_to_lock);
+  if (!lock.owns_lock()) {
+    logger_->log_warn("'onTrigger' is called before previous 'onTrigger' call is finished.");
+    return;
+  }
 
-        auto rowset = statement->execute();
-
-        int count = 0;
-        size_t row_count = 0;
-        std::stringstream outputStream;
-        sql::JSONSQLWriter writer(rowset, &outputStream);
-        // serialize the rows
-        do {
-          row_count = writer.serialize(max_rows_ == 0 ? std::numeric_limits<size_t>::max() : max_rows_);
-          count++;
-          if (row_count == 0)
-            break;
-          writer.write();
-          auto output = outputStream.str();
-          if (!output.empty()) {
-            WriteCallback writer(output.data(), output.size());
-            auto newflow = session->create();
-            newflow->addAttribute("executesql.resultset.index", std::to_string(row_count));
-            session->write(newflow, &writer);
-            session->transfer(newflow, Success);
-          }
-          outputStream.str("");
-          outputStream.clear();
-        } while (row_count > 0);
-      } catch (std::exception& e) {
-        logger_->log_error(e.what());
-      }
-    }
-    else {
+  if (!connection_) {
+    connection_ = database_service_->getConnection();
+    if (!connection_) {
       context->yield();
     }
+  }
+
+  try {
+    auto statement = connection_->prepareStatement(sqlSelectQuery_);
+
+    auto rowset = statement->execute();
+
+    int count = 0;
+    size_t row_count = 0;
+    std::stringstream outputStream;
+    sql::JSONSQLWriter writer(rowset, &outputStream);
+    // serialize the rows
+    do {
+      row_count = writer.serialize(max_rows_ == 0 ? std::numeric_limits<size_t>::max() : max_rows_);
+      count++;
+      if (row_count == 0)
+        break;
+      writer.write();
+      auto output = outputStream.str();
+      if (!output.empty()) {
+        WriteCallback writer(output.data(), output.size());
+        auto newflow = session->create();
+        newflow->addAttribute("executesql.resultset.index", std::to_string(row_count));
+        session->write(newflow, &writer);
+        session->transfer(newflow, Success);
+      }
+      outputStream.str("");
+      outputStream.clear();
+    } while (row_count > 0);
+  } catch (std::exception& e) {
+    logger_->log_error(e.what());
   }
 }
 

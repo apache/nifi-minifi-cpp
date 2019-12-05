@@ -70,6 +70,8 @@ class PutSQL : public core::Processor {
   std::string db_controller_service_;
   std::vector<std::string> sqlStatements_;
   bool onScheduleOK_{false};
+  std::unique_ptr<sql::Connection> connection_;
+  std::mutex onTriggerMutex_;
 };
 
 REGISTER_RESOURCE(PutSQL, "PutSQL to execute SQL command via ODBC.");
