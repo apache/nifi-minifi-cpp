@@ -102,25 +102,30 @@ void PutSQL::onTrigger(const std::shared_ptr<core::ProcessContext> &context, con
     return;
   }
 
-  if (database_service_) {
-    std::unique_ptr<sql::Connection> connection = database_service_->getConnection();
-    if (connection) {
-      const auto dbSession = connection->getSession();
+  std::unique_lock<std::mutex> lock(onTriggerMutex_, std::try_to_lock);
+  if (!lock.owns_lock()) {
+    logger_->log_warn("'onTrigger' is called before previous 'onTrigger' call is finished.");
+    return;
+  }
 
-      try {
-        dbSession->begin();
-        for (const auto& statement : sqlStatements_) {
-          dbSession->execute(statement);
-        }
-        dbSession->commit();
-      } catch (std::exception& e) {
-        logger_->log_error("SQL statement error: %s", e.what());
-        dbSession->rollback();
-      }
-    }
-    else {
+  if (!connection_) {
+    connection_ = database_service_->getConnection();
+    if (!connection_) {
       context->yield();
     }
+  }
+
+  const auto dbSession = connection_->getSession();
+
+  try {
+    dbSession->begin();
+    for (const auto& statement : sqlStatements_) {
+      dbSession->execute(statement);
+    }
+    dbSession->commit();
+  } catch (std::exception& e) {
+    logger_->log_error("SQL statement error: %s", e.what());
+    dbSession->rollback();
   }
 }
 
