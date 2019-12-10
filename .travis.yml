@@ -138,49 +138,45 @@ matrix:
         - ./bootstrap.sh -e -t && cd build  && cmake -DUSE_SHARED_LIBS=ON .. &&  cmake --build . --parallel 4  && sudo make test ARGS="-j4 --output-on-failure"
     - os: osx
       osx_image: xcode10.3
+      addons:
+        homebrew:
+          packages:
+          - ossp-uuid
+          - boost
+          - flex
+          - openssl
+          - doxygen
+          - graphviz
+          - python
+          - lua
+          - libusb
+          - libpng
+          - libpcap
+          - xz
+          - libssh2
       env:
         - CMAKE_BUILD_OPTIONS="${CMAKE_BUILD_OPTIONS} -DENABLE_LUA_SCRIPTING=1"
-      # https://docs.travis-ci.com/user/osx-ci-environment/#Homebrew
-      before_install:
-        - brew update
-        - package='ossp-uuid'; [[ $(brew ls --versions ${package}) ]] && { brew outdated ${package} || brew upgrade ${package}; } || brew install ${package}
-        - package='boost'; [[ $(brew ls --versions ${package}) ]] && { brew outdated ${package} || brew upgrade ${package}; } || brew install ${package}
-        - package='cmake'; [[ $(brew ls --versions ${package}) ]] && { brew outdated ${package} || brew upgrade ${package}; } || brew install ${package}
-        - package='flex'; [[ $(brew ls --versions ${package}) ]] && { brew outdated ${package} || brew upgrade ${package}; } || brew install ${package}; brew link flex --force
-        - package='ccache'; [[ $(brew ls --versions ${package}) ]] && { brew outdated ${package} || brew upgrade ${package}; } || brew install ${package}
-        - package='openssl'; [[ $(brew ls --versions ${package}) ]] && { brew outdated ${package} || brew upgrade ${package}; } || brew install ${package}
-        - package='doxygen'; [[ $(brew ls --versions ${package}) ]] && { brew outdated ${package} || brew upgrade ${package}; } || brew install ${package}
-        - package='graphviz'; [[ $(brew ls --versions ${package}) ]] && { brew outdated ${package} || brew upgrade ${package}; } || brew install ${package}
-        - package='python'; [[ $(brew ls --versions ${package}) ]] && { brew outdated ${package} || brew upgrade ${package}; } || brew install ${package}
-        - package='lua'; [[ $(brew ls --versions ${package}) ]] && { brew outdated ${package} || brew upgrade ${package}; } || brew install ${package}
-        - package='libusb'; [[ $(brew ls --versions ${package}) ]] && { brew outdated ${package} || brew upgrade ${package}; } || brew install ${package}
-        - package='libpng'; [[ $(brew ls --versions ${package}) ]] && { brew outdated ${package} || brew upgrade ${package}; } || brew install ${package}
-        - package='libpcap'; [[ $(brew ls --versions ${package}) ]] && { brew outdated ${package} || brew upgrade ${package}; } || brew install ${package}
-        - package='xz'; [[ $(brew ls --versions ${package}) ]] && { brew outdated ${package} || brew upgrade ${package}; } || brew install ${package}
-        - package='libssh2'; [[ $(brew ls --versions ${package}) ]] && { brew outdated ${package} || brew upgrade ${package}; } || brew install ${package}
       script:
         - ./bootstrap.sh -e -t && cd build  && cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_RULE_MESSAGES=OFF .. && cmake --build . --parallel 4 && sudo make test ARGS="-j4 --output-on-failure" && make linter
     - os: osx
       osx_image: xcode11.2
+      addons:
+        homebrew:
+          packages:
+          - ossp-uuid
+          - boost
+          - flex
+          - openssl
+          - doxygen
+          - graphviz
+          - python
+          - lua
+          - libusb
+          - libpng
+          - libpcap
+          - xz
+          - libssh2
       env:
         - CMAKE_BUILD_OPTIONS="${CMAKE_BUILD_OPTIONS} -DENABLE_LUA_SCRIPTING=1"
-      # https://docs.travis-ci.com/user/osx-ci-environment/#Homebrew
-      before_install:
-        - brew update
-        - package='ossp-uuid'; [[ $(brew ls --versions ${package}) ]] && { brew outdated ${package} || brew upgrade ${package}; } || brew install ${package}
-        - package='boost'; [[ $(brew ls --versions ${package}) ]] && { brew outdated ${package} || brew upgrade ${package}; } || brew install ${package}
-        - package='cmake'; [[ $(brew ls --versions ${package}) ]] && { brew outdated ${package} || brew upgrade ${package}; } || brew install ${package}
-        - package='flex'; [[ $(brew ls --versions ${package}) ]] && { brew outdated ${package} || brew upgrade ${package}; } || brew install ${package}; brew link flex --force
-        - package='ccache'; [[ $(brew ls --versions ${package}) ]] && { brew outdated ${package} || brew upgrade ${package}; } || brew install ${package}
-        - package='openssl'; [[ $(brew ls --versions ${package}) ]] && { brew outdated ${package} || brew upgrade ${package}; } || brew install ${package}
-        - package='doxygen'; [[ $(brew ls --versions ${package}) ]] && { brew outdated ${package} || brew upgrade ${package}; } || brew install ${package}
-        - package='graphviz'; [[ $(brew ls --versions ${package}) ]] && { brew outdated ${package} || brew upgrade ${package}; } || brew install ${package}
-        - package='python'; [[ $(brew ls --versions ${package}) ]] && { brew outdated ${package} || brew upgrade ${package}; } || brew install ${package}
-        - package='lua'; [[ $(brew ls --versions ${package}) ]] && { brew outdated ${package} || brew upgrade ${package}; } || brew install ${package}
-        - package='libusb'; [[ $(brew ls --versions ${package}) ]] && { brew outdated ${package} || brew upgrade ${package}; } || brew install ${package}
-        - package='libpng'; [[ $(brew ls --versions ${package}) ]] && { brew outdated ${package} || brew upgrade ${package}; } || brew install ${package}
-        - package='libpcap'; [[ $(brew ls --versions ${package}) ]] && { brew outdated ${package} || brew upgrade ${package}; } || brew install ${package}
-        - package='xz'; [[ $(brew ls --versions ${package}) ]] && { brew outdated ${package} || brew upgrade ${package}; } || brew install ${package}
-        - package='libssh2'; [[ $(brew ls --versions ${package}) ]] && { brew outdated ${package} || brew upgrade ${package}; } || brew install ${package}
       script:
         - ./bootstrap.sh -e -t && cd build  && cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_RULE_MESSAGES=OFF .. && cmake --build . --parallel 4 && sudo make test ARGS="-j4 --output-on-failure" && make linter
