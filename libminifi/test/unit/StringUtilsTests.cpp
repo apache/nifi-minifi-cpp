@@ -123,6 +123,38 @@ TEST_CASE("TestStringUtils::testJoin", "[test string join]") {
   REQUIRE(StringUtils::join("this separator wont appear", std::vector<std::string>()) == "");
 }
 
+TEST_CASE("TestStringUtils::trim", "[test trim]") {
+  REQUIRE("" == StringUtils::trim(" \n\t"));
+  REQUIRE("foobar" == StringUtils::trim("foobar"));
+  REQUIRE("foo bar" == StringUtils::trim("foo bar"));
+  REQUIRE("foobar" == StringUtils::trim("foobar "));
+  REQUIRE("foobar" == StringUtils::trim(" foobar"));
+  REQUIRE("foobar" == StringUtils::trim("foobar  "));
+  REQUIRE("foobar" == StringUtils::trim("  foobar"));
+  REQUIRE("foobar" == StringUtils::trim("  foobar  "));
+  REQUIRE("foobar" == StringUtils::trim(" \n\tfoobar\n\t "));
+
+  REQUIRE("" == StringUtils::trimRight(" \n\t"));
+  REQUIRE("foobar" == StringUtils::trimRight("foobar"));
+  REQUIRE("foo bar" == StringUtils::trimRight("foo bar"));
+  REQUIRE("foobar" == StringUtils::trimRight("foobar "));
+  REQUIRE(" foobar" == StringUtils::trimRight(" foobar"));
+  REQUIRE("foobar" == StringUtils::trimRight("foobar  "));
+  REQUIRE("  foobar" == StringUtils::trimRight("  foobar"));
+  REQUIRE("  foobar" == StringUtils::trimRight("  foobar  "));
+  REQUIRE(" \n\tfoobar" == StringUtils::trimRight(" \n\tfoobar\n\t "));
+
+  REQUIRE("" == StringUtils::trimLeft(" \n\t"));
+  REQUIRE("foobar" == StringUtils::trimLeft("foobar"));
+  REQUIRE("foo bar" == StringUtils::trimLeft("foo bar"));
+  REQUIRE("foobar " == StringUtils::trimLeft("foobar "));
+  REQUIRE("foobar" == StringUtils::trimLeft(" foobar"));
+  REQUIRE("foobar  " == StringUtils::trimLeft("foobar  "));
+  REQUIRE("foobar" == StringUtils::trimLeft("  foobar"));
+  REQUIRE("foobar  " == StringUtils::trimLeft("  foobar  "));
+  REQUIRE("foobar\n\t " == StringUtils::trimLeft(" \n\tfoobar\n\t "));
+}
+
 TEST_CASE("TestStringUtils::testHexEncode", "[test hex encode]") {
   REQUIRE("" == StringUtils::to_hex(""));
   REQUIRE("6f" == StringUtils::to_hex("o"));
