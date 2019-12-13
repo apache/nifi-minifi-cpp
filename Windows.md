@@ -32,7 +32,7 @@ The project previously required OpenSSL to be installed. If you follow our build
 
 ### JNI support
 Though the project is written in C++, JNI functionality supports running Java processors stored in NiFi Archives. These can be run
-in a much smaller memory footprint and consumer fewer resources. If your systems do not support Java or you do not want a JDK installed, please use non-JNI builds.
+in a much smaller memory footprint and consume fewer resources. If your systems do not support Java or you do not want a JDK installed, please use non-JNI builds.
 
 ## Building with Visual Studio 
 
@@ -62,8 +62,8 @@ After the build directory it will take optional parameters modifying the CMake c
 | /D | Builds RelWithDebInfo build instead of Release |
 
 Examples:
- - 32-bit build with kafka, disabling tests, enabling MSI creation: `win_build_vs.bat build /T /K /P`
- - 64-bit build with JNI, with debug symbols: `win_build_vs.bat build /64 /J /D`
+ - 32-bit build with kafka, disabling tests, enabling MSI creation: `win_build_vs.bat build32 /T /K /P`
+ - 64-bit build with JNI, with debug symbols: `win_build_vs.bat build64 /64 /J /D`
 
 `win_build_vs.bat` requires a Visual Studio 2017 build environment to be set up. For 32-bit builds this can be achieved by using the `x86 Native Tools Command Prompt for VS 2017`, for 64-bit builds by using the `x64 Native Tools Command Prompt for VS 2017`.
 
