@@ -54,7 +54,7 @@ for %%x in (%*) do (
 	set generator="Visual Studio 15 2017 Win64"
     )
     if [%%~x] EQU [/D] ( 
-	set cmake_build_type=RelwithDebInfo
+	set cmake_build_type=RelWithDebInfo
     )
 )
 
