@@ -558,6 +558,11 @@ TEST_CASE("MergeFileDefragmentDropFlow", "[mergefiletest3]") {
     std::set<std::shared_ptr<core::FlowFile>> expiredFlowRecords;
     std::shared_ptr<core::FlowFile> flow1 = connection->poll(expiredFlowRecords);
     std::shared_ptr<core::FlowFile> flow2 = connection->poll(expiredFlowRecords);
+
+    if (flow2->getSize() > flow1->getSize()) {
+      flow1.swap(flow2);  // The order of FFs is non-deterministic, this caused the test to fail when the server was heavily loaded
+    }
+
     REQUIRE(flow1->getSize() == 96);
     {
       ReadCallback callback(flow1->getSize());
@@ -707,6 +712,11 @@ TEST_CASE("MergeFileBinPack", "[mergefiletest4]") {
     std::set<std::shared_ptr<core::FlowFile>> expiredFlowRecords;
     std::shared_ptr<core::FlowFile> flow1 = connection->poll(expiredFlowRecords);
     std::shared_ptr<core::FlowFile> flow2 = connection->poll(expiredFlowRecords);
+
+    if (flow1->getName() > flow2->getName()) {
+      flow1.swap(flow2);  // The order of FFs is non-deterministic, this caused the test to fail when the server was heavily loaded
+    }
+
     REQUIRE(flow1->getSize() == 96);
     {
       ReadCallback callback(flow1->getSize());
@@ -855,6 +865,11 @@ TEST_CASE("MergeFileTar", "[mergefiletest4]") {
     std::set<std::shared_ptr<core::FlowFile>> expiredFlowRecords;
     std::shared_ptr<core::FlowFile> flow1 = connection->poll(expiredFlowRecords);
     std::shared_ptr<core::FlowFile> flow2 = connection->poll(expiredFlowRecords);
+
+    if (flow1->getName() > flow2->getName()) {
+      flow1.swap(flow2);  // The order of FFs is non-deterministic, this caused the test to fail when the server was heavily loaded
+    }
+
     REQUIRE(flow1->getSize() > 0);
     {
       ReadCallback callback(flow1->getSize());
