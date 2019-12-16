@@ -18,6 +18,8 @@
 #
 
 cmake_minimum_required(VERSION 3.7)
+cmake_policy(SET CMP0065 OLD) # default export policy, required for self-dlopen
+
 project(nifi-minifi-cpp)
 set(PROJECT_NAME "nifi-minifi-cpp")
 set(PROJECT_VERSION_MAJOR 0)
