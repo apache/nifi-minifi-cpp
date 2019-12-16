@@ -21,6 +21,11 @@
 
 #include <memory>
 #include <soci.h>
+#include <iostream>
+#include <algorithm>
+#include <cctype>
+
+#include "Utils.h"
 
 namespace org {
 namespace apache {
@@ -37,19 +42,17 @@ class Statement {
  public:
 
   explicit Statement(std::unique_ptr<soci::session>& sql, const std::string &query)
-      : sql_(std::move(sql)),
-        query_(query) {
+    : sql_(std::move(sql)), query_(query) {
   }
 
   virtual ~Statement() {
   }
 
-  soci::rowset<soci::row> execute(){
+  soci::rowset<soci::row> execute() {
     return sql_->prepare << query_;
   }
 
  protected:
-
   std::string query_;
   std::unique_ptr<soci::session> sql_;
 };

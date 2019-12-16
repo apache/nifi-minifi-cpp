@@ -20,6 +20,7 @@
 #define EXTENSIONS_SQL_DATA_JSONSQLWRITER_H_
 
 #include "SQLWriter.h"
+#include "MaxCollector.h"
 #include "rapidjson/document.h"
 
 namespace org {
@@ -30,18 +31,18 @@ namespace sql {
 
 class JSONSQLWriter : public SQLWriter {
  public:
-  explicit JSONSQLWriter(const soci::rowset<soci::row> &rowset, std::ostream *out);
+  explicit JSONSQLWriter(const soci::rowset<soci::row> &rowset, std::ostream *out, MaxCollector* pMaxCollector = nullptr);
   virtual ~JSONSQLWriter();
 
-  bool addRow(const soci::row &set) override;
+  bool addRow(const soci::row &set, size_t rowCount) override;
 
   void write() override;
 
  private:
 
-  std::ostream *output_stream;
-  rapidjson::Document json_payload;
-
+  std::ostream *output_stream_;
+  rapidjson::Document json_payload_;
+  MaxCollector* pMaxCollector_{};
 };
 
 } /* namespace sql */
