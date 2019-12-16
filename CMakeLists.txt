@@ -540,6 +540,7 @@ if (ENABLE_TENSORFLOW)
 endif()
 
 ## AWS Extentions
+option(ENABLE_AWS "Enables AWS support." OFF)
 if (ENABLE_AWS)
 	createExtension(AWS-EXTENSIONS "AWS EXTENSIONS" "This enables AWS support" "extensions/aws" )
 endif()
