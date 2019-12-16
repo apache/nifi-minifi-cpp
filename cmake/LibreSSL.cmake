@@ -29,9 +29,8 @@ function(use_libre_ssl SOURCE_DIR BINARY_DIR)
 	endif(WIN32)
 	ExternalProject_Add(
 	libressl-portable
-	### default is openbsd.org -- cloudflare is a reliable mirror
-	#URL "https://ftp.openbsd.org/pub/OpenBSD/LibreSSL/libressl-2.8.3.tar.gz"
-	URL "https://cloudflare.cdn.openbsd.org/pub/OpenBSD/LibreSSL/libressl-2.8.3.tar.gz"
+	URL https://cdn.openbsd.org/pub/OpenBSD/LibreSSL/libressl-2.8.3.tar.gz https://ftp.openbsd.org/pub/OpenBSD/LibreSSL/libressl-2.8.3.tar.gz https://gentoo.osuosl.org/distfiles/libressl-2.8.3.tar.gz
+	URL_HASH "SHA256=9b640b13047182761a99ce3e4f000be9687566e0828b4a72709e9e6a3ef98477"
 	SOURCE_DIR "${BINARY_DIR}/thirdparty/libressl-src"
 	CMAKE_ARGS ${PASSTHROUGH_CMAKE_ARGS}
 				"-DCMAKE_INSTALL_PREFIX=${BINARY_DIR}/thirdparty/libressl-install"
