@@ -141,9 +141,6 @@ void ExecuteSQL::onTrigger(const std::shared_ptr<core::ProcessContext> &context,
       outputStream.str("");
       outputStream.clear();
     } while (row_count > 0);
-
-    std::cout << "!!! cout: " << count << std::endl;
-
   } catch (std::exception& e) {
     logger_->log_error(e.what());
   }
