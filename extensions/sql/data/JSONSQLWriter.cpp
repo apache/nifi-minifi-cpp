@@ -115,8 +115,6 @@ bool JSONSQLWriter::addRow(const soci::row &row, size_t rowCount) {
           std::strftime(strWhen, sizeof(strWhen), "%Y-%m-%d %H:%M:%S", &when);
 
           std::string value = strWhen;
-          
-//          std::cout << "date: '" << value << "'" << std::endl;
           if (pMaxCollector_) {
             pMaxCollector_->updateMaxValue(columnName, Date('\'' + value + ".999'"));
           }
