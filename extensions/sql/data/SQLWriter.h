@@ -38,19 +38,19 @@ class SQLWriter {
     size_t count = 0;
 
     for (; iter_ != rowset_.end(); ) {
-      addRow(*iter_);
-	  iter_++;
-	  count++; 
-	  total_count_++;
-	  if (max > 0 && count >= max) {
-		  break;
-	  }
+      addRow(*iter_, count);
+	    iter_++;
+	    count++; 
+	    total_count_++;
+	    if (max > 0 && count >= max) {
+		    break;
+	    }
     }
 
     return count;
   }
 
-  virtual bool addRow(const soci::row &set) = 0;
+  virtual bool addRow(const soci::row &set, size_t rowCount) = 0;
 
   virtual void write() = 0;
 

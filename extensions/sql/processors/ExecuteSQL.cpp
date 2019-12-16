@@ -39,6 +39,7 @@
 #include "utils/OsUtils.h"
 #include "data/DatabaseConnectors.h"
 #include "data/JSONSQLWriter.h"
+#include "data/WriteCallback.h"
 
 namespace org {
 namespace apache {
@@ -94,6 +95,7 @@ void ExecuteSQL::onSchedule(const std::shared_ptr<core::ProcessContext> &context
 }
 
 void ExecuteSQL::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
+  return;
   if (!onScheduleOK_) {
     logger_->log_error("'DB Controller Service' must be defined, 'onTrigger' is not processed.");
     return;
@@ -139,6 +141,9 @@ void ExecuteSQL::onTrigger(const std::shared_ptr<core::ProcessContext> &context,
       outputStream.str("");
       outputStream.clear();
     } while (row_count > 0);
+
+    std::cout << "!!! cout: " << count << std::endl;
+
   } catch (std::exception& e) {
     logger_->log_error(e.what());
   }
