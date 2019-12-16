@@ -4,13 +4,7 @@ Copyright 2019 The Apache Software Foundation
 This product includes software developed at
 The Apache Software Foundation (http://www.apache.org/).
 
-This includes derived works from the Apache Celix (ASLv2 licensed) project (https://github.com/apache/celix):
-Copyright 2015 The Apache Software Foundation
-The derived work is adapted from
-  celix/cmake/FindUUID.cmake
-and can be found in cmake/FindUUID.cmake
-
-This includes derived works from the Apache NiFi (ALv2 Licensed ) project (https://github.com/apache/nifi):
+This includes derived works from the Apache NiFi (ALv2 Licensed) project (https://github.com/apache/nifi):
 Copyright 2019 The Apache Software Foundation
 The derived and original works are listed below:
     JniUnpacker.java is based on NarUnpacker.java.
