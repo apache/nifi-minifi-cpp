@@ -54,7 +54,15 @@ build_git_project(opencv-external "${BASE_DIR}" "https://github.com/opencv/openc
         -DBUILD_opencv_photo=ON
         -DBUILD_opencv_stitching=ON
         -DBUILD_opencv_video=ON
-        -DBUILD_opencv_videoio=ON)
+        -DBUILD_opencv_videoio=ON
+        -DWITH_1394=OFF
+        -DWITH_FFMPEG=OFF
+        -DWITH_GSTREAMER=OFF
+        -DWITH_GTK=OFF
+        -DWITH_IPP=OFF
+        -DWITH_JASPER=OFF
+        -DWITH_OPENEXR=OFF
+        -DWITH_ITT=OFF)
 
 add_library(minifi-opencv STATIC ${SOURCES})
 

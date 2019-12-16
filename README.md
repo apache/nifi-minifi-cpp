@@ -90,6 +90,7 @@ Through JNI extensions you can run NiFi processors using NARs. The JNI extension
 * Build and usage currently only supports Linux and OS X environments. MiNiFi C++ can be built and run through the Windows Subsystem for Linux but we provide no support for this platform.
 * Native Windows builds are possible with limited support. OPENSSL_ROOT_DIR must be specified to support OpenSSL support within your build.
 * Provenance events generation is supported and are persisted using RocksDB. Volatile repositories can be used on systems without persistent storage.
+* If MiNiFi C++ is built with the OPC-UA extension enabled, it bundles [open62541](https://open62541.org/), which is available under the Mozilla Public License Version 2.0, a Category B license under [ASF 3rd party license policy](https://www.apache.org/legal/resolved.html#category-b).
 
 ## System Requirements
 
