@@ -55,6 +55,10 @@ class DockerTestCluster(SingleNodeDockerCluster):
         logging.info('Creating tmp test resource dir: %s', self.tmp_test_resources_dir)
         os.makedirs(self.tmp_test_resources_dir)
 
+        # Add resources
+        test_dir = os.environ['PYTHONPATH'].split(':')[-1] # Based on DockerVerify.sh
+        shutil.copytree(test_dir + "/resources/kafka_broker/conf/certs", self.tmp_test_resources_dir + "/certs")
+
         # Point output validator to ephemeral output dir
         self.output_validator = output_validator
         if isinstance(output_validator, FileOutputValidator):
@@ -69,8 +73,7 @@ class DockerTestCluster(SingleNodeDockerCluster):
 
         super(DockerTestCluster, self).__init__()
 
-        if isinstance(output_validator, KafkaValidator):
-            output_validator.set_containers(self.containers)
+
 
     def deploy_flow(self,
                     flow,
@@ -177,6 +180,7 @@ class DockerTestCluster(SingleNodeDockerCluster):
         if isinstance(self.output_validator, FileOutputValidator):
             return self.output_validator.validate(dir=kwargs.get('dir', ''))
         return self.output_validator.validate()
+
     def rm_out_child(self, dir):
         logging.info('Removing %s from output folder', self.tmp_test_output_dir + dir)
         shutil.rmtree(self.tmp_test_output_dir + dir)
@@ -271,47 +275,6 @@ class SingleFileOutputValidator(FileOutputValidator):
 
         return self.valid
 
-class KafkaValidator(OutputValidator):
-    """
-    Validates PublishKafka
-    """
-
-    def __init__(self, expected_content):
-        self.valid = False
-        self.expected_content = expected_content
-        self.containers = None
-
-    def set_containers(self, containers):
-        self.containers = containers
-
-    def validate(self):
-
-        if self.valid:
-            return True
-        if self.containers is None:
-            return self.valid
-
-        if 'kafka-consumer' not in self.containers:
-            logging.info('Not found kafka container.')
-            return False
-        else:
-            kafka_container = self.containers['kafka-consumer']
-
-        output, stat = kafka_container.get_archive('/heaven_signal.txt')
-        file_obj = BytesIO()
-        for i in output:
-            file_obj.write(i)
-        file_obj.seek(0)
-        tar = tarfile.open(mode='r', fileobj=file_obj)
-        contents = tar.extractfile('heaven_signal.txt').read()
-        logging.info("expected %s -- content %s", self.expected_content, contents)
-
-        contents = contents.decode("utf-8")
-        if self.expected_content in contents:
-            self.valid = True
-
-        logging.info("expected %s -- content %s", self.expected_content, contents)
-        return self.valid
 
 class EmptyFilesOutPutValidator(FileOutputValidator):
     """
