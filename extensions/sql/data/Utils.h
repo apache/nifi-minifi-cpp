@@ -28,7 +28,6 @@ namespace minifi {
 namespace utils {
 
 std::string toLower(const std::string& str);
-std::string& trimLeftRight(std::string& str);
 std::vector<std::string> inputStringToList(const std::string& str);
 
 

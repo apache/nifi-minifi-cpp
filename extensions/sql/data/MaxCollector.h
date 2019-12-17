@@ -28,24 +28,7 @@ namespace nifi {
 namespace minifi {
 namespace sql {
 
-struct Date : public std::string {
-  Date(const std::string& str)
-    : std::string(str) {
-  }
-};
-
 class MaxCollector {
-  template <typename T>
-  static bool valueGreaterMaxValue(const T& value, const T& maxValue) {
-    return value > maxValue;
-  }
-
-  /* Date is returned as 'Y-m-d H:M:S.999', which works for string comparison 'value > maxValue', but can be customized if needed via template specialization.
-  static bool valueGreaterMaxValue(const Date& value, const Date& maxValue) {
-    return value > maxValue;
-  }
-  */
-
   template <typename T>
   struct MaxValue {
     void updateMaxValue(const std::string& columnName, const T& value) {
@@ -53,7 +36,7 @@ class MaxCollector {
       if (it == mapColumnNameValue_.end()) {
         mapColumnNameValue_.insert({ columnName, value });
       } else {
-        if (valueGreaterMaxValue(value, it->second)) {
+        if (value > it->second) {
           it->second = value;
         }
       }
@@ -137,7 +120,7 @@ class MaxCollector {
   const std::string selectQuery_;
   const std::string maxValueColumnNames_;
   std::unordered_map<std::string, std::string>& mapState_;
-  MaxValues<std::string, double, int, long long, unsigned long long, Date> maxValues_;
+  MaxValues<std::string, double, int, long long, unsigned long long> maxValues_;
 };
 	
 } /* namespace sql */

@@ -87,20 +87,11 @@ void ExecuteSQL::onSchedule(const std::shared_ptr<core::ProcessContext> &context
   context->getProperty(MaxRowsPerFlowFile.getName(), max_rows_);
 
   database_service_ = std::dynamic_pointer_cast<sql::controllers::DatabaseService>(context->getControllerService(db_controller_service_));
-  if (database_service_ == nullptr) {
-    logger_->log_error("'DB Controller Service' must be defined");
-  } else {
-    onScheduleOK_ = true;
-  }
+  if (!database_service_)
+    throw minifi::Exception(PROCESSOR_EXCEPTION, "'DB Controller Service' must be defined");
 }
 
 void ExecuteSQL::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
-  return;
-  if (!onScheduleOK_) {
-    logger_->log_error("'DB Controller Service' must be defined, 'onTrigger' is not processed.");
-    return;
-  }
-
   std::unique_lock<std::mutex> lock(onTriggerMutex_, std::try_to_lock);
   if (!lock.owns_lock()) {
     logger_->log_warn("'onTrigger' is called before previous 'onTrigger' call is finished.");
@@ -111,6 +102,7 @@ void ExecuteSQL::onTrigger(const std::shared_ptr<core::ProcessContext> &context,
     connection_ = database_service_->getConnection();
     if (!connection_) {
       context->yield();
+      return;
     }
   }
 

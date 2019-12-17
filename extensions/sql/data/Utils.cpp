@@ -53,15 +53,6 @@ std::vector<std::string> inputStringToList(const std::string& str) {
   return ret;
 }
 
-std::string& trimLeftRight(std::string& str) {
-  static const char* ws = " \t\n\r";
-
-  str.erase(str.find_last_not_of(ws) + 1);
-  str.erase(0, str.find_first_not_of(ws));
-
-  return str;
-}
-
 } /* namespace utils */
 } /* namespace minifi */
 } /* namespace nifi */

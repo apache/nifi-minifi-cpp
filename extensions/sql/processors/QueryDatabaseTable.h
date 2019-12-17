@@ -71,7 +71,6 @@ class QueryDatabaseTable : public core::Processor {
   std::shared_ptr<sql::controllers::DatabaseService> database_service_;
   std::shared_ptr<logging::Logger> logger_;
   std::string db_controller_service_;
-  bool onScheduleOK_{false};
   std::unique_ptr<sql::Connection> connection_;
   std::mutex onTriggerMutex_;
   std::string tableName_;

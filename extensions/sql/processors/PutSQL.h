@@ -69,7 +69,6 @@ class PutSQL : public core::Processor {
   std::shared_ptr<logging::Logger> logger_;
   std::string db_controller_service_;
   std::vector<std::string> sqlStatements_;
-  bool onScheduleOK_{false};
   std::unique_ptr<sql::Connection> connection_;
   std::mutex onTriggerMutex_;
 };
