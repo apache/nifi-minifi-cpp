@@ -97,6 +97,7 @@ void PutSQL::onTrigger(const std::shared_ptr<core::ProcessContext> &context, con
   std::unique_lock<std::mutex> lock(onTriggerMutex_, std::try_to_lock);
   if (!lock.owns_lock()) {
     logger_->log_warn("'onTrigger' is called before previous 'onTrigger' call is finished.");
+    context->yield();
     return;
   }
 
