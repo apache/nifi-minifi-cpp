@@ -56,6 +56,7 @@ function(use_bundled_libssh2 SOURCE_DIR BINARY_DIR)
     ExternalProject_Add(
             libssh2-external
             URL "https://www.libssh2.org/download/libssh2-1.8.2.tar.gz"
+            URL_HASH "SHA256=088307d9f6b6c4b8c13f34602e8ff65d21c2dc4d55284dfe15d502c4ee190d67"
             SOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libssh2-src"
             LIST_SEPARATOR % # This is needed for passing semicolon-separated lists
             CMAKE_ARGS ${LIBSSH2_CMAKE_ARGS}
