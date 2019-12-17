@@ -112,11 +112,12 @@ bool JSONSQLWriter::addRow(const soci::row &row, size_t rowCount) {
           std::tm when = row.get<std::tm>(i);
 
           char strWhen[128];
-          std::strftime(strWhen, sizeof(strWhen), "%Y-%m-%d %H:%M:%S", &when);
+          if (!std::strftime(strWhen, sizeof(strWhen), "%Y-%m-%d %H:%M:%S", &when))
+            throw minifi::Exception(PROCESSOR_EXCEPTION, std::string("ExecuteSQL. !strftime with '") + strWhen + "'");
 
           std::string value = strWhen;
           if (pMaxCollector_) {
-            pMaxCollector_->updateMaxValue(columnName, Date('\'' + value + ".999'"));
+            pMaxCollector_->updateMaxValue(columnName, '\'' + value + ".999'");
           }
           valueVal.SetString(value.c_str(), value.length(), alloc);
         }

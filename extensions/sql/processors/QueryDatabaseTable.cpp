@@ -105,15 +105,13 @@ class State {
  public:
   State(const std::string& stateDir, const std::string& uuid, std::shared_ptr<logging::Logger> logger)
     :logger_(logger) {
-    if (!createUUIDDir(stateDir, uuid, filePath_)) {
+    if (!createUUIDDir(stateDir, uuid, filePath_))
       return;
-    }
 
     filePath_ += "State.txt";
 
-    if (!getStateFromFile()) {
+    if (!getStateFromFile())
       return;
-    }
 
     ok_ = true;
   }
@@ -165,12 +163,14 @@ class State {
        return false;
      }
 
-     auto dirWithBackslash = stateDir;
-     if (stateDir.back() != '\\') {
-       dirWithBackslash += '\\';
+     const auto dirSeparator = utils::file::FileUtils::get_separator();
+
+     auto dirWithSlash = stateDir;
+     if (stateDir.back() != dirSeparator) {
+       dirWithSlash += dirSeparator;
      }
 
-     dir = dirWithBackslash + "uuid\\" + uuid + "\\";
+     dir = dirWithSlash + "uuid" + dirSeparator + uuid + dirSeparator;
 
      utils::file::FileUtils::create_dir(dir);
 
@@ -182,7 +182,6 @@ class State {
 
      return dirCreated;
    }
-
 
    bool getStateFromFile() {
      std::string state;
@@ -220,7 +219,7 @@ class State {
        if (posEQ == std::string::npos) {
          logger_->log_error("Invalid data in '%s' file.", filePath_.c_str());
          mapState_.clear();
-         return false;
+         return createEmptyStateFile();
        }
 
        const auto& name = columnNameValue.substr(0, posEQ);
@@ -240,13 +239,9 @@ class State {
    }
 
    bool createEmptyStateFile() {
-     if (file_.is_open()) {
-       file_.close();
-     }
-
      file_.open(filePath_, std::ios::out);
      if (!file_.is_open()) {
-       logger_->log_error("Cannot open %s", filePath_.c_str());
+       logger_->log_error("Cannot open '%s' file", filePath_.c_str());
        return false;
      }
 
@@ -258,8 +253,8 @@ class State {
    std::shared_ptr<logging::Logger> logger_;
    std::string filePath_;
    std::fstream file_;
-   bool ok_{};
    int dataSize_{};
+   bool ok_{};
 };
 
 
@@ -324,19 +319,11 @@ void QueryDatabaseTable::onSchedule(const std::shared_ptr<core::ProcessContext> 
   }
 
   database_service_ = std::dynamic_pointer_cast<sql::controllers::DatabaseService>(context->getControllerService(db_controller_service_));
-  if (!database_service_) {
-    logger_->log_error("'DB Controller Service' must be defined");
-    return;
-  }
-
-  onScheduleOK_ = true;
+  if (!database_service_) 
+    throw minifi::Exception(PROCESSOR_EXCEPTION, "'DB Controller Service' must be defined");
 }
 
 void QueryDatabaseTable::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
-  if (!onScheduleOK_) {
-    return;
-  }
-
   std::unique_lock<std::mutex> lock(onTriggerMutex_, std::try_to_lock);
   if (!lock.owns_lock()) {
     logger_->log_warn("'onTrigger' is called before previous 'onTrigger' call is finished.");
@@ -347,6 +334,7 @@ void QueryDatabaseTable::onTrigger(const std::shared_ptr<core::ProcessContext> &
     connection_ = database_service_->getConnection();
     if (!connection_) {
       context->yield();
+      return;
     }
   }
 
