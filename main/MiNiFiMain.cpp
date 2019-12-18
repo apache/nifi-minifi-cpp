@@ -46,6 +46,7 @@
 #include <queue>
 #include <map>
 #include <iostream>
+#include <utils/file/FileUtils.h>
 #include "ResourceClaim.h"
 #include "core/Core.h"
 
@@ -54,6 +55,7 @@
 #include "core/RepositoryFactory.h"
 #include "utils/file/PathUtils.h"
 #include "FlowController.h"
+#include "AgentDocs.h"
 #include "Main.h"
 
  // Variables that allow us to avoid a timed wait.
@@ -93,6 +95,17 @@ void sigHandler(int signal) {
 		// avoid stopping the controller here.
 		sem_post(running);
 	}
+}
+
+void dumpDocs(const std::shared_ptr<minifi::Configure> &configuration, const std::string &dir, std::ostream &out) {
+	auto pythoncreator = core::ClassLoader::getDefaultClassLoader().instantiate("PythonCreator", "PythonCreator");
+	if (nullptr != pythoncreator) {
+		pythoncreator->configure(configuration);
+	}
+
+	minifi::docs::AgentDocs docsCreator;
+
+	docsCreator.generate(dir, out);
 }
 
 int main(int argc, char **argv) {
@@ -233,6 +246,28 @@ int main(int argc, char **argv) {
 	std::shared_ptr<minifi::Configure> configure = std::make_shared<minifi::Configure>();
 	configure->setHome(minifiHome);
 	configure->loadConfigureFile(DEFAULT_NIFI_PROPERTIES_FILE);
+
+  if (argc >= 3 && std::string("docs") == argv[1]) {
+    if (utils::file::FileUtils::create_dir(argv[2]) != 0) {
+      std::cerr << "Working directory doesn't exist and cannot be created: " << argv[2] << std::endl;
+      exit(1);
+    }
+
+    std::cerr << "Dumping docs to " << argv[2] << std::endl;
+    if (argc == 4) {
+      std::string filepath, filename;
+      utils::file::PathUtils::getFileNameAndPath(argv[3], filepath, filename);
+      if (filepath == argv[2]) {
+        std::cerr << "Target file should be out of the working directory: " << filepath << std::endl;
+        exit(1);
+      }
+      std::ofstream outref(argv[3]);
+      dumpDocs(configure, argv[2], outref);
+    } else{
+      dumpDocs(configure, argv[2], std::cout);
+    }
+    exit(0);
+  }
 
 
 	if (configure->get(minifi::Configure::nifi_graceful_shutdown_seconds, graceful_shutdown_seconds)) {

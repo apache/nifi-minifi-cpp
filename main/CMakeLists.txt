@@ -55,7 +55,7 @@ endif()
 
 endif()
 
-add_executable(minifiexe MiNiFiMain.cpp MiNiFiWindowsService.cpp)
+add_executable(minifiexe MiNiFiMain.cpp MiNiFiWindowsService.cpp AgentDocs.cpp)
 
 if (NOT USE_SHARED_LIBS)
 	if (LIBC_STATIC)
