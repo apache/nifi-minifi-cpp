@@ -10,14 +10,12 @@
 - [CaptureRTSPFrame](#capturertspframe)
 - [CompressContent](#compresscontent)
 - [ConsumeMQTT](#consumemqtt)
-- [ConvertHeartBeat](#convertheartbeat)
-- [ConvertJSONAck](#convertjsonack)
-- [ConvertUpdate](#convertupdate)
 - [ExecuteProcess](#executeprocess)
 - [ExecutePythonProcessor](#executepythonprocessor)
 - [ExecuteSQL](#executesql)
 - [ExecuteScript](#executescript)
 - [ExtractText](#extracttext)
+- [FetchOPCProcessor](#fetchopcprocessor)
 - [FetchSFTP](#fetchsftp)
 - [FocusArchiveEntry](#focusarchiveentry)
 - [GenerateFlowFile](#generateflowfile)
@@ -33,15 +31,14 @@
 - [LogAttribute](#logattribute)
 - [ManipulateArchive](#manipulatearchive)
 - [MergeContent](#mergecontent)
+- [MotionDetector](#motiondetector)
 - [PublishKafka](#publishkafka)
 - [PublishMQTT](#publishmqtt)
 - [PutFile](#putfile)
+- [PutOPCProcessor](#putopcprocessor)
 - [PutSFTP](#putsftp)
 - [PutSQL](#putsql)
 - [RouteOnAttribute](#routeonattribute)
-- [TFApplyGraph](#tfapplygraph)
-- [TFConvertImageToTensor](#tfconvertimagetotensor)
-- [TFExtractTopLabels](#tfextracttoplabels)
 - [TailFile](#tailfile)
 - [UnfocusArchiveEntry](#unfocusarchiveentry)
 - [UpdateAttribute](#updateattribute)
@@ -124,7 +121,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 |Base Directory|/tmp/||Scratch directory for PCAP files|
 |Batch Size|50||The number of packets to combine within a given PCAP|
 |Capture Bluetooth|false||True indicates that we support bluetooth interfaces|
-|Network Controller|.*||Regular expression of the network controller(s) to which we will attach|
+|Network Controllers|.*||Regular expression of the network controller(s) to which we will attach|
 ### Properties 
 
 | Name | Description |
@@ -207,67 +204,6 @@ In the list below, the names of required properties appear in bold. Any other pr
 | Name | Description |
 | - | - |
 |success|FlowFiles that are sent successfully to the destination are transferred to this relationship|
-
-
-## ConvertHeartBeat
-
-### Description 
-
-ConvertHeartBeat converts heatrbeats into MQTT messages.
-### Properties 
-
-In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
-
-| Name | Default Value | Allowable Values | Description | 
-| - | - | - | - | 
-|Listening Topic|||Name of topic to listen to|
-|MQTT Controller Service|||Name of controller service that will be used for MQTT interactivity|
-### Properties 
-
-| Name | Description |
-| - | - |
-|success|All files are routed to success|
-
-
-## ConvertJSONAck
-
-### Description 
-
-Converts JSON acks into an MQTT consumable by MQTTC2Protocol
-### Properties 
-
-In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
-
-| Name | Default Value | Allowable Values | Description | 
-| - | - | - | - | 
-|Listening Topic|||Name of topic to listen to|
-|MQTT Controller Service|||Name of controller service that will be used for MQTT interactivity|
-### Properties 
-
-| Name | Description |
-| - | - |
-|success|All files are routed to success|
-
-
-## ConvertUpdate
-
-### Description 
-
-onverts update messages into the appropriate RESTFul call
-### Properties 
-
-In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
-
-| Name | Default Value | Allowable Values | Description | 
-| - | - | - | - | 
-|Listening Topic|||Name of topic to listen to|
-|MQTT Controller Service|||Name of controller service that will be used for MQTT interactivity|
-|SSL Context Service|||The SSL Context Service used to provide client certificate information for TLS/SSL (https) connections.|
-### Properties 
-
-| Name | Description |
-| - | - |
-|success|All files are routed to success|
 
 
 ## ExecuteProcess
@@ -364,109 +300,6 @@ In the list below, the names of required properties appear in bold. Any other pr
 |success|Script successes|
 
 
-### Python Notes
-
-- ExecuteScript uses native Python bindings, which means that any environment packages (e.g. those installed by pip) can be referenced.
-- Virtual environments do work.
-- It is possible to build MiNiFi - C++ against implementations which are compatible with CPython. CPython v2.7 as well as v3.4 do work, but only one version can be used at a time for a build.
-- We recommend building multiple MiNiFi - C++ executables if there is a requirement for operating multiple Python versions or implmentations concurrently.
-- Be mindful of the Global Interpreter Lock (GIL); While Python scripts will execute concurrently, execution is multiplexed from a single thread. Generally speaking, Python input/output and library calls with native implementations will release the GIL and enable concurrency, but long-running Python code such as loops will block other threads.
-
-### Lua Notes
-
-- Take care to use the `local` keyword where appropriate (such as inside of onTrigger functions and read/write callbacks) as scripts are long-running and this will help to avoid memory leaks.
-- The following Lua packages are enabled/available for scripts:
-  - `base`
-  - `os`
-  - `coroutine`
-  - `math`
-  - `io`
-  - `string`
-  - `table`
-  - `utf8`
-  - `package`
-
-#### Python Example: Reading a File
-
-```python
-import codecs
-
-class ReadCallback(object):
-  def process(self, input_stream):
-    content = codecs.getreader('utf-8')(input_stream).read()
-    log.info('file content: %s' % content)
-    return len(content)
-
-def onTrigger(context, session):
-  flow_file = session.get()
-
-  if flow_file is not None:
-    log.info('got flow file: %s' % flow_file.getAttribute('filename'))
-    session.read(flow_file, ReadCallback())
-    session.transfer(flow_file, REL_SUCCESS)
-```
-
-#### Python Example: Writing a File
-
-```python
-class WriteCallback(object):
-  def process(self, output_stream):
-    new_content = 'hello 2'.encode('utf-8')
-    output_stream.write(new_content)
-    return len(new_content)
-
-def onTrigger(context, session):
-  flow_file = session.get()
-  if flow_file is not None:
-    log.info('got flow file: %s' % flow_file.getAttribute('filename'))
-    session.write(flow_file, WriteCallback())
-    session.transfer(flow_file, REL_SUCCESS)
-```
-
-#### Lua Example: Reading a File
-
-```lua
-read_callback = {}
-
-function read_callback.process(self, input_stream)
-    local content = input_stream:read()
-    log:info('file content: ' .. content)
-    return #content
-end
-
-function onTrigger(context, session)
-  local flow_file = session:get()
-
-  if flow_file ~= nil then
-    log:info('got flow file: ' .. flow_file:getAttribute('filename'))
-    session:read(flow_file, read_callback)
-    session:transfer(flow_file, REL_SUCCESS)
-  end
-end
-```
-
-#### Lua Example: Writing a File
-
-```lua
-write_callback = {}
-
-function write_callback.process(self, output_stream)
-  local new_content = 'hello 2'
-  output_stream:write(new_content)
-  return #new_content
-end
-
-function onTrigger(context, session)
-  local flow_file = session:get()
-
-  if flow_file ~= nil then
-    log:info('got flow file: ' .. flow_file:getAttribute('filename'))
-    session:write(flow_file, write_callback)
-    session:transfer(flow_file, REL_SUCCESS)
-  end
-end
-```
-
 ## ExtractText
 
 ### Description 
@@ -490,6 +323,37 @@ In the list below, the names of required properties appear in bold. Any other pr
 | Name | Description |
 | - | - |
 |success|success operational on the flow record|
+
+
+## FetchOPCProcessor
+
+### Description 
+
+Fetches OPC-UA node
+### Properties 
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+| Name | Default Value | Allowable Values | Description | 
+| - | - | - | - | 
+|Application URI|||Application URI of the client in the format 'urn:unconfigured:application'. Mandatory, if using Secure Channel and must match the URI included in the certificate's Subject Alternative Names.|
+|Certificate path|||Path to the DER-encoded cert file|
+|Key path|||Path to the DER-encoded key file|
+|**Lazy mode**|Off|Off<br>On<br>|Only creates flowfiles from nodes with new timestamp from the server.|
+|Max depth|0||Specifiec the max depth of browsing. 0 means unlimited.|
+|Namespace index|0||The index of the namespace. Used only if node ID type is not path.|
+|**Node ID**|||Specifies the ID of the root node to traverse|
+|**Node ID type**||Int<br>Path<br>String<br>|Specifies the type of the provided node ID|
+|**OPC server endpoint**|||Specifies the address, port and relative path of an OPC endpoint|
+|Password|||Password to log in with. Providing this requires cert and key to be provided as well, credentials are always sent encrypted.|
+|Trusted server certificate path|||Path to the DER-encoded trusted server certificate|
+|Username|||Username to log in with.|
+### Properties 
+
+| Name | Description |
+| - | - |
+|failure|Retrieved OPC-UA nodes where value cannot be extracted (only if enabled)|
+|success|Successfully retrieved OPC-UA nodes|
 
 
 ## FetchSFTP
@@ -593,8 +457,9 @@ In the list below, the names of required properties appear in bold. Any other pr
 |**Input Directory**|.||The input directory from which to pull files<br/>**Supports Expression Language: true**|
 |Keep Source File|false||If true, the file is not deleted after it has been copied to the Content Repository|
 |Maximum File Age|0 sec||The maximum age that a file must be in order to be pulled; any file older than this amount of time (according to last modification date) will be ignored|
+|Maximum File Size|0 B||The maximum size that a file can be in order to be pulled|
 |Minimum File Age|0 sec||The minimum age that a file must be in order to be pulled; any file younger than this amount of time (according to last modification date) will be ignored|
-|Minimum File Size|0 B||The maximum size that a file can be in order to be pulled|
+|Minimum File Size|0 B||The minimum size that a file can be in order to be pulled|
 |Polling Interval|0 sec||Indicates how long to wait before performing a directory listing|
 |Recurse Subdirectories|true||Indicates whether or not to pull files from subdirectories|
 ### Properties 
@@ -798,7 +663,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 |**Listening Port**|80||The Port to listen on for incoming connections. 0 means port is going to be selected randomly.|
 |SSL Certificate|||File containing PEM-formatted file including TLS/SSL certificate and key|
 |SSL Certificate Authority|||File containing trusted PEM-formatted certificates|
-|SSL Minimum Version|SSL2|SSL2<br>SSL3<br>TLS1.0<br>TLS1.1<br>TLS1.2<br>|Minimum TLS/SSL version allowed (SSL2, SSL3, TLS1.0, TLS1.1, TLS1.2)|
+|SSL Minimum Version|TLS1.2|TLS1.2<br>|Minimum TLS/SSL version allowed (TLS1.2)|
 |SSL Verify Peer|no|no<br>yes<br>|Whether or not to verify the client's certificate (yes/no)|
 ### Properties 
 
@@ -848,9 +713,11 @@ In the list below, the names of required properties appear in bold. Any other pr
 |Attributes to Ignore|||A comma-separated list of Attributes to ignore. If not specified, no attributes will be ignored.|
 |Attributes to Log|||A comma-separated list of Attributes to Log. If not specified, all attributes will be logged.|
 |FlowFiles To Log|1||Number of flow files to log. If set to zero all flow files will be logged. Please note that this may block other threads from running if not used judiciously.|
+|Hexencode Payload|false||If true, the FlowFile's payload will be logged in a hexencoded format|
 |Log Level||debug<br>error<br>info<br>trace<br>warn<br>|The Log Level to use when logging the Attributes|
 |Log Payload|false||If true, the FlowFile's payload will be logged, in addition to its attributes.otherwise, just the Attributes will be logged|
 |Log Prefix|||Log prefix appended to the log lines. It helps to distinguish the output of multiple LogAttribute processors.|
+|Maximum Payload Line Length|80||The logged payload will be broken into lines this long. 0 means no newlines will be added.|
 ### Properties 
 
 | Name | Description |
@@ -916,6 +783,30 @@ In the list below, the names of required properties appear in bold. Any other pr
 |original|The FlowFiles that were used to create the bundle|
 
 
+## MotionDetector
+
+### Description 
+
+Detect motion from captured images.
+### Properties 
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+| Name | Default Value | Allowable Values | Description | 
+| - | - | - | - | 
+|**Dilate iteration**|10||For image processing, if an object is detected as 2 separate objects, increase this value|
+|**Image Encoding**|.jpg|.jpg<br>.png<br>|The encoding that should be applied to the output|
+|**Minimum Area**|100||We only consider the movement regions with area greater than this.|
+|**Path to background frame**|||If not provided then the processor will take the first input frame as background|
+|**Threshold for segmentation**|42||Pixel greater than this will be white, otherwise black.|
+### Properties 
+
+| Name | Description |
+| - | - |
+|failure|Failure to detect motion|
+|success|Successful to detect motion|
+
+
 ## PublishKafka
 
 ### Description 
@@ -928,27 +819,30 @@ In the list below, the names of required properties appear in bold. Any other pr
 | Name | Default Value | Allowable Values | Description | 
 | - | - | - | - | 
 |Attributes to Send as Headers|||Any attribute whose name matches the regex will be added to the Kafka messages as a Header|
-|Batch Size|||Maximum number of messages batched in one MessageSet|
+|Batch Size|10||Maximum number of messages batched in one MessageSet|
 |**Client Name**|||Client Name to use when communicating with Kafka<br/>**Supports Expression Language: true**|
 |Compress Codec|none||compression codec to use for compressing message sets|
-|Delivery Guarantee|DELIVERY_ONE_NODE||TSpecifies the requirement for guaranteeing that a message is sent to Kafka<br/>**Supports Expression Language: true**|
+|Debug contexts|||A comma-separated list of debug contexts to enable.Including: generic, broker, topic, metadata, feature, queue, msg, protocol, cgrp, security, fetch, interceptor, plugin, consumer, admin, eos, all|
+|Delivery Guarantee|1||Specifies the requirement for guaranteeing that a message is sent to Kafka. Valid values are 0 (do not wait for acks), -1 or all (block until message is committed by all in sync replicas) or any concrete number of nodes.<br/>**Supports Expression Language: true**|
 |Kerberos Keytab Path|||The path to the location on the local filesystem where the kerberos keytab is located. Read permission on the file is required.|
 |Kerberos Principal|||Keberos Principal|
 |Kerberos Service Name|||Kerberos Service Name|
 |**Known Brokers**|||A comma-separated list of known Kafka Brokers in the format <host>:<port><br/>**Supports Expression Language: true**|
-|Max Flow Segment Size|||Maximum flow content payload segment size for the kafka record|
+|Max Flow Segment Size|0 B||Maximum flow content payload segment size for the kafka record. 0 B means unlimited.|
 |Max Request Size|||Maximum Kafka protocol request message size|
 |Message Key Field|||The name of a field in the Input Records that should be used as the Key for the Kafka message.
 Supports Expression Language: true (will be evaluated using flow file attributes)|
+|Message Timeout|30 sec||The total time sending a message could take<br/>**Supports Expression Language: true**|
 |Queue Buffering Max Time|||Delay to wait for messages in the producer queue to accumulate before constructing message batches|
 |Queue Max Buffer Size|||Maximum total message size sum allowed on the producer queue|
 |Queue Max Message|||Maximum number of messages allowed on the producer queue|
-|Request Timeout|||The ack timeout of the producer request in milliseconds<br/>**Supports Expression Language: true**|
+|Request Timeout|10 sec||The ack timeout of the producer request<br/>**Supports Expression Language: true**|
 |Security CA|||File or directory path to CA certificate(s) for verifying the broker's key|
 |Security Cert|||Path to client's public key (PEM) used for authentication|
 |Security Pass Phrase|||Private key passphrase|
 |Security Private Key|||Path to client's private key (PEM) used for authentication|
 |Security Protocol|||Protocol used to communicate with brokers|
+|Target Batch Payload Size|512 KB||The target total payload size for a batch. 0 B means unlimited (Batch Size is still applied).|
 |**Topic Name**|||The Kafka Topic of interest<br/>**Supports Expression Language: true**|
 ### Properties 
 
@@ -1009,6 +903,40 @@ In the list below, the names of required properties appear in bold. Any other pr
 | - | - |
 |failure|Failed files (conflict, write failure, etc.) are transferred to failure|
 |success|All files are routed to success|
+
+
+## PutOPCProcessor
+
+### Description 
+
+Creates/updates  OPC nodes
+### Properties 
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+| Name | Default Value | Allowable Values | Description | 
+| - | - | - | - | 
+|Application URI|||Application URI of the client in the format 'urn:unconfigured:application'. Mandatory, if using Secure Channel and must match the URI included in the certificate's Subject Alternative Names.|
+|Certificate path|||Path to the DER-encoded cert file|
+|Key path|||Path to the DER-encoded key file|
+|**OPC server endpoint**|||Specifies the address, port and relative path of an OPC endpoint|
+|**Parent node ID**|||Specifies the ID of the root node to traverse|
+|**Parent node ID type**||Int<br>Path<br>String<br>|Specifies the type of the provided node ID|
+|Parent node namespace index|0||The index of the namespace. Used only if node ID type is not path.|
+|Password|||Password to log in with. Providing this requires cert and key to be provided as well, credentials are always sent encrypted.|
+|Target node ID|||ID of target node.<br/>**Supports Expression Language: true**|
+|Target node ID type|||ID type of target node. Allowed values are: Int, String.<br/>**Supports Expression Language: true**|
+|Target node browse name|||Browse name of target node. Only used when new node is created.<br/>**Supports Expression Language: true**|
+|Target node namespace index|||The index of the namespace. Used only if node ID type is not path.<br/>**Supports Expression Language: true**|
+|Trusted server certificate path|||Path to the DER-encoded trusted server certificate|
+|Username|||Username to log in with.|
+|**Value type**||Boolean<br>Double<br>Float<br>Int32<br>Int64<br>String<br>UInt32<br>UInt64<br>|Set the OPC value type of the created nodes|
+### Properties 
+
+| Name | Description |
+| - | - |
+|failure|Failed to put OPC-UA node|
+|success|Successfully put OPC-UA node|
 
 
 ## PutSFTP
@@ -1102,102 +1030,6 @@ In the list below, the names of required properties appear in bold. Any other pr
 |unmatched|Files which do not match any expression are routed here|
 
 
-## TFApplyGraph 
-
-### Description
-
-Applies a TensorFlow graph to the tensor protobuf supplied as input. The tensor
-is fed into the node specified by the `Input Node` property. The output
-FlowFile is a tensor protobuf extracted from the node specified by the `Output
-Node` property.
-
-TensorFlow graphs are read dynamically by feeding a graph protobuf to the
-processor with the `tf.type` property set to `graph`.
-
-### Properties
-
-In the list below, the names of required properties appear in bold. Any other
-properties (not in bold) are considered optional. The table also indicates any
-default values, and whether a property supports the NiFi Expression Language.
-
-| Name | Default Value | Allowable Values | Description |
-| - | - | - | - |
-| **Input Node** | | | The node of the TensorFlow graph to feed tensor inputs to |
-| **Output Node** | | | The node of the TensorFlow graph to read tensor outputs from |
-
-### Relationships
-
-| Name | Description |
-| - | - |
-| success | Successful graph application outputs as tensor protobufs |
-| retry | Inputs which fail graph application but may work if sent again |
-| failure | Failures which will not work if retried |
-## TFConvertImageToTensor
-
-### Description
-
-Converts the input image file into a tensor protobuf. The image will be resized
-to the given output tensor dimensions.
-
-### Properties
-
-In the list below, the names of required properties appear in bold. Any other
-properties (not in bold) are considered optional. The table also indicates any
-default values, and whether a property supports the NiFi Expression Language.
-
-| Name | Default Value | Allowable Values | Description |
-| - | - | - | - |
-| **Input Format** | | PNG, RAW | The format of the input image (PNG or RAW). RAW is RGB24. |
-| **Input Width** | | | The width, in pixels, of the input image. |
-| **Input Height** | | | The height, in pixels, of the input image. |
-| Crop Offset X | | | The X (horizontal) offset, in pixels, to crop the input image (relative to top-left corner). |
-| Crop Offset Y | | | The Y (vertical) offset, in pixels, to crop the input image (relative to top-left corner). |
-| Crop Size X | | | The X (horizontal) size, in pixels, to crop the input image. |
-| Crop Size Y | | | The Y (vertical) size, in pixels, to crop the input image. |
-| **Output Width** | | | The width, in pixels, of the output image. |
-| **Output Height** | | | The height, in pixels, of the output image. |
-| **Channels** | 3 | | The number of channels (e.g. 3 for RGB, 4 for RGBA) in the input image. |
-
-### Relationships
-
-| Name | Description |
-| - | - |
-| success | Successfully read tensor protobufs |
-| failure | Inputs which could not be converted to tensor protobufs |
-## TFExtractTopLabels
-
-### Description
-
-Extracts the top 5 labels for categorical inference models.
-
-Labels are fed as newline (`\n`) -delimited files where each line is a label
-for the tensor index equivalent to the line number. Label files must be fed in
-with the `tf.type` property set to `labels`.
-
-The top 5 labels are written to the following attributes:
-
-- `top_label_0`
-- `top_label_1`
-- `top_label_2`
-- `top_label_3`
-- `top_label_4`
-
-### Properties
-
-In the list below, the names of required properties appear in bold. Any other
-properties (not in bold) are considered optional. The table also indicates any
-default values, and whether a property supports the NiFi Expression Language.
-
-| Name | Default Value | Allowable Values | Description |
-| - | - | - | - |
-
-### Relationships
-
-| Name | Description |
-| - | - |
-| success | Successful FlowFiles are sent here with labels as attributes |
-| retry | Failures which might work if retried |
-| failure | Failures which will not work if retried |
 ## TailFile
 
 ### Description 
