@@ -21,13 +21,14 @@
 #include "core/logging/LoggerConfiguration.h"
 #include "core/controller/ControllerService.h"
 
-#include <soci.h>
-#include <odbc/soci-odbc.h>
 #include "DatabaseService.h"
 #include "core/Resource.h"
 #include "data/DatabaseConnectors.h"
 #include <memory>
 #include <unordered_map>
+
+#include <soci/soci.h>
+#include <soci/odbc/soci-odbc.h>
 
 namespace org {
 namespace apache {
