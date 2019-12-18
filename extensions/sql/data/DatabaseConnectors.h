@@ -20,10 +20,11 @@
 #define EXTENSIONS_SQL_SERVICES_DATABASECONNECTORS_H_
 
 #include <memory>
-#include <soci.h>
 #include <iostream>
 #include <algorithm>
 #include <cctype>
+
+#include <soci/soci.h>
 
 #include "Utils.h"
 
@@ -41,7 +42,7 @@ namespace sql {
 class Statement {
  public:
 
-  explicit Statement(std::unique_ptr<soci::session>& sql, const std::string &query)
+  explicit Statement(std::unique_ptr<soci::session>&& sql, const std::string &query)
     : sql_(std::move(sql)), query_(query) {
   }
 
@@ -60,7 +61,7 @@ class Statement {
 class Session {
  public:
 
-  explicit Session(std::unique_ptr<soci::session>& sql)
+  explicit Session(std::unique_ptr<soci::session>&& sql)
     : sql_(std::move(sql)) {
   }
 

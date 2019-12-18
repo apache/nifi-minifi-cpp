@@ -30,7 +30,8 @@
 #include <iostream>
 #include <memory>
 #include <codecvt>
-#include <soci.h>
+
+#include <soci/soci.h>
 
 #include "io/DataStream.h"
 #include "core/ProcessContext.h"

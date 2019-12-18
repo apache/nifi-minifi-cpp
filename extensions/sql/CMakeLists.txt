@@ -18,13 +18,18 @@
 #
 
 include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
-include_directories(../../thirdparty/rapidjson-1.1.0/include/ ../../thirdparty/rapidjson-1.1.0/include/rapidjson)
-set(EXTRA_SOURCES "")
 
-file(GLOB SOURCES  "*.cpp" "services/*.cpp" "processors/*.cpp"  "data/*.cpp" ${EXTRA_SOURCES} )
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+include_directories(../../thirdparty/rapidjson-1.1.0/include/ ../../thirdparty/rapidjson-1.1.0/include/rapidjson)
+include_directories(".")
+
+file(GLOB SOURCES  "*.cpp" "services/*.cpp" "processors/*.cpp"  "data/*.cpp")
 
 add_library(minifi-sql STATIC ${SOURCES})
 set_property(TARGET minifi-sql PROPERTY POSITION_INDEPENDENT_CODE ON)
+
 if(THREADS_HAVE_PTHREAD_ARG)
   target_compile_options(PUBLIC minifi-sql "-pthread")
 endif()
@@ -32,122 +37,145 @@ if(CMAKE_THREAD_LIBS_INIT)
   target_link_libraries(minifi-sql "${CMAKE_THREAD_LIBS_INIT}")
 endif()
 
+# Get whether we should use lib64/ library paths
+get_property(LIB64 GLOBAL PROPERTY FIND_LIBRARY_USE_LIB64_PATHS)
+
+if(WIN32)
+	find_package(ODBC REQUIRED)
+else()
+	# Build iODBC
+
+	# Define byproducts
+	if(LIB64 AND NOT APPLE)
+		set(IODBC_BYPRODUCT "lib64/libiodbc.a")
+	else()
+		set(IODBC_BYPRODUCT "lib/libiodbc.a")
+	endif()
+
+	set(IODBC_BYPRODUCT_DIR "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/iodbc-install/")
+
+	# Build project
+	ExternalProject_Add(
+			iodbc-external
+			URL "https://github.com/openlink/iODBC/archive/v3.52.13.tar.gz"
+			URL_HASH "SHA256=4bf67fc6d4d237a4db19b292b5dd255ee09a0b2daa4e4058cf3a918bc5102135"
+			BUILD_IN_SOURCE true
+			SOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/iodbc-src"
+			BUILD_COMMAND make
+			CMAKE_COMMAND ""
+			UPDATE_COMMAND ""
+			INSTALL_COMMAND make install
+			CONFIGURE_COMMAND ""
+			PATCH_COMMAND ./autogen.sh && ./configure --prefix=${IODBC_BYPRODUCT_DIR}
+			STEP_TARGETS build
+			BUILD_BYPRODUCTS "${IODBC_BYPRODUCT_DIR}/${IODBC_BYPRODUCT}"
+			EXCLUDE_FROM_ALL TRUE
+	)
+
+	# Set variables
+	set(IODBC_FOUND "YES" CACHE STRING "" FORCE)
+	set(IODBC_INCLUDE_DIRS "${IODBC_BYPRODUCT_DIR}/include" CACHE STRING "" FORCE)
+	set(IODBC_LIBRARIES "${IODBC_BYPRODUCT_DIR}/${IODBC_BYPRODUCT}" CACHE STRING "" FORCE)
+
+	# Set exported variables for FindPackage.cmake
+	set(EXPORTED_IODBC_INCLUDE_DIRS "${IODBC_INCLUDE_DIRS}" CACHE STRING "" FORCE)
+	set(EXPORTED_IODBC_LIBRARIES "${IODBC_LIBRARIES}" CACHE STRING "" FORCE)
+
+	# Create imported targets
+	add_library(ODBC::ODBC STATIC IMPORTED)
+	set_target_properties(ODBC::ODBC PROPERTIES IMPORTED_LOCATION "${IODBC_LIBRARIES}")
+	add_dependencies(ODBC::ODBC iodbc-external)
+	file(MAKE_DIRECTORY ${IODBC_INCLUDE_DIRS})
+	set_property(TARGET ODBC::ODBC APPEND PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${IODBC_INCLUDE_DIRS})
+endif()
+
+# Build SOCI
+
+# Find patch executable
 find_package(Patch)
 
-if(NOT WIN32)
-set(ODBC_BYPRODUCT_DIR "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/iodbc-install/" CACHE STRING "iODBC install directory")
-	
-  ExternalProject_Add(
-    iodbc-external
-    GIT_REPOSITORY "https://github.com/openlink/iODBC.git"
-    GIT_TAG "d9293505804e775488582321420e427464e6c3ce" 
-    BUILD_IN_SOURCE true
-    SOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/iodbc-src"
- 	BUILD_COMMAND make
-    CMAKE_COMMAND ""
-    UPDATE_COMMAND ""
-    INSTALL_COMMAND make install
-    CONFIGURE_COMMAND ""
-    PATCH_COMMAND ./autogen.sh && ./configure --prefix=${ODBC_BYPRODUCT_DIR}
-    STEP_TARGETS build
-    EXCLUDE_FROM_ALL TRUE
-    BUILD_BYPRODUCTS ${ODBC_BYPRODUCT}
-  )
+# Define patch step
+set(PC "${Patch_EXECUTABLE}" -p1 -i "${CMAKE_CURRENT_SOURCE_DIR}/patch/soci.patch")
 
-  endif()
-set(SOCI_BYPRODUCT_DIR "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/soci-install" CACHE STRING "SOCI install directory")
-if(WIN32)
-	set(BYPRODUCT "${SOCI_BYPRODUCT_DIR}/lib/libsoci_core_4_0.lib")
-	set(ODBC_BYPRODUCT "${SOCI_BYPRODUCT_DIR}/lib/libsoci_odbc_4_0.lib")
-	set(ODBC_OPTION "")
-	set(CMAKE_MODULE "")
-else()
-	get_property(LIB64 GLOBAL PROPERTY FIND_LIBRARY_USE_LIB64_PATHS)
-	if ("${LIB64}" STREQUAL "TRUE" AND (NOT WIN32 AND NOT APPLE))
-		set(LIBSUFFIX 64)
-	endif()
-	set(BYPRODUCT "${SOCI_BYPRODUCT_DIR}/lib${LIBSUFFIX}/libsoci_core.a")
-	set(ODBC_OPTION "-DODBC_BYPRODUCT_DIR=${ODBC_BYPRODUCT_DIR}")
-	set(ODBC_BYPRODUCT "${SOCI_BYPRODUCT_DIR}/lib${LIBSUFFIX}/libsoci_odbc.a")
-	set(CMAKE_MODULE "-DCMAKE_MODULE_PATH=${CMAKE_CURRENT_SOURCE_DIR}/cmake/")
-endif()
-
-
-
-  ExternalProject_Add(
-    sql-external
-    GIT_REPOSITORY "https://github.com/SOCI/soci.git"
-    GIT_TAG "04e1870294918d20761736743bb6136314c42dd5" 
-    BUILD_IN_SOURCE 1
-    PATCH_COMMAND ${Patch_EXECUTABLE} -f ${CMAKE_CURRENT_BINARY_DIR}/thirdparty/soci-src/CMakeLists.txt ${CMAKE_CURRENT_SOURCE_DIR}/patch/soci.patch
-	SOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/soci-src"
- 	CMAKE_ARGS ${PASSTHROUGH_CMAKE_ARGS}
-			   "-DSOCI_TESTS=OFF"
-			   ${CMAKE_MODULE}
-			   "-DSOCI_SHARED=OFF"
-			   "-DSOCI_CXX_C11=ON"
-			   "-DWITH_ODBC=ON"
-			   "-DSOCI_ODBC=ON"
-			   "-DWITH_BOOST=OFF"
-			   "-DCMAKE_BUILD_TYPE=Release"
-			   ${ODBC_OPTION}
-               "-DCMAKE_INSTALL_PREFIX=${SOCI_BYPRODUCT_DIR}"
-    BUILD_BYPRODUCTS ${BYPRODUCT}
-  )
-
-if(NOT WIN32)  
-	add_dependencies(sql-external iodbc-external)
-endif()  
-
-include_directories("./")
-
-if(NOT WIN32)
-	include_directories("${ODBC_BYPRODUCT_DIR}/include")
-endif()
-
-include_directories("${SOCI_BYPRODUCT_DIR}/include/")
-include_directories("${SOCI_BYPRODUCT_DIR}/include/soci")
-add_dependencies(minifi-sql sql-external)
-target_link_libraries(minifi-sql ${LIBMINIFI})
-
-
-if (NOT WIN32)
-	if (APPLE)
-		target_link_libraries (minifi-sql  -Wl,-all_load "${ODBC_BYPRODUCT_DIR}/lib/libodbc.a")
-		target_link_libraries (minifi-sql  -Wl,-all_load ${BYPRODUCT})
-		target_link_libraries (minifi-sql  -Wl,-all_load ${ODBC_BYPRODUCT})
-	else()
-		target_link_libraries (minifi-sql  "-Wl,--whole-archive ${ODBC_BYPRODUCT_DIR}/lib/libodbc.a -Wl,--no-whole-archive")
-		target_link_libraries (minifi-sql  "-Wl,--whole-archive ${ODBC_BYPRODUCT} -Wl,--no-whole-archive")
-		target_link_libraries (minifi-sql  "-Wl,--whole-archive ${BYPRODUCT} -Wl,--no-whole-archive")
-		message("Linking whole archives")
-	endif()
-else()
-	find_package(ODBC REQUIRED)
-	target_link_libraries (minifi-sql  ${BYPRODUCT} ${ODBC_BYPRODUCT} ${ODBC_LIBRARIES} )
+# Define byproducts
+if(NOT APPLE AND CMAKE_SIZEOF_VOID_P EQUAL 8)
+	set(LIBSUFFIX 64)
 endif()
 
 if (WIN32)
-    set_target_properties(minifi-sql PROPERTIES
-        LINK_FLAGS "/WHOLEARCHIVE:${BYPRODUCT}"
-    )
-	set_target_properties(minifi-sql PROPERTIES
-        LINK_FLAGS "/WHOLEARCHIVE:${ODBC_BYPRODUCT}"
-    )
-elseif (APPLE)
-    set_target_properties(minifi-sql PROPERTIES
-        LINK_FLAGS "-Wl,-all_load  ${ODBC_BYPRODUCT_DIR}/lib/libodbc.a "
-    )
-else ()
-    set_target_properties(minifi-sql PROPERTIES
-        LINK_FLAGS "-Wl,--whole-archive"
-    )
-endif ()
+	set(BYPRODUCT_SUFFIX "_4_0.lib")
+else()
+	set(BYPRODUCT_SUFFIX ".a")
+endif()
 
+set(SOCI_BYPRODUCTS
+		"lib${LIBSUFFIX}/libsoci_core${BYPRODUCT_SUFFIX}"
+		"lib${LIBSUFFIX}/libsoci_odbc${BYPRODUCT_SUFFIX}"
+		)
+
+set(SOCI_BYPRODUCT_DIR "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/soci-install")
+
+foreach(SOCI_BYPRODUCT ${SOCI_BYPRODUCTS})
+	list(APPEND SOCI_LIBRARIES_LIST "${SOCI_BYPRODUCT_DIR}/${SOCI_BYPRODUCT}")
+endforeach(SOCI_BYPRODUCT)
+
+# Set build options
+set(SOCI_CMAKE_ARGS ${PASSTHROUGH_CMAKE_ARGS}
+		"-DCMAKE_INSTALL_PREFIX=${SOCI_BYPRODUCT_DIR}"
+		"-DSOCI_TESTS=OFF"
+		"-DSOCI_SHARED=OFF"
+		"-DSOCI_CXX_C11=ON"
+		"-DWITH_ODBC=ON"
+		"-DSOCI_ODBC=ON"
+		"-DWITH_BOOST=OFF")
+
+if(NOT WIN32)
+	list(APPEND SOCI_CMAKE_ARGS "-DCMAKE_MODULE_PATH=${CMAKE_CURRENT_SOURCE_DIR}/cmake/"
+			"-DEXPORTED_IODBC_INCLUDE_DIRS=${EXPORTED_IODBC_INCLUDE_DIRS}"
+			"-DEXPORTED_IODBC_LIBRARIES=${EXPORTED_IODBC_LIBRARIES}")
+endif()
+
+# Build project
+ExternalProject_Add(
+		soci-external
+		URL "https://github.com/SOCI/soci/archive/4.0.0.tar.gz"
+		URL_HASH "SHA256=359b988d8cbe81357835317821919f7e270c0705e41951a92ac1627cb9fe8faf"
+		PATCH_COMMAND ${PC}
+		SOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/soci-src"
+		CMAKE_ARGS ${SOCI_CMAKE_ARGS}
+		BUILD_BYPRODUCTS ${SOCI_LIBRARIES_LIST}
+		EXCLUDE_FROM_ALL TRUE
+)
+
+# Set dependencies
+if(NOT WIN32)
+	add_dependencies(soci-external ODBC::ODBC)
+endif()
+
+# Set variables
+set(SOCI_FOUND "YES" CACHE STRING "" FORCE)
+set(SOCI_INCLUDE_DIR "${SOCI_BYPRODUCT_DIR}/include" CACHE STRING "" FORCE)
+set(SOCI_LIBRARIES "${SOCI_LIBRARIES_LIST}" CACHE STRING "" FORCE)
+
+# Create imported targets
+file(MAKE_DIRECTORY ${SOCI_INCLUDE_DIR})
+
+add_library(SOCI::libsoci_core STATIC IMPORTED)
+set_target_properties(SOCI::libsoci_core PROPERTIES IMPORTED_LOCATION "${SOCI_BYPRODUCT_DIR}/lib${LIBSUFFIX}/libsoci_core${BYPRODUCT_SUFFIX}")
+set_target_properties(SOCI::libsoci_core PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "${SOCI_INCLUDE_DIR}")
+add_dependencies(SOCI::libsoci_core soci-external)
+
+add_library(SOCI::libsoci_odbc STATIC IMPORTED)
+set_target_properties(SOCI::libsoci_odbc PROPERTIES IMPORTED_LOCATION "${SOCI_BYPRODUCT_DIR}/lib${LIBSUFFIX}/libsoci_odbc${BYPRODUCT_SUFFIX}")
+set_target_properties(SOCI::libsoci_odbc PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "${SOCI_INCLUDE_DIR}")
+add_dependencies(SOCI::libsoci_odbc soci-external)
+set_property(TARGET SOCI::libsoci_odbc APPEND PROPERTY INTERFACE_LINK_LIBRARIES SOCI::libsoci_core)
+set_property(TARGET SOCI::libsoci_odbc APPEND PROPERTY INTERFACE_LINK_LIBRARIES ODBC::ODBC)
+
+target_link_libraries(minifi-sql SOCI::libsoci_odbc SOCI::libsoci_core)
+
+target_link_libraries(minifi-sql ${LIBMINIFI})
 
 SET (SQL-EXTENSION minifi-sql PARENT_SCOPE)
-
 register_extension(minifi-sql)
-
-
 register_extension_linter(minifi-sql-linter)

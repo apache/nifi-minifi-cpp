@@ -32,7 +32,8 @@
 #include <codecvt>
 #include <algorithm>
 #include <regex>
-#include <soci.h>
+
+#include <soci/soci.h>
 
 #include "io/DataStream.h"
 #include "core/ProcessContext.h"
@@ -116,7 +117,7 @@ class State {
     ok_ = true;
   }
 
-  State::~State() {
+  ~State() {
     if (file_.is_open()) {
       file_.close();
     }
@@ -130,7 +131,7 @@ class State {
     return mapState_;
   }
 
-  bool writeStateToFile(const std::unordered_map<std::string, std::string>& mapState) {
+  void writeStateToFile(const std::unordered_map<std::string, std::string>& mapState) {
     file_.seekp(std::ios::beg);
 
     auto dataSize = 0;

@@ -21,7 +21,8 @@
 
 #include "DatabaseConnectors.h"
 #include <iostream>
-#include <soci.h>
+
+#include <soci/soci.h>
 
 namespace org {
 namespace apache {
