@@ -102,7 +102,7 @@ static const std::string ResultRowCount = "querydbtable.row.count";
 // State
 class State {
  public:
-  State(const std::string& tableName, std::string& stateDir, const std::string& uuid, std::shared_ptr<logging::Logger> logger)
+  State(const std::string& tableName, const std::string& stateDir, const std::string& uuid, std::shared_ptr<logging::Logger> logger)
     :tableName_(tableName), logger_(logger) {
     if (!createUUIDDir(stateDir, uuid, filePath_))
       return;
@@ -198,8 +198,6 @@ class State {
      ss << file.rdbuf();
 
      state = ss.str();
-
-     auto size = state.size();
 
      dataSize_ = state.size();
 
