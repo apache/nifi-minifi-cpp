@@ -96,7 +96,6 @@ void sigHandler(int signal) {
 }
 
 int main(int argc, char **argv) {
-  MessageBox(0, "QAZ", "QAZ", MB_OK);
 #ifdef WIN32
   CheckRunAsService();
 #endif
