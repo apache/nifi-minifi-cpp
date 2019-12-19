@@ -48,23 +48,23 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-  const std::string ExecuteSQL::ProcessorName("ExecuteSQL");
+const std::string ExecuteSQL::ProcessorName("ExecuteSQL");
 
-static core::Property DBCControllerService(
+const core::Property ExecuteSQL::s_dbControllerService(
     core::PropertyBuilder::createProperty("DB Controller Service")->isRequired(true)->withDescription("Database Controller Service.")->supportsExpressionLanguage(true)->build());
 
-static core::Property s_SQLSelectQuery(
-    core::PropertyBuilder::createProperty("SQL select query")->isRequired(true)->withDefaultValue("System")->withDescription(
-        "The SQL select query to execute. The query can be empty, a constant value, or built from attributes using Expression Language. "
-        "If this property is specified, it will be used regardless of the content of incoming flowfiles. "
-        "If this property is empty, the content of the incoming flow file is expected to contain a valid SQL select query, to be issued by the processor to the database. "
-        "Note that Expression Language is not evaluated for flow file contents.")->supportsExpressionLanguage(true)->build());
+const core::Property ExecuteSQL::s_sqlSelectQuery(
+  core::PropertyBuilder::createProperty("SQL select query")->isRequired(true)->withDefaultValue("System")->withDescription(
+    "The SQL select query to execute. The query can be empty, a constant value, or built from attributes using Expression Language. "
+    "If this property is specified, it will be used regardless of the content of incoming flowfiles. "
+    "If this property is empty, the content of the incoming flow file is expected to contain a valid SQL select query, to be issued by the processor to the database. "
+    "Note that Expression Language is not evaluated for flow file contents.")->supportsExpressionLanguage(true)->build());
 
-static core::Property MaxRowsPerFlowFile(
+const core::Property ExecuteSQL::s_maxRowsPerFlowFile(
 	core::PropertyBuilder::createProperty("Max Rows Per Flow File")->isRequired(true)->withDefaultValue<int>(0)->withDescription(
 		"The maximum number of result rows that will be included intoi a flow file. If zero then all will be placed into the flow file")->supportsExpressionLanguage(true)->build());
 
-core::Relationship ExecuteSQL::Success("success", "Successfully created FlowFile from SQL query result set.");
+const core::Relationship ExecuteSQL::s_success("success", "Successfully created FlowFile from SQL query result set.");
 
 ExecuteSQL::ExecuteSQL(const std::string& name, utils::Identifier uuid)
     : core::Processor(name, uuid), max_rows_(0),
@@ -76,16 +76,16 @@ ExecuteSQL::~ExecuteSQL() {
 
 void ExecuteSQL::initialize() {
   //! Set the supported properties
-  setSupportedProperties( { DBCControllerService, s_SQLSelectQuery, MaxRowsPerFlowFile });
+  setSupportedProperties( { s_dbControllerService, s_sqlSelectQuery, s_maxRowsPerFlowFile });
 
   //! Set the supported relationships
-  setSupportedRelationships( { Success });
+  setSupportedRelationships( { s_success });
 }
 
 void ExecuteSQL::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
-  context->getProperty(DBCControllerService.getName(), db_controller_service_);
-  context->getProperty(s_SQLSelectQuery.getName(), sqlSelectQuery_);
-  context->getProperty(MaxRowsPerFlowFile.getName(), max_rows_);
+  context->getProperty(s_dbControllerService.getName(), db_controller_service_);
+  context->getProperty(s_sqlSelectQuery.getName(), sqlSelectQuery_);
+  context->getProperty(s_maxRowsPerFlowFile.getName(), max_rows_);
 
   database_service_ = std::dynamic_pointer_cast<sql::controllers::DatabaseService>(context->getControllerService(db_controller_service_));
   if (!database_service_)
@@ -130,7 +130,7 @@ void ExecuteSQL::onTrigger(const std::shared_ptr<core::ProcessContext> &context,
         auto newflow = session->create();
         newflow->addAttribute("executesql.resultset.index", std::to_string(row_count));
         session->write(newflow, &writer);
-        session->transfer(newflow, Success);
+        session->transfer(newflow, s_success);
       }
       outputStream.str("");
       outputStream.clear();

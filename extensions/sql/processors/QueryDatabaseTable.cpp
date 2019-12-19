@@ -55,19 +55,19 @@ namespace processors {
 
 const std::string QueryDatabaseTable::ProcessorName("QueryDatabaseTable");
 
-static const core::Property s_dbControllerService(
+const core::Property QueryDatabaseTable::s_dbControllerService(
     core::PropertyBuilder::createProperty("DB Controller Service")->isRequired(true)->withDescription("Database Controller Service.")->supportsExpressionLanguage(true)->build());
 
-static const core::Property s_tableName(
+const core::Property QueryDatabaseTable::s_tableName(
   core::PropertyBuilder::createProperty("Table Name")->isRequired(true)->withDescription("The name of the database table to be queried.")->supportsExpressionLanguage(true)->build());
 
-static const core::Property s_columnNames(
+const core::Property QueryDatabaseTable::s_columnNames(
   core::PropertyBuilder::createProperty("Columns to Return")->isRequired(false)->withDescription(
     "A comma-separated list of column names to be used in the query. If your database requires special treatment of the names (quoting, e.g.), each name should include such treatment. "
     "If no column names are supplied, all columns in the specified table will be returned. "
     "NOTE: It is important to use consistent column names for a given table for incremental fetch to work properly.")->supportsExpressionLanguage(true)->build());
 
-static const core::Property s_maxValueColumnNames(
+const core::Property QueryDatabaseTable::s_maxValueColumnNames(
   core::PropertyBuilder::createProperty("Maximum-value Columns")->isRequired(false)->withDescription(
     "A comma-separated list of column names. The processor will keep track of the maximum value for each column that has been returned since the processor started running. "
     "Using multiple columns implies an order to the column list, and each column's values are expected to increase more slowly than the previous columns' values. "
@@ -77,29 +77,27 @@ static const core::Property s_maxValueColumnNames(
     "If no columns are provided, all rows from the table will be considered, which could have a performance impact. "
     "NOTE: It is important to use consistent max-value column names for a given table for incremental fetch to work properly.")->supportsExpressionLanguage(true)->build());
 
-static const core::Property s_whereClause(
+const core::Property QueryDatabaseTable::s_whereClause(
   core::PropertyBuilder::createProperty("db-fetch-where-clause")->isRequired(false)->withDescription(
     "A custom clause to be added in the WHERE condition when building SQL queries.")->supportsExpressionLanguage(true)->build());
 
-static const core::Property s_sqlQuery(
+const core::Property QueryDatabaseTable::s_sqlQuery(
   core::PropertyBuilder::createProperty("db-fetch-sql-query")->isRequired(false)->withDescription(
     "A custom SQL query used to retrieve data. Instead of building a SQL query from other properties, this query will be wrapped as a sub-query. "
     "Query must have no ORDER BY statement.")->supportsExpressionLanguage(true)->build());
 
-static const core::Property s_maxRowsPerFlowFile(
+const core::Property QueryDatabaseTable::s_maxRowsPerFlowFile(
   core::PropertyBuilder::createProperty("qdbt-max-rows")->isRequired(true)->withDefaultValue<int>(0)->withDescription(
     "The maximum number of result rows that will be included in a single FlowFile. This will allow you to break up very large result sets into multiple FlowFiles. "
     "If the value specified is zero, then all rows are returned in a single FlowFile.")->supportsExpressionLanguage(true)->build());
 
-static core::Property s_stateDirectory(
+const core::Property QueryDatabaseTable::s_stateDirectory(
   core::PropertyBuilder::createProperty("State Directory")->isRequired(false)->withDefaultValue("QDTState")->withDescription("Directory which contains processor state data.")->build());
 
-static const core::Relationship s_success("success", "Successfully created FlowFile from SQL query result set.");
+const core::Relationship QueryDatabaseTable::s_success("success", "Successfully created FlowFile from SQL query result set.");
 
-// Probably need to have `FragmentAttributes` like nifi has https://github.com/apache/nifi/blob/master/nifi-commons/nifi-utils/src/main/java/org/apache/nifi/flowfile/attributes/FragmentAttributes.java.
-static const std::string FragmentId = "fragment.identifier";
-static const std::string FragmentIndex = "fragment.index";
-static const std::string FragmentCount = "fragment.count";
+static const std::string ResultTableName = "tablename";
+static const std::string ResultRowCount = "querydbtable.row.count";
 
 // State
 class State {
@@ -343,6 +341,8 @@ void QueryDatabaseTable::onTrigger(const std::shared_ptr<core::ProcessContext> &
   try {
     const auto& selectQuery = getSelectQuery();
 
+    logger_->log_info("QueryDatabaseTable: selectQuery: '%s'", selectQuery.c_str());
+
     auto statement = connection_->prepareStatement(selectQuery);
 
     auto rowset = statement->execute();
@@ -364,7 +364,8 @@ void QueryDatabaseTable::onTrigger(const std::shared_ptr<core::ProcessContext> &
       if (!output.empty()) {
         WriteCallback writer(output.data(), output.size());
         auto newflow = session->create();
-        newflow->addAttribute("executesql.resultset.index", std::to_string(row_count));
+        newflow->addAttribute(ResultRowCount, std::to_string(row_count));
+        newflow->addAttribute(ResultTableName, tableName_);
         session->write(newflow, &writer);
         session->transfer(newflow, s_success);
       }
