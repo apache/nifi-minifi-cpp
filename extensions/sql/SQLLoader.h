@@ -44,7 +44,7 @@ class SQLFactory : public core::ObjectFactory {
    * @return class name for the processor.
    */
   virtual std::vector<std::string> getClassNames() override{
-    std::vector<std::string> class_names = {"ExecuteSQL","ODBCService"};
+    std::vector<std::string> class_names = {"ExecuteSQL", "PutSQL", "QueryDatabaseTable", "ODBCService"};
     return class_names;
   }
 
