@@ -97,8 +97,6 @@ class ODBCService : public DatabaseService {
     initialize();
   }
 
-  virtual void initialize() override;
-
   virtual std::unique_ptr<sql::Connection> getConnection() const override;
 
  private:

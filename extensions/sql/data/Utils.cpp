@@ -32,7 +32,8 @@ namespace utils {
 std::string toLower(const std::string& str) {
   std::string ret;
 
-  // (int(*)(int))std::tolower - to avoid compilation error.
+  // (int(*)(int))std::tolower - to avoid compilation error 'no matching overloaded function found'. 
+  // It is described in https://stackoverflow.com/questions/5539249/why-cant-transforms-begin-s-end-s-begin-tolower-be-complied-successfu.
   std::transform(str.begin(), str.end(), std::back_inserter(ret), (int(*)(int))std::tolower);
 
   return ret;

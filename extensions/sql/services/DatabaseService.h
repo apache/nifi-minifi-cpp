@@ -96,7 +96,7 @@ class DatabaseService : public core::controller::ControllerService {
   // initialization mutex.
   std::recursive_mutex initialization_mutex_;
 
-  std::atomic<bool> initialized_;
+  bool initialized_{};
 
   std::string connection_string_;
 
