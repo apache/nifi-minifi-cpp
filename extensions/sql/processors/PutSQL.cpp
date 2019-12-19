@@ -81,7 +81,7 @@ void PutSQL::onSchedule(const std::shared_ptr<core::ProcessContext> &context, co
 
   std::string sqlStatements;
   context->getProperty(s_sqlStatements.getName(), sqlStatements);
-  sqlStatements_ = utils::StringUtils::split(sqlStatements, ",");
+  sqlStatements_ = utils::StringUtils::split(sqlStatements, ";");
 
   database_service_ = std::dynamic_pointer_cast<sql::controllers::DatabaseService>(context->getControllerService(db_controller_service_));
   if (!database_service_) 
