@@ -102,8 +102,8 @@ static const std::string ResultRowCount = "querydbtable.row.count";
 // State
 class State {
  public:
-  State(const std::string& stateDir, const std::string& uuid, std::shared_ptr<logging::Logger> logger)
-    :logger_(logger) {
+  State(const std::string& tableName, std::string& stateDir, const std::string& uuid, std::shared_ptr<logging::Logger> logger)
+    :tableName_(tableName), logger_(logger) {
     if (!createUUIDDir(stateDir, uuid, filePath_))
       return;
 
@@ -132,15 +132,19 @@ class State {
   void writeStateToFile(const std::unordered_map<std::string, std::string>& mapState) {
     file_.seekp(std::ios::beg);
 
-    auto dataSize = 0;
+    file_ << tableName_ << separator();
+    auto dataSize = tableName_.size() + separator().size();
+
     for (const auto& el : mapState) {
       file_ << el.first << '=' << el.second << separator();
       dataSize += el.first.size() + 1 + el.second.size() + separator().size();
     }
 
-    // Clear old data with ' '. 
-    for (auto i = dataSize_ - dataSize; i > 0; i--) {
-      file_ << ' ';
+    // If dataSize_ > dataSize, then clear difference with ' '.
+    if (dataSize_ > dataSize) {
+      for (auto i = dataSize_ - dataSize; i > 0; i--) {
+        file_ << ' ';
+      }
     }
     dataSize_ = dataSize;
 
@@ -195,13 +199,31 @@ class State {
 
      state = ss.str();
 
+     auto size = state.size();
+
      dataSize_ = state.size();
 
      file.close();
 
      std::vector<std::string> listColumnNameValue;
 
-     size_t pos = 0;
+     size_t pos = state.find(separator(), 0);
+     if (pos == std::string::npos) {
+       logger_->log_error("Invalid data in '%s' file.", filePath_.c_str());
+       mapState_.clear();
+       return createEmptyStateFile();
+     }
+
+     auto tableName = state.substr(0, pos);
+     if (tableName != tableName_) {
+       logger_->log_warn("tableName is changed - now: '%s', in State.txt: '%s'.", tableName_.c_str(), tableName.c_str());
+       mapState_.clear();
+
+       return createEmptyStateFile();
+     }
+
+     pos += separator().size();
+
      while (true) {
        auto newPos = state.find(separator(), pos);
        if (newPos == std::string::npos)
@@ -244,6 +266,8 @@ class State {
        return false;
      }
 
+     dataSize_ = 0;
+
      return true;
    }
 
@@ -252,7 +276,8 @@ class State {
    std::shared_ptr<logging::Logger> logger_;
    std::string filePath_;
    std::fstream file_;
-   int dataSize_{};
+   size_t dataSize_{};
+   std::string tableName_;
    bool ok_{};
 };
 
@@ -278,7 +303,6 @@ void QueryDatabaseTable::onSchedule(const std::shared_ptr<core::ProcessContext> 
   context->getProperty(s_tableName.getName(), tableName_);
 
   context->getProperty(s_columnNames.getName(), columnNames_);
-  //  parseCommaSeparatedString(columnNames, listColumnNames_);
 
   context->getProperty(s_maxValueColumnNames.getName(), maxValueColumnNames_);
   listMaxValueColumnName_ = utils::inputStringToList(maxValueColumnNames_);
@@ -294,19 +318,22 @@ void QueryDatabaseTable::onSchedule(const std::shared_ptr<core::ProcessContext> 
     return;
   }
 
-  pState_ = std::make_unique<State>(stateDir, getUUIDStr(), logger_);
+  pState_ = std::make_unique<State>(tableName_, stateDir, getUUIDStr(), logger_);
   if (!*pState_) {
     return;
   }
   
   mapState_ = pState_->mapState();
 
-  // Remove from 'mapState_' columns which are not in 'listMaxValueColumnName_'.
-  for (auto itMapState = mapState_.begin(); itMapState != mapState_.end(); ) {
-    if (listMaxValueColumnName_.end() == std::find(listMaxValueColumnName_.begin(), listMaxValueColumnName_.end(), itMapState->first)) {
-      itMapState = mapState_.erase(itMapState);
-    } else {
-      ++itMapState;
+  // If 'listMaxValueColumnName_' doesn't match columns in mapState_, then clear mapState_.
+  if (listMaxValueColumnName_.size() != mapState_.size()) {
+    mapState_.clear();
+  } else {
+    for (const auto& columName : listMaxValueColumnName_) {
+      if (0 == mapState_.count(columName)) {
+        mapState_.clear();
+        break;
+      }
     }
   }
 
@@ -375,11 +402,14 @@ void QueryDatabaseTable::onTrigger(const std::shared_ptr<core::ProcessContext> &
     } while (row_count > 0);
 
     if (maxCollector.updateMapState()) {
+      session->commit();
+
       pState_->writeStateToFile(mapState_);
     }
   }
   catch (std::exception& e) {
     logger_->log_error(e.what());
+    throw;
   }
 }
 

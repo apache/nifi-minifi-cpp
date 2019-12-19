@@ -42,7 +42,7 @@ bool JSONSQLWriter::addRow(const soci::row &row, size_t rowCount) {
 
   // 'countColumnsInMaxCollector' is used to check that all columns in maxCollector are in row columns.
   // It is checked here since don't know if it is possible in 'soci' to get coulmns info of a select statements without executing query.
-  int countColumnsInMaxCollector = 0;
+  size_t countColumnsInMaxCollector = 0;
 
   for (std::size_t i = 0; i != row.size(); ++i) {
     const soci::column_properties & props = row.get_properties(i);

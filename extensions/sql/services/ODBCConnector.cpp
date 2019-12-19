@@ -37,16 +37,6 @@ std::unique_ptr<sql::Connection> ODBCService::getConnection() const {
   return std::unique_ptr<sql::Connection>(new ODBCConnection(connection_string_));
 }
 
-void ODBCService::initialize() {
-  if (initialized_)
-    return;
-
-  std::lock_guard<std::recursive_mutex> lock(initialization_mutex_);
-
-  DatabaseService::initialize();
-
-}
-
 } /* namespace controllers */
 } /* namespace sql */
 } /* namespace minifi */

@@ -115,6 +115,7 @@ void PutSQL::onTrigger(const std::shared_ptr<core::ProcessContext> &context, con
   } catch (std::exception& e) {
     logger_->log_error("SQL statement error: %s", e.what());
     dbSession->rollback();
+    throw;
   }
 }
 

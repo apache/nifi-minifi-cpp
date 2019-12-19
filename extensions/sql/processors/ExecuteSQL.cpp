@@ -54,7 +54,7 @@ const core::Property ExecuteSQL::s_dbControllerService(
     core::PropertyBuilder::createProperty("DB Controller Service")->isRequired(true)->withDescription("Database Controller Service.")->supportsExpressionLanguage(true)->build());
 
 const core::Property ExecuteSQL::s_sqlSelectQuery(
-  core::PropertyBuilder::createProperty("SQL select query")->isRequired(true)->withDefaultValue("System")->withDescription(
+  core::PropertyBuilder::createProperty("SQL select query")->isRequired(true)->withDescription(
     "The SQL select query to execute. The query can be empty, a constant value, or built from attributes using Expression Language. "
     "If this property is specified, it will be used regardless of the content of incoming flowfiles. "
     "If this property is empty, the content of the incoming flow file is expected to contain a valid SQL select query, to be issued by the processor to the database. "
@@ -65,6 +65,8 @@ const core::Property ExecuteSQL::s_maxRowsPerFlowFile(
 		"The maximum number of result rows that will be included intoi a flow file. If zero then all will be placed into the flow file")->supportsExpressionLanguage(true)->build());
 
 const core::Relationship ExecuteSQL::s_success("success", "Successfully created FlowFile from SQL query result set.");
+
+static const std::string ResultRowCount = "executesql.row.count";
 
 ExecuteSQL::ExecuteSQL(const std::string& name, utils::Identifier uuid)
     : core::Processor(name, uuid), max_rows_(0),
@@ -128,7 +130,7 @@ void ExecuteSQL::onTrigger(const std::shared_ptr<core::ProcessContext> &context,
       if (!output.empty()) {
         WriteCallback writer(output.data(), output.size());
         auto newflow = session->create();
-        newflow->addAttribute("executesql.resultset.index", std::to_string(row_count));
+        newflow->addAttribute(ResultRowCount, std::to_string(row_count));
         session->write(newflow, &writer);
         session->transfer(newflow, s_success);
       }
@@ -137,6 +139,7 @@ void ExecuteSQL::onTrigger(const std::shared_ptr<core::ProcessContext> &context,
     } while (row_count > 0);
   } catch (std::exception& e) {
     logger_->log_error(e.what());
+    throw;
   }
 }
 
