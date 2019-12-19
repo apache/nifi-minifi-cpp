@@ -49,17 +49,17 @@ namespace processors {
 
 const std::string PutSQL::ProcessorName("PutSQL");
 
-static core::Property DBCControllerService(
-    core::PropertyBuilder::createProperty("DB Controller Service")->isRequired(true)->withDescription("Database Controller Service.")->supportsExpressionLanguage(true)->build());
+const core::Property PutSQL::s_dbControllerService(
+  core::PropertyBuilder::createProperty("DB Controller Service")->isRequired(true)->withDescription("Database Controller Service.")->supportsExpressionLanguage(true)->build());
 
-static core::Property s_SQLStatements(
-    core::PropertyBuilder::createProperty("SQL statements")->isRequired(true)->withDefaultValue("System")->withDescription(
-        "A semicolon-delimited list of SQL statements to execute. The statement can be empty, a constant value, or built from attributes using Expression Language. "
-        "If this property is specified, it will be used regardless of the content of incoming flowfiles. "
-        "If this property is empty, the content of the incoming flow file is expected to contain a valid SQL statements, to be issued by the processor to the database.")
-        ->supportsExpressionLanguage(true)->build());
+const core::Property PutSQL::s_sqlStatements(
+  core::PropertyBuilder::createProperty("SQL statements")->isRequired(true)->withDefaultValue("System")->withDescription(
+    "A semicolon-delimited list of SQL statements to execute. The statement can be empty, a constant value, or built from attributes using Expression Language. "
+    "If this property is specified, it will be used regardless of the content of incoming flowfiles. "
+    "If this property is empty, the content of the incoming flow file is expected to contain a valid SQL statements, to be issued by the processor to the database.")
+    ->supportsExpressionLanguage(true)->build());
 
-core::Relationship PutSQL::Success("success", "Database is successfully updated.");
+const core::Relationship PutSQL::s_success("success", "Database is successfully updated.");
 
 PutSQL::PutSQL(const std::string& name, utils::Identifier uuid)
     : core::Processor(name, uuid), logger_(logging::LoggerFactory<PutSQL>::getLogger()) {
@@ -70,24 +70,18 @@ PutSQL::~PutSQL() {
 
 void PutSQL::initialize() {
   //! Set the supported properties
-  setSupportedProperties( { DBCControllerService, s_SQLStatements });
+  setSupportedProperties( { s_dbControllerService, s_sqlStatements });
 
   //! Set the supported relationships
-  setSupportedRelationships( { Success });
+  setSupportedRelationships( { s_success });
 }
 
 void PutSQL::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
-  context->getProperty(DBCControllerService.getName(), db_controller_service_);
+  context->getProperty(s_dbControllerService.getName(), db_controller_service_);
 
   std::string sqlStatements;
-  context->getProperty(s_SQLStatements.getName(), sqlStatements);
-
-  // SQL statements separated by ';'.
-  std::stringstream strStream(sqlStatements);
-  std::string sqlStatement;
-  while (getline(strStream, sqlStatement, ';')) {
-    sqlStatements_.push_back(sqlStatement);
-  }
+  context->getProperty(s_sqlStatements.getName(), sqlStatements);
+  sqlStatements_ = utils::StringUtils::split(sqlStatements, ",");
 
   database_service_ = std::dynamic_pointer_cast<sql::controllers::DatabaseService>(context->getControllerService(db_controller_service_));
   if (!database_service_) 

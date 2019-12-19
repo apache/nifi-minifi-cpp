@@ -52,6 +52,17 @@ class QueryDatabaseTable : public core::Processor {
   //! Processor Name
   static const std::string ProcessorName;
 
+  static const core::Property s_dbControllerService;
+  static const core::Property s_tableName;
+  static const core::Property s_columnNames;
+  static const core::Property s_maxValueColumnNames;
+  static const core::Property s_whereClause;
+  static const core::Property s_sqlQuery;
+  static const core::Property s_maxRowsPerFlowFile;
+  static const core::Property s_stateDirectory;
+
+  static const core::Relationship s_success;
+
   /**
    * Function that's executed when the processor is scheduled.
    * @param context process context.

@@ -59,12 +59,12 @@ bool JSONSQLWriter::addRow(const soci::row &row, size_t rowCount) {
     rapidjson::Value valueVal;
 
     if (row.get_indicator(i) == soci::i_null) {
-      std::string null = "NULL";
+      const std::string null = "NULL";
       valueVal.SetString(null.c_str(), null.length(), alloc);
     } else {
       switch (const auto dataType = props.get_data_type()) {
         case soci::data_type::dt_string: {
-          auto value = std::string(row.get<std::string>(i));
+          const auto value = std::string(row.get<std::string>(i));
           if (pMaxCollector_) {
             pMaxCollector_->updateMaxValue(columnName, '\'' + value + '\'');
           }
@@ -72,7 +72,7 @@ bool JSONSQLWriter::addRow(const soci::row &row, size_t rowCount) {
         }
         break;
         case soci::data_type::dt_double: {
-          auto value = row.get<double>(i);
+          const auto value = row.get<double>(i);
           if (pMaxCollector_) {
             pMaxCollector_->updateMaxValue(columnName, value);
           }
@@ -80,7 +80,7 @@ bool JSONSQLWriter::addRow(const soci::row &row, size_t rowCount) {
         }
         break;
         case soci::data_type::dt_integer: {
-          auto value = row.get<int>(i);
+          const auto value = row.get<int>(i);
           if (pMaxCollector_) {
             pMaxCollector_->updateMaxValue(columnName, value);
           }
@@ -88,7 +88,7 @@ bool JSONSQLWriter::addRow(const soci::row &row, size_t rowCount) {
         }
         break;
         case soci::data_type::dt_long_long: {
-          auto value = row.get<long long>(i);
+          const auto value = row.get<long long>(i);
           if (pMaxCollector_) {
             pMaxCollector_->updateMaxValue(columnName, value);
           }
@@ -96,7 +96,7 @@ bool JSONSQLWriter::addRow(const soci::row &row, size_t rowCount) {
         }
         break;
         case soci::data_type::dt_unsigned_long_long: {
-          auto value = row.get<unsigned long long>(i);
+          const auto value = row.get<unsigned long long>(i);
           if (pMaxCollector_) {
             pMaxCollector_->updateMaxValue(columnName, value);
           }
@@ -109,13 +109,13 @@ bool JSONSQLWriter::addRow(const soci::row &row, size_t rowCount) {
           // The problem for maxCollector, if milliseconds value is not stored as a maximum, then when running query with 'select ... datetimeColumn > maxValue', 
           // it will be always at least one record since DB has milliseconds "maxValue.milliseconds".
           // For a workaround in the string representation for 'dt_date', add '999' for maxCollector (won't work for cases where time precision is important).
-          std::tm when = row.get<std::tm>(i);
+          const std::tm when = row.get<std::tm>(i);
 
           char strWhen[128];
           if (!std::strftime(strWhen, sizeof(strWhen), "%Y-%m-%d %H:%M:%S", &when))
             throw minifi::Exception(PROCESSOR_EXCEPTION, std::string("ExecuteSQL. !strftime with '") + strWhen + "'");
 
-          std::string value = strWhen;
+          const std::string value = strWhen;
           if (pMaxCollector_) {
             pMaxCollector_->updateMaxValue(columnName, '\'' + value + ".999'");
           }

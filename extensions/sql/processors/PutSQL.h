@@ -61,7 +61,10 @@ class PutSQL : public core::Processor {
   void initialize(void) override;
   void notifyStop() override;
 
-  static core::Relationship Success;
+  static const core::Property s_dbControllerService;
+  static const core::Property s_sqlStatements;
+
+  static const core::Relationship s_success;
 
  private:
   std::shared_ptr<sql::controllers::DatabaseService> database_service_;
