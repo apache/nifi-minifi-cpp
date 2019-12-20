@@ -20,6 +20,8 @@
 
 #include "core/ClassLoader.h"
 #include "processors/ExecuteSQL.h"
+#include "processors/PutSQL.h"
+#include "processors/QueryDatabaseTable.h"
 #include "services/ODBCConnector.h"
 
 class SQLFactory : public core::ObjectFactory {
@@ -48,18 +50,29 @@ class SQLFactory : public core::ObjectFactory {
     return class_names;
   }
 
+  template <typename T>
+  static std::unique_ptr<ObjectFactory> getObjectFactory() {
+    return std::unique_ptr<ObjectFactory>(new core::DefautObjectFactory<T>());
+  }
+
   virtual std::unique_ptr<ObjectFactory> assign(const std::string &class_name) override {
     if (utils::StringUtils::equalsIgnoreCase(class_name, "ExecuteSQL")) {
-      return std::unique_ptr<ObjectFactory>(new core::DefautObjectFactory<minifi::processors::ExecuteSQL>());
-    } else if (utils::StringUtils::equalsIgnoreCase(class_name, "ODBCService")) {
-      return std::unique_ptr<ObjectFactory>(new core::DefautObjectFactory<minifi::sql::controllers::ODBCService>());
-    } else {
-      return nullptr;
+      return getObjectFactory<minifi::processors::ExecuteSQL>();
     }
+    if (utils::StringUtils::equalsIgnoreCase(class_name, "PutSQL")) {
+      return getObjectFactory<minifi::processors::PutSQL>();
+    }
+    if (utils::StringUtils::equalsIgnoreCase(class_name, "QueryDatabaseTable")) {
+      return getObjectFactory<minifi::processors::QueryDatabaseTable>();
+    }
+    if (utils::StringUtils::equalsIgnoreCase(class_name, "ODBCService")) {
+      return getObjectFactory<minifi::sql::controllers::ODBCService>();
+    }
+
+    return nullptr;
   }
 
   static bool added;
-
 };
 
 extern "C" {
