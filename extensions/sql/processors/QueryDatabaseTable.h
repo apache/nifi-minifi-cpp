@@ -61,7 +61,13 @@ class QueryDatabaseTable : public core::Processor {
   static const core::Property s_maxRowsPerFlowFile;
   static const core::Property s_stateDirectory;
 
+  static const std::string s_initialMaxValueDynamicPropertyPrefix;
+
   static const core::Relationship s_success;
+
+  virtual bool supportsDynamicProperties() override {
+    return true;
+  }
 
   /**
    * Function that's executed when the processor is scheduled.
