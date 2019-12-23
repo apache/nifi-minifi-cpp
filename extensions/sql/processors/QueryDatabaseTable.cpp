@@ -94,6 +94,8 @@ const core::Property QueryDatabaseTable::s_maxRowsPerFlowFile(
 const core::Property QueryDatabaseTable::s_stateDirectory(
   core::PropertyBuilder::createProperty("State Directory")->isRequired(false)->withDefaultValue("QDTState")->withDescription("Directory which contains processor state data.")->build());
 
+const std::string QueryDatabaseTable::s_initialMaxValueDynamicPropertyPrefix("initial.maxvalue.");
+
 const core::Relationship QueryDatabaseTable::s_success("success", "Successfully created FlowFile from SQL query result set.");
 
 static const std::string ResultTableName = "tablename";
@@ -339,6 +341,32 @@ void QueryDatabaseTable::onSchedule(const std::shared_ptr<core::ProcessContext> 
   for (const auto& maxValueColumnName: listMaxValueColumnName_) {
     if (0 == mapState_.count(maxValueColumnName)) {
       mapState_.insert({maxValueColumnName, std::string()});
+    }
+  }
+
+  const auto dynamic_prop_keys = context->getDynamicPropertyKeys();
+  logger_->log_info("Received %zu dynamic properties", dynamic_prop_keys.size());
+
+  // If the stored state for a max value column is empty, populate it with the corresponding initial max value, if it exists
+  for (const auto& key : dynamic_prop_keys) {
+    if (key.length() <= s_initialMaxValueDynamicPropertyPrefix.length() ||
+        key.compare(0, s_initialMaxValueDynamicPropertyPrefix.length(), s_initialMaxValueDynamicPropertyPrefix) != 0) {
+      logger_->log_warn("Unsupported dynamic property \"%s\"", key);
+      continue;
+    }
+    const auto columnName = utils::toLower(key.substr(s_initialMaxValueDynamicPropertyPrefix.length()));
+    auto it = mapState_.find(columnName);
+    if (it == mapState_.end()) {
+      logger_->log_warn("Initial maximum value specified for column \"%s\", which is not specified as a Maximum-value Column. Ignoring.", columnName);
+      continue;
+    }
+    if (!it->second.empty()) {
+      continue;
+    }
+    std::string value;
+    if (context->getDynamicProperty(key, value) && !value.empty()) {
+      it->second = value;
+      logger_->log_info("Setting initial maximum value of %s to %s", columnName, value);
     }
   }
 
