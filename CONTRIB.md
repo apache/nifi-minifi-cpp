@@ -37,6 +37,10 @@ Once you have completed your changes, including source code and tests, you can v
      
 This will provide output for all source files.
 
+### Third parties
+
+Please see [ThirdParties.md](ThirdParties.md) on how MiNiFi builds and uses third party libraries and how you can add new ones.
+
 ### Extensions 
 
 MiNiFi C++ contains a dynamic loading mechanism that loads arbitrary objects. To maintain consistency of development amongst the NiFi ecosystem, it is called a class loader. If you

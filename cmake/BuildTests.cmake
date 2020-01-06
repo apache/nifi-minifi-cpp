@@ -130,7 +130,6 @@ FOREACH(testfile ${NANOFI_UNIT_TESTS})
     target_link_libraries(${testfilename} ${CMAKE_THREAD_LIBS_INIT} ${CATCH_MAIN_LIB} ${TEST_BASE_LIB}  nanofi)
 
     target_wholearchive_library(${testfilename} minifi-standard-processors)
-#    target_wholearchive_library(${testfilename} nanofi)
 
     MATH(EXPR UNIT_TEST_COUNT "${UNIT_TEST_COUNT}+1")
     add_test(NAME "${testfilename}" COMMAND "${testfilename}" WORKING_DIRECTORY ${TEST_DIR})

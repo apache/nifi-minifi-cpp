@@ -113,7 +113,7 @@ If it is not provided, you have three options
  - you can search for an already implemented one in other projects with an acceptable license
  - if everything else fails, you can write one yourself
 
-If you don't end up writing it from scratch, make sure that you indicate the original source in the `NOTICE` file.
+If you don't end up writing it from scratch, make sure that you indicate the original source in the `NOTICE` file and add the proper license to the `LICENSE` file.
 
 If you need to add a `Find<Package>.cmake` file, add it as `cmake/<package>/sys/Find<Package>.cmake`, and add it to the `CMAKE_MODULE_PATH`.
 

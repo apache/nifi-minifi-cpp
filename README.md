@@ -539,10 +539,6 @@ Antivirus software can take a long time to scan directories and the files within
 - flowfile_repository
 - provenance_repository
 
-### Third parties
-
-Please see [ThirdParties.md](ThirdParties.md) on how MiNiFi builds and uses third party libraries and how you can add new ones.
-
 ## Operations
 See our [operations documentation for additional inforomation on how to manage instances](OPS.md)
 
