@@ -201,15 +201,15 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 
-APACHE NIFI - MINIFI SUBCOMPONENTS:
+APACHE NIFI - MINIFI C++ SUBCOMPONENTS:
 
-The Apache NiFi - MiNiFi project contains subcomponents licensed under the Apache License, Version 2.0:
+The Apache NiFi - MiNiFi C++ project contains subcomponents licensed under the Apache License, Version 2.0:
 This product bundles 'Simple-Windows-Posix-Semaphore' which is available under an ALv2 license
 This project bundles 'mbedTLS' which is available under an ALv2 license
 This project bundles 'RocksDB' which is available under an ALv2 license
 This project bundles 'AWS SDK for C++' which is available under an ALv2 license
 
-The Apache NiFi - MiNiFi project contains subcomponents with separate copyright
+The Apache NiFi - MiNiFi C++ project contains subcomponents with separate copyright
 notices and license terms. Your use of the source code for the these
 subcomponents is subject to the terms and conditions of the following
 licenses.
@@ -1693,7 +1693,7 @@ When compiled with tinyDTLS support, this software includes components
 that are licensed under the terms of the Eclipse Distribution License 1.0
 (http://www.eclipse.org/org/documents/edl-v10.php).
 
-This project bundles 'open62541' which is available under an MPLv2.0 license,
+When this product is built with the OPC-UA extension enabled, the resulting binary includes 'open62541' which is available under an MPLv2.0 license,
 and its plugins as well as the server and client examples are in the public domain (Creative Commons CCZero 1.0 Universal):
 
 Mozilla Public License Version 2.0
