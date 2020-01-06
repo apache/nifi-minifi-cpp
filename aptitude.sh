@@ -25,11 +25,19 @@ add_os_flags() {
     CMAKE_BUILD_COMMAND="${CMAKE_BUILD_COMMAND} -DFAIL_ON_WARNINGS= "
 }
 bootstrap_cmake(){
+    ## on Ubuntu 16.04 we need a more recent CMake
+    if [[ "$OS" = Ubuntu* && "$VER" = "16.04" ]]; then
+      echo "Adding KitWare CMake apt repository..."
+      sudo apt-get update && sudo apt-get install -y apt-transport-https ca-certificates gnupg software-properties-common wget
+      wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | sudo apt-key add -
+      sudo apt-add-repository 'deb https://apt.kitware.com/ubuntu/ xenial main' && sudo apt-get update
+    fi
     sudo apt-get -y install cmake
 }
 build_deps(){
     ## need to account for debian
     COMMAND="sudo apt-get -y install cmake gcc g++ zlib1g-dev libssl-dev uuid uuid-dev"
+
     export DEBIAN_FRONTEND=noninteractive
     INSTALLED=()
     INSTALLED+=("libbz2-dev")

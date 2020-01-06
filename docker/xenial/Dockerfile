@@ -34,13 +34,7 @@ ENV MINIFI_BASE_DIR /opt/minifi
 RUN mkdir -p $MINIFI_BASE_DIR 
 USER $USER
 
-
 RUN apt-get update && apt-get install -y openjdk-8-jdk openjdk-8-source sudo git maven autogen autoconf automake
-RUN apt-get install -y apt-transport-https ca-certificates gnupg software-properties-common wget
-RUN wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | apt-key add -
-RUN apt-add-repository 'deb https://apt.kitware.com/ubuntu/ xenial main' && apt-get update
-RUN apt-get install -y cmake
-
 
 ADD $MINIFI_SOURCE_CODE $MINIFI_BASE_DIR
 
