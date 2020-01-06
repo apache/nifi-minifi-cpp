@@ -49,7 +49,7 @@ namespace minifi {
 namespace core {
 namespace logging {
 
-const char* LoggerConfiguration::spdlog_default_pattern = "[%Y-%m-%ll %H:%M:%S.%e] [%n] [%l] %v";
+const char* LoggerConfiguration::spdlog_default_pattern = "[%Y-%m-%d %H:%M:%S.%e] [%n] [%l] %v";
 
 std::vector<std::string> LoggerProperties::get_keys_of_type(const std::string &type) {
   std::vector<std::string> appenders;
