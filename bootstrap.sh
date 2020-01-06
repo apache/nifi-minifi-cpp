@@ -18,6 +18,10 @@
 
 script_directory="$(cd "$(dirname "$0")" && pwd)"
 
+CMAKE_GLOBAL_MIN_VERSION_MAJOR=3
+CMAKE_GLOBAL_MIN_VERSION_MINOR=7
+CMAKE_GLOBAL_MIN_VERSION_REVISION=0
+
 #RED='\033[0;41;30m'
 RED='\033[0;101m'
 NO_COLOR='\033[0;0;39m'
@@ -215,26 +219,31 @@ elif [ -x "$(command -v cmake)" ]; then
   CMAKE_COMMAND="cmake"
 fi
 
-if [ -z "${CMAKE_COMMAND}" ]; then
-  echo "CMAKE is not installed, attempting to install it..."
+if [ -n "${CMAKE_COMMAND}" ]; then
+  get_cmake_version
+fi
+
+if [ -z "${CMAKE_COMMAND}" ] ||
+   [ "$CMAKE_MAJOR" -lt "$CMAKE_GLOBAL_MIN_VERSION_MAJOR" ] ||
+   [ "$CMAKE_MINOR" -lt "$CMAKE_GLOBAL_MIN_VERSION_MINOR" ] ||
+   [ "$CMAKE_REVISION" -lt "$CMAKE_GLOBAL_MIN_VERSION_REVISION" ]; then
+  echo "CMake is not installed or too old, attempting to install it..."
   bootstrap_cmake
   if [ -x "$(command -v cmake3)" ]; then
     CMAKE_COMMAND="cmake3"
   elif [ -x "$(command -v cmake)" ]; then
     CMAKE_COMMAND="cmake"
   fi
+
+  get_cmake_version
 fi
 
-
-## before we begin, let's ensure that cmake exists
-
-CMAKE_VERSION=`${CMAKE_COMMAND} --version | head -n 1 | awk '{print $3}'`
-
-CMAKE_MAJOR=`echo $CMAKE_VERSION | cut -d. -f1`
-CMAKE_MINOR=`echo $CMAKE_VERSION | cut -d. -f2`
-CMAKE_REVISION=`echo $CMAKE_VERSION | cut -d. -f3`
-
-
+if [ "$CMAKE_MAJOR" -lt "$CMAKE_GLOBAL_MIN_VERSION_MAJOR" ] ||
+   [ "$CMAKE_MINOR" -lt "$CMAKE_GLOBAL_MIN_VERSION_MINOR" ] ||
+   [ "$CMAKE_REVISION" -lt "$CMAKE_GLOBAL_MIN_VERSION_REVISION" ]; then
+  echo "Failed to install or update CMake, exiting..."
+  exit
+fi
 
 add_cmake_option PORTABLE_BUILD ${TRUE}
 add_cmake_option DEBUG_SYMBOLS ${FALSE}

@@ -18,6 +18,14 @@
 
 script_directory="$(cd "$(dirname "$0")" && pwd)"
 
+get_cmake_version(){
+  CMAKE_VERSION=`${CMAKE_COMMAND} --version | head -n 1 | awk '{print $3}'`
+
+  CMAKE_MAJOR=`echo $CMAKE_VERSION | cut -d. -f1`
+  CMAKE_MINOR=`echo $CMAKE_VERSION | cut -d. -f2`
+  CMAKE_REVISION=`echo $CMAKE_VERSION | cut -d. -f3`
+}
+
 add_option(){
   eval "$1=$2"
   OPTIONS+=("$1")
