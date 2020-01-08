@@ -22,19 +22,66 @@
 #include <unordered_map>
 #include <tuple>
 
+#include "SQLRowSubscriber.h"
+
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
 namespace sql {
 
-class MaxCollector {
+class MaxCollector: public SQLRowSubscriber {
+  void beginProcessRow() override {}
+
+  void endProcessRow() override {
+    if (columnsVerified_) {
+      return;
+    }
+
+    if (countColumns_ != mapState_.size())
+      throw minifi::Exception(PROCESSOR_EXCEPTION, "MaxCollector: Column(s) '" + maxValueColumnNames_ + "' are not found in the columns of '" + selectQuery_ + "' result.");
+
+    columnsVerified_ = true;
+  }
+
+  void processColumnName(const std::string& name) override {
+    if (columnsVerified_) {
+      return;
+    }
+
+    if (mapState_.count(name)) {
+      countColumns_++;
+    }
+  }
+
+  void processColumn(const std::string& name, const std::string& value)  override {
+    updateMaxValue(name, '\'' + value + '\'');
+  }
+
+  void processColumn(const std::string& name, double value) override {
+    updateMaxValue(name, value);
+  }
+
+  void processColumn(const std::string& name, int value) override {
+    updateMaxValue(name, value);
+  }
+
+  void processColumn(const std::string& name, long long value) override {
+    updateMaxValue(name, value);
+  }
+
+  void processColumn(const std::string& name, unsigned long long value) override {
+    updateMaxValue(name, value);
+  }
+
+  void processColumn(const std::string& name, const char* value) override {}
+
   template <typename T>
   struct MaxValue {
-    void updateMaxValue(const std::string& columnName, const T& value) {
-      const auto it = mapColumnNameValue_.find(columnName);
+    void updateMaxValue(const std::string& name, const T& value) {
+      const auto it = mapColumnNameValue_.find(name);
       if (it == mapColumnNameValue_.end()) {
-        mapColumnNameValue_.insert({ columnName, value });
+        mapColumnNameValue_.insert({ name, value });
       } else {
         if (value > it->second) {
           it->second = value;
@@ -94,10 +141,6 @@ class MaxCollector {
     :selectQuery_(selectQuery), maxValueColumnNames_(maxValueColumnNames), mapState_(mapState) {
   }
 
-  bool hasColumn(const std::string& columName) {
-    return !!mapState_.count(columName);
-  }
-
   template <typename T>
   void updateMaxValue(const std::string& columnName, const T& value) {
     if (mapState_.count(columnName)) {
@@ -113,16 +156,13 @@ class MaxCollector {
     return mapState != mapState_;
   }
 
-  void checkNumberProcessedColumns(int columns) {
-    if (columns != mapState_.size())
-      throw std::runtime_error("QueryDatabaseTable: Column(s) '" + maxValueColumnNames_ + "' are not found in the columns of '" + selectQuery_ + "' result.");
-  }
-
  private:
   const std::string selectQuery_;
   const std::string maxValueColumnNames_;
   std::unordered_map<std::string, std::string>& mapState_;
   MaxValues<std::string, double, int, long long, unsigned long long> maxValues_;
+  size_t countColumns_{};
+  bool columnsVerified_{false};
 };
 	
 } /* namespace sql */

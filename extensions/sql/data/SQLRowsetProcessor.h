@@ -18,11 +18,7 @@
 
 #pragma once
 
-//#include "DatabaseConnectors.h"
-
-
-#include <string>
-#include <iostream>
+#include <vector>
 
 #include <soci/soci.h>
 
@@ -34,11 +30,29 @@ namespace nifi {
 namespace minifi {
 namespace sql {
 
-struct SQLWriter: public SQLRowSubscriber
+class SQLRowsetProcessor
 {
-  virtual std::string toString() = 0;
-};
+ public:
+  SQLRowsetProcessor(const soci::rowset<soci::row>& rowset, const std::vector<SQLRowSubscriber*>& rowSubscribers);
 
+  size_t process(size_t max = 0);
+
+ private:
+   void addRow(const soci::row& row, size_t rowCount);
+
+   template <typename T>
+   void processColumn(const std::string& name, const T& value) const {
+     for (const auto& pRowSubscriber: rowSubscribers_) {
+       pRowSubscriber->processColumn(name, value);
+     }
+   }
+
+ private:
+  size_t totalCount_{};
+  soci::rowset<soci::row>::const_iterator iter_;
+  soci::rowset<soci::row> rowset_;
+  std::vector<SQLRowSubscriber*> rowSubscribers_;
+};
 
 } /* namespace sql */
 } /* namespace minifi */
