@@ -57,7 +57,8 @@ class C2Agent : public state::UpdateController, public state::response::Response
 
   C2Agent(const std::shared_ptr<core::controller::ControllerServiceProvider> &controller, const std::shared_ptr<state::StateMonitor> &updateSink, const std::shared_ptr<Configure> &configure);
 
-  virtual ~C2Agent() {
+  virtual ~C2Agent() noexcept {
+    delete protocol_.load();
   }
 
   /**
