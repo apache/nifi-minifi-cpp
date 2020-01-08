@@ -16,12 +16,11 @@
  * limitations under the License.
  */
 
-#ifndef EXTENSIONS_SQL_DATA_JSONSQLWRITER_H_
-#define EXTENSIONS_SQL_DATA_JSONSQLWRITER_H_
+#pragma once
+
+#include "rapidjson/document.h"
 
 #include "SQLWriter.h"
-#include "MaxCollector.h"
-#include "rapidjson/document.h"
 
 namespace org {
 namespace apache {
@@ -29,20 +28,30 @@ namespace nifi {
 namespace minifi {
 namespace sql {
 
-class JSONSQLWriter : public SQLWriter {
+class JSONSQLWriter: public SQLWriter {
  public:
-  explicit JSONSQLWriter(const soci::rowset<soci::row> &rowset, std::ostream *out, MaxCollector* pMaxCollector = nullptr);
+  JSONSQLWriter();
   virtual ~JSONSQLWriter();
 
-  bool addRow(const soci::row &set, size_t rowCount) override;
+  std::string toString() override;
 
-  void write() override;
+private:
+  void beginProcessRow() override;
+  void endProcessRow() override;
+  void processColumnName(const std::string& name) override;
+  void processColumn(const std::string& name, const std::string& value) override;
+  void processColumn(const std::string& name, double value) override;
+  void processColumn(const std::string& name, int value) override;
+  void processColumn(const std::string& name, long long value) override;
+  void processColumn(const std::string& name, unsigned long long value) override;
+  void processColumn(const std::string& name, const char* value) override;
+
+  void addToJSONRow(const std::string& columnName, rapidjson::Value& jsonValue);
+  rapidjson::Value toJSONString(const std::string& s);
 
  private:
-
-  std::ostream *output_stream_;
-  rapidjson::Document json_payload_;
-  MaxCollector* pMaxCollector_{};
+  rapidjson::Document jsonPayload_;
+  rapidjson::Value jsonRow_;
 };
 
 } /* namespace sql */
@@ -51,4 +60,4 @@ class JSONSQLWriter : public SQLWriter {
 } /* namespace apache */
 } /* namespace org */
 
-#endif /* EXTENSIONS_SQL_DATA_JSONSQLWRITER_H_ */
+

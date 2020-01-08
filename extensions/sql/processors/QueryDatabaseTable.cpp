@@ -42,6 +42,7 @@
 #include "utils/OsUtils.h"
 #include "data/DatabaseConnectors.h"
 #include "data/JSONSQLWriter.h"
+#include "data/SQLRowsetProcessor.h"
 #include "data/WriteCallback.h"
 #include "data/MaxCollector.h"
 #include "data/Utils.h"
@@ -401,31 +402,28 @@ void QueryDatabaseTable::onTrigger(const std::shared_ptr<core::ProcessContext> &
     auto rowset = statement->execute();
 
     int count = 0;
-    size_t row_count = 0;
-    std::stringstream outputStream;
+    size_t rowCount = 0;
     sql::MaxCollector maxCollector(selectQuery, maxValueColumnNames_, mapState_);
-    sql::JSONSQLWriter writer(rowset, &outputStream, &maxCollector);
-    // serialize the rows
-    do {
-      row_count = writer.serialize(maxRowsPerFlowFile_ == 0 ? std::numeric_limits<size_t>::max() : maxRowsPerFlowFile_);
-      count++;
-      if (row_count == 0)
-        break;
-      writer.write();
+    sql::JSONSQLWriter jsonSQLWriter;
+    sql::SQLRowsetProcessor sqlRowsetProcessor(rowset, {&jsonSQLWriter, &maxCollector});
 
-      auto output = outputStream.str();
+    // Process rowset.
+    do {
+      rowCount = sqlRowsetProcessor.process(maxRowsPerFlowFile_ == 0 ? std::numeric_limits<size_t>::max() : maxRowsPerFlowFile_);
+      count++;
+      if (rowCount == 0)
+        break;
+
+      const auto& output = jsonSQLWriter.toString();
       if (!output.empty()) {
         WriteCallback writer(output.data(), output.size());
         auto newflow = session->create();
-        newflow->addAttribute(ResultRowCount, std::to_string(row_count));
+        newflow->addAttribute(ResultRowCount, std::to_string(rowCount));
         newflow->addAttribute(ResultTableName, tableName_);
         session->write(newflow, &writer);
         session->transfer(newflow, s_success);
       }
-
-      outputStream.str("");
-      outputStream.clear();
-    } while (row_count > 0);
+    } while (rowCount > 0);
 
     if (maxCollector.updateMapState()) {
       session->commit();

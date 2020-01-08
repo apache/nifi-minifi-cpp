@@ -40,6 +40,7 @@
 #include "utils/OsUtils.h"
 #include "data/DatabaseConnectors.h"
 #include "data/JSONSQLWriter.h"
+#include "data/SQLRowsetProcessor.h"
 #include "data/WriteCallback.h"
 
 namespace org {
@@ -116,27 +117,26 @@ void ExecuteSQL::onTrigger(const std::shared_ptr<core::ProcessContext> &context,
     auto rowset = statement->execute();
 
     int count = 0;
-    size_t row_count = 0;
-    std::stringstream outputStream;
-    sql::JSONSQLWriter writer(rowset, &outputStream);
-    // serialize the rows
+    size_t rowCount = 0;
+    sql::JSONSQLWriter jsonSQLWriter;
+    sql::SQLRowsetProcessor sqlRowsetProcessor(rowset, { &jsonSQLWriter });
+
+    // Process rowset.
     do {
-      row_count = writer.serialize(max_rows_ == 0 ? std::numeric_limits<size_t>::max() : max_rows_);
+      rowCount = sqlRowsetProcessor.process(max_rows_ == 0 ? std::numeric_limits<size_t>::max() : max_rows_);
       count++;
-      if (row_count == 0)
+      if (rowCount == 0)
         break;
-      writer.write();
-      auto output = outputStream.str();
+
+      const auto& output = jsonSQLWriter.toString();
       if (!output.empty()) {
         WriteCallback writer(output.data(), output.size());
         auto newflow = session->create();
-        newflow->addAttribute(ResultRowCount, std::to_string(row_count));
+        newflow->addAttribute(ResultRowCount, std::to_string(rowCount));
         session->write(newflow, &writer);
         session->transfer(newflow, s_success);
       }
-      outputStream.str("");
-      outputStream.clear();
-    } while (row_count > 0);
+    } while (rowCount > 0);
   } catch (std::exception& e) {
     logger_->log_error(e.what());
     throw;

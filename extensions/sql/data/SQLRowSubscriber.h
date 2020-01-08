@@ -16,7 +16,9 @@
  * limitations under the License.
  */
 
-#include "SQLWriter.h"
+#pragma once
+
+#include <string>
 
 namespace org {
 namespace apache {
@@ -24,13 +26,18 @@ namespace nifi {
 namespace minifi {
 namespace sql {
 
-SQLWriter::SQLWriter(const soci::rowset<soci::row> &rowset)
-    : rowset_(rowset), total_count_(0){
-  iter_ = rowset_.begin();
-}
-
-SQLWriter::~SQLWriter() {
-}
+struct SQLRowSubscriber {
+  virtual void beginProcessRow() = 0;
+  virtual void endProcessRow() = 0;
+  virtual void processColumnName(const std::string& name) = 0;
+  virtual void processColumn(const std::string& name, const std::string& value) = 0;
+  virtual void processColumn(const std::string& name, double value) = 0;
+  virtual void processColumn(const std::string& name, int value) = 0;
+  virtual void processColumn(const std::string& name, long long value) = 0;
+  virtual void processColumn(const std::string& name, unsigned long long value) = 0;
+  // Process NULL value.
+  virtual void processColumn(const std::string& name, const char* value) = 0;
+};
 
 } /* namespace sql */
 } /* namespace minifi */
