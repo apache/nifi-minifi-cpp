@@ -40,12 +40,13 @@ namespace c2 {
 
 C2Agent::C2Agent(const std::shared_ptr<core::controller::ControllerServiceProvider> &controller, const std::shared_ptr<state::StateMonitor> &updateSink,
                  const std::shared_ptr<Configure> &configuration)
-    : controller_(controller),
+    : heart_beat_period_(3000),
+      max_c2_responses(5),
       update_sink_(updateSink),
       update_service_(nullptr),
+      controller_(controller),
       configuration_(configuration),
-      heart_beat_period_(3000),
-      max_c2_responses(5),
+      protocol_(nullptr),
       logger_(logging::LoggerFactory<C2Agent>::getLogger()) {
   allow_updates_ = true;
 
@@ -154,25 +155,24 @@ void C2Agent::configure(const std::shared_ptr<Configure> &configure, bool reconf
       clazz = "CoapProtocol";
     }
     logger_->log_info("Class is %s", clazz);
-    auto protocol = core::ClassLoader::getDefaultClassLoader().instantiateRaw(clazz, clazz);
 
+    auto protocol = core::ClassLoader::getDefaultClassLoader().instantiateRaw(clazz, clazz);
     if (protocol == nullptr) {
-      logger_->log_info("Class %s not found", clazz);
+      logger_->log_warn("Class %s not found", clazz);
       protocol = core::ClassLoader::getDefaultClassLoader().instantiateRaw("CoapProtocol", "CoapProtocol");
       if (!protocol) {
-        logger_->log_info("Attempted to load CoapProtocol. To enable C2, please specify an active protocol for this agent.");
-        return;
-      } else {
-        logger_->log_info("Class is CoapProtocol");
+        const char* errmsg = "Attempted to load CoapProtocol. To enable C2, please specify an active protocol for this agent.";
+        logger_->log_error(errmsg);
+        throw minifi::Exception{ minifi::GENERAL_EXCEPTION, errmsg };
       }
+
+      logger_->log_info("Class is CoapProtocol");
     }
-    C2Protocol *old_protocol = protocol_.exchange(dynamic_cast<C2Protocol*>(protocol));
+
+    // Since !reconfigure, the call comes from the ctor and protocol_ is null, therefore no delete is necessary
+    protocol_.exchange(dynamic_cast<C2Protocol *>(protocol));
 
     protocol_.load()->initialize(controller_, configuration_);
-
-    if (reconfigure && old_protocol != nullptr) {
-      delete old_protocol;
-    }
   } else {
     protocol_.load()->update(configure);
   }
@@ -232,7 +232,7 @@ void C2Agent::configure(const std::shared_ptr<Configure> &configure, bool reconf
   if (configure->get("nifi.c2.agent.heartbeat.reporter.classes", "c2.agent.heartbeat.reporter.classes", heartbeat_reporters)) {
     std::vector<std::string> reporters = utils::StringUtils::split(heartbeat_reporters, ",");
     std::lock_guard<std::mutex> lock(heartbeat_mutex);
-    for (auto reporter : reporters) {
+    for (const auto& reporter : reporters) {
       auto heartbeat_reporter_obj = core::ClassLoader::getDefaultClassLoader().instantiate(reporter, reporter);
       if (heartbeat_reporter_obj == nullptr) {
         logger_->log_debug("Could not instantiate %s", reporter);
@@ -248,7 +248,7 @@ void C2Agent::configure(const std::shared_ptr<Configure> &configure, bool reconf
   if (configure->get("nifi.c2.agent.trigger.classes", "c2.agent.trigger.classes", trigger_classes)) {
     std::vector<std::string> triggers = utils::StringUtils::split(trigger_classes, ",");
     std::lock_guard<std::mutex> lock(heartbeat_mutex);
-    for (auto trigger : triggers) {
+    for (const auto& trigger : triggers) {
       auto trigger_obj = core::ClassLoader::getDefaultClassLoader().instantiate(trigger, trigger);
       if (trigger_obj == nullptr) {
         logger_->log_debug("Could not instantiate %s", trigger);
