@@ -31,7 +31,6 @@ namespace apache {
 namespace nifi {
 namespace minifi {
 
-// ExceptionType 
 enum ExceptionType {
   FILE_OPERATION_EXCEPTION = 0,
   FLOW_EXCEPTION,
@@ -44,11 +43,9 @@ enum ExceptionType {
   MAX_EXCEPTION
 };
 
-// Exception String 
 static const char *ExceptionStr[MAX_EXCEPTION] = { "File Operation", "Flow File Operation", "Processor Operation", "Process Session Operation", "Process Schedule Operation", "Site2Site Protocol",
     "General Operation", "Regex Operation" };
 
-// Exception Type to String 
 inline const char *ExceptionTypeToString(ExceptionType type) {
   if (type < MAX_EXCEPTION)
     return ExceptionStr[type];
@@ -56,37 +53,46 @@ inline const char *ExceptionTypeToString(ExceptionType type) {
     return NULL;
 }
 
-// Exception Class
-class Exception : public std::exception {
- public:
-  // Constructor
+namespace detail {
+inline size_t StringLength(const char* str) { return strlen(str); }
+
+template<size_t L>
+constexpr size_t StringLength(const char (&str)[L]) { return L; }
+
+inline size_t StringLength(const std::string& str) { return str.size(); }
+
+template<typename... SizeT>
+size_t sum(SizeT... ns) {
+  size_t result = 0;
+  (void)(std::initializer_list<size_t>{(
+      result += ns
+      )...});
+  return result; // (ns + ...)
+}
+
+template<typename... Strs>
+std::string StringJoin(Strs&&... strs) {
+  std::string result;
+  size_t length = sum(StringLength(strs)...);
+  result.reserve(length);
+  (void)(std::initializer_list<int>{(
+      result.append(strs)
+      , 0)...});
+  return result;
+}
+} /* namespace detail */
+
+struct Exception : public std::runtime_error {
   /*!
    * Create a new exception
    */
-  Exception(ExceptionType type, std::string errorMsg)
-      : _type(type),
-        _errorMsg(std::move(errorMsg)) {
-  }
+  Exception(ExceptionType type, const std::string& errorMsg)
+      : std::runtime_error{ detail::StringJoin(ExceptionTypeToString(type), ": ", errorMsg) }
+  { }
 
-  // Destructor
-  virtual ~Exception() noexcept {
-  }
-  virtual const char * what() const noexcept {
-
-    _whatStr = ExceptionTypeToString(_type);
-
-    _whatStr += ":" + _errorMsg;
-    return _whatStr.c_str();
-  }
-
- private:
-  // Exception type
-  ExceptionType _type;
-  // Exception detailed information
-  std::string _errorMsg;
-  // Hold the what result
-  mutable std::string _whatStr;
-
+  Exception(ExceptionType type, const char* errorMsg)
+      : std::runtime_error{ detail::StringJoin(ExceptionTypeToString(type), ": ", errorMsg) }
+  { }
 };
 
 } /* namespace minifi */
