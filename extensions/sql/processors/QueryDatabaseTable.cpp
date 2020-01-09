@@ -180,13 +180,13 @@ class State {
 
      utils::file::FileUtils::create_dir(dir);
 
-     auto dirCreated = utils::file::FileUtils::is_directory(dir.c_str());
-     if (!dirCreated) {
+     if (!utils::file::FileUtils::is_directory(dir.c_str())) {
        logger_->log_error("Cannot create %s", dir.c_str());
        dir.clear();
+       return false;
      }
 
-     return dirCreated;
+     return true;
    }
 
    bool getStateFromFile() {
@@ -285,7 +285,7 @@ class State {
 
 // QueryDatabaseTable
 QueryDatabaseTable::QueryDatabaseTable(const std::string& name, utils::Identifier uuid)
-  : core::Processor(name, uuid), logger_(logging::LoggerFactory<QueryDatabaseTable>::getLogger()) {
+  : SQLProcessor(name, uuid) {
 }
 
 QueryDatabaseTable::~QueryDatabaseTable() {
@@ -299,8 +299,7 @@ void QueryDatabaseTable::initialize() {
   setSupportedRelationships( { s_success });
 }
 
-void QueryDatabaseTable::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
-  context->getProperty(s_dbControllerService.getName(), db_controller_service_);
+void QueryDatabaseTable::processOnSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
   context->getProperty(s_tableName.getName(), tableName_);
 
   context->getProperty(s_columnNames.getName(), columnNames_);
@@ -370,28 +369,9 @@ void QueryDatabaseTable::onSchedule(const std::shared_ptr<core::ProcessContext> 
       logger_->log_info("Setting initial maximum value of %s to %s", columnName, value);
     }
   }
-
-  database_service_ = std::dynamic_pointer_cast<sql::controllers::DatabaseService>(context->getControllerService(db_controller_service_));
-  if (!database_service_) 
-    throw minifi::Exception(PROCESSOR_EXCEPTION, "'DB Controller Service' must be defined");
 }
 
-void QueryDatabaseTable::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
-  std::unique_lock<std::mutex> lock(onTriggerMutex_, std::try_to_lock);
-  if (!lock.owns_lock()) {
-    logger_->log_warn("'onTrigger' is called before previous 'onTrigger' call is finished.");
-    context->yield();
-    return;
-  }
-
-  if (!connection_) {
-    connection_ = database_service_->getConnection();
-    if (!connection_) {
-      context->yield();
-      return;
-    }
-  }
-
+void QueryDatabaseTable::processOnTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
   try {
     const auto& selectQuery = getSelectQuery();
 
