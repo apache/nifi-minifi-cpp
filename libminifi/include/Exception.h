@@ -20,6 +20,7 @@
 #ifndef __EXCEPTION_H__
 #define __EXCEPTION_H__
 
+#include "utils/StringUtils.h"
 #include <sstream>
 #include <exception>
 #include <stdexcept>
@@ -31,7 +32,6 @@ namespace apache {
 namespace nifi {
 namespace minifi {
 
-// ExceptionType 
 enum ExceptionType {
   FILE_OPERATION_EXCEPTION = 0,
   FLOW_EXCEPTION,
@@ -44,11 +44,9 @@ enum ExceptionType {
   MAX_EXCEPTION
 };
 
-// Exception String 
 static const char *ExceptionStr[MAX_EXCEPTION] = { "File Operation", "Flow File Operation", "Processor Operation", "Process Session Operation", "Process Schedule Operation", "Site2Site Protocol",
     "General Operation", "Regex Operation" };
 
-// Exception Type to String 
 inline const char *ExceptionTypeToString(ExceptionType type) {
   if (type < MAX_EXCEPTION)
     return ExceptionStr[type];
@@ -56,37 +54,17 @@ inline const char *ExceptionTypeToString(ExceptionType type) {
     return NULL;
 }
 
-// Exception Class
-class Exception : public std::exception {
- public:
-  // Constructor
+struct Exception : public std::runtime_error {
   /*!
    * Create a new exception
    */
-  Exception(ExceptionType type, std::string errorMsg)
-      : _type(type),
-        _errorMsg(std::move(errorMsg)) {
-  }
+  Exception(ExceptionType type, const std::string& errorMsg)
+      : std::runtime_error{ org::apache::nifi::minifi::utils::StringUtils::join_pack(ExceptionTypeToString(type), ": ", errorMsg) }
+  { }
 
-  // Destructor
-  virtual ~Exception() noexcept {
-  }
-  virtual const char * what() const noexcept {
-
-    _whatStr = ExceptionTypeToString(_type);
-
-    _whatStr += ":" + _errorMsg;
-    return _whatStr.c_str();
-  }
-
- private:
-  // Exception type
-  ExceptionType _type;
-  // Exception detailed information
-  std::string _errorMsg;
-  // Hold the what result
-  mutable std::string _whatStr;
-
+  Exception(ExceptionType type, const char* errorMsg)
+      : std::runtime_error{ org::apache::nifi::minifi::utils::StringUtils::join_pack(ExceptionTypeToString(type), ": ", errorMsg) }
+  { }
 };
 
 } /* namespace minifi */

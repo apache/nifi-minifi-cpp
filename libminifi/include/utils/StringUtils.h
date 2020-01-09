@@ -27,6 +27,7 @@
 #include <sstream>
 #include <vector>
 #include <map>
+#include <type_traits>
 #include "utils/FailurePolicy.h"
 
 enum TimeUnit {
@@ -162,7 +163,107 @@ class StringUtils {
     }
     return newString;
   }
-  
+
+  /**
+   * Returns the size of the passed std::w?string, C string or char array. Returns the array size - 1 in case of arrays.
+   * @tparam CharT Character type, typically char or wchar_t (deduced)
+   * @param str
+   * @return The size of the argument string
+   */
+  template<typename CharT>
+  static size_t size(const std::basic_string<CharT>& str) noexcept { return str.size(); }
+
+  template<typename CharT>
+  static size_t size(const CharT* str) noexcept { return std::char_traits<CharT>::length(str); }
+
+  struct detail {
+
+  // add all args
+  template<typename... SizeT>
+  static size_t sum(SizeT... ns) {
+    size_t result = 0;
+    (void)(std::initializer_list<size_t>{( result += ns )...});
+    return result; // (ns + ...)
+  }
+
+  #ifndef _MSC_VER
+  // partial detection idiom impl
+  template<typename...>
+  using void_t = void;
+
+  struct nonesuch{};
+
+  template<typename Default, typename Void, template<class...> class Op, typename... Args>
+  struct detector {
+    using value_t = std::false_type;
+    using type = Default;
+  };
+
+  template<typename Default, template<class...> class Op, typename... Args>
+  struct detector<Default, void_t<Op<Args...>>, Op, Args...> {
+    using value_t = std::true_type;
+    using type = Op<Args...>;
+  };
+
+  template<template<class...> class Op, typename... Args>
+  using is_detected = typename detector<nonesuch, void, Op, Args...>::value_t;
+
+  // and operation for boolean template argument packs
+  template<bool...>
+  struct and_;
+
+  template<bool Head, bool... Tail>
+  struct and_<Head, Tail...> : std::integral_constant<bool, Head && and_<Tail...>::value>
+  {};
+
+  template<bool B>
+  struct and_<B> : std::integral_constant<bool, B>
+  {};
+
+  // implementation detail of join_pack
+  template<typename CharT>
+  struct str_detector {
+    template<typename Str>
+    using valid_string_t = decltype(std::declval<std::basic_string<CharT>>().append(std::declval<Str>()));
+  };
+
+  template<typename ResultT, typename CharT, typename... Strs>
+  using valid_string_pack_t = typename std::enable_if<and_<is_detected<str_detector<CharT>::template valid_string_t, Strs>::value...>::value, ResultT>::type;
+  #else
+  // MSVC is broken without /permissive-
+  template<typename ResultT, typename...>
+  using valid_string_pack_t = ResultT;
+  #endif
+
+  template<typename CharT, typename... Strs, valid_string_pack_t<void, CharT, Strs...>* = nullptr>
+  static std::basic_string<CharT> join_pack(const Strs&... strs) {
+    std::basic_string<CharT> result;
+    result.reserve(sum(size(strs)...));
+    (void)(std::initializer_list<int>{( result.append(strs) ,0)...});
+    return result;
+  }
+  }; /* struct detail */
+
+  /**
+   * Join all arguments
+   * @tparam CharT Deduced character type
+   * @tparam Strs Deduced string types
+   * @param head First string, used for CharT deduction
+   * @param tail Rest of the strings
+   * @return std::basic_string<CharT> containing the resulting string
+   */
+  template<typename CharT, typename... Strs>
+  static detail::valid_string_pack_t<std::basic_string<CharT>, CharT, Strs...>
+  join_pack(const std::basic_string<CharT>& head, const Strs&... tail) {
+    return detail::join_pack<CharT>(head, tail...);
+  }
+
+  template<typename CharT, typename... Strs>
+  static detail::valid_string_pack_t<std::basic_string<CharT>, CharT, Strs...>
+  join_pack(const CharT* head, const Strs&... tail) {
+    return detail::join_pack<CharT>(head, tail...);
+  }
+
   /**
    * Concatenates strings stored in an arbitrary container using the provided separator.
    * @tparam TChar char type of the string (char or wchar_t)

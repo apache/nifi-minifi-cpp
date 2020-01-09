@@ -53,7 +53,7 @@
 class SecureSocketTest : public IntegrationBase {
  public:
   explicit SecureSocketTest(bool isSecure)
-      : isSecure(isSecure) {
+      : isSecure{ isSecure }, isRunning_{ false } {
     char format[] = "/tmp/ssth.XXXXXX";
     dir = testController.createTempDirectory(format);
   }
@@ -76,7 +76,7 @@ class SecureSocketTest : public IntegrationBase {
   }
 
   void runAssertions() {
-    assert(LogTestController::getInstance().contains("send succeed 20") == true);
+    assert(LogTestController::getInstance().contains("send succeed 20"));
   }
 
   void queryRootProcessGroup(std::shared_ptr<core::ProcessGroup> pg) {

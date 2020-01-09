@@ -498,7 +498,7 @@ void testRPGBypass(const std::string &host, const std::string &port, const std::
   auto context = std::make_shared<core::ProcessContext>(node, controller_services_provider, repo, repo, content_repo);
   auto psf = std::make_shared<core::ProcessSessionFactory>(context);
   if (hasException) {
-    auto expected_error = "Site2Site Protocol:HTTPClient not resolvable. No peers configured or any port specific hostname and port -- cannot schedule";
+    auto expected_error = "Site2Site Protocol: HTTPClient not resolvable. No peers configured or any port specific hostname and port -- cannot schedule";
     try {
       rpg->onSchedule(context, psf);
     } catch (std::exception &e) {
