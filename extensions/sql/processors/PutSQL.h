@@ -26,6 +26,8 @@
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
 #include "services/DatabaseService.h"
+#include "SQLProcessor.h"
+
 #include <sstream>
 
 namespace org {
@@ -35,45 +37,26 @@ namespace minifi {
 namespace processors {
 
 //! PutSQL Class
-class PutSQL : public core::Processor {
+class PutSQL: public SQLProcessor<PutSQL> {
  public:
-  //! Constructor
-  /*!
-   * Create a new processor
-   */
   explicit PutSQL(const std::string& name, utils::Identifier uuid = utils::Identifier());
-
-  //! Destructor
   virtual ~PutSQL();
 
   //! Processor Name
   static const std::string ProcessorName;
 
-  /**
-   * Function that's executed when the processor is scheduled.
-   * @param context process context.
-   * @param sessionFactory process session factory that is used when creating
-   * ProcessSession objects.
-   */
-  void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
-  void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
+  void processOnSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory);
+  void processOnTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session);
   
-  void initialize(void) override;
+  void initialize() override;
   void notifyStop() override;
 
-  static const core::Property s_dbControllerService;
   static const core::Property s_sqlStatements;
 
   static const core::Relationship s_success;
 
  private:
-  std::shared_ptr<sql::controllers::DatabaseService> database_service_;
-  // Logger
-  std::shared_ptr<logging::Logger> logger_;
-  std::string db_controller_service_;
-  std::vector<std::string> sqlStatements_;
-  std::unique_ptr<sql::Connection> connection_;
-  std::mutex onTriggerMutex_;
+   std::vector<std::string> sqlStatements_;
 };
 
 REGISTER_RESOURCE(PutSQL, "PutSQL to execute SQL command via ODBC.");

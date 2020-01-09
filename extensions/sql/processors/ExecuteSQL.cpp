@@ -51,9 +51,6 @@ namespace processors {
 
 const std::string ExecuteSQL::ProcessorName("ExecuteSQL");
 
-const core::Property ExecuteSQL::s_dbControllerService(
-    core::PropertyBuilder::createProperty("DB Controller Service")->isRequired(true)->withDescription("Database Controller Service.")->supportsExpressionLanguage(true)->build());
-
 const core::Property ExecuteSQL::s_sqlSelectQuery(
   core::PropertyBuilder::createProperty("SQL select query")->isRequired(true)->withDescription(
     "The SQL select query to execute. The query can be empty, a constant value, or built from attributes using Expression Language. "
@@ -70,8 +67,7 @@ const core::Relationship ExecuteSQL::s_success("success", "Successfully created 
 static const std::string ResultRowCount = "executesql.row.count";
 
 ExecuteSQL::ExecuteSQL(const std::string& name, utils::Identifier uuid)
-    : core::Processor(name, uuid), max_rows_(0),
-      logger_(logging::LoggerFactory<ExecuteSQL>::getLogger()) {
+  : SQLProcessor(name, uuid), max_rows_(0) {
 }
 
 ExecuteSQL::~ExecuteSQL() {
@@ -85,32 +81,12 @@ void ExecuteSQL::initialize() {
   setSupportedRelationships( { s_success });
 }
 
-void ExecuteSQL::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
-  context->getProperty(s_dbControllerService.getName(), db_controller_service_);
+void ExecuteSQL::processOnSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
   context->getProperty(s_sqlSelectQuery.getName(), sqlSelectQuery_);
   context->getProperty(s_maxRowsPerFlowFile.getName(), max_rows_);
-
-  database_service_ = std::dynamic_pointer_cast<sql::controllers::DatabaseService>(context->getControllerService(db_controller_service_));
-  if (!database_service_)
-    throw minifi::Exception(PROCESSOR_EXCEPTION, "'DB Controller Service' must be defined");
 }
 
-void ExecuteSQL::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
-  std::unique_lock<std::mutex> lock(onTriggerMutex_, std::try_to_lock);
-  if (!lock.owns_lock()) {
-    logger_->log_warn("'onTrigger' is called before previous 'onTrigger' call is finished.");
-    context->yield();
-    return;
-  }
-
-  if (!connection_) {
-    connection_ = database_service_->getConnection();
-    if (!connection_) {
-      context->yield();
-      return;
-    }
-  }
-
+void ExecuteSQL::processOnTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
   try {
     auto statement = connection_->prepareStatement(sqlSelectQuery_);
 

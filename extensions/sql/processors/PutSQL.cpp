@@ -49,9 +49,6 @@ namespace processors {
 
 const std::string PutSQL::ProcessorName("PutSQL");
 
-const core::Property PutSQL::s_dbControllerService(
-  core::PropertyBuilder::createProperty("DB Controller Service")->isRequired(true)->withDescription("Database Controller Service.")->supportsExpressionLanguage(true)->build());
-
 const core::Property PutSQL::s_sqlStatements(
   core::PropertyBuilder::createProperty("SQL statements")->isRequired(true)->withDefaultValue("System")->withDescription(
     "A semicolon-delimited list of SQL statements to execute. The statement can be empty, a constant value, or built from attributes using Expression Language. "
@@ -62,7 +59,7 @@ const core::Property PutSQL::s_sqlStatements(
 const core::Relationship PutSQL::s_success("success", "Database is successfully updated.");
 
 PutSQL::PutSQL(const std::string& name, utils::Identifier uuid)
-    : core::Processor(name, uuid), logger_(logging::LoggerFactory<PutSQL>::getLogger()) {
+  : SQLProcessor(name, uuid) {
 }
 
 PutSQL::~PutSQL() {
@@ -76,34 +73,13 @@ void PutSQL::initialize() {
   setSupportedRelationships( { s_success });
 }
 
-void PutSQL::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
-  context->getProperty(s_dbControllerService.getName(), db_controller_service_);
-
+void PutSQL::processOnSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& sessionFactory) {
   std::string sqlStatements;
   context->getProperty(s_sqlStatements.getName(), sqlStatements);
   sqlStatements_ = utils::StringUtils::split(sqlStatements, ";");
-
-  database_service_ = std::dynamic_pointer_cast<sql::controllers::DatabaseService>(context->getControllerService(db_controller_service_));
-  if (!database_service_) 
-    throw minifi::Exception(PROCESSOR_EXCEPTION, "'DB Controller Service' must be defined");
 }
 
-void PutSQL::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
-  std::unique_lock<std::mutex> lock(onTriggerMutex_, std::try_to_lock);
-  if (!lock.owns_lock()) {
-    logger_->log_warn("'onTrigger' is called before previous 'onTrigger' call is finished.");
-    context->yield();
-    return;
-  }
-
-  if (!connection_) {
-    connection_ = database_service_->getConnection();
-    if (!connection_) {
-      context->yield();
-      return;
-    }
-  }
-
+void PutSQL::processOnTrigger(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) {
   const auto dbSession = connection_->getSession();
 
   try {
