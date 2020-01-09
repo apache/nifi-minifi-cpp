@@ -71,43 +71,37 @@ void SQLRowsetProcessor::addRow(const soci::row& row, size_t rowCount) {
     } else {
       switch (const auto dataType = props.get_data_type()) {
         case soci::data_type::dt_string: {
-          const auto value = std::string(row.get<std::string>(i));
-          processColumn(name, value);
+          processColumn(name, row.get<std::string>(i));
         }
         break;
         case soci::data_type::dt_double: {
-          const auto value = row.get<double>(i);
-          processColumn(name, value);
+          processColumn(name, row.get<double>(i));
         }
         break;
         case soci::data_type::dt_integer: {
-          const auto value = row.get<int>(i);
-          processColumn(name, value);
+          processColumn(name, row.get<int>(i));
         }
         break;
         case soci::data_type::dt_long_long: {
-          const auto value = row.get<long long>(i);
-          processColumn(name, value);
+          processColumn(name, row.get<long long>(i));
         }
         break;
         case soci::data_type::dt_unsigned_long_long: {
-          const auto value = row.get<unsigned long long>(i);
-          processColumn(name, value);
+          processColumn(name, row.get<unsigned long long>(i));
         }
         break;
         case soci::data_type::dt_date: {
           const std::tm when = row.get<std::tm>(i);
 
-          char strWhen[128];
-          if (!std::strftime(strWhen, sizeof(strWhen), "%Y-%m-%d %H:%M:%S", &when))
-            throw minifi::Exception(PROCESSOR_EXCEPTION, std::string("SQLRowsetProcessor: !strftime with '") + strWhen + "'");
+          char value[128];
+          if (!std::strftime(value, sizeof(value), "%Y-%m-%d %H:%M:%S", &when))
+            throw minifi::Exception(PROCESSOR_EXCEPTION, "SQLRowsetProcessor: !strftime.");
 
-          const std::string value = strWhen;
-          processColumn(name, value);
+          processColumn(name, std::string(value));
         }
         break;
         default: {
-          throw minifi::Exception(PROCESSOR_EXCEPTION, "ExecuteSQL. Unsupported data type " + std::to_string(dataType));
+          throw minifi::Exception(PROCESSOR_EXCEPTION, "SQLRowsetProcessor: Unsupported data type " + std::to_string(dataType));
         }
       }
     }
