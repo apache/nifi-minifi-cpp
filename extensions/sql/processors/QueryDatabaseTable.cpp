@@ -410,8 +410,7 @@ void QueryDatabaseTable::processOnTrigger(const std::shared_ptr<core::ProcessCon
 
       pState_->writeStateToFile(mapState_);
     }
-  }
-  catch (std::exception& e) {
+  }  catch (std::exception& e) {
     logger_->log_error(e.what());
     throw;
   }
@@ -468,8 +467,6 @@ std::string QueryDatabaseTable::getSelectQuery() {
   return ret;
 }
 
-void QueryDatabaseTable::notifyStop() {
-}
 
 } /* namespace processors */
 } /* namespace minifi */

@@ -119,9 +119,6 @@ void ExecuteSQL::processOnTrigger(const std::shared_ptr<core::ProcessContext> &c
   }
 }
 
-void ExecuteSQL::notifyStop() {
-}
-
 } /* namespace processors */
 } /* namespace minifi */
 } /* namespace nifi */

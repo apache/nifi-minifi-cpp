@@ -49,7 +49,6 @@ class ExecuteSQL: public SQLProcessor<ExecuteSQL> {
   void processOnTrigger(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session);
   
   void initialize() override;
-  void notifyStop() override;
 
   static const core::Property s_sqlSelectQuery;
   static const core::Property s_maxRowsPerFlowFile;

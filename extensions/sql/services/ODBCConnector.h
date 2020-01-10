@@ -15,8 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CONTROLLERS_ODBCService_H_
-#define LIBMINIFI_INCLUDE_CONTROLLERS_ODBCService_H_
+
+#pragma once 
 
 #include "core/logging/LoggerConfiguration.h"
 #include "core/controller/ControllerService.h"
@@ -30,6 +30,8 @@
 #include <soci/soci.h>
 #include <soci/odbc/soci-odbc.h>
 
+#include <iostream>
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -39,19 +41,31 @@ namespace controllers {
 
 class ODBCConnection : public sql::Connection {
  public:
-  explicit ODBCConnection(const std::string &connectionString)
-      : connection_string_(connectionString) {
+  explicit ODBCConnection(const std::string& connectionString)
+    : connection_string_(connectionString) {
+    try {
+      session_ = std::make_unique<soci::session>(getSessionParameters());
+      hasException_ = false;
+    } catch (std::exception& e) {
+      exception_ = e.what();
+      hasException_ = true;
+    }
   }
+
   virtual ~ODBCConnection() {
   }
 
+  bool ok(std::string& exception) const override {
+    exception = exception_;
+    return !hasException_;
+  }
 
-  std::unique_ptr<sql::Statement> prepareStatement(const std::string &query) const override {
-    return std::make_unique<sql::Statement>(std::make_unique<soci::session>(getSessionParameters()), query);
+  std::unique_ptr<sql::Statement> prepareStatement(const std::string& query) const override {
+    return std::make_unique<sql::Statement>(session_, query);
   }
 
   std::unique_ptr<Session> getSession() const override {
-    return std::make_unique<sql::Session>(std::make_unique<soci::session>(getSessionParameters()));
+    return std::make_unique<sql::Session>(session_);
   }
 
  private:
@@ -65,8 +79,12 @@ class ODBCConnection : public sql::Connection {
    }
 
  private:
+  std::unique_ptr<soci::session> session_;
   std::string connection_string_;
+  std::string exception_;
+  bool hasException_;
 };
+
 /**
  * Purpose and Justification: Controller services function as a layerable way to provide
  * services to internal services. While a controller service is generally configured from the flow,
@@ -74,19 +92,15 @@ class ODBCConnection : public sql::Connection {
  */
 class ODBCService : public DatabaseService {
  public:
-
-  /**
-   * Constructors for the controller service.
-   */
   explicit ODBCService(const std::string &name, const std::string &id)
-      : DatabaseService(name, id),
-        logger_(logging::LoggerFactory<ODBCService>::getLogger()) {
+    : DatabaseService(name, id),
+      logger_(logging::LoggerFactory<ODBCService>::getLogger()) {
     initialize();
   }
 
   explicit ODBCService(const std::string &name, utils::Identifier uuid = utils::Identifier())
-      : DatabaseService(name, uuid),
-        logger_(logging::LoggerFactory<ODBCService>::getLogger()) {
+    : DatabaseService(name, uuid),
+      logger_(logging::LoggerFactory<ODBCService>::getLogger()) {
     initialize();
   }
 
@@ -100,12 +114,10 @@ class ODBCService : public DatabaseService {
   virtual std::unique_ptr<sql::Connection> getConnection() const override;
 
  private:
-
   std::shared_ptr<logging::Logger> logger_;
 };
 
 REGISTER_RESOURCE(ODBCService, "Controller service that provides ODBC database connection");
-
 
 } /* namespace controllers */
 } /* namespace sql */
@@ -113,5 +125,3 @@ REGISTER_RESOURCE(ODBCService, "Controller service that provides ODBC database c
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-
-#endif /* LIBMINIFI_INCLUDE_CONTROLLERS_ODBCService_H_ */
