@@ -42,56 +42,57 @@ namespace sql {
 class Statement {
  public:
 
-  explicit Statement(std::unique_ptr<soci::session>&& sql, const std::string &query)
-    : sql_(std::move(sql)), query_(query) {
+  explicit Statement(const std::unique_ptr<soci::session>& session, const std::string &query)
+    : session_(session), query_(query) {
   }
 
   virtual ~Statement() {
   }
 
   soci::rowset<soci::row> execute() {
-    return sql_->prepare << query_;
+    return session_->prepare << query_;
   }
 
  protected:
   std::string query_;
-  std::unique_ptr<soci::session> sql_;
+  const std::unique_ptr<soci::session>& session_;
 };
 
 class Session {
  public:
 
-  explicit Session(std::unique_ptr<soci::session>&& sql)
-    : sql_(std::move(sql)) {
+  explicit Session(const std::unique_ptr<soci::session>& session)
+    : session_(session) {
   }
 
   virtual ~Session() {
   }
 
   void begin() {
-    sql_->begin();
+    session_->begin();
   }
 
   void commit() {
-    sql_->commit();
+    session_->commit();
   }
 
   void rollback() {
-    sql_->rollback();
+    session_->rollback();
   }
 
   void execute(const std::string &statement) {
-    *sql_ << statement;
+    *session_ << statement;
   }
 
 protected:
-  std::unique_ptr<soci::session> sql_;
+  const std::unique_ptr<soci::session>& session_;
 };
 
 class Connection {
  public:
   virtual ~Connection() {
   }
+  virtual bool ok(std::string& exception) const = 0;
   virtual std::unique_ptr<Statement> prepareStatement(const std::string &query) const = 0;
   virtual std::unique_ptr<Session> getSession() const = 0;
 };

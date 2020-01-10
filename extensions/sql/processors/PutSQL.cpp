@@ -95,9 +95,6 @@ void PutSQL::processOnTrigger(const std::shared_ptr<core::ProcessContext>& conte
   }
 }
 
-void PutSQL::notifyStop() {
-}
-
 } /* namespace processors */
 } /* namespace minifi */
 } /* namespace nifi */
