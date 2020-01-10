@@ -20,6 +20,7 @@
 #ifndef __EXCEPTION_H__
 #define __EXCEPTION_H__
 
+#include "utils/StringUtils.h"
 #include <sstream>
 #include <exception>
 #include <stdexcept>
@@ -53,45 +54,16 @@ inline const char *ExceptionTypeToString(ExceptionType type) {
     return NULL;
 }
 
-namespace detail {
-inline size_t StringLength(const char* str) { return strlen(str); }
-
-template<size_t L>
-constexpr size_t StringLength(const char (&str)[L]) { return L; }
-
-inline size_t StringLength(const std::string& str) { return str.size(); }
-
-template<typename... SizeT>
-size_t sum(SizeT... ns) {
-  size_t result = 0;
-  (void)(std::initializer_list<size_t>{(
-      result += ns
-      )...});
-  return result; // (ns + ...)
-}
-
-template<typename... Strs>
-std::string StringJoin(Strs&&... strs) {
-  std::string result;
-  size_t length = sum(StringLength(strs)...);
-  result.reserve(length);
-  (void)(std::initializer_list<int>{(
-      result.append(strs)
-      , 0)...});
-  return result;
-}
-} /* namespace detail */
-
 struct Exception : public std::runtime_error {
   /*!
    * Create a new exception
    */
   Exception(ExceptionType type, const std::string& errorMsg)
-      : std::runtime_error{ detail::StringJoin(ExceptionTypeToString(type), ": ", errorMsg) }
+      : std::runtime_error{ org::apache::nifi::minifi::utils::StringUtils::join_pack(ExceptionTypeToString(type), ": ", errorMsg) }
   { }
 
   Exception(ExceptionType type, const char* errorMsg)
-      : std::runtime_error{ detail::StringJoin(ExceptionTypeToString(type), ": ", errorMsg) }
+      : std::runtime_error{ org::apache::nifi::minifi::utils::StringUtils::join_pack(ExceptionTypeToString(type), ": ", errorMsg) }
   { }
 };
 

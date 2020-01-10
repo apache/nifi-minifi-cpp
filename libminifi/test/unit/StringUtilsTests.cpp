@@ -317,3 +317,10 @@ TEST_CASE("TestStringUtils::testBase64EncodeDecode", "[test base64 encode decode
     REQUIRE(data == utils::StringUtils::from_base64(base64.data(), base64.size()));
   }
 }
+
+TEST_CASE("TestStringUtils::testJoinPack", "[test join_pack]") {
+  std::string stdstr = "std::string";
+  const char* cstr = "c string";
+  const char carr[] = "char array";
+  REQUIRE(utils::StringUtils::join_pack("rvalue c string, ", cstr, std::string{ ", rval std::string, " }, stdstr, ", ", carr) == "rvalue c string, c string, rval std::string, std::string, char array");
+}

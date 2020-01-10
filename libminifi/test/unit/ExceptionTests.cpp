@@ -20,7 +20,7 @@
 #include "../TestBase.h"
 #include "Exception.h"
 
-TEST_CASE("Test general exception .what()", "[testgeneralwhat]") {
+TEST_CASE("Test general exception .what()", "[testi general what]") {
   auto ex = minifi::Exception(minifi::GENERAL_EXCEPTION, "Test exception message");
   REQUIRE(std::string{ ex.what() } == "General Operation: Test exception message");
 }
