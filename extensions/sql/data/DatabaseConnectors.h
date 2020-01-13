@@ -92,7 +92,7 @@ class Connection {
  public:
   virtual ~Connection() {
   }
-  virtual bool ok(std::string& exception) const = 0;
+  virtual bool connected(std::string& exception) const = 0;
   virtual std::unique_ptr<Statement> prepareStatement(const std::string &query) const = 0;
   virtual std::unique_ptr<Session> getSession() const = 0;
 };

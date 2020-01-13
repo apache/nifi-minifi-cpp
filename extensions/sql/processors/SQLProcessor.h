@@ -58,24 +58,22 @@ class SQLProcessor: public core::Processor {
       return;
     }
 
-    if (!connection_) {
-      connection_ = dbService_->getConnection();
-      std::string exception;
-      if (!connection_->ok(exception)) {
-        logger_->log_error("SQLProcessor: Connection exception: %s", exception.c_str());
-        connection_.reset();
-        context->yield();
-        return;
-      }
-    }
-
     try {
+      if (!connection_) {
+        connection_ = dbService_->getConnection();
+      }
       static_cast<T*>(this)->processOnTrigger(context, session);
     } catch (std::exception& e) {
-      // Exception might happened because connection is dropped, call 'connection_.reset()', then on next 'onTrigger', it will connect to DB. 
-      logger_->log_error("SQLProcessor: close connection.");
-      connection_.reset();
-      throw;
+      logger_->log_error("SQLProcessor: '%s'", e.what());
+      if (connection_) {
+        std::string exp;
+        if (!connection_->connected(exp)) {
+          logger_->log_error("SQLProcessor: Connection exception: %s", exp.c_str());
+          connection_.reset();
+        }
+      }
+      context->yield();
+      return;
     }
   }
 
