@@ -279,13 +279,13 @@ class Socket : public BaseStream {
 
   bool nonBlocking_;
 
- protected:
+  std::shared_ptr<logging::Logger> logger_;
+
   void setPort(uint16_t port) {
     port_ = port;
   }
 
  private:
-  std::shared_ptr<logging::Logger> logger_;
   static std::string init_hostname() {
     char hostname[1024];
     gethostname(hostname, 1024);

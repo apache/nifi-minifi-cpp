@@ -24,6 +24,7 @@
 #include "io/tls/TLSSocket.h"
 #include "io/tls/TLSUtils.h"
 #include "properties/Configure.h"
+#include "utils/ScopeGuard.h"
 #include "utils/StringUtils.h"
 #include "core/Property.h"
 #include "core/logging/LoggerConfiguration.h"
@@ -39,8 +40,8 @@ std::mutex OpenSSLInitializer::context_mutex;
 
 TLSContext::TLSContext(const std::shared_ptr<Configure> &configure, const std::shared_ptr<minifi::controllers::SSLContextService> &ssl_service)
     : SocketContext(configure),
-      error_value(0),
-      ctx(0),
+      error_value(TLS_GOOD),
+      ctx(nullptr),
       logger_(logging::LoggerFactory<TLSContext>::getLogger()),
       configure_(configure),
       ssl_service_(ssl_service) {
@@ -73,6 +74,12 @@ int16_t TLSContext::initialize(bool server_method) {
     error_value = TLS_ERROR_CONTEXT;
     return error_value;
   }
+
+  utils::ScopeGuard ctxGuard([this]() {
+    SSL_CTX_free(ctx);
+    ctx = nullptr;
+  });
+
   if (needClientCert) {
     std::string certificate;
     std::string privatekey;
@@ -84,6 +91,8 @@ int16_t TLSContext::initialize(bool server_method) {
         error_value = TLS_ERROR_CERT_ERROR;
         return error_value;
       }
+      ctxGuard.disable();
+      error_value = TLS_GOOD;
       return 0;
     }
 
@@ -135,16 +144,23 @@ int16_t TLSContext::initialize(bool server_method) {
 
     logger_->log_debug("Load/Verify Client Certificate OK. for %X and %X", this, ctx);
   }
+  ctxGuard.disable();
+  error_value = TLS_GOOD;
   return 0;
 }
 
 TLSSocket::~TLSSocket() {
+  closeStream();
+}
+
+void TLSSocket::closeStream() {
   if (ssl_ != 0) {
     SSL_free(ssl_);
     ssl_ = nullptr;
   }
-  closeStream();
+  Socket::closeStream();
 }
+
 /**
  * Constructor that accepts host name, port and listeners. With this
  * contructor we will be creating a server socket
@@ -154,22 +170,21 @@ TLSSocket::~TLSSocket() {
  */
 TLSSocket::TLSSocket(const std::shared_ptr<TLSContext> &context, const std::string &hostname, const uint16_t port, const uint16_t listeners)
     : Socket(context, hostname, port, listeners),
-      ssl_(0),
-      logger_(logging::LoggerFactory<TLSSocket>::getLogger()) {
+      ssl_(0) {
+  logger_ = logging::LoggerFactory<TLSSocket>::getLogger();
   context_ = context;
 }
 
 TLSSocket::TLSSocket(const std::shared_ptr<TLSContext> &context, const std::string &hostname, const uint16_t port)
     : Socket(context, hostname, port, 0),
-      ssl_(0),
-      logger_(logging::LoggerFactory<TLSSocket>::getLogger()) {
+      ssl_(0) {
+  logger_ = logging::LoggerFactory<TLSSocket>::getLogger();
   context_ = context;
 }
 
 TLSSocket::TLSSocket(const TLSSocket &&d)
     : Socket(std::move(d)),
-      ssl_(0),
-      logger_(std::move(d.logger_)) {
+      ssl_(0) {
   context_ = d.context_;
 }
 
@@ -182,9 +197,19 @@ int16_t TLSSocket::initialize(bool blocking) {
     setNonBlocking();
   logger_->log_trace("Initializing TLSSocket %d", is_server);
   int16_t ret = context_->initialize(is_server);
-  Socket::initialize();
 
-  if (!ret && listeners_ == 0) {
+  if (ret != 0) {
+    logger_->log_warn("Failed to initialize SSL context!");
+    return -1;
+  }
+
+  ret = Socket::initialize();
+  if (ret != 0) {
+    logger_->log_warn("Failed to initialise basic socket for TLS socket");
+    return -1;
+  }
+
+  if (listeners_ == 0) {
     // we have s2s secure config
     ssl_ = SSL_new(context_->getContext());
     SSL_set_fd(ssl_, socket_file_descriptor_);
@@ -200,17 +225,10 @@ int16_t TLSSocket::initialize(bool blocking) {
         logger_->log_trace("want read");
         return 0;
       } else {
+        logger_->log_error("SSL socket connect failed to %s %d", requested_hostname_, port_);
+        closeStream();
         return -1;
       }
-      logger_->log_error("SSL socket connect failed to %s %d", requested_hostname_, port_);
-      SSL_free(ssl_);
-      ssl_ = NULL;
-#ifdef WIN32
-      closesocket(socket_file_descriptor_);
-#else
-      close(socket_file_descriptor_);
-#endif
-      return -1;
     } else {
       connected_ = true;
       logger_->log_debug("SSL socket connect success to %s %d, on fd %d", requested_hostname_, port_, socket_file_descriptor_);
@@ -229,11 +247,7 @@ void TLSSocket::close_ssl(int fd) {
     if (nullptr != fd_ssl) {
       SSL_free(fd_ssl);
       ssl_map_[fd] = nullptr;
-#ifdef WIN32
-      closesocket(fd);
-#else
-      close(fd);
-#endif
+      closeStream();
     }
   }
 }
@@ -295,17 +309,10 @@ int16_t TLSSocket::select_descriptor(const uint16_t msec) {
                 logger_->log_trace("want read");
                 return socket_file_descriptor_;
               } else {
+                logger_->log_error("SSL socket connect failed to %s %d", requested_hostname_, port_);
+                closeStream();
                 return -1;
               }
-              logger_->log_error("SSL socket connect failed to %s %d", requested_hostname_, port_);
-              SSL_free(ssl_);
-              ssl_ = NULL;
-#ifdef WIN32
-              closesocket(socket_file_descriptor_);
-#else
-              close(socket_file_descriptor_);
-#endif
-              return -1;
             } else {
               connected_ = true;
               logger_->log_debug("SSL socket connect success to %s %d, on fd %d", requested_hostname_, port_, socket_file_descriptor_);
@@ -452,11 +459,7 @@ int TLSSocket::readData(uint8_t *buf, int buflen) {
   while (buflen) {
     int16_t fd = select_descriptor(1000);
     if (fd <= 0) {
-#ifdef WIN32
-      closesocket(socket_file_descriptor_);
-#else
-      close(socket_file_descriptor_);
-#endif
+      closeStream();
       return -1;
     }
 
