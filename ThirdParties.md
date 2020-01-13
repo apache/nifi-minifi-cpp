@@ -152,7 +152,7 @@ You will need to do the following steps:
      ```
      list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/<package>/dummy")
      ```
-     These should be in an extension's enabled conditional path, if the third party is only used by one extension, or in the section for third parties used my multiple packages, if used by more.
+     These should be in an extension's enabled conditional path, if the third party is only used by one extension, or in the section for third parties used by multiple packages, if used by more.
  - Link your extension with the imported third party targets. If everything is done right, dependencies, transitive library linkings and include paths should work automatically.
 
 ### ExternalProject_Add
@@ -236,7 +236,7 @@ Only use a git repo in a last resort:
 
 When using the `URL` download method, **always** use `URL_HASH` with SHA256 to verify the integrity of the downloaded artifact.
 
-When using the `GIT` download method, prefer to use the textual tag of the release instead of the commit id as the `GIT_TAG`.
+When using the `GIT` download method, use the textual tag of the release instead of the commit id as the `GIT_TAG`.
 
 ### Patching
 Adding patches to a third party is sometimes necessary, but maintaining a local patch set is error-prone and takes a lot of work.
@@ -275,7 +275,7 @@ However, these are usually provided by built-in packages, for multiple reasons:
 They - like other library targets - can have interface (transitive) library link, include dir and compile definitions.
 These dependencies define, respectively, what other libraries should be linked with the target that links this library, what include paths should be added when compiling a target linking to this library, and what compile flags should be added when compiling a target linking to this library.
 
-If the third party creates multiple library archives, one imported target should created for each of them, creating the proper dependencies between them, if necessary.
+If the third party creates multiple library archives, one imported target should be created for each of them, creating the proper dependencies between them, if necessary.
 
 The imported targets should be made dependent on the target created by `ExternalProject_Add`, to make sure that we really have the proper artifacts before we want to use them.
 
