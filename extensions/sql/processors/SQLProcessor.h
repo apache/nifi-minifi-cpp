@@ -73,7 +73,6 @@ class SQLProcessor: public core::Processor {
         }
       }
       context->yield();
-      return;
     }
   }
 
