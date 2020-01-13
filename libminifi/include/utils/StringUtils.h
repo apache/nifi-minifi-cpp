@@ -173,13 +173,8 @@ class StringUtils {
   template<typename CharT>
   static size_t size(const std::basic_string<CharT>& str) noexcept { return str.size(); }
 
-  // argument is cref so that the array version can take precedence during overload resolution as more specialized
-  // Probably no overhead because the function will be inlined.
   template<typename CharT>
-  static size_t size(const CharT* const (&str)) noexcept { return std::char_traits<CharT>::length(str); }
-
-  template<typename CharT, size_t ArraySize>
-  constexpr static size_t size(const CharT (&str)[ArraySize]) { return std::max(ArraySize - 1, size_t{ 0 }); }
+  static size_t size(const CharT* str) noexcept { return std::char_traits<CharT>::length(str); }
 
   struct detail {
 
@@ -191,6 +186,7 @@ class StringUtils {
     return result; // (ns + ...)
   }
 
+  #ifndef _MSC_VER
   // partial detection idiom impl
   template<typename...>
   using void_t = void;
@@ -233,6 +229,11 @@ class StringUtils {
 
   template<typename ResultT, typename CharT, typename... Strs>
   using valid_string_pack_t = typename std::enable_if<and_<is_detected<str_detector<CharT>::template valid_string_t, Strs>::value...>::value, ResultT>::type;
+  #else
+  // MSVC is broken without /permissive-
+  template<typename ResultT, typename...>
+  using valid_string_pack_t = ResultT;
+  #endif
 
   template<typename CharT, typename... Strs, valid_string_pack_t<void, CharT, Strs...>* = nullptr>
   static std::basic_string<CharT> join_pack(const Strs&... strs) {
@@ -249,7 +250,7 @@ class StringUtils {
    * @tparam Strs Deduced string types
    * @param head First string, used for CharT deduction
    * @param tail Rest of the strings
-   * @return
+   * @return std::basic_string<CharT> containing the resulting string
    */
   template<typename CharT, typename... Strs>
   static detail::valid_string_pack_t<std::basic_string<CharT>, CharT, Strs...>
@@ -257,17 +258,9 @@ class StringUtils {
     return detail::join_pack<CharT>(head, tail...);
   }
 
-  template<typename CharT, size_t L, typename... Strs>
-  static detail::valid_string_pack_t<std::basic_string<CharT>, CharT, Strs...>
-  join_pack(const CharT (&head)[L], const Strs&... tail) {
-    return detail::join_pack<CharT>(head, tail...);
-  }
-
-  // argument is cref so that the array version can take precedence during overload resolution as more specialized
-  // Probably no overhead because the function will be inlined.
   template<typename CharT, typename... Strs>
   static detail::valid_string_pack_t<std::basic_string<CharT>, CharT, Strs...>
-  join_pack(const CharT* const (&head), const Strs&... tail) {
+  join_pack(const CharT* head, const Strs&... tail) {
     return detail::join_pack<CharT>(head, tail...);
   }
 

@@ -322,5 +322,24 @@ TEST_CASE("TestStringUtils::testJoinPack", "[test join_pack]") {
   std::string stdstr = "std::string";
   const char* cstr = "c string";
   const char carr[] = "char array";
-  REQUIRE(utils::StringUtils::join_pack("rvalue c string, ", cstr, std::string{ ", rval std::string, " }, stdstr, ", ", carr) == "rvalue c string, c string, rval std::string, std::string, char array");
+  REQUIRE(utils::StringUtils::join_pack("rvalue c string, ", cstr, std::string{ ", rval std::string, " }, stdstr, ", ", carr)
+              == "rvalue c string, c string, rval std::string, std::string, char array");
 }
+
+TEST_CASE("TestStringUtils::testJoinPackWstring", "[test join_pack wstring]") {
+  std::wstring stdstr = L"std::string";
+  const wchar_t* cstr = L"c string";
+  const wchar_t carr[] = L"char array";
+  REQUIRE(utils::StringUtils::join_pack(L"rvalue c string, ", cstr, std::wstring{ L", rval std::string, " }, stdstr, L", ", carr)
+              == L"rvalue c string, c string, rval std::string, std::string, char array");
+}
+
+/* doesn't and shouldn't compile
+TEST_CASE("TestStringUtils::testJoinPackNegative", "[test join_pack negative]") {
+  std::wstring stdstr = L"std::string";
+  const wchar_t* cstr = L"c string";
+  const wchar_t carr[] = L"char array";
+  REQUIRE(utils::StringUtils::join_pack("rvalue c string, ", cstr, std::string{ ", rval std::string, " }, stdstr, ", ", carr)
+              == "rvalue c string, c string, rval std::string, std::string, char array");
+}
+ */
