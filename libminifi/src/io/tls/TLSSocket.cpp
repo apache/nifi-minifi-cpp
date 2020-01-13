@@ -182,7 +182,15 @@ int16_t TLSSocket::initialize(bool blocking) {
     setNonBlocking();
   logger_->log_trace("Initializing TLSSocket %d", is_server);
   int16_t ret = context_->initialize(is_server);
-  Socket::initialize();
+
+  if (ret == 0) {
+    ret = Socket::initialize();
+    if (ret != 0) {
+      logger_->log_warn("Failed to initialise basic socket for TLS socket");
+    }
+  } else {
+    logger_->log_warn("Failed to initialize SSL context!");
+  }
 
   if (!ret && listeners_ == 0) {
     // we have s2s secure config
@@ -200,17 +208,12 @@ int16_t TLSSocket::initialize(bool blocking) {
         logger_->log_trace("want read");
         return 0;
       } else {
+        logger_->log_error("SSL socket connect failed to %s %d", requested_hostname_, port_);
+        SSL_free(ssl_);
+        ssl_ = NULL;
+        Socket::closeStream();
         return -1;
       }
-      logger_->log_error("SSL socket connect failed to %s %d", requested_hostname_, port_);
-      SSL_free(ssl_);
-      ssl_ = NULL;
-#ifdef WIN32
-      closesocket(socket_file_descriptor_);
-#else
-      close(socket_file_descriptor_);
-#endif
-      return -1;
     } else {
       connected_ = true;
       logger_->log_debug("SSL socket connect success to %s %d, on fd %d", requested_hostname_, port_, socket_file_descriptor_);
@@ -229,11 +232,7 @@ void TLSSocket::close_ssl(int fd) {
     if (nullptr != fd_ssl) {
       SSL_free(fd_ssl);
       ssl_map_[fd] = nullptr;
-#ifdef WIN32
-      closesocket(fd);
-#else
-      close(fd);
-#endif
+      Socket::closeStream();
     }
   }
 }
@@ -295,17 +294,12 @@ int16_t TLSSocket::select_descriptor(const uint16_t msec) {
                 logger_->log_trace("want read");
                 return socket_file_descriptor_;
               } else {
+                logger_->log_error("SSL socket connect failed to %s %d", requested_hostname_, port_);
+                SSL_free(ssl_);
+                ssl_ = NULL;
+                Socket::closeStream();
                 return -1;
               }
-              logger_->log_error("SSL socket connect failed to %s %d", requested_hostname_, port_);
-              SSL_free(ssl_);
-              ssl_ = NULL;
-#ifdef WIN32
-              closesocket(socket_file_descriptor_);
-#else
-              close(socket_file_descriptor_);
-#endif
-              return -1;
             } else {
               connected_ = true;
               logger_->log_debug("SSL socket connect success to %s %d, on fd %d", requested_hostname_, port_, socket_file_descriptor_);
@@ -452,11 +446,7 @@ int TLSSocket::readData(uint8_t *buf, int buflen) {
   while (buflen) {
     int16_t fd = select_descriptor(1000);
     if (fd <= 0) {
-#ifdef WIN32
-      closesocket(socket_file_descriptor_);
-#else
-      close(socket_file_descriptor_);
-#endif
+      Socket::closeStream();
       return -1;
     }
 
