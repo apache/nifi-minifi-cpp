@@ -28,6 +28,13 @@
 #include "utils/StringUtils.h"
 #include "protocols/CoapC2Protocol.h"
 
+class COAPObjectFactoryInitializer : public core::ObjectFactoryInitializer {
+ public:
+  virtual bool initialize();
+
+  virtual void deinitialize();
+};
+
 /**
  * Object factory class loader for this extension.
  * Can add extensions to the default class loader through REGISTER_RESOURCE,
@@ -69,6 +76,10 @@ class COAPObjectFactory : public core::ObjectFactory {
     } else {
       return nullptr;
     }
+  }
+
+  virtual std::unique_ptr<core::ObjectFactoryInitializer> getInitializer() override{
+    return std::unique_ptr<core::ObjectFactoryInitializer>(new COAPObjectFactoryInitializer());
   }
 
   static bool added;

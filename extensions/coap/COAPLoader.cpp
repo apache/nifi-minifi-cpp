@@ -18,7 +18,28 @@
 #include "core/FlowConfiguration.h"
 #include "COAPLoader.h"
 
+#ifdef WIN32
+#include <winsock2.h>
+#endif
+
 bool COAPObjectFactory::added = core::FlowConfiguration::add_static_func("createCOAPFactory");
+
+bool COAPObjectFactoryInitializer::initialize() {
+#ifdef WIN32
+  static WSADATA s_wsaData;
+  int iWinSockInitResult = WSAStartup(MAKEWORD(2, 2), &s_wsaData);
+  return iWinSockInitResult == 0;
+#else
+  return true;
+#endif
+}
+
+void COAPObjectFactoryInitializer::deinitialize() {
+#ifdef WIN32
+  WSACleanup();
+#endif
+}
+
 extern "C" {
 
 
