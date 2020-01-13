@@ -372,47 +372,42 @@ void QueryDatabaseTable::processOnSchedule(const std::shared_ptr<core::ProcessCo
 }
 
 void QueryDatabaseTable::processOnTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
-  try {
-    const auto& selectQuery = getSelectQuery();
+  const auto& selectQuery = getSelectQuery();
 
-    logger_->log_info("QueryDatabaseTable: selectQuery: '%s'", selectQuery.c_str());
+  logger_->log_info("QueryDatabaseTable: selectQuery: '%s'", selectQuery.c_str());
 
-    auto statement = connection_->prepareStatement(selectQuery);
+  auto statement = connection_->prepareStatement(selectQuery);
 
-    auto rowset = statement->execute();
+  auto rowset = statement->execute();
 
-    int count = 0;
-    size_t rowCount = 0;
-    sql::MaxCollector maxCollector(selectQuery, maxValueColumnNames_, mapState_);
-    sql::JSONSQLWriter jsonSQLWriter;
-    sql::SQLRowsetProcessor sqlRowsetProcessor(rowset, {&jsonSQLWriter, &maxCollector});
+  int count = 0;
+  size_t rowCount = 0;
+  sql::MaxCollector maxCollector(selectQuery, maxValueColumnNames_, mapState_);
+  sql::JSONSQLWriter jsonSQLWriter;
+  sql::SQLRowsetProcessor sqlRowsetProcessor(rowset, {&jsonSQLWriter, &maxCollector});
 
-    // Process rowset.
-    do {
-      rowCount = sqlRowsetProcessor.process(maxRowsPerFlowFile_ == 0 ? std::numeric_limits<size_t>::max() : maxRowsPerFlowFile_);
-      count++;
-      if (rowCount == 0)
-        break;
+  // Process rowset.
+  do {
+    rowCount = sqlRowsetProcessor.process(maxRowsPerFlowFile_ == 0 ? std::numeric_limits<size_t>::max() : maxRowsPerFlowFile_);
+    count++;
+    if (rowCount == 0)
+      break;
 
-      const auto& output = jsonSQLWriter.toString();
-      if (!output.empty()) {
-        WriteCallback writer(output.data(), output.size());
-        auto newflow = session->create();
-        newflow->addAttribute(ResultRowCount, std::to_string(rowCount));
-        newflow->addAttribute(ResultTableName, tableName_);
-        session->write(newflow, &writer);
-        session->transfer(newflow, s_success);
-      }
-    } while (rowCount > 0);
-
-    if (maxCollector.updateMapState()) {
-      session->commit();
-
-      pState_->writeStateToFile(mapState_);
+    const auto& output = jsonSQLWriter.toString();
+    if (!output.empty()) {
+      WriteCallback writer(output.data(), output.size());
+      auto newflow = session->create();
+      newflow->addAttribute(ResultRowCount, std::to_string(rowCount));
+      newflow->addAttribute(ResultTableName, tableName_);
+      session->write(newflow, &writer);
+      session->transfer(newflow, s_success);
     }
-  }  catch (std::exception& e) {
-    logger_->log_error(e.what());
-    throw;
+  } while (rowCount > 0);
+
+  if (maxCollector.updateMapState()) {
+    session->commit();
+
+    pState_->writeStateToFile(mapState_);
   }
 }
 

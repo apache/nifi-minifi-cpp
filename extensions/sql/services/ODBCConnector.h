@@ -43,21 +43,23 @@ class ODBCConnection : public sql::Connection {
  public:
   explicit ODBCConnection(const std::string& connectionString)
     : connection_string_(connectionString) {
-    try {
       session_ = std::make_unique<soci::session>(getSessionParameters());
-      hasException_ = false;
-    } catch (std::exception& e) {
-      exception_ = e.what();
-      hasException_ = true;
-    }
   }
 
   virtual ~ODBCConnection() {
   }
 
-  bool ok(std::string& exception) const override {
-    exception = exception_;
-    return !hasException_;
+  bool connected(std::string& exception) const override {
+    try {
+      exception.clear();
+      // According to https://stackoverflow.com/questions/3668506/efficient-sql-test-query-or-validation-query-that-will-work-across-all-or-most by Rob Hruska, 
+      // 'select 1' works for: H2, MySQL, Microsoft SQL Server, PostgreSQL, SQLite. For Orcale 'SELECT 1 FROM DUAL' works.
+      prepareStatement("select 1")->execute();
+      return true;
+    } catch (std::exception& e) {
+      exception = e.what();
+      return false;
+    }
   }
 
   std::unique_ptr<sql::Statement> prepareStatement(const std::string& query) const override {
@@ -81,8 +83,6 @@ class ODBCConnection : public sql::Connection {
  private:
   std::unique_ptr<soci::session> session_;
   std::string connection_string_;
-  std::string exception_;
-  bool hasException_;
 };
 
 /**

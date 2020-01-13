@@ -87,36 +87,31 @@ void ExecuteSQL::processOnSchedule(const std::shared_ptr<core::ProcessContext> &
 }
 
 void ExecuteSQL::processOnTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
-  try {
-    auto statement = connection_->prepareStatement(sqlSelectQuery_);
+  auto statement = connection_->prepareStatement(sqlSelectQuery_);
 
-    auto rowset = statement->execute();
+  auto rowset = statement->execute();
 
-    int count = 0;
-    size_t rowCount = 0;
-    sql::JSONSQLWriter jsonSQLWriter;
-    sql::SQLRowsetProcessor sqlRowsetProcessor(rowset, { &jsonSQLWriter });
+  int count = 0;
+  size_t rowCount = 0;
+  sql::JSONSQLWriter jsonSQLWriter;
+  sql::SQLRowsetProcessor sqlRowsetProcessor(rowset, { &jsonSQLWriter });
 
-    // Process rowset.
-    do {
-      rowCount = sqlRowsetProcessor.process(max_rows_ == 0 ? std::numeric_limits<size_t>::max() : max_rows_);
-      count++;
-      if (rowCount == 0)
-        break;
+  // Process rowset.
+  do {
+    rowCount = sqlRowsetProcessor.process(max_rows_ == 0 ? std::numeric_limits<size_t>::max() : max_rows_);
+    count++;
+    if (rowCount == 0)
+      break;
 
-      const auto& output = jsonSQLWriter.toString();
-      if (!output.empty()) {
-        WriteCallback writer(output.data(), output.size());
-        auto newflow = session->create();
-        newflow->addAttribute(ResultRowCount, std::to_string(rowCount));
-        session->write(newflow, &writer);
-        session->transfer(newflow, s_success);
-      }
-    } while (rowCount > 0);
-  } catch (std::exception& e) {
-    logger_->log_error(e.what());
-    throw;
-  }
+    const auto& output = jsonSQLWriter.toString();
+    if (!output.empty()) {
+      WriteCallback writer(output.data(), output.size());
+      auto newflow = session->create();
+      newflow->addAttribute(ResultRowCount, std::to_string(rowCount));
+      session->write(newflow, &writer);
+      session->transfer(newflow, s_success);
+    }
+  } while (rowCount > 0);
 }
 
 } /* namespace processors */
