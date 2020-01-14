@@ -48,7 +48,6 @@ class QueryDatabaseTable: public SQLProcessor<QueryDatabaseTable> {
   //! Processor Name
   static const std::string ProcessorName;
 
-  static const core::Property s_dbControllerService;
   static const core::Property s_tableName;
   static const core::Property s_columnNames;
   static const core::Property s_maxValueColumnNames;
