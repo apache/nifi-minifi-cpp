@@ -24,6 +24,7 @@
 #include "io/tls/TLSSocket.h"
 #include "io/tls/TLSUtils.h"
 #include "properties/Configure.h"
+#include "utils/ScopeGuard.h"
 #include "utils/StringUtils.h"
 #include "core/Property.h"
 #include "core/logging/LoggerConfiguration.h"
@@ -39,8 +40,8 @@ std::mutex OpenSSLInitializer::context_mutex;
 
 TLSContext::TLSContext(const std::shared_ptr<Configure> &configure, const std::shared_ptr<minifi::controllers::SSLContextService> &ssl_service)
     : SocketContext(configure),
-      error_value(0),
-      ctx(0),
+      error_value(TLS_GOOD),
+      ctx(nullptr),
       logger_(logging::LoggerFactory<TLSContext>::getLogger()),
       configure_(configure),
       ssl_service_(ssl_service) {
@@ -73,6 +74,12 @@ int16_t TLSContext::initialize(bool server_method) {
     error_value = TLS_ERROR_CONTEXT;
     return error_value;
   }
+
+  utils::ScopeGuard ctxGuard([this]() {
+    SSL_CTX_free(ctx);
+    ctx = nullptr;
+  });
+
   if (needClientCert) {
     std::string certificate;
     std::string privatekey;
@@ -84,6 +91,8 @@ int16_t TLSContext::initialize(bool server_method) {
         error_value = TLS_ERROR_CERT_ERROR;
         return error_value;
       }
+      ctxGuard.disable();
+      error_value = TLS_GOOD;
       return 0;
     }
 
@@ -135,6 +144,8 @@ int16_t TLSContext::initialize(bool server_method) {
 
     logger_->log_debug("Load/Verify Client Certificate OK. for %X and %X", this, ctx);
   }
+  ctxGuard.disable();
+  error_value = TLS_GOOD;
   return 0;
 }
 
@@ -159,22 +170,21 @@ void TLSSocket::closeStream() {
  */
 TLSSocket::TLSSocket(const std::shared_ptr<TLSContext> &context, const std::string &hostname, const uint16_t port, const uint16_t listeners)
     : Socket(context, hostname, port, listeners),
-      ssl_(0),
-      logger_(logging::LoggerFactory<TLSSocket>::getLogger()) {
+      ssl_(0) {
+  logger_ = logging::LoggerFactory<TLSSocket>::getLogger();
   context_ = context;
 }
 
 TLSSocket::TLSSocket(const std::shared_ptr<TLSContext> &context, const std::string &hostname, const uint16_t port)
     : Socket(context, hostname, port, 0),
-      ssl_(0),
-      logger_(logging::LoggerFactory<TLSSocket>::getLogger()) {
+      ssl_(0) {
+  logger_ = logging::LoggerFactory<TLSSocket>::getLogger();
   context_ = context;
 }
 
 TLSSocket::TLSSocket(const TLSSocket &&d)
     : Socket(std::move(d)),
-      ssl_(0),
-      logger_(std::move(d.logger_)) {
+      ssl_(0) {
   context_ = d.context_;
 }
 

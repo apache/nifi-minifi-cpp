@@ -33,6 +33,7 @@ namespace nifi {
 namespace minifi {
 namespace io {
 
+#define TLS_GOOD 0
 #define TLS_ERROR_CONTEXT 1
 #define TLS_ERROR_PEM_MISSING 2
 #define TLS_ERROR_CERT_MISSING 3
@@ -193,9 +194,6 @@ class TLSSocket : public Socket {
   SSL* ssl_;
   std::mutex ssl_mutex_;
   std::map<int, SSL*> ssl_map_;
-
- private:
-  std::shared_ptr<logging::Logger> logger_;
 };
 
 } /* namespace io */
