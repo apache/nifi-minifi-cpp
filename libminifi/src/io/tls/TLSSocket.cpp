@@ -139,12 +139,17 @@ int16_t TLSContext::initialize(bool server_method) {
 }
 
 TLSSocket::~TLSSocket() {
+  closeStream();
+}
+
+void TLSSocket::closeStream() {
   if (ssl_ != 0) {
     SSL_free(ssl_);
     ssl_ = nullptr;
   }
-  closeStream();
+  Socket::closeStream();
 }
+
 /**
  * Constructor that accepts host name, port and listeners. With this
  * contructor we will be creating a server socket
@@ -183,16 +188,18 @@ int16_t TLSSocket::initialize(bool blocking) {
   logger_->log_trace("Initializing TLSSocket %d", is_server);
   int16_t ret = context_->initialize(is_server);
 
-  if (ret == 0) {
-    ret = Socket::initialize();
-    if (ret != 0) {
-      logger_->log_warn("Failed to initialise basic socket for TLS socket");
-    }
-  } else {
+  if (ret != 0) {
     logger_->log_warn("Failed to initialize SSL context!");
+    return -1;
   }
 
-  if (!ret && listeners_ == 0) {
+  ret = Socket::initialize();
+  if (ret != 0) {
+    logger_->log_warn("Failed to initialise basic socket for TLS socket");
+    return -1;
+  }
+
+  if (listeners_ == 0) {
     // we have s2s secure config
     ssl_ = SSL_new(context_->getContext());
     SSL_set_fd(ssl_, socket_file_descriptor_);
@@ -209,9 +216,7 @@ int16_t TLSSocket::initialize(bool blocking) {
         return 0;
       } else {
         logger_->log_error("SSL socket connect failed to %s %d", requested_hostname_, port_);
-        SSL_free(ssl_);
-        ssl_ = NULL;
-        Socket::closeStream();
+        closeStream();
         return -1;
       }
     } else {
@@ -232,7 +237,7 @@ void TLSSocket::close_ssl(int fd) {
     if (nullptr != fd_ssl) {
       SSL_free(fd_ssl);
       ssl_map_[fd] = nullptr;
-      Socket::closeStream();
+      closeStream();
     }
   }
 }
@@ -295,9 +300,7 @@ int16_t TLSSocket::select_descriptor(const uint16_t msec) {
                 return socket_file_descriptor_;
               } else {
                 logger_->log_error("SSL socket connect failed to %s %d", requested_hostname_, port_);
-                SSL_free(ssl_);
-                ssl_ = NULL;
-                Socket::closeStream();
+                closeStream();
                 return -1;
               }
             } else {
@@ -446,7 +449,7 @@ int TLSSocket::readData(uint8_t *buf, int buflen) {
   while (buflen) {
     int16_t fd = select_descriptor(1000);
     if (fd <= 0) {
-      Socket::closeStream();
+      closeStream();
       return -1;
     }
 
