@@ -56,9 +56,6 @@ namespace processors {
 
 const std::string QueryDatabaseTable::ProcessorName("QueryDatabaseTable");
 
-const core::Property QueryDatabaseTable::s_dbControllerService(
-    core::PropertyBuilder::createProperty("DB Controller Service")->isRequired(true)->withDescription("Database Controller Service.")->supportsExpressionLanguage(true)->build());
-
 const core::Property QueryDatabaseTable::s_tableName(
   core::PropertyBuilder::createProperty("Table Name")->isRequired(true)->withDescription("The name of the database table to be queried.")->supportsExpressionLanguage(true)->build());
 
@@ -347,12 +344,10 @@ void QueryDatabaseTable::processOnSchedule(const std::shared_ptr<core::ProcessCo
   const auto dynamic_prop_keys = context->getDynamicPropertyKeys();
   logger_->log_info("Received %zu dynamic properties", dynamic_prop_keys.size());
 
-  // If the stored state for a max value column is empty, populate it with the corresponding initial max value, if it exists
+  // If the stored state for a max value column is empty, populate it with the corresponding initial max value, if it exists.
   for (const auto& key : dynamic_prop_keys) {
-    if (key.length() <= s_initialMaxValueDynamicPropertyPrefix.length() ||
-        key.compare(0, s_initialMaxValueDynamicPropertyPrefix.length(), s_initialMaxValueDynamicPropertyPrefix) != 0) {
-      logger_->log_warn("Unsupported dynamic property \"%s\"", key);
-      continue;
+    if (std::string::npos == key.rfind(s_initialMaxValueDynamicPropertyPrefix, 0)) {
+      throw minifi::Exception(PROCESSOR_EXCEPTION, "QueryDatabaseTable: Unsupported dynamic property \"" + key + "\"");
     }
     const auto columnName = utils::toLower(key.substr(s_initialMaxValueDynamicPropertyPrefix.length()));
     auto it = mapState_.find(columnName);
