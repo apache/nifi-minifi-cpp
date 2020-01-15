@@ -40,8 +40,8 @@ class LogAttribute : public core::Processor {
   /*!
    * Create a new processor
    */
-  LogAttribute(std::string name, utils::Identifier uuid = utils::Identifier())
-      : Processor(name, uuid),
+  explicit LogAttribute(std::string name, utils::Identifier uuid = utils::Identifier())
+      : Processor(std::move(name), uuid),
         flowfiles_to_log_(1),
         hexencode_(false),
         max_line_length_(80U),
@@ -71,7 +71,7 @@ class LogAttribute : public core::Processor {
     LogAttrLevelError
   };
   // Convert log level from string to enum
-  bool logLevelStringToEnum(std::string logStr, LogAttrLevel &level) {
+  bool logLevelStringToEnum(const std::string &logStr, LogAttrLevel &level) {
     if (logStr == "trace") {
       level = LogAttrLevelTrace;
       return true;

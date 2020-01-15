@@ -88,6 +88,13 @@ struct convert_if<int64_t> : public convert_if_base<int64_t, state::response::In
 };
 
 template<>
+struct convert_if<uint32_t > : public convert_if_base<uint32_t, state::response::UInt32Value> {
+  explicit convert_if(const std::shared_ptr<state::response::Value> &node)
+      : convert_if_base(node) {
+  }
+};
+
+template<>
 struct convert_if<int> : public convert_if_base<int, state::response::IntValue> {
   explicit convert_if(const std::shared_ptr<state::response::Value> &node)
       : convert_if_base(node) {

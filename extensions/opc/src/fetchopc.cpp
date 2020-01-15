@@ -95,12 +95,6 @@ namespace processors {
 
     BaseOPCProcessor::onSchedule(context, factory);
 
-    if(!configOK_) {
-      return;
-    }
-
-    configOK_ = false;
-
     std::string value;
     context->getProperty(NodeID.getName(), nodeID_);
     context->getProperty(NodeIDType.getName(), value);
@@ -116,37 +110,30 @@ namespace processors {
       idType_ = opc::OPCNodeIDType::Path;
     } else {
       // Where have our validators gone?
-      logger_->log_error("%s is not a valid node ID type!", value.c_str());
+      auto error_msg = utils::StringUtils::join_pack(value, " is not a valid node ID type!");
+      throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
     }
 
     if(idType_ == opc::OPCNodeIDType::Int) {
       try {
         int t = std::stoi(nodeID_);
       } catch(...) {
-        logger_->log_error("%s cannot be used as an int type node ID", nodeID_.c_str());
-        return;
+        auto error_msg = utils::StringUtils::join_pack(nodeID_, " cannot be used as an int type node ID");
+        throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
       }
     }
     if(idType_ != opc::OPCNodeIDType::Path) {
       if(!context->getProperty(NameSpaceIndex.getName(), nameSpaceIdx_)) {
-        logger_->log_error("%s is mandatory in case %s is not Path", NameSpaceIndex.getName().c_str(), NodeIDType.getName().c_str());
-        return;
+        auto error_msg = utils::StringUtils::join_pack(NameSpaceIndex.getName(), " is mandatory in case ", NodeIDType.getName(), " is not Path");
+        throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
       }
     }
 
     context->getProperty(Lazy.getName(), value);
     lazy_mode_ = value == "On" ? true : false;
-
-    configOK_ = true;
   }
 
   void FetchOPCProcessor::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session){
-    if(!configOK_) {
-      logger_->log_error("This processor was not configured properly, yielding. Please check for previous errors in the logs!");
-      yield();
-      return;
-    }
-
     logger_->log_trace("FetchOPCProcessor::onTrigger");
 
     std::unique_lock<std::mutex> lock(onTriggerMutex_, std::try_to_lock);

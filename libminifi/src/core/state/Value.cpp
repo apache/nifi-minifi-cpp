@@ -29,6 +29,7 @@ namespace response {
 
 const std::type_index Value::UINT64_TYPE = std::type_index(typeid(uint64_t));
 const std::type_index Value::INT64_TYPE = std::type_index(typeid(int64_t));
+const std::type_index Value::UINT32_TYPE = std::type_index(typeid(uint32_t));
 const std::type_index Value::INT_TYPE = std::type_index(typeid(int));
 const std::type_index Value::BOOL_TYPE = std::type_index(typeid(bool));
 const std::type_index Value::STRING_TYPE = std::type_index(typeid(std::string));

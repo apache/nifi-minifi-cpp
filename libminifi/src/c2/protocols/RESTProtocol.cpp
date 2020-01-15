@@ -165,6 +165,10 @@ void setJsonStr(const std::string& key, const state::response::ValueNode& value,
       int value = 0;
       base_type->convertValue(value);
       valueVal.SetInt(value);
+    } else if (type_index == state::response::Value::UINT32_TYPE) {
+      uint32_t value = 0;
+      base_type->convertValue(value);
+      valueVal.SetUint(value);
     } else if (type_index == state::response::Value::INT64_TYPE) {
       int64_t value = 0;
       base_type->convertValue(value);
