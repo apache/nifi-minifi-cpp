@@ -305,6 +305,9 @@ protected:
 	uint16_t listeners_;
 
 	bool nonBlocking_;
+
+	std::shared_ptr<logging::Logger> logger_;
+
 private:
 
 	class SocketInitializer
@@ -328,9 +331,6 @@ private:
 	 static void initialize_socket() {
 		 static SocketInitializer initialized;
 		 }
-	 
-
-  std::shared_ptr<logging::Logger> logger_;
 
 
   static std::string init_hostname() {
