@@ -29,6 +29,7 @@
 #include <vector>
 #include <set>
 #include <map>
+#include <unordered_map>
 #include "core/logging/Logger.h"
 #include "core/Core.h"
 #include "properties/Configure.h"

@@ -18,7 +18,15 @@
 
 #include "utils/file/PathUtils.h"
 #include "utils/file/FileUtils.h"
+
 #include <iostream>
+#ifdef WIN32
+#include <Windows.h>
+#else
+#include <limits.h>
+#include <stdlib.h>
+#endif
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -46,6 +54,35 @@ bool PathUtils::getFileNameAndPath(const std::string &path, std::string &filePat
   filePath = path.substr(0, found);
   fileName = path.substr(found + 1);
   return true;
+}
+
+std::string PathUtils::getFullPath(const std::string& path) {
+#ifdef WIN32
+  std::vector<char> buffer(MAX_PATH);
+  uint32_t len = 0U;
+  while (true) {
+      len = GetFullPathNameA(path.c_str(), buffer.size(), buffer.data(), nullptr /*lpFilePart*/);
+      if (len > buffer.size()) {
+        buffer.resize(len);
+        continue;
+      } else {
+        break;
+      }
+    }
+  if (len > 0U) {
+    return std::string(buffer.data(), len);
+  } else {
+    return "";
+  }
+#else
+  std::vector<char> buffer(PATH_MAX);
+  char* res = realpath(path.c_str(), buffer.data());
+  if (res == nullptr) {
+    return "";
+  } else {
+    return res;
+  }
+#endif
 }
 
 } /* namespace file */

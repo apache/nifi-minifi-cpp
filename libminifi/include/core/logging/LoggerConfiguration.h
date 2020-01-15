@@ -24,7 +24,9 @@
 #include <map>
 #include <mutex>
 #include <string>
-#include "spdlog/spdlog.h"
+#include "spdlog/common.h"
+#include "spdlog/sinks/sink.h"
+#include "spdlog/logger.h"
 #include "spdlog/formatter.h"
 
 #include "core/Core.h"
@@ -118,12 +120,17 @@ class LoggerConfiguration {
    * Can be used to get arbitrarily named Logger, LoggerFactory should be preferred within a class.
    */
   std::shared_ptr<Logger> getLogger(const std::string &name);
+
   static const char *spdlog_default_pattern;
+
  protected:
   static std::shared_ptr<internal::LoggerNamespace> initialize_namespaces(const std::shared_ptr<LoggerProperties> &logger_properties);
   static std::shared_ptr<spdlog::logger> get_logger(std::shared_ptr<Logger> logger, const std::shared_ptr<internal::LoggerNamespace> &root_namespace, const std::string &name,
                                                     std::shared_ptr<spdlog::formatter> formatter, bool remove_if_present = false);
  private:
+  static std::shared_ptr<spdlog::sinks::sink> create_syslog_sink();
+  static std::shared_ptr<spdlog::sinks::sink> create_fallback_sink();
+
   static std::shared_ptr<internal::LoggerNamespace> create_default_root();
 
   class LoggerImpl : public Logger {

@@ -26,14 +26,9 @@
 #include "../TestBase.h"
 #include "core/Core.h"
 #include "utils/StringUtils.h"
+#include "utils/Environment.h"
 
 using org::apache::nifi::minifi::utils::StringUtils;
-
-#ifdef WIN32
-void setenv(std::string var, std::string value, int val) {
-  _putenv_s(var.c_str(), value.c_str());
-}
-#endif
 
 TEST_CASE("TestStringUtils::split", "[test split no delimiter]") {
   std::vector<std::string> expected = { "hello" };
@@ -59,7 +54,7 @@ TEST_CASE("TestStringUtils::testEnv1", "[test split classname]") {
   std::string test_string = "hello world ${blahblahnamenamenotexist}";
 
 
-  setenv("blahblahnamenamenotexist", "computer", 0);
+  utils::Environment::setEnvironmentVariable("blahblahnamenamenotexist", "computer", 0);
 
   std::string expected = "hello world computer";
 
@@ -69,7 +64,7 @@ TEST_CASE("TestStringUtils::testEnv1", "[test split classname]") {
 TEST_CASE("TestStringUtils::testEnv2", "[test split classname]") {
   std::string test_string = "hello world ${blahblahnamenamenotexist";
 
-  setenv("blahblahnamenamenotexist", "computer", 0);
+  utils::Environment::setEnvironmentVariable("blahblahnamenamenotexist", "computer");
 
   std::string expected = "hello world ${blahblahnamenamenotexist";
 
@@ -79,7 +74,7 @@ TEST_CASE("TestStringUtils::testEnv2", "[test split classname]") {
 TEST_CASE("TestStringUtils::testEnv3", "[test split classname]") {
   std::string test_string = "hello world $${blahblahnamenamenotexist}";
 
-  setenv("blahblahnamenamenotexist", "computer", 0);
+  utils::Environment::setEnvironmentVariable("blahblahnamenamenotexist", "computer");
 
   std::string expected = "hello world $computer";
 
@@ -89,7 +84,7 @@ TEST_CASE("TestStringUtils::testEnv3", "[test split classname]") {
 TEST_CASE("TestStringUtils::testEnv4", "[test split classname]") {
   std::string test_string = "hello world \\${blahblahnamenamenotexist}";
 
-  setenv("blahblahnamenamenotexist", "computer", 0);
+  utils::Environment::setEnvironmentVariable("blahblahnamenamenotexist", "computer");
 
   std::string expected = "hello world ${blahblahnamenamenotexist}";
 
@@ -97,7 +92,7 @@ TEST_CASE("TestStringUtils::testEnv4", "[test split classname]") {
 }
 
 TEST_CASE("TestStringUtils::testEnv5", "[test split classname]") {
-  // can't use blahblahnamenamenotexist because the setenv in other functions may have already set it
+  // can't use blahblahnamenamenotexist because the utils::Environment::setEnvironmentVariable in other functions may have already set it
   std::string test_string = "hello world ${blahblahnamenamenotexist2}";
 
   std::string expected = "hello world ";

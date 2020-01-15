@@ -54,9 +54,11 @@
 #include "core/ConfigurationFactory.h"
 #include "core/RepositoryFactory.h"
 #include "utils/file/PathUtils.h"
+#include "utils/file/FileUtils.h"
+#include "utils/Environment.h"
 #include "FlowController.h"
 #include "AgentDocs.h"
-#include "Main.h"
+#include "MainHelper.h"
 
  // Variables that allow us to avoid a timed wait.
 sem_t *running;
@@ -110,14 +112,29 @@ void dumpDocs(const std::shared_ptr<minifi::Configure> &configuration, const std
 
 int main(int argc, char **argv) {
 #ifdef WIN32
-  CheckRunAsService();
+  RunAsServiceIfNeeded();
+
+  bool isStartedByService = false;
+  HANDLE terminationEventHandler = GetTerminationEventHandle(&isStartedByService);
+  if (terminationEventHandler == nullptr) {
+    return -1;
+  }
+
+  utils::Environment::setRunningAsService(isStartedByService);
 #endif
 
-	std::shared_ptr<logging::Logger> logger = logging::LoggerConfiguration::getConfiguration().getLogger("main");
+  if (utils::Environment::isRunningAsService()) {
+    setSyslogLogger();
+  }
+  std::shared_ptr<logging::Logger> logger = logging::LoggerConfiguration::getConfiguration().getLogger("main");
 
 #ifdef WIN32
-  if (!CreateServiceTerminationThread(logger)) {
-    return -1;
+  if (isStartedByService) {
+    if (!CreateServiceTerminationThread(logger, terminationEventHandler)) {
+      return -1;
+    }
+  } else {
+    CloseHandle(terminationEventHandler);
   }
 #endif
 
@@ -142,93 +159,38 @@ int main(int argc, char **argv) {
 #ifdef WIN32
 	if (!SetConsoleCtrlHandler(consoleSignalHandler, TRUE)) {
 		logger->log_error("Cannot install signal handler");
-		std::cerr << "Cannot install signal handler" << std::endl;
-		return 1;
+		return -1;
 	}
 
 	if (signal(SIGINT, sigHandler) == SIG_ERR || signal(SIGTERM, sigHandler) == SIG_ERR ) {
-		std::cerr << "Cannot install signal handler" << std::endl;
+		logger->log_error("Cannot install signal handler");
 		return -1;
 	}
 #ifdef SIGBREAK
 	if (signal(SIGBREAK, sigHandler) == SIG_ERR) {
-		std::cerr << "Cannot install signal handler" << std::endl;
+		logger->log_error("Cannot install signal handler");
 		return -1;
 	}
 #endif
 #else
 	if (signal(SIGINT, sigHandler) == SIG_ERR || signal(SIGTERM, sigHandler) == SIG_ERR || signal(SIGPIPE, SIG_IGN) == SIG_ERR) {
-		std::cerr << "Cannot install signal handler" << std::endl;
+    logger->log_error("Cannot install signal handler");
 		return -1;
 	}
 #endif
-	// assumes POSIX compliant environment
-	std::string minifiHome;
-	if (const char *env_p = std::getenv(MINIFI_HOME_ENV_KEY)) {
-		minifiHome = env_p;
-		logger->log_info("Using MINIFI_HOME=%s from environment.", minifiHome);
-	}
-	else {
-		logger->log_info("MINIFI_HOME is not set; determining based on environment.");
-		char *path = nullptr;
-		char full_path[PATH_MAX];
-#ifndef WIN32
-		path = realpath(argv[0], full_path);
-#else
-		path = nullptr;
-#endif
 
-		if (path != nullptr) {
-			std::string minifiHomePath(path);
-			if (minifiHomePath.find_last_of("/\\") != std::string::npos) {
-				minifiHomePath = minifiHomePath.substr(0, minifiHomePath.find_last_of("/\\"));  //Remove /minifi from path
-				minifiHome = minifiHomePath.substr(0, minifiHomePath.find_last_of("/\\"));    //Remove /bin from path
-			}
-		}
-
-		// attempt to use cwd as MINIFI_HOME
-		if (minifiHome.empty() || !validHome(minifiHome)) {
-			char cwd[PATH_MAX];
-#ifdef WIN32
-			_getcwd(cwd, PATH_MAX);
-			auto handle = GetModuleHandle(0);
-			GetModuleFileNameA(NULL, cwd, sizeof(cwd));
-			std::string fullPath = cwd;
-			std::string minifiFileName, minifiPath;
-			minifi::utils::file::PathUtils::getFileNameAndPath(fullPath, minifiPath, minifiFileName);
-			if (utils::StringUtils::endsWith(minifiPath, "bin")) {
-				minifiHome = minifiPath.substr(0, minifiPath.size()-3);
-			}
-			else {
-				minifiHome = minifiPath;
-			}
-		
-#else
-			getcwd(cwd, PATH_MAX);
-			minifiHome = cwd;
-#endif
-			
-		}
-
-
-		logger->log_debug("Setting %s to %s", MINIFI_HOME_ENV_KEY, minifiHome);
-#ifdef WIN32
-		SetEnvironmentVariable(MINIFI_HOME_ENV_KEY, minifiHome.c_str());
-#else
-		setenv(MINIFI_HOME_ENV_KEY, minifiHome.c_str(), 0);
-#endif
+	// Determine MINIFI_HOME
+  const std::string minifiHome = determineMinifiHome(logger);
+	if (minifiHome.empty()) {
+	  // determineMinifiHome already logged everything we need
+	  return -1;
 	}
 
-	if (!validHome(minifiHome)) {
-		minifiHome = minifiHome.substr(0, minifiHome.find_last_of("/\\"));    //Remove /bin from path
-		if (!validHome(minifiHome)) {
-			logger->log_error("No valid MINIFI_HOME could be inferred. "
-				"Please set MINIFI_HOME or run minifi from a valid location. minifiHome is %s", minifiHome);
-			return -1;
-		}
+	// chdir to MINIFI_HOME
+	if (!utils::Environment::setCurrentWorkingDirectory(minifiHome.c_str())) {
+    logger->log_error("Failed to change working directory to MINIFI_HOME (%s)", minifiHome);
+    return -1;
 	}
-
-
 
 	std::shared_ptr<logging::LoggerProperties> log_properties = std::make_shared<logging::LoggerProperties>();
 	log_properties->setHome(minifiHome);
@@ -291,7 +253,7 @@ int main(int argc, char **argv) {
 	std::shared_ptr<core::Repository> prov_repo = core::createRepository(prov_repo_class, true, "provenance");
 
 	if (!prov_repo->initialize(configure)) {
-		std::cerr << "Provenance repository failed to initialize, exiting.." << std::endl;
+		logger->log_error("Provenance repository failed to initialize, exiting..");
 		exit(1);
 	}
 
@@ -300,7 +262,7 @@ int main(int argc, char **argv) {
 	std::shared_ptr<core::Repository> flow_repo = core::createRepository(flow_repo_class, true, "flowfile");
 
 	if (!flow_repo->initialize(configure)) {
-		std::cerr << "Flow file repository failed to initialize, exiting.." << std::endl;
+		logger->log_error("Flow file repository failed to initialize, exiting..");
 		exit(1);
 	}
 
@@ -309,13 +271,13 @@ int main(int argc, char **argv) {
 	std::shared_ptr<core::ContentRepository> content_repo = core::createContentRepository(content_repo_class, true, "content");
 
 	if (!content_repo->initialize(configure)) {
-		std::cerr << "Content repository failed to initialize, exiting.." << std::endl;
+		logger->log_error("Content repository failed to initialize, exiting..");
 		exit(1);
 	}
 
 	std::string content_repo_path;
 	if (configure->get(minifi::Configure::nifi_dbcontent_repository_directory_default, content_repo_path)) {
-		std::cout << "setting default dir to " << content_repo_path << std::endl;
+		logging::LOG_INFO(logger) << "setting default dir to " << content_repo_path;
 		minifi::setDefaultDirectory(content_repo_path);
 	}
 

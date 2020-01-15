@@ -17,9 +17,7 @@
 
 #include "utils/StringUtils.h"
 
-#ifdef WIN32
-#include <Windows.h>
-#endif
+#include "utils/Environment.h"
 
 namespace org {
 namespace apache {
@@ -109,18 +107,10 @@ std::string StringUtils::replaceEnvironmentVariables(std::string& original_strin
     if (env_field.empty()) {
       continue;
     }
-#ifdef WIN32
-    DWORD buffSize = 65535;
-    std::vector<char> buffer;
-    buffer.resize(buffSize);
-    char *strVal = buffer.data();
-    GetEnvironmentVariableA(env_field.c_str(), strVal, buffSize);
-#else
-    const auto strVal = std::getenv(env_field.c_str());
-#endif
+
     std::string env_value;
-    if (strVal != nullptr)
-      env_value = strVal;
+    std::tie(std::ignore, env_value) = utils::Environment::getEnvironmentVariable(env_field.c_str());
+
     source_string = replaceAll(source_string, env_field_wrapped, env_value);
     beg_seq = 0;  // restart
   } while (beg_seq >= 0);

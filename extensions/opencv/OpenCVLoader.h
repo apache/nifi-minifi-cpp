@@ -20,6 +20,7 @@
 
 #include "CaptureRTSPFrame.h"
 #include "core/ClassLoader.h"
+#include "utils/Environment.h"
 
 class OpenCVObjectFactoryInitializer : public core::ObjectFactoryInitializer {
  public:
@@ -29,7 +30,7 @@ class OpenCVObjectFactoryInitializer : public core::ObjectFactoryInitializer {
     // Note:
     // 1. OpenCV community are trying to find a better approach than setenv.
     // 2. The command will not overwrite value if "OPENCV_FFMPEG_CAPTURE_OPTIONS" already exists.
-    return setenv("OPENCV_FFMPEG_CAPTURE_OPTIONS", "rtsp_transport;udp", 0) == 0;
+    return utils::Environment::setEnvironmentVariable("OPENCV_FFMPEG_CAPTURE_OPTIONS", "rtsp_transport;udp", false /*overwrite*/);
   }
 
   virtual void deinitialize() {

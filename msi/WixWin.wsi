@@ -18,7 +18,8 @@ Licensed to the Apache Software Foundation (ASF) under one or more
 <?include "cpack_variables.wxi"?>
 
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
-    RequiredVersion="3.6.3303.0">
+    RequiredVersion="3.6.3303.0"
+	xmlns:Util="http://schemas.microsoft.com/wix/UtilExtension">
 
   <Product Id="$(var.CPACK_WIX_PRODUCT_GUID)"
       Name="Apache NiFi MiNiFi"
@@ -343,6 +344,9 @@ Licensed to the Apache Software Foundation (ASF) under one or more
                                 Stop="both"
                                 Remove="uninstall"
                                 Wait="yes" />
+                <Util:EventSource Log="Application"
+                                  Name="ApacheNiFiMiNiFi"
+                                  EventMessageFile="[#MiNiFiExe]" />
                 <Condition><![CDATA[SERVICEACCOUNT="LocalSystem"]]></Condition>
               </Component>
               <Component Id="minifiServiceNotLocal" Guid="87658309-0339-425c-8633-f54ffaaa4922">
@@ -371,6 +375,9 @@ Licensed to the Apache Software Foundation (ASF) under one or more
                                 Stop="both"
                                 Remove="uninstall"
                                 Wait="yes" />
+                <Util:EventSource Log="Application"
+                                  Name="ApacheNiFiMiNiFi"
+                                  EventMessageFile="[#MiNiFiExeWithPassword]" />
                 <Condition><![CDATA[SERVICEACCOUNT<>"LocalSystem"]]></Condition>
               </Component>
             </Directory>

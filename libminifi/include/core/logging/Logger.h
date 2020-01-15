@@ -23,7 +23,8 @@
 #include <sstream>
 #include <iostream>
 
-#include "spdlog/spdlog.h"
+#include "spdlog/common.h"
+#include "spdlog/logger.h"
 
 namespace org {
 namespace apache {
@@ -36,18 +37,12 @@ namespace logging {
 
 class LoggerControl {
  public:
-  LoggerControl()
-      : is_enabled_(true) {
+  LoggerControl();
 
-  }
+  bool is_enabled() const;
 
-  bool is_enabled(){
-    return is_enabled_;
-  }
+  void setEnabled(bool status);
 
-  void setEnabled(bool status){
-    is_enabled_ = status;
-  }
  protected:
   std::atomic<bool> is_enabled_;
 };
@@ -85,14 +80,11 @@ typedef enum {
 class BaseLogger {
  public:
 
-  virtual ~BaseLogger() {
+  virtual ~BaseLogger();
 
-  }
   virtual void log_string(LOG_LEVEL level, std::string str) = 0;
 
-  virtual bool should_log(const LOG_LEVEL &level) {
-    return true;
-  }
+  virtual bool should_log(const LOG_LEVEL &level);
 
 };
 
@@ -102,27 +94,13 @@ class BaseLogger {
  */
 class LogBuilder {
  public:
-  LogBuilder(BaseLogger *l, LOG_LEVEL level)
-      : ignore(false),
-        ptr(l),
-        level(level) {
-    if (!l->should_log(level)) {
-      setIgnore();
-    }
-  }
+  LogBuilder(BaseLogger *l, LOG_LEVEL level);
 
-  ~LogBuilder() {
-    if (!ignore)
-      log_string(level);
-  }
+  ~LogBuilder();
 
-  void setIgnore() {
-    ignore = true;
-  }
+  void setIgnore();
 
-  void log_string(LOG_LEVEL level) {
-    ptr->log_string(level, str.str());
-  }
+  void log_string(LOG_LEVEL level);
 
   template<typename T>
   LogBuilder &operator<<(const T &o) {
@@ -189,73 +167,15 @@ class Logger : public BaseLogger {
     log(spdlog::level::trace, format, args...);
   }
 
-  bool should_log(const LOG_LEVEL &level) {
-    if (controller_ && !controller_->is_enabled())
-      return false;
-    spdlog::level::level_enum logger_level = spdlog::level::level_enum::info;
-    switch (level) {
-      case critical:
-        logger_level = spdlog::level::level_enum::critical;
-        break;
-      case err:
-        logger_level = spdlog::level::level_enum::err;
-        break;
-      case info:
-        break;
-      case debug:
-        logger_level = spdlog::level::level_enum::debug;
-        break;
-      case off:
-        logger_level = spdlog::level::level_enum::off;
-        break;
-      case trace:
-        logger_level = spdlog::level::level_enum::trace;
-        break;
-      case warn:
-        logger_level = spdlog::level::level_enum::warn;
-        break;
-    }
-
-    std::lock_guard<std::mutex> lock(mutex_);
-    if (!delegate_->should_log(logger_level)) {
-      return false;
-    }
-    return true;
-  }
+  bool should_log(const LOG_LEVEL &level);
 
  protected:
 
-  virtual void log_string(LOG_LEVEL level, std::string str) {
-    switch (level) {
-      case critical:
-        log_warn(str.c_str());
-        break;
-      case err:
-        log_error(str.c_str());
-        break;
-      case info:
-        log_info(str.c_str());
-        break;
-      case debug:
-        log_debug(str.c_str());
-        break;
-      case trace:
-        log_trace(str.c_str());
-        break;
-      case warn:
-        log_warn(str.c_str());
-        break;
-      case off:
-        break;
-    }
-  }
-  Logger(std::shared_ptr<spdlog::logger> delegate, std::shared_ptr<LoggerControl> controller)
-      : delegate_(delegate), controller_(controller) {
-  }
+  virtual void log_string(LOG_LEVEL level, std::string str);
 
-  Logger(std::shared_ptr<spdlog::logger> delegate)
-        : delegate_(delegate), controller_(nullptr) {
-    }
+  Logger(std::shared_ptr<spdlog::logger> delegate, std::shared_ptr<LoggerControl> controller);
+
+  Logger(std::shared_ptr<spdlog::logger> delegate);
 
 
   std::shared_ptr<spdlog::logger> delegate_;

@@ -19,6 +19,7 @@
 #include <string>
 #include "utils/StringUtils.h"
 #include "utils/file/FileUtils.h"
+#include "utils/file/PathUtils.h"
 #include "core/Core.h"
 #include "core/logging/LoggerConfiguration.h"
 
@@ -120,28 +121,13 @@ void Properties::loadConfigureFile(const char *fileName) {
     return;
   }
 
-  std::string adjustedFilename = getHome();
-  // perform a naive determination if this is a relative path
-  if (fileName[0] != utils::file::FileUtils::get_separator()) {
-    adjustedFilename += utils::file::FileUtils::get_separator();
-  }
+  properties_file_ = utils::file::PathUtils::getFullPath(utils::file::FileUtils::concat_path(getHome(), fileName));
 
-  adjustedFilename += fileName;
+  logger_->log_info("Using configuration file to load configuration for %s from %s (located at %s)", getName().c_str(), fileName, properties_file_);
 
-  const char *path = NULL;
-#ifndef WIN32
-  char full_path[PATH_MAX];
-  path = realpath(adjustedFilename.c_str(), full_path);
-#else
-  path = adjustedFilename.c_str();
-#endif
-  logger_->log_info("Using configuration file to load configuration for %s from %s (located at %s)", getName().c_str(), fileName, path);
-
-  properties_file_ = path;
-
-  std::ifstream file(path, std::ifstream::in);
+  std::ifstream file(properties_file_, std::ifstream::in);
   if (!file.good()) {
-    logger_->log_error("load configure file failed %s", path);
+    logger_->log_error("load configure file failed %s", properties_file_);
     return;
   }
   this->clear();

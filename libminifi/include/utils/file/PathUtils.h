@@ -35,7 +35,15 @@ namespace PathUtils {
  * @param fileName output file name
  * @return result of the operation.
  */
-extern bool getFileNameAndPath(const std::string &path, std::string &filePath, std::string &fileName);
+bool getFileNameAndPath(const std::string &path, std::string &filePath, std::string &fileName);
+
+/**
+ * Resolves the supplied path to an absolute pathname using the native OS functions
+ * (realpath(3) on *nix, GetFullPathNameA on Windows)
+ * @param path the name of the file
+ * @return the canonicalized absolute pathname on success, empty string on failure
+ */
+std::string getFullPath(const std::string& path);
 
 } /* namespace PathUtils */
 } /* namespace file */

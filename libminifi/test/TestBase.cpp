@@ -18,6 +18,21 @@
 
 #include "./TestBase.h"
 
+#include "spdlog/spdlog.h"
+
+void LogTestController::setLevel(const std::string name, spdlog::level::level_enum level) {
+  logger_->log_info("Setting log level for %s to %s", name, spdlog::level::to_str(level));
+  std::string adjusted_name = name;
+  const std::string clazz = "class ";
+  auto haz_clazz = name.find(clazz);
+  if (haz_clazz == 0)
+    adjusted_name = name.substr(clazz.length(), name.length() - clazz.length());
+  if (config && config->shortenClassNames()) {
+    utils::ClassUtils::shortenClassName(adjusted_name, adjusted_name);
+  }
+  spdlog::get(adjusted_name)->set_level(level);
+}
+
 TestPlan::TestPlan(std::shared_ptr<core::ContentRepository> content_repo, std::shared_ptr<core::Repository> flow_repo, std::shared_ptr<core::Repository> prov_repo,
                    const std::shared_ptr<minifi::state::response::FlowVersion> &flow_version, const std::shared_ptr<minifi::Configure> &configuration)
     : configuration_(configuration),
