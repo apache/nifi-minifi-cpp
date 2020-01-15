@@ -91,10 +91,26 @@ endif()
 
 file(GLOB SOURCES  "src/utils/file/*.cpp" "src/sitetosite/*.cpp"  "src/core/logging/*.cpp"  "src/core/state/*.cpp" "src/core/state/nodes/*.cpp" "src/c2/protocols/*.cpp" "src/c2/triggers/*.cpp" "src/c2/*.cpp" "src/io/*.cpp" ${SOCKET_SOURCES} ${TLS_SOURCES} "src/core/controller/*.cpp" "src/controllers/*.cpp" "src/core/*.cpp"  "src/core/repository/*.cpp" "src/core/yaml/*.cpp" "src/core/reporting/*.cpp"  "src/provenance/*.cpp" "src/utils/*.cpp" "src/*.cpp")
 
+if(WIN32)
+	include(FindMessageCompiler)
+	find_package(MessageCompiler REQUIRED)
+	add_custom_target(message-strings
+						COMMAND "${CMAKE_MC_COMPILER}" -U "${CMAKE_CURRENT_SOURCE_DIR}/src/core/logging/WindowsMessageTextFile.mc" -h "${CMAKE_CURRENT_BINARY_DIR}/include/core/logging" -r "${CMAKE_CURRENT_BINARY_DIR}/src/core/logging"
+						DEPENDS "src/core/logging/WindowsMessageTextFile.mc"
+						BYPRODUCTS "include/core/logging/WindowsMessageTextFile.h" "src/core/logging/WindowsMessageTextFile.rc")
+	file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/src/core/logging")
+	file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/include/core/logging")
+endif()
+
 file(GLOB PROCESSOR_SOURCES  "src/processors/*.cpp" )
 
 
 add_library(core-minifi STATIC ${SOURCES})
+if(WIN32)
+        add_dependencies(core-minifi message-strings)
+        target_include_directories(core-minifi PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/include")
+endif()
+
 target_link_libraries(core-minifi ${CMAKE_DL_LIBS} yaml-cpp ZLIB::ZLIB concurrentqueue RapidJSON spdlog cron)
 if(NOT WIN32)
 	target_link_libraries(core-minifi OSSP::libuuid++)

@@ -27,6 +27,7 @@
 
 #include <string>
 #include <functional>
+#include <map>
 
 namespace org {
 namespace apache {

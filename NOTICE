@@ -29,6 +29,10 @@ The derived work is adapted from
   Modules/FindPatch.cmake
 and can be found in cmake/FindPatch.cmake
 
+This includes derived works from the 'POCO C++ Libraries' (BSL-1.0 licensed) project (https://github.com/pocoproject/poco):
+The derived work is adapted from
+  cmake/PocoMacros.cmake and can be found in cmake/FindMessageCompiler.cmake
+
 This bundles the 'AWS SDK for C++' (ALv2 licensed) project (https://github.com/aws/aws-sdk-cpp/), which includes the following NOTICE:
 AWS SDK for C++
 Copyright 2015 Amazon.com, Inc. or its affiliates. All Rights Reserved.

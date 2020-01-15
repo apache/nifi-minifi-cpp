@@ -31,7 +31,7 @@
 #include "core/ConfigurationFactory.h"
 #include "core/RepositoryFactory.h"
 #include "FlowController.h"
-#include "Main.h"
+#include "MainHelper.h"
 #include "properties/Configure.h"
 #include "Controller.h"
 #include "c2/ControllerSocketProtocol.h"
@@ -42,42 +42,10 @@ int main(int argc, char **argv) {
 
   std::shared_ptr<logging::Logger> logger = logging::LoggerConfiguration::getConfiguration().getLogger("controller");
 
-  // assumes POSIX compliant environment
-  std::string minifiHome;
-  if (const char *env_p = std::getenv(MINIFI_HOME_ENV_KEY)) {
-    minifiHome = env_p;
-    logger->log_info("Using MINIFI_HOME=%s from environment.", minifiHome);
-  } else {
-    logger->log_info("MINIFI_HOME is not set; determining based on environment.");
-    char *path = nullptr;
-    char full_path[PATH_MAX];
-    path = realpath(argv[0], full_path);
-
-    if (path != nullptr) {
-      std::string minifiHomePath(path);
-      if (minifiHomePath.find_last_of("/\\") != std::string::npos) {
-        minifiHomePath = minifiHomePath.substr(0, minifiHomePath.find_last_of("/\\"));  //Remove /minifi from path
-        minifiHome = minifiHomePath.substr(0, minifiHomePath.find_last_of("/\\"));    //Remove /bin from path
-      }
-    }
-
-    // attempt to use cwd as MINIFI_HOME
-    if (minifiHome.empty() || !validHome(minifiHome)) {
-      char cwd[PATH_MAX];
-      #ifdef WIN32
-          _getcwd(cwd,PATH_MAX);
-      #else
-          getcwd(cwd, PATH_MAX);
-      #endif
-      minifiHome = cwd;
-    }
-
-  }
-
-  if (!validHome(minifiHome)) {
-    logger->log_error("No valid MINIFI_HOME could be inferred. "
-                      "Please set MINIFI_HOME or run minifi from a valid location.");
-    //return -1;
+  const std::string minifiHome = determineMinifiHome(logger);
+  if (minifiHome.empty()) {
+    // determineMinifiHome already logged everything we need
+    return -1;
   }
 
   std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::Configure>();

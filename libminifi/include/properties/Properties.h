@@ -29,14 +29,6 @@
 #include <fstream>
 #include "core/logging/Logger.h"
 
-#ifndef FILE_SEPARATOR
-	#ifdef WIN32
-		#define FILE_SEPARATOR '\\'
-	#else
-		#define FILE_SEPARATOR '/'
-	#endif
-#endif
-
 
 namespace org {
 namespace apache {
@@ -98,8 +90,13 @@ class Properties {
 
   // Parse one line in configure file like key=value
   bool parseConfigureFileLine(char *buf, std::string &prop_key, std::string &prop_value);
-  // Load Configure File
+
+  /**
+   * Load configure file
+   * @param fileName path of the configuration file RELATIVE to MINIFI_HOME set by setHome()
+   */
   void loadConfigureFile(const char *fileName);
+
   // Set the determined MINIFI_HOME
   void setHome(std::string minifiHome) {
     minifi_home_ = minifiHome;

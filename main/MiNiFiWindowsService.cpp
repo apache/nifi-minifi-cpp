@@ -1,4 +1,21 @@
-#ifdef WIN32 
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#ifdef WIN32
 
 #include "MiNiFiWindowsService.h"
 
@@ -7,6 +24,7 @@
 #include <tuple>
 #include <tlhelp32.h>
 
+#include "MainHelper.h"
 #include "core/FlowConfiguration.h"
 
 //#define DEBUG_SERVICE
@@ -43,7 +61,7 @@ static void OutputDebug(const char* format, ...) {
   va_end(args);
 };
 
-void CheckRunAsService() {
+void RunAsServiceIfNeeded() {
   static const int WAIT_TIME_EXE_TERMINATION = 5000;
   static const int WAIT_TIME_EXE_RESTART = 60000;
 
@@ -63,6 +81,8 @@ void CheckRunAsService() {
       SERVICE_NAME,
       [](DWORD argc, LPTSTR *argv)
       {
+        setSyslogLogger();
+
         LOG_INFO("ServiceCtrlDispatcher");
 
         s_hEvent = CreateEvent(0, TRUE, FALSE, SERVICE_TERMINATION_EVENT_NAME);
@@ -239,18 +259,21 @@ void CheckRunAsService() {
   ExitProcess(0);
 }
 
-bool CreateServiceTerminationThread(std::shared_ptr<logging::Logger> logger) {
+HANDLE GetTerminationEventHandle(bool* isStartedByService) {
+  *isStartedByService = true;
   HANDLE hEvent = CreateEvent(0, TRUE, FALSE, SERVICE_TERMINATION_EVENT_NAME);
   if (!hEvent) {
-    logger->log_error("!CreateEvent lastError %x", GetLastError());
-    return false;
+    return nullptr;
   }
 
   if (GetLastError() != ERROR_ALREADY_EXISTS) {
-    CloseHandle(hEvent);
-    return true;
+    *isStartedByService = false;
   }
 
+  return hEvent;
+}
+
+bool CreateServiceTerminationThread(std::shared_ptr<logging::Logger> logger, HANDLE terminationEventHandle) {
   // Get hService and monitor it - if service is terminated, then terminate current exe, otherwise the exe becomes unmanageable when service is restarted.
   auto hService = [&logger]() -> HANDLE {
     auto hSnapShot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
@@ -322,18 +345,18 @@ bool CreateServiceTerminationThread(std::shared_ptr<logging::Logger> logger) {
     return false;
 
   using ThreadInfo = std::tuple<std::shared_ptr<logging::Logger>, HANDLE, HANDLE>;
-  auto pThreadInfo = new ThreadInfo(logger, hEvent, hService);
+  auto pThreadInfo = new ThreadInfo(logger, terminationEventHandle, hService);
 
   HANDLE hThread = (HANDLE)_beginthreadex(
     0, 0,
     [](void* pPar) {
       const auto pThreadInfo = static_cast<ThreadInfo*>(pPar);
       const auto logger = std::get<0>(*pThreadInfo);
-      const auto hEvent = std::get<1>(*pThreadInfo);
+      const auto terminationEventHandle = std::get<1>(*pThreadInfo);
       const auto hService = std::get<2>(*pThreadInfo);
       delete pThreadInfo;
 
-      HANDLE arHandle[] = { hEvent, hService };
+      HANDLE arHandle[] = { terminationEventHandle, hService };
       switch (auto res = WaitForMultipleObjects(_countof(arHandle), arHandle, FALSE, INFINITE))
       {
         case WAIT_FAILED:

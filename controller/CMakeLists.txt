@@ -46,7 +46,7 @@ else()
  message(STATUS "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
 endif()
 
-add_executable(minificontroller MiNiFiController.cpp)
+add_executable(minificontroller MiNiFiController.cpp ../main/MainHelper.cpp)
 if(THREADS_HAVE_PTHREAD_ARG)
   target_compile_options(PUBLIC minificontroller "-pthread")
 endif()

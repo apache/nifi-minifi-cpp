@@ -33,6 +33,7 @@
 #include "properties/Properties.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/Id.h"
+#include "spdlog/common.h"
 #include "spdlog/sinks/ostream_sink.h"
 #include "spdlog/sinks/dist_sink.h"
 #include "unit/ProvenanceTestHelper.h"
@@ -216,20 +217,8 @@ class LogTestController {
   LogTestController(LogTestController const&);
   LogTestController& operator=(LogTestController const&);
 
-  ;
+  void setLevel(const std::string name, spdlog::level::level_enum level);
 
-  void setLevel(const std::string name, spdlog::level::level_enum level) {
-    logger_->log_info("Setting log level for %s to %s", name, spdlog::level::to_str(level));
-    std::string adjusted_name = name;
-    const std::string clazz = "class ";
-    auto haz_clazz = name.find(clazz);
-    if (haz_clazz == 0)
-      adjusted_name = name.substr(clazz.length(), name.length() - clazz.length());
-    if (config && config->shortenClassNames()) {
-      utils::ClassUtils::shortenClassName(adjusted_name, adjusted_name);
-    }
-    spdlog::get(adjusted_name)->set_level(level);
-  }
   std::shared_ptr<logging::LoggerProperties> my_properties_;
   std::unique_ptr<logging::LoggerConfiguration> config;
   std::set<std::string> modified_loggers;

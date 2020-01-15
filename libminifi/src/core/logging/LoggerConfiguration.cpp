@@ -19,6 +19,7 @@
  */
 
 #include "core/logging/LoggerConfiguration.h"
+
 #include <sys/stat.h>
 #include <algorithm>
 #include <vector>
@@ -31,10 +32,18 @@
 #include "utils/StringUtils.h"
 #include "utils/ClassUtils.h"
 #include "utils/file/FileUtils.h"
+#include "utils/Environment.h"
 
 #include "spdlog/spdlog.h"
 #include "spdlog/sinks/stdout_sinks.h"
 #include "spdlog/sinks/null_sink.h"
+
+#ifdef WIN32
+#include "core/logging/WindowsEventLogSink.h"
+#else
+#include "spdlog/sinks/syslog_sink.h"
+#endif
+
 #ifdef WIN32
 #include <direct.h>
 #define _WINSOCKAPI_
@@ -175,8 +184,12 @@ std::shared_ptr<internal::LoggerNamespace> LoggerConfiguration::initialize_names
       sink_map[appender_name] = std::make_shared<spdlog::sinks::rotating_file_sink_mt>(file_name, max_file_size, max_files);
     } else if ("stdout" == appender_type) {
       sink_map[appender_name] = spdlog::sinks::stdout_sink_mt::instance();
-    } else {
+    } else if ("stderr" == appender_type) {
       sink_map[appender_name] = spdlog::sinks::stderr_sink_mt::instance();
+    } else if ("syslog" == appender_type) {
+      sink_map[appender_name] = LoggerConfiguration::create_syslog_sink();
+    } else {
+      sink_map[appender_name] = LoggerConfiguration::create_fallback_sink();
     }
   }
 
@@ -279,6 +292,22 @@ std::shared_ptr<spdlog::logger> LoggerConfiguration::get_logger(std::shared_ptr<
     // Ignore as someone else beat us to registration, we should get the one they made below
   }
   return spdlog::get(name);
+}
+
+std::shared_ptr<spdlog::sinks::sink> LoggerConfiguration::create_syslog_sink() {
+#ifdef WIN32
+  return std::make_shared<internal::windowseventlog_sink>("ApacheNiFiMiNiFi");
+#else
+  return std::make_shared<spdlog::sinks::syslog_sink>("ApacheNiFiMiNiFi");
+#endif
+}
+
+std::shared_ptr<spdlog::sinks::sink> LoggerConfiguration::create_fallback_sink() {
+  if (utils::Environment::isRunningAsService()) {
+    return LoggerConfiguration::create_syslog_sink();
+  } else {
+    return spdlog::sinks::stderr_sink_mt::instance();
+  }
 }
 
 std::shared_ptr<internal::LoggerNamespace> LoggerConfiguration::create_default_root() {

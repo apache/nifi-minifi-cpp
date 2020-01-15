@@ -224,6 +224,9 @@ endif()
 # spdlog
 add_library(spdlog INTERFACE)
 target_include_directories(spdlog INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/spdlog-20170710/include")
+if (NOT WIN32)
+	set_property(TARGET spdlog APPEND PROPERTY INTERFACE_COMPILE_DEFINITIONS "SPDLOG_ENABLE_SYSLOG")
+endif()
 
 # yaml-cpp
 include(BundledYamlCpp)
@@ -506,6 +509,7 @@ if(WIN32)
 	set(CPACK_COMPONENT_LIBRARIES_INSTALL_TYPES Developer Full)
 	set(CPACK_COMPONENT_HEADERS_INSTALL_TYPES Developer Full)
 	set(CPACK_COMPONENT_APPLICATIONS_INSTALL_TYPES Full)
+	set(CPACK_WIX_EXTENSIONS WixUtilExtension)
 	set(CPACK_WIX_UI_BANNER "${CMAKE_CURRENT_SOURCE_DIR}/msi/minifi-logo-png-banner.png")
 	set(CPACK_WIX_UI_DIALOG "${CMAKE_CURRENT_SOURCE_DIR}/msi/bgr.png")
 

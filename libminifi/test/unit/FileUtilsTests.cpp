@@ -24,6 +24,8 @@
 #include "core/Core.h"
 #include "utils/file/FileUtils.h"
 #include "utils/file/PathUtils.h"
+#include "utils/ScopeGuard.h"
+#include "utils/Environment.h"
 
 using org::apache::nifi::minifi::utils::file::FileUtils;
 
@@ -145,4 +147,34 @@ TEST_CASE("TestFileUtils::create_dir", "[TestCreateDir]") {
   REQUIRE(FileUtils::create_dir(test_dir_path) == 0);  // Dir has to be created successfully
   REQUIRE(FileUtils::create_dir(test_dir_path) == 0);  // Dir already exists, success should be returned
   REQUIRE(FileUtils::delete_dir(test_dir_path) == 0);  // Delete should be successful as welll
+}
+
+TEST_CASE("TestFileUtils::getFullPath", "[TestGetFullPath]") {
+  TestController testController;
+
+  char format[] = "/tmp/gt.XXXXXX";
+  const std::string tempDir = utils::file::PathUtils::getFullPath(testController.createTempDirectory(format));
+
+  const std::string cwd = utils::Environment::getCurrentWorkingDirectory();
+
+  REQUIRE(utils::Environment::setCurrentWorkingDirectory(tempDir.c_str()));
+  utils::ScopeGuard cwdGuard([&cwd]() {
+    utils::Environment::setCurrentWorkingDirectory(cwd.c_str());
+  });
+
+  const std::string tempDir1 = utils::file::FileUtils::concat_path(tempDir, "test1");
+  const std::string tempDir2 = utils::file::FileUtils::concat_path(tempDir, "test2");
+  REQUIRE(0 == utils::file::FileUtils::create_dir(tempDir1));
+  REQUIRE(0 == utils::file::FileUtils::create_dir(tempDir2));
+
+  REQUIRE(tempDir1 == utils::file::PathUtils::getFullPath(tempDir1));
+  REQUIRE(tempDir1 == utils::file::PathUtils::getFullPath("test1"));
+  REQUIRE(tempDir1 == utils::file::PathUtils::getFullPath("./test1"));
+  REQUIRE(tempDir1 == utils::file::PathUtils::getFullPath("././test1"));
+  REQUIRE(tempDir1 == utils::file::PathUtils::getFullPath("./test2/../test1"));
+#ifdef WIN32
+  REQUIRE(tempDir1 == utils::file::PathUtils::getFullPath(".\\test1"));
+  REQUIRE(tempDir1 == utils::file::PathUtils::getFullPath(".\\.\\test1"));
+  REQUIRE(tempDir1 == utils::file::PathUtils::getFullPath(".\\test2\\..\\test1"));
+#endif
 }

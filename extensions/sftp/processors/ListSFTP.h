@@ -22,6 +22,7 @@
 #include <map>
 #include <chrono>
 #include <cstdint>
+#include <unordered_map>
 
 #include "SFTPProcessorBase.h"
 #include "utils/ByteArrayCallback.h"
