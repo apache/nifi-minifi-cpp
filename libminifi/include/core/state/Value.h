@@ -71,6 +71,7 @@ class Value {
 
   static const std::type_index UINT64_TYPE;
   static const std::type_index INT64_TYPE;
+  static const std::type_index UINT32_TYPE;
   static const std::type_index INT_TYPE;
   static const std::type_index BOOL_TYPE;
   static const std::type_index STRING_TYPE;
@@ -85,6 +86,15 @@ class Value {
   template<typename T>
   void setTypeId() {
     type_id = std::type_index(typeid(T));
+  }
+
+  virtual bool getValue(uint32_t &ref) {
+    const auto negative = string_value.find_first_of('-') != std::string::npos;
+     if (negative){
+       return false;
+     }
+    ref = std::stoul(string_value);
+    return true;
   }
 
   virtual bool getValue(int &ref) {
@@ -115,6 +125,64 @@ class Value {
   std::type_index type_id;
 };
 
+class UInt32Value : public Value {
+ public:
+  explicit UInt32Value(uint32_t value)
+      : Value(std::to_string(value)),
+        value(value) {
+    setTypeId<uint32_t>();
+  }
+
+  explicit UInt32Value(const std::string &strvalue)
+      : Value(strvalue),
+        value(std::stoul(strvalue)) {
+    /**
+     * This is a fundamental change in that we would be changing where this error occurs.
+     * We should be prudent about breaking backwards compatibility, but since Uint32Value
+     * is only created with a validator and type, we **should** be okay.
+     */
+    const auto negative = strvalue.find_first_of('-') != std::string::npos;
+     if (negative){
+       throw std::out_of_range("negative value detected");
+     }
+    setTypeId<uint32_t>();
+  }
+
+  uint32_t getValue() const {
+    return value;
+  }
+ protected:
+
+  virtual bool getValue(uint32_t &ref) {
+    ref = value;
+    return true;
+  }
+
+  virtual bool getValue(int &ref) {
+    if (value <= (std::numeric_limits<int>::max)()) {
+      ref = value;
+      return true;
+    }
+    return false;
+  }
+
+  virtual bool getValue(int64_t &ref) {
+    ref = value;
+    return true;
+  }
+
+  virtual bool getValue(uint64_t &ref) {
+    ref = value;
+    return true;
+  }
+
+  virtual bool getValue(bool &ref) {
+    return false;
+  }
+
+  uint32_t value;
+};
+
 class IntValue : public Value {
  public:
   explicit IntValue(int value)
@@ -137,6 +205,14 @@ class IntValue : public Value {
   virtual bool getValue(int &ref) {
     ref = value;
     return true;
+  }
+
+  virtual bool getValue(uint32_t &ref) {
+    if (value >= 0) {
+      ref = value;
+      return true;
+    }
+    return false;
   }
 
   virtual bool getValue(int64_t &ref) {
@@ -177,6 +253,18 @@ class BoolValue : public Value {
  protected:
 
   virtual bool getValue(int &ref) {
+    if (ref == 1) {
+      ref = true;
+      return true;
+    } else if (ref == 0) {
+      ref = false;
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  virtual bool getValue(uint32_t &ref) {
     if (ref == 1) {
       ref = true;
       return true;
@@ -252,6 +340,10 @@ class UInt64Value : public Value {
     return false;
   }
 
+  virtual bool getValue(uint32_t &ref) {
+    return false;
+  }
+
   virtual bool getValue(int64_t &ref) {
     if (value <= (std::numeric_limits<int64_t>::max)()) {
       ref = value;
@@ -294,6 +386,10 @@ class Int64Value : public Value {
     return false;
   }
 
+  virtual bool getValue(uint32_t &ref) {
+    return false;
+  }
+
   virtual bool getValue(int64_t &ref) {
     ref = value;
     return true;
@@ -322,7 +418,7 @@ static inline std::shared_ptr<Value> createValue(const char *object) {
   return std::make_shared<Value>(object);
 }
 
-static inline std::shared_ptr<Value> createValue(char *object) {
+static inline std::shared_ptr<Value> createValue(char *object) { // hmm?
   return std::make_shared<Value>(std::string(object));
 }
 
@@ -331,7 +427,7 @@ static inline std::shared_ptr<Value> createValue(const std::string &object) {
 }
 
 static inline std::shared_ptr<Value> createValue(const uint32_t &object) {
-  return std::make_shared<UInt64Value>(object);
+  return std::make_shared<UInt32Value>(object);
 }
 #if ( defined(__APPLE__) || defined(__MACH__) || defined(DARWIN) )
 static inline std::shared_ptr<Value> createValue(const size_t &object) {
@@ -370,6 +466,7 @@ class ValueNode {
   auto operator=(const T ref) -> typename std::enable_if<std::is_same<T, int >::value ||
   std::is_same<T, uint32_t >::value ||
   std::is_same<T, size_t >::value ||
+  std::is_same<T, int64_t>::value ||
   std::is_same<T, uint64_t >::value ||
   std::is_same<T, bool >::value ||
   std::is_same<T, char* >::value ||
@@ -379,10 +476,7 @@ class ValueNode {
     return *this;
   }
 
-  ValueNode &operator=(const ValueNode &ref) {
-    value_ = ref.value_;
-    return *this;
-  }
+  ValueNode &operator=(const ValueNode &ref) = default;
 
   inline bool operator==(const ValueNode &rhs) const {
     return to_string() == rhs.to_string();
@@ -419,7 +513,7 @@ struct SerializedResponseNode {
   bool collapsible;
   std::vector<SerializedResponseNode> children;
 
-  SerializedResponseNode(bool collapsible = true)
+  explicit SerializedResponseNode(bool collapsible = true)
       : array(false),
         collapsible(collapsible) {
   }

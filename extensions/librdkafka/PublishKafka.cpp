@@ -149,6 +149,59 @@ void PublishKafka::initialize() {
 
 void PublishKafka::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
   interrupted_ = false;
+
+  // Try to get a KafkaConnection
+  std::string client_id, brokers;
+  if (!context->getProperty(ClientName.getName(), client_id)) {
+    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Client Name property missing or invalid");
+  }
+  if (!context->getProperty(SeedBrokers.getName(), brokers)) {
+    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Known Brokers property missing or invalid");
+  }
+
+  // Get some properties not (only) used directly to set up librdkafka
+  std::string value;
+
+  // Batch Size
+  value = "";
+  if (context->getProperty(BatchSize.getName(), batch_size_)) {
+    logger_->log_debug("PublishKafka: Batch Size [%lu]", batch_size_);
+  } else {
+    batch_size_ = 10;
+  }
+
+  // Target Batch Payload Size
+  value = "";
+  if (context->getProperty(TargetBatchPayloadSize.getName(), target_batch_payload_size_)) {
+    logger_->log_debug("PublishKafka: Target Batch Payload Size [%llu]", target_batch_payload_size_);
+  } else {
+    target_batch_payload_size_ = 512 * 1024U;
+  }
+
+  // Max Flow Segment Size
+  value = "";
+  if (context->getProperty(MaxFlowSegSize.getName(), max_flow_seg_size_)) {
+    logger_->log_debug("PublishKafka: Max Flow Segment Size [%llu]", max_flow_seg_size_);
+  } else {
+    max_flow_seg_size_ = 0U;
+  }
+
+  // Attributes to Send as Headers
+  value = "";
+  if (context->getProperty(AttributeNameRegex.getName(), value) && !value.empty()) {
+    attributeNameRegex_ = utils::Regex(value);
+    logger_->log_debug("PublishKafka: AttributeNameRegex [%s]", value);
+  }
+
+  // TODO - Nghia: Get rid of key since we only need to store one connection.
+  key_.brokers_ = brokers;
+  key_.client_id_ = client_id;
+
+  std::unique_ptr<KafkaLease> lease = connection_pool_.getOrCreateConnection(key_);
+  std::shared_ptr<KafkaConnection> conn = lease->getConn();
+  configureNewConnection(conn, context);
+
+  logger_->log_debug("Successfully configured PublishKafka");
 }
 
 void PublishKafka::notifyStop() {
@@ -184,8 +237,7 @@ bool PublishKafka::configureNewConnection(const std::shared_ptr<KafkaConnection>
 
   rd_kafka_conf_t* conf_ = rd_kafka_conf_new();
   if (conf_ == nullptr) {
-    logger_->log_error("Failed to create rd_kafka_conf_t object");
-    return false;
+    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Failed to create rd_kafka_conf_t object");
   }
   utils::ScopeGuard confGuard([conf_](){
     rd_kafka_conf_destroy(conf_);
@@ -194,25 +246,23 @@ bool PublishKafka::configureNewConnection(const std::shared_ptr<KafkaConnection>
   auto key = conn->getKey();
 
   if (key->brokers_.empty()) {
-    logger_->log_error("There are no brokers");
-    return false;
+    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "There are no brokers");
   }
   result = rd_kafka_conf_set(conf_, "bootstrap.servers", key->brokers_.c_str(), errstr.data(), errstr.size());
   logger_->log_debug("PublishKafka: bootstrap.servers [%s]", key->brokers_);
   if (result != RD_KAFKA_CONF_OK) {
-    logger_->log_error("PublishKafka: configure error result [%s]", errstr.data());
-    return false;
+    auto error_msg = utils::StringUtils::join_pack("PublishKafka: configure error result [%s]", errstr.data());
+    throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
   }
 
   if (key->client_id_.empty()) {
-    logger_->log_error("Client id is empty");
-    return false;
+    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Client id is empty");
   }
   result = rd_kafka_conf_set(conf_, "client.id", key->client_id_.c_str(), errstr.data(), errstr.size());
   logger_->log_debug("PublishKafka: client.id [%s]", key->client_id_);
   if (result != RD_KAFKA_CONF_OK) {
-    logger_->log_error("PublishKafka: configure error result [%s]", errstr.data());
-    return false;
+    auto error_msg = utils::StringUtils::join_pack("PublishKafka: configure error result ", errstr.data());
+    throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
   }
 
   value = "";
@@ -220,8 +270,8 @@ bool PublishKafka::configureNewConnection(const std::shared_ptr<KafkaConnection>
     result = rd_kafka_conf_set(conf_, "debug", value.c_str(), errstr.data(), errstr.size());
     logger_->log_debug("PublishKafka: debug [%s]", value);
     if (result != RD_KAFKA_CONF_OK) {
-      logger_->log_error("PublishKafka: configure debug error result [%s]", errstr.data());
-      return false;
+      auto error_msg = utils::StringUtils::join_pack("PublishKafka: configure debug error result ", errstr.data());
+      throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
     }
   }
   value = "";
@@ -229,8 +279,8 @@ bool PublishKafka::configureNewConnection(const std::shared_ptr<KafkaConnection>
     result = rd_kafka_conf_set(conf_, "sasl.kerberos.service.name", value.c_str(), errstr.data(), errstr.size());
     logger_->log_debug("PublishKafka: sasl.kerberos.service.name [%s]", value);
     if (result != RD_KAFKA_CONF_OK) {
-      logger_->log_error("PublishKafka: configure error result [%s]", errstr.data());
-      return false;
+      auto error_msg = utils::StringUtils::join_pack("PublishKafka: configure error result ", errstr.data());
+      throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
     }
   }
   value = "";
@@ -238,8 +288,8 @@ bool PublishKafka::configureNewConnection(const std::shared_ptr<KafkaConnection>
     result = rd_kafka_conf_set(conf_, "sasl.kerberos.principal", value.c_str(), errstr.data(), errstr.size());
     logger_->log_debug("PublishKafka: sasl.kerberos.principal [%s]", value);
     if (result != RD_KAFKA_CONF_OK) {
-      logger_->log_error("PublishKafka: configure error result [%s]", errstr.data());
-      return false;
+      auto error_msg = utils::StringUtils::join_pack("PublishKafka: configure error result ", errstr.data());
+      throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
     }
   }
   value = "";
@@ -247,19 +297,17 @@ bool PublishKafka::configureNewConnection(const std::shared_ptr<KafkaConnection>
     result = rd_kafka_conf_set(conf_, "sasl.kerberos.keytab", value.c_str(), errstr.data(), errstr.size());
     logger_->log_debug("PublishKafka: sasl.kerberos.keytab [%s]", value);
     if (result != RD_KAFKA_CONF_OK) {
-      logger_->log_error("PublishKafka: configure error result [%s]", errstr.data());
-      return false;
+      auto error_msg = utils::StringUtils::join_pack("PublishKafka: configure error result ", errstr.data());
+      throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
     }
   }
-
   value = "";
-  if (context->getProperty(MaxMessageSize.getName(), value) && !value.empty() && core::Property::StringToInt(value, valInt)) {
-    valueConf = std::to_string(valInt);
-    result = rd_kafka_conf_set(conf_, "message.max.bytes", valueConf.c_str(), errstr.data(), errstr.size());
-    logger_->log_debug("PublishKafka: message.max.bytes [%s]", valueConf);
+  if (context->getProperty(MaxMessageSize.getName(), value) && !value.empty()) {
+    result = rd_kafka_conf_set(conf_, "message.max.bytes", value.c_str(), errstr.data(), errstr.size());
+    logger_->log_debug("PublishKafka: message.max.bytes [%s]", value);
     if (result != RD_KAFKA_CONF_OK) {
-      logger_->log_error("PublishKafka: configure error result [%s]", errstr.data());
-      return false;
+      auto error_msg = utils::StringUtils::join_pack("PublishKafka: configure error result ", errstr.data());
+      throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
     }
   }
   value = "";
@@ -267,8 +315,8 @@ bool PublishKafka::configureNewConnection(const std::shared_ptr<KafkaConnection>
     result = rd_kafka_conf_set(conf_, "queue.buffering.max.messages", value.c_str(), errstr.data(), errstr.size());
     logger_->log_debug("PublishKafka: queue.buffering.max.messages [%s]", value);
     if (result != RD_KAFKA_CONF_OK) {
-      logger_->log_error("PublishKafka: configure error result [%s]", errstr.data());
-      return false;
+      auto error_msg = utils::StringUtils::join_pack("PublishKafka: configure error result ", errstr.data());
+      throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
     }
   }
   value = "";
@@ -278,8 +326,8 @@ bool PublishKafka::configureNewConnection(const std::shared_ptr<KafkaConnection>
     result = rd_kafka_conf_set(conf_, "queue.buffering.max.kbytes", valueConf.c_str(), errstr.data(), errstr.size());
     logger_->log_debug("PublishKafka: queue.buffering.max.kbytes [%s]", valueConf);
     if (result != RD_KAFKA_CONF_OK) {
-      logger_->log_error("PublishKafka: configure error result [%s]", errstr.data());
-      return false;
+      auto error_msg = utils::StringUtils::join_pack("PublishKafka: configure error result ", errstr.data());
+      throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
     }
   }
   value = "";
@@ -290,8 +338,8 @@ bool PublishKafka::configureNewConnection(const std::shared_ptr<KafkaConnection>
       result = rd_kafka_conf_set(conf_, "queue.buffering.max.ms", valueConf.c_str(), errstr.data(), errstr.size());
       logger_->log_debug("PublishKafka: queue.buffering.max.ms [%s]", valueConf);
       if (result != RD_KAFKA_CONF_OK) {
-        logger_->log_error("PublishKafka: configure queue buffer error result [%s]", errstr.data());
-        return false;
+        auto error_msg = utils::StringUtils::join_pack("PublishKafka: configure queue buffer error result ", errstr.data());
+        throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
       }
     }
   }
@@ -300,8 +348,8 @@ bool PublishKafka::configureNewConnection(const std::shared_ptr<KafkaConnection>
     result = rd_kafka_conf_set(conf_, "batch.num.messages", value.c_str(), errstr.data(), errstr.size());
     logger_->log_debug("PublishKafka: batch.num.messages [%s]", value);
     if (result != RD_KAFKA_CONF_OK) {
-      logger_->log_error("PublishKafka: configure batch size error result [%s]", errstr.data());
-      return false;
+      auto error_msg = utils::StringUtils::join_pack("PublishKafka: configure batch size error result ", errstr.data());
+      throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
     }
   }
   value = "";
@@ -309,8 +357,8 @@ bool PublishKafka::configureNewConnection(const std::shared_ptr<KafkaConnection>
     result = rd_kafka_conf_set(conf_, "compression.codec", value.c_str(), errstr.data(), errstr.size());
     logger_->log_debug("PublishKafka: compression.codec [%s]", value);
     if (result != RD_KAFKA_CONF_OK) {
-      logger_->log_error("PublishKafka: configure compression codec error result [%s]", errstr.data());
-      return false;
+      auto error_msg = utils::StringUtils::join_pack("PublishKafka: configure compression codec error result ", errstr.data());
+      throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
     }
   }
   value = "";
@@ -319,16 +367,16 @@ bool PublishKafka::configureNewConnection(const std::shared_ptr<KafkaConnection>
       result = rd_kafka_conf_set(conf_, "security.protocol", value.c_str(), errstr.data(), errstr.size());
       logger_->log_debug("PublishKafka: security.protocol [%s]", value);
       if (result != RD_KAFKA_CONF_OK) {
-        logger_->log_error("PublishKafka: configure error result [%s]", errstr.data());
-        return false;
+        auto error_msg = utils::StringUtils::join_pack("PublishKafka: configure error result ", errstr.data());
+        throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
       }
       value = "";
       if (context->getProperty(SecurityCA.getName(), value) && !value.empty()) {
         result = rd_kafka_conf_set(conf_, "ssl.ca.location", value.c_str(), errstr.data(), errstr.size());
         logger_->log_debug("PublishKafka: ssl.ca.location [%s]", value);
         if (result != RD_KAFKA_CONF_OK) {
-          logger_->log_error("PublishKafka: configure error result [%s]", errstr.data());
-          return false;
+          auto error_msg = utils::StringUtils::join_pack("PublishKafka: configure error result ", errstr.data());
+          throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
         }
       }
       value = "";
@@ -336,8 +384,8 @@ bool PublishKafka::configureNewConnection(const std::shared_ptr<KafkaConnection>
         result = rd_kafka_conf_set(conf_, "ssl.certificate.location", value.c_str(), errstr.data(), errstr.size());
         logger_->log_debug("PublishKafka: ssl.certificate.location [%s]", value);
         if (result != RD_KAFKA_CONF_OK) {
-          logger_->log_error("PublishKafka: configure error result [%s]", errstr.data());
-          return false;
+          auto error_msg = utils::StringUtils::join_pack("PublishKafka: configure error result ", errstr.data());
+          throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
         }
       }
       value = "";
@@ -345,8 +393,8 @@ bool PublishKafka::configureNewConnection(const std::shared_ptr<KafkaConnection>
         result = rd_kafka_conf_set(conf_, "ssl.key.location", value.c_str(), errstr.data(), errstr.size());
         logger_->log_debug("PublishKafka: ssl.key.location [%s]", value);
         if (result != RD_KAFKA_CONF_OK) {
-          logger_->log_error("PublishKafka: configure error result [%s]", errstr.data());
-          return false;
+          auto error_msg = utils::StringUtils::join_pack("PublishKafka: configure error result ", errstr.data());
+          throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
         }
       }
       value = "";
@@ -354,13 +402,13 @@ bool PublishKafka::configureNewConnection(const std::shared_ptr<KafkaConnection>
         result = rd_kafka_conf_set(conf_, "ssl.key.password", value.c_str(), errstr.data(), errstr.size());
         logger_->log_debug("PublishKafka: ssl.key.password [%s]", value);
         if (result != RD_KAFKA_CONF_OK) {
-          logger_->log_error("PublishKafka: configure error result [%s]", errstr.data());
-          return false;
+          auto error_msg = utils::StringUtils::join_pack("PublishKafka: configure error result ", errstr.data());
+          throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
         }
       }
     } else {
-      logger_->log_error("PublishKafka: unknown Security Protocol: %s", value);
-      return false;
+      auto error_msg = utils::StringUtils::join_pack("PublishKafka: unknown Security Protocol: ", value);
+      throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
     }
   }
 
@@ -374,8 +422,8 @@ bool PublishKafka::configureNewConnection(const std::shared_ptr<KafkaConnection>
       logger_->log_debug("PublishKafka: DynamicProperty: [%s] -> [%s]", prop_key, value);
       result = rd_kafka_conf_set(conf_, prop_key.c_str(), value.c_str(), errstr.data(), errstr.size());
       if (result != RD_KAFKA_CONF_OK) {
-        logger_->log_error("PublishKafka: configure error result [%s]", errstr.data());
-        return false;
+        auto error_msg = utils::StringUtils::join_pack("PublishKafka: configure error result ", errstr.data());
+        throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
       }
     } else {
       logger_->log_warn("PublishKafka Dynamic Property '%s' is empty and therefore will not be configured", prop_key);
@@ -391,8 +439,8 @@ bool PublishKafka::configureNewConnection(const std::shared_ptr<KafkaConnection>
   rd_kafka_t* producer = rd_kafka_new(RD_KAFKA_PRODUCER, conf_, errstr.data(), errstr.size());
 
   if (producer == nullptr) {
-    logger_->log_error("Failed to create Kafka producer %s", errstr.data());
-    return false;
+    auto error_msg = utils::StringUtils::join_pack("Failed to create Kafka producer ", errstr.data());
+    throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
   }
 
   // The producer took ownership of the configuration, we must not free it
@@ -497,24 +545,9 @@ void PublishKafka::onTrigger(const std::shared_ptr<core::ProcessContext> &contex
     return;
   }
 
-  // Try to get a KafkaConnection
-  std::string client_id, brokers;
-  if (!context->getProperty(ClientName.getName(), client_id)) {
-    logger_->log_error("Client Name property missing or invalid");
-    context->yield();
-    return;
-  }
-  if (!context->getProperty(SeedBrokers.getName(), brokers)) {
-    logger_->log_error("Knowb Brokers property missing or invalid");
-    context->yield();
-    return;
-  }
+  logger_->log_debug("PublishKafka onTrigger");
 
-  KafkaConnectionKey key;
-  key.brokers_ = brokers;
-  key.client_id_ = client_id;
-
-  std::unique_ptr<KafkaLease> lease = connection_pool_.getOrCreateConnection(key);
+  std::unique_ptr<KafkaLease> lease = connection_pool_.getOrCreateConnection(key_);
   if (lease == nullptr) {
     logger_->log_info("This connection is used by another thread.");
     context->yield();
@@ -522,64 +555,18 @@ void PublishKafka::onTrigger(const std::shared_ptr<core::ProcessContext> &contex
   }
 
   std::shared_ptr<KafkaConnection> conn = lease->getConn();
-  if (!conn->initialized()) {
-    logger_->log_trace("Connection not initialized to %s, %s", client_id, brokers);
-    if (!configureNewConnection(conn, context)) {
-      logger_->log_error("Could not configure Kafka Connection");
-      context->yield();
-      return;
-    }
-  }
-
-  // Get some properties not (only) used directly to set up librdkafka
-  std::string value;
-
-  // Batch Size
-  uint32_t batch_size;
-  value = "";
-  if (context->getProperty(BatchSize.getName(), value) && !value.empty() && core::Property::StringToInt(value, batch_size)) {
-    logger_->log_debug("PublishKafka: Batch Size [%lu]", batch_size);
-  } else {
-    batch_size = 10;
-  }
-
-  // Target Batch Payload Size
-  uint64_t target_batch_payload_size;
-  value = "";
-  if (context->getProperty(TargetBatchPayloadSize.getName(), value) && !value.empty() && core::Property::StringToInt(value, target_batch_payload_size)) {
-    logger_->log_debug("PublishKafka: Target Batch Payload Size [%llu]", target_batch_payload_size);
-  } else {
-    target_batch_payload_size = 512 * 1024U;
-  }
-
-  // Max Flow Segment Size
-  uint64_t max_flow_seg_size;
-  value = "";
-  if (context->getProperty(MaxFlowSegSize.getName(), value) && !value.empty() && core::Property::StringToInt(value, max_flow_seg_size)) {
-    logger_->log_debug("PublishKafka: Max Flow Segment Size [%llu]", max_flow_seg_size);
-  } else {
-    max_flow_seg_size = 0U;
-  }
-
-  // Attributes to Send as Headers
-  utils::Regex attributeNameRegex;
-  value = "";
-  if (context->getProperty(AttributeNameRegex.getName(), value) && !value.empty()) {
-    attributeNameRegex = utils::Regex(value);
-    logger_->log_debug("PublishKafka: AttributeNameRegex [%s]", value);
-  }
 
   // Collect FlowFiles to process
   uint64_t actual_bytes = 0U;
   std::vector<std::shared_ptr<core::FlowFile>> flowFiles;
-  for (uint32_t i = 0; i < batch_size; i++) {
+  for (uint32_t i = 0; i < batch_size_; i++) {
     std::shared_ptr<core::FlowFile> flowFile = session->get();
     if (flowFile == nullptr) {
       break;
     }
     actual_bytes += flowFile->getSize();
     flowFiles.emplace_back(std::move(flowFile));
-    if (target_batch_payload_size != 0U && actual_bytes >= target_batch_payload_size) {
+    if (target_batch_payload_size_ != 0U && actual_bytes >= target_batch_payload_size_) {
       break;
     }
   }
@@ -646,8 +633,8 @@ void PublishKafka::onTrigger(const std::shared_ptr<core::ProcessContext> &contex
     bool failEmptyFlowFiles = true;
     context->getProperty(FailEmptyFlowFiles.getName(), failEmptyFlowFiles);
 
-    PublishKafka::ReadCallback callback(max_flow_seg_size, kafkaKey, thisTopic->getTopic(), conn->getConnection(), *flowFile,
-                                        attributeNameRegex, messages, flow_file_index, failEmptyFlowFiles);
+    PublishKafka::ReadCallback callback(max_flow_seg_size_, kafkaKey, thisTopic->getTopic(), conn->getConnection(), *flowFile,
+                                        attributeNameRegex_, messages, flow_file_index, failEmptyFlowFiles);
     session->read(flowFile, &callback);
 
     if (!callback.called_) {

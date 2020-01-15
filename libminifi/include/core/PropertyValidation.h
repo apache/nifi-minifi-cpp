@@ -180,6 +180,34 @@ class IntegerValidator : public PropertyValidator {
   }
 };
 
+class UnsignedIntValidator : public PropertyValidator {
+ public:
+  explicit UnsignedIntValidator(const std::string &name)
+      : PropertyValidator(name) {
+  }
+  virtual ~UnsignedIntValidator() {
+
+  }
+  ValidationResult validate(const std::string &subject, const std::shared_ptr<minifi::state::response::Value> &input) const {
+    return PropertyValidator::_validate_internal<minifi::state::response::UInt32Value>(subject, input);
+  }
+
+  ValidationResult validate(const std::string &subject, const std::string &input) const {
+    try {
+      auto negative = input.find_first_of('-') != std::string::npos;
+      if (negative){
+        throw std::out_of_range("non negative expected");
+      }
+      std::stoul(input);
+      return ValidationResult::Builder::createBuilder().withSubject(subject).withInput(input).isValid(true).build();
+    } catch (...) {
+
+    }
+    return ValidationResult::Builder::createBuilder().withSubject(subject).withInput(input).isValid(false).build();
+  }
+
+};
+
 class LongValidator : public PropertyValidator {
  public:
   explicit LongValidator(const std::string &name, int64_t min = (std::numeric_limits<int64_t>::min)(), int64_t max = (std::numeric_limits<int64_t>::max)())
@@ -327,6 +355,8 @@ class StandardValidators {
       return init.BOOLEAN_VALIDATOR;
     } else if (std::dynamic_pointer_cast<minifi::state::response::IntValue>(input) != nullptr) {
       return init.INTEGER_VALIDATOR;
+    } else if (std::dynamic_pointer_cast<minifi::state::response::UInt32Value>(input) != nullptr) {
+      return init.UNSIGNED_INT_VALIDATOR;;
     } else if (std::dynamic_pointer_cast<minifi::state::response::Int64Value>(input) != nullptr) {
       return init.LONG_VALIDATOR;
     } else if (std::dynamic_pointer_cast<minifi::state::response::UInt64Value>(input) != nullptr) {
@@ -349,6 +379,7 @@ class StandardValidators {
  private:
   std::shared_ptr<PropertyValidator> INVALID;
   std::shared_ptr<PropertyValidator> INTEGER_VALIDATOR;
+  std::shared_ptr<PropertyValidator> UNSIGNED_INT_VALIDATOR;
   std::shared_ptr<PropertyValidator> LONG_VALIDATOR;
   std::shared_ptr<PropertyValidator> UNSIGNED_LONG_VALIDATOR;
   std::shared_ptr<PropertyValidator> BOOLEAN_VALIDATOR;

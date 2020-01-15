@@ -95,7 +95,7 @@ void LogAttribute::onSchedule(const std::shared_ptr<core::ProcessContext> &conte
     // in configuration. In future releases we can add that exception handling there.
     if (!flowsToLog.getValue().validate("Validating FlowFilesToLog").valid())
       throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Invalid value for flowfiles to log: " + flowsToLog.getValue().to_string());
-    flowfiles_to_log_ = flowsToLog.getValue();
+    flowfiles_to_log_ = static_cast<uint64_t>(flowsToLog.getValue());
   }
 
   std::string value;

@@ -116,12 +116,7 @@ namespace processors {
 
     BaseOPCProcessor::onSchedule(context, factory);
 
-    if(!configOK_) {
-      return;
-    }
-
-    configOK_ = false;
-
+    // TODO - Nghia: why get this again after getting this from BaseOPC?
     context->getProperty(OPCServerEndPoint.getName(), endPointURL_);
     std::string value;
     context->getProperty(ParentNodeID.getName(), nodeID_);
@@ -135,21 +130,22 @@ namespace processors {
       idType_ = opc::OPCNodeIDType::Path;
     } else {
       // Where have our validators gone?
-      logger_->log_error("%s is not a valid node ID type!", value.c_str());
+      auto error_msg = utils::StringUtils::join_pack(value, " is not a valid node ID type!");
+      throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
     }
 
     if(idType_ == opc::OPCNodeIDType::Int) {
       try {
         int t = std::stoi(nodeID_);
       } catch(...) {
-        logger_->log_error("%s cannot be used as an int type node ID", nodeID_.c_str());
-        return;
+        auto error_msg = utils::StringUtils::join_pack(nodeID_, " cannot be used as an int type node ID");
+        throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
       }
     }
     if(idType_ != opc::OPCNodeIDType::Path) {
       if(!context->getProperty(ParentNameSpaceIndex.getName(), nameSpaceIdx_)) {
-        logger_->log_error("%s is mandatory in case %s is not Path", ParentNameSpaceIndex.getName().c_str(), ParentNodeIDType.getName().c_str());
-        return;
+        auto error_msg = utils::StringUtils::join_pack(ParentNameSpaceIndex.getName(), " is mandatory in case ", ParentNodeIDType.getName(), " is not Path");
+        throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
       }
     }
 
@@ -157,17 +153,9 @@ namespace processors {
     context->getProperty(ValueType.getName(), typestr);
     nodeDataType_ = opc::StringToOPCDataTypeMap.at(typestr);  // This throws, but allowed values are generated based on this map -> that's a really unexpected error
 
-    configOK_ = true;
   }
 
   void PutOPCProcessor::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
-    if (!configOK_) {
-      logger_->log_error(
-          "This processor was not configured properly, yielding. Please check for previous errors in the logs!");
-      yield();
-      return;
-    }
-
     logger_->log_trace("PutOPCProcessor::onTrigger");
 
     std::unique_lock<std::mutex> lock(onTriggerMutex_, std::try_to_lock);

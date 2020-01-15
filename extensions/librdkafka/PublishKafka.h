@@ -353,6 +353,12 @@ class PublishKafka : public core::Processor {
   std::shared_ptr<logging::Logger> logger_;
 
   KafkaPool connection_pool_;
+  KafkaConnectionKey key_;
+
+  uint32_t batch_size_;
+  uint64_t target_batch_payload_size_;
+  uint64_t max_flow_seg_size_;
+  utils::Regex attributeNameRegex_;
 
   std::atomic<bool> interrupted_;
   std::mutex messages_mutex_;

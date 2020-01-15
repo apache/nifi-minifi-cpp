@@ -1,0 +1,46 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+
+Flow Controller:
+  name: MiNiFi Flow
+  onschedule retry interval: 1000 ms
+Processors:
+  - Properties:
+#      Batch Size: 1234
+      Client Name: lmn
+#      Compress Codec: none
+#      Delivery Guarantee: '1'
+      Known Brokers: localhost:9092
+      Max Request Size: '1'
+#      Message Timeout: 5 sec
+#      Request Timeout: 10 sec
+      Topic Name: test
+    class: org.apache.nifi.processors.standard.PublishKafka
+    id: 3744352b-6eb1-4677-98a6-353417a90496
+    name: kafka
+    max concurrent tasks: 1
+    scheduling strategy: TIMER_DRIVEN
+    scheduling period: 100 sec
+    penalization period: 30 sec
+    yield period: 1 sec
+    run duration nanos: 0
+    auto-terminated relationships list:
+Connections:
+Remote Processing Groups:
+

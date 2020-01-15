@@ -75,33 +75,27 @@ namespace processors {
     username_.clear();
     trustBuffers_.clear();
 
-    configOK_ = false;
-
     context->getProperty(OPCServerEndPoint.getName(), endPointURL_);
     context->getProperty(ApplicationURI.getName(), applicationURI_);
 
     if (context->getProperty(Username.getName(), username_) != context->getProperty(Password.getName(), password_)) {
-      logger_->log_error("Both or neither of Username and Password should be provided!");
-      return;
+      throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Both or neither of Username and Password should be provided!");
     }
 
     auto certificatePathRes = context->getProperty(CertificatePath.getName(), certpath_);
     auto keyPathRes = context->getProperty(KeyPath.getName(), keypath_);
     auto trustedPathRes = context->getProperty(TrustedPath.getName(), trustpath_);
     if (certificatePathRes != keyPathRes || keyPathRes != trustedPathRes) {
-      logger_->log_error("All or none of Certificate path, Key path and Trusted server certificate path should be provided!");
-      return;
+      throw Exception(PROCESS_SCHEDULE_EXCEPTION, "All or none of Certificate path, Key path and Trusted server certificate path should be provided!");
     }
 
     if (!password_.empty() && (certpath_.empty() || keypath_.empty() || trustpath_.empty() || applicationURI_.empty())) {
-      logger_->log_error("Certificate path, Key path, Trusted server certificate path and Application URI must be provided in case Password is provided!");
-      return;
+      throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Certificate path, Key path, Trusted server certificate path and Application URI must be provided in case Password is provided!");
     }
 
     if (!certpath_.empty()) {
       if (applicationURI_.empty()) {
-        logger_->log_error("Application URI must be provided if Certificate path is provided!");
-        return;
+        throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Application URI must be provided if Certificate path is provided!");
       }
 
       std::ifstream input_cert(certpath_, std::ios::binary);
@@ -120,21 +114,19 @@ namespace processors {
       }
 
       if (certBuffer_.empty()) {
-        logger_->log_error("Failed to load cert from path: %s", certpath_);
-        return;
+        auto error_msg = utils::StringUtils::join_pack("Failed to load cert from path: ", certpath_);
+        throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
       }
       if (keyBuffer_.empty()) {
-        logger_->log_error("Failed to load key from path: %s", keypath_);
-        return;
+        auto error_msg = utils::StringUtils::join_pack("Failed to load key from path: ", keypath_);
+        throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
       }
 
       if (trustBuffers_[0].empty()) {
-        logger_->log_error("Failed to load trusted server certs from path: %s", trustpath_);
-        return;
+        auto error_msg = utils::StringUtils::join_pack("Failed to load trusted server certs from path: ", trustpath_);
+        throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
       }
     }
-
-    configOK_ = true;
   }
 
   bool BaseOPCProcessor::reconnect() {

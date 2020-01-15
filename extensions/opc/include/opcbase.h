@@ -71,8 +71,6 @@ class BaseOPCProcessor : public core::Processor {
   std::vector<char> keyBuffer_;
   std::vector<std::vector<char>> trustBuffers_;
 
-  bool configOK_;
-
   virtual std::set<core::Property> getSupportedProperties() const {return {OPCServerEndPoint, ApplicationURI, Username, Password, CertificatePath, KeyPath, TrustedPath};}
 };
 

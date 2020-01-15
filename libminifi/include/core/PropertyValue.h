@@ -40,6 +40,8 @@ static inline std::shared_ptr<state::response::Value> convert(const std::shared_
     }
   } else if (prior->getTypeIndex() == state::response::Value::INT64_TYPE) {
     return std::make_shared<state::response::Int64Value>(ref);
+  } else if (prior->getTypeIndex() == state::response::Value::UINT32_TYPE) {
+    return std::make_shared<state::response::UInt32Value>(ref);
   } else if (prior->getTypeIndex() == state::response::Value::INT_TYPE) {
     return std::make_shared<state::response::IntValue>(ref);
   } else if (prior->getTypeIndex() == state::response::Value::BOOL_TYPE) {
@@ -67,7 +69,7 @@ class PropertyValue : public state::response::ValueNode {
         validator_(o.validator_),
         state::response::ValueNode(o) {
   }
-  PropertyValue(PropertyValue &&o)
+  PropertyValue(PropertyValue &&o) noexcept
       : type_id(o.type_id),
         validator_(std::move(o.validator_)),
         state::response::ValueNode(std::move(o)) {
@@ -90,7 +92,7 @@ class PropertyValue : public state::response::ValueNode {
 	  }
   }
 
-  operator uint64_t() const {
+  explicit operator uint64_t() const {
     uint64_t res;
     if (value_->convertValue(res)) {
       return res;
@@ -98,7 +100,7 @@ class PropertyValue : public state::response::ValueNode {
     throw std::runtime_error("Invalid conversion to uint64_t for" + value_->getStringValue());
   }
 
-  operator int64_t() const {
+  explicit operator int64_t() const {
     int64_t res;
     if (value_->convertValue(res)) {
       return res;
@@ -106,7 +108,15 @@ class PropertyValue : public state::response::ValueNode {
     throw std::runtime_error("Invalid conversion to int64_t");
   }
 
-  operator int() const {
+  explicit operator uint32_t() const {
+    uint32_t res;
+    if (value_->convertValue(res)) {
+      return res;
+    }
+    throw std::runtime_error("Invalid conversion to uint32_t for" + value_->getStringValue());
+  }
+
+  explicit operator int() const {
     int res;
     if (value_->convertValue(res)) {
       return res;
@@ -114,7 +124,7 @@ class PropertyValue : public state::response::ValueNode {
     throw std::runtime_error("Invalid conversion to int ");
   }
 
-  operator bool() const {
+  explicit operator bool() const {
     bool res;
     if (value_->convertValue(res)) {
       return res;
