@@ -102,10 +102,7 @@ bool Logger::should_log(const LOG_LEVEL &level) {
   }
 
   std::lock_guard<std::mutex> lock(mutex_);
-  if (!delegate_->should_log(logger_level)) {
-    return false;
-  }
-  return true;
+  return delegate_->should_log(logger_level);
 }
 
 void Logger::log_string(LOG_LEVEL level, std::string str) {

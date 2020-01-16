@@ -119,12 +119,10 @@ std::string Environment::getCurrentWorkingDirectory() {
     // in characters, including the null-terminating character."
     while (true) {
       len = GetCurrentDirectoryA(buffer.size(), buffer.data());
-      if (len > buffer.size()) {
-        buffer.resize(len);
-        continue;
-      } else {
+      if (len < buffer.size()) {
         break;
       }
+      buffer.resize(len);
     }
     if (len > 0U) {
       cwd = std::string(buffer.data(), len);
@@ -134,19 +132,14 @@ std::string Environment::getCurrentWorkingDirectory() {
     char* path = nullptr;
     while (true) {
       path = getcwd(buffer.data(), buffer.size());
-      if (path == nullptr) {
-        if (errno == ERANGE) {
-          buffer.resize(buffer.size() * 2);
-          continue;
-        } else {
-          break;
-        }
+      if (path != nullptr) {
+        cwd = path;
+        break;
+      } else if (errno == ERANGE) {
+        buffer.resize(buffer.size() * 2);
       } else {
         break;
       }
-    }
-    if (path != nullptr) {
-      cwd = path;
     }
 #endif
   });
