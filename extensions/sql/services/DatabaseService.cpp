@@ -41,11 +41,11 @@ static core::Property MaxQueueSize;
 core::Property DatabaseService::ConnectionString(core::PropertyBuilder::createProperty("Connection String")->withDescription("Database Connection String")->isRequired(true)->build());
 
 void DatabaseService::initialize() {
+  std::lock_guard<std::recursive_mutex> lock(initialization_mutex_);
+
   if (initialized_)
     return;
 
-  std::lock_guard<std::recursive_mutex> lock(initialization_mutex_);
-  
   ControllerService::initialize();
 
   initializeProperties();

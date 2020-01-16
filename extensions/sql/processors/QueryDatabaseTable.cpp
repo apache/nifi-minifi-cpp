@@ -378,8 +378,8 @@ void QueryDatabaseTable::processOnTrigger(const std::shared_ptr<core::ProcessCon
   int count = 0;
   size_t rowCount = 0;
   sql::MaxCollector maxCollector(selectQuery, maxValueColumnNames_, mapState_);
-  sql::JSONSQLWriter jsonSQLWriter;
-  sql::SQLRowsetProcessor sqlRowsetProcessor(rowset, {&jsonSQLWriter, &maxCollector});
+  sql::JSONSQLWriter sqlWriter;
+  sql::SQLRowsetProcessor sqlRowsetProcessor(rowset, {&sqlWriter, &maxCollector});
 
   // Process rowset.
   do {
@@ -388,7 +388,7 @@ void QueryDatabaseTable::processOnTrigger(const std::shared_ptr<core::ProcessCon
     if (rowCount == 0)
       break;
 
-    const auto& output = jsonSQLWriter.toString();
+    const auto& output = sqlWriter.toString();
     if (!output.empty()) {
       WriteCallback writer(output.data(), output.size());
       auto newflow = session->create();
@@ -399,8 +399,14 @@ void QueryDatabaseTable::processOnTrigger(const std::shared_ptr<core::ProcessCon
     }
   } while (rowCount > 0);
 
+  const auto mapState = mapState_;
   if (maxCollector.updateMapState()) {
-    session->commit();
+    try {
+      session->commit();
+    } catch (std::exception& e) {
+      mapState_ = mapState;
+      throw;
+    }
 
     pState_->writeStateToFile(mapState_);
   }

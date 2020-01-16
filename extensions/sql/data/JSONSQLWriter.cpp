@@ -46,31 +46,31 @@ void JSONSQLWriter::endProcessRow() {
 void JSONSQLWriter::processColumnName(const std::string& name) {}
 
 void JSONSQLWriter::processColumn(const std::string& name, const std::string& value) {
-  addToJSONRow(name, toJSONString(value));
+  addToJSONRow(name, std::move(toJSONString(value)));
 }
 
 void JSONSQLWriter::processColumn(const std::string& name, double value) {
-  addToJSONRow(name, rapidjson::Value().SetDouble(value));
+  addToJSONRow(name, std::move(rapidjson::Value().SetDouble(value)));
 }
 
 void JSONSQLWriter::processColumn(const std::string& name, int value) {
-  addToJSONRow(name, rapidjson::Value().SetInt(value));
+  addToJSONRow(name, std::move(rapidjson::Value().SetInt(value)));
 }
 
 void JSONSQLWriter::processColumn(const std::string& name, long long value) {
-  addToJSONRow(name, rapidjson::Value().SetInt64(value));
+  addToJSONRow(name, std::move(rapidjson::Value().SetInt64(value)));
 }
 
 void JSONSQLWriter::processColumn(const std::string& name, unsigned long long value) {
-  addToJSONRow(name, rapidjson::Value().SetUint64(value));
+  addToJSONRow(name, std::move(rapidjson::Value().SetUint64(value)));
 }
 
 void JSONSQLWriter::processColumn(const std::string& name, const char* value) {
-  addToJSONRow(name, toJSONString(value));
+  addToJSONRow(name, std::move(toJSONString(value)));
 }
 
-void JSONSQLWriter::addToJSONRow(const std::string& columnName, rapidjson::Value& jsonValue) {
-  jsonRow_.AddMember(toJSONString(columnName), jsonValue, jsonPayload_.GetAllocator());
+void JSONSQLWriter::addToJSONRow(const std::string& columnName, rapidjson::Value&& jsonValue) {
+  jsonRow_.AddMember(toJSONString(columnName), std::move(jsonValue), jsonPayload_.GetAllocator());
 }
 
 rapidjson::Value JSONSQLWriter::toJSONString(const std::string& s) {
