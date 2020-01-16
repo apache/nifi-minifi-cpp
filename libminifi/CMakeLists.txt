@@ -92,20 +92,8 @@ endif()
 file(GLOB SOURCES  "src/utils/file/*.cpp" "src/sitetosite/*.cpp"  "src/core/logging/*.cpp"  "src/core/state/*.cpp" "src/core/state/nodes/*.cpp" "src/c2/protocols/*.cpp" "src/c2/triggers/*.cpp" "src/c2/*.cpp" "src/io/*.cpp" ${SOCKET_SOURCES} ${TLS_SOURCES} "src/core/controller/*.cpp" "src/controllers/*.cpp" "src/core/*.cpp"  "src/core/repository/*.cpp" "src/core/yaml/*.cpp" "src/core/reporting/*.cpp"  "src/provenance/*.cpp" "src/utils/*.cpp" "src/*.cpp")
 
 if(WIN32)
-	if(CMAKE_SIZEOF_VOID_P EQUAL 8)
-		set(MC_COMPILER_SEARCH_PATH "$ENV{WindowsSdkVerBinPath}\\x64")
-	elseif(CMAKE_SIZEOF_VOID_P EQUAL 4)
-		set(MC_COMPILER_SEARCH_PATH "$ENV{WindowsSdkVerBinPath}\\x86")
-	else()
-		message(FATAL_ERROR "Could not determine architecture, CMAKE_SIZEOF_VOID_P is unexpected: ${CMAKE_SIZEOF_VOID_P}")
-	endif()
-	find_program(CMAKE_MC_COMPILER mc.exe
-					HINTS "${MC_COMPILER_SEARCH_PATH}"
-					DOC "path to message compiler")
-	if(NOT CMAKE_MC_COMPILER)
-		message(FATAL_ERROR "Failed to find message compiler (mc.exe)")
-	endif()
-	message("CMAKE_MC_COMPILER is ${CMAKE_MC_COMPILER}")
+	include(FindMessageCompiler)
+	find_package(MessageCompiler REQUIRED)
 	add_custom_target(message-strings
 						COMMAND "${CMAKE_MC_COMPILER}" -U "${CMAKE_CURRENT_SOURCE_DIR}/src/core/logging/WindowsMessageTextFile.mc" -h "${CMAKE_CURRENT_BINARY_DIR}/include/core/logging" -r "${CMAKE_CURRENT_BINARY_DIR}/src/core/logging"
 						DEPENDS "src/core/logging/WindowsMessageTextFile.mc"
