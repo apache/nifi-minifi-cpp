@@ -299,7 +299,6 @@ void QueryDatabaseTable::initialize() {
 void QueryDatabaseTable::processOnSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
   initOutputFormat(context);
 
-
   context->getProperty(s_tableName.getName(), tableName_);
   context->getProperty(s_columnNames.getName(), columnNames_);
 
