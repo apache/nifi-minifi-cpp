@@ -27,6 +27,7 @@
 #include "core/ProcessSession.h"
 #include "services/DatabaseService.h"
 #include "SQLProcessor.h"
+#include "OutputFormat.h"
 
 #include <sstream>
 
@@ -37,7 +38,7 @@ namespace minifi {
 namespace processors {
 
 //! ExecuteSQL Class
-class ExecuteSQL: public SQLProcessor<ExecuteSQL> {
+class ExecuteSQL: public SQLProcessor<ExecuteSQL>, public OutputFormat {
  public:
   explicit ExecuteSQL(const std::string& name, utils::Identifier uuid = utils::Identifier());
   virtual ~ExecuteSQL();

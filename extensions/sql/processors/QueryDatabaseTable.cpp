@@ -290,15 +290,17 @@ QueryDatabaseTable::~QueryDatabaseTable() {
 
 void QueryDatabaseTable::initialize() {
   //! Set the supported properties
-  setSupportedProperties( { s_dbControllerService, s_tableName, s_columnNames, s_maxValueColumnNames, s_whereClause, s_sqlQuery, s_maxRowsPerFlowFile, s_stateDirectory });
+  setSupportedProperties( { dbControllerService(), outputFormat(), s_tableName, s_columnNames, s_maxValueColumnNames, s_whereClause, s_sqlQuery, s_maxRowsPerFlowFile, s_stateDirectory});
 
   //! Set the supported relationships
   setSupportedRelationships( { s_success });
 }
 
 void QueryDatabaseTable::processOnSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
-  context->getProperty(s_tableName.getName(), tableName_);
+  initOutputFormat(context);
 
+
+  context->getProperty(s_tableName.getName(), tableName_);
   context->getProperty(s_columnNames.getName(), columnNames_);
 
   context->getProperty(s_maxValueColumnNames.getName(), maxValueColumnNames_);
@@ -378,7 +380,7 @@ void QueryDatabaseTable::processOnTrigger(const std::shared_ptr<core::ProcessCon
   int count = 0;
   size_t rowCount = 0;
   sql::MaxCollector maxCollector(selectQuery, maxValueColumnNames_, mapState_);
-  sql::JSONSQLWriter sqlWriter;
+  sql::JSONSQLWriter sqlWriter(isJSONPretty());
   sql::SQLRowsetProcessor sqlRowsetProcessor(rowset, {&sqlWriter, &maxCollector});
 
   // Process rowset.

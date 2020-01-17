@@ -27,6 +27,7 @@
 #include "core/ProcessSession.h"
 #include "services/DatabaseService.h"
 #include "SQLProcessor.h"
+#include "OutputFormat.h"
 
 #include <sstream>
 #include <unordered_map>
@@ -40,7 +41,7 @@ namespace processors {
 class State;
 
 //! QueryDatabaseTable Class
-class QueryDatabaseTable: public SQLProcessor<QueryDatabaseTable> {
+class QueryDatabaseTable: public SQLProcessor<QueryDatabaseTable>, public OutputFormat {
  public:
   explicit QueryDatabaseTable(const std::string& name, utils::Identifier uuid = utils::Identifier());
   virtual ~QueryDatabaseTable();

@@ -29,8 +29,8 @@ namespace nifi {
 namespace minifi {
 namespace sql {
 
-JSONSQLWriter::JSONSQLWriter()
-  : jsonPayload_(rapidjson::kArrayType) {
+JSONSQLWriter::JSONSQLWriter(bool pretty)
+  : pretty_(pretty), jsonPayload_(rapidjson::kArrayType) {
 }
 
 JSONSQLWriter::~JSONSQLWriter() {}
@@ -82,8 +82,14 @@ rapidjson::Value JSONSQLWriter::toJSONString(const std::string& s) {
 
 std::string JSONSQLWriter::toString() {
   rapidjson::StringBuffer buffer;
-  rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(buffer);
-  jsonPayload_.Accept(writer);
+
+  if (pretty_) {
+    rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(buffer);
+    jsonPayload_.Accept(writer);
+  } else {
+    rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+    jsonPayload_.Accept(writer);
+  }
 
   std::stringstream outputStream;
   outputStream << buffer.GetString();

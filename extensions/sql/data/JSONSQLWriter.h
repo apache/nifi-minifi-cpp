@@ -30,7 +30,7 @@ namespace sql {
 
 class JSONSQLWriter: public SQLWriter {
  public:
-  JSONSQLWriter();
+  JSONSQLWriter(bool pretty);
   virtual ~JSONSQLWriter();
 
   std::string toString() override;
@@ -51,6 +51,7 @@ private:
   rapidjson::Value toJSONString(const std::string& s);
 
  private:
+  bool pretty_;
   rapidjson::Document jsonPayload_;
   rapidjson::Value jsonRow_;
 };

@@ -1,6 +1,6 @@
 /**
- * @file ExecuteSQL.h
- * ExecuteSQL class declaration
+ * @file SQLProcessor.h
+ * SQLProcessor class declaration
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -40,10 +40,10 @@ class SQLProcessor: public core::Processor {
   }
 
   void onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& sessionFactory) override {
-    std::string dbControllerService;
-    context->getProperty(s_dbControllerService.getName(), dbControllerService);
+    std::string controllerService;
+    context->getProperty(dbControllerService().getName(), controllerService);
 
-    dbService_ = std::dynamic_pointer_cast<sql::controllers::DatabaseService>(context->getControllerService(dbControllerService));
+    dbService_ = std::dynamic_pointer_cast<sql::controllers::DatabaseService>(context->getControllerService(controllerService));
     if (!dbService_)
       throw minifi::Exception(PROCESSOR_EXCEPTION, "'DB Controller Service' must be defined");
 
@@ -81,16 +81,21 @@ class SQLProcessor: public core::Processor {
   }
 
  protected:
-   static const core::Property s_dbControllerService;
+   static const core::Property& dbControllerService() {
+     static const core::Property s_dbControllerService = 
+       core::PropertyBuilder::createProperty("DB Controller Service")->
+       isRequired(true)->
+       withDescription("Database Controller Service.")->
+       supportsExpressionLanguage(true)->
+       build();
+     return s_dbControllerService;
+   }
 
    std::shared_ptr<logging::Logger> logger_;
    std::shared_ptr<sql::controllers::DatabaseService> dbService_;
    std::unique_ptr<sql::Connection> connection_;
    std::mutex onTriggerMutex_;
 };
-
-template <typename T>
-const core::Property SQLProcessor<T>::s_dbControllerService = core::PropertyBuilder::createProperty("DB Controller Service")->isRequired(true)->withDescription("Database Controller Service.")->supportsExpressionLanguage(true)->build();
 
 } /* namespace processors */
 } /* namespace minifi */

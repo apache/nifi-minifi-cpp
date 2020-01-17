@@ -67,7 +67,7 @@ PutSQL::~PutSQL() {
 
 void PutSQL::initialize() {
   //! Set the supported properties
-  setSupportedProperties( { s_dbControllerService, s_sqlStatements });
+  setSupportedProperties( { dbControllerService(), s_sqlStatements });
 
   //! Set the supported relationships
   setSupportedRelationships( { s_success });

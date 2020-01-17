@@ -75,13 +75,15 @@ ExecuteSQL::~ExecuteSQL() {
 
 void ExecuteSQL::initialize() {
   //! Set the supported properties
-  setSupportedProperties( { s_dbControllerService, s_sqlSelectQuery, s_maxRowsPerFlowFile });
+  setSupportedProperties( { dbControllerService(), outputFormat(), s_sqlSelectQuery, s_maxRowsPerFlowFile});
 
   //! Set the supported relationships
   setSupportedRelationships( { s_success });
 }
 
 void ExecuteSQL::processOnSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
+  initOutputFormat(context);
+
   context->getProperty(s_sqlSelectQuery.getName(), sqlSelectQuery_);
   context->getProperty(s_maxRowsPerFlowFile.getName(), max_rows_);
 }
@@ -93,8 +95,8 @@ void ExecuteSQL::processOnTrigger(const std::shared_ptr<core::ProcessContext> &c
 
   int count = 0;
   size_t rowCount = 0;
-  sql::JSONSQLWriter jsonSQLWriter;
-  sql::SQLRowsetProcessor sqlRowsetProcessor(rowset, { &jsonSQLWriter });
+  sql::JSONSQLWriter sqlWriter(isJSONPretty());
+  sql::SQLRowsetProcessor sqlRowsetProcessor(rowset, { &sqlWriter });
 
   // Process rowset.
   do {
@@ -103,7 +105,7 @@ void ExecuteSQL::processOnTrigger(const std::shared_ptr<core::ProcessContext> &c
     if (rowCount == 0)
       break;
 
-    const auto& output = jsonSQLWriter.toString();
+    const auto& output = sqlWriter.toString();
     if (!output.empty()) {
       WriteCallback writer(output.data(), output.size());
       auto newflow = session->create();
