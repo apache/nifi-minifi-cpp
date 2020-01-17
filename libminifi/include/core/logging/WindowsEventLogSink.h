@@ -45,9 +45,9 @@ class windowseventlog_sink : public spdlog::sinks::base_sink<spdlog::details::nu
   WORD type_from_level(const spdlog::details::log_msg& msg) const;
 
   protected:
-   void _sink_it(const spdlog::details::log_msg& msg) override;
+   virtual void _sink_it(const spdlog::details::log_msg& msg);
 
-   void _flush() override;
+   virtual void _flush();
 
   public:
    windowseventlog_sink(const std::string& source_name = "ApacheNiFiMiNiFi");
@@ -59,12 +59,13 @@ class windowseventlog_sink : public spdlog::sinks::base_sink<spdlog::details::nu
    windowseventlog_sink(windowseventlog_sink&&) = delete;
    windowseventlog_sink& operator=(windowseventlog_sink&&) = delete;
 };
-}
-}
-}
-}
-}
-}
-}
+
+}  // namespace internal
+}  // namespace logging
+}  // namespace core
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
 
 #endif
