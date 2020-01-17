@@ -1,7 +1,4 @@
 /**
- * @file OutputFormat.h
- * OutputFormat class declaration
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -18,12 +15,7 @@
  * limitations under the License.
  */
 
-#pragma once
-
-#include "core/Core.h"
-#include "core/Processor.h"
-
-#include <string>
+#include "OutputFormat.h"
 
 namespace org {
 namespace apache {
@@ -31,22 +23,32 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-class OutputFormat {
- protected:
-  static constexpr const char* const s_outputFormatJSON = "JSON";
-  static constexpr const char* const s_outputFormatJSONPretty = "JSON-Pretty";
+const char* const OutputFormat::s_outputFormatJSON;
+const char* const OutputFormat::s_outputFormatJSONPretty;
 
-  static const core::Property& outputFormat();
+const core::Property& OutputFormat::outputFormat() {
+  static const core::Property s_outputFormat =
+      core::PropertyBuilder::createProperty("Output Format")->
+          isRequired(true)->
+          withDefaultValue(s_outputFormatJSONPretty)->
+          withAllowableValues<std::string>({ s_outputFormatJSON, s_outputFormatJSONPretty })->
+          withDescription("Set the output format type.")->
+          build();
 
-  bool isJSONFormat() const;
+  return s_outputFormat;
+}
 
-  bool isJSONPretty() const;
+bool OutputFormat::isJSONFormat() const {
+  return outputFormat_ == s_outputFormatJSON || outputFormat_ == s_outputFormatJSONPretty;
+}
 
-  void initOutputFormat(const std::shared_ptr<core::ProcessContext>& context);
+bool OutputFormat::isJSONPretty() const {
+  return outputFormat_ == s_outputFormatJSONPretty;
+}
 
- protected:
-   std::string outputFormat_;
-};
+void OutputFormat::initOutputFormat(const std::shared_ptr<core::ProcessContext>& context) {
+  context->getProperty(outputFormat().getName(), outputFormat_);
+}
 
 } /* namespace processors */
 } /* namespace minifi */
