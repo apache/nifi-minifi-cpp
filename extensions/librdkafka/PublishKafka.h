@@ -105,7 +105,7 @@ class PublishKafka : public core::Processor {
   static core::Property KerberosKeytabPath;
   static core::Property MessageKeyField;
   static core::Property DebugContexts;
-  static const core::Property DropEmptyFlowFiles;
+  static const core::Property FailEmptyFlowFiles;
 
   // Supported Relationships
   static core::Relationship Failure;
@@ -195,7 +195,7 @@ class PublishKafka : public core::Processor {
       });
     }
 
-    rd_kafka_headers_s* make_headers() const {
+    utils::owner<rd_kafka_headers_s*> make_headers() const {
       rd_kafka_headers_s* const result = rd_kafka_headers_new(8);
       for (const auto& kv : flowFile_->getAttributes()) {
         if(attributeNameRegex_.match(kv.first)) {
@@ -206,8 +206,6 @@ class PublishKafka : public core::Processor {
     }
 
     rd_kafka_resp_err_t produce(const size_t segment_num, std::vector<unsigned char>& buffer, const size_t buflen) const {
-      rd_kafka_resp_err_t err{};
-
       const auto messages_copy = this->messages_;
       const auto flow_file_index_copy = this->flow_file_index_;
       const auto produce_callback = [messages_copy, flow_file_index_copy, segment_num](rd_kafka_t * /*rk*/, const rd_kafka_message_t *rkmessage) {
@@ -223,18 +221,18 @@ class PublishKafka : public core::Processor {
       allocate_message_object(segment_num);
 
       if (hdrs) {
-        rd_kafka_headers_t * const hdrs_copy = rd_kafka_headers_copy(hdrs);
-        err = rd_kafka_producev(rk_, RD_KAFKA_V_RKT(rkt_), RD_KAFKA_V_PARTITION(RD_KAFKA_PARTITION_UA), RD_KAFKA_V_MSGFLAGS(RD_KAFKA_MSG_F_COPY), RD_KAFKA_V_VALUE(buffer.data(), buflen),
-                                RD_KAFKA_V_HEADERS(hdrs_copy), RD_KAFKA_V_KEY(key_.c_str(), key_.size()), RD_KAFKA_V_OPAQUE(callback_ptr.release()), RD_KAFKA_V_END);
+        const utils::owner<rd_kafka_headers_t*> hdrs_copy = rd_kafka_headers_copy(hdrs);
+        const auto err = rd_kafka_producev(rk_, RD_KAFKA_V_RKT(rkt_), RD_KAFKA_V_PARTITION(RD_KAFKA_PARTITION_UA), RD_KAFKA_V_MSGFLAGS(RD_KAFKA_MSG_F_COPY), RD_KAFKA_V_VALUE(buffer.data(), buflen),
+                                           RD_KAFKA_V_HEADERS(hdrs_copy), RD_KAFKA_V_KEY(key_.c_str(), key_.size()), RD_KAFKA_V_OPAQUE(callback_ptr.release()), RD_KAFKA_V_END);
         if (err) {
           // the message only takes ownership of the headers in case of success
           rd_kafka_headers_destroy(hdrs_copy);
         }
+        return err;
       } else {
-        err = rd_kafka_producev(rk_, RD_KAFKA_V_RKT(rkt_), RD_KAFKA_V_PARTITION(RD_KAFKA_PARTITION_UA), RD_KAFKA_V_MSGFLAGS(RD_KAFKA_MSG_F_COPY), RD_KAFKA_V_VALUE(buffer.data(), buflen),
+        return rd_kafka_producev(rk_, RD_KAFKA_V_RKT(rkt_), RD_KAFKA_V_PARTITION(RD_KAFKA_PARTITION_UA), RD_KAFKA_V_MSGFLAGS(RD_KAFKA_MSG_F_COPY), RD_KAFKA_V_VALUE(buffer.data(), buflen),
                                 RD_KAFKA_V_KEY(key_.c_str(), key_.size()), RD_KAFKA_V_OPAQUE(callback_ptr.release()), RD_KAFKA_V_END);
       }
-      return err;
     }
 
    public:
@@ -245,7 +243,8 @@ class PublishKafka : public core::Processor {
                  std::shared_ptr<core::FlowFile> flowFile,
                  utils::Regex &attributeNameRegex,
                  std::shared_ptr<Messages> messages,
-                 const size_t flow_file_index)
+                 const size_t flow_file_index,
+                 const bool fail_empty_flow_files)
         : flowFile_(std::move(flowFile)),
           flow_size_(flowFile_->getSize()),
           max_seg_size_(max_seg_size == 0 || flow_size_ < max_seg_size ? flow_size_ : max_seg_size),
@@ -257,40 +256,37 @@ class PublishKafka : public core::Processor {
           flow_file_index_(flow_file_index),
           status_(0),
           read_size_(0),
-          attributeNameRegex_(attributeNameRegex)
+          attributeNameRegex_(attributeNameRegex),
+          fail_empty_flow_files_(fail_empty_flow_files)
     { }
 
     ~ReadCallback() {
-      if (hdrs) {
-        rd_kafka_headers_destroy(hdrs);
-      }
+      rd_kafka_headers_destroy(hdrs);
     }
 
     int64_t process(const std::shared_ptr<io::BaseStream> stream) {
       std::vector<unsigned char> buffer;
+
       buffer.resize(max_seg_size_);
       read_size_ = 0;
       status_ = 0;
-      rd_kafka_resp_err_t err;
-
       called_ = true;
 
-      size_t segment_num = 0U;
-
-      assert(flow_size_ == 0 || max_seg_size_ != 0 && "at this point, max_seg_size_ is only zero if flow_size_ is zero");
+      assert(max_seg_size_ != 0 || flow_size_ == 0 && "max_seg_size_ == 0 implies flow_size_ == 0");
+      // ^^ therefore checking max_seg_size_ == 0 handles both division by zero and flow_size_ == 0 cases
       const size_t reserved_msg_capacity = max_seg_size_ == 0 ? 1 : utils::intdiv_ceil(flow_size_, max_seg_size_);
       messages_->modifyResult(flow_file_index_, [reserved_msg_capacity](FlowFileResult& flow_file) {
         flow_file.messages.reserve(reserved_msg_capacity);
       });
 
-      // If the flow file is empty, we still want to send an empty segment with the headers
-      if (flow_size_ == 0) {
+      // If the flow file is empty, we still want to send the message, unless the user wants to fail_empty_flow_files_
+      if (flow_size_ == 0 && !fail_empty_flow_files_) {
         produce(0, buffer, 0);
         return 0;
       }
 
-      while (read_size_ < flow_size_) {
-        int readRet = stream->read(buffer.data(), buffer.size());
+      for (size_t segment_num = 0; read_size_ < flow_size_; ++segment_num) {
+        const int readRet = stream->read(buffer.data(), buffer.size());
         if (readRet < 0) {
           status_ = -1;
           error_ = "Failed to read from stream";
@@ -299,7 +295,7 @@ class PublishKafka : public core::Processor {
 
         if (readRet <= 0) { break; }
 
-        err = produce(segment_num, buffer, readRet);
+        const auto err = produce(segment_num, buffer, readRet);
         if (err) {
           messages_->modifyResult(flow_file_index_, [segment_num, err](FlowFileResult& flow_file) {
             auto& message = flow_file.messages.at(segment_num);
@@ -311,7 +307,6 @@ class PublishKafka : public core::Processor {
           return read_size_;
         }
         read_size_ += readRet;
-        segment_num++;
       }
       return read_size_;
     }
@@ -322,7 +317,7 @@ class PublishKafka : public core::Processor {
     const std::string key_;
     rd_kafka_topic_t * const rkt_ = nullptr;
     rd_kafka_t * const rk_ = nullptr;
-    rd_kafka_headers_t * const hdrs = nullptr;
+    const utils::owner<rd_kafka_headers_t*> hdrs = nullptr;
     const std::shared_ptr<Messages> messages_;
     const size_t flow_file_index_;
     int status_ = 0;
@@ -330,6 +325,7 @@ class PublishKafka : public core::Processor {
     int read_size_ = 0;
     utils::Regex& attributeNameRegex_;
     bool called_ = false;
+    const bool fail_empty_flow_files_ = true;
   };
 
  public:

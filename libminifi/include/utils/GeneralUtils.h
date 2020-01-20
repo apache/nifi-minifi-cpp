@@ -39,6 +39,9 @@ T intdiv_ceil(T numerator, T denominator) {
   return numerator / denominator + (numerator % denominator > 0);
 }
 
+template <typename T, typename std::enable_if<std::is_pointer<T>::value>::type* = nullptr>
+using owner = T;
+
 } /* namespace utils */
 } /* namespace minifi */
 } /* namespace nifi */

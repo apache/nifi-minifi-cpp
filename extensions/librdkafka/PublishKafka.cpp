@@ -99,14 +99,13 @@ core::Property PublishKafka::MessageKeyField("Message Key Field", "The name of a
                                              "");
 core::Property PublishKafka::DebugContexts("Debug contexts", "A comma-separated list of debug contexts to enable."
                                            "Including: generic, broker, topic, metadata, feature, queue, msg, protocol, cgrp, security, fetch, interceptor, plugin, consumer, admin, eos, all", "");
-const core::Property PublishKafka::DropEmptyFlowFiles(
-    core::PropertyBuilder::createProperty("Drop empty flow files")
-        ->withDescription("Keep backwards compatibility with <=0.7.0 bug which caused flow files with empty content to not be published to Kafka. The old behavior is deprecated. Use connections "
-                          "to drop empty flow files!")
+const core::Property PublishKafka::FailEmptyFlowFiles(
+    core::PropertyBuilder::createProperty("Fail empty flow files")
+        ->withDescription("Keep backwards compatibility with <=0.7.0 bug which caused flow files with empty content to not be published to Kafka and forwarded to failure. The old behavior is "
+                          "deprecated. Use connections to drop empty flow files!")
         ->isRequired(false)
         ->withDefaultValue<bool>(true)
-        ->build()
-);
+        ->build());
 
 core::Relationship PublishKafka::Success("success", "Any FlowFile that is successfully sent to Kafka will be routed to this Relationship");
 core::Relationship PublishKafka::Failure("failure", "Any FlowFile that cannot be sent to Kafka will be routed to this Relationship");
@@ -139,7 +138,7 @@ void PublishKafka::initialize() {
   properties.insert(KerberosKeytabPath);
   properties.insert(MessageKeyField);
   properties.insert(DebugContexts);
-  properties.insert(DropEmptyFlowFiles);
+  properties.insert(FailEmptyFlowFiles);
   setSupportedProperties(properties);
   // Set the supported relationships
   std::set<core::Relationship> relationships;
@@ -644,18 +643,23 @@ void PublishKafka::onTrigger(const std::shared_ptr<core::ProcessContext> &contex
       continue;
     }
 
+    bool failEmptyFlowFiles = true;
+    context->getProperty(FailEmptyFlowFiles.getName(), failEmptyFlowFiles);
+
     PublishKafka::ReadCallback callback(max_flow_seg_size, kafkaKey, thisTopic->getTopic(), conn->getConnection(), flowFile,
-                                        attributeNameRegex, messages, flow_file_index);
+                                        attributeNameRegex, messages, flow_file_index, failEmptyFlowFiles);
     session->read(flowFile, &callback);
 
-    bool dropEmptyFlowFiles;
-    if (!callback.called_ && context->getProperty(DropEmptyFlowFiles.getName(), dropEmptyFlowFiles) && !dropEmptyFlowFiles) {
-      // workaround: call callback since ProcessSession doesn't do so for empty flow files
-      logger_->log_debug("ReadCallback workaround on empty flow file, because DropEmptyFlowFiles is false, uuid: %s", flowFile->getUUIDStr());
+    if (!callback.called_) {
+      // workaround: call callback since ProcessSession doesn't do so for empty flow files without resource claims
       callback.process(nullptr);
     }
-    if (!callback.called_ && dropEmptyFlowFiles) {
-      logger_->log_info("Deprecated behavior, use connections to drop empty flow files! Dropped empty flow file with uuid: %s", flowFile->getUUIDStr());
+
+    if (flowFile->getSize() == 0 && failEmptyFlowFiles) {
+      logger_->log_debug("Deprecated behavior, use connections to drop empty flow files! Failing empty flow file with uuid: %s", flowFile->getUUIDStr());
+      messages->modifyResult(flow_file_index, [](FlowFileResult& flow_file_result) {
+        flow_file_result.flow_file_error = true;
+      });
     }
 
     if (callback.status_ < 0) {
