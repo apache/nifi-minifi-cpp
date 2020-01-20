@@ -1,6 +1,5 @@
 /**
- * @file ScopeGuard.h
- * Exception class declaration
+ * @file GeneralUtils.h
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -17,10 +16,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __SCOPE_GUARD_H__
-#define __SCOPE_GUARD_H__
+#ifndef LIBMINIFI_INCLUDE_UTILS_GENERAL_UTILS_H
+#define LIBMINIFI_INCLUDE_UTILS_GENERAL_UTILS_H
 
-#include <functional>
+#include <memory>
+#include <type_traits>
 
 namespace org {
 namespace apache {
@@ -28,39 +28,20 @@ namespace nifi {
 namespace minifi {
 namespace utils {
 
-class ScopeGuard {
- private:
-  bool enabled_;
-  std::function<void()> func_;
+template<typename T, typename... Args>
+std::unique_ptr<T> make_unique(Args&&... args) {
+  return std::unique_ptr<T>{ new T{ std::forward<Args>(args)... } };
+}
 
- public:
-  explicit ScopeGuard(std::function<void()>&& func)
-    : enabled_(true)
-    , func_(std::move(func)) {
-  }
-
-  ~ScopeGuard() {
-    if (enabled_) {
-      try {
-        func_();
-      } catch (...) {
-      }
-    }
-  }
-
-  ScopeGuard(const ScopeGuard&) = delete;
-  ScopeGuard(ScopeGuard&&) = delete;
-  ScopeGuard& operator=(const ScopeGuard&) = delete;
-  ScopeGuard& operator=(ScopeGuard&&) = delete;
-
-  void disable() {
-    enabled_ = false;
-  }
-};
+template<typename T, typename std::enable_if<std::is_integral<T>::value>::type* = nullptr>
+T intdiv_ceil(T numerator, T denominator) {
+  // note: division and remainder is 1 instruction on x86
+  return numerator / denominator + (numerator % denominator > 0);
+}
 
 } /* namespace utils */
 } /* namespace minifi */
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-#endif
+#endif /* LIBMINIFI_INCLUDE_UTILS_GENERAL_UTILS_H */
