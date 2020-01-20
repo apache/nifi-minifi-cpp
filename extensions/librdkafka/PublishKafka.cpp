@@ -18,7 +18,7 @@
  * limitations under the License.
  */
 #include "PublishKafka.h"
-#include <stdio.h>
+#include <cstdio>
 #include <algorithm>
 #include <memory>
 #include <string>
@@ -99,6 +99,13 @@ core::Property PublishKafka::MessageKeyField("Message Key Field", "The name of a
                                              "");
 core::Property PublishKafka::DebugContexts("Debug contexts", "A comma-separated list of debug contexts to enable."
                                            "Including: generic, broker, topic, metadata, feature, queue, msg, protocol, cgrp, security, fetch, interceptor, plugin, consumer, admin, eos, all", "");
+const core::Property PublishKafka::FailEmptyFlowFiles(
+    core::PropertyBuilder::createProperty("Fail empty flow files")
+        ->withDescription("Keep backwards compatibility with <=0.7.0 bug which caused flow files with empty content to not be published to Kafka and forwarded to failure. The old behavior is "
+                          "deprecated. Use connections to drop empty flow files!")
+        ->isRequired(false)
+        ->withDefaultValue<bool>(true)
+        ->build());
 
 core::Relationship PublishKafka::Success("success", "Any FlowFile that is successfully sent to Kafka will be routed to this Relationship");
 core::Relationship PublishKafka::Failure("failure", "Any FlowFile that cannot be sent to Kafka will be routed to this Relationship");
@@ -131,6 +138,7 @@ void PublishKafka::initialize() {
   properties.insert(KerberosKeytabPath);
   properties.insert(MessageKeyField);
   properties.insert(DebugContexts);
+  properties.insert(FailEmptyFlowFiles);
   setSupportedProperties(properties);
   // Set the supported relationships
   std::set<core::Relationship> relationships;
@@ -159,12 +167,11 @@ void PublishKafka::messageDeliveryCallback(rd_kafka_t* rk, const rd_kafka_messag
   if (rkmessage->_private == nullptr) {
     return;
   }
-  std::function<void(rd_kafka_t*, const rd_kafka_message_t*)>* func =
-    reinterpret_cast<std::function<void(rd_kafka_t*, const rd_kafka_message_t*)>*>(rkmessage->_private);
+  // allocated in PublishKafka::ReadCallback::produce
+  auto* func = reinterpret_cast<std::function<void(rd_kafka_t*, const rd_kafka_message_t*)>*>(rkmessage->_private);
   try {
     (*func)(rk, rkmessage);
-  } catch (...) {
-  }
+  } catch (...) { }
   delete func;
 }
 
@@ -172,7 +179,7 @@ bool PublishKafka::configureNewConnection(const std::shared_ptr<KafkaConnection>
   std::string value;
   int64_t valInt;
   std::string valueConf;
-  std::array<char, 512U> errstr;
+  std::array<char, 512U> errstr{};
   rd_kafka_conf_res_t result;
 
   rd_kafka_conf_t* conf_ = rd_kafka_conf_new();
@@ -361,17 +368,17 @@ bool PublishKafka::configureNewConnection(const std::shared_ptr<KafkaConnection>
   const auto &dynamic_prop_keys = context->getDynamicPropertyKeys();
   logger_->log_info("PublishKafka registering %d librdkafka dynamic properties", dynamic_prop_keys.size());
 
-  for (const auto &key : dynamic_prop_keys) {
+  for (const auto &prop_key : dynamic_prop_keys) {
     value = "";
-    if (context->getDynamicProperty(key, value) && !value.empty()) {
-      logger_->log_debug("PublishKafka: DynamicProperty: [%s] -> [%s]", key, value);
-      result = rd_kafka_conf_set(conf_, key.c_str(), value.c_str(), errstr.data(), errstr.size());
+    if (context->getDynamicProperty(prop_key, value) && !value.empty()) {
+      logger_->log_debug("PublishKafka: DynamicProperty: [%s] -> [%s]", prop_key, value);
+      result = rd_kafka_conf_set(conf_, prop_key.c_str(), value.c_str(), errstr.data(), errstr.size());
       if (result != RD_KAFKA_CONF_OK) {
         logger_->log_error("PublishKafka: configure error result [%s]", errstr.data());
         return false;
       }
     } else {
-      logger_->log_warn("PublishKafka Dynamic Property '%s' is empty and therefore will not be configured", key);
+      logger_->log_warn("PublishKafka Dynamic Property '%s' is empty and therefore will not be configured", prop_key);
     }
   }
 
@@ -408,7 +415,7 @@ bool PublishKafka::createNewTopic(const std::shared_ptr<KafkaConnection> &conn, 
 
   rd_kafka_conf_res_t result;
   std::string value;
-  std::array<char, 512U> errstr;
+  std::array<char, 512U> errstr{};
   int64_t valInt;
   std::string valueConf;
 
@@ -636,9 +643,25 @@ void PublishKafka::onTrigger(const std::shared_ptr<core::ProcessContext> &contex
       continue;
     }
 
-    PublishKafka::ReadCallback callback(max_flow_seg_size, kafkaKey, thisTopic->getTopic(), conn->getConnection(), flowFile,
-                                        attributeNameRegex, messages, flow_file_index);
+    bool failEmptyFlowFiles = true;
+    context->getProperty(FailEmptyFlowFiles.getName(), failEmptyFlowFiles);
+
+    PublishKafka::ReadCallback callback(max_flow_seg_size, kafkaKey, thisTopic->getTopic(), conn->getConnection(), *flowFile,
+                                        attributeNameRegex, messages, flow_file_index, failEmptyFlowFiles);
     session->read(flowFile, &callback);
+
+    if (!callback.called_) {
+      // workaround: call callback since ProcessSession doesn't do so for empty flow files without resource claims
+      callback.process(nullptr);
+    }
+
+    if (flowFile->getSize() == 0 && failEmptyFlowFiles) {
+      logger_->log_debug("Deprecated behavior, use connections to drop empty flow files! Failing empty flow file with uuid: %s", flowFile->getUUIDStr());
+      messages->modifyResult(flow_file_index, [](FlowFileResult& flow_file_result) {
+        flow_file_result.flow_file_error = true;
+      });
+    }
+
     if (callback.status_ < 0) {
       logger_->log_error("Failed to send flow to kafka topic %s, error: %s", topic, callback.error_);
       messages->modifyResult(flow_file_index, [](FlowFileResult& flow_file_result) {
@@ -659,9 +682,6 @@ void PublishKafka::onTrigger(const std::shared_ptr<core::ProcessContext> &contex
     bool success;
     if (flow_file.flow_file_error) {
       success = false;
-    } else if (flow_file.messages.empty()) {
-      success = false;
-      logger_->log_error("Assertion error: no messages found for flow file %s", flowFiles[index]->getUUIDStr());
     } else {
       success = true;
       for (size_t segment_num = 0; segment_num < flow_file.messages.size(); segment_num++) {

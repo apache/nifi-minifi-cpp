@@ -37,6 +37,8 @@
 #include <mutex>
 #include <cstdint>
 #include <condition_variable>
+#include <utility>
+#include <utils/GeneralUtils.h>
 
 namespace org {
 namespace apache {
@@ -67,16 +69,16 @@ class PublishKafka : public core::Processor {
    * Create a new processor
    */
   explicit PublishKafka(std::string name, utils::Identifier uuid = utils::Identifier())
-      : core::Processor(name, uuid),
+      : core::Processor(std::move(name), uuid),
         connection_pool_(5),
         logger_(logging::LoggerFactory<PublishKafka>::getLogger()),
         interrupted_(false) {
   }
-  // Destructor
-  virtual ~PublishKafka() {
-  }
-  // Processor Name
+
+  virtual ~PublishKafka() = default;
+
   static constexpr char const* ProcessorName = "PublishKafka";
+
   // Supported Properties
   static core::Property SeedBrokers;
   static core::Property Topic;
@@ -103,6 +105,7 @@ class PublishKafka : public core::Processor {
   static core::Property KerberosKeytabPath;
   static core::Property MessageKeyField;
   static core::Property DebugContexts;
+  static const core::Property FailEmptyFlowFiles;
 
   // Supported Relationships
   static core::Relationship Failure;
@@ -116,30 +119,20 @@ class PublishKafka : public core::Processor {
   };
 
   struct MessageResult {
-    MessageStatus status;
-    rd_kafka_resp_err_t err_code;
-
-    MessageResult()
-        : status(MessageStatus::MESSAGESTATUS_UNCOMPLETE) {
-    }
+    MessageStatus status = MessageStatus::MESSAGESTATUS_UNCOMPLETE;
+    rd_kafka_resp_err_t err_code = RD_KAFKA_RESP_ERR_UNKNOWN;
   };
+
   struct FlowFileResult {
-    bool flow_file_error;
+    bool flow_file_error = false;
     std::vector<MessageResult> messages;
-
-    FlowFileResult()
-        : flow_file_error(false) {
-    }
   };
+
   struct Messages {
     std::mutex mutex;
     std::condition_variable cv;
     std::vector<FlowFileResult> flow_files;
-    bool interrupted;
-
-    Messages()
-        : interrupted(false) {
-    }
+    bool interrupted = false;
 
     void waitForCompletion() {
       std::unique_lock<std::mutex> lock(mutex);
@@ -194,120 +187,142 @@ class PublishKafka : public core::Processor {
   // Nest Callback Class for read stream
   class ReadCallback : public InputStreamCallback {
    public:
-    ReadCallback(uint64_t max_seg_size,
-                 const std::string &key,
-                 rd_kafka_topic_t *rkt,
-                 rd_kafka_t *rk,
-                 const std::shared_ptr<core::FlowFile> flowFile,
-                 utils::Regex &attributeNameRegex,
-                 std::shared_ptr<Messages> messages,
-                 size_t flow_file_index)
-        : max_seg_size_(max_seg_size),
-          key_(key),
-          rkt_(rkt),
-          rk_(rk),
-          flowFile_(flowFile),
-          messages_(std::move(messages)),
-          flow_file_index_(flow_file_index),
-          attributeNameRegex_(attributeNameRegex) {
-      flow_size_ = flowFile_->getSize();
-      status_ = 0;
-      read_size_ = 0;
-      hdrs = nullptr;
+    struct rd_kafka_headers_deleter {
+      void operator()(rd_kafka_headers_t* ptr) const noexcept {
+        rd_kafka_headers_destroy(ptr);
+      }
+    };
+
+    using rd_kafka_headers_unique_ptr = std::unique_ptr<rd_kafka_headers_t, rd_kafka_headers_deleter>;
+
+   private:
+    void allocate_message_object(const size_t segment_num) const {
+      messages_->modifyResult(flow_file_index_, [segment_num](FlowFileResult& flow_file) {
+        // allocate message object to be filled in by the callback in produce()
+        if (flow_file.messages.size() < segment_num + 1) {
+          flow_file.messages.resize(segment_num + 1);
+        }
+      });
     }
 
-    ~ReadCallback() {
-      if (hdrs) {
-        rd_kafka_headers_destroy(hdrs);
-      }
-    }
+    static rd_kafka_headers_unique_ptr make_headers(const core::FlowFile& flow_file, utils::Regex& attribute_name_regex) {
+      const utils::owner<rd_kafka_headers_t*> result{ rd_kafka_headers_new(8) };
+      if (!result) { throw std::bad_alloc{}; }
 
-    int64_t process(std::shared_ptr<io::BaseStream> stream) {
-      if (max_seg_size_ == 0U || flow_size_ < max_seg_size_) {
-        max_seg_size_ = flow_size_;
-      }
-      std::vector<unsigned char> buffer;
-      buffer.reserve(max_seg_size_);
-      read_size_ = 0;
-      status_ = 0;
-      rd_kafka_resp_err_t err;
-
-      for (auto kv : flowFile_->getAttributes()) {
-        if(attributeNameRegex_.match(kv.first)) {
-          if (!hdrs) {
-            hdrs = rd_kafka_headers_new(8);
-          }
-          err = rd_kafka_header_add(hdrs, kv.first.c_str(), kv.first.size(), kv.second.c_str(), kv.second.size());
+      for (const auto& kv : flow_file.getAttributes()) {
+        if(attribute_name_regex.match(kv.first)) {
+          rd_kafka_header_add(result, kv.first.c_str(), kv.first.size(), kv.second.c_str(), kv.second.size());
         }
       }
+      return rd_kafka_headers_unique_ptr{ result };
+    }
 
-      size_t segment_num = 0U;
-      while (read_size_ < flow_size_) {
-        int readRet = stream->read(&buffer[0], max_seg_size_);
+    rd_kafka_resp_err_t produce(const size_t segment_num, std::vector<unsigned char>& buffer, const size_t buflen) const {
+      const auto messages_copy = this->messages_;
+      const auto flow_file_index_copy = this->flow_file_index_;
+      const auto produce_callback = [messages_copy, flow_file_index_copy, segment_num](rd_kafka_t * /*rk*/, const rd_kafka_message_t *rkmessage) {
+        messages_copy->modifyResult(flow_file_index_copy, [segment_num, rkmessage](FlowFileResult &flow_file) {
+          auto &message = flow_file.messages.at(segment_num);
+          message.err_code = rkmessage->err;
+          message.status = message.err_code == 0 ? MessageStatus::MESSAGESTATUS_SUCCESS : MessageStatus::MESSAGESTATUS_ERROR;
+        });
+      };
+      // release()d below, deallocated in PublishKafka::messageDeliveryCallback
+      auto callback_ptr = utils::make_unique<std::function<void(rd_kafka_t*, const rd_kafka_message_t*)>>(std::move(produce_callback));
+
+      allocate_message_object(segment_num);
+
+      const utils::owner<rd_kafka_headers_t*> hdrs_copy = rd_kafka_headers_copy(hdrs.get());
+      const auto err = rd_kafka_producev(rk_, RD_KAFKA_V_RKT(rkt_), RD_KAFKA_V_PARTITION(RD_KAFKA_PARTITION_UA), RD_KAFKA_V_MSGFLAGS(RD_KAFKA_MSG_F_COPY), RD_KAFKA_V_VALUE(buffer.data(), buflen),
+                                         RD_KAFKA_V_HEADERS(hdrs_copy), RD_KAFKA_V_KEY(key_.c_str(), key_.size()), RD_KAFKA_V_OPAQUE(callback_ptr.release()), RD_KAFKA_V_END);
+      if (err) {
+        // the message only takes ownership of the headers in case of success
+        rd_kafka_headers_destroy(hdrs_copy);
+      }
+      return err;
+    }
+
+   public:
+    ReadCallback(const uint64_t max_seg_size,
+                 std::string key,
+                 rd_kafka_topic_t * const rkt,
+                 rd_kafka_t * const rk,
+                 const core::FlowFile& flowFile,
+                 utils::Regex &attributeNameRegex,
+                 std::shared_ptr<Messages> messages,
+                 const size_t flow_file_index,
+                 const bool fail_empty_flow_files)
+        : flow_size_(flowFile.getSize()),
+          max_seg_size_(max_seg_size == 0 || flow_size_ < max_seg_size ? flow_size_ : max_seg_size),
+          key_(std::move(key)),
+          rkt_(rkt),
+          rk_(rk),
+          hdrs(make_headers(flowFile, attributeNameRegex)),
+          messages_(std::move(messages)),
+          flow_file_index_(flow_file_index),
+          fail_empty_flow_files_(fail_empty_flow_files)
+    { }
+
+    int64_t process(const std::shared_ptr<io::BaseStream> stream) {
+      std::vector<unsigned char> buffer;
+
+      buffer.resize(max_seg_size_);
+      read_size_ = 0;
+      status_ = 0;
+      called_ = true;
+
+      assert(max_seg_size_ != 0 || flow_size_ == 0 && "max_seg_size_ == 0 implies flow_size_ == 0");
+      // ^^ therefore checking max_seg_size_ == 0 handles both division by zero and flow_size_ == 0 cases
+      const size_t reserved_msg_capacity = max_seg_size_ == 0 ? 1 : utils::intdiv_ceil(flow_size_, max_seg_size_);
+      messages_->modifyResult(flow_file_index_, [reserved_msg_capacity](FlowFileResult& flow_file) {
+        flow_file.messages.reserve(reserved_msg_capacity);
+      });
+
+      // If the flow file is empty, we still want to send the message, unless the user wants to fail_empty_flow_files_
+      if (flow_size_ == 0 && !fail_empty_flow_files_) {
+        produce(0, buffer, 0);
+        return 0;
+      }
+
+      for (size_t segment_num = 0; read_size_ < flow_size_; ++segment_num) {
+        const int readRet = stream->read(buffer.data(), buffer.size());
         if (readRet < 0) {
           status_ = -1;
           error_ = "Failed to read from stream";
           return read_size_;
         }
-        if (readRet > 0) {
-          messages_->modifyResult(flow_file_index_, [](FlowFileResult& flow_file) {
-            flow_file.messages.resize(flow_file.messages.size() + 1);
+
+        if (readRet <= 0) { break; }
+
+        const auto err = produce(segment_num, buffer, readRet);
+        if (err) {
+          messages_->modifyResult(flow_file_index_, [segment_num, err](FlowFileResult& flow_file) {
+            auto& message = flow_file.messages.at(segment_num);
+            message.status = MessageStatus::MESSAGESTATUS_ERROR;
+            message.err_code = err;
           });
-          auto messages_copy = this->messages_;
-          auto flow_file_index_copy = this->flow_file_index_;
-          auto callback = std::unique_ptr<std::function<void(rd_kafka_t*, const rd_kafka_message_t*)>>(
-              new std::function<void(rd_kafka_t*, const rd_kafka_message_t*)>(
-                [messages_copy, flow_file_index_copy, segment_num](rd_kafka_t* /*rk*/, const rd_kafka_message_t* rkmessage) {
-                  messages_copy->modifyResult(flow_file_index_copy, [segment_num, rkmessage](FlowFileResult& flow_file) {
-                    auto& message = flow_file.messages.at(segment_num);
-                    message.err_code = rkmessage->err;
-                    message.status = message.err_code == 0 ? MessageStatus::MESSAGESTATUS_SUCCESS : MessageStatus::MESSAGESTATUS_ERROR;
-                  });
-                }));
-          if (hdrs) {
-            rd_kafka_headers_t *hdrs_copy;
-            hdrs_copy = rd_kafka_headers_copy(hdrs);
-            err = rd_kafka_producev(rk_, RD_KAFKA_V_RKT(rkt_), RD_KAFKA_V_PARTITION(RD_KAFKA_PARTITION_UA), RD_KAFKA_V_MSGFLAGS(RD_KAFKA_MSG_F_COPY), RD_KAFKA_V_VALUE(&buffer[0], readRet),
-                                    RD_KAFKA_V_HEADERS(hdrs_copy), RD_KAFKA_V_KEY(key_.c_str(), key_.size()), RD_KAFKA_V_OPAQUE(callback.release()), RD_KAFKA_V_END);
-            if (err) {
-              rd_kafka_headers_destroy(hdrs_copy);
-            }
-          } else {
-            err = rd_kafka_producev(rk_, RD_KAFKA_V_RKT(rkt_), RD_KAFKA_V_PARTITION(RD_KAFKA_PARTITION_UA), RD_KAFKA_V_MSGFLAGS(RD_KAFKA_MSG_F_COPY), RD_KAFKA_V_VALUE(&buffer[0], readRet),
-                                    RD_KAFKA_V_KEY(key_.c_str(), key_.size()), RD_KAFKA_V_OPAQUE(callback.release()), RD_KAFKA_V_END);
-          }
-          if (err) {
-            messages_->modifyResult(flow_file_index_, [segment_num, err](FlowFileResult& flow_file) {
-              auto& message = flow_file.messages.at(segment_num);
-              message.status = MessageStatus::MESSAGESTATUS_ERROR;
-              message.err_code = err;
-            });
-            status_ = -1;
-            error_ = rd_kafka_err2str(err);
-            return read_size_;
-          }
-          read_size_ += readRet;
-        } else {
-          break;
+          status_ = -1;
+          error_ = rd_kafka_err2str(err);
+          return read_size_;
         }
-        segment_num++;
+        read_size_ += readRet;
       }
       return read_size_;
     }
 
-    uint64_t flow_size_;
-    uint64_t max_seg_size_;
-    std::string key_;
-    rd_kafka_topic_t *rkt_;
-    rd_kafka_t *rk_;
-    rd_kafka_headers_t *hdrs;
-    std::shared_ptr<core::FlowFile> flowFile_;
-    std::shared_ptr<Messages> messages_;
-    size_t flow_file_index_;
-    int status_;
+    const uint64_t flow_size_ = 0;
+    const uint64_t max_seg_size_ = 0;
+    const std::string key_;
+    rd_kafka_topic_t * const rkt_ = nullptr;
+    rd_kafka_t * const rk_ = nullptr;
+    const rd_kafka_headers_unique_ptr hdrs;  // not null
+    const std::shared_ptr<Messages> messages_;
+    const size_t flow_file_index_;
+    int status_ = 0;
     std::string error_;
-    int read_size_;
-    utils::Regex& attributeNameRegex_;
+    int read_size_ = 0;
+    bool called_ = false;
+    const bool fail_empty_flow_files_ = true;
   };
 
  public:
