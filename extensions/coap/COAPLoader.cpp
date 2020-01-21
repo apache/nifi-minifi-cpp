@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 #include "core/FlowConfiguration.h"
+#include "core/logging/LoggerConfiguration.h"
 #include "COAPLoader.h"
 
 #ifdef WIN32
@@ -28,7 +29,12 @@ bool COAPObjectFactoryInitializer::initialize() {
 #ifdef WIN32
   static WSADATA s_wsaData;
   int iWinSockInitResult = WSAStartup(MAKEWORD(2, 2), &s_wsaData);
-  return iWinSockInitResult == 0;
+  if (iWinSockInitResult != 0) {
+    logging::LoggerFactory<COAPObjectFactoryInitializer>::getLogger()->log_error("WSAStartup failed with error %d", iWinSockInitResult);
+    return false;
+  } else {
+    return true;
+  }
 #else
   return true;
 #endif
