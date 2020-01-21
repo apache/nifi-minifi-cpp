@@ -73,7 +73,10 @@ const core::Property QueryDatabaseTable::s_maxValueColumnNames(
     "This processor can be used to retrieve only those rows that have been added/updated since the last retrieval. "
     "Note that some ODBC types such as bit/boolean are not conducive to maintaining maximum value, so columns of these types should not be listed in this property, and will result in error(s) during processing. "
     "If no columns are provided, all rows from the table will be considered, which could have a performance impact. "
-    "NOTE: It is important to use consistent max-value column names for a given table for incremental fetch to work properly.")->supportsExpressionLanguage(true)->build());
+    "NOTE: It is important to use consistent max-value column names for a given table for incremental fetch to work properly. "
+    "NOTE: Because of a limitation of database access library 'soci', which doesn't support milliseconds in it's 'dt_date', "
+    "there is a possibility that flowfiles might have duplicated records, if a max-value column with 'dt_date' type has value with milliseconds.")->
+    supportsExpressionLanguage(true)->build());
 
 const core::Property QueryDatabaseTable::s_whereClause(
   core::PropertyBuilder::createProperty("db-fetch-where-clause")->isRequired(false)->withDescription(
