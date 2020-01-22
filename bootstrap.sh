@@ -42,6 +42,7 @@ OPTIONS=()
 CMAKE_OPTIONS_ENABLED=()
 CMAKE_OPTIONS_DISABLED=()
 CMAKE_MIN_VERSION=()
+INCOMPATIBLE_WITH=()
 DEPLOY_LIMITS=()
 USER_DISABLE_TESTS="${FALSE}"
 USE_NINJA="false"
@@ -302,6 +303,7 @@ add_dependency SFTP_ENABLED "libssh2"
 add_disabled_option SQLITE_ENABLED ${FALSE} "ENABLE_SQLITE"
 
 add_disabled_option SQL_ENABLED ${FALSE} "ENABLE_SQL"
+set_incompatible_with SQL_ENABLED SQLITE_ENABLED
 
 # Since the following extensions have limitations on
 add_disabled_option BUSTACHE_ENABLED ${FALSE} "ENABLE_BUSTACHE" "2.6" ${TRUE}
