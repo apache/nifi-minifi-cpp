@@ -69,6 +69,11 @@ add_multi_option(){
 	done
 }
 
+set_incompatible_with(){
+  INCOMPATIBLE_WITH+=("$1:$2")
+  INCOMPATIBLE_WITH+=("$2:$1")
+}
+
 print_multi_option_status(){
   feature="$1"
   feature_status=${!1}
@@ -167,6 +172,30 @@ save_state(){
   for option in "${OPTIONS[@]}" ; do
     echo_state_variable $option
   done
+}
+
+check_compatibility(){
+  for option in "${INCOMPATIBLE_WITH[@]}" ; do
+    OPT=${option%%:*}
+    if [ "$OPT" = "$1" ]; then
+      OTHER_FEATURE=${option#*:}
+      OTHER_FEATURE_VALUE=${!OTHER_FEATURE}
+      if [ $OTHER_FEATURE_VALUE = "Enabled" ]; then
+        echo "false"
+        return
+      fi
+    fi
+  done
+  echo "true"
+}
+
+verify_enable(){
+  COMPATIBLE=$(check_compatibility $1)
+  if [ "$COMPATIBLE" = "true" ]; then
+    verify_enable_platform $1
+  else
+    echo "false"
+  fi
 }
 
 can_deploy(){
@@ -349,7 +378,8 @@ show_supported_features() {
   fi
   echo "Q. Quit"
   echo "* Extension cannot be installed due to"
-  echo -e "  version of cmake or other software\r\n"
+  echo "  version of cmake or other software, or"
+  echo -e "  incompatibility with other extensions\r\n"
 }
 
 read_feature_options(){

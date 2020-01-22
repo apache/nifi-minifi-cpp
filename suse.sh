@@ -16,7 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-verify_enable() {
+verify_enable_platform() {
   feature="$1"
   feature_status=${!1}
   if [ "$OS_MAJOR" = "6" ]; then
