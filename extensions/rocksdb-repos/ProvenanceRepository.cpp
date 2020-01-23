@@ -17,72 +17,37 @@
  */
 
 #include "ProvenanceRepository.h"
-#include "rocksdb/write_batch.h"
 #include <string>
-#include <vector>
-#include "rocksdb/options.h"
-#include "provenance/Provenance.h"
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
 namespace provenance {
 
-void ProvenanceRepository::flush() {
-  rocksdb::WriteBatch batch;
-  std::string key;
-  std::string value;
-  rocksdb::ReadOptions options;
-  uint64_t decrement_total = 0;
-  while (keys_to_delete.size_approx() > 0) {
-    if (keys_to_delete.try_dequeue(key)) {
-      db_->Get(options, key, &value);
-      decrement_total += value.size();
-      batch.Delete(key);
-      logger_->log_debug("Removing %s", key);
-    }
-  }
-  if (db_->Write(rocksdb::WriteOptions(), &batch).ok()) {
-    logger_->log_debug("Decrementing %u from a repo size of %u", decrement_total, repo_size_.load());
-    if (decrement_total > repo_size_.load()) {
-      repo_size_ = 0;
-    } else {
-      repo_size_ -= decrement_total;
-    }
-  }
+void ProvenanceRepository::printStats() {
+  std::string key_count;
+  db_->GetProperty("rocksdb.estimate-num-keys", &key_count);
+
+  std::string table_readers;
+  db_->GetProperty("rocksdb.estimate-table-readers-mem", &table_readers);
+
+  std::string all_memtables;
+  db_->GetProperty("rocksdb.cur-size-all-mem-tables", &all_memtables);
+
+  logger_->log_info("Repository stats: key count: %zu, table readers size: %zu, all memory tables size: %zu",
+                    key_count, table_readers, all_memtables);
 }
 
 void ProvenanceRepository::run() {
+  size_t count = 0;
   while (running_) {
-    std::this_thread::sleep_for(std::chrono::milliseconds(purge_period_));
-    uint64_t curTime = getTimeMillis();
-    // threshold for purge
-    uint64_t purgeThreshold = max_partition_bytes_ * 3 / 4;
-
-    uint64_t size = getRepoSize();
-
-    if (size >= purgeThreshold) {
-      rocksdb::Iterator* it = db_->NewIterator(rocksdb::ReadOptions());
-      for (it->SeekToFirst(); it->Valid(); it->Next()) {
-        ProvenanceEventRecord eventRead;
-        std::string key = it->key().ToString();
-        uint64_t eventTime = eventRead.getEventTime(reinterpret_cast<uint8_t*>(const_cast<char*>(it->value().data())), it->value().size());
-        if (eventTime > 0) {
-          if ((curTime - eventTime) > (uint64_t)max_partition_millis_)
-            Delete(key);
-        } else {
-          logger_->log_debug("NiFi Provenance retrieve event %s fail", key);
-          Delete(key);
-        }
-      }
-      delete it;
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+    count++;
+    // Hack, to be removed in scope of https://issues.apache.org/jira/browse/MINIFICPP-1145
+    count = count % 30;
+    if(count == 0) {
+      printStats();
     }
-    flush();
-    size = getRepoSize();
-    if (size > (uint64_t)max_partition_bytes_)
-      repo_full_ = true;
-    else
-      repo_full_ = false;
   }
 }
 } /* namespace provenance */
