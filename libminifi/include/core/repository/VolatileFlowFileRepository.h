@@ -55,7 +55,9 @@ class VolatileFlowFileRepository : public VolatileRepository<std::string> {
           std::shared_ptr<FlowFileRecord> eventRead = std::make_shared<FlowFileRecord>(shared_from_this(), content_repo_);
           if (eventRead->DeSerialize(reinterpret_cast<const uint8_t *>(purgeItem.data()), purgeItem.size())) {
             std::shared_ptr<minifi::ResourceClaim> newClaim = eventRead->getResourceClaim();
-            content_repo_->remove(newClaim);
+            if (newClaim != nullptr) {
+              content_repo_->removeIfOrphaned(newClaim);
+            }
           }
         }
         purge_list_.resize(0);

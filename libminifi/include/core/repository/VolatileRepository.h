@@ -79,12 +79,22 @@ class VolatileRepository : public core::Repository, public std::enable_shared_fr
 
   virtual void run() = 0;
 
+  virtual bool isNoop() {
+    return false;
+  }
+
   /**
    * Places a new object into the volatile memory area
    * @param key key to add to the repository
    * @param buf buffer 
    **/
   virtual bool Put(T key, const uint8_t *buf, size_t bufLen);
+
+  /**
+   * Places new objects into the volatile memory area
+   * @param data the key-value pairs to add to the repository
+   **/
+  virtual bool MultiPut(const std::vector<std::pair<T, std::unique_ptr<io::DataStream>>>& data);
 
   /**
    * Deletes the key
@@ -280,6 +290,19 @@ bool VolatileRepository<T>::Put(T key, const uint8_t *buf, size_t bufLen) {
   logger_->log_debug("VolatileRepository -- put %u %u", current_size_.load(), current_index_.load());
   return true;
 }
+
+template<typename T>
+bool VolatileRepository<T>::MultiPut(const std::vector<std::pair<T, std::unique_ptr<io::DataStream>>>& data) {
+  bool success = true;
+  for (const auto& item : data) {
+    success &= Put(item.first, item.second->getBuffer(), item.second->getSize());
+    if (!success) {
+      break;
+    }
+  }
+  return success;
+}
+
 /**
  * Deletes the key
  * @return status of the delete operation
