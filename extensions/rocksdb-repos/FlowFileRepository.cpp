@@ -15,16 +15,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include "FlowFileRecord.h"
 #include "FlowFileRepository.h"
+#include "utils/ScopeGuard.h"
+
+#include "rocksdb/options.h"
 #include "rocksdb/write_batch.h"
 #include "rocksdb/slice.h"
+
+#include <chrono>
 #include <memory>
 #include <string>
 #include <utility>
 #include <vector>
 #include <list>
-#include "FlowFileRecord.h"
-#include "utils/ScopeGuard.h"
 
 namespace org {
 namespace apache {
@@ -35,7 +39,6 @@ namespace repository {
 
 void FlowFileRepository::flush() {
   rocksdb::WriteBatch batch;
-  uint64_t decrement_total = 0;
   rocksdb::ReadOptions options;
 
   std::vector<std::shared_ptr<FlowFileRecord>> purgeList;
@@ -61,7 +64,6 @@ void FlowFileRepository::flush() {
       continue;
     }
 
-    decrement_total += values[i].size();
     std::shared_ptr<FlowFileRecord> eventRead = std::make_shared<FlowFileRecord>(shared_from_this(), content_repo_);
     if (eventRead->DeSerialize(reinterpret_cast<const uint8_t *>(values[i].data()), values[i].size())) {
       purgeList.push_back(eventRead);
@@ -70,17 +72,9 @@ void FlowFileRepository::flush() {
     batch.Delete(keys[i]);
   }
 
-
   auto operation = [this, &batch]() { return db_->Write(rocksdb::WriteOptions(), &batch); };
 
-  if (ExecuteWithRetry(operation)) {
-    logger_->log_trace("Decrementing %u from a repo size of %u", decrement_total, repo_size_.load());
-    if (decrement_total > repo_size_.load()) {
-      repo_size_ = 0;
-    } else {
-      repo_size_ -= decrement_total;
-    }
-  } else {
+  if (!ExecuteWithRetry(operation)) {
     for (const auto& key: keystrings) {
       keys_to_delete.enqueue(key);  // Push back the values that we could get but couldn't delete
     }
@@ -97,23 +91,33 @@ void FlowFileRepository::flush() {
   }
 }
 
-void FlowFileRepository::run() {
-  // threshold for purge
+void FlowFileRepository::printStats() {
+  std::string key_count;
+  db_->GetProperty("rocksdb.estimate-num-keys", &key_count);
 
+  std::string table_readers;
+  db_->GetProperty("rocksdb.estimate-table-readers-mem", &table_readers);
+
+  std::string all_memtables;
+  db_->GetProperty("rocksdb.cur-size-all-mem-tables", &all_memtables);
+
+  logger_->log_info("Repository stats: key count: %zu, table readers size: %zu, all memory tables size: %zu",
+      key_count, table_readers, all_memtables);
+}
+
+void FlowFileRepository::run() {
+  auto last = std::chrono::steady_clock::now();
   if (running_) {
     prune_stored_flowfiles();
   }
   while (running_) {
     std::this_thread::sleep_for(std::chrono::milliseconds(purge_period_));
-
     flush();
-
-    uint64_t size = getRepoSize();
-
-    if (size > (uint64_t) max_partition_bytes_)
-      repo_full_ = true;
-    else
-      repo_full_ = false;
+    auto now = std::chrono::steady_clock::now();
+    if ((now-last) > std::chrono::seconds(30)) {
+      printStats();
+      last = now;
+    }
   }
 }
 
@@ -142,7 +146,6 @@ void FlowFileRepository::prune_stored_flowfiles() {
   for (it->SeekToFirst(); it->Valid(); it->Next()) {
     std::shared_ptr<FlowFileRecord> eventRead = std::make_shared<FlowFileRecord>(shared_from_this(), content_repo_);
     std::string key = it->key().ToString();
-    repo_size_ += it->value().size();
     if (eventRead->DeSerialize(reinterpret_cast<const uint8_t *>(it->value().data()), it->value().size())) {
       logger_->log_debug("Found connection for %s, path %s ", eventRead->getConnectionUuid(), eventRead->getContentFullPath());
       auto search = connectionMap.find(eventRead->getConnectionUuid());

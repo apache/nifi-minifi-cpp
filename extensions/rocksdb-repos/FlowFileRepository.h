@@ -82,6 +82,8 @@ class FlowFileRepository : public core::Repository, public std::enable_shared_fr
 
   virtual void flush();
 
+  virtual void printStats();
+
   // initialize
   virtual bool initialize(const std::shared_ptr<Configure> &configure) {
     std::string value;
@@ -104,6 +106,16 @@ class FlowFileRepository : public core::Repository, public std::enable_shared_fr
     options.create_if_missing = true;
     options.use_direct_io_for_flush_and_compaction = true;
     options.use_direct_reads = true;
+
+    // Write buffers are used as db operation logs. When they get filled the events are merged and serialized.
+    // The default size is 64MB.
+    // In our case it's usually too much, causing sawtooth in memory consumption. (Consumes more than the whole MiniFi)
+    // To avoid DB write issues during heavy load it's recommended to have high number of buffer.
+    // Rocksdb's stall feature can also trigger in case the number of buffers is >= 3.
+    // The more buffers we have the more memory rocksdb can utilize without significant memory consumption under low load.
+    options.write_buffer_size = 8 << 20;
+    options.max_write_buffer_number = 20;
+    options.min_write_buffer_number_to_merge = 1;
     rocksdb::Status status = rocksdb::DB::Open(options, directory_, &db_);
     if (status.ok()) {
       logger_->log_debug("NiFi FlowFile Repository database open %s success", directory_);
@@ -118,7 +130,6 @@ class FlowFileRepository : public core::Repository, public std::enable_shared_fr
   virtual bool Put(std::string key, const uint8_t *buf, size_t bufLen) {
     // persistent to the DB
     rocksdb::Slice value((const char *) buf, bufLen);
-    repo_size_ += bufLen;
     auto operation = [this, &key, &value]() { return db_->Put(rocksdb::WriteOptions(), key, value); };
     return ExecuteWithRetry(operation);
   }
