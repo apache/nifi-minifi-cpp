@@ -82,6 +82,8 @@ class FlowFileRepository : public core::Repository, public std::enable_shared_fr
 
   virtual void flush();
 
+  virtual void printStats();
+
   // initialize
   virtual bool initialize(const std::shared_ptr<Configure> &configure) {
     std::string value;
@@ -104,6 +106,9 @@ class FlowFileRepository : public core::Repository, public std::enable_shared_fr
     options.create_if_missing = true;
     options.use_direct_io_for_flush_and_compaction = true;
     options.use_direct_reads = true;
+    options.write_buffer_size = 8 << 20;
+    options.max_write_buffer_number = 4;
+    options.min_write_buffer_number_to_merge = 1;
     rocksdb::Status status = rocksdb::DB::Open(options, directory_, &db_);
     if (status.ok()) {
       logger_->log_debug("NiFi FlowFile Repository database open %s success", directory_);
@@ -118,7 +123,6 @@ class FlowFileRepository : public core::Repository, public std::enable_shared_fr
   virtual bool Put(std::string key, const uint8_t *buf, size_t bufLen) {
     // persistent to the DB
     rocksdb::Slice value((const char *) buf, bufLen);
-    repo_size_ += bufLen;
     auto operation = [this, &key, &value]() { return db_->Put(rocksdb::WriteOptions(), key, value); };
     return ExecuteWithRetry(operation);
   }
