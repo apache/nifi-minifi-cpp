@@ -142,7 +142,7 @@ cat <<SERVICEDESCRIPTOR > ${SVC_FILE}
 export MINIFI_HOME=${MINIFI_HOME}
 bin_dir=\${MINIFI_HOME}/bin
 minifi_executable=\${bin_dir}/minifi
-pid_file=${bin_dir}/.minifi.pid
+pid_file="\${bin_dir}/.minifi.pid"
 
 # determines the pid
 get_pid() {
@@ -150,7 +150,7 @@ get_pid() {
   pid=-1
   # Check to see if we have a pid file
   if [ -f \${pid_file} ]; then
-    pid=\$(cat ${pid_file})
+    pid=\$(cat "\${pid_file}")
   fi
   echo \${pid}
 }
@@ -257,21 +257,21 @@ case "\$1" in
         ;;
     restart)
       echo "Restarting the MiNiFi service. Hit CTRL+C at any time to forcibly terminate MiNiFi"
-      ${bin_dir}/minifi.sh stop
+      "\${bin_dir}/minifi.sh" stop
       ticks=1
       printf "Waiting for process to terminate."
       trap endnow INT
-      if [ "${saved_pid}" -gt 0 ]; then
-        while [ $(active_pid ${saved_pid}) -eq 0 ]; do
+      if [ "\${saved_pid}" -gt 0 ]; then
+        while [ "\$(active_pid \${saved_pid})" -eq 0 ]; do
                 sleep 1
-                ticks=$((ticks+1))
-                numticks=$(($ticks % 5))
-                if [ "${numticks}"  -eq 0 ]; then
+                ticks="\$((ticks+1))"
+                numticks="\$((ticks % 5))"
+                if [ "\${numticks}"  -eq 0 ]; then
                         printf "."
                 fi
         done
       fi
-      ${bin_dir}/minifi.sh start
+      "\${bin_dir}/minifi.sh" start
 	;;
     *)
         echo "Usage: service minifi {start|stop|restart|status}"
