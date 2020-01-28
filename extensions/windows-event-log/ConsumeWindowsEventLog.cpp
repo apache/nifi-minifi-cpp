@@ -563,6 +563,9 @@ int ConsumeWindowsEventLog::processQueue(const std::shared_ptr<core::ProcessSess
       if (pBookmark_) {
         pBookmark_->saveBookmarkXml(evt.bookmarkXml_);
       }
+      if(session->outgoingConnectionsFull("success")) {
+        return flowFileCount;  // Enough flowfiles there
+      }
 
       commitAndSaveBookmark = false;
     }

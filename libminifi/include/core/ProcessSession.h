@@ -102,6 +102,8 @@ class ProcessSession : public ReferenceContainer {
   // Penalize the flow
   void penalize(const std::shared_ptr<core::FlowFile> &flow);
 
+  bool outgoingConnectionsFull(const std::string& relationship);
+
   /**
    * Imports a file from the data stream
    * @param stream incoming data stream that contains the data to store into a file
