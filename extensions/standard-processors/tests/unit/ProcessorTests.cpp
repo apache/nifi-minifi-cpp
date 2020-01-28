@@ -21,6 +21,7 @@
 #include <vector>
 #include <set>
 #include <fstream>
+#include <GenerateFlowFile.h>
 
 #include "TestBase.h"
 #include "LogAttribute.h"
@@ -129,6 +130,7 @@ TEST_CASE("Test GetFile Ignore", "[getfileCreate3]") {
   LogTestController::getInstance().setDebug<minifi::processors::GetFile>();
   std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
   std::shared_ptr<core::Processor> processor = std::make_shared<org::apache::nifi::minifi::processors::GetFile>("getfileCreate2");
+  processor->initialize();
 
   std::shared_ptr<core::Repository> test_repo = std::make_shared<TestRepository>();
   std::shared_ptr<TestRepository> repo = std::static_pointer_cast<TestRepository>(test_repo);
@@ -205,6 +207,60 @@ TEST_CASE("Test GetFile Ignore", "[getfileCreate3]") {
 
   REQUIRE(repo->getRepoMap().size() == 0);
   prev++;
+}
+
+TEST_CASE("TestConnectionFull", "[ConnectionFull]") {
+  TestController testController;
+  LogTestController::getInstance().setDebug<minifi::processors::GenerateFlowFile>();
+  std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
+  std::shared_ptr<core::Processor> processor = std::make_shared<org::apache::nifi::minifi::processors::GenerateFlowFile>("GFF");
+  processor->initialize();
+  processor->setProperty(processors::GenerateFlowFile::BatchSize, "10");
+  processor->setProperty(processors::GenerateFlowFile::FileSize, "0");
+
+
+  std::shared_ptr<core::Repository> test_repo = std::make_shared<TestRepository>();
+  std::shared_ptr<TestRepository> repo = std::static_pointer_cast<TestRepository>(test_repo);
+
+  std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(test_repo, content_repo, "GFF2Connection");
+  connection->setMaxQueueSize(5);
+  connection->addRelationship(core::Relationship("success", "description"));
+
+
+  utils::Identifier processoruuid;
+  processor->getUUID(processoruuid);
+
+  // link the connections so that we can test results at the end for this
+  connection->setSource(processor);
+  connection->setDestination(processor);
+
+  connection->setSourceUUID(processoruuid);
+  connection->setDestinationUUID(processoruuid);
+
+  processor->addConnection(connection);
+  processor->setScheduledState(core::ScheduledState::RUNNING);
+
+  std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(processor);
+  std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider = nullptr;
+  auto context = std::make_shared<core::ProcessContext>(node, controller_services_provider, repo, repo, content_repo);
+
+  auto factory = std::make_shared<core::ProcessSessionFactory>(context);
+
+  processor->onSchedule(context, factory);
+
+  auto session = std::make_shared<core::ProcessSession>(context);
+
+  REQUIRE(session->outgoingConnectionsFull("success") == false);
+  REQUIRE(connection->isFull() == false);
+
+  processor->incrementActiveTasks();
+  processor->setScheduledState(core::ScheduledState::RUNNING);
+  processor->onTrigger(context, session);
+
+  session->commit();
+
+  REQUIRE(connection->isFull());
+  REQUIRE(session->outgoingConnectionsFull("success"));
 }
 
 TEST_CASE("LogAttributeTest", "[getfileCreate3]") {

@@ -965,6 +965,18 @@ std::shared_ptr<core::FlowFile> ProcessSession::get() {
   return NULL;
 }
 
+bool ProcessSession::outgoingConnectionsFull(const std::string& relationship) {
+  std::set<std::shared_ptr<Connectable>> connections = process_context_->getProcessorNode()->getOutGoingConnections(relationship);
+  Connection * connection = nullptr;
+  for (const auto& conn : connections) {
+    connection = dynamic_cast<Connection*>(conn.get());
+    if (connection && connection->isFull()) {
+      return true;
+    }
+  }
+  return false;
+}
+
 } /* namespace core */
 } /* namespace minifi */
 } /* namespace nifi */
