@@ -325,6 +325,11 @@ Licensed to the Apache Software Foundation (ASF) under one or more
                          Name="minifi.exe"
                          KeyPath="yes"
                          Source="main\minifi.exe"/>
+                <!-- 
+				It is not possible to set 'ServiceConfig' for 2 'Component' (error LGHT0130 : The primary key 'Apache NiFi MiNiFi' is duplicated in table 'ServiceConfig').
+				Problem is described: http://windows-installer-xml-wix-toolset.687559.n2.nabble.com/Installing-a-Service-with-Varying-Dependencies-td693097.html
+				For now 'ServiceConfig' is set only for 'LocalSystem'.
+				-->
                 <ServiceInstall Id="MiNiFiExeService"
                                 Type="ownProcess"
                                 Vital="yes"
@@ -333,7 +338,14 @@ Licensed to the Apache Software Foundation (ASF) under one or more
                                 Description="Apache NiFi MiNiFi Service"
                                 ErrorControl="ignore"
                                 Start="auto"
-                                Interactive="no" />
+                                Interactive="no">
+					<Util:ServiceConfig
+					  FirstFailureActionType="restart"
+					  SecondFailureActionType="restart"
+					  ThirdFailureActionType="restart"
+					  RestartServiceDelayInSeconds="60"/>
+                </ServiceInstall>
+                <RegistryValue Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\Apache NiFi MiNiFi" Type="integer" Name="DelayedAutostart" Value="1"/>
                 <!--
                 <ServiceControl Id="ServiceControl_Start"
                       Name="Apache NiFi MiNiFi"
@@ -365,6 +377,7 @@ Licensed to the Apache Software Foundation (ASF) under one or more
                                 Password="[SERVICEACCOUNTPASSWORD]"
                                 Start="auto"
                                 Interactive="no" />
+                <RegistryValue Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\Apache NiFi MiNiFi" Type="integer" Name="DelayedAutostart" Value="1"/>
                 <!--
                 <ServiceControl Id="ServiceControl_Start"
                       Name="Apache NiFi MiNiFi"
