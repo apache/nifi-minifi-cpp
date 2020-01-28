@@ -106,8 +106,15 @@ class FlowFileRepository : public core::Repository, public std::enable_shared_fr
     options.create_if_missing = true;
     options.use_direct_io_for_flush_and_compaction = true;
     options.use_direct_reads = true;
+
+    // Write buffers are used as db oepration logs. When they get filled the events are merged and serialized.
+    // The default size is 64MB.
+    // In our case it's usually too much, causing sawtooth in memory consumption. (Consumes more than the whole MiniFi)
+    // To avoid DB write issues during heavy load it's recommended to have high number of buffer.
+    // Rocksdb's stall featur can also trigger in case the number of buffers is >= 3.
+    // The more buffers we have the more memory rocksdb can utilize without significant memory consumption under low load.
     options.write_buffer_size = 8 << 20;
-    options.max_write_buffer_number = 4;
+    options.max_write_buffer_number = 20;
     options.min_write_buffer_number_to_merge = 1;
     rocksdb::Status status = rocksdb::DB::Open(options, directory_, &db_);
     if (status.ok()) {
