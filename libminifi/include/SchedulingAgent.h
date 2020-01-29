@@ -20,12 +20,14 @@
 #ifndef __SCHEDULING_AGENT_H__
 #define __SCHEDULING_AGENT_H__
 
+#include <set>
 #include <vector>
 #include <map>
 #include <mutex>
 #include <atomic>
 #include <algorithm>
 #include <thread>
+#include "utils/CallBackTimer.h"
 #include "utils/TimeUtil.h"
 #include "utils/ThreadPool.h"
 #include "utils/BackTrace.h"
@@ -38,6 +40,9 @@
 #include "core/ProcessContext.h"
 #include "core/controller/ControllerServiceProvider.h"
 #include "core/controller/ControllerServiceNode.h"
+
+#define SCHEDULING_WATCHDOG_CHECK_PERIOD 1000  // msec
+#define SCHEDULING_WATCHDOG_ALERT_PERIOD 5000  // msec
 
 namespace org {
 namespace apache {
@@ -131,11 +136,16 @@ class SchedulingAgent {
     auto pool = utils::ThreadPool<uint64_t>(csThreads, false, controller_service_provider, "SchedulingAgent");
     thread_pool_ = std::move(pool);
     thread_pool_.start();
+
+    std::function<void(void)> f = std::bind(&SchedulingAgent::watchDogFunc, this);
+    watchDogTimer_.reset(new utils::CallBackTimer(std::chrono::milliseconds(SCHEDULING_WATCHDOG_CHECK_PERIOD), f));
+    watchDogTimer_->start();
   }
   // Destructor
   virtual ~SchedulingAgent() {
-
+    watchDogTimer_->stop();
   }
+
   // onTrigger, return whether the yield is need
   bool onTrigger(const std::shared_ptr<core::Processor> &processor, const std::shared_ptr<core::ProcessContext> &processContext, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory);
   // Whether agent has work to do
@@ -157,7 +167,8 @@ class SchedulingAgent {
     return thread_pool_.getTraces();
   }
 
- public:
+  void watchDogFunc();
+
   virtual std::future<uint64_t> enableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode);
   virtual std::future<uint64_t> disableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode);
   // schedule, overwritten by different DrivenSchedulingAgent
@@ -190,8 +201,39 @@ class SchedulingAgent {
   std::shared_ptr<core::controller::ControllerServiceProvider> controller_service_provider_;
 
  private:
+  struct SchedulingInfo {
+    std::chrono::time_point<std::chrono::system_clock> start_time_;
+    std::string name_;
+    std::string uuid_;
+
+    SchedulingInfo(const std::shared_ptr<core::Processor> &processor) {
+     start_time_ = std::chrono::system_clock::now();
+     name_ = processor->getName();
+     uuid_ = processor->getUUIDStr();
+    }
+
+    bool operator <(const SchedulingInfo& o) const {
+      if (start_time_ < o.start_time_) {
+        return true;
+      }
+      if (start_time_ == o.start_time_) {
+        if (name_ < o.name_) {
+          return true;
+        }
+        if (name_ == o.name_) {
+          return uuid_ < o.uuid_;
+        }
+      }
+      return false;
+    }
+  };
+
   // Logger
   std::shared_ptr<logging::Logger> logger_;
+  std::mutex watchdog_mtx_;  // used to protect the vector below
+  std::set<SchedulingInfo> scheduled_processors_;
+  std::unique_ptr<utils::CallBackTimer> watchDogTimer_;
+
   // Prevent default copy constructor and assignment operation
   // Only support pass by reference or pointer
 
