@@ -83,8 +83,8 @@ void FlowFileRepository::flush() {
   } else {
     for (const auto& key: keystrings) {
       keys_to_delete.enqueue(key);  // Push back the values that we could get but couldn't delete
-      return;  // Stop here - don't delete from content repo while we have records in FF repo
     }
+    return;  // Stop here - don't delete from content repo while we have records in FF repo
   }
 
   if (nullptr != content_repo_) {
