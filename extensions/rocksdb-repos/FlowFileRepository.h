@@ -46,7 +46,7 @@ namespace repository {
 #define MAX_FLOWFILE_REPOSITORY_STORAGE_SIZE (10*1024*1024) // 10M
 #define MAX_FLOWFILE_REPOSITORY_ENTRY_LIFE_TIME (600000) // 10 minute
 #define FLOWFILE_REPOSITORY_PURGE_PERIOD (2000) // 2000 msec
-#define FLOWFILE_REPOSITORY_RETRY_INTERVAL (500)  // msec
+#define FLOWFILE_REPOSITORY_RETRY_INTERVAL_INCREMENTS (500)  // msec
 
 /**
  * Flow File repository
@@ -172,7 +172,7 @@ class FlowFileRepository : public core::Repository, public std::enable_shared_fr
 
  private:
 
-  virtual bool ExecuteWithRetry(std::function<rocksdb::Status()> operation);
+  bool ExecuteWithRetry(std::function<rocksdb::Status()> operation);
 
   /**
    * Initialize the repository

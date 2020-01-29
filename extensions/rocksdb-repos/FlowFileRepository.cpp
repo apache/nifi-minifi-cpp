@@ -169,7 +169,7 @@ void FlowFileRepository::prune_stored_flowfiles() {
 }
 
 bool FlowFileRepository::ExecuteWithRetry(std::function<rocksdb::Status()> operation) {
-  int waitTime = FLOWFILE_REPOSITORY_RETRY_INTERVAL;
+  int waitTime = 0;
   for (int i=0; i<3; ++i) {
     auto status = operation();
     if (status.ok()) {
@@ -177,8 +177,8 @@ bool FlowFileRepository::ExecuteWithRetry(std::function<rocksdb::Status()> opera
       return true;
     }
     logger_->log_error("Rocksdb operation failed: %s", status.ToString());
+    waitTime += FLOWFILE_REPOSITORY_RETRY_INTERVAL_INCREMENTS;
     std::this_thread::sleep_for(std::chrono::milliseconds(waitTime));
-    waitTime += FLOWFILE_REPOSITORY_RETRY_INTERVAL;
   }
   return false;
 }
