@@ -46,6 +46,7 @@ namespace repository {
 #define MAX_FLOWFILE_REPOSITORY_STORAGE_SIZE (10*1024*1024) // 10M
 #define MAX_FLOWFILE_REPOSITORY_ENTRY_LIFE_TIME (600000) // 10 minute
 #define FLOWFILE_REPOSITORY_PURGE_PERIOD (2000) // 2000 msec
+#define FLOWFILE_REPOSITORY_RETRY_INTERVAL_INCREMENTS (500)  // msec
 
 /**
  * Flow File repository
@@ -118,7 +119,8 @@ class FlowFileRepository : public core::Repository, public std::enable_shared_fr
     // persistent to the DB
     rocksdb::Slice value((const char *) buf, bufLen);
     repo_size_ += bufLen;
-    return db_->Put(rocksdb::WriteOptions(), key, value).ok();
+    auto operation = [this, &key, &value]() { return db_->Put(rocksdb::WriteOptions(), key, value); };
+    return ExecuteWithRetry(operation);
   }
 
   virtual bool MultiPut(const std::vector<std::pair<std::string, std::unique_ptr<minifi::io::DataStream>>>& data) {
@@ -126,10 +128,12 @@ class FlowFileRepository : public core::Repository, public std::enable_shared_fr
     for (const auto &item: data) {
       rocksdb::Slice value((const char *) item.second->getBuffer(), item.second->getSize());
       if (!batch.Put(item.first, value).ok()) {
+        logger_->log_error("Failed to add item to batch operation");
         return false;
       }
     }
-    return db_->Write(rocksdb::WriteOptions(), &batch).ok();
+    auto operation = [this, &batch]() { return db_->Write(rocksdb::WriteOptions(), &batch); };
+    return ExecuteWithRetry(operation);
   }
 
 
@@ -167,6 +171,8 @@ class FlowFileRepository : public core::Repository, public std::enable_shared_fr
   }
 
  private:
+
+  bool ExecuteWithRetry(std::function<rocksdb::Status()> operation);
 
   /**
    * Initialize the repository

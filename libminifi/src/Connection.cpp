@@ -154,6 +154,9 @@ void Connection::put(std::shared_ptr<core::FlowFile> flow) {
     FlowFileRecord event(flow_repository_, content_repo_, flow, this->uuidStr_);
     if (event.Serialize()) {
       flow->setStoredToRepository(true);
+    } else {
+      logger_->log_error("Failed to serialize FlowFileRecord to repo!");
+      throw Exception(PROCESS_SESSION_EXCEPTION, "Failed to put flowfile to repository");
     }
   }
 
@@ -194,7 +197,8 @@ void Connection::multiPut(std::vector<std::shared_ptr<core::FlowFile>>& flows) {
   }
 
   if (!flow_repository_->MultiPut(flowData)) {
-    return;
+    logger_->log_error("Failed execute multiput on FF repo!");
+    throw Exception(PROCESS_SESSION_EXCEPTION, "Failed to put flowfiles to repository");
   }
 
   for (auto& ff : flows) {
