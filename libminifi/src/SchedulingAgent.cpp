@@ -25,6 +25,7 @@
 #include <iostream>
 #include "Exception.h"
 #include "core/Processor.h"
+#include "utils/ScopeGuard.h"
 
 namespace org {
 namespace apache {
@@ -104,6 +105,18 @@ bool SchedulingAgent::onTrigger(const std::shared_ptr<core::Processor> &processo
     return true;
   }
 
+  auto schedule_it = scheduled_processors_.end();
+
+  {
+    std::lock_guard<std::mutex> lock(watchdog_mtx_);
+    schedule_it = scheduled_processors_.emplace(processor).first;
+  }
+
+  utils::ScopeGuard guard([this, &schedule_it](){
+    std::lock_guard<std::mutex> lock(watchdog_mtx_);
+    scheduled_processors_.erase(schedule_it);
+  });
+
   processor->incrementActiveTasks();
   try {
     processor->onTrigger(processContext, sessionFactory);
@@ -123,6 +136,19 @@ bool SchedulingAgent::onTrigger(const std::shared_ptr<core::Processor> &processo
   }
 
   return false;
+}
+
+void SchedulingAgent::watchDogFunc() {
+  std::lock_guard<std::mutex> lock(watchdog_mtx_);
+  auto now = std::chrono::steady_clock::now();
+  for (const auto& info : scheduled_processors_) {
+    auto elapsed = now - info.last_alert_time_;
+    if (elapsed > alert_time_) {
+      int64_t elapsed_ms{ std::chrono::duration_cast<std::chrono::milliseconds>(now - info.start_time_).count() };
+      logger_->log_warn("%s::onTrigger has been running for %lld  ms in %s", info.name_, elapsed_ms, info.uuid_);
+      info.last_alert_time_ = now;
+    }
+  }
 }
 
 } /* namespace minifi */
