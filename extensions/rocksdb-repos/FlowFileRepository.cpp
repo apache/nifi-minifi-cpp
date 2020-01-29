@@ -57,6 +57,7 @@ void FlowFileRepository::flush() {
   for(size_t i=0; i<keys.size() && i<values.size() && i<multistatus.size(); ++i) {
     if(!multistatus[i].ok()) {
       logger_->log_error("Failed to read key from rocksdb: %s! DB is most probably in an inconsistent state!", keys[i].data());
+      keystrings.remove(keys[i].data());
       continue;
     }
 
@@ -70,12 +71,19 @@ void FlowFileRepository::flush() {
   }
 
 
-  if (db_->Write(rocksdb::WriteOptions(), &batch).ok()) {
+  auto operation = [this, &batch]() { return db_->Write(rocksdb::WriteOptions(), &batch); };
+
+  if (ExecuteWithRetry(operation)) {
     logger_->log_trace("Decrementing %u from a repo size of %u", decrement_total, repo_size_.load());
     if (decrement_total > repo_size_.load()) {
       repo_size_ = 0;
     } else {
       repo_size_ -= decrement_total;
+    }
+  } else {
+    for (const auto& key: keystrings) {
+      keys_to_delete.enqueue(key);  // Push back the values that we could get but couldn't delete
+      return;  // Stop here - don't delete from content repo while we have records in FF repo
     }
   }
 
@@ -158,7 +166,21 @@ void FlowFileRepository::prune_stored_flowfiles() {
   }
 
   delete it;
+}
 
+bool FlowFileRepository::ExecuteWithRetry(std::function<rocksdb::Status()> operation) {
+  int waitTime = FLOWFILE_REPOSITORY_RETRY_INTERVAL;
+  for (int i=0; i<3; ++i) {
+    auto status = operation();
+    if (status.ok()) {
+      logger_->log_trace("Rocksdb operation executed successfully");
+      return true;
+    }
+    logger_->log_error("Rocksdb operation failed: %s", status.ToString());
+    std::this_thread::sleep_for(std::chrono::milliseconds(waitTime));
+    waitTime += FLOWFILE_REPOSITORY_RETRY_INTERVAL;
+  }
+  return false;
 }
 
 /**
