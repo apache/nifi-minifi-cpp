@@ -15,17 +15,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include "FlowFileRecord.h"
 #include "FlowFileRepository.h"
+#include "utils/ScopeGuard.h"
+
 #include "rocksdb/options.h"
 #include "rocksdb/write_batch.h"
 #include "rocksdb/slice.h"
+
+#include <chrono>
 #include <memory>
 #include <string>
 #include <utility>
 #include <vector>
 #include <list>
-#include "FlowFileRecord.h"
-#include "utils/ScopeGuard.h"
 
 namespace org {
 namespace apache {
@@ -103,13 +106,18 @@ void FlowFileRepository::printStats() {
 }
 
 void FlowFileRepository::run() {
+  auto last = std::chrono::system_clock::now();
   if (running_) {
     prune_stored_flowfiles();
   }
   while (running_) {
     std::this_thread::sleep_for(std::chrono::milliseconds(purge_period_));
     flush();
-    printStats();
+    auto now = std::chrono::system_clock::now();
+    if ((now-last) > std::chrono::seconds(30)) {
+      printStats();
+      last = now;
+    }
   }
 }
 
