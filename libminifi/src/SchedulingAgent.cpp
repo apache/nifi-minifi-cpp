@@ -140,11 +140,11 @@ bool SchedulingAgent::onTrigger(const std::shared_ptr<core::Processor> &processo
 
 void SchedulingAgent::watchDogFunc() {
   std::lock_guard<std::mutex> lock(watchdog_mtx_);
-  auto now = std::chrono::system_clock::now();
+  auto now = std::chrono::steady_clock::now();
   for (const auto& info : scheduled_processors_) {
-    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - info.start_time_).count();
+    int64_t elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - info.start_time_).count();
     if (elapsed > SCHEDULING_WATCHDOG_ALERT_PERIOD) {
-      logger_->log_warn("%s::onTrigger is running for %zu ms in %s", info.name_, elapsed, info.uuid_);
+      logger_->log_warn("%s::onTrigger is running for %lld ms in %s", info.name_, elapsed, info.uuid_);
     }
   }
 }

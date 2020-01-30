@@ -202,29 +202,18 @@ class SchedulingAgent {
 
  private:
   struct SchedulingInfo {
-    std::chrono::time_point<std::chrono::system_clock> start_time_;
+    std::chrono::time_point<std::chrono::steady_clock> start_time_;
     std::string name_;
     std::string uuid_;
 
     SchedulingInfo(const std::shared_ptr<core::Processor> &processor) {
-     start_time_ = std::chrono::system_clock::now();
+     start_time_ = std::chrono::steady_clock::now();
      name_ = processor->getName();
      uuid_ = processor->getUUIDStr();
     }
 
     bool operator <(const SchedulingInfo& o) const {
-      if (start_time_ < o.start_time_) {
-        return true;
-      }
-      if (start_time_ == o.start_time_) {
-        if (name_ < o.name_) {
-          return true;
-        }
-        if (name_ == o.name_) {
-          return uuid_ < o.uuid_;
-        }
-      }
-      return false;
+      return std::tie(start_time_, name_, uuid_) < std::tie(o.start_time_, o.name_, o.uuid_);
     }
   };
 
