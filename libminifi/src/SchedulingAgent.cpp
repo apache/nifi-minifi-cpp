@@ -142,10 +142,10 @@ void SchedulingAgent::watchDogFunc() const {
   std::lock_guard<std::mutex> lock(watchdog_mtx_);
   auto now = std::chrono::steady_clock::now();
   for (auto& info : scheduled_processors_) {
-    int64_t elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - info.last_alert_time_).count();
+    auto elapsed = now - info.last_alert_time_;
     if (elapsed > alert_time_) {
-      logger_->log_warn("%s::onTrigger has been running for %lld ms in %s", info.name_,
-          std::chrono::duration_cast<std::chrono::milliseconds>(now - info.start_time_).count(), info.uuid_);
+      int64_t elapsed_ms{ std::chrono::duration_cast<std::chrono::milliseconds>(now - info.start_time_).count() };
+      logger_->log_warn("%s::onTrigger has been running for %lld  ms in %s", info.name_, elapsed_ms, info.uuid_);
       info.last_alert_time_ = now;
     }
   }

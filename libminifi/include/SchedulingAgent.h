@@ -42,7 +42,7 @@
 #include "core/controller/ControllerServiceNode.h"
 
 #define SCHEDULING_WATCHDOG_CHECK_PERIOD 1000  // msec
-#define SCHEDULING_WATCHDOG_ALERT_PERIOD 5000  // msec
+#define SCHEDULING_WATCHDOG_ALERT_DEFAULT_PERIOD 5000  // msec
 
 namespace org {
 namespace apache {
@@ -133,13 +133,13 @@ class SchedulingAgent {
      * to be able to debug why an agent doesn't work and still allow a restart via updates in these cases.
      */
     auto csThreads = configure_->getInt(Configure::nifi_flow_engine_threads, 2);
-    alert_time_ = configure_->getInt(Configure::nifi_flow_engine_alert_time, 5000);
+    alert_time_ = std::chrono::milliseconds(configure_->getInt(Configure::nifi_flow_engine_alert_time, SCHEDULING_WATCHDOG_ALERT_DEFAULT_PERIOD));
     auto pool = utils::ThreadPool<uint64_t>(csThreads, false, controller_service_provider, "SchedulingAgent");
     thread_pool_ = std::move(pool);
     thread_pool_.start();
 
     std::function<void(void)> f = std::bind(&SchedulingAgent::watchDogFunc, this);
-    if (alert_time_ > 0) {
+    if (alert_time_ > std::chrono::milliseconds(0)) {
       watchDogTimer_.reset(new utils::CallBackTimer(std::chrono::milliseconds(SCHEDULING_WATCHDOG_CHECK_PERIOD), f));
       watchDogTimer_->start();
     }
@@ -227,7 +227,7 @@ class SchedulingAgent {
   mutable std::mutex watchdog_mtx_;  // used to protect the set below
   std::set<SchedulingInfo> scheduled_processors_;  // set was chosen to avoid iterator invalidation
   std::unique_ptr<utils::CallBackTimer> watchDogTimer_;
-  int64_t alert_time_;  // msec
+  std::chrono::milliseconds alert_time_;  // msec
 };
 
 } /* namespace minifi */
