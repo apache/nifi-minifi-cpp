@@ -144,7 +144,7 @@ void SchedulingAgent::watchDogFunc() {
   for (const auto& info : scheduled_processors_) {
     int64_t elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - info.start_time_).count();
     if (elapsed > SCHEDULING_WATCHDOG_ALERT_PERIOD) {
-      logger_->log_warn("%s::onTrigger is running for %lld ms in %s", info.name_, elapsed, info.uuid_);
+      logger_->log_warn("%s::onTrigger has been running for %lld ms in %s", info.name_, elapsed, info.uuid_);
     }
   }
 }

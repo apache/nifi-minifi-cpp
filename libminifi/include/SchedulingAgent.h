@@ -141,9 +141,12 @@ class SchedulingAgent {
     watchDogTimer_.reset(new utils::CallBackTimer(std::chrono::milliseconds(SCHEDULING_WATCHDOG_CHECK_PERIOD), f));
     watchDogTimer_->start();
   }
-  // Destructor
+
   virtual ~SchedulingAgent() {
-    watchDogTimer_->stop();
+    // Do NOT remove this!
+    // The destructor of the timer also stops is, but the stop should happen first!
+    // Otherwise the callback might access already destructed members.
+    watchDogTimer_.reset();
   }
 
   // onTrigger, return whether the yield is need
@@ -202,15 +205,13 @@ class SchedulingAgent {
 
  private:
   struct SchedulingInfo {
-    std::chrono::time_point<std::chrono::steady_clock> start_time_;
+    std::chrono::time_point<std::chrono::steady_clock> start_time_ = std::chrono::steady_clock::now();
     std::string name_;
     std::string uuid_;
 
-    SchedulingInfo(const std::shared_ptr<core::Processor> &processor) {
-     start_time_ = std::chrono::steady_clock::now();
-     name_ = processor->getName();
-     uuid_ = processor->getUUIDStr();
-    }
+    explicit SchedulingInfo(const std::shared_ptr<core::Processor> &processor) :
+      name_(processor->getName()),
+      uuid_(processor->getUUIDStr()) {}
 
     bool operator <(const SchedulingInfo& o) const {
       return std::tie(start_time_, name_, uuid_) < std::tie(o.start_time_, o.name_, o.uuid_);
@@ -219,13 +220,9 @@ class SchedulingAgent {
 
   // Logger
   std::shared_ptr<logging::Logger> logger_;
-  std::mutex watchdog_mtx_;  // used to protect the vector below
-  std::set<SchedulingInfo> scheduled_processors_;
+  std::mutex watchdog_mtx_;  // used to protect the set below
+  std::set<SchedulingInfo> scheduled_processors_;  // set was chosen to avoid iterator invalidation
   std::unique_ptr<utils::CallBackTimer> watchDogTimer_;
-
-  // Prevent default copy constructor and assignment operation
-  // Only support pass by reference or pointer
-
 };
 
 } /* namespace minifi */
