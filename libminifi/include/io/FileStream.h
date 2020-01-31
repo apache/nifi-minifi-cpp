@@ -18,12 +18,9 @@
 #ifndef LIBMINIFI_INCLUDE_IO_TLS_FILESTREAM_H_
 #define LIBMINIFI_INCLUDE_IO_TLS_FILESTREAM_H_
 
-#include <iostream>
-#include <cstdint>
+#include <fstream>
 #include <string>
-#include "EndianCheck.h"
 #include "BaseStream.h"
-#include "Serializable.h"
 #include "core/logging/LoggerConfiguration.h"
 
 namespace org {

@@ -17,6 +17,7 @@
  */
 #include <openssl/ssl.h>
 #include <openssl/err.h>
+#include <fstream>
 #include <memory>
 #include <utility>
 #include <string>

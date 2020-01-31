@@ -36,7 +36,7 @@ Properties::Properties(const std::string& name)
 }
 
 // Get the config value
-bool Properties::get(const std::string &key, std::string &value) {
+bool Properties::get(const std::string &key, std::string &value) const {
   std::lock_guard<std::mutex> lock(mutex_);
   auto it = properties_.find(key);
 
@@ -48,7 +48,7 @@ bool Properties::get(const std::string &key, std::string &value) {
   }
 }
 
-bool Properties::get(const std::string &key, const std::string &alternate_key, std::string &value) {
+bool Properties::get(const std::string &key, const std::string &alternate_key, std::string &value) const {
   std::lock_guard<std::mutex> lock(mutex_);
   auto it = properties_.find(key);
 
@@ -67,15 +67,11 @@ bool Properties::get(const std::string &key, const std::string &alternate_key, s
   }
 }
 
-int Properties::getInt(const std::string &key, int default_value) {
+int Properties::getInt(const std::string &key, int default_value) const {
   std::lock_guard<std::mutex> lock(mutex_);
   auto it = properties_.find(key);
 
-  if (it != properties_.end()) {
-    return std::atol(it->second.c_str());
-  } else {
-    return default_value;
-  }
+  return it != properties_.end() ? std::stoi(it->second) : default_value;
 }
 
 // Parse one line in configure file like key=value

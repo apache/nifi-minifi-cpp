@@ -20,15 +20,9 @@
 #ifndef __PROPERTIES_H__
 #define __PROPERTIES_H__
 
-#include <stdio.h>
 #include <string>
 #include <map>
-#include <stdlib.h>
-#include <errno.h>
-#include <iostream>
-#include <fstream>
 #include "core/logging/Logger.h"
-
 
 namespace org {
 namespace apache {
@@ -43,7 +37,7 @@ class Properties {
 
   }
 
-  virtual const std::string& getName() {
+  virtual const std::string& getName() const{
     return name_;
   }
 
@@ -59,9 +53,9 @@ class Properties {
     dirty_ = true;
   }
   // Check whether the config value existed
-  bool has(std::string key) {
+  bool has(std::string key) const {
     std::lock_guard<std::mutex> lock(mutex_);
-    return (properties_.find(key) != properties_.end());
+    return properties_.count(key) > 0;
   }
   /**
    * Returns the config value by placing it into the referenced param value
@@ -69,7 +63,7 @@ class Properties {
    * @param value value in which to place the map's stored property value
    * @returns true if found, false otherwise.
    */
-  bool get(const std::string &key, std::string &value);
+  bool get(const std::string &key, std::string &value) const;
 
   /**
    * Returns the config value by placing it into the referenced param value
@@ -80,13 +74,13 @@ class Properties {
    * @param value value in which to place the map's stored property value
    * @returns true if found, false otherwise.
    */
-  bool get(const std::string &key, const std::string &alternate_key, std::string &value);
+  bool get(const std::string &key, const std::string &alternate_key, std::string &value) const;
 
   /**
    * Returns the configuration value or an empty string.
    * @return value corresponding to key or empty value.
    */
-  int getInt(const std::string &key, int default_value);
+  int getInt(const std::string &key, int default_value) const;
 
   // Parse one line in configure file like key=value
   bool parseConfigureFileLine(char *buf, std::string &prop_key, std::string &prop_value);
@@ -133,7 +127,7 @@ class Properties {
   std::string properties_file_;
 
   // Mutex for protection
-  std::mutex mutex_;
+  mutable std::mutex mutex_;
   // Logger
   std::shared_ptr<minifi::core::logging::Logger> logger_;
   // Home location for this executable
