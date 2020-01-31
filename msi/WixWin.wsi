@@ -339,11 +339,11 @@ Licensed to the Apache Software Foundation (ASF) under one or more
                                 ErrorControl="ignore"
                                 Start="auto"
                                 Interactive="no">
-                   <Util:ServiceConfig
-                      FirstFailureActionType="restart"
-                      SecondFailureActionType="restart"
-                      ThirdFailureActionType="restart"
-                      RestartServiceDelayInSeconds="60"/>
+                    <Util:ServiceConfig
+                        FirstFailureActionType="restart"
+                        SecondFailureActionType="restart"
+                        ThirdFailureActionType="restart"
+                        RestartServiceDelayInSeconds="60"/>
                 </ServiceInstall>
                 <RegistryValue Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\Apache NiFi MiNiFi" Type="integer" Name="DelayedAutostart" Value="1"/>
                 <!--
