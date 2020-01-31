@@ -133,13 +133,16 @@ class SchedulingAgent {
      * to be able to debug why an agent doesn't work and still allow a restart via updates in these cases.
      */
     auto csThreads = configure_->getInt(Configure::nifi_flow_engine_threads, 2);
+    alert_time_ = configure_->getInt(Configure::nifi_flow_engine_alert_time, 5000);
     auto pool = utils::ThreadPool<uint64_t>(csThreads, false, controller_service_provider, "SchedulingAgent");
     thread_pool_ = std::move(pool);
     thread_pool_.start();
 
     std::function<void(void)> f = std::bind(&SchedulingAgent::watchDogFunc, this);
-    watchDogTimer_.reset(new utils::CallBackTimer(std::chrono::milliseconds(SCHEDULING_WATCHDOG_CHECK_PERIOD), f));
-    watchDogTimer_->start();
+    if (alert_time_ > 0) {
+      watchDogTimer_.reset(new utils::CallBackTimer(std::chrono::milliseconds(SCHEDULING_WATCHDOG_CHECK_PERIOD), f));
+      watchDogTimer_->start();
+    }
   }
 
   virtual ~SchedulingAgent() {
@@ -170,7 +173,7 @@ class SchedulingAgent {
     return thread_pool_.getTraces();
   }
 
-  void watchDogFunc();
+  void watchDogFunc() const;
 
   virtual std::future<uint64_t> enableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode);
   virtual std::future<uint64_t> disableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode);
@@ -206,6 +209,7 @@ class SchedulingAgent {
  private:
   struct SchedulingInfo {
     std::chrono::time_point<std::chrono::steady_clock> start_time_ = std::chrono::steady_clock::now();
+    mutable std::chrono::time_point<std::chrono::steady_clock> last_alert_time_ = std::chrono::steady_clock::now();
     std::string name_;
     std::string uuid_;
 
@@ -220,9 +224,10 @@ class SchedulingAgent {
 
   // Logger
   std::shared_ptr<logging::Logger> logger_;
-  std::mutex watchdog_mtx_;  // used to protect the set below
+  mutable std::mutex watchdog_mtx_;  // used to protect the set below
   std::set<SchedulingInfo> scheduled_processors_;  // set was chosen to avoid iterator invalidation
   std::unique_ptr<utils::CallBackTimer> watchDogTimer_;
+  int64_t alert_time_;  // msec
 };
 
 } /* namespace minifi */
