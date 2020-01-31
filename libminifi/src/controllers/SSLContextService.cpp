@@ -22,9 +22,12 @@
 #include <openssl/err.h>
 #include <openssl/ssl.h>
 #endif
+
+#include <fstream>
 #include <string>
 #include <memory>
 #include <set>
+
 #include "core/Property.h"
 #include "io/validation.h"
 #include "properties/Configure.h"

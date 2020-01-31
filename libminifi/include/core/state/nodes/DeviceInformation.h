@@ -47,6 +47,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <fstream>
 #include <sstream>
 #include <map>
 #include "../nodes/MetricsBase.h"
