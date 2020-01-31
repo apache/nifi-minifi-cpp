@@ -186,6 +186,16 @@ class PublishKafka : public core::Processor {
 
   // Nest Callback Class for read stream
   class ReadCallback : public InputStreamCallback {
+   public:
+    struct rd_kafka_headers_deleter {
+      void operator()(rd_kafka_headers_t* ptr) const noexcept {
+        rd_kafka_headers_destroy(ptr);
+      }
+    };
+
+    using rd_kafka_headers_unique_ptr = std::unique_ptr<rd_kafka_headers_t, rd_kafka_headers_deleter>;
+
+   private:
     void allocate_message_object(const size_t segment_num) const {
       messages_->modifyResult(flow_file_index_, [segment_num](FlowFileResult& flow_file) {
         // allocate message object to be filled in by the callback in produce()
@@ -195,14 +205,16 @@ class PublishKafka : public core::Processor {
       });
     }
 
-    utils::owner<rd_kafka_headers_s*> make_headers() const {
-      rd_kafka_headers_s* const result = rd_kafka_headers_new(8);
+    rd_kafka_headers_unique_ptr make_headers() const {
+      const utils::owner<rd_kafka_headers_t*> result = rd_kafka_headers_new(8);
+      if (!result) { throw std::bad_alloc{}; }
+
       for (const auto& kv : flowFile_->getAttributes()) {
         if(attributeNameRegex_.match(kv.first)) {
           rd_kafka_header_add(result, kv.first.c_str(), kv.first.size(), kv.second.c_str(), kv.second.size());
         }
       }
-      return result;
+      return rd_kafka_headers_unique_ptr{result};
     }
 
     rd_kafka_resp_err_t produce(const size_t segment_num, std::vector<unsigned char>& buffer, const size_t buflen) const {
@@ -220,19 +232,14 @@ class PublishKafka : public core::Processor {
 
       allocate_message_object(segment_num);
 
-      if (hdrs) {
-        const utils::owner<rd_kafka_headers_t*> hdrs_copy = rd_kafka_headers_copy(hdrs);
-        const auto err = rd_kafka_producev(rk_, RD_KAFKA_V_RKT(rkt_), RD_KAFKA_V_PARTITION(RD_KAFKA_PARTITION_UA), RD_KAFKA_V_MSGFLAGS(RD_KAFKA_MSG_F_COPY), RD_KAFKA_V_VALUE(buffer.data(), buflen),
-                                           RD_KAFKA_V_HEADERS(hdrs_copy), RD_KAFKA_V_KEY(key_.c_str(), key_.size()), RD_KAFKA_V_OPAQUE(callback_ptr.release()), RD_KAFKA_V_END);
-        if (err) {
-          // the message only takes ownership of the headers in case of success
-          rd_kafka_headers_destroy(hdrs_copy);
-        }
-        return err;
-      } else {
-        return rd_kafka_producev(rk_, RD_KAFKA_V_RKT(rkt_), RD_KAFKA_V_PARTITION(RD_KAFKA_PARTITION_UA), RD_KAFKA_V_MSGFLAGS(RD_KAFKA_MSG_F_COPY), RD_KAFKA_V_VALUE(buffer.data(), buflen),
-                                RD_KAFKA_V_KEY(key_.c_str(), key_.size()), RD_KAFKA_V_OPAQUE(callback_ptr.release()), RD_KAFKA_V_END);
+      const utils::owner<rd_kafka_headers_t*> hdrs_copy = rd_kafka_headers_copy(hdrs.get());
+      const auto err = rd_kafka_producev(rk_, RD_KAFKA_V_RKT(rkt_), RD_KAFKA_V_PARTITION(RD_KAFKA_PARTITION_UA), RD_KAFKA_V_MSGFLAGS(RD_KAFKA_MSG_F_COPY), RD_KAFKA_V_VALUE(buffer.data(), buflen),
+                                         RD_KAFKA_V_HEADERS(hdrs_copy), RD_KAFKA_V_KEY(key_.c_str(), key_.size()), RD_KAFKA_V_OPAQUE(callback_ptr.release()), RD_KAFKA_V_END);
+      if (err) {
+        // the message only takes ownership of the headers in case of success
+        rd_kafka_headers_destroy(hdrs_copy);
       }
+      return err;
     }
 
    public:
@@ -251,18 +258,11 @@ class PublishKafka : public core::Processor {
           key_(std::move(key)),
           rkt_(rkt),
           rk_(rk),
-          hdrs(make_headers()),
           messages_(std::move(messages)),
           flow_file_index_(flow_file_index),
-          status_(0),
-          read_size_(0),
           attributeNameRegex_(attributeNameRegex),
           fail_empty_flow_files_(fail_empty_flow_files)
     { }
-
-    ~ReadCallback() {
-      rd_kafka_headers_destroy(hdrs);
-    }
 
     int64_t process(const std::shared_ptr<io::BaseStream> stream) {
       std::vector<unsigned char> buffer;
@@ -317,7 +317,7 @@ class PublishKafka : public core::Processor {
     const std::string key_;
     rd_kafka_topic_t * const rkt_ = nullptr;
     rd_kafka_t * const rk_ = nullptr;
-    const utils::owner<rd_kafka_headers_t*> hdrs = nullptr;
+    const rd_kafka_headers_unique_ptr hdrs = make_headers();  // not null
     const std::shared_ptr<Messages> messages_;
     const size_t flow_file_index_;
     int status_ = 0;
