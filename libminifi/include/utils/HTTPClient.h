@@ -168,6 +168,8 @@ class HTTPRequestResponse {
 
  public:
 
+  static const size_t CALLBACK_ABORT = 0x10000000;
+
   const std::vector<char> &getData() {
     return data;
   }
@@ -185,11 +187,19 @@ class HTTPRequestResponse {
    * Receive HTTP Response.
    */
   static size_t recieve_write(char * data, size_t size, size_t nmemb, void * p) {
-    HTTPReadCallback *callback = static_cast<HTTPReadCallback*>(p);
-    if (callback->stop)
-      return 0x10000000;
-    callback->ptr->write(data, (size * nmemb));
-    return (size * nmemb);
+    try {
+      if (p == nullptr) {
+        return CALLBACK_ABORT;
+      }
+      HTTPReadCallback *callback = static_cast<HTTPReadCallback *>(p);
+      if (callback->stop) {
+        return CALLBACK_ABORT;
+      }
+      callback->ptr->write(data, (size * nmemb));
+      return (size * nmemb);
+    } catch (...) {
+      return CALLBACK_ABORT;
+    }
   }
 
   /**
@@ -201,15 +211,18 @@ class HTTPRequestResponse {
    */
 
   static size_t send_write(char * data, size_t size, size_t nmemb, void * p) {
-    if (p != 0) {
-      HTTPUploadCallback *callback = (HTTPUploadCallback*) p;
-      if (callback->stop)
-        return 0x10000000;
+    try {
+      if (p == nullptr) {
+        return CALLBACK_ABORT;
+      }
+      HTTPUploadCallback *callback = (HTTPUploadCallback *) p;
+      if (callback->stop) {
+        return CALLBACK_ABORT;
+      }
       size_t buffer_size = callback->ptr->getBufferSize();
       if (callback->getPos() <= buffer_size) {
         size_t len = buffer_size - callback->pos;
-        if (len <= 0)
-        {
+        if (len <= 0) {
           return 0;
         }
         char *ptr = callback->ptr->getBuffer(callback->getPos());
@@ -219,16 +232,15 @@ class HTTPRequestResponse {
         }
         if (len > size * nmemb)
           len = size * nmemb;
-        auto strr = std::string(ptr,len);
         memcpy(data, ptr, len);
         callback->pos += len;
         callback->ptr->seek(callback->getPos());
         return len;
       }
-    } else {
-      return 0x10000000;
+      return 0;
+    } catch (...) {
+      return CALLBACK_ABORT;
     }
-    return 0;
   }
 
   int read_data(uint8_t *buf, size_t size) {
