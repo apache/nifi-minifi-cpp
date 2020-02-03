@@ -41,8 +41,8 @@
 #include "core/controller/ControllerServiceProvider.h"
 #include "core/controller/ControllerServiceNode.h"
 
-#define SCHEDULING_WATCHDOG_CHECK_PERIOD 1000  // msec
-#define SCHEDULING_WATCHDOG_ALERT_DEFAULT_PERIOD 5000  // msec
+#define SCHEDULING_WATCHDOG_CHECK_PERIOD_MS 1000  // msec
+#define SCHEDULING_WATCHDOG_DEFAULT_ALERT_PERIOD_MS 5000  // msec
 
 namespace org {
 namespace apache {
@@ -124,7 +124,8 @@ class SchedulingAgent {
         configure_(configuration),
         content_repo_(content_repo),
         controller_service_provider_(controller_service_provider),
-        logger_(logging::LoggerFactory<SchedulingAgent>::getLogger()) {
+        logger_(logging::LoggerFactory<SchedulingAgent>::getLogger()),
+        alert_time_(configuration->getInt(Configure::nifi_flow_engine_alert_period, SCHEDULING_WATCHDOG_DEFAULT_ALERT_PERIOD_MS)) {
     running_ = false;
     repo_ = repo;
     flow_repo_ = flow_repo;
@@ -133,14 +134,13 @@ class SchedulingAgent {
      * to be able to debug why an agent doesn't work and still allow a restart via updates in these cases.
      */
     auto csThreads = configure_->getInt(Configure::nifi_flow_engine_threads, 2);
-    alert_time_ = std::chrono::milliseconds(configure_->getInt(Configure::nifi_flow_engine_alert_time, SCHEDULING_WATCHDOG_ALERT_DEFAULT_PERIOD));
     auto pool = utils::ThreadPool<uint64_t>(csThreads, false, controller_service_provider, "SchedulingAgent");
     thread_pool_ = std::move(pool);
     thread_pool_.start();
 
-    std::function<void(void)> f = std::bind(&SchedulingAgent::watchDogFunc, this);
     if (alert_time_ > std::chrono::milliseconds(0)) {
-      watchDogTimer_.reset(new utils::CallBackTimer(std::chrono::milliseconds(SCHEDULING_WATCHDOG_CHECK_PERIOD), f));
+      std::function<void(void)> f = std::bind(&SchedulingAgent::watchDogFunc, this);
+      watchDogTimer_.reset(new utils::CallBackTimer(std::chrono::milliseconds(SCHEDULING_WATCHDOG_CHECK_PERIOD_MS), f));
       watchDogTimer_->start();
     }
   }
@@ -173,7 +173,7 @@ class SchedulingAgent {
     return thread_pool_.getTraces();
   }
 
-  void watchDogFunc() const;
+  void watchDogFunc();
 
   virtual std::future<uint64_t> enableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode);
   virtual std::future<uint64_t> disableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode);
@@ -209,6 +209,7 @@ class SchedulingAgent {
  private:
   struct SchedulingInfo {
     std::chrono::time_point<std::chrono::steady_clock> start_time_ = std::chrono::steady_clock::now();
+    // Mutable is required to be able to modify this while leaving in std::set
     mutable std::chrono::time_point<std::chrono::steady_clock> last_alert_time_ = std::chrono::steady_clock::now();
     std::string name_;
     std::string uuid_;
@@ -227,7 +228,7 @@ class SchedulingAgent {
   mutable std::mutex watchdog_mtx_;  // used to protect the set below
   std::set<SchedulingInfo> scheduled_processors_;  // set was chosen to avoid iterator invalidation
   std::unique_ptr<utils::CallBackTimer> watchDogTimer_;
-  std::chrono::milliseconds alert_time_;  // msec
+  std::chrono::milliseconds alert_time_;
 };
 
 } /* namespace minifi */
