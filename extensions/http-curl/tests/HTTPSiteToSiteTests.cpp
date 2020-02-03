@@ -66,6 +66,7 @@ class SiteToSiteTestHarness : public CoapIntegrationBase {
     LogTestController::getInstance().setTrace<minifi::controllers::SSLContextService>();
     LogTestController::getInstance().setInfo<minifi::FlowController>();
     LogTestController::getInstance().setDebug<core::ConfigurableComponent>();
+    LogTestController::getInstance().setTrace<utils::HttpStreamingCallback>();
 
     std::fstream file;
     ss << dir << utils::file::FileUtils::get_separator() << "tstFile.ext";
