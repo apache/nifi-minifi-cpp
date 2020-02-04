@@ -106,14 +106,14 @@ void FlowFileRepository::printStats() {
 }
 
 void FlowFileRepository::run() {
-  auto last = std::chrono::system_clock::now();
+  auto last = std::chrono::steady_clock::now();
   if (running_) {
     prune_stored_flowfiles();
   }
   while (running_) {
     std::this_thread::sleep_for(std::chrono::milliseconds(purge_period_));
     flush();
-    auto now = std::chrono::system_clock::now();
+    auto now = std::chrono::steady_clock::now();
     if ((now-last) > std::chrono::seconds(30)) {
       printStats();
       last = now;
