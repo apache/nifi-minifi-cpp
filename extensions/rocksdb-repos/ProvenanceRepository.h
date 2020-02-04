@@ -37,7 +37,6 @@ namespace provenance {
 
 class ProvenanceRepository : public core::Repository, public std::enable_shared_from_this<ProvenanceRepository> {
  public:
-
   ProvenanceRepository(std::string name, utils::Identifier uuid)
       : ProvenanceRepository(name){
 
@@ -219,6 +218,13 @@ class ProvenanceRepository : public core::Repository, public std::enable_shared_
   }
   // Run function for the thread
   void run();
+
+  uint64_t getKeyCount() const {
+    std::string key_count;
+    db_->GetProperty("rocksdb.estimate-num-keys", &key_count);
+
+    return std::stoull(key_count);
+  }
 
   // Prevent default copy constructor and assignment operation
   // Only support pass by reference or pointer
