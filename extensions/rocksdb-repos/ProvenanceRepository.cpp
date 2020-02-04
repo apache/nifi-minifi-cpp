@@ -25,22 +25,22 @@ namespace minifi {
 namespace provenance {
 
 void ProvenanceRepository::printStats() {
-  logger_->log_info("ProvenanceRepository stats:");
+  std::string key_count;
+  db_->GetProperty("rocksdb.estimate-num-keys", &key_count);
 
-  std::string out;
-  db_->GetProperty("rocksdb.estimate-num-keys", &out);
-  logger_->log_info("\\--Estimated key count: %s", out);
+  std::string table_readers;
+  db_->GetProperty("rocksdb.estimate-table-readers-mem", &table_readers);
 
-  db_->GetProperty("rocksdb.estimate-table-readers-mem", &out);
-  logger_->log_info("\\--Estimated table readers memory consumption: %s", out);
+  std::string all_memtables;
+  db_->GetProperty("rocksdb.cur-size-all-mem-tables", &all_memtables);
 
-  db_->GetProperty("rocksdb.cur-size-all-mem-tables", &out);
-  logger_->log_info("\\--Size of all memory tables: %s", out);
+  logger_->log_info("Repository stats: key count: %zu, table readers size: %zu, all memory tables size: %zu",
+                    key_count, table_readers, all_memtables);
 }
 
 void ProvenanceRepository::run() {
   while (running_) {
-    std::this_thread::sleep_for(std::chrono::seconds(10));
+    std::this_thread::sleep_for(std::chrono::seconds(30));
     printStats();
   }
 }

@@ -55,7 +55,7 @@ class ProvenanceRepository : public core::Repository, public std::enable_shared_
     db_ = NULL;
   }
 
-  virtual void printStats();
+  void printStats();
 
   virtual bool isNoop() {
     return false;
@@ -90,6 +90,8 @@ class ProvenanceRepository : public core::Repository, public std::enable_shared_
     options.create_if_missing = true;
     options.use_direct_io_for_flush_and_compaction = true;
     options.use_direct_reads = true;
+    // Rocksdb write buffers act as a log of database operation: grow till reaching the limit, serialized after
+    // This shouldn't go above 16MB and the configured total size of the db should cap it as well
     int64_t max_buffer_size = 16 << 20;
     options.write_buffer_size = std::min(max_buffer_size, max_partition_bytes_);
     options.max_write_buffer_number = 4;
