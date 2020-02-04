@@ -1,6 +1,4 @@
 /**
- * @file GenerateFlowFile.h
- * GenerateFlowFile class declaration
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -29,32 +27,22 @@ class OnScheduleErrorHandlingTests : public IntegrationBase {
  public:
   virtual void runAssertions() {
     std::string logs = LogTestController::getInstance().log_output.str();
-    size_t pos = 0;
-    size_t last_pos = 0;
-    unsigned int occurances = 0;
-    do {
-      pos = logs.find(minifi::processors::KamikazeProcessor::OnScheduleExceptionStr, pos);
-      if (pos != std::string::npos) {
-        last_pos = pos;
-        pos = logs.find(minifi::processors::KamikazeProcessor::OnUnScheduleLogStr, pos);
-        if (pos != std::string::npos) {
-          last_pos = pos;
-          occurances++;
-        }
-      }
-    } while (pos != std::string::npos);
+
+    auto result = countPatInStr(logs, minifi::processors::KamikazeProcessor::OnScheduleExceptionStr);
+    size_t last_pos = result.first;
+    unsigned int occurances = result.second;
 
     assert(occurances > 1);  // Verify retry of onSchedule and onUnSchedule calls
 
-    // Make sure onSchedule succeeded after property was set
-    assert(logs.find(minifi::processors::KamikazeProcessor::OnScheduleLogStr, last_pos) != std::string::npos);
+    std::vector<std::string> must_appear_byorder_msgs = {minifi::processors::KamikazeProcessor::OnUnScheduleLogStr,
+                                                 minifi::processors::KamikazeProcessor::OnScheduleLogStr,
+                                                 minifi::processors::KamikazeProcessor::OnTriggerExceptionStr,
+                                                 "[warning] ProcessSession rollback for kamikaze executed"};
 
-    // Make sure onTrigger was called after onshedule succeeded
-    pos = logs.find(minifi::processors::KamikazeProcessor::OnTriggerExceptionStr);
-    assert(pos != std::string::npos && pos > last_pos);
-
-    pos = logs.find("[warning] ProcessSession rollback for kamikaze executed");  // Check rollback
-    assert(pos != std::string::npos && pos > last_pos);
+    for(const auto &msg: must_appear_byorder_msgs) {
+      last_pos = logs.find(msg, last_pos);
+      assert(last_pos != std::string::npos);
+    }
 
     assert(logs.find(minifi::processors::KamikazeProcessor::OnTriggerLogStr) == std::string::npos);
   }

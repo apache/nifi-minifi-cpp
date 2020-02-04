@@ -221,10 +221,11 @@ bool ConfigurableComponent::getProperty(const std::string name, T &value) const{
        return true;
      }
      else{
-       logger_->log_debug("Component %s property name %s, empty value", name, item.getName());
+       logger_->log_warn("Component %s property name %s, empty value", name, item.getName());
        return false;
      }
    } else {
+     logger_->log_warn("Could not find property %s", name);
      return false;
    }
 }

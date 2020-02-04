@@ -116,8 +116,6 @@ namespace processors {
 
     BaseOPCProcessor::onSchedule(context, factory);
 
-    // TODO - Nghia: why get this again after getting this from BaseOPC?
-    context->getProperty(OPCServerEndPoint.getName(), endPointURL_);
     std::string value;
     context->getProperty(ParentNodeID.getName(), nodeID_);
     context->getProperty(ParentNodeIDType.getName(), value);

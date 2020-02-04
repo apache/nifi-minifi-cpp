@@ -1,7 +1,4 @@
 /**
- * @file GenerateFlowFile.h
- * GenerateFlowFile class declaration
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -29,29 +26,21 @@ class PublishKafkaOnScheduleTests : public IntegrationBase {
 public:
     virtual void runAssertions() {
       std::string logs = LogTestController::getInstance().log_output.str();
-      size_t pos = 0;
-      size_t last_pos = 0;
-      unsigned int occurances = 0;
-      do {
-        pos = logs.find(" value 1 is outside allowed range 1000..1000000000", pos);
-        if (pos != std::string::npos) {
-          last_pos = pos;
-          pos = logs.find("notifyStop called", pos);
-          if (pos != std::string::npos) {
-            last_pos = pos;
-            occurances++;
-          }
-        }
-      } while (pos != std::string::npos);
+
+      auto result = countPatInStr(logs, "value 1 is outside allowed range 1000..1000000000");
+      size_t last_pos = result.first;
+      unsigned int occurances = result.second;
 
       assert(occurances > 1);  // Verify retry of onSchedule and onUnSchedule calls
 
-      // Make sure onSchedule succeeded after property was set
-      assert(logs.find("Successfully configured PublishKafka", last_pos) != std::string::npos);
+      std::vector<std::string> must_appear_byorder_msgs = {"notifyStop called",
+                                                           "Successfully configured PublishKafka",
+                                                           "PublishKafka onTrigger"};
 
-      // Make sure onTrigger was called after onshedule succeeded
-      pos = logs.find("PublishKafka onTrigger");
-      assert(pos != std::string::npos && pos > last_pos);
+      for(const auto &msg: must_appear_byorder_msgs) {
+        last_pos = logs.find(msg, last_pos);
+        assert(last_pos != std::string::npos);
+      }
     }
 
     virtual void testSetup() {

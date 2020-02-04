@@ -27,7 +27,7 @@ std::shared_ptr<PropertyValidator> StandardValidators::VALID = std::make_shared<
 StandardValidators::StandardValidators() {
   INVALID = std::make_shared<AlwaysValid>(false, "INVALID");
   INTEGER_VALIDATOR = std::make_shared<IntegerValidator>("INTEGER_VALIDATOR");
-  UNSIGNED_INT_VALIDATOR = std::make_shared<UnsignedIntValidator>("UNSIGNED_INT_VALIDATOR");
+  UNSIGNED_INT_VALIDATOR = std::make_shared<UnsignedIntValidator>("NON_NEGATIVE_INTEGER_VALIDATOR");
   LONG_VALIDATOR = std::make_shared<LongValidator>("LONG_VALIDATOR");
   // name is used by java nifi validators, so we should keep this LONG and not change to reflect
   // its internal use

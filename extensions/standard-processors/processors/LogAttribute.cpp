@@ -88,23 +88,14 @@ void LogAttribute::initialize() {
 }
 
 void LogAttribute::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &factory) {
-  core::Property flowsToLog = FlowFilesToLog;
 
-  if (getProperty(FlowFilesToLog.getName(), flowsToLog)) {
-    // we are going this route since to avoid breaking backwards compatibility the get property function doesn't perform validation ( That's done
-    // in configuration. In future releases we can add that exception handling there.
-    if (!flowsToLog.getValue().validate("Validating FlowFilesToLog").valid())
-      throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Invalid value for flowfiles to log: " + flowsToLog.getValue().to_string());
-    flowfiles_to_log_ = static_cast<uint64_t>(flowsToLog.getValue());
-  }
+  context->getProperty(FlowFilesToLog.getName(), flowfiles_to_log_);
+  logger_->log_debug("FlowFiles To Log: %llu", flowfiles_to_log_);
 
-  std::string value;
-  if (context->getProperty(HexencodePayload.getName(), value)) {
-    utils::StringUtils::StringToBool(value, hexencode_);
-  }
-  if (context->getProperty(MaxPayloadLineLength.getName(), value)) {
-    core::Property::StringToInt(value, max_line_length_);
-  }
+  context->getProperty(HexencodePayload.getName(), hexencode_);
+
+  context->getProperty(MaxPayloadLineLength.getName(), max_line_length_);
+  logger_->log_debug("Maximum Payload Line Length: %u", max_line_length_);
 }
 // OnTrigger method, implemented by NiFi LogAttribute
 void LogAttribute::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
