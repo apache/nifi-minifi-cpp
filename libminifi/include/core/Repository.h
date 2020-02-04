@@ -85,10 +85,6 @@ class Repository : public virtual core::SerializableComponent, public core::Trac
 
   virtual void flush();
 
-  virtual void printStats() {
-    return;
-  }
-
   // initialize
   virtual bool initialize(const std::shared_ptr<Configure> &configure) {
     return true;
