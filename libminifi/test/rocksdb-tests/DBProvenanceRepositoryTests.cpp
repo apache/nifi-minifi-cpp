@@ -66,7 +66,7 @@ TEST_CASE("Test size limit", "[sizeLimitTest]") {
   auto temp_dir = testController.createTempDirectory(dirtemplate);
   REQUIRE(!temp_dir.empty());
 
-  // 20 sec, 100kb - going to exceed the latter
+  // 60 sec, 100 KB - going to exceed the size limit
   minifi::provenance::ProvenanceRepository provdb("TestProvRepo", temp_dir,
       MAX_PROVENANCE_ENTRY_LIFE_TIME, TEST_PROVENANCE_STORAGE_SIZE, 1000);
 
@@ -89,7 +89,7 @@ TEST_CASE("Test time limit", "[timeLimitTest]") {
   auto temp_dir = testController.createTempDirectory(dirtemplate);
   REQUIRE(!temp_dir.empty());
 
-  // 20 sec, 100kb - going to exceed the latter
+  // 1 sec, 100 MB - going to exceed TTL
   minifi::provenance::ProvenanceRepository provdb("TestProvRepo", temp_dir,
                                                   TEST_PROVENANCE_ENTRY_LIFE_TIME, TEST_MAX_PROVENANCE_STORAGE_SIZE, 1000);
 
