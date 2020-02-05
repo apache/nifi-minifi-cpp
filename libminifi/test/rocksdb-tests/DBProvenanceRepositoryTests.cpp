@@ -37,9 +37,9 @@ void generateData(std::vector<char>& data) {
   std::generate_n(data.begin(), data.size(), rand);
 }
 
-void provisionRepo(minifi::provenance::ProvenanceRepository& repo, size_t count, size_t size) {
-  for (int i = 0; i < count; ++i) {
-    std::vector<char> v(size);
+void provisionRepo(minifi::provenance::ProvenanceRepository& repo, size_t number_of_records, size_t record_size) {
+  for (int i = 0; i < number_of_records; ++i) {
+    std::vector<char> v(record_size);
     generateData(v);
     REQUIRE(repo.Put(std::to_string(i), reinterpret_cast<const uint8_t*>(v.data()), v.size()));
   }
@@ -48,8 +48,8 @@ void provisionRepo(minifi::provenance::ProvenanceRepository& repo, size_t count,
 void verifyMaxKeyCount(const minifi::provenance::ProvenanceRepository& repo, uint64_t keyCount) {
   uint64_t k = keyCount;
 
-  for (int i = 0; i < 5; ++i) {
-    std::this_thread::sleep_for(std::chrono::seconds(1));
+  for (int i = 0; i < 50; ++i) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
     k = std::min(k, repo.getKeyCount());
     if (k < keyCount) {
       break;
@@ -107,7 +107,7 @@ TEST_CASE("Test time limit", "[timeLimitTest]") {
   /**
    * Magic: TTL-based DB cleanup only triggers when writeBuffers are serialized to storage
    * To achieve this 250 entries are put to DB with a total size that ensures at least one buffer is serialized
-   * Wait a sec to make sure the serialized records expire
+   * Wait more than a sec to make sure the serialized records expire
    * Put another set of entries to trigger cleanup logic to drop the already serialized records
    * This tests relies on the default settings of Provenance repo: a size of a writeBuffer is 16 MB
    * One provisioning call here writes 25 MB to make sure serialization is triggered
