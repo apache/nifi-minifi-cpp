@@ -17,7 +17,7 @@
 
 function(use_bundled_librdkafka SOURCE_DIR BINARY_DIR)
     # Define patch step
-    set(PC "${Patch_EXECUTABLE}" -p1 -i "${SOURCE_DIR}/thirdparty/librdkafka/librdkafka-libressl.patch")
+    set(PC "${Patch_EXECUTABLE}" -p1 -i "${SOURCE_DIR}/thirdparty/librdkafka/librdkafka-libressl.patch" && "${Patch_EXECUTABLE}" -p1 -i "${SOURCE_DIR}/thirdparty/librdkafka/librdkafka-macos-timespec.patch")
 
     # Define byproducts
     if(WIN32)
