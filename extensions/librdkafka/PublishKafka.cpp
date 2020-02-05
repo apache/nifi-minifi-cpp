@@ -180,7 +180,7 @@ void PublishKafka::onSchedule(const std::shared_ptr<core::ProcessContext> &conte
     logger_->log_debug("PublishKafka: AttributeNameRegex [%s]", value);
   }
 
-  // TODO: Get rid of key since we only need to store one connection.
+  // Future Improvement: Get rid of key since we only need to store one connection with current design.
   key_.brokers_ = brokers;
   key_.client_id_ = client_id;
 

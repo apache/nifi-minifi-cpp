@@ -114,6 +114,7 @@ TEST_CASE("GetTCPWithoutEOM", "[GetTCP1]") {
   server.writeData(buffer, buffer.size());
   std::this_thread::sleep_for(std::chrono::seconds(2));
 
+  logAttribute->initialize();
   logAttribute->incrementActiveTasks();
   logAttribute->setScheduledState(core::ScheduledState::RUNNING);
   std::shared_ptr<core::ProcessSessionFactory> factory2 = std::make_shared<core::ProcessSessionFactory>(context2);
@@ -227,6 +228,7 @@ TEST_CASE("GetTCPWithOEM", "[GetTCP2]") {
   server.writeData(buffer, buffer.size());
   std::this_thread::sleep_for(std::chrono::seconds(2));
 
+  logAttribute->initialize();
   logAttribute->incrementActiveTasks();
   logAttribute->setScheduledState(core::ScheduledState::RUNNING);
   std::shared_ptr<core::ProcessSessionFactory> factory2 = std::make_shared<core::ProcessSessionFactory>(context2);
@@ -349,6 +351,7 @@ TEST_CASE("GetTCPWithOnlyOEM", "[GetTCP3]") {
   server.writeData(buffer, buffer.size());
   std::this_thread::sleep_for(std::chrono::seconds(2));
 
+  logAttribute->initialize();
   logAttribute->incrementActiveTasks();
   logAttribute->setScheduledState(core::ScheduledState::RUNNING);
   std::shared_ptr<core::ProcessSessionFactory> factory2 = std::make_shared<core::ProcessSessionFactory>(context2);

@@ -39,7 +39,7 @@ class OnScheduleErrorHandlingTests : public IntegrationBase {
                                                  minifi::processors::KamikazeProcessor::OnTriggerExceptionStr,
                                                  "[warning] ProcessSession rollback for kamikaze executed"};
 
-    for(const auto &msg: must_appear_byorder_msgs) {
+    for (const auto &msg : must_appear_byorder_msgs) {
       last_pos = logs.find(msg, last_pos);
       assert(last_pos != std::string::npos);
     }

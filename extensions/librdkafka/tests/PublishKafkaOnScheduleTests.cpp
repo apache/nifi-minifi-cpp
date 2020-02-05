@@ -16,6 +16,7 @@
  */
 
 #undef NDEBUG
+
 #include <cassert>
 #include "../../../libminifi/test/integration/IntegrationBase.h"
 #include "core/logging/Logger.h"
@@ -23,7 +24,7 @@
 #include "../PublishKafka.h"
 
 class PublishKafkaOnScheduleTests : public IntegrationBase {
-public:
+ public:
     virtual void runAssertions() {
       std::string logs = LogTestController::getInstance().log_output.str();
 
@@ -37,7 +38,7 @@ public:
                                                            "Successfully configured PublishKafka",
                                                            "PublishKafka onTrigger"};
 
-      for(const auto &msg: must_appear_byorder_msgs) {
+      for (const auto &msg : must_appear_byorder_msgs) {
         last_pos = logs.find(msg, last_pos);
         assert(last_pos != std::string::npos);
       }
