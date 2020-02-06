@@ -283,8 +283,6 @@ protected:
 	virtual int16_t select_descriptor(const uint16_t msec);
 
 
-	addrinfo *addr_info_;
-
 	std::recursive_mutex selection_mutex_;
 
 	std::string requested_hostname_;
