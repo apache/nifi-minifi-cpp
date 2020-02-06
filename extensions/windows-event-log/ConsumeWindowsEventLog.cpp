@@ -360,15 +360,7 @@ void ConsumeWindowsEventLog::substituteXMLPercentageItems(pugi::xml_document& do
             value = pBuffer;
             LocalFree(pBuffer);
 
-            // Remove trailing white spaces.
-            if (!value.empty()) {
-              for (int i = value.size() - 1; i >= 0; i--) {
-                if (!std::iswspace(value[i])) {
-                  value.resize(i + 1);
-                  break;
-                }
-              }
-            }
+            value = utils::StringUtils::trimRight(value);
 
             xmlPercentageItemsResolutions_.insert({key, value});
           } else {
