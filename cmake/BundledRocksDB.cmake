@@ -39,6 +39,7 @@ function(use_bundled_rocksdb SOURCE_DIR BINARY_DIR)
             -DWITH_TESTS=OFF
             -DWITH_TOOLS=OFF
             -DWITH_GFLAGS=OFF
+            -DUSE_RTTI=1
             -DFAIL_ON_WARNINGS=OFF)
     if(PORTABLE)
         list(APPEND ROCKSDB_CMAKE_ARGS -DPORTABLE=ON)
