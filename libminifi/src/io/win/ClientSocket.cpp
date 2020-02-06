@@ -26,19 +26,24 @@
 #include <net/if.h>
 #include <ifaddrs.h>
 #include <unistd.h>
-#endif
 #include <sys/types.h>
+#endif
 
-#include <cstdio>
 #include <memory>
 #include <utility>
 #include <vector>
 #include <cerrno>
-#include <iostream>
 #include <string>
 #include "io/validation.h"
 #include "core/logging/LoggerConfiguration.h"
-#include "utils/ScopeGuard.h"
+
+namespace {
+  struct addrinfo_deleter {
+    void operator()(addrinfo* const p) const noexcept {
+      freeaddrinfo(p);
+    }
+  };
+} /* namespace <anonymous> */
 
 namespace org {
 namespace apache {
@@ -49,7 +54,6 @@ namespace io {
 Socket::Socket(const std::shared_ptr<SocketContext> &context, const std::string &hostname, const uint16_t port, const uint16_t listeners = -1)
     : requested_hostname_(hostname),
       port_(port),
-      addr_info_(0),
       socket_file_descriptor_(-1),
       socket_max_(0),
       total_written_(0),
@@ -73,7 +77,6 @@ Socket::Socket(const Socket &&other)
     : requested_hostname_(std::move(other.requested_hostname_)),
       port_(std::move(other.port_)),
       is_loopback_only_(false),
-      addr_info_(std::move(other.addr_info_)),
       socket_file_descriptor_(other.socket_file_descriptor_),
       socket_max_(other.socket_max_.load()),
       listeners_(other.listeners_),
@@ -236,19 +239,14 @@ int16_t Socket::initialize() {
     hints.ai_flags |= AI_PASSIVE;
   hints.ai_protocol = 0; /* any protocol */
 
-  int errcode = getaddrinfo(requested_hostname_.c_str(), 0, &hints, &addr_info_);
+  addrinfo* getaddrinfo_result = nullptr;
+  const int errcode = getaddrinfo(requested_hostname_.c_str(), nullptr, &hints, &getaddrinfo_result);
   if (errcode != 0) {
     logger_->log_error("Saw error during getaddrinfo, error: %lu", WSAGetLastError());
     return -1;
   }
-  utils::ScopeGuard addrinfo_guard{[this] {
-      if (addr_info_) {
-        freeaddrinfo(addr_info_);
-        addr_info_ = nullptr;
-      }
-    }
-  };
-
+  const std::unique_ptr<addrinfo, addrinfo_deleter> addr_info{ getaddrinfo_result };
+  getaddrinfo_result = nullptr;
   socket_file_descriptor_ = -1;
 
 #ifndef WIN32
@@ -273,8 +271,7 @@ int16_t Socket::initialize() {
   }
   memcpy(reinterpret_cast<char*>(&addr), h->h_addr_list[0], h->h_length);
 
-  auto p = addr_info_;
-  for (; p != NULL; p = p->ai_next) {
+  for (const auto* p = addr_info.get(); p; p = p->ai_next) {
     if (IsNullOrEmpty(canonical_hostname_)) {
       if (!IsNullOrEmpty(p) && !IsNullOrEmpty(p->ai_canonname))
         canonical_hostname_ = p->ai_canonname;
