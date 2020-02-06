@@ -164,6 +164,9 @@ ConsumeWindowsEventLog::ConsumeWindowsEventLog(const std::string& name, utils::I
 }
 
 ConsumeWindowsEventLog::~ConsumeWindowsEventLog() {
+  if (hMsobjsDll_) {
+    FreeLibrary(hMsobjsDll_);
+  }
 }
 
 void ConsumeWindowsEventLog::initialize() {
@@ -226,6 +229,25 @@ void ConsumeWindowsEventLog::onSchedule(const std::shared_ptr<core::ProcessConte
     }
   }
 
+  std::string mode;
+  context->getProperty(OutputFormat.getName(), mode);
+
+  writeXML_ = (mode == Both || mode == XML);
+
+  writePlainText_ = (mode == Both || mode == Plaintext);
+
+  if (writeXML_) {
+    char systemDir[MAX_PATH];
+    if (GetSystemDirectory(systemDir, sizeof(systemDir))) {
+      hMsobjsDll_ = LoadLibrary((systemDir + std::string("\\msobjs.dll")).c_str());
+      if (!hMsobjsDll_) {
+        logger_->log_error("!LoadLibrary error %x", GetLastError());
+      }
+    } else {
+      logger_->log_error("!GetSystemDirectory error %x", GetLastError());
+    }
+  }
+
   if (subscriptionHandle_) {
     logger_->log_error("Processor already subscribed to Event Log, expected cleanup to unsubscribe.");
   } else {
@@ -233,13 +255,6 @@ void ConsumeWindowsEventLog::onSchedule(const std::shared_ptr<core::ProcessConte
 
     subscribe(context);
   }
-
-  std::string mode;
-  context->getProperty(OutputFormat.getName(), mode);
-
-  writeXML_ = (mode == Both || mode == XML);
-
-  writePlainText_ = (mode == Both || mode == Plaintext);
 }
 
 void ConsumeWindowsEventLog::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
@@ -285,6 +300,103 @@ wel::WindowsEventLogHandler ConsumeWindowsEventLog::getEventLogHandler(const std
 
   return providers_[name];
 } 
+
+
+// !!! Used a non-documented approach to resolve `%%` in XML via C:\Windows\System32\MsObjs.dll.
+// Links which mention this approach: 
+// https://social.technet.microsoft.com/Forums/Windows/en-US/340632d1-60f0-4cc5-ad6f-f8c841107d0d/translate-value-1833quot-on-impersonationlevel-and-similar-values?forum=winservergen
+// https://github.com/libyal/libevtx/blob/master/documentation/Windows%20XML%20Event%20Log%20(EVTX).asciidoc 
+// https://stackoverflow.com/questions/33498244/marshaling-a-message-table-resource
+//
+// Traverse xml and check each node, if it starts with '%%' and contains only digits, use it as key to lookup value in C:\Windows\System32\MsObjs.dll.
+void ConsumeWindowsEventLog::substituteXMLPercentageItems(pugi::xml_document& doc) {
+  if (!hMsobjsDll_) {
+    return;
+  }
+
+  struct TreeWalker: public pugi::xml_tree_walker {
+    TreeWalker(HMODULE hMsobjsDll, std::unordered_map<std::string, std::string>& xmlPercentageItemsResolutions, std::shared_ptr<logging::Logger> logger)
+      : hMsobjsDll_(hMsobjsDll), xmlPercentageItemsResolutions_(xmlPercentageItemsResolutions), logger_(logger) {
+    }
+
+    bool for_each(pugi::xml_node& node) override {
+      const std::string& nodeText = node.text().get();
+
+      auto beginNumberPos = nodeText.find("%%", 0);
+      if (std::string::npos == beginNumberPos) {
+        return true;
+      }
+      beginNumberPos += 2;
+
+      auto endNumberPos = beginNumberPos;
+
+      auto n = 0;
+      for (; endNumberPos < nodeText.size(); endNumberPos++) {
+        const auto c = nodeText[endNumberPos];
+
+        if (!isdigit(c)) {
+          break;
+        }
+
+        n = 10 * n + c - '0';
+      }
+
+      if (n) {
+        const std::string key(&nodeText[beginNumberPos], endNumberPos - beginNumberPos);
+        std::string value;
+
+        const auto it = xmlPercentageItemsResolutions_.find(key);
+        if (it == xmlPercentageItemsResolutions_.end()) {
+          LPTSTR pBuffer{};
+          if (FormatMessage(
+            FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_HMODULE | FORMAT_MESSAGE_IGNORE_INSERTS,
+            hMsobjsDll_,
+            n,
+            MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+            (LPTSTR)&pBuffer,
+            1024,
+            0
+          )) {
+            value = pBuffer;
+            LocalFree(pBuffer);
+
+            // Remove trailing white spaces.
+            if (!value.empty()) {
+              for (int i = value.size() - 1; i >= 0; i--) {
+                if (!std::iswspace(value[i])) {
+                  value.resize(i + 1);
+                  break;
+                }
+              }
+            }
+
+            xmlPercentageItemsResolutions_.insert({key, value});
+          } else {
+            // Add "" to xmlPercentageItemsResolutions_ - don't need to call FormaMessage for this 'key' again.
+            xmlPercentageItemsResolutions_.insert({key, ""});
+
+            logger_->log_error("!FormatMessage error: %d. '%s' is not found in msobjs.dll.", GetLastError(), key.c_str());
+          }
+        } else {
+          value = it->second;
+        }
+
+        if (!value.empty()) {
+          node.text().set(value.c_str());
+        }
+      }
+
+      return true;
+    }
+
+   private:
+    HMODULE hMsobjsDll_;
+    std::unordered_map<std::string, std::string>& xmlPercentageItemsResolutions_;
+    std::shared_ptr<logging::Logger> logger_;
+  } treeWalker(hMsobjsDll_, xmlPercentageItemsResolutions_, logger_);
+
+  doc.traverse(treeWalker);
+}
 
 void ConsumeWindowsEventLog::processEvent(EVT_HANDLE hEvent) {
   DWORD size = 0;
@@ -343,6 +455,8 @@ void ConsumeWindowsEventLog::processEvent(EVT_HANDLE hEvent) {
       }
 
       if (writeXML_) {
+        substituteXMLPercentageItems(doc);
+
         if (resolve_as_attributes_) {
           renderedData.matched_fields_ = walker.getFieldValues();
         }
