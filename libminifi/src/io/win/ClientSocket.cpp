@@ -38,6 +38,7 @@
 #include <string>
 #include "io/validation.h"
 #include "core/logging/LoggerConfiguration.h"
+#include "utils/ScopeGuard.h"
 
 namespace org {
 namespace apache {
@@ -90,10 +91,6 @@ Socket::~Socket() {
 }
 
 void Socket::closeStream() {
-  if (0 != addr_info_) {
-    freeaddrinfo(addr_info_);
-    addr_info_ = 0;
-  }
   if (socket_file_descriptor_ >= 0 && socket_file_descriptor_ != INVALID_SOCKET) {
     logging::LOG_DEBUG(logger_) << "Closing " << socket_file_descriptor_;
 #ifdef WIN32
@@ -207,10 +204,8 @@ int8_t Socket::createConnection(const addrinfo *p, in_addr_t &addr) {
         } else {
           logger_->log_error("Unknown error");
         }
-
 #endif
         closeStream();
-        socket_file_descriptor_ = -1;
         return -1;
       }
     }
@@ -242,11 +237,17 @@ int16_t Socket::initialize() {
   hints.ai_protocol = 0; /* any protocol */
 
   int errcode = getaddrinfo(requested_hostname_.c_str(), 0, &hints, &addr_info_);
-
   if (errcode != 0) {
     logger_->log_error("Saw error during getaddrinfo, error: %lu", WSAGetLastError());
     return -1;
   }
+  utils::ScopeGuard addrinfo_guard{[this] {
+      if (addr_info_) {
+        freeaddrinfo(addr_info_);
+        addr_info_ = nullptr;
+      }
+    }
+  };
 
   socket_file_descriptor_ = -1;
 
