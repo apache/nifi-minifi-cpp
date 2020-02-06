@@ -38,6 +38,8 @@ function(use_bundled_rocksdb SOURCE_DIR BINARY_DIR)
             "-DCMAKE_INSTALL_PREFIX=${BINARY_DIR}/thirdparty/rocksdb-install"
             -DWITH_TESTS=OFF
             -DWITH_TOOLS=OFF
+            -DWITH_GFLAGS=OFF
+            -DUSE_RTTI=1
             -DFAIL_ON_WARNINGS=OFF)
     if(PORTABLE)
         list(APPEND ROCKSDB_CMAKE_ARGS -DPORTABLE=ON)
@@ -49,8 +51,8 @@ function(use_bundled_rocksdb SOURCE_DIR BINARY_DIR)
     # Build project
     ExternalProject_Add(
             rocksdb-external
-            URL "https://github.com/facebook/rocksdb/archive/rocksdb-5.8.6.tar.gz"
-            URL_HASH "SHA256=eb7d79572fff8ba60ccf1caa3b504dd1f4ac7fc864773ff056e1c3c30902508b"
+            URL "https://github.com/facebook/rocksdb/archive/v5.18.3.tar.gz"
+            URL_HASH "SHA256=7fb6738263d3f2b360d7468cf2ebe333f3109f3ba1ff80115abd145d75287254"
             SOURCE_DIR "${BINARY_DIR}/thirdparty/rocksdb-src"
             CMAKE_ARGS ${ROCKSDB_CMAKE_ARGS}
             PATCH_COMMAND ${PC}
