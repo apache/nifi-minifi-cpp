@@ -34,6 +34,7 @@
 #include "utils/OsUtils.h"
 #include <Objbase.h>
 #include <mutex>
+#include <unordered_map>
 
 namespace org {
 namespace apache {
@@ -108,13 +109,13 @@ protected:
   void LogWindowsError();
   void processEvent(EVT_HANDLE eventHandle);
   bool processEventsAfterBookmark(EVT_HANDLE hEventResults, const std::wstring& channel, const std::wstring& query);
+  void substituteXMLPercentageItems(pugi::xml_document& doc);
 
   static constexpr const char * const XML = "XML";
   static constexpr const char * const Both = "Both";
   static constexpr const char * const Plaintext = "Plaintext";
 
 private:
-
   // Logger
   wel::METADATA_NAMES header_names_;
   std::string header_delimiter_;
@@ -140,6 +141,8 @@ private:
   bool writePlainText_;
   std::unique_ptr<Bookmark> pBookmark_;
   std::mutex onTriggerMutex_;
+  std::unordered_map<std::string, std::string> xmlPercentageItemsResolutions_;
+  HMODULE hMsobjsDll_{};
 };
 
 REGISTER_RESOURCE(ConsumeWindowsEventLog, "Windows Event Log Subscribe Callback to receive FlowFiles from Events on Windows.");
