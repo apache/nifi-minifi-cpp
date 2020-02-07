@@ -38,12 +38,12 @@
 #include "core/logging/LoggerConfiguration.h"
 
 namespace {
-  struct addrinfo_deleter {
-    void operator()(addrinfo* const p) const noexcept {
-      freeaddrinfo(p);
-    }
-  };
-} /* namespace <anonymous> */
+struct addrinfo_deleter {
+  void operator()(addrinfo* const p) const noexcept {
+    freeaddrinfo(p);
+  }
+};
+}  // namespace
 
 namespace org {
 namespace apache {
