@@ -205,16 +205,16 @@ class PublishKafka : public core::Processor {
       });
     }
 
-    rd_kafka_headers_unique_ptr make_headers() const {
-      const utils::owner<rd_kafka_headers_t*> result = rd_kafka_headers_new(8);
+    static rd_kafka_headers_unique_ptr make_headers(const core::FlowFile& flow_file, utils::Regex& attribute_name_regex) {
+      const utils::owner<rd_kafka_headers_t*> result{ rd_kafka_headers_new(8) };
       if (!result) { throw std::bad_alloc{}; }
 
-      for (const auto& kv : flowFile_->getAttributes()) {
-        if(attributeNameRegex_.match(kv.first)) {
+      for (const auto& kv : flow_file.getAttributes()) {
+        if(attribute_name_regex.match(kv.first)) {
           rd_kafka_header_add(result, kv.first.c_str(), kv.first.size(), kv.second.c_str(), kv.second.size());
         }
       }
-      return rd_kafka_headers_unique_ptr{result};
+      return rd_kafka_headers_unique_ptr{ result };
     }
 
     rd_kafka_resp_err_t produce(const size_t segment_num, std::vector<unsigned char>& buffer, const size_t buflen) const {
@@ -247,20 +247,19 @@ class PublishKafka : public core::Processor {
                  std::string key,
                  rd_kafka_topic_t * const rkt,
                  rd_kafka_t * const rk,
-                 std::shared_ptr<core::FlowFile> flowFile,
+                 const core::FlowFile& flowFile,
                  utils::Regex &attributeNameRegex,
                  std::shared_ptr<Messages> messages,
                  const size_t flow_file_index,
                  const bool fail_empty_flow_files)
-        : flowFile_(std::move(flowFile)),
-          flow_size_(flowFile_->getSize()),
+        : flow_size_(flowFile.getSize()),
           max_seg_size_(max_seg_size == 0 || flow_size_ < max_seg_size ? flow_size_ : max_seg_size),
           key_(std::move(key)),
           rkt_(rkt),
           rk_(rk),
+          hdrs(make_headers(flowFile, attributeNameRegex)),
           messages_(std::move(messages)),
           flow_file_index_(flow_file_index),
-          attributeNameRegex_(attributeNameRegex),
           fail_empty_flow_files_(fail_empty_flow_files)
     { }
 
@@ -311,19 +310,17 @@ class PublishKafka : public core::Processor {
       return read_size_;
     }
 
-    const std::shared_ptr<core::FlowFile> flowFile_;
     const uint64_t flow_size_ = 0;
     const uint64_t max_seg_size_ = 0;
     const std::string key_;
     rd_kafka_topic_t * const rkt_ = nullptr;
     rd_kafka_t * const rk_ = nullptr;
-    const rd_kafka_headers_unique_ptr hdrs = make_headers();  // not null
+    const rd_kafka_headers_unique_ptr hdrs;  // not null
     const std::shared_ptr<Messages> messages_;
     const size_t flow_file_index_;
     int status_ = 0;
     std::string error_;
     int read_size_ = 0;
-    utils::Regex& attributeNameRegex_;
     bool called_ = false;
     const bool fail_empty_flow_files_ = true;
   };

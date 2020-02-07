@@ -646,7 +646,7 @@ void PublishKafka::onTrigger(const std::shared_ptr<core::ProcessContext> &contex
     bool failEmptyFlowFiles = true;
     context->getProperty(FailEmptyFlowFiles.getName(), failEmptyFlowFiles);
 
-    PublishKafka::ReadCallback callback(max_flow_seg_size, kafkaKey, thisTopic->getTopic(), conn->getConnection(), flowFile,
+    PublishKafka::ReadCallback callback(max_flow_seg_size, kafkaKey, thisTopic->getTopic(), conn->getConnection(), *flowFile,
                                         attributeNameRegex, messages, flow_file_index, failEmptyFlowFiles);
     session->read(flowFile, &callback);
 
