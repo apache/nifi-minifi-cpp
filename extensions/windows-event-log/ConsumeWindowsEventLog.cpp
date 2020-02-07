@@ -236,7 +236,7 @@ void ConsumeWindowsEventLog::onSchedule(const std::shared_ptr<core::ProcessConte
 
   writePlainText_ = (mode == Both || mode == Plaintext);
 
-  if (writeXML_) {
+  if (writeXML_ && !hMsobjsDll_) {
     char systemDir[MAX_PATH];
     if (GetSystemDirectory(systemDir, sizeof(systemDir))) {
       hMsobjsDll_ = LoadLibrary((systemDir + std::string("\\msobjs.dll")).c_str());
