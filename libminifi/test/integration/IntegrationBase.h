@@ -43,9 +43,9 @@ class IntegrationBase {
   }
 
   // Return the last position and number of occurrences.
-  std::pair<size_t, uint32_t> countPatInStr(const std::string &str, const std::string &pattern) {
+  std::pair<size_t, int> countPatInStr(const std::string &str, const std::string &pattern) {
     size_t last_pos = 0;
-    unsigned int occurrences = 0;
+    int occurrences = 0;
     for(size_t pos = str.find(pattern); pos != std::string::npos; pos = str.find(pattern, pos + pattern.size())) {
       last_pos = pos;
       occurrences++;

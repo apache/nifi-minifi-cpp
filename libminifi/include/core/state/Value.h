@@ -253,51 +253,19 @@ class BoolValue : public Value {
  protected:
 
   virtual bool getValue(int &ref) {
-    if (ref == 1) {
-      ref = true;
-      return true;
-    } else if (ref == 0) {
-      ref = false;
-      return true;
-    } else {
-      return false;
-    }
+    return PreventSwearingInFutureRefactor(ref);
   }
 
   virtual bool getValue(uint32_t &ref) {
-    if (ref == 1) {
-      ref = true;
-      return true;
-    } else if (ref == 0) {
-      ref = false;
-      return true;
-    } else {
-      return false;
-    }
+    return PreventSwearingInFutureRefactor(ref);
   }
 
   virtual bool getValue(int64_t &ref) {
-    if (ref == 1) {
-      ref = true;
-      return true;
-    } else if (ref == 0) {
-      ref = false;
-      return true;
-    } else {
-      return false;
-    }
+    return PreventSwearingInFutureRefactor(ref);
   }
 
   virtual bool getValue(uint64_t &ref) {
-    if (ref == 1) {
-      ref = true;
-      return true;
-    } else if (ref == 0) {
-      ref = false;
-      return true;
-    } else {
-      return false;
-    }
+    return PreventSwearingInFutureRefactor(ref);
   }
 
   virtual bool getValue(bool &ref) {
@@ -306,6 +274,16 @@ class BoolValue : public Value {
   }
 
   bool value;
+
+ private:
+  template<typename T>
+  bool PreventSwearingInFutureRefactor(T &ref) {
+    if (value != 0 && value != 1) {
+      return false;
+    }
+    ref = value != 0;
+    return true;
+  }
 };
 
 class UInt64Value : public Value {
@@ -418,7 +396,7 @@ static inline std::shared_ptr<Value> createValue(const char *object) {
   return std::make_shared<Value>(object);
 }
 
-static inline std::shared_ptr<Value> createValue(char *object) { // hmm?
+static inline std::shared_ptr<Value> createValue(char *object) {
   return std::make_shared<Value>(std::string(object));
 }
 
@@ -513,7 +491,7 @@ struct SerializedResponseNode {
   bool collapsible;
   std::vector<SerializedResponseNode> children;
 
-  explicit SerializedResponseNode(bool collapsible = true)
+  SerializedResponseNode(bool collapsible = true)
       : array(false),
         collapsible(collapsible) {
   }

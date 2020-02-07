@@ -92,7 +92,7 @@ class PropertyValue : public state::response::ValueNode {
 	  }
   }
 
-  explicit operator uint64_t() const {
+  operator uint64_t() const {
     uint64_t res;
     if (value_->convertValue(res)) {
       return res;
@@ -100,7 +100,7 @@ class PropertyValue : public state::response::ValueNode {
     throw std::runtime_error("Invalid conversion to uint64_t for" + value_->getStringValue());
   }
 
-  explicit operator int64_t() const {
+  operator int64_t() const {
     int64_t res;
     if (value_->convertValue(res)) {
       return res;
@@ -108,7 +108,7 @@ class PropertyValue : public state::response::ValueNode {
     throw std::runtime_error("Invalid conversion to int64_t");
   }
 
-  explicit operator uint32_t() const {
+  operator uint32_t() const {
     uint32_t res;
     if (value_->convertValue(res)) {
       return res;
@@ -116,7 +116,7 @@ class PropertyValue : public state::response::ValueNode {
     throw std::runtime_error("Invalid conversion to uint32_t for" + value_->getStringValue());
   }
 
-  explicit operator int() const {
+  operator int() const {
     int res;
     if (value_->convertValue(res)) {
       return res;
@@ -124,7 +124,7 @@ class PropertyValue : public state::response::ValueNode {
     throw std::runtime_error("Invalid conversion to int ");
   }
 
-  explicit operator bool() const {
+  operator bool() const {
     bool res;
     if (value_->convertValue(res)) {
       return res;

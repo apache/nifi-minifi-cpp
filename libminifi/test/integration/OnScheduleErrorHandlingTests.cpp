@@ -30,9 +30,9 @@ class OnScheduleErrorHandlingTests : public IntegrationBase {
 
     auto result = countPatInStr(logs, minifi::processors::KamikazeProcessor::OnScheduleExceptionStr);
     size_t last_pos = result.first;
-    unsigned int occurances = result.second;
+    int occurrences = result.second;
 
-    assert(occurances > 1);  // Verify retry of onSchedule and onUnSchedule calls
+    assert(occurrences > 1);  // Verify retry of onSchedule and onUnSchedule calls
 
     std::vector<std::string> must_appear_byorder_msgs = {minifi::processors::KamikazeProcessor::OnUnScheduleLogStr,
                                                  minifi::processors::KamikazeProcessor::OnScheduleLogStr,
