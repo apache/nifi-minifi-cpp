@@ -320,38 +320,33 @@ void ConsumeWindowsEventLog::substituteXMLPercentageItems(pugi::xml_document& do
     }
 
     bool for_each(pugi::xml_node& node) override {
-      const std::string& nodeText = node.text().get();
+      static const std::string percentages = "%%";
 
-      auto beginNumberPos = nodeText.find("%%", 0);
-      if (std::string::npos == beginNumberPos) {
-        return true;
-      }
-      beginNumberPos += 2;
+      bool percentagesReplaced = false;
 
-      auto endNumberPos = beginNumberPos;
+      std::string nodeText = node.text().get();
 
-      auto n = 0;
-      for (; endNumberPos < nodeText.size(); endNumberPos++) {
-        const auto c = nodeText[endNumberPos];
+      for (size_t numberPos = 0; std::string::npos != (numberPos = nodeText.find(percentages, numberPos));) {
+        numberPos += percentages.size();
 
-        if (!isdigit(c)) {
-          break;
+        auto number = 0u;
+        try {
+          // Assumption - first character is not '0', otherwise not all digits will be replaced by 'value'.
+          number = std::stoul(&nodeText[numberPos]);
+        } catch (std::invalid_argument& e) {
+          continue;
         }
 
-        n = 10 * n + c - '0';
-      }
+        const std::string key = std::to_string(number);
 
-      if (n) {
-        const std::string key(&nodeText[beginNumberPos], endNumberPos - beginNumberPos);
         std::string value;
-
         const auto it = xmlPercentageItemsResolutions_.find(key);
         if (it == xmlPercentageItemsResolutions_.end()) {
           LPTSTR pBuffer{};
           if (FormatMessage(
             FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_HMODULE | FORMAT_MESSAGE_IGNORE_INSERTS,
             hMsobjsDll_,
-            n,
+            number,
             MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
             (LPTSTR)&pBuffer,
             1024,
@@ -374,8 +369,14 @@ void ConsumeWindowsEventLog::substituteXMLPercentageItems(pugi::xml_document& do
         }
 
         if (!value.empty()) {
-          node.text().set(value.c_str());
+          nodeText.replace(numberPos - percentages.size(), key.size() + percentages.size(), value);
+
+          percentagesReplaced = true;
         }
+      }
+
+      if (percentagesReplaced) {
+        node.text().set(nodeText.c_str());
       }
 
       return true;
