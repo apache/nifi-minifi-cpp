@@ -68,7 +68,7 @@ namespace response {
 
 class ComponentManifest : public DeviceInformation {
  public:
-  ComponentManifest(std::string name, utils::Identifier & uuid)
+  ComponentManifest(const std::string& name, utils::Identifier & uuid)
       : DeviceInformation(name, uuid) {
   }
 
@@ -92,7 +92,7 @@ class ComponentManifest : public DeviceInformation {
   }
  protected:
 
-  void serializeClassDescription(const std::vector<ClassDescription> &descriptions, const std::string name, SerializedResponseNode &response) {
+  void serializeClassDescription(const std::vector<ClassDescription> &descriptions, const std::string name, SerializedResponseNode &response) const {
     if (!descriptions.empty()) {
       SerializedResponseNode type;
       type.name = name;
@@ -307,7 +307,7 @@ class ComponentManifest : public DeviceInformation {
 
 class ExternalManifest : public ComponentManifest {
  public:
-  ExternalManifest(std::string name, utils::Identifier & uuid)
+  ExternalManifest(const std::string& name, utils::Identifier & uuid)
       : ComponentManifest(name, uuid) {
   }
 
@@ -329,7 +329,7 @@ class ExternalManifest : public ComponentManifest {
 
 class Bundles : public DeviceInformation {
  public:
-  Bundles(std::string name, utils::Identifier & uuid)
+  Bundles(const std::string& name, utils::Identifier & uuid)
       : DeviceInformation(name, uuid) {
     setArray(true);
   }
@@ -452,8 +452,17 @@ class AgentStatus : public StateMonitorNode {
         queuesize.name = "size";
         queuesize.value = repo.second->getRepoSize();
 
-        repoNode.children.push_back(queuesize);
+        SerializedResponseNode isRunning;
+        isRunning.name = "running";
+        isRunning.value = repo.second->isRunning();
 
+        SerializedResponseNode isFull;
+        isFull.name = "full";
+        isFull.value = repo.second->isFull();
+
+        repoNode.children.push_back(queuesize);
+        repoNode.children.push_back(isRunning);
+        repoNode.children.push_back(isFull);
         repositories.children.push_back(repoNode);
 
       }
@@ -540,14 +549,12 @@ class AgentMonitor {
 class AgentManifest : public DeviceInformation {
  public:
 
-  AgentManifest(std::string name, utils::Identifier & uuid)
+  AgentManifest(const std::string& name, utils::Identifier & uuid)
       : DeviceInformation(name, uuid) {
-    //setArray(true);
   }
 
   AgentManifest(const std::string &name)
       : DeviceInformation(name) {
-    //  setArray(true);
   }
 
   std::string getName() const {
@@ -622,25 +629,21 @@ class AgentManifest : public DeviceInformation {
   }
 };
 
-/**
- * Purpose and Justification: Prints classes along with their properties for the current agent.
- */
-class AgentInformation : public DeviceInformation, public AgentMonitor, public AgentIdentifier {
- public:
 
-  AgentInformation(std::string name, utils::Identifier & uuid)
+class AgentNode : public DeviceInformation, public AgentMonitor, public AgentIdentifier {
+public:
+
+  AgentNode(const std::string& name, utils::Identifier & uuid)
       : DeviceInformation(name, uuid) {
     setArray(false);
   }
 
-  AgentInformation(const std::string &name)
+  explicit AgentNode(const std::string& name)
       : DeviceInformation(name) {
     setArray(false);
   }
 
-  std::string getName() const {
-    return "agentInfo";
-  }
+protected:
 
   std::vector<SerializedResponseNode> serialize() {
     std::vector<SerializedResponseNode> serialized;
@@ -654,6 +657,14 @@ class AgentInformation : public DeviceInformation, public AgentMonitor, public A
     agentClass.name = "agentClass";
     agentClass.value = agent_class_;
 
+    serialized.push_back(ident);
+    serialized.push_back(agentClass);
+
+    return serialized;
+  }
+
+  std::vector<SerializedResponseNode> getAgentManifest() const {
+    std::vector<SerializedResponseNode> serialized;
     AgentManifest manifest("manifest");
 
     SerializedResponseNode agentManifest;
@@ -661,6 +672,34 @@ class AgentInformation : public DeviceInformation, public AgentMonitor, public A
     for (auto &ser : manifest.serialize()) {
       agentManifest.children.push_back(std::move(ser));
     }
+    serialized.push_back(agentManifest);
+    return serialized;
+  }
+};
+
+/**
+ * This class is used for regular heartbeat without manifest
+ * A light weight heartbeat
+ */
+class AgentInformationWithoutManifest : public AgentNode {
+public:
+
+  AgentInformationWithoutManifest(const std::string& name, utils::Identifier & uuid)
+      : AgentNode(name, uuid) {
+    setArray(false);
+  }
+
+  explicit AgentInformationWithoutManifest(const std::string &name)
+      : AgentNode(name) {
+    setArray(false);
+  }
+
+  std::string getName() const {
+    return "agentInfo";
+  }
+
+  std::vector<SerializedResponseNode> serialize() {
+    std::vector<SerializedResponseNode> serialized(AgentNode::serialize());
 
     AgentStatus status("status");
     status.setRepositories(repositories_);
@@ -672,16 +711,72 @@ class AgentInformation : public DeviceInformation, public AgentMonitor, public A
       agentStatus.children.push_back(std::move(ser));
     }
 
-    serialized.push_back(ident);
-    serialized.push_back(agentClass);
-    serialized.push_back(agentManifest);
     serialized.push_back(agentStatus);
+    return serialized;
+  }
+};
+
+
+/**
+ * This class is used for sending all agent information including manifest and status
+ * A heavy weight heartbeat. Here to maintain backward compatibility
+ */
+class AgentInformation : public AgentInformationWithoutManifest {
+ public:
+
+  AgentInformation(const std::string& name, utils::Identifier & uuid)
+      : AgentInformationWithoutManifest(name, uuid) {
+    setArray(false);
+  }
+
+  explicit AgentInformation(const std::string &name)
+      : AgentInformationWithoutManifest(name) {
+    setArray(false);
+  }
+
+  std::string getName() const {
+    return "agentInfo";
+  }
+
+  std::vector<SerializedResponseNode> serialize() {
+    std::vector<SerializedResponseNode> serialized(AgentInformationWithoutManifest::serialize());
+    auto manifest = getAgentManifest();
+    serialized.insert(serialized.end(), std::make_move_iterator(manifest.begin()), std::make_move_iterator(manifest.end()));
     return serialized;
   }
 
 };
 
+/**
+ * This class is used for response to DESCRIBE manifest request
+ * It contains static information only
+ */
+class AgentInformationWithManifest : public AgentNode {
+public:
+  AgentInformationWithManifest(const std::string& name, utils::Identifier & uuid)
+      : AgentNode(name, uuid) {
+    setArray(false);
+  }
+
+  explicit AgentInformationWithManifest(const std::string &name)
+      : AgentNode(name) {
+    setArray(false);
+  }
+
+  std::string getName() const {
+    return "agentInfo";
+  }
+
+  std::vector<SerializedResponseNode> serialize() {
+    std::vector<SerializedResponseNode> serialized(AgentNode::serialize());
+    auto manifest = getAgentManifest();
+    serialized.insert(serialized.end(), std::make_move_iterator(manifest.begin()), std::make_move_iterator(manifest.end()));
+    return serialized;
+  }
+};
+
 REGISTER_RESOURCE(AgentInformation, "Node part of an AST that defines all agent information, to include the manifest, and bundle information as part of a healthy hearbeat.");
+REGISTER_RESOURCE(AgentInformationWithoutManifest, "Node part of an AST that defines all agent information, without the manifest and bundle information as part of a healthy hearbeat.");
 
 } /* namespace metrics */
 } /* namespace state */

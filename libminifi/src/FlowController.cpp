@@ -466,6 +466,7 @@ void FlowController::initializeC2() {
   device_information_.clear();
   component_metrics_.clear();
   component_metrics_by_id_.clear();
+  agent_information_.clear();
   std::string class_csv;
 
   if (root_ != nullptr) {
@@ -484,6 +485,15 @@ void FlowController::initializeC2() {
     repoMetrics->addRepository(flow_file_repo_);
 
     device_information_[repoMetrics->getName()] = repoMetrics;
+
+    std::shared_ptr<state::response::AgentInformationWithManifest> manifest = std::make_shared<state::response::AgentInformationWithManifest>("agentInformation");
+    auto identifier = std::dynamic_pointer_cast<state::response::AgentIdentifier>(manifest);
+
+    if (identifier != nullptr) {
+      identifier->setIdentifier(identifier_str);
+      identifier->setAgentClass(class_str);
+      agent_information_[manifest->getName()] = manifest;
+    }
   }
 
   if (configuration_->get("nifi.c2.root.classes", class_csv)) {
@@ -930,6 +940,34 @@ int16_t FlowController::getMetricsNodes(std::vector<std::shared_ptr<state::respo
     }
   }
   return 0;
+}
+
+int16_t FlowController::getManifestNodes(std::vector<std::shared_ptr<state::response::ResponseNode>>& manifest_vector) const {
+    std::lock_guard<std::mutex> lock(metrics_mutex_);
+    for (const auto& metric : agent_information_) {
+        manifest_vector.push_back(metric.second);
+    }
+    return 0;
+}
+
+std::shared_ptr<state::response::ResponseNode> FlowController::getAgentInformation() const {
+    auto agentInfo = std::make_shared<state::response::AgentInformation>("agentInfo");
+    auto identifier = std::dynamic_pointer_cast<state::response::AgentIdentifier>(agentInfo);
+
+    if (identifier != nullptr) {
+      std::string class_str;
+      configuration_->get("nifi.c2.agent.class", "c2.agent.class", class_str);
+
+      std::string identifier_str;
+      if (!configuration_->get("nifi.c2.agent.identifier", "c2.agent.identifier", identifier_str) || identifier_str.empty()) {
+        identifier_str = uuidStr_;
+      }
+
+      identifier->setIdentifier(identifier_str);
+      identifier->setAgentClass(class_str);
+      return agentInfo;
+    }
+    return nullptr;
 }
 
 std::vector<std::shared_ptr<state::StateController>> FlowController::getAllComponents() {

@@ -43,12 +43,12 @@ class ResponseNode : public core::Connectable {
         is_array_(false) {
   }
 
-  ResponseNode(std::string name)
+  ResponseNode(const std::string& name)
       : core::Connectable(name),
         is_array_(false) {
   }
 
-  ResponseNode(std::string name, utils::Identifier & uuid)
+  ResponseNode(const std::string& name, utils::Identifier & uuid)
       : core::Connectable(name, uuid),
         is_array_(false) {
   }
@@ -90,10 +90,10 @@ class ResponseNode : public core::Connectable {
  */
 class DeviceInformation : public ResponseNode {
  public:
-  DeviceInformation(std::string name, utils::Identifier & uuid)
+  DeviceInformation(const std::string& name, utils::Identifier & uuid)
       : ResponseNode(name, uuid) {
   }
-  DeviceInformation(std::string name)
+  DeviceInformation(const std::string& name)
       : ResponseNode(name) {
   }
 };
@@ -228,6 +228,18 @@ class NodeReporter {
    */
   virtual int16_t getMetricsNodes(std::vector<std::shared_ptr<ResponseNode>> &metric_vector, uint16_t metricsClass) = 0;
 
+  /**
+   * Retrieves agent information with manifest only from this source.
+   * @param manifest_vector -- manifest nodes vector.
+   * @return 0 on Success, -1 on failure
+   */
+  virtual int16_t getManifestNodes(std::vector<std::shared_ptr<state::response::ResponseNode>>& manifest_vector) const = 0;
+
+  /**
+   * Returns a response node containing all agent information with manifest and agent status
+   * @return a shared pointer to agent information
+   */
+  virtual std::shared_ptr<state::response::ResponseNode> getAgentInformation() const = 0;
 };
 
 /**

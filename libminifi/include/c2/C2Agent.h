@@ -171,6 +171,11 @@ class C2Agent : public state::UpdateController, public state::response::Response
    */
   bool update_property(const std::string &property_name, const std::string &property_value,  bool persist = false);
 
+  /**
+   * Creates configuration options C2 payload for response
+   */
+  C2Payload prepareConfigurationOptions(const C2ContentResponse &resp) const;
+
   std::timed_mutex metrics_mutex_;
   std::map<std::string, std::shared_ptr<state::response::ResponseNode>> metrics_map_;
 
@@ -244,6 +249,8 @@ class C2Agent : public state::UpdateController, public state::response::Response
   std::string bin_location_;
 
   std::shared_ptr<logging::Logger> logger_;
+
+  bool manifest_sent_;
 };
 
 } /* namesapce c2 */

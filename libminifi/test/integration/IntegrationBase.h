@@ -35,7 +35,7 @@ class IntegrationBase {
  public:
   IntegrationBase(uint64_t waitTime = DEFAULT_WAITTIME_MSECS);
 
-  virtual ~IntegrationBase();
+  virtual ~IntegrationBase() = default;
 
   virtual void run(std::string test_file_location);
 
@@ -75,6 +75,10 @@ class IntegrationBase {
 
   }
 
+  virtual void configureC2RootClasses() {
+
+  }
+
   virtual void updateProperties(std::shared_ptr<minifi::FlowController> fc) {
 
   }
@@ -90,9 +94,6 @@ class IntegrationBase {
 IntegrationBase::IntegrationBase(uint64_t waitTime)
     : configuration(std::make_shared<minifi::Configure>()),
       wait_time_(waitTime) {
-}
-
-IntegrationBase::~IntegrationBase() {
 }
 
 void IntegrationBase::configureSecurity() {
@@ -125,6 +126,8 @@ void IntegrationBase::run(std::string test_file_location) {
   std::shared_ptr<core::ProcessGroup> pg = std::shared_ptr<core::ProcessGroup>(ptr.get());
 
   queryRootProcessGroup(pg);
+
+  configureC2RootClasses();
 
   ptr.release();
 
