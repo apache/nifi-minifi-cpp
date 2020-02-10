@@ -78,7 +78,7 @@ class BuildInformation : public DeviceInformation {
     return "BuildInformation";
   }
 
-  std::vector<SerializedResponseNode> serialize() {
+  std::vector<SerializedResponseNode> serialize() const {
     std::vector<SerializedResponseNode> serialized;
 
     SerializedResponseNode build_version;

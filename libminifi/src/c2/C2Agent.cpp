@@ -50,6 +50,8 @@ C2Agent::C2Agent(const std::shared_ptr<core::controller::ControllerServiceProvid
       logger_(logging::LoggerFactory<C2Agent>::getLogger()) {
   allow_updates_ = true;
 
+  manifest_sent_ = false;
+
   running_c2_configuration = std::make_shared<Configure>();
 
   last_run_ = std::chrono::steady_clock::now();
@@ -299,32 +301,34 @@ void C2Agent::performHeartBeat() {
     payload.addPayload(std::move(metrics));
   }
 
-  if (device_information_.size() > 0) {
-    C2Payload deviceInfo(Operation::HEARTBEAT);
-    deviceInfo.setLabel("AgentInformation");
+  for (auto metric : root_response_nodes_) {
+    C2Payload child_metric_payload(Operation::HEARTBEAT);
+    bool isArray{false};
+    std::string metricName;
+    std::vector<state::response::SerializedResponseNode> metrics;
+    std::shared_ptr<state::response::NodeReporter> reporter;
+    std::shared_ptr<state::response::ResponseNode> agentInfo;
 
-    for (auto metric : device_information_) {
-      C2Payload child_metric_payload(Operation::HEARTBEAT);
-      child_metric_payload.setLabel(metric.first);
-      if (metric.second->isArray()) {
-        child_metric_payload.setContainer(true);
-      }
-      serializeMetrics(child_metric_payload, metric.first, metric.second->serialize(), metric.second->isArray());
-      deviceInfo.addPayload(std::move(child_metric_payload));
+    // Send agent manifest in first heartbeat
+    if (!manifest_sent_
+        && (reporter = std::dynamic_pointer_cast<state::response::NodeReporter>(update_sink_))
+        && (agentInfo = reporter->getAgentInformation())
+        && metric.first == agentInfo->getName()) {
+      metricName = agentInfo->getName();
+      isArray = agentInfo->isArray();
+      metrics = agentInfo->serialize();
+      manifest_sent_ = true;
+    } else {
+      metricName = metric.first;
+      isArray = metric.second->isArray();
+      metrics = metric.second->serialize();
     }
-    payload.addPayload(std::move(deviceInfo));
-  }
-
-  if (!root_response_nodes_.empty()) {
-    for (auto metric : root_response_nodes_) {
-      C2Payload child_metric_payload(Operation::HEARTBEAT);
-      child_metric_payload.setLabel(metric.first);
-      if (metric.second->isArray()) {
-        child_metric_payload.setContainer(true);
-      }
-      serializeMetrics(child_metric_payload, metric.first, metric.second->serialize(), metric.second->isArray());
-      payload.addPayload(std::move(child_metric_payload));
+    child_metric_payload.setLabel(metricName);
+    if (isArray) {
+      child_metric_payload.setContainer(true);
     }
+    serializeMetrics(child_metric_payload, metricName, metrics, isArray);
+    payload.addPayload(std::move(child_metric_payload));
   }
   C2Payload && response = protocol_.load()->consumePayload(payload);
 
@@ -485,6 +489,28 @@ void C2Agent::handle_c2_server_response(const C2ContentResponse &resp) {
   }
 }
 
+C2Payload C2Agent::prepareConfigurationOptions(const C2ContentResponse &resp) const {
+    auto unsanitized_keys = configuration_->getConfiguredKeys();
+    std::vector<std::string> keys;
+    std::copy_if(unsanitized_keys.begin(), unsanitized_keys.end(), std::back_inserter(keys),
+            [](std::string key) {return key.find("pass") == std::string::npos;});
+
+    C2Payload response(Operation::ACKNOWLEDGE, resp.ident, false, true);
+    C2Payload options(Operation::ACKNOWLEDGE);
+    options.setLabel("configuration_options");
+    std::string value;
+    for (auto key : keys) {
+      C2ContentResponse option(Operation::ACKNOWLEDGE);
+      option.name = key;
+      if (configuration_->get(key, value)) {
+        option.operation_arguments[key] = value;
+        options.addContent(std::move(option));
+      }
+    }
+    response.addPayload(std::move(options));
+    return response;
+}
+
 /**
  * Descriptions are special types of requests that require information
  * to be put into the acknowledgement
@@ -506,67 +532,36 @@ void C2Agent::handle_describe(const C2ContentResponse &resp) {
       }
 
       std::vector<std::shared_ptr<state::response::ResponseNode>> metrics_vec;
-
-      reporter->getResponseNodes(metrics_vec, metric_class_id);
       C2Payload response(Operation::ACKNOWLEDGE, resp.ident, false, true);
-      response.setLabel("metrics");
+      C2Payload metrics(Operation::ACKNOWLEDGE);
+      metrics.setLabel("metrics");
+      reporter->getResponseNodes(metrics_vec, 0);
       for (auto metric : metrics_vec) {
-        serializeMetrics(response, metric->getName(), metric->serialize());
+        serializeMetrics(metrics, metric->getName(), metric->serialize());
       }
+      response.addPayload(std::move(metrics));
       enqueue_c2_response(std::move(response));
     }
 
   } else if (resp.name == "configuration") {
-    auto unsanitized_keys = configuration_->getConfiguredKeys();
-    std::vector<std::string> keys;
-    std::copy_if(unsanitized_keys.begin(), unsanitized_keys.end(), std::back_inserter(keys), [](std::string key) {return key.find("pass") == std::string::npos;});
-    C2Payload response(Operation::ACKNOWLEDGE, resp.ident, false, true);
-    response.setLabel("configuration_options");
-    C2Payload options(Operation::ACKNOWLEDGE, resp.ident, false, true);
-    options.setLabel("configuration_options");
-    std::string value;
-    for (auto key : keys) {
-      C2ContentResponse option(Operation::ACKNOWLEDGE);
-      option.name = key;
-      if (configuration_->get(key, value)) {
-        option.operation_arguments[key] = value;
-        options.addContent(std::move(option));
-      }
-    }
-    response.addPayload(std::move(options));
-    enqueue_c2_response(std::move(response));
+    auto configOptions = prepareConfigurationOptions(resp);
+    enqueue_c2_response(std::move(configOptions));
     return;
   } else if (resp.name == "manifest") {
-    auto keys = configuration_->getConfiguredKeys();
-    C2Payload response(Operation::ACKNOWLEDGE, resp.ident, false, true);
-    response.setLabel("configuration_options");
-    C2Payload options(Operation::ACKNOWLEDGE, resp.ident, false, true);
-    options.setLabel("configuration_options");
-    std::string value;
-    for (auto key : keys) {
-      C2ContentResponse option(Operation::ACKNOWLEDGE);
-      option.name = key;
-      if (configuration_->get(key, value)) {
-        option.operation_arguments[key] = value;
-        options.addContent(std::move(option));
-      }
-    }
-    response.addPayload(std::move(options));
+    C2Payload response(prepareConfigurationOptions(resp));
 
-    if (device_information_.size() > 0) {
-      C2Payload deviceInfo(Operation::HEARTBEAT);
-      deviceInfo.setLabel("AgentInformation");
+    auto reporter = std::dynamic_pointer_cast<state::response::NodeReporter>(update_sink_);
+    if (reporter != nullptr) {
+      std::vector<std::shared_ptr<state::response::ResponseNode>> metrics_vec;
 
-      for (auto metric : device_information_) {
-        C2Payload child_metric_payload(Operation::HEARTBEAT);
-        child_metric_payload.setLabel(metric.first);
-        if (metric.second->isArray()) {
-          child_metric_payload.setContainer(true);
-        }
-        serializeMetrics(child_metric_payload, metric.first, metric.second->serialize(), metric.second->isArray());
-        deviceInfo.addPayload(std::move(child_metric_payload));
+      C2Payload agentInfo(Operation::ACKNOWLEDGE, resp.ident, false, true);
+      agentInfo.setLabel("agentInfo");
+
+      reporter->getManifestNodes(metrics_vec);
+      for (const auto& metric : metrics_vec) {
+          serializeMetrics(agentInfo, metric->getName(), metric->serialize());
       }
-      response.addPayload(std::move(deviceInfo));
+      response.addPayload(std::move(agentInfo));
     }
 
     enqueue_c2_response(std::move(response));
@@ -581,7 +576,6 @@ void C2Agent::handle_describe(const C2ContentResponse &resp) {
       }
       auto keys = configuration_->getConfiguredKeys();
       C2Payload response(Operation::ACKNOWLEDGE, resp.ident, false, true);
-      response.setLabel("configuration_options");
       for (const auto &trace : traces) {
         C2Payload options(Operation::ACKNOWLEDGE, resp.ident, false, true);
         options.setLabel(trace.getName());
@@ -596,6 +590,7 @@ void C2Agent::handle_describe(const C2ContentResponse &resp) {
       }
       enqueue_c2_response(std::move(response));
     }
+    return;
   }
   C2Payload response(Operation::ACKNOWLEDGE, resp.ident, false, true);
   enqueue_c2_response(std::move(response));

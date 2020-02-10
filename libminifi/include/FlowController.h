@@ -322,6 +322,19 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
    */
   virtual int16_t getMetricsNodes(std::vector<std::shared_ptr<state::response::ResponseNode>> &metric_vector, uint16_t metricsClass);
 
+  /**
+   * Retrieves agent information with manifest only from this source.
+   * @param manifest_vector -- manifest nodes vector.
+   * @return 0 on Success, -1 on failure
+   */
+  virtual int16_t getManifestNodes(std::vector<std::shared_ptr<state::response::ResponseNode>>& manifest_vector) const;
+
+  /**
+   * Returns a response node containing all agent information with manifest and agent status
+   * @return a shared pointer to agent information
+   */
+  virtual std::shared_ptr<state::response::ResponseNode> getAgentInformation() const;
+
   virtual uint64_t getUptime();
 
   virtual std::vector<BackTrace> getTraces();
@@ -406,9 +419,10 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
 
   std::chrono::steady_clock::time_point start_time_;
 
-  std::mutex metrics_mutex_;
+  mutable std::mutex metrics_mutex_;
   // root_nodes cache
   std::map<std::string, std::shared_ptr<state::response::ResponseNode>> root_response_nodes_;
+
   // metrics cache
   std::map<std::string, std::shared_ptr<state::response::ResponseNode>> device_information_;
 
@@ -416,6 +430,10 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
   std::map<std::string, std::shared_ptr<state::response::ResponseNode>> component_metrics_;
 
   std::map<uint8_t, std::vector<std::shared_ptr<state::response::ResponseNode>>> component_metrics_by_id_;
+
+  // manifest cache
+  std::map<std::string, std::shared_ptr<state::response::ResponseNode>> agent_information_;
+
   // metrics last run
   std::chrono::steady_clock::time_point last_metrics_capture_;
 

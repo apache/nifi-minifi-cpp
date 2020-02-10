@@ -41,7 +41,7 @@ class CoapIntegrationBase : public IntegrationBase {
 
   void setUrl(std::string url, CivetHandler *handler);
 
-  virtual ~CoapIntegrationBase();
+  virtual ~CoapIntegrationBase() = default;
 
   void shutdownBeforeFlowController() {
     stop_webserver(server);
@@ -58,10 +58,6 @@ class CoapIntegrationBase : public IntegrationBase {
  protected:
   CivetServer *server;
 };
-
-CoapIntegrationBase::~CoapIntegrationBase() {
-
-}
 
 void CoapIntegrationBase::setUrl(std::string url, CivetHandler *handler) {
 
@@ -91,4 +87,58 @@ void CoapIntegrationBase::setUrl(std::string url, CivetHandler *handler) {
   }
 }
 
+class VerifyC2Base : public CoapIntegrationBase {
+ public:
+  explicit VerifyC2Base(bool isSecure)
+      : isSecure(isSecure) {
+    char format[] = "/tmp/ssth.XXXXXX";
+    dir = testController.createTempDirectory(format);
+  }
+
+  virtual ~VerifyC2Base() = default;
+
+  virtual void testSetup() {
+    LogTestController::getInstance().setDebug<utils::HTTPClient>();
+    LogTestController::getInstance().setDebug<LogTestController>();
+    std::fstream file;
+    ss << dir << "/" << "tstFile.ext";
+    file.open(ss.str(), std::ios::out);
+    file << "tempFile";
+    file.close();
+  }
+
+  void runAssertions() {
+  }
+
+  virtual void queryRootProcessGroup(std::shared_ptr<core::ProcessGroup> pg) {
+    std::shared_ptr<core::Processor> proc = pg->findProcessor("invoke");
+    assert(proc != nullptr);
+
+    std::shared_ptr<minifi::processors::InvokeHTTP> inv = std::dynamic_pointer_cast<minifi::processors::InvokeHTTP>(proc);
+
+    assert(inv != nullptr);
+    std::string url = "";
+    inv->getProperty(minifi::processors::InvokeHTTP::URL.getName(), url);
+
+    std::string c2_url = std::string("http") + (isSecure ? "s" : "") + "://localhost:" + getWebPort() + "/api/heartbeat";
+
+    configuration->set("nifi.c2.agent.protocol.class", "RESTSender");
+    configuration->set("nifi.c2.enable", "true");
+    configuration->set("nifi.c2.agent.class", "test");
+    configuration->set("nifi.c2.rest.url", c2_url);
+    configuration->set("nifi.c2.agent.heartbeat.period", "1000");
+    configuration->set("nifi.c2.rest.url.ack", c2_url);
+  }
+
+  void cleanup() {
+    LogTestController::getInstance().reset();
+    unlink(ss.str().c_str());
+  }
+
+ protected:
+  bool isSecure;
+  std::string dir;
+  std::stringstream ss;
+  TestController testController;
+};
 #endif /* LIBMINIFI_TEST_INTEGRATION_HTTPINTEGRATIONBASE_H_ */

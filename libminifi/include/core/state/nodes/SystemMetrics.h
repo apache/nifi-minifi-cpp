@@ -57,7 +57,7 @@ class SystemInformation : public DeviceInformation {
     return "systeminfo";
   }
 
-  std::vector<SerializedResponseNode> serialize() {
+  std::vector<SerializedResponseNode> serialize() const {
     std::vector<SerializedResponseNode> serialized;
     SerializedResponseNode identifier;
     identifier.name = "identifier";
