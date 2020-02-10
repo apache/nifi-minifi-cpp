@@ -127,7 +127,7 @@ class TLSSocket : public Socket {
    * Initializes the socket
    * @return result of the creation operation.
    */
-  int16_t initialize(){
+  int16_t initialize() {
     return initialize(true);
   }
 
@@ -187,9 +187,9 @@ class TLSSocket : public Socket {
 
   void close_ssl(int fd);
 
-  std::atomic<bool> connected_{};
+  std::atomic<bool> connected_{ false };
   std::shared_ptr<TLSContext> context_;
-  SSL* ssl_ = nullptr;
+  SSL* ssl_{ nullptr };
   std::mutex ssl_mutex_;
   std::map<int, SSL*> ssl_map_;
 };

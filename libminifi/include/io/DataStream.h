@@ -108,7 +108,7 @@ class DataStream {
    * Retrieve size of data stream
    * @return size of data stream
    **/
-  virtual uint64_t getSize() const {
+  virtual const uint64_t getSize() const {
     return buffer.size();
   }
 

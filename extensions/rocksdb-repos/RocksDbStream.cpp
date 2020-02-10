@@ -36,9 +36,7 @@ RocksDbStream::RocksDbStream(std::string path, rocksdb::DB *db, bool write_enabl
       write_enable_(write_enable),
       db_(db),
       logger_(logging::LoggerFactory<RocksDbStream>::getLogger()) {
-  rocksdb::Status status;
-  status = db_->Get(rocksdb::ReadOptions(), path_, &value_);
-  exists_ = status.ok();
+  exists_ = db_->Get(rocksdb::ReadOptions(), path_, &value_).ok();
   offset_ = 0;
   size_ = value_.size();
 }

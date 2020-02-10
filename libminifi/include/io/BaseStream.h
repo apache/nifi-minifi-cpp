@@ -46,7 +46,7 @@ class BaseStream : public DataStream, public Serializable {
       : composable_stream_(this) {
   }
 
-  explicit BaseStream(DataStream *other)
+  BaseStream(DataStream *other)
       : composable_stream_(other) {
   }
 
@@ -174,7 +174,7 @@ class BaseStream : public DataStream, public Serializable {
    **/
   virtual int read(uint64_t &value, bool is_little_endian = EndiannessCheck::IS_LITTLE);
 
-  virtual uint64_t getSize() const {
+  const uint64_t getSize() const override {
     if (LIKELY(composable_stream_ == this)) {
       return buffer.size();
     } else {

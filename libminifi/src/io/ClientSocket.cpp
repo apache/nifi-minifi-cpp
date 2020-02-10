@@ -43,15 +43,8 @@ struct addrinfo_deleter {
     freeaddrinfo(p);
   }
 };
-}  // namespace
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace io {
-
-static std::string get_last_err_str() noexcept {
+std::string get_last_err_str() {
 #ifdef WIN32
   const auto error_code = WSAGetLastError();
 #else
@@ -60,13 +53,29 @@ static std::string get_last_err_str() noexcept {
   return std::system_category().message(error_code);
 }
 
-static bool valid_sock_fd(SocketDescriptor fd) {
+std::string get_last_getaddrinfo_err_str(int getaddrinfo_result) {
+  (void)getaddrinfo_result; // against unused warnings on windows
+#ifdef WIN32
+  return get_last_err_str();
+#else
+  return gai_strerror(getaddrinfo_result);
+#endif /* WIN32 */
+}
+
+bool valid_sock_fd(org::apache::nifi::minifi::io::SocketDescriptor fd) {
 #ifdef WIN32
   return fd != INVALID_SOCKET && fd >= 0;
 #else
   return fd >= 0;
 #endif /* WIN32 */
 }
+}  // namespace
+
+namespace org {
+namespace apache {
+namespace nifi {
+namespace minifi {
+namespace io {
 
 Socket::Socket(const std::shared_ptr<SocketContext>& /*context*/, std::string hostname, const uint16_t port, const uint16_t listeners)
     : requested_hostname_(std::move(hostname)),
@@ -108,7 +117,7 @@ void Socket::closeStream() {
 #else
     close(socket_file_descriptor_);
 #endif
-    socket_file_descriptor_ = -1;
+    socket_file_descriptor_ = INVALID_SOCKET;
   }
   if (total_written_ > 0) {
     local_network_interface_.log_write(total_written_);
@@ -226,8 +235,7 @@ int8_t Socket::createConnection(const addrinfo *p, ip4addr &addr) {
         sa_loc->sin_addr.s_addr = addr;
       }
       if (connect(socket_file_descriptor_, p->ai_addr, p->ai_addrlen) < 0) {
-        close(socket_file_descriptor_);
-        socket_file_descriptor_ = -1;
+        closeStream();
         return -1;
       }
 #endif /* WIN32 */
@@ -262,12 +270,12 @@ int16_t Socket::initialize() {
   addrinfo* getaddrinfo_result = nullptr;
   const int errcode = getaddrinfo(requested_hostname_.c_str(), nullptr, &hints, &getaddrinfo_result);
   if (errcode != 0) {
-    logger_->log_error("Saw error during getaddrinfo, error: %s", get_last_err_str());
+    logger_->log_error("Saw error during getaddrinfo, error: %s", get_last_getaddrinfo_err_str(errcode));
     return -1;
   }
   const std::unique_ptr<addrinfo, addrinfo_deleter> addr_info{ getaddrinfo_result };
   getaddrinfo_result = nullptr;
-  socket_file_descriptor_ = -1;
+  socket_file_descriptor_ = INVALID_SOCKET;
 
   ip4addr addr;
   struct hostent *h;

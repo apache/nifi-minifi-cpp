@@ -51,7 +51,7 @@ using ip4addr = in_addr;
 #else
 using SocketDescriptor = int;
 using ip4addr = in_addr_t;
-static constexpr auto INVALID_SOCKET = -1;
+static constexpr SocketDescriptor INVALID_SOCKET = -1;
 #endif /* WIN32 */
 
 /**
@@ -60,7 +60,7 @@ static constexpr auto INVALID_SOCKET = -1;
  */
 class SocketContext {
  public:
-  explicit SocketContext(const std::shared_ptr<Configure> &configure) {
+  SocketContext(const std::shared_ptr<Configure> &configure) {
   }
 };
 /**
@@ -106,7 +106,7 @@ class Socket : public BaseStream {
    */
   virtual int16_t initialize();
 
-  virtual void setInterface(io::NetworkInterface interface) noexcept {
+  virtual void setInterface(io::NetworkInterface interface) {
     local_network_interface_ = std::move(interface);
   }
 
@@ -121,11 +121,11 @@ class Socket : public BaseStream {
    * Return the port for this socket
    * @returns port
    */
-  uint16_t getPort() const noexcept {
+  uint16_t getPort() const {
     return port_;
   }
 
-  void setPort(uint16_t port) noexcept {
+  void setPort(uint16_t port) {
     port_ = port;
   }
 

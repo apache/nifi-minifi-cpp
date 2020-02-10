@@ -21,6 +21,8 @@
 #ifndef WIN32
 #include <sys/types.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>
+#include <fcntl.h>
 #include <unistd.h>
 #else
 #pragma comment(lib, "Ws2_32.lib")

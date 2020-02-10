@@ -67,13 +67,13 @@ class NetworkInterface {
   }
 
   NetworkInterface &operator=(const NetworkInterface &other) = default;
-  NetworkInterface &operator=(NetworkInterface &&other) noexcept(std::is_nothrow_move_assignable<std::string>::value) = default;
+  NetworkInterface &operator=(NetworkInterface &&other) = default;
 
  private:
   friend class NetworkPrioritizer;
 
   std::string ifc_;
-  std::shared_ptr<NetworkPrioritizer> prioritizer_ = nullptr;
+  std::shared_ptr<NetworkPrioritizer> prioritizer_;
 };
 
 class NetworkPrioritizerFactory {
@@ -101,7 +101,7 @@ class NetworkPrioritizerFactory {
   }
 
  private:
-  std::shared_ptr<NetworkPrioritizer> np_ = nullptr;
+  std::shared_ptr<NetworkPrioritizer> np_;
 };
 
 } /* namespace io */

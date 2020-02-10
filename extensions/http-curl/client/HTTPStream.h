@@ -79,7 +79,7 @@ class HttpStream : public io::BaseStream {
    */
   virtual void seek(uint64_t offset) override;
 
-  virtual uint64_t getSize() const override {
+  const uint64_t getSize() const override {
     return written;
   }
 
