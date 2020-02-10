@@ -51,8 +51,7 @@ FlowFile::FlowFile()
   lineage_start_date_ = entry_date_;
 }
 
-FlowFile::~FlowFile() {
-}
+FlowFile::~FlowFile() = default;
 
 FlowFile& FlowFile::operator=(const FlowFile& other) {
   uuid_ = other.uuid_;
@@ -79,7 +78,7 @@ FlowFile& FlowFile::operator=(const FlowFile& other) {
  * is marked as deleted.
  * @return marked deleted
  */
-bool FlowFile::isDeleted() {
+bool FlowFile::isDeleted() const {
   return marked_delete_;
 }
 
@@ -130,14 +129,14 @@ bool FlowFile::hasStashClaim(const std::string &key) {
 }
 
 // ! Get Entry Date
-uint64_t FlowFile::getEntryDate() {
+uint64_t FlowFile::getEntryDate() const {
   return entry_date_;
 }
-uint64_t FlowFile::getEventTime() {
+uint64_t FlowFile::getEventTime() const {
   return event_time_;
 }
 // ! Get Lineage Start Date
-uint64_t FlowFile::getlineageStartDate() {
+uint64_t FlowFile::getlineageStartDate() const {
   return lineage_start_date_;
 }
 
@@ -145,7 +144,7 @@ std::set<std::string> &FlowFile::getlineageIdentifiers() {
   return lineage_Identifiers_;
 }
 
-bool FlowFile::getAttribute(std::string key, std::string &value) {
+bool FlowFile::getAttribute(std::string key, std::string &value) const {
   auto it = attributes_.find(key);
   if (it != attributes_.end()) {
     value = it->second;
@@ -156,11 +155,11 @@ bool FlowFile::getAttribute(std::string key, std::string &value) {
 }
 
 // Get Size
-uint64_t FlowFile::getSize() {
+uint64_t FlowFile::getSize() const {
   return size_;
 }
 // ! Get Offset
-uint64_t FlowFile::getOffset() {
+uint64_t FlowFile::getOffset() const {
   return offset_;
 }
 
@@ -227,7 +226,7 @@ void FlowFile::setConnection(std::shared_ptr<core::Connectable> &&connection) {
  * Returns the connection referenced by this record.
  * @return shared connection pointer.
  */
-std::shared_ptr<core::Connectable> FlowFile::getConnection() {
+std::shared_ptr<core::Connectable> FlowFile::getConnection() const {
   return connection_;
 }
 
@@ -235,7 +234,7 @@ std::shared_ptr<core::Connectable> FlowFile::getConnection() {
  * Returns the original connection referenced by this record.
  * @return shared original connection pointer.
  */
-std::shared_ptr<core::Connectable> FlowFile::getOriginalConnection() {
+std::shared_ptr<core::Connectable> FlowFile::getOriginalConnection() const {
   return original_connection_;
 }
 

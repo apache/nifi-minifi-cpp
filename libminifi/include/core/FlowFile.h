@@ -87,31 +87,31 @@ class FlowFile : public core::Connectable, public ReferenceContainer {
    * is marked as deleted.
    * @return marked deleted
    */
-  bool isDeleted();
+  bool isDeleted() const;
 
   /**
    * Sets whether to mark this flow file record
    * as deleted
    * @param deleted deleted flag
    */
-  void setDeleted(const bool deleted);
+  void setDeleted(bool deleted);
 
   /**
    * Get entry date for this record
    * @return entry date uint64_t
    */
-  uint64_t getEntryDate();
+  uint64_t getEntryDate() const;
 
   /**
    * Gets the event time.
    * @return event time.
    */
-  uint64_t getEventTime();
+  uint64_t getEventTime() const;
   /**
    * Get lineage start date
    * @return lineage start date uint64_t
    */
-  uint64_t getlineageStartDate();
+  uint64_t getlineageStartDate() const;
 
   /**
    * Sets the lineage start date
@@ -129,7 +129,7 @@ class FlowFile : public core::Connectable, public ReferenceContainer {
    * @param value value to set
    * @return result of finding key
    */
-  bool getAttribute(std::string key, std::string &value);
+  bool getAttribute(std::string key, std::string &value) const;
 
   /**
    * Updates the value in the attribute map that corresponds
@@ -138,14 +138,14 @@ class FlowFile : public core::Connectable, public ReferenceContainer {
    * @param value value to set to attribute name
    * @return result of finding key
    */
-  bool updateAttribute(const std::string key, const std::string value);
+  bool updateAttribute(std::string key, std::string value);
 
   /**
    * Removes the attribute
    * @param key attribute name to remove
    * @return result of finding key
    */
-  bool removeAttribute(const std::string key);
+  bool removeAttribute(std::string key);
 
   /**
    * setAttribute, if attribute already there, update it, else, add it
@@ -158,7 +158,7 @@ class FlowFile : public core::Connectable, public ReferenceContainer {
    * Returns the map of attributes
    * @return attributes.
    */
-  std::map<std::string, std::string> getAttributes() {
+  std::map<std::string, std::string> getAttributes() const {
     return attributes_;
   }
 
@@ -187,7 +187,7 @@ class FlowFile : public core::Connectable, public ReferenceContainer {
    * Returns the size of corresponding flow file
    * @return size as a uint64_t
    */
-  uint64_t getSize();
+  uint64_t getSize() const;
 
   /**
    * Sets the offset
@@ -205,7 +205,7 @@ class FlowFile : public core::Connectable, public ReferenceContainer {
     penaltyExpiration_ms_ = penaltyExp;
   }
 
-  uint64_t getPenaltyExpiration() {
+  uint64_t getPenaltyExpiration() const {
     return penaltyExpiration_ms_;
   }
 
@@ -213,7 +213,7 @@ class FlowFile : public core::Connectable, public ReferenceContainer {
    * Gets the offset within the flow file
    * @return size as a uint64_t
    */
-  uint64_t getOffset();
+  uint64_t getOffset() const;
 
   bool getUUID(utils::Identifier &other) {
     other = uuid_;
@@ -221,7 +221,7 @@ class FlowFile : public core::Connectable, public ReferenceContainer {
   }
 
   // Check whether it is still being penalized
-  bool isPenalized() {
+  bool isPenalized() const {
     return (penaltyExpiration_ms_ > 0 ? penaltyExpiration_ms_ > getTimeMillis() : false);
   }
 
@@ -266,7 +266,7 @@ class FlowFile : public core::Connectable, public ReferenceContainer {
    * Returns the connection referenced by this record.
    * @return shared connection pointer.
    */
-  std::shared_ptr<core::Connectable> getConnection();
+  std::shared_ptr<core::Connectable> getConnection() const;
   /**
    * Sets the original connection with a shared pointer.
    * @param connection shared connection.
@@ -276,13 +276,13 @@ class FlowFile : public core::Connectable, public ReferenceContainer {
    * Returns the original connection referenced by this record.
    * @return shared original connection pointer.
    */
-  std::shared_ptr<core::Connectable> getOriginalConnection();
+  std::shared_ptr<core::Connectable> getOriginalConnection() const;
 
   void setStoredToRepository(bool storedInRepository) {
     stored = storedInRepository;
   }
 
-  bool isStored() {
+  bool isStored() const {
     return stored;
   }
 
