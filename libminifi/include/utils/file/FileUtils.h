@@ -112,31 +112,31 @@ class FileUtils {
 #endif
   }
 
-  static std::string create_temp_directory(char *format) {
+  static std::string create_temp_directory(const char *format) {
 #ifdef WIN32
-	  std::string tempDirectory;
-	  char tempBuffer[MAX_PATH];
-	  auto ret = GetTempPath(MAX_PATH, tempBuffer); 
-	  if (ret <= MAX_PATH && ret != 0)
-	  {
-		  static std::shared_ptr<minifi::utils::IdGenerator> generator;
-		  if (!generator) {
-			  generator = minifi::utils::IdGenerator::getIdGenerator();
-			  generator->initialize(std::make_shared<minifi::Properties>());
-		  }
-		  tempDirectory = tempBuffer;
-		  minifi::utils::Identifier id;
-		  generator->generate(id);
-		  tempDirectory += id.to_string();
-		  create_dir(tempDirectory);
-	  }
-	  return tempDirectory;
+    std::string tempDirectory;
+    char tempBuffer[MAX_PATH];
+    auto ret = GetTempPath(MAX_PATH, tempBuffer);
+    if (ret <= MAX_PATH && ret != 0)
+    {
+      static std::shared_ptr<minifi::utils::IdGenerator> generator;
+      if (!generator) {
+        generator = minifi::utils::IdGenerator::getIdGenerator();
+        generator->initialize(std::make_shared<minifi::Properties>());
+      }
+      tempDirectory = tempBuffer;
+      minifi::utils::Identifier id;
+      generator->generate(id);
+      tempDirectory += id.to_string();
+      create_dir(tempDirectory);
+    }
+    return tempDirectory;
 #else
-	  auto dir = mkdtemp(format);
-	  if (nullptr == dir) {
-		  return "";
-	  }
-	  else return dir;
+    auto dir = mkdtemp(format);
+    if (nullptr == dir) {
+      return "";
+    }
+    return dir;
 #endif
   }
 

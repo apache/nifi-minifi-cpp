@@ -364,8 +364,8 @@ class TestController {
   /**
    * format will be changed by mkdtemp, so don't rely on a shared variable.
    */
-  std::string createTempDirectory(char *format) {
-    auto dir = utils::file::FileUtils::create_temp_directory(format);
+  std::string createTempDirectory(const char *format) {
+    const auto dir = utils::file::FileUtils::create_temp_directory(format);
     directories.push_back(dir);
     return dir;
   }
