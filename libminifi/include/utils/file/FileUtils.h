@@ -640,10 +640,10 @@ class FileUtils {
     std::vector<char> buf(1024U);
     while (true) {
       ssize_t ret = readlink("/proc/self/exe", buf.data(), buf.size());
-      if (ret == -1) {
+      if (ret < 0) {
         return "";
       }
-      if (ret == buf.size()) {
+      if (static_cast<size_t>(ret) == buf.size()) {
         /* It may have been truncated */
         buf.resize(buf.size() * 2);
         continue;

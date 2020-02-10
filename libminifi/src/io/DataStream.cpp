@@ -17,13 +17,12 @@
  */
 #include "io/DataStream.h"
 #include <vector>
-#include <iostream>
 #include <cstdint>
-#include <cstdio>
-#include <cstring>
 #include <string>
 #include <algorithm>
 #include <iterator>
+#include <Exception.h>
+#include <cassert>
 
 namespace org {
 namespace apache {
@@ -89,28 +88,44 @@ int DataStream::read(uint16_t &value, bool is_little_endian) {
 }
 
 int DataStream::readData(std::vector<uint8_t> &buf, int buflen) {
+  if (buflen < 0) {
+    throw minifi::Exception{ExceptionType::GENERAL_EXCEPTION, "negative buflen"};
+  }
+
   if ((buflen + readBuffer) > buffer.size()) {
     // if read exceed
     return -1;
   }
 
-  if (static_cast<int>(buf.capacity()) < buflen)
-    buf.resize(buflen+1);
+  if (buf.size() < static_cast<size_t>(buflen))
+    buf.resize(buflen);
 
-  // back inserter works differently on win32 versions
-  buf.insert(buf.begin(), &buffer[readBuffer], &buffer[(readBuffer + buflen)]);
-
-  readBuffer += buflen;
-  return buflen;
+  return this->doReadData(buf.data(), buflen);
 }
 
 int DataStream::readData(uint8_t *buf, int buflen) {
+  if (buflen < 0) {
+    throw minifi::Exception{ ExceptionType::GENERAL_EXCEPTION, "negative buflen" };
+  }
+
   if ((buflen + readBuffer) > buffer.size()) {
     // if read exceed
     return -1;
   }
-  std::copy(&buffer[readBuffer], &buffer[(readBuffer + buflen)], buf);
+
+  return this->doReadData(buf, buflen);
+}
+
+int DataStream::doReadData(uint8_t *buf, int buflen) noexcept {
+  const auto read_start = std::next(std::begin(buffer), readBuffer);
+  const auto read_end = std::next(read_start, buflen);
+  const auto write_end = std::copy(read_start, read_end, buf);
+
+  assert(std::distance(buf, write_end) == buflen && "read buflen bytes");
+
+  // increase offset for the next read
   readBuffer += buflen;
+
   return buflen;
 }
 

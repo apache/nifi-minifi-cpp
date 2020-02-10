@@ -21,6 +21,7 @@
 #include <vector>
 #include <memory>
 #include <string>
+#include <Exception.h>
 #include "io/validation.h"
 namespace org {
 namespace apache {
@@ -53,10 +54,14 @@ void RocksDbStream::seek(uint64_t offset) {
 }
 
 int RocksDbStream::writeData(std::vector<uint8_t> &buf, int buflen) {
-  if (buf.capacity() < buflen) {
+  if (buflen < 0) {
+    throw minifi::Exception{ExceptionType::GENERAL_EXCEPTION, "negative buflen"};
+  }
+
+  if (buf.size() < buflen) {
     return -1;
   }
-  return writeData(reinterpret_cast<uint8_t *>(&buf[0]), buflen);
+  return writeData(buf.data(), buflen);
 }
 
 // data stream overrides
@@ -88,13 +93,17 @@ inline std::vector<uint8_t> RocksDbStream::readBuffer(const T& t) {
 }
 
 int RocksDbStream::readData(std::vector<uint8_t> &buf, int buflen) {
-  if (buf.capacity() < buflen) {
+  if (buflen < 0) {
+    throw minifi::Exception{ExceptionType::GENERAL_EXCEPTION, "negative buflen"};
+  }
+
+  if (buf.size() < buflen) {
     buf.resize(buflen);
   }
-  int ret = readData(reinterpret_cast<uint8_t*>(&buf[0]), buflen);
+  int ret = readData(buf.data(), buflen);
 
   if (ret < buflen) {
-    buf.resize(ret);
+    buf.resize((std::max)(ret, 0));
   }
   return ret;
 }

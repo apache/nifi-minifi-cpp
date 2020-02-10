@@ -27,6 +27,7 @@
 #endif
 #include "BaseStream.h"
 #include "Serializable.h"
+#include "Exception.h"
 
 namespace org {
 namespace apache {
@@ -180,10 +181,13 @@ CRCStream<T>::CRCStream(CRCStream<T> &&move)
 
 template<typename T>
 int CRCStream<T>::readData(std::vector<uint8_t> &buf, int buflen) {
+  if (buflen < 0) {
+    throw minifi::Exception{ExceptionType::GENERAL_EXCEPTION, "negative buflen"};
+  }
 
-  if ((int)buf.capacity() < buflen)
+  if (buf.size() < static_cast<size_t>(buflen))
     buf.resize(buflen);
-  return readData((uint8_t*) &buf[0], buflen);
+  return readData(buf.data(), buflen);
 }
 
 template<typename T>
@@ -197,21 +201,22 @@ int CRCStream<T>::readData(uint8_t *buf, int buflen) {
 
 template<typename T>
 int CRCStream<T>::writeData(std::vector<uint8_t> &buf, int buflen) {
+  if (buflen < 0) {
+    throw minifi::Exception{ExceptionType::GENERAL_EXCEPTION, "negative buflen"};
+  }
 
-  if ((int)buf.capacity() < buflen)
+  if (buf.size() < static_cast<size_t>(buflen))
     buf.resize(buflen);
-  return writeData((uint8_t*) &buf[0], buflen);
+  return writeData(buf.data(), buflen);
 }
 
 template<typename T>
 int CRCStream<T>::writeData(uint8_t *value, int size) {
-
   int ret = child_stream_->write(value, size);
   if (ret > 0) {
     crc_ = crc32(crc_, value, ret);
   }
   return ret;
-
 }
 template<typename T>
 void CRCStream<T>::reset() {

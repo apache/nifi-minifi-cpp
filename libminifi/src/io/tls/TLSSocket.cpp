@@ -22,6 +22,7 @@
 #include <utility>
 #include <string>
 #include <vector>
+#include <Exception.h>
 #include "io/tls/TLSSocket.h"
 #include "io/tls/TLSUtils.h"
 #include "properties/Configure.h"
@@ -351,10 +352,14 @@ int TLSSocket::writeData(std::vector<uint8_t>& buf, int buflen) {
 }
 
 int TLSSocket::readData(std::vector<uint8_t> &buf, int buflen, bool retrieve_all_bytes) {
-  if (static_cast<int>(buf.capacity()) < buflen) {
+  if (buflen < 0) {
+    throw minifi::Exception{ExceptionType::GENERAL_EXCEPTION, "negative buflen"};
+  }
+
+  if (buf.size() < static_cast<size_t>(buflen)) {
     buf.resize(buflen);
   }
-  return readData(reinterpret_cast<uint8_t*>(&buf[0]), buflen, retrieve_all_bytes);
+  return readData(buf.data(), buflen, retrieve_all_bytes);
 }
 
 int TLSSocket::readData(uint8_t *buf, int buflen, bool retrieve_all_bytes) {
@@ -394,8 +399,8 @@ int TLSSocket::readData(uint8_t *buf, int buflen, bool retrieve_all_bytes) {
 int TLSSocket::readData(std::vector<uint8_t> &buf, int buflen) {
   if (buflen < 0)
     return -1;
-  if (buf.capacity() < static_cast<size_t>(buflen)) {
-    buf.reserve(buflen);
+  if (buf.size() < static_cast<size_t>(buflen)) {
+    buf.resize(buflen);
   }
   int total_read = 0;
   int status = 0;

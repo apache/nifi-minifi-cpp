@@ -20,6 +20,7 @@
 
 #include <mutex>
 #include <cstring>
+#include <algorithm>
 #include "BaseStream.h"
 #include "core/repository/AtomicRepoEntries.h"
 #include "Exception.h"
@@ -129,9 +130,13 @@ void AtomicEntryStream<T>::seek(uint64_t offset) {
 
 template<typename T>
 int AtomicEntryStream<T>::writeData(std::vector<uint8_t> &buf, int buflen) {
-  if ((int)buf.capacity() < buflen || invalid_stream_)
+  if (buflen < 0) {
+    throw minifi::Exception{ExceptionType::GENERAL_EXCEPTION, "negative buflen"};
+  }
+
+  if (buf.size() < static_cast<size_t>(buflen) || invalid_stream_)
     return -1;
-  return writeData(reinterpret_cast<uint8_t *>(&buf[0]), buflen);
+  return writeData(buf.data(), buflen);
 }
 
 // data stream overrides
@@ -154,16 +159,20 @@ int AtomicEntryStream<T>::writeData(uint8_t *value, int size) {
 
 template<typename T>
 int AtomicEntryStream<T>::readData(std::vector<uint8_t> &buf, int buflen) {
+  if (buflen < 0) {
+    throw minifi::Exception{ExceptionType::GENERAL_EXCEPTION, "negative buflen"};
+  }
+
   if (invalid_stream_) {
     return -1;
   }
-  if ((int)buf.capacity() < buflen) {
+  if (buf.size() < static_cast<size_t>(buflen)) {
     buf.resize(buflen);
   }
-  int ret = readData(reinterpret_cast<uint8_t*>(&buf[0]), buflen);
+  int ret = readData(buf.data(), buflen);
 
   if (ret < buflen) {
-    buf.resize(ret);
+    buf.resize((std::max)(ret, 0));
   }
   return ret;
 }
