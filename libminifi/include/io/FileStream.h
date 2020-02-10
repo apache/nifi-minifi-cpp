@@ -52,18 +52,18 @@ class FileStream : public io::BaseStream {
    */
   explicit FileStream(const std::string &path, bool append = false);
 
-  virtual ~FileStream() {
+  ~FileStream() override {
     closeStream();
   }
 
-  virtual void closeStream();
+  void closeStream() override;
   /**
    * Skip to the specified offset.
    * @param offset offset to which we will skip
    */
-  void seek(uint64_t offset);
+  void seek(uint64_t offset) override;
 
-  const uint64_t getSize() const {
+  const uint64_t getSize() const override {
     return length_;
   }
 
@@ -73,13 +73,13 @@ class FileStream : public io::BaseStream {
    * @param buf buffer in which we extract data
    * @param buflen
    */
-  virtual int readData(std::vector<uint8_t> &buf, int buflen);
+  int readData(std::vector<uint8_t> &buf, int buflen) override;
   /**
    * Reads data and places it into buf
    * @param buf buffer in which we extract data
    * @param buflen
    */
-  virtual int readData(uint8_t *buf, int buflen);
+  int readData(uint8_t *buf, int buflen) override;
 
   /**
    * Write value to the stream using std::vector
@@ -94,7 +94,7 @@ class FileStream : public io::BaseStream {
    * @param value value to write
    * @param size size of value
    */
-  virtual int writeData(uint8_t *value, int size);
+  int writeData(uint8_t *value, int size) override;
 
   /**
    * Returns the underlying buffer
@@ -121,9 +121,7 @@ class FileStream : public io::BaseStream {
   size_t length_;
 
  private:
-
   std::shared_ptr<logging::Logger> logger_;
-
 };
 
 } /* namespace io */

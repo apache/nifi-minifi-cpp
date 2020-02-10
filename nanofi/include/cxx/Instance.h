@@ -67,12 +67,9 @@ class Instance {
  public:
 
   explicit Instance(const std::string &url, const std::string &port, const std::string &repo_class_name = "")
-      : configure_(std::make_shared<Configure>()),
+      : no_op_repo_(std::make_shared<minifi::core::Repository>()),
         url_(url),
-        agent_(nullptr),
-        rpgInitialized_(false),
-        listener_thread_pool_(1),
-        no_op_repo_(std::make_shared<minifi::core::Repository>()) {
+        configure_(std::make_shared<Configure>()) {
 
     if (repo_class_name == "filesystemrepository") {
         content_repo_ = std::make_shared<minifi::core::repository::FileSystemRepository>();
@@ -171,12 +168,11 @@ class Instance {
 
   std::shared_ptr<c2::C2CallbackAgent> agent_;
 
-  std::atomic<bool> running_;
+  std::atomic<bool> running_{ false };
 
-  bool rpgInitialized_;
+  bool rpgInitialized_{ false };
 
   std::shared_ptr<minifi::core::Repository> no_op_repo_;
-
   std::shared_ptr<minifi::core::ContentRepository> content_repo_;
 
   std::shared_ptr<core::ProcessorNode> proc_node_;
@@ -185,7 +181,7 @@ class Instance {
   std::string url_;
   std::shared_ptr<Configure> configure_;
 
-  utils::ThreadPool<state::Update> listener_thread_pool_;
+  utils::ThreadPool<state::Update> listener_thread_pool_{ 1 };
 };
 
 } /* namespace minifi */

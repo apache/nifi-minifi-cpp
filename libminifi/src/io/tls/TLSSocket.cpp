@@ -17,6 +17,10 @@
  */
 #include <openssl/ssl.h>
 #include <openssl/err.h>
+#ifdef WIN32
+#include <WS2tcpip.h>
+#pragma comment(lib, "Ws2_32.lib")
+#endif /* WIN32 */
 #include <fstream>
 #include <memory>
 #include <utility>
@@ -30,6 +34,7 @@
 #include "utils/StringUtils.h"
 #include "core/Property.h"
 #include "core/logging/LoggerConfiguration.h"
+#include "utils/GeneralUtils.h"
 
 namespace org {
 namespace apache {
@@ -37,23 +42,20 @@ namespace nifi {
 namespace minifi {
 namespace io {
 
-std::atomic<OpenSSLInitializer*> OpenSSLInitializer::context_instance;
-std::mutex OpenSSLInitializer::context_mutex;
-
-TLSContext::TLSContext(const std::shared_ptr<Configure> &configure, const std::shared_ptr<minifi::controllers::SSLContextService> &ssl_service)
+TLSContext::TLSContext(const std::shared_ptr<Configure> &configure, std::shared_ptr<minifi::controllers::SSLContextService> ssl_service)
     : SocketContext(configure),
       error_value(TLS_GOOD),
       ctx(nullptr),
       logger_(logging::LoggerFactory<TLSContext>::getLogger()),
       configure_(configure),
-      ssl_service_(ssl_service) {
+      ssl_service_(std::move(ssl_service)) {
 }
 
 /**
  * The memory barrier is defined by the singleton
  */
 int16_t TLSContext::initialize(bool server_method) {
-  if (ctx != 0) {
+  if (ctx) {
     return error_value;
   }
 
@@ -71,7 +73,7 @@ int16_t TLSContext::initialize(bool server_method) {
   const SSL_METHOD *method;
   method = server_method ? TLSv1_2_server_method() : TLSv1_2_client_method();
   ctx = SSL_CTX_new(method);
-  if (ctx == NULL) {
+  if (ctx == nullptr) {
     logger_->log_error("Could not create SSL context, error: %s.", std::strerror(errno));
     error_value = TLS_ERROR_CONTEXT;
     return error_value;
@@ -152,7 +154,7 @@ int16_t TLSContext::initialize(bool server_method) {
 }
 
 TLSSocket::~TLSSocket() {
-  closeStream();
+  TLSSocket::closeStream();
 }
 
 void TLSSocket::closeStream() {
@@ -171,23 +173,38 @@ void TLSSocket::closeStream() {
  * @param listeners number of listeners in the queue
  */
 TLSSocket::TLSSocket(const std::shared_ptr<TLSContext> &context, const std::string &hostname, const uint16_t port, const uint16_t listeners)
-    : Socket(context, hostname, port, listeners),
-      ssl_(0) {
+    : Socket(context, hostname, port, listeners) {
   logger_ = logging::LoggerFactory<TLSSocket>::getLogger();
   context_ = context;
 }
 
 TLSSocket::TLSSocket(const std::shared_ptr<TLSContext> &context, const std::string &hostname, const uint16_t port)
-    : Socket(context, hostname, port, 0),
-      ssl_(0) {
+    : Socket(context, hostname, port, 0) {
   logger_ = logging::LoggerFactory<TLSSocket>::getLogger();
   context_ = context;
 }
 
-TLSSocket::TLSSocket(const TLSSocket &&d)
-    : Socket(std::move(d)),
-      ssl_(0) {
-  context_ = d.context_;
+TLSSocket::TLSSocket(TLSSocket &&other)
+    : Socket(std::move(other)),
+      context_{ utils::exchange(other.context_, nullptr) } {
+  std::lock_guard<std::mutex> lg{ other.ssl_mutex_ };
+
+  connected_.exchange(other.connected_.load());
+  other.connected_.exchange(false);
+  ssl_ = utils::exchange(other.ssl_, nullptr);
+  ssl_map_ = utils::exchange(other.ssl_map_, {});
+}
+
+TLSSocket& TLSSocket::operator=(TLSSocket&& other) {
+  if (&other == this) return *this;
+  this->Socket::operator=(static_cast<Socket&&>(other));
+  std::lock_guard<std::mutex> lg{ other.ssl_mutex_ };
+  connected_.exchange(other.connected_.load());
+  other.connected_.exchange(false);
+  context_ = utils::exchange(other.context_, nullptr);
+  ssl_ = utils::exchange(other.ssl_, nullptr);
+  ssl_map_ = utils::exchange(other.ssl_map_, {});
+  return *this;
 }
 
 int16_t TLSSocket::initialize(bool blocking) {
@@ -274,61 +291,60 @@ int16_t TLSSocket::select_descriptor(const uint16_t msec) {
     select(socket_max_ + 1, &read_fds_, NULL, NULL, NULL);
 
   for (int i = 0; i <= socket_max_; i++) {
-    if (FD_ISSET(i, &read_fds_)) {
-      if (i == socket_file_descriptor_) {
-        if (listeners_ > 0) {
-          struct sockaddr_in remoteaddr;  // client address
-          socklen_t addrlen = sizeof remoteaddr;
-          int newfd = accept(socket_file_descriptor_, (struct sockaddr *) &remoteaddr, &addrlen);
-          FD_SET(newfd, &total_list_);  // add to master set
-          if (newfd > socket_max_) {    // keep track of the max
-            socket_max_ = newfd;
-          }
-          auto ssl = SSL_new(context_->getContext());
-          SSL_set_fd(ssl, newfd);
-          auto accept_value = SSL_accept(ssl);
-          if (accept_value != -1) {
-            logger_->log_trace("Accepted on %d", newfd);
-            ssl_map_[newfd] = ssl;
-            return newfd;
-          } else {
-            int ssl_err = SSL_get_error(ssl, accept_value);
-            logger_->log_error("Could not accept %d, error code %d", newfd, ssl_err);
-            close_ssl(newfd);
-            return -1;
-          }
-        } else {
-          if (!connected_) {
-            int rez = SSL_connect(ssl_);
+    if (!FD_ISSET(i, &read_fds_)) continue;
 
-            if (rez < 0) {
-              ERR_print_errors_fp(stderr);
-              int ssl_error = SSL_get_error(ssl_, rez);
-              if (ssl_error == SSL_ERROR_WANT_WRITE) {
-                logger_->log_trace("want write");
-                return socket_file_descriptor_;
-              } else if (ssl_error == SSL_ERROR_WANT_READ) {
-                logger_->log_trace("want read");
-                return socket_file_descriptor_;
-              } else {
-                logger_->log_error("SSL socket connect failed to %s %d", requested_hostname_, port_);
-                closeStream();
-                return -1;
-              }
-            } else {
-              connected_ = true;
-              logger_->log_debug("SSL socket connect success to %s %d, on fd %d", requested_hostname_, port_, socket_file_descriptor_);
-              return socket_file_descriptor_;
-            }
-          }
-        }
-        return socket_file_descriptor_;
-        // we have a new connection
-      } else {
-        // data to be received on i
-        return i;
-      }
+    if (i != socket_file_descriptor_) {
+      // data to be received on i
+      return i;
     }
+
+    // listener can accept a new connection
+    if (listeners_ > 0) {
+      const auto newfd = accept(socket_file_descriptor_, nullptr, nullptr);
+      if (!valid_socket(newfd)) {
+        logger_->log_error("accept: %s", get_last_socket_error_message());
+        return -1;
+      }
+      FD_SET(newfd, &total_list_);  // add to master set
+      if (newfd > socket_max_) {    // keep track of the max
+        socket_max_ = newfd;
+      }
+      auto ssl = SSL_new(context_->getContext());
+      SSL_set_fd(ssl, newfd);
+      auto accept_value = SSL_accept(ssl);
+      if (accept_value != -1) {
+        logger_->log_trace("Accepted on %d", newfd);
+        ssl_map_[newfd] = ssl;
+        return newfd;
+      }
+      int ssl_err = SSL_get_error(ssl, accept_value);
+      logger_->log_error("Could not accept %d, error code %d", newfd, ssl_err);
+      close_ssl(newfd);
+      return -1;
+    }
+    if (!connected_) {
+      int rez = SSL_connect(ssl_);
+      if (rez < 0) {
+        ERR_print_errors_fp(stderr);
+        int ssl_error = SSL_get_error(ssl_, rez);
+        if (ssl_error == SSL_ERROR_WANT_WRITE) {
+          logger_->log_trace("want write");
+          return socket_file_descriptor_;
+        } else if (ssl_error == SSL_ERROR_WANT_READ) {
+          logger_->log_trace("want read");
+          return socket_file_descriptor_;
+        } else {
+          logger_->log_error("SSL socket connect failed (%d) to %s %d", ssl_error, requested_hostname_, port_);
+          closeStream();
+          return -1;
+        }
+      }
+      connected_ = true;
+      logger_->log_debug("SSL socket connect success to %s %d, on fd %d", requested_hostname_, port_, socket_file_descriptor_);
+      return socket_file_descriptor_;
+    }
+    return socket_file_descriptor_;
+    // we have a new connection
   }
 
   bool is_server = listeners_ > 0;

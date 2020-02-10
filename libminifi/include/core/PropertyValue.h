@@ -59,21 +59,12 @@ static inline std::shared_ptr<state::response::Value> convert(const std::shared_
 class PropertyValue : public state::response::ValueNode {
  public:
   PropertyValue()
-      : type_id(std::type_index(typeid(std::string))),
-        ValueNode() {
+      : type_id(std::type_index(typeid(std::string))) {
     validator_ = StandardValidators::VALID;
   }
 
-  PropertyValue(const PropertyValue &o)
-      : type_id(o.type_id),
-        validator_(o.validator_),
-        state::response::ValueNode(o) {
-  }
-  PropertyValue(PropertyValue &&o) noexcept
-      : type_id(o.type_id),
-        validator_(std::move(o.validator_)),
-        state::response::ValueNode(std::move(o)) {
-  }
+  PropertyValue(const PropertyValue &o) = default;
+  PropertyValue(PropertyValue &&o) noexcept = default;
 
   void setValidator(const std::shared_ptr<PropertyValidator> &val) {
     validator_ = val;
@@ -84,12 +75,11 @@ class PropertyValue : public state::response::ValueNode {
   }
 
   ValidationResult validate(const std::string &subject) const {
-	  if (validator_) {
-		  return validator_->validate(subject, getValue());
-	  }
-	  else {
-		  return ValidationResult::Builder::createBuilder().isValid(true).build();
-	  }
+    if (validator_) {
+      return validator_->validate(subject, getValue());
+    } else {
+      return ValidationResult::Builder::createBuilder().isValid(true).build();
+    }
   }
 
   operator uint64_t() const {
@@ -147,7 +137,7 @@ class PropertyValue : public state::response::ValueNode {
    * createValue
    */
   template<typename T>
-  auto operator=(const T ref) -> typename std::enable_if<std::is_same<T, std::string >::value,PropertyValue&>::type {
+  auto operator=(const T ref) -> typename std::enable_if<std::is_same<T, std::string>::value,PropertyValue&>::type {
     if (value_ == nullptr) {
       type_id = std::type_index(typeid(T));
       value_ = minifi::state::response::createValue(ref);

@@ -36,10 +36,8 @@ namespace io {
  */
 class DataStream {
  public:
-
   DataStream() = default;
-
-  virtual ~DataStream() = default;
+  virtual ~DataStream() noexcept = default;
 
   /**
    * Constructor

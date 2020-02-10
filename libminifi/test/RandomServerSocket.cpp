@@ -18,6 +18,10 @@
 
 #include "./RandomServerSocket.h"
 
+#ifdef WIN32
+#pragma comment(lib, "Ws2_32.lib")
+#endif /* WIN32 */
+
 #include <sstream>
 #include <random>
 #include <string>

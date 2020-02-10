@@ -28,17 +28,12 @@ namespace io {
 
 
 class BaseServerSocket  {
-
  public:
-
-  virtual ~BaseServerSocket(){
-
-  }
+  virtual ~BaseServerSocket()= default;
 
   virtual int16_t initialize(bool loopbackOnly) = 0;
 
   virtual void registerCallback(std::function<bool()> accept_function, std::function<void(io::BaseStream *)> handler) = 0;
-
 };
 /**
  * Purpose: Server socket abstraction that makes focusing the accept/block paradigm
@@ -46,7 +41,7 @@ class BaseServerSocket  {
  */
 class ServerSocket : public BaseServerSocket, public Socket {
  public:
-  explicit ServerSocket(const std::shared_ptr<SocketContext> &context, const std::string &hostname, const uint16_t port, const uint16_t listeners);
+  explicit ServerSocket(const std::shared_ptr<SocketContext> &context, const std::string &hostname, uint16_t port, uint16_t listeners);
 
   virtual ~ServerSocket();
 

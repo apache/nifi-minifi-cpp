@@ -46,30 +46,24 @@ class RocksDbStream : public io::BaseStream {
    * File Stream constructor that accepts an fstream shared pointer.
    * It must already be initialized for read and write.
    */
-  explicit RocksDbStream(const std::string &path, rocksdb::DB *db, bool write_enable = false);
+  explicit RocksDbStream(std::string path, rocksdb::DB *db, bool write_enable = false);
 
-  /**
-   * File Stream constructor that accepts an fstream shared pointer.
-   * It must already be initialized for read and write.
-   */
-  explicit RocksDbStream(const std::string &path);
-
-  virtual ~RocksDbStream() {
+  ~RocksDbStream() override {
     closeStream();
   }
 
-  virtual void closeStream();
+  void closeStream() override;
   /**
    * Skip to the specified offset.
    * @param offset offset to which we will skip
    */
-  void seek(uint64_t offset);
+  void seek(uint64_t offset) override;
 
-  const uint64_t getSize() const {
+  const uint64_t getSize() const override {
     return size_;
   }
 
-  virtual int read(uint16_t &value, bool is_little_endian) {
+  int read(uint16_t &value, bool is_little_endian) override {
     uint8_t buf[2];
     if (readData(&buf[0], 2) < 0)
       return -1;
@@ -81,7 +75,7 @@ class RocksDbStream : public io::BaseStream {
     return 2;
   }
 
-  virtual int read(uint32_t &value, bool is_little_endian) {
+  int read(uint32_t &value, bool is_little_endian) override {
     uint8_t buf[4];
     if (readData(&buf[0], 4) < 0)
       return -1;
@@ -94,7 +88,7 @@ class RocksDbStream : public io::BaseStream {
 
     return 4;
   }
-  virtual int read(uint64_t &value, bool is_little_endian) {
+  int read(uint64_t &value, bool is_little_endian) override {
     uint8_t buf[8];
     if (readData(&buf[0], 8) < 0)
       return -1;
@@ -114,13 +108,13 @@ class RocksDbStream : public io::BaseStream {
    * @param buf buffer in which we extract data
    * @param buflen
    */
-  virtual int readData(std::vector<uint8_t> &buf, int buflen);
+  int readData(std::vector<uint8_t> &buf, int buflen) override;
   /**
    * Reads data and places it into buf
    * @param buf buffer in which we extract data
    * @param buflen
    */
-  virtual int readData(uint8_t *buf, int buflen);
+  int readData(uint8_t *buf, int buflen) override;
 
   /**
    * Write value to the stream using std::vector
@@ -135,7 +129,7 @@ class RocksDbStream : public io::BaseStream {
    * @param value value to write
    * @param size size of value
    */
-  virtual int writeData(uint8_t *value, int size);
+  int writeData(uint8_t *value, int size) override;
 
   /**
    * Returns the underlying buffer

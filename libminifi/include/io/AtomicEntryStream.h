@@ -50,19 +50,18 @@ class AtomicEntryStream : public BaseStream {
     }
   }
 
-  virtual ~AtomicEntryStream();
+  ~AtomicEntryStream() override;
 
-  virtual void closeStream() {
-
+  void closeStream() override {
   }
 
   /**
    * Skip to the specified offset.
    * @param offset offset to which we will skip
    */
-  void seek(uint64_t offset);
+  void seek(uint64_t offset) override;
 
-  virtual const uint64_t getSize() const {
+  const uint64_t getSize() const override {
     return length_;
   }
 
@@ -72,19 +71,18 @@ class AtomicEntryStream : public BaseStream {
    * @param buf buffer in which we extract data
    * @param buflen
    */
-  virtual int readData(std::vector<uint8_t> &buf, int buflen);
+  int readData(std::vector<uint8_t> &buf, int buflen) override;
   /**
    * Reads data and places it into buf
    * @param buf buffer in which we extract data
    * @param buflen
    */
-  virtual int readData(uint8_t *buf, int buflen);
+  int readData(uint8_t *buf, int buflen) override;
 
   /**
    * Write value to the stream using std::vector
    * @param buf incoming buffer
    * @param buflen buffer to write
-   *
    */
   virtual int writeData(std::vector<uint8_t> &buf, int buflen);
 
@@ -93,7 +91,7 @@ class AtomicEntryStream : public BaseStream {
    * @param value value to write
    * @param size size of value
    */
-  virtual int writeData(uint8_t *value, int size);
+  int writeData(uint8_t *value, int size) override;
 
   /**
    * Returns the underlying buffer

@@ -43,18 +43,8 @@ namespace io {
 class OpenSSLInitializer {
  public:
   static OpenSSLInitializer *getInstance() {
-    OpenSSLInitializer* atomic_context = context_instance.load(std::memory_order_relaxed);
-    std::atomic_thread_fence(std::memory_order_acquire);
-    if (atomic_context == nullptr) {
-      std::lock_guard<std::mutex> lock(context_mutex);
-      atomic_context = context_instance.load(std::memory_order_relaxed);
-      if (atomic_context == nullptr) {
-        atomic_context = new OpenSSLInitializer();
-        std::atomic_thread_fence(std::memory_order_release);
-        context_instance.store(atomic_context, std::memory_order_relaxed);
-      }
-    }
-    return atomic_context;
+    static OpenSSLInitializer openssl_initializer;
+    return &openssl_initializer;
   }
 
   OpenSSLInitializer() {
@@ -62,18 +52,14 @@ class OpenSSLInitializer {
     OpenSSL_add_all_algorithms();
     SSL_load_error_strings();
   }
- private:
-  static std::atomic<OpenSSLInitializer*> context_instance;
-  static std::mutex context_mutex;
 };
 
 class TLSContext : public SocketContext {
-
  public:
-  TLSContext(const std::shared_ptr<Configure> &configure, const std::shared_ptr<minifi::controllers::SSLContextService> &ssl_service = nullptr);
+  TLSContext(const std::shared_ptr<Configure> &configure, std::shared_ptr<minifi::controllers::SSLContextService> ssl_service = nullptr);
 
   virtual ~TLSContext() {
-    if (0 != ctx)
+    if (nullptr != ctx)
       SSL_CTX_free(ctx);
   }
 
@@ -88,8 +74,6 @@ class TLSContext : public SocketContext {
   int16_t initialize(bool server_method = false);
 
  private:
-
-
   std::shared_ptr<logging::Logger> logger_;
   std::shared_ptr<Configure> configure_;
   std::shared_ptr<minifi::controllers::SSLContextService> ssl_service_;
@@ -109,7 +93,7 @@ class TLSSocket : public Socket {
    * @param port connecting port
    * @param listeners number of listeners in the queue
    */
-  explicit TLSSocket(const std::shared_ptr<TLSContext> &context, const std::string &hostname, const uint16_t port, const uint16_t listeners);
+  explicit TLSSocket(const std::shared_ptr<TLSContext> &context, const std::string &hostname, uint16_t port, uint16_t listeners);
 
   /**
    * Constructor that creates a client socket.
@@ -117,12 +101,14 @@ class TLSSocket : public Socket {
    * @param hostname hostname we are connecting to.
    * @param port port we are connecting to.
    */
-  explicit TLSSocket(const std::shared_ptr<TLSContext> &context, const std::string &hostname, const uint16_t port);
+  explicit TLSSocket(const std::shared_ptr<TLSContext> &context, const std::string &hostname, uint16_t port);
 
   /**
    * Move constructor.
    */
-  explicit TLSSocket(const TLSSocket &&);
+  TLSSocket(TLSSocket &&);
+
+  TLSSocket& operator=(TLSSocket&&);
 
   virtual ~TLSSocket();
 
@@ -130,7 +116,7 @@ class TLSSocket : public Socket {
    * Initializes the socket
    * @return result of the creation operation.
    */
-  int16_t initialize(){
+  int16_t initialize() {
     return initialize(true);
   }
 
@@ -141,7 +127,7 @@ class TLSSocket : public Socket {
    * @param msec timeout interval to wait
    * @returns file descriptor
    */
-  virtual int16_t select_descriptor(const uint16_t msec);
+  virtual int16_t select_descriptor(uint16_t msec);
 
   virtual int readData(std::vector<uint8_t> &buf, int buflen);
 
@@ -189,9 +175,10 @@ class TLSSocket : public Socket {
   }
 
   void close_ssl(int fd);
-  std::atomic<bool> connected_;
+
+  std::atomic<bool> connected_{ false };
   std::shared_ptr<TLSContext> context_;
-  SSL* ssl_;
+  SSL* ssl_{ nullptr };
   std::mutex ssl_mutex_;
   std::map<int, SSL*> ssl_map_;
 };
