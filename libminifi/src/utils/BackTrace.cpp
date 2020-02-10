@@ -17,9 +17,9 @@
 #ifdef HAS_EXECINFO
 #include <execinfo.h>
 #include <iostream>
+#include <utility>
 #include <cxxabi.h>
 #endif
-#define NAME_SIZE 256
 
 void pull_trace(const uint8_t frames_to_skip) {
 #ifdef HAS_EXECINFO
@@ -33,9 +33,9 @@ void pull_trace(const uint8_t frames_to_skip) {
    * we can skip the signal handler, call to pull_trace, and the first entry for backtrace_symbols
    */
   for (int i = frames_to_skip; i < trace_size; i++) {
-    char *start_parenthetical = 0;
-    char *functor = 0;
-    char *stop_parenthetical = 0;
+    char *start_parenthetical = nullptr;
+    char *functor = nullptr;
+    char *stop_parenthetical = nullptr;
 
     for (char *p = symboltable[i]; *p; ++p) {
       if (*p == '(') {
@@ -76,14 +76,14 @@ void pull_trace(const uint8_t frames_to_skip) {
 #endif
 }
 
-BackTrace &&TraceResolver::getBackTrace(const std::string &thread_name, std::thread::native_handle_type thread_handle) {
+BackTrace TraceResolver::getBackTrace(std::string thread_name, std::thread::native_handle_type thread_handle) {
   // lock so that we only perform one backtrace at a time.
 #ifdef HAS_EXECINFO
   std::lock_guard<std::mutex> lock(mutex_);
 
   caller_handle_ = pthread_self();
   thread_handle_ = thread_handle;
-  trace_ = BackTrace(thread_name);
+  trace_ = BackTrace(std::move(thread_name));
 
   if (0 == thread_handle_ || pthread_equal(caller_handle_, thread_handle)) {
     pull_trace();
@@ -102,16 +102,14 @@ BackTrace &&TraceResolver::getBackTrace(const std::string &thread_name, std::thr
   }
 #else
   // even if tracing is disabled, include thread name into the trace object
-  trace_ = BackTrace(thread_name);
+  trace_ = BackTrace(std::move(thread_name));
 #endif
   return std::move(trace_);
 }
 #ifdef HAS_EXECINFO
-void handler(int signr, siginfo_t *info, void *secret) {
-  auto curThread = pthread_self();
-
+static void handler(int, siginfo_t*, void*) {
   // not the intended thread
-  if (!pthread_equal(curThread, TraceResolver::getResolver().getThreadHandle())) {
+  if (!pthread_equal(pthread_self(), TraceResolver::getResolver().getThreadHandle())) {
     return;
   }
 
@@ -123,10 +121,10 @@ void handler(int signr, siginfo_t *info, void *secret) {
 
 void emplace_handler() {
 #ifdef HAS_EXECINFO
-  struct sigaction sa;
+  struct sigaction sa{};
   sigfillset(&sa.sa_mask);
   sa.sa_flags = SA_SIGINFO;
   sa.sa_sigaction = handler;
-  sigaction(SIGUSR2, &sa, NULL);
+  sigaction(SIGUSR2, &sa, nullptr);
 #endif
 }

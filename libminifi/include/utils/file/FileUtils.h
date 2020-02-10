@@ -112,31 +112,21 @@ class FileUtils {
 #endif
   }
 
-  static std::string create_temp_directory(char *format) {
+  static std::string create_temp_directory(char* format) {
 #ifdef WIN32
-	  std::string tempDirectory;
-	  char tempBuffer[MAX_PATH];
-	  auto ret = GetTempPath(MAX_PATH, tempBuffer); 
-	  if (ret <= MAX_PATH && ret != 0)
-	  {
-		  static std::shared_ptr<minifi::utils::IdGenerator> generator;
-		  if (!generator) {
-			  generator = minifi::utils::IdGenerator::getIdGenerator();
-			  generator->initialize(std::make_shared<minifi::Properties>());
-		  }
-		  tempDirectory = tempBuffer;
-		  minifi::utils::Identifier id;
-		  generator->generate(id);
-		  tempDirectory += id.to_string();
-		  create_dir(tempDirectory);
-	  }
-	  return tempDirectory;
+    char tempBuffer[MAX_PATH];
+    const auto ret = GetTempPath(MAX_PATH, tempBuffer);
+    if (ret <= MAX_PATH && ret != 0)
+    {
+      const std::string tempDirectory = tempBuffer
+          + minifi::utils::IdGenerator::getIdGenerator()->generate().to_string();
+      create_dir(tempDirectory);
+      return tempDirectory;
+    }
+    return {};
 #else
-	  auto dir = mkdtemp(format);
-	  if (nullptr == dir) {
-		  return "";
-	  }
-	  else return dir;
+    if (mkdtemp(format) == nullptr) { return ""; }
+    return format;
 #endif
   }
 
@@ -640,10 +630,10 @@ class FileUtils {
     std::vector<char> buf(1024U);
     while (true) {
       ssize_t ret = readlink("/proc/self/exe", buf.data(), buf.size());
-      if (ret == -1) {
+      if (ret < 0) {
         return "";
       }
-      if (ret == buf.size()) {
+      if (static_cast<size_t>(ret) == buf.size()) {
         /* It may have been truncated */
         buf.resize(buf.size() * 2);
         continue;
@@ -694,6 +684,18 @@ class FileUtils {
     }
     return get_parent_path(executable_path);
   }
+
+#ifdef WIN32
+  static std::error_code hide_file(const char* const file_name) {
+    const bool success = SetFileAttributesA(file_name, FILE_ATTRIBUTE_HIDDEN);
+    if (!success) {
+      // note: All possible documented error codes from GetLastError are in [0;15999] at the time of writing.
+      // The below casting is safe in [0;std::numeric_limits<int>::max()], int max is guaranteed to be at least 32767
+      return { static_cast<int>(GetLastError()), std::system_category() };
+    }
+    return {};
+  }
+#endif /* WIN32 */
 };
 
 } /* namespace file */

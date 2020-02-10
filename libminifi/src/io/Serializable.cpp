@@ -89,7 +89,7 @@ int Serializable::readUTF(std::string &str, DataStream *stream, bool widen) {
   }
 
   std::vector<uint8_t> buf;
-  ret = stream->readData(buf, utflen);
+  stream->readData(buf, utflen);
 
   // The number of chars produced may be less than utflen
   str = std::string((const char*) &buf[0], utflen);

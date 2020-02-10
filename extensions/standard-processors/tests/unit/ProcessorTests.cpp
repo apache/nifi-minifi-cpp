@@ -22,11 +22,16 @@
 #include <set>
 #include <fstream>
 #include <GenerateFlowFile.h>
+#ifdef WIN32
+#include <fileapi.h>
+#include <system_error>
+#endif /* WIN32 */
 
 #include "TestBase.h"
 #include "LogAttribute.h"
 #include "GetFile.h"
 #include "unit/ProvenanceTestHelper.h"
+#include "utils/file/FileUtils.h"
 #include "core/Core.h"
 #include "core/FlowFile.h"
 #include "core/Processor.h"
@@ -136,10 +141,10 @@ TEST_CASE("Test GetFile Ignore", "[getfileCreate3]") {
   std::shared_ptr<TestRepository> repo = std::static_pointer_cast<TestRepository>(test_repo);
 
   char format[] = "/tmp/gt.XXXXXX";
-  auto dir = testController.createTempDirectory(format);
+  const auto dir = testController.createTempDirectory(format);
 
   utils::Identifier processoruuid;
-  REQUIRE(true == processor->getUUID(processoruuid));
+  REQUIRE(processor->getUUID(processoruuid));
 
   std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(test_repo, content_repo, "getfileCreate2Connection");
 
@@ -180,19 +185,34 @@ TEST_CASE("Test GetFile Ignore", "[getfileCreate3]") {
   auto records = reporter->getEvents();
   record = session->get();
   REQUIRE(record == nullptr);
-  REQUIRE(records.size() == 0);
+  REQUIRE(records.empty());
 
-  std::fstream file;
-  std::stringstream ss;
-  ss << dir << utils::file::FileUtils::get_separator() << ".filewithoutanext";
-  file.open(ss.str(), std::ios::out);
-  file << "tempFile";
-  file.close();
+  const std::string hidden_file_name = [&] {
+    std::stringstream ss;
+    ss << dir << utils::file::FileUtils::get_separator() << ".filewithoutanext";
+    return ss.str();
+  }();
+  {
+    std::ofstream file{ hidden_file_name };
+    file << "tempFile";
+  }
+
+#ifdef WIN32
+  {
+    // hide file on windows, because a . prefix in the filename doesn't imply a hidden file
+    const auto hide_file_error = utils::file::FileUtils::hide_file(hidden_file_name.c_str());
+    REQUIRE(!hide_file_error);
+  }
+#endif /* WIN32 */
 
   processor->incrementActiveTasks();
   processor->setScheduledState(core::ScheduledState::RUNNING);
   processor->onTrigger(context, session);
-  unlink(ss.str().c_str());
+#ifndef WIN32
+  unlink(hidden_file_name.c_str());
+#else
+  _unlink(hidden_file_name.c_str());
+#endif /* !WIN32 */
   reporter = session->getProvenanceReporter();
 
   REQUIRE(processor->getName() == "getfileCreate2");

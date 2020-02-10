@@ -127,7 +127,7 @@ class Repository : public virtual core::SerializableComponent, public core::Trac
   /**
    * Since SerializableComponents represent a runnable object, we should return traces
    */
-  virtual BackTrace &&getTraces() {
+  virtual BackTrace getTraces() {
     return TraceResolver::getResolver().getBackTrace(getName(), thread_.native_handle());
   }
 

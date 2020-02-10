@@ -166,8 +166,8 @@ class IdGenerator {
   unsigned char deterministic_prefix_[8];
   std::atomic<uint64_t> incrementor_;
 
-#ifndef WIN32
   std::mutex uuid_mutex_;
+#ifndef WIN32
   std::unique_ptr<uuid> uuid_impl_;
   bool generateWithUuidImpl(unsigned int mode, UUID_FIELD output);
 #endif

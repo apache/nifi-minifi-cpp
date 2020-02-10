@@ -41,7 +41,7 @@ class TraceableResource {
   /**
    * Since SerializableComponents represent a runnable object, we should return traces
    */
-  virtual BackTrace &&getTraces() = 0;
+  virtual BackTrace getTraces() = 0;
 };
 
 } /* namespace core */

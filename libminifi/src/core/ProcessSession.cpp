@@ -19,17 +19,16 @@
  */
 #include "core/ProcessSession.h"
 #include "core/ProcessSessionReadCallback.h"
-#include <time.h>
+#include <ctime>
 #include <vector>
-#include <queue>
 #include <map>
 #include <memory>
 #include <string>
 #include <set>
 #include <chrono>
-#include <thread>
 #include <iostream>
 #include <cinttypes>
+#include <algorithm>
 /* This implementation is only for native Windows systems.  */
 #if (defined _WIN32 || defined __WIN32__) && !defined __CYGWIN__
 #define _WINSOCKAPI_
@@ -399,14 +398,8 @@ void ProcessSession::importFrom(io::DataStream &stream, const std::shared_ptr<co
     }
     size_t position = 0;
     const size_t max_size = stream.getSize();
-    size_t read_size = max_read;
     while (position < max_size) {
-      if ((max_size - position) > max_read) {
-        read_size = max_read;
-      } else {
-        read_size = max_size - position;
-      }
-      charBuffer.clear();
+      const size_t read_size = (std::min)(max_read, max_size - position);
       stream.readData(charBuffer, read_size);
 
       content_stream->write(charBuffer.data(), read_size);

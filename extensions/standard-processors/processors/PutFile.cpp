@@ -225,13 +225,12 @@ bool PutFile::putFile(core::ProcessSession *session, std::shared_ptr<FlowFileRec
     logger_->log_debug("Committing %s", destFile);
     success = cb.commit();
   } else {
-    std::ofstream outfile(destFile);
+    std::ofstream outfile(destFile, std::ios::out | std::ios::binary);
     if (!outfile.good()) {
       logger_->log_error("Failed to create empty file: %s", destFile);
     } else {
       success = true;
     }
-    outfile.close();
   }
 
   if (success) {
@@ -256,7 +255,7 @@ int64_t PutFile::ReadCallback::process(std::shared_ptr<io::BaseStream> stream) {
   size_t size = 0;
   uint8_t buffer[1024];
 
-  std::ofstream tmp_file_os(tmp_file_);
+  std::ofstream tmp_file_os(tmp_file_, std::ios::out | std::ios::binary);
 
   do {
     int read = stream->read(buffer, 1024);

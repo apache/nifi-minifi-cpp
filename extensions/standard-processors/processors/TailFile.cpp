@@ -340,8 +340,6 @@ void TailFile::checkRollOver(TailState &file, const std::string &base_file_name)
     file.current_file_name_ = item.fileName;
 
     storeState();
-  } else {
-    return;
   }
 }
 

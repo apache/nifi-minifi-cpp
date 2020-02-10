@@ -65,13 +65,17 @@ class CivetStream : public io::BaseStream {
    * @param buflen
    */
   virtual int readData(std::vector<uint8_t> &buf, int buflen) {
-    if (buf.capacity() < buflen) {
+    if (buflen < 0) {
+      throw minifi::Exception{ExceptionType::GENERAL_EXCEPTION, "negative buflen"};
+    }
+
+    if (buf.size() < buflen) {
       buf.resize(buflen);
     }
-    int ret = readData(reinterpret_cast<uint8_t*>(&buf[0]), buflen);
+    int ret = readData(buf.data(), buflen);
 
     if (ret < buflen) {
-      buf.resize(ret);
+      buf.resize((std::max)(ret, 0));
     }
     return ret;
   }
