@@ -79,7 +79,7 @@ class HttpStream : public io::BaseStream {
    */
   virtual void seek(uint64_t offset) override;
 
-  virtual const uint64_t getSize() const override {
+  virtual uint64_t getSize() const override {
     return written;
   }
 
@@ -136,11 +136,9 @@ class HttpStream : public io::BaseStream {
   }
 
   inline bool isFinished(int seconds = 0) {
-    if (http_client_future_.wait_for(std::chrono::seconds(seconds)) == std::future_status::ready && (http_read_callback_.getSize() == 0 && http_read_callback_.waitingOps())) {
-      return true;
-    } else {
-      return false;
-    }
+    return http_client_future_.wait_for(std::chrono::seconds(seconds)) == std::future_status::ready
+        && http_read_callback_.getSize() == 0
+        && http_read_callback_.waitingOps();
   }
 
   /**

@@ -18,21 +18,15 @@
 #include "io/ServerSocket.h"
 #include "io/DescriptorStream.h"
 
-#include <sys/types.h>
 #ifndef WIN32
-#include <netinet/tcp.h>
-#include <netdb.h>
-#include <sys/socket.h>
+#include <sys/types.h>
 #include <netinet/in.h>
-#include <arpa/inet.h>
 #include <unistd.h>
-#endif
-#include <cstdio>
+#else
+#pragma comment(lib, "Ws2_32.lib")
+#endif /* !WIN32 */
 #include <memory>
 #include <utility>
-#include <vector>
-#include <cerrno>
-#include <iostream>
 #include <string>
 #include "io/validation.h"
 #include "core/logging/LoggerConfiguration.h"
@@ -70,7 +64,7 @@ void ServerSocket::registerCallback(std::function<bool()> accept_function, std::
       }
     }
   };
-  server_read_thread_ = std::thread(fx, accept_function, handler);
+  server_read_thread_ = std::thread(fx, std::move(accept_function), std::move(handler));
 }
 
 void ServerSocket::close_fd(int fd) {

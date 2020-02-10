@@ -17,6 +17,10 @@
  */
 #include <openssl/ssl.h>
 #include <openssl/err.h>
+#ifdef WIN32
+#include <WS2tcpip.h>
+#pragma comment(lib, "Ws2_32.lib")
+#endif /* WIN32 */
 #include <fstream>
 #include <memory>
 #include <utility>
@@ -40,20 +44,20 @@ namespace io {
 std::atomic<OpenSSLInitializer*> OpenSSLInitializer::context_instance;
 std::mutex OpenSSLInitializer::context_mutex;
 
-TLSContext::TLSContext(const std::shared_ptr<Configure> &configure, const std::shared_ptr<minifi::controllers::SSLContextService> &ssl_service)
+TLSContext::TLSContext(const std::shared_ptr<Configure> &configure, std::shared_ptr<minifi::controllers::SSLContextService> ssl_service)
     : SocketContext(configure),
       error_value(TLS_GOOD),
       ctx(nullptr),
       logger_(logging::LoggerFactory<TLSContext>::getLogger()),
       configure_(configure),
-      ssl_service_(ssl_service) {
+      ssl_service_(std::move(ssl_service)) {
 }
 
 /**
  * The memory barrier is defined by the singleton
  */
 int16_t TLSContext::initialize(bool server_method) {
-  if (ctx != 0) {
+  if (ctx) {
     return error_value;
   }
 
@@ -71,7 +75,7 @@ int16_t TLSContext::initialize(bool server_method) {
   const SSL_METHOD *method;
   method = server_method ? TLSv1_2_server_method() : TLSv1_2_client_method();
   ctx = SSL_CTX_new(method);
-  if (ctx == NULL) {
+  if (ctx == nullptr) {
     logger_->log_error("Could not create SSL context, error: %s.", std::strerror(errno));
     error_value = TLS_ERROR_CONTEXT;
     return error_value;
@@ -171,22 +175,19 @@ void TLSSocket::closeStream() {
  * @param listeners number of listeners in the queue
  */
 TLSSocket::TLSSocket(const std::shared_ptr<TLSContext> &context, const std::string &hostname, const uint16_t port, const uint16_t listeners)
-    : Socket(context, hostname, port, listeners),
-      ssl_(0) {
+    : Socket(context, hostname, port, listeners) {
   logger_ = logging::LoggerFactory<TLSSocket>::getLogger();
   context_ = context;
 }
 
 TLSSocket::TLSSocket(const std::shared_ptr<TLSContext> &context, const std::string &hostname, const uint16_t port)
-    : Socket(context, hostname, port, 0),
-      ssl_(0) {
+    : Socket(context, hostname, port, 0) {
   logger_ = logging::LoggerFactory<TLSSocket>::getLogger();
   context_ = context;
 }
 
-TLSSocket::TLSSocket(const TLSSocket &&d)
-    : Socket(std::move(d)),
-      ssl_(0) {
+TLSSocket::TLSSocket(TLSSocket &&d) noexcept
+    : Socket(std::move(d)) {
   context_ = d.context_;
 }
 

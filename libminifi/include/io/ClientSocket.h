@@ -15,15 +15,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_IO_POSIX_CLIENTSOCKET_H_
-#define LIBMINIFI_INCLUDE_IO_POSIX_CLIENTSOCKET_H_
-
+#ifndef LIBMINIFI_INCLUDE_IO_CLIENTSOCKET_H_
+#define LIBMINIFI_INCLUDE_IO_CLIENTSOCKET_H_
 
 #include <cstdint>
+#ifdef WIN32
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif /* WIN32_LEAN_AND_MEAN */
+#include <WinSock2.h>
+#else
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
 #include <unistd.h>
+#endif /* WIN32 */
 #include <mutex>
 #include <atomic>
 #include "io/BaseStream.h"
@@ -39,13 +45,22 @@ namespace nifi {
 namespace minifi {
 namespace io {
 
+#ifdef WIN32
+using SocketDescriptor = SOCKET;
+using ip4addr = in_addr;
+#else
+using SocketDescriptor = int;
+using ip4addr = in_addr_t;
+static constexpr auto INVALID_SOCKET = -1;
+#endif /* WIN32 */
+
 /**
  * Context class for socket. This is currently only used as a parent class for TLSContext.  It is necessary so the Socket and TLSSocket constructors
  * can be the same.  It also gives us a common place to set timeouts, etc from the Configure object in the future.
  */
 class SocketContext {
  public:
-  SocketContext(const std::shared_ptr<Configure> &configure) {
+  explicit SocketContext(const std::shared_ptr<Configure> &configure) {
   }
 };
 /**
@@ -54,8 +69,6 @@ class SocketContext {
  * connecting information from users
  * Design: Extends DataStream and allows us to perform most streaming
  * operations against a BSD socket
- *
- *
  */
 class Socket : public BaseStream {
  public:
@@ -65,18 +78,18 @@ class Socket : public BaseStream {
    * @param hostname hostname we are connecting to.
    * @param port port we are connecting to.
    */
-  explicit Socket(const std::shared_ptr<SocketContext> &context, const std::string &hostname, const uint16_t port);
+  explicit Socket(const std::shared_ptr<SocketContext> &context, std::string hostname, uint16_t port);
 
   /**
    * Move constructor.
    */
-  explicit Socket(const Socket &&);
+  Socket(Socket&&) noexcept;
 
   /**
    * Static function to return the current machine's host name
    */
   static std::string getMyHostName() {
-    static std::string HOSTNAME = init_hostname();
+    static const std::string HOSTNAME = init_hostname();
     return HOSTNAME;
   }
 
@@ -93,7 +106,7 @@ class Socket : public BaseStream {
    */
   virtual int16_t initialize();
 
-  virtual void setInterface(io::NetworkInterface &&interface) {
+  virtual void setInterface(io::NetworkInterface interface) noexcept {
     local_network_interface_ = std::move(interface);
   }
 
@@ -108,8 +121,12 @@ class Socket : public BaseStream {
    * Return the port for this socket
    * @returns port
    */
-  uint16_t getPort() const {
+  uint16_t getPort() const noexcept {
     return port_;
+  }
+
+  void setPort(uint16_t port) noexcept {
+    port_ = port;
   }
 
   // data stream extensions
@@ -198,22 +215,6 @@ class Socket : public BaseStream {
    */
   virtual int read(uint16_t &value, bool is_little_endian = EndiannessCheck::IS_LITTLE);
 
-  /**
-   * Returns the underlying buffer
-   * @return vector's array
-   **/
-  const uint8_t *getBuffer() const {
-    return DataStream::getBuffer();
-  }
-
-  /**
-   * Retrieve size of data stream
-   * @return size of data stream
-   **/
-  const uint64_t getSize() const {
-    return DataStream::getSize();
-  }
-
  protected:
 
   /**
@@ -224,7 +225,7 @@ class Socket : public BaseStream {
    * @param port connecting port
    * @param listeners number of listeners in the queue
    */
-  explicit Socket(const std::shared_ptr<SocketContext> &context, const std::string &hostname, const uint16_t port, const uint16_t listeners);
+  explicit Socket(const std::shared_ptr<SocketContext> &context, std::string hostname, uint16_t port, uint16_t listeners);
 
   /**
    * Creates a vector and returns the vector using the provided
@@ -240,58 +241,73 @@ class Socket : public BaseStream {
    * @param p addrinfo structure.
    * @returns fd.
    */
-  virtual int8_t createConnection(const addrinfo *p, in_addr_t &addr);
+  virtual int8_t createConnection(const addrinfo *p, ip4addr &addr);
 
   /**
    * Sets socket options depending on the instance.
    * @param sock socket file descriptor.
    */
-  virtual int16_t setSocketOptions(const int sock);
+  virtual int16_t setSocketOptions(SocketDescriptor sock);
 
   /**
    * Attempt to select the socket file descriptor
    * @param msec timeout interval to wait
    * @returns file descriptor
    */
-  virtual int16_t select_descriptor(const uint16_t msec);
-
-  addrinfo *addr_info_;
+  virtual int16_t select_descriptor(uint16_t msec);
 
   std::recursive_mutex selection_mutex_;
 
   std::string requested_hostname_;
   std::string canonical_hostname_;
-  uint16_t port_;
+  uint16_t port_{ 0 };
 
-  bool is_loopback_only_;
+  bool is_loopback_only_{ false };
   io::NetworkInterface local_network_interface_;
 
   // connection information
-  int32_t socket_file_descriptor_;
+  SocketDescriptor socket_file_descriptor_{ INVALID_SOCKET }; // -1 on posix
 
-  fd_set total_list_;
-  fd_set read_fds_;
-  std::atomic<uint16_t> socket_max_;
-  std::atomic<uint64_t> total_written_;
-  std::atomic<uint64_t> total_read_;
-  uint16_t listeners_;
+  fd_set total_list_{};
+  fd_set read_fds_{};
+  std::atomic<uint16_t> socket_max_{ 0 };
+  std::atomic<uint64_t> total_written_{ 0 };
+  std::atomic<uint64_t> total_read_{ 0 };
+  uint16_t listeners_{ 0 };
 
-
-  bool nonBlocking_;
+  bool nonBlocking_{ false };
 
   std::shared_ptr<logging::Logger> logger_;
 
-  void setPort(uint16_t port) {
-    port_ = port;
-  }
-
  private:
+#ifdef WIN32
+  struct SocketInitializer
+  {
+    SocketInitializer() {
+      static WSADATA s_wsaData;
+      const int iWinSockInitResult = WSAStartup(MAKEWORD(2, 2), &s_wsaData);
+      if (0 != iWinSockInitResult) {
+        throw std::exception("Cannot start client");
+      }
+    }
+    ~SocketInitializer() noexcept {
+      WSACleanup();
+    }
+  };
+  static void initialize_socket() {
+    static SocketInitializer initialized;
+  }
+#else
+  static void initialize_socket(){}
+#endif /* WIN32 */
+
   static std::string init_hostname() {
+    initialize_socket();
     char hostname[1024];
     gethostname(hostname, 1024);
     Socket mySock(nullptr, hostname, 0);
     mySock.initialize();
-    auto resolved_hostname = mySock.getHostname();
+    const auto resolved_hostname = mySock.getHostname();
     return !IsNullOrEmpty(resolved_hostname) ? resolved_hostname : hostname;
   }
 };
@@ -301,4 +317,4 @@ class Socket : public BaseStream {
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-#endif /* LIBMINIFI_INCLUDE_IO_POSIX_CLIENTSOCKET_H_ */
+#endif /* LIBMINIFI_INCLUDE_IO_CLIENTSOCKET_H_ */

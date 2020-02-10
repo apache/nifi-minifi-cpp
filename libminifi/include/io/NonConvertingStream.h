@@ -171,7 +171,7 @@ class NonConvertingStream : public BaseStream  {
    **/
   virtual int read(uint64_t &value, bool is_little_endian = false);
 
-  virtual const uint64_t getSize() const {
+  virtual uint64_t getSize() const {
       if (composable_stream_ == this){
         return buffer.size();
       }

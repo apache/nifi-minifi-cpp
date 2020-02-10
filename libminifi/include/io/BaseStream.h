@@ -46,13 +46,12 @@ class BaseStream : public DataStream, public Serializable {
       : composable_stream_(this) {
   }
 
-  BaseStream(DataStream *other)
+  explicit BaseStream(DataStream *other)
       : composable_stream_(other) {
   }
 
-  virtual ~BaseStream() {
+  virtual ~BaseStream() = default;
 
-  }
   /**
    * write 4 bytes to stream
    * @param base_value non encoded value
@@ -175,13 +174,12 @@ class BaseStream : public DataStream, public Serializable {
    **/
   virtual int read(uint64_t &value, bool is_little_endian = EndiannessCheck::IS_LITTLE);
 
-  virtual const uint64_t getSize() const {
+  virtual uint64_t getSize() const {
     if (LIKELY(composable_stream_ == this)) {
       return buffer.size();
     } else {
       return composable_stream_->getSize();
     }
-
   }
 
   /**

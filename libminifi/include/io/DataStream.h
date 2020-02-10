@@ -36,10 +36,8 @@ namespace io {
  */
 class DataStream {
  public:
-
   DataStream() = default;
-
-  virtual ~DataStream() = default;
+  virtual ~DataStream() noexcept = default;
 
   /**
    * Constructor
@@ -110,7 +108,7 @@ class DataStream {
    * Retrieve size of data stream
    * @return size of data stream
    **/
-  virtual const uint64_t getSize() const {
+  virtual uint64_t getSize() const {
     return buffer.size();
   }
 

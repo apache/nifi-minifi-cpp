@@ -31,18 +31,16 @@ namespace io {
 
 class AbstractStreamFactory {
  public:
-  virtual ~AbstractStreamFactory() {
-  }
+  virtual ~AbstractStreamFactory() = default;
 
-  virtual std::unique_ptr<Socket> createSocket(const std::string &host, const uint16_t port) = 0;
+  virtual std::unique_ptr<Socket> createSocket(const std::string &host, uint16_t port) = 0;
 
-  virtual std::unique_ptr<Socket> createSecureSocket(const std::string &host, const uint16_t port, const std::shared_ptr<minifi::controllers::SSLContextService> &ssl_service) = 0;
+  virtual std::unique_ptr<Socket> createSecureSocket(const std::string &host, uint16_t port, const std::shared_ptr<minifi::controllers::SSLContextService> &ssl_service) = 0;
 };
 
 /**
  Purpose: Due to the current design this is the only mechanism by which we can
  inject different socket types
- 
  **/
 class StreamFactory {
  public:
@@ -90,8 +88,7 @@ class StreamFactory {
   }
 
  protected:
-
-  StreamFactory(const std::shared_ptr<Configure> &configure);
+  explicit StreamFactory(const std::shared_ptr<Configure> &configure);
 
   std::shared_ptr<AbstractStreamFactory> delegate_;
 };

@@ -26,7 +26,10 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <unistd.h>
-#endif
+#else
+#pragma comment(lib, "Ws2_32.lib")
+#endif /* !WIN32 */
+
 #include <cstdio>
 #include <memory>
 #include <chrono>

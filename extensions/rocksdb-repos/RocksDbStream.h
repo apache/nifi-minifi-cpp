@@ -46,13 +46,7 @@ class RocksDbStream : public io::BaseStream {
    * File Stream constructor that accepts an fstream shared pointer.
    * It must already be initialized for read and write.
    */
-  explicit RocksDbStream(const std::string &path, rocksdb::DB *db, bool write_enable = false);
-
-  /**
-   * File Stream constructor that accepts an fstream shared pointer.
-   * It must already be initialized for read and write.
-   */
-  explicit RocksDbStream(const std::string &path);
+  explicit RocksDbStream(std::string path, rocksdb::DB *db, bool write_enable = false);
 
   virtual ~RocksDbStream() {
     closeStream();
@@ -65,7 +59,7 @@ class RocksDbStream : public io::BaseStream {
    */
   void seek(uint64_t offset);
 
-  const uint64_t getSize() const {
+  uint64_t getSize() const {
     return size_;
   }
 

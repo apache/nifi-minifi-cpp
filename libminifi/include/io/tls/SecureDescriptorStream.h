@@ -49,9 +49,7 @@ class SecureDescriptorStream : public io::BaseStream {
    */
   explicit SecureDescriptorStream(int fd, SSL *s);
 
-  virtual ~SecureDescriptorStream() {
-
-  }
+  virtual ~SecureDescriptorStream() = default;
 
   /**
    * Skip to the specified offset.
@@ -59,7 +57,7 @@ class SecureDescriptorStream : public io::BaseStream {
    */
   void seek(uint64_t offset);
 
-  const uint64_t getSize() const {
+  uint64_t getSize() const {
     return -1;
   }
 

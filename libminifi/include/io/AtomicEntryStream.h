@@ -62,7 +62,7 @@ class AtomicEntryStream : public BaseStream {
    */
   void seek(uint64_t offset);
 
-  virtual const uint64_t getSize() const {
+  virtual uint64_t getSize() const {
     return length_;
   }
 

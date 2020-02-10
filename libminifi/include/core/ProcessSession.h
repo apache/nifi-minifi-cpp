@@ -18,6 +18,7 @@
 #ifndef __PROCESS_SESSION_H__
 #define __PROCESS_SESSION_H__
 
+#include <utility>
 #include <vector>
 #include <queue>
 #include <map>
@@ -48,11 +49,11 @@ class ProcessSession : public ReferenceContainer {
   /*!
    * Create a new process session
    */
-  ProcessSession(std::shared_ptr<ProcessContext> processContext = nullptr)
-      : process_context_(processContext),
+  explicit ProcessSession(std::shared_ptr<ProcessContext> processContext = nullptr)
+      : process_context_(std::move(processContext)),
         logger_(logging::LoggerFactory<ProcessSession>::getLogger()) {
     logger_->log_trace("ProcessSession created for %s", process_context_->getProcessorNode()->getName());
-    auto repo = processContext->getProvenanceRepository();
+    auto repo = process_context_->getProvenanceRepository();
     //provenance_report_ = new provenance::ProvenanceReporter(repo, process_context_->getProcessorNode()->getName(), process_context_->getProcessorNode()->getName());
     provenance_report_ = std::make_shared<provenance::ProvenanceReporter>(repo, process_context_->getProcessorNode()->getName(), process_context_->getProcessorNode()->getName());
   }
@@ -83,8 +84,6 @@ class ProcessSession : public ReferenceContainer {
   std::shared_ptr<core::FlowFile> clone(const std::shared_ptr<core::FlowFile> &parent);
   // Clone a new UUID FlowFile from parent for attributes and sub set of parent content resource claim
   std::shared_ptr<core::FlowFile> clone(const std::shared_ptr<core::FlowFile> &parent, int64_t offset, int64_t size);
-  // Duplicate a FlowFile with the same UUID and all attributes and content resource claim for the roll back of the session
-  std::shared_ptr<core::FlowFile> duplicate(const std::shared_ptr<core::FlowFile> &original);
   // Transfer the FlowFile to the relationship
   virtual void transfer(const std::shared_ptr<core::FlowFile> &flow, Relationship relationship);
   // Put Attribute

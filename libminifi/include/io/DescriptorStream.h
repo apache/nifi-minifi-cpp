@@ -47,9 +47,7 @@ class DescriptorStream : public io::BaseStream {
    */
   explicit DescriptorStream(int fd);
 
-  virtual ~DescriptorStream() {
-
-  }
+  virtual ~DescriptorStream() = default;
 
   /**
    * Skip to the specified offset.
@@ -57,7 +55,7 @@ class DescriptorStream : public io::BaseStream {
    */
   void seek(uint64_t offset);
 
-  const uint64_t getSize() const {
+  uint64_t getSize() const {
     return -1;
   }
 

@@ -20,6 +20,7 @@
 #include <memory>
 #include <mutex>
 #include <string>
+#include <utils/GeneralUtils.h>
 
 #ifdef OPENSSL_SUPPORT
 #include "io/tls/TLSSocket.h"
@@ -38,34 +39,20 @@ namespace io {
 
 template<typename T, typename V>
 class SocketCreator : public AbstractStreamFactory {
-  template<bool cond, typename U>
-  using TypeCheck = typename std::enable_if< cond, U >::type;
-
-  template<bool cond, typename Q>
-  using ContextTypeCheck = typename std::enable_if< cond, Q >::type;
-
  public:
   template<typename Q = V>
-  ContextTypeCheck<true, std::shared_ptr<Q>> create(const std::shared_ptr<Configure> &configure) {
+  std::shared_ptr<Q> create(const std::shared_ptr<Configure> &configure) {
     return std::make_shared<V>(configure);
   }
-  template<typename Q = V>
-  ContextTypeCheck<false, std::shared_ptr<Q>> create(const std::shared_ptr<Configure> &configure) {
-    return std::make_shared<SocketContext>(configure);
-  }
 
-  SocketCreator<T, V>(const std::shared_ptr<Configure> &configuration)
+  explicit SocketCreator<T, V>(const std::shared_ptr<Configure> &configuration)
       : configuration_(configuration) {
     context_ = create(configuration);
   }
 
   template<typename U = T>
-  TypeCheck<true, U> *create(const std::string &host, const uint16_t port) {
+  U* create(const std::string &host, const uint16_t port) {
     return new T(context_, host, port);
-  }
-  template<typename U = T>
-  TypeCheck<false, U> *create(const std::string &host, const uint16_t port) {
-    return new Socket(context_, host, port);
   }
 
   std::unique_ptr<Socket> createSocket(const std::string &host, const uint16_t port) {
@@ -76,15 +63,11 @@ class SocketCreator : public AbstractStreamFactory {
   std::unique_ptr<Socket> createSecureSocket(const std::string &host, const uint16_t port, const std::shared_ptr<minifi::controllers::SSLContextService> &ssl_service) {
 #ifdef OPENSSL_SUPPORT
     if (ssl_service != nullptr) {
-      auto ptr = std::make_shared<TLSContext>(configuration_, ssl_service);
-      TLSSocket *socket = new TLSSocket(ptr, host, port);
-      return std::unique_ptr<Socket>(socket);
-    } else {
-      return nullptr;
+      auto context = std::make_shared<TLSContext>(configuration_, ssl_service);
+      return utils::make_unique<TLSSocket>(context, host, port);
     }
-#else
+#endif /* OPENSSL_SUPPORT */
     return nullptr;
-#endif
   }
 
  private:

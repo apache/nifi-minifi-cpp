@@ -20,6 +20,7 @@
 
 #include <iostream>
 #include <memory>
+#include <utility>
 
 namespace org {
 namespace apache {
@@ -29,48 +30,30 @@ namespace io {
 
 class NetworkInterface;
 
-class NetworkPrioritizer {
- public:
-
-  virtual ~NetworkPrioritizer() {
-  }
-
+struct NetworkPrioritizer {
+  virtual ~NetworkPrioritizer() noexcept = default;
   virtual NetworkInterface getInterface(uint32_t size) = 0;
 
  protected:
   friend class NetworkInterface;
   virtual void reduce_tokens(uint32_t size) = 0;
-
 };
 
 class NetworkInterface {
  public:
+  NetworkInterface() = default;
 
-  NetworkInterface()
-      : prioritizer_(nullptr) {
-  }
+  NetworkInterface(std::string ifc, std::shared_ptr<NetworkPrioritizer> prioritizer)
+      : ifc_{std::move(ifc)}, prioritizer_{std::move(prioritizer)}
+  { }
 
-  virtual ~NetworkInterface() {
-  }
+  NetworkInterface(const NetworkInterface &other) = default;
+  NetworkInterface(NetworkInterface &&other) noexcept = default;
 
-  explicit NetworkInterface(const std::string &ifc, const std::shared_ptr<NetworkPrioritizer> &prioritizer)
-      : prioritizer_(prioritizer) {
-    ifc_ = ifc;
-  }
+  virtual ~NetworkInterface() = default;
 
-  NetworkInterface(const NetworkInterface &other)
-      : prioritizer_(other.prioritizer_) {
-    ifc_ = other.ifc_;
-  }
+  std::string getInterface() const { return ifc_; }
 
-  explicit NetworkInterface(const NetworkInterface &&other)
-      : ifc_(std::move(other.ifc_)),
-        prioritizer_(std::move(other.prioritizer_)) {
-  }
-
-  std::string getInterface() const {
-    return ifc_;
-  }
   void log_write(uint32_t size) {
     if (nullptr != prioritizer_) {
       prioritizer_->reduce_tokens(size);
@@ -83,29 +66,26 @@ class NetworkInterface {
     }
   }
 
-  NetworkInterface &operator=(const NetworkInterface &&other) {
-    ifc_ = std::move(other.ifc_);
-    prioritizer_ = std::move(other.prioritizer_);
-    return *this;
-  }
+  NetworkInterface &operator=(const NetworkInterface &other) = default;
+  NetworkInterface &operator=(NetworkInterface &&other) noexcept(std::is_nothrow_move_assignable<std::string>::value) = default;
+
  private:
   friend class NetworkPrioritizer;
+
   std::string ifc_;
-  std::shared_ptr<NetworkPrioritizer> prioritizer_;
+  std::shared_ptr<NetworkPrioritizer> prioritizer_ = nullptr;
 };
 
 class NetworkPrioritizerFactory {
  public:
-  NetworkPrioritizerFactory()
-      : np_(nullptr) {
+  NetworkPrioritizerFactory() = default;
 
-  }
   static std::shared_ptr<NetworkPrioritizerFactory> getInstance() {
     static std::shared_ptr<NetworkPrioritizerFactory> fa = std::make_shared<NetworkPrioritizerFactory>();
     return fa;
   }
 
-  void clearPrioritizer(){
+  void clearPrioritizer() {
     np_ = nullptr;
   }
 
@@ -119,8 +99,9 @@ class NetworkPrioritizerFactory {
   std::shared_ptr<NetworkPrioritizer> getPrioritizer() {
     return np_;
   }
+
  private:
-  std::shared_ptr<NetworkPrioritizer> np_;
+  std::shared_ptr<NetworkPrioritizer> np_ = nullptr;
 };
 
 } /* namespace io */

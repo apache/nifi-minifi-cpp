@@ -37,9 +37,7 @@ namespace core {
 template<typename T>
 class StreamManager {
  public:
-  virtual ~StreamManager() {
-
-  }
+  virtual ~StreamManager() = default;
 
   virtual std::string getStoragePath() const = 0;
 

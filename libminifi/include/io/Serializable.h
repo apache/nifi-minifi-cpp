@@ -85,7 +85,7 @@ class Serializable {
    * @param strema output stream
    * @return resulting write size
    **/
-  int write(const uint8_t * const value, int len, DataStream *stream);
+  int write(const uint8_t *value, int len, DataStream *stream);
 
   /**
    * write bool to stream

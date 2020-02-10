@@ -44,17 +44,14 @@ class CivetStream : public io::BaseStream {
 
   }
 
-  virtual ~CivetStream() {
-  }
+  virtual ~CivetStream() = default;
   /**
    * Skip to the specified offset.
    * @param offset offset to which we will skip
    */
-  void seek(uint64_t offset){
+  void seek(uint64_t offset) { }
 
-  }
-
-  const uint64_t getSize() const {
+  uint64_t getSize() const {
     return BaseStream::readBuffer;
   }
 
@@ -123,8 +120,6 @@ class CivetStream : public io::BaseStream {
     readData(reinterpret_cast<uint8_t *>(&buf[0]), sizeof(t));
     return buf;
   }
-
-  void reset();
 
   //size_t pos;
   struct mg_connection *conn;
