@@ -41,13 +41,13 @@ class CoapIntegrationBase : public IntegrationBase {
 
   void setUrl(std::string url, CivetHandler *handler);
 
-  virtual ~CoapIntegrationBase();
+  virtual ~CoapIntegrationBase() = default;
 
   void shutdownBeforeFlowController() override {
     stop_webserver(server);
   }
 
-  virtual void run(std::string test_file_location) override {
+  virtual void run(std::string test_file_location) {
     testSetup();
 
     std::shared_ptr<core::Repository> test_repo = std::make_shared<TestRepository>();
@@ -67,6 +67,8 @@ class CoapIntegrationBase : public IntegrationBase {
     std::shared_ptr<core::ProcessGroup> pg = std::shared_ptr<core::ProcessGroup>(ptr.get());
 
     queryRootProcessGroup(pg);
+
+    configureC2RootClasses();
 
     ptr.release();
 
@@ -89,10 +91,6 @@ class CoapIntegrationBase : public IntegrationBase {
  protected:
   CivetServer *server;
 };
-
-CoapIntegrationBase::~CoapIntegrationBase() {
-
-}
 
 void CoapIntegrationBase::setUrl(std::string url, CivetHandler *handler) {
 

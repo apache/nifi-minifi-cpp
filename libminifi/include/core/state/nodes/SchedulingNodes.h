@@ -44,7 +44,7 @@ class SchedulingDefaults : public DeviceInformation {
     return "schedulingDefaults";
   }
 
-  std::vector<SerializedResponseNode> serialize() {
+  std::vector<SerializedResponseNode> serialize() const {
     std::vector<SerializedResponseNode> serialized;
 
     SerializedResponseNode schedulingDefaults;

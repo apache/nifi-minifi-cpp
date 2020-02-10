@@ -45,123 +45,114 @@
 #include "CivetServer.h"
 #include <cstring>
 #include "protocols/RESTSender.h"
+#include "HTTPIntegrationBase.h"
+#include "HTTPHandlers.h"
 
-void waitToVerifyProcessor() {
-  std::this_thread::sleep_for(std::chrono::seconds(10));
-}
-
-
-class ConfigHandler : public CivetHandler {
+class VerifyC2Describe : public VerifyC2Base {
  public:
-  ConfigHandler() {
-    calls_ = 0;
-  }
-  bool handlePost(CivetServer *server, struct mg_connection *conn) {
-    calls_++;
-    std::string heartbeat_response = "{\"operation\" : \"heartbeat\",\"requested_operations\": [  {"
-          "\"operation\" : \"describe\", "
-          "\"operationid\" : \"8675309\", "
-          "\"name\": \"jstack\""
-          "}]}";
-      mg_printf(conn, "HTTP/1.1 200 OK\r\nContent-Type: "
-                "text/plain\r\nContent-Length: %lu\r\nConnection: close\r\n\r\n",
-                heartbeat_response.length());
-      mg_printf(conn, "%s", heartbeat_response.c_str());
-
-
-    return true;
+  explicit VerifyC2Describe(bool isSecure)
+      : VerifyC2Base(isSecure) {
   }
 
-  bool handleGet(CivetServer *server, struct mg_connection *conn) {
-    std::ifstream myfile(test_file_location_.c_str());
+  virtual ~VerifyC2Describe() = default;
 
-    if (myfile.is_open()) {
-      std::stringstream buffer;
-      buffer << myfile.rdbuf();
-      std::string str = buffer.str();
-      myfile.close();
-      mg_printf(conn, "HTTP/1.1 200 OK\r\nContent-Type: "
-                "text/plain\r\nContent-Length: %lu\r\nConnection: close\r\n\r\n",
-                str.length());
-      mg_printf(conn, "%s", str.c_str());
-    } else {
-      mg_printf(conn, "HTTP/1.1 500 Internal Server Error\r\n");
-    }
-
-    return true;
+  void testSetup() {
+    LogTestController::getInstance().setTrace<minifi::c2::C2Agent>();
+    LogTestController::getInstance().setDebug<minifi::c2::RESTSender>();
+    LogTestController::getInstance().setInfo<minifi::FlowController>();
+    VerifyC2Base::testSetup();
   }
-  std::string test_file_location_;
-  std::atomic<size_t> calls_;
+
+  void configureC2RootClasses() {
+    configuration->set("nifi.c2.root.classes", "DeviceInfoNode,AgentInformationWithoutManifest,FlowInformation");
+  }
+};
+
+class VerifyC2DescribeJstack : public VerifyC2Describe {
+ public:
+  explicit VerifyC2DescribeJstack(bool isSecure)
+      : VerifyC2Describe(isSecure) {
+  }
+
+  virtual ~VerifyC2DescribeJstack() = default;
+
+  virtual void runAssertions() {
+    assert(LogTestController::getInstance().contains("SchedulingAgent") == true);
+  }
+
+};
+
+class DescribeManifestHandler: public HeartbeatHandler {
+public:
+
+  explicit DescribeManifestHandler(bool isSecure)
+      : HeartbeatHandler(isSecure) {
+  }
+
+  virtual ~DescribeManifestHandler() =  default;
+
+  virtual void handleHeartbeat(const rapidjson::Document& root, struct mg_connection * conn) {
+    sendHeartbeatResponse("DESCRIBE", "manifest", "889345", conn);
+  }
+
+  virtual void handleAcknowledge(const rapidjson::Document& root) {
+    verifyJsonHasAgentManifest(root);
+  }
+};
+
+class DescribeJstackHandler : public HeartbeatHandler {
+ public:
+  explicit DescribeJstackHandler(bool isSecure)
+     : HeartbeatHandler(isSecure) {
+  }
+
+  virtual ~DescribeJstackHandler() = default;
+
+  virtual void handleHeartbeat(const rapidjson::Document& root, struct mg_connection * conn) {
+    sendHeartbeatResponse("DESCRIBE", "jstack", "889398", conn);
+  }
+
+  virtual void handleAcknowledge(const rapidjson::Document& root) {
+    assert(root.HasMember("SchedulingAgent #0") == true);
+  }
+
 };
 
 int main(int argc, char **argv) {
-  mg_init_library(0);
-  LogTestController::getInstance().setInfo<minifi::FlowController>();
-  LogTestController::getInstance().setDebug<minifi::utils::HTTPClient>();
-  LogTestController::getInstance().setDebug<minifi::c2::RESTSender>();
-  LogTestController::getInstance().setTrace<minifi::c2::C2Agent>();
-
-  const char *options[] = { "document_root", ".", "listening_ports", "0", 0 };
-  std::vector<std::string> cpp_options;
-  for (int i = 0; i < (sizeof(options) / sizeof(options[0]) - 1); i++) {
-    cpp_options.push_back(options[i]);
-  }
-
-  CivetServer server(cpp_options);
-
-  std::string port_str = std::to_string(server.getListeningPorts()[0]);
-
-  ConfigHandler h_ex;
-  server.addHandler("/update", h_ex);
-  std::string key_dir, test_file_location;
+  std::string key_dir, test_file_location, url;
+  url = "http://localhost:0/api/heartbeat";
   if (argc > 1) {
-    h_ex.test_file_location_ = test_file_location = argv[1];
-    key_dir = argv[2];
+    test_file_location = argv[1];
+    if (argc > 2) {
+      url = "https://localhost:0/api/heartbeat";
+      key_dir = argv[2];
+    }
   }
 
+  bool isSecure = false;
+  if (url.find("https") != std::string::npos) {
+    isSecure = true;
+  }
+  {
+    VerifyC2Describe harness(isSecure);
 
-  std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::Configure>();
+    harness.setKeyDir(key_dir);
 
-  std::string c2_rest_url = "http://localhost:" + port_str + "/update";
+    DescribeManifestHandler responder(isSecure);
 
-  configuration->set("c2.rest.url", c2_rest_url);
-  configuration->set("c2.agent.heartbeat.period", "1000");
+    harness.setUrl(url, &responder);
 
-  std::shared_ptr<core::Repository> test_repo = std::make_shared<TestRepository>();
-  std::shared_ptr<core::Repository> test_flow_repo = std::make_shared<TestFlowRepository>();
+    harness.run(test_file_location);
+  }
 
-  configuration->set(minifi::Configure::nifi_flow_configuration_file, test_file_location);
+  VerifyC2Describe harness(isSecure);
 
-  std::shared_ptr<minifi::io::StreamFactory> stream_factory = minifi::io::StreamFactory::getInstance(configuration);
-  std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
-  std::unique_ptr<core::FlowConfiguration> yaml_ptr = std::unique_ptr<core::YamlConfiguration>(
-      new core::YamlConfiguration(test_repo, test_repo, content_repo, stream_factory, configuration, test_file_location));
-  std::shared_ptr<TestRepository> repo = std::static_pointer_cast<TestRepository>(test_repo);
+  harness.setKeyDir(key_dir);
 
-  std::shared_ptr<minifi::FlowController> controller = std::make_shared<minifi::FlowController>(test_repo, test_flow_repo, configuration, std::move(yaml_ptr), content_repo, DEFAULT_ROOT_GROUP_NAME,
-  true);
+  DescribeJstackHandler responder(isSecure);
 
-  core::YamlConfiguration yaml_config(test_repo, test_repo, content_repo, stream_factory, configuration, test_file_location);
+  harness.setUrl(url, &responder);
 
-  std::unique_ptr<core::ProcessGroup> ptr = yaml_config.getRoot(test_file_location);
-  std::shared_ptr<core::ProcessGroup> pg = std::shared_ptr<core::ProcessGroup>(ptr.get());
-  ptr.release();
-  auto start = std::chrono::system_clock::now();
+  harness.run(test_file_location);
 
-  controller->load();
-  controller->start();
-  waitToVerifyProcessor();
-
-  controller->waitUnload(60000);
-  auto then = std::chrono::system_clock::now();
-
-  auto milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(then - start).count();
-  std::string logs = LogTestController::getInstance().log_output.str();
-  #ifndef WIN32
-  assert(logs.find("SchedulingAgent") != std::string::npos);
-  #endif
-  LogTestController::getInstance().reset();
-  assert(h_ex.calls_ <= (milliseconds / 1000) + 1);
-
-  return 0;
 }

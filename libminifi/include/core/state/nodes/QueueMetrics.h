@@ -60,7 +60,7 @@ class QueueMetrics : public ResponseNode {
     }
   }
 
-  std::vector<SerializedResponseNode> serialize() {
+  std::vector<SerializedResponseNode> serialize() const {
     std::vector<SerializedResponseNode> serialized;
     for (auto conn : connections) {
       auto connection = conn.second;
