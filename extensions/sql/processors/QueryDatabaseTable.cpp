@@ -373,8 +373,6 @@ void QueryDatabaseTable::processOnSchedule(const std::shared_ptr<core::ProcessCo
 void QueryDatabaseTable::processOnTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
   const auto& selectQuery = getSelectQuery();
 
-  std::cout << selectQuery << std::endl;
-
   logger_->log_info("QueryDatabaseTable: selectQuery: '%s'", selectQuery.c_str());
 
   auto statement = connection_->prepareStatement(selectQuery);
