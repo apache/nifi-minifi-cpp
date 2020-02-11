@@ -301,6 +301,8 @@ add_dependency SFTP_ENABLED "libssh2"
 
 add_disabled_option SQLITE_ENABLED ${FALSE} "ENABLE_SQLITE"
 
+add_disabled_option SQL_ENABLED ${FALSE} "ENABLE_SQL"
+
 # Since the following extensions have limitations on
 add_disabled_option BUSTACHE_ENABLED ${FALSE} "ENABLE_BUSTACHE" "2.6" ${TRUE}
 add_dependency BUSTACHE_ENABLED "boost"

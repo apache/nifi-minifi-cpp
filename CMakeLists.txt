@@ -328,6 +328,11 @@ if (WIN32)
 	endif()
 endif(WIN32)
 
+option(ENABLE_SQL "Enables the SQL Suite of Tools." OFF)
+if (ENABLE_ALL OR ENABLE_SQL)
+	createExtension(SQL-EXTENSIONS "SQL EXTENSIONS" "Enables the SQL Suite of Tools" "extensions/sql")
+endif()
+
 ## Create MQTT Extension
 option(ENABLE_MQTT "Enables the mqtt extension." OFF)
 if(ENABLE_ALL OR ENABLE_MQTT)

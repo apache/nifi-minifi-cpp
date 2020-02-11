@@ -334,6 +334,7 @@ show_supported_features() {
   echo "V. AWS Support .................$(print_feature_status AWS_ENABLED)"
   echo "T. OpenCV Support ..............$(print_feature_status OPENCV_ENABLED)"
   echo "U. OPC-UA Support...............$(print_feature_status OPC_ENABLED)"
+  echo "W. SQL Support..................$(print_feature_status SQL_ENABLED)"
   echo "****************************************"
   echo "            Build Options."
   echo "****************************************"
@@ -353,7 +354,7 @@ show_supported_features() {
 
 read_feature_options(){
   local choice
-  read -p "Enter choice [ A - V or 1-4 ] " choice
+  read -p "Enter choice [ A - W or 1-4 ] " choice
   choice=$(echo ${choice} | tr '[:upper:]' '[:lower:]')
   case $choice in
     a) ToggleFeature ROCKSDB_ENABLED ;;
@@ -380,6 +381,7 @@ read_feature_options(){
 	s) ToggleFeature SFTP_ENABLED ;;
     t) ToggleFeature OPENCV_ENABLED ;;
     u) ToggleFeature OPC_ENABLED ;;
+    w) ToggleFeature SQL_ENABLED ;;	
     1) ToggleFeature TESTS_DISABLED ;;
     2) EnableAllFeatures ;;
     3) ToggleFeature JNI_ENABLED;;
