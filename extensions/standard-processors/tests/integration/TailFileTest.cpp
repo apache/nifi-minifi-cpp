@@ -61,7 +61,6 @@ class TailFileTestHarness : public IntegrationBase {
     LogTestController::getInstance().setInfo<minifi::processors::LogAttribute>();
     LogTestController::getInstance().setTrace<minifi::processors::TailFile>();
     LogTestController::getInstance().setTrace<minifi::FlowController>();
-    LogTestController::getInstance().setDebug<core::ConfigurableComponent>();
   }
 
   virtual void cleanup() {
@@ -93,10 +92,9 @@ class TailFileTestHarness : public IntegrationBase {
 };
 
 int main(int argc, char **argv) {
-  std::string key_dir, test_file_location, url;
+  std::string test_file_location;
   if (argc > 1) {
     test_file_location = argv[1];
-    key_dir = argv[2];
   }
 
   TailFileTestHarness harness;
