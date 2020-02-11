@@ -101,7 +101,7 @@ void FlowFileRepository::printStats() {
   std::string all_memtables;
   db_->GetProperty("rocksdb.cur-size-all-mem-tables", &all_memtables);
 
-  logger_->log_info("Repository stats: key count: %zu, table readers size: %zu, all memory tables size: %zu",
+  logger_->log_info("Repository stats: key count: %s, table readers size: %s, all memory tables size: %s",
       key_count, table_readers, all_memtables);
 }
 
