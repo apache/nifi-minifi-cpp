@@ -150,14 +150,14 @@ class UpdateRunner : public utils::AfterExecute<Update> {
     return !*running_;
   }
 
-  virtual int64_t wait_time() {
+  virtual std::chrono::milliseconds wait_time() {
     return delay_;
   }
  protected:
 
   std::atomic<bool> *running_;
 
-  int64_t delay_;
+  std::chrono::milliseconds delay_;
 
 };
 

@@ -35,8 +35,7 @@ Processors:
       id: 2438e3c8-015a-1000-79ca-83af40ec1992
       class: org.apache.nifi.processors.standard.UpdateAttribute
       max concurrent tasks: 1
-      scheduling strategy: TIMER_DRIVEN
-      scheduling period: 1 sec
+      scheduling strategy: EVENT_DRIVEN
       penalization period: 30 sec
       yield period: 1 sec
       run duration nanos: 0
@@ -47,20 +46,18 @@ Processors:
       id: 2438e3c8-015a-1000-79ca-83af40ec1993
       class: org.apache.nifi.processors.standard.RouteOnAttribute
       max concurrent tasks: 1
-      scheduling strategy: TIMER_DRIVEN
-      scheduling period: 1 sec
+      scheduling strategy: EVENT_DRIVEN
       penalization period: 30 sec
       yield period: 1 sec
       run duration nanos: 0
-      auto-terminated relationships list: failure
+      auto-terminated relationships list:
       Properties:
         route_matched: ${route_condition_attr}    
     - name: up2
       id: 2438e3c8-015a-1000-79ca-83af40ec1994
       class: org.apache.nifi.processors.standard.UpdateAttribute
       max concurrent tasks: 1
-      scheduling strategy: TIMER_DRIVEN
-      scheduling period: 1 sec
+      scheduling strategy: EVENT_DRIVEN
       penalization period: 30 sec
       yield period: 1 sec
       run duration nanos: 0
@@ -72,8 +69,7 @@ Processors:
       id: 2438e3c8-015a-1000-79ca-83af40ec1995
       class: org.apache.nifi.processors.standard.LogAttribute
       max concurrent tasks: 1
-      scheduling strategy: TIMER_DRIVEN
-      scheduling period: 1 sec
+      scheduling strategy: EVENT_DRIVEN
       penalization period: 30 sec
       yield period: 1 sec
       run duration nanos: 0

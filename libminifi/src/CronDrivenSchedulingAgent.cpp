@@ -32,7 +32,7 @@ namespace apache {
 namespace nifi {
 namespace minifi {
 
-uint64_t CronDrivenSchedulingAgent::run(const std::shared_ptr<core::Processor> &processor, const std::shared_ptr<core::ProcessContext> &processContext,
+utils::ComplexResult CronDrivenSchedulingAgent::run(const std::shared_ptr<core::Processor> &processor, const std::shared_ptr<core::ProcessContext> &processContext,
                                         const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
   if (this->running_ && processor->isRunning()) {
     std::chrono::system_clock::time_point leap_nanos;
@@ -52,7 +52,7 @@ uint64_t CronDrivenSchedulingAgent::run(const std::shared_ptr<core::Processor> &
           // we may be woken up a little early so that we can honor our time.
           // in this case we can return the next time to run with the expectation
           // that the wakeup mechanism gets more granular.
-          return std::chrono::duration_cast<std::chrono::milliseconds>(result - from).count();
+          return utils::Retry(std::chrono::duration_cast<std::chrono::milliseconds>(result - from));
         }
       } else {
         Bosma::Cron schedule(processor->getCronPeriod());
@@ -67,16 +67,15 @@ uint64_t CronDrivenSchedulingAgent::run(const std::shared_ptr<core::Processor> &
 
       if (processor->isYield()) {
         // Honor the yield
-        return processor->getYieldTime();
+        return utils::Retry(std::chrono::milliseconds(processor->getYieldTime()));
       } else if (shouldYield && this->bored_yield_duration_ > 0) {
         // No work to do or need to apply back pressure
-        return this->bored_yield_duration_;
+        return utils::Retry(std::chrono::milliseconds(this->bored_yield_duration_));
       }
     }
-    auto sleep_time = std::chrono::duration_cast<std::chrono::milliseconds>(result - from).count();
-    return sleep_time;
+    return utils::Retry(std::chrono::duration_cast<std::chrono::milliseconds>(result - from));
   }
-  return 0;
+  return utils::Done();
 }
 
 } /* namespace minifi */

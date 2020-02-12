@@ -32,6 +32,7 @@
 #include "core/ProcessContextBuilder.h"
 #include "core/ProcessSession.h"
 #include "core/ProcessSessionFactory.h"
+#include "utils/GeneralUtils.h"
 
 namespace org {
 namespace apache {
@@ -89,16 +90,16 @@ void ThreadedSchedulingAgent::schedule(std::shared_ptr<core::Processor> processo
     // reference the disable function from serviceNode
     processor->incrementActiveTasks();
 
-    std::function<uint64_t()> f_ex = [agent, processor, processContext, sessionFactory] () {
+    std::function<utils::ComplexResult()> f_ex = [agent, processor, processContext, sessionFactory] () {
       return agent->run(processor, processContext, sessionFactory);
     };
 
     // create a functor that will be submitted to the thread pool.
-    std::unique_ptr<TimerAwareMonitor> monitor = std::unique_ptr<TimerAwareMonitor>(new TimerAwareMonitor(&running_));
-    utils::Worker<uint64_t> functor(f_ex, processor->getUUIDStr(), std::move(monitor));
+    auto monitor = utils::make_unique<utils::ComplexMonitor>(&running_);
+    utils::Worker<utils::ComplexResult> functor(f_ex, processor->getUUIDStr(), std::move(monitor));
     // move the functor into the thread pool. While a future is returned
     // we aren't terribly concerned with the result.
-    std::future<uint64_t> future;
+    std::future<utils::ComplexResult> future;
     thread_pool_.execute(std::move(functor), future);
   }
   logger_->log_debug("Scheduled thread %d concurrent workers for for process %s", processor->getMaxConcurrentTasks(), processor->getName());

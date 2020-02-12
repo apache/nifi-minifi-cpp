@@ -42,11 +42,10 @@ class EventDrivenSchedulingAgent : public ThreadedSchedulingAgent {
                              std::shared_ptr<core::Repository> flow_repo, std::shared_ptr<core::ContentRepository> content_repo, std::shared_ptr<Configure> configuration)
       : ThreadedSchedulingAgent(controller_service_provider, repo, flow_repo, content_repo, configuration) {
   }
-  // Destructor
-  virtual ~EventDrivenSchedulingAgent() {
-  }
+
   // Run function for the thread
-  uint64_t run(const std::shared_ptr<core::Processor> &processor, const std::shared_ptr<core::ProcessContext> &processContext, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory);
+  utils::ComplexResult run(const std::shared_ptr<core::Processor> &processor, const std::shared_ptr<core::ProcessContext> &processContext,
+      const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
 
  private:
   // Prevent default copy constructor and assignment operation

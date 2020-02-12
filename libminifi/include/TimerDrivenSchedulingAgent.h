@@ -42,13 +42,12 @@ class TimerDrivenSchedulingAgent : public ThreadedSchedulingAgent {
       : ThreadedSchedulingAgent(controller_service_provider, repo, flow_repo, content_repo, configure),
         logger_(logging::LoggerFactory<TimerDrivenSchedulingAgent>::getLogger()) {
   }
-  //  Destructor
-  virtual ~TimerDrivenSchedulingAgent() {
-  }
+
   /**
    * Run function that accepts the processor, context and session factory.
    */
-  uint64_t run(const std::shared_ptr<core::Processor> &processor, const std::shared_ptr<core::ProcessContext> &processContext, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory);
+  utils::ComplexResult run(const std::shared_ptr<core::Processor> &processor, const std::shared_ptr<core::ProcessContext> &processContext,
+      const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
 
  private:
   // Prevent default copy constructor and assignment operation

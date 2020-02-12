@@ -48,9 +48,10 @@ class CronDrivenSchedulingAgent : public ThreadedSchedulingAgent {
   virtual ~CronDrivenSchedulingAgent() {
   }
   // Run function for the thread
-  uint64_t run(const std::shared_ptr<core::Processor> &processor, const std::shared_ptr<core::ProcessContext> &processContext, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory);
+  utils::ComplexResult run(const std::shared_ptr<core::Processor> &processor, const std::shared_ptr<core::ProcessContext> &processContext,
+      const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
 
-  virtual void stop() {
+  virtual void stop() override {
     std::lock_guard<std::mutex> locK(mutex_);
     schedules_.clear();
     last_exec_.clear();

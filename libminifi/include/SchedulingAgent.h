@@ -28,6 +28,7 @@
 #include <algorithm>
 #include <thread>
 #include "utils/CallBackTimer.h"
+#include "utils/Monitors.h"
 #include "utils/TimeUtil.h"
 #include "utils/ThreadPool.h"
 #include "utils/BackTrace.h"
@@ -48,67 +49,6 @@ namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
-
-/**
- * Uses the wait time for a given worker to determine if it is eligible to run
- */
-class TimerAwareMonitor : public utils::AfterExecute<uint64_t> {
- public:
-  TimerAwareMonitor(std::atomic<bool> *run_monitor)
-      : current_wait_(0),
-        run_monitor_(run_monitor) {
-  }
-  explicit TimerAwareMonitor(TimerAwareMonitor &&other)
-      : AfterExecute(std::move(other)),
-        run_monitor_(std::move(other.run_monitor_)) {
-    current_wait_.store(other.current_wait_.load());
-  }
-  virtual bool isFinished(const uint64_t &result) {
-    current_wait_.store(result);
-    if (*run_monitor_) {
-      return false;
-    }
-    return true;
-  }
-  virtual bool isCancelled(const uint64_t &result) {
-    if (*run_monitor_) {
-      return false;
-    }
-    return true;
-  }
-  /**
-   * Time to wait before re-running this task if necessary
-   * @return milliseconds since epoch after which we are eligible to re-run this task.
-   */
-  virtual int64_t wait_time() {
-    return current_wait_.load();
-  }
- protected:
-
-  std::atomic<uint64_t> current_wait_;
-  std::atomic<bool> *run_monitor_;
-};
-
-class SingleRunMonitor : public TimerAwareMonitor {
- public:
-  SingleRunMonitor(std::atomic<bool> *run_monitor)
-      : TimerAwareMonitor(run_monitor) {
-  }
-  explicit SingleRunMonitor(TimerAwareMonitor &&other)
-      : TimerAwareMonitor(std::move(other)) {
-  }
-  virtual bool isFinished(const uint64_t &result) {
-    if (result == 0) {
-      return true;
-    } else {
-      current_wait_.store(result);
-      if (*run_monitor_) {
-        return false;
-      }
-      return true;
-    }
-  }
-};
 
 // SchedulingAgent Class
 class SchedulingAgent {
@@ -134,7 +74,7 @@ class SchedulingAgent {
      * to be able to debug why an agent doesn't work and still allow a restart via updates in these cases.
      */
     auto csThreads = configure_->getInt(Configure::nifi_flow_engine_threads, 2);
-    auto pool = utils::ThreadPool<uint64_t>(csThreads, false, controller_service_provider, "SchedulingAgent");
+    auto pool = utils::ThreadPool<utils::ComplexResult>(csThreads, false, controller_service_provider, "SchedulingAgent");
     thread_pool_ = std::move(pool);
     thread_pool_.start();
 
@@ -175,8 +115,8 @@ class SchedulingAgent {
 
   void watchDogFunc();
 
-  virtual std::future<uint64_t> enableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode);
-  virtual std::future<uint64_t> disableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode);
+  virtual std::future<utils::ComplexResult> enableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode);
+  virtual std::future<utils::ComplexResult> disableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode);
   // schedule, overwritten by different DrivenSchedulingAgent
   virtual void schedule(std::shared_ptr<core::Processor> processor) = 0;
   // unschedule, overwritten by different DrivenSchedulingAgent
@@ -202,7 +142,7 @@ class SchedulingAgent {
 
   std::shared_ptr<core::ContentRepository> content_repo_;
   // thread pool for components.
-  utils::ThreadPool<uint64_t> thread_pool_;
+  utils::ThreadPool<utils::ComplexResult> thread_pool_;
   // controller service provider reference
   std::shared_ptr<core::controller::ControllerServiceProvider> controller_service_provider_;
 

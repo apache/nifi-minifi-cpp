@@ -19,9 +19,6 @@
  */
 #include "EventDrivenSchedulingAgent.h"
 #include <chrono>
-#include <memory>
-#include <thread>
-#include <iostream>
 #include "core/Processor.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSessionFactory.h"
@@ -32,28 +29,24 @@ namespace apache {
 namespace nifi {
 namespace minifi {
 
-uint64_t EventDrivenSchedulingAgent::run(const std::shared_ptr<core::Processor> &processor, const std::shared_ptr<core::ProcessContext> &processContext,
+utils::ComplexResult EventDrivenSchedulingAgent::run(const std::shared_ptr<core::Processor> &processor, const std::shared_ptr<core::ProcessContext> &processContext,
                                          const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
-  while (this->running_) {
-    bool shouldYield = this->onTrigger(processor, processContext, sessionFactory);
-
-    if (processor->isYield()) {
-      // Honor the yield
-      return processor->getYieldTime();
-    } else if (shouldYield && this->bored_yield_duration_ > 0) {
-      // No work to do or need to apply back pressure
-      return this->bored_yield_duration_;
+  if (this->running_ && processor->isRunning()) {
+    auto start_time = std::chrono::steady_clock::now();
+    // trigger processor until it has work to do, but no more than half a sec
+    while (std::chrono::steady_clock::now() - start_time < std::chrono::milliseconds(500)) {
+      bool shouldYield = this->onTrigger(processor, processContext, sessionFactory);
+      if (processor->isYield()) {
+        // Honor the yield
+        return utils::Retry(std::chrono::milliseconds(processor->getYieldTime()));
+      } else if (shouldYield) {
+        // No work to do or need to apply back pressure
+        return utils::Retry(std::chrono::milliseconds((this->bored_yield_duration_ > 0) ? this->bored_yield_duration_ : 10));  // No work left to do, stand by
+      }
     }
-
-    // Block until work is available
-
-    processor->waitForWork(1000);
-
-    if (!processor->isWorkAvailable()) {
-      return 1000;
-    }
+    return utils::Retry(std::chrono::milliseconds(0));  // Let's continue work as soon as a thread is available
   }
-  return 0;
+  return utils::Done();
 }
 
 } /* namespace minifi */
