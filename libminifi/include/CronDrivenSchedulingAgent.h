@@ -41,16 +41,18 @@ class CronDrivenSchedulingAgent : public ThreadedSchedulingAgent {
    * Create a new event driven scheduling agent.
    */
   CronDrivenSchedulingAgent(std::shared_ptr<core::controller::ControllerServiceProvider> controller_service_provider, std::shared_ptr<core::Repository> repo,
-                            std::shared_ptr<core::Repository> flow_repo, std::shared_ptr<core::ContentRepository> content_repo, std::shared_ptr<Configure> configuration)
-      : ThreadedSchedulingAgent(controller_service_provider, repo, flow_repo, content_repo, configuration) {
+                            std::shared_ptr<core::Repository> flow_repo, std::shared_ptr<core::ContentRepository> content_repo, std::shared_ptr<Configure> configuration,
+                            utils::ThreadPool<utils::TaskRescheduleInfo> &thread_pool)
+      : ThreadedSchedulingAgent(controller_service_provider, repo, flow_repo, content_repo, configuration, thread_pool) {
   }
   // Destructor
   virtual ~CronDrivenSchedulingAgent() {
   }
   // Run function for the thread
-  uint64_t run(const std::shared_ptr<core::Processor> &processor, const std::shared_ptr<core::ProcessContext> &processContext, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory);
+  utils::TaskRescheduleInfo run(const std::shared_ptr<core::Processor> &processor, const std::shared_ptr<core::ProcessContext> &processContext,
+      const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
 
-  virtual void stop() {
+  void stop() override {
     std::lock_guard<std::mutex> locK(mutex_);
     schedules_.clear();
     last_exec_.clear();

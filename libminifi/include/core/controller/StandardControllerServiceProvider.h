@@ -103,15 +103,12 @@ class StandardControllerServiceProvider : public ControllerServiceProvider, publ
 
   }
 
-  std::future<uint64_t> enableControllerService(std::shared_ptr<ControllerServiceNode> &serviceNode) {
+  std::future<utils::TaskRescheduleInfo> enableControllerService(std::shared_ptr<ControllerServiceNode> &serviceNode) {
     if (serviceNode->canEnable()) {
       return agent_->enableControllerService(serviceNode);
     } else {
 
-      std::future<uint64_t> no_run = std::async(std::launch::async, []() {
-        uint64_t ret = 0;
-        return ret;
-      });
+      std::future<utils::TaskRescheduleInfo> no_run = std::async(std::launch::deferred, utils::TaskRescheduleInfo::Done);
       return no_run;
     }
   }
@@ -135,14 +132,11 @@ class StandardControllerServiceProvider : public ControllerServiceProvider, publ
     }
   }
 
-  std::future<uint64_t> disableControllerService(std::shared_ptr<ControllerServiceNode> &serviceNode) {
+  std::future<utils::TaskRescheduleInfo> disableControllerService(std::shared_ptr<ControllerServiceNode> &serviceNode) {
     if (!IsNullOrEmpty(serviceNode.get()) && serviceNode->enabled()) {
       return agent_->disableControllerService(serviceNode);
     } else {
-      std::future<uint64_t> no_run = std::async(std::launch::async, []() {
-        uint64_t ret = 0;
-        return ret;
-      });
+      std::future<utils::TaskRescheduleInfo> no_run = std::async(std::launch::deferred, utils::TaskRescheduleInfo::Done);
       return no_run;
     }
   }

@@ -36,37 +36,25 @@
 
 class TestHarness : public IntegrationBase {
  public:
-  TestHarness() {
-    log_entry_found = false;
-  }
-
-  void testSetup() {
+  void testSetup() override {
     LogTestController::getInstance().setTrace<minifi::FlowController>();
-	LogTestController::getInstance().setTrace<core::ProcessSession>();
-	LogTestController::getInstance().setTrace<core::ProcessContextExpr>();
+    LogTestController::getInstance().setTrace<core::ProcessSession>();
+    LogTestController::getInstance().setTrace<core::ProcessContextExpr>();
     LogTestController::getInstance().setInfo<processors::LogAttribute>();
   }
 
-  void cleanup() {
+  void cleanup() override {}
+
+  void runAssertions() override {
+    assert(LogTestController::getInstance().contains("key:route_check_attr value:good"));
+    assert(LogTestController::getInstance().contains("key:variable_attribute value:replacement_value"));
+    assert(LogTestController::getInstance().contains("ProcessSession rollback", std::chrono::seconds(1)) == false);  // No rollback happened
   }
 
-  void runAssertions() {
-    assert(log_entry_found);
-  }
-
-  void waitToVerifyProcessor() {
-    // This test takes a while to complete -> wait at most 10 secs
-    log_entry_found = LogTestController::getInstance().contains("key:route_check_attr value:good", std::chrono::seconds(10));
-    log_entry_found = LogTestController::getInstance().contains("key:variable_attribute value:replacement_value", std::chrono::seconds(10));
-  }
-
-  void queryRootProcessGroup(std::shared_ptr<core::ProcessGroup> pg) {
+  void queryRootProcessGroup(std::shared_ptr<core::ProcessGroup> pg) override {
     // inject the variable into the context.
     configuration->set("nifi.variable.test", "replacement_value");
   }
-
- protected:
-  bool log_entry_found;
 };
 
 int main(int argc, char **argv) {

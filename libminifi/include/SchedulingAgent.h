@@ -28,6 +28,7 @@
 #include <algorithm>
 #include <thread>
 #include "utils/CallBackTimer.h"
+#include "utils/Monitors.h"
 #include "utils/TimeUtil.h"
 #include "utils/ThreadPool.h"
 #include "utils/BackTrace.h"
@@ -49,67 +50,6 @@ namespace apache {
 namespace nifi {
 namespace minifi {
 
-/**
- * Uses the wait time for a given worker to determine if it is eligible to run
- */
-class TimerAwareMonitor : public utils::AfterExecute<uint64_t> {
- public:
-  TimerAwareMonitor(std::atomic<bool> *run_monitor)
-      : current_wait_(0),
-        run_monitor_(run_monitor) {
-  }
-  explicit TimerAwareMonitor(TimerAwareMonitor &&other)
-      : AfterExecute(std::move(other)),
-        run_monitor_(std::move(other.run_monitor_)) {
-    current_wait_.store(other.current_wait_.load());
-  }
-  virtual bool isFinished(const uint64_t &result) {
-    current_wait_.store(result);
-    if (*run_monitor_) {
-      return false;
-    }
-    return true;
-  }
-  virtual bool isCancelled(const uint64_t &result) {
-    if (*run_monitor_) {
-      return false;
-    }
-    return true;
-  }
-  /**
-   * Time to wait before re-running this task if necessary
-   * @return milliseconds since epoch after which we are eligible to re-run this task.
-   */
-  virtual int64_t wait_time() {
-    return current_wait_.load();
-  }
- protected:
-
-  std::atomic<uint64_t> current_wait_;
-  std::atomic<bool> *run_monitor_;
-};
-
-class SingleRunMonitor : public TimerAwareMonitor {
- public:
-  SingleRunMonitor(std::atomic<bool> *run_monitor)
-      : TimerAwareMonitor(run_monitor) {
-  }
-  explicit SingleRunMonitor(TimerAwareMonitor &&other)
-      : TimerAwareMonitor(std::move(other)) {
-  }
-  virtual bool isFinished(const uint64_t &result) {
-    if (result == 0) {
-      return true;
-    } else {
-      current_wait_.store(result);
-      if (*run_monitor_) {
-        return false;
-      }
-      return true;
-    }
-  }
-};
-
 // SchedulingAgent Class
 class SchedulingAgent {
  public:
@@ -118,25 +58,18 @@ class SchedulingAgent {
    * Create a new scheduling agent.
    */
   SchedulingAgent(std::shared_ptr<core::controller::ControllerServiceProvider> controller_service_provider, std::shared_ptr<core::Repository> repo, std::shared_ptr<core::Repository> flow_repo,
-                  std::shared_ptr<core::ContentRepository> content_repo, std::shared_ptr<Configure> configuration)
-      : admin_yield_duration_(0),
+                  std::shared_ptr<core::ContentRepository> content_repo, std::shared_ptr<Configure> configuration, utils::ThreadPool<utils::TaskRescheduleInfo> &thread_pool)
+      : admin_yield_duration_(),
         bored_yield_duration_(0),
         configure_(configuration),
         content_repo_(content_repo),
+        thread_pool_(thread_pool),
         controller_service_provider_(controller_service_provider),
         logger_(logging::LoggerFactory<SchedulingAgent>::getLogger()),
         alert_time_(configuration->getInt(Configure::nifi_flow_engine_alert_period, SCHEDULING_WATCHDOG_DEFAULT_ALERT_PERIOD_MS)) {
     running_ = false;
     repo_ = repo;
     flow_repo_ = flow_repo;
-    /**
-     * To facilitate traces we cannot use daemon threads -- this could potentially cause blocking on I/O; however, it's a better path
-     * to be able to debug why an agent doesn't work and still allow a restart via updates in these cases.
-     */
-    auto csThreads = configure_->getInt(Configure::nifi_flow_engine_threads, 2);
-    auto pool = utils::ThreadPool<uint64_t>(csThreads, false, controller_service_provider, "SchedulingAgent");
-    thread_pool_ = std::move(pool);
-    thread_pool_.start();
 
     if (alert_time_ > std::chrono::milliseconds(0)) {
       std::function<void(void)> f = std::bind(&SchedulingAgent::watchDogFunc, this);
@@ -166,7 +99,6 @@ class SchedulingAgent {
   // stop
   virtual void stop() {
     running_ = false;
-    thread_pool_.shutdown();
   }
 
   std::vector<BackTrace> getTraces() {
@@ -175,8 +107,8 @@ class SchedulingAgent {
 
   void watchDogFunc();
 
-  virtual std::future<uint64_t> enableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode);
-  virtual std::future<uint64_t> disableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode);
+  virtual std::future<utils::TaskRescheduleInfo> enableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode);
+  virtual std::future<utils::TaskRescheduleInfo> disableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode);
   // schedule, overwritten by different DrivenSchedulingAgent
   virtual void schedule(std::shared_ptr<core::Processor> processor) = 0;
   // unschedule, overwritten by different DrivenSchedulingAgent
@@ -202,7 +134,7 @@ class SchedulingAgent {
 
   std::shared_ptr<core::ContentRepository> content_repo_;
   // thread pool for components.
-  utils::ThreadPool<uint64_t> thread_pool_;
+  utils::ThreadPool<utils::TaskRescheduleInfo> &thread_pool_;
   // controller service provider reference
   std::shared_ptr<core::controller::ControllerServiceProvider> controller_service_provider_;
 

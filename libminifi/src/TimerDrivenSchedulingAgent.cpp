@@ -29,20 +29,21 @@ namespace apache {
 namespace nifi {
 namespace minifi {
 
-uint64_t TimerDrivenSchedulingAgent::run(const std::shared_ptr<core::Processor> &processor, const std::shared_ptr<core::ProcessContext> &processContext,
+utils::TaskRescheduleInfo TimerDrivenSchedulingAgent::run(const std::shared_ptr<core::Processor> &processor, const std::shared_ptr<core::ProcessContext> &processContext,
                                          const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
-  while (this->running_ && processor->isRunning()) {
+  if (this->running_ && processor->isRunning()) {
     bool shouldYield = this->onTrigger(processor, processContext, sessionFactory);
     if (processor->isYield()) {
       // Honor the yield
-      return processor->getYieldTime();
+      return utils::TaskRescheduleInfo::RetryIn(std::chrono::milliseconds(processor->getYieldTime()));
     } else if (shouldYield && this->bored_yield_duration_ > 0) {
       // No work to do or need to apply back pressure
-      return this->bored_yield_duration_;
+      return utils::TaskRescheduleInfo::RetryIn(std::chrono::milliseconds(this->bored_yield_duration_));
     }
-    return processor->getSchedulingPeriodNano() / 1000000;
+    return utils::TaskRescheduleInfo::RetryIn(std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::nanoseconds(processor->getSchedulingPeriodNano())));
   }
-  return processor->getSchedulingPeriodNano() / 1000000;
+  return utils::TaskRescheduleInfo::Done();
 }
 
 } /* namespace minifi */

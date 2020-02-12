@@ -63,9 +63,6 @@ namespace minifi {
  */
 class FlowController : public core::controller::ControllerServiceProvider, public state::StateManager {
  public:
-  static const int DEFAULT_MAX_TIMER_DRIVEN_THREAD = 10;
-  static const int DEFAULT_MAX_EVENT_DRIVEN_THREAD = 5;
-
   /**
    * Flow controller constructor
    */
@@ -86,22 +83,6 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
   // Destructor
   virtual ~FlowController();
 
-  // Set MAX TimerDrivenThreads
-  virtual void setMaxTimerDrivenThreads(int number) {
-    max_timer_driven_threads_ = number;
-  }
-  // Get MAX TimerDrivenThreads
-  virtual int getMaxTimerDrivenThreads() {
-    return max_timer_driven_threads_;
-  }
-  // Set MAX EventDrivenThreads
-  virtual void setMaxEventDrivenThreads(int number) {
-    max_event_driven_threads_ = number;
-  }
-  // Get MAX EventDrivenThreads
-  virtual int getMaxEventDrivenThreads() {
-    return max_event_driven_threads_;
-  }
   // Get the provenance repository
   virtual std::shared_ptr<core::Repository> getProvenanceRepository() {
     return this->provenance_repo_;
@@ -222,7 +203,7 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
    * Enables the controller service services
    * @param serviceNode service node which will be disabled, along with linked services.
    */
-  virtual std::future<uint64_t> enableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode);
+  virtual std::future<utils::TaskRescheduleInfo> enableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode);
 
   /**
    * Enables controller services
@@ -234,7 +215,7 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
    * Disables controller services
    * @param serviceNode service node which will be disabled, along with linked services.
    */
-  virtual std::future<uint64_t> disableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode);
+  virtual std::future<utils::TaskRescheduleInfo> disableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode);
 
   /**
    * Gets all controller services.
@@ -355,11 +336,6 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
   std::string properties_file_name_;
   // Root Process Group
   std::shared_ptr<core::ProcessGroup> root_;
-  // MAX Timer Driven Threads
-  int max_timer_driven_threads_;
-  // MAX Event Driven Threads
-  int max_event_driven_threads_;
-  // FlowFile Repo
   // Whether it is running
   std::atomic<bool> running_;
   std::atomic<bool> updating_;
@@ -380,6 +356,8 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
 
   std::shared_ptr<core::ContentRepository> content_repo_;
 
+  // Thread pool for schedulers
+  utils::ThreadPool<utils::TaskRescheduleInfo> thread_pool_;
   // Flow Engines
   // Flow Timer Scheduler
   std::shared_ptr<TimerDrivenSchedulingAgent> timer_scheduler_;

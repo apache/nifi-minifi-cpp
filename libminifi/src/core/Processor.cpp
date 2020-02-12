@@ -268,6 +268,7 @@ void Processor::onTrigger(const std::shared_ptr<ProcessContext> &context, const 
 
 bool Processor::isWorkAvailable() {
   // We have work if any incoming connection has work
+  std::lock_guard<std::mutex> lock(mutex_);
   bool hasWork = false;
 
   try {

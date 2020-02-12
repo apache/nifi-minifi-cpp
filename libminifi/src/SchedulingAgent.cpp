@@ -26,6 +26,7 @@
 #include "Exception.h"
 #include "core/Processor.h"
 #include "utils/ScopeGuard.h"
+#include "utils/GeneralUtils.h"
 
 namespace org {
 namespace apache {
@@ -40,41 +41,41 @@ bool SchedulingAgent::hasWorkToDo(std::shared_ptr<core::Processor> processor) {
     return false;
 }
 
-std::future<uint64_t> SchedulingAgent::enableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) {
+std::future<utils::TaskRescheduleInfo> SchedulingAgent::enableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) {
   logger_->log_info("Enabling CSN in SchedulingAgent %s", serviceNode->getName());
   // reference the enable function from serviceNode
-  std::function<uint64_t()> f_ex = [serviceNode] {
+  std::function<utils::TaskRescheduleInfo()> f_ex = [serviceNode] {
       serviceNode->enable();
-      return 0;
+      return utils::TaskRescheduleInfo::Done();
     };
 
   // only need to run this once.
-  std::unique_ptr<SingleRunMonitor> monitor = std::unique_ptr<SingleRunMonitor>(new SingleRunMonitor(&running_));
-  utils::Worker<uint64_t> functor(f_ex, serviceNode->getUUIDStr(), std::move(monitor));
+  auto monitor = utils::make_unique<utils::ComplexMonitor>();
+  utils::Worker<utils::TaskRescheduleInfo> functor(f_ex, serviceNode->getUUIDStr(), std::move(monitor));
   // move the functor into the thread pool. While a future is returned
   // we aren't terribly concerned with the result.
-  std::future<uint64_t> future;
+  std::future<utils::TaskRescheduleInfo> future;
   thread_pool_.execute(std::move(functor), future);
   if (future.valid())
     future.wait();
   return future;
 }
 
-std::future<uint64_t> SchedulingAgent::disableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) {
+std::future<utils::TaskRescheduleInfo> SchedulingAgent::disableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) {
   logger_->log_info("Disabling CSN in SchedulingAgent %s", serviceNode->getName());
   // reference the disable function from serviceNode
-  std::function<uint64_t()> f_ex = [serviceNode] {
+  std::function<utils::TaskRescheduleInfo()> f_ex = [serviceNode] {
     serviceNode->disable();
-    return 0;
+    return utils::TaskRescheduleInfo::Done();
   };
 
   // only need to run this once.
-  std::unique_ptr<SingleRunMonitor> monitor = std::unique_ptr<SingleRunMonitor>(new SingleRunMonitor(&running_));
-  utils::Worker<uint64_t> functor(f_ex, serviceNode->getUUIDStr(), std::move(monitor));
+  auto monitor = utils::make_unique<utils::ComplexMonitor>();
+  utils::Worker<utils::TaskRescheduleInfo> functor(f_ex, serviceNode->getUUIDStr(), std::move(monitor));
 
   // move the functor into the thread pool. While a future is returned
   // we aren't terribly concerned with the result.
-  std::future<uint64_t> future;
+  std::future<utils::TaskRescheduleInfo> future;
   thread_pool_.execute(std::move(functor), future);
   if (future.valid())
     future.wait();
@@ -120,10 +121,6 @@ bool SchedulingAgent::onTrigger(const std::shared_ptr<core::Processor> &processo
   processor->incrementActiveTasks();
   try {
     processor->onTrigger(processContext, sessionFactory);
-    processor->decrementActiveTask();
-  } catch (Exception &exception) {
-    // Normal exception
-    logger_->log_debug("Caught Exception %s", exception.what());
     processor->decrementActiveTask();
   } catch (std::exception &exception) {
     logger_->log_debug("Caught Exception %s", exception.what());

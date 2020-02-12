@@ -45,8 +45,8 @@ class ThreadedSchedulingAgent : public SchedulingAgent {
    * Create a new threaded scheduling agent.
    */
   ThreadedSchedulingAgent(std::shared_ptr<core::controller::ControllerServiceProvider> controller_service_provider, std::shared_ptr<core::Repository> repo, std::shared_ptr<core::Repository> flow_repo,
-                          std::shared_ptr<core::ContentRepository> content_repo, std::shared_ptr<Configure> configuration)
-      : SchedulingAgent(controller_service_provider, repo, flow_repo, content_repo, configuration),
+                          std::shared_ptr<core::ContentRepository> content_repo, std::shared_ptr<Configure> configuration,  utils::ThreadPool<utils::TaskRescheduleInfo> &thread_pool)
+      : SchedulingAgent(controller_service_provider, repo, flow_repo, content_repo, configuration, thread_pool),
         logger_(logging::LoggerFactory<ThreadedSchedulingAgent>::getLogger()) {
   }
   // Destructor
@@ -54,7 +54,7 @@ class ThreadedSchedulingAgent : public SchedulingAgent {
   }
 
   // Run function for the thread
-  virtual uint64_t run(const std::shared_ptr<core::Processor> &processor, const std::shared_ptr<core::ProcessContext> &processContext,
+  virtual utils::TaskRescheduleInfo run(const std::shared_ptr<core::Processor> &processor, const std::shared_ptr<core::ProcessContext> &processContext,
                        const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) = 0;
 
  public:
@@ -73,6 +73,8 @@ class ThreadedSchedulingAgent : public SchedulingAgent {
   ThreadedSchedulingAgent(const ThreadedSchedulingAgent &parent);
   ThreadedSchedulingAgent &operator=(const ThreadedSchedulingAgent &parent);
   std::shared_ptr<logging::Logger> logger_;
+
+  std::set<std::string> processors_running_;  // Set just for easy usage
 };
 
 } /* namespace minifi */

@@ -69,9 +69,9 @@ class SocketAfterExecute : public utils::AfterExecute<int> {
       return false;
   }
 
-  virtual int64_t wait_time() {
+  virtual std::chrono::milliseconds wait_time() {
     // wait 500ms
-    return 500;
+    return std::chrono::milliseconds(500);
   }
 
  protected:
