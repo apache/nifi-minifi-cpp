@@ -58,7 +58,7 @@ class SecureSocketTest : public IntegrationBase {
     dir = testController.createTempDirectory(format);
   }
 
-  void testSetup() {
+  void testSetup() override {
     LogTestController::getInstance().setDebug<minifi::io::Socket>();
     LogTestController::getInstance().setDebug<minifi::io::TLSContext>();
     LogTestController::getInstance().setDebug<core::ProcessSession>();
@@ -71,15 +71,17 @@ class SecureSocketTest : public IntegrationBase {
     file.close();
   }
 
-  void cleanup() {
+  void cleanup() override {
     LogTestController::getInstance().reset();
   }
 
-  void runAssertions() {
+  void runAssertions() override {
+    isRunning_ = false;
+    server_socket_.reset();
     assert(LogTestController::getInstance().contains("send succeed 20"));
   }
 
-  void queryRootProcessGroup(std::shared_ptr<core::ProcessGroup> pg) {
+  void queryRootProcessGroup(std::shared_ptr<core::ProcessGroup> pg) override {
     std::shared_ptr<core::Processor> proc = pg->findProcessor("invoke");
     assert(proc != nullptr);
 
@@ -107,8 +109,8 @@ class SecureSocketTest : public IntegrationBase {
     if (host == "localhost") {
       host = org::apache::nifi::minifi::io::Socket::getMyHostName();
     }
-    server_socket = std::make_shared<org::apache::nifi::minifi::io::TLSServerSocket>(socket_context, host, std::stoi(hostAndPort.at(1)), 3);
-    server_socket->initialize();
+    server_socket_ = std::make_shared<org::apache::nifi::minifi::io::TLSServerSocket>(socket_context, host, std::stoi(hostAndPort.at(1)), 3);
+    server_socket_->initialize();
 
     isRunning_ = true;
     check = [this]() -> bool {
@@ -122,50 +124,7 @@ class SecureSocketTest : public IntegrationBase {
       *size = 20;
       return *size;
     };
-    server_socket->registerCallback(check, handler);
-  }
-
-  void run(std::string test_file_location) {
-    testSetup();
-
-    std::shared_ptr<core::Repository> test_repo = std::make_shared<TestRepository>();
-    std::shared_ptr<core::Repository> test_flow_repo = std::make_shared<TestFlowRepository>();
-
-    configuration->set(minifi::Configure::nifi_flow_configuration_file, test_file_location);
-
-    std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
-    content_repo->initialize(configuration);
-    std::shared_ptr<minifi::io::StreamFactory> stream_factory = minifi::io::StreamFactory::getInstance(configuration);
-    std::unique_ptr<core::FlowConfiguration> yaml_ptr = std::unique_ptr<core::YamlConfiguration>(
-        new core::YamlConfiguration(test_repo, test_repo, content_repo, stream_factory, configuration, test_file_location));
-
-    core::YamlConfiguration yaml_config(test_repo, test_repo, content_repo, stream_factory, configuration, test_file_location);
-
-    std::unique_ptr<core::ProcessGroup> ptr = yaml_config.getRoot(test_file_location);
-    std::shared_ptr<core::ProcessGroup> pg = std::shared_ptr<core::ProcessGroup>(ptr.get());
-
-    queryRootProcessGroup(pg);
-
-    ptr.release();
-
-    std::shared_ptr<TestRepository> repo = std::static_pointer_cast<TestRepository>(test_repo);
-
-    std::shared_ptr<minifi::FlowController> controller = std::make_shared<minifi::FlowController>(test_repo, test_flow_repo, configuration, std::move(yaml_ptr), content_repo, DEFAULT_ROOT_GROUP_NAME,
-                                                                                                  true);
-    controller->load();
-    controller->start();
-    waitToVerifyProcessor();
-    controller->waitUnload(60000);
-    isRunning_ = false;
-    server_socket->closeStream();
-    server_socket = nullptr;
-    runAssertions();
-
-    cleanup();
-  }
-
-  virtual void waitToVerifyProcessor() {
-    std::this_thread::sleep_for(std::chrono::seconds(3));
+    server_socket_->registerCallback(check, handler);
   }
 
  protected:
@@ -176,7 +135,7 @@ class SecureSocketTest : public IntegrationBase {
   std::string dir;
   std::stringstream ss;
   TestController testController;
-  std::shared_ptr<org::apache::nifi::minifi::io::TLSServerSocket> server_socket;
+  std::shared_ptr<org::apache::nifi::minifi::io::TLSServerSocket> server_socket_;
 };
 
 static void sigpipe_handle(int x) {

@@ -34,7 +34,7 @@ int ssl_enable(void *ssl_context, void *user_data) {
 
 class CoapIntegrationBase : public IntegrationBase {
  public:
-  CoapIntegrationBase(uint64_t waitTime = 60000)
+  CoapIntegrationBase(uint64_t waitTime = DEFAULT_WAITTIME_MSECS)
       : IntegrationBase(waitTime),
         server(nullptr) {
   }
