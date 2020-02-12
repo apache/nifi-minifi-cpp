@@ -92,22 +92,6 @@ class MaxCollector: public SQLRowSubscriber {
     std::unordered_map<std::string, T> mapColumnNameValue_;
   };
 
-  template <typename T, typename Tuple, int Index, bool>
-  struct TupleIndexByType {
-    constexpr static int index() {
-      using tupleElType = typename std::decay<decltype(std::get<Index + 1>(Tuple()))>::type;
-
-      return TupleIndexByType<T, Tuple, Index + 1, std::is_same<tupleElType, MaxValue<T>>::value>::index();
-    }
-  };
-
-  template <typename T, typename Tuple, int Index>
-  struct TupleIndexByType<T, Tuple, Index, true> {
-    constexpr static int index() {
-      return Index;
-    }
-  };
-
   template <typename Tuple, int Index>
   struct UpdateMapState {
     UpdateMapState(const Tuple& tpl, std::unordered_map<std::string, std::string>& mapState) {
@@ -128,7 +112,7 @@ class MaxCollector: public SQLRowSubscriber {
 
   template <typename Tuple>
   struct UpdateMapState<Tuple, -1> {
-    UpdateMapState(const Tuple&, std::unordered_map<std::string, std::string>&) {}
+    UpdateMapState(...) {}
   };
 
   template <typename ...Ts>
@@ -144,8 +128,7 @@ class MaxCollector: public SQLRowSubscriber {
   template <typename T>
   void updateMaxValue(const std::string& columnName, const T& value) {
     if (mapState_.count(columnName)) {
-      constexpr auto index = TupleIndexByType<T, decltype(maxValues_), -1, false>::index();
-      std::get<index>(maxValues_).updateMaxValue(columnName, value);
+      std::get<MaxValue<T>>(maxValues_).updateMaxValue(columnName, value);
     }
   }
 

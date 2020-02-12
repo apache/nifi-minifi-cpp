@@ -35,7 +35,7 @@ class SQLRowsetProcessor
  public:
   SQLRowsetProcessor(const soci::rowset<soci::row>& rowset, const std::vector<SQLRowSubscriber*>& rowSubscribers);
 
-  size_t process(size_t max = 0);
+  size_t process(size_t max);
 
  private:
    void addRow(const soci::row& row, size_t rowCount);

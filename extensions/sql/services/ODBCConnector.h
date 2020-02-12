@@ -53,7 +53,7 @@ class ODBCConnection : public sql::Connection {
     try {
       exception.clear();
       // According to https://stackoverflow.com/questions/3668506/efficient-sql-test-query-or-validation-query-that-will-work-across-all-or-most by Rob Hruska, 
-      // 'select 1' works for: H2, MySQL, Microsoft SQL Server, PostgreSQL, SQLite. For Orcale 'SELECT 1 FROM DUAL' works.
+      // 'select 1' works for: H2, MySQL, Microsoft SQL Server, PostgreSQL, SQLite. For Oracle 'SELECT 1 FROM DUAL' works.
       prepareStatement("select 1")->execute();
       return true;
     } catch (std::exception& e) {

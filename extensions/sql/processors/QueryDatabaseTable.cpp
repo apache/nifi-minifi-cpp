@@ -120,7 +120,7 @@ class State {
 
   ~State() {}
 
-  operator bool() const {
+  explicit operator bool() const {
     return ok_;
   }
 

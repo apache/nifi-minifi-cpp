@@ -48,7 +48,7 @@ class SQLFactory : public core::ObjectFactory {
 
   template <typename T>
   static std::unique_ptr<ObjectFactory> getObjectFactory() {
-    return std::unique_ptr<ObjectFactory>(new core::DefautObjectFactory<T>());
+    return std::make_unique<core::DefautObjectFactory<T>>();
   }
 
   std::unique_ptr<ObjectFactory> assign(const std::string &class_name) override {
