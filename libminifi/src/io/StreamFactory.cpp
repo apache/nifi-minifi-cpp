@@ -45,7 +45,7 @@ class SocketCreator : public AbstractStreamFactory {
     return std::make_shared<V>(configure);
   }
 
-  explicit SocketCreator<T, V>(const std::shared_ptr<Configure> &configuration)
+  SocketCreator<T, V>(const std::shared_ptr<Configure> &configuration)
       : configuration_(configuration) {
     context_ = create(configuration);
   }

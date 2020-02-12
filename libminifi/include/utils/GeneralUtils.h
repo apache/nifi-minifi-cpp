@@ -21,6 +21,8 @@
 
 #include <memory>
 #include <type_traits>
+#include <utility>
+#include <functional>
 
 namespace org {
 namespace apache {
@@ -28,10 +30,14 @@ namespace nifi {
 namespace minifi {
 namespace utils {
 
+#if __cplusplus < 201402L
 template<typename T, typename... Args>
 std::unique_ptr<T> make_unique(Args&&... args) {
   return std::unique_ptr<T>{ new T{ std::forward<Args>(args)... } };
 }
+#else
+using std::make_unique;
+#endif /* < C++14 */
 
 template<typename T, typename std::enable_if<std::is_integral<T>::value>::type* = nullptr>
 T intdiv_ceil(T numerator, T denominator) {
@@ -42,9 +48,21 @@ T intdiv_ceil(T numerator, T denominator) {
 template <typename T, typename std::enable_if<std::is_pointer<T>::value>::type* = nullptr>
 using owner = T;
 
+#if __cplusplus < 201402L
+template<typename T, typename U = T>
+T exchange(T& obj, U&& new_value) {
+  T old_value = std::move(obj);
+  obj = std::forward<U>(new_value);
+  return old_value;
+}
+#else
+using std::exchange;
+#endif /* < C++14 */
+
 } /* namespace utils */
 } /* namespace minifi */
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
+
 #endif /* LIBMINIFI_INCLUDE_UTILS_GENERAL_UTILS_H */

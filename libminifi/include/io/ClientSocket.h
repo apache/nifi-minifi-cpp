@@ -52,6 +52,7 @@ using ip4addr = in_addr;
 using SocketDescriptor = int;
 using ip4addr = in_addr_t;
 static constexpr SocketDescriptor INVALID_SOCKET = -1;
+static constexpr int SOCKET_ERROR = -1;
 #endif /* WIN32 */
 
 /**
@@ -80,10 +81,11 @@ class Socket : public BaseStream {
    */
   explicit Socket(const std::shared_ptr<SocketContext> &context, std::string hostname, uint16_t port);
 
-  /**
-   * Move constructor.
-   */
+  Socket(const Socket&) = delete;
   Socket(Socket&&) noexcept;
+
+  Socket& operator=(const Socket&) = delete;
+  Socket& operator=(Socket&& other) noexcept;
 
   /**
    * Static function to return the current machine's host name
@@ -237,11 +239,20 @@ class Socket : public BaseStream {
   std::vector<uint8_t> readBuffer(const T&);
 
   /**
-   * Creates a connection using the address info object.
-   * @param p addrinfo structure.
-   * @returns fd.
+   * Creates a connection using the addr object
+   * @param ignored ignored
+   * @param addr The IPv4 address to connect to
+   * @returns 0 on success, -1 on error
    */
-  virtual int8_t createConnection(const addrinfo *p, ip4addr &addr);
+  virtual int8_t createConnection(const addrinfo *ignored, ip4addr &addr);
+
+  /**
+   * Iterates through {@code destination_addresses} and tries to connect to each address until it succeeds.
+   * Supports both IPv4 and IPv6.
+   * @param destination_addresses Destination addresses, typically from {@code getaddrinfo}.
+   * @return 0 on success, -1 on error
+   */
+  virtual int8_t createConnection(const addrinfo *destination_addresses);
 
   /**
    * Sets socket options depending on the instance.

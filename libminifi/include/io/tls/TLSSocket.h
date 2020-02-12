@@ -69,10 +69,10 @@ class OpenSSLInitializer {
 
 class TLSContext : public SocketContext {
  public:
-  explicit TLSContext(const std::shared_ptr<Configure> &configure, std::shared_ptr<minifi::controllers::SSLContextService> ssl_service = nullptr);
+  TLSContext(const std::shared_ptr<Configure> &configure, std::shared_ptr<minifi::controllers::SSLContextService> ssl_service = nullptr);
 
   virtual ~TLSContext() {
-    if (0 != ctx)
+    if (nullptr != ctx)
       SSL_CTX_free(ctx);
   }
 
@@ -120,6 +120,8 @@ class TLSSocket : public Socket {
    * Move constructor.
    */
   TLSSocket(TLSSocket &&) noexcept;
+
+  TLSSocket& operator=(TLSSocket&&) noexcept;
 
   virtual ~TLSSocket();
 

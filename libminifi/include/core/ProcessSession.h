@@ -49,7 +49,7 @@ class ProcessSession : public ReferenceContainer {
   /*!
    * Create a new process session
    */
-  explicit ProcessSession(std::shared_ptr<ProcessContext> processContext = nullptr)
+  ProcessSession(std::shared_ptr<ProcessContext> processContext = nullptr)
       : process_context_(std::move(processContext)),
         logger_(logging::LoggerFactory<ProcessSession>::getLogger()) {
     logger_->log_trace("ProcessSession created for %s", process_context_->getProcessorNode()->getName());

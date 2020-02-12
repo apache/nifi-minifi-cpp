@@ -88,7 +88,7 @@ class StreamFactory {
   }
 
  protected:
-  explicit StreamFactory(const std::shared_ptr<Configure> &configure);
+  StreamFactory(const std::shared_ptr<Configure> &configure);
 
   std::shared_ptr<AbstractStreamFactory> delegate_;
 };

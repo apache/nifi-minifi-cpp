@@ -34,6 +34,7 @@
 #include "utils/StringUtils.h"
 #include "core/Property.h"
 #include "core/logging/LoggerConfiguration.h"
+#include "utils/GeneralUtils.h"
 
 namespace org {
 namespace apache {
@@ -156,7 +157,7 @@ int16_t TLSContext::initialize(bool server_method) {
 }
 
 TLSSocket::~TLSSocket() {
-  closeStream();
+  TLSSocket::closeStream();
 }
 
 void TLSSocket::closeStream() {
@@ -186,9 +187,27 @@ TLSSocket::TLSSocket(const std::shared_ptr<TLSContext> &context, const std::stri
   context_ = context;
 }
 
-TLSSocket::TLSSocket(TLSSocket &&d) noexcept
-    : Socket(std::move(d)) {
-  context_ = d.context_;
+TLSSocket::TLSSocket(TLSSocket &&other) noexcept
+    : Socket(std::move(other)),
+      context_{ utils::exchange(other.context_, nullptr) } {
+  std::lock_guard<std::mutex> lg{ other.ssl_mutex_ };
+
+  connected_.exchange(other.connected_.load());
+  other.connected_.exchange(false);
+  ssl_ = utils::exchange(other.ssl_, nullptr);
+  ssl_map_ = utils::exchange(other.ssl_map_, {});
+}
+
+TLSSocket& TLSSocket::operator=(TLSSocket&& other) noexcept {
+  if (&other == this) return *this;
+  this->Socket::operator=(static_cast<Socket&&>(other));
+  std::lock_guard<std::mutex> lg{ other.ssl_mutex_ };
+  connected_.exchange(other.connected_.load());
+  other.connected_.exchange(false);
+  context_ = utils::exchange(other.context_, nullptr);
+  ssl_ = utils::exchange(other.ssl_, nullptr);
+  ssl_map_ = utils::exchange(other.ssl_map_, {});
+  return *this;
 }
 
 int16_t TLSSocket::initialize(bool blocking) {
