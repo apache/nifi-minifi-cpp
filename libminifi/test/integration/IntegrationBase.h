@@ -18,6 +18,8 @@
 #ifndef LIBMINIFI_TEST_INTEGRATION_INTEGRATIONBASE_H_
 #define LIBMINIFI_TEST_INTEGRATION_INTEGRATIONBASE_H_
 
+#define DEFAULT_WAITTIME_MSECS 3000
+
 #include "core/logging/Logger.h"
 #include "core/ProcessGroup.h"
 #include "core/yaml/YamlConfiguration.h"
@@ -31,7 +33,7 @@
 
 class IntegrationBase {
  public:
-  IntegrationBase(uint64_t waitTime = 60000);
+  IntegrationBase(uint64_t waitTime = DEFAULT_WAITTIME_MSECS);
 
   virtual ~IntegrationBase();
 
@@ -53,7 +55,7 @@ class IntegrationBase {
   virtual void runAssertions() = 0;
 
   virtual void waitToVerifyProcessor() {
-    std::this_thread::sleep_for(std::chrono::seconds(3));
+    std::this_thread::sleep_for(std::chrono::milliseconds(wait_time_));
   }
 
  protected:

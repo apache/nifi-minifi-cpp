@@ -58,7 +58,7 @@ class SiteToSiteTestHarness : public CoapIntegrationBase {
     dir = testController.createTempDirectory(format);
   }
 
-  void testSetup() {
+  void testSetup() override {
     LogTestController::getInstance().setTrace<minifi::RemoteProcessorGroupPort>();
     LogTestController::getInstance().setTrace<minifi::sitetosite::HttpSiteToSiteClient>();
     LogTestController::getInstance().setTrace<minifi::sitetosite::SiteToSiteClient>();
@@ -78,15 +78,9 @@ class SiteToSiteTestHarness : public CoapIntegrationBase {
     configuration->set("nifi.remote.input.socket.port", "8099");
   }
 
-  virtual void waitToVerifyProcessor() {
-    std::this_thread::sleep_for(std::chrono::seconds(3));
-  }
+  void cleanup() override {}
 
-  void cleanup() {
-  }
-
-  void runAssertions() {
-  }
+  void runAssertions() override {}
 
  protected:
   bool isSecure;

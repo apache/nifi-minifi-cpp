@@ -44,7 +44,7 @@
 
 class TailFileTestHarness : public IntegrationBase {
  public:
-  TailFileTestHarness() {
+  TailFileTestHarness() : IntegrationBase(1000) {
     char format[] = "/tmp/ssth.XXXXXX";
     dir = testController.createTempDirectory(format);
 
@@ -57,25 +57,25 @@ class TailFileTestHarness : public IntegrationBase {
     file.close();
   }
 
-  void testSetup() {
+  void testSetup() override {
     LogTestController::getInstance().setInfo<minifi::processors::LogAttribute>();
     LogTestController::getInstance().setTrace<minifi::processors::TailFile>();
     LogTestController::getInstance().setTrace<minifi::FlowController>();
   }
 
-  virtual void cleanup() {
+  void cleanup() override {
     unlink(ss.str().c_str());
     unlink(statefile.c_str());
   }
 
-  virtual void runAssertions() {
+  void runAssertions() override {
     assert(LogTestController::getInstance().contains("5 flowfiles were received from TailFile input") == true);
     assert(LogTestController::getInstance().contains("Looking for delimiter 0xA") == true);
     assert(LogTestController::getInstance().contains("li\\ne5") == true);
   }
 
  protected:
-  virtual void updateProperties(std::shared_ptr<minifi::FlowController> fc) {
+  void updateProperties(std::shared_ptr<minifi::FlowController> fc) override {
     for (auto &comp : fc->getComponents("tf")) {
       std::shared_ptr<minifi::state::ProcessorController> proc = std::dynamic_pointer_cast<minifi::state::ProcessorController>(comp);
       if (nullptr != proc) {
