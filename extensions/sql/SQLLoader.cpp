@@ -18,7 +18,7 @@
 #include "core/FlowConfiguration.h"
 #include "SQLLoader.h"
 
-bool SQLFactory::added = core::FlowConfiguration::add_static_func("createSQLFactory");
+static auto added = core::FlowConfiguration::add_static_func("createSQLFactory");
 
 extern "C" {
 

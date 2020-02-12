@@ -118,11 +118,7 @@ class State {
     ok_ = true;
   }
 
-  ~State() {
-    if (file_.is_open()) {
-      file_.close();
-    }
-  }
+  ~State() {}
 
   operator bool() const {
     return ok_;

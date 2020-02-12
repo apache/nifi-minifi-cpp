@@ -15,9 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef EXTENSION_SQLLOADER_H
-#define EXTENSION_SQLLOADER_H
 
+#pragma once
 #include "core/ClassLoader.h"
 #include "processors/ExecuteSQL.h"
 #include "processors/PutSQL.h"
@@ -26,28 +25,25 @@
 
 class SQLFactory : public core::ObjectFactory {
  public:
-  SQLFactory() {
-
-  }
+  SQLFactory() {}
 
   /**
    * Gets the name of the object.
    * @return class name of processor
    */
-  virtual std::string getName() override {
+  std::string getName() override {
     return "SQLFactory";
   }
 
-  virtual std::string getClassName() override{
+  std::string getClassName() override{
     return "SQLFactory";
   }
   /**
    * Gets the class name for the object
    * @return class name for the processor.
    */
-  virtual std::vector<std::string> getClassNames() override{
-    std::vector<std::string> class_names = {"ExecuteSQL", "PutSQL", "QueryDatabaseTable", "ODBCService"};
-    return class_names;
+  std::vector<std::string> getClassNames() override{
+    return {"ExecuteSQL", "PutSQL", "QueryDatabaseTable", "ODBCService"};
   }
 
   template <typename T>
@@ -55,7 +51,7 @@ class SQLFactory : public core::ObjectFactory {
     return std::unique_ptr<ObjectFactory>(new core::DefautObjectFactory<T>());
   }
 
-  virtual std::unique_ptr<ObjectFactory> assign(const std::string &class_name) override {
+  std::unique_ptr<ObjectFactory> assign(const std::string &class_name) override {
     if (utils::StringUtils::equalsIgnoreCase(class_name, "ExecuteSQL")) {
       return getObjectFactory<minifi::processors::ExecuteSQL>();
     }
@@ -71,11 +67,8 @@ class SQLFactory : public core::ObjectFactory {
 
     return nullptr;
   }
-
-  static bool added;
 };
 
 extern "C" {
   DLL_EXPORT void *createSQLFactory(void);
 }
-#endif /* EXTENSION_SQLLOADER_H */

@@ -16,13 +16,10 @@
  * limitations under the License.
  */
 
-#ifndef EXTENSIONS_SQL_SERVICES_DATABASECONNECTORS_H_
-#define EXTENSIONS_SQL_SERVICES_DATABASECONNECTORS_H_
+#pragma once
 
 #include <memory>
-#include <iostream>
-#include <algorithm>
-#include <cctype>
+#include <string>
 
 #include <soci/soci.h>
 
@@ -103,4 +100,3 @@ class Connection {
 } /* namespace apache */
 } /* namespace org */
 
-#endif /* EXTENSIONS_SQL_SERVICES_DATABASECONNECTORS_H_ */

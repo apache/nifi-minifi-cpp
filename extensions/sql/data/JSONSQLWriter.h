@@ -30,7 +30,7 @@ namespace sql {
 
 class JSONSQLWriter: public SQLWriter {
  public:
-  JSONSQLWriter(bool pretty);
+  explicit JSONSQLWriter(bool pretty);
   virtual ~JSONSQLWriter();
 
   std::string toString() override;

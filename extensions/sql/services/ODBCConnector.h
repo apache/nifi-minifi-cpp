@@ -71,7 +71,7 @@ class ODBCConnection : public sql::Connection {
   }
 
  private:
-   const soci::connection_parameters getSessionParameters() const {
+   soci::connection_parameters getSessionParameters() const {
      static const soci::backend_factory &backEnd = *soci::factory_odbc();
 
      soci::connection_parameters parameters(backEnd, connection_string_);
