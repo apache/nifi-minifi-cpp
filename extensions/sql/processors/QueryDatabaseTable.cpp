@@ -139,7 +139,7 @@ class State {
       dataSize += el.first.size() + 1 + el.second.size() + separator().size();
     }
 
-    // If dataSize_ > dataSize, then clear difference with ' '.
+    // If a maxValueColumnName type is varchar, a new max value 'dataSize' can be shorter than previous max value 'dataSize_' - clear difference with ' ' to keep file format.
     if (dataSize_ > dataSize) {
       for (auto i = dataSize_ - dataSize; i > 0; i--) {
         file_ << ' ';
@@ -295,21 +295,21 @@ void QueryDatabaseTable::initialize() {
   setSupportedRelationships( { s_success });
 }
 
-void QueryDatabaseTable::processOnSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
+void QueryDatabaseTable::processOnSchedule(const core::ProcessContext &context) {
   initOutputFormat(context);
 
-  context->getProperty(s_tableName.getName(), tableName_);
-  context->getProperty(s_columnNames.getName(), columnNames_);
+  context.getProperty(s_tableName.getName(), tableName_);
+  context.getProperty(s_columnNames.getName(), columnNames_);
 
-  context->getProperty(s_maxValueColumnNames.getName(), maxValueColumnNames_);
+  context.getProperty(s_maxValueColumnNames.getName(), maxValueColumnNames_);
   listMaxValueColumnName_ = utils::inputStringToList(maxValueColumnNames_);
 
-  context->getProperty(s_whereClause.getName(), whereClause_);
-  context->getProperty(s_sqlQuery.getName(), sqlQuery_);
-  context->getProperty(s_maxRowsPerFlowFile.getName(), maxRowsPerFlowFile_);
+  context.getProperty(s_whereClause.getName(), whereClause_);
+  context.getProperty(s_sqlQuery.getName(), sqlQuery_);
+  context.getProperty(s_maxRowsPerFlowFile.getName(), maxRowsPerFlowFile_);
 
   std::string stateDir;
-  context->getProperty(s_stateDirectory.getName(), stateDir);
+  context.getProperty(s_stateDirectory.getName(), stateDir);
   if (stateDir.empty()) {
     logger_->log_error("State Directory is empty");
     return;
@@ -341,7 +341,7 @@ void QueryDatabaseTable::processOnSchedule(const std::shared_ptr<core::ProcessCo
     }
   }
 
-  const auto dynamic_prop_keys = context->getDynamicPropertyKeys();
+  const auto dynamic_prop_keys = context.getDynamicPropertyKeys();
   logger_->log_info("Received %zu dynamic properties", dynamic_prop_keys.size());
 
   // If the stored state for a max value column is empty, populate it with the corresponding initial max value, if it exists.
@@ -359,14 +359,14 @@ void QueryDatabaseTable::processOnSchedule(const std::shared_ptr<core::ProcessCo
       continue;
     }
     std::string value;
-    if (context->getDynamicProperty(key, value) && !value.empty()) {
+    if (context.getDynamicProperty(key, value) && !value.empty()) {
       it->second = value;
       logger_->log_info("Setting initial maximum value of %s to %s", columnName, value);
     }
   }
 }
 
-void QueryDatabaseTable::processOnTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
+void QueryDatabaseTable::processOnTrigger(core::ProcessSession &session) {
   const auto& selectQuery = getSelectQuery();
 
   logger_->log_info("QueryDatabaseTable: selectQuery: '%s'", selectQuery.c_str());
@@ -390,19 +390,19 @@ void QueryDatabaseTable::processOnTrigger(const std::shared_ptr<core::ProcessCon
 
     const auto& output = sqlWriter.toString();
     if (!output.empty()) {
-      WriteCallback writer(output.data(), output.size());
-      auto newflow = session->create();
+      WriteCallback writer(output);
+      auto newflow = session.create();
       newflow->addAttribute(ResultRowCount, std::to_string(rowCount));
       newflow->addAttribute(ResultTableName, tableName_);
-      session->write(newflow, &writer);
-      session->transfer(newflow, s_success);
+      session.write(newflow, &writer);
+      session.transfer(newflow, s_success);
     }
   } while (rowCount > 0);
 
   const auto mapState = mapState_;
   if (maxCollector.updateMapState()) {
     try {
-      session->commit();
+      session.commit();
     } catch (std::exception& e) {
       mapState_ = mapState;
       throw;

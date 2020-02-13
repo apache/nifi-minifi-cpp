@@ -18,6 +18,8 @@
 
 #pragma once
 
+#include <string>
+
 #include "FlowFileRecord.h"
 
 namespace org {
@@ -27,18 +29,18 @@ namespace minifi {
 
 class WriteCallback : public OutputStreamCallback {
 public:
-  WriteCallback(const char *data, uint64_t size)
-    : _data(const_cast<char*>(data)),
-    _dataSize(size) {
+  WriteCallback(const std::string& data)
+    : data_(data) {
   }
-  char *_data;
-  uint64_t _dataSize;
-  int64_t process(std::shared_ptr<io::BaseStream> stream) {
-    int64_t ret = 0;
-    if (_data && _dataSize > 0)
-	  ret = stream->write(reinterpret_cast<uint8_t*>(_data), _dataSize);
-    return ret;
+
+ int64_t process(std::shared_ptr<io::BaseStream> stream) {
+    if (data_.empty())
+      return 0;
+
+    return stream->write(reinterpret_cast<uint8_t*>(const_cast<char*>(data_.c_str())), data_.size());
   }
+
+ const std::string& data_;
 };
 
 } /* namespace minifi */

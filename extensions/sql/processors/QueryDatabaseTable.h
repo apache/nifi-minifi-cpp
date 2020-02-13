@@ -65,8 +65,8 @@ class QueryDatabaseTable: public SQLProcessor<QueryDatabaseTable>, public Output
     return true;
   }
 
-  void processOnSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& sessionFactory);
-  void processOnTrigger(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session);
+  void processOnSchedule(const core::ProcessContext& context);
+  void processOnTrigger(core::ProcessSession& session);
   
   void initialize() override;
 

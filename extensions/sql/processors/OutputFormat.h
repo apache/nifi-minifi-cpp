@@ -39,7 +39,7 @@ class OutputFormat {
 
   bool isJSONPretty() const;
 
-  void initOutputFormat(const std::shared_ptr<core::ProcessContext>& context);
+  void initOutputFormat(const core::ProcessContext& context);
 
  protected:
    std::string outputFormat_;

@@ -45,8 +45,8 @@ class PutSQL: public SQLProcessor<PutSQL> {
   //! Processor Name
   static const std::string ProcessorName;
 
-  void processOnSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory);
-  void processOnTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session);
+  void processOnSchedule(const core::ProcessContext &context);
+  void processOnTrigger(core::ProcessSession &session);
   
   void initialize() override;
 

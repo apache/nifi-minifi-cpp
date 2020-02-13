@@ -18,9 +18,6 @@
 
 #pragma once
 
-//#include "DatabaseConnectors.h"
-
-
 #include <string>
 #include <iostream>
 

@@ -73,13 +73,13 @@ void PutSQL::initialize() {
   setSupportedRelationships( { s_success });
 }
 
-void PutSQL::processOnSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& sessionFactory) {
+void PutSQL::processOnSchedule(const core::ProcessContext& context) {
   std::string sqlStatements;
-  context->getProperty(s_sqlStatements.getName(), sqlStatements);
+  context.getProperty(s_sqlStatements.getName(), sqlStatements);
   sqlStatements_ = utils::StringUtils::split(sqlStatements, ";");
 }
 
-void PutSQL::processOnTrigger(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) {
+void PutSQL::processOnTrigger(core::ProcessSession& session) {
   const auto dbSession = connection_->getSession();
 
   try {

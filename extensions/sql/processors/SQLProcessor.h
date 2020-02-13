@@ -47,7 +47,7 @@ class SQLProcessor: public core::Processor {
     if (!dbService_)
       throw minifi::Exception(PROCESSOR_EXCEPTION, "'DB Controller Service' must be defined");
 
-    static_cast<T*>(this)->processOnSchedule(context, sessionFactory);
+    static_cast<T*>(this)->processOnSchedule(*context);
   }
 
   void onTrigger(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) override {
@@ -62,7 +62,7 @@ class SQLProcessor: public core::Processor {
       if (!connection_) {
         connection_ = dbService_->getConnection();
       }
-      static_cast<T*>(this)->processOnTrigger(context, session);
+      static_cast<T*>(this)->processOnTrigger(*session);
     } catch (std::exception& e) {
       logger_->log_error("SQLProcessor: '%s'", e.what());
       if (connection_) {

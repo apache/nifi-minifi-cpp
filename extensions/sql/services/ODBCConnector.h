@@ -63,11 +63,11 @@ class ODBCConnection : public sql::Connection {
   }
 
   std::unique_ptr<sql::Statement> prepareStatement(const std::string& query) const override {
-    return std::make_unique<sql::Statement>(session_, query);
+    return std::make_unique<sql::Statement>(*session_, query);
   }
 
   std::unique_ptr<Session> getSession() const override {
-    return std::make_unique<sql::Session>(session_);
+    return std::make_unique<sql::Session>(*session_);
   }
 
  private:

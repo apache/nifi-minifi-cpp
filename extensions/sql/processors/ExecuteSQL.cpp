@@ -81,14 +81,14 @@ void ExecuteSQL::initialize() {
   setSupportedRelationships( { s_success });
 }
 
-void ExecuteSQL::processOnSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
+void ExecuteSQL::processOnSchedule(const core::ProcessContext &context) {
   initOutputFormat(context);
 
-  context->getProperty(s_sqlSelectQuery.getName(), sqlSelectQuery_);
-  context->getProperty(s_maxRowsPerFlowFile.getName(), max_rows_);
+  context.getProperty(s_sqlSelectQuery.getName(), sqlSelectQuery_);
+  context.getProperty(s_maxRowsPerFlowFile.getName(), max_rows_);
 }
 
-void ExecuteSQL::processOnTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
+void ExecuteSQL::processOnTrigger(core::ProcessSession &session) {
   auto statement = connection_->prepareStatement(sqlSelectQuery_);
 
   auto rowset = statement->execute();
@@ -107,11 +107,11 @@ void ExecuteSQL::processOnTrigger(const std::shared_ptr<core::ProcessContext> &c
 
     const auto& output = sqlWriter.toString();
     if (!output.empty()) {
-      WriteCallback writer(output.data(), output.size());
-      auto newflow = session->create();
+      WriteCallback writer(output);
+      auto newflow = session.create();
       newflow->addAttribute(ResultRowCount, std::to_string(rowCount));
-      session->write(newflow, &writer);
-      session->transfer(newflow, s_success);
+      session.write(newflow, &writer);
+      session.transfer(newflow, s_success);
     }
   } while (rowCount > 0);
 }

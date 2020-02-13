@@ -46,8 +46,8 @@ bool OutputFormat::isJSONPretty() const {
   return outputFormat_ == s_outputFormatJSONPretty;
 }
 
-void OutputFormat::initOutputFormat(const std::shared_ptr<core::ProcessContext>& context) {
-  context->getProperty(outputFormat().getName(), outputFormat_);
+void OutputFormat::initOutputFormat(const core::ProcessContext& context) {
+  context.getProperty(outputFormat().getName(), outputFormat_);
 }
 
 } /* namespace processors */

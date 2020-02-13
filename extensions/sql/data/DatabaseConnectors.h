@@ -39,7 +39,7 @@ namespace sql {
 class Statement {
  public:
 
-  explicit Statement(const std::unique_ptr<soci::session>& session, const std::string &query)
+  explicit Statement(soci::session& session, const std::string &query)
     : session_(session), query_(query) {
   }
 
@@ -47,18 +47,18 @@ class Statement {
   }
 
   soci::rowset<soci::row> execute() {
-    return session_->prepare << query_;
+    return session_.prepare << query_;
   }
 
  protected:
   std::string query_;
-  const std::unique_ptr<soci::session>& session_;
+  soci::session& session_;
 };
 
 class Session {
  public:
 
-  explicit Session(const std::unique_ptr<soci::session>& session)
+  explicit Session(soci::session& session)
     : session_(session) {
   }
 
@@ -66,23 +66,23 @@ class Session {
   }
 
   void begin() {
-    session_->begin();
+    session_.begin();
   }
 
   void commit() {
-    session_->commit();
+    session_.commit();
   }
 
   void rollback() {
-    session_->rollback();
+    session_.rollback();
   }
 
   void execute(const std::string &statement) {
-    *session_ << statement;
+    session_ << statement;
   }
 
 protected:
-  const std::unique_ptr<soci::session>& session_;
+  soci::session& session_;
 };
 
 class Connection {
