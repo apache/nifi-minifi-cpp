@@ -97,11 +97,18 @@ matrix:
       name: xenial shared build with tests
       dist: xenial
       sudo: required
+      addons:
+        apt:
+          sources:
+          - ubuntu-toolchain-r-test
+          packages:
+          - openjdk-8-jdk
+          - maven
       script:
-        - ./bootstrap.sh -e -t && cd build  && cmake -DUSE_SHARED_LIBS= .. &&  cmake --build . --parallel 4  && sudo make test ARGS="-j4 --output-on-failure"
+        - ./bootstrap.sh -e -t && cd build  && cmake -DUSE_SHARED_LIBS= -DENABLE_LIBRDKAFKA=ON -DENABLE_OPC=ON -DENABLE_SFTP=ON -DENABLE_MQTT=ON -DENABLE_COAP=ON .. &&  cmake --build . --parallel 4  && sudo make test ARGS="-j4 --output-on-failure"
     - os: linux
       name: debian static package build
-      dist: trusty
+      dist: bionic
       sudo: required
       services:
         - docker
@@ -109,7 +116,7 @@ matrix:
         - mkdir -p build && cd build && cmake .. && make debian
     - os: linux
       name: centos static package biuld
-      dist: trusty
+      dist: bionic
       sudo: required
       services:
         - docker
@@ -117,7 +124,7 @@ matrix:
         - mkdir -p build && cd build && cmake .. && make centos
     - os: linux
       name: fedora static package build
-      dist: trusty
+      dist: bionic
       sudo: required
       services:
         - docker
@@ -125,7 +132,7 @@ matrix:
         - mkdir -p build && cd build && cmake .. && make fedora
     - os: linux
       name: bionic static package build
-      dist: trusty
+      dist: bionic
       sudo: required
       services:
         - docker
