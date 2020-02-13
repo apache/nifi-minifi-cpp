@@ -29,7 +29,7 @@ namespace minifi {
 
 class WriteCallback : public OutputStreamCallback {
 public:
-  WriteCallback(const std::string& data)
+  explicit WriteCallback(const std::string& data)
     : data_(data) {
   }
 
