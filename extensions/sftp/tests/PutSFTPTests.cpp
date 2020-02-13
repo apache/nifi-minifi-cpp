@@ -39,6 +39,7 @@
 #endif
 
 #include "TestBase.h"
+#include "Exception.h"
 #include "utils/StringUtils.h"
 #include "utils/file/FileUtils.h"
 #include "core/Core.h"
@@ -236,7 +237,7 @@ TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP bad password", "[PutSFTP][authent
   try {
     testController.runSession(plan, true);
   } catch (std::exception &e) {
-    std::string expected("Process Session Operation:Can not find the transfer relationship for the updated flow");
+    std::string expected = minifi::Exception(minifi::PROCESS_SESSION_EXCEPTION, "Can not find the transfer relationship for the updated flow").what();
     REQUIRE(0 == std::string(e.what()).compare(0, expected.size(), expected));
   }
 
@@ -266,7 +267,7 @@ TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP public key authentication bad pas
   try {
     testController.runSession(plan, true);
   } catch (std::exception &e) {
-    std::string expected("Process Session Operation:Can not find the transfer relationship for the updated flow");
+    std::string expected = minifi::Exception(minifi::PROCESS_SESSION_EXCEPTION, "Can not find the transfer relationship for the updated flow").what();
     REQUIRE(0 == std::string(e.what()).compare(0, expected.size(), expected));
   }
 
@@ -310,7 +311,7 @@ TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP host key checking missing strict"
   try {
     testController.runSession(plan, true);
   } catch (std::exception &e) {
-    std::string expected("Process Session Operation:Can not find the transfer relationship for the updated flow");
+    std::string expected = minifi::Exception(minifi::PROCESS_SESSION_EXCEPTION, "Can not find the transfer relationship for the updated flow").what();
     REQUIRE(0 == std::string(e.what()).compare(0, expected.size(), expected));
   }
 
@@ -340,7 +341,7 @@ TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP host key checking mismatch strict
   try {
     testController.runSession(plan, true);
   } catch (std::exception &e) {
-    std::string expected("Process Session Operation:Can not find the transfer relationship for the updated flow");
+    std::string expected = minifi::Exception(minifi::PROCESS_SESSION_EXCEPTION, "Can not find the transfer relationship for the updated flow").what();
     REQUIRE(0 == std::string(e.what()).compare(0, expected.size(), expected));
   }
 
@@ -675,7 +676,7 @@ TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP connection caching does not reuse
   try {
     testController.runSession(plan, true);
   } catch (std::exception &e) {
-    std::string expected("Process Session Operation:Can not find the transfer relationship for the updated flow");
+    std::string expected = minifi::Exception(minifi::PROCESS_SESSION_EXCEPTION, "Can not find the transfer relationship for the updated flow").what();
     REQUIRE(0 == std::string(e.what()).compare(0, expected.size(), expected));
   }
 
