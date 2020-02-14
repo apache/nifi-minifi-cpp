@@ -105,7 +105,7 @@ void ExecuteSQL::processOnTrigger(core::ProcessSession &session) {
     if (rowCount == 0)
       break;
 
-    const auto& output = sqlWriter.toString();
+    const auto output = sqlWriter.toString();
     if (!output.empty()) {
       WriteCallback writer(output);
       auto newflow = session.create();
