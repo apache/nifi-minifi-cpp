@@ -112,7 +112,7 @@ class MaxCollector: public SQLRowSubscriber {
 
   template <typename Tuple>
   struct UpdateMapState<Tuple, -1> {
-    UpdateMapState(...) {}
+    UpdateMapState(const Tuple&, std::unordered_map<std::string, std::string>&) {}
   };
 
   template <typename ...Ts>
