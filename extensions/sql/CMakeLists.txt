@@ -178,4 +178,3 @@ target_link_libraries(minifi-sql ${LIBMINIFI})
 
 SET (SQL-EXTENSION minifi-sql PARENT_SCOPE)
 register_extension(minifi-sql)
-register_extension_linter(minifi-sql-linter)
