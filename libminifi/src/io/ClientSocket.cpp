@@ -41,6 +41,8 @@
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/GeneralUtils.h"
 
+namespace util = org::apache::nifi::minifi::utils;
+
 namespace {
 
 std::string get_last_err_str() {
@@ -104,7 +106,7 @@ auto find_if_custom_linked_list(T* const list, const Adv advance_func, const Pre
 
 #ifndef WIN32
 std::error_code bind_to_local_network_interface(const minifi::io::SocketDescriptor fd, const minifi::io::NetworkInterface& interface) {
-  using ifaddrs_uniq_ptr = std::unique_ptr<ifaddrs, utils::ifaddrs_deleter>;
+  using ifaddrs_uniq_ptr = std::unique_ptr<ifaddrs, util::ifaddrs_deleter>;
   const auto if_list_ptr = []() -> ifaddrs_uniq_ptr {
     ifaddrs *list = nullptr;
     const auto get_ifa_success = getifaddrs(&list) == 0;
@@ -134,8 +136,8 @@ std::error_code set_non_blocking(const minifi::io::SocketDescriptor fd) noexcept
   }
 #else
   u_long iMode = 1;
-  if (ioctlsocket(socket_file_descriptor_, FIONBIO, &iMode) == SOCKET_ERROR) {
-    return { WSAGetLastError(), std::system_category() }
+  if (ioctlsocket(fd, FIONBIO, &iMode) == SOCKET_ERROR) {
+    return { WSAGetLastError(), std::system_category() };
   }
 #endif /* !WIN32 */
   return {};
@@ -182,14 +184,13 @@ Socket::Socket(Socket &&other) noexcept
 }
 
 Socket& Socket::operator=(Socket &&other) noexcept {
-  using utils::exchange;
   if (&other == this) return *this;
-  requested_hostname_ = exchange(other.requested_hostname_, {});
-  canonical_hostname_ = exchange(other.canonical_hostname_, {});
-  port_ = exchange(other.port_, 0);
-  is_loopback_only_ = exchange(other.is_loopback_only_, false);
-  local_network_interface_ = exchange(other.local_network_interface_, {});
-  socket_file_descriptor_ = exchange(other.socket_file_descriptor_, INVALID_SOCKET);
+  requested_hostname_ = util::exchange(other.requested_hostname_, "");
+  canonical_hostname_ = util::exchange(other.canonical_hostname_, "");
+  port_ = util::exchange(other.port_, 0);
+  is_loopback_only_ = util::exchange(other.is_loopback_only_, false);
+  local_network_interface_ = util::exchange(other.local_network_interface_, {});
+  socket_file_descriptor_ = util::exchange(other.socket_file_descriptor_, INVALID_SOCKET);
   total_list_ = other.total_list_;
   FD_ZERO(&other.total_list_);
   read_fds_ = other.read_fds_;
@@ -200,8 +201,8 @@ Socket& Socket::operator=(Socket &&other) noexcept {
   other.total_written_.exchange(0);
   total_read_.exchange(other.total_read_);
   other.total_read_.exchange(0);
-  listeners_ = exchange(other.listeners_, 0);
-  nonBlocking_ = exchange(other.nonBlocking_, false);
+  listeners_ = util::exchange(other.listeners_, 0);
+  nonBlocking_ = util::exchange(other.nonBlocking_, false);
   logger_ = other.logger_;
   return *this;
 }
@@ -378,7 +379,7 @@ int16_t Socket::initialize() {
   const auto gai_service = std::to_string(port_);
   addrinfo* getaddrinfo_result = nullptr;
   const int errcode = getaddrinfo(gai_node, gai_service.c_str(), &hints, &getaddrinfo_result);
-  const std::unique_ptr<addrinfo, utils::addrinfo_deleter> addr_info{ getaddrinfo_result };
+  const std::unique_ptr<addrinfo, util::addrinfo_deleter> addr_info{ getaddrinfo_result };
   getaddrinfo_result = nullptr;
   if (errcode != 0) {
     logger_->log_error("getaddrinfo: %s", get_last_getaddrinfo_err_str(errcode));
