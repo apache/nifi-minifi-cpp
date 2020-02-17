@@ -60,6 +60,10 @@
           "value": "TRUE"
         },
         {
+          "name": "ENABLE_SQL",
+          "value": "TRUE"
+        },
+        {
           "name": "ENABLE_LIBRDKAFKA",
           "value": "OFF"
         },

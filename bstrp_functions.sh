@@ -69,6 +69,11 @@ add_multi_option(){
 	done
 }
 
+set_incompatible_with(){
+  INCOMPATIBLE_WITH+=("$1:$2")
+  INCOMPATIBLE_WITH+=("$2:$1")
+}
+
 print_multi_option_status(){
   feature="$1"
   feature_status=${!1}
@@ -167,6 +172,30 @@ save_state(){
   for option in "${OPTIONS[@]}" ; do
     echo_state_variable $option
   done
+}
+
+check_compatibility(){
+  for option in "${INCOMPATIBLE_WITH[@]}" ; do
+    OPT=${option%%:*}
+    if [ "$OPT" = "$1" ]; then
+      OTHER_FEATURE=${option#*:}
+      OTHER_FEATURE_VALUE=${!OTHER_FEATURE}
+      if [ $OTHER_FEATURE_VALUE = "Enabled" ]; then
+        echo "false"
+        return
+      fi
+    fi
+  done
+  echo "true"
+}
+
+verify_enable(){
+  COMPATIBLE=$(check_compatibility $1)
+  if [ "$COMPATIBLE" = "true" ]; then
+    verify_enable_platform $1
+  else
+    echo "false"
+  fi
 }
 
 can_deploy(){
@@ -334,6 +363,7 @@ show_supported_features() {
   echo "V. AWS Support .................$(print_feature_status AWS_ENABLED)"
   echo "T. OpenCV Support ..............$(print_feature_status OPENCV_ENABLED)"
   echo "U. OPC-UA Support...............$(print_feature_status OPC_ENABLED)"
+  echo "W. SQL Support..................$(print_feature_status SQL_ENABLED)"
   echo "****************************************"
   echo "            Build Options."
   echo "****************************************"
@@ -348,12 +378,13 @@ show_supported_features() {
   fi
   echo "Q. Quit"
   echo "* Extension cannot be installed due to"
-  echo -e "  version of cmake or other software\r\n"
+  echo "  version of cmake or other software, or"
+  echo -e "  incompatibility with other extensions\r\n"
 }
 
 read_feature_options(){
   local choice
-  read -p "Enter choice [ A - V or 1-4 ] " choice
+  read -p "Enter choice [ A - W or 1-4 ] " choice
   choice=$(echo ${choice} | tr '[:upper:]' '[:lower:]')
   case $choice in
     a) ToggleFeature ROCKSDB_ENABLED ;;
@@ -380,6 +411,7 @@ read_feature_options(){
 	s) ToggleFeature SFTP_ENABLED ;;
     t) ToggleFeature OPENCV_ENABLED ;;
     u) ToggleFeature OPC_ENABLED ;;
+    w) ToggleFeature SQL_ENABLED ;;	
     1) ToggleFeature TESTS_DISABLED ;;
     2) EnableAllFeatures ;;
     3) ToggleFeature JNI_ENABLED;;
