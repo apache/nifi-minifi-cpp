@@ -40,7 +40,13 @@ void ThreadPool<T>::run_tasks(std::shared_ptr<WorkerThread> thread) {
 
     Worker<T> task;
     if (worker_queue_.try_dequeue(task)) {
-      if (task_status_[task.getIdentifier()] && task.run()) {
+      {
+        std::unique_lock<std::mutex> lock(worker_queue_mutex_);
+        if(!task_status_[task.getIdentifier()]) {
+          continue;
+        }
+      }
+      if(task.run()) {
         if(task.getTimeSlice() <= std::chrono::steady_clock::now()) {
           // it can be rescheduled again as soon as there is a worker available
           worker_queue_.enqueue(std::move(task));
@@ -70,7 +76,7 @@ void ThreadPool<T>::manage_delayed_queue() {
     std::unique_lock<std::mutex> lock(worker_queue_mutex_);
 
     // Put the tasks ready to run in the worker queue
-    while(!delayed_worker_queue_.empty() && delayed_worker_queue_.top().getTimeSlice() < std::chrono::steady_clock::now()) {
+    while(!delayed_worker_queue_.empty() && delayed_worker_queue_.top().getTimeSlice() <= std::chrono::steady_clock::now()) {
       // I'm very sorry for this - committee must has been seriously drunk when the interface of prio queue was submitted.
       Worker<T> task = std::move(const_cast<Worker<T>&>(delayed_worker_queue_.top()));
       delayed_worker_queue_.pop();
@@ -80,8 +86,8 @@ void ThreadPool<T>::manage_delayed_queue() {
     if(delayed_worker_queue_.empty()) {
       delayed_task_available_.wait(lock);
     } else {
-      auto wait_time = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - delayed_worker_queue_.top().getTimeSlice());
-      delayed_task_available_.wait_for(lock, wait_time);
+      auto wait_time = std::chrono::duration_cast<std::chrono::milliseconds>(delayed_worker_queue_.top().getTimeSlice() - std::chrono::steady_clock::now());
+      delayed_task_available_.wait_for(lock, std::max(wait_time, std::chrono::milliseconds(1)));
     }
   }
 }

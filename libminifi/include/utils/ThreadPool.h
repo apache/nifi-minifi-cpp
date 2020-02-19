@@ -142,7 +142,7 @@ template<typename T>
 class WorkerComparator {
  public:
   bool operator()(Worker<T> &a, Worker<T> &b) {
-    return a.getTimeSlice() < b.getTimeSlice();
+    return a.getTimeSlice() > b.getTimeSlice();
   }
 };
 
