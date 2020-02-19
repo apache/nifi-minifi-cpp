@@ -22,9 +22,19 @@
 #include "utlist.h"
 #include "flowfiles.h"
 
+#ifndef _WIN32
+#include <dirent.h>
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+typedef struct dir_handle {
+#ifndef _WIN32
+    DIR * dp;
+#endif
+} dir_handle_t;
 
 /**
  * Recursively deletes a directory tree
@@ -77,6 +87,14 @@ char * get_current_working_directory();
  * @return properties key value pair
  */
 properties_t * read_configuration_file(const char * file_path);
+
+dir_handle_t open_dir(const char * dir_path);
+
+/**
+ * Read all files in the directory and return
+ * a list of buffers
+ */
+file_buffer_list read_from_directory(const char * dir_path);
 
 #ifdef __cplusplus
 }

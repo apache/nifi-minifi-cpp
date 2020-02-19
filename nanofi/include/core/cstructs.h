@@ -143,6 +143,11 @@ typedef struct file_buffer {
   uint64_t file_len;
 } file_buffer;
 
+typedef struct file_buffer_list {
+  file_buffer * buffers;
+  uint64_t size;
+} file_buffer_list;
+
 #ifndef _WIN32
 typedef int SOCKET;
 #endif

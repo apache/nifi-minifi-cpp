@@ -16,8 +16,8 @@
  * limitations under the License.
  */
 
-#ifndef NANOFI_INCLUDE_CORE_BUFFER_CHUNKS_H_
-#define NANOFI_INCLUDE_CORE_BUFFER_CHUNKS_H_
+#ifndef NANOFI_INCLUDE_CORE_STORAGEFS_H_
+#define NANOFI_INCLUDE_CORE_STORAGEFS_H_
 
 #include "cstructs.h"
 #include "uthash.h"
@@ -27,20 +27,24 @@ typedef struct chunk {
     char * buffer; //chunk data
     uint64_t len; //chunk size
     attribute_set as; //attributes associated with the data
+    char path[21]; // the relative path of the chunk in file system
     struct chunk * next;
-} chunk_t;
+} chunks_t;
 
-typedef struct stream {
-    chunk_t * ct; //the list of chunks in this stream
-    uint64_t total_size; //the total amount of bytes stored in memory
-} stream_t;
+typedef struct storage {
+    char uuid[37]; //the uuid of this stream
+    char * fs_path; //the root path of this stream
+    chunks_t * ct; //the list of chunks in this stream
+    uint64_t total_size; //the total bytes stored in memory
+    uint64_t last_chunk_number; //the number of last chunk stored
+} storage_t;
 
 /**
  * Create a directory at the specified path
  * @param file_path the path in file system
  * @return returns a pointer to initialized storage
  */
-stream_t * create_stream();
+storage_t * create_storage(const char * root_path);
 
 /**
  * Adds a chunk to the list of chunks
@@ -49,27 +53,36 @@ stream_t * create_stream();
  * @param len, the length of the buffer
  * @return pointer to the chunk added
  */
-chunk_t * add_chunk(stream_t * strm, const char * buffer, size_t len);
+chunks_t * add_chunk(storage_t * strm, const char * buffer, size_t len);
+
+/**
+ * Writes a chunk to the file system
+ */
+int write_chunk_to_storage(storage_t * strg, chunks_t * ck);
 
 /**
  * Adds an attribute set to a chunk
  * @param chunk, a pointer to the chunk in chunk list
  * @param as, the attribute set to add
  */
-void add_chunk_attributes(chunk_t * chunk, attribute_set as);
+void add_chunk_attributes(chunks_t * chunk, attribute_set as);
 
 /**
  * Move the list of chunks from source to destination
  * After move, the source chunk list will be empty
  * and total_size will be zero
  */
-void move_chunks(stream_t * source, stream_t * dest);
+int move_chunks(storage_t * source, storage_t * dest);
 
 /**
- * Read the chunks from storage into memory
- * skip reading those already in memory
+ * Read all chunks from storage into memory
  * @param strm, the stream to get chunks from
  */
-void get_chunks(stream_t * strm);
+void read_chunks_up(storage_t * strm);
+
+/**
+ * Write all chunks to storage
+ */
+void write_chunks_down(storage_t * strm);
 
 #endif /* NANOFI_INCLUDE_CORE_BUFFER_CHUNKS_H_ */

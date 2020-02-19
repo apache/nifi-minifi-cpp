@@ -18,7 +18,7 @@
 
 #include <core/cuuid.h>
 #include <core/file_utils.h>
-#include "../../include/core/buffer_chunks.h"
+#include <core/storagefs.h>
 
 storage_t * create_storage(const char * root_path) {
     if (!root_path) return NULL;
@@ -59,18 +59,46 @@ int write_chunk_to_storage(storage_t * strg, chunks_t * ck) {
     FILE * fp = fopen(path, "w");
     if (!fp) {
         free(path);
+        fclose(fp);
         return -1;
     }
 
     if (fwrite(ck->buffer, 1, ck->len, fp) < ck->len) {
         free(path);
+        fclose(fp);
         return -1;
     }
     free(path);
+    fclose(fp);
     return 0;
 }
 
 void add_chunk_attributes(chunks_t * chunk, attribute_set as) {
+    if (!chunk) return;
+    chunk->as = as;
+}
+
+int move_chunks(storage_t * source, storage_t * dest) {
+    if (!source || !dest) return -1;
+    strcpy(dest->uuid, source->uuid);
+    if (source->fs_path) {
+        if (!dest->fs_path) {
+            dest->fs_path = (char *)malloc(strlen(source->fs_path) + 1);
+            strpcy(dest->fs_path, source->fs_path);
+        }
+    }
+    dest->ct = source->ct;
+    source->ct = NULL;
+    dest->total_size = source->total_size;
+    dest->last_chunk_number = source->last_chunk_number;
+    return 0;
+}
+
+void read_chunks_up(storage_t * strm) {
+    if (!strm || !strm->fs_path) return;
 
 }
 
+void write_chunks_down(storage_t * strm) {
+
+}

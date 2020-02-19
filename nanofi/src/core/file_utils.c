@@ -201,6 +201,45 @@ char * get_current_working_directory() {
     return NULL;
 }
 
+dir_handle_t open_dir(const char * dir_path) {
+    dir_handle_t dh;
+    memset(&dh, 0, sizeof(dir_handle_t));
+    if (!dir_path || !is_directory(dir_path)) {
+        return dh;
+    }
+    dh.dp = opendir(dir_path);
+    return dh;
+}
+
+char * read_dir(dir_handle_t * dh) {
+    if  (!dh || !dh->dp) return NULL;
+
+    struct dirent * dr = readdir(dh->dp);
+    if (!dr) {
+        return NULL;
+    }
+    if (dr->d_type == DT_DIR) {
+        return read_dir(dh);
+    }
+
+    size_t len = strlen(dr->d_name);
+    char * file_name = (char *)malloc(len + 1);
+    strncpy(file_name, dr->d_name, len);
+    file_name[len] = '\0';
+    return file_name;
+}
+
+file_buffer_list read_from_directory(const char * dir_path) {
+    file_buffer_list fbl;
+    memset(&fbl, 0, sizeof(fbl));
+    if (!dir_path || !is_directory(dir_path)) {
+        return fbl;
+    }
+
+    struct dirent * dr = readdir(dp);
+
+}
+
 properties_t * read_configuration_file(const char * file_path) {
     if (!file_path) {
         logc(err, "%s", "No file path provided");
