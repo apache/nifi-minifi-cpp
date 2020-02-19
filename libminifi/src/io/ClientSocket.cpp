@@ -111,6 +111,7 @@ std::error_code bind_to_local_network_interface(const minifi::io::SocketDescript
     ifaddrs *list = nullptr;
     const auto get_ifa_success = getifaddrs(&list) == 0;
     assert(get_ifa_success || !list);
+    (void)get_ifa_success;  // unused in release builds
     return ifaddrs_uniq_ptr{ list };
   }();
   if (!if_list_ptr) { return { errno, std::generic_category() }; }
