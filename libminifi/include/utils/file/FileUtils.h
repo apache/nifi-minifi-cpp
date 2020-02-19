@@ -112,7 +112,7 @@ class FileUtils {
 #endif
   }
 
-  static std::string create_temp_directory(const char * const format) {
+  static std::string create_temp_directory(char * const format) {
 #ifdef WIN32
     std::string tempDirectory;
     char tempBuffer[MAX_PATH];
@@ -132,13 +132,8 @@ class FileUtils {
     }
     return tempDirectory;
 #else
-    std::string mutable_format{ format };
-    if (mutable_format.empty()) { return ""; }
-    auto dir = mkdtemp(&mutable_format[0]);
-    if (nullptr == dir) {
-      return "";
-    }
-    return mutable_format;
+    if (mkdtemp(format) == nullptr) { return ""; }
+    return format;
 #endif
   }
 
