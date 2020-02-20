@@ -168,6 +168,8 @@ class HTTPRequestResponse {
 
  public:
 
+  static const size_t CALLBACK_ABORT = 0x10000000;
+
   const std::vector<char> &getData() {
     return data;
   }
@@ -187,16 +189,16 @@ class HTTPRequestResponse {
   static size_t recieve_write(char * data, size_t size, size_t nmemb, void * p) {
     try {
       if (p == nullptr) {
-        return 0x10000000;
+        return CALLBACK_ABORT;
       }
       HTTPReadCallback *callback = static_cast<HTTPReadCallback *>(p);
       if (callback->stop) {
-        return 0x10000000;
+        return CALLBACK_ABORT;
       }
       callback->ptr->write(data, (size * nmemb));
       return (size * nmemb);
     } catch (...) {
-      return 0x10000000;
+      return CALLBACK_ABORT;
     }
   }
 
@@ -211,11 +213,11 @@ class HTTPRequestResponse {
   static size_t send_write(char * data, size_t size, size_t nmemb, void * p) {
     try {
       if (p == nullptr) {
-        return 0x10000000;
+        return CALLBACK_ABORT;
       }
       HTTPUploadCallback *callback = (HTTPUploadCallback *) p;
       if (callback->stop) {
-        return 0x10000000;
+        return CALLBACK_ABORT;
       }
       size_t buffer_size = callback->ptr->getBufferSize();
       if (callback->getPos() <= buffer_size) {
@@ -237,7 +239,7 @@ class HTTPRequestResponse {
       }
       return 0;
     } catch (...) {
-      return 0x10000000;
+      return CALLBACK_ABORT;
     }
   }
 
