@@ -34,7 +34,7 @@ utils::ComplexTaskResult EventDrivenSchedulingAgent::run(const std::shared_ptr<c
   if (this->running_) {
     auto start_time = std::chrono::steady_clock::now();
     // trigger processor until it has work to do, but no more than half a sec
-    while (processor->isRunning() && (std::chrono::steady_clock::now() - start_time < std::chrono::milliseconds(500))) {
+    while (processor->isRunning() && (std::chrono::steady_clock::now() - start_time < time_slice_)) {
       bool shouldYield = this->onTrigger(processor, processContext, sessionFactory);
       if (processor->isYield()) {
         // Honor the yield

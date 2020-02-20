@@ -126,26 +126,19 @@ struct ComplexTaskResult {
 
 class ComplexMonitor : public utils::AfterExecute<ComplexTaskResult> {
  public:
-  ComplexMonitor(std::atomic<bool> *run_monitor)
-  : current_wait_(std::chrono::milliseconds(0)),
-    run_monitor_(run_monitor) {
+  ComplexMonitor()
+  : current_wait_(std::chrono::milliseconds(0)) {
   }
 
   virtual bool isFinished(const ComplexTaskResult &result) override {
     if (result.finished_) {
       return true;
     }
-    if (*run_monitor_) {
-      current_wait_.store(result.wait_time_);
-      return false;
-    }
-    return true;
+    current_wait_.store(result.wait_time_);
+    return false;
   }
   virtual bool isCancelled(const ComplexTaskResult &result) override {
-    if (*run_monitor_) {
-      return false;
-    }
-    return true;
+    return false;
   }
   /**
    * Time to wait before re-running this task if necessary
@@ -157,7 +150,6 @@ class ComplexMonitor : public utils::AfterExecute<ComplexTaskResult> {
 
  private:
   std::atomic<std::chrono::milliseconds> current_wait_;
-  std::atomic<bool> *run_monitor_;
 };
 
 } /* namespace utils */

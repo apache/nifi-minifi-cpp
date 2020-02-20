@@ -58,8 +58,8 @@ class SchedulingAgent {
    * Create a new scheduling agent.
    */
   SchedulingAgent(std::shared_ptr<core::controller::ControllerServiceProvider> controller_service_provider, std::shared_ptr<core::Repository> repo, std::shared_ptr<core::Repository> flow_repo,
-                  std::shared_ptr<core::ContentRepository> content_repo, std::shared_ptr<Configure> configuration)
-      : admin_yield_duration_(0),
+                  std::shared_ptr<core::ContentRepository> content_repo, std::shared_ptr<Configure> configuration, std::shared_ptr<utils::ThreadPool<utils::ComplexTaskResult>> thread_pool)
+      : admin_yield_duration_(),
         bored_yield_duration_(0),
         configure_(configuration),
         content_repo_(content_repo),
@@ -73,10 +73,7 @@ class SchedulingAgent {
      * To facilitate traces we cannot use daemon threads -- this could potentially cause blocking on I/O; however, it's a better path
      * to be able to debug why an agent doesn't work and still allow a restart via updates in these cases.
      */
-    auto csThreads = configure_->getInt(Configure::nifi_flow_engine_threads, 2);
-    auto pool = utils::ThreadPool<utils::ComplexTaskResult>(csThreads, false, controller_service_provider, "SchedulingAgent");
-    thread_pool_ = std::move(pool);
-    thread_pool_.start();
+    thread_pool_ = thread_pool;
 
     if (alert_time_ > std::chrono::milliseconds(0)) {
       std::function<void(void)> f = std::bind(&SchedulingAgent::watchDogFunc, this);
@@ -101,16 +98,15 @@ class SchedulingAgent {
   // start
   void start() {
     running_ = true;
-    thread_pool_.start();
+    thread_pool_->start();
   }
   // stop
   virtual void stop() {
     running_ = false;
-    thread_pool_.shutdown();
   }
 
   std::vector<BackTrace> getTraces() {
-    return thread_pool_.getTraces();
+    return thread_pool_->getTraces();
   }
 
   void watchDogFunc();
@@ -142,7 +138,7 @@ class SchedulingAgent {
 
   std::shared_ptr<core::ContentRepository> content_repo_;
   // thread pool for components.
-  utils::ThreadPool<utils::ComplexTaskResult> thread_pool_;
+  std::shared_ptr<utils::ThreadPool<utils::ComplexTaskResult>> thread_pool_;
   // controller service provider reference
   std::shared_ptr<core::controller::ControllerServiceProvider> controller_service_provider_;
 

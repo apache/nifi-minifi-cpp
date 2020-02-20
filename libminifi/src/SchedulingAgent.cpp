@@ -50,12 +50,12 @@ std::future<utils::ComplexTaskResult> SchedulingAgent::enableControllerService(s
     };
 
   // only need to run this once.
-  auto monitor = utils::make_unique<utils::ComplexMonitor>(&running_);
+  auto monitor = utils::make_unique<utils::ComplexMonitor>();
   utils::Worker<utils::ComplexTaskResult> functor(f_ex, serviceNode->getUUIDStr(), std::move(monitor));
   // move the functor into the thread pool. While a future is returned
   // we aren't terribly concerned with the result.
   std::future<utils::ComplexTaskResult> future;
-  thread_pool_.execute(std::move(functor), future);
+  thread_pool_->execute(std::move(functor), future);
   if (future.valid())
     future.wait();
   return future;
@@ -70,13 +70,13 @@ std::future<utils::ComplexTaskResult> SchedulingAgent::disableControllerService(
   };
 
   // only need to run this once.
-  auto monitor = utils::make_unique<utils::ComplexMonitor>(&running_);
+  auto monitor = utils::make_unique<utils::ComplexMonitor>();
   utils::Worker<utils::ComplexTaskResult> functor(f_ex, serviceNode->getUUIDStr(), std::move(monitor));
 
   // move the functor into the thread pool. While a future is returned
   // we aren't terribly concerned with the result.
   std::future<utils::ComplexTaskResult> future;
-  thread_pool_.execute(std::move(functor), future);
+  thread_pool_->execute(std::move(functor), future);
   if (future.valid())
     future.wait();
   return future;
@@ -121,10 +121,6 @@ bool SchedulingAgent::onTrigger(const std::shared_ptr<core::Processor> &processo
   processor->incrementActiveTasks();
   try {
     processor->onTrigger(processContext, sessionFactory);
-    processor->decrementActiveTask();
-  } catch (Exception &exception) {
-    // Normal exception
-    logger_->log_debug("Caught Exception %s", exception.what());
     processor->decrementActiveTask();
   } catch (std::exception &exception) {
     logger_->log_debug("Caught Exception %s", exception.what());

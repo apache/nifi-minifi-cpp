@@ -74,8 +74,6 @@ FlowController::FlowController(std::shared_ptr<core::Repository> provenance_repo
                                std::unique_ptr<core::FlowConfiguration> flow_configuration, std::shared_ptr<core::ContentRepository> content_repo, const std::string name, bool headless_mode)
     : core::controller::ControllerServiceProvider(core::getClassName<FlowController>()),
       root_(nullptr),
-      max_timer_driven_threads_(0),
-      max_event_driven_threads_(0),
       running_(false),
       updating_(false),
       c2_enabled_(true),
@@ -84,6 +82,7 @@ FlowController::FlowController(std::shared_ptr<core::Repository> provenance_repo
       flow_file_repo_(flow_file_repo),
       protocol_(0),
       controller_service_map_(std::make_shared<core::controller::ControllerServiceMap>()),
+      thread_pool_(nullptr),
       timer_scheduler_(nullptr),
       event_scheduler_(nullptr),
       cron_scheduler_(nullptr),
@@ -107,8 +106,6 @@ FlowController::FlowController(std::shared_ptr<core::Repository> provenance_repo
   if (flow_configuration_ != nullptr) {
     configuration_filename_ = flow_configuration_->getConfigurationPath();
   }
-  max_event_driven_threads_ = DEFAULT_MAX_EVENT_DRIVEN_THREAD;
-  max_timer_driven_threads_ = DEFAULT_MAX_TIMER_DRIVEN_THREAD;
   running_ = false;
   initialized_ = false;
   c2_initialized_ = false;
@@ -247,6 +244,7 @@ int16_t FlowController::stop(bool force, uint64_t timeToWait) {
     this->timer_scheduler_->stop();
     this->event_scheduler_->stop();
     this->cron_scheduler_->stop();
+    this->thread_pool_->shutdown();
     running_ = false;
   }
   return 0;
@@ -313,21 +311,24 @@ void FlowController::load(const std::shared_ptr<core::ProcessGroup> &root, bool 
 
     controller_service_provider_ = flow_configuration_->getControllerServiceProvider();
 
-    if (nullptr == timer_scheduler_ || reload) {
-      timer_scheduler_ = std::make_shared<TimerDrivenSchedulingAgent>(
-          std::static_pointer_cast<core::controller::ControllerServiceProvider>(std::dynamic_pointer_cast<FlowController>(shared_from_this())), provenance_repo_, flow_file_repo_, content_repo_,
-          configuration_);
+    auto base_shared_ptr = std::dynamic_pointer_cast<core::controller::ControllerServiceProvider>(shared_from_this());
+
+    if (nullptr == thread_pool_ || reload) {
+      int csThreads = configuration_->getInt(Configure::nifi_flow_engine_threads, 2);
+      thread_pool_ = std::make_shared<utils::ThreadPool<utils::ComplexTaskResult>>(csThreads, false, base_shared_ptr, "Flowcontroller threadpool");
     }
+    thread_pool_->start();
+
+    if (nullptr == timer_scheduler_ || reload) {
+      timer_scheduler_ = std::make_shared<TimerDrivenSchedulingAgent>(base_shared_ptr, provenance_repo_, flow_file_repo_, content_repo_, configuration_, thread_pool_);
+    }
+
     if (nullptr == event_scheduler_ || reload) {
-      event_scheduler_ = std::make_shared<EventDrivenSchedulingAgent>(
-          std::static_pointer_cast<core::controller::ControllerServiceProvider>(std::dynamic_pointer_cast<FlowController>(shared_from_this())), provenance_repo_, flow_file_repo_, content_repo_,
-          configuration_);
+      event_scheduler_ = std::make_shared<EventDrivenSchedulingAgent>(base_shared_ptr, provenance_repo_, flow_file_repo_, content_repo_, configuration_, thread_pool_);
     }
 
     if (nullptr == cron_scheduler_ || reload) {
-      cron_scheduler_ = std::make_shared<CronDrivenSchedulingAgent>(
-          std::static_pointer_cast<core::controller::ControllerServiceProvider>(std::dynamic_pointer_cast<FlowController>(shared_from_this())), provenance_repo_, flow_file_repo_, content_repo_,
-          configuration_);
+      cron_scheduler_ = std::make_shared<CronDrivenSchedulingAgent>(base_shared_ptr, provenance_repo_, flow_file_repo_, content_repo_, configuration_, thread_pool_);
     }
 
     std::static_pointer_cast<core::controller::StandardControllerServiceProvider>(controller_service_provider_)->setRootGroup(root_);

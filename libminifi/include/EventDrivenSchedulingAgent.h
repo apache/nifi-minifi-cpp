@@ -20,6 +20,8 @@
 #ifndef __EVENT_DRIVEN_SCHEDULING_AGENT_H__
 #define __EVENT_DRIVEN_SCHEDULING_AGENT_H__
 
+#define DEFAULT_TIME_SLICE_MS 500
+
 #include "core/logging/Logger.h"
 #include "core/Processor.h"
 #include "core/ProcessContext.h"
@@ -39,8 +41,14 @@ class EventDrivenSchedulingAgent : public ThreadedSchedulingAgent {
    * Create a new event driven scheduling agent.
    */
   EventDrivenSchedulingAgent(std::shared_ptr<core::controller::ControllerServiceProvider> controller_service_provider, std::shared_ptr<core::Repository> repo,
-                             std::shared_ptr<core::Repository> flow_repo, std::shared_ptr<core::ContentRepository> content_repo, std::shared_ptr<Configure> configuration)
-      : ThreadedSchedulingAgent(controller_service_provider, repo, flow_repo, content_repo, configuration) {
+                             std::shared_ptr<core::Repository> flow_repo, std::shared_ptr<core::ContentRepository> content_repo, std::shared_ptr<Configure> configuration,
+                             std::shared_ptr<utils::ThreadPool<utils::ComplexTaskResult>> thread_pool)
+      : ThreadedSchedulingAgent(controller_service_provider, repo, flow_repo, content_repo, configuration, thread_pool) {
+    int slice = configuration->getInt(Configure::nifi_flow_engine_event_driven_time_slice, DEFAULT_TIME_SLICE_MS);
+    if (slice < 10 || 1000 < slice) {
+      throw Exception(FLOW_EXCEPTION, std::string(Configure::nifi_flow_engine_event_driven_time_slice) + " is out of reasonable range!");
+    }
+    time_slice_ = std::chrono::milliseconds(slice);
   }
 
   // Run function for the thread
@@ -52,6 +60,8 @@ class EventDrivenSchedulingAgent : public ThreadedSchedulingAgent {
   // Only support pass by reference or pointer
   EventDrivenSchedulingAgent(const EventDrivenSchedulingAgent &parent);
   EventDrivenSchedulingAgent &operator=(const EventDrivenSchedulingAgent &parent);
+
+  std::chrono::milliseconds time_slice_;
 
 };
 
