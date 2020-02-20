@@ -74,7 +74,7 @@ class SchedulingAgent {
      * to be able to debug why an agent doesn't work and still allow a restart via updates in these cases.
      */
     auto csThreads = configure_->getInt(Configure::nifi_flow_engine_threads, 2);
-    auto pool = utils::ThreadPool<utils::ComplexResult>(csThreads, false, controller_service_provider, "SchedulingAgent");
+    auto pool = utils::ThreadPool<utils::ComplexTaskResult>(csThreads, false, controller_service_provider, "SchedulingAgent");
     thread_pool_ = std::move(pool);
     thread_pool_.start();
 
@@ -115,8 +115,8 @@ class SchedulingAgent {
 
   void watchDogFunc();
 
-  virtual std::future<utils::ComplexResult> enableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode);
-  virtual std::future<utils::ComplexResult> disableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode);
+  virtual std::future<utils::ComplexTaskResult> enableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode);
+  virtual std::future<utils::ComplexTaskResult> disableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode);
   // schedule, overwritten by different DrivenSchedulingAgent
   virtual void schedule(std::shared_ptr<core::Processor> processor) = 0;
   // unschedule, overwritten by different DrivenSchedulingAgent
@@ -142,7 +142,7 @@ class SchedulingAgent {
 
   std::shared_ptr<core::ContentRepository> content_repo_;
   // thread pool for components.
-  utils::ThreadPool<utils::ComplexResult> thread_pool_;
+  utils::ThreadPool<utils::ComplexTaskResult> thread_pool_;
   // controller service provider reference
   std::shared_ptr<core::controller::ControllerServiceProvider> controller_service_provider_;
 

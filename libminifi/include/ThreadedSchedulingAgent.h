@@ -54,7 +54,7 @@ class ThreadedSchedulingAgent : public SchedulingAgent {
   }
 
   // Run function for the thread
-  virtual utils::ComplexResult run(const std::shared_ptr<core::Processor> &processor, const std::shared_ptr<core::ProcessContext> &processContext,
+  virtual utils::ComplexTaskResult run(const std::shared_ptr<core::Processor> &processor, const std::shared_ptr<core::ProcessContext> &processContext,
                        const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) = 0;
 
  public:

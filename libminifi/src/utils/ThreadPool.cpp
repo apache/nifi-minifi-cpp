@@ -150,9 +150,6 @@ void ThreadPool<T>::manageWorkers() {
           thread_queue_.push_back(worker_thread);
           current_workers_++;
         }
-      }
-      {
-        std::lock_guard<std::recursive_mutex> lock(manager_mutex_);
         std::shared_ptr<WorkerThread> thread_ref;
         while (deceased_thread_queue_.try_dequeue(thread_ref)) {
           std::unique_lock<std::mutex> lock(worker_queue_mutex_);
@@ -231,7 +228,7 @@ void ThreadPool<T>::shutdown() {
   }
 }
 
-template class utils::ThreadPool<utils::ComplexResult>;
+template class utils::ThreadPool<utils::ComplexTaskResult>;
 template class utils::ThreadPool<int>;
 template class utils::ThreadPool<bool>;
 template class utils::ThreadPool<state::Update>;

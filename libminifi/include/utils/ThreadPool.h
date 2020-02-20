@@ -139,7 +139,7 @@ class Worker {
 };
 
 template<typename T>
-class WorkerComparator {
+class DelayedTaskComparator {
  public:
   bool operator()(Worker<T> &a, Worker<T> &b) {
     return a.getTimeSlice() > b.getTimeSlice();
@@ -358,7 +358,7 @@ class ThreadPool {
   moodycamel::ConcurrentQueue<std::shared_ptr<WorkerThread>> deceased_thread_queue_;
 // worker queue of worker objects
   moodycamel::ConcurrentQueue<Worker<T>> worker_queue_;
-  std::priority_queue<Worker<T>, std::vector<Worker<T>>, WorkerComparator<T>> delayed_worker_queue_;
+  std::priority_queue<Worker<T>, std::vector<Worker<T>>, DelayedTaskComparator<T>> delayed_worker_queue_;
 // notification for available work
   std::condition_variable tasks_available_;
 // notification for new delayed tasks that's before the current ones

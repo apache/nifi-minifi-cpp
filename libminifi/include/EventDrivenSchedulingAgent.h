@@ -44,7 +44,7 @@ class EventDrivenSchedulingAgent : public ThreadedSchedulingAgent {
   }
 
   // Run function for the thread
-  utils::ComplexResult run(const std::shared_ptr<core::Processor> &processor, const std::shared_ptr<core::ProcessContext> &processContext,
+  utils::ComplexTaskResult run(const std::shared_ptr<core::Processor> &processor, const std::shared_ptr<core::ProcessContext> &processContext,
       const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
 
  private:

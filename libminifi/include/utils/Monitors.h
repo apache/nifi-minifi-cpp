@@ -63,7 +63,6 @@ class TimerAwareMonitor : public utils::AfterExecute<std::chrono::milliseconds> 
       : current_wait_(std::chrono::milliseconds(0)),
         run_monitor_(run_monitor) {
   }
-  explicit TimerAwareMonitor(TimerAwareMonitor &&other) = default;
   virtual bool isFinished(const std::chrono::milliseconds &result) override {
     current_wait_.store(result);
     if (*run_monitor_) {
@@ -95,7 +94,6 @@ class SingleRunMonitor : public utils::AfterExecute<bool>{
   SingleRunMonitor(std::chrono::milliseconds retry_interval = std::chrono::milliseconds(100))
       : retry_interval_(retry_interval) {
   }
-  explicit SingleRunMonitor(SingleRunMonitor &&other) = default;
 
   virtual bool isFinished(const bool &result) override {
     return result;
@@ -111,22 +109,29 @@ class SingleRunMonitor : public utils::AfterExecute<bool>{
 };
 
 
-struct ComplexResult {
-  ComplexResult(bool result, std::chrono::milliseconds wait_time)
+struct ComplexTaskResult {
+  ComplexTaskResult(bool result, std::chrono::milliseconds wait_time)
     : finished_(result), wait_time_(wait_time){}
   std::chrono::milliseconds wait_time_;
   bool finished_;
+
+  static ComplexTaskResult Done() {
+    return ComplexTaskResult(true, std::chrono::milliseconds(0));
+  }
+
+  static ComplexTaskResult Retry(std::chrono::milliseconds interval) {
+    return ComplexTaskResult(false, interval);
+  }
 };
 
-class ComplexMonitor : public utils::AfterExecute<ComplexResult> {
+class ComplexMonitor : public utils::AfterExecute<ComplexTaskResult> {
  public:
   ComplexMonitor(std::atomic<bool> *run_monitor)
   : current_wait_(std::chrono::milliseconds(0)),
     run_monitor_(run_monitor) {
   }
-  explicit ComplexMonitor(ComplexMonitor &&other) = default;
 
-  virtual bool isFinished(const ComplexResult &result) override {
+  virtual bool isFinished(const ComplexTaskResult &result) override {
     if (result.finished_) {
       return true;
     }
@@ -136,7 +141,7 @@ class ComplexMonitor : public utils::AfterExecute<ComplexResult> {
     }
     return true;
   }
-  virtual bool isCancelled(const ComplexResult &result) override {
+  virtual bool isCancelled(const ComplexTaskResult &result) override {
     if (*run_monitor_) {
       return false;
     }
@@ -154,14 +159,6 @@ class ComplexMonitor : public utils::AfterExecute<ComplexResult> {
   std::atomic<std::chrono::milliseconds> current_wait_;
   std::atomic<bool> *run_monitor_;
 };
-
-static ComplexResult Done() {
-  return ComplexResult(true, std::chrono::milliseconds(0));
-}
-
-static ComplexResult Retry(std::chrono::milliseconds interval) {
-  return ComplexResult(false, interval);
-}
 
 } /* namespace utils */
 } /* namespace minifi */

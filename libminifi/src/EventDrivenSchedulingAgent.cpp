@@ -29,24 +29,24 @@ namespace apache {
 namespace nifi {
 namespace minifi {
 
-utils::ComplexResult EventDrivenSchedulingAgent::run(const std::shared_ptr<core::Processor> &processor, const std::shared_ptr<core::ProcessContext> &processContext,
+utils::ComplexTaskResult EventDrivenSchedulingAgent::run(const std::shared_ptr<core::Processor> &processor, const std::shared_ptr<core::ProcessContext> &processContext,
                                          const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
-  if (this->running_ && processor->isRunning()) {
+  if (this->running_) {
     auto start_time = std::chrono::steady_clock::now();
     // trigger processor until it has work to do, but no more than half a sec
-    while (std::chrono::steady_clock::now() - start_time < std::chrono::milliseconds(500)) {
+    while (processor->isRunning() && (std::chrono::steady_clock::now() - start_time < std::chrono::milliseconds(500))) {
       bool shouldYield = this->onTrigger(processor, processContext, sessionFactory);
       if (processor->isYield()) {
         // Honor the yield
-        return utils::Retry(std::chrono::milliseconds(processor->getYieldTime()));
+        return utils::ComplexTaskResult::Retry(std::chrono::milliseconds(processor->getYieldTime()));
       } else if (shouldYield) {
         // No work to do or need to apply back pressure
-        return utils::Retry(std::chrono::milliseconds((this->bored_yield_duration_ > 0) ? this->bored_yield_duration_ : 10));  // No work left to do, stand by
+        return utils::ComplexTaskResult::Retry(std::chrono::milliseconds((this->bored_yield_duration_ > 0) ? this->bored_yield_duration_ : 10));  // No work left to do, stand by
       }
     }
-    return utils::Retry(std::chrono::milliseconds(0));  // Let's continue work as soon as a thread is available
+    return utils::ComplexTaskResult::Retry(std::chrono::milliseconds(0));  // Let's continue work as soon as a thread is available
   }
-  return utils::Done();
+  return utils::ComplexTaskResult::Done();
 }
 
 } /* namespace minifi */
