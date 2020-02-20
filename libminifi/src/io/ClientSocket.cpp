@@ -165,6 +165,9 @@ Socket::Socket(const std::shared_ptr<SocketContext>& context, std::string hostna
     : Socket(context, std::move(hostname), port, 0) {
 }
 
+// total_list_ and read_fds_ have to use parentheses for initialization due to CWG 1467
+// http://www.open-std.org/jtc1/sc22/wg21/docs/cwg_defects.html#1467
+// Language defect fix was applied to GCC 5 and Clang 4, but at the time of writing this comment, we support GCC 4.8
 Socket::Socket(Socket &&other) noexcept
     : requested_hostname_{ std::move(other.requested_hostname_) },
       canonical_hostname_{ std::move(other.canonical_hostname_) },
@@ -172,8 +175,8 @@ Socket::Socket(Socket &&other) noexcept
       is_loopback_only_{ other.is_loopback_only_ },
       local_network_interface_{ std::move(other.local_network_interface_) },
       socket_file_descriptor_{ other.socket_file_descriptor_ },
-      total_list_{ other.total_list_ },
-      read_fds_{ other.read_fds_ },
+      total_list_(other.total_list_),
+      read_fds_(other.read_fds_),
       socket_max_{ other.socket_max_.load() },
       total_written_{ other.total_written_.load() },
       total_read_{ other.total_read_.load() },
