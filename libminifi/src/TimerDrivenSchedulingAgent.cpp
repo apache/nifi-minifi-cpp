@@ -43,7 +43,6 @@ utils::ComplexResult TimerDrivenSchedulingAgent::run(const std::shared_ptr<core:
     return utils::Retry(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::nanoseconds(processor->getSchedulingPeriodNano())));
   }
   return utils::Done();
-
 }
 
 } /* namespace minifi */

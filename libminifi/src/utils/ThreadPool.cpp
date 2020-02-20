@@ -42,12 +42,12 @@ void ThreadPool<T>::run_tasks(std::shared_ptr<WorkerThread> thread) {
     if (worker_queue_.try_dequeue(task)) {
       {
         std::unique_lock<std::mutex> lock(worker_queue_mutex_);
-        if(!task_status_[task.getIdentifier()]) {
+        if (!task_status_[task.getIdentifier()]) {
           continue;
         }
       }
-      if(task.run()) {
-        if(task.getTimeSlice() <= std::chrono::steady_clock::now()) {
+      if (task.run()) {
+        if (task.getTimeSlice() <= std::chrono::steady_clock::now()) {
           // it can be rescheduled again as soon as there is a worker available
           worker_queue_.enqueue(std::move(task));
           continue;
@@ -58,7 +58,7 @@ void ThreadPool<T>::run_tasks(std::shared_ptr<WorkerThread> thread) {
             delayed_worker_queue_.empty() || task.getTimeSlice() < delayed_worker_queue_.top().getTimeSlice();
 
         delayed_worker_queue_.push(std::move(task));
-        if(need_to_notify) {
+        if (need_to_notify) {
           delayed_task_available_.notify_all();
         }
       }
@@ -72,18 +72,18 @@ void ThreadPool<T>::run_tasks(std::shared_ptr<WorkerThread> thread) {
 
 template<typename T>
 void ThreadPool<T>::manage_delayed_queue() {
-  while(running_) {
+  while (running_) {
     std::unique_lock<std::mutex> lock(worker_queue_mutex_);
 
     // Put the tasks ready to run in the worker queue
-    while(!delayed_worker_queue_.empty() && delayed_worker_queue_.top().getTimeSlice() <= std::chrono::steady_clock::now()) {
+    while (!delayed_worker_queue_.empty() && delayed_worker_queue_.top().getTimeSlice() <= std::chrono::steady_clock::now()) {
       // I'm very sorry for this - committee must has been seriously drunk when the interface of prio queue was submitted.
       Worker<T> task = std::move(const_cast<Worker<T>&>(delayed_worker_queue_.top()));
       delayed_worker_queue_.pop();
       worker_queue_.enqueue(std::move(task));
       tasks_available_.notify_one();
     }
-    if(delayed_worker_queue_.empty()) {
+    if (delayed_worker_queue_.empty()) {
       delayed_task_available_.wait(lock);
     } else {
       auto wait_time = std::chrono::duration_cast<std::chrono::milliseconds>(delayed_worker_queue_.top().getTimeSlice() - std::chrono::steady_clock::now());
@@ -213,11 +213,11 @@ void ThreadPool<T>::shutdown() {
     }
 
     delayed_task_available_.notify_all();
-    if(delayed_scheduler_thread_.joinable()) {
+    if (delayed_scheduler_thread_.joinable()) {
       delayed_scheduler_thread_.join();
     }
 
-    for(const auto &thread : thread_queue_){
+    for (const auto &thread : thread_queue_) {
       if (thread->thread_.joinable())
         thread->thread_.join();
     }
@@ -227,7 +227,6 @@ void ThreadPool<T>::shutdown() {
     while (worker_queue_.size_approx() > 0) {
       Worker<T> task;
       worker_queue_.try_dequeue(task);
-
     }
   }
 }
