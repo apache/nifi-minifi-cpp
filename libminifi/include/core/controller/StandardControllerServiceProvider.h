@@ -108,9 +108,7 @@ class StandardControllerServiceProvider : public ControllerServiceProvider, publ
       return agent_->enableControllerService(serviceNode);
     } else {
 
-      std::future<utils::ComplexTaskResult> no_run = std::async(std::launch::async, []() {
-        return utils::ComplexTaskResult::Done();
-      });
+      std::future<utils::ComplexTaskResult> no_run = std::async(std::launch::deferred, utils::ComplexTaskResult::Done);
       return no_run;
     }
   }
@@ -138,9 +136,7 @@ class StandardControllerServiceProvider : public ControllerServiceProvider, publ
     if (!IsNullOrEmpty(serviceNode.get()) && serviceNode->enabled()) {
       return agent_->disableControllerService(serviceNode);
     } else {
-      std::future<utils::ComplexTaskResult> no_run = std::async(std::launch::async, []() {
-        return utils::ComplexTaskResult::Done();
-      });
+      std::future<utils::ComplexTaskResult> no_run = std::async(std::launch::deferred, utils::ComplexTaskResult::Done);
       return no_run;
     }
   }
