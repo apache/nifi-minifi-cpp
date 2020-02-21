@@ -39,16 +39,17 @@ std::unique_ptr<T> make_unique(Args&&... args) {
 using std::make_unique;
 #endif /* < C++14 */
 
-template<typename T, typename std::enable_if<std::is_integral<T>::value>::type* = nullptr>
+template<typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
 T intdiv_ceil(T numerator, T denominator) {
   // note: division and remainder is 1 instruction on x86
   return numerator / denominator + (numerator % denominator > 0);
 }
 
-template <typename T, typename std::enable_if<std::is_pointer<T>::value>::type* = nullptr>
+template <typename T, typename = typename std::enable_if<std::is_pointer<T>::value>::type>
 using owner = T;
 
 #if __cplusplus < 201402L
+// from https://en.cppreference.com/w/cpp/utility/exchange
 template<typename T, typename U = T>
 T exchange(T& obj, U&& new_value) {
   T old_value = std::move(obj);
