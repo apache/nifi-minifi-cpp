@@ -60,7 +60,7 @@ class HttpStreamingCallback : public ByteInputCallBack {
         total_bytes_loaded_(0U),
         current_buffer_start_(0U),
         current_pos_(0U),
-        ptr(nullptr) {
+        ptr_(nullptr) {
   }
 
   virtual ~HttpStreamingCallback() = default;
@@ -110,14 +110,14 @@ class HttpStreamingCallback : public ByteInputCallBack {
     std::unique_lock<std::mutex> lock(mutex_);
 
     seekInner(lock, pos);
-    if (ptr == nullptr) {
+    if (ptr_ == nullptr) {
       return nullptr;
     }
 
     size_t relative_pos = pos - current_buffer_start_;
     current_pos_ = pos;
 
-    return ptr + relative_pos;
+    return ptr_ + relative_pos;
   }
 
   const size_t getRemaining(size_t pos) override {
@@ -150,17 +150,17 @@ class HttpStreamingCallback : public ByteInputCallBack {
 
     if (byte_arrays_.empty()) {
       logger_->log_trace("loadNextBuffer() ran out of buffers");
-      ptr = nullptr;
+      ptr_ = nullptr;
     } else {
       current_vec_ = std::move(byte_arrays_.front());
       byte_arrays_.pop_front();
 
-      ptr = current_vec_.data();
+      ptr_ = current_vec_.data();
       current_buffer_start_ = total_bytes_loaded_;
       current_pos_ = current_buffer_start_;
       total_bytes_loaded_ += current_vec_.size();
-      logger_->log_trace("loadNextBuffer() loaded new buffer, ptr: %p, size: %zu, current_buffer_start_: %zu, current_pos_: %zu, total_bytes_loaded_: %zu",
-          ptr,
+      logger_->log_trace("loadNextBuffer() loaded new buffer, ptr_: %p, size: %zu, current_buffer_start_: %zu, current_pos_: %zu, total_bytes_loaded_: %zu",
+          ptr_,
           current_vec_.size(),
           current_buffer_start_,
           current_pos_,
@@ -203,7 +203,7 @@ class HttpStreamingCallback : public ByteInputCallBack {
     }
     while ((pos - current_buffer_start_) >= current_vec_.size()) {
       loadNextBuffer(lock);
-      if (ptr == nullptr) {
+      if (ptr_ == nullptr) {
         break;
       }
     }
@@ -222,7 +222,7 @@ class HttpStreamingCallback : public ByteInputCallBack {
   std::deque<std::vector<char>> byte_arrays_;
 
   std::vector<char> current_vec_;
-  char *ptr;
+  char *ptr_;
 };
 
 } /* namespace utils */
