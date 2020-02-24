@@ -110,7 +110,7 @@ class SecureSocketTest : public IntegrationBase {
       host = org::apache::nifi::minifi::io::Socket::getMyHostName();
     }
     server_socket_ = std::make_shared<org::apache::nifi::minifi::io::TLSServerSocket>(socket_context, host, std::stoi(hostAndPort.at(1)), 3);
-    server_socket_->initialize();
+    assert(0 == server_socket_->initialize());
 
     isRunning_ = true;
     check = [this]() -> bool {
