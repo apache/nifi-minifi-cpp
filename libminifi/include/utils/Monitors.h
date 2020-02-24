@@ -20,6 +20,9 @@
 
 #include <chrono>
 #include <atomic>
+#if defined(WIN32)
+#include <future>  // This is required to work around a VS2017 bug, see the details below
+#endif
 
 namespace org {
 namespace apache {
@@ -122,6 +125,14 @@ struct ComplexTaskResult {
   static ComplexTaskResult Retry(std::chrono::milliseconds interval) {
     return ComplexTaskResult(false, interval);
   }
+
+#if defined(WIN32)
+ // https://developercommunity.visualstudio.com/content/problem/60897/c-shared-state-futuresstate-default-constructs-the.html
+ // Because of this bug we need to have this object default constructible, which makes no sense otherwise. Hack.
+ private:
+  ComplexTaskResult() : wait_time_(std::chrono::milliseconds(0)), finished_(true) {}
+  friend class std::_Associated_state<ComplexTaskResult>;
+#endif
 };
 
 class ComplexMonitor : public utils::AfterExecute<ComplexTaskResult> {
