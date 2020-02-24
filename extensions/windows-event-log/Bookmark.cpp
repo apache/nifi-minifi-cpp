@@ -3,6 +3,7 @@
 #include <direct.h>
 
 #include "utils/file/FileUtils.h"
+#include "utils/ScopeGuard.h"
 
 namespace org {
 namespace apache {
@@ -10,7 +11,7 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-Bookmark::Bookmark(const std::string& bookmarkRootDir, const std::string& uuid, std::shared_ptr<logging::Logger> logger)
+Bookmark::Bookmark(const std::wstring& channel, const std::wstring& query, const std::string& bookmarkRootDir, const std::string& uuid, std::shared_ptr<logging::Logger> logger)
   :logger_(logger) {
   if (!createUUIDDir(bookmarkRootDir, uuid, filePath_))
     return;
@@ -22,41 +23,45 @@ Bookmark::Bookmark(const std::string& bookmarkRootDir, const std::string& uuid, 
     return;
   }
 
-  if (bookmarkXml.empty()) {
-    if (!(hBookmark_ = EvtCreateBookmark(0))) {
-      logger_->log_error("!EvtCreateBookmark error: %d", GetLastError());
+  if (!bookmarkXml.empty()) {
+    if (hBookmark_ = EvtCreateBookmark(bookmarkXml.c_str())) {
+      ok_ = true;
       return;
     }
 
-    hasBookmarkXml_ = false;
-  } else {
-    if (!(hBookmark_ = EvtCreateBookmark(bookmarkXml.c_str()))) {
-      logger_->log_error("!EvtCreateBookmark error: %d bookmarkXml_ '%s'", GetLastError(), bookmarkXml.c_str());
-
-      // BookmarkXml can be corrupted - create hBookmark_, and create empty file. 
-      if (!(hBookmark_ = EvtCreateBookmark(0))) {
-        logger_->log_error("!EvtCreateBookmark error: %d", GetLastError());
-        return;
-      }
-
-      hasBookmarkXml_ = false;
-
-      ok_ = createEmptyBookmarkXmlFile();
-
+    if (!createEmptyBookmarkXmlFile()) {
       return;
     }
-
-    hasBookmarkXml_ = true;
   }
 
-  ok_ = true;
+  if (!(hBookmark_ = EvtCreateBookmark(0))) {
+    logger_->log_error("!EvtCreateBookmark error: %d.", GetLastError());
+    return;
+  }
+
+  auto hEventResults = EvtQuery(0, channel.c_str(), query.c_str(), EvtQueryChannelPath);
+  if (!hEventResults) {
+    logger_->log_error("!EvtQuery error: %d.", GetLastError());
+    return;
+  }
+  const utils::ScopeGuard guard_hEventResults([hEventResults]() { EvtClose(hEventResults); });
+
+  if (!EvtSeek(hEventResults, 0, 0, 0, EvtSeekRelativeToLast)) {
+    logger_->log_error("!EvtSeek error: %d.", GetLastError());
+    return;
+  }
+
+  DWORD dwReturned{};
+  EVT_HANDLE hEvent{};
+  if (!EvtNext(hEventResults, 1, &hEvent, INFINITE, 0, &dwReturned)) {
+    logger_->log_error("!EvtNext error: %d.", GetLastError());
+    return;
+  }
+
+  ok_ = saveBookmark(hEvent);
 }
 
 Bookmark::~Bookmark() {
-  if (file_.is_open()) {
-    file_.close();
-  }
-
   if (hBookmark_) {
     EvtClose(hBookmark_);
   }
@@ -66,10 +71,6 @@ Bookmark::operator bool() const {
   return ok_;
 }
   
-bool Bookmark::hasBookmarkXml() const {
-  return hasBookmarkXml_;
-}
-
 EVT_HANDLE Bookmark::bookmarkHandle() const {
   return hBookmark_;
 }
@@ -111,8 +112,8 @@ bool Bookmark::getNewBookmarkXml(EVT_HANDLE hEvent, std::wstring& bookmarkXml) {
       bookmarkXml = &buf[0];
 
       return true;
-    }
-    else if (ERROR_SUCCESS != (status = GetLastError())) {
+    } 
+    if (ERROR_SUCCESS != (status = GetLastError())) {
       logger_->log_error("!EvtRender error: %d.", GetLastError());
       return false;
     }
@@ -121,7 +122,7 @@ bool Bookmark::getNewBookmarkXml(EVT_HANDLE hEvent, std::wstring& bookmarkXml) {
   return false;
 }
 
-void Bookmark::saveBookmarkXml(std::wstring& bookmarkXml) {
+void Bookmark::saveBookmarkXml(const std::wstring& bookmarkXml) {
   // Write new bookmark over old and in the end write '!'. Then new bookmark is read until '!'. This is faster than truncate.
   file_.seekp(std::ios::beg);
 
@@ -205,7 +206,7 @@ bool Bookmark::getBookmarkXmlFromFile(std::wstring& bookmarkXml) {
   // '!' should be at the end of bookmark.
   auto pos = bookmarkXml.find(L'!');
   if (std::wstring::npos == pos) {
-    logger_->log_error("No '!' in bookmarXml '%s'", bookmarkXml.c_str());
+    logger_->log_error("No '!' in bookmarXml '%ws'", bookmarkXml.c_str());
     bookmarkXml.clear();
     return createEmptyBookmarkXmlFile();
   }

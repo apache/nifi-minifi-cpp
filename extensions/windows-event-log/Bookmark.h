@@ -17,20 +17,18 @@ namespace processors {
 class Bookmark
 {
 public:
-  Bookmark(const std::string& bookmarkRootDir, const std::string& uuid, std::shared_ptr<logging::Logger> logger);
+  Bookmark(const std::wstring& channel, const std::wstring& query, const std::string& bookmarkRootDir, const std::string& uuid, std::shared_ptr<logging::Logger> logger);
   ~Bookmark();
 
   operator bool() const;
   
-  bool hasBookmarkXml() const;
-
   EVT_HANDLE bookmarkHandle() const;
 
   bool saveBookmark(EVT_HANDLE hEvent);
 
   bool getNewBookmarkXml(EVT_HANDLE hEvent, std::wstring& bookmarkXml);
 
-  void saveBookmarkXml(std::wstring& bookmarkXml);
+  void saveBookmarkXml(const std::wstring& bookmarkXml);
 private:
   bool createEmptyBookmarkXmlFile();
 
@@ -46,7 +44,6 @@ private:
   bool ok_{};
   EVT_HANDLE hBookmark_{};
   std::wfstream file_;
-  bool hasBookmarkXml_{};
 };
 
 } /* namespace processors */

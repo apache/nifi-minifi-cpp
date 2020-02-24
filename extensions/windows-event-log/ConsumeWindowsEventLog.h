@@ -46,7 +46,6 @@ struct EventRender {
 	std::map<std::string, std::string> matched_fields_;
 	std::string text_;
 	std::string rendered_text_;
-  std::wstring bookmarkXml_;
 };
 
 class Bookmark;
@@ -101,14 +100,12 @@ public:
   
 
 protected:
-  bool subscribe(const std::shared_ptr<core::ProcessContext> &context);
-  void unsubscribe();
-  int processQueue(const std::shared_ptr<core::ProcessSession> &session);
+  void processEventsAfterBookmark(core::ProcessSession& session);
+  void processEventRender(const EventRender& renderedData, core::ProcessSession& session);
   wel::WindowsEventLogHandler getEventLogHandler(const std::string & name);
   bool insertHeaderName(wel::METADATA_NAMES &header, const std::string &key, const std::string &value);
   void LogWindowsError();
-  void processEvent(EVT_HANDLE eventHandle);
-  bool processEventsAfterBookmark(EVT_HANDLE hEventResults, const std::wstring& channel, const std::wstring& query);
+  bool processEvent(EVT_HANDLE eventHandle, EventRender& renderedData);
   void substituteXMLPercentageItems(pugi::xml_document& doc);
 
   static constexpr const char * const XML = "XML";
@@ -120,7 +117,8 @@ private:
   wel::METADATA_NAMES header_names_;
   std::string header_delimiter_;
   std::string channel_;
-  std::string query_;
+  std::wstring wstrChannel_;
+  std::wstring wstrQuery_;
   std::shared_ptr<logging::Logger> logger_;
   std::string regex_;
   bool resolve_as_attributes_;
@@ -128,8 +126,6 @@ private:
   moodycamel::ConcurrentQueue<EventRender> listRenderedData_;
   std::string provenanceUri_;
   std::string computerName_;
-  int64_t inactiveDurationToReconnect_{};
-  EVT_HANDLE subscriptionHandle_{};
   uint64_t maxBufferSize_{};
   DWORD lastActivityTimestamp_{};
   std::shared_ptr<core::ProcessSessionFactory> sessionFactory_;
