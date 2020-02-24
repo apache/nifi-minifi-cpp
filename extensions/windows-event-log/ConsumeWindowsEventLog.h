@@ -123,7 +123,6 @@ private:
   std::string regex_;
   bool resolve_as_attributes_;
   bool apply_identifier_function_;
-  moodycamel::ConcurrentQueue<EventRender> listRenderedData_;
   std::string provenanceUri_;
   std::string computerName_;
   uint64_t maxBufferSize_{};

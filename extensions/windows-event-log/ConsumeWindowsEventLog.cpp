@@ -583,20 +583,6 @@ void ConsumeWindowsEventLog::processEventRender(const EventRender& renderedData,
 
 void ConsumeWindowsEventLog::notifyStop()
 {
-  if (listRenderedData_.size_approx() != 0) {
-    auto session = sessionFactory_->createSession();
-    if (session) {
-      logger_->log_info("Finishing processing leftover events");
-
-      processEventsAfterBookmark(*session);
-    } else {
-      logger_->log_error(
-        "Stopping the processor but there is no ProcessSessionFactory stored and there are messages in the internal queue. "
-        "Removing the processor now will clear the queue but will result in DATA LOSS. This is normally due to starting the processor, "
-        "receiving events and stopping before the onTrigger happens. The messages in the internal queue cannot finish processing until "
-        "the processor is triggered to run.");
-    }
-  }
 }
 
 void ConsumeWindowsEventLog::LogWindowsError()
