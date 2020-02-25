@@ -100,12 +100,11 @@ public:
   
 
 protected:
-  void processEventsAfterBookmark(core::ProcessSession& session);
-  void processEventRender(const EventRender& renderedData, core::ProcessSession& session);
+  void putEventRenderFlowFileToSession(const EventRender& eventRender, core::ProcessSession& session);
   wel::WindowsEventLogHandler getEventLogHandler(const std::string & name);
   bool insertHeaderName(wel::METADATA_NAMES &header, const std::string &key, const std::string &value);
   void LogWindowsError();
-  bool processEvent(EVT_HANDLE eventHandle, EventRender& renderedData);
+  bool createEventRender(EVT_HANDLE eventHandle, EventRender& eventRender);
   void substituteXMLPercentageItems(pugi::xml_document& doc);
 
   static constexpr const char * const XML = "XML";

@@ -266,87 +266,6 @@ void ConsumeWindowsEventLog::onSchedule(const std::shared_ptr<core::ProcessConte
   provenanceUri_ = "winlog://" + computerName_ + "/" + channel_ + "?" + query;
 }
 
-void ConsumeWindowsEventLog::processEventsAfterBookmark(core::ProcessSession& session) {
-  // External loop is used in case if there are new events while the events after bookmark are processed.
-  bool hasEvent{};
-  do {
-    hasEvent = false;
-
-    auto hEventResults = EvtQuery(0, wstrChannel_.c_str(), wstrQuery_.c_str(), EvtQueryChannelPath);
-    if (!hEventResults) {
-      logger_->log_error("!EvtQuery error: %d.", GetLastError());
-      return;
-    }
-    const utils::ScopeGuard guard_hEventResults([hEventResults]() { EvtClose(hEventResults); });
-
-    if (!EvtSeek(hEventResults, 1, pBookmark_->bookmarkHandle(), 0, EvtSeekRelativeToBookmark)) {
-      logger_->log_error("!EvtSeek error: %d.", GetLastError());
-      return;
-    }
-
-    size_t eventCount = 0;
-    auto before_time = std::chrono::high_resolution_clock::now();
-    utils::ScopeGuard timeGuard([&]() {
-      logger_->log_debug("processed %d Events in %llu ms",
-                         eventCount,
-                         std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - before_time).count());
-    });
-
-    // Enumerate the events in the result set after the bookmarked event.
-    bool commitAndSaveBookmark{};
-    std::wstring bookmarkXml;
-    while (true) {
-      EVT_HANDLE hEvent{};
-      DWORD dwReturned{};
-      if (!EvtNext(hEventResults, 1, &hEvent, INFINITE, 0, &dwReturned)) {
-        DWORD status = ERROR_SUCCESS;
-        if (ERROR_NO_MORE_ITEMS != (status = GetLastError())) {
-          logger_->log_error("!EvtNext error %d.", status);
-        }
-        break;
-      }
-      const utils::ScopeGuard guard_hEvent([hEvent]() { EvtClose(hEvent); });
-
-      commitAndSaveBookmark = false;
-      EventRender renderedData;
-      if (processEvent(hEvent, renderedData)) {
-        if (pBookmark_->getNewBookmarkXml(hEvent, bookmarkXml)) {
-          commitAndSaveBookmark = true;
-
-          eventCount++;
-          processEventRender(renderedData, session);
-
-          if (batch_commit_size_ != 0U && (eventCount % batch_commit_size_ == 0)) {
-            auto before_commit = std::chrono::high_resolution_clock::now();
-            session.commit();
-            logger_->log_debug("processQueue commit took %llu ms",
-                               std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - before_commit).count());
-
-            pBookmark_->saveBookmarkXml(bookmarkXml);
-
-            if (session.outgoingConnectionsFull("success")) {
-              return;
-            }
-
-            commitAndSaveBookmark = false;
-          }
-        }
-      }
-
-      hasEvent = true;
-    }
-
-    if (commitAndSaveBookmark) {
-      session.commit();
-      pBookmark_->saveBookmarkXml(bookmarkXml);
-
-      if (session.outgoingConnectionsFull("success")) {
-        return;
-      }
-    }
-
-  } while (hasEvent);
-}
 
 void ConsumeWindowsEventLog::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
   if (!pBookmark_) {
@@ -360,7 +279,84 @@ void ConsumeWindowsEventLog::onTrigger(const std::shared_ptr<core::ProcessContex
     return;
   }
 
-  processEventsAfterBookmark(*session);
+  const auto commitAndSaveBookmark = [&] (const std::wstring& bookmarkXml){
+    const auto before_commit = std::chrono::high_resolution_clock::now();
+    session->commit();
+    logger_->log_debug("processQueue commit took %llu ms",
+      std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - before_commit).count());
+
+    pBookmark_->saveBookmarkXml(bookmarkXml);
+
+    if (session->outgoingConnectionsFull("success")) {
+      return false;
+    }
+
+    return true;
+  };
+
+  size_t eventCount = 0;
+  const auto before_time = std::chrono::high_resolution_clock::now();
+  utils::ScopeGuard timeGuard([&]() {
+    logger_->log_debug("processed %d Events in %llu ms",
+                       eventCount,
+                       std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - before_time).count());
+  });
+
+  size_t commitAndSaveBookmarkCount = 0;
+  std::wstring bookmarkXml;
+
+  const auto hEventResults = EvtQuery(0, wstrChannel_.c_str(), wstrQuery_.c_str(), EvtQueryChannelPath);
+  if (!hEventResults) {
+    logger_->log_error("!EvtQuery error: %d.", GetLastError());
+    return;
+  }
+  const utils::ScopeGuard guard_hEventResults([hEventResults]() { EvtClose(hEventResults); });
+
+  auto hBookmark = pBookmark_->getBookmarkHandleFromXML();
+  if (!hBookmark) {
+    // Unrecovarable error.
+    pBookmark_.reset();
+    return;
+  }
+
+  if (!EvtSeek(hEventResults, 1, hBookmark, 0, EvtSeekRelativeToBookmark)) {
+    logger_->log_error("!EvtSeek error: %d.", GetLastError());
+    return;
+  }
+
+  // Enumerate the events in the result set after the bookmarked event.
+  while (true) {
+    EVT_HANDLE hEvent{};
+    DWORD dwReturned{};
+    if (!EvtNext(hEventResults, 1, &hEvent, INFINITE, 0, &dwReturned)) {
+      DWORD status = ERROR_SUCCESS;
+      if (ERROR_NO_MORE_ITEMS != (status = GetLastError())) {
+        logger_->log_error("!EvtNext error %d.", status);
+      }
+      break;
+    }
+    const utils::ScopeGuard guard_hEvent([hEvent]() { EvtClose(hEvent); });
+
+    EventRender eventRender;
+    std::wstring newBookmarkXml;
+    if (createEventRender(hEvent, eventRender) && pBookmark_->getNewBookmarkXml(hEvent, newBookmarkXml)) {
+      bookmarkXml = std::move(newBookmarkXml);
+      eventCount++;
+      putEventRenderFlowFileToSession(eventRender, *session);
+
+      if (batch_commit_size_ != 0U && (eventCount % batch_commit_size_ == 0)) {
+        if (!commitAndSaveBookmark(bookmarkXml)) {
+          return;
+        }
+
+        commitAndSaveBookmarkCount = eventCount;
+      }
+    }
+  }
+
+  if (eventCount > commitAndSaveBookmarkCount) {
+    commitAndSaveBookmark(bookmarkXml);
+  }
 }
 
 wel::WindowsEventLogHandler ConsumeWindowsEventLog::getEventLogHandler(const std::string & name) {
@@ -467,7 +463,7 @@ void ConsumeWindowsEventLog::substituteXMLPercentageItems(pugi::xml_document& do
   doc.traverse(treeWalker);
 }
 
-bool ConsumeWindowsEventLog::processEvent(EVT_HANDLE hEvent, EventRender& renderedData) {
+bool ConsumeWindowsEventLog::createEventRender(EVT_HANDLE hEvent, EventRender& eventRender) {
   DWORD size = 0;
   DWORD used = 0;
   DWORD propertyCount = 0;
@@ -520,9 +516,9 @@ bool ConsumeWindowsEventLog::processEvent(EVT_HANDLE hEvent, EventRender& render
       // set the delimiter
       log_header.setDelimiter(header_delimiter_);
       // render the header.
-      renderedData.rendered_text_ = log_header.getEventHeader(&walker);
-      renderedData.rendered_text_ += "Message" + header_delimiter_ + " ";
-      renderedData.rendered_text_ += message;
+      eventRender.rendered_text_ = log_header.getEventHeader(&walker);
+      eventRender.rendered_text_ += "Message" + header_delimiter_ + " ";
+      eventRender.rendered_text_ += message;
     }
   }
 
@@ -530,24 +526,24 @@ bool ConsumeWindowsEventLog::processEvent(EVT_HANDLE hEvent, EventRender& render
     substituteXMLPercentageItems(doc);
 
     if (resolve_as_attributes_) {
-      renderedData.matched_fields_ = walker.getFieldValues();
+      eventRender.matched_fields_ = walker.getFieldValues();
     }
 
     wel::XmlString writer;
     doc.print(writer, "", pugi::format_raw); // no indentation or formatting
     xml = writer.xml_;
 
-    renderedData.text_ = std::move(xml);
+    eventRender.text_ = std::move(xml);
   }
 
   return true;
 }
 
-void ConsumeWindowsEventLog::processEventRender(const EventRender& renderedData, core::ProcessSession& session)
+void ConsumeWindowsEventLog::putEventRenderFlowFileToSession(const EventRender& eventRender, core::ProcessSession& session)
 {
   struct WriteCallback : public OutputStreamCallback {
     WriteCallback(const std::string& str)
-      : str_(str.c_str()) {
+      : str_(str) {
     }
 
     int64_t process(std::shared_ptr<io::BaseStream> stream) {
@@ -560,8 +556,8 @@ void ConsumeWindowsEventLog::processEventRender(const EventRender& renderedData,
   if (writeXML_) {
     auto flowFile = session.create();
 
-    session.write(flowFile, &WriteCallback(renderedData.text_));
-    for (const auto &fieldMapping : renderedData.matched_fields_) {
+    session.write(flowFile, &WriteCallback(eventRender.text_));
+    for (const auto &fieldMapping : eventRender.matched_fields_) {
       if (!fieldMapping.second.empty()) {
         session.putAttribute(flowFile, fieldMapping.first, fieldMapping.second);
       }
@@ -574,7 +570,7 @@ void ConsumeWindowsEventLog::processEventRender(const EventRender& renderedData,
   if (writePlainText_) {
     auto flowFile = session.create();
 
-    session.write(flowFile, &WriteCallback(renderedData.rendered_text_));
+    session.write(flowFile, &WriteCallback(eventRender.rendered_text_));
     session.putAttribute(flowFile, FlowAttributeKey(MIME_TYPE), "text/plain");
     session.getProvenanceReporter()->receive(flowFile, provenanceUri_, getUUIDStr(), "Consume windows event logs", 0);
     session.transfer(flowFile, Success);

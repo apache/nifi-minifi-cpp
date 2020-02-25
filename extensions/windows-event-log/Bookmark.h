@@ -19,23 +19,15 @@ class Bookmark
 public:
   Bookmark(const std::wstring& channel, const std::wstring& query, const std::string& bookmarkRootDir, const std::string& uuid, std::shared_ptr<logging::Logger> logger);
   ~Bookmark();
-
   operator bool() const;
-  
-  EVT_HANDLE bookmarkHandle() const;
-
-  bool saveBookmark(EVT_HANDLE hEvent);
-
+  EVT_HANDLE getBookmarkHandleFromXML();
   bool getNewBookmarkXml(EVT_HANDLE hEvent, std::wstring& bookmarkXml);
-
   void saveBookmarkXml(const std::wstring& bookmarkXml);
 private:
+  bool saveBookmark(EVT_HANDLE hEvent);
   bool createEmptyBookmarkXmlFile();
-
   bool createUUIDDir(const std::string& bookmarkRootDir, const std::string& uuid, std::string& dir);
-
   std::string filePath(const std::string& uuid);
-
   bool getBookmarkXmlFromFile(std::wstring& bookmarkXml);
 
 private:
@@ -44,6 +36,7 @@ private:
   bool ok_{};
   EVT_HANDLE hBookmark_{};
   std::wfstream file_;
+  std::wstring bookmarkXml_;
 };
 
 } /* namespace processors */
