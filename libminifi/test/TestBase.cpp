@@ -49,13 +49,8 @@ TestPlan::TestPlan(std::shared_ptr<core::ContentRepository> content_repo, std::s
   controller_services_provider_ = std::make_shared<core::controller::StandardControllerServiceProvider>(controller_services_, nullptr, configuration_);
   /* Inject the default state provider ahead of ProcessContext to make sure we have a unique state directory */
   if (state_dir == nullptr) {
-    std::string state_dir_name_template = "/tmp/teststate.XXXXXX";
-    std::vector<char> state_dir_buf(state_dir_name_template.c_str(),
-                                   state_dir_name_template.c_str() + state_dir_name_template.size() + 1);
-    if (mkdtemp(state_dir_buf.data()) == nullptr) {
-      throw std::runtime_error("Failed to create temporary directory for state");
-    }
-    state_dir_ = state_dir_buf.data();
+    char state_dir_name_template[] = "/tmp/teststate.XXXXXX";
+    state_dir_ = utils::file::FileUtils::create_temp_directory(state_dir_name_template);
   } else {
     state_dir_ = state_dir;
   }
