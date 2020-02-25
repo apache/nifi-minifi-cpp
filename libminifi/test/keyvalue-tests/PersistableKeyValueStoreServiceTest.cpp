@@ -19,13 +19,11 @@
 #define CATCH_CONFIG_RUNNER
 #include "catch.hpp"
 
-#include <uuid/uuid.h>
 #include <vector>
 #include <memory>
 #include <utility>
 #include <string>
 #include <array>
-#include <unistd.h>
 #include "../TestBase.h"
 #include "../../controller/Controller.h"
 #include "core/controller/ControllerService.h"
