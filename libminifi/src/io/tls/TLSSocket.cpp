@@ -343,6 +343,10 @@ int16_t TLSSocket::select_descriptor(const uint16_t msec) {
 
 int TLSSocket::writeData(std::vector<uint8_t>& buf, int buflen) {
   int16_t fd = select_descriptor(1000);
+  if (fd < 0) {
+    closeStream();
+    return -1;
+  }
   return writeData(buf.data(), buflen, fd);
 }
 
@@ -358,7 +362,14 @@ int TLSSocket::readData(uint8_t *buf, int buflen, bool retrieve_all_bytes) {
   int status = 0;
   int loc = 0;
   int16_t fd = select_descriptor(1000);
+  if (fd < 0) {
+    closeStream();
+    return -1;
+  }
   auto fd_ssl = get_ssl(fd);
+  if (IsNullOrEmpty(fd_ssl)) {
+    return -1;
+  }
   if (!SSL_pending(fd_ssl)) {
     return 0;
   }
@@ -391,11 +402,15 @@ int TLSSocket::readData(std::vector<uint8_t> &buf, int buflen) {
   int loc = 0;
   while (buflen) {
     int16_t fd = select_descriptor(1000);
-    if (fd <= 0) {
+    if (fd < 0) {
+      closeStream();
       return -1;
     }
 
     auto fd_ssl = get_ssl(fd);
+    if (IsNullOrEmpty(fd_ssl)) {
+      return -1;
+    }
     int sslStatus;
     do {
       status = SSL_read(fd_ssl, buf.data() + loc, buflen);
@@ -437,9 +452,14 @@ int TLSSocket::writeData(uint8_t *value, int size) {
   int bytes = 0;
   int sent = 0;
   int fd = select_descriptor(1000);
-  auto fd_ssl = get_ssl(fd);
-  if (IsNullOrEmpty(fd_ssl))
+  if (fd < 0) {
+    closeStream();
     return -1;
+  }
+  auto fd_ssl = get_ssl(fd);
+  if (IsNullOrEmpty(fd_ssl)) {
+    return -1;
+  }
   while (bytes < size) {
     sent = SSL_write(fd_ssl, value + bytes, size - bytes);
     // check for errors
@@ -459,7 +479,7 @@ int TLSSocket::readData(uint8_t *buf, int buflen) {
   int status = 0;
   while (buflen) {
     int16_t fd = select_descriptor(1000);
-    if (fd <= 0) {
+    if (fd < 0) {
       closeStream();
       return -1;
     }
@@ -467,8 +487,9 @@ int TLSSocket::readData(uint8_t *buf, int buflen) {
     int sslStatus;
     do {
       auto fd_ssl = get_ssl(fd);
-      if (IsNullOrEmpty(fd_ssl))
+      if (IsNullOrEmpty(fd_ssl)) {
         return -1;
+      }
       status = SSL_read(fd_ssl, buf, buflen);
       sslStatus = SSL_get_error(fd_ssl, status);
     } while (status < 0 && sslStatus == SSL_ERROR_WANT_READ);
