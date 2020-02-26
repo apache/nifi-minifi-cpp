@@ -196,12 +196,12 @@ TEST_CASE("TestChangeState", "[tailFileWithDelimiterState]") {
   temp_file << dir << utils::file::FileUtils::get_separator() << TMP_FILE;
 
   std::ofstream tmpfile;
-  tmpfile.open(temp_file.str());
+  tmpfile.open(temp_file.str(), std::ios::out | std::ios::binary);
   tmpfile << NEWLINE_FILE;
   tmpfile.close();
 
   std::ofstream appendStream;
-  appendStream.open(temp_file.str(), std::ios_base::app);
+  appendStream.open(temp_file.str(), std::ios_base::app | std::ios_base::binary);
   appendStream.write("\n", 1);
   appendStream.close();
 
@@ -209,11 +209,7 @@ TEST_CASE("TestChangeState", "[tailFileWithDelimiterState]") {
   plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::Delimiter.getName(), "\n");
 
   testController.runSession(plan, true);
-#ifdef WIN32
-  REQUIRE(LogTestController::getInstance().contains("minifi-tmpfile.0-14.txt"));
-#else
   REQUIRE(LogTestController::getInstance().contains("minifi-tmpfile.0-13.txt"));
-#endif
 
   std::string filePath, fileName;
   REQUIRE(utils::file::PathUtils::getFileNameAndPath(temp_file.str(), filePath, fileName));
