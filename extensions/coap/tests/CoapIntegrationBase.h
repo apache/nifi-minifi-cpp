@@ -47,7 +47,7 @@ class CoapIntegrationBase : public IntegrationBase {
     stop_webserver(server);
   }
 
-  virtual void run(std::string test_file_location) {
+  virtual void run(std::string test_file_location) override {
     testSetup();
 
     std::shared_ptr<core::Repository> test_repo = std::make_shared<TestRepository>();

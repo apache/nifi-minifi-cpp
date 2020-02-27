@@ -138,7 +138,7 @@ class GetTCPMetrics : public state::response::ResponseNode {
     return core::Connectable::getName();
   }
 
-  virtual std::vector<state::response::SerializedResponseNode> serialize() const {
+  virtual std::vector<state::response::SerializedResponseNode> serialize() {
     std::vector<state::response::SerializedResponseNode> resp;
 
     state::response::SerializedResponseNode iter;

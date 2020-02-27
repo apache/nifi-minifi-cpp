@@ -351,8 +351,6 @@ class HeartbeatHandler : public CivetHandler {
       : isSecure(isSecure) {
   }
 
-  virtual ~HeartbeatHandler() = default;
-
   std::string readPost(struct mg_connection *conn) {
     std::string response;
     int blockSize = 1024 * sizeof(char), readBytes;
@@ -431,6 +429,8 @@ class HeartbeatHandler : public CivetHandler {
         handleHeartbeat(root, conn);
       } else if (operation == "acknowledge") {
         handleAcknowledge(root);
+      } else {
+        throw std::runtime_error("operation not supported " + operation);
       }
     }
   }

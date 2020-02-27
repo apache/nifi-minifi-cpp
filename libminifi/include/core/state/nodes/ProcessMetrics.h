@@ -58,7 +58,7 @@ class ProcessMetrics : public ResponseNode {
     return "ProcessMetrics";
   }
 
-  std::vector<SerializedResponseNode> serialize() const {
+  std::vector<SerializedResponseNode> serialize() {
     std::vector<SerializedResponseNode> serialized;
 
 #ifndef WIN32

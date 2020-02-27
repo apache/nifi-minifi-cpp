@@ -21,6 +21,8 @@
 #include "../tests/TestServer.h"
 #include "CivetServer.h"
 #include "integration/IntegrationBase.h"
+#include "c2/C2Agent.h"
+#include "protocols/RESTSender.h"
 
 int log_message(const struct mg_connection *conn, const char *message) {
   puts(message);
@@ -40,8 +42,6 @@ class CoapIntegrationBase : public IntegrationBase {
   }
 
   void setUrl(std::string url, CivetHandler *handler);
-
-  virtual ~CoapIntegrationBase() = default;
 
   void shutdownBeforeFlowController() {
     stop_webserver(server);
@@ -95,8 +95,6 @@ class VerifyC2Base : public CoapIntegrationBase {
     dir = testController.createTempDirectory(format);
   }
 
-  virtual ~VerifyC2Base() = default;
-
   virtual void testSetup() {
     LogTestController::getInstance().setDebug<utils::HTTPClient>();
     LogTestController::getInstance().setDebug<LogTestController>();
@@ -140,5 +138,23 @@ class VerifyC2Base : public CoapIntegrationBase {
   std::string dir;
   std::stringstream ss;
   TestController testController;
+};
+
+class VerifyC2Describe : public VerifyC2Base {
+ public:
+  explicit VerifyC2Describe(bool isSecure)
+      : VerifyC2Base(isSecure) {
+  }
+
+  void testSetup() {
+    LogTestController::getInstance().setTrace<minifi::c2::C2Agent>();
+    LogTestController::getInstance().setDebug<minifi::c2::RESTSender>();
+    LogTestController::getInstance().setInfo<minifi::FlowController>();
+    VerifyC2Base::testSetup();
+  }
+
+  void configureC2RootClasses() {
+    configuration->set("nifi.c2.root.classes", "DeviceInfoNode,AgentInformationWithoutManifest,FlowInformation");
+  }
 };
 #endif /* LIBMINIFI_TEST_INTEGRATION_HTTPINTEGRATIONBASE_H_ */

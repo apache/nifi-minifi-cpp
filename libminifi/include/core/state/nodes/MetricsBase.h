@@ -56,7 +56,7 @@ class ResponseNode : public core::Connectable {
 
   }
 
-  virtual std::vector<SerializedResponseNode> serialize() const = 0;
+  virtual std::vector<SerializedResponseNode> serialize() = 0;
 
   virtual void yield() {
   }
@@ -115,7 +115,7 @@ class ObjectNode : public ResponseNode {
     return Connectable::getName();
   }
 
-  virtual std::vector<SerializedResponseNode> serialize() const {
+  virtual std::vector<SerializedResponseNode> serialize() {
     std::vector<SerializedResponseNode> serialized;
 //    SerializedResponseNode outer_node;
     //  outer_node.name = getName();
@@ -239,9 +239,7 @@ class NodeReporter {
    * Returns a response node containing all agent information with manifest and agent status
    * @return a shared pointer to agent information
    */
-  virtual std::shared_ptr<state::response::ResponseNode> getAgentInformation() const {
-      return nullptr;
-  }
+  virtual std::shared_ptr<state::response::ResponseNode> getAgentInformation() const = 0;
 };
 
 /**

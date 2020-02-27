@@ -60,7 +60,7 @@ class RepositoryMetrics : public ResponseNode {
     }
   }
 
-  std::vector<SerializedResponseNode> serialize() const {
+  std::vector<SerializedResponseNode> serialize() {
     std::vector<SerializedResponseNode> serialized;
     for (auto conn : repositories) {
       auto repo = conn.second;
