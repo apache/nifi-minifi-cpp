@@ -223,8 +223,7 @@ void GetTCP::onSchedule(const std::shared_ptr<core::ProcessContext> &context, co
     }
   }
 
-  utils::ThreadPool<int> pool = utils::ThreadPool<int>(concurrent_handlers_);
-  client_thread_pool_ = std::move(pool);
+  client_thread_pool_.setMaxConcurrentTasks(concurrent_handlers_);
   client_thread_pool_.start();
 
   running_ = true;

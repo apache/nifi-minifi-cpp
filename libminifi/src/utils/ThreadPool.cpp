@@ -235,7 +235,7 @@ void ThreadPool<T>::shutdown() {
   }
 }
 
-template class utils::ThreadPool<utils::ComplexTaskResult>;
+template class utils::ThreadPool<utils::TaskRescheduleInfo>;
 template class utils::ThreadPool<int>;
 template class utils::ThreadPool<bool>;
 template class utils::ThreadPool<state::Update>;

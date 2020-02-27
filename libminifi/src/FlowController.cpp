@@ -312,9 +312,11 @@ void FlowController::load(const std::shared_ptr<core::ProcessGroup> &root, bool 
 
     auto base_shared_ptr = std::dynamic_pointer_cast<core::controller::ControllerServiceProvider>(shared_from_this());
 
-    if(!thread_pool_.isRunning() || reload) {
+    if (!thread_pool_.isRunning() || reload) {
+      thread_pool_.shutdown();
       thread_pool_.setMaxConcurrentTasks(configuration_->getInt(Configure::nifi_flow_engine_threads, 2));
       thread_pool_.setControllerServiceProvider(base_shared_ptr);
+      thread_pool_.start();
     }
 
     if (nullptr == timer_scheduler_ || reload) {
@@ -768,7 +770,7 @@ void FlowController::removeControllerService(const std::shared_ptr<core::control
  * Enables the controller service services
  * @param serviceNode service node which will be disabled, along with linked services.
  */
-std::future<utils::ComplexTaskResult> FlowController::enableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) {
+std::future<utils::TaskRescheduleInfo> FlowController::enableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) {
   return controller_service_provider_->enableControllerService(serviceNode);
 }
 
@@ -783,7 +785,7 @@ void FlowController::enableControllerServices(std::vector<std::shared_ptr<core::
  * Disables controller services
  * @param serviceNode service node which will be disabled, along with linked services.
  */
-std::future<utils::ComplexTaskResult> FlowController::disableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) {
+std::future<utils::TaskRescheduleInfo> FlowController::disableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) {
   return controller_service_provider_->disableControllerService(serviceNode);
 }
 

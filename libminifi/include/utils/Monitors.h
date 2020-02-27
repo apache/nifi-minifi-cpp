@@ -112,45 +112,45 @@ class SingleRunMonitor : public utils::AfterExecute<bool>{
 };
 
 
-struct ComplexTaskResult {
-  ComplexTaskResult(bool result, std::chrono::milliseconds wait_time)
+struct TaskRescheduleInfo {
+  TaskRescheduleInfo(bool result, std::chrono::milliseconds wait_time)
     : finished_(result), wait_time_(wait_time){}
   std::chrono::milliseconds wait_time_;
   bool finished_;
 
-  static ComplexTaskResult Done() {
-    return ComplexTaskResult(true, std::chrono::milliseconds(0));
+  static TaskRescheduleInfo Done() {
+    return TaskRescheduleInfo(true, std::chrono::milliseconds(0));
   }
 
-  static ComplexTaskResult RetryIn(std::chrono::milliseconds interval) {
-    return ComplexTaskResult(false, interval);
+  static TaskRescheduleInfo RetryIn(std::chrono::milliseconds interval) {
+    return TaskRescheduleInfo(false, interval);
   }
 
-  static ComplexTaskResult RetryImmediately() {
-    return ComplexTaskResult(false, std::chrono::milliseconds(0));
+  static TaskRescheduleInfo RetryImmediately() {
+    return TaskRescheduleInfo(false, std::chrono::milliseconds(0));
   }
 
 #if defined(WIN32)
  // https://developercommunity.visualstudio.com/content/problem/60897/c-shared-state-futuresstate-default-constructs-the.html
  // Because of this bug we need to have this object default constructible, which makes no sense otherwise. Hack.
  private:
-  ComplexTaskResult() : wait_time_(std::chrono::milliseconds(0)), finished_(true) {}
-  friend class std::_Associated_state<ComplexTaskResult>;
+  TaskRescheduleInfo() : wait_time_(std::chrono::milliseconds(0)), finished_(true) {}
+  friend class std::_Associated_state<TaskRescheduleInfo>;
 #endif
 };
 
-class ComplexMonitor : public utils::AfterExecute<ComplexTaskResult> {
+class ComplexMonitor : public utils::AfterExecute<TaskRescheduleInfo> {
  public:
   ComplexMonitor() = default;
 
-  virtual bool isFinished(const ComplexTaskResult &result) override {
+  virtual bool isFinished(const TaskRescheduleInfo &result) override {
     if (result.finished_) {
       return true;
     }
     current_wait_.store(result.wait_time_);
     return false;
   }
-  virtual bool isCancelled(const ComplexTaskResult &result) override {
+  virtual bool isCancelled(const TaskRescheduleInfo &result) override {
     return false;
   }
   /**

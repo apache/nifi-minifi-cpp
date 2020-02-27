@@ -42,7 +42,7 @@ class EventDrivenSchedulingAgent : public ThreadedSchedulingAgent {
    */
   EventDrivenSchedulingAgent(std::shared_ptr<core::controller::ControllerServiceProvider> controller_service_provider, std::shared_ptr<core::Repository> repo,
                              std::shared_ptr<core::Repository> flow_repo, std::shared_ptr<core::ContentRepository> content_repo, std::shared_ptr<Configure> configuration,
-                             utils::ThreadPool<utils::ComplexTaskResult> &thread_pool)
+                             utils::ThreadPool<utils::TaskRescheduleInfo> &thread_pool)
       : ThreadedSchedulingAgent(controller_service_provider, repo, flow_repo, content_repo, configuration, thread_pool) {
     int slice = configuration->getInt(Configure::nifi_flow_engine_event_driven_time_slice, DEFAULT_TIME_SLICE_MS);
     if (slice < 10 || 1000 < slice) {
@@ -52,7 +52,7 @@ class EventDrivenSchedulingAgent : public ThreadedSchedulingAgent {
   }
 
   // Run function for the thread
-  utils::ComplexTaskResult run(const std::shared_ptr<core::Processor> &processor, const std::shared_ptr<core::ProcessContext> &processContext,
+  utils::TaskRescheduleInfo run(const std::shared_ptr<core::Processor> &processor, const std::shared_ptr<core::ProcessContext> &processContext,
       const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
 
  private:

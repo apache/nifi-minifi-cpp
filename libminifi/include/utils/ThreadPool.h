@@ -199,20 +199,9 @@ class ThreadPool {
   }
 
   ThreadPool(const ThreadPool<T> &other) = delete;
-  ThreadPool<T> operator=(const ThreadPool<T> &other) = delete;
-
-  ThreadPool(ThreadPool<T> &&other)
-      : daemon_threads_(std::move(other.daemon_threads_)),
-        thread_reduction_count_(0),
-        max_worker_threads_(std::move(other.max_worker_threads_)),
-        adjust_threads_(false),
-        running_(false),
-        controller_service_provider_(std::move(other.controller_service_provider_)),
-        thread_manager_(std::move(other.thread_manager_)),
-        name_(std::move(other.name_)) {
-    current_workers_ = 0;
-    task_count_ = 0;
-  }
+  ThreadPool<T>& operator=(const ThreadPool<T> &other) = delete;
+  ThreadPool(ThreadPool<T> &&other) = delete;
+  ThreadPool<T>& operator=(ThreadPool<T> &&other) = delete;
 
   ~ThreadPool() {
     shutdown();
@@ -282,51 +271,24 @@ class ThreadPool {
    */
   void setMaxConcurrentTasks(uint16_t max) {
     std::lock_guard<std::recursive_mutex> lock(manager_mutex_);
-    if (running_) {
+    bool was_running = running_;
+    if (was_running) {
       shutdown();
     }
     max_worker_threads_ = max;
-    if (!running_)
+    if (was_running)
       start();
   }
 
   void setControllerServiceProvider(std::shared_ptr<core::controller::ControllerServiceProvider> controller_service_provider) {
     std::lock_guard<std::recursive_mutex> lock(manager_mutex_);
-    if (running_) {
+    bool was_running = running_;
+    if (was_running) {
       shutdown();
     }
     controller_service_provider_ = controller_service_provider;
-    if (!running_)
+    if (was_running)
       start();
-  }
-
-  ThreadPool<T> &operator=(ThreadPool<T> &&other) {
-    std::lock_guard<std::recursive_mutex> lock(manager_mutex_);
-    if (other.running_) {
-      other.shutdown();
-    }
-    if (running_) {
-      shutdown();
-    }
-    max_worker_threads_ = std::move(other.max_worker_threads_);
-    daemon_threads_ = std::move(other.daemon_threads_);
-    current_workers_ = 0;
-    thread_reduction_count_ = 0;
-
-    thread_queue_ = std::move(other.thread_queue_);
-    worker_queue_ = std::move(other.worker_queue_);
-
-    controller_service_provider_ = std::move(other.controller_service_provider_);
-    thread_manager_ = std::move(other.thread_manager_);
-
-    adjust_threads_ = false;
-
-    if (!running_) {
-      start();
-    }
-
-    name_ = other.name_;
-    return *this;
   }
 
  protected:

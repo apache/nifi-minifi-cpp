@@ -98,7 +98,7 @@ class ControllerServiceProvider : public CoreComponent, public ConfigurableCompo
    * Enables the provided controller service
    * @param serviceNode controller service node.
    */
-  virtual std::future<utils::ComplexTaskResult> enableControllerService(std::shared_ptr<ControllerServiceNode> &serviceNode) = 0;
+  virtual std::future<utils::TaskRescheduleInfo> enableControllerService(std::shared_ptr<ControllerServiceNode> &serviceNode) = 0;
 
   /**
    * Enables the provided controller service nodes
@@ -110,7 +110,7 @@ class ControllerServiceProvider : public CoreComponent, public ConfigurableCompo
    * Disables the provided controller service node
    * @param serviceNode controller service node.
    */
-  virtual std::future<utils::ComplexTaskResult> disableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) = 0;
+  virtual std::future<utils::TaskRescheduleInfo> disableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) = 0;
 
   /**
    * Gets a list of all controller services.

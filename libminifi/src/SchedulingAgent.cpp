@@ -41,41 +41,41 @@ bool SchedulingAgent::hasWorkToDo(std::shared_ptr<core::Processor> processor) {
     return false;
 }
 
-std::future<utils::ComplexTaskResult> SchedulingAgent::enableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) {
+std::future<utils::TaskRescheduleInfo> SchedulingAgent::enableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) {
   logger_->log_info("Enabling CSN in SchedulingAgent %s", serviceNode->getName());
   // reference the enable function from serviceNode
-  std::function<utils::ComplexTaskResult()> f_ex = [serviceNode] {
+  std::function<utils::TaskRescheduleInfo()> f_ex = [serviceNode] {
       serviceNode->enable();
-      return utils::ComplexTaskResult::Done();
+      return utils::TaskRescheduleInfo::Done();
     };
 
   // only need to run this once.
   auto monitor = utils::make_unique<utils::ComplexMonitor>();
-  utils::Worker<utils::ComplexTaskResult> functor(f_ex, serviceNode->getUUIDStr(), std::move(monitor));
+  utils::Worker<utils::TaskRescheduleInfo> functor(f_ex, serviceNode->getUUIDStr(), std::move(monitor));
   // move the functor into the thread pool. While a future is returned
   // we aren't terribly concerned with the result.
-  std::future<utils::ComplexTaskResult> future;
+  std::future<utils::TaskRescheduleInfo> future;
   thread_pool_.execute(std::move(functor), future);
   if (future.valid())
     future.wait();
   return future;
 }
 
-std::future<utils::ComplexTaskResult> SchedulingAgent::disableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) {
+std::future<utils::TaskRescheduleInfo> SchedulingAgent::disableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) {
   logger_->log_info("Disabling CSN in SchedulingAgent %s", serviceNode->getName());
   // reference the disable function from serviceNode
-  std::function<utils::ComplexTaskResult()> f_ex = [serviceNode] {
+  std::function<utils::TaskRescheduleInfo()> f_ex = [serviceNode] {
     serviceNode->disable();
-    return utils::ComplexTaskResult::Done();
+    return utils::TaskRescheduleInfo::Done();
   };
 
   // only need to run this once.
   auto monitor = utils::make_unique<utils::ComplexMonitor>();
-  utils::Worker<utils::ComplexTaskResult> functor(f_ex, serviceNode->getUUIDStr(), std::move(monitor));
+  utils::Worker<utils::TaskRescheduleInfo> functor(f_ex, serviceNode->getUUIDStr(), std::move(monitor));
 
   // move the functor into the thread pool. While a future is returned
   // we aren't terribly concerned with the result.
-  std::future<utils::ComplexTaskResult> future;
+  std::future<utils::TaskRescheduleInfo> future;
   thread_pool_.execute(std::move(functor), future);
   if (future.valid())
     future.wait();

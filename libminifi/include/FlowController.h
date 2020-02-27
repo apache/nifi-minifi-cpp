@@ -203,7 +203,7 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
    * Enables the controller service services
    * @param serviceNode service node which will be disabled, along with linked services.
    */
-  virtual std::future<utils::ComplexTaskResult> enableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode);
+  virtual std::future<utils::TaskRescheduleInfo> enableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode);
 
   /**
    * Enables controller services
@@ -215,7 +215,7 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
    * Disables controller services
    * @param serviceNode service node which will be disabled, along with linked services.
    */
-  virtual std::future<utils::ComplexTaskResult> disableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode);
+  virtual std::future<utils::TaskRescheduleInfo> disableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode);
 
   /**
    * Gets all controller services.
@@ -357,7 +357,7 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
   std::shared_ptr<core::ContentRepository> content_repo_;
 
   // Thread pool for schedulers
-  utils::ThreadPool<utils::ComplexTaskResult> thread_pool_;
+  utils::ThreadPool<utils::TaskRescheduleInfo> thread_pool_;
   // Flow Engines
   // Flow Timer Scheduler
   std::shared_ptr<TimerDrivenSchedulingAgent> timer_scheduler_;
