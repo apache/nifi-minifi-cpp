@@ -55,7 +55,7 @@ std::future<utils::ComplexTaskResult> SchedulingAgent::enableControllerService(s
   // move the functor into the thread pool. While a future is returned
   // we aren't terribly concerned with the result.
   std::future<utils::ComplexTaskResult> future;
-  thread_pool_->execute(std::move(functor), future);
+  thread_pool_.execute(std::move(functor), future);
   if (future.valid())
     future.wait();
   return future;
@@ -76,7 +76,7 @@ std::future<utils::ComplexTaskResult> SchedulingAgent::disableControllerService(
   // move the functor into the thread pool. While a future is returned
   // we aren't terribly concerned with the result.
   std::future<utils::ComplexTaskResult> future;
-  thread_pool_->execute(std::move(functor), future);
+  thread_pool_.execute(std::move(functor), future);
   if (future.valid())
     future.wait();
   return future;

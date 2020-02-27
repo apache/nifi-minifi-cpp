@@ -198,7 +198,10 @@ class ThreadPool {
     thread_manager_ = nullptr;
   }
 
-  ThreadPool(const ThreadPool<T> &&other)
+  ThreadPool(const ThreadPool<T> &other) = delete;
+  ThreadPool<T> operator=(const ThreadPool<T> &other) = delete;
+
+  ThreadPool(ThreadPool<T> &&other)
       : daemon_threads_(std::move(other.daemon_threads_)),
         thread_reduction_count_(0),
         max_worker_threads_(std::move(other.max_worker_threads_)),
@@ -235,8 +238,16 @@ class ThreadPool {
   /**
    * Returns true if a task is running.
    */
-  bool isRunning(const std::string &identifier) {
-    return task_status_[identifier] == true;
+  bool isTaskRunning(const std::string &identifier) const {
+    try {
+      return task_status_.at(identifier) == true;
+    } catch (const std::out_of_range &e) {
+      return false;
+    }
+  }
+
+  bool isRunning() const {
+    return running_.load();
   }
 
   std::vector<BackTrace> getTraces() {
@@ -279,8 +290,15 @@ class ThreadPool {
       start();
   }
 
-  ThreadPool<T> operator=(const ThreadPool<T> &other) = delete;
-  ThreadPool(const ThreadPool<T> &other) = delete;
+  void setControllerServiceProvider(std::shared_ptr<core::controller::ControllerServiceProvider> controller_service_provider) {
+    std::lock_guard<std::recursive_mutex> lock(manager_mutex_);
+    if (running_) {
+      shutdown();
+    }
+    controller_service_provider_ = controller_service_provider;
+    if (!running_)
+      start();
+  }
 
   ThreadPool<T> &operator=(ThreadPool<T> &&other) {
     std::lock_guard<std::recursive_mutex> lock(manager_mutex_);

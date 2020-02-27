@@ -224,6 +224,10 @@ void ThreadPool<T>::shutdown() {
 
     thread_queue_.clear();
     current_workers_ = 0;
+    while (!delayed_worker_queue_.empty()) {
+      delayed_worker_queue_.pop();
+    }
+
     while (worker_queue_.size_approx() > 0) {
       Worker<T> task;
       worker_queue_.try_dequeue(task);

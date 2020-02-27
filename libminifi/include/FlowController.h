@@ -357,7 +357,7 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
   std::shared_ptr<core::ContentRepository> content_repo_;
 
   // Thread pool for schedulers
-  std::shared_ptr<utils::ThreadPool<utils::ComplexTaskResult>> thread_pool_;
+  utils::ThreadPool<utils::ComplexTaskResult> thread_pool_;
   // Flow Engines
   // Flow Timer Scheduler
   std::shared_ptr<TimerDrivenSchedulingAgent> timer_scheduler_;

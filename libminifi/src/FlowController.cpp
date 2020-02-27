@@ -82,7 +82,7 @@ FlowController::FlowController(std::shared_ptr<core::Repository> provenance_repo
       flow_file_repo_(flow_file_repo),
       protocol_(0),
       controller_service_map_(std::make_shared<core::controller::ControllerServiceMap>()),
-      thread_pool_(nullptr),
+      thread_pool_(2, false, nullptr, "Flowcontroller threadpool"),
       timer_scheduler_(nullptr),
       event_scheduler_(nullptr),
       cron_scheduler_(nullptr),
@@ -100,7 +100,6 @@ FlowController::FlowController(std::shared_ptr<core::Repository> provenance_repo
   }
   id_generator_->generate(uuid_);
   setUUID(uuid_);
-
   flow_update_ = false;
   // Setup the default values
   if (flow_configuration_ != nullptr) {
@@ -244,7 +243,7 @@ int16_t FlowController::stop(bool force, uint64_t timeToWait) {
     this->timer_scheduler_->stop();
     this->event_scheduler_->stop();
     this->cron_scheduler_->stop();
-    this->thread_pool_->shutdown();
+    this->thread_pool_.shutdown();
     running_ = false;
   }
   return 0;
@@ -313,11 +312,10 @@ void FlowController::load(const std::shared_ptr<core::ProcessGroup> &root, bool 
 
     auto base_shared_ptr = std::dynamic_pointer_cast<core::controller::ControllerServiceProvider>(shared_from_this());
 
-    if (nullptr == thread_pool_ || reload) {
-      int csThreads = configuration_->getInt(Configure::nifi_flow_engine_threads, 2);
-      thread_pool_ = std::make_shared<utils::ThreadPool<utils::ComplexTaskResult>>(csThreads, false, base_shared_ptr, "Flowcontroller threadpool");
+    if(!thread_pool_.isRunning() || reload) {
+      thread_pool_.setMaxConcurrentTasks(configuration_->getInt(Configure::nifi_flow_engine_threads, 2));
+      thread_pool_.setControllerServiceProvider(base_shared_ptr);
     }
-    thread_pool_->start();
 
     if (nullptr == timer_scheduler_ || reload) {
       timer_scheduler_ = std::make_shared<TimerDrivenSchedulingAgent>(base_shared_ptr, provenance_repo_, flow_file_repo_, content_repo_, configuration_, thread_pool_);
