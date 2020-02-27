@@ -52,7 +52,7 @@ class CronDrivenSchedulingAgent : public ThreadedSchedulingAgent {
   utils::ComplexTaskResult run(const std::shared_ptr<core::Processor> &processor, const std::shared_ptr<core::ProcessContext> &processContext,
       const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
 
-  virtual void stop() override {
+  void stop() override {
     std::lock_guard<std::mutex> locK(mutex_);
     schedules_.clear();
     last_exec_.clear();

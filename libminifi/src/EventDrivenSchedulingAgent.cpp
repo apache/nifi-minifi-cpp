@@ -38,13 +38,14 @@ utils::ComplexTaskResult EventDrivenSchedulingAgent::run(const std::shared_ptr<c
       bool shouldYield = this->onTrigger(processor, processContext, sessionFactory);
       if (processor->isYield()) {
         // Honor the yield
-        return utils::ComplexTaskResult::Retry(std::chrono::milliseconds(processor->getYieldTime()));
+        return utils::ComplexTaskResult::RetryIn(std::chrono::milliseconds(processor->getYieldTime()));
       } else if (shouldYield) {
         // No work to do or need to apply back pressure
-        return utils::ComplexTaskResult::Retry(std::chrono::milliseconds((this->bored_yield_duration_ > 0) ? this->bored_yield_duration_ : 10));  // No work left to do, stand by
+        return utils::ComplexTaskResult::RetryIn(
+            std::chrono::milliseconds((this->bored_yield_duration_ > 0) ? this->bored_yield_duration_ : 10));  // No work left to do, stand by
       }
     }
-    return utils::ComplexTaskResult::Retry(std::chrono::milliseconds(0));  // Let's continue work as soon as a thread is available
+    return utils::ComplexTaskResult::RetryImmediately();  // Let's continue work as soon as a thread is available
   }
   return utils::ComplexTaskResult::Done();
 }

@@ -35,12 +35,13 @@ utils::ComplexTaskResult TimerDrivenSchedulingAgent::run(const std::shared_ptr<c
     bool shouldYield = this->onTrigger(processor, processContext, sessionFactory);
     if (processor->isYield()) {
       // Honor the yield
-      return utils::ComplexTaskResult::Retry(std::chrono::milliseconds(processor->getYieldTime()));
+      return utils::ComplexTaskResult::RetryIn(std::chrono::milliseconds(processor->getYieldTime()));
     } else if (shouldYield && this->bored_yield_duration_ > 0) {
       // No work to do or need to apply back pressure
-      return utils::ComplexTaskResult::Retry(std::chrono::milliseconds(this->bored_yield_duration_));
+      return utils::ComplexTaskResult::RetryIn(std::chrono::milliseconds(this->bored_yield_duration_));
     }
-    return utils::ComplexTaskResult::Retry(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::nanoseconds(processor->getSchedulingPeriodNano())));
+    return utils::ComplexTaskResult::RetryIn(std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::nanoseconds(processor->getSchedulingPeriodNano())));
   }
   return utils::ComplexTaskResult::Done();
 }

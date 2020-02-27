@@ -52,7 +52,7 @@ class Worker {
  public:
   explicit Worker(std::function<T()> &task, const std::string &identifier, std::unique_ptr<AfterExecute<T>> run_determinant)
       : identifier_(identifier),
-        time_slice_(std::chrono::steady_clock::now()),
+        next_exec_time_(std::chrono::steady_clock::now()),
         task(task),
         run_determinant_(std::move(run_determinant)) {
     promise = std::make_shared<std::promise<T>>();
@@ -60,7 +60,7 @@ class Worker {
 
   explicit Worker(std::function<T()> &task, const std::string &identifier)
       : identifier_(identifier),
-        time_slice_(std::chrono::steady_clock::now()),
+        next_exec_time_(std::chrono::steady_clock::now()),
         task(task),
         run_determinant_(nullptr) {
     promise = std::make_shared<std::promise<T>>();
@@ -68,7 +68,7 @@ class Worker {
 
   explicit Worker(const std::string identifier = "")
       : identifier_(identifier),
-        time_slice_(std::chrono::steady_clock::now()) {
+        next_exec_time_(std::chrono::steady_clock::now()) {
   }
 
   virtual ~Worker() {
@@ -78,9 +78,9 @@ class Worker {
   /**
    * Move constructor for worker tasks
    */
-  Worker(Worker &&other)
+  Worker (Worker &&other) noexcept
       : identifier_(std::move(other.identifier_)),
-        time_slice_(std::move(other.time_slice_)),
+        next_exec_time_(std::move(other.next_exec_time_)),
         task(std::move(other.task)),
         run_determinant_(std::move(other.run_determinant_)),
         promise(other.promise) {
@@ -99,7 +99,7 @@ class Worker {
       promise->set_value(result);
       return false;
     }
-    time_slice_ = increment_time(run_determinant_->wait_time());
+    next_exec_time_ += run_determinant_->wait_time();
     return true;
   }
 
@@ -107,32 +107,27 @@ class Worker {
     identifier_ = identifier;
   }
 
-  virtual std::chrono::time_point<std::chrono::steady_clock> getTimeSlice() const {
-    return time_slice_;
+  virtual std::chrono::time_point<std::chrono::steady_clock> getNextExecutionTime() const {
+    return next_exec_time_;
   }
 
-  virtual std::chrono::milliseconds getWaitTime() {
+  virtual std::chrono::milliseconds getWaitTime() const {
     return run_determinant_->wait_time();
   }
 
   Worker<T>(const Worker<T>&) = delete;
-  Worker<T>& operator =(const Worker<T>&) = delete;
+  Worker<T>& operator= (const Worker<T>&) = delete;
 
-  Worker<T>& operator =(Worker<T> &&);
+  Worker<T>& operator= (Worker<T> &&) noexcept;
 
-  std::shared_ptr<std::promise<T>> getPromise();
+  std::shared_ptr<std::promise<T>> getPromise() const;
 
-  const std::string &getIdentifier() {
+  const std::string &getIdentifier() const {
     return identifier_;
   }
- protected:
-
-  inline std::chrono::time_point<std::chrono::steady_clock> increment_time(const std::chrono::milliseconds &time) {
-    return std::chrono::steady_clock::now() + time;
-  }
-
+protected:
   std::string identifier_;
-  std::chrono::time_point<std::chrono::steady_clock> time_slice_;
+  std::chrono::time_point<std::chrono::steady_clock> next_exec_time_;
   std::function<T()> task;
   std::unique_ptr<AfterExecute<T>> run_determinant_;
   std::shared_ptr<std::promise<T>> promise;
@@ -142,22 +137,22 @@ template<typename T>
 class DelayedTaskComparator {
  public:
   bool operator()(Worker<T> &a, Worker<T> &b) {
-    return a.getTimeSlice() > b.getTimeSlice();
+    return a.getNextExecutionTime() > b.getNextExecutionTime();
   }
 };
 
 template<typename T>
-Worker<T>& Worker<T>::operator =(Worker<T> && other) {
+Worker<T>& Worker<T>::operator =(Worker<T> && other) noexcept {
   task = std::move(other.task);
   promise = other.promise;
-  time_slice_ = std::move(other.time_slice_);
+  next_exec_time_ = std::move(other.next_exec_time_);
   identifier_ = std::move(other.identifier_);
   run_determinant_ = std::move(other.run_determinant_);
   return *this;
 }
 
 template<typename T>
-std::shared_ptr<std::promise<T>> Worker<T>::getPromise() {
+std::shared_ptr<std::promise<T>> Worker<T>::getPromise() const {
   return promise;
 }
 

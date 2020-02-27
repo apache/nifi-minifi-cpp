@@ -47,7 +47,7 @@ void ThreadPool<T>::run_tasks(std::shared_ptr<WorkerThread> thread) {
         }
       }
       if (task.run()) {
-        if (task.getTimeSlice() <= std::chrono::steady_clock::now()) {
+        if (task.getNextExecutionTime() <= std::chrono::steady_clock::now()) {
           // it can be rescheduled again as soon as there is a worker available
           worker_queue_.enqueue(std::move(task));
           continue;
@@ -55,7 +55,8 @@ void ThreadPool<T>::run_tasks(std::shared_ptr<WorkerThread> thread) {
         // Task will be put to the delayed queue as next exec time is in the future
         std::unique_lock<std::mutex> lock(worker_queue_mutex_);
         bool need_to_notify =
-            delayed_worker_queue_.empty() || task.getTimeSlice() < delayed_worker_queue_.top().getTimeSlice();
+            delayed_worker_queue_.empty() ||
+                task.getNextExecutionTime() < delayed_worker_queue_.top().getNextExecutionTime();
 
         delayed_worker_queue_.push(std::move(task));
         if (need_to_notify) {
@@ -76,7 +77,8 @@ void ThreadPool<T>::manage_delayed_queue() {
     std::unique_lock<std::mutex> lock(worker_queue_mutex_);
 
     // Put the tasks ready to run in the worker queue
-    while (!delayed_worker_queue_.empty() && delayed_worker_queue_.top().getTimeSlice() <= std::chrono::steady_clock::now()) {
+    while (!delayed_worker_queue_.empty() &&
+        delayed_worker_queue_.top().getNextExecutionTime() <= std::chrono::steady_clock::now()) {
       // I'm very sorry for this - committee must has been seriously drunk when the interface of prio queue was submitted.
       Worker<T> task = std::move(const_cast<Worker<T>&>(delayed_worker_queue_.top()));
       delayed_worker_queue_.pop();
@@ -86,7 +88,8 @@ void ThreadPool<T>::manage_delayed_queue() {
     if (delayed_worker_queue_.empty()) {
       delayed_task_available_.wait(lock);
     } else {
-      auto wait_time = std::chrono::duration_cast<std::chrono::milliseconds>(delayed_worker_queue_.top().getTimeSlice() - std::chrono::steady_clock::now());
+      auto wait_time = std::chrono::duration_cast<std::chrono::milliseconds>(
+          delayed_worker_queue_.top().getNextExecutionTime() - std::chrono::steady_clock::now());
       delayed_task_available_.wait_for(lock, (std::max)(wait_time, std::chrono::milliseconds(1)));
     }
   }

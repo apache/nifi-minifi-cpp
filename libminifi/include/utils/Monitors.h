@@ -122,8 +122,12 @@ struct ComplexTaskResult {
     return ComplexTaskResult(true, std::chrono::milliseconds(0));
   }
 
-  static ComplexTaskResult Retry(std::chrono::milliseconds interval) {
+  static ComplexTaskResult RetryIn(std::chrono::milliseconds interval) {
     return ComplexTaskResult(false, interval);
+  }
+
+  static ComplexTaskResult RetryImmediately() {
+    return ComplexTaskResult(false, std::chrono::milliseconds(0));
   }
 
 #if defined(WIN32)
@@ -137,9 +141,7 @@ struct ComplexTaskResult {
 
 class ComplexMonitor : public utils::AfterExecute<ComplexTaskResult> {
  public:
-  ComplexMonitor()
-  : current_wait_(std::chrono::milliseconds(0)) {
-  }
+  ComplexMonitor() = default;
 
   virtual bool isFinished(const ComplexTaskResult &result) override {
     if (result.finished_) {
@@ -160,7 +162,7 @@ class ComplexMonitor : public utils::AfterExecute<ComplexTaskResult> {
   }
 
  private:
-  std::atomic<std::chrono::milliseconds> current_wait_;
+  std::atomic<std::chrono::milliseconds> current_wait_ {std::chrono::milliseconds(0)};
 };
 
 } /* namespace utils */

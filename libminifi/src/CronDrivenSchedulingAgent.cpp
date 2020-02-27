@@ -52,7 +52,7 @@ utils::ComplexTaskResult CronDrivenSchedulingAgent::run(const std::shared_ptr<co
           // we may be woken up a little early so that we can honor our time.
           // in this case we can return the next time to run with the expectation
           // that the wakeup mechanism gets more granular.
-          return utils::ComplexTaskResult::Retry(std::chrono::duration_cast<std::chrono::milliseconds>(result - from));
+          return utils::ComplexTaskResult::RetryIn(std::chrono::duration_cast<std::chrono::milliseconds>(result - from));
         }
       } else {
         Bosma::Cron schedule(processor->getCronPeriod());
@@ -67,13 +67,13 @@ utils::ComplexTaskResult CronDrivenSchedulingAgent::run(const std::shared_ptr<co
 
       if (processor->isYield()) {
         // Honor the yield
-        return utils::ComplexTaskResult::Retry(std::chrono::milliseconds(processor->getYieldTime()));
+        return utils::ComplexTaskResult::RetryIn(std::chrono::milliseconds(processor->getYieldTime()));
       } else if (shouldYield && this->bored_yield_duration_ > 0) {
         // No work to do or need to apply back pressure
-        return utils::ComplexTaskResult::Retry(std::chrono::milliseconds(this->bored_yield_duration_));
+        return utils::ComplexTaskResult::RetryIn(std::chrono::milliseconds(this->bored_yield_duration_));
       }
     }
-    return utils::ComplexTaskResult::Retry(std::chrono::duration_cast<std::chrono::milliseconds>(result - from));
+    return utils::ComplexTaskResult::RetryIn(std::chrono::duration_cast<std::chrono::milliseconds>(result - from));
   }
   return utils::ComplexTaskResult::Done();
 }
