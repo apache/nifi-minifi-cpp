@@ -80,7 +80,7 @@ class ComponentManifest : public DeviceInformation {
     return CoreComponent::getName();
   }
 
-  virtual std::vector<SerializedResponseNode> serialize() const {
+  virtual std::vector<SerializedResponseNode> serialize() {
     std::vector<SerializedResponseNode> serialized;
     SerializedResponseNode resp;
     resp.name = "componentManifest";
@@ -315,7 +315,7 @@ class ExternalManifest : public ComponentManifest {
       : ComponentManifest(name) {
   }
 
-  virtual std::vector<SerializedResponseNode> serialize() const {
+  virtual std::vector<SerializedResponseNode> serialize() {
     std::vector<SerializedResponseNode> serialized;
     SerializedResponseNode resp;
     resp.name = "componentManifest";
@@ -343,7 +343,7 @@ class Bundles : public DeviceInformation {
     return "bundles";
   }
 
-  std::vector<SerializedResponseNode> serialize() const {
+  std::vector<SerializedResponseNode> serialize() {
     std::vector<SerializedResponseNode> serialized;
     for (auto group : AgentBuild::getExtensions()) {
       SerializedResponseNode bundle;
@@ -426,7 +426,7 @@ class AgentStatus : public StateMonitorNode {
     repositories_ = repositories;
   }
 
-  std::vector<SerializedResponseNode> serialize() const {
+  std::vector<SerializedResponseNode> serialize() {
     std::vector<SerializedResponseNode> serialized;
 
     SerializedResponseNode uptime;
@@ -561,7 +561,7 @@ class AgentManifest : public DeviceInformation {
     return "agentManifest";
   }
 
-  std::vector<SerializedResponseNode> serialize() const {
+  std::vector<SerializedResponseNode> serialize() {
     static std::vector<SerializedResponseNode> serialized;
     if (serialized.empty()) {
       SerializedResponseNode ident;
@@ -645,7 +645,7 @@ public:
 
 protected:
 
-  std::vector<SerializedResponseNode> serialize() const {
+  std::vector<SerializedResponseNode> serialize() {
     std::vector<SerializedResponseNode> serialized;
 
     SerializedResponseNode ident;
@@ -698,7 +698,7 @@ public:
     return "agentInfo";
   }
 
-  std::vector<SerializedResponseNode> serialize() const {
+  std::vector<SerializedResponseNode> serialize() {
     std::vector<SerializedResponseNode> serialized(AgentNode::serialize());
 
     AgentStatus status("status");
@@ -738,7 +738,7 @@ class AgentInformation : public AgentInformationWithoutManifest {
     return "agentInfo";
   }
 
-  std::vector<SerializedResponseNode> serialize() const {
+  std::vector<SerializedResponseNode> serialize() {
     std::vector<SerializedResponseNode> serialized(AgentInformationWithoutManifest::serialize());
     auto manifest = getAgentManifest();
     serialized.insert(serialized.end(), std::make_move_iterator(manifest.begin()), std::make_move_iterator(manifest.end()));
@@ -767,7 +767,7 @@ public:
     return "agentInfo";
   }
 
-  std::vector<SerializedResponseNode> serialize() const {
+  std::vector<SerializedResponseNode> serialize() {
     std::vector<SerializedResponseNode> serialized(AgentNode::serialize());
     auto manifest = getAgentManifest();
     serialized.insert(serialized.end(), std::make_move_iterator(manifest.begin()), std::make_move_iterator(manifest.end()));

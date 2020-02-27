@@ -353,7 +353,7 @@ class DeviceInfoNode : public DeviceInformation {
     return "deviceInfo";
   }
 
-  std::vector<SerializedResponseNode> serialize() const {
+  std::vector<SerializedResponseNode> serialize() {
     std::vector<SerializedResponseNode> serialized;
 
     SerializedResponseNode identifier;

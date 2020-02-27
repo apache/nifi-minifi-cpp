@@ -93,7 +93,7 @@ class FlowVersion : public DeviceInformation {
     identifier = std::make_shared<FlowIdentifier>(url, bucket_id, flow_id);
   }
 
-  std::vector<SerializedResponseNode> serialize() const {
+  std::vector<SerializedResponseNode> serialize() {
     std::lock_guard<std::mutex> lock(guard);
     std::vector<SerializedResponseNode> serialized;
     SerializedResponseNode ru;
@@ -169,7 +169,7 @@ class FlowInformation : public FlowMonitor {
     return "flowInfo";
   }
 
-  std::vector<SerializedResponseNode> serialize() const {
+  std::vector<SerializedResponseNode> serialize() {
     std::vector<SerializedResponseNode> serialized;
 
     SerializedResponseNode fv;
