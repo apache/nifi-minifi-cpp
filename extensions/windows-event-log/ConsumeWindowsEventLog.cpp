@@ -280,11 +280,17 @@ void ConsumeWindowsEventLog::onTrigger(const std::shared_ptr<core::ProcessContex
     return;
   }
 
-  const auto commitAndSaveBookmark = [&] (const std::wstring& bookmarkXml){
-    const auto before_commit = std::chrono::steady_clock::now();
+  struct TimeDiff {
+    auto operator()() const {
+      return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - time_).count();
+    }
+    const decltype(std::chrono::steady_clock::now()) time_ = std::chrono::steady_clock::now();
+  };
+
+  const auto commitAndSaveBookmark = [&] (const std::wstring& bookmarkXml) {
+    const TimeDiff timeDiff;
     session->commit();
-    logger_->log_debug("processQueue commit took %llu ms",
-                       std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - before_commit).count());
+    logger_->log_debug("processQueue commit took %" PRIu64 " ms", (uint64_t)timeDiff());
 
     pBookmark_->saveBookmarkXml(bookmarkXml);
 
@@ -297,11 +303,9 @@ void ConsumeWindowsEventLog::onTrigger(const std::shared_ptr<core::ProcessContex
   };
 
   size_t eventCount = 0;
-  const auto before_time = std::chrono::steady_clock::now();
+  const TimeDiff timeDiff;
   utils::ScopeGuard timeGuard([&]() {
-    logger_->log_debug("processed %zu Events in %llu ms",
-                       eventCount,
-                       std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - before_time).count());
+    logger_->log_debug("processed %zu Events in %"  PRIu64 " ms", eventCount, (uint64_t)timeDiff());
   });
 
   size_t commitAndSaveBookmarkCount = 0;
