@@ -29,6 +29,7 @@
 #include <iostream>
 #include <memory>
 #include <regex>
+#include <cinttypes>
 
 #include "wel/MetadataWalker.h"
 #include "wel/XMLString.h"
@@ -48,6 +49,8 @@ namespace apache {
 namespace nifi {
 namespace minifi {
 namespace processors {
+
+#define LOG_LAST_ERROR(func) logger_->log_error("!"#func" error %x", GetLastError())
 
 // ConsumeWindowsEventLog
 const std::string ConsumeWindowsEventLog::ProcessorName("ConsumeWindowsEventLog");
@@ -192,8 +195,6 @@ bool ConsumeWindowsEventLog::insertHeaderName(wel::METADATA_NAMES &header, const
 }
 
 void ConsumeWindowsEventLog::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
-  sessionFactory_ = sessionFactory;
-
   context->getProperty(IdentifierMatcher.getName(), regex_);
   context->getProperty(ResolveAsAttributes.getName(), resolve_as_attributes_);
   context->getProperty(IdentifierFunction.getName(), apply_identifier_function_);
@@ -232,10 +233,10 @@ void ConsumeWindowsEventLog::onSchedule(const std::shared_ptr<core::ProcessConte
     if (GetSystemDirectory(systemDir, sizeof(systemDir))) {
       hMsobjsDll_ = LoadLibrary((systemDir + std::string("\\msobjs.dll")).c_str());
       if (!hMsobjsDll_) {
-        logger_->log_error("!LoadLibrary error %x", GetLastError());
+        LOG_LAST_ERROR(LoadLibrary);
       }
     } else {
-      logger_->log_error("!GetSystemDirectory error %x", GetLastError());
+      LOG_LAST_ERROR(GetSystemDirectory);
     }
   }
 
@@ -261,7 +262,7 @@ void ConsumeWindowsEventLog::onSchedule(const std::shared_ptr<core::ProcessConte
   }
 
   context->getProperty(MaxBufferSize.getName(), maxBufferSize_);
-  logger_->log_debug("ConsumeWindowsEventLog: maxBufferSize_ %lld", maxBufferSize_);
+  logger_->log_debug("ConsumeWindowsEventLog: maxBufferSize_ %" PRIu64, maxBufferSize_);
 
   provenanceUri_ = "winlog://" + computerName_ + "/" + channel_ + "?" + query;
 }
@@ -280,14 +281,15 @@ void ConsumeWindowsEventLog::onTrigger(const std::shared_ptr<core::ProcessContex
   }
 
   const auto commitAndSaveBookmark = [&] (const std::wstring& bookmarkXml){
-    const auto before_commit = std::chrono::high_resolution_clock::now();
+    const auto before_commit = std::chrono::steady_clock::now();
     session->commit();
     logger_->log_debug("processQueue commit took %llu ms",
-      std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - before_commit).count());
+                       std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - before_commit).count());
 
     pBookmark_->saveBookmarkXml(bookmarkXml);
 
     if (session->outgoingConnectionsFull("success")) {
+      logger_->log_debug("outgoingConnectionsFull");
       return false;
     }
 
@@ -295,9 +297,9 @@ void ConsumeWindowsEventLog::onTrigger(const std::shared_ptr<core::ProcessContex
   };
 
   size_t eventCount = 0;
-  const auto before_time = std::chrono::high_resolution_clock::now();
+  const auto before_time = std::chrono::steady_clock::now();
   utils::ScopeGuard timeGuard([&]() {
-    logger_->log_debug("processed %d Events in %llu ms",
+    logger_->log_debug("processed %zu Events in %llu ms",
                        eventCount,
                        std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - before_time).count());
   });
@@ -307,7 +309,7 @@ void ConsumeWindowsEventLog::onTrigger(const std::shared_ptr<core::ProcessContex
 
   const auto hEventResults = EvtQuery(0, wstrChannel_.c_str(), wstrQuery_.c_str(), EvtQueryChannelPath);
   if (!hEventResults) {
-    logger_->log_error("!EvtQuery error: %d.", GetLastError());
+    LOG_LAST_ERROR(EvtQuery);
     return;
   }
   const utils::ScopeGuard guard_hEventResults([hEventResults]() { EvtClose(hEventResults); });
@@ -320,7 +322,7 @@ void ConsumeWindowsEventLog::onTrigger(const std::shared_ptr<core::ProcessContex
   }
 
   if (!EvtSeek(hEventResults, 1, hBookmark, 0, EvtSeekRelativeToBookmark)) {
-    logger_->log_error("!EvtSeek error: %d.", GetLastError());
+    LOG_LAST_ERROR(EvtSeek);
     return;
   }
 
@@ -329,9 +331,8 @@ void ConsumeWindowsEventLog::onTrigger(const std::shared_ptr<core::ProcessContex
     EVT_HANDLE hEvent{};
     DWORD dwReturned{};
     if (!EvtNext(hEventResults, 1, &hEvent, INFINITE, 0, &dwReturned)) {
-      DWORD status = ERROR_SUCCESS;
-      if (ERROR_NO_MORE_ITEMS != (status = GetLastError())) {
-        logger_->log_error("!EvtNext error %d.", status);
+      if (ERROR_NO_MORE_ITEMS != GetLastError()) {
+        LOG_LAST_ERROR(EvtNext);
       }
       break;
     }
@@ -434,7 +435,7 @@ void ConsumeWindowsEventLog::substituteXMLPercentageItems(pugi::xml_document& do
             // Add "" to xmlPercentageItemsResolutions_ - don't need to call FormaMessage for this 'key' again.
             xmlPercentageItemsResolutions_.insert({key, ""});
 
-            logger_->log_error("!FormatMessage error: %d. '%s' is not found in msobjs.dll.", GetLastError(), key.c_str());
+            logger_->log_error("!FormatMessage error: %x. '%s' is not found in msobjs.dll.", GetLastError(), key.c_str());
           }
         } else {
           value = it->second;
@@ -469,19 +470,19 @@ bool ConsumeWindowsEventLog::createEventRender(EVT_HANDLE hEvent, EventRender& e
   DWORD propertyCount = 0;
   EvtRender(NULL, hEvent, EvtRenderEventXml, size, 0, &used, &propertyCount);
   if (ERROR_INSUFFICIENT_BUFFER != GetLastError()) {
-    logger_->log_error("!EvtRender error %d.", GetLastError());
+    LOG_LAST_ERROR(EvtRender);
     return false;
   }
 
   if (used > maxBufferSize_) {
-    logger_->log_error("Dropping event %x because it couldn't be rendered within %ll bytes.", hEvent, maxBufferSize_);
+    logger_->log_error("Dropping event %x because it couldn't be rendered within %" PRIu64 " bytes.", hEvent, maxBufferSize_);
     return false;
   }
 
   size = used;
   std::vector<wchar_t> buf(size / 2 + 1);
   if (!EvtRender(NULL, hEvent, EvtRenderEventXml, size, &buf[0], &used, &propertyCount)) {
-    logger_->log_error("!EvtRender error: %d.", GetLastError());
+    LOG_LAST_ERROR(EvtRender);
     return false;
   }
 
@@ -595,7 +596,7 @@ void ConsumeWindowsEventLog::LogWindowsError()
     (LPTSTR)&lpMsg,
     0, NULL);
 
-  logger_->log_error("Error %d: %s\n", (int)error_id, (char *)lpMsg);
+  logger_->log_error("Error %x: %s\n", (int)error_id, (char *)lpMsg);
 
   LocalFree(lpMsg);
 }
