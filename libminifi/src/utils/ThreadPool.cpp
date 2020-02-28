@@ -129,12 +129,15 @@ void ThreadPool<T>::manageWorkers() {
     }
   }
 
-// likely don't have a thread manager
-  if (LIKELY(nullptr != thread_manager_)) {
+  if (nullptr != thread_manager_) {
     while (running_) {
       auto waitperiod = std::chrono::milliseconds(500);
       {
-        std::lock_guard<std::recursive_mutex> lock(manager_mutex_);
+        std::unique_lock<std::recursive_mutex> lock(manager_mutex_, std::try_to_lock);
+        if (!lock.owns_lock()) {
+          // Threadpool is being stopped/started or config is being changed, better wait a bit
+          std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        }
         if (thread_manager_->isAboveMax(current_workers_)) {
           auto max = thread_manager_->getMaxConcurrentTasks();
           auto differential = current_workers_ - max;
