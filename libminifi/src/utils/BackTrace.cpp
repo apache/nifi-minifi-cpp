@@ -16,63 +16,115 @@
 #include "utils/BackTrace.h"
 #ifdef HAS_EXECINFO
 #include <execinfo.h>
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
+#include <dlfcn.h>
+#ifdef __linux__
+#include <link.h>
+#endif
 #include <iostream>
 #include <utility>
+#include <cstring>
 #include <cxxabi.h>
 #endif
 
-void pull_trace(const uint8_t frames_to_skip) {
 #ifdef HAS_EXECINFO
-  void *stackBuffer[TRACE_BUFFER_SIZE + 1];
-
-  // retrieve current stack addresses
-  int trace_size = backtrace(stackBuffer, TRACE_BUFFER_SIZE);
-
-  char **symboltable = backtrace_symbols(stackBuffer, trace_size);
+namespace {
   /**
-   * we can skip the signal handler, call to pull_trace, and the first entry for backtrace_symbols
+   * Demangles a symbol name using the cxx abi.
+   * @param symbol_name the mangled name of the symbol
+   * @return the demangled name on success, empty string on failure
    */
-  for (int i = frames_to_skip; i < trace_size; i++) {
-    char *start_parenthetical = nullptr;
-    char *functor = nullptr;
-    char *stop_parenthetical = nullptr;
-
-    for (char *p = symboltable[i]; *p; ++p) {
-      if (*p == '(') {
-        start_parenthetical = p;
-      } else if (*p == '+') {
-        functor = p;
-      } else if (*p == ')' && functor) {
-        stop_parenthetical = p;
-        break;
-      }
-    }
-    bool hasFunc = start_parenthetical && functor && stop_parenthetical;
-    if (hasFunc && start_parenthetical < functor) {
-      *start_parenthetical++ = '\0';
-      *functor++ = '\0';
-      *stop_parenthetical = '\0';
-
-      /**
-       * Demangle the names -- this requires calling cxx api to demangle the function name.
-       * not sending an allocated buffer, so we'll deallocate if status is zero.
-       */
-
-      int status;
-
-      auto demangled = abi::__cxa_demangle(start_parenthetical, nullptr, nullptr, &status);
-      if (status == 0) {
-        TraceResolver::getResolver().addTraceLine(symboltable[i], demangled);
-        free(demangled);
-      } else {
-        TraceResolver::getResolver().addTraceLine(symboltable[i], start_parenthetical);
-      }
+  std::string demangle_symbol(const char* symbol_name) {
+    int status;
+    char* demangled = abi::__cxa_demangle(symbol_name, nullptr, nullptr, &status);
+    if (status == 0) {
+      std::string demangled_name = demangled;
+      free(demangled);
+      return demangled_name;
     } else {
-      TraceResolver::getResolver().addTraceLine(symboltable[i], "");
+      return "";
     }
   }
+}  // namespace
+#endif
 
-  free(symboltable);
+void pull_trace(uint8_t frames_to_skip /* = 1 */) {
+#ifdef HAS_EXECINFO
+  void* stack_buffer[TRACE_BUFFER_SIZE + 1];
+
+  /* Get the backtrace of the current thread */
+  int trace_size = backtrace(stack_buffer, TRACE_BUFFER_SIZE);
+
+  /* We can skip the signal handler, call to pull_trace, and the first entry for backtrace_symbols */
+  for (int i = frames_to_skip; i < trace_size; i++) {
+    const char* file_name = "???";
+    const char* symbol_name = nullptr;
+    uintptr_t symbol_offset = 0;
+
+    /* Translate the address to symbolic information */
+    Dl_info dl_info{};
+#ifdef __linux__
+    struct link_map* l_map = nullptr;
+    int res = dladdr1(stack_buffer[i], &dl_info, reinterpret_cast<void**>(&l_map), RTLD_DL_LINKMAP);
+#else
+    int res = dladdr(stack_buffer[i], &dl_info);
+#endif
+    if (res == 0 || dl_info.dli_fname == nullptr || dl_info.dli_fname[0] == '\0') {
+      /* We could not determine symbolic information for this address*/
+      TraceResolver::getResolver().addTraceLine(file_name, symbol_name, symbol_offset);
+      continue;
+    }
+
+    /* Determine the filename of the shared object */
+    if (dl_info.dli_fname != nullptr) {
+      const char* last_slash = nullptr;
+      /* If the shared object name is a full path, we still only want the filename component */
+      if ((last_slash = strrchr(dl_info.dli_fname, '/')) != nullptr) {
+        file_name = last_slash + 1;
+      } else {
+        file_name = dl_info.dli_fname;
+      }
+    }
+
+    /* Determine the symbol name */
+    std::string demangled_symbol_name;
+    if (dl_info.dli_sname != nullptr) {
+      symbol_name = dl_info.dli_sname;
+
+      /* Try to demangle the symbol name */
+      demangled_symbol_name = demangle_symbol(symbol_name);
+      if (!demangled_symbol_name.empty()) {
+        symbol_name = demangled_symbol_name.c_str();
+      }
+    } else {
+      /* If we could not determine the symbol name, we will use the filename instead */
+      symbol_name = file_name;
+    }
+
+    /* Determine our offset */
+    uintptr_t base_address = 0;
+    if (dl_info.dli_sname != nullptr) {
+      /* If we could determine our symbol we will display our offset from the address of the symbol */
+      base_address = reinterpret_cast<uintptr_t>(dl_info.dli_saddr);
+    } else {
+      /* Otherwise we will display our offset from base address of the shared object */
+#ifdef __linux__
+      /*
+       * glibc uses l_addr from the link map instead of dli_fbase in backtrace_symbols for calculating this offset.
+       * I could not find a difference between the two in my limited measurements, but we will use it too, just to be sure.
+       */
+      if (l_map != nullptr) {
+        dl_info.dli_fbase = reinterpret_cast<void*>(l_map->l_addr);
+      }
+#endif
+      base_address = reinterpret_cast<uintptr_t>(dl_info.dli_fbase);
+    }
+    symbol_offset = reinterpret_cast<uintptr_t>(stack_buffer[i]) - base_address;
+
+    TraceResolver::getResolver().addTraceLine(file_name, symbol_name, symbol_offset);
+  }
 #endif
 }
 

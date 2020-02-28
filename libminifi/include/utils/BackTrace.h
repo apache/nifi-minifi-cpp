@@ -130,6 +130,22 @@ class TraceResolver {
   }
 
   /**
+   * Adds a trace line in the format "<file_name> @ <symbol_name> + <symbol_offset>", if symbol_name is not nullptr,
+   * "<file_name>" otherwise.
+   * @param file_name the filename of the shared object
+   * @param symbol_name the name of the symbol (or of the shared object, if the offset is supplied from that)
+   * @param symbol_offset offset from the base address of the symbol (or the shared object)
+   */
+  void addTraceLine(const char* file_name, const char* symbol_name, uintptr_t symbol_offset) {
+    std::stringstream line;
+    line << file_name;
+    if (symbol_name != nullptr) {
+      line << " @ " << symbol_name << " + " << symbol_offset;
+    }
+    trace_.addLine(line.str());
+  }
+
+  /**
    * Returns the thread handle reference in the native format.
    */
   std::thread::native_handle_type getThreadHandle() {
