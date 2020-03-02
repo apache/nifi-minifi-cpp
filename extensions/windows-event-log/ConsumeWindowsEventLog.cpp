@@ -280,7 +280,7 @@ void ConsumeWindowsEventLog::onTrigger(const std::shared_ptr<core::ProcessContex
 
   struct TimeDiff {
     auto operator()() const {
-      return static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - time_).count());
+      return int64_t{ std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - time_).count() };
     }
     const decltype(std::chrono::steady_clock::now()) time_ = std::chrono::steady_clock::now();
   };
