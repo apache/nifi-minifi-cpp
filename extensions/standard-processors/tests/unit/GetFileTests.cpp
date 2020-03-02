@@ -77,7 +77,8 @@ TEST_CASE("GetFile: MaxSize", "[getFileFifo]") {  // NOLINT
   hidden_in_file_stream << "But noone has ever seen it" << std::endl;
   hidden_in_file_stream.close();
 #ifdef WIN32
-  REQUIRE(SetFileAttributesA(hidden_in_file.c_str(), FILE_ATTRIBUTE_HIDDEN));
+  const auto hide_file_err = FileUtils::hide_file(hidden_in_file.c_str());
+  REQUIRE(!hide_file_err);
 #endif
   plan->runNextProcessor();  // Get
   plan->runNextProcessor();  // Log

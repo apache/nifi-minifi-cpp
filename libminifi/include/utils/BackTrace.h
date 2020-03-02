@@ -37,14 +37,14 @@
 class TraceResolver;
 
 /**
- * Purpose: Backtrace is a movable vector of trace lines.
+ * Purpose: Backtrace is a vector of trace lines.
  *
  */
 class BackTrace {
  public:
   BackTrace() = default;
 
-  explicit BackTrace(std::string name)
+  BackTrace(std::string name)
       : name_(std::move(name)) {
   }
 

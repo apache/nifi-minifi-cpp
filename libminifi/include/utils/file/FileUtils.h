@@ -112,25 +112,18 @@ class FileUtils {
 #endif
   }
 
-  static std::string create_temp_directory(char * const format) {
+  static std::string create_temp_directory(char* format) {
 #ifdef WIN32
-    std::string tempDirectory;
     char tempBuffer[MAX_PATH];
-    auto ret = GetTempPath(MAX_PATH, tempBuffer);
+    const auto ret = GetTempPath(MAX_PATH, tempBuffer);
     if (ret <= MAX_PATH && ret != 0)
     {
-      static std::shared_ptr<minifi::utils::IdGenerator> generator;
-      if (!generator) {
-        generator = minifi::utils::IdGenerator::getIdGenerator();
-        generator->initialize(std::make_shared<minifi::Properties>());
-      }
-      tempDirectory = tempBuffer;
-      minifi::utils::Identifier id;
-      generator->generate(id);
-      tempDirectory += id.to_string();
+      const std::string tempDirectory = tempBuffer
+          + minifi::utils::IdGenerator::getIdGenerator()->generate().to_string();
       create_dir(tempDirectory);
+      return tempDirectory;
     }
-    return tempDirectory;
+    return {};
 #else
     if (mkdtemp(format) == nullptr) { return ""; }
     return format;
@@ -691,6 +684,16 @@ class FileUtils {
     }
     return get_parent_path(executable_path);
   }
+
+#ifdef WIN32
+  static std::error_code hide_file(const char* const file_name) {
+    const bool success = SetFileAttributesA(file_name, FILE_ATTRIBUTE_HIDDEN);
+    if (!success) {
+      return { GetLastError(), std::system_category() };
+    }
+    return {};
+  }
+#endif /* WIN32 */
 };
 
 } /* namespace file */

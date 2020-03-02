@@ -58,7 +58,7 @@ int RocksDbStream::writeData(std::vector<uint8_t> &buf, int buflen) {
     throw minifi::Exception{ExceptionType::GENERAL_EXCEPTION, "negative buflen"};
   }
 
-  if (buf.size() < buflen) {
+  if (buf.size() < static_cast<size_t>(buflen)) {
     return -1;
   }
   return writeData(buf.data(), buflen);

@@ -199,11 +199,8 @@ TEST_CASE("Test GetFile Ignore", "[getfileCreate3]") {
 #ifdef WIN32
   {
     // hide file on windows, because a . prefix in the filename doesn't imply a hidden file
-    const bool result = SetFileAttributesA(hidden_file_name.c_str(), FILE_ATTRIBUTE_HIDDEN);
-    if (!result) {
-      throw std::runtime_error{ std::system_category().message(GetLastError()) };
-    }
-    REQUIRE(result);
+    const auto hide_file_error = FileUtils::hide_file(hidden_file_name);
+    REQUIRE(!hide_file_error);
   }
 #endif /* WIN32 */
 
