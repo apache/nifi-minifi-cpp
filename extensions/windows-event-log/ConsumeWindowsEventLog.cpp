@@ -288,7 +288,7 @@ void ConsumeWindowsEventLog::onTrigger(const std::shared_ptr<core::ProcessContex
   const auto commitAndSaveBookmark = [&] (const std::wstring& bookmarkXml) {
     const TimeDiff timeDiff;
     session->commit();
-    logger_->log_debug("processQueue commit took %" PRIu64 " ms", timeDiff());
+    logger_->log_debug("processQueue commit took %" PRId64 " ms", timeDiff());
 
     pBookmark_->saveBookmarkXml(bookmarkXml);
 
@@ -303,7 +303,7 @@ void ConsumeWindowsEventLog::onTrigger(const std::shared_ptr<core::ProcessContex
   size_t eventCount = 0;
   const TimeDiff timeDiff;
   utils::ScopeGuard timeGuard([&]() {
-    logger_->log_debug("processed %zu Events in %"  PRIu64 " ms", eventCount, timeDiff());
+    logger_->log_debug("processed %zu Events in %"  PRId64 " ms", eventCount, timeDiff());
   });
 
   size_t commitAndSaveBookmarkCount = 0;
