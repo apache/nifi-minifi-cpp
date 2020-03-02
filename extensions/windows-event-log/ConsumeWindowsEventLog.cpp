@@ -50,8 +50,6 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-#define LOG_LAST_ERROR(func) logger_->log_error("!"#func" error %x", GetLastError())
-
 // ConsumeWindowsEventLog
 const std::string ConsumeWindowsEventLog::ProcessorName("ConsumeWindowsEventLog");
 
@@ -282,7 +280,7 @@ void ConsumeWindowsEventLog::onTrigger(const std::shared_ptr<core::ProcessContex
 
   struct TimeDiff {
     auto operator()() const {
-      return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - time_).count();
+      return static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - time_).count());
     }
     const decltype(std::chrono::steady_clock::now()) time_ = std::chrono::steady_clock::now();
   };
@@ -290,7 +288,7 @@ void ConsumeWindowsEventLog::onTrigger(const std::shared_ptr<core::ProcessContex
   const auto commitAndSaveBookmark = [&] (const std::wstring& bookmarkXml) {
     const TimeDiff timeDiff;
     session->commit();
-    logger_->log_debug("processQueue commit took %" PRIu64 " ms", (uint64_t)timeDiff());
+    logger_->log_debug("processQueue commit took %" PRIu64 " ms", timeDiff());
 
     pBookmark_->saveBookmarkXml(bookmarkXml);
 
@@ -305,7 +303,7 @@ void ConsumeWindowsEventLog::onTrigger(const std::shared_ptr<core::ProcessContex
   size_t eventCount = 0;
   const TimeDiff timeDiff;
   utils::ScopeGuard timeGuard([&]() {
-    logger_->log_debug("processed %zu Events in %"  PRIu64 " ms", eventCount, (uint64_t)timeDiff());
+    logger_->log_debug("processed %zu Events in %"  PRIu64 " ms", eventCount, timeDiff());
   });
 
   size_t commitAndSaveBookmarkCount = 0;
@@ -479,7 +477,7 @@ bool ConsumeWindowsEventLog::createEventRender(EVT_HANDLE hEvent, EventRender& e
   }
 
   if (used > maxBufferSize_) {
-    logger_->log_error("Dropping event %x because it couldn't be rendered within %" PRIu64 " bytes.", hEvent, maxBufferSize_);
+    logger_->log_error("Dropping event because it couldn't be rendered within %" PRIu64 " bytes.", maxBufferSize_);
     return false;
   }
 

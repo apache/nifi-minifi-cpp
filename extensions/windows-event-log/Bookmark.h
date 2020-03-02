@@ -14,6 +14,8 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
+#define LOG_LAST_ERROR(func) logger_->log_error("!"#func" error %x", GetLastError())
+
 class Bookmark
 {
 public:
