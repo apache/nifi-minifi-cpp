@@ -186,7 +186,8 @@ TEST_CASE("TestGet", "[test1]") {
   configuration->set("controller.socket.port", "9997");
   auto ptr = std::make_shared<TestUpdateSink>(controller);
   minifi::c2::ControllerSocketProtocol protocol("testprotocol");
-  protocol.initialize(nullptr, ptr, configuration);
+  std::shared_ptr<core::controller::ControllerServiceProvider> controllerService;
+  protocol.initialize(controllerService, ptr, configuration);
 
   auto stream_factory = minifi::io::StreamFactory::getInstance(configuration);
 
@@ -219,7 +220,8 @@ TEST_CASE("TestClear", "[test1]") {
   configuration->set("controller.socket.port", "9997");
   auto ptr = std::make_shared<TestUpdateSink>(controller);
   minifi::c2::ControllerSocketProtocol protocol("testprotocol");
-  protocol.initialize(nullptr, ptr, configuration);
+  std::shared_ptr<core::controller::ControllerServiceProvider> controllerService;
+  protocol.initialize(controllerService, ptr, configuration);
 
   auto stream_factory = minifi::io::StreamFactory::getInstance(configuration);
 
@@ -255,7 +257,8 @@ TEST_CASE("TestUpdate", "[test1]") {
   configuration->set("controller.socket.port", "9997");
   auto ptr = std::make_shared<TestUpdateSink>(controller);
   minifi::c2::ControllerSocketProtocol protocol("testprotocol");
-  protocol.initialize(nullptr, ptr, configuration);
+  std::shared_ptr<core::controller::ControllerServiceProvider> controllerService;
+  protocol.initialize(controllerService, ptr, configuration);
 
   auto stream_factory = minifi::io::StreamFactory::getInstance(configuration);
 

@@ -75,49 +75,6 @@ class OperationWatcher : public utils::AfterExecute<Update> {
 
 };
 
-class TreeUpdateListener {
- public:
-  TreeUpdateListener(const std::shared_ptr<response::NodeReporter> &source, const std::shared_ptr<response::ResponseNodeSink> &sink)
-      : running_(true),
-        source_(source),
-        sink_(sink){
-
-    function_ = [&]() {
-      while(running_) {
-        std::vector<std::shared_ptr<response::ResponseNode>> metric_vector;
-        // simple pass through for the metrics
-        if (nullptr != source_ && nullptr != sink_) {
-          source_->getResponseNodes(metric_vector,0);
-          for(auto metric : metric_vector) {
-            sink_->setResponseNodes(metric);
-          }
-        }
-        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-      }
-      return MetricsUpdate(UpdateState::READ_COMPLETE);
-    };
-  }
-
-  void stop() {
-    running_ = false;
-  }
-
-  std::function<Update()> &getFunction() {
-    return function_;
-  }
-
-  std::future<Update> &getFuture() {
-    return future_;
-  }
-
- private:
-  std::function<Update()> function_;
-  std::future<Update> future_;
-  std::atomic<bool> running_;
-  std::shared_ptr<response::NodeReporter> source_;
-  std::shared_ptr<response::ResponseNodeSink> sink_;
-};
-
 } /* namespace metrics */
 } /* namespace state */
 } /* namespace minifi */

@@ -36,7 +36,7 @@ AgentPrinter::AgentPrinter(std::string name, utils::Identifier uuid)
       logger_(logging::LoggerFactory<AgentPrinter>::getLogger()) {
 }
 
-void AgentPrinter::initialize(const std::shared_ptr<core::controller::ControllerServiceProvider> &controller, const std::shared_ptr<state::StateMonitor> &updateSink,
+void AgentPrinter::initialize(const std::weak_ptr<core::controller::ControllerServiceProvider> &controller, const std::weak_ptr<state::StateMonitor> &updateSink,
                               const std::shared_ptr<Configure> &configure) {
   HeartBeatReporter::initialize(controller, updateSink, configure);
 }

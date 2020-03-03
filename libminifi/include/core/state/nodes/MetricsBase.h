@@ -208,38 +208,28 @@ class NodeReporter {
   virtual ~NodeReporter() {
   }
 
+  //This function will be removed when we remove TreeUpdateListener class
+  virtual int16_t getResponseNodes(std::vector<std::shared_ptr<ResponseNode>> &metric_vector, uint16_t metricsClass) {
+    return 0;
+  }
   /**
-   * Retrieves all root response nodes from this source.
-   * @param metric_vector -- metrics will be placed in this vector.
-   * @return result of the get operation.
-   *  0 Success
-   *  1 No error condition, but cannot obtain lock in timely manner.
-   *  -1 failure
+   * Retrieves metrics node
+   * @return metrics response node
    */
-  virtual int16_t getResponseNodes(std::vector<std::shared_ptr<ResponseNode>> &metric_vector, uint16_t metricsClass) = 0;
+  virtual std::shared_ptr<ResponseNode> getMetricsNode() const = 0;
 
   /**
-   * Retrieves all metrics from this source.
-   * @param metric_vector -- metrics will be placed in this vector.
-   * @return result of the get operation.
-   *  0 Success
-   *  1 No error condition, but cannot obtain lock in timely manner.
-   *  -1 failure
+   * Retrieves root nodes configured to be included in heartbeat
+   * @param includeManifest -- determines if manifest is to be included
+   * @return a list of response nodes
    */
-  virtual int16_t getMetricsNodes(std::vector<std::shared_ptr<ResponseNode>> &metric_vector, uint16_t metricsClass) = 0;
+  virtual std::vector<std::shared_ptr<ResponseNode>> getHeartbeatNodes(bool includeManifest) const = 0;
 
   /**
-   * Retrieves agent information with manifest only from this source.
-   * @param manifest_vector -- manifest nodes vector.
-   * @return 0 on Success, -1 on failure
+   * Retrieves the agent manifest to be sent as a response to C2 DESCRIBE manifest
+   * @return the agent manifest response node
    */
-  virtual int16_t getManifestNodes(std::vector<std::shared_ptr<state::response::ResponseNode>>& manifest_vector) const = 0;
-
-  /**
-   * Returns a response node containing all agent information with manifest and agent status
-   * @return a shared pointer to agent information
-   */
-  virtual std::shared_ptr<state::response::ResponseNode> getAgentInformation() const = 0;
+  virtual std::shared_ptr<state::response::ResponseNode> getAgentManifest() const = 0;
 };
 
 /**
@@ -269,7 +259,7 @@ class ResponseNodeSink {
    *  1 No error condition, but cannot obtain lock in timely manner.
    *  -1 failure
    */
-//  virtual int16_t setMetricsNodes(const std::shared_ptr<ResponseNode> &metrics) = 0;
+  virtual int16_t setMetricsNodes(const std::shared_ptr<ResponseNode> &metrics) = 0;
 };
 
 } /* namespace metrics */

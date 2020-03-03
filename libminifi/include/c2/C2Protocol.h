@@ -40,7 +40,7 @@ class C2Protocol : public core::Connectable {
 
   }
 
-  virtual void initialize(const std::shared_ptr<core::controller::ControllerServiceProvider> &controller, const std::shared_ptr<Configure> &configure) {
+  virtual void initialize(const std::weak_ptr<core::controller::ControllerServiceProvider> &controller, const std::shared_ptr<Configure> &configure) {
     controller_ = controller;
     configuration_ = configure;
   }
@@ -105,7 +105,7 @@ class C2Protocol : public core::Connectable {
 
   std::atomic<bool> running_;
 
-  std::shared_ptr<core::controller::ControllerServiceProvider> controller_;
+  std::weak_ptr<core::controller::ControllerServiceProvider> controller_;
 
   std::shared_ptr<Configure> configuration_;
 };

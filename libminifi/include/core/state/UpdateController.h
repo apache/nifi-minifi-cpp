@@ -256,12 +256,26 @@ class StateMonitor : public StateController {
 class UpdateController {
  public:
 
-  virtual std::vector<std::function<Update()>> getFunctions() = 0;
-
-  virtual ~UpdateController() {
-
+  UpdateController()
+      : controller_running_(false) {
   }
 
+  virtual std::vector<std::function<Update()>> getFunctions() {
+    return {};
+  }
+
+  virtual void start() = 0;
+
+  virtual void stop() = 0;
+
+  std::atomic<bool>& isControllerRunning() {
+    return controller_running_;
+  }
+ protected:
+
+  std::atomic<bool> controller_running_;
+
+  virtual ~UpdateController() = default;
 };
 
 } /* namespace state */

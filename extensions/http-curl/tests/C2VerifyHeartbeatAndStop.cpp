@@ -83,8 +83,6 @@ class VerifyC2Heartbeat : public VerifyC2Base {
       : VerifyC2Base(isSecure) {
   }
 
-  virtual ~VerifyC2Heartbeat() = default;
-
   virtual void testSetup() {
     LogTestController::getInstance().setTrace<minifi::c2::C2Agent>();
     LogTestController::getInstance().setDebug<minifi::c2::RESTSender>();
@@ -101,8 +99,8 @@ class VerifyC2Heartbeat : public VerifyC2Base {
     assert(LogTestController::getInstance().contains("C2Agent] [debug] Stopping component FlowController") == true);
   }
 
-  void configureC2RootClasses() {
-    configuration->set("nifi.c2.root.classes", "DeviceInfoNode,AgentInformation,FlowInformation");
+  void configureFullHeartbeat() {
+    configuration->set("nifi.c2.full.heartbeat", "true");
   }
 };
 
@@ -112,10 +110,8 @@ public:
       : VerifyC2Heartbeat(isSecure) {
   }
 
-  virtual ~VerifyLightWeightC2Heartbeat() = default;
-
-  void configureC2RootClasses() {
-    configuration->set("nifi.c2.root.classes", "DeviceInfoNode,AgentInformationWithoutManifest,FlowInformation");
+  void configureFullHeartbeat() {
+    configuration->set("nifi.c2.full.heartbeat", "false");
   }
 };
 

@@ -54,6 +54,7 @@
 #include "core/Connectable.h"
 #include "utils/HTTPClient.h"
 #include "io/NetworkPrioritizer.h"
+#include "io/validation.h"
 
 #ifdef _MSC_VER
 #ifndef PATH_MAX
@@ -173,6 +174,8 @@ void FlowController::initializePaths(const std::string &adjustedFilename) {
 FlowController::~FlowController() {
   stop(true);
   unload();
+  if (c2_agent_)
+    c2_agent_->stop();
   if (NULL != protocol_)
     delete protocol_;
   flow_file_repo_ = nullptr;
@@ -282,8 +285,6 @@ void FlowController::unload() {
     initialized_ = false;
     name_ = "";
   }
-
-  return;
 }
 
 void FlowController::load(const std::shared_ptr<core::ProcessGroup> &root, bool reload) {
@@ -414,6 +415,7 @@ void FlowController::initializeC2() {
 
   // don't need to worry about the return code, only whether class_str is defined.
   configuration_->get("nifi.c2.agent.class", "c2.agent.class", class_str);
+  configuration_->setAgentClass(class_str);
 
   if (configuration_->get(Configure::nifi_c2_enable, "c2.enable", c2_enable_str)) {
     bool enable_c2 = true;
@@ -450,13 +452,9 @@ void FlowController::initializeC2() {
 
   if (!c2_initialized_) {
     configuration_->setAgentIdentifier(identifier_str);
-    state::StateManager::initialize();
-    std::shared_ptr<c2::C2Agent> agent = std::make_shared<c2::C2Agent>(std::dynamic_pointer_cast<FlowController>(shared_from_this()), std::dynamic_pointer_cast<FlowController>(shared_from_this()),
+    c2_agent_ = std::make_shared<c2::C2Agent>(std::dynamic_pointer_cast<FlowController>(shared_from_this()), std::dynamic_pointer_cast<FlowController>(shared_from_this()),
                                                                        configuration_);
-    registerUpdateListener(agent, agent->getHeartBeatDelay());
-
-    state::StateManager::startMetrics(agent->getHeartBeatDelay());
-
+    c2_agent_->start();
     c2_initialized_ = true;
   } else {
     if (!flow_update_) {
@@ -486,6 +484,7 @@ void FlowController::initializeC2() {
 
     device_information_[repoMetrics->getName()] = repoMetrics;
 
+    /*
     std::shared_ptr<state::response::AgentInformationWithManifest> manifest = std::make_shared<state::response::AgentInformationWithManifest>("agentInformation");
     auto identifier = std::dynamic_pointer_cast<state::response::AgentIdentifier>(manifest);
 
@@ -494,6 +493,7 @@ void FlowController::initializeC2() {
       identifier->setAgentClass(class_str);
       agent_information_[manifest->getName()] = manifest;
     }
+    */
   }
 
   if (configuration_->get("nifi.c2.root.classes", class_csv)) {
@@ -917,57 +917,37 @@ int16_t FlowController::clearConnection(const std::string &connection) {
   return -1;
 }
 
-int16_t FlowController::getResponseNodes(std::vector<std::shared_ptr<state::response::ResponseNode>> &metric_vector, uint16_t metricsClass) {
+std::shared_ptr<state::response::ResponseNode> FlowController::getMetricsNode() const {
   std::lock_guard<std::mutex> lock(metrics_mutex_);
-
-  for (auto metric : root_response_nodes_) {
-    metric_vector.push_back(metric.second);
+  const auto iter = root_response_nodes_.find("metrics");
+  if (iter != root_response_nodes_.end()) {
+    return iter->second;
   }
-
-  return 0;
+  return nullptr;
 }
 
-int16_t FlowController::getMetricsNodes(std::vector<std::shared_ptr<state::response::ResponseNode>> &metric_vector, uint16_t metricsClass) {
-  std::lock_guard<std::mutex> lock(metrics_mutex_);
-  if (metricsClass == 0) {
-    for (auto metric : device_information_) {
-      metric_vector.push_back(metric.second);
+std::vector<std::shared_ptr<state::response::ResponseNode>> FlowController::getHeartbeatNodes(bool includeManifest) const {
+  std::string fullHb{"true"};
+  configuration_->get("nifi.c2.full.heartbeat", fullHb);
+  const bool include = includeManifest ? true : (fullHb == "true");
+
+  std::vector<std::shared_ptr<state::response::ResponseNode>> nodes;
+  for (const auto& entry : root_response_nodes_) {
+    auto identifier = std::dynamic_pointer_cast<state::response::AgentIdentifier>(entry.second);
+    if (identifier) {
+      identifier->includeAgentManifest(include);
     }
-  } else {
-    auto metrics = component_metrics_by_id_[metricsClass];
-    for (const auto &metric : metrics) {
-      metric_vector.push_back(metric);
-    }
+    nodes.push_back(entry.second);
   }
-  return 0;
+  return nodes;
 }
 
-int16_t FlowController::getManifestNodes(std::vector<std::shared_ptr<state::response::ResponseNode>>& manifest_vector) const {
-    std::lock_guard<std::mutex> lock(metrics_mutex_);
-    for (const auto& metric : agent_information_) {
-        manifest_vector.push_back(metric.second);
-    }
-    return 0;
-}
-
-std::shared_ptr<state::response::ResponseNode> FlowController::getAgentInformation() const {
-    auto agentInfo = std::make_shared<state::response::AgentInformation>("agentInfo");
-    auto identifier = std::dynamic_pointer_cast<state::response::AgentIdentifier>(agentInfo);
-
-    if (identifier != nullptr) {
-      std::string class_str;
-      configuration_->get("nifi.c2.agent.class", "c2.agent.class", class_str);
-
-      std::string identifier_str;
-      if (!configuration_->get("nifi.c2.agent.identifier", "c2.agent.identifier", identifier_str) || identifier_str.empty()) {
-        identifier_str = uuidStr_;
-      }
-
-      identifier->setIdentifier(identifier_str);
-      identifier->setAgentClass(class_str);
-      return agentInfo;
-    }
-    return nullptr;
+std::shared_ptr<state::response::ResponseNode> FlowController::getAgentManifest() const {
+  auto agentInfo = std::make_shared<state::response::AgentInformation>("agentInfo");
+  agentInfo->setIdentifier(configuration_->getAgentIdentifier());
+  agentInfo->setAgentClass(configuration_->getAgentClass());
+  agentInfo->includeAgentStatus(false);
+  return agentInfo;
 }
 
 std::vector<std::shared_ptr<state::StateController>> FlowController::getAllComponents() {

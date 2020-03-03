@@ -45,7 +45,7 @@ class AgentPrinter : public RESTProtocol, public HeartBeatReporter {
   /**
    * Initialize agent printer.
    */
-  virtual void initialize(const std::shared_ptr<core::controller::ControllerServiceProvider> &controller, const std::shared_ptr<state::StateMonitor> &updateSink,
+  virtual void initialize(const std::weak_ptr<core::controller::ControllerServiceProvider> &controller, const std::weak_ptr<state::StateMonitor> &updateSink,
                           const std::shared_ptr<Configure> &configure) override;
 
   /**

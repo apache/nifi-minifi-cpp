@@ -91,18 +91,11 @@ class VerifyC2Base : public CoapIntegrationBase {
  public:
   explicit VerifyC2Base(bool isSecure)
       : isSecure(isSecure) {
-    char format[] = "/tmp/ssth.XXXXXX";
-    dir = testController.createTempDirectory(format);
   }
 
   virtual void testSetup() {
     LogTestController::getInstance().setDebug<utils::HTTPClient>();
     LogTestController::getInstance().setDebug<LogTestController>();
-    std::fstream file;
-    ss << dir << "/" << "tstFile.ext";
-    file.open(ss.str(), std::ios::out);
-    file << "tempFile";
-    file.close();
   }
 
   void runAssertions() {
@@ -126,18 +119,15 @@ class VerifyC2Base : public CoapIntegrationBase {
     configuration->set("nifi.c2.rest.url", c2_url);
     configuration->set("nifi.c2.agent.heartbeat.period", "1000");
     configuration->set("nifi.c2.rest.url.ack", c2_url);
+    configuration->set("nifi.c2.root.classes", "DeviceInfoNode,AgentInformation,FlowInformation");
   }
 
   void cleanup() {
     LogTestController::getInstance().reset();
-    unlink(ss.str().c_str());
   }
 
  protected:
   bool isSecure;
-  std::string dir;
-  std::stringstream ss;
-  TestController testController;
 };
 
 class VerifyC2Describe : public VerifyC2Base {
@@ -153,8 +143,8 @@ class VerifyC2Describe : public VerifyC2Base {
     VerifyC2Base::testSetup();
   }
 
-  void configureC2RootClasses() {
-    configuration->set("nifi.c2.root.classes", "DeviceInfoNode,AgentInformationWithoutManifest,FlowInformation");
+  void configureFullHeartbeat() {
+    configuration->set("nifi.c2.full.heartbeat", "false");
   }
 };
 #endif /* LIBMINIFI_TEST_INTEGRATION_HTTPINTEGRATIONBASE_H_ */

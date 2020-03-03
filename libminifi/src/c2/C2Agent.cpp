@@ -38,7 +38,7 @@ namespace nifi {
 namespace minifi {
 namespace c2 {
 
-C2Agent::C2Agent(const std::shared_ptr<core::controller::ControllerServiceProvider> &controller, const std::shared_ptr<state::StateMonitor> &updateSink,
+C2Agent::C2Agent(const std::weak_ptr<core::controller::ControllerServiceProvider> &controller, const std::weak_ptr<state::StateMonitor> &updateSink,
                  const std::shared_ptr<Configure> &configuration)
     : heart_beat_period_(3000),
       max_c2_responses(5),
@@ -56,8 +56,9 @@ C2Agent::C2Agent(const std::shared_ptr<core::controller::ControllerServiceProvid
 
   last_run_ = std::chrono::steady_clock::now();
 
-  if (nullptr != controller_) {
-    update_service_ = std::static_pointer_cast<controllers::UpdatePolicyControllerService>(controller_->getControllerService(C2_AGENT_UPDATE_NAME));
+  auto sharedController = controller_.lock();
+  if (sharedController) {
+    update_service_ = std::static_pointer_cast<controllers::UpdatePolicyControllerService>(sharedController->getControllerService(C2_AGENT_UPDATE_NAME));
   }
 
   if (update_service_ == nullptr) {
@@ -110,7 +111,6 @@ C2Agent::C2Agent(const std::shared_ptr<core::controller::ControllerServiceProvid
       std::this_thread::sleep_for(std::chrono::milliseconds(heart_beat_period_ > 500 ? 500 : heart_beat_period_));
       return state::Update(state::UpdateStatus(state::UpdateState::READ_COMPLETE, false));
     };
-
   functions_.push_back(c2_producer_);
 
   c2_consumer_ = [&]() {
@@ -125,8 +125,24 @@ C2Agent::C2Agent(const std::shared_ptr<core::controller::ControllerServiceProvid
     }
     return state::Update(state::UpdateStatus(state::UpdateState::READ_COMPLETE, false));
   };
-
   functions_.push_back(c2_consumer_);
+}
+
+void C2Agent::start() {
+  controller_running_ = true;
+  heartbeat_thread_pool_.setMaxConcurrentTasks(2);
+  for (const auto& function : functions_) {
+    std::unique_ptr<utils::AfterExecute<state::Update>> after_execute(new state::UpdateRunner(isControllerRunning(), getHeartBeatDelay()));
+    utils::Worker<state::Update> functor(function, "c2processor", std::move(after_execute));
+    std::future<state::Update> future;
+    heartbeat_thread_pool_.execute(std::move(functor), future);
+  }
+  heartbeat_thread_pool_.start();
+}
+
+void C2Agent::stop() {
+  controller_running_ = false;
+  heartbeat_thread_pool_.shutdown();
 }
 
 void C2Agent::checkTriggers() {
@@ -275,60 +291,25 @@ void C2Agent::configure(const std::shared_ptr<Configure> &configure, bool reconf
 
 void C2Agent::performHeartBeat() {
   C2Payload payload(Operation::HEARTBEAT);
-
   logger_->log_trace("Performing heartbeat");
-
-  std::map<std::string, std::shared_ptr<state::response::ResponseNode>> metrics_copy;
-  {
-    std::lock_guard<std::timed_mutex> lock(metrics_mutex_);
-    if (metrics_map_.size() > 0) {
-      metrics_copy = std::move(metrics_map_);
-    }
-  }
-
-  if (metrics_copy.size() > 0) {
-    C2Payload metrics(Operation::HEARTBEAT);
-    metrics.setLabel("metrics");
-
-    for (auto metric : metrics_copy) {
-      if (metric.second->serialize().size() == 0)
-        continue;
-      C2Payload child_metric_payload(Operation::HEARTBEAT);
-      child_metric_payload.setLabel(metric.first);
-      serializeMetrics(child_metric_payload, metric.first, metric.second->serialize(), metric.second->isArray());
-      metrics.addPayload(std::move(child_metric_payload));
-    }
-    payload.addPayload(std::move(metrics));
-  }
-
-  for (auto metric : root_response_nodes_) {
-    C2Payload child_metric_payload(Operation::HEARTBEAT);
-    bool isArray{false};
-    std::string metricName;
-    std::vector<state::response::SerializedResponseNode> metrics;
-    std::shared_ptr<state::response::NodeReporter> reporter;
-    std::shared_ptr<state::response::ResponseNode> agentInfo;
-
-    // Send agent manifest in first heartbeat
-    if (!manifest_sent_
-        && (reporter = std::dynamic_pointer_cast<state::response::NodeReporter>(update_sink_))
-        && (agentInfo = reporter->getAgentInformation())
-        && metric.first == agentInfo->getName()) {
-      metricName = agentInfo->getName();
-      isArray = agentInfo->isArray();
-      metrics = agentInfo->serialize();
+  std::shared_ptr<state::response::NodeReporter> reporter = std::dynamic_pointer_cast<state::response::NodeReporter>(update_sink_.lock());
+  std::vector<std::shared_ptr<state::response::ResponseNode>> metrics;
+  if (reporter) {
+    if (!manifest_sent_) {
+      // include agent manifest for the first heartbeat
+      metrics = reporter->getHeartbeatNodes(true);
       manifest_sent_ = true;
     } else {
-      metricName = metric.first;
-      isArray = metric.second->isArray();
-      metrics = metric.second->serialize();
+      metrics = reporter->getHeartbeatNodes(false);
     }
-    child_metric_payload.setLabel(metricName);
-    if (isArray) {
-      child_metric_payload.setContainer(true);
+
+    for (const auto& metric : metrics) {
+      C2Payload child_metric_payload(Operation::HEARTBEAT);
+      child_metric_payload.setLabel(metric->getName());
+      child_metric_payload.setContainer(metric->isArray());
+      serializeMetrics(child_metric_payload, metric->getName(), metric->serialize(), metric->isArray());
+      payload.addPayload(std::move(child_metric_payload));
     }
-    serializeMetrics(child_metric_payload, metricName, metrics, isArray);
-    payload.addPayload(std::move(child_metric_payload));
   }
   C2Payload && response = protocol_.load()->consumePayload(payload);
 
@@ -425,18 +406,23 @@ void C2Agent::extractPayload(const C2Payload &resp) {
 }
 
 void C2Agent::handle_c2_server_response(const C2ContentResponse &resp) {
+  auto update_sink = update_sink_.lock();
   switch (resp.op) {
     case Operation::CLEAR:
       // we've been told to clear something
       if (resp.name == "connection") {
         for (auto connection : resp.operation_arguments) {
-          logger_->log_debug("Clearing connection %s", connection.second.to_string());
-          update_sink_->clearConnection(connection.second.to_string());
+          if (update_sink) {
+            logger_->log_debug("Clearing connection %s", connection.second.to_string());
+            update_sink->clearConnection(connection.second.to_string());
+          }
         }
         C2Payload response(Operation::ACKNOWLEDGE, resp.ident, false, true);
         enqueue_c2_response(std::move(response));
       } else if (resp.name == "repositories") {
-        update_sink_->drainRepositories();
+        if (update_sink) {
+          update_sink->drainRepositories();
+        }
         C2Payload response(Operation::ACKNOWLEDGE, resp.ident, false, true);
         enqueue_c2_response(std::move(response));
       } else {
@@ -453,10 +439,11 @@ void C2Agent::handle_c2_server_response(const C2ContentResponse &resp) {
       handle_describe(resp);
       break;
     case Operation::RESTART: {
-      update_sink_->stop(true);
+      if (update_sink)
+          update_sink->stop(true);
       C2Payload response(Operation::ACKNOWLEDGE, resp.ident, false, true);
       protocol_.load()->consumePayload(std::move(response));
-      exit(1);
+      restart_agent();
     }
       break;
     case Operation::START:
@@ -465,15 +452,16 @@ void C2Agent::handle_c2_server_response(const C2ContentResponse &resp) {
         raise(SIGTERM);
       }
 
-      std::vector<std::shared_ptr<state::StateController>> components = update_sink_->getComponents(resp.name);
-
-      // stop all referenced components.
-      for (auto &component : components) {
-        logger_->log_debug("Stopping component %s", component->getComponentName());
-        if (resp.op == Operation::STOP)
-          component->stop(true);
-        else
-          component->start();
+      if (update_sink) {
+        std::vector<std::shared_ptr<state::StateController>> components = update_sink->getComponents(resp.name);
+        // stop all referenced components.
+        for (auto &component : components) {
+          logger_->log_debug("Stopping component %s", component->getComponentName());
+          if (resp.op == Operation::STOP)
+            component->stop(true);
+          else
+            component->start();
+        }
       }
 
       if (resp.ident.length() > 0) {
@@ -516,59 +504,40 @@ C2Payload C2Agent::prepareConfigurationOptions(const C2ContentResponse &resp) co
  * to be put into the acknowledgement
  */
 void C2Agent::handle_describe(const C2ContentResponse &resp) {
+  auto update_sink = update_sink_.lock();
+  auto reporter = std::dynamic_pointer_cast<state::response::NodeReporter>(update_sink);
   if (resp.name == "metrics") {
-    auto reporter = std::dynamic_pointer_cast<state::response::NodeReporter>(update_sink_);
-
+    C2Payload response(Operation::ACKNOWLEDGE, resp.ident, false, true);
     if (reporter != nullptr) {
-      auto metricsClass = resp.operation_arguments.find("metricsClass");
-      uint8_t metric_class_id = 0;
-      if (metricsClass != resp.operation_arguments.end()) {
-        // we have a class
-        try {
-          metric_class_id = std::stoi(metricsClass->second.to_string());
-        } catch (...) {
-          logger_->log_error("Could not convert %s into an integer", metricsClass->second.to_string());
-        }
-      }
-
-      std::vector<std::shared_ptr<state::response::ResponseNode>> metrics_vec;
-      C2Payload response(Operation::ACKNOWLEDGE, resp.ident, false, true);
       C2Payload metrics(Operation::ACKNOWLEDGE);
       metrics.setLabel("metrics");
-      reporter->getResponseNodes(metrics_vec, 0);
-      for (auto metric : metrics_vec) {
-        serializeMetrics(metrics, metric->getName(), metric->serialize());
+      auto metricsNode = reporter->getMetricsNode();
+      if (metricsNode) {
+        serializeMetrics(metrics, metricsNode->getName(), metricsNode->serialize(), metricsNode->isArray());
       }
       response.addPayload(std::move(metrics));
-      enqueue_c2_response(std::move(response));
     }
-
+    enqueue_c2_response(std::move(response));
+    return;
   } else if (resp.name == "configuration") {
     auto configOptions = prepareConfigurationOptions(resp);
     enqueue_c2_response(std::move(configOptions));
     return;
   } else if (resp.name == "manifest") {
     C2Payload response(prepareConfigurationOptions(resp));
-
-    auto reporter = std::dynamic_pointer_cast<state::response::NodeReporter>(update_sink_);
     if (reporter != nullptr) {
-      std::vector<std::shared_ptr<state::response::ResponseNode>> metrics_vec;
-
       C2Payload agentInfo(Operation::ACKNOWLEDGE, resp.ident, false, true);
       agentInfo.setLabel("agentInfo");
 
-      reporter->getManifestNodes(metrics_vec);
-      for (const auto& metric : metrics_vec) {
-          serializeMetrics(agentInfo, metric->getName(), metric->serialize());
-      }
+      const auto manifest = reporter->getAgentManifest();
+      serializeMetrics(agentInfo, manifest->getName(), manifest->serialize());
       response.addPayload(std::move(agentInfo));
     }
-
     enqueue_c2_response(std::move(response));
     return;
   } else if (resp.name == "jstack") {
-    if (update_sink_->isRunning()) {
-      const std::vector<BackTrace> traces = update_sink_->getTraces();
+    if (update_sink && update_sink->isRunning()) {
+      const std::vector<BackTrace> traces = update_sink->getTraces();
       for (const auto &trace : traces) {
         for (const auto & line : trace.getTraces()) {
           logger_->log_trace("%s -- %s", trace.getName(), line);
@@ -651,7 +620,8 @@ void C2Agent::handle_update(const C2ContentResponse &resp) {
       std::string raw_data_str((std::istreambuf_iterator<char>(new_conf)), std::istreambuf_iterator<char>());
       unlink(file_path.c_str());
       // if we can apply the update, we will acknowledge it and then backup the configuration file.
-      if (update_sink_->applyUpdate(urlStr, raw_data_str)) {
+      auto update_sink = update_sink_.lock();
+      if (update_sink && update_sink->applyUpdate(urlStr, raw_data_str)) {
         C2Payload response(Operation::ACKNOWLEDGE, state::UpdateState::FULLY_APPLIED, resp.ident, false, true);
         enqueue_c2_response(std::move(response));
 
@@ -705,7 +675,8 @@ void C2Agent::handle_update(const C2ContentResponse &resp) {
       logger_->log_debug("Did not have location within %s", resp.ident);
       auto update_text = resp.operation_arguments.find("configuration_data");
       if (update_text != resp.operation_arguments.end()) {
-        if (update_sink_->applyUpdate(url->second.to_string(), update_text->second.to_string()) != 0 && persist != resp.operation_arguments.end()
+        auto update_sink = update_sink_.lock();
+        if (update_sink && update_sink->applyUpdate(url->second.to_string(), update_text->second.to_string()) != 0 && persist != resp.operation_arguments.end()
             && utils::StringUtils::equalsIgnoreCase(persist->second.to_string(), "true")) {
           C2Payload response(Operation::ACKNOWLEDGE, state::UpdateState::FULLY_APPLIED, resp.ident, false, true);
           enqueue_c2_response(std::move(response));
@@ -839,33 +810,14 @@ void C2Agent::restart_agent() {
   }
 
   std::stringstream command;
-  command << cwd << "/minifi.sh restart";
+  command << cwd << "/bin/minifi.sh restart";
+  system(command.str().c_str());
 }
 
 void C2Agent::update_agent() {
   if (!system(update_command_.c_str())) {
     logger_->log_warn("May not have command processor");
   }
-}
-
-int16_t C2Agent::setResponseNodes(const std::shared_ptr<state::response::ResponseNode> &metric) {
-  auto now = std::chrono::steady_clock::now();
-  if (metrics_mutex_.try_lock_until(now + std::chrono::seconds(1))) {
-    root_response_nodes_[metric->getName()] = metric;
-    metrics_mutex_.unlock();
-    return 0;
-  }
-  return -1;
-}
-
-int16_t C2Agent::setMetricsNodes(const std::shared_ptr<state::response::ResponseNode> &metric) {
-  auto now = std::chrono::steady_clock::now();
-  if (metrics_mutex_.try_lock_until(now + std::chrono::seconds(1))) {
-    metrics_map_[metric->getName()] = metric;
-    metrics_mutex_.unlock();
-    return 0;
-  }
-  return -1;
 }
 
 } /* namespace c2 */
