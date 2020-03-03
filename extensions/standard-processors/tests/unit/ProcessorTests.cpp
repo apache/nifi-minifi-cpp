@@ -31,6 +31,7 @@
 #include "LogAttribute.h"
 #include "GetFile.h"
 #include "unit/ProvenanceTestHelper.h"
+#include "utils/file/FileUtils.h"
 #include "core/Core.h"
 #include "core/FlowFile.h"
 #include "core/Processor.h"
@@ -199,7 +200,7 @@ TEST_CASE("Test GetFile Ignore", "[getfileCreate3]") {
 #ifdef WIN32
   {
     // hide file on windows, because a . prefix in the filename doesn't imply a hidden file
-    const auto hide_file_error = FileUtils::hide_file(hidden_file_name);
+    const auto hide_file_error = utils::file::FileUtils::hide_file(hidden_file_name.c_str());
     REQUIRE(!hide_file_error);
   }
 #endif /* WIN32 */

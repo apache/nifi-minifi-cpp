@@ -25,6 +25,7 @@
 #include "TestBase.h"
 #include "LogAttribute.h"
 #include "GetFile.h"
+#include "utils/file/FileUtils.h"
 
 #ifdef WIN32
 #include <fileapi.h>
@@ -77,7 +78,7 @@ TEST_CASE("GetFile: MaxSize", "[getFileFifo]") {  // NOLINT
   hidden_in_file_stream << "But noone has ever seen it" << std::endl;
   hidden_in_file_stream.close();
 #ifdef WIN32
-  const auto hide_file_err = FileUtils::hide_file(hidden_in_file.c_str());
+  const auto hide_file_err = utils::file::FileUtils::hide_file(hidden_in_file.c_str());
   REQUIRE(!hide_file_err);
 #endif
   plan->runNextProcessor();  // Get

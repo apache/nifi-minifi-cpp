@@ -689,7 +689,9 @@ class FileUtils {
   static std::error_code hide_file(const char* const file_name) {
     const bool success = SetFileAttributesA(file_name, FILE_ATTRIBUTE_HIDDEN);
     if (!success) {
-      return { GetLastError(), std::system_category() };
+      // note: All possible documented error codes from GetLastError are in [0;15999] at the time of writing.
+      // The below casting is safe in [0;std::numeric_limits<int>::max()], int max is guaranteed to be at least 32767
+      return { static_cast<int>(GetLastError()), std::system_category() };
     }
     return {};
   }
