@@ -324,14 +324,18 @@ static void updateCRC(CTransaction * transaction, const uint8_t *buffer, uint32_
 
 static int writeData(CTransaction * transaction, const uint8_t *value, int size) {
   int ret = write_buffer(value, size, transaction->_stream);
-  transaction->_crc = crc32(transaction->_crc, value, size);
+  if (ret > 0) {
+    transaction->_crc = crc32(transaction->_crc, value, ret);
+  }
   return ret;
 }
 
 static int readData(CTransaction * transaction, uint8_t *buf, int buflen) {
   //int ret = transaction->_stream->read(buf, buflen);
   int ret = read_buffer(buf, buflen, transaction->_stream);
-  transaction->_crc = crc32(transaction->_crc, buf, ret);
+  if (ret > 0) {
+    transaction->_crc = crc32(transaction->_crc, buf, ret);
+  }
   return ret;
 }
 
