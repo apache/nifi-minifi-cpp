@@ -252,53 +252,107 @@ TEST_CASE("TestStateMigration", "[tailFileStateMigration]") {
   LogTestController::getInstance().setTrace<TestPlan>();
   LogTestController::getInstance().setDebug<minifi::processors::LogAttribute>();
 
-  std::shared_ptr<TestPlan> plan = testController.createPlan();
-  std::shared_ptr<core::Processor> tailfile = plan->addProcessor("TailFile", "tailfileProc");
+  auto plan = testController.createPlan();
+  auto tailfile = plan->addProcessor("TailFile", "tailfileProc");
   auto id = tailfile->getUUIDStr();
 
-  plan->addProcessor("LogAttribute", "logattribute", core::Relationship("success", "description"), true);
+  auto logattribute = plan->addProcessor("LogAttribute", "logattribute", core::Relationship("success", "description"), true);
+  plan->setProperty(logattribute, org::apache::nifi::minifi::processors::LogAttribute::FlowFilesToLog.getName(), "0");
 
   char format[] = "/tmp/gt.XXXXXX";
   auto dir = testController.createTempDirectory(format);
-  std::stringstream temp_file;
-  temp_file << dir << utils::file::FileUtils::get_separator() << TMP_FILE;
 
-  std::ofstream tmpfile;
-  tmpfile.open(temp_file.str(), std::ios::out | std::ios::binary);
-  tmpfile << NEWLINE_FILE;
-  tmpfile.close();
+  auto createTempFile = [&](const std::string& file_name) -> std::string /*file_path*/ {
+    std::stringstream temp_file;
+    temp_file << dir << utils::file::FileUtils::get_separator() << file_name;
 
-  std::ofstream appendStream;
-  appendStream.open(temp_file.str(), std::ios_base::app | std::ios_base::binary);
-  appendStream.write("\n", 1);
-  appendStream.close();
+    std::ofstream tmpfile;
+    tmpfile.open(temp_file.str(), std::ios::out | std::ios::binary);
+    tmpfile << NEWLINE_FILE << "\n";
+    tmpfile.close();
+
+    return temp_file.str();
+  };
 
   std::stringstream state_file;
   state_file << dir << utils::file::FileUtils::get_separator() << STATE_FILE;
 
-  plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::FileName.getName(), temp_file.str());
-  plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::StateFile.getName(), state_file.str());
-  plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::Delimiter.getName(), "\n");
-
   auto statefile = state_file.str() + "." + id;
-  std::ofstream newstatefile;
-  newstatefile.open(statefile);
-  newstatefile << "FILENAME=" << temp_file.str() << std::endl;
-  newstatefile << "POSITION=14" << std::endl;
-  newstatefile.close();
 
-  testController.runSession(plan, true);
-  REQUIRE(LogTestController::getInstance().contains("minifi-tmpfile.14-34.txt"));
+  SECTION("single") {
+    const std::string temp_file = createTempFile(TMP_FILE);
 
-  std::unordered_map<std::string, std::string> state;
-  REQUIRE(plan->getStateManagerProvider()->getCoreComponentStateManager(*tailfile)->get(state));
+    plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::FileName.getName(), temp_file);
+    plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::StateFile.getName(), state_file.str());
+    plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::Delimiter.getName(), "\n");
 
-  std::string filePath, fileName;
-  REQUIRE(utils::file::PathUtils::getFileNameAndPath(temp_file.str(), filePath, fileName));
-  std::unordered_map<std::string, std::string> expected_state{{"file.0.name", fileName},
-                                                              {"file.0.position", "35"},
-                                                              {"file.0.current", temp_file.str()}};
-  REQUIRE(expected_state == state);
+    std::ofstream newstatefile;
+    newstatefile.open(statefile);
+    SECTION("legacy") {
+      newstatefile << "FILENAME=" << temp_file << std::endl;
+      newstatefile << "POSITION=14" << std::endl;
+    }
+    SECTION("newer single") {
+      newstatefile << "FILENAME=" << TMP_FILE << std::endl;
+      newstatefile << "POSITION." << TMP_FILE << "=14" << std::endl;
+      newstatefile << "CURRENT." << TMP_FILE << "=" << temp_file << std::endl;
+    }
+    newstatefile.close();
+
+    testController.runSession(plan, true);
+    REQUIRE(LogTestController::getInstance().contains("minifi-tmpfile.14-34.txt"));
+
+    std::unordered_map<std::string, std::string> state;
+    REQUIRE(plan->getStateManagerProvider()->getCoreComponentStateManager(*tailfile)->get(state));
+
+    std::string filePath, fileName;
+    REQUIRE(utils::file::PathUtils::getFileNameAndPath(temp_file, filePath, fileName));
+    std::unordered_map<std::string, std::string> expected_state{{"file.0.name", fileName},
+                                                                {"file.0.position", "35"},
+                                                                {"file.0.current", temp_file}};
+    REQUIRE(expected_state == state);
+  }
+
+  SECTION("multiple") {
+    const std::string file_name_1 = "bar.txt";
+    const std::string file_name_2 = "foo.txt";
+    const std::string temp_file_1 = createTempFile(file_name_1);
+    const std::string temp_file_2 = createTempFile(file_name_2);
+
+    plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::TailMode.getName(), "Multiple file");
+    plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::BaseDirectory.getName(), dir);
+    plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::FileName.getName(), ".*");
+    plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::StateFile.getName(), state_file.str());
+    plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::Delimiter.getName(), "\n");
+
+    std::ofstream newstatefile;
+    newstatefile.open(statefile);
+    newstatefile << "FILENAME=" << file_name_1 << std::endl;
+    newstatefile << "POSITION." << file_name_1 << "=14" << std::endl;
+    newstatefile << "CURRENT." << file_name_1 << "=" << temp_file_1 << std::endl;
+    newstatefile << "FILENAME=" << file_name_2 << std::endl;
+    newstatefile << "POSITION." << file_name_2 << "=15" << std::endl;
+    newstatefile << "CURRENT." << file_name_2 << "=" << temp_file_2 << std::endl;
+    newstatefile.close();
+
+    testController.runSession(plan, true);
+    REQUIRE(LogTestController::getInstance().contains(file_name_1.substr(0, file_name_1.rfind('.')) + ".14-34.txt"));
+    REQUIRE(LogTestController::getInstance().contains(file_name_2.substr(0, file_name_2.rfind('.')) + ".15-34.txt"));
+
+    std::unordered_map<std::string, std::string> state;
+    REQUIRE(plan->getStateManagerProvider()->getCoreComponentStateManager(*tailfile)->get(state));
+
+    std::string filePath1, filePath2, fileName1, fileName2;
+    REQUIRE(utils::file::PathUtils::getFileNameAndPath(temp_file_1, filePath1, fileName1));
+    REQUIRE(utils::file::PathUtils::getFileNameAndPath(temp_file_2, filePath2, fileName2));
+    std::unordered_map<std::string, std::string> expected_state{{"file.0.name", fileName1},
+                                                                {"file.0.position", "35"},
+                                                                {"file.0.current", temp_file_1},
+                                                                {"file.1.name", fileName2},
+                                                                {"file.1.position", "35"},
+                                                                {"file.1.current", temp_file_2}};
+    REQUIRE(expected_state == state);
+  }
 }
 
 

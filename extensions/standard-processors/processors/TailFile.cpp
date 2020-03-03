@@ -217,7 +217,23 @@ void TailFile::parseStateFileLine(char *buf) {
     logger_->log_debug("Received position %d", position);
     tail_states_.begin()->second.currentTailFilePosition_ = position;
   }
+  if (key.find(CURRENT_STR) == 0) {
+    const auto file = key.substr(strlen(CURRENT_STR));
+    std::string fileLocation, fileName;
+    if (utils::file::PathUtils::getFileNameAndPath(value, fileLocation, fileName)) {
+      tail_states_[file].path_ = fileLocation;
+      tail_states_[file].current_file_name_ = fileName;
+    } else {
+      throw minifi::Exception(ExceptionType::PROCESSOR_EXCEPTION, "State file contains an invalid file name");
+    }
+  }
+
+  if (key.find(POSITION_STR) == 0) {
+    const auto file = key.substr(strlen(POSITION_STR));
+    tail_states_[file].currentTailFilePosition_ = std::stoull(value);
+  }
 }
+
 
 
 bool TailFile::recoverState(const std::shared_ptr<core::ProcessContext>& context) {
