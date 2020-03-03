@@ -189,7 +189,9 @@ int CRCStream<T>::readData(std::vector<uint8_t> &buf, int buflen) {
 template<typename T>
 int CRCStream<T>::readData(uint8_t *buf, int buflen) {
   int ret = child_stream_->read(buf, buflen);
-  crc_ = crc32(crc_, buf, ret);
+  if (ret > 0) {
+    crc_ = crc32(crc_, buf, ret);
+  }
   return ret;
 }
 
@@ -205,7 +207,9 @@ template<typename T>
 int CRCStream<T>::writeData(uint8_t *value, int size) {
 
   int ret = child_stream_->write(value, size);
-  crc_ = crc32(crc_, value, size);
+  if (ret > 0) {
+    crc_ = crc32(crc_, value, ret);
+  }
   return ret;
 
 }
