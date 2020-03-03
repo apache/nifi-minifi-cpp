@@ -329,6 +329,8 @@ int main(int argc, char **argv) {
    */
   controller->waitUnload(stop_wait_time);
 
+  controller->stopC2();
+
   flow_repo = nullptr;
 
   prov_repo = nullptr;

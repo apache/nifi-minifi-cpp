@@ -75,7 +75,7 @@ class IntegrationBase {
 
   }
 
-  virtual void configureC2RootClasses() {
+  virtual void configureFullHeartbeat() {
 
   }
 
@@ -127,7 +127,7 @@ void IntegrationBase::run(std::string test_file_location) {
 
   queryRootProcessGroup(pg);
 
-  configureC2RootClasses();
+  configureFullHeartbeat();
 
   ptr.release();
 
@@ -142,8 +142,9 @@ void IntegrationBase::run(std::string test_file_location) {
 
   shutdownBeforeFlowController();
   flowController_->unload();
-  runAssertions();
+  flowController_->stopC2();
 
+  runAssertions();
   cleanup();
 }
 

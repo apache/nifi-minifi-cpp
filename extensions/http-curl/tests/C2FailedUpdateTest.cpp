@@ -198,22 +198,18 @@ int main(int argc, char **argv) {
   std::unique_ptr<core::ProcessGroup> ptr = yaml_config.getRoot(test_file_location);
   std::shared_ptr<core::ProcessGroup> pg = std::shared_ptr<core::ProcessGroup>(ptr.get());
   ptr.release();
-  auto start = std::chrono::system_clock::now();
 
   controller->load();
   controller->start();
   waitToVerifyProcessor();
 
   controller->waitUnload(60000);
-  auto then = std::chrono::system_clock::now();
 
-  auto milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(then - start).count();
   std::string logs = LogTestController::getInstance().log_output.str();
   assert(logs.find("Invalid configuration payload") != std::string::npos);
   assert(logs.find("update failed.") != std::string::npos);
   LogTestController::getInstance().reset();
   utils::file::FileUtils::delete_dir("content_repository",true);
-  assert(h_ex.calls_ <= (milliseconds / 1000) + 1);
 
   return 0;
 }

@@ -101,10 +101,6 @@ class SchedulingAgent {
     running_ = false;
   }
 
-  std::vector<BackTrace> getTraces() {
-    return thread_pool_.getTraces();
-  }
-
   void watchDogFunc();
 
   virtual std::future<utils::TaskRescheduleInfo> enableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode);

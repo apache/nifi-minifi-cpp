@@ -36,10 +36,21 @@ class Configure : public Properties {
     std::lock_guard<std::mutex> lock(mutex_);
     agent_identifier_ = identifier;
   }
-  std::string getAgentIdentifier() {
+  std::string getAgentIdentifier() const {
     std::lock_guard<std::mutex> lock(mutex_);
     return agent_identifier_;
   }
+
+  void setAgentClass(const std::string& agentClass) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    agent_class_ = agentClass;
+  }
+
+  std::string getAgentClass() const {
+    std::lock_guard<std::mutex> lock(mutex_);
+    return agent_class_;
+  }
+
   // nifi.flow.configuration.file
   static const char *nifi_default_directory;
   static const char *nifi_flow_configuration_file;
@@ -87,10 +98,12 @@ class Configure : public Properties {
   static const char *nifi_c2_flow_id;
   static const char *nifi_c2_flow_url;
   static const char *nifi_c2_flow_base_url;
+  static const char *nifi_c2_full_heartbeat;
 
  private:
   std::string agent_identifier_;
-  std::mutex mutex_;
+  std::string agent_class_;
+  mutable std::mutex mutex_;
 };
 
 } /* namespace minifi */

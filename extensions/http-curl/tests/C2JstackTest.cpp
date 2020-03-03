@@ -16,35 +16,9 @@
  * limitations under the License.
  */
 
-#include <sys/stat.h>
 #undef NDEBUG
-#include <cassert>
-#include <utility>
-#include <chrono>
-#include <fstream>
-#include <memory>
 #include <string>
-#include <thread>
-#include <type_traits>
-#include <vector>
-#include <iostream>
-#include <sstream>
-#include "HTTPClient.h"
-#include "InvokeHTTP.h"
 #include "TestBase.h"
-#include "utils/StringUtils.h"
-#include "core/Core.h"
-#include "core/logging/Logger.h"
-#include "core/ProcessGroup.h"
-#include "core/yaml/YamlConfiguration.h"
-#include "FlowController.h"
-#include "properties/Configure.h"
-#include "unit/ProvenanceTestHelper.h"
-#include "io/StreamFactory.h"
-#include "c2/C2Agent.h"
-#include "CivetServer.h"
-#include <cstring>
-#include "protocols/RESTSender.h"
 #include "HTTPIntegrationBase.h"
 #include "HTTPHandlers.h"
 
@@ -55,7 +29,7 @@ class VerifyC2DescribeJstack : public VerifyC2Describe {
   }
 
   virtual void runAssertions() {
-    assert(LogTestController::getInstance().contains("SchedulingAgent") == true);
+    assert(LogTestController::getInstance().contains("SchedulingAgent"));
   }
 };
 
@@ -65,12 +39,12 @@ class DescribeJstackHandler : public HeartbeatHandler {
      : HeartbeatHandler(isSecure) {
   }
 
-  virtual void handleHeartbeat(const rapidjson::Document& root, struct mg_connection * conn) {
+  virtual void handleHeartbeat(const rapidjson::Document&, struct mg_connection * conn) {
     sendHeartbeatResponse("DESCRIBE", "jstack", "889398", conn);
   }
 
   virtual void handleAcknowledge(const rapidjson::Document& root) {
-    assert(root.HasMember("SchedulingAgent #0") == true);
+    assert(root.HasMember("Flowcontroller threadpool #0"));
   }
 
 };

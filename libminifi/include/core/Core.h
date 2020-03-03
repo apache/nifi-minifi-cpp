@@ -153,7 +153,7 @@ class CoreComponent {
       : name_(name) {
     if (uuid == nullptr) {
       // Generate the global UUID for the flow record
-      id_generator_->generate(uuid_);
+      utils::IdGenerator::getIdGenerator()->generate(uuid_);
     } else {
       uuid_ = uuid;
     }
@@ -163,7 +163,7 @@ class CoreComponent {
   explicit CoreComponent(const std::string &name)
       : name_(name) {
     // Generate the global UUID for the flow record
-    id_generator_->generate(uuid_);
+    utils::IdGenerator::getIdGenerator()->generate(uuid_);
     uuidStr_ = uuid_.to_string();
   }
 
@@ -226,9 +226,6 @@ protected:
 
   // Connectable's name
   std::string name_;
-
-private:
-  static std::shared_ptr<utils::IdGenerator> id_generator_;
 };
 
 namespace logging {

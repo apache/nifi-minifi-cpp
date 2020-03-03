@@ -504,8 +504,8 @@ class AgentStatus : public StateMonitorNode {
 class AgentIdentifier {
  public:
 
-  AgentIdentifier() {
-
+  AgentIdentifier()
+     : include_agent_manifest_(true) {
   }
 
   void setIdentifier(const std::string &identifier) {
@@ -516,9 +516,14 @@ class AgentIdentifier {
     agent_class_ = agentClass;
   }
 
+  void includeAgentManifest(bool include) {
+    include_agent_manifest_ = include;
+  }
+
  protected:
   std::string identifier_;
   std::string agent_class_;
+  bool include_agent_manifest_;
 };
 
 class AgentMonitor {
@@ -675,31 +680,9 @@ protected:
     serialized.push_back(agentManifest);
     return serialized;
   }
-};
 
-/**
- * This class is used for regular heartbeat without manifest
- * A light weight heartbeat
- */
-class AgentInformationWithoutManifest : public AgentNode {
-public:
-
-  AgentInformationWithoutManifest(const std::string& name, utils::Identifier & uuid)
-      : AgentNode(name, uuid) {
-    setArray(false);
-  }
-
-  explicit AgentInformationWithoutManifest(const std::string &name)
-      : AgentNode(name) {
-    setArray(false);
-  }
-
-  std::string getName() const {
-    return "agentInfo";
-  }
-
-  std::vector<SerializedResponseNode> serialize() {
-    std::vector<SerializedResponseNode> serialized(AgentNode::serialize());
+  std::vector<SerializedResponseNode> getAgentStatus() const {
+    std::vector<SerializedResponseNode> serialized;
 
     AgentStatus status("status");
     status.setRepositories(repositories_);
@@ -716,21 +699,23 @@ public:
   }
 };
 
-
 /**
- * This class is used for sending all agent information including manifest and status
- * A heavy weight heartbeat. Here to maintain backward compatibility
+ * This class is used for sending agent information while including
+ * or excluding the agent manifest. agent status and agent manifest
+ * is included by default
  */
-class AgentInformation : public AgentInformationWithoutManifest {
+class AgentInformation : public AgentNode {
  public:
 
   AgentInformation(const std::string& name, utils::Identifier & uuid)
-      : AgentInformationWithoutManifest(name, uuid) {
+      : AgentNode(name, uuid),
+        include_agent_status_(true) {
     setArray(false);
   }
 
   explicit AgentInformation(const std::string &name)
-      : AgentInformationWithoutManifest(name) {
+      : AgentNode(name),
+        include_agent_status_(true) {
     setArray(false);
   }
 
@@ -738,45 +723,28 @@ class AgentInformation : public AgentInformationWithoutManifest {
     return "agentInfo";
   }
 
-  std::vector<SerializedResponseNode> serialize() {
-    std::vector<SerializedResponseNode> serialized(AgentInformationWithoutManifest::serialize());
-    auto manifest = getAgentManifest();
-    serialized.insert(serialized.end(), std::make_move_iterator(manifest.begin()), std::make_move_iterator(manifest.end()));
-    return serialized;
-  }
-
-};
-
-/**
- * This class is used for response to DESCRIBE manifest request
- * It contains static information only
- */
-class AgentInformationWithManifest : public AgentNode {
-public:
-  AgentInformationWithManifest(const std::string& name, utils::Identifier & uuid)
-      : AgentNode(name, uuid) {
-    setArray(false);
-  }
-
-  explicit AgentInformationWithManifest(const std::string &name)
-      : AgentNode(name) {
-    setArray(false);
-  }
-
-  std::string getName() const {
-    return "agentInfo";
+  void includeAgentStatus(bool include) {
+    include_agent_status_ = include;
   }
 
   std::vector<SerializedResponseNode> serialize() {
     std::vector<SerializedResponseNode> serialized(AgentNode::serialize());
-    auto manifest = getAgentManifest();
-    serialized.insert(serialized.end(), std::make_move_iterator(manifest.begin()), std::make_move_iterator(manifest.end()));
+    if (include_agent_manifest_) {
+      auto manifest = getAgentManifest();
+      serialized.insert(serialized.end(), std::make_move_iterator(manifest.begin()), std::make_move_iterator(manifest.end()));
+    }
+
+    if (include_agent_status_) {
+      auto status = getAgentStatus();
+      serialized.insert(serialized.end(), std::make_move_iterator(status.begin()), std::make_move_iterator(status.end()));
+    }
     return serialized;
   }
+ protected:
+  bool include_agent_status_;
 };
 
 REGISTER_RESOURCE(AgentInformation, "Node part of an AST that defines all agent information, to include the manifest, and bundle information as part of a healthy hearbeat.");
-REGISTER_RESOURCE(AgentInformationWithoutManifest, "Node part of an AST that defines all agent information, without the manifest and bundle information as part of a healthy hearbeat.");
 
 } /* namespace metrics */
 } /* namespace state */

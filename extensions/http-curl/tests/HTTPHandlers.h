@@ -353,18 +353,18 @@ class HeartbeatHandler : public CivetHandler {
 
   std::string readPost(struct mg_connection *conn) {
     std::string response;
-    int blockSize = 1024 * sizeof(char), readBytes;
+    int readBytes;
 
     char buffer[1024];
-    while ((readBytes = mg_read(conn, buffer, blockSize)) > 0) {
-      response.append(buffer, 0, (readBytes / sizeof(char)));
+    while ((readBytes = mg_read(conn, buffer, sizeof(buffer))) > 0) {
+      response.append(buffer, (readBytes / sizeof(char)));
     }
     return response;
   }
 
   void sendStopOperation(struct mg_connection *conn) {
-    std::string resp = "{\"operation\" : \"heartbeat\", \"requested_operations\" : [{ \"operationid\" : 41, \"operation\" : \"stop\", \"name\" : \"invoke\"  }, "
-        "{ \"operationid\" : 42, \"operation\" : \"stop\", \"name\" : \"FlowController\"  } ]}";
+    std::string resp = "{\"operation\" : \"heartbeat\", \"requested_operations\" : [{ \"operationid\" : 41, \"operation\" : \"stop\", \"operand\" : \"invoke\"  }, "
+        "{ \"operationid\" : 42, \"operation\" : \"stop\", \"operand\" : \"FlowController\"  } ]}";
     mg_printf(conn, "HTTP/1.1 200 OK\r\nContent-Type: "
               "text/plain\r\nContent-Length: %lu\r\nConnection: close\r\n\r\n",
               resp.length());
@@ -385,14 +385,14 @@ class HeartbeatHandler : public CivetHandler {
 
   void verifyJsonHasAgentManifest(const rapidjson::Document& root) {
     bool found = false;
-    assert(root.HasMember("agentInfo") == true);
-    assert(root["agentInfo"].HasMember("agentManifest") == true);
-    assert(root["agentInfo"]["agentManifest"].HasMember("bundles") == true);
+    assert(root.HasMember("agentInfo"));
+    assert(root["agentInfo"].HasMember("agentManifest"));
+    assert(root["agentInfo"]["agentManifest"].HasMember("bundles"));
 
     for (auto &bundle : root["agentInfo"]["agentManifest"]["bundles"].GetArray()) {
       assert(bundle.HasMember("artifact"));
       std::string str = bundle["artifact"].GetString();
-      if (str == "minifi-system") {
+      if (str == "minifi-standard-processors") {
 
         std::vector<std::string> classes;
         for (auto &proc : bundle["componentManifest"]["processors"].GetArray()) {
@@ -407,23 +407,23 @@ class HeartbeatHandler : public CivetHandler {
 
       }
     }
-    assert(found == true);
+    assert(found);
   }
 
-  virtual void handleHeartbeat(const rapidjson::Document& root, struct mg_connection * conn) {
-    (void)conn;
+  virtual void handleHeartbeat(const rapidjson::Document& root, struct mg_connection *) {
     verifyJsonHasAgentManifest(root);
   }
 
-  virtual void handleAcknowledge(const rapidjson::Document& root) {
+  virtual void handleAcknowledge(const rapidjson::Document&) {
   }
 
   void verify(struct mg_connection *conn) {
     auto post_data = readPost(conn);
-    std::cerr << post_data << std::endl;
+    //std::cerr << post_data << std::endl;
     if (!IsNullOrEmpty(post_data)) {
       rapidjson::Document root;
       rapidjson::ParseResult ok = root.Parse(post_data.data(), post_data.size());
+      assert(ok);
       std::string operation = root["operation"].GetString();
       if (operation == "heartbeat") {
         handleHeartbeat(root, conn);
@@ -435,7 +435,7 @@ class HeartbeatHandler : public CivetHandler {
     }
   }
 
-  bool handlePost(CivetServer *server, struct mg_connection *conn) {
+  bool handlePost(CivetServer *, struct mg_connection *conn) {
     verify(conn);
     sendStopOperation(conn);
     return true;

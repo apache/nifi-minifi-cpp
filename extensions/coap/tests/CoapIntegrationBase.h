@@ -41,8 +41,6 @@ class CoapIntegrationBase : public IntegrationBase {
 
   void setUrl(std::string url, CivetHandler *handler);
 
-  virtual ~CoapIntegrationBase() = default;
-
   void shutdownBeforeFlowController() override {
     stop_webserver(server);
   }
@@ -68,8 +66,6 @@ class CoapIntegrationBase : public IntegrationBase {
 
     queryRootProcessGroup(pg);
 
-    configureC2RootClasses();
-
     ptr.release();
 
     std::shared_ptr<TestRepository> repo = std::static_pointer_cast<TestRepository>(test_repo);
@@ -83,6 +79,7 @@ class CoapIntegrationBase : public IntegrationBase {
 
     shutdownBeforeFlowController();
     controller->waitUnload(wait_time_);
+    controller->stopC2();
     runAssertions();
 
     cleanup();
