@@ -624,9 +624,9 @@ int ConsumeWindowsEventLog::processQueue(const std::shared_ptr<core::ProcessSess
 
   auto before_time = std::chrono::high_resolution_clock::now();
   utils::ScopeGuard timeGuard([&](){
-    logger_->log_debug("processQueue processed %d Events in %" PRIu64 " ms",
+    logger_->log_debug("processQueue processed %d Events in %" PRId64 " ms",
                       flowFileCount,
-                      std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - before_time).count());
+                      int64_t {std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - before_time).count()});
   });
 
   bool commitAndSaveBookmark = false;
@@ -665,8 +665,8 @@ int ConsumeWindowsEventLog::processQueue(const std::shared_ptr<core::ProcessSess
     if (batch_commit_size_ != 0U && (flowFileCount % batch_commit_size_ == 0)) {
       auto before_commit = std::chrono::high_resolution_clock::now();
       session->commit();
-      logger_->log_debug("processQueue commit took %" PRIu64 " ms",
-                        std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - before_commit).count());
+      logger_->log_debug("processQueue commit took %" PRId64 " ms",
+                        int64_t {std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - before_commit).count()});
 
       if (pBookmark_) {
         pBookmark_->saveBookmarkXml(evt.bookmarkXml_);
