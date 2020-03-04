@@ -102,15 +102,16 @@ const core::Relationship QueryDatabaseTable::s_success("success", "Successfully 
 static const std::string ResultTableName = "tablename";
 static const std::string ResultRowCount = "querydbtable.row.count";
 
-// State
-class State {
- public:
-  State(const std::string& tableName, const std::string& stateDir, const std::string& uuid, std::shared_ptr<logging::Logger> logger)
-    :tableName_(tableName), logger_(logger) {
-    if (!createUUIDDir(stateDir, uuid, filePath_))
-      return;
+static const std::string TABLENAME_KEY = "tablename";
+static const std::string MAXVALUE_KEY_PREFIX = "maxvalue.";
 
-    filePath_ += "State.txt";
+// State
+class LegacyState {
+ public:
+  LegacyState(const std::string& tableName, const std::string& stateDir, const std::string& uuid, std::shared_ptr<logging::Logger> logger)
+    :tableName_(tableName), logger_(logger) {
+
+    filePath_ = utils::file::FileUtils::concat_path(utils::file::FileUtils::concat_path(stateDir, uuid), "State.txt");
 
     if (!getStateFromFile())
       return;
@@ -118,79 +119,23 @@ class State {
     ok_ = true;
   }
 
-  ~State() {}
-
   explicit operator bool() const {
     return ok_;
   }
 
-  std::unordered_map<std::string, std::string> mapState() const {
+  const std::unordered_map<std::string, std::string>& getStateMap() const {
     return mapState_;
   }
 
-  void writeStateToFile(const std::unordered_map<std::string, std::string>& mapState) {
-    file_.seekp(std::ios::beg);
-
-    file_ << tableName_ << separator();
-    auto dataSize = tableName_.size() + separator().size();
-
-    for (const auto& el : mapState) {
-      file_ << el.first << '=' << el.second << separator();
-      dataSize += el.first.size() + 1 + el.second.size() + separator().size();
-    }
-
-    // If a maxValueColumnName type is varchar, a new max value 'dataSize' can be shorter than previous max value 'dataSize_' - clear difference with ' ' to keep file format.
-    if (dataSize_ > dataSize) {
-      for (auto i = dataSize_ - dataSize; i > 0; i--) {
-        file_ << ' ';
-      }
-    }
-    dataSize_ = dataSize;
-
-    file_.flush();
-
-    mapState_ = mapState;
-  }
-
  private:
-   static const std::string& separator() {
-     static const std::string s_separator = "@!qdt!@";
-     return s_separator;
-   }
-
-   bool createUUIDDir(const std::string& stateDir, const std::string& uuid, std::string& dir)
-   {
-     if (stateDir.empty()) {
-       dir.clear();
-       return false;
-     }
-
-     const auto dirSeparator = utils::file::FileUtils::get_separator();
-
-     auto dirWithSlash = stateDir;
-     if (stateDir.back() != dirSeparator) {
-       dirWithSlash += dirSeparator;
-     }
-
-     dir = dirWithSlash + "uuid" + dirSeparator + uuid + dirSeparator;
-
-     utils::file::FileUtils::create_dir(dir);
-
-     if (!utils::file::FileUtils::is_directory(dir.c_str())) {
-       logger_->log_error("Cannot create %s", dir.c_str());
-       dir.clear();
-       return false;
-     }
-
-     return true;
-   }
+  static const std::string separator_;
 
    bool getStateFromFile() {
      std::string state;
 
      std::ifstream file(filePath_);
      if (!file) {
-       return createEmptyStateFile();
+       return false;
      }
 
      std::stringstream ss;
@@ -198,17 +143,15 @@ class State {
 
      state = ss.str();
 
-     dataSize_ = state.size();
-
      file.close();
 
      std::vector<std::string> listColumnNameValue;
 
-     size_t pos = state.find(separator(), 0);
+     size_t pos = state.find(separator_, 0);
      if (pos == std::string::npos) {
        logger_->log_error("Invalid data in '%s' file.", filePath_.c_str());
        mapState_.clear();
-       return createEmptyStateFile();
+       return false;
      }
 
      auto tableName = state.substr(0, pos);
@@ -216,20 +159,20 @@ class State {
        logger_->log_warn("tableName is changed - now: '%s', in State.txt: '%s'.", tableName_.c_str(), tableName.c_str());
        mapState_.clear();
 
-       return createEmptyStateFile();
+       return false;
      }
 
-     pos += separator().size();
+     pos += separator_.size();
 
      while (true) {
-       auto newPos = state.find(separator(), pos);
+       auto newPos = state.find(separator_, pos);
        if (newPos == std::string::npos)
          break;
 
        const std::string& columnNameValue = state.substr(pos, newPos - pos);
        listColumnNameValue.emplace_back(columnNameValue);
 
-       pos = newPos + separator().size();
+       pos = newPos + separator_.size();
      }
 
      for (const auto& columnNameValue : listColumnNameValue) {
@@ -237,7 +180,7 @@ class State {
        if (posEQ == std::string::npos) {
          logger_->log_error("Invalid data in '%s' file.", filePath_.c_str());
          mapState_.clear();
-         return createEmptyStateFile();
+         return false;
        }
 
        const auto& name = columnNameValue.substr(0, posEQ);
@@ -246,25 +189,6 @@ class State {
        mapState_.insert({ name, value });
      }
 
-     file_.open(filePath_);
-     if (!file_.is_open()) {
-       logger_->log_error("Cannot open %s", filePath_.c_str());
-       mapState_.clear();
-       return false;
-     }
-
-     return true;
-   }
-
-   bool createEmptyStateFile() {
-     file_.open(filePath_, std::ios::out);
-     if (!file_.is_open()) {
-       logger_->log_error("Cannot open '%s' file", filePath_.c_str());
-       return false;
-     }
-
-     dataSize_ = 0;
-
      return true;
    }
 
@@ -272,12 +196,11 @@ class State {
    std::unordered_map<std::string, std::string> mapState_;
    std::shared_ptr<logging::Logger> logger_;
    std::string filePath_;
-   std::fstream file_;
-   size_t dataSize_{};
    std::string tableName_;
    bool ok_{};
 };
 
+const std::string LegacyState::separator_ = "@!qdt!@";
 
 // QueryDatabaseTable
 QueryDatabaseTable::QueryDatabaseTable(const std::string& name, utils::Identifier uuid)
@@ -295,7 +218,7 @@ void QueryDatabaseTable::initialize() {
   setSupportedRelationships( { s_success });
 }
 
-void QueryDatabaseTable::processOnSchedule(const core::ProcessContext &context) {
+void QueryDatabaseTable::processOnSchedule(core::ProcessContext &context) {
   initOutputFormat(context);
 
   context.getProperty(s_tableName.getName(), tableName_);
@@ -308,19 +231,35 @@ void QueryDatabaseTable::processOnSchedule(const core::ProcessContext &context) 
   context.getProperty(s_sqlQuery.getName(), sqlQuery_);
   context.getProperty(s_maxRowsPerFlowFile.getName(), maxRowsPerFlowFile_);
 
-  std::string stateDir;
-  context.getProperty(s_stateDirectory.getName(), stateDir);
-  if (stateDir.empty()) {
-    logger_->log_error("State Directory is empty");
-    return;
+  mapState_.clear();
+
+  auto state_manager = context.getStateManager();
+  if (state_manager == nullptr) {
+    throw Exception(PROCESSOR_EXCEPTION, "Failed to get StateManager");
   }
 
-  pState_ = std::make_unique<State>(tableName_, stateDir, getUUIDStr(), logger_);
-  if (!*pState_) {
-    return;
+  std::unordered_map<std::string, std::string> state_map;
+  if (state_manager->get(state_map)) {
+    if (state_map[TABLENAME_KEY] != tableName_) {
+      state_manager->clear();
+    } else {
+      for (auto&& elem : state_map) {
+        if (elem.first.find(MAXVALUE_KEY_PREFIX) == 0) {
+          mapState_.emplace(elem.first.substr(MAXVALUE_KEY_PREFIX.length()), std::move(elem.second));
+        }
+      }
+    }
+  } else {
+    // Try to migrate legacy state file
+    std::string stateDir;
+    context.getProperty(s_stateDirectory.getName(), stateDir);
+    if (!stateDir.empty()) {
+      LegacyState legacyState(tableName_, stateDir, getUUIDStr(), logger_);
+      if (legacyState) {
+        mapState_ = legacyState.getStateMap();
+      }
+    }
   }
-  
-  mapState_ = pState_->mapState();
 
   // If 'listMaxValueColumnName_' doesn't match columns in mapState_, then clear mapState_.
   if (listMaxValueColumnName_.size() != mapState_.size()) {
@@ -366,7 +305,7 @@ void QueryDatabaseTable::processOnSchedule(const core::ProcessContext &context) 
   }
 }
 
-void QueryDatabaseTable::processOnTrigger(core::ProcessSession &session) {
+void QueryDatabaseTable::processOnTrigger(core::ProcessContext& context, core::ProcessSession& session) {
   const auto& selectQuery = getSelectQuery();
 
   logger_->log_info("QueryDatabaseTable: selectQuery: '%s'", selectQuery.c_str());
@@ -408,7 +347,16 @@ void QueryDatabaseTable::processOnTrigger(core::ProcessSession &session) {
       throw;
     }
 
-    pState_->writeStateToFile(mapState_);
+    std::unordered_map<std::string, std::string> state_map;
+    state_map.emplace(TABLENAME_KEY, tableName_);
+    for (const auto& elem : mapState_) {
+      state_map.emplace(MAXVALUE_KEY_PREFIX + elem.first, elem.second);
+    }
+    auto state_manager = context.getStateManager();
+    if (state_manager == nullptr) {
+      throw Exception(PROCESSOR_EXCEPTION, "Failed to get StateManager");
+    }
+    state_manager->set(state_map);
   }
 }
 

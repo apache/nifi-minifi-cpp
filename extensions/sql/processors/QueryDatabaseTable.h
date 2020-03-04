@@ -65,8 +65,8 @@ class QueryDatabaseTable: public SQLProcessor<QueryDatabaseTable>, public Output
     return true;
   }
 
-  void processOnSchedule(const core::ProcessContext& context);
-  void processOnTrigger(core::ProcessSession& session);
+  void processOnSchedule(core::ProcessContext& context);
+  void processOnTrigger(core::ProcessContext& context, core::ProcessSession& session);
   
   void initialize() override;
 
@@ -83,7 +83,6 @@ class QueryDatabaseTable: public SQLProcessor<QueryDatabaseTable>, public Output
   std::vector<std::string> listMaxValueColumnName_;
   std::unordered_map<std::string, std::string> mapState_;
   std::unordered_map<std::string, soci::data_type> mapColumnType_;
-  std::unique_ptr<State> pState_;
 };
 
 REGISTER_RESOURCE(QueryDatabaseTable, "QueryDatabaseTable to execute SELECT statement via ODBC.");

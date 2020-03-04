@@ -81,14 +81,14 @@ void ExecuteSQL::initialize() {
   setSupportedRelationships( { s_success });
 }
 
-void ExecuteSQL::processOnSchedule(const core::ProcessContext &context) {
+void ExecuteSQL::processOnSchedule(core::ProcessContext &context) {
   initOutputFormat(context);
 
   context.getProperty(s_sqlSelectQuery.getName(), sqlSelectQuery_);
   context.getProperty(s_maxRowsPerFlowFile.getName(), max_rows_);
 }
 
-void ExecuteSQL::processOnTrigger(core::ProcessSession &session) {
+void ExecuteSQL::processOnTrigger(core::ProcessContext& /*context*/, core::ProcessSession& session) {
   auto statement = connection_->prepareStatement(sqlSelectQuery_);
 
   auto rowset = statement->execute();
