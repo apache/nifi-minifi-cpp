@@ -30,6 +30,7 @@
 #include <string>
 #include <type_traits>
 #include <utility>
+#include <cinttypes>
 
 #include "sitetosite/Peer.h"
 #include "Exception.h"
@@ -80,7 +81,7 @@ std::unique_ptr<sitetosite::SiteToSiteClient> RemoteProcessorGroupPort::getNextP
         }
       } else if (peer_index_ >= 0) {
         std::lock_guard<std::mutex> lock(peer_mutex_);
-        logger_->log_debug("Creating client from peer %ll", peer_index_.load());
+        logger_->log_debug("Creating client from peer %d", peer_index_.load());
         sitetosite::SiteToSiteClientConfiguration config(stream_factory_, peers_[this->peer_index_].getPeer(), local_network_interface_, client_type_);
         config.setSecurityContext(ssl_service);
         peer_index_++;
@@ -360,7 +361,7 @@ std::pair<std::string, int> RemoteProcessorGroupPort::refreshRemoteSite2SiteInfo
           return std::make_pair(host, siteTosite_port_);
         }
       } else {
-        logger_->log_error("Cannot output body to content for ProcessGroup::refreshRemoteSite2SiteInfo: received HTTP code %ll from %s", client->getResponseCode(), fullUrl.str());
+        logger_->log_error("Cannot output body to content for ProcessGroup::refreshRemoteSite2SiteInfo: received HTTP code %" PRId64 " from %s", client->getResponseCode(), fullUrl.str());
       }
     } else {
       logger_->log_error("ProcessGroup::refreshRemoteSite2SiteInfo -- curl_easy_perform() failed , response code %d\n", client->getResponseCode());

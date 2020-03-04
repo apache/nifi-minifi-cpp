@@ -21,6 +21,8 @@
 #include <stdio.h>
 #include <memory>
 #include <string>
+#include <cinttypes>
+
 #include "utils/TimeUtil.h"
 #include "utils/StringUtils.h"
 #include "core/ProcessContext.h"
@@ -92,7 +94,7 @@ void AbstractMQTTProcessor::onSchedule(const std::shared_ptr<core::ProcessContex
     core::TimeUnit unit;
     if (core::Property::StringToTime(value, valInt, unit) && core::Property::ConvertTimeUnitToMS(valInt, unit, valInt)) {
       keepAliveInterval_ = valInt/1000;
-      logger_->log_debug("AbstractMQTTProcessor: KeepLiveInterval [%ll]", keepAliveInterval_);
+      logger_->log_debug("AbstractMQTTProcessor: KeepLiveInterval [%" PRId64 "]", keepAliveInterval_);
     }
   }
   value = "";
@@ -100,14 +102,14 @@ void AbstractMQTTProcessor::onSchedule(const std::shared_ptr<core::ProcessContex
     core::TimeUnit unit;
     if (core::Property::StringToTime(value, valInt, unit) && core::Property::ConvertTimeUnitToMS(valInt, unit, valInt)) {
       connectionTimeOut_ = valInt/1000;
-      logger_->log_debug("AbstractMQTTProcessor: ConnectionTimeOut [%ll]", connectionTimeOut_);
+      logger_->log_debug("AbstractMQTTProcessor: ConnectionTimeOut [%" PRId64 "]", connectionTimeOut_);
     }
   }
   value = "";
   if (context->getProperty(QOS.getName(), value) && !value.empty() && (value == MQTT_QOS_0 || value == MQTT_QOS_1 || MQTT_QOS_2) &&
       core::Property::StringToInt(value, valInt)) {
     qos_ = valInt;
-    logger_->log_debug("AbstractMQTTProcessor: QOS [%ll]", qos_);
+    logger_->log_debug("AbstractMQTTProcessor: QOS [%" PRId64 "]", qos_);
   }
   value = "";
 

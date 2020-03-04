@@ -29,6 +29,7 @@
 #include <chrono>
 #include <thread>
 #include <iostream>
+#include <cinttypes>
 /* This implementation is only for native Windows systems.  */
 #if (defined _WIN32 || defined __WIN32__) && !defined __CYGWIN__
 #define _WINSOCKAPI_
@@ -184,7 +185,7 @@ std::shared_ptr<core::FlowFile> ProcessSession::clone(const std::shared_ptr<core
     if (parent->getResourceClaim()) {
       if ((uint64_t) (offset + size) > parent->getSize()) {
         // Set offset and size
-        logger_->log_error("clone offset %ll and size %ll exceed parent size %llu", offset, size, parent->getSize());
+        logger_->log_error("clone offset %" PRId64 " and size %" PRId64 " exceed parent size %" PRIu64, offset, size, parent->getSize());
         // Remove the Add FlowFile for the session
         std::map<std::string, std::shared_ptr<core::FlowFile> >::iterator it = this->_addedFlowFiles.find(record->getUUIDStr());
         if (it != this->_addedFlowFiles.end())
@@ -209,7 +210,7 @@ void ProcessSession::remove(const std::shared_ptr<core::FlowFile> &flow) {
   flow->setDeleted(true);
   if (flow->getResourceClaim() != nullptr) {
     flow->getResourceClaim()->decreaseFlowFileRecordOwnedCount();
-    logger_->log_debug("Auto terminated %s %llu %s", flow->getResourceClaim()->getContentFullPath(), flow->getResourceClaim()->getFlowFileRecordOwnedCount(), flow->getUUIDStr());
+    logger_->log_debug("Auto terminated %s %" PRIu64 " %s", flow->getResourceClaim()->getContentFullPath(), flow->getResourceClaim()->getFlowFileRecordOwnedCount(), flow->getUUIDStr());
   } else {
     logger_->log_debug("Flow does not contain content. no resource claim to decrement.");
   }
@@ -422,7 +423,8 @@ void ProcessSession::importFrom(io::DataStream &stream, const std::shared_ptr<co
     }
     flow->setResourceClaim(claim);
 
-    logger_->log_debug("Import offset %llu length %llu into content %s for FlowFile UUID %s", flow->getOffset(), flow->getSize(), flow->getResourceClaim()->getContentFullPath(), flow->getUUIDStr());
+    logger_->log_debug("Import offset %" PRIu64 " length %" PRIu64 " into content %s for FlowFile UUID %s",
+        flow->getOffset(), flow->getSize(), flow->getResourceClaim()->getContentFullPath(), flow->getUUIDStr());
 
     content_stream->closeStream();
     std::stringstream details;
@@ -497,7 +499,7 @@ void ProcessSession::import(std::string source, const std::shared_ptr<core::Flow
         }
         flow->setResourceClaim(claim);
 
-        logger_->log_debug("Import offset %llu length %llu into content %s for FlowFile UUID %s", flow->getOffset(), flow->getSize(), flow->getResourceClaim()->getContentFullPath(),
+        logger_->log_debug("Import offset %" PRIu64 " length %" PRIu64 " into content %s for FlowFile UUID %s", flow->getOffset(), flow->getSize(), flow->getResourceClaim()->getContentFullPath(),
                            flow->getUUIDStr());
 
         stream->closeStream();

@@ -19,6 +19,7 @@
 #include <memory>
 #include <vector>
 #include <set>
+#include <cinttypes>
 
 #include "core/yaml/YamlConfiguration.h"
 #include "core/state/Value.h"
@@ -71,7 +72,7 @@ core::ProcessGroup *YamlConfiguration::parseRootProcessGroupYaml(YAML::Node root
     if (core::Property::StringToTime(onScheduleRetryPeriod, onScheduleRetryPeriodValue, unit)
         && core::Property::ConvertTimeUnitToMS(onScheduleRetryPeriodValue, unit, onScheduleRetryPeriodValue)
         && group) {
-      logger_->log_debug("parseRootProcessGroup: onschedule retry => [%lld] ms", onScheduleRetryPeriodValue);
+      logger_->log_debug("parseRootProcessGroup: onschedule retry => [%" PRId64 "] ms", onScheduleRetryPeriodValue);
       group->setOnScheduleRetryPeriod(onScheduleRetryPeriodValue);
     }
   }
@@ -195,7 +196,7 @@ void YamlConfiguration::parseProcessorNodeYaml(YAML::Node processorsNode, core::
 
         if (procCfg.schedulingStrategy == "TIMER_DRIVEN" || procCfg.schedulingStrategy == "EVENT_DRIVEN") {
           if (core::Property::StringToTime(procCfg.schedulingPeriod, schedulingPeriod, unit) && core::Property::ConvertTimeUnitToNS(schedulingPeriod, unit, schedulingPeriod)) {
-            logger_->log_debug("convert: parseProcessorNode: schedulingPeriod => [%ll] ns", schedulingPeriod);
+            logger_->log_debug("convert: parseProcessorNode: schedulingPeriod => [%" PRId64 "] ns", schedulingPeriod);
             processor->setSchedulingPeriodNano(schedulingPeriod);
           }
         } else {
@@ -203,12 +204,12 @@ void YamlConfiguration::parseProcessorNodeYaml(YAML::Node processorsNode, core::
         }
 
         if (core::Property::StringToTime(procCfg.penalizationPeriod, penalizationPeriod, unit) && core::Property::ConvertTimeUnitToMS(penalizationPeriod, unit, penalizationPeriod)) {
-          logger_->log_debug("convert: parseProcessorNode: penalizationPeriod => [%ll] ms", penalizationPeriod);
+          logger_->log_debug("convert: parseProcessorNode: penalizationPeriod => [%" PRId64 "] ms", penalizationPeriod);
           processor->setPenalizationPeriodMsec(penalizationPeriod);
         }
 
         if (core::Property::StringToTime(procCfg.yieldPeriod, yieldPeriod, unit) && core::Property::ConvertTimeUnitToMS(yieldPeriod, unit, yieldPeriod)) {
-          logger_->log_debug("convert: parseProcessorNode: yieldPeriod => [%ll] ms", yieldPeriod);
+          logger_->log_debug("convert: parseProcessorNode: yieldPeriod => [%" PRId64 "] ms", yieldPeriod);
           processor->setYieldPeriodMsec(yieldPeriod);
         }
 
@@ -298,7 +299,7 @@ void YamlConfiguration::parseRemoteProcessGroupYaml(YAML::Node *rpgNode, core::P
           logger_->log_debug("parseRemoteProcessGroupYaml: yield period => [%s]", yieldPeriod);
 
           if (core::Property::StringToTime(yieldPeriod, yieldPeriodValue, unit) && core::Property::ConvertTimeUnitToMS(yieldPeriodValue, unit, yieldPeriodValue) && group) {
-            logger_->log_debug("parseRemoteProcessGroupYaml: yieldPeriod => [%ll] ms", yieldPeriodValue);
+            logger_->log_debug("parseRemoteProcessGroupYaml: yieldPeriod => [%" PRId64 "] ms", yieldPeriodValue);
             group->setYieldPeriodMsec(yieldPeriodValue);
           }
         }
@@ -308,7 +309,7 @@ void YamlConfiguration::parseRemoteProcessGroupYaml(YAML::Node *rpgNode, core::P
           logger_->log_debug("parseRemoteProcessGroupYaml: timeout => [%s]", timeout);
 
           if (core::Property::StringToTime(timeout, timeoutValue, unit) && core::Property::ConvertTimeUnitToMS(timeoutValue, unit, timeoutValue) && group) {
-            logger_->log_debug("parseRemoteProcessGroupYaml: timeoutValue => [%ll] ms", timeoutValue);
+            logger_->log_debug("parseRemoteProcessGroupYaml: timeoutValue => [%" PRId64 "] ms", timeoutValue);
             group->setTimeOut(timeoutValue);
           }
         }
@@ -413,7 +414,7 @@ void YamlConfiguration::parseProvenanceReportingYaml(YAML::Node *reportNode, cor
 
   core::TimeUnit unit;
   if (core::Property::StringToTime(schedulingPeriodStr, schedulingPeriod, unit) && core::Property::ConvertTimeUnitToNS(schedulingPeriod, unit, schedulingPeriod)) {
-    logger_->log_debug("ProvenanceReportingTask schedulingPeriod %ll ns", schedulingPeriod);
+    logger_->log_debug("ProvenanceReportingTask schedulingPeriod %" PRId64 " ns", schedulingPeriod);
     processor->setSchedulingPeriodNano(schedulingPeriod);
   }
 
@@ -430,7 +431,7 @@ void YamlConfiguration::parseProvenanceReportingYaml(YAML::Node *reportNode, cor
 
     auto portStr = node["port"].as<std::string>();
     if (core::Property::StringToInt(portStr, lvalue) && !hostStr.empty()) {
-      logger_->log_debug("ProvenanceReportingTask port %ll", lvalue);
+      logger_->log_debug("ProvenanceReportingTask port %" PRId64, lvalue);
       std::string url = hostStr + ":" + portStr;
       reportTask->setURL(url);
     }

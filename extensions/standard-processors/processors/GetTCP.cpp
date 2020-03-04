@@ -36,6 +36,8 @@
 #include <sstream>
 #include <string>
 #include <iostream>
+#include <cinttypes>
+
 #include "io/ClientSocket.h"
 #include "utils/StringUtils.h"
 #include "utils/TimeUtil.h"
@@ -197,7 +199,7 @@ void GetTCP::onSchedule(const std::shared_ptr<core::ProcessContext> &context, co
               socket_ptr->closeStream();
               return -1;
             }
-            logger_->log_info("Sleeping for %ll msec before attempting to reconnect", reconnect_interval_);
+            logger_->log_info("Sleeping for %" PRIu64 " msec before attempting to reconnect", reconnect_interval_);
             std::this_thread::sleep_for(std::chrono::milliseconds(reconnect_interval_));
             socket_ring_buffer_.enqueue(std::move(socket_ptr));
           } else {

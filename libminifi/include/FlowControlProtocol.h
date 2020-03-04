@@ -28,6 +28,7 @@
 #include <errno.h>
 #include <chrono>
 #include <thread>
+#include <cinttypes>
 
 #include "core/Property.h"
 #include "properties/Configure.h"
@@ -168,12 +169,12 @@ class FlowControlProtocol {
       logger_->log_info("NiFi Server Name %s", _serverName);
     }
     if (configure->get(Configure::nifi_server_port, value) && core::Property::StringToInt(value, _serverPort)) {
-      logger_->log_info("NiFi Server Port: [%ll]", _serverPort);
+      logger_->log_info("NiFi Server Port: [%" PRIu16 "]", _serverPort);
     }
     if (configure->get(Configure::nifi_server_report_interval, value)) {
       core::TimeUnit unit;
       if (core::Property::StringToTime(value, _reportInterval, unit) && core::Property::ConvertTimeUnitToMS(_reportInterval, unit, _reportInterval)) {
-        logger_->log_info("NiFi server report interval: [%ll] ms", _reportInterval);
+        logger_->log_info("NiFi server report interval: [%" PRId64 "] ms", _reportInterval);
       }
     } else
       _reportInterval = 0;
@@ -261,7 +262,7 @@ class FlowControlProtocol {
   // NiFi server Name
   std::string _serverName;
   // NiFi server port
-  int64_t _serverPort;
+  uint16_t _serverPort;
   // Serial Number
   uint8_t _serialNumber[8];
   // socket to server
