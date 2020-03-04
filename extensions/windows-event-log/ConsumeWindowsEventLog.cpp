@@ -29,6 +29,7 @@
 #include <iostream>
 #include <memory>
 #include <regex>
+#include <cinttypes>
 
 #include "wel/MetadataWalker.h"
 #include "wel/XMLString.h"
@@ -280,7 +281,7 @@ void ConsumeWindowsEventLog::onTrigger(const std::shared_ptr<core::ProcessContex
   }
   else if (inactiveDurationToReconnect_ > 0) {
     if ((now - lastActivityTimestamp_) > inactiveDurationToReconnect_) {
-      logger_->log_info("Exceeds configured 'inactive duration to reconnect' %lld ms. Unsubscribe to reconnect..", inactiveDurationToReconnect_);
+      logger_->log_info("Exceeds configured 'inactive duration to reconnect' %" PRId64 " ms. Unsubscribe to reconnect..", inactiveDurationToReconnect_);
       unsubscribe();
     }
   }
@@ -398,7 +399,7 @@ void ConsumeWindowsEventLog::processEvent(EVT_HANDLE hEvent) {
   if (!EvtRender(NULL, hEvent, EvtRenderEventXml, size, 0, &used, &propertyCount)) {
     if (ERROR_INSUFFICIENT_BUFFER == GetLastError()) {
       if (used > maxBufferSize_) {
-        logger_->log_error("Dropping event %x because it couldn't be rendered within %llu bytes.", hEvent, maxBufferSize_);
+        logger_->log_error("Dropping event %p because it couldn't be rendered within %" PRIu64 " bytes.", hEvent, maxBufferSize_);
         return;
       }
 
@@ -505,7 +506,7 @@ bool ConsumeWindowsEventLog::subscribe(const std::shared_ptr<core::ProcessContex
   context->getProperty(Query.getName(), query_);
 
   context->getProperty(MaxBufferSize.getName(), maxBufferSize_);
-  logger_->log_debug("ConsumeWindowsEventLog: maxBufferSize_ %lld", maxBufferSize_);
+  logger_->log_debug("ConsumeWindowsEventLog: maxBufferSize_ %" PRId64, maxBufferSize_);
 
   provenanceUri_ = "winlog://" + computerName_ + "/" + channel_ + "?" + query_;
 
@@ -516,7 +517,7 @@ bool ConsumeWindowsEventLog::subscribe(const std::shared_ptr<core::ProcessContex
   core::TimeUnit unit;
   if (core::Property::StringToTime(strInactiveDurationToReconnect, inactiveDurationToReconnect_, unit) &&
     core::Property::ConvertTimeUnitToMS(inactiveDurationToReconnect_, unit, inactiveDurationToReconnect_)) {
-    logger_->log_info("inactiveDurationToReconnect: [%lld] ms", inactiveDurationToReconnect_);
+    logger_->log_info("inactiveDurationToReconnect: [%" PRId64 "] ms", inactiveDurationToReconnect_);
   }
 
   if (!pBookmark_) {
@@ -575,7 +576,7 @@ bool ConsumeWindowsEventLog::subscribe(const std::shared_ptr<core::ProcessContex
           if (ERROR_EVT_QUERY_RESULT_STALE == (DWORD)hEvent) {
             logger->log_error("Received missing event notification. Consider triggering processor more frequently or increasing queue size.");
           } else {
-            logger->log_error("Received the following Win32 error: %x", hEvent);
+            logger->log_error("Received the following Win32 error: %p", hEvent);
           }
         } else if (action == EvtSubscribeActionDeliver) {
           pConsumeWindowsEventLog->processEvent(hEvent);
@@ -623,7 +624,7 @@ int ConsumeWindowsEventLog::processQueue(const std::shared_ptr<core::ProcessSess
 
   auto before_time = std::chrono::high_resolution_clock::now();
   utils::ScopeGuard timeGuard([&](){
-    logger_->log_debug("processQueue processed %d Events in %llu ms",
+    logger_->log_debug("processQueue processed %d Events in %" PRIu64 " ms",
                       flowFileCount,
                       std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - before_time).count());
   });
@@ -664,7 +665,7 @@ int ConsumeWindowsEventLog::processQueue(const std::shared_ptr<core::ProcessSess
     if (batch_commit_size_ != 0U && (flowFileCount % batch_commit_size_ == 0)) {
       auto before_commit = std::chrono::high_resolution_clock::now();
       session->commit();
-      logger_->log_debug("processQueue commit took %llu ms",
+      logger_->log_debug("processQueue commit took %" PRIu64 " ms",
                         std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - before_commit).count());
 
       if (pBookmark_) {
