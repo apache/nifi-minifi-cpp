@@ -398,7 +398,7 @@ void ConsumeWindowsEventLog::processEvent(EVT_HANDLE hEvent) {
   if (!EvtRender(NULL, hEvent, EvtRenderEventXml, size, 0, &used, &propertyCount)) {
     if (ERROR_INSUFFICIENT_BUFFER == GetLastError()) {
       if (used > maxBufferSize_) {
-        logger_->log_error("Dropping event %x because it couldn't be rendered within %ll bytes.", hEvent, maxBufferSize_);
+        logger_->log_error("Dropping event %x because it couldn't be rendered within %llu bytes.", hEvent, maxBufferSize_);
         return;
       }
 

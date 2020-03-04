@@ -284,7 +284,7 @@ bool ListenHTTP::Handler::handlePost(CivetServer *server, struct mg_connection *
       logger_->log_error("ListenHTTP handling POST resulted in a null request");
       return false;
   }
-  logger_->log_debug("ListenHTTP handling POST request of length %ll", req_info->content_length);
+  logger_->log_debug("ListenHTTP handling POST request of length %lld", req_info->content_length);
 
   if (!auth_request(conn, req_info)) {
     return true;

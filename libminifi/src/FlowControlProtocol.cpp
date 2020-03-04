@@ -25,6 +25,8 @@
 #include <string>
 #include <random>
 #include <iostream>
+#include <cinttypes>
+
 #include "FlowController.h"
 #include "core/Core.h"
 namespace org {
@@ -205,9 +207,9 @@ int FlowControlProtocol::sendRegisterReq() {
     return -1;
   }
   logger_->log_debug("Flow Control Protocol receive MsgType %s", FlowControlMsgTypeToStr((FlowControlMsgType) hdr.msgType));
-  logger_->log_debug("Flow Control Protocol receive Seq Num %ll", hdr.seqNumber);
+  logger_->log_debug("Flow Control Protocol receive Seq Num %" PRIu32, hdr.seqNumber);
   logger_->log_debug("Flow Control Protocol receive Resp Code %s", FlowControlRespCodeToStr((FlowControlRespCode) hdr.status));
-  logger_->log_debug("Flow Control Protocol receive Payload len %ll", hdr.payloadLen);
+  logger_->log_debug("Flow Control Protocol receive Payload len %" PRIu32, hdr.payloadLen);
 
   if (hdr.status == RESP_SUCCESS && hdr.seqNumber == this->_seqNumber) {
     this->_registered = true;
@@ -230,7 +232,7 @@ int FlowControlProtocol::sendRegisterReq() {
         // Fixed 4 bytes
         uint32_t reportInterval;
         payloadPtr = this->decode(payloadPtr, reportInterval);
-        logger_->log_debug("Flow Control Protocol receive report interval %ll ms", reportInterval);
+        logger_->log_debug("Flow Control Protocol receive report interval %" PRIu32 " ms", reportInterval);
         this->_reportInterval = reportInterval;
       } else {
         break;
@@ -299,9 +301,9 @@ int FlowControlProtocol::sendReportReq() {
     return -1;
   }
   logger_->log_debug("Flow Control Protocol receive MsgType %s", FlowControlMsgTypeToStr((FlowControlMsgType) hdr.msgType));
-  logger_->log_debug("Flow Control Protocol receive Seq Num %ll", hdr.seqNumber);
+  logger_->log_debug("Flow Control Protocol receive Seq Num %" PRIu32, hdr.seqNumber);
   logger_->log_debug("Flow Control Protocol receive Resp Code %s", FlowControlRespCodeToStr((FlowControlRespCode) hdr.status));
-  logger_->log_debug("Flow Control Protocol receive Payload len %ll", hdr.payloadLen);
+  logger_->log_debug("Flow Control Protocol receive Payload len %" PRIu32, hdr.payloadLen);
 
   if (hdr.status == RESP_SUCCESS && hdr.seqNumber == this->_seqNumber) {
     this->_seqNumber++;

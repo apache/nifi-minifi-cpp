@@ -18,12 +18,15 @@
  * limitations under the License.
  */
 #include "ConsumeMQTT.h"
+
 #include <stdio.h>
 #include <algorithm>
 #include <memory>
 #include <string>
 #include <map>
 #include <set>
+#include <cinttypes>
+
 #include "utils/TimeUtil.h"
 #include "utils/StringUtils.h"
 #include "core/ProcessContext.h"
@@ -70,12 +73,12 @@ void ConsumeMQTT::onSchedule(const std::shared_ptr<core::ProcessContext> &contex
   value = "";
   if (context->getProperty(QueueBufferMaxMessage.getName(), value) && !value.empty() && core::Property::StringToInt(value, valInt)) {
     maxQueueSize_ = valInt;
-    logger_->log_debug("ConsumeMQTT: Queue Max Message [%ll]", maxQueueSize_);
+    logger_->log_debug("ConsumeMQTT: Queue Max Message [%" PRIu64 "]", maxQueueSize_);
   }
   value = "";
   if (context->getProperty(MaxFlowSegSize.getName(), value) && !value.empty() && core::Property::StringToInt(value, valInt)) {
     maxSegSize_ = valInt;
-    logger_->log_debug("ConsumeMQTT: Max Flow Segment Size [%ll]", maxSegSize_);
+    logger_->log_debug("ConsumeMQTT: Max Flow Segment Size [%" PRIu64 "]", maxSegSize_);
   }
 }
 

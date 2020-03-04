@@ -18,12 +18,15 @@
  * limitations under the License.
  */
 #include "PublishMQTT.h"
+
 #include <stdio.h>
 #include <algorithm>
 #include <memory>
 #include <string>
 #include <map>
 #include <set>
+#include <cinttypes>
+
 #include "utils/TimeUtil.h"
 #include "utils/StringUtils.h"
 #include "core/ProcessContext.h"
@@ -58,7 +61,7 @@ void PublishMQTT::onSchedule(const std::shared_ptr<core::ProcessContext> &contex
   value = "";
   if (context->getProperty(MaxFlowSegSize.getName(), value) && !value.empty() && core::Property::StringToInt(value, valInt)) {
     max_seg_size_ = valInt;
-    logger_->log_debug("PublishMQTT: max flow segment size [%ll]", max_seg_size_);
+    logger_->log_debug("PublishMQTT: max flow segment size [%" PRIu64 "]", max_seg_size_);
   }
   value = "";
   if (context->getProperty(Retain.getName(), value) && !value.empty() && org::apache::nifi::minifi::utils::StringUtils::StringToBool(value, retain_)) {
