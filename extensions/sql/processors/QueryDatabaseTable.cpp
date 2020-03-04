@@ -242,15 +242,15 @@ void QueryDatabaseTable::processOnSchedule(core::ProcessContext &context) {
 
   mapState_.clear();
 
-  auto state_manager = context.getStateManager();
-  if (state_manager == nullptr) {
+  state_manager_ = context.getStateManager();
+  if (state_manager_ == nullptr) {
     throw Exception(PROCESSOR_EXCEPTION, "Failed to get StateManager");
   }
 
   std::unordered_map<std::string, std::string> state_map;
-  if (state_manager->get(state_map)) {
+  if (state_manager_->get(state_map)) {
     if (state_map[TABLENAME_KEY] != tableName_) {
-      state_manager->clear();
+      state_manager_->clear();
     } else {
       for (auto&& elem : state_map) {
         if (elem.first.find(MAXVALUE_KEY_PREFIX) == 0) {
@@ -266,7 +266,7 @@ void QueryDatabaseTable::processOnSchedule(core::ProcessContext &context) {
       LegacyState legacyState(tableName_, stateDir, getUUIDStr(), logger_);
       if (legacyState) {
         mapState_ = legacyState.getStateMap();
-        if (saveState(*state_manager) && state_manager->persist()) {
+        if (saveState() && state_manager_->persist()) {
           logger_->log_info("State migration successful");
           legacyState.moveStateFileToMigrated();
         } else {
@@ -364,12 +364,7 @@ void QueryDatabaseTable::processOnTrigger(core::ProcessContext& context, core::P
       throw;
     }
 
-    auto state_manager = context.getStateManager();
-    if (state_manager == nullptr) {
-      throw Exception(PROCESSOR_EXCEPTION, "Failed to get StateManager");
-    }
-
-    saveState(*state_manager);
+    saveState();
   }
 }
 
@@ -424,13 +419,13 @@ std::string QueryDatabaseTable::getSelectQuery() {
   return ret;
 }
 
-bool QueryDatabaseTable::saveState(core::CoreComponentStateManager& state_manager) {
+bool QueryDatabaseTable::saveState() {
   std::unordered_map<std::string, std::string> state_map;
   state_map.emplace(TABLENAME_KEY, tableName_);
   for (const auto& elem : mapState_) {
     state_map.emplace(MAXVALUE_KEY_PREFIX + elem.first, elem.second);
   }
-  return state_manager.set(state_map);
+  return state_manager_->set(state_map);
 }
 
 
