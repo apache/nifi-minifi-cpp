@@ -73,6 +73,8 @@ class QueryDatabaseTable: public SQLProcessor<QueryDatabaseTable>, public Output
  private:
   std::string getSelectQuery();
 
+  bool saveState(core::CoreComponentStateManager& context);
+
  private:
   std::string tableName_;
   std::string columnNames_;

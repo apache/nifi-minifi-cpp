@@ -25,7 +25,7 @@
 #include <map>
 #include <set>
 #include <sstream>
-#include <stdio.h>
+#include <cstdio>
 #include <string>
 #include <iostream>
 #include <memory>
@@ -93,7 +93,7 @@ const core::Property QueryDatabaseTable::s_maxRowsPerFlowFile(
     "If the value specified is zero, then all rows are returned in a single FlowFile.")->supportsExpressionLanguage(true)->build());
 
 const core::Property QueryDatabaseTable::s_stateDirectory(
-  core::PropertyBuilder::createProperty("State Directory")->isRequired(false)->withDefaultValue("QDTState")->withDescription("Directory which contains processor state data.")->build());
+  core::PropertyBuilder::createProperty("State Directory")->isRequired(false)->withDefaultValue("QDTState")->withDescription("DEPRECATED. Only use it for state migration from the state file, supplying the legacy state directory.")->build());
 
 const std::string QueryDatabaseTable::s_initialMaxValueDynamicPropertyPrefix("initial.maxvalue.");
 
@@ -111,7 +111,9 @@ class LegacyState {
   LegacyState(const std::string& tableName, const std::string& stateDir, const std::string& uuid, std::shared_ptr<logging::Logger> logger)
     :tableName_(tableName), logger_(logger) {
 
-    filePath_ = utils::file::FileUtils::concat_path(utils::file::FileUtils::concat_path(stateDir, uuid), "State.txt");
+    filePath_ = utils::file::FileUtils::concat_path(
+            utils::file::FileUtils::concat_path(
+              utils::file::FileUtils::concat_path(stateDir, "uuid"), uuid), "State.txt");
 
     if (!getStateFromFile())
       return;
@@ -125,6 +127,13 @@ class LegacyState {
 
   const std::unordered_map<std::string, std::string>& getStateMap() const {
     return mapState_;
+  }
+
+  bool moveStateFileToMigrated() {
+    if (!ok_) {
+      return false;
+    }
+    return rename(filePath_.c_str(), (filePath_ + "-migrated").c_str()) == 0;
   }
 
  private:
@@ -257,6 +266,14 @@ void QueryDatabaseTable::processOnSchedule(core::ProcessContext &context) {
       LegacyState legacyState(tableName_, stateDir, getUUIDStr(), logger_);
       if (legacyState) {
         mapState_ = legacyState.getStateMap();
+        if (saveState(*state_manager) && state_manager->persist()) {
+          logger_->log_info("State migration successful");
+          legacyState.moveStateFileToMigrated();
+        } else {
+          logger_->log_warn("Failed to persists migrated state");
+        }
+      } else {
+        logger_->log_warn("Could not migrate state from specified State Directory %s", stateDir);
       }
     }
   }
@@ -347,16 +364,12 @@ void QueryDatabaseTable::processOnTrigger(core::ProcessContext& context, core::P
       throw;
     }
 
-    std::unordered_map<std::string, std::string> state_map;
-    state_map.emplace(TABLENAME_KEY, tableName_);
-    for (const auto& elem : mapState_) {
-      state_map.emplace(MAXVALUE_KEY_PREFIX + elem.first, elem.second);
-    }
     auto state_manager = context.getStateManager();
     if (state_manager == nullptr) {
       throw Exception(PROCESSOR_EXCEPTION, "Failed to get StateManager");
     }
-    state_manager->set(state_map);
+
+    saveState(*state_manager);
   }
 }
 
@@ -409,6 +422,15 @@ std::string QueryDatabaseTable::getSelectQuery() {
   }
 
   return ret;
+}
+
+bool QueryDatabaseTable::saveState(core::CoreComponentStateManager& state_manager) {
+  std::unordered_map<std::string, std::string> state_map;
+  state_map.emplace(TABLENAME_KEY, tableName_);
+  for (const auto& elem : mapState_) {
+    state_map.emplace(MAXVALUE_KEY_PREFIX + elem.first, elem.second);
+  }
+  return state_manager.set(state_map);
 }
 
 
