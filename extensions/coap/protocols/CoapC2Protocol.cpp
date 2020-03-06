@@ -40,14 +40,11 @@ CoapProtocol::CoapProtocol(const std::string &name, const utils::Identifier &uui
 CoapProtocol::~CoapProtocol() {
 }
 
-void CoapProtocol::initialize(const std::weak_ptr<core::controller::ControllerServiceProvider> &controller, const std::shared_ptr<Configure> &configure) {
+void CoapProtocol::initialize(const std::shared_ptr<core::controller::ControllerServiceProvider> &controller, const std::shared_ptr<Configure> &configure) {
   RESTSender::initialize(controller, configure);
   if (configure->get("nifi.c2.coap.connector.service", controller_service_name_)) {
-    auto sharedController = controller.lock();
-    if (sharedController) {
-      auto service = sharedController->getControllerService(controller_service_name_);
-      coap_service_ = std::static_pointer_cast<coap::controllers::CoapConnectorService>(service);
-    }
+    auto service = controller->getControllerService(controller_service_name_);
+    coap_service_ = std::static_pointer_cast<coap::controllers::CoapConnectorService>(service);
   } else {
     logger_->log_info("No CoAP connector configured, so using default service");
     coap_service_ = std::make_shared<coap::controllers::CoapConnectorService>("cs", configure);

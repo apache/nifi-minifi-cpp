@@ -56,7 +56,9 @@ C2Agent::C2Agent(const std::shared_ptr<core::controller::ControllerServiceProvid
 
   last_run_ = std::chrono::steady_clock::now();
 
-  update_service_ = std::static_pointer_cast<controllers::UpdatePolicyControllerService>(controller_->getControllerService(C2_AGENT_UPDATE_NAME));
+  if (nullptr != controller_) {
+    update_service_ = std::static_pointer_cast<controllers::UpdatePolicyControllerService>(controller_->getControllerService(C2_AGENT_UPDATE_NAME));
+  }
 
   if (update_service_ == nullptr) {
     // create a stubbed service for updating the flow identifier

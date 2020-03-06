@@ -56,7 +56,7 @@ class RESTSender : public RESTProtocol, public C2Protocol {
 
   virtual void update(const std::shared_ptr<Configure> &configure) override;
 
-  virtual void initialize(const std::weak_ptr<core::controller::ControllerServiceProvider> &controller, const std::shared_ptr<Configure> &configure) override;
+  virtual void initialize(const std::shared_ptr<core::controller::ControllerServiceProvider> &controller, const std::shared_ptr<Configure> &configure) override;
 
  protected:
 

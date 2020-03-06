@@ -41,7 +41,7 @@ RESTSender::RESTSender(const std::string &name, const utils::Identifier &uuid)
       logger_(logging::LoggerFactory<Connectable>::getLogger()) {
 }
 
-void RESTSender::initialize(const std::weak_ptr<core::controller::ControllerServiceProvider> &controller, const std::shared_ptr<Configure> &configure) {
+void RESTSender::initialize(const std::shared_ptr<core::controller::ControllerServiceProvider> &controller, const std::shared_ptr<Configure> &configure) {
   C2Protocol::initialize(controller, configure);
   // base URL when one is not specified.
   if (nullptr != configure) {
@@ -49,12 +49,9 @@ void RESTSender::initialize(const std::weak_ptr<core::controller::ControllerServ
     configure->get("nifi.c2.rest.url", "c2.rest.url", rest_uri_);
     configure->get("nifi.c2.rest.url.ack", "c2.rest.url.ack", ack_uri_);
     if (configure->get("nifi.c2.rest.ssl.context.service", "c2.rest.ssl.context.service", ssl_context_service_str)) {
-      auto sharedController = controller.lock();
-      if (sharedController) {
-        auto service = sharedController->getControllerService(ssl_context_service_str);
-        if (nullptr != service) {
-          ssl_context_service_ = std::static_pointer_cast<minifi::controllers::SSLContextService>(service);
-        }
+      auto service = controller->getControllerService(ssl_context_service_str);
+      if (nullptr != service) {
+        ssl_context_service_ = std::static_pointer_cast<minifi::controllers::SSLContextService>(service);
       }
     }
     configure->get("nifi.c2.rest.heartbeat.minimize.updates", "c2.rest.heartbeat.minimize.updates", update_str);

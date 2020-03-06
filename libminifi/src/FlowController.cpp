@@ -464,7 +464,6 @@ void FlowController::initializeC2() {
   device_information_.clear();
   component_metrics_.clear();
   component_metrics_by_id_.clear();
-  agent_information_.clear();
   std::string class_csv;
 
   if (root_ != nullptr) {
@@ -483,17 +482,6 @@ void FlowController::initializeC2() {
     repoMetrics->addRepository(flow_file_repo_);
 
     device_information_[repoMetrics->getName()] = repoMetrics;
-
-    /*
-    std::shared_ptr<state::response::AgentInformationWithManifest> manifest = std::make_shared<state::response::AgentInformationWithManifest>("agentInformation");
-    auto identifier = std::dynamic_pointer_cast<state::response::AgentIdentifier>(manifest);
-
-    if (identifier != nullptr) {
-      identifier->setIdentifier(identifier_str);
-      identifier->setAgentClass(class_str);
-      agent_information_[manifest->getName()] = manifest;
-    }
-    */
   }
 
   if (configuration_->get("nifi.c2.root.classes", class_csv)) {

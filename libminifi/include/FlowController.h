@@ -399,9 +399,6 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
 
   std::map<uint8_t, std::vector<std::shared_ptr<state::response::ResponseNode>>> component_metrics_by_id_;
 
-  // manifest cache
-  std::map<std::string, std::shared_ptr<state::response::ResponseNode>> agent_information_;
-
   // metrics last run
   std::chrono::steady_clock::time_point last_metrics_capture_;
 

@@ -98,6 +98,7 @@ class Configure : public Properties {
   static const char *nifi_c2_flow_id;
   static const char *nifi_c2_flow_url;
   static const char *nifi_c2_flow_base_url;
+  static const char *nifi_c2_full_heartbeat;
 
  private:
   std::string agent_identifier_;

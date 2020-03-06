@@ -50,7 +50,7 @@ namespace utils {
 template<typename T>
 class Worker {
  public:
-  explicit Worker(const std::function<T()> &task, const std::string &identifier, std::unique_ptr<AfterExecute<T>> run_determinant)
+  explicit Worker(std::function<T()> &task, const std::string &identifier, std::unique_ptr<AfterExecute<T>> run_determinant)
       : identifier_(identifier),
         next_exec_time_(std::chrono::steady_clock::now()),
         task(task),
@@ -58,7 +58,7 @@ class Worker {
     promise = std::make_shared<std::promise<T>>();
   }
 
-  explicit Worker(const std::function<T()> &task, const std::string &identifier)
+  explicit Worker(std::function<T()> &task, const std::string &identifier)
       : identifier_(identifier),
         next_exec_time_(std::chrono::steady_clock::now()),
         task(task),
