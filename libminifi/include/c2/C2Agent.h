@@ -57,7 +57,7 @@ namespace c2 {
 class C2Agent : public state::UpdateController {
  public:
 
-  C2Agent(const std::weak_ptr<core::controller::ControllerServiceProvider> &controller, const std::weak_ptr<state::StateMonitor> &updateSink, const std::shared_ptr<Configure> &configure);
+  C2Agent(const std::shared_ptr<core::controller::ControllerServiceProvider> &controller, const std::shared_ptr<state::StateMonitor> &updateSink, const std::shared_ptr<Configure> &configure);
 
   virtual ~C2Agent() noexcept {
     delete protocol_.load();
@@ -206,7 +206,7 @@ class C2Agent : public state::UpdateController {
   std::function<state::Update()> c2_consumer_;
 
   // reference to the update sink, against which we will execute updates.
-  std::weak_ptr<state::StateMonitor> update_sink_;
+  std::shared_ptr<state::StateMonitor> update_sink_;
 
   // functions that will be used for the udpate controller.
   std::vector<std::function<state::Update()>> functions_;
@@ -214,7 +214,7 @@ class C2Agent : public state::UpdateController {
   std::shared_ptr<controllers::UpdatePolicyControllerService> update_service_;
 
   // controller service provider reference.
-  std::weak_ptr<core::controller::ControllerServiceProvider> controller_;
+  std::shared_ptr<core::controller::ControllerServiceProvider> controller_;
 
   // shared pointer to the configuration of this agent
   std::shared_ptr<Configure> configuration_;

@@ -30,7 +30,7 @@ namespace nifi {
 namespace minifi {
 namespace c2 {
 
-void ControllerSocketProtocol::initialize(const std::weak_ptr<core::controller::ControllerServiceProvider> &controller, const std::weak_ptr<state::StateMonitor> &updateSink,
+void ControllerSocketProtocol::initialize(const std::shared_ptr<core::controller::ControllerServiceProvider> &controller, const std::shared_ptr<state::StateMonitor> &updateSink,
                                           const std::shared_ptr<Configure> &configuration) {
   HeartBeatReporter::initialize(controller, updateSink, configuration);
   stream_factory_ = minifi::io::StreamFactory::getInstance(configuration);
@@ -41,12 +41,9 @@ void ControllerSocketProtocol::initialize(const std::weak_ptr<core::controller::
   std::shared_ptr<minifi::controllers::SSLContextService> secure_context = nullptr;
 
   if (configuration_->get("controller.ssl.context.service", context_name)) {
-    auto sharedController = controller.lock();
-    if (sharedController) {
-      std::shared_ptr<core::controller::ControllerService> service = sharedController->getControllerService(context_name);
-      if (nullptr != service) {
-        secure_context = std::static_pointer_cast<minifi::controllers::SSLContextService>(service);
-      }
+    std::shared_ptr<core::controller::ControllerService> service = controller->getControllerService(context_name);
+    if (nullptr != service) {
+      secure_context = std::static_pointer_cast<minifi::controllers::SSLContextService>(service);
     }
   }
   if (nullptr == secure_context) {
@@ -87,12 +84,11 @@ void ControllerSocketProtocol::initialize(const std::weak_ptr<core::controller::
       server_socket_->initialize(false);
     }
 
-    auto update_sink = update_sink_.lock();
-    auto check = [update_sink]() -> bool {
-      return update_sink && update_sink->isRunning();
+    auto check = [this]() -> bool {
+      return update_sink_->isRunning();
     };
 
-    auto handler = [this, update_sink](io::BaseStream *stream) {
+    auto handler = [this](io::BaseStream *stream) {
       uint8_t head;
       if (stream->read(head) != 1) {
         logger_->log_debug("Connection broke");
@@ -103,8 +99,8 @@ void ControllerSocketProtocol::initialize(const std::weak_ptr<core::controller::
         {
           std::string componentStr;
           int size = stream->readUTF(componentStr);
-          if ( size != -1 && update_sink ) {
-            auto components = update_sink->getComponents(componentStr);
+          if ( size != -1 ) {
+            auto components = update_sink_->getComponents(componentStr);
             for (auto component : components) {
               component->start();
             }
@@ -117,8 +113,8 @@ void ControllerSocketProtocol::initialize(const std::weak_ptr<core::controller::
         {
           std::string componentStr;
           int size = stream->readUTF(componentStr);
-          if ( size != -1 && update_sink ) {
-            auto components = update_sink->getComponents(componentStr);
+          if ( size != -1 ) {
+            auto components = update_sink_->getComponents(componentStr);
             for (auto component : components) {
               component->stop(true, 1000);
             }
@@ -131,8 +127,8 @@ void ControllerSocketProtocol::initialize(const std::weak_ptr<core::controller::
         {
           std::string connection;
           int size = stream->readUTF(connection);
-          if ( size != -1 && update_sink ) {
-            update_sink->clearConnection(connection);
+          if ( size != -1 ) {
+            update_sink_->clearConnection(connection);
           }
         }
         break;
@@ -154,9 +150,7 @@ void ControllerSocketProtocol::initialize(const std::weak_ptr<core::controller::
               logger_->log_debug("Connection broke");
               break;
             }
-            if (update_sink) {
-              update_sink->applyUpdate("ControllerSocketProtocol", configuration);
-            }
+            update_sink_->applyUpdate("ControllerSocketProtocol", configuration);
           }
         }
         break;
@@ -187,38 +181,27 @@ void ControllerSocketProtocol::initialize(const std::weak_ptr<core::controller::
           } else if (what == "components") {
             io::BaseStream resp;
             resp.writeData(&head, 1);
-            uint16_t comps_size = 0;
-            if (update_sink) {
-              const auto& components = update_sink->getAllComponents();
-              comps_size = components.size();
-              resp.write(comps_size);
-              for (const auto &component : components) {
-                resp.writeUTF(component->getComponentName());
-                resp.writeUTF(component->isRunning() ? "true" : "false");
-              }
-            } else {
-              resp.write(comps_size);
+            uint16_t size = update_sink_->getAllComponents().size();
+            resp.write(size);
+            for (const auto &component : update_sink_->getAllComponents()) {
+              resp.writeUTF(component->getComponentName());
+              resp.writeUTF(component->isRunning() ? "true" : "false");
             }
             stream->writeData(const_cast<uint8_t*>(resp.getBuffer()), resp.getSize());
           } else if (what == "jstack") {
             io::BaseStream resp;
             resp.writeData(&head, 1);
-            uint64_t trace_size = 0;
-            if (update_sink) {
-              auto traces = update_sink->getTraces();
-              trace_size = traces.size();
-              resp.write(trace_size);
-              for (const auto &trace : traces) {
-                const auto &lines = trace.getTraces();
-                resp.writeUTF(trace.getName());
-                uint64_t lsize = lines.size();
-                resp.write(lsize);
-                for (const auto &line : lines) {
-                  resp.writeUTF(line);
-                }
+            auto traces = update_sink_->getTraces();
+            uint64_t trace_size = traces.size();
+            resp.write(trace_size);
+            for (const auto &trace : traces) {
+              const auto &lines = trace.getTraces();
+              resp.writeUTF(trace.getName());
+              uint64_t lsize = lines.size();
+              resp.write(lsize);
+              for (const auto &line : lines) {
+                resp.writeUTF(line);
               }
-            } else {
-              resp.write(trace_size);
             }
             stream->writeData(const_cast<uint8_t*>(resp.getBuffer()), resp.getSize());
           } else if (what == "connections") {
