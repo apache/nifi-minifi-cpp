@@ -2,6 +2,7 @@
 
 #include <direct.h>
 
+#include "wel/UnicodeConversion.h"
 #include "utils/file/FileUtils.h"
 #include "utils/ScopeGuard.h"
 
@@ -10,16 +11,28 @@ namespace apache {
 namespace nifi {
 namespace minifi {
 namespace processors {
+static const std::string BOOKMARK_KEY = "bookmark";
 
-Bookmark::Bookmark(const std::wstring& channel, const std::wstring& query, const std::string& bookmarkRootDir, const std::string& uuid, bool processOldEvents, std::shared_ptr<logging::Logger> logger)
-  :logger_(logger) {
-  if (!createUUIDDir(bookmarkRootDir, uuid, filePath_))
-    return;
+Bookmark::Bookmark(const std::wstring& channel, const std::wstring& query, const std::string& bookmarkRootDir, const std::string& uuid, std::shared_ptr<core::CoreComponentStateManager> state_manager, std::shared_ptr<logging::Logger> logger)
+  : logger_(logger)
+  , state_manager_(state_manager) {
+  std::unordered_map<std::string, std::string> state_map;
+  if (state_manager_->get(state_map) && state_map.count(BOOKMARK_KEY) == 1U) {
+    bookmarkXml_ = wel::to_wstring(state_map[BOOKMARK_KEY].c_str());
+  } else if (!bookmarkRootDir.empty()) {
+    filePath_ = utils::file::FileUtils::concat_path(
+      utils::file::FileUtils::concat_path(
+        utils::file::FileUtils::concat_path(bookmarkRootDir, "uuid"), uuid), "Bookmark.txt");
 
-  filePath_ += "Bookmark.txt";
-
-  if (!getBookmarkXmlFromFile(bookmarkXml_)) {
-    return;
+    std::wstring bookmarkXml;
+     if (getBookmarkXmlFromFile(bookmarkXml)) {
+      if (saveBookmarkXml(bookmarkXml) && state_manager_->persist()) {
+        logger_->log_info("State migration successful");
+        rename(filePath_.c_str(), (filePath_ + "-migrated").c_str());
+      } else {
+        logger_->log_warn("Could not migrate state from specified State Directory %s", bookmarkRootDir);
+      }
+    }
   }
 
   if (!bookmarkXml_.empty()) {
@@ -31,9 +44,8 @@ Bookmark::Bookmark(const std::wstring& channel, const std::wstring& query, const
     LOG_LAST_ERROR(EvtCreateBookmark);
 
     bookmarkXml_.clear();
-    if (!createEmptyBookmarkXmlFile()) {
-      return;
-    }
+    state_map.erase(BOOKMARK_KEY);
+    state_manager_->set(state_map);
   }
 
   if (!(hBookmark_ = EvtCreateBookmark(0))) {
@@ -88,6 +100,15 @@ EVT_HANDLE Bookmark::getBookmarkHandleFromXML() {
   return hBookmark_;
 }
 
+bool Bookmark::saveBookmarkXml(const std::wstring& bookmarkXml) {
+  bookmarkXml_ = bookmarkXml;
+
+  std::unordered_map<std::string, std::string> state_map;
+  state_map[BOOKMARK_KEY] = wel::to_string(bookmarkXml_.c_str());
+
+  return state_manager_->set(state_map);
+}
+
 bool Bookmark::saveBookmark(EVT_HANDLE hEvent)
 {
   std::wstring bookmarkXml;
@@ -95,9 +116,7 @@ bool Bookmark::saveBookmark(EVT_HANDLE hEvent)
     return false;
   }
 
-  saveBookmarkXml(bookmarkXml);
-
-  return true;
+  return saveBookmarkXml(bookmarkXml);
 }
 
 bool Bookmark::getNewBookmarkXml(EVT_HANDLE hEvent, std::wstring& bookmarkXml) {
@@ -122,7 +141,7 @@ bool Bookmark::getNewBookmarkXml(EVT_HANDLE hEvent, std::wstring& bookmarkXml) {
         return false;
       }
 
-      bookmarkXml = &buf[0];
+      bookmarkXml = buf.data();
 
       return true;
     }
@@ -135,62 +154,12 @@ bool Bookmark::getNewBookmarkXml(EVT_HANDLE hEvent, std::wstring& bookmarkXml) {
   return false;
 }
 
-void Bookmark::saveBookmarkXml(const std::wstring& bookmarkXml) {
-  bookmarkXml_ = bookmarkXml;
-
-  // Write new bookmark over old and in the end write '!'. Then new bookmark is read until '!'. This is faster than truncate.
-  file_.seekp(std::ios::beg);
-
-  file_ << bookmarkXml << L'!';
-
-  file_.flush();
-}
-
-bool Bookmark::createEmptyBookmarkXmlFile() {
-  if (file_.is_open()) {
-    file_.close();
-  }
-
-  file_.open(filePath_, std::ios::out);
-  if (!file_.is_open()) {
-    logger_->log_error("Cannot open %s", filePath_.c_str());
-    return false;
-  }
-
-  return true;
-}
-
-bool Bookmark::createUUIDDir(const std::string& bookmarkRootDir, const std::string& uuid, std::string& dir)
-{
-  if (bookmarkRootDir.empty()) {
-    dir.clear();
-    return false;
-  }
-
-  auto dirWithBackslash = bookmarkRootDir;
-  if (bookmarkRootDir.back() != '\\') {
-    dirWithBackslash += '\\';
-  }
-  
-  dir = dirWithBackslash + "uuid\\" + uuid + "\\";
-
-  utils::file::FileUtils::create_dir(dir);
-
-  auto dirCreated = utils::file::FileUtils::is_directory(dir.c_str());
-  if (!dirCreated) {
-    logger_->log_error("Cannot create %s", dir.c_str());
-    dir.clear();
-  }
-
-  return dirCreated;
-}
-
 bool Bookmark::getBookmarkXmlFromFile(std::wstring& bookmarkXml) {
   bookmarkXml.clear();
 
   std::wifstream file(filePath_);
   if (!file.is_open()) {
-    return createEmptyBookmarkXmlFile();
+    return false;
   }
 
   // Generically is not efficient, but bookmarkXML is small ~100 bytes. 
@@ -206,13 +175,6 @@ bool Bookmark::getBookmarkXmlFromFile(std::wstring& bookmarkXml) {
 
   file.close();
 
-  file_.open(filePath_);
-  if (!file_.is_open()) {
-    logger_->log_error("Cannot open %s", filePath_.c_str());
-    bookmarkXml.clear();
-    return false;
-  }
-
   if (bookmarkXml.empty()) {
     return true;
   }
@@ -222,7 +184,7 @@ bool Bookmark::getBookmarkXmlFromFile(std::wstring& bookmarkXml) {
   if (std::wstring::npos == pos) {
     logger_->log_error("No '!' in bookmarXml '%ls'", bookmarkXml.c_str());
     bookmarkXml.clear();
-    return createEmptyBookmarkXmlFile();
+	return false;
   }
 
   // Remove '!'.

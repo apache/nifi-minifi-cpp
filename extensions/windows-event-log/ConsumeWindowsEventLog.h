@@ -114,12 +114,13 @@ protected:
 
 private:
   // Logger
+  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::CoreComponentStateManager> state_manager_;
   wel::METADATA_NAMES header_names_;
   std::string header_delimiter_;
   std::string channel_;
   std::wstring wstrChannel_;
   std::wstring wstrQuery_;
-  std::shared_ptr<logging::Logger> logger_;
   std::string regex_;
   bool resolve_as_attributes_;
   bool apply_identifier_function_;
