@@ -41,6 +41,10 @@ bool PersistableKeyValueStoreService::getImpl(const std::string& key, std::strin
   return get(key, value);
 }
 
+bool PersistableKeyValueStoreService::getImpl(std::unordered_map<std::string, std::string>& kvs) {
+  return get(kvs);
+}
+
 bool PersistableKeyValueStoreService::removeImpl(const std::string& key) {
   return remove(key);
 }

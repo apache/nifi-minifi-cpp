@@ -25,6 +25,8 @@
 #include <string>
 #include <memory>
 #include "c2/ControllerSocketProtocol.h"
+#include "core/ProcessContext.h"
+#include "core/CoreComponentState.h"
 #include "core/state/UpdateController.h"
 #include "core/logging/Logger.h"
 #include "core/logging/LoggerConfiguration.h"
@@ -431,6 +433,27 @@ void C2Agent::handle_c2_server_response(const C2ContentResponse &resp) {
         update_sink_->drainRepositories();
         C2Payload response(Operation::ACKNOWLEDGE, resp.ident, false, true);
         enqueue_c2_response(std::move(response));
+      } else if (resp.name == "corecomponentstate") {
+        std::vector<std::shared_ptr<state::StateController>> components = update_sink_->getComponents(resp.name);
+        auto state_manager_provider = core::ProcessContext::getStateManagerProvider(logger_, controller_, configuration_);
+        if (state_manager_provider != nullptr) {
+          for (auto &component : components) {
+            logger_->log_debug("Clearing state for component %s", component->getComponentName());
+            auto state_manager = state_manager_provider->getCoreComponentStateManager(component->getComponentUUID());
+            if (state_manager != nullptr) {
+              component->stop(true);
+              state_manager->clear();
+              state_manager->persist();
+              component->start();
+            } else {
+              logger_->log_warn("Failed to get StateManager for component %s", component->getComponentUUID());
+            }
+          }
+        } else {
+          logger_->log_error("Failed to get StateManagerProvider");
+        }
+        C2Payload response(Operation::ACKNOWLEDGE, resp.ident, false, true);
+        enqueue_c2_response(std::move(response));
       } else {
         logger_->log_debug("Clearing unknown %s", resp.name);
       }
@@ -566,6 +589,28 @@ void C2Agent::handle_describe(const C2ContentResponse &resp) {
       }
       enqueue_c2_response(std::move(response));
     }
+  } else if (resp.name == "corecomponentstate") {
+    C2Payload response(Operation::ACKNOWLEDGE, resp.ident, false, true);
+    response.setLabel("corecomponentstate");
+    C2Payload states(Operation::ACKNOWLEDGE, resp.ident, false, true);
+    states.setLabel("corecomponentstate");
+    auto state_manager_provider = core::ProcessContext::getStateManagerProvider(logger_, controller_, configuration_);
+    if (state_manager_provider != nullptr) {
+      auto core_component_states = state_manager_provider->getAllCoreComponentStates();
+      for (const auto& core_component_state : core_component_states) {
+        C2Payload state(Operation::ACKNOWLEDGE, resp.ident, false, true);
+        state.setLabel(core_component_state.first);
+        for (const auto& kv : core_component_state.second) {
+          C2ContentResponse entry(Operation::ACKNOWLEDGE);
+          entry.name = kv.first;
+          entry.operation_arguments[kv.first] = kv.second;
+          state.addContent(std::move(entry));
+        }
+        states.addPayload(std::move(state));
+      }
+    }
+    response.addPayload(std::move(states));
+    enqueue_c2_response(std::move(response));
     return;
   }
   C2Payload response(Operation::ACKNOWLEDGE, resp.ident, false, true);

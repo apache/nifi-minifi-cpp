@@ -85,8 +85,25 @@ bool AbstractCoreComponentStateManagerProvider::AbstractCoreComponentStateManage
 AbstractCoreComponentStateManagerProvider::~AbstractCoreComponentStateManagerProvider() {
 }
 
-std::shared_ptr<core::CoreComponentStateManager> AbstractCoreComponentStateManagerProvider::getCoreComponentStateManager(const core::CoreComponent& component) {
-  return std::make_shared<AbstractCoreComponentStateManager>(shared_from_this(), component.getUUIDStr());
+std::shared_ptr<core::CoreComponentStateManager> AbstractCoreComponentStateManagerProvider::getCoreComponentStateManager(const std::string& uuid) {
+  return std::make_shared<AbstractCoreComponentStateManager>(shared_from_this(), uuid);
+}
+
+std::unordered_map<std::string, std::unordered_map<std::string, std::string>> AbstractCoreComponentStateManagerProvider::getAllCoreComponentStates() {
+  std::unordered_map<std::string, std::string> all_serialized;
+  if (!getImpl(all_serialized)) {
+    return {};
+  }
+
+  std::unordered_map<std::string, std::unordered_map<std::string, std::string>> all_deserialized;
+  for (const auto& serialized : all_serialized) {
+    std::unordered_map<std::string, std::string> deserialized;
+    if (deserialize(serialized.second, deserialized)) {
+      all_deserialized.emplace(serialized.first, std::move(deserialized));
+    }
+  }
+
+  return all_deserialized;
 }
 
 std::string AbstractCoreComponentStateManagerProvider::serialize(const std::unordered_map<std::string, std::string>& kvs) {

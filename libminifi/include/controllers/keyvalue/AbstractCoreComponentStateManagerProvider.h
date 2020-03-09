@@ -33,7 +33,9 @@ namespace controllers {
  public:
   virtual ~AbstractCoreComponentStateManagerProvider();
 
-  virtual std::shared_ptr<core::CoreComponentStateManager> getCoreComponentStateManager(const core::CoreComponent& component) override;
+  virtual std::shared_ptr<core::CoreComponentStateManager> getCoreComponentStateManager(const std::string& uuid) override;
+
+  virtual std::unordered_map<std::string, std::unordered_map<std::string, std::string>> getAllCoreComponentStates() override;
 
   class AbstractCoreComponentStateManager : public core::CoreComponentStateManager{
    private:
@@ -57,6 +59,7 @@ namespace controllers {
  protected:
   virtual bool setImpl(const std::string& key, const std::string& value) = 0;
   virtual bool getImpl(const std::string& key, std::string& value) = 0;
+  virtual bool getImpl(std::unordered_map<std::string, std::string>& kvs) = 0;
   virtual bool removeImpl(const std::string& key) = 0;
   virtual bool persistImpl() = 0;
 

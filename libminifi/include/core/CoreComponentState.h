@@ -47,10 +47,15 @@ class CoreComponentStateManager {
 
 class CoreComponentStateManagerProvider {
  public:
-  virtual ~CoreComponentStateManagerProvider() {
+  virtual ~CoreComponentStateManagerProvider() = default;
+
+  virtual std::shared_ptr<CoreComponentStateManager> getCoreComponentStateManager(const std::string& uuid) = 0;
+
+  virtual std::shared_ptr<CoreComponentStateManager> getCoreComponentStateManager(const CoreComponent& component) {
+    return getCoreComponentStateManager(component.getUUIDStr());
   }
 
-  virtual std::shared_ptr<CoreComponentStateManager> getCoreComponentStateManager(const CoreComponent& component) = 0;
+  virtual std::unordered_map<std::string, std::unordered_map<std::string, std::string>> getAllCoreComponentStates() = 0;
 };
 
 } /* namespace core */

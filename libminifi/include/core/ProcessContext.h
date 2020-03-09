@@ -64,12 +64,7 @@ class ProcessContext : public controller::ControllerServiceLookup, public core::
         configure_(std::make_shared<minifi::Configure>()),
         initialized_(false) {
     repo_ = repo;
-    if (controller_service_provider_ != nullptr) {
-      state_manager_provider_ = getOrCreateDefaultStateManagerProvider(controller_service_provider_);
-      if (state_manager_provider_ == nullptr) {
-        logger_->log_error("Failed to create default CoreComponentStateManagerProvider");
-      }
-    }
+    state_manager_provider_ = getStateManagerProvider(logger_, controller_service_provider_, nullptr);
   }
 
   // Constructor
@@ -87,21 +82,7 @@ class ProcessContext : public controller::ControllerServiceLookup, public core::
         logger_(logging::LoggerFactory<ProcessContext>::getLogger()),
         initialized_(false) {
     repo_ = repo;
-    std::string id;
-    if (configuration->get(minifi::Configure::nifi_state_management_provider_local, id)) {
-      auto node = controller_service_provider_->getControllerServiceNode(id);
-      if (node == nullptr) {
-        logger_->log_error("Failed to find the CoreComponentStateManagerProvider %s defined by %s", id, minifi::Configure::nifi_state_management_provider_local);
-      } else {
-        state_manager_provider_ = std::dynamic_pointer_cast<core::CoreComponentStateManagerProvider>(
-            node->getControllerServiceImplementation());
-      }
-    } else {
-      state_manager_provider_ = getOrCreateDefaultStateManagerProvider(controller_service_provider_);
-      if (state_manager_provider_ == nullptr) {
-        logger_->log_error("Failed to create default CoreComponentStateManagerProvider");
-      }
-    }
+    state_manager_provider_ = getStateManagerProvider(logger_, controller_service_provider_, configuration);
   }
   // Destructor
   virtual ~ProcessContext() {
@@ -285,6 +266,31 @@ class ProcessContext : public controller::ControllerServiceLookup, public core::
 
     /* Give up */
     return nullptr;
+  }
+
+  static std::shared_ptr<core::CoreComponentStateManagerProvider> getStateManagerProvider(
+      std::shared_ptr<logging::Logger> logger,
+      std::shared_ptr<controller::ControllerServiceProvider> controller_service_provider,
+      std::shared_ptr<minifi::Configure> configuration) {
+    if (controller_service_provider == nullptr) {
+      return nullptr;
+    }
+    std::string id;
+    if (configuration != nullptr && configuration->get(minifi::Configure::nifi_state_management_provider_local, id)) {
+      auto node = controller_service_provider->getControllerServiceNode(id);
+      if (node == nullptr) {
+        logger->log_error("Failed to find the CoreComponentStateManagerProvider %s defined by %s", id, minifi::Configure::nifi_state_management_provider_local);
+        return nullptr;
+      } else {
+        return std::dynamic_pointer_cast<core::CoreComponentStateManagerProvider>(node->getControllerServiceImplementation());
+      }
+    } else {
+      auto state_manager_provider = getOrCreateDefaultStateManagerProvider(controller_service_provider);
+      if (state_manager_provider == nullptr) {
+        logger->log_error("Failed to create default CoreComponentStateManagerProvider");
+      }
+      return state_manager_provider;
+    }
   }
 
  private:
