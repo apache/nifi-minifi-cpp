@@ -37,10 +37,8 @@ AbstractCoreComponentStateManagerProvider::AbstractCoreComponentStateManager::Ab
     , id_(id)
     , state_valid_(false) {
   std::string serialized;
-  if (provider_->getImpl(id_, serialized)) {
-    if (provider_->deserialize(serialized, state_)) {
-      state_valid_ = true;
-    }
+  if (provider_->getImpl(id_, serialized) && provider_->deserialize(serialized, state_)) {
+    state_valid_ = true;
   }
 }
 

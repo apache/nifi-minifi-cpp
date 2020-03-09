@@ -118,7 +118,6 @@ void AbstractAutoPersistingKeyValueStoreService::persistingThreadFunc() {
 
     if (!running_) {
       logger_->log_trace("Stopping persistence thread");
-      lock.unlock();
       return;
     }
 
