@@ -32,6 +32,7 @@
 #include "core/controller/ControllerServiceProvider.h"
 #include "core/controller/ControllerServiceLookup.h"
 #include "core/logging/LoggerConfiguration.h"
+#include "controllers/keyvalue/AbstractAutoPersistingKeyValueStoreService.h"
 #include "ProcessorNode.h"
 #include "core/Repository.h"
 #include "core/FlowFile.h"
@@ -202,7 +203,7 @@ class ProcessContext : public controller::ControllerServiceLookup, public core::
   const std::string getControllerServiceName(const std::string &identifier) {
     return controller_service_provider_->getControllerServiceName(identifier);
   }
-  
+
   void initializeContentRepository(const std::string& home) {
       configure_->setHome(home);
       content_repo_->initialize(configure_);
@@ -224,15 +225,21 @@ class ProcessContext : public controller::ControllerServiceLookup, public core::
 
   static std::shared_ptr<core::CoreComponentStateManagerProvider> getOrCreateDefaultStateManagerProvider(
       std::shared_ptr<controller::ControllerServiceProvider> controller_service_provider,
+      std::shared_ptr<minifi::Configure> configuration,
       const char *base_path = "") {
     static std::mutex mutex;
     std::lock_guard<std::mutex> lock(mutex);
 
     /* See if we have already created a default provider */
-    std::shared_ptr<core::controller::ControllerServiceNode> node = controller_service_provider->getControllerServiceNode(DefaultStateManagerProviderName); // TODO
+    std::shared_ptr<core::controller::ControllerServiceNode> node = controller_service_provider->getControllerServiceNode(DefaultStateManagerProviderName);
     if (node != nullptr) {
       return std::dynamic_pointer_cast<core::CoreComponentStateManagerProvider>(node->getControllerServiceImplementation());
     }
+
+    /* Try to get configuration options for default provider */
+    std::string always_persist, auto_persistence_interval;
+    configuration->get(Configure::nifi_state_management_provider_local_always_persist, always_persist);
+    configuration->get(Configure::nifi_state_management_provider_local_auto_persistence_interval, auto_persistence_interval);
 
     /* Try to create a RocksDB-backed provider */
     node = controller_service_provider->createControllerService("RocksDbPersistableKeyValueStoreService",
@@ -244,6 +251,12 @@ class ProcessContext : public controller::ControllerServiceLookup, public core::
       auto provider = node->getControllerServiceImplementation();
       if (provider != nullptr) {
         provider->setProperty("Directory", utils::file::FileUtils::concat_path(base_path, "corecomponentstate"));
+        if (!always_persist.empty()) {
+          provider->setProperty(controllers::AbstractAutoPersistingKeyValueStoreService::AlwaysPersist.getName(), always_persist);
+        }
+        if (!auto_persistence_interval.empty()) {
+          provider->setProperty(controllers::AbstractAutoPersistingKeyValueStoreService::AutoPersistenceInterval.getName(), auto_persistence_interval);
+        }
         node->enable();
         return std::dynamic_pointer_cast<core::CoreComponentStateManagerProvider>(provider);
       }
@@ -259,6 +272,12 @@ class ProcessContext : public controller::ControllerServiceLookup, public core::
       auto provider = node->getControllerServiceImplementation();
       if (provider != nullptr) {
         provider->setProperty("File", utils::file::FileUtils::concat_path(base_path, "corecomponentstate.txt"));
+        if (!always_persist.empty()) {
+          provider->setProperty(controllers::AbstractAutoPersistingKeyValueStoreService::AlwaysPersist.getName(), always_persist);
+        }
+        if (!auto_persistence_interval.empty()) {
+          provider->setProperty(controllers::AbstractAutoPersistingKeyValueStoreService::AutoPersistenceInterval.getName(), auto_persistence_interval);
+        }
         node->enable();
         return std::dynamic_pointer_cast<core::CoreComponentStateManagerProvider>(provider);
       }
@@ -285,7 +304,7 @@ class ProcessContext : public controller::ControllerServiceLookup, public core::
         return std::dynamic_pointer_cast<core::CoreComponentStateManagerProvider>(node->getControllerServiceImplementation());
       }
     } else {
-      auto state_manager_provider = getOrCreateDefaultStateManagerProvider(controller_service_provider);
+      auto state_manager_provider = getOrCreateDefaultStateManagerProvider(controller_service_provider, configuration);
       if (state_manager_provider == nullptr) {
         logger->log_error("Failed to create default CoreComponentStateManagerProvider");
       }

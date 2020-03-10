@@ -102,6 +102,8 @@ class Configure : public Properties {
 
   // state management options
   static const char *nifi_state_management_provider_local;
+  static const char *nifi_state_management_provider_local_always_persist;
+  static const char *nifi_state_management_provider_local_auto_persistence_interval;
 
  private:
   std::string agent_identifier_;
