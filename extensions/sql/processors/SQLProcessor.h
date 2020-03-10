@@ -78,6 +78,8 @@ class SQLProcessor: public core::Processor {
 
   void notifyStop() override {
     connection_.reset();
+
+    static_cast<T*>(this)->processNotifyStop();
   }
 
  protected:

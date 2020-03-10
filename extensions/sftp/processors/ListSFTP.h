@@ -101,9 +101,11 @@ class ListSFTP : public SFTPProcessorBase {
   virtual void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
   virtual void initialize() override;
   virtual void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
+  virtual void notifyStop() override;
 
  private:
 
+  std::shared_ptr<core::CoreComponentStateManager> state_manager_;
   std::string listing_strategy_;
   bool search_recursively_;
   bool follow_symlink_;

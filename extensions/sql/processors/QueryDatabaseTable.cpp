@@ -368,6 +368,11 @@ void QueryDatabaseTable::processOnTrigger(core::ProcessContext& context, core::P
   }
 }
 
+void QueryDatabaseTable::processNotifyStop() {
+  state_manager_->persist();
+  state_manager_.reset();
+}
+
 std::string QueryDatabaseTable::getSelectQuery() {
   std::string ret;
 

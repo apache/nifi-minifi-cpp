@@ -90,6 +90,8 @@ class TailFile : public core::Processor {
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession>  &session) override;
   // Initialize, over write by NiFi TailFile
   void initialize(void) override;
+  // notifyStop
+  void notifyStop() override;
   // recoverState
   bool recoverState(const std::shared_ptr<core::ProcessContext>& context);
   // storeState
@@ -104,6 +106,8 @@ class TailFile : public core::Processor {
   std::string state_file_;
   // Delimiter for the data incoming from the tailed file.
   std::string delimiter_;
+  // StateManager
+  std::shared_ptr<core::CoreComponentStateManager> state_manager_;
   // determine if state is recovered;
   bool state_recovered_;
 

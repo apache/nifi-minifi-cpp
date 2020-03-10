@@ -58,6 +58,9 @@ TestPlan::TestPlan(std::shared_ptr<core::ContentRepository> content_repo, std::s
 }
 
 TestPlan::~TestPlan() {
+  for (auto& processor : configured_processors_) {
+    processor->setScheduledState(core::ScheduledState::STOPPED);
+  }
   controller_services_provider_->clearControllerServices();
 }
 

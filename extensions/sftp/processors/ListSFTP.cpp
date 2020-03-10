@@ -198,6 +198,11 @@ ListSFTP::~ListSFTP() {
 void ListSFTP::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
   parseCommonPropertiesOnSchedule(context);
 
+  state_manager_ = context->getStateManager();
+  if (state_manager_ == nullptr) {
+    throw Exception(PROCESSOR_EXCEPTION, "Failed to get StateManager");
+  }
+
   std::string value;
   context->getProperty(ListingStrategy.getName(), listing_strategy_);
   if (!last_listing_strategy_.empty() && last_listing_strategy_ != listing_strategy_) {
@@ -267,6 +272,11 @@ void ListSFTP::onSchedule(const std::shared_ptr<core::ProcessContext> &context, 
   }
 
   startKeepaliveThreadIfNeeded();
+}
+
+void ListSFTP::notifyStop() {
+  state_manager_->persist();
+  state_manager_.reset();
 }
 
 void ListSFTP::invalidateCache() {
@@ -477,10 +487,6 @@ ListSFTP::ListedEntity::ListedEntity(uint64_t timestamp_, uint64_t size_)
 }
 
 bool ListSFTP::persistTrackingTimestampsCache(const std::shared_ptr<core::ProcessContext>& context, const std::string& hostname, const std::string& username, const std::string& remote_path) {
-  auto state_manager = context->getStateManager();
-  if (state_manager == nullptr) {
-    return false;
-  }
   std::unordered_map<std::string, std::string> state;
   state["listing_strategy"] = LISTING_STRATEGY_TRACKING_TIMESTAMPS;
   state["hostname"] = hostname;
@@ -493,11 +499,7 @@ bool ListSFTP::persistTrackingTimestampsCache(const std::shared_ptr<core::Proces
     state["id." + std::to_string(i)] = identifier;
     ++i;
   }
-  state_manager->set(state);
-  if (!state_manager->persist()) {
-    return false;
-  }
-  return true;
+  return state_manager_->set(state);
 }
 
 bool ListSFTP::updateFromTrackingTimestampsCache(const std::shared_ptr<core::ProcessContext>& context, const std::string& hostname, const std::string& username, const std::string& remote_path) {
@@ -508,14 +510,9 @@ bool ListSFTP::updateFromTrackingTimestampsCache(const std::shared_ptr<core::Pro
   uint64_t state_listing_timestamp;
   uint64_t state_processed_timestamp;
   std::set<std::string> state_ids;
-  auto state_manager = context->getStateManager();
-  if (state_manager == nullptr) {
-    logger_->log_error("Failed to get StateManager");
-    return false;
-  }
 
   std::unordered_map<std::string, std::string> state_map;
-  if (!state_manager->get(state_map)) {
+  if (!state_manager_->get(state_map)) {
     logger_->log_debug("Failed to get state from StateManager");
     return false;
   }
@@ -730,10 +727,6 @@ void ListSFTP::listByTrackingTimestamps(
 }
 
 bool ListSFTP::persistTrackingEntitiesCache(const std::shared_ptr<core::ProcessContext>& context, const std::string& hostname, const std::string& username, const std::string& remote_path) {
-  auto state_manager = context->getStateManager();
-  if (state_manager == nullptr) {
-    return false;
-  }
   std::unordered_map<std::string, std::string> state;
   state["listing_strategy"] = listing_strategy_;
   state["hostname"] = hostname;
@@ -746,19 +739,10 @@ bool ListSFTP::persistTrackingEntitiesCache(const std::shared_ptr<core::ProcessC
     state["entity." + std::to_string(i) + ".size"] = std::to_string(already_listed_entity.second.size);
     ++i;
   }
-  state_manager->set(state);
-  if (!state_manager->persist()) {
-    return false;
-  }
-  return true;
+  return state_manager_->set(state);
 }
 
 bool ListSFTP::updateFromTrackingEntitiesCache(const std::shared_ptr<core::ProcessContext>& context, const std::string& hostname, const std::string& username, const std::string& remote_path) {
-  auto state_manager = context->getStateManager();
-  if (state_manager == nullptr) {
-    logger_->log_error("Failed to get StateManager");
-    return false;
-  }
   std::string state_listing_strategy;
   std::string state_hostname;
   std::string state_username;
@@ -766,8 +750,8 @@ bool ListSFTP::updateFromTrackingEntitiesCache(const std::shared_ptr<core::Proce
   std::unordered_map<std::string, ListedEntity> new_already_listed_entities;
 
   std::unordered_map<std::string, std::string> state_map;
-  if (!state_manager->get(state_map)) {
-    logger_->log_error("Failed to get state from StateManager");
+  if (!state_manager_->get(state_map)) {
+    logger_->log_debug("Failed to get state from StateManager");
     return false;
   }
   try {

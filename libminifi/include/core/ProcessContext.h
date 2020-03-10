@@ -241,46 +241,53 @@ class ProcessContext : public controller::ControllerServiceLookup, public core::
     configuration->get(Configure::nifi_state_management_provider_local_always_persist, always_persist);
     configuration->get(Configure::nifi_state_management_provider_local_auto_persistence_interval, auto_persistence_interval);
 
-    /* Try to create a RocksDB-backed provider */
-    node = controller_service_provider->createControllerService("RocksDbPersistableKeyValueStoreService",
-                                                                "org.apache.nifi.minifi.controllers.RocksDbPersistableKeyValueStoreService",
-                                                                DefaultStateManagerProviderName,
-                                                                true /*firstTimeAdded*/);
-    if (node != nullptr) {
+    /* Function to help creating a provider */
+    auto create_provider = [&](
+        const std::string& type,
+        const std::string& longType,
+        const std::unordered_map<std::string, std::string>& extraProperties) -> std::shared_ptr<core::CoreComponentStateManagerProvider> {
+      node = controller_service_provider->createControllerService(type, longType, DefaultStateManagerProviderName, true /*firstTimeAdded*/);
+      if (node == nullptr) {
+        return nullptr;
+      }
       node->initialize();
       auto provider = node->getControllerServiceImplementation();
-      if (provider != nullptr) {
-        provider->setProperty("Directory", utils::file::FileUtils::concat_path(base_path, "corecomponentstate"));
-        if (!always_persist.empty()) {
-          provider->setProperty(controllers::AbstractAutoPersistingKeyValueStoreService::AlwaysPersist.getName(), always_persist);
-        }
-        if (!auto_persistence_interval.empty()) {
-          provider->setProperty(controllers::AbstractAutoPersistingKeyValueStoreService::AutoPersistenceInterval.getName(), auto_persistence_interval);
-        }
-        node->enable();
-        return std::dynamic_pointer_cast<core::CoreComponentStateManagerProvider>(provider);
+      if (provider == nullptr) {
+        return nullptr;
       }
+      if (!always_persist.empty() && !provider->setProperty(
+          controllers::AbstractAutoPersistingKeyValueStoreService::AlwaysPersist.getName(), always_persist)) {
+        return nullptr;
+      }
+      if (!auto_persistence_interval.empty() && !provider->setProperty(
+          controllers::AbstractAutoPersistingKeyValueStoreService::AutoPersistenceInterval.getName(), auto_persistence_interval)) {
+        return nullptr;
+      }
+      for (const auto& extraProperty : extraProperties) {
+        if (!provider->setProperty(extraProperty.first, extraProperty.second)) {
+          return nullptr;
+        }
+      }
+      if (!node->enable()) {
+        return nullptr;
+      }
+      return std::dynamic_pointer_cast<core::CoreComponentStateManagerProvider>(provider);
+    };
+
+    /* Try to create a RocksDB-backed provider */
+    auto provider = create_provider("RocksDbPersistableKeyValueStoreService",
+        "org.apache.nifi.minifi.controllers.RocksDbPersistableKeyValueStoreService",
+        {{"Directory", utils::file::FileUtils::concat_path(base_path, "corecomponentstate")}});
+    if (provider != nullptr) {
+      return provider;
     }
 
     /* Fall back to a locked unordered map-backed provider */
-    node = controller_service_provider->createControllerService("UnorderedMapPersistableKeyValueStoreService",
-                                                                "org.apache.nifi.minifi.controllers.UnorderedMapPersistableKeyValueStoreService",
-                                                                DefaultStateManagerProviderName,
-                                                                true /*firstTimeAdded*/);
-    if (node != nullptr) {
-      node->initialize();
-      auto provider = node->getControllerServiceImplementation();
-      if (provider != nullptr) {
-        provider->setProperty("File", utils::file::FileUtils::concat_path(base_path, "corecomponentstate.txt"));
-        if (!always_persist.empty()) {
-          provider->setProperty(controllers::AbstractAutoPersistingKeyValueStoreService::AlwaysPersist.getName(), always_persist);
-        }
-        if (!auto_persistence_interval.empty()) {
-          provider->setProperty(controllers::AbstractAutoPersistingKeyValueStoreService::AutoPersistenceInterval.getName(), auto_persistence_interval);
-        }
-        node->enable();
-        return std::dynamic_pointer_cast<core::CoreComponentStateManagerProvider>(provider);
-      }
+    provider = create_provider("UnorderedMapPersistableKeyValueStoreService",
+        "org.apache.nifi.minifi.controllers.UnorderedMapPersistableKeyValueStoreService",
+        {{"File", utils::file::FileUtils::concat_path(base_path, "corecomponentstate.txt")}});
+    if (provider != nullptr) {
+      return provider;
     }
 
     /* Give up */

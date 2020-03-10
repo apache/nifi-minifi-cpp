@@ -99,8 +99,10 @@ void RocksDbPersistableKeyValueStoreService::onEnable() {
 void RocksDbPersistableKeyValueStoreService::notifyStop() {
   AbstractAutoPersistingKeyValueStoreService::notifyStop();
 
-  db_valid_ = false;
-  delete db_;
+  if (db_valid_) {
+    delete db_;
+    db_valid_= false;
+  }
 }
 
 bool RocksDbPersistableKeyValueStoreService::set(const std::string& key, const std::string& value) {

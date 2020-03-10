@@ -113,6 +113,11 @@ void TailFile::onSchedule(const std::shared_ptr<core::ProcessContext> &context, 
   tail_states_.clear();
   state_recovered_ = false;
 
+  state_manager_ = context->getStateManager();
+  if (state_manager_ == nullptr) {
+    throw Exception(PROCESSOR_EXCEPTION, "Failed to get StateManager");
+  }
+
   std::string value;
 
   if (context->getProperty(Delimiter.getName(), value)) {
@@ -150,6 +155,11 @@ void TailFile::onSchedule(const std::shared_ptr<core::ProcessContext> &context, 
       throw minifi::Exception(ExceptionType::PROCESSOR_EXCEPTION, "File to tail must be a fully qualified file");
     }
   }
+}
+
+void TailFile::notifyStop() {
+  state_manager_->persist();
+  state_manager_.reset();
 }
 
 bool TailFile::acceptFile(const std::string &fileFilter, const std::string &file) {
@@ -238,45 +248,41 @@ void TailFile::parseStateFileLine(char *buf) {
 
 bool TailFile::recoverState(const std::shared_ptr<core::ProcessContext>& context) {
   bool state_load_success = false;
-  auto state_manager = context->getStateManager();
-  if (state_manager == nullptr) {
-    logger_->log_error("Failed to get StateManager");
-  } else {
-    std::unordered_map<std::string, std::string> state_map;
-    if (state_manager->get(state_map)) {
-      std::map<std::string, TailState> new_tail_states;
-      size_t i = 0;
-      while (true) {
-        std::string name;
-        try {
-          name = state_map.at("file." + std::to_string(i) + ".name");
-        } catch (...) {
-          break;
-        }
-        try {
-          const std::string& current = state_map.at("file." + std::to_string(i) + ".current");
-          uint64_t position = std::stoull(state_map.at("file." + std::to_string(i) + ".position"));
 
-          std::string fileLocation, fileName;
-          if (utils::file::PathUtils::getFileNameAndPath(current, fileLocation, fileName)) {
-            logger_->log_debug("Received path %s, file %s", fileLocation, fileName);
-            new_tail_states.emplace(fileName, TailState { fileLocation, fileName, position, 0 });
-          } else {
-            new_tail_states.emplace(current, TailState { fileLocation, current, position, 0 });
-          }
-        } catch (...) {
-          continue;
+  std::unordered_map<std::string, std::string> state_map;
+  if (state_manager_->get(state_map)) {
+    std::map<std::string, TailState> new_tail_states;
+    size_t i = 0;
+    while (true) {
+      std::string name;
+      try {
+        name = state_map.at("file." + std::to_string(i) + ".name");
+      } catch (...) {
+        break;
+      }
+      try {
+        const std::string& current = state_map.at("file." + std::to_string(i) + ".current");
+        uint64_t position = std::stoull(state_map.at("file." + std::to_string(i) + ".position"));
+
+        std::string fileLocation, fileName;
+        if (utils::file::PathUtils::getFileNameAndPath(current, fileLocation, fileName)) {
+          logger_->log_debug("Received path %s, file %s", fileLocation, fileName);
+          new_tail_states.emplace(fileName, TailState { fileLocation, fileName, position, 0 });
+        } else {
+          new_tail_states.emplace(current, TailState { fileLocation, current, position, 0 });
         }
-        ++i;
+      } catch (...) {
+        continue;
       }
-      state_load_success = true;
-      tail_states_ = std::move(new_tail_states);
-      for (const auto& s : tail_states_) {
-        logger_->log_debug("TailState %s: %s, %s, %llu, %llu", s.first, s.second.path_, s.second.current_file_name_, s.second.currentTailFilePosition_, s.second.currentTailFileModificationTime_);
-      }
-    } else {
-      logger_->log_error("Failed to get state from StateManager");
+      ++i;
     }
+    state_load_success = true;
+    tail_states_ = std::move(new_tail_states);
+    for (const auto& s : tail_states_) {
+      logger_->log_debug("TailState %s: %s, %s, %llu, %llu", s.first, s.second.path_, s.second.current_file_name_, s.second.currentTailFilePosition_, s.second.currentTailFileModificationTime_);
+    }
+  } else {
+    logger_->log_error("Failed to get state from StateManager");
   }
 
   /* We could not get the state form the StateManager, try to migrate the old state file if it exists */
@@ -318,11 +324,6 @@ bool TailFile::recoverState(const std::shared_ptr<core::ProcessContext>& context
 }
 
 bool TailFile::storeState(const std::shared_ptr<core::ProcessContext>& context) {
-  auto state_manager = context->getStateManager();
-  if (state_manager == nullptr) {
-    logger_->log_error("Failed to get StateManager");
-    return false;
-  }
   std::unordered_map<std::string, std::string> state;
   size_t i = 0;
   for (const auto& tail_state : tail_states_) {
@@ -331,8 +332,8 @@ bool TailFile::storeState(const std::shared_ptr<core::ProcessContext>& context) 
     state["file." + std::to_string(i) + ".position"] = std::to_string(tail_state.second.currentTailFilePosition_);
     ++i;
   }
-  state_manager->set(state);
-  if (!state_manager->persist()) {
+  if (!state_manager_->set(state)) {
+    logger_->log_error("Failed to set state");
     return false;
   }
   return true;

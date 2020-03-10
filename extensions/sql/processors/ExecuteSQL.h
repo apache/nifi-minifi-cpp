@@ -48,6 +48,7 @@ class ExecuteSQL: public SQLProcessor<ExecuteSQL>, public OutputFormat {
 
   void processOnSchedule(core::ProcessContext& context);
   void processOnTrigger(core::ProcessContext& context, core::ProcessSession& session);
+  void processNotifyStop();
   
   void initialize() override;
 
