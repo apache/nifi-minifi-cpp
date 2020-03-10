@@ -289,7 +289,7 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
    * Retrieves metrics node
    * @return metrics response node
    */
-  virtual std::shared_ptr<state::response::ResponseNode> getMetricsNode() const;
+  virtual std::shared_ptr<state::response::ResponseNode> getMetricsNode(const std::string& metricsClass) const;
 
   /**
    * Retrieves root nodes configured to be included in heartbeat
@@ -406,7 +406,7 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
   std::shared_ptr<logging::Logger> logger_;
   std::string serial_number_;
 
-  std::shared_ptr<state::UpdateController> c2_agent_;
+  std::unique_ptr<state::UpdateController> c2_agent_;
 
   static std::shared_ptr<utils::IdGenerator> id_generator_;
 };

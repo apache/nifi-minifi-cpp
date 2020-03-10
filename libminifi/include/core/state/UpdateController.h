@@ -260,6 +260,8 @@ class UpdateController {
       : controller_running_(false) {
   }
 
+  virtual ~UpdateController() = default;
+
   virtual std::vector<std::function<Update()>> getFunctions() {
     return {};
   }
@@ -274,8 +276,6 @@ class UpdateController {
  protected:
 
   std::atomic<bool> controller_running_;
-
-  virtual ~UpdateController() = default;
 };
 
 } /* namespace state */

@@ -353,10 +353,10 @@ class HeartbeatHandler : public CivetHandler {
 
   std::string readPost(struct mg_connection *conn) {
     std::string response;
-    int blockSize = 1024 * sizeof(char), readBytes;
+    int readBytes;
 
     char buffer[1024];
-    while ((readBytes = mg_read(conn, buffer, blockSize)) > 0) {
+    while ((readBytes = mg_read(conn, buffer, sizeof(buffer))) > 0) {
       response.append(buffer, 0, (readBytes / sizeof(char)));
     }
     return response;
@@ -410,8 +410,7 @@ class HeartbeatHandler : public CivetHandler {
     assert(found == true);
   }
 
-  virtual void handleHeartbeat(const rapidjson::Document& root, struct mg_connection * conn) {
-    (void)conn;
+  virtual void handleHeartbeat(const rapidjson::Document& root, struct mg_connection *) {
     verifyJsonHasAgentManifest(root);
   }
 

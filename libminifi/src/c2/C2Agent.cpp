@@ -499,9 +499,14 @@ void C2Agent::handle_describe(const C2ContentResponse &resp) {
   if (resp.name == "metrics") {
     C2Payload response(Operation::ACKNOWLEDGE, resp.ident, false, true);
     if (reporter != nullptr) {
+      auto iter = resp.operation_arguments.find("metricsClass");
+      std::string metricsClass;
+      if (iter != resp.operation_arguments.end()) {
+        metricsClass = iter->second.to_string();
+      }
       C2Payload metrics(Operation::ACKNOWLEDGE);
       metrics.setLabel("metrics");
-      auto metricsNode = reporter->getMetricsNode();
+      auto metricsNode = reporter->getMetricsNode(metricsClass);
       if (metricsNode) {
         serializeMetrics(metrics, metricsNode->getName(), metricsNode->serialize(), metricsNode->isArray());
       }

@@ -452,8 +452,8 @@ void FlowController::initializeC2() {
 
   if (!c2_initialized_) {
     configuration_->setAgentIdentifier(identifier_str);
-    c2_agent_ = std::make_shared<c2::C2Agent>(std::dynamic_pointer_cast<FlowController>(shared_from_this()), std::dynamic_pointer_cast<FlowController>(shared_from_this()),
-                                                                       configuration_);
+    c2_agent_ = std::unique_ptr<c2::C2Agent>(new c2::C2Agent(std::dynamic_pointer_cast<FlowController>(shared_from_this()), std::dynamic_pointer_cast<FlowController>(shared_from_this()),
+                                                                       configuration_));
     c2_agent_->start();
     c2_initialized_ = true;
   } else {
@@ -905,8 +905,12 @@ int16_t FlowController::clearConnection(const std::string &connection) {
   return -1;
 }
 
-std::shared_ptr<state::response::ResponseNode> FlowController::getMetricsNode() const {
+std::shared_ptr<state::response::ResponseNode> FlowController::getMetricsNode(const std::string& metricsClass) const {
   std::lock_guard<std::mutex> lock(metrics_mutex_);
+  const auto citer = component_metrics_.find(metricsClass);
+  if (citer != component_metrics_.end()) {
+    return citer->second;
+  }
   const auto iter = root_response_nodes_.find("metrics");
   if (iter != root_response_nodes_.end()) {
     return iter->second;
