@@ -146,7 +146,7 @@ core::Property ConsumeWindowsEventLog::BookmarkRootDirectory(
   core::PropertyBuilder::createProperty("State Directory")->
   isRequired(false)->
   withDefaultValue("CWELState")->
-  withDescription("Directory which contains processor state data.")->
+  withDescription("DEPRECATED. Only use it for state migration from the state file, supplying the legacy state directory.")->
   build());
 
 core::Property ConsumeWindowsEventLog::ProcessOldEvents(

@@ -69,8 +69,7 @@ namespace minifi {
 namespace processors {
 
 core::Property TailFile::FileName("File to Tail", "Fully-qualified filename of the file that should be tailed when using single file mode, or a file regex when using multifile mode", "");
-core::Property TailFile::StateFile("State File", "Specifies the file that should be used for storing state about"
-                                   " what data has been ingested so that upon restart NiFi can resume from where it left off",
+core::Property TailFile::StateFile("State File", "DEPRECATED. Only use it for state migration from the legacy state file.",
                                    "TailFileState");
 core::Property TailFile::Delimiter("Input Delimiter", "Specifies the character that should be used for delimiting the data being tailed"
                                    "from the incoming file."
