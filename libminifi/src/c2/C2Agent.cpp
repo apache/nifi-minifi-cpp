@@ -342,6 +342,31 @@ void C2Agent::serializeMetrics(C2Payload &metric_payload, const std::string &nam
   }
 }
 
+/*
+void C2Agent::serializeMetrics(C2Payload &metric_payload, const std::string &name, const std::vector<state::response::SerializedResponseNode> &metrics, bool is_container, bool is_collapsible) {
+  C2Payload payload(metric_payload.getOperation());
+  payload.setLabel(name);
+  for (const auto &metric : metrics) {
+    if (metric.children.size() > 0) {
+      C2Payload child_metric_payload(metric_payload.getOperation());
+      if (metric.array) {
+        child_metric_payload.setContainer(true);
+      }
+      auto collapsible = !metric.collapsible ? metric.collapsible : is_collapsible;
+      child_metric_payload.setCollapsible(collapsible);
+      child_metric_payload.setLabel(metric.name);
+      serializeMetrics(child_metric_payload, metric.name, metric.children, is_container, collapsible);
+      payload.addPayload(std::move(child_metric_payload));
+    } else {
+      C2ContentResponse response(metric_payload.getOperation());
+      response.name = name;
+      response.operation_arguments[metric.name] = metric.value;
+      payload.addContent(std::move(response), is_collapsible);
+    }
+  }
+  metric_payload.addPayload(std::move(payload));
+}*/
+
 void C2Agent::extractPayload(const C2Payload &&resp) {
   if (resp.getStatus().getState() == state::UpdateState::NESTED) {
     const std::vector<C2Payload> &payloads = resp.getNestedPayloads();
@@ -508,7 +533,10 @@ void C2Agent::handle_describe(const C2ContentResponse &resp) {
       metrics.setLabel("metrics");
       auto metricsNode = reporter->getMetricsNode(metricsClass);
       if (metricsNode) {
-        serializeMetrics(metrics, metricsNode->getName(), metricsNode->serialize(), metricsNode->isArray());
+        C2Payload payload(Operation::ACKNOWLEDGE);
+        payload.setLabel(metricsNode->getName());
+        serializeMetrics(payload, metricsNode->getName(), metricsNode->serialize(), metricsNode->isArray());
+        metrics.addPayload(std::move(payload));
       }
       response.addPayload(std::move(metrics));
     }

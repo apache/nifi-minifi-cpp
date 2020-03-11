@@ -907,13 +907,16 @@ int16_t FlowController::clearConnection(const std::string &connection) {
 
 std::shared_ptr<state::response::ResponseNode> FlowController::getMetricsNode(const std::string& metricsClass) const {
   std::lock_guard<std::mutex> lock(metrics_mutex_);
-  const auto citer = component_metrics_.find(metricsClass);
-  if (citer != component_metrics_.end()) {
-    return citer->second;
-  }
-  const auto iter = root_response_nodes_.find("metrics");
-  if (iter != root_response_nodes_.end()) {
-    return iter->second;
+  if (!metricsClass.empty()) {
+    const auto citer = component_metrics_.find(metricsClass);
+    if (citer != component_metrics_.end()) {
+      return citer->second;
+    }
+  } else {
+    const auto iter = root_response_nodes_.find("metrics");
+    if (iter != root_response_nodes_.end()) {
+      return iter->second;
+    }
   }
   return nullptr;
 }

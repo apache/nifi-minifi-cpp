@@ -140,25 +140,25 @@ class GetTCPMetrics : public state::response::ResponseNode {
 
   virtual std::vector<state::response::SerializedResponseNode> serialize() {
     std::vector<state::response::SerializedResponseNode> resp;
-    state::response::SerializedResponseNode metric;
-    metric.name = getName();
 
     state::response::SerializedResponseNode iter;
     iter.name = "OnTriggerInvocations";
     iter.value = (uint32_t)iterations_.load();
-    metric.children.push_back(iter);
+
+    resp.push_back(iter);
 
     state::response::SerializedResponseNode accepted_files;
     accepted_files.name = "AcceptedFiles";
     accepted_files.value = (uint32_t)accepted_files_.load();
-    metric.children.push_back(accepted_files);
+
+    resp.push_back(accepted_files);
 
     state::response::SerializedResponseNode input_bytes;
     input_bytes.name = "InputBytes";
     input_bytes.value = (uint32_t)input_bytes_.load();
-    metric.children.push_back(input_bytes);
 
-    resp.push_back(metric);
+    resp.push_back(input_bytes);
+
     return resp;
   }
 
