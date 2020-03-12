@@ -173,7 +173,8 @@ void FlowController::initializePaths(const std::string &adjustedFilename) {
 
 FlowController::~FlowController() {
   stop(true);
-  c2_agent_->stop();
+  if (c2_agent_)
+    c2_agent_->stop();
   thread_pool_.shutdown();
   unload();
   if (NULL != protocol_)
