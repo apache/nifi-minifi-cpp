@@ -262,7 +262,7 @@ class UpdateController {
 
   virtual ~UpdateController() = default;
 
-  virtual std::vector<std::function<Update()>> getFunctions() {
+  virtual std::vector<std::function<utils::TaskRescheduleInfo()>> getFunctions() {
     return {};
   }
 

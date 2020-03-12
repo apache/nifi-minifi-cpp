@@ -173,9 +173,9 @@ void FlowController::initializePaths(const std::string &adjustedFilename) {
 
 FlowController::~FlowController() {
   stop(true);
+  c2_agent_->stop();
+  thread_pool_.shutdown();
   unload();
-  if (c2_agent_)
-    c2_agent_->stop();
   if (NULL != protocol_)
     delete protocol_;
   flow_file_repo_ = nullptr;
@@ -246,7 +246,6 @@ int16_t FlowController::stop(bool force, uint64_t timeToWait) {
     this->timer_scheduler_->stop();
     this->event_scheduler_->stop();
     this->cron_scheduler_->stop();
-    this->thread_pool_.shutdown();
     running_ = false;
   }
   return 0;
@@ -449,23 +448,17 @@ void FlowController::initializeC2() {
     // set to the flow controller's identifier
     identifier_str = uuidStr_;
   }
+  configuration_->setAgentIdentifier(identifier_str);
 
-  if (!c2_initialized_) {
-    configuration_->setAgentIdentifier(identifier_str);
-    c2_agent_ = std::unique_ptr<c2::C2Agent>(new c2::C2Agent(std::dynamic_pointer_cast<FlowController>(shared_from_this()), std::dynamic_pointer_cast<FlowController>(shared_from_this()),
-                                                                       configuration_));
-    c2_agent_->start();
-    c2_initialized_ = true;
-  } else {
-    if (!flow_update_) {
-      return;
-    }
+  if (c2_initialized_ && !flow_update_) {
+    return;
   }
+
   device_information_.clear();
   component_metrics_.clear();
   component_metrics_by_id_.clear();
-  std::string class_csv;
 
+  std::string class_csv;
   if (root_ != nullptr) {
     std::shared_ptr<state::response::QueueMetrics> queueMetrics = std::make_shared<state::response::QueueMetrics>();
 
@@ -599,6 +592,15 @@ void FlowController::initializeC2() {
   }
 
   loadC2ResponseConfiguration();
+
+  if (!c2_initialized_) {
+    c2_agent_ = std::unique_ptr<c2::C2Agent>(new c2::C2Agent(std::dynamic_pointer_cast<FlowController>(shared_from_this()),
+                                                             std::dynamic_pointer_cast<FlowController>(shared_from_this()),
+                                                             configuration_,
+                                                             thread_pool_));
+    c2_agent_->start();
+    c2_initialized_ = true;
+  }
 }
 
 void FlowController::loadC2ResponseConfiguration(const std::string &prefix) {

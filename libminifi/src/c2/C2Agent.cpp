@@ -32,14 +32,21 @@
 #include "utils/file/FileUtils.h"
 #include "utils/file/FileManager.h"
 #include "utils/HTTPClient.h"
+#include "utils/GeneralUtils.h"
+#include "utils/Monitors.h"
+
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
 namespace c2 {
 
-C2Agent::C2Agent(const std::shared_ptr<core::controller::ControllerServiceProvider> &controller, const std::shared_ptr<state::StateMonitor> &updateSink,
-                 const std::shared_ptr<Configure> &configuration)
+std::shared_ptr<utils::IdGenerator> C2Agent::id_generator_ = utils::IdGenerator::getIdGenerator();
+
+C2Agent::C2Agent(const std::shared_ptr<core::controller::ControllerServiceProvider> &controller,
+                 const std::shared_ptr<state::StateMonitor> &updateSink,
+                 const std::shared_ptr<Configure> &configuration,
+                 utils::ThreadPool<utils::TaskRescheduleInfo>& thread_pool)
     : heart_beat_period_(3000),
       max_c2_responses(5),
       update_sink_(updateSink),
@@ -47,7 +54,8 @@ C2Agent::C2Agent(const std::shared_ptr<core::controller::ControllerServiceProvid
       controller_(controller),
       configuration_(configuration),
       protocol_(nullptr),
-      logger_(logging::LoggerFactory<C2Agent>::getLogger()) {
+      logger_(logging::LoggerFactory<C2Agent>::getLogger()),
+      thread_pool_(thread_pool) {
   allow_updates_ = true;
 
   manifest_sent_ = false;
@@ -68,8 +76,6 @@ C2Agent::C2Agent(const std::shared_ptr<core::controller::ControllerServiceProvid
 
   c2_producer_ = [&]() {
     auto now = std::chrono::steady_clock::now();
-    auto time_since = std::chrono::duration_cast<std::chrono::milliseconds>(now - last_run_).count();
-
     // place priority on messages to send to the c2 server
       if ( protocol_.load() != nullptr && request_mutex.try_lock_until(now + std::chrono::seconds(1)) ) {
         if (requests.size() > 0) {
@@ -91,24 +97,19 @@ C2Agent::C2Agent(const std::shared_ptr<core::controller::ControllerServiceProvid
         }
         request_mutex.unlock();
       }
-
-      if ( time_since > heart_beat_period_ ) {
-        last_run_ = now;
-        try {
-          performHeartBeat();
-        }
-        catch(const std::exception &e) {
-          logger_->log_error("Exception occurred while performing heartbeat. error: %s", e.what());
-        }
-        catch(...) {
-          logger_->log_error("Unknonwn exception occurred while performing heartbeat.");
-        }
+      try {
+        performHeartBeat();
+      }
+      catch(const std::exception &e) {
+        logger_->log_error("Exception occurred while performing heartbeat. error: %s", e.what());
+      }
+      catch(...) {
+        logger_->log_error("Unknonwn exception occurred while performing heartbeat.");
       }
 
       checkTriggers();
 
-      std::this_thread::sleep_for(std::chrono::milliseconds(heart_beat_period_ > 500 ? 500 : heart_beat_period_));
-      return state::Update(state::UpdateStatus(state::UpdateState::READ_COMPLETE, false));
+      return utils::TaskRescheduleInfo::RetryIn(std::chrono::milliseconds(heart_beat_period_));
     };
   functions_.push_back(c2_producer_);
 
@@ -122,26 +123,31 @@ C2Agent::C2Agent(const std::shared_ptr<core::controller::ControllerServiceProvid
       }
       queue_mutex.unlock();
     }
-    return state::Update(state::UpdateStatus(state::UpdateState::READ_COMPLETE, false));
+    return utils::TaskRescheduleInfo::RetryImmediately();
   };
   functions_.push_back(c2_consumer_);
 }
 
 void C2Agent::start() {
-  controller_running_ = true;
-  heartbeat_thread_pool_.setMaxConcurrentTasks(2);
+  task_ids_.clear();
   for (const auto& function : functions_) {
-    std::unique_ptr<utils::AfterExecute<state::Update>> after_execute(new state::UpdateRunner(isControllerRunning(), getHeartBeatDelay()));
-    utils::Worker<state::Update> functor(function, "c2processor", std::move(after_execute));
-    std::future<state::Update> future;
-    heartbeat_thread_pool_.execute(std::move(functor), future);
+    utils::Identifier uuid;
+    id_generator_->generate(uuid);
+    const std::string uuid_str = uuid.to_string();
+    task_ids_.push_back(uuid_str);
+    auto monitor = utils::make_unique<utils::ComplexMonitor>();
+    utils::Worker<utils::TaskRescheduleInfo> functor(function, uuid_str, std::move(monitor));
+    std::future<utils::TaskRescheduleInfo> future;
+    thread_pool_.execute(std::move(functor), future);
   }
-  heartbeat_thread_pool_.start();
+  controller_running_ = true;
 }
 
 void C2Agent::stop() {
   controller_running_ = false;
-  heartbeat_thread_pool_.shutdown();
+  for(const auto& id : task_ids_) {
+    thread_pool_.stopTasks(id);
+  }
 }
 
 void C2Agent::checkTriggers() {
@@ -341,31 +347,6 @@ void C2Agent::serializeMetrics(C2Payload &metric_payload, const std::string &nam
     }
   }
 }
-
-/*
-void C2Agent::serializeMetrics(C2Payload &metric_payload, const std::string &name, const std::vector<state::response::SerializedResponseNode> &metrics, bool is_container, bool is_collapsible) {
-  C2Payload payload(metric_payload.getOperation());
-  payload.setLabel(name);
-  for (const auto &metric : metrics) {
-    if (metric.children.size() > 0) {
-      C2Payload child_metric_payload(metric_payload.getOperation());
-      if (metric.array) {
-        child_metric_payload.setContainer(true);
-      }
-      auto collapsible = !metric.collapsible ? metric.collapsible : is_collapsible;
-      child_metric_payload.setCollapsible(collapsible);
-      child_metric_payload.setLabel(metric.name);
-      serializeMetrics(child_metric_payload, metric.name, metric.children, is_container, collapsible);
-      payload.addPayload(std::move(child_metric_payload));
-    } else {
-      C2ContentResponse response(metric_payload.getOperation());
-      response.name = name;
-      response.operation_arguments[metric.name] = metric.value;
-      payload.addContent(std::move(response), is_collapsible);
-    }
-  }
-  metric_payload.addPayload(std::move(payload));
-}*/
 
 void C2Agent::extractPayload(const C2Payload &&resp) {
   if (resp.getStatus().getState() == state::UpdateState::NESTED) {

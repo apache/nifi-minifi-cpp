@@ -70,7 +70,7 @@ class DescribeJstackHandler : public HeartbeatHandler {
   }
 
   virtual void handleAcknowledge(const rapidjson::Document& root) {
-    assert(root.HasMember("SchedulingAgent #0") == true);
+    assert(root.HasMember("Flowcontroller threadpool #0") == true);
   }
 
 };

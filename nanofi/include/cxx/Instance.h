@@ -107,7 +107,7 @@ class Instance {
       configure_->set("c2.rest.url", server->url);
       configure_->set("c2.rest.url.ack", server->ack_url);
     }
-    agent_ = std::make_shared<c2::C2CallbackAgent>(controller_service_provider, nullptr, configure_);
+    agent_ = std::make_shared<c2::C2CallbackAgent>(controller_service_provider, nullptr, configure_, listener_thread_pool_);
     listener_thread_pool_.start();
     registerUpdateListener(agent_, 1000);
     agent_->setStopCallback(c1);
@@ -155,9 +155,8 @@ class Instance {
     // run all functions independently
 
     for (auto function : functions) {
-      std::unique_ptr<utils::AfterExecute<state::Update>> after_execute = std::unique_ptr<utils::AfterExecute<state::Update>>(new state::UpdateRunner(running_, delay));
-      utils::Worker<state::Update> functor(function, "listeners", std::move(after_execute));
-      std::future<state::Update> future;
+      utils::Worker<utils::TaskRescheduleInfo> functor(function, "listeners");
+      std::future<utils::TaskRescheduleInfo> future;
       if (!listener_thread_pool_.execute(std::move(functor), future)) {
         // denote failure
         return false;
@@ -181,7 +180,7 @@ class Instance {
   std::string url_;
   std::shared_ptr<Configure> configure_;
 
-  utils::ThreadPool<state::Update> listener_thread_pool_{ 1 };
+  utils::ThreadPool<utils::TaskRescheduleInfo> listener_thread_pool_;
 };
 
 } /* namespace minifi */

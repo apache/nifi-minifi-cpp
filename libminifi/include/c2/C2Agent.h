@@ -35,6 +35,7 @@
 #include "io/validation.h"
 #include "HeartBeatReporter.h"
 #include "utils/ThreadPool.h"
+#include "utils/Id.h"
 
 namespace org {
 namespace apache {
@@ -57,7 +58,10 @@ namespace c2 {
 class C2Agent : public state::UpdateController {
  public:
 
-  C2Agent(const std::shared_ptr<core::controller::ControllerServiceProvider> &controller, const std::shared_ptr<state::StateMonitor> &updateSink, const std::shared_ptr<Configure> &configure);
+  C2Agent(const std::shared_ptr<core::controller::ControllerServiceProvider> &controller,
+          const std::shared_ptr<state::StateMonitor> &updateSink,
+          const std::shared_ptr<Configure> &configure,
+          utils::ThreadPool<utils::TaskRescheduleInfo> &pool);
 
   virtual ~C2Agent() noexcept {
     delete protocol_.load();
@@ -200,16 +204,16 @@ class C2Agent : public state::UpdateController {
   std::chrono::steady_clock::time_point last_run_;
 
   // function that performs the heartbeat
-  std::function<state::Update()> c2_producer_;
+  std::function<utils::TaskRescheduleInfo()> c2_producer_;
 
   // function that acts upon the
-  std::function<state::Update()> c2_consumer_;
+  std::function<utils::TaskRescheduleInfo()> c2_consumer_;
 
   // reference to the update sink, against which we will execute updates.
   std::shared_ptr<state::StateMonitor> update_sink_;
 
   // functions that will be used for the udpate controller.
-  std::vector<std::function<state::Update()>> functions_;
+  std::vector<std::function<utils::TaskRescheduleInfo()>> functions_;
 
   std::shared_ptr<controllers::UpdatePolicyControllerService> update_service_;
 
@@ -240,7 +244,11 @@ class C2Agent : public state::UpdateController {
 
   std::shared_ptr<logging::Logger> logger_;
 
-  utils::ThreadPool<state::Update> heartbeat_thread_pool_;
+  utils::ThreadPool<utils::TaskRescheduleInfo> &thread_pool_;
+
+  std::vector<std::string> task_ids_;
+
+  static std::shared_ptr<utils::IdGenerator> id_generator_;
 
   bool manifest_sent_;
 };
