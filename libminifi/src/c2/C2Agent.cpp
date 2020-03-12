@@ -510,14 +510,11 @@ void C2Agent::handle_describe(const C2ContentResponse &resp) {
       if (iter != resp.operation_arguments.end()) {
         metricsClass = iter->second.to_string();
       }
-      C2Payload metrics(Operation::ACKNOWLEDGE);
-      metrics.setLabel("metrics");
       auto metricsNode = reporter->getMetricsNode(metricsClass);
+      C2Payload metrics(Operation::ACKNOWLEDGE);
+      metricsClass.empty() ? metrics.setLabel("metrics") : metrics.setLabel(metricsClass);
       if (metricsNode) {
-        C2Payload payload(Operation::ACKNOWLEDGE);
-        payload.setLabel(metricsNode->getName());
-        serializeMetrics(payload, metricsNode->getName(), metricsNode->serialize(), metricsNode->isArray());
-        metrics.addPayload(std::move(payload));
+        serializeMetrics(metrics, metricsNode->getName(), metricsNode->serialize(), metricsNode->isArray());
       }
       response.addPayload(std::move(metrics));
     }
