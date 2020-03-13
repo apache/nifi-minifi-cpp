@@ -407,7 +407,7 @@ class HeartbeatHandler : public CivetHandler {
 
       }
     }
-    assert(found == true);
+    assert(found);
   }
 
   virtual void handleHeartbeat(const rapidjson::Document& root, struct mg_connection *) {

@@ -75,9 +75,8 @@ C2Agent::C2Agent(const std::shared_ptr<core::controller::ControllerServiceProvid
   configure(configuration, false);
 
   c2_producer_ = [&]() {
-    auto now = std::chrono::steady_clock::now();
     // place priority on messages to send to the c2 server
-      if ( protocol_.load() != nullptr && request_mutex.try_lock_until(now + std::chrono::seconds(1)) ) {
+      if ( protocol_.load() != nullptr && request_mutex.try_lock_for(std::chrono::seconds(1))) {
         if (requests.size() > 0) {
           int count = 0;
           do {

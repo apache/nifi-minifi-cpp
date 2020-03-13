@@ -16,55 +16,24 @@
  * limitations under the License.
  */
 
-#include <sys/stat.h>
 #undef NDEBUG
-#include <cassert>
-#include <utility>
-#include <chrono>
-#include <fstream>
-#include <memory>
-#include <string>
-#include <thread>
-#include <type_traits>
-#include <vector>
-#include <iostream>
-#include <sstream>
-#include "HTTPClient.h"
-#include "InvokeHTTP.h"
 #include "TestBase.h"
-#include "utils/StringUtils.h"
-#include "core/Core.h"
-#include "core/logging/Logger.h"
-#include "core/ProcessGroup.h"
-#include "core/yaml/YamlConfiguration.h"
-#include "FlowController.h"
-#include "properties/Configure.h"
-#include "unit/ProvenanceTestHelper.h"
-#include "io/StreamFactory.h"
-#include "CivetServer.h"
-#include "RemoteProcessorGroupPort.h"
-#include "core/ConfigurableComponent.h"
-#include "controllers/SSLContextService.h"
-#include "TestServer.h"
 #include "c2/C2Agent.h"
-#include "protocols/RESTReceiver.h"
+#include "protocols/RESTProtocol.h"
 #include "protocols/RESTSender.h"
+#include "protocols/RESTReceiver.h"
 #include "HTTPIntegrationBase.h"
 #include "HTTPHandlers.h"
-#include "agent/build_description.h"
-#include "processors/LogAttribute.h"
 
 class LightWeightC2Handler : public HeartbeatHandler {
  public:
   explicit LightWeightC2Handler(bool isSecure)
-      : HeartbeatHandler(isSecure),
-        calls_(0) {
+      : HeartbeatHandler(isSecure) {
   }
 
   virtual ~LightWeightC2Handler() = default;
 
-  virtual void handleHeartbeat(const rapidjson::Document& root, struct mg_connection * conn)  {
-    (void)conn;
+  virtual void handleHeartbeat(const rapidjson::Document& root, struct mg_connection *)  {
     if (calls_ == 0) {
       verifyJsonHasAgentManifest(root);
     } else {
@@ -74,7 +43,7 @@ class LightWeightC2Handler : public HeartbeatHandler {
     calls_++;
   }
  private:
-  std::atomic<size_t> calls_;
+  std::atomic<size_t> calls_{0};
 };
 
 class VerifyC2Heartbeat : public VerifyC2Base {
