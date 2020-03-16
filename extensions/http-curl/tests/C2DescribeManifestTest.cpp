@@ -19,7 +19,6 @@
 #undef NDEBUG
 #include <string>
 #include "TestBase.h"
-#include "InvokeHTTP.h"
 #include "HTTPIntegrationBase.h"
 #include "HTTPHandlers.h"
 

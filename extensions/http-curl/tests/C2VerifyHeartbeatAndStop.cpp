@@ -24,7 +24,6 @@
 #include "protocols/RESTReceiver.h"
 #include "HTTPIntegrationBase.h"
 #include "HTTPHandlers.h"
-#include "processors/LogAttribute.h"
 
 class LightWeightC2Handler : public HeartbeatHandler {
  public:

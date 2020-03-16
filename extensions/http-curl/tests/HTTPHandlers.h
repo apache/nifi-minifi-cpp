@@ -392,7 +392,7 @@ class HeartbeatHandler : public CivetHandler {
     for (auto &bundle : root["agentInfo"]["agentManifest"]["bundles"].GetArray()) {
       assert(bundle.HasMember("artifact"));
       std::string str = bundle["artifact"].GetString();
-      if (str == "minifi-system") {
+      if (str == "minifi-standard-processors") {
 
         std::vector<std::string> classes;
         for (auto &proc : bundle["componentManifest"]["processors"].GetArray()) {
