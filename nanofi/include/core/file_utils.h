@@ -88,13 +88,7 @@ char * get_current_working_directory();
  */
 properties_t * read_configuration_file(const char * file_path);
 
-dir_handle_t open_dir(const char * dir_path);
-
-/**
- * Read all files in the directory and return
- * a list of buffers
- */
-file_buffer_list read_from_directory(const char * dir_path);
+size_t get_file_size(FILE * fp);
 
 #ifdef __cplusplus
 }

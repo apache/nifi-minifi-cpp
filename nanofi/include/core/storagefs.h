@@ -24,19 +24,18 @@
 #include "utlist.h"
 
 typedef struct chunk {
-    char * buffer; //chunk data
-    uint64_t len; //chunk size
-    attribute_set as; //attributes associated with the data
-    char path[21]; // the relative path of the chunk in file system
+    char * buffer; // chunk data
+    uint64_t len; // chunk size
+    attribute_set as; // attributes associated with the data
+    char name[37]; // the name of chunk file
     struct chunk * next;
 } chunks_t;
 
 typedef struct storage {
-    char uuid[37]; //the uuid of this stream
-    char * fs_path; //the root path of this stream
-    chunks_t * ct; //the list of chunks in this stream
-    uint64_t total_size; //the total bytes stored in memory
-    uint64_t last_chunk_number; //the number of last chunk stored
+    char uuid[37]; // the uuid of this stream
+    char * dir_path; // the root path of this stream
+    chunks_t * ct; // the list of chunks in this stream
+    uint64_t total_size;
 } storage_t;
 
 /**
@@ -76,13 +75,14 @@ int move_chunks(storage_t * source, storage_t * dest);
 
 /**
  * Read all chunks from storage into memory
- * @param strm, the stream to get chunks from
+ * @param strg, the stream to get chunks from
  */
-void read_chunks_up(storage_t * strm);
+int read_chunks_up(storage_t * strg);
 
 /**
  * Write all chunks to storage
+ * @param strg, the stream containing chunks
  */
-void write_chunks_down(storage_t * strm);
+void write_chunks_down(storage_t * strg);
 
 #endif /* NANOFI_INCLUDE_CORE_BUFFER_CHUNKS_H_ */

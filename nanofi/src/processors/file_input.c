@@ -41,7 +41,7 @@ void start_file_input(file_input_context_t * ctx) {
 }
 
 void stop_file_input(file_input_context_t * ctx) {
-	acquire_lock(&ctx->stop_mutex);
+    acquire_lock(&ctx->stop_mutex);
     ctx->stop = 1;
     condition_variable_broadcast(&ctx->stop_cond);
     release_lock(&ctx->stop_mutex);
@@ -53,8 +53,8 @@ int validate_file_path(const char * file_path) {
         return -1;
     }
 
-	struct stat stats;
-	int ret = stat(file_path, &stats);
+    struct stat stats;
+    int ret = stat(file_path, &stats);
 
     if (ret == -1) {
         logc(err, "Error occurred while getting file status {file: %s, error: %s}\n", file_path, strerror(errno));
@@ -197,7 +197,7 @@ message_t * create_message(char * data, size_t len, properties_t * props) {
 }
 
 size_t enqueue_chunk(file_input_context_t * ctx, data_buff_t chunk) {
-	size_t bytes_enqueued = 0;
+    size_t bytes_enqueued = 0;
     if (chunk.len > 0 && chunk.data) {
         size_t fp_len = strlen(ctx->file_path);
         chunk.file_path = (char *)malloc(fp_len + 1);
