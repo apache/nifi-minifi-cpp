@@ -37,8 +37,8 @@ class LightWeightC2Handler : public HeartbeatHandler {
     if (calls_ == 0) {
       verifyJsonHasAgentManifest(root);
     } else {
-      assert(root.HasMember("agentInfo") == true);
-      assert(root["agentInfo"].HasMember("agentManifest") == false);
+      assert(root.HasMember("agentInfo"));
+      assert(!root["agentInfo"].HasMember("agentManifest"));
     }
     calls_++;
   }
@@ -61,11 +61,9 @@ class VerifyC2Heartbeat : public VerifyC2Base {
   }
 
   void runAssertions() {
-    assert(LogTestController::getInstance().contains("Received Ack from Server") == true);
-
-    assert(LogTestController::getInstance().contains("C2Agent] [debug] Stopping component invoke") == true);
-
-    assert(LogTestController::getInstance().contains("C2Agent] [debug] Stopping component FlowController") == true);
+    assert(LogTestController::getInstance().contains("Received Ack from Server"));
+    assert(LogTestController::getInstance().contains("C2Agent] [debug] Stopping component invoke"));
+    assert(LogTestController::getInstance().contains("C2Agent] [debug] Stopping component FlowController"));
   }
 
   void configureFullHeartbeat() {

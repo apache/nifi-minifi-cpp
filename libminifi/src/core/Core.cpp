@@ -26,8 +26,6 @@ namespace nifi {
 namespace minifi {
 namespace core {
 
-std::shared_ptr<utils::IdGenerator> CoreComponent::id_generator_ = utils::IdGenerator::getIdGenerator();
-
 // Set UUID
 void CoreComponent::setUUID(utils::Identifier &uuid) {
   uuid_ = uuid;

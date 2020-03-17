@@ -29,7 +29,7 @@ public:
       : HeartbeatHandler(isSecure) {
   }
 
-  virtual void handleHeartbeat(const rapidjson::Document& root, struct mg_connection * conn) {
+  virtual void handleHeartbeat(const rapidjson::Document&, struct mg_connection * conn) {
     sendHeartbeatResponse("DESCRIBE", "manifest", "889345", conn);
   }
 
