@@ -248,6 +248,8 @@ int16_t FlowController::stop(bool force, uint64_t timeToWait) {
     this->timer_scheduler_->stop();
     this->event_scheduler_->stop();
     this->cron_scheduler_->stop();
+    // stop the ControllerServices
+    this->controller_service_provider_->disableAllControllerServices();
     thread_pool_.shutdown();
     running_ = false;
   }
@@ -893,6 +895,13 @@ std::shared_ptr<core::controller::ControllerService> FlowController::getControll
  */
 void FlowController::enableAllControllerServices() {
   controller_service_provider_->enableAllControllerServices();
+}
+
+/**
+ * Disables all controller services for the provider.
+ */
+void FlowController::disableAllControllerServices() {
+  controller_service_provider_->disableAllControllerServices();
 }
 
 int16_t FlowController::applyUpdate(const std::string &source, const std::string &configuration) {

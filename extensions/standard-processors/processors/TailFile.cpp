@@ -156,11 +156,6 @@ void TailFile::onSchedule(const std::shared_ptr<core::ProcessContext> &context, 
   }
 }
 
-void TailFile::notifyStop() {
-  state_manager_->persist();
-  state_manager_.reset();
-}
-
 bool TailFile::acceptFile(const std::string &fileFilter, const std::string &file) {
   utils::Regex rgx(fileFilter);
   return rgx.match(file);

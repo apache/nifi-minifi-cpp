@@ -58,6 +58,7 @@ UnorderedMapPersistableKeyValueStoreService::UnorderedMapPersistableKeyValueStor
 }
 
 UnorderedMapPersistableKeyValueStoreService::~UnorderedMapPersistableKeyValueStoreService() {
+  persist();
 }
 
 std::string UnorderedMapPersistableKeyValueStoreService::escape(const std::string& str) {
@@ -160,6 +161,11 @@ void UnorderedMapPersistableKeyValueStoreService::onEnable() {
   AbstractAutoPersistingKeyValueStoreService::onEnable();
 
   logger_->log_trace("Enabled UnorderedMapPersistableKeyValueStoreService");
+}
+
+void UnorderedMapPersistableKeyValueStoreService::notifyStop() {
+  AbstractAutoPersistingKeyValueStoreService::notifyStop();
+  persist();
 }
 
 bool UnorderedMapPersistableKeyValueStoreService::set(const std::string& key, const std::string& value) {

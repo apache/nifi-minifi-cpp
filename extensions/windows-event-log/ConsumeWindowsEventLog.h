@@ -97,7 +97,6 @@ public:
   virtual void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
   //! Initialize, overwrite by NiFi ConsumeWindowsEventLog
   virtual void initialize(void) override;
-  virtual void notifyStop() override;
   
 
 protected:

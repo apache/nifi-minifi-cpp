@@ -116,12 +116,20 @@ class StandardControllerServiceProvider : public ControllerServiceProvider, publ
   virtual void enableAllControllerServices() {
     logger_->log_info("Enabling %u controller services", controller_map_->getAllControllerServices().size());
     for (auto service : controller_map_->getAllControllerServices()) {
-
       if (service->canEnable()) {
         logger_->log_info("Enabling %s", service->getName());
         agent_->enableControllerService(service);
       } else {
         logger_->log_warn("Could not enable %s", service->getName());
+      }
+    }
+  }
+
+  virtual void disableAllControllerServices() {
+    logger_->log_info("Disabling %u controller services", controller_map_->getAllControllerServices().size());
+    for (auto service : controller_map_->getAllControllerServices()) {
+      if (!service->disable()) {
+        logger_->log_warn("Could not disable %s", service->getName());
       }
     }
   }

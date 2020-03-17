@@ -116,9 +116,6 @@ void ExecuteSQL::processOnTrigger(core::ProcessContext& /*context*/, core::Proce
   } while (rowCount > 0);
 }
 
-void ExecuteSQL::processNotifyStop() {
-}
-
 } /* namespace processors */
 } /* namespace minifi */
 } /* namespace nifi */

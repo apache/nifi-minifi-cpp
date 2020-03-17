@@ -274,11 +274,6 @@ void ListSFTP::onSchedule(const std::shared_ptr<core::ProcessContext> &context, 
   startKeepaliveThreadIfNeeded();
 }
 
-void ListSFTP::notifyStop() {
-  state_manager_->persist();
-  state_manager_.reset();
-}
-
 void ListSFTP::invalidateCache() {
   logger_->log_warn("Important properties have been reconfigured, invalidating in-memory cache");
 

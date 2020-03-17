@@ -291,6 +291,11 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
   virtual void enableAllControllerServices();
 
   /**
+   * Disables all controller services for the provider.
+   */
+  virtual void disableAllControllerServices();
+
+  /**
    * Retrieves metrics node
    * @return metrics response node
    */

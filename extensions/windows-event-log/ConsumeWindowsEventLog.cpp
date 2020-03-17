@@ -596,11 +596,6 @@ void ConsumeWindowsEventLog::putEventRenderFlowFileToSession(const EventRender& 
   }
 }
 
-void ConsumeWindowsEventLog::notifyStop() {
-  state_manager_->persist();
-  state_manager_.reset();
-}
-
 void ConsumeWindowsEventLog::LogWindowsError()
 {
   auto error_id = GetLastError();

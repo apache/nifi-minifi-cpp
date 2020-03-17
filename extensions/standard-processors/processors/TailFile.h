@@ -90,8 +90,6 @@ class TailFile : public core::Processor {
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession>  &session) override;
   // Initialize, over write by NiFi TailFile
   void initialize(void) override;
-  // notifyStop
-  void notifyStop() override;
   // recoverState
   bool recoverState(const std::shared_ptr<core::ProcessContext>& context);
   // storeState

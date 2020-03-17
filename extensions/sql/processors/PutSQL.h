@@ -47,7 +47,6 @@ class PutSQL: public SQLProcessor<PutSQL> {
 
   void processOnSchedule(core::ProcessContext &context);
   void processOnTrigger(core::ProcessContext& context, core::ProcessSession &session);
-  void processNotifyStop();
   
   void initialize() override;
 

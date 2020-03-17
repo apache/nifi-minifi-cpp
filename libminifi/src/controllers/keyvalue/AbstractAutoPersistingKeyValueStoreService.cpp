@@ -51,7 +51,17 @@ AbstractAutoPersistingKeyValueStoreService::AbstractAutoPersistingKeyValueStoreS
 }
 
 AbstractAutoPersistingKeyValueStoreService::~AbstractAutoPersistingKeyValueStoreService() {
-  notifyStop();
+  stopPersistingThread();
+}
+
+void AbstractAutoPersistingKeyValueStoreService::stopPersistingThread() {
+  std::unique_lock<std::mutex> lock(persisting_mutex_);
+  if (persisting_thread_.joinable()) {
+    running_ = false;
+    persisting_cv_.notify_one();
+    lock.unlock();
+    persisting_thread_.join();
+  }
 }
 
 void AbstractAutoPersistingKeyValueStoreService::initialize() {
@@ -97,14 +107,7 @@ void AbstractAutoPersistingKeyValueStoreService::onEnable() {
 }
 
 void AbstractAutoPersistingKeyValueStoreService::notifyStop() {
-  if (persisting_thread_.joinable()) {
-    {
-      std::lock_guard<std::mutex> lock(persisting_mutex_);
-      running_ = false;
-      persisting_cv_.notify_one();
-    }
-    persisting_thread_.join();
-  }
+  stopPersistingThread();
 }
 
 void AbstractAutoPersistingKeyValueStoreService::persistingThreadFunc() {

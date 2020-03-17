@@ -95,9 +95,6 @@ void PutSQL::processOnTrigger(core::ProcessContext& /*context*/, core::ProcessSe
   }
 }
 
-void PutSQL::processNotifyStop() {
-}
-
 } /* namespace processors */
 } /* namespace minifi */
 } /* namespace nifi */

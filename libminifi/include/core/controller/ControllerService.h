@@ -137,6 +137,9 @@ class ControllerService : public ConfigurableComponent, public Connectable {
 
   void setState(ControllerServiceState state) {
     current_state_ = state;
+    if (state == DISABLED) {
+      notifyStop();
+    }
   }
 
   virtual bool supportsDynamicProperties() {
