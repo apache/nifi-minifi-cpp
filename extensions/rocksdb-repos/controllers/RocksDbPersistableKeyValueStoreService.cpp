@@ -66,6 +66,12 @@ void RocksDbPersistableKeyValueStoreService::onEnable() {
   db_.reset();
   rocksdb::Options options;
   options.create_if_missing = true;
+  options.use_direct_io_for_flush_and_compaction = true;
+  options.use_direct_reads = true;
+  // Use the same buffer settings as the FlowFileRepository
+  options.write_buffer_size = 8 << 20;
+  options.max_write_buffer_number = 20;
+  options.min_write_buffer_number_to_merge = 1;
   if (!always_persist_) {
     options.manual_wal_flush = true;
   }

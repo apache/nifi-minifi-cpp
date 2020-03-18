@@ -276,7 +276,7 @@ bool TailFile::recoverState(const std::shared_ptr<core::ProcessContext>& context
       logger_->log_debug("TailState %s: %s, %s, %llu, %llu", s.first, s.second.path_, s.second.current_file_name_, s.second.currentTailFilePosition_, s.second.currentTailFileModificationTime_);
     }
   } else {
-    logger_->log_error("Failed to get state from StateManager");
+    logger_->log_info("Found no stored state");
   }
 
   /* We could not get the state form the StateManager, try to migrate the old state file if it exists */

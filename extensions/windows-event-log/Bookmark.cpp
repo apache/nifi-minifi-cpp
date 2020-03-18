@@ -33,6 +33,8 @@ Bookmark::Bookmark(const std::wstring& channel, const std::wstring& query, const
         logger_->log_warn("Could not migrate state from specified State Directory %s", bookmarkRootDir);
       }
     }
+  } else {
+    logger_->log_info("Found no stored state");
   }
 
   if (!bookmarkXml_.empty()) {

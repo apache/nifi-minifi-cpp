@@ -508,7 +508,7 @@ bool ListSFTP::updateFromTrackingTimestampsCache(const std::shared_ptr<core::Pro
 
   std::unordered_map<std::string, std::string> state_map;
   if (!state_manager_->get(state_map)) {
-    logger_->log_debug("Failed to get state from StateManager");
+    logger_->log_info("Found no stored state");
     return false;
   }
   try {
