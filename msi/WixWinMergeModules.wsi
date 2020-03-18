@@ -49,6 +49,10 @@ Licensed to the Apache Software Foundation (ASF) under one or more
       <Custom Action="UpdateConfig" After="InstallFiles">NOT Installed</Custom>
     </InstallExecuteSequence> -->
 
+
+    <Feature Id="VCRedist" Title="Visual C++ 14.0 Runtime" AllowAdvertise="yes"  Level="1">
+      <MergeRef Id="VCRedist"/>
+    </Feature>
 <!--
     <Feature Id="VCRedist64" Title="Visual C++ 14.0 Runtime" AllowAdvertise="yes"  Level="1">
       <MergeRef Id="VCRedist64"/>
@@ -317,13 +321,10 @@ Licensed to the Apache Software Foundation (ASF) under one or more
 
             <Directory Id="INSTALLBINDIR" Name="bin">
               <Component Id="minifiService" Guid="87658309-0339-425c-8633-f54ffaaa4921">
-                <File Id="MiNiFiExe" Name="minifi.exe" KeyPath="yes" Source="main\minifi.exe"/>
-                <File Id="MiNiFiExe_concrt140" Name="concrt140.dll" KeyPath="no" Source="redist\concrt140.dll"/>
-                <File Id="MiNiFiExe_msvcp140" Name="msvcp140.dll" KeyPath="no" Source="redist\msvcp140.dll"/>
-                <File Id="MiNiFiExe_msvcp140_1" Name="msvcp140_1.dll" KeyPath="no" Source="redist\msvcp140_1.dll"/>
-                <File Id="MiNiFiExe_msvcp140_2" Name="msvcp140_2.dll" KeyPath="no" Source="redist\msvcp140_2.dll"/>
-                <File Id="MiNiFiExe_vccorlib140" Name="vccorlib140.dll" KeyPath="no" Source="redist\vccorlib140.dll"/>
-                <File Id="MiNiFiExe_vcruntime140" Name="vcruntime140.dll" KeyPath="no" Source="redist\vcruntime140.dll"/>
+                <File Id="MiNiFiExe"
+                         Name="minifi.exe"
+                         KeyPath="yes"
+                         Source="main\minifi.exe"/>
                 <!-- 
                 It is not possible to set 'ServiceConfig' for 2 'Component' (error LGHT0130 : The primary key 'Apache NiFi MiNiFi' is duplicated in table 'ServiceConfig').
                 Problem is described: http://windows-installer-xml-wix-toolset.687559.n2.nabble.com/Installing-a-Service-with-Varying-Dependencies-td693097.html
@@ -361,13 +362,10 @@ Licensed to the Apache Software Foundation (ASF) under one or more
                 <Condition><![CDATA[SERVICEACCOUNT="LocalSystem"]]></Condition>
               </Component>
               <Component Id="minifiServiceNotLocal" Guid="87658309-0339-425c-8633-f54ffaaa4922">
-                <File Id="MiNiFiExeWithPassword" Name="minifi.exe" KeyPath="yes" Source="main\minifi.exe"/>
-                <File Id="MiNiFiExeWithPassword_concrt140" Name="concrt140.dll" KeyPath="no" Source="redist\concrt140.dll"/>
-                <File Id="MiNiFiExeWithPassword_msvcp140" Name="msvcp140.dll" KeyPath="no" Source="redist\msvcp140.dll"/>
-                <File Id="MiNiFiExeWithPassword_msvcp140_1" Name="msvcp140_1.dll" KeyPath="no" Source="redist\msvcp140_1.dll"/>
-                <File Id="MiNiFiExeWithPassword_msvcp140_2" Name="msvcp140_2.dll" KeyPath="no" Source="redist\msvcp140_2.dll"/>
-                <File Id="MiNiFiExeWithPassword_vccorlib140" Name="vccorlib140.dll" KeyPath="no" Source="redist\vccorlib140.dll"/>
-                <File Id="MiNiFiExeWithPassword_vcruntime140" Name="vcruntime140.dll" KeyPath="no" Source="redist\vcruntime140.dll"/>
+                <File Id="MiNiFiExeWithPassword"
+                         Name="minifi.exe"
+                         KeyPath="yes"
+                         Source="main\minifi.exe"/>
                 <ServiceInstall Id="MiNiFiExeServiceWithPassword"
                                 Type="ownProcess"
                                 Vital="yes"
