@@ -34,21 +34,13 @@ core::Property RocksDbPersistableKeyValueStoreService::Directory(
 RocksDbPersistableKeyValueStoreService::RocksDbPersistableKeyValueStoreService(const std::string& name, const std::string& id)
     : controllers::KeyValueStoreService(name, id)
     , controllers::AbstractAutoPersistingKeyValueStoreService(name, id)
-    , db_valid_(false)
     , logger_(logging::LoggerFactory<RocksDbPersistableKeyValueStoreService>::getLogger()) {
 }
 
 RocksDbPersistableKeyValueStoreService::RocksDbPersistableKeyValueStoreService(const std::string& name, utils::Identifier uuid /*= utils::Identifier()*/)
     : controllers::KeyValueStoreService(name, uuid)
     , controllers::AbstractAutoPersistingKeyValueStoreService(name, uuid)
-    , db_valid_(false)
     , logger_(logging::LoggerFactory<RocksDbPersistableKeyValueStoreService>::getLogger()) {
-}
-
-RocksDbPersistableKeyValueStoreService::~RocksDbPersistableKeyValueStoreService() {
-  if (db_valid_) {
-    delete db_;
-  }
 }
 
 void RocksDbPersistableKeyValueStoreService::initialize() {
@@ -71,18 +63,16 @@ void RocksDbPersistableKeyValueStoreService::onEnable() {
     return;
   }
 
-  if (db_valid_) {
-    db_valid_ = false;
-    delete db_;
-  }
+  db_.reset();
   rocksdb::Options options;
   options.create_if_missing = true;
   if (!always_persist_) {
     options.manual_wal_flush = true;
   }
-  rocksdb::Status status = rocksdb::DB::Open(options, directory_, &db_);
+  rocksdb::DB* db = nullptr;
+  rocksdb::Status status = rocksdb::DB::Open(options, directory_, &db);
   if (status.ok()) {
-    db_valid_ = true;
+    db_.reset(db);
     logger_->log_trace("Successfully opened RocksDB database at %s", directory_.c_str());
   } else {
     logger_->log_error("Failed to open RocksDB database at %s, error: %s", directory_.c_str(), status.getState());
@@ -99,14 +89,11 @@ void RocksDbPersistableKeyValueStoreService::onEnable() {
 void RocksDbPersistableKeyValueStoreService::notifyStop() {
   AbstractAutoPersistingKeyValueStoreService::notifyStop();
 
-  if (db_valid_) {
-    delete db_;
-    db_valid_= false;
-  }
+  db_.reset();
 }
 
 bool RocksDbPersistableKeyValueStoreService::set(const std::string& key, const std::string& value) {
-  if (!db_valid_) {
+  if (!db_) {
     return false;
   }
   rocksdb::Status status = db_->Put(default_write_options, key, value);
@@ -118,7 +105,7 @@ bool RocksDbPersistableKeyValueStoreService::set(const std::string& key, const s
 }
 
 bool RocksDbPersistableKeyValueStoreService::get(const std::string& key, std::string& value) {
-  if (!db_valid_) {
+  if (!db_) {
     return false;
   }
   rocksdb::Status status = db_->Get(rocksdb::ReadOptions(), key, &value);
@@ -130,7 +117,7 @@ bool RocksDbPersistableKeyValueStoreService::get(const std::string& key, std::st
 }
 
 bool RocksDbPersistableKeyValueStoreService::get(std::unordered_map<std::string, std::string>& kvs) {
-  if (!db_valid_) {
+  if (!db_) {
     return false;
   }
   kvs.clear();
@@ -146,7 +133,7 @@ bool RocksDbPersistableKeyValueStoreService::get(std::unordered_map<std::string,
 }
 
 bool RocksDbPersistableKeyValueStoreService::remove(const std::string& key) {
-  if (!db_valid_) {
+  if (!db_) {
     return false;
   }
   rocksdb::Status status = db_->Delete(default_write_options, key);
@@ -158,7 +145,7 @@ bool RocksDbPersistableKeyValueStoreService::remove(const std::string& key) {
 }
 
 bool RocksDbPersistableKeyValueStoreService::clear() {
-  if (!db_valid_) {
+  if (!db_) {
     return false;
   }
   std::unique_ptr<rocksdb::Iterator> it = std::unique_ptr<rocksdb::Iterator>(db_->NewIterator(rocksdb::ReadOptions()));
@@ -177,14 +164,14 @@ bool RocksDbPersistableKeyValueStoreService::clear() {
 }
 
 bool RocksDbPersistableKeyValueStoreService::update(const std::string& key, const std::function<bool(bool /*exists*/, std::string& /*value*/)>& update_func) {
-  if (!db_valid_) {
+  if (!db_) {
     return false;
   }
   throw std::logic_error("Unsupported method");
 }
 
 bool RocksDbPersistableKeyValueStoreService::persist() {
-  if (!db_valid_) {
+  if (!db_) {
     return false;
   }
   if (always_persist_) {

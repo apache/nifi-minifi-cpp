@@ -13,7 +13,7 @@ namespace minifi {
 namespace processors {
 static const std::string BOOKMARK_KEY = "bookmark";
 
-Bookmark::Bookmark(const std::wstring& channel, const std::wstring& query, const std::string& bookmarkRootDir, const std::string& uuid, std::shared_ptr<core::CoreComponentStateManager> state_manager, std::shared_ptr<logging::Logger> logger)
+Bookmark::Bookmark(const std::wstring& channel, const std::wstring& query, const std::string& bookmarkRootDir, const std::string& uuid, bool processOldEvents, std::shared_ptr<core::CoreComponentStateManager> state_manager, std::shared_ptr<logging::Logger> logger)
   : logger_(logger)
   , state_manager_(state_manager) {
   std::unordered_map<std::string, std::string> state_map;
@@ -25,7 +25,7 @@ Bookmark::Bookmark(const std::wstring& channel, const std::wstring& query, const
         utils::file::FileUtils::concat_path(bookmarkRootDir, "uuid"), uuid), "Bookmark.txt");
 
     std::wstring bookmarkXml;
-     if (getBookmarkXmlFromFile(bookmarkXml)) {
+    if (getBookmarkXmlFromFile(bookmarkXml)) {
       if (saveBookmarkXml(bookmarkXml) && state_manager_->persist()) {
         logger_->log_info("State migration successful");
         rename(filePath_.c_str(), (filePath_ + "-migrated").c_str());
@@ -184,7 +184,7 @@ bool Bookmark::getBookmarkXmlFromFile(std::wstring& bookmarkXml) {
   if (std::wstring::npos == pos) {
     logger_->log_error("No '!' in bookmarXml '%ls'", bookmarkXml.c_str());
     bookmarkXml.clear();
-	return false;
+    return false;
   }
 
   // Remove '!'.

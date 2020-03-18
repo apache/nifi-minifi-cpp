@@ -44,7 +44,7 @@ class RocksDbPersistableKeyValueStoreService : public AbstractAutoPersistingKeyV
   explicit RocksDbPersistableKeyValueStoreService(const std::string& name, const std::string& id);
   explicit RocksDbPersistableKeyValueStoreService(const std::string& name, utils::Identifier uuid = utils::Identifier());
 
-  virtual ~RocksDbPersistableKeyValueStoreService();
+  virtual ~RocksDbPersistableKeyValueStoreService() = default;
 
   static core::Property Directory;
 
@@ -69,9 +69,8 @@ class RocksDbPersistableKeyValueStoreService : public AbstractAutoPersistingKeyV
  protected:
   std::string directory_;
 
-  rocksdb::DB* db_;
+  std::unique_ptr<rocksdb::DB> db_;
   rocksdb::WriteOptions default_write_options;
-  bool db_valid_;
 
  private:
   std::shared_ptr<logging::Logger> logger_;
