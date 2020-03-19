@@ -32,6 +32,9 @@
 #endif /* WIN32 */
 #include <mutex>
 #include <atomic>
+#include <string>
+#include <memory>
+#include <vector>
 #include "io/BaseStream.h"
 #include "core/Core.h"
 #include "core/logging/Logger.h"
@@ -54,6 +57,16 @@ using ip4addr = in_addr_t;
 static constexpr SocketDescriptor INVALID_SOCKET = -1;
 static constexpr int SOCKET_ERROR = -1;
 #endif /* WIN32 */
+
+/**
+ * Return the last socket error message, based on errno on posix and WSAGetLastError() on windows
+ */
+std::string get_last_socket_error_message();
+
+/**
+ * @return >= 0 on posix, != INVALID_SOCKET on windows
+ */
+bool valid_socket(SocketDescriptor) noexcept;
 
 /**
  * Context class for socket. This is currently only used as a parent class for TLSContext.  It is necessary so the Socket and TLSSocket constructors

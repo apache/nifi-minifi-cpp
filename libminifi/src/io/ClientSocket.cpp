@@ -42,32 +42,15 @@
 #include "utils/GeneralUtils.h"
 
 namespace util = org::apache::nifi::minifi::utils;
+namespace mio = org::apache::nifi::minifi::io;
 
 namespace {
-
-std::string get_last_err_str() {
-#ifdef WIN32
-  const auto error_code = WSAGetLastError();
-#else
-  const auto error_code = errno;
-#endif /* WIN32 */
-  return std::system_category().message(error_code);
-}
-
 std::string get_last_getaddrinfo_err_str(int getaddrinfo_result) {
 #ifdef WIN32
   (void)getaddrinfo_result;  // against unused warnings on windows
-  return get_last_err_str();
+  return mio::get_last_socket_error_message();
 #else
   return gai_strerror(getaddrinfo_result);
-#endif /* WIN32 */
-}
-
-bool valid_sock_fd(org::apache::nifi::minifi::io::SocketDescriptor fd) {
-#ifdef WIN32
-  return fd != INVALID_SOCKET && fd >= 0;
-#else
-  return fd >= 0;
 #endif /* WIN32 */
 }
 
@@ -78,14 +61,14 @@ std::string sockaddr_ntop(const sockaddr* const sa) {
     std::memcpy(reinterpret_cast<void*>(&sa_in), sa, sizeof(sockaddr_in));
     result.resize(INET_ADDRSTRLEN);
     if (inet_ntop(AF_INET, &sa_in.sin_addr, &result[0], INET_ADDRSTRLEN) == nullptr) {
-      throw minifi::Exception{ minifi::ExceptionType::GENERAL_EXCEPTION, get_last_err_str() };
+      throw minifi::Exception{ minifi::ExceptionType::GENERAL_EXCEPTION, mio::get_last_socket_error_message() };
     }
   } else if (sa->sa_family == AF_INET6) {
     sockaddr_in6 sa_in6{};
     std::memcpy(reinterpret_cast<void*>(&sa_in6), sa, sizeof(sockaddr_in6));
     result.resize(INET6_ADDRSTRLEN);
     if (inet_ntop(AF_INET6, &sa_in6.sin6_addr, &result[0], INET6_ADDRSTRLEN) == nullptr) {
-      throw minifi::Exception{ minifi::ExceptionType::GENERAL_EXCEPTION, get_last_err_str() };
+      throw minifi::Exception{ minifi::ExceptionType::GENERAL_EXCEPTION, mio::get_last_socket_error_message() };
     }
   } else {
     throw minifi::Exception{ minifi::ExceptionType::GENERAL_EXCEPTION, "sockaddr_ntop: unknown address family" };
@@ -150,6 +133,23 @@ namespace apache {
 namespace nifi {
 namespace minifi {
 namespace io {
+
+std::string get_last_socket_error_message() {
+#ifdef WIN32
+  const auto error_code = WSAGetLastError();
+#else
+  const auto error_code = errno;
+#endif /* WIN32 */
+  return std::system_category().message(error_code);
+}
+
+bool valid_socket(const SocketDescriptor fd) noexcept {
+#ifdef WIN32
+  return fd != INVALID_SOCKET && fd >= 0;
+#else
+  return fd >= 0;
+#endif /* WIN32 */
+}
 
 Socket::Socket(const std::shared_ptr<SocketContext>& /*context*/, std::string hostname, const uint16_t port, const uint16_t listeners)
     : requested_hostname_(std::move(hostname)),
@@ -216,7 +216,7 @@ Socket::~Socket() {
 }
 
 void Socket::closeStream() {
-  if (valid_sock_fd(socket_file_descriptor_)) {
+  if (valid_socket(socket_file_descriptor_)) {
     logging::LOG_DEBUG(logger_) << "Closing " << socket_file_descriptor_;
 #ifdef WIN32
     closesocket(socket_file_descriptor_);
@@ -243,8 +243,8 @@ void Socket::setNonBlocking() {
 
 int8_t Socket::createConnection(const addrinfo* const destination_addresses) {
   for (const auto *current_addr = destination_addresses; current_addr; current_addr = current_addr->ai_next) {
-    if (!valid_sock_fd(socket_file_descriptor_ = socket(current_addr->ai_family, current_addr->ai_socktype, current_addr->ai_protocol))) {
-      logger_->log_warn("socket: %s", get_last_err_str());
+    if (!valid_socket(socket_file_descriptor_ = socket(current_addr->ai_family, current_addr->ai_socktype, current_addr->ai_protocol))) {
+      logger_->log_warn("socket: %s", get_last_socket_error_message());
       continue;
     }
     setSocketOptions(socket_file_descriptor_);
@@ -253,14 +253,14 @@ int8_t Socket::createConnection(const addrinfo* const destination_addresses) {
       // server socket
       const auto bind_result = bind(socket_file_descriptor_, current_addr->ai_addr, current_addr->ai_addrlen);
       if (bind_result == SOCKET_ERROR) {
-        logger_->log_warn("bind: %s", get_last_err_str());
+        logger_->log_warn("bind: %s", get_last_socket_error_message());
         closeStream();
         continue;
       }
 
       const auto listen_result = listen(socket_file_descriptor_, listeners_);
       if (listen_result == SOCKET_ERROR) {
-        logger_->log_warn("listen: %s", get_last_err_str());
+        logger_->log_warn("listen: %s", get_last_socket_error_message());
         closeStream();
         continue;
       }
@@ -278,7 +278,7 @@ int8_t Socket::createConnection(const addrinfo* const destination_addresses) {
 
       const auto connect_result = connect(socket_file_descriptor_, current_addr->ai_addr, current_addr->ai_addrlen);
       if (connect_result == SOCKET_ERROR) {
-        logger_->log_warn("Couldn't connect to %s:%" PRIu16 ": %s", sockaddr_ntop(current_addr->ai_addr), port_, get_last_err_str());
+        logger_->log_warn("Couldn't connect to %s:%" PRIu16 ": %s", sockaddr_ntop(current_addr->ai_addr), port_, get_last_socket_error_message());
         closeStream();
         continue;
       }
@@ -294,7 +294,7 @@ int8_t Socket::createConnection(const addrinfo* const destination_addresses) {
 }
 
 int8_t Socket::createConnection(const addrinfo *, ip4addr &addr) {
-  if (!valid_sock_fd(socket_file_descriptor_ = socket(AF_INET, SOCK_STREAM, 0))) {
+  if (!valid_socket(socket_file_descriptor_ = socket(AF_INET, SOCK_STREAM, 0))) {
     logger_->log_error("error while connecting to server socket");
     return -1;
   }
@@ -309,7 +309,7 @@ int8_t Socket::createConnection(const addrinfo *, ip4addr &addr) {
     sa.sin_port = htons(port_);
     sa.sin_addr.s_addr = htonl(is_loopback_only_ ? INADDR_LOOPBACK : INADDR_ANY);
     if (bind(socket_file_descriptor_, reinterpret_cast<const sockaddr*>(&sa), sizeof(struct sockaddr_in)) == SOCKET_ERROR) {
-      logger_->log_error("Could not bind to socket, reason %s", get_last_err_str());
+      logger_->log_error("Could not bind to socket, reason %s", get_last_socket_error_message());
       return -1;
     }
 
@@ -513,7 +513,7 @@ int Socket::writeData(uint8_t *value, int size) {
     // check for errors
     if (ret <= 0) {
       close(fd);
-      logger_->log_error("Could not send to %d, error: %s", fd, get_last_err_str());
+      logger_->log_error("Could not send to %d, error: %s", fd, get_last_socket_error_message());
       return ret;
     }
     bytes += ret;
