@@ -24,6 +24,7 @@ namespace minifi {
 namespace core {
 
 std::shared_ptr<PropertyValidator> StandardValidators::VALID = std::make_shared<AlwaysValid>(true, "VALID");
+
 StandardValidators::StandardValidators() {
   INVALID = std::make_shared<AlwaysValid>(false, "INVALID");
   INTEGER_VALIDATOR = std::make_shared<IntegerValidator>("INTEGER_VALIDATOR");

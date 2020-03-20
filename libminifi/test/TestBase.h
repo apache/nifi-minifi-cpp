@@ -164,7 +164,7 @@ class LogTestController {
     }
     modified_loggers.clear();
     if (config)
-      config = std::move(logging::LoggerConfiguration::newInstance());
+      config = logging::LoggerConfiguration::newInstance();
     resetStream(log_output);
   }
 
@@ -206,7 +206,7 @@ class LogTestController {
       logging::LoggerConfiguration::getConfiguration().initialize(my_properties_);
       logger_ = logging::LoggerConfiguration::getConfiguration().getLogger(core::getClassName<LogTestController>());
     } else {
-      config = std::move(logging::LoggerConfiguration::newInstance());
+      config = logging::LoggerConfiguration::newInstance();
       // create for test purposes. most tests use the main logging factory, but this exists to test the logging
       // framework itself.
       config->initialize(my_properties_);

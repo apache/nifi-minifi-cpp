@@ -42,9 +42,6 @@ namespace nifi {
 namespace minifi {
 namespace io {
 
-std::atomic<OpenSSLInitializer*> OpenSSLInitializer::context_instance;
-std::mutex OpenSSLInitializer::context_mutex;
-
 TLSContext::TLSContext(const std::shared_ptr<Configure> &configure, std::shared_ptr<minifi::controllers::SSLContextService> ssl_service)
     : SocketContext(configure),
       error_value(TLS_GOOD),
@@ -333,12 +330,10 @@ int16_t TLSSocket::select_descriptor(const uint16_t msec) {
         if (ssl_error == SSL_ERROR_WANT_WRITE) {
           logger_->log_trace("want write");
           return socket_file_descriptor_;
-        }
-        else if (ssl_error == SSL_ERROR_WANT_READ) {
+        } else if (ssl_error == SSL_ERROR_WANT_READ) {
           logger_->log_trace("want read");
           return socket_file_descriptor_;
-        }
-        else {
+        } else {
           logger_->log_error("SSL socket connect failed (%d) to %s %d", ssl_error, requested_hostname_, port_);
           closeStream();
           return -1;

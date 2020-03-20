@@ -244,8 +244,7 @@ bool PutFile::putFile(core::ProcessSession *session, std::shared_ptr<FlowFileRec
 
 PutFile::ReadCallback::ReadCallback(const std::string &tmp_file, const std::string &dest_file)
     : tmp_file_(tmp_file),
-      dest_file_(dest_file),
-      logger_(logging::LoggerFactory<PutFile::ReadCallback>::getLogger()) {
+      dest_file_(dest_file) {
 }
 
 // Copy the entire file contents to the temporary file

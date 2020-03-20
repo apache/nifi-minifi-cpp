@@ -49,13 +49,13 @@ class SecureDescriptorStream : public io::BaseStream {
    */
   explicit SecureDescriptorStream(int fd, SSL *s);
 
-  virtual ~SecureDescriptorStream() = default;
+  ~SecureDescriptorStream() override = default;
 
   /**
    * Skip to the specified offset.
    * @param offset offset to which we will skip
    */
-  void seek(uint64_t offset);
+  void seek(uint64_t offset) override;
 
   const uint64_t getSize() const override {
     return -1;
@@ -67,13 +67,13 @@ class SecureDescriptorStream : public io::BaseStream {
    * @param buf buffer in which we extract data
    * @param buflen
    */
-  virtual int readData(std::vector<uint8_t> &buf, int buflen);
+  int readData(std::vector<uint8_t> &buf, int buflen) override;
   /**
    * Reads data and places it into buf
    * @param buf buffer in which we extract data
    * @param buflen
    */
-  virtual int readData(uint8_t *buf, int buflen);
+  int readData(uint8_t *buf, int buflen) override;
 
   /**
    * Write value to the stream using std::vector
@@ -88,12 +88,12 @@ class SecureDescriptorStream : public io::BaseStream {
    * @param value value to write
    * @param size size of value
    */
-  virtual int writeData(uint8_t *value, int size);
+  int writeData(uint8_t *value, int size) override;
 
   /**
    * Returns the underlying buffer
    * @return vector's array
-   **/
+   */
   const uint8_t *getBuffer() const {
     throw std::runtime_error("Stream does not support this operation");
   }
@@ -104,7 +104,7 @@ class SecureDescriptorStream : public io::BaseStream {
    * @param stream stream from which we will read
    * @return resulting read size
    **/
-  virtual int read(uint8_t &value);
+  int read(uint8_t &value) override;
 
   /**
    * reads two bytes from the stream
@@ -112,7 +112,7 @@ class SecureDescriptorStream : public io::BaseStream {
    * @param stream stream from which we will read
    * @return resulting read size
    **/
-  virtual int read(uint16_t &base_value, bool is_little_endian = false);
+  int read(uint16_t &base_value, bool is_little_endian = false) override;
 
   /**
    * reads a byte from the stream
@@ -120,7 +120,7 @@ class SecureDescriptorStream : public io::BaseStream {
    * @param stream stream from which we will read
    * @return resulting read size
    **/
-  virtual int read(char &value);
+  int read(char &value) override;
 
   /**
    * reads a byte array from the stream
@@ -129,7 +129,7 @@ class SecureDescriptorStream : public io::BaseStream {
    * @param stream stream from which we will read
    * @return resulting read size
    **/
-  virtual int read(uint8_t *value, int len);
+  int read(uint8_t *value, int len) override;
 
   /**
    * reads four bytes from the stream
@@ -137,7 +137,7 @@ class SecureDescriptorStream : public io::BaseStream {
    * @param stream stream from which we will read
    * @return resulting read size
    **/
-  virtual int read(uint32_t &value, bool is_little_endian = false);
+  int read(uint32_t &value, bool is_little_endian = false) override;
 
   /**
    * reads eight byte from the stream
@@ -145,7 +145,7 @@ class SecureDescriptorStream : public io::BaseStream {
    * @param stream stream from which we will read
    * @return resulting read size
    **/
-  virtual int read(uint64_t &value, bool is_little_endian = false);
+  int read(uint64_t &value, bool is_little_endian = false) override;
 
 
   /**
@@ -154,7 +154,7 @@ class SecureDescriptorStream : public io::BaseStream {
    * @param stream stream from which we will read
    * @return resulting read size
    **/
-  virtual int readUTF(std::string &str, bool widen = false);
+  int readUTF(std::string &str, bool widen = false) override;
 
  protected:
 

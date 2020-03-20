@@ -20,6 +20,8 @@
 #ifndef __PUT_FILE_H__
 #define __PUT_FILE_H__
 
+#include <utility>
+
 #include "FlowFileRecord.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
@@ -47,11 +49,11 @@ class PutFile : public core::Processor {
    * Create a new processor
    */
   PutFile(std::string name,  utils::Identifier uuid = utils::Identifier())
-      : core::Processor(name, uuid),
+      : core::Processor(std::move(name), uuid),
         logger_(logging::LoggerFactory<PutFile>::getLogger()) {
   }
 
-  virtual ~PutFile() = default;
+  ~PutFile() override = default;
 
   // Supported Properties
   static core::Property Directory;
@@ -68,25 +70,23 @@ class PutFile : public core::Processor {
    * @param sessionFactory process session factory that is used when creating
    * ProcessSession objects.
    */
-  virtual void onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory);
+  void onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory) override;
 
-  virtual void onTrigger(core::ProcessContext *context, core::ProcessSession *session);
-  virtual void initialize(void);
+  void onTrigger(core::ProcessContext *context, core::ProcessSession *session) override;
+  void initialize() override;
 
   class ReadCallback : public InputStreamCallback {
    public:
-    ReadCallback(const std::string &tmp_file,
-                 const std::string &dest_file);
-    ~ReadCallback();
-    virtual int64_t process(std::shared_ptr<io::BaseStream> stream);
+    ReadCallback(const std::string &tmp_file, const std::string &dest_file);
+    ~ReadCallback() override;
+    int64_t process(std::shared_ptr<io::BaseStream> stream) override;
     bool commit();
 
    private:
-    std::shared_ptr<logging::Logger> logger_;
+    std::shared_ptr<logging::Logger> logger_{ logging::LoggerFactory<PutFile::ReadCallback>::getLogger() };
     bool write_succeeded_ = false;
     std::string tmp_file_;
     std::string dest_file_;
-    std::string dest_dir_;
   };
 
   /**

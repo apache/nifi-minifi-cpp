@@ -44,12 +44,12 @@ class CivetStream : public io::BaseStream {
 
   }
 
-  virtual ~CivetStream() = default;
+  ~CivetStream() override = default;
   /**
    * Skip to the specified offset.
    * @param offset offset to which we will skip
    */
-  void seek(uint64_t offset) { }
+  void seek(uint64_t offset) override { }
 
   const uint64_t getSize() const override {
     return BaseStream::readBuffer;
@@ -61,7 +61,7 @@ class CivetStream : public io::BaseStream {
    * @param buf buffer in which we extract data
    * @param buflen
    */
-  virtual int readData(std::vector<uint8_t> &buf, int buflen) {
+  int readData(std::vector<uint8_t> &buf, int buflen) override {
     if (buflen < 0) {
       throw minifi::Exception{ExceptionType::GENERAL_EXCEPTION, "negative buflen"};
     }
@@ -82,7 +82,7 @@ class CivetStream : public io::BaseStream {
    * @param buf buffer in which we extract data
    * @param buflen
    */
-  virtual int readData(uint8_t *buf, int buflen) {
+  int readData(uint8_t *buf, int buflen) override {
     return mg_read(conn,buf,buflen);
   }
 
@@ -101,7 +101,7 @@ class CivetStream : public io::BaseStream {
    * @param value value to write
    * @param size size of value
    */
-  virtual int writeData(uint8_t *value, int size) {
+  int writeData(uint8_t *value, int size) override {
     return 0;
   }
 

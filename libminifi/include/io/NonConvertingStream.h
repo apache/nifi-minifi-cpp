@@ -56,11 +56,11 @@ class NonConvertingStream : public BaseStream  {
    * @param is_little_endian endianness determination
    * @return resulting write size
    **/
-  virtual int write(uint32_t base_value, bool is_little_endian = false);
+  int write(uint32_t base_value, bool is_little_endian = false) override;
 
-  int writeData(uint8_t *value, int size);
+  int writeData(uint8_t *value, int size) override;
 
-  virtual void seek(uint64_t offset) {
+  void seek(uint64_t offset) override {
     if (composable_stream_ != this) {
       composable_stream_->seek(offset);
     } else {
@@ -75,7 +75,7 @@ class NonConvertingStream : public BaseStream  {
    * @param is_little_endian endianness determination
    * @return resulting write size
    **/
-  virtual int write(uint16_t base_value, bool is_little_endian = false);
+  int write(uint16_t base_value, bool is_little_endian = false) override;
 
   /**
    * write valueto stream
@@ -84,7 +84,7 @@ class NonConvertingStream : public BaseStream  {
    * @param strema output stream
    * @return resulting write size
    **/
-  virtual int write(uint8_t *value, int len);
+  int write(uint8_t *value, int len) override;
 
   /**
    * write 8 bytes to stream
@@ -93,21 +93,21 @@ class NonConvertingStream : public BaseStream  {
    * @param is_little_endian endianness determination
    * @return resulting write size
    **/
-  virtual int write(uint64_t base_value, bool is_little_endian = false);
+  int write(uint64_t base_value, bool is_little_endian = false) override;
 
   /**
    * write bool to stream
    * @param value non encoded value
    * @return resulting write size
    **/
-  virtual int write(bool value);
+  int write(bool value) override;
 
   /**
    * write UTF string to stream
    * @param str string to write
    * @return resulting write size
    **/
-  virtual int writeUTF(std::string str, bool widen = false);
+  int writeUTF(std::string str, bool widen = false) override;
 
   /**
    * reads a byte from the stream
@@ -115,20 +115,20 @@ class NonConvertingStream : public BaseStream  {
    * @param stream stream from which we will read
    * @return resulting read size
    **/
-  virtual int read(uint8_t &value);
+  int read(uint8_t &value) override;
 
   /**
    * Reads data and places it into buf
    * @param buf buffer in which we extract data
    * @param buflen
    */
-  virtual int readData(std::vector<uint8_t> &buf, int buflen);
+  int readData(std::vector<uint8_t> &buf, int buflen) override;
   /**
    * Reads data and places it into buf
    * @param buf buffer in which we extract data
    * @param buflen
    */
-  virtual int readData(uint8_t *buf, int buflen);
+  int readData(uint8_t *buf, int buflen) override;
 
   /**
    * reads two bytes from the stream
@@ -136,7 +136,7 @@ class NonConvertingStream : public BaseStream  {
    * @param stream stream from which we will read
    * @return resulting read size
    **/
-  virtual int read(uint16_t &base_value, bool is_little_endian = false);
+  int read(uint16_t &base_value, bool is_little_endian = false) override;
 
   /**
    * reads a byte from the stream
@@ -144,7 +144,7 @@ class NonConvertingStream : public BaseStream  {
    * @param stream stream from which we will read
    * @return resulting read size
    **/
-  virtual int read(char &value);
+  int read(char &value) override;
 
   /**
    * reads a byte array from the stream
@@ -153,7 +153,7 @@ class NonConvertingStream : public BaseStream  {
    * @param stream stream from which we will read
    * @return resulting read size
    **/
-  virtual int read(uint8_t *value, int len);
+  int read(uint8_t *value, int len) override;
 
   /**
    * reads four bytes from the stream
@@ -161,7 +161,7 @@ class NonConvertingStream : public BaseStream  {
    * @param stream stream from which we will read
    * @return resulting read size
    **/
-  virtual int read(uint32_t &value, bool is_little_endian = false);
+  int read(uint32_t &value, bool is_little_endian = false) override;
 
   /**
    * reads eight byte from the stream
@@ -169,7 +169,7 @@ class NonConvertingStream : public BaseStream  {
    * @param stream stream from which we will read
    * @return resulting read size
    **/
-  virtual int read(uint64_t &value, bool is_little_endian = false);
+  int read(uint64_t &value, bool is_little_endian = false) override;
 
   const uint64_t getSize() const override {
       if (composable_stream_ == this){
@@ -187,7 +187,7 @@ class NonConvertingStream : public BaseStream  {
    * @param stream stream from which we will read
    * @return resulting read size
    **/
-  virtual int readUTF(std::string &str, bool widen = false);
+  int readUTF(std::string &str, bool widen = false) override;
  protected:
   DataStream *composable_stream_;
 };

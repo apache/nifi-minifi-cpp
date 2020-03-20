@@ -44,14 +44,13 @@ class CRCStream : public BaseStream {
    * Raw pointer because the caller guarantees that
    * it will exceed our lifetime.
    */
-  explicit CRCStream(T *stream);
+  explicit CRCStream(T *child_stream);
 
-  explicit CRCStream(CRCStream<T> &&move);
+  CRCStream(CRCStream<T>&&) noexcept;
 
-  virtual ~CRCStream() {
-  }
+  ~CRCStream() override = default;
 
-  T *getstream() {
+  T *getstream() const {
     return child_stream_;
   }
 
@@ -64,19 +63,18 @@ class CRCStream : public BaseStream {
    * @param buf buffer in which we extract data
    * @param buflen
    */
-  virtual int readData(std::vector<uint8_t> &buf, int buflen);
+  int readData(std::vector<uint8_t> &buf, int buflen) override;
   /**
    * Reads data and places it into buf
    * @param buf buffer in which we extract data
    * @param buflen
    */
-  virtual int readData(uint8_t *buf, int buflen);
+  int readData(uint8_t *buf, int buflen) override;
 
   /**
    * Write value to the stream using std::vector
    * @param buf incoming buffer
    * @param buflen buffer to write
-   *
    */
   virtual int writeData(std::vector<uint8_t> &buf, int buflen);
 
@@ -85,7 +83,7 @@ class CRCStream : public BaseStream {
    * @param value value to write
    * @param size size of value
    */
-  virtual int writeData(uint8_t *value, int size);
+  int writeData(uint8_t *value, int size) override;
 
   /**
    * write 4 bytes to stream
@@ -94,7 +92,7 @@ class CRCStream : public BaseStream {
    * @param is_little_endian endianness determination
    * @return resulting write size
    **/
-  virtual int write(uint32_t base_value, bool is_little_endian = EndiannessCheck::IS_LITTLE);
+  int write(uint32_t base_value, bool is_little_endian = EndiannessCheck::IS_LITTLE) override;
   /**
    * write 2 bytes to stream
    * @param base_value non encoded value
@@ -102,7 +100,7 @@ class CRCStream : public BaseStream {
    * @param is_little_endian endianness determination
    * @return resulting write size
    **/
-  virtual int write(uint16_t base_value, bool is_little_endian = EndiannessCheck::IS_LITTLE);
+  int write(uint16_t base_value, bool is_little_endian = EndiannessCheck::IS_LITTLE) override;
 
   /**
    * write 8 bytes to stream
@@ -111,27 +109,27 @@ class CRCStream : public BaseStream {
    * @param is_little_endian endianness determination
    * @return resulting write size
    **/
-  virtual int write(uint64_t base_value, bool is_little_endian = EndiannessCheck::IS_LITTLE);
+  int write(uint64_t base_value, bool is_little_endian = EndiannessCheck::IS_LITTLE) override;
 
   /**
    * Reads a system word
    * @param value value to write
    */
-  virtual int read(uint64_t &value, bool is_little_endian = EndiannessCheck::IS_LITTLE);
+  int read(uint64_t &value, bool is_little_endian = EndiannessCheck::IS_LITTLE) override;
 
   /**
    * Reads a uint32_t
    * @param value value to write
    */
-  virtual int read(uint32_t &value, bool is_little_endian = EndiannessCheck::IS_LITTLE);
+  int read(uint32_t &value, bool is_little_endian = EndiannessCheck::IS_LITTLE) override;
 
   /**
    * Reads a system short
    * @param value value to write
    */
-  virtual int read(uint16_t &value, bool is_little_endian = EndiannessCheck::IS_LITTLE);
+  int read(uint16_t &value, bool is_little_endian = EndiannessCheck::IS_LITTLE) override;
 
-  virtual short initialize() {
+  short initialize() override {
     child_stream_->initialize();
     reset();
     return 0;
@@ -166,14 +164,14 @@ class CRCStream : public BaseStream {
 };
 
 template<typename T>
-CRCStream<T>::CRCStream(T *other)
-    : child_stream_(other),
+CRCStream<T>::CRCStream(T *child_stream)
+    : child_stream_(child_stream),
       disable_encoding_(false) {
   crc_ = crc32(0L, Z_NULL, 0);
 }
 
 template<typename T>
-CRCStream<T>::CRCStream(CRCStream<T> &&move)
+CRCStream<T>::CRCStream(CRCStream<T> &&move) noexcept
     : crc_(std::move(move.crc_)),
       child_stream_(std::move(move.child_stream_)),
       disable_encoding_(false) {
@@ -229,7 +227,6 @@ void CRCStream<T>::updateCRC(uint8_t *buffer, uint32_t length) {
 
 template<typename T>
 int CRCStream<T>::write(uint64_t base_value, bool is_little_endian) {
-
   if (disable_encoding_)
     is_little_endian = false;
   const uint64_t value = is_little_endian == 1 ? htonll_r(base_value) : base_value;
@@ -284,7 +281,6 @@ int CRCStream<T>::read(uint32_t &value, bool is_little_endian) {
     value = (buf[0] << 24) | (buf[1] << 16) | (buf[2] << 8) | buf[3];
   } else {
     value = buf[0] | buf[1] << 8 | buf[2] << 16 | buf[3] << 24;
-
   }
 
   return sizeof(value);
@@ -300,7 +296,6 @@ int CRCStream<T>::read(uint16_t &value, bool is_little_endian) {
     value = (buf[0] << 8) | buf[1];
   } else {
     value = buf[0] | buf[1] << 8;
-
   }
   return sizeof(value);
 }

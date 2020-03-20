@@ -70,7 +70,7 @@ class NetworkInterface {
   NetworkInterface &operator=(NetworkInterface &&other) = default;
 
  private:
-  friend class NetworkPrioritizer;
+  friend struct NetworkPrioritizer;
 
   std::string ifc_;
   std::shared_ptr<NetworkPrioritizer> prioritizer_;

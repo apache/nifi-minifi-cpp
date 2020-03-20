@@ -69,7 +69,7 @@ class CoapProtocol : public minifi::c2::RESTSender {
  public:
   explicit CoapProtocol(const std::string &name, const utils::Identifier &uuid = utils::Identifier());
 
-  virtual ~CoapProtocol();
+  ~CoapProtocol() override;
 
   /**
    * Consume the payload.
@@ -77,17 +77,17 @@ class CoapProtocol : public minifi::c2::RESTSender {
    * @param payload payload to consume.
    * @param direction direction of operation.
    */
-  virtual minifi::c2::C2Payload consumePayload(const std::string &url, const minifi::c2::C2Payload &payload, minifi::c2::Direction direction, bool async) override;
+  minifi::c2::C2Payload consumePayload(const std::string &url, const minifi::c2::C2Payload &payload, minifi::c2::Direction direction, bool async) override;
 
-  virtual minifi::c2::C2Payload consumePayload(const minifi::c2::C2Payload &payload, minifi::c2::Direction direction, bool async) override {
+  minifi::c2::C2Payload consumePayload(const minifi::c2::C2Payload &payload, minifi::c2::Direction direction, bool async) override {
       return serialize(payload);
   }
 
-  virtual void update(const std::shared_ptr<Configure> &configure) override {
+  void update(const std::shared_ptr<Configure> &configure) override {
     // no op.
   }
 
-  virtual void initialize(const std::shared_ptr<core::controller::ControllerServiceProvider> &controller, const std::shared_ptr<Configure> &configure) override;
+  void initialize(const std::shared_ptr<core::controller::ControllerServiceProvider> &controller, const std::shared_ptr<Configure> &configure) override;
 
   // Supported Properties
 

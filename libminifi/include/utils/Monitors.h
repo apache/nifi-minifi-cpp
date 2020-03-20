@@ -114,7 +114,8 @@ class SingleRunMonitor : public utils::AfterExecute<bool>{
 
 struct TaskRescheduleInfo {
   TaskRescheduleInfo(bool result, std::chrono::milliseconds wait_time)
-    : finished_(result), wait_time_(wait_time){}
+    : wait_time_(wait_time), finished_(result) {}
+
   std::chrono::milliseconds wait_time_;
   bool finished_;
 

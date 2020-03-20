@@ -28,6 +28,7 @@
 #include "coap_message.h"
 #include <memory>
 #include <unordered_map>
+#include <utility>
 
 namespace org {
 namespace apache {
@@ -48,26 +49,17 @@ class CoapConnectorService : public core::controller::ControllerService {
    * Constructors for the controller service.
    */
   explicit CoapConnectorService(const std::string &name, const std::string &id)
-      : ControllerService(name, id),
-        port_(0),
-        initialized_(false),
-        logger_(logging::LoggerFactory<CoapConnectorService>::getLogger()) {
+      : ControllerService(name, id) {
     initialize();
   }
 
   explicit CoapConnectorService(const std::string &name, utils::Identifier uuid = utils::Identifier())
-      : ControllerService(name, uuid),
-        port_(0),
-        initialized_(false),
-        logger_(logging::LoggerFactory<CoapConnectorService>::getLogger()) {
+      : ControllerService(name, std::move(uuid)) {
     initialize();
   }
 
   explicit CoapConnectorService(const std::string &name, const std::shared_ptr<Configure> &configuration)
-      : ControllerService(name),
-        port_(0),
-        initialized_(false),
-        logger_(logging::LoggerFactory<CoapConnectorService>::getLogger()) {
+      : ControllerService(name) {
     setConfiguration(configuration);
     initialize();
   }
@@ -79,21 +71,19 @@ class CoapConnectorService : public core::controller::ControllerService {
   static core::Property Port;
   static core::Property MaxQueueSize;
 
-  virtual void initialize();
+  void initialize() override;
 
-  void yield() {
+  void yield() override { }
 
-  }
-
-  bool isRunning() {
+  bool isRunning() override {
     return getState() == core::controller::ControllerServiceState::ENABLED;
   }
 
-  bool isWorkAvailable() {
+  bool isWorkAvailable() override {
     return false;
   }
 
-  virtual void onEnable();
+  void onEnable() override;
 
   /**
    * Sends the payload to the endpoint, returning the response as we await. Will retry transmission
@@ -103,7 +93,7 @@ class CoapConnectorService : public core::controller::ControllerService {
    * @param size size of the payload to be sent
    * @return CoAPMessage that contains the response code and data, if any.
    */
-  CoapResponse sendPayload(uint8_t type, const std::string &endpoint, const CoapMessage * const message);
+  CoapResponse sendPayload(uint8_t type, const std::string &endpoint, const CoapMessage * message);
 
  protected:
 
@@ -115,16 +105,16 @@ class CoapConnectorService : public core::controller::ControllerService {
   // initialization mutex.
   std::mutex initialization_mutex_;
 
-  std::atomic<bool> initialized_;
+  std::atomic<bool> initialized_{ false };
 
  private:
 
   // host connecting to.
   std::string host_;
   // port connecting to
-  unsigned int port_;
+  unsigned int port_{ 0 };
 
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<logging::Logger> logger_{ logging::LoggerFactory<CoapConnectorService>::getLogger() };
 
 };
 
