@@ -30,10 +30,10 @@
 #include <functional>
 
 #include "BackTrace.h"
+#include "ConcurrentQueue.h"
 #include "Monitors.h"
 #include "core/expect.h"
 #include "controllers/ThreadManagementService.h"
-#include "concurrentqueue.h"
 #include "core/controller/ControllerService.h"
 #include "core/controller/ControllerServiceProvider.h"
 namespace org {
@@ -303,8 +303,9 @@ class ThreadPool {
    * Drain will notify tasks to stop following notification
    */
   void drain() {
+    worker_queue_.stop();
     while (current_workers_ > 0) {
-      tasks_available_.notify_one();
+      std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
   }
 // determines if threads are detached
@@ -330,20 +331,18 @@ class ThreadPool {
 // integrated power manager
   std::shared_ptr<controllers::ThreadManagementService> thread_manager_;
   // thread queue for the recently deceased threads.
-  moodycamel::ConcurrentQueue<std::shared_ptr<WorkerThread>> deceased_thread_queue_;
+  ConcurrentQueue<std::shared_ptr<WorkerThread>> deceased_thread_queue_;
 // worker queue of worker objects
-  moodycamel::ConcurrentQueue<Worker<T>> worker_queue_;
+  ConditionConcurrentQueue<Worker<T>> worker_queue_;
   std::priority_queue<Worker<T>, std::vector<Worker<T>>, DelayedTaskComparator<T>> delayed_worker_queue_;
-// notification for available work
-  std::condition_variable tasks_available_;
+// mutex to  protect task status and delayed queue   
+  std::mutex worker_queue_mutex_;
 // notification for new delayed tasks that's before the current ones
   std::condition_variable delayed_task_available_;
 // map to identify if a task should be
   std::map<std::string, bool> task_status_;
 // manager mutex
   std::recursive_mutex manager_mutex_;
-// work queue mutex
-  std::mutex worker_queue_mutex_;
   // thread pool name
   std::string name_;
 
