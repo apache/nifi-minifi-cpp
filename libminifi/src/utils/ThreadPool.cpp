@@ -39,7 +39,7 @@ void ThreadPool<T>::run_tasks(std::shared_ptr<WorkerThread> thread) {
     }
 
     Worker<T> task;
-    if (worker_queue_.tryDequeue(task)) {
+    if (worker_queue_.dequeue(task)) {
       {
         std::unique_lock<std::mutex> lock(worker_queue_mutex_);
         if (!task_status_[task.getIdentifier()]) {
@@ -66,7 +66,7 @@ void ThreadPool<T>::run_tasks(std::shared_ptr<WorkerThread> thread) {
     } else {
       // This means that the threadpool is running, but the ConcurrentQueue is stopped -> shouldn't happen
       if (running_.load()) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(0));
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
       }
     }
   }

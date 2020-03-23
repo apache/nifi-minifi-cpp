@@ -17,9 +17,11 @@
 #ifndef LIBMINIFI_INCLUDE_CONCURRENT_QUEUE_H
 #define LIBMINIFI_INCLUDE_CONCURRENT_QUEUE_H
 
+#include <chrono>
 #include <deque>
 #include <mutex>
 #include <condition_variable>
+#include <stdexcept>
 
 namespace org {
 namespace apache {
@@ -48,22 +50,22 @@ class ConcurrentQueue {
     return *this;
   }
 
-  virtual bool tryDequeue(T& out) {
+  bool tryDequeue(T& out) {
     std::unique_lock<std::mutex> lck(mtx_);
     return tryDequeue(lck, out);
   }
 
-  virtual bool empty() const {
+  bool empty() const {
     std::lock_guard<std::mutex> guard(mtx_);
     return queue_.empty();
   }
 
-  virtual size_t size() const {
+  size_t size() const {
     std::lock_guard<std::mutex> guard(mtx_);
     return queue_.size();
   }
 
-  virtual void clear() {
+  void clear() {
     std::lock_guard<std::mutex> guard(mtx_);
     queue_.clear();
   }
@@ -81,7 +83,7 @@ class ConcurrentQueue {
  protected:
   bool tryDequeue(std::unique_lock<std::mutex>& lck, T& out) {
     if (!lck.owns_lock()) {
-      return false;
+      throw std::logic_error("Caller of protected ConcurrentQueue::tryDequeue should own the lock!");
     }
     if (queue_.empty()) {
       return false;
@@ -112,11 +114,9 @@ class ConditionConcurrentQueue : public ConcurrentQueue<T> {
     }
   }
   
-  bool tryDequeue(T& out) override {
+  bool dequeue(T& out) {
     std::unique_lock<std::mutex> lck(this->mtx_);
-    if (running_ && this->queue_.empty()) {
-      cv_.wait(lck, [this]{ return !running_ || !this->queue_.empty(); });  // Only wake up if there is something to return or stopped 
-    }
+    cv_.wait(lck, [this]{ return !running_ || !this->queue_.empty(); });  // Only wake up if there is something to return or stopped 
     return running_ && ConcurrentQueue<T>::tryDequeue(lck, out);
   }
   
@@ -131,14 +131,14 @@ class ConditionConcurrentQueue : public ConcurrentQueue<T> {
     if (!running_) {
       running_ = true;
       if (!this->queue_.empty()) {
-	cv_.notify_all();
+        cv_.notify_all();
       }
     }
   }
   
   bool isRunning() const {
     std::lock_guard<std::mutex> guard(this->mtx_);
-    return running_;
+    return running_;  // In case it's not running no notifications are generated, dequeueing fails instead of blocking to avoid hanging threads
   }
 
  private:
