@@ -39,7 +39,7 @@ void ThreadPool<T>::run_tasks(std::shared_ptr<WorkerThread> thread) {
     }
 
     Worker<T> task;
-    if (worker_queue_.try_dequeue(task)) {
+    if (worker_queue_.dequeueWait(task)) {
       {
         std::unique_lock<std::mutex> lock(worker_queue_mutex_);
         if (!task_status_[task.getIdentifier()]) {
@@ -64,8 +64,11 @@ void ThreadPool<T>::run_tasks(std::shared_ptr<WorkerThread> thread) {
         }
       }
     } else {
-      std::unique_lock<std::mutex> lock(worker_queue_mutex_);
-      tasks_available_.wait(lock);
+      // This means that the threadpool is running, but the ConcurrentQueue is stopped -> shouldn't happen during normal conditions
+      // Might happen during startup or shutdown for a very short time
+      if (running_.load()) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+      }
     }
   }
   current_workers_--;
@@ -83,7 +86,6 @@ void ThreadPool<T>::manage_delayed_queue() {
       Worker<T> task = std::move(const_cast<Worker<T>&>(delayed_worker_queue_.top()));
       delayed_worker_queue_.pop();
       worker_queue_.enqueue(std::move(task));
-      tasks_available_.notify_one();
     }
     if (delayed_worker_queue_.empty()) {
       delayed_task_available_.wait(lock);
@@ -102,14 +104,11 @@ bool ThreadPool<T>::execute(Worker<T> &&task, std::future<T> &future) {
     task_status_[task.getIdentifier()] = true;
   }
   future = std::move(task.getPromise()->get_future());
-  bool enqueued = worker_queue_.enqueue(std::move(task));
-  if (running_) {
-    tasks_available_.notify_one();
-  }
+  worker_queue_.enqueue(std::move(task));
 
   task_count_++;
 
-  return enqueued;
+  return true;
 }
 
 template<typename T>
@@ -157,7 +156,7 @@ void ThreadPool<T>::manageWorkers() {
           current_workers_++;
         }
         std::shared_ptr<WorkerThread> thread_ref;
-        while (deceased_thread_queue_.try_dequeue(thread_ref)) {
+        while (deceased_thread_queue_.tryDequeue(thread_ref)) {
           std::unique_lock<std::mutex> lock(worker_queue_mutex_);
           if (thread_ref->thread_.joinable())
             thread_ref->thread_.join();
@@ -186,10 +185,8 @@ void ThreadPool<T>::start() {
   std::lock_guard<std::recursive_mutex> lock(manager_mutex_);
   if (!running_) {
     running_ = true;
+    worker_queue_.start();
     manager_thread_ = std::move(std::thread(&ThreadPool::manageWorkers, this));
-    if (worker_queue_.size_approx() > 0) {
-      tasks_available_.notify_all();
-    }
 
     std::lock_guard<std::mutex> quee_lock(worker_queue_mutex_);
     delayed_scheduler_thread_ = std::thread(&ThreadPool<T>::manage_delayed_queue, this);
@@ -231,10 +228,7 @@ void ThreadPool<T>::shutdown() {
       delayed_worker_queue_.pop();
     }
 
-    while (worker_queue_.size_approx() > 0) {
-      Worker<T> task;
-      worker_queue_.try_dequeue(task);
-    }
+    worker_queue_.clear();
   }
 }
 
