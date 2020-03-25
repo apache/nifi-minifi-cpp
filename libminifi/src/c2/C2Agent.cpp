@@ -41,12 +41,9 @@ namespace nifi {
 namespace minifi {
 namespace c2 {
 
-std::shared_ptr<utils::IdGenerator> C2Agent::id_generator_ = utils::IdGenerator::getIdGenerator();
-
 C2Agent::C2Agent(const std::shared_ptr<core::controller::ControllerServiceProvider> &controller,
                  const std::shared_ptr<state::StateMonitor> &updateSink,
-                 const std::shared_ptr<Configure> &configuration,
-                 utils::ThreadPool<utils::TaskRescheduleInfo>& thread_pool)
+                 const std::shared_ptr<Configure> &configuration)
     : heart_beat_period_(3000),
       max_c2_responses(5),
       update_sink_(updateSink),
@@ -55,7 +52,7 @@ C2Agent::C2Agent(const std::shared_ptr<core::controller::ControllerServiceProvid
       configuration_(configuration),
       protocol_(nullptr),
       logger_(logging::LoggerFactory<C2Agent>::getLogger()),
-      thread_pool_(thread_pool) {
+      thread_pool_(2, false, nullptr, "C2 threadpool") {
   allow_updates_ = true;
 
   manifest_sent_ = false;
@@ -128,10 +125,13 @@ C2Agent::C2Agent(const std::shared_ptr<core::controller::ControllerServiceProvid
 }
 
 void C2Agent::start() {
+  if (controller_running_) {
+    return;
+  }
   task_ids_.clear();
   for (const auto& function : functions_) {
     utils::Identifier uuid;
-    id_generator_->generate(uuid);
+    utils::IdGenerator::getIdGenerator()->generate(uuid);
     const std::string uuid_str = uuid.to_string();
     task_ids_.push_back(uuid_str);
     auto monitor = utils::make_unique<utils::ComplexMonitor>();
@@ -140,6 +140,8 @@ void C2Agent::start() {
     thread_pool_.execute(std::move(functor), future);
   }
   controller_running_ = true;
+  thread_pool_.start();
+  logger_->log_info("C2 agent started");
 }
 
 void C2Agent::stop() {
@@ -147,6 +149,8 @@ void C2Agent::stop() {
   for(const auto& id : task_ids_) {
     thread_pool_.stopTasks(id);
   }
+  thread_pool_.shutdown();
+  logger_->log_info("C2 agent stopped");
 }
 
 void C2Agent::checkTriggers() {

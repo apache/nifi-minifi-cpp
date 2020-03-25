@@ -49,8 +49,7 @@ class C2CallbackAgent : public c2::C2Agent {
 
   explicit C2CallbackAgent(const std::shared_ptr<core::controller::ControllerServiceProvider> &controller,
       const std::shared_ptr<state::StateMonitor> &updateSink,
-      const std::shared_ptr<Configure> &configure,
-      utils::ThreadPool<utils::TaskRescheduleInfo>& pool);
+      const std::shared_ptr<Configure> &configure);
 
   virtual ~C2CallbackAgent() {
   }
@@ -70,6 +69,7 @@ class C2CallbackAgent : public c2::C2Agent {
     c2_ag_stop_callback *stop;
 
  private:
+    utils::ThreadPool<utils::TaskRescheduleInfo> thread_pool_;
     std::shared_ptr<logging::Logger> logger_;
 
 };

@@ -107,7 +107,7 @@ class Instance {
       configure_->set("c2.rest.url", server->url);
       configure_->set("c2.rest.url.ack", server->ack_url);
     }
-    agent_ = std::make_shared<c2::C2CallbackAgent>(controller_service_provider, nullptr, configure_, listener_thread_pool_);
+    agent_ = std::make_shared<c2::C2CallbackAgent>(controller_service_provider, nullptr, configure_);
     listener_thread_pool_.start();
     registerUpdateListener(agent_, 1000);
     agent_->setStopCallback(c1);

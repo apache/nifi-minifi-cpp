@@ -142,8 +142,9 @@ void IntegrationBase::run(std::string test_file_location) {
 
   shutdownBeforeFlowController();
   flowController_->unload();
-  runAssertions();
+  flowController_->stopC2();
 
+  runAssertions();
   cleanup();
 }
 

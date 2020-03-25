@@ -60,8 +60,7 @@ class C2Agent : public state::UpdateController {
 
   C2Agent(const std::shared_ptr<core::controller::ControllerServiceProvider> &controller,
           const std::shared_ptr<state::StateMonitor> &updateSink,
-          const std::shared_ptr<Configure> &configure,
-          utils::ThreadPool<utils::TaskRescheduleInfo> &pool);
+          const std::shared_ptr<Configure> &configure);
 
   virtual ~C2Agent() noexcept {
     delete protocol_.load();
@@ -244,11 +243,9 @@ class C2Agent : public state::UpdateController {
 
   std::shared_ptr<logging::Logger> logger_;
 
-  utils::ThreadPool<utils::TaskRescheduleInfo> &thread_pool_;
+  utils::ThreadPool<utils::TaskRescheduleInfo> thread_pool_;
 
   std::vector<std::string> task_ids_;
-
-  static std::shared_ptr<utils::IdGenerator> id_generator_;
 
   bool manifest_sent_;
 };

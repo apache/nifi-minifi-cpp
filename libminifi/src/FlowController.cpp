@@ -67,8 +67,6 @@ namespace apache {
 namespace nifi {
 namespace minifi {
 
-std::shared_ptr<utils::IdGenerator> FlowController::id_generator_ = utils::IdGenerator::getIdGenerator();
-
 #define DEFAULT_CONFIG_NAME "conf/config.yml"
 
 FlowController::FlowController(std::shared_ptr<core::Repository> provenance_repo, std::shared_ptr<core::Repository> flow_file_repo, std::shared_ptr<Configure> configure,
@@ -99,7 +97,7 @@ FlowController::FlowController(std::shared_ptr<core::Repository> provenance_repo
   if (IsNullOrEmpty(configuration_)) {
     throw std::runtime_error("Must supply a configuration.");
   }
-  id_generator_->generate(uuid_);
+  utils::IdGenerator::getIdGenerator()->generate(uuid_);
   setUUID(uuid_);
   flow_update_ = false;
   // Setup the default values
@@ -173,14 +171,17 @@ void FlowController::initializePaths(const std::string &adjustedFilename) {
 
 FlowController::~FlowController() {
   stop(true);
-  if (c2_agent_)
-    c2_agent_->stop();
-  thread_pool_.shutdown();
+  stopC2();
   unload();
   if (NULL != protocol_)
     delete protocol_;
   flow_file_repo_ = nullptr;
   provenance_repo_ = nullptr;
+}
+
+void FlowController::stopC2() {
+  if (c2_agent_)
+    c2_agent_->stop();
 }
 
 bool FlowController::applyConfiguration(const std::string &source, const std::string &configurePayload) {
@@ -247,6 +248,7 @@ int16_t FlowController::stop(bool force, uint64_t timeToWait) {
     this->timer_scheduler_->stop();
     this->event_scheduler_->stop();
     this->cron_scheduler_->stop();
+    thread_pool_.shutdown();
     running_ = false;
   }
   return 0;
@@ -399,6 +401,7 @@ int16_t FlowController::start() {
       this->protocol_->start();
       this->provenance_repo_->start();
       this->flow_file_repo_->start();
+      thread_pool_.start();
       logger_->log_info("Started Flow Controller");
     }
     return 0;
@@ -597,8 +600,7 @@ void FlowController::initializeC2() {
   if (!c2_initialized_) {
     c2_agent_ = std::unique_ptr<c2::C2Agent>(new c2::C2Agent(std::dynamic_pointer_cast<FlowController>(shared_from_this()),
                                                              std::dynamic_pointer_cast<FlowController>(shared_from_this()),
-                                                             configuration_,
-                                                             thread_pool_));
+                                                             configuration_));
     c2_agent_->start();
     c2_initialized_ = true;
   }

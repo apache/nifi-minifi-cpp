@@ -310,6 +310,8 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
 
   void initializeC2();
 
+  void stopC2();
+
  protected:
 
   void loadC2ResponseConfiguration();
@@ -407,8 +409,6 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
   std::string serial_number_;
 
   std::unique_ptr<state::UpdateController> c2_agent_;
-
-  static std::shared_ptr<utils::IdGenerator> id_generator_;
 };
 
 }
