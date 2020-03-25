@@ -357,7 +357,7 @@ class HeartbeatHandler : public CivetHandler {
 
     char buffer[1024];
     while ((readBytes = mg_read(conn, buffer, sizeof(buffer))) > 0) {
-      response.append(buffer, 0, (readBytes / sizeof(char)));
+      response.append(buffer, (readBytes / sizeof(char)));
     }
     return response;
   }
