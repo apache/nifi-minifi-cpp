@@ -137,11 +137,11 @@ bool check_archive_contents(std::string path, TAE_MAP_T entries, bool check_attr
 
       if (size > 0) {
         int rlen, nlen = 0;
-        const char* buf[size];
+        std::vector<char> buf(size);
         bool read_ok = true;
 
         for (;;) {
-          rlen = archive_read_data(a, buf, size);
+          rlen = archive_read_data(a, buf.data(), size);
           nlen += rlen;
           if (rlen == 0)
             break;
@@ -154,7 +154,7 @@ bool check_archive_contents(std::string path, TAE_MAP_T entries, bool check_attr
 
         if (read_ok) {
           REQUIRE(nlen == size);
-          REQUIRE(memcmp(buf, test_entry.content, size) == 0);
+          REQUIRE(memcmp(buf.data(), test_entry.content, size) == 0);
         }
       }
 

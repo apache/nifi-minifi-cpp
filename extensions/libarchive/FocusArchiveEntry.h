@@ -83,7 +83,7 @@ class FocusArchiveEntry : public core::Processor {
     std::shared_ptr<logging::Logger> logger_;
     ArchiveMetadata *_archiveMetadata;
     static int ok_cb(struct archive *, void *d) { return ARCHIVE_OK; }
-    static ssize_t read_cb(struct archive * a, void *d, const void **buf);
+    static la_ssize_t read_cb(struct archive * a, void *d, const void **buf);
   };
 
  private:

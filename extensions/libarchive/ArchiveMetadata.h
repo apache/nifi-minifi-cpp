@@ -30,6 +30,7 @@
 #include <string>
 #include <algorithm>
 
+#include "ArchiveCommon.h"
 #include "core/Core.h"
 #include "utils/file/FileManager.h"
 

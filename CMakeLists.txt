@@ -48,9 +48,6 @@ option(ENABLE_OPENCV "Instructs the build system to enable the OpenCV extension"
 option(ENABLE_OPC "Instructs the build system to enable the OPC extension" OFF)
 option(BUILD_SHARED_LIBS "Build yaml cpp shared lib" OFF)
 
-cmake_dependent_option(USE_SYSTEM_ZLIB "Instructs the build system to search for and use a zlib library available in the host system" ON "NOT STATIC_BUILD" OFF)
-
-option(USE_SYSTEM_BZIP2 "Instructs the build system to search for and use a bzip2 library available in the host system" ON)
 option(BUILD_ROCKSDB "Instructs the build system to use RocksDB from the third party directory" ON)
 option(FORCE_WINDOWS "Instructs the build system to force Windows builds when WIN32 is specified" OFF)
 option(DISABLE_CURL "Disables libCurl Properties." OFF)
@@ -192,20 +189,16 @@ endif()
 if (NOT OPENSSL_OFF)
 	include(BundledLibreSSL)
 	use_libre_ssl("${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_BINARY_DIR}")
-	list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/ssl")
+	list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/ssl")
 
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DOPENSSL_SUPPORT")
 	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DOPENSSL_SUPPORT")
 endif()
 
 # zlib
-if(WIN32 OR NOT USE_SYSTEM_ZLIB)
-	include(BundledZLIB)
-	use_bundled_zlib(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
-	list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/zlib/dummy")
-else()
-	find_package(ZLIB REQUIRED)
-endif()
+include(BundledZLIB)
+use_bundled_zlib(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/zlib/dummy")
 
 # uthash
 add_library(ut INTERFACE)
@@ -215,7 +208,7 @@ target_include_directories(ut INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/
 if(NOT DISABLE_CURL)
 	include(BundledLibcURL)
 	use_bundled_curl(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
-	list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/curl/dummy")
+	list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/curl/dummy")
 else()
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDISABLE_CURL")
 	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DDISABLE_CURL")
@@ -296,12 +289,26 @@ if (NOT DISABLE_ROCKSDB)
 endif()
 
 ## Create LibArchive Extension
-if (NOT LibArchive_FOUND OR BUILD_LIBARCHIVE)
-	set(BUILD_TP "TRUE")
-endif()
 option(DISABLE_LIBARCHIVE "Disables the lib archive extensions." OFF)
+option(DISABLE_LZMA "Disables the liblzma build" OFF)
+option(DISABLE_BZIP2 "Disables the bzip2 build" OFF)
 if (NOT DISABLE_LIBARCHIVE)
-	createExtension(ARCHIVE-EXTENSIONS "ARCHIVE EXTENSIONS" "This Enables libarchive functionality including MergeContent, CompressContent, (Un)FocusArchiveEntry and ManipulateArchive." "extensions/libarchive" "${TEST_DIR}/archive-tests" BUILD_TP "thirdparty/libarchive-3.3.2")
+	if (NOT DISABLE_LZMA)
+		include(BundledLibLZMA)
+		use_bundled_liblzma(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
+		list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/liblzma/dummy")
+	endif()
+
+	if (NOT DISABLE_BZIP2)
+		include(BundledBZip2)
+		use_bundled_bzip2(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
+		list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/bzip2/dummy")
+	endif()
+
+	include(BundledLibArchive)
+	use_bundled_libarchive(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
+
+	createExtension(ARCHIVE-EXTENSIONS "ARCHIVE EXTENSIONS" "This Enables libarchive functionality including MergeContent, CompressContent, (Un)FocusArchiveEntry and ManipulateArchive." "extensions/libarchive" "${TEST_DIR}/archive-tests")
 endif()
 
 option(ENABLE_GPS "Enables the GPS extension." OFF)
