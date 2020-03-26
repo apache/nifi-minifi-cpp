@@ -22,6 +22,9 @@
 #include <utility>
 #include <string>
 #include <set>
+#include <random>
+#include <sstream>
+#include <iostream>
 #include "FlowController.h"
 #include "../TestBase.h"
 #include "core/Core.h"
@@ -34,13 +37,12 @@
 #include "CompressContent.h"
 #include "io/FileStream.h"
 #include "FlowFileRecord.h"
-#include <sstream>
-#include <iostream>
 #include "processors/LogAttribute.h"
+#include "processors/PutFile.h"
+#include "utils/file/FileUtils.h"
 
 static const char* EXPECT_COMPRESS_CONTENT = "/tmp/minifi-expect-compresscontent.txt";
 static const char* COMPRESS_CONTENT = "/tmp/minifi-compresscontent";
-static unsigned int globalSeed;
 
 class ReadCallback: public org::apache::nifi::minifi::InputStreamCallback {
  public:
@@ -94,8 +96,9 @@ TEST_CASE("CompressFileGZip", "[compressfiletest1]") {
     std::ofstream expectfile;
     expectfile.open(EXPECT_COMPRESS_CONTENT);
 
+    std::mt19937 gen(std::random_device { }());
     for (int i = 0; i < 100000; i++) {
-      expectfile << std::to_string(rand_r(&globalSeed)%100);
+      expectfile << std::to_string(gen() % 100);
     }
     expectfile.close();
 
@@ -299,8 +302,9 @@ TEST_CASE("CompressFileBZip", "[compressfiletest3]") {
     std::ofstream expectfile;
     expectfile.open(EXPECT_COMPRESS_CONTENT);
 
+    std::mt19937 gen(std::random_device { }());
     for (int i = 0; i < 100000; i++) {
-      expectfile << std::to_string(rand_r(&globalSeed)%100);
+      expectfile << std::to_string(gen() % 100);
     }
     expectfile.close();
 
@@ -503,8 +507,9 @@ TEST_CASE("CompressFileLZMA", "[compressfiletest5]") {
     std::ofstream expectfile;
     expectfile.open(EXPECT_COMPRESS_CONTENT);
 
+    std::mt19937 gen(std::random_device { }());
     for (int i = 0; i < 100000; i++) {
-      expectfile << std::to_string(rand_r(&globalSeed)%100);
+      expectfile << std::to_string(gen() % 100);
     }
     expectfile.close();
 
@@ -720,8 +725,9 @@ TEST_CASE("CompressFileXYLZMA", "[compressfiletest7]") {
     std::ofstream expectfile;
     expectfile.open(EXPECT_COMPRESS_CONTENT);
 
+    std::mt19937 gen(std::random_device { }());
     for (int i = 0; i < 100000; i++) {
-      expectfile << std::to_string(rand_r(&globalSeed)%100);
+      expectfile << std::to_string(gen() % 100);
     }
     expectfile.close();
 
@@ -932,3 +938,107 @@ TEST_CASE("DecompressFileXYLZMA", "[compressfiletest8]") {
   }
 }
 
+TEST_CASE("RawGzipCompressionDecompression", "[compressfiletest8]") {
+  TestController testController;
+  LogTestController::getInstance().setTrace<org::apache::nifi::minifi::processors::CompressContent>();
+  LogTestController::getInstance().setTrace<org::apache::nifi::minifi::processors::PutFile>();
+
+  // Create temporary directories
+  char format_src[] = "/tmp/archives.XXXXXX";
+  std::string src_dir = testController.createTempDirectory(format_src);
+  REQUIRE(!src_dir.empty());
+
+  char format_dst[] = "/tmp/archived.XXXXXX";
+  std::string dst_dir = testController.createTempDirectory(format_dst);
+  REQUIRE(!dst_dir.empty());
+
+  // Define files
+  std::string src_file = utils::file::FileUtils::concat_path(src_dir, "src.txt");
+  std::string compressed_file = utils::file::FileUtils::concat_path(dst_dir, "src.txt.gz");
+  std::string decompressed_file = utils::file::FileUtils::concat_path(dst_dir, "src.txt");
+
+  // Build MiNiFi processing graph
+  auto plan = testController.createPlan();
+  auto get_file = plan->addProcessor(
+      "GetFile",
+      "GetFile");
+  auto compress_content = plan->addProcessor(
+      "CompressContent",
+      "CompressContent",
+      core::Relationship("success", "d"),
+      true);
+  auto put_compressed = plan->addProcessor(
+      "PutFile",
+      "PutFile",
+      core::Relationship("success", "d"),
+      true);
+  auto decompress_content = plan->addProcessor(
+      "CompressContent",
+      "CompressContent",
+      core::Relationship("success", "d"),
+      true);
+  auto put_decompressed = plan->addProcessor(
+      "PutFile",
+      "PutFile",
+      core::Relationship("success", "d"),
+      true);
+
+  // Configure GetFile processor
+  plan->setProperty(get_file, "Input Directory", src_dir);
+
+  // Configure CompressContent processor for compression
+  plan->setProperty(compress_content, "Mode", MODE_COMPRESS);
+  plan->setProperty(compress_content, "Compression Format", COMPRESSION_FORMAT_GZIP);
+  plan->setProperty(compress_content, "Update Filename", "true");
+  plan->setProperty(compress_content, "Encapsulate in TAR", "false");
+
+  // Configure first PutFile processor
+  plan->setProperty(put_compressed, "Directory", dst_dir);
+
+  // Configure CompressContent processor for decompression
+  plan->setProperty(decompress_content, "Mode", MODE_DECOMPRESS);
+  plan->setProperty(decompress_content, "Compression Format", COMPRESSION_FORMAT_GZIP);
+  plan->setProperty(decompress_content, "Update Filename", "true");
+  plan->setProperty(decompress_content, "Encapsulate in TAR", "false");
+
+  // Configure second PutFile processor
+  plan->setProperty(put_decompressed, "Directory", dst_dir);
+
+  // Create source file
+  std::string content;
+  SECTION("Empty content") {
+  }
+  SECTION("Short content") {
+    content = "Repeated repeated repeated repeated repeated stuff.";
+  }
+  SECTION("Long content") {
+    std::stringstream content_ss;
+    for (size_t i = 0U; i < 1024 * 1024U; i++) {
+      content_ss << "foobar";
+    }
+    content = content_ss.str();
+  }
+
+  std::fstream file;
+  file.open(src_file, std::ios::out);
+  file << content;
+  file.close();
+
+  // Run flow
+  testController.runSession(plan, true);
+
+  // Check compressed file
+  std::ifstream compressed(compressed_file, std::ios::in | std::ios::binary);
+  std::vector<uint8_t> compressed_content((std::istreambuf_iterator<char>(compressed)), std::istreambuf_iterator<char>());
+  REQUIRE(2 < compressed_content.size());
+  // gzip magic number
+  REQUIRE(0x1f == compressed_content[0]);
+  REQUIRE(0x8b == compressed_content[1]);
+
+  // Check decompressed file
+  std::ifstream decompressed(decompressed_file, std::ios::in | std::ios::binary);
+  std::string decompressed_content((std::istreambuf_iterator<char>(decompressed)), std::istreambuf_iterator<char>());
+  REQUIRE(content == decompressed_content);
+
+  LogTestController::getInstance().reset();
+}

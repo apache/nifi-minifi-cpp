@@ -20,15 +20,17 @@
 #ifndef __COMPRESS_CONTENT_H__
 #define __COMPRESS_CONTENT_H__
 
+#include "archive_entry.h"
+#include "archive.h"
+
 #include "FlowFileRecord.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
 #include "core/Core.h"
 #include "core/Resource.h"
 #include "core/Property.h"
-#include "archive_entry.h"
-#include "archive.h"
 #include "core/logging/LoggerConfiguration.h"
+#include "io/ZlibStream.h"
 
 namespace org {
 namespace apache {
@@ -52,8 +54,11 @@ public:
   /*!
    * Create a new processor
    */
-  explicit CompressContent(std::string name, utils::Identifier uuid = utils::Identifier()) :
-      core::Processor(name, uuid), logger_(logging::LoggerFactory<CompressContent>::getLogger()), updateFileName_(false) {
+  explicit CompressContent(std::string name, utils::Identifier uuid = utils::Identifier())
+    : core::Processor(name, uuid)
+    , logger_(logging::LoggerFactory<CompressContent>::getLogger())
+    , updateFileName_(false)
+    , encapsulateInTar_(false) {
   }
   // Destructor
   virtual ~CompressContent() {
@@ -65,6 +70,7 @@ public:
   static core::Property CompressLevel;
   static core::Property CompressFormat;
   static core::Property UpdateFileName;
+  static core::Property EncapsulateInTar;
 
   // Supported Relationships
   static core::Relationship Failure;
@@ -80,8 +86,7 @@ public:
     ~ReadCallbackCompress() {
     }
     int64_t process(std::shared_ptr<io::BaseStream> stream) {
-      int max_read = getpagesize();
-      uint8_t buffer[max_read];
+      uint8_t buffer[4096U];
       int64_t ret = 0;
       uint64_t read_size = 0;
 
@@ -177,7 +182,7 @@ public:
       return ret;
     }
 
-    static ssize_t archive_read(struct archive *arch, void *context, const void **buff) {
+    static la_ssize_t archive_read(struct archive *arch, void *context, const void **buff) {
       WriteCallback *callback = (WriteCallback *) context;
       callback->session_->read(callback->flow_, &callback->readDecompressCb_);
       if (callback->readDecompressCb_.read_size_ >= 0) {
@@ -341,6 +346,71 @@ public:
     }
   };
 
+  class GzipWriteCallback : public OutputStreamCallback {
+   public:
+    GzipWriteCallback(std::string compress_mode, int64_t compress_level, std::shared_ptr<core::FlowFile> flow, std::shared_ptr<core::ProcessSession> session)
+      : logger_(logging::LoggerFactory<CompressContent>::getLogger())
+      , compress_mode_(std::move(compress_mode))
+      , compress_level_(compress_level)
+      , flow_(std::move(flow))
+      , session_(std::move(session))
+    {
+    }
+
+    std::shared_ptr<logging::Logger> logger_;
+    std::string compress_mode_;
+    int64_t compress_level_;
+    std::shared_ptr<core::FlowFile> flow_;
+    std::shared_ptr<core::ProcessSession> session_;
+    bool success_{false};
+
+    int64_t process(std::shared_ptr<io::BaseStream> outputStream) override {
+      class ReadCallback : public InputStreamCallback {
+       public:
+        ReadCallback(GzipWriteCallback& writer, std::shared_ptr<io::BaseStream> outputStream)
+          : writer_(writer)
+          , outputStream_(std::move(outputStream)) {
+        }
+
+        int64_t process(std::shared_ptr<io::BaseStream> inputStream) override {
+          std::vector<uint8_t> buffer(16 * 1024U);
+          int64_t read_size = 0;
+          while (read_size < writer_.flow_->getSize()) {
+            int ret = inputStream->read(buffer.data(), buffer.size());
+            if (ret < 0) {
+              return -1;
+            } else if (ret == 0) {
+              break;
+            } else {
+              if (outputStream_->writeData(buffer.data(), ret) != ret) {
+                return -1;
+              }
+              read_size += ret;
+            }
+          }
+          outputStream_->closeStream();
+          return read_size;
+        }
+
+        GzipWriteCallback& writer_;
+        std::shared_ptr<io::BaseStream> outputStream_;
+      };
+
+      std::shared_ptr<io::ZlibBaseStream> filterStream;
+      if (compress_mode_ == MODE_COMPRESS) {
+        filterStream = std::make_shared<io::ZlibCompressStream>(outputStream.get(), io::ZlibCompressionFormat::GZIP, compress_level_);
+      } else {
+        filterStream = std::make_shared<io::ZlibDecompressStream>(outputStream.get(), io::ZlibCompressionFormat::GZIP);
+      }
+      ReadCallback readCb(*this, filterStream);
+      session_->read(flow_, &readCb);
+
+      success_ = filterStream->isFinished();
+
+      return flow_->getSize();
+    }
+  };
+
 public:
   /**
    * Function that's executed when the processor is scheduled.
@@ -365,6 +435,7 @@ private:
   std::string compressMode_;
   std::string compressFormat_;
   bool updateFileName_;
+  bool encapsulateInTar_;
   std::map<std::string, std::string> compressionFormatMimeTypeMap_;
   std::map<std::string, std::string> fileExtension_;
 };

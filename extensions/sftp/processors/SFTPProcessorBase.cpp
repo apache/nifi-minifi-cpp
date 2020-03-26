@@ -103,6 +103,10 @@ core::Property SFTPProcessorBase::HttpProxyPassword(
     core::PropertyBuilder::createProperty("Http Proxy Password")->withDescription("Http Proxy Password")
         ->isRequired(false)->supportsExpressionLanguage(true)->build());
 
+constexpr char const* SFTPProcessorBase::PROXY_TYPE_DIRECT;
+constexpr char const* SFTPProcessorBase::PROXY_TYPE_HTTP;
+constexpr char const* SFTPProcessorBase::PROXY_TYPE_SOCKS;
+
 constexpr size_t SFTPProcessorBase::CONNECTION_CACHE_MAX_SIZE;
 
 SFTPProcessorBase::SFTPProcessorBase(std::string name, utils::Identifier uuid)

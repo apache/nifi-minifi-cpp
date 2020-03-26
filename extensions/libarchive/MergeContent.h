@@ -20,6 +20,7 @@
 #ifndef __MERGE_CONTENT_H__
 #define __MERGE_CONTENT_H__
 
+#include "ArchiveCommon.h"
 #include "BinFiles.h"
 #include "archive_entry.h"
 #include "archive.h"
@@ -74,8 +75,7 @@ public:
     ~ReadCallback() {
     }
     int64_t process(std::shared_ptr<io::BaseStream> stream) {
-      int max_read = getpagesize();
-      uint8_t buffer[max_read];
+      uint8_t buffer[4096U];
       int64_t ret = 0;
       uint64_t read_size = 0;
       while (read_size < buffer_size_) {
@@ -148,8 +148,7 @@ public:
     ~ReadCallback() {
     }
     int64_t process(std::shared_ptr<io::BaseStream> stream) {
-      int max_read = getpagesize();
-      uint8_t buffer[max_read];
+      uint8_t buffer[4096U];
       int64_t ret = 0;
       uint64_t read_size = 0;
       ret = archive_write_header(arch_, entry_);

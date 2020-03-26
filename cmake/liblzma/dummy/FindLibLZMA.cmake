@@ -1,4 +1,3 @@
-#
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -15,25 +14,20 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-#
 
-include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt) 
-
-file(GLOB SOURCES  "*.cpp")
-
-add_library(minifi-archive-extensions STATIC ${SOURCES})
-set_property(TARGET minifi-archive-extensions PROPERTY POSITION_INDEPENDENT_CODE ON)
-if(THREADS_HAVE_PTHREAD_ARG)
-  target_compile_options(PUBLIC minifi-archive-extensions "-pthread")
-endif()
-if(CMAKE_THREAD_LIBS_INIT)
-  target_link_libraries(minifi-archive-extensions "${CMAKE_THREAD_LIBS_INIT}")
+# Dummy zlib find for when we use bundled version
+if(NOT LIBLZMA_FOUND)
+    set(LIBLZMA_FOUND "YES" CACHE STRING "" FORCE)
+    set(LIBLZMA_INCLUDE_DIR "${EXPORTED_LIBLZMA_INCLUDE_DIRS}" CACHE STRING "" FORCE)
+    set(LIBLZMA_INCLUDE_DIRS "${EXPORTED_LIBLZMA_INCLUDE_DIRS}" CACHE STRING "" FORCE)
+    set(LIBLZMA_LIBRARIES "${EXPORTED_LIBLZMA_LIBRARIES}" CACHE STRING "" FORCE)
 endif()
 
-target_link_libraries(minifi-archive-extensions ${LIBMINIFI})
-target_link_libraries(minifi-archive-extensions LibArchive::LibArchive)
-
-SET (ARCHIVE-EXTENSIONS minifi-archive-extensions PARENT_SCOPE)
-
-register_extension(minifi-archive-extensions)
-
+if(NOT TARGET LibLZMA::LibLZMA)
+    add_library(LibLZMA::LibLZMA STATIC IMPORTED)
+    set_target_properties(LibLZMA::LibLZMA PROPERTIES
+            INTERFACE_INCLUDE_DIRECTORIES "${LIBLZMA_INCLUDE_DIRS}")
+    set_target_properties(LibLZMA::LibLZMA PROPERTIES
+            IMPORTED_LINK_INTERFACE_LANGUAGES "C"
+            IMPORTED_LOCATION "${LIBLZMA_LIBRARIES}")
+endif()

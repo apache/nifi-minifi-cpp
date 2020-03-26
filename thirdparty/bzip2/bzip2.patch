@@ -1,0 +1,35 @@
+bzip2 only provides a Makefile which is not very usable on Windows,
+and it is a pretty simple project, so we create CMakeLists.txt file to
+compile the project on all platforms.
+
+diff -rupN orig/CMakeLists.txt patched/CMakeLists.txt
+--- orig/CMakeLists.txt	1970-01-01 01:00:00.000000000 +0100
++++ patched/CMakeLists.txt	2020-03-31 21:51:58.000000000 +0200
+@@ -0,0 +1,27 @@
++cmake_minimum_required(VERSION 3.7)
++
++project(bzip2)
++
++set(SOURCES blocksort.c
++            huffman.c
++            crctable.c
++            randtable.c
++            compress.c
++            decompress.c
++            bzlib.c)
++
++set(PUBLIC_HEADERS bzlib.h)
++
++add_library(bz2 STATIC ${SOURCES})
++
++set_property(TARGET bz2 PROPERTY POSITION_INDEPENDENT_CODE ON)
++
++target_compile_definitions(bz2
++                            PRIVATE
++                              _FILE_OFFSET_BITS=64)
++
++install(TARGETS bz2
++    ARCHIVE DESTINATION lib
++)
++
++install(FILES ${PUBLIC_HEADERS} DESTINATION include)

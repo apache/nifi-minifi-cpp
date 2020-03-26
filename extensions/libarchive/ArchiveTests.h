@@ -28,6 +28,8 @@
 #include <archive.h>
 #include <archive_entry.h>
 
+#include "ArchiveCommon.h"
+
 typedef struct {
     const char* content;
     std::string name;

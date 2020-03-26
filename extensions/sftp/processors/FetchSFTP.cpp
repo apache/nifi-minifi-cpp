@@ -82,6 +82,16 @@ core::Relationship FetchSFTP::CommsFailure("comms.failure", "Any FlowFile that c
 core::Relationship FetchSFTP::NotFound("not.found", "Any FlowFile for which we receive a 'Not Found' message from the remote server will be transferred to this Relationship.");
 core::Relationship FetchSFTP::PermissionDenied("permission.denied", "Any FlowFile that could not be fetched from the remote server due to insufficient permissions will be transferred to this Relationship.");
 
+constexpr char const* FetchSFTP::COMPLETION_STRATEGY_NONE;
+constexpr char const* FetchSFTP::COMPLETION_STRATEGY_MOVE_FILE;
+constexpr char const* FetchSFTP::COMPLETION_STRATEGY_DELETE_FILE;
+
+constexpr char const* FetchSFTP::ATTRIBUTE_SFTP_REMOTE_HOST;
+constexpr char const* FetchSFTP::ATTRIBUTE_SFTP_REMOTE_PORT;
+constexpr char const* FetchSFTP::ATTRIBUTE_SFTP_REMOTE_FILENAME;
+
+constexpr char const* FetchSFTP::ProcessorName;
+
 void FetchSFTP::initialize() {
   logger_->log_trace("Initializing FetchSFTP");
 

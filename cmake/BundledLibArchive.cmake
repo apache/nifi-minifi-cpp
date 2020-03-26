@@ -21,7 +21,7 @@ function(use_bundled_libarchive SOURCE_DIR BINARY_DIR)
 
     # Define byproducts
     if (WIN32)
-        set(BYPRODUCT "lib/libarchive.lib")
+        set(BYPRODUCT "lib/archive_static.lib")
     else()
         set(BYPRODUCT "lib/libarchive.a")
     endif()
@@ -29,34 +29,91 @@ function(use_bundled_libarchive SOURCE_DIR BINARY_DIR)
     # Set build options
     set(LIBARCHIVE_CMAKE_ARGS ${PASSTHROUGH_CMAKE_ARGS}
             "-DCMAKE_INSTALL_PREFIX=${BINARY_DIR}/thirdparty/libarchive-install"
-            -DENABLE_NETTLE=FALSE
-            -DENABLE_OPENSSL=FALSE
-            -DENABLE_TAR=FALSE
-            -DENABLE_CPIO=FALSE
-            -DENABLE_TEST=FALSE)
+            -DLIBARCHIVE_STATIC=1
+            -DENABLE_MBEDTLS=OFF
+            -DENABLE_NETTLE=OFF
+            -DENABLE_LIBB2=OFF
+            -DENABLE_LZ4=OFF
+            -DENABLE_LZO=OFF
+            -DENABLE_ZSTD=OFF
+            -DENABLE_ZLIB=ON
+            -DENABLE_LIBXML2=OFF
+            -DENABLE_EXPAT=OFF
+            -DENABLE_PCREPOSIX=OFF
+            -DENABLE_TAR=OFF # This does not disable the tar format, just the standalone tar command line utility
+            -DENABLE_CPIO=OFF
+            -DENABLE_CAT=OFF
+            -DENABLE_XATTR=ON
+            -DENABLE_ACL=ON
+            -DENABLE_ICONV=OFF
+            -DENABLE_TEST=OFF)
+
+    if (OPENSSL_OFF)
+        list(APPEND LIBARCHIVE_CMAKE_ARGS -DENABLE_OPENSSL=OFF)
+    else()
+        list(APPEND LIBARCHIVE_CMAKE_ARGS -DENABLE_OPENSSL=ON)
+    endif()
+
+    if (DISABLE_LZMA)
+        list(APPEND LIBARCHIVE_CMAKE_ARGS -DENABLE_LZMA=OFF)
+    else()
+        list(APPEND LIBARCHIVE_CMAKE_ARGS -DENABLE_LZMA=ON)
+    endif()
+
+    if (DISABLE_BZIP2)
+        list(APPEND LIBARCHIVE_CMAKE_ARGS -DENABLE_BZip2=OFF)
+    else()
+        list(APPEND LIBARCHIVE_CMAKE_ARGS -DENABLE_BZip2=ON)
+    endif()
+
+    append_third_party_passthrough_args(LIBARCHIVE_CMAKE_ARGS "${LIBARCHIVE_CMAKE_ARGS}")
 
     # Build project
     ExternalProject_Add(
             libarchive-external
-            URL "https://www.libarchive.org/downloads/libarchive-3.3.2.tar.gz"
-            URL_HASH "SHA256=ed2dbd6954792b2c054ccf8ec4b330a54b85904a80cef477a1c74643ddafa0ce"
-            SOURCE_DIR "${SOURCE_DIR}/thirdparty/libarchive-src"
+            URL "https://github.com/libarchive/libarchive/releases/download/v3.4.2/libarchive-3.4.2.tar.gz"
+            URL_HASH "SHA256=b60d58d12632ecf1e8fad7316dc82c6b9738a35625746b47ecdcaf4aed176176"
+            SOURCE_DIR "${BINARY_DIR}/thirdparty/libarchive-src"
+            LIST_SEPARATOR % # This is needed for passing semicolon-separated lists
             CMAKE_ARGS ${LIBARCHIVE_CMAKE_ARGS}
             PATCH_COMMAND ${PC}
             BUILD_BYPRODUCTS "${BINARY_DIR}/thirdparty/libarchive-install/${BYPRODUCT}"
             EXCLUDE_FROM_ALL TRUE
     )
 
+    # Set dependencies
+    add_dependencies(libarchive-external ZLIB::ZLIB)
+    if (NOT OPENSSL_OFF)
+        add_dependencies(libarchive-external OpenSSL::Crypto)
+    endif()
+    if (NOT DISABLE_LZMA)
+        add_dependencies(libarchive-external LibLZMA::LibLZMA)
+    endif()
+    if (NOT DISABLE_BZIP2)
+        add_dependencies(libarchive-external BZip2::BZip2)
+    endif()
+
     # Set variables
     set(LIBARCHIVE_FOUND "YES" CACHE STRING "" FORCE)
-    set(LIBARCHIVE_INCLUDE_DIR "${BINARY_DIR}/thirdparty/libarchive-install/include" CACHE STRING "" FORCE)
+    set(LIBARCHIVE_INCLUDE_DIRS "${BINARY_DIR}/thirdparty/libarchive-install/include" CACHE STRING "" FORCE)
     set(LIBARCHIVE_LIBRARY "${BINARY_DIR}/thirdparty/libarchive-install/${BYPRODUCT}" CACHE STRING "" FORCE)
     set(LIBARCHIVE_LIBRARIES ${LIBARCHIVE_LIBRARY} CACHE STRING "" FORCE)
 
     # Create imported targets
-    add_library(libarchive STATIC IMPORTED)
-    set_target_properties(libarchive PROPERTIES IMPORTED_LOCATION "${LIBARCHIVE_LIBRARY}")
-    add_dependencies(libarchive libarchive-external)
-    file(MAKE_DIRECTORY ${LIBARCHIVE_INCLUDE_DIR})
-    set_property(TARGET libarchive APPEND PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${LIBARCHIVE_INCLUDE_DIR})
+    add_library(LibArchive::LibArchive STATIC IMPORTED)
+    set_target_properties(LibArchive::LibArchive PROPERTIES IMPORTED_LOCATION "${LIBARCHIVE_LIBRARY}")
+    add_dependencies(LibArchive::LibArchive libarchive-external)
+    set_property(TARGET LibArchive::LibArchive APPEND PROPERTY INTERFACE_LINK_LIBRARIES ZLIB::ZLIB)
+    if (NOT OPENSSL_OFF)
+        set_property(TARGET LibArchive::LibArchive APPEND PROPERTY INTERFACE_LINK_LIBRARIES OpenSSL::Crypto)
+    endif()
+    if (NOT DISABLE_LZMA)
+        set_property(TARGET LibArchive::LibArchive APPEND PROPERTY INTERFACE_LINK_LIBRARIES LibLZMA::LibLZMA)
+    endif()
+    if (NOT DISABLE_BZIP2)
+        set_property(TARGET LibArchive::LibArchive APPEND PROPERTY INTERFACE_LINK_LIBRARIES BZip2::BZip2)
+    endif()
+    file(MAKE_DIRECTORY ${LIBARCHIVE_INCLUDE_DIRS})
+    set_property(TARGET LibArchive::LibArchive APPEND PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${LIBARCHIVE_INCLUDE_DIRS})
+	set_property(TARGET LibArchive::LibArchive APPEND PROPERTY INTERFACE_COMPILE_DEFINITIONS "LIBARCHIVE_STATIC=1")
 endfunction(use_bundled_libarchive)
