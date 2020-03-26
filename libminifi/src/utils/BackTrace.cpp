@@ -132,20 +132,16 @@ BackTrace TraceResolver::getBackTrace(std::string thread_name, std::thread::nati
   // lock so that we only perform one backtrace at a time.
 #ifdef HAS_EXECINFO
   std::unique_lock<std::mutex> lock(mutex_);
-
-  caller_handle_ = pthread_self();
-  thread_handle_ = thread_handle;
   trace_ = BackTrace(std::move(thread_name));
 
-  if (0 == thread_handle_ || pthread_equal(caller_handle_, thread_handle)) {
+  if (0 == thread_handle || pthread_equal(pthread_self(), thread_handle)) {
     pull_trace();
   } else {
-    if (thread_handle_ == 0) {
+    if (thread_handle == 0) {
       return std::move(trace_);
     }
     emplace_handler();
-    pull_traces_ = false;
-    if (pthread_kill(thread_handle_, SIGUSR2) != 0) {
+    if (pthread_kill(thread_handle, SIGUSR2) != 0) {
       return std::move(trace_);
     }
     pull_traces_ = false;
@@ -159,7 +155,7 @@ BackTrace TraceResolver::getBackTrace(std::string thread_name, std::thread::nati
 }
 #ifdef HAS_EXECINFO
 void handler(int signr, siginfo_t *info, void *secret) {
-  std::unique_ptr<TraceResolver::Lock> lock(TraceResolver::getResolver().lock());
+  std::unique_ptr<Lock> lock(TraceResolver::getResolver().lock());
   pull_trace();
   TraceResolver::getResolver().notifyPullTracesDone(lock);
 }

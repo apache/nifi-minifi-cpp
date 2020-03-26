@@ -178,11 +178,10 @@ class TraceResolver {
 
  private:
   TraceResolver() = default;
-
   BackTrace trace_;
 
-  std::mutex mutex_;
   bool pull_traces_{false};
+  mutable std::mutex mutex_;
   std::condition_variable trace_condition_;
 };
 

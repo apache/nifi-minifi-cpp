@@ -73,7 +73,7 @@ C2Agent::C2Agent(const std::shared_ptr<core::controller::ControllerServiceProvid
 
   c2_producer_ = [&]() {
     // place priority on messages to send to the c2 server
-      if ( protocol_.load() != nullptr && request_mutex.try_lock_for(std::chrono::seconds(1))) {
+      if (protocol_.load() != nullptr && request_mutex.try_lock_for(std::chrono::seconds(1))) {
         if (requests.size() > 0) {
           int count = 0;
           do {
@@ -112,14 +112,16 @@ C2Agent::C2Agent(const std::shared_ptr<core::controller::ControllerServiceProvid
   c2_consumer_ = [&]() {
     auto now = std::chrono::steady_clock::now();
     if ( queue_mutex.try_lock_until(now + std::chrono::seconds(1)) ) {
-      if (responses.size() > 0) {
-        const C2Payload payload(std::move(responses.back()));
-        responses.pop_back();
-        extractPayload(std::move(payload));
+      if (responses.empty()) {
+        queue_mutex.unlock();
+        return utils::TaskRescheduleInfo::RetryIn(std::chrono::milliseconds(10));
       }
+      const C2Payload payload(std::move(responses.back()));
+      responses.pop_back();
       queue_mutex.unlock();
+      extractPayload(std::move(payload));
     }
-    return utils::TaskRescheduleInfo::RetryImmediately();
+    return utils::TaskRescheduleInfo::RetryIn(std::chrono::milliseconds(10));
   };
   functions_.push_back(c2_consumer_);
 }
@@ -146,7 +148,7 @@ void C2Agent::start() {
 
 void C2Agent::stop() {
   controller_running_ = false;
-  for(const auto& id : task_ids_) {
+  for (const auto& id : task_ids_) {
     thread_pool_.stopTasks(id);
   }
   thread_pool_.shutdown();
