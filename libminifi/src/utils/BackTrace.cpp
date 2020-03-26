@@ -131,7 +131,7 @@ void pull_trace(uint8_t frames_to_skip /* = 1 */) {
 BackTrace TraceResolver::getBackTrace(std::string thread_name, std::thread::native_handle_type thread_handle) {
   // lock so that we only perform one backtrace at a time.
 #ifdef HAS_EXECINFO
-  std::lock_guard<std::mutex> lock(mutex_);
+  std::unique_lock<std::mutex> lock(mutex_);
 
   caller_handle_ = pthread_self();
   thread_handle_ = thread_handle;
@@ -144,13 +144,12 @@ BackTrace TraceResolver::getBackTrace(std::string thread_name, std::thread::nati
       return std::move(trace_);
     }
     emplace_handler();
+    pull_traces_ = false;
     if (pthread_kill(thread_handle_, SIGUSR2) != 0) {
       return std::move(trace_);
     }
-    sigset_t mask;
-    sigfillset(&mask);
-    sigdelset(&mask, SIGUSR2);
-    sigsuspend(&mask);
+    pull_traces_ = false;
+    trace_condition_.wait(lock, [this] { return pull_traces_; });
   }
 #else
   // even if tracing is disabled, include thread name into the trace object
@@ -159,15 +158,10 @@ BackTrace TraceResolver::getBackTrace(std::string thread_name, std::thread::nati
   return std::move(trace_);
 }
 #ifdef HAS_EXECINFO
-static void handler(int, siginfo_t*, void*) {
-  // not the intended thread
-  if (!pthread_equal(pthread_self(), TraceResolver::getResolver().getThreadHandle())) {
-    return;
-  }
-
+void handler(int signr, siginfo_t *info, void *secret) {
+  std::unique_ptr<TraceResolver::Lock> lock(TraceResolver::getResolver().lock());
   pull_trace();
-
-  pthread_kill(TraceResolver::getResolver().getCallerHandle(), SIGUSR2);
+  TraceResolver::getResolver().notifyPullTracesDone(lock);
 }
 #endif
 

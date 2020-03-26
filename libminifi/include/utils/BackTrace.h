@@ -25,8 +25,10 @@
 #include <utility>
 #include <vector>
 #include <mutex>
+#include <condition_variable>
 #include <iostream>
 #include <sstream>
+#include <memory>
 
 #define TRACE_BUFFER_SIZE 128
 
@@ -81,13 +83,32 @@ void pull_trace(uint8_t frames_to_skip = 1);
  */
 void emplace_handler();
 
+class Lock {
+public:
+  explicit Lock(std::mutex& mutex)
+      : mutex_(mutex) {
+    mutex_.lock();
+  }
+
+  ~Lock() {
+    mutex_.unlock();
+  }
+
+  Lock(const Lock& ) = delete;
+  Lock& operator=(const Lock& ) = delete;
+  Lock(Lock&& ) = delete;
+  Lock& operator=(Lock&& ) = delete;
+
+private:
+  std::mutex& mutex_;
+};
+
 /**
  * Purpose: Provides a singular instance to grab the call stack for thread(s).
  * Design: is a singleton to avoid multiple signal handlers.
  */
 class TraceResolver {
  public:
-
   /**
    * Retrieves the backtrace for the provided thread reference
    * @return BackTrace instance
@@ -145,27 +166,24 @@ class TraceResolver {
     trace_.addLine(line.str());
   }
 
-  /**
-   * Returns the thread handle reference in the native format.
-   */
-  std::thread::native_handle_type getThreadHandle() {
-    return thread_handle_;
+  std::unique_ptr<Lock> lock() {
+    return std::unique_ptr<Lock>(new Lock(mutex_));
   }
 
-  /**
-   * Returns the caller handle reference in the native format.
-   */
-  std::thread::native_handle_type getCallerHandle() {
-    return caller_handle_;
+  void notifyPullTracesDone(std::unique_ptr<Lock>& lock) {
+    std::unique_ptr<Lock> tlock(std::move(lock));
+    pull_traces_ = true;
+    trace_condition_.notify_one();
   }
 
  private:
   TraceResolver() = default;
 
   BackTrace trace_;
-  std::thread::native_handle_type thread_handle_{0};
-  std::thread::native_handle_type caller_handle_{0};
+
   std::mutex mutex_;
+  bool pull_traces_{false};
+  std::condition_variable trace_condition_;
 };
 
 #endif /* LIBMINIFI_INCLUDE_UTILS_BACKTRACE_H_ */

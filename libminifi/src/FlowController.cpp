@@ -1010,13 +1010,8 @@ uint64_t FlowController::getUptime() {
 
 std::vector<BackTrace> FlowController::getTraces() {
   std::vector<BackTrace> traces;
-  auto timer_driven = timer_scheduler_->getTraces();
-  traces.insert(traces.end(), std::make_move_iterator(timer_driven.begin()), std::make_move_iterator(timer_driven.end()));
-  auto event_driven = event_scheduler_->getTraces();
-  traces.insert(traces.end(), std::make_move_iterator(event_driven.begin()), std::make_move_iterator(event_driven.end()));
-  auto cron_driven = cron_scheduler_->getTraces();
-  traces.insert(traces.end(), std::make_move_iterator(cron_driven.begin()), std::make_move_iterator(cron_driven.end()));
-  // repositories
+  auto tp_traces = thread_pool_.getTraces();
+  traces.insert(traces.end(), std::make_move_iterator(tp_traces.begin()), std::make_move_iterator(tp_traces.end()));
   auto prov_repo_trace = provenance_repo_->getTraces();
   traces.emplace_back(std::move(prov_repo_trace));
   auto flow_repo_trace = flow_file_repo_->getTraces();
