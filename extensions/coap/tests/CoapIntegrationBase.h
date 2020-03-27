@@ -79,6 +79,7 @@ class CoapIntegrationBase : public IntegrationBase {
 
     shutdownBeforeFlowController();
     controller->waitUnload(wait_time_);
+    controller->stopC2();
     runAssertions();
 
     cleanup();

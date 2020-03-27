@@ -94,10 +94,10 @@ public:
     mutex_.unlock();
   }
 
-  Lock(const Lock& ) = delete;
-  Lock& operator=(const Lock& ) = delete;
-  Lock(Lock&& ) = delete;
-  Lock& operator=(Lock&& ) = delete;
+  Lock(const Lock& other) = delete;
+  Lock& operator=(const Lock& other) = delete;
+  Lock(Lock&& other) = delete;
+  Lock& operator=(Lock&& other) = delete;
 
 private:
   std::mutex& mutex_;
