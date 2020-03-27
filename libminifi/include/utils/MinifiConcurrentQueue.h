@@ -97,7 +97,7 @@ class ConcurrentQueue {
 };
 
 template <typename T>
-class ConditionConcurrentQueue : public ConcurrentQueue<T> {
+class ConditionConcurrentQueue : private ConcurrentQueue<T> {
  public:
   ConditionConcurrentQueue(bool start = false) : ConcurrentQueue<T>(), running_{start} {};
   
@@ -105,7 +105,12 @@ class ConditionConcurrentQueue : public ConcurrentQueue<T> {
   ConditionConcurrentQueue& operator=(const ConditionConcurrentQueue& other) = delete;
   ConditionConcurrentQueue(ConditionConcurrentQueue&& other) = delete;
   ConditionConcurrentQueue& operator=(ConditionConcurrentQueue&& other) = delete;
-  
+
+  using ConcurrentQueue<T>::size;
+  using ConcurrentQueue<T>::empty;
+  using ConcurrentQueue<T>::clear;
+
+
   template <typename... Args>
   void enqueue(Args&&... args) {
     ConcurrentQueue<T>::enqueue(std::forward<Args>(args)...);

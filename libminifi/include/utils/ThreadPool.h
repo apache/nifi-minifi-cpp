@@ -305,6 +305,9 @@ class ThreadPool {
   void drain() {
     worker_queue_.stop();
     while (current_workers_ > 0) {
+      // The sleeping workers were waken up and stopped, but we have to wait 
+      // the ones that actually worked on something when the queue was stopped.
+      // Stopping the queue guarantees that they don't get any new task.
       std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
   }
