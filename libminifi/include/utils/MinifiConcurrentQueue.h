@@ -31,6 +31,7 @@ namespace utils {
 
 
 // Provides a queue API and guarantees no race conditions in case of multiple producers and consumers.
+// Guarantees elements to be dequeued in order of insertion
 template <typename T>
 class ConcurrentQueue {
  public:    
@@ -110,6 +111,8 @@ class ConcurrentQueue {
 
 
 // A ConcurrentQueue extended with a condition variable to be able to block and wait for incoming data
+// Stopping interrupts all consumers without a chance to consume remaining elements in the queue although elements can still be enqueued
+// Started means queued elements can be consumed/dequeued and dequeueWait* calls can block
 template <typename T>
 class ConditionConcurrentQueue : private ConcurrentQueue<T> {
  public:
@@ -159,12 +162,7 @@ class ConditionConcurrentQueue : private ConcurrentQueue<T> {
 
   void start() {
     std::unique_lock<std::mutex> lck(this->mtx_);
-    if (!running_) {
-      running_ = true;
-      if (!this->emptyImpl(lck)) {
-        cv_.notify_all();
-      }
-    }
+    running_ = true;
   }
   
   bool isRunning() const {

@@ -17,6 +17,7 @@
  */
 
 #include <chrono>
+#include <random>
 #include <string>
 #include <thread>
 #include <vector>
@@ -142,7 +143,6 @@ TEST_CASE("TestConditionConqurrentQueue::testQueueWithReAdd", "[TestConditionQue
 
   producer.join();
 
-  // Give some time for the consumer to loop over the queue
   std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
   queue.stop();
@@ -152,3 +152,50 @@ TEST_CASE("TestConditionConqurrentQueue::testQueueWithReAdd", "[TestConditionQue
   REQUIRE(utils::StringUtils::join("-", results) == "ba-dum-tss");
 }
 
+TEST_CASE("TestConruccentQueues::highLoad", "[TestConcurrentQueuesHighLoad]") {
+  std::random_device dev;
+  std::mt19937 rng(dev());
+  std::uniform_int_distribution<std::mt19937::result_type> dist(1, std::numeric_limits<int>::max());
+
+  std::vector<int> source(1000000);
+  std::vector<int> target;
+
+  generate(source.begin(), source.end(), [&rng, &dist](){ return dist(rng); });
+
+  utils::ConcurrentQueue<int> queue;
+  utils::ConditionConcurrentQueue<int> cqueue(true);
+
+  std::thread producer([&source, &queue]()  {
+    for (int i : source) { queue.enqueue(i); }
+  });
+
+  std::thread relay([&queue, &cqueue]() {
+    size_t cnt = 0;
+    while (cnt < 1000000) {
+      int i;
+      if (queue.tryDequeue(i)) {
+        cnt++;
+        cqueue.enqueue(i);
+      }
+    }
+  });
+
+  std::thread consumer([&cqueue, &target]() {
+    int i;
+    while (cqueue.dequeueWait(i)) {
+      target.push_back(i);
+    }
+  });
+
+  producer.join();
+  relay.join();
+
+  while (cqueue.size() > 0) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(0));
+  }
+
+  cqueue.stop();
+  consumer.join();
+
+  REQUIRE(source == target);
+}
