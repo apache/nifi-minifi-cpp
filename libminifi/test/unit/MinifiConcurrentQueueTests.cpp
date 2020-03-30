@@ -26,7 +26,7 @@
 #include "utils/MinifiConcurrentQueue.h"
 #include "utils/StringUtils.h"
 
-using namespace org::apache::nifi::minifi::utils;
+namespace utils = org::apache::nifi::minifi::utils;
 
 TEST_CASE("TestConqurrentQueue::testQueue", "[TestQueue]") {
   utils::ConcurrentQueue<std::string> queue;
@@ -72,7 +72,7 @@ TEST_CASE("TestConditionConqurrentQueue::testQueue", "[TestConditionQueue]") {
 
   std::thread consumer([&queue, &results]() {
     std::string s;
-    while (queue.dequeue(s)) {
+    while (queue.dequeueWait(s)) {
       results.push_back(s);
     }
   });
@@ -94,12 +94,12 @@ TEST_CASE("TestConqurrentQueue::testQueueWithReAdd", "[TestQueueWithReAdd]") {
   std::set<std::string> results;
 
   std::thread producer([&queue]() {
-      queue.enqueue("ba");
-      std::this_thread::sleep_for(std::chrono::milliseconds(3));
-      queue.enqueue("dum");
-      std::this_thread::sleep_for(std::chrono::milliseconds(3));
-      queue.enqueue("tss");
-    });
+    queue.enqueue("ba");
+    std::this_thread::sleep_for(std::chrono::milliseconds(3));
+    queue.enqueue("dum");
+    std::this_thread::sleep_for(std::chrono::milliseconds(3));
+    queue.enqueue("tss");
+  });
 
   std::thread consumer([&queue, &results]() {
     while (results.size() < 3) {
@@ -114,10 +114,6 @@ TEST_CASE("TestConqurrentQueue::testQueueWithReAdd", "[TestQueueWithReAdd]") {
   });
 
   producer.join();
-
-  // Give some time for the consumer to loop over the queue
-  std::this_thread::sleep_for(std::chrono::milliseconds(10));
-
   consumer.join();
 
   REQUIRE(utils::StringUtils::join("-", results) == "ba-dum-tss");
@@ -138,7 +134,7 @@ TEST_CASE("TestConditionConqurrentQueue::testQueueWithReAdd", "[TestConditionQue
 
   std::thread consumer([&queue, &results]() {
     std::string s;
-    while  (queue.dequeue(s)) {
+    while (queue.dequeueWait(s)) {
       results.insert(s);
       queue.enqueue(std::move(s));
     }

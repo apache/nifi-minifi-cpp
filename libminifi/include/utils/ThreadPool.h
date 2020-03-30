@@ -338,7 +338,7 @@ class ThreadPool {
 // worker queue of worker objects
   ConditionConcurrentQueue<Worker<T>> worker_queue_;
   std::priority_queue<Worker<T>, std::vector<Worker<T>>, DelayedTaskComparator<T>> delayed_worker_queue_;
-// mutex to  protect task status and delayed queue   
+// mutex to  protect task status and delayed queue 
   std::mutex worker_queue_mutex_;
 // notification for new delayed tasks that's before the current ones
   std::condition_variable delayed_task_available_;
