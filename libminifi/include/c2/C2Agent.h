@@ -167,8 +167,6 @@ class C2Agent : public state::UpdateController {
    */
   C2Payload prepareConfigurationOptions(const C2ContentResponse &resp) const;
 
-  void execute(const std::function<state::Update()>& function);
-
   std::timed_mutex metrics_mutex_;
   std::map<std::string, std::shared_ptr<state::response::ResponseNode>> metrics_map_;
 
