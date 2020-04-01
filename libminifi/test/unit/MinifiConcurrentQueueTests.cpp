@@ -80,6 +80,8 @@ TEST_CASE("TestConditionConqurrentQueue::testQueue", "[TestConditionQueue]") {
 
   producer.join();
 
+  std::this_thread::sleep_for(std::chrono::milliseconds(10));
+
   queue.stop();
 
   consumer.join();
