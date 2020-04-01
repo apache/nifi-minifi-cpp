@@ -167,7 +167,7 @@ class TraceResolver {
   }
 
   std::unique_ptr<Lock> lock() {
-    return std::unique_ptr<Lock>(new Lock(mutex_));
+    return std::unique_ptr<Lock>(new Lock(trace_mutex_));
   }
 
   void notifyPullTracesDone(std::unique_ptr<Lock>& lock) {
@@ -178,10 +178,12 @@ class TraceResolver {
 
  private:
   TraceResolver() = default;
+
   BackTrace trace_;
+  mutable std::mutex mutex_;
 
   bool pull_traces_{false};
-  mutable std::mutex mutex_;
+  mutable std::mutex trace_mutex_;
   std::condition_variable trace_condition_;
 };
 
