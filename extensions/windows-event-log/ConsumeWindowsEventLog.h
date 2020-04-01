@@ -80,6 +80,7 @@ public:
   static core::Property OutputFormat;
   static core::Property BatchCommitSize;
   static core::Property BookmarkRootDirectory;
+  static core::Property ProcessOldEvents;
 
   //! Supported Relationships
   static core::Relationship Success;

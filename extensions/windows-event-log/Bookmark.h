@@ -19,7 +19,7 @@ namespace processors {
 class Bookmark
 {
 public:
-  Bookmark(const std::wstring& channel, const std::wstring& query, const std::string& bookmarkRootDir, const std::string& uuid, std::shared_ptr<logging::Logger> logger);
+  Bookmark(const std::wstring& channel, const std::wstring& query, const std::string& bookmarkRootDir, const std::string& uuid, bool processOldEvents, std::shared_ptr<logging::Logger> logger);
   ~Bookmark();
   operator bool() const;
   EVT_HANDLE getBookmarkHandleFromXML();

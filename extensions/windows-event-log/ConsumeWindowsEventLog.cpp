@@ -149,6 +149,13 @@ core::Property ConsumeWindowsEventLog::BookmarkRootDirectory(
   withDescription("Directory which contains processor state data.")->
   build());
 
+core::Property ConsumeWindowsEventLog::ProcessOldEvents(
+  core::PropertyBuilder::createProperty("Process Old Events")->
+  isRequired(true)->
+  withDefaultValue<bool>(false)->
+  withDescription("This property defines if old events (which are created before first time server is started) should be processed.")->
+  build());
+
 core::Relationship ConsumeWindowsEventLog::Success("success", "Relationship for successfully consumed events.");
 
 ConsumeWindowsEventLog::ConsumeWindowsEventLog(const std::string& name, utils::Identifier uuid)
@@ -173,9 +180,10 @@ ConsumeWindowsEventLog::~ConsumeWindowsEventLog() {
 
 void ConsumeWindowsEventLog::initialize() {
   //! Set the supported properties
-  setSupportedProperties(
-    {Channel, Query, MaxBufferSize, InactiveDurationToReconnect, IdentifierMatcher, IdentifierFunction, ResolveAsAttributes, EventHeaderDelimiter, EventHeader, OutputFormat, BatchCommitSize, BookmarkRootDirectory}
-  );
+  setSupportedProperties({
+     Channel, Query, MaxBufferSize, InactiveDurationToReconnect, IdentifierMatcher, IdentifierFunction, ResolveAsAttributes, 
+     EventHeaderDelimiter, EventHeader, OutputFormat, BatchCommitSize, BookmarkRootDirectory, ProcessOldEvents
+  });
 
   //! Set the supported relationships
   setSupportedRelationships({Success});
@@ -245,6 +253,9 @@ void ConsumeWindowsEventLog::onSchedule(const std::shared_ptr<core::ProcessConte
   context->getProperty(Query.getName(), query);
   wstrQuery_ = std::wstring(query.begin(), query.end());
 
+  bool processOldEvents{};
+  context->getProperty(ProcessOldEvents.getName(), processOldEvents);
+
   if (!pBookmark_) {
     std::string bookmarkDir;
     context->getProperty(BookmarkRootDirectory.getName(), bookmarkDir);
@@ -252,7 +263,7 @@ void ConsumeWindowsEventLog::onSchedule(const std::shared_ptr<core::ProcessConte
       logger_->log_error("State Directory is empty");
       return;
     }
-    pBookmark_ = std::make_unique<Bookmark>(wstrChannel_, wstrQuery_, bookmarkDir, getUUIDStr(), logger_);
+    pBookmark_ = std::make_unique<Bookmark>(wstrChannel_, wstrQuery_, bookmarkDir, getUUIDStr(), processOldEvents, logger_);
     if (!*pBookmark_) {
       pBookmark_.reset();
       return;
