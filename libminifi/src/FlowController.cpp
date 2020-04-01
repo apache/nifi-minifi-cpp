@@ -1009,9 +1009,7 @@ uint64_t FlowController::getUptime() {
 }
 
 std::vector<BackTrace> FlowController::getTraces() {
-  std::vector<BackTrace> traces;
-  auto tp_traces = thread_pool_.getTraces();
-  traces.insert(traces.end(), std::make_move_iterator(tp_traces.begin()), std::make_move_iterator(tp_traces.end()));
+  std::vector<BackTrace> traces{thread_pool_.getTraces()};
   auto prov_repo_trace = provenance_repo_->getTraces();
   traces.emplace_back(std::move(prov_repo_trace));
   auto flow_repo_trace = flow_file_repo_->getTraces();
