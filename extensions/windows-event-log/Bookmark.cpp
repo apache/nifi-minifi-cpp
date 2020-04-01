@@ -11,7 +11,7 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-Bookmark::Bookmark(const std::wstring& channel, const std::wstring& query, const std::string& bookmarkRootDir, const std::string& uuid, std::shared_ptr<logging::Logger> logger)
+Bookmark::Bookmark(const std::wstring& channel, const std::wstring& query, const std::string& bookmarkRootDir, const std::string& uuid, bool processOldEvents, std::shared_ptr<logging::Logger> logger)
   :logger_(logger) {
   if (!createUUIDDir(bookmarkRootDir, uuid, filePath_))
     return;
@@ -48,7 +48,7 @@ Bookmark::Bookmark(const std::wstring& channel, const std::wstring& query, const
   }
   const utils::ScopeGuard guard_hEventResults([hEventResults]() { EvtClose(hEventResults); });
 
-  if (!EvtSeek(hEventResults, 0, 0, 0, EvtSeekRelativeToLast)) {
+  if (!EvtSeek(hEventResults, 0, 0, 0, processOldEvents? EvtSeekRelativeToFirst : EvtSeekRelativeToLast)) {
     LOG_LAST_ERROR(EvtSeek);
     return;
   }
