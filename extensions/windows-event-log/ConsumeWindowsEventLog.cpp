@@ -152,8 +152,7 @@ core::Property ConsumeWindowsEventLog::BookmarkRootDirectory(
 core::Property ConsumeWindowsEventLog::ProcessOldEvents(
   core::PropertyBuilder::createProperty("Process Old Events")->
   isRequired(true)->
-  withAllowableValues<std::string>({ "true", "false" })->
-  withDefaultValue("false")->
+  withDefaultValue<bool>(false)->
   withDescription("This property defines if old events (which are created before first time server is started) should be processed.")->
   build());
 
