@@ -27,13 +27,13 @@
 
 TEST_CASE("Write Claim", "[TestDBCR1]") {
   TestController testController;
-  char format[] = "/tmp/testRepo.XXXXXX";
-auto dir = testController.createTempDirectory(format);
+  char format[] = "/var/tmp/testRepo.XXXXXX";
+  auto dir = testController.createTempDirectory(format);
   auto content_repo = std::make_shared<core::repository::DatabaseContentRepository>();
 
   auto configuration = std::make_shared<org::apache::nifi::minifi::Configure>();
   configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, dir);
-  REQUIRE(true == content_repo->initialize(configuration));
+  REQUIRE(content_repo->initialize(configuration));
 
 
   auto claim = std::make_shared<minifi::ResourceClaim>(content_repo);
@@ -51,7 +51,7 @@ auto dir = testController.createTempDirectory(format);
 
   configuration = std::make_shared<org::apache::nifi::minifi::Configure>();
   configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, dir);
-  REQUIRE(true == content_repo->initialize(configuration));
+  REQUIRE(content_repo->initialize(configuration));
 
   auto read_stream = content_repo->read(claim);
 
@@ -68,13 +68,13 @@ auto dir = testController.createTempDirectory(format);
 
 TEST_CASE("Delete Claim", "[TestDBCR2]") {
   TestController testController;
-  char format[] = "/tmp/testRepo.XXXXXX";
-auto dir = testController.createTempDirectory(format);
+  char format[] = "/var/tmp/testRepo.XXXXXX";
+  auto dir = testController.createTempDirectory(format);
   auto content_repo = std::make_shared<core::repository::DatabaseContentRepository>();
 
   auto configuration = std::make_shared<org::apache::nifi::minifi::Configure>();
   configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, dir);
-  REQUIRE(true == content_repo->initialize(configuration));
+  REQUIRE(content_repo->initialize(configuration));
 
 
   auto claim = std::make_shared<minifi::ResourceClaim>(content_repo);
@@ -93,7 +93,7 @@ auto dir = testController.createTempDirectory(format);
 
   configuration = std::make_shared<org::apache::nifi::minifi::Configure>();
   configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, dir);
-  REQUIRE(true == content_repo->initialize(configuration));
+  REQUIRE(content_repo->initialize(configuration));
 
   content_repo->remove(claim);
 
@@ -107,13 +107,13 @@ auto dir = testController.createTempDirectory(format);
 
 TEST_CASE("Test Empty Claim", "[TestDBCR3]") {
   TestController testController;
-  char format[] = "/tmp/testRepo.XXXXXX";
-auto dir = testController.createTempDirectory(format);
+  char format[] = "/var/tmp/testRepo.XXXXXX";
+  auto dir = testController.createTempDirectory(format);
   auto content_repo = std::make_shared<core::repository::DatabaseContentRepository>();
 
   auto configuration = std::make_shared<org::apache::nifi::minifi::Configure>();
   configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, dir);
-  REQUIRE(true == content_repo->initialize(configuration));
+  REQUIRE(content_repo->initialize(configuration));
 
   auto claim = std::make_shared<minifi::ResourceClaim>(content_repo);
   auto stream = content_repo->write(claim);
@@ -131,7 +131,7 @@ auto dir = testController.createTempDirectory(format);
 
   configuration = std::make_shared<org::apache::nifi::minifi::Configure>();
   configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, dir);
-  REQUIRE(true == content_repo->initialize(configuration));
+  REQUIRE(content_repo->initialize(configuration));
 
   auto read_stream = content_repo->read(claim);
 
@@ -143,13 +143,13 @@ auto dir = testController.createTempDirectory(format);
 
 TEST_CASE("Test Null Claim", "[TestDBCR4]") {
   TestController testController;
-  char format[] = "/tmp/testRepo.XXXXXX";
-auto dir = testController.createTempDirectory(format);
+  char format[] = "/var/tmp/testRepo.XXXXXX";
+  auto dir = testController.createTempDirectory(format);
   auto content_repo = std::make_shared<core::repository::DatabaseContentRepository>();
 
   auto configuration = std::make_shared<org::apache::nifi::minifi::Configure>();
   configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, dir);
-  REQUIRE(true == content_repo->initialize(configuration));
+  REQUIRE(content_repo->initialize(configuration));
 
 
   auto claim = std::make_shared<minifi::ResourceClaim>(content_repo);
@@ -164,13 +164,13 @@ auto dir = testController.createTempDirectory(format);
 
 TEST_CASE("Delete Null Claim", "[TestDBCR5]") {
   TestController testController;
-  char format[] = "/tmp/testRepo.XXXXXX";
-auto dir = testController.createTempDirectory(format);
+  char format[] = "/var/tmp/testRepo.XXXXXX";
+  auto dir = testController.createTempDirectory(format);
   auto content_repo = std::make_shared<core::repository::DatabaseContentRepository>();
 
   auto configuration = std::make_shared<org::apache::nifi::minifi::Configure>();
   configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, dir);
-  REQUIRE(true == content_repo->initialize(configuration));
+  REQUIRE(content_repo->initialize(configuration));
 
   auto claim = std::make_shared<minifi::ResourceClaim>(content_repo);
   auto stream = content_repo->write(claim);
@@ -188,9 +188,9 @@ auto dir = testController.createTempDirectory(format);
 
   configuration = std::make_shared<org::apache::nifi::minifi::Configure>();
   configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, dir);
-  REQUIRE(true == content_repo->initialize(configuration));
+  REQUIRE(content_repo->initialize(configuration));
 
-  REQUIRE(false == content_repo->remove(nullptr));
+  REQUIRE(!content_repo->remove(nullptr));
 
   auto read_stream = content_repo->read(claim);
 
@@ -204,13 +204,13 @@ auto dir = testController.createTempDirectory(format);
 
 TEST_CASE("Delete NonExistent Claim", "[TestDBCR5]") {
   TestController testController;
-  char format[] = "/tmp/testRepo.XXXXXX";
-auto dir = testController.createTempDirectory(format);
+  char format[] = "/var/tmp/testRepo.XXXXXX";
+  auto dir = testController.createTempDirectory(format);
   auto content_repo = std::make_shared<core::repository::DatabaseContentRepository>();
 
   auto configuration = std::make_shared<org::apache::nifi::minifi::Configure>();
   configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, dir);
-  REQUIRE(true == content_repo->initialize(configuration));
+  REQUIRE(content_repo->initialize(configuration));
 
   auto claim = std::make_shared<minifi::ResourceClaim>(content_repo);
   auto claim2 = std::make_shared<minifi::ResourceClaim>(content_repo);
@@ -229,10 +229,10 @@ auto dir = testController.createTempDirectory(format);
 
   configuration = std::make_shared<org::apache::nifi::minifi::Configure>();
   configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, dir);
-  REQUIRE(true == content_repo->initialize(configuration));
+  REQUIRE(content_repo->initialize(configuration));
 
   // we won't complain if it does not exist
-  REQUIRE(true == content_repo->remove(claim2));
+  REQUIRE(content_repo->remove(claim2));
 
   auto read_stream = content_repo->read(claim);
 
@@ -246,13 +246,13 @@ auto dir = testController.createTempDirectory(format);
 
 TEST_CASE("Delete Remove Count Claim", "[TestDBCR6]") {
   TestController testController;
-  char format[] = "/tmp/testRepo.XXXXXX";
-auto dir = testController.createTempDirectory(format);
+  char format[] = "/var/tmp/testRepo.XXXXXX";
+  auto dir = testController.createTempDirectory(format);
   auto content_repo = std::make_shared<core::repository::DatabaseContentRepository>();
 
   auto configuration = std::make_shared<org::apache::nifi::minifi::Configure>();
   configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, dir);
-  REQUIRE(true == content_repo->initialize(configuration));
+  REQUIRE(content_repo->initialize(configuration));
 
   auto claim = std::make_shared<minifi::ResourceClaim>(content_repo);
   auto claim2 = std::make_shared<minifi::ResourceClaim>(content_repo);
@@ -271,7 +271,7 @@ auto dir = testController.createTempDirectory(format);
 
   configuration = std::make_shared<org::apache::nifi::minifi::Configure>();
   configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, dir);
-  REQUIRE(true == content_repo->initialize(configuration));
+  REQUIRE(content_repo->initialize(configuration));
 
   // increment twice. verify we have 2 for the stream count
   // and then test the removal and verify that the claim was removed by virtue of obtaining
@@ -281,7 +281,7 @@ auto dir = testController.createTempDirectory(format);
   REQUIRE(content_repo->getStreamCount(claim2) == 2);
   content_repo->decrementStreamCount(claim2);
   content_repo->decrementStreamCount(claim2);
-  REQUIRE(true == content_repo->removeIfOrphaned(claim2));
+  REQUIRE(content_repo->removeIfOrphaned(claim2));
   REQUIRE(content_repo->getStreamCount(claim2) == 0);
   auto read_stream = content_repo->read(claim);
 

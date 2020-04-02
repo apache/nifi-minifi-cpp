@@ -43,7 +43,7 @@ TEST_CASE("Test Repo Empty Value Attribute", "[TestFFR1]") {
   LogTestController::getInstance().setDebug<core::repository::FileSystemRepository>();
   LogTestController::getInstance().setDebug<core::repository::FlowFileRepository>();
   TestController testController;
-  char format[] = "/tmp/testRepo.XXXXXX";
+  char format[] = "/var/tmp/testRepo.XXXXXX";
   auto dir = testController.createTempDirectory(format);
   std::shared_ptr<core::repository::FlowFileRepository> repository = std::make_shared<core::repository::FlowFileRepository>("ff", dir, 0, 0, 1);
 
@@ -66,7 +66,7 @@ TEST_CASE("Test Repo Empty Key Attribute ", "[TestFFR2]") {
   LogTestController::getInstance().setDebug<core::repository::FileSystemRepository>();
   LogTestController::getInstance().setDebug<core::repository::FlowFileRepository>();
   TestController testController;
-  char format[] = "/tmp/testRepo.XXXXXX";
+  char format[] = "/var/tmp/testRepo.XXXXXX";
   auto dir = testController.createTempDirectory(format);
   std::shared_ptr<core::repository::FlowFileRepository> repository = std::make_shared<core::repository::FlowFileRepository>("ff", dir, 0, 0, 1);
 
@@ -90,7 +90,7 @@ TEST_CASE("Test Repo Key Attribute Verify ", "[TestFFR3]") {
   LogTestController::getInstance().setDebug<core::repository::FileSystemRepository>();
   LogTestController::getInstance().setDebug<core::repository::FlowFileRepository>();
   TestController testController;
-  char format[] = "/tmp/testRepo.XXXXXX";
+  char format[] = "/var/tmp/testRepo.XXXXXX";
   auto dir = testController.createTempDirectory(format);
   std::shared_ptr<core::repository::FlowFileRepository> repository = std::make_shared<core::repository::FlowFileRepository>("ff", dir, 0, 0, 1);
 
@@ -113,30 +113,30 @@ TEST_CASE("Test Repo Key Attribute Verify ", "[TestFFR3]") {
 
   record.addAttribute("", "sdgsdg");
 
-  REQUIRE(true == record.Serialize());
+  REQUIRE(record.Serialize());
 
   repository->stop();
 
   record2.DeSerialize(uuid);
 
   std::string value;
-  REQUIRE(true == record2.getAttribute("", value));
+  REQUIRE(record2.getAttribute("", value));
 
   REQUIRE("hasdgasdgjsdgasgdsgsadaskgasd2" == value);
 
-  REQUIRE(false == record2.getAttribute("key", value));
-  REQUIRE(true == record2.getAttribute("keyA", value));
+  REQUIRE(!record2.getAttribute("key", value));
+  REQUIRE(record2.getAttribute("keyA", value));
   REQUIRE("hasdgasdgjsdgasgdsgsadaskgasd" == value);
 
-  REQUIRE(true == record2.getAttribute("keyB", value));
-  REQUIRE("" == value);
+  REQUIRE(record2.getAttribute("keyB", value));
+  REQUIRE(value.empty());
 
   utils::file::FileUtils::delete_dir(FLOWFILE_CHECKPOINT_DIRECTORY, true);
 }
 
 TEST_CASE("Test Delete Content ", "[TestFFR4]") {
   TestController testController;
-  char format[] = "/tmp/testRepo.XXXXXX";
+  char format[] = "/var/tmp/testRepo.XXXXXX";
   LogTestController::getInstance().setDebug<core::ContentRepository>();
   LogTestController::getInstance().setDebug<core::repository::FileSystemRepository>();
   LogTestController::getInstance().setDebug<core::repository::FlowFileRepository>();
@@ -168,7 +168,7 @@ TEST_CASE("Test Delete Content ", "[TestFFR4]") {
 
   record.addAttribute("", "hasdgasdgjsdgasgdsgsadaskgasd");
 
-  REQUIRE(true == record.Serialize());
+  REQUIRE(record.Serialize());
 
   claim->decreaseFlowFileRecordOwnedCount();
 
@@ -181,7 +181,7 @@ TEST_CASE("Test Delete Content ", "[TestFFR4]") {
   repository->stop();
 
   std::ifstream fileopen(ss.str(), std::ios::in);
-  REQUIRE(false == fileopen.good());
+  REQUIRE(!fileopen.good());
 
   utils::file::FileUtils::delete_dir(FLOWFILE_CHECKPOINT_DIRECTORY, true);
 
@@ -191,7 +191,7 @@ TEST_CASE("Test Delete Content ", "[TestFFR4]") {
 TEST_CASE("Test Validate Checkpoint ", "[TestFFR5]") {
   TestController testController;
   utils::file::FileUtils::delete_dir(FLOWFILE_CHECKPOINT_DIRECTORY, true);
-  char format[] = "/tmp/testRepo.XXXXXX";
+  char format[] = "/var/tmp/testRepo.XXXXXX";
   LogTestController::getInstance().setDebug<core::ContentRepository>();
   LogTestController::getInstance().setTrace<core::repository::FileSystemRepository>();
   LogTestController::getInstance().setTrace<minifi::ResourceClaim>();
@@ -224,7 +224,7 @@ TEST_CASE("Test Validate Checkpoint ", "[TestFFR5]") {
 
     record.addAttribute("", "hasdgasdgjsdgasgdsgsadaskgasd");
 
-    REQUIRE(true == record.Serialize());
+    REQUIRE(record.Serialize());
 
     repository->flush();
 
@@ -243,7 +243,7 @@ TEST_CASE("Test Validate Checkpoint ", "[TestFFR5]") {
   }
 
   std::ifstream fileopen(ss.str(), std::ios::in);
-  REQUIRE(true == fileopen.fail());
+  REQUIRE(fileopen.fail());
 
   utils::file::FileUtils::delete_dir(FLOWFILE_CHECKPOINT_DIRECTORY, true);
 
