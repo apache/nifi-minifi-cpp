@@ -32,6 +32,11 @@ namespace nifi {
 namespace minifi {
 namespace io {
 
+enum class ZlibCompressionFormat : uint8_t {
+  ZLIB,
+  GZIP
+};
+
 enum class ZlibStreamState : uint8_t {
   UNINITIALIZED,
   INITIALIZED,
@@ -61,8 +66,8 @@ class ZlibBaseStream : public BaseStream {
 
 class ZlibCompressStream : public ZlibBaseStream {
  public:
-  ZlibCompressStream(bool gzip = true, int level = Z_DEFAULT_COMPRESSION);
-  ZlibCompressStream(DataStream* other, bool gzip = true, int level = Z_DEFAULT_COMPRESSION);
+  explicit ZlibCompressStream(ZlibCompressionFormat format = ZlibCompressionFormat::GZIP, int level = Z_DEFAULT_COMPRESSION);
+  explicit ZlibCompressStream(DataStream* other, ZlibCompressionFormat format = ZlibCompressionFormat::GZIP, int level = Z_DEFAULT_COMPRESSION);
 
   ZlibCompressStream(const ZlibCompressStream&) = delete;
   ZlibCompressStream& operator=(const ZlibCompressStream&) = delete;
@@ -76,13 +81,13 @@ class ZlibCompressStream : public ZlibBaseStream {
   void closeStream() override;
 
  private:
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<logging::Logger> logger_{logging::LoggerFactory<ZlibCompressStream>::getLogger()};
 };
 
 class ZlibDecompressStream : public ZlibBaseStream {
  public:
-  ZlibDecompressStream(bool gzip = true);
-  ZlibDecompressStream(DataStream* other, bool gzip = true);
+  explicit ZlibDecompressStream(ZlibCompressionFormat format = ZlibCompressionFormat::GZIP);
+  explicit ZlibDecompressStream(DataStream* other, ZlibCompressionFormat format = ZlibCompressionFormat::GZIP);
 
   ZlibDecompressStream(const ZlibDecompressStream&) = delete;
   ZlibDecompressStream& operator=(const ZlibDecompressStream&) = delete;
@@ -94,7 +99,7 @@ class ZlibDecompressStream : public ZlibBaseStream {
   int writeData(uint8_t *value, int size) override;
 
  private:
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<logging::Logger> logger_{logging::LoggerFactory<ZlibDecompressStream>::getLogger()};
 };
 
 } /* namespace io */

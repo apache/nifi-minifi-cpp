@@ -357,8 +357,6 @@ public:
     {
     }
 
-    ~GzipWriteCallback() override = default;
-
     std::shared_ptr<logging::Logger> logger_;
     std::string compress_mode_;
     int64_t compress_level_;
@@ -400,9 +398,9 @@ public:
 
       std::shared_ptr<io::ZlibBaseStream> filterStream;
       if (compress_mode_ == MODE_COMPRESS) {
-        filterStream = std::make_shared<io::ZlibCompressStream>(outputStream.get(), true /*gzip*/, compress_level_);
+        filterStream = std::make_shared<io::ZlibCompressStream>(outputStream.get(), io::ZlibCompressionFormat::GZIP, compress_level_);
       } else {
-        filterStream = std::make_shared<io::ZlibDecompressStream>(outputStream.get(), true /*gzip*/);
+        filterStream = std::make_shared<io::ZlibDecompressStream>(outputStream.get(), io::ZlibCompressionFormat::GZIP);
       }
       ReadCallback readCb(*this, filterStream);
       session_->read(flow_, &readCb);

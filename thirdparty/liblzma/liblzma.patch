@@ -1,3 +1,7 @@
+We can't run the configure script on Windows, and the only thing lzma provides
+for Windows are msbuild files which do not integrate well into our CMake build system,
+so we create a Windows-specific CMakeLists.txt for the project.
+
 diff -rupN orig/CMakeLists.txt patched/CMakeLists.txt
 --- orig/CMakeLists.txt	1970-01-01 01:00:00.000000000 +0100
 +++ patched/CMakeLists.txt	2020-03-31 21:52:39.000000000 +0200

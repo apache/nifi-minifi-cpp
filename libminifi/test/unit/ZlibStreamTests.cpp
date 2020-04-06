@@ -33,13 +33,13 @@ TEST_CASE("gzip compression and decompression", "[basic]") {
   SECTION("Empty") {
   }
   SECTION("Simple content in one write") {
-    REQUIRE(-1 != compressStream.write(reinterpret_cast<uint8_t*>(const_cast<char*>("foobar")), strlen("foobar")));
+    REQUIRE(strlen("foobar") == compressStream.write(reinterpret_cast<uint8_t*>(const_cast<char*>("foobar")), strlen("foobar")));
     original += "foobar";
   }
   SECTION("Simple content in two writes") {
-    REQUIRE(-1 != compressStream.write(reinterpret_cast<uint8_t*>(const_cast<char*>("foo")), strlen("foo")));
+    REQUIRE(strlen("foo") == compressStream.write(reinterpret_cast<uint8_t*>(const_cast<char*>("foo")), strlen("foo")));
     original += "foo";
-    REQUIRE(-1 != compressStream.write(reinterpret_cast<uint8_t*>(const_cast<char*>("bar")), strlen("bar")));
+    REQUIRE(strlen("bar") == compressStream.write(reinterpret_cast<uint8_t*>(const_cast<char*>("bar")), strlen("bar")));
     original += "bar";
   }
   SECTION("Large data") {
@@ -61,7 +61,7 @@ TEST_CASE("gzip compression and decompression", "[basic]") {
     std::cerr << utils::StringUtils::to_hex(compressStream.getBuffer(), compressStream.getSize()) << std::endl;
   }
 
-  /* Decompresion */
+  /* Decompression */
   io::ZlibDecompressStream decompressStream;
 
   decompressStream.writeData(const_cast<uint8_t*>(compressStream.getBuffer()), compressStream.getSize());
@@ -78,13 +78,13 @@ TEST_CASE("gzip compression and decompression pipeline", "[basic]") {
   SECTION("Empty") {
   }
   SECTION("Simple content in one write") {
-    REQUIRE(-1 != compressStream.writeData(reinterpret_cast<uint8_t*>(const_cast<char*>("foobar")), strlen("foobar")));
+    REQUIRE(strlen("foobar") == compressStream.writeData(reinterpret_cast<uint8_t*>(const_cast<char*>("foobar")), strlen("foobar")));
     original += "foobar";
   }
   SECTION("Simple content in two writes") {
-    REQUIRE(-1 != compressStream.writeData(reinterpret_cast<uint8_t*>(const_cast<char*>("foo")), strlen("foo")));
+    REQUIRE(strlen("foo") == compressStream.writeData(reinterpret_cast<uint8_t*>(const_cast<char*>("foo")), strlen("foo")));
     original += "foo";
-    REQUIRE(-1 != compressStream.writeData(reinterpret_cast<uint8_t*>(const_cast<char*>("bar")), strlen("bar")));
+    REQUIRE(strlen("bar") == compressStream.writeData(reinterpret_cast<uint8_t*>(const_cast<char*>("bar")), strlen("bar")));
     original += "bar";
   }
   SECTION("Large data") {
@@ -94,7 +94,7 @@ TEST_CASE("gzip compression and decompression pipeline", "[basic]") {
     for (size_t i = 0U; i < 1024U; i++) {
       std::generate(buf.begin(), buf.end(), [&](){return dist(gen);});
       original += std::string(reinterpret_cast<const char*>(buf.data()), buf.size());
-      REQUIRE(-1 != compressStream.writeData(buf.data(), buf.size()));
+      REQUIRE(buf.size() == compressStream.writeData(buf.data(), buf.size()));
     }
   }
 

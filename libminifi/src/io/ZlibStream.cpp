@@ -45,18 +45,17 @@ bool ZlibBaseStream::isFinished() const {
 
 /* ZlibCompressStream */
 
-ZlibCompressStream::ZlibCompressStream(bool gzip, int level)
-  : ZlibCompressStream(this, gzip, level) {
+ZlibCompressStream::ZlibCompressStream(ZlibCompressionFormat format, int level)
+  : ZlibCompressStream(this, format, level) {
 }
 
-ZlibCompressStream::ZlibCompressStream(DataStream* other, bool gzip, int level)
-  : ZlibBaseStream(other)
-  , logger_(logging::LoggerFactory<ZlibCompressStream>::getLogger()) {
+ZlibCompressStream::ZlibCompressStream(DataStream* other, ZlibCompressionFormat format, int level)
+  : ZlibBaseStream(other) {
   int ret = deflateInit2(
       &strm_,
       level,
       Z_DEFLATED /* method */,
-      15 + (gzip ? 16 : 0) /* windowBits */,
+      15 + (format == ZlibCompressionFormat::GZIP ? 16 : 0) /* windowBits */,
       8 /* memLevel */,
       Z_DEFAULT_STRATEGY /* strategy */);
   if (ret != Z_OK) {
@@ -127,14 +126,13 @@ void ZlibCompressStream::closeStream() {
 
 /* ZlibDecompressStream */
 
-ZlibDecompressStream::ZlibDecompressStream(bool gzip)
-  : ZlibDecompressStream(this, gzip) {
+ZlibDecompressStream::ZlibDecompressStream(ZlibCompressionFormat format)
+  : ZlibDecompressStream(this, format) {
 }
 
-ZlibDecompressStream::ZlibDecompressStream(DataStream* other, bool gzip)
-    : ZlibBaseStream(other)
-    , logger_(logging::LoggerFactory<ZlibDecompressStream>::getLogger()) {
-  int ret = inflateInit2(&strm_, 15 + (gzip ? 16 : 0) /* windowBits */);
+ZlibDecompressStream::ZlibDecompressStream(DataStream* other, ZlibCompressionFormat format)
+    : ZlibBaseStream(other) {
+  int ret = inflateInit2(&strm_, 15 + (format == ZlibCompressionFormat::GZIP ? 16 : 0) /* windowBits */);
   if (ret != Z_OK) {
     logger_->log_error("Failed to initialize z_stream with inflateInit2, error code: %d", ret);
     throw Exception(ExceptionType::GENERAL_EXCEPTION, "zlib inflateInit2 failed");
