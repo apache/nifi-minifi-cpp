@@ -120,6 +120,15 @@ core::Relationship PutSFTP::Success("success", "FlowFiles that are successfully 
 core::Relationship PutSFTP::Reject("reject", "FlowFiles that were rejected by the destination system");
 core::Relationship PutSFTP::Failure("failure", "FlowFiles that failed to send to the remote system; failure is usually looped back to this processor");
 
+constexpr char const* PutSFTP::CONFLICT_RESOLUTION_REPLACE;
+constexpr char const* PutSFTP::CONFLICT_RESOLUTION_IGNORE;
+constexpr char const* PutSFTP::CONFLICT_RESOLUTION_RENAME;
+constexpr char const* PutSFTP::CONFLICT_RESOLUTION_REJECT;
+constexpr char const* PutSFTP::CONFLICT_RESOLUTION_FAIL;
+constexpr char const* PutSFTP::CONFLICT_RESOLUTION_NONE;
+
+constexpr char const* PutSFTP::ProcessorName;
+
 void PutSFTP::initialize() {
   logger_->log_trace("Initializing PutSFTP");
 
