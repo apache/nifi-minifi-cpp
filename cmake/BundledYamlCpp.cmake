@@ -18,7 +18,11 @@
 function(use_bundled_yamlcpp SOURCE_DIR BINARY_DIR)
     # Define byproducts
     if (WIN32)
-        set(BYPRODUCT "lib/libyaml-cppmd.lib")
+        if ("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
+            set(BYPRODUCT "lib/libyaml-cppmdd.lib")
+        else()
+            set(BYPRODUCT "lib/libyaml-cppmd.lib")
+        endif()
     else()
         set(BYPRODUCT "lib/libyaml-cpp.a")
     endif()
