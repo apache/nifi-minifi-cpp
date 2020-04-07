@@ -46,19 +46,17 @@ enum class ZlibStreamState : uint8_t {
 
 class ZlibBaseStream : public BaseStream {
  public:
+  virtual bool isFinished() const;
+
+ protected:
   ZlibBaseStream();
-  ZlibBaseStream(DataStream* other);
+  explicit ZlibBaseStream(DataStream* other);
 
   ZlibBaseStream(const ZlibBaseStream&) = delete;
   ZlibBaseStream& operator=(const ZlibBaseStream&) = delete;
   ZlibBaseStream(ZlibBaseStream&& other) = delete;
   ZlibBaseStream& operator=(ZlibBaseStream&& other) = delete;
 
-  ~ZlibBaseStream() override = default;
-
-  virtual bool isFinished() const;
-
- protected:
   ZlibStreamState state_{ZlibStreamState::UNINITIALIZED};
   z_stream strm_{};
   std::vector<uint8_t> outputBuffer_;
