@@ -232,6 +232,18 @@ endif()
 include(BundledYamlCpp)
 use_bundled_yamlcpp(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
 
+# libyamlc
+include(BundledYamlC)
+use_bundled_libyamlc(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
+
+# chunkio
+include(BundledLibChunkIO)
+use_bundled_libchunkio(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
+
+# cbor
+include(BundledLibCBOR)
+use_bundled_libcbor(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
+
 # concurrentqueue
 add_library(concurrentqueue INTERFACE)
 target_include_directories(concurrentqueue INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/concurrentqueue")

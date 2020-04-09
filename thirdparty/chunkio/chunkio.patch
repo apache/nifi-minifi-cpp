@@ -1,0 +1,13 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 7351c26..50e4400 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -101,7 +101,7 @@ include_directories(
+ 
+ add_subdirectory(deps/crc32)
+ add_subdirectory(src)
+-add_subdirectory(tools)
++#add_subdirectory(tools)
+ 
+ if(CIO_TESTS)
+   add_subdirectory(tests)

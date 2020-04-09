@@ -400,12 +400,14 @@ typedef struct {
   const attribute_set * _attributes;
   CTransaction* transaction_;
   const char * payload_;
+  size_t payload_length_;
 } CDataPacket;
 
-static void initPacket(CDataPacket * packet, CTransaction* transaction, const attribute_set * attributes, const char * payload) {
+static void initPacket(CDataPacket * packet, CTransaction* transaction, const attribute_set * attributes, const char * payload, size_t length) {
   packet->payload_ = payload;
   packet->transaction_ = transaction;
   packet->_attributes = attributes;
+  packet->payload_length_ = length;
 }
 
 

@@ -388,7 +388,7 @@ CTransaction* createTransaction(struct CRawSiteToSiteClient * client, TransferDi
   }
 }
 
-int transmitPayload(struct CRawSiteToSiteClient * client, const char * payload, const attribute_set * attributes) {
+int transmitRawPayload(struct CRawSiteToSiteClient * client, char * payload, size_t len, const attribute_set * attributes) {
   CTransaction* transaction = NULL;
 
   if (payload == NULL && attributes == NULL) {
@@ -418,7 +418,7 @@ int transmitPayload(struct CRawSiteToSiteClient * client, const char * payload, 
 
   CDataPacket packet;
 
-  initPacket(&packet, transaction, attributes, payload);
+  initPacket(&packet, transaction, attributes, payload, len);
 
   int16_t resp = sendPacket(client, transactionID, &packet, NULL);
   if (resp != 0) {
@@ -426,7 +426,7 @@ int transmitPayload(struct CRawSiteToSiteClient * client, const char * payload, 
     tearDown(client);
     return resp;
   }
-  logc(info, "Site2Site transaction %s sent bytes length %lu", transactionID, strlen(payload));
+  logc(info, "Site2Site transaction %s sent bytes length %lu", transactionID, len);
 
 
   int ret = confirm(client, transactionID);
@@ -442,6 +442,14 @@ int transmitPayload(struct CRawSiteToSiteClient * client, const char * payload, 
   }
 
   return ret;
+}
+
+int transmitPayload(struct CRawSiteToSiteClient * client, const char * payload, const attribute_set * attributes) {
+  uint64_t len = 0;
+  if (payload) {
+    len = strlen(payload);
+  }
+  return transmitRawPayload(client, payload, len, attributes);
 }
 
 // Complete the transaction
@@ -687,15 +695,19 @@ int confirm(struct CRawSiteToSiteClient * client, const char * transactionID) {
         return -1;
       }
     }
+
+    uint32_t numAttributes = 0;
+    if (packet->_attributes) {
+      numAttributes = packet->_attributes->size;
+    }
     // start to read the packet
-    uint32_t numAttributes = packet->_attributes->size;
     ret = write_uint32t(transaction, numAttributes);
     if (ret != 4) {
       return -1;
     }
 
     int i;
-    for (i = 0; i < packet->_attributes->size; ++i) {
+    for (i = 0; i < numAttributes; ++i) {
       const char *key = packet->_attributes->attributes[i].key;
 
       ret = write_UTF(transaction, key, True);
@@ -735,8 +747,8 @@ int confirm(struct CRawSiteToSiteClient * client, const char * transactionID) {
         writeData(transaction, content_buf, len);
       }
 
-    } else if (packet->payload_ != NULL && strlen(packet->payload_) > 0) {
-      len = strlen(packet->payload_);
+    } else if (packet->payload_ != NULL && packet->payload_length_ > 0) {
+      len = packet->payload_length_;
 
       ret = write_uint64t(transaction, len);
       if (ret != 8) {

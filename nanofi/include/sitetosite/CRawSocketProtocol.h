@@ -72,6 +72,8 @@ int confirm(struct CRawSiteToSiteClient * client, const char * transactionID);
 
 int transmitPayload(struct CRawSiteToSiteClient * client, const char * payload, const attribute_set * attributes);
 
+int transmitRawPayload(struct CRawSiteToSiteClient * client, char * payload, size_t len, const attribute_set * attributes);
+
 int16_t sendPacket(struct CRawSiteToSiteClient * client, const char * transactionID, CDataPacket *packet, flow_file_record * ff);
 
 CTransaction* createTransaction(struct CRawSiteToSiteClient * client, TransferDirection direction);

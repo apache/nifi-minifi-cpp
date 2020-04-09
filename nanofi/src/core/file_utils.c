@@ -16,17 +16,26 @@
  * limitations under the License.
  */
 
+#ifndef WIN32
+#include <dirent.h>
+#include <unistd.h>
+#else
+#include <windows.h>
+#include <fileapi.h>
+#include <handleapi.h>
+#include <direct.h>
+#pragma comment(lib, "User32.lib")
+#endif
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
 #include <sys/stat.h>
-#include <dirent.h>
-#include <unistd.h>
 #include <limits.h>
 
 #include "core/string_utils.h"
 #include "core/file_utils.h"
+#include "core/log.h"
 
 #ifdef _MSC_VER
 #ifndef PATH_MAX
@@ -34,16 +43,24 @@
 #endif
 #endif
 
+#ifdef WIN32
+#define stat _stat
+#define mkdir _mkdir
+#endif
+
 int is_directory(const char * path) {
     struct stat dir_stat;
     if (stat(path, &dir_stat) < 0) {
         return 0;
     }
+#ifdef WIN32
+    return dir_stat.st_mode & S_IFDIR;
+#else
     return S_ISDIR(dir_stat.st_mode);
+#endif
 }
 
-const char * get_separator(int force_posix)
-{
+const char * get_separator(int force_posix) {
 #ifdef WIN32
     if (!force_posix) {
         return "\\";
@@ -61,6 +78,7 @@ char * concat_path(const char * parent, const char * child) {
     return path;
 }
 
+#ifndef WIN32
 void remove_directory(const char * dir_path) {
 
     if (!is_directory(dir_path)) {
@@ -83,23 +101,62 @@ void remove_directory(const char * dir_path) {
         remove_directory(path);
         free(path);
     }
-
     rmdir(dir_path);
+    
     closedir(d);
 }
+#else
+void remove_directory(const char * dir_path) {
+    HANDLE hFind;
+    WIN32_FIND_DATA fd;
+
+    hFind = FindFirstFile(dir_path, &fd);
+    if (hFind == INVALID_HANDLE_VALUE) {
+        return;
+    }
+
+    if (fd.dwFileAttributes != FILE_ATTRIBUTE_DIRECTORY) {
+        DeleteFile(dir_path);
+        FindClose(hFind);
+        return;
+    }
+
+    char * path = concat_path(dir_path, "*");
+    HANDLE hFind1;
+    if ((hFind1 = FindFirstFile(path, &fd)) != INVALID_HANDLE_VALUE) {
+        do {
+            char * entry_name = fd.cFileName;
+            if (!strcmp(entry_name, ".") || !strcmp(entry_name, "..")) continue;
+            char * entry_path = concat_path(dir_path, entry_name);
+            remove_directory(entry_path);
+            free(entry_path);
+        } while (FindNextFile(hFind1, &fd));
+    }
+    RemoveDirectory(dir_path);
+    FindClose(hFind);
+    FindClose(hFind1);
+    free(path);
+}
+#endif
 
 int make_dir(const char * path) {
     if (!path) return -1;
 
     errno = 0;
+#ifdef WIN32
+    int ret = mkdir(path);
+    char path_sep = '\\';
+#else
     int ret = mkdir(path, S_IRUSR|S_IWUSR|S_IXUSR|S_IRGRP|S_IXGRP|S_IROTH|S_IXOTH);
+    char path_sep = '/';
+#endif
     if (ret == 0) {
         return 0;
     }
 
     switch (errno) {
     case ENOENT: {
-        char * found = strrchr(path, '/');
+        char * found = strrchr(path, path_sep);
         if (!found) {
             return -1;
         }
@@ -112,7 +169,11 @@ int make_dir(const char * path) {
         if (res < 0) {
             return -1;
         }
+#ifdef WIN32
+        return mkdir(path);
+#else
         return mkdir(path, S_IRUSR|S_IWUSR|S_IXUSR|S_IRGRP|S_IXGRP|S_IROTH|S_IXOTH);
+#endif
     }
     case EEXIST: {
         if (is_directory(path)) {
@@ -139,3 +200,92 @@ char * get_current_working_directory() {
     free(cwd);
     return NULL;
 }
+
+properties_t * read_properties_file(const char * file_path) {
+    if (!file_path) {
+        logc(err, "%s", "No file path provided");
+        return NULL;
+    }
+
+    properties_t * params = NULL;
+    FILE * fp = fopen(file_path, "r");
+    char * line = NULL;
+    size_t size = 0;
+    if (!fp) {
+        logc(err, "Could not open file %s", file_path);
+        return NULL;
+    }
+#ifndef WIN32
+    while (getline(&line, &size, fp) > 0) {
+#else
+    size = 1024;
+    line = (char *)malloc(1024);
+    while (fgets(line, size, fp) != NULL) {
+#endif
+        char ** tokens = parse_tokens(line, size, 2, " =\n");
+        properties_t * el = (properties_t *)malloc(sizeof(properties_t));
+
+        el->key = tokens[0];
+        el->value = tokens[1];
+
+        char ** tmp = tokens;
+        free(tmp);
+
+        if (el->key && el->value) {
+            HASH_ADD_KEYPTR(hh, params, el->key, strlen(el->key), el);
+        } else {
+            free(el->key);
+            free(el->value);
+            free(el);
+        }
+    }
+    free(line);
+    fclose(fp);
+    return params;
+}
+
+size_t get_file_size(FILE * fp) {
+  assert(fp);
+  off_t offset = ftell(fp);
+  fseek(fp, 0, SEEK_END);
+  off_t size = ftell(fp);
+  fseek(fp, offset, SEEK_SET);
+  return (size_t)size;
+}
+
+#ifndef WIN32
+int is_file(const char * file_path) {
+    if (!file_path) {
+        return -1;
+    }
+
+    struct stat stats;
+    int ret = stat(file_path, &stats);
+
+    if (ret == -1) {
+        logc(err, "Error occurred while getting file status {file: %s, error: %s}\n", file_path, strerror(errno));
+        return -1;
+    }
+
+    if (S_ISDIR(stats.st_mode)){
+        logc(err, "Error: %s is a directory!\n", file_path);
+        return -1;
+    }
+    return 0;
+}
+#else
+int is_file(const char * file_path) {
+    if (!file_path) {
+        return -1;
+    }
+    HANDLE hFind;
+    WIN32_FIND_DATA fd;
+
+    hFind = FindFirstFile(file_path, &fd);
+    if (hFind == INVALID_HANDLE_VALUE || fd.dwFileAttributes == FILE_ATTRIBUTE_DIRECTORY) {
+        return -1;
+    }
+
+    return 0;
+}
+#endif

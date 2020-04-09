@@ -22,6 +22,10 @@
 #include "utlist.h"
 #include "flowfiles.h"
 
+#ifndef _WIN32
+#include <dirent.h>
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -70,6 +74,15 @@ int make_dir(const char * path);
  * it is left to the caller to free it
  */
 char * get_current_working_directory();
+
+/**
+ * Return a key value pair properties from file
+ * @param file_path the path to the properties file
+ * @return properties key value pair
+ */
+properties_t * read_properties_file(const char * file_path);
+
+size_t get_file_size(FILE * fp);
 
 #ifdef __cplusplus
 }

@@ -27,7 +27,7 @@ extern "C" {
 #endif
 
 #define MAX_BYTES_READ 4096
-
+#define MIN(a,b) (((a)<(b))?(a):(b))
 /**
  * Tokenizes a delimited string and returns a list of tokens
  * @param str the string to be tokenized
@@ -86,6 +86,65 @@ int validate_list(token_list * tk_list);
  * @attention, if the to list is empty, to and from will be same after appending
  */
 void attach_lists(token_list * to, token_list * from);
+
+/**
+ * Copies source string into destination
+ * @param source, the string to copy from
+ * @param dest, the destination to copy into
+ * This function allocates heap memory for destination
+ * so the caller is expected to free it
+ *
+ * @attention the source string is expected to be
+ * null terminated
+ */
+void copystr(const char * source, char ** dest);
+
+/**
+ * Copies len number of characters from source
+ * into destination
+ * This function allocates heap memory for destination
+ * so the caller is expected to free it
+ * @param source, the source string to be copied
+ * @param len the length to be copied
+ * @param dest the destination to copy into
+ */
+void copynstr(const char * source, size_t len, char ** dest);
+
+/**
+ * Copies min(src_len, dest_len) number of chars from source
+ * into destination. It is expected that destination dest is
+ * allocated before calling this function.
+ * @param source, the source string
+ * @param src_len, the source string length
+ * @param dest, the destination
+ * @param dest_len, the destination length
+ */
+void copynstrd(const char * source, size_t src_len, unsigned char * dest, size_t dest_len);
+
+
+/**
+ * Convert string to unsigned int
+ * @param input_str, the input string
+ * @param out, converted value output
+ * @return -1 if unsuccessful else 0
+ */
+int str_to_uint(const char * input_str, uint64_t * out);
+
+/**
+ * Convert uint to string
+ * @param value, the unsigned int value to convert
+ * @return the string representation
+ */
+const char * uint_to_str(uint64_t value);
+
+/**
+ * Tokenize string against a set of separators
+ * @param str the string to be tokenized
+ * @param len, the length of the string
+ * @param num_tokens, the number of tokens to be parsed
+ * @param sep, the tokens separator set
+ */
+char ** parse_tokens(const char * str, size_t len, size_t num_tokens, const char * sep);
 
 #ifdef __cplusplus
 }

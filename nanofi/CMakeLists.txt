@@ -26,54 +26,33 @@ ENDIF(POLICY CMP0048)
 include_directories(include)
 include_directories(../libminifi/include)
 
-if(WIN32)
-include_directories(../libminifi/opsys/win)
-else()
-include_directories(../libminifi/opsys/posix)
-endif()
-
-file(GLOB NANOFI_SOURCES "src/api/*.c*" "src/core/*.c*" "src/cxx/*.cpp" "src/sitetosite/*.c*")
+include_directories(${CMAKE_SOURCE_DIR}/nanofi/include)
+include_directories(${CMAKE_SOURCE_DIR}/libminifi/include ${CMAKE_SOURCE_DIR}/thirdparty/cron ${CMAKE_SOURCE_DIR}/thirdparty/spdlog-20170710/include)
+include_directories(${CMAKE_SOURCE_DIR}/thirdparty/ut)
 
 if(WIN32)
-list(REMOVE_ITEM NANOFI_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/api/ecu.c ${CMAKE_CURRENT_SOURCE_DIR}/src/core/file_utils.c ${CMAKE_CURRENT_SOURCE_DIR}/src/core/flowfiles.c)
+    include_directories(../libminifi/opsys/win)
+else()
+    include_directories(../libminifi/opsys/posix)
 endif()
 
-file(GLOB NANOFI_ECU_SOURCES "ecu/*.c")
+file(GLOB NANOFI_SOURCES  "src/api/*.c*" "src/core/*.c*" "src/cxx/*.cpp" "src/sitetosite/*.c*" "src/ecu_api/*.c*" "src/processors/*.c*")
 
-include(CheckCXXCompilerFlag)
-if (WIN32)
-  if ((MSVC_VERSION GREATER "1900") OR (MSVC_VERSION EQUAL "1900"))
-	    CHECK_CXX_COMPILER_FLAG("/std:c++14" _cpp_latest_flag_supported)
-	    if (_cpp_latest_flag_supported)
-	        add_compile_options("/std:c++14")
-	    endif()
-	endif()
-else()
-
-CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
-CHECK_CXX_COMPILER_FLAG("-std=c++0x" COMPILER_SUPPORTS_CXX0X)
-if(COMPILER_SUPPORTS_CXX11)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-elseif(COMPILER_SUPPORTS_CXX0X)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
-else()
- message(STATUS "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
-endif()
-
+if(WIN32)
+    list(REMOVE_ITEM NANOFI_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/api/ecu.c ${CMAKE_CURRENT_SOURCE_DIR}/src/core/flowfiles.c)
 endif()
 
 add_library(nanofi STATIC ${NANOFI_SOURCES})
+add_dependencies(nanofi minifi-standard-processors)
 
-target_link_libraries(nanofi spdlog ut)
+target_link_libraries(nanofi spdlog ut libchunkio libyaml-c libcbor)
 target_wholearchive_library(nanofi core-minifi)
 target_wholearchive_library(nanofi minifi)
 target_wholearchive_library(nanofi minifi-standard-processors)
 
-
 if (ENABLE_PYTHON AND NOT STATIC_BUILD)
 
 add_library(nanofi-shared SHARED ${NANOFI_SOURCES})
-
 target_link_libraries(nanofi-shared spdlog ut)
 target_wholearchive_library(nanofi-shared core-minifi-shared)
 target_wholearchive_library(nanofi-shared minifi-shared)

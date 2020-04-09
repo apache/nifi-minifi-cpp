@@ -1,4 +1,4 @@
-#
+# 
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -19,7 +19,6 @@
 
 cmake_minimum_required(VERSION 2.6)
 
-
 if (NOT WIN32)
 add_executable(log_aggregator log_aggregator.c)
 target_link_libraries(log_aggregator nanofi ${CMAKE_THREAD_LIBS_INIT})
@@ -33,3 +32,7 @@ add_executable(tailfile_delimited tailfile_delimited.c)
 target_link_libraries(tailfile_delimited nanofi ${CMAKE_THREAD_LIBS_INIT})
 target_wholearchive_library(tailfile_delimited minifi-http-curl)
 endif()
+
+add_executable(tailfile_ecu_c2 tailfile_ecu_c2.c)
+add_dependencies(tailfile_ecu_c2 nanofi)
+target_link_libraries(tailfile_ecu_c2 PRIVATE nanofi)
