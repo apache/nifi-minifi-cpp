@@ -156,7 +156,7 @@ BackTrace TraceResolver::getBackTrace(std::string thread_name, std::thread::nati
 }
 #ifdef HAS_EXECINFO
 void handler(int signr, siginfo_t *info, void *secret) {
-  std::unique_ptr<Lock> lock(TraceResolver::getResolver().lock());
+  std::unique_lock<std::mutex> lock(TraceResolver::getResolver().lock());
   pull_trace();
   TraceResolver::getResolver().notifyPullTracesDone(lock);
 }

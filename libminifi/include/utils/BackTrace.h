@@ -83,26 +83,6 @@ void pull_trace(uint8_t frames_to_skip = 1);
  */
 void emplace_handler();
 
-class Lock {
-public:
-  explicit Lock(std::mutex& mutex)
-      : mutex_(mutex) {
-    mutex_.lock();
-  }
-
-  ~Lock() {
-    mutex_.unlock();
-  }
-
-  Lock(const Lock& other) = delete;
-  Lock& operator=(const Lock& other) = delete;
-  Lock(Lock&& other) = delete;
-  Lock& operator=(Lock&& other) = delete;
-
-private:
-  std::mutex& mutex_;
-};
-
 /**
  * Purpose: Provides a singular instance to grab the call stack for thread(s).
  * Design: is a singleton to avoid multiple signal handlers.
@@ -166,12 +146,12 @@ class TraceResolver {
     trace_.addLine(line.str());
   }
 
-  std::unique_ptr<Lock> lock() {
-    return std::unique_ptr<Lock>(new Lock(trace_mutex_));
+  std::unique_lock<std::mutex> lock() {
+    return std::unique_lock<std::mutex>(trace_mutex_);
   }
 
-  void notifyPullTracesDone(std::unique_ptr<Lock>& lock) {
-    std::unique_ptr<Lock> tlock(std::move(lock));
+  void notifyPullTracesDone(std::unique_lock<std::mutex>& lock) {
+    std::unique_lock<std::mutex> tlock(std::move(lock));
     pull_traces_ = true;
     trace_condition_.notify_one();
   }
