@@ -496,7 +496,7 @@ build_cmake_command
 
 ### run the cmake command
 if [ "${SKIP_CMAKE}" = "${TRUE}" ]; then
-	echo "Not running ${CMAKE_BUILD_COMMAND} "
+	echo "Now running ${CMAKE_BUILD_COMMAND} "
 else
 	${CMAKE_BUILD_COMMAND}
 fi
