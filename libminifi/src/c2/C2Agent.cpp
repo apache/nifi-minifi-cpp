@@ -114,14 +114,14 @@ C2Agent::C2Agent(const std::shared_ptr<core::controller::ControllerServiceProvid
     if ( queue_mutex.try_lock_until(now + std::chrono::seconds(1)) ) {
       if (responses.empty()) {
         queue_mutex.unlock();
-        return utils::TaskRescheduleInfo::RetryImmediately();
+        return utils::TaskRescheduleInfo::RetryIn(std::chrono::milliseconds(100));
       }
       const C2Payload payload(std::move(responses.back()));
       responses.pop_back();
       queue_mutex.unlock();
       extractPayload(std::move(payload));
     }
-    return utils::TaskRescheduleInfo::RetryImmediately();
+    return utils::TaskRescheduleInfo::RetryIn(std::chrono::milliseconds(100));
   };
   functions_.push_back(c2_consumer_);
 }
