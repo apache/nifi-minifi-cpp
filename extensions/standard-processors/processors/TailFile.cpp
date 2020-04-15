@@ -472,9 +472,9 @@ void TailFile::recoverState(core::ProcessContext& context, const std::unordered_
     return;
   }
 
-  auto& tailFileObj = states_.at(filePath);
+  auto& tfo = states_.at(filePath);
 
-  tailFileObj->setExpectedRecoveryChecksum(checksumValue);
+  tfo->setExpectedRecoveryChecksum(checksumValue);
 
   // We have an expected checksum and the currently configured filename is the same as the state file.
   // We need to check if the existing file is the same as the one referred to in the state file based on the checksum.
@@ -495,13 +495,13 @@ void TailFile::recoverState(core::ProcessContext& context, const std::unordered_
 
   if (fileInfo.st_size >= position) {
     bool positionIsLarge = false;
-    const auto checksumResult = calcCRC(file, tailFileObj->getState().position(), positionIsLarge);
+    const auto checksumResult = calcCRC(file, tfo->getState().position(), positionIsLarge);
     if (positionIsLarge) {
       logger_->log_debug(
         "When recovering state, file being tailed has less data than was stored in the state. Assuming rollover. Will begin tailing current file from beginning.");
     }
 
-    if (checksumResult == tailFileObj->getExpectedRecoveryChecksum()) {
+    if (checksumResult == tfo->getExpectedRecoveryChecksum()) {
       // Checksums match. This means that we want to resume reading from where we left off. So we will populate the reader object so that it will be used in onTrigger. 
       // If the checksums do not match, SET 'position' = 0, so that the next call to onTrigger will result in a new Reader being created and starting at the beginning of the file.
       logger_->log_debug("When recovering state, checksum of tailed file matches the stored checksum. Will resume where left off.");
@@ -518,16 +518,15 @@ void TailFile::recoverState(core::ProcessContext& context, const std::unordered_
       "Will begin tailing current file from beginning.", static_cast<uint64_t>(fileInfo.st_size), position);
   }
 
-  tailFileObj->setState(TailFileState(filePath, readerFileName, position, timestamp, length, 0));
+  tfo->setState(TailFileState(filePath, readerFileName, position, timestamp, length, 0));
 }
 
 void TailFile::cleanup() {
   for (auto it : states_) {
-    auto& tailFileObj = it.second;
+    auto& tfo = it.second;
 
-    auto state = tailFileObj->getState();
-    // ??? state.readerFilename()
-    tailFileObj->setState(TailFileState(state.filename(), state.readerFilename(), state.position(), state.timestamp(), state.length(), state.checksum()));
+    const auto state = tfo->getState();
+    tfo->setState(TailFileState(state.filename(), state.readerFilename(), state.position(), state.timestamp(), state.length(), state.checksum()));
   }
 }
 
@@ -563,10 +562,10 @@ void TailFile::onTrigger(const std::shared_ptr<core::ProcessContext> &context, c
 }
 
 void TailFile::resetState(const std::string& filePath) {
-  auto& tailFileObj = states_.at(filePath);
+  auto& tfo = states_.at(filePath);
 
-  tailFileObj->setExpectedRecoveryChecksum(0);
-  tailFileObj->setState(TailFileState(filePath, "", 0, 0, 0, 0));
+  tfo->setExpectedRecoveryChecksum(0);
+  tfo->setState(TailFileState(filePath, "", 0, 0, 0, 0));
 }
 
 
@@ -689,16 +688,16 @@ void TailFile::processTailFile(core::ProcessContext& context, core::ProcessSessi
 
   bool rolloverOccurred{};
 
-  auto tailFileObj = states_.at(tailFile);
+  auto tfo = states_.at(tailFile);
 
-  if (tailFileObj->getTailFileChanged()) {
+  if (tfo->getTailFileChanged()) {
     rolloverOccurred = false;
 
     if (startPosition_ == StartBeginOfTime) {
-      recoverRolledFiles(context, session, tailFile, tailFileObj->getExpectedRecoveryChecksum(), tailFileObj->getState().timestamp(), tailFileObj->getState().position());
+      recoverRolledFiles(context, session, tailFile, tfo->getExpectedRecoveryChecksum(), tfo->getState().timestamp(), tfo->getState().position());
     } else if (startPosition_ == StartCurrentTime) {
       cleanup();
-      tailFileObj->setState(TailFileState(tailFile, "", 0, 0, 0, 0));
+      tfo->setState(TailFileState(tailFile, "", 0, 0, 0, 0));
     } else {
       struct stat fileInfo;
       if (stat(tailFile.c_str(), &fileInfo)) {
@@ -721,10 +720,10 @@ void TailFile::processTailFile(core::ProcessContext& context, core::ProcessSessi
       
       cleanup();
 
-      tailFileObj->setState(TailFileState(tailFile, tailFile, position, timestamp, position, checksumResult));
+      tfo->setState(TailFileState(tailFile, tailFile, position, timestamp, position, checksumResult));
     }
 
-    tailFileObj->setTailFileChanged(false);
+    tfo->setTailFileChanged(false);
   } else {
     // Recover any data that may have rolled over since the last time that this processor ran.
     // If expectedRecoveryChecksum != null, that indicates that this is the first iteration since processor was started, 
@@ -733,18 +732,18 @@ void TailFile::processTailFile(core::ProcessContext& context, core::ProcessSessi
     // If the value is null, then we know that either the processor has already recovered that data, or there was no state persisted. 
     // In either case, use whatever checksum value is currently in the state.
 
-    auto expectedChecksumValue = tailFileObj->getExpectedRecoveryChecksum();
+    auto expectedChecksumValue = tfo->getExpectedRecoveryChecksum();
     if (!expectedChecksumValue) {
-      expectedChecksumValue = tailFileObj->getState().checksum();
+      expectedChecksumValue = tfo->getState().checksum();
     }
 
-    rolloverOccurred = recoverRolledFiles(context, session, tailFile, expectedChecksumValue, tailFileObj->getState().timestamp(), tailFileObj->getState().position());
-    tailFileObj->setExpectedRecoveryChecksum(0);
+    rolloverOccurred = recoverRolledFiles(context, session, tailFile, expectedChecksumValue, tfo->getState().timestamp(), tfo->getState().position());
+    tfo->setExpectedRecoveryChecksum(0);
   }
 
   // Initialize local variables from state object; this is done so that we can easily change the values throughout
   // the onTrigger method and then create a new state object after we finish processing the files.
-  const auto state = tailFileObj->getState();
+  const auto state = tfo->getState();
   const auto filename = state.filename();
   auto readerFilename = state.readerFilename();
   auto checksum = state.checksum();
@@ -827,8 +826,8 @@ void TailFile::processTailFile(core::ProcessContext& context, core::ProcessSessi
   if (fileLengthEqPosition || !fileExists) {
     // No data to consume so rather than continually running, yield to allow other processors to use the thread.
     logger_->log_debug("No data to consume; created no FlowFiles");
-    tailFileObj->setState(TailFileState(tailFile, readerFilename, position, timestamp, length, checksum));
-    persistState(tailFileObj, context);
+    tfo->setState(TailFileState(tailFile, readerFilename, position, timestamp, length, checksum));
+    persistState(tfo, context);
     context.yield();
     return;
   }
@@ -874,11 +873,11 @@ void TailFile::processTailFile(core::ProcessContext& context, core::ProcessSessi
   }
 
   // Create a new state object to represent our current position, timestamp, etc.
-  tailFileObj->setState(TailFileState(tailFile, readerFilename, position, timestamp, length, checksum));
+  tfo->setState(TailFileState(tailFile, readerFilename, position, timestamp, length, checksum));
 
   // We must commit session before persisting state in order to avoid data loss on restart
   session.commit();
-  persistState(tailFileObj, context);
+  persistState(tfo, context);
 }
 
 
@@ -944,10 +943,10 @@ std::vector<std::string> TailFile::getRolledOffFiles(core::ProcessContext& conte
   return rolledOffFiles;
 }
 
-void TailFile::persistState(const std::shared_ptr<TailFileObject>& tailFileObject, core::ProcessContext& context) {
+void TailFile::persistState(const std::shared_ptr<TailFileObject>& tfo, core::ProcessContext& context) {
   auto& stateMap = getStateMap();
 
-  const auto state = tailFileObject->getState().toStateMap(tailFileObject->getFilenameIndex());
+  const auto state = tfo->getState().toStateMap(tfo->getFilenameIndex());
 
   for (auto const& el : state) {
     stateMap.insert(el);
@@ -1004,7 +1003,7 @@ bool TailFile::recoverRolledFiles(
 
   logger_->log_debug("Recovering Rolled Off Files; total number of files rolled off %zu", rolledOffFiles.size());
 
-  auto tailFileObj = states_.at(tailFile);
+  auto tfo = states_.at(tailFile);
 
   // For first file that we find, it may or may not be the file that we were last reading from.
   // As a result, we have to read up to the position we stored, while calculating the checksum. If the checksums match,
@@ -1044,7 +1043,7 @@ bool TailFile::recoverRolledFiles(
           cleanup();
 
           // Use a timestamp of lastModified + 1 so that we do not ingest this file again.
-          tailFileObj->setState(TailFileState(tailFile, "", 0, fileInfo.st_mtime + 1, fileInfo.st_size, 0));
+          tfo->setState(TailFileState(tailFile, "", 0, fileInfo.st_mtime + 1, fileInfo.st_size, 0));
         } else {
           session.putAttribute(flowFile, FlowAttributeKey(FILENAME), firstFile);
           session.putAttribute(flowFile, FlowAttributeKey(MIME_TYPE), "text/plain");
@@ -1057,11 +1056,11 @@ bool TailFile::recoverRolledFiles(
           cleanup();
 
           // Use a timestamp of lastModified() + 1 so that we do not ingest this file again.
-          tailFileObj->setState(TailFileState(tailFile, "", 0, fileInfo.st_mtime + 1, fileInfo.st_size, 0));
+          tfo->setState(TailFileState(tailFile, "", 0, fileInfo.st_mtime + 1, fileInfo.st_size, 0));
 
           // must ensure that we do session.commit() before persisting state in order to avoid data loss.
           session.commit();
-          persistState(tailFileObj, context);
+          persistState(tfo, context);
         }
       } else {
         logger_->log_debug(
@@ -1075,7 +1074,7 @@ bool TailFile::recoverRolledFiles(
   // that we recovered from the state file, we need to consume the entire file. The only exception to this is the file that
   // we were reading when we last stopped, as it may already have been partially consumed. That is taken care of in the above block of code.
   for (const auto& file: rolledOffFiles) {
-    tailFileObj->setState(consumeFileFully(file, context, session, tailFileObj));
+    tfo->setState(consumeFileFully(file, context, session, tfo));
   }
 
   return true;
@@ -1083,7 +1082,7 @@ bool TailFile::recoverRolledFiles(
 
 // Creates a new FlowFile that contains the entire contents of the given file and transfers that FlowFile to success.
 // This method will commit the given session and emit an appropriate Provenance Event.
-TailFileState TailFile::consumeFileFully(const std::string& filename, core::ProcessContext& context, core::ProcessSession& session, const std::shared_ptr<TailFileObject>& tailFileObject) {
+TailFileState TailFile::consumeFileFully(const std::string& filename, core::ProcessContext& context, core::ProcessSession& session, const std::shared_ptr<TailFileObject>& tfo) {
   const auto startTime = getTimeMillis();
 
   auto flowFile = session.create();
@@ -1094,7 +1093,7 @@ TailFileState TailFile::consumeFileFully(const std::string& filename, core::Proc
   } else {
     session.putAttribute(flowFile, FlowAttributeKey(FILENAME), filename);
     session.putAttribute(flowFile, FlowAttributeKey(MIME_TYPE), "text/plain");
-    session.putAttribute(flowFile, "tailfile.original.path", tailFileObject->getState().filename());
+    session.putAttribute(flowFile, "tailfile.original.path", tfo->getState().filename());
 
     session.getProvenanceReporter()->receive(flowFile, "file:/" + filename, getUUIDStr(), "FlowFile contains bytes " + std::to_string(flowFile->getSize()), getTimeMillis() - startTime);
     session.transfer(flowFile, Success);
@@ -1111,14 +1110,14 @@ TailFileState TailFile::consumeFileFully(const std::string& filename, core::Proc
     }
 
     // Use a timestamp of lastModified() + 1 so that we do not ingest this file again.
-    tailFileObject->setState(TailFileState(fileName_, "", 0, fileInfo.st_mtime + 1, fileInfo.st_size, 0));
+    tfo->setState(TailFileState(fileName_, "", 0, fileInfo.st_mtime + 1, fileInfo.st_size, 0));
 
     // Must ensure that we do session.commit() before persisting state in order to avoid data loss.
     session.commit();
-    persistState(tailFileObject, context);
+    persistState(tfo, context);
   }
 
-  return tailFileObject->getState();
+  return tfo->getState();
 }
 
 uint64_t TailFile::calcCRC(std::ifstream& reader, uint64_t size, bool& sizeIsLarge) {
