@@ -17,8 +17,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __TAIL_FILE_H__
-#define __TAIL_FILE_H__
+
+#pragma once
+
+#include <unordered_map>
 
 #include "FlowFileRecord.h"
 #include "core/Processor.h"
@@ -27,58 +29,41 @@
 #include "core/Core.h"
 #include "core/Resource.h"
 #include "core/logging/LoggerConfiguration.h"
+#include "io/CRCStream.h"
+
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
 namespace processors {
 
-// TailFile Class
+class TailFileState;
+class TailFileObject;
 
-
-typedef struct {
-  std::string path_;
-  std::string current_file_name_;
-  uint64_t currentTailFilePosition_;
-  uint64_t currentTailFileModificationTime_;
-} TailState;
-
-// Matched File Item for Roll over check
-typedef struct {
-  std::string fileName;
-  uint64_t modifiedTime;
-} TailMatchedFileItem;
-
-
-
-class TailFile : public core::Processor {
+class TailFile: public core::Processor {
  public:
-  // Constructor
-  /*!
-   * Create a new processor
-   */
   explicit TailFile(std::string name, utils::Identifier uuid = utils::Identifier())
       : core::Processor(name, uuid),
         logger_(logging::LoggerFactory<TailFile>::getLogger()) {
-    state_recovered_ = false;
   }
-  // Destructor
   virtual ~TailFile() {
   }
   // Processor Name
   static constexpr char const* ProcessorName = "TailFile";
   // Supported Properties
-  static core::Property FileName;
-  static core::Property StateFile;
-  static core::Property Delimiter;
-  static core::Property TailMode;
   static core::Property BaseDirectory;
+  static core::Property Mode;
+  static core::Property FileName;
+  static core::Property RollingFileNamePattern;
+  static core::Property StartPosition;
+  static core::Property Recursive;
+  static core::Property LookupFrequency;
+  static core::Property MaximumAge;
   // Supported Relationships
   static core::Relationship Success;
 
  public:
 
-  bool acceptFile(const std::string &filter, const std::string &file);
   /**
    * Function that's executed when the processor is scheduled.
    * @param context process context.
@@ -91,36 +76,48 @@ class TailFile : public core::Processor {
   // Initialize, over write by NiFi TailFile
   void initialize(void) override;
   // recoverState
-  bool recoverState(const std::shared_ptr<core::ProcessContext>& context);
+  void recoverState(core::ProcessContext& context);
   // storeState
-  bool storeState(const std::shared_ptr<core::ProcessContext>& context);
+  void storeState();
 
+  void recoverState(core::ProcessContext& context, const std::vector<std::string>& filesToTail, std::unordered_map<std::string, std::string>& map);
+  void recoverState(core::ProcessContext& context, const std::unordered_map<std::string, std::string>& stateValues, const std::string& filePath);
+  std::vector<std::string> lookup(core::ProcessContext& context);
+  std::vector<std::string> TailFile::getFilesToTail(const std::string& baseDir, const std::string& fileRegex, bool isRecursive, uint64_t maxAge);
+  void resetState(const std::string& filePath);
+  void cleanup();
+  void initStates(const std::vector<std::string>& filesToTail, const std::unordered_map<std::string, std::string>& statesMap, bool isCleared, const std::string& startPosition);
+  void processTailFile(core::ProcessContext& context, core::ProcessSession& session, const std::string& tailFile);
+  bool createReader(std::ifstream& reader, const std::string& filename, uint64_t position = 0);
+  bool getReaderSizePosition(uint64_t& size, uint64_t& position, std::ifstream& reader, const std::string& filename);
+  void persistState(const std::shared_ptr<TailFileObject>& tailFileObject, core::ProcessContext& context);
+  bool recoverRolledFiles(core::ProcessContext& context, core::ProcessSession& session, const std::string& tailFile, uint64_t expectedChecksum, uint64_t timestamp, uint64_t position);
+  bool recoverRolledFiles(
+    core::ProcessContext& context, core::ProcessSession& session, const std::string& tailFile, std::vector<std::string> rolledOffFiles, uint64_t expectedChecksum, uint64_t timestamp, uint64_t position);
+  std::vector<std::string> getRolledOffFiles(core::ProcessContext& context, uint64_t minTimestamp, const std::string& tailFilePath);
+  uint64_t calcCRC(std::ifstream& reader, uint64_t size, bool& sizeIsLarge);
+  TailFileState consumeFileFully(const std::string& filename, core::ProcessContext& context, core::ProcessSession& session, const std::shared_ptr<TailFileObject>& tailFileObject);
+
+  std::unordered_map<std::string, std::string>& getStateMap();
  private:
 
   static const char *CURRENT_STR;
   static const char *POSITION_STR;
   std::mutex tail_file_mutex_;
-  // File to save state
-  std::string state_file_;
-  // Delimiter for the data incoming from the tailed file.
-  std::string delimiter_;
-  // StateManager
-  std::shared_ptr<core::CoreComponentStateManager> state_manager_;
-  // determine if state is recovered;
-  bool state_recovered_;
 
-  std::map<std::string, TailState> tail_states_;
+  std::unordered_map<std::string, std::string> stateMap_;
+  std::unordered_map<std::string, std::shared_ptr<TailFileObject>> states_;
 
-  static const int BUFFER_SIZE = 512;
-
-  // Utils functions for parse state file
-  std::string trimLeft(const std::string& s);
-  std::string trimRight(const std::string& s);
-  void parseStateFileLine(char *buf);
-  /**
-   * Check roll over for the provided file.
-   */
-  void checkRollOver(const std::shared_ptr<core::ProcessContext>& context, TailState &file, const std::string &base_file_name);
+  std::mutex onTriggerMutex_;
+  std::string baseDirectory_;
+  std::string fileName_;
+  bool recursive_{};
+  bool isMultiChanging_{};
+  uint64_t maxAge_{};
+  uint64_t lastLookup_{};
+  std::string startPosition_;
+  std::string rollingFileNamePattern_;
+  uint64_t lookupFrequency_{};
   std::shared_ptr<logging::Logger> logger_;
 };
 
@@ -136,5 +133,3 @@ REGISTER_RESOURCE(TailFile, "\"Tails\" a file, or a list of files, ingesting dat
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-
-#endif
