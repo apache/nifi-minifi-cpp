@@ -323,10 +323,10 @@ $ # It is recommended that you install bison from source as HomeBrew now uses an
 
 ### Bootstrapping
 
-- MiNiFi C++ offers a bootstrap script in the root of our github repo that will boot strap the cmake and build process for you without the need to install dependencies yourself. To use this process, please run the command boostrap.sh from the root of the MiNiFi C++ source tree.
+- MiNiFi C++ offers a bootstrap script in the root of our github repo that will boot strap the cmake and build process for you without the need to install dependencies yourself. To use this process, please run the command `boostrap.sh` from the root of the MiNiFi C++ source tree.
 
 
-- Per the table, below, you will be presented with a menu guided bootstrap process. You may enable and disable extensions ( further defined below ). Once you are finished selecting the features you wish to build, enter N to continue with the process. CMAKE dependencies will be resolved for your distro. You may enter command line options -n to force yes to all prompts ( including the package installation prompts ) and -b to automatically run make once the cmake process is complete. Alternatively, you may include the package argument to boostrap, -p, which will run make package.
+- Per the table, below, you will be presented with a menu guided bootstrap process. You may enable and disable extensions ( further defined below ). Once you are finished selecting the features you wish to build, enter P to continue with the process. CMAKE dependencies will be resolved for your distro. You may enter command line options -n to force yes to all prompts ( including the package installation prompts ) and -b to automatically run make once the cmake process is complete. Alternatively, you may include the package argument to boostrap, -p, which will run make package.
 
 - If you provide -b or -p to bootstrap.sh, you do not need to follow the Building section, below. If you do not provide these arguments you may skip the cmake .. section from Building.
 
@@ -335,9 +335,9 @@ $ # It is recommended that you install bison from source as HomeBrew now uses an
   $ ./bootstrap.sh
   # CMAKE Build dir exists, should we overwrite your build directory before we begin?
     If you have already bootstrapped, bootstrapping again isn't necessary to run make [ Y/N ] Y
-  $  ****************************************
+  $ *****************************************
      Select MiNiFi C++ Features to toggle.
-    ****************************************
+    *****************************************
     A. Persistent Repositories .....Enabled
     B. Lib Curl Features ...........Enabled
     C. Lib Archive Features ........Enabled
@@ -348,15 +348,31 @@ $ # It is recommended that you install bison from source as HomeBrew now uses an
     H. USB Camera support ..........Disabled
     I. GPS support .................Disabled
     J. TensorFlow Support ..........Disabled
-    K. Enable all extensions
-    L. Portable Build ..............Enabled
-    M. Build with Debug symbols ....Disabled
-    N. Continue with these options
-    Q. Exit
+    K. Bustache Support ............Disabled
+    L. MQTT Support ................Disabled
+    M. SQLite Support ..............Disabled
+    N. Python Support ..............Disabled
+    O. COAP Support ................Enabled
+    S. SFTP Support ................Disabled
+    V. AWS Support .................Disabled
+    T. OpenCV Support ..............Disabled
+    U. OPC-UA Support ..............Disabled
+    W. SQL Support .................Disabled
+    ****************************************
+                Build Options.
+    ****************************************
+    1. Disable Tests ...............Disabled
+    2. Enable all extensions
+    3. Enable JNI Support ..........Disabled
+    4. Use Shared Dependency Links .Enabled
+    5. Build Profile ...............RelWithDebInfo Debug MinSizeRel Release
+    P. Continue with these options
+    Q. Quit
     * Extension cannot be installed due to
-      version of cmake or other software
+      version of cmake or other software, or
+      incompatibility with other extensions
     
-    Enter choice [ A - N ] 
+    Enter choice [ A - W or 1-4 ] 
   ```
 
 - Boostrap now saves state between runs. State will automatically be saved. Provide -c or --clear to clear this state. The -i option provides a guided menu install with the ability to change 
