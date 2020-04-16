@@ -65,11 +65,8 @@ C2Agent::C2Agent(const std::shared_ptr<core::controller::ControllerServiceProvid
   configure(configuration, false);
 
   c2_producer_ = [&]() {
-    auto now = std::chrono::steady_clock::now();
-    auto time_since = std::chrono::duration_cast<std::chrono::milliseconds>(now - last_run_).count();
-
     // place priority on messages to send to the c2 server
-      if ( protocol_.load() != nullptr && request_mutex.try_lock_until(now + std::chrono::seconds(1)) ) {
+      if ( protocol_.load() != nullptr && request_mutex.try_lock_for(std::chrono::seconds(1)) ) {
         if (requests.size() > 0) {
           int count = 0;
           do {
@@ -90,22 +87,16 @@ C2Agent::C2Agent(const std::shared_ptr<core::controller::ControllerServiceProvid
         request_mutex.unlock();
       }
 
-      if ( time_since > heart_beat_period_ ) {
-        last_run_ = now;
-        try {
-          performHeartBeat();
-        }
-        catch(const std::exception &e) {
-          logger_->log_error("Exception occurred while performing heartbeat. error: %s", e.what());
-        }
-        catch(...) {
-          logger_->log_error("Unknonwn exception occurred while performing heartbeat.");
-        }
+      try {
+        performHeartBeat();
+      } catch(const std::exception &e) {
+        logger_->log_error("Exception occurred while performing heartbeat. error: %s", e.what());
+      } catch(...) {
+        logger_->log_error("Unknonwn exception occurred while performing heartbeat.");
       }
 
       checkTriggers();
 
-      std::this_thread::sleep_for(std::chrono::milliseconds(heart_beat_period_ > 500 ? 500 : heart_beat_period_));
       return state::Update(state::UpdateStatus(state::UpdateState::READ_COMPLETE, false));
     };
 
