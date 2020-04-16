@@ -43,11 +43,9 @@ class TailFileObject;
 class TailFile: public core::Processor {
  public:
   explicit TailFile(std::string name, utils::Identifier uuid = utils::Identifier())
-      : core::Processor(name, uuid),
-        logger_(logging::LoggerFactory<TailFile>::getLogger()) {
+    : core::Processor(name, uuid), logger_(logging::LoggerFactory<TailFile>::getLogger()) {
   }
-  virtual ~TailFile() {
-  }
+  virtual ~TailFile() {}
   // Processor Name
   static constexpr char const* ProcessorName = "TailFile";
   // Supported Properties
@@ -64,22 +62,11 @@ class TailFile: public core::Processor {
 
  public:
 
-  /**
-   * Function that's executed when the processor is scheduled.
-   * @param context process context.
-   * @param sessionFactory process session factory that is used when creating
-   * ProcessSession objects.
-   */
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
-  // OnTrigger method, implemented by NiFi TailFile
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession>  &session) override;
-  // Initialize, over write by NiFi TailFile
-  void initialize(void) override;
-  // recoverState
-  void recoverState(core::ProcessContext& context);
-  // storeState
-  void storeState();
+  void initialize() override;
 
+  void recoverState(core::ProcessContext& context);
   void recoverState(core::ProcessContext& context, const std::vector<std::string>& filesToTail, std::unordered_map<std::string, std::string>& map);
   void recoverState(core::ProcessContext& context, const std::unordered_map<std::string, std::string>& stateValues, const std::string& filePath);
   std::vector<std::string> lookup(core::ProcessContext& context);
@@ -97,17 +84,16 @@ class TailFile: public core::Processor {
   std::vector<std::string> getRolledOffFiles(core::ProcessContext& context, uint64_t minTimestamp, const std::string& tailFilePath);
   uint64_t calcCRC(std::ifstream& reader, uint64_t size, bool& sizeIsLarge);
   TailFileState consumeFileFully(const std::string& filename, core::ProcessContext& context, core::ProcessSession& session, const std::shared_ptr<TailFileObject>& tailFileObject);
+  bool getFileSizeLastModifiedTime(const std::string& filename, uint64_t& size, uint64_t& lastModifiedTime);
+  bool getFileSize(const std::string& filename, uint64_t& size);
 
+  // Will be substituted by RocksDB controller service.
   std::unordered_map<std::string, std::string>& getStateMap();
  private:
-
-  static const char *CURRENT_STR;
-  static const char *POSITION_STR;
-  std::mutex tail_file_mutex_;
-
+  // Used by 'getStateMap()' for testing until RocksDB controller service is used instead of 'getStateMap'.
   std::unordered_map<std::string, std::string> stateMap_;
-  std::unordered_map<std::string, std::shared_ptr<TailFileObject>> states_;
 
+  std::unordered_map<std::string, std::shared_ptr<TailFileObject>> states_;
   std::mutex onTriggerMutex_;
   std::string baseDirectory_;
   std::string fileName_;

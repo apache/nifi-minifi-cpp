@@ -358,7 +358,7 @@ void TailFile::initStates(const std::vector<std::string>& filesToTail, const std
     // We have to deal with the case where Minifi has been restarted. In this case 'states' object is empty but the statesMap is not. 
     // So we have to put back the files we already know about in 'states' object before doing the recovery.
     if (states_.empty() && !statesMap.empty()) {
-      for (auto it: statesMap) {
+      for (const auto it: statesMap) {
         const auto& key = it.first;
         // If 'key' startsWith 'FilenameKey'.
         if (!key.rfind(FilenameKey, 0)) {
@@ -423,17 +423,17 @@ std::vector<std::string> TailFile::getFilesToTail(const std::string& baseDir, co
       continue;
     }
 
-    struct stat fileState;
-    if (stat(path.c_str(), &fileState)) {
+    const auto lastModified = utils::file::FileUtils::last_write_time(path);
+    if (!lastModified) {
+      logger_->log_warn("'last_write_time' for '%s'", path.c_str());
       continue;
     }
 
     if (isMultiChanging_) {
-      if (std::time(0) - fileState.st_mtime < maxAge_) {
+      if (std::time(0) - lastModified < maxAge_) {
         ret.push_back(path);
       }
-    }
-    else {
+    } else {
       ret.push_back(path);
     }
   }
@@ -478,9 +478,9 @@ void TailFile::recoverState(core::ProcessContext& context, const std::unordered_
 
   // We have an expected checksum and the currently configured filename is the same as the state file.
   // We need to check if the existing file is the same as the one referred to in the state file based on the checksum.
-  struct stat fileInfo;
-  if (stat(storedStateFilename.c_str(), &fileInfo)) {
-    logger_->log_error("'stat' file %s", filePath.c_str());
+  uint64_t fileSize{};
+  if (!getFileSize(storedStateFilename, fileSize)) {
+    logger_->log_error("!getFileSize file %s", storedStateFilename.c_str());
     resetState(filePath);
     return;
   }
@@ -493,7 +493,7 @@ void TailFile::recoverState(core::ProcessContext& context, const std::unordered_
 
   std::string readerFileName;
 
-  if (fileInfo.st_size >= position) {
+  if (fileSize >= position) {
     bool positionIsLarge = false;
     const auto checksumResult = calcCRC(file, tfo->getState().position(), positionIsLarge);
     if (positionIsLarge) {
@@ -512,10 +512,10 @@ void TailFile::recoverState(core::ProcessContext& context, const std::unordered_
       logger_->log_debug("When recovering state, checksum of tailed file does not match the stored checksum. Will begin tailing current file from beginning.");
     }
   } else {
-    // fewer bytes than our position, so we know we weren't already reading from this file. Keep reader at a position of 0.
+    // Fewer bytes than our position, so we know we weren't already reading from this file. Keep reader at a position of 0.
     logger_->log_debug(
       "When recovering state, existing file to tail is only %" PRIu64 " bytes but position flag is %" PRIu64 ", this indicates that the file has rotated. "
-      "Will begin tailing current file from beginning.", static_cast<uint64_t>(fileInfo.st_size), position);
+      "Will begin tailing current file from beginning.", fileSize, position);
   }
 
   tfo->setState(TailFileState(filePath, readerFileName, position, timestamp, length, 0));
@@ -567,7 +567,6 @@ void TailFile::resetState(const std::string& filePath) {
   tfo->setExpectedRecoveryChecksum(0);
   tfo->setState(TailFileState(filePath, "", 0, 0, 0, 0));
 }
-
 
 bool TailFile::getReaderSizePosition(uint64_t& size, uint64_t& position, std::ifstream& reader, const std::string& filename) {
   int64_t readerPosition = reader.tellg();
@@ -699,9 +698,10 @@ void TailFile::processTailFile(core::ProcessContext& context, core::ProcessSessi
       cleanup();
       tfo->setState(TailFileState(tailFile, "", 0, 0, 0, 0));
     } else {
-      struct stat fileInfo;
-      if (stat(tailFile.c_str(), &fileInfo)) {
-        logger_->log_error("'stat' file %s", tailFile.c_str());
+      uint64_t fileSize{};
+      uint64_t fileLastModifiedTime{};
+      if (!getFileSizeLastModifiedTime(tailFile, fileSize, fileLastModifiedTime)) {
+        logger_->log_error("!getFileSizeLastModifiedTime file %s", tailFile.c_str());
         context.yield();
         return;
       }
@@ -712,8 +712,8 @@ void TailFile::processTailFile(core::ProcessContext& context, core::ProcessSessi
         return;
       }
 
-      const auto position = fileInfo.st_size;
-      const auto timestamp = fileInfo.st_mtime + 1;
+      const auto position = fileSize;
+      const auto timestamp = fileLastModifiedTime + 1;
 
       bool sizeIsLarge{};
       const auto checksumResult = calcCRC(reader, position, sizeIsLarge);
@@ -754,21 +754,21 @@ void TailFile::processTailFile(core::ProcessContext& context, core::ProcessSessi
   std::ifstream reader;
 
   auto fileExists = false;
-  struct stat fileInfo {};
+
+  uint64_t fileSize{};
+  uint64_t fileLastModifiedTime{};
 
   // Create a reader if necessary.
   if (readerFilename.empty()) {
     readerFilename = tailFile;
 
-    if (!(fileExists = createReader(reader, readerFilename, position) && stat(readerFilename.c_str(), &fileInfo))) {
+    if (!(fileExists = createReader(reader, readerFilename, position) && getFileSizeLastModifiedTime(readerFilename, fileSize, fileLastModifiedTime))) {
       context.yield();
       return;
     }
   } else {
-    fileExists = createReader(reader, readerFilename, position) && stat(readerFilename.c_str(), &fileInfo);
+    fileExists = createReader(reader, readerFilename, position) && getFileSizeLastModifiedTime(readerFilename, fileSize, fileLastModifiedTime);
   }
-
-  const auto lastModified = fileInfo.st_mtime;
 
   const auto startTime = getTimeMillis(); 
 
@@ -785,28 +785,26 @@ void TailFile::processTailFile(core::ProcessContext& context, core::ProcessSessi
   //    both have the same name but are different files. As a result, once we have consumed all data from the File Channel,
   //    we want to roll over and consume data from the new file.
 
-  bool fileLengthEqPosition = false;
+  bool fileSizeEqPosition = false;
 
   if (fileExists) {
     auto rotated = rolloverOccurred;
 
-    auto fileLength = fileInfo.st_size;
-
     if (!rotated) {
-      if (length > fileLength) {
+      if (length > fileSize) {
         rotated = true;
       } else {
         uint64_t readerSize{};
         uint64_t readerPosition{};
         if (getReaderSizePosition(readerSize, readerPosition, reader, readerFilename)) {
-          if (readerSize == readerPosition && readerSize != fileLength) {
+          if (readerSize == readerPosition && readerSize != fileSize) {
             rotated = true;
           }
         } else {
           logger_->log_warn(
             "Failed to determined the reader '%s' size when determining if the file has rolled over. Will assume that the file being tailed has not rolled over.", readerFilename.c_str());
         }
-        if (readerSize == readerPosition && readerSize != fileLength) {
+        if (readerSize == readerPosition && readerSize != fileSize) {
           rotated = true;
         }
       }
@@ -820,10 +818,10 @@ void TailFile::processTailFile(core::ProcessContext& context, core::ProcessSessi
       checksum = 0;
     }
 
-    fileLengthEqPosition = fileLength == position;
+    fileSizeEqPosition = fileSize == position;
   }
 
-  if (fileLengthEqPosition || !fileExists) {
+  if (fileSizeEqPosition || !fileExists) {
     // No data to consume so rather than continually running, yield to allow other processors to use the thread.
     logger_->log_debug("No data to consume; created no FlowFiles");
     tfo->setState(TailFileState(tailFile, readerFilename, position, timestamp, length, checksum));
@@ -868,8 +866,8 @@ void TailFile::processTailFile(core::ProcessContext& context, core::ProcessSessi
     // depending on the operating system file last mod precision), then we could set the timestamp to a smaller value, 
     // which could result in reading in the rotated file a second time.
 
-    timestamp = max(timestamp, fileInfo.st_mtime);
-    length = fileInfo.st_size;
+    timestamp = max(timestamp, fileLastModifiedTime);
+    length = fileSize;
   }
 
   // Create a new state object to represent our current position, timestamp, etc.
@@ -933,11 +931,11 @@ std::vector<std::string> TailFile::getRolledOffFiles(core::ProcessContext& conte
     rolledOffFiles.begin(),
     rolledOffFiles.end(),
     [](const std::string& file1, const std::string& file2) {
-    const auto time1 = utils::file::FileUtils::last_write_time(file1);
-    const auto time2 = utils::file::FileUtils::last_write_time(file2);
+      const auto time1 = utils::file::FileUtils::last_write_time(file1);
+      const auto time2 = utils::file::FileUtils::last_write_time(file2);
 
-    return (time1 == time2) ? file1 < file2 : time1 < time2;
-  }
+      return (time1 == time2) ? file1 < file2 : time1 < time2;
+    }
   );
 
   return rolledOffFiles;
@@ -1027,9 +1025,9 @@ bool TailFile::recoverRolledFiles(
       if (checksumResult == expectedChecksum) {
         logger_->log_debug("Checksum for '%s' matched expected checksum. Will skip first %" PRIu64 " bytes", firstFile.c_str(), position);
 
-        // ??? Exception ?
-        struct stat fileInfo;
-        if (stat(firstFile.c_str(), &fileInfo)) {
+        uint64_t fileSize{};
+        uint64_t fileLastModifiedTime{};
+        if (!getFileSizeLastModifiedTime(firstFile, fileSize, fileLastModifiedTime)) {
           logger_->log_error("'stat' file %s", firstFile.c_str());
           return {};
         }
@@ -1043,20 +1041,20 @@ bool TailFile::recoverRolledFiles(
           cleanup();
 
           // Use a timestamp of lastModified + 1 so that we do not ingest this file again.
-          tfo->setState(TailFileState(tailFile, "", 0, fileInfo.st_mtime + 1, fileInfo.st_size, 0));
+          tfo->setState(TailFileState(tailFile, "", 0, fileLastModifiedTime + 1, fileSize, 0));
         } else {
           session.putAttribute(flowFile, FlowAttributeKey(FILENAME), firstFile);
           session.putAttribute(flowFile, FlowAttributeKey(MIME_TYPE), "text/plain");
           session.putAttribute(flowFile, "tailfile.original.path", tailFile);
 
-          session.getProvenanceReporter()->receive(flowFile, "file:/" + firstFile, getUUIDStr(), "FlowFile contains bytes " + std::to_string(fileInfo.st_size), getTimeMillis() - startTime);
+          session.getProvenanceReporter()->receive(flowFile, "file:/" + firstFile, getUUIDStr(), "FlowFile contains bytes " + std::to_string(fileSize), getTimeMillis() - startTime);
           session.transfer(flowFile, Success);
           logger_->log_debug("Created flowFile from rolled over file '%s' and routed to success", firstFile.c_str());
 
           cleanup();
 
           // Use a timestamp of lastModified() + 1 so that we do not ingest this file again.
-          tfo->setState(TailFileState(tailFile, "", 0, fileInfo.st_mtime + 1, fileInfo.st_size, 0));
+          tfo->setState(TailFileState(tailFile, "", 0, fileLastModifiedTime + 1, fileSize, 0));
 
           // must ensure that we do session.commit() before persisting state in order to avoid data loss.
           session.commit();
@@ -1102,15 +1100,15 @@ TailFileState TailFile::consumeFileFully(const std::string& filename, core::Proc
 
     cleanup();
 
-    // ??? Exception?
-    struct stat fileInfo;
-    if (stat(filename.c_str(), &fileInfo)) {
+    uint64_t fileSize{};
+    uint64_t fileLastModifiedTime{};
+    if (!getFileSizeLastModifiedTime(filename, fileSize, fileLastModifiedTime)) {
       logger_->log_error("'stat' file %s", filename.c_str());
       return {};
     }
 
     // Use a timestamp of lastModified() + 1 so that we do not ingest this file again.
-    tfo->setState(TailFileState(fileName_, "", 0, fileInfo.st_mtime + 1, fileInfo.st_size, 0));
+    tfo->setState(TailFileState(fileName_, "", 0, fileLastModifiedTime + 1, fileSize, 0));
 
     // Must ensure that we do session.commit() before persisting state in order to avoid data loss.
     session.commit();
@@ -1146,6 +1144,29 @@ uint64_t TailFile::calcCRC(std::ifstream& reader, uint64_t size, bool& sizeIsLar
   } while (!sizeIsLarge && !allDataRead);
 }
 
+bool TailFile::getFileSizeLastModifiedTime(const std::string& filename, uint64_t& size, uint64_t& lastModifiedTime) {
+  struct stat fileInfo;
+  if (stat(filename.c_str(), &fileInfo)) {
+    size = 0;
+    lastModifiedTime = 0;
+    return false;
+  }
+
+  size = fileInfo.st_size;
+  lastModifiedTime = fileInfo.st_mtime;
+  return true;
+}
+
+bool TailFile::getFileSize(const std::string& filename, uint64_t& size) {
+  struct stat fileInfo;
+  if (stat(filename.c_str(), &fileInfo)) {
+    size = 0;
+    return false;
+  }
+
+  size = fileInfo.st_size;
+  return true;
+}
 
 std::unordered_map<std::string, std::string>& TailFile::getStateMap() {
   return stateMap_;
