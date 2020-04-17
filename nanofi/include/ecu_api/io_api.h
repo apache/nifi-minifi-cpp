@@ -21,36 +21,38 @@
 #include <core/cstructs.h>
 
 typedef enum io_type {
-    INVALID_IO = -1,
-    TAILFILE,
-    SITE2SITE,
-    KAFKA,
-    MQTTIO,
-    MANUAL
+  INVALID_IO = -1,
+  TAILFILE,
+  SITE2SITE,
+  KAFKA,
+  MQTTIO,
+  MANUAL
 } io_type_t;
 
 static const char * io_type_str[MANUAL+1] = {"FILE", "SITE2SITE", "KAFKA", "MQTT", "MANUAL"};
 
 typedef struct input_api {
-    void*(*create_input_context)();
-    int(*set_input_property)(void * ip_ctx, const char * name, const char * value);
-    properties_t*(*get_input_properties)(void * ip_ctx);
-    int(*validate_input_properties)(void * ip_ctx);
-    void(*free_input_properties)(void * ip_ctx);
-    void(*free_input_context)(void * ip_ctx);
-    properties_t*(*clone_input_properties)(void * ip_ctx);
-    void(*wait_input_stop)(void * ip_ctx);
+  void*(*create_input_context)();
+  int (*set_input_property)(void * ip_ctx, const char * name,
+      const char * value);
+  properties_t*(*get_input_properties)(void * ip_ctx);
+  int (*validate_input_properties)(void * ip_ctx);
+  void (*free_input_properties)(void * ip_ctx);
+  void (*free_input_context)(void * ip_ctx);
+  properties_t*(*clone_input_properties)(void * ip_ctx);
+  void (*wait_input_stop)(void * ip_ctx);
 } input_api_t;
 
 typedef struct output_api {
-    void*(*create_output_context)();
-    int(*set_output_property)(void * op_ctx, const char * name, const char * value);
-    properties_t*(*get_output_properties)(void * op_ctx);
-    int(*validate_output_properties)(void * op_ctx);
-    void(*free_output_properties)(void * op_ctx);
-    void(*free_output_context)(void * op_ctx);
-    properties_t*(*clone_output_properties)(void * op_ctx);
-    void(*wait_output_stop)(void * op_ctx);
+  void*(*create_output_context)();
+  int (*set_output_property)(void * op_ctx, const char * name,
+      const char * value);
+  properties_t*(*get_output_properties)(void * op_ctx);
+  int (*validate_output_properties)(void * op_ctx);
+  void (*free_output_properties)(void * op_ctx);
+  void (*free_output_context)(void * op_ctx);
+  properties_t*(*clone_output_properties)(void * op_ctx);
+  void (*wait_output_stop)(void * op_ctx);
 } output_api_t;
 
 void * create_input_context_file();

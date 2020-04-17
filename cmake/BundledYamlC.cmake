@@ -21,14 +21,14 @@ function(use_bundled_libyamlc SOURCE_DIR BINARY_DIR)
 
     # Define byproducts
     if (WIN32)
-        set(LIB_YAML "${YAMLC_BINARY_DIR}/${CMAKE_BUILD_TYPE}/yamlc.lib" CACHE STRING "" FORCE)
+      set(LIB_YAML "${YAMLC_BINARY_DIR}/${CMAKE_BUILD_TYPE}/yamlc.lib" CACHE STRING "" FORCE)
     else()
-        set(LIB_YAML "${YAMLC_BINARY_DIR}/libyamlc.a" CACHE STRING "" FORCE)
+      set(LIB_YAML "${YAMLC_BINARY_DIR}/libyamlc.a" CACHE STRING "" FORCE)
     endif()
 
     set(YAMLC_BYPRODUCT "${LIB_YAML}")
     set(LIBYAMLC_CMAKE_ARGS ${PASSTHROUGH_CMAKE_ARGS}
-	    "-DYAML_STATIC_LIB_NAME=yamlc")
+      "-DYAML_STATIC_LIB_NAME=yamlc")
 
     # Build project
     ExternalProject_Add(
@@ -42,17 +42,17 @@ function(use_bundled_libyamlc SOURCE_DIR BINARY_DIR)
       BUILD_BYPRODUCTS "${YAMLC_BYPRODUCT}"
       EXCLUDE_FROM_ALL TRUE
     )
-     
+
     # Set variables
     set(YAMLC_INCLUDE_DIR "${YAMLC_SOURCE_DIR}/include" CACHE STRING "" FORCE)
-    
+
     # Create imported targets
     add_library(yaml STATIC IMPORTED)
     add_dependencies(yaml libyamlc-external)    
     add_library(libyaml-c INTERFACE)
 
     set_property(TARGET yaml PROPERTY IMPORTED_LOCATION "${YAMLC_BYPRODUCT}")
-    
+
     target_include_directories(libyaml-c INTERFACE "${YAMLC_INCLUDE_DIR}")
     target_compile_definitions(libyaml-c INTERFACE "YAML_DECLARE_STATIC")
     target_link_libraries(libyaml-c INTERFACE yaml)

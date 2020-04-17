@@ -114,13 +114,12 @@ void copynstr(const char * source, size_t len, char ** dest);
  * Copies min(src_len, dest_len) number of chars from source
  * into destination. It is expected that destination dest is
  * allocated before calling this function.
- * @param source, the source string
+ * @param source, the source string, may or may not be null terminated
  * @param src_len, the source string length
- * @param dest, the destination
+ * @param dest, the destination after copy is null terminated
  * @param dest_len, the destination length
  */
 void copynstrd(const char * source, size_t src_len, unsigned char * dest, size_t dest_len);
-
 
 /**
  * Convert string to unsigned int

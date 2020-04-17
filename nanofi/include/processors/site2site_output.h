@@ -23,7 +23,6 @@ extern "C" {
 #endif
 
 #include <sitetosite/CRawSocketProtocol.h>
-#include <core/synchutils.h>
 #include <core/threadpool.h>
 #include <core/storage.h>
 

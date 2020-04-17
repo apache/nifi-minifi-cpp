@@ -26,7 +26,6 @@ extern "C" {
 #include <string.h>
 #include <stdio.h>
 #include <core/cstructs.h>
-#include <core/threadutils.h>
 #include <core/threadpool.h>
 #include <core/storage.h>
 

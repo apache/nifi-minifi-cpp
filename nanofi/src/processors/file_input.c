@@ -159,13 +159,12 @@ int set_file_input_property(file_input_context_t * ctx, const char * name, const
 }
 
 void prepare_meta_data(file_input_context_t * ctx, char ** meta_data, size_t * len) {
-  char offset_str[21];
-  snprintf(offset_str, 21, "%zu", ctx->current_offset);
-
+  char * offset_str = uint_to_str(ctx->current_offset);
   properties_t * props = NULL;
   add_property(&props, "file_path", ctx->file_path);
   add_property(&props, "current_offset", offset_str);
   serialize_properties(props, meta_data, len);
+  free(offset_str);
 }
 
 content_t prepare_content(char * from, size_t data_len, char * meta_data, size_t meta_len) {

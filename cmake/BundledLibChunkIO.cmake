@@ -21,11 +21,11 @@ function(use_bundled_libchunkio SOURCE_DIR BINARY_DIR)
 
     # Define byproducts
     if (WIN32)
-        set(LIB_CIO "src/${CMAKE_BUILD_TYPE}/chunkio-static.lib")
-	set(LIB_CRC "deps/crc32/${CMAKE_BUILD_TYPE}/cio-crc32.lib")
+      set(LIB_CIO "src/${CMAKE_BUILD_TYPE}/chunkio-static.lib")
+      set(LIB_CRC "deps/crc32/${CMAKE_BUILD_TYPE}/cio-crc32.lib")
     else()
-        set(LIB_CIO "src/libchunkio-static.a")
-	set(LIB_CRC "deps/crc32/libcio-crc32.a")
+      set(LIB_CIO "src/libchunkio-static.a")
+      set(LIB_CRC "deps/crc32/libcio-crc32.a")
     endif()
 
     set(CIO_SOURCE_DIR "${BINARY_DIR}/thirdparty/libchunkio-src")
@@ -45,18 +45,18 @@ function(use_bundled_libchunkio SOURCE_DIR BINARY_DIR)
       BUILD_BYPRODUCTS "${CIO_BYPRODUCT} ${CRC_BYPRODUCT}"
       EXCLUDE_FROM_ALL TRUE
     )
-     
+
     # Set variables
     set(LIBCIO_INCLUDE_DIRS "${CIO_SOURCE_DIR}/include" "${CIO_SOURCE_DIR}/deps" "${CIO_SOURCE_DIR}/deps/monkey/include" CACHE STRING "" FORCE)
-    
+
     # Create imported targets
     add_library(libcio STATIC IMPORTED)
     add_library(libcrc32 STATIC IMPORTED)
     add_library(libchunkio INTERFACE) 
-    
+
     set_property(TARGET libcio PROPERTY IMPORTED_LOCATION "${CIO_BYPRODUCT}")
     set_property(TARGET libcrc32 PROPERTY IMPORTED_LOCATION "${CRC_BYPRODUCT}")
-   
+
     target_include_directories(libchunkio INTERFACE "${LIBCIO_INCLUDE_DIRS}")
     target_link_libraries(libchunkio INTERFACE libcio INTERFACE libcrc32)
 

@@ -24,9 +24,10 @@ extern "C" {
 #endif
 
 #include <stdlib.h>
-#include <core/synchutils.h>
 #include <chunkio/chunkio_compat.h>
 #include <chunkio/chunkio.h>
+
+#include <core/threadutils.h>
 
 struct storage_config * strg_config;
 struct mk_list * list;

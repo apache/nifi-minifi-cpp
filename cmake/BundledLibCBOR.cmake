@@ -29,15 +29,15 @@ function(use_bundled_libcbor SOURCE_DIR BINARY_DIR)
 
     # Define byproducts
     if (WIN32)
-        set(LIB_CBOR "${CBOR_BINARY_DIR}/src/${CMAKE_BUILD_TYPE}/cbor.lib" CACHE STRING "" FORCE)
+      set(LIB_CBOR "${CBOR_BINARY_DIR}/src/${CMAKE_BUILD_TYPE}/cbor.lib" CACHE STRING "" FORCE)
     else()
-        set(LIB_CBOR "${CBOR_BINARY_DIR}/src/libcbor.a" CACHE STRING "" FORCE)
+      set(LIB_CBOR "${CBOR_BINARY_DIR}/src/libcbor.a" CACHE STRING "" FORCE)
     endif()
 
     set(CBOR_BYPRODUCT "${LIB_CBOR}")
     set(LIBCBOR_CMAKE_ARGS ${PASSTHROUGH_CMAKE_ARGS}
-	    "-DCBOR_CUSTOM_ALLOC=ON"
-            "-DCMAKE_BUILD_TYPE=Release")
+      "-DCBOR_CUSTOM_ALLOC=ON"
+      "-DCMAKE_BUILD_TYPE=Release")
 
     # Build project
     ExternalProject_Add(
@@ -51,17 +51,17 @@ function(use_bundled_libcbor SOURCE_DIR BINARY_DIR)
       BUILD_BYPRODUCTS "${CBOR_BYPRODUCT}"
       EXCLUDE_FROM_ALL TRUE
     )
-    
+
     # Set variables
     set(CBOR_INCLUDE_DIR "${CBOR_SOURCE_DIR}/src" "${CBOR_BINARY_DIR}" CACHE STRING "" FORCE)
-    
+
     # Create imported targets
     add_library(cbor STATIC IMPORTED)
     add_dependencies(cbor libcbor-external)    
     add_library(libcbor INTERFACE)
     set_target_properties(cbor PROPERTIES IMPORTED_LOCATION "${CBOR_BYPRODUCT}"
                           INTERFACE_COMPILE_DEFINITIONS "restrict=${CBOR_RESTRICT_SPECIFIER}")
-    
+
     target_include_directories(libcbor INTERFACE "${CBOR_INCLUDE_DIR}")
     target_link_libraries(libcbor INTERFACE cbor)
 endfunction(use_bundled_libcbor)

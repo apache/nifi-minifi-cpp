@@ -23,7 +23,6 @@
 extern "C" {
 #endif
 
-#include <core/synchutils.h>
 #include <core/threadutils.h>
 #include <stdint.h>
 #include "utlist.h"
