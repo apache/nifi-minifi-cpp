@@ -19,6 +19,7 @@
 #ifdef _WIN32
 #define NOMINMAX
 #include <winsock2.h>
+#include <ws2tcpip.h>
 #else
 #include <sys/socket.h>	// socket
 #include <arpa/inet.h> // inet_addr
