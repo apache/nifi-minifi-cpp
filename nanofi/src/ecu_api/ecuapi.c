@@ -240,7 +240,7 @@ int start_ecu_async(ecu_context_t * ecu) {
 
     start_s2s_output(s2s_ctx);
     task_node_t * task = create_repeatable_task(&site2site_writer_processor,
-        (void *) s2s_ctx, NULL, 10000);
+        (void *) s2s_ctx, NULL, 1000);
     if (threadpool_add(ecu->io->thread_pool, task) < 0) {
       return -1;
     }

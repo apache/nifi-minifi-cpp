@@ -26,19 +26,11 @@ extern "C" {
 #include "uthash.h"
 #include "utlist.h"
 
-typedef enum yaml_type {
-  MAP,
-  LIST,
-  SCALAR
-} yaml_type_t;
-
 typedef struct config_yaml_node {
   char * key;
   char * value;
   struct config_yaml_node * list;
   struct config_yaml_node * map;
-  yaml_type_t node_type;
-  yaml_type_t value_type;
 
   struct config_yaml_node * next;
   UT_hash_handle hh;

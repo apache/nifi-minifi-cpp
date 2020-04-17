@@ -29,38 +29,43 @@ extern "C" {
 #include "utlist.h"
 
 typedef enum task_state {
-    RUN_AGAIN,
-    DONOT_RUN_AGAIN
+  RUN_AGAIN, DONOT_RUN_AGAIN
 } task_state_t;
 
 typedef task_state_t (*function_t)(void * args, void * state);
 
 typedef struct task {
-    function_t function;
-    void * args;
-    void * state;
-    int64_t start_time_ms;
-    uint64_t interval_ms;
+  function_t function;
+  void * args;
+  void * state;
+  int64_t start_time_ms;
+  uint64_t interval_ms;
 } task_t;
 
 typedef struct task_node {
-    task_t task;
-    struct task_node * next;
+  task_t task;
+  struct task_node * next;
 } task_node_t;
 
 typedef struct threadpool {
-    task_node_t * task_queue;
-	lock_t task_queue_lock;
-    conditionvariable_t task_queue_cond;
-    int num_threads;
-    thread_handle_t * threads;
-    int shuttingdown;
-    int num_tasks;
-    int started;
+  task_node_t * task_queue;
+  task_node_t * wait_queue;
+  lock_t task_queue_lock;
+  conditionvariable_t task_queue_cond;
+  conditionvariable_t wait_queue_cond;
+  conditionvariable_attr_t wait_queue_cond_attr;
+  int num_threads;
+  thread_handle_t * threads;
+  thread_handle_t * wait_queue_thread;
+  int shuttingdown;
+  int num_tasks;
+  int started;
 } threadpool_t;
 
-task_node_t * create_repeatable_task(function_t function, void * args, void* state, uint64_t interval_seconds);
-task_node_t * create_oneshot_task(function_t function, void * args, void * state);
+task_node_t * create_repeatable_task(function_t function, void * args,
+    void* state, uint64_t interval_seconds);
+task_node_t * create_oneshot_task(function_t function, void * args,
+    void * state);
 int is_task_repeatable(task_t * task);
 uint64_t get_task_repeat_interval(task_t * task);
 uint64_t get_num_tasks(threadpool_t * pool);
@@ -79,6 +84,5 @@ unsigned __stdcall threadpool_thread_function(PVOID p);
 #ifdef __cplusplus
 }
 #endif
-
 
 #endif /* THREADPOOL_H_ */

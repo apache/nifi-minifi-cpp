@@ -3,29 +3,30 @@
 #include "uthash.h"
 #include <core/core_utils.h>
 
-int add_property(struct properties ** head, const char * name, const char * value) {
-    if (!head || !name || !value) {
-        return -1;
-    }
-    properties_t * el = NULL;
-    HASH_FIND_STR(*head, name, el);
-    if (el) {
-        HASH_DEL(*head, el);
-        free_property(el);
-        free(el);
-    }
+int add_property(struct properties ** head, const char * name,
+    const char * value) {
+  if (!head || !name || !value) {
+    return -1;
+  }
+  properties_t * el = NULL;
+  HASH_FIND_STR(*head, name, el);
+  if (el) {
+    HASH_DEL(*head, el);
+    free_property(el);
+    free(el);
+  }
 
-    properties_t * new_prop = (properties_t *) malloc(sizeof(struct properties));
-    size_t name_len = strlen(name);
-    new_prop->key = (char *) malloc(name_len + 1);
-    strcpy(new_prop->key, name);
+  properties_t * new_prop = (properties_t *) malloc(sizeof(struct properties));
+  size_t name_len = strlen(name);
+  new_prop->key = (char *) malloc(name_len + 1);
+  strcpy(new_prop->key, name);
 
-    size_t value_len = strlen(value);
-    new_prop->value = (char *) malloc(value_len + 1);
-    strcpy(new_prop->value, value);
+  size_t value_len = strlen(value);
+  new_prop->value = (char *) malloc(value_len + 1);
+  strcpy(new_prop->value, value);
 
-    HASH_ADD_KEYPTR(hh, *head, new_prop->key, strlen(new_prop->key), new_prop);
-    return 0;
+  HASH_ADD_KEYPTR(hh, *head, new_prop->key, strlen(new_prop->key), new_prop);
+  return 0;
 }
 
 properties_t * clone_properties(properties_t * props) {
@@ -88,26 +89,28 @@ void serialize_properties(properties_t * props, char ** data, size_t * len) {
 }
 
 attribute_set prepare_attributes(properties_t * attributes) {
-    attribute_set as;
-    memset(&as, 0, sizeof(attribute_set));
-    if (!attributes) return as;
-
-    as.size = HASH_COUNT(attributes);
-    attribute * attrs = (attribute *)malloc(as.size * sizeof(attribute));
-
-    properties_t *p, *tmp;
-    int i = 0;
-    HASH_ITER(hh, attributes, p, tmp) {
-        attrs[i].key = (char *)malloc(strlen(p->key) + 1);
-        strcpy((char *)attrs[i].key, p->key);
-        char * value = (char *)malloc(strlen(p->value) + 1);
-        strcpy(value, p->value);
-        attrs[i].value = (void *)value;
-        attrs[i].value_size = strlen(value);
-        i++;
-    }
-    as.attributes = attrs;
+  attribute_set as;
+  memset(&as, 0, sizeof(attribute_set));
+  if (!attributes)
     return as;
+
+  as.size = HASH_COUNT(attributes);
+  attribute * attrs = (attribute *) malloc(as.size * sizeof(attribute));
+
+  properties_t *p, *tmp;
+  int i = 0;
+  HASH_ITER(hh, attributes, p, tmp)
+  {
+    attrs[i].key = (char *) malloc(strlen(p->key) + 1);
+    strcpy((char *) attrs[i].key, p->key);
+    char * value = (char *) malloc(strlen(p->value) + 1);
+    strcpy(value, p->value);
+    attrs[i].value = (void *) value;
+    attrs[i].value_size = strlen(value);
+    i++;
+  }
+  as.attributes = attrs;
+  return as;
 }
 
 void free_attributes(attribute_set as) {
