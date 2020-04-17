@@ -105,6 +105,7 @@ class TailFile: public core::Processor {
   std::string rollingFileNamePattern_;
   uint64_t lookupFrequency_{};
   std::shared_ptr<logging::Logger> logger_;
+  bool requireStateLookup_{true};
 };
 
 REGISTER_RESOURCE(TailFile, "\"Tails\" a file, or a list of files, ingesting data from the file as it is written to the file. The file is expected to be textual."

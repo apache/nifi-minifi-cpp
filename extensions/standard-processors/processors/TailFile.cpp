@@ -230,7 +230,7 @@ core::Property TailFile::Mode(
 core::Property TailFile::FileName(
   core::PropertyBuilder::createProperty("File to Tail", "File(s) to Tail")->
   withDescription(
-    "Path of the file to tail in case of single file mode.If using multifile mode, regular expression to find files to tail in the base directory. "
+    "Path of the file to tail in case of single file mode. If using multifile mode, regular expression to find files to tail in the base directory. "
     "In case recursivity is set to true, the regular expression will be used to match the path starting from the base directory.")->
   isRequired(true)->
   supportsExpressionLanguage(true)->
@@ -319,7 +319,7 @@ void TailFile::onSchedule(const std::shared_ptr<core::ProcessContext> &context, 
   std::string lookupFrequency;
   context->getProperty(LookupFrequency.getName(), lookupFrequency);
   core::TimeUnit unitLookupFrequency;
-  if (!core::Property::StringToTime(lookupFrequency, lookupFrequency_, unitLookupFrequency) && 
+  if (!core::Property::StringToTime(lookupFrequency, lookupFrequency_, unitLookupFrequency) ||
       !core::Property::ConvertTimeUnitToMS(lookupFrequency_, unitLookupFrequency, lookupFrequency_)) {
     throw minifi::Exception(PROCESSOR_EXCEPTION, "TailFile: LookupFrequency property is invalid.");
   }
@@ -327,8 +327,8 @@ void TailFile::onSchedule(const std::shared_ptr<core::ProcessContext> &context, 
   std::string maxAge;
   context->getProperty(MaximumAge.getName(), maxAge);
   core::TimeUnit unitMaxAge;
-  if (!core::Property::StringToTime(maxAge, maxAge_, unitMaxAge) && !core::Property::ConvertTimeUnitToMS(maxAge_, unitMaxAge, maxAge_)) {
-    throw minifi::Exception(PROCESSOR_EXCEPTION, "TailFile: LookupFrequency property is invalid.");
+  if (!core::Property::StringToTime(maxAge, maxAge_, unitMaxAge) || !core::Property::ConvertTimeUnitToMS(maxAge_, unitMaxAge, maxAge_)) {
+    throw minifi::Exception(PROCESSOR_EXCEPTION, "TailFile: MaximumAge property is invalid.");
   }
   // maxAge_ in seconds.
   maxAge_ /= 1000;
@@ -549,6 +549,12 @@ void TailFile::onTrigger(const std::shared_ptr<core::ProcessContext> &context, c
         throw;
       }
     }
+  }
+
+  if (requireStateLookup_) {
+    requireStateLookup_ = false;
+
+    recoverState(*context);
   }
 
   if (states_.empty()) {
@@ -1142,6 +1148,8 @@ uint64_t TailFile::calcCRC(std::ifstream& reader, uint64_t size, bool& sizeIsLar
 
     streamCRC.writeData(reinterpret_cast<uint8_t*>(buf.data()), buf.size());
   } while (!sizeIsLarge && !allDataRead);
+
+  return streamCRC.getCRC();
 }
 
 bool TailFile::getFileSizeLastModifiedTime(const std::string& filename, uint64_t& size, uint64_t& lastModifiedTime) {
