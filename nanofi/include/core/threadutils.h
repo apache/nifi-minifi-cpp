@@ -34,9 +34,9 @@ extern "C" {
 
 typedef struct thread_handle {
 #ifdef WIN32
-	uintptr_t thread;
+  uintptr_t thread;
 #else
-	pthread_t thread;
+  pthread_t thread;
 #endif
 } thread_handle_t;
 
@@ -46,9 +46,9 @@ typedef void*(*pthread_proc_type)(void *);
 
 typedef struct thread_proc {
 #ifdef WIN32
-	_beginthreadex_proc_type threadfunc;
+  _beginthreadex_proc_type threadfunc;
 #else
-	pthread_proc_type threadfunc;
+  pthread_proc_type threadfunc;
 #endif
 } thread_proc_t;
 

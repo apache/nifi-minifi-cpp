@@ -240,7 +240,7 @@ int start_ecu_async(ecu_context_t * ecu) {
 
     start_s2s_output(s2s_ctx);
     task_node_t * task = create_repeatable_task(&site2site_writer_processor,
-        (void *) s2s_ctx, NULL, 1000);
+        (void *) s2s_ctx, NULL, 2000);
     if (threadpool_add(ecu->io->thread_pool, task) < 0) {
       return -1;
     }
@@ -341,7 +341,9 @@ void destroy_ecu(ecu_context_t * ctx) {
   acquire_lock(&ctx->ctx_lock);
   destroy_lock(&ctx->ctx_lock);
   destroy_stream(ctx->stream);
-  destroy_lock(&ctx->stream->lock);
+  if (ctx->stream) {
+    destroy_lock(&ctx->stream->lock);
+  }
   free(ctx->stream);
   free(ctx);
   logc(info, "%s", "ECU destroyed");
@@ -657,6 +659,6 @@ void destroy_io_context(io_context_t * io) {
   free_storage_config(io->strg_conf);
   free(io->strg_conf);
   free(io->thread_pool);
-  release_lock(&io->ctx_lock);
+  destroy_lock(&io->ctx_lock);
   free(io);
 }

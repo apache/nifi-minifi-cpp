@@ -19,38 +19,38 @@
 #include <core/threadutils.h>
 
 int create_thread(thread_handle_t * hnd, thread_proc_t tproc, void * args) {
-	if (!hnd || tproc.threadfunc == NULL) {
-		return -1;
-	}
+  if (!hnd || tproc.threadfunc == NULL) {
+    return -1;
+  }
 
 #ifndef WIN32
-	if (pthread_create(&hnd->thread, NULL, tproc.threadfunc, args) != 0) {
-		return -1;
-	}
+  if (pthread_create(&hnd->thread, NULL, tproc.threadfunc, args) != 0) {
+    return -1;
+  }
 #else
-	uintptr_t ret = _beginthreadex(NULL, 0, tproc.threadfunc, args, 0, NULL);
-	if (ret == 0) {
-		hnd->thread = 0;
-		return -1;
-	}
-	hnd->thread = ret;
+  uintptr_t ret = _beginthreadex(NULL, 0, tproc.threadfunc, args, 0, NULL);
+  if (ret == 0) {
+    hnd->thread = 0;
+    return -1;
+  }
+  hnd->thread = ret;
 #endif
-	return 0;
+  return 0;
 }
 
 void wait_thread_complete(thread_handle_t * hnd) {
-	assert(hnd != NULL);
+  assert(hnd != NULL);
 #ifndef WIN32
-	pthread_join(hnd->thread, NULL);
+  pthread_join(hnd->thread, NULL);
 #else
-	WaitForSingleObject((void *)(&hnd->thread), INFINITE);
+  WaitForSingleObject((void *)(&hnd->thread), INFINITE);
 #endif
 }
 
 void thread_sleep_ms(uint64_t millis) {
 #ifndef WIN32
-	usleep(millis * 1000L);
+  usleep(millis * 1000L);
 #else
-	Sleep(millis);
+  Sleep(millis);
 #endif
 }

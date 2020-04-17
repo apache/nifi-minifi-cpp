@@ -186,15 +186,14 @@ void * process_wait_queue(void * pool) {
       LL_APPEND(thpool->task_queue, el);
       thpool->num_tasks++;
     }
-    condition_variable_broadcast(&thpool->task_queue_cond);
+    if (thpool->num_tasks) {
+      condition_variable_broadcast(&thpool->task_queue_cond);
+    }
 
     if(is_task_queue_empty(thpool->wait_queue)) {
       condition_variable_wait(&thpool->wait_queue_cond, &thpool->task_queue_lock);
     } else {
-      uint64_t time_to_expire = 0;
-      if (thpool->wait_queue) {
-        time_to_expire = get_expiry_time_millis(&(thpool->wait_queue->task));
-      }
+      uint64_t time_to_expire = get_expiry_time_millis(&(thpool->wait_queue->task));
       condition_variable_timedwait(&thpool->wait_queue_cond, &thpool->task_queue_lock,
           !time_to_expire ? 1 : time_to_expire);
     }
@@ -313,17 +312,13 @@ void threadpool_shutdown(threadpool_t * pool) {
   free(pool->threads);
   free(pool->wait_queue_thread);
 
-  task_node_t * head = pool->task_queue;
-  while (head) {
-    task_node_t * tmp = head;
-    head = head->next;
-    free(tmp);
+  task_node_t *el, *tmp;
+  LL_FOREACH_SAFE(pool->task_queue, el, tmp) {
+    LL_DELETE(pool->task_queue, el);
+    free(el);
   }
-
-  head = pool->wait_queue;
-  while (head) {
-    task_node_t * tmp = head;
-    head = head->next;
-    free(tmp);
+  LL_FOREACH_SAFE(pool->wait_queue, el, tmp) {
+    LL_DELETE(pool->wait_queue, el);
+    free(el);
   }
 }
