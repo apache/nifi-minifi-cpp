@@ -150,7 +150,7 @@ class TailFileObject {
   TailFileState state_;
   uint64_t expectedRecoveryChecksum_{};
   int filenameIndex_{};
-  bool tailFileChanged_{ true };
+  bool tailFileChanged_{true};
 
 public:
   TailFileObject(int index) {
@@ -247,7 +247,7 @@ core::Property TailFile::RollingFileNamePattern(
   build());
 
 static const std::string StartBeginOfTime = "Beginning of Time";
-static const std::string StartBeginOfFile = "Beginning of File";
+static const std::string StartCurrentFile = "Beginning of File";
 static const std::string StartCurrentTime = "Current Time";
 
 core::Property TailFile::StartPosition(
@@ -256,8 +256,8 @@ core::Property TailFile::StartPosition(
     "When the Processor first begins to tail data, this property specifies where the Processor should begin reading data. "
     "Once data has been ingested from a file, the Processor will continue from the last point from which it has received data.")->
   isRequired(true)->
-  withAllowableValues<std::string>({ StartBeginOfTime, StartBeginOfFile, StartCurrentTime})->
-  withDefaultValue(StartBeginOfFile)->
+  withAllowableValues<std::string>({ StartBeginOfTime, StartCurrentFile, StartCurrentTime})->
+  withDefaultValue(StartCurrentFile)->
   build());
 
 core::Property TailFile::Recursive(
@@ -484,7 +484,7 @@ void TailFile::recoverState(core::ProcessContext& context, const std::unordered_
     resetState(filePath);
     return;
   }
-  std::ifstream file(storedStateFilename.c_str(), std::ifstream::in);
+  std::ifstream file(storedStateFilename.c_str(), std::ifstream::in | std::ifstream::binary);
   if (!file) {
     logger_->log_error("load state file failed %s", storedStateFilename);
     resetState(filePath);
@@ -494,7 +494,7 @@ void TailFile::recoverState(core::ProcessContext& context, const std::unordered_
   std::string readerFileName;
 
   if (fileSize >= position) {
-    bool positionIsLarge = false;
+    bool positionIsLarge{};
     const auto checksumResult = calcCRC(file, tfo->getState().position(), positionIsLarge);
     if (positionIsLarge) {
       logger_->log_debug(
@@ -551,9 +551,8 @@ void TailFile::onTrigger(const std::shared_ptr<core::ProcessContext> &context, c
     }
   }
 
-  if (requireStateLookup_) {
-    requireStateLookup_ = false;
-
+  if (!stateRecovered_) {
+    stateRecovered_ = true;
     recoverState(*context);
   }
 
@@ -620,19 +619,17 @@ struct WriteCallback : public OutputStreamCallback {
 
     newPosition_ = pos;
 
-    uint64_t linesRead{};
     bool seenCR = false;
-
     std::vector<uint8_t> line;
-
-    std::vector<char> buf(102400);
+    std::size_t size = 102400;
+    std::vector<char> buf(size);
     bool endOfReader = false;
     do {
-      if (endOfReader = !reader_.read(buf.data(), buf.size())) {
-        buf.resize(reader_.gcount());
+      if (endOfReader = !reader_.read(buf.data(), size)) {
+        size = reader_.gcount();
       }
 
-      for (auto i = 0; i < buf.size(); i++) {
+      for (auto i = 0; i < size; i++) {
         uint8_t c = buf[i];
         switch (c) {
           case '\n': {
@@ -640,9 +637,8 @@ struct WriteCallback : public OutputStreamCallback {
             line.push_back(c);
             ret += writeToStream(line);
             checksum_ = crc32(checksum_, &c, 1);
+            newPosition_ += line.size();
             line.clear();
-            newPosition_ = pos + i + 1;
-            linesRead++;
           }
           break;
 
@@ -657,9 +653,8 @@ struct WriteCallback : public OutputStreamCallback {
               seenCR = false;
               ret += writeToStream(line);
               checksum_ = crc32(checksum_, &c, 1);
-              linesRead++;
+              newPosition_ += line.size() - 1;
               line.clear();
-              newPosition_ = pos + i;
             }
 
             line.push_back(c);
@@ -667,15 +662,7 @@ struct WriteCallback : public OutputStreamCallback {
         }
       }
 
-      pos = reader_.tellg();
     } while (!endOfReader);
-
-    if (newPosition_ < reader_.tellg()) {
-      logger_->log_debug("Read '%s', %" PRIu64 " lines; repositioning reader from %" PRIu64 "to %" PRIu64 ".", readerFilename_.c_str(), linesRead, pos, newPosition_);
-
-      // Ensure we can re-read if necessary.
-      reader_.seekg(newPosition_);
-    }
 
     return ret;
   }
@@ -699,8 +686,9 @@ void TailFile::processTailFile(core::ProcessContext& context, core::ProcessSessi
     rolloverOccurred = false;
 
     if (startPosition_ == StartBeginOfTime) {
+      // Should be assigned 'rolloverOccurred' ?
       recoverRolledFiles(context, session, tailFile, tfo->getExpectedRecoveryChecksum(), tfo->getState().timestamp(), tfo->getState().position());
-    } else if (startPosition_ == StartCurrentTime) {
+    } else if (startPosition_ == StartCurrentFile) {
       cleanup();
       tfo->setState(TailFileState(tailFile, "", 0, 0, 0, 0));
     } else {
@@ -766,15 +754,16 @@ void TailFile::processTailFile(core::ProcessContext& context, core::ProcessSessi
 
   // Create a reader if necessary.
   if (readerFilename.empty()) {
-    readerFilename = tailFile;
-
-    if (!(fileExists = createReader(reader, readerFilename, position) && getFileSizeLastModifiedTime(readerFilename, fileSize, fileLastModifiedTime))) {
+    if (!(fileExists = createReader(reader, tailFile, position) && getFileSizeLastModifiedTime(tailFile, fileSize, fileLastModifiedTime))) {
       context.yield();
       return;
     }
+
+    readerFilename = tailFile;
   } else {
     fileExists = createReader(reader, readerFilename, position) && getFileSizeLastModifiedTime(readerFilename, fileSize, fileLastModifiedTime);
   }
+
 
   const auto startTime = getTimeMillis(); 
 
@@ -810,16 +799,11 @@ void TailFile::processTailFile(core::ProcessContext& context, core::ProcessSessi
           logger_->log_warn(
             "Failed to determined the reader '%s' size when determining if the file has rolled over. Will assume that the file being tailed has not rolled over.", readerFilename.c_str());
         }
-        if (readerSize == readerPosition && readerSize != fileSize) {
-          rotated = true;
-        }
       }
     }
 
     if (rotated) {
       // Since file has rotated, we set position to 0.
-      reader.seekg(0);
-
       position = 0;
       checksum = 0;
     }
@@ -860,7 +844,6 @@ void TailFile::processTailFile(core::ProcessContext& context, core::ProcessSessi
     session.putAttribute(flowFile, FlowAttributeKey(FILENAME), flowFileName);
     session.putAttribute(flowFile, FlowAttributeKey(MIME_TYPE), "text/plain");
     session.putAttribute(flowFile, "tailfile.original.path", tailFilename);
-
     session.getProvenanceReporter()->receive(flowFile, "file:/" + readerFilename, getUUIDStr(), "FlowFile contains bytes " + std::to_string(flowFile->getSize()), getTimeMillis() - startTime);
     session.transfer(flowFile, Success);
 
@@ -958,7 +941,7 @@ void TailFile::persistState(const std::shared_ptr<TailFileObject>& tfo, core::Pr
 }
 
 bool TailFile::createReader(std::ifstream& reader, const std::string& filename, uint64_t position) {
-  reader.open(filename.c_str(), std::ifstream::in);
+  reader.open(filename.c_str(), std::ifstream::in | std::ifstream::binary);
   if (!reader) {
     logger_->log_warn("Unable to open file '%s'.", filename.c_str());
     return false;
@@ -966,14 +949,13 @@ bool TailFile::createReader(std::ifstream& reader, const std::string& filename, 
 
   logger_->log_debug("Created reader '%s'.", filename.c_str());
 
-  uint64_t readerSize{};
-  uint64_t readerPosition{};
-  if (!getReaderSizePosition(readerSize, readerPosition, reader, filename)) {
+  uint64_t fileSize{};
+  if (!getFileSize(filename, fileSize)) {
     return false;
   }
 
-  if (position >= readerSize) {
-    logger_->log_warn("Reader '%s' position %" PRIu64 ">= file size %" PRId64 ".", filename.c_str(), position, readerSize);
+  if (position > fileSize) {
+    logger_->log_warn("Reader '%s' position %" PRIu64 "> file size %" PRId64 ".", filename.c_str(), position, fileSize);
     return false;
   }
 
@@ -1020,7 +1002,7 @@ bool TailFile::recoverRolledFiles(
     const auto startTime = getTimeMillis();
 
     if (position > 0) {
-      std::ifstream file(firstFile.c_str(), std::ifstream::in);
+      std::ifstream file(firstFile.c_str(), std::ifstream::in | std::ifstream::binary);
       if (!file) {
         logger_->log_error("load state file failed %s", firstFile);
         return false;
