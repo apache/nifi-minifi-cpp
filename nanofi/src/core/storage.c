@@ -65,13 +65,17 @@ storage_stream * create_stream(struct storage_config * config, const char * stre
   } else {
     strm->cio_ctx = cio_create(NULL, NULL, CIO_LOG_DEBUG, flags);
   }
+
   if (!strm->cio_ctx) {
     free(strm);
     logc(err, "failed to create cio context");
     return NULL;
   }
-  struct cio_stream * cio_strm = (storage_type == CIO_STORE_FS) ? cio_stream_create(strm->cio_ctx, stream_name, CIO_STORE_FS)
-                                      : cio_stream_create(strm->cio_ctx, stream_name, CIO_STORE_MEM);
+
+  struct cio_stream * cio_strm =
+      (storage_type == CIO_STORE_FS) ?
+          cio_stream_create(strm->cio_ctx, stream_name, CIO_STORE_FS) :
+          cio_stream_create(strm->cio_ctx, stream_name, CIO_STORE_MEM);
 
   if (!cio_strm) {
     cio_destroy(strm->cio_ctx);
@@ -80,8 +84,9 @@ storage_stream * create_stream(struct storage_config * config, const char * stre
     return NULL;
   }
 
-  cio_set_max_chunks_up(strm->cio_ctx, config->max_chunks_up);
   strm->cio_strm = cio_strm;
+  load_backlog_chunks(strm);
+  cio_set_max_chunks_up(strm->cio_ctx, config->max_chunks_up);
   initialize_lock(&strm->lock);
   return strm;
 }
@@ -165,7 +170,6 @@ int write_chunk(storage_stream * stream, content_t content) {
 
 void reset_stream_get_chunks(struct storage_stream * stream, struct mk_list * chunks) {
   acquire_lock(&stream->lock);
-  mk_list_init(chunks);
   struct mk_list * old = &stream->cio_strm->chunks;
   chunks->prev = old->prev;
   chunks->next = old->next;
@@ -175,18 +179,18 @@ void reset_stream_get_chunks(struct storage_stream * stream, struct mk_list * ch
   release_lock(&stream->lock);
 }
 
-size_t get_backlog_chunks(storage_stream * stream, struct mk_list * out_chunks) {
+void load_backlog_chunks(storage_stream * stream) {
 #ifndef _WIN32
   assert(stream);
   if (stream->strg_config->storage_type != CIO_STORE_FS)
-    return 0;
+    return;
 
   char * storage_path = stream->strg_config->storage_path;
   char * stream_name = stream->cio_strm->name;
   char * path = concat_path(storage_path, stream_name);
   if (!is_directory(path)) {
     free(path);
-    return 0;
+    return;
   }
   struct dirent * dir;
   DIR * d = opendir(path);
@@ -204,19 +208,27 @@ size_t get_backlog_chunks(storage_stream * stream, struct mk_list * out_chunks) 
       char * chunk_path = concat_path(path, entry_name);
       remove_directory(chunk_path);
       free(chunk_path);
-    } else {
-      if (cio_chunk_is_up(chunk)) {
-        mk_list_del(&chunk->_head);
-        mk_list_add(&chunk->_head, out_chunks);
-      } else {
-        cio_chunk_close(chunk, CIO_FALSE);
-        break;
-      }
     }
   }
   release_lock(&stream->lock);
   closedir(d);
   free(path);
 #endif
-  return mk_list_size(out_chunks);
+}
+
+void chunks_up(storage_stream * stream, struct mk_list * chunks) {
+  assert(stream);
+  assert(chunks);
+  if (stream->cio_strm->type == CIO_STORE_FS) {
+    acquire_lock(&stream->lock);
+    struct mk_list * head;
+    struct mk_list * tmp;
+    mk_list_foreach_safe(head, tmp, chunks) {
+      struct cio_chunk * chunk = mk_list_entry(head, struct cio_chunk, _head);
+      if (!cio_chunk_is_up(chunk) && cio_chunk_up_force(chunk) != CIO_OK) {
+        cio_chunk_close(chunk, CIO_TRUE);
+      }
+    }
+    release_lock(&stream->lock);
+  }
 }

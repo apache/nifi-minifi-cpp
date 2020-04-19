@@ -38,13 +38,14 @@ void initialize_file_input(file_input_context_t * ctx) {
 void start_file_input(file_input_context_t * ctx) {
   acquire_lock(&ctx->stop_mutex);
   ctx->stop = 0;
+  ctx->running = 1;
   release_lock(&ctx->stop_mutex);
 }
 
 void wait_file_input_stop(file_input_context_t * ctx) {
   acquire_lock(&ctx->stop_mutex);
   ctx->stop = 1;
-  while (!ctx->done) {
+  while (ctx->running) {
     condition_variable_wait(&ctx->stop_cond, &ctx->stop_mutex);
   }
   release_lock(&ctx->stop_mutex);
@@ -296,7 +297,7 @@ task_state_t file_reader_processor(void * args, void * state) {
   file_input_context_t * ctx = (file_input_context_t *) args;
   acquire_lock(&ctx->stop_mutex);
   if (ctx->stop) {
-    ctx->done = 1;
+    ctx->running = 0;
     condition_variable_broadcast(&ctx->stop_cond);
     release_lock(&ctx->stop_mutex);
     return DONOT_RUN_AGAIN;

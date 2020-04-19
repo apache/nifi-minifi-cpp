@@ -230,14 +230,6 @@ int start_ecu_async(ecu_context_t * ecu) {
         (site2site_output_context_t *) (ecu->output->proc_ctx);
     s2s_ctx->stream = ecu->stream;
 
-    // flush any backlogged chunks before we go ahead and ingest new data
-    // this will be applicable where chunkio supports filesystem backend
-    struct mk_list chunks;
-    mk_list_init(&chunks);
-    while (get_backlog_chunks(s2s_ctx->stream, &chunks)) {
-      write_to_s2s(s2s_ctx, &chunks);
-    }
-
     start_s2s_output(s2s_ctx);
     task_node_t * task = create_repeatable_task(&site2site_writer_processor,
         (void *) s2s_ctx, NULL, 2000);

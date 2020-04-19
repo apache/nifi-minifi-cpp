@@ -32,10 +32,11 @@ typedef struct site2site_output_context {
   char * host_name;
   properties_t * output_properties;
   struct CRawSiteToSiteClient * client;
+  struct mk_list backlog_chunks;
   storage_stream * stream;
   lock_t client_mutex;
   int stop;
-  int done;
+  int running;
   lock_t stop_mutex;
   conditionvariable_t stop_cond;
 } site2site_output_context_t;

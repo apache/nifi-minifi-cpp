@@ -64,7 +64,9 @@ void close_chunk(storage_stream * stream, struct cio_chunk * chunk);
 
 void close_chunks(storage_stream * stream, struct mk_list * chunks);
 
-size_t get_backlog_chunks(storage_stream * stream, struct mk_list * out_chunks);
+void load_backlog_chunks(storage_stream * stream);
+
+void chunks_up(storage_stream * stream, struct mk_list * chunks);
 
 /**
  * Puts the cio_chunk list of cio_stream strm into out param

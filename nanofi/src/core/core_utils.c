@@ -99,8 +99,7 @@ attribute_set prepare_attributes(properties_t * attributes) {
 
   properties_t *p, *tmp;
   int i = 0;
-  HASH_ITER(hh, attributes, p, tmp)
-  {
+  HASH_ITER(hh, attributes, p, tmp) {
     attrs[i].key = (char *) malloc(strlen(p->key) + 1);
     strcpy((char *) attrs[i].key, p->key);
     char * value = (char *) malloc(strlen(p->value) + 1);

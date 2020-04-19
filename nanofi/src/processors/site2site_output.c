@@ -22,6 +22,7 @@
 #include <processors/site2site_output.h>
 
 void initialize_s2s_output(site2site_output_context_t * ctx) {
+  mk_list_init(&ctx->backlog_chunks);
   initialize_lock(&ctx->client_mutex);
   initialize_lock(&ctx->stop_mutex);
   initialize_cv(&ctx->stop_cond, NULL);
@@ -30,13 +31,17 @@ void initialize_s2s_output(site2site_output_context_t * ctx) {
 void start_s2s_output(site2site_output_context_t * ctx) {
   acquire_lock(&ctx->stop_mutex);
   ctx->stop = 0;
+  if (ctx->stream) {
+    reset_stream_get_chunks(ctx->stream, &ctx->backlog_chunks);
+  }
+  ctx->running = 1;
   release_lock(&ctx->stop_mutex);
 }
 
 void wait_s2s_output_stop(site2site_output_context_t * ctx) {
   acquire_lock(&ctx->stop_mutex);
   ctx->stop = 1;
-  while (!ctx->done) {
+  while (ctx->running) {
     condition_variable_wait(&ctx->stop_cond, &ctx->stop_mutex);
   }
   release_lock(&ctx->stop_mutex);
@@ -88,12 +93,17 @@ task_state_t site2site_writer_processor(void * args, void * state) {
 
   acquire_lock(&ctx->stop_mutex);
   if (ctx->stop) {
-    ctx->done = 1;
+    ctx->running = 0;
     condition_variable_broadcast(&ctx->stop_cond);
     release_lock(&ctx->stop_mutex);
     return DONOT_RUN_AGAIN;
   }
   release_lock(&ctx->stop_mutex);
+
+  if (mk_list_is_empty(&ctx->backlog_chunks) != 0) {
+    chunks_up(ctx->stream, &ctx->backlog_chunks);
+    write_to_s2s(ctx, &ctx->backlog_chunks);
+  }
 
   struct mk_list chunks;
   reset_stream_get_chunks(ctx->stream, &chunks);

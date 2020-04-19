@@ -38,7 +38,7 @@ typedef struct file_input_context {
     char delimiter;
     uint64_t tail_frequency_ms;
     int stop;
-    int done;
+    int running;
     lock_t stop_mutex;
     conditionvariable_t stop_cond;
 } file_input_context_t;
