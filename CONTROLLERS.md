@@ -34,6 +34,6 @@ properties (not in bold) are considered optional. The table also indicates any
 default values, and whether a property supports the NiFi Expression Language.
 
 | Name | Default Value | Allowable Values | Expression Language Supported? | Description |
-| - | - | - | - |
+| - | - | - | - | - |
 | **Access Key** | | | Yes | Specifies the AWS Access Key |
 | **Secret Key** | | | Yes | Specifies the AWS Secret Key |
