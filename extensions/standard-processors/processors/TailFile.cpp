@@ -256,7 +256,7 @@ core::Property TailFile::StartPosition(
     "When the Processor first begins to tail data, this property specifies where the Processor should begin reading data. "
     "Once data has been ingested from a file, the Processor will continue from the last point from which it has received data.")->
   isRequired(true)->
-  withAllowableValues<std::string>({ StartBeginOfTime, StartCurrentFile, StartCurrentTime})->
+  withAllowableValues<std::string>({StartBeginOfTime, StartCurrentFile, StartCurrentTime})->
   withDefaultValue(StartCurrentFile)->
   build());
 
@@ -296,20 +296,22 @@ void TailFile::initialize() {
 }
 
 void TailFile::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
-  context->getProperty(BaseDirectory.getName(), baseDirectory_);
-  if (!baseDirectory_.empty()) {
-    if (!utils::file::FileUtils::is_directory(baseDirectory_.c_str())) {
-      throw minifi::Exception(PROCESSOR_EXCEPTION, "TailFile: BaseDirectory property is invalid.");
-    }
-  }
-
   std::string mode;
   context->getProperty(Mode.getName(), mode);
   isMultiChanging_ = ModeMultiplFiles == mode;
 
+  if (isMultiChanging_) {
+    context->getProperty(BaseDirectory.getName(), baseDirectory_);
+    if (!baseDirectory_.empty()) {
+      if (!utils::file::FileUtils::is_directory(baseDirectory_.c_str())) {
+        throw minifi::Exception(PROCESSOR_EXCEPTION, "TailFile: 'tail-base-directory' is required property for multiple tail mode.");
+      }
+    }
+  }
+
   context->getProperty(FileName.getName(), fileName_);
   if (fileName_.empty()) {
-    throw minifi::Exception(PROCESSOR_EXCEPTION, "TailFile: FileName property is empty.");
+    throw minifi::Exception(PROCESSOR_EXCEPTION, "TailFile: 'File to Tail' is a required property.");
   }
 
   context->getProperty(RollingFileNamePattern.getName(), rollingFileNamePattern_);
@@ -406,13 +408,31 @@ void TailFile::recoverState(core::ProcessContext& context, const std::vector<std
 std::vector<std::string> TailFile::getFilesToTail(const std::string& baseDir, const std::string& fileRegex, bool isRecursive, uint64_t maxAge) {
   const auto files = utils::file::FileUtils::list_dir_all(baseDir, logger_, isRecursive);
 
-  std::string fullRegex = baseDir;
-  if (*baseDir.rbegin() != utils::file::FileUtils::get_separator()) {
-    fullRegex += utils::file::FileUtils::get_separator();
+  // !!! In Nifi Java it is like this, need to analyze.
+/*
+  const auto separator = utils::file::FileUtils::get_separator();
+
+  const auto baseDirNoTrailingSeparator =
+    (*baseDir.rbegin() == separator)
+      ? baseDir.substr(0, baseDir.size() - 1) 
+      : baseDir;
+
+  std::string adjustedSeparator;
+  if (separator == '/') {
+    // handle unix-style paths
+    adjustedSeparator = separator;
+  } else {
+    std::stringstream strStream;
+    strStream << std::quoted("" + separator);
+    adjustedSeparator = strStream.str();
   }
-  fullRegex += fileRegex;
+
+  const std::string fullRegex = baseDirNoTrailingSeparator + separator + fileRegex;
 
   std::regex rgx(fullRegex);
+*/
+
+  std::regex rgx(fileRegex);
 
   std::vector<std::string> ret;
 
@@ -429,11 +449,7 @@ std::vector<std::string> TailFile::getFilesToTail(const std::string& baseDir, co
       continue;
     }
 
-    if (isMultiChanging_) {
-      if (std::time(0) - lastModified < maxAge_) {
-        ret.push_back(path);
-      }
-    } else {
+    if (std::time(0) - lastModified < maxAge_) {
       ret.push_back(path);
     }
   }
@@ -619,6 +635,7 @@ struct WriteCallback : public OutputStreamCallback {
 
     newPosition_ = pos;
 
+    checksum_ = 0;
     bool seenCR = false;
     std::vector<uint8_t> line;
     std::size_t size = 102400;
@@ -636,8 +653,12 @@ struct WriteCallback : public OutputStreamCallback {
             seenCR = false;
             line.push_back(c);
             ret += writeToStream(line);
-            checksum_ = crc32(checksum_, &c, 1);
+            checksum_ = crc32(checksum_, reinterpret_cast<uint8_t*>(line.data()), line.size());
             newPosition_ += line.size();
+
+            for (auto c : line) {
+              std::cout << c;
+            }
             line.clear();
           }
           break;
@@ -652,7 +673,7 @@ struct WriteCallback : public OutputStreamCallback {
             if (seenCR) {
               seenCR = false;
               ret += writeToStream(line);
-              checksum_ = crc32(checksum_, &c, 1);
+              checksum_ = crc32(checksum_, reinterpret_cast<uint8_t*>(line.data()), line.size());
               newPosition_ += line.size() - 1;
               line.clear();
             }
@@ -686,7 +707,7 @@ void TailFile::processTailFile(core::ProcessContext& context, core::ProcessSessi
     rolloverOccurred = false;
 
     if (startPosition_ == StartBeginOfTime) {
-      // Should be assigned 'rolloverOccurred' ?
+      // Should be assigned 'rolloverOccurred' (in Nifi Java it doesn't, is it a bug) ?
       recoverRolledFiles(context, session, tailFile, tfo->getExpectedRecoveryChecksum(), tfo->getState().timestamp(), tfo->getState().position());
     } else if (startPosition_ == StartCurrentFile) {
       cleanup();
@@ -764,7 +785,6 @@ void TailFile::processTailFile(core::ProcessContext& context, core::ProcessSessi
     fileExists = createReader(reader, readerFilename, position) && getFileSizeLastModifiedTime(readerFilename, fileSize, fileLastModifiedTime);
   }
 
-
   const auto startTime = getTimeMillis(); 
 
   // Check if file has rotated.
@@ -806,6 +826,8 @@ void TailFile::processTailFile(core::ProcessContext& context, core::ProcessSessi
       // Since file has rotated, we set position to 0.
       position = 0;
       checksum = 0;
+
+      reader.seekg(0);
     }
 
     fileSizeEqPosition = fileSize == position;
@@ -880,16 +902,18 @@ std::vector<std::string> TailFile::getRolledOffFiles(core::ProcessContext& conte
   }
 
   const auto posSlash = tailFilePath.find_last_of("/\\");
-  std::string directory =
+  std::string dir =
     (posSlash == std::string::npos)
-    ? tailFilePath.substr(0, posSlash)
-    : ".";
+      ? "."
+      : tailFilePath.substr(0, posSlash);
+
+  std::cout << "dir: " << dir << std::endl;
 
   const auto rposDot = tailFilePath.rfind('.');
   std::string beforeDot =
     (rposDot == std::string::npos)
-    ? tailFilePath
-    : tailFilePath.substr(0, rposDot);
+      ? tailFilePath
+      : tailFilePath.substr(0, rposDot);
 
   auto rollingPattern = rollingFileNamePattern_;
   rollingPattern = utils::StringUtils::replaceAll(rollingPattern, "${filename}", beforeDot);
@@ -897,9 +921,9 @@ std::vector<std::string> TailFile::getRolledOffFiles(core::ProcessContext& conte
   std::vector<std::string> rolledOffFiles;
 
   const std::regex rgx(rollingPattern);
-  const auto files = utils::file::FileUtils::list_dir_all(directory, logger_, false);
+  const auto files = utils::file::FileUtils::list_dir_all(dir, logger_, false);
   for (const auto& file : files) {
-    const auto filePath = file.first + file.second;
+    const auto filePath = file.first + utils::file::FileUtils::get_separator() + file.second;
     if (std::regex_search(filePath, rgx)) {
       const auto lastModified = utils::file::FileUtils::last_write_time(filePath);
 
@@ -996,9 +1020,15 @@ bool TailFile::recoverRolledFiles(
   // then we know we've already processed this file. If the checksums do not match, 
   // then we have notprocessed this file and we need to seek back to position 0 and ingest the entire file.
   // For all other files that have been rolled over, we need to just ingest the entire file.
-  if (expectedChecksum != 0 && rolledOffFiles[0].size() >= position) {
-    const auto firstFile = rolledOffFiles[0];
+  const auto firstFile = rolledOffFiles[0];
+  uint64_t fileSize{};
+  uint64_t fileLastModifiedTime{};
+  if (!getFileSizeLastModifiedTime(firstFile, fileSize, fileLastModifiedTime)) {
+    logger_->log_error("'stat' file %s", firstFile.c_str());
+    return false;
+  }
 
+  if (expectedChecksum != 0 && fileSize >= position) {
     const auto startTime = getTimeMillis();
 
     if (position > 0) {
@@ -1012,13 +1042,6 @@ bool TailFile::recoverRolledFiles(
       const auto checksumResult = calcCRC(file, position, sizeIsLarge);
       if (checksumResult == expectedChecksum) {
         logger_->log_debug("Checksum for '%s' matched expected checksum. Will skip first %" PRIu64 " bytes", firstFile.c_str(), position);
-
-        uint64_t fileSize{};
-        uint64_t fileLastModifiedTime{};
-        if (!getFileSizeLastModifiedTime(firstFile, fileSize, fileLastModifiedTime)) {
-          logger_->log_error("'stat' file %s", firstFile.c_str());
-          return {};
-        }
 
         // This is the same file that we were reading when we shutdown. Start reading from this point on.
         rolledOffFiles.erase(rolledOffFiles.begin(), rolledOffFiles.begin() + 1);
@@ -1108,30 +1131,32 @@ TailFileState TailFile::consumeFileFully(const std::string& filename, core::Proc
 
 uint64_t TailFile::calcCRC(std::ifstream& reader, uint64_t size, bool& sizeIsLarge) {
   sizeIsLarge = false;
-
-  io::BaseStream base;
-  io::CRCStream<io::BaseStream> streamCRC(&base);
-
+  uint64_t checksum{};
   uint64_t count{};
 
-  std::vector<char> buf(10240);
-  bool allDataRead = false;
+  std::size_t bufSize = min(size, 102400);
+  std::vector<char> buf(bufSize);
+  bool endOfReader = false;
   do {
-    if (count + buf.size() > size) {
-      allDataRead = true;
-      buf.resize(size - count);
+    if (endOfReader = !reader.read(buf.data(), bufSize)) {
+      bufSize = reader.gcount();
     }
 
-    if (sizeIsLarge = !reader.read(buf.data(), buf.size())) {
-      buf.resize(reader.gcount());
+    count += bufSize;
+
+    if (endOfReader) {
+      if (count < size) {
+        sizeIsLarge = true;
+        return 0;
+      } 
+
+      bufSize -= (count - size);
     }
 
-    count += buf.size();
+    checksum = crc32(checksum, reinterpret_cast<uint8_t*>(buf.data()), bufSize);
+  } while (!endOfReader);
 
-    streamCRC.writeData(reinterpret_cast<uint8_t*>(buf.data()), buf.size());
-  } while (!sizeIsLarge && !allDataRead);
-
-  return streamCRC.getCRC();
+  return checksum;
 }
 
 bool TailFile::getFileSizeLastModifiedTime(const std::string& filename, uint64_t& size, uint64_t& lastModifiedTime) {
