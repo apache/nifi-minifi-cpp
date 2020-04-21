@@ -23,14 +23,8 @@ file(GLOB SOURCES  "*.cpp" "wel/*.cpp")
 
 add_library(minifi-wel STATIC ${SOURCES})
 set_property(TARGET minifi-wel PROPERTY POSITION_INDEPENDENT_CODE ON)
-if(THREADS_HAVE_PTHREAD_ARG)
-  target_compile_options(PUBLIC minifi-wel "-pthread")
-endif()
-if(CMAKE_THREAD_LIBS_INIT)
-  target_link_libraries(minifi-wel "${CMAKE_THREAD_LIBS_INIT}")
-endif()
 
-target_link_libraries(minifi-wel ${LIBMINIFI})
+target_link_libraries(minifi-wel ${LIBMINIFI} Threads::Threads)
 target_link_libraries(minifi-wel PUGI::libpugixml ZLIB::ZLIB Wevtapi.lib)
 
 SET(WEL-EXTENSION minifi-wel PARENT_SCOPE)

@@ -23,14 +23,8 @@ file(GLOB SOURCES "*.cpp")
 
 add_library(minifi-sqlite-extensions STATIC ${SOURCES})
 set_property(TARGET minifi-sqlite-extensions PROPERTY POSITION_INDEPENDENT_CODE ON)
-if(THREADS_HAVE_PTHREAD_ARG)
-  target_compile_options(PUBLIC minifi-sqlite-extensions "-pthread")
-endif()
-if(CMAKE_THREAD_LIBS_INIT)
-  target_link_libraries(minifi-sqlite-extensions "${CMAKE_THREAD_LIBS_INIT}")
-endif()
 
-target_link_libraries(minifi-sqlite-extensions ${LIBMINIFI})
+target_link_libraries(minifi-sqlite-extensions ${LIBMINIFI} Threads::Threads)
 target_link_libraries(minifi-sqlite-extensions SQLite::SQLite3)
 
 

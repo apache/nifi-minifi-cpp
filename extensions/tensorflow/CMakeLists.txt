@@ -32,14 +32,8 @@ file(GLOB SOURCES  "*.cpp")
 
 add_library(minifi-tensorflow-extensions STATIC ${SOURCES})
 set_property(TARGET minifi-tensorflow-extensions PROPERTY POSITION_INDEPENDENT_CODE ON)
-if(THREADS_HAVE_PTHREAD_ARG)
-  target_compile_options(PUBLIC minifi-tensorflow-extensions "-pthread")
-endif()
-if(CMAKE_THREAD_LIBS_INIT)
-  target_link_libraries(minifi-tensorflow-extensions "${CMAKE_THREAD_LIBS_INIT}")
-endif()
 
-target_link_libraries(minifi-tensorflow-extensions ${LIBMINIFI})
+target_link_libraries(minifi-tensorflow-extensions ${LIBMINIFI} Threads::Threads)
 target_link_libraries(minifi-tensorflow-extensions ${TENSORFLOW_LIBRARIES})
 
 SET (TENSORFLOW-EXTENSIONS minifi-tensorflow-extensions PARENT_SCOPE)

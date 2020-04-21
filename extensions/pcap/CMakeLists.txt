@@ -53,12 +53,6 @@ file(GLOB SOURCES  "*.cpp")
 
 add_library(minifi-pcap STATIC ${SOURCES})
 set_property(TARGET minifi-pcap PROPERTY POSITION_INDEPENDENT_CODE ON)
-if(THREADS_HAVE_PTHREAD_ARG)
-  target_compile_options(PUBLIC minifi-pcap "-pthread")
-endif()
-if(CMAKE_THREAD_LIBS_INIT)
-  target_link_libraries(minifi-pcap "${CMAKE_THREAD_LIBS_INIT}")
-endif()
 
 add_dependencies(minifi-pcap pcappp)
 
@@ -69,7 +63,7 @@ if (APPLE)
 	set_target_properties(minifi-pcap PROPERTIES LINK_FLAGS "-Wl,-F/Library/Frameworks")
 endif ()
 
-target_link_libraries(minifi-pcap ${LIBMINIFI})
+target_link_libraries(minifi-pcap ${LIBMINIFI} Threads::Threads)
 
 SET (PCAP-EXTENSION minifi-pcap PARENT_SCOPE)
 register_extension(minifi-pcap)

@@ -43,7 +43,6 @@ function(use_bundled_civetweb SOURCE_DIR BINARY_DIR)
     # Set build options
     set(CIVETWEB_CMAKE_ARGS ${PASSTHROUGH_CMAKE_ARGS}
             "-DCMAKE_INSTALL_PREFIX=${CIVETWEB_BIN_DIR}"
-            -DCMAKE_POSITION_INDEPENDENT_CODE=ON
             -DCIVETWEB_ENABLE_SSL_DYNAMIC_LOADING=OFF
             -DCIVETWEB_ENABLE_CXX=ON
             -DBUILD_TESTING=OFF
@@ -91,7 +90,7 @@ function(use_bundled_civetweb SOURCE_DIR BINARY_DIR)
     set_property(TARGET CIVETWEB::c-library APPEND PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${CIVETWEB_INCLUDE_DIR})
     add_dependencies(CIVETWEB::c-library civetweb-external)
     if (NOT OPENSSL_OFF)
-        set_property(TARGET CIVETWEB::c-library APPEND PROPERTY INTERFACE_LINK_LIBRARIES OpenSSL::SSL OpenSSL::Crypto)
+        set_property(TARGET CIVETWEB::c-library APPEND PROPERTY INTERFACE_LINK_LIBRARIES OpenSSL::SSL OpenSSL::Crypto Threads::Threads)
     endif()
 
     add_library(CIVETWEB::civetweb-cpp STATIC IMPORTED)

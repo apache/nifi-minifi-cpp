@@ -25,14 +25,8 @@ file(GLOB SOURCES  "*.cpp")
 add_library(minifi-sensors STATIC ${SOURCES})
 
 set_property(TARGET minifi-sensors PROPERTY POSITION_INDEPENDENT_CODE ON)
-if(THREADS_HAVE_PTHREAD_ARG)
-  target_compile_options(PUBLIC minifi-sensors "-pthread")
-endif()
-if(CMAKE_THREAD_LIBS_INIT)
-  target_link_libraries(minifi-sensors "${CMAKE_THREAD_LIBS_INIT}")
-endif()
 
-target_link_libraries(minifi-sensors ${LIBMINIFI})
+target_link_libraries(minifi-sensors ${LIBMINIFI} Threads::Threads)
 
 add_dependencies(minifi-sensors RTIMULib)
 target_link_libraries(minifi-sensors RTIMULib)

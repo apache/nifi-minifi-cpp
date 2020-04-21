@@ -51,14 +51,8 @@ file(GLOB SOURCES  "*.cpp")
 
 add_library(minifi-usb-camera-extensions STATIC ${SOURCES})
 set_property(TARGET minifi-usb-camera-extensions PROPERTY POSITION_INDEPENDENT_CODE ON)
-if(THREADS_HAVE_PTHREAD_ARG)
-  target_compile_options(PUBLIC minifi-usb-camera-extensions "-pthread")
-endif()
-if(CMAKE_THREAD_LIBS_INIT)
-  target_link_libraries(minifi-usb-camera-extensions "${CMAKE_THREAD_LIBS_INIT}")
-endif()
 
-target_link_libraries(minifi-usb-camera-extensions ${LIBMINIFI})
+target_link_libraries(minifi-usb-camera-extensions ${LIBMINIFI} Threads::Threads)
 target_link_libraries(minifi-usb-camera-extensions libuvc PNG::PNG)
 
 SET (USB-CAMERA-EXTENSIONS minifi-usb-camera-extensions PARENT_SCOPE)
