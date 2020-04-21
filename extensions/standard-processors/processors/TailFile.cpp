@@ -381,8 +381,8 @@ void TailFile::initStates(const std::vector<std::string>& filesToTail, const std
     }
 
     // Then we need to get the highest ID used so far to be sure we don't mix different files in case we add new files to tail.
-    for (auto it = states_.begin(); it != states_.end(); ++it) {
-      const auto filenameIndex = it->second->getFilenameIndex();
+    for (const auto it: states_) {
+      const auto filenameIndex = it.second->getFilenameIndex();
       if (fileIndex <= filenameIndex) {
         fileIndex = filenameIndex + 1;
       }
@@ -483,7 +483,7 @@ void TailFile::recoverState(core::ProcessContext& context, const std::unordered_
   const auto length = Uint64(stateValues.at(lengthKeyIndex));
   const auto checksumValue = Uint64(stateValues.at(checksumKeyIndex));
 
-  if (filePath != storedStateFilename) {
+  if (!checksumValue || filePath != storedStateFilename) {
     resetState(filePath);
     return;
   }
@@ -537,6 +537,13 @@ void TailFile::recoverState(core::ProcessContext& context, const std::unordered_
   tfo->setState(TailFileState(filePath, readerFileName, position, timestamp, length, 0));
 }
 
+void TailFile::resetState(const std::string& filePath) {
+  auto& tfo = states_.at(filePath);
+
+  tfo->setExpectedRecoveryChecksum(0);
+  tfo->setState(TailFileState(filePath, "", 0, 0, 0, 0));
+}
+
 void TailFile::cleanup() {
   for (auto it : states_) {
     auto& tfo = it.second;
@@ -557,13 +564,7 @@ void TailFile::onTrigger(const std::shared_ptr<core::ProcessContext> &context, c
   if (isMultiChanging_) {
     auto timeSinceLastLookup = getTimeMillis() - lastLookup_;
     if (timeSinceLastLookup > lookupFrequency_) {
-      try {
-        initStates(lookup(*context), getStateMap(), false, startPosition_);
-      }
-      catch (std::ifstream::failure e) {
-        logger_->log_error("TailFile::onTrigger '%s'", e.what());
-        throw;
-      }
+      initStates(lookup(*context), getStateMap(), false, startPosition_);
     }
   }
 
@@ -580,13 +581,6 @@ void TailFile::onTrigger(const std::shared_ptr<core::ProcessContext> &context, c
   for (const auto it : states_) {
     processTailFile(*context, *session, it.first);
   }
-}
-
-void TailFile::resetState(const std::string& filePath) {
-  auto& tfo = states_.at(filePath);
-
-  tfo->setExpectedRecoveryChecksum(0);
-  tfo->setState(TailFileState(filePath, "", 0, 0, 0, 0));
 }
 
 bool TailFile::getReaderSizePosition(uint64_t& size, uint64_t& position, std::ifstream& reader, const std::string& filename) {
@@ -638,15 +632,15 @@ struct WriteCallback : public OutputStreamCallback {
     checksum_ = 0;
     bool seenCR = false;
     std::vector<uint8_t> line;
-    std::size_t size = 102400;
-    std::vector<char> buf(size);
+    std::size_t bufSize = 102400;
+    std::vector<char> buf(bufSize);
     bool endOfReader = false;
     do {
-      if (endOfReader = !reader_.read(buf.data(), size)) {
-        size = reader_.gcount();
+      if (endOfReader = !reader_.read(buf.data(), bufSize)) {
+        bufSize = reader_.gcount();
       }
 
-      for (auto i = 0; i < size; i++) {
+      for (auto i = 0; i < bufSize; i++) {
         uint8_t c = buf[i];
         switch (c) {
           case '\n': {
@@ -655,10 +649,6 @@ struct WriteCallback : public OutputStreamCallback {
             ret += writeToStream(line);
             checksum_ = crc32(checksum_, reinterpret_cast<uint8_t*>(line.data()), line.size());
             newPosition_ += line.size();
-
-            for (auto c : line) {
-              std::cout << c;
-            }
             line.clear();
           }
           break;
@@ -850,7 +840,7 @@ void TailFile::processTailFile(core::ProcessContext& context, core::ProcessSessi
   session.write(flowFile, &writer);
 
   // If there ended up being no data, just remove the FlowFile.
-  if (flowFile->getSize() == 0) {
+  if (!flowFile->getSize()) {
     session.remove(flowFile);
     logger_->log_debug("No data to consume; removed created FlowFile");
   } else {
@@ -1144,13 +1134,11 @@ uint64_t TailFile::calcCRC(std::ifstream& reader, uint64_t size, bool& sizeIsLar
 
     count += bufSize;
 
-    if (endOfReader) {
-      if (count < size) {
-        sizeIsLarge = true;
-        return 0;
-      } 
-
+    if (count > size) {
       bufSize -= (count - size);
+      endOfReader = true;
+    } else if (count < size && endOfReader) {
+      sizeIsLarge = true;
     }
 
     checksum = crc32(checksum, reinterpret_cast<uint8_t*>(buf.data()), bufSize);
