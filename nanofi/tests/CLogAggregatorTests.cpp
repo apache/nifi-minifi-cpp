@@ -28,6 +28,7 @@
 #include <sys/stat.h>
 #include "core/string_utils.h"
 #include "core/file_utils.h"
+#include "core/flowfiles.h"
 
 #include "CTestsBase.h"
 

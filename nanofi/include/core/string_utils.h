@@ -88,27 +88,19 @@ int validate_list(token_list * tk_list);
 void attach_lists(token_list * to, token_list * from);
 
 /**
- * Copies source string into destination
+ * Returns a heap allocated string copy
  * @param source, the string to copy from
- * @param dest, the destination to copy into
- * This function allocates heap memory for destination
- * so the caller is expected to free it
- *
  * @attention the source string is expected to be
  * null terminated
  */
-void copystr(const char * source, char ** dest);
+char * copystr(const char * source);
 
 /**
- * Copies len number of characters from source
- * into destination
- * This function allocates heap memory for destination
- * so the caller is expected to free it
+ * Returns a heap allocated string copy
  * @param source, the source string to be copied
- * @param len the length to be copied
- * @param dest the destination to copy into
+ * @param len the number of chars to be copied
  */
-void copynstr(const char * source, size_t len, char ** dest);
+char * copynstr(const char * source, size_t len);
 
 /**
  * Copies min(src_len, dest_len) number of chars from source

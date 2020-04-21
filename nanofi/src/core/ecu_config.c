@@ -33,14 +33,14 @@ int parse_ecu_properties(config_yaml_node_t * node, ecu_config * conf) {
     logc(err, "ecu name not provided or empty");
     return 0;
   }
-  copystr(out->value, &conf->name);
+  conf->name = copystr(out->value);
 
   HASH_FIND(hh, node, "stream_name", strlen("stream_name"), out);
   if (!out || !out->value || strlen(out->value) == 0) {
     logc(err, "ecu stream name not provided or empty");
     return 0;
   }
-  copystr(out->value, &conf->stream_name);
+  conf->stream_name = copystr(out->value);
   return 1;
 }
 
@@ -64,8 +64,8 @@ properties_t * parse_io_properties(config_yaml_node_t * node, const char * key) 
         continue;
       }
       properties_t * prop = (properties_t *)malloc(sizeof(properties_t));
-      copystr(el->key, &prop->key);
-      copystr(el->value, &prop->value);
+      prop->key = copystr(el->key);
+      prop->value = copystr(el->value);
       HASH_ADD_KEYPTR(hh, props, prop->key, strlen(prop->key), prop);
     }
   }
@@ -104,8 +104,8 @@ storage_config * validate_storage_configuration(config_yaml_node_t * node) {
       free(conf);
       return NULL;
     }
-    copystr(sp->value, &conf->storage_path);
-    copystr(sm->value, &conf->sync_mode);
+    conf->storage_path = copystr(sp->value);
+    conf->sync_mode = copystr(sm->value);
   }
 
   HASH_FIND(hh, node, "chunk_size", strlen("chunk_size"), cs);

@@ -30,8 +30,9 @@ extern "C" {
 #include <core/storage.h>
 
 typedef struct file_input_context {
-    size_t current_offset;
     properties_t * input_properties;
+    fileinfo * files;
+    fileinfo* temps;
     char * file_path;
     uint64_t chunk_size;
     storage_stream * stream;
@@ -42,12 +43,6 @@ typedef struct file_input_context {
     lock_t stop_mutex;
     conditionvariable_t stop_cond;
 } file_input_context_t;
-
-typedef struct data_buff {
-    char * data;
-    size_t len;
-    char * file_path;
-} data_buff_t;
 
 void initialize_file_input(file_input_context_t * ctx);
 
@@ -64,21 +59,6 @@ void free_file_input_context(file_input_context_t * ctx);
 
 int set_file_input_property(file_input_context_t * ctx, const char * name, const char * value);
 file_input_context_t * create_file_input_context();
-void set_file_params(file_input_context_t * f_ctx,
-        const char * file_path,
-        uint64_t tail_freq,
-        uint64_t current_offset);
-void set_file_chunk_params(file_input_context_t * f_ctx,
-        const char * file_path,
-        uint64_t tail_freq,
-        uint64_t current_offset,
-        uint64_t chunk_size);
-void set_file_delim_params(file_input_context_t * f_ctx,
-        const char * file_path,
-        uint64_t tail_freq,
-        uint64_t current_offset,
-        char delim);
-data_buff_t read_file_chunk_data(FILE * fp, file_input_context_t * ctx);
 
 static const property_descriptor chunk_prop_desc[3] = {
     {"file_path", "File Path", "Path of the file to tail on", 1, 0, 0, "PathValidator"},

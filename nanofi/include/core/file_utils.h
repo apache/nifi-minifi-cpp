@@ -19,12 +19,12 @@
 #ifndef NANOFI_INCLUDE_CORE_FILE_UTILS_H_
 #define NANOFI_INCLUDE_CORE_FILE_UTILS_H_
 
-#include "utlist.h"
-#include "flowfiles.h"
-
+#include <stdio.h>
 #ifndef _WIN32
 #include <dirent.h>
 #endif
+
+#include "core/cstructs.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -83,6 +83,16 @@ char * get_current_working_directory();
 properties_t * read_properties_file(const char * file_path);
 
 size_t get_file_size(FILE * fp);
+
+/**
+ * Returns a NULL terminated char ** array
+ * of file paths that match the pattern provided
+ * in path. directories are included or excluded
+ * from the result set depending on the value of
+ * @param include_dirs (0 = exclude, 1 = include)
+ * @param path the pattern to match
+ */
+fileinfo * scan_matching_files(const char * pattern, int include_dirs);
 
 #ifdef __cplusplus
 }

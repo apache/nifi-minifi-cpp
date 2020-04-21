@@ -167,7 +167,6 @@ config_yaml_node_t * parse_yaml_configuration(const char * config_file) {
     return NULL;
   }
 
-
   yaml_document_delete(&document);
   yaml_parser_delete(&parser);
   fclose(fp);

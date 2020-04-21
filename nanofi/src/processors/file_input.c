@@ -24,10 +24,11 @@
 #include <errno.h>
 #include <string.h>
 #include <sys/stat.h>
-#include <core/log.h>
 #include <sys/types.h>
+#include <core/log.h>
 #include <core/string_utils.h>
 #include <core/core_utils.h>
+#include <core/file_utils.h>
 #include <processors/file_input.h>
 
 void initialize_file_input(file_input_context_t * ctx) {
@@ -49,6 +50,15 @@ void wait_file_input_stop(file_input_context_t * ctx) {
     condition_variable_wait(&ctx->stop_cond, &ctx->stop_mutex);
   }
   release_lock(&ctx->stop_mutex);
+}
+
+void free_file_list(fileinfo * fps) {
+  fileinfo * el, *tmp;
+  LL_FOREACH_SAFE(fps, el, tmp) {
+    LL_DELETE(fps, el);
+    free(el->path);
+    free(el);
+  }
 }
 
 int validate_file_delimiter(const char * delimiter_str, char * delim) {
@@ -82,7 +92,7 @@ int validate_file_delimiter(const char * delimiter_str, char * delim) {
 
 int validate_file_properties(struct file_input_context * context) {
   if (!context || !context->input_properties) {
-    printf("input context properties not defined\n");
+    logc(err, "input context properties not defined");
     return -1;
   }
 
@@ -131,21 +141,21 @@ int validate_file_properties(struct file_input_context * context) {
   uint64_t tail_frequency_uint = 0;
   char delim = '\0';
 
-  if ((is_file(file_path) < 0)
-      || (dl && validate_file_delimiter(delimiter, &delim) < 0)
+  fileinfo * files = scan_matching_files(file_path, 0);
+  if (!files) {
+    logc(err, "No matching files found for path %s", file_path);
+    return -1;
+  }
+
+  if ((dl && validate_file_delimiter(delimiter, &delim) < 0)
       || (cs && str_to_uint(chunk_size_str, &chunk_size_uint) < 0)
       || (str_to_uint(tail_frequency_str, &tail_frequency_uint) < 0)
       || (dl && delim == '\0')) {
     return -1;
   }
 
-  //populate file input context with parameters
-  size_t file_path_len = strlen(file_path);
-  char * fp = context->file_path;
-  free(fp);
-  context->file_path = (char *) malloc(file_path_len + 1);
-  strcpy(context->file_path, file_path);
-
+  free_file_list(context->files);
+  context->files = files;
   context->tail_frequency_ms = tail_frequency_uint;
 
   if (cs)
@@ -159,10 +169,10 @@ int set_file_input_property(file_input_context_t * ctx, const char * name, const
   return add_property(&ctx->input_properties, name, value);
 }
 
-void prepare_meta_data(file_input_context_t * ctx, char ** meta_data, size_t * len) {
-  char * offset_str = uint_to_str(ctx->current_offset);
+void prepare_metadata(size_t current_offset, const char * path, char ** meta_data, size_t * len) {
+  char * offset_str = uint_to_str(current_offset);
   properties_t * props = NULL;
-  add_property(&props, "file_path", ctx->file_path);
+  add_property(&props, "file_path", path);
   add_property(&props, "current_offset", offset_str);
   serialize_properties(props, meta_data, len);
   free(offset_str);
@@ -183,106 +193,132 @@ void free_content(content_t content) {
   free(content.meta_data);
 }
 
-void read_file_chunk(file_input_context_t * ctx) {
-  errno = 0;
-  FILE * fp = fopen(ctx->file_path, "rb");
-  if (!fp) {
-    logc(err, "Error opening file %s, error: %s\n", ctx->file_path, strerror(errno));
-    return;
-  }
-  size_t bytes_read = 0;
-  char * data = (char *) malloc((ctx->chunk_size) * sizeof(char));
-  fseek(fp, ctx->current_offset, SEEK_SET);
-  while ((bytes_read = fread(data, 1, ctx->chunk_size, fp)) > 0) {
-    if (bytes_read < ctx->chunk_size) {
-      break;
-    }
-    size_t old_offset = ctx->current_offset;
-    ctx->current_offset = ftell(fp);
-    char * meta_data;
-    size_t meta_len = 0;
-    prepare_meta_data(ctx, &meta_data, &meta_len);
-    content_t content = prepare_content(data, bytes_read, meta_data, meta_len);
-    // prepare meta data, the file name and current offset
-    if (!write_chunk(ctx->stream, content)) {
-      ctx->current_offset = old_offset;
-      break;
-    }
+uint64_t process_content(file_input_context_t * ctx, char * data, uint64_t len, uint64_t offset, const char * path) {
+  char * meta_data;
+  uint64_t meta_len = 0;
+  prepare_metadata(offset, path, &meta_data, &meta_len);
+  content_t content = prepare_content(data, len, meta_data, meta_len);
+  if (!write_chunk(ctx->stream, content)) {
     free_content(content);
-    fseek(fp, ctx->current_offset, SEEK_SET);
+    return 0;
   }
-  free(data);
-  fclose(fp);
+  free_content(content);
+  return len;
+}
+
+void reset_file_list(file_input_context_t * ctx) {
+  LL_CONCAT(ctx->files, ctx->temps);
+  ctx->temps = NULL;
+}
+
+void reset_file_context(file_input_context_t * ctx, fileinfo ** file) {
+  assert(ctx && file);
+  LL_DELETE(ctx->files, *file);
+  LL_APPEND(ctx->temps, *file);
+  reset_file_list(ctx);
+}
+
+void read_file_chunk(file_input_context_t * ctx) {
+  fileinfo * file, *tmp;
+  LL_FOREACH_SAFE(ctx->files, file, tmp) {
+    errno = 0;
+    FILE * fp = fopen(file->path, "rb");
+    if (!fp) {
+      logc(err, "Error opening file %s, error: %s\n", file->path, strerror(errno));
+      return;
+    }
+    uint64_t bytes_read = 0;
+    char * data = (char *) malloc((ctx->chunk_size) * sizeof(char));
+    fseek(fp, file->offset, SEEK_SET);
+    while ((bytes_read = fread(data, 1, ctx->chunk_size, fp)) > 0) {
+      if (bytes_read < ctx->chunk_size) {
+        break;
+      }
+      uint64_t processed_bytes = process_content(ctx, data, bytes_read, ftell(fp), file->path);
+      if (!processed_bytes) {
+        fclose(fp);
+        free(data);
+        reset_file_context(ctx, &file);
+        return;
+      }
+
+      file->offset += processed_bytes;
+      fseek(fp, file->offset, SEEK_SET);
+    }
+    free(data);
+    fclose(fp);
+    LL_DELETE(ctx->files, file);
+    LL_APPEND(ctx->temps, file);
+  }
+  reset_file_list(ctx);
 }
 
 void read_file_delim(file_input_context_t * ctx) {
-  FILE * fp = fopen(ctx->file_path, "rb");
-  errno = 0;
-  if (!fp) {
-    logc(err, "Unable to open file. {file: %s, reason: %s}\n", ctx->file_path, strerror(errno));
-    return;
-  }
+  fileinfo * file, *tmp;
+  LL_FOREACH_SAFE(ctx->files, file, tmp) {
+    FILE * fp = fopen(file->path, "rb");
+    errno = 0;
+    if (!fp) {
+      logc(err, "Unable to open file. {file: %s, reason: %s}\n", file->path, strerror(errno));
+      return;
+    }
 
-  char data[4096];
-  memset(data, 0, sizeof(data));
-  fseek(fp, ctx->current_offset, SEEK_SET);
-  size_t old_offset = ctx->current_offset;
-  size_t bytes_read = 0;
-  while ((bytes_read = fread(data, 1, 4096, fp)) > 0) {
-    const char * begin = data;
-    const char * end = NULL;
+    char data[4096];
+    memset(data, 0, sizeof(data));
+    fseek(fp, file->offset, SEEK_SET);
+    uint64_t old_offset = file->offset;
+    uint64_t bytes_read = 0;
+    while ((bytes_read = fread(data, 1, 4096, fp)) > 0) {
+      const char * begin = data;
+      const char * end = NULL;
 
-    size_t search_bytes = bytes_read;
-    while ((end = memchr(begin, ctx->delimiter, search_bytes))) {
-      old_offset = ctx->current_offset;
-      uint64_t len = end - begin;
-      ctx->current_offset += (len + 1);
-      if (len > 0) {
-        char * meta_data;
-        size_t meta_len = 0;
-        prepare_meta_data(ctx, &meta_data, &meta_len);
-        content_t content = prepare_content((char *)begin, len, meta_data, meta_len);
-        if (!write_chunk(ctx->stream, content)) {
-          free_content(content);
+      uint64_t search_bytes = bytes_read;
+      while ((end = memchr(begin, ctx->delimiter, search_bytes))) {
+        old_offset = file->offset;
+        uint64_t len = end - begin;
+        file->offset += (len + 1);
+        if (len > 0) {
+          uint64_t processed_bytes = process_content(ctx, (char *)begin, len, file->offset, file->path);
+          if (!processed_bytes) {
+            fclose(fp);
+            file->offset = old_offset;
+            reset_file_context(ctx, &file);
+            return;
+          }
+        }
+        begin = (end + 1);
+        search_bytes -= (len + 1);
+      }
+
+      //at this point we did not find the delimiter in search_bytes bytes
+      //if search_bytes is less than 4096, we will come back later
+      old_offset = file->offset;
+      if (search_bytes != 0) {
+        if (search_bytes < 4096) {
           fclose(fp);
-          ctx->current_offset = old_offset;
           return;
         }
-        free_content(content);
+        file->offset += search_bytes;
+        uint64_t processed_bytes = process_content(ctx, (char *)begin, search_bytes, file->offset, file->path);
+        if (!processed_bytes) {
+          fclose(fp);
+          file->offset = old_offset;
+          reset_file_context(ctx, &file);
+          return;
+        }
       }
-      begin = (end + 1);
-      search_bytes -= (len + 1);
+      //ship out the bytes anyway even though we did not find
+      //the delimiter. This is necessary to avoid getting
+      //stuck at an offset and not being able to ship contents
+      //even though delimiter might appear albeit 4096 bytes beyond
+      //current offset
+      fseek(fp, file->offset, SEEK_SET);
     }
-
-    //at this point we did not find the delimiter in search_bytes bytes
-    //if search_bytes is less than 4096, we will come back later
-    old_offset = ctx->current_offset;
-    if (search_bytes != 0) {
-      if (search_bytes < 4096) {
-        fclose(fp);
-        return;
-      }
-      ctx->current_offset += search_bytes;
-      char * meta_data;
-      size_t meta_len = 0;
-      prepare_meta_data(ctx, &meta_data, &meta_len);
-      content_t content = prepare_content((char *)begin, search_bytes, meta_data, meta_len);
-      if (!write_chunk(ctx->stream, content)) {
-        free_content(content);
-        fclose(fp);
-        ctx->current_offset = old_offset;
-        return;
-      }
-      free_content(content);
-    }
-    //ship out the bytes anyway even though we did not find
-    //the delimiter. This is necessary to avoid getting
-    //stuck at an offset and not being able to ship contents
-    //even though delimiter might appear albeit 4096 bytes beyond
-    //current offset
-    fseek(fp, ctx->current_offset, SEEK_SET);
+    fclose(fp);
+    LL_DELETE(ctx->files, file);
+    LL_APPEND(ctx->temps, file);
   }
-  fclose(fp);
+  reset_file_list(ctx);
 }
 
 file_input_context_t * create_file_input_context() {
@@ -321,43 +357,7 @@ void free_file_input_properties(file_input_context_t * ctx) {
 void free_file_input_context(file_input_context_t * ctx) {
   free_properties(ctx->input_properties);
   free(ctx->file_path);
+  free_file_list(ctx->files);
   destroy_lock(&ctx->stop_mutex);
   free(ctx);
-}
-
-void set_file_params(file_input_context_t * f_ctx, const char * file_path,
-  uint64_t tail_freq, uint64_t current_offset) {
-  size_t fp_len = strlen(file_path);
-  f_ctx->file_path = (char *) malloc(fp_len + 1);
-  strcpy(f_ctx->file_path, file_path);
-  f_ctx->tail_frequency_ms = tail_freq;
-  f_ctx->current_offset = current_offset;
-}
-
-void set_file_chunk_params(file_input_context_t * f_ctx, const char * file_path,
-    uint64_t tail_freq, uint64_t current_offset, uint64_t chunk_size) {
-  set_file_params(f_ctx, file_path, tail_freq, current_offset);
-  f_ctx->chunk_size = chunk_size;
-}
-
-void set_file_delim_params(file_input_context_t * f_ctx, const char * file_path,
-    uint64_t tail_freq, uint64_t current_offset, char delim) {
-  set_file_params(f_ctx, file_path, tail_freq, current_offset);
-  f_ctx->delimiter = delim;
-}
-
-data_buff_t read_file_chunk_data(FILE * fp, file_input_context_t * ctx) {
-  data_buff_t chunk;
-  memset(&chunk, 0, sizeof(data_buff_t));
-  if (!ctx || ctx->chunk_size == 0 || !fp) {
-    return chunk;
-  }
-  size_t bytes_read = 0;
-  chunk.data = (char *) malloc(ctx->chunk_size + 1);
-  fseek(fp, ctx->current_offset, SEEK_SET);
-  bytes_read = fread(chunk.data, 1, ctx->chunk_size, fp);
-  chunk.data[bytes_read] = '\0';
-  chunk.len = bytes_read;
-  ctx->current_offset += bytes_read;
-  return chunk;
 }

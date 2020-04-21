@@ -30,6 +30,7 @@ typedef struct site2site_output_context {
   uint64_t tcp_port;
   char port_uuid[37];
   char * host_name;
+  uint64_t flush_interval_ms;
   properties_t * output_properties;
   struct CRawSiteToSiteClient * client;
   struct mk_list backlog_chunks;

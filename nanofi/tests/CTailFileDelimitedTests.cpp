@@ -19,6 +19,7 @@
 #include "catch.hpp"
 
 #include "CTestsBase.h"
+#include "core/flowfiles.h"
 
 /****
  * ##################################################################

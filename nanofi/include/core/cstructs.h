@@ -216,4 +216,11 @@ typedef struct {
     property_descriptor * prop_descrs;
 } io_descriptor;
 
+typedef struct fileinfo {
+  size_t offset;
+  char * path;
+  char * pos_file;
+  struct fileinfo * next;
+} fileinfo;
+
 #endif /* LIBMINIFI_SRC_CAPI_CSTRUCTS_H_ */

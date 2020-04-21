@@ -167,28 +167,25 @@ token_list tokenize_string_tailfile(const char * str, char delim) {
   return tks;
 }
 
-void copystr(const char * source, char ** dest) {
-  if (!source || !dest)
-    return;
+char * copystr(const char * source) {
+  if (!source)
+    return NULL;
   size_t len = strlen(source);
-  char * tmp = (char *) malloc(len + 1);
-  strcpy(tmp, source);
-  *dest = tmp;
+  char * dest = (char *) malloc(len + 1);
+  if (!dest) return NULL;
+  strcpy(dest, source);
+  return dest;
 }
 
-void copynstr(const char * source, size_t len, char ** dest) {
-  if (!source || !len || !dest)
-    return;
-  size_t source_len = strlen(source);
-  char * tmp;
-  if (source_len <= len) {
-    copystr(source, &tmp);
-  } else {
-    tmp = (char *) malloc(len + 1);
-    memcpy(tmp, source, len);
-    tmp[len] = '\0';
+char * copynstr(const char * source, size_t len) {
+  if (!source || !len){
+    return NULL;
   }
-  *dest = tmp;
+  char * dest = (char *)malloc(len + 1);
+  if (!dest) return NULL;
+  strncpy(dest, source, len);
+  dest[len] = '\0';
+  return dest;
 }
 
 void copynstrd(const char * source, size_t src_len, unsigned char * dest, size_t dest_len) {
@@ -215,9 +212,7 @@ int str_to_uint(const char * input_str, uint64_t * out) {
 const char * uint_to_str(uint64_t value) {
   char value_str[21];
   snprintf(value_str, sizeof(value_str), "%llu", value);
-  char * copy = NULL;
-  copystr(value_str, &copy);
-  return copy;
+  return copystr(value_str);
 }
 
 char ** parse_tokens(const char * str, size_t len, size_t num_tokens, const char * sep) {

@@ -142,11 +142,8 @@ int validate_s2s_properties(site2site_output_context_t * ctx) {
 
   properties_t * host_el = NULL;
   HASH_FIND_STR(props, "host_name", host_el);
-  if (!host_el) {
-    return -1;
-  }
-
-  if (!host_el->value) {
+  if (!host_el || !host_el->value || strlen(host_el->value) == 0) {
+    logc(err, "host name for sitetosite not specified");
     return -1;
   }
 
@@ -157,6 +154,18 @@ int validate_s2s_properties(site2site_output_context_t * ctx) {
   if (hn)
     free(hn);
   ctx->host_name = host_name;
+
+  properties_t * fel = NULL;
+  HASH_FIND_STR(props, "flush_interval_ms", fel);
+  if (!fel || !fel->value || strlen(fel->value) == 0) {
+    logc(err, "flush interval ms not specified for sitetosite");
+    return -1;
+  }
+
+  if (str_to_uint(fel->value, &ctx->flush_interval_ms) < 0) {
+    logc(err, "flush interval incorrect format");
+    return -1;
+  }
 
   if (ctx->client) {
     struct CRawSiteToSiteClient * cl = ctx->client;

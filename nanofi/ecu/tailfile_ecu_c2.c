@@ -52,7 +52,7 @@ int main(int argc, char ** argv) {
     printf("usage ./tailfile_ecu_c2 <ecu config yaml>\n");
     return 1;
   }
-  set_log_level(trace);
+  set_log_level(err);
 
   config_yaml_node_t * config = parse_yaml_configuration(argv[1]);
   if (!config) {
