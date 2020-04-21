@@ -23,14 +23,8 @@ file(GLOB SOURCES  "*.cpp")
 
 add_library(minifi-rdkafka-extensions STATIC ${SOURCES})
 set_property(TARGET minifi-rdkafka-extensions PROPERTY POSITION_INDEPENDENT_CODE ON)
-if(THREADS_HAVE_PTHREAD_ARG)
-  target_compile_options(PUBLIC minifi-rdkafka-extensions "-pthread")
-endif()
-if(CMAKE_THREAD_LIBS_INIT)
-  target_link_libraries(minifi-rdkafka-extensions "${CMAKE_THREAD_LIBS_INIT}")
-endif()
 
-target_link_libraries(minifi-rdkafka-extensions ${LIBMINIFI})
+target_link_libraries(minifi-rdkafka-extensions ${LIBMINIFI} Threads::Threads)
 target_link_libraries(minifi-rdkafka-extensions librdkafka)
 
 SET (RDKAFKA-EXTENSIONS minifi-rdkafka-extensions PARENT_SCOPE)

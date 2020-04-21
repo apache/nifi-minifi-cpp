@@ -24,14 +24,8 @@ file(GLOB SOURCES  "*.cpp" "protocols/*.cpp" "client/*.cpp" "processors/*.cpp" "
 
 add_library(minifi-http-curl STATIC ${SOURCES})
 set_property(TARGET minifi-http-curl PROPERTY POSITION_INDEPENDENT_CODE ON)
-if(THREADS_HAVE_PTHREAD_ARG)
-  target_compile_options(PUBLIC minifi-http-curl "-pthread")
-endif()
-if(CMAKE_THREAD_LIBS_INIT)
-  target_link_libraries(minifi-http-curl "${CMAKE_THREAD_LIBS_INIT}")
-endif()
 
-target_link_libraries(minifi-http-curl ${LIBMINIFI})
+target_link_libraries(minifi-http-curl ${LIBMINIFI} Threads::Threads)
 target_link_libraries(minifi-http-curl CURL::libcurl RapidJSON)
 target_link_libraries(minifi-http-curl minifi-civet-extensions)
 

@@ -24,18 +24,18 @@ function(use_bundled_jemalloc SOURCE_DIR BINARY_DIR)
     # Build project
     ExternalProject_Add(
             jemalloc-external
-            GIT_REPOSITORY "https://github.com/jemalloc/jemalloc.git"
-            GIT_TAG "5.1.0"
+            URL https://github.com/jemalloc/jemalloc/releases/download/5.1.0/jemalloc-5.1.0.tar.bz2
+            URL_HASH "SHA256=5396e61cc6103ac393136c309fae09e44d74743c86f90e266948c50f3dbb7268"
             PREFIX "${BINARY_DIR}/thirdparty/jemalloc"
             BUILD_IN_SOURCE true
             SOURCE_DIR "${BINARY_DIR}/thirdparty/jemalloc-src"
-            BUILD_COMMAND make
+            BUILD_COMMAND make build_lib_static
             CMAKE_COMMAND ""
             UPDATE_COMMAND ""
             BUILD_BYPRODUCTS "${BINARY_DIR}/thirdparty/jemalloc-src/${BYPRODUCT}"
             INSTALL_COMMAND ${CMAKE_COMMAND} -E echo "Skipping install step."
             CONFIGURE_COMMAND ""
-            PATCH_COMMAND ./autogen.sh && ./configure
+            PATCH_COMMAND ./autogen.sh && ./configure "CFLAGS=${CMAKE_C_FLAGS}" "CXXFLAGS=${CMAKE_CXX_FLAGS}"
             STEP_TARGETS build
             EXCLUDE_FROM_ALL TRUE
     )

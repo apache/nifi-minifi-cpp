@@ -53,27 +53,27 @@ add_executable(generate_flow generate_flow.c)
 add_executable(terminate_handler terminate_handler.c)
 
 target_wholearchive_library(generate_flow minifi-http-curl)
-target_link_libraries(generate_flow nanofi ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(generate_flow nanofi Threads::Threads)
 
-target_link_libraries(terminate_handler nanofi ${CMAKE_THREAD_LIBS_INIT} )
+target_link_libraries(terminate_handler nanofi Threads::Threads)
 
 #add_executable(hash_file hash_file.c)
 
-#arget_link_libraries(hash_file nanofi ${CMAKE_THREAD_LIBS_INIT} )
+#arget_link_libraries(hash_file nanofi Threads::Threads )
 
 add_executable(transmit_flow transmit_flow.c)
 
 target_wholearchive_library(transmit_flow minifi-http-curl)
-target_link_libraries(transmit_flow nanofi ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(transmit_flow nanofi Threads::Threads)
 
 add_executable(transmit_payload transmit_payload.c)
 
 target_wholearchive_library(transmit_payload minifi-http-curl)
-target_link_libraries(transmit_payload nanofi ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(transmit_payload nanofi Threads::Threads)
 
 add_executable(monitor_directory monitor_directory.c)
 
 target_wholearchive_library(monitor_directory minifi-http-curl)
-target_link_libraries(monitor_directory nanofi ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(monitor_directory nanofi Threads::Threads)
 
 endif()

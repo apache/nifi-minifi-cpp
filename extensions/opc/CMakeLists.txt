@@ -28,14 +28,7 @@ file(GLOB SOURCES "src/*.cpp")
 add_library(minifi-opc-extensions STATIC ${SOURCES})
 set_property(TARGET minifi-opc-extensions PROPERTY POSITION_INDEPENDENT_CODE ON)
 
-if(THREADS_HAVE_PTHREAD_ARG)
-  target_compile_options(PUBLIC minifi-opc-extensions "-pthread")
-endif()
-if(CMAKE_THREAD_LIBS_INIT)
-  target_link_libraries(minifi-opc-extensions "${CMAKE_THREAD_LIBS_INIT}")
-endif()
-
-target_link_libraries(minifi-opc-extensions ${LIBMINIFI})
+target_link_libraries(minifi-opc-extensions ${LIBMINIFI} Threads::Threads)
 target_link_libraries(minifi-opc-extensions ${CMAKE_DL_LIBS} spdlog open62541::open62541)
 
 

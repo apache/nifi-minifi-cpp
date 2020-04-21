@@ -322,6 +322,8 @@ TESTS_DISABLED=${FALSE}
 ## name, default, values
 add_multi_option BUILD_PROFILE "RelWithDebInfo" "RelWithDebInfo" "Debug" "MinSizeRel" "Release"
 
+add_disabled_option ASAN_ENABLED ${FALSE} "ASAN_BUILD"
+
 if [ "$GUIDED_INSTALL" == "${TRUE}" ]; then
   EnableAllFeatures
   ALL_FEATURES_ENABLED=${TRUE}

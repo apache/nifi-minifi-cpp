@@ -45,14 +45,8 @@ file(GLOB SOURCES  "ExecuteScript.cpp" "ScriptFlowFile.cpp" "ScriptProcessContex
 
 add_library(minifi-script-extensions STATIC ${SOURCES})
 set_property(TARGET minifi-script-extensions PROPERTY POSITION_INDEPENDENT_CODE ON)
-if(THREADS_HAVE_PTHREAD_ARG)
-  target_compile_options(PUBLIC minifi-script-extensions "-pthread")
-endif()
-if(CMAKE_THREAD_LIBS_INIT)
-  target_link_libraries(minifi-script-extensions "${CMAKE_THREAD_LIBS_INIT}")
-endif()
 
-target_link_libraries(minifi-script-extensions ${LIBMINIFI})
+target_link_libraries(minifi-script-extensions ${LIBMINIFI} Threads::Threads)
 
 if (NOT DISABLE_PYTHON_SCRIPTING)
     find_package(PythonLibs 3.5)

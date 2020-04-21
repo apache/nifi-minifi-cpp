@@ -37,7 +37,6 @@ function(use_bundled_curl SOURCE_DIR BINARY_DIR)
     # Set build options
     set(CURL_CMAKE_ARGS ${PASSTHROUGH_CMAKE_ARGS}
             "-DCMAKE_INSTALL_PREFIX=${BINARY_DIR}/thirdparty/curl-install"
-            -DCMAKE_POSITION_INDEPENDENT_CODE=ON
             -DBUILD_CURL_EXE=OFF
             -DBUILD_TESTING=OFF
             -DBUILD_SHARED_LIBS=OFF
@@ -99,7 +98,7 @@ function(use_bundled_curl SOURCE_DIR BINARY_DIR)
     set_target_properties(CURL::libcurl PROPERTIES IMPORTED_LOCATION "${CURL_LIBRARY}")
     add_dependencies(CURL::libcurl curl-external)
     set_property(TARGET CURL::libcurl APPEND PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${CURL_INCLUDE_DIRS})
-    set_property(TARGET CURL::libcurl APPEND PROPERTY INTERFACE_LINK_LIBRARIES ZLIB::ZLIB)
+    set_property(TARGET CURL::libcurl APPEND PROPERTY INTERFACE_LINK_LIBRARIES ZLIB::ZLIB Threads::Threads)
     if (NOT OPENSSL_OFF)
         set_property(TARGET CURL::libcurl APPEND PROPERTY INTERFACE_LINK_LIBRARIES OpenSSL::SSL OpenSSL::Crypto)
     endif()

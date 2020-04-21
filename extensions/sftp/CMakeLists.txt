@@ -24,15 +24,8 @@ file(GLOB SOURCES  "*.cpp" "client/*.cpp" "processors/*.cpp")
 
 add_library(minifi-sftp STATIC ${SOURCES})
 set_property(TARGET minifi-sftp PROPERTY POSITION_INDEPENDENT_CODE ON)
-if(THREADS_HAVE_PTHREAD_ARG)
-	target_compile_options(PUBLIC minifi-sftp "-pthread")
-endif()
-if(CMAKE_THREAD_LIBS_INIT)
-	target_link_libraries(minifi-sftp "${CMAKE_THREAD_LIBS_INIT}")
-endif()
 
-target_link_libraries(minifi-sftp ${LIBMINIFI})
-
+target_link_libraries(minifi-sftp ${LIBMINIFI} Threads::Threads)
 target_link_libraries(minifi-sftp CURL::libcurl libssh2 RapidJSON)
 
 SET (SFTP minifi-sftp PARENT_SCOPE)

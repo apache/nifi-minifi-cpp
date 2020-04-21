@@ -1,0 +1,81 @@
+diff -rupN orig/Makefile.in patched/Makefile.in
+--- orig/Makefile.in	2008-03-08 19:31:40.000000000 +0100
++++ patched/Makefile.in	2020-04-21 15:57:42.000000000 +0200
+@@ -71,9 +71,6 @@ DCE_OBJS    = uuid_dce.lo $(LIB_OBJS)
+ CXX_NAME    = libuuid++.la
+ CXX_OBJS    = uuid++.lo $(LIB_OBJS)
+ 
+-PRG_NAME    = uuid
+-PRG_OBJS    = uuid_cli.o
+-
+ MAN_NAME    = uuid.3 uuid++.3 uuid.1
+ 
+ PERL_NAME   = $(S)/perl/blib/lib/OSSP/uuid.pm
+@@ -85,7 +82,7 @@ PHP_OBJS    = $(S)/php/uuid.c
+ PGSQL_NAME  = $(S)/pgsql/libuuid.so
+ PGSQL_OBJS  = $(S)/pgsql/uuid.c
+ 
+-TARGETS     = $(LIB_NAME) @DCE_NAME@ @CXX_NAME@ $(PRG_NAME) @PERL_NAME@ @PHP_NAME@ @PGSQL_NAME@
++TARGETS     = $(LIB_NAME) @DCE_NAME@ @CXX_NAME@ @PERL_NAME@ @PHP_NAME@ @PGSQL_NAME@
+ 
+ WITH_DCE         = @WITH_DCE@
+ WITH_CXX         = @WITH_CXX@
+@@ -123,9 +120,6 @@ $(CXX_NAME): $(CXX_OBJS)
+ 	@$(LIBTOOL) --mode=link $(CXX) -o $(CXX_NAME) $(CXX_OBJS) -rpath $(libdir) \
+ 	    -version-info `$(SHTOOL) version -l c -d libtool $(S)/uuid_vers.h`
+ 
+-$(PRG_NAME): $(PRG_OBJS) $(LIB_NAME)
+-	@$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) -o $(PRG_NAME) $(PRG_OBJS) $(LIB_NAME) $(LIBS)
+-
+ $(PERL_NAME): $(PERL_OBJS) $(LIB_NAME)
+ 	@cd $(S)/perl && $(PERL) Makefile.PL PREFIX=$(prefix) COMPAT=$(WITH_PERL_COMPAT) && $(MAKE) $(MFLAGS) all
+ 	@touch $(PERL_NAME)
+@@ -187,27 +181,6 @@ uuid.1: uuid_cli.pod
+ 	$(RM) /tmp/uuid.pod
+ 
+ check: all
+-	@echo "==== UUID version 1 (time and node based): 4 single iterations"; \
+-	$(LIBTOOL) --mode=execute ./$(PRG_NAME) -v1 -n 4 -1
+-	@echo "==== UUID version 1 (time and node based): 4 subsequent iterations"; \
+-	$(LIBTOOL) --mode=execute ./$(PRG_NAME) -v1 -n 4
+-	@echo "==== UUID version 3 (name based, MD5): 2 times repeated"; \
+-	$(LIBTOOL) --mode=execute ./$(PRG_NAME) -v3 -n 2 ns:URL http://www.ossp.org/
+-	@echo "==== UUID version 5 (name based, SHA-1): 2 times repeated"; \
+-	$(LIBTOOL) --mode=execute ./$(PRG_NAME) -v5 -n 2 ns:URL http://www.ossp.org/
+-	@echo "==== UUID version 4 (random data based): 4 single iterations"; \
+-	$(LIBTOOL) --mode=execute ./$(PRG_NAME) -v4 -n 4 -1
+-	@echo "==== UUID version 4 (random data based): 4 subsequent iterations"; \
+-	$(LIBTOOL) --mode=execute ./$(PRG_NAME) -v4 -n 4
+-	@echo "==== UUID version 1 generation and decoding"; \
+-	$(LIBTOOL) --mode=execute ./$(PRG_NAME) -d `$(LIBTOOL) --mode=execute ./$(PRG_NAME) -v1`; \
+-	$(LIBTOOL) --mode=execute ./$(PRG_NAME) -d `$(LIBTOOL) --mode=execute ./$(PRG_NAME) -v1 -m`
+-	@echo "==== UUID version 3 generation and decoding"; \
+-	$(LIBTOOL) --mode=execute ./$(PRG_NAME) -d `$(LIBTOOL) --mode=execute ./$(PRG_NAME) -v3 ns:URL http://www.ossp.org/`
+-	@echo "==== UUID version 5 generation and decoding"; \
+-	$(LIBTOOL) --mode=execute ./$(PRG_NAME) -d `$(LIBTOOL) --mode=execute ./$(PRG_NAME) -v5 ns:URL http://www.ossp.org/`
+-	@echo "==== UUID version 3 generation and decoding"; \
+-	$(LIBTOOL) --mode=execute ./$(PRG_NAME) -d `$(LIBTOOL) --mode=execute ./$(PRG_NAME) -v4`
+ 	-@if [ ".$(WITH_PERL)" = .yes ]; then \
+ 	    echo "==== Perl bindings to C API"; \
+ 	    (cd $(S)/perl && $(MAKE) $(MFLAGS) test); \
+@@ -253,7 +226,6 @@ install:
+ 	-@if [ ".$(WITH_CXX)" = .yes ]; then \
+ 	    $(LIBTOOL) --mode=install $(SHTOOL) install -c -m 644 $(CXX_NAME) $(DESTDIR)$(libdir)/; \
+ 	fi
+-	@$(LIBTOOL) --mode=install $(SHTOOL) install -c -s -m 755 uuid $(DESTDIR)$(bindir)/
+ 	$(SHTOOL) install -c -m 644 $(S)/uuid.1 $(DESTDIR)$(mandir)/man1/
+ 	-@if [ ".$(WITH_PERL)" = .yes ]; then \
+ 	    (cd $(S)/perl && $(MAKE) $(MFLAGS) install DESTDIR=$(DESTDIR)); \
+@@ -313,7 +285,6 @@ clean:
+ 	    echo "$(RM) $(CXX_NAME) $(CXX_OBJS)"; \
+ 	    $(RM) $(CXX_NAME) $(CXX_OBJS); \
+ 	fi
+-	-$(RM) $(PRG_NAME) $(PRG_OBJS)
+ 	-$(RM) -r .libs >/dev/null 2>&1 || $(TRUE)
+ 	-$(RM) *.o *.lo
+ 	-@if [ ".$(WITH_PERL)" = .yes ]; then \
+@@ -354,4 +325,3 @@ realclean: distclean
+ 	-@if [ ".$(WITH_PGSQL)" = .yes ]; then \
+ 	    (cd $(S)/pgsql && $(MAKE) $(MFLAGS) realclean PG_CONFIG=$(PG_CONFIG) || true); \
+ 	fi
+-

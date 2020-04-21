@@ -29,13 +29,9 @@ add_library(nanofi-coap-c STATIC ${CSOURCES})
 add_library(minifi-coap STATIC ${SOURCES})
 set_property(TARGET minifi-coap PROPERTY POSITION_INDEPENDENT_CODE ON)
 
-if(CMAKE_THREAD_LIBS_INIT)
-  target_link_libraries(minifi-coap "${CMAKE_THREAD_LIBS_INIT}")
-endif()
-
-target_link_libraries(nanofi-coap-c COAP::libcoap)
+target_link_libraries(nanofi-coap-c COAP::libcoap Threads::Threads)
 target_link_libraries(minifi-coap ${LIBMINIFI})
-target_link_libraries(minifi-coap nanofi-coap-c COAP::libcoap minifi-http-curl)
+target_link_libraries(minifi-coap nanofi-coap-c Threads::Threads COAP::libcoap minifi-http-curl)
 
 SET (COAP-EXTENSION minifi-coap PARENT_SCOPE)
 register_extension(minifi-coap)

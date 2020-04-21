@@ -372,6 +372,7 @@ show_supported_features() {
   echo "3. Enable JNI Support ..........$(print_feature_status JNI_ENABLED)"
   echo "4. Use Shared Dependency Links .$(print_feature_status USE_SHARED_LIBS)"
   echo "5. Build Profile ...............$(print_multi_option_status BUILD_PROFILE)"
+  echo "6. Create ASAN build ...........$(print_feature_status ASAN_ENABLED)"
   echo "P. Continue with these options"
   if [ "$GUIDED_INSTALL" = "${TRUE}" ]; then
     echo "R. Return to Main Menu"
@@ -384,7 +385,7 @@ show_supported_features() {
 
 read_feature_options(){
   local choice
-  read -p "Enter choice [ A - W or 1-4 ] " choice
+  read -p "Enter choice [ A - W or 1-6 ] " choice
   choice=$(echo ${choice} | tr '[:upper:]' '[:lower:]')
   case $choice in
     a) ToggleFeature ROCKSDB_ENABLED ;;
@@ -422,13 +423,14 @@ read_feature_options(){
    	   fi
        ;;
     5) ToggleMultiOption BUILD_PROFILE;;
+    6) ToggleFeature ASAN_ENABLED;;
     p) FEATURES_SELECTED="true" ;;
     r) if [ "$GUIDED_INSTALL" = "${TRUE}" ]; then
         MENU="main"
       fi
       ;;
     q) exit 0;;
-    *) echo -e "${RED}Please enter an option A-V or 1-4...${NO_COLOR}" && sleep 2
+    *) echo -e "${RED}Please enter an option A-W or 1-6...${NO_COLOR}" && sleep 2
   esac
 }
 

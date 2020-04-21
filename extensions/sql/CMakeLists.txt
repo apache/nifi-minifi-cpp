@@ -30,13 +30,6 @@ file(GLOB SOURCES  "*.cpp" "services/*.cpp" "processors/*.cpp"  "data/*.cpp")
 add_library(minifi-sql STATIC ${SOURCES})
 set_property(TARGET minifi-sql PROPERTY POSITION_INDEPENDENT_CODE ON)
 
-if(THREADS_HAVE_PTHREAD_ARG)
-  target_compile_options(PUBLIC minifi-sql "-pthread")
-endif()
-if(CMAKE_THREAD_LIBS_INIT)
-  target_link_libraries(minifi-sql "${CMAKE_THREAD_LIBS_INIT}")
-endif()
-
 # Get whether we should use lib64/ library paths
 get_property(LIB64 GLOBAL PROPERTY FIND_LIBRARY_USE_LIB64_PATHS)
 
@@ -174,7 +167,7 @@ set_property(TARGET SOCI::libsoci_odbc APPEND PROPERTY INTERFACE_LINK_LIBRARIES 
 
 target_link_libraries(minifi-sql SOCI::libsoci_odbc SOCI::libsoci_core)
 
-target_link_libraries(minifi-sql ${LIBMINIFI})
+target_link_libraries(minifi-sql ${LIBMINIFI} Threads::Threads)
 
 SET (SQL-EXTENSION minifi-sql PARENT_SCOPE)
 register_extension(minifi-sql)

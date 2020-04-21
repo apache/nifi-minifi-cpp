@@ -23,14 +23,8 @@ file(GLOB SOURCES  "*.cpp")
 
 add_library(minifi-archive-extensions STATIC ${SOURCES})
 set_property(TARGET minifi-archive-extensions PROPERTY POSITION_INDEPENDENT_CODE ON)
-if(THREADS_HAVE_PTHREAD_ARG)
-  target_compile_options(PUBLIC minifi-archive-extensions "-pthread")
-endif()
-if(CMAKE_THREAD_LIBS_INIT)
-  target_link_libraries(minifi-archive-extensions "${CMAKE_THREAD_LIBS_INIT}")
-endif()
 
-target_link_libraries(minifi-archive-extensions ${LIBMINIFI})
+target_link_libraries(minifi-archive-extensions ${LIBMINIFI} Threads::Threads)
 target_link_libraries(minifi-archive-extensions LibArchive::LibArchive)
 
 SET (ARCHIVE-EXTENSIONS minifi-archive-extensions PARENT_SCOPE)

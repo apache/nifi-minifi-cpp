@@ -62,7 +62,7 @@ function(use_bundled_libcoap SOURCE_DIR BINARY_DIR)
                 INSTALL_COMMAND make install
                 BUILD_BYPRODUCTS "${BINARY_DIR}/thirdparty/libcoap-install/${BYPRODUCT}"
                 CONFIGURE_COMMAND ""
-                PATCH_COMMAND ./autogen.sh && ./configure --disable-examples --disable-dtls --disable-tests --disable-documentation --prefix=${BINARY_DIR}/thirdparty/libcoap-install
+                PATCH_COMMAND ./autogen.sh && ./configure "CFLAGS=${CMAKE_C_FLAGS} -fPIC" "CXXFLAGS=${CMAKE_CXX_FLAGS} -fPIC" --disable-examples --disable-dtls --disable-tests --disable-documentation --prefix=${BINARY_DIR}/thirdparty/libcoap-install
                 STEP_TARGETS build
                 EXCLUDE_FROM_ALL TRUE
         )
@@ -81,4 +81,5 @@ function(use_bundled_libcoap SOURCE_DIR BINARY_DIR)
     set_target_properties(COAP::libcoap PROPERTIES IMPORTED_LOCATION "${COAP_LIBRARY}")
     add_dependencies(COAP::libcoap coap-external)
     set_property(TARGET COAP::libcoap APPEND PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${COAP_INCLUDE_DIRS}")
+    set_property(TARGET COAP::libcoap APPEND PROPERTY INTERFACE_LINK_LIBRARIES Threads::Threads)
 endfunction(use_bundled_libcoap)

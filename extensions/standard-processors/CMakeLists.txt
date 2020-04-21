@@ -24,14 +24,8 @@ file(GLOB SOURCES  "processors/*.cpp" )
 
 add_library(minifi-standard-processors STATIC ${SOURCES})
 set_property(TARGET minifi-standard-processors PROPERTY POSITION_INDEPENDENT_CODE ON)
-if(THREADS_HAVE_PTHREAD_ARG)
-  target_compile_options(PUBLIC minifi-standard-processors "-pthread")
-endif()
-if(CMAKE_THREAD_LIBS_INIT)
-  target_link_libraries(minifi-standard-processors "${CMAKE_THREAD_LIBS_INIT}")
-endif()
 
-target_link_libraries(minifi-standard-processors ${LIBMINIFI})
+target_link_libraries(minifi-standard-processors ${LIBMINIFI} Threads::Threads)
 
 SET (STANDARD-PROCESSORS minifi-standard-processors PARENT_SCOPE)
 register_extension(minifi-standard-processors)

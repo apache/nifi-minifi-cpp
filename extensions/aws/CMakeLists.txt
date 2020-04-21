@@ -24,10 +24,9 @@ file(GLOB SOURCES "*.cpp" "s3/*.cpp" "controllerservices/*.cpp")
 
 add_library(minifi-aws STATIC ${SOURCES})
 
-target_link_libraries(minifi-aws ${LIBMINIFI})
+target_link_libraries(minifi-aws ${LIBMINIFI} Threads::Threads)
 
-target_link_libraries(minifi-aws AWS::aws-cpp-sdk-core)
-target_link_libraries(minifi-aws AWS::aws-cpp-sdk-s3)
+target_link_libraries(minifi-aws AWS::aws-cpp-sdk-core AWS::aws-cpp-sdk-s3)
 
 SET (AWS-EXTENSION minifi-aws PARENT_SCOPE)
 register_extension(minifi-aws)

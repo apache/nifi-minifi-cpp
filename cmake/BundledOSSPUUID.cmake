@@ -21,7 +21,8 @@ function(use_bundled_osspuuid SOURCE_DIR BINARY_DIR)
     message("Using bundled ossp-uuid")
 
     # Define patch step
-    set(PC "${Patch_EXECUTABLE}" -p1 -i "${SOURCE_DIR}/thirdparty/ossp-uuid/ossp-uuid-mac-fix.patch")
+    set(PC "${Patch_EXECUTABLE}" -p1 -i "${SOURCE_DIR}/thirdparty/ossp-uuid/ossp-uuid-mac-fix.patch" &&
+           "${Patch_EXECUTABLE}" -p1 -i "${SOURCE_DIR}/thirdparty/ossp-uuid/ossp-uuid-no-prog.patch")
 
     # Define byproducts
     set(BYPRODUCTS "lib/libuuid.a"
@@ -34,7 +35,7 @@ function(use_bundled_osspuuid SOURCE_DIR BINARY_DIR)
     ENDFOREACH(BYPRODUCT)
 
     # Build project
-    set(CONFIGURE_COMMAND ./configure "CFLAGS=-fPIC" "CXXFLAGS=-fPIC" --with-cxx --without-perl --without-php --without-pgsql "--prefix=${BINARY_DIR}/thirdparty/ossp-uuid-install")
+    set(CONFIGURE_COMMAND ./configure "CFLAGS=${CMAKE_C_FLAGS} -fPIC" "CXXFLAGS=${CMAKE_CXX_FLAGS} -fPIC" --enable-shared=no --with-cxx --without-perl --without-php --without-pgsql "--prefix=${BINARY_DIR}/thirdparty/ossp-uuid-install")
     string(TOLOWER "${CMAKE_BUILD_TYPE}" build_type)
     if(NOT build_type MATCHES debug)
         list(APPEND CONFIGURE_COMMAND --enable-debug=yes)

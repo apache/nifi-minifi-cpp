@@ -23,14 +23,8 @@ file(GLOB SOURCES  "*.cpp")
 
 add_library(minifi-rocksdb-repos STATIC ${SOURCES})
 set_property(TARGET minifi-rocksdb-repos PROPERTY POSITION_INDEPENDENT_CODE ON)
-if(THREADS_HAVE_PTHREAD_ARG)
-  target_compile_options(PUBLIC minifi-rocksdb-repos "-pthread")
-endif()
-if(CMAKE_THREAD_LIBS_INIT)
-  target_link_libraries(minifi-rocksdb-repos "${CMAKE_THREAD_LIBS_INIT}")
-endif()
 
-target_link_libraries(minifi-rocksdb-repos ${LIBMINIFI})
+target_link_libraries(minifi-rocksdb-repos ${LIBMINIFI} Threads::Threads)
 target_link_libraries(minifi-rocksdb-repos RocksDB::RocksDB)
 
 SET (ROCKSDB-REPOS minifi-rocksdb-repos PARENT_SCOPE)
