@@ -83,8 +83,8 @@ def onTrigger(context, session):
         test_dt_frame = dt.Frame(read_cb.content)
         # do batch scoring on test data in datatable frame, return pandas df with predicted labels
         batch_scores_df = scorer.score_batch(test_dt_frame)
-        # convert df to str, then write to flow file
-        batch_scores_df_str = batch_scores_df.to_string()
+        # convert df to str without df index, then write to flow file
+        batch_scores_df_str = batch_scores_df.to_string(index=False)
         write_cb = ContentWrite(batch_scores_df_str)
         session.write(flow_file, write_cb)
         # add flow file attribute: number of rows in the frame to know how many rows were scored
