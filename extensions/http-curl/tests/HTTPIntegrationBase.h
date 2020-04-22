@@ -98,7 +98,7 @@ class VerifyC2Base : public CoapIntegrationBase {
     LogTestController::getInstance().setDebug<LogTestController>();
   }
 
-  virtual void queryRootProcessGroup(std::shared_ptr<core::ProcessGroup> pg) {
+  virtual void queryRootProcessGroup(std::shared_ptr<core::ProcessGroup>) override {
     std::string c2_url = std::string("http") + (isSecure ? "s" : "") + "://localhost:" + getWebPort() + "/api/heartbeat";
 
     configuration->set("nifi.c2.agent.protocol.class", "RESTSender");

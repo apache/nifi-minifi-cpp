@@ -74,7 +74,8 @@ C2Agent::C2Agent(const std::shared_ptr<core::controller::ControllerServiceProvid
   c2_producer_ = [&]() {
     // place priority on messages to send to the c2 server
       if (protocol_.load() != nullptr && request_mutex.try_lock_for(std::chrono::seconds(1))) {
-        if (requests.size() > 0) {
+        std::lock_guard<std::timed_mutex> lock(request_mutex, std::adopt_lock);
+        if (!requests.empty()) {
           int count = 0;
           do {
             const C2Payload payload(std::move(requests.back()));
@@ -89,9 +90,8 @@ C2Agent::C2Agent(const std::shared_ptr<core::controller::ControllerServiceProvid
             catch(...) {
               logger_->log_error("Unknonwn exception occurred while consuming payload.");
             }
-          }while(requests.size() > 0 && ++count < max_c2_responses);
+          }while(!requests.empty() && ++count < max_c2_responses);
         }
-        request_mutex.unlock();
       }
       try {
         performHeartBeat();
@@ -110,18 +110,19 @@ C2Agent::C2Agent(const std::shared_ptr<core::controller::ControllerServiceProvid
   functions_.push_back(c2_producer_);
 
   c2_consumer_ = [&]() {
-    auto now = std::chrono::steady_clock::now();
-    if ( queue_mutex.try_lock_until(now + std::chrono::seconds(1)) ) {
-      if (responses.empty()) {
-        queue_mutex.unlock();
-        return utils::TaskRescheduleInfo::RetryIn(std::chrono::milliseconds(100));
+    if ( queue_mutex.try_lock_for(std::chrono::seconds(1)) ) {
+      C2Payload payload(Operation::HEARTBEAT);
+      {
+        std::lock_guard<std::timed_mutex> lock(queue_mutex, std::adopt_lock);
+        if (responses.empty()) {
+          return utils::TaskRescheduleInfo::RetryIn(std::chrono::milliseconds(C2RESPONSE_POLL_MS));
+        }
+        payload = std::move(responses.back());
+        responses.pop_back();
       }
-      const C2Payload payload(std::move(responses.back()));
-      responses.pop_back();
-      queue_mutex.unlock();
       extractPayload(std::move(payload));
     }
-    return utils::TaskRescheduleInfo::RetryIn(std::chrono::milliseconds(100));
+    return utils::TaskRescheduleInfo::RetryIn(std::chrono::milliseconds(C2RESPONSE_POLL_MS));
   };
   functions_.push_back(c2_consumer_);
 }

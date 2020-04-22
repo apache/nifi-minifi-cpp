@@ -99,24 +99,16 @@ int main(int argc, char **argv) {
   }
   {
     VerifyC2Heartbeat harness(isSecure);
-
     harness.setKeyDir(key_dir);
-
     HeartbeatHandler responder(isSecure);
-
     harness.setUrl(url, &responder);
-
     harness.run(test_file_location);
   }
 
   VerifyLightWeightC2Heartbeat harness(isSecure);
-
   harness.setKeyDir(key_dir);
-
   LightWeightC2Handler responder(isSecure);
-
   harness.setUrl(url, &responder);
-
   harness.run(test_file_location);
 
   return 0;

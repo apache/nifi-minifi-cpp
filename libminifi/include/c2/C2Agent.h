@@ -246,6 +246,8 @@ class C2Agent : public state::UpdateController {
   std::vector<std::string> task_ids_;
 
   bool manifest_sent_;
+
+  const uint64_t C2RESPONSE_POLL_MS = 100;
 };
 
 } /* namesapce c2 */

@@ -385,9 +385,9 @@ class HeartbeatHandler : public CivetHandler {
 
   void verifyJsonHasAgentManifest(const rapidjson::Document& root) {
     bool found = false;
-    assert(root.HasMember("agentInfo") == true);
-    assert(root["agentInfo"].HasMember("agentManifest") == true);
-    assert(root["agentInfo"]["agentManifest"].HasMember("bundles") == true);
+    assert(root.HasMember("agentInfo"));
+    assert(root["agentInfo"].HasMember("agentManifest"));
+    assert(root["agentInfo"]["agentManifest"].HasMember("bundles"));
 
     for (auto &bundle : root["agentInfo"]["agentManifest"]["bundles"].GetArray()) {
       assert(bundle.HasMember("artifact"));
@@ -414,7 +414,7 @@ class HeartbeatHandler : public CivetHandler {
     verifyJsonHasAgentManifest(root);
   }
 
-  virtual void handleAcknowledge(const rapidjson::Document& root) {
+  virtual void handleAcknowledge(const rapidjson::Document&) {
   }
 
   void verify(struct mg_connection *conn) {
@@ -423,6 +423,7 @@ class HeartbeatHandler : public CivetHandler {
     if (!IsNullOrEmpty(post_data)) {
       rapidjson::Document root;
       rapidjson::ParseResult ok = root.Parse(post_data.data(), post_data.size());
+      assert(ok);
       std::string operation = root["operation"].GetString();
       if (operation == "heartbeat") {
         handleHeartbeat(root, conn);
@@ -434,7 +435,7 @@ class HeartbeatHandler : public CivetHandler {
     }
   }
 
-  bool handlePost(CivetServer *server, struct mg_connection *conn) {
+  bool handlePost(CivetServer *, struct mg_connection *conn) {
     verify(conn);
     sendStopOperation(conn);
     return true;
