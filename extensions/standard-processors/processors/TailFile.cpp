@@ -83,6 +83,8 @@ auto Uint64(const std::string& s) {
   return Convert<uint64_t>(s);
 }
 
+static const auto ReadBufferSize = 4096u;
+
 static const std::string MapPrefix = "file.";
 
 static const std::string FilenameKey = MapPrefix + "filename.";
@@ -408,30 +410,6 @@ void TailFile::recoverState(core::ProcessContext& context, const std::vector<std
 std::vector<std::string> TailFile::getFilesToTail(const std::string& baseDir, const std::string& fileRegex, bool isRecursive, uint64_t maxAge) {
   const auto files = utils::file::FileUtils::list_dir_all(baseDir, logger_, isRecursive);
 
-  // !!! In Nifi Java it is like this, need to analyze.
-/*
-  const auto separator = utils::file::FileUtils::get_separator();
-
-  const auto baseDirNoTrailingSeparator =
-    (*baseDir.rbegin() == separator)
-      ? baseDir.substr(0, baseDir.size() - 1) 
-      : baseDir;
-
-  std::string adjustedSeparator;
-  if (separator == '/') {
-    // handle unix-style paths
-    adjustedSeparator = separator;
-  } else {
-    std::stringstream strStream;
-    strStream << std::quoted("" + separator);
-    adjustedSeparator = strStream.str();
-  }
-
-  const std::string fullRegex = baseDirNoTrailingSeparator + separator + fileRegex;
-
-  std::regex rgx(fullRegex);
-*/
-
   std::regex rgx(fileRegex);
 
   std::vector<std::string> ret;
@@ -617,11 +595,7 @@ struct WriteCallback : public OutputStreamCallback {
   // Read new lines from the given reader, copying it to the given Output Stream.
   // The Checksum is used in order to later determine whether or not data has been consumed.
   int64_t readLines(std::shared_ptr<io::BaseStream> stream) {
-    auto writeToStream = [&stream](const std::vector<uint8_t>& line) {
-      return stream->writeData(const_cast<uint8_t*>(&line[0]), line.size());
-    };
-
-    int64_t ret = 0;
+    int64_t ret{};
 
     uint64_t pos = reader_.tellg();
 
@@ -632,7 +606,7 @@ struct WriteCallback : public OutputStreamCallback {
     checksum_ = 0;
     bool seenCR = false;
     std::vector<uint8_t> line;
-    std::size_t bufSize = 102400;
+    std::size_t bufSize = ReadBufferSize;
     std::vector<char> buf(bufSize);
     bool endOfReader = false;
     do {
@@ -646,8 +620,8 @@ struct WriteCallback : public OutputStreamCallback {
           case '\n': {
             seenCR = false;
             line.push_back(c);
-            ret += writeToStream(line);
-            checksum_ = crc32(checksum_, reinterpret_cast<uint8_t*>(line.data()), line.size());
+            ret += stream->writeData(line.data(), line.size());
+            checksum_ = crc32(checksum_, line.data(), line.size());
             newPosition_ += line.size();
             line.clear();
           }
@@ -662,8 +636,8 @@ struct WriteCallback : public OutputStreamCallback {
           default: {
             if (seenCR) {
               seenCR = false;
-              ret += writeToStream(line);
-              checksum_ = crc32(checksum_, reinterpret_cast<uint8_t*>(line.data()), line.size());
+              ret += stream->writeData(line.data(), line.size());
+              checksum_ = crc32(checksum_, line.data(), line.size());
               newPosition_ += line.size() - 1;
               line.clear();
             }
@@ -697,8 +671,7 @@ void TailFile::processTailFile(core::ProcessContext& context, core::ProcessSessi
     rolloverOccurred = false;
 
     if (startPosition_ == StartBeginOfTime) {
-      // Should be assigned 'rolloverOccurred' (in Nifi Java it doesn't, is it a bug) ?
-      recoverRolledFiles(context, session, tailFile, tfo->getExpectedRecoveryChecksum(), tfo->getState().timestamp(), tfo->getState().position());
+      rolloverOccurred = recoverRolledFiles(context, session, tailFile, tfo->getExpectedRecoveryChecksum(), tfo->getState().timestamp(), tfo->getState().position());
     } else if (startPosition_ == StartCurrentFile) {
       cleanup();
       tfo->setState(TailFileState(tailFile, "", 0, 0, 0, 0));
@@ -896,8 +869,6 @@ std::vector<std::string> TailFile::getRolledOffFiles(core::ProcessContext& conte
     (posSlash == std::string::npos)
       ? "."
       : tailFilePath.substr(0, posSlash);
-
-  std::cout << "dir: " << dir << std::endl;
 
   const auto rposDot = tailFilePath.rfind('.');
   std::string beforeDot =
@@ -1124,7 +1095,7 @@ uint64_t TailFile::calcCRC(std::ifstream& reader, uint64_t size, bool& sizeIsLar
   uint64_t checksum{};
   uint64_t count{};
 
-  std::size_t bufSize = min(size, 102400);
+  std::size_t bufSize = ReadBufferSize;
   std::vector<char> buf(bufSize);
   bool endOfReader = false;
   do {
