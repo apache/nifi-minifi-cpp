@@ -125,7 +125,10 @@ endif()
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# We want everything PIC
+# We want everything PIC. Even though it isn't needed for the executables itself (that use libminifi.a), it is needed
+# to create libminifi.so, and it will enable us to use the same set of compiled libminifi sources for both.
+# It has the added benefit of having PIE executables that supports using Address space layout randomization,
+# an important security feature.
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 # Use ASAN if instructed
