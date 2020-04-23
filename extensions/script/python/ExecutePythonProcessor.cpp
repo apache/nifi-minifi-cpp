@@ -35,8 +35,7 @@ namespace python {
 namespace processors {
 
 core::Property ExecutePythonProcessor::ScriptFile("Script File",  // NOLINT
-    R"(Path to script file to execute.
-                                            Only one of Script File or Script Body may be used)", "");
+    R"(Path to script file to execute)", "");
 core::Property ExecutePythonProcessor::ModuleDirectory("Module Directory",  // NOLINT
     R"(Comma-separated list of paths to files and/or directories which
                                                  contain modules required by the script)", "");
@@ -100,7 +99,7 @@ void ExecutePythonProcessor::onSchedule(const std::shared_ptr<core::ProcessConte
   context->getProperty(ScriptFile.getName(), script_file_);
   context->getProperty(ModuleDirectory.getName(), module_directory_);
   if (script_file_.empty() && script_engine_.empty()) {
-    logger_->log_error("Either Script Body or Script File must be defined");
+    logger_->log_error("Script File must be defined");
     return;
   }
 
@@ -120,12 +119,10 @@ void ExecutePythonProcessor::onSchedule(const std::shared_ptr<core::ProcessConte
         throw std::runtime_error("No script engine available");
       }
 
-      if (!script_body_.empty()) {
-        engine->eval(script_body_);
-      } else if (!script_file_.empty()) {
+      if (!script_file_.empty()) {
         engine->evalFile(script_file_);
       } else {
-        throw std::runtime_error("Neither Script Body nor Script File is available to execute");
+        throw std::runtime_error("No Script File is available to execute");
       }
     }
 
@@ -162,12 +159,10 @@ void ExecutePythonProcessor::onTrigger(const std::shared_ptr<core::ProcessContex
         throw std::runtime_error("No script engine available");
       }
 
-      if (!script_body_.empty()) {
-        engine->eval(script_body_);
-      } else if (!script_file_.empty()) {
+      if (!script_file_.empty()) {
         engine->evalFile(script_file_);
       } else {
-        throw std::runtime_error("Neither Script Body nor Script File is available to execute");
+        throw std::runtime_error("No Script File is available to execute");
       }
     }
 
