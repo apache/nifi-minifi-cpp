@@ -45,7 +45,7 @@ core::Property BinFiles::MaxEntries("Maximum Number of Entries", "The maximum nu
 core::Property BinFiles::MaxBinAge("Max Bin Age", "The maximum age of a Bin that will trigger a Bin to be complete. Expected format is <duration> <time unit>", "");
 core::Property BinFiles::MaxBinCount("Maximum number of Bins", "Specifies the maximum number of bins that can be held in memory at any one time", "100");
 core::Relationship BinFiles::Original("original", "The FlowFiles that were used to create the bundle");
-core::Relationship BinFiles::Failure("failure", "If the bundle cannot be created, all FlowFiles that would have been used to created the bundle will be transferred to failure");
+core::Relationship BinFiles::Failure("failure", "If the bundle cannot be created, all FlowFiles that would have been used to create the bundle will be transferred to failure");
 const char *BinFiles::FRAGMENT_COUNT_ATTRIBUTE = "fragment.count";
 const char *BinFiles::FRAGMENT_ID_ATTRIBUTE = "fragment.identifier";
 const char *BinFiles::FRAGMENT_INDEX_ATTRIBUTE = "fragment.index";
