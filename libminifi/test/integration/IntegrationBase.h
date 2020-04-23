@@ -124,7 +124,7 @@ void IntegrationBase::run(std::string test_file_location) {
   core::YamlConfiguration yaml_config(test_repo, test_repo, content_repo, stream_factory, configuration, test_file_location);
 
   auto controller_service_provider = yaml_ptr->getControllerServiceProvider();
-  char state_dir_name_template[] = "/tmp/integrationstate.XXXXXX";
+  char state_dir_name_template[] = "/var/tmp/integrationstate.XXXXXX";
   state_dir = utils::file::FileUtils::create_temp_directory(state_dir_name_template);
   core::ProcessContext::getOrCreateDefaultStateManagerProvider(controller_service_provider, configuration, state_dir.c_str());
 

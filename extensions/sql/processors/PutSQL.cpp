@@ -79,7 +79,7 @@ void PutSQL::processOnSchedule(core::ProcessContext& context) {
   sqlStatements_ = utils::StringUtils::split(sqlStatements, ";");
 }
 
-void PutSQL::processOnTrigger(core::ProcessContext& /*context*/, core::ProcessSession& session) {
+void PutSQL::processOnTrigger(core::ProcessSession& session) {
   const auto dbSession = connection_->getSession();
 
   try {

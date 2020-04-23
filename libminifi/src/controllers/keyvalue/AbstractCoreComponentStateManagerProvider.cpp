@@ -80,8 +80,7 @@ bool AbstractCoreComponentStateManagerProvider::AbstractCoreComponentStateManage
   return provider_->persistImpl();
 }
 
-AbstractCoreComponentStateManagerProvider::~AbstractCoreComponentStateManagerProvider() {
-}
+AbstractCoreComponentStateManagerProvider::~AbstractCoreComponentStateManagerProvider() = default;
 
 std::shared_ptr<core::CoreComponentStateManager> AbstractCoreComponentStateManagerProvider::getCoreComponentStateManager(const std::string& uuid) {
   return std::make_shared<AbstractCoreComponentStateManager>(shared_from_this(), uuid);

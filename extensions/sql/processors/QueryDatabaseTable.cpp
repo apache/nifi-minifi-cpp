@@ -322,7 +322,7 @@ void QueryDatabaseTable::processOnSchedule(core::ProcessContext &context) {
   }
 }
 
-void QueryDatabaseTable::processOnTrigger(core::ProcessContext& context, core::ProcessSession& session) {
+void QueryDatabaseTable::processOnTrigger(core::ProcessSession& session) {
   const auto& selectQuery = getSelectQuery();
 
   logger_->log_info("QueryDatabaseTable: selectQuery: '%s'", selectQuery.c_str());

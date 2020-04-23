@@ -279,7 +279,7 @@ bool TailFile::recoverState(const std::shared_ptr<core::ProcessContext>& context
     logger_->log_info("Found no stored state");
   }
 
-  /* We could not get the state form the StateManager, try to migrate the old state file if it exists */
+  /* We could not get the state from the StateManager, try to migrate the old state file if it exists */
   if (!state_load_success) {
     std::ifstream file(state_file_.c_str(), std::ifstream::in);
     if (!file.good()) {

@@ -62,7 +62,7 @@ class SQLProcessor: public core::Processor {
       if (!connection_) {
         connection_ = dbService_->getConnection();
       }
-      static_cast<T*>(this)->processOnTrigger(*context, *session);
+      static_cast<T*>(this)->processOnTrigger(*session);
     } catch (std::exception& e) {
       logger_->log_error("SQLProcessor: '%s'", e.what());
       if (connection_) {

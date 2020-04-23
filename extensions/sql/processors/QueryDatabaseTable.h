@@ -66,7 +66,7 @@ class QueryDatabaseTable: public SQLProcessor<QueryDatabaseTable>, public Output
   }
 
   void processOnSchedule(core::ProcessContext& context);
-  void processOnTrigger(core::ProcessContext& context, core::ProcessSession& session);
+  void processOnTrigger(core::ProcessSession& session);
 
   void initialize() override;
 

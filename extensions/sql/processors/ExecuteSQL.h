@@ -47,7 +47,7 @@ class ExecuteSQL: public SQLProcessor<ExecuteSQL>, public OutputFormat {
   static const std::string ProcessorName;
 
   void processOnSchedule(core::ProcessContext& context);
-  void processOnTrigger(core::ProcessContext& context, core::ProcessSession& session);
+  void processOnTrigger(core::ProcessSession& session);
 
   void initialize() override;
 

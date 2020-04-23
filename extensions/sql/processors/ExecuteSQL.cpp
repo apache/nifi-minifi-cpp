@@ -88,7 +88,7 @@ void ExecuteSQL::processOnSchedule(core::ProcessContext &context) {
   context.getProperty(s_maxRowsPerFlowFile.getName(), max_rows_);
 }
 
-void ExecuteSQL::processOnTrigger(core::ProcessContext& /*context*/, core::ProcessSession& session) {
+void ExecuteSQL::processOnTrigger(core::ProcessSession& session) {
   auto statement = connection_->prepareStatement(sqlSelectQuery_);
 
   auto rowset = statement->execute();
