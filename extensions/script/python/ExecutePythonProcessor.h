@@ -101,7 +101,6 @@ class ExecutePythonProcessor : public core::Processor {
 
   std::string script_engine_;
   std::string script_file_;
-  std::string script_body_;
   std::string module_directory_;
 
   moodycamel::ConcurrentQueue<std::shared_ptr<script::ScriptEngine>> script_engine_q_;
