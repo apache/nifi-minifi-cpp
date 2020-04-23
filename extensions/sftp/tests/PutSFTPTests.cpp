@@ -60,8 +60,8 @@
 class PutSFTPTestsFixture {
  public:
   PutSFTPTestsFixture()
-  : src_dir(strdup("/tmp/sftps.XXXXXX"))
-  , dst_dir(strdup("/tmp/sftpd.XXXXXX")) {
+  : src_dir(strdup("/var/tmp/sftps.XXXXXX"))
+  , dst_dir(strdup("/var/tmp/sftpd.XXXXXX")) {
     LogTestController::getInstance().setTrace<TestPlan>();
     LogTestController::getInstance().setDebug<minifi::FlowController>();
     LogTestController::getInstance().setDebug<minifi::SchedulingAgent>();
@@ -736,7 +736,7 @@ TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP connection caching reaches limit"
   std::vector<std::vector<char>> dst_dirs;
   std::vector<std::unique_ptr<SFTPTestServer>> sftp_servers;
 
-  std::string tmp_dir_format("/tmp/sftpd.XXXXXX");
+  std::string tmp_dir_format("/var/tmp/sftpd.XXXXXX");
   for (size_t i = 0; i < 10; i++) {
     dst_dirs.emplace_back(tmp_dir_format.data(), tmp_dir_format.data() + tmp_dir_format.size() + 1);
     testController.createTempDirectory(dst_dirs.back().data());

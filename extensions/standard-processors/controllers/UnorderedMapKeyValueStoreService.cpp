@@ -90,7 +90,11 @@ bool UnorderedMapKeyValueStoreService::update(const std::string& key, const std:
     if (!update_func(exists, value)) {
       return false;
     }
+  } catch (const std::exception& e) {
+    logger_->log_error("update_func failed with an exception: %s", e.what());
+    return false;
   } catch (...) {
+    logger_->log_error("update_func failed with an exception");
     return false;
   }
   if (!exists) {

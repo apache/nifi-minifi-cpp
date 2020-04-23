@@ -511,28 +511,47 @@ bool ListSFTP::updateFromTrackingTimestampsCache(const std::shared_ptr<core::Pro
     logger_->log_info("Found no stored state");
     return false;
   }
+
   try {
     state_listing_strategy = state_map.at("listing_strategy");
-    state_hostname = state_map.at("hostname");
-    state_username = state_map.at("username");
-    state_remote_path = state_map.at("remote_path");
-    try {
-      state_listing_timestamp = stoull(state_map.at("listing.timestamp"));
-    } catch (...) {
-      return false;
-    }
-    try {
-      state_processed_timestamp = stoull(state_map.at("processed.timestamp"));
-    } catch (...) {
-      return false;
-    }
-    for (const auto &kv : state_map) {
-      if (kv.first.compare(0, strlen("id."), "id.") == 0) {
-        state_ids.emplace(kv.second);
-      }
-    }
   } catch (...) {
+    logger_->log_error("listing_strategy is missing from state");
     return false;
+  }
+  try {
+    state_hostname = state_map.at("hostname");
+  } catch (...) {
+    logger_->log_error("hostname is missing from state");
+    return false;
+  }
+  try {
+    state_username = state_map.at("username");
+  } catch (...) {
+    logger_->log_error("username is missing from state");
+    return false;
+  }
+  try {
+    state_remote_path = state_map.at("remote_path");
+  } catch (...) {
+    logger_->log_error("remote_path is missing from state");
+    return false;
+  }
+  try {
+    state_listing_timestamp = stoull(state_map.at("listing.timestamp"));
+  } catch (...) {
+    logger_->log_error("listing.timestamp is missing from state or is invalid");
+    return false;
+  }
+  try {
+    state_processed_timestamp = stoull(state_map.at("processed.timestamp"));
+  } catch (...) {
+    logger_->log_error("processed.timestamp is missing from state or is invalid");
+    return false;
+  }
+  for (const auto &kv : state_map) {
+    if (kv.first.compare(0, strlen("id."), "id.") == 0) {
+      state_ids.emplace(kv.second);
+    }
   }
 
   if (state_listing_strategy != listing_strategy_ ||
@@ -749,34 +768,51 @@ bool ListSFTP::updateFromTrackingEntitiesCache(const std::shared_ptr<core::Proce
     logger_->log_debug("Failed to get state from StateManager");
     return false;
   }
+
   try {
     state_listing_strategy = state_map.at("listing_strategy");
-    state_hostname = state_map.at("hostname");
-    state_username = state_map.at("username");
-    state_remote_path = state_map.at("remote_path");
-
-    std::unordered_map<std::string, ListedEntity> new_already_listed_entities;
-    size_t i = 0;
-    while (true) {
-      std::string name;
-      try {
-        name = state_map.at("entity." + std::to_string(i) + ".name");
-      } catch (...) {
-        break;
-      }
-      try {
-        uint64_t timestamp = std::stoull(state_map.at("entity." + std::to_string(i) + ".timestamp"));
-        uint64_t size = std::stoull(state_map.at("entity." + std::to_string(i) + ".size"));
-        new_already_listed_entities.emplace(std::piecewise_construct,
-                                            std::forward_as_tuple(name),
-                                            std::forward_as_tuple(timestamp, size));
-      } catch (...) {
-        continue;
-      }
-      ++i;
-    }
   } catch (...) {
+    logger_->log_error("listing_strategy is missing from state");
     return false;
+  }
+  try {
+    state_hostname = state_map.at("hostname");
+  } catch (...) {
+    logger_->log_error("hostname is missing from state");
+    return false;
+  }
+  try {
+    state_username = state_map.at("username");
+  } catch (...) {
+    logger_->log_error("username is missing from state");
+    return false;
+  }
+  try {
+    state_remote_path = state_map.at("remote_path");
+  } catch (...) {
+    logger_->log_error("remote_path is missing from state");
+    return false;
+  }
+
+  size_t i = 0;
+  while (true) {
+    std::string name;
+    try {
+      name = state_map.at("entity." + std::to_string(i) + ".name");
+    } catch (...) {
+      break;
+    }
+    try {
+      uint64_t timestamp = std::stoull(state_map.at("entity." + std::to_string(i) + ".timestamp"));
+      uint64_t size = std::stoull(state_map.at("entity." + std::to_string(i) + ".size"));
+      new_already_listed_entities.emplace(std::piecewise_construct,
+                                          std::forward_as_tuple(name),
+                                          std::forward_as_tuple(timestamp, size));
+    } catch (...) {
+      logger_->log_error("State for entity \"%s\" is missing or invalid, skipping", name);
+      continue;
+    }
+    ++i;
   }
 
   if (state_listing_strategy != listing_strategy_ ||

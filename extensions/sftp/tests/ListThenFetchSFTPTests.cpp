@@ -57,8 +57,8 @@
 class ListThenFetchSFTPTestsFixture {
  public:
   ListThenFetchSFTPTestsFixture()
-  : src_dir(strdup("/tmp/sftps.XXXXXX"))
-  , dst_dir(strdup("/tmp/sftpd.XXXXXX")) {
+  : src_dir(strdup("/var/tmp/sftps.XXXXXX"))
+  , dst_dir(strdup("/var/tmp/sftpd.XXXXXX")) {
     LogTestController::getInstance().setTrace<TestPlan>();
     LogTestController::getInstance().setDebug<minifi::FlowController>();
     LogTestController::getInstance().setDebug<minifi::SchedulingAgent>();
