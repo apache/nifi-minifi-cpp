@@ -125,6 +125,14 @@ endif()
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# thread library - we must find this before we set ASAN flags, otherwise FindThreads.cmake sometimes thinks we don't
+# need to link with libpthread because libasan already provides some overridden pthread_* symbols.
+set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
+set(THREADS_PREFER_PTHREAD_FLAG TRUE)
+find_package(Threads REQUIRED)
+message("CMAKE_THREAD_LIBS_INIT is ${CMAKE_THREAD_LIBS_INIT}")
+message("THREADS_HAVE_PTHREAD_ARG is ${THREADS_HAVE_PTHREAD_ARG}")
+
 # We want everything PIC. Even though it isn't needed for the executables itself (that use libminifi.a), it is needed
 # to create libminifi.so, and it will enable us to use the same set of compiled libminifi sources for both.
 # It has the added benefit of having PIE executables that supports using Address space layout randomization,
@@ -189,11 +197,6 @@ if(NOT WIN32)
 		set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DENABLE_JNI")
 	endif()
 endif()
-
-# thread library
-set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
-set(THREADS_PREFER_PTHREAD_FLAG TRUE)
-find_package(Threads REQUIRED)
 
 # Simple-Windows-Posix-Semaphore
 if (WIN32)
