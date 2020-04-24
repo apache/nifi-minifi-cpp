@@ -217,14 +217,13 @@ bool Processor::flowFilesQueued() {
 bool Processor::flowFilesOutGoingFull() {
   std::lock_guard<std::mutex> lock(mutex_);
 
-  for (auto &&connection : out_going_connections_) {
+  for (const auto& connection_pair : out_going_connections_) {
     // We already has connection for this relationship
-    std::set<std::shared_ptr<Connectable>> existedConnection = connection.second;
-    for (const auto conn : existedConnection) {
-      std::shared_ptr<Connection> connection = std::static_pointer_cast<Connection>(conn);
-      if (connection->isFull())
-        return true;
-    }
+    std::set<std::shared_ptr<Connectable>> existedConnection = connection_pair.second;
+    const bool has_full_connection = std::any_of(begin(existedConnection), end(existedConnection), [](const std::shared_ptr<Connectable>& conn) {
+      return std::static_pointer_cast<Connection>(conn)->isFull();
+    });
+    if (has_full_connection) { return true; }
   }
 
   return false;

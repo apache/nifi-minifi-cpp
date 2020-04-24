@@ -60,8 +60,13 @@ file_buffer file_to_buffer(const char *path) {
   rewind(fileptr);
 
   buffer = (uint8_t *)malloc((filelen+1)*sizeof(uint8_t)); // Enough memory for file + \0
-  fread(buffer, filelen, 1, fileptr);
+  const size_t read_result = fread(buffer, filelen, 1, fileptr);
   fclose(fileptr);
+
+  if (read_result != 1) {
+    free(buffer);
+    return fb;
+  }
 
   fb.buffer = buffer;
   fb.file_len = filelen;

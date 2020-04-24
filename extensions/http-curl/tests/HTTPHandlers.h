@@ -15,34 +15,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#ifndef LIBMINIFI_TEST_CURL_TESTS_SITETOSITEHTTP_HTTPHANDLERS_H_
+#define LIBMINIFI_TEST_CURL_TESTS_SITETOSITEHTTP_HTTPHANDLERS_H_
+
 #include "civetweb.h"
 #include "CivetServer.h"
 #include "concurrentqueue.h"
 #include "CivetStream.h"
 #include "io/CRCStream.h"
 #include "rapidjson/document.h"
+#include <cinttypes>
+#include <utility>
 
-#ifndef LIBMINIFI_TEST_CURL_TESTS_SITETOSITEHTTP_HTTPHANDLERS_H_
-#define LIBMINIFI_TEST_CURL_TESTS_SITETOSITEHTTP_HTTPHANDLERS_H_
 static std::atomic<int> transaction_id;
 static std::atomic<int> transaction_id_output;
 
 class FlowObj {
  public:
-  FlowObj()
-      : total_size(0) {
+  FlowObj() = default;
 
-  }
-  explicit FlowObj(const FlowObj &&other)
-      : total_size(std::move(other.total_size)),
+  FlowObj(FlowObj &&other) noexcept
+      : total_size(other.total_size),
         attributes(std::move(other.attributes)),
-        data(std::move(other.data)) {
+        data(std::move(other.data))
+  { }
 
-  }
-  uint64_t total_size;
+  uint64_t total_size{0};
   std::map<std::string, std::string> attributes;
   std::vector<uint8_t> data;
-
 };
 
 class SiteToSiteLocationResponder : public CivetHandler {
@@ -75,8 +75,8 @@ class SiteToSiteLocationResponder : public CivetHandler {
 class PeerResponder : public CivetHandler {
  public:
 
-  explicit PeerResponder(const std::string base_url)
-      : base_url(base_url) {
+  explicit PeerResponder(std::string base_url)
+      : base_url(std::move(base_url)) {
   }
 
   bool handleGet(CivetServer *server, struct mg_connection *conn) {
@@ -101,8 +101,8 @@ class PeerResponder : public CivetHandler {
 class SiteToSiteBaseResponder : public CivetHandler {
  public:
 
-  explicit SiteToSiteBaseResponder(const std::string base_url)
-      : base_url(base_url) {
+  explicit SiteToSiteBaseResponder(std::string base_url)
+      : base_url(std::move(base_url)) {
   }
 
   bool handleGet(CivetServer *server, struct mg_connection *conn) {
@@ -122,12 +122,12 @@ class SiteToSiteBaseResponder : public CivetHandler {
 class TransactionResponder : public CivetHandler {
  public:
 
-  explicit TransactionResponder(const std::string base_url, std::string port_id, bool input_port, bool wrong_uri, bool empty_transaction_uri)
-      : base_url(base_url),
+  explicit TransactionResponder(std::string base_url, std::string port_id, bool input_port, bool wrong_uri, bool empty_transaction_uri)
+      : base_url(std::move(base_url)),
         wrong_uri(wrong_uri),
         empty_transaction_uri(empty_transaction_uri),
         input_port(input_port),
-        port_id(port_id),
+        port_id(std::move(port_id)),
         flow_files_feed_(nullptr) {
 
     if (input_port) {
@@ -142,7 +142,7 @@ class TransactionResponder : public CivetHandler {
   }
 
   bool handlePost(CivetServer *server, struct mg_connection *conn) {
-    std::string site2site_rest_resp = "";
+    std::string site2site_rest_resp;
     std::stringstream headers;
     headers << "HTTP/1.1 201 OK\r\nContent-Type: application/json\r\nContent-Length: " << site2site_rest_resp.length() << "\r\nX-Location-Uri-Intent: ";
     if (wrong_uri)
@@ -200,7 +200,7 @@ class FlowFileResponder : public CivetHandler {
   }
 
   bool handlePost(CivetServer *server, struct mg_connection *conn) {
-    std::string site2site_rest_resp = "";
+    std::string site2site_rest_resp;
     std::stringstream headers;
 
     if (!wrong_uri) {
@@ -251,26 +251,26 @@ class FlowFileResponder : public CivetHandler {
   bool handleGet(CivetServer *server, struct mg_connection *conn) {
 
     if (flow_files_feed_->size_approx() > 0) {
-      std::shared_ptr<FlowObj> flow;
+      std::shared_ptr<FlowObj> flowobj;
       uint8_t buf[1];
       std::vector<std::shared_ptr<FlowObj>> flows;
       uint64_t total = 0;
 
-      while (flow_files_feed_->try_dequeue(flow)) {
-        flows.push_back(flow);
-        total += flow->total_size;
+      while (flow_files_feed_->try_dequeue(flowobj)) {
+        flows.push_back(flowobj);
+        total += flowobj->total_size;
       }
       mg_printf(conn, "HTTP/1.1 200 OK\r\n"
-                "Content-Length: %llu\r\n"
+                      "Content-Length: %" PRIu64 "\r\n"
                 "Content-Type: application/octet-stream\r\n"
                 "Connection: close\r\n\r\n",
                 total);
       minifi::io::BaseStream serializer;
       minifi::io::CRCStream < minifi::io::BaseStream > stream(&serializer);
-      for (auto flow : flows) {
+      for (const auto& flow : flows) {
         uint32_t num_attributes = flow->attributes.size();
         stream.write(num_attributes);
-        for (auto entry : flow->attributes) {
+        for (const auto& entry : flow->attributes) {
           stream.writeUTF(entry.first);
           stream.writeUTF(entry.second);
         }
@@ -289,7 +289,7 @@ class FlowFileResponder : public CivetHandler {
   }
 
   void setFlowUrl(std::string flowUrl) {
-    base_url = flowUrl;
+    base_url = std::move(flowUrl);
   }
 
  protected:
@@ -308,22 +308,21 @@ class FlowFileResponder : public CivetHandler {
 class DeleteTransactionResponder : public CivetHandler {
  public:
 
-  explicit DeleteTransactionResponder(const std::string base_url, std::string response_code, int expected_resp_code)
+  explicit DeleteTransactionResponder(std::string base_url, std::string response_code, int expected_resp_code)
       : flow_files_feed_(nullptr),
-        base_url(base_url),
-        response_code(response_code) {
+        base_url(std::move(base_url)),
+        response_code(std::move(response_code)) {
     expected_resp_code_str = std::to_string(expected_resp_code);
   }
 
-  explicit DeleteTransactionResponder(const std::string base_url, std::string response_code, moodycamel::ConcurrentQueue<std::shared_ptr<FlowObj>> *feed)
+  explicit DeleteTransactionResponder(std::string base_url, std::string response_code, moodycamel::ConcurrentQueue<std::shared_ptr<FlowObj>> *feed)
       : flow_files_feed_(feed),
-        base_url(base_url),
-        response_code(response_code) {
+        base_url(std::move(base_url)),
+        response_code(std::move(response_code)) {
   }
 
   bool handleDelete(CivetServer *server, struct mg_connection *conn) {
-
-    std::string site2site_rest_resp = "";
+    std::string site2site_rest_resp;
     std::stringstream headers;
     std::string resp;
     CivetServer::getParam(conn, "responseCode", resp);

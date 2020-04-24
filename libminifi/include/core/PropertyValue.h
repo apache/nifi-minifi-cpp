@@ -210,8 +210,8 @@ class PropertyValue : public state::response::ValueNode {
   std::shared_ptr<PropertyValidator> validator_;
 };
 
-inline char const* conditional_conversion(const PropertyValue &v) {
-  return v.getValue()->getStringValue().c_str();
+inline std::string conditional_conversion(const PropertyValue &v) {
+  return v.getValue()->getStringValue();
 }
 
 } /* namespace core */

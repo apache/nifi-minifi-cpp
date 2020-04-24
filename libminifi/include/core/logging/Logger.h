@@ -47,17 +47,6 @@ class LoggerControl {
   std::atomic<bool> is_enabled_;
 };
 
-template<typename ... Args>
-inline std::string format_string(char const* format_str, Args&&... args) {
-  char buf[LOG_BUFFER_SIZE];
-  std::snprintf(buf, LOG_BUFFER_SIZE, format_str, args...);
-  return std::string(buf);
-}
-
-inline std::string format_string(char const* format_str) {
-  return format_str;
-}
-
 inline char const* conditional_conversion(std::string const& str) {
   return str.c_str();
 }
@@ -65,6 +54,17 @@ inline char const* conditional_conversion(std::string const& str) {
 template<typename T>
 inline T conditional_conversion(T const& t) {
   return t;
+}
+
+template<typename ... Args>
+inline std::string format_string(char const* format_str, Args&&... args) {
+  char buf[LOG_BUFFER_SIZE];
+  std::snprintf(buf, LOG_BUFFER_SIZE, format_str, conditional_conversion(std::forward<Args>(args))...);
+  return std::string(buf);
+}
+
+inline std::string format_string(char const* format_str) {
+  return format_str;
 }
 
 typedef enum {

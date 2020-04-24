@@ -28,6 +28,15 @@
 #include "core/FlowConfiguration.h"
 
 //#define DEBUG_SERVICE
+#ifdef LOG_INFO
+  #undef LOG_INFO
+#endif
+#ifdef LOG_ERROR
+  #undef LOG_ERROR
+#endif
+#ifdef LOG_LASTERROR
+  #undef LOG_LASTERROR
+#endif
 
 #ifdef DEBUG_SERVICE
   #define LOG_INFO(...)       OutputDebug(__VA_ARGS__)
@@ -44,7 +53,7 @@
 // Implemented in MiNiFiMain.cpp
 void SignalExitProcess();
 
-static char* SERVICE_TERMINATION_EVENT_NAME = "Global\\MiNiFiServiceTermination";
+static const char* const SERVICE_TERMINATION_EVENT_NAME = "Global\\MiNiFiServiceTermination";
 
 static void OutputDebug(const char* format, ...) {
   va_list args;

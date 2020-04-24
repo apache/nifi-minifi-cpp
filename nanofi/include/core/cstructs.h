@@ -142,7 +142,12 @@ typedef struct file_buffer {
   uint64_t file_len;
 } file_buffer;
 
-#ifndef _WIN32
+#if defined(_WIN32) && defined(_WIN64)
+#define PRI_SOCKET "llu"
+#elif defined(_WIN32)
+#define PRI_SOCKET "u"
+#else
+#define PRI_SOCKET "d"
 typedef int SOCKET;
 #endif
 

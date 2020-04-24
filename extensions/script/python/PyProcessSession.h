@@ -27,6 +27,8 @@
 
 #include "PyBaseStream.h"
 
+#pragma GCC visibility push(hidden)
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -96,5 +98,7 @@ class PyProcessSession {
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
+
+#pragma GCC visibility pop
 
 #endif //NIFI_MINIFI_CPP_PYPROCESSESSION_H

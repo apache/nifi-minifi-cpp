@@ -64,7 +64,7 @@ uint16_t LinuxPowerManagerService::getMaxThreads() {
 }
 
 bool LinuxPowerManagerService::canIncrease() {
-  for (const auto path_pair : paths_) {
+  for (const auto& path_pair : paths_) {
     try {
       auto capacity = path_pair.first;
       auto status = path_pair.second;
@@ -107,7 +107,7 @@ bool LinuxPowerManagerService::shouldReduce() {
   bool all_discharging = !paths_.empty();
 
   int battery_sum = 0;
-  for (const auto path_pair : paths_) {
+  for (const auto& path_pair : paths_) {
     try {
       auto capacity = path_pair.first;
       auto status = path_pair.second;

@@ -577,7 +577,7 @@ bool CollectorInitiatedSubscription::subscribe(const std::shared_ptr<core::Proce
         auto& logger = pCollectorInitiatedSubscription->logger_;
 
         if (action == EvtSubscribeActionError) {
-          if (ERROR_EVT_QUERY_RESULT_STALE == reinterpret_cast<DWORD>(hEvent)) {
+          if (ERROR_EVT_QUERY_RESULT_STALE == reinterpret_cast<intptr_t>(hEvent)) {
             logger->log_error("Received missing event notification. Consider triggering processor more frequently or increasing queue size.");
           } else {
             logger->log_error("Received the following Win32 error: %x", hEvent);

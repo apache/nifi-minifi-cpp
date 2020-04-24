@@ -17,6 +17,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <inttypes.h>
 
 #include "uthash.h"
 #include "sitetosite/CRawSocketProtocol.h"
@@ -93,21 +94,23 @@ int handShake(struct CRawSiteToSiteClient * client) {
   current = (PropertyValue *)malloc(sizeof(PropertyValue));
 
   current->name = HandShakePropertyStr[GZIP];
-  strncpy(current->value, "false", strlen("false") +1);
+  strncpy(current->value, "false", sizeof(current->value));
+  current->value[sizeof(current->value) - 1] = '\0';
 
   HASH_ADD_KEYPTR(hh, properties, current->name, strlen(current->name), current);
 
   current = (PropertyValue *)malloc(sizeof(PropertyValue));
 
   current->name = HandShakePropertyStr[PORT_IDENTIFIER];
-  strncpy(current->value, client->_port_id_str, strlen(client->_port_id_str) +1);
+  strncpy(current->value, client->_port_id_str, sizeof(current->value));
+  current->value[sizeof(current->value) - 1] = '\0';
 
   HASH_ADD_KEYPTR(hh, properties, current->name, strlen(current->name), current);
 
   current = (PropertyValue *)malloc(sizeof(PropertyValue));
 
   current->name = HandShakePropertyStr[REQUEST_EXPIRATION_MILLIS];
-  sprintf(current->value, "%llu", client->_timeout);
+  sprintf(current->value, "%"PRIu64, client->_timeout);
 
   HASH_ADD_KEYPTR(hh, properties, current->name, strlen(current->name), current);
 
@@ -118,7 +121,7 @@ int handShake(struct CRawSiteToSiteClient * client) {
       current = (PropertyValue *)malloc(sizeof(PropertyValue));
 
       current->name = HandShakePropertyStr[BATCH_COUNT];
-      sprintf(current->value, "%llu", client->_batch_count);
+      sprintf(current->value, "%"PRIu64, client->_batch_count);
 
       HASH_ADD_KEYPTR(hh, properties, current->name, strlen(current->name), current);
 
@@ -128,7 +131,7 @@ int handShake(struct CRawSiteToSiteClient * client) {
       current = (PropertyValue *)malloc(sizeof(PropertyValue));
 
       current->name = HandShakePropertyStr[BATCH_SIZE];
-      sprintf(current->value, "%llu", client->_batch_size);
+      sprintf(current->value, "%"PRIu64, client->_batch_size);
 
       HASH_ADD_KEYPTR(hh, properties, current->name, strlen(current->name), current);
 
@@ -138,7 +141,7 @@ int handShake(struct CRawSiteToSiteClient * client) {
       current = (PropertyValue *)malloc(sizeof(PropertyValue));
 
       current->name = HandShakePropertyStr[BATCH_DURATION];
-      sprintf(current->value, "%llu", client->_batch_duration);
+      sprintf(current->value, "%"PRIu64, client->_batch_duration);
 
       HASH_ADD_KEYPTR(hh, properties, current->name, strlen(current->name), current);
 
@@ -426,7 +429,7 @@ int transmitPayload(struct CRawSiteToSiteClient * client, const char * payload, 
     tearDown(client);
     return resp;
   }
-  logc(info, "Site2Site transaction %s sent bytes length %lu", transactionID, strlen(payload));
+  logc(info, "Site2Site transaction %s sent bytes length %zu", transactionID, strlen(payload));
 
 
   int ret = confirm(client, transactionID);
@@ -549,9 +552,9 @@ int confirm(struct CRawSiteToSiteClient * client, const char * transactionID) {
     // time window involved in the entire transaction, it is reduced to a simple round-trip conversation.
     int64_t crcValue = getCRC(transaction);
     char crc[40];
-    sprintf(crc, "%lld", crcValue);
+    sprintf(crc, "%"PRId64, crcValue);
 
-    logc(debug, "Site2Site Send confirm with CRC %lld to transaction %s", crcValue, transactionID);
+    logc(debug, "Site2Site Send confirm with CRC %"PRId64" to transaction %s", crcValue, transactionID);
     if (writeResponse(client, CONFIRM_TRANSACTION, crc) <= 0) {
       return -1;
     }
@@ -627,7 +630,7 @@ int confirm(struct CRawSiteToSiteClient * client, const char * transactionID) {
         int64_t crcValue = getCRC(transaction);
         char crc[40];
         memset(crc, 0, 40);
-        sprintf(crc, "%lld", crcValue);
+        sprintf(crc, "%"PRId64, crcValue);
 
         if (strcmp(client->_description_buffer, crc) == 0) {
           logc(debug, "Site2Site transaction %s CRC matched", transactionID);
@@ -755,7 +758,7 @@ int confirm(struct CRawSiteToSiteClient * client, const char * transactionID) {
     transaction->_state = DATA_EXCHANGED;
     transaction->_bytes += len;
 
-    logc(info, "Site to Site transaction %s sent flow %d flow records, with total size %llu", transactionID,
+    logc(info, "Site to Site transaction %s sent flow %d flow records, with total size %"PRIu64, transactionID,
         transaction->total_transfers_, transaction->_bytes);
 
     return 0;
