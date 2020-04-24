@@ -122,6 +122,7 @@ int DataStream::doReadData(uint8_t *buf, int buflen) noexcept {
   const auto write_end = std::copy(read_start, read_end, buf);
 
   assert(std::distance(buf, write_end) == buflen && "read buflen bytes");
+  (void)write_end;
 
   // increase offset for the next read
   readBuffer += buflen;

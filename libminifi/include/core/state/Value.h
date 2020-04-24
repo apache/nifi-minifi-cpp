@@ -159,7 +159,7 @@ class UInt32Value : public Value {
   }
 
   virtual bool getValue(int &ref) {
-    if (value <= (std::numeric_limits<int>::max)()) {
+    if (value <= static_cast<uint32_t>((std::numeric_limits<int>::max)())) {
       ref = value;
       return true;
     }
@@ -323,7 +323,7 @@ class UInt64Value : public Value {
   }
 
   virtual bool getValue(int64_t &ref) {
-    if (value <= (std::numeric_limits<int64_t>::max)()) {
+    if (value <= static_cast<uint32_t>((std::numeric_limits<int64_t>::max)())) {
       ref = value;
       return true;
     }

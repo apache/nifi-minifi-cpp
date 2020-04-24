@@ -29,21 +29,20 @@ int log_message(const struct mg_connection *conn, const char *message) {
   return 1;
 }
 
-int ssl_enable(void *ssl_context, void *user_data) {
-  struct ssl_ctx_st *ctx = (struct ssl_ctx_st *) ssl_context;
+int ssl_enable(void* /*ssl_context*/, void* /*user_data*/) {
   return 0;
 }
 
 class CoapIntegrationBase : public IntegrationBase {
  public:
-  CoapIntegrationBase(uint64_t waitTime = DEFAULT_WAITTIME_MSECS)
+  explicit CoapIntegrationBase(uint64_t waitTime = DEFAULT_WAITTIME_MSECS)
       : IntegrationBase(waitTime),
         server(nullptr) {
   }
 
-  void setUrl(std::string url, CivetHandler *handler);
+  void setUrl(const std::string& url, CivetHandler *handler);
 
-  void shutdownBeforeFlowController() {
+  void shutdownBeforeFlowController() override {
     stop_webserver(server);
   }
 
@@ -59,10 +58,10 @@ class CoapIntegrationBase : public IntegrationBase {
   CivetServer *server;
 };
 
-void CoapIntegrationBase::setUrl(std::string url, CivetHandler *handler) {
+void CoapIntegrationBase::setUrl(const std::string& url, CivetHandler *handler) {
 
   parse_http_components(url, port, scheme, path);
-  struct mg_callbacks callback;
+  struct mg_callbacks callback{};
   if (server != nullptr) {
     server->addHandler(path, handler);
     return;
@@ -93,12 +92,12 @@ class VerifyC2Base : public CoapIntegrationBase {
       : isSecure(isSecure) {
   }
 
-  virtual void testSetup() {
+  void testSetup() override {
     LogTestController::getInstance().setDebug<utils::HTTPClient>();
     LogTestController::getInstance().setDebug<LogTestController>();
   }
 
-  virtual void queryRootProcessGroup(std::shared_ptr<core::ProcessGroup>) override {
+  void queryRootProcessGroup(std::shared_ptr<core::ProcessGroup>) override {
     std::string c2_url = std::string("http") + (isSecure ? "s" : "") + "://localhost:" + getWebPort() + "/api/heartbeat";
 
     configuration->set("nifi.c2.agent.protocol.class", "RESTSender");
@@ -110,7 +109,7 @@ class VerifyC2Base : public CoapIntegrationBase {
     configuration->set("nifi.c2.root.classes", "DeviceInfoNode,AgentInformation,FlowInformation");
   }
 
-  void cleanup() {
+  void cleanup() override {
     LogTestController::getInstance().reset();
   }
 
@@ -124,18 +123,18 @@ class VerifyC2Describe : public VerifyC2Base {
       : VerifyC2Base(isSecure) {
   }
 
-  void testSetup() {
+  void testSetup() override {
     LogTestController::getInstance().setTrace<minifi::c2::C2Agent>();
     LogTestController::getInstance().setDebug<minifi::c2::RESTSender>();
     LogTestController::getInstance().setInfo<minifi::FlowController>();
     VerifyC2Base::testSetup();
   }
 
-  void configureFullHeartbeat() {
+  void configureFullHeartbeat() override {
     configuration->set("nifi.c2.full.heartbeat", "false");
   }
 
-  void runAssertions() {
+  void runAssertions() override {
   }
 };
 #endif /* LIBMINIFI_TEST_INTEGRATION_HTTPINTEGRATIONBASE_H_ */

@@ -186,7 +186,7 @@ void ThreadPool<T>::start() {
   if (!running_) {
     running_ = true;
     worker_queue_.start();
-    manager_thread_ = std::move(std::thread(&ThreadPool::manageWorkers, this));
+    manager_thread_ = std::thread(&ThreadPool::manageWorkers, this);
 
     std::lock_guard<std::mutex> quee_lock(worker_queue_mutex_);
     delayed_scheduler_thread_ = std::thread(&ThreadPool<T>::manage_delayed_queue, this);

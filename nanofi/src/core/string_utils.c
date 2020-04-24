@@ -69,7 +69,7 @@ void print_token_list(token_list * tokens) {
         token_node * head = tokens->head;
         int i = 0;
         while (head) {
-            printf("Token %d : %s Length = %lu\n", i, head->data, strlen(head->data));
+            printf("Token %d : %s Length = %zu\n", i, head->data, strlen(head->data));
             head = head->next;
             ++i;
         }

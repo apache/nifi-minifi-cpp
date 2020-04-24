@@ -355,11 +355,6 @@ class ThreadPool {
   void manageWorkers();
 
   /**
-   * Function to adjust the workers up and down.
-   */
-  void adjustWorkers(int count);
-
-  /**
    * Runs worker tasks
    */
   void run_tasks(std::shared_ptr<WorkerThread> thread);

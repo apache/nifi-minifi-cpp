@@ -29,6 +29,8 @@
 #include "PyProcessSession.h"
 #include "../ScriptException.h"
 
+#pragma GCC visibility push(hidden)
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -235,5 +237,7 @@ class PythonScriptEngine : public script::ScriptEngine {
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
+
+#pragma GCC visibility pop
 
 #endif //NIFI_MINIFI_CPP_PYTHONSCRIPTENGINE_H

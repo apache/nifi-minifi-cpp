@@ -78,7 +78,7 @@ class PcapTestHarness : public IntegrationBase {
   }
 
  protected:
-  char *dir;
+  std::string dir;
   TestController testController;
 };
 

@@ -54,16 +54,15 @@ int log_message(const struct mg_connection *conn, const char *message) {
   return 1;
 }
 
-int ssl_enable(void *ssl_context, void *user_data) {
+int ssl_enable(void* /*ssl_context*/, void* /*user_data*/) {
   puts("Enable ssl");
-  struct ssl_ctx_st *ctx = (struct ssl_ctx_st *) ssl_context;
   return 0;
 }
 
 class HttpResponder : public CivetHandler {
  private:
  public:
-  bool handleGet(CivetServer *server, struct mg_connection *conn) {
+  bool handleGet(CivetServer *server, struct mg_connection *conn) override {
     puts("handle get");
     static const std::string site2site_rest_resp = "hi this is a get test";
     mg_printf(conn, "HTTP/1.1 200 OK\r\nContent-Type: "
@@ -112,24 +111,21 @@ int main(int argc, char **argv) {
 
   core::YamlConfiguration yaml_config(test_repo, test_repo, content_repo, stream_factory, configuration, test_file_location);
 
-  std::unique_ptr<core::ProcessGroup> ptr = yaml_config.getRoot(test_file_location);
-  std::shared_ptr<core::ProcessGroup> pg = std::shared_ptr<core::ProcessGroup>(ptr.get());
-  std::shared_ptr<core::Processor> proc = ptr->findProcessor("invoke");
+  std::shared_ptr<core::Processor> proc = yaml_config.getRoot(test_file_location)->findProcessor("invoke");
   assert(proc != nullptr);
 
-  std::shared_ptr<minifi::processors::InvokeHTTP> inv = std::dynamic_pointer_cast<minifi::processors::InvokeHTTP>(proc);
-
+  const auto inv = std::dynamic_pointer_cast<minifi::processors::InvokeHTTP>(proc);
   assert(inv != nullptr);
-  std::string url = "";
+
+  std::string url;
   inv->getProperty(minifi::processors::InvokeHTTP::URL.getName(), url);
-  ptr.release();
   HttpResponder h_ex;
   std::string port, scheme, path;
   CivetServer *server = nullptr;
   parse_http_components(url, port, scheme, path);
-  struct mg_callbacks callback;
+  struct mg_callbacks callback{};
     if (scheme == "https") {
-      std::string cert = "";
+      std::string cert;
       cert = key_dir + "nifi-cert.pem";
       memset(&callback, 0, sizeof(callback));
       callback.init_ssl = ssl_enable;

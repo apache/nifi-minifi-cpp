@@ -18,7 +18,11 @@
  * limitations under the License.
  */
 #include "AppendHostInfo.h"
+
+#ifndef __USE_POSIX
 #define __USE_POSIX
+#endif /* __USE_POSIX */
+
 #include <limits.h>
 #include <string.h>
 #include <memory>

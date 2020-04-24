@@ -17,7 +17,6 @@
  */
 
 #include "api/nanofi.h"
-#include "api/ecu.h"
 #include "core/flowfiles.h"
 
 #include "utlist.h"
@@ -25,6 +24,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/stat.h>
+#include <inttypes.h>
 
 flow_file_list * add_flow_file_record(flow_file_list ** ff_list, flow_file_record * record) {
     if (!record) {
@@ -52,7 +52,7 @@ void free_flow_file_list(flow_file_list ** ff_list) {
 
 void add_attributes(flow_file_record * ffr, const char * file_path, uint64_t curr_offset) {
     char offset_str[21];
-    snprintf(offset_str, sizeof(offset_str), "%llu", curr_offset);
+    snprintf(offset_str, sizeof(offset_str), "%"PRIu64, curr_offset);
     add_attribute(ffr, "current offset", offset_str, strlen(offset_str));
     char content_location[strlen(ffr->contentLocation) + 1];
     snprintf(content_location, sizeof(content_location), "%s", ffr->contentLocation);
@@ -62,7 +62,7 @@ void add_attributes(flow_file_record * ffr, const char * file_path, uint64_t cur
 
 void update_attributes(flow_file_record * ffr, const char * file_path, uint64_t curr_offset) {
     char offset_str[21];
-    snprintf(offset_str, sizeof(offset_str), "%llu", curr_offset);
+    snprintf(offset_str, sizeof(offset_str), "%"PRIu64, curr_offset);
     update_attribute(ffr, "current offset", offset_str, strlen(offset_str));
     char content_location[strlen(ffr->contentLocation) + 1];
     snprintf(content_location, sizeof(content_location), "%s", ffr->contentLocation);
@@ -119,7 +119,7 @@ void read_payload_and_transmit(struct flow_file_list * ffl, struct CRawSiteToSit
         buff[count] = '\0';
         begin_offset += count;
         char offset_str[21];
-        snprintf(offset_str, sizeof(offset_str), "%llu", begin_offset);
+        snprintf(offset_str, sizeof(offset_str), "%"PRIu64, begin_offset);
         update_attribute(ffl->ff_record, "current offset", offset_str, strlen(offset_str));
 
         attribute_set as;

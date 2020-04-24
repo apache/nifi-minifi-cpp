@@ -54,7 +54,7 @@ int write_buffer(const uint8_t *value, int len, cstream * stream) {
       if (ret < 0 && errno == EINTR) {
         continue;
       }
-      logc(err, "Could not send to %d, error: %s", stream->socket_, strerror(errno));
+      logc(err, "Could not send to %" PRI_SOCKET ", error: %s", stream->socket_, strerror(errno));
       close_stream(stream);
       return ret;
     }
@@ -62,7 +62,7 @@ int write_buffer(const uint8_t *value, int len, cstream * stream) {
   }
 
   if (bytes)
-    logc(trace, "Sent data size %d over socket %d", bytes, stream->socket_);
+    logc(trace, "Sent data size %d over socket %" PRI_SOCKET, bytes, stream->socket_);
   return bytes;
 }
 
@@ -72,12 +72,12 @@ int read_buffer(uint8_t *buf, int len, cstream * stream) {
     int bytes_read = recv(stream->socket_, buf, len, 0);
     if (bytes_read <= 0) {
       if (bytes_read == 0) {
-        logc(debug, "Other side hung up on %d",stream->socket_);
+        logc(debug, "Other side hung up on %" PRI_SOCKET, stream->socket_);
       } else {
         if (errno == EINTR) {
           continue;
         }
-        logc(err, "Could not recv on %d, error: %s", stream->socket_, strerror(errno));
+        logc(err, "Could not recv on %" PRI_SOCKET ", error: %s", stream->socket_, strerror(errno));
       }
       return -1;
     }
@@ -86,7 +86,7 @@ int read_buffer(uint8_t *buf, int len, cstream * stream) {
     total_read += bytes_read;
   }
   if(total_read)
-    logc(trace, "Received data size %d over socket %d", total_read, stream->socket_);
+    logc(trace, "Received data size %d over socket %" PRI_SOCKET, total_read, stream->socket_);
   return total_read;
 }
 
