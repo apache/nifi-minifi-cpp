@@ -20,6 +20,8 @@
 #include "concurrentqueue.h"
 #include "CivetStream.h"
 #include "io/CRCStream.h"
+#include "rapidjson/document.h"
+
 #ifndef LIBMINIFI_TEST_CURL_TESTS_SITETOSITEHTTP_HTTPHANDLERS_H_
 #define LIBMINIFI_TEST_CURL_TESTS_SITETOSITEHTTP_HTTPHANDLERS_H_
 static std::atomic<int> transaction_id;
@@ -341,6 +343,106 @@ class DeleteTransactionResponder : public CivetHandler {
   std::string base_url;
   std::string expected_resp_code_str;
   std::string response_code;
+};
+
+class HeartbeatHandler : public CivetHandler {
+ public:
+  explicit HeartbeatHandler(bool isSecure)
+      : isSecure(isSecure) {
+  }
+
+  std::string readPost(struct mg_connection *conn) {
+    std::string response;
+    int readBytes;
+
+    char buffer[1024];
+    while ((readBytes = mg_read(conn, buffer, sizeof(buffer))) > 0) {
+      response.append(buffer, (readBytes / sizeof(char)));
+    }
+    return response;
+  }
+
+  void sendStopOperation(struct mg_connection *conn) {
+    std::string resp = "{\"operation\" : \"heartbeat\", \"requested_operations\" : [{ \"operationid\" : 41, \"operation\" : \"stop\", \"operand\" : \"invoke\"  }, "
+        "{ \"operationid\" : 42, \"operation\" : \"stop\", \"operand\" : \"FlowController\"  } ]}";
+    mg_printf(conn, "HTTP/1.1 200 OK\r\nContent-Type: "
+              "text/plain\r\nContent-Length: %lu\r\nConnection: close\r\n\r\n",
+              resp.length());
+    mg_printf(conn, "%s", resp.c_str());
+  }
+
+  void sendHeartbeatResponse(const std::string& operation, const std::string& operand, const std::string& operationId, struct mg_connection * conn) {
+    std::string heartbeat_response = "{\"operation\" : \"heartbeat\",\"requested_operations\": [  {"
+          "\"operation\" : \"" + operation + "\","
+          "\"operationid\" : \"" + operationId + "\","
+          "\"operand\": \"" + operand + "\"}]}";
+
+      mg_printf(conn, "HTTP/1.1 200 OK\r\nContent-Type: "
+                "text/plain\r\nContent-Length: %lu\r\nConnection: close\r\n\r\n",
+                heartbeat_response.length());
+      mg_printf(conn, "%s", heartbeat_response.c_str());
+  }
+
+  void verifyJsonHasAgentManifest(const rapidjson::Document& root) {
+    bool found = false;
+    assert(root.HasMember("agentInfo"));
+    assert(root["agentInfo"].HasMember("agentManifest"));
+    assert(root["agentInfo"]["agentManifest"].HasMember("bundles"));
+
+    for (auto &bundle : root["agentInfo"]["agentManifest"]["bundles"].GetArray()) {
+      assert(bundle.HasMember("artifact"));
+      std::string str = bundle["artifact"].GetString();
+      if (str == "minifi-standard-processors") {
+
+        std::vector<std::string> classes;
+        for (auto &proc : bundle["componentManifest"]["processors"].GetArray()) {
+          classes.push_back(proc["type"].GetString());
+        }
+
+        auto group = minifi::BuildDescription::getClassDescriptions(str);
+        for (auto proc : group.processors_) {
+          assert(std::find(classes.begin(), classes.end(), proc.class_name_) != std::end(classes));
+          found = true;
+        }
+
+      }
+    }
+    assert(found);
+  }
+
+  virtual void handleHeartbeat(const rapidjson::Document& root, struct mg_connection *) {
+    verifyJsonHasAgentManifest(root);
+  }
+
+  virtual void handleAcknowledge(const rapidjson::Document&) {
+  }
+
+  void verify(struct mg_connection *conn) {
+    auto post_data = readPost(conn);
+    //std::cerr << post_data << std::endl;
+    if (!IsNullOrEmpty(post_data)) {
+      rapidjson::Document root;
+      rapidjson::ParseResult ok = root.Parse(post_data.data(), post_data.size());
+      assert(ok);
+      std::string operation = root["operation"].GetString();
+      if (operation == "heartbeat") {
+        handleHeartbeat(root, conn);
+      } else if (operation == "acknowledge") {
+        handleAcknowledge(root);
+      } else {
+        throw std::runtime_error("operation not supported " + operation);
+      }
+    }
+  }
+
+  bool handlePost(CivetServer *, struct mg_connection *conn) {
+    verify(conn);
+    sendStopOperation(conn);
+    return true;
+  }
+
+ protected:
+  bool isSecure;
 };
 
 #endif /* LIBMINIFI_TEST_CURL_TESTS_SITETOSITEHTTP_HTTPHANDLERS_H_ */

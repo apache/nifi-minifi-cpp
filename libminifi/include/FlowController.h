@@ -47,8 +47,9 @@
 #include "core/Property.h"
 #include "core/state/nodes/MetricsBase.h"
 #include "utils/Id.h"
-#include "core/state/StateManager.h"
+#include "core/state/UpdateController.h"
 #include "core/state/nodes/FlowInformation.h"
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -61,7 +62,7 @@ namespace minifi {
  * Flow Controller class. Generally used by FlowController factory
  * as a singleton.
  */
-class FlowController : public core::controller::ControllerServiceProvider, public state::StateManager {
+class FlowController : public core::controller::ControllerServiceProvider, public state::response::NodeReporter,  public state::StateMonitor, public std::enable_shared_from_this<FlowController> {
  public:
   /**
    * Flow controller constructor
@@ -285,29 +286,31 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
   virtual void enableAllControllerServices();
 
   /**
-   * Retrieves all root response nodes from this source.
-   * @param metric_vector -- metrics will be placed in this vector.
-   * @return result of the get operation.
-   *  0 Success
-   *  1 No error condition, but cannot obtain lock in timely manner.
-   *  -1 failure
+   * Retrieves metrics node
+   * @return metrics response node
    */
-  virtual int16_t getResponseNodes(std::vector<std::shared_ptr<state::response::ResponseNode>> &metric_vector, uint16_t metricsClass);
+  virtual std::shared_ptr<state::response::ResponseNode> getMetricsNode(const std::string& metricsClass) const;
+
   /**
-   * Retrieves all metrics from this source.
-   * @param metric_vector -- metrics will be placed in this vector.
-   * @return result of the get operation.
-   *  0 Success
-   *  1 No error condition, but cannot obtain lock in timely manner.
-   *  -1 failure
+   * Retrieves root nodes configured to be included in heartbeat
+   * @param includeManifest -- determines if manifest is to be included
+   * @return a list of response nodes
    */
-  virtual int16_t getMetricsNodes(std::vector<std::shared_ptr<state::response::ResponseNode>> &metric_vector, uint16_t metricsClass);
+  virtual std::vector<std::shared_ptr<state::response::ResponseNode>> getHeartbeatNodes(bool includeManifest) const;
+
+  /**
+   * Retrieves the agent manifest to be sent as a response to C2 DESCRIBE manifest
+   * @return the agent manifest response node
+   */
+  virtual std::shared_ptr<state::response::ResponseNode> getAgentManifest() const;
 
   virtual uint64_t getUptime();
 
   virtual std::vector<BackTrace> getTraces();
 
   void initializeC2();
+
+  void stopC2();
 
  protected:
 
@@ -321,6 +324,8 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
   void loadFlowRepo();
 
   void initializeExternalComponents();
+
+  std::shared_ptr<state::response::ResponseNode> getAgentInformation() const;
 
   /**
    * Initializes flow controller paths.
@@ -384,9 +389,10 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
 
   std::chrono::steady_clock::time_point start_time_;
 
-  std::mutex metrics_mutex_;
+  mutable std::mutex metrics_mutex_;
   // root_nodes cache
   std::map<std::string, std::shared_ptr<state::response::ResponseNode>> root_response_nodes_;
+
   // metrics cache
   std::map<std::string, std::shared_ptr<state::response::ResponseNode>> device_information_;
 
@@ -394,13 +400,15 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
   std::map<std::string, std::shared_ptr<state::response::ResponseNode>> component_metrics_;
 
   std::map<uint8_t, std::vector<std::shared_ptr<state::response::ResponseNode>>> component_metrics_by_id_;
+
   // metrics last run
   std::chrono::steady_clock::time_point last_metrics_capture_;
 
  private:
   std::shared_ptr<logging::Logger> logger_;
   std::string serial_number_;
-  static std::shared_ptr<utils::IdGenerator> id_generator_;
+
+  std::unique_ptr<state::UpdateController> c2_agent_;
 };
 
 }

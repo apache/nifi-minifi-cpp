@@ -16,168 +16,70 @@
  * limitations under the License.
  */
 
-#include <sys/stat.h>
 #undef NDEBUG
-#include <cassert>
-#include <utility>
-#include <chrono>
-#include <fstream>
-#include <memory>
-#include <string>
-#include <thread>
-#include <type_traits>
-#include <vector>
-#include <iostream>
-#include <sstream>
-#include "HTTPClient.h"
-#include "InvokeHTTP.h"
 #include "TestBase.h"
-#include "utils/StringUtils.h"
-#include "core/Core.h"
-#include "core/logging/Logger.h"
-#include "core/ProcessGroup.h"
-#include "core/yaml/YamlConfiguration.h"
-#include "FlowController.h"
-#include "properties/Configure.h"
-#include "unit/ProvenanceTestHelper.h"
-#include "io/StreamFactory.h"
-#include "CivetServer.h"
-#include "RemoteProcessorGroupPort.h"
-#include "core/ConfigurableComponent.h"
-#include "controllers/SSLContextService.h"
-#include "TestServer.h"
 #include "c2/C2Agent.h"
-#include "protocols/RESTReceiver.h"
+#include "protocols/RESTProtocol.h"
 #include "protocols/RESTSender.h"
+#include "protocols/RESTReceiver.h"
 #include "HTTPIntegrationBase.h"
-#include "agent/build_description.h"
-#include "processors/LogAttribute.h"
+#include "HTTPHandlers.h"
 
-class Responder : public CivetHandler {
+class LightWeightC2Handler : public HeartbeatHandler {
  public:
-  explicit Responder(bool isSecure)
-      : isSecure(isSecure) {
+  explicit LightWeightC2Handler(bool isSecure)
+      : HeartbeatHandler(isSecure) {
   }
 
-  std::string readPost(struct mg_connection *conn) {
-    std::string response;
-    int blockSize = 1024 * sizeof(char), readBytes;
+  virtual ~LightWeightC2Handler() = default;
 
-    char buffer[1024];
-    while ((readBytes = mg_read(conn, buffer, blockSize)) > 0) {
-      response.append(buffer, 0, (readBytes / sizeof(char)));
+  virtual void handleHeartbeat(const rapidjson::Document& root, struct mg_connection *)  {
+    if (calls_ == 0) {
+      verifyJsonHasAgentManifest(root);
+    } else {
+      assert(root.HasMember("agentInfo"));
+      assert(!root["agentInfo"].HasMember("agentManifest"));
     }
-    return response;
+    calls_++;
   }
-  bool handlePost(CivetServer *server, struct mg_connection *conn) {
-    auto post_data = readPost(conn);
-
-    std::cerr << post_data << std::endl;
-
-    if (!IsNullOrEmpty(post_data)) {
-      rapidjson::Document root;
-      rapidjson::ParseResult ok = root.Parse(post_data.data(), post_data.size());
-      bool found = false;
-      std::string operation = root["operation"].GetString();
-      if (operation == "heartbeat") {
-        assert(root.HasMember("agentInfo") == true);
-        assert(root["agentInfo"]["agentManifest"].HasMember("bundles") == true);
-
-        for (auto &bundle : root["agentInfo"]["agentManifest"]["bundles"].GetArray()) {
-          assert(bundle.HasMember("artifact"));
-          std::string str = bundle["artifact"].GetString();
-          if (str == "minifi-system") {
-
-            std::vector<std::string> classes;
-            for (auto &proc : bundle["componentManifest"]["processors"].GetArray()) {
-              classes.push_back(proc["type"].GetString());
-            }
-
-            auto group = minifi::BuildDescription::getClassDescriptions(str);
-            for (auto proc : group.processors_) {
-              assert(std::find(classes.begin(), classes.end(), proc.class_name_) != std::end(classes));
-              found = true;
-            }
-
-          }
-        }
-        assert(found == true);
-      }
-    }
-    std::string resp = "{\"operation\" : \"heartbeat\", \"requested_operations\" : [{ \"operationid\" : 41, \"operation\" : \"stop\", \"name\" : \"invoke\"  }, "
-        "{ \"operationid\" : 42, \"operation\" : \"stop\", \"name\" : \"FlowController\"  } ]}";
-    mg_printf(conn, "HTTP/1.1 200 OK\r\nContent-Type: "
-              "text/plain\r\nContent-Length: %lu\r\nConnection: close\r\n\r\n",
-              resp.length());
-    mg_printf(conn, "%s", resp.c_str());
-    return true;
-  }
-
- protected:
-  bool isSecure;
+ private:
+  std::atomic<size_t> calls_{0};
 };
 
-class VerifyC2Heartbeat : public CoapIntegrationBase {
+class VerifyC2Heartbeat : public VerifyC2Base {
  public:
   explicit VerifyC2Heartbeat(bool isSecure)
-      : isSecure(isSecure) {
-    char format[] = "/tmp/ssth.XXXXXX";
-    dir = testController.createTempDirectory(format);
+      : VerifyC2Base(isSecure) {
   }
 
-  void testSetup() {
-    LogTestController::getInstance().setDebug<utils::HTTPClient>();
+  virtual void testSetup() {
     LogTestController::getInstance().setTrace<minifi::c2::C2Agent>();
-    LogTestController::getInstance().setDebug<LogTestController>();
     LogTestController::getInstance().setDebug<minifi::c2::RESTSender>();
     LogTestController::getInstance().setDebug<minifi::c2::RESTProtocol>();
     LogTestController::getInstance().setDebug<minifi::c2::RESTReceiver>();
-    std::fstream file;
-    ss << dir << "/" << "tstFile.ext";
-    file.open(ss.str(), std::ios::out);
-    file << "tempFile";
-    file.close();
-  }
-
-  void cleanup() {
-    LogTestController::getInstance().reset();
-    unlink(ss.str().c_str());
+    VerifyC2Base::testSetup();
   }
 
   void runAssertions() {
-    assert(LogTestController::getInstance().contains("Received Ack from Server") == true);
-
-    assert(LogTestController::getInstance().contains("C2Agent] [debug] Stopping component invoke") == true);
-
-    assert(LogTestController::getInstance().contains("C2Agent] [debug] Stopping component FlowController") == true);
+    assert(LogTestController::getInstance().contains("Received Ack from Server"));
+    assert(LogTestController::getInstance().contains("C2Agent] [debug] Stopping component invoke"));
+    assert(LogTestController::getInstance().contains("C2Agent] [debug] Stopping component FlowController"));
   }
 
-  void queryRootProcessGroup(std::shared_ptr<core::ProcessGroup> pg) {
-    std::shared_ptr<core::Processor> proc = pg->findProcessor("invoke");
-    assert(proc != nullptr);
+  void configureFullHeartbeat() {
+    configuration->set("nifi.c2.full.heartbeat", "true");
+  }
+};
 
-    std::shared_ptr<minifi::processors::InvokeHTTP> inv = std::dynamic_pointer_cast<minifi::processors::InvokeHTTP>(proc);
-
-    assert(inv != nullptr);
-    std::string url = "";
-    inv->getProperty(minifi::processors::InvokeHTTP::URL.getName(), url);
-
-    std::string c2_url = std::string("http") + (isSecure ? "s" : "") + "://localhost:" + getWebPort() + "/api/heartbeat";
-
-    configuration->set("nifi.c2.agent.protocol.class", "RESTSender");
-    configuration->set("nifi.c2.enable", "true");
-    configuration->set("nifi.c2.agent.class", "test");
-    configuration->set("nifi.c2.rest.url", c2_url);
-    configuration->set("nifi.c2.agent.heartbeat.period", "1000");
-    configuration->set("nifi.c2.rest.url.ack", c2_url);
-    configuration->set("nifi.c2.root.classes", "DeviceInfoNode,AgentInformation,FlowInformation");
+class VerifyLightWeightC2Heartbeat : public VerifyC2Heartbeat {
+public:
+  explicit VerifyLightWeightC2Heartbeat(bool isSecure)
+      : VerifyC2Heartbeat(isSecure) {
   }
 
- protected:
-  bool isSecure;
-  std::string dir;
-  std::stringstream ss;
-  TestController testController;
+  void configureFullHeartbeat() {
+    configuration->set("nifi.c2.full.heartbeat", "false");
+  }
 };
 
 int main(int argc, char **argv) {
@@ -195,15 +97,18 @@ int main(int argc, char **argv) {
   if (url.find("https") != std::string::npos) {
     isSecure = true;
   }
+  {
+    VerifyC2Heartbeat harness(isSecure);
+    harness.setKeyDir(key_dir);
+    HeartbeatHandler responder(isSecure);
+    harness.setUrl(url, &responder);
+    harness.run(test_file_location);
+  }
 
-  VerifyC2Heartbeat harness(isSecure);
-
+  VerifyLightWeightC2Heartbeat harness(isSecure);
   harness.setKeyDir(key_dir);
-
-  Responder responder(isSecure);
-
+  LightWeightC2Handler responder(isSecure);
   harness.setUrl(url, &responder);
-
   harness.run(test_file_location);
 
   return 0;

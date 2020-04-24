@@ -41,8 +41,6 @@ class CoapIntegrationBase : public IntegrationBase {
 
   void setUrl(std::string url, CivetHandler *handler);
 
-  virtual ~CoapIntegrationBase();
-
   void shutdownBeforeFlowController() override {
     stop_webserver(server);
   }
@@ -81,6 +79,7 @@ class CoapIntegrationBase : public IntegrationBase {
 
     shutdownBeforeFlowController();
     controller->waitUnload(wait_time_);
+    controller->stopC2();
     runAssertions();
 
     cleanup();
@@ -89,10 +88,6 @@ class CoapIntegrationBase : public IntegrationBase {
  protected:
   CivetServer *server;
 };
-
-CoapIntegrationBase::~CoapIntegrationBase() {
-
-}
 
 void CoapIntegrationBase::setUrl(std::string url, CivetHandler *handler) {
 

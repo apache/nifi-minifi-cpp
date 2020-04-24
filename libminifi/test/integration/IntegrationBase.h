@@ -35,7 +35,7 @@ class IntegrationBase {
  public:
   IntegrationBase(uint64_t waitTime = DEFAULT_WAITTIME_MSECS);
 
-  virtual ~IntegrationBase();
+  virtual ~IntegrationBase() = default;
 
   virtual void run(std::string test_file_location);
 
@@ -75,6 +75,10 @@ class IntegrationBase {
 
   }
 
+  virtual void configureFullHeartbeat() {
+
+  }
+
   virtual void updateProperties(std::shared_ptr<minifi::FlowController> fc) {
 
   }
@@ -90,9 +94,6 @@ class IntegrationBase {
 IntegrationBase::IntegrationBase(uint64_t waitTime)
     : configuration(std::make_shared<minifi::Configure>()),
       wait_time_(waitTime) {
-}
-
-IntegrationBase::~IntegrationBase() {
 }
 
 void IntegrationBase::configureSecurity() {
@@ -126,6 +127,8 @@ void IntegrationBase::run(std::string test_file_location) {
 
   queryRootProcessGroup(pg);
 
+  configureFullHeartbeat();
+
   ptr.release();
 
   std::shared_ptr<TestRepository> repo = std::static_pointer_cast<TestRepository>(test_repo);
@@ -139,8 +142,9 @@ void IntegrationBase::run(std::string test_file_location) {
 
   shutdownBeforeFlowController();
   flowController_->unload();
-  runAssertions();
+  flowController_->stopC2();
 
+  runAssertions();
   cleanup();
 }
 

@@ -16,7 +16,7 @@
  */
 
 #include "utils/ThreadPool.h"
-#include "core/state/StateManager.h"
+#include "core/state/UpdateController.h"
 
 namespace org {
 namespace apache {

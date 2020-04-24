@@ -22,33 +22,21 @@
 #include "HTTPIntegrationBase.h"
 #include "HTTPHandlers.h"
 
-class VerifyC2DescribeJstack : public VerifyC2Describe {
- public:
-  explicit VerifyC2DescribeJstack(bool isSecure)
-      : VerifyC2Describe(isSecure) {
-  }
+class DescribeManifestHandler: public HeartbeatHandler {
+public:
 
-  virtual void runAssertions() {
-    assert(LogTestController::getInstance().contains("SchedulingAgent"));
-  }
-};
-
-class DescribeJstackHandler : public HeartbeatHandler {
- public:
-  explicit DescribeJstackHandler(bool isSecure)
-     : HeartbeatHandler(isSecure) {
+  explicit DescribeManifestHandler(bool isSecure)
+      : HeartbeatHandler(isSecure) {
   }
 
   virtual void handleHeartbeat(const rapidjson::Document&, struct mg_connection * conn) {
-    sendHeartbeatResponse("DESCRIBE", "jstack", "889398", conn);
+    sendHeartbeatResponse("DESCRIBE", "manifest", "889345", conn);
   }
 
   virtual void handleAcknowledge(const rapidjson::Document& root) {
-    assert(root.HasMember("Flowcontroller threadpool #0"));
+    verifyJsonHasAgentManifest(root);
   }
-
 };
-
 int main(int argc, char **argv) {
   std::string key_dir, test_file_location, url;
   url = "http://localhost:0/api/heartbeat";
@@ -65,14 +53,13 @@ int main(int argc, char **argv) {
     isSecure = true;
   }
 
-  VerifyC2DescribeJstack harness(isSecure);
+  VerifyC2Describe harness(isSecure);
 
   harness.setKeyDir(key_dir);
 
-  DescribeJstackHandler responder(isSecure);
+  DescribeManifestHandler responder(isSecure);
 
   harness.setUrl(url, &responder);
 
   harness.run(test_file_location);
-
 }

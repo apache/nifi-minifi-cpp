@@ -192,8 +192,8 @@ case "\$1" in
         echo "MiNiFi is not currently running."
       else
         echo "Stopping MiNiFi (PID: \${saved_pid})."
-        # Send a SIGINT to MiNiFi so that the handler begins shutdown.
-        kill -2 \${saved_pid} > /dev/null 2>&1
+        # Send a SIGTERM to MiNiFi so that the handler begins shutdown.
+        kill -15 \${saved_pid} > /dev/null 2>&1
         if [ \$? -ne 0 ]; then
           echo "Could not successfully send termination signal to MiNiFi (PID: \${saved_pid})"
           exit 1;
@@ -321,8 +321,8 @@ case "$1" in
         echo "MiNiFi is not currently running."
       else
         echo "Stopping MiNiFi (PID: ${saved_pid})."
-        # Send a SIGINT to MiNiFi so that the handler begins shutdown.
-        kill -2 ${saved_pid} > /dev/null 2>&1
+        # Send a SIGTERM to MiNiFi so that the handler begins shutdown.
+        kill -15 ${saved_pid} > /dev/null 2>&1
         if [ $? -ne 0 ]; then
           echo "Could not successfully send termination signal to MiNiFi (PID: ${saved_pid})"
           exit 1;

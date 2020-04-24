@@ -25,8 +25,10 @@
 #include <utility>
 #include <vector>
 #include <mutex>
+#include <condition_variable>
 #include <iostream>
 #include <sstream>
+#include <memory>
 
 #define TRACE_BUFFER_SIZE 128
 
@@ -87,7 +89,6 @@ void emplace_handler();
  */
 class TraceResolver {
  public:
-
   /**
    * Retrieves the backtrace for the provided thread reference
    * @return BackTrace instance
@@ -145,27 +146,25 @@ class TraceResolver {
     trace_.addLine(line.str());
   }
 
-  /**
-   * Returns the thread handle reference in the native format.
-   */
-  std::thread::native_handle_type getThreadHandle() {
-    return thread_handle_;
+  std::unique_lock<std::mutex> lock() {
+    return std::unique_lock<std::mutex>(trace_mutex_);
   }
 
-  /**
-   * Returns the caller handle reference in the native format.
-   */
-  std::thread::native_handle_type getCallerHandle() {
-    return caller_handle_;
+  void notifyPullTracesDone(std::unique_lock<std::mutex>& lock) {
+    std::unique_lock<std::mutex> tlock(std::move(lock));
+    pull_traces_ = true;
+    trace_condition_.notify_one();
   }
 
  private:
   TraceResolver() = default;
 
   BackTrace trace_;
-  std::thread::native_handle_type thread_handle_{0};
-  std::thread::native_handle_type caller_handle_{0};
-  std::mutex mutex_;
+  mutable std::mutex mutex_;
+
+  bool pull_traces_{false};
+  mutable std::mutex trace_mutex_;
+  std::condition_variable trace_condition_;
 };
 
 #endif /* LIBMINIFI_INCLUDE_UTILS_BACKTRACE_H_ */

@@ -56,7 +56,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 |Hostname Attribute|source.hostname||Flowfile attribute to used to record the agent's hostname|
 |IP Attribute|source.ipv4||Flowfile attribute to used to record the agent's IP address|
 |Network Interface Name|eth0||Network interface from which to read an IP v4 address|
-### Properties 
+### Relationships
 
 | Name | Description |
 | - | - |
@@ -75,7 +75,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 | Name | Default Value | Allowable Values | Description | 
 | - | - | - | - | 
 |Template|||Path to the input mustache template file|
-### Properties 
+### Relationships
 
 | Name | Description |
 | - | - |
@@ -99,11 +99,11 @@ In the list below, the names of required properties appear in bold. Any other pr
 |Maximum number of Bins|100||Specifies the maximum number of bins that can be held in memory at any one time|
 |Minimum Group Size|0||The minimum size of for the bundle|
 |Minimum Number of Entries|1||The minimum number of files to include in a bundle|
-### Properties 
+### Relationships
 
 | Name | Description |
 | - | - |
-|failure|If the bundle cannot be created, all FlowFiles that would have been used to created the bundle will be transferred to failure|
+|failure|If the bundle cannot be created, all FlowFiles that would have been used to create the bundle will be transferred to failure|
 |original|The FlowFiles that were used to create the bundle|
 
 
@@ -122,7 +122,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 |Batch Size|50||The number of packets to combine within a given PCAP|
 |Capture Bluetooth|false||True indicates that we support bluetooth interfaces|
 |Network Controllers|.*||Regular expression of the network controller(s) to which we will attach|
-### Properties 
+### Relationships
 
 | Name | Description |
 | - | - |
@@ -146,7 +146,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 |RTSP Port|||Port that should be connected to to receive RTSP Frames|
 |RTSP URI|||URI that should be appended to the RTSP stream hostname|
 |RTSP Username|||The username for connecting to the RTSP stream|
-### Properties 
+### Relationships
 
 | Name | Description |
 | - | - |
@@ -169,7 +169,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 |Compression Level|1||The compression level to use; this is valid only when using GZIP compression.|
 |Mode|compress||Indicates whether the processor should compress content or decompress content.|
 |Update Filename|false||Determines if filename extension need to be updated|
-### Properties 
+### Relationships
 
 | Name | Description |
 | - | - |
@@ -199,7 +199,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 |Session state|true||Whether to start afresh or resume previous flows. See the allowable value descriptions for more details|
 |Topic|||The topic to publish the message to|
 |Username|||Username to use when connecting to the broker|
-### Properties 
+### Relationships
 
 | Name | Description |
 | - | - |
@@ -222,7 +222,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 |Command Arguments|||The arguments to supply to the executable delimited by white space. White space can be escaped by enclosing it in double-quotes.<br/>**Supports Expression Language: true**|
 |Redirect Error Stream|false||If true will redirect any error stream output of the process to the output stream.|
 |Working Directory|||The directory to use as the current working directory when executing the command<br/>**Supports Expression Language: true**|
-### Properties 
+### Relationships
 
 | Name | Description |
 | - | - |
@@ -233,7 +233,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 ### Description 
 
-Executes a script given the flow file and a process session. The script is responsible for handling the incoming flow file (transfer to SUCCESS or remove, e.g.) as well as any flow files created by the script. If the handling is incomplete or incorrect, the session will be rolled back.Scripts must define an onTrigger function which accepts NiFi Context and Property objects. For efficiency, scripts are executed once when the processor is run, then the onTrigger method is called for each incoming flowfile. This enables scripts to keep state if they wish, although there will be a script context per concurrent task of the processor. In order to, e.g., compute an arithmetic sum based on incoming flow file information, set the concurrent tasks to 1.
+Executes a script given the flow file and a process session. The script is responsible for handling the incoming flow file (transfer to SUCCESS or remove, e.g.) as well as any flow files created by the script. If the handling is incomplete or incorrect, the session will be rolled back. Scripts must define an onTrigger function which accepts NiFi Context and Property objects. For efficiency, scripts are executed once when the processor is run, then the onTrigger method is called for each incoming flowfile. This enables scripts to keep state if they wish, although there will be a script context per concurrent task of the processor. In order to, e.g., compute an arithmetic sum based on incoming flow file information, set the concurrent tasks to 1.
 ### Properties 
 
 In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
@@ -242,7 +242,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 | - | - | - | - | 
 |Module Directory|||Comma-separated list of paths to files and/or directories which contain modules required by the script|
 |Script File|||Path to script file to execute|
-### Properties 
+### Relationships
 
 | Name | Description |
 | - | - |
@@ -263,7 +263,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 | - | - | - | - | 
 |Connection URL|||The database URL to connect to|
 |SQL Statement|||The SQL statement to execute|
-### Properties 
+### Relationships
 
 | Name | Description |
 | - | - |
@@ -276,7 +276,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 ### Description 
 
-Executes a script given the flow file and a process session. The script is responsible for handling the incoming flow file (transfer to SUCCESS or remove, e.g.) as well as any flow files created by the script. If the handling is incomplete or incorrect, the session will be rolled back.Scripts must define an onTrigger function which accepts NiFi Context and Property objects. For efficiency, scripts are executed once when the processor is run, then the onTrigger method is called for each incoming flowfile. This enables scripts to keep state if they wish, although there will be a script context per concurrent task of the processor. In order to, e.g., compute an arithmetic sum based on incoming flow file information, set the concurrent tasks to 1.
+Executes a script given the flow file and a process session. The script is responsible for handling the incoming flow file (transfer to SUCCESS or remove, e.g.) as well as any flow files created by the script. If the handling is incomplete or incorrect, the session will be rolled back. Scripts must define an onTrigger function which accepts NiFi Context and Property objects. For efficiency, scripts are executed once when the processor is run, then the onTrigger method is called for each incoming flowfile. This enables scripts to keep state if they wish, although there will be a script context per concurrent task of the processor. In order to, e.g., compute an arithmetic sum based on incoming flow file information, set the concurrent tasks to 1.
 ### Properties 
 
 In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
@@ -288,7 +288,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 |Script Engine|python||The engine to execute scripts (python, lua)|
 |Script File|||Path to script file to execute. Only one of Script File or Script Body may be used|
 
-### Properties 
+### Relationships
 
 | Name | Description |
 | - | - |
@@ -314,7 +314,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 |Maximum Capture Group Length|1024||Specifies the maximum number of characters a given capture group value can have. Any characters beyond the max will be truncated.|
 |Regex Mode|false||Set this to extract parts of flowfile content using regular experssions in dynamic properties|
 |Size Limit|2097152||Maximum number of bytes to read into the attribute. 0 for no limit. Default is 2MB.|
-### Properties 
+### Relationships
 
 | Name | Description |
 | - | - |
@@ -344,7 +344,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 |Password|||Password to log in with. Providing this requires cert and key to be provided as well, credentials are always sent encrypted.|
 |Trusted server certificate path|||Path to the DER-encoded trusted server certificate|
 |Username|||Username to log in with.|
-### Properties 
+### Relationships
 
 | Name | Description |
 | - | - |
@@ -385,7 +385,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 |**Strict Host Key Checking**|false||Indicates whether or not strict enforcement of hosts keys should be applied|
 |**Use Compression**|false||Indicates whether or not ZLIB compression should be used when transferring files|
 |**Username**|||Username<br/>**Supports Expression Language: true**|
-### Properties 
+### Relationships
 
 | Name | Description |
 | - | - |
@@ -407,7 +407,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 | Name | Default Value | Allowable Values | Description | 
 | - | - | - | - | 
 |Path|||The path within the archive to focus ("/" to focus the total archive)|
-### Properties 
+### Relationships
 
 | Name | Description |
 | - | - |
@@ -429,7 +429,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 |Data Format|Binary|Text<br>Binary<br>|Specifies whether the data should be Text or Binary|
 |File Size|1 kB||The size of the file that will be used|
 |Unique FlowFiles|true||If true, each FlowFile that is generated will be unique. If false, a random value will be generated and all FlowFiles|
-### Properties 
+### Relationships
 
 | Name | Description |
 | - | - |
@@ -458,7 +458,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 |Minimum File Size|0 B||The minimum size that a file can be in order to be pulled|
 |Polling Interval|0 sec||Indicates how long to wait before performing a directory listing|
 |Recurse Subdirectories|true||Indicates whether or not to pull files from subdirectories|
-### Properties 
+### Relationships
 
 | Name | Description |
 | - | - |
@@ -479,7 +479,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 |GPSD Host|localhost||The host running the GPSD daemon|
 |GPSD Port|2947||The GPSD daemon port|
 |GPSD Wait Time|50000000||Timeout value for waiting for data from the GPSD instance|
-### Properties 
+### Relationships
 
 | Name | Description |
 | - | - |
@@ -504,7 +504,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 |end-of-message-byte|13||Byte value which denotes end of message. Must be specified as integer within the valid byte range  (-128 thru 127). For example, '13' = Carriage return and '10' = New line. Default '13'.|
 |**endpoint-list**|||A comma delimited list of the endpoints to connect to. The format should be <server_address>:<port>.|
 |receive-buffer-size|16 MB||The size of the buffer to receive data in. Default 16384 (16MB).|
-### Properties 
+### Relationships
 
 | Name | Description |
 | - | - |
@@ -530,7 +530,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 |USB Serial No.|||USB Serial No. of camera device|
 |USB Vendor ID|0x0||USB Vendor ID of camera device, in hexadecimal format|
 |Width|||Target width of image to capture from USB camera|
-### Properties 
+### Relationships
 
 | Name | Description |
 | - | - |
@@ -586,7 +586,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 |invokehttp-proxy-password|||Password to set when authenticating against proxy|
 |invokehttp-proxy-username|||Username to set when authenticating against proxy|
 |send-message-body|true||If true, sends the HTTP message body on POST/PUT/PATCH requests (default).  If false, suppresses the message body and content-type header for these requests.|
-### Properties 
+### Relationships
 
 | Name | Description |
 | - | - |
@@ -635,7 +635,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 |**Strict Host Key Checking**|false||Indicates whether or not strict enforcement of hosts keys should be applied|
 |**Target System Timestamp Precision**|Auto Detect|Auto Detect<br>Milliseconds<br>Minutes<br>Seconds<br>|Specify timestamp precision at the target system. Since this processor uses timestamp of entities to decide which should be listed, it is crucial to use the right timestamp precision.|
 |**Username**|||Username<br/>**Supports Expression Language: true**|
-### Properties 
+### Relationships
 
 | Name | Description |
 | - | - |
@@ -661,7 +661,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 |SSL Certificate Authority|||File containing trusted PEM-formatted certificates|
 |SSL Minimum Version|TLS1.2|TLS1.2<br>|Minimum TLS/SSL version allowed (TLS1.2)|
 |SSL Verify Peer|no|no<br>yes<br>|Whether or not to verify the client's certificate (yes/no)|
-### Properties 
+### Relationships
 
 | Name | Description |
 | - | - |
@@ -687,7 +687,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 |Port|514||The port for Syslog communication|
 |Protocol|UDP|UDP<br>TCP<br>|The protocol for Syslog communication.|
 |Receive Buffer Size|65507 B||The size of each buffer used to receive Syslog messages.|
-### Properties 
+### Relationships
 
 | Name | Description |
 | - | - |
@@ -714,7 +714,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 |Log Payload|false||If true, the FlowFile's payload will be logged, in addition to its attributes.otherwise, just the Attributes will be logged|
 |Log Prefix|||Log prefix appended to the log lines. It helps to distinguish the output of multiple LogAttribute processors.|
 |Maximum Payload Line Length|80||The logged payload will be broken into lines this long. 0 means no newlines will be added.|
-### Properties 
+### Relationships
 
 | Name | Description |
 | - | - |
@@ -737,7 +737,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 |Destination|||Destination for operations (touch, move or copy) which result in new entries.|
 |Operation|||Operation to perform on the archive (touch, remove, copy, move).|
 |Target|||An existing entry within the archive to perform the operation on.|
-### Properties 
+### Relationships
 
 | Name | Description |
 | - | - |
@@ -770,7 +770,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 |Merge Strategy|Defragment||Defragment or Bin-Packing Algorithm|
 |Minimum Group Size|0||The minimum size of for the bundle|
 |Minimum Number of Entries|1||The minimum number of files to include in a bundle|
-### Properties 
+### Relationships
 
 | Name | Description |
 | - | - |
@@ -795,7 +795,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 |**Minimum Area**|100||We only consider the movement regions with area greater than this.|
 |**Path to background frame**|||If not provided then the processor will take the first input frame as background|
 |**Threshold for segmentation**|42||Pixel greater than this will be white, otherwise black.|
-### Properties 
+### Relationships
 
 | Name | Description |
 | - | - |
@@ -840,7 +840,7 @@ Supports Expression Language: true (will be evaluated using flow file attributes
 |Security Protocol|||Protocol used to communicate with brokers|
 |Target Batch Payload Size|512 KB||The target total payload size for a batch. 0 B means unlimited (Batch Size is still applied).|
 |**Topic Name**|||The Kafka Topic of interest<br/>**Supports Expression Language: true**|
-### Properties 
+### Relationships
 
 | Name | Description |
 | - | - |
@@ -870,7 +870,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 |Session state|true||Whether to start afresh or resume previous flows. See the allowable value descriptions for more details|
 |Topic|||The topic to publish the message to|
 |Username|||Username to use when connecting to the broker|
-### Properties 
+### Relationships
 
 | Name | Description |
 | - | - |
@@ -893,7 +893,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 |**Create Missing Directories**|true||If true, then missing destination directories will be created. If false, flowfiles are penalized and sent to failure.|
 |Directory|.||The output directory to which to put files<br/>**Supports Expression Language: true**|
 |Maximum File Count|-1||Specifies the maximum number of files that can exist in the output directory|
-### Properties 
+### Relationships
 
 | Name | Description |
 | - | - |
@@ -927,7 +927,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 |Trusted server certificate path|||Path to the DER-encoded trusted server certificate|
 |Username|||Username to log in with.|
 |**Value type**||Boolean<br>Double<br>Float<br>Int32<br>Int64<br>String<br>UInt32<br>UInt64<br>|Set the OPC value type of the created nodes|
-### Properties 
+### Relationships
 
 | Name | Description |
 | - | - |
@@ -975,7 +975,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 |Temporary Filename|||If set, the filename of the sent file will be equal to the value specified during the transfer and after successful completion will be renamed to the original filename. If this value is set, the Dot Rename property is ignored.<br/>**Supports Expression Language: true**|
 |**Use Compression**|false||Indicates whether or not ZLIB compression should be used when transferring files|
 |**Username**|||Username<br/>**Supports Expression Language: true**|
-### Properties 
+### Relationships
 
 | Name | Description |
 | - | - |
@@ -998,7 +998,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 |Batch Size|1||The maximum number of flow files to process in one batch|
 |Connection URL|||The database URL to connect to|
 |SQL Statement|||The SQL statement to execute|
-### Properties 
+### Relationships
 
 | Name | Description |
 | - | - |
@@ -1018,7 +1018,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 | Name | Default Value | Allowable Values | Description | 
 | - | - | - | - | 
-### Properties 
+### Relationships
 
 | Name | Description |
 | - | - |
@@ -1042,7 +1042,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 |State File|TailFileState||Specifies the file that should be used for storing state about what data has been ingested so that upon restart NiFi can resume from where it left off|
 |tail-base-directory||||
 |**tail-mode**|Single file|Single file<br>Multiple file<br>|Specifies the tail file mode. In 'Single file' mode only a single file will be watched. In 'Multiple file' mode a regex may be used. Note that in multiple file mode we will still continue to watch for rollover on the initial set of watched files. The Regex used to locate multiple files will be run during the schedule phrase. Note that if rotated files are matched by the regex, those files will be tailed.|
-### Properties 
+### Relationships
 
 | Name | Description |
 | - | - |
@@ -1060,7 +1060,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 | Name | Default Value | Allowable Values | Description | 
 | - | - | - | - | 
-### Properties 
+### Relationships
 
 | Name | Description |
 | - | - |
@@ -1078,7 +1078,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 | Name | Default Value | Allowable Values | Description | 
 | - | - | - | - | 
-### Properties 
+### Relationships
 
 | Name | Description |
 | - | - |
