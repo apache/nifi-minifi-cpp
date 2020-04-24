@@ -18,6 +18,8 @@
  * limitations under the License.
  */
 
+#include <string>
+
 #include "KamikazeProcessor.h"
 #include "Exception.h"
 

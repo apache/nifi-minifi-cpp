@@ -18,13 +18,15 @@
  * limitations under the License.
  */
 #include "ArchiveTests.h"
-#include <set>
+
 #include <algorithm>
+#include <set>
 #include <string>
 #include <utility>
 
-#include <archive.h>
-#include <archive_entry.h>
+#include <archive.h> // NOLINT
+#include <archive_entry.h> // NOLINT
+
 #include "../../TestBase.h"
 
 TAE_MAP_T build_test_archive_map(int NUM_FILES, const char** FILE_NAMES, const char** FILE_CONTENT) {

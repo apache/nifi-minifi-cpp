@@ -15,16 +15,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "io/tls/SecureDescriptorStream.h"
 #include "io/tls/TLSServerSocket.h"
 
 #include <sys/types.h>
+
 #ifndef WIN32
-#include <netinet/tcp.h>
-#include <netdb.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
 #include <arpa/inet.h>
+#include <netdb.h>
+#include <netinet/in.h>
+#include <netinet/tcp.h>
+#include <sys/socket.h>
 #include <unistd.h>
 #else
 #pragma comment(lib, "Ws2_32.lib")
@@ -40,8 +40,10 @@
 #include <iostream>
 #include <algorithm>
 #include <string>
-#include "io/validation.h"
+
 #include "core/logging/LoggerConfiguration.h"
+#include "io/tls/SecureDescriptorStream.h"
+#include "io/validation.h"
 
 namespace org {
 namespace apache {

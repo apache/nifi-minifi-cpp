@@ -15,10 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "io/FileStream.h"
+#include <iostream>
 #include <string>
 #include <vector>
-#include <iostream>
+
+#include "io/FileStream.h"
 #include "../TestBase.h"
 
 TEST_CASE("TestFileOverWrite", "[TestFiles]") {

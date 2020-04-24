@@ -17,13 +17,15 @@
  */
 
 #include "core/repository/VolatileContentRepository.h"
-#include "core/expect.h"
+
 #include <cstdio>
-#include <string>
 #include <memory>
+#include <string>
 #include <thread>
-#include "utils/StringUtils.h"
+
+#include "core/expect.h"
 #include "io/FileStream.h"
+#include "utils/StringUtils.h"
 
 namespace org {
 namespace apache {

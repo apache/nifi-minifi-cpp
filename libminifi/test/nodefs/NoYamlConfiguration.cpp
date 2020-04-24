@@ -16,11 +16,11 @@
  * limitations under the License.
  */
 
-#include "core/Core.h"
 #include <memory>
-#include "core/RepositoryFactory.h"
 
 #include "core/ConfigurationFactory.h"
+#include "core/Core.h"
+#include "core/RepositoryFactory.h"
 
 TEST_CASE("NoYamlSupport1", "[NoYamlSupport1]") {
   std::shared_ptr<core::Repository> prov_repo = core::createRepository(

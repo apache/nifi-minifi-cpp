@@ -28,12 +28,14 @@
 #include <sddl.h>
 #pragma comment(lib, "Ws2_32.lib")
 #else
-#include <mutex>
-#include <pwd.h>
-#include <netdb.h>
 #include <arpa/inet.h>
+#include <netdb.h>
+#include <pwd.h>
 #include <sys/types.h>
+
+#include <mutex>
 #endif
+
 namespace org {
 namespace apache {
 namespace nifi {

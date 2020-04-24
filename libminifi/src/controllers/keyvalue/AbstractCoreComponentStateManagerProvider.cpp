@@ -17,12 +17,12 @@
 
 #include "controllers/keyvalue/AbstractCoreComponentStateManagerProvider.h"
 
+#include <memory>
+
 #include "rapidjson/rapidjson.h"
 #include "rapidjson/document.h"
 #include "rapidjson/stringbuffer.h"
 #include "rapidjson/writer.h"
-
-#include <memory>
 
 namespace org {
 namespace apache {

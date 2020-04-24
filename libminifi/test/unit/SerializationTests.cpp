@@ -15,14 +15,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <algorithm>
+#include <memory>
+#include <string>
+
 #include "io/BaseStream.h"
 #include "SiteToSiteHelper.h"
-#include <algorithm>
-#include <string>
-#include <memory>
-
 #include "../TestBase.h"
 #include "../unit/SiteToSiteHelper.h"
+
 #define FMT_DEFAULT fmt_lower
 
 TEST_CASE("TestWriteUTF", "[MINIFI193]") {

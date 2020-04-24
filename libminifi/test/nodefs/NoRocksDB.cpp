@@ -16,10 +16,11 @@
  * limitations under the License.
  */
 
-#include "../TestBase.h"
 #include <memory>
+
 #include "core/Core.h"
 #include "core/RepositoryFactory.h"
+#include "../TestBase.h"
 
 TEST_CASE("NoRocksDBTest1", "[NoRocksDBTest]") {
   std::shared_ptr<core::Repository> prov_repo = core::createRepository("provenancerepository", true);

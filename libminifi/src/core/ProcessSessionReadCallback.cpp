@@ -18,10 +18,11 @@
  * limitations under the License.
  */
 #include "core/ProcessSessionReadCallback.h"
-#include "core/logging/LoggerConfiguration.h"
-#include "io/BaseStream.h"
 #include <memory>
 #include <string>
+
+#include "core/logging/LoggerConfiguration.h"
+#include "io/BaseStream.h"
 
 namespace org {
 namespace apache {

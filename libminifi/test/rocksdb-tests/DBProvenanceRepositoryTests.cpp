@@ -16,12 +16,13 @@
  * limitations under the License.
  */
 
-#include "ProvenanceRepository.h"
-#include "../TestBase.h"
 #include <array>
 #include <chrono>
-#include <vector>
 #include <random>
+#include <vector>
+
+#include "ProvenanceRepository.h"
+#include "../TestBase.h"
 
 #define TEST_PROVENANCE_STORAGE_SIZE (1024*100)  // 100 KB
 #define TEST_MAX_PROVENANCE_STORAGE_SIZE (100*1024*1024)  // 100 MB

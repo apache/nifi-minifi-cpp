@@ -17,24 +17,26 @@
  */
 
 #define CATCH_CONFIG_MAIN  // This tells Catch to provide a main() - only do this in one cpp file
+
 #include <fstream>
+#include <iostream>
 #include <map>
 #include <memory>
-#include <utility>
-#include <string>
 #include <set>
-#include "FlowController.h"
-#include "../TestBase.h"
+#include <string>
+#include <utility>
+
 #include "core/Core.h"
 #include "core/FlowFile.h"
-#include "processors/GetFile.h"
-#include "../unit/ProvenanceTestHelper.h"
 #include "core/Processor.h"
 #include "core/ProcessContext.h"
-#include "core/ProcessSession.h"
 #include "core/ProcessorNode.h"
-#include <iostream>
+#include "core/ProcessSession.h"
+#include "FlowController.h"
 #include "GetGPS.h"
+#include "processors/GetFile.h"
+#include "../TestBase.h"
+#include "../unit/ProvenanceTestHelper.h"
 
 
 TEST_CASE("GPSD Create", "[gpsdtest1]") {

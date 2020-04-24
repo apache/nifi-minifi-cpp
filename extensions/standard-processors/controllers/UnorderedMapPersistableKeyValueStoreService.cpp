@@ -18,6 +18,7 @@
 #include "UnorderedMapPersistableKeyValueStoreService.h"
 
 #include <fstream>
+#include <set>
 
 #include "utils/file/FileUtils.h"
 #include "utils/StringUtils.h"

@@ -16,12 +16,13 @@
  * limitations under the License.
  */
 #include "io/StreamFactory.h"
+
 #include <atomic>
 #include <memory>
 #include <mutex>
 #include <string>
-#include <utils/GeneralUtils.h>
 
+#include <utils/GeneralUtils.h> // NOLINT
 #ifdef OPENSSL_SUPPORT
 #include "io/tls/TLSSocket.h"
 #endif

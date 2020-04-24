@@ -17,24 +17,25 @@
  */
 
 #include <fstream>
+#include <iostream>
 #include <map>
 #include <memory>
 #include <utility>
-#include <string>
 #include <set>
-#include "FlowController.h"
-#include "../TestBase.h"
+#include <sstream>
+#include <string>
+
 #include "core/Core.h"
-#include "../../include/core/FlowFile.h"
-#include "../unit/ProvenanceTestHelper.h"
 #include "core/Processor.h"
 #include "core/ProcessContext.h"
-#include "core/ProcessSession.h"
 #include "core/ProcessorNode.h"
+#include "core/ProcessSession.h"
+#include "FlowController.h"
+#include "../../include/core/FlowFile.h"
 #include "MergeContent.h"
-#include <sstream>
-#include <iostream>
 #include "processors/LogAttribute.h"
+#include "../TestBase.h"
+#include "../unit/ProvenanceTestHelper.h"
 
 static const char* FLOW_FILE = "/tmp/minifi-mergecontent";
 static const char* EXPECT_MERGE_CONTENT_FIRST = "/tmp/minifi-expect-mergecontent1.txt";

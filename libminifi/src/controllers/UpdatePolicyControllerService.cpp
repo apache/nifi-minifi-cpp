@@ -16,14 +16,17 @@
  * limitations under the License.
  */
 #include "controllers/UpdatePolicyControllerService.h"
-#include <cstdio>
-#include <utility>
-#include <limits>
-#include <string>
-#include <vector>
-#include <string.h>
+
 #include <stdlib.h>
+#include <string.h>
+
+#include <cstdio>
+#include <limits>
 #include <set>
+#include <string>
+#include <utility>
+#include <vector>
+
 #include "utils/StringUtils.h"
 #if ( defined(__APPLE__) || defined(__MACH__) || defined(BSD))
 #include <net/if_dl.h>

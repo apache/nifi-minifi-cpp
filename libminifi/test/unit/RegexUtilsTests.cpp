@@ -16,11 +16,12 @@
  * limitations under the License.
  */
 
-#include "../TestBase.h"
-#include "utils/RegexUtils.h"
-#include "Exception.h"
 #include <string>
 #include <vector>
+
+#include "Exception.h"
+#include "utils/RegexUtils.h"
+#include "../TestBase.h"
 
 using org::apache::nifi::minifi::utils::Regex;
 using org::apache::nifi::minifi::Exception;

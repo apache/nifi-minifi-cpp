@@ -18,14 +18,15 @@
 
 #include "c2/protocols/RESTProtocol.h"
 
-#include "core/TypedValues.h"
 #include <algorithm>
-#include <memory>
-#include <utility>
-#include <map>
-#include <string>
-#include <vector>
 #include <list>
+#include <map>
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
+
+#include "core/TypedValues.h"
 
 namespace org {
 namespace apache {

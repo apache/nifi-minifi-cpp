@@ -16,9 +16,11 @@
  * limitations under the License.
  */
 #include "io/tls/TLSUtils.h"
-#include "utils/StringUtils.h"
-#include <string>
+
 #include <cstring>
+#include <string>
+
+#include "utils/StringUtils.h"
 
 namespace org {
 namespace apache {

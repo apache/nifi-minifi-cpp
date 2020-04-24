@@ -17,6 +17,8 @@
 
 #include "KafkaConnection.h"
 
+#include <memory>
+
 namespace org {
 namespace apache {
 namespace nifi {

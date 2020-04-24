@@ -18,12 +18,15 @@
  * limitations under the License.
  */
 #include "PublishKafka.h"
+
 #include <cstdio>
 #include <algorithm>
 #include <memory>
 #include <string>
 #include <map>
 #include <set>
+#include <vector>
+
 #include "utils/TimeUtil.h"
 #include "utils/StringUtils.h"
 #include "utils/ScopeGuard.h"

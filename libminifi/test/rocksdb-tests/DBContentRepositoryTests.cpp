@@ -15,15 +15,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "../TestBase.h"
+
 #include <memory>
 #include <string>
-#include "../unit/ProvenanceTestHelper.h"
-#include "provenance/Provenance.h"
-#include "FlowFileRecord.h"
+
 #include "core/Core.h"
 #include "DatabaseContentRepository.h"
+#include "FlowFileRecord.h"
 #include "properties/Configure.h"
+#include "provenance/Provenance.h"
+#include "../TestBase.h"
+#include "../unit/ProvenanceTestHelper.h"
 
 TEST_CASE("Write Claim", "[TestDBCR1]") {
   TestController testController;
