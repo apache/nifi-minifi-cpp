@@ -588,6 +588,7 @@ void C2Agent::handle_describe(const C2ContentResponse &resp) {
         response.addPayload(std::move(options));
       }
       enqueue_c2_response(std::move(response));
+      return;
     }
   } else if (resp.name == "corecomponentstate") {
     C2Payload response(Operation::ACKNOWLEDGE, resp.ident, false, true);
