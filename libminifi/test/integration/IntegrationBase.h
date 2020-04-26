@@ -71,6 +71,9 @@ class IntegrationBase {
 
  protected:
 
+  virtual void configureC2() {
+  }
+
   virtual void queryRootProcessGroup(std::shared_ptr<core::ProcessGroup> pg) {
 
   }
@@ -115,6 +118,9 @@ void IntegrationBase::run(std::string test_file_location) {
 
   configuration->set(minifi::Configure::nifi_flow_configuration_file, test_file_location);
 
+  configureC2();
+  configureFullHeartbeat();
+
   std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
   content_repo->initialize(configuration);
   std::shared_ptr<minifi::io::StreamFactory> stream_factory = minifi::io::StreamFactory::getInstance(configuration);
@@ -132,8 +138,6 @@ void IntegrationBase::run(std::string test_file_location) {
   std::shared_ptr<core::ProcessGroup> pg = std::shared_ptr<core::ProcessGroup>(ptr.get());
 
   queryRootProcessGroup(pg);
-
-  configureFullHeartbeat();
 
   ptr.release();
 

@@ -344,23 +344,19 @@ class DeleteTransactionResponder : public CivetHandler {
   std::string response_code;
 };
 
+std::string readPayload(struct mg_connection *conn) {
+  std::string response;
+  int readBytes;
+
+  char buffer[1024];
+  while ((readBytes = mg_read(conn, buffer, sizeof(buffer))) > 0) {
+    response.append(buffer, (readBytes / sizeof(char)));
+  }
+  return response;
+}
+
 class HeartbeatHandler : public CivetHandler {
  public:
-  explicit HeartbeatHandler(bool isSecure)
-      : isSecure(isSecure) {
-  }
-
-  std::string readPost(struct mg_connection *conn) {
-    std::string response;
-    int readBytes;
-
-    char buffer[1024];
-    while ((readBytes = mg_read(conn, buffer, sizeof(buffer))) > 0) {
-      response.append(buffer, (readBytes / sizeof(char)));
-    }
-    return response;
-  }
-
   void sendStopOperation(struct mg_connection *conn) {
     std::string resp = "{\"operation\" : \"heartbeat\", \"requested_operations\" : [{ \"operationid\" : 41, \"operation\" : \"stop\", \"operand\" : \"invoke\"  }, "
         "{ \"operationid\" : 42, \"operation\" : \"stop\", \"operand\" : \"FlowController\"  } ]}";
@@ -417,7 +413,7 @@ class HeartbeatHandler : public CivetHandler {
   }
 
   void verify(struct mg_connection *conn) {
-    auto post_data = readPost(conn);
+    auto post_data = readPayload(conn);
     //std::cerr << post_data << std::endl;
     if (!IsNullOrEmpty(post_data)) {
       rapidjson::Document root;
@@ -439,9 +435,73 @@ class HeartbeatHandler : public CivetHandler {
     sendStopOperation(conn);
     return true;
   }
+};
 
- protected:
-  bool isSecure;
+class C2UpdateHandler : public CivetHandler {
+ public:
+  explicit C2UpdateHandler(const std::string& test_file_location)
+    : test_file_location_(test_file_location) {
+  }
+
+  bool handlePost(CivetServer *server, struct mg_connection *conn) {
+    calls_++;
+    if (!response_.empty()) {
+      mg_printf(conn, "HTTP/1.1 200 OK\r\nContent-Type: "
+                "text/plain\r\nContent-Length: %lu\r\nConnection: close\r\n\r\n",
+                response_.length());
+      mg_printf(conn, "%s", response_.c_str());
+      response_.clear();
+    } else {
+      mg_printf(conn, "HTTP/1.1 500 Internal Server Error\r\n");
+    }
+
+    return true;
+  }
+
+  bool handleGet(CivetServer *server, struct mg_connection *conn) {
+    std::ifstream myfile(test_file_location_.c_str(), std::ios::in | std::ios::binary);
+    if (myfile.good()) {
+      std::string str((std::istreambuf_iterator<char>(myfile)), (std::istreambuf_iterator<char>()));
+      mg_printf(conn, "HTTP/1.1 200 OK\r\nContent-Type: "
+                "text/plain\r\nContent-Length: %lu\r\nConnection: close\r\n\r\n",
+                str.length());
+      mg_printf(conn, "%s", str.c_str());
+    } else {
+      mg_printf(conn, "HTTP/1.1 500 Internal Server Error\r\n");
+    }
+
+    return true;
+  }
+
+  virtual void setC2RestResponse(const std::string& url, const std::string& name) {
+    response_ = "{\"operation\" : \"heartbeat\",\"requested_operations\": [  {"
+        "\"operation\" : \"update\", "
+        "\"operationid\" : \"8675309\", "
+        "\"name\": \"" + name + "\", \"content\": { \"location\": \"" + url + "\"}}]}";
+  }
+
+  std::atomic<size_t> calls_{0};
+ private:
+  std::string test_file_location_;
+  std::string response_;
+};
+
+class C2FailedUpdateHandler : public C2UpdateHandler {
+public:
+ explicit C2FailedUpdateHandler(const std::string& test_file_location)
+   : C2UpdateHandler(test_file_location) {
+ }
+
+ bool handlePost(CivetServer *server, struct mg_connection *conn) {
+   calls_++;
+   const auto data = readPayload(conn);
+
+   if (data.find("operationState") != std::string::npos) {
+     assert(data.find("state\": \"NOT_APPLIED") != std::string::npos);
+   }
+
+   return C2UpdateHandler::handlePost(server, conn);
+ }
 };
 
 #endif /* LIBMINIFI_TEST_CURL_TESTS_SITETOSITEHTTP_HTTPHANDLERS_H_ */
