@@ -29,7 +29,7 @@ class VerifyC2DescribeCoreComponentState : public VerifyC2Describe {
  public:
   explicit VerifyC2DescribeCoreComponentState(bool isSecure)
       : VerifyC2Describe(isSecure) {
-    char format[] = "/tmp/ssth.XXXXXX";
+    char format[] = "/var/tmp/ssth.XXXXXX";
     temp_dir_ = testController.createTempDirectory(format);
 
     test_file_1_ = utils::file::FileUtils::concat_path(temp_dir_, "test1.txt");

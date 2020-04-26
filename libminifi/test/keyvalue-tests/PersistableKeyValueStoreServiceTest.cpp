@@ -67,7 +67,7 @@ class PersistableKeyValueStoreServiceTestsFixture {
     LogTestController::getInstance().setTrace<minifi::controllers::AbstractAutoPersistingKeyValueStoreService>();
 
     // Create temporary directories
-    char format[] = "/tmp/state.XXXXXX";
+    char format[] = "/var/tmp/state.XXXXXX";
     state_dir = testController.createTempDirectory(format);
     REQUIRE(false == state_dir.empty());
     REQUIRE(0 == chdir(state_dir.c_str()));
