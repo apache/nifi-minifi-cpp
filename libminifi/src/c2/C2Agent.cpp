@@ -434,6 +434,7 @@ void C2Agent::handle_c2_server_response(const C2ContentResponse &resp) {
         C2Payload response(Operation::ACKNOWLEDGE, resp.ident, false, true);
         enqueue_c2_response(std::move(response));
       } else if (resp.name == "corecomponentstate") {
+        // TODO(bakaid): untested
         std::vector<std::shared_ptr<state::StateController>> components = update_sink_->getComponents(resp.name);
         auto state_manager_provider = core::ProcessContext::getStateManagerProvider(logger_, controller_, configuration_);
         if (state_manager_provider != nullptr) {
