@@ -56,6 +56,10 @@ T exchange(T& obj, U&& new_value) {
   obj = std::forward<U>(new_value);
   return old_value;
 }
+
+template<typename...>
+using void_t = void;
+
 #else
 using std::exchange;
 #endif /* < C++14 */
