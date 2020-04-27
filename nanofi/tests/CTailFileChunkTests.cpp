@@ -37,17 +37,20 @@
 TEST_CASE("Test tailfile chunk size 4096, file size 8KB", "[tailfileChunk8KBFileSize]") {
 
     TailFileTestResourceManager mgr("TailFileChunk", on_trigger_tailfilechunk);
-    const char * file = "./e.txt";
+    const char * file = "e.txt";
     const char * chunksize = "4096";
 
+    char * file_path = get_temp_file_path(file);
+    REQUIRE(file_path != NULL);
+
     //Write 8192 bytes to the file
-    FileManager fm(file);
+    FileManager fm(file_path);
     fm.WriteNChars(4096, 'a');
     fm.WriteNChars(4096, 'b');
     fm.CloseStream();
 
     standalone_processor * proc = mgr.getProcessor();
-    set_standalone_property(proc, "file_path", file);
+    set_standalone_property(proc, "file_path", file_path);
     set_standalone_property(proc, "chunk_size", chunksize);
 
     flow_file_record * new_ff = invoke(proc);
@@ -64,22 +67,26 @@ TEST_CASE("Test tailfile chunk size 4096, file size 8KB", "[tailfileChunk8KBFile
 
     //Test that the current offset in the file is 8192 bytes
     REQUIRE(pp->curr_offset == 8192);
+    free(file_path);
 }
 
 TEST_CASE("Test tailfile chunk size 4096, file size less than 8KB", "[tailfileChunkFileSizeLessThan8KB]") {
 
     TailFileTestResourceManager mgr("TailFileChunk", on_trigger_tailfilechunk);
-    const char * file = "./e.txt";
+    const char * file = "e.txt";
     const char * chunksize = "4096";
 
+    char * file_path = get_temp_file_path(file);
+    REQUIRE(file_path != NULL);
+
     //Write 4505 bytes to the file
-    FileManager fm(file);
+    FileManager fm(file_path);
     fm.WriteNChars(4096, 'a');
     fm.WriteNChars(409, 'b');
     fm.CloseStream();
 
     standalone_processor * proc = mgr.getProcessor();
-    set_standalone_property(proc, "file_path", file);
+    set_standalone_property(proc, "file_path", file_path);
     set_standalone_property(proc, "chunk_size", chunksize);
 
     flow_file_record * new_ff = invoke(proc);
@@ -100,21 +107,25 @@ TEST_CASE("Test tailfile chunk size 4096, file size less than 8KB", "[tailfileCh
     struct stat fstat;
     REQUIRE(stat(pp->ff_list->ff_record->contentLocation, &fstat) == 0);
     REQUIRE(fstat.st_size == 4096);
+    free(file_path);
 }
 
 TEST_CASE("Test tailfile chunk size 512, file size equal to 4608B", "[tailfileChunkFileSize8KB]") {
 
     TailFileTestResourceManager mgr("TailFileChunk", on_trigger_tailfilechunk);
-    const char * file = "./e.txt";
+    const char * file = "e.txt";
     const char * chunksize = "512";
 
+    char * file_path = get_temp_file_path(file);
+    REQUIRE(file_path != NULL);
+
     //Write 4608 bytes to the file
-    FileManager fm(file);
+    FileManager fm(file_path);
     fm.WriteNChars(4608, 'a');
     fm.CloseStream();
 
     standalone_processor * proc = mgr.getProcessor();
-    set_standalone_property(proc, "file_path", file);
+    set_standalone_property(proc, "file_path", file_path);
     set_standalone_property(proc, "chunk_size", chunksize);
 
     flow_file_record * new_ff = invoke(proc);
@@ -131,5 +142,6 @@ TEST_CASE("Test tailfile chunk size 512, file size equal to 4608B", "[tailfileCh
 
     //Test that the current offset in the file is 4608 bytes
     REQUIRE(pp->curr_offset == 4608);
+    free(file_path);
 }
 #endif

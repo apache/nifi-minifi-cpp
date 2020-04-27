@@ -87,6 +87,14 @@ int validate_list(token_list * tk_list);
  */
 void attach_lists(token_list * to, token_list * from);
 
+/**
+ * Returns a heap allocated string copy
+ * @param source, the string to copy from
+ * @attention the source string is expected to be
+ * null terminated
+ */
+char * copystr(const char * source);
+
 #ifdef __cplusplus
 }
 #endif

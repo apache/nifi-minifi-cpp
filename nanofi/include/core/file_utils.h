@@ -71,6 +71,35 @@ int make_dir(const char * path);
  */
 char * get_current_working_directory();
 
+/**
+ * Creates and returns path to a directory
+ * @param format should be in XXXXXX format
+ * on linux and unused on windows
+ * @return a heap allocated char * to the
+ * created directory path name
+ */
+char * create_temp_directory(char * format);
+
+/**
+ * Gets file size
+ * @param path the path to the file
+ * @param out_size a pointer to collect file size in
+ * @return -1 on error and 0 on success
+ * @attention it is expected that path and out_size
+ * be non NULL and that path is not a directory
+ */
+int get_file_size(const char * path, uint64_t * out_size);
+
+/**
+ * Generates a unique directory name, creates the
+ * directory and appends the file name provided
+ * in the parameter to the directory path and
+ * returns the complete path
+ * @param file_path the file name or file path
+ * @return a heap allocated file path string
+ */
+char * get_temp_file_path(const char * file);
+
 #ifdef __cplusplus
 }
 #endif

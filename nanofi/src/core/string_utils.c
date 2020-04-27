@@ -162,3 +162,13 @@ token_list tokenize_string_tailfile(const char * str, char delim) {
     tks.has_non_delimited_token = 0;
     return tks;
 }
+
+char * copystr(const char * source) {
+  if (!source)
+    return NULL;
+  size_t len = strlen(source);
+  char * dest = (char *) malloc(len + 1);
+  if (!dest) return NULL;
+  strcpy(dest, source);
+  return dest;
+}
