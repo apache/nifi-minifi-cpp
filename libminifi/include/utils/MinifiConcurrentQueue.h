@@ -21,6 +21,7 @@
 #include <deque>
 #include <mutex>
 #include <condition_variable>
+#include <utility>
 #include <stdexcept>
 
 namespace org {
@@ -32,7 +33,7 @@ namespace utils {
 
 // Provides a queue API and guarantees no race conditions in case of multiple producers and consumers.
 // Guarantees elements to be dequeued in order of insertion
-template <typename T>
+template <typename T, typename = typename std::enable_if<std::is_nothrow_move_constructible<T>::value>::type>
 class ConcurrentQueue {
  public:    
   explicit ConcurrentQueue() = default;
@@ -55,6 +56,12 @@ class ConcurrentQueue {
   bool tryDequeue(T& out) {
     std::unique_lock<std::mutex> lck(mtx_);
     return tryDequeueImpl(lck, out);
+  }
+
+  template<typename Functor>
+  bool dequeueApply(Functor&& fun) {
+    std::unique_lock<std::mutex> lck(mtx_);
+    return dequeueApplyImpl(lck, std::forward<Functor>(fun));
   }
 
   bool empty() const {
@@ -85,7 +92,7 @@ class ConcurrentQueue {
  protected:
   void checkLock(std::unique_lock<std::mutex>& lck) const {
     if (!lck.owns_lock()) {
-      throw std::logic_error("Caller of protected functions of ConcurrentQueue should own the lock!"); 
+      throw std::logic_error("Caller of protected functions of ConcurrentQueue should own the lock!");
     }
   }
 
@@ -96,6 +103,19 @@ class ConcurrentQueue {
     }
     out = std::move(queue_.front());
     queue_.pop_front();
+    return true;
+  }
+
+  template<typename Functor>
+  bool dequeueApplyImpl(std::unique_lock<std::mutex>& lck, Functor&& fun) {
+    checkLock(lck);
+    if (queue_.empty()) {
+      return false;
+    }
+    T elem = std::move(queue_.front());
+    queue_.pop_front();
+    lck.unlock();
+    fun(elem);
     return true;
   }
 
@@ -117,7 +137,7 @@ template <typename T>
 class ConditionConcurrentQueue : private ConcurrentQueue<T> {
  public:
   explicit ConditionConcurrentQueue(bool start = true) : ConcurrentQueue<T>{}, running_{start} {}
-  
+
   ConditionConcurrentQueue(const ConditionConcurrentQueue& other) = delete;
   ConditionConcurrentQueue& operator=(const ConditionConcurrentQueue& other) = delete;
   ConditionConcurrentQueue(ConditionConcurrentQueue&& other) = delete;
@@ -127,7 +147,6 @@ class ConditionConcurrentQueue : private ConcurrentQueue<T> {
   using ConcurrentQueue<T>::empty;
   using ConcurrentQueue<T>::clear;
 
-
   template <typename... Args>
   void enqueue(Args&&... args) {
     ConcurrentQueue<T>::enqueue(std::forward<Args>(args)...);
@@ -135,25 +154,51 @@ class ConditionConcurrentQueue : private ConcurrentQueue<T> {
       cv_.notify_one();
     }
   }
-  
+
   bool dequeueWait(T& out) {
+    if (!running_) {
+      return false;
+    }
     std::unique_lock<std::mutex> lck(this->mtx_);
-    cv_.wait(lck, [this, &lck]{ return !running_ || !this->emptyImpl(lck); });  // Only wake up if there is something to return or stopped 
-    return running_ && ConcurrentQueue<T>::tryDequeueImpl(lck, out);
+    cv_.wait(lck, [this, &lck]{ return !running_ || !this->emptyImpl(lck); });  // Only wake up if there is something to return or stopped
+    return ConcurrentQueue<T>::tryDequeueImpl(lck, out);
+  }
+
+  template<typename Functor>
+  bool dequeueApplyWait(Functor&& fun) {
+    if (!running_) {
+      return false;
+    }
+    std::unique_lock<std::mutex> lck(this->mtx_);
+    cv_.wait(lck, [this, &lck]{ return !running_ || !this->emptyImpl(lck); });  // Only wake up if there is something to return or stopped
+    return ConcurrentQueue<T>::dequeueApplyImpl(lck, std::forward<Functor>(fun));
   }
 
   template< class Rep, class Period >
   bool dequeueWaitFor(T& out, const std::chrono::duration<Rep, Period>& time) {
+    if (!running_) {
+      return false;
+    }
     std::unique_lock<std::mutex> lck(this->mtx_);
     cv_.wait_for(lck, time, [this, &lck]{ return !running_ || !this->emptyImpl(lck); });  // Wake up with timeout or in case there is something to do
-    return running_ && ConcurrentQueue<T>::tryDequeueImpl(lck, out);
+    return ConcurrentQueue<T>::tryDequeueImpl(lck, out);
+  }
+
+  template<typename Functor, class Rep, class Period>
+  bool dequeueApplyWaitFor(Functor&& fun, const std::chrono::duration<Rep, Period>& time) {
+    if (!running_) {
+      return false;
+    }
+    std::unique_lock<std::mutex> lck(this->mtx_);
+    cv_.wait_for(lck, time, [this, &lck]{ return !running_ || !this->emptyImpl(lck); });  // Wake up with timeout or in case there is something to do
+    return ConcurrentQueue<T>::dequeueApplyImpl(lck, std::forward<Functor>(fun));
   }
 
   bool tryDequeue(T& out) {
     std::unique_lock<std::mutex> lck(this->mtx_);
     return running_ && ConcurrentQueue<T>::tryDequeueImpl(lck, out);
   }
-  
+
   void stop() {
     std::lock_guard<std::mutex> guard(this->mtx_);
     running_ = false;
@@ -164,7 +209,7 @@ class ConditionConcurrentQueue : private ConcurrentQueue<T> {
     std::unique_lock<std::mutex> lck(this->mtx_);
     running_ = true;
   }
-  
+
   bool isRunning() const {
     std::lock_guard<std::mutex> guard(this->mtx_);
     return running_;  // In case it's not running no notifications are generated, dequeueing fails instead of blocking to avoid hanging threads
