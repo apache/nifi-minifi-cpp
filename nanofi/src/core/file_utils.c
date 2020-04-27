@@ -28,7 +28,7 @@
 #include "core/string_utils.h"
 #include "core/file_utils.h"
 
-#ifdef _MSC_VER
+#ifdef WIN32
 #ifndef PATH_MAX
 #define PATH_MAX 260
 #endif
@@ -169,10 +169,11 @@ int make_dir(const char * path) {
 #endif
   }
   case EEXIST: {
-    if (is_directory(path)) {
-      return 0;
+    int ret = is_directory(path);
+    if (ret <= 0) {
+      return -1;
     }
-    return -1;
+    return 0;
   }
   default:
     return -1;
@@ -201,7 +202,8 @@ char * create_temp_directory(char * format) {
   }
   return copystr(format);
 #else
-  char temp_dir_path[MAX_PATH];
+  char * temp_dir_path = (char *)malloc(PATH_MAX);
+  memset(temp_dir_path, 0, PATH_MAX);
   DWORD ret = GetTempPath(PATH_MAX, temp_dir_path);
   if (ret <= PATH_MAX && ret != 0) {
     CIDGenerator gen;
@@ -209,12 +211,12 @@ char * create_temp_directory(char * format) {
     gen.implementation_ = CUUID_DEFAULT_IMPL;
     generate_uuid(&gen, uuid);
     uuid[36] = '\0';
-    char * path = concat_path(temp_dir_path, uuid);
-    if (make_dir(path) < 0) {
-      free(path);
+    strcat(temp_dir_path, ".");
+    strcat(temp_dir_path, uuid);
+    if (make_dir(temp_dir_path) < 0) {
       return NULL;
     }
-    return path;
+    return temp_dir_path;
   }
   return NULL;
 #endif
