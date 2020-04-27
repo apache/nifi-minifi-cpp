@@ -36,112 +36,116 @@
 
 TEST_CASE("Test tailfile chunk size 4096, file size 8KB", "[tailfileChunk8KBFileSize]") {
 
-    TailFileTestResourceManager mgr("TailFileChunk", on_trigger_tailfilechunk);
-    const char * file = "e.txt";
-    const char * chunksize = "4096";
+  TailFileTestResourceManager mgr("TailFileChunk", on_trigger_tailfilechunk);
+  const char * file = "e.txt";
+  const char * chunksize = "4096";
 
-    char * file_path = get_temp_file_path(file);
-    REQUIRE(file_path != NULL);
+  char * file_path = get_temp_file_path(file);
+  REQUIRE(file_path != NULL);
 
-    //Write 8192 bytes to the file
-    FileManager fm(file_path);
-    fm.WriteNChars(4096, 'a');
-    fm.WriteNChars(4096, 'b');
-    fm.CloseStream();
+  //Write 8192 bytes to the file
+  FileManager fm(file_path);
+  fm.WriteNChars(4096, 'a');
+  fm.WriteNChars(4096, 'b');
+  fm.CloseStream();
 
-    standalone_processor * proc = mgr.getProcessor();
-    set_standalone_property(proc, "file_path", file_path);
-    set_standalone_property(proc, "chunk_size", chunksize);
+  standalone_processor * proc = mgr.getProcessor();
+  set_standalone_property(proc, "file_path", file_path);
+  set_standalone_property(proc, "chunk_size", chunksize);
 
-    flow_file_record * new_ff = invoke(proc);
+  flow_file_record * new_ff = invoke(proc);
 
-    char uuid_str[37];
-    get_proc_uuid_from_processor(proc, uuid_str);
-    struct processor_params * pp = get_proc_params(uuid_str);
+  char uuid_str[37];
+  get_proc_uuid_from_processor(proc, uuid_str);
+  struct processor_params * pp = get_proc_params(uuid_str);
 
-    //Test that two flow file records were created
-    REQUIRE(pp != NULL);
-    REQUIRE(pp->ff_list != NULL);
-    REQUIRE(pp->ff_list->ff_record != NULL);
-    REQUIRE(flow_files_size(pp->ff_list) == 2);
+  //Test that two flow file records were created
+  REQUIRE(pp != NULL);
+  REQUIRE(pp->ff_list != NULL);
+  REQUIRE(pp->ff_list->ff_record != NULL);
+  REQUIRE(flow_files_size(pp->ff_list) == 2);
 
-    //Test that the current offset in the file is 8192 bytes
-    REQUIRE(pp->curr_offset == 8192);
-    free(file_path);
+  //Test that the current offset in the file is 8192 bytes
+  REQUIRE(pp->curr_offset == 8192);
+  remove_temp_directory(file_path);
+  free(file_path);
 }
 
 TEST_CASE("Test tailfile chunk size 4096, file size less than 8KB", "[tailfileChunkFileSizeLessThan8KB]") {
 
-    TailFileTestResourceManager mgr("TailFileChunk", on_trigger_tailfilechunk);
-    const char * file = "e.txt";
-    const char * chunksize = "4096";
+  TailFileTestResourceManager mgr("TailFileChunk", on_trigger_tailfilechunk);
+  const char * file = "e.txt";
+  const char * chunksize = "4096";
 
-    char * file_path = get_temp_file_path(file);
-    REQUIRE(file_path != NULL);
+  char * file_path = get_temp_file_path(file);
+  REQUIRE(file_path != NULL);
 
-    //Write 4505 bytes to the file
-    FileManager fm(file_path);
-    fm.WriteNChars(4096, 'a');
-    fm.WriteNChars(409, 'b');
-    fm.CloseStream();
+  //Write 4505 bytes to the file
+  FileManager fm(file_path);
+  fm.WriteNChars(4096, 'a');
+  fm.WriteNChars(409, 'b');
+  fm.CloseStream();
 
-    standalone_processor * proc = mgr.getProcessor();
-    set_standalone_property(proc, "file_path", file_path);
-    set_standalone_property(proc, "chunk_size", chunksize);
+  standalone_processor * proc = mgr.getProcessor();
+  set_standalone_property(proc, "file_path", file_path);
+  set_standalone_property(proc, "chunk_size", chunksize);
 
-    flow_file_record * new_ff = invoke(proc);
+  flow_file_record * new_ff = invoke(proc);
 
-    char uuid_str[37];
-    get_proc_uuid_from_processor(proc, uuid_str);
-    struct processor_params * pp = get_proc_params(uuid_str);
-    //Test that one flow file record was created
-    REQUIRE(pp != NULL);
-    REQUIRE(pp->ff_list != NULL);
-    REQUIRE(pp->ff_list->ff_record != NULL);
-    REQUIRE(flow_files_size(pp->ff_list) == 1);
+  char uuid_str[37];
+  get_proc_uuid_from_processor(proc, uuid_str);
+  struct processor_params * pp = get_proc_params(uuid_str);
+  //Test that one flow file record was created
+  REQUIRE(pp != NULL);
+  REQUIRE(pp->ff_list != NULL);
+  REQUIRE(pp->ff_list->ff_record != NULL);
+  REQUIRE(flow_files_size(pp->ff_list) == 1);
 
-    //Test that the current offset in the file is 4096 bytes
-    REQUIRE(pp->curr_offset == 4096);
-    REQUIRE(pp->ff_list->ff_record->size == 4096);
+  //Test that the current offset in the file is 4096 bytes
+  REQUIRE(pp->curr_offset == 4096);
+  REQUIRE(pp->ff_list->ff_record->size == 4096);
 
-    struct stat fstat;
-    REQUIRE(stat(pp->ff_list->ff_record->contentLocation, &fstat) == 0);
-    REQUIRE(fstat.st_size == 4096);
-    free(file_path);
+  struct stat fstat;
+  REQUIRE(stat(pp->ff_list->ff_record->contentLocation, &fstat) == 0);
+  REQUIRE(fstat.st_size == 4096);
+  remove_temp_directory(file_path);
+  free(file_path);
 }
 
 TEST_CASE("Test tailfile chunk size 512, file size equal to 4608B", "[tailfileChunkFileSize8KB]") {
 
-    TailFileTestResourceManager mgr("TailFileChunk", on_trigger_tailfilechunk);
-    const char * file = "e.txt";
-    const char * chunksize = "512";
+  TailFileTestResourceManager mgr("TailFileChunk", on_trigger_tailfilechunk);
+  const char * file = "e.txt";
+  const char * chunksize = "512";
 
-    char * file_path = get_temp_file_path(file);
-    REQUIRE(file_path != NULL);
+  char * file_path = get_temp_file_path(file);
+  REQUIRE(file_path != NULL);
 
-    //Write 4608 bytes to the file
-    FileManager fm(file_path);
-    fm.WriteNChars(4608, 'a');
-    fm.CloseStream();
+  //Write 4608 bytes to the file
+  FileManager fm(file_path);
+  fm.WriteNChars(4608, 'a');
+  fm.CloseStream();
 
-    standalone_processor * proc = mgr.getProcessor();
-    set_standalone_property(proc, "file_path", file_path);
-    set_standalone_property(proc, "chunk_size", chunksize);
+  standalone_processor * proc = mgr.getProcessor();
+  set_standalone_property(proc, "file_path", file_path);
+  set_standalone_property(proc, "chunk_size", chunksize);
 
-    flow_file_record * new_ff = invoke(proc);
+  flow_file_record * new_ff = invoke(proc);
 
-    char uuid_str[37];
-    get_proc_uuid_from_processor(proc, uuid_str);
-    struct processor_params * pp = get_proc_params(uuid_str);
+  char uuid_str[37];
+  get_proc_uuid_from_processor(proc, uuid_str);
+  struct processor_params * pp = get_proc_params(uuid_str);
 
-    //Test that one flow file record was created
-    REQUIRE(pp != NULL);
-    REQUIRE(pp->ff_list != NULL);
-    REQUIRE(pp->ff_list->ff_record != NULL);
-    REQUIRE(flow_files_size(pp->ff_list) == 9);
+  //Test that one flow file record was created
+  REQUIRE(pp != NULL);
+  REQUIRE(pp->ff_list != NULL);
+  REQUIRE(pp->ff_list->ff_record != NULL);
+  REQUIRE(flow_files_size(pp->ff_list) == 9);
 
-    //Test that the current offset in the file is 4608 bytes
-    REQUIRE(pp->curr_offset == 4608);
-    free(file_path);
+  //Test that the current offset in the file is 4608 bytes
+  REQUIRE(pp->curr_offset == 4608);
+
+  remove_temp_directory(file_path);
+  free(file_path);
 }
 #endif

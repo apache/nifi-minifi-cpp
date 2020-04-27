@@ -71,7 +71,6 @@ char * concat_path(const char * parent, const char * child) {
 
 #ifndef WIN32
 void remove_directory(const char * dir_path) {
-
   if (!is_directory(dir_path)) {
     if (unlink(dir_path) == -1) {
       printf("Could not remove file %s\n", dir_path);
@@ -233,8 +232,12 @@ int get_file_size(const char * path, uint64_t * out_size) {
 }
 
 char * get_temp_file_path(const char * file) {
+#ifndef WIN32
   char format[] = "/tmp/dir.XXXXXX";
   char * dir = create_temp_directory(format);
+#else
+  char * dir = create_temp_directory(NULL);
+#endif
   if (dir) {
     char * file_path = concat_path(dir, file);
     free(dir);

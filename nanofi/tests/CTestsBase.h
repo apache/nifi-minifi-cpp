@@ -137,5 +137,22 @@ struct processor_params * invoke_processor(TailFileTestResourceManager& mgr,
   return pp;
 }
 
+void remove_temp_directory(char * path) {
+  if (path) {
+#ifdef WIN32
+    char * tmp = strrchr(path, '\\');
+#else
+    char * tmp = strrchr(path, '/');
+#endif
+    if (tmp) {
+      size_t len = tmp - path;
+      char * dir_path = (char *)malloc(len + 1);
+      strncpy(dir_path, path, len);
+      dir_path[len] = '\0';
+      remove_directory(dir_path);
+      free(dir_path);
+    }
+  }
+}
 #endif /* NANOFI_TESTS_CTESTSBASE_H_ */
 #endif
