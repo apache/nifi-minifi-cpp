@@ -111,17 +111,14 @@ int main(int argc, char **argv) {
 
   core::YamlConfiguration yaml_config(test_repo, test_repo, content_repo, stream_factory, configuration, test_file_location);
 
-  std::unique_ptr<core::ProcessGroup> ptr = yaml_config.getRoot(test_file_location);
-  std::shared_ptr<core::ProcessGroup> pg = std::shared_ptr<core::ProcessGroup>(ptr.get());
-  std::shared_ptr<core::Processor> proc = ptr->findProcessor("invoke");
+  std::shared_ptr<core::Processor> proc = yaml_config.getRoot(test_file_location)->findProcessor("invoke");
   assert(proc != nullptr);
 
-  std::shared_ptr<minifi::processors::InvokeHTTP> inv = std::dynamic_pointer_cast<minifi::processors::InvokeHTTP>(proc);
-
+  const auto inv = std::dynamic_pointer_cast<minifi::processors::InvokeHTTP>(proc);
   assert(inv != nullptr);
+
   std::string url;
   inv->getProperty(minifi::processors::InvokeHTTP::URL.getName(), url);
-  ptr = nullptr;
   HttpResponder h_ex;
   std::string port, scheme, path;
   CivetServer *server = nullptr;
