@@ -72,7 +72,7 @@ namespace MinifiConcurrentQueueTestProducersConsumers {
     });
   }
 
-  std::thread getSimpleApplyConsumerThread(utils::ConcurrentQueue<std::string>& queue, std::vector<std::string>& results) {
+  std::thread getSimpleConsumeConsumerThread(utils::ConcurrentQueue<std::string>& queue, std::vector<std::string>& results) {
     return std::thread([&queue, &results] {
       while (results.size() < 3) {
         std::string s;
@@ -92,7 +92,7 @@ namespace MinifiConcurrentQueueTestProducersConsumers {
     });
   }
 
-  std::thread getApplyWaitConsumerThread(utils::ConditionConcurrentQueue<std::string>& queue, std::vector<std::string>& results) {
+  std::thread getConsumeWaitConsumerThread(utils::ConditionConcurrentQueue<std::string>& queue, std::vector<std::string>& results) {
     return std::thread([&queue, &results] {
       while (results.size() < 3) {
         std::string s;
@@ -145,7 +145,7 @@ namespace MinifiConcurrentQueueTestProducersConsumers {
     });
   }
 
-  std::thread getApplyWaitForConsumerThread(utils::ConditionConcurrentQueue<std::string>& queue, std::set<std::string>& results) {
+  std::thread getConsumeWaitForConsumerThread(utils::ConditionConcurrentQueue<std::string>& queue, std::set<std::string>& results) {
     return std::thread([&queue, &results]() {
       const std::size_t max_read_attempts = 6;
       std::size_t attemt_num = 0;
@@ -159,7 +159,7 @@ namespace MinifiConcurrentQueueTestProducersConsumers {
 
 }  // namespace MinifiConcurrentQueueTestProducersConsumers
 
-TEST_CASE("TestConqurrentQueue::testQueue", "[TestQueue]") {
+TEST_CASE("TestConcurrentQueue::testQueue", "[TestQueue]") {
   using namespace MinifiConcurrentQueueTestProducersConsumers;
   utils::ConcurrentQueue<std::string> queue;
   std::vector<std::string> results;
@@ -172,8 +172,22 @@ TEST_CASE("TestConqurrentQueue::testQueue", "[TestQueue]") {
   REQUIRE(utils::StringUtils::join("-", results) == "ba-dum-tss");
 }
 
+TEST_CASE("TestConditionConcurrentQueue::testQueueUsingApply", "[TestConditionQueueUsingApply]") {
+  using namespace MinifiConcurrentQueueTestProducersConsumers;
+  utils::ConcurrentQueue<std::string> queue;
+  std::vector<std::string> results;
 
-TEST_CASE("TestConditionConqurrentQueue::testConditionQueue", "[TestConditionQueue]") {
+  std::thread producer{ getSimpleProducerThread(queue) };
+  std::thread consumer{ getSimpleConsumeConsumerThread(queue, results) };
+
+  producer.join();
+  consumer.join();
+
+  REQUIRE(utils::StringUtils::join("-", results) == "ba-dum-tss");
+}
+
+
+TEST_CASE("TestConditionConcurrentQueue::testConditionQueue", "[TestConditionQueue]") {
   using namespace MinifiConcurrentQueueTestProducersConsumers;
   utils::ConditionConcurrentQueue<std::string> queue(true);
   std::vector<std::string> results;
@@ -188,27 +202,14 @@ TEST_CASE("TestConditionConqurrentQueue::testConditionQueue", "[TestConditionQue
   REQUIRE(utils::StringUtils::join("-", results) == "ba-dum-tss");
 }
 
-TEST_CASE("TestConditionConqurrentQueue::testQueueUsingApply", "[TestConditionQueueUsingApply]") {
+
+TEST_CASE("TestConditionConcurrentQueue::testConditionQueueConsumeWait", "[TestConditionQueueApplyWait]") {
   using namespace MinifiConcurrentQueueTestProducersConsumers;
   utils::ConditionConcurrentQueue<std::string> queue(true);
   std::vector<std::string> results;
 
   std::thread producer{ getSimpleProducerThread(queue) };
-  std::thread consumer{ getApplyWaitConsumerThread(queue, results) };
-
-  producer.join();
-  consumer.join();
-
-  REQUIRE(utils::StringUtils::join("-", results) == "ba-dum-tss");
-}
-
-TEST_CASE("TestConditionConqurrentQueue::testConditionQueueApplyWait", "[TestConditionQueueApplyWait]") {
-  using namespace MinifiConcurrentQueueTestProducersConsumers;
-  utils::ConditionConcurrentQueue<std::string> queue(true);
-  std::vector<std::string> results;
-
-  std::thread producer{ getSimpleProducerThread(queue) };
-  std::thread consumer{ getApplyWaitConsumerThread(queue, results) };
+  std::thread consumer{ getConsumeWaitConsumerThread(queue, results) };
 
   producer.join();
   std::this_thread::sleep_for(std::chrono::milliseconds(10));
@@ -219,7 +220,7 @@ TEST_CASE("TestConditionConqurrentQueue::testConditionQueueApplyWait", "[TestCon
 
 /* In this testcase the consumer thread puts back all items to the queue to consume again
  * Even in this case the ones inserted later by the producer  should be consumed */
-TEST_CASE("TestConqurrentQueue::testQueueWithReAdd", "[TestQueueWithSingleReAdd]") {
+TEST_CASE("TestConcurrentQueue::testQueueWithReAdd", "[TestQueueWithSingleReAdd]") {
   using namespace MinifiConcurrentQueueTestProducersConsumers;
   utils::ConcurrentQueue<std::string> queue;
   std::set<std::string> results;
@@ -234,7 +235,7 @@ TEST_CASE("TestConqurrentQueue::testQueueWithReAdd", "[TestQueueWithSingleReAdd]
 }
 
 /* The same test as above, but covering the ConditionConcurrentQueue */
-TEST_CASE("TestConditionConqurrentQueue::testConditionQueueWithReAdd", "[TestConditionQueueWithInfReAdd]") {
+TEST_CASE("TestConditionConcurrentQueue::testConditionQueueWithReAdd", "[TestConditionQueueWithInfReAdd]") {
   using namespace MinifiConcurrentQueueTestProducersConsumers;
   utils::ConditionConcurrentQueue<std::string> queue(true);
   std::set<std::string> results;
@@ -248,21 +249,7 @@ TEST_CASE("TestConditionConqurrentQueue::testConditionQueueWithReAdd", "[TestCon
   REQUIRE(utils::StringUtils::join("-", results) == "ba-dum-tss");
 }
 
-TEST_CASE("TestConditionConqurrentQueue::testConditionQueueDequeueWaitForWithSignal", "[testConditionQueueDequeueWaitForWithSignal]") {
-  using namespace MinifiConcurrentQueueTestProducersConsumers;
-  utils::ConditionConcurrentQueue<std::string> queue(true);
-  std::set<std::string> results;
-
-  std::thread producer{ getSimpleProducerThread(queue) };
-  std::thread consumer{ getDequeueWaitForConsumerThread(queue, results) };
-
-  producer.join();
-  consumer.join();
-
-  REQUIRE(utils::StringUtils::join("-", results) == "ba-dum-tss");
-}
-
-TEST_CASE("TestConditionConqurrentQueue::testConditionQueueconsumeWaitForWithSignal", "[testConditionQueueconsumeWaitForWithSignal]") {
+TEST_CASE("TestConditionConcurrentQueue::testConditionQueueDequeueWaitForWithSignal", "[testConditionQueueDequeueWaitForWithSignal]") {
   using namespace MinifiConcurrentQueueTestProducersConsumers;
   utils::ConditionConcurrentQueue<std::string> queue(true);
   std::set<std::string> results;
@@ -275,7 +262,20 @@ TEST_CASE("TestConditionConqurrentQueue::testConditionQueueconsumeWaitForWithSig
   REQUIRE(utils::StringUtils::join("-", results) == "ba-dum-tss");
 }
 
-TEST_CASE("TestConditionConqurrentQueue::testConditionQueueDequeueWaitForNoSignal", "[testConditionQueueDequeueWaitForNoSignal]") {
+TEST_CASE("TestConditionConcurrentQueue::testConditionQueueConsumeWaitForWithSignal", "[testConditionQueueconsumeWaitForWithSignal]") {
+  using namespace MinifiConcurrentQueueTestProducersConsumers;
+  utils::ConditionConcurrentQueue<std::string> queue(true);
+  std::set<std::string> results;
+
+  std::thread producer{ getSimpleProducerThread(queue) };
+  std::thread consumer{ getConsumeWaitForConsumerThread(queue, results) };
+  producer.join();
+  consumer.join();
+
+  REQUIRE(utils::StringUtils::join("-", results) == "ba-dum-tss");
+}
+
+TEST_CASE("TestConditionConcurrentQueue::testConditionQueueDequeueWaitForNoSignal", "[testConditionQueueDequeueWaitForNoSignal]") {
   using namespace MinifiConcurrentQueueTestProducersConsumers;
   utils::ConditionConcurrentQueue<std::string> queue(true);
   std::set<std::string> results;
@@ -291,7 +291,7 @@ TEST_CASE("TestConditionConqurrentQueue::testConditionQueueDequeueWaitForNoSigna
   REQUIRE(0 == results.size());
 }
 
-TEST_CASE("TestConditionConqurrentQueue::testConditionQueueconsumeWaitForNoSignal", "[testConditionQueueconsumeWaitForNoSignal]") {
+TEST_CASE("TestConditionConcurrentQueue::testConditionQueueconsumeWaitForNoSignal", "[testConditionQueueconsumeWaitForNoSignal]") {
   using namespace MinifiConcurrentQueueTestProducersConsumers;
   utils::ConditionConcurrentQueue<std::string> queue(true);
   std::set<std::string> results;
@@ -299,7 +299,7 @@ TEST_CASE("TestConditionConqurrentQueue::testConditionQueueconsumeWaitForNoSigna
   std::unique_lock<std::mutex> lock(mutex);
 
   std::thread producer{ getBlockedProducerThread(queue, mutex) };
-  std::thread consumer{ getDequeueWaitForConsumerThread(queue, results) };
+  std::thread consumer{ getConsumeWaitForConsumerThread(queue, results) };
   consumer.join();
   lock.unlock();
   producer.join();
@@ -307,7 +307,7 @@ TEST_CASE("TestConditionConqurrentQueue::testConditionQueueconsumeWaitForNoSigna
   REQUIRE(0 == results.size());
 }
 
-TEST_CASE("TestConruccentQueues::highLoad", "[TestConcurrentQueuesHighLoad]") {
+TEST_CASE("TestConcurrentQueues::highLoad", "[TestConcurrentQueuesHighLoad]") {
   std::random_device dev;
   std::mt19937 rng(dev());
   std::uniform_int_distribution<std::mt19937::result_type> dist(1, std::numeric_limits<int>::max());
